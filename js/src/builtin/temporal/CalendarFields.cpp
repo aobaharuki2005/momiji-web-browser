@@ -545,31 +545,10 @@ bool js::temporal::PreparePartialCalendarFields(
 }
 
 /**
- * CalendarFieldKeysToIgnore ( calendar, keys )
+ * NonISOFieldKeysToIgnore ( calendar, keys )
  */
-static auto CalendarFieldKeysToIgnore(CalendarId calendar,
-                                      mozilla::EnumSet<CalendarField> keys) {
-  // Step 1.
-  if (calendar == CalendarId::ISO8601) {
-    // Steps 1.a and 1.b.i.
-    auto ignoredKeys = keys;
-
-    // Step 1.b.ii.
-    if (keys.contains(CalendarField::Month)) {
-      ignoredKeys += CalendarField::MonthCode;
-    }
-
-    // Step 1.b.iii.
-    else if (keys.contains(CalendarField::MonthCode)) {
-      ignoredKeys += CalendarField::Month;
-    }
-
-    // Steps 1.c-d.
-    return ignoredKeys;
-  }
-
-  // Step 2.
-
+static auto NonISOFieldKeysToIgnore(CalendarId calendar,
+                                    mozilla::EnumSet<CalendarField> keys) {
   static constexpr auto eraOrEraYear = mozilla::EnumSet{
       CalendarField::Era,
       CalendarField::EraYear,
@@ -615,6 +594,34 @@ static auto CalendarFieldKeysToIgnore(CalendarId calendar,
   }
 
   return result;
+}
+
+/**
+ * CalendarFieldKeysToIgnore ( calendar, keys )
+ */
+static auto CalendarFieldKeysToIgnore(CalendarId calendar,
+                                      mozilla::EnumSet<CalendarField> keys) {
+  // Step 1.
+  if (calendar == CalendarId::ISO8601) {
+    // Steps 1.a and 1.b.i.
+    auto ignoredKeys = keys;
+
+    // Step 1.b.ii.
+    if (keys.contains(CalendarField::Month)) {
+      ignoredKeys += CalendarField::MonthCode;
+    }
+
+    // Step 1.b.iii.
+    else if (keys.contains(CalendarField::MonthCode)) {
+      ignoredKeys += CalendarField::Month;
+    }
+
+    // Steps 1.c-d.
+    return ignoredKeys;
+  }
+
+  // Step 2.
+  return NonISOFieldKeysToIgnore(calendar, keys);
 }
 
 /**

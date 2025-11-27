@@ -2140,6 +2140,39 @@ static bool RegulateISODate(JSContext* cx, int32_t year, double month,
 }
 
 /**
+ * NonISOCalendarDateToISO ( calendar, fields, overflow )
+ */
+static bool NonISOCalendarDateToISO(JSContext* cx, CalendarId calendar,
+                                    Handle<CalendarFields> fields,
+                                    TemporalOverflow overflow,
+                                    ISODate* result) {
+  EraYears eraYears;
+  if (!CalendarFieldYear(cx, calendar, fields, &eraYears)) {
+    return false;
+  }
+
+  Month month;
+  if (!CalendarFieldMonth(cx, calendar, fields, overflow, &month)) {
+    return false;
+  }
+
+  int32_t day;
+  if (!CalendarFieldDay(cx, calendar, fields, overflow, &day)) {
+    return false;
+  }
+
+  auto cal = CreateICU4XCalendar(calendar);
+  auto date = CreateDateFrom(cx, calendar, cal.get(), eraYears, month, day,
+                             fields, overflow);
+  if (!date) {
+    return false;
+  }
+
+  *result = ToISODate(date.get());
+  return true;
+}
+
+/**
  * CalendarDateToISO ( calendar, fields, overflow )
  */
 static bool CalendarDateToISO(JSContext* cx, CalendarId calendar,
@@ -2171,81 +2204,16 @@ static bool CalendarDateToISO(JSContext* cx, CalendarId calendar,
   }
 
   // Step 2.
-
-  EraYears eraYears;
-  if (!CalendarFieldYear(cx, calendar, fields, &eraYears)) {
-    return false;
-  }
-
-  Month month;
-  if (!CalendarFieldMonth(cx, calendar, fields, overflow, &month)) {
-    return false;
-  }
-
-  int32_t day;
-  if (!CalendarFieldDay(cx, calendar, fields, overflow, &day)) {
-    return false;
-  }
-
-  auto cal = CreateICU4XCalendar(calendar);
-  auto date = CreateDateFrom(cx, calendar, cal.get(), eraYears, month, day,
-                             fields, overflow);
-  if (!date) {
-    return false;
-  }
-
-  *result = ToISODate(date.get());
-  return true;
+  return NonISOCalendarDateToISO(cx, calendar, fields, overflow, result);
 }
 
 /**
- * CalendarMonthDayToISOReferenceDate ( calendar, fields, overflow )
+ * NonISOMonthDayToISOReferenceDate ( calendar, fields, overflow )
  */
-static bool CalendarMonthDayToISOReferenceDate(JSContext* cx,
-                                               CalendarId calendar,
-                                               Handle<CalendarFields> fields,
-                                               TemporalOverflow overflow,
-                                               ISODate* result) {
-  // Step 1.
-  if (calendar == CalendarId::ISO8601) {
-    // Step 1.a.
-    MOZ_ASSERT(fields.has(CalendarField::Month) ||
-               fields.has(CalendarField::MonthCode));
-    MOZ_ASSERT(fields.has(CalendarField::Day));
-
-    // Remaining steps from CalendarResolveFields to resolve the month.
-    double month;
-    if (!ISOCalendarResolveMonth(cx, fields, &month)) {
-      return false;
-    }
-
-    // Step 1.b.
-    int32_t referenceISOYear = 1972;
-
-    // Step 1.c.
-    double year =
-        !fields.has(CalendarField::Year) ? referenceISOYear : fields.year();
-
-    int32_t intYear;
-    if (!mozilla::NumberEqualsInt32(year, &intYear)) {
-      // Calendar cycles repeat every 400 years in the Gregorian calendar.
-      intYear = int32_t(std::fmod(year, 400));
-    }
-
-    // Step 1.d.
-    ISODate regulated;
-    if (!RegulateISODate(cx, intYear, month, fields.day(), overflow,
-                         &regulated)) {
-      return false;
-    }
-
-    // Step 1.e.
-    *result = {referenceISOYear, regulated.month, regulated.day};
-    return true;
-  }
-
-  // Step 2.
-
+static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
+                                             Handle<CalendarFields> fields,
+                                             TemporalOverflow overflow,
+                                             ISODate* result) {
   EraYears eraYears;
   if (fields.has(CalendarField::Year) || fields.has(CalendarField::EraYear)) {
     if (!CalendarFieldYear(cx, calendar, fields, &eraYears)) {
@@ -2419,43 +2387,64 @@ static bool CalendarMonthDayToISOReferenceDate(JSContext* cx,
   return true;
 }
 
-enum class FieldType { Date, YearMonth, MonthDay };
-
 /**
- * CalendarResolveFields ( calendar, fields, type )
+ * CalendarMonthDayToISOReferenceDate ( calendar, fields, overflow )
  */
-static bool CalendarResolveFields(JSContext* cx, CalendarId calendar,
-                                  Handle<CalendarFields> fields,
-                                  FieldType type) {
+static bool CalendarMonthDayToISOReferenceDate(JSContext* cx,
+                                               CalendarId calendar,
+                                               Handle<CalendarFields> fields,
+                                               TemporalOverflow overflow,
+                                               ISODate* result) {
   // Step 1.
   if (calendar == CalendarId::ISO8601) {
-    // Steps 1.a-e.
-    const char* missingField = nullptr;
-    if ((type == FieldType::Date || type == FieldType::YearMonth) &&
-        !fields.has(CalendarField::Year)) {
-      missingField = "year";
-    } else if ((type == FieldType::Date || type == FieldType::MonthDay) &&
-               !fields.has(CalendarField::Day)) {
-      missingField = "day";
-    } else if (!fields.has(CalendarField::MonthCode) &&
-               !fields.has(CalendarField::Month)) {
-      missingField = "month";
-    }
+    // Step 1.a.
+    MOZ_ASSERT(fields.has(CalendarField::Month) ||
+               fields.has(CalendarField::MonthCode));
+    MOZ_ASSERT(fields.has(CalendarField::Day));
 
-    if (missingField) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_CALENDAR_MISSING_FIELD,
-                                missingField);
+    // Remaining steps from CalendarResolveFields to resolve the month.
+    double month;
+    if (!ISOCalendarResolveMonth(cx, fields, &month)) {
       return false;
     }
 
-    // Steps 1.f-n. (Handled in ISOCalendarResolveMonth.)
+    // Step 1.b.
+    int32_t referenceISOYear = 1972;
 
+    // Step 1.c.
+    double year =
+        !fields.has(CalendarField::Year) ? referenceISOYear : fields.year();
+
+    int32_t intYear;
+    if (!mozilla::NumberEqualsInt32(year, &intYear)) {
+      // Calendar cycles repeat every 400 years in the Gregorian calendar.
+      intYear = int32_t(std::fmod(year, 400));
+    }
+
+    // Step 1.d.
+    ISODate regulated;
+    if (!RegulateISODate(cx, intYear, month, fields.day(), overflow,
+                         &regulated)) {
+      return false;
+    }
+
+    // Step 1.e.
+    *result = {referenceISOYear, regulated.month, regulated.day};
     return true;
   }
 
   // Step 2.
+  return NonISOMonthDayToISOReferenceDate(cx, calendar, fields, overflow,
+                                          result);
+}
 
+enum class FieldType { Date, YearMonth, MonthDay };
+
+/**
+ * NonISOResolveFields ( calendar, fields, type )
+ */
+static bool NonISOResolveFields(JSContext* cx, CalendarId calendar,
+                                Handle<CalendarFields> fields, FieldType type) {
   // Date and Month-Day require |day| to be present.
   bool requireDay = type == FieldType::Date || type == FieldType::MonthDay;
 
@@ -2497,7 +2486,45 @@ static bool CalendarResolveFields(JSContext* cx, CalendarId calendar,
 }
 
 /**
+ * CalendarResolveFields ( calendar, fields, type )
+ */
+static bool CalendarResolveFields(JSContext* cx, CalendarId calendar,
+                                  Handle<CalendarFields> fields,
+                                  FieldType type) {
+  // Step 1.
+  if (calendar == CalendarId::ISO8601) {
+    // Steps 1.a-e.
+    const char* missingField = nullptr;
+    if ((type == FieldType::Date || type == FieldType::YearMonth) &&
+        !fields.has(CalendarField::Year)) {
+      missingField = "year";
+    } else if ((type == FieldType::Date || type == FieldType::MonthDay) &&
+               !fields.has(CalendarField::Day)) {
+      missingField = "day";
+    } else if (!fields.has(CalendarField::MonthCode) &&
+               !fields.has(CalendarField::Month)) {
+      missingField = "month";
+    }
+
+    if (missingField) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_TEMPORAL_CALENDAR_MISSING_FIELD,
+                                missingField);
+      return false;
+    }
+
+    // Steps 1.f-n. (Handled in ISOCalendarResolveMonth.)
+
+    return true;
+  }
+
+  // Step 2.
+  return NonISOResolveFields(cx, calendar, fields, type);
+}
+
+/**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[Era]] field.
  */
@@ -2540,6 +2567,7 @@ bool js::temporal::CalendarEra(JSContext* cx, Handle<CalendarValue> calendar,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[EraYear]] field.
  */
@@ -2574,6 +2602,7 @@ bool js::temporal::CalendarEraYear(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[Year]] field.
  */
@@ -2606,6 +2635,7 @@ bool js::temporal::CalendarYear(JSContext* cx, Handle<CalendarValue> calendar,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[Month]] field.
  */
@@ -2634,6 +2664,7 @@ bool js::temporal::CalendarMonth(JSContext* cx, Handle<CalendarValue> calendar,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[MonthCode]] field.
  */
@@ -2679,6 +2710,7 @@ bool js::temporal::CalendarMonthCode(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[Day]] field.
  */
@@ -2707,6 +2739,7 @@ bool js::temporal::CalendarDay(JSContext* cx, Handle<CalendarValue> calendar,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[DayOfWeek]] field.
  */
@@ -2745,6 +2778,7 @@ bool js::temporal::CalendarDayOfWeek(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[DayOfYear]] field.
  */
@@ -2806,6 +2840,7 @@ bool js::temporal::CalendarDayOfYear(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[WeekOfYear]].[[Week]] field.
  */
@@ -2833,6 +2868,7 @@ bool js::temporal::CalendarWeekOfYear(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[WeekOfYear]].[[Year]] field.
  */
@@ -2860,6 +2896,7 @@ bool js::temporal::CalendarYearOfWeek(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[DaysInWeek]] field.
  */
@@ -2880,6 +2917,7 @@ bool js::temporal::CalendarDaysInWeek(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[DaysInMonth]] field.
  */
@@ -2909,6 +2947,7 @@ bool js::temporal::CalendarDaysInMonth(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[DaysInYear]] field.
  */
@@ -2938,6 +2977,7 @@ bool js::temporal::CalendarDaysInYear(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[MonthsInYear]] field.
  */
@@ -2967,6 +3007,7 @@ bool js::temporal::CalendarMonthsInYear(JSContext* cx,
 
 /**
  * CalendarISOToDate ( calendar, isoDate )
+ * NonISOCalendarISOToDate ( calendar, isoDate )
  *
  * Return the Calendar Date Record's [[InLeapYear]] field.
  */
@@ -3633,10 +3674,12 @@ static bool AddNonISODate(JSContext* cx, CalendarId calendarId,
   return true;
 }
 
-static bool AddCalendarDate(JSContext* cx, CalendarId calendarId,
-                            const ISODate& isoDate,
-                            const DateDuration& duration,
-                            TemporalOverflow overflow, ISODate* result) {
+/**
+ * NonISODateAdd ( calendar, isoDate, duration, overflow )
+ */
+static bool NonISODateAdd(JSContext* cx, CalendarId calendarId,
+                          const ISODate& isoDate, const DateDuration& duration,
+                          TemporalOverflow overflow, ISODate* result) {
   // ICU4X doesn't yet provide a public API for CalendarDateAdd.
   //
   // https://github.com/unicode-org/icu4x/issues/3964
@@ -3696,7 +3739,7 @@ bool js::temporal::CalendarDateAdd(JSContext* cx,
       return false;
     }
   } else {
-    if (!AddCalendarDate(cx, calendarId, isoDate, duration, overflow, result)) {
+    if (!NonISODateAdd(cx, calendarId, isoDate, duration, overflow, result)) {
       return false;
     }
   }
@@ -4028,10 +4071,12 @@ static bool DifferenceNonISODate(JSContext* cx, CalendarId calendarId,
   return true;
 }
 
-static bool DifferenceCalendarDate(JSContext* cx, CalendarId calendarId,
-                                   const ISODate& one, const ISODate& two,
-                                   TemporalUnit largestUnit,
-                                   DateDuration* result) {
+/**
+ * NonISODateUntil ( calendar, one, two, largestUnit )
+ */
+static bool NonISODateUntil(JSContext* cx, CalendarId calendarId,
+                            const ISODate& one, const ISODate& two,
+                            TemporalUnit largestUnit, DateDuration* result) {
   // ICU4X doesn't yet provide a public API for CalendarDateUntil.
   //
   // https://github.com/unicode-org/icu4x/issues/3964
@@ -4093,5 +4138,5 @@ bool js::temporal::CalendarDateUntil(JSContext* cx,
   }
 
   // Step 2.
-  return DifferenceCalendarDate(cx, calendarId, one, two, largestUnit, result);
+  return NonISODateUntil(cx, calendarId, one, two, largestUnit, result);
 }
