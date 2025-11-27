@@ -762,7 +762,7 @@ static mozilla::Maybe<EraCode> CanonicalizeEraInCalendar(
   MOZ_ASSERT(CalendarSupportsEra(calendar));
 
   // Note: Assigning MaxLength to EraNameMaxLength() breaks the CDT indexer.
-  constexpr size_t MaxLength = 24;
+  constexpr size_t MaxLength = 8;
   static_assert(MaxLength >= EraNameMaxLength(),
                 "Storage size is at least as large as the largest known era");
 

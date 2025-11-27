@@ -135,13 +135,10 @@ inline constexpr auto Persian = {
 
 inline constexpr auto ROC = {
     "roc"sv,
-    "minguo"sv,
 };
 
 inline constexpr auto ROCInverse = {
     "broc"sv,
-    "before-roc"sv,
-    "minguo-qian"sv,
 };
 }  // namespace names
 }  // namespace eras
