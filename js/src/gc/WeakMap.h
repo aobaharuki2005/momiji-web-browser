@@ -435,6 +435,9 @@ class WeakMap : public WeakMapBase {
   static size_t offsetOfHashShift() {
     return offsetof(WeakMap, map_) + UnbarrieredMap::offsetOfHashShift();
   }
+  static size_t offsetOfTable() {
+    return offsetof(WeakMap, map_) + UnbarrieredMap::offsetOfTable();
+  }
 
  protected:
   inline void assertMapIsSameZoneWithValue(const BarrieredValue& v);

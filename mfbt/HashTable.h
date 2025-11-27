@@ -429,6 +429,9 @@ class MOZ_STANDALONE_DEBUG HashMap {
   static size_t offsetOfHashShift() {
     return offsetof(HashMap, mImpl) + Impl::offsetOfHashShift();
   }
+  static size_t offsetOfTable() {
+    return offsetof(HashMap, mImpl) + Impl::offsetOfTable();
+  }
 };
 
 //---------------------------------------------------------------------------
@@ -979,6 +982,9 @@ class HashMapEntry {
 
   const Value& value() const { return value_; }
   Value& value() { return value_; }
+
+  static size_t offsetOfKey() { return offsetof(HashMapEntry, key_); }
+  static size_t offsetOfValue() { return offsetof(HashMapEntry, value_); }
 
  private:
   HashMapEntry(const HashMapEntry&) = delete;
@@ -2352,6 +2358,7 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
     return offsetof(HashTable, mGenAndHashShift);
 #endif
   }
+  static size_t offsetOfTable() { return offsetof(HashTable, mTable); }
 };
 
 }  // namespace detail

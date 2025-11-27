@@ -5454,6 +5454,34 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void computeHash2MFBT(Register hashTable, Register hashCode, Register hash2,
                         Register sizeMask, Register scratch);
   void applyDoubleHashMFBT(Register hash1, Register hash2, Register sizeMask);
+  template <typename Table>
+  void checkForMatchMFBT(Register hashTable, Register hashIndex,
+                         Register hashCode, Register scratch, Register scratch2,
+                         Label* missing, Label* collision);
+
+ public:
+  // This generates an inlined version of mozilla::detail::HashTable::lookup
+  // (ForNonAdd).
+  // Inputs/requirements:
+  // - hashTable: A register containing a pointer to a Table. The Table type
+  //              must define:
+  //              - Table::Entry
+  //              - Table::offsetOfHashShift()
+  //              - Table::offsetOfTable()
+  // - hashCode:  The 32-bit hash of the key to look up. This should already
+  //              have been scrambled using prepareHashMFBT.
+  // - match:     A lambda to generate code to compare keys. The code that it
+  //              generates can assume that `scratch` contains the address of
+  //              a Table::Entry with a matching hash value. `scratch2` can be
+  //              safely used without clobbering anything. If the keys don't
+  //              match, the generated code should fall through. If the keys
+  //              match, the generated code is responsible for jumping to the
+  //              correct continuation.
+  // - missing:   A label to jump to if the key does not exist in the table.
+  template <typename Table, typename Match>
+  void lookupMFBT(Register hashTable, Register hashCode, Register scratch,
+                  Register scratch2, Register scratch3, Register scratch4,
+                  Register scratch5, Label* missing, Match match);
 
  private:
   enum class IsBigInt { No, Yes, Maybe };
