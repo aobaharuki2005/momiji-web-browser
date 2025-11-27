@@ -1036,6 +1036,51 @@ static int32_t FromAmeteMihretToAmeteAlem(int32_t year) {
   return year + ethiopianYearsFromCreationToIncarnation;
 }
 
+/**
+ * ConstrainMonthCode ( calendar, arithmeticYear, monthCode, overflow )
+ */
+static bool ConstrainMonthCode(JSContext* cx, CalendarId calendar,
+                               MonthCode monthCode, TemporalOverflow overflow,
+                               MonthCode* result) {
+  // Step 1.
+  MOZ_ASSERT(IsValidMonthCodeForCalendar(calendar, monthCode));
+
+  // Steps 2 and 4.
+  MOZ_ASSERT(CalendarHasLeapMonths(calendar));
+  MOZ_ASSERT(monthCode.isLeapMonth());
+
+  // Step 3.
+  if (overflow == TemporalOverflow::Reject) {
+    // Ensure the month code is null-terminated.
+    char code[5] = {};
+    auto monthCodeView = std::string_view{monthCode};
+    monthCodeView.copy(code, monthCodeView.length());
+
+    JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
+                             JSMSG_TEMPORAL_CALENDAR_INVALID_MONTHCODE, code);
+    return false;
+  }
+
+  // Steps 5-6.
+  bool skipBackward =
+      calendar == CalendarId::Chinese || calendar == CalendarId::Dangi;
+
+  // Step 7.
+  if (skipBackward) {
+    // Step 7.a.
+    *result = MonthCode{monthCode.ordinal()};
+    return true;
+  }
+
+  // Step 8.a
+  MOZ_ASSERT(calendar == CalendarId::Hebrew);
+  MOZ_ASSERT(monthCode.code() == MonthCode::Code::M05L);
+
+  // Step 8.b
+  *result = MonthCode{6};
+  return true;
+}
+
 static UniqueICU4XDate CreateDateFromCodes(
     JSContext* cx, CalendarId calendarId, const icu4x::capi::Calendar* calendar,
     EraYear eraYear, MonthCode monthCode, int32_t day,
@@ -1089,46 +1134,16 @@ static UniqueICU4XDate CreateDateFromCodes(
       // We've asserted above that |monthCode| is valid for this calendar, so
       // any unknown month code must be for a leap month which doesn't happen in
       // the current year.
-      MOZ_ASSERT(CalendarHasLeapMonths(calendarId));
-      MOZ_ASSERT(monthCode.isLeapMonth());
-
-      if (overflow == TemporalOverflow::Reject) {
-        // Ensure the month code is null-terminated.
-        char code[5] = {};
-        auto monthCodeView = std::string_view{monthCode};
-        monthCodeView.copy(code, monthCodeView.length());
-
-        JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
-                                 JSMSG_TEMPORAL_CALENDAR_INVALID_MONTHCODE,
-                                 code);
+      MonthCode constrained;
+      if (!ConstrainMonthCode(cx, calendarId, monthCode, overflow,
+                              &constrained)) {
         return nullptr;
       }
+      MOZ_ASSERT(!constrained.isLeapMonth());
 
       // Retry as non-leap month when we're allowed to constrain.
-      //
-      // CalendarDateToISO ( calendar, fields, overflow )
-      //
-      // If the month is a leap month that doesn't exist in the year, pick
-      // another date according to the cultural conventions of that calendar's
-      // users. Usually this will result in the same day in the month before or
-      // after where that month would normally fall in a leap year.
-      //
-      // Hebrew calendar:
-      // Replace Adar I (M05L) with Adar (M06).
-      //
-      // Chinese/Dangi calendar:
-      // Pick the next month, for example M03L -> M04, except for M12L, because
-      // we don't want to switch over to the next year.
-
-      // TODO: Temporal spec polyfill replaces M03L with M03 for Chinese/Dangi.
-      // No idea what are the "cultural conventions" for these two calendars...
-      //
-      // https://github.com/tc39/proposal-intl-era-monthcode/issues/32
-
-      int32_t nonLeapMonth = std::min(monthCode.ordinal() + 1, 12);
-      auto nonLeapMonthCode = MonthCode{nonLeapMonth};
-      return CreateDateFromCodes(cx, calendarId, calendar, eraYear,
-                                 nonLeapMonthCode, day, overflow);
+      return CreateDateFromCodes(cx, calendarId, calendar, eraYear, constrained,
+                                 day, overflow);
     }
 
     case CalendarError::OutOfRange: {
