@@ -258,7 +258,7 @@ bool GetTemporalFractionalSecondDigitsOption(JSContext* cx,
 
 struct SecondsStringPrecision final {
   Precision precision = Precision{0};
-  TemporalUnit unit = TemporalUnit::Auto;
+  TemporalUnit unit = TemporalUnit::Unset;
   Increment increment = Increment{1};
 };
 
@@ -354,8 +354,8 @@ inline const char* ToName(TemporalAddDuration addDuration) {
 }
 
 struct DifferenceSettings final {
-  TemporalUnit smallestUnit = TemporalUnit::Auto;
-  TemporalUnit largestUnit = TemporalUnit::Auto;
+  TemporalUnit smallestUnit = TemporalUnit::Unset;
+  TemporalUnit largestUnit = TemporalUnit::Unset;
   TemporalRoundingMode roundingMode = TemporalRoundingMode::Trunc;
   Increment roundingIncrement = Increment{1};
 };

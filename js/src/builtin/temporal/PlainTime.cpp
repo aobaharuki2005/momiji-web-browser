@@ -802,6 +802,7 @@ TimeRecord js::temporal::RoundTime(const Time& time, Increment increment,
       result = &nanosecond;
       break;
 
+    case TemporalUnit::Unset:
     case TemporalUnit::Auto:
     case TemporalUnit::Year:
     case TemporalUnit::Month:

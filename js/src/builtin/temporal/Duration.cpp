@@ -593,6 +593,7 @@ static Duration TemporalDurationFromInternal(const TimeDuration& timeDuration,
     case TemporalUnit::Millisecond:
     case TemporalUnit::Microsecond:
     case TemporalUnit::Nanosecond:
+    case TemporalUnit::Unset:
     case TemporalUnit::Auto:
       MOZ_CRASH("Unexpected temporal unit");
   }
@@ -770,6 +771,7 @@ bool js::temporal::TemporalDurationFromInternal(
       return true;
     }
 
+    case TemporalUnit::Unset:
     case TemporalUnit::Auto:
       break;
   }
@@ -2587,8 +2589,8 @@ static bool BubbleRelativeDuration(
   while (unit > largestUnit) {
     using TemporalUnitType = std::underlying_type_t<TemporalUnit>;
 
-    static_assert(static_cast<TemporalUnitType>(TemporalUnit::Auto) == 0,
-                  "TemporalUnit::Auto has value zero");
+    static_assert(static_cast<TemporalUnitType>(TemporalUnit::Auto) == 1,
+                  "TemporalUnit::Auto has value one");
     MOZ_ASSERT(unit > TemporalUnit::Auto, "can subtract unit by one");
 
     // Steps 4, 6.a, and 6.c.
