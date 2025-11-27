@@ -4844,8 +4844,8 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
     MOZ_ASSERT(rt.is_reg());
     scratch = rt.rm();
   }
-  BlockTrampolinePoolScope block_trampoline_pool(this, 2);
   {
+    BlockTrampolinePoolScope block_trampoline_pool(this, 2);
     switch (cond) {
       case Always:
         if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
