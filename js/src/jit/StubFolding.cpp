@@ -54,7 +54,7 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
 
   uint32_t numActive = 0;
   mozilla::Maybe<uint32_t> foldableFieldOffset;
-  RootedValueVector shapeList(cx);
+  GCVector<Value, 8> shapeList(cx);
 
   // Try to add a shape to the list. Can fail on OOM or for cross-realm shapes.
   // Returns true if the shape was successfully added to the list, and false
