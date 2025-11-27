@@ -78,12 +78,25 @@ dictionary NotificationOptions {
   NotificationDirection dir = "auto";
   DOMString lang = "";
   DOMString body = "";
+  // [UseCounter], bug 1976515
+  UTF8String navigate;
   DOMString tag = "";
+  // [UseCounter], bug 1976515
+  UTF8String image;
   UTF8String icon = "";
-  boolean requireInteraction = false;
-  boolean silent = false;
+  // [UseCounter], bug 1976515
+  UTF8String badge;
+  // [UseCounter], bug 1976515
   VibratePattern vibrate;
+  // [UseCounter], bug 1976515
+  EpochTimeStamp timestamp;
+  // [UseCounter], bug 1976515
+  boolean renotify = false;
+  boolean silent = false;
+  // [UseCounter], bug 1976515
+  boolean requireInteraction = false;
   any data = null;
+  // [UseCounter], bug 1976515
   [Pref="dom.webnotifications.actions.enabled"]
   sequence<NotificationAction> actions = [];
 };

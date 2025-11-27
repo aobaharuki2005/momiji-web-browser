@@ -13,6 +13,7 @@
 #include "mozilla/HoldDropJSObjects.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/UseCounter.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Promise-inl.h"
@@ -345,6 +346,16 @@ static Result<nsString, nsresult> SerializeDataAsBase64(
   return result;
 }
 
+#define SetUseCounterIf(wasUsed, memberName)                             \
+  if (wasUsed) {                                                         \
+    if (NS_IsMainThread()) {                                             \
+      SetUseCounter(aGlobal->GetGlobalJSObject(),                        \
+                    eUseCounter_NotificationOptions_##memberName);       \
+    } else {                                                             \
+      SetUseCounter(UseCounterWorker::NotificationOptions_##memberName); \
+    }                                                                    \
+  }
+
 /* static */
 // https://notifications.spec.whatwg.org/#create-a-notification
 already_AddRefed<Notification> Notification::ValidateAndCreate(
@@ -352,6 +363,14 @@ already_AddRefed<Notification> Notification::ValidateAndCreate(
     const NotificationOptions& aOptions, const nsAString& aScope,
     ErrorResult& aRv) {
   MOZ_ASSERT(aGlobal);
+
+  SetUseCounterIf(aOptions.mNavigate.WasPassed(), navigate);
+  SetUseCounterIf(aOptions.mBadge.WasPassed(), badge);
+  SetUseCounterIf(aOptions.mVibrate.WasPassed(), vibrate);
+  SetUseCounterIf(aOptions.mTimestamp.WasPassed(), timestamp);
+  SetUseCounterIf(aOptions.mRenotify, renotify);
+  SetUseCounterIf(aOptions.mRequireInteraction, requireInteraction);
+  SetUseCounterIf(!aOptions.mActions.IsEmpty(), actions);
 
   // Step 4: Set notification’s data to
   // StructuredSerializeForStorage(options["data"]).
