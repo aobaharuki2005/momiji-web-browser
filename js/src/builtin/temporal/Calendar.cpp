@@ -341,12 +341,8 @@ std::string_view js::temporal::CalendarIdentifier(CalendarId calendarId) {
       return "hebrew";
     case CalendarId::Indian:
       return "indian";
-    case CalendarId::Islamic:
-      return "islamic";
     case CalendarId::IslamicCivil:
       return "islamic-civil";
-    case CalendarId::IslamicRGSA:
-      return "islamic-rgsa";
     case CalendarId::IslamicTabular:
       return "islamic-tbla";
     case CalendarId::IslamicUmmAlQura:
@@ -537,12 +533,7 @@ static inline bool DayOfMonthCanBeZero(CalendarId calendarId) {
   // Workaround when day-of-month returns zero.
   //
   // See <https://github.com/unicode-org/icu4x/issues/5069>.
-  static constexpr mozilla::EnumSet<CalendarId> calendars{
-      CalendarId::Islamic,
-      CalendarId::IslamicRGSA,
-      CalendarId::IslamicUmmAlQura,
-  };
-  return calendars.contains(calendarId);
+  return calendarId == CalendarId::IslamicUmmAlQura;
 }
 
 static inline int32_t OrdinalMonth(CalendarId calendarId,
@@ -626,9 +617,6 @@ static auto ToAnyCalendarKind(CalendarId id) {
       return icu4x::capi::CalendarKind_Indian;
     case CalendarId::IslamicCivil:
       return icu4x::capi::CalendarKind_HijriTabularTypeIIFriday;
-    case CalendarId::Islamic:
-    case CalendarId::IslamicRGSA:
-      return icu4x::capi::CalendarKind_HijriSimulatedMecca;
     case CalendarId::IslamicTabular:
       return icu4x::capi::CalendarKind_HijriTabularTypeIIThursday;
     case CalendarId::IslamicUmmAlQura:
@@ -687,8 +675,6 @@ static uint32_t MaximumISOYear(CalendarId calendarId) {
       return 10'000;
     }
 
-    case CalendarId::Islamic:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicUmmAlQura: {
       // Lower limit for these calendars to avoid running into ICU4X assertions.
       //
@@ -727,8 +713,6 @@ static uint32_t MaximumCalendarYear(CalendarId calendarId) {
       return 10'000;
     }
 
-    case CalendarId::Islamic:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicUmmAlQura: {
       // Lower limit for these calendars to avoid running into ICU4X assertions.
       //
@@ -888,12 +872,9 @@ static constexpr std::string_view IcuEraName(CalendarId calendar, EraCode era) {
       return "shaka";
     }
 
-    // https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriSimulated.html#era-codes
     // https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriTabular.html#era-codes
     // https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriUmmAlQura.html#era-codes
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura: {
       MOZ_ASSERT(era == EraCode::Standard || era == EraCode::Inverse);
@@ -1252,9 +1233,7 @@ static UniqueICU4XDate CreateDateFrom(JSContext* cx, CalendarId calendarId,
     case CalendarId::EthiopianAmeteAlem:
     case CalendarId::Gregorian:
     case CalendarId::Indian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::Japanese:
@@ -1520,9 +1499,7 @@ static bool CalendarDateYear(JSContext* cx, CalendarId calendar,
     case CalendarId::Indian:
     case CalendarId::Persian:
     case CalendarId::Gregorian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::Japanese: {
@@ -3116,9 +3093,7 @@ bool js::temporal::CalendarInLeapYear(JSContext* cx,
       break;
     }
 
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura: {
       MOZ_ASSERT(!CalendarHasLeapMonths(calendarId));
@@ -3764,9 +3739,7 @@ static bool NonISODateAdd(JSContext* cx, CalendarId calendarId,
     case CalendarId::EthiopianAmeteAlem:
     case CalendarId::Hebrew:
     case CalendarId::Indian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::Persian:
@@ -4160,9 +4133,7 @@ static bool NonISODateUntil(JSContext* cx, CalendarId calendarId,
     case CalendarId::EthiopianAmeteAlem:
     case CalendarId::Hebrew:
     case CalendarId::Indian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::Persian:

@@ -127,9 +127,7 @@ constexpr auto& CalendarEras(CalendarId id) {
       return eras::Standard;
 
     case CalendarId::Gregorian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::ROC:
@@ -165,9 +163,7 @@ constexpr auto& CalendarEraNames(CalendarId calendar, EraCode era) {
                                       : eras::names::GregorianInverse;
     }
 
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura: {
       MOZ_ASSERT(era == EraCode::Standard || era == EraCode::Inverse);
@@ -228,9 +224,7 @@ constexpr bool CalendarEraStartsAtYearBoundary(CalendarId id) {
     // Calendar system which use multiple eras, but each era starts at a year
     // boundary.
     case CalendarId::Gregorian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::ROC:

@@ -178,7 +178,6 @@ class MonthCodes final {
 //
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Buddhist.html#month-codes
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Indian.html#month-codes
-// https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriSimulated.html#month-codes
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriTabular.html#month-codes
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.HijriUmmAlQura.html#month-codes
 // https://docs.rs/icu/latest/icu/calendar/cal/struct.Japanese.html#month-codes
@@ -228,9 +227,7 @@ constexpr auto& CalendarMonthCodes(CalendarId id) {
     case CalendarId::Buddhist:
     case CalendarId::Gregorian:
     case CalendarId::Indian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::Persian:
@@ -262,9 +259,7 @@ constexpr bool CalendarHasLeapMonths(CalendarId id) {
     case CalendarId::EthiopianAmeteAlem:
     case CalendarId::Gregorian:
     case CalendarId::Indian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::Japanese:
@@ -289,9 +284,7 @@ constexpr bool CalendarHasEpagomenalMonths(CalendarId id) {
     case CalendarId::Gregorian:
     case CalendarId::Hebrew:
     case CalendarId::Indian:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
     case CalendarId::Japanese:
@@ -344,9 +337,7 @@ constexpr std::pair<int32_t, int32_t> CalendarDaysInMonth(CalendarId id) {
     case CalendarId::Chinese:
     case CalendarId::Dangi:
     case CalendarId::Hebrew:
-    case CalendarId::Islamic:
     case CalendarId::IslamicCivil:
-    case CalendarId::IslamicRGSA:
     case CalendarId::IslamicTabular:
     case CalendarId::IslamicUmmAlQura:
       return {29, 30};
@@ -449,9 +440,7 @@ constexpr std::pair<int32_t, int32_t> CalendarDaysInMonth(CalendarId id,
       return {30, 30};
     }
 
-    // Islamic calendars have 29-30 days per month.
-    case CalendarId::Islamic:
-    case CalendarId::IslamicRGSA:
+    // IslamicUmmAlQura calendar has 29-30 days per month.
     case CalendarId::IslamicUmmAlQura:
       return {29, 30};
 

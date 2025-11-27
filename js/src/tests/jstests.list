@@ -864,6 +864,10 @@ skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Arabic.
 # https://github.com/tc39/test262/pull/4659
 skip script test262/staging/Intl402/Temporal/old/indian-calendar.js
 
+# "Intl era and monthCode" proposal should clarify if "islamic" and "islamic-rgsa" are still allowed
+# for Intl.DisplayNames.
+skip script test262/intl402/Intl/supportedValuesOf/calendars-accepted-by-DisplayNames.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
@@ -1055,16 +1059,11 @@ skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/argument-st
 # See Bug 1950425, skip tests for calendars disabled in release or beta
 skip-if(release_or_beta) script non262/Temporal/Intl/defaults.js
 skip-if(release_or_beta) script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-umalqura.js
-skip-if(release_or_beta) script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic.js
-skip-if(release_or_beta) script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic-rgsa.js
 skip-if(release_or_beta) script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic-umalqura.js
 skip-if(release_or_beta) script test262/intl402/Temporal/PlainMonthDay/from/constrain-to-leap-day.js
 
 # Try re-enabling when Bug 1954138 or Bug 1955545 are fixed.
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic.js
-skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-rgsa.js
 skip script test262/intl402/DateTimeFormat/constructor-options-calendar-islamic-fallback.js
-skip script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic-rgsa.js
 
 # https://github.com/tc39/proposal-intl-era-monthcode/issues/23. ICU4X 2.0 doesn't have inverse type
 skip script test262/staging/Intl402/Temporal/old/non-iso-calendars-coptic.js
