@@ -22,6 +22,7 @@
 #include "nsContentUtils.h"  // for nsAutoScriptBlocker
 #include "nsDocShell.h"
 #include "nsLayoutUtils.h"
+#include "WindowRenderer.h"
 #include "mozilla/StartupTimeline.h"
 
 using namespace mozilla;
@@ -228,20 +229,20 @@ void nsView::AndroidPipModeChanged(bool aPipMode) {
 }
 #endif
 
-void nsView::WillPaintWindow(nsIWidget* aWidget) {
-  RefPtr<nsViewManager> vm = mViewManager;
-  vm->WillPaintWindow(aWidget);
-}
-
-bool nsView::PaintWindow(nsIWidget* aWidget, LayoutDeviceIntRegion) {
-  RefPtr<nsViewManager> vm = mViewManager;
-  vm->PaintWindow(aWidget);
-  return true;
-}
-
-void nsView::DidPaintWindow() {
-  RefPtr<nsViewManager> vm = mViewManager;
-  vm->DidPaintWindow();
+void nsView::PaintWindow(nsIWidget* aWidget) {
+  RefPtr ps = GetPresShell();
+  if (!ps) {
+    return;
+  }
+  RefPtr renderer = aWidget->GetWindowRenderer();
+  if (!renderer->NeedsWidgetInvalidation()) {
+    ps->PaintSynchronously();
+    renderer->FlushRendering(wr::RenderReasons::WIDGET);
+  } else {
+    ps->SyncPaintFallback(ps->GetRootFrame(), renderer);
+  }
+  mozilla::StartupTimeline::RecordOnce(mozilla::StartupTimeline::FIRST_PAINT);
+  ps->DidPaintWindow();
 }
 
 void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,

@@ -150,37 +150,6 @@ void nsViewManager::FlushDelayedResize() {
   }
 }
 
-void nsViewManager::PaintWindow(nsIWidget* aWidget) {
-  RefPtr ps = mPresShell;
-  if (!ps) {
-    return;
-  }
-  RefPtr renderer = aWidget->GetWindowRenderer();
-  if (!renderer->NeedsWidgetInvalidation()) {
-    renderer->FlushRendering(wr::RenderReasons::WIDGET);
-  } else {
-    ps->SyncPaintFallback(ps->GetRootFrame(), renderer);
-  }
-  mozilla::StartupTimeline::RecordOnce(mozilla::StartupTimeline::FIRST_PAINT);
-}
-
-void nsViewManager::WillPaintWindow(nsIWidget* aWidget) {
-  WindowRenderer* renderer = aWidget->GetWindowRenderer();
-  if (renderer->NeedsWidgetInvalidation()) {
-    return;
-  }
-  if (RefPtr ps = mPresShell) {
-    // FIXME(bug 2002232): Why is this needed?
-    ps->PaintSynchronously();
-  }
-}
-
-void nsViewManager::DidPaintWindow() {
-  if (RefPtr<PresShell> presShell = mPresShell) {
-    presShell->DidPaintWindow();
-  }
-}
-
 void nsViewManager::MaybeUpdateLastUserEventTime(WidgetGUIEvent* aEvent) {
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
   if ((mouseEvent &&
