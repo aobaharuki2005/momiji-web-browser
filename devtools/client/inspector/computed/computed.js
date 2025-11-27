@@ -1040,7 +1040,9 @@ class PropertyView {
     this.isCustomProperty = isCustomProperty;
 
     if (!this.isCustomProperty) {
-      this.link = "https://developer.mozilla.org/docs/Web/CSS/" + name;
+      this.link =
+        "https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/" +
+        name;
     }
 
     this.#propertyInfo = new PropertyInfo(tree, name);

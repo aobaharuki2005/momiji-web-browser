@@ -1042,7 +1042,7 @@ async function checkInteractiveTooltip(view, type, ruleIndex, declaration) {
  *                  {
  *                    value: "grab",
  *                    expected: INCOMPATIBILITY_TOOLTIP_MESSAGE.default,
- *                    expectedLearnMoreUrl: "https://developer.mozilla.org/en-US/docs/Web/CSS/cursor",
+ *                    expectedLearnMoreUrl: "https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/cursor",
  *                  },
  *                },
  *              ],

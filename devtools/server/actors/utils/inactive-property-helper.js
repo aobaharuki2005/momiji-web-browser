@@ -16,7 +16,8 @@ const TEXT_WRAP_BALANCE_LIMIT = Services.prefs.getIntPref(
   10
 );
 
-const VISITED_MDN_LINK = "https://developer.mozilla.org/docs/Web/CSS/:visited";
+const VISITED_MDN_LINK =
+  "https://developer.mozilla.org/docs/Web/CSS/Reference/Selectors/:visited";
 const VISITED_INVALID_PROPERTIES = allCssPropertiesExcept([
   "all",
   "color",
@@ -71,7 +72,7 @@ const REPLACED_ELEMENTS_NAMES = new Set([
 ]);
 
 const CUE_PSEUDO_ELEMENT_STYLING_SPEC_URL =
-  "https://developer.mozilla.org/docs/Web/CSS/::cue";
+  "https://developer.mozilla.org/docs/Web/CSS/Reference/Selectors/::cue";
 
 const HIGHLIGHT_PSEUDO_ELEMENTS_STYLING_SPEC_URL =
   "https://www.w3.org/TR/css-pseudo-4/#highlight-styling";

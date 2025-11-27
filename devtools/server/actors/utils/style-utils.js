@@ -46,7 +46,7 @@ function getFontPreviewData(font, doc, options) {
   // properly applied, but we don't want to wrap all fonts, otherwise generic family names
   // (e.g. `monospace`) wouldn't work.
   // It should be safe to only add the quotes when the font has some spaces (generic family
-  // names don't have spaces, https://developer.mozilla.org/en-US/docs/Web/CSS/font-family#generic-name)
+  // names don't have spaces, https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/font-family#generic-name)
   // We also don't want to add quotes if there are already some
   // `font` is the declaration value, so it can have multiple parts,
   // e.g: `"Menlo", MonoLisa, monospace`

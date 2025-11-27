@@ -61,7 +61,8 @@ class InactiveCssTooltipHelper {
     const { doc } = tooltip;
 
     const documentUrl = new URL(
-      learnMoreURL || `https://developer.mozilla.org/docs/Web/CSS/${property}`
+      learnMoreURL ||
+        `https://developer.mozilla.org/docs/Web/CSS/Reference/Properties/${property}`
     );
     this._currentTooltip = tooltip;
     const { searchParams } = documentUrl;
