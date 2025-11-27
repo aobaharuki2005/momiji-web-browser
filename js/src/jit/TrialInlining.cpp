@@ -17,6 +17,7 @@
 #include "jit/CacheIRWriter.h"
 #include "jit/InlineScriptTree.h"
 #include "jit/Ion.h"  // TooManyFormalArguments
+#include "jit/StubFolding.h"
 
 #include "vm/BytecodeLocation-inl.h"
 
