@@ -6967,7 +6967,7 @@ nsHttpChannel::Cancel(nsresult status) {
        static_cast<uint32_t>(status), mCanceledReason.get()));
   MOZ_ASSERT_IF(!(mConnectionInfo && mConnectionInfo->UsingConnect()) &&
                     NS_SUCCEEDED(mStatus),
-                !AllowedErrorForHTTPSRRFallback(status));
+                !AllowedErrorForTransactionRetry(status));
 
   mEarlyHintObserver = nullptr;
   mWebTransportSessionEventListener = nullptr;
