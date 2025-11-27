@@ -8171,10 +8171,17 @@ void LIRGenerator::visitMapObjectSize(MMapObjectSize* ins) {
 }
 
 void LIRGenerator::visitWeakMapGetObject(MWeakMapGetObject* ins) {
+#ifdef JS_CODEGEN_X86
   auto* lir = new (alloc()) LWeakMapGetObject(
       useFixedAtStart(ins->weakMap(), CallTempReg0),
       useFixedAtStart(ins->object(), CallTempReg1), tempFixed(CallTempReg2));
   defineReturn(lir, ins);
+#else
+  auto* lir = new (alloc()) LWeakMapGetObject(
+      useRegisterAtStart(ins->weakMap()), useRegisterAtStart(ins->object()),
+      temp(), temp(), temp(), temp(), temp(), temp(), temp());
+  defineBox(lir, ins);
+#endif
 }
 
 void LIRGenerator::visitWeakMapHasObject(MWeakMapHasObject* ins) {
