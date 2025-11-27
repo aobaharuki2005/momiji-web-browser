@@ -60,6 +60,8 @@ class CSSStyleValue : public nsISupports, public nsWrapperCache {
 
   // end of CSSStyleValue Web IDL declarations
 
+  ValueType GetValueType() const { return mValueType; }
+
   bool IsCSSUnsupportedValue() const;
 
   // Defined in CSSUnsupportedValue.cpp

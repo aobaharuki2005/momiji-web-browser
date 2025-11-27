@@ -75,16 +75,27 @@ void StylePropertyMap::Set(
 
   nsAutoCString cssText;
 
-  if (styleValue.IsCSSUnsupportedValue()) {
-    CSSUnsupportedValue& unsupportedValue =
-        styleValue.GetAsCSSUnsupportedValue();
+  switch (styleValue.GetValueType()) {
+    case CSSStyleValue::ValueType::Keyword: {
+      CSSKeywordValue& keywordValue = styleValue.GetAsCSSKeywordValue();
 
-    unsupportedValue.ToCssTextWithProperty(propertyId, cssText);
-  } else if (styleValue.IsCSSKeywordValue()) {
-    CSSKeywordValue& keywordValue = styleValue.GetAsCSSKeywordValue();
+      keywordValue.ToCssTextWithProperty(propertyId, cssText);
+      break;
+    }
 
-    keywordValue.ToCssTextWithProperty(propertyId, cssText);
-  } else {
+    case CSSStyleValue::ValueType::Unsupported: {
+      CSSUnsupportedValue& unsupportedValue =
+          styleValue.GetAsCSSUnsupportedValue();
+
+      unsupportedValue.ToCssTextWithProperty(propertyId, cssText);
+      break;
+    }
+
+    case CSSStyleValue::ValueType::Uninitialized:
+      break;
+  }
+
+  if (cssText.IsEmpty()) {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return;
   }
