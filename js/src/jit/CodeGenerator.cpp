@@ -22695,11 +22695,11 @@ void CodeGenerator::visitWeakMapGetObject(LWeakMapGetObject* ins) {
   masm.loadPrivate(mapAddr, hashTable);
 
   // Hash and scramble address of object.
-#ifdef JS_PUNBOX64
+#  ifdef JS_PUNBOX64
   ValueOperand boxedObj(scratch);
-#else
+#  else
   ValueOperand boxedObj(scratch, obj);
-#endif
+#  endif
   masm.tagValue(JSVAL_TYPE_OBJECT, obj, boxedObj);
   masm.hashAndScrambleValue(boxedObj, hashCode, scratch2);
   masm.prepareHashMFBT(hashCode, /*alreadyScrambled*/ true);
