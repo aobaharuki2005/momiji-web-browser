@@ -982,6 +982,10 @@ class HashMapEntry {
 
 namespace detail {
 
+static const HashNumber kHashTableFreeKey = 0;
+static const HashNumber kHashTableRemovedKey = 1;
+static const HashNumber kHashTableCollisionBit = 1;
+
 template <class T, class HashPolicy, class AllocPolicy>
 class HashTable;
 
@@ -1057,9 +1061,9 @@ class HashTableEntry {
                 "subsequent N*2 T values must not require more than an even "
                 "number of HashNumbers provides");
 
-  static const HashNumber sFreeKey = 0;
-  static const HashNumber sRemovedKey = 1;
-  static const HashNumber sCollisionBit = 1;
+  static const HashNumber sFreeKey = kHashTableFreeKey;
+  static const HashNumber sRemovedKey = kHashTableRemovedKey;
+  static const HashNumber sCollisionBit = kHashTableCollisionBit;
 
   alignas(NonConstT) unsigned char mValueData[sizeof(NonConstT)];
 

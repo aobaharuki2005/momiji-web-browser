@@ -9936,17 +9936,13 @@ void MacroAssembler::scrambleHashCode(Register result) {
   mul32(Imm32(mozilla::kGoldenRatioU32), result);
 }
 
-void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
-                                           Register temp) {
-  // Inline implementation of |OrderedHashTableImpl::prepareHash()| and
-  // |mozilla::HashGeneric(v.asRawBits())|.
-
-#ifdef DEBUG
-  Label ok;
-  branchTestGCThing(Assembler::NotEqual, value, &ok);
-  assumeUnreachable("Unexpected GC thing");
-  bind(&ok);
-#endif
+void MacroAssembler::hashAndScrambleValue(ValueOperand value, Register result,
+                                          Register temp) {
+  // Inline implementation of:
+  // mozilla::ScrambleHashCode(mozilla::HashGeneric(v.asRawBits()))
+  // Note that this uses the raw bits, which will change if a GC thing moves.
+  // This function should only be used for non-GC things, or in cases where
+  // moving GC things are handled specially (eg WeakMapObject).
 
   // uint32_t v1 = static_cast<uint32_t>(aValue);
 #ifdef JS_PUNBOX64
@@ -9980,6 +9976,21 @@ void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
   //
   // scrambleHashCode(result);
   mul32(Imm32(mozilla::kGoldenRatioU32 * mozilla::kGoldenRatioU32), result);
+}
+
+void MacroAssembler::prepareHashNonGCThing(ValueOperand value, Register result,
+                                           Register temp) {
+  // Inline implementation of |OrderedHashTableImpl::prepareHash()| and
+  // |mozilla::HashGeneric(v.asRawBits())|.
+
+#ifdef DEBUG
+  Label ok;
+  branchTestGCThing(Assembler::NotEqual, value, &ok);
+  assumeUnreachable("Unexpected GC thing");
+  bind(&ok);
+#endif
+
+  hashAndScrambleValue(value, result, temp);
 }
 
 void MacroAssembler::prepareHashString(Register str, Register result,
@@ -10470,6 +10481,33 @@ void MacroAssembler::loadSetObjectSize(Register setObj, Register result) {
 
 void MacroAssembler::loadMapObjectSize(Register mapObj, Register result) {
   loadOrderedHashTableCount<MapObject>(mapObj, result);
+}
+
+void MacroAssembler::prepareHashMFBT(Register hashCode, bool alreadyScrambled) {
+  // Inline implementation of |mozilla::HashTable::prepareHash()|.
+  static_assert(sizeof(HashNumber) == sizeof(uint32_t));
+
+  // In some cases scrambling can be more efficiently folded into the
+  // computation of the hash itself.
+  if (!alreadyScrambled) {
+    // HashNumber keyHash = ScrambleHashCode(aInputHash);
+    scrambleHashCode(hashCode);
+  }
+
+  const mozilla::HashNumber RemovedKey = mozilla::detail::kHashTableRemovedKey;
+  const mozilla::HashNumber CollisionBit =
+      mozilla::detail::kHashTableCollisionBit;
+
+  // Avoid reserved hash codes:
+  // if (!isLiveHash(keyHash)) {
+  Label isLive;
+  branch32(Assembler::Above, hashCode, Imm32(RemovedKey), &isLive);
+  //   keyHash -= (sRemovedKey + 1);
+  sub32(Imm32(RemovedKey + 1), hashCode);
+  bind(&isLive);
+
+  // return keyHash & ~sCollisionBit;
+  and32(Imm32(~CollisionBit), hashCode);
 }
 
 // Can't push large frames blindly on windows, so we must touch frame memory
