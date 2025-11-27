@@ -58,8 +58,6 @@ class ModuleLoadRequest;
 class ModuleScript;
 class ScriptLoadRequest;
 
-enum class ParserMetadata;
-
 }  // namespace loader
 }  // namespace JS
 

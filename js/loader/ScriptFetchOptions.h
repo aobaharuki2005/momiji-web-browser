@@ -19,7 +19,7 @@ namespace JS::loader {
 // https://fetch.spec.whatwg.org/#concept-request-parser-metadata
 // All scripts are either "parser-inserted" or "not-parser-inserted", so
 // the empty string is not necessary.
-enum class ParserMetadata {
+enum class ParserMetadata : uint8_t {
   NotParserInserted,
   ParserInserted,
 };
