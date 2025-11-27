@@ -1094,8 +1094,3 @@ skip script test262/intl402/Temporal/PlainYearMonth/from/reference-day-chinese.j
 skip script test262/intl402/Temporal/PlainYearMonth/from/reference-day-hebrew.js
 skip script test262/intl402/Temporal/PlainDate/from/calendar-not-supporting-eras.js
 skip script test262/intl402/Temporal/PlainDateTime/from/calendar-not-supporting-eras.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1971346
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/bubble-time-unit.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/bubble-time-unit.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/bubble-time-unit.js

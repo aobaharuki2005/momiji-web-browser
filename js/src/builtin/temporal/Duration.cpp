@@ -2569,18 +2569,16 @@ static bool BubbleRelativeDuration(
   MOZ_ASSERT(IsValidDuration(duration));
   MOZ_ASSERT(IsValidDuration(nudge.duration));
   MOZ_ASSERT(ISODateTimeWithinLimits(isoDateTime));
-  MOZ_ASSERT(largestUnit <= TemporalUnit::Day);
   MOZ_ASSERT(smallestUnit <= TemporalUnit::Day);
-  MOZ_ASSERT(largestUnit <= smallestUnit);
 
-  int32_t sign = InternalDurationSign(duration) < 0 ? -1 : 1;
-
-  // Step 1.
-  if (smallestUnit == largestUnit) {
+  // Step 1. (Modified to use `<=` to return early.)
+  if (smallestUnit <= largestUnit) {
     *result = nudge.duration;
     return true;
   }
   MOZ_ASSERT(smallestUnit != TemporalUnit::Year);
+
+  int32_t sign = InternalDurationSign(duration) < 0 ? -1 : 1;
 
   // Steps 2-6.
   auto dateDuration = nudge.duration.date;
