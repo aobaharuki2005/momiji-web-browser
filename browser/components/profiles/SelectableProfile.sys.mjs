@@ -479,7 +479,20 @@ export class SelectableProfile {
     // We set the pref here so the copied profile will inherit this pref and
     // the copied profile will not show the backup welcome messaging.
     Services.prefs.setBoolPref("browser.profiles.profile-copied", true);
-    const backupServiceInstance = BackupService.init();
+    const backupServiceInstance = new BackupService();
+
+    let encState = await backupServiceInstance.loadEncryptionState(this.path);
+    let createdEncState = false;
+    if (!encState) {
+      // If we don't have encryption enabled, temporarily create encryption so
+      // we can copy resources that require encryption
+      await backupServiceInstance.enableEncryption(
+        Services.uuid.generateUUID().toString().slice(1, -1),
+        this.path
+      );
+      encState = await backupServiceInstance.loadEncryptionState(this.path);
+      createdEncState = true;
+    }
     let result = await backupServiceInstance.createAndPopulateStagingFolder(
       this.path
     );
@@ -495,9 +508,13 @@ export class SelectableProfile {
       await backupServiceInstance.recoverFromSnapshotFolderIntoSelectableProfile(
         result.stagingPath,
         true, // shouldLaunch
-        null, // encState
+        encState, // encState
         this // copiedProfile
       );
+
+    if (createdEncState) {
+      await backupServiceInstance.disableEncryption(this.path);
+    }
 
     copiedProfile.theme = this.theme;
     await copiedProfile.setAvatar(this.avatar);
