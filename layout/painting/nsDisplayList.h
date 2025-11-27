@@ -616,10 +616,10 @@ class nsDisplayListBuilder {
   /**
    * Call this if we're doing painting for WebRender
    */
-  void SetPaintingForWebRender(bool aForWebRender) {
-    mIsPaintingForWebRender = true;
+  static void SetPaintingForWebRender(bool aForWebRender) {
+    sIsPaintingForWebRender = aForWebRender;
   }
-  bool IsPaintingForWebRender() const { return mIsPaintingForWebRender; }
+  static bool IsPaintingForWebRender() { return sIsPaintingForWebRender; }
   /**
    * Call this to prevent descending into subdocuments.
    */
@@ -2024,7 +2024,10 @@ class nsDisplayListBuilder {
   bool mIsPaintingToWindow;
   bool mAsyncPanZoomEnabled;
   bool mUseHighQualityScaling;
-  bool mIsPaintingForWebRender;
+  // This is static because it's used by nsLayoutUtils::ShouldSnapToGrid which
+  // is a static method that is very unwieldy to provide a builder instance
+  // object to.
+  static bool sIsPaintingForWebRender;
   bool mAncestorHasApzAwareEventHandler;
   // True when the first async-scrollable scroll frame for which we build a
   // display list has a display port. An async-scrollable scroll frame is one

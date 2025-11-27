@@ -781,6 +781,7 @@ void nsDisplayListBuilder::Linkifier::MaybeAppendLink(
 }
 
 uint32_t nsDisplayListBuilder::sPaintSequenceNumber(1);
+bool nsDisplayListBuilder::sIsPaintingForWebRender(false);
 
 nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
                                            nsDisplayListBuilderMode aMode,
@@ -819,7 +820,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mIsPaintingToWindow(false),
       mAsyncPanZoomEnabled(nsLayoutUtils::AsyncPanZoomEnabled(aReferenceFrame)),
       mUseHighQualityScaling(false),
-      mIsPaintingForWebRender(false),
       mAncestorHasApzAwareEventHandler(false),
       mHaveScrollableDisplayPort(false),
       mWindowDraggingAllowed(false),
