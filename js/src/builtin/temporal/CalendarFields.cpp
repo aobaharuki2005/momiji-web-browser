@@ -208,63 +208,59 @@ static mozilla::EnumSet<CalendarField> CalendarExtraFields(
 }
 
 /**
- * ToMonthCode ( argument )
+ * ParseMonthCode ( argument )
  */
 template <typename CharT>
-static mozilla::Maybe<MonthCodeField> ToMonthCode(
+static mozilla::Maybe<MonthCodeField> ParseMonthCode(
     mozilla::Range<const CharT> chars) {
   // Steps 1-2. (Not applicable)
 
-  // Step 3.
-  //
-  // Caller is responsible to ensure the string has the correct length.
-  MOZ_ASSERT(chars.length() >= 3 && chars.length() <= 4);
+  // Steps 3-6.
+  if (chars.length() < 3 || chars.length() > 4) {
+    return mozilla::Nothing();
+  }
 
-  // Steps 4 and 7.
-  //
   // Starts with capital letter 'M'. Leap months end with capital letter 'L'.
   bool isLeapMonth = chars.length() == 4;
   if (chars[0] != 'M' || (isLeapMonth && chars[3] != 'L')) {
     return mozilla::Nothing();
   }
 
-  // Steps 5-6.
-  //
   // Month numbers are ASCII digits.
   if (!mozilla::IsAsciiDigit(chars[1]) || !mozilla::IsAsciiDigit(chars[2])) {
     return mozilla::Nothing();
   }
 
-  // Steps 8-9.
+  // Steps 6-7.
   int32_t ordinal =
       AsciiDigitToNumber(chars[1]) * 10 + AsciiDigitToNumber(chars[2]);
 
-  // Step 10.
+  // Step 8.
   if (ordinal == 0 && !isLeapMonth) {
     return mozilla::Nothing();
   }
 
-  // Step 11.
+  // Step 9.
   return mozilla::Some(MonthCodeField{ordinal, isLeapMonth});
 }
 
 /**
- * ToMonthCode ( argument )
+ * ParseMonthCode ( argument )
  */
-static auto ToMonthCode(const JSLinearString* linear) {
+static auto ParseMonthCode(const JSLinearString* linear) {
   JS::AutoCheckCannotGC nogc;
 
   if (linear->hasLatin1Chars()) {
-    return ToMonthCode(linear->latin1Range(nogc));
+    return ParseMonthCode(linear->latin1Range(nogc));
   }
-  return ToMonthCode(linear->twoByteRange(nogc));
+  return ParseMonthCode(linear->twoByteRange(nogc));
 }
 
 /**
- * ToMonthCode ( argument )
+ * ParseMonthCode ( argument )
  */
-static bool ToMonthCode(JSContext* cx, Handle<Value> value,
-                        MonthCodeField* result) {
+static bool ParseMonthCode(JSContext* cx, Handle<Value> value,
+                           MonthCodeField* result) {
   auto reportInvalidMonthCode = [&](JSLinearString* monthCode) {
     if (auto code = QuoteString(cx, monthCode)) {
       JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -292,13 +288,8 @@ static bool ToMonthCode(JSContext* cx, Handle<Value> value,
     return false;
   }
 
-  // Step 3.
-  if (monthCodeStr->length() < 3 || monthCodeStr->length() > 4) {
-    return reportInvalidMonthCode(monthCodeStr);
-  }
-
-  // Steps 4-11.
-  auto parsed = ToMonthCode(monthCodeStr);
+  // Steps 3-9.
+  auto parsed = ParseMonthCode(monthCodeStr);
   if (!parsed) {
     return reportInvalidMonthCode(monthCodeStr);
   }
@@ -417,7 +408,7 @@ static bool PrepareCalendarFields(
         }
         case CalendarField::MonthCode: {
           MonthCodeField monthCode;
-          if (!ToMonthCode(cx, value, &monthCode)) {
+          if (!ParseMonthCode(cx, value, &monthCode)) {
             return false;
           }
           result.setMonthCode(monthCode);
