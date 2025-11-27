@@ -23,7 +23,6 @@
 #include "jit/CodeGenerator.h"
 #include "jit/CompileInfo.h"
 #include "jit/DominatorTree.h"
-#include "jit/EdgeCaseAnalysis.h"
 #include "jit/EffectiveAddressAnalysis.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/FoldLinearArithConstants.h"
@@ -1488,22 +1487,6 @@ bool OptimizeMIR(MIRGenerator* mir) {
     AssertGraphCoherency(graph);
 
     if (mir->shouldCancel("Remove fake loop predecessors")) {
-      return false;
-    }
-  }
-
-  // Passes after this point must not move instructions; these analyses
-  // depend on knowing the final order in which instructions will execute.
-
-  if (mir->optimizationInfo().edgeCaseAnalysisEnabled()) {
-    EdgeCaseAnalysis edgeCaseAnalysis(mir, graph);
-    if (!edgeCaseAnalysis.analyzeLate()) {
-      return false;
-    }
-    mir->spewPass("Edge Case Analysis (Late)");
-    AssertGraphCoherency(graph);
-
-    if (mir->shouldCancel("Edge Case Analysis (Late)")) {
       return false;
     }
   }
