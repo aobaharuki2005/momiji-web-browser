@@ -8185,9 +8185,16 @@ void LIRGenerator::visitWeakMapGetObject(MWeakMapGetObject* ins) {
 }
 
 void LIRGenerator::visitWeakMapHasObject(MWeakMapHasObject* ins) {
+#ifdef JS_CODEGEN_X86
   auto* lir = new (alloc()) LWeakMapHasObject(
       useRegisterAtStart(ins->weakMap()), useRegisterAtStart(ins->object()));
   defineReturn(lir, ins);
+#else
+  auto* lir = new (alloc()) LWeakMapHasObject(
+      useRegisterAtStart(ins->weakMap()), useRegisterAtStart(ins->object()),
+      temp(), temp(), temp(), temp(), temp(), temp(), temp());
+  define(lir, ins);
+#endif
 }
 
 void LIRGenerator::visitWeakSetHasObject(MWeakSetHasObject* ins) {

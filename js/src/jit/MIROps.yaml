@@ -3935,8 +3935,12 @@
   result_type: Boolean
   alias_set: custom
   movable: false
-  possibly_calls: true
   generate_lir: true
+#ifdef JS_CODEGEN_X86
+  possibly_calls: true
+#else
+  lir_temps: 7
+#endif
 
 - name: WeakSetHasObject
   operands:

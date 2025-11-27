@@ -22673,22 +22673,11 @@ void CodeGenerator::visitMapObjectSize(LMapObjectSize* ins) {
   masm.loadMapObjectSize(mapObj, output);
 }
 
-void CodeGenerator::visitWeakMapGetObject(LWeakMapGetObject* ins) {
-#ifndef JS_CODEGEN_X86
-  Register weakMap = ToRegister(ins->weakMap());
-  Register obj = ToRegister(ins->object());
-  Register hashTable = ToRegister(ins->temp0());
-  Register hashCode = ToRegister(ins->temp1());
-  Register scratch = ToRegister(ins->temp2());
-  Register scratch2 = ToRegister(ins->temp3());
-  Register scratch3 = ToRegister(ins->temp4());
-  Register scratch4 = ToRegister(ins->temp5());
-  Register scratch5 = ToRegister(ins->temp6());
-  ValueOperand output = ToOutValue(ins);
-
-  Label found, missing;
-
-  // Load hash map if it exists. If not, return `undefined`.
+void CodeGenerator::emitWeakMapLookupObject(
+    Register weakMap, Register obj, Register hashTable, Register hashCode,
+    Register scratch, Register scratch2, Register scratch3, Register scratch4,
+    Register scratch5, Label* found, Label* missing) {
+  // Load hash map if it exists. If not, jump to missing.
   Address mapAddr(weakMap,
                   NativeObject::getFixedSlotOffset(WeakMapObject::DataSlot));
   masm.branchTestUndefined(Assembler::Equal, mapAddr, missing);
@@ -22710,14 +22699,35 @@ void CodeGenerator::visitWeakMapGetObject(LWeakMapGetObject* ins) {
     Label noMatch;
     masm.fallibleUnboxObject(Address(entry, Entry::offsetOfKey()), scratch2,
                              &noMatch);
-    masm.branchPtr(Assembler::Equal, obj, scratch2, &found);
+    masm.branchPtr(Assembler::Equal, obj, scratch2, found);
     masm.bind(&noMatch);
   };
   masm.lookupMFBT<WeakMapObject::Map>(hashTable, hashCode, scratch, scratch2,
-                                      scratch3, scratch4, scratch5, &missing,
+                                      scratch3, scratch4, scratch5, missing,
                                       matchEntry);
+}
+
+void CodeGenerator::visitWeakMapGetObject(LWeakMapGetObject* ins) {
+#ifndef JS_CODEGEN_X86
+  Register weakMap = ToRegister(ins->weakMap());
+  Register obj = ToRegister(ins->object());
+  Register hashTable = ToRegister(ins->temp0());
+  Register hashCode = ToRegister(ins->temp1());
+  Register scratch = ToRegister(ins->temp2());
+  Register scratch2 = ToRegister(ins->temp3());
+  Register scratch3 = ToRegister(ins->temp4());
+  Register scratch4 = ToRegister(ins->temp5());
+  Register scratch5 = ToRegister(ins->temp6());
+  ValueOperand output = ToOutValue(ins);
+
+  Label found, missing;
+
+  emitWeakMapLookupObject(weakMap, obj, hashTable, hashCode, scratch, scratch2,
+                          scratch3, scratch4, scratch5, &found, &missing);
+
   masm.bind(&found);
 
+  using Entry = WeakMapObject::Map::Entry;
   masm.loadValue(Address(scratch, Entry::offsetOfValue()), output);
 
   auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
@@ -22775,6 +22785,32 @@ void CodeGenerator::visitWeakMapGetObject(LWeakMapGetObject* ins) {
 }
 
 void CodeGenerator::visitWeakMapHasObject(LWeakMapHasObject* ins) {
+#ifndef JS_CODEGEN_X86
+  Register weakMap = ToRegister(ins->weakMap());
+  Register obj = ToRegister(ins->object());
+  Register hashTable = ToRegister(ins->temp0());
+  Register hashCode = ToRegister(ins->temp1());
+  Register scratch = ToRegister(ins->temp2());
+  Register scratch2 = ToRegister(ins->temp3());
+  Register scratch3 = ToRegister(ins->temp4());
+  Register scratch4 = ToRegister(ins->temp5());
+  Register scratch5 = ToRegister(ins->temp6());
+  Register output = ToRegister(ins->output());
+
+  Label found, missing, done;
+
+  emitWeakMapLookupObject(weakMap, obj, hashTable, hashCode, scratch, scratch2,
+                          scratch3, scratch4, scratch5, &found, &missing);
+
+  masm.bind(&found);
+  masm.move32(Imm32(1), output);
+  masm.jump(&done);
+
+  masm.bind(&missing);
+  masm.move32(Imm32(0), output);
+  masm.bind(&done);
+#else
+  // x86 doesn't have enough registers, so we call into the VM.
   Register weakMap = ToRegister(ins->weakMap());
   Register obj = ToRegister(ins->object());
   Register output = ToRegister(ins->output());
@@ -22785,6 +22821,7 @@ void CodeGenerator::visitWeakMapHasObject(LWeakMapHasObject* ins) {
   masm.passABIArg(obj);
   masm.callWithABI<Fn, js::WeakMapObject::hasObject>();
   masm.storeCallBoolResult(output);
+#endif
 }
 
 void CodeGenerator::visitWeakSetHasObject(LWeakSetHasObject* ins) {
