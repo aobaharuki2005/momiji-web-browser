@@ -312,11 +312,13 @@ bool wasm::IsPlausibleStackMapKey(const uint8_t* nextPC) {
   // TODO(loong64): Implement IsValidStackMapKey.
   return true;
 #  elif defined(JS_CODEGEN_RISCV64)
-  const uint32_t* insn = (const uint32_t*)nextPC;
+  const uint32_t* insn = reinterpret_cast<const uint32_t*>(nextPC);
   return (((uintptr_t(insn) & 3) == 0) &&
           ((insn[-1] == 0x00006037 && insn[-2] == 0x00100073) ||  // break;
-           ((insn[-1] & kBaseOpcodeMask) == JALR) ||
-           ((insn[-1] & kBaseOpcodeMask) == JAL) ||
+           ((insn[-1] & kBaseOpcodeMask) == JALR) ||              // jalr
+           ((insn[-1] & kBaseOpcodeMask) == JAL) ||               // jal
+           ((insn[-2] & kBaseOpcodeMask) == JAL &&
+            insn[-1] == 0x00000013 /* addi zero, zero, 0 */) ||  // jal; nop
            (insn[-1] == 0x00100073 &&
             (insn[-2] & kITypeMask) == RO_CSRRWI)));  // wasm trap
 #  else

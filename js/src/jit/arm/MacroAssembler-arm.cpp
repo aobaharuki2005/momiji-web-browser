@@ -4426,9 +4426,9 @@ CodeOffset MacroAssembler::call(wasm::SymbolicAddress imm) {
   return call(CallReg);
 }
 
-void MacroAssembler::call(const Address& addr) {
+CodeOffset MacroAssembler::call(const Address& addr) {
   loadPtr(addr, CallReg);
-  call(CallReg);
+  return call(CallReg);
 }
 
 void MacroAssembler::call(JitCode* c) {
