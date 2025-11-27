@@ -58,6 +58,28 @@ function waitForSnapshotCount(histogram, expectedCount) {
   }, `Collected value should become ${expectedCount}.`);
 }
 
+/**
+ * Test close time probe histogram accumulation.
+ *
+ * @param animate (Boolean)
+ *        Whether or not the tab is expected to animate on close.
+ */
+async function testCloseTimeProbe(animate) {
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
+  await BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
+
+  gAnimHistogram.clear();
+  gNoAnimHistogram.clear();
+
+  BrowserTestUtils.removeTab(tab, { animate });
+
+  await waitForSnapshotCount(gAnimHistogram, animate ? 1 : 0);
+  assertCount(gNoAnimHistogram.snapshot(), animate ? 0 : 1);
+
+  gAnimHistogram.clear();
+  gNoAnimHistogram.clear();
+}
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["test.wait300msAfterTabSwitch", true]],
@@ -80,19 +102,7 @@ add_setup(async function () {
  * close animation.
  */
 add_task(async function test_close_time_anim_probe() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  await BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
-
-  gAnimHistogram.clear();
-  gNoAnimHistogram.clear();
-
-  BrowserTestUtils.removeTab(tab, { animate: true });
-
-  await waitForSnapshotCount(gAnimHistogram, 1);
-  assertCount(gNoAnimHistogram.snapshot(), 0);
-
-  gAnimHistogram.clear();
-  gNoAnimHistogram.clear();
+  await testCloseTimeProbe(true);
 });
 
 /**
@@ -100,17 +110,5 @@ add_task(async function test_close_time_anim_probe() {
  * tab close animation.
  */
 add_task(async function test_close_time_no_anim_probe() {
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
-  await BrowserTestUtils.waitForCondition(() => tab._fullyOpen);
-
-  gAnimHistogram.clear();
-  gNoAnimHistogram.clear();
-
-  BrowserTestUtils.removeTab(tab, { animate: false });
-
-  await waitForSnapshotCount(gNoAnimHistogram, 1);
-  assertCount(gAnimHistogram.snapshot(), 0);
-
-  gAnimHistogram.clear();
-  gNoAnimHistogram.clear();
+  await testCloseTimeProbe(false);
 });

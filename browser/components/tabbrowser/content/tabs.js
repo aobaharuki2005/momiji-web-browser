@@ -411,7 +411,8 @@
      * @param {TransitionEvent} event
      */
     on_transitionend(event) {
-      if (event.propertyName != "max-width") {
+      let propertyName = this.verticalMode ? "max-height" : "max-width";
+      if (event.propertyName != propertyName) {
         return;
       }
 
