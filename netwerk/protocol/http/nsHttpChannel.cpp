@@ -136,6 +136,8 @@
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/OpaqueResponseUtils.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
+#include "mozilla/net/URLPatternGlue.h"
+#include "mozilla/net/urlpattern_glue.h"
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/dom/SecFetch.h"
@@ -6192,14 +6194,26 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
       return false;
     }
 
+    // Verify if the matchVal has regexp groups.  If so, reject it
+    UrlpPattern pattern;
+    UrlpOptions options;
+    if (!urlp_parse_pattern_from_string(&matchVal, &mSpec, options, &pattern)) {
+      LOG_DICTIONARIES(
+          ("Failed to parse dictionary pattern %s", matchVal.get()));
+      return false;
+    }
+    if (urlp_get_has_regexp_groups(pattern)) {
+      LOG_DICTIONARIES(("Pattern %s has regexp groups", matchVal.get()));
+      return false;
+    }
+
     nsCString hash;
     // Available now for use
     RefPtr<DictionaryCache> dicts(DictionaryCache::GetInstance());
     LOG_DICTIONARIES(
         ("Adding DictionaryCache entry for %s: key %s, matchval %s, id=%s, "
          "match-dest[0]=%s, type=%s",
-         mURI->GetSpecOrDefault().get(), key.get(), matchVal.get(),
-         matchIdVal.get(),
+         mSpec.get(), key.get(), matchVal.get(), matchIdVal.get(),
          matchDestItems.Length() > 0 ? matchDestItems[0].get() : "<none>",
          typeVal.get()));
 
