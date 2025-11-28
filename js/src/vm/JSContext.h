@@ -166,7 +166,7 @@ struct MicroTaskQueueElement {
   void trace(JSTracer* trc);
 
  private:
-  js::HeapPtr<JS::Value> value;
+  JS::Value value;
 };
 
 // Use TempAllocPolicy to report OOM
@@ -1070,7 +1070,7 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   bool hasExecutionTracer() { return false; }
 #endif
 
-  js::UniquePtr<js::MicroTaskQueueSet> microTaskQueues;
+  JS::PersistentRooted<js::UniquePtr<js::MicroTaskQueueSet>> microTaskQueues;
 }; /* struct JSContext */
 
 inline JSContext* JSRuntime::mainContextFromOwnThread() {
