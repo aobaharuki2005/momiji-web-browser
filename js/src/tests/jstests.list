@@ -1028,17 +1028,18 @@ skip-if(release_or_beta) script non262/Temporal/Intl/defaults.js
 skip-if(release_or_beta) script test262/staging/Intl402/Temporal/old/non-iso-calendars-islamic-umalqura.js
 skip-if(release_or_beta) script test262/staging/Intl402/Temporal/old/islamic-calendars-islamic-umalqura.js
 skip-if(release_or_beta) script test262/intl402/Temporal/PlainMonthDay/from/constrain-to-leap-day.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/constrain-day-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/basic-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/constrain-day-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/ZonedDateTime/prototype/add/basic-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/PlainDate/prototype/subtract/constrain-day-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/PlainDate/prototype/subtract/basic-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/PlainDate/prototype/add/basic-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/PlainDate/prototype/add/constrain-day-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/constrain-day-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/PlainDateTime/prototype/subtract/basic-islamic-umalqura.js
-skip-if(release_or_beta) skip script test262/intl402/Temporal/PlainDateTime/prototype/add/constrain-day-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/constrain-day-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/ZonedDateTime/prototype/subtract/basic-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/ZonedDateTime/prototype/add/constrain-day-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/ZonedDateTime/prototype/add/basic-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/PlainDate/prototype/subtract/constrain-day-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/PlainDate/prototype/subtract/basic-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/PlainDate/prototype/add/basic-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/PlainDate/prototype/add/constrain-day-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/PlainDateTime/prototype/subtract/constrain-day-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/PlainDateTime/prototype/subtract/basic-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/PlainDateTime/prototype/add/constrain-day-islamic-umalqura.js
+skip-if(release_or_beta) script test262/intl402/Temporal/PlainDateTime/prototype/add/basic-islamic-umalqura.js
 
 # Fails for "ethiopic", see <https://unicode-org.atlassian.net/browse/CLDR-18739>.
 skip script test262/staging/sm/Temporal/PlainDate/non-positive-era-year.js
