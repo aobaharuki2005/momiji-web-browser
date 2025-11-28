@@ -4083,11 +4083,13 @@
 # temporary storage initialization?
 # When enabled, the QuotaManager will automatically clear non-persisted
 # origins that have zero quota-charged usage during final steps of temporary
-# storage initialization. This removes directories and files belonging to
-# origins that do not store any real data but still consume resources through
-# bookkeeping structures on disk. The feature helps reduce storage bloat and
-# improve initialization performance, especially on long-lived profiles with a
-# large number of unused origins.
+# storage initialization. Recently used origins (within the last week) are
+# excluded, and clearing is performed in batches to avoid large I/O spikes
+# when many origins need to be removed. This removes directories and files
+# belonging to origins that do not store any real data but still consume
+# resources through bookkeeping structures on disk. The feature helps reduce
+# storage bloat and improve initialization performance, especially on
+# long-lived profiles with a large number of unused origins.
 - name: dom.quotaManager.temporaryStorage.clearNonPersistedZeroUsageOrigins
   type: RelaxedAtomicBool
   value: false

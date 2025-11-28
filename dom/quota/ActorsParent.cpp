@@ -8077,9 +8077,41 @@ void QuotaManager::ClearOrigins(
 void QuotaManager::CleanupTemporaryStorage() {
   AssertIsOnIOThread();
 
-  // XXX Maybe clear non-persistent zero usage origins here. Ideally the
-  // clearing would be done asynchronously by storage maintenance service once
-  // available.
+  if (StaticPrefs::
+          dom_quotaManager_temporaryStorage_clearNonPersistedZeroUsageOrigins()) {
+    // XXX Ideally the clearing would be done asynchronously by storage
+    // maintenance service once available.
+
+    // We hardcode a 7-day cutoff for "recently used" origins. Even if such
+    // origins have zero usage, skipping them avoids the performance penalty
+    // of repeatedly recreating origin directories and metadata files. The
+    // value is fixed for now to keep things simple, but could be made
+    // configurable in the future if needed.
+    static_assert(aDefaultCutoffAccessTime == kSecPerWeek * PR_USEC_PER_SEC);
+
+    // Calculate cutoff time (one week ago). PR_Now() returns microseconds
+    // since epoch, so this cannot realistically overflow.
+    const int64_t cutoffTime = PR_Now() - aDefaultCutoffAccessTime;
+
+#ifdef DEBUG
+    // Verify that origins being cleared meet our criteria:
+    // non-persisted, zero usage, and outside cutoff window
+    auto checker = [&self = *this, cutoffTime](const auto& doomedOriginInfo) {
+      MutexAutoLock lock(self.mQuotaMutex);
+      MOZ_ASSERT(!doomedOriginInfo->LockedPersisted());
+      MOZ_ASSERT(doomedOriginInfo->LockedUsage() == 0);
+      MOZ_ASSERT(doomedOriginInfo->LockedAccessTime() < cutoffTime);
+    };
+#else
+    auto checker = [](const auto&) {};
+#endif
+
+    const size_t maxOriginsToClear = StaticPrefs::
+        dom_quotaManager_temporaryStorage_maxOriginsToClearDuringCleanup();
+
+    ClearOrigins(GetOriginInfosWithZeroUsage(Some(cutoffTime)),
+                 std::move(checker), Some(maxOriginsToClear));
+  }
 
   // Evicting origins that exceed their group limit also affects the global
   // temporary storage usage, so these steps have to be taken sequentially.
