@@ -1316,6 +1316,10 @@ void nsPlainTextSerializer::PerformWrapAndOutputCompleteLines(
     aLine.mContent.Truncate(goodSpace);
     // Append the line to the output.
     if (!aLine.mContent.IsEmpty()) {
+      // Trim _one_ potential trailing newline.
+      if (aLine.mContent.Last() == '\n') {
+        aLine.mContent.Truncate(goodSpace - 1);
+      }
       if (!aSettings.HasFlag(nsIDocumentEncoder::OutputPreformatted)) {
         aLine.mContent.Trim(" ", false, true, false);
       }
