@@ -106,6 +106,8 @@ skip-if = [
 
 ["test_get_features.js"]
 
+["test_marker_jit_sourceindex.js"]
+
 ["test_merged_stacks.js"]
 skip-if = [
   "asan",
