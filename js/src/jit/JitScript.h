@@ -214,7 +214,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray<ICScript> {
   bool traceWeak(JSTracer* trc);
 
 #ifdef DEBUG
-  mozilla::HashNumber hash();
+  mozilla::HashNumber hash(JSContext* cx);
 #endif
 
  private:

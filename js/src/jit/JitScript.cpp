@@ -982,7 +982,7 @@ JitScript* ICScript::outerJitScript() {
 // 5. The hash will change if the set of shapes stored in ShapeListSnapshot
 //    is changed by stub folding or GC (the shapes in ShapeListObject are weak
 //    pointers).
-HashNumber ICScript::hash() {
+HashNumber ICScript::hash(JSContext* cx) {
   HashNumber h = 0;
   for (size_t i = 0; i < numICEntries(); i++) {
     ICStub* stub = icEntry(i).firstStub();
@@ -1010,6 +1010,11 @@ HashNumber ICScript::hash() {
                 Shape* shape = shapesObject->getUnbarriered(i);
                 h = mozilla::AddToHash(h, shape);
               }
+              // Also include the GC number to handle the case where we bail
+              // out, add an additional shape, remove this new shape during GC,
+              // and then recompile with the current set of shapes.
+              // See bug 2002447.
+              h = mozilla::AddToHash(h, cx->runtime()->gc.majorGCCount());
             }
             break;
           }
