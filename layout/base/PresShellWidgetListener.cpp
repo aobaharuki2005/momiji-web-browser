@@ -3,26 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsView.h"
+#include "PresShellWidgetListener.h"
 
-#include "nsDeviceContext.h"
-#include "mozilla/BasicEvents.h"
-#include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/Poison.h"
-#include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs_layout.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/BrowserParent.h"
-#include "mozilla/widget/Screen.h"
-#include "nsIWidget.h"
-#include "nsIFrame.h"
-#include "nsXULPopupManager.h"
-#include "nsIWidgetListener.h"
-#include "nsContentUtils.h"  // for nsAutoScriptBlocker
-#include "nsDocShell.h"
-#include "nsLayoutUtils.h"
 #include "WindowRenderer.h"
+#include "mozilla/BasicEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StartupTimeline.h"
+#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/dom/BrowserParent.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/widget/Screen.h"
+#include "nsContentUtils.h"  // for nsAutoScriptBlocker
+#include "nsDeviceContext.h"
+#include "nsDocShell.h"
+#include "nsIFrame.h"
+#include "nsIWidget.h"
+#include "nsIWidgetListener.h"
+#include "nsLayoutUtils.h"
+#include "nsXULPopupManager.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -43,12 +41,17 @@ static void MaybeUpdateLastUserEventTime(WidgetGUIEvent* aEvent) {
   }
 }
 
-uint32_t nsView::GetLastUserEventTime() { return gLastUserEventTime; }
+uint32_t PresShellWidgetListener::GetLastUserEventTime() {
+  return gLastUserEventTime;
+}
 
-nsView::nsView(PresShell* aPs) : mPresShell(aPs) { MOZ_COUNT_CTOR(nsView); }
+PresShellWidgetListener::PresShellWidgetListener(PresShell* aPs)
+    : mPresShell(aPs) {
+  MOZ_COUNT_CTOR(PresShellWidgetListener);
+}
 
-nsView::~nsView() {
-  MOZ_COUNT_DTOR(nsView);
+PresShellWidgetListener::~PresShellWidgetListener() {
+  MOZ_COUNT_DTOR(PresShellWidgetListener);
 
   if (mPreviousWindow) {
     mPreviousWindow->SetPreviouslyAttachedWidgetListener(nullptr);
@@ -58,39 +61,25 @@ nsView::~nsView() {
   DetachWidget();
 }
 
-void nsView::DetachWidget() {
+void PresShellWidgetListener::DetachWidget() {
   if (mWindow) {
-    // If we are not attached to a base window, we're going to tear down our
-    // widget here. However, if we're attached to somebody elses widget, we
-    // want to leave the widget alone: don't reset the client data or call
-    // Destroy. Just clear our event view ptr and free our reference to it.
     mWindow->SetAttachedWidgetListener(nullptr);
     mWindow = nullptr;
   }
 }
 
-void nsView::Destroy() {
-  this->~nsView();
-  mozWritePoison(this, sizeof(*this));
-  nsView::operator delete(this);
-}
-
 // Attach to a top level widget and start receiving mirrored events.
-void nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
+void PresShellWidgetListener::AttachToTopLevelWidget(nsIWidget* aWidget) {
   MOZ_ASSERT(aWidget, "null widget ptr");
-#ifdef DEBUG
-  nsIWidgetListener* parentListener = aWidget->GetWidgetListener();
-  MOZ_ASSERT(!parentListener || parentListener->GetAppWindow(),
+  MOZ_ASSERT(!aWidget->GetWidgetListener() ||
+                 aWidget->GetWidgetListener()->GetAppWindow(),
              "Expect a top level widget");
-  MOZ_ASSERT(!parentListener || !parentListener->GetAsMenuPopupFrame(),
-             "Expect a top level widget");
-#endif
 
   /// XXXjimm This is a temporary workaround to an issue w/document
   // viewer (bug 513162).
   if (nsIWidgetListener* listener = aWidget->GetAttachedWidgetListener()) {
-    if (nsView* oldView = listener->GetView()) {
-      oldView->DetachFromTopLevelWidget();
+    if (auto* old = listener->GetAsPresShellWidgetListener()) {
+      old->DetachFromTopLevelWidget();
     }
   }
 
@@ -102,47 +91,30 @@ void nsView::AttachToTopLevelWidget(nsIWidget* aWidget) {
   }
 }
 
-// Detach this view from an attached widget.
-void nsView::DetachFromTopLevelWidget() {
+// Detach us from an attached widget.
+void PresShellWidgetListener::DetachFromTopLevelWidget() {
   MOZ_ASSERT(mWindow, "null mWindow for DetachFromTopLevelWidget!");
 
   mWindow->SetAttachedWidgetListener(nullptr);
   if (nsIWidgetListener* listener =
           mWindow->GetPreviouslyAttachedWidgetListener()) {
-    if (nsView* view = listener->GetView()) {
+    if (auto* previousListener = listener->GetAsPresShellWidgetListener()) {
       // Ensure the listener doesn't think it's being used anymore
-      view->mPreviousWindow = nullptr;
+      previousListener->mPreviousWindow = nullptr;
     }
   }
 
-  // If the new view's frame is paint suppressed then the window
+  // If the new pres shell is paint suppressed then the window
   // will want to use us instead until that's done
   mWindow->SetPreviouslyAttachedWidgetListener(this);
-
-  mPreviousWindow = mWindow;
-  mWindow = nullptr;
+  mPreviousWindow = std::move(mWindow);
+  MOZ_ASSERT(!mWindow);
 }
 
-#ifdef DEBUG
-void nsView::List(FILE* out, int32_t aIndent) const {
-  int32_t i;
-  for (i = aIndent; --i >= 0;) fputs("  ", out);
-  fprintf(out, "%p ", (void*)this);
-  if (mWindow) {
-    nsrefcnt widgetRefCnt = mWindow.get()->AddRef() - 1;
-    mWindow.get()->Release();
-    fprintf(out, "(widget=%p[%" PRIuPTR "] pos=%s) ", (void*)mWindow,
-            widgetRefCnt, ToString(mWindow->GetBounds()).c_str());
-  }
-  for (i = aIndent; --i >= 0;) fputs("  ", out);
-  fputs(">\n", out);
-}
-#endif  // DEBUG
+PresShell* PresShellWidgetListener::GetPresShell() { return mPresShell; }
 
-PresShell* nsView::GetPresShell() { return mPresShell; }
-
-bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
-                           int32_t aHeight) {
+bool PresShellWidgetListener::WindowResized(nsIWidget* aWidget, int32_t aWidth,
+                                            int32_t aHeight) {
   RefPtr<PresShell> ps = GetPresShell();
   if (!ps) {
     return false;
@@ -174,8 +146,7 @@ bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
   return true;
 }
 
-#ifdef MOZ_WIDGET_ANDROID
-void nsView::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
+void PresShellWidgetListener::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
   CallOnAllRemoteChildren(
@@ -185,7 +156,7 @@ void nsView::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
       });
 }
 
-void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
+void PresShellWidgetListener::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
   CallOnAllRemoteChildren(
@@ -200,9 +171,10 @@ void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
       });
 }
 
-void nsView::KeyboardHeightChanged(ScreenIntCoord aHeight) {
+void PresShellWidgetListener::KeyboardHeightChanged(ScreenIntCoord aHeight) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
+#ifdef MOZ_WIDGET_ANDROID
   CallOnAllRemoteChildren(
       [aHeight](dom::BrowserParent* aBrowserParent) -> CallState {
         // Skip background tabs.
@@ -213,20 +185,22 @@ void nsView::KeyboardHeightChanged(ScreenIntCoord aHeight) {
         aBrowserParent->KeyboardHeightChanged(aHeight);
         return CallState::Stop;
       });
+#endif
 }
 
-void nsView::AndroidPipModeChanged(bool aPipMode) {
+void PresShellWidgetListener::AndroidPipModeChanged(bool aPipMode) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
+#ifdef MOZ_WIDGET_ANDROID
   CallOnAllRemoteChildren(
       [aPipMode](dom::BrowserParent* aBrowserParent) -> CallState {
         aBrowserParent->AndroidPipModeChanged(aPipMode);
         return CallState::Continue;
       });
-}
 #endif
+}
 
-void nsView::PaintWindow(nsIWidget* aWidget) {
+void PresShellWidgetListener::PaintWindow(nsIWidget* aWidget) {
   RefPtr ps = GetPresShell();
   if (!ps) {
     return;
@@ -242,9 +216,9 @@ void nsView::PaintWindow(nsIWidget* aWidget) {
   ps->DidPaintWindow();
 }
 
-void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
-                                const TimeStamp& aCompositeStart,
-                                const TimeStamp& aCompositeEnd) {
+void PresShellWidgetListener::DidCompositeWindow(
+    mozilla::layers::TransactionId aTransactionId,
+    const TimeStamp& aCompositeStart, const TimeStamp& aCompositeEnd) {
   PresShell* presShell = GetPresShell();
   if (!presShell) {
     return;
@@ -262,7 +236,7 @@ void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                                        aCompositeEnd);
 }
 
-nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent) {
+nsEventStatus PresShellWidgetListener::HandleEvent(WidgetGUIEvent* aEvent) {
   MOZ_ASSERT(aEvent->mWidget, "null widget ptr");
 
   nsEventStatus result = nsEventStatus_eIgnore;
@@ -275,7 +249,7 @@ nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent) {
   return result;
 }
 
-void nsView::SafeAreaInsetsChanged(
+void PresShellWidgetListener::SafeAreaInsetsChanged(
     const LayoutDeviceIntMargin& aSafeAreaInsets) {
   PresShell* presShell = GetPresShell();
   if (!presShell) {
@@ -301,12 +275,12 @@ void nsView::SafeAreaInsetsChanged(
       });
 }
 
-bool nsView::IsPrimaryFramePaintSuppressed() const {
+bool PresShellWidgetListener::IsPrimaryFramePaintSuppressed() const {
   return StaticPrefs::layout_show_previous_page() && mPresShell &&
          mPresShell->IsPaintingSuppressed();
 }
 
-void nsView::CallOnAllRemoteChildren(
+void PresShellWidgetListener::CallOnAllRemoteChildren(
     const std::function<CallState(dom::BrowserParent*)>& aCallback) {
   PresShell* presShell = GetPresShell();
   if (!presShell) {

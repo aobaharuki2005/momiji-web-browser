@@ -59,7 +59,6 @@
 #include "nsPresContext.h"
 #include "nsIFrame.h"
 #include "nsTextFrame.h"
-#include "nsView.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsStyleStructInlines.h"
 #include "nsFocusManager.h"

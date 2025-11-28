@@ -63,7 +63,6 @@
 #include "nsStyleStructInlines.h"
 #include "nsTransitionManager.h"
 #include "nsUnicharUtils.h"
-#include "nsView.h"
 #include "nsWidgetsCID.h"
 #include "nsXULPopupManager.h"
 

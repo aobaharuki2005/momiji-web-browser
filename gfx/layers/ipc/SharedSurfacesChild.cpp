@@ -17,7 +17,6 @@
 #include "mozilla/StaticPrefs_image.h"
 #include "mozilla/PresShell.h"
 #include "nsRefreshDriver.h"
-#include "nsView.h"
 
 namespace mozilla {
 namespace layers {

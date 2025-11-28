@@ -21,6 +21,7 @@ class nsMenuPopupFrame;
 
 namespace mozilla {
 class PresShell;
+class PresShellWidgetListener;
 }  // namespace mozilla
 
 /**
@@ -42,8 +43,10 @@ class nsIWidgetListener {
    */
   virtual nsIAppWindow* GetAppWindow() { return nullptr; }
 
-  /** If this listener is for a view, return it. */
-  virtual nsView* GetView() { return nullptr; }
+  /** If this listener is for a pres shell, return it. */
+  virtual mozilla::PresShellWidgetListener* GetAsPresShellWidgetListener() {
+    return nullptr;
+  }
 
   /** If this listener is for an nsMenuPopupFrame, return it. */
   virtual nsMenuPopupFrame* GetAsMenuPopupFrame() { return nullptr; }
@@ -78,11 +81,9 @@ class nsIWidgetListener {
   virtual void DynamicToolbarMaxHeightChanged(mozilla::ScreenIntCoord aHeight) {
   }
   virtual void DynamicToolbarOffsetChanged(mozilla::ScreenIntCoord aOffset) {}
-#ifdef MOZ_WIDGET_ANDROID
   /** Called when the software keyboard appears/disappears. */
   virtual void KeyboardHeightChanged(mozilla::ScreenIntCoord aHeight) {}
   virtual void AndroidPipModeChanged(bool) {}
-#endif
 
   /** Called when the macOS titlebar is shown while in fullscreen. */
   virtual void MacFullscreenMenubarOverlapChanged(

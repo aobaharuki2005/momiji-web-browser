@@ -77,7 +77,6 @@ class nsRefreshDriver;
 class nsRegion;
 class nsTextFrame;
 class nsSubDocumentFrame;
-class nsView;
 class nsWindowSizes;
 class WeakFrame;
 class ZoomConstraintsClient;
@@ -95,6 +94,7 @@ class GeckoMVMContext;
 class nsDisplayList;
 class nsDisplayListBuilder;
 class OverflowChangedTracker;
+class PresShellWidgetListener;
 class ProfileChunkedBuffer;
 class ScrollContainerFrame;
 class StyleSheet;
@@ -311,7 +311,9 @@ class PresShell final : public nsStubDocumentObserver,
    */
   PresShell* GetRootPresShell() const;
 
-  nsView* GetRootView() const { return mRootView.get(); }
+  PresShellWidgetListener* GetWidgetListener() const {
+    return mWidgetListener.get();
+  }
 
   nsRefreshDriver* GetRefreshDriver() const;
 
@@ -3204,8 +3206,7 @@ class PresShell final : public nsStubDocumentObserver,
   MOZ_KNOWN_LIVE RefPtr<nsPresContext> const mPresContext;
   UniquePtr<nsCSSFrameConstructor> mFrameConstructor;
   // The object responsible for listening to widget events.
-  // TODO(emilio): Find a better name or remove altogether.
-  UniquePtr<nsView> mRootView;
+  UniquePtr<PresShellWidgetListener> mWidgetListener;
   RefPtr<nsFrameSelection> mSelection;
   // The frame selection that last took focus on this shell, which we need to
   // hide if we focus another selection. May or may not be the same as

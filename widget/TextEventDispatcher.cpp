@@ -9,13 +9,10 @@
 #include "PuppetWidget.h"
 #include "TextEvents.h"
 
-#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "nsCharTraits.h"
 #include "nsIFrame.h"
 #include "nsIWidget.h"
-#include "nsPIDOMWindow.h"
-#include "nsView.h"
 
 namespace mozilla {
 namespace widget {

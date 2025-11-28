@@ -8,22 +8,18 @@
 
 #include "gfxContext.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/PresShellWidgetListener.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
-#include "mozilla/StaticPrefs_print.h"
 #include "mozilla/dom/AutoSuppressEventHandlingAndSuspend.h"
 #include "mozilla/dom/BeforeUnloadEvent.h"
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/FragmentDirective.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/widget/Screen.h"
 #include "nsCOMPtr.h"
-#include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsDeviceContext.h"
 #include "nsFrameSelection.h"
@@ -34,10 +30,8 @@
 #include "nsIFrame.h"
 #include "nsIScreen.h"
 #include "nsISelectionListener.h"
-#include "nsIWritablePropertyBag2.h"
 #include "nsPresContext.h"
 #include "nsReadableUtils.h"
-#include "nsString.h"
 #include "nsStubMutationObserver.h"
 #include "nsSubDocumentFrame.h"
 #include "nsThreadUtils.h"
@@ -89,7 +83,6 @@
 #include "nsPageSequenceFrame.h"
 #include "nsSandboxFlags.h"
 #include "nsStyleSheetService.h"
-#include "nsView.h"
 #include "nsXULPopupManager.h"
 
 //--------------------------
@@ -2136,9 +2129,9 @@ nsDocumentViewer::ClearHistoryEntry() {
 
 void nsDocumentViewer::DetachFromTopLevelWidget() {
   if (mPresShell) {
-    nsView* oldView = mPresShell->GetRootView();
-    if (oldView && oldView->HasWidget()) {
-      oldView->DetachFromTopLevelWidget();
+    if (auto* listener = mPresShell->GetWidgetListener();
+        listener && listener->HasWidget()) {
+      listener->DetachFromTopLevelWidget();
     }
   }
 }
@@ -2146,8 +2139,8 @@ void nsDocumentViewer::DetachFromTopLevelWidget() {
 void nsDocumentViewer::AttachToTopLevelWidget() {
   DetachFromTopLevelWidget();
   if (mPresShell && mParentWidget) {
-    nsView* view = mPresShell->GetRootView();
-    view->AttachToTopLevelWidget(mParentWidget);
+    auto* listener = mPresShell->GetWidgetListener();
+    listener->AttachToTopLevelWidget(mParentWidget);
     mWindow = mParentWidget;
   }
 }

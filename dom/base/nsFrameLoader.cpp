@@ -983,7 +983,6 @@ bool nsFrameLoader::Show(nsSubDocumentFrame* aFrame) {
       }
     }
     aFrame->EnsureEmbeddingPresShell(presShell);
-    MOZ_DIAGNOSTIC_ASSERT(presShell->GetRootView());
   }
 
   RefPtr<nsDocShell> baseWindow = GetDocShell();

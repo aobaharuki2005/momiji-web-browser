@@ -13,7 +13,6 @@
 #include "nsCOMPtr.h"
 #include "nsObjCExceptions.h"
 #include "nsIFrame.h"
-#include "nsView.h"
 #include "nsIWidget.h"
 
 using namespace mozilla;
