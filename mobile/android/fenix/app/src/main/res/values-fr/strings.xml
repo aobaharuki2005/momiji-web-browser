@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">%s privé</string>
@@ -1058,6 +1065,8 @@
   <string name="restart_warning_dialog_title">Changer l’icône de l’application\u00a0?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Il se peut que l’application se ferme. Il vous suffit alors d’appuyer sur votre toute nouvelle icône pour relancer %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Modifier l’icône supprimera tous les sites et raccourcis que vous avez enregistrés sur votre écran d’accueil.\n\n%1$s risque de se fermer. Appuyez sur la nouvelle icône pour le rouvrir.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Changer l’icône</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2748,14 +2757,16 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Synchroniser les adresses entre plusieurs appareils</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Synchroniser les adresses</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Retour</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Ajouter une carte</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Précédent</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Modifier la carte</string>
   <!-- The header for the card number of a credit card -->
   <string name="credit_cards_card_number">Numéro de carte</string>
-  <!-- The header for the expiration date of a credit card -->
-  <string name="credit_cards_expiration_date">Date d’expiration</string>
   <!-- The label for the expiration date month of a credit card to be used by a11y services -->
   <string name="credit_cards_expiration_date_month">Mois d’expiration</string>
   <!-- The label for the expiration date year of a credit card to be used by a11y services -->

@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">私密 %s</string>
@@ -1052,14 +1059,20 @@
   <string name="alternative_app_icon_group_gradients">渐变</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">其他</string>
+  <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_featured">精选</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">更改应用图标？</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">应用可能会关闭。点按您挑选的崭新图标即可重新打开 %1$s。</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">更改图标将移除您保存到主屏幕的所有网站和快捷方式。 \n\n%1$s 可能会关闭，点按新图标即可重新打开。</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">更改图标</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">取消</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">更新应用图标失败。请移除现有的快捷方式，然后重试。</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -2350,6 +2363,8 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">修复严重网站问题（推荐）</string>
   <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">修复轻微网站问题</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">需配合修复严重问题功能使用。</string>
   <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_subheader">修复网站问题</string>
   <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
@@ -2742,14 +2757,16 @@
   <string name="preferences_addresses_sync_addresses_across_devices">跨设备同步地址</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">同步地址</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">返回</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">添加卡片</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">浏览上一页</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">编辑卡片</string>
   <!-- The header for the card number of a credit card -->
   <string name="credit_cards_card_number">卡号</string>
-  <!-- The header for the expiration date of a credit card -->
-  <string name="credit_cards_expiration_date">有效期</string>
   <!-- The label for the expiration date month of a credit card to be used by a11y services -->
   <string name="credit_cards_expiration_date_month">到期月份</string>
   <!-- The label for the expiration date year of a credit card to be used by a11y services -->
@@ -3871,6 +3888,8 @@
   <string name="settings_search_title">搜索设置</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
   <string name="content_description_settings_search_clear_search">清除搜索</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">浏览上一页</string>
   <!-- Message displayed when the search field in the Settings Search screen is empty -->
   <string name="settings_search_empty_query_placeholder">无近期搜索记录</string>
   <!-- Message when error happens with Settings Search -->
@@ -3881,6 +3900,8 @@
   <string name="settings_search_recent_searches_section_header">近期搜索结果</string>
   <!-- Message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_title">无结果</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">试试搜索其他关键词？</string>
   <!--
     Terms of use pop up prompt
 

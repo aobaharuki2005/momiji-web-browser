@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Поверителен %s</string>
@@ -1058,6 +1065,8 @@
   <string name="restart_warning_dialog_title">Промяна на иконата на приложението?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Приложението може да се затвори. Просто докоснете новата ни лъскава иконка, за да го отворите отново %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Смяната на иконата ще премахне всички сайтове и преки пътища, които сте запазили от началния екран. \u0020\u0020%1$s може да бъде затворено. Докоснете новата икона, за да я отворите отново.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Промяна на иконката</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -1731,7 +1740,7 @@
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Подобрена защита от проследяване може да блокира проследяващите скриптове, от които някои уебсайтове се нуждаят, за да работят правилно.</string>
   <!-- The button text for the preview report button to view a preview of the report. -->
-  <string name="webcompat_reporter_preview_report">Доклад за визуализация</string>
+  <string name="webcompat_reporter_preview_report">Доклад за предварителните прегледи</string>
   <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
   <string name="webcompat_reporter_preview_bottom_sheet_header">Преглед на доклад</string>
   <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
@@ -2748,14 +2757,16 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Синхронизиране на адреси между устройства</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Синхронизиране на адреси</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Назад</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Добавяне на карта</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Връщане назад</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Редактиране на карта</string>
   <!-- The header for the card number of a credit card -->
   <string name="credit_cards_card_number">Номер на карта</string>
-  <!-- The header for the expiration date of a credit card -->
-  <string name="credit_cards_expiration_date">Дата на валидност</string>
   <!-- The label for the expiration date month of a credit card to be used by a11y services -->
   <string name="credit_cards_expiration_date_month">Месец на валидност</string>
   <!-- The label for the expiration date year of a credit card to be used by a11y services -->
@@ -3666,9 +3677,9 @@
   <!-- The text field label for overriding current region. -->
   <string name="debug_drawer_override_current_region_label">Замяна на текущия регион</string>
   <!-- The title of the button for overriding home and current region. -->
-  <string name="debug_drawer_override_region">Заменяне на начало и текущ регион</string>
+  <string name="debug_drawer_override_region">Заменяне на адреса и текущия регион</string>
   <!-- The title of the button for overriding home region permanently. -->
-  <string name="debug_drawer_override_home_region_permanently">Заместване на началния регион за постоянно</string>
+  <string name="debug_drawer_override_home_region_permanently">Заменяне на началния регион за постоянно</string>
   <!--
     Add-ons debug tools
 

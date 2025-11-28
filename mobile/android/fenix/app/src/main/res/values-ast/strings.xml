@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">%s en privao</string>
@@ -1298,8 +1305,6 @@
   <string name="credit_cards_add_card">Amiestu d\'una tarxeta</string>
   <!-- The header for the card number of a credit card -->
   <string name="credit_cards_card_number">Númberu de la tarxeta</string>
-  <!-- The header for the expiration date of a credit card -->
-  <string name="credit_cards_expiration_date">Data de caducidá</string>
   <!-- The header for the name on the credit card -->
   <string name="credit_cards_name_on_card">Titular de la tarxeta</string>
   <!-- The text for the "Delete card" button for deleting a credit card -->

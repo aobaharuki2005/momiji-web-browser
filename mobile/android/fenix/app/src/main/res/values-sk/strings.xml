@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Súkromný %s</string>
@@ -1058,6 +1065,8 @@
   <string name="restart_warning_dialog_title">Zmeniť ikonu aplikácie?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Aplikácia sa môže zatvoriť. Stačí ťuknúť na novú lesklú ikonu a znova otvoriť %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Zmenou ikony odstránite všetky webové stránky a skratky, ktoré ste si uložili na domovskú obrazovku.\n\n%1$s sa môže zatvoriť. Ťuknutím na novú ikonu ho znova otvoríte.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Zmeniť ikonu</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2748,14 +2757,16 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Synchronizovať adresy naprieč zariadeniami</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Synchronizovať adresy</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Späť</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Pridať kartu</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Prejsť dozadu</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Upraviť kartu</string>
   <!-- The header for the card number of a credit card -->
   <string name="credit_cards_card_number">Číslo karty</string>
-  <!-- The header for the expiration date of a credit card -->
-  <string name="credit_cards_expiration_date">Dátum vypršania platnosti</string>
   <!-- The label for the expiration date month of a credit card to be used by a11y services -->
   <string name="credit_cards_expiration_date_month">Dátum vypršania platnosti (mesiac)</string>
   <!-- The label for the expiration date year of a credit card to be used by a11y services -->
