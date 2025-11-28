@@ -1319,20 +1319,15 @@ bool js::temporal::GetDifferenceSettings(
   }
 
   // Step 9.
-  if (operation == TemporalDifference::Since) {
-    roundingMode = NegateRoundingMode(roundingMode);
-  }
-
-  // Step 10.
   if (!ValidateTemporalUnitValue(cx, TemporalUnitKey::SmallestUnit,
                                  smallestUnit, unitGroup)) {
     return false;
   }
 
-  // Step 11. (Not applicable in our implementation.)
+  // Step 10. (Not applicable in our implementation.)
   MOZ_ASSERT(smallestUnit != TemporalUnit::Unset);
 
-  // Step 12.
+  // Step 11.
   if (smallestUnit > smallestAllowedUnit) {
     JS_ReportErrorNumberASCII(
         cx, GetErrorMessage, nullptr, JSMSG_TEMPORAL_INVALID_UNIT_OPTION,
@@ -1340,31 +1335,36 @@ bool js::temporal::GetDifferenceSettings(
     return false;
   }
 
-  // Step 13. (Inlined call to LargerOfTwoTemporalUnits)
+  // Step 12. (Inlined call to LargerOfTwoTemporalUnits)
   auto defaultLargestUnit = std::min(smallestLargestDefaultUnit, smallestUnit);
 
-  // Step 14.
+  // Step 13.
   if (largestUnit == TemporalUnit::Auto) {
     largestUnit = defaultLargestUnit;
   }
 
-  // Step 15.
+  // Step 14.
   if (largestUnit > smallestUnit) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_INVALID_UNIT_RANGE);
     return false;
   }
 
-  // Steps 16-17.
+  // Steps 15-16.
   if (smallestUnit > TemporalUnit::Day) {
-    // Step 16.
+    // Step 15.
     auto maximum = MaximumTemporalDurationRoundingIncrement(smallestUnit);
 
-    // Step 17.
+    // Step 16.
     if (!ValidateTemporalRoundingIncrement(cx, roundingIncrement, maximum,
                                            false)) {
       return false;
     }
+  }
+
+  // Step 17.
+  if (operation == TemporalDifference::Since) {
+    roundingMode = NegateRoundingMode(roundingMode);
   }
 
   // Step 18.
