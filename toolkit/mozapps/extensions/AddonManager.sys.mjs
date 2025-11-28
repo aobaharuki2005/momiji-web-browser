@@ -40,6 +40,12 @@ const PREF_REMOTESETTINGS_DISABLED = "extensions.remoteSettings.disabled";
 const PREF_USE_REMOTE = "extensions.webextensions.remote";
 const PREF_AMTELEMETRY_ADDONS_BUILDER =
   "extensions.telemetry.EnvironmentAddonBuilder";
+const PREF_GLEAN_PING_ADDONS_UPDATED_DELAY_MS =
+  "extensions.gleanPingAddons.updated.delay";
+const PREF_GLEAN_PING_ADDONS_UPDATED_IDLE_TIMEOUT_MS =
+  "extensions.gleanPingAddons.updated.idleTimeout";
+const PREF_GLEAN_PING_ADDONS_UPDATED_TESTING =
+  "extensions.gleanPingAddons.updated.testing";
 
 const PREF_MIN_WEBEXT_PLATFORM_VERSION =
   "extensions.webExtensionsMinPlatformVersion";
@@ -86,6 +92,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AbuseReporter: "resource://gre/modules/AbuseReporter.sys.mjs",
   AddonRepository: "resource://gre/modules/addons/AddonRepository.sys.mjs",
+  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
   Extension: "resource://gre/modules/Extension.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -110,6 +117,31 @@ XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "AMTELEMETRY_ADDONS_BUILDER_ENABLED",
   PREF_AMTELEMETRY_ADDONS_BUILDER,
+  false
+);
+
+// By default coalesce `addons` updated ping submission happening in a 5min interval.
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "GLEAN_PING_ADDONS_UPDATED_DELAY_MS",
+  PREF_GLEAN_PING_ADDONS_UPDATED_DELAY_MS,
+  1000 * 60 * 5
+);
+
+// By default wait for 1min for an idle slot after the delay time have already elapsed.
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "GLEAN_PING_ADDONS_UPDATED_IDLE_TIMEOUT_MS",
+  PREF_GLEAN_PING_ADDONS_UPDATED_IDLE_TIMEOUT_MS,
+  1000 * 60
+);
+
+// Whether EnvironmentAddonBuilder._scheduleGleanPingAddonsUpdated should
+// send the `test-glean-ping-addons-updated` observer service notification.
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "GLEAN_PING_ADDONS_UPDATED_TESTING",
+  PREF_GLEAN_PING_ADDONS_UPDATED_TESTING,
   false
 );
 
@@ -4841,6 +4873,10 @@ export class EnvironmentAddonBuilder {
     // has had a chance to load. Do we have full data yet?
     this._addonsAreFull = false;
 
+    // a DeferredTask coalescing multiple addons list updates into a single
+    // submission of the Glean Ping `addons` with the reason `updated`.
+    this._submitGleanPingAddonsUpdatedTask = null;
+
     this._log = console.createInstance({
       prefix: "EnvironmentAddonBuilder",
       maxLogLevel: Services.prefs.getBoolPref(PREF_LOGGING_ENABLED, false)
@@ -4914,6 +4950,10 @@ export class EnvironmentAddonBuilder {
         this._pendingTask = null;
         this._shutdownState = "_pendingTask init complete. No longer blocking.";
         this._log.debug("init - completed");
+        // Submit the addons Glean ping with reason "startup" right after
+        // the EnvironmentAddonBuilder has been initialized as part of the
+        // AddonManager and application startup.
+        GleanPings.addons.submit("startup");
       }
     })();
 
@@ -4924,6 +4964,7 @@ export class EnvironmentAddonBuilder {
     if (this._shutdownCompleted) {
       return;
     }
+    this._finalizeGleanPingAddonsUpdatedTask();
     await this._shutdownBlocker();
   }
 
@@ -5035,6 +5076,7 @@ export class EnvironmentAddonBuilder {
         this._shutdownState = "No longer blocking, _updateAddons resolved";
         if (result.changed) {
           this._onEnvironmentChange(changeReason, result.oldEnvironment);
+          this._scheduleGleanPingAddonsUpdated();
         }
       },
       err => {
@@ -5043,6 +5085,48 @@ export class EnvironmentAddonBuilder {
         this._log.error("_checkForChanges: Error collecting addons", err);
       }
     );
+  }
+
+  _scheduleGleanPingAddonsUpdated() {
+    if (!this._submitGleanPingAddonsUpdatedTask) {
+      this._submitGleanPingAddonsUpdatedTask = new lazy.DeferredTask(
+        () => {
+          if (lazy.GLEAN_PING_ADDONS_UPDATED_TESTING) {
+            Services.obs.notifyObservers(
+              null,
+              "test-glean-ping-addons-updated"
+            );
+          }
+          // Submit the addons Glean ping with reason "updated" when
+          // the list of addons/theme/GMPlugins has changed.
+          GleanPings.addons.submit("updated");
+        },
+        lazy.GLEAN_PING_ADDONS_UPDATED_DELAY_MS,
+        lazy.GLEAN_PING_ADDONS_UPDATED_IDLE_TIMEOUT_MS
+      );
+      AddonManager.beforeShutdown.addBlocker(
+        "EnvironmentAddonBuilder::GleanPingAddonsUpdated",
+        () => this._finalizeGleanPingAddonsUpdatedTask(),
+        { fetchState: () => this._shutdownState }
+      );
+    }
+    this._submitGleanPingAddonsUpdatedTask.arm();
+  }
+
+  _finalizeGleanPingAddonsUpdatedTask() {
+    try {
+      this._submitGleanPingAddonsUpdatedTask?.disarm();
+      this._submitGleanPingAddonsUpdatedTask?.finalize();
+    } catch (err) {
+      this._log.error(
+        "Unexpected failure on disarming and finalizing _submitGleanPingAddonsUpdatedTask",
+        err
+      );
+    } finally {
+      if (this._submitGleanPingAddonsUpdatedTask?.isFinalized) {
+        this._submitGleanPingAddonsUpdatedTask = null;
+      }
+    }
   }
 
   async _shutdownBlocker() {

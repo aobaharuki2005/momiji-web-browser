@@ -214,6 +214,7 @@ gecko_pings = [
     "toolkit/components/gecko-trace/pings.yaml",
     "toolkit/components/glean/pings.yaml",
     "toolkit/components/resistfingerprinting/pings.yaml",
+    "toolkit/mozapps/extensions/pings.yaml",
 ]
 
 # Pings that are sent by Firefox Desktop.

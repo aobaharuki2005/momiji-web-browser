@@ -77,6 +77,8 @@ skip-if = [
 
 ["test_addon_manager_telemetry_events.js"]
 
+["test_addons_glean_ping.js"]
+
 ["test_amo_stats_telemetry.js"]
 skip-if = [
   "os == 'android'", # bug 1866520 - missing Glean version of stats telemetry

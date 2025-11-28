@@ -30,9 +30,11 @@ addons:
     bugs:
       - https://bugzilla.mozilla.org/1950416
       - https://bugzilla.mozilla.org/1991924
+      - https://bugzilla.mozilla.org/2000866
     data_reviews:
       - https://bugzilla.mozilla.org/1950416
       - https://bugzilla.mozilla.org/1991924
+      - https://bugzilla.mozilla.org/2000866
     data_sensitivity:
       - technical
       - interaction
@@ -89,6 +91,7 @@ addons:
     send_in_pings:
       - metrics
       - heartbeat
+      - addons
 
   theme:
     type: object
@@ -108,9 +111,11 @@ addons:
     bugs:
       - https://bugzilla.mozilla.org/1950416
       - https://bugzilla.mozilla.org/1991924
+      - https://bugzilla.mozilla.org/2000866
     data_reviews:
       - https://bugzilla.mozilla.org/1950416
       - https://bugzilla.mozilla.org/1991924
+      - https://bugzilla.mozilla.org/2000866
     data_sensitivity:
       - technical
       - interaction
@@ -148,6 +153,9 @@ addons:
            type: number
          signedTypes:
            type: string
+    send_in_pings:
+      - metrics
+      - addons
 
   active_g_m_plugins:
     type: object
@@ -167,9 +175,11 @@ addons:
     bugs:
       - https://bugzilla.mozilla.org/1950416
       - https://bugzilla.mozilla.org/1991924
+      - https://bugzilla.mozilla.org/2000866
     data_reviews:
       - https://bugzilla.mozilla.org/1950416
       - https://bugzilla.mozilla.org/1991924
+      - https://bugzilla.mozilla.org/2000866
     data_sensitivity:
       - technical
       - interaction
@@ -191,7 +201,9 @@ addons:
             type: boolean
           applyBackgroundUpdates:
             type: number
-
+    send_in_pings:
+      - metrics
+      - addons
 
 addons_manager:
   install: &install_update_event
