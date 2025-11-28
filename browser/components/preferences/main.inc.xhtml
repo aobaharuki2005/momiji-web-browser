@@ -33,17 +33,7 @@
 </groupbox>
 
 <!-- Data migration -->
-<groupbox id="dataMigrationGroup" data-category="paneGeneral" hidden="true">
-  <label><html:h2 data-l10n-id="preferences-data-migration-header"/></label>
-
-  <hbox id="dataMigration" flex="1">
-    <description flex="1" control="data-migration" data-l10n-id="preferences-data-migration-description"/>
-    <button id="data-migration"
-            is="highlightable-button"
-            class="accessory-button"
-            data-l10n-id="preferences-data-migration-button"/>
-  </hbox>
-</groupbox>
+<html:setting-group groupid="importBrowserData" id="dataMigrationGroup" data-category="paneGeneral" hidden="true" />
 
 <!-- Profiles -->
 <groupbox id="profilesGroup" data-category="paneGeneral" hidden="true">

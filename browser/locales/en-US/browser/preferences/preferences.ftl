@@ -171,10 +171,11 @@ windows-launch-on-login-disabled = This preference has been disabled in Windows.
 disable-extension =
     .label = Disable Extension
 
-preferences-data-migration-header = Import Browser Data
-preferences-data-migration-description = Import bookmarks, passwords, history, and autofill data into { -brand-short-name }.
+preferences-data-migration-group =
+    .label = Import browser data
+    .description = Bring your bookmarks, passwords, history, extensions, and autofill data from another browser.
 preferences-data-migration-button =
-    .label = Import Data
+    .label = Import data
     .accesskey = m
 
 preferences-profiles-group-header =

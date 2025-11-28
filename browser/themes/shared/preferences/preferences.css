@@ -259,12 +259,6 @@ radio {
   }
 }
 
-#dataMigration {
-  /* This should really be using baseline, but that doesn't work properly with
-   * the <description> and XUL <button> markup. */
-  align-items: center;
-}
-
 .extension-controlled {
   margin-block: 18px;
 }
