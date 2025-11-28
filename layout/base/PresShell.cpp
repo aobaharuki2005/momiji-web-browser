@@ -11733,6 +11733,13 @@ void PresShell::UpdateAnchorPosForScroll(
       // block's.
       positioned->UpdateOverflow();
       positioned->GetParent()->UpdateOverflow();
+      // APZ-handled scrolling may skip scheduling of paint for the relevant
+      // scroll container - We need to ensure that we schedule a paint for this
+      // positioned frame. Could theoretically do this when deciding to skip
+      // painting in `ScrollContainerFrame::ScrollToImpl`, that'd be conditional
+      // on finding a dependent anchor anyway, we should be as specific as
+      // possible as to what gets scheduled to paint.
+      positioned->SchedulePaint();
       referenceData->mDefaultScrollShift = offset;
       return true;
     }();
