@@ -197,8 +197,9 @@ void ProfileBufferCollector::CollectJitReturnAddr(void* aAddr) {
 }
 
 void ProfileBufferCollector::CollectWasmOrSyncJITFrame(
-    JS::ProfilingCategoryPair aCategory, const char* aLabel) {
-  mBuf.CollectCodeLocation("", aLabel, 0, 0, 0, Nothing(), Nothing(),
+    JS::ProfilingCategoryPair aCategory, const char* aLabel,
+    uint32_t aSourceId) {
+  mBuf.CollectCodeLocation("", aLabel, 0, 0, aSourceId, Nothing(), Nothing(),
                            Some(aCategory));
 }
 

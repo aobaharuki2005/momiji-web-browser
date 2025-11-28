@@ -202,7 +202,8 @@ void ThreadStackHelper::CollectJitReturnAddr(void* aAddr) {
 }
 
 void ThreadStackHelper::CollectWasmOrSyncJITFrame(
-    JS::ProfilingCategoryPair aCategory, const char* aLabel) {
+    JS::ProfilingCategoryPair aCategory, const char* aLabel,
+    uint32_t aSourceId) {
   MOZ_RELEASE_ASSERT(mStackToFill);
   // BHR performs asynchronous sampling as the stack collection happens on the
   // "BHMgr Monitor" thread. That's why, this method only receives WASM frames,
