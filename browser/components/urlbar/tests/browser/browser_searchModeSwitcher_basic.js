@@ -268,19 +268,6 @@ async function setDefaultEngine(name) {
   );
 }
 
-add_task(async function test_icon_new_window() {
-  let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  let expectedIcon = await Services.search.defaultEngine.getIconURL();
-
-  Assert.equal(
-    await getSearchModeSwitcherIcon(newWin),
-    expectedIcon,
-    "The search mode switcher should already have the engine favicon."
-  );
-
-  await BrowserTestUtils.closeWindow(newWin);
-});
-
 add_task(async function test_search_icon_change() {
   await SpecialPowers.pushPrefEnv({
     set: [["keyword.enabled", false]],
@@ -288,11 +275,12 @@ add_task(async function test_search_icon_change() {
 
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
   const globeIconUrl = UrlbarUtils.ICON.GLOBE;
+  const searchIconUrl = UrlbarUtils.ICON.SEARCH_GLASS;
 
   Assert.equal(
     await getSearchModeSwitcherIcon(newWin),
-    globeIconUrl,
-    "The search mode switcher should have the globe icon url since keyword.enabled is false"
+    searchIconUrl,
+    "The search mode switcher should have the default (search icon) url since we are not in search mode."
   );
 
   let popup = UrlbarTestUtils.searchModeSwitcherPopup(newWin);
