@@ -45,6 +45,7 @@ tasktype_map:
     repackage: repackage
     repackage-deb: repackage
     repackage-deb-l10n: repackage
+    repackage-rpm: repackage
     repackage-signing: repackage
     repackage-signing-msi: repackage
     repackage-signing-shippable-l10n-msix: signing
@@ -463,6 +464,40 @@ mapping:
         destinations:
             - ${year}/${month}/${upload_date}-${branch}
             - latest-${branch}
+    target.rpm:
+        <<: *default
+        description: "Firefox as a .rpm package"
+        only_for_platforms:
+            - linux64-shippable
+            - linux64-aarch64-shippable
+            - linux64-devedition
+            - linux64-aarch64-devedition
+        pretty_name: firefox-${version}.${filename_platform}.rpm
+        checksums_path: ${filename_platform}/rpm/firefox-${version}.rpm
+        from:
+            - repackage-rpm
+        destinations:
+            - ${year}/${month}/${upload_date}-${branch}
+            - latest-${branch}
+        update_balrog_manifest: false
+    langpack-${locale}.noarch.rpm:
+        <<: *default
+        description: "langpack.xpi repackaged as a .rpm"
+        all_locales: true
+        locale_prefix: ''
+        from:
+            - repackage-rpm
+        not_for_locales:
+            - en-US
+        only_for_platforms:
+            - linux64-shippable
+            - linux64-devedition
+        pretty_name: firefox-l10n-${locale}-${version}.noarch.rpm
+        checksums_path: ${filename_platform}/rpm/firefox-l10n-${locale}-${version}.noarch.rpm
+        destinations:
+            - ${year}/${month}/${upload_date}-${branch}-l10n/${filename_platform}/rpm
+            - latest-${branch}-l10n/${filename_platform}/rpm
+        update_balrog_manifest: false
     ${partial}:
         <<: *default
         description: "Partials MAR files to serve as updates"

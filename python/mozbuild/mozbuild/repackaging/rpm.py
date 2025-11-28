@@ -158,8 +158,12 @@ def _generate_rpm_archive(
         os.mkdir(upload_dir)
 
     l10n_rpm_directory = pathlib.Path(target_dir, "noarch")
-    for filename in l10n_rpm_directory.glob("*.rpm"):
-        shutil.copy(filename, upload_dir)
+    for locale in build_variables["LANGUAGES"]:
+        source_filename = f"{build_variables['PKG_NAME']}-l10n-{locale}-{build_variables['PKG_VERSION']}-{build_variables['PKG_BUILD_NUMBER']}.noarch.rpm"
+        new_filename = f"langpack-{locale}.noarch.rpm"
+
+        source_path = l10n_rpm_directory / source_filename
+        shutil.copy(source_path, os.path.join(upload_dir, new_filename))
 
 
 def _get_build_variables(
