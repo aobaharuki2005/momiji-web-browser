@@ -19,6 +19,7 @@
 #include "mozilla/dom/FragmentDirective.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/widget/Screen.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsDeviceContext.h"
