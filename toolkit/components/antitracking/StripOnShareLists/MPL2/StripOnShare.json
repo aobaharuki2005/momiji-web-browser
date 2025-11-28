@@ -187,5 +187,18 @@
       "meta.wikimedia.org",
       "commons.wikimedia.org"
     ]
+  },
+  "bilibili": {
+    "queryParams": [
+      "spm_id_from",
+      "broadcast_type",
+      "is_room_feed",
+      "live_from"
+    ],
+    "topLevelSites": [
+      "www.bilibili.com",
+      "space.bilibili.com",
+      "live.bilibili.com"
+    ]
   }
 }
