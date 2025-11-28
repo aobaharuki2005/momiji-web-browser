@@ -2023,28 +2023,29 @@ static UnsignedRoundingMode GetUnsignedRoundingMode(
   MOZ_CRASH("invalid rounding mode");
 }
 
-struct DurationNudge {
-  InternalDuration duration;
-  EpochNanoseconds epochNs;
-  double total = 0;
-  bool didExpandCalendarUnit = false;
+struct NudgeWindow {
+  int64_t r1;
+  int64_t r2;
+  EpochNanoseconds startEpochNs;
+  EpochNanoseconds endEpochNs;
+  DateDuration startDuration;
+  DateDuration endDuration;
 };
 
 /**
- * NudgeToCalendarUnit ( sign, duration, originEpochNs, destEpochNs,
- * isoDateTime, timeZone, calendar, increment, unit, roundingMode )
+ * ComputeNudgeWindow ( sign, duration, originEpochNs, isoDateTime, timeZone,
+ * calendar, increment, unit, additionalShift )
  */
-static bool NudgeToCalendarUnit(
-    JSContext* cx, const InternalDuration& duration,
-    const EpochNanoseconds& originEpochNs, const EpochNanoseconds& destEpochNs,
-    const ISODateTime& isoDateTime, Handle<TimeZoneValue> timeZone,
-    Handle<CalendarValue> calendar, Increment increment, TemporalUnit unit,
-    TemporalRoundingMode roundingMode, DurationNudge* result) {
+static bool ComputeNudgeWindow(JSContext* cx, const InternalDuration& duration,
+                               const EpochNanoseconds& originEpochNs,
+                               const ISODateTime& isoDateTime,
+                               Handle<TimeZoneValue> timeZone,
+                               Handle<CalendarValue> calendar,
+                               Increment increment, TemporalUnit unit,
+                               bool additionalShift, NudgeWindow* result) {
   MOZ_ASSERT(IsValidDuration(duration));
   MOZ_ASSERT_IF(timeZone, IsValidEpochNanoseconds(originEpochNs));
   MOZ_ASSERT_IF(!timeZone, IsValidLocalNanoseconds(originEpochNs));
-  MOZ_ASSERT_IF(timeZone, IsValidEpochNanoseconds(destEpochNs));
-  MOZ_ASSERT_IF(!timeZone, IsValidLocalNanoseconds(destEpochNs));
   MOZ_ASSERT(ISODateTimeWithinLimits(isoDateTime));
   MOZ_ASSERT(unit <= TemporalUnit::Day);
 
@@ -2060,32 +2061,40 @@ static bool NudgeToCalendarUnit(
     int64_t years = RoundNumberToIncrement(duration.date.years, increment,
                                            TemporalRoundingMode::Trunc);
 
-    // Step 1.b.
-    r1 = years;
-
-    // Step 1.c.
-    r2 = years + int64_t(increment.value()) * sign;
+    // Steps 1.b-c.
+    if (!additionalShift) {
+      r1 = years;
+    } else {
+      r1 = years + int64_t(increment.value()) * sign;
+    }
 
     // Step 1.d.
-    startDuration = {r1};
+    r2 = r1 + int64_t(increment.value()) * sign;
 
     // Step 1.e.
+    startDuration = {r1};
+
+    // Step 1.f.
     endDuration = {r2};
   } else if (unit == TemporalUnit::Month) {
     // Step 2.a.
     int64_t months = RoundNumberToIncrement(duration.date.months, increment,
                                             TemporalRoundingMode::Trunc);
 
-    // Step 2.b.
-    r1 = months;
-
-    // Step 2.c.
-    r2 = months + int64_t(increment.value()) * sign;
+    // Steps 2.b-c.
+    if (!additionalShift) {
+      r1 = months;
+    } else {
+      r1 = months + int64_t(increment.value()) * sign;
+    }
 
     // Step 2.d.
-    startDuration = {duration.date.years, r1};
+    r2 = r1 + int64_t(increment.value()) * sign;
 
     // Step 2.e.
+    startDuration = {duration.date.years, r1};
+
+    // Step 2.f.
     endDuration = {duration.date.years, r2};
   } else if (unit == TemporalUnit::Week) {
     // Step 3.a.
@@ -2118,16 +2127,20 @@ static bool NudgeToCalendarUnit(
         RoundNumberToIncrement(duration.date.weeks + untilResult.weeks,
                                increment, TemporalRoundingMode::Trunc);
 
-    // Step 3.f.
-    r1 = weeks;
-
-    // Step 3.g.
-    r2 = weeks + int64_t(increment.value()) * sign;
+    // Steps 3.f-g.
+    if (!additionalShift) {
+      r1 = weeks;
+    } else {
+      r1 = weeks + int64_t(increment.value()) * sign;
+    }
 
     // Step 3.h.
-    startDuration = {duration.date.years, duration.date.months, r1};
+    r2 = r1 + int64_t(increment.value()) * sign;
 
     // Step 3.i.
+    startDuration = {duration.date.years, duration.date.months, r1};
+
+    // Step 3.j.
     endDuration = {duration.date.years, duration.date.months, r2};
   } else {
     // Step 4.a.
@@ -2137,17 +2150,21 @@ static bool NudgeToCalendarUnit(
     int64_t days = RoundNumberToIncrement(duration.date.days, increment,
                                           TemporalRoundingMode::Trunc);
 
-    // Step 4.c.
-    r1 = days;
-
-    // Step 4.d.
-    r2 = days + int64_t(increment.value()) * sign;
+    // Steps 4.c-d.
+    if (!additionalShift) {
+      r1 = days;
+    } else {
+      r1 = days + int64_t(increment.value()) * sign;
+    }
 
     // Step 4.e.
+    r2 = r1 + int64_t(increment.value()) * sign;
+
+    // Step 4.f.
     startDuration = {duration.date.years, duration.date.months,
                      duration.date.weeks, r1};
 
-    // Step 4.f.
+    // Step 4.g.
     endDuration = {duration.date.years, duration.date.months,
                    duration.date.weeks, r2};
   }
@@ -2216,16 +2233,78 @@ static bool NudgeToCalendarUnit(
     }
   }
 
-  // Steps 13-14.
+  // Step 13.
+  *result = {r1, r2, startEpochNs, endEpochNs, startDuration, endDuration};
+  return true;
+}
+
+struct DurationNudge {
+  InternalDuration duration;
+  EpochNanoseconds epochNs;
+  double total = 0;
+  bool didExpandCalendarUnit = false;
+};
+
+/**
+ * NudgeToCalendarUnit ( sign, duration, originEpochNs, destEpochNs,
+ * isoDateTime, timeZone, calendar, increment, unit, roundingMode )
+ */
+static bool NudgeToCalendarUnit(
+    JSContext* cx, const InternalDuration& duration,
+    const EpochNanoseconds& originEpochNs, const EpochNanoseconds& destEpochNs,
+    const ISODateTime& isoDateTime, Handle<TimeZoneValue> timeZone,
+    Handle<CalendarValue> calendar, Increment increment, TemporalUnit unit,
+    TemporalRoundingMode roundingMode, DurationNudge* result) {
+  MOZ_ASSERT(IsValidDuration(duration));
+  MOZ_ASSERT_IF(timeZone, IsValidEpochNanoseconds(originEpochNs));
+  MOZ_ASSERT_IF(!timeZone, IsValidLocalNanoseconds(originEpochNs));
+  MOZ_ASSERT_IF(timeZone, IsValidEpochNanoseconds(destEpochNs));
+  MOZ_ASSERT_IF(!timeZone, IsValidLocalNanoseconds(destEpochNs));
+  MOZ_ASSERT(ISODateTimeWithinLimits(isoDateTime));
+  MOZ_ASSERT(unit <= TemporalUnit::Day);
+
+  int32_t sign = InternalDurationSign(duration) < 0 ? -1 : 1;
+
+  // Step 1.
+  bool didExpandCalendarUnit = false;
+
+  // Step 2.
+  NudgeWindow nudgeWindow;
+  if (!ComputeNudgeWindow(cx, duration, originEpochNs, isoDateTime, timeZone,
+                          calendar, increment, unit, false, &nudgeWindow)) {
+    return false;
+  }
+
+  // Steps 3-6.
+  const auto& startPoint =
+      sign > 0 ? nudgeWindow.startEpochNs : nudgeWindow.endEpochNs;
+  const auto& endPoint =
+      sign > 0 ? nudgeWindow.endEpochNs : nudgeWindow.startEpochNs;
+  if (!(startPoint <= destEpochNs && destEpochNs <= endPoint)) {
+    // Steps 5.a.i and 6.a.i.
+    if (!ComputeNudgeWindow(cx, duration, originEpochNs, isoDateTime, timeZone,
+                            calendar, increment, unit, true, &nudgeWindow)) {
+      return false;
+    }
+
+    // Steps 5.a.ii and 6.a.ii. (Moved below)
+
+    // Steps 5.a.iii and 6.a.iii.
+    didExpandCalendarUnit = true;
+  }
+
+  // Steps 7-12.
+  const auto& [r1, r2, startEpochNs, endEpochNs, startDuration, endDuration] =
+      nudgeWindow;
+
+  // Step 13.
+  MOZ_ASSERT(startEpochNs != endEpochNs);
   MOZ_ASSERT_IF(sign > 0,
                 startEpochNs <= destEpochNs && destEpochNs <= endEpochNs);
   MOZ_ASSERT_IF(sign < 0,
                 endEpochNs <= destEpochNs && destEpochNs <= startEpochNs);
 
-  // Step 15.
-  MOZ_ASSERT(startEpochNs != endEpochNs);
-
-  // Step 16.
+  // Step 14.
   auto numerator = (destEpochNs - startEpochNs).toNanoseconds();
   auto denominator = (endEpochNs - startEpochNs).toNanoseconds();
   MOZ_ASSERT(denominator != Int128{0});
@@ -2240,7 +2319,7 @@ static bool NudgeToCalendarUnit(
     denominator = -denominator;
   }
 
-  // Steps 17-19.
+  // Steps 15-17.
   //
   // |total| must only be computed when called from Duration.prototype.total,
   // which always passes "trunc" rounding mode with an increment of one.
@@ -2261,10 +2340,10 @@ static bool NudgeToCalendarUnit(
     total = FractionToDouble(n, denominator);
   }
 
-  // Steps 20-21.
+  // Steps 18-19.
   auto unsignedRoundingMode = GetUnsignedRoundingMode(roundingMode, sign < 0);
 
-  // Steps 22-23. (Inlined ApplyUnsignedRoundingMode)
+  // Steps 20-21. (Inlined ApplyUnsignedRoundingMode)
   //
   // clang-format off
   //
@@ -2291,33 +2370,38 @@ static bool NudgeToCalendarUnit(
   //             = (r1 / increment) modulo 2
   //
   // clang-format on
-  bool didExpandCalendarUnit;
+  bool roundedUp;
   if (numerator == denominator) {
-    didExpandCalendarUnit = true;
+    roundedUp = true;
   } else if (numerator == Int128{0}) {
-    didExpandCalendarUnit = false;
+    roundedUp = false;
   } else if (unsignedRoundingMode == UnsignedRoundingMode::Zero) {
-    didExpandCalendarUnit = false;
+    roundedUp = false;
   } else if (unsignedRoundingMode == UnsignedRoundingMode::Infinity) {
-    didExpandCalendarUnit = true;
+    roundedUp = true;
   } else if (numerator + numerator < denominator) {
-    didExpandCalendarUnit = false;
+    roundedUp = false;
   } else if (numerator + numerator > denominator) {
-    didExpandCalendarUnit = true;
+    roundedUp = true;
   } else if (unsignedRoundingMode == UnsignedRoundingMode::HalfZero) {
-    didExpandCalendarUnit = false;
+    roundedUp = false;
   } else if (unsignedRoundingMode == UnsignedRoundingMode::HalfInfinity) {
-    didExpandCalendarUnit = true;
+    roundedUp = true;
   } else if ((r1 / increment.value()) % 2 == 0) {
-    didExpandCalendarUnit = false;
+    roundedUp = false;
   } else {
-    didExpandCalendarUnit = true;
+    roundedUp = true;
   }
 
-  // Steps 24-28.
-  auto resultDuration = didExpandCalendarUnit ? endDuration : startDuration;
-  auto resultEpochNs = didExpandCalendarUnit ? endEpochNs : startEpochNs;
-  *result = {{resultDuration, {}}, resultEpochNs, total, didExpandCalendarUnit};
+  // Steps 22-26.
+  auto resultDuration = roundedUp ? endDuration : startDuration;
+  auto resultEpochNs = roundedUp ? endEpochNs : startEpochNs;
+  *result = {
+      {resultDuration, {}},
+      resultEpochNs,
+      total,
+      didExpandCalendarUnit || roundedUp,
+  };
   return true;
 }
 
