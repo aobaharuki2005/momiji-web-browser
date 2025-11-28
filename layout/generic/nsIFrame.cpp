@@ -950,10 +950,6 @@ void nsIFrame::Destroy(DestroyContext& aContext) {
     ps->ClearFrameRefs(this);
   }
 
-  if (nsView* view = GetView()) {
-    view->Destroy();
-  }
-
   // Make sure that our deleted frame can't be returned from GetPrimaryFrame()
   if (IsPrimaryFrame()) {
     mContent->SetPrimaryFrame(nullptr);
@@ -7861,18 +7857,13 @@ nsIFrame* nsIFrame::GetTailContinuation() {
 }
 
 nsIWidget* nsIFrame::GetOwnWidget() const {
-  if (auto* view = GetView()) {
-    return view->GetWidget();
-  }
   if (IsMenuPopupFrame()) {
     return static_cast<const nsMenuPopupFrame*>(this)->GetWidget();
   }
+  if (!GetParent()) {
+    return PresShell()->GetOwnWidget();
+  }
   return nullptr;
-}
-
-nsView* nsIFrame::DoGetView() const {
-  MOZ_ASSERT(IsViewportFrame());
-  return static_cast<const ViewportFrame*>(this)->GetViewportFrameView();
 }
 
 template <nsPoint (nsIFrame::*PositionGetter)() const>
@@ -8012,14 +8003,9 @@ nsIWidget* nsIFrame::GetNearestWidget(nsPoint& aOffset) const {
   const auto targetAPD = PresContext()->AppUnitsPerDevPixel();
   auto curAPD = targetAPD;
   do {
-    if (frame->IsMenuPopupFrame()) {
-      return static_cast<nsMenuPopupFrame*>(frame)->GetWidget();
-    }
-    if (auto* view = frame->GetView()) {
-      if (auto* widget = view->GetWidget()) {
-        aOffset = aOffset.ScaleToOtherAppUnits(curAPD, targetAPD);
-        return widget;
-      }
+    if (auto* widget = frame->GetOwnWidget()) {
+      aOffset = aOffset.ScaleToOtherAppUnits(curAPD, targetAPD);
+      return widget;
     }
     aOffset += frame->GetPosition();
     nsPoint crossDocOffset;
@@ -8877,11 +8863,6 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
   const bool onlyDeterministic =
       aFlags.contains(ListFlag::OnlyListDeterministicInfo);
   aTo += ListTag(onlyDeterministic);
-  if (auto* view = GetView()) {
-    aTo += " [view";
-    ListPtr(aTo, aFlags, view);
-    aTo += "]";
-  }
   if (!onlyDeterministic) {
     if (GetParent()) {
       aTo += nsPrintfCString(" parent=%p", static_cast<void*>(GetParent()));

@@ -1261,6 +1261,9 @@ void PresShell::Destroy() {
   }
 
   if (mViewManager) {
+    if (auto* root = mViewManager->GetRootView()) {
+      root->Destroy();
+    }
     // Clear the view manager's weak pointer back to |this| in case it
     // was leaked.
     mViewManager->SetPresShell(nullptr);
@@ -1799,8 +1802,44 @@ void PresShell::RefreshZoomConstraintsForScreenSizeChange() {
   }
 }
 
+nsSize PresShell::MaybePendingLayoutViewportSize() const {
+  if (mPendingLayoutViewportSize) {
+    return *mPendingLayoutViewportSize;
+  }
+  return mPresContext ? mPresContext->GetVisibleArea().Size() : nsSize();
+}
+
+bool PresShell::ShouldDelayResize() const {
+  if (!IsVisible()) {
+    return true;
+  }
+  nsRefreshDriver* rd = GetRefreshDriver();
+  return rd && rd->IsResizeSuppressed();
+}
+
+void PresShell::FlushDelayedResize() {
+  if (!mPendingLayoutViewportSize) {
+    return;
+  }
+  auto size = mPendingLayoutViewportSize.extract();
+  if (!mPresContext || size == mPresContext->GetVisibleArea().Size()) {
+    return;
+  }
+  ResizeReflow(size);
+}
+
+void PresShell::SetLayoutViewportSize(const nsSize& aSize, bool aDelay) {
+  mPendingLayoutViewportSize = Some(aSize);
+  if (aDelay || ShouldDelayResize()) {
+    SetNeedStyleFlush();
+    SetNeedLayoutFlush();
+    return;
+  }
+  FlushDelayedResize();
+}
+
 void PresShell::ForceResizeReflowWithCurrentDimensions() {
-  ResizeReflow(mViewManager->GetWindowDimensions());
+  ResizeReflow(MaybePendingLayoutViewportSize());
 }
 
 void PresShell::ResizeReflow(const nsSize& aSize,
@@ -4374,8 +4413,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     return;
   }
 
-  // Make sure the view manager stays alive.
-  RefPtr<nsViewManager> viewManager = mViewManager;
   // We need to make sure external resource documents are flushed too (for
   // example, svg filters that reference a filter in an external document
   // need the frames in the external document to be constructed for the
@@ -4395,7 +4432,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   // Process pending restyles, since any flush of the presshell wants
   // up-to-date style data.
   if (MOZ_LIKELY(!mIsDestroying)) {
-    viewManager->FlushDelayedResize();
+    FlushDelayedResize();
     mPresContext->FlushPendingMediaFeatureValuesChanged();
   }
 
@@ -12486,7 +12523,7 @@ void PresShell::PaintSynchronously() {
     return;
   }
 
-  mViewManager->FlushDelayedResize();
+  FlushDelayedResize();
 
   mIsPainting = true;
   auto cleanUpPaintingBit = MakeScopeExit([&] { mIsPainting = false; });

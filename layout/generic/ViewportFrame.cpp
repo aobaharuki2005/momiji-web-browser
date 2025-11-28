@@ -339,11 +339,6 @@ void ViewportFrame::RemoveFrame(DestroyContext& aContext, ChildListID aListID,
 }
 #endif
 
-void ViewportFrame::SetView(nsView* aView) {
-  MOZ_ASSERT(!mView, "Should not swap views");
-  mView = aView;
-}
-
 void ViewportFrame::Destroy(DestroyContext& aContext) {
   if (PresShell()->IsDestroying()) {
     PresShell::ClearMouseCapture(this);
@@ -501,10 +496,6 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
   // Clipping is handled by the document container (e.g., nsSubDocumentFrame),
   // so we don't need to change our overflow areas.
   FinishAndStoreOverflow(&aDesiredSize);
-
-  if (mView) {
-    mView->GetViewManager()->ResizeView(mView, aDesiredSize.PhysicalSize());
-  }
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
 }

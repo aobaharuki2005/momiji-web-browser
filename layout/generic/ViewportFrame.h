@@ -94,12 +94,9 @@ class ViewportFrame : public nsContainerFrame {
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  nsView* GetViewportFrameView() const { return mView; }
-  void SetView(nsView*);
-
  protected:
   ViewportFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, ClassID aID)
-      : nsContainerFrame(aStyle, aPresContext, aID), mView(nullptr) {}
+      : nsContainerFrame(aStyle, aPresContext, aID) {}
 
  private:
   nsDisplayWrapList* MaybeWrapTopLayerList(nsDisplayListBuilder*,
@@ -108,8 +105,6 @@ class ViewportFrame : public nsContainerFrame {
   mozilla::FrameChildListID GetAbsoluteListID() const override {
     return FrameChildListID::Fixed;
   }
-
-  nsView* mView;
 };
 
 }  // namespace mozilla

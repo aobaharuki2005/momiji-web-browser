@@ -541,19 +541,16 @@ void nsPresContext::PreferenceChanged(const char* aPrefName) {
     // other documents, and we'd need to save the return value of the first call
     // for all of them.
     (void)mDeviceContext->CheckDPIChange();
-    OwningNonNull<mozilla::PresShell> presShell(*mPresShell);
-    // Re-fetch the view manager's window dimensions in case there's a
-    // deferred resize which hasn't affected our mVisibleArea yet
-    RefPtr<nsViewManager> vm = presShell->GetViewManager();
-    if (!vm) {
-      return;
-    }
+    RefPtr ps = mPresShell;
+    // Use the maybe-pending size from presshell in case there's a
+    // deferred resize which hasn't affected our visible area yet.
     auto oldSizeDevPixels = LayoutDeviceSize::FromAppUnits(
-        vm->GetWindowDimensions(), oldAppUnitsPerDevPixel);
+        ps->MaybePendingLayoutViewportSize(), oldAppUnitsPerDevPixel);
 
     UIResolutionChangedInternal();
-    vm->SetWindowDimensions(
-        LayoutDeviceSize::ToAppUnits(oldSizeDevPixels, AppUnitsPerDevPixel()));
+    ps->SetLayoutViewportSize(
+        LayoutDeviceSize::ToAppUnits(oldSizeDevPixels, AppUnitsPerDevPixel()),
+        /* aDelay = */ false);
     return;
   }
 
@@ -1399,19 +1396,20 @@ void nsPresContext::SetFullZoom(float aZoom) {
     return;
   }
 
-  // Re-fetch the view manager's window dimensions in case there's a deferred
-  // resize which hasn't affected our mVisibleArea yet
+  // Use the maybe-pending size from presshell in case there's a
+  // deferred resize which hasn't affected our visible area yet.
+  RefPtr ps = mPresShell;
   const auto oldSizeDevPixels = LayoutDeviceSize::FromAppUnits(
-      mPresShell->GetViewManager()->GetWindowDimensions(),
-      mCurAppUnitsPerDevPixel);
+      ps->MaybePendingLayoutViewportSize(), mCurAppUnitsPerDevPixel);
   mDeviceContext->SetFullZoom(aZoom);
 
   mFullZoom = aZoom;
 
   AppUnitsPerDevPixelChanged();
 
-  mPresShell->GetViewManager()->SetWindowDimensions(
-      LayoutDeviceSize::ToAppUnits(oldSizeDevPixels, AppUnitsPerDevPixel()));
+  ps->SetLayoutViewportSize(
+      LayoutDeviceSize::ToAppUnits(oldSizeDevPixels, AppUnitsPerDevPixel()),
+      /* aDelay = */ false);
 }
 
 void nsPresContext::SetOverrideDPPX(float aDPPX) {

@@ -337,9 +337,8 @@ class nsDocumentViewer final : public nsIDocumentViewer,
   /**
    * Creates a view manager, root view, and widget for the root view, setting
    * mViewManager and mWindow.
-   * @param aSize the initial size in appunits
    */
-  void MakeWindow(const nsSize& aSize);
+  void MakeWindow();
   nsresult CreateDeviceContext(nsSubDocumentFrame* aContainerFrame);
 
   /**
@@ -714,7 +713,6 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
         mPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
     const nsSize size = LayoutDevicePixel::ToAppUnits(mBounds.Size(), p2a);
-    mViewManager->SetWindowDimensions(size);
     mPresContext->SetInitialVisibleArea(nsRect(nsPoint(), size));
     // We rely on the default zoom not being initialized until here.
     mPresContext->RecomputeBrowsingContextDependentData();
@@ -837,9 +835,7 @@ nsresult nsDocumentViewer::InitInternal(
       // this new document since doing that will cause us to re-enter
       // into nsSubDocumentFrame code through reflows caused by
       // FlushPendingNotifications() calls down the road...
-
-      MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(aBounds.width),
-                        mPresContext->DevPixelsToAppUnits(aBounds.height)));
+      MakeWindow();
       Hide();
 
 #ifdef NS_PRINT_PREVIEW
@@ -1934,17 +1930,16 @@ nsDocumentViewer::SetBoundsWithFlags(const LayoutDeviceIntRect& aBounds,
 
     int32_t p2a = mPresContext->AppUnitsPerDevPixel();
     const nsSize size = LayoutDeviceSize::ToAppUnits(mBounds.Size(), p2a);
-    nsView* rootView = mViewManager->GetRootView();
-    if (boundsChanged && rootView && rootView->GetSize() == size) {
+    if (boundsChanged && mPresContext->GetVisibleArea().Size() == size) {
       // If the view/frame tree and prescontext visible area already has the new
       // size but we did not, then it's likely that we got reflowed in response
       // to a call to GetContentSize. Thus there is a disconnect between the
       // size on the document viewer/docshell/containing widget and view
-      // tree/frame tree/prescontext visible area). SetWindowDimensions compares
-      // to the root view dimenstions to determine if it needs to do anything;
-      // if they are the same as the new size it won't do anything, but we still
-      // need to invalidate because what we want to draw to the screen has
-      // changed.
+      // tree/frame tree/prescontext visible area). SetLayoutViewportSize
+      // compares to the pres context visible area to determine if it needs to
+      // do anything; if they are the same as the new size it won't do anything,
+      // but we still need to invalidate because what we want to draw to the
+      // screen has changed.
       if (nsIFrame* f = mPresShell->GetRootFrame()) {
         f->InvalidateFrame();
 
@@ -1956,8 +1951,9 @@ nsDocumentViewer::SetBoundsWithFlags(const LayoutDeviceIntRect& aBounds,
       }
     }
 
-    mViewManager->SetWindowDimensions(
-        size, !!(aFlags & nsIDocumentViewer::eDelayResize));
+    RefPtr ps = mPresShell;
+    ps->SetLayoutViewportSize(size,
+                              !!(aFlags & nsIDocumentViewer::eDelayResize));
   }
 
   // If there's a previous viewer, it's the one that's actually showing,
@@ -2074,8 +2070,7 @@ nsDocumentViewer::Show() {
       return rv;
     }
 
-    MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(mBounds.width),
-                      mPresContext->DevPixelsToAppUnits(mBounds.height)));
+    MakeWindow();
 
     if (mPresContext) {
       Hide();
@@ -2190,7 +2185,7 @@ nsDocumentViewer::ClearHistoryEntry() {
 
 //-------------------------------------------------------
 
-void nsDocumentViewer::MakeWindow(const nsSize& aSize) {
+void nsDocumentViewer::MakeWindow() {
   if (GetIsPrintPreview()) {
     return;
   }
@@ -2198,7 +2193,7 @@ void nsDocumentViewer::MakeWindow(const nsSize& aSize) {
   mViewManager = new nsViewManager();
 
   // Create a view
-  nsView* view = mViewManager->CreateView(aSize);
+  nsView* view = mViewManager->CreateView();
 
   // Create a widget if we were given a parent widget or don't have a
   // container view that we can hook up to without a widget.
@@ -3326,8 +3321,7 @@ NS_IMETHODIMP nsDocumentViewer::SetPrintSettingsForSubdocument(
     rv = mPresContext->Init(mDeviceContext);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MakeWindow(nsSize(mPresContext->DevPixelsToAppUnits(mBounds.width),
-                      mPresContext->DevPixelsToAppUnits(mBounds.height)));
+    MakeWindow();
 
     MOZ_TRY(InitPresentationStuff(true));
   }

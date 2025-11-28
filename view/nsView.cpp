@@ -128,7 +128,6 @@ void nsView::List(FILE* out, int32_t aIndent) const {
     fprintf(out, "(widget=%p[%" PRIuPTR "] pos=%s) ", (void*)mWindow,
             widgetRefCnt, ToString(mWindow->GetBounds()).c_str());
   }
-  fprintf(out, "{%d, %d}", mSize.width, mSize.height);
   for (i = aIndent; --i >= 0;) fputs("  ", out);
   fputs(">\n", out);
 }
@@ -138,7 +137,7 @@ PresShell* nsView::GetPresShell() { return GetViewManager()->GetPresShell(); }
 
 bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
                            int32_t aHeight) {
-  PresShell* ps = GetPresShell();
+  RefPtr<PresShell> ps = GetPresShell();
   if (!ps) {
     return false;
   }
@@ -159,7 +158,8 @@ bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
     frame->InvalidateFrame();
   }
   const LayoutDeviceIntSize size(aWidth, aHeight);
-  mViewManager->SetWindowDimensions(LayoutDeviceIntSize::ToAppUnits(size, p2a));
+  ps->SetLayoutViewportSize(LayoutDeviceIntSize::ToAppUnits(size, p2a),
+                            /* aDelay = */ false);
 
   if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
     pm->AdjustPopupsOnWindowChange(ps);

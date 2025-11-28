@@ -1211,7 +1211,7 @@ nsresult nsPrintJob::SetRootView(nsPrintObject* aPO, bool aDocumentIsTopLevel,
 
   if (!aPO->mViewManager->GetRootView()) {
     // Create a child window of the parent that is our "root view/window"
-    nsView* rootView = aPO->mViewManager->CreateView(adjSize);
+    nsView* rootView = aPO->mViewManager->CreateView();
     aPO->mViewManager->SetRootView(rootView);
   }
 

@@ -51,10 +51,7 @@ using namespace mozilla::layers;
 
 uint32_t nsViewManager::gLastUserEventTime = 0;
 
-nsViewManager::nsViewManager()
-    : mPresShell(nullptr),
-      mDelayedResize(NSCOORD_NONE, NSCOORD_NONE),
-      mRootView(nullptr) {}
+nsViewManager::nsViewManager() : mPresShell(nullptr), mRootView(nullptr) {}
 
 nsViewManager::~nsViewManager() {
   if (mRootView) {
@@ -67,11 +64,8 @@ nsViewManager::~nsViewManager() {
                      "Releasing nsViewManager without having called Destroy on "
                      "the PresShell!");
 }
-nsView* nsViewManager::CreateView(const nsSize& aSize) {
-  auto* v = new nsView(this);
-  v->SetSize(aSize);
-  return v;
-}
+
+nsView* nsViewManager::CreateView() { return new nsView(this); }
 
 void nsViewManager::SetRootView(nsView* aView) {
   MOZ_ASSERT(!aView || aView->GetViewManager() == this,
@@ -80,74 +74,6 @@ void nsViewManager::SetRootView(nsView* aView) {
   // Do NOT destroy the current root view. It's the caller's responsibility
   // to destroy it
   mRootView = aView;
-}
-
-nsSize nsViewManager::GetWindowDimensions() const {
-  if (!mRootView) {
-    return {};
-  }
-  if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
-    return mDelayedResize;
-  }
-  return mRootView->GetSize();
-}
-
-void nsViewManager::DoSetWindowDimensions(const nsSize& aSize) {
-  if (mRootView->GetSize() == aSize) {
-    return;
-  }
-  // Don't resize the widget. It is already being set elsewhere.
-  mRootView->SetSize(aSize);
-  if (RefPtr<PresShell> presShell = mPresShell) {
-    presShell->ResizeReflow(aSize);
-  }
-}
-
-bool nsViewManager::ShouldDelayResize() const {
-  MOZ_ASSERT(mRootView);
-  if (!mPresShell || !mPresShell->IsVisible()) {
-    return true;
-  }
-  if (nsRefreshDriver* rd = mPresShell->GetRefreshDriver()) {
-    if (rd->IsResizeSuppressed()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void nsViewManager::SetWindowDimensions(const nsSize& aSize,
-                                        bool aDelayResize) {
-  if (!mRootView) {
-    return;
-  }
-  if (!ShouldDelayResize() && !aDelayResize) {
-    if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-        mDelayedResize != aSize) {
-      // We have a delayed resize; that now obsolete size may already have
-      // been flushed to the PresContext so we need to update the PresContext
-      // with the new size because if the new size is exactly the same as the
-      // root view's current size then DoSetWindowDimensions will not
-      // request a resize reflow (which would correct it). See bug 617076.
-      mDelayedResize = aSize;
-      FlushDelayedResize();
-    }
-    mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
-    DoSetWindowDimensions(aSize);
-  } else {
-    mDelayedResize = aSize;
-    if (mPresShell) {
-      mPresShell->SetNeedStyleFlush();
-      mPresShell->SetNeedLayoutFlush();
-    }
-  }
-}
-
-void nsViewManager::FlushDelayedResize() {
-  if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE)) {
-    DoSetWindowDimensions(mDelayedResize);
-    mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
-  }
 }
 
 void nsViewManager::MaybeUpdateLastUserEventTime(WidgetGUIEvent* aEvent) {
@@ -163,15 +89,4 @@ void nsViewManager::MaybeUpdateLastUserEventTime(WidgetGUIEvent* aEvent) {
       aEvent->HasKeyEventMessage() || aEvent->HasIMEEventMessage()) {
     gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
   }
-}
-
-void nsViewManager::ResizeView(nsView* aView, const nsSize& aSize) {
-  NS_ASSERTION(aView->GetViewManager() == this, "wrong view manager");
-  aView->SetSize(aSize);
-
-  // Note that if layout resizes the view and the view has a custom clip
-  // region set, then we expect layout to update the clip region too. Thus
-  // in the case where mClipRect has been optimized away to just be a null
-  // pointer, and this resize is implicitly changing the clip rect, it's OK
-  // because layout will change it back again if necessary.
 }

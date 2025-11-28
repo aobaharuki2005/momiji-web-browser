@@ -24,15 +24,10 @@ RootAccessibleWrap::RootAccessibleWrap(dom::Document* aDocument,
     : RootAccessible(aDocument, aPresShell) {}
 
 void RootAccessibleWrap::GetNativeWidget(void** aOutView) {
-  nsIFrame* frame = GetFrame();
-  if (frame) {
-    nsView* view = frame->GetView();
-    if (view) {
-      nsIWidget* widget = view->GetWidget();
-      if (widget) {
-        *aOutView = (void**)widget->GetNativeData(NS_NATIVE_WIDGET);
-        MOZ_DIAGNOSTIC_ASSERT(*aOutView, "Couldn't get the native UIView!");
-      }
+  if (nsIFrame* frame = GetFrame()) {
+    if (nsIWidget* widget = frame->GetOwnWidget()) {
+      *aOutView = (void**)widget->GetNativeData(NS_NATIVE_WIDGET);
+      MOZ_DIAGNOSTIC_ASSERT(*aOutView, "Couldn't get the native UIView!");
     }
   }
 }

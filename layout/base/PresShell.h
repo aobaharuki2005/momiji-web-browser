@@ -366,6 +366,13 @@ class PresShell final : public nsStubDocumentObserver,
   MOZ_CAN_RUN_SCRIPT bool ResizeReflowIgnoreOverride(
       const nsSize&, ResizeReflowOptions = ResizeReflowOptions::NoOption);
   MOZ_CAN_RUN_SCRIPT void ForceResizeReflowWithCurrentDimensions();
+  MOZ_CAN_RUN_SCRIPT void FlushDelayedResize();
+  nsSize MaybePendingLayoutViewportSize() const;
+  bool ShouldDelayResize() const;
+  // FIXME: MOZ_CAN_RUN_SCRIPT_BOUNDARY because the aDelay parameter forces us
+  // to effectively not run script.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetLayoutViewportSize(const nsSize&,
+                                                         bool aDelay);
 
   /** Schedule a resize event if applicable. */
   enum class ResizeEventKind : uint8_t { Regular, Visual };
@@ -3334,6 +3341,9 @@ class PresShell final : public nsStubDocumentObserver,
 
   // Only populated on root content documents.
   nsSize mVisualViewportSize;
+
+  // Layout viewport size that we still haven't committed to the layout tree.
+  Maybe<nsSize> mPendingLayoutViewportSize;
 
   using Arena = nsPresArena<8192, ArenaObjectID, eArenaObjectID_COUNT>;
   Arena mFrameArena;

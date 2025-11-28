@@ -12,7 +12,6 @@
 #include "nsCRT.h"
 #include "nsTArray.h"
 #include "nsTArray.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 
 class nsIWidget;
@@ -38,12 +37,9 @@ class nsViewManager final {
 
   /**
    * Create an ordinary view
-   * @param aSize initial size for view
-   *        XXX We should eliminate this parameter; you can set the bounds
-   *        after CreateView
    * @result The new view.  Never null.
    */
-  nsView* CreateView(const nsSize& aSize);
+  nsView* CreateView();
 
   /**
    * Get the root of the view tree.
@@ -58,27 +54,6 @@ class nsViewManager final {
    * @param aView view to set as root
    */
   void SetRootView(nsView* aView);
-
-  /** Get the dimensions of the root view. */
-  nsSize GetWindowDimensions() const;
-
-  /**
-   * Set the dimensions of the root window.
-   * Called if the root window is resized.
-   */
-  void SetWindowDimensions(const nsSize& aSize, bool aDelayResize = false);
-
-  /**
-   * Do any resizes that are pending.
-   */
-  void FlushDelayedResize();
-
-  /**
-   * Resize a view.
-   * @param aView view to move
-   * @param aSize the new size
-   */
-  void ResizeView(nsView* aView, const nsSize& aSize);
 
   /**
    * Set the presshell associated with this manager
@@ -103,14 +78,7 @@ class nsViewManager final {
  private:
   static uint32_t gLastUserEventTime;
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoSetWindowDimensions(const nsSize&);
-  bool ShouldDelayResize() const;
-
   mozilla::PresShell* mPresShell;
-
-  // The size for a resize that we delayed until the root view becomes
-  // visible again.
-  nsSize mDelayedResize;
 
   nsView* mRootView;
   // from here to public should be static and locked... MMP

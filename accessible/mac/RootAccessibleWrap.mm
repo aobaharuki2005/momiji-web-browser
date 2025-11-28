@@ -34,18 +34,12 @@ Class RootAccessibleWrap::GetNativeType() {
 }
 
 void RootAccessibleWrap::GetNativeWidget(void** aOutView) {
-  nsIFrame* frame = GetFrame();
-  if (frame) {
-    nsView* view = frame->GetView();
-    if (view) {
-      nsIWidget* widget = view->GetWidget();
-      if (widget) {
-        *aOutView = (void**)widget->GetNativeData(NS_NATIVE_WIDGET);
-        MOZ_ASSERT(
-            *aOutView || gfxPlatform::IsHeadless(),
-            "Couldn't get the native NSView parent we need to connect the "
-            "accessibility hierarchy!");
-      }
+  if (nsIFrame* frame = GetFrame()) {
+    if (nsIWidget* widget = frame->GetOwnWidget()) {
+      *aOutView = (void**)widget->GetNativeData(NS_NATIVE_WIDGET);
+      MOZ_ASSERT(*aOutView || gfxPlatform::IsHeadless(),
+                 "Couldn't get the native NSView parent we need to connect the "
+                 "accessibility hierarchy!");
     }
   }
 }

@@ -137,11 +137,6 @@ class nsView final : public nsIWidgetListener {
    */
   void Destroy();
 
-  /**
-   * Called to get the size of the view.
-   */
-  nsSize GetSize() const { return mSize; }
-
   // Stops listening to mWidget and clears it.
   void DetachWidget();
 
@@ -214,8 +209,6 @@ class nsView final : public nsIWidgetListener {
  private:
   explicit nsView(nsViewManager* = nullptr);
 
-  void SetSize(const nsSize& aSize) { mSize = aSize; }
-
   void CallOnAllRemoteChildren(
       const std::function<mozilla::CallState(mozilla::dom::BrowserParent*)>&
           aCallback);
@@ -223,7 +216,6 @@ class nsView final : public nsIWidgetListener {
   nsViewManager* mViewManager;
   nsCOMPtr<nsIWidget> mWindow;
   nsCOMPtr<nsIWidget> mPreviousWindow;
-  nsSize mSize;
 };
 
 #endif
