@@ -11566,9 +11566,12 @@ var gCSSProperties = {
   "-webkit-transform": {
     domProp: "webkitTransform",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LEGACY_SHORTHAND,
     alias_for: "transform",
     subproperties: ["transform"],
+    initial_values: ["none"],
+    other_values: ["perspective(1000)", "perspective(25)"],
+    invalid_values: [],
   },
   "-webkit-transform-origin": {
     domProp: "webkitTransformOrigin",
@@ -11594,9 +11597,12 @@ var gCSSProperties = {
   "-webkit-perspective": {
     domProp: "webkitPerspective",
     inherited: false,
-    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    type: CSS_TYPE_LEGACY_SHORTHAND,
     alias_for: "perspective",
     subproperties: ["perspective"],
+    initial_values: ["none"],
+    other_values: ["1000", "25"],
+    invalid_values: ["calc(1000)", "calc(25)"],
   },
   "-webkit-perspective-origin": {
     domProp: "webkitPerspectiveOrigin",
