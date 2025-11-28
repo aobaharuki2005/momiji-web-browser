@@ -43,6 +43,7 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINode.h"
+#include "nsISizeOf.h"
 #include "nsISupports.h"
 #include "nsLiteralString.h"
 #include "nsString.h"
@@ -265,6 +266,8 @@ class nsXULPrototypeScript : public nsXULPrototypeNode {
 
   nsresult InstantiateScript(JSContext* aCx,
                              JS::MutableHandle<JSScript*> aScript);
+
+  void AddSizeOfExcludingThis(nsWindowSizes& aSizes, size_t* aNodeSize) const;
 
   nsCOMPtr<nsIURI> mSrcURI;
   uint32_t mLineNo;
