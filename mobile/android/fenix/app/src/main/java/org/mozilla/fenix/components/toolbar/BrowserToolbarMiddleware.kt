@@ -724,7 +724,7 @@ class BrowserToolbarMiddleware(
     private fun buildEndPageActions(): List<Action> {
         val isWideScreen = isWideScreen()
         val tabStripEnabled = settings.isTabStripEnabled
-        val simpleShortcut = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey)
+        val simpleShortcut = ShortcutType.fromValue(settings.toolbarSimpleShortcut)
         val translateShortcutEnabled = simpleShortcut == ShortcutType.TRANSLATE
         val shareShortcutEnabled = simpleShortcut == ShortcutType.SHARE
 
@@ -751,9 +751,8 @@ class BrowserToolbarMiddleware(
         val isWideWindow = isWideScreen()
         val isTallWindow = isTallScreen()
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
-        val useCustomPrimary = settings.shouldShowToolbarCustomization
-        val primarySlotAction = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey)
-            ?.toToolbarAction().takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarSimpleShortcut)
+            ?.toToolbarAction() ?: ToolbarAction.NewTab
 
         val configs = listOf(
             ToolbarActionConfig(primarySlotAction) {
@@ -788,9 +787,8 @@ class BrowserToolbarMiddleware(
         val isWideWindow = isWideScreen()
         val isTallWindow = isTallScreen()
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
-        val useCustomPrimary = settings.shouldShowToolbarCustomization
-        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcutKey)
-            ?.toToolbarAction().takeIf { useCustomPrimary } ?: getBookmarkAction()
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcut)
+            ?.toToolbarAction() ?: getBookmarkAction()
 
         return listOf(
             ToolbarActionConfig(primarySlotAction) { shouldUseExpandedToolbar && isTallWindow && !isWideWindow },
@@ -994,10 +992,10 @@ class BrowserToolbarMiddleware(
             distinctUntilChangedBy { it.pageTranslationStatus }
             .collect {
                 updateEndPageActions(context)
-                if (ShortcutType.fromValue(settings.toolbarSimpleShortcutKey) == ShortcutType.TRANSLATE) {
+                if (ShortcutType.fromValue(settings.toolbarSimpleShortcut) == ShortcutType.TRANSLATE) {
                     updateEndBrowserActions(context)
                 }
-                if (ShortcutType.fromValue(settings.toolbarExpandedShortcutKey) == ShortcutType.TRANSLATE) {
+                if (ShortcutType.fromValue(settings.toolbarExpandedShortcut) == ShortcutType.TRANSLATE) {
                     updateNavigationActions(context)
                 }
             }
@@ -1013,10 +1011,10 @@ class BrowserToolbarMiddleware(
                 )
             }.collect {
                 updateStartBrowserActions(context)
-                if (ShortcutType.fromValue(settings.toolbarSimpleShortcutKey) == ShortcutType.BACK) {
+                if (ShortcutType.fromValue(settings.toolbarSimpleShortcut) == ShortcutType.BACK) {
                     updateEndBrowserActions(context)
                 }
-                if (ShortcutType.fromValue(settings.toolbarExpandedShortcutKey) == ShortcutType.BACK) {
+                if (ShortcutType.fromValue(settings.toolbarExpandedShortcut) == ShortcutType.BACK) {
                     updateNavigationActions(context)
                 }
             }
@@ -1047,10 +1045,10 @@ class BrowserToolbarMiddleware(
                 it.snackbarState is SnackbarState.BookmarkAdded ||
                         it.snackbarState is SnackbarState.BookmarkDeleted
             }.collect { isBookmarked ->
-                if (ShortcutType.fromValue(settings.toolbarSimpleShortcutKey) == ShortcutType.BOOKMARK) {
+                if (ShortcutType.fromValue(settings.toolbarSimpleShortcut) == ShortcutType.BOOKMARK) {
                     updateEndBrowserActions(context)
                 }
-                if (ShortcutType.fromValue(settings.toolbarExpandedShortcutKey) == ShortcutType.BOOKMARK) {
+                if (ShortcutType.fromValue(settings.toolbarExpandedShortcut) == ShortcutType.BOOKMARK) {
                     updateNavigationActions(context)
                 }
             }

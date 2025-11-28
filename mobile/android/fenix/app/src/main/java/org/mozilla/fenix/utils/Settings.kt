@@ -219,6 +219,12 @@ class Settings(
         persistDefaultIfNotExists = true,
     )
 
+    val toolbarSimpleShortcut: String
+        get() = when (shouldShowToolbarCustomization) {
+            true -> toolbarSimpleShortcutKey
+            false -> ShortcutType.NEW_TAB.value
+        }
+
     /**
      * Indicates what expanded toolbar shortcut key is currently selected.
      */
@@ -227,6 +233,12 @@ class Settings(
         default = { ShortcutType.BOOKMARK.value },
         persistDefaultIfNotExists = true,
     )
+
+    val toolbarExpandedShortcut: String
+        get() = when (shouldShowToolbarCustomization) {
+            true -> toolbarExpandedShortcutKey
+            false -> ShortcutType.BOOKMARK.value
+        }
 
     /**
      * Indicates if the Pocket recommendations homescreen section should also show sponsored stories.

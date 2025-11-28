@@ -353,9 +353,8 @@ class BrowserToolbarMiddleware(
         val isWideWindow = isWideScreen()
         val isTallWindow = isTallScreen()
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
-        val useCustomPrimary = settings.shouldShowToolbarCustomization && shouldUseExpandedToolbar
-        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcutKey)
-            ?.toHomeToolbarAction().takeIf { useCustomPrimary } ?: HomeToolbarAction.FakeBookmark
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcut)
+            ?.toHomeToolbarAction() ?: HomeToolbarAction.FakeBookmark
 
         return listOf(
             HomeToolbarActionConfig(primarySlotAction) {

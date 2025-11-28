@@ -117,7 +117,7 @@ class BrowserToolbarMiddlewareTest {
         every { testContext.settings().isTabStripEnabled } returns false
         every { testContext.settings().tabManagerEnhancementsEnabled } returns false
         every { testContext.settings().shouldShowToolbarCustomization } returns false
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BOOKMARK.value
+        every { testContext.settings().toolbarExpandedShortcut } returns ShortcutType.BOOKMARK.value
     }
 
     @Test
@@ -755,7 +755,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN expanded toolbar use translate shortcut WHEN initializing toolbar THEN show DISABLED Translate in navigation actions`() = runTest {
         every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.TRANSLATE.value
+        every { testContext.settings().toolbarExpandedShortcut } returns ShortcutType.TRANSLATE.value
 
         val (_, toolbarStore) = buildMiddlewareAndAddToStore()
 
@@ -767,7 +767,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN expanded toolbar use homepage shortcut WHEN initializing toolbar THEN show DISABLED Homepage in navigation actions`() = runTest {
         every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.HOMEPAGE.value
+        every { testContext.settings().toolbarExpandedShortcut } returns ShortcutType.HOMEPAGE.value
 
         val (_, toolbarStore) = buildMiddlewareAndAddToStore()
 
@@ -779,7 +779,7 @@ class BrowserToolbarMiddlewareTest {
     fun `GIVEN expanded toolbar use back shortcut WHEN initializing toolbar THEN show DISABLED Back in navigation actions`() = runTest {
         every { testContext.settings().shouldShowToolbarCustomization } returns true
         every { testContext.settings().shouldUseExpandedToolbar } returns true
-        every { testContext.settings().toolbarExpandedShortcutKey } returns ShortcutType.BACK.value
+        every { testContext.settings().toolbarExpandedShortcut } returns ShortcutType.BACK.value
 
         val (_, toolbarStore) = buildMiddlewareAndAddToStore()
 

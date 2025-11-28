@@ -487,7 +487,7 @@ class TabPreview @JvmOverloads constructor(
         val settings = context.settings()
         val isWideScreen = context.isWideWindow()
         val tabStripEnabled = settings.isTabStripEnabled
-        val shareShortcutEnabled = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey) == ShortcutType.SHARE
+        val shareShortcutEnabled = ShortcutType.fromValue(settings.toolbarSimpleShortcut) == ShortcutType.SHARE
 
         return listOf(
             ToolbarActionConfig(ToolbarAction.Share) {
@@ -520,9 +520,8 @@ class TabPreview @JvmOverloads constructor(
         val isTallWindow = context.isTallWindow()
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
-        val useCustomPrimary = settings.shouldShowToolbarCustomization
-        val primarySlotAction = ShortcutType.fromValue(settings.toolbarSimpleShortcutKey)
-            ?.toToolbarAction(tab).takeIf { useCustomPrimary } ?: ToolbarAction.NewTab
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarSimpleShortcut)
+            ?.toToolbarAction(tab) ?: ToolbarAction.NewTab
 
         return listOf(
             ToolbarActionConfig(primarySlotAction) {
@@ -548,9 +547,8 @@ class TabPreview @JvmOverloads constructor(
         val isTallWindow = context.isTallWindow()
         val shouldUseExpandedToolbar = settings.shouldUseExpandedToolbar
 
-        val useCustomPrimary = settings.shouldShowToolbarCustomization
-        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcutKey)
-            ?.toToolbarAction(tab).takeIf { useCustomPrimary } ?: getBookmarkAction(tab)
+        val primarySlotAction = ShortcutType.fromValue(settings.toolbarExpandedShortcut)
+            ?.toToolbarAction(tab) ?: getBookmarkAction(tab)
 
         return listOf(
             ToolbarActionConfig(primarySlotAction) { shouldUseExpandedToolbar && isTallWindow && !isWideWindow },
