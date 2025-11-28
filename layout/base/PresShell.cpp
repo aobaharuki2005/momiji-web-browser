@@ -11616,15 +11616,30 @@ static nsTArray<AffectedAnchorGroup> FindAnchorsAffectedByScroll(
 static Maybe<const AffectedAnchor&> FindScrollCompensatedAnchor(
     const PresShell* aPresShell,
     const nsTArray<AffectedAnchorGroup>& aAffectedAnchors,
-    const nsIFrame* aPositioned, const AnchorPosReferenceData& aReferenceData) {
+    const nsIFrame* aPositioned, const AnchorPosReferenceData& aReferenceData,
+    const nsIFrame** aResolvedDefaultAnchor) {
   MOZ_ASSERT(aPositioned->IsAbsolutelyPositioned(),
              "Anchor positioned frame is not absolutely positioned?");
+  if (aResolvedDefaultAnchor) {
+    *aResolvedDefaultAnchor = nullptr;
+  }
+
   if (aReferenceData.IsEmpty()) {
     return Nothing{};
   }
 
-  if (!aReferenceData.mDefaultAnchorName) {
+  const auto* defaultAnchorName = aReferenceData.mDefaultAnchorName.get();
+  if (!defaultAnchorName) {
     return Nothing{};
+  }
+
+  const auto* defaultAnchor =
+      aPresShell->GetAnchorPosAnchor(defaultAnchorName, aPositioned);
+  if (!defaultAnchor) {
+    return Nothing{};
+  }
+  if (aResolvedDefaultAnchor) {
+    *aResolvedDefaultAnchor = defaultAnchor;
   }
 
   const auto compensatingForScroll = aReferenceData.CompensatingForScrollAxes();
@@ -11639,24 +11654,11 @@ static Maybe<const AffectedAnchor&> FindScrollCompensatedAnchor(
   };
 
   // Find the relevant default anchor.
-  const auto* defaultAnchorName =
-      AnchorPositioningUtils::GetUsedAnchorName(aPositioned, nullptr);
-  nsIFrame const* defaultAnchor = nullptr;
   for (const auto& group : aAffectedAnchors) {
-    if (defaultAnchorName &&
-        !group.mAnchorName->Equals(defaultAnchorName->GetUTF16String(),
-                                   defaultAnchorName->GetLength())) {
+    if (group.mAnchorName != defaultAnchorName) {
       // Default anchor has a name, and it's different from this affected
       // anchor group.
       continue;
-    }
-    if (!defaultAnchor) {
-      defaultAnchor =
-          aPresShell->GetAnchorPosAnchor(defaultAnchorName, aPositioned);
-      if (!defaultAnchor) {
-        // Default anchor not valid for this positioned frame.
-        return Nothing{};
-      }
     }
     const auto& anchors = group.mFrames;
     // Find the affected anchor that not only matches in name, but in actual
@@ -11690,6 +11692,41 @@ static bool CheckOverflow(nsIFrame* aPositioned,
   return hasFallbacks && overflows;
 }
 
+// HACK(dshin, Bug 1999954): This is a workaround. While we try to lay out
+// against the scroll-ignored position of an anchor, sticky and chain anchor
+// positioned frames actually end up containing scroll offset in their position.
+// Additionally, scroll offset collection does not do any special handling for
+// such frames (Which is impossible unless we can cleanly separate the
+// scroll-ignored position).
+// For now, we detect such frames and just trigger a reflow.
+// Bug 2002789 tracks the proper fix.
+static bool AnchorIsStickyOrChainedToScrollCompensatedAnchor(
+    const nsIFrame* aAnchor) {
+  if (!aAnchor) {
+    return false;
+  }
+
+  if (aAnchor->IsStickyPositioned()) {
+    return true;
+  }
+
+  if (aAnchor->StylePosition()->mPositionAnchor.IsNone()) {
+    // Not anchored, or anchored but not scroll compensated.
+    return false;
+  }
+
+  const auto* referenceData =
+      aAnchor->GetProperty(nsIFrame::AnchorPosReferences());
+  if (!referenceData) {
+    return false;
+  }
+
+  // Theoretically, we should look at the entire anchor chain to see if this
+  // anchor will be affected by scroll compensation. However, that does not seem
+  // worth it - A long anchor chain seems like an edge case anyway.
+  return !referenceData->CompensatingForScrollAxes().isEmpty();
+}
+
 // https://drafts.csswg.org/css-anchor-position-1/#default-scroll-shift
 void PresShell::UpdateAnchorPosForScroll(
     const ScrollContainerFrame* aScrollContainer) {
@@ -11716,8 +11753,9 @@ void PresShell::UpdateAnchorPosForScroll(
     if (!referenceData) {
       continue;
     }
+    const nsIFrame* defaultAnchor = nullptr;
     const auto scrollDependency = FindScrollCompensatedAnchor(
-        this, affectedAnchors, positioned, *referenceData);
+        this, affectedAnchors, positioned, *referenceData, &defaultAnchor);
     const bool offsetChanged = [&]() {
       if (!scrollDependency) {
         return false;
@@ -11745,8 +11783,18 @@ void PresShell::UpdateAnchorPosForScroll(
     }();
     const bool cbScrolls =
         positioned->GetParent() == aScrollContainer->GetScrolledFrame();
-    if (offsetChanged || cbScrolls) {
-      if (CheckOverflow(positioned, *referenceData)) {
+    // HACK(dshin): Check if this positioned frame is anchoring to a sticky or
+    // another anchor positioned frame, even if we may not be scroll
+    // compensating against it. Such frames, even when in the same scroll
+    // container, as the positioned element, don't (always) scroll with the
+    // scroll container. Also see comment for
+    // `AnchorIsStickyOrChainedToScrollCompensatedAnchor`.
+    const bool anchorIsStickyOrScrollCompensatedAnchor =
+        defaultAnchor &&
+        AnchorIsStickyOrChainedToScrollCompensatedAnchor(defaultAnchor);
+    if (offsetChanged || cbScrolls || anchorIsStickyOrScrollCompensatedAnchor) {
+      if (CheckOverflow(positioned, *referenceData) ||
+          anchorIsStickyOrScrollCompensatedAnchor) {
 #ifdef ACCESSIBILITY
         if (nsAccessibilityService* accService = GetAccService()) {
           accService->NotifyAnchorPositionedScrollUpdate(this, positioned);
