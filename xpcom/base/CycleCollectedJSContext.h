@@ -109,9 +109,7 @@ class SuppressedMicroTasks : public MicroTaskRunnable {
 // A gecko wrapper for the JS::MicroTask type. Used to enforce both
 // that this is handled move only, but also that we have succesfully
 // consumed this microtask before destruction.
-//
-// This type must be rooted, it holds onto a JS reference.
-class MOZ_STACK_CLASS MustConsumeMicroTask {
+class MustConsumeMicroTask {
  public:
   // We need a public constructor to allow forward declared Rooted
   MustConsumeMicroTask() = default;
@@ -255,14 +253,14 @@ class MOZ_STACK_CLASS MustConsumeMicroTask {
   }
 
   void trace(JSTracer* aTrc) {
-    TraceRoot(aTrc, &mMicroTask, "MustConsumeMicroTask value");
+    TraceEdge(aTrc, &mMicroTask, "MustConsumeMicroTask value");
   }
 
  private:
   explicit MustConsumeMicroTask(JS::GenericMicroTask&& aMicroTask)
       : mMicroTask(aMicroTask) {}
 
-  JS::GenericMicroTask mMicroTask;
+  JS::Heap<JS::GenericMicroTask> mMicroTask;
 };
 
 class SuppressedMicroTaskList final : public MicroTaskRunnable {

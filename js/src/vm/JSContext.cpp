@@ -1067,9 +1067,11 @@ void js::MicroTaskQueueElement::trace(JSTracer* trc) {
   auto* queue = cx->jobQueue.ref();
 
   if (!queue || value.isGCThing()) {
-    TraceRoot(trc, &value, "microtask-queue-entry");
+    TraceEdge(trc, &value, "microtask-queue-entry");
   } else {
-    queue->traceNonGCThingMicroTask(trc, &value);
+    // It's OK to use unbarriered address here because this is not a GC thing
+    // and so there are no worthwhile barriers to consider here.
+    queue->traceNonGCThingMicroTask(trc, value.unbarrieredAddress());
   }
 }
 
@@ -1161,7 +1163,7 @@ JS_PUBLIC_API bool JS::HasDebuggerMicroTasks(JSContext* cx) {
 struct SavedMicroTaskQueueImpl : public JS::SavedMicroTaskQueue {
   explicit SavedMicroTaskQueueImpl(JSContext* cx) : savedQueues(cx) {
     savedQueues = js::MakeUnique<js::MicroTaskQueueSet>(cx);
-    std::swap(cx->microTaskQueues.get(), savedQueues.get());
+    std::swap(cx->microTaskQueues, savedQueues.get());
   }
   ~SavedMicroTaskQueueImpl() override = default;
   JS::PersistentRooted<js::UniquePtr<js::MicroTaskQueueSet>> savedQueues;
@@ -1184,7 +1186,7 @@ JS_PUBLIC_API void JS::RestoreMicroTaskQueue(
   // There's only one impl, so we know this is safe.
   SavedMicroTaskQueueImpl* savedQueueImpl =
       static_cast<SavedMicroTaskQueueImpl*>(savedQueue.get());
-  std::swap(savedQueueImpl->savedQueues.get(), cx->microTaskQueues.get());
+  std::swap(savedQueueImpl->savedQueues.get(), cx->microTaskQueues);
 }
 
 JS_PUBLIC_API size_t JS::GetRegularMicroTaskCount(JSContext* cx) {
@@ -1290,8 +1292,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       canSkipEnqueuingJobs(this, false),
       promiseRejectionTrackerCallback(this, nullptr),
       promiseRejectionTrackerCallbackData(this, nullptr),
-      insideExclusiveDebuggerOnEval(this, nullptr),
-      microTaskQueues(this) {
+      insideExclusiveDebuggerOnEval(this, nullptr) {
   MOZ_ASSERT(static_cast<JS::RootingContext*>(this) ==
              JS::RootingContext::get(this));
 }
@@ -1537,6 +1538,12 @@ void JSContext::trace(JSTracer* trc) {
 #ifdef ENABLE_WASM_JSPI
   wasm().promiseIntegration.trace(trc);
 #endif
+
+  // Skip tracing the microtask queues on minor GC as we will be updating
+  // nursery pointers through the store buffer instead.
+  if (!trc->isTenuringTracer() && microTaskQueues) {
+    microTaskQueues->trace(trc);
+  }
 }
 
 JS::NativeStackLimit JSContext::stackLimitForJitCode(JS::StackKind kind) {
