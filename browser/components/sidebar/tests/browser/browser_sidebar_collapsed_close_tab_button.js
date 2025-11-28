@@ -4,14 +4,10 @@
 "use strict";
 
 add_setup(async () => {
-  // Force-disable tab animations for tab close
-  gReduceMotionOverride = true;
-
   await SpecialPowers.pushPrefEnv({
     set: [[VERTICAL_TABS_PREF, true]],
   });
   await waitForTabstripOrientation("vertical");
-
   Assert.equal(
     Services.prefs.getStringPref(SIDEBAR_VISIBILITY_PREF),
     "always-show",

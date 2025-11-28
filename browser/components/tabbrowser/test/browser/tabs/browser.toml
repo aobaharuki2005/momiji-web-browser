@@ -489,6 +489,9 @@ skip-if = [
   "os == 'mac' && os_version == '14.70' && arch == 'x86_64'", # Bug 1932997
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1932997
 ]
+fail-if = [
+  "vertical_tab", # Bug 1976110, fails in the "vertical-tabs" variant
+]
 
 ["browser_tabCloseSpacer.js"]
 skip-if = [

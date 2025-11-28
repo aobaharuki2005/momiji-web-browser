@@ -16,9 +16,6 @@ add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.groups.enabled", true]],
   });
-
-  // Force-disable tab animations for tab close
-  gReduceMotionOverride = true;
 });
 
 function createManyTabs(number, win = window) {
