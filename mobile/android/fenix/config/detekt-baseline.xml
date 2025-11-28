@@ -18,7 +18,7 @@
     <ID>ForbiddenSuppress:BookmarksMiddleware.kt$BookmarksMiddleware$@Suppress("LongMethod", "CognitiveComplexMethod", "CyclomaticComplexMethod")</ID>
     <ID>ForbiddenSuppress:BookmarksReducer.kt$@Suppress("CyclomaticComplexMethod")</ID>
     <ID>ForbiddenSuppress:BookmarksScreen.kt$@Suppress("LongMethod", "CognitiveComplexMethod", "CyclomaticComplexMethod")</ID>
-    <ID>ForbiddenSuppress:BookmarksTelemetryMiddleware.kt$BookmarksTelemetryMiddleware$@Suppress("LongMethod", "CyclomaticComplexMethod")</ID>
+    <ID>ForbiddenSuppress:BookmarksTelemetryMiddleware.kt$BookmarksTelemetryMiddleware$@Suppress("CyclomaticComplexMethod")</ID>
     <ID>ForbiddenSuppress:BrowserToolbarCFRPresenter.kt$BrowserToolbarCFRPresenter$@Suppress("MagicNumber")</ID>
     <ID>ForbiddenSuppress:BrowserToolbarMenuController.kt$DefaultBrowserToolbarMenuController$@Suppress("CognitiveComplexMethod", "LongMethod")</ID>
     <ID>ForbiddenSuppress:BrowserToolbarMenuController.kt$DefaultBrowserToolbarMenuController$@Suppress("CognitiveComplexMethod", "LongMethod", "CyclomaticComplexMethod")</ID>
