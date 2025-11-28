@@ -453,6 +453,7 @@
 #include "nsXPCOMCID.h"
 #include "nsXULAppAPI.h"
 #include "nsXULCommandDispatcher.h"
+#include "nsXULElement.h"
 #include "nsXULPopupManager.h"
 #include "nsXULPrototypeDocument.h"
 #include "prthread.h"

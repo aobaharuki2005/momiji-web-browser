@@ -104,7 +104,6 @@
 #include "nsURIHashKey.h"
 #include "nsWeakReference.h"
 #include "nsWindowSizes.h"
-#include "nsXULElement.h"
 #include "nscore.h"
 
 // XXX We need to include this here to ensure that DefaultDeleter for Servo
@@ -184,6 +183,7 @@ class nsTextNode;
 class nsViewManager;
 class nsViewportInfo;
 class nsXULPrototypeDocument;
+class nsXULPrototypeElement;
 struct JSContext;
 struct nsFont;
 
