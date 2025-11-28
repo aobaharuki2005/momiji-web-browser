@@ -5165,7 +5165,6 @@
         isLastTab ||
         aTab.pinned ||
         !isVisibleTab ||
-        this.tabContainer.verticalMode ||
         this._removingTabs.size >
           3 /* don't want lots of concurrent animations */ ||
         !aTab.hasAttribute(
@@ -5190,10 +5189,11 @@
 
       setTimeout(
         function (tab, tabbrowser) {
-          if (
-            tab.container &&
-            window.getComputedStyle(tab).maxWidth == "0.1px"
-          ) {
+          let styles = window.getComputedStyle(tab);
+          let tabSize = tabbrowser.tabContainer.verticalMode
+            ? styles.maxHeight
+            : styles.maxWidth;
+          if (tab.container && tabSize == "0.1px") {
             console.assert(
               false,
               "Giving up waiting for the tab closing animation to finish (bug 608589)"
