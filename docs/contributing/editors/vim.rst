@@ -28,7 +28,7 @@ You also need to set some options to get full diagnostics:
 
 .. code ::
 
-   "rust-analyzer.server.extraEnv": {
+   "rust-analyzer.cargo.extraEnv": {
      "CARGO_TARGET_DIR": "/path/to/objdir"
    },
    "rust-analyzer.vfs.extraIncludes": ["/path/to/objdir", "/optional/path/to/windows_rs_dir"],

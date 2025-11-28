@@ -241,6 +241,7 @@ def setup_vscode_or_vscodium(ide, command_context, interactive):
             "[javascript][javascriptreact][typescript][typescriptreact][json]",
             "[javascript][javascriptreact][typescript][typescriptreact][json][html]",
             "[javascript][javascriptreact][typescript][typescriptreact][json][jsonc][html]",
+            "rust-analyzer.server.extraEnv",
         ]
         for entry in deprecated:
             if entry in old_settings:
@@ -403,7 +404,7 @@ def setup_clangd_rust_in_vscode(command_context):
             "--clang-tidy",
             "--header-insertion=never",
         ],
-        "rust-analyzer.server.extraEnv": {
+        "rust-analyzer.cargo.extraEnv": {
             # Point rust-analyzer at the real target directory used by our
             # build, so it can discover the files created when we run `./mach
             # cargo check`.
