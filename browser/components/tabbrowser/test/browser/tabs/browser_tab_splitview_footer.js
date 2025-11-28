@@ -3,6 +3,11 @@
 
 "use strict";
 
+const TEST_PATH = getRootDirectory(gTestPath).replace(
+  "chrome://mochitests/content",
+  "https://example.com"
+);
+
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["dom.security.https_first", false]],
@@ -106,8 +111,23 @@ add_task(async function test_security_warning() {
     "No security warning for HTTPS."
   );
 
-  info("Load an insecure website.");
+  info("Load a site with an icon.");
   let promiseLoaded = BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
+  BrowserTestUtils.startLoadingURIString(
+    tab2.linkedBrowser,
+    TEST_PATH + "file_withicon.html"
+  );
+  await promiseLoaded;
+  if (!BrowserTestUtils.isVisible(footer.iconElement)) {
+    await BrowserTestUtils.waitForEvent(footer.iconElement, "load");
+  }
+  Assert.ok(
+    BrowserTestUtils.isVisible(footer.iconElement),
+    "Show favicon for secure sites."
+  );
+
+  info("Load an insecure website.");
+  promiseLoaded = BrowserTestUtils.browserLoaded(tab2.linkedBrowser);
   BrowserTestUtils.startLoadingURIString(
     tab2.linkedBrowser,
     "http://example.com/" // eslint-disable-line @microsoft/sdl/no-insecure-url
@@ -117,6 +137,11 @@ add_task(async function test_security_warning() {
     BrowserTestUtils.isVisible(footer.securityElement),
     "Security warning for HTTP."
   );
+  Assert.ok(
+    footer.iconElement.hidden,
+    "Icon is deliberately hidden for insecure sites."
+  );
+  Assert.ok(!footer.iconElement.src, "Icon has no src for insecure sites.");
 
   info("Load a local site.");
   promiseLoaded = BrowserTestUtils.browserLoaded(tab2.linkedBrowser);

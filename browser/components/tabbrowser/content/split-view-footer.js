@@ -125,6 +125,9 @@
       if (this.securityElement) {
         this.#updateSecurityElement();
       }
+      if (this.iconElement) {
+        this.#updateIconElement();
+      }
     }
 
     #updateSecurityElement() {
@@ -146,12 +149,13 @@
     }
 
     #updateIconElement() {
-      if (this.#iconSrc) {
+      let canShowIcon = !this.#isInsecure && this.#iconSrc;
+      if (canShowIcon) {
         this.iconElement.setAttribute("src", this.#iconSrc);
       } else {
         this.iconElement.removeAttribute("src");
       }
-      this.iconElement.hidden = !this.#iconSrc;
+      this.iconElement.hidden = !canShowIcon;
     }
 
     /**
