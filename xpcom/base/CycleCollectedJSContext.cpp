@@ -1197,7 +1197,7 @@ bool CycleCollectedJSContext::PerformMicroTaskCheckPoint(bool aForce) {
     while (JS::HasAnyMicroTasks(cx)) {
       MOZ_ASSERT(mDebuggerMicroTaskQueue.empty());
       MOZ_ASSERT(mPendingMicroTaskRunnables.empty());
-      job = DequeueNextMicroTask(cx);
+      job.set(DequeueNextMicroTask(cx));
 
       // To avoid us accidentally re-enqueing a SuppressionMicroTaskList in
       // itself, we determine here if the job is actually the suppression task
@@ -1327,11 +1327,11 @@ void CycleCollectedJSContext::PerformDebuggerMicroTaskCheckpoint() {
 
   JSContext* cx = Context();
   if (StaticPrefs::javascript_options_use_js_microtask_queue()) {
+    JS::Rooted<MustConsumeMicroTask> job(cx);
     while (JS::HasDebuggerMicroTasks(cx)) {
       MOZ_ASSERT(mDebuggerMicroTaskQueue.empty());
       MOZ_ASSERT(mPendingMicroTaskRunnables.empty());
 
-      JS::Rooted<MustConsumeMicroTask> job(cx);
       job.set(DequeueNextDebuggerMicroTask(cx));
 
       RunMicroTask(cx, &job);
