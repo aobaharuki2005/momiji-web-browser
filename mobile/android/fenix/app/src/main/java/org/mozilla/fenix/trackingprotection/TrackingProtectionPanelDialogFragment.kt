@@ -41,12 +41,11 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.databinding.FragmentTrackingProtectionBinding
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.openToBrowser
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
@@ -59,8 +58,8 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
 
     private fun inflateRootView(container: ViewGroup? = null): View {
         val contextThemeWrapper = ContextThemeWrapper(
-            activity,
-            (activity as HomeActivity).themeManager.currentThemeResource,
+            requireContext(),
+            requireActivity().theme,
         )
         return LayoutInflater.from(contextThemeWrapper).inflate(
             R.layout.fragment_tracking_protection,
@@ -163,12 +162,13 @@ class TrackingProtectionPanelDialogFragment : AppCompatDialogFragment(), UserInt
     }
 
     private fun handleLearnMoreClicked() {
-        (activity as HomeActivity).openToBrowserAndLoad(
-            searchTermOrURL = SupportUtils.getGenericSumoURLForTopic(
-                SupportUtils.SumoTopic.SMARTBLOCK,
-            ),
+        val url = SupportUtils.getGenericSumoURLForTopic(
+            SupportUtils.SumoTopic.SMARTBLOCK,
+        )
+        findNavController().openToBrowser()
+        requireComponents.useCases.fenixBrowserUseCases.loadUrlOrSearch(
+            searchTermOrURL = url,
             newTab = true,
-            from = BrowserDirection.FromTrackingProtectionDialog,
         )
     }
 
