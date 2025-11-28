@@ -17,8 +17,6 @@ members = [
   "security/manager/ssl/qwac_trust_anchors",
   "security/manager/ssl/trust_anchors",
   "security/mls/mls_gk",
-  "services/app-services-tools/embedded-uniffi-bindgen",
-  "services/app-services-tools/nimbus-fml",
   "testing/geckodriver",
   "toolkit/components/uniffi-bindgen-gecko-js",
   "toolkit/crashreporter/client/app",

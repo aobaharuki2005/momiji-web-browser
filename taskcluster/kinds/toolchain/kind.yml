@@ -35,7 +35,6 @@ tasks-from:
     - compiler-rt.yml
     - dxc.yml
     - dump-syms.yml
-    - embedded-uniffi-bindgen.yml
     - fix-stacks.yml
     - gcc.yml
     - geckodriver.yml
@@ -51,7 +50,6 @@ tasks-from:
     - minidump-stackwalk.yml
     - misc.yml
     - nasm.yml
-    - nimbus-fml.yml
     - node.yml
     - onnx.yml
     - pkgconf.yml

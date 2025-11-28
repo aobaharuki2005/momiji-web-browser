@@ -20,8 +20,6 @@ task-defaults:
     fetches:
         toolchain:
             - android-sdk-linux
-            - linux64-embedded-uniffi-bindgen
-            - linux64-nimbus-fml
             - android-gradle-dependencies
             - linux64-jdk-repack
         build-fat-aar:
