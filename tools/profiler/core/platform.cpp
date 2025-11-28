@@ -2475,7 +2475,8 @@ static void MergeStacks(
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_WasmIon ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_WasmBaseline ||
           jsFrame.kind == JS::ProfilingFrameIterator::Frame_WasmOther) {
-        aCollector.CollectWasmFrame(jsFrame.profilingCategory(), jsFrame.label);
+        aCollector.CollectWasmOrSyncJITFrame(jsFrame.profilingCategory(),
+                                             jsFrame.label);
       } else if (jsFrame.kind ==
                  JS::ProfilingFrameIterator::Frame_BaselineInterpreter) {
         // Materialize a ProfilingStackFrame similar to the C++ Interpreter. We

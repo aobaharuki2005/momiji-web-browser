@@ -261,8 +261,8 @@ class ProfilerStackCollector {
 
   virtual void CollectJitReturnAddr(void* aAddr) = 0;
 
-  virtual void CollectWasmFrame(JS::ProfilingCategoryPair aCategory,
-                                const char* aLabel) = 0;
+  virtual void CollectWasmOrSyncJITFrame(JS::ProfilingCategoryPair aCategory,
+                                         const char* aLabel) = 0;
 
   virtual void CollectProfilingStackFrame(
       const js::ProfilingStackFrame& aFrame) = 0;
