@@ -2357,14 +2357,6 @@ static bool NonISOMonthDayToISOReferenceDate(JSContext* cx, CalendarId calendar,
     return false;
   }
 
-  // |month| and |monthCode| must be consistent.
-  if (month.code != MonthCode{} && month.ordinal > 0) {
-    if (!CalendarFieldMonthCodeMatchesMonth(cx, fields, date.get(),
-                                            month.ordinal)) {
-      return false;
-    }
-  }
-
   *result = ToISODate(date.get());
   return true;
 }
@@ -2432,8 +2424,11 @@ static bool NonISOResolveFields(JSContext* cx, CalendarId calendar,
 
   // Date and Year-Month require |year| (or |eraYear|) to be present.
   // Month-Day requires |year| (or |eraYear|) if |monthCode| is absent.
+  // Month-Day requires |year| (or |eraYear|) if |month| is present, even if
+  // |monthCode| is also present.
   bool requireYear = type == FieldType::Date || type == FieldType::YearMonth ||
-                     !fields.has(CalendarField::MonthCode);
+                     !fields.has(CalendarField::MonthCode) ||
+                     fields.has(CalendarField::Month);
 
   // Determine if any calendar fields are missing.
   const char* missingField = nullptr;
