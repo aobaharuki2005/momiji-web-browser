@@ -9123,14 +9123,6 @@ void nsHttpChannel::MaybeUpdateDocumentIPAddressSpaceFromCache() {
 nsresult nsHttpChannel::OnPermissionPromptResult(bool aGranted,
                                                  const nsACString& aType) {
   mWaitingForLNAPermission = false;
-
-  // Set prompt action for telemetry
-  if (aGranted) {
-    mLNAPromptAction.AssignLiteral("allow");
-  } else {
-    mLNAPromptAction.AssignLiteral("deny");
-  }
-
   if (aGranted) {
     LOG(
         ("nsHttpChannel::OnPermissionPromptResult [this=%p] "
@@ -9556,32 +9548,25 @@ static void RecordIPAddressSpaceTelemetry(bool aLoadSuccess, nsIURI* aURI,
   }
 }
 
-static void RecordLNATelemetry(nsHttpChannel* aChannel, bool aLoadSuccess) {
-  // Extract data from channel
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  nsCOMPtr<nsIURI> uri;
-  aChannel->GetURI(getter_AddRefs(uri));
-  NetAddr peerAddr = aChannel->GetPeerAddr();
-  const nsACString& promptAction = aChannel->GetLNAPromptAction();
-
-  if (!loadInfo || !uri) {
+static void RecordLNATelemetry(bool aLoadSuccess, nsIURI* aURI,
+                               nsILoadInfo* aLoadInfo, NetAddr& aPeerAddr) {
+  if (!aLoadInfo || !aURI) {
     return;
   }
 
   RefPtr<mozilla::dom::BrowsingContext> bc;
-  loadInfo->GetBrowsingContext(getter_AddRefs(bc));
+  aLoadInfo->GetBrowsingContext(getter_AddRefs(bc));
 
   nsILoadInfo::IPAddressSpace parentAddressSpace =
       nsILoadInfo::IPAddressSpace::Unknown;
   if (!bc) {
-    parentAddressSpace = loadInfo->GetParentIpAddressSpace();
+    parentAddressSpace = aLoadInfo->GetParentIpAddressSpace();
   } else {
     parentAddressSpace = bc->GetCurrentIPAddressSpace();
   }
 
-  // Early return if NOT LNA - don't record telemetry or log
   if (!mozilla::net::IsLocalOrPrivateNetworkAccess(
-          parentAddressSpace, loadInfo->GetIpAddressSpace())) {
+          parentAddressSpace, aLoadInfo->GetIpAddressSpace())) {
     return;
   }
 
@@ -9592,7 +9577,7 @@ static void RecordLNATelemetry(nsHttpChannel* aChannel, bool aLoadSuccess) {
   }
 
   uint16_t port = 0;
-  if (NS_SUCCEEDED(peerAddr.GetPort(&port))) {
+  if (NS_SUCCEEDED(aPeerAddr.GetPort(&port))) {
     mozilla::glean::networking::local_network_access_port
         .AccumulateSingleSample(port);
   }
@@ -9601,107 +9586,24 @@ static void RecordLNATelemetry(nsHttpChannel* aChannel, bool aLoadSuccess) {
   // At this point we are sure that the request is a LNA,
   // Hence we can safely assume few conditions to construct the label
   nsAutoCString glean_lna_label;
-  if (parentAddressSpace == nsILoadInfo::IPAddressSpace::Public) {
+  if (aLoadInfo->GetParentIpAddressSpace() ==
+      nsILoadInfo::IPAddressSpace::Public) {
     glean_lna_label.Append("public_to_"_ns);
   } else {
     glean_lna_label.Append("private_to_"_ns);
   }
-  if (loadInfo->GetIpAddressSpace() == nsILoadInfo::IPAddressSpace::Private) {
+  if (aLoadInfo->GetIpAddressSpace() == nsILoadInfo::IPAddressSpace::Private) {
     glean_lna_label.Append("private_"_ns);
   } else {
     glean_lna_label.Append("local_"_ns);
   }
-  if (uri->SchemeIs("https")) {
+  if (aURI->SchemeIs("https")) {
     glean_lna_label.Append("https"_ns);
   } else {
     glean_lna_label.Append("http"_ns);
   }
 
   mozilla::glean::networking::local_network_access.Get(glean_lna_label).Add(1);
-
-  // Get top-level site (main window principal) - TLD+1
-  nsAutoCString topLevelSite;
-  if (bc && bc->Top()) {
-    if (bc->Top()->Canonical()) {
-      RefPtr<mozilla::dom::WindowGlobalParent> topWindowGlobal =
-          bc->Top()->Canonical()->GetCurrentWindowGlobal();
-      if (topWindowGlobal) {
-        nsCOMPtr<nsIPrincipal> topPrincipal =
-            topWindowGlobal->DocumentPrincipal();
-        if (topPrincipal) {
-          (void)topPrincipal->GetBaseDomain(topLevelSite);
-        }
-      }
-    }
-  }
-
-  // Get initiator (triggering principal) - TLD+1
-  nsAutoCString initiator;
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
-  loadInfo->GetTriggeringPrincipal(getter_AddRefs(triggeringPrincipal));
-  if (triggeringPrincipal) {
-    (void)triggeringPrincipal->GetBaseDomain(initiator);
-  }
-
-  bool isSecureContext =
-      triggeringPrincipal
-          ? triggeringPrincipal->GetIsOriginPotentiallyTrustworthy()
-          : false;
-
-  // Get target host - TLD+1
-  nsCOMPtr<nsIEffectiveTLDService> eTLDService =
-      mozilla::components::EffectiveTLD::Service();
-  nsAutoCString targetHost;
-  if (eTLDService) {
-    (void)eTLDService->GetBaseDomain(uri, 0, targetHost);
-  }
-
-  // Get target IP address
-  nsCString targetIp = peerAddr.ToString();
-
-  // Determine protocol from LoadInfo
-  nsAutoCString protocol;
-  ExtContentPolicyType contentType = loadInfo->GetExternalContentPolicyType();
-  switch (contentType) {
-    case ExtContentPolicyType::TYPE_WEBSOCKET:
-      protocol.AssignLiteral("websocket");
-      break;
-    case ExtContentPolicyType::TYPE_WEB_TRANSPORT:
-      protocol.AssignLiteral("webtransport");
-      break;
-    case ExtContentPolicyType::TYPE_FETCH:
-      protocol.AssignLiteral("fetch");
-      break;
-    case ExtContentPolicyType::TYPE_XMLHTTPREQUEST:
-      protocol.AssignLiteral("xhr");
-      break;
-    default:
-      if (uri->SchemeIs("https")) {
-        protocol.AssignLiteral("https");
-      } else {
-        protocol.AssignLiteral("http");
-      }
-      break;
-  }
-
-  // Record the event
-  glean::networking::LocalNetworkAccessConnectionExtra extra = {
-      .initiator = initiator.IsEmpty() ? Nothing() : Some(initiator),
-      .isSecureContext = Some(isSecureContext),
-      .loadSuccess = Some(aLoadSuccess),
-      .promptAction =
-          promptAction.IsEmpty() ? Nothing() : Some(nsCString(promptAction)),
-      .protocol = Some(protocol),
-      .targetHost = targetHost.IsEmpty() ? Nothing() : Some(targetHost),
-      .targetIp = Some(targetIp),
-      .targetPort = Some(port),
-      .topLevelSite = topLevelSite.IsEmpty() ? Nothing() : Some(topLevelSite),
-
-  };
-  glean::networking::local_network_access_connection.Record(Some(extra));
-
-  ReportLNAAccessToConsole(aChannel, "LocalNetworkAccessDetected",
-                           promptAction);
 }
 
 NS_IMETHODIMP
@@ -9785,8 +9687,6 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 
   bool isFromNet = request == mTransactionPump;
 
-  RecordIPAddressSpaceTelemetry(NS_SUCCEEDED(mStatus), mURI, mLoadInfo,
-                                mPeerAddr);
   if (mTransaction) {
     // determine if we should call DoAuthRetry
     bool authRetry = (mAuthRetryPending && NS_SUCCEEDED(status) &&
@@ -9853,7 +9753,7 @@ nsHttpChannel::OnStopRequest(nsIRequest* request, nsresult status) {
 
     RecordIPAddressSpaceTelemetry(NS_SUCCEEDED(mStatus), mURI, mLoadInfo,
                                   mPeerAddr);
-    RecordLNATelemetry(this, NS_SUCCEEDED(mStatus));
+    RecordLNATelemetry(NS_SUCCEEDED(mStatus), mURI, mLoadInfo, mPeerAddr);
 
     uint32_t flags;
     if (mStatus == NS_ERROR_LOCAL_NETWORK_ACCESS_DENIED &&

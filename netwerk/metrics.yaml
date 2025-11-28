@@ -1776,52 +1776,6 @@ networking:
       - necko@mozilla.com
     expires: 160
 
-  local_network_access_connection:
-    type: event
-    description: >
-      Recorded when a site attempts to access local network resources.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1989916
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1989916#c5
-    data_sensitivity:
-      - stored_content
-    notification_emails:
-      - smayya@mozilla.com
-      - vgosu@mozilla.com
-      - necko@mozilla.com
-    send_in_pings:
-      - local-network-access
-    expires: 150
-    extra_keys:
-      top_level_site:
-        description: The base domain (eTLD+1) of the top-level document/main window.
-        type: string
-      initiator:
-        description: The base domain (eTLD+1) of the site that triggered the LNA request (triggering principal).
-        type: string
-      target_host:
-        description: The base domain (eTLD+1) of the target host being accessed.
-        type: string
-      target_ip:
-        description: The IP address the target URL resolves to.
-        type: string
-      target_port:
-        description: The port being accessed.
-        type: quantity
-      protocol:
-        description: The protocol used for the connection (websocket/webtransport/http/https/fetch/xhr).
-        type: string
-      is_secure_context:
-        description: Whether the request is from a secure context.
-        type: boolean
-      prompt_action:
-        description: The user action on the permission prompt (allow/deny/dismissed/not_shown).
-        type: string
-      load_success:
-        description: Whether the load/connection was successful.
-        type: boolean
-
   http_channel_sub_open_to_first_sent_https_rr:
     type: timing_distribution
     time_unit: millisecond
