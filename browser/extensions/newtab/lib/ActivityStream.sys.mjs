@@ -60,6 +60,10 @@ const REGION_INFERRED_PERSONALIZATION_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.sections.personalization.inferred.region-config";
 const LOCALE_INFERRED_PERSONALIZATION_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.sections.personalization.inferred.locale-config";
+const REGION_SOV_CONFIG =
+  "browser.newtabpage.activity-stream.sov.region-config";
+const LOCALE_SOV_CONFIG =
+  "browser.newtabpage.activity-stream.sov.locale-config";
 
 const REGION_WEATHER_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-weather-config";
@@ -136,7 +140,7 @@ export function csvPrefHasValue(stringPrefName, value) {
     throw new Error(`The stringPrefName argument is not a string`);
   }
 
-  const pref = Services.prefs.getStringPref(stringPrefName) || "";
+  const pref = Services.prefs.getStringPref(stringPrefName, "") || "";
   const prefValues = pref
     .split(",")
     .map(s => s.trim())
@@ -160,6 +164,13 @@ function useInferredPersonalization({ geo, locale }) {
   return (
     csvPrefHasValue(REGION_INFERRED_PERSONALIZATION_CONFIG, geo) &&
     csvPrefHasValue(LOCALE_INFERRED_PERSONALIZATION_CONFIG, locale)
+  );
+}
+
+function useSov({ geo, locale }) {
+  return (
+    csvPrefHasValue(REGION_SOV_CONFIG, geo) &&
+    csvPrefHasValue(LOCALE_SOV_CONFIG, locale)
   );
 }
 
@@ -959,7 +970,7 @@ export const PREFS_CONFIG = new Map([
     "sov.enabled",
     {
       title: "Enables share of voice (SOV)",
-      value: false,
+      getValue: useSov,
     },
   ],
   [
