@@ -67,7 +67,10 @@ export class SearchModeSwitcher {
   async #onPopupShowing() {
     await this.#buildSearchModeList();
     this.#input.view.close({ showFocusBorder: false });
-    Glean.urlbarUnifiedsearchbutton.opened.add(1);
+
+    if (this.#input.sapName == "urlbar") {
+      Glean.urlbarUnifiedsearchbutton.opened.add(1);
+    }
   }
 
   /**
@@ -93,7 +96,9 @@ export class SearchModeSwitcher {
     this.#input.window.openPreferences("paneSearch");
     this.#popup.hidePopup();
 
-    Glean.urlbarUnifiedsearchbutton.picked.settings.add(1);
+    if (this.#input.sapName == "urlbar") {
+      Glean.urlbarUnifiedsearchbutton.picked.settings.add(1);
+    }
   }
 
   /**
@@ -504,12 +509,16 @@ export class SearchModeSwitcher {
     this.#popup.hidePopup();
 
     if (engine) {
-      // TODO do we really need to distinguish here?
-      Glean.urlbarUnifiedsearchbutton.picked[
-        engine.isConfigEngine ? "builtin_search" : "addon_search"
-      ].add(1);
+      if (this.#input.sapName == "urlbar") {
+        // TODO do we really need to distinguish here?
+        Glean.urlbarUnifiedsearchbutton.picked[
+          engine.isConfigEngine ? "builtin_search" : "addon_search"
+        ].add(1);
+      }
     } else if (restrict) {
-      Glean.urlbarUnifiedsearchbutton.picked.local_search.add(1);
+      if (this.#input.sapName == "urlbar") {
+        Glean.urlbarUnifiedsearchbutton.picked.local_search.add(1);
+      }
     } else {
       console.warn(
         `Unexpected search: ${JSON.stringify({ engine, restrict, openEngineHomePage })}`
