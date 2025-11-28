@@ -7,5 +7,13 @@
       }
     ],
     "optional": true
+  },
+  {
+    "eventType": "ELEMENT_IGNORED",
+    "elementDescriptors": [
+      {
+        "text": "Trigger Crash Report"
+      }
+    ]
   }
 ]
