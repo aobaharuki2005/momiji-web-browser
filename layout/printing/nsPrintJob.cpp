@@ -41,7 +41,6 @@
 #include "nsQueryObject.h"
 #include "nsReadableUtils.h"
 #include "nsSubDocumentFrame.h"
-#include "nsView.h"
 
 // Print Options
 #include "nsGkAtoms.h"
@@ -84,7 +83,6 @@ static const char sPrintSettingsServiceContractID[] =
 #include "nsIWebBrowserChrome.h"
 #include "nsPageSequenceFrame.h"
 #include "nsRange.h"
-#include "nsViewManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -310,7 +308,6 @@ static void DumpPrintObjectsTree(nsPrintObject* aPO, int aLevel, FILE* aFD);
 static void DumpPrintObjectsList(const nsTArray<nsPrintObject*>& aDocList);
 static void RootFrameList(nsPresContext* aPresContext, FILE* out,
                           const char* aPrefix);
-static void DumpViews(nsIDocShell* aDocShell, FILE* out);
 static void DumpLayoutData(const char* aTitleStr, const char* aURLStr,
                            nsPresContext* aPresContext, nsDeviceContext* aDC,
                            nsIFrame* aRootFrame, nsIDocShell* aDocShell,
@@ -1209,12 +1206,6 @@ nsresult nsPrintJob::SetRootView(nsPrintObject* aPO, bool aDocumentIsTopLevel,
     adjSize = mPrt->mPrintDC->GetDeviceSurfaceDimensions();
   }
 
-  if (!aPO->mViewManager->GetRootView()) {
-    // Create a child window of the parent that is our "root view/window"
-    nsView* rootView = aPO->mViewManager->CreateView();
-    aPO->mViewManager->SetRootView(rootView);
-  }
-
   if (mIsCreatingPrintPreview && aDocumentIsTopLevel) {
     aPO->mPresContext->SetPaginatedScrolling(canCreateScrollbars);
   }
@@ -1263,8 +1254,6 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   // init it with the DC
   MOZ_TRY(aPO->mPresContext->Init(printData->mPrintDC));
 
-  aPO->mViewManager = new nsViewManager();
-
   bool doReturn = false;
   nsSize adjSize;
   nsresult rv = SetRootView(aPO.get(), documentIsTopLevel, doReturn, adjSize);
@@ -1311,10 +1300,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   // in media_queries.rs for more details.
   RefPtr<Document> doc = aPO->mDocument;
   RefPtr<nsPresContext> presContext = aPO->mPresContext;
-  RefPtr<nsViewManager> viewManager = aPO->mViewManager;
 
-  aPO->mPresShell =
-      doc->CreatePresShell(presContext, viewManager, embedderFrame);
+  aPO->mPresShell = doc->CreatePresShell(presContext, embedderFrame);
   if (!aPO->mPresShell) {
     return NS_ERROR_FAILURE;
   }
@@ -1337,8 +1324,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
        pageSize.width, pageSize.height));
 
   if (mIsCreatingPrintPreview && documentIsTopLevel) {
-    mDocViewerPrint->SetPrintPreviewPresentation(
-        aPO->mViewManager, aPO->mPresContext, aPO->mPresShell.get());
+    mDocViewerPrint->SetPrintPreviewPresentation(aPO->mPresContext,
+                                                 aPO->mPresShell.get());
   }
 
   MOZ_TRY(aPO->mPresShell->Initialize());
@@ -1415,18 +1402,6 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
       RootFrameList(aPO->mPresContext, fd, 0);
       // DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
       fprintf(fd, "---------------------------------------\n\n");
-      fprintf(fd, "--------------- Views From Root Frame----------------\n");
-      nsView* v = theRootFrame->GetView();
-      if (v) {
-        v->List(fd);
-      } else {
-        printf("View is null!\n");
-      }
-      if (aPO->mDocShell) {
-        fprintf(fd, "--------------- All Views ----------------\n");
-        DumpViews(aPO->mDocShell, fd);
-        fprintf(fd, "---------------------------------------\n\n");
-      }
       fclose(fd);
     }
   }
@@ -2183,38 +2158,6 @@ static void DumpFrames(FILE* out, nsPresContext* aPresContext,
 }
 
 /** ---------------------------------------------------
- *  Dumps the Views from the DocShell
- */
-static void DumpViews(nsIDocShell* aDocShell, FILE* out) {
-  NS_ASSERTION(aDocShell, "Pointer is null!");
-  NS_ASSERTION(out, "Pointer is null!");
-
-  if (nullptr != aDocShell) {
-    fprintf(out, "docshell=%p \n", aDocShell);
-    if (PresShell* presShell = aDocShell->GetPresShell()) {
-      nsViewManager* vm = presShell->GetViewManager();
-      if (vm) {
-        nsView* root = vm->GetRootView();
-        if (root) {
-          root->List(out);
-        }
-      }
-    } else {
-      fputs("null pres shell\n", out);
-    }
-
-    // dump the views of the sub documents
-    int32_t i, n;
-    BrowsingContext* bc = nsDocShell::Cast(aDocShell)->GetBrowsingContext();
-    for (auto& child : bc->Children()) {
-      if (auto childDS = child->GetDocShell()) {
-        DumpViews(childAsShell, out);
-      }
-    }
-  }
-}
-
-/** ---------------------------------------------------
  *  Dumps the Views and Frames
  */
 void DumpLayoutData(const char* aTitleStr, const char* aURLStr,
@@ -2258,11 +2201,6 @@ void DumpLayoutData(const char* aTitleStr, const char* aURLStr,
       v->List(fd);
     } else {
       printf("View is null!\n");
-    }
-    if (aDocShell) {
-      fprintf(fd, "--------------- All Views ----------------\n");
-      DumpViews(aDocShell, fd);
-      fprintf(fd, "---------------------------------------\n\n");
     }
     if (aFD == nullptr) {
       fclose(fd);

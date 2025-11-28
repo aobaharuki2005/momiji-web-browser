@@ -106,7 +106,6 @@
 #include "nsTextNode.h"
 #include "nsTransitionManager.h"
 #include "nsUnicharUtils.h"
-#include "nsViewManager.h"
 #include "nsXULElement.h"
 
 #ifdef XP_MACOSX

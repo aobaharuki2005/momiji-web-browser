@@ -66,7 +66,7 @@
 #include "nsSandboxFlags.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
-#include "nsViewManager.h"
+#include "nsView.h"
 #include "nsWidgetsCID.h"
 using namespace mozilla;
 using namespace mozilla::css;
@@ -914,7 +914,7 @@ nsresult nsContentSink::WillParseImpl(void) {
   uint32_t currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
   if (StaticPrefs::content_sink_enable_perf_mode() == 0) {
-    uint32_t lastEventTime = nsViewManager::GetLastUserEventTime();
+    uint32_t lastEventTime = nsView::GetLastUserEventTime();
     bool newDynLower = mDocument->IsInBackgroundWindow() ||
                        ((currentTime - mBeginLoadTime) >
                             StaticPrefs::content_sink_initial_perf_time() &&

@@ -172,8 +172,6 @@
 #include "nsQueryObject.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 #include "xpcprivate.h"
 
 #ifdef NS_PRINTING

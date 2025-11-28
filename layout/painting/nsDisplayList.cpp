@@ -108,7 +108,6 @@
 #include "nsTextFrame.h"
 #include "nsTextPaintStyle.h"
 #include "nsTransitionManager.h"
-#include "nsViewManager.h"
 
 namespace mozilla {
 

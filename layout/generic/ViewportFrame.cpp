@@ -24,8 +24,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsSubDocumentFrame.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 
 using namespace mozilla;
 

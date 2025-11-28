@@ -87,8 +87,6 @@
 #include "mozilla/layers/CompositorSession.h"
 #include "VRManagerChild.h"
 #include "gfxConfig.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 
 static mozilla::LazyLogModule sBaseWidgetLog("BaseWidget");
 

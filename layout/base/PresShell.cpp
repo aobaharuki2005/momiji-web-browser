@@ -198,7 +198,6 @@
 #include "nsTreeBodyFrame.h"
 #include "nsTreeColumns.h"
 #include "nsView.h"
-#include "nsViewManager.h"
 #include "nsViewportInfo.h"
 #include "nsWindowSizes.h"
 #include "nsXPCOM.h"
@@ -670,7 +669,6 @@ bool PresShell::AccessibleCaretEnabled(nsIDocShell* aDocShell) {
 
 PresShell::PresShell(Document* aDocument)
     : mDocument(aDocument),
-      mViewManager(nullptr),
       mLastSelectionForToString(nullptr),
 #ifdef ACCESSIBILITY
       mDocAccessible(nullptr),
@@ -791,13 +789,12 @@ PresShell::~PresShell() {
  * Note this can't be merged into our constructor because caret initialization
  * calls AddRef() on us.
  */
-void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
+void PresShell::Init(nsPresContext* aPresContext) {
   MOZ_ASSERT(mDocument);
   MOZ_ASSERT(aPresContext);
-  MOZ_ASSERT(aViewManager);
-  MOZ_ASSERT(!mViewManager, "already initialized");
+  MOZ_ASSERT(!mRootView, "Already initialized");
 
-  mViewManager = aViewManager;
+  mRootView = MakeUnique<nsView>(this);
 
   // mDocument is now set.  It might have a display document whose "need layout/
   // style" flush flags are not set, but ours will be set.  To keep these
@@ -808,9 +805,6 @@ void PresShell::Init(nsPresContext* aPresContext, nsViewManager* aViewManager) {
 
   // Create our frame constructor.
   mFrameConstructor = MakeUnique<nsCSSFrameConstructor>(mDocument, this);
-
-  // The document viewer owns both view manager and pres shell.
-  mViewManager->SetPresShell(this);
 
   // Bind the context to the presentation shell.
   // FYI: We cannot initialize mPresContext in the constructor because we
@@ -1260,15 +1254,7 @@ void PresShell::Destroy() {
     mAccessibleCaretEventHub = nullptr;
   }
 
-  if (mViewManager) {
-    if (auto* root = mViewManager->GetRootView()) {
-      root->Destroy();
-    }
-    // Clear the view manager's weak pointer back to |this| in case it
-    // was leaked.
-    mViewManager->SetPresShell(nullptr);
-    mViewManager = nullptr;
-  }
+  mRootView = nullptr;
 
   if (mPresContext) {
     // We hold a reference to the pres context, and it holds a weak link back
@@ -4406,7 +4392,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   }
 
   MOZ_DIAGNOSTIC_ASSERT(!mIsDestroying || !isSafeToFlush);
-  MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mViewManager);
+  MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mRootView);
   MOZ_DIAGNOSTIC_ASSERT(mIsDestroying || mDocument->HasShellOrBFCacheEntry());
 
   if (!isSafeToFlush) {
@@ -5632,7 +5618,6 @@ struct PaintParams {
 };
 
 WindowRenderer* PresShell::GetWindowRenderer() {
-  NS_ASSERTION(mViewManager, "Should have view manager");
   if (nsIWidget* widget = GetOwnWidget()) {
     return widget->GetWindowRenderer();
   }
@@ -5650,11 +5635,8 @@ nsIWidget* PresShell::GetNearestWidget() const {
 }
 
 nsIWidget* PresShell::GetOwnWidget() const {
-  if (!mViewManager) {
-    return nullptr;
-  }
-  if (auto* root = mViewManager->GetRootView()) {
-    return root->GetWidget();
+  if (mRootView) {
+    return mRootView->GetWidget();
   }
   return nullptr;
 }

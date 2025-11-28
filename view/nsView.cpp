@@ -15,7 +15,6 @@
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/widget/Screen.h"
 #include "nsIWidget.h"
-#include "nsViewManager.h"
 #include "nsIFrame.h"
 #include "nsXULPopupManager.h"
 #include "nsIWidgetListener.h"
@@ -28,21 +27,28 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-nsView::nsView(nsViewManager* aViewManager) : mViewManager(aViewManager) {
-  MOZ_COUNT_CTOR(nsView);
+static uint32_t gLastUserEventTime = 0;
+static void MaybeUpdateLastUserEventTime(WidgetGUIEvent* aEvent) {
+  WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+  if ((mouseEvent &&
+       // Ignore mouse events that we synthesize.
+       mouseEvent->mReason == WidgetMouseEvent::eReal &&
+       // Ignore mouse exit and enter (we'll get moves if the user
+       // is really moving the mouse) since we get them when we
+       // create and destroy widgets.
+       mouseEvent->mMessage != eMouseExitFromWidget &&
+       mouseEvent->mMessage != eMouseEnterIntoWidget) ||
+      aEvent->HasKeyEventMessage() || aEvent->HasIMEEventMessage()) {
+    gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
+  }
 }
+
+uint32_t nsView::GetLastUserEventTime() { return gLastUserEventTime; }
+
+nsView::nsView(PresShell* aPs) : mPresShell(aPs) { MOZ_COUNT_CTOR(nsView); }
 
 nsView::~nsView() {
   MOZ_COUNT_DTOR(nsView);
-
-  if (mViewManager) {
-    nsView* rootView = mViewManager->GetRootView();
-    if (rootView == this) {
-      // Inform the view manager that the root view has gone away...
-      mViewManager->SetRootView(nullptr);
-    }
-    mViewManager = nullptr;
-  }
 
   if (mPreviousWindow) {
     mPreviousWindow->SetPreviouslyAttachedWidgetListener(nullptr);
@@ -133,7 +139,7 @@ void nsView::List(FILE* out, int32_t aIndent) const {
 }
 #endif  // DEBUG
 
-PresShell* nsView::GetPresShell() { return GetViewManager()->GetPresShell(); }
+PresShell* nsView::GetPresShell() { return mPresShell; }
 
 bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
                            int32_t aHeight) {
@@ -172,9 +178,6 @@ bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
 void nsView::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
-  MOZ_ASSERT(this == mViewManager->GetRootView(),
-             "Should be called for the root view");
-
   CallOnAllRemoteChildren(
       [aHeight](dom::BrowserParent* aBrowserParent) -> CallState {
         aBrowserParent->DynamicToolbarMaxHeightChanged(aHeight);
@@ -185,8 +188,6 @@ void nsView::DynamicToolbarMaxHeightChanged(ScreenIntCoord aHeight) {
 void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
-  MOZ_ASSERT(this == mViewManager->GetRootView(),
-             "Should be called for the root view");
   CallOnAllRemoteChildren(
       [aOffset](dom::BrowserParent* aBrowserParent) -> CallState {
         // Skip background tabs.
@@ -202,8 +203,6 @@ void nsView::DynamicToolbarOffsetChanged(ScreenIntCoord aOffset) {
 void nsView::KeyboardHeightChanged(ScreenIntCoord aHeight) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
-  MOZ_ASSERT(this == mViewManager->GetRootView(),
-             "Should be called for the root view");
   CallOnAllRemoteChildren(
       [aHeight](dom::BrowserParent* aBrowserParent) -> CallState {
         // Skip background tabs.
@@ -219,8 +218,6 @@ void nsView::KeyboardHeightChanged(ScreenIntCoord aHeight) {
 void nsView::AndroidPipModeChanged(bool aPipMode) {
   MOZ_ASSERT(XRE_IsParentProcess(),
              "Should be only called for the browser parent process");
-  MOZ_ASSERT(this == mViewManager->GetRootView(),
-             "Should be called for the root view");
   CallOnAllRemoteChildren(
       [aPipMode](dom::BrowserParent* aBrowserParent) -> CallState {
         aBrowserParent->AndroidPipModeChanged(aPipMode);
@@ -269,7 +266,7 @@ nsEventStatus nsView::HandleEvent(WidgetGUIEvent* aEvent) {
   MOZ_ASSERT(aEvent->mWidget, "null widget ptr");
 
   nsEventStatus result = nsEventStatus_eIgnore;
-  nsViewManager::MaybeUpdateLastUserEventTime(aEvent);
+  MaybeUpdateLastUserEventTime(aEvent);
   if (RefPtr<PresShell> ps = GetPresShell()) {
     if (nsIFrame* root = ps->GetRootFrame()) {
       ps->HandleEvent(root, aEvent, false, &result);
@@ -305,9 +302,8 @@ void nsView::SafeAreaInsetsChanged(
 }
 
 bool nsView::IsPrimaryFramePaintSuppressed() const {
-  return StaticPrefs::layout_show_previous_page() &&
-         mViewManager->GetPresShell() &&
-         mViewManager->GetPresShell()->IsPaintingSuppressed();
+  return StaticPrefs::layout_show_previous_page() && mPresShell &&
+         mPresShell->IsPaintingSuppressed();
 }
 
 void nsView::CallOnAllRemoteChildren(

@@ -74,7 +74,6 @@
 #include "nsQueryObject.h"
 #include "nsRefreshDriver.h"
 #include "nsStyleUtil.h"
-#include "nsViewManager.h"
 
 #if defined(MOZ_WIDGET_GTK)
 #  include <gdk/gdk.h>
@@ -423,15 +422,12 @@ nsDOMWindowUtils::GetDocumentMetadata(const nsAString& aName,
 NS_IMETHODIMP
 nsDOMWindowUtils::UpdateLayerTree() {
   FlushLayoutWithoutThrottledAnimations();
-  if (RefPtr<PresShell> presShell = GetPresShell()) {
-    RefPtr<nsViewManager> vm = presShell->GetViewManager();
-    if (nsView* view = vm->GetRootView()) {
-      nsAutoScriptBlocker scriptBlocker;
-      presShell->PaintAndRequestComposite(
-          presShell->GetRootFrame(), view->GetWidget()->GetWindowRenderer(),
-          PaintFlags::PaintSyncDecodeImages);
-      presShell->GetWindowRenderer()->WaitOnTransactionProcessed();
-    }
+  if (RefPtr<PresShell> ps = GetPresShell()) {
+    nsAutoScriptBlocker scriptBlocker;
+    RefPtr renderer = ps->GetWindowRenderer();
+    ps->PaintAndRequestComposite(ps->GetRootFrame(), renderer,
+                                 PaintFlags::PaintSyncDecodeImages);
+    renderer->WaitOnTransactionProcessed();
   }
   return NS_OK;
 }

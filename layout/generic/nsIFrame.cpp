@@ -103,8 +103,6 @@
 #include "nsStyleStructInlines.h"
 #include "nsTableWrapperFrame.h"
 #include "nsTextControlFrame.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 
 // For triple-click pref
 #include "RetainedDisplayListBuilder.h"

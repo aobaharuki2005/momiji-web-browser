@@ -31,7 +31,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsString.h"
-#include "nsViewManager.h"
 
 namespace mozilla::dom {
 

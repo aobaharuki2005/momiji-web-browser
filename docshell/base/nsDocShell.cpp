@@ -234,8 +234,6 @@
 #include "nsSubDocumentFrame.h"
 #include "nsURILoader.h"
 #include "nsURLHelper.h"
-#include "nsView.h"
-#include "nsViewManager.h"
 #include "nsViewSourceHandler.h"
 #include "nsWebBrowserFind.h"
 #include "nsWhitespaceTokenizer.h"
@@ -7735,9 +7733,6 @@ nsresult nsDocShell::RestoreFromHistory() {
     pc->RecomputeBrowsingContextDependentData();
   }
 
-  nsViewManager* newVM = presShell ? presShell->GetViewManager() : nullptr;
-  nsView* newRootView = newVM ? newVM->GetRootView() : nullptr;
-
   nsCOMPtr<nsPIDOMWindowInner> privWinInner = privWin->GetCurrentInnerWindow();
 
   // If parent is suspended, increase suspension count.
@@ -7774,7 +7769,7 @@ nsresult nsDocShell::RestoreFromHistory() {
   // presentation.  If this is not the same size we showed it at last time,
   // then we need to resize the widget.
 
-  if (newRootView) {
+  if (presShell) {
     if (!newBounds.IsEmpty() &&
         !newBounds.ToUnknownRect().IsEqualEdges(oldBounds)) {
       MOZ_LOG(gPageCacheLog, LogLevel::Debug,
@@ -7786,11 +7781,6 @@ nsresult nsDocShell::RestoreFromHistory() {
       sf->PostScrolledAreaEventForCurrentArea();
     }
   }
-
-  // The FinishRestore call below can kill these, null them out so we don't
-  // have invalid pointer lying around.
-  newRootView = nullptr;
-  newVM = nullptr;
 
   // If the IsUnderHiddenEmbedderElement() state has been changed, we need to
   // update it.

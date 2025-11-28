@@ -62,7 +62,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsPresContextInlines.h"
-#include "nsViewManager.h"
 #include "nsXULElement.h"
 
 using namespace mozilla;
@@ -3067,17 +3066,9 @@ nsXULMenuCommandEvent::Run() {
     }
   }
 
-  // The order of the nsViewManager and PresShell COM pointers is
-  // important below.  We want the pres shell to get released before the
-  // associated view manager on exit from this function.
-  // See bug 54233.
-  // XXXndeakin is this still needed?
   RefPtr<nsPresContext> presContext = menu->OwnerDoc()->GetPresContext();
   RefPtr<PresShell> presShell =
       presContext ? presContext->PresShell() : nullptr;
-  RefPtr<nsViewManager> kungFuDeathGrip =
-      presShell ? presShell->GetViewManager() : nullptr;
-  (void)kungFuDeathGrip;  // Not referred to directly within this function
 
   // Deselect ourselves.
   if (mCloseMenuMode != CloseMenuMode_None) {

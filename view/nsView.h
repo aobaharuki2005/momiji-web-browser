@@ -6,11 +6,7 @@
 #ifndef nsView_h__
 #define nsView_h__
 
-#include "nsCoord.h"
 #include "nsRect.h"
-#include "nsPoint.h"
-#include "nsRegion.h"
-#include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "nsIWidgetListener.h"
 #include "Units.h"
@@ -118,14 +114,6 @@ class nsView final : public nsIWidgetListener {
   void operator delete(void* ptr) { ::operator delete(ptr); }
 
   /**
-   * Get the view manager which "owns" the view.
-   * This method might require some expensive traversal work in the future. If
-   * you can get the view manager from somewhere else, do that instead.
-   * @result the view manager
-   */
-  nsViewManager* GetViewManager() const { return mViewManager; }
-
-  /**
    * Destroy the view.
    *
    * The view destroys its child views, and destroys and releases its
@@ -153,6 +141,8 @@ class nsView final : public nsIWidgetListener {
    */
   void AttachToTopLevelWidget(nsIWidget* aWidget);
   void DetachFromTopLevelWidget();
+
+  static uint32_t GetLastUserEventTime();
 
   /**
    * In 4.0, the "cutout" nature of a view is queryable.
@@ -202,18 +192,17 @@ class nsView final : public nsIWidgetListener {
   nsEventStatus HandleEvent(mozilla::WidgetGUIEvent*) override;
   void SafeAreaInsetsChanged(const mozilla::LayoutDeviceIntMargin&) override;
 
+  explicit nsView(mozilla::PresShell*);
   virtual ~nsView();
 
   bool IsPrimaryFramePaintSuppressed() const;
 
  private:
-  explicit nsView(nsViewManager* = nullptr);
-
   void CallOnAllRemoteChildren(
       const std::function<mozilla::CallState(mozilla::dom::BrowserParent*)>&
           aCallback);
 
-  nsViewManager* mViewManager;
+  mozilla::PresShell* mPresShell = nullptr;
   nsCOMPtr<nsIWidget> mWindow;
   nsCOMPtr<nsIWidget> mPreviousWindow;
 };

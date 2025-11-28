@@ -79,7 +79,6 @@
 #include "nsTableWrapperFrame.h"
 #include "nsTextFrame.h"
 #include "nsThreadUtils.h"
-#include "nsViewManager.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"

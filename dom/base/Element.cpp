@@ -201,7 +201,6 @@
 #include "nsTArray.h"
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
-#include "nsViewManager.h"
 #include "nsWindowSizes.h"
 #include "nsXULElement.h"
 

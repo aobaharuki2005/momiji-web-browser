@@ -94,7 +94,6 @@
 #include "nsPresContext.h"
 #include "nsTextFrame.h"
 #include "nsTransitionManager.h"
-#include "nsViewManager.h"
 
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "VRManagerChild.h"
