@@ -27,8 +27,12 @@ export default {
    *
    * TypeScript (ts) is not listed here, as we currently only format that with
    * Prettier.
+   *
+   * JSON is not listed here, as we don't want to apply most rules to the JSON
+   * files, but only the json ones. These are managed in the main configuration
+   * for firefox-main.
    */
-  allFileExtensions: ["mjs", "js", "json", "jsx", "html", "sjs", "xhtml"],
+  allFileExtensions: ["mjs", "js", "jsx", "html", "sjs", "xhtml"],
 
   /**
    * Can be used to change a group of rules or globals, so that all the items
