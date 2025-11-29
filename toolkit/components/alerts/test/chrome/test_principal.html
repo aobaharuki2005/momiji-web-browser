@@ -15,11 +15,6 @@
 const Cc = SpecialPowers.Cc;
 const Ci = SpecialPowers.Ci;
 const Services = SpecialPowers.Services;
-const AlertNotification = Components.Constructor(
-  "@mozilla.org/alert-notification;1",
-  "nsIAlertNotification",
-  "initWithObject"
-);
 
 const notifier = Cc["@mozilla.org/alerts-service;1"]
                    .getService(Ci.nsIAlertsService);
@@ -55,14 +50,10 @@ function notify(alertName, principal) {
         resolve(source);
       }
     }
-    let alert = new AlertNotification({
-      title: "Notification test",
-      body: "Surprise! I'm here to test notifications!",
-      cookie: alertName,
-      name: alertName,
-      principal
-    });
-    notifier.showAlert(alert, observe);
+    notifier.showAlertNotification(null, "Notification test",
+                                   "Surprise! I'm here to test notifications!",
+                                   false, alertName, observe, alertName,
+                                   null, null, null, principal);
     if (SpecialPowers.Services.appinfo.OS == "Darwin") {
       notifier.closeAlert(alertName);
     }

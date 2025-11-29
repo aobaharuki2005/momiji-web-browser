@@ -57,9 +57,10 @@ class AlertNotification : public nsIAlertNotification {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTNOTIFICATION
+  AlertNotification();
 
  protected:
-  virtual ~AlertNotification() = default;
+  virtual ~AlertNotification();
 
  private:
   nsresult InitId();
@@ -69,15 +70,15 @@ class AlertNotification : public nsIAlertNotification {
   nsString mImageURL;
   nsString mTitle;
   nsString mText;
-  bool mTextClickable = false;
+  bool mTextClickable;
   nsString mCookie;
   nsString mDir;
   nsString mLang;
-  bool mRequireInteraction = false;
+  bool mRequireInteraction;
   nsString mData;
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  bool mInPrivateBrowsing = false;
-  bool mSilent = false;
+  bool mInPrivateBrowsing;
+  bool mSilent;
   nsTArray<uint32_t> mVibrate;
   nsTArray<RefPtr<nsIAlertAction>> mActions;
   nsString mOpaqueRelaunchData;
@@ -88,8 +89,6 @@ class AlertAction : public nsIAlertAction {
   NS_DECL_NSIALERTACTION
 
   AlertAction(const nsAString& aAction, const nsAString& aTitle);
-  static Result<already_AddRefed<AlertAction>, nsresult> Copy(
-      nsIAlertAction& aAction);
 
  protected:
   virtual ~AlertAction() = default;

@@ -12,6 +12,23 @@ const mockAlertsService = {
     listener.observe(null, "alertfinished", alert.cookie);
   },
 
+  showAlertNotification(
+    imageUrl,
+    title,
+    text,
+    textClickable,
+    cookie,
+    alertListener,
+    name,
+    dir,
+    lang,
+    data,
+    principal,
+    privateBrowsing
+  ) {
+    this.showAlert({ cookie, title, text, privateBrowsing }, alertListener);
+  },
+
   closeAlert() {
     // This mock immediately close the alert on show, so this is empty.
   },
@@ -74,7 +91,7 @@ add_task(async function test_notification_privateBrowsing_flag() {
     Assert.equal(notification.cookie, "notifid", "notification id");
     Assert.equal(notification.title, "titl", "notification title");
     Assert.equal(notification.text, "msg", "notification text");
-    Assert.equal(notification.inPrivateBrowsing, privateBrowsing, "pbm flag");
+    Assert.equal(notification.privateBrowsing, privateBrowsing, "pbm flag");
   }
 
   await checkPrivateBrowsingFlag(false);

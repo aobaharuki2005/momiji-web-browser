@@ -22,12 +22,6 @@ const PREF_TIMER_SHOW_NOTIFICATIONS =
   "widgets.focusTimer.showSystemNotifications";
 const CACHE_KEY = "timer_widget";
 
-const AlertNotification = Components.Constructor(
-  "@mozilla.org/alert-notification;1",
-  "nsIAlertNotification",
-  "initWithObject"
-);
-
 /**
  * Class for the Timer widget, which manages the changes to the Timer widget
  * and syncs with PersistentCache
@@ -55,12 +49,14 @@ export class TimerFeed {
         Ci.nsIAlertsService
       );
 
-      alertsService.showAlert(
-        new AlertNotification({
-          imageURL: "chrome://branding/content/icon64.png",
-          title,
-          text: body,
-        })
+      // TODO: Add more readable args as defined in toolkit/components/alerts/nsIAlertsService.idl
+      alertsService.showAlertNotification(
+        "chrome://branding/content/icon64.png",
+        title,
+        body,
+        false,
+        "",
+        null
       );
     } catch (err) {
       console.error("Failed to show system notification", err);
