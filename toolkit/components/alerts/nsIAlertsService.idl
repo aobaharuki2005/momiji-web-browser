@@ -106,6 +106,12 @@ interface nsIAlertNotification : nsISupports
             [optional] in Array<uint32_t> aVibrate);
 
   /**
+   * Initializes an alert notification with another instance.
+   * Can be useful in JS as it can provide a dictionary object.
+   */
+  void initWithObject(in nsIAlertNotification aAlertNotification);
+
+  /**
    * The unique ID of the notification, based on the profile path and the caller
    * given name.
    *
