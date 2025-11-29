@@ -4007,6 +4007,24 @@
   value: -1
   mirror: always
 
+# Controls the time offset (in seconds) applied when initializing the access
+# time for a newly created origin in temporary storage. When set to a positive
+# value, the stored access time is artificially adjusted by subtracting the
+# specified number of seconds from the current time. This can be used to
+# simulate older origins for testing eviction and recency-based cleanup
+# behavior.
+#
+# If the offset value is too large and would cause integer underflow, the
+# current time is used as it would have been used normally.
+#
+# A value of 0 disables this behavior (default).
+#
+# This setting is for testing only and must not be enabled in production.
+- name: dom.quotaManager.temporaryStorage.initialOriginAccessTimeOffsetSec
+  type: RelaxedAtomicUint32
+  value: 0
+  mirror: always
+
 # Controls whether the quota manager updates the last access time for origins
 # in temporary storage. When enabled, the access time is updated only when an
 # origin is accessed by a quota client for the first time during a session or

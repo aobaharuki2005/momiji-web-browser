@@ -6500,7 +6500,33 @@ QuotaManager::EnsureTemporaryOriginIsInitializedInternal(
       return std::pair(std::move(directory), false);
     }
 
-    const int64_t timestamp = PR_Now();
+    // We apply the offset only here when setting the initial access time for
+    // a new origin. In theory PersistOp::DoDirectoryWork could also honor this
+    // pref, but since the pref is intended for testing only, we do it only
+    // here for now for simplicity.
+    const int64_t timestamp = []() {
+      const int64_t now = PR_Now();
+      const uint32_t offsetSec = StaticPrefs::
+          dom_quotaManager_temporaryStorage_initialOriginAccessTimeOffsetSec();
+
+      if (offsetSec > 0) {
+        CheckedInt<int64_t> ts(now);
+
+        ts -= CheckedInt<int64_t>(offsetSec) * PR_USEC_PER_SEC;
+        if (!ts.isValid()) {
+          // Offset too large (underflow), use current time as if there was no
+          // offset.
+
+          QM_WARNING("Initial origin access time offset too large!");
+
+          return now;
+        }
+
+        return ts.value();
+      }
+
+      return now;
+    }();
 
     FullOriginMetadata fullOriginMetadata{
         aOriginMetadata,
