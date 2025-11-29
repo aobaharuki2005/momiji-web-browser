@@ -241,9 +241,9 @@
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
   <string name="browser_menu_add_to_homescreen">Adaugă în ecranul de pornire</string>
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
-  <string name="browser_menu_add_app_to_homescreen">Adaugă aplicația pe ecranul de pornire</string>
+  <string name="browser_menu_add_app_to_homescreen">Adaugă aplicația în ecranul de pornire</string>
   <!-- Text for notifying users that Xiaomi devices require additional permissions to add to home screen -->
-  <string name="browser_menu_add_to_homescreen_xiaomi">Este posibil ca dispozitivele Xiaomi să necesite permisiuni suplimentare pentru adăugarea de comenzi rapide pe ecranul de pornire. Te rugăm să verifici setările.</string>
+  <string name="browser_menu_add_to_homescreen_xiaomi">Este posibil ca dispozitivele Xiaomi să necesite permisiuni suplimentare pentru adăugarea de comenzi rapide în ecranul de pornire. Te rugăm să verifici setările.</string>
   <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
   <string name="resync_button_content_description">Resincronizează</string>
   <!-- Browser menu button that opens the find in page menu -->
@@ -1064,7 +1064,9 @@
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Schimbi pictograma aplicației?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
-  <string name="restart_warning_dialog_body_2">Este posibil să se închidă aplicația. Atinge pictograma nouă și strălucitoare ca să redeschizi %1$s.</string>
+  <string name="restart_warning_dialog_body_2">Este posibil ca aplicația să se închidă. Atinge pictograma nouă și strălucitoare pentru a redeschide %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Modificarea pictogramei va elimina toate site-urile și comenzile rapide pe care le-ai salvat în ecranul de pornire.\n\nEste posibil ca %1$s să se închidă. Atinge noua pictogramă pentru a-l redeschide.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Schimbă pictograma</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2755,8 +2757,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Sincronizează adresele pe toate dispozitivele</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Sincronizează adresele</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Înapoi</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Adaugă un card</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Navighează înapoi</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Editează card</string>
   <!-- The header for the card number of a credit card -->
