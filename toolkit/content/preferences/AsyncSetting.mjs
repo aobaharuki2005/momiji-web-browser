@@ -44,6 +44,25 @@ export class AsyncSetting extends EventEmitter {
   setup() {}
 
   /**
+   * Called before the setting values will be cached. You can start any shared
+   * work here if you need the same value in multiple callbacks.
+   *
+   * @example
+   * class Attendees extends AsyncSetting {
+   *   beforeRefresh() {
+   *     this.attendees = MeetingDb.getAttendees();
+   *   }
+   *   get() {
+   *     return this.attendees;
+   *   }
+   *   async visible() {
+   *     return (await this.attendees).length;
+   *   }
+   * }
+   */
+  beforeRefresh() {}
+
+  /**
    * Get the value of this setting.
    *
    * @abstract
@@ -171,6 +190,7 @@ export class AsyncSettingHandler {
    * Called to trigger async tasks and re-cache values.
    */
   async refresh() {
+    this.asyncSetting.beforeRefresh();
     [
       this.cachedValue,
       this.cachedDisabled,

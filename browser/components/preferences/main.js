@@ -1317,6 +1317,13 @@ Preferences.addSetting(
   class extends Preferences.AsyncSetting {
     static id = "payments-list";
 
+    /** @type {Promise<any[]>} */
+    paymentMethods;
+
+    beforeRefresh() {
+      this.paymentMethods = this.getPaymentMethods();
+    }
+
     async getPaymentMethods() {
       await FormAutofillPreferences.prototype.initializePaymentsStorage();
       return FormAutofillPreferences.prototype.makePaymentsListItems();
@@ -1324,8 +1331,12 @@ Preferences.addSetting(
 
     async getControlConfig() {
       return {
-        items: await this.getPaymentMethods(),
+        items: await this.paymentMethods,
       };
+    }
+
+    async visible() {
+      return Boolean((await this.paymentMethods).length);
     }
 
     setup() {
