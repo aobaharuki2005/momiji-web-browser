@@ -363,7 +363,7 @@ inTimeZone("Asia/Ho_Chi_Minh", () => {
 // bug 1300197
 inTimeZone("Europe/Dublin", () => {
     let dt = new Date(1910, Month.January, 1);
-    assertDateTime(dt, "Sat Jan 01 1910 00:00:00 GMT-0025 (GMT+00:00)");
+    assertDateTime(dt, "Sat Jan 01 1910 00:00:00 GMT-0025 (Greenwich Mean Time)");
 });
 
 // bug 1304774
