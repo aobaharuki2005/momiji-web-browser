@@ -485,6 +485,7 @@ mapping:
         description: "langpack.xpi repackaged as a .rpm"
         all_locales: true
         locale_prefix: ''
+        source_path_modifier: ''
         from:
             - repackage-rpm
         not_for_locales:
