@@ -52,6 +52,12 @@ ChromeUtils.defineLazyGetter(lazy, "screenshotsLocalization", () => {
   return new Localization(["browser/screenshots.ftl"], true);
 });
 
+const AlertNotification = Components.Constructor(
+  "@mozilla.org/alert-notification;1",
+  "nsIAlertNotification",
+  "initWithObject"
+);
+
 // The max dimension for a canvas is 32,767 https://searchfox.org/mozilla-central/rev/f40d29a11f2eb4685256b59934e637012ea6fb78/gfx/cairo/cairo/src/cairo-image-surface.c#62.
 // The max number of pixels for a canvas is 472,907,776 pixels (i.e., 22,528 x 20,992) https://developer.mozilla.org/en-US/docs/Web/HTML/Element/canvas#maximum_canvas_size
 // We have to limit screenshots to these dimensions otherwise it will cause an error.
@@ -984,7 +990,9 @@ export var ScreenshotsUtils = {
   },
 
   showAlertMessage(title, message) {
-    lazy.AlertsService.showAlertNotification(null, title, message);
+    lazy.AlertsService.showAlert(
+      new AlertNotification({ title, text: message })
+    );
   },
 
   /**
