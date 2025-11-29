@@ -1290,6 +1290,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       canSkipEnqueuingJobs(this, false),
       promiseRejectionTrackerCallback(this, nullptr),
       promiseRejectionTrackerCallbackData(this, nullptr),
+      bypassCSPForDebugger(this, false),
       insideExclusiveDebuggerOnEval(this, nullptr),
       microTaskQueues(this) {
   MOZ_ASSERT(static_cast<JS::RootingContext*>(this) ==

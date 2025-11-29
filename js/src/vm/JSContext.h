@@ -1013,6 +1013,11 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::StructuredSpewer& spewer() { return structuredSpewer_.ref(); }
 #endif
 
+  // This flag indicates whether we should bypass CSP restrictions for
+  // eval() and Function() calls or not. This flag can be set when
+  // evaluating the code for Debugger.Frame.prototype.eval.
+  js::ContextData<bool> bypassCSPForDebugger;
+
   // Debugger having set `exclusiveDebuggerOnEval` property to true
   // want their evaluations and calls to be ignore by all other Debuggers
   // except themself. This flag indicates whether we are in such debugger
@@ -1199,6 +1204,19 @@ class MOZ_RAII AutoNoteExclusiveDebuggerOnEval {
   ~AutoNoteExclusiveDebuggerOnEval() {
     cx->insideExclusiveDebuggerOnEval = oldValue;
   }
+};
+
+class MOZ_RAII AutoSetBypassCSPForDebugger {
+  JSContext* cx;
+  bool oldValue;
+
+ public:
+  AutoSetBypassCSPForDebugger(JSContext* cx, bool value)
+      : cx(cx), oldValue(cx->bypassCSPForDebugger) {
+    cx->bypassCSPForDebugger = value;
+  }
+
+  ~AutoSetBypassCSPForDebugger() { cx->bypassCSPForDebugger = oldValue; }
 };
 
 enum UnsafeABIStrictness {
