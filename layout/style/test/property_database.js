@@ -13461,19 +13461,24 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
     invalid_values: ["foo", "none none", "span-y-start self-block-end"],
   };
 
-  gCSSProperties["position-try-order"] = {
-    domProp: "positionTryOrder",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["normal"],
-    other_values: [
-      "most-width",
-      "most-height",
-      "most-block-size",
-      "most-inline-size",
-    ],
-    invalid_values: ["auto", "none", "foo"],
-  };
+  const tryOrderEnabled = IsCSSPropertyPrefEnabled(
+    "layout.css.anchor-positioning.position-try-order.enabled"
+  );
+  if (tryOrderEnabled) {
+    gCSSProperties["position-try-order"] = {
+      domProp: "positionTryOrder",
+      inherited: false,
+      type: CSS_TYPE_LONGHAND,
+      initial_values: ["normal"],
+      other_values: [
+        "most-width",
+        "most-height",
+        "most-block-size",
+        "most-inline-size",
+      ],
+      invalid_values: ["auto", "none", "foo"],
+    };
+  }
 
   gCSSProperties["position-visibility"] = {
     domProp: "positionVisibility",
@@ -13493,7 +13498,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
     domProp: "positionTry",
     inherited: false,
     type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: ["position-try-order", "position-try-fallbacks"],
+    subproperties: ["position-try-fallbacks"],
     initial_values: ["none"],
     other_values: [
       "--foo",
@@ -13508,54 +13513,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
       "span-all self-block-end",
       "end span-start",
       "center span-all",
-      "most-width --foo",
-      "most-width flip-block",
-      "most-width flip-inline",
-      "most-width flip-x",
-      "most-width flip-y",
-      "most-width flip-start",
-      "most-width left",
-      "most-width span-y-start",
-      "most-width span-block-start inline-end",
-      "most-width span-all self-block-end",
-      "most-width end span-start",
-      "most-width center span-all",
-      "most-height --foo",
-      "most-height flip-block",
-      "most-height flip-inline",
-      "most-height flip-x",
-      "most-height flip-y",
-      "most-height flip-start",
-      "most-height left",
-      "most-height span-y-start",
-      "most-height span-block-start inline-end",
-      "most-height span-all self-block-end",
-      "most-height end span-start",
-      "most-height center span-all",
-      "most-block-size --foo",
-      "most-block-size flip-block",
-      "most-block-size flip-inline",
-      "most-block-size flip-x",
-      "most-block-size flip-y",
-      "most-block-size flip-start",
-      "most-block-size left",
-      "most-block-size span-y-start",
-      "most-block-size span-block-start inline-end",
-      "most-block-size span-all self-block-end",
-      "most-block-size end span-start",
-      "most-block-size center span-all",
-      "most-inline-size --foo",
-      "most-inline-size flip-block",
-      "most-inline-size flip-inline",
-      "most-inline-size flip-x",
-      "most-inline-size flip-y",
-      "most-inline-size flip-start",
-      "most-inline-size left",
-      "most-inline-size span-y-start",
-      "most-inline-size span-block-start inline-end",
-      "most-inline-size span-all self-block-end",
-      "most-inline-size end span-start",
-      "most-inline-size center span-all",
     ],
     invalid_values: [
       "foo",
@@ -13563,6 +13520,63 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
       "--foo span-y-start self-block-end",
     ],
   };
+  if (tryOrderEnabled) {
+    gCSSProperties["position-try"].subproperties.push("position-try-order");
+  }
+  const positionTryValuesWithOrder = [
+    "most-width --foo",
+    "most-width flip-block",
+    "most-width flip-inline",
+    "most-width flip-x",
+    "most-width flip-y",
+    "most-width flip-start",
+    "most-width left",
+    "most-width span-y-start",
+    "most-width span-block-start inline-end",
+    "most-width span-all self-block-end",
+    "most-width end span-start",
+    "most-width center span-all",
+    "most-height --foo",
+    "most-height flip-block",
+    "most-height flip-inline",
+    "most-height flip-x",
+    "most-height flip-y",
+    "most-height flip-start",
+    "most-height left",
+    "most-height span-y-start",
+    "most-height span-block-start inline-end",
+    "most-height span-all self-block-end",
+    "most-height end span-start",
+    "most-height center span-all",
+    "most-block-size --foo",
+    "most-block-size flip-block",
+    "most-block-size flip-inline",
+    "most-block-size flip-x",
+    "most-block-size flip-y",
+    "most-block-size flip-start",
+    "most-block-size left",
+    "most-block-size span-y-start",
+    "most-block-size span-block-start inline-end",
+    "most-block-size span-all self-block-end",
+    "most-block-size end span-start",
+    "most-block-size center span-all",
+    "most-inline-size --foo",
+    "most-inline-size flip-block",
+    "most-inline-size flip-inline",
+    "most-inline-size flip-x",
+    "most-inline-size flip-y",
+    "most-inline-size flip-start",
+    "most-inline-size left",
+    "most-inline-size span-y-start",
+    "most-inline-size span-block-start inline-end",
+    "most-inline-size span-all self-block-end",
+    "most-inline-size end span-start",
+    "most-inline-size center span-all",
+  ];
+  (tryOrderEnabled
+    ? gCSSProperties["position-try"].other_values
+    : gCSSProperties["position-try"].invalid_values
+  ).push(...positionTryValuesWithOrder);
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.scroll-state.enabled")) {

@@ -9897,6 +9897,13 @@
   mirror: always
   rust: true
 
+# Whether to enable position-try-order
+- name: layout.css.anchor-positioning.position-try-order.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether to enable generalized CSS Attr Support. If this pref is set to false
 # we treat attr as a regular function with support only for the `content` css
 # property. If it is set to true, attr is parsed as a subtitution function.

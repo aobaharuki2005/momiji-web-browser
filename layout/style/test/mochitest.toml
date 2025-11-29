@@ -12,6 +12,7 @@ prefs = [
   "layout.css.basic-shape-shape.enabled=true",
   "layout.css.field-sizing.enabled=true",
   "layout.css.anchor-positioning.enabled=true",
+  "layout.css.anchor-positioning.position-try-order.enabled=true",
   "layout.css.scroll-state.enabled=true",
 ]
 support-files = [
