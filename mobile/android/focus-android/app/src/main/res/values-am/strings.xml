@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools">
   <!--
     #######################################################################################
@@ -354,7 +361,7 @@
   <!-- Explanation text above the list of search engines -->
   <string name="preference_select_preferred_engine">የእርስዎን ተመራጭ ፍርግም ይምረጡ፡-</string>
   <!-- Clickable action text that shows when user long-presses on a search engine search field (this is similar to paste or copy when long-pressing a text field) -->
-  <string name="action_option_add_search_engine">የፍለጋ ፕሮግራም አክል\n</string>
+  <string name="action_option_add_search_engine">የፍለጋ ፍርግም አክል</string>
   <string name="search_add_manually_name_hint">የመፈለጊያ ማሸን ስም</string>
   <string name="search_add_manually_string">የሚጠቀሙ ሕብረ ቁምፊዎችን ፈልግ</string>
   <string name="search_add_manually_save">አስቀምጥ</string>
@@ -362,7 +369,7 @@
   <string name="search_add_manually_example">ለምሳሌ: ለምሳሌ.com /search/?q=%s</string>
   <string name="search_add_confirmation">አዲስ የፍለጋ ፕሮግራም ታክሏል</string>
   <string name="search_add_error_empty_name">የፍለጋውን ስም አስገባ</string>
-  <string name="search_add_error_duplicate_name">አንድ የተጫነ የፍለጋ ፕሮግራም አስቀድሞ በዚያ ስም እየተጠቀመ ነው\n</string>
+  <string name="search_add_error_duplicate_name">አንድ የተጫነ የፍለጋ ፍርግም አስቀድሞ ያንን ስም እየተጠቀመ ነው።</string>
   <string name="search_add_error_empty_search">የፍለጋ ህብረ ቁምፊ ያስገቡ</string>
   <string name="search_add_error_format">የፍለጋ ሕብረቁምፊ ና የምሳሌ ቅርጸት እንደ ሚመሳሰሉ አረጋግጥ</string>
   <!-- Content description (not visible, for screen readers etc.): Clear text in URL bar -->

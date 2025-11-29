@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Anonymní %s</string>
@@ -82,12 +89,12 @@
     %1$s is the name of the app (for example "Firefox").
     %2$s is a link using felt_privacy_info_card_subtitle_link_text as text
   -->
-  <string name="felt_privacy_info_card_subtitle_2" tools:ignore="UnusedResources" moz:removedIn="147">Když zavřete všechny anonymní panely, %1$s odstraní vaše soubory cookie, historii a data stránek. %2$s</string>
+  <string name="felt_privacy_info_card_subtitle_2" tools:ignore="UnusedResources" moz:removedIn="147">Když zavřete všechny anonymní panely, %1$s odstraní vaše cookies, historii a data stránek. %2$s</string>
   <!--
     Description of private browsing mode displayed to users on the homepage when they enable private mode.
     %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="felt_privacy_info_card_subtitle_3">Když zavřete všechny anonymní panely, %1$s odstraní vaše soubory cookie, historii a data stránek.</string>
+  <string name="felt_privacy_info_card_subtitle_3">Když zavřete všechny anonymní panely, %1$s odstraní vaše cookies, historii a data stránek.</string>
   <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
@@ -758,13 +765,13 @@
   <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
   <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s nemůže pro tuto stránku automaticky blokovat lištu s žádostí ohledně souborů cookie. Můžete však poslat žádost o podporu této stránky do budoucna.</string>
   <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Vypněte a %1$s vymaže soubory cookie a znovu načte tuto stránku. To vás může odhlásit nebo vyprázdnit nákupní košíky.</string>
+  <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Vypněte ho a %1$s vymaže cookies a znovu načte tuto stránku. To vás může odhlásit z webů nebo vám vyprázdnit nákupní košíky.</string>
   <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
   <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Zapněte a %1$s se pokusí automaticky odmítnout všechny lišty cookie na této stránce.</string>
   <!-- Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name. %1$s is the name of the app (for example "Firefox"). -->
   <string name="cookie_banner_cfr_title">%1$s za vás odmítl cookies</string>
   <!-- Message for the cookie banner re-engagement CFR -->
-  <string name="cookie_banner_cfr_message">Méně rozptylování, méně souborů cookie, které vás na tomto webu sledují.</string>
+  <string name="cookie_banner_cfr_message">Méně rozptylování, méně cookies, co vás na tomto webu sledují.</string>
   <!-- Description of the preference to enable "HTTPS-Only" mode. -->
   <string name="preferences_https_only_summary">Pro zvýšení zabezpečení se automaticky pokusí připojit k webům pomocí šifrovacího protokolu HTTPS.</string>
   <!-- Summary of https only preference if https only is set to off -->
@@ -2744,8 +2751,6 @@
   <string name="credit_cards_edit_card">Upravit kartu</string>
   <!-- The header for the card number of a credit card -->
   <string name="credit_cards_card_number">Číslo karty</string>
-  <!-- The header for the expiration date of a credit card -->
-  <string name="credit_cards_expiration_date">Datum platnosti</string>
   <!-- The label for the expiration date month of a credit card to be used by a11y services -->
   <string name="credit_cards_expiration_date_month">Datum platnosti (měsíc)</string>
   <!-- The label for the expiration date year of a credit card to be used by a11y services -->

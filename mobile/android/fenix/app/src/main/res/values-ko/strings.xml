@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">사생활 보호 %s</string>
@@ -451,7 +458,7 @@
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">더 많은 선택으로 안전한 브라우징</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_3">당사의 비영리 지원 브라우저는 회사가 웹에서 비밀리에 사용자를 추적하는 것을 방지하는 데 도움이 됩니다.</string>
+  <string name="juno_onboarding_default_browser_description_nimbus_3">당사의 비영리 지원 브라우저는 기업이 웹에서 비밀리에 사용자를 추적하는 것을 방지하는 데 도움이 됩니다.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">1억 명 이상의 사람들이 비영리 단체가 지원하는 브라우저를 선택하여 개인 정보를 보호합니다.</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
@@ -1058,6 +1065,8 @@
   <string name="restart_warning_dialog_title">앱 아이콘을 변경하시겠습니까?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">앱이 닫힐 수 있습니다. %1$s를 다시 열려면 빛나는 새 아이콘을 누르세요.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">아이콘을 변경하면 홈 화면에 저장한 모든 사이트와 바로 가기가 제거됩니다. \n\n%1$s가 닫힐 수 있습니다. 다시 열려면 새 아이콘을 누르세요.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">아이콘 변경</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2748,14 +2757,16 @@
   <string name="preferences_addresses_sync_addresses_across_devices">기기 간에 주소 동기화</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">주소 동기화</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">뒤로</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">카드 추가</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">뒤로</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">카드 편집</string>
   <!-- The header for the card number of a credit card -->
   <string name="credit_cards_card_number">카드 번호</string>
-  <!-- The header for the expiration date of a credit card -->
-  <string name="credit_cards_expiration_date">유효 기간</string>
   <!-- The label for the expiration date month of a credit card to be used by a11y services -->
   <string name="credit_cards_expiration_date_month">유효 기간 월</string>
   <!-- The label for the expiration date year of a credit card to be used by a11y services -->
@@ -3766,7 +3777,7 @@
   <!-- Subtitle for the setup checklist when the second task is completed. -->
   <string name="setup_checklist_subtitle_6_steps_second_step">6단계 중 2단계를 완료했습니다. 엄청난 발전을 했네요!</string>
   <!-- Subtitle for a setup checklist with 6 steps when three of the tasks are completed. -->
-  <string name="setup_checklist_subtitle_6_steps_third_step">절반 정도 하였습니다! 3단계가 완료되었고 3단계가 남았습니다.</string>
+  <string name="setup_checklist_subtitle_6_steps_third_step">반은 왔어요! 세 단계 완료, 이제 3단계 남았습니다.</string>
   <!-- Subtitle for a setup checklist with 6 steps when the fourth task is completed. -->
   <string name="setup_checklist_subtitle_6_steps_fourth_step">4번째 단계입니다. 두 단계만 더 하면 됩니다!</string>
   <!-- Subtitle for a setup checklist with 6 steps when the fifth task is completed. -->
