@@ -960,8 +960,23 @@ class ShellPrincipals final : public JSPrincipals {
   static ShellPrincipals fullyTrusted;
 };
 
+// Global CSP state for the shell. When true, CSP restrictions are enforced.
+static bool gCSPEnabled = false;
+
+static bool ContentSecurityPolicyAllows(
+    JSContext* cx, JS::RuntimeCode kind, JS::Handle<JSString*> codeString,
+    JS::CompilationType compilationType,
+    JS::Handle<JS::StackGCVector<JSString*>> parameterStrings,
+    JS::Handle<JSString*> bodyString,
+    JS::Handle<JS::StackGCVector<JS::Value>> parameterArgs,
+    JS::Handle<JS::Value> bodyArg, bool* outCanCompileStrings) {
+  // If CSP is enabled, block string compilation.
+  *outCanCompileStrings = !gCSPEnabled;
+  return true;
+}
+
 JSSecurityCallbacks ShellPrincipals::securityCallbacks = {
-    nullptr,  // contentSecurityPolicyAllows
+    ContentSecurityPolicyAllows,
     nullptr,  // codeForEvalGets
     subsumes};
 
@@ -1649,6 +1664,20 @@ static bool SetTimeout(JSContext* cx, unsigned argc, Value* vp) {
     ReportOutOfMemory(cx);
     return false;
   }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool SetCSPEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  if (args.length() != 1) {
+    JS_ReportErrorASCII(cx, "setCSPEnabled() requires one boolean argument");
+    return false;
+  }
+
+  gCSPEnabled = JS::ToBoolean(args[0]);
 
   args.rval().setUndefined();
   return true;
@@ -10570,6 +10599,12 @@ JS_FN_HELP("createUserArrayBuffer", CreateUserArrayBuffer, 1, 0,
 "Executes functionRef after the specified delay, like the Web builtin."
 "This is currently restricted to require a delay of 0 and will not accept"
 "any extra arguments. No return value is given and there is no clearTimeout."),
+
+    JS_FN_HELP("setCSPEnabled", SetCSPEnabled, 1, 0,
+"setCSPEnabled(enabled)",
+"Enable or disable Content Security Policy restrictions for eval() and Function().\n"
+"When enabled (true), string compilation will be blocked. When disabled (false),\n"
+"string compilation is allowed. Defaults to disabled."),
 
     JS_FN_HELP("setPromiseRejectionTrackerCallback", SetPromiseRejectionTrackerCallback, 1, 0,
 "setPromiseRejectionTrackerCallback()",
