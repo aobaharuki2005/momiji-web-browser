@@ -2755,8 +2755,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Ҳамоҳанг кардани нишониҳо байни дастгоҳҳо</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Ҳамоҳангсозии нишониҳо</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Ба қафо</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Илова кардани корт</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Ба қафо гузаштан</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Таҳрир кардани корт</string>
   <!-- The header for the card number of a credit card -->

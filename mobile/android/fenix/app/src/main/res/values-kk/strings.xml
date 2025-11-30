@@ -1065,6 +1065,8 @@
   <string name="restart_warning_dialog_title">Қолданба таңбашасын өзгерту керек пе?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Қолданба жабылуы мүмкін. %1$s қайта ашу үшін жаңа таңбашаңызға шертіңіз.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Таңбашаны өзгерту негізгі экранға сақталған сайттар мен таңбашаларды өшіреді. \n\n%1$s жабылуы мүмкін. Қайта ашу үшін жаңа таңбашаны шертіңіз.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Таңбашаны өзгерту</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2755,8 +2757,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Адрестерді құрылғылар арасында синхрондау</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Адрестерді синхрондау</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Артқа</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Картаны қосу</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Артқа өту</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Картаны түзету</string>
   <!-- The header for the card number of a credit card -->
