@@ -26,6 +26,8 @@ JSObject* CSSKeywordValue::WrapObject(JSContext* aCx,
 
 // start of CSSKeywordValue Web IDL implementation
 
+// https://drafts.css-houdini.org/css-typed-om-1/#dom-csskeywordvalue-csskeywordvalue
+//
 // static
 already_AddRefed<CSSKeywordValue> CSSKeywordValue::Constructor(
     const GlobalObject& aGlobal, const nsACString& aValue, ErrorResult& aRv) {
@@ -43,6 +45,7 @@ already_AddRefed<CSSKeywordValue> CSSKeywordValue::Constructor(
 
 void CSSKeywordValue::GetValue(nsCString& aRetVal) const { aRetVal = mValue; }
 
+// https://drafts.css-houdini.org/css-typed-om-1/#dom-csskeywordvalue-value
 void CSSKeywordValue::SetValue(const nsACString& aArg, ErrorResult& aRv) {
   // Step 1.
 

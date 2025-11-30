@@ -9,7 +9,7 @@
 
 #include "js/TypeDecls.h"
 #include "mozilla/dom/CSSNumericValue.h"
-#include "nsStringFwd.h"
+#include "nsString.h"
 
 template <class T>
 struct already_AddRefed;
@@ -27,13 +27,18 @@ class GlobalObject;
 
 class CSSUnitValue final : public CSSNumericValue {
  public:
+  // XXX Remove this constructor once mozilla::dom::CSS stops using it
   explicit CSSUnitValue(nsCOMPtr<nsISupports> aParent);
+
+  CSSUnitValue(nsCOMPtr<nsISupports> aParent, double aValue,
+               const nsACString& aUnit);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // start of CSSUnitValue Web IDL declarations
 
+  // https://drafts.css-houdini.org/css-typed-om-1/#dom-cssunitvalue-cssunitvalue
   static already_AddRefed<CSSUnitValue> Constructor(const GlobalObject& aGlobal,
                                                     double aValue,
                                                     const nsACString& aUnit,
@@ -49,6 +54,9 @@ class CSSUnitValue final : public CSSNumericValue {
 
  private:
   virtual ~CSSUnitValue() = default;
+
+  double mValue;
+  nsCString mUnit;
 };
 
 }  // namespace dom

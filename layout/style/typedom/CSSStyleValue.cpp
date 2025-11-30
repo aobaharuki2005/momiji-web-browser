@@ -71,4 +71,8 @@ bool CSSStyleValue::IsCSSKeywordValue() const {
   return mValueType == ValueType::KeywordValue;
 }
 
+bool CSSStyleValue::IsCSSUnitValue() const {
+  return mValueType == ValueType::UnitValue;
+}
+
 }  // namespace mozilla::dom

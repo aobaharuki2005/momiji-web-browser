@@ -111,6 +111,8 @@ JSObject* StylePropertyMapReadOnly::WrapObject(
 
 // start of StylePropertyMapReadOnly Web IDL implementation
 
+// https://drafts.css-houdini.org/css-typed-om-1/#dom-stylepropertymapreadonly-get
+//
 // XXX This is not yet fully implemented and optimized!
 void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
                                    OwningUndefinedOrCSSStyleValue& aRetVal,
@@ -176,6 +178,8 @@ void StylePropertyMapReadOnly::Get(const nsACString& aProperty,
   }
 }
 
+// https://drafts.css-houdini.org/css-typed-om-1/#dom-stylepropertymapreadonly-getall
+//
 // XXX This is not yet fully implemented and optimized!
 void StylePropertyMapReadOnly::GetAll(const nsACString& aProperty,
                                       nsTArray<RefPtr<CSSStyleValue>>& aRetVal,

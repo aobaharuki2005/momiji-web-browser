@@ -35,6 +35,8 @@ JSObject* StylePropertyMap::WrapObject(JSContext* aCx,
 
 // start of StylePropertyMap Web IDL implementation
 
+// https://drafts.css-houdini.org/css-typed-om/#dom-stylepropertymap-set
+//
 // XXX This is not yet fully implemented and optimized!
 void StylePropertyMap::Set(
     const nsACString& aProperty,
@@ -76,6 +78,9 @@ void StylePropertyMap::Set(
   nsAutoCString cssText;
 
   switch (styleValue.GetValueType()) {
+    case CSSStyleValue::ValueType::UnitValue:
+      break;
+
     case CSSStyleValue::ValueType::KeywordValue: {
       CSSKeywordValue& keywordValue = styleValue.GetAsCSSKeywordValue();
 
