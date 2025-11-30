@@ -46,7 +46,7 @@
   <!-- The document title and heading of the error page shown when a website takes too long to load. -->
   <string name="mozac_browser_errorpages_net_timeout_title">Կապը ժամանակասպառվեց</string>
   <!-- The error message shown when a website took long to load. -->
-  <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Հարցվող կայքը չպատասխանեց կապի հարցմանը և ծրագիրը դադարեցրեց պատասխան սպասելուն</p>\n<ul>\n<li>Հնարավո՞ր է կայքը խիստ ծանրաբեռնված է կամ ժամանակավորապես չի գործում: Փորձեք քիչ ուշ:</li>\n<li>Այլ կայքեր ևս չի՞ լինում բացել: Ստուգեք ցանցային կապակցումը:</li>\n<li>Արդյոք ձեր համակարգիչը կամ ցանցը պաշտպանվա՞ծ են Firewall­-ով կամ պրոքսիով: Դրա սխալ կազմաձևումը կարող է խանգարել վեբի զննմանը:</li>\n<li>Եթե դեռ դժվարություններ ունեք, ապա օգնության համար դիմեք ցանցային վարիչին կամ համացանցի սպասարկողին:</li>\n</ul>]]></string>
+  <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Հարցվող կայքը չպատասխանեց կապի հարցմանը և դիտարկիչը դադարեցրել է պատասխանին սպասելը:</p>\n<ul>\n<li>Հնարավոր է սպասարկիչը խիստ ծանրաբեռնված է կամ ժամանակավորապես չի գործում: Փորձեք քիչ ուշ:</li>\n<li>Այլ կայքերը ևս չե՞ն բացվում: Ստուգեք ցանցային կապակցումը:</li>\n<li>Արդյո՞ք ձեր համակարգիչը կամ ցանցը պաշտպանված են Firewall­-ով կամ պրոքսիով: Դրա սխալ կազմաձևումը կարող է խանգարել վեբի դիտարկմանը:</li>\n<li>Եթե դեռ դժվարություններ ունեք, ապա օգնության համար դիմեք ցանցային վարիչին կամ համացանցի սպասարկողին:</li>\n</ul>]]></string>
   <!-- The document title and heading of the error page shown when a website could not be reached. -->
   <string name="mozac_browser_errorpages_connection_failure_title">Հնարավոր չէ միանալ</string>
   <!-- The error message shown when a website could not be reached. -->
@@ -62,7 +62,7 @@
   <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
   <string name="mozac_browser_errorpages_offline_title">Անցանց կերպ</string>
   <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
-  <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Դիտարկիչը աշխատում է անցանց կերպում և չի կարող կապակցվել հարցվող միույթին:</p>\n<ul>\n<li>Համակարգիչը կապակցվա՞ծ է ակտիվ ցանցի:</li>\n<li>Սեղմեք “Կրկին փորձել”՝ առցանց անցնելու և էջը կրկին բեռնելու համար:</li>\n</ul>]]></string>
+  <string name="mozac_browser_errorpages_offline_message"><![CDATA[<p>Դիտարկիչը աշխատում է անցանց կերպում և չի կարող կապակցվել հարցվող տարրին:</p>\n<ul>\n<li>Համակարգիչը կապակցվա՞ծ է ակտիվ ցանցի:</li>\n<li>Սեղմեք “Կրկին փորձել”՝ առցանց անցնելու և էջը կրկին բեռնելու համար:</li>\n</ul>]]></string>
   <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
   <string name="mozac_browser_errorpages_port_blocked_title">Պորտը սահմանափակված է անվտանգության նկատառումներից ելնելով</string>
   <!-- The error message shown when the browser prevents loading a website on a restricted port. -->

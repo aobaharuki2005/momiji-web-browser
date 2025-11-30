@@ -1071,6 +1071,8 @@
   <string name="restart_warning_dialog_button_positive_2">ხატულას შეცვლა</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">გაუქმება</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">ხატულა ვერ განახლდა. მოაცილეთ არსებული მალსახმობები და ხელახლა სცადეთ.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -2755,8 +2757,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">დაასინქრონეთ მისამართები სხვადასხვა მოწყობილობაზე</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">დაასინქ. მისამართები</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">უკან</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">ბარათის დამატება</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">გადასვლა უკან</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">ბარათის ჩასწორება</string>
   <!-- The header for the card number of a credit card -->

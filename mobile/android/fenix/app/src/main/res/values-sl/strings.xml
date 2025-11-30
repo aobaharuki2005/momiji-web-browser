@@ -2741,8 +2741,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Sinhroniziraj naslove med napravami</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Sinhroniziraj naslove</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Nazaj</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Dodaj kartico</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Pojdi nazaj</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Uredi kartico</string>
   <!-- The header for the card number of a credit card -->
