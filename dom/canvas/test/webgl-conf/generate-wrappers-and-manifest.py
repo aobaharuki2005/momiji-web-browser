@@ -35,9 +35,8 @@ EXTRA_SUPPORT_FILES = [
 ACCEPTABLE_ERRATA_KEYS = set(
     [
         "fail-if",
-        "prefs",
         "skip-if",
-        "tags",
+        "prefs",
     ]
 )
 
@@ -125,6 +124,7 @@ class TestEntry:
         self.path = path
         self.webgl1 = webgl1
         self.webgl2 = webgl2
+        return
 
 
 def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
@@ -194,6 +194,8 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
             AccumTests(nextPathStr, nextListFile, webgl1, webgl2, out_testList)
             continue
 
+    return
+
 
 ########################################################################
 # Templates
@@ -202,6 +204,7 @@ def AccumTests(pathStr, listFile, allowWebGL1, allowWebGL2, out_testList):
 def FillTemplate(inFilePath, templateDict, outFilePath):
     templateShell = ImportTemplate(inFilePath)
     OutputFilledTemplate(templateShell, templateDict, outFilePath)
+    return
 
 
 def ImportTemplate(inFilePath):
@@ -214,6 +217,7 @@ def OutputFilledTemplate(templateShell, templateDict, outFilePath):
 
     with open(outFilePath, "w", newline="\n") as f:
         f.writelines(spanStrList)
+    return
 
 
 ##############################
@@ -245,6 +249,8 @@ class TemplateShellSpan:
         if self.span.startswith("%%") and self.span.endswith("%%"):
             self.isLiteralSpan = False
             self.span = self.span[2:-2]
+
+        return
 
     def Fill(self, templateDict, indentLen):
         if self.isLiteralSpan:
@@ -289,14 +295,15 @@ class TemplateShell:
             spanList.append(span)
 
         self.spanList = spanList
+        return
 
     # Returns spanStrList.
 
     def Fill(self, templateDict):
         indentLen = 0
         ret = []
-        for span_ in self.spanList:
-            span = span_.Fill(templateDict, indentLen)
+        for span in self.spanList:
+            span = span.Fill(templateDict, indentLen)
             ret.append(span)
 
             # Get next `indentLen`.
@@ -351,6 +358,7 @@ def WriteWrapper(entryPath, webgl2, templateShell, wrapperPathAccum):
         assert IsWrapperWebGL2(wrapperPath)
 
     wrapperPathAccum.append(wrapperPath)
+    return
 
 
 def WriteWrappers(testEntryList):
@@ -442,6 +450,7 @@ def WriteManifest(wrapperPathStrList, supportPathStrList):
 
     destPath = destPathStr.replace("/", os.sep)
     FillTemplate(MANIFEST_TEMPLATE_FILE, templateDict, destPath)
+    return
 
 
 ##############################
