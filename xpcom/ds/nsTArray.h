@@ -1845,7 +1845,6 @@ class nsTArray_Impl
     if (i == NoIndex) {
       return false;
     }
-
     RemoveElementsAtUnsafe(i, 1);
     return true;
   }
@@ -1855,6 +1854,23 @@ class nsTArray_Impl
   template <class Item>
   bool RemoveElement(const Item& aItem) {
     return RemoveElement(aItem, nsDefaultComparator<value_type, Item>());
+  }
+
+  // Variations for RemoveElement that uses unordered removal.
+  template <class Item, class Comparator>
+  bool UnorderedRemoveElement(const Item& aItem, const Comparator& aComp) {
+    index_type i = IndexOf(aItem, 0, aComp);
+    if (i == NoIndex) {
+      return false;
+    }
+    UnorderedRemoveElementAt(i);
+    return true;
+  }
+
+  template <class Item>
+  bool UnorderedRemoveElement(const Item& aItem) {
+    return UnorderedRemoveElement(aItem,
+                                  nsDefaultComparator<value_type, Item>());
   }
 
   // This helper function combines IndexOfFirstElementGt with
