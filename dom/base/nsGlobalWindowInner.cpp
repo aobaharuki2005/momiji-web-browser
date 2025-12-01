@@ -2183,7 +2183,8 @@ MOZ_CAN_RUN_SCRIPT static bool IsCkEditor4EmptyFrame(Element& aEmbedder) {
     return false;
   }
   CkEditorProperty property;
-  JS::RootedValue v(jsapi.cx(), JS::ObjectValue(*global->GetGlobalJSObject()));
+  JS::Rooted<JS::Value> v(jsapi.cx(),
+                          JS::ObjectValue(*global->GetGlobalJSObject()));
   if (!property.Init(jsapi.cx(), v)) {
     JS_ClearPendingException(jsapi.cx());
     return false;
