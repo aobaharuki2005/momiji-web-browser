@@ -36,7 +36,7 @@
 #include "mozilla/layers/KnowsCompositor.h"
 #include "nsContentUtils.h"
 
-static mozilla::LazyLogModule sMediaCapabilitiesLog("MediaCapabilities");
+mozilla::LazyLogModule sMediaCapabilitiesLog("MediaCapabilities");
 
 #define LOG(msg, ...) \
   DDMOZ_LOG(sMediaCapabilitiesLog, LogLevel::Debug, msg, ##__VA_ARGS__)
