@@ -90,9 +90,11 @@ class alignas(16) Instance {
   // always in sync with the MemoryInstanceData for memory 0.
   uint8_t* memory0Base_;
 
-  // Bounds check limit in bytes (or zero if there is no memory) for memory 0
-  // This is 64-bits on 64-bit systems so as to allow for heap lengths up to and
-  // beyond 4GB, and 32-bits on 32-bit systems, where memories are limited to
+  // Bounds check limit in bytes for memory 0. If there is no memory 0, this
+  // value will be zero.
+  //
+  // This is 64 bits on 64-bit systems so as to allow for heap lengths up to and
+  // beyond 4GB, and 32 bits on 32-bit systems, where memories are limited to
   // 2GB.
   //
   // See "Linear memory addresses and bounds checking" in WasmMemory.cpp.
