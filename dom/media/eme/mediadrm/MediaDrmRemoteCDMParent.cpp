@@ -514,9 +514,7 @@ mozilla::ipc::IPCResult MediaDrmRemoteCDMParent::RecvCreateSession(
   NS_ConvertUTF8toUTF16 sessionIdStr(
       reinterpret_cast<const char*>(sessionId.ptr), sessionId.length);
   mSessions[sessionIdStr] = {sessionId, std::move(mimeType)};
-  aResolver(std::move(sessionIdStr));
-
-  (void)SendOnSessionKeyMessage(RemoteCDMKeyMessageIPDL(
+  aResolver(RemoteCDMKeyMessageIPDL(
       std::move(sessionIdStr), MediaKeyMessageType::License_request,
       nsTArray<uint8_t>(reinterpret_cast<const uint8_t*>(keyRequest),
                         keyRequestSize)));
