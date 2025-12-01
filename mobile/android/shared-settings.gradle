@@ -42,7 +42,8 @@ class Config {
     public final String componentsVersion
     public final String componentsGroupId
     public final Integer jvmTargetCompatibility
-    public final Integer compileSdkVersion
+    public final Integer compileSdkMajorVersion
+    public final Integer compileSdkMinorVersion
     public final Integer minSdkVersion
     public final Integer targetSdkVersion
     public final String ndkVersion
@@ -52,7 +53,8 @@ class Config {
             String componentsVersion,
             String componentsGroupId,
             Integer jvmTargetCompatibility,
-            Integer compileSdkVersion,
+            Integer compileSdkMajorVersion,
+            Integer compileSdkMinorVersion,
             Integer minSdkVersion,
             Integer targetSdkVersion,
             String ndkVersion
@@ -60,7 +62,8 @@ class Config {
         this.componentsVersion = componentsVersion
         this.componentsGroupId = componentsGroupId
         this.jvmTargetCompatibility = jvmTargetCompatibility
-        this.compileSdkVersion = compileSdkVersion
+        this.compileSdkMajorVersion = compileSdkMajorVersion
+        this.compileSdkMinorVersion = compileSdkMinorVersion
         this.minSdkVersion = minSdkVersion
         this.targetSdkVersion = targetSdkVersion
         this.ndkVersion = ndkVersion
@@ -155,7 +158,8 @@ gradle.projectsLoaded { ->
             version,
             configData.componentsGroupId,
             configData.jvmTargetCompatibility,
-            configData.compileSdkVersion,
+            configData.compileSdkMajorVersion,
+            configData.compileSdkMinorVersion,
             configData.minSdkVersion,
             configData.targetSdkVersion,
             ndkVersion

@@ -6,7 +6,7 @@ android {
         }
     }
 
-    compileSdk config.compileSdkVersion
+    compileSdk { version = release(config.compileSdkMajorVersion) { minorApiLevel = config.compileSdkMinorVersion } }
 
     defaultConfig {
         minSdk config.minSdkVersion

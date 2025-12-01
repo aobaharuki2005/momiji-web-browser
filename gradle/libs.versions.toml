@@ -1,7 +1,7 @@
 [versions]
 # AGP
-android-gradle-plugin = "8.13.0" # Keep lint version in sync
-android-lint = "31.13.0"
+android-gradle-plugin = "8.13.1" # Keep lint version in sync
+android-lint = "31.13.1"
 
 # Kotlin
 coroutines = "1.10.2"

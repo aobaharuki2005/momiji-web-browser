@@ -13,15 +13,17 @@ evaluationDependsOn(':annotations')
 
 android {
     buildToolsVersion = project.ext.buildToolsVersion
-    compileSdkVersion = project.ext.compileSdkVersion
+    compileSdk {
+        version = release(project.ext.compileSdkMajorVersion) { minorApiLevel = project.ext.compileSdkMinorVersion }
+    }
 
     useLibrary 'android.test.runner'
     useLibrary 'android.test.base'
     useLibrary 'android.test.mock'
 
     defaultConfig {
-        targetSdkVersion project.ext.targetSdkVersion
-        minSdkVersion project.ext.minSdkVersion
+        targetSdk project.ext.targetSdkVersion
+        minSdk project.ext.minSdkVersion
         manifestPlaceholders = project.ext.manifestPlaceholders
 
         versionCode project.ext.versionCode
