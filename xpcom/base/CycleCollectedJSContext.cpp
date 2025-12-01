@@ -1025,10 +1025,8 @@ static void MOZ_CAN_RUN_SCRIPT RunMicroTask(
     return;
   }
 
-  // Don't run if we fail to unwrap the stack.
-  if (!aMicroTask.get().MaybeGetAllocationSiteFromJSMicroTask(&allocStack)) {
-    return;
-  }
+  // We do however still need to run if we can't unwrap the stack
+  (void)aMicroTask.get().MaybeGetAllocationSiteFromJSMicroTask(&allocStack);
 
   nsIGlobalObject* incumbentGlobal = nullptr;
 
