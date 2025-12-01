@@ -2145,11 +2145,11 @@ Preferences.addSetting({
   getControlConfig(config, { privateBrowsingAutoStart }, setting) {
     let l10nId = null;
     if (setting.value == "remember") {
-      l10nId = "history-remember-description2";
+      l10nId = "history-remember-description3";
     } else if (setting.value == "dontremember") {
-      l10nId = "history-dontremember-description2";
+      l10nId = "history-dontremember-description3";
     } else if (setting.value == "custom") {
-      l10nId = "history-custom-description";
+      l10nId = "history-custom-description3";
     }
 
     let dontRememberOption = config.options.find(
