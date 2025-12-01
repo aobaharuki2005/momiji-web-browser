@@ -1687,6 +1687,27 @@ function toOpenWindowByType(inType, uri, features) {
 function OpenBrowserWindow(options = {}) {
   let timerId = Glean.browserTimings.newWindow.start();
 
+  if (options?.aiWindow) {
+    options.args ??= Cc["@mozilla.org/array;1"].createInstance(
+      Ci.nsIMutableArray
+    );
+
+    if (!options.args.length) {
+      const aiWindowURI = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString
+      );
+      aiWindowURI.data = "chrome://browser/content/genai/smartAssist.html";
+
+      const aiOption = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
+        Ci.nsIWritablePropertyBag2
+      );
+      aiOption.setPropertyAsBool("ai-window", options.aiWindow);
+
+      options.args.appendElement(aiWindowURI);
+      options.args.appendElement(aiOption);
+    }
+  }
+
   let win = BrowserWindowTracker.openWindow({
     openerWindow: window,
     ...options,

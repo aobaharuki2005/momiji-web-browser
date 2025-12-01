@@ -2,11 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-with Files("**"):
-    BUG_COMPONENT = ("Core", "Machine Learning: Frontend")
+## Chrome
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
-
-MOZ_SRC_FILES += [
-    "modules/AIWindow.sys.mjs",
-]
+appmenuitem-new-ai-window =
+    .label = New AI window
