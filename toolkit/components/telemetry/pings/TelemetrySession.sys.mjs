@@ -11,6 +11,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManagerPrivate: "resource://gre/modules/AddonManager.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   TelemetryController: "resource://gre/modules/TelemetryController.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetryReportingPolicy:
@@ -506,6 +507,31 @@ var Impl = {
           clearSubsession,
           !this._testing
         );
+
+    if (
+      lazy.NimbusFeatures.legacyTelemetry.getVariable("disableMainPingScalars")
+    ) {
+      this._log.trace("getScalars - Main ping scalars are disabled.");
+      if (keyed) {
+        // We don't need to preserve any keyed scalars.
+        scalarsSnapshot = {};
+      } else {
+        let filteredSnapshot = {};
+        const scalarsToKeep = [
+          "browser.engagement.total_uri_count_normal_and_private_mode",
+          "browser.engagement.active_ticks",
+        ];
+        for (let scalar of scalarsToKeep) {
+          if ("parent" in scalarsSnapshot && scalar in scalarsSnapshot.parent) {
+            if (!("parent" in filteredSnapshot)) {
+              filteredSnapshot.parent = {};
+            }
+            filteredSnapshot.parent[scalar] = scalarsSnapshot.parent[scalar];
+          }
+        }
+        scalarsSnapshot = filteredSnapshot;
+      }
+    }
 
     return scalarsSnapshot;
   },

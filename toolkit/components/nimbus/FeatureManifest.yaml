@@ -2741,6 +2741,15 @@ legacyTelemetry:
         Code that collects to and submits the ping will still operate as normal.
         Cannot be used to disable the "main", "first-shutdown", "new-profile",
         or "deletion-request" pings.
+    disableMainPingScalars:
+      type: boolean
+      description: |
+        If true, scalars will not be included in "main" pings.
+        Exceptions are made for two important engagement measures:
+        `browser.engagement.total_uri_count_normal_and_private_mode` and
+        `browser.engagement.active_ticks`.
+        These scalars will continue to be reported as normal, even if all
+        others are disabled by this variable.
 
 browserLowMemoryPrefs:
   description: Prefs which control the browser's behaviour under low memory.
