@@ -1,5 +1,7 @@
 [DEFAULT]
-run-if = ["os != 'android'"]
+run-if = [
+  "os != 'android'",
+]
 head = "head.js"
 firefox-appdir = "browser"
 support-files = []
@@ -7,5 +9,7 @@ support-files = []
 ["test_ChatUtils.js"]
 
 ["test_InsightsHistorySource.js"]
+
+["test_Utils.js"]
 
 ["test_intent_classifier.js"]

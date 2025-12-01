@@ -9,6 +9,7 @@ MOZ_SRC_FILES += [
     "ChatUtils.mjs",
     "InsightsHistorySource.sys.mjs",
     "IntentClassifier.sys.mjs",
+    "Utils.mjs",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
