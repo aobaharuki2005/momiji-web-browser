@@ -1270,6 +1270,12 @@ export const FormAutofillHeuristics = {
           yield* lazy.LabelUtils.extractLabelStrings(label);
         }
 
+        // If no labels were found, look for nearby text that could
+        // be used as a label.
+        if (!labels.length) {
+          yield lazy.LabelUtils.findNearbyText(element);
+        }
+
         const ariaLabels = element.getAttribute("aria-label");
         if (ariaLabels) {
           yield* [ariaLabels];
