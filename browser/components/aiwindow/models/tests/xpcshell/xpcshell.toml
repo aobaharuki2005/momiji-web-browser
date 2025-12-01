@@ -4,6 +4,8 @@ head = "head.js"
 firefox-appdir = "browser"
 support-files = []
 
+["test_ChatUtils.js"]
+
 ["test_InsightsHistorySource.js"]
 
 ["test_intent_classifier.js"]
