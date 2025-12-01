@@ -44,6 +44,7 @@ mozilla::LazyLogModule sMediaCapabilitiesLog("MediaCapabilities");
 
 namespace mozilla::dom {
 using mediacaps::IsValidMediaDecodingConfiguration;
+using mediacaps::IsValidMediaEncodingConfiguration;
 
 static bool
 MediaCapabilitiesKeySystemConfigurationToMediaKeySystemConfiguration(
@@ -646,11 +647,9 @@ already_AddRefed<Promise> MediaCapabilities::EncodingInfo(
 
   // If configuration is not a valid MediaConfiguration, return a Promise
   // rejected with a TypeError.
-  if (!aConfiguration.mVideo.WasPassed() &&
-      !aConfiguration.mAudio.WasPassed()) {
-    aRv.ThrowTypeError<MSG_MISSING_REQUIRED_DICTIONARY_MEMBER>(
-        "'audio' or 'video' member of argument of "
-        "MediaCapabilities.encodingInfo");
+  if (auto configCheck = IsValidMediaEncodingConfiguration(aConfiguration);
+      configCheck.isErr()) {
+    ThrowWithValidationResult(aRv, configCheck.unwrapErr());
     return nullptr;
   }
 
