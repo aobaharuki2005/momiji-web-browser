@@ -5,8 +5,6 @@
 with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning: Frontend")
 
-BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
-
 MOZ_SRC_FILES += [
     "modules/AIWindow.sys.mjs",
 ]

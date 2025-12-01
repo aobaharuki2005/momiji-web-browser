@@ -218,9 +218,6 @@ document.addEventListener(
           case "cmd_openUnifiedExtensionsPanel":
             gUnifiedExtensions.openPanel(event);
             break;
-          case "Tools:AIWindow":
-            OpenBrowserWindow({ aiWindow: true });
-            break;
           case "Tools:Sanitize":
             Sanitizer.showUI(window);
             break;
