@@ -1415,7 +1415,9 @@ GeckoDriver.prototype.getWindowHandle = function () {
  */
 GeckoDriver.prototype.getWindowHandles = function () {
   if (this.context == lazy.Context.Chrome) {
-    return lazy.windowManager.chromeWindowHandles.map(String);
+    return lazy.windowManager.windows.map(window =>
+      lazy.windowManager.getIdForWindow(window)
+    );
   }
 
   return lazy.TabManager.getBrowsers({ unloaded: true }).map(browser =>
@@ -1526,6 +1528,47 @@ GeckoDriver.prototype.setWindowRect = async function (cmd) {
 };
 
 /**
+ * Find a specific window matching the provided window handle.
+ *
+ * @param {string} handle
+ *     The unique handle of either a chrome window or a content browser, as
+ *     returned by :js:func:`#getIdForBrowser` or :js:func:`#getIdForWindow`.
+ *
+ * @returns {object|null}
+ *     A window properties object, or `null` if a window cannot be found.
+ *.    @see :js:func:`WindowManager#getWindowProperties`
+ */
+GeckoDriver.prototype._findWindowByHandle = function (handle) {
+  for (const win of lazy.windowManager.windows) {
+    const chromeWindowId = lazy.NavigableManager.getIdForBrowsingContext(
+      win.browsingContext
+    );
+    if (chromeWindowId == handle) {
+      return lazy.windowManager.getWindowProperties(win);
+    }
+
+    // Otherwise check if the chrome window has a tab browser, and that it
+    // contains a tab with the wanted window handle.
+    const tabBrowser = lazy.TabManager.getTabBrowser(win);
+    if (tabBrowser && tabBrowser.tabs) {
+      for (let i = 0; i < tabBrowser.tabs.length; ++i) {
+        let contentBrowser = lazy.TabManager.getBrowserForTab(
+          tabBrowser.tabs[i]
+        );
+        let contentWindowId =
+          lazy.NavigableManager.getIdForBrowser(contentBrowser);
+
+        if (contentWindowId == handle) {
+          return lazy.windowManager.getWindowProperties(win, { tabIndex: i });
+        }
+      }
+    }
+  }
+
+  return null;
+};
+
+/**
  * Switch current top-level browsing context by name or server-assigned
  * ID.  Searches for windows by name, then ID.  Content windows take
  * precedence.
@@ -1554,7 +1597,7 @@ GeckoDriver.prototype.switchToWindow = async function (cmd) {
     lazy.pprint`Expected "focus" to be a boolean, got ${focus}`
   );
 
-  const found = lazy.windowManager.findWindowByHandle(handle);
+  const found = this._findWindowByHandle(handle);
 
   let selected = false;
   if (found) {
@@ -2831,7 +2874,9 @@ GeckoDriver.prototype.closeChromeWindow = async function () {
   this.currentSession.chromeBrowsingContext = null;
   this.currentSession.contentBrowsingContext = null;
 
-  return lazy.windowManager.chromeWindowHandles.map(String);
+  return lazy.windowManager.windows.map(window =>
+    lazy.NavigableManager.getIdForBrowsingContext(window.browsingContext)
+  );
 };
 
 /** Delete Marionette session. */
