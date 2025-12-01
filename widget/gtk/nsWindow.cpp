@@ -3996,7 +3996,8 @@ bool nsWindow::HasPendingInputEvent() {
 #ifdef cairo_copy_clip_rectangle_list
 #  error "Looks like we're including Mozilla's cairo instead of system cairo"
 #endif
-static bool ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr) {
+bool nsWindow::ExtractExposeRegion(LayoutDeviceIntRegion& aRegion,
+                                   cairo_t* cr) {
   cairo_rectangle_list_t* rects = cairo_copy_clip_rectangle_list(cr);
   if (rects->status != CAIRO_STATUS_SUCCESS) {
     NS_WARNING("Failed to obtain cairo rectangle list.");
@@ -4005,6 +4006,8 @@ static bool ExtractExposeRegion(LayoutDeviceIntRegion& aRegion, cairo_t* cr) {
 
   for (int i = 0; i < rects->num_rectangles; i++) {
     const cairo_rectangle_t& r = rects->rectangles[i];
+    LOGVERBOSE("  expose region unscaled: [%d, %d] -> [%d x %d]", (int)r.x,
+               (int)r.y, (int)r.width, (int)r.height);
     aRegion.Or(aRegion,
                LayoutDeviceIntRect::Truncate((float)r.x, (float)r.y,
                                              (float)r.width, (float)r.height));
@@ -4133,6 +4136,8 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   }
 
   region.AndWith(LayoutDeviceIntRect(LayoutDeviceIntPoint(), GetClientSize()));
+  LOGVERBOSE("painted region scaled %s (client size scaled %s)",
+             ToString(region).c_str(), ToString(GetClientSize()).c_str());
   if (region.IsEmpty()) {
     LOG("quit, region.IsEmpty()");
     return TRUE;
