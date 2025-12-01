@@ -6154,6 +6154,7 @@
   value: false
 #else
   value: true
+#endif
   mirror: never
 
 # Disable storing the session history in the parent process, and accessing it
