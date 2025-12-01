@@ -35,7 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
@@ -45,6 +45,7 @@ import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.modifier.animateRotation
 import mozilla.components.compose.base.text.Text
+import mozilla.components.compose.base.theme.surfaceDimVariant
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.Page
@@ -168,7 +169,7 @@ private fun FloatingToolbarActions(
         modifier = Modifier.size(56.dp),
         shape = CircleShape,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = MaterialTheme.colorScheme.surfaceDimVariant,
             contentColor = MaterialTheme.colorScheme.onSurface,
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
@@ -442,7 +443,7 @@ private class TabManagerFloatingToolbarParameterProvider :
         )
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun TabManagerFloatingToolbarPreview(
     @PreviewParameter(TabManagerFloatingToolbarParameterProvider::class)
