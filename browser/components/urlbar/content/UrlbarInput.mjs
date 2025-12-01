@@ -70,8 +70,6 @@ const lazy = XPCOMUtils.declareLazy({
   logger: () => lazy.UrlbarUtils.getLogger({ prefix: "Input" }),
 });
 
-const DEFAULT_FORM_HISTORY_NAME = "searchbar-history";
-
 const UNLIMITED_MAX_RESULTS = 99;
 
 let getBoundsWithoutFlushing = element =>
@@ -218,7 +216,6 @@ export class UrlbarInput extends HTMLElement {
   #compositionClosedPopup = false;
 
   valueIsTyped = false;
-  formHistoryName = DEFAULT_FORM_HISTORY_NAME;
 
   // Properties accessed in tests.
   lastQueryContextPromise = Promise.resolve();
@@ -5182,7 +5179,6 @@ export class UrlbarInput extends HTMLElement {
       ),
       tabGroup: this.window.gBrowser.selectedTab.group?.id ?? null,
       currentPage: this.window.gBrowser.currentURI.spec,
-      formHistoryName: this.formHistoryName,
       prohibitRemoteResults:
         event &&
         lazy.UrlbarUtils.isPasteEvent(event) &&

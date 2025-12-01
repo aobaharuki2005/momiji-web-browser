@@ -19,6 +19,8 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ContextualIdentityService:
     "resource://gre/modules/ContextualIdentityService.sys.mjs",
+  DEFAULT_FORM_HISTORY_PARAM:
+    "moz-src:///toolkit/components/search/SearchSuggestionController.sys.mjs",
   FormHistory: "resource://gre/modules/FormHistory.sys.mjs",
   KeywordUtils: "resource://gre/modules/KeywordUtils.sys.mjs",
   PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
@@ -1159,7 +1161,7 @@ export var UrlbarUtils = {
     }
     return lazy.FormHistory.update({
       op: "bump",
-      fieldname: input.formHistoryName,
+      fieldname: lazy.DEFAULT_FORM_HISTORY_PARAM,
       value,
       source,
     });
@@ -2343,8 +2345,6 @@ export class UrlbarQueryContext {
    *   If it's false, then `allowRemoteResults` will do its usual checks to
    *   determine whether remote results are allowed. If it's true, then
    *   `allowRemoteResults` will immediately return false. Defaults to false.
-   * @param {string} [options.formHistoryName]
-   *   The name under which the local form history is registered.
    */
   constructor(options) {
     // Clone to make sure all properties belong to the system realm.
@@ -2373,7 +2373,6 @@ export class UrlbarQueryContext {
      */
     const optionalProperties = [
       ["currentPage", v => typeof v == "string" && !!v.length],
-      ["formHistoryName", v => typeof v == "string" && !!v.length],
       ["prohibitRemoteResults", () => true, false],
       ["providers", v => Array.isArray(v) && !!v.length],
       ["searchMode", v => v && typeof v == "object"],
@@ -2441,12 +2440,6 @@ export class UrlbarQueryContext {
    *   Indicates if the first result has been changed changed.
    */
   firstResultChanged = false;
-
-  /**
-   * @type {string}
-   *   The form history name to use when saving search history.
-   */
-  formHistoryName;
 
   /**
    * @type {UrlbarResult}
