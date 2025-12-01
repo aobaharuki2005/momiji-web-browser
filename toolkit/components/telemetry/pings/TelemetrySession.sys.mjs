@@ -464,19 +464,35 @@ var Impl = {
   },
 
   getHistograms: function getHistograms(clearSubsession) {
-    return Services.telemetry.getSnapshotForHistograms(
+    const snapshot = Services.telemetry.getSnapshotForHistograms(
       "main",
       clearSubsession,
       !this._testing
     );
+    if (
+      lazy.NimbusFeatures.legacyTelemetry.getVariable("disableMainPingHgrams")
+    ) {
+      this._log.trace("getHistograms - Main ping histograms are disabled.");
+      return {};
+    }
+    return snapshot;
   },
 
   getKeyedHistograms(clearSubsession) {
-    return Services.telemetry.getSnapshotForKeyedHistograms(
+    const snapshot = Services.telemetry.getSnapshotForKeyedHistograms(
       "main",
       clearSubsession,
       !this._testing
     );
+    if (
+      lazy.NimbusFeatures.legacyTelemetry.getVariable("disableMainPingHgrams")
+    ) {
+      this._log.trace(
+        "getKeyedHistograms - Main ping histograms are disabled."
+      );
+      return {};
+    }
+    return snapshot;
   },
 
   /**
