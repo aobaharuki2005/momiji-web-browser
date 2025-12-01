@@ -12,7 +12,7 @@
  * @type {TestSettingControlCommonPropertiesFunction}
  */
 async function testCommonSettingControlPropertiesSet(renderTemplateFunction) {
-  const l10nId = "l10n ID";
+  const l10nId = "l10n-test-id";
   const l10nArgs = { foo: "bar" };
   const iconSrc = "anicon.png";
   const supportPage = "https://support.page";
