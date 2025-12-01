@@ -129,11 +129,6 @@ class _OpenSearchManager {
   updateOpenSearchBadge(win) {
     let engines = this.#offeredEngines.get(win.gBrowser.selectedBrowser);
     for (let urlbar of win.document.querySelectorAll("moz-urlbar")) {
-      if (!urlbar.controller) {
-        // This means it is not initialized and happens
-        // if the new searchbar is disabled.
-        continue;
-      }
       urlbar.addSearchEngineHelper.setEnginesFromBrowser(
         win.gBrowser.selectedBrowser,
         engines || []

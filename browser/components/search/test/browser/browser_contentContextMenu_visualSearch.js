@@ -8,6 +8,7 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   SearchEngine: "moz-src:///toolkit/components/search/SearchEngine.sys.mjs",
+  sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
 const CONTEXT_MENU_ID = "contentAreaContextMenu";
