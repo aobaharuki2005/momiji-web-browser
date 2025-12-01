@@ -162,6 +162,13 @@ export const UnenrollmentCause = {
     };
   },
 
+  Migration(migration) {
+    return {
+      reason: lazy.NimbusTelemetry.UnenrollReason.MIGRATION,
+      migration,
+    };
+  },
+
   Unknown() {
     return {
       reason: lazy.NimbusTelemetry.UnenrollReason.UNKNOWN,
@@ -290,6 +297,8 @@ export class ExperimentManager {
         "ExperimentManager.onStartup() can only be called from the main process"
       );
     }
+
+    lazy.log.debug("onStartup");
 
     this._prefs = new Map();
     this._prefsBySlug = new Map();
@@ -1011,8 +1020,15 @@ export class ExperimentManager {
    * @param {boolean} options.duringRestore
    *        If true, this indicates that this was during the call to
    *        `_restoreEnrollmentPrefs`.
+   *
+   * @param {boolean} options.unsetEnrollmentPrefs
+   *        Whether or not to unset the prefs set by enrollment.
    */
-  _unenroll(enrollment, cause, { duringRestore = false } = {}) {
+  _unenroll(
+    enrollment,
+    cause,
+    { duringRestore = false, unsetEnrollmentPrefs = true } = {}
+  ) {
     const { slug } = enrollment;
 
     if (!enrollment.active) {
@@ -1029,7 +1045,14 @@ export class ExperimentManager {
 
     lazy.NimbusTelemetry.recordUnenrollment(enrollment, cause);
 
-    this._unsetEnrollmentPrefs(enrollment, cause, { duringRestore });
+    if (unsetEnrollmentPrefs) {
+      this._unsetEnrollmentPrefs(enrollment, cause, { duringRestore });
+    } else if (enrollment.prefs) {
+      // If we're not unsetting enrollment prefs, we must remove our listeners.
+      for (const pref of enrollment.prefs) {
+        this._removePrefObserver(pref.name, enrollment.slug);
+      }
+    }
 
     lazy.log.debug(`Recipe unenrolled: ${slug} (${cause.reason})`);
   }
@@ -1592,6 +1615,11 @@ export class ExperimentManager {
    * @param {string} slug The slug of the enrollment that is being unenrolled.
    */
   _removePrefObserver(name, slug) {
+    /// This may be called before the ExperimentManager has finished initializing.
+    if (!this._prefs) {
+      return;
+    }
+
     // Update the pref observer that the current enrollment is no longer
     // involved in the pref.
     //

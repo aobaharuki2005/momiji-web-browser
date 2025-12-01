@@ -1617,3 +1617,110 @@ add_task(async function testMigrateEnrollmentsToSqlDb() {
   await testMigrateEnrollmentsToSql("database");
   resetNimbusEnrollmentPrefs();
 });
+
+add_task(async function testGraduateFirefoxLabsAutoPip() {
+  const SLUG = "firefox-labs-auto-pip";
+
+  const recipe = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    SLUG,
+    {
+      featureId: "auto-pip",
+      value: { enabled: true },
+    },
+    {
+      isFirefoxLabsOptIn: true,
+      firefoxLabsTitle: "experimental-features-auto-pip",
+      firefoxLabsDescription: "experimental-features-auto-pip-description",
+      firefoxLabsDescriptionLink: null,
+      firefoxLabsGroup: "experimental-features-group-productivity",
+      requiresRestart: false,
+    }
+  );
+
+  const ENABLED_PREF = getEnabledPrefForFeature("auto-pip");
+
+  Services.fog.applyServerKnobsConfig(
+    JSON.stringify({
+      metrics_enabled: {
+        "nimbus_events.enrollment_status": true,
+      },
+    })
+  );
+
+  Services.prefs.setBoolPref(ENABLED_PREF, true);
+  const { cleanup, manager } = await NimbusTestUtils.setupTest({
+    storePath: await NimbusTestUtils.createStoreWith(store => {
+      NimbusTestUtils.addEnrollmentForRecipe(recipe, {
+        store,
+        extra: {
+          prefs: [
+            {
+              name: ENABLED_PREF,
+              featureId: "auto-pip",
+              variable: "enabled",
+              branch: "user",
+              originalValue: false,
+            },
+          ],
+        },
+      });
+    }),
+    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+  });
+
+  const enrollment = manager.store.get(SLUG);
+
+  Assert.ok(!enrollment.active, "Enrollment is not active");
+  Assert.deepEqual(enrollment.featureIds, ["auto-pip"]);
+  Assert.equal(enrollment.unenrollReason, "migration");
+
+  Assert.equal(
+    Services.prefs.getBoolPref(ENABLED_PREF),
+    true,
+    "Pref is still set"
+  );
+
+  Assert.deepEqual(
+    Glean.nimbusEvents.migration.testGetValue().map(event => event.extra),
+    [
+      {
+        success: "true",
+        migration_id: "graduate-firefox-labs-auto-pip",
+      },
+    ]
+  );
+
+  Assert.deepEqual(
+    Glean.nimbusEvents.unenrollment
+      .testGetValue("events")
+      .map(event => event.extra),
+    [
+      {
+        experiment: "firefox-labs-auto-pip",
+        branch: "control",
+        reason: "migration",
+        migration: "graduate-firefox-labs-auto-pip",
+      },
+    ]
+  );
+
+  Assert.deepEqual(
+    Glean.nimbusEvents.enrollmentStatus
+      .testGetValue("events")
+      .map(event => event.extra),
+    [
+      {
+        slug: "firefox-labs-auto-pip",
+        branch: "control",
+        status: "WasEnrolled",
+        reason: "Migration",
+        migration: "graduate-firefox-labs-auto-pip",
+      },
+    ]
+  );
+
+  Services.prefs.setBoolPref(ENABLED_PREF, false);
+  await cleanup();
+
+  Services.fog.testResetFOG();
+});
