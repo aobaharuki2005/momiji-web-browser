@@ -42,6 +42,11 @@ const CannotEnrollFeatureReason = Object.freeze({
    * feature does not support co-enrollment.
    */
   ENROLLED_IN_FEATURE: "enrolled-in-feature",
+
+  /**
+   * The enrollment is paused.
+   */
+  ENROLLMENT_PAUSED: "enrollment-paused",
 });
 
 /**
@@ -562,22 +567,25 @@ export class ExperimentManager {
   }
 
   /**
-   * Determine if enrollment in the given recipe is possible based on its
-   * features.
+   * Determine if enrollment in the given recipe is possible.
    *
    * @param {object} recipe The recipe in question.
-   * @param {string[]} recipe.featureIds The list of featureIds that the recipe
-   * uses.
-   * @param {boolean} recipe.isRollout Whether or not the recipe is a rollout.
    *
    * @returns {CanEnrollResult} Whether or not we can enroll into a given recipe.
    */
-  canEnroll({ featureIds, isRollout }) {
-    const storeLookupByFeature = isRollout
+  canEnroll(recipe) {
+    const storeLookupByFeature = recipe.isRollout
       ? this.store.getRolloutForFeature.bind(this.store)
       : this.store.getExperimentForFeature.bind(this.store);
 
-    for (const featureId of featureIds) {
+    if (recipe.isEnrollmentPaused) {
+      return {
+        ok: false,
+        reason: CannotEnrollFeatureReason.ENROLLMENT_PAUSED,
+      };
+    }
+
+    for (const featureId of recipe.featureIds) {
       const feature = lazy.NimbusFeatures[featureId];
 
       if (!feature) {

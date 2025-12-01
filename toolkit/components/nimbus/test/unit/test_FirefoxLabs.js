@@ -35,11 +35,29 @@ add_task(async function test_all() {
     }
   );
 
+  const preexistingPaused = NimbusTestUtils.factories.recipe.withFeatureConfig(
+    "preexisting-paused",
+    { featureId: "no-feature-firefox-desktop" },
+    {
+      isRollout: true,
+      isEnrollmentPaused: true,
+      isFirefoxLabsOptIn: true,
+      firefoxLabsTitle: "true",
+      firefoxLabsDescription: "description",
+      firefoxLabsDescriptionLinks: null,
+      firefoxLabsGroup: "group",
+      requiresRestart: false,
+    }
+  );
+
   const { initExperimentAPI, cleanup } = await setupTest({
     init: false,
     storePath: await NimbusTestUtils.createStoreWith(async store => {
       await NimbusTestUtils.addEnrollmentForRecipe(preexisting, { store });
       await NimbusTestUtils.addEnrollmentForRecipe(alreadyEnrolled, { store });
+      await NimbusTestUtils.addEnrollmentForRecipe(preexistingPaused, {
+        store,
+      });
     }),
     experiments: [
       NimbusTestUtils.factories.recipe("opt-in-rollout", {
@@ -113,7 +131,22 @@ add_task(async function test_all() {
         { featureId: "no-feature-firefox-desktop" },
         { isRollout: true }
       ),
+      NimbusTestUtils.factories.recipe.withFeatureConfig(
+        "paused",
+        { featureId: "no-feature-firefox-desktop" },
+        {
+          isRollout: true,
+          isEnrollmentPaused: true,
+          isFirefoxLabsOptIn: true,
+          firefoxLabsTitle: "title",
+          firefoxLabsDescription: "description",
+          firefoxLabsDescriptionLinks: null,
+          firefoxLabsGroup: "group",
+          requiresRestart: false,
+        }
+      ),
       preexisting, // Prevent unenrollment.
+      preexistingPaused,
       alreadyEnrolled,
     ],
     migrationState: NimbusTestUtils.migrationState.LATEST,
@@ -126,7 +159,12 @@ add_task(async function test_all() {
 
   Assert.deepEqual(
     availableSlugs,
-    ["opt-in-rollout", "opt-in-experiment", "already-enrolled-opt-in"].sort(),
+    [
+      "opt-in-rollout",
+      "opt-in-experiment",
+      "already-enrolled-opt-in",
+      "preexisting-paused",
+    ].sort(),
     "Should return all opt in recipes that match targeting and bucketing"
   );
 
@@ -135,6 +173,7 @@ add_task(async function test_all() {
     "experiment",
     "rollout",
     "preexisting-rollout",
+    "preexisting-paused",
   ]);
 
   await cleanup();
