@@ -635,7 +635,7 @@ template <typename F>
 void MacroAssemblerRiscv64::RoundHelper(FPURegister dst, FPURegister src,
                                         FPURegister fpu_scratch,
                                         FPURoundingMode frm) {
-  BlockTrampolinePoolScope block_trampoline_pool(this, 20);
+  BlockTrampolinePoolScope block_trampoline_pool(this, 20, 2);
   UseScratchRegisterScope temps(this);
   Register scratch2 = temps.Acquire();
 
@@ -2476,10 +2476,7 @@ void MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output) {
 // ===============================================================
 // MacroAssembler high-level usage.
 bool MacroAssembler::convertUInt64ToDoubleNeedsTemp() { return false; }
-CodeOffset MacroAssembler::call(Label* label) {
-  BranchAndLink(label);
-  return CodeOffset(currentOffset());
-}
+CodeOffset MacroAssembler::call(Label* label) { return BranchAndLink(label); }
 CodeOffset MacroAssembler::call(Register reg) {
   jalr(reg, 0);
   return CodeOffset(currentOffset());
@@ -2626,7 +2623,9 @@ static void AtomicExchange(MacroAssembler& masm,
   if (nbytes == 4) {
     masm.memoryBarrierBefore(sync);
     masm.bind(&again);
-    BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
+    BlockTrampolinePoolScope block_trampoline_pool(&masm,
+                                                   /* 1 + 1 + 1 + 4 + 1 = */ 8,
+                                                   1);
     if (access) {
       masm.append(*access, wasm::TrapMachineInsn::Atomic,
                   FaultingCodeOffset(masm.currentOffset()));
@@ -2663,7 +2662,8 @@ static void AtomicExchange(MacroAssembler& masm,
 
   masm.bind(&again);
 
-  BlockTrampolinePoolScope block_trampoline_pool(&masm, 10);
+  BlockTrampolinePoolScope block_trampoline_pool(
+      &masm, /* 1 + 1 + 1 + 1 + 4 + 1 + 2 + 1 = */ 12, 1);
   if (access) {
     masm.append(*access, wasm::TrapMachineInsn::Atomic,
                 FaultingCodeOffset(masm.currentOffset()));
@@ -2716,7 +2716,9 @@ static void AtomicExchange64(MacroAssembler& masm,
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&tryAgain);
-  BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
+  BlockTrampolinePoolScope block_trampoline_pool(&masm,
+                                                 /* 1 + 1 + 1 + 4 + 1 = */ 8,
+                                                 1);
   if (access) {
     masm.append(*access, js::wasm::TrapMachineInsn::Load64,
                 FaultingCodeOffset(masm.currentOffset()));
@@ -2746,7 +2748,9 @@ static void AtomicFetchOp64(MacroAssembler& masm,
   masm.memoryBarrierBefore(sync);
 
   masm.bind(&tryAgain);
-  BlockTrampolinePoolScope block_trampoline_pool(&masm, 5);
+  BlockTrampolinePoolScope block_trampoline_pool(&masm,
+                                                 /* 1 + 1 + 1 + 4 + 1 = */ 8,
+                                                 1);
   if (access) {
     masm.append(*access, js::wasm::TrapMachineInsn::Load64,
                 FaultingCodeOffset(masm.currentOffset()));
@@ -3271,11 +3275,11 @@ void MacroAssembler::branchValueIsNurseryCell(Condition cond,
                                               Label* label) {
   branchValueIsNurseryCellImpl(cond, value, temp, label);
 }
-void MacroAssembler::call(const Address& addr) {
+CodeOffset MacroAssembler::call(const Address& addr) {
   UseScratchRegisterScope temps(this);
   temps.Exclude(GeneralRegisterSet(1 << CallReg.code()));
   loadPtr(addr, CallReg);
-  call(CallReg);
+  return call(CallReg);
 }
 void MacroAssembler::call(ImmPtr target) {
   BufferOffset bo = m_buffer.nextOffset();
@@ -4824,6 +4828,7 @@ bool MacroAssemblerRiscv64::CalculateOffset(Label* L, int32_t* offset,
 
 void MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L) {
   MOZ_ASSERT(L == nullptr || offset == 0);
+  BlockTrampolinePoolScope block_trampoline_pool(this, 2, 1);
   offset = GetOffset(offset, L, OffsetSize::kOffset21);
   Assembler::j(offset);
 }
@@ -4846,8 +4851,8 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
     MOZ_ASSERT(rt.is_reg());
     scratch = rt.rm();
   }
-  BlockTrampolinePoolScope block_trampoline_pool(this, 2);
   {
+    BlockTrampolinePoolScope block_trampoline_pool(this, 2, 1);
     switch (cond) {
       case Always:
         if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
@@ -4998,12 +5003,13 @@ void MacroAssemblerRiscv64::BranchLong(Label* L) {
   GenPCRelativeJump(scratch, imm);
 }
 
-void MacroAssemblerRiscv64::BranchAndLinkLong(Label* L) {
+CodeOffset MacroAssemblerRiscv64::BranchAndLinkLong(Label* L) {
   // Generate position independent long branch and link.
   int32_t imm = branch_long_offset(L);
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
   GenPCRelativeJumpAndLink(scratch, imm);
+  return CodeOffset(currentOffset());
 }
 
 void MacroAssemblerRiscv64::ma_branch(Label* L, Condition cond, Register rs,
@@ -6911,30 +6917,32 @@ void MacroAssemblerRiscv64::GenPCRelativeJumpAndLink(Register rd,
   jalr(rd, Lo12);   // jump PC + Hi20 + Lo12
 }
 
-void MacroAssemblerRiscv64::BranchAndLinkShortHelper(int32_t offset, Label* L) {
+CodeOffset MacroAssemblerRiscv64::BranchAndLinkShortHelper(int32_t offset,
+                                                           Label* L) {
   MOZ_ASSERT(L == nullptr || offset == 0);
+  BlockTrampolinePoolScope block_trampoline_pool(this, 2, 1);
   offset = GetOffset(offset, L, OffsetSize::kOffset21);
-  jal(offset);
+  return jal(offset);
 }
 
-void MacroAssemblerRiscv64::BranchAndLinkShort(int32_t offset) {
+CodeOffset MacroAssemblerRiscv64::BranchAndLinkShort(int32_t offset) {
   MOZ_ASSERT(is_int21(offset));
-  BranchAndLinkShortHelper(offset, nullptr);
+  return BranchAndLinkShortHelper(offset, nullptr);
 }
 
-void MacroAssemblerRiscv64::BranchAndLinkShort(Label* L) {
-  BranchAndLinkShortHelper(0, L);
+CodeOffset MacroAssemblerRiscv64::BranchAndLinkShort(Label* L) {
+  return BranchAndLinkShortHelper(0, L);
 }
 
-void MacroAssemblerRiscv64::BranchAndLink(Label* L) {
+CodeOffset MacroAssemblerRiscv64::BranchAndLink(Label* L) {
   if (L->bound()) {
     if (is_near(L)) {
-      BranchAndLinkShort(L);
+      return BranchAndLinkShort(L);
     } else {
-      BranchAndLinkLong(L);
+      return BranchAndLinkLong(L);
     }
   } else {
-    BranchAndLinkShort(L);
+    return BranchAndLinkShort(L);
   }
 }
 

@@ -2979,6 +2979,7 @@ html {
 }
 .onboardingContainer .confirmation-checklist-section .confirmation-checklist-container .confirmation-checklist-icon-wrapper {
   display: flex;
+  align-items: center;
 }
 .onboardingContainer .confirmation-checklist-section .confirmation-checklist-container .confirmation-checklist-text {
   margin-inline-start: 8px;

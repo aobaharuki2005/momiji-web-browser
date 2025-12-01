@@ -476,6 +476,14 @@ const CurlUtils = {
         // by the previous replace.
         .replace(/%(?=[a-zA-Z0-9_])/g, "%^")
 
+        // All other whitespace characters are replaced with a single space, as there
+        // is no way to enter their literal values in a command line, and they do break
+        // the command allowing for injection.
+        // Since want to keep line breaks, we need to exclude them in the regex (`[^\r\n]`),
+        // and use double negations to get the other whitespace chars (`[^\S]` translates
+        // to "not not whitespace")
+        .replace(/[^\S\r\n]/g, " ")
+
         // Lastly we replace new lines with ^ and TWO new lines because the first
         // new line is there to enact the escape command the second is the character
         // to escape (in this case new line).

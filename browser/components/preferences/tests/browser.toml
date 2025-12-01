@@ -2,6 +2,8 @@
 prefs = [
   "extensions.formautofill.addresses.available='on'",
   "signon.management.page.os-auth.enabled=true",
+  "browser.backup.archive.enabled=false",
+  "browser.backup.restore.enabled=false",
   "browser.backup.archive.overridePlatformCheck=true",
   "browser.backup.restore.overridePlatformCheck=true",
 ]

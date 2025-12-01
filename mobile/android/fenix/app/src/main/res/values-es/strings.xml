@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
 <resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">%s privado</string>
@@ -82,7 +89,7 @@
     %1$s is the name of the app (for example "Firefox").
     %2$s is a link using felt_privacy_info_card_subtitle_link_text as text
   -->
-  <string name="felt_privacy_info_card_subtitle_2">%1$s elimina tus cookies, historial y datos del sitio cuando cierras todas tus pestañas privadas. %2$s</string>
+  <string name="felt_privacy_info_card_subtitle_2" tools:ignore="UnusedResources" moz:removedIn="147">%1$s elimina tus cookies, historial y datos del sitio cuando cierras todas tus pestañas privadas. %2$s</string>
   <!--
     Description of private browsing mode displayed to users on the homepage when they enable private mode.
     %1$s is the name of the app (for example "Firefox").
@@ -1058,6 +1065,8 @@
   <string name="restart_warning_dialog_title">¿Cambiar el icono de la aplicación?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">La aplicación podría cerrarse. Simplemente toca el nuevo icono para volver a abrir %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Al cambiar el icono, se eliminarán los sitios y accesos directos que hayas guardado en la pantalla de inicio. \n\nEs posible que %1$s se cierre. Pulsa el nuevo icono para volver a abrirlo.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Cambiar icono</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2748,14 +2757,14 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Sincronizar direcciones entre dispositivos</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Sincronizar direcciones</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Atrás</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Añadir tarjeta</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Editar tarjeta</string>
   <!-- The header for the card number of a credit card -->
   <string name="credit_cards_card_number">Número de tarjeta</string>
-  <!-- The header for the expiration date of a credit card -->
-  <string name="credit_cards_expiration_date">Fecha de caducidad</string>
   <!-- The label for the expiration date month of a credit card to be used by a11y services -->
   <string name="credit_cards_expiration_date_month">Mes de caducidad</string>
   <!-- The label for the expiration date year of a credit card to be used by a11y services -->
