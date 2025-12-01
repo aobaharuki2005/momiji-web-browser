@@ -5322,6 +5322,7 @@ var gCSSProperties = {
       "-moz-hyperlinktext",
       "-moz-visitedhyperlinktext",
       /* color-mix */
+      "color-mix(red, blue)",
       "color-mix(in srgb, red, blue)",
       "color-mix(in srgb, highlight, rgba(0, 0, 0, .5))",
       "color-mix(in srgb, color-mix(in srgb, red 10%, blue), green)",
@@ -5360,7 +5361,6 @@ var gCSSProperties = {
       "hsl(0 0% 0% /)",
       "hsl(0, 0%, 0% /)",
       /* color-mix */
-      "color-mix(red, blue)",
       "color-mix(red blue)",
       "color-mix(in srgb, red blue)",
       "color-mix(in srgb, red 10% blue)",
