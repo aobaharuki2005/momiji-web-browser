@@ -5935,6 +5935,18 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
+# Whether to enable about:blank async-load workaround for ckeditor.
+- name: dom.about-blank-ckeditor-hack.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# Per-domain blocklist for the previous hack.
+- name: dom.about-blank-ckeditor-hack.disabled-domains
+  type: String
+  value: ""
+  mirror: never
+
 #---------------------------------------------------------------------------
 # Prefs starting with "editor"
 #---------------------------------------------------------------------------

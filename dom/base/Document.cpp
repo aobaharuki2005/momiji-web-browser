@@ -14423,6 +14423,8 @@ void Document::WarnOnceAbout(
   // Don't count deprecated operations for about pages since those pages
   // are almost in our control, and we always need to remove uses there
   // before we remove the operation itself anyway.
+  // FIXME: This seems wrong for about:blank. we don't report telemetry for
+  // internal about: pages anyways (see ShouldIncludeInTelemetry()).
   if (!IsAboutPage()) {
     const_cast<Document*>(this)->SetUseCounter(
         OperationToUseCounter(aOperation));

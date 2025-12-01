@@ -252,6 +252,7 @@ STATIC_ATOMS = [
     Atom("circ", "circ"),
     Atom("circle", "circle"),
     Atom("cite", "cite"),
+    Atom("cke_wysiwyg_frame", "cke_wysiwyg_frame"),
     Atom("_class", "class"),
     Atom("classid", "classid"),
     Atom("clear", "clear"),

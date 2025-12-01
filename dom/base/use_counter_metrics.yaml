@@ -108,7 +108,7 @@ use.counter:
     send_in_pings:
       - use-counters
 
-# Total of 2420 use counter metrics (excludes denominators).
+# Total of 2422 use counter metrics (excludes denominators).
 # Total of 364 'page' use counters.
 use.counter.page:
   svgsvgelement_getelementbyid:
@@ -15657,7 +15657,7 @@ use.counter.worker.service:
     send_in_pings:
       - use-counters
 
-# Total of 49 'deprecated operations (page)' use counters.
+# Total of 50 'deprecated operations (page)' use counters.
 use.counter.deprecated_ops.page:
   components:
     type: counter
@@ -16492,7 +16492,24 @@ use.counter.deprecated_ops.page:
     send_in_pings:
       - use-counters
 
-# Total of 49 'deprecated operations (document)' use counters.
+  ckeditor4_compat_hack:
+    type: counter
+    description: >
+      Whether a page used CKEditor4CompatHack.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+# Total of 50 'deprecated operations (document)' use counters.
 use.counter.deprecated_ops.doc:
   components:
     type: counter
@@ -17314,6 +17331,23 @@ use.counter.deprecated_ops.doc:
     type: counter
     description: >
       Whether a document used XSLTDeprecated.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  ckeditor4_compat_hack:
+    type: counter
+    description: >
+      Whether a document used CKEditor4CompatHack.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -24860,6 +24894,40 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
+  css_webkit_perspective:
+    type: counter
+    description: >
+      Whether a page used the CSS property -webkit-perspective.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_webkit_transform:
+    type: counter
+    description: >
+      Whether a page used the CSS property -webkit-transform.
+      Compare against `use.counter.top_level_content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
   css_columns:
     type: counter
     description: >
@@ -25914,44 +25982,10 @@ use.counter.css.page:
     send_in_pings:
       - use-counters
 
-  css_webkit_transform:
-    type: counter
-    description: >
-      Whether a page used the CSS property -webkit-transform.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
   css_moz_perspective:
     type: counter
     description: >
       Whether a page used the CSS property -moz-perspective.
-      Compare against `use.counter.top_level_content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_webkit_perspective:
-    type: counter
-    description: >
-      Whether a page used the CSS property -webkit-perspective.
       Compare against `use.counter.top_level_content_documents_destroyed`
       to calculate the rate.
     bugs:
@@ -36830,6 +36864,40 @@ use.counter.css.doc:
     send_in_pings:
       - use-counters
 
+  css_webkit_perspective:
+    type: counter
+    description: >
+      Whether a document used the CSS property -webkit-perspective.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+  css_webkit_transform:
+    type: counter
+    description: >
+      Whether a document used the CSS property -webkit-transform.
+      Compare against `use.counter.content_documents_destroyed`
+      to calculate the rate.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
   css_columns:
     type: counter
     description: >
@@ -37884,44 +37952,10 @@ use.counter.css.doc:
     send_in_pings:
       - use-counters
 
-  css_webkit_transform:
-    type: counter
-    description: >
-      Whether a document used the CSS property -webkit-transform.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
   css_moz_perspective:
     type: counter
     description: >
       Whether a document used the CSS property -moz-perspective.
-      Compare against `use.counter.content_documents_destroyed`
-      to calculate the rate.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
-    notification_emails:
-      - dom-core@mozilla.com
-      - emilio@mozilla.com
-    expires: never
-    send_in_pings:
-      - use-counters
-
-  css_webkit_perspective:
-    type: counter
-    description: >
-      Whether a document used the CSS property -webkit-perspective.
       Compare against `use.counter.content_documents_destroyed`
       to calculate the rate.
     bugs:
