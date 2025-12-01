@@ -187,16 +187,10 @@ def chunk_manifests(suite, platform, chunks, manifests):
             for _, c in cbr.get_chunked_manifests(manifests)
         ]
 
+    # Keep track of test paths for each chunk, and the runtime information.
     # Spread out the test manifests evenly across all chunks.
-    chunked_manifests = [[] for _ in range(chunks)]
-    for index, key in enumerate(sorted(manifests)):
-        chunked_manifests[index % chunks].append(key)
-
-    # One last sort by the number of manifests. Chunk size should be more or less
-    # equal in size.
-    chunked_manifests.sort(key=lambda x: len(x))
-
-    # Return just the chunked test paths.
+    sorted_manifests = sorted(manifests)
+    chunked_manifests = [sorted_manifests[c::chunks] for c in range(chunks)]
     return chunked_manifests
 
 
