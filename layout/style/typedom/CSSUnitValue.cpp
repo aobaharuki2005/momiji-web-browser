@@ -14,9 +14,6 @@
 
 namespace mozilla::dom {
 
-CSSUnitValue::CSSUnitValue(nsCOMPtr<nsISupports> aParent)
-    : CSSNumericValue(std::move(aParent)) {}
-
 CSSUnitValue::CSSUnitValue(nsCOMPtr<nsISupports> aParent, double aValue,
                            const nsACString& aUnit)
     : CSSNumericValue(std::move(aParent), ValueType::UnitValue),
