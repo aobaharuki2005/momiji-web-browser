@@ -5,6 +5,8 @@ head = "head.js"
 
 ["test_AsyncQueue.js"]
 
+["test_BiMap.js"]
+
 ["test_ChallengeHeaderParser.js"]
 
 ["test_DOM.js"]
