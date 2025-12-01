@@ -85,6 +85,8 @@ skip-if = [
 
 ["browser_ime_composition.js"]
 
+["browser_new_searchbar_init.js"]
+
 ["browser_oneOff.js"]
 
 ["browser_oneOffContextMenu.js"]

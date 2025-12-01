@@ -89,7 +89,6 @@ export class UrlbarInput extends HTMLElement {
             flex="1"
             pageproxystate="invalid">
         <moz-urlbar-slot name="remote-control-box"> </moz-urlbar-slot>
-        <toolbartabstop />
         <toolbarbutton id="urlbar-searchmode-switcher"
                        class="searchmode-switcher chromeclass-toolbar-additional"
                        align="center"
@@ -356,7 +355,7 @@ export class UrlbarInput extends HTMLElement {
 
   connectedCallback() {
     if (
-      this.sapName == "searchbar" &&
+      this.getAttribute("sap-name") == "searchbar" &&
       !lazy.UrlbarPrefs.get("browser.search.widget.new")
     ) {
       return;
@@ -453,7 +452,7 @@ export class UrlbarInput extends HTMLElement {
 
   disconnectedCallback() {
     if (
-      this.sapName == "searchbar" &&
+      this.getAttribute("sap-name") == "searchbar" &&
       !lazy.UrlbarPrefs.get("browser.search.widget.new")
     ) {
       return;
@@ -594,7 +593,7 @@ export class UrlbarInput extends HTMLElement {
         );
         break;
       case "browser.search.widget.new": {
-        if (this.sapName == "searchbar" && this.isConnected) {
+        if (this.getAttribute("sap-name") == "searchbar" && this.isConnected) {
           if (lazy.UrlbarPrefs.get("browser.search.widget.new")) {
             // The connectedCallback was skipped. Init now.
             this.#init();
