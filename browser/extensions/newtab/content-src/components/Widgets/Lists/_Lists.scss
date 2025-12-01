@@ -114,6 +114,9 @@
     border: none;
     overflow-y: auto;
     max-height: 165px;
+    &:focus {
+      outline: var(--focus-outline);
+    }
   }
 
   .task-item {
@@ -146,6 +149,7 @@
 
       span {
         -webkit-line-clamp: 3;
+        line-clamp: 3;
         overflow: hidden;
         text-overflow: ellipsis;
         word-break: break-word;
@@ -234,10 +238,14 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-small);
-  }
+    }
+    
+    .completed-task-wrapper summary {
+      list-style: none;
 
-  .completed-task-wrapper summary {
-    list-style: none;
+          &:focus {
+            outline: var(--focus-outline);
+      }
 
     .completed-title {
       color: var(--text-color-deemphasized);
