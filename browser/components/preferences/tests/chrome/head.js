@@ -18,6 +18,7 @@ async function testCommonSettingControlPropertiesSet(renderTemplateFunction) {
   const supportPage = "https://support.page";
   const subcategory = "the sub category";
   const label = "foo-bar";
+  const slot = "foo";
 
   const element = await renderTemplateFunction({
     l10nId,
@@ -25,6 +26,7 @@ async function testCommonSettingControlPropertiesSet(renderTemplateFunction) {
     iconSrc,
     supportPage,
     subcategory: "the sub category",
+    slot,
     controlAttrs: {
       label,
     },
@@ -49,6 +51,8 @@ async function testCommonSettingControlPropertiesSet(renderTemplateFunction) {
   is(element.iconSrc, iconSrc, "sets iconSrc");
 
   is(element.supportPage, supportPage, "sets supportPage");
+
+  is(element.slot, slot, "sets slot");
 }
 
 /**
@@ -66,6 +70,7 @@ async function testCommonSettingControlPropertiesUnset(renderTemplateFunction) {
   ok(!element.hasAttribute("label"), "no controlAttrs.label");
   ok(!element.iconSrc, "no iconSrc");
   ok(!element.supportPage, "no supportPage");
+  ok(!element.slot, "no slot");
 }
 
 /**

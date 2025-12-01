@@ -1724,9 +1724,7 @@ SettingGroupManager.registerGroups({
           {
             control: "span",
             l10nId: "windows-launch-on-login-disabled",
-            controlAttrs: {
-              slot: "message",
-            },
+            slot: "message",
             options: [
               {
                 control: "a",
@@ -1763,8 +1761,8 @@ SettingGroupManager.registerGroups({
             control: "moz-button",
             l10nId: "set-as-my-default-browser",
             id: "setDefaultButton",
+            slot: "actions",
             controlAttrs: {
-              slot: "actions",
               type: "primary",
             },
           },
@@ -1874,9 +1872,9 @@ SettingGroupManager.registerGroups({
               {
                 control: "a",
                 l10nId: "home-prefs-mission-message-learn-more-link",
+                slot: "support-link",
                 controlAttrs: {
                   is: "moz-support-link",
-                  slot: "support-link",
                   "support-page": "sponsor-privacy",
                   "utm-content": "inproduct",
                 },
@@ -2508,9 +2506,7 @@ SettingGroupManager.registerGroups({
                     id: "turnOffPrimaryPassword",
                     l10nId: "forms-primary-pw-turn-off",
                     control: "moz-button",
-                    controlAttrs: {
-                      slot: "actions",
-                    },
+                    slot: "actions",
                   },
                 ],
               },

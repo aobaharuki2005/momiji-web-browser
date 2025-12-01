@@ -20,6 +20,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {Record<string, string>} [l10nArgs] - An object containing l10n IDs and their values that will be translated with Fluent
  * @property {Record<string, any>} [controlAttrs] - An object of additional attributes to be set on the control. These can be used to further customize the control for example a message bar of the warning type, or what dialog a button should open
  * @property {string} [iconSrc] - A path to the icon for the control (if the control supports one)
+ * @property {string} [slot] - The named slot for the control
  * @property {string} [supportPage] - The SUMO support page slug for the setting
  * @property {string} [subcategory] - The sub-category slug used for direct linking to a setting from SUMO
  */
@@ -125,6 +126,7 @@ export class SettingElement extends MozLitElement {
       "data-subcategory": config.subcategory,
       ".supportPage":
         config.supportPage != undefined ? config.supportPage : undefined,
+      slot: config.slot,
       ...config.controlAttrs,
     };
   }
