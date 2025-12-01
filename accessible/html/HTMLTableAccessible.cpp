@@ -81,10 +81,6 @@ uint64_t HTMLTableCellAccessible::NativeState() const {
   return state;
 }
 
-uint64_t HTMLTableCellAccessible::NativeInteractiveState() const {
-  return HyperTextAccessible::NativeInteractiveState() | states::SELECTABLE;
-}
-
 already_AddRefed<AccAttributes> HTMLTableCellAccessible::NativeAttributes() {
   RefPtr<AccAttributes> attributes = HyperTextAccessible::NativeAttributes();
 
