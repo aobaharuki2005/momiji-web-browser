@@ -41,14 +41,12 @@ extern mozilla::LazyLogModule gWindowsLog;
 /* mingw currently doesn't support windows.ui.viewmanagement.h, so we disable it
  * until it's fixed. */
 
-// See
-// https://github.com/tpn/winsdk-10/blob/master/Include/10.0.14393.0/winrt/windows.ui.viewmanagement.h
-// for the source of some of these definitions for older SDKs.
 #ifndef __MINGW32__
 
 #  include <inspectable.h>
 #  include <roapi.h>
 #  include <windows.ui.viewmanagement.h>
+#  include <uiviewsettingsinterop.h>
 
 #  pragma comment(lib, "runtimeobject.lib")
 
@@ -59,139 +57,6 @@ using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::ApplicationModel::DataTransfer;
 
-#  ifndef RuntimeClass_Windows_UI_ViewManagement_UIViewSettings
-#    define RuntimeClass_Windows_UI_ViewManagement_UIViewSettings \
-      L"Windows.UI.ViewManagement.UIViewSettings"
-#  endif
-
-#  ifndef IUIViewSettingsInterop
-
-using IUIViewSettingsInterop = interface IUIViewSettingsInterop;
-
-MIDL_INTERFACE("3694dbf9-8f68-44be-8ff5-195c98ede8a6")
-IUIViewSettingsInterop : public IInspectable {
- public:
-  virtual HRESULT STDMETHODCALLTYPE GetForWindow(HWND hwnd, REFIID riid,
-                                                 void** ppv) = 0;
-};
-#  endif
-
-#  ifndef __IDataTransferManagerInterop_INTERFACE_DEFINED__
-#    define __IDataTransferManagerInterop_INTERFACE_DEFINED__
-
-using IDataTransferManagerInterop = interface IDataTransferManagerInterop;
-
-MIDL_INTERFACE("3A3DCD6C-3EAB-43DC-BCDE-45671CE800C8")
-IDataTransferManagerInterop : public IUnknown {
- public:
-  virtual HRESULT STDMETHODCALLTYPE GetForWindow(
-      HWND appWindow, REFIID riid, void** dataTransferManager) = 0;
-  virtual HRESULT STDMETHODCALLTYPE ShowShareUIForWindow(HWND appWindow) = 0;
-};
-
-#  endif
-
-#  if !defined( \
-      ____x_ABI_CWindows_CApplicationModel_CDataTransfer_CIDataPackage4_INTERFACE_DEFINED__)
-#    define ____x_ABI_CWindows_CApplicationModel_CDataTransfer_CIDataPackage4_INTERFACE_DEFINED__
-
-MIDL_INTERFACE("13a24ec8-9382-536f-852a-3045e1b29a3b")
-IDataPackage4 : public IInspectable {
- public:
-  virtual HRESULT STDMETHODCALLTYPE add_ShareCanceled(
-      __FITypedEventHandler_2_Windows__CApplicationModel__CDataTransfer__CDataPackage_IInspectable *
-          handler,
-      EventRegistrationToken * token) = 0;
-  virtual HRESULT STDMETHODCALLTYPE remove_ShareCanceled(
-      EventRegistrationToken token) = 0;
-};
-
-#  endif
-
-#  ifndef RuntimeClass_Windows_UI_ViewManagement_UISettings
-#    define RuntimeClass_Windows_UI_ViewManagement_UISettings \
-      L"Windows.UI.ViewManagement.UISettings"
-#  endif
-#  if WINDOWS_FOUNDATION_UNIVERSALAPICONTRACT_VERSION < 0x80000
-namespace ABI {
-namespace Windows {
-namespace UI {
-namespace ViewManagement {
-
-class UISettings;
-class UISettingsAutoHideScrollBarsChangedEventArgs;
-interface IUISettingsAutoHideScrollBarsChangedEventArgs;
-MIDL_INTERFACE("87afd4b2-9146-5f02-8f6b-06d454174c0f")
-IUISettingsAutoHideScrollBarsChangedEventArgs : public IInspectable{};
-
-}  // namespace ViewManagement
-}  // namespace UI
-}  // namespace Windows
-}  // namespace ABI
-
-namespace ABI {
-namespace Windows {
-namespace Foundation {
-
-template <>
-struct __declspec(uuid("808aef30-2660-51b0-9c11-f75dd42006b4"))
-ITypedEventHandler<ABI::Windows::UI::ViewManagement::UISettings*,
-                   ABI::Windows::UI::ViewManagement::
-                       UISettingsAutoHideScrollBarsChangedEventArgs*>
-    : ITypedEventHandler_impl<
-          ABI::Windows::Foundation::Internal::AggregateType<
-              ABI::Windows::UI::ViewManagement::UISettings*,
-              ABI::Windows::UI::ViewManagement::IUISettings*>,
-          ABI::Windows::Foundation::Internal::AggregateType<
-              ABI::Windows::UI::ViewManagement::
-                  UISettingsAutoHideScrollBarsChangedEventArgs*,
-              ABI::Windows::UI::ViewManagement::
-                  IUISettingsAutoHideScrollBarsChangedEventArgs*>> {
-  static const wchar_t* z_get_rc_name_impl() {
-    return L"Windows.Foundation.TypedEventHandler`2<Windows.UI.ViewManagement."
-           L"UISettings, "
-           L"Windows.UI.ViewManagement."
-           L"UISettingsAutoHideScrollBarsChangedEventArgs>";
-  }
-};
-// Define a typedef for the parameterized interface specialization's mangled
-// name. This allows code which uses the mangled name for the parameterized
-// interface to access the correct parameterized interface specialization.
-typedef ITypedEventHandler<ABI::Windows::UI::ViewManagement::UISettings*,
-                           ABI::Windows::UI::ViewManagement::
-                               UISettingsAutoHideScrollBarsChangedEventArgs*>
-    __FITypedEventHandler_2_Windows__CUI__CViewManagement__CUISettings_Windows__CUI__CViewManagement__CUISettingsAutoHideScrollBarsChangedEventArgs_t;
-#    define __FITypedEventHandler_2_Windows__CUI__CViewManagement__CUISettings_Windows__CUI__CViewManagement__CUISettingsAutoHideScrollBarsChangedEventArgs \
-      ABI::Windows::Foundation::                                                                                                                            \
-          __FITypedEventHandler_2_Windows__CUI__CViewManagement__CUISettings_Windows__CUI__CViewManagement__CUISettingsAutoHideScrollBarsChangedEventArgs_t
-
-}  // namespace Foundation
-}  // namespace Windows
-}  // namespace ABI
-
-namespace ABI {
-namespace Windows {
-namespace UI {
-namespace ViewManagement {
-class UISettings;
-class UISettingsAutoHideScrollBarsChangedEventArgs;
-interface IUISettings5;
-MIDL_INTERFACE("5349d588-0cb5-5f05-bd34-706b3231f0bd")
-IUISettings5 : public IInspectable {
- public:
-  virtual HRESULT STDMETHODCALLTYPE get_AutoHideScrollBars(boolean * value) = 0;
-  virtual HRESULT STDMETHODCALLTYPE add_AutoHideScrollBarsChanged(
-      __FITypedEventHandler_2_Windows__CUI__CViewManagement__CUISettings_Windows__CUI__CViewManagement__CUISettingsAutoHideScrollBarsChangedEventArgs *
-          handler,
-      EventRegistrationToken * token) = 0;
-  virtual HRESULT STDMETHODCALLTYPE remove_AutoHideScrollBarsChanged(
-      EventRegistrationToken token) = 0;
-};
-}  // namespace ViewManagement
-}  // namespace UI
-}  // namespace Windows
-}  // namespace ABI
-#  endif
 #endif
 
 using namespace mozilla;
