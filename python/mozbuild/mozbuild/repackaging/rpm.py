@@ -11,6 +11,7 @@ import tempfile
 
 import mozfile
 import mozpack.path as mozpath
+from mozilla_version.gecko import GeckoVersion
 
 from mozbuild.repackaging.utils import (
     application_ini_data_from_tar,
@@ -68,12 +69,18 @@ def repackage_rpm(
         mozfile.extract_tarball(infile, source_dir)
 
         application_ini_data = application_ini_data_from_tar(infile)
+        gecko_version = GeckoVersion.parse(version)
+        rpm_build_number = (
+            application_ini_data["build_id"]
+            if gecko_version.is_nightly
+            else str(build_number)
+        )
         build_variables = get_build_variables(
             application_ini_data,
             arch,
             version,
             product=product,
-            build_number=build_number,
+            build_number=rpm_build_number,
         )
 
         rpm_dir = mozpath.join(source_dir, "rpm")
