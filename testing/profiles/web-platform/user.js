@@ -64,10 +64,6 @@ user_pref("widget.gtk.theme-scrollbar-colors.enabled", false);
 // (only Android right now), might get a snapshot at different times during the
 // animation.
 user_pref("ui.scrollbarFadeDuration", 0);
-// Don't enable paint suppression when the background is unknown. While paint
-// is suppressed, synthetic click events and co. go to the old page, which can
-// be confusing for tests that send click events before the first paint.
-user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
 user_pref("media.block-autoplay-until-in-foreground", false);
 // Force a light color scheme unless explicitly overridden by pref.
 user_pref("layout.css.prefers-color-scheme.content-override", 1);
