@@ -1065,6 +1065,8 @@
   <string name="restart_warning_dialog_title">Змінити піктограму програми?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Програма може закритися. Просто торкніться нової піктограми, щоб знову відкрити %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Зміна піктограми вилучить усі сайти та ярлики, які ви зберегли на головному екрані. \n\n%1$s може закритися. Торкніться нової піктограми, щоб відкрити знову.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Змінити піктограму</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2755,8 +2757,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Синхронізуйте адреси на різних пристроях</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Синхронізувати адреси</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Назад</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Додати картку</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Перейти назад</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Змінити картку</string>
   <!-- The header for the card number of a credit card -->
