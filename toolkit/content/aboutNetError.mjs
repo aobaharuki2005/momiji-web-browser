@@ -16,6 +16,9 @@ import {
   getFailedCertificatesAsPEMString,
   recordSecurityUITelemetry,
   getCSSClass,
+  gNoConnectivity,
+  gOffline,
+  retryThis,
 } from "chrome://global/content/aboutNetErrorHelpers.mjs";
 
 const formatter = new Intl.DateTimeFormat();
@@ -102,11 +105,6 @@ function getDescription() {
  */
 function getMitmName(failedCertInfo) {
   return failedCertInfo.issuerCommonName;
-}
-
-function retryThis(buttonEl) {
-  RPMSendAsyncMessage("Browser:EnableOnlineMode");
-  buttonEl.disabled = true;
 }
 
 function showPrefChangeContainer() {
@@ -447,7 +445,6 @@ function initPage() {
   }
 
   const isTRROnlyFailure = gErrorCode == "dnsNotFound" && RPMIsTRROnlyFailure();
-  let noConnectivity = gErrorCode == "dnsNotFound" && !RPMHasConnectivity();
 
   const docTitle = document.querySelector("title");
   const shortDesc = document.getElementById("errorShortDesc");
@@ -498,7 +495,7 @@ function initPage() {
   );
 
   // We can handle the offline page separately.
-  if (noConnectivity) {
+  if (gNoConnectivity) {
     pageTitleId = "neterror-dns-not-found-title";
     bodyTitleId = "internet-connection-offline-title";
   }
@@ -511,7 +508,7 @@ function initPage() {
 
   // The TRR errors may present options that direct users to settings only available on Firefox Desktop
   if (RPMIsFirefox()) {
-    if (isTRROnlyFailure && !noConnectivity) {
+    if (isTRROnlyFailure && !gNoConnectivity) {
       pageTitleId = "neterror-dns-not-found-title";
       document.l10n.setAttributes(docTitle, pageTitleId);
       if (bodyTitle) {
@@ -639,7 +636,7 @@ function initPage() {
   setFocus("#netErrorButtonContainer > .try-again");
 
   if (longDesc) {
-    const parts = getNetErrorDescParts(noConnectivity);
+    const parts = getNetErrorDescParts(gNoConnectivity);
     setNetErrorMessageFromParts(longDesc, parts);
   }
 
@@ -1469,8 +1466,15 @@ function shouldUseFeltPrivacyRefresh() {
   const errorInfo = gIsCertError
     ? document.getFailedCertSecurityInfo()
     : document.getNetErrorInfo();
+  let errorCode = errorInfo.errorCodeString
+    ? errorInfo.errorCodeString
+    : gErrorCode;
 
-  return NetErrorCard.ERROR_CODES.has(errorInfo.errorCodeString);
+  if (gOffline) {
+    errorCode = "NS_ERROR_OFFLINE";
+  }
+
+  return NetErrorCard.ERROR_CODES.has(errorCode);
 }
 
 if (!shouldUseFeltPrivacyRefresh()) {

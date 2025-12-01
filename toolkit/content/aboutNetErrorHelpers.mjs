@@ -27,6 +27,9 @@ export let searchParams = new URLSearchParams(
 export let gErrorCode = searchParams.get("e");
 export let gIsCertError = gErrorCode == "nssBadCert";
 export let gHasSts = gIsCertError && getCSSClass() === "badStsCert";
+export let gNoConnectivity =
+  gErrorCode == "dnsNotFound" && !RPMHasConnectivity();
+export let gOffline = gErrorCode === "netOffline" || gNoConnectivity;
 const HOST_NAME = getHostName();
 
 export function isCaptive() {
@@ -44,6 +47,11 @@ export function getHostName() {
     console.error("Could not parse URL", error);
   }
   return "";
+}
+
+export function retryThis(buttonEl) {
+  RPMSendAsyncMessage("Browser:EnableOnlineMode");
+  buttonEl.disabled = true;
 }
 
 export async function getFailedCertificatesAsPEMString() {

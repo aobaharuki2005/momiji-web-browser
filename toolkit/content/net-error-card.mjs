@@ -7,12 +7,15 @@
 import {
   gHasSts,
   gIsCertError,
+  gErrorCode,
   isCaptive,
   getCSSClass,
   getHostName,
   getSubjectAltNames,
   getFailedCertificatesAsPEMString,
   recordSecurityUITelemetry,
+  gOffline,
+  retryThis,
 } from "chrome://global/content/aboutNetErrorHelpers.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
@@ -46,6 +49,7 @@ export class NetErrorCard extends MozLitElement {
     learnMoreLink: "#learnMoreLink",
     whatCanYouDo: "#whatCanYouDo",
     whyDangerous: "#fp-why-site-dangerous",
+    netErrorTitleText: "#neterror-title-text",
   };
 
   static ERROR_CODES = new Set([
@@ -56,6 +60,7 @@ export class NetErrorCard extends MozLitElement {
     "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE",
     "SSL_ERROR_NO_CYPHER_OVERLAP",
     "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY",
+    "NS_ERROR_OFFLINE",
   ]);
 
   constructor() {
@@ -77,11 +82,8 @@ export class NetErrorCard extends MozLitElement {
     }
 
     await Promise.all([
-      this.getDomainMismatchNames(),
-      this.getCertificateErrorText(),
-    ]);
-
-    await Promise.all([
+      gErrorCode === "domain-mismatch" && this.getDomainMismatchNames(),
+      document.getFailedCertSecurityInfo && this.getCertificateErrorText(),
       this.domainMismatchNamesPromise,
       this.certificateErrorTextPromise,
     ]);
@@ -161,9 +163,15 @@ export class NetErrorCard extends MozLitElement {
   }
 
   getErrorInfo() {
-    return gIsCertError
+    const errorInfo = gIsCertError
       ? document.getFailedCertSecurityInfo()
       : document.getNetErrorInfo();
+
+    if (gOffline) {
+      errorInfo.errorCodeString = "NS_ERROR_OFFLINE";
+    }
+
+    return errorInfo;
   }
 
   introContentTemplate() {
@@ -190,6 +198,11 @@ export class NetErrorCard extends MozLitElement {
       case "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY":
         return html`<p
           data-l10n-id="fp-certerror-transparency-intro"
+          data-l10n-args='{"hostname": "${this.hostname}"}'
+        ></p>`;
+      case "NS_ERROR_OFFLINE":
+        return html`<p
+          data-l10n-id="fp-neterror-offline-intro"
           data-l10n-args='{"hostname": "${this.hostname}"}'
         ></p>`;
     }
@@ -393,7 +406,7 @@ export class NetErrorCard extends MozLitElement {
           </p>`
         : null}
       ${gIsCertError
-        ? html` <p>
+        ? html`<p>
             <a
               id="errorCode"
               data-l10n-id="fp-cert-error-code"
@@ -488,6 +501,11 @@ export class NetErrorCard extends MozLitElement {
     );
   }
 
+  handleTryAgain(e) {
+    this.handleTelemetryClick(e);
+    retryThis(e);
+  }
+
   toggleAdvancedShowing(e) {
     if (e) {
       this.handleTelemetryClick(e);
@@ -579,8 +597,11 @@ export class NetErrorCard extends MozLitElement {
       target = target.getRootNode().host;
     }
     let telemetryId = target.dataset.telemetryId;
+    const category = gIsCertError
+      ? "securityUiCerterror"
+      : "securityUiNeterror";
     void recordSecurityUITelemetry(
-      "securityUiCerterror",
+      category,
       "click" +
         telemetryId
           .split("_")
@@ -604,30 +625,55 @@ export class NetErrorCard extends MozLitElement {
           <img src="chrome://global/skin/illustrations/security-error.svg" />
         </div>
         <div class="container">
-          <h1
-            id="certErrorBodyTitle"
-            data-l10n-id="fp-certerror-body-title"
-          ></h1>
-          ${this.introContentTemplate()}
-          <moz-button-group
-            ><moz-button
-              type="primary"
-              data-l10n-id="fp-certerror-return-to-previous-page-recommended-button"
-              data-telemetry-id="return_button_adv"
-              id="returnButton"
-              @click=${this.handleGoBackClick}
-            ></moz-button
-            ><moz-button
-              id="advanced-button"
-              data-l10n-id=${this.advancedShowing
-                ? "fp-certerror-hide-advanced-button"
-                : "fp-certerror-advanced-button"}
-              data-telemetry-id="advanced_button"
-              @click=${this.toggleAdvancedShowing}
-            ></moz-button
-          ></moz-button-group>
-          ${this.advancedContainerTemplate()}
-          ${this.certErrorDebugInfoTemplate()}
+          ${this.errorInfo.errorCodeString === "NS_ERROR_OFFLINE"
+            ? html`<h1
+                  id="neterror-title-text"
+                  data-l10n-id="fp-neterror-offline-body-title"
+                ></h1>
+                ${this.introContentTemplate()}
+                <p>
+                  <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
+                </p>
+                <p>
+                  <span
+                    data-l10n-id="fp-neterror-offline-what-can-you-do-body"
+                    data-l10n-args='{"hostname": "${this.hostname}"}'
+                  ></span>
+                </p>
+                <moz-button-group>
+                  <moz-button
+                    id="neterrorTryAgainButton"
+                    class="try-again"
+                    type="primary"
+                    data-l10n-id="neterror-try-again-button"
+                    data-telemetry-id="try_again_button"
+                    @click=${this.handleTryAgain}
+                  ></moz-button>
+                </moz-button-group>`
+            : html`<h1
+                  id="certErrorBodyTitle"
+                  data-l10n-id="fp-certerror-body-title"
+                ></h1>
+                ${this.introContentTemplate()}
+                <moz-button-group
+                  ><moz-button
+                    type="primary"
+                    data-l10n-id="fp-certerror-return-to-previous-page-recommended-button"
+                    data-telemetry-id="return_button_adv"
+                    id="returnButton"
+                    @click=${this.handleGoBackClick}
+                  ></moz-button
+                  ><moz-button
+                    id="advanced-button"
+                    data-l10n-id=${this.advancedShowing
+                      ? "fp-certerror-hide-advanced-button"
+                      : "fp-certerror-advanced-button"}
+                    data-telemetry-id="advanced_button"
+                    @click=${this.toggleAdvancedShowing}
+                  ></moz-button
+                ></moz-button-group>
+                ${this.advancedContainerTemplate()}
+                ${this.certErrorDebugInfoTemplate()}`}
         </div>
       </article>`;
   }
