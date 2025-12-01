@@ -671,6 +671,10 @@ browsing-picture-in-picture-toggle-enabled =
     .label = Enable Picture-in-Picture video controls
     .accesskey = E
 
+browsing-picture-in-picture-enable-when-switching-tabs =
+    .label = Keep playing videos in Picture-in-Picture when switching tabs
+    .accesskey = s
+
 browsing-media-control =
     .label = Control media via keyboard, headset, or virtual interface
     .accesskey = v
