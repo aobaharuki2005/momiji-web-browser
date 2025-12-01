@@ -620,8 +620,6 @@ tags = "vertical-tabs"
 ["browser_tab_move_to_new_window_reload.js"]
 tags = "vertical-tabs"
 
-["browser_tab_notes.js"]
-
 ["browser_tab_play.js"]
 tags = "vertical-tabs"
 

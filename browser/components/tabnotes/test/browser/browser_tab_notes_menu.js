@@ -16,6 +16,39 @@ registerCleanupFunction(() => {
  *  Tab note menu tests
  */
 
+/**
+ * @param {Node} triggerNode
+ * @param {string} contextMenuId
+ * @returns {Promise<XULMenuElement|XULPopupElement>}
+ */
+async function getContextMenu(triggerNode, contextMenuId) {
+  let win = triggerNode.ownerGlobal;
+  triggerNode.scrollIntoView({ behavior: "instant" });
+  const contextMenu = win.document.getElementById(contextMenuId);
+  const contextMenuShown = BrowserTestUtils.waitForPopupEvent(
+    contextMenu,
+    "shown"
+  );
+
+  EventUtils.synthesizeMouseAtCenter(
+    triggerNode,
+    { type: "contextmenu", button: 2 },
+    win
+  );
+  await contextMenuShown;
+  return contextMenu;
+}
+
+/**
+ * @param {XULMenuElement|XULPopupElement} contextMenu
+ * @returns {Promise<void>}
+ */
+async function closeContextMenu(contextMenu) {
+  let menuHidden = BrowserTestUtils.waitForPopupEvent(contextMenu, "hidden");
+  contextMenu.hidePopup();
+  await menuHidden;
+}
+
 async function openTabNoteMenu(tab) {
   let tabContextMenu = await getContextMenu(tab, "tabContextMenu");
   let tabNotePanel = document.getElementById("tabNotePanel");
@@ -67,7 +100,8 @@ add_task(async function test_openTabNotePanelFromContextMenu() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.notes.enabled", false]],
   });
-  let tab = await addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let addNoteElement = document.getElementById("context_addNote");
   let tabContextMenu = await getContextMenu(tab, "tabContextMenu");
   Assert.ok(
@@ -108,7 +142,8 @@ add_task(async function test_dismissTabNotePanel() {
     set: [["browser.tabs.notes.enabled", true]],
   });
   // Dismiss panel by pressing Esc
-  let tab = await addTab("about:blank");
+  let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let tabNoteMenu = await openTabNoteMenu(tab);
   Assert.equal(tabNoteMenu.state, "open", "Tab note menu is open");
   EventUtils.synthesizeKey("KEY_Escape");

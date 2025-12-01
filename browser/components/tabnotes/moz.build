@@ -25,3 +25,7 @@ EXTRA_COMPONENTS += [
 XPCSHELL_TESTS_MANIFESTS += [
     "test/unit/xpcshell.toml",
 ]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.toml",
+]
