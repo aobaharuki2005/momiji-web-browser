@@ -614,7 +614,11 @@ export const GenAI = {
     const window = browser.ownerGlobal;
     const { document, devicePixelRatio } = window;
     const aiActionButton = document.getElementById("ai-action-button");
+    const chatProvider = this.chatProviders.get(lazy.chatProvider);
     this.initializeAIShortcut(aiActionButton);
+    document.l10n.setAttributes(aiActionButton, "genai-shortcut-button", {
+      provider: chatProvider.name,
+    });
 
     switch (name) {
       case "GenAI:HideShortcuts":
