@@ -229,7 +229,7 @@
   <!-- Browser menu button that sends a user to help articles -->
   <string name="browser_menu_help">هیاری</string>
   <!-- Browser menu button that sends a to a the what's new article -->
-  <string name="browser_menu_whats_new">چیا نۊ</string>
+  <string name="browser_menu_whats_new">چ چیه نۊ هڌ</string>
   <!-- Browser menu button that opens the settings menu -->
   <string name="browser_menu_settings">سامووا</string>
   <!-- Browser menu button that opens a user's library -->

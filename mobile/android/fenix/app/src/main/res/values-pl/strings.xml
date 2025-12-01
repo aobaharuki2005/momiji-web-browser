@@ -1059,14 +1059,20 @@
   <string name="alternative_app_icon_group_gradients">Gradienty</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Inne</string>
+  <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_featured">Polecane</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Czy zmienić ikonę aplikacji?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Aplikacja może zostać zamknięta. Wystarczy stuknąć nową, śliczną ikonę, aby ponownie otworzyć przeglądarkę %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Zmiana ikony spowoduje usunięcie wszystkich witryn i\u00a0skrótów zachowanych na ekranie głównym. \n\n%1$s może zostać zamknięty. Stuknij nową ikonę, aby otworzyć go z\u00a0powrotem.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Zmień ikonę</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Anuluj</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Zaktualizowanie ikony aplikacji się nie powiodło. Usuń istniejące skróty i\u00a0spróbuj ponownie.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1733,6 +1739,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">Wyślij adresy zablokowane przez ochronę przed śledzeniem</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Wzmocniona ochrona przed śledzeniem może blokować elementy śledzące i\u00a0skrypty, których niektóre strony potrzebują do poprawnego działania.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Podgląd zgłoszenia</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Podgląd zgłoszenia</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Wyślij</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2347,6 +2359,16 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">%1$s może automatycznie stosować wyjątki wymagane, aby uniknąć poważnych problemów z\u00a0działaniem witryny.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Automatyczne stosowanie także wyjątków wymaganych tylko do rozwiązania pomniejszych problemów i\u00a0zapewnienia dostępu do funkcji ułatwiających korzystanie z\u00a0witryny.</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Naprawianie poważnych problemów ze stronami (zalecane)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Naprawianie drobnych problemów ze stronami</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">Wymaga włączenia opcji naprawiania poważnych problemów.</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Naprawianie problemów ze stronami</string>
+  <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Więcej informacji</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
@@ -2735,8 +2757,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Synchronizuj adresy między urządzeniami</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Synchronizuj adresy</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Wstecz</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Dodaj kartę</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Przejdź wstecz</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Edytuj kartę</string>
   <!-- The header for the card number of a credit card -->
@@ -3570,6 +3596,8 @@
   <string name="microsurvey_close_handle_content_description">Zamknij ankietę</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Zamknij</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Narzędzia wypełniania</string>
   <!--
     Debug drawer logins
 
@@ -3842,6 +3870,28 @@
   <string name="review_prompt_feedback_header">Przykro nam, że masz problemy. Powiedz nam, jak możemy ulepszyć przeglądarkę %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Podziel się opinią</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">Ustawienia wyszukiwania</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
+  <string name="content_description_settings_search_clear_search">Wyczyść pole wyszukiwania</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">Przejdź wstecz</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">Nic ostatnio nie wyszukiwano</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">Wystąpił błąd</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">Wyczyść wszystkie</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Ostatnie wyniki wyszukiwania</string>
+  <!-- Message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_title">Nic nie znaleziono</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">Może spróbuj innego słowa?</string>
   <!--
     Terms of use pop up prompt
 

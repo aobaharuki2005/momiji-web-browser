@@ -1059,14 +1059,20 @@
   <string name="alternative_app_icon_group_gradients">Farveforløb</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Andet</string>
+  <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_featured">Udvalgt</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Skift app-ikon?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Appen lukker muligvis. Bare tryk på det nye ikon for at genåbne %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Hvis du ændrer ikonet, fjernes alle websteder og genveje, du har gemt på din startskærm. \n\n%1$s lukkes muligvis. Tryk på dit nye ikon for at genåbne.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Skift ikon</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Annuller</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Opdatering af app-ikonet mislykkedes. Fjern eksisterende genveje og prøv igen.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1733,6 +1739,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">Send URL\'er blokeret af beskyttelse mod sporing</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">Udvidet beskyttelse mod sporing kan blokere sporings-teknologier og scripts, som nogle websteder har brug for for at fungere korrekt.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Forhåndsvis rapport</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Forhåndsvisning af rapport</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Send</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2347,6 +2359,16 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Tillad at %1$s automatisk anvender undtagelser, som er nødvendige for at undgå alvorlige problemer med indlæsning af websteder.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Anvend også automatisk undtagelser, der kun er nødvendige for at løse mindre problemer og gøre ikke-essentielle funktioner tilgængelige.</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Løs store problemer med websted (anbefalet)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Løs mindre problemer med websted</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">Skal anvendes sammen med rettelser, når det handler om store problemer.</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Løs problemer med websted</string>
+  <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Læs mere</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
@@ -2735,8 +2757,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Synkroniser adresser på tværs af enheder</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Synkroniser adresser</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Tilbage</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Tilføj kort</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Gå tilbage</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Rediger kort</string>
   <!-- The header for the card number of a credit card -->
@@ -3580,6 +3606,8 @@
   <string name="microsurvey_close_handle_content_description">Luk undersøgelse</string>
   <!-- Content description for "X" button that is closing microsurvey. -->
   <string name="microsurvey_close_button_content_description">Luk</string>
+  <!-- The title of the autofill tab in the Debug Drawer. -->
+  <string name="debug_drawer_autofill_title">Autofyld-værktøjer</string>
   <!--
     Debug drawer logins
 
@@ -3852,6 +3880,28 @@
   <string name="review_prompt_feedback_header">Vi beklager, at du har problemer. Fortæl os, hvordan vi kan forbedre %1$s.</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Indsend feedback</string>
+  <!--
+    Settings Search Strings
+
+    Title of Settings Search. "Search" is a verb here
+  -->
+  <string name="settings_search_title">Søg i indstillinger</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
+  <string name="content_description_settings_search_clear_search">Ryd søgning</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
+  <string name="content_description_settings_search_navigate_back">Gå tilbage</string>
+  <!-- Message displayed when the search field in the Settings Search screen is empty -->
+  <string name="settings_search_empty_query_placeholder">Ingen seneste søgninger</string>
+  <!-- Message when error happens with Settings Search -->
+  <string name="settings_search_error_message">Der opstod en fejl</string>
+  <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
+  <string name="settings_search_clear_recent_searches_message">Ryd alt</string>
+  <!-- Section header for recent search results -->
+  <string name="settings_search_recent_searches_section_header">Seneste søgeresultater</string>
+  <!-- Message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_title">Intet dukkede op</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">Prøv med en anden søgning?</string>
   <!--
     Terms of use pop up prompt
 
