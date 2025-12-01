@@ -386,7 +386,7 @@ class MarkupView extends EventEmitter {
       mutations: this._onWalkerMutations,
     });
 
-    this.resourceCommand = this.inspector.toolbox.resourceCommand;
+    this.resourceCommand = this.inspector.commands.resourceCommand;
     this.resourceCommand.watchResources(
       [this.resourceCommand.TYPES.ROOT_NODE],
       {

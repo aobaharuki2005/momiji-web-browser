@@ -101,7 +101,7 @@ class DebuggerPanel {
       await this.panelWin.Debugger.bootstrap({
         commands: this.commands,
         fluentBundles: fluentL10n.getBundles(),
-        resourceCommand: this.toolbox.resourceCommand,
+        resourceCommand: this.commands.resourceCommand,
         workers: {
           sourceMapLoader: this.toolbox.sourceMapLoader,
           parserWorker: this.toolbox.parserWorker,

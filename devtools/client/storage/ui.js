@@ -319,7 +319,7 @@ class StorageUI {
 
     this._onResourceListAvailable = this._onResourceListAvailable.bind(this);
 
-    const { resourceCommand } = this._toolbox;
+    const { resourceCommand } = this._commands;
 
     this._listenedResourceTypes = [
       // The first item in this list will be the first selected storage item
@@ -334,7 +334,7 @@ class StorageUI {
     if (this._commands.descriptorFront.isWebExtensionDescriptor) {
       this._listenedResourceTypes.push(resourceCommand.TYPES.EXTENSION_STORAGE);
     }
-    await this._toolbox.resourceCommand.watchResources(
+    await this._commands.resourceCommand.watchResources(
       this._listenedResourceTypes,
       {
         onAvailable: this._onResourceListAvailable,
@@ -447,7 +447,7 @@ class StorageUI {
     }
     this._destroyed = true;
 
-    const { resourceCommand } = this._toolbox;
+    const { resourceCommand } = this._commands;
     resourceCommand.unwatchResources(this._listenedResourceTypes, {
       onAvailable: this._onResourceListAvailable,
     });
