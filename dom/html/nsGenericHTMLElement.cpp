@@ -856,14 +856,20 @@ void nsGenericHTMLElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
               IMEStateManager::GetActiveContentObserver();
           if (observer && observer->IsObserving(*presContext, this)) {
             if (const RefPtr<EditorBase> editorBase = GetExtantEditor()) {
-              IMEState newState;
-              editorBase->GetPreferredIMEState(&newState);
-              OwningNonNull<nsGenericHTMLElement> kungFuDeathGrip(*this);
-              IMEStateManager::UpdateIMEState(
-                  newState, kungFuDeathGrip, *editorBase,
-                  {IMEStateManager::UpdateIMEStateOption::ForceUpdate,
-                   IMEStateManager::UpdateIMEStateOption::
-                       DontCommitComposition});
+              // If the TextControlState does not have a bound frame,
+              // TextEditor::GetPreferredIMEState() may fail.  In such case,
+              // TextEditor will update IME state when it's (re)initialized
+              // later.
+              Result<IMEState, nsresult> newStateOrError =
+                  editorBase->GetPreferredIMEState();
+              if (MOZ_LIKELY(newStateOrError.isOk())) {
+                OwningNonNull<nsGenericHTMLElement> kungFuDeathGrip(*this);
+                IMEStateManager::UpdateIMEState(
+                    newStateOrError.unwrap(), kungFuDeathGrip, *editorBase,
+                    {IMEStateManager::UpdateIMEStateOption::ForceUpdate,
+                     IMEStateManager::UpdateIMEStateOption::
+                         DontCommitComposition});
+              }
             }
           }
         }
@@ -2541,12 +2547,11 @@ nsIContent::IMEState nsGenericHTMLFormControlElement::GetDesiredIMEState() {
   if (!textEditor) {
     return nsGenericHTMLFormElement::GetDesiredIMEState();
   }
-  IMEState state;
-  nsresult rv = textEditor->GetPreferredIMEState(&state);
-  if (NS_FAILED(rv)) {
+  Result<IMEState, nsresult> stateOrError = textEditor->GetPreferredIMEState();
+  if (MOZ_UNLIKELY(stateOrError.isErr())) {
     return nsGenericHTMLFormElement::GetDesiredIMEState();
   }
-  return state;
+  return stateOrError.unwrap();
 }
 
 void nsGenericHTMLFormControlElement::GetAutocapitalize(

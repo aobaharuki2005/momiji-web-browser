@@ -212,9 +212,8 @@ nsIContent::IMEState nsIContent::GetDesiredIMEState() {
   if (!htmlEditor) {
     return IMEState(IMEEnabled::Disabled);
   }
-  IMEState state;
-  htmlEditor->GetPreferredIMEState(&state);
-  return state;
+  // FYI: HTMLEditor::GetPreferredIMEState() is infallible.
+  return htmlEditor->GetPreferredIMEState().unwrap();
 }
 
 bool nsIContent::HasIndependentSelection() const {

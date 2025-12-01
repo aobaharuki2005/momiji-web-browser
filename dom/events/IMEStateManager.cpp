@@ -1356,9 +1356,10 @@ void IMEStateManager::OnReFocus(nsPresContext& aPresContext,
           nsContentUtils::GetHTMLEditor(&aPresContext);
 #ifdef DEBUG
       MOZ_ASSERT(htmlEditor);
-      IMEState state;
-      MOZ_ASSERT(NS_SUCCEEDED(htmlEditor->GetPreferredIMEState(&state)));
-      MOZ_ASSERT(!state.IsEditable());
+      Result<IMEState, nsresult> stateOrError =
+          htmlEditor->GetPreferredIMEState();
+      MOZ_ASSERT(stateOrError.isOk());
+      MOZ_ASSERT(!stateOrError.inspect().IsEditable());
 #endif  // #ifdef DEBUG
       MOZ_LOG(sISMLog, LogLevel::Warning,
               ("  OnRefocus(), Disabling IME for the focused element, "
