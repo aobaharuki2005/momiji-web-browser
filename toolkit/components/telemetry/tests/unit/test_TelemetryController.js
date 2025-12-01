@@ -11,6 +11,12 @@
 const { ClientID } = ChromeUtils.importESModule(
   "resource://gre/modules/ClientID.sys.mjs"
 );
+const { ExperimentAPI, NimbusFeatures } = ChromeUtils.importESModule(
+  "resource://nimbus/ExperimentAPI.sys.mjs"
+);
+const { NimbusTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/NimbusTestUtils.sys.mjs"
+);
 const { TelemetryController } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryController.sys.mjs"
 );
@@ -32,6 +38,8 @@ const { ContentTaskUtils } = ChromeUtils.importESModule(
 const { TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TestUtils.sys.mjs"
 );
+
+NimbusTestUtils.init(this);
 
 const PING_FORMAT_VERSION = 4;
 const DELETION_REQUEST_PING_TYPE = "deletion-request";
@@ -895,6 +903,103 @@ add_task(async function test_sendNewProfile() {
   // Reset the pref and restart Telemetry.
   Services.prefs.clearUserPref(PREF_NEWPROFILE_ENABLED);
   PingServer.resetPingHandler();
+});
+
+add_task(async function test_pingDisablement() {
+  await TelemetryController.testReset();
+  PingServer.clearRequests();
+
+  info("1. Ensure test pings can be sent.");
+  let docid = await sendPing(false, false);
+  let request = await PingServer.promiseNextRequest();
+
+  let ping = decodeRequestPayload(request);
+  Assert.equal(docid, ping.id, "Server delivered the ping we just submitted.");
+  checkPingFormat(ping, TEST_PING_TYPE, false, false);
+
+  info("2. Ensure we can disable a ping by name.");
+  const { cleanup } = await NimbusTestUtils.setupTest();
+  registerCleanupFunction(cleanup);
+  await ExperimentAPI.ready();
+  let nimbusCleanup = await NimbusTestUtils.enrollWithFeatureConfig({
+    featureId: NimbusFeatures.legacyTelemetry.featureId,
+    value: {
+      disabledPings: [TEST_PING_TYPE],
+    },
+  });
+
+  PingServer.registerPingHandler(() =>
+    Assert.ok(false, "Telemetry must not send the disabled ping.")
+  );
+  await Assert.rejects(
+    sendPing(true, true),
+    /Ping disabled/,
+    "Disabled ping should not send."
+  );
+
+  PingServer.resetPingHandler();
+
+  info("3. Ensure disabling one kind of ping doesn't disable others.");
+  const OTHER_PING_TYPE = TEST_PING_TYPE + "-other";
+  await TelemetryController.submitExternalPing(OTHER_PING_TYPE, {}, {});
+  request = await PingServer.promiseNextRequest();
+
+  ping = decodeRequestPayload(request);
+  checkPingFormat(ping, OTHER_PING_TYPE, false, false);
+
+  await nimbusCleanup();
+});
+
+add_task(async function test_cantDisableImportantPings() {
+  await TelemetryController.testReset();
+  PingServer.clearRequests();
+
+  const DO_NOT_DISABLE_THESE_PINGS = [
+    "main",
+    "first-shutdown",
+    "new-profile",
+    "deletion-request",
+  ];
+  const PINGS = [TEST_PING_TYPE, ...DO_NOT_DISABLE_THESE_PINGS];
+  let nimbusCleanup = await NimbusTestUtils.enrollWithFeatureConfig({
+    featureId: NimbusFeatures.legacyTelemetry.featureId,
+    value: {
+      disabledPings: PINGS,
+    },
+  });
+
+  for (const pingName of PINGS) {
+    info("Check " + pingName);
+    if (DO_NOT_DISABLE_THESE_PINGS.includes(pingName)) {
+      let docid = await TelemetryController.submitExternalPing(
+        pingName,
+        {},
+        {}
+      );
+      let request = await PingServer.promiseNextRequest();
+      let ping = decodeRequestPayload(request);
+      Assert.equal(
+        docid,
+        ping.id,
+        "Server delivered the ping we just submitted."
+      );
+      checkPingFormat(ping, pingName, false, false);
+      // Ensure we don't get throttled for too many pings in a row.
+      await TelemetrySend.reset();
+    } else {
+      PingServer.registerPingHandler(() =>
+        Assert.ok(false, "Telemetry must not send the disabled ping.")
+      );
+      await Assert.rejects(
+        TelemetryController.submitExternalPing(pingName, {}, {}),
+        /Ping disabled/,
+        "Disabled ping should not send."
+      );
+      PingServer.resetPingHandler();
+    }
+  }
+
+  await nimbusCleanup();
 });
 
 // Testing shutdown and checking that pings sent afterwards are rejected.
