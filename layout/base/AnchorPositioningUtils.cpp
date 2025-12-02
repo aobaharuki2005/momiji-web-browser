@@ -61,40 +61,43 @@ bool IsAnchorInScopeForPositionedElement(const nsAtom* aName,
       aPositionedFrame->GetParent()->GetContent();
 
   auto getAnchorPosNearestScope =
-      [&positionedContainingBlockContent](
-          const nsAtom* aName, const nsIFrame* aFrame) -> const nsIContent* {
+      [&](const nsAtom* aName, const nsIFrame* aFrame) -> const nsIContent* {
     // We need to traverse the DOM, not the frame tree, since `anchor-scope`
     // may be present on elements with `display: contents` (in which case its
     // frame is in the `::before` list and won't be found by walking the frame
     // tree parent chain).
-    for (const nsIContent* cp = aFrame->GetContent();
+    for (nsIContent* cp = aFrame->GetContent();
          cp && cp != positionedContainingBlockContent;
          cp = cp->GetFlattenedTreeParentElementForStyle()) {
-      // TODO: The case when no frame is generated needs to be
-      // handled, e.g. `display: contents`, see bug 1987086.
-      const nsIFrame* f = cp->GetPrimaryFrame();
-      if (!f) {
+      const auto* anchorScope = [&]() -> const StyleAnchorScope* {
+        const nsIFrame* f = nsLayoutUtils::GetStyleFrame(cp);
+        if (MOZ_LIKELY(f)) {
+          return &f->StyleDisplay()->mAnchorScope;
+        }
+        if (cp->AsElement()->IsDisplayContents()) {
+          const auto* style =
+              Servo_Element_GetMaybeOutOfDateStyle(cp->AsElement());
+          MOZ_ASSERT(style);
+          return &style->StyleDisplay()->mAnchorScope;
+        }
+        return nullptr;
+      }();
+
+      if (!anchorScope || anchorScope->IsNone()) {
         continue;
       }
 
-      const StyleAnchorScope& anchorScope = f->StyleDisplay()->mAnchorScope;
-      if (anchorScope.IsNone()) {
-        continue;
-      }
-
-      if (anchorScope.IsAll()) {
+      if (anchorScope->IsAll()) {
         return cp;
       }
 
-      MOZ_ASSERT(anchorScope.IsIdents());
-      for (const StyleAtom& ident : anchorScope.AsIdents().AsSpan()) {
-        const auto* id = ident.AsAtom();
-        if (aName->Equals(id->GetUTF16String(), id->GetLength())) {
+      MOZ_ASSERT(anchorScope->IsIdents());
+      for (const StyleAtom& ident : anchorScope->AsIdents().AsSpan()) {
+        if (aName == ident.AsAtom()) {
           return cp;
         }
       }
     }
-
     return nullptr;
   };
 
