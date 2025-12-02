@@ -7080,12 +7080,12 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                 let guard = declarations.read_with(&guard);
                 for decl in guard.normal_declaration_iter() {
                     if let PropertyDeclaration::Custom(ref declaration) = *decl {
-                        builder.cascade(declaration, priority);
+                        builder.cascade(declaration, priority, &element);
                     }
                 }
             }
             iter.reset();
-            let _deferred = builder.build(DeferFontRelativeCustomPropertyResolution::No);
+            let _deferred = builder.build(DeferFontRelativeCustomPropertyResolution::No, &element);
             debug_assert!(
                 _deferred.is_none(),
                 "Custom property processing deferred despite specifying otherwise?"
@@ -7234,8 +7234,13 @@ pub extern "C" fn Servo_AnimationValue_Compute(
         .next()
     {
         Some((decl, imp)) if imp == Importance::Normal => {
-            let animation =
-                AnimationValue::from_declaration(decl, &mut context, style, default_values);
+            let animation = AnimationValue::from_declaration(
+                decl,
+                &mut context,
+                style,
+                default_values,
+                &element,
+            );
             animation.map_or(Strong::null(), |value| Arc::new(value).into())
         },
         _ => Strong::null(),
