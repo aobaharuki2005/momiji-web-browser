@@ -53,6 +53,7 @@ struct IDWriteFont;
 struct IDWriteFontCollection;
 struct IDWriteFontFace;
 struct IDWriteFontFallback;
+struct IDWriteFontFamily;
 
 /**
  *  Like the other Typeface create methods, this returns a new reference to the
@@ -62,6 +63,7 @@ struct IDWriteFontFallback;
 SK_API SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
                                                   IDWriteFontFace* aFontFace,
                                                   IDWriteFont* aFont,
+                                                  IDWriteFontFamily* aFontFamily,
                                                   SkFontStyle aStyle,
                                                   int aRenderingMode,
                                                   float aGamma,
