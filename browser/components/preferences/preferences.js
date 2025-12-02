@@ -286,6 +286,11 @@ const CONFIG_PANES = Object.freeze({
     l10nId: "preferences-profiles-group-header",
     groupIds: ["profilePane"],
   },
+  etp: {
+    parent: "privacy",
+    l10nId: "preferences-etp-header",
+    groupIds: ["etpBanner", "etpAdvanced"],
+  },
 });
 
 var gLastCategory = { category: undefined, subcategory: undefined };

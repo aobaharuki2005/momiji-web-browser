@@ -2980,6 +2980,87 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  etpBanner: {
+    inProgress: true,
+    items: [
+      {
+        id: "etpBannerEl",
+        control: "moz-card",
+      },
+    ],
+  },
+  etpAdvanced: {
+    inProgress: true,
+    headingLevel: 2,
+    l10nId: "preferences-etp-advanced-settings-group",
+    supportPage: "enhanced-tracking-protection",
+    items: [
+      {
+        id: "contentBlockingCategory",
+        control: "moz-radio-group",
+        options: [
+          {
+            id: "etpLevelStandard",
+            value: "standard",
+            l10nId: "preferences-etp-level-standard",
+          },
+          {
+            id: "etpLevelStrict",
+            value: "strict",
+            l10nId: "preferences-etp-level-strict",
+            items: [
+              {
+                id: "etpAllowListBaselineEnabled",
+                l10nId: "content-blocking-baseline-exceptions-3",
+                supportPage: "manage-enhanced-tracking-protection-exceptions",
+                control: "moz-checkbox",
+                items: [
+                  {
+                    id: "etpAllowListConvenienceEnabled",
+                    l10nId: "content-blocking-convenience-exceptions-3",
+                    control: "moz-checkbox",
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "etpLevelCustom",
+            value: "custom",
+            l10nId: "preferences-etp-level-custom",
+            items: [
+              {
+                id: "etpCustomizeButton",
+                l10nId: "preferences-etp-customize-button",
+                control: "moz-box-button",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "rfpWarning",
+        control: "moz-message-bar",
+        l10nId: "preferences-etp-rfp-warning-message",
+        supportPage: "resist-fingerprinting",
+      },
+      {
+        id: "etpLevelWarning",
+        control: "moz-promo",
+        l10nId: "preferences-etp-level-warning-message",
+        controlAttrs: {
+          ".imageAlignment": "end",
+          ".imageSrc":
+            "chrome://browser/content/preferences/etp-toggle-promo.svg",
+        },
+      },
+      {
+        id: "etpManageExceptionsButton",
+        l10nId: "preferences-etp-manage-exceptions-button",
+        control: "moz-box-button",
+      },
+    ],
+  },
 });
 
 /**

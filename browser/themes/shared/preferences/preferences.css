@@ -1493,3 +1493,19 @@ setting-group[groupid="home"] {
 #browserContainersbox moz-message-bar {
   margin-block-start: 0;
 }
+
+#etpBannerEl {
+  border-radius: var(--border-radius-large);
+  background-clip: content-box;
+  background-image:
+    url("chrome://browser/content/preferences/etp-advanced-banner.svg"),
+    radial-gradient(94.12% 34.67% at 50% 50%, rgba(159, 116, 255, 0.5) 0%, rgba(159, 116, 255, 0) 100%), linear-gradient(135deg, #592acb 0%, #ab43e7 100%);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  height: 128px;
+}
+
+#etpLevelWarning {
+  --promo-image-position: top;
+}
