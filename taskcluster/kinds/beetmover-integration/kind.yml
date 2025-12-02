@@ -41,7 +41,7 @@ tasks:
         scopes:
             by-project:
                 autoland:
-                    - project:releng:beetmover:bucket:integration
+                    - project:releng:beetmover:bucket:release
                     - project:releng:beetmover:action:direct-push-to-bucket
                 default:
                     - project:releng:beetmover:bucket:dep
