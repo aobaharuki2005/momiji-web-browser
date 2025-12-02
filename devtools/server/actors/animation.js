@@ -88,6 +88,7 @@ class AnimationPlayerActor extends Actor {
 
     this.onAnimationMutation = this.onAnimationMutation.bind(this);
 
+    this.animationsActor = animationsActor;
     this.walker = animationsActor.walker;
     this.player = player;
     // getting the node might need to traverse the DOM, let's only do this once, when
@@ -120,7 +121,7 @@ class AnimationPlayerActor extends Actor {
     if (this.observer && !Cu.isDeadWrapper(this.observer)) {
       this.observer.disconnect();
     }
-    this.player = this.observer = this.walker = null;
+    this.player = this.observer = this.walker = this.animationsActor = null;
 
     super.destroy();
   }
@@ -351,7 +352,10 @@ class AnimationPlayerActor extends Actor {
     // add the corresponding property in the AnimationPlayerFront' initialState
     // getter.
     return {
-      type: this.getType(),
+      // Don't include the type if the animation was removed (e.g. it isn't handled by the
+      // AnimationsActor anymore). The client filters out animations without type as a
+      // result of its calls to AnimationPlayerFront#refreshState.
+      type: this.animationRemoved ? null : this.getType(),
       // startTime is null whenever the animation is paused or waiting to start.
       startTime: this.player.startTime,
       currentTime: this.player.currentTime,
@@ -464,6 +468,10 @@ class AnimationPlayerActor extends Actor {
     }
   }
 
+  onAnimationRemoved() {
+    this.animationRemoved = true;
+  }
+
   /**
    * Get data about the animated properties of this animation player.
    *
@@ -474,6 +482,13 @@ class AnimationPlayerActor extends Actor {
     const properties = this.player.effect.getProperties().map(property => {
       return { name: property.property, values: property.values };
     });
+
+    // If the node isn't connected, the call to DOMWindowUtils.getUnanimatedComputedStyle
+    // below would throw. So early return from here, we'll miss the distance but that
+    // seems fine.
+    if (!this.node?.isConnected) {
+      return properties;
+    }
 
     const DOMWindowUtils = this.window.windowUtils;
 
@@ -745,6 +760,7 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
             type: "removed",
             player: this.actors[index],
           });
+          this.actors[index].onAnimationRemoved();
           this.actors.splice(index, 1);
         }
       }
@@ -777,6 +793,7 @@ exports.AnimationsActor = class AnimationsActor extends Actor {
             type: "removed",
             player: this.actors[index],
           });
+          this.actors[index].onAnimationRemoved();
           this.actors.splice(index, 1);
         }
 

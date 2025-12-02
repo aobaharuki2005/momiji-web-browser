@@ -196,29 +196,60 @@ add_task(async function () {
     "Expected view transition pseudo element node was selected"
   );
 
+  info("Select <html> to reset the animation list");
+  await selectNode("html", inspector);
+  // wait for all the animations to be displayed again
+  await waitFor(
+    () =>
+      panel.querySelectorAll(".animation-list .animation-item").length ===
+      TEST_DATA.length
+  );
+
+  info(
+    "Stop the view transition and check that related animations are removed"
+  );
+  const TEST_DATA_WITHOUT_VIEW_TRANSITION = TEST_DATA.filter(
+    ({ expectedTargetLabel }) =>
+      !expectedTargetLabel.startsWith("::view-transition")
+  );
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    content.document.activeViewTransition.skipTransition();
+  });
+
+  await waitFor(
+    () =>
+      panel.querySelectorAll(".animation-list .animation-item").length ===
+      TEST_DATA_WITHOUT_VIEW_TRANSITION.length
+  );
+  ok(
+    true,
+    `Got expectedCount of animation item after stopping the view transition`
+  );
+
   info("Reload the page");
   await reloadBrowser();
 
   info("Waiting for expected animations to be displayed");
   // No need to check for view transition this time, we want to assert that we do get
   // animations for pseudo element after reloading (assert fix for Bug 2001126)
-  const TEST_DATA_AFTER_RELOAD = TEST_DATA.filter(
-    ({ expectedTargetLabel }) =>
-      !expectedTargetLabel.startsWith("::view-transition")
-  );
   await waitFor(
     () =>
       panel.querySelectorAll(".animation-list .animation-item").length ===
-      TEST_DATA_AFTER_RELOAD.length
+      TEST_DATA_WITHOUT_VIEW_TRANSITION.length
   );
   ok(
     true,
-    `Got expectedCount of animation item should be ${TEST_DATA_AFTER_RELOAD.length} after reloading`
+    `Got expectedCount of animation item should be ${TEST_DATA_WITHOUT_VIEW_TRANSITION.length} after reloading`
   );
 
   info("Checking content of each animation item after reload");
-  for (let i = 0; i < TEST_DATA_AFTER_RELOAD.length; i++) {
-    await checkAnimationItemAtIndex(panel, i, TEST_DATA_AFTER_RELOAD[i]);
+  for (let i = 0; i < TEST_DATA_WITHOUT_VIEW_TRANSITION.length; i++) {
+    await checkAnimationItemAtIndex(
+      panel,
+      i,
+      TEST_DATA_WITHOUT_VIEW_TRANSITION[i]
+    );
   }
 });
 
