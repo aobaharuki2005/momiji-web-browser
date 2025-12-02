@@ -19,8 +19,7 @@ import androidx.navigation.fragment.navArgs
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.helpers.StoreProvider.Companion.storeProvider
 import mozilla.components.support.ktx.android.view.hideKeyboard
-import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.ext.openToBrowser
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.webcompat.WEB_COMPAT_REPORTER_SUMO_URL
@@ -79,17 +78,17 @@ class WebCompatReporterFragment : Fragment() {
                 webCompatReporterStore.navEvents.collect { navEvent ->
                     when (navEvent) {
                         is WebCompatReporterAction.SendMoreInfoSubmitted -> {
-                            (activity as HomeActivity).openToBrowserAndLoad(
+                            findNavController().openToBrowser()
+                            requireComponents.useCases.fenixBrowserUseCases.loadUrlOrSearch(
                                 searchTermOrURL = "$WEB_COMPAT_REPORTER_URL${webCompatReporterStore.state.enteredUrl}",
                                 newTab = true,
-                                from = BrowserDirection.FromWebCompatReporterFragment,
                             )
                         }
                         is WebCompatReporterAction.LearnMoreClicked -> {
-                            (activity as HomeActivity).openToBrowserAndLoad(
+                            findNavController().openToBrowser()
+                            requireComponents.useCases.fenixBrowserUseCases.loadUrlOrSearch(
                                 searchTermOrURL = WEB_COMPAT_REPORTER_SUMO_URL,
                                 newTab = true,
-                                from = BrowserDirection.FromWebCompatReporterFragment,
                             )
                         }
                         is WebCompatReporterAction.ReportSubmitted -> {
