@@ -85,9 +85,10 @@ String tables for efficient storage. All strings are deduplicated and stored onc
     "XPPf5b1DRJrcBndDp9o74x.1",      // Retry 1
     ...
   ],
-  "messages": [                      // SKIP status messages (only for tests that were skipped)
+  "messages": [                      // Test messages (for SKIP and FAIL statuses)
     "skip-if: os == 'linux'",
     "disabled due to bug 123456",
+    "Expected 5, got 10",              // Failure message
     ...
   ],
   "crashSignatures": [               // Crash signatures (only for crashed tests)
@@ -162,9 +163,16 @@ Each `testRuns[testId][statusId]` contains data for all runs of that test with t
       "taskIdIds": [45, 67, ...],
       "durations": [0, 0, ...],
       "timestamps": [100, 200, ...],
-      "messageIds": [5, 5, ...]            // Only present for SKIP status - indices into tables.messages (null if no message)
+      "messageIds": [5, 5, ...]            // Present for SKIP and FAIL statuses - indices into tables.messages (null if no message)
     },
-    // statusId 3 (e.g., "CRASH")
+    // statusId 3 (e.g., "FAIL-PARALLEL")
+    {
+      "taskIdIds": [78, ...],
+      "durations": [1234, ...],
+      "timestamps": [250, ...],
+      "messageIds": [12, ...]              // Present for SKIP and FAIL statuses - indices into tables.messages (null if no message)
+    },
+    // statusId 4 (e.g., "CRASH")
     {
       "taskIdIds": [89, ...],
       "durations": [5678, ...],

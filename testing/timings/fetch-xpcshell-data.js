@@ -271,6 +271,11 @@ async function processJobsWithWorkers(jobs, targetDate = null) {
   });
 }
 
+// Helper function to determine if a status should include message data
+function shouldIncludeMessage(status) {
+  return status === "SKIP" || status.startsWith("FAIL");
+}
+
 // Create string tables and store raw data efficiently
 function createDataTables(jobResults) {
   const tables = {
@@ -387,8 +392,8 @@ function createDataTables(jobResults) {
           durations: [],
           timestamps: [],
         };
-        // Only include messageIds array for SKIP status
-        if (timing.status === "SKIP") {
+        // Include messageIds array for statuses that should have messages
+        if (shouldIncludeMessage(timing.status)) {
           statusGroup.messageIds = [];
         }
         // Only include crash data arrays for CRASH status
@@ -404,8 +409,8 @@ function createDataTables(jobResults) {
       statusGroup.durations.push(Math.round(timing.duration));
       statusGroup.timestamps.push(timing.timestamp);
 
-      // Store message ID for SKIP status (or null if no message)
-      if (timing.status === "SKIP") {
+      // Store message ID for statuses that should include messages (or null if no message)
+      if (shouldIncludeMessage(timing.status)) {
         const messageId = timing.message
           ? findStringIndex("messages", timing.message)
           : null;
@@ -582,7 +587,7 @@ function sortStringTablesByFrequency(dataStructure) {
         timestamps: statusGroup.timestamps,
       };
 
-      // Remap message IDs for SKIP status
+      // Remap message IDs for status groups that have messages
       if (statusGroup.messageIds) {
         remapped.messageIds = statusGroup.messageIds.map(oldId =>
           oldId === null ? null : indexMaps.messages.get(oldId)
@@ -852,7 +857,7 @@ async function processJobsAndCreateData(
         if (statusGroup.minidumps) {
           run.minidump = statusGroup.minidumps[i];
         }
-        // Include message data if this is a SKIP status group
+        // Include message data if this status group has messages
         if (statusGroup.messageIds) {
           run.messageId = statusGroup.messageIds[i];
         }
