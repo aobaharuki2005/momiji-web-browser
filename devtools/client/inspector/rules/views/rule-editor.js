@@ -1230,6 +1230,11 @@ RuleEditor.prototype = {
     try {
       const response = await this.rule.domRule.modifySelector(element, value);
 
+      // Modifying the selector might have removed the element (e.g. for pseudo element)
+      if (!element.actorID) {
+        return;
+      }
+
       // We recompute the list of applied styles, because editing a
       // selector might cause this rule's position to change.
       const applied = await elementStyle.pageStyle.getApplied(element, {
@@ -1237,6 +1242,11 @@ RuleEditor.prototype = {
         matchedSelectors: true,
         filter: elementStyle.showUserAgentStyles ? "ua" : undefined,
       });
+
+      // The element might have been removed while we were trying to get the applied declarations
+      if (!element.actorID) {
+        return;
+      }
 
       this.isEditing = false;
 

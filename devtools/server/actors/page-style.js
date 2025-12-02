@@ -599,7 +599,7 @@ class PageStyleActor extends Actor {
     // Assume the consumer has switched context to a new node and no longer
     // interested in state changes of previous rules.
     this._observedRules = [];
-    this.selectedElement = node.rawNode;
+    this.selectedElement = node?.rawNode || null;
 
     if (!node) {
       return { entries: [] };

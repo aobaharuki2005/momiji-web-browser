@@ -145,11 +145,9 @@ add_task(async function test_inline_sheet() {
   info(`Modify ".foo::after" into "h2::after"`);
   ruleEditor = getRuleViewRuleEditor(view, 0);
   editor = await focusEditableField(view, ruleEditor.selectorText);
-  onRuleViewChanged = view.once("ruleview-changed");
   const onSelection = inspector.selection.once("new-node-front");
   editor.input.value = "h2::after";
   EventUtils.synthesizeKey("KEY_Enter");
-  await onRuleViewChanged;
   await onSelection;
   is(
     inspector.selection.nodeFront,
