@@ -1901,6 +1901,21 @@
       }
     ]
   },
+  "1895672": {
+    "label": "hackgreensdr.org and websdr.78dx.ru",
+    "bugs": {
+      "1895672": {
+        "issue": "broken-audio",
+        "matches": ["*://hackgreensdr.org/*", "*://websdr.78dx.ru/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1895997": {
     "label": "e.seb.lt",
     "bugs": {
