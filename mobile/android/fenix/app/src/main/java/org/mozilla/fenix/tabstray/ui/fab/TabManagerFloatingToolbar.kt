@@ -8,7 +8,6 @@ import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -23,6 +22,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -300,7 +300,7 @@ private fun CloseAllTabsConfirmationDialog(
         title = {
             Text(
                 text = stringResource(R.string.tab_manager_close_all_tabs_dialog_title),
-                style = FirefoxTheme.typography.headline6,
+                style = FirefoxTheme.typography.headline5,
             )
         },
         text = {
@@ -450,21 +450,21 @@ private fun TabManagerFloatingToolbarPreview(
     previewDataModel: TabManagerFloatingToolbarPreviewModel,
 ) {
     FirefoxTheme {
-        TabManagerFloatingToolbar(
-            tabsTrayStore = remember { TabsTrayStore(initialState = previewDataModel.state) },
-            expanded = previewDataModel.expanded,
-            isSignedIn = previewDataModel.isSignedIn,
-            pbmLocked = false,
-            modifier = Modifier
-                .background(color = MaterialTheme.colorScheme.surface)
-                .padding(all = 16.dp),
-            onOpenNewNormalTabClicked = {},
-            onOpenNewPrivateTabClicked = {},
-            onSyncedTabsFabClicked = {},
-            onTabSettingsClick = {},
-            onAccountSettingsClick = {},
-            onDeleteAllTabsClick = {},
-            onRecentlyClosedClick = {},
-        )
+        Surface {
+            TabManagerFloatingToolbar(
+                tabsTrayStore = remember { TabsTrayStore(initialState = previewDataModel.state) },
+                expanded = previewDataModel.expanded,
+                isSignedIn = previewDataModel.isSignedIn,
+                pbmLocked = false,
+                modifier = Modifier.padding(all = 16.dp),
+                onOpenNewNormalTabClicked = {},
+                onOpenNewPrivateTabClicked = {},
+                onSyncedTabsFabClicked = {},
+                onTabSettingsClick = {},
+                onAccountSettingsClick = {},
+                onDeleteAllTabsClick = {},
+                onRecentlyClosedClick = {},
+            )
+        }
     }
 }

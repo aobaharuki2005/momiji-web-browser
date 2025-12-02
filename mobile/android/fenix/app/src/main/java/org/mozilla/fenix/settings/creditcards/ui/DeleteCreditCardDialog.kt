@@ -33,14 +33,12 @@ internal fun DeleteCreditCardDialog(
 ) {
     AlertDialog(
         modifier = modifier,
-        title = {
+        text = {
             Text(
                 text = stringResource(R.string.credit_cards_delete_dialog_confirmation_2),
-                color = FirefoxTheme.colors.textPrimary,
-                style = FirefoxTheme.typography.headline5,
+                style = FirefoxTheme.typography.body2,
             )
         },
-        text = null,
         onDismissRequest = onCancel,
         confirmButton = {
             TextButton(

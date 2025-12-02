@@ -36,10 +36,10 @@ internal fun DeleteAddressDialog(store: AddressStore) {
 
     if (dialogState is DialogState.Presenting) {
         AlertDialog(
-            title = {
+            text = {
                 Text(
                     text = stringResource(R.string.addressess_confirm_dialog_message_2),
-                    style = FirefoxTheme.typography.headline5,
+                    style = FirefoxTheme.typography.body2,
                 )
             },
             onDismissRequest = { store.dispatch(DeleteDialogAction.CancelTapped) },

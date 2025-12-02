@@ -880,9 +880,10 @@ private fun AlertDialogDeletionWarning(
     onDeleteTapped: () -> Unit,
 ) {
     AlertDialog(
-        title = {
+        text = {
             Text(
                 text = stringResource(R.string.bookmark_delete_folders_confirmation_dialog),
+                style = FirefoxTheme.typography.body2,
             )
         },
         onDismissRequest = onCancelTapped,
