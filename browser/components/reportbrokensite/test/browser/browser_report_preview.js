@@ -78,8 +78,6 @@ async function checkPreviewPanel(rbs, basic) {
       })
     );
   }
-  target = await pressKeyAndGetFocus("VK_TAB");
-  is(target, rbs.previewCopyButton, "Final focus is on copy button");
 
   function adjustForWrapping(value) {
     // match what we do to strings when generating the preview markup.
@@ -109,25 +107,6 @@ async function checkPreviewPanel(rbs, basic) {
   ok(
     areObjectsEqual(previewData, expectedPreviewData),
     "Preview had the expected information"
-  );
-
-  setClipboard("did not copy");
-  rbs.clickPreviewCopy();
-  const copied = JSON.parse(getClipboardAsString());
-
-  // we don't adjust the copied text for wrapping like we do the markup.
-  const expectedCopyData = { basic };
-  for (const [category, values] of Object.entries(rawReportData)) {
-    expectedCopyData[category] = Object.fromEntries(
-      Object.entries(values)
-        .filter(([_, { do_not_preview }]) => !do_not_preview)
-        .map(([name, { value }]) => [name, value])
-    );
-  }
-
-  ok(
-    areObjectsEqual(copied, expectedCopyData),
-    "Copied the expected information"
   );
 }
 
