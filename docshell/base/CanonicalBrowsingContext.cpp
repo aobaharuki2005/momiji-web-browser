@@ -1613,6 +1613,8 @@ Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
 
   // GoToIndex checks that index is >= 0 and < length.
   nsTArray<nsSHistory::LoadEntryResult> loadResults;
+  const int32_t oldRequestedIndex = shistory->GetRequestedIndex();
+
   nsresult rv = shistory->GotoIndex(this, index.value(), loadResults, sameEpoch,
                                     aOffset == 0, aUserActivation);
   if (NS_FAILED(rv)) {
@@ -1620,6 +1622,19 @@ Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
             ("Dropping HistoryGo - bad index or same epoch (not in same doc)"));
     return Nothing();
   }
+
+  for (auto& loadResult : loadResults) {
+    if (nsresult result = loadResult.mBrowsingContext->CheckSandboxFlags(
+            loadResult.mLoadState);
+        NS_FAILED(result)) {
+      aResolver(result);
+      MOZ_LOG(gSHLog, LogLevel::Debug,
+              ("Dropping HistoryGo - sandbox check failed"));
+      shistory->InternalSetRequestedIndex(oldRequestedIndex);
+      return Nothing();
+    }
+  }
+
   if (epoch < aHistoryEpoch || aContentId != id) {
     MOZ_LOG(gSHLog, LogLevel::Debug, ("Set epoch"));
     shistory->SetEpoch(aHistoryEpoch, aContentId);
