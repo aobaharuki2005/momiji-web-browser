@@ -170,6 +170,12 @@ protected:
      */
     virtual int32_t handleGetExtendedYear(UErrorCode& status) override;
 
+    /**
+     * Calculate the limit for a specified type of limit and field
+     * @internal
+     */
+    virtual int32_t handleGetLimit(UCalendarDateFields field, ELimitType limitType) const override;
+
     DECLARE_OVERRIDE_SYSTEM_DEFAULT_CENTURY
 
     /**
@@ -189,11 +195,6 @@ protected:
      * @internal
      */
     int32_t extendedYearToYear(int32_t extendedYear) const override;
-
-    /**
-     * @internal
-     */
-    bool isEra0CountingBackward() const override;
 public:
     /**
      * Override Calendar Returns a unique class ID POLYMORPHICALLY. Pure virtual
