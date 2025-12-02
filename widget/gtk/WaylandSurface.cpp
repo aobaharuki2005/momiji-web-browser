@@ -723,6 +723,8 @@ bool WaylandSurface::EnableFractionalScaleLocked(
     std::function<void(void)> aFractionalScaleCallback, bool aManageViewport) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
 
+  LOGWAYLAND("WaylandSurface::SetupFractionalScale()");
+
   MOZ_DIAGNOSTIC_ASSERT(!mFractionalScaleListener);
   auto* manager = WaylandDisplayGet()->GetFractionalScaleManager();
   if (!manager) {
@@ -740,29 +742,36 @@ bool WaylandSurface::EnableFractionalScaleLocked(
   // regular rendering uses Viewport for fraction scale only.
   if (aManageViewport &&
       !CreateViewportLocked(aProofOfLock, /* aFollowsSizeChanges */ true)) {
+    LOGWAYLAND("WaylandSurface::SetupFractionalScale() failed");
     return false;
   }
   mFractionalScaleCallback = std::move(aFractionalScaleCallback);
 
+  if (mViewportFollowsSizeChanges) {
+    SetViewPortDestLocked(aProofOfLock, mSize);
+  }
+
   // Init scale to default values and load ceiled screen scale from GdkWindow.
   // We use it as fallback before we get mScreenScale from system.
   mScaleType = ScaleType::Fractional;
-
-  LOGWAYLAND("WaylandSurface::SetupFractionalScale()");
   return true;
 }
 
 bool WaylandSurface::EnableCeiledScaleLocked(
     const WaylandSurfaceLock& aProofOfLock) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
+  LOGWAYLAND("WaylandSurface::EnableCeiledScaleLocked()");
 
   if (!CreateViewportLocked(aProofOfLock, /* aFollowsSizeChanges */ true)) {
+    LOGWAYLAND("WaylandSurface::EnableCeiledScaleLocked() failed");
     return false;
   }
 
-  mScaleType = ScaleType::Ceiled;
+  if (mViewportFollowsSizeChanges) {
+    SetViewPortDestLocked(aProofOfLock, mSize);
+  }
 
-  LOGWAYLAND("WaylandSurface::EnableCeiledScaleLocked()");
+  mScaleType = ScaleType::Ceiled;
   return true;
 }
 
@@ -1113,7 +1122,6 @@ void WaylandSurface::RemoveAttachedBufferLocked(
 
   LOGWAYLAND("WaylandSurface::RemoveAttachedBufferLocked()");
 
-  SetRenderingSizeLocked(aSurfaceLock, DesktopIntSize());
   wl_surface_attach(mSurface, nullptr, 0, 0);
   mLatestAttachedBuffer = 0;
   mSurfaceNeedsCommit = true;
