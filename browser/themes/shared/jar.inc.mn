@@ -15,7 +15,6 @@
   skin/classic/browser/tab-list-tree.css                       (../shared/tab-list-tree.css)
   skin/classic/browser/addon-notification.css                  (../shared/addon-notification.css)
   skin/classic/browser/autocomplete.css                        (../shared/autocomplete.css)
-  skin/classic/browser/aiWindowSidebar.css                     (../shared/aiWindowSidebar.css)
   skin/classic/browser/blockedSite.css                         (../shared/blockedSite.css)
   skin/classic/browser/browser-colors.css                      (../shared/browser-colors.css)
   skin/classic/browser/browser-shared.css                      (../shared/browser-shared.css)
