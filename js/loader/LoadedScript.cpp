@@ -13,9 +13,10 @@
 
 #include "mozilla/dom/ScriptLoadContext.h"  // ScriptLoadContext
 #include "jsfriendapi.h"
-#include "js/Modules.h"       // JS::{Get,Set}ModulePrivate
-#include "LoadContextBase.h"  // LoadContextBase
-#include "nsIChannel.h"       // nsIChannel
+#include "js/Modules.h"                 // JS::{Get,Set}ModulePrivate
+#include "js/experimental/JSStencil.h"  // JS::SizeOfStencil
+#include "LoadContextBase.h"            // LoadContextBase
+#include "nsIChannel.h"                 // nsIChannel
 
 namespace JS::loader {
 
@@ -136,7 +137,10 @@ size_t LoadedScript::SizeOfIncludingThis(
 
   bytes += mSRIAndSerializedStencil.sizeOfExcludingThis(aMallocSizeOf);
 
-  // NOTE: Stencil is reported by SpiderMonkey.
+  if (mStencil) {
+    bytes += JS::SizeOfStencil(mStencil, aMallocSizeOf);
+  }
+
   return bytes;
 }
 
