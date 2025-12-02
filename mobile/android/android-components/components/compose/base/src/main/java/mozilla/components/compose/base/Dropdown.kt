@@ -96,79 +96,77 @@ fun Dropdown(
 
     var measuredDropdownMenuWidthDp by remember { mutableStateOf(0.dp) }
 
-    Surface {
-        Column(
-            modifier = modifier
-                .clickable {
-                    expanded = true
-                }
-                .semantics { role = Role.DropdownList },
-        ) {
-            Text(
-                text = label,
-                modifier = Modifier
-                    .wrapContentSize()
-                    .defaultMinSize(minHeight = 16.dp)
-                    .wrapContentHeight(),
-                style = AcornTheme.typography.caption,
-            )
+    Column(
+        modifier = modifier
+            .clickable {
+                expanded = true
+            }
+            .semantics { role = Role.DropdownList },
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier
+                .wrapContentSize()
+                .defaultMinSize(minHeight = 16.dp)
+                .wrapContentHeight(),
+            style = AcornTheme.typography.caption,
+        )
 
-            Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
-            val placeholderText = checkedItemText?.value ?: placeholder
+        val placeholderText = checkedItemText?.value ?: placeholder
 
-            Box {
-                Row {
-                    Text(
-                        text = placeholderText,
-                        modifier = Modifier.weight(1f),
-                        style = AcornTheme.typography.subtitle1,
-                    )
+        Box {
+            Row {
+                Text(
+                    text = placeholderText,
+                    modifier = Modifier.weight(1f),
+                    style = AcornTheme.typography.subtitle1,
+                )
 
-                    Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
-                    Icon(
-                        painter = painterResource(id = iconsR.drawable.mozac_ic_dropdown_arrow),
-                        contentDescription = null,
-                    )
-                }
-
-                Box(modifier = Modifier.align(Alignment.TopEnd)) {
-                    val widthModifier = if (dropdownMenuWidth == null) {
-                        Modifier
-                    } else {
-                        Modifier.width(width = dropdownMenuWidth)
-                    }
-
-                    DropdownMenu(
-                        menuItems = dropdownItems,
-                        expanded = expanded,
-                        modifier = Modifier
-                            .onGloballyPositioned { coordinates ->
-                                measuredDropdownMenuWidthDp = with(density) {
-                                    coordinates.size.width.toDp()
-                                }
-                            }
-                            .requiredSizeIn(maxHeight = DropdownMenuMaxHeight)
-                            .then(widthModifier),
-                        offset = if (isInLandscapeMode) {
-                            DpOffset(
-                                -measuredDropdownMenuWidthDp,
-                                IconSize,
-                            )
-                        } else {
-                            DpOffset(
-                                0.dp,
-                                IconSize,
-                            )
-                        },
-                        onDismissRequest = { expanded = false },
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = iconsR.drawable.mozac_ic_dropdown_arrow),
+                    contentDescription = null,
+                )
             }
 
-            HorizontalDivider(color = AcornTheme.colors.formDefault)
+            Box(modifier = Modifier.align(Alignment.TopEnd)) {
+                val widthModifier = if (dropdownMenuWidth == null) {
+                    Modifier
+                } else {
+                    Modifier.width(width = dropdownMenuWidth)
+                }
+
+                DropdownMenu(
+                    menuItems = dropdownItems,
+                    expanded = expanded,
+                    modifier = Modifier
+                        .onGloballyPositioned { coordinates ->
+                            measuredDropdownMenuWidthDp = with(density) {
+                                coordinates.size.width.toDp()
+                            }
+                        }
+                        .requiredSizeIn(maxHeight = DropdownMenuMaxHeight)
+                        .then(widthModifier),
+                    offset = if (isInLandscapeMode) {
+                        DpOffset(
+                            -measuredDropdownMenuWidthDp,
+                            IconSize,
+                        )
+                    } else {
+                        DpOffset(
+                            0.dp,
+                            IconSize,
+                        )
+                    },
+                    onDismissRequest = { expanded = false },
+                )
+            }
         }
+
+        HorizontalDivider(color = AcornTheme.colors.formDefault)
     }
 }
 
