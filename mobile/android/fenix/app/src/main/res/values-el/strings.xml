@@ -1065,6 +1065,8 @@
   <string name="restart_warning_dialog_title">Αλλαγή εικονιδίου εφαρμογής;</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Η εφαρμογή ενδέχεται να κλείσει. Πατήστε το νέο εικονίδιο για να ανοίξετε ξανά το %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Η αλλαγή του εικονιδίου θα αφαιρέσει τυχόν αποθηκευμένους ιστοτόπους και συντομεύσεις από την αρχική σας οθόνη. \n\nΤο %1$s ενδέχεται να κλείσει. Πατήστε το νέο σας εικονίδιο για να ανοίξετε ξανά την εφαρμογή.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Αλλαγή εικονιδίου</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -2759,6 +2761,8 @@
   <string name="autofill_settings_navigate_back_button_content_description">Πίσω</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Προσθήκη κάρτας</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Πλοήγηση προς τα πίσω</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Επεξεργασία κάρτας</string>
   <!-- The header for the card number of a credit card -->

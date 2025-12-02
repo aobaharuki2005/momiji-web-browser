@@ -1049,10 +1049,14 @@
   <string name="alternative_app_icon_group_gradients">Prelivi</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Drugo</string>
+  <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_featured">Predstavljamo</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Spremenim ikono aplikacije?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">%1$s se bo morda zaprl. Ponovno ga odprite z dotikom čudovite nove ikone.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Ob spremembi ikone bodo odstranjene vse morebitne strani in bližnjice, ki ste jih shranili na domači zaslon. \n\n%1$s se bo morda zaprl. Ponovno ga odprete z dotikom nove ikone.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Spremeni ikono</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -3882,6 +3886,10 @@
   <string name="settings_search_clear_recent_searches_message">Izbriši vse</string>
   <!-- Section header for recent search results -->
   <string name="settings_search_recent_searches_section_header">Nedavni rezultati iskanja</string>
+  <!-- Message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_title">Nič se ni našlo</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">Morda poskusite z drugačnim iskanjem?</string>
   <!--
     Terms of use pop up prompt
 
