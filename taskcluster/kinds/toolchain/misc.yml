@@ -364,9 +364,9 @@ win64-custom-car:
         cached_task: false
     treeherder:
         symbol: TW64(custom-car)
-    worker-type: b-win2022
+    worker-type: b-win2022-xxlarge
     worker:
-        max-run-time: 18000
+        max-run-time: 10000
         env:
             MSYSTEM: "MINGW64"
     use-python: "3.11"
@@ -386,7 +386,7 @@ win64-custom-car:
             is_official_build=true,
             symbol_level=2,
             target_cpu=\"x64\",
-            use_v8_context_snapshot=false,
+            use_v8_context_snapshot=false
         ]
         toolchain-artifact: public/build/car_win64.tar.zst
     fetches:

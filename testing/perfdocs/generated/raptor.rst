@@ -4281,7 +4281,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-custom-car-speedometer3**
-        - ✅
+        - ❌
         - ❌
         - ❌
         - ❌
@@ -4401,7 +4401,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-custom-car-speedometer3**
-        - ✅
+        - ❌
         - ❌
         - ❌
         - ❌
@@ -4459,7 +4459,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-custom-car-speedometer3**
-        - ✅
+        - ❌
         - ❌
         - ❌
         - ❌
@@ -4729,7 +4729,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-custom-car-speedometer3**
-        - ✅
+        - ❌
         - ❌
         - ❌
         - ❌
@@ -4849,7 +4849,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-custom-car-speedometer3**
-        - ✅
+        - ❌
         - ❌
         - ❌
         - ❌
@@ -4907,7 +4907,7 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
         - ❌
       * - **browsertime-benchmark-custom-car-speedometer3**
-        - ✅
+        - ❌
         - ❌
         - ❌
         - ❌
