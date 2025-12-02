@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -65,7 +66,7 @@ internal fun StoryCard(
         modifier = modifier,
         shape = cardShape,
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        colors = CardDefaults.cardColors(containerColor = FirefoxTheme.colors.layer2),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
     ) {
         Column(
             modifier = Modifier.padding(all = defaultCardContentPadding),
@@ -90,7 +91,6 @@ internal fun StoryCard(
             ) {
                 Text(
                     text = story.title,
-                    color = FirefoxTheme.colors.textPrimary,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 2,
                     style = FirefoxTheme.typography.headline7,
@@ -122,7 +122,7 @@ internal fun StoryCard(
 
                         Text(
                             text = subtitle,
-                            color = FirefoxTheme.colors.textSecondary,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             overflow = TextOverflow.Ellipsis,
                             style = FirefoxTheme.typography.subtitle1,
                         )
