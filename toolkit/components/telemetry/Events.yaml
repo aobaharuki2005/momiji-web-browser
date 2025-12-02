@@ -3994,7 +3994,7 @@ profiles:
     products:
       - "firefox"
   existing:
-    objects: ["alert", "avatar", "closed", "deleted", "displayed", "learn_more", "name", "theme"]
+    objects: ["alert", "avatar", "closed", "deleted", "displayed", "learn_more", "name", "shortcut", "theme"]
     release_channel_collection: opt-out
     record_in_processes:
       - main
@@ -4009,6 +4009,7 @@ profiles:
       - "nbaumgardner@mozilla.com"
     bug_numbers:
       - 1927607
+      - 1997471
     expiry_version: never
     products:
       - "firefox"
