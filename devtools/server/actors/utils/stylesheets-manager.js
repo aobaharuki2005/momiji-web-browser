@@ -720,6 +720,13 @@ class StyleSheetsManager extends EventEmitter {
           line: InspectorUtils.getRelativeRuleLine(rule),
           column: InspectorUtils.getRuleColumn(rule),
         });
+      } else if (className === "CSSPositionTryRule") {
+        atRules.push({
+          type: "position-try",
+          positionTryName: rule.name,
+          line: InspectorUtils.getRelativeRuleLine(rule),
+          column: InspectorUtils.getRuleColumn(rule),
+        });
       }
     }
     return {

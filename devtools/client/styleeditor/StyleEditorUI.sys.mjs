@@ -1442,6 +1442,10 @@ export class StyleEditorUI extends EventEmitter {
           type.append(
             this.#panelDoc.createTextNode(`${rule.propertyName}\u00A0`)
           );
+        } else if (rule.type === "position-try") {
+          type.append(
+            this.#panelDoc.createTextNode(`${rule.positionTryName}\u00A0`)
+          );
         }
 
         const cond = this.#panelDoc.createElementNS(HTML_NS, "span");

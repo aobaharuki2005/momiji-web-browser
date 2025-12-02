@@ -568,6 +568,7 @@ static uint32_t CollectAtRules(ServoCSSRuleList& aRuleList,
       case StyleCssRuleType::Media:
       case StyleCssRuleType::Supports:
       case StyleCssRuleType::LayerBlock:
+      case StyleCssRuleType::PositionTry:
       case StyleCssRuleType::Property:
       case StyleCssRuleType::Container: {
         (void)aResult.AppendElement(OwningNonNull(*rule), fallible);
@@ -589,7 +590,6 @@ static uint32_t CollectAtRules(ServoCSSRuleList& aRuleList,
       case StyleCssRuleType::FontPaletteValues:
       case StyleCssRuleType::Scope:
       case StyleCssRuleType::StartingStyle:
-      case StyleCssRuleType::PositionTry:
       case StyleCssRuleType::NestedDeclarations:
         break;
     }
