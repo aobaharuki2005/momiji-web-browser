@@ -1,331 +1,425 @@
-From: Palak Agarwal <agpalak@google.com>
-Date: Tue, 7 Oct 2025 13:45:52 +0200
-Subject: (cherry-pick-branch-heads/7390) [M141] Add logging while creating
- {Window|Screen}Capturer
+From: Daniel Baker <dbaker@mozilla.com>
+Date: Mon, 1 Dec 2025 19:28:40 -0700
+Subject: (tmp-cherry-pick) Revert "Mark deprecated features with
+ [[deprecated]]" (7e1a12d6ff)
 
-(cherry picked from commit 6908505ae0eba5d530ad0bb4b37d4654a4f36c95)
+This reverts commit 3cf5dc1bece892a9c6e359bfa9931a88f896df12.
 
-Fixed: chromium:450184498
-Bug: chromium:448881311
-Change-Id: I0f043f58bf831e6822451cac99a8972a054ffdf7
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/414800
-Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Palak Agarwal <agpalak@google.com>
-Cr-Original-Commit-Position: refs/heads/main@{#45856}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/415420
-Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/7390@{#3}
-Cr-Branched-From: 2f553bf8d573c90176d51559b76dfc836996c8f5-refs/heads/main@{#45520}
+Reason for revert: Broke downstream project (Nearby)
+
+Original change's description:
+> Mark deprecated features with [[deprecated]]
+>
+> This was the result of asking Gemini
+> "Consider the interfaces in @api. There are comments that indicate that certain methods are deprecated, but the methods don't have [[deprecated]] on them. Make a CL that adds [[deprecated]] to those methods"
+>
+> followed by a few rounds of reverting and working around errors.
+>
+> Bug: None
+> Change-Id: I5d7b1f89fff01277ce96e940aa7340cdfcb728cc
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407441
+> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+> Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#45623}
+
+Bug: None
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Change-Id: Ib5c58e36e94b915a01514455c8a2ad561b61a5c9
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/409000
+Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#45629}
 ---
- modules/desktop_capture/desktop_capturer.cc       | 15 +++++++++++++++
- .../linux/x11/screen_capturer_x11.cc              |  6 ++++++
- .../linux/x11/window_capturer_x11.cc              |  4 ++++
- modules/desktop_capture/screen_capturer_darwin.mm |  7 +++++++
- .../desktop_capture/screen_capturer_fuchsia.cc    |  3 +++
- modules/desktop_capture/screen_capturer_linux.cc  |  4 ++++
- modules/desktop_capture/screen_capturer_null.cc   |  4 ++++
- modules/desktop_capture/screen_capturer_win.cc    |  6 ++++++
- modules/desktop_capture/window_capturer_linux.cc  |  4 ++++
- modules/desktop_capture/window_capturer_mac.mm    |  2 ++
- modules/desktop_capture/window_capturer_null.cc   |  3 +++
- modules/desktop_capture/window_capturer_win.cc    |  7 +++++++
- 12 files changed, 65 insertions(+)
+ api/audio/audio_processing_statistics.cc          |  5 -----
+ api/audio/audio_processing_statistics.h           |  5 +----
+ api/call/bitrate_allocation.h                     |  1 -
+ api/candidate.cc                                  |  5 -----
+ api/candidate.h                                   |  4 +++-
+ api/data_channel_interface.h                      |  5 +----
+ api/dtls_transport_interface.h                    | 15 +++++++--------
+ api/dtmf_sender_interface.h                       |  3 +--
+ api/jsep.h                                        |  3 ++-
+ api/peer_connection_interface.h                   |  4 ++--
+ api/rtp_receiver_interface.h                      |  5 +++--
+ api/rtp_sender_interface.h                        |  5 +++--
+ api/uma_metrics.h                                 |  2 +-
+ .../audio_processing/audio_processing_unittest.cc |  3 ---
+ .../include/audio_frame_proxies.cc                |  4 ----
+ pc/data_channel_unittest.cc                       |  3 ---
+ pc/dtmf_sender.cc                                 |  6 ------
+ pc/dtmf_sender_unittest.cc                        |  2 ++
+ pc/peer_connection_integrationtest.cc             |  3 ---
+ pc/sctp_data_channel.cc                           |  3 ---
+ sdk/objc/unittests/RTCIceCandidateTest.mm         |  3 ++-
+ 21 files changed, 28 insertions(+), 61 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index ae9aba26ee..bf63f73178 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -21,6 +21,7 @@
- #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
- #include "modules/desktop_capture/desktop_geometry.h"
- #include "modules/desktop_capture/shared_memory.h"
-+#include "rtc_base/logging.h"
- #include "system_wrappers/include/metrics.h"
+diff --git a/api/audio/audio_processing_statistics.cc b/api/audio/audio_processing_statistics.cc
+index b6e92eaa12..90da7e8874 100644
+--- a/api/audio/audio_processing_statistics.cc
++++ b/api/audio/audio_processing_statistics.cc
+@@ -14,13 +14,8 @@ namespace webrtc {
  
- #if defined(WEBRTC_WIN)
-@@ -81,18 +82,26 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
- #if defined(RTC_ENABLE_WIN_WGC)
-   if (options.allow_wgc_window_capturer() &&
-       IsWgcSupported(CaptureType::kWindow)) {
-+    RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateWindowCapturer "
-+                        "creates DesktopCapturer of type WgcCapturerWin";
-     return WgcCapturerWin::CreateRawWindowCapturer(options);
-   }
- #endif  // defined(RTC_ENABLE_WIN_WGC)
+ AudioProcessingStats::AudioProcessingStats() = default;
  
- #if defined(WEBRTC_WIN)
-   if (options.allow_cropping_window_capturer()) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateWindowCapturer "
-+           "creates DesktopCapturer of type CroppingWindowCapturerWin";
-     return CroppingWindowCapturer::CreateCapturer(options);
-   }
- #endif  // defined(WEBRTC_WIN)
+-// TODO: https://issues.webrtc.org/42221314 - remove pragma when deprecated
+-// field `voice_detected` is removed.
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+ AudioProcessingStats::AudioProcessingStats(const AudioProcessingStats& other) =
+     default;
+-#pragma clang diagnostic pop
  
-   std::unique_ptr<DesktopCapturer> capturer = CreateRawWindowCapturer(options);
-   if (capturer && options.detect_updated_region()) {
-+    RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateWindowCapturer "
-+                        "creates DesktopCapturer of type "
-+                        "DesktopCapturerDifferWrapper over a base capturer";
-     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-   }
+ AudioProcessingStats::~AudioProcessingStats() = default;
  
-@@ -105,12 +114,18 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
- #if defined(RTC_ENABLE_WIN_WGC)
-   if (options.allow_wgc_screen_capturer() &&
-       IsWgcSupported(CaptureType::kScreen)) {
-+    RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateScreenCapturer "
-+                        "creates DesktopCapturer of type WgcCapturerWin";
-     return WgcCapturerWin::CreateRawScreenCapturer(options);
-   }
- #endif  // defined(RTC_ENABLE_WIN_WGC)
+diff --git a/api/audio/audio_processing_statistics.h b/api/audio/audio_processing_statistics.h
+index 897af0c2c3..d6f8b6e61c 100644
+--- a/api/audio/audio_processing_statistics.h
++++ b/api/audio/audio_processing_statistics.h
+@@ -20,8 +20,6 @@
+ namespace webrtc {
+ // This version of the stats uses Optionals, it will replace the regular
+ // AudioProcessingStatistics struct.
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+ struct RTC_EXPORT AudioProcessingStats {
+   AudioProcessingStats();
+   AudioProcessingStats(const AudioProcessingStats& other);
+@@ -33,7 +31,7 @@ struct RTC_EXPORT AudioProcessingStats {
+   // It is conservative in flagging audio as speech, with low likelihood of
+   // incorrectly flagging a frame as voice.
+   // Only reported if voice detection is enabled in AudioProcessing::Config.
+-  [[deprecated("bugs.webrtc.org/11226")]] std::optional<bool> voice_detected;
++  std::optional<bool> voice_detected;
  
-   std::unique_ptr<DesktopCapturer> capturer = CreateRawScreenCapturer(options);
-   if (capturer && options.detect_updated_region()) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateScreenCapturer creates "
-+           "DesktopCapturer of type DesktopCapturerDifferWrapper over a base "
-+           "capturer";
-     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-   }
+   // AEC Statistics.
+   // ERL = 10log_10(P_far / P_echo)
+@@ -64,7 +62,6 @@ struct RTC_EXPORT AudioProcessingStats {
+   // call to `GetStatistics()`.
+   std::optional<int32_t> delay_ms;
+ };
+-#pragma clang diagnostic pop
  
-diff --git a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-index 90dd797cb3..f10dcabc7e 100644
---- a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-+++ b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-@@ -511,8 +511,14 @@ std::unique_ptr<DesktopCapturer> ScreenCapturerX11::CreateRawScreenCapturer(
-   if (!options.x_display())
-     return nullptr;
+ }  // namespace webrtc
  
-+  RTC_LOG(LS_INFO)
-+      << "video capture: ScreenCapturerX11::CreateRawScreenCapturer creates "
-+         "DesktopCapturer of type ScreenCapturerX11";
-   std::unique_ptr<ScreenCapturerX11> capturer(new ScreenCapturerX11());
-   if (!capturer->Init(options)) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: ScreenCapturerX11::CreateRawScreenCapturer "
-+           "DesktopCapturer is null because it can not be initiated";
-     return nullptr;
-   }
- 
-diff --git a/modules/desktop_capture/linux/x11/window_capturer_x11.cc b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-index 8e592ff2d9..9505205b76 100644
---- a/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-+++ b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-@@ -247,6 +247,10 @@ std::unique_ptr<DesktopCapturer> WindowCapturerX11::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-   if (!options.x_display())
-     return nullptr;
-+
-+  RTC_LOG(LS_INFO)
-+      << "video capture: WindowCapturerX11::CreateRawWindowCapturer creates "
-+         "DesktopCapturer of type WindowCapturerX11";
-   return std::unique_ptr<DesktopCapturer>(new WindowCapturerX11(options));
+diff --git a/api/call/bitrate_allocation.h b/api/call/bitrate_allocation.h
+index 20f8b69b13..e0557504d6 100644
+--- a/api/call/bitrate_allocation.h
++++ b/api/call/bitrate_allocation.h
+@@ -28,7 +28,6 @@ struct BitrateAllocationUpdate {
+   // Predicted round trip time.
+   TimeDelta round_trip_time = TimeDelta::PlusInfinity();
+   // `bwe_period` is deprecated.
+-  // TODO: https://issues.webrtc.org/442860748 - complete removal.
+   TimeDelta bwe_period = TimeDelta::PlusInfinity();
+   // Congestion window pushback bitrate reduction fraction. Used in
+   // VideoStreamEncoder to reduce the bitrate by the given fraction
+diff --git a/api/candidate.cc b/api/candidate.cc
+index a92f00e6ab..bb12f06a3b 100644
+--- a/api/candidate.cc
++++ b/api/candidate.cc
+@@ -195,11 +195,6 @@ bool Candidate::operator!=(const Candidate& o) const {
+   return !(*this == o);
  }
  
-diff --git a/modules/desktop_capture/screen_capturer_darwin.mm b/modules/desktop_capture/screen_capturer_darwin.mm
-index 95a877c45d..3f14ddfe58 100644
---- a/modules/desktop_capture/screen_capturer_darwin.mm
-+++ b/modules/desktop_capture/screen_capturer_darwin.mm
-@@ -12,6 +12,7 @@
+-Candidate Candidate::ToSanitizedCopy(bool use_hostname_address,
+-                                     bool filter_related_address) const {
+-  return ToSanitizedCopy(use_hostname_address, filter_related_address, false);
+-}
+-
+ Candidate Candidate::ToSanitizedCopy(bool use_hostname_address,
+                                      bool filter_related_address,
+                                      bool filter_ufrag) const {
+diff --git a/api/candidate.h b/api/candidate.h
+index 7e2b13838f..c6f16a50f7 100644
+--- a/api/candidate.h
++++ b/api/candidate.h
+@@ -236,7 +236,9 @@ class RTC_EXPORT Candidate {
+   // any remote ice parameters have been set.
+   [[deprecated("Use variant with filter_ufrag")]] Candidate ToSanitizedCopy(
+       bool use_hostname_address,
+-      bool filter_related_address) const;
++      bool filter_related_address) const {
++    return ToSanitizedCopy(use_hostname_address, filter_related_address, false);
++  }
+   Candidate ToSanitizedCopy(bool use_hostname_address,
+                             bool filter_related_address,
+                             bool filter_ufrag) const;
+diff --git a/api/data_channel_interface.h b/api/data_channel_interface.h
+index e9c0c78750..4a8299a0b7 100644
+--- a/api/data_channel_interface.h
++++ b/api/data_channel_interface.h
+@@ -32,12 +32,10 @@ namespace webrtc {
  
- #include "modules/desktop_capture/mac/screen_capturer_mac.h"
- #include "modules/desktop_capture/mac/screen_capturer_sck.h"
-+#include "rtc_base/logging.h"
+ // C++ version of: https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannelinit
+ // TODO(deadbeef): Use std::optional for the "-1 if unset" things.
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+ struct DataChannelInit {
+   // Deprecated. Reliability is assumed, and channel will be unreliable if
+   // maxRetransmitTime or MaxRetransmits is set.
+-  [[deprecated]] bool reliable = false;
++  bool reliable = false;
  
- namespace webrtc {
+   // True if ordered delivery is required.
+   bool ordered = true;
+@@ -71,7 +69,6 @@ struct DataChannelInit {
+   // https://w3c.github.io/webrtc-priority/#new-rtcdatachannelinit-member
+   std::optional<PriorityValue> priority;
+ };
+-#pragma clang diagnostic pop
  
-@@ -27,10 +28,16 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     std::unique_ptr<DesktopCapturer> sck_capturer =
-         CreateScreenCapturerSck(options);
-     if (sck_capturer) {
-+      RTC_LOG(LS_INFO)
-+          << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+             "DesktopCapturer of type ScreenCapturerSck";
-       return sck_capturer;
+ // At the JavaScript level, data can be passed in as a string or a blob, so
+ // this structure's `binary` flag tells whether the data should be interpreted
+diff --git a/api/dtls_transport_interface.h b/api/dtls_transport_interface.h
+index 3b11015bc0..79099f43a2 100644
+--- a/api/dtls_transport_interface.h
++++ b/api/dtls_transport_interface.h
+@@ -55,14 +55,13 @@ class RTC_EXPORT DtlsTransportInformation {
+       std::optional<int> srtp_cipher_suite,
+       std::unique_ptr<SSLCertChain> remote_ssl_certificates,
+       std::optional<int> ssl_group_id);
+-  [[deprecated("Use version with role parameter")]] ABSL_DEPRECATED(
+-      "Use version with role parameter")
+-      DtlsTransportInformation(
+-          DtlsTransportState state,
+-          std::optional<int> tls_version,
+-          std::optional<int> ssl_cipher_suite,
+-          std::optional<int> srtp_cipher_suite,
+-          std::unique_ptr<SSLCertChain> remote_ssl_certificates);
++  ABSL_DEPRECATED("Use version with role parameter")
++  DtlsTransportInformation(
++      DtlsTransportState state,
++      std::optional<int> tls_version,
++      std::optional<int> ssl_cipher_suite,
++      std::optional<int> srtp_cipher_suite,
++      std::unique_ptr<SSLCertChain> remote_ssl_certificates);
+ 
+   // Copy and assign
+   DtlsTransportInformation(const DtlsTransportInformation& c);
+diff --git a/api/dtmf_sender_interface.h b/api/dtmf_sender_interface.h
+index ba1948f430..3b184832c0 100644
+--- a/api/dtmf_sender_interface.h
++++ b/api/dtmf_sender_interface.h
+@@ -32,8 +32,7 @@ class DtmfSenderObserverInterface {
+   // DEPRECATED: Older API without tone buffer.
+   // TODO(bugs.webrtc.org/9725): Remove old API and default implementation
+   // when old callers are gone.
+-  [[deprecated("Use OnToneChange with tone_buffer")]] virtual void OnToneChange(
+-      const std::string& /* tone */) {}
++  virtual void OnToneChange(const std::string& /* tone */) {}
+ 
+  protected:
+   virtual ~DtmfSenderObserverInterface() = default;
+diff --git a/api/jsep.h b/api/jsep.h
+index df0ebdcc43..7495535e31 100644
+--- a/api/jsep.h
++++ b/api/jsep.h
+@@ -89,7 +89,8 @@ class RTC_EXPORT IceCandidate final {
+   std::string ToString() const;
+ 
+   // TODO: webrtc:406795492 - Deprecate and remove this method.
+-  [[deprecated("Use ToString()")]] bool ToString(std::string* out) const {
++  // [[deprecated("Use ToString()")]]
++  bool ToString(std::string* out) const {
+     if (!out)
+       return false;
+     *out = ToString();
+diff --git a/api/peer_connection_interface.h b/api/peer_connection_interface.h
+index aea35c2514..15942a40e1 100644
+--- a/api/peer_connection_interface.h
++++ b/api/peer_connection_interface.h
+@@ -1132,8 +1132,8 @@ class RTC_EXPORT PeerConnectionInterface : public RefCountInterface {
+   // to the MID of the m= section that generated the candidate.
+   // TODO(bugs.webrtc.org/8395): Use IceCandidate instead of
+   // Candidate, which would avoid the transport_name oddity.
+-  [[deprecated("Use IceCandidate version")]] virtual bool RemoveIceCandidates(
+-      const std::vector<Candidate>& candidates);
++  [[deprecated("Use IceCandidate version")]]
++  virtual bool RemoveIceCandidates(const std::vector<Candidate>& candidates);
+ 
+   // SetBitrate limits the bandwidth allocated for all RTP streams sent by
+   // this PeerConnection. Other limitations might affect these limits and
+diff --git a/api/rtp_receiver_interface.h b/api/rtp_receiver_interface.h
+index 8e301ee575..bf87f463c3 100644
+--- a/api/rtp_receiver_interface.h
++++ b/api/rtp_receiver_interface.h
+@@ -116,8 +116,9 @@ class RTC_EXPORT RtpReceiverInterface : public RefCountInterface,
+   // Sets a frame transformer between the depacketizer and the decoder to enable
+   // client code to transform received frames according to their own processing
+   // logic.
+-  [[deprecated("Use SetFrameTransformer")]] virtual void
+-  SetDepacketizerToDecoderFrameTransformer(
++  // TODO: bugs.webrtc.org/15929 - add [[deprecated("Use SetFrameTransformer")]]
++  // when usage in Chrome is removed
++  virtual void SetDepacketizerToDecoderFrameTransformer(
+       scoped_refptr<FrameTransformerInterface> frame_transformer) {
+     SetFrameTransformer(std::move(frame_transformer));
+   }
+diff --git a/api/rtp_sender_interface.h b/api/rtp_sender_interface.h
+index db04b9580c..2a7907dc4e 100644
+--- a/api/rtp_sender_interface.h
++++ b/api/rtp_sender_interface.h
+@@ -118,8 +118,9 @@ class RTC_EXPORT RtpSenderInterface : public RefCountInterface,
+   // user. This can be used to update the state of the object.
+   virtual scoped_refptr<FrameEncryptorInterface> GetFrameEncryptor() const = 0;
+ 
+-  [[deprecated("Use SetFrameTransformer")]] virtual void
+-  SetEncoderToPacketizerFrameTransformer(
++  // TODO: bugs.webrtc.org/15929 - add [[deprecated("Use SetFrameTransformer")]]
++  // when usage in Chrome is removed
++  virtual void SetEncoderToPacketizerFrameTransformer(
+       scoped_refptr<FrameTransformerInterface> frame_transformer) {
+     SetFrameTransformer(std::move(frame_transformer));
+   }
+diff --git a/api/uma_metrics.h b/api/uma_metrics.h
+index 53511ef762..d7946885c7 100644
+--- a/api/uma_metrics.h
++++ b/api/uma_metrics.h
+@@ -48,7 +48,7 @@ enum PeerConnectionMetricsName {
+ enum IceCandidatePairType {
+   // HostHost is deprecated. It was replaced with the set of types at the bottom
+   // to report private or public host IP address.
+-  kIceCandidatePairHostHost [[deprecated]] = 0,
++  kIceCandidatePairHostHost = 0,
+   kIceCandidatePairHostSrflx = 1,
+   kIceCandidatePairHostRelay = 2,
+   kIceCandidatePairHostPrflx = 3,
+diff --git a/modules/audio_processing/audio_processing_unittest.cc b/modules/audio_processing/audio_processing_unittest.cc
+index 8a3651566a..ce668bad1f 100644
+--- a/modules/audio_processing/audio_processing_unittest.cc
++++ b/modules/audio_processing/audio_processing_unittest.cc
+@@ -2875,10 +2875,7 @@ TEST(ApmStatistics, DoNotReportVoiceDetectedStat) {
+                 StreamConfig(frame.sample_rate_hz, frame.num_channels()),
+                 frame.data.data()),
+             0);
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+   EXPECT_FALSE(apm->GetStatistics().voice_detected.has_value());
+-#pragma clang diagnostic pop
+ }
+ 
+ TEST(ApmStatistics, GetStatisticsReportsNoEchoDetectorStatsWhenDisabled) {
+diff --git a/modules/audio_processing/include/audio_frame_proxies.cc b/modules/audio_processing/include/audio_frame_proxies.cc
+index 84523250a5..97d81e6b85 100644
+--- a/modules/audio_processing/include/audio_frame_proxies.cc
++++ b/modules/audio_processing/include/audio_frame_proxies.cc
+@@ -31,15 +31,11 @@ int ProcessAudioFrame(AudioProcessing* ap, AudioFrame* frame) {
+ 
+   AudioProcessingStats stats = ap->GetStatistics();
+ 
+-  // TODO: https://issues.webrtc.org/42221314 - remove when deleted
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+   if (stats.voice_detected) {
+     frame->vad_activity_ = *stats.voice_detected
+                                ? AudioFrame::VADActivity::kVadActive
+                                : AudioFrame::VADActivity::kVadPassive;
+   }
+-#pragma clang diagnostic pop
+ 
+   return result;
+ }
+diff --git a/pc/data_channel_unittest.cc b/pc/data_channel_unittest.cc
+index dca2d6ece9..603b7f91d6 100644
+--- a/pc/data_channel_unittest.cc
++++ b/pc/data_channel_unittest.cc
+@@ -164,11 +164,8 @@ TEST_F(SctpDataChannelTest, VerifyConfigurationGetters) {
+   // Note that the `init_.reliable` field is deprecated, so we directly set
+   // it here to match spec behavior for purposes of checking the `reliable()`
+   // getter.
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+   init_.reliable = (!init_.maxRetransmits && !init_.maxRetransmitTime);
+   EXPECT_EQ(channel_->reliable(), init_.reliable);
+-#pragma clang diagnostic pop
+   EXPECT_EQ(channel_->ordered(), init_.ordered);
+   EXPECT_EQ(channel_->negotiated(), init_.negotiated);
+   EXPECT_EQ(channel_->priority(), PriorityValue(Priority::kLow));
+diff --git a/pc/dtmf_sender.cc b/pc/dtmf_sender.cc
+index 7890e58841..703fe9b459 100644
+--- a/pc/dtmf_sender.cc
++++ b/pc/dtmf_sender.cc
+@@ -191,10 +191,7 @@ void DtmfSender::DoInsertDtmf() {
+     // Fire a “OnToneChange” event with an empty string and stop.
+     if (observer_) {
+       observer_->OnToneChange(std::string(), tones_);
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+       observer_->OnToneChange(std::string());
+-#pragma clang diagnostic pop
      }
+     return;
+   } else {
+@@ -232,10 +229,7 @@ void DtmfSender::DoInsertDtmf() {
+   if (observer_) {
+     observer_->OnToneChange(tones_.substr(first_tone_pos, 1),
+                             tones_.substr(first_tone_pos + 1));
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+     observer_->OnToneChange(tones_.substr(first_tone_pos, 1));
+-#pragma clang diagnostic pop
    }
  
-+  RTC_LOG(LS_INFO)
-+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+         "DesktopCapturer of type ScreenCapturerMac";
-   auto capturer =
-       std::make_unique<ScreenCapturerMac>(options.configuration_monitor(),
-                                           options.detect_updated_region(),
-diff --git a/modules/desktop_capture/screen_capturer_fuchsia.cc b/modules/desktop_capture/screen_capturer_fuchsia.cc
-index c3f51ef0fc..2a6c5e753d 100644
---- a/modules/desktop_capture/screen_capturer_fuchsia.cc
-+++ b/modules/desktop_capture/screen_capturer_fuchsia.cc
-@@ -56,6 +56,9 @@ size_t RoundUpToMultiple(size_t value, size_t multiple) {
- 
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO)
-+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+         "DesktopCapturer of type ScreenCapturerFuchsia";
-   std::unique_ptr<ScreenCapturerFuchsia> capturer(new ScreenCapturerFuchsia());
-   return capturer;
- }
-diff --git a/modules/desktop_capture/screen_capturer_linux.cc b/modules/desktop_capture/screen_capturer_linux.cc
-index 94726750c5..f25e08fb59 100644
---- a/modules/desktop_capture/screen_capturer_linux.cc
-+++ b/modules/desktop_capture/screen_capturer_linux.cc
-@@ -13,6 +13,7 @@
- #include "modules/desktop_capture/desktop_capture_options.h"
- #include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/desktop_capture/desktop_capturer.h"
-+#include "rtc_base/logging.h"
- 
- #if defined(WEBRTC_USE_PIPEWIRE)
- #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
-@@ -29,6 +30,9 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     const DesktopCaptureOptions& options) {
- #if defined(WEBRTC_USE_PIPEWIRE)
-   if (options.allow_pipewire() && BaseCapturerPipeWire::IsSupported()) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+           "DesktopCapturer of type BaseCapturerPipeWire";
-     return std::make_unique<BaseCapturerPipeWire>(options,
-                                                   CaptureType::kScreen);
+   // Erase the unrecognized characters plus the tone that's just processed.
+diff --git a/pc/dtmf_sender_unittest.cc b/pc/dtmf_sender_unittest.cc
+index 9c62cc151e..deb18fe769 100644
+--- a/pc/dtmf_sender_unittest.cc
++++ b/pc/dtmf_sender_unittest.cc
+@@ -200,6 +200,8 @@ class DtmfSenderTest : public ::testing::Test {
+     const std::vector<std::string>& tones = observer_->tones();
+     // The observer will get an empty string at the end.
+     EXPECT_EQ(tones_ref.size() + 1, tones.size());
++    EXPECT_EQ(observer_->tones(),
++              observer_->tones_from_single_argument_callback());
+     EXPECT_TRUE(tones.back().empty());
+     EXPECT_TRUE(observer_->tones_remaining().empty());
+     std::string::const_iterator it_ref = tones_ref.begin();
+diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
+index 7a8d0860ff..2d5deb8435 100644
+--- a/pc/peer_connection_integrationtest.cc
++++ b/pc/peer_connection_integrationtest.cc
+@@ -2136,12 +2136,9 @@ TEST_P(PeerConnectionIntegrationIceStatesTest, MAYBE_VerifyBestConnection) {
+     EXPECT_METRIC_EQ(0, num_best_ipv6);
    }
-diff --git a/modules/desktop_capture/screen_capturer_null.cc b/modules/desktop_capture/screen_capturer_null.cc
-index aa6d4991a0..21b2f46c4d 100644
---- a/modules/desktop_capture/screen_capturer_null.cc
-+++ b/modules/desktop_capture/screen_capturer_null.cc
-@@ -11,12 +11,16 @@
- #include <memory>
  
- #include "modules/desktop_capture/desktop_capturer.h"
-+#include "rtc_base/logging.h"
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+   EXPECT_METRIC_EQ(
+       0, metrics::NumEvents("WebRTC.PeerConnection.CandidatePairType_UDP",
+                             kIceCandidatePairHostHost));
+-#pragma clang diagnostic pop
+   EXPECT_METRIC_EQ(
+       1, metrics::NumEvents("WebRTC.PeerConnection.CandidatePairType_UDP",
+                             kIceCandidatePairHostPublicHostPublic));
+diff --git a/pc/sctp_data_channel.cc b/pc/sctp_data_channel.cc
+index 18a8e8ab6b..7cca341408 100644
+--- a/pc/sctp_data_channel.cc
++++ b/pc/sctp_data_channel.cc
+@@ -84,11 +84,8 @@ BYPASS_PROXY_METHOD2(void,
+ END_PROXY_MAP(DataChannel)
+ }  // namespace
  
- namespace webrtc {
+-#pragma clang diagnostic push
+-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+ InternalDataChannelInit::InternalDataChannelInit(const DataChannelInit& base)
+     : DataChannelInit(base), open_handshake_role(kOpener) {
+-#pragma clang diagnostic pop
+   // If the channel is externally negotiated, do not send the OPEN message.
+   if (base.negotiated) {
+     open_handshake_role = kNone;
+diff --git a/sdk/objc/unittests/RTCIceCandidateTest.mm b/sdk/objc/unittests/RTCIceCandidateTest.mm
+index 268d330815..c000be5a1b 100644
+--- a/sdk/objc/unittests/RTCIceCandidateTest.mm
++++ b/sdk/objc/unittests/RTCIceCandidateTest.mm
+@@ -39,7 +39,8 @@
+   EXPECT_EQ("audio", nativeCandidate->sdp_mid());
+   EXPECT_EQ(0, nativeCandidate->sdp_mline_index());
  
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO)
-+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates null "
-+         "DesktopCapturer";
-   return nullptr;
+-  std::string sdpString = nativeCandidate->ToString();
++  std::string sdpString;
++  nativeCandidate->ToString(&sdpString);
+   EXPECT_EQ(sdp.stdString, sdpString);
  }
  
-diff --git a/modules/desktop_capture/screen_capturer_win.cc b/modules/desktop_capture/screen_capturer_win.cc
-index a5f2052979..6620888f18 100644
---- a/modules/desktop_capture/screen_capturer_win.cc
-+++ b/modules/desktop_capture/screen_capturer_win.cc
-@@ -19,6 +19,7 @@
- #include "modules/desktop_capture/win/dxgi_duplicator_controller.h"
- #include "modules/desktop_capture/win/screen_capturer_win_directx.h"
- #include "modules/desktop_capture/win/screen_capturer_win_gdi.h"
-+#include "rtc_base/logging.h"
- 
- namespace webrtc {
- 
-@@ -26,6 +27,9 @@ namespace {
- 
- std::unique_ptr<DesktopCapturer> CreateScreenCapturerWinDirectx(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO)
-+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+         "DesktopCapturer of type ScreenCapturerWinDirectx";
-   std::unique_ptr<DesktopCapturer> capturer(
-       new ScreenCapturerWinDirectx(options));
-   capturer.reset(new BlankDetectorDesktopCapturerWrapper(
-@@ -39,6 +43,8 @@ std::unique_ptr<DesktopCapturer> CreateScreenCapturerWinDirectx(
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     const DesktopCaptureOptions& options) {
-   // Default capturer if no options are enabled is GDI.
-+  RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateRawScreenCapturer "
-+                      "creates DesktopCapturer of type ScreenCapturerWinGdi";
-   std::unique_ptr<DesktopCapturer> capturer(new ScreenCapturerWinGdi(options));
- 
-   // If DirectX is enabled use it as main capturer with GDI as fallback.
-diff --git a/modules/desktop_capture/window_capturer_linux.cc b/modules/desktop_capture/window_capturer_linux.cc
-index f621a63e72..87ea3d5721 100644
---- a/modules/desktop_capture/window_capturer_linux.cc
-+++ b/modules/desktop_capture/window_capturer_linux.cc
-@@ -13,6 +13,7 @@
- #include "modules/desktop_capture/desktop_capture_options.h"
- #include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/desktop_capture/desktop_capturer.h"
-+#include "rtc_base/logging.h"
- 
- #if defined(WEBRTC_USE_PIPEWIRE)
- #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
-@@ -29,6 +30,9 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
- #if defined(WEBRTC_USE_PIPEWIRE)
-   if (options.allow_pipewire() && BaseCapturerPipeWire::IsSupported()) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateRawWindowCapturer creates "
-+           "DesktopCapturer of type BaseCapturerPipeWire";
-     return std::make_unique<BaseCapturerPipeWire>(options,
-                                                   CaptureType::kWindow);
-   }
-diff --git a/modules/desktop_capture/window_capturer_mac.mm b/modules/desktop_capture/window_capturer_mac.mm
-index a1e6157b87..731090d3fb 100644
---- a/modules/desktop_capture/window_capturer_mac.mm
-+++ b/modules/desktop_capture/window_capturer_mac.mm
-@@ -217,6 +217,8 @@ void WindowCapturerMac::CaptureFrame() {
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateRawWindowCapturer "
-+                      "creates DesktopCapturer of type WindowCapturerMac";
-   return std::unique_ptr<DesktopCapturer>(new WindowCapturerMac(
-       options.full_screen_window_detector(), options.configuration_monitor()));
- }
-diff --git a/modules/desktop_capture/window_capturer_null.cc b/modules/desktop_capture/window_capturer_null.cc
-index 2061dc5248..384e186d20 100644
---- a/modules/desktop_capture/window_capturer_null.cc
-+++ b/modules/desktop_capture/window_capturer_null.cc
-@@ -12,6 +12,7 @@
- 
- #include "modules/desktop_capture/desktop_capturer.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/logging.h"
- 
- namespace webrtc {
- 
-@@ -65,6 +66,8 @@ void WindowCapturerNull::CaptureFrame() {
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateRawWindowCapturer "
-+                      "creates DesktopCapturer of type WindowCapturerNull";
-   return std::unique_ptr<DesktopCapturer>(new WindowCapturerNull());
- }
- 
-diff --git a/modules/desktop_capture/window_capturer_win.cc b/modules/desktop_capture/window_capturer_win.cc
-index 115bc7d9b0..15ed7f5121 100644
---- a/modules/desktop_capture/window_capturer_win.cc
-+++ b/modules/desktop_capture/window_capturer_win.cc
-@@ -15,6 +15,7 @@
- #include "modules/desktop_capture/desktop_capturer.h"
- #include "modules/desktop_capture/rgba_color.h"
- #include "modules/desktop_capture/win/window_capturer_win_gdi.h"
-+#include "rtc_base/logging.h"
- 
- #if defined(RTC_ENABLE_WIN_WGC)
- #include "modules/desktop_capture/blank_detector_desktop_capturer_wrapper.h"
-@@ -28,6 +29,8 @@ namespace webrtc {
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateRawWindowCapturer "
-+                      "creates DesktopCapturer of type WindowCapturerWinGdi";
-   std::unique_ptr<DesktopCapturer> capturer(
-       WindowCapturerWinGdi::CreateRawWindowCapturer(options));
- #if defined(RTC_ENABLE_WIN_WGC)
-@@ -36,6 +39,10 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     // BlankDectector capturer will send an error when it detects a failed
-     // GDI rendering, then Fallback capturer will try to capture it again with
-     // WGC.
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateRawWindowCapturer creates "
-+           "DesktopCapturer of type FallbackDesktopCapturerWrapper which has a "
-+           "fallback capturer of type WgcCapturerWin";
-     capturer = std::make_unique<BlankDetectorDesktopCapturerWrapper>(
-         std::move(capturer), RgbaColor(0, 0, 0, 0),
-         /*check_per_capture*/ true);
