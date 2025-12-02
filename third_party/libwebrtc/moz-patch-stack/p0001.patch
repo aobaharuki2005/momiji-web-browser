@@ -65,7 +65,7 @@ index 7843a8b37d..a4b96db00b 100644
  
  void IceTransportInternal::SubscribeRoleConflict(
 diff --git a/p2p/base/ice_transport_internal.h b/p2p/base/ice_transport_internal.h
-index 69b8214fe1..0e233df6a5 100644
+index 9f6722c8ad..c83a7d70d7 100644
 --- a/p2p/base/ice_transport_internal.h
 +++ b/p2p/base/ice_transport_internal.h
 @@ -352,9 +352,11 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
@@ -81,7 +81,7 @@ index 69b8214fe1..0e233df6a5 100644
    }
    void SubscribeCandidateGathered(
        absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
-@@ -464,8 +466,9 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
+@@ -462,8 +464,9 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
        candidate_pair_change_callback_;
  
   private:
