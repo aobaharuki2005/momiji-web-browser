@@ -755,7 +755,9 @@ nsresult ModuleLoaderBase::OnFetchComplete(ModuleLoadRequest* aRequest,
     }
 #endif
 
-    aRequest->ClearScriptSource();
+    if (aRequest->IsTextSource()) {
+      aRequest->ClearScriptText();
+    }
 
     if (NS_FAILED(rv)) {
       aRequest->LoadFailed();

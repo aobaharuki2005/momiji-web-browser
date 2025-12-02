@@ -208,12 +208,6 @@ class LoadedScript : public nsIMemoryReporter {
   nsresult GetScriptSource(JSContext* aCx, MaybeSourceText* aMaybeSource,
                            LoadContextBase* aMaybeLoadContext);
 
-  void ClearScriptSource() {
-    if (IsTextSource()) {
-      ClearScriptText();
-    }
-  }
-
   void ClearScriptText() {
     MOZ_ASSERT(IsTextSource());
     return IsUTF16Text() ? ScriptText<char16_t>().clearAndFree()
@@ -538,8 +532,6 @@ class LoadedScriptDelegate {
                            LoadContextBase* aLoadContext) {
     return GetLoadedScript()->GetScriptSource(aCx, aMaybeSource, aLoadContext);
   }
-
-  void ClearScriptSource() { GetLoadedScript()->ClearScriptSource(); }
 
   void ClearScriptText() { GetLoadedScript()->ClearScriptText(); }
 

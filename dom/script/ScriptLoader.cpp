@@ -2532,10 +2532,11 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
     aRequest->GetScriptLoadContext()->MaybeCancelOffThreadScript();
   }
 
-  // Free any source data, but keep the serialized Stencil as we might have to
-  // save it later.
-  aRequest->ClearScriptSource();
-  if (aRequest->IsSerializedStencil()) {
+  if (aRequest->IsTextSource()) {
+    // Free text source, but keep the serialized Stencil as we might have to
+    // save it later.
+    aRequest->ClearScriptText();
+  } else if (aRequest->IsSerializedStencil()) {
     // We received serialized Stencil as input, thus we were decoding, and we
     // will not be encoding it once more. We can safely clear the content of
     // this buffer.
