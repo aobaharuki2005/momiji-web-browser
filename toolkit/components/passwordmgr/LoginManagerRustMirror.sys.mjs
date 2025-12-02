@@ -7,7 +7,119 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LoginHelper: "resource://gre/modules/LoginHelper.sys.mjs",
 });
 
-const rustMirrorTelemetryVersion = "2";
+const rustMirrorTelemetryVersion = "3";
+
+// checks validity of an origin
+function checkOrigin(origin) {
+  try {
+    new URL(origin);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Validate an origin string.
+ *
+ * Returns:
+ * [
+ *   "ErrorName" or null,
+ *   fixedOrigin or null,
+ * ]
+ *
+ * Possible ErrorName values include:
+ * - FalsyOrigin
+ * - SurroundingWhitespace
+ * - SingleDot
+ * - ProtocolNameOnly
+ * - ProtocolFragmentOnly
+ * - ProtocolOnly
+ * - MissingProtocol
+ * - ProtocolTypo
+ * - MissingProtocol
+ * - UnknownError
+ */
+function validateOrigin(origin) {
+  // valid origin
+  if (checkOrigin(origin)) {
+    return [null, null];
+  }
+
+  // falsy origin
+  if (!origin) {
+    return ["FalsyOrigin", null];
+  }
+
+  // surrounding white-space
+  {
+    const fixedOrigin = origin.trim();
+    if (checkOrigin(fixedOrigin)) {
+      return ["SurroundingWhitespace", fixedOrigin];
+    }
+  }
+
+  const lower = origin.toLowerCase();
+
+  // some protocol-only urls we won't try to fix
+  const wontfix = {
+    ".": "SingleDot",
+
+    http: "ProtocolNameOnly",
+    "http:": "ProtocolFragmentOnly",
+    "http://": "ProtocolOnly",
+
+    https: "ProtocolNameOnly",
+    "https:": "ProtocolFragmentOnly",
+    "https://": "ProtocolOnly",
+
+    file: "ProtocolNameOnly",
+    "file:": "ProtocolFragmentOnly",
+    "file://": "ProtocolOnly",
+  };
+  if (lower in wontfix) {
+    return [wontfix[lower], null];
+  }
+
+  // leading "//"
+  if (origin.startsWith("//")) {
+    const fixedOrigin = "https:" + origin;
+    if (checkOrigin(fixedOrigin)) {
+      return ["MissingProtocol", fixedOrigin];
+    }
+  }
+
+  // protocol typos
+  const brokenPrefixes = [
+    "http//",
+    "https//",
+    "htp//",
+    "htttp//",
+    "hptts//",
+    "htpps//",
+    "http:/",
+    "https:/",
+  ];
+  for (const prefix of brokenPrefixes) {
+    if (lower.startsWith(prefix)) {
+      const fixedOrigin = "https://" + origin.slice(prefix.length);
+      if (checkOrigin(fixedOrigin)) {
+        return ["ProtocolTypo", fixedOrigin];
+      }
+    }
+  }
+
+  // no protocol
+  if (!lower.match(/^[a-z]{2,20}\:\/\//)) {
+    const fixedOrigin = "https://" + origin;
+    if (checkOrigin(fixedOrigin)) {
+      return ["MissingProtocol", fixedOrigin];
+    }
+  }
+
+  // the rest is unknown
+  return ["UnknownError", null];
+}
 
 /* Check if an url has punicode encoded hostname */
 function isPunycodeOrigin(origin) {
@@ -16,16 +128,6 @@ function isPunycodeOrigin(origin) {
   } catch (_) {
     return false;
   }
-}
-
-/* Check if an origin is a single dot */
-function isSingleDot(str) {
-  return str === ".";
-}
-
-/* Check if an origin does not contain http protocol */
-function isHttpOrigin(str) {
-  return str.startsWith("https://") || str.startsWith("http://");
 }
 
 /* Check if a string contains line breaks */
@@ -64,26 +166,37 @@ function recordMirrorFailure(runId, operation, error, login = null) {
     error_message: normalizeRustStorageErrorMessage(error),
 
     is_deleted: false,
-    has_empty_password: false,
+
+    origin_error: null,
+    origin_fixable: false,
+    form_action_origin_error: null,
+    form_action_origin_fixable: false,
+
     has_punycode_origin: false,
-    has_single_dot_origin: false,
-    has_non_http_origin: false,
+    has_punycode_form_action_origin: false,
+
+    has_empty_password: false,
     has_username_line_break: false,
     has_username_nul: false,
   };
 
   if (login) {
     data.is_deleted = login.deleted;
+
+    const [originError, fixableOriginError] = validateOrigin(login.origin);
+    data.origin_error = originError;
+    data.origin_fixable = !!fixableOriginError;
+    const [formActionOriginError, fixableFormActionOriginError] =
+      validateOrigin(login.formActionOrigin);
+    data.form_action_origin_error = formActionOriginError;
+    data.form_action_origin_fixable = !!fixableFormActionOriginError;
+
+    data.has_punycode_origin = isPunycodeOrigin(login.origin);
+    data.has_punycode_form_action_origin = isPunycodeOrigin(
+      login.formActionOrigin
+    );
+
     data.has_empty_password = !login.password;
-    data.has_punycode_origin = isPunycodeOrigin(
-      login.origin || login.formActionOrigin
-    );
-    data.has_single_dot_origin = isSingleDot(
-      login.origin || login.formActionOrigin
-    );
-    data.has_non_http_origin = !isHttpOrigin(
-      login.origin || login.formActionOrigin
-    );
     data.has_username_line_break = containsLineBreaks(login.username);
     data.has_username_nul = containsNul(login.username);
   }

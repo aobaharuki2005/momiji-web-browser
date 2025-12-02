@@ -683,37 +683,59 @@ add_task(async function test_punycode_formActionOrigin_metric() {
 });
 
 /*
- * Tests that we collect telemetry for single dot in origin
+ * Tests that we collect telemetry about several origin errors
  */
-add_task(async function test_single_dot_in_origin() {
-  // ensure mirror is on
-  await SpecialPowers.pushPrefEnv({
-    set: [["signon.rustMirror.enabled", true]],
+const originsToTest = {
+  "//example.com": "MissingProtocol",
+  "//example.com/path": "MissingProtocol",
+  "example.com": "MissingProtocol",
+  "example.com/path": "MissingProtocol",
+  "hptts//example.com": "ProtocolTypo",
+  "htp//example.com": "ProtocolTypo",
+  "htpps//example.com": "ProtocolTypo",
+  "http//example.com": "ProtocolTypo",
+  "http//example.com/path": "ProtocolTypo",
+  https: "ProtocolNameOnly",
+  "https//example.com": "ProtocolTypo",
+  "https//example.com:abc": "MissingProtocol",
+  "https:": "ProtocolFragmentOnly",
+  "https:// example.com": "UnknownError",
+  "https://": "ProtocolOnly",
+  "https:///": "UnknownError",
+  "https://exa mple.com": "UnknownError",
+  "htttp//example.com": "ProtocolTypo",
+  "www.example.com": "MissingProtocol",
+};
+for (const origin in originsToTest) {
+  add_task(async function () {
+    // ensure mirror is on
+    await SpecialPowers.pushPrefEnv({
+      set: [["signon.rustMirror.enabled", true]],
+    });
+
+    Services.fog.testResetFOG();
+
+    const login = LoginTestUtils.testData.formLogin({
+      origin,
+      formActionOrigin: "https://example.com",
+      username: "user1",
+      password: "pass1",
+    });
+
+    const waitForGleanEvent = BrowserTestUtils.waitForCondition(
+      () => Glean.pwmgr.rustMirrorStatus.testGetValue()?.length == 1,
+      "event has been emitted"
+    );
+    await Services.logins.addLoginAsync(login);
+    await waitForGleanEvent;
+
+    const [evt] = Glean.pwmgr.rustWriteFailure.testGetValue();
+    Assert.equal(evt.extra?.origin_error, originsToTest[origin]);
+
+    LoginTestUtils.clearData();
+    await SpecialPowers.flushPrefEnv();
   });
-
-  Services.fog.testResetFOG();
-
-  const badOrigin = ".";
-  const login = LoginTestUtils.testData.formLogin({
-    origin: badOrigin,
-    formActionOrigin: "https://example.com",
-    username: "user1",
-    password: "pass1",
-  });
-
-  const waitForGleanEvent = BrowserTestUtils.waitForCondition(
-    () => Glean.pwmgr.rustMirrorStatus.testGetValue()?.length == 1,
-    "event has been emitted"
-  );
-  await Services.logins.addLoginAsync(login);
-  await waitForGleanEvent;
-
-  const [evt] = Glean.pwmgr.rustWriteFailure.testGetValue();
-  Assert.ok(evt.extra?.has_single_dot_origin);
-
-  LoginTestUtils.clearData();
-  await SpecialPowers.flushPrefEnv();
-});
+}
 
 /*
  * Tests that we collect telemetry if the username contains line breaks.
