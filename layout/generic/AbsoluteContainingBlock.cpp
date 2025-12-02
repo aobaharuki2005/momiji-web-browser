@@ -1605,13 +1605,6 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     aKidFrame->UpdateOverflow();
   }();
 
-  // If author asked for `position-visibility: no-overflow` and we overflow
-  // `usedCB`, treat as "strongly hidden".
-  aKidFrame->AddOrRemoveStateBits(
-      NS_FRAME_POSITION_VISIBILITY_HIDDEN,
-      isOverflowingCB && aKidFrame->StylePosition()->mPositionVisibility ==
-                             StylePositionVisibility::NO_OVERFLOW);
-
   if (currentFallbackIndex) {
     aKidFrame->SetOrUpdateDeletableProperty(
         nsIFrame::LastSuccessfulPositionFallback(), *currentFallbackIndex,
@@ -1625,6 +1618,16 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
                  ToString(aKidFrame->GetRect()));
   }
 #endif
+  // If author asked for `position-visibility: no-overflow` and we overflow
+  // `usedCB`, treat as "strongly hidden". Note that for anchored frames this
+  // happens in ComputePositionVisibility. But no-overflow also applies to
+  // non-anchored frames.
+  if (!aAnchorPosResolutionCache) {
+    aKidFrame->AddOrRemoveStateBits(
+        NS_FRAME_POSITION_VISIBILITY_HIDDEN,
+        isOverflowingCB && aKidFrame->StylePosition()->mPositionVisibility &
+                               StylePositionVisibility::NO_OVERFLOW);
+  }
 
   if (aOverflowAreas) {
     aOverflowAreas->UnionWith(aKidFrame->GetOverflowAreasRelativeToParent());

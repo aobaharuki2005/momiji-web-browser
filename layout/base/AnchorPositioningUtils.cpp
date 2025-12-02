@@ -10,6 +10,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/dom/DOMIntersectionObserver.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "nsCanvasFrame.h"
@@ -26,6 +27,16 @@
 namespace mozilla {
 
 namespace {
+
+bool IsScrolled(const nsIFrame* aFrame) {
+  switch (aFrame->Style()->GetPseudoType()) {
+    case PseudoStyleType::scrolledContent:
+    case PseudoStyleType::scrolledCanvas:
+      return true;
+    default:
+      return false;
+  }
+}
 
 bool DoTreeScopedPropertiesOfElementApplyToContent(
     const nsINode* aStylePropertyElement, const nsINode* aStyledContent) {
@@ -800,7 +811,7 @@ const nsAtom* AnchorPositioningUtils::GetUsedAnchorName(
   return nullptr;
 }
 
-const nsIFrame* AnchorPositioningUtils::GetAnchorPosImplicitAnchor(
+nsIFrame* AnchorPositioningUtils::GetAnchorPosImplicitAnchor(
     const nsIFrame* aFrame) {
   const auto* frameContent = aFrame->GetContent();
   const bool hasElement = frameContent && frameContent->IsElement();
@@ -824,7 +835,7 @@ const nsIFrame* AnchorPositioningUtils::GetAnchorPosImplicitAnchor(
     return nullptr;
   }
 
-  const auto* pseudoRootFrame = pseudoRoot->GetPrimaryFrame();
+  auto* pseudoRootFrame = pseudoRoot->GetPrimaryFrame();
   if (!pseudoRootFrame) {
     return nullptr;
   }
@@ -848,7 +859,7 @@ AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(
   // TODO(dshin, bug 1989292): This just gets local containing block.
   const auto* cb = aPositioned->GetParent();
   MOZ_ASSERT(cb);
-  if (cb->Style()->GetPseudoType() == PseudoStyleType::scrolledContent) {
+  if (IsScrolled(cb)) {
     cb = aPositioned->GetParent();
   }
   return ContainingBlockInfo{cb->GetPaddingRectRelativeToSelf()};
@@ -866,7 +877,7 @@ bool AnchorPositioningUtils::FitsInContainingBlock(
   const auto rect = [&]() {
     auto rect = aPositioned->GetMarginRect();
     const auto* cb = aPositioned->GetParent();
-    if (cb->Style()->GetPseudoType() != PseudoStyleType::scrolledContent) {
+    if (!IsScrolled(cb)) {
       return rect;
     }
     const ScrollContainerFrame* scrollContainer =
@@ -908,6 +919,130 @@ nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
   return anchor;
 }
 
+static bool TriggerFallbackReflow(PresShell* aPresShell, nsIFrame* aPositioned,
+                                  AnchorPosReferenceData* aReferencedAnchors,
+                                  bool aEvaluateAllFallbacksIfNeeded) {
+  auto totalFallbacks =
+      aPositioned->StylePosition()->mPositionTryFallbacks._0.Length();
+  if (!totalFallbacks) {
+    // No fallbacks specified.
+    return false;
+  }
+
+  const bool positionedFitsInCB = AnchorPositioningUtils::FitsInContainingBlock(
+      AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(aPositioned),
+      aPositioned, aReferencedAnchors);
+  if (positionedFitsInCB) {
+    return false;
+  }
+
+  // TODO(bug 1987964): Try to only do this when the scroll offset changes?
+  auto* lastSuccessfulPosition =
+      aPositioned->GetProperty(nsIFrame::LastSuccessfulPositionFallback());
+  const bool needsRetry =
+      aEvaluateAllFallbacksIfNeeded ||
+      (lastSuccessfulPosition && !lastSuccessfulPosition->mTriedAllFallbacks);
+  if (!needsRetry) {
+    return false;
+  }
+  // We want to retry from the first position; remove the last position
+  // property so all potential positions are re-evaluated.
+  aPositioned->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
+  aPresShell->FrameNeedsReflow(aPositioned, mozilla::IntrinsicDirty::None,
+                               NS_FRAME_IS_DIRTY);
+  return true;
+}
+
+static bool AnchorIsEffectivelyHidden(nsIFrame* aAnchor) {
+  if (!aAnchor->StyleVisibility()->IsVisible()) {
+    return true;
+  }
+  for (auto* anchor = aAnchor; anchor; anchor = anchor->GetParent()) {
+    if (anchor->HasAnyStateBits(NS_FRAME_POSITION_VISIBILITY_HIDDEN)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool ComputePositionVisibility(
+    PresShell* aPresShell, nsIFrame* aPositioned,
+    AnchorPosReferenceData* aReferencedAnchors) {
+  auto vis = aPositioned->StylePosition()->mPositionVisibility;
+  if (vis & StylePositionVisibility::ALWAYS) {
+    MOZ_ASSERT(vis == StylePositionVisibility::ALWAYS,
+               "always can't be combined");
+    return true;
+  }
+  if (vis & StylePositionVisibility::ANCHORS_VALID) {
+    for (const auto& ref : *aReferencedAnchors) {
+      if (ref.GetData().isNothing()) {
+        return false;
+      }
+    }
+  }
+  if (vis & StylePositionVisibility::NO_OVERFLOW) {
+    const bool positionedFitsInCB =
+        AnchorPositioningUtils::FitsInContainingBlock(
+            AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(
+                aPositioned),
+            aPositioned, aReferencedAnchors);
+    if (!positionedFitsInCB) {
+      return false;
+    }
+  }
+  if (vis & StylePositionVisibility::ANCHORS_VISIBLE) {
+    const auto* defaultAnchorName =
+        aReferencedAnchors->mDefaultAnchorName.get();
+    if (defaultAnchorName) {
+      auto* defaultAnchor =
+          aPresShell->GetAnchorPosAnchor(defaultAnchorName, aPositioned);
+      if (defaultAnchor && AnchorIsEffectivelyHidden(defaultAnchor)) {
+        return false;
+      }
+      // If both are in the same cb the expectation is that this doesn't apply
+      // because there are no intervening clips. I think that's broken, see
+      // https://github.com/w3c/csswg-drafts/issues/13176
+      if (defaultAnchor &&
+          defaultAnchor->GetParent() != aPositioned->GetParent()) {
+        auto* intersectionRoot = aPositioned->GetParent();
+        nsRect rootRect = intersectionRoot->InkOverflowRectRelativeToSelf();
+        if (IsScrolled(intersectionRoot)) {
+          intersectionRoot = intersectionRoot->GetParent();
+          ScrollContainerFrame* sc = do_QueryFrame(intersectionRoot);
+          rootRect = sc->GetScrollPortRectAccountingForDynamicToolbar();
+        }
+        const auto* doc = aPositioned->PresContext()->Document();
+        const nsINode* root =
+            intersectionRoot->GetContent()
+                ? static_cast<nsINode*>(intersectionRoot->GetContent())
+                : doc;
+        rootRect = nsLayoutUtils::TransformFrameRectToAncestor(
+            intersectionRoot, rootRect,
+            nsLayoutUtils::GetContainingBlockForClientRect(intersectionRoot));
+        const auto input = dom::IntersectionInput{
+            .mIsImplicitRoot = false,
+            .mRootNode = root,
+            .mRootFrame = intersectionRoot,
+            .mRootRect = rootRect,
+            .mRootMargin = {},
+            .mScrollMargin = {},
+            .mRemoteDocumentVisibleRect = {},
+        };
+        const auto output =
+            dom::DOMIntersectionObserver::Intersect(input, defaultAnchor);
+        // NOTE(emilio): It is a bit weird to also check that mIntersectionRect
+        // is non-empty, see https://github.com/w3c/csswg-drafts/issues/13176.
+        if (!output.Intersects() || (output.mIntersectionRect->IsEmpty() &&
+                                     !defaultAnchor->GetRect().IsEmpty())) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
 bool AnchorPositioningUtils::TriggerLayoutOnOverflow(
     PresShell* aPresShell, bool aEvaluateAllFallbacksIfNeeded) {
   bool didLayoutPositionedItems = false;
@@ -919,38 +1054,25 @@ bool AnchorPositioningUtils::TriggerLayoutOnOverflow(
       continue;
     }
 
-    auto totalFallbacks =
-        positioned->StylePosition()->mPositionTryFallbacks._0.Length();
-    if (!totalFallbacks) {
-      // No fallbacks specified.
-      continue;
-    }
-
-    const bool positionedFitsInCB =
-        AnchorPositioningUtils::FitsInContainingBlock(
-            AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(
-                positioned),
-            positioned, referencedAnchors);
-    if (positionedFitsInCB) {
-      continue;
-    }
-
-    // TODO(bug 1987964): Try to only do this when the scroll offset changes?
-    auto* lastSuccessfulPosition =
-        positioned->GetProperty(nsIFrame::LastSuccessfulPositionFallback());
-    const bool needsRetry =
-        aEvaluateAllFallbacksIfNeeded ||
-        (lastSuccessfulPosition && !lastSuccessfulPosition->mTriedAllFallbacks);
-    if (needsRetry) {
-      // We want to retry from the first position; remove the last position
-      // property so all potential positions are re-evaluated.
-      positioned->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
-      aPresShell->FrameNeedsReflow(positioned, mozilla::IntrinsicDirty::None,
-                                   NS_FRAME_IS_DIRTY);
+    if (TriggerFallbackReflow(aPresShell, positioned, referencedAnchors,
+                              aEvaluateAllFallbacksIfNeeded)) {
       didLayoutPositionedItems = true;
     }
-  }
 
+    if (didLayoutPositionedItems) {
+      // We'll come back to evaluate position-visibility later.
+      continue;
+    }
+    const bool shouldBeVisible =
+        ComputePositionVisibility(aPresShell, positioned, referencedAnchors);
+    const bool isVisible =
+        !positioned->HasAnyStateBits(NS_FRAME_POSITION_VISIBILITY_HIDDEN);
+    if (shouldBeVisible != isVisible) {
+      positioned->AddOrRemoveStateBits(NS_FRAME_POSITION_VISIBILITY_HIDDEN,
+                                       !shouldBeVisible);
+      positioned->InvalidateFrameSubtree();
+    }
+  }
   return didLayoutPositionedItems;
 }
 

@@ -283,7 +283,7 @@ struct AnchorPositioningUtils {
    * element. For popovers, this returns the primary frame of the invoker. In
    * all other cases, returns null.
    */
-  static const nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
+  static nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
 
   struct NearestScrollFrameInfo {
     const nsIFrame* mScrollContainer = nullptr;
