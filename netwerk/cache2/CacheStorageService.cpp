@@ -2295,8 +2295,10 @@ void CacheStorageService::TelemetryRecordEntryRemoval(CacheEntry* entry) {
 
   glean::network::http_cache_entry_reuse_count.AccumulateSingleSample(
       entry->UseCount());
-  glean::network::http_cache_entry_alive_time.AccumulateRawDuration(
-      TimeStamp::NowLoRes() - entry->LoadStart());
+  if (Telemetry::CanRecordPrereleaseData()) {
+    glean::network::http_cache_entry_alive_time.AccumulateRawDuration(
+        TimeStamp::NowLoRes() - entry->LoadStart());
+  }
 }
 
 // nsIMemoryReporter

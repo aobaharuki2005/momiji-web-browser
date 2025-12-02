@@ -11656,7 +11656,6 @@ void nsHttpChannel::ReportRcwnStats(bool isFromNet) {
           nsPrintfCString(
               "Cache won or was replaced, valid = %d, channel %p, URI %s",
               LoadCachedContentIsValid(), this, mSpec.get()));
-      glean::network::race_cache_bandwidth_not_race.Accumulate(mTransferSize);
     }
   } else {
     if (mRaceCacheWithNetwork || mRaceDelay) {
@@ -11667,8 +11666,6 @@ void nsHttpChannel::ReportRcwnStats(bool isFromNet) {
       gIOService->IncrementCacheWonRequestNumber();
       glean::network::race_cache_bandwidth_race_cache_win.Accumulate(
           mTransferSize);
-    } else {
-      glean::network::race_cache_bandwidth_not_race.Accumulate(mTransferSize);
     }
   }
 
