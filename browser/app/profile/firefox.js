@@ -688,6 +688,7 @@ pref("places.semanticHistory.featureGate", true);
 #else
 pref("places.semanticHistory.featureGate", false);
 #endif
+pref("places.semanticHistory.supportedRegions", "[[\"AU\",[\"en-*\"]],[\"CA\",[\"en-*\"]],[\"GB\",[\"en-*\"]],[\"IE\",[\"en-*\"]],[\"NZ\",[\"en-*\"]],[\"PH\",[\"en-*\"]],[\"US\",[\"en-*\"]]]");
 
 // Minimum length threshold for semantic history search
 pref("browser.urlbar.suggest.semanticHistory.minLength", 5);
