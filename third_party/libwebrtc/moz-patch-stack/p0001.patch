@@ -1,425 +1,118 @@
 From: Daniel Baker <dbaker@mozilla.com>
-Date: Mon, 1 Dec 2025 19:28:40 -0700
-Subject: (tmp-cherry-pick) Revert "Mark deprecated features with
- [[deprecated]]" (7e1a12d6ff)
+Date: Mon, 1 Dec 2025 19:31:22 -0700
+Subject: (tmp-cherry-pick) [M142] Revert "Add instructions for removing a
+ Trampoline-wrapped Signal" (29d6eabaf0)
 
-This reverts commit 3cf5dc1bece892a9c6e359bfa9931a88f896df12.
+This reverts commit bb6b3aab159ebcd825526cf831f54170ccb2584d.
 
-Reason for revert: Broke downstream project (Nearby)
+Reason for revert: Need to fix downstream Chromium issues.
 
 Original change's description:
-> Mark deprecated features with [[deprecated]]
+> Add instructions for removing a Trampoline-wrapped Signal
 >
-> This was the result of asking Gemini
-> "Consider the interfaces in @api. There are comments that indicate that certain methods are deprecated, but the methods don't have [[deprecated]] on them. Make a CL that adds [[deprecated]] to those methods"
+> Also apply the instructions to one Signal.
 >
-> followed by a few rounds of reverting and working around errors.
->
-> Bug: None
-> Change-Id: I5d7b1f89fff01277ce96e940aa7340cdfcb728cc
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/407441
+> Bug: webrtc:42222066
+> Change-Id: I63409d968d27a843b0ac7c61a122a1b685cb7a6f
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408883
 > Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
 > Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45623}
+> Cr-Commit-Position: refs/heads/main@{#45624}
 
-Bug: None
-No-Presubmit: true
-No-Tree-Checks: true
-No-Try: true
-Change-Id: Ib5c58e36e94b915a01514455c8a2ad561b61a5c9
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/409000
-Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+(cherry picked from commit 716c8eb942a74ad641bbace8c1db521b4857c636)
+
+Bug: webrtc:42222066, chromium:449225599, chromium:450516559
+No-IWYU: Revert
+Change-Id: I7fdf1694664b11ffcfd91916f1e98ef88254059d
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/413923
+Auto-Submit: Harald Alvestrand <hta@webrtc.org>
 Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#45629}
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#45840}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/415743
+Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/7444@{#2}
+Cr-Branched-From: f70dc714a073397356f6ed866481da73f90f0b96-refs/heads/main@{#45766}
 ---
- api/audio/audio_processing_statistics.cc          |  5 -----
- api/audio/audio_processing_statistics.h           |  5 +----
- api/call/bitrate_allocation.h                     |  1 -
- api/candidate.cc                                  |  5 -----
- api/candidate.h                                   |  4 +++-
- api/data_channel_interface.h                      |  5 +----
- api/dtls_transport_interface.h                    | 15 +++++++--------
- api/dtmf_sender_interface.h                       |  3 +--
- api/jsep.h                                        |  3 ++-
- api/peer_connection_interface.h                   |  4 ++--
- api/rtp_receiver_interface.h                      |  5 +++--
- api/rtp_sender_interface.h                        |  5 +++--
- api/uma_metrics.h                                 |  2 +-
- .../audio_processing/audio_processing_unittest.cc |  3 ---
- .../include/audio_frame_proxies.cc                |  4 ----
- pc/data_channel_unittest.cc                       |  3 ---
- pc/dtmf_sender.cc                                 |  6 ------
- pc/dtmf_sender_unittest.cc                        |  2 ++
- pc/peer_connection_integrationtest.cc             |  3 ---
- pc/sctp_data_channel.cc                           |  3 ---
- sdk/objc/unittests/RTCIceCandidateTest.mm         |  3 ++-
- 21 files changed, 28 insertions(+), 61 deletions(-)
+ p2p/base/ice_transport_internal.cc |  5 +++--
+ p2p/base/ice_transport_internal.h  |  9 ++++++---
+ rtc_base/sigslot_trampoline.h      | 12 ------------
+ 3 files changed, 9 insertions(+), 17 deletions(-)
 
-diff --git a/api/audio/audio_processing_statistics.cc b/api/audio/audio_processing_statistics.cc
-index b6e92eaa12..90da7e8874 100644
---- a/api/audio/audio_processing_statistics.cc
-+++ b/api/audio/audio_processing_statistics.cc
-@@ -14,13 +14,8 @@ namespace webrtc {
- 
- AudioProcessingStats::AudioProcessingStats() = default;
- 
--// TODO: https://issues.webrtc.org/42221314 - remove pragma when deprecated
--// field `voice_detected` is removed.
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
- AudioProcessingStats::AudioProcessingStats(const AudioProcessingStats& other) =
-     default;
--#pragma clang diagnostic pop
- 
- AudioProcessingStats::~AudioProcessingStats() = default;
- 
-diff --git a/api/audio/audio_processing_statistics.h b/api/audio/audio_processing_statistics.h
-index 897af0c2c3..d6f8b6e61c 100644
---- a/api/audio/audio_processing_statistics.h
-+++ b/api/audio/audio_processing_statistics.h
-@@ -20,8 +20,6 @@
- namespace webrtc {
- // This version of the stats uses Optionals, it will replace the regular
- // AudioProcessingStatistics struct.
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
- struct RTC_EXPORT AudioProcessingStats {
-   AudioProcessingStats();
-   AudioProcessingStats(const AudioProcessingStats& other);
-@@ -33,7 +31,7 @@ struct RTC_EXPORT AudioProcessingStats {
-   // It is conservative in flagging audio as speech, with low likelihood of
-   // incorrectly flagging a frame as voice.
-   // Only reported if voice detection is enabled in AudioProcessing::Config.
--  [[deprecated("bugs.webrtc.org/11226")]] std::optional<bool> voice_detected;
-+  std::optional<bool> voice_detected;
- 
-   // AEC Statistics.
-   // ERL = 10log_10(P_far / P_echo)
-@@ -64,7 +62,6 @@ struct RTC_EXPORT AudioProcessingStats {
-   // call to `GetStatistics()`.
-   std::optional<int32_t> delay_ms;
- };
--#pragma clang diagnostic pop
- 
- }  // namespace webrtc
- 
-diff --git a/api/call/bitrate_allocation.h b/api/call/bitrate_allocation.h
-index 20f8b69b13..e0557504d6 100644
---- a/api/call/bitrate_allocation.h
-+++ b/api/call/bitrate_allocation.h
-@@ -28,7 +28,6 @@ struct BitrateAllocationUpdate {
-   // Predicted round trip time.
-   TimeDelta round_trip_time = TimeDelta::PlusInfinity();
-   // `bwe_period` is deprecated.
--  // TODO: https://issues.webrtc.org/442860748 - complete removal.
-   TimeDelta bwe_period = TimeDelta::PlusInfinity();
-   // Congestion window pushback bitrate reduction fraction. Used in
-   // VideoStreamEncoder to reduce the bitrate by the given fraction
-diff --git a/api/candidate.cc b/api/candidate.cc
-index a92f00e6ab..bb12f06a3b 100644
---- a/api/candidate.cc
-+++ b/api/candidate.cc
-@@ -195,11 +195,6 @@ bool Candidate::operator!=(const Candidate& o) const {
-   return !(*this == o);
+diff --git a/p2p/base/ice_transport_internal.cc b/p2p/base/ice_transport_internal.cc
+index 7843a8b37d..a4b96db00b 100644
+--- a/p2p/base/ice_transport_internal.cc
++++ b/p2p/base/ice_transport_internal.cc
+@@ -236,7 +236,8 @@ RTCError IceConfig::IsValid() const {
  }
  
--Candidate Candidate::ToSanitizedCopy(bool use_hostname_address,
--                                     bool filter_related_address) const {
--  return ToSanitizedCopy(use_hostname_address, filter_related_address, false);
--}
--
- Candidate Candidate::ToSanitizedCopy(bool use_hostname_address,
-                                      bool filter_related_address,
-                                      bool filter_ufrag) const {
-diff --git a/api/candidate.h b/api/candidate.h
-index 7e2b13838f..c6f16a50f7 100644
---- a/api/candidate.h
-+++ b/api/candidate.h
-@@ -236,7 +236,9 @@ class RTC_EXPORT Candidate {
-   // any remote ice parameters have been set.
-   [[deprecated("Use variant with filter_ufrag")]] Candidate ToSanitizedCopy(
-       bool use_hostname_address,
--      bool filter_related_address) const;
-+      bool filter_related_address) const {
-+    return ToSanitizedCopy(use_hostname_address, filter_related_address, false);
-+  }
-   Candidate ToSanitizedCopy(bool use_hostname_address,
-                             bool filter_related_address,
-                             bool filter_ufrag) const;
-diff --git a/api/data_channel_interface.h b/api/data_channel_interface.h
-index e9c0c78750..4a8299a0b7 100644
---- a/api/data_channel_interface.h
-+++ b/api/data_channel_interface.h
-@@ -32,12 +32,10 @@ namespace webrtc {
+ IceTransportInternal::IceTransportInternal()
+-    : role_conflict_trampoline_(this),
++    : candidate_gathered_trampoline_(this),
++      role_conflict_trampoline_(this),
+       ice_transport_state_changed_trampoline_(this),
+       destroyed_trampoline_(this) {}
  
- // C++ version of: https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannelinit
- // TODO(deadbeef): Use std::optional for the "-1 if unset" things.
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
- struct DataChannelInit {
-   // Deprecated. Reliability is assumed, and channel will be unreliable if
-   // maxRetransmitTime or MaxRetransmits is set.
--  [[deprecated]] bool reliable = false;
-+  bool reliable = false;
- 
-   // True if ordered delivery is required.
-   bool ordered = true;
-@@ -71,7 +69,6 @@ struct DataChannelInit {
-   // https://w3c.github.io/webrtc-priority/#new-rtcdatachannelinit-member
-   std::optional<PriorityValue> priority;
- };
--#pragma clang diagnostic pop
- 
- // At the JavaScript level, data can be passed in as a string or a blob, so
- // this structure's `binary` flag tells whether the data should be interpreted
-diff --git a/api/dtls_transport_interface.h b/api/dtls_transport_interface.h
-index 3b11015bc0..79099f43a2 100644
---- a/api/dtls_transport_interface.h
-+++ b/api/dtls_transport_interface.h
-@@ -55,14 +55,13 @@ class RTC_EXPORT DtlsTransportInformation {
-       std::optional<int> srtp_cipher_suite,
-       std::unique_ptr<SSLCertChain> remote_ssl_certificates,
-       std::optional<int> ssl_group_id);
--  [[deprecated("Use version with role parameter")]] ABSL_DEPRECATED(
--      "Use version with role parameter")
--      DtlsTransportInformation(
--          DtlsTransportState state,
--          std::optional<int> tls_version,
--          std::optional<int> ssl_cipher_suite,
--          std::optional<int> srtp_cipher_suite,
--          std::unique_ptr<SSLCertChain> remote_ssl_certificates);
-+  ABSL_DEPRECATED("Use version with role parameter")
-+  DtlsTransportInformation(
-+      DtlsTransportState state,
-+      std::optional<int> tls_version,
-+      std::optional<int> ssl_cipher_suite,
-+      std::optional<int> srtp_cipher_suite,
-+      std::unique_ptr<SSLCertChain> remote_ssl_certificates);
- 
-   // Copy and assign
-   DtlsTransportInformation(const DtlsTransportInformation& c);
-diff --git a/api/dtmf_sender_interface.h b/api/dtmf_sender_interface.h
-index ba1948f430..3b184832c0 100644
---- a/api/dtmf_sender_interface.h
-+++ b/api/dtmf_sender_interface.h
-@@ -32,8 +32,7 @@ class DtmfSenderObserverInterface {
-   // DEPRECATED: Older API without tone buffer.
-   // TODO(bugs.webrtc.org/9725): Remove old API and default implementation
-   // when old callers are gone.
--  [[deprecated("Use OnToneChange with tone_buffer")]] virtual void OnToneChange(
--      const std::string& /* tone */) {}
-+  virtual void OnToneChange(const std::string& /* tone */) {}
- 
-  protected:
-   virtual ~DtmfSenderObserverInterface() = default;
-diff --git a/api/jsep.h b/api/jsep.h
-index df0ebdcc43..7495535e31 100644
---- a/api/jsep.h
-+++ b/api/jsep.h
-@@ -89,7 +89,8 @@ class RTC_EXPORT IceCandidate final {
-   std::string ToString() const;
- 
-   // TODO: webrtc:406795492 - Deprecate and remove this method.
--  [[deprecated("Use ToString()")]] bool ToString(std::string* out) const {
-+  // [[deprecated("Use ToString()")]]
-+  bool ToString(std::string* out) const {
-     if (!out)
-       return false;
-     *out = ToString();
-diff --git a/api/peer_connection_interface.h b/api/peer_connection_interface.h
-index aea35c2514..15942a40e1 100644
---- a/api/peer_connection_interface.h
-+++ b/api/peer_connection_interface.h
-@@ -1132,8 +1132,8 @@ class RTC_EXPORT PeerConnectionInterface : public RefCountInterface {
-   // to the MID of the m= section that generated the candidate.
-   // TODO(bugs.webrtc.org/8395): Use IceCandidate instead of
-   // Candidate, which would avoid the transport_name oddity.
--  [[deprecated("Use IceCandidate version")]] virtual bool RemoveIceCandidates(
--      const std::vector<Candidate>& candidates);
-+  [[deprecated("Use IceCandidate version")]]
-+  virtual bool RemoveIceCandidates(const std::vector<Candidate>& candidates);
- 
-   // SetBitrate limits the bandwidth allocated for all RTP streams sent by
-   // this PeerConnection. Other limitations might affect these limits and
-diff --git a/api/rtp_receiver_interface.h b/api/rtp_receiver_interface.h
-index 8e301ee575..bf87f463c3 100644
---- a/api/rtp_receiver_interface.h
-+++ b/api/rtp_receiver_interface.h
-@@ -116,8 +116,9 @@ class RTC_EXPORT RtpReceiverInterface : public RefCountInterface,
-   // Sets a frame transformer between the depacketizer and the decoder to enable
-   // client code to transform received frames according to their own processing
-   // logic.
--  [[deprecated("Use SetFrameTransformer")]] virtual void
--  SetDepacketizerToDecoderFrameTransformer(
-+  // TODO: bugs.webrtc.org/15929 - add [[deprecated("Use SetFrameTransformer")]]
-+  // when usage in Chrome is removed
-+  virtual void SetDepacketizerToDecoderFrameTransformer(
-       scoped_refptr<FrameTransformerInterface> frame_transformer) {
-     SetFrameTransformer(std::move(frame_transformer));
-   }
-diff --git a/api/rtp_sender_interface.h b/api/rtp_sender_interface.h
-index db04b9580c..2a7907dc4e 100644
---- a/api/rtp_sender_interface.h
-+++ b/api/rtp_sender_interface.h
-@@ -118,8 +118,9 @@ class RTC_EXPORT RtpSenderInterface : public RefCountInterface,
-   // user. This can be used to update the state of the object.
-   virtual scoped_refptr<FrameEncryptorInterface> GetFrameEncryptor() const = 0;
- 
--  [[deprecated("Use SetFrameTransformer")]] virtual void
--  SetEncoderToPacketizerFrameTransformer(
-+  // TODO: bugs.webrtc.org/15929 - add [[deprecated("Use SetFrameTransformer")]]
-+  // when usage in Chrome is removed
-+  virtual void SetEncoderToPacketizerFrameTransformer(
-       scoped_refptr<FrameTransformerInterface> frame_transformer) {
-     SetFrameTransformer(std::move(frame_transformer));
-   }
-diff --git a/api/uma_metrics.h b/api/uma_metrics.h
-index 53511ef762..d7946885c7 100644
---- a/api/uma_metrics.h
-+++ b/api/uma_metrics.h
-@@ -48,7 +48,7 @@ enum PeerConnectionMetricsName {
- enum IceCandidatePairType {
-   // HostHost is deprecated. It was replaced with the set of types at the bottom
-   // to report private or public host IP address.
--  kIceCandidatePairHostHost [[deprecated]] = 0,
-+  kIceCandidatePairHostHost = 0,
-   kIceCandidatePairHostSrflx = 1,
-   kIceCandidatePairHostRelay = 2,
-   kIceCandidatePairHostPrflx = 3,
-diff --git a/modules/audio_processing/audio_processing_unittest.cc b/modules/audio_processing/audio_processing_unittest.cc
-index 8a3651566a..ce668bad1f 100644
---- a/modules/audio_processing/audio_processing_unittest.cc
-+++ b/modules/audio_processing/audio_processing_unittest.cc
-@@ -2875,10 +2875,7 @@ TEST(ApmStatistics, DoNotReportVoiceDetectedStat) {
-                 StreamConfig(frame.sample_rate_hz, frame.num_channels()),
-                 frame.data.data()),
-             0);
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   EXPECT_FALSE(apm->GetStatistics().voice_detected.has_value());
--#pragma clang diagnostic pop
+@@ -265,7 +266,7 @@ void IceTransportInternal::RemoveGatheringStateCallback(
+ void IceTransportInternal::SubscribeCandidateGathered(
+     absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
+         callback) {
+-  candidate_gathered_callbacks_.AddReceiver(std::move(callback));
++  candidate_gathered_trampoline_.Subscribe(std::move(callback));
  }
  
- TEST(ApmStatistics, GetStatisticsReportsNoEchoDetectorStatsWhenDisabled) {
-diff --git a/modules/audio_processing/include/audio_frame_proxies.cc b/modules/audio_processing/include/audio_frame_proxies.cc
-index 84523250a5..97d81e6b85 100644
---- a/modules/audio_processing/include/audio_frame_proxies.cc
-+++ b/modules/audio_processing/include/audio_frame_proxies.cc
-@@ -31,15 +31,11 @@ int ProcessAudioFrame(AudioProcessing* ap, AudioFrame* frame) {
+ void IceTransportInternal::SubscribeRoleConflict(
+diff --git a/p2p/base/ice_transport_internal.h b/p2p/base/ice_transport_internal.h
+index 69b8214fe1..0e233df6a5 100644
+--- a/p2p/base/ice_transport_internal.h
++++ b/p2p/base/ice_transport_internal.h
+@@ -352,9 +352,11 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
+   void RemoveGatheringStateCallback(const void* removal_tag);
  
-   AudioProcessingStats stats = ap->GetStatistics();
- 
--  // TODO: https://issues.webrtc.org/42221314 - remove when deleted
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   if (stats.voice_detected) {
-     frame->vad_activity_ = *stats.voice_detected
-                                ? AudioFrame::VADActivity::kVadActive
-                                : AudioFrame::VADActivity::kVadPassive;
+   // Handles sending and receiving of candidates.
++  sigslot::signal2<IceTransportInternal*, const Candidate&>
++      SignalCandidateGathered;
+   void NotifyCandidateGathered(IceTransportInternal* transport,
+                                const Candidate& candidate) {
+-    candidate_gathered_callbacks_.Send(transport, candidate);
++    SignalCandidateGathered(transport, candidate);
    }
--#pragma clang diagnostic pop
+   void SubscribeCandidateGathered(
+       absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
+@@ -464,8 +466,9 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
+       candidate_pair_change_callback_;
  
-   return result;
- }
-diff --git a/pc/data_channel_unittest.cc b/pc/data_channel_unittest.cc
-index dca2d6ece9..603b7f91d6 100644
---- a/pc/data_channel_unittest.cc
-+++ b/pc/data_channel_unittest.cc
-@@ -164,11 +164,8 @@ TEST_F(SctpDataChannelTest, VerifyConfigurationGetters) {
-   // Note that the `init_.reliable` field is deprecated, so we directly set
-   // it here to match spec behavior for purposes of checking the `reliable()`
-   // getter.
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   init_.reliable = (!init_.maxRetransmits && !init_.maxRetransmitTime);
-   EXPECT_EQ(channel_->reliable(), init_.reliable);
--#pragma clang diagnostic pop
-   EXPECT_EQ(channel_->ordered(), init_.ordered);
-   EXPECT_EQ(channel_->negotiated(), init_.negotiated);
-   EXPECT_EQ(channel_->priority(), PriorityValue(Priority::kLow));
-diff --git a/pc/dtmf_sender.cc b/pc/dtmf_sender.cc
-index 7890e58841..703fe9b459 100644
---- a/pc/dtmf_sender.cc
-+++ b/pc/dtmf_sender.cc
-@@ -191,10 +191,7 @@ void DtmfSender::DoInsertDtmf() {
-     // Fire a “OnToneChange” event with an empty string and stop.
-     if (observer_) {
-       observer_->OnToneChange(std::string(), tones_);
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-       observer_->OnToneChange(std::string());
--#pragma clang diagnostic pop
-     }
-     return;
-   } else {
-@@ -232,10 +229,7 @@ void DtmfSender::DoInsertDtmf() {
-   if (observer_) {
-     observer_->OnToneChange(tones_.substr(first_tone_pos, 1),
-                             tones_.substr(first_tone_pos + 1));
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-     observer_->OnToneChange(tones_.substr(first_tone_pos, 1));
--#pragma clang diagnostic pop
-   }
- 
-   // Erase the unrecognized characters plus the tone that's just processed.
-diff --git a/pc/dtmf_sender_unittest.cc b/pc/dtmf_sender_unittest.cc
-index 9c62cc151e..deb18fe769 100644
---- a/pc/dtmf_sender_unittest.cc
-+++ b/pc/dtmf_sender_unittest.cc
-@@ -200,6 +200,8 @@ class DtmfSenderTest : public ::testing::Test {
-     const std::vector<std::string>& tones = observer_->tones();
-     // The observer will get an empty string at the end.
-     EXPECT_EQ(tones_ref.size() + 1, tones.size());
-+    EXPECT_EQ(observer_->tones(),
-+              observer_->tones_from_single_argument_callback());
-     EXPECT_TRUE(tones.back().empty());
-     EXPECT_TRUE(observer_->tones_remaining().empty());
-     std::string::const_iterator it_ref = tones_ref.begin();
-diff --git a/pc/peer_connection_integrationtest.cc b/pc/peer_connection_integrationtest.cc
-index 7a8d0860ff..2d5deb8435 100644
---- a/pc/peer_connection_integrationtest.cc
-+++ b/pc/peer_connection_integrationtest.cc
-@@ -2136,12 +2136,9 @@ TEST_P(PeerConnectionIntegrationIceStatesTest, MAYBE_VerifyBestConnection) {
-     EXPECT_METRIC_EQ(0, num_best_ipv6);
-   }
- 
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   EXPECT_METRIC_EQ(
-       0, metrics::NumEvents("WebRTC.PeerConnection.CandidatePairType_UDP",
-                             kIceCandidatePairHostHost));
--#pragma clang diagnostic pop
-   EXPECT_METRIC_EQ(
-       1, metrics::NumEvents("WebRTC.PeerConnection.CandidatePairType_UDP",
-                             kIceCandidatePairHostPublicHostPublic));
-diff --git a/pc/sctp_data_channel.cc b/pc/sctp_data_channel.cc
-index 18a8e8ab6b..7cca341408 100644
---- a/pc/sctp_data_channel.cc
-+++ b/pc/sctp_data_channel.cc
-@@ -84,11 +84,8 @@ BYPASS_PROXY_METHOD2(void,
- END_PROXY_MAP(DataChannel)
- }  // namespace
- 
--#pragma clang diagnostic push
--#pragma clang diagnostic ignored "-Wdeprecated-declarations"
- InternalDataChannelInit::InternalDataChannelInit(const DataChannelInit& base)
-     : DataChannelInit(base), open_handshake_role(kOpener) {
--#pragma clang diagnostic pop
-   // If the channel is externally negotiated, do not send the OPEN message.
-   if (base.negotiated) {
-     open_handshake_role = kNone;
-diff --git a/sdk/objc/unittests/RTCIceCandidateTest.mm b/sdk/objc/unittests/RTCIceCandidateTest.mm
-index 268d330815..c000be5a1b 100644
---- a/sdk/objc/unittests/RTCIceCandidateTest.mm
-+++ b/sdk/objc/unittests/RTCIceCandidateTest.mm
-@@ -39,7 +39,8 @@
-   EXPECT_EQ("audio", nativeCandidate->sdp_mid());
-   EXPECT_EQ(0, nativeCandidate->sdp_mline_index());
- 
--  std::string sdpString = nativeCandidate->ToString();
-+  std::string sdpString;
-+  nativeCandidate->ToString(&sdpString);
-   EXPECT_EQ(sdp.stdString, sdpString);
- }
- 
+  private:
+-  CallbackList<IceTransportInternal*, const Candidate&>
+-      candidate_gathered_callbacks_;
++  SignalTrampoline<IceTransportInternal,
++                   &IceTransportInternal::SignalCandidateGathered>
++      candidate_gathered_trampoline_;
+   SignalTrampoline<IceTransportInternal,
+                    &IceTransportInternal::SignalRoleConflict>
+       role_conflict_trampoline_;
+diff --git a/rtc_base/sigslot_trampoline.h b/rtc_base/sigslot_trampoline.h
+index a399e4177f..590e73d97b 100644
+--- a/rtc_base/sigslot_trampoline.h
++++ b/rtc_base/sigslot_trampoline.h
+@@ -51,18 +51,6 @@ namespace webrtc {
+ //     my_class_object.SubscibeMyNamedEvent(
+ //         SafeInvocable(target.safety_flag_.flag(),
+ //                       [target] { target.function(); }
+-// WHEN REMOVING THE SIGNAL
+-// Make a CL that will:
+-// - Delete the SignalMyNamedEvent signal
+-// - Change my_named_event_trampoline_ to my_named_event_callbacks,
+-//   of type CallbackList<function arguments>
+-// - Change SubscribeMyNamedEvent to call my_named_event_callbacks.AddReceiver
+-// - Change NotifyMyNamedEvent to call my_named_event_callbacks_.Send
+-// - If UnsubscribeMyNamedEvent exists, change that also.
+-// - Delete the initialization of my_named_event_trampoline_ from the
+-//   relevant constructor.
+-// Sending this through the bots will flush out remaining references to
+-// SignalMyNamedEvent.
+ namespace internal {
+ template <typename MemberPtrT>
+ struct member_pointer_traits;
