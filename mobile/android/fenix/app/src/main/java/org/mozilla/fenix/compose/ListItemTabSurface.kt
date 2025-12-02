@@ -100,7 +100,7 @@ fun ListItemTabSurface(
                 },
             )
 
-            Spacer(Modifier.width(FirefoxTheme.layout.space.static100))
+            Spacer(modifier = Modifier.width(FirefoxTheme.layout.space.static100))
 
             Column(
                 verticalArrangement = Arrangement.SpaceBetween,
@@ -120,7 +120,6 @@ private fun ListItemTabSurfacePreview() {
         ) {
             Text(
                 text = "This can be anything",
-                color = FirefoxTheme.colors.textPrimary,
                 fontSize = 22.sp,
             )
         }
@@ -137,7 +136,6 @@ private fun ListItemTabSurfaceWithCustomBackgroundPreview() {
         ) {
             Text(
                 text = "This can be anything",
-                color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 14.sp,
             )
         }
@@ -151,22 +149,22 @@ private fun ListItemTabSurfaceWithCustomBackgroundPreview() {
  *
  * @param durationMillis The duration in milliseconds of the shimmer animation cycle.
  * Defaults to `1000`.
- * @param color1 The starting color of the gradient animation. Defaults to [Color.LightGray].
- * @param color2 The ending color of the gradient animation. Defaults to [Color.White].
+ * @param initialColor The starting color of the gradient animation.
+ * @param targetColor The ending color of the gradient animation.
  *
  * @return A [Modifier] that displays a skeleton loader effect.
  */
 @Composable
 fun Modifier.skeletonLoader(
     durationMillis: Int = 1000,
-    color1: Color = Color.LightGray,
-    color2: Color = Color.White,
+    initialColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
+    targetColor: Color = Color.White,
 ): Modifier {
     val transition = rememberInfiniteTransition(label = "")
 
     val color by transition.animateColor(
-        initialValue = color1,
-        targetValue = color2,
+        initialValue = initialColor,
+        targetValue = targetColor,
         animationSpec = infiniteRepeatable(
             animation = tween(durationMillis, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse,
