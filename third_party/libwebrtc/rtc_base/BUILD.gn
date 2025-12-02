@@ -1871,6 +1871,7 @@ rtc_library("rtc_base_tests_utils") {
     "../api/units:timestamp",
     "memory:always_valid_pointer",
     "memory:fifo_buffer",
+    "memory:less_unique_ptr",
     "network:received_packet",
     "synchronization:mutex",
     "third_party/sigslot",
