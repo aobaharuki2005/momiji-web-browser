@@ -835,6 +835,16 @@ class Document : public nsINode,
   ReferrerPolicyEnum ReferrerPolicy() const { return GetReferrerPolicy(); }
 
   /**
+   * The referrer policy that was used for the fetch of this document, what the
+   * spec calls "request referrer policy". Not to be confused with the history
+   * policy container's referrer policy, which dictates the policy for fetches
+   * made by this document (see ReferrerPolicy()).
+   *
+   * See: https://html.spec.whatwg.org/#document-state-request-referrer-policy
+   */
+  ReferrerPolicyEnum ReferrerPolicyUsedToFetchThisDocument() const;
+
+  /**
    * If true, this flag indicates that all mixed content subresource
    * loads for this document (and also embeded browsing contexts) will
    * be blocked.
@@ -4765,6 +4775,10 @@ class Document : public nsINode,
 
   nsCOMPtr<nsIReferrerInfo> mPreloadReferrerInfo;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
+  // A request referrer policy, which is a referrer policy, initially the
+  // default referrer policy.
+  ReferrerPolicyEnum mRequestReferrerPolicy =
+      ReferrerPolicyEnum::Strict_origin_when_cross_origin;
 
   nsString mLastModified;
 

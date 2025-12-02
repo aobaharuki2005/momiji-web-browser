@@ -4318,6 +4318,11 @@ void Document::EnsureNotEnteringAndExitFullscreen() {
   }
 }
 
+// https://html.spec.whatwg.org/#document-state-request-referrer-policy
+ReferrerPolicy Document::ReferrerPolicyUsedToFetchThisDocument() const {
+  return mRequestReferrerPolicy;
+}
+
 void Document::SetReferrerInfo(nsIReferrerInfo* aReferrerInfo) {
   mReferrerInfo = aReferrerInfo;
   mCachedReferrerInfoForInternalCSSAndSVGResources = nullptr;
@@ -4362,6 +4367,7 @@ nsresult Document::InitReferrerInfo(nsIChannel* aChannel) {
 
   if (nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo()) {
     SetReferrerInfo(referrerInfo);
+    mRequestReferrerPolicy = referrerInfo->ReferrerPolicy();
   }
 
   // Override policy if we get one from Referrerr-Policy header
