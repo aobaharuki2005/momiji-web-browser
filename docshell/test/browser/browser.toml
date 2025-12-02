@@ -274,6 +274,8 @@ skip-if = [
 
 ["browser_bug1798780.js"]
 
+["browser_bug2002654.js"]
+
 ["browser_click_link_within_view_source.js"]
 
 ["browser_closewatcher_integration.js"]
