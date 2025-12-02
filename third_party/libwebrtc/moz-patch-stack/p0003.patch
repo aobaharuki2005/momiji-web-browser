@@ -1,51 +1,54 @@
 From: Daniel Baker <dbaker@mozilla.com>
-Date: Mon, 1 Dec 2025 17:44:54 -0700
+Date: Mon, 1 Dec 2025 17:52:37 -0700
 Subject: (tmp-cherry-pick) Revert "Avoid seeding Random with current time in
- rtp_sender" (40c9ccfc4a)
+ packet_sequencer" (ef084b6cc6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit a0e60db139e8d06f3646b374837fcbdd5b98df42.
+This reverts commit 6cccb107b808c6b55666a70cfd24c315e8255546.
 
-Reason for revert: Broke win10 chrome bots: https://ci.chromium.org/ui/p/chromium/builders/webrtc.fyi/WebRTC%20Chromium%20FYI%20Win10%20Tester/18529/overview
+Reason for revert: absl::BitGen has issues seeding on Windows10 Chromium render process. https://ci.chromium.org/ui/p/chromium/builders/webrtc.fyi/WebRTC%20Chromium%20FYI%20Win10%20Tester/18543/test-results
 
 Original change's description:
-> Avoid seeding Random with current time in rtp_sender
+> Avoid seeding Random with current time in packet_sequencer
 >
 > Random default constructor now provides a non-deterministic random seed.
 >
 > This CL was uploaded by an experimental version of git cl split
 > (https://crbug.com/389069356).
 >
-> R=danilchap@webrtc.org
+> R=sprang@webrtc.org
 >
 > Bug: webrtc:42223992, webrtc:441137274
-> Change-Id: If0b2959994c474d2d8d433749879e72f1e0c530c
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408744
-> Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
-> Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+> Change-Id: I73041a621fe768fe60cb1a7db78f917f17571ff0
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408742
+> Reviewed-by: Erik Språng <sprang@webrtc.org>
+> Commit-Queue: Erik Språng <sprang@webrtc.org>
 > Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45590}
+> Cr-Commit-Position: refs/heads/main@{#45593}
 
 Bug: webrtc:42223992, webrtc:441137274
-Change-Id: Ib09ca1047a798dd6c9500b9ce4a33198f0f5cb21
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408820
+Change-Id: I11af73ef3273c40734761abfcf0291106b136d2f
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408902
 Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
-Owners-Override: Ilya Nikolaevskiy <ilnik@webrtc.org>
-Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
-Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#45605}
+Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#45611}
 ---
- modules/rtp_rtcp/source/rtp_sender.cc | 1 +
- 1 file changed, 1 insertion(+)
+ modules/rtp_rtcp/source/packet_sequencer.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 3e333af6e5..ef9d0250f6 100644
---- a/modules/rtp_rtcp/source/rtp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtp_sender.cc
-@@ -157,6 +157,7 @@ RTPSender::RTPSender(const Environment& env,
-                      RtpPacketHistory* packet_history,
-                      RtpPacketSender* packet_sender)
-     : clock_(&env.clock()),
-+      random_(clock_->TimeInMicroseconds()),
-       audio_configured_(config.audio),
-       ssrc_(config.local_media_ssrc),
-       rtx_ssrc_(config.rtx_send_ssrc),
+diff --git a/modules/rtp_rtcp/source/packet_sequencer.cc b/modules/rtp_rtcp/source/packet_sequencer.cc
+index abae8c1b97..930ace9d38 100644
+--- a/modules/rtp_rtcp/source/packet_sequencer.cc
++++ b/modules/rtp_rtcp/source/packet_sequencer.cc
+@@ -45,7 +45,7 @@ PacketSequencer::PacketSequencer(uint32_t media_ssrc,
+       last_payload_type_(-1),
+       last_rtp_timestamp_(0),
+       last_packet_marker_bit_(false) {
+-  Random random;
++  Random random(clock_->TimeInMicroseconds());
+   // Random start, 16 bits. Upper half of range is avoided in order to prevent
+   // SRTP wraparound issues during startup. See this unit test for details:
+   // SrtpSessionTest.ProtectUnprotectWrapAroundRocMismatch
