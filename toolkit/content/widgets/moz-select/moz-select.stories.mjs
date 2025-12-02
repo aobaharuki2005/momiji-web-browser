@@ -157,6 +157,8 @@ Default.args = {
   useOtherOptions: false,
   hasSlottedSupportLink: false,
   ellipsized: false,
+  disabledOption: false,
+  hiddenOption: false,
 };
 
 export const WithIcon = Template.bind({});
