@@ -22,13 +22,11 @@ repositories {
 dependencies {
     implementation libs.okhttp
     implementation libs.okio
-
-    compileOnly libs.android.gradle.plugin
 }
 
 gradlePlugin {
     plugins.register("mozac.PublicSuffixListPlugin") {
         id = "mozac.PublicSuffixListPlugin"
-        implementationClass = "mozilla.components.gradle.plugins.PublicSuffixListPlugin"
+        implementationClass = "PublicSuffixListPlugin"
     }
 }
