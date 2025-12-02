@@ -1,121 +1,61 @@
-From: Daniel Baker <dbaker@mozilla.com>
-Date: Mon, 1 Dec 2025 17:39:53 -0700
-Subject: (tmp-cherry-pick) Revert "Use absl::BitGen to generate Random's seed"
- (b90d283911)
+From: =?UTF-8?q?Henrik=20Bostr=C3=B6m?= <hbos@webrtc.org>
+Date: Wed, 10 Sep 2025 12:47:04 +0200
+Subject: (cherry-pick-branch-heads/7390) [M141] Do not hide inbound-rtp if
+ media is received.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit f2556b4ffe51bc25bfa99771801800ddb71aad8e.
+This condition neglected the fact that if Insertable Streams API is used
+we can have frames or samples despite packets never being received.
 
-Reason for revert: absl::BitGen has issues seeding on Windows10 Chromium render process. https://ci.chromium.org/ui/p/chromium/builders/webrtc.fyi/WebRTC%20Chromium%20FYI%20Win10%20Tester/18543/test-results
+This CL fixes this unintended regression.
 
-Original change's description:
-> Use absl::BitGen to generate Random's seed
->
-> This adds a default constructor to Random which uses absl::BitGet to
-> generate its own seed. This allows us to replace places where the
-> current time was used to set a seed.
->
-> Bug: webrtc:441137274
-> Change-Id: I5afeca99b2fee5e5a2a0b31043ee0c81c00af5cc
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408005
-> Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
-> Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
-> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45588}
+# Ignore unrelated compile issues on ios webrtc bots
+NOTRY=True
 
-Bug: webrtc:441137274
-Change-Id: I7acb39e56cfb119742a2b36f053abd1a43781417
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408903
-Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#45619}
+(cherry picked from commit c15949eda5a00122e2f3b5a643e15781049b9927)
+
+Bug: chromium:444048024, chromium:444384230
+Change-Id: Ie6e17a3bc96701476787f5898446f3f706715d15
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408884
+Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
+Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+Auto-Submit: Henrik Boström <hbos@webrtc.org>
+Commit-Queue: Henrik Boström <hbos@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#45616}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/409020
+Cr-Commit-Position: refs/branch-heads/7390@{#2}
+Cr-Branched-From: 2f553bf8d573c90176d51559b76dfc836996c8f5-refs/heads/main@{#45520}
 ---
- rtc_base/BUILD.gn  |  1 -
- rtc_base/DEPS      |  3 ---
- rtc_base/random.cc |  8 --------
- rtc_base/random.h  | 19 ++++++++++++-------
- 4 files changed, 12 insertions(+), 19 deletions(-)
+ pc/rtc_stats_collector.cc | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index b7ec9d0fdf..4d4014adc9 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -251,7 +251,6 @@ rtc_library("random") {
-   deps = [
-     ":checks",
-     ":safe_conversions",
--    "//third_party/abseil-cpp/absl/random",
-   ]
- }
- 
-diff --git a/rtc_base/DEPS b/rtc_base/DEPS
-index 8ad49971f1..9e8908ceb2 100644
---- a/rtc_base/DEPS
-+++ b/rtc_base/DEPS
-@@ -44,7 +44,4 @@ specific_include_rules = {
-   "base64_rust\.cc": [
-     "+third_party/rust/chromium_crates_io/vendor/cxx-v1/include/cxx.h",
-   ],
--  "random\.cc": [
--    "+absl/random/random.h",
--  ],
- }
-diff --git a/rtc_base/random.cc b/rtc_base/random.cc
-index 7f2303b711..8fd23ea7ad 100644
---- a/rtc_base/random.cc
-+++ b/rtc_base/random.cc
-@@ -11,21 +11,13 @@
- 
- #include <cmath>
- #include <cstdint>
--#include <limits>
- #include <numbers>
- 
--#include "absl/random/random.h"
- #include "rtc_base/checks.h"
- #include "rtc_base/numerics/safe_conversions.h"
- 
- namespace webrtc {
- 
--Random::Random() {
--  absl::BitGen gen;
--  state_ =
--      absl::Uniform<uint64_t>(gen, 1, std::numeric_limits<uint64_t>::max());
--}
--
- Random::Random(uint64_t seed) {
-   RTC_DCHECK(seed != 0x0ull);
-   state_ = seed;
-diff --git a/rtc_base/random.h b/rtc_base/random.h
-index 3b9112a9e3..b3b9fd1608 100644
---- a/rtc_base/random.h
-+++ b/rtc_base/random.h
-@@ -21,15 +21,20 @@ namespace webrtc {
- 
- class Random {
-  public:
--  // Returns a random number generator with a random seed.
--  Random();
--
--  // Returns a random number generator with the given seed. The seed must not
--  // be 0. It is expected that callers intelligently generate their seeds and do
--  // not simply pass a constant value or use the current time as a seed.
--  // This function should only be used for testing.
-+  // TODO(tommi): Change this so that the seed can be initialized internally,
-+  // e.g. by offering two ways of constructing or offer a static method that
-+  // returns a seed that's suitable for initialization.
-+  // The problem now is that callers are calling clock_->TimeInMicroseconds()
-+  // which calls TickTime::Now().Ticks(), which can return a very low value on
-+  // Mac and can result in a seed of 0 after conversion to microseconds.
-+  // Besides the quality of the random seed being poor, this also requires
-+  // the client to take on extra dependencies to generate a seed.
-+  // If we go for a static seed generator in Random, we can use something from
-+  // webrtc/rtc_base and make sure that it works the same way across platforms.
-+  // See also discussion here: https://codereview.webrtc.org/1623543002/
-   explicit Random(uint64_t seed);
- 
-+  Random() = delete;
-   Random(const Random&) = delete;
-   Random& operator=(const Random&) = delete;
- 
+diff --git a/pc/rtc_stats_collector.cc b/pc/rtc_stats_collector.cc
+index 8686143e68..8d6cc22426 100644
+--- a/pc/rtc_stats_collector.cc
++++ b/pc/rtc_stats_collector.cc
+@@ -1754,7 +1754,10 @@ void RTCStatsCollector::ProduceAudioRTPStreamStats_n(
+     if (!voice_receiver_info.connected()) {
+       continue;  // The SSRC is not known yet.
+     }
+-    if (spec_lifetime && voice_receiver_info.packets_received == 0) {
++    // Check both packets received and samples received to handle the Insertable
++    // Streams use case of receiving media without receiving packets.
++    if (spec_lifetime && voice_receiver_info.packets_received == 0 &&
++        voice_receiver_info.total_samples_received == 0) {
+       // The SSRC is known despite not receiving any packets. This happens if
+       // SSRC is signalled in the SDP which we should not rely on for getStats.
+       continue;
+@@ -1868,7 +1871,10 @@ void RTCStatsCollector::ProduceVideoRTPStreamStats_n(
+     if (!video_receiver_info.connected()) {
+       continue;  // The SSRC is not known yet.
+     }
+-    if (spec_lifetime && video_receiver_info.packets_received == 0) {
++    // Check both packets received and frames received to handle the Insertable
++    // Streams use case of receiving media without receiving packets.
++    if (spec_lifetime && video_receiver_info.packets_received == 0 &&
++        video_receiver_info.frames_received == 0) {
+       // The SSRC is known despite not receiving any packets. This happens if
+       // SSRC is signalled in the SDP which we should not rely on for getStats.
+       continue;
