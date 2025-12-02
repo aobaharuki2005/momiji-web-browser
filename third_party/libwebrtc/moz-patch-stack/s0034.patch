@@ -172,7 +172,7 @@ index ac862c65a8..e66ed2796e 100644
    } else {
      sources += [ "spl_sqrt_floor.c" ]
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index 4d7dc5d9cb..847e5ccbea 100644
+index c12c4b653f..fd9bd4f298 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
 @@ -123,7 +123,7 @@ rtc_library("aec3") {
@@ -184,7 +184,7 @@ index 4d7dc5d9cb..847e5ccbea 100644
      suppressed_configs += [ "//build/config/compiler:compiler_arm_fpu" ]
      cflags = [ "-mfpu=neon" ]
    }
-@@ -161,7 +161,7 @@ rtc_library("aec3") {
+@@ -162,7 +162,7 @@ rtc_library("aec3") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  
@@ -193,7 +193,7 @@ index 4d7dc5d9cb..847e5ccbea 100644
      deps += [ ":aec3_avx2" ]
    }
  }
-@@ -252,7 +252,7 @@ rtc_source_set("fft_data") {
+@@ -253,7 +253,7 @@ rtc_source_set("fft_data") {
    ]
  }
  
