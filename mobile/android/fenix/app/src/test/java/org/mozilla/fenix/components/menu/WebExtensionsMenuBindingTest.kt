@@ -5,6 +5,9 @@
 package org.mozilla.fenix.components.menu
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.state.createTab
@@ -15,12 +18,9 @@ import mozilla.components.support.ktx.android.util.dpToPx
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
-import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.rule.runTestOnMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
@@ -29,17 +29,17 @@ import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class WebExtensionsMenuBindingTest {
-    @get:Rule
-    val coroutineRule = MainCoroutineRule()
+    private val testDispatcher = StandardTestDispatcher()
 
     lateinit var browserStore: BrowserStore
     private lateinit var menuStore: MenuStore
 
     @Test
     fun `WHEN browser web extension state get updated in the browserStore THEN invoke action update browser web extension menu items`() =
-        runTestOnMain {
+        runTest {
             val defaultBrowserAction =
                 createWebExtensionBrowserAction("default_browser_action_title")
 
@@ -86,8 +86,10 @@ class WebExtensionsMenuBindingTest {
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
+                mainDispatcher = testDispatcher,
             )
             binding.start()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             val browserItemsUpdateCaptor = argumentCaptor<MenuAction.UpdateWebExtensionBrowserMenuItems>()
 
@@ -104,7 +106,7 @@ class WebExtensionsMenuBindingTest {
 
     @Test
     fun `WHEN all web extensions are disabled THEN show disabled extensions onboarding`() =
-        runTestOnMain {
+        runTest {
             val extensions: Map<String, WebExtensionState> = mapOf(
                 "id" to WebExtensionState(
                     id = "id",
@@ -135,8 +137,10 @@ class WebExtensionsMenuBindingTest {
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
+                mainDispatcher = testDispatcher,
             )
             binding.start()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             val showDisabledExtensionsOnboardingCaptor = argumentCaptor<MenuAction.UpdateShowDisabledExtensionsOnboarding>()
 
@@ -147,7 +151,7 @@ class WebExtensionsMenuBindingTest {
 
     @Test
     fun `WHEN only one web extension is disabled THEN not show disabled extensions onboarding`() =
-        runTestOnMain {
+        runTest {
             val extensions: Map<String, WebExtensionState> = mapOf(
                 "id" to WebExtensionState(
                     id = "id",
@@ -184,8 +188,10 @@ class WebExtensionsMenuBindingTest {
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
+                mainDispatcher = testDispatcher,
             )
             binding.start()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             val showDisabledExtensionsOnboardingCaptor = argumentCaptor<MenuAction.UpdateShowDisabledExtensionsOnboarding>()
 
@@ -196,7 +202,7 @@ class WebExtensionsMenuBindingTest {
 
     @Test
     fun `WHEN page web extension state get updated in the browserStore THEN invoke action update page web extension menu items`() =
-        runTestOnMain {
+        runTest {
             val defaultPageAction = createWebExtensionPageAction("default_page_action_title")
 
             val overriddenPageAction = createWebExtensionPageAction("overridden_page_action_title")
@@ -241,8 +247,10 @@ class WebExtensionsMenuBindingTest {
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
+                mainDispatcher = testDispatcher,
             )
             binding.start()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             val pageItemsUpdateCaptor = argumentCaptor<MenuAction.UpdateWebExtensionBrowserMenuItems>()
 
@@ -259,7 +267,7 @@ class WebExtensionsMenuBindingTest {
 
     @Test
     fun `WHEN page web extension state disabled get updated in the browserStore THEN not invoke action update page web extension menu items`() =
-        runTestOnMain {
+        runTest {
             val defaultPageAction =
                 createWebExtensionPageAction("default_page_action_title", enabled = false)
 
@@ -294,8 +302,10 @@ class WebExtensionsMenuBindingTest {
                 menuStore = menuStore,
                 iconSize = 24.dpToPx(testContext.resources.displayMetrics),
                 onDismiss = {},
+                mainDispatcher = testDispatcher,
             )
             binding.start()
+            testDispatcher.scheduler.advanceUntilIdle()
 
             val pageItemsUpdateCaptor =
                 argumentCaptor<MenuAction.UpdateWebExtensionBrowserMenuItems>()
@@ -311,12 +321,12 @@ class WebExtensionsMenuBindingTest {
         WebExtensionPageAction(
             title = title,
             enabled = enabled,
-        loadIcon = mock(),
-        badgeText = "",
-        badgeTextColor = 0,
-        badgeBackgroundColor = 0,
-        onClick = {},
-    )
+            loadIcon = mock(),
+            badgeText = "",
+            badgeTextColor = 0,
+            badgeBackgroundColor = 0,
+            onClick = {},
+        )
 
     private fun createWebExtensionBrowserAction(title: String) = WebExtensionBrowserAction(
         title,

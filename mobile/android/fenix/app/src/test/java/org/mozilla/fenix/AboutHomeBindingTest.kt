@@ -7,6 +7,8 @@ package org.mozilla.fenix
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
@@ -14,12 +16,9 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.rule.MainCoroutineRule
-import mozilla.components.support.test.rule.runTestOnMain
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.never
@@ -27,8 +26,7 @@ import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class AboutHomeBindingTest {
-    @get:Rule
-    val coroutineRule = MainCoroutineRule()
+    private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var browserStore: BrowserStore
     private lateinit var tabId: String
@@ -53,10 +51,11 @@ class AboutHomeBindingTest {
     }
 
     @Test
-    fun `WHEN URL is updated to ABOUT_HOME THEN navigate to the homepage`() = runTestOnMain {
+    fun `WHEN URL is updated to ABOUT_HOME THEN navigate to the homepage`() = runTest(testDispatcher) {
         val binding = AboutHomeBinding(
             browserStore = browserStore,
             navController = navController,
+            mainDispatcher = testDispatcher,
         )
 
         binding.start()
@@ -68,13 +67,15 @@ class AboutHomeBindingTest {
             ),
         )
 
+        testDispatcher.scheduler.advanceUntilIdle()
+
         assertEquals(ABOUT_HOME_URL, tab.content.url)
 
         verify(navController).navigate(NavGraphDirections.actionGlobalHome())
     }
 
     @Test
-    fun `GIVEN homepage is the currently shown WHEN URL is updated to ABOUT_HOME THEN do not navigate to the homepage`() = runTestOnMain {
+    fun `GIVEN homepage is the currently shown WHEN URL is updated to ABOUT_HOME THEN do not navigate to the homepage`() = runTest(testDispatcher) {
         val mockDestination: NavDestination = mock()
         whenever(mockDestination.id).thenReturn(R.id.homeFragment)
         whenever(navController.currentDestination).thenReturn(mockDestination)
@@ -82,6 +83,7 @@ class AboutHomeBindingTest {
         val binding = AboutHomeBinding(
             browserStore = browserStore,
             navController = navController,
+            mainDispatcher = testDispatcher,
         )
 
         binding.start()
@@ -93,13 +95,15 @@ class AboutHomeBindingTest {
             ),
         )
 
+        testDispatcher.scheduler.advanceUntilIdle()
+
         assertEquals(ABOUT_HOME_URL, tab.content.url)
 
         verify(navController, never()).navigate(NavGraphDirections.actionGlobalHome())
     }
 
     @Test
-    fun `GIVEN onboarding is the currently shown WHEN URL is updated to ABOUT_HOME THEN do not navigate to the homepage`() = runTestOnMain {
+    fun `GIVEN onboarding is the currently shown WHEN URL is updated to ABOUT_HOME THEN do not navigate to the homepage`() = runTest(testDispatcher) {
         val mockDestination: NavDestination = mock()
         whenever(mockDestination.id).thenReturn(R.id.onboardingFragment)
         whenever(navController.currentDestination).thenReturn(mockDestination)
@@ -107,7 +111,8 @@ class AboutHomeBindingTest {
         val binding = AboutHomeBinding(
             browserStore = browserStore,
             navController = navController,
-        )
+            mainDispatcher = testDispatcher,
+            )
 
         binding.start()
 
@@ -118,13 +123,16 @@ class AboutHomeBindingTest {
             ),
         )
 
+        // Wait for ContentAction.UpdateUrlAction
+        testDispatcher.scheduler.advanceUntilIdle()
+
         assertEquals(ABOUT_HOME_URL, tab.content.url)
 
         verify(navController, never()).navigate(NavGraphDirections.actionGlobalHome())
     }
 
     @Test
-    fun `WHEN URL is updated to a URL that is not ABOUT_HOME THEN do not navigate to the homepage`() = runTestOnMain {
+    fun `WHEN URL is updated to a URL that is not ABOUT_HOME THEN do not navigate to the homepage`() = runTest(testDispatcher) {
         val binding = AboutHomeBinding(
             browserStore = browserStore,
             navController = navController,
@@ -139,6 +147,9 @@ class AboutHomeBindingTest {
                 url = newUrl,
             ),
         )
+
+        // Wait for ContentAction.UpdateUrlAction
+        testDispatcher.scheduler.advanceUntilIdle()
 
         assertEquals(newUrl, tab.content.url)
 

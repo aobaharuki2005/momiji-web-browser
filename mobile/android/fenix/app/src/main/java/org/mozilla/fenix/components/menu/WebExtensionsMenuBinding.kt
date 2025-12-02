@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.components.menu
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -32,6 +34,8 @@ import org.mozilla.fenix.components.menu.store.WebExtensionMenuItem
  * @param menuStore The [Store] for holding the [MenuState] and applying [MenuAction]s.
  * @param iconSize for [WebExtensionMenuItem].
  * @param onDismiss Callback invoked to dismiss the menu dialog.
+ * @param mainDispatcher The [CoroutineDispatcher] on which the state observation and updates will occur.
+ *                       Defaults to [Dispatchers.Main].
  */
 class WebExtensionsMenuBinding(
     browserStore: BrowserStore,
@@ -39,7 +43,8 @@ class WebExtensionsMenuBinding(
     private val menuStore: MenuStore,
     private val iconSize: Int,
     private val onDismiss: () -> Unit,
-) : AbstractBinding<BrowserState>(browserStore) {
+    mainDispatcher: CoroutineDispatcher = Dispatchers.Main,
+) : AbstractBinding<BrowserState>(browserStore, mainDispatcher) {
 
     override suspend fun onState(flow: Flow<BrowserState>) {
         // Browser level flows
