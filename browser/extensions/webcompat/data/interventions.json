@@ -6223,6 +6223,23 @@
       }
     ]
   },
+  "2003011": {
+    "label": "ehealth.gov.gr",
+    "bugs": {
+      "2003011": {
+        "issue": "broken-layout",
+        "matches": ["*://ehealth.gov.gr/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "content_scripts": {
+          "css": ["bug2003011-ehealth.gov.gr-fix-font-inflation-issue.css"]
+        }
+      }
+    ]
+  },
   "2003019": {
     "label": "jw.org",
     "bugs": {
