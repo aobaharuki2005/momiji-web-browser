@@ -95,6 +95,12 @@ String tables for efficient storage. All strings are deduplicated and stored onc
     "mozilla::dom::Something::Crash",
     "EMPTY: no crashing thread identified",
     ...
+  ],
+  "components": [                    // Bugzilla components (Product :: Component format)
+    "Core :: Storage: IndexedDB",
+    "Testing :: XPCShell Harness",
+    "Firefox :: General",
+    ...
   ]
 }
 ```
@@ -120,12 +126,13 @@ const jobName = tables.jobNames[taskInfo.jobNameIds[taskIdId]];           // "te
 
 ### testInfo
 
-Maps test IDs to their test paths and names. These are parallel arrays indexed by `testId`:
+Maps test IDs to their test paths, names, and components. These are parallel arrays indexed by `testId`:
 
 ```json
 {
   "testPathIds": [0, 0, 1, 2, ...],    // Index into tables.testPaths
-  "testNameIds": [0, 1, 2, 3, ...]     // Index into tables.testNames
+  "testNameIds": [0, 1, 2, 3, ...],    // Index into tables.testNames
+  "componentIds": [5, 5, 12, null, ...] // Index into tables.components (null if unknown)
 }
 ```
 
@@ -135,6 +142,8 @@ const testId = 10;
 const testPath = tables.testPaths[testInfo.testPathIds[testId]];  // "dom/indexedDB/test/unit"
 const testName = tables.testNames[testInfo.testNameIds[testId]];  // "test_foo.js"
 const fullPath = testPath ? `${testPath}/${testName}` : testName;
+const componentId = testInfo.componentIds[testId];
+const component = componentId !== null ? tables.components[componentId] : "Unknown";  // "Core :: Storage: IndexedDB"
 ```
 
 ### testRuns
@@ -385,4 +394,6 @@ Dates are sorted in descending order (newest first).
 - **Task ID formats differ between files:**
   - Test timing data: Always includes retry suffix (e.g., `"YJJe4a0CRIqbAmcCo8n63w.0"`)
   - Resource usage data: Omits `.0` for retry 0 (e.g., `"YJJe4a0CRIqbAmcCo8n63w"`), includes suffix for retries > 0 (e.g., `"YJJe4a0CRIqbAmcCo8n63w.1"`)
+- **Component mapping:** Components are fetched from the TaskCluster index `gecko.v2.mozilla-central.latest.source.source-bugzilla-info` and mapped to test paths. The component ID in `testInfo.componentIds` may be `null` if the test path is not found in the mapping
+- Components are formatted as `"Product :: Component"` (e.g., `"Core :: Storage: IndexedDB"`)
 - The data structure is optimized for sequential access patterns used by the dashboards
