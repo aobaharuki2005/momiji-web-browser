@@ -82,7 +82,7 @@
 
     Title for info card on private homescreen in True Private Browsing Mode.
   -->
-  <string name="felt_privacy_desc_card_title">Nezanechávejte na tomto zařízení žádné stopy</string>
+  <string name="felt_privacy_desc_card_title">Nezanechá stopy</string>
   <!--
     Explanation for private browsing displayed to users on home view when they first enable
     private mode in our new Total Private Browsing mode.
@@ -1065,10 +1065,14 @@
   <string name="restart_warning_dialog_title">Změnit ikonu aplikace?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Aplikace může být ukončena. Pro opětovné otevření aplikace %1$s klepněte na svou novou ikonu.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Změnou ikony odstraníte všechny webové stránky a zkratky, které jste si uložili na domovskou obrazovku.\n\nAplikace %1$s může být zavřena. Klepněte na novou ikonu pro opětovné otevření.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Změnit ikonu</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Zrušit</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Ikonu aplikace se nepodařilo aktualizovat. Odeberte existující zkratky a zkuste to znovu.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -2355,6 +2359,14 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Povolit aplikaci %1$s automaticky aplikovat výjimky potřebné k zabránění rozsáhlému rozbití webových stránek.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Automaticky také aplikovat výjimky, které jsou potřeba jen k opravě menších problémů a zpřístupnění komfortních funkcí.</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Oprava velkých problémů se stránkami (doporučeno)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Oprava menších problémů se stránkami</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">Musí být použito spolu s opravami velkých problémů.</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Oprava problémů se stránkami</string>
   <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Zjistit více</string>
   <!--
@@ -2745,8 +2757,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Synchronizace adres napříč zařízeními</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Synchronizace adres</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Zpět</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Přidat kartu</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Návrat zpět</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Upravit kartu</string>
   <!-- The header for the card number of a credit card -->
@@ -3882,6 +3898,10 @@
   <string name="settings_search_clear_recent_searches_message">Vymazat vše</string>
   <!-- Section header for recent search results -->
   <string name="settings_search_recent_searches_section_header">Nedávné výsledky vyhledávání</string>
+  <!-- Message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_title">Nic se neobjevilo</string>
+  <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
+  <string name="settings_search_no_results_message">Možná zkusit jiné vyhledávání?</string>
   <!--
     Terms of use pop up prompt
 
