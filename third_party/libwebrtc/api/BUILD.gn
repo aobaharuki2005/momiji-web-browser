@@ -402,6 +402,7 @@ if (!build_with_mozilla) {
     "../rtc_base:ssl",
     "../rtc_base:ssl_adapter",
     "../rtc_base:stringutils",
+    "../rtc_base/system:no_unique_address",
     "adaptation:resource_adaptation_api",
     "audio:audio_device",
     "audio:audio_frame_processor",
@@ -1424,6 +1425,7 @@ if (rtc_include_tests) {
     deps = [
       ":candidate",
       ":libjingle_peerconnection_api",
+      "../pc:session_description",
       "../test:test_support",
       "//third_party/abseil-cpp/absl/strings:string_view",
     ]

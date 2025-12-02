@@ -203,7 +203,7 @@ index 3efce2dd19..cbfc05f243 100644
      }
  
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index 47f3e23450..462739dea8 100644
+index 1c02e38171..7758d17af0 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -44,6 +44,9 @@ rtc_library("enable_media") {
@@ -287,7 +287,7 @@ index 47f3e23450..462739dea8 100644
    visibility = [ "*" ]
    cflags = []
    sources = [
-@@ -422,6 +450,7 @@ rtc_library("libjingle_peerconnection_api") {
+@@ -423,6 +451,7 @@ rtc_library("libjingle_peerconnection_api") {
      "../rtc_base/system:rtc_export",
    ]
  }
@@ -295,7 +295,7 @@ index 47f3e23450..462739dea8 100644
  
  rtc_library("frame_transformer_interface") {
    visibility = [ "*" ]
-@@ -644,6 +673,7 @@ rtc_source_set("peer_network_dependencies") {
+@@ -645,6 +674,7 @@ rtc_source_set("peer_network_dependencies") {
  }
  
  rtc_source_set("peer_connection_quality_test_fixture_api") {
@@ -303,7 +303,7 @@ index 47f3e23450..462739dea8 100644
    visibility = [ "*" ]
    testonly = true
    sources = [ "test/peerconnection_quality_test_fixture.h" ]
-@@ -688,6 +718,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
+@@ -689,6 +719,7 @@ rtc_source_set("peer_connection_quality_test_fixture_api") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  }
@@ -311,7 +311,7 @@ index 47f3e23450..462739dea8 100644
  
  rtc_library("frame_generator_api") {
    visibility = [ "*" ]
-@@ -793,6 +824,7 @@ rtc_library("create_frame_generator") {
+@@ -794,6 +825,7 @@ rtc_library("create_frame_generator") {
    ]
  }
  
@@ -319,7 +319,7 @@ index 47f3e23450..462739dea8 100644
  rtc_library("create_peer_connection_quality_test_frame_generator") {
    visibility = [ "*" ]
    testonly = true
-@@ -810,6 +842,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
+@@ -811,6 +843,7 @@ rtc_library("create_peer_connection_quality_test_frame_generator") {
      "units:time_delta",
    ]
  }
@@ -327,7 +327,7 @@ index 47f3e23450..462739dea8 100644
  
  rtc_source_set("data_channel_event_observer_interface") {
    visibility = [ "*" ]
-@@ -1002,6 +1035,7 @@ rtc_source_set("refcountedbase") {
+@@ -1003,6 +1036,7 @@ rtc_source_set("refcountedbase") {
  }
  
  rtc_library("ice_transport_factory") {
@@ -335,7 +335,7 @@ index 47f3e23450..462739dea8 100644
    visibility = [ "*" ]
    sources = [
      "ice_transport_factory.cc",
-@@ -1025,6 +1059,7 @@ rtc_library("ice_transport_factory") {
+@@ -1026,6 +1060,7 @@ rtc_library("ice_transport_factory") {
      "rtc_event_log",
    ]
  }
