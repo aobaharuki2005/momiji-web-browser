@@ -1008,7 +1008,7 @@ index 39aa39a41c..b26e30e8bb 100644
          "/config/external/nspr",
          "/nsprpub/lib/ds",
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index 8cbca254d4..d8a0a3630c 100644
+index 4ee3f2e5da..7c81cb7e11 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -326,6 +326,7 @@ rtc_library("sample_counter") {
@@ -1128,7 +1128,7 @@ index 8cbca254d4..d8a0a3630c 100644
  
  if (rtc_include_tests) {
    rtc_library("async_packet_socket_unittest") {
-@@ -1463,6 +1481,7 @@ rtc_library("data_rate_limiter") {
+@@ -1464,6 +1482,7 @@ rtc_library("data_rate_limiter") {
  }
  
  rtc_library("unique_id_generator") {
@@ -1136,7 +1136,7 @@ index 8cbca254d4..d8a0a3630c 100644
    sources = [
      "unique_id_generator.cc",
      "unique_id_generator.h",
-@@ -1480,6 +1499,7 @@ rtc_library("unique_id_generator") {
+@@ -1481,6 +1500,7 @@ rtc_library("unique_id_generator") {
      "//third_party/abseil-cpp/absl/strings:string_view",
    ]
  }
@@ -1144,7 +1144,7 @@ index 8cbca254d4..d8a0a3630c 100644
  
  rtc_library("crc32") {
    sources = [
-@@ -1511,6 +1531,7 @@ rtc_library("stream") {
+@@ -1512,6 +1532,7 @@ rtc_library("stream") {
  }
  
  rtc_library("rtc_certificate_generator") {
@@ -1152,7 +1152,7 @@ index 8cbca254d4..d8a0a3630c 100644
    visibility = [ "*" ]
    sources = [
      "rtc_certificate_generator.cc",
-@@ -1525,6 +1546,7 @@ rtc_library("rtc_certificate_generator") {
+@@ -1526,6 +1547,7 @@ rtc_library("rtc_certificate_generator") {
      "//third_party/abseil-cpp/absl/functional:any_invocable",
    ]
  }
@@ -1160,7 +1160,7 @@ index 8cbca254d4..d8a0a3630c 100644
  
  rtc_source_set("ssl_header") {
    visibility = [ "*" ]
-@@ -1581,6 +1603,7 @@ rtc_library("crypto_random") {
+@@ -1582,6 +1604,7 @@ rtc_library("crypto_random") {
  }
  
  rtc_library("ssl") {
@@ -1168,7 +1168,7 @@ index 8cbca254d4..d8a0a3630c 100644
    visibility = [ "*" ]
    sources = [
      "openssl_key_pair.cc",
-@@ -1653,6 +1676,7 @@ rtc_library("ssl") {
+@@ -1654,6 +1677,7 @@ rtc_library("ssl") {
      deps += [ ":win32" ]
    }
  }
@@ -1176,7 +1176,7 @@ index 8cbca254d4..d8a0a3630c 100644
  
  rtc_library("ssl_adapter") {
    visibility = [ "*" ]
-@@ -2379,7 +2403,7 @@ if (rtc_include_tests) {
+@@ -2381,7 +2405,7 @@ if (rtc_include_tests) {
    }
  }
  
