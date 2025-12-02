@@ -436,7 +436,7 @@ class WebConsoleWrapper {
 
         if (this.queuedMessageUpdates.length) {
           await store.dispatch(
-            actions.networkMessageUpdates(this.queuedMessageUpdates, null)
+            actions.networkMessageUpdates(this.queuedMessageUpdates)
           );
           this.webConsoleUI.emitForTests("network-messages-updated");
           this.queuedMessageUpdates = [];
