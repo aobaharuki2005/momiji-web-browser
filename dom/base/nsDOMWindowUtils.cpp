@@ -3165,7 +3165,7 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
         caretInfo.frame, caretInfo.caretRectRelativeToTextFrame,
         ScrollAxis(WhereToScroll::Center, WhenToScroll::IfNotVisible),
         ScrollAxis(WhereToScroll::Center, WhenToScroll::IfNotVisible),
-        ScrollFlags::ScrollOverflowHidden);
+        ScrollFlags::ScrollOverflowHidden | ScrollFlags::ForZoomToFocusedInput);
   }
 
   RefPtr<Document> document = presShell->GetDocument();

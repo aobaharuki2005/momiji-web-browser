@@ -3810,13 +3810,19 @@ void PresShell::ScrollFrameIntoVisualViewport(
     nscoord unusedRangeMinOutparam;
     nscoord unusedRangeMaxOutparam;
     nscoord x = ComputeWhereToScroll(
-        aHorizontal.mWhereToScroll, layoutOffset.x, aPositionFixedRect.x,
-        aPositionFixedRect.XMost(), visibleRect.x, visibleRect.XMost(),
-        &unusedRangeMinOutparam, &unusedRangeMaxOutparam);
+        aScrollFlags & ScrollFlags::ForZoomToFocusedInput
+            ? WhereToScroll::Nearest
+            : aHorizontal.mWhereToScroll,
+        layoutOffset.x, aPositionFixedRect.x, aPositionFixedRect.XMost(),
+        visibleRect.x, visibleRect.XMost(), &unusedRangeMinOutparam,
+        &unusedRangeMaxOutparam);
     nscoord y = ComputeWhereToScroll(
-        aVertical.mWhereToScroll, layoutOffset.y, aPositionFixedRect.y,
-        aPositionFixedRect.YMost(), visibleRect.y, visibleRect.YMost(),
-        &unusedRangeMinOutparam, &unusedRangeMaxOutparam);
+        aScrollFlags & ScrollFlags::ForZoomToFocusedInput
+            ? WhereToScroll::Nearest
+            : aVertical.mWhereToScroll,
+        layoutOffset.y, aPositionFixedRect.y, aPositionFixedRect.YMost(),
+        visibleRect.y, visibleRect.YMost(), &unusedRangeMinOutparam,
+        &unusedRangeMaxOutparam);
 
     layoutOffset.x += x;
     layoutOffset.y += y;
