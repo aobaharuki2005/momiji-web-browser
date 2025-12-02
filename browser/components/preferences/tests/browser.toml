@@ -107,6 +107,8 @@ skip-if = [
 
 ["browser_etp_exceptions_dialog.js"]
 
+["browser_etp_status.js"]
+
 ["browser_experimental_features.js"]
 
 ["browser_experimental_features_filter.js"]

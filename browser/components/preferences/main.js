@@ -2947,6 +2947,39 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  etpStatus: {
+    inProgress: true,
+    headingLevel: 2,
+    l10nId: "preferences-etp-status-header",
+    supportPage: "enhanced-tracking-protection",
+    iconSrc: "chrome://browser/skin/controlcenter/tracking-protection.svg",
+    items: [
+      {
+        id: "etpStatusBoxGroup",
+        control: "moz-box-group",
+        items: [
+          {
+            id: "etpStatusItem",
+            l10nId: "preferences-etp-level-standard",
+            control: "moz-box-item",
+          },
+          {
+            id: "etpStatusAdvancedButton",
+            l10nId: "preferences-etp-status-advanced-button",
+            control: "moz-box-button",
+          },
+        ],
+      },
+      {
+        id: "protectionsDashboardLink",
+        l10nId: "preferences-etp-status-protections-dashboard-link",
+        control: "moz-box-link",
+        controlAttrs: {
+          href: "about:protections",
+        },
+      },
+    ],
+  },
 });
 
 /**
