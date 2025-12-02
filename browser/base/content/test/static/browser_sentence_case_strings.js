@@ -22,7 +22,7 @@ const { AppMenuNotifications } = ChromeUtils.importESModule(
 // These are brand names, proper names, or other things that we expect to
 // not abide exactly to sentence case. NAMES is for single words, and PHRASES
 // is for words in a specific order.
-const NAMES = new Set(["Mozilla", "Nightly", "Firefox"]);
+const NAMES = new Set(["Mozilla", "Nightly", "Firefox", "AI"]);
 const PHRASES = new Set(["Troubleshoot Mode…"]);
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
