@@ -116,7 +116,7 @@ index e8484bfad5..ffafaf0a4a 100644
    # TODO(https://bugs.webrtc.org/14437):  Remove this section if general
    # Chromium fix resolves the problem.
 diff --git a/BUILD.gn b/BUILD.gn
-index 3efce2dd19..cbfc05f243 100644
+index 8488cf0818..14d1caaa01 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -33,7 +33,7 @@ if (is_android) {
@@ -816,10 +816,10 @@ index c8b15e4040..7ace1135c8 100644
      testonly = true
  
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index e864c4dfe2..c12c4b653f 100644
+index 6ab5f18f4d..2649cb2f35 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
-@@ -264,14 +264,11 @@ if (current_cpu == "x86" || current_cpu == "x64") {
+@@ -267,14 +267,11 @@ if (current_cpu == "x86" || current_cpu == "x64") {
        "vector_math_avx2.cc",
      ]
  
@@ -1280,7 +1280,7 @@ index 79b0e8e040..2e408d56c0 100644
      "../api:sequence_checker",
      "../api/adaptation:resource_adaptation_api",
 diff --git a/webrtc.gni b/webrtc.gni
-index 613d872b69..88e0441d9e 100644
+index 0a291ff95c..63f36cc466 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1380,7 +1380,7 @@ index 613d872b69..88e0441d9e 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1209,7 +1219,7 @@ if (is_mac || is_ios) {
+@@ -1212,7 +1222,7 @@ if (is_mac || is_ios) {
    }
  }
  

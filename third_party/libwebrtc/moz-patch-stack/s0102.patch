@@ -75,7 +75,7 @@ index 4df8681a9b..269ca2f5a7 100644
  # The python interpreter to use by default. On Windows, this will look
  # for vpython3.exe and vpython3.bat.
 diff --git a/BUILD.gn b/BUILD.gn
-index 771e0b196a..7e1e8353ab 100644
+index 7d8d06c678..a28f254f8d 100644
 --- a/BUILD.gn
 +++ b/BUILD.gn
 @@ -21,15 +21,15 @@
@@ -116,7 +116,7 @@ index 771e0b196a..7e1e8353ab 100644
    defines = []
    deps = [
      "net/dcsctp/public:factory",
-@@ -892,7 +892,7 @@ group("poison_software_video_codecs") {
+@@ -895,7 +895,7 @@ group("poison_default_neural_residual_echo_estimator") {
  if (!build_with_chromium) {
    # Write debug logs to gn_logs.txt.
    # This is also required for Siso builds.
@@ -455,10 +455,10 @@ index 7ace1135c8..b63880a296 100644
  
  config("audio_device_warnings_config") {
 diff --git a/modules/audio_processing/aec3/BUILD.gn b/modules/audio_processing/aec3/BUILD.gn
-index fd9bd4f298..f2348fb71c 100644
+index c08e7ad5c9..bb0da3bcae 100644
 --- a/modules/audio_processing/aec3/BUILD.gn
 +++ b/modules/audio_processing/aec3/BUILD.gn
-@@ -124,7 +124,7 @@ rtc_library("aec3") {
+@@ -127,7 +127,7 @@ rtc_library("aec3") {
  
    defines = []
    if (rtc_build_with_neon && target_cpu != "arm64") {
@@ -804,7 +804,7 @@ index e7a254c85d..eb2cb6c937 100644
    }
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index 87ce405e1c..6d303397f3 100644
+index 6d3d1853ad..da08c490e7 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -5,12 +5,12 @@
