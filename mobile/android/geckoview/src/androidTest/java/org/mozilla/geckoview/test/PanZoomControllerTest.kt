@@ -1,6 +1,7 @@
 package org.mozilla.geckoview.test
 
 import android.os.SystemClock
+import android.util.Log
 import android.view.InputDevice
 import android.view.MotionEvent
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -20,6 +21,7 @@ import org.mozilla.geckoview.GeckoSession.ScrollPositionUpdate
 import org.mozilla.geckoview.PanZoomController
 import org.mozilla.geckoview.ScreenLength
 import org.mozilla.geckoview.test.rule.GeckoSessionTestRule.WithDisplay
+import org.mozilla.geckoview.test.util.UiThreadUtils
 import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
@@ -27,6 +29,7 @@ import kotlin.math.roundToInt
 class PanZoomControllerTest : BaseSessionTest() {
     private val errorEpsilon = 3.0
     private val scrollWaitTimeout = 10000.0 // 10 seconds
+    private val LOGTAG = "PanZoomControllerTest"
 
     private fun setupDocument(documentPath: String) {
         mainSession.loadTestPath(documentPath)
@@ -789,6 +792,71 @@ class PanZoomControllerTest : BaseSessionTest() {
                 equalTo(ScrollPositionUpdate.SOURCE_OTHER),
             )
         }
+
+        // Clean up
+        mainSession.setCompositorScrollDelegate(null)
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun compositorScrollDelegateNotifiedOnRegistration() {
+        // Load a simple vertically scrollable page
+        setupDocument(SIMPLE_SCROLL_TEST_PATH)
+
+        // Without a CompositorScrollDelegate registered yet,
+        // scroll down by 50 pixels, and wait for the change
+        // to be propagated to the compositor.
+        mainSession.evaluateJS("window.scrollTo(0, 50)")
+        mainSession.promiseAllPaintsDone()
+        mainSession.flushApzRepaints()
+
+        // The compositor reports a scroll position updates
+        // delayed by one frame, so wait an additional frame
+        // to ensure the y=50 gets reported.
+        val promise = mainSession.evaluatePromiseJS(
+            """
+            new Promise(resolve => {
+                window.requestAnimationFrame(() => resolve(true));
+            });
+            """,
+        )
+        assertThat(
+            "we waited a frame",
+                   promise.value as Boolean, equalTo(true),
+        )
+        mainSession.promiseAllPaintsDone()
+        mainSession.flushApzRepaints()
+
+        // Register a CompositorScrollDelegate, and check that it
+        // immediately gets notified about the scrollY=50, even
+        // though that scroll offset was reached before the delegate
+        // was registered.
+        var wasNotified = false
+        sessionRule.addExternalDelegateUntilTestEnd(
+            GeckoSession.CompositorScrollDelegate::class,
+            mainSession::setCompositorScrollDelegate,
+            { mainSession.setCompositorScrollDelegate(null) },
+            object : GeckoSession.CompositorScrollDelegate {
+                override fun onScrollChanged(session: GeckoSession, update: ScrollPositionUpdate) {
+                    var scrollY = update.scrollY
+                    Log.d(LOGTAG, "test scroll delegate onScrollChanged, scrollY = " + scrollY)
+                    wasNotified = true
+                    assertThat(
+                        "notified scrollY is correct",
+                            scrollY, equalTo(50.0f),
+                    )
+                    }
+            },
+        )
+
+        // setCompositorScrollDelegate() runs on the UI thread,
+        // so the delegate callback may not be called synchronously.
+        UiThreadUtils.loopUntilIdle(sessionRule.env.defaultTimeoutMillis)
+
+        assertThat(
+            "delegate was notified on registration",
+                   wasNotified, equalTo(true),
+        )
 
         // Clean up
         mainSession.setCompositorScrollDelegate(null)
