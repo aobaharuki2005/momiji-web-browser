@@ -63,7 +63,7 @@ add_task(async function () {
     altKey: true,
   });
 
-  const tree = `
+  let tree = `
     html
       head!ignore-children
       body!ignore-children
@@ -83,9 +83,38 @@ add_task(async function () {
       `.trim();
   await assertMarkupViewAsTree(tree, "html", inspector);
 
-  // Cancel transition
+  info(
+    "Check that html element is selected back when view transition is over and pseudo elements removed"
+  );
+
+  const htmlChildren = await inspector.markup.walker.children(htmlNodeFront);
+  const viewTransitionNodeFront = htmlChildren.nodes[2];
+  await selectNode(viewTransitionNodeFront, inspector);
+  is(
+    inspector.selection.nodeFront.displayName,
+    "::view-transition",
+    "::view-transition element is properly selected"
+  );
+
+  info("Stop the view transition");
+  const onSelection = inspector.selection.once("new-node-front");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
     content.testTransition.skipTransition();
     delete content.testTransition;
   });
+  await onSelection;
+
+  is(
+    inspector.selection.nodeFront.displayName,
+    "html",
+    "html element was selected after the view transition was skipped"
+  );
+
+  // Check that the ::view-transition elements are removed
+  tree = `
+    html
+      head!ignore-children
+      body!ignore-children
+      `.trim();
+  await assertMarkupViewAsTree(tree, "html", inspector);
 });

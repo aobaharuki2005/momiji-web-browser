@@ -2294,29 +2294,10 @@ class WalkerActor extends Actor {
         const removedActors = [];
         const addedActors = [];
         for (const removed of change.removedNodes) {
-          const removedActor = this.getNode(removed);
-          if (!removedActor) {
-            // If the client never encountered this actor we don't need to
-            // mention that it was removed.
-            continue;
-          }
-          // While removed from the tree, nodes are saved as orphaned.
-          this._orphaned.add(removedActor);
-          removedActors.push(removedActor.actorID);
+          this._onMutationsNode(removed, removedActors, "removed");
         }
         for (const added of change.addedNodes) {
-          const addedActor = this.getNode(added);
-          if (!addedActor) {
-            // If the client never encounted this actor we don't need to tell
-            // it about its addition for ownership tree purposes - if the
-            // client wants to see the new nodes it can ask for children.
-            continue;
-          }
-          // The actor is reconnected to the ownership tree, unorphan
-          // it and let the client know so that its ownership tree is up
-          // to date.
-          this._orphaned.delete(addedActor);
-          addedActors.push(addedActor.actorID);
+          this._onMutationsNode(added, addedActors, "added");
         }
 
         mutation.numChildren = targetActor.numChildren;
@@ -2329,6 +2310,57 @@ class WalkerActor extends Actor {
         }
       }
       this.queueMutation(mutation);
+    }
+  }
+
+  /**
+   * Handle a mutation on a node
+   *
+   * @param {Element} node
+   *        The element that is added/removed in the mutation
+   * @param {NodeActor[]} actors
+   *        An array that will be populated by this function with the node actors that
+   *        were added
+   * @param {string} mutationType
+   *        The type of mutation we're handlign ("added" or "removed")
+   */
+  _onMutationsNode(node, actors, mutationType) {
+    if (mutationType !== "added" && mutationType !== "removed") {
+      console.error("Unknown mutation type", mutationType);
+      return;
+    }
+
+    const actor = this.getNode(node);
+    if (actor) {
+      actors.push(actor.actorID);
+      if (mutationType === "added") {
+        // The actor is reconnected to the ownership tree, unorphan
+        // it and let the client know so that its ownership tree is up
+        // to date.
+        this._orphaned.delete(actor);
+        return;
+      }
+      if (mutationType === "removed") {
+        // While removed from the tree, nodes are saved as orphaned.
+        this._orphaned.add(actor);
+        return;
+      }
+    }
+
+    // Here, we might be in a case where a node is remove/added for which we don't have an
+    // actor for, but do have actors for its children.
+    const filter = this.getDocumentWalkerFilter();
+    if (filter(node) !== nodeFilterConstants.FILTER_ACCEPT_CHILDREN) {
+      // At this point, the client never encountered this actor and the node wasn't ignored,
+      // so we don't need to tell it about this mutation.
+      // For added node, if the client wants to see the new nodes it can ask for children.
+      return;
+    }
+
+    // Otherwise, the node was ignored, so we need to go over its children to find
+    // actor references we might have.
+    for (const child of this._rawChildren(node)) {
+      this._onMutationsNode(child, actors, mutationType);
     }
   }
 
