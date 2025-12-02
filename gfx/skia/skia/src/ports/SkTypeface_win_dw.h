@@ -115,6 +115,7 @@ public:
 
     static DWriteFontTypeface* Create(IDWriteFactory* factory,
                                       IDWriteFontFace* fontFace,
+                                      IDWriteFont* font,
                                       SkFontStyle aStyle,
                                       DWRITE_RENDERING_MODE aRenderingMode,
                                       float aGamma,
@@ -122,7 +123,7 @@ public:
                                       float aClearTypeLevel) {
         DWriteFontTypeface* typeface =
                 new DWriteFontTypeface(aStyle, factory, fontFace,
-                                       nullptr, nullptr,
+                                       font, nullptr,
                                        nullptr, SkFontArguments::Palette{0, nullptr, 0});
         typeface->fRenderingMode = aRenderingMode;
         typeface->fGamma = aGamma;

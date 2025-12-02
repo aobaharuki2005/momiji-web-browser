@@ -49,9 +49,10 @@ SK_API void SkTypeface_SetEnsureLOGFONTAccessibleProc(void (*)(const LOGFONT&));
 //
 class SkFontMgr;
 struct IDWriteFactory;
+struct IDWriteFont;
 struct IDWriteFontCollection;
-struct IDWriteFontFallback;
 struct IDWriteFontFace;
+struct IDWriteFontFallback;
 
 /**
  *  Like the other Typeface create methods, this returns a new reference to the
@@ -60,6 +61,7 @@ struct IDWriteFontFace;
  */
 SK_API SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
                                                   IDWriteFontFace* aFontFace,
+                                                  IDWriteFont* aFont,
                                                   SkFontStyle aStyle,
                                                   int aRenderingMode,
                                                   float aGamma,

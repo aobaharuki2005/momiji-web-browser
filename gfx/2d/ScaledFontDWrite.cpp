@@ -117,9 +117,11 @@ SkTypeface* ScaledFontDWrite::CreateSkTypeface() {
     clearTypeLevel = 1.0f;
   }
 
-  return SkCreateTypefaceFromDWriteFont(factory, mFontFace, mStyle,
-                                        (int)settings.RenderingMode(), gamma,
-                                        contrast, clearTypeLevel);
+  IDWriteFont* font =
+      static_cast<UnscaledFontDWrite*>(mUnscaledFont.get())->GetFont();
+  return SkCreateTypefaceFromDWriteFont(
+      factory, mFontFace, font, mStyle,
+      (int)settings.RenderingMode(), gamma, contrast, clearTypeLevel);
 }
 
 void ScaledFontDWrite::SetupSkFontDrawOptions(SkFont& aFont) {
