@@ -6047,6 +6047,23 @@
       }
     ]
   },
+  "1999198": {
+    "label": "anime-bit.ru",
+    "bugs": {
+      "1999198": {
+        "issue": "broken-scrolling",
+        "matches": ["*://*.anime-bit.ru/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "content_scripts": {
+          "js": ["bug1999198-anime-bit.ru-fix-broken-scrolling.js"]
+        }
+      }
+    ]
+  },
   "1999488": {
     "label": "languageacademy.com.au",
     "bugs": {
