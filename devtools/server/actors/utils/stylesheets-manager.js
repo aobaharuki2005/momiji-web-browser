@@ -270,13 +270,14 @@ class StyleSheetsManager extends EventEmitter {
    *
    * @param  {Document} document
    *         Document that the new style sheet belong to.
+   * @param  {Element} parent
+   *         The element into which we'll append the <style> element
    * @param  {string} text
    *         Content of style sheet.
    * @param  {string} fileName
    *         If the stylesheet adding is from file, `fileName` indicates the path.
    */
-  async addStyleSheet(document, text, fileName) {
-    const parent = document.documentElement;
+  async addStyleSheet(document, parent, text, fileName) {
     const style = document.createElementNS(
       "http://www.w3.org/1999/xhtml",
       "style"
