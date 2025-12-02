@@ -820,10 +820,16 @@ add_task(async function tabGroupPanelUpdatesTests() {
     "Panel toolbarbutton has updated label"
   );
 
+  await closeGroupPreviews();
+
   info("Test that adding a tab to the group adds the tab to the group's panel");
   let TabOpenEvent = BrowserTestUtils.waitForEvent(group, "TabOpen");
   let newTab = await addTabTo(gBrowser, "about:robots", { tabGroup: group });
   await TabOpenEvent;
+
+  // Re-collapse the group, which was uncollapsed when the new tab was added
+  group.collapsed = true;
+  await openGroupPreview(group);
 
   Assert.equal(
     panelContent.children.length,

@@ -4430,6 +4430,13 @@
         tabContainer.insertBefore(tab, itemAfter);
       }
 
+      if (tab.group?.collapsed) {
+        // Bug 1997096: automatically expand the group if we are adding a new
+        // tab to a collapsed group, and that tab does not have automatic focus
+        // (i.e. if the user right clicks and clicks "Open in New Tab")
+        tab.group.collapsed = false;
+      }
+
       this._updateTabsAfterInsert();
 
       if (pinned) {

@@ -1297,3 +1297,35 @@ add_task(async function test_bug1969925_adoptLastTabGroupFromWindow() {
 
   await removeTabGroup(groupAfterAdopt);
 });
+
+/*
+ * Tests that if a new tab is opened via right click from the active tab in a collapsed group,
+ * the group auto-uncollapses so you can see the tab that was just opened.
+ */
+add_task(async function test_bug1997096_autoUncollapseOnRightClick() {
+  let groupedTab = await addTabTo(gBrowser);
+  let group = gBrowser.addTabGroup([groupedTab]);
+  gBrowser.selectedTab = groupedTab;
+  group.collapsed = true;
+
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
+
+  await BrowserTestUtils.synthesizeMouseAtCenter(
+    "a",
+    { type: "contextmenu", button: 2 },
+    groupedTab.linkedBrowser
+  );
+  document.getElementById("context-openlinkintab").click();
+
+  let newTab = await newTabPromise;
+
+  Assert.ok(newTab, "New tab opened via right click");
+  Assert.ok(
+    !group.collapsed,
+    "Group is automatically uncollapsed when opening tab via right click"
+  );
+
+  document.querySelector("#contentAreaContextMenu").hidePopup();
+  BrowserTestUtils.removeTab(newTab);
+  BrowserTestUtils.removeTab(groupedTab);
+});
