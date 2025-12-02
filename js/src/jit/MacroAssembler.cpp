@@ -10702,17 +10702,12 @@ void MacroAssembler::checkForMatchMFBT(Register hashTable, Register hashIndex,
   addPtr(capacityOffset, entries);
 
   // Load entries[hashIndex] into |scratch|
-  size_t EntrySize = sizeof(typename Table::Entry);
-  if (mozilla::IsPowerOfTwo(EntrySize)) {
-    uint32_t shift = mozilla::FloorLog2(EntrySize);
-    lshiftPtr(Imm32(shift), hashIndex, scratch);
-  } else {
-    // Note: this is provided as a fallback. Faster paths are possible for many
-    // non-power-of-two constants. If you add a use of this code that requires a
-    // non-power-of-two EntrySize, consider extending this code.
-    move32(hashIndex, scratch);
-    mulPtr(ImmWord(EntrySize), scratch);
-  }
+  // TODO: support non-power-of-2 entry sizes
+  constexpr size_t EntrySize = sizeof(typename Table::Entry);
+  static_assert(mozilla::IsPowerOfTwo(EntrySize));
+  uint32_t shift = mozilla::FloorLog2(EntrySize);
+  lshiftPtr(Imm32(shift), hashIndex, scratch);
+
   computeEffectiveAddress(BaseIndex(entries, scratch, Scale::TimesOne),
                           scratch);
 }
