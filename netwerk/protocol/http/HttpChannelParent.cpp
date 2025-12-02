@@ -1354,6 +1354,20 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     (void)SendOnStartRequestSent();
   }
 
+  if (!args.timing().domainLookupEnd().IsNull() &&
+      !args.timing().connectStart().IsNull()) {
+    nsAutoCString protocolVersion;
+    mChannel->GetProtocolVersion(protocolVersion);
+    uint32_t classOfServiceFlags = 0;
+    mChannel->GetClassFlags(&classOfServiceFlags);
+    nsAutoCString cosString;
+    ClassOfService::ToString(classOfServiceFlags, cosString);
+    nsAutoCString key(
+        nsPrintfCString("%s_%s", protocolVersion.get(), cosString.get()));
+    glean::network::dns_end_to_connect_start_exp.Get(key).AccumulateRawDuration(
+        args.timing().connectStart() - args.timing().domainLookupEnd());
+  }
+
   return rv;
 }
 

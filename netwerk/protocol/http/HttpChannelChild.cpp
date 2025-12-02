@@ -444,14 +444,26 @@ void HttpChannelChild::OnStartRequest(
 
   ResourceTimingStructArgsToTimingsStruct(aArgs.timing(), mTransactionTimings);
 
+  nsAutoCString cosString;
+  ClassOfService::ToString(mClassOfService, cosString);
   if (!mAsyncOpenTime.IsNull() &&
       !aArgs.timing().transactionPending().IsNull()) {
+    glean::network::async_open_child_to_transaction_pending_exp.Get(cosString)
+        .AccumulateRawDuration(aArgs.timing().transactionPending() -
+                               mAsyncOpenTime);
     PerfStats::RecordMeasurement(
         PerfStats::Metric::HttpChannelAsyncOpenToTransactionPending,
         aArgs.timing().transactionPending() - mAsyncOpenTime);
   }
 
   const TimeStamp now = TimeStamp::Now();
+  if (!aArgs.timing().responseStart().IsNull()) {
+    glean::network::response_start_parent_to_content_exp.Get(cosString)
+        .AccumulateRawDuration(now - aArgs.timing().responseStart());
+    PerfStats::RecordMeasurement(
+        PerfStats::Metric::HttpChannelResponseStartParentToContent,
+        now - aArgs.timing().responseStart());
+  }
   if (!mOnStartRequestStartTime.IsNull()) {
     PerfStats::RecordMeasurement(PerfStats::Metric::OnStartRequestToContent,
                                  now - mOnStartRequestStartTime);
@@ -1011,6 +1023,16 @@ void HttpChannelChild::OnStopRequest(
   }
   PerfStats::RecordMeasurement(PerfStats::Metric::HttpChannelCompletion,
                                channelCompletionDuration);
+
+  if (!aTiming.responseEnd().IsNull()) {
+    nsAutoCString cosString;
+    ClassOfService::ToString(mClassOfService, cosString);
+    glean::network::response_end_parent_to_content.Get(cosString)
+        .AccumulateRawDuration(now - aTiming.responseEnd());
+    PerfStats::RecordMeasurement(
+        PerfStats::Metric::HttpChannelResponseEndParentToContent,
+        now - aTiming.responseEnd());
+  }
 
   if (!mOnStopRequestStartTime.IsNull()) {
     PerfStats::RecordMeasurement(PerfStats::Metric::OnStopRequestToContent,
