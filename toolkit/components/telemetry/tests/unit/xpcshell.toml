@@ -40,11 +40,6 @@ skip-if = [
 ]
 tags = "addons"
 
-["test_MainPingDisablement.js"]
-run-if = [
-  "os != 'android'", # Legacy telemetry is always disabled on Android
-]
-
 ["test_MigratePendingPings.js"]
 run-if = [
   "os != 'android'", # Legacy telemetry is a lways disabled on Android
