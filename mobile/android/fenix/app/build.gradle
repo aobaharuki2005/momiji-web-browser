@@ -708,6 +708,8 @@ dependencies {
     testImplementation testFixtures(project(':components:feature-downloads'))
 
     testImplementation ComponentsDependencies.mozilla_appservices_full_megazord_libsForTests
+
+    testImplementation libs.androidx.compose.ui.test
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.junit
     testImplementation libs.androidx.work.testing

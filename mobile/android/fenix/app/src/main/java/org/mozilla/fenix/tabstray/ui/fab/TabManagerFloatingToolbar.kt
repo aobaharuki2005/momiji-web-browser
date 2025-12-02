@@ -360,6 +360,7 @@ private fun generateMenuItems(
         drawableRes = iconsR.drawable.mozac_ic_delete_24,
         testTag = TabsTrayTestTag.CLOSE_ALL_TABS,
         onClick = onDeleteAllTabsClick,
+        level = MenuItem.FixedItem.Level.Critical,
     )
     val accountSettingsItem = MenuItem.IconItem(
         text = Text.Resource(R.string.tab_tray_menu_account_settings),
