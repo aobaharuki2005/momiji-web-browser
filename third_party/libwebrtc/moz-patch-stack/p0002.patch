@@ -1,121 +1,51 @@
 From: Daniel Baker <dbaker@mozilla.com>
-Date: Mon, 1 Dec 2025 17:39:53 -0700
-Subject: (tmp-cherry-pick) Revert "Use absl::BitGen to generate Random's seed"
- (b90d283911)
+Date: Mon, 1 Dec 2025 17:44:54 -0700
+Subject: (tmp-cherry-pick) Revert "Avoid seeding Random with current time in
+ rtp_sender" (40c9ccfc4a)
 
-This reverts commit f2556b4ffe51bc25bfa99771801800ddb71aad8e.
+This reverts commit a0e60db139e8d06f3646b374837fcbdd5b98df42.
 
-Reason for revert: absl::BitGen has issues seeding on Windows10 Chromium render process. https://ci.chromium.org/ui/p/chromium/builders/webrtc.fyi/WebRTC%20Chromium%20FYI%20Win10%20Tester/18543/test-results
+Reason for revert: Broke win10 chrome bots: https://ci.chromium.org/ui/p/chromium/builders/webrtc.fyi/WebRTC%20Chromium%20FYI%20Win10%20Tester/18529/overview
 
 Original change's description:
-> Use absl::BitGen to generate Random's seed
+> Avoid seeding Random with current time in rtp_sender
 >
-> This adds a default constructor to Random which uses absl::BitGet to
-> generate its own seed. This allows us to replace places where the
-> current time was used to set a seed.
+> Random default constructor now provides a non-deterministic random seed.
 >
-> Bug: webrtc:441137274
-> Change-Id: I5afeca99b2fee5e5a2a0b31043ee0c81c00af5cc
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408005
+> This CL was uploaded by an experimental version of git cl split
+> (https://crbug.com/389069356).
+>
+> R=danilchap@webrtc.org
+>
+> Bug: webrtc:42223992, webrtc:441137274
+> Change-Id: If0b2959994c474d2d8d433749879e72f1e0c530c
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408744
 > Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
+> Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
 > Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
-> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45588}
+> Cr-Commit-Position: refs/heads/main@{#45590}
 
-Bug: webrtc:441137274
-Change-Id: I7acb39e56cfb119742a2b36f053abd1a43781417
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408903
+Bug: webrtc:42223992, webrtc:441137274
+Change-Id: Ib09ca1047a798dd6c9500b9ce4a33198f0f5cb21
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408820
 Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#45619}
+Owners-Override: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#45605}
 ---
- rtc_base/BUILD.gn  |  1 -
- rtc_base/DEPS      |  3 ---
- rtc_base/random.cc |  8 --------
- rtc_base/random.h  | 19 ++++++++++++-------
- 4 files changed, 12 insertions(+), 19 deletions(-)
+ modules/rtp_rtcp/source/rtp_sender.cc | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index b7ec9d0fdf..4d4014adc9 100644
---- a/rtc_base/BUILD.gn
-+++ b/rtc_base/BUILD.gn
-@@ -251,7 +251,6 @@ rtc_library("random") {
-   deps = [
-     ":checks",
-     ":safe_conversions",
--    "//third_party/abseil-cpp/absl/random",
-   ]
- }
- 
-diff --git a/rtc_base/DEPS b/rtc_base/DEPS
-index 8ad49971f1..9e8908ceb2 100644
---- a/rtc_base/DEPS
-+++ b/rtc_base/DEPS
-@@ -44,7 +44,4 @@ specific_include_rules = {
-   "base64_rust\.cc": [
-     "+third_party/rust/chromium_crates_io/vendor/cxx-v1/include/cxx.h",
-   ],
--  "random\.cc": [
--    "+absl/random/random.h",
--  ],
- }
-diff --git a/rtc_base/random.cc b/rtc_base/random.cc
-index 7f2303b711..8fd23ea7ad 100644
---- a/rtc_base/random.cc
-+++ b/rtc_base/random.cc
-@@ -11,21 +11,13 @@
- 
- #include <cmath>
- #include <cstdint>
--#include <limits>
- #include <numbers>
- 
--#include "absl/random/random.h"
- #include "rtc_base/checks.h"
- #include "rtc_base/numerics/safe_conversions.h"
- 
- namespace webrtc {
- 
--Random::Random() {
--  absl::BitGen gen;
--  state_ =
--      absl::Uniform<uint64_t>(gen, 1, std::numeric_limits<uint64_t>::max());
--}
--
- Random::Random(uint64_t seed) {
-   RTC_DCHECK(seed != 0x0ull);
-   state_ = seed;
-diff --git a/rtc_base/random.h b/rtc_base/random.h
-index 3b9112a9e3..b3b9fd1608 100644
---- a/rtc_base/random.h
-+++ b/rtc_base/random.h
-@@ -21,15 +21,20 @@ namespace webrtc {
- 
- class Random {
-  public:
--  // Returns a random number generator with a random seed.
--  Random();
--
--  // Returns a random number generator with the given seed. The seed must not
--  // be 0. It is expected that callers intelligently generate their seeds and do
--  // not simply pass a constant value or use the current time as a seed.
--  // This function should only be used for testing.
-+  // TODO(tommi): Change this so that the seed can be initialized internally,
-+  // e.g. by offering two ways of constructing or offer a static method that
-+  // returns a seed that's suitable for initialization.
-+  // The problem now is that callers are calling clock_->TimeInMicroseconds()
-+  // which calls TickTime::Now().Ticks(), which can return a very low value on
-+  // Mac and can result in a seed of 0 after conversion to microseconds.
-+  // Besides the quality of the random seed being poor, this also requires
-+  // the client to take on extra dependencies to generate a seed.
-+  // If we go for a static seed generator in Random, we can use something from
-+  // webrtc/rtc_base and make sure that it works the same way across platforms.
-+  // See also discussion here: https://codereview.webrtc.org/1623543002/
-   explicit Random(uint64_t seed);
- 
-+  Random() = delete;
-   Random(const Random&) = delete;
-   Random& operator=(const Random&) = delete;
- 
+diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
+index 3e333af6e5..ef9d0250f6 100644
+--- a/modules/rtp_rtcp/source/rtp_sender.cc
++++ b/modules/rtp_rtcp/source/rtp_sender.cc
+@@ -157,6 +157,7 @@ RTPSender::RTPSender(const Environment& env,
+                      RtpPacketHistory* packet_history,
+                      RtpPacketSender* packet_sender)
+     : clock_(&env.clock()),
++      random_(clock_->TimeInMicroseconds()),
+       audio_configured_(config.audio),
+       ssrc_(config.local_media_ssrc),
+       rtx_ssrc_(config.rtx_send_ssrc),
