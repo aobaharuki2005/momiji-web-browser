@@ -4,18 +4,3 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning: General")
-
-DIRS += [
-    "prompts",
-]
-
-MOZ_SRC_FILES += [
-    "ChatUtils.mjs",
-    "InsightsHistorySource.sys.mjs",
-    "IntentClassifier.sys.mjs",
-    "Utils.mjs",
-]
-
-XPCSHELL_TESTS_MANIFESTS += [
-    "tests/xpcshell/xpcshell.toml",
-]
