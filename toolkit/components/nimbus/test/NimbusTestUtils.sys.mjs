@@ -251,6 +251,36 @@ export const NimbusTestUtils = {
     },
 
     /**
+     * Assert that the only active enrollments have the expected slugs.
+     *
+     * @param {string} expectedSlugs The slugs of the enrollments that we expect to be active.
+     */
+    async activeEnrollments(expectedSlugs) {
+      await NimbusTestUtils.flushStore();
+
+      const conn = await lazy.ProfilesDatastoreService.getConnection();
+      const slugs = await conn
+        .execute(
+          `
+            SELECT
+              slug
+            FROM NimbusEnrollments
+            WHERE
+              active = true AND
+              profileId = :profileId;
+          `,
+          { profileId: ExperimentAPI.profileId }
+        )
+        .then(rows => rows.map(row => row.getResultByName("slug")));
+
+      NimbusTestUtils.Assert.deepEqual(
+        slugs.sort(),
+        expectedSlugs.sort(),
+        "Should only see expected active enrollments"
+      );
+    },
+
+    /**
      * Assert that an enrollment exists in the NimbusEnrollments table.
      *
      * @param {string} slug The slug to check for.
@@ -1365,13 +1395,6 @@ export const NimbusTestUtils = {
     );
   },
 
-  /**
-   * Wait for the given slugs to be the only active enrollments in the
-   * NimbusEnrollments table.
-   *
-   * @param {string[]} expectedSlugs The slugs of the only active enrollments we
-   * expect.
-   */
   async waitForActiveEnrollments(expectedSlugs) {
     const profileId = ExperimentAPI.profileId;
 

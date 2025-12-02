@@ -1750,8 +1750,7 @@ add_task(async function test_prefChange() {
 
     PrefUtils.setPref(pref, OVERWRITE_VALUE, { branch: setBranch });
 
-    await NimbusTestUtils.flushStore();
-    await NimbusTestUtils.waitForActiveEnrollments(
+    await NimbusTestUtils.assert.activeEnrollments(
       expectedEnrollments.map(kind => slugs[kind])
     );
 

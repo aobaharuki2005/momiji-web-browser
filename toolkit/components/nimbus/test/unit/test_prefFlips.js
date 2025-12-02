@@ -1735,7 +1735,7 @@ add_task(async function test_prefFlips_unenrollment() {
       Assert.ok(enrollment.active, `It should still be active`);
     }
 
-    await NimbusTestUtils.waitForActiveEnrollments(expectedEnrollments);
+    await NimbusTestUtils.assert.activeEnrollments(expectedEnrollments);
 
     info("Checking expected unenrollments...");
     for (const slug of expectedUnenrollments) {
@@ -1770,7 +1770,7 @@ add_task(async function test_prefFlips_unenrollment() {
     let expectedCurrentEnrollments = new Set(expectedEnrollments).difference(
       new Set(expectedUnenrollments)
     );
-    await NimbusTestUtils.waitForActiveEnrollments(
+    await NimbusTestUtils.assert.activeEnrollments(
       Array.from(expectedCurrentEnrollments)
     );
 
@@ -1784,7 +1784,7 @@ add_task(async function test_prefFlips_unenrollment() {
     expectedCurrentEnrollments = expectedCurrentEnrollments.difference(
       new Set(unenrollmentOrder)
     );
-    await NimbusTestUtils.waitForActiveEnrollments(
+    await NimbusTestUtils.assert.activeEnrollments(
       Array.from(expectedCurrentEnrollments)
     );
 
@@ -1801,7 +1801,7 @@ add_task(async function test_prefFlips_unenrollment() {
       }
     }
 
-    await NimbusTestUtils.waitForActiveEnrollments([]);
+    await NimbusTestUtils.assert.activeEnrollments([]);
 
     info("Cleaning up prefs...");
     Services.prefs.deleteBranch(PREF_FOO);
@@ -2664,7 +2664,7 @@ add_task(async function test_prefFlips_failed_experiment_and_rollout_1() {
       Assert.ok(enrollment.active, `The enrollment for ${slug} is active`);
     }
 
-    await NimbusTestUtils.waitForActiveEnrollments(expectedEnrollments);
+    await NimbusTestUtils.assert.activeEnrollments(expectedEnrollments);
 
     info("Checking expected unenrollments...");
     for (const slug of expectedUnenrollments) {
@@ -2774,7 +2774,7 @@ add_task(async function test_prefFlips_failed_experiment_and_rollout_2() {
       );
     }
 
-    await NimbusTestUtils.waitForActiveEnrollments(expectedEnrollments);
+    await NimbusTestUtils.assert.activeEnrollments(expectedEnrollments);
 
     info("Checking expected enrollments...");
     for (const slug of expectedEnrollments) {
@@ -2843,7 +2843,7 @@ add_task(async function test_prefFlips_update_failure() {
     { manager, slug: "experiment" }
   );
 
-  await NimbusTestUtils.waitForActiveEnrollments(["rollout"]);
+  await NimbusTestUtils.assert.activeEnrollments(["rollout"]);
 
   const rolloutEnrollment = manager.store.get("rollout");
   const experimentEnrollment = manager.store.get("experiment");
@@ -3109,7 +3109,7 @@ async function test_prefFlips_restore_failure_conflict() {
     migrationState: NimbusTestUtils.migrationState.LATEST,
   });
 
-  await NimbusTestUtils.waitForActiveEnrollments(["rollout-1"]);
+  await NimbusTestUtils.assert.activeEnrollments(["rollout-1"]);
   await NimbusTestUtils.assert.enrollmentExists("rollout-2", { active: false });
 
   Assert.ok(manager.store.get("rollout-1").active, "rollout-1 is active");
