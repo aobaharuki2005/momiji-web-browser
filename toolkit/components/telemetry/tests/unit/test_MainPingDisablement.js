@@ -55,7 +55,6 @@ add_task(async function test_scalarDisablement() {
 
   info("2. Ensure we can disable scalars, leaving important ones intact.");
   const { cleanup } = await NimbusTestUtils.setupTest();
-  registerCleanupFunction(cleanup);
 
   let nimbusCleanup = await NimbusTestUtils.enrollWithFeatureConfig({
     featureId: NimbusFeatures.legacyTelemetry.featureId,
@@ -74,4 +73,44 @@ add_task(async function test_scalarDisablement() {
   Assert.ok(!(LAST_SHUTDOWN_SCALAR in filtered.processes.parent.scalars));
 
   await nimbusCleanup();
+  await cleanup();
+});
+
+add_task(async function test_hgramDisablement() {
+  const ARCHIVE_HGRAM = "TELEMETRY_ARCHIVE_DIRECTORIES_COUNT";
+  const SEND_KEYED_HGRAM = "TELEMETRY_SEND_FAILURE_TYPE_PER_PING";
+  // Let's check both normal and keyed.
+  Glean.telemetry.archiveDirectoriesCount.accumulateSingleSample(42);
+  Glean.telemetry.sendFailureTypePerPing.get("some-ping", "eOK").add(1);
+
+  info("1. Ensure histogram data is reported normally to begin with.");
+
+  let payload = TelemetrySession.getPayload(
+    "reason",
+    /*clearSubsession*/ false
+  );
+
+  Assert.ok(ARCHIVE_HGRAM in payload.histograms);
+  Assert.ok(SEND_KEYED_HGRAM in payload.keyedHistograms);
+
+  info("2. Ensure we can disable histograms.");
+  const { cleanup } = await NimbusTestUtils.setupTest();
+
+  let nimbusCleanup = await NimbusTestUtils.enrollWithFeatureConfig({
+    featureId: NimbusFeatures.legacyTelemetry.featureId,
+    value: {
+      disableMainPingHgrams: true,
+    },
+  });
+
+  let filtered = TelemetrySession.getPayload(
+    "reason",
+    /*clearSubsession*/ false
+  );
+
+  Assert.ok(!(ARCHIVE_HGRAM in filtered.histograms));
+  Assert.ok(!(SEND_KEYED_HGRAM in filtered.keyedHistograms));
+
+  await nimbusCleanup();
+  await cleanup();
 });

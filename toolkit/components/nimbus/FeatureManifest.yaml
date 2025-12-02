@@ -2763,6 +2763,12 @@ legacyTelemetry:
         `browser.engagement.active_ticks`.
         These scalars will continue to be reported as normal, even if all
         others are disabled by this variable.
+    disableMainPingHgrams:
+      type: boolean
+      description: |
+        If true, histograms will not be included in "main" pings.
+        Data will still be recorded locally,
+        it will merely not be included in "main" pings when they are submitted.
 
 browserLowMemoryPrefs:
   description: Prefs which control the browser's behaviour under low memory.
