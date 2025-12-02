@@ -237,9 +237,9 @@ export class SmartAssist extends MozLitElement {
       {
         type: "FXA_SIGNIN_FLOW",
         data: {
-          entrypoint: "ai-window",
+          entrypoint: "aiwindow",
           extraParams: {
-            service: "ai-window",
+            service: "aiwindow",
           },
         },
       },
