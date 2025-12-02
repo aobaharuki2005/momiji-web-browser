@@ -200,7 +200,7 @@ class HighlightersOverlay {
     // Add inspector events, not specific to a given view.
     this.inspector.on("markupmutation", this.onMarkupMutation);
 
-    this.resourceCommand = this.inspector.commands.resourceCommand;
+    this.resourceCommand = this.inspector.toolbox.resourceCommand;
     this.resourceCommand.watchResources(
       [this.resourceCommand.TYPES.ROOT_NODE],
       { onAvailable: this.#onResourceAvailable }

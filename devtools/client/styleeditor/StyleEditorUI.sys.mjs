@@ -203,8 +203,8 @@ export class StyleEditorUI extends EventEmitter {
       }
     }
 
-    await this.#commands.resourceCommand.watchResources(
-      [this.#commands.resourceCommand.TYPES.DOCUMENT_EVENT],
+    await this.#toolbox.resourceCommand.watchResources(
+      [this.#toolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
       { onAvailable: this.#onResourceAvailable }
     );
     await this.#commands.targetCommand.watchTargets({
@@ -214,8 +214,8 @@ export class StyleEditorUI extends EventEmitter {
     });
 
     this.#startLoadingStyleSheets();
-    await this.#commands.resourceCommand.watchResources(
-      [this.#commands.resourceCommand.TYPES.STYLESHEET],
+    await this.#toolbox.resourceCommand.watchResources(
+      [this.#toolbox.resourceCommand.TYPES.STYLESHEET],
       {
         onAvailable: this.#onResourceAvailable,
         onUpdated: this.#onResourceUpdated,
@@ -501,8 +501,8 @@ export class StyleEditorUI extends EventEmitter {
     // same stylesheet resources from ResourceCommand, but `_addStyleSheet` will trigger
     // or ignore the additional source-map mapping.
     this.#root.classList.add("loading");
-    for (const resource of this.#commands.resourceCommand.getAllResources(
-      this.#commands.resourceCommand.TYPES.STYLESHEET
+    for (const resource of this.#toolbox.resourceCommand.getAllResources(
+      this.#toolbox.resourceCommand.TYPES.STYLESHEET
     )) {
       await this.#handleStyleSheetResource(resource);
     }
@@ -1640,8 +1640,7 @@ export class StyleEditorUI extends EventEmitter {
     const promises = [];
     for (const resource of resources) {
       if (
-        resource.resourceType ===
-        this.#commands.resourceCommand.TYPES.STYLESHEET
+        resource.resourceType === this.#toolbox.resourceCommand.TYPES.STYLESHEET
       ) {
         const onStyleSheetHandled = this.#handleStyleSheetResource(resource);
 
@@ -1682,7 +1681,7 @@ export class StyleEditorUI extends EventEmitter {
 
     for (const { resource, update } of updates) {
       if (
-        update.resourceType === this.#commands.resourceCommand.TYPES.STYLESHEET
+        update.resourceType === this.#toolbox.resourceCommand.TYPES.STYLESHEET
       ) {
         const editor = this.editors.find(
           e => e.resourceId === update.resourceId
@@ -1721,8 +1720,7 @@ export class StyleEditorUI extends EventEmitter {
   #onResourceDestroyed = resources => {
     for (const resource of resources) {
       if (
-        resource.resourceType !==
-        this.#commands.resourceCommand.TYPES.STYLESHEET
+        resource.resourceType !== this.#toolbox.resourceCommand.TYPES.STYLESHEET
       ) {
         continue;
       }
@@ -1852,10 +1850,10 @@ export class StyleEditorUI extends EventEmitter {
   }
 
   destroy() {
-    this.#commands.resourceCommand.unwatchResources(
+    this.#toolbox.resourceCommand.unwatchResources(
       [
-        this.#commands.resourceCommand.TYPES.DOCUMENT_EVENT,
-        this.#commands.resourceCommand.TYPES.STYLESHEET,
+        this.#toolbox.resourceCommand.TYPES.DOCUMENT_EVENT,
+        this.#toolbox.resourceCommand.TYPES.STYLESHEET,
       ],
       {
         onAvailable: this.#onResourceAvailable,

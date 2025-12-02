@@ -129,8 +129,8 @@ add_task(async function () {
 
   function assertNetworkEventResourceState(expectedNoOfNetworkEventResources) {
     const actualNoOfNetworkEventResources =
-      toolbox.commands.resourceCommand.getAllResources(
-        toolbox.commands.resourceCommand.TYPES.NETWORK_EVENT
+      toolbox.resourceCommand.getAllResources(
+        toolbox.resourceCommand.TYPES.NETWORK_EVENT
       ).length;
 
     is(
