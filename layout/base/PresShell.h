@@ -407,6 +407,9 @@ class PresShell final : public nsStubDocumentObserver,
 
   void ScrollFrameIntoVisualViewport(Maybe<nsPoint>& aDestination,
                                      const nsRect& aPositionFixedRect,
+                                     const nsIFrame* aPositionFixedFrame,
+                                     ScrollAxis aVertical,
+                                     ScrollAxis aHorizontal,
                                      ScrollFlags aScrollFlags);
 
  public:
