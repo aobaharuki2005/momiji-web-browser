@@ -397,7 +397,7 @@ index 26d136a1d8..1b3d2f3884 100644
      deps = [
        ":generated_jni",
 diff --git a/examples/androidvoip/BUILD.gn b/examples/androidvoip/BUILD.gn
-index af82ba39db..2306fe1886 100644
+index 1954875050..8dee85583a 100644
 --- a/examples/androidvoip/BUILD.gn
 +++ b/examples/androidvoip/BUILD.gn
 @@ -50,8 +50,8 @@ if (is_android) {
