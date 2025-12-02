@@ -698,7 +698,7 @@ index cbec6fcfd7..15f4f39141 100644
  class VideoMediaReceiveChannelInterface;
  class VoiceMediaSendChannelInterface;
 diff --git a/media/base/media_channel_impl.cc b/media/base/media_channel_impl.cc
-index 6d4d4a2363..316408a9b3 100644
+index 2cb3560682..01fcd82dc8 100644
 --- a/media/base/media_channel_impl.cc
 +++ b/media/base/media_channel_impl.cc
 @@ -35,15 +35,6 @@
