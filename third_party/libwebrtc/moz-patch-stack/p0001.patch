@@ -1,50 +1,180 @@
 From: Daniel Baker <dbaker@mozilla.com>
-Date: Mon, 1 Dec 2025 17:59:50 -0700
-Subject: (tmp-cherry-pick) Revert "Avoid seeding Random with current time in
- dcsctp_transport" (806853d75b)
+Date: Mon, 1 Dec 2025 18:45:43 -0700
+Subject: (tmp-cherry-pick) Revert "use sigslot trampoline in PortInterface"
+ (113c64e969)
 
-This reverts commit cf09fe4f7b2b9fb1d914e1e2f636c943b1f4a7ac.
+This reverts commit 9155b7818e423bdec0b8902d5d34620c17e97413.
 
-Reason for revert: absl::BitGen has issues seeding on Windows10 Chromium render process. https://ci.chromium.org/ui/p/chromium/builders/webrtc.fyi/WebRTC%20Chromium%20FYI%20Win10%20Tester/18543/test-results
+Reason for revert: Looks like this is blocking the chromium import:
+https://chromium-review.googlesource.com/c/chromium/src/+/6936215?tab=checks
 
 Original change's description:
-> Avoid seeding Random with current time in dcsctp_transport
+> use sigslot trampoline in PortInterface
 >
-> Random default constructor now provides a non-deterministic random seed.
->
-> This CL was uploaded by an experimental version of git cl split
-> (https://crbug.com/389069356).
->
-> R=boivie@webrtc.org
->
-> Bug: webrtc:42223992, webrtc:441137274
-> Change-Id: If0c4dccb4276167087737d08bdd00a37decdeb0f
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408721
-> Auto-Submit: Evan Shrubsole <eshr@webrtc.org>
-> Reviewed-by: Victor Boivie <boivie@webrtc.org>
-> Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45596}
+> Bug: webrtc:42222066
+> Change-Id: I940ab87de5fb0fa135612c3caf65236b4874e5d4
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408784
+> Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+> Commit-Queue: Lena Kaplan <lenakaplan@meta.com>
+> Cr-Commit-Position: refs/heads/main@{#45610}
 
-Bug: webrtc:42223992, webrtc:441137274
-Change-Id: I99f02130cd4315de0983fbdae8e7bd1d0951bde0
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408905
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Evan Shrubsole <eshr@webrtc.org>
+Bug: webrtc:42222066
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Change-Id: If7185f7d9ff36d5928b7e1dadd5bc48576af4eba
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408920
+Auto-Submit: Tomas Gunnarsson <tommi@webrtc.org>
 Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
-Cr-Commit-Position: refs/heads/main@{#45615}
+Commit-Queue: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Cr-Commit-Position: refs/heads/main@{#45620}
 ---
- media/sctp/dcsctp_transport.cc | 1 +
- 1 file changed, 1 insertion(+)
+ p2p/base/p2p_transport_channel.cc | 12 +++---------
+ p2p/base/port_interface.cc        |  5 +----
+ p2p/base/port_interface.h         | 29 +----------------------------
+ p2p/base/port_unittest.cc         |  7 +------
+ p2p/base/turn_port_unittest.cc    |  9 +++------
+ 5 files changed, 9 insertions(+), 53 deletions(-)
 
-diff --git a/media/sctp/dcsctp_transport.cc b/media/sctp/dcsctp_transport.cc
-index d31d05e6a4..faee56519f 100644
---- a/media/sctp/dcsctp_transport.cc
-+++ b/media/sctp/dcsctp_transport.cc
-@@ -149,6 +149,7 @@ DcSctpTransport::DcSctpTransport(
-     : network_thread_(network_thread),
-       transport_(transport),
-       env_(env),
-+      random_(env_.clock().TimeInMicroseconds()),
-       socket_factory_(std::move(socket_factory)),
-       task_queue_timeout_factory_(
-           *network_thread,
+diff --git a/p2p/base/p2p_transport_channel.cc b/p2p/base/p2p_transport_channel.cc
+index 23633c2639..b022a1035d 100644
+--- a/p2p/base/p2p_transport_channel.cc
++++ b/p2p/base/p2p_transport_channel.cc
+@@ -931,15 +931,9 @@ void P2PTransportChannel::OnPortReady(PortAllocatorSession* /* session */,
+   port->SetIceRole(ice_role_);
+   port->SetIceTiebreaker(allocator_->ice_tiebreaker());
+   ports_.push_back(port);
+-  port->SubscribeUnknownAddress(
+-      [this](PortInterface* port, const SocketAddress& address,
+-             ProtocolType proto, IceMessage* stun_msg,
+-             const std::string& remote_username, bool port_muxed) {
+-        OnUnknownAddress(port, address, proto, stun_msg, remote_username,
+-                         port_muxed);
+-      });
+-  port->SubscribeSentPacket(
+-      [this](const SentPacketInfo& sent_packet) { OnSentPacket(sent_packet); });
++  port->SignalUnknownAddress.connect(this,
++                                     &P2PTransportChannel::OnUnknownAddress);
++  port->SignalSentPacket.connect(this, &P2PTransportChannel::OnSentPacket);
+ 
+   port->SubscribePortDestroyed(
+       [this](PortInterface* port) { OnPortDestroyed(port); });
+diff --git a/p2p/base/port_interface.cc b/p2p/base/port_interface.cc
+index d442ad4b02..b123fd2614 100644
+--- a/p2p/base/port_interface.cc
++++ b/p2p/base/port_interface.cc
+@@ -14,10 +14,7 @@
+ 
+ namespace webrtc {
+ 
+-PortInterface::PortInterface()
+-    : unknown_address_trampoline_(this),
+-      read_packet_trampoline_(this),
+-      sent_packet_trampoline_(this) {}
++PortInterface::PortInterface() = default;
+ 
+ PortInterface::~PortInterface() = default;
+ 
+diff --git a/p2p/base/port_interface.h b/p2p/base/port_interface.h
+index 1acf913524..23f808c494 100644
+--- a/p2p/base/port_interface.h
++++ b/p2p/base/port_interface.h
+@@ -17,7 +17,6 @@
+ #include <memory>
+ #include <optional>
+ #include <string>
+-#include <utility>
+ #include <vector>
+ 
+ #include "absl/functional/any_invocable.h"
+@@ -112,15 +111,7 @@ class PortInterface {
+                    const std::string&,
+                    bool>
+       SignalUnknownAddress;
+-  virtual void SubscribeUnknownAddress(
+-      absl::AnyInvocable<void(PortInterface*,
+-                              const SocketAddress&,
+-                              ProtocolType,
+-                              IceMessage*,
+-                              const std::string&,
+-                              bool)> callback) {
+-    unknown_address_trampoline_.Subscribe(std::move(callback));
+-  }
++
+   // Sends a response message (normal or error) to the given request.  One of
+   // these methods should be called as a response to SignalUnknownAddress.
+   virtual void SendBindingErrorResponse(StunMessage* message,
+@@ -146,19 +137,9 @@ class PortInterface {
+   virtual void EnablePortPackets() = 0;
+   sigslot::signal4<PortInterface*, const char*, size_t, const SocketAddress&>
+       SignalReadPacket;
+-  virtual void SubscribeReadPacket(
+-      absl::AnyInvocable<
+-          void(PortInterface*, const char*, size_t, const SocketAddress&)>
+-          callback) {
+-    read_packet_trampoline_.Subscribe(std::move(callback));
+-  }
+ 
+   // Emitted each time a packet is sent on this port.
+   sigslot::signal1<const SentPacketInfo&> SignalSentPacket;
+-  virtual void SubscribeSentPacket(
+-      absl::AnyInvocable<void(const SentPacketInfo&)> callback) {
+-    sent_packet_trampoline_.Subscribe(std::move(callback));
+-  }
+ 
+   virtual std::string ToString() const = 0;
+ 
+@@ -224,14 +205,6 @@ class PortInterface {
+   // Connection and Port are entangled; functions exposed to Port only
+   // should not be public.
+   friend class Connection;
+-
+- private:
+-  SignalTrampoline<PortInterface, &PortInterface::SignalUnknownAddress>
+-      unknown_address_trampoline_;
+-  SignalTrampoline<PortInterface, &PortInterface::SignalReadPacket>
+-      read_packet_trampoline_;
+-  SignalTrampoline<PortInterface, &PortInterface::SignalSentPacket>
+-      sent_packet_trampoline_;
+ };
+ 
+ }  //  namespace webrtc
+diff --git a/p2p/base/port_unittest.cc b/p2p/base/port_unittest.cc
+index b004b3026c..43a4935432 100644
+--- a/p2p/base/port_unittest.cc
++++ b/p2p/base/port_unittest.cc
+@@ -296,12 +296,7 @@ class TestChannel : public sigslot::has_slots<> {
+   // Takes ownership of `p1` (but not `p2`).
+   explicit TestChannel(std::unique_ptr<Port> p1) : port_(std::move(p1)) {
+     port_->SubscribePortComplete([this](Port* port) { OnPortComplete(port); });
+-    port_->SubscribeUnknownAddress(
+-        [this](PortInterface* port, const SocketAddress& address,
+-               ProtocolType proto, IceMessage* msg, const std::string& rf,
+-               bool port_muxed) {
+-          OnUnknownAddress(port, address, proto, msg, rf, port_muxed);
+-        });
++    port_->SignalUnknownAddress.connect(this, &TestChannel::OnUnknownAddress);
+     port_->SubscribePortDestroyed(
+         [this](PortInterface* port) { OnSrcPortDestroyed(port); });
+   }
+diff --git a/p2p/base/turn_port_unittest.cc b/p2p/base/turn_port_unittest.cc
+index d5b4c32884..7346f584de 100644
+--- a/p2p/base/turn_port_unittest.cc
++++ b/p2p/base/turn_port_unittest.cc
+@@ -372,12 +372,9 @@ class TurnPortTest : public ::testing::Test,
+         [this](Port* port, const IceCandidateErrorEvent& event) {
+           OnCandidateError(port, event);
+         });
+-    turn_port_->SubscribeUnknownAddress(
+-        [this](PortInterface* port, const SocketAddress& address,
+-               ProtocolType proto, IceMessage* stun_msg, const std::string& rf,
+-               bool port_muxed) {
+-          OnTurnUnknownAddress(port, address, proto, stun_msg, rf, port_muxed);
+-        });
++
++    turn_port_->SignalUnknownAddress.connect(
++        this, &TurnPortTest::OnTurnUnknownAddress);
+     turn_port_->SubscribePortDestroyed(
+         [this](PortInterface* port) { OnTurnPortDestroyed(port); });
+     turn_port_->SetCallbacksForTest(this);
