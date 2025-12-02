@@ -20,6 +20,7 @@ import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MockLocationUpdatesRule
 import org.mozilla.fenix.helpers.RetryTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestSetup
@@ -331,6 +332,26 @@ class SitePermissionsTest : TestSetup() {
         }.clickGetLocationButton {
             verifyLocationPermissionPrompt(testPageHost)
             verifyDoNotAskAgainIsHidden()
+        }
+    }
+
+    @Test
+    fun crossOriginStoragePermissionLearnMoreLinkTest() {
+        val genericWebPage = mockWebServer.getGenericAsset(1)
+        val testPage = mockWebServer.url("pages/cross-site-cookies.html").toString().toUri()
+        val originHost = "mozilla-mobile.github.io"
+        val currentHost = "localhost"
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(genericWebPage.url) {
+            waitForPageToLoad()
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(testPage) {
+            waitForPageToLoad()
+        }.clickRequestStorageAccessButton {
+            verifyCrossOriginCookiesPermissionPrompt(originHost, currentHost)
+        }.clickLearnMore {
+            verifyCrossOriginStorageLearnMoreURL()
         }
     }
 }

@@ -202,6 +202,12 @@ class BrowserRobot {
         }
     }
 
+    fun verifyCrossOriginStorageLearnMoreURL() {
+        Log.i(TAG, "verifyCrossOriginStorageLearnMoreURL: Trying to verify cross origin storage URL")
+        verifyUrl("docs/Web/API/Storage_Access_API")
+        Log.i(TAG, "verifyCrossOriginStorageLearnMoreURL: Verified cross origin storage URL")
+    }
+
     fun verifySponsoredShortcutsLearnMoreURL() {
         try {
             verifyUrl("support.mozilla.org/en-US/kb/sponsor-privacy")
