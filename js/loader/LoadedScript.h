@@ -148,7 +148,6 @@ class LoadedScript : public nsIMemoryReporter {
 
   bool IsUnknownDataType() const { return mDataType == DataType::eUnknown; }
   bool IsTextSource() const { return mDataType == DataType::eTextSource; }
-  bool IsSource() const { return IsTextSource(); }
   bool IsSerializedStencil() const {
     return mDataType == DataType::eSerializedStencil;
   }
@@ -233,7 +232,7 @@ class LoadedScript : public nsIMemoryReporter {
 
   // ---- For SRI-only consumers ----
 
-  bool CanHaveSRIOnly() const { return IsSource() || IsCachedStencil(); }
+  bool CanHaveSRIOnly() const { return IsTextSource() || IsCachedStencil(); }
 
   bool HasSRI() {
     MOZ_ASSERT(CanHaveSRIOnly());
@@ -315,7 +314,7 @@ class LoadedScript : public nsIMemoryReporter {
 
   void DropDiskCacheReferenceAndSRI() {
     DropDiskCacheReference();
-    if (IsSource()) {
+    if (IsTextSource()) {
       DropSRI();
     }
   }
@@ -494,7 +493,6 @@ class LoadedScriptDelegate {
     return GetLoadedScript()->IsUnknownDataType();
   }
   bool IsTextSource() const { return GetLoadedScript()->IsTextSource(); }
-  bool IsSource() const { return GetLoadedScript()->IsSource(); }
   bool IsSerializedStencil() const {
     return GetLoadedScript()->IsSerializedStencil();
   }
