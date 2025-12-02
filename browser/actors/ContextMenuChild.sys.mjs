@@ -268,15 +268,6 @@ export class ContextMenuChild extends JSWindowActorChild {
       }
 
       case "ContextMenu:GetTextDirective": {
-        if (
-          !Services.prefs.getBoolPref("dom.text_fragments.enabled", false) ||
-          !Services.prefs.getBoolPref(
-            "dom.text_fragments.create_text_fragment.enabled",
-            false
-          )
-        ) {
-          return null;
-        }
         const sel = this.contentWindow.getSelection();
         const ranges = !sel.isCollapsed
           ? Array.from({ length: sel.rangeCount }, (_, i) => sel.getRangeAt(i))

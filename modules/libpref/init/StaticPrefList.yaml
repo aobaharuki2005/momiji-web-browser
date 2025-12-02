@@ -5062,11 +5062,6 @@
   mirror: always
   rust: true
 
-- name: dom.text_fragments.create_text_fragment.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: dom.text_fragments.create_text_fragment.timeout_seconds
   type: uint32_t
   value: 5

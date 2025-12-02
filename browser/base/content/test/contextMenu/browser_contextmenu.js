@@ -80,7 +80,6 @@ add_setup(async function () {
     set: [
       ["test.wait300msAfterTabSwitch", true],
       ["browser.search.separatePrivateDefault.ui.enabled", true],
-      ["dom.text_fragments.create_text_fragment.enabled", true],
     ],
   });
 });
