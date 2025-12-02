@@ -184,8 +184,6 @@
     <string name="profiler_error">Something went wrong with the profiler</string>
     <string name="profiler_io_error">Something went wrong contacting the Profiler server.</string>
     <string name="profiler_uploaded_url_to_clipboard">URL copied to clipboard successfully</string>
-    <string name="profiler_service_notification_channel_name" translatable="false">App Profiling Status</string>
-    <string name="profiler_service_description" translatable="false">App Profiling Status</string>
 
     <!-- Debug drawer "contextual feature recommendation" (CFR) tools -->
     <!-- The description of the reset CFR section in CFR Tools -->

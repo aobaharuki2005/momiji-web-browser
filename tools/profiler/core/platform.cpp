@@ -5647,22 +5647,9 @@ static void NotifyObservers(const char* aTopic,
     return;
   }
 
-  // Notify C++ observers through the ObserverService
   if (nsCOMPtr<nsIObserverService> os = services::GetObserverService()) {
     os->NotifyObservers(aSubject, aTopic, nullptr);
   }
-
-#if defined(GP_OS_android)
-  // In the parent process, notify the GeckoJavaSampler when the profiler is
-  // started / stopped.
-  if (XRE_IsParentProcess()) {
-    if (strcmp(aTopic, "profiler-started") == 0) {
-      java::GeckoJavaSampler::NotifyProfilerStateChanged(true);
-    } else if (strcmp(aTopic, "profiler-stopped") == 0) {
-      java::GeckoJavaSampler::NotifyProfilerStateChanged(false);
-    }
-  }
-#endif
 }
 
 [[nodiscard]] static RefPtr<GenericPromise> NotifyProfilerStarted(

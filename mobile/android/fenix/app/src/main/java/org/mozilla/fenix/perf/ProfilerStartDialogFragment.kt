@@ -58,6 +58,7 @@ class ProfilerStartDialogFragment : AppCompatDialogFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         profilerViewModel.resetUiState()
+        profilerViewModel.updateProfilerActiveStatus()
         super.onDismiss(dialog)
     }
 

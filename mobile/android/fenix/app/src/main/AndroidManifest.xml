@@ -54,12 +54,6 @@
     This is NOT required for the adjust plugin. -->
     <uses-permission android:name="com.adjust.preinstall.READ_PERMISSION"/>
 
-    <uses-permission android:name="${applicationId}.permission.PROFILER_INTERNAL" />
-
-    <permission
-        android:name="${applicationId}.permission.PROFILER_INTERNAL"
-        android:protectionLevel="signature" />
-
     <application
         android:name=".FenixApplication"
         android:allowBackup="false"
@@ -768,18 +762,14 @@
         <service
             android:name=".perf.ProfilerService"
             android:foregroundServiceType="specialUse"
-            android:exported="false">
+            android:exported="true"
+            android:permission="android.permission.DUMP">
             <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Developer tool: Shows notification during performance profiling" />
+                android:value="This foreground service allows the profiler to stop through adb." />
+            <intent-filter>
+                <action android:name="mozilla.perf.action.STOP_PROFILING" />
+            </intent-filter>
         </service>
-
-        <provider
-            android:name=".perf.ProfilerProvider"
-            android:authorities="${applicationId}.profiler"
-            android:exported="false"
-            android:enabled="false"
-            android:readPermission="android.permission.DUMP"
-            android:grantUriPermissions="false" />
 
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
