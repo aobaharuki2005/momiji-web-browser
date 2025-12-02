@@ -365,10 +365,6 @@ class ReportBrokenSiteHelper {
     await this.#assertClickAndViewChanges(this.okayButton, this.sentView);
   }
 
-  async clickPreviewCopy() {
-    EventUtils.synthesizeMouseAtCenter(this.previewCopyButton, {}, this.win);
-  }
-
   async clickPreview() {
     await this.#assertClickAndViewChanges(
       this.previewButton,
@@ -478,8 +474,12 @@ class ReportBrokenSiteHelper {
     return this.getViewNode("report-broken-site-popup-preview-button");
   }
 
-  get previewCopyButton() {
-    return this.getViewNode("report-broken-site-popup-preview-copy-button");
+  get previewCancelButton() {
+    return this.getViewNode("report-broken-site-popup-preview-cancel-button");
+  }
+
+  get previewSendButton() {
+    return this.getViewNode("report-broken-site-popup-preview-send-button");
   }
 
   get previewItems() {
