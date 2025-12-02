@@ -13484,8 +13484,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.anchor-positioning.enabled")) {
     domProp: "positionVisibility",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: ["always"],
-    other_values: ["anchors-valid", "anchors-visible", "no-overflow"],
+    initial_values: ["anchors-visible"],
+    other_values: ["anchors-valid", "always", "no-overflow"],
     invalid_values: [
       "none",
       "auto",
