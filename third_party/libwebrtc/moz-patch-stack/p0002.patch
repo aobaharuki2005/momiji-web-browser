@@ -1,331 +1,118 @@
-From: Palak Agarwal <agpalak@google.com>
-Date: Tue, 7 Oct 2025 13:45:52 +0200
-Subject: (cherry-pick-branch-heads/7390) [M141] Add logging while creating
- {Window|Screen}Capturer
+From: Daniel Baker <dbaker@mozilla.com>
+Date: Mon, 1 Dec 2025 19:31:22 -0700
+Subject: (tmp-cherry-pick) [M142] Revert "Add instructions for removing a
+ Trampoline-wrapped Signal" (29d6eabaf0)
 
-(cherry picked from commit 6908505ae0eba5d530ad0bb4b37d4654a4f36c95)
+This reverts commit bb6b3aab159ebcd825526cf831f54170ccb2584d.
 
-Fixed: chromium:450184498
-Bug: chromium:448881311
-Change-Id: I0f043f58bf831e6822451cac99a8972a054ffdf7
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/414800
-Reviewed-by: Ilya Nikolaevskiy <ilnik@webrtc.org>
+Reason for revert: Need to fix downstream Chromium issues.
+
+Original change's description:
+> Add instructions for removing a Trampoline-wrapped Signal
+>
+> Also apply the instructions to one Signal.
+>
+> Bug: webrtc:42222066
+> Change-Id: I63409d968d27a843b0ac7c61a122a1b685cb7a6f
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408883
+> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+> Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#45624}
+
+(cherry picked from commit 716c8eb942a74ad641bbace8c1db521b4857c636)
+
+Bug: webrtc:42222066, chromium:449225599, chromium:450516559
+No-IWYU: Revert
+Change-Id: I7fdf1694664b11ffcfd91916f1e98ef88254059d
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/413923
+Auto-Submit: Harald Alvestrand <hta@webrtc.org>
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
+Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#45840}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/415743
+Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
 Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Palak Agarwal <agpalak@google.com>
-Cr-Original-Commit-Position: refs/heads/main@{#45856}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/415420
-Commit-Queue: Ilya Nikolaevskiy <ilnik@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/7390@{#3}
-Cr-Branched-From: 2f553bf8d573c90176d51559b76dfc836996c8f5-refs/heads/main@{#45520}
+Cr-Commit-Position: refs/branch-heads/7444@{#2}
+Cr-Branched-From: f70dc714a073397356f6ed866481da73f90f0b96-refs/heads/main@{#45766}
 ---
- modules/desktop_capture/desktop_capturer.cc       | 15 +++++++++++++++
- .../linux/x11/screen_capturer_x11.cc              |  6 ++++++
- .../linux/x11/window_capturer_x11.cc              |  4 ++++
- modules/desktop_capture/screen_capturer_darwin.mm |  7 +++++++
- .../desktop_capture/screen_capturer_fuchsia.cc    |  3 +++
- modules/desktop_capture/screen_capturer_linux.cc  |  4 ++++
- modules/desktop_capture/screen_capturer_null.cc   |  4 ++++
- modules/desktop_capture/screen_capturer_win.cc    |  6 ++++++
- modules/desktop_capture/window_capturer_linux.cc  |  4 ++++
- modules/desktop_capture/window_capturer_mac.mm    |  2 ++
- modules/desktop_capture/window_capturer_null.cc   |  3 +++
- modules/desktop_capture/window_capturer_win.cc    |  7 +++++++
- 12 files changed, 65 insertions(+)
+ p2p/base/ice_transport_internal.cc |  5 +++--
+ p2p/base/ice_transport_internal.h  |  9 ++++++---
+ rtc_base/sigslot_trampoline.h      | 12 ------------
+ 3 files changed, 9 insertions(+), 17 deletions(-)
 
-diff --git a/modules/desktop_capture/desktop_capturer.cc b/modules/desktop_capture/desktop_capturer.cc
-index ae9aba26ee..bf63f73178 100644
---- a/modules/desktop_capture/desktop_capturer.cc
-+++ b/modules/desktop_capture/desktop_capturer.cc
-@@ -21,6 +21,7 @@
- #include "modules/desktop_capture/desktop_capturer_differ_wrapper.h"
- #include "modules/desktop_capture/desktop_geometry.h"
- #include "modules/desktop_capture/shared_memory.h"
-+#include "rtc_base/logging.h"
- #include "system_wrappers/include/metrics.h"
- 
- #if defined(WEBRTC_WIN)
-@@ -81,18 +82,26 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateWindowCapturer(
- #if defined(RTC_ENABLE_WIN_WGC)
-   if (options.allow_wgc_window_capturer() &&
-       IsWgcSupported(CaptureType::kWindow)) {
-+    RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateWindowCapturer "
-+                        "creates DesktopCapturer of type WgcCapturerWin";
-     return WgcCapturerWin::CreateRawWindowCapturer(options);
-   }
- #endif  // defined(RTC_ENABLE_WIN_WGC)
- 
- #if defined(WEBRTC_WIN)
-   if (options.allow_cropping_window_capturer()) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateWindowCapturer "
-+           "creates DesktopCapturer of type CroppingWindowCapturerWin";
-     return CroppingWindowCapturer::CreateCapturer(options);
-   }
- #endif  // defined(WEBRTC_WIN)
- 
-   std::unique_ptr<DesktopCapturer> capturer = CreateRawWindowCapturer(options);
-   if (capturer && options.detect_updated_region()) {
-+    RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateWindowCapturer "
-+                        "creates DesktopCapturer of type "
-+                        "DesktopCapturerDifferWrapper over a base capturer";
-     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-   }
- 
-@@ -105,12 +114,18 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateScreenCapturer(
- #if defined(RTC_ENABLE_WIN_WGC)
-   if (options.allow_wgc_screen_capturer() &&
-       IsWgcSupported(CaptureType::kScreen)) {
-+    RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateScreenCapturer "
-+                        "creates DesktopCapturer of type WgcCapturerWin";
-     return WgcCapturerWin::CreateRawScreenCapturer(options);
-   }
- #endif  // defined(RTC_ENABLE_WIN_WGC)
- 
-   std::unique_ptr<DesktopCapturer> capturer = CreateRawScreenCapturer(options);
-   if (capturer && options.detect_updated_region()) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateScreenCapturer creates "
-+           "DesktopCapturer of type DesktopCapturerDifferWrapper over a base "
-+           "capturer";
-     capturer.reset(new DesktopCapturerDifferWrapper(std::move(capturer)));
-   }
- 
-diff --git a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-index 90dd797cb3..f10dcabc7e 100644
---- a/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-+++ b/modules/desktop_capture/linux/x11/screen_capturer_x11.cc
-@@ -511,8 +511,14 @@ std::unique_ptr<DesktopCapturer> ScreenCapturerX11::CreateRawScreenCapturer(
-   if (!options.x_display())
-     return nullptr;
- 
-+  RTC_LOG(LS_INFO)
-+      << "video capture: ScreenCapturerX11::CreateRawScreenCapturer creates "
-+         "DesktopCapturer of type ScreenCapturerX11";
-   std::unique_ptr<ScreenCapturerX11> capturer(new ScreenCapturerX11());
-   if (!capturer->Init(options)) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: ScreenCapturerX11::CreateRawScreenCapturer "
-+           "DesktopCapturer is null because it can not be initiated";
-     return nullptr;
-   }
- 
-diff --git a/modules/desktop_capture/linux/x11/window_capturer_x11.cc b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-index 8e592ff2d9..9505205b76 100644
---- a/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-+++ b/modules/desktop_capture/linux/x11/window_capturer_x11.cc
-@@ -247,6 +247,10 @@ std::unique_ptr<DesktopCapturer> WindowCapturerX11::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-   if (!options.x_display())
-     return nullptr;
-+
-+  RTC_LOG(LS_INFO)
-+      << "video capture: WindowCapturerX11::CreateRawWindowCapturer creates "
-+         "DesktopCapturer of type WindowCapturerX11";
-   return std::unique_ptr<DesktopCapturer>(new WindowCapturerX11(options));
+diff --git a/p2p/base/ice_transport_internal.cc b/p2p/base/ice_transport_internal.cc
+index 7843a8b37d..a4b96db00b 100644
+--- a/p2p/base/ice_transport_internal.cc
++++ b/p2p/base/ice_transport_internal.cc
+@@ -236,7 +236,8 @@ RTCError IceConfig::IsValid() const {
  }
  
-diff --git a/modules/desktop_capture/screen_capturer_darwin.mm b/modules/desktop_capture/screen_capturer_darwin.mm
-index 95a877c45d..3f14ddfe58 100644
---- a/modules/desktop_capture/screen_capturer_darwin.mm
-+++ b/modules/desktop_capture/screen_capturer_darwin.mm
-@@ -12,6 +12,7 @@
+ IceTransportInternal::IceTransportInternal()
+-    : role_conflict_trampoline_(this),
++    : candidate_gathered_trampoline_(this),
++      role_conflict_trampoline_(this),
+       ice_transport_state_changed_trampoline_(this),
+       destroyed_trampoline_(this) {}
  
- #include "modules/desktop_capture/mac/screen_capturer_mac.h"
- #include "modules/desktop_capture/mac/screen_capturer_sck.h"
-+#include "rtc_base/logging.h"
+@@ -265,7 +266,7 @@ void IceTransportInternal::RemoveGatheringStateCallback(
+ void IceTransportInternal::SubscribeCandidateGathered(
+     absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
+         callback) {
+-  candidate_gathered_callbacks_.AddReceiver(std::move(callback));
++  candidate_gathered_trampoline_.Subscribe(std::move(callback));
+ }
  
- namespace webrtc {
+ void IceTransportInternal::SubscribeRoleConflict(
+diff --git a/p2p/base/ice_transport_internal.h b/p2p/base/ice_transport_internal.h
+index 9f6722c8ad..c83a7d70d7 100644
+--- a/p2p/base/ice_transport_internal.h
++++ b/p2p/base/ice_transport_internal.h
+@@ -352,9 +352,11 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
+   void RemoveGatheringStateCallback(const void* removal_tag);
  
-@@ -27,10 +28,16 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     std::unique_ptr<DesktopCapturer> sck_capturer =
-         CreateScreenCapturerSck(options);
-     if (sck_capturer) {
-+      RTC_LOG(LS_INFO)
-+          << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+             "DesktopCapturer of type ScreenCapturerSck";
-       return sck_capturer;
-     }
+   // Handles sending and receiving of candidates.
++  sigslot::signal2<IceTransportInternal*, const Candidate&>
++      SignalCandidateGathered;
+   void NotifyCandidateGathered(IceTransportInternal* transport,
+                                const Candidate& candidate) {
+-    candidate_gathered_callbacks_.Send(transport, candidate);
++    SignalCandidateGathered(transport, candidate);
    }
+   void SubscribeCandidateGathered(
+       absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
+@@ -462,8 +464,9 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
+       candidate_pair_change_callback_;
  
-+  RTC_LOG(LS_INFO)
-+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+         "DesktopCapturer of type ScreenCapturerMac";
-   auto capturer =
-       std::make_unique<ScreenCapturerMac>(options.configuration_monitor(),
-                                           options.detect_updated_region(),
-diff --git a/modules/desktop_capture/screen_capturer_fuchsia.cc b/modules/desktop_capture/screen_capturer_fuchsia.cc
-index c3f51ef0fc..2a6c5e753d 100644
---- a/modules/desktop_capture/screen_capturer_fuchsia.cc
-+++ b/modules/desktop_capture/screen_capturer_fuchsia.cc
-@@ -56,6 +56,9 @@ size_t RoundUpToMultiple(size_t value, size_t multiple) {
- 
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO)
-+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+         "DesktopCapturer of type ScreenCapturerFuchsia";
-   std::unique_ptr<ScreenCapturerFuchsia> capturer(new ScreenCapturerFuchsia());
-   return capturer;
- }
-diff --git a/modules/desktop_capture/screen_capturer_linux.cc b/modules/desktop_capture/screen_capturer_linux.cc
-index 94726750c5..f25e08fb59 100644
---- a/modules/desktop_capture/screen_capturer_linux.cc
-+++ b/modules/desktop_capture/screen_capturer_linux.cc
-@@ -13,6 +13,7 @@
- #include "modules/desktop_capture/desktop_capture_options.h"
- #include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/desktop_capture/desktop_capturer.h"
-+#include "rtc_base/logging.h"
- 
- #if defined(WEBRTC_USE_PIPEWIRE)
- #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
-@@ -29,6 +30,9 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     const DesktopCaptureOptions& options) {
- #if defined(WEBRTC_USE_PIPEWIRE)
-   if (options.allow_pipewire() && BaseCapturerPipeWire::IsSupported()) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+           "DesktopCapturer of type BaseCapturerPipeWire";
-     return std::make_unique<BaseCapturerPipeWire>(options,
-                                                   CaptureType::kScreen);
-   }
-diff --git a/modules/desktop_capture/screen_capturer_null.cc b/modules/desktop_capture/screen_capturer_null.cc
-index aa6d4991a0..21b2f46c4d 100644
---- a/modules/desktop_capture/screen_capturer_null.cc
-+++ b/modules/desktop_capture/screen_capturer_null.cc
-@@ -11,12 +11,16 @@
- #include <memory>
- 
- #include "modules/desktop_capture/desktop_capturer.h"
-+#include "rtc_base/logging.h"
- 
- namespace webrtc {
- 
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO)
-+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates null "
-+         "DesktopCapturer";
-   return nullptr;
- }
- 
-diff --git a/modules/desktop_capture/screen_capturer_win.cc b/modules/desktop_capture/screen_capturer_win.cc
-index a5f2052979..6620888f18 100644
---- a/modules/desktop_capture/screen_capturer_win.cc
-+++ b/modules/desktop_capture/screen_capturer_win.cc
-@@ -19,6 +19,7 @@
- #include "modules/desktop_capture/win/dxgi_duplicator_controller.h"
- #include "modules/desktop_capture/win/screen_capturer_win_directx.h"
- #include "modules/desktop_capture/win/screen_capturer_win_gdi.h"
-+#include "rtc_base/logging.h"
- 
- namespace webrtc {
- 
-@@ -26,6 +27,9 @@ namespace {
- 
- std::unique_ptr<DesktopCapturer> CreateScreenCapturerWinDirectx(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO)
-+      << "video capture: DesktopCapturer::CreateRawScreenCapturer creates "
-+         "DesktopCapturer of type ScreenCapturerWinDirectx";
-   std::unique_ptr<DesktopCapturer> capturer(
-       new ScreenCapturerWinDirectx(options));
-   capturer.reset(new BlankDetectorDesktopCapturerWrapper(
-@@ -39,6 +43,8 @@ std::unique_ptr<DesktopCapturer> CreateScreenCapturerWinDirectx(
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawScreenCapturer(
-     const DesktopCaptureOptions& options) {
-   // Default capturer if no options are enabled is GDI.
-+  RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateRawScreenCapturer "
-+                      "creates DesktopCapturer of type ScreenCapturerWinGdi";
-   std::unique_ptr<DesktopCapturer> capturer(new ScreenCapturerWinGdi(options));
- 
-   // If DirectX is enabled use it as main capturer with GDI as fallback.
-diff --git a/modules/desktop_capture/window_capturer_linux.cc b/modules/desktop_capture/window_capturer_linux.cc
-index f621a63e72..87ea3d5721 100644
---- a/modules/desktop_capture/window_capturer_linux.cc
-+++ b/modules/desktop_capture/window_capturer_linux.cc
-@@ -13,6 +13,7 @@
- #include "modules/desktop_capture/desktop_capture_options.h"
- #include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/desktop_capture/desktop_capturer.h"
-+#include "rtc_base/logging.h"
- 
- #if defined(WEBRTC_USE_PIPEWIRE)
- #include "modules/desktop_capture/linux/wayland/base_capturer_pipewire.h"
-@@ -29,6 +30,9 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
- #if defined(WEBRTC_USE_PIPEWIRE)
-   if (options.allow_pipewire() && BaseCapturerPipeWire::IsSupported()) {
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateRawWindowCapturer creates "
-+           "DesktopCapturer of type BaseCapturerPipeWire";
-     return std::make_unique<BaseCapturerPipeWire>(options,
-                                                   CaptureType::kWindow);
-   }
-diff --git a/modules/desktop_capture/window_capturer_mac.mm b/modules/desktop_capture/window_capturer_mac.mm
-index a1e6157b87..731090d3fb 100644
---- a/modules/desktop_capture/window_capturer_mac.mm
-+++ b/modules/desktop_capture/window_capturer_mac.mm
-@@ -217,6 +217,8 @@ void WindowCapturerMac::CaptureFrame() {
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateRawWindowCapturer "
-+                      "creates DesktopCapturer of type WindowCapturerMac";
-   return std::unique_ptr<DesktopCapturer>(new WindowCapturerMac(
-       options.full_screen_window_detector(), options.configuration_monitor()));
- }
-diff --git a/modules/desktop_capture/window_capturer_null.cc b/modules/desktop_capture/window_capturer_null.cc
-index 2061dc5248..384e186d20 100644
---- a/modules/desktop_capture/window_capturer_null.cc
-+++ b/modules/desktop_capture/window_capturer_null.cc
-@@ -12,6 +12,7 @@
- 
- #include "modules/desktop_capture/desktop_capturer.h"
- #include "rtc_base/checks.h"
-+#include "rtc_base/logging.h"
- 
- namespace webrtc {
- 
-@@ -65,6 +66,8 @@ void WindowCapturerNull::CaptureFrame() {
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateRawWindowCapturer "
-+                      "creates DesktopCapturer of type WindowCapturerNull";
-   return std::unique_ptr<DesktopCapturer>(new WindowCapturerNull());
- }
- 
-diff --git a/modules/desktop_capture/window_capturer_win.cc b/modules/desktop_capture/window_capturer_win.cc
-index 115bc7d9b0..15ed7f5121 100644
---- a/modules/desktop_capture/window_capturer_win.cc
-+++ b/modules/desktop_capture/window_capturer_win.cc
-@@ -15,6 +15,7 @@
- #include "modules/desktop_capture/desktop_capturer.h"
- #include "modules/desktop_capture/rgba_color.h"
- #include "modules/desktop_capture/win/window_capturer_win_gdi.h"
-+#include "rtc_base/logging.h"
- 
- #if defined(RTC_ENABLE_WIN_WGC)
- #include "modules/desktop_capture/blank_detector_desktop_capturer_wrapper.h"
-@@ -28,6 +29,8 @@ namespace webrtc {
- // static
- std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     const DesktopCaptureOptions& options) {
-+  RTC_LOG(LS_INFO) << "video capture: DesktopCapturer::CreateRawWindowCapturer "
-+                      "creates DesktopCapturer of type WindowCapturerWinGdi";
-   std::unique_ptr<DesktopCapturer> capturer(
-       WindowCapturerWinGdi::CreateRawWindowCapturer(options));
- #if defined(RTC_ENABLE_WIN_WGC)
-@@ -36,6 +39,10 @@ std::unique_ptr<DesktopCapturer> DesktopCapturer::CreateRawWindowCapturer(
-     // BlankDectector capturer will send an error when it detects a failed
-     // GDI rendering, then Fallback capturer will try to capture it again with
-     // WGC.
-+    RTC_LOG(LS_INFO)
-+        << "video capture: DesktopCapturer::CreateRawWindowCapturer creates "
-+           "DesktopCapturer of type FallbackDesktopCapturerWrapper which has a "
-+           "fallback capturer of type WgcCapturerWin";
-     capturer = std::make_unique<BlankDetectorDesktopCapturerWrapper>(
-         std::move(capturer), RgbaColor(0, 0, 0, 0),
-         /*check_per_capture*/ true);
+  private:
+-  CallbackList<IceTransportInternal*, const Candidate&>
+-      candidate_gathered_callbacks_;
++  SignalTrampoline<IceTransportInternal,
++                   &IceTransportInternal::SignalCandidateGathered>
++      candidate_gathered_trampoline_;
+   SignalTrampoline<IceTransportInternal,
+                    &IceTransportInternal::SignalRoleConflict>
+       role_conflict_trampoline_;
+diff --git a/rtc_base/sigslot_trampoline.h b/rtc_base/sigslot_trampoline.h
+index a399e4177f..590e73d97b 100644
+--- a/rtc_base/sigslot_trampoline.h
++++ b/rtc_base/sigslot_trampoline.h
+@@ -51,18 +51,6 @@ namespace webrtc {
+ //     my_class_object.SubscibeMyNamedEvent(
+ //         SafeInvocable(target.safety_flag_.flag(),
+ //                       [target] { target.function(); }
+-// WHEN REMOVING THE SIGNAL
+-// Make a CL that will:
+-// - Delete the SignalMyNamedEvent signal
+-// - Change my_named_event_trampoline_ to my_named_event_callbacks,
+-//   of type CallbackList<function arguments>
+-// - Change SubscribeMyNamedEvent to call my_named_event_callbacks.AddReceiver
+-// - Change NotifyMyNamedEvent to call my_named_event_callbacks_.Send
+-// - If UnsubscribeMyNamedEvent exists, change that also.
+-// - Delete the initialization of my_named_event_trampoline_ from the
+-//   relevant constructor.
+-// Sending this through the bots will flush out remaining references to
+-// SignalMyNamedEvent.
+ namespace internal {
+ template <typename MemberPtrT>
+ struct member_pointer_traits;

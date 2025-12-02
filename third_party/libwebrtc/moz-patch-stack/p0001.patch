@@ -1,118 +1,200 @@
 From: Daniel Baker <dbaker@mozilla.com>
-Date: Mon, 1 Dec 2025 19:31:22 -0700
-Subject: (tmp-cherry-pick) [M142] Revert "Add instructions for removing a
- Trampoline-wrapped Signal" (29d6eabaf0)
+Date: Mon, 1 Dec 2025 23:58:28 -0700
+Subject: (tmp-cherry-pick) Revert "Store a raw_packetization bool in
+ RtpSenderVideo rather than inferring" (37ba143ad7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-This reverts commit bb6b3aab159ebcd825526cf831f54170ccb2584d.
+This reverts commit fc1cbcf05221bf26b6fa94ecb018a5225060ddb4.
 
-Reason for revert: Need to fix downstream Chromium issues.
+Reason for revert: Reverting while we figure out why the check is triggering downstream
 
 Original change's description:
-> Add instructions for removing a Trampoline-wrapped Signal
+> Store a raw_packetization bool in RtpSenderVideo rather than inferring
 >
-> Also apply the instructions to one Signal.
+> Ensure all calls to SendVideo() use a raw packetizer when they should
+> rather than inferring it from the absence of |codec_type| - an issue
+> when the caller doesn't know the correct packetization (eg
+> RTPSenderVideoFrameTransformerDelegate).
 >
-> Bug: webrtc:42222066
-> Change-Id: I63409d968d27a843b0ac7c61a122a1b685cb7a6f
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/408883
-> Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
-> Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#45624}
+> Bug: b/446768451
+> Change-Id: Ib628d69ac1697de63cc293c5f4c681d6450f72d9
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/411560
+> Reviewed-by: Danil Chapovalov <danilchap@webrtc.org>
+> Auto-Submit: Tony Herre <herre@google.com>
+> Reviewed-by: Henrik Boström <hbos@webrtc.org>
+> Commit-Queue: Henrik Boström <hbos@webrtc.org>
+> Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#45724}
 
-(cherry picked from commit 716c8eb942a74ad641bbace8c1db521b4857c636)
-
-Bug: webrtc:42222066, chromium:449225599, chromium:450516559
-No-IWYU: Revert
-Change-Id: I7fdf1694664b11ffcfd91916f1e98ef88254059d
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/413923
-Auto-Submit: Harald Alvestrand <hta@webrtc.org>
-Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Reviewed-by: Tomas Gunnarsson <tommi@webrtc.org>
-Reviewed-by: Guido Urdaneta <guidou@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#45840}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/415743
-Commit-Queue: Guido Urdaneta <guidou@webrtc.org>
-Reviewed-by: Harald Alvestrand <hta@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/7444@{#2}
-Cr-Branched-From: f70dc714a073397356f6ed866481da73f90f0b96-refs/heads/main@{#45766}
+Bug: b/446768451
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Change-Id: I456daecded27f9e52e126b8e5760238704f67300
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/411940
+Auto-Submit: Tomas Gunnarsson <tommi@webrtc.org>
+Bot-Commit: Rubber Stamper <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#45731}
 ---
- p2p/base/ice_transport_internal.cc |  5 +++--
- p2p/base/ice_transport_internal.h  |  9 ++++++---
- rtc_base/sigslot_trampoline.h      | 12 ------------
- 3 files changed, 9 insertions(+), 17 deletions(-)
+ call/rtp_video_sender.cc                      |  2 --
+ modules/rtp_rtcp/source/rtp_sender_video.cc   |  7 +---
+ modules/rtp_rtcp/source/rtp_sender_video.h    |  3 --
+ .../source/rtp_sender_video_unittest.cc       | 36 +++----------------
+ 4 files changed, 6 insertions(+), 42 deletions(-)
 
-diff --git a/p2p/base/ice_transport_internal.cc b/p2p/base/ice_transport_internal.cc
-index 7843a8b37d..a4b96db00b 100644
---- a/p2p/base/ice_transport_internal.cc
-+++ b/p2p/base/ice_transport_internal.cc
-@@ -236,7 +236,8 @@ RTCError IceConfig::IsValid() const {
- }
+diff --git a/call/rtp_video_sender.cc b/call/rtp_video_sender.cc
+index 78144121d1..25cc81396c 100644
+--- a/call/rtp_video_sender.cc
++++ b/call/rtp_video_sender.cc
+@@ -324,8 +324,6 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
+     }
+     video_config.frame_transformer = frame_transformer;
+     video_config.task_queue_factory = &env.task_queue_factory();
+-    video_config.raw_packetization = rtp_config.raw_payload;
+-
+     auto sender_video = std::make_unique<RTPSenderVideo>(video_config);
+     rtp_streams.emplace_back(std::move(rtp_rtcp), std::move(sender_video),
+                              std::move(fec_generator));
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video.cc b/modules/rtp_rtcp/source/rtp_sender_video.cc
+index 64276b00d8..ee7414b582 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video.cc
+@@ -177,7 +177,6 @@ RTPSenderVideo::RTPSenderVideo(const Config& config)
+       require_frame_encryption_(config.require_frame_encryption),
+       generic_descriptor_auth_experiment_(
+           !config.field_trials->IsDisabled("WebRTC-GenericDescriptorAuth")),
+-      raw_packetization_(config.raw_packetization),
+       absolute_capture_time_sender_(config.clock),
+       frame_transformer_delegate_(
+           config.frame_transformer
+@@ -499,9 +498,6 @@ bool RTPSenderVideo::SendVideo(int payload_type,
+                                std::vector<uint32_t> csrcs) {
+   RTC_CHECK_RUNS_SERIALIZED(&send_checker_);
  
- IceTransportInternal::IceTransportInternal()
--    : role_conflict_trampoline_(this),
-+    : candidate_gathered_trampoline_(this),
-+      role_conflict_trampoline_(this),
-       ice_transport_state_changed_trampoline_(this),
-       destroyed_trampoline_(this) {}
+-  // Codec type can only be absent when using raw packetization.
+-  RTC_CHECK(raw_packetization_ || codec_type.has_value());
+-
+   if (video_header.frame_type == VideoFrameType::kEmptyFrame)
+     return true;
  
-@@ -265,7 +266,7 @@ void IceTransportInternal::RemoveGatheringStateCallback(
- void IceTransportInternal::SubscribeCandidateGathered(
-     absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
-         callback) {
--  candidate_gathered_callbacks_.AddReceiver(std::move(callback));
-+  candidate_gathered_trampoline_.Subscribe(std::move(callback));
- }
- 
- void IceTransportInternal::SubscribeRoleConflict(
-diff --git a/p2p/base/ice_transport_internal.h b/p2p/base/ice_transport_internal.h
-index 9f6722c8ad..c83a7d70d7 100644
---- a/p2p/base/ice_transport_internal.h
-+++ b/p2p/base/ice_transport_internal.h
-@@ -352,9 +352,11 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
-   void RemoveGatheringStateCallback(const void* removal_tag);
- 
-   // Handles sending and receiving of candidates.
-+  sigslot::signal2<IceTransportInternal*, const Candidate&>
-+      SignalCandidateGathered;
-   void NotifyCandidateGathered(IceTransportInternal* transport,
-                                const Candidate& candidate) {
--    candidate_gathered_callbacks_.Send(transport, candidate);
-+    SignalCandidateGathered(transport, candidate);
+@@ -678,8 +674,7 @@ bool RTPSenderVideo::SendVideo(int payload_type,
    }
-   void SubscribeCandidateGathered(
-       absl::AnyInvocable<void(IceTransportInternal*, const Candidate&)>
-@@ -462,8 +464,9 @@ class RTC_EXPORT IceTransportInternal : public PacketTransportInternal {
-       candidate_pair_change_callback_;
  
-  private:
--  CallbackList<IceTransportInternal*, const Candidate&>
--      candidate_gathered_callbacks_;
-+  SignalTrampoline<IceTransportInternal,
-+                   &IceTransportInternal::SignalCandidateGathered>
-+      candidate_gathered_trampoline_;
-   SignalTrampoline<IceTransportInternal,
-                    &IceTransportInternal::SignalRoleConflict>
-       role_conflict_trampoline_;
-diff --git a/rtc_base/sigslot_trampoline.h b/rtc_base/sigslot_trampoline.h
-index a399e4177f..590e73d97b 100644
---- a/rtc_base/sigslot_trampoline.h
-+++ b/rtc_base/sigslot_trampoline.h
-@@ -51,18 +51,6 @@ namespace webrtc {
- //     my_class_object.SubscibeMyNamedEvent(
- //         SafeInvocable(target.safety_flag_.flag(),
- //                       [target] { target.function(); }
--// WHEN REMOVING THE SIGNAL
--// Make a CL that will:
--// - Delete the SignalMyNamedEvent signal
--// - Change my_named_event_trampoline_ to my_named_event_callbacks,
--//   of type CallbackList<function arguments>
--// - Change SubscribeMyNamedEvent to call my_named_event_callbacks.AddReceiver
--// - Change NotifyMyNamedEvent to call my_named_event_callbacks_.Send
--// - If UnsubscribeMyNamedEvent exists, change that also.
--// - Delete the initialization of my_named_event_trampoline_ from the
--//   relevant constructor.
--// Sending this through the bots will flush out remaining references to
--// SignalMyNamedEvent.
- namespace internal {
- template <typename MemberPtrT>
- struct member_pointer_traits;
+   std::unique_ptr<RtpPacketizer> packetizer =
+-      RtpPacketizer::Create(raw_packetization_ ? std::nullopt : codec_type,
+-                            payload, limits, video_header);
++      RtpPacketizer::Create(codec_type, payload, limits, video_header);
+ 
+   const size_t num_packets = packetizer->NumPackets();
+ 
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video.h b/modules/rtp_rtcp/source/rtp_sender_video.h
+index 681675e27b..8e300214af 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video.h
++++ b/modules/rtp_rtcp/source/rtp_sender_video.h
+@@ -90,7 +90,6 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
+     const FieldTrialsView* field_trials = nullptr;
+     scoped_refptr<FrameTransformerInterface> frame_transformer;
+     TaskQueueFactory* task_queue_factory = nullptr;
+-    bool raw_packetization = false;
+   };
+ 
+   explicit RTPSenderVideo(const Config& config);
+@@ -250,8 +249,6 @@ class RTPSenderVideo : public RTPVideoFrameSenderInterface {
+   // Set to true if the generic descriptor should be authenticated.
+   const bool generic_descriptor_auth_experiment_;
+ 
+-  const bool raw_packetization_;
+-
+   AbsoluteCaptureTimeSender absolute_capture_time_sender_
+       RTC_GUARDED_BY(send_checker_);
+   // Tracks updates to the active decode targets and decides when active decode
+diff --git a/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc b/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
+index b63bafe34e..9479714d8a 100644
+--- a/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
++++ b/modules/rtp_rtcp/source/rtp_sender_video_unittest.cc
+@@ -166,14 +166,12 @@ class TestRtpSenderVideo : public RTPSenderVideo {
+  public:
+   TestRtpSenderVideo(Clock* clock,
+                      RTPSender* rtp_sender,
+-                     const FieldTrialsView& field_trials,
+-                     bool raw_packetization)
++                     const FieldTrialsView& field_trials)
+       : RTPSenderVideo([&] {
+           Config config;
+           config.clock = clock;
+           config.rtp_sender = rtp_sender;
+           config.field_trials = &field_trials;
+-          config.raw_packetization = raw_packetization;
+           return config;
+         }()) {}
+   ~TestRtpSenderVideo() override {}
+@@ -189,7 +187,7 @@ class TestRtpSenderVideo : public RTPSenderVideo {
+ 
+ class RtpSenderVideoTest : public ::testing::Test {
+  public:
+-  explicit RtpSenderVideoTest(bool raw_packetization = false)
++  RtpSenderVideoTest()
+       : fake_clock_(kStartTime),
+         env_(CreateEnvironment(&fake_clock_)),
+         retransmission_rate_limiter_(&fake_clock_, 1000),
+@@ -203,8 +201,7 @@ class RtpSenderVideoTest : public ::testing::Test {
+         rtp_sender_video_(
+             std::make_unique<TestRtpSenderVideo>(&fake_clock_,
+                                                  rtp_module_.RtpSender(),
+-                                                 env_.field_trials(),
+-                                                 raw_packetization)) {
++                                                 env_.field_trials())) {
+     rtp_module_.SetSequenceNumber(kSeqNum);
+     rtp_module_.SetStartTimestamp(0);
+   }
+@@ -1359,8 +1356,7 @@ TEST_F(RtpSenderVideoTest,
+ 
+ TEST_F(RtpSenderVideoTest, AbsoluteCaptureTime) {
+   rtp_sender_video_ = std::make_unique<TestRtpSenderVideo>(
+-      &fake_clock_, rtp_module_.RtpSender(), env_.field_trials(),
+-      /*raw_packetization=*/false);
++      &fake_clock_, rtp_module_.RtpSender(), env_.field_trials());
+ 
+   constexpr Timestamp kAbsoluteCaptureTimestamp = Timestamp::Millis(12345678);
+   uint8_t kFrame[kMaxPacketLength];
+@@ -1526,12 +1522,7 @@ TEST_F(RtpSenderVideoTest, SendGenericVideo) {
+   EXPECT_THAT(sent_payload.subview(1), ElementsAreArray(kDeltaPayload));
+ }
+ 
+-class RtpSenderVideoRawPacketizationTest : public RtpSenderVideoTest {
+- public:
+-  RtpSenderVideoRawPacketizationTest() : RtpSenderVideoTest(true) {}
+-};
+-
+-TEST_F(RtpSenderVideoRawPacketizationTest, SendRawVideo) {
++TEST_F(RtpSenderVideoTest, SendRawVideo) {
+   const uint8_t kPayloadTypeRaw = 111;
+   const uint8_t kPayload[] = {11, 22, 33, 44, 55};
+ 
+@@ -1547,23 +1538,6 @@ TEST_F(RtpSenderVideoRawPacketizationTest, SendRawVideo) {
+   EXPECT_THAT(sent_payload, ElementsAreArray(kPayload));
+ }
+ 
+-TEST_F(RtpSenderVideoRawPacketizationTest, SendVideoWithSetCodecTypeStillRaw) {
+-  const uint8_t kPayloadTypeRaw = 111;
+-  const uint8_t kPayload[] = {11, 22, 33, 44, 55};
+-
+-  // Send a frame with codectype "generic"
+-  RTPVideoHeader video_header;
+-  video_header.frame_type = VideoFrameType::kVideoFrameKey;
+-  ASSERT_TRUE(rtp_sender_video_->SendVideo(
+-      kPayloadTypeRaw, VideoCodecType::kVideoCodecGeneric, 1234,
+-      fake_clock_.CurrentTime(), kPayload, sizeof(kPayload), video_header,
+-      TimeDelta::PlusInfinity(), {}));
+-
+-  // Should still be packetized as raw.
+-  EXPECT_THAT(transport_.last_sent_packet().payload(),
+-              ElementsAreArray(kPayload));
+-}
+-
+ class RtpSenderVideoWithFrameTransformerTest : public ::testing::Test {
+  public:
+   RtpSenderVideoWithFrameTransformerTest()
