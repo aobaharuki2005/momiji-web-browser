@@ -4141,7 +4141,7 @@ size_t InitialStencilAndDelazifications::sizeOfExcludingThis(
     // The initial stencil can be shared between multiple owners, but
     // in most case this instance is considered as the main owner, in term
     // of the memory reporting.
-    size += initial_->sizeOfExcludingThis(mallocSizeOf);
+    size += initial_->sizeOfIncludingThis(mallocSizeOf);
   }
 
   size += delazifications_.sizeOfExcludingThis(mallocSizeOf);
@@ -4152,7 +4152,7 @@ size_t InitialStencilAndDelazifications::sizeOfExcludingThis(
     }
 
     // Delazifications are exclusively owned by this instance.
-    size += (*delazification).sizeOfExcludingThis(mallocSizeOf);
+    size += (*delazification).sizeOfIncludingThis(mallocSizeOf);
   }
 
   size += functionKeyToInitialScriptIndex_.sizeOfExcludingThis(mallocSizeOf);
