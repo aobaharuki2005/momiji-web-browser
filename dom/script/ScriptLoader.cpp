@@ -3343,12 +3343,12 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
     cacheBehavior = CacheBehavior::Evict;
   }
 
+  LoadedScript* loadedScript = aRequest->getLoadedScript();
   if (cacheBehavior == CacheBehavior::Insert) {
-    auto loadData =
-        MakeRefPtr<ScriptLoadData>(this, aRequest, aRequest->getLoadedScript());
-    aRequest->ConvertToCachedStencil();
-    if (aRequest->getLoadedScript()->mFetchCount == 0) {
-      aRequest->getLoadedScript()->mFetchCount = 1;
+    auto loadData = MakeRefPtr<ScriptLoadData>(this, aRequest, loadedScript);
+    loadedScript->ConvertToCachedStencil();
+    if (loadedScript->mFetchCount == 0) {
+      loadedScript->mFetchCount = 1;
     }
     mCache->Insert(*loadData);
     LOG(("ScriptLoader (%p): Inserting in-memory cache for %s.", this,
@@ -3356,7 +3356,7 @@ void ScriptLoader::TryCacheRequest(ScriptLoadRequest* aRequest) {
     TRACE_FOR_TEST(aRequest, "memorycache:saved");
   } else {
     MOZ_ASSERT(cacheBehavior == CacheBehavior::Evict);
-    ScriptHashKey key(this, aRequest, aRequest->getLoadedScript());
+    ScriptHashKey key(this, aRequest, loadedScript);
     mCache->Evict(key);
     LOG(("ScriptLoader (%p): Evicting in-memory cache for %s.", this,
          aRequest->URI()->GetSpecOrDefault().get()));

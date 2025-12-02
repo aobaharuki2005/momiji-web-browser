@@ -506,8 +506,6 @@ class LoadedScriptDelegate {
 
   void SetSerializedStencil() { GetLoadedScript()->SetSerializedStencil(); }
 
-  void ConvertToCachedStencil() { GetLoadedScript()->ConvertToCachedStencil(); }
-
   bool IsUTF16Text() const { return GetLoadedScript()->IsUTF16Text(); }
   bool IsUTF8Text() const { return GetLoadedScript()->IsUTF8Text(); }
 
