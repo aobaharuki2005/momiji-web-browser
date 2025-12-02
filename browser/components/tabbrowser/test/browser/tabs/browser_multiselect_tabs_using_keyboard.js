@@ -57,11 +57,25 @@ add_task(async function changeSelectionUsingKeyboard() {
     unifiedSearchButton,
     "Unified Search Button should be focused"
   );
-  await synthesizeKeyAndWaitForFocus(
-    document.getElementById("reload-button"),
-    "VK_TAB",
-    { shiftKey: true }
-  );
+  if (Services.prefs.getBoolPref("sidebar.revamp", false)) {
+    // when sidebar.revamp is enabled, the sidebar-button is placed by default at the
+    // start of the #nav-bar and will receive focus.
+    info("Move focus to the sidebar-button using the keyboard");
+    await synthesizeKeyAndWaitForFocus(
+      document.getElementById("sidebar-button"),
+      "VK_TAB",
+      { shiftKey: true }
+    );
+  } else {
+    info("Move focus to the reload-button using the keyboard");
+    await synthesizeKeyAndWaitForFocus(
+      document.getElementById("reload-button"),
+      "VK_TAB",
+      { shiftKey: true }
+    );
+  }
+
+  info("Move focus to the tabs-newtab-button using the keyboard");
   await synthesizeKeyAndWaitForFocus(
     document.getElementById("tabs-newtab-button"),
     "VK_TAB",
