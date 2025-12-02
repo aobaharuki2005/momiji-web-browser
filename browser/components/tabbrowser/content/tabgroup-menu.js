@@ -1188,7 +1188,6 @@
     #createRow(tab) {
       // Create Checkbox
       let checkbox = document.createElement("moz-checkbox");
-      checkbox.value = tab;
       checkbox.label = tab.label;
       checkbox.iconSrc = tab.image;
       checkbox.checked = true;
@@ -1197,14 +1196,11 @@
         "text-truncated-ellipsis"
       );
       checkbox.addEventListener("change", e => {
-        const isChecked = e.target.checked;
-        const currentTab = e.target.value;
-
-        if (isChecked) {
-          this.#selectedSuggestedTabs.push(currentTab);
+        if (e.target.checked) {
+          this.#selectedSuggestedTabs.push(tab);
         } else {
           this.#selectedSuggestedTabs = this.#selectedSuggestedTabs.filter(
-            t => t != currentTab
+            t => t != tab
           );
         }
       });
