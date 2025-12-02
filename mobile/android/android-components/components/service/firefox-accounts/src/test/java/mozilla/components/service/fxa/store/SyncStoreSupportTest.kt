@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa.store
 
 import androidx.lifecycle.LifecycleOwner
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.sync.AuthFlowError
 import mozilla.components.concept.sync.AuthType
@@ -20,21 +21,16 @@ import mozilla.components.support.test.any
 import mozilla.components.support.test.coMock
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 
 class SyncStoreSupportTest {
-
-    @get:Rule
-    val mainCoroutineRule = MainCoroutineRule()
-
+    private val testDispatcher = StandardTestDispatcher()
     private val accountManager = mock<FxaAccountManager>()
     private val lifecycleOwner = mock<LifecycleOwner>()
     private val autoPause = false
@@ -55,7 +51,8 @@ class SyncStoreSupportTest {
             deviceConstellationObserver = constellationObserver,
             lifecycleOwner = lifecycleOwner,
             autoPause = autoPause,
-            coroutineScope = mainCoroutineRule.scope,
+            ioDispatcher = testDispatcher,
+            mainDispatcher = testDispatcher,
         )
 
         integration = SyncStoreSupport(
@@ -63,7 +60,8 @@ class SyncStoreSupportTest {
             fxaAccountManager = lazyOf(accountManager),
             lifecycleOwner = lifecycleOwner,
             autoPause = autoPause,
-            coroutineScope = mainCoroutineRule.scope,
+            ioDispatcher = testDispatcher,
+            mainDispatcher = testDispatcher,
         )
     }
 
@@ -97,7 +95,7 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onAuthenticated observed THEN device observer registered`() = runTest {
+    fun `GIVEN account observer WHEN onAuthenticated observed THEN device observer registered`() = runTest(testDispatcher) {
         val constellation = mock<DeviceConstellation>()
         val account = mock<OAuthAccount> {
             whenever(deviceConstellation()).thenReturn(constellation)
@@ -105,11 +103,13 @@ class SyncStoreSupportTest {
 
         accountObserver.onAuthenticated(account, mock<AuthType.Existing>())
 
+        testDispatcher.scheduler.advanceUntilIdle()
+
         verify(constellation).registerDeviceObserver(constellationObserver, lifecycleOwner, autoPause)
     }
 
     @Test
-    fun `GIVEN account observer WHEN onAuthenticated observed with profile THEN account and account state are updated`() = runTest {
+    fun `GIVEN account observer WHEN onAuthenticated observed with profile THEN account and account state are updated`() = runTest(testDispatcher) {
         val profile = generateProfile()
         val constellation = mock<DeviceConstellation>()
         val account = coMock<OAuthAccount> {
@@ -122,6 +122,7 @@ class SyncStoreSupportTest {
         assertEquals(AccountState.NotAuthenticated, store.state.accountState)
 
         accountObserver.onAuthenticated(account, AuthType.Existing)
+        testDispatcher.scheduler.advanceUntilIdle()
 
         val expected = Account(
             profile.uid,
@@ -136,7 +137,7 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onAuthenticated observed without profile THEN account and account state are not updated`() = runTest {
+    fun `GIVEN account observer WHEN onAuthenticated observed without profile THEN account and account state are not updated`() = runTest(testDispatcher) {
         val constellation = mock<DeviceConstellation>()
         val account = coMock<OAuthAccount> {
             whenever(deviceConstellation()).thenReturn(constellation)
@@ -150,7 +151,7 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN user is logged in WHEN onLoggedOut observed THEN sync status and account states are updated`() = runTest {
+    fun `GIVEN user is logged in WHEN onLoggedOut observed THEN sync status and account states are updated`() = runTest(testDispatcher) {
         val account = coMock<OAuthAccount> {
             whenever(deviceConstellation()).thenReturn(mock())
             whenever(getProfile()).thenReturn(null)
@@ -165,7 +166,7 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onAuthenticationProblems observed THEN account state is updated`() = runTest {
+    fun `GIVEN account observer WHEN onAuthenticationProblems observed THEN account state is updated`() {
         assertEquals(AccountState.NotAuthenticated, store.state.accountState)
 
         accountObserver.onAuthenticationProblems()
@@ -174,7 +175,7 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onFlowError observed THEN account state is updated`() = runTest {
+    fun `GIVEN account observer WHEN onFlowError observed THEN account state is updated`() {
         assertNull(store.state.account)
         assertEquals(AccountState.NotAuthenticated, store.state.accountState)
 
@@ -185,7 +186,7 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onProfileUpdated then update the account state`() = runTest {
+    fun `GIVEN account observer WHEN onProfileUpdated then update the account state`() {
         // Prerequisite is having a non-null account already.
         store.dispatch(SyncAction.UpdateAccount(Account(null, null, null, null, null, null)))
 
@@ -199,7 +200,7 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onReady is triggered THEN do nothing`() = runTest {
+    fun `GIVEN account observer WHEN onReady is triggered THEN do nothing`() = runTest(testDispatcher) {
         // `onReady` is too early for us (today) to try and get the auth status from the cached value.
         // See: https://bugzilla.mozilla.org/show_bug.cgi?id=1909779
         val currentDeviceId = "id"
@@ -229,7 +230,7 @@ class SyncStoreSupportTest {
     }
 
     @Test
-    fun `GIVEN account observer WHEN onReady observed without profile THEN account states are not updated`() = runTest {
+    fun `GIVEN account observer WHEN onReady observed without profile THEN account states are not updated`() = runTest(testDispatcher) {
         val constellation = mock<DeviceConstellation>()
         val account = coMock<OAuthAccount> {
             whenever(deviceConstellation()).thenReturn(constellation)
