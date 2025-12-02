@@ -16,6 +16,9 @@ prefs = [
 run-sequentially = ["os == 'mac'"] # frequent fail in parallel on Mac
 
 ["test_copy_profile.js"]
+skip-if = [
+  "os == 'mac' && os_version == '10.15' && arch == 'x86_64'", # Bug 2002468
+]
 
 ["test_create_profile.js"]
 
