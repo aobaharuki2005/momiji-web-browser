@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.compose
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,19 +15,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
-import org.mozilla.fenix.theme.Theme
-import mozilla.components.ui.icons.R as iconsR
 
 /**
  * The background of an item that is being swiped horizontally.
@@ -46,12 +43,12 @@ fun DismissibleItemBackground(
     if (isSwipeActive) {
         Card(
             modifier = modifier.fillMaxSize(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            colors = CardDefaults.cardColors(containerColor = FirefoxTheme.colors.layer3),
             shape = shape,
         ) {
             Box(modifier = Modifier.fillMaxSize()) {
                 Icon(
-                    painter = painterResource(iconsR.drawable.mozac_ic_delete_24),
+                    painter = painterResource(R.drawable.ic_delete),
                     contentDescription = null,
                     modifier = Modifier
                         .padding(horizontal = 32.dp)
@@ -62,7 +59,7 @@ fun DismissibleItemBackground(
                                 Alignment.CenterStart
                             },
                         ),
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = FirefoxTheme.colors.iconCritical,
                 )
             }
         }
@@ -70,9 +67,12 @@ fun DismissibleItemBackground(
 }
 
 @Composable
-private fun DismissibleItemBackgroundPreviewContent() {
-    Surface {
-        Column {
+@PreviewLightDark
+private fun DismissedTabBackgroundPreview() {
+    FirefoxTheme {
+        Column(
+            modifier = Modifier.background(color = FirefoxTheme.colors.layer1),
+        ) {
             Box(modifier = Modifier.height(56.dp)) {
                 DismissibleItemBackground(
                     isSwipeActive = true,
@@ -100,21 +100,5 @@ private fun DismissibleItemBackgroundPreviewContent() {
                 )
             }
         }
-    }
-}
-
-@Composable
-@PreviewLightDark
-private fun DismissedTabBackgroundPreview() {
-    FirefoxTheme {
-        DismissibleItemBackgroundPreviewContent()
-    }
-}
-
-@Composable
-@Preview
-private fun DismissedTabBackgroundPrivatePreview() {
-    FirefoxTheme(theme = Theme.Private) {
-        DismissibleItemBackgroundPreviewContent()
     }
 }

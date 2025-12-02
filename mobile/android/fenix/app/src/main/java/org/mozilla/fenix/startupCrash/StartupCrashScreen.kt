@@ -5,20 +5,24 @@
 package org.mozilla.fenix.startupCrash
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,8 +36,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
-import mozilla.components.compose.base.button.FilledButton
-import mozilla.components.compose.base.button.OutlinedButton
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -45,20 +47,15 @@ internal fun StartupCrashScreen(store: StartupCrashStore) {
     val scrollState = rememberScrollState()
 
     Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(top = 74.dp, bottom = 97.dp, start = 16.dp, end = 16.dp),
     ) {
         ScreenImg()
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         ScreenText()
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         when (state.uiState) {
             UiState.Idle -> {
@@ -76,49 +73,78 @@ internal fun StartupCrashScreen(store: StartupCrashStore) {
 
 @Composable
 private fun ReportButtons(store: StartupCrashStore) {
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        FilledButton(
-            text = stringResource(R.string.startup_crash_positive),
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Button(
+            onClick = { store.dispatch(ReportTapped) },
+            shape = RoundedCornerShape(4.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = FirefoxTheme.colors.actionPrimary,
+                contentColor = FirefoxTheme.colors.textActionPrimary,
+            ),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            store.dispatch(ReportTapped)
+            Text(stringResource(R.string.startup_crash_positive))
         }
-
-        OutlinedButton(
-            text = stringResource(R.string.startup_crash_negative),
+        Button(
+            onClick = { store.dispatch(NoTapped) },
+            shape = RoundedCornerShape(4.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = FirefoxTheme.colors.actionSecondary,
+                contentColor = FirefoxTheme.colors.textActionSecondary,
+            ),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            store.dispatch(NoTapped)
+            Text(stringResource(R.string.startup_crash_negative))
         }
     }
 }
 
 @Composable
 private fun ReopenButton(store: StartupCrashStore) {
-    FilledButton(
-        text = stringResource(
-            R.string.startup_crash_restart,
-            stringResource(R.string.firefox),
+    Button(
+        onClick = { store.dispatch(ReopenTapped) },
+        shape = RoundedCornerShape(4.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = FirefoxTheme.colors.actionPrimary,
+            contentColor = FirefoxTheme.colors.textActionPrimary,
         ),
-        modifier = Modifier.fillMaxWidth(),
-        icon = painterResource(iconsR.drawable.mozac_ic_checkmark_24),
+        modifier = Modifier
+            .padding(bottom = 8.dp)
+            .fillMaxWidth(),
     ) {
-        store.dispatch(ReopenTapped)
+        Icon(
+            painter = painterResource(iconsR.drawable.mozac_ic_checkmark_24),
+            contentDescription = null,
+            tint = FirefoxTheme.colors.textActionPrimary,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            stringResource(
+                R.string.startup_crash_restart,
+                stringResource(R.string.firefox),
+            ),
+        )
     }
 }
 
 @Composable
 private fun CircularLoadButton() {
-    FilledButton(
-        onClick = {},
-        modifier = Modifier.fillMaxWidth(),
+    Button(
+        onClick = { },
         enabled = false,
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(4.dp),
+        colors = ButtonDefaults.buttonColors(
+            disabledContainerColor = FirefoxTheme.colors.actionPrimaryDisabled,
+            disabledContentColor = FirefoxTheme.colors.textActionPrimaryDisabled,
+        ),
     ) {
         CircularProgressIndicator(
-            modifier = Modifier.size(18.dp),
-            color = MaterialTheme.colorScheme.inverseOnSurface,
             strokeWidth = 2.dp,
-            trackColor = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .size(24.dp),
+            color = FirefoxTheme.colors.actionPrimaryDisabled,
         )
     }
 }
@@ -132,6 +158,7 @@ private fun ScreenImg() {
             painterResource(id = R.drawable.fox_alert_crash_dark)
         },
         contentDescription = null,
+        modifier = Modifier.padding(bottom = 24.dp),
     )
 }
 
@@ -140,22 +167,24 @@ private fun ScreenText() {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .padding(bottom = 32.dp)
+            .fillMaxWidth(),
     ) {
         Text(
             text = stringResource(
                 R.string.startup_crash_title,
                 stringResource(R.string.firefox),
             ),
+            color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline5,
         )
-
         Text(
             text = stringResource(
                 R.string.startup_crash_body,
                 stringResource(R.string.firefox),
             ),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = FirefoxTheme.colors.textSecondary,
             style = FirefoxTheme.typography.body2,
             textAlign = TextAlign.Center,
         )
@@ -182,7 +211,7 @@ internal fun StartupCrashScreenPreview(
         )
     }
     FirefoxTheme {
-        Surface {
+        Box(modifier = Modifier.background(FirefoxTheme.colors.layer2)) {
             StartupCrashScreen(store)
         }
     }
