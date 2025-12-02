@@ -869,6 +869,11 @@ bool Gecko_IsSelectListBox(const Element* aElement) {
   return select && !select->IsCombobox();
 }
 
+bool Gecko_LookupAttrValue(const Element* aElement, const nsAtom& aName,
+                           nsAString& aResult) {
+  return aElement->GetAttr(&aName, aResult);
+}
+
 template <typename Implementor>
 static nsAtom* LangValue(Implementor* aElement) {
   // TODO(emilio): Deduplicate a bit with nsIContent::GetLang().
