@@ -150,7 +150,7 @@ const observer = {
         this.handleKeydown(aEvent, field, loginManagerChild, ownerDocument);
         break;
 
-      case "focus":
+      case "focusin":
         this.handleFocus(field, docState, aEvent.target);
         break;
 
@@ -616,7 +616,7 @@ export class LoginFormState {
     this.generatedPasswordFields.add(passwordField);
 
     // blur/focus: listen for focus changes to we can mask/unmask generated passwords
-    for (let eventType of ["blur", "focus"]) {
+    for (let eventType of ["blur", "focusin"]) {
       passwordField.addEventListener(eventType, observer, {
         capture: true,
         mozSystemGroup: true,
@@ -668,7 +668,7 @@ export class LoginFormState {
     this.generatedPasswordFields.delete(passwordField);
 
     // Remove all the event listeners added in _passwordEditedOrGenerated
-    for (let eventType of ["blur", "focus"]) {
+    for (let eventType of ["blur", "focusin"]) {
       passwordField.removeEventListener(eventType, observer, {
         capture: true,
         mozSystemGroup: true,
@@ -3113,7 +3113,7 @@ export class LoginManagerChild extends JSWindowActorChild {
 
       if (usernameField) {
         lazy.log("Attaching event listeners to usernameField.");
-        usernameField.addEventListener("focus", observer);
+        usernameField.addEventListener("focusin", observer);
         usernameField.addEventListener("mousedown", observer);
       }
 
