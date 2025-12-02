@@ -70,7 +70,6 @@ internal fun UnlockPrivateTabsTrayScreen(
             Text(
                 text = stringResource(id = R.string.pbm_authentication_unlock_private_tabs),
                 modifier = Modifier.align(Alignment.Center),
-                color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.headline6,
             )
         }
