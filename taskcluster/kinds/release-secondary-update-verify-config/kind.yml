@@ -83,7 +83,7 @@ tasks:
     firefox-secondary-macosx64:
         treeherder:
             symbol: UVCS
-            platform: macosx64/opt
+            platform: osx-shippable/opt
             kind: test
             tier: 1
         attributes:
