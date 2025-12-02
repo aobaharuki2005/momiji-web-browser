@@ -276,7 +276,7 @@ index c6040740ce..70ed476401 100644
  
  rtc_library("scalability_mode") {
 diff --git a/audio/BUILD.gn b/audio/BUILD.gn
-index 3773ab8173..d2734974c9 100644
+index 3776dac967..0200d8c204 100644
 --- a/audio/BUILD.gn
 +++ b/audio/BUILD.gn
 @@ -8,8 +8,8 @@
@@ -440,7 +440,7 @@ index 6896edbc34..ecbb7eae7e 100644
  import("../webrtc.gni")
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index e57e55882c..80af18a5fa 100644
+index 7ace1135c8..b63880a296 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -9,8 +9,8 @@
