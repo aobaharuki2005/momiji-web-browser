@@ -36,6 +36,8 @@ support-files = [
 
 ["browser_aboutCertError_offlineSupport_feltPrivacyV1.js"]
 
+["browser_aboutCertError_revoked.js"]
+
 ["browser_aboutCertError_telemetry.js"]
 
 ["browser_aboutDialog_distribution.js"]

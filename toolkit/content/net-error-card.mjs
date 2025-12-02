@@ -53,6 +53,7 @@ export class NetErrorCard extends MozLitElement {
   };
 
   static ERROR_CODES = new Set([
+    "SEC_ERROR_REVOKED_CERTIFICATE",
     "SEC_ERROR_UNKNOWN_ISSUER",
     "SSL_ERROR_BAD_CERT_DOMAIN",
     "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT",
@@ -176,6 +177,7 @@ export class NetErrorCard extends MozLitElement {
 
   introContentTemplate() {
     switch (this.errorInfo.errorCodeString) {
+      case "SEC_ERROR_REVOKED_CERTIFICATE":
       case "SEC_ERROR_UNKNOWN_ISSUER":
       case "SSL_ERROR_BAD_CERT_DOMAIN":
       case "SEC_ERROR_EXPIRED_CERTIFICATE":
@@ -218,6 +220,20 @@ export class NetErrorCard extends MozLitElement {
     let content;
 
     switch (this.errorInfo.errorCodeString) {
+      case "SEC_ERROR_REVOKED_CERTIFICATE": {
+        content = this.advancedSectionTemplate({
+          whyDangerousL10nId: "fp-certerror-revoked-why-dangerous-body",
+          whyDangerousL10nArgs: {
+            hostname: this.hostname,
+          },
+          whatCanYouDoL10nId: "fp-certerror-revoked-what-can-you-do-body",
+          learnMoreL10nId: "fp-learn-more-about-cert-issues",
+          learnMoreSupportPage: "connection-not-secure",
+          viewCert: true,
+          proceedButton: false,
+        });
+        break;
+      }
       case "SEC_ERROR_UNKNOWN_ISSUER": {
         content = this.advancedSectionTemplate({
           whyDangerousL10nId: "fp-certerror-unknown-issuer-why-dangerous-body",
@@ -527,6 +543,11 @@ export class NetErrorCard extends MozLitElement {
     // information panel is hidden as well, since it's opened by the
     // error code link in the advanced panel.
     this.certErrorDebugInfoShowing = false;
+
+    if (!this.exceptionButton) {
+      this.resetReveal = null;
+      return;
+    }
 
     // Reveal, but disabled (and grayed-out) for 3.0s.
     if (this.exceptionButton) {
