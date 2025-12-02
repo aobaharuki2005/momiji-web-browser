@@ -83,38 +83,6 @@ features:
         description: The drawable displayed in the app menu for Settings
         type: String
         default: mozac_ic_settings
-  query-parameter-stripping:
-    description: Features for query parameter stripping.
-    variables:
-      sections-enabled:
-        description: "This property provides a lookup table of whether or not the given section should be enabled."
-        type: Map<QueryParameterStrippingSection, String>
-        default:
-          {
-            "query-parameter-stripping": "0",
-            "query-parameter-stripping-pmb": "0",
-            "query-parameter-stripping-allow-list": "",
-            "query-parameter-stripping-strip-list": "",
-          }
-    defaults:
-      - channel: developer
-        value: {
-          "sections-enabled": {
-            "query-parameter-stripping": "0",
-            "query-parameter-stripping-pmb": "0",
-            "query-parameter-stripping-allow-list": "",
-            "query-parameter-stripping-strip-list": "",
-          }
-        }
-      - channel: nightly
-        value: {
-          "sections-enabled": {
-            "query-parameter-stripping": "0",
-            "query-parameter-stripping-pmb": "0",
-            "query-parameter-stripping-allow-list": "",
-            "query-parameter-stripping-strip-list": "",
-          }
-        }
   cookie-banners:
     description: Features for cookie banner handling.
     variables:
