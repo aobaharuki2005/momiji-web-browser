@@ -1396,30 +1396,6 @@ export const NimbusTestUtils = {
     }, `Waiting for enrollments of ${expectedSlugs} to sync to database`);
   },
 
-  async waitForAllUnenrollments() {
-    const profileId = ExperimentAPI.profileId;
-
-    await this.flushStore();
-    await lazy.TestUtils.waitForCondition(async () => {
-      const conn = await lazy.ProfilesDatastoreService.getConnection();
-      const slugs = await conn
-        .execute(
-          `
-            SELECT
-              slug
-            FROM NimbusEnrollments
-            WHERE
-              active = true AND
-              profileId = :profileId;
-          `,
-          { profileId }
-        )
-        .then(rows => rows.map(row => row.getResultByName("slug")));
-
-      return slugs.length === 0;
-    }, "Waiting for unenrollments to sync to database");
-  },
-
   async flushStore(store = null) {
     const db = (store ?? ExperimentAPI.manager.store)._db;
 

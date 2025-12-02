@@ -164,7 +164,6 @@ async function setupTest({ ...args } = {}) {
     ...ctx,
     async cleanup() {
       assertNoObservers(ctx.manager);
-      await NimbusTestUtils.waitForAllUnenrollments();
       await baseCleanup();
     },
   };
