@@ -70,3 +70,4 @@ report-broken-site-panel-preview-button =
   .label = Preview report
 report-broken-site-panel-preview-header =
   .label = Preview report
+report-broken-site-panel-button-copy = Copy

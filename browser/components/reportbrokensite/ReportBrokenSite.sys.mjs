@@ -301,15 +301,9 @@ export class ViewState {
     );
   }
 
-  get previewCancelButton() {
+  get copyButton() {
     return this.#previewView.querySelector(
-      "#report-broken-site-popup-preview-cancel-button"
-    );
-  }
-
-  get previewSendButton() {
-    return this.#previewView.querySelector(
-      "#report-broken-site-popup-preview-send-button"
+      "#report-broken-site-popup-preview-copy-button"
     );
   }
 
@@ -635,36 +629,33 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
   }
 
   #initPreviewView(state) {
-    state.previewSendButton.addEventListener("command", event => {
-      // If the user has not entered a reason yet, then the form's validity
-      // check will bring up the reason dropdown, despite it being out of view
-      // (since we're looking at the preview panel, not the main one). This is
-      // confusing, so we instead go back to the main view first if there is a
-      // validity check failure (we also have to be careful to avoid possibly
-      // racing with the user if they close the popup during this sequence, so
-      // we don't leak any event listeners and world with them).
-      if (!state.form.checkValidity()) {
-        const view = event.target.closest("panelview").panelMultiView;
-        const { document } = event.target.ownerGlobal;
-        const listener = event => {
-          document.removeEventListener("popuphiding", listener);
-          view.removeEventListener("ViewShown", listener);
-          if (event.type == "ViewShown") {
-            state.form.requestSubmit();
-          }
-        };
-        document.addEventListener("popuphiding", listener);
-        view.addEventListener("ViewShown", listener);
-        view.goBack();
-      } else {
-        state.form.requestSubmit();
+    state.copyButton.addEventListener("click", event => {
+      event.preventDefault();
+      const { cachedPreviewData } = state;
+      if (!cachedPreviewData) {
+        console.error("Report Broken Site: No cached preview data to copy?");
+        return;
       }
+      this.#setClipboardToString(JSON.stringify(cachedPreviewData));
     });
+  }
 
-    state.previewCancelButton.addEventListener("command", ({ target }) => {
-      target.ownerGlobal.CustomizableUI.hidePanelForNode(target);
-      state.reset();
-    });
+  #setClipboardToString(string) {
+    let str = Cc["@mozilla.org/supports-string;1"].createInstance(
+      Ci.nsISupportsString
+    );
+    str.data = string;
+    const xferable = Cc["@mozilla.org/widget/transferable;1"].createInstance(
+      Ci.nsITransferable
+    );
+    xferable.init(null);
+    xferable.addDataFlavor("text/plain");
+    xferable.setTransferData("text/plain", str);
+    Services.clipboard.setData(
+      xferable,
+      null,
+      Ci.nsIClipboard.kGlobalClipboard
+    );
   }
 
   #initReportSentView(state) {
