@@ -220,6 +220,10 @@ class WalkerActor extends Actor {
     this.overflowCausingElementsMap = new Map();
 
     this.showAllAnonymousContent = options.showAllAnonymousContent;
+    // Allow native anonymous content (like <video> controls) if preffed on
+    this.documentWalkerFilter = this.showAllAnonymousContent
+      ? allAnonymousContentTreeWalkerFilter
+      : standardTreeWalkerFilter;
 
     this.walkerSearch = new WalkerSearch(this);
 
@@ -349,16 +353,9 @@ class WalkerActor extends Actor {
     return "[WalkerActor " + this.actorID + "]";
   }
 
-  getDocumentWalkerFilter() {
-    // Allow native anonymous content (like <video> controls) if preffed on
-    return this.showAllAnonymousContent
-      ? allAnonymousContentTreeWalkerFilter
-      : standardTreeWalkerFilter;
-  }
-
   getDocumentWalker(node, skipTo) {
     return new DocumentWalker(node, this.rootWin, {
-      filter: this.getDocumentWalkerFilter(),
+      filter: this.documentWalkerFilter,
       skipTo,
       showAnonymousContent: true,
     });
@@ -440,6 +437,7 @@ class WalkerActor extends Actor {
       this.layoutActor = null;
       this.targetActor = null;
       this.chromeEventHandler = null;
+      this.documentWalkerFilter = null;
 
       this.emit("destroyed");
     } catch (e) {
@@ -651,18 +649,15 @@ class WalkerActor extends Actor {
     const newParents = new Set();
     for (let node of nodes) {
       if (!(node instanceof NodeActor)) {
-        // If an anonymous node was passed in and we aren't supposed to know
-        // about it, then use the closest ancestor.
-        if (!this.showAllAnonymousContent) {
-          while (
-            node &&
-            standardTreeWalkerFilter(node) != nodeFilterConstants.FILTER_ACCEPT
-          ) {
-            node = this.rawParentNode(node);
-          }
-          if (!node) {
-            continue;
-          }
+        // If the provided node doesn't match the filter, use the closest ancestor
+        while (
+          node &&
+          this.documentWalkerFilter(node) != nodeFilterConstants.FILTER_ACCEPT
+        ) {
+          node = this.rawParentNode(node);
+        }
+        if (!node) {
+          continue;
         }
 
         node = this._getOrCreateNodeActor(node);
@@ -731,13 +726,13 @@ class WalkerActor extends Actor {
       return null;
     }
 
-    const filter = this.showAllAnonymousContent
-      ? allAnonymousContentTreeWalkerFilter
-      : standardTreeWalkerFilter;
     // If the parent node is one we should ignore (e.g. :-moz-snapshot-containing-block,
     // which is the root node for ::view-transition pseudo elements), we want to return
     // the closest non-ignored parent.
-    if (filter(parentNode) === nodeFilterConstants.FILTER_ACCEPT_CHILDREN) {
+    if (
+      this.documentWalkerFilter(parentNode) ===
+      nodeFilterConstants.FILTER_ACCEPT_CHILDREN
+    ) {
       return this.rawParentNode(parentNode);
     }
 
@@ -933,9 +928,6 @@ class WalkerActor extends Actor {
    * @returns Array<Node> the list of children.
    */
   _rawChildren(rawNode, includeAssigned) {
-    const filter = this.showAllAnonymousContent
-      ? allAnonymousContentTreeWalkerFilter
-      : standardTreeWalkerFilter;
     const ret = [];
     const children = InspectorUtils.getChildrenForNode(
       rawNode,
@@ -943,7 +935,7 @@ class WalkerActor extends Actor {
       includeAssigned
     );
     for (const child of children) {
-      const filterResult = filter(child);
+      const filterResult = this.documentWalkerFilter(child);
       if (filterResult == nodeFilterConstants.FILTER_ACCEPT) {
         ret.push(child);
       } else if (filterResult == nodeFilterConstants.FILTER_ACCEPT_CHILDREN) {
@@ -2251,11 +2243,10 @@ class WalkerActor extends Actor {
   onMutations(mutations) {
     // Don't send a mutation event if the mutation target would be ignored by the walker
     // filter function.
-    const documentWalkerFilter = this.getDocumentWalkerFilter();
     if (
       mutations.every(
         mutation =>
-          documentWalkerFilter(mutation.target) ===
+          this.documentWalkerFilter(mutation.target) ===
           nodeFilterConstants.FILTER_SKIP
       )
     ) {
@@ -2349,8 +2340,10 @@ class WalkerActor extends Actor {
 
     // Here, we might be in a case where a node is remove/added for which we don't have an
     // actor for, but do have actors for its children.
-    const filter = this.getDocumentWalkerFilter();
-    if (filter(node) !== nodeFilterConstants.FILTER_ACCEPT_CHILDREN) {
+    if (
+      this.documentWalkerFilter(node) !==
+      nodeFilterConstants.FILTER_ACCEPT_CHILDREN
+    ) {
       // At this point, the client never encountered this actor and the node wasn't ignored,
       // so we don't need to tell it about this mutation.
       // For added node, if the client wants to see the new nodes it can ask for children.
@@ -2422,8 +2415,7 @@ class WalkerActor extends Actor {
     const root = event.target;
 
     // Don't trigger a mutation if the document walker would filter out the element.
-    const documentWalkerFilter = this.getDocumentWalkerFilter();
-    if (documentWalkerFilter(root) === nodeFilterConstants.FILTER_SKIP) {
+    if (this.documentWalkerFilter(root) === nodeFilterConstants.FILTER_SKIP) {
       return;
     }
 
