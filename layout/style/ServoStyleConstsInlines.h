@@ -1105,6 +1105,10 @@ inline void StyleFontStyle::ToString(nsACString& aString) const {
 
 inline bool StyleFontWeight::IsBold() const { return *this >= BOLD_THRESHOLD; }
 
+inline bool StyleFontWeight::PreferBold() const {
+  return *this > PREFER_BOLD_THRESHOLD;
+}
+
 inline bool StyleFontStyle::IsItalic() const { return *this == ITALIC; }
 
 inline float StyleFontStyle::ObliqueAngle() const {
