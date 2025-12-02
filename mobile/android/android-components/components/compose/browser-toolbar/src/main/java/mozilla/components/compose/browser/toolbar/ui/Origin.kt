@@ -120,13 +120,14 @@ internal fun Origin(
             else -> url
         }
     }
+    val contentDescription: String = getContentDescription(urlToShow, hint, title)
 
     CompositionLocalProvider(LocalIndication provides NoRippleIndication) {
         Box(
             contentAlignment = Alignment.CenterStart,
             modifier = modifier
                 .clearAndSetSemantics {
-                    this.contentDescription = "${title ?: ""} $urlToShow. $hint"
+                    this.contentDescription = contentDescription
                 }
                 .clickable(
                     enabled = onClick != null && !shouldReactToLongClicks,
@@ -258,6 +259,16 @@ private fun TextGravity.toTextTruncationDirection() = when (this) {
     TEXT_GRAVITY_START -> END
     TEXT_GRAVITY_END -> START
 }
+
+@Composable
+private fun getContentDescription(urlToShow: CharSequence, hint: String, title: String?) =
+    remember(urlToShow) {
+        if (urlToShow == hint) {
+            hint
+        } else {
+            "${title ?: ""} $urlToShow. $hint"
+        }
+    }
 
 /**
  * Custom indication disabling click ripples.

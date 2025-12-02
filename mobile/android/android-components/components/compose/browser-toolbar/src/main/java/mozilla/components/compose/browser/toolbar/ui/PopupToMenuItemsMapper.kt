@@ -35,8 +35,8 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import mozilla.components.compose.base.modifier.thenConditional
@@ -92,7 +92,7 @@ internal fun menuItemComposable(
                                 },
                             ),
                         ) { source.onClick != null }
-                        .semantics(mergeDescendants = true) {
+                        .clearAndSetSemantics {
                             this.contentDescription = contentDescription
                         }
                         .fillMaxWidth()
