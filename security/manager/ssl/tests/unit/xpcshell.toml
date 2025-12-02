@@ -203,9 +203,6 @@ run-sequentially = ["true"] # hardcoded ports
 
 ["test_faulty_server.js"]
 run-sequentially = ["true"] # hardcoded ports
-skip-if = [
-  "condprof", # Bug 2003129
-]
 
 ["test_forget_about_site_security_headers.js"]
 
