@@ -7045,11 +7045,6 @@ RefPtr<BoolPromise> QuotaManager::SaveOriginAccessTime(
   AssertIsOnOwningThread();
   MOZ_ASSERT(aOriginMetadata.mPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
 
-  if (!StaticPrefs::
-          dom_quotaManager_temporaryStorage_updateOriginAccessTime()) {
-    return BoolPromise::CreateAndResolve(true, __func__);
-  }
-
   RefPtr<UniversalDirectoryLock> directoryLock =
       CreateSaveOriginAccessTimeLock(*this, aOriginMetadata);
 
@@ -7073,11 +7068,6 @@ RefPtr<BoolPromise> QuotaManager::SaveOriginAccessTime(
   MOZ_ASSERT(aOriginMetadata.mPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
   MOZ_ASSERT(aDirectoryLock);
   MOZ_ASSERT(aDirectoryLock->Acquired());
-
-  if (!StaticPrefs::
-          dom_quotaManager_temporaryStorage_updateOriginAccessTime()) {
-    return BoolPromise::CreateAndResolve(true, __func__);
-  }
 
   auto saveOriginAccessTimeOp =
       CreateSaveOriginAccessTimeOp(WrapMovingNotNullUnchecked(this),

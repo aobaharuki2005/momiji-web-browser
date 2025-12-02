@@ -4032,7 +4032,8 @@
 # based on the LRU policy. When disabled, the access time is stored only once
 # when the corresponding origin directory is created for the first time.
 #
-# This setting is currently intended for manual testing purposes only.
+# This pref must remain set to true in production, setting it to false is
+# intended for testing only.
 - name: dom.quotaManager.temporaryStorage.updateOriginAccessTime
   type: RelaxedAtomicBool
   value: true
