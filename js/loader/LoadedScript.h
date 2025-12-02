@@ -469,12 +469,6 @@ class LoadedScriptDelegate {
   using ScriptTextBuffer = LoadedScript::ScriptTextBuffer<Unit>;
   using MaybeSourceText = LoadedScript::MaybeSourceText;
 
-  bool IsModuleScript() const { return GetLoadedScript()->IsModuleScript(); }
-  bool IsEventScript() const { return GetLoadedScript()->IsEventScript(); }
-  bool IsImportMapScript() const {
-    return GetLoadedScript()->IsImportMapScript();
-  }
-
   mozilla::dom::ReferrerPolicy ReferrerPolicy() const {
     return GetLoadedScript()->ReferrerPolicy();
   }
