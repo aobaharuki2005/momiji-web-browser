@@ -3524,11 +3524,7 @@ toolbar#nav-bar {
                 # Currently for automation, the pref defaults to true (but can be
                 # overridden with --setpref).
                 "sessionHistoryInParent": not options.disable_fission
-                or not self.extraPrefs.get(
-                    "fission.disableSessionHistoryInParent",
-                    mozinfo.info["os"] == "android"
-                    and not mozinfo.info.get("early_beta_or_earlier", False),
-                ),
+                or not self.extraPrefs.get("fission.disableSessionHistoryInParent"),
                 "socketprocess_e10s": self.extraPrefs.get(
                     "network.process.enabled", False
                 ),
