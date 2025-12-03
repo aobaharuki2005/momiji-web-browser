@@ -5,6 +5,9 @@
 "use strict";
 
 add_setup(async () => {
+  do_get_profile();
+  Services.fog.initializeFOG();
+
   Services.prefs.setCharPref(
     "urlclassifier.features.harmfuladdon.blocklistHosts",
     "example.org"
@@ -56,18 +59,20 @@ server.registerPathHandler("/backgroundScript", (request, response) => {
 add_task(
   { pref_set: [["privacy.trackingprotection.harmfuladdon.enabled", true]] },
   async function test_addon_blocked_by_url_classifier() {
-    await runTest("backgroundScript_failed", "contentScript_failed");
+    await runTest("backgroundScript_failed", "contentScript_failed", true);
   }
 );
 
 add_task(
   { pref_set: [["privacy.trackingprotection.harmfuladdon.enabled", false]] },
   async function test_addon_blocked_by_url_classifier() {
-    await runTest("backgroundScript_loaded", "contentScript_loaded");
+    await runTest("backgroundScript_loaded", "contentScript_loaded", false);
   }
 );
 
-async function runTest(message1, message2) {
+async function runTest(message1, message2, expectGleanEvent) {
+  Services.fog.testResetFOG();
+
   const extension = ExtensionTestUtils.loadExtension({
     manifest: {
       host_permissions: ["http://example.org/"],
@@ -110,6 +115,24 @@ async function runTest(message1, message2) {
 
   await extension.awaitMessage(message1);
   await extension.awaitMessage(message2);
+
+  if (expectGleanEvent) {
+    const events = Glean.network.urlclassifierAddonBlock.testGetValue();
+    Assert.greater(events.length, 1, "We have received glean events");
+
+    let glean = events[0];
+    Assert.greater(glean.extra.addon_id.length, 0);
+    Assert.equal(glean.extra.table, "harmfuladdon-blocklist-pref");
+    Assert.equal(glean.extra.etld, "example.org");
+
+    glean = events[1];
+    Assert.greater(glean.extra.addon_id.length, 0);
+    Assert.equal(glean.extra.table, "harmfuladdon-blocklist-pref");
+    Assert.equal(glean.extra.etld, "example.org");
+  } else {
+    const events = Glean.network.urlclassifierAddonBlock.testGetValue();
+    Assert.equal(events, undefined, "We haven't received glean events");
+  }
 
   await contentPage.close();
   await extension.unload();
