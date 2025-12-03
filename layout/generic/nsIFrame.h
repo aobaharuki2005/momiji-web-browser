@@ -5911,8 +5911,17 @@ inline nsIFrame* nsFrameList::BackwardFrameTraversal::Prev(nsIFrame* aFrame) {
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
     const nsIFrame* aFrame,
     mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache) {
-  return {aFrame, aFrame->StyleDisplay()->mPosition,
-          aFrame->StylePosition()->mPositionArea, aAnchorPosResolutionCache};
+  bool inlineUsesAnchorCenter = false;
+  bool blockUsesAnchorCenter = false;
+  ComputeAnchorCenterUsage(aFrame, aAnchorPosResolutionCache,
+                           inlineUsesAnchorCenter, blockUsesAnchorCenter);
+
+  return {aFrame,
+          aFrame->StyleDisplay()->mPosition,
+          aFrame->StylePosition()->mPositionArea,
+          aAnchorPosResolutionCache,
+          inlineUsesAnchorCenter,
+          blockUsesAnchorCenter};
 }
 
 #endif /* nsIFrame_h___ */

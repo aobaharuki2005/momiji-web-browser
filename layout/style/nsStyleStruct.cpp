@@ -1326,6 +1326,21 @@ StyleSelfAlignment nsStylePosition::UsedJustifySelf(
   return {StyleAlignFlags::NORMAL};
 }
 
+bool AnchorResolvedInsetHelper::SideUsesAnchorCenter(
+    mozilla::Side aSide, const AnchorPosOffsetResolutionParams& aParams) {
+  const nsIFrame* frame = aParams.mBaseParams.mFrame;
+  if (!frame) {
+    return false;
+  }
+
+  WritingMode wm = frame->GetWritingMode();
+  LogicalSide logicalSide = wm.LogicalSideForPhysicalSide(aSide);
+  LogicalAxis axis = GetAxis(logicalSide);
+
+  return axis == LogicalAxis::Inline ? aParams.mBaseParams.mIAnchorCenter
+                                     : aParams.mBaseParams.mBAnchorCenter;
+}
+
 AnchorResolvedInset AnchorResolvedInsetHelper::ResolveAnchor(
     const mozilla::StyleInset& aValue, mozilla::StylePhysicalSide aSide,
     const AnchorPosOffsetResolutionParams& aParams) {
