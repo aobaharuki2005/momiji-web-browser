@@ -11,6 +11,7 @@ root:
       external-scroll-offset: [0, 50.1]
       items:
         - type: stacking-context
+          bounds: [0, -1.0, 0, 0]
           transform: translate(100, 0.4)
           items:
             - type: rect
