@@ -20,8 +20,6 @@ const lazy = XPCOMUtils.declareLazy({
     "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
   BrowserUIUtils: "resource:///modules/BrowserUIUtils.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
-  CustomizableUI:
-    "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   ExtensionSearchHandler:
     "resource://gre/modules/ExtensionSearchHandler.sys.mjs",
   ExtensionUtils: "resource://gre/modules/ExtensionUtils.sys.mjs",
@@ -400,9 +398,6 @@ export class UrlbarInput extends HTMLElement {
     // recording abandonment events when the command causes a blur event.
     this.view.panel.addEventListener("command", this, true);
 
-    lazy.CustomizableUI.addListener(this);
-
-    this.window.addEventListener("unload", this);
     this.window.addEventListener("customizationstarting", this);
     this.window.addEventListener("aftercustomization", this);
     this.window.addEventListener("toolbarvisibilitychange", this);
@@ -485,10 +480,6 @@ export class UrlbarInput extends HTMLElement {
     // This is used to detect commands launched from the panel, to avoid
     // recording abandonment events when the command causes a blur event.
     this.view.panel.removeEventListener("command", this, true);
-
-    lazy.CustomizableUI.removeListener(this);
-
-    this.window.removeEventListener("unload", this);
 
     this.window.removeEventListener("customizationstarting", this);
     this.window.removeEventListener("aftercustomization", this);
@@ -5478,8 +5469,6 @@ export class UrlbarInput extends HTMLElement {
     this.blur();
   }
 
-  // TODO(emilio, bug 1927942): Consider removing this listener and using
-  // onCustomizeEnd.
   _on_aftercustomization() {
     this.decrementBreakoutBlockerCount();
     this.#updateLayoutBreakout();
@@ -5490,24 +5479,6 @@ export class UrlbarInput extends HTMLElement {
       return;
     }
     this.#updateLayoutBreakout();
-  }
-
-  // CustomizableUI might unbind and bind us again, which makes us lose the
-  // popover state, which this fixes up. This can easily happen outside of
-  // customize mode with a call to CustomizableUI.reset().
-  // TODO(emilio): Do we need some of the on-aftercustomization fixups here?
-  onWidgetAfterDOMChange(aNode) {
-    if (aNode != this.parentNode || !this.hasAttribute("breakout")) {
-      return;
-    }
-    if (!this.matches(":popover-open")) {
-      this.showPopover();
-    }
-    this.#updateTextboxPositionNextFrame();
-  }
-
-  _on_unload() {
-    lazy.CustomizableUI.removeListener(this);
   }
 
   _on_toolbarvisibilitychange() {
