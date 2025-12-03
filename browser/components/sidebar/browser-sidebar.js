@@ -794,12 +794,23 @@ var SidebarController = {
     // First reset all ordinals to match DOM ordering.
     let contentArea = document.getElementById("tabbrowser-tabbox");
     let browser = document.getElementById("browser");
-    [...browser.children].forEach((node, i, children) => {
-      node.style.order = this._positionStart ? i + 1 : children.length - i;
+    [...browser.children].forEach((node, i) => {
+      node.style.order = i + 1;
     });
     let sidebarContainer = document.getElementById("sidebar-main");
     let sidebarMain = document.querySelector("sidebar-main");
-
+    if (!this._positionStart) {
+      // DOM ordering is:     sidebar-main | launcher-splitter | sidebar-box | splitter | tabbrowser-tabbox
+      // Want to display as:  tabbrowser-tabbox | splitter |  sidebar-box  | launcher-splitter | sidebar-main
+      // First switch order of sidebar-main and tabbrowser-tabbox
+      let mainOrdinal = this.sidebarContainer.style.order;
+      this.sidebarContainer.style.order = contentArea.style.order;
+      contentArea.style.order = mainOrdinal;
+      // Then swap launcher-splitter and splitter
+      let splitterOrdinal = this._splitter.style.order;
+      this._splitter.style.order = this._launcherSplitter.style.order;
+      this._launcherSplitter.style.order = splitterOrdinal;
+    }
     // Indicate we've switched ordering to the box
     this._box.toggleAttribute("sidebar-positionend", !this._positionStart);
     sidebarMain.toggleAttribute("sidebar-positionend", !this._positionStart);
