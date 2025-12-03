@@ -390,7 +390,6 @@ export interface Modules {
   "resource:///modules/MigrationUtils.sys.mjs": typeof import("resource:///modules/MigrationUtils.sys.mjs"),
   "resource:///modules/MigratorBase.sys.mjs": typeof import("resource:///modules/MigratorBase.sys.mjs"),
   "resource:///modules/OpenTabs.sys.mjs": typeof import("resource:///modules/OpenTabs.sys.mjs"),
-  "resource:///modules/OpenTabsController.sys.mjs": typeof import("resource:///modules/OpenTabs.sys.mjs"),
   "resource:///modules/PageActions.sys.mjs": typeof import("resource:///modules/PageActions.sys.mjs"),
   "resource:///modules/PartnerLinkAttribution.sys.mjs": typeof import("resource:///modules/PartnerLinkAttribution.sys.mjs"),
   "resource:///modules/PermissionUI.sys.mjs": typeof import("resource:///modules/PermissionUI.sys.mjs"),

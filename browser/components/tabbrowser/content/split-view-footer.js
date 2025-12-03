@@ -164,7 +164,6 @@
      * @param {nsIURI} uri
      */
     #updateUri(uri) {
-      this.hidden = uri.specIgnoringRef === "about:opentabs";
       this.#uri = uri;
       if (this.uriElement) {
         this.#updateUriElement();

@@ -1046,9 +1046,6 @@
       "resource:///modules/OpenTabs.sys.mjs": [
         "browser/components/firefoxview/OpenTabs.sys.mjs"
       ],
-      "resource:///modules/OpenTabsController.sys.mjs": [
-        "browser/components/firefoxview/OpenTabsController.sys.mjs"
-      ],
       "resource:///modules/PageActions.sys.mjs": [
         "browser/modules/PageActions.sys.mjs"
       ],
