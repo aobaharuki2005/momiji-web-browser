@@ -11,7 +11,7 @@ import android.view.View
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.test.TestScope
 import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.engine.EngineMiddleware
@@ -216,7 +216,7 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = MainScope(),
+                scope = TestScope(),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -447,7 +447,7 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = MainScope(),
+                scope = TestScope(),
             ),
             initialState = BrowserState(
                 tabs = listOf(
@@ -515,7 +515,7 @@ class ContextMenuCandidateTest {
         val store = BrowserStore(
             middleware = EngineMiddleware.create(
                 engine = mock(),
-                scope = MainScope(),
+                scope = TestScope(),
             ),
             initialState = BrowserState(
                 tabs = listOf(

@@ -10,8 +10,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.core.content.pm.ShortcutInfoCompat
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 import mozilla.components.concept.base.crash.Breadcrumb
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.support.test.any
@@ -620,7 +618,7 @@ private class TestCrashReporter() : CrashReporting {
     override fun submitCaughtException(throwable: Throwable): Job {
         submitCaughtExceptionInvoked = true
         errors.add(throwable)
-        return MainScope().launch {}
+        return Job().apply { complete() }
     }
 
     override fun recordCrashBreadcrumb(breadcrumb: Breadcrumb) {}
