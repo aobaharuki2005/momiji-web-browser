@@ -240,7 +240,7 @@ enum class ErrorType(
         R.string.mozac_browser_errorpages_safe_phishing_uri_title,
         R.string.mozac_browser_errorpages_safe_phishing_uri_message,
     ),
-    NS_ERROR_HARMFULADDON_URI(
+    ERROR_HARMFULADDON_URI(
         R.string.mozac_browser_errorpages_harmful_addon_uri_title,
         R.string.mozac_browser_errorpages_harmful_addon_uri_message,
     ),

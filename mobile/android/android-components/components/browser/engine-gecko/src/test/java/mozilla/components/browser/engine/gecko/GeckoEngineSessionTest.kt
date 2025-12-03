@@ -1816,6 +1816,7 @@ class GeckoEngineSessionTest {
         assertEquals(GeckoSafeBrowsing.UNWANTED, SafeBrowsingPolicy.UNWANTED.id)
         assertEquals(GeckoSafeBrowsing.HARMFUL, SafeBrowsingPolicy.HARMFUL.id)
         assertEquals(GeckoSafeBrowsing.PHISHING, SafeBrowsingPolicy.PHISHING.id)
+        assertEquals(GeckoSafeBrowsing.HARMFULADDON, SafeBrowsingPolicy.HARMFULADDON.id)
         assertEquals(GeckoSafeBrowsing.DEFAULT, SafeBrowsingPolicy.RECOMMENDED.id)
     }
 
@@ -2335,6 +2336,10 @@ class GeckoEngineSessionTest {
         assertEquals(
             ErrorType.ERROR_SAFEBROWSING_UNWANTED_URI,
             GeckoEngineSession.geckoErrorToErrorType(WebRequestError.ERROR_SAFEBROWSING_UNWANTED_URI),
+        )
+        assertEquals(
+            ErrorType.ERROR_HARMFULADDON_URI,
+            GeckoEngineSession.geckoErrorToErrorType(WebRequestError.ERROR_HARMFULADDON_URI),
         )
         assertEquals(
             ErrorType.UNKNOWN,
