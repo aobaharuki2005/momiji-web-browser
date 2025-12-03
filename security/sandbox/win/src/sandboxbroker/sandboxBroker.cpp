@@ -75,6 +75,7 @@ static StaticAutoPtr<nsString> sBinDir;
 static StaticAutoPtr<nsString> sProfileDir;
 static StaticAutoPtr<nsString> sWindowsProfileDir;
 static StaticAutoPtr<nsString> sLocalAppDataDir;
+static StaticAutoPtr<nsString> sRoamingAppDataDir;
 static StaticAutoPtr<nsString> sSystemFontsDir;
 static StaticAutoPtr<nsString> sWindowsSystemDir;
 static StaticAutoPtr<nsString> sLocalAppDataLowDir;
@@ -148,6 +149,7 @@ void SandboxBroker::Initialize(sandbox::BrokerServices* aBrokerServices,
     sProfileDir = nullptr;
     sWindowsProfileDir = nullptr;
     sLocalAppDataDir = nullptr;
+    sRoamingAppDataDir = nullptr;
     sSystemFontsDir = nullptr;
     sWindowsSystemDir = nullptr;
     sLocalAppDataLowDir = nullptr;
@@ -261,6 +263,12 @@ static void AddCachedWindowsDirRule(
                            "Failed to get Windows LocalAppDataLow folder",
                            &sLocalAppDataLowParentDir);
     AddCachedDirRule(aConfig, aAccess, sLocalAppDataLowDir, aRelativePath);
+    return;
+  }
+  if (aFolderID == FOLDERID_RoamingAppData) {
+    EnsureWindowsDirCached(FOLDERID_RoamingAppData, sRoamingAppDataDir,
+                           "Failed to get Windows RoamingAppData folder");
+    AddCachedDirRule(aConfig, aAccess, sRoamingAppDataDir, aRelativePath);
     return;
   }
   if (aFolderID == FOLDERID_Profile) {
@@ -1366,11 +1374,13 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
     EnsureWindowsDirCached(FOLDERID_Profile, sWindowsProfileDir,
                            "Failed to get Windows Profile folder");
     EnsureWindowsDirCached(FOLDERID_LocalAppData, sLocalAppDataDir,
-                           "Failed to get Windows LocalAppDataLow folder");
-    if (sWindowsProfileDir && sLocalAppDataDir) {
+                           "Failed to get Windows LocalAppData folder");
+    EnsureWindowsDirCached(FOLDERID_RoamingAppData, sRoamingAppDataDir,
+                           "Failed to get Windows RoamingAppData folder");
+    if (sWindowsProfileDir && sLocalAppDataDir && sRoamingAppDataDir) {
       sandboxing::UserFontConfigHelper configHelper(
           LR"(Software\Microsoft\Windows NT\CurrentVersion\Fonts)",
-          *sWindowsProfileDir, *sLocalAppDataDir);
+          *sWindowsProfileDir, *sLocalAppDataDir, *sRoamingAppDataDir);
       configHelper.AddRules(trackingConfig);
     }
   }
