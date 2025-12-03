@@ -11,6 +11,7 @@ use std::{
     mem::zeroed,
     os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle},
     ptr::{null, null_mut},
+    rc::Rc,
 };
 use windows_sys::Win32::{
     Foundation::{
@@ -96,7 +97,7 @@ fn cancel_overlapped_io(handle: HANDLE, overlapped: &mut OVERLAPPED) -> bool {
 }
 
 pub(crate) struct OverlappedOperation {
-    handle: OwnedHandle,
+    handle: Rc<OwnedHandle>,
     overlapped: Option<Box<OVERLAPPED>>,
     buffer: Option<Vec<u8>>,
 }
@@ -108,7 +109,7 @@ enum OverlappedOperationType {
 
 impl OverlappedOperation {
     pub(crate) fn listen(
-        handle: OwnedHandle,
+        handle: &Rc<OwnedHandle>,
         event: HANDLE,
     ) -> Result<OverlappedOperation, IPCError> {
         let mut overlapped = Self::overlapped_with_event(event)?;
@@ -134,7 +135,7 @@ impl OverlappedOperation {
         }
 
         Ok(OverlappedOperation {
-            handle,
+            handle: handle.clone(),
             overlapped: Some(overlapped),
             buffer: None,
         })
@@ -209,7 +210,7 @@ impl OverlappedOperation {
     }
 
     pub(crate) fn sched_recv(
-        handle: OwnedHandle,
+        handle: &Rc<OwnedHandle>,
         event: HANDLE,
         expected_size: usize,
     ) -> Result<OverlappedOperation, IPCError> {
@@ -239,7 +240,7 @@ impl OverlappedOperation {
         }
 
         Ok(OverlappedOperation {
-            handle,
+            handle: handle.clone(),
             overlapped: Some(overlapped),
             buffer: Some(buffer),
         })
@@ -250,7 +251,7 @@ impl OverlappedOperation {
     }
 
     pub(crate) fn sched_send(
-        handle: OwnedHandle,
+        handle: &Rc<OwnedHandle>,
         event: HANDLE,
         mut buffer: Vec<u8>,
     ) -> Result<OverlappedOperation, IPCError> {
@@ -279,7 +280,7 @@ impl OverlappedOperation {
         }
 
         Ok(OverlappedOperation {
-            handle,
+            handle: handle.clone(),
             overlapped: Some(overlapped),
             buffer: Some(buffer),
         })

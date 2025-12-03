@@ -12,6 +12,7 @@ use std::{
     ffi::{CStr, CString, OsString},
     os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle, RawHandle},
     ptr::null_mut,
+    rc::Rc,
     str::FromStr,
 };
 use windows_sys::Win32::{
@@ -27,9 +28,13 @@ use windows_sys::Win32::{
 };
 
 pub struct IPCListener {
+    /// The name of the pipe this listener will be bound to
     server_addr: CString,
-    handle: OwnedHandle,
+    /// A named pipe handle listening for incoming connections
+    handle: Rc<OwnedHandle>,
+    /// Stores the only pending operation we might have on the pipe
     overlapped: Option<OverlappedOperation>,
+    /// A handle to an event which will be used for overlapped I/O on the pipe
     event: OwnedHandle,
 }
 
@@ -40,7 +45,7 @@ impl IPCListener {
 
         Ok(IPCListener {
             server_addr,
-            handle: pipe,
+            handle: Rc::new(pipe),
             overlapped: None,
             event,
         })
@@ -56,28 +61,34 @@ impl IPCListener {
 
     pub(crate) fn listen(&mut self) -> Result<(), IPCError> {
         self.overlapped = Some(OverlappedOperation::listen(
-            self.handle
-                .try_clone()
-                .map_err(IPCError::CloneHandleFailed)?,
+            &self.handle,
             self.event_raw_handle(),
         )?);
         Ok(())
     }
 
     pub fn accept(&mut self) -> Result<IPCConnector, IPCError> {
-        // We should never call accept() on a listener that wasn't
-        // already waiting, so panic in that scenario.
-        let overlapped = self.overlapped.take().unwrap();
-        overlapped.accept(self.handle.as_raw_handle() as HANDLE)?;
-        let new_pipe = create_named_pipe(&self.server_addr, /* first_instance */ false)?;
-        let connected_pipe = std::mem::replace(&mut self.handle, new_pipe);
+        let connected_pipe = {
+            // We extract the overlapped operation within this scope so
+            // that it's dropped right away. This ensures that only one
+            // reference to the listener's handle remains.
+            let overlapped = self
+                .overlapped
+                .take()
+                .expect("Accepting a connection without listening first");
+            overlapped.accept(self.handle.as_raw_handle() as HANDLE)?;
+            let new_pipe = create_named_pipe(&self.server_addr, /* first_instance */ false)?;
+            std::mem::replace(&mut self.handle, Rc::new(new_pipe))
+        };
 
         // Once we've accepted a new connection and replaced the listener's
         // pipe we need to listen again before we return, so that we're ready
         // for the next iteration.
         self.listen()?;
 
-        IPCConnector::from_ancillary(connected_pipe)
+        // We can guarantee that there's only one reference to this handle at
+        // this point in time.
+        IPCConnector::from_ancillary(Rc::<OwnedHandle>::try_unwrap(connected_pipe).unwrap())
     }
 
     /// Serialize this listener into a string that can be passed on the
@@ -100,7 +111,7 @@ impl IPCListener {
 
         let mut listener = IPCListener {
             server_addr,
-            handle,
+            handle: Rc::new(handle),
             overlapped: None,
             event,
         };
