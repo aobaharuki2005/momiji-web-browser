@@ -799,6 +799,17 @@ void WebrtcVideoConduit::OnControlConfigChange() {
                 .valueOr(-1);
           })());
 
+          // Set each layer's max-bitrate explicitly or libwebrtc may ignore all
+          // stream-specific max-bitrate settings later on, as provided by the
+          // VideoStreamFactory. Default to our max of 10Mbps, overriden by
+          // SDP/JS.
+          int maxBps = KBPS(10000);
+          maxBps = MinIgnoreZero(maxBps, mPrefMaxBitrate);
+          maxBps = MinIgnoreZero(maxBps, mNegotiatedMaxBitrate);
+          maxBps = MinIgnoreZero(maxBps,
+                                 static_cast<int>(encodingConstraints.maxBr));
+          video_stream.max_bitrate_bps = maxBps;
+
           // At this time, other values are not used until after
           // CreateEncoderStreams(). We fill these in directly from the codec
           // config in VideoStreamFactory.
