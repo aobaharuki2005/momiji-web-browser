@@ -614,7 +614,8 @@ function matchRequest(channel, filters) {
 }
 
 function getBlockedReason(channel, fromCache = false) {
-  let blockingExtension, blockedReason;
+  let blockedReason;
+  const extension = {};
   const { status } = channel;
 
   try {
@@ -622,15 +623,27 @@ function getBlockedReason(channel, fromCache = false) {
     const properties = request.QueryInterface(Ci.nsIPropertyBag);
 
     blockedReason = request.loadInfo.requestBlockingReason;
-    blockingExtension = properties.getProperty("cancelledByExtension");
+    extension.blocking = properties.getProperty("cancelledByExtension");
 
     // WebExtensionPolicy is not available for workers
     if (typeof WebExtensionPolicy !== "undefined") {
-      blockingExtension = WebExtensionPolicy.getByID(blockingExtension).name;
+      extension.blocking = WebExtensionPolicy.getByID(extension.blocking).name;
     }
   } catch (err) {
     // "cancelledByExtension" doesn't have to be available.
   }
+
+  if (
+    blockedReason === Ci.nsILoadInfo.BLOCKING_REASON_CLASSIFY_HARMFULADDON_URI
+  ) {
+    try {
+      const properties = channel.QueryInterface(Ci.nsIPropertyBag);
+      extension.blocked = properties.getProperty("blockedExtension");
+    } catch (err) {
+      // "blockedExtension" doesn't have to be available.
+    }
+  }
+
   // These are platform errors which are not exposed to the users,
   // usually the requests (with these errors) might be displayed with various
   // other status codes.
@@ -666,7 +679,7 @@ function getBlockedReason(channel, fromCache = false) {
     blockedReason = ChromeUtils.getXPCOMErrorName(status);
   }
 
-  return { blockingExtension, blockedReason };
+  return { extension, blockedReason };
 }
 
 function getCharset(channel) {

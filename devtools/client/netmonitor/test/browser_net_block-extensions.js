@@ -87,7 +87,7 @@ add_task(async function () {
 
   is(
     request.querySelector(".requests-list-transferred").innerText,
-    `Blocked By ${extensionName}`,
+    `Harmful Add-on Blocked (${extensionName})`,
     "The request shows the blocking extension name"
   );
 
