@@ -153,15 +153,20 @@ def process_results(flank_config: str, test_type: str = "instrumentation") -> No
 
     Args:
         flank_config: The YML configuration for Flank to use e.g, automation/taskcluster/androidTest/flank-<config>.yml
+        test_type: The type of test executed: 'instrumentation' or 'robo'
     """
 
     parse_junit_results_artifact = os.path.join(SCRIPT_DIR, "parse-junit-results.py")
     copy_robo_crash_artifacts_script = os.path.join(
         SCRIPT_DIR, "copy-artifacts-from-ftl.py"
     )
+    generate_flaky_report_script = os.path.join(
+        SCRIPT_DIR, "generate-flaky-report-from-ftl.py"
+    )
 
     os.chmod(parse_junit_results_artifact, 0o755)
     os.chmod(copy_robo_crash_artifacts_script, 0o755)
+    os.chmod(generate_flaky_report_script, 0o755)
 
     # Process the results differently based on the test type: instrumentation or robo
     #
@@ -170,6 +175,11 @@ def process_results(flank_config: str, test_type: str = "instrumentation") -> No
     if test_type == "instrumentation":
         run_command(
             [parse_junit_results_artifact, "--results", Worker.RESULTS_DIR.value],
+            "flank.log",
+        )
+        # Generate flaky test report if flaky tests exist
+        run_command(
+            [generate_flaky_report_script, "--results", Worker.RESULTS_DIR.value],
             "flank.log",
         )
 
