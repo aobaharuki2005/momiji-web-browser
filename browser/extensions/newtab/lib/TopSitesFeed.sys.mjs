@@ -1402,7 +1402,7 @@ export class TopSitesFeed {
    * @returns {Array} An array of sponsored tile objects.
    */
   async fetchFrecencyBoostedSpocs() {
-    if (!this._contile.sovEnabled() || this._linksWithDefaults.length === 0) {
+    if (!this._contile.sovEnabled() || !this._linksWithDefaults?.length) {
       return [];
     }
     const domainData = {};
