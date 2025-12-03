@@ -13,5 +13,6 @@ dictionary CkEditorVersion {
 
 [GenerateInit]
 dictionary CkEditorProperty {
-  required CkEditorVersion CKEDITOR;
+  CkEditorVersion CKEDITOR;
+  CkEditorVersion JEDITOR;
 };

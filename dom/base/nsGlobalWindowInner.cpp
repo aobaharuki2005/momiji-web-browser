@@ -2189,7 +2189,16 @@ MOZ_CAN_RUN_SCRIPT static bool IsCkEditor4EmptyFrame(Element& aEmbedder) {
     JS_ClearPendingException(jsapi.cx());
     return false;
   }
-  if (!StringBeginsWith(property.mCKEDITOR.mVersion, u"4."_ns)) {
+  const auto* version = [&]() -> const CkEditorVersion* {
+    if (property.mCKEDITOR.WasPassed()) {
+      return &property.mCKEDITOR.Value();
+    }
+    if (property.mJEDITOR.WasPassed()) {
+      return &property.mJEDITOR.Value();
+    }
+    return nullptr;
+  }();
+  if (!version || !StringBeginsWith(version->mVersion, u"4."_ns)) {
     return false;
   }
   aEmbedder.OwnerDoc()->WarnOnceAbout(
