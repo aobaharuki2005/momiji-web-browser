@@ -544,6 +544,7 @@ class WalkerActor extends Actor {
     const containerTypeChanges = [];
     const displayTypeChanges = [];
     const scrollableStateChanges = [];
+    const anchorNameChanges = [];
 
     const currentOverflowCausingElementsMap = new Map();
 
@@ -584,6 +585,12 @@ class WalkerActor extends Actor {
         containerTypeChanges.push(actor);
         actor.currentContainerType = containerType;
       }
+
+      const anchorName = actor.anchorName;
+      if (anchorName !== actor.currentAnchorName) {
+        anchorNameChanges.push(actor);
+        actor.currentAnchorName = anchorName;
+      }
     }
 
     // Get the NodeActor for each node in the symmetric difference of
@@ -614,6 +621,10 @@ class WalkerActor extends Actor {
 
     if (containerTypeChanges.length) {
       this.emit("container-type-change", containerTypeChanges);
+    }
+
+    if (anchorNameChanges.length) {
+      this.emit("anchor-name-change", anchorNameChanges);
     }
   }
 

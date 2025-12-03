@@ -340,6 +340,7 @@ ElementEditor.prototype = {
     this.updateCustomBadge();
     this.updateScrollableBadge();
     this.updateContainerBadge();
+    this.updateAnchorBadge();
     this.updateTextEditor();
     this.updateUnavailableChildren();
     this.updateOverflowBadge();
@@ -548,6 +549,30 @@ ElementEditor.prototype = {
     // Ideally badges order should be [event][display][container][custom]
     this.elt.insertBefore(this._containerBadge, this._customBadge);
     this.markup.emit("badge-added-event");
+  },
+
+  updateAnchorBadge() {
+    const showAnchorBadge = this.node.anchorName?.includes?.("--");
+
+    if (this._anchorBadge && !showAnchorBadge) {
+      this._anchorBadge.remove();
+      this._anchorBadge = null;
+    } else if (showAnchorBadge && !this._anchorBadge) {
+      this._createAnchorBadge();
+    }
+
+    if (this._anchorBadge) {
+      this._anchorBadge.title = `anchor-name: ${this.node.anchorName}`;
+    }
+  },
+
+  _createAnchorBadge() {
+    this._anchorBadge = this.doc.createElement("div");
+    this._anchorBadge.classList.add("inspector-badge");
+    this._anchorBadge.dataset.anchor = "true";
+
+    this._anchorBadge.append(this.doc.createTextNode("anchor"));
+    this.elt.insertBefore(this._anchorBadge, this._containerBadge);
   },
 
   /**

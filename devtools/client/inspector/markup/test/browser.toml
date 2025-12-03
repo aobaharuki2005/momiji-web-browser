@@ -65,6 +65,8 @@ run-if = [
 
 ["browser_markup_accessibility_semantics.js"]
 
+["browser_markup_anchor_badge.js"]
+
 ["browser_markup_anonymous_01.js"]
 
 ["browser_markup_anonymous_03.js"]

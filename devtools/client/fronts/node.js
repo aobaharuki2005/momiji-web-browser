@@ -494,6 +494,10 @@ class NodeFront extends FrontClassWithSpec(nodeSpec) {
     return this._form.containerType;
   }
 
+  get anchorName() {
+    return this._form.anchorName;
+  }
+
   get isTreeDisplayed() {
     let parent = this;
     while (parent) {
