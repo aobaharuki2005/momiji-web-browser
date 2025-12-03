@@ -20,7 +20,9 @@
 
 // ISA SUPPORT: Do not include this file unless the compilation unit is
 // being compiled either for little-endian aarch64 or for x86/x86_64 with
-// at least SSSE3 enabled.
+// at least SSSE3 enabled. (We're actually not using this on 32-bit x86
+// and are compiling with AVX+BMI on x86_64; see below. In the build
+// system, `HTML_ACCEL_FLAGS` contains the actually-used flags.)
 //
 // It's probably feasible to extend this to support little-endian POWER
 // by defining
@@ -29,7 +31,7 @@
 //  return vec_perm(table, table, nibbles);
 // }
 // but since I don't have a little-endian POWER system to test with,
-// this is left as an exercise to the reader. (The x86/x86_64 reduction
+// this is left as an exercise to the reader. (The x86_64 reduction
 // code should be portable to POWER10 using vec_extractm and the aarch64
 // reduction code should be portable to older POWER using vec_max.)
 //
@@ -39,14 +41,14 @@
 #  error "A little-endian target is required."
 #endif
 #if !(defined(__aarch64__) || defined(__SSSE3__))
-#  error "Must be targeting aarch64 or SSSE3."
+#  error "Must be targeting SSSE3 or above (notably AVX+BMI), or aarch64."
 #endif
 
 // NOTE: This file uses GCC/clang built-ins that provide SIMD portability.
 // Compared to pretending unawareness of what arm_neon.h and tmmintrin.h
 // map to in GCC and clang, this has the benefit that the code is not stuck
 // at an SSSE3 local maximum but adapts maximally to upgrades to SSE 4.2,
-// AVX2, and BMI. (Yes, enabling BMI seems to affect more than just
+// AVX, and AVX+BMI. (Yes, enabling BMI seems to affect more than just
 // __builtin_ctz!)
 // (We need to check for __clang__, because clang-cl does not define __GNUC__.)
 #if !(defined(__GNUC__) || defined(__clang__))
@@ -76,10 +78,10 @@
 // The lookup operation is available unconditionally on aarch64. On
 // x86/x86_64, it is part of the SSSE3 instruction set extension, which is
 // why on x86/x86_64 we must not call into this code unless SSSE3 is
-// available. (Each additional level of compiling  this code with SSE4.2,
-// AVX2, or AVX2 + BMI makes this code shorter, which presumably means more
+// available. (Each additional level of compiling this code with SSE4.2,
+// AVX, or AVX+BMI makes this code shorter, which presumably means more
 // efficient, so instead of compiling this just with SSSE3, we compile this
-// with AVX2+BMI on x86_64, considering that CPUs with such capabilities
+// with AVX+BMI on x86_64, considering that CPUs with such capabilities
 // have been available for 12 years at the time of landing this code.)
 //
 // The lookup table contains the loop-terminating ASCII characters in the
@@ -102,8 +104,9 @@
 // low 4 bits. This is true for U+0000, &, <, LF, CR, ", and ', but,
 // unfortunately, CR, ] and - share the low 4 bits, so cases where we need
 // to include a check for ] or - needs to do a separate check, since CR is
-// always in the lookup table. (Checks for ", ', ], and - are not here at
-// this time but will come in follow-up patches.)
+// always in the lookup table. Note that it's not worthwhile to pursue
+// the low 5 bits instead when possible, because CR and - share the low
+// 5 bits, too.
 //
 // From these operations, we get a vector of 16 8-bit mask lanes where a
 // lane is 0xFF if the low 8 bits of the UTF-16 code unit matched an ASCII
@@ -122,9 +125,9 @@
 // Now we have a vector of 16 8-bit mask lanes that corresponds to the input
 // of 16 UTF-16 code units to indicate which code units in the run of 16
 // UTF-16 code units require terminating the loop (i.e. must not be skipped
-// over). At this point, the handling diverges for x86/x86_64 and aarch64.
+// over). At this point, the handling diverges for x86_64 and aarch64.
 //
-// ## x86/x86_64
+// ## x86_64
 //
 // We convert the SIMD mask into bits in an ALU register. The operation
 // returns a 32-bit type, but only the low 16 bits can be non-zero. If the
@@ -169,11 +172,13 @@
 //
 // # Inlining
 //
-// The public functions here are expected to be called from a loop. To give
-// LICM the opportunity to hoist the SIMD constants out of the loop, make
-// sure that every function on the path from the loop to here is declared
-// MOZ_ALWAYS_INLINE_EVEN_DEBUG and that all these and the loop itself are
-// compiled with the same instruction set extension flags (if applicable).
+// This code was designed for inlining the public functions all the
+// way to the caller for maximum LICM. However, due to
+// https://github.com/llvm/llvm-project/issues/160886 the public
+// functions are currently annotated _not_ to be inlined, because
+// currently inlining them into the eventual caller results in
+// no LICM but leaving them not-inlined results in one level of
+// LICM in the leaf function.
 //
 // # Acknowledments
 //
