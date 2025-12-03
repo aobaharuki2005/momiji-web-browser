@@ -141,7 +141,7 @@ function createScript(url) {
 function waitForSourceLoad(toolbox, url) {
   info(`Waiting for source ${url} to be available...`);
   return new Promise(resolve => {
-    const { resourceCommand } = toolbox;
+    const { resourceCommand } = toolbox.commands;
 
     function onAvailable(sources) {
       for (const source of sources) {

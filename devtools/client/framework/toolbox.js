@@ -947,9 +947,6 @@ Toolbox.prototype = {
       // Mount toolbox React components and update all its state that can be updated synchronously.
       this.onReactLoaded = this._initializeReactComponent();
 
-      // Bug 1709063: Use commands.resourceCommand instead of toolbox.resourceCommand
-      this.resourceCommand = this.commands.resourceCommand;
-
       this.commands.targetCommand.on(
         "target-thread-wrong-order-on-resume",
         this._onTargetThreadFrontResumeWrongOrder.bind(this)
@@ -982,10 +979,10 @@ Toolbox.prototype = {
       const watchedResources = [
         // Watch for console API messages, errors and network events in order to populate
         // the error count icon in the toolbox.
-        this.resourceCommand.TYPES.CONSOLE_MESSAGE,
-        this.resourceCommand.TYPES.ERROR_MESSAGE,
-        this.resourceCommand.TYPES.DOCUMENT_EVENT,
-        this.resourceCommand.TYPES.THREAD_STATE,
+        this.commands.resourceCommand.TYPES.CONSOLE_MESSAGE,
+        this.commands.resourceCommand.TYPES.ERROR_MESSAGE,
+        this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+        this.commands.resourceCommand.TYPES.THREAD_STATE,
       ];
 
       let tracerInitialization;
@@ -995,7 +992,9 @@ Toolbox.prototype = {
           false
         )
       ) {
-        watchedResources.push(this.resourceCommand.TYPES.JSTRACER_STATE);
+        watchedResources.push(
+          this.commands.resourceCommand.TYPES.JSTRACER_STATE
+        );
         tracerInitialization = this.commands.tracerCommand.initialize();
         this.onTracerToggled = this.onTracerToggled.bind(this);
         this.commands.tracerCommand.on("toggle", this.onTracerToggled);
@@ -1007,10 +1006,12 @@ Toolbox.prototype = {
         // as tabs, in order to ensure there is always at least one listener existing
         // for network events across the lifetime of the various panels, so stopping
         // the resource command from clearing out its cache of network event resources.
-        watchedResources.push(this.resourceCommand.TYPES.NETWORK_EVENT);
+        watchedResources.push(
+          this.commands.resourceCommand.TYPES.NETWORK_EVENT
+        );
       }
 
-      const onResourcesWatched = this.resourceCommand.watchResources(
+      const onResourcesWatched = this.commands.resourceCommand.watchResources(
         watchedResources,
         {
           onAvailable: this._onResourceAvailable,
@@ -4411,14 +4412,14 @@ Toolbox.prototype = {
     });
 
     const watchedResources = [
-      this.resourceCommand.TYPES.CONSOLE_MESSAGE,
-      this.resourceCommand.TYPES.ERROR_MESSAGE,
-      this.resourceCommand.TYPES.DOCUMENT_EVENT,
-      this.resourceCommand.TYPES.THREAD_STATE,
+      this.commands.resourceCommand.TYPES.CONSOLE_MESSAGE,
+      this.commands.resourceCommand.TYPES.ERROR_MESSAGE,
+      this.commands.resourceCommand.TYPES.DOCUMENT_EVENT,
+      this.commands.resourceCommand.TYPES.THREAD_STATE,
     ];
 
     if (!this.isBrowserToolbox) {
-      watchedResources.push(this.resourceCommand.TYPES.NETWORK_EVENT);
+      watchedResources.push(this.commands.resourceCommand.TYPES.NETWORK_EVENT);
     }
 
     if (
@@ -4427,11 +4428,11 @@ Toolbox.prototype = {
         false
       )
     ) {
-      watchedResources.push(this.resourceCommand.TYPES.JSTRACER_STATE);
+      watchedResources.push(this.commands.resourceCommand.TYPES.JSTRACER_STATE);
       this.commands.tracerCommand.off("toggle", this.onTracerToggled);
     }
 
-    this.resourceCommand.unwatchResources(watchedResources, {
+    this.commands.resourceCommand.unwatchResources(watchedResources, {
       onAvailable: this._onResourceAvailable,
     });
 
@@ -4521,7 +4522,6 @@ Toolbox.prototype = {
             this._win = null;
             this._toolPanels.clear();
             this._descriptorFront = null;
-            this.resourceCommand = null;
             this.commands = null;
             this._visibleIframes.clear();
 
@@ -4958,7 +4958,7 @@ Toolbox.prototype = {
   _onResourceAvailable(resources) {
     let errors = this._errorCount || 0;
 
-    const { TYPES } = this.resourceCommand;
+    const { TYPES } = this.commands.resourceCommand;
     for (const resource of resources) {
       const { resourceType } = resource;
       if (
@@ -5047,7 +5047,8 @@ Toolbox.prototype = {
     for (const { update } of resources) {
       // In order to match webconsole behaviour, we treat 4xx and 5xx network calls as errors.
       if (
-        update.resourceType === this.resourceCommand.TYPES.NETWORK_EVENT &&
+        update.resourceType ===
+          this.commands.resourceCommand.TYPES.NETWORK_EVENT &&
         update.resourceUpdates.status &&
         update.resourceUpdates.status.toString().match(REGEX_4XX_5XX)
       ) {

@@ -68,7 +68,7 @@ class CompatibilityView {
   }
 
   get resourceCommand() {
-    return this.inspector.toolbox.resourceCommand;
+    return this.inspector.commands.resourceCommand;
   }
 
   async #init() {
