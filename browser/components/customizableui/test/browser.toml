@@ -245,6 +245,10 @@ skip-if = [
 ]
 
 ["browser_995164_registerArea_during_customize_mode.js"]
+skip-if = [
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && opt", # Bug 1779584
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt", # Bug 1779584
+]
 
 ["browser_996364_registerArea_different_properties.js"]
 
