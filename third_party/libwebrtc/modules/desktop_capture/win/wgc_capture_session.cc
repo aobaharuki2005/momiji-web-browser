@@ -276,6 +276,9 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
   }
 #endif
 
+// Until Mozilla builds with SDK v10.0.26100.0 or newer, this
+// code will not build.
+#if !defined(WEBRTC_MOZILLA_BUILD)
   // Windows 11 24H2 (10.0.26100.0) added
   // `IGraphicsCaptureSession6::put_IncludeSecondaryWindows()`. See
   // `wgc_include_secondary_windows()` in
@@ -287,6 +290,7 @@ HRESULT WgcCaptureSession::StartCapture(const DesktopCaptureOptions& options) {
     session6->put_IncludeSecondaryWindows(
         options.wgc_include_secondary_windows());
   }
+#endif
 
   allow_zero_hertz_ = options.allow_wgc_zero_hertz();
 
