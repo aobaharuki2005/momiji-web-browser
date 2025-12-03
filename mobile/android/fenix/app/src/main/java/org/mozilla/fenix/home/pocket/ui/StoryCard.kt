@@ -148,7 +148,7 @@ private fun StoryCardPreview() {
     FirefoxTheme {
         Column(modifier = Modifier.padding(16.dp)) {
             StoryCard(
-                story = FakeHomepagePreview.pocketStories(limit = 1).first(),
+                story = FakeHomepagePreview.stories(limit = 1).first(),
                 onClick = { _, _ -> },
             )
         }

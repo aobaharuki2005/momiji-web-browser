@@ -397,7 +397,7 @@ internal object FakeHomepagePreview {
 
     @Composable
     internal fun pocketState(limit: Int = 1) = PocketState(
-        stories = pocketStories(limit = limit),
+        stories = stories(limit = limit),
         categories = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"
             .split(" ")
             .map { PocketRecommendedStoriesCategory(it) },
@@ -438,7 +438,7 @@ internal object FakeHomepagePreview {
         caps = PocketStory.SponsoredContentFrequencyCaps(flightPeriod = 1, flightCount = 0),
     )
 
-    internal fun pocketStories(limit: Int = 5) = (0 until limit).map { index ->
+    internal fun stories(limit: Int = 5) = (0 until limit).map { index ->
         if (index % 2 == 0) {
             sponsoredContent(index)
         } else {

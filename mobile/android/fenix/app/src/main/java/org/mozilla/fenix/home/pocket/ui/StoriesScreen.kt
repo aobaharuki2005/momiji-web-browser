@@ -152,7 +152,7 @@ private fun ShortcutsScreenPreviews() {
     FirefoxTheme {
         StoriesScreen(
             state = ContentRecommendationsState(
-                pocketStories = FakeHomepagePreview.pocketStories(),
+                pocketStories = FakeHomepagePreview.stories(),
             ),
             interactor = FakeHomepagePreview.storiesInteractor,
             onNavigationIconClick = {},

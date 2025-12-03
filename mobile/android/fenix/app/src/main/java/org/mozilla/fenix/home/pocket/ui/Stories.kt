@@ -346,6 +346,6 @@ private fun maxSponsoredLines() = if (limitMaxLines()) SPONSORED_MAX_LINES else 
 private fun limitMaxLines() = LocalConfiguration.current.fontScale <= ACCESSIBILITY_MAX_LINES_SCALE_FACTOR
 
 private class StoryProvider : PreviewParameterProvider<PocketStory> {
-    override val values = FakeHomepagePreview.pocketStories(limit = 7).asSequence()
+    override val values = FakeHomepagePreview.stories(limit = 7).asSequence()
     override val count = 8
 }
