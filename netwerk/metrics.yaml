@@ -3105,3 +3105,27 @@ network:
       - kershaw@mozilla.com
     expires: never
     telemetry_mirror: h#REL_PRELOAD_MISS_RATIO
+
+  urlclassifier_addon_block:
+    type: event
+    description: >
+      A classified network request initiated by a WebExtension was blocked by the
+      addon-protection feature.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1986320
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1986320
+    notification_emails:
+      - amarchesini@mozilla.com
+      - addons-dev-internal@mozilla.com
+    expires: never
+    extra_keys:
+      addon_id:
+        description: The add-on ID
+        type: string
+      etld:
+        description: The eTLD+1 of the request URL
+        type: string
+      table:
+        description: Classifier table name(s) that matched
+        type: string
