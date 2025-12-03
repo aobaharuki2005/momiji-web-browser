@@ -24,7 +24,8 @@ nscoord CSSAlignUtils::AlignJustifySelf(const StyleAlignFlags& aAlignment,
                                         AlignJustifyFlags aFlags,
                                         nscoord aBaselineAdjust,
                                         nscoord aCBSize, const ReflowInput& aRI,
-                                        const LogicalSize& aChildSize) {
+                                        const LogicalSize& aChildSize,
+                                        const Maybe<LogicalRect>& aAnchorRect) {
   MOZ_ASSERT(aAlignment != StyleAlignFlags::AUTO,
              "auto values should have resolved already");
   MOZ_ASSERT(aAlignment != StyleAlignFlags::LEFT &&
@@ -133,13 +134,20 @@ nscoord CSSAlignUtils::AlignJustifySelf(const StyleAlignFlags& aAlignment,
   } else if (alignment == StyleAlignFlags::END) {
     nscoord size = aChildSize.Size(aAxis, wm);
     offset = aCBSize - (size + marginEnd);
-  } else if (alignment == StyleAlignFlags::CENTER ||
-             alignment == StyleAlignFlags::ANCHOR_CENTER) {
-    // TODO(dshin, Bug 1909339): For now, treat `anchor-center` as `center`.
+  } else if (alignment == StyleAlignFlags::ANCHOR_CENTER && aAnchorRect) {
+    const nscoord anchorSize = aAnchorRect->Size(aAxis, wm);
+    const nscoord anchorStart = aAnchorRect->Start(aAxis, wm);
+    const nscoord size = aChildSize.Size(aAxis, wm);
+
+    // Offset relative to the anchors center, accounting for margins
+    offset = anchorStart + (anchorSize - size + marginStart - marginEnd) / 2;
+  } else {
+    // ANCHOR_CENTER with no Anchor is treated like CENTER.
+    MOZ_ASSERT(alignment == StyleAlignFlags::CENTER ||
+                   alignment == StyleAlignFlags::ANCHOR_CENTER,
+               "unknown align-/justify-self value");
     nscoord size = aChildSize.Size(aAxis, wm);
     offset = (aCBSize - size + marginStart - marginEnd) / 2;
-  } else {
-    MOZ_ASSERT_UNREACHABLE("unknown align-/justify-self value");
   }
 
   return offset;
