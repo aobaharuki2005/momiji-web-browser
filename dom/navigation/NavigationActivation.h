@@ -29,13 +29,8 @@ class NavigationActivation final : public nsISupports, public nsWrapperCache {
 
   already_AddRefed<NavigationHistoryEntry> GetFrom() const;
   already_AddRefed<NavigationHistoryEntry> Entry() const;
-
   // https://html.spec.whatwg.org/#dom-navigationactivation-navigationtype
   enum NavigationType NavigationType() const { return mType; }
-
-  void SetNewEntry(NavigationHistoryEntry* aEntry);
-  void SetOldEntry(NavigationHistoryEntry* aEntry);
-  void SetNavigationType(enum NavigationType aType);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;

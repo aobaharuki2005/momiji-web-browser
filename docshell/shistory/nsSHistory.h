@@ -250,7 +250,7 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                     mozilla::dom::BrowsingContext* aFrameBC, long aLoadType,
                     nsTArray<LoadEntryResult>& aLoadResult,
                     bool aLoadCurrentEntry, bool aUserActivation,
-                    int32_t aOffset, nsISHEntry* aPreviousEntryForActivation);
+                    int32_t aOffset);
 
   nsresult LoadEntry(mozilla::dom::BrowsingContext* aSourceBrowsingContext,
                      int32_t aIndex, long aLoadType, uint32_t aHistCmd,

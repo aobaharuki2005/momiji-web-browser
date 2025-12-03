@@ -400,7 +400,6 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
     mOngoingAPIMethodTracker->NotifyAboutCommittedToEntry(currentEntry);
   }
 
-  // Reset cached index for entries.
   for (auto& entry : disposedEntries) {
     entry->ResetIndexForDisposal();
   }
@@ -419,93 +418,19 @@ void Navigation::UpdateEntriesForSameDocumentNavigation(
     event->SetTrusted(true);
     DispatchEvent(*event);
 
-    for (RefPtr<NavigationHistoryEntry>& entry : disposedEntries) {
-      MOZ_KnownLive(entry)->FireDisposeEvent();
+    for (const auto& entry : disposedEntries) {
+      RefPtr<Event> event = NS_NewDOMEvent(entry, nullptr, nullptr);
+      event->InitEvent(u"dispose"_ns, false, false);
+      event->SetTrusted(true);
+      event->SetTarget(entry);
+      entry->DispatchEvent(*event);
     }
   }
 }
 
 // https://html.spec.whatwg.org/#update-the-navigation-api-entries-for-reactivation
-void Navigation::UpdateForReactivation(
-    Span<const SessionHistoryInfo> aNewSHEs,
-    const SessionHistoryInfo* aReactivatedEntry) {
-  // Step 1
-  if (HasEntriesAndEventsDisabled()) {
-    return;
-  }
-
-  LOG_FMTD(
-      "Reactivate {} {}", fmt::ptr(aReactivatedEntry),
-      fmt::join(
-          [currentEntry = RefPtr{GetCurrentEntry()}](auto& aEntries) {
-            nsTArray<nsCString> entries;
-            (void)TransformIfAbortOnErr(
-                aEntries, MakeBackInserter(entries), [](auto) { return true; },
-                [currentEntry](auto& entry) -> Result<nsCString, nsresult> {
-                  return nsPrintfCString(
-                      "%s%s", entry.NavigationKey().ToString().get(),
-                      currentEntry &&
-                              currentEntry->Key() == entry.NavigationKey()
-                          ? "*"
-                          : "");
-                });
-            return std::move(entries);
-          }(aNewSHEs),
-          ", "));
-
-  // Step 2
-  nsTArray<RefPtr<NavigationHistoryEntry>> newNHEs;
-
-  // Step 3
-  nsTArray<RefPtr<NavigationHistoryEntry>> oldNHEs = mEntries.Clone();
-
-  // Step 4
-  for (const auto& newSHE : aNewSHEs) {
-    // Step 4.1
-    RefPtr<NavigationHistoryEntry> newNHE;
-    if (ArrayIterator matchingOldNHE = std::find_if(
-            oldNHEs.begin(), oldNHEs.end(),
-            [newSHE](const auto& aNHE) { return aNHE->IsSameEntry(&newSHE); });
-        matchingOldNHE != oldNHEs.end()) {
-      // Step 4.2.1
-      newNHE = *matchingOldNHE;
-      // Since we cache indices we need to update newNHE here. Also, narrowing.
-      // Yay.
-      CheckedInt<int64_t> newIndex(newNHEs.Length());
-      newNHE->SetIndex(newIndex.value());
-
-      // Step 4.2.2
-      oldNHEs.RemoveElementAt(matchingOldNHE);
-    } else {
-      // Step 4.3.1 and 4.3.2
-      newNHE = MakeRefPtr<NavigationHistoryEntry>(GetOwnerGlobal(), &newSHE,
-                                                  newNHEs.Length());
-    }
-    // Step 4.4
-    newNHEs.AppendElement(newNHE);
-  }
-
-  // Step 5
-  mEntries = std::move(newNHEs);
-
-  // Step 6
-  mCurrentEntryIndex = GetNavigationEntryIndex(*aReactivatedEntry);
-
-  // Reset cached index for entries.
-  for (const auto& oldEntry : oldNHEs) {
-    oldEntry->ResetIndexForDisposal();
-  }
-
-  // Step 7
-  NS_DispatchToMainThread(NS_NewRunnableFunction(
-      "UpdateForReactivation",
-      [oldEntries = std::move(oldNHEs)]() MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
-        // Step 7.1
-        for (const RefPtr<NavigationHistoryEntry>& disposedNHE : oldEntries) {
-          // Step 7.1.1
-          MOZ_KnownLive(disposedNHE)->FireDisposeEvent();
-        }
-      }));
+void Navigation::UpdateForReactivation(SessionHistoryInfo* aReactivatedEntry) {
+  // NAV-TODO
 }
 
 // https://html.spec.whatwg.org/#navigation-api-early-error-result
@@ -1348,7 +1273,7 @@ struct NavigationWaitForAllScope final : public nsISupports,
       return;
     }
     // 2. Let navigable be event's relevant global object's navigable.
-    RefPtr<nsDocShell> docShell = nsDocShell::Cast(document->GetDocShell());
+    nsDocShell* docShell = nsDocShell::Cast(document->GetDocShell());
     Maybe<BrowsingContext&> navigable =
         ToMaybeRef(mNavigation->GetOwnerWindow()).andThen([](auto& aWindow) {
           return ToMaybeRef(aWindow.GetBrowsingContext());
@@ -1393,13 +1318,11 @@ struct NavigationWaitForAllScope final : public nsISupports,
           // URL, with serializedData set to event's classic history API
           // state and historyHandling set to event's navigationType.
           if (docShell) {
-            nsCOMPtr newURL = mDestination->GetURL();
-            nsCOMPtr currentURL = document->GetDocumentURI();
-            nsCOMPtr serializedData = mEvent->ClassicHistoryAPIState();
             docShell->UpdateURLAndHistory(
-                document, newURL, serializedData,
+                document, mDestination->GetURL(),
+                mEvent->ClassicHistoryAPIState(),
                 *NavigationUtils::NavigationHistoryBehavior(aNavigationType),
-                currentURL,
+                document->GetDocumentURI(),
                 Equals(mDestination->GetURL(), document->GetDocumentURI()));
           }
           break;
@@ -1408,9 +1331,8 @@ struct NavigationWaitForAllScope final : public nsISupports,
           // given navigation, navigable's active session history entry, and
           // "reload".
           if (docShell) {
-            MOZ_KnownLive(mNavigation)
-                ->UpdateEntriesForSameDocumentNavigation(
-                    docShell->GetActiveSessionHistoryInfo(), aNavigationType);
+            mNavigation->UpdateEntriesForSameDocumentNavigation(
+                docShell->GetActiveSessionHistoryInfo(), aNavigationType);
           }
           break;
         case NavigationType::Traverse:
@@ -1871,21 +1793,6 @@ NavigationHistoryEntry* Navigation::FindNavigationHistoryEntry(
   return nullptr;
 }
 
-// https://html.spec.whatwg.org/#getting-the-navigation-api-entry-index
-Maybe<size_t> Navigation::GetNavigationEntryIndex(
-    const SessionHistoryInfo& aSessionHistoryInfo) const {
-  size_t index = 0;
-  for (const auto& navigationHistoryEntry : mEntries) {
-    if (navigationHistoryEntry->IsSameEntry(&aSessionHistoryInfo)) {
-      return Some(index);
-    }
-
-    index++;
-  }
-
-  return Nothing();
-}
-
 // https://html.spec.whatwg.org/#navigation-api-method-tracker-clean-up
 /* static */ void Navigation::CleanUp(
     NavigationAPIMethodTracker* aNavigationAPIMethodTracker) {
@@ -2161,31 +2068,19 @@ Navigation::AddUpcomingTraverseAPIMethodTracker(const nsID& aKey,
 
 // https://html.spec.whatwg.org/#update-document-for-history-step-application
 void Navigation::CreateNavigationActivationFrom(
-    const SessionHistoryInfo* aPreviousEntryForActivation,
-    Maybe<NavigationType> aNavigationType) {
-  // Step 7 If all the following are true:
-  // * previousEntryForActivation is given;
-  // * navigationType is non-null; and
-  // * navigationType is "reload" or previousEntryForActivation's document is
-  //   not document,
-  RefPtr<NavigationHistoryEntry> currentEntry = GetCurrentEntry();
-  if (!aPreviousEntryForActivation || !aNavigationType || !currentEntry ||
-      (*aNavigationType != NavigationType::Reload &&
-       currentEntry->SessionHistoryInfo()->SharesDocumentWith(
-           *aPreviousEntryForActivation))) {
+    SessionHistoryInfo* aPreviousEntryForActivation,
+    NavigationType aNavigationType) {
+  // Note: we do Step 7.1 at the end of method so we can both create and
+  // initialize the activation at once.
+  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
+              "Creating NavigationActivation for from={}, type={}",
+              fmt::ptr(aPreviousEntryForActivation), aNavigationType);
+  RefPtr currentEntry = GetCurrentEntry();
+  if (!currentEntry) {
     return;
   }
 
-  NavigationType navigationType = *aNavigationType;
-
-  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
-              "Creating NavigationActivation for from={}, type={}",
-              fmt::ptr(aPreviousEntryForActivation), navigationType);
-
-  // Note: we do Step 7.1 at the end of method so we can both create and
-  // initialize the activation at once.
-
-  // Step 7.2 Let previousEntryIndex be the result of getting the navigation
+  // Step 7.2. Let previousEntryIndex be the result of getting the navigation
   // API entry index of previousEntryForActivation within navigation.
   auto possiblePreviousEntry =
       std::find_if(mEntries.begin(), mEntries.end(),
@@ -2193,7 +2088,7 @@ void Navigation::CreateNavigationActivationFrom(
                      return entry->IsSameEntry(aPreviousEntryForActivation);
                    });
 
-  // 7.3 If previousEntryIndex is non-negative, then set activation's old entry
+  // 3. If previousEntryIndex is non-negative, then set activation's old entry
   // to navigation's entry list[previousEntryIndex].
   RefPtr<NavigationHistoryEntry> oldEntry;
   if (possiblePreviousEntry != mEntries.end()) {
@@ -2201,9 +2096,9 @@ void Navigation::CreateNavigationActivationFrom(
                 "Found previous entry at {}",
                 fmt::ptr(possiblePreviousEntry->get()));
     oldEntry = *possiblePreviousEntry;
-  } else if (navigationType == NavigationType::Replace &&
+  } else if (aNavigationType == NavigationType::Replace &&
              !aPreviousEntryForActivation->IsTransient()) {
-    // 7.4 Otherwise, if all the following are true:
+    // 4. Otherwise, if all the following are true:
     //     navigationType is "replace";
     //     previousEntryForActivation's document state's origin is same origin
     //     with document's origin; and previousEntryForActivation's document's
@@ -2223,11 +2118,6 @@ void Navigation::CreateNavigationActivationFrom(
       MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug,
                   "Created a new entry at {}", fmt::ptr(oldEntry.get()));
     }
-  } else {
-    LOG_FMTV("Didn't find previous entry id={}",
-             aPreviousEntryForActivation
-                 ? aPreviousEntryForActivation->NavigationId().ToString().get()
-                 : "");
   }
 
   // 1. If navigation's activation is null, then set navigation's
@@ -2235,16 +2125,8 @@ void Navigation::CreateNavigationActivationFrom(
   // realm.
   // 5. Set activation's new entry to navigation's current entry.
   // 6. Set activation's navigation type to navigationType.
-  if (!mActivation) {
-    mActivation = MakeRefPtr<NavigationActivation>(
-        GetOwnerGlobal(), currentEntry, oldEntry, navigationType);
-  } else {
-    mActivation->SetNewEntry(currentEntry);
-    mActivation->SetNavigationType(navigationType);
-    if (oldEntry) {
-      mActivation->SetOldEntry(oldEntry);
-    }
-  }
+  mActivation = MakeRefPtr<NavigationActivation>(GetOwnerGlobal(), currentEntry,
+                                                 oldEntry, aNavigationType);
 }
 
 // https://html.spec.whatwg.org/#dom-navigationprecommitcontroller-redirect

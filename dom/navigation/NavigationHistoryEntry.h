@@ -30,7 +30,6 @@ class NavigationHistoryEntry final : public DOMEventTargetHelper {
   void GetKey(nsAString& aResult) const;
   void GetId(nsAString& aResult) const;
   int64_t Index() const;
-  void SetIndex(int64_t aIndex) { mIndex = aIndex; }
   bool SameDocument() const;
 
   void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
@@ -53,9 +52,6 @@ class NavigationHistoryEntry final : public DOMEventTargetHelper {
   class SessionHistoryInfo* SessionHistoryInfo() { return mSHInfo.get(); }
 
   void ResetIndexForDisposal();
-
-  MOZ_CAN_RUN_SCRIPT
-  void FireDisposeEvent();
 
  private:
   ~NavigationHistoryEntry();
