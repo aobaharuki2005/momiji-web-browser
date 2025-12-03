@@ -2014,7 +2014,7 @@ void nsXULPrototypeScript::Set(JS::Stencil* aStencil) { mStencil = aStencil; }
 void nsXULPrototypeScript::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                                   size_t* aNodeSize) const {
   if (nsCOMPtr<nsISizeOf> iface = do_QueryInterface(mSrcURI)) {
-    *aNodeSize += iface->SizeOfExcludingThis(aSizes.mState.mMallocSizeOf);
+    *aNodeSize += iface->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 }
 
