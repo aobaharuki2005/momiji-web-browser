@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.colorResource
@@ -262,11 +263,11 @@ private fun EmptySearchResultsView(
 ) {
     Box(
         modifier = modifier,
-        contentAlignment = Alignment.Center,
+        contentAlignment = BiasAlignment(0f, VERTICAL_BIAS_OFFSET_IMAGE_MESSAGE),
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Image(
                 modifier = Modifier.size(77.dp),
@@ -415,3 +416,4 @@ private fun SettingsSearchScreenNoResultsPreview() {
 
 private val RECENT_SEARCHES_HEADER_TEXT_COLOR = mozilla.components.ui.colors.R.color.photonDarkGrey05
 private val RECENT_SEARCHES_CLEAR_RECENTS_TEXT_COLOR = mozilla.components.ui.colors.R.color.photonViolet70
+private const val VERTICAL_BIAS_OFFSET_IMAGE_MESSAGE = -0.33f
