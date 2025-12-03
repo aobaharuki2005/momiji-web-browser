@@ -543,9 +543,8 @@ package org.mozilla.geckoview {
 
   public static class ContentBlocking.SafeBrowsing {
     ctor protected SafeBrowsing();
-    field public static final int DEFAULT = 31744;
+    field public static final int DEFAULT = 15360;
     field public static final int HARMFUL = 4096;
-    field public static final int HARMFULADDON = 16384;
     field public static final int MALWARE = 1024;
     field public static final int NONE = 0;
     field public static final int PHISHING = 8192;
@@ -3121,7 +3120,6 @@ package org.mozilla.geckoview {
     field public static final int ERROR_DATA_URI_TOO_LONG = 117;
     field public static final int ERROR_FILE_ACCESS_DENIED = 101;
     field public static final int ERROR_FILE_NOT_FOUND = 85;
-    field public static final int ERROR_HARMFULADDON_URI = 103;
     field public static final int ERROR_HTTPS_ONLY = 163;
     field public static final int ERROR_INVALID_CONTENT_ENCODING = 84;
     field public static final int ERROR_MALFORMED_URI = 53;

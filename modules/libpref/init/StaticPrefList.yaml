@@ -16345,12 +16345,6 @@
   value: true
   mirror: always
 
-# Block harmful addon URLs.
-- name: privacy.trackingprotection.harmfuladdon.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Block 3rd party fingerprinting resources.
 - name: privacy.trackingprotection.fingerprinting.enabled
   type: bool

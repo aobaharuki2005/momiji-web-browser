@@ -60,7 +60,6 @@ public class WebRequestError extends Exception {
     ERROR_SAFEBROWSING_MALWARE_URI,
     ERROR_SAFEBROWSING_UNWANTED_URI,
     ERROR_SAFEBROWSING_HARMFUL_URI,
-    ERROR_HARMFULADDON_URI,
     ERROR_CONTENT_CRASHED,
     ERROR_OFFLINE,
     ERROR_PORT_BLOCKED,
@@ -202,9 +201,6 @@ public class WebRequestError extends Exception {
   /** The requested URI was present in the "phishing" blocklist. */
   public static final int ERROR_SAFEBROWSING_PHISHING_URI = 0x57;
 
-  /** The requested URI was present in the "harmful-addon" blocklist. */
-  public static final int ERROR_HARMFULADDON_URI = 0x67;
-
   /** The error code, e.g. {@link #ERROR_MALFORMED_URI}. */
   public final int code;
 
@@ -309,9 +305,6 @@ public class WebRequestError extends Exception {
     }
     if (geckoError == XPCOMError.NS_ERROR_HARMFUL_URI) {
       return ERROR_SAFEBROWSING_HARMFUL_URI;
-    }
-    if (geckoError == XPCOMError.NS_ERROR_HARMFULADDON_URI) {
-      return ERROR_HARMFULADDON_URI;
     }
     // content
     if (geckoError == XPCOMError.NS_ERROR_CONTENT_CRASHED) {

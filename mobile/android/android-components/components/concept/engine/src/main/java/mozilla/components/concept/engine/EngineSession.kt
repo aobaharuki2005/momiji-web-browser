@@ -430,14 +430,9 @@ abstract class EngineSession(
         PHISHING(1 shl 13),
 
         /**
-         * Blocks harmful add-on sites.
-         */
-        HARMFULADDON(1 shl 14),
-
-        /**
          * Blocks all unsafe sites.
          */
-        RECOMMENDED(MALWARE.id + UNWANTED.id + HARMFUL.id + PHISHING.id + HARMFULADDON.id),
+        RECOMMENDED(MALWARE.id + UNWANTED.id + HARMFUL.id + PHISHING.id),
     }
 
     /**

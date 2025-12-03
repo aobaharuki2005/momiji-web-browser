@@ -45,7 +45,6 @@ rawPackets.set(`GET request`, {
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "strict-origin-when-cross-origin",
   "blockedReason": 0,
-  "extension": {},
   "totalTime": 2,
   "securityState": "secure",
   "isRacing": false
@@ -78,7 +77,6 @@ rawPackets.set(`GET request update`, {
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "strict-origin-when-cross-origin",
   "blockedReason": 0,
-  "extension": {},
   "totalTime": 3,
   "securityState": "secure",
   "isRacing": false
@@ -118,7 +116,6 @@ rawPackets.set(`XHR GET request`, {
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "strict-origin-when-cross-origin",
   "blockedReason": 0,
-  "extension": {},
   "totalTime": 1,
   "securityState": "insecure",
   "isRacing": false
@@ -157,7 +154,6 @@ rawPackets.set(`XHR GET request update`, {
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "strict-origin-when-cross-origin",
   "blockedReason": 0,
-  "extension": {},
   "totalTime": 1,
   "securityState": "insecure",
   "isRacing": false
@@ -197,7 +193,6 @@ rawPackets.set(`XHR POST request`, {
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "strict-origin-when-cross-origin",
   "blockedReason": 0,
-  "extension": {},
   "totalTime": 1,
   "securityState": "insecure",
   "isRacing": false
@@ -236,7 +231,6 @@ rawPackets.set(`XHR POST request update`, {
   "isThirdPartyTrackingResource": false,
   "referrerPolicy": "strict-origin-when-cross-origin",
   "blockedReason": 0,
-  "extension": {},
   "totalTime": 2,
   "securityState": "insecure",
   "isRacing": false

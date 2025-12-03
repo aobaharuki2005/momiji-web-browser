@@ -63,7 +63,7 @@ function isFileChannel(channel) {
  *        Object describing the network event or the configuration of the
  *        network observer, and which cannot be easily inferred from the raw
  *        channel.
- *        - extension: optional object with `blocking` or `blocked` extension IDs
+ *        - blockingExtension: optional string
  *          id of the blocking webextension if any
  *        - blockedReason: optional number or string
  *        - discardRequestBody: boolean
@@ -223,7 +223,7 @@ class NetworkEventActor extends Actor {
       resourceId: this._channelId,
       resourceType: NETWORK_EVENT,
       blockedReason,
-      extension: networkEventOptions.extension,
+      blockingExtension: networkEventOptions.blockingExtension,
       browsingContextID,
       cause,
       // This is used specifically in the browser toolbox console to distinguish privileged
@@ -658,7 +658,7 @@ class NetworkEventActor extends Actor {
    *
    * @param object
    */
-  addResponseContentComplete({ blockedReason, extension }) {
+  addResponseContentComplete({ blockedReason, blockingExtension }) {
     // Ignore calls when this actor is already destroyed
     if (this.isDestroyed()) {
       return;
@@ -668,7 +668,7 @@ class NetworkEventActor extends Actor {
       lazy.NetworkUtils.NETWORK_EVENT_TYPES.RESPONSE_CONTENT_COMPLETE,
       {
         blockedReason,
-        extension,
+        blockingExtension,
       }
     );
   }
@@ -679,9 +679,7 @@ class NetworkEventActor extends Actor {
    * @param object content
    *        The response content.
    */
-  addResponseContent(content, data) {
-    const { blockedReason, extension } = data || {};
-
+  addResponseContent(content) {
     // Ignore calls when this actor is already destroyed
     if (this.isDestroyed()) {
       return;
@@ -694,8 +692,6 @@ class NetworkEventActor extends Actor {
         mimeType: content.mimeType,
         contentSize: content.size,
         transferredSize: content.transferredSize,
-        blockedReason,
-        extension,
       }
     );
   }

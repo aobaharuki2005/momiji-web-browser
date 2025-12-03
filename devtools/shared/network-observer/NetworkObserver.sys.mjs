@@ -443,13 +443,11 @@ export class NetworkObserver {
         });
       } else {
         // Handles any early blockings e.g by Web Extensions or by CORS
-        const { extension, blockedReason } = lazy.NetworkUtils.getBlockedReason(
-          channel,
-          httpActivity.fromCache
-        );
+        const { blockingExtension, blockedReason } =
+          lazy.NetworkUtils.getBlockedReason(channel, httpActivity.fromCache);
         this.#createNetworkEvent(httpActivity, {
           blockedReason,
-          extension,
+          blockingExtension,
         });
       }
     }
@@ -931,7 +929,7 @@ export class NetworkObserver {
    */
   #createNetworkEvent(
     httpActivity,
-    { timestamp, blockedReason, extension, inProgressRequest } = {}
+    { timestamp, blockedReason, blockingExtension, inProgressRequest } = {}
   ) {
     if (
       blockedReason === undefined &&
@@ -947,7 +945,7 @@ export class NetworkObserver {
       {
         timestamp,
         blockedReason,
-        extension,
+        blockingExtension,
         discardRequestBody: !this.#saveRequestAndResponseBodies,
         discardResponseBody: !this.#saveRequestAndResponseBodies,
       },
