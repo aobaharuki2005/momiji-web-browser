@@ -232,16 +232,12 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
 void nsThreadPool::ShutdownThread(nsIThread* aThread) {
   LOG(("THRD-P(%p) shutdown async [%p]\n", this, aThread));
 
-  // This is either called by a threadpool thread that is out of work, or
-  // a thread that attempted to create a threadpool thread and raced in
-  // such a way that the newly created thread is no longer necessary.
-  // In the first case, we must go to another thread to shut aThread down
-  // (because it is the current thread).  In the second case, we cannot
-  // synchronously shut down the current thread (because then Dispatch() would
-  // spin the event loop, and that could blow up the world), and asynchronous
-  // shutdown requires this thread have an event loop (and it may not, see bug
-  // 10204784).  The simplest way to cover all cases is to asynchronously
-  // shutdown aThread from the main thread.
+  // This is called by a threadpool thread that is out of work and exceeded
+  // its idle timeout. The thread has already been unregistered from the pool's
+  // bookkeeping and will go idle right after this call. We must go to another
+  // thread to shut it down completely (because it is the current thread).
+  // The simplest way to cover that case is to asynchronously shutdown aThread
+  // from the main thread.
   // NOTE: If this fails, it's OK, as XPCOM shutdown will already have destroyed
   // the nsThread for us.
   SchedulerGroup::Dispatch(
