@@ -4903,6 +4903,24 @@ bool nsIFrame::IsSelectable(StyleUserSelect* aSelectStyle) const {
   return style != StyleUserSelect::None;
 }
 
+bool nsIFrame::ShouldPaintNormalSelection() const {
+  if (IsSelectable()) {
+    // NOTE: Ideally, we should return false if display selection is "OFF".
+    // However, here is a hot path at painting.  Therefore, it should be checked
+    // before and we shouldn't need to check it.
+    return true;
+  }
+  // If we're not selectable by user, we should paint selection only while the
+  // normal selection is styled as "attention" by "Find in Page" or something.
+  nsCOMPtr<nsISelectionController> selCon;
+  GetSelectionController(PresContext(), getter_AddRefs(selCon));
+  int16_t displaySelection = nsISelectionController::SELECTION_OFF;
+  if (selCon) {
+    selCon->GetDisplaySelection(&displaySelection);
+  }
+  return displaySelection == nsISelectionController::SELECTION_ATTENTION;
+}
+
 bool nsIFrame::ShouldHaveLineIfEmpty() const {
   switch (Style()->GetPseudoType()) {
     case PseudoStyleType::NotPseudo:
@@ -9175,8 +9193,8 @@ bool nsIFrame::IsSelfEmpty() {
   return IsHiddenByContentVisibilityOfInFlowParentForLayout();
 }
 
-nsresult nsIFrame::GetSelectionController(nsPresContext* aPresContext,
-                                          nsISelectionController** aSelCon) {
+nsresult nsIFrame::GetSelectionController(
+    nsPresContext* aPresContext, nsISelectionController** aSelCon) const {
   if (!aPresContext || !aSelCon) {
     return NS_ERROR_INVALID_ARG;
   }

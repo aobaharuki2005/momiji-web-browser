@@ -57,8 +57,9 @@ bool nsMathMLmoFrame::IsFrameInSelection(nsIFrame* aFrame) {
   const nsFrameSelection* frameSelection = aFrame->GetConstFrameSelection();
   UniquePtr<SelectionDetails> details = frameSelection->LookUpSelection(
       aFrame->GetContent(), 0, 1,
-      aFrame->IsSelectable() ? nsFrameSelection::IgnoreNormalSelection::No
-                             : nsFrameSelection::IgnoreNormalSelection::Yes);
+      aFrame->ShouldPaintNormalSelection()
+          ? nsFrameSelection::IgnoreNormalSelection::No
+          : nsFrameSelection::IgnoreNormalSelection::Yes);
 
   return details != nullptr;
 }

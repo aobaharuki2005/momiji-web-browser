@@ -4047,6 +4047,16 @@ class nsIFrame : public nsQueryFrame {
       mozilla::StyleUserSelect* aSelectStyle = nullptr) const;
 
   /**
+   * Return true if the frame should paint normal selection.  This may return
+   * true even if IsSelectable() in some cases.  E.g., when the normal selection
+   * is the result of "Find in Page".
+   * NOTE: This returns true even if the display selection is OFF since it
+   * should've already been checked before this is called and this should be
+   * cheaper as far as possible because of a part of painting.
+   */
+  [[nodiscard]] bool ShouldPaintNormalSelection() const;
+
+  /**
    * Returns whether this frame should have the content-block-size of a line,
    * even if empty.
    */
@@ -4059,7 +4069,7 @@ class nsIFrame : public nsQueryFrame {
    * the frame.
    */
   nsresult GetSelectionController(nsPresContext* aPresContext,
-                                  nsISelectionController** aSelCon);
+                                  nsISelectionController** aSelCon) const;
 
   /**
    * Call to get nsFrameSelection for this frame.

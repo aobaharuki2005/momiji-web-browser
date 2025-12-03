@@ -496,8 +496,9 @@ void nsContainerFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
   // look up to see what selection(s) are on this frame
   UniquePtr<SelectionDetails> details = frameSelection->LookUpSelection(
       newContent, offset, 1,
-      IsSelectable() ? nsFrameSelection::IgnoreNormalSelection::No
-                     : nsFrameSelection::IgnoreNormalSelection::Yes);
+      ShouldPaintNormalSelection()
+          ? nsFrameSelection::IgnoreNormalSelection::No
+          : nsFrameSelection::IgnoreNormalSelection::Yes);
   if (!details) {
     return;
   }
