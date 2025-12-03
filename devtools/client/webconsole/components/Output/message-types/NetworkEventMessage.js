@@ -89,7 +89,7 @@ function NetworkEventMessage({
     isXHR,
     timeStamp,
     blockedReason,
-    extension,
+    blockingExtension,
     httpVersion,
     status,
     statusText,
@@ -137,7 +137,7 @@ function NetworkEventMessage({
   if (blockedReason) {
     statusInfo = dom.span(
       { className: "status-info" },
-      getBlockedReasonString(blockedReason, extension)
+      getBlockedReasonString(blockedReason, blockingExtension)
     );
     topLevelClasses.push("network-message-blocked");
   }

@@ -197,7 +197,6 @@ WebExtensionPolicyCore::WebExtensionPolicyCore(GlobalObject& aGlobal,
       mTemporarilyInstalled(aInit.mTemporarilyInstalled),
       mBackgroundWorkerScript(aInit.mBackgroundWorkerScript),
       mIgnoreQuarantine(aInit.mIsPrivileged || aInit.mIgnoreQuarantine),
-      mHasRecommendedState(aInit.mHasRecommendedState),
       mPermissions(new AtomSet(aInit.mPermissions)) {
   // In practice this is not necessary, but in tests where the uuid
   // passed in is not lowercased various tests can fail.
@@ -467,10 +466,6 @@ Result<nsString, nsresult> WebExtensionPolicy::GetURL(
 void WebExtensionPolicy::SetIgnoreQuarantine(bool aIgnore) {
   WebExtensionPolicy_Binding::ClearCachedIgnoreQuarantineValue(this);
   mCore->SetIgnoreQuarantine(aIgnore);
-}
-
-void WebExtensionPolicy::SetHasRecommendedState(bool aHasRecommendedState) {
-  mCore->SetHasRecommendedState(aHasRecommendedState);
 }
 
 void WebExtensionPolicy::RegisterContentScript(

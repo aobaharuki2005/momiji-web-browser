@@ -30,7 +30,7 @@ const UPDATED_TRANSFERRED_PROPS = [
   "isRacing",
   "fromServiceWorker",
   "blockedReason",
-  "extension",
+  "blockingExtension",
 ];
 
 class RequestListColumnTransferredSize extends Component {
@@ -51,7 +51,7 @@ class RequestListColumnTransferredSize extends Component {
   render() {
     const {
       blockedReason,
-      extension,
+      blockingExtension,
       fromCache,
       fromServiceWorker,
       status,
@@ -61,7 +61,7 @@ class RequestListColumnTransferredSize extends Component {
     let text;
 
     if (blockedReason) {
-      text = getBlockedReasonString(blockedReason, extension);
+      text = getBlockedReasonString(blockedReason, blockingExtension);
     } else if (fromCache || status === "304") {
       text = SIZE_CACHED;
     } else if (fromServiceWorker) {

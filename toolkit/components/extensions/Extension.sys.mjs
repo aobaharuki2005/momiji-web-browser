@@ -3469,8 +3469,6 @@ export class Extension extends ExtensionData {
       !!addonData.recommendationState?.states?.length ||
       lazy.QuarantinedDomains.isUserAllowedAddonId(this.id);
 
-    this.hasRecommendedState = !!addonData.recommendationState?.states?.length;
-
     this.views = new Set();
     this._backgroundPageFrameLoader = null;
 
@@ -3801,7 +3799,6 @@ export class Extension extends ExtensionData {
       optionalPermissions: this.optionalPermissions,
       isPrivileged: this.isPrivileged,
       ignoreQuarantine: this.ignoreQuarantine,
-      hasRecommendedState: this.hasRecommendedState,
       temporarilyInstalled: this.temporarilyInstalled,
     };
   }
@@ -4076,7 +4073,6 @@ export class Extension extends ExtensionData {
       baseURL: this.resourceURL,
       isPrivileged: this.isPrivileged,
       ignoreQuarantine: this.ignoreQuarantine,
-      hasRecommendedState: this.hasRecommendedState,
       temporarilyInstalled: this.temporarilyInstalled,
       allowedOrigins: new MatchPatternSet([]),
       localizeCallback: () => "",
@@ -4093,7 +4089,6 @@ export class Extension extends ExtensionData {
       baseURL: this.resourceURL,
       isPrivileged: this.isPrivileged,
       ignoreQuarantine: this.ignoreQuarantine,
-      hasRecommendedState: this.hasRecommendedState,
     });
     sharedData.set("extensions/pending", pendingExtensions);
 

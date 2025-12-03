@@ -385,7 +385,7 @@ class NetworkEventWatcher {
         resourceUpdates.mimeType = updateResource.mimeType;
         break;
       case NETWORK_EVENT_TYPES.RESPONSE_CONTENT_COMPLETE:
-        resourceUpdates.extension = updateResource.extension;
+        resourceUpdates.blockingExtension = updateResource.blockingExtension;
         resourceUpdates.blockedReason = updateResource.blockedReason;
         break;
       case NETWORK_EVENT_TYPES.EVENT_TIMINGS:

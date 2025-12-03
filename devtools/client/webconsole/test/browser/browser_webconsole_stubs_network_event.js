@@ -196,7 +196,7 @@ function getOrderedResource(resource) {
     isThirdPartyTrackingResource: resource.isThirdPartyTrackingResource,
     referrerPolicy: resource.referrerPolicy,
     blockedReason: resource.blockedReason,
-    extension: resource.extension,
+    blockingExtension: resource.blockingExtension,
     channelId: resource.channelId,
     totalTime: resource.totalTime,
     securityState: resource.securityState,

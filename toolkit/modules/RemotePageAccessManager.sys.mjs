@@ -213,7 +213,6 @@ export let RemotePageAccessManager = {
         "browser.contentblocking.report.proxy.enabled",
         "privacy.trackingprotection.cryptomining.enabled",
         "privacy.trackingprotection.fingerprinting.enabled",
-        "privacy.trackingprotection.harmfuladdon.enabled",
         "privacy.trackingprotection.enabled",
         "privacy.trackingprotection.socialtracking.enabled",
         "browser.contentblocking.report.show_mobile_app",
