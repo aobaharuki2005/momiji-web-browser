@@ -4197,6 +4197,8 @@ class Document : public nsINode,
 
   bool DOMNotificationsSuspended() const { return mSuspendDOMNotifications; }
 
+  bool IsExpectingEndLoad() { return mDidCallBeginLoad; }
+
  protected:
   RefPtr<DocumentL10n> mDocumentL10n;
 
