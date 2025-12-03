@@ -623,6 +623,8 @@ tags = "vertical-tabs"
 
 ["browser_tab_splitview.js"]
 
+["browser_tab_splitview_about_opentabs.js"]
+
 ["browser_tab_splitview_contextmenu.js"]
 skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt", # Bug 1996471
