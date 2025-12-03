@@ -40,3 +40,5 @@ browser.jar:
    content/browser/preferences/widgets/security-privacy-card.mjs        (widgets/security-privacy/security-privacy-card/security-privacy-card.mjs)
    content/browser/preferences/widgets/security-privacy-card.css        (widgets/security-privacy/security-privacy-card/security-privacy-card.css)
    content/browser/preferences/widgets/sync-device-name.mjs          (widgets/sync-device-name/sync-device-name.mjs)
+   content/browser/preferences/widgets/sync-engines-list.mjs          (widgets/sync-engine-list/sync-engines-list.mjs)
+   content/browser/preferences/widgets/sync-engines-list.css          (widgets/sync-engine-list/sync-engines-list.css)

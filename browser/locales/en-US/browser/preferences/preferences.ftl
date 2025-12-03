@@ -1047,6 +1047,12 @@ prefs-syncing-button =
 
 sync-syncing-across-devices-heading = You are syncing these items across all your connected devices:
 
+sync-syncing-across-devices-heading-2 = Data synced across devices
+
+sync-syncing-across-devices-empty-state =
+    .label = You aren’t syncing anything… yet.
+    .description = Start syncing to get all of your data on all your devices.
+
 sync-currently-syncing-bookmarks = Bookmarks
 sync-currently-syncing-history = History
 sync-currently-syncing-tabs = Open tabs
