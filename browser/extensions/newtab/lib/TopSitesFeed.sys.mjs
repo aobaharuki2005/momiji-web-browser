@@ -1773,7 +1773,6 @@ export class TopSitesFeed {
       sponsoredLinks[SPONSORED_TILE_PARTNER_AMP].filter(Boolean);
 
     let sponsored = [];
-    let chosenPartners = [];
 
     for (const allocation of allocatedPositions) {
       let link = null;
@@ -1801,11 +1800,6 @@ export class TopSitesFeed {
 
         if (!link) {
           // No more links to be added across all the partners, just return.
-          if (chosenPartners.length) {
-            Glean.newtab.sovAllocation.set(
-              chosenPartners.map(entry => JSON.stringify(entry))
-            );
-          }
           return sponsored;
         }
       }
@@ -1817,18 +1811,6 @@ export class TopSitesFeed {
         link.pos = allocation.position - 1;
       }
       sponsored.push(link);
-
-      chosenPartners.push({
-        pos: allocation.position,
-        assigned: assignedPartner, // The assigned partner based on SOV
-        chosen: link.partner,
-      });
-    }
-    // Record chosen partners to glean
-    if (chosenPartners.length) {
-      Glean.newtab.sovAllocation.set(
-        chosenPartners.map(entry => JSON.stringify(entry))
-      );
     }
 
     // add the remaining contile sponsoredLinks when nimbus variable present
