@@ -119,6 +119,20 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
       },
       [&aValueString](const WritingMode& val) {
         aValueString.AppendPrintf("WritingModes: %x", val.GetBits());
+      },
+      [&aValueString](const nsTArray<RefPtr<nsAtom>>& val) {
+        if (const size_t len = val.Length()) {
+          for (size_t i = 0; i < len - 1; i++) {
+            aValueString.Append(val[i]->GetUTF16String());
+            aValueString.Append(u" ");
+          }
+          aValueString.Append(val[len - 1]->GetUTF16String());
+        } else {
+          // The array is empty
+          NS_WARNING(
+              "Hmm, should we have used a DeleteEntry() for this instead?");
+          aValueString.Append(u"");
+        }
       });
 }
 
@@ -255,6 +269,11 @@ void AccAttributes::CopyTo(AccAttributes* aDest, bool aOnlyMissing) const {
         },
         [&iter, &aDest](const WritingMode& val) {
           aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));
+        },
+        [](const nsTArray<RefPtr<nsAtom>>& val) {
+          // We don't copy arrays.
+          MOZ_ASSERT_UNREACHABLE(
+              "Trying to copy an AccAttributes containing an array");
         });
   }
 }
@@ -300,6 +319,9 @@ size_t AccAttributes::Entry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
     size += aMallocSizeOf(mValue->as<UniquePtr<gfx::Matrix4x4>>().get());
   } else if (mValue->is<nsTArray<uint64_t>>()) {
     size += mValue->as<nsTArray<uint64_t>>().ShallowSizeOfExcludingThis(
+        aMallocSizeOf);
+  } else if (mValue->is<nsTArray<RefPtr<nsAtom>>>()) {
+    size += mValue->as<nsTArray<RefPtr<nsAtom>>>().ShallowSizeOfExcludingThis(
         aMallocSizeOf);
   } else {
     // This type is stored directly and already counted or is an atom and

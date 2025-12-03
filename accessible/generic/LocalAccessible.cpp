@@ -3922,12 +3922,19 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     } else if (IsUpdatePush(CacheDomain::DOMNodeIDAndClass)) {
       fields->SetAttribute(CacheKey::DOMNodeID, DeleteEntry());
     }
-    nsString className;
-    DOMNodeClass(className);
-    if (!className.IsEmpty()) {
-      fields->SetAttribute(CacheKey::DOMNodeClass, std::move(className));
-    } else if (IsUpdatePush(CacheDomain::DOMNodeIDAndClass)) {
-      fields->SetAttribute(CacheKey::DOMNodeClass, DeleteEntry());
+
+    if (dom::Element* el = Elm()) {
+      nsTArray<RefPtr<nsAtom>> classes;
+      if (const nsAttrValue* attr = el->GetClasses()) {
+        for (uint32_t i = 0; i < attr->GetAtomCount(); i++) {
+          classes.AppendElement(attr->AtomAt(i));
+        }
+      }
+      if (!classes.IsEmpty()) {
+        fields->SetAttribute(CacheKey::DOMNodeClass, std::move(classes));
+      } else if (IsUpdatePush(CacheDomain::DOMNodeIDAndClass)) {
+        fields->SetAttribute(CacheKey::DOMNodeClass, DeleteEntry());
+      }
     }
   }
 

@@ -108,7 +108,8 @@ class AccAttributes {
               CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>,
               RefPtr<AccAttributes>, uint64_t, UniquePtr<AccGroupInfo>,
               UniquePtr<gfx::Matrix4x4>, nsTArray<uint64_t>,
-              nsTArray<TextOffsetAttribute>, WritingMode>;
+              nsTArray<TextOffsetAttribute>, WritingMode,
+              nsTArray<RefPtr<nsAtom>>>;
   static_assert(sizeof(AttrValueType) <= 16);
   using AtomVariantMap = nsTHashMap<RefPtr<nsAtom>, AttrValueType>;
 
@@ -197,7 +198,8 @@ class AccAttributes {
   template <typename T>
   Maybe<T&> GetMutableAttribute(nsAtom* aAttrName) const {
     static_assert(std::is_same_v<nsTArray<int32_t>, T> ||
-                      std::is_same_v<nsTArray<uint64_t>, T>,
+                      std::is_same_v<nsTArray<uint64_t>, T> ||
+                      std::is_same_v<nsTArray<RefPtr<nsAtom>>, T>,
                   "Only arrays should be mutable attributes");
     if (auto value = mData.Lookup(aAttrName)) {
       if (value->is<T>()) {
