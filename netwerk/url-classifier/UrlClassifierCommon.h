@@ -39,8 +39,7 @@ class UrlClassifierCommon final {
 
   static bool AddonMayLoad(nsIChannel* aChannel, nsIURI* aURI);
 
-  static bool ShouldEnableProtectionForChannel(nsIChannel* aChannel,
-                                               bool aShouldAllowAddons = true);
+  static bool ShouldEnableProtectionForChannel(nsIChannel* aChannel);
 
   static nsresult SetBlockedContent(nsIChannel* channel, nsresult aErrorCode,
                                     const nsACString& aList,
