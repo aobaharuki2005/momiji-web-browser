@@ -102,6 +102,7 @@
 #include "nsIObjectOutputStream.h"
 #include "nsIRunnable.h"
 #include "nsIScriptContext.h"
+#include "nsISizeOf.h"
 #include "nsISupportsUtils.h"
 #include "nsIURI.h"
 #include "nsIXPConnect.h"

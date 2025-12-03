@@ -9,7 +9,7 @@
 
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "mozilla/dom/SVGFilters.h"
-#include "nsISizeOf.h"
+#include "nsINode.h"
 
 nsresult NS_NewSVGFEImageElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);

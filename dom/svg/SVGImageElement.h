@@ -12,7 +12,7 @@
 #include "mozilla/dom/SVGAnimatedString.h"
 #include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/gfx/2D.h"
-#include "nsISizeOf.h"
+#include "nsINode.h"
 #include "nsImageLoadingContent.h"
 
 nsresult NS_NewSVGImageElement(

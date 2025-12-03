@@ -43,13 +43,13 @@
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
 #include "nsINode.h"
-#include "nsISizeOf.h"
 #include "nsISupports.h"
 #include "nsLiteralString.h"
 #include "nsString.h"
 #include "nsStyledElement.h"
 #include "nsTArray.h"
 #include "nsTLiteralString.h"
+#include "nsWindowSizes.h"
 #include "nscore.h"
 
 class JSObject;
