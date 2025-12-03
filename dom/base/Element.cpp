@@ -2201,6 +2201,144 @@ bool Element::HasVisibleScrollbars() {
   return scrollFrame && !scrollFrame->GetScrollbarVisibility().isEmpty();
 }
 
+// Hash function for 63-bit bloom filter (k=2)
+// Returns 64-bit value with bit 0 set to 1 and 2 bits set in range 1-63
+static uint64_t HashForBloomFilter63(const nsAtom* aAtom) {
+  if (!aAtom) {
+    return 1ULL;  // Just the tag bit
+  }
+  uint32_t hash = aAtom->hash();
+  uint64_t filter = 1ULL;
+  // Set 2 bits in the 63-bit range (bits 1-63)
+  filter |= 1ULL << (1 + (hash % 63));         // First hash function
+  filter |= 1ULL << (1 + ((hash >> 6) % 63));  // Second hash function
+  return filter;
+}
+
+// Propagates this element's bloom filter up the tree by OR-ing it with
+// all ancestor element bloom filters, stopping early if no new bits are added.
+void Element::PropagateBloomFilterToParents() {
+  Element* toUpdate = this;
+  Element* parent = GetParentElement();
+
+  while (parent) {
+    uint64_t childBloom = toUpdate->mAttrs.GetSubtreeBloomFilter();
+    uint64_t parentBloom = parent->mAttrs.GetSubtreeBloomFilter();
+    uint64_t newBloom = parentBloom | childBloom;
+
+    if (newBloom == parentBloom) {
+      break;
+    }
+    parent->mAttrs.SetSubtreeBloomFilter(newBloom);
+    toUpdate = parent;
+    parent = toUpdate->GetParentElement();
+  }
+}
+
+// Hashes all class names in a class attribute value for the bloom filter.
+// Handles both single class (eAtom) and multiple classes (eAtomArray).
+static uint64_t HashClassesForBloom(const nsAttrValue* aValue) {
+  uint64_t filter = 1ULL;  // Start with tag bit
+  if (!aValue) {
+    return filter;
+  }
+
+  if (aValue->Type() == nsAttrValue::eAtomArray) {
+    const mozilla::AttrAtomArray* array = aValue->GetAtomArrayValue();
+    if (array) {
+      for (const RefPtr<nsAtom>& className : array->mArray) {
+        filter |= HashForBloomFilter63(className);
+      }
+    }
+  } else if (aValue->Type() == nsAttrValue::eAtom) {
+    filter |= HashForBloomFilter63(aValue->GetAtomValue());
+  }
+#ifdef DEBUG
+  else {
+    // Assert that only empty strings make it here.
+    nsAutoString value;
+    aValue->ToString(value);
+    bool isOnlyWhitespace = true;
+    for (uint32_t i = 0; i < value.Length(); i++) {
+      if (!nsContentUtils::IsHTMLWhitespace(value[i])) {
+        isOnlyWhitespace = false;
+        break;
+      }
+    }
+    MOZ_ASSERT(isOnlyWhitespace, "Expecting only empty strings here.");
+  }
+#endif
+
+  return filter;
+}
+
+#ifdef DEBUG
+// Asserts that the bloom filter contains all expected bits from
+// current attributes, classes, and descendant bloom filters.
+void Element::VerifySubtreeBloomFilter() const {
+  uint64_t expectedBloom = 1ULL;
+
+  // Hash all attribute names in kNameSpaceID_None namespace
+  uint32_t attrCount = GetAttrCount();
+  for (uint32_t i = 0; i < attrCount; i++) {
+    const nsAttrName* attrName = GetAttrNameAt(i);
+    MOZ_ASSERT(attrName, "Attribute name should not be null");
+    if (attrName->NamespaceEquals(kNameSpaceID_None)) {
+      nsAtom* localName = attrName->LocalName();
+      expectedBloom |= HashForBloomFilter63(localName);
+
+      if (!localName->IsAsciiLowercase()) {
+        Document* doc = OwnerDoc();
+        if (!IsHTMLElement() && doc->IsHTMLDocument()) {
+          RefPtr<nsAtom> lowercaseAttr(localName);
+          ToLowerCaseASCII(lowercaseAttr);
+          expectedBloom |= HashForBloomFilter63(lowercaseAttr);
+        }
+      }
+    }
+  }
+
+  // Hash class names
+  const nsAttrValue* classAttr = GetClasses();
+  expectedBloom |= HashClassesForBloom(classAttr);
+
+  // Include children's bloom filters
+  for (Element* child = GetFirstElementChild(); child;
+       child = child->GetNextElementSibling()) {
+    expectedBloom |= child->mAttrs.GetSubtreeBloomFilter();
+  }
+
+  uint64_t actualBloom = mAttrs.GetSubtreeBloomFilter();
+  // Bloom filters are append-only: bits can be set but never cleared.
+  // So actualBloom may contain extra bits from removed attributes.
+  // We only check that all expected bits are present.
+  MOZ_ASSERT((actualBloom & expectedBloom) == expectedBloom,
+             "Bloom filter missing required bits");
+}
+#endif
+
+void Element::UpdateSubtreeBloomFilterForClass(const nsAttrValue* aClassValue) {
+  if (!aClassValue) {
+    return;
+  }
+  mAttrs.UpdateSubtreeBloomFilter(HashClassesForBloom(aClassValue));
+}
+
+void Element::UpdateSubtreeBloomFilterForAttribute(nsAtom* aAttribute) {
+  MOZ_ASSERT(aAttribute, "Attribute should not be null");
+  mAttrs.UpdateSubtreeBloomFilter(HashForBloomFilter63(aAttribute));
+
+  // For non-HTML elements in HTML documents, also add the lowercase hash.
+  // This ensures querySelector on HTML ancestors can find these attributes,
+  // since HTML elements use case-insensitive attribute matching.
+  if (!aAttribute->IsAsciiLowercase() && !IsHTMLElement() &&
+      OwnerDoc()->IsHTMLDocument()) {
+    RefPtr<nsAtom> lowercaseAttr(aAttribute);
+    ToLowerCaseASCII(lowercaseAttr);
+    mAttrs.UpdateSubtreeBloomFilter(HashForBloomFilter63(lowercaseAttr));
+  }
+}
+
 nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   MOZ_ASSERT(aParent.IsContent() || aParent.IsDocument(),
              "Must have content or document parent!");
@@ -2339,6 +2477,13 @@ nsresult Element::BindToTree(BindContext& aContext, nsINode& aParent) {
   MOZ_ASSERT(aParent.IsInComposedDoc() == IsInComposedDoc());
   MOZ_ASSERT(aParent.IsInShadowTree() == IsInShadowTree());
   MOZ_ASSERT(aParent.SubtreeRoot() == SubtreeRoot());
+
+#ifdef DEBUG
+  VerifySubtreeBloomFilter();
+#endif
+
+  // When binding to tree, propagate this element's bloom to parents.
+  PropagateBloomFilterToParents();
   return NS_OK;
 }
 
@@ -2890,6 +3035,37 @@ nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
                          });
 }
 
+nsresult Element::SetAndSwapAttr(nsAtom* aLocalName, nsAttrValue& aValue,
+                                 bool* aHadValue) {
+  MOZ_TRY(mAttrs.SetAndSwapAttr(aLocalName, aValue, aHadValue));
+
+  if (aLocalName == nsGkAtoms::_class) {
+    UpdateSubtreeBloomFilterForClass(GetClasses());
+  }
+  UpdateSubtreeBloomFilterForAttribute(aLocalName);
+  PropagateBloomFilterToParents();
+
+  return NS_OK;
+}
+
+nsresult Element::SetAndSwapAttr(mozilla::dom::NodeInfo* aName,
+                                 nsAttrValue& aValue, bool* aHadValue) {
+  MOZ_TRY(mAttrs.SetAndSwapAttr(aName, aValue, aHadValue));
+
+  // Only update bloom filter for null-namespace attributes, since the
+  // querySelector bloom filter optimization only applies to those.
+  if (aName->NamespaceEquals(kNameSpaceID_None)) {
+    nsAtom* localName = aName->NameAtom();
+    if (localName == nsGkAtoms::_class) {
+      UpdateSubtreeBloomFilterForClass(GetClasses());
+    }
+    UpdateSubtreeBloomFilterForAttribute(localName);
+    PropagateBloomFilterToParents();
+  }
+
+  return NS_OK;
+}
+
 nsresult Element::SetAttr(int32_t aNamespaceID, nsAtom* aName, nsAtom* aPrefix,
                           nsAtom* aValue, nsIPrincipal* aSubjectPrincipal,
                           bool aNotify) {
@@ -3015,7 +3191,7 @@ nsresult Element::SetAttrAndNotify(
       hadDirAuto = HasDirAuto();  // already takes bdi into account
     }
 
-    MOZ_TRY(mAttrs.SetAndSwapAttr(aName, aParsedValue, &oldValueSet));
+    MOZ_TRY(SetAndSwapAttr(aName, aParsedValue, &oldValueSet));
     if (IsAttributeMapped(aName) && !IsPendingMappedAttributeEvaluation()) {
       mAttrs.InfallibleMarkAsPendingPresAttributeEvaluation();
       if (Document* doc = GetComposedDoc()) {
@@ -3026,7 +3202,7 @@ nsresult Element::SetAttrAndNotify(
     RefPtr<mozilla::dom::NodeInfo> ni =
         mNodeInfo->NodeInfoManager()->GetNodeInfo(aName, aPrefix, aNamespaceID,
                                                   ATTRIBUTE_NODE);
-    MOZ_TRY(mAttrs.SetAndSwapAttr(ni, aParsedValue, &oldValueSet));
+    MOZ_TRY(SetAndSwapAttr(ni, aParsedValue, &oldValueSet));
   }
 
   PostIdMaybeChange(aNamespaceID, aName, &valueForAfterSetAttr);
