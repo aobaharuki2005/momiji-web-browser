@@ -5,7 +5,6 @@
 package org.mozilla.fenix.home.pocket.ui
 
 import android.graphics.Rect
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,9 +16,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -35,7 +34,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
@@ -90,7 +89,6 @@ fun SponsoredContentStory(
                     testTagsAsResourceId = true
                     testTag = "pocket.sponsoredContent.title"
                 },
-                color = FirefoxTheme.colors.textPrimary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = maxSponsoredLines(),
                 style = FirefoxTheme.typography.body2,
@@ -102,7 +100,7 @@ fun SponsoredContentStory(
                     testTagsAsResourceId = true
                     testTag = "pocket.sponsoredContent.identifier"
                 },
-                color = FirefoxTheme.colors.textSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = FirefoxTheme.typography.caption,
@@ -144,7 +142,6 @@ fun ContentRecommendationStory(
                 testTagsAsResourceId = true
                 testTag = "pocket.contentRecommendation.title"
             },
-            color = FirefoxTheme.colors.textPrimary,
             overflow = TextOverflow.Ellipsis,
             maxLines = maxLines(),
             style = FirefoxTheme.typography.body2,
@@ -167,7 +164,7 @@ fun ContentRecommendationStory(
 fun Stories(
     @PreviewParameter(StoryProvider::class) stories: List<PocketStory>,
     contentPadding: Dp,
-    backgroundColor: Color = FirefoxTheme.colors.layer2,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
     onStoryShown: (PocketStory, Triple<Int, Int, Int>) -> Unit,
     onStoryClicked: (PocketStory, Triple<Int, Int, Int>) -> Unit,
 ) {
@@ -270,29 +267,24 @@ fun Stories(
     }
 }
 
-@Suppress("MagicNumber")
 @Composable
-@Preview
+@PreviewLightDark
 private fun StoriesWithCategoriesPreview() {
     FirefoxTheme {
-        Box(
-            Modifier
-                .background(MaterialTheme.colorScheme.surface)
-                .systemBarsPadding()
-                .padding(top = 32.dp),
-        ) {
+        Surface {
             Column {
                 Stories(
                     stories = listOf(
-                        FakeHomepagePreview.contentRecommendation(15),
-                        FakeHomepagePreview.sponsoredContent(15),
-                        FakeHomepagePreview.contentRecommendation(1),
-                        FakeHomepagePreview.sponsoredContent(1),
+                        FakeHomepagePreview.contentRecommendation(),
+                        FakeHomepagePreview.sponsoredContent(),
+                        FakeHomepagePreview.contentRecommendation(),
+                        FakeHomepagePreview.sponsoredContent(),
                     ),
                     contentPadding = 0.dp,
                     onStoryShown = { _, _ -> },
                     onStoryClicked = { _, _ -> },
                 )
+
                 Spacer(Modifier.height(10.dp))
 
                 StoriesCategories(
@@ -307,23 +299,17 @@ private fun StoriesWithCategoriesPreview() {
     }
 }
 
-@Suppress("MagicNumber")
 @Composable
-@Preview
+@PreviewLightDark
 private fun StoriesPreview() {
     FirefoxTheme {
-        Box(
-            Modifier
-                .background(MaterialTheme.colorScheme.surface)
-                .systemBarsPadding()
-                .padding(top = 32.dp),
-        ) {
+        Surface {
             Stories(
                 stories = listOf(
-                    FakeHomepagePreview.contentRecommendation(15),
-                    FakeHomepagePreview.sponsoredContent(15),
-                    FakeHomepagePreview.contentRecommendation(1),
-                    FakeHomepagePreview.sponsoredContent(1),
+                    FakeHomepagePreview.contentRecommendation(),
+                    FakeHomepagePreview.sponsoredContent(),
+                    FakeHomepagePreview.contentRecommendation(),
+                    FakeHomepagePreview.sponsoredContent(),
                 ),
                 contentPadding = 0.dp,
                 onStoryShown = { _, _ -> },

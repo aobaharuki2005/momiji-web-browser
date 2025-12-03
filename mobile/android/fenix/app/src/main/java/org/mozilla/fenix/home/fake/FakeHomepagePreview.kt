@@ -29,6 +29,7 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
 import org.mozilla.fenix.compose.MessageCardColors
 import org.mozilla.fenix.compose.MessageCardState
+import org.mozilla.fenix.ext.CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT
 import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.home.bookmarks.interactor.BookmarksInteractor
 import org.mozilla.fenix.home.collections.CollectionColors
@@ -396,7 +397,7 @@ internal object FakeHomepagePreview {
     }
 
     @Composable
-    internal fun pocketState(limit: Int = 1) = PocketState(
+    internal fun pocketState(limit: Int = CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT) = PocketState(
         stories = stories(limit = limit),
         categories = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"
             .split(" ")
@@ -408,7 +409,7 @@ internal object FakeHomepagePreview {
         showDiscoverMoreButton = false,
     )
 
-    internal fun contentRecommendation(index: Int = 0): ContentRecommendation =
+    internal fun contentRecommendation(index: Int = Random.nextInt(until = 5)): ContentRecommendation =
         ContentRecommendation(
             corpusItemId = "corpusItemId$index",
             scheduledCorpusItemId = "scheduledCorpusItemId$index",
@@ -425,7 +426,7 @@ internal object FakeHomepagePreview {
             impressions = index.toLong(),
         )
 
-    internal fun sponsoredContent(index: Int = 0) = SponsoredContent(
+    internal fun sponsoredContent(index: Int = Random.nextInt(until = 5)) = SponsoredContent(
         url = "https://sponsored-story$index.com",
         title = "This is a ${"very ".repeat(index)}long title",
         callbacks = PocketStory.SponsoredContentCallbacks(clickUrl = "", impressionUrl = ""),
