@@ -5,7 +5,9 @@
 package mozilla.components.browser.state.engine.middleware
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.TabListAction
@@ -25,6 +27,7 @@ import org.mockito.Mockito.anyString
 import org.mockito.Mockito.never
 import org.mockito.Mockito.verify
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class LinkingMiddlewareTest {
     private val testDispatcher = StandardTestDispatcher()
     private val scope = CoroutineScope(testDispatcher)
@@ -168,7 +171,7 @@ class LinkingMiddlewareTest {
         val tab1 = createTab("https://www.mozilla.org", id = "1")
         val tab2 = createTab("https://www.mozilla.org", id = "2")
 
-        val middleware = LinkingMiddleware(scope)
+        val middleware = LinkingMiddleware(this)
 
         val store = BrowserStore(
             initialState = BrowserState(tabs = listOf(tab1, tab2)),
@@ -186,6 +189,7 @@ class LinkingMiddlewareTest {
 
         verify(engineSession2).register(engineObserver!!)
         engineObserver.onTitleChange("test")
+        advanceUntilIdle()
 
         assertEquals("test", store.state.tabs[1].content.title)
     }
@@ -219,7 +223,7 @@ class LinkingMiddlewareTest {
         val tab1 = createTab("https://www.mozilla.org", id = "1")
         val tab2 = createTab("https://www.mozilla.org", id = "2", engineSession = engineSession)
 
-        val middleware = LinkingMiddleware(scope)
+        val middleware = LinkingMiddleware(this)
 
         val store = BrowserStore(
             initialState = BrowserState(),
@@ -234,6 +238,7 @@ class LinkingMiddlewareTest {
         assertNotNull(engineObserver)
         verify(engineSession).register(engineObserver!!)
         engineObserver.onTitleChange("test")
+        advanceUntilIdle()
 
         assertEquals("test", store.state.tabs[1].content.title)
     }
