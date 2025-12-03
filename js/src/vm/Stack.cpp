@@ -767,7 +767,7 @@ uint32_t JS::ProfilingFrameIterator::extractStack(Frame* frames,
   uint32_t depth = entry->callStackAtAddr(cx_->runtime(),
                                           jsJitIter().resumePCinCurrentFrame(),
                                           frameInfos, std::size(frameInfos));
-  MOZ_ASSERT(depth < std::size(frameInfos));
+  MOZ_ASSERT(depth <= std::size(frameInfos));
   for (uint32_t i = 0; i < depth; i++) {
     if (offset + i >= end) {
       return i;
