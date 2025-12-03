@@ -138,12 +138,6 @@ void nsThreadPool::DebugLogPoolStatus(MutexAutoLock& aProofOfLock,
 }
 #endif
 
-nsresult nsThreadPool::PutEvent(nsIRunnable* aEvent,
-                                MutexAutoLock& aProofOfLock) {
-  nsCOMPtr<nsIRunnable> event(aEvent);
-  return PutEvent(event.forget(), NS_DISPATCH_NORMAL, aProofOfLock);
-}
-
 nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
                                 DispatchFlags aFlags,
                                 MutexAutoLock& aProofOfLock) {
