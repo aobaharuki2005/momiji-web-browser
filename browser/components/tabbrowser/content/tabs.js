@@ -34,8 +34,10 @@
       this.addEventListener("TabHoverEnd", this);
       this.addEventListener("TabGroupLabelHoverStart", this);
       this.addEventListener("TabGroupLabelHoverEnd", this);
-      this.addEventListener("TabGroupExpand", this);
-      this.addEventListener("TabGroupCollapse", this);
+      // Capture collapse/expand early so we mark animating groups before
+      // overflow/underflow handlers run.
+      this.addEventListener("TabGroupExpand", this, true);
+      this.addEventListener("TabGroupCollapse", this, true);
       this.addEventListener("TabGroupAnimationComplete", this);
       this.addEventListener("TabGroupCreate", this);
       this.addEventListener("TabGroupRemoved", this);
@@ -388,7 +390,11 @@
     }
 
     on_TabGroupAnimationComplete(event) {
-      this.#animatingGroups.delete(event.target.id);
+      // Delay clearing the animating flag so overflow/underflow handlers
+      // triggered by the size change can observe it and skip auto-scroll.
+      window.requestAnimationFrame(() => {
+        this.#animatingGroups.delete(event.target.id);
+      });
     }
 
     on_TabGroupCreate() {

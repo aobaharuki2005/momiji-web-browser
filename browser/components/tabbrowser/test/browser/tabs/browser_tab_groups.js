@@ -279,11 +279,11 @@ add_task(async function test_tabGroupPreventScrollOnUncollapse() {
 
   info("scrolling to beginning of tabstrip");
   let arrowScrollbox = win.gBrowser.tabContainer.arrowScrollbox;
-  let scrolledToStart = BrowserTestUtils.waitForCondition(() =>
-    arrowScrollbox.hasAttribute("scrolledtostart")
-  );
+  let scrolledToStart = BrowserTestUtils.waitForCondition(() => {
+    return arrowScrollbox.hasAttribute("scrolledtostart");
+  }, "Waiting for tabstrip to be scrolled to start");
 
-  bigGroup.labelElement.scrollIntoView(true);
+  arrowScrollbox.ensureElementIsVisible(bigGroup.labelElement, true);
   await scrolledToStart;
   Assert.ok(!bigGroup.collapsed, "Group is expanded");
   Assert.ok(
@@ -375,6 +375,20 @@ add_task(async function test_groupHasActiveTab() {
   let group2 = gBrowser.addTabGroup([tab2]);
 
   async function activeTabTest(tabsMode) {
+    async function addTabToGroup(group, tab) {
+      if (tab.group == group) {
+        return;
+      }
+      let tabGrouped = BrowserTestUtils.waitForEvent(
+        group,
+        "TabGrouped",
+        false,
+        event => event.detail == tab
+      );
+      group.addTabs([tab]);
+      await tabGrouped;
+    }
+
     info(`hasactivetab test for ${tabsMode} tabs mode`);
     info("tab3 is ungrouped and active");
     gBrowser.selectedTab = tab3;
@@ -393,21 +407,23 @@ add_task(async function test_groupHasActiveTab() {
     Assert.ok(!group1.hasActiveTab, "group1 hasactivetab=false");
     Assert.ok(!group2.hasActiveTab, "group2 hasactivetab=false");
     info("tab3 enters group1 as the active tab");
-    let tab3InGroup1 = BrowserTestUtils.waitForEvent(group1, "TabGrouped");
-    group1.addTabs([tab3]);
-    await tab3InGroup1;
+    await addTabToGroup(group1, tab3);
     Assert.ok(group1.hasActiveTab, "group1 hasactivetab=true");
     Assert.ok(!group2.hasActiveTab, "group2 hasactivetab=false");
     info("tab3 enters group2 as the active tab");
-    let tab3InGroup2 = BrowserTestUtils.waitForEvent(group2, "TabGrouped");
-    group2.addTabs([tab3]);
-    await tab3InGroup2;
+    await addTabToGroup(group2, tab3);
     Assert.ok(!group1.hasActiveTab, "group1 hasactivetab=false");
     Assert.ok(group2.hasActiveTab, "group2 hasactivetab=true");
     info("tab3 becomes ungrouped again as the active tab");
     let tab3Moved = BrowserTestUtils.waitForEvent(tab3, "TabMove");
+    let tab3Ungrouped = BrowserTestUtils.waitForEvent(
+      group2,
+      "TabUngrouped",
+      false,
+      event => event.detail == tab3
+    );
     gBrowser.moveTabToEnd(tab3);
-    await tab3Moved;
+    await Promise.all([tab3Moved, tab3Ungrouped]);
     Assert.ok(!group1.hasActiveTab, "group1 hasactivetab=false");
     Assert.ok(!group2.hasActiveTab, "group2 hasactivetab=false");
   }
@@ -575,7 +591,9 @@ add_task(async function test_tabGroupDeletesWhenLastTabClosed() {
   let tab = BrowserTestUtils.addTab(gBrowser, "about:blank");
   let group = gBrowser.addTabGroup([tab]);
 
+  let removePromise = BrowserTestUtils.waitForEvent(group, "TabGroupRemoved");
   gBrowser.removeTab(tab);
+  await removePromise;
 
   Assert.equal(group.parent, null, "group is removed from tabbrowser");
 });
@@ -738,11 +756,21 @@ add_task(async function test_moveTabGroup() {
 });
 
 add_task(async function test_moveTabBetweenGroups() {
-  let tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank");
-  let tab2 = BrowserTestUtils.addTab(gBrowser, "about:blank");
+  let tab1 = await addTab("about:blank");
+  let tab2 = await addTab("about:blank");
 
-  let tab1Added = BrowserTestUtils.waitForEvent(window, "TabGrouped");
-  let tab2Added = BrowserTestUtils.waitForEvent(window, "TabGrouped");
+  let tab1Added = BrowserTestUtils.waitForEvent(
+    window,
+    "TabGrouped",
+    false,
+    event => event.detail === tab1
+  );
+  let tab2Added = BrowserTestUtils.waitForEvent(
+    window,
+    "TabGrouped",
+    false,
+    event => event.detail === tab2
+  );
   let group1 = gBrowser.addTabGroup([tab1]);
   let group2 = gBrowser.addTabGroup([tab2]);
   await Promise.allSettled([tab1Added, tab2Added]);

@@ -560,11 +560,6 @@ tags = "vertical-tabs"
 ["browser_tab_groups.js"]
 support-files = ["file_new_tab_page.html"]
 tags = "vertical-tabs"
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt", # Bug 1928146
-  "os == 'mac' && os_version == '10.15' && arch == 'x86_64' && opt", # Bug 1928146
-  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt", # Bug 1928146
-]
 
 ["browser_tab_groups_a11y.js"]
 tags = "vertical-tabs"
