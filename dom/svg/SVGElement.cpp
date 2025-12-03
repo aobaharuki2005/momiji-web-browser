@@ -283,11 +283,6 @@ void SVGElement::DidAnimateClass() {
   }
   mClassAnimAttr->ParseAtomArray(src);
 
-  // Update bloom filter after mutating mClassAnimAttr.
-  UpdateSubtreeBloomFilterForClass(mClassAnimAttr.get());
-  UpdateSubtreeBloomFilterForAttribute(nsGkAtoms::_class);
-  PropagateBloomFilterToParents();
-
   // FIXME(emilio): This re-selector-matches, but we do the snapshot stuff right
   // above... Is this needed anymore?
   if (presShell) {

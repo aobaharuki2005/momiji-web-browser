@@ -1787,10 +1787,6 @@ nsAtom** Gecko_Element_ExportedParts(const nsAttrValue* aValue,
   return reinterpret_cast<nsAtom**>(parts->Elements());
 }
 
-uint64_t Gecko_Element_GetSubtreeBloomFilter(const Element* aElement) {
-  return aElement->GetSubtreeBloomFilter();
-}
-
 bool StyleSingleFontFamily::IsNamedFamily(const nsAString& aFamilyName) const {
   if (!IsFamilyName()) {
     return false;

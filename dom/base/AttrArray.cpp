@@ -35,12 +35,12 @@ AttrArray::Impl::~Impl() {
 void AttrArray::SetMappedDeclarationBlock(
     already_AddRefed<mozilla::StyleLockedDeclarationBlock> aBlock) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(HasImpl());
+  MOZ_ASSERT(mImpl);
   MOZ_ASSERT(IsPendingMappedAttributeEvaluation());
   if (auto* decl = GetMappedDeclarationBlock()) {
     Servo_DeclarationBlock_Release(decl);
   }
-  GetImpl()->mMappedAttributeBits = reinterpret_cast<uintptr_t>(aBlock.take());
+  mImpl->mMappedAttributeBits = reinterpret_cast<uintptr_t>(aBlock.take());
   MOZ_ASSERT(!IsPendingMappedAttributeEvaluation());
 }
 
@@ -103,13 +103,13 @@ const nsAttrValue* AttrArray::GetAttr(const nsAString& aName,
 
 const nsAttrValue* AttrArray::AttrAt(uint32_t aPos) const {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds access in AttrArray");
-  return &GetImpl()->Attrs()[aPos].mValue;
+  return &mImpl->Attrs()[aPos].mValue;
 }
 
 template <typename Name>
 inline nsresult AttrArray::AddNewAttribute(Name* aName, nsAttrValue& aValue) {
-  MOZ_ASSERT(!HasImpl() || GetImpl()->mCapacity >= GetImpl()->mAttrCount);
-  if (!HasImpl() || GetImpl()->mCapacity == GetImpl()->mAttrCount) {
+  MOZ_ASSERT(!mImpl || mImpl->mCapacity >= mImpl->mAttrCount);
+  if (!mImpl || mImpl->mCapacity == mImpl->mAttrCount) {
     if (!GrowBy(1)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -161,29 +161,27 @@ nsresult AttrArray::SetAndSwapAttr(mozilla::dom::NodeInfo* aName,
 nsresult AttrArray::RemoveAttrAt(uint32_t aPos, nsAttrValue& aValue) {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds");
 
-  Impl* impl = GetImpl();
-  impl->mBuffer[aPos].mValue.SwapValueWith(aValue);
-  impl->mBuffer[aPos].~InternalAttr();
+  mImpl->mBuffer[aPos].mValue.SwapValueWith(aValue);
+  mImpl->mBuffer[aPos].~InternalAttr();
 
   // InternalAttr are not trivially copyable *but* we manually called the
   // destructor so the memmove should be ok.
-  memmove((void*)(impl->mBuffer + aPos), impl->mBuffer + aPos + 1,
-          (impl->mAttrCount - aPos - 1) * sizeof(InternalAttr));
+  memmove((void*)(mImpl->mBuffer + aPos), mImpl->mBuffer + aPos + 1,
+          (mImpl->mAttrCount - aPos - 1) * sizeof(InternalAttr));
 
-  --impl->mAttrCount;
+  --mImpl->mAttrCount;
   return NS_OK;
 }
 
 mozilla::dom::BorrowedAttrInfo AttrArray::AttrInfoAt(uint32_t aPos) const {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds access in AttrArray");
-  const Impl* impl = GetImpl();
-  return BorrowedAttrInfo(&impl->mBuffer[aPos].mName,
-                          &impl->mBuffer[aPos].mValue);
+  InternalAttr& attr = mImpl->mBuffer[aPos];
+  return BorrowedAttrInfo(&attr.mName, &attr.mValue);
 }
 
 const nsAttrName* AttrArray::AttrNameAt(uint32_t aPos) const {
   NS_ASSERTION(aPos < AttrCount(), "out-of-bounds access in AttrArray");
-  return &GetImpl()->mBuffer[aPos].mName;
+  return &mImpl->mBuffer[aPos].mName;
 }
 
 [[nodiscard]] bool AttrArray::GetSafeAttrNameAt(
@@ -191,7 +189,7 @@ const nsAttrName* AttrArray::AttrNameAt(uint32_t aPos) const {
   if (aPos >= AttrCount()) {
     return false;
   }
-  *aResult = &GetImpl()->mBuffer[aPos].mName;
+  *aResult = &mImpl->mBuffer[aPos].mName;
   return true;
 }
 
@@ -241,36 +239,33 @@ int32_t AttrArray::IndexOfAttr(const nsAtom* aLocalName,
 }
 
 void AttrArray::Compact() {
-  if (!HasImpl()) {
+  if (!mImpl) {
     return;
   }
 
-  Impl* impl = GetImpl();
-  if (!impl->mAttrCount && !impl->mMappedAttributeBits) {
-    Clear();
+  if (!mImpl->mAttrCount && !mImpl->mMappedAttributeBits) {
+    mImpl.reset();
     return;
   }
 
   // Nothing to do.
-  if (impl->mAttrCount == impl->mCapacity) {
+  if (mImpl->mAttrCount == mImpl->mCapacity) {
     return;
   }
 
-  // Extract the real pointer for realloc
   Impl* oldImpl = mImpl.release();
-
-  Impl* newImpl = static_cast<Impl*>(
+  Impl* impl = static_cast<Impl*>(
       realloc(oldImpl, Impl::AllocationSizeForAttributes(oldImpl->mAttrCount)));
-  if (!newImpl) {
-    SetImpl(oldImpl);
+  if (!impl) {
+    mImpl.reset(oldImpl);
     return;
   }
-  newImpl->mCapacity = newImpl->mAttrCount;
-  SetImpl(newImpl);
+  impl->mCapacity = impl->mAttrCount;
+  mImpl.reset(impl);
 }
 
 nsresult AttrArray::EnsureCapacityToClone(const AttrArray& aOther) {
-  MOZ_ASSERT(!HasImpl(),
+  MOZ_ASSERT(!mImpl,
              "AttrArray::EnsureCapacityToClone requires the array be empty "
              "when called");
 
@@ -281,15 +276,13 @@ nsresult AttrArray::EnsureCapacityToClone(const AttrArray& aOther) {
 
   // No need to use a CheckedUint32 because we are cloning. We know that we
   // have already allocated an AttrArray of this size.
-  Impl* impl =
-      static_cast<Impl*>(malloc(Impl::AllocationSizeForAttributes(attrCount)));
-  NS_ENSURE_TRUE(impl, NS_ERROR_OUT_OF_MEMORY);
+  mImpl.reset(
+      static_cast<Impl*>(malloc(Impl::AllocationSizeForAttributes(attrCount))));
+  NS_ENSURE_TRUE(mImpl, NS_ERROR_OUT_OF_MEMORY);
 
-  impl->mMappedAttributeBits = 0;
-  impl->mCapacity = attrCount;
-  impl->mAttrCount = 0;
-  impl->mSubtreeBloomFilter = aOther.GetSubtreeBloomFilter();
-  SetImpl(impl);
+  mImpl->mMappedAttributeBits = 0;
+  mImpl->mCapacity = attrCount;
+  mImpl->mAttrCount = 0;
 
   return NS_OK;
 }
@@ -298,7 +291,7 @@ bool AttrArray::GrowBy(uint32_t aGrowSize) {
   const uint32_t kLinearThreshold = 16;
   const uint32_t kLinearGrowSize = 4;
 
-  CheckedUint32 capacity = HasImpl() ? GetImpl()->mCapacity : 0;
+  CheckedUint32 capacity = mImpl ? mImpl->mCapacity : 0;
   CheckedUint32 minCapacity = capacity;
   minCapacity += aGrowSize;
   if (!minCapacity.isValid()) {
@@ -324,7 +317,7 @@ bool AttrArray::GrowBy(uint32_t aGrowSize) {
 }
 
 bool AttrArray::GrowTo(uint32_t aCapacity) {
-  uint32_t oldCapacity = HasImpl() ? GetImpl()->mCapacity : 0;
+  uint32_t oldCapacity = mImpl ? mImpl->mCapacity : 0;
   if (aCapacity <= oldCapacity) {
     return true;
   }
@@ -343,46 +336,32 @@ bool AttrArray::GrowTo(uint32_t aCapacity) {
   MOZ_ASSERT(sizeInBytes.value() ==
              Impl::AllocationSizeForAttributes(aCapacity));
 
-  const bool needToInitialize = !HasImpl();
-  uint64_t oldBloom = 0xFFFFFFFFFFFFFFFFULL;
-  Impl* oldImpl = nullptr;
-
-  if (HasImpl()) {
-    // We have a real Impl pointer, extract it for realloc
-    oldImpl = mImpl.release();
-  } else if (HasTaggedBloom()) {
-    // Preserve bloom filter from the tagged value
-    oldBloom = GetTaggedBloom();
-  }
-
+  const bool needToInitialize = !mImpl;
+  Impl* oldImpl = mImpl.release();
   Impl* newImpl = static_cast<Impl*>(realloc(oldImpl, sizeInBytes.value()));
   if (!newImpl) {
-    if (oldImpl) {
-      SetImpl(oldImpl);
-    } else if (HasTaggedBloom()) {
-      SetTaggedBloom(oldBloom);
-    }
+    mImpl.reset(oldImpl);
     return false;
   }
 
+  mImpl.reset(newImpl);
+
   // Set initial counts if we didn't have a buffer before
   if (needToInitialize) {
-    newImpl->mMappedAttributeBits = 0;
-    newImpl->mAttrCount = 0;
-    newImpl->mSubtreeBloomFilter = oldBloom;
+    mImpl->mMappedAttributeBits = 0;
+    mImpl->mAttrCount = 0;
   }
 
-  newImpl->mCapacity = aCapacity;
-  SetImpl(newImpl);
+  mImpl->mCapacity = aCapacity;
   return true;
 }
 
 size_t AttrArray::SizeOfExcludingThis(
     mozilla::MallocSizeOf aMallocSizeOf) const {
-  if (!HasImpl()) {
+  if (!mImpl) {
     return 0;
   }
-  size_t n = aMallocSizeOf(GetImpl());
+  size_t n = aMallocSizeOf(mImpl.get());
   for (const InternalAttr& attr : Attrs()) {
     n += attr.mValue.SizeOfExcludingThis(aMallocSizeOf);
   }

@@ -1059,32 +1059,6 @@ class Element : public FragmentOrElement {
   nsresult UnsetAttr(int32_t aNameSpaceID, nsAtom* aName, bool aNotify);
 
   /**
-   * Swap an attribute value. This is a public wrapper that ensures bloom
-   * filter updates are performed correctly. For kNameSpaceID_None attributes,
-   * this will automatically update the bloom filter and propagate changes to
-   * parent elements.
-   *
-   * @param aLocalName the local name of the attribute
-   * @param aValue the value to swap (will contain old value on return)
-   * @param aHadValue set to true if attribute existed, false otherwise
-   */
-  nsresult SetAndSwapAttr(nsAtom* aLocalName, nsAttrValue& aValue,
-                          bool* aHadValue);
-
-  /**
-   * Swap an attribute value. This is a public wrapper that ensures bloom
-   * filter updates are performed correctly. For kNameSpaceID_None attributes,
-   * this will automatically update the bloom filter and propagate changes to
-   * parent elements.
-   *
-   * @param aName the node info of the attribute
-   * @param aValue the value to swap (will contain old value on return)
-   * @param aHadValue set to true if attribute existed, false otherwise
-   */
-  nsresult SetAndSwapAttr(mozilla::dom::NodeInfo* aName, nsAttrValue& aValue,
-                          bool* aHadValue);
-
-  /**
    * Get the namespace / name / prefix of a given attribute.
    *
    * @param   aIndex the index of the attribute name
@@ -2346,16 +2320,6 @@ class Element : public FragmentOrElement {
 
   MOZ_CAN_RUN_SCRIPT
   void FireBeforematchEvent(ErrorResult& aRv);
-
-  void PropagateBloomFilterToParents();
-  void UpdateSubtreeBloomFilterForClass(const nsAttrValue* aClassValue);
-  void UpdateSubtreeBloomFilterForAttribute(nsAtom* aAttribute);
-  uint64_t GetSubtreeBloomFilter() const {
-    return mAttrs.GetSubtreeBloomFilter();
-  }
-#ifdef DEBUG
-  void VerifySubtreeBloomFilter() const;
-#endif
 
  protected:
   enum class ReparseAttributes { No, Yes };

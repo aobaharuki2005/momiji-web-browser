@@ -109,7 +109,6 @@ const nsINode* Gecko_GetNextStyleChild(mozilla::dom::StyleChildrenIterator*);
 nsAtom* Gecko_Element_ImportedPart(const nsAttrValue*, nsAtom*);
 nsAtom** Gecko_Element_ExportedParts(const nsAttrValue*, nsAtom*,
                                      size_t* aOutLength);
-uint64_t Gecko_Element_GetSubtreeBloomFilter(const mozilla::dom::Element*);
 
 NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::css::SheetLoadDataHolder,
                                    SheetLoadDataHolder);

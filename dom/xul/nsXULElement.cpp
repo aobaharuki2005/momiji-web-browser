@@ -1047,9 +1047,11 @@ nsresult nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype) {
     bool oldValueSet;
     // XXX we might wanna have a SetAndTakeAttr that takes an nsAttrName
     if (protoattr->mName.IsAtom()) {
-      rv = SetAndSwapAttr(protoattr->mName.Atom(), attrValue, &oldValueSet);
+      rv = mAttrs.SetAndSwapAttr(protoattr->mName.Atom(), attrValue,
+                                 &oldValueSet);
     } else {
-      rv = SetAndSwapAttr(protoattr->mName.NodeInfo(), attrValue, &oldValueSet);
+      rv = mAttrs.SetAndSwapAttr(protoattr->mName.NodeInfo(), attrValue,
+                                 &oldValueSet);
     }
     NS_ENSURE_SUCCESS(rv, rv);
   }
