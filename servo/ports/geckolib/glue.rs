@@ -174,7 +174,7 @@ use style::values::generics::length::GenericAnchorSizeFunction;
 use style::values::resolved;
 use style::values::specified::align::AlignFlags;
 use style::values::specified::intersection_observer::IntersectionObserverMargin;
-use style::values::specified::position::DashedIdentAndOrTryTactic;
+use style::values::specified::position::PositionTryFallbacksItem;
 use style::values::specified::source_size_list::SourceSizeList;
 use style::values::specified::svg_path::PathCommand;
 use style::values::specified::{AbsoluteLength, NoCalcLength};
@@ -4452,7 +4452,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForPositionTry(
     raw_data: &PerDocumentStyleData,
     style: &ComputedValues,
     element: &RawGeckoElement,
-    name_and_try_tactic: &DashedIdentAndOrTryTactic,
+    fallback_item: &PositionTryFallbacksItem,
 ) -> Strong<ComputedValues> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
@@ -4460,7 +4460,7 @@ pub unsafe extern "C" fn Servo_ComputedValues_GetForPositionTry(
     let element = GeckoElement(element);
     let data = raw_data.borrow();
     data.stylist
-        .resolve_position_try(style, &guards, element, name_and_try_tactic)
+        .resolve_position_try(style, &guards, element, fallback_item)
         .into()
 }
 
@@ -6946,7 +6946,7 @@ fn create_context_for_animation<'a>(
     container_size_query: ContainerSizeQuery<'a>,
 ) -> Context<'a> {
     Context::new_for_animation(
-        StyleBuilder::for_animation(
+        StyleBuilder::for_derived_style(
             per_doc_data.stylist.device(),
             Some(&per_doc_data.stylist),
             style,

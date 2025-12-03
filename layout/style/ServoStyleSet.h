@@ -32,7 +32,7 @@ enum class MediaFeatureChangeReason : uint8_t;
 enum class StylePageSizeOrientation : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
 enum class StyleRelativeSelectorNthEdgeInvalidateFor : uint8_t;
-struct StyleDashedIdentAndOrTryTactic;
+union StylePositionTryFallbacksItem;
 struct StyleRuleChange;
 
 class ErrorResult;
@@ -267,7 +267,7 @@ class ServoStyleSet {
 
   already_AddRefed<ComputedStyle> ResolvePositionTry(
       dom::Element& aElement, ComputedStyle& aStyle,
-      const StyleDashedIdentAndOrTryTactic&);
+      const StylePositionTryFallbacksItem&);
 
   size_t SheetCount(Origin) const;
   StyleSheet* SheetAt(Origin, size_t aIndex) const;

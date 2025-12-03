@@ -611,7 +611,7 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStartingStyle(
 
 already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePositionTry(
     dom::Element& aElement, ComputedStyle& aStyle,
-    const StyleDashedIdentAndOrTryTactic& aFallback) {
+    const StylePositionTryFallbacksItem& aFallback) {
   return Servo_ComputedValues_GetForPositionTry(mRawData.get(), &aStyle,
                                                 &aElement, &aFallback)
       .Consume();
