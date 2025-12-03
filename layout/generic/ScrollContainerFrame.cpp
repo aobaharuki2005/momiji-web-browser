@@ -7827,6 +7827,12 @@ bool ScrollContainerFrame::IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
               StyleScrollBehavior::Smooth);
 }
 
+ScrollMode ScrollContainerFrame::ScrollModeForScrollBehavior(
+    dom::ScrollBehavior aBehavior) const {
+  return IsSmoothScroll(aBehavior) ? ScrollMode::SmoothMsd
+                                   : ScrollMode::Instant;
+}
+
 nsTArray<ScrollPositionUpdate> ScrollContainerFrame::GetScrollUpdates() const {
   return mScrollUpdates.Clone();
 }

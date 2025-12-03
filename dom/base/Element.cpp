@@ -899,9 +899,7 @@ void Element::ScrollTo(const ScrollToOptions& aOptions) {
     scrollPos.y = ToZeroIfNonfinite(
         frame->Style()->EffectiveZoom().Zoom(aOptions.mTop.Value()));
   }
-  ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
-                              ? ScrollMode::SmoothMsd
-                              : ScrollMode::Instant;
+  ScrollMode scrollMode = sf->ScrollModeForScrollBehavior(aOptions.mBehavior);
   sf->ScrollToCSSPixels(scrollPos, scrollMode);
 }
 
@@ -930,9 +928,7 @@ void Element::ScrollBy(const ScrollToOptions& aOptions) {
         frame->Style()->EffectiveZoom().Zoom(aOptions.mTop.Value()));
   }
 
-  auto scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
-                        ? ScrollMode::SmoothMsd
-                        : ScrollMode::Instant;
+  auto scrollMode = sf->ScrollModeForScrollBehavior(aOptions.mBehavior);
   sf->ScrollByCSSPixels(scrollDelta, scrollMode);
 }
 

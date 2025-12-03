@@ -3947,9 +3947,7 @@ void nsGlobalWindowInner::ScrollTo(const ScrollToOptions& aOptions) {
   if (scrollPos.y > maxpx) {
     scrollPos.y = maxpx;
   }
-  auto scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
-                        ? ScrollMode::SmoothMsd
-                        : ScrollMode::Instant;
+  auto scrollMode = sf->ScrollModeForScrollBehavior(aOptions.mBehavior);
   sf->ScrollToCSSPixels(scrollPos, scrollMode);
 }
 
@@ -3982,9 +3980,7 @@ void nsGlobalWindowInner::ScrollBy(const ScrollToOptions& aOptions) {
     return;
   }
 
-  auto scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
-                        ? ScrollMode::SmoothMsd
-                        : ScrollMode::Instant;
+  auto scrollMode = sf->ScrollModeForScrollBehavior(aOptions.mBehavior);
   sf->ScrollByCSSPixels(scrollDelta, scrollMode);
 }
 
@@ -4001,9 +3997,7 @@ void nsGlobalWindowInner::ScrollByLines(int32_t numLines,
   // It seems like it would make more sense for ScrollByLines to use
   // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
   // Perhaps Web content does too.
-  ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
-                              ? ScrollMode::SmoothMsd
-                              : ScrollMode::Instant;
+  ScrollMode scrollMode = sf->ScrollModeForScrollBehavior(aOptions.mBehavior);
   sf->ScrollBy(nsIntPoint(0, numLines), ScrollUnit::LINES, scrollMode);
 }
 
@@ -4020,9 +4014,7 @@ void nsGlobalWindowInner::ScrollByPages(int32_t numPages,
   // It seems like it would make more sense for ScrollByPages to use
   // SMOOTH mode, but tests seem to depend on the synchronous behaviour.
   // Perhaps Web content does too.
-  ScrollMode scrollMode = sf->IsSmoothScroll(aOptions.mBehavior)
-                              ? ScrollMode::SmoothMsd
-                              : ScrollMode::Instant;
+  ScrollMode scrollMode = sf->ScrollModeForScrollBehavior(aOptions.mBehavior);
 
   sf->ScrollBy(nsIntPoint(0, numPages), ScrollUnit::PAGES, scrollMode);
 }

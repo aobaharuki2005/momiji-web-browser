@@ -3267,8 +3267,7 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName,
     // Check |aScroll| after setting |rv| so we set |rv| to the same
     // thing whether or not |aScroll| is true.
     if (aScroll && sf) {
-      ScrollMode scrollMode =
-          sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
+      ScrollMode scrollMode = sf->ScrollModeForScrollBehavior();
       // Scroll to the top of the page
       sf->ScrollTo(nsPoint(0, 0), scrollMode);
     }
@@ -3458,7 +3457,6 @@ static WhereToScroll GetApplicableWhereToScroll(
 static ScrollMode GetScrollModeForScrollIntoView(
     const ScrollContainerFrame* aScrollContainerFrame,
     ScrollFlags aScrollFlags) {
-  ScrollMode scrollMode = ScrollMode::Instant;
   // Default to an instant scroll, but if the scroll behavior given is "auto"
   // or "smooth", use that as the specified behavior. If the user has disabled
   // smooth scrolls, a given mode of "auto" or "smooth" should not result in
@@ -3469,10 +3467,7 @@ static ScrollMode GetScrollModeForScrollIntoView(
   } else if (aScrollFlags & ScrollFlags::ScrollSmoothAuto) {
     behavior = ScrollBehavior::Auto;
   }
-  if (aScrollContainerFrame->IsSmoothScroll(behavior)) {
-    scrollMode = ScrollMode::SmoothMsd;
-  }
-  return scrollMode;
+  return aScrollContainerFrame->ScrollModeForScrollBehavior(behavior);
 }
 
 /**

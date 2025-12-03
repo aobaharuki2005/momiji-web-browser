@@ -5037,8 +5037,7 @@ nsresult nsDocShell::SetCurScrollPosEx(int32_t aCurHorizontalPos,
   ScrollContainerFrame* sf = GetRootScrollContainerFrame();
   NS_ENSURE_TRUE(sf, NS_ERROR_FAILURE);
 
-  ScrollMode scrollMode =
-      sf->IsSmoothScroll() ? ScrollMode::SmoothMsd : ScrollMode::Instant;
+  ScrollMode scrollMode = sf->ScrollModeForScrollBehavior();
 
   nsPoint targetPos(aCurHorizontalPos, aCurVerticalPos);
   sf->ScrollTo(targetPos, scrollMode);
