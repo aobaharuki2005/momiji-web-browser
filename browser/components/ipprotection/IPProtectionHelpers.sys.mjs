@@ -23,6 +23,7 @@ import { IPPProxyManager } from "resource:///modules/ipprotection/IPPProxyManage
 import { IPPAutoStartHelpers } from "resource:///modules/ipprotection/IPPAutoStart.sys.mjs";
 import { IPPEnrollAndEntitleManager } from "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs";
 import { IPPNimbusHelper } from "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs";
+import { IPPOnboardingMessage } from "resource:///modules/ipprotection/IPPOnboardingMessageHelper.sys.mjs";
 import { IPProtectionServerlist } from "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs";
 import { IPPSignInWatcher } from "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs";
 import { IPPStartupCache } from "resource:///modules/ipprotection/IPPStartupCache.sys.mjs";
@@ -83,6 +84,7 @@ const IPPHelpers = [
   IPPSignInWatcher,
   IPProtectionServerlist,
   IPPEnrollAndEntitleManager,
+  IPPOnboardingMessage,
   IPPProxyManager,
   new UIHelper(),
   IPPVPNAddonHelper,
