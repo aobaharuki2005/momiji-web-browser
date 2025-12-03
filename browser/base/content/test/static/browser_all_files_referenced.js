@@ -343,11 +343,12 @@ var allowlist = [
   },
   // Bug 2002840 - add function to return real time info injection message & tests (backed out due to unused file)
   {
-    file: "moz-src:///browser/components/aiwindow/models/ChatUtils.mjs",
+    file: "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs",
   },
-  // Bug 2003328 - Implement createOpenAIEngine and prompt rendering
+  // Bug 2003328 - Implement createOpenAIEngine and prompt rendering (backed out due to unused file)
+  // Bug 2003832 - Change .mjs files to .sys.mjs (backed out due to unused file)
   {
-    file: "moz-src:///browser/components/aiwindow/models/Utils.mjs",
+    file: "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   },
 ];
 

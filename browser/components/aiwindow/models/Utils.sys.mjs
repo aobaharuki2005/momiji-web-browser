@@ -10,7 +10,6 @@
  * - Rendering prompts from files
  */
 
-/* eslint-disable-next-line mozilla/reject-import-system-module-from-non-system */
 import { createEngine } from "chrome://global/content/ml/EngineProcess.sys.mjs";
 
 /**

@@ -9,7 +9,7 @@ const {
   getLocalIsoTime,
   getCurrentTabMetadata,
 } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/ChatUtils.mjs"
+  "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs"
 );
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"

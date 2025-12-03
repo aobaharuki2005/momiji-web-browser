@@ -10,10 +10,10 @@ DIRS += [
 ]
 
 MOZ_SRC_FILES += [
-    "ChatUtils.mjs",
+    "ChatUtils.sys.mjs",
     "InsightsHistorySource.sys.mjs",
     "IntentClassifier.sys.mjs",
-    "Utils.mjs",
+    "Utils.sys.mjs",
 ]
 
 XPCSHELL_TESTS_MANIFESTS += [
