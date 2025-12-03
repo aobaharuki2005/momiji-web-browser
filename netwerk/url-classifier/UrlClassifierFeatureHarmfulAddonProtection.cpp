@@ -14,10 +14,11 @@
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsNetUtil.h"
 #include "mozilla/StaticPtr.h"
-#include "nsIEffectiveTLDService.h"
-#include "nsIWebProgressListener.h"
-#include "nsIHttpChannelInternal.h"
 #include "nsIChannel.h"
+#include "nsIEffectiveTLDService.h"
+#include "nsIHttpChannelInternal.h"
+#include "nsIWebProgressListener.h"
+#include "nsIWritablePropertyBag2.h"
 
 namespace mozilla {
 namespace net {
@@ -87,6 +88,16 @@ bool GetAddonId(nsIChannel* aChannel, nsACString& aAddonID) {
   }
 
   CopyUTF16toUTF8(nsDependentAtomString(policy->Id()), aAddonID);
+  return true;
+}
+
+bool GetAddonName(nsIChannel* aChannel, nsACString& aAddonName) {
+  extensions::WebExtensionPolicy* policy = GetAddonPolicy(aChannel);
+  if (!policy) {
+    return false;
+  }
+
+  CopyUTF16toUTF8(policy->Name(), aAddonName);
   return true;
 }
 
@@ -260,6 +271,14 @@ UrlClassifierFeatureHarmfulAddonProtection::ProcessChannel(
   }
 
   RecordGleanAddonBlocked(aChannel, list);
+
+  nsAutoCString addonName;
+  if (GetAddonName(aChannel, addonName)) {
+    nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aChannel));
+    if (props) {
+      props->SetPropertyAsACString(u"blockedExtension"_ns, addonName);
+    }
+  }
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_HARMFULADDON_URI,
                                          list, ""_ns, ""_ns);

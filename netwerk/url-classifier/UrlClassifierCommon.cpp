@@ -142,7 +142,7 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   switch (aErrorCode) {
     case NS_ERROR_HARMFULADDON_URI:
       NS_SetRequestBlockingReason(
-          channel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_BLOCKED_URI);
+          channel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_HARMFULADDON_URI);
       break;
     case NS_ERROR_MALWARE_URI:
       NS_SetRequestBlockingReason(
