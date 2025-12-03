@@ -1445,7 +1445,7 @@ let interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SVGViewElement", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "Sanitizer", insecureContext: true, nightly: true },
+  { name: "Sanitizer", insecureContext: true, earlyBetaOrEarlier: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Scheduler", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
