@@ -24,6 +24,7 @@ support-files = [
 ]
 skip-if = [
   "headless", # bug 1989339
+  "a11y_checks", # bug 2001749
 ]
 
 ["browser_navigator_clipboard_contextmenu_suppression_ext.js"]
@@ -48,6 +49,7 @@ skip-if = [
 support-files = ["simple_page_ext.html"]
 skip-if = [
   "headless", # bug 1989339
+  "a11y_checks", # bug 2001749
 ]
 
 ["browser_navigator_clipboard_readText_multiple.js"]
@@ -62,6 +64,7 @@ skip-if = [
 support-files = ["simple_page_ext.html"]
 skip-if = [
   "headless", # bug 1989339
+  "a11y_checks", # bug 2001749
 ]
 
 ["browser_navigator_clipboard_touch.js"]
