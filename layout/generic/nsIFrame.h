@@ -423,10 +423,8 @@ struct IntrinsicSize {
     }
   }
 
-  bool operator==(const IntrinsicSize& rhs) const {
-    return width == rhs.width && height == rhs.height;
-  }
-  bool operator!=(const IntrinsicSize& rhs) const { return !(*this == rhs); }
+  bool operator==(const IntrinsicSize&) const = default;
+  bool operator!=(const IntrinsicSize&) const = default;
 };
 
 // Pseudo bidi embedding level indicating nonexistence.
@@ -5250,13 +5248,8 @@ class nsIFrame : public nsQueryFrame {
     uint8_t mTop;
     uint8_t mRight;
     uint8_t mBottom;
-    bool operator==(const InkOverflowDeltas& aOther) const {
-      return mLeft == aOther.mLeft && mTop == aOther.mTop &&
-             mRight == aOther.mRight && mBottom == aOther.mBottom;
-    }
-    bool operator!=(const InkOverflowDeltas& aOther) const {
-      return !(*this == aOther);
-    }
+    bool operator==(const InkOverflowDeltas& aOther) const = default;
+    bool operator!=(const InkOverflowDeltas& aOther) const = default;
   };
   enum class OverflowStorageType : uint32_t {
     // No overflow area; code relies on this being an all-zero value.

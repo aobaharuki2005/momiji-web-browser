@@ -1416,13 +1416,8 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     int32_t mOffset = -1;
     nscoord mBlockCoord = 0;
 
-    bool operator==(const BalanceTarget& aOther) const {
-      return mContent == aOther.mContent && mOffset == aOther.mOffset &&
-             mBlockCoord == aOther.mBlockCoord;
-    }
-    bool operator!=(const BalanceTarget& aOther) const {
-      return !(*this == aOther);
-    }
+    bool operator==(const BalanceTarget& aOther) const = default;
+    bool operator!=(const BalanceTarget& aOther) const = default;
   };
 
   BalanceTarget balanceTarget;

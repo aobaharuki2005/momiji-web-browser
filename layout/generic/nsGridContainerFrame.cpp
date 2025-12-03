@@ -315,11 +315,7 @@ class nsGridContainerFrame::CachedBAxisMeasurement final {
           aFrame->GetProperty(nsIFrame::BBaselinePadProperty());
     }
 
-    bool operator==(const Key& aOther) const {
-      return mCBSizeInItemInlineAxis == aOther.mCBSizeInItemInlineAxis &&
-             mBaselinePaddingInItemBlockAxis ==
-                 aOther.mBaselinePaddingInItemBlockAxis;
-    }
+    bool operator==(const Key& aOther) const = default;
   };
 
   Key mKey;

@@ -63,12 +63,9 @@ struct CSSPropertyId {
   RefPtr<nsAtom> mCustomName;
 
   bool IsCustom() const { return mId == eCSSPropertyExtra_variable; }
-  bool operator==(const CSSPropertyId& aOther) const {
-    return mId == aOther.mId && mCustomName == aOther.mCustomName;
-  }
-  bool operator!=(const CSSPropertyId& aOther) const {
-    return !(*this == aOther);
-  }
+
+  bool operator==(const CSSPropertyId&) const = default;
+  bool operator!=(const CSSPropertyId&) const = default;
 
   bool IsValid() const {
     if (mId == eCSSProperty_UNKNOWN) {

@@ -1870,12 +1870,7 @@ class nsFlexContainerFrame::CachedBAxisMeasurement {
           mComputedMaxBSize(aRI.ComputedMaxBSize()),
           mAvailableBSize(aRI.AvailableBSize()) {}
 
-    bool operator==(const Key& aOther) const {
-      return mComputedSize == aOther.mComputedSize &&
-             mComputedMinBSize == aOther.mComputedMinBSize &&
-             mComputedMaxBSize == aOther.mComputedMaxBSize &&
-             mAvailableBSize == aOther.mAvailableBSize;
-    }
+    bool operator==(const Key& aOther) const = default;
   };
 
   const Key mKey;

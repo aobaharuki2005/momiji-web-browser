@@ -86,10 +86,7 @@ struct ContainSizeAxes {
   bool IsBoth() const { return mIContained && mBContained; }
   bool IsAny() const { return mIContained || mBContained; }
 
-  bool operator==(const ContainSizeAxes& aOther) const {
-    return mIContained == aOther.mIContained &&
-           mBContained == aOther.mBContained;
-  }
+  bool operator==(const ContainSizeAxes&) const = default;
 
   /**
    * Return a contained size from an uncontained size.
@@ -214,10 +211,8 @@ struct nsStyleImageLayers {
              mYRepeat == mozilla::StyleImageLayerRepeat::Space;
     }
 
-    bool operator==(const Repeat& aOther) const {
-      return mXRepeat == aOther.mXRepeat && mYRepeat == aOther.mYRepeat;
-    }
-    bool operator!=(const Repeat& aOther) const { return !(*this == aOther); }
+    bool operator==(const Repeat& aOther) const = default;
+    bool operator!=(const Repeat& aOther) const = default;
   };
 
   struct Layer {
@@ -279,7 +274,7 @@ struct nsStyleImageLayers {
     // An equality operator that compares the images using URL-equality
     // rather than pointer-equality.
     bool operator==(const Layer& aOther) const;
-    bool operator!=(const Layer& aOther) const { return !(*this == aOther); }
+    bool operator!=(const Layer& aOther) const = default;
   };
 
   // The (positive) number of computed values of each property, since
@@ -1477,9 +1472,7 @@ struct StyleTransition {
   StyleTransitionBehavior GetBehavior() const { return mBehavior; }
 
   bool operator==(const StyleTransition& aOther) const;
-  bool operator!=(const StyleTransition& aOther) const {
-    return !(*this == aOther);
-  }
+  bool operator!=(const StyleTransition&) const = default;
 
  private:
   StyleComputedTimingFunction mTimingFunction{
@@ -1509,9 +1502,7 @@ struct StyleAnimation {
   const StyleAnimationTimeline& GetTimeline() const { return mTimeline; }
 
   bool operator==(const StyleAnimation& aOther) const;
-  bool operator!=(const StyleAnimation& aOther) const {
-    return !(*this == aOther);
-  }
+  bool operator!=(const StyleAnimation&) const = default;
 
  private:
   StyleComputedTimingFunction mTimingFunction{
@@ -1534,12 +1525,8 @@ struct StyleScrollTimeline {
   nsAtom* GetName() const { return mName.AsAtom(); }
   StyleScrollAxis GetAxis() const { return mAxis; }
 
-  bool operator==(const StyleScrollTimeline& aOther) const {
-    return mName == aOther.mName && mAxis == aOther.mAxis;
-  }
-  bool operator!=(const StyleScrollTimeline& aOther) const {
-    return !(*this == aOther);
-  }
+  bool operator==(const StyleScrollTimeline&) const = default;
+  bool operator!=(const StyleScrollTimeline&) const = default;
 
  private:
   StyleTimelineName mName;
@@ -1554,13 +1541,8 @@ struct StyleViewTimeline {
   StyleScrollAxis GetAxis() const { return mAxis; }
   const StyleViewTimelineInset& GetInset() const { return mInset; }
 
-  bool operator==(const StyleViewTimeline& aOther) const {
-    return mName == aOther.mName && mAxis == aOther.mAxis &&
-           mInset == aOther.mInset;
-  }
-  bool operator!=(const StyleViewTimeline& aOther) const {
-    return !(*this == aOther);
-  }
+  bool operator==(const StyleViewTimeline&) const = default;
+  bool operator!=(const StyleViewTimeline&) const = default;
 
  private:
   StyleTimelineName mName;
