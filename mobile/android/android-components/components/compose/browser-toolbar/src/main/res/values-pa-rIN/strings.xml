@@ -19,4 +19,6 @@
   <string name="mozac_browser_toolbar_long_press_popup_paste_and_go">ਚੇਪੋ ਤੇ ਜਾਓ</string>
   <!-- Text for the title displayed in the contextual feature recommendation popup promoting the new toolbar redesign. -->
   <string name="mozac_toolbar_cfr_title">Android ਲਈ ਡਿਜ਼ਾਇਨ ਕੀਤਾ। ਤੁਹਾਡੇ ਲਈ ਸੁਧਾਰਿਆ</string>
+  <!-- Text for the description displayed in the contextual feature recommendation popup promoting the new toolbar redesign. -->
+  <string name="mozac_toolbar_cfr_description">ਅਸੀਂ ਡਿਜ਼ਾਈਨ ਨੂੰ ਹਲਕੇ, ਮਾਡਰਨ ਦਿੱਖ ਨਾਲ ਨਵੇਂ ਸਿਰਿਓ ਬਣਾਇਆ ਹੈ।</string>
 </resources>

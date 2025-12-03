@@ -33,7 +33,7 @@
   <string name="mozac_feature_addons_permissions_extra_domains_description_plural_2">Přistupovat k vašim datům z dalších domén</string>
   <!-- When an add-on requires access to domains, this entry is used to describe the total number of domains. Underneath it will be the list of all the domains. %1$d is the number of all the domains that will be shown to the user as required. -->
   <string name="mozac_feature_addons_permissions_all_domain_count_description" moz:removedIn="148" tools:ignore="PluralsCandidate">Přistupovat k vašim datům pro webové stránky na %1$d doménách</string>
-  <plurals name="mozac_feature_addons_permissions_all_domain_count_description_2" tools:ignore="MissingQuantity">
+  <plurals name="mozac_feature_addons_permissions_all_domain_count_description_2">
     <!-- When an add-on requires access to domains, this entry is used to describe the total number of domains. Underneath it will be the list of all the domains. %1$d is the number of all the domains that will be shown to the user as required. -->
     <item quantity="one">Přístup k údajům pro webové stránky v %1$d doméně</item>
     <item quantity="few">Přístup k údajům pro webové stránky ve %1$d doménách</item>

@@ -1066,7 +1066,7 @@
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Efallai y bydd yr ap yn cau. Tapiwch eich eicon newydd sgleiniog i ailagor %1$s.</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
-  <string name="restart_and_shortcuts_removal_warning_dialog_body">Bydd newid yr eicon yn dileu unrhyw wefannau a llwybrau byr rydych chi wedi\'u cadw i\'ch sgrin Cartref. \u0020\u0020Gall %1$s gau. Tapiwch eich eicon newydd i ailagor.</string>
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">Bydd newid yr eicon yn dileu unrhyw wefannau a llwybrau byr rydych chi wedi\'u cadw i\'ch sgrin Cartref.\n\nGall %1$s gau. Tapiwch eich eicon newydd i\'w hailagor.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Newid eicon</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -1481,6 +1481,14 @@
   <string name="tab_tray_menu_tab_settings">Gosodiadau tabiau</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">Cau pob tab</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">Cau pob tab?</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">Bydd hyn yn cau pob tab agored.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">Cau tabiau</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Diddymu</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Nod Tudalen</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->

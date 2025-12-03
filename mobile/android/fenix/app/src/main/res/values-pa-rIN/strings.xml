@@ -1065,10 +1065,14 @@
   <string name="restart_warning_dialog_title">ਐਪ ਦੇ ਆਈਕਾਨ ਨੂੰ ਬਦਲਣਾ ਹੈ?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">ਐਪ ਬੰਦ ਹੋ ਸਕਦੀ ਹੈ। %1$s ਨੂੰ ਮੁੜ-ਖੋਲ੍ਹਣ ਲਈ ਆਪਣੇ ਚਮਕਦੇ ਨਵੇਂ ਆਈਕਾਨ ਨੂੰ ਛੂਹੋ।</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">ਆਈਕਾਨ ਨੂੰ ਬਦਲਣ ਨਾਲ ਤੁਹਾਡੀ ਮੁੱਖ ਸਕਰੀਨ ਉੱਤੇ ਸੰਭਾਲੀਆਂ ਕੋਈ ਵੀ ਸਾਈਟਾਂ ਅਤੇ ਸ਼ਾਰਟਕੱਟਾਂ ਨੂੰ ਹਟਾਇਆ ਜਾਵੇਗਾ।\n\n%1$s ਨੂੰ ਬੰਦ ਕੀਤਾ ਜਾ ਸਕਦਾ ਹੈ। ਮੁੜ ਖੋਲ੍ਹਣ ਲਈ ਆਪਣੇ ਨਵੇਂ ਆਈਕਾਨ ਨੂੰ ਛੂਹੋ।</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">ਆਈਕਾਨ ਨੂੰ ਬਦਲੋ</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">ਰੱਦ ਕਰੋ</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">ਐਪ ਦੇ ਆਈਕਾਨ ਨੂੰ ਅੱਪਡੇਟ ਕਰਨ ਲਈ ਅਸਫ਼ਲ ਹੈ। ਮੌਜੂਦਾ ਸ਼ਾਰਟਕੱਟਾਂ ਨੂੰ ਹਟਾ ਕੇ ਫੇਰ ਕੋਸ਼ਿਸ਼ ਕਰੋ।</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -2359,6 +2363,8 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">ਵੱਡੇ ਸਾਈਟ ਮਸਲੇ ਠੀਕ ਕਰੋ (ਸਿਫ਼ਾਰਸ਼ੀ)</string>
   <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">ਛੋਟੇ ਸਾਈਟ ਮਸਲੇ ਠੀਕ ਕਰੋ</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">ਵੱਡੇ ਮਸਲੇ ਠੀਕ ਕਰਨ ਵਰਤਣਾ ਚਾਹੀਦਾ ਹੈ।</string>
   <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
   <string name="preference_enhanced_tracking_protection_allow_list_subheader">ਸਾਈਟ ਮਸਲੇ ਠੀਕ ਕਰੋ</string>
   <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->

@@ -1438,7 +1438,7 @@
     Title for the list of tabs in the current normal session used by a11y services
     The %1$s will be replaced by the number of opened normal tabs
   -->
-  <string name="tabs_header_normal_tabs_counter_title">열린 일반 탭: %1$s개. 탭을 전환하려면 누르세요.</string>
+  <string name="tabs_header_normal_tabs_counter_title">일반 열린 탭: %1$s개. 탭을 전환하려면 누르세요.</string>
   <!--
     Title for the list of tabs in the current private session used by a11y services
     The %1$s will be replaced by the number of opened private tabs
@@ -1481,6 +1481,14 @@
   <string name="tab_tray_menu_tab_settings">탭 설정</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">모든 탭 닫기</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">모든 탭을 닫으시겠습니까?</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">모든 열린 탭을 닫습니다.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">탭 닫기</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">취소</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">북마크</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
