@@ -7,11 +7,14 @@
 #include "UrlClassifierFeatureHarmfulAddonProtection.h"
 
 #include "mozilla/AntiTrackingUtils.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
+#include "mozilla/glean/NetwerkMetrics.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "ChannelClassifierService.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "nsNetUtil.h"
 #include "mozilla/StaticPtr.h"
+#include "nsIEffectiveTLDService.h"
 #include "nsIWebProgressListener.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIChannel.h"
@@ -38,6 +41,93 @@ namespace {
 
 StaticRefPtr<UrlClassifierFeatureHarmfulAddonProtection>
     gFeatureHarmfulAddonProtection;
+
+extensions::WebExtensionPolicy* GetAddonPolicy(nsIChannel* aChannel) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal;
+  if (NS_FAILED(loadInfo->GetTriggeringPrincipal(
+          getter_AddRefs(triggeringPrincipal)))) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIPrincipal> loadingPrincipal;
+  if (NS_FAILED(
+          loadInfo->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal)))) {
+    return nullptr;
+  }
+
+  extensions::WebExtensionPolicy* policy = nullptr;
+
+  if (triggeringPrincipal) {
+    policy = BasePrincipal::Cast(triggeringPrincipal)->AddonPolicy();
+
+    if (!policy) {
+      policy =
+          BasePrincipal::Cast(triggeringPrincipal)->ContentScriptAddonPolicy();
+    }
+  }
+
+  if (!policy && loadingPrincipal) {
+    policy = BasePrincipal::Cast(loadingPrincipal)->AddonPolicy();
+
+    if (!policy) {
+      policy =
+          BasePrincipal::Cast(loadingPrincipal)->ContentScriptAddonPolicy();
+    }
+  }
+
+  return policy;
+}
+
+bool GetAddonId(nsIChannel* aChannel, nsACString& aAddonID) {
+  extensions::WebExtensionPolicy* policy = GetAddonPolicy(aChannel);
+  if (!policy) {
+    return false;
+  }
+
+  CopyUTF16toUTF8(nsDependentAtomString(policy->Id()), aAddonID);
+  return true;
+}
+
+bool GetETLD(nsIChannel* aChannel, nsACString& aETLD) {
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
+    return false;
+  }
+
+  nsCOMPtr<nsIEffectiveTLDService> etld(
+      do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID));
+  if (NS_WARN_IF(!etld)) {
+    return false;
+  }
+
+  rv = etld->GetBaseDomain(uri, 0, aETLD);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  return !aETLD.IsEmpty();
+}
+
+void RecordGleanAddonBlocked(nsIChannel* aChannel,
+                             const nsACString& aTableStr) {
+  nsAutoCString etld;
+  if (!GetETLD(aChannel, etld)) {
+    return;
+  }
+
+  nsAutoCString addonId;
+  if (!GetAddonId(aChannel, addonId)) {
+    return;
+  }
+
+  glean::network::urlclassifier_addon_block.Record(
+      Some(glean::network::UrlclassifierAddonBlockExtra{
+          mozilla::Some(addonId), mozilla::Some(etld),
+          mozilla::Some(nsCString(aTableStr))}));
+}
 
 }  // namespace
 
@@ -168,6 +258,8 @@ UrlClassifierFeatureHarmfulAddonProtection::ProcessChannel(
     *aShouldContinue = true;
     return NS_OK;
   }
+
+  RecordGleanAddonBlocked(aChannel, list);
 
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_HARMFULADDON_URI,
                                          list, ""_ns, ""_ns);
