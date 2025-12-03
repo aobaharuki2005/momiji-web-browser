@@ -1320,13 +1320,98 @@ export class TopSitesFeed {
   }
 
   /**
+   * Dedupe sponsored domains against organic topsites.
+   *
+   * @param {Array} sponsors - List of sponsor domain objects
+   * @returns {Array} Filtered list of sponsors not in organic topsites
+   */
+  dedupeSponsorsAgainstTopsites(sponsors) {
+    const topsites = new Set(
+      (this._linksWithDefaults || [])
+        .filter(site => site.type !== "frecency-boost")
+        .map(site => {
+          try {
+            return new URL(site.url).hostname;
+          } catch (e) {
+            return null;
+          }
+        })
+        .filter(Boolean)
+    );
+
+    return sponsors.filter(({ domain }) => !topsites.has(domain));
+  }
+
+  /**
+   * Build frecency-boosted spocs from a list of sponsor domains by checking Places history.
+   * Checks if domains exist in history with favicons, dedupes against organic
+   * topsites, and returns all matches sorted by frecency.
+   *
+   * @param {Array} sponsors - List of sponsor domain objects with domain and title
+   * @returns {Array} Array of sponsored tile objects sorted by frecency, or empty array
+   */
+  async buildFrecencyBoostedSpocs(sponsors) {
+    if (!sponsors || !sponsors.length) {
+      return [];
+    }
+
+    const sponsorsToCheck = this.dedupeSponsorsAgainstTopsites(sponsors);
+
+    if (!sponsorsToCheck.length) {
+      return [];
+    }
+
+    let pagesMap;
+    try {
+      pagesMap = await lazy.PlacesUtils.history.fetchMany(
+        sponsorsToCheck.map(({ domain }) => `https://${domain}`)
+      );
+    } catch (error) {
+      lazy.log.warn(`Failed to fetch history data: ${error.message}`);
+      return [];
+    }
+
+    const candidates = [];
+    for (const domainObj of sponsorsToCheck) {
+      const url = `https://${domainObj.domain}/`;
+      const page = pagesMap.get(url);
+
+      if (!page) {
+        continue;
+      }
+
+      candidates.push({
+        hostname: domainObj.domain,
+        url,
+        label: domainObj.title,
+        sponsored_position: 3,
+        partner: SPONSORED_TILE_PARTNER_FREC_BOOST,
+        type: "frecency-boost",
+        frecency: page.frecency,
+        show_sponsored_label: true,
+      });
+    }
+
+    candidates.sort((a, b) => b.frecency - a.frecency);
+    return candidates;
+  }
+
+  /**
    * Fetch topsites spocs that are frecency boosted.
    *
    * @returns {Array} An array of sponsored tile objects.
    */
-  fetchFrecencyBoostedSpocs() {
-    let sponsored = [];
-    return sponsored;
+  async fetchFrecencyBoostedSpocs() {
+    if (!this._contile.sovEnabled() || this._linksWithDefaults.length === 0) {
+      return [];
+    }
+    const domainData = {};
+    // Get domains for current region
+    const userRegion = lazy.Region.home || "";
+    const domainList = domainData[userRegion] || [];
+
+    // Find all matches from the test domains, sorted by frecency
+    return this.buildFrecencyBoostedSpocs(domainList);
   }
 
   /**
@@ -1502,7 +1587,7 @@ export class TopSitesFeed {
     );
 
     const discoverySponsored = this.fetchDiscoveryStreamSpocs();
-    const frecencyBoostedSponsored = this.fetchFrecencyBoostedSpocs();
+    const frecencyBoostedSponsored = await this.fetchFrecencyBoostedSpocs();
     this._telemetryUtility.setTiles(discoverySponsored);
 
     const sponsored = this._mergeSponsoredLinks({
@@ -1802,6 +1887,7 @@ export class TopSitesFeed {
     if (!this._contile.sov) {
       return;
     }
+
     // This sample input should ensure we return the same result for this allocation,
     // even if called from other parts of the code.
     let contextId = await lazy.ContextId.request();
