@@ -1088,7 +1088,7 @@ export class SubDialogManager {
   /**
    * Abort open dialogs.
    *
-   * @param {function} [filterFn] - Function which should return true for
+   * @param {Function} [filterFn] - Function which should return true for
    * dialogs that should be aborted and false for dialogs that should remain
    * open. Defaults to aborting all dialogs.
    */
@@ -1121,6 +1121,25 @@ export class SubDialogManager {
         this._onDialogClose(aEvent.detail.dialog);
         break;
       }
+      case "click": {
+        this._onClickSplitViewPanel(aEvent);
+        break;
+      }
+    }
+  }
+
+  _onClickSplitViewPanel(aEvent) {
+    const splitViewPanel =
+      aEvent.currentTarget.offsetParent.closest(".split-view-panel");
+    // If the dialog is within a split view panel and the panel is currently not
+    // selected, select corresponding tab.
+    if (splitViewPanel) {
+      const browser = splitViewPanel.querySelector("browser");
+      const tabbrowser = browser.getTabBrowser();
+      const tabbox = aEvent.currentTarget.offsetParent.closest("tabbox");
+      const tab = tabbrowser.getTabForBrowser(browser);
+      const tabstrip = tabbox.tabs;
+      tabstrip.selectedItem = tab;
     }
   }
 
@@ -1177,11 +1196,13 @@ export class SubDialogManager {
   _ensureStackEventListeners() {
     this._dialogStack.addEventListener("dialogopen", this);
     this._dialogStack.addEventListener("dialogclose", this);
+    this._dialogStack.addEventListener("click", this);
   }
 
   _removeStackEventListeners() {
     this._dialogStack.removeEventListener("dialogopen", this);
     this._dialogStack.removeEventListener("dialogclose", this);
+    this._dialogStack.removeEventListener("click", this);
   }
 }
 
