@@ -46,10 +46,11 @@ class MockDAPSender {
     this.receivedMeasurements = [];
   }
 
-  async sendDAPMeasurement(task, measurement, _options) {
+  async sendDAPMeasurement(task, measurement, options) {
     this.receivedMeasurements.push({
       task,
       measurement,
+      options,
     });
   }
 }
@@ -145,6 +146,10 @@ add_task(async function testSuccessfulConversion() {
       time_precision: conversionSettings.time_precision,
     },
     measurement: conversionSettings.index,
+    options: {
+      ohttp_hpke: Services.prefs.getStringPref("dap.ohttp.hpke"),
+      ohttp_relay: Services.prefs.getStringPref("dap.ohttp.relayURL"),
+    },
   };
 
   const receivedMeasurement = mockSender.receivedMeasurements.pop();
@@ -571,6 +576,8 @@ add_task(async function testHistogramSize() {
 add_task(async function testWithRealDAPSender() {
   // Omit mocking DAP telemetry sender in this test to defend against mock
   // sender getting out of sync
+  Services.prefs.setStringPref("dap.ohttp.hpke", "");
+  Services.prefs.setStringPref("dap.ohttp.relayURL", "");
   const mockServer = new MockServer();
   mockServer.start();
 
@@ -609,4 +616,7 @@ add_task(async function testWithRealDAPSender() {
 
   const receivedReport = mockServer.receivedReports.pop();
   Assert.deepEqual(receivedReport, expectedReport);
+
+  Services.prefs.clearUserPref("dap.ohttp.hpke");
+  Services.prefs.clearUserPref("dap.ohttp.relayURL");
 });
