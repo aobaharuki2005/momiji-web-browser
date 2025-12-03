@@ -3565,6 +3565,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
   } else if (NS_ERROR_PHISHING_URI == aError ||
              NS_ERROR_MALWARE_URI == aError ||
              NS_ERROR_UNWANTED_URI == aError ||
+             NS_ERROR_HARMFULADDON_URI == aError ||
              NS_ERROR_HARMFUL_URI == aError) {
     nsAutoCString host;
     aURI->GetHost(host);
@@ -3587,6 +3588,8 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       error = "unwantedBlocked";
     } else if (NS_ERROR_HARMFUL_URI == aError) {
       error = "harmfulBlocked";
+    } else if (NS_ERROR_HARMFULADDON_URI == aError) {
+      error = "addonBlocked";
     }
 
     cssClass.AssignLiteral("blacklist");
@@ -3926,6 +3929,18 @@ nsresult nsDocShell::LoadErrorPage(nsIURI* aURI, const char16_t* aURL,
 
   errorPageUrl.AppendLiteral("&d=");
   errorPageUrl.AppendASCII(escapedDescription.get());
+
+  nsCOMPtr<nsIWritablePropertyBag2> props(do_QueryInterface(aFailedChannel));
+  if (props) {
+    nsAutoCString addonName;
+    props->GetPropertyAsACString(u"blockedExtension"_ns, addonName);
+
+    nsCString escapedAddonName;
+    SAFE_ESCAPE(escapedAddonName, addonName, url_Path);
+
+    errorPageUrl.AppendLiteral("&a=");
+    errorPageUrl.AppendASCII(escapedAddonName.get());
+  }
 
   nsCOMPtr<nsIURI> errorPageURI;
   nsresult rv = NS_NewURI(getter_AddRefs(errorPageURI), errorPageUrl);
@@ -6344,6 +6359,7 @@ nsresult nsDocShell::FilterStatusForErrorPage(
        aStatus == NS_ERROR_PROXY_AUTHENTICATION_FAILED ||
        aStatus == NS_ERROR_PROXY_TOO_MANY_REQUESTS ||
        aStatus == NS_ERROR_MALFORMED_URI ||
+       aStatus == NS_ERROR_HARMFULADDON_URI ||
        aStatus == NS_ERROR_BLOCKED_BY_POLICY ||
        aStatus == NS_ERROR_DOM_COOP_FAILED ||
        aStatus == NS_ERROR_DOM_COEP_FAILED ||

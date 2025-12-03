@@ -57,8 +57,7 @@ bool UrlClassifierCommon::AddonMayLoad(nsIChannel* aChannel, nsIURI* aURI) {
 }
 
 /* static */
-bool UrlClassifierCommon::ShouldEnableProtectionForChannel(
-    nsIChannel* aChannel, bool aShouldAllowAddons) {
+bool UrlClassifierCommon::ShouldEnableProtectionForChannel(nsIChannel* aChannel) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsIURI> chanURI;
@@ -67,8 +66,7 @@ bool UrlClassifierCommon::ShouldEnableProtectionForChannel(
     return false;
   }
 
-  if (aShouldAllowAddons &&
-      UrlClassifierCommon::AddonMayLoad(aChannel, chanURI)) {
+  if (UrlClassifierCommon::AddonMayLoad(aChannel, chanURI)) {
     return false;
   }
 
