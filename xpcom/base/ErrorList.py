@@ -953,6 +953,7 @@ with modules["URILOADER"]:
     errors["NS_ERROR_SOCIALTRACKING_URI"] = FAILURE(43)
     errors["NS_ERROR_EMAILTRACKING_URI"] = FAILURE(44)
     errors["NS_ERROR_RESTRICTED_CONTENT"] = FAILURE(45)
+    errors["NS_ERROR_HARMFULADDON_URI"] = FAILURE(46)
     # Used when "Save Link As..." doesn't see the headers quickly enough to
     # choose a filename.  See nsContextMenu.js.
     errors["NS_ERROR_SAVE_LINK_AS_TIMEOUT"] = FAILURE(32)

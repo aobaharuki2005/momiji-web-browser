@@ -58,7 +58,7 @@ bool UrlClassifierCommon::AddonMayLoad(nsIChannel* aChannel, nsIURI* aURI) {
 
 /* static */
 bool UrlClassifierCommon::ShouldEnableProtectionForChannel(
-    nsIChannel* aChannel) {
+    nsIChannel* aChannel, bool aShouldAllowAddons) {
   MOZ_ASSERT(aChannel);
 
   nsCOMPtr<nsIURI> chanURI;
@@ -67,7 +67,8 @@ bool UrlClassifierCommon::ShouldEnableProtectionForChannel(
     return false;
   }
 
-  if (UrlClassifierCommon::AddonMayLoad(aChannel, chanURI)) {
+  if (aShouldAllowAddons &&
+      UrlClassifierCommon::AddonMayLoad(aChannel, chanURI)) {
     return false;
   }
 
@@ -139,6 +140,10 @@ nsresult UrlClassifierCommon::SetBlockedContent(nsIChannel* channel,
   NS_ENSURE_ARG(!aList.IsEmpty());
 
   switch (aErrorCode) {
+    case NS_ERROR_HARMFULADDON_URI:
+      NS_SetRequestBlockingReason(
+          channel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_BLOCKED_URI);
+      break;
     case NS_ERROR_MALWARE_URI:
       NS_SetRequestBlockingReason(
           channel, nsILoadInfo::BLOCKING_REASON_CLASSIFY_MALWARE_URI);
