@@ -853,7 +853,8 @@ class ScrollContainerFrame : public nsContainerFrame,
 
   bool SmoothScrollVisual(
       const nsPoint& aVisualViewportOffset,
-      layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType);
+      layers::FrameMetrics::ScrollOffsetUpdateType aUpdateType,
+      ScrollMode aMode);
 
   /**
    * Returns true if this scroll frame should perform smooth scroll with the

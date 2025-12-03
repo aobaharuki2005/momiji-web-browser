@@ -12331,11 +12331,9 @@ void PresShell::RefreshViewportSize() {
 void PresShell::ScrollToVisual(const nsPoint& aVisualViewportOffset,
                                FrameMetrics::ScrollOffsetUpdateType aUpdateType,
                                ScrollMode aMode) {
-  MOZ_ASSERT(aMode == ScrollMode::Instant || aMode == ScrollMode::SmoothMsd);
-
-  if (aMode == ScrollMode::SmoothMsd) {
+  if (aMode == ScrollMode::Smooth || aMode == ScrollMode::SmoothMsd) {
     if (ScrollContainerFrame* sf = GetRootScrollContainerFrame()) {
-      if (sf->SmoothScrollVisual(aVisualViewportOffset, aUpdateType)) {
+      if (sf->SmoothScrollVisual(aVisualViewportOffset, aUpdateType, aMode)) {
         return;
       }
     }
