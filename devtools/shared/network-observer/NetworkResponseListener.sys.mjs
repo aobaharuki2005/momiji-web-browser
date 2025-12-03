@@ -636,15 +636,14 @@ export class NetworkResponseListener {
   #getResponseContentComplete() {
     // Check any errors or blocking scenarios which happen late in the cycle
     // e.g If a host is not found (NS_ERROR_UNKNOWN_HOST) or CORS blocking.
-    const { blockingExtension, blockedReason } =
-      lazy.NetworkUtils.getBlockedReason(
-        this.#httpActivity.channel,
-        this.#httpActivity.fromCache
-      );
+    const { extension, blockedReason } = lazy.NetworkUtils.getBlockedReason(
+      this.#httpActivity.channel,
+      this.#httpActivity.fromCache
+    );
 
     this.#httpActivity.owner.addResponseContentComplete({
       blockedReason,
-      blockingExtension,
+      extension,
       discardResponseBody: this.#httpActivity.discardResponseBody,
       truncated: this.#truncated,
     });
