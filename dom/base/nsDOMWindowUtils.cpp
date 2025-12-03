@@ -1785,6 +1785,10 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
   NS_ENSURE_TRUE(presContext->IsRootContentDocumentCrossProcess(),
                  NS_ERROR_INVALID_ARG);
 
+  ScrollContainerFrame* sf =
+      presContext->PresShell()->GetRootScrollContainerFrame();
+  NS_ENSURE_TRUE(sf, NS_ERROR_NOT_AVAILABLE);
+
   FrameMetrics::ScrollOffsetUpdateType updateType;
   switch (aUpdateType) {
     case UPDATE_TYPE_RESTORE:
@@ -1797,13 +1801,13 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
       return NS_ERROR_INVALID_ARG;
   }
 
-  ScrollMode scrollMode;
+  ScrollBehavior scrollBehavior;
   switch (aScrollMode) {
     case SCROLL_MODE_INSTANT:
-      scrollMode = ScrollMode::Instant;
+      scrollBehavior = ScrollBehavior::Instant;
       break;
     case SCROLL_MODE_SMOOTH:
-      scrollMode = ScrollMode::SmoothMsd;
+      scrollBehavior = ScrollBehavior::Smooth;
       break;
     default:
       return NS_ERROR_INVALID_ARG;
@@ -1811,7 +1815,7 @@ nsDOMWindowUtils::ScrollToVisual(float aOffsetX, float aOffsetY,
 
   presContext->PresShell()->ScrollToVisual(
       CSSPoint::ToAppUnits(CSSPoint(aOffsetX, aOffsetY)), updateType,
-      scrollMode);
+      sf->ScrollModeForScrollBehavior(scrollBehavior));
 
   return NS_OK;
 }
