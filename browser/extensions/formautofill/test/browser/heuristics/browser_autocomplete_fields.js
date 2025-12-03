@@ -51,7 +51,6 @@ add_heuristic_tests([
         default: {
           reason: "autocomplete",
         },
-        invalid: true,
         fields: [
           { fieldName: "street-address" },
           { fieldName: "address-level2" },
@@ -113,6 +112,36 @@ add_heuristic_tests([
           { fieldName: "address-level2" },
           { fieldName: "address-line2" },
         ],
+      },
+    ],
+  },
+  {
+    description: "Form containing a single field.",
+    fixtureData: `<form>
+                    <input autocomplete="postal-code">
+                 </form>`,
+    expectedResult: [
+      {
+        fields: [{ fieldName: "postal-code" }],
+      },
+    ],
+  },
+  {
+    description: "Form containing a single invalid field.",
+    fixtureData: `<form>
+                    <input autocomplete="postalCode">
+                 </form>`,
+    expectedResult: [],
+  },
+  {
+    description: "Form containing two fields, one invalid.",
+    fixtureData: `<form>
+                    <input autocomplete="postal-code">
+                    <input autocomplete="town">
+                 </form>`,
+    expectedResult: [
+      {
+        fields: [{ fieldName: "postal-code" }],
       },
     ],
   },

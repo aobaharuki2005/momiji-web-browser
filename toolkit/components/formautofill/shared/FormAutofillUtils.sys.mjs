@@ -204,6 +204,17 @@ FormAutofillUtils = {
     );
   },
 
+  isValidSection(fieldDetails) {
+    // If one of the fields has the autocomplete reason, the section is valid.
+    if (fieldDetails.some(f => f.reason == "autocomplete")) {
+      return true;
+    }
+
+    // Otherwise, there must be a minimum number of fields.
+    const fields = new Set(fieldDetails.map(f => f.fieldName));
+    return fields.size >= this.AUTOFILL_FIELDS_THRESHOLD;
+  },
+
   queryEligibleElements(element, includeIframe = false) {
     const types = includeIframe
       ? [...ELIGIBLE_ELEMENT_TYPES, "iframe"]

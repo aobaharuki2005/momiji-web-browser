@@ -143,10 +143,7 @@ export class FormAutofillChild extends JSWindowActorChild {
       // Bug 1905040. This is only a temporarily workaround for now to skip marking address fields
       // autocompletable whenever we detect an address field. We only mark address field when
       // it is a valid address section (This is done in the parent)
-      const addressFieldSet = new Set(addressFields.map(fd => fd.fieldName));
-      if (
-        addressFieldSet.size < lazy.FormAutofillUtils.AUTOFILL_FIELDS_THRESHOLD
-      ) {
+      if (!lazy.FormAutofillUtils.isValidSection(addressFields)) {
         addressFields = [];
       }
 
@@ -179,7 +176,9 @@ export class FormAutofillChild extends JSWindowActorChild {
             "address-line1",
             "address-line2",
             "address-line3",
-          ].some(fieldName => addressFieldSet.has(fieldName)))
+          ].some(fieldName =>
+            addressFields.some(fd => fd.fieldName == fieldName)
+          ))
       ) {
         this.manager
           .getActor("FormHandler")
