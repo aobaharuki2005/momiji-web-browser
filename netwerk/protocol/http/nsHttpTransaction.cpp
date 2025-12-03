@@ -3457,6 +3457,10 @@ void nsHttpTransaction::OnBackupConnectionReady(bool aTriggeredByHTTPSRR) {
   }
 
   if (mConnection) {
+    if (mConnection->Version() != HttpVersion::v3_0) {
+      LOG(("Already have non-HTTP/3 conn:%p", mConnection.get()));
+      return;
+    }
     // The transaction will only be restarted when we already have a connection.
     // When there is no connection, this transaction will be moved to another
     // connection entry.
