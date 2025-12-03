@@ -211,6 +211,11 @@ requesttimeoutfactor = 3  # Slow on Mac debug
 
 ["test_promiseBookmarksTree.js"]
 
+["test_removeDownloadsMetadataFromDb.js"]
+support-files = [
+  "test_places.sqlite",
+]
+
 ["test_resolveNullBookmarkTitles.js"]
 
 ["test_result_sort.js"]
