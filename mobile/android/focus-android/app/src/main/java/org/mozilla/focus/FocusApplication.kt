@@ -77,7 +77,7 @@ open class FocusApplication : LocaleAwareApplication(), Provider {
             registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
             registerComponentCallbacks(visibilityLifeCycleCallback)
 
-            storeLink.start()
+            storeLink.start(applicationScope)
 
             initializeWebExtensionSupport()
 

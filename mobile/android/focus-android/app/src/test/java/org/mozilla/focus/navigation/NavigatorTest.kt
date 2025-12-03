@@ -46,7 +46,7 @@ class NavigatorTest {
         navigator = Navigator(
             stateFlow = stateFlow,
             navigation = navigation,
-            dispatcherScope = navigatorTestScope,
+            scope = navigatorTestScope,
         )
     }
 

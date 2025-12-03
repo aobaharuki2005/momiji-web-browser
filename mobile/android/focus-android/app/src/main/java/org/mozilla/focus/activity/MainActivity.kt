@@ -22,6 +22,7 @@ import androidx.core.content.edit
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.concept.engine.EngineView
@@ -77,8 +78,8 @@ open class MainActivity : EdgeToEdgeActivity() {
     private val onboardingStorage by lazy { OnboardingStorage(this) }
     private val navigator by lazy {
         Navigator(
-            components.appStore.flow(),
-            MainActivityNavigation(
+            stateFlow = components.appStore.flow(),
+            navigation = MainActivityNavigation(
                 supportFragmentManager = supportFragmentManager,
                 onboardingStorage = onboardingStorage,
                 isInPictureInPictureMode = { isInPictureInPictureMode },
@@ -86,6 +87,8 @@ open class MainActivity : EdgeToEdgeActivity() {
                 showStartBrowsingCfr = ::showStartBrowsingCfr,
                 onEraseAction = ::reactToEraseAction,
             ),
+            scope = lifecycleScope,
+
         )
     }
 

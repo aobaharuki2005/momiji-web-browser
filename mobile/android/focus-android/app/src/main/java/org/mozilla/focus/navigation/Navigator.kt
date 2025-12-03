@@ -7,11 +7,11 @@ package org.mozilla.focus.navigation
 import android.os.Bundle
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.onEach
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import org.mozilla.focus.settings.permissions.permissionoptions.SitePermission
 import org.mozilla.focus.state.AppState
@@ -27,32 +27,27 @@ import org.mozilla.focus.state.Screen
  *
  * @param stateFlow A [Flow] that emits the current [AppState].
  * @param navigation An implementation of [AppNavigation] that handles the actual screen transitions.
- * @param dispatcherScope The [CoroutineScope] in which the state observation will run. Defaults to [MainScope].
+ * @param scope The [CoroutineScope] in which the state observation will run.
  */
 class Navigator(
     private val stateFlow: Flow<AppState>,
     private val navigation: AppNavigation,
-    private val dispatcherScope: CoroutineScope = MainScope(),
+    private val scope: CoroutineScope,
 ) : LifecycleAwareFeature {
     private var navigationJob: Job? = null
 
     override fun start() {
         if (navigationJob?.isActive == true) return
 
-        navigationJob = dispatcherScope.launch {
-            subscribe()
-        }
+        navigationJob = stateFlow.map { state -> state.screen }
+            .distinctUntilChangedBy { screen -> screen.id }
+            .onEach { screen -> navigateTo(screen) }
+            .launchIn(scope)
     }
 
     override fun stop() {
         navigationJob?.cancel()
         navigationJob = null
-    }
-
-    private suspend fun subscribe() {
-        stateFlow.map { state -> state.screen }
-            .distinctUntilChangedBy { screen -> screen.id }
-            .collect { screen -> navigateTo(screen) }
     }
 
     private fun navigateTo(screen: Screen) {
