@@ -414,6 +414,7 @@ class alignas(uintptr_t) JitScript final
   void resetAllActiveFlags();
 
   void ensureProfileString(JSContext* cx, JSScript* script);
+  void ensureProfilerScriptSource(JSContext* cx, JSScript* script);
 
   const char* profileString() const {
     MOZ_ASSERT(profileString_);

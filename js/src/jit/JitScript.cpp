@@ -355,6 +355,12 @@ void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
   if (!profileString_) {
     oomUnsafe.crash("Failed to allocate profile string");
   }
+}
+
+void JitScript::ensureProfilerScriptSource(JSContext* cx, JSScript* script) {
+  MOZ_ASSERT(cx->runtime()->geckoProfiler().enabled());
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
   if (!cx->runtime()->geckoProfiler().insertScriptSource(
           script->scriptSource())) {
     oomUnsafe.crash("Failed to insert profiled script source");
