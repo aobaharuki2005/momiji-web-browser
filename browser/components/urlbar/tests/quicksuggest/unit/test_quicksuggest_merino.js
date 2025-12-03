@@ -428,9 +428,9 @@ add_task(async function dismissals_amp() {
         full_keyword: "full keyword 2",
       },
       expected: {
-        // dismissal key should be the `full_keyword` value
-        dismissalKey: "full keyword 2",
-        notDismissalKeys: ["https://example.com/2"],
+        // dismissal key should be the `url` value
+        dismissalKey: "https://example.com/2",
+        notDismissalKeys: ["full keyword 2"],
       },
     },
     {
@@ -439,9 +439,9 @@ add_task(async function dismissals_amp() {
         full_keyword: "full keyword 3",
       },
       expected: {
-        // dismissal key should be the `full_keyword` value
-        dismissalKey: "full keyword 3",
-        notDismissalKeys: [`https://example.com/3-${TIMESTAMP_TEMPLATE}`],
+        // dismissal key should be the `url` value
+        dismissalKey: `https://example.com/3-${TIMESTAMP_TEMPLATE}`,
+        notDismissalKeys: ["full keyword 3"],
       },
     },
     {
@@ -529,7 +529,7 @@ add_task(async function dismissals_amp() {
         url: suggestion.url,
         originalUrl: suggestion.original_url || suggestion.url,
         displayUrl: suggestion.url.replace(/^https:\/\//, ""),
-        dismissalKey: expected.dismissalKey,
+        dismissalKey: suggestion.dismissal_key,
         requestId: suggestion.request_id,
         sponsoredImpressionUrl: suggestion.impression_url,
         sponsoredClickUrl: suggestion.click_url,

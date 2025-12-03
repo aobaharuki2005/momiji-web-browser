@@ -526,7 +526,9 @@ class _QuickSuggestTestUtils {
       });
     } else {
       result.payload.icon = icon;
-      result.payload.dismissalKey = dismissalKey || fullKeyword || originalUrl;
+      if (typeof dismissalKey == "string") {
+        result.payload.dismissalKey = dismissalKey;
+      }
     }
 
     return result;
