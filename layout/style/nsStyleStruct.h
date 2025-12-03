@@ -392,12 +392,6 @@ struct AnchorPosResolutionParams {
   mozilla::StylePositionArea mPositionArea;
   // Cache data used for anchor resolution.
   mozilla::AnchorPosResolutionCache* const mCache;
-  // Whether anchor-center is being used with a valid anchor on the inline axis.
-  // When true, auto insets in the inline axis resolve to 0.
-  bool mIAnchorCenter = false;
-  // Whether anchor-center is being used with a valid anchor on the block axis.
-  // When true, auto insets in the block axis resolve to 0.
-  bool mBAnchorCenter = false;
 
   // Helper functions for creating anchor resolution parameters.
   // Defined in corresponding header files.
@@ -784,11 +778,7 @@ struct AnchorResolvedInsetHelper {
     if (!aValue.HasAnchorPositioningFunction()) {
       // If `position-area` is used "Any auto inset properties resolve to 0":
       // https://drafts.csswg.org/css-anchor-position-1/#valdef-position-area-position-area
-      // If `anchor-center` is used with a valid anchor, "auto inset
-      // properties resolve to 0":
-      // https://drafts.csswg.org/css-anchor-position-1/#anchor-center
-      if (aValue.IsAuto() && (!aParams.mBaseParams.mPositionArea.IsNone() ||
-                              SideUsesAnchorCenter(aSide, aParams))) {
+      if (aValue.IsAuto() && !aParams.mBaseParams.mPositionArea.IsNone()) {
         return AnchorResolvedInset::UniquelyOwning(
             new mozilla::StyleInset(mozilla::LengthPercentage::Zero()));
       }
@@ -801,9 +791,6 @@ struct AnchorResolvedInsetHelper {
   static AnchorResolvedInset Auto() {
     return AnchorResolvedInset::NonOwning(&AutoValue());
   }
-
-  static bool SideUsesAnchorCenter(
-      mozilla::Side aSide, const AnchorPosOffsetResolutionParams& aParams);
 
   static AnchorResolvedInset ResolveAnchor(
       const mozilla::StyleInset& aValue, mozilla::StylePhysicalSide aSide,

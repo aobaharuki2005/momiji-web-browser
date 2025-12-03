@@ -62,15 +62,12 @@ class CSSAlignUtils {
    * @param aCBSize The size of the alignment container, in its aAxis.
    * @param aRI A ReflowInput for the child.
    * @param aChildSize The child's LogicalSize (in its own writing mode).
-   * @param aAnchorRect When specified, an inset-modified anchor rect (in the
-   *                    child's writing mode) to use for anchor-center
-   *                    alignment.
    */
-  static nscoord AlignJustifySelf(
-      const StyleAlignFlags& aAlignment, LogicalAxis aAxis,
-      AlignJustifyFlags aFlags, nscoord aBaselineAdjust, nscoord aCBSize,
-      const ReflowInput& aRI, const LogicalSize& aChildSize,
-      const Maybe<LogicalRect>& aAnchorRect = Nothing());
+  static nscoord AlignJustifySelf(const StyleAlignFlags& aAlignment,
+                                  LogicalAxis aAxis, AlignJustifyFlags aFlags,
+                                  nscoord aBaselineAdjust, nscoord aCBSize,
+                                  const ReflowInput& aRI,
+                                  const LogicalSize& aChildSize);
 };
 
 }  // namespace mozilla

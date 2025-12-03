@@ -10785,8 +10785,6 @@ fn offset_params_from_base_params(
             mPosition: params.mPosition,
             mPositionArea: params.mPositionArea,
             mCache: params.mCache,
-            mIAnchorCenter: params.mIAnchorCenter,
-            mBAnchorCenter: params.mBAnchorCenter,
         },
     }
 }
