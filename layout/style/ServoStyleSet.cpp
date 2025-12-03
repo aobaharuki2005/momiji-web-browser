@@ -1186,6 +1186,10 @@ bool ServoStyleSet::UsesFontMetrics() const {
   return Servo_StyleSet_UsesFontMetrics(mRawData.get());
 }
 
+bool ServoStyleSet::UsesRootFontMetrics() const {
+  return Servo_StyleSet_UsesRootFontMetrics(mRawData.get());
+}
+
 bool ServoStyleSet::EnsureUniqueInnerOnCSSSheets() {
   using SheetOwner = Variant<ServoStyleSet*, ShadowRoot*>;
 

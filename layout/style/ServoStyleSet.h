@@ -166,6 +166,8 @@ class ServoStyleSet {
 
   bool UsesFontMetrics() const;
 
+  bool UsesRootFontMetrics() const;
+
   void SetAuthorStyleDisabled(bool aStyleDisabled);
 
   // Get a CopmutedStyle for a text node (which no rules will match).
