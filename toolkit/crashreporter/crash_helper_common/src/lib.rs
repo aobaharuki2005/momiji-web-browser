@@ -13,7 +13,7 @@ mod ipc_connector;
 mod ipc_listener;
 mod platform;
 
-use errors::MessageError;
+use messages::MessageError;
 
 // Re-export the platform-specific types and functions
 pub use crate::breakpad::{BreakpadChar, BreakpadData, BreakpadRawData, Pid};
@@ -21,8 +21,8 @@ pub use crate::ipc_channel::{IPCChannel, IPCClientChannel};
 pub use crate::ipc_connector::{
     AncillaryData, IPCConnector, IPCEvent, RawAncillaryData, INVALID_ANCILLARY_DATA,
 };
-pub use crate::ipc_listener::IPCListener;
-pub use crate::platform::ProcessHandle;
+pub use crate::ipc_listener::{IPCListener, IPCListenerError};
+pub use crate::platform::{PlatformError, ProcessHandle};
 
 #[cfg(target_os = "windows")]
 pub use crate::platform::server_addr;

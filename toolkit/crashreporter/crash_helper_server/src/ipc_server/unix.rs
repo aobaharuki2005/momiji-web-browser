@@ -17,8 +17,8 @@ impl IPCServer {
         );
 
         let mut events = Vec::<IPCEvent>::new();
-        let mut num_events =
-            ignore_eintr!(poll(&mut pollfds, PollTimeout::NONE)).map_err(IPCError::System)?;
+        let mut num_events = ignore_eintr!(poll(&mut pollfds, PollTimeout::NONE))
+            .map_err(|errno| IPCError::WaitingFailure(Some(errno)))?;
 
         for (index, pollfd) in pollfds.iter().enumerate() {
             // revents() returns None only if the kernel sends back data
