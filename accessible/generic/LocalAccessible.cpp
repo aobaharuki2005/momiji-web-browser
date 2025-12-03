@@ -3678,15 +3678,8 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     if (boundsChanged) {
       mBounds = Some(newBoundsRect);
 
-      nsTArray<int32_t> boundsArray(4);
-
-      boundsArray.AppendElement(newBoundsRect.x);
-      boundsArray.AppendElement(newBoundsRect.y);
-      boundsArray.AppendElement(newBoundsRect.width);
-      boundsArray.AppendElement(newBoundsRect.height);
-
-      fields->SetAttribute(CacheKey::ParentRelativeBounds,
-                           std::move(boundsArray));
+      UniquePtr<nsRect> ptr = MakeUnique<nsRect>(newBoundsRect);
+      fields->SetAttribute(CacheKey::ParentRelativeBounds, std::move(ptr));
     }
 
     if (frame && frame->ScrollableOverflowRect().IsEmpty()) {

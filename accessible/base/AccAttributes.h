@@ -107,7 +107,7 @@ class AccAttributes {
       Variant<bool, float, double, int32_t, RefPtr<nsAtom>, nsTArray<int32_t>,
               CSSCoord, FontSize, Color, DeleteEntry, UniquePtr<nsString>,
               RefPtr<AccAttributes>, uint64_t, UniquePtr<AccGroupInfo>,
-              UniquePtr<gfx::Matrix4x4>, nsTArray<uint64_t>,
+              UniquePtr<gfx::Matrix4x4>, UniquePtr<nsRect>, nsTArray<uint64_t>,
               nsTArray<TextOffsetAttribute>, WritingMode,
               nsTArray<RefPtr<nsAtom>>>;
   static_assert(sizeof(AttrValueType) <= 16);
@@ -136,6 +136,9 @@ class AccAttributes {
     } else if constexpr (std::is_same_v<ValType, gfx::Matrix4x4>) {
       UniquePtr<gfx::Matrix4x4> value = MakeUnique<gfx::Matrix4x4>(aAttrValue);
       mData.InsertOrUpdate(aAttrName, AsVariant(std::move(value)));
+    } else if constexpr (std::is_same_v<ValType, nsRect>) {
+      UniquePtr<nsRect> value = MakeUnique<nsRect>(aAttrValue);
+      mData.InsertOrUpdate(aAttrName, AsVariant(std::move(value)));
     } else if constexpr (std::is_same_v<ValType, AccGroupInfo*>) {
       UniquePtr<AccGroupInfo> value(aAttrValue);
       mData.InsertOrUpdate(aAttrName, AsVariant(std::move(value)));
@@ -161,6 +164,11 @@ class AccAttributes {
       } else if constexpr (std::is_same_v<gfx::Matrix4x4, T>) {
         if (value->is<UniquePtr<gfx::Matrix4x4>>()) {
           const T& val = *(value->as<UniquePtr<gfx::Matrix4x4>>());
+          return SomeRef(val);
+        }
+      } else if constexpr (std::is_same_v<nsRect, T>) {
+        if (value->is<UniquePtr<nsRect>>()) {
+          const T& val = *(value->as<UniquePtr<nsRect>>());
           return SomeRef(val);
         }
       } else {
@@ -263,6 +271,11 @@ class AccAttributes {
       } else if constexpr (std::is_same_v<gfx::Matrix4x4, T>) {
         if (mValue->is<UniquePtr<gfx::Matrix4x4>>()) {
           const T& val = *(mValue->as<UniquePtr<gfx::Matrix4x4>>());
+          return SomeRef(val);
+        }
+      } else if constexpr (std::is_same_v<nsRect, T>) {
+        if (mValue->is<UniquePtr<nsRect>>()) {
+          const T& val = *(mValue->as<UniquePtr<nsRect>>());
           return SomeRef(val);
         }
       } else {

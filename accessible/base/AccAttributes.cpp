@@ -84,6 +84,9 @@ void AccAttributes::StringFromValueAndName(nsAtom* aAttrName,
       [&aValueString](const UniquePtr<gfx::Matrix4x4>& val) {
         aValueString.AppendPrintf("Matrix4x4=%s", ToString(*val).c_str());
       },
+      [&aValueString](const UniquePtr<nsRect>& val) {
+        aValueString.AppendPrintf("nsRect=%s", ToString(*val).c_str());
+      },
       [&aValueString](const nsTArray<uint64_t>& val) {
         if (const size_t len = val.Length()) {
           for (size_t i = 0; i < len - 1; i++) {
@@ -257,6 +260,10 @@ void AccAttributes::CopyTo(AccAttributes* aDest, bool aOnlyMissing) const {
           MOZ_ASSERT_UNREACHABLE(
               "Trying to copy an AccAttributes containing a matrix");
         },
+        [](const UniquePtr<nsRect>& val) {
+          MOZ_ASSERT_UNREACHABLE(
+              "Trying to copy an AccAttributes containing a nsrect");
+        },
         [](const nsTArray<uint64_t>& val) {
           // We don't copy arrays.
           MOZ_ASSERT_UNREACHABLE(
@@ -317,6 +324,8 @@ size_t AccAttributes::Entry::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) {
         aMallocSizeOf);
   } else if (mValue->is<UniquePtr<gfx::Matrix4x4>>()) {
     size += aMallocSizeOf(mValue->as<UniquePtr<gfx::Matrix4x4>>().get());
+  } else if (mValue->is<UniquePtr<nsRect>>()) {
+    size += aMallocSizeOf(mValue->as<UniquePtr<nsRect>>().get());
   } else if (mValue->is<nsTArray<uint64_t>>()) {
     size += mValue->as<nsTArray<uint64_t>>().ShallowSizeOfExcludingThis(
         aMallocSizeOf);

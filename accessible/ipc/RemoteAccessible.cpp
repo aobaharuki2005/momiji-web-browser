@@ -759,16 +759,11 @@ Maybe<nsRect> RemoteAccessible::RetrieveCachedBounds() const {
   }
 
   ASSERT_DOMAINS_ACTIVE(CacheDomain::Bounds);
-  Maybe<const nsTArray<int32_t>&> maybeArray =
-      mCachedFields->GetAttribute<nsTArray<int32_t>>(
+  Maybe<const UniquePtr<nsRect>&> maybeRect =
+      mCachedFields->GetAttribute<UniquePtr<nsRect>>(
           CacheKey::ParentRelativeBounds);
-  if (maybeArray) {
-    const nsTArray<int32_t>& relativeBoundsArr = *maybeArray;
-    MOZ_ASSERT(relativeBoundsArr.Length() == 4,
-               "Incorrectly sized bounds array");
-    nsRect relativeBoundsRect(relativeBoundsArr[0], relativeBoundsArr[1],
-                              relativeBoundsArr[2], relativeBoundsArr[3]);
-    return Some(relativeBoundsRect);
+  if (maybeRect) {
+    return Some(*(*maybeRect));
   }
 
   return Nothing();
