@@ -133,6 +133,29 @@ void AccAttributes::Update(AccAttributes* aOther) {
   }
 }
 
+void AccAttributes::RemoveIdentical(const AccAttributes* aOther) {
+  for (auto iter = mData.Iter(); !iter.Done(); iter.Next()) {
+    if (const auto otherEntry = aOther->mData.Lookup(iter.Key())) {
+      if (iter.Data().is<UniquePtr<nsString>>()) {
+        // Because we store nsString in a UniquePtr, we must handle it specially
+        // so we compare the string and not the pointer.
+        if (!otherEntry->is<UniquePtr<nsString>>()) {
+          continue;
+        }
+        const auto& thisStr = iter.Data().as<UniquePtr<nsString>>();
+        const auto& otherStr = otherEntry->as<UniquePtr<nsString>>();
+        if (*thisStr != *otherStr) {
+          continue;
+        }
+      } else if (iter.Data() != otherEntry.Data()) {
+        continue;
+      }
+
+      iter.Remove();
+    }
+  }
+}
+
 bool AccAttributes::Equal(const AccAttributes* aOther) const {
   if (Count() != aOther->Count()) {
     return false;
@@ -160,8 +183,12 @@ bool AccAttributes::Equal(const AccAttributes* aOther) const {
   return true;
 }
 
-void AccAttributes::CopyTo(AccAttributes* aDest) const {
+void AccAttributes::CopyTo(AccAttributes* aDest, bool aOnlyMissing) const {
   for (auto iter = mData.ConstIter(); !iter.Done(); iter.Next()) {
+    if (aOnlyMissing && aDest->HasAttribute(iter.Key())) {
+      continue;
+    }
+
     iter.Data().match(
         [&iter, &aDest](const bool& val) {
           aDest->mData.InsertOrUpdate(iter.Key(), AsVariant(val));

@@ -223,6 +223,9 @@ class AccAttributes {
   // will be emptied.
   void Update(AccAttributes* aOther);
 
+  // Remove all entries that are identical to the supplied AccAttributes.
+  void RemoveIdentical(const AccAttributes* aOther);
+
   /**
    * Return true if all the attributes in this instance are equal to all the
    * attributes in another instance.
@@ -235,8 +238,10 @@ class AccAttributes {
    * cached attributes without modifying the cache. It can only copy simple
    * value types; e.g. it can't copy array values. Attempting to copy an
    * AccAttributes with uncopyable values will cause an assertion.
+   * If aOnlyMissing is true, don't copy entries if destination already has
+   * a given key.
    */
-  void CopyTo(AccAttributes* aDest) const;
+  void CopyTo(AccAttributes* aDest, bool aOnlyMissing = false) const;
 
   // An entry class for our iterator.
   class Entry {

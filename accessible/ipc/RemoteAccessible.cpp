@@ -1713,11 +1713,23 @@ already_AddRefed<AccAttributes> RemoteAccessible::DefaultTextAttributes() {
   if (RequestDomainsIfInactive(CacheDomain::Text)) {
     return nullptr;
   }
-  RefPtr<const AccAttributes> attrs = GetCachedTextAttributes();
+
   RefPtr<AccAttributes> result = new AccAttributes();
-  if (attrs) {
-    attrs->CopyTo(result);
+  for (RemoteAccessible* parent = this; parent;
+       parent = parent->RemoteParent()) {
+    if (!parent->IsHyperText()) {
+      // We are only interested in hypertext nodes for defaults, not in text
+      // leafs or non hypertext nodes.
+      continue;
+    }
+
+    if (RefPtr<const AccAttributes> parentAttrs =
+            parent->GetCachedTextAttributes()) {
+      // Update our text attributes with any parent entries we don't have.
+      parentAttrs->CopyTo(result, true);
+    }
   }
+
   return result.forget();
 }
 
@@ -2622,15 +2634,13 @@ void RemoteAccessible::Language(nsAString& aLocale) {
   }
 
   if (IsHyperText() || IsText()) {
-    if (auto attrs = GetCachedTextAttributes()) {
-      attrs->GetAttribute(nsGkAtoms::language, aLocale);
-    }
-    if (IsText() && aLocale.IsEmpty()) {
-      // If a leaf has the same language as its parent HyperTextAccessible, it
-      // won't be cached in the leaf's text attributes. Check the parent.
-      if (RemoteAccessible* parent = RemoteParent()) {
-        if (auto attrs = parent->GetCachedTextAttributes()) {
-          attrs->GetAttribute(nsGkAtoms::language, aLocale);
+    for (RemoteAccessible* parent = this; parent;
+         parent = parent->RemoteParent()) {
+      // Climb up the tree to find where the nearest language attribute is.
+      if (RefPtr<const AccAttributes> attrs =
+              parent->GetCachedTextAttributes()) {
+        if (attrs->GetAttribute(nsGkAtoms::language, aLocale)) {
+          return;
         }
       }
     }
