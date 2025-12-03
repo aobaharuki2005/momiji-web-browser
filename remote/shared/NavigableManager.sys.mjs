@@ -287,7 +287,7 @@ class NavigableManagerClass {
     const { browsingContext } = data;
 
     if (!browsingContext.isContent) {
-      this.#chromeNavigables.deleteByValue(browsingContext);
+      this.#chromeNavigables.deleteByObject(browsingContext);
     }
   };
 }
