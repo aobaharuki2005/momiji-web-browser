@@ -2802,6 +2802,7 @@ void CanonicalBrowsingContext::HistoryCommitIndexAndLength() {
   CallerWillNotifyHistoryIndexAndLengthChanges caller(nullptr);
   HistoryCommitIndexAndLength(changeID, caller);
 }
+
 void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
     const nsID& aChangeID,
     const CallerWillNotifyHistoryIndexAndLengthChanges& aProofOfCaller) {
@@ -2826,6 +2827,75 @@ void CanonicalBrowsingContext::HistoryCommitIndexAndLength(
     (void)aParent->SendHistoryCommitIndexAndLength(this, index, length,
                                                    aChangeID);
   });
+}
+
+void CanonicalBrowsingContext::DeactivateDocuments() {
+  MOZ_DIAGNOSTIC_ASSERT(IsTop() && mozilla::BFCacheInParent() &&
+                        GetContentParent());
+  if (IsInProcess()) {
+    BrowsingContext::DeactivateDocuments();
+  } else {
+    Group()->EachParent([&](ContentParent* aContentParent) {
+      (void)aContentParent->SendDeactivateDocuments(this);
+    });
+
+    PreOrderWalk([&](BrowsingContext* aContext) {
+      aContext->Canonical()->SetIsInBFCache(true);
+    });
+  }
+
+  if (GetCurrentWindowGlobal() && GetCurrentWindowGlobal()->Fullscreen()) {
+    GetCurrentWindowGlobal()->ExitTopChromeDocumentFullscreen();
+  }
+}
+
+void CanonicalBrowsingContext::ReactivateDocuments(
+    SessionHistoryEntry* aEntry,
+    SessionHistoryEntry* aPreviousEntryForActivation) {
+  nsTArray<SessionHistoryInfo> topNewSHIs;
+
+  if (Navigation::IsAPIEnabled()) {
+    nsSHistory::WalkContiguousEntriesInOrder(
+        aEntry, [&topNewSHIs](auto* aContiguousEntry) {
+          if (nsCOMPtr<SessionHistoryEntry> she =
+                  do_QueryInterface(aContiguousEntry)) {
+            topNewSHIs.AppendElement(she->Info());
+          }
+          return true;
+        });
+  }
+
+  if (IsInProcess()) {
+    BrowsingContext::ReactivateDocuments(
+        Some(mActiveEntry->Info()), topNewSHIs,
+        ToMaybeRef(aPreviousEntryForActivation).map([](auto& entry) {
+          return entry.Info();
+        }));
+
+  } else {
+    Group()->EachParent([&](ContentParent* aContentParent) {
+      nsTArray<SessionHistoryInfo> newSHIs;
+      Maybe<SessionHistoryInfo> reactivatedEntry;
+      if (GetContentParent() == aContentParent && Navigation::IsAPIEnabled()) {
+        newSHIs.AppendElements(std::move(topNewSHIs));
+        reactivatedEntry.emplace(mActiveEntry->Info());
+      }
+      (void)aContentParent->SendReactivateDocuments(
+          this, reactivatedEntry, newSHIs,
+          ToMaybeRef(aPreviousEntryForActivation).map([](auto& entry) {
+            return entry.Info();
+          }));
+    });
+
+    UpdateCurrentTopByBrowserId(this);
+    PreOrderWalk([&](BrowsingContext* aContext) {
+      aContext->Canonical()->SetIsInBFCache(false);
+    });
+  }
+
+  if (GetCurrentWindowGlobal() && GetCurrentWindowGlobal()->Fullscreen()) {
+    GetCurrentWindowGlobal()->ExitTopChromeDocumentFullscreen();
+  }
 }
 
 void CanonicalBrowsingContext::SynchronizeLayoutHistoryState() {

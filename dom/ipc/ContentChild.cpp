@@ -75,6 +75,7 @@
 #include "mozilla/dom/LSObject.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/dom/Navigation.h"
+#include "mozilla/dom/NavigationHistoryEntry.h"
 #include "mozilla/dom/PSessionStorageObserverChild.h"
 #include "mozilla/dom/PostMessageEvent.h"
 #include "mozilla/dom/PushNotifier.h"
@@ -4613,6 +4614,38 @@ mozilla::ipc::IPCResult ContentChild::RecvStopLoad(
   if (auto* docShell = nsDocShell::Cast(bc->GetDocShell())) {
     docShell->Stop(aStopFlags);
   }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentChild::RecvDeactivateDocuments(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  BrowsingContext* browsingContext = aContext.get();
+  MOZ_DIAGNOSTIC_ASSERT(browsingContext->IsTopContent());
+
+  browsingContext->DeactivateDocuments();
+
+  return IPC_OK();
+}
+
+// https://html.spec.whatwg.org/#update-document-for-history-step-application
+// Perform steps 7 and 9 for the BFCache case.
+mozilla::ipc::IPCResult ContentChild::RecvReactivateDocuments(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    const Maybe<SessionHistoryInfo>& aReactivatedEntry,
+    const nsTArray<SessionHistoryInfo>& aNewSHEs,
+    const Maybe<SessionHistoryInfo>& aPreviousEntryForActivation) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  RefPtr browsingContext = aContext.get();
+  MOZ_DIAGNOSTIC_ASSERT(browsingContext->IsTopContent());
+
+  browsingContext->ReactivateDocuments(aReactivatedEntry, aNewSHEs,
+                                       aPreviousEntryForActivation);
 
   return IPC_OK();
 }

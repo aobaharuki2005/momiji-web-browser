@@ -1258,7 +1258,9 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
 
   aEntry->SetFrameLoader(nullptr);
 
-  nsCOMPtr<nsISHistory> shistory = aEntry->GetShistory();
+  nsCOMPtr<nsISHistory> nsihistory = aEntry->GetShistory();
+  RefPtr<nsSHistory> shistory = static_cast<nsSHistory*>(nsihistory.get());
+
   int32_t indexOfHistoryLoad =
       shistory ? shistory->GetIndexOfEntry(aEntry) : -1;
 
@@ -1303,7 +1305,7 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
 
       if (aCanSave) {
         currentSHEntry->SetFrameLoader(currentFrameLoader);
-        (void)aBrowsingContext->SetIsInBFCache(true);
+        aBrowsingContext->DeactivateDocuments();
       }
     }
 
@@ -1349,10 +1351,10 @@ static void FinishRestore(CanonicalBrowsingContext* aBrowsingContext,
       currentFrameLoader->Destroy();
     }
 
-    (void)loadingBC->SetIsInBFCache(false);
+    loadingBC->ReactivateDocuments(aEntry, currentSHEntry);
 
     // We need to call this after we've restored the page from BFCache (see
-    // SetIsInBFCache(false) above), so that the page is not frozen anymore and
+    // ReactivateDocuments above), so that the page is not frozen anymore and
     // the right focus events are fired.
     frameLoaderOwner->UpdateFocusAndMouseEnterStateAfterFrameLoaderChange();
 
@@ -2408,7 +2410,7 @@ nsresult nsSHistory::LoadEntry(BrowsingContext* aSourceBrowsingContext,
     // Possibly a reload case
     InitiateLoad(aSourceBrowsingContext, nextEntry, rootBC, aLoadType,
                  aLoadResults, aLoadCurrentEntry, aUserActivation,
-                 requestedOffset);
+                 requestedOffset, prevEntry);
     return NS_OK;
   }
 
@@ -2417,13 +2419,13 @@ nsresult nsSHistory::LoadEntry(BrowsingContext* aSourceBrowsingContext,
       prevEntry, nextEntry, rootBC,
       [self = RefPtr{this},
        sourceBrowsingContext = RefPtr{aSourceBrowsingContext}, aLoadType,
-       &aLoadResults, aLoadCurrentEntry, aUserActivation,
-       requestedOffset](nsISHEntry* aEntry, BrowsingContext* aParent) {
+       &aLoadResults, aLoadCurrentEntry, aUserActivation, requestedOffset,
+       prevEntry](nsISHEntry* aEntry, BrowsingContext* aParent) {
         // Set the Subframe flag if not navigating the root docshell.
         aEntry->SetIsSubFrame(aParent->Id() != self->mRootBC);
         self->InitiateLoad(sourceBrowsingContext, aEntry, aParent, aLoadType,
                            aLoadResults, aLoadCurrentEntry, aUserActivation,
-                           requestedOffset);
+                           requestedOffset, prevEntry);
       });
   if (!differenceFound) {
     // LoadNextPossibleEntry will change the offset by one, and in order
@@ -2625,7 +2627,8 @@ void nsSHistory::InitiateLoad(BrowsingContext* aSourceBrowsingContext,
                               BrowsingContext* aFrameBC, long aLoadType,
                               nsTArray<LoadEntryResult>& aLoadResults,
                               bool aLoadCurrentEntry, bool aUserActivation,
-                              int32_t aOffset) {
+                              int32_t aOffset,
+                              nsISHEntry* aPreviousEntryForActivation) {
   MOZ_ASSERT(aFrameBC && aFrameEntry);
 
   LoadEntryResult* loadResult = aLoadResults.AppendElement();
@@ -2653,6 +2656,8 @@ void nsSHistory::InitiateLoad(BrowsingContext* aSourceBrowsingContext,
 
   loadState->SetSHEntry(aFrameEntry);
 
+  loadState->SetPreviousEntryForActivation(aPreviousEntryForActivation);
+
   // If we're loading the current entry we want to treat it as not a
   // same-document navigation (see nsDocShell::IsSameDocumentNavigation), so
   // record that here in the LoadingSessionHistoryEntry.
@@ -2668,8 +2673,10 @@ void nsSHistory::InitiateLoad(BrowsingContext* aSourceBrowsingContext,
 
   if (mozilla::SessionHistoryInParent()) {
     nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aFrameEntry);
-    aFrameBC->Canonical()->AddLoadingSessionHistoryEntry(
-        loadState->GetLoadingSessionHistoryInfo()->mLoadId, she);
+    const LoadingSessionHistoryInfo* loadingInfo =
+        loadState->GetLoadingSessionHistoryInfo();
+    aFrameBC->Canonical()->AddLoadingSessionHistoryEntry(loadingInfo->mLoadId,
+                                                         she);
   }
 
   nsCOMPtr<nsIURI> originalURI = aFrameEntry->GetOriginalURI();

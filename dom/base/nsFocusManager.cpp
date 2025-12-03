@@ -1355,8 +1355,9 @@ void nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow,
   if (!XRE_IsParentProcess() &&
       mActiveBrowsingContextInContent ==
           docShellBeingHidden->GetBrowsingContext() &&
-      mActiveBrowsingContextInContent->GetIsInBFCache()) {
-    SetActiveBrowsingContextInContent(nullptr, aActionId, aIsEnteringBFCache);
+      aIsEnteringBFCache) {
+    SetActiveBrowsingContextInContent(nullptr, aActionId,
+                                      /* aIsEnteringBFCache */ true);
   }
 
   // if the window being hidden is an ancestor of the focused window, adjust

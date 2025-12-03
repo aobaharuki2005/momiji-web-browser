@@ -330,6 +330,12 @@ class CanonicalBrowsingContext final : public BrowsingContext {
 
   void HistoryCommitIndexAndLength();
 
+  void DeactivateDocuments();
+
+  MOZ_CAN_RUN_SCRIPT
+  void ReactivateDocuments(SessionHistoryEntry* aEntry,
+                           SessionHistoryEntry* aPreviousEntryForActivation);
+
   void SynchronizeLayoutHistoryState();
 
   void SynchronizeNavigationAPIState(nsIStructuredCloneContainer* aState);

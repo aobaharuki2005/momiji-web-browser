@@ -136,9 +136,10 @@ class Navigation final : public DOMEventTargetHelper {
 
   // https://html.spec.whatwg.org/multipage/nav-history-apis.html#update-the-navigation-api-entries-for-reactivation
   MOZ_CAN_RUN_SCRIPT
-  void UpdateForReactivation(SessionHistoryInfo* aReactivatedEntry);
+  void UpdateForReactivation(Span<const SessionHistoryInfo> aNewSHEs,
+                             const SessionHistoryInfo* aReactivatedEntry);
 
-  // https://html.spec.whatwg.org/multipage/nav-history-apis.html#update-the-navigation-api-entries-for-a-same-document-navigation
+  MOZ_CAN_RUN_SCRIPT
   void UpdateEntriesForSameDocumentNavigation(
       SessionHistoryInfo* aDestinationSHE, NavigationType aNavigationType);
 
@@ -192,8 +193,8 @@ class Navigation final : public DOMEventTargetHelper {
   void InformAboutChildNavigableDestruction(JSContext* aCx);
 
   void CreateNavigationActivationFrom(
-      SessionHistoryInfo* aPreviousEntryForActivation,
-      NavigationType aNavigationType);
+      const SessionHistoryInfo* aPreviousEntryForActivation,
+      Maybe<NavigationType> aNavigationType);
 
   void SetSerializedStateIntoOngoingAPIMethodTracker(
       nsIStructuredCloneContainer* aSerializedState);
@@ -227,6 +228,9 @@ class Navigation final : public DOMEventTargetHelper {
       NavigationAPIMethodTracker* aNavigationAPIMethodTracker = nullptr);
 
   NavigationHistoryEntry* FindNavigationHistoryEntry(
+      const SessionHistoryInfo& aSessionHistoryInfo) const;
+
+  Maybe<size_t> GetNavigationEntryIndex(
       const SessionHistoryInfo& aSessionHistoryInfo) const;
 
   RefPtr<NavigationAPIMethodTracker> SetUpNavigateReloadAPIMethodTracker(

@@ -162,7 +162,7 @@ class SessionHistoryInfo {
 
   void SetSaveLayoutStateFlag(bool aSaveLayoutStateFlag);
 
-  bool IsTransient() { return mTransient; }
+  bool IsTransient() const { return mTransient; }
   void SetTransient() { mTransient = true; }
 
   nsID& NavigationKey() { return mNavigationKey; }

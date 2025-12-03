@@ -82,6 +82,7 @@ include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/FeaturePolicyUtils.h";
 include "mozilla/dom/GeolocationIPCUtils.h";
 include "mozilla/dom/MediaSessionIPCUtils.h";
+include "mozilla/dom/NavigationAPIIPCUtils.h";
 include "mozilla/dom/PageLoadEventUtils.h";
 include "mozilla/dom/ReferrerInfoUtils.h";
 include "mozilla/glean/DomMetrics.h";
@@ -106,6 +107,7 @@ using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using gfxPlatform::GlobalReflowFlags from "gfxPlatform.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::dom::ContentParentId from "mozilla/dom/ipc/IdType.h";
+using mozilla::dom::NavigationType from "mozilla/dom/NavigationAPIIPCUtils.h";
 using mozilla::EventMessage from "mozilla/EventForwards.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::ImagePoint from "Units.h";
@@ -1029,6 +1031,12 @@ child:
     async GoToIndex(MaybeDiscardedBrowsingContext aContext, int32_t aIndex, int32_t? aCancelContentJSEpoch, bool aUserActivation);
     async Reload(MaybeDiscardedBrowsingContext aContext, uint32_t aReloadFlags);
     async StopLoad(MaybeDiscardedBrowsingContext aContext, uint32_t aStopFlags);
+
+    async DeactivateDocuments(MaybeDiscardedBrowsingContext aContext);
+    async ReactivateDocuments(MaybeDiscardedBrowsingContext aContext,
+                              SessionHistoryInfo? aReactivatedEntry,
+                              SessionHistoryInfo[] aNewSHEs,
+                              SessionHistoryInfo? aPreviousEntryForActivation);
 
     async OnAllowAccessFor(MaybeDiscardedBrowsingContext aParentContext,
                            nsCString aTrackingOrigin,

@@ -200,6 +200,8 @@ class nsDocShellLoadState final {
 
   void SetSHEntry(nsISHEntry* aSHEntry);
 
+  void SetPreviousEntryForActivation(nsISHEntry* aSHEntry);
+
   const mozilla::dom::LoadingSessionHistoryInfo* GetLoadingSessionHistoryInfo()
       const;
 

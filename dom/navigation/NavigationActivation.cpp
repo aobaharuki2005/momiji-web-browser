@@ -44,4 +44,16 @@ already_AddRefed<NavigationHistoryEntry> NavigationActivation::Entry() const {
   return do_AddRef(mNewEntry);
 }
 
+void NavigationActivation::SetNewEntry(NavigationHistoryEntry* aEntry) {
+  mNewEntry = aEntry;
+}
+
+void NavigationActivation::SetOldEntry(NavigationHistoryEntry* aEntry) {
+  mOldEntry = aEntry;
+}
+
+void NavigationActivation::SetNavigationType(enum NavigationType aType) {
+  mType = aType;
+}
+
 }  // namespace mozilla::dom
