@@ -308,13 +308,22 @@ class DefaultLoader(BaseManifestLoader):
             disabled=False, exists=False, filters=filters, **mozinfo
         )
 
-        active_manifests = {chunk_by_runtime.get_manifest(t) for t in active_tests}
+        all_manifests = {chunk_by_runtime.get_manifest(t) for t in tests}
 
-        skipped_manifests = {chunk_by_runtime.get_manifest(t) for t in tests}
-        skipped_manifests.difference_update(active_manifests)
+        active = {}
+        for t in active_tests:
+            mp = chunk_by_runtime.get_manifest(t)
+            dir_relpath = t["dir_relpath"]
+            if not mp.startswith(dir_relpath):
+                active.setdefault(mp, set()).add(dir_relpath)
+            else:
+                active.setdefault(mp, set())
+
+        skipped = all_manifests - set(active.keys())
+
         return {
-            "active": list(active_manifests),
-            "skipped": list(skipped_manifests),
+            "active": list(active.keys()),
+            "skipped": list(skipped),
             "other_dirs": {},
         }
 

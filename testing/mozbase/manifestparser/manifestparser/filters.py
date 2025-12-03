@@ -33,12 +33,12 @@ def skip_if(tests, values, strict=False):
     Sets disabled on all tests containing the `skip-if` tag and whose condition
     is True. This filter is added by default.
     """
+    tag = "skip-if"
     for test in tests:
-        test_tag = test.get("skip_if")
-        if test_tag:
-            matching_expr = _match(test_tag, strict, **values)
+        if tag in test:
+            matching_expr = _match(test[tag], strict, **values)
             if matching_expr:
-                test.setdefault("disabled", f"skip_if: {matching_expr}")
+                test.setdefault("disabled", f"{tag}: {matching_expr}")
         yield test
 
 
