@@ -6,7 +6,6 @@
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.trustPanel.featureGate", false],
       ["test.wait300msAfterTabSwitch", true],
       ["extensions.formautofill.addresses.capture.enabled", true],
       ["extensions.formautofill.addresses.supported", "on"],

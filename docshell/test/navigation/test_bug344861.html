@@ -5,19 +5,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=344861
 -->
 <head>
   <title>Test for Bug 344861</title>
-  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=344861">Mozilla Bug 344861</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-
+  
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-
-SpecialPowers.pushPrefEnv({"set": [["browser.urlbar.trustPanel.featureGate", false]]});
 
 /** Test for Bug 344861 */
 SimpleTest.waitForExplicitFinish();
@@ -34,4 +32,4 @@ newwindow.onload = function() {
 </body>
 </html>
 
-
+   
