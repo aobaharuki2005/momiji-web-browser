@@ -10386,7 +10386,7 @@
 #endif
   mirror: always
 
-- name: layout.css.scroll-behavior.damping-ratio
+- name: layout.css.scroll-snap.damping-ratio
   type: AtomicFloat
   value: 1.0f
   mirror: always
@@ -10394,7 +10394,7 @@
 # Tuning of the smooth scroll motion used by CSSOM-View scroll-behavior.
 # Spring-constant controls the strength of the simulated MSD
 # (Mass-Spring-Damper).
-- name: layout.css.scroll-behavior.spring-constant
+- name: layout.css.scroll-snap.spring-constant
   type: AtomicFloat
   value: 250.0f
   mirror: always
