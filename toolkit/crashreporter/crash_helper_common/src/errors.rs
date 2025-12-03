@@ -35,6 +35,4 @@ pub enum IPCError {
     TransmissionFailure(PlatformError),
     #[error("Unexpected message of kind: {0:?}")]
     UnexpectedMessage(messages::Kind),
-    #[error("Error while waiting for events, error: {0:?}")]
-    WaitingFailure(Option<SystemError>),
 }

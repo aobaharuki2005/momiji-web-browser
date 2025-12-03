@@ -618,7 +618,16 @@ impl Message for UnregisterAuxvInfo {
 
 /* Message sent from the main process to the crash helper to register a new
  * child process which is about to be spawned. This message contains the IPC
- * endpoint which the crash helper will use to talk to the child. */
+ * endpoint which the crash helper will use to talk to the child.
+ *
+ * Note that these processes should only contain an IPC endpoint and no actual
+ * data, however they declare a 1-byte sized payload which is transferred but
+ * ignored on the receiving size. This is a workaround to an issue with macOS
+ * 10.15 implementation of Unix sockets which would sometimes fail to deliver
+ * a message that would only contain control data and no buffer. See bug
+ * 1989686 for more information. This dummy payload can be removed once bug
+ * 2002791 is implemented.
+ */
 
 pub struct RegisterChildProcess {
     pub ipc_endpoint: AncillaryData,
@@ -630,7 +639,7 @@ impl RegisterChildProcess {
     }
 
     fn payload_size(&self) -> usize {
-        0
+        1
     }
 }
 
@@ -648,7 +657,7 @@ impl Message for RegisterChildProcess {
     }
 
     fn into_payload(self) -> (Vec<u8>, Option<AncillaryData>) {
-        (Vec::<u8>::new(), Some(self.ipc_endpoint))
+        (vec![0], Some(self.ipc_endpoint))
     }
 
     fn decode(
