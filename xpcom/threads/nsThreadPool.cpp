@@ -220,6 +220,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
 
   mThreads.AppendObject(thread);
   if (mThreads.Count() >= (int32_t)mThreadLimit) {
+    MOZ_ASSERT(mMRUIdleThreads.isEmpty());
     mIsAPoolThreadFree = false;
   }
 
@@ -389,10 +390,11 @@ nsThreadPool::Run() {
           DebugOnly<bool> found = mThreads.RemoveObject(current);
           MOZ_ASSERT(found || (mShutdown && mThreads.IsEmpty()));
 
-          // Keep track if there are threads available to start. If we are
-          // shutting down, no new threads can start.
+          // Keep track if there are threads available. If we are shutting
+          // down, no new threads can start.
           mIsAPoolThreadFree =
-              !mShutdown && (mThreads.Count() < (int32_t)mThreadLimit);
+              !mMRUIdleThreads.isEmpty() ||
+              (!mShutdown && mThreads.Count() < (int32_t)mThreadLimit);
         } else {
           current->SetRunningEventDelay(TimeDuration(), TimeStamp());
 
@@ -560,7 +562,7 @@ nsThreadPool::ShutdownWithTimeout(int32_t aTimeoutMs) {
     // join each thread.
     name = mName;
     mShutdown = true;
-    mIsAPoolThreadFree = false;
+    mIsAPoolThreadFree = !mMRUIdleThreads.isEmpty();
     NotifyChangeToAllIdleThreads();
 
     // From now on we do not allow the creation of new threads, and threads
