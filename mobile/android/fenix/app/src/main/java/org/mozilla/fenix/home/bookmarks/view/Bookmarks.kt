@@ -6,7 +6,6 @@ package org.mozilla.fenix.home.bookmarks.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,13 +43,13 @@ import androidx.compose.ui.unit.dp
 import mozilla.components.browser.icons.compose.Loader
 import mozilla.components.browser.icons.compose.Placeholder
 import mozilla.components.compose.base.utils.inComposePreview
-import mozilla.components.ui.colors.PhotonColors
 import org.mozilla.fenix.components.components
 import org.mozilla.fenix.compose.ContextualMenu
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.home.bookmarks.Bookmark
+import org.mozilla.fenix.home.fake.FakeHomepagePreview.bookmarks
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val cardShape = RoundedCornerShape(8.dp)
@@ -138,7 +139,6 @@ private fun BookmarkItem(
                     testTagsAsResourceId = true
                     testTag = "bookmark.title"
                 },
-                color = FirefoxTheme.colors.textPrimary,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = FirefoxTheme.typography.caption,
@@ -192,10 +192,7 @@ private fun BookmarkImage(bookmark: Bookmark) {
 private fun PlaceholderBookmarkImage() {
     Box(
         modifier = imageModifier.background(
-            color = when (isSystemInDarkTheme()) {
-                true -> PhotonColors.DarkGrey60
-                false -> PhotonColors.LightGrey30
-            },
+            color = MaterialTheme.colorScheme.surfaceContainerHighest,
         ),
     )
 }
@@ -206,7 +203,7 @@ private fun FallbackBookmarkFaviconImage(
 ) {
     Box(
         modifier = imageModifier.background(
-            color = FirefoxTheme.colors.layer2,
+            color = MaterialTheme.colorScheme.surfaceContainerLowest,
         ),
         contentAlignment = Alignment.Center,
     ) {
@@ -218,31 +215,12 @@ private fun FallbackBookmarkFaviconImage(
 @PreviewLightDark
 private fun BookmarksPreview() {
     FirefoxTheme {
-        Bookmarks(
-            bookmarks = listOf(
-                Bookmark(
-                    title = "Other Bookmark Title",
-                    url = "https://www.example.com",
-                    previewImageUrl = null,
-                ),
-                Bookmark(
-                    title = "Other Bookmark Title",
-                    url = "https://www.example.com",
-                    previewImageUrl = null,
-                ),
-                Bookmark(
-                    title = "Other Bookmark Title",
-                    url = "https://www.example.com",
-                    previewImageUrl = null,
-                ),
-                Bookmark(
-                    title = "Other Bookmark Title",
-                    url = "https://www.example.com",
-                    previewImageUrl = null,
-                ),
-            ),
-            menuItems = listOf(),
-            backgroundColor = FirefoxTheme.colors.layer2,
-        )
+        Surface {
+            Bookmarks(
+                bookmarks = bookmarks(),
+                menuItems = listOf(),
+                backgroundColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            )
+        }
     }
 }
