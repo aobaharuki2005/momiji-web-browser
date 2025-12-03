@@ -54,7 +54,10 @@ requestLongerTimeout(2);
 add_setup(async function () {
   // We do not want http://example.com etc. to be upgraded to https
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.security.https_first", false]],
+    set: [
+      ["browser.urlbar.trustPanel.featureGate", false],
+      ["dom.security.https_first", false],
+    ],
   });
 
   // Load recipes for this test.
