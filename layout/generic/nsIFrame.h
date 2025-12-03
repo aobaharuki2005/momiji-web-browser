@@ -4062,12 +4062,14 @@ class nsIFrame : public nsQueryFrame {
 
   /**
    * Called to retrieve the SelectionController associated with the frame.
-   *
-   * @param aSelCon will contain the selection controller associated with
-   * the frame.
    */
-  nsresult GetSelectionController(nsPresContext* aPresContext,
-                                  nsISelectionController** aSelCon) const;
+  nsISelectionController* GetSelectionController() const;
+
+  /**
+   * Return the display value of selections which is default to SELECTION_OFF if
+   * there is no selection controller.
+   */
+  int16_t GetDisplaySelection() const;
 
   /**
    * Call to get nsFrameSelection for this frame.

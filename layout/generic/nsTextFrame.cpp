@@ -8061,19 +8061,15 @@ nsRect nsTextFrame::WebRenderBounds() {
 }
 
 int16_t nsTextFrame::GetSelectionStatus(int16_t* aSelectionFlags) {
-  // get the selection controller
-  nsCOMPtr<nsISelectionController> selectionController;
-  nsresult rv = GetSelectionController(PresContext(),
-                                       getter_AddRefs(selectionController));
-  if (NS_FAILED(rv) || !selectionController) {
+  nsISelectionController* const selCon = GetSelectionController();
+  if (MOZ_UNLIKELY(!selCon)) {
     return nsISelectionController::SELECTION_OFF;
   }
 
-  selectionController->GetSelectionFlags(aSelectionFlags);
+  selCon->GetSelectionFlags(aSelectionFlags);
 
-  int16_t selectionValue;
-  selectionController->GetDisplaySelection(&selectionValue);
-
+  int16_t selectionValue = nsISelectionController::SELECTION_OFF;
+  selCon->GetDisplaySelection(&selectionValue);
   return selectionValue;
 }
 
