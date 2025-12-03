@@ -107,6 +107,13 @@ class SiteSettingsFragment : PreferenceFragmentCompat() {
         val preference = requirePreference<Preference>(phoneFeature.getPreferenceId())
         preference.summary = phoneFeature.getActionLabel(context, settings = settings)
         preference.isVisible = true
+        preference.icon?.setTint(
+            MaterialColors.getColor(
+                requireContext(),
+                materialR.attr.colorOnSurface,
+                "Could not resolve themed color",
+            ),
+        )
         preference.onPreferenceClickListener = OnPreferenceClickListener {
             navigateToPhoneFeature(phoneFeature)
             true
