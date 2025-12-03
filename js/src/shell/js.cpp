@@ -8085,6 +8085,14 @@ static bool DisableGeckoProfiling(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool GetGeckoProfilingScriptSourcesCount(JSContext* cx, unsigned argc,
+                                                Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  size_t count = cx->runtime()->geckoProfiler().scriptSourcesCount();
+  args.rval().setNumber(static_cast<double>(count));
+  return true;
+}
+
 // Global mailbox that is used to communicate a shareable object value from one
 // worker to another.
 //
@@ -10574,6 +10582,10 @@ JS_FN_HELP("createUserArrayBuffer", CreateUserArrayBuffer, 1, 0,
     JS_FN_HELP("disableGeckoProfiling", DisableGeckoProfiling, 0, 0,
 "disableGeckoProfiling()",
 "  Disables Gecko Profiler instrumentation"),
+
+    JS_FN_HELP("getGeckoProfilingScriptSourcesCount", GetGeckoProfilingScriptSourcesCount, 0, 0,
+"getGeckoProfilingScriptSourcesCount()",
+"  Returns the number of script sources registered with the Gecko Profiler"),
 
     JS_FN_HELP("isLatin1", IsLatin1, 1, 0,
 "isLatin1(s)",
