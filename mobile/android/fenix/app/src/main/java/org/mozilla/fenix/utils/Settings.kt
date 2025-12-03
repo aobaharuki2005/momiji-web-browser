@@ -85,14 +85,12 @@ private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
  * @param appContext Reference to application context.
  * @param packageName Package name of the application.
  * @param packageManagerCompatHelper Helper for accessing [android.content.pm.PackageManager] methods.
- * @param isBenchmarkBuild Boolean that will be true only when the app is built for Baseline Profile or Macrobenchmark.
  */
 @Suppress("LargeClass", "TooManyFunctions")
 class Settings(
     private val appContext: Context,
     private val packageName: String = appContext.packageName,
     private val packageManagerCompatHelper: PackageManagerCompatHelper = appContext.packageManagerCompatHelper,
-    private val isBenchmarkBuild: Boolean = BuildConfig.IS_BENCHMARK_BUILD,
 ) : PreferencesHolder {
     companion object {
         const val FENIX_PREFERENCES = "fenix_preferences"

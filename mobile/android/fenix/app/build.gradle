@@ -100,7 +100,6 @@ android {
         ]
 
         buildConfigField "String[]", "SUPPORTED_LOCALE_ARRAY", getSupportedLocales()
-        buildConfigField "boolean", "IS_BENCHMARK_BUILD", "false"
     }
 
     def releaseTemplate = {
@@ -185,7 +184,6 @@ android {
             applicationIdSuffix ".fenix"
             signingConfig = signingConfigs.debug
             debuggable false
-            buildConfigField "boolean", "IS_BENCHMARK_BUILD", "true"
         }
     }
 
