@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.recentsyncedtabs.view
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,8 +19,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,10 +39,10 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import mozilla.components.compose.base.button.OutlinedButton
+import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.text.Text
@@ -52,6 +54,7 @@ import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
 import org.mozilla.fenix.theme.FirefoxTheme
+import mozilla.components.ui.icons.R as iconsR
 
 private const val THUMBNAIL_SIZE = 108
 
@@ -70,9 +73,9 @@ private const val THUMBNAIL_SIZE = 108
 @Composable
 fun RecentSyncedTab(
     tab: RecentSyncedTab?,
-    backgroundColor: Color = FirefoxTheme.colors.layer2,
-    buttonBackgroundColor: Color = FirefoxTheme.colors.actionSecondary,
-    buttonTextColor: Color = FirefoxTheme.colors.textActionSecondary,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
+    buttonBackgroundColor: Color = ButtonDefaults.buttonColors().containerColor,
+    buttonTextColor: Color = ButtonDefaults.buttonColors().contentColor,
     onRecentSyncedTabClick: (RecentSyncedTab) -> Unit,
     onSeeAllSyncedTabsButtonClick: () -> Unit,
     onRemoveSyncedTab: (RecentSyncedTab) -> Unit,
@@ -134,7 +137,6 @@ fun RecentSyncedTab(
                     } else {
                         Text(
                             text = tab.title.trimmed(),
-                            color = FirefoxTheme.colors.textPrimary,
                             fontSize = 14.sp,
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 2,
@@ -145,12 +147,12 @@ fun RecentSyncedTab(
                         if (tab == null) {
                             Box(
                                 modifier = Modifier
-                                    .background(FirefoxTheme.colors.layer3)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                                     .size(18.dp),
                             )
                         } else {
-                            Image(
-                                painter = painterResource(R.drawable.ic_synced_tabs),
+                            Icon(
+                                painter = painterResource(iconsR.drawable.mozac_ic_sync_tabs_24),
                                 contentDescription = stringResource(
                                     R.string.recent_tabs_synced_device_icon_content_description,
                                 ),
@@ -165,7 +167,7 @@ fun RecentSyncedTab(
                         } else {
                             Text(
                                 text = tab.deviceDisplayName,
-                                color = FirefoxTheme.colors.textSecondary,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 12.sp,
                                 overflow = TextOverflow.Ellipsis,
                                 maxLines = 1,
@@ -177,7 +179,7 @@ fun RecentSyncedTab(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            OutlinedButton(
+            FilledButton(
                 text = if (tab != null) {
                     stringResource(R.string.recent_tabs_see_all_synced_tabs_button_text)
                 } else {
@@ -211,7 +213,7 @@ private fun RecentTabImagePlaceholder() {
         modifier = Modifier
             .size(108.dp, 80.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(color = FirefoxTheme.colors.layer3),
+            .background(color = MaterialTheme.colorScheme.surfaceContainerHighest),
     )
 }
 
@@ -238,11 +240,11 @@ private fun TextLinePlaceHolder() {
         modifier = Modifier
             .height(12.dp)
             .fillMaxWidth()
-            .background(FirefoxTheme.colors.layer3),
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
     )
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun LoadedRecentSyncedTab() {
     val tab = RecentSyncedTab(
@@ -262,13 +264,13 @@ private fun LoadedRecentSyncedTab() {
     }
 }
 
-@Preview
+@PreviewLightDark
 @Composable
 private fun LoadingRecentSyncedTab() {
     FirefoxTheme {
         RecentSyncedTab(
             tab = null,
-            buttonBackgroundColor = FirefoxTheme.colors.layer3,
+            buttonBackgroundColor = MaterialTheme.colorScheme.surfaceContainerHighest,
             onRecentSyncedTabClick = {},
             onSeeAllSyncedTabsButtonClick = {},
             onRemoveSyncedTab = {},

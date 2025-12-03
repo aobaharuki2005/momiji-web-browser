@@ -292,7 +292,7 @@ internal object FakeHomepagePreview {
         }
     }
 
-    internal fun recentTabs(tabCount: Int = 2): List<RecentTab.Tab> =
+    internal fun recentTabs(tabCount: Int = 1): List<RecentTab.Tab> =
         mutableListOf<RecentTab.Tab>().apply {
             repeat(tabCount) {
                 add(

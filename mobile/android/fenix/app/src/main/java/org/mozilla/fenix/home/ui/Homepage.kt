@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.home.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
@@ -177,7 +177,7 @@ internal fun Homepage(
                                             buttonBackgroundColor = if (syncedTab != null) {
                                                 buttonBackgroundColor
                                             } else {
-                                                FirefoxTheme.colors.layer3
+                                                MaterialTheme.colorScheme.surfaceContainerHighest
                                             },
                                             buttonTextColor = buttonTextColor,
                                             onRecentSyncedTabClick = interactor::onRecentSyncedTabClicked,
@@ -459,49 +459,49 @@ private fun CollectionsSection(
 @PreviewLightDark
 private fun HomepagePreview() {
     FirefoxTheme {
-        Homepage(
-            state = HomepageState.Normal(
-                nimbusMessage = FakeHomepagePreview.nimbusMessageState(),
-                topSites = FakeHomepagePreview.topSites(),
-                recentTabs = FakeHomepagePreview.recentTabs(),
-                syncedTab = FakeHomepagePreview.recentSyncedTab(),
-                bookmarks = FakeHomepagePreview.bookmarks(),
-                recentlyVisited = FakeHomepagePreview.recentHistory(),
-                collectionsState = FakeHomepagePreview.collectionsPlaceholder(),
-                pocketState = FakeHomepagePreview.pocketState(),
-                showTopSites = true,
-                showRecentTabs = true,
-                showRecentSyncedTab = true,
-                showBookmarks = true,
-                showRecentlyVisited = true,
-                showPocketStories = true,
-                showCollections = true,
-                headerState = HeaderState(
-                    showHeader = false,
-                    wordmarkTextColor = null,
-                    privateBrowsingButtonColor = colorResource(
-                        getAttr(
-                            iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+        Surface {
+            Homepage(
+                state = HomepageState.Normal(
+                    nimbusMessage = FakeHomepagePreview.nimbusMessageState(),
+                    topSites = FakeHomepagePreview.topSites(),
+                    recentTabs = FakeHomepagePreview.recentTabs(),
+                    syncedTab = FakeHomepagePreview.recentSyncedTab(),
+                    bookmarks = FakeHomepagePreview.bookmarks(),
+                    recentlyVisited = FakeHomepagePreview.recentHistory(),
+                    collectionsState = FakeHomepagePreview.collectionsPlaceholder(),
+                    pocketState = FakeHomepagePreview.pocketState(),
+                    showTopSites = true,
+                    showRecentTabs = true,
+                    showRecentSyncedTab = true,
+                    showBookmarks = true,
+                    showRecentlyVisited = true,
+                    showPocketStories = true,
+                    showCollections = true,
+                    headerState = HeaderState(
+                        showHeader = false,
+                        wordmarkTextColor = null,
+                        privateBrowsingButtonColor = colorResource(
+                            getAttr(
+                                iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                            ),
                         ),
                     ),
+                    searchBarVisible = true,
+                    searchBarEnabled = false,
+                    firstFrameDrawn = true,
+                    setupChecklistState = null,
+                    topSiteColors = TopSiteColors.colors(),
+                    cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
+                    buttonTextColor = WallpaperState.default.buttonTextColor,
+                    buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
+                    isSearchInProgress = false,
+                    bottomPadding = 68,
                 ),
-                searchBarVisible = true,
-                searchBarEnabled = false,
-                firstFrameDrawn = true,
-                setupChecklistState = null,
-                topSiteColors = TopSiteColors.colors(),
-                cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
-                buttonTextColor = WallpaperState.default.buttonTextColor,
-                buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
-                isSearchInProgress = false,
-                bottomPadding = 68,
-            ),
-            interactor = FakeHomepagePreview.homepageInteractor,
-            onTopSitesItemBound = {},
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.surface),
-        )
+                interactor = FakeHomepagePreview.homepageInteractor,
+                onTopSitesItemBound = {},
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
@@ -509,49 +509,49 @@ private fun HomepagePreview() {
 @PreviewLightDark
 private fun HomepagePreviewCollections() {
     FirefoxTheme {
-        Homepage(
-            state = HomepageState.Normal(
-                nimbusMessage = null,
-                topSites = FakeHomepagePreview.topSites(),
-                recentTabs = FakeHomepagePreview.recentTabs(),
-                syncedTab = FakeHomepagePreview.recentSyncedTab(),
-                bookmarks = FakeHomepagePreview.bookmarks(),
-                recentlyVisited = FakeHomepagePreview.recentHistory(),
-                collectionsState = FakeHomepagePreview.collectionState(),
-                pocketState = FakeHomepagePreview.pocketState(),
-                showTopSites = false,
-                showRecentTabs = false,
-                showRecentSyncedTab = false,
-                showBookmarks = false,
-                showRecentlyVisited = true,
-                showPocketStories = true,
-                showCollections = true,
-                headerState = HeaderState(
-                    showHeader = false,
-                    wordmarkTextColor = null,
-                    privateBrowsingButtonColor = colorResource(
-                        getAttr(
-                            iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+        Surface {
+            Homepage(
+                state = HomepageState.Normal(
+                    nimbusMessage = null,
+                    topSites = FakeHomepagePreview.topSites(),
+                    recentTabs = FakeHomepagePreview.recentTabs(),
+                    syncedTab = FakeHomepagePreview.recentSyncedTab(),
+                    bookmarks = FakeHomepagePreview.bookmarks(),
+                    recentlyVisited = FakeHomepagePreview.recentHistory(),
+                    collectionsState = FakeHomepagePreview.collectionState(),
+                    pocketState = FakeHomepagePreview.pocketState(),
+                    showTopSites = false,
+                    showRecentTabs = false,
+                    showRecentSyncedTab = false,
+                    showBookmarks = false,
+                    showRecentlyVisited = true,
+                    showPocketStories = true,
+                    showCollections = true,
+                    headerState = HeaderState(
+                        showHeader = false,
+                        wordmarkTextColor = null,
+                        privateBrowsingButtonColor = colorResource(
+                            getAttr(
+                                iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                            ),
                         ),
                     ),
+                    searchBarVisible = true,
+                    searchBarEnabled = false,
+                    firstFrameDrawn = true,
+                    setupChecklistState = null,
+                    topSiteColors = TopSiteColors.colors(),
+                    cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
+                    buttonTextColor = WallpaperState.default.buttonTextColor,
+                    buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
+                    isSearchInProgress = false,
+                    bottomPadding = 68,
                 ),
-                searchBarVisible = true,
-                searchBarEnabled = false,
-                firstFrameDrawn = true,
-                setupChecklistState = null,
-                topSiteColors = TopSiteColors.colors(),
-                cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
-                buttonTextColor = WallpaperState.default.buttonTextColor,
-                buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
-                isSearchInProgress = false,
-                bottomPadding = 68,
-            ),
-            interactor = FakeHomepagePreview.homepageInteractor,
-            onTopSitesItemBound = {},
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.surface),
-        )
+                interactor = FakeHomepagePreview.homepageInteractor,
+                onTopSitesItemBound = {},
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
@@ -559,49 +559,49 @@ private fun HomepagePreviewCollections() {
 @PreviewLightDark
 private fun MinimalHomepagePreview() {
     FirefoxTheme {
-        Homepage(
-            state = HomepageState.Normal(
-                nimbusMessage = null,
-                topSites = FakeHomepagePreview.topSites(),
-                recentTabs = FakeHomepagePreview.recentTabs(),
-                syncedTab = FakeHomepagePreview.recentSyncedTab(),
-                bookmarks = FakeHomepagePreview.bookmarks(),
-                recentlyVisited = FakeHomepagePreview.recentHistory(),
-                collectionsState = FakeHomepagePreview.collectionState(),
-                pocketState = FakeHomepagePreview.pocketState(),
-                showTopSites = true,
-                showRecentTabs = false,
-                showRecentSyncedTab = false,
-                showBookmarks = false,
-                showRecentlyVisited = false,
-                showPocketStories = true,
-                showCollections = false,
-                HeaderState(
-                    showHeader = false,
-                    wordmarkTextColor = null,
-                    privateBrowsingButtonColor = colorResource(
-                        getAttr(
-                            iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+        Surface {
+            Homepage(
+                state = HomepageState.Normal(
+                    nimbusMessage = null,
+                    topSites = FakeHomepagePreview.topSites(),
+                    recentTabs = FakeHomepagePreview.recentTabs(),
+                    syncedTab = FakeHomepagePreview.recentSyncedTab(),
+                    bookmarks = FakeHomepagePreview.bookmarks(),
+                    recentlyVisited = FakeHomepagePreview.recentHistory(),
+                    collectionsState = FakeHomepagePreview.collectionState(),
+                    pocketState = FakeHomepagePreview.pocketState(),
+                    showTopSites = true,
+                    showRecentTabs = false,
+                    showRecentSyncedTab = false,
+                    showBookmarks = false,
+                    showRecentlyVisited = false,
+                    showPocketStories = true,
+                    showCollections = false,
+                    HeaderState(
+                        showHeader = false,
+                        wordmarkTextColor = null,
+                        privateBrowsingButtonColor = colorResource(
+                            getAttr(
+                                iconsR.attr.mozac_ic_private_mode_circle_fill_icon_color,
+                            ),
                         ),
                     ),
+                    searchBarVisible = false,
+                    searchBarEnabled = false,
+                    firstFrameDrawn = true,
+                    setupChecklistState = null,
+                    topSiteColors = TopSiteColors.colors(),
+                    cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
+                    buttonTextColor = WallpaperState.default.buttonTextColor,
+                    buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
+                    isSearchInProgress = false,
+                    bottomPadding = 68,
                 ),
-                searchBarVisible = false,
-                searchBarEnabled = false,
-                firstFrameDrawn = true,
-                setupChecklistState = null,
-                topSiteColors = TopSiteColors.colors(),
-                cardBackgroundColor = WallpaperState.default.cardBackgroundColor,
-                buttonTextColor = WallpaperState.default.buttonTextColor,
-                buttonBackgroundColor = WallpaperState.default.buttonBackgroundColor,
-                isSearchInProgress = false,
-                bottomPadding = 68,
-            ),
-            interactor = FakeHomepagePreview.homepageInteractor,
-            onTopSitesItemBound = {},
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.surface),
-        )
+                interactor = FakeHomepagePreview.homepageInteractor,
+                onTopSitesItemBound = {},
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
     }
 }
 
@@ -625,9 +625,7 @@ private fun PrivateHomepagePreview() {
             ),
             interactor = FakeHomepagePreview.homepageInteractor,
             onTopSitesItemBound = {},
-            modifier = Modifier
-                .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.surface),
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }
