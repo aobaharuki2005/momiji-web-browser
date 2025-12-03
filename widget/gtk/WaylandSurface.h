@@ -197,7 +197,7 @@ class WaylandSurface final {
   // Returns scale as float point number. If WaylandSurface is not mapped,
   // return fractional scale of parent surface or monitor.
   static constexpr const double sNoScale = -1;
-  double GetScale();
+  double GetScale() const;
 
   // Called when screen ceiled scale changed or set initial scale before we map
   // and paint the surface.
@@ -301,6 +301,10 @@ class WaylandSurface final {
 
   void ClearScaleLocked(const WaylandSurfaceLock& aProofOfLock);
 
+  // Calculate 'stable' rounded size for subsurface based
+  // on its size and position.
+  LayoutDeviceIntSize GetScaledSize(const DesktopIntSize& aSize) const;
+
   // Weak ref to owning widget (nsWindow or NativeLayerWayland),
   // used for diagnostics/logging only.
   void* mLoggingWidget = nullptr;
@@ -347,7 +351,7 @@ class WaylandSurface final {
   bool mSubsurfaceDesync = true;
 
   wl_subsurface* mSubsurface = nullptr;
-  DesktopIntPoint mSubsurfacePosition{-1, -1};
+  DesktopIntPoint mSubsurfacePosition;
 
   // Wayland buffers recently attached to this surface or held by
   // Wayland compositor.
