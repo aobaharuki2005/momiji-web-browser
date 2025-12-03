@@ -189,16 +189,6 @@ static inline StyleCSSFloat GetRotate(const StyleAngle& aAngle) {
   return aAngle.ToDegrees();
 }
 
-static inline StyleCSSFloat Resolve(const StyleCSSFloat& aValue,
-                                    CSSCoord aBasis) {
-  return aValue;
-}
-
-static inline StyleCSSFloat Resolve(const LengthPercentage& aValue,
-                                    CSSCoord aBasis) {
-  return aValue.ResolveToCSSPixels(aBasis);
-}
-
 template <typename Angle, typename Position, typename LP>
 static already_AddRefed<Path> BuildPathInternal(
     Span<const StyleGenericShapeCommand<Angle, Position, LP>> aPath,
@@ -327,8 +317,8 @@ static already_AddRefed<Path> BuildPathInternal(
         break;
       }
       case Command::Tag::HLine: {
-        const float x = Resolve(cmd.h_line.x, aPercentageBasis.width);
-        if (cmd.h_line.by_to == StyleByTo::To) {
+        const auto x = cmd.h_line.x.ToGfxCoord(aPercentageBasis.width);
+        if (cmd.h_line.x.IsToPosition()) {
           segEnd = Point(x, segStart.y);
         } else {
           segEnd = segStart + Point(x, 0.0f);
@@ -341,8 +331,8 @@ static already_AddRefed<Path> BuildPathInternal(
         break;
       }
       case Command::Tag::VLine: {
-        const float y = Resolve(cmd.v_line.y, aPercentageBasis.height);
-        if (cmd.v_line.by_to == StyleByTo::To) {
+        const auto y = cmd.v_line.y.ToGfxCoord(aPercentageBasis.height);
+        if (cmd.v_line.y.IsToPosition()) {
           segEnd = Point(segStart.x, y);
         } else {
           segEnd = segStart + Point(0.0f, y);
@@ -640,19 +630,21 @@ void SVGPathData::GetMarkerPositioningData(Span<const StylePathCommand> aPath,
         break;
       }
       case StylePathCommand::Tag::HLine: {
-        if (cmd.h_line.by_to == StyleByTo::To) {
-          segEnd = Point(cmd.h_line.x, segStart.y) * aZoom;
+        const auto x = cmd.h_line.x.ToGfxCoord();
+        if (cmd.h_line.x.IsToPosition()) {
+          segEnd = Point(x, segStart.y) * aZoom;
         } else {
-          segEnd = segStart + Point(cmd.h_line.x, 0.0f) * aZoom;
+          segEnd = segStart + Point(x, 0.0f) * aZoom;
         }
         segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
         break;
       }
       case StylePathCommand::Tag::VLine: {
-        if (cmd.v_line.by_to == StyleByTo::To) {
-          segEnd = Point(segStart.x, cmd.v_line.y) * aZoom;
+        const auto y = cmd.v_line.y.ToGfxCoord();
+        if (cmd.v_line.y.IsToPosition()) {
+          segEnd = Point(segStart.x, y) * aZoom;
         } else {
-          segEnd = segStart + Point(0.0f, cmd.v_line.y) * aZoom;
+          segEnd = segStart + Point(0.0f, y) * aZoom;
         }
         segStartAngle = segEndAngle = AngleOfVector(segEnd, segStart);
         break;

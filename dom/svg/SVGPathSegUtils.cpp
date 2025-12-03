@@ -188,9 +188,8 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::HLine: {
-      Point to(aCommand.h_line.by_to == StyleByTo::To
-                   ? aCommand.h_line.x
-                   : aState.pos.x + aCommand.h_line.x,
+      const auto x = aCommand.h_line.x.ToGfxCoord();
+      Point to(aCommand.h_line.x.IsToPosition() ? x : aState.pos.x + x,
                aState.pos.y);
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         aState.length += std::fabs(to.x - aState.pos.x);
@@ -200,9 +199,9 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::VLine: {
-      Point to(aState.pos.x, aCommand.v_line.by_to == StyleByTo::To
-                                 ? aCommand.v_line.y
-                                 : aState.pos.y + aCommand.v_line.y);
+      const auto y = aCommand.v_line.y.ToGfxCoord();
+      Point to(aState.pos.x,
+               aCommand.v_line.y.IsToPosition() ? y : aState.pos.y + y);
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         aState.length += std::fabs(to.y - aState.pos.y);
         aState.cp1 = aState.cp2 = to;
@@ -434,8 +433,8 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
         break;
       }
       case StylePathCommand::Tag::HLine: {
-        Point to = gfx::Point(cmd.h_line.x, segStart.y);
-        if (cmd.h_line.by_to == StyleByTo::By) {
+        Point to = gfx::Point(cmd.h_line.x.ToGfxCoord(), segStart.y);
+        if (cmd.h_line.x.IsByCoordinate()) {
           to.x += segStart.x;
         }
 
@@ -446,8 +445,8 @@ Maybe<gfx::Rect> SVGPathToAxisAlignedRect(Span<const StylePathCommand> aPath) {
         break;
       }
       case StylePathCommand::Tag::VLine: {
-        Point to = gfx::Point(segStart.x, cmd.v_line.y);
-        if (cmd.h_line.by_to == StyleByTo::By) {
+        Point to = gfx::Point(segStart.x, cmd.v_line.y.ToGfxCoord());
+        if (cmd.v_line.y.IsByCoordinate()) {
           to.y += segStart.y;
         }
 

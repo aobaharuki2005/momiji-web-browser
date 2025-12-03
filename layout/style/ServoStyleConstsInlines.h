@@ -1323,6 +1323,29 @@ inline gfx::Point StyleCommandEndPoint<
 }
 
 template <>
+inline gfx::Coord StyleAxisEndPoint<StyleCSSFloat>::ToGfxCoord(
+    const StyleCSSFloat* aBasis) const {
+  if (IsToPosition()) {
+    const auto pos = AsToPosition();
+    MOZ_ASSERT(pos.IsLengthPercent());
+    return gfx::Coord(pos.AsLengthPercent());
+  }
+  return gfx::Coord(AsByCoordinate());
+}
+
+template <>
+inline gfx::Coord StyleAxisEndPoint<LengthPercentage>::ToGfxCoord(
+    const StyleCSSFloat* aBasis) const {
+  MOZ_ASSERT(aBasis);
+  if (IsToPosition()) {
+    const auto pos = AsToPosition();
+    MOZ_ASSERT(pos.IsLengthPercent());
+    return gfx::Coord(pos.AsLengthPercent().ResolveToCSSPixels(*aBasis));
+  }
+  return gfx::Coord(AsByCoordinate().ResolveToCSSPixels(*aBasis));
+}
+
+template <>
 inline gfx::Point
 StyleControlPoint<StyleShapePosition<StyleCSSFloat>, StyleCSSFloat>::ToGfxPoint(
     const gfx::Point aStatePos, const gfx::Point aEndPoint,

@@ -85,14 +85,12 @@ SVGPathSegment::SVGPathSegment(SVGPathElement* aSVGPathElement,
       break;
     }
     case StylePathCommand::Tag::HLine:
-      mCommand.AssignLiteral(aCommand.h_line.by_to == StyleByTo::To ? "H"
-                                                                    : "h");
-      mValues.AppendElement(aCommand.h_line.x);
+      mCommand.AssignLiteral(aCommand.h_line.x.IsToPosition() ? "H" : "h");
+      mValues.AppendElement(aCommand.h_line.x.ToGfxCoord());
       break;
     case StylePathCommand::Tag::VLine:
-      mCommand.AssignLiteral(aCommand.v_line.by_to == StyleByTo::To ? "V"
-                                                                    : "v");
-      mValues.AppendElement(aCommand.v_line.y);
+      mCommand.AssignLiteral(aCommand.v_line.y.IsToPosition() ? "V" : "v");
+      mValues.AppendElement(aCommand.v_line.y.ToGfxCoord());
       break;
     case StylePathCommand::Tag::SmoothCubic:
       mCommand.AssignLiteral(aCommand.smooth_cubic.point.IsToPosition() ? "S"
