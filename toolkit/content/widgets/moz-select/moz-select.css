@@ -48,7 +48,7 @@
     color: var(--select-text-color-hover);
   }
 
-  &:has(:disabled) {
+  &:has(> :disabled) {
     border-color: var(--select-border-color-disabled);
     background-color: var(--select-background-color-disabled);
     color: var(--select-text-color-disabled);
