@@ -211,6 +211,12 @@ UrlClassifierFeatureHarmfulAddonProtection::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
+  // Recommended add-ons are exempt.
+  extensions::WebExtensionPolicy* policy = GetAddonPolicy(aChannel);
+  if (policy && policy->HasRecommendedState()) {
+    return nullptr;
+  }
+
   MaybeInitialize();
   MOZ_ASSERT(gFeatureHarmfulAddonProtection);
 
