@@ -491,6 +491,8 @@ int32_t WebrtcGmpVideoEncoder::SetRates_g(uint32_t aOldBitRateKbps,
     return WEBRTC_VIDEO_CODEC_ERROR;
   }
 
+  GMP_LOG_DEBUG("GMP Encoder %p setting rate %ukbps", this, aNewBitRateKbps);
+
   mNeedKeyframe |= (aOldBitRateKbps == 0 && aNewBitRateKbps != 0);
 
   GMPErr err = mGMP->SetRates(

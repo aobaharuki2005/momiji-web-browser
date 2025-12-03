@@ -960,6 +960,14 @@ void WebrtcVideoConduit::OnControlConfigChange() {
               mEncoderConfig.number_of_streams,
           "Each video substream must have a corresponding ssrc.");
       mEncoderConfig.video_stream_factory = CreateVideoStreamFactory();
+      for (const auto& stream : mEncoderConfig.simulcast_layers) {
+        CSFLogDebug(
+            LOGTAG,
+            "%s Reconfigure with simulcast stream maxFps=%d, "
+            "bitrate=[%dkbps, %dkbps, %dkbps]",
+            __FUNCTION__, stream.max_framerate, stream.min_bitrate_bps / 1000,
+            stream.target_bitrate_bps / 1000, stream.max_bitrate_bps / 1000);
+      }
       mSendStream->ReconfigureVideoEncoder(mEncoderConfig.Copy());
     }
     if (sendSourceUpdateNeeded && mTrackSource) {
