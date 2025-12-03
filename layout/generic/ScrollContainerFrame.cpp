@@ -7831,8 +7831,13 @@ bool ScrollContainerFrame::IsSmoothScroll(dom::ScrollBehavior aBehavior) const {
 
 ScrollMode ScrollContainerFrame::ScrollModeForScrollBehavior(
     dom::ScrollBehavior aBehavior) const {
-  return IsSmoothScroll(aBehavior) ? ScrollMode::SmoothMsd
-                                   : ScrollMode::Instant;
+  if (!IsSmoothScroll(aBehavior)) {
+    return ScrollMode::Instant;
+  }
+
+  return StaticPrefs::layout_css_scroll_behavior_same_physics_as_user_input()
+             ? ScrollMode::Smooth
+             : ScrollMode::SmoothMsd;
 }
 
 nsTArray<ScrollPositionUpdate> ScrollContainerFrame::GetScrollUpdates() const {
