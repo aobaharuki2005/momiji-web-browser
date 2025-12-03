@@ -207,10 +207,6 @@ UrlClassifierFeatureHarmfulAddonProtection::MaybeCreate(nsIChannel* aChannel) {
     return nullptr;
   }
 
-  if (!UrlClassifierCommon::ShouldEnableProtectionForChannel(aChannel, false)) {
-    return nullptr;
-  }
-
   // Recommended add-ons are exempt.
   extensions::WebExtensionPolicy* policy = GetAddonPolicy(aChannel);
   if (policy && policy->HasRecommendedState()) {
