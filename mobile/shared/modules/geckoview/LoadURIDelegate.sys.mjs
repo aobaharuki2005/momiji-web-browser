@@ -90,7 +90,8 @@ export const LoadURIDelegate = {
       aError === Cr.NS_ERROR_PHISHING_URI ||
       aError === Cr.NS_ERROR_MALWARE_URI ||
       aError === Cr.NS_ERROR_HARMFUL_URI ||
-      aError === Cr.NS_ERROR_UNWANTED_URI
+      aError === Cr.NS_ERROR_UNWANTED_URI ||
+      aError === Cr.NS_ERROR_HARMFULADDON_URI
     );
   },
 };
