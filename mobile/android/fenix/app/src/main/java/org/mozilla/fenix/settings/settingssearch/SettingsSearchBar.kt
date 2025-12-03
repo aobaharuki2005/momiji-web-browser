@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -25,7 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.button.IconButton
-import mozilla.components.compose.base.textfield.TextField
+import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -43,65 +45,18 @@ fun SettingsSearchBar(
     store: SettingsSearchStore,
     onBackClick: () -> Unit,
 ) {
-    val state by store.observeAsComposableState { it }
-    var searchQuery by remember { mutableStateOf(state.searchQuery) }
     val focusRequester = remember { FocusRequester() }
 
     TopAppBar(
         modifier = Modifier
             .wrapContentHeight(),
         title = {
-            TextField(
-                value = searchQuery,
-                onValueChange = { value ->
-                    searchQuery = value
-                    store.dispatch(SettingsSearchAction.SearchQueryUpdated(value))
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focusRequester),
-                placeholder = stringResource(R.string.settings_search_title),
-                singleLine = true,
-                errorText = stringResource(R.string.settings_search_error_message),
-                colors = TextFieldDefaults.colors(
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    errorIndicatorColor = Color.Transparent,
-                ),
-                trailingIcon = {
-                    when (state) {
-                        is SettingsSearchState.SearchInProgress,
-                         is SettingsSearchState.NoSearchResults,
-                             -> {
-                                 ClearTextButton(
-                                     onClick = {
-                                         searchQuery = ""
-                                         store.dispatch(SettingsSearchAction.SearchQueryUpdated(""))
-                                     },
-                                 )
-                        }
-                        else -> Unit
-                    }
-                },
+            SettingsSearchField(
+                store = store,
+                focusRequester = focusRequester,
             )
         },
-        navigationIcon = {
-            IconButton(
-                onClick = onBackClick,
-                contentDescription =
-                    stringResource(
-                        R.string.content_description_settings_search_navigate_back,
-                    ),
-            ) {
-                Icon(
-                    painter = painterResource(
-                        iconsR.drawable.mozac_ic_back_24,
-                    ),
-                    contentDescription = null,
-                    tint = FirefoxTheme.colors.textPrimary,
-                )
-            }
-        },
+        navigationIcon = { BackButton(onClick = onBackClick) },
         windowInsets = WindowInsets(
             top = 0.dp,
             bottom = 0.dp,
@@ -110,6 +65,77 @@ fun SettingsSearchBar(
 
     SideEffect {
         focusRequester.requestFocus()
+    }
+}
+
+@Composable
+private fun SettingsSearchField(
+    store: SettingsSearchStore,
+    focusRequester: FocusRequester,
+) {
+    val state by store.observeAsComposableState { it }
+    var searchQuery by remember { mutableStateOf(state.searchQuery) }
+
+    TextField(
+        value = searchQuery,
+        onValueChange = { value: String ->
+            searchQuery = value
+            store.dispatch(SettingsSearchAction.SearchQueryUpdated(value))
+        },
+        textStyle = AcornTheme.typography.body1,
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusRequester(focusRequester),
+        placeholder = {
+            Text(
+                text = stringResource(R.string.settings_search_title),
+                style = AcornTheme.typography.body1,
+            )
+        },
+        singleLine = true,
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            errorIndicatorColor = Color.Transparent,
+        ),
+        trailingIcon = @Composable {
+            when (state) {
+                is SettingsSearchState.SearchInProgress,
+                is SettingsSearchState.NoSearchResults,
+                    -> {
+                    ClearTextButton(
+                        onClick = {
+                            searchQuery = ""
+                            store.dispatch(SettingsSearchAction.SearchQueryUpdated(""))
+                        },
+                    )
+                }
+                else -> Unit
+            }
+        },
+    )
+}
+
+@Composable
+private fun BackButton(
+    onClick: () -> Unit,
+) {
+    IconButton(
+        onClick = onClick,
+        contentDescription =
+            stringResource(
+                R.string.content_description_settings_search_navigate_back,
+            ),
+    ) {
+        Icon(
+            painter = painterResource(
+                R.drawable.ic_back_button,
+            ),
+            contentDescription = null,
+            tint = FirefoxTheme.colors.textPrimary,
+        )
     }
 }
 
