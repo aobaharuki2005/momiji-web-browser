@@ -140,6 +140,8 @@ skip-if = [
 
 ["test_ext_unknown_permissions.js"]
 
+["test_ext_urlclassifier.js"]
+
 ["test_ext_webRequest_handlerBehaviorChanged.js"]
 
 ["test_ext_webRequest_urlclassification.js"]
