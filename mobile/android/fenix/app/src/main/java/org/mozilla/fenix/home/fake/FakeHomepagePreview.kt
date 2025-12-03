@@ -22,10 +22,6 @@ import mozilla.components.service.nimbus.messaging.MessageData
 import mozilla.components.service.nimbus.messaging.StyleData
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.ContentRecommendation
-import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
-import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
-import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryCaps
-import mozilla.components.service.pocket.PocketStory.PocketSponsoredStoryShim
 import mozilla.components.service.pocket.PocketStory.SponsoredContent
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -429,31 +425,6 @@ internal object FakeHomepagePreview {
             impressions = index.toLong(),
         )
 
-    internal fun pocketRecommendedStory(index: Int = 0) = PocketRecommendedStory(
-            title = "Story - This is a ${"very ".repeat(index)} long title",
-            publisher = "Publisher",
-            url = "https://story$index.com",
-            imageUrl = URL,
-            timeToRead = index,
-            category = "Category #$index",
-            timesShown = index.toLong(),
-        )
-
-    internal fun pocketSponsoredStory(index: Int = 0) = PocketSponsoredStory(
-        id = index,
-        title = "This is a ${"very ".repeat(index)} long title",
-        url = "https://sponsored-story$index.com",
-        imageUrl = URL,
-        sponsor = "Mozilla",
-        shim = PocketSponsoredStoryShim("", ""),
-        priority = index,
-        caps = PocketSponsoredStoryCaps(
-            flightCount = index,
-            flightPeriod = index * 2,
-            lifetimeCount = index * 3,
-        ),
-    )
-
     internal fun sponsoredContent(index: Int = 0) = SponsoredContent(
         url = "https://sponsored-story$index.com",
         title = "This is a ${"very ".repeat(index)}long title",
@@ -467,23 +438,11 @@ internal object FakeHomepagePreview {
         caps = PocketStory.SponsoredContentFrequencyCaps(flightPeriod = 1, flightCount = 0),
     )
 
-    @Suppress("MagicNumber")
-    internal fun pocketStories(limit: Int = 5) = mutableListOf<PocketStory>().apply {
-        for (index in 0 until limit) {
-            when {
-                (index % 4 == 0) -> add(
-                    sponsoredContent(index),
-                )
-                (index % 3 == 0) -> add(
-                    contentRecommendation(index),
-                )
-                (index % 2 == 0) -> add(
-                    pocketRecommendedStory(index),
-                )
-                else -> add(
-                    pocketSponsoredStory(index),
-                )
-            }
+    internal fun pocketStories(limit: Int = 5) = (0 until limit).map { index ->
+        if (index % 2 == 0) {
+            sponsoredContent(index)
+        } else {
+            contentRecommendation(index)
         }
     }
 

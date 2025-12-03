@@ -40,7 +40,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import mozilla.components.compose.base.modifier.onShown
 import mozilla.components.compose.base.utils.inComposePreview
 import mozilla.components.service.pocket.PocketStory
@@ -59,108 +58,9 @@ import org.mozilla.fenix.home.ui.HomepageTestTag.HOMEPAGE_STORY
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.roundToInt
 
-private const val URI_PARAM_UTM_KEY = "utm_source"
-private const val POCKET_STORIES_UTM_VALUE = "pocket-newtab-android"
 private const val DEFAULT_MAX_LINES = 3
 private const val SPONSORED_MAX_LINES = 2
 private const val ACCESSIBILITY_MAX_LINES_SCALE_FACTOR = 1.2f
-
-/**
- * Displays a single [PocketRecommendedStory].
- *
- * @param story The [PocketRecommendedStory] to be displayed.
- * @param backgroundColor The background [Color] of the story.
- * @param onStoryClick Callback for when the user taps on this story.
- */
-@Composable
-fun Story(
-    @PreviewParameter(StoryProvider::class) story: PocketRecommendedStory,
-    backgroundColor: Color,
-    onStoryClick: (PocketRecommendedStory) -> Unit,
-) {
-    val imageUrl = story.imageUrl.replace(
-        "{wh}",
-        with(LocalDensity.current) {
-            "${IMAGE_SIZE.dp.toPx().roundToInt()}x${
-                IMAGE_SIZE.dp.toPx().roundToInt()
-            }"
-        },
-    )
-
-    ListItemTabSurface(
-        imageUrl = imageUrl,
-        backgroundColor = backgroundColor,
-        onClick = { onStoryClick(story) },
-    ) {
-        Text(
-            text = story.title,
-            modifier = Modifier.semantics {
-                testTagsAsResourceId = true
-                testTag = "pocket.story.title"
-            },
-            color = FirefoxTheme.colors.textPrimary,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = maxLines(),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-}
-
-/**
- * Displays a single [PocketSponsoredStory].
- *
- * @param story The [PocketSponsoredStory] to be displayed.
- * @param backgroundColor The background [Color] of the story.
- * @param onStoryClick Callback for when the user taps on this story.
- */
-@Composable
-fun SponsoredStory(
-    story: PocketSponsoredStory,
-    backgroundColor: Color,
-    onStoryClick: (PocketSponsoredStory) -> Unit,
-) {
-    val (imageWidth, imageHeight) = with(LocalDensity.current) {
-        IMAGE_SIZE.dp.toPx().roundToInt() to IMAGE_SIZE.dp.toPx().roundToInt()
-    }
-    val imageUrl = story.imageUrl.replace(
-        "&resize=w[0-9]+-h[0-9]+".toRegex(),
-        "&resize=w$imageWidth-h$imageHeight",
-    )
-
-    ListItemTabSurface(
-        imageUrl = imageUrl,
-        backgroundColor = backgroundColor,
-        onClick = { onStoryClick(story) },
-    ) {
-        Column(
-            verticalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            Text(
-                text = story.title,
-                modifier = Modifier.semantics {
-                    testTagsAsResourceId = true
-                    testTag = "pocket.sponsoredStory.title"
-                },
-                color = FirefoxTheme.colors.textPrimary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = maxSponsoredLines(),
-                style = FirefoxTheme.typography.body2,
-            )
-
-            Text(
-                text = stringResource(R.string.pocket_stories_sponsor_indication),
-                modifier = Modifier.semantics {
-                    testTagsAsResourceId = true
-                    testTag = "pocket.sponsoredStory.identifier"
-                },
-                color = FirefoxTheme.colors.textSecondary,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                style = FirefoxTheme.typography.caption,
-            )
-        }
-    }
-}
 
 /**
  * Displays a single [SponsoredContent].
@@ -299,69 +199,11 @@ fun Stories(
                     },
             ) {
                 when (story) {
-                    is PocketRecommendedStory -> {
-                        Story(
-                            story = story,
-                            backgroundColor = backgroundColor,
-                        ) {
-                            val uri = story.url.toUri()
-                                .buildUpon()
-                                .appendQueryParameter(
-                                    URI_PARAM_UTM_KEY,
-                                    POCKET_STORIES_UTM_VALUE,
-                                )
-                                .build().toString()
-                            onStoryClicked(
-                                it.copy(url = uri),
-                                Triple(rowIndex, columnIndex, stories.indexOf(story)),
-                            )
-                        }
-                    }
-
-                    is PocketSponsoredStory -> {
-                        val screenBounds = Rect()
-                            .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
-                            .apply {
-                                // Check if this is in a preview because `.settings()` breaks previews
-                                if (!inComposePreview) {
-                                    val verticalOffset =
-                                        with(LocalDensity.current) {
-                                            dimensionResource(id = R.dimen.browser_toolbar_height).roundToPx()
-                                        }
-
-                                    if (LocalContext.current.settings().shouldUseBottomToolbar) {
-                                        bottom -= verticalOffset
-                                    } else {
-                                        top += verticalOffset
-                                    }
-                                }
-                            }
-                        Box(
-                            modifier = Modifier.onShown(
-                                threshold = 0.5f,
-                                onVisible = {
-                                    onStoryShown(
-                                        story,
-                                        Triple(
-                                            rowIndex,
-                                            columnIndex,
-                                            stories.indexOf(story),
-                                        ),
-                                    )
-                                },
-                                screenBounds = screenBounds,
-                            ),
-                        ) {
-                            SponsoredStory(
-                                story = story,
-                                backgroundColor = backgroundColor,
-                            ) {
-                                onStoryClicked(
-                                    story,
-                                    Triple(rowIndex, columnIndex, stories.indexOf(story)),
-                                )
-                            }
-                        }
+                    is PocketRecommendedStory,
+                    is PocketSponsoredStory,
+                        -> {
+                        // no-op, don't handle these [PocketStory] types as they are no longer
+                        // supported.
                     }
 
                     is ContentRecommendation -> {
@@ -442,12 +284,8 @@ private fun StoriesWithCategoriesPreview() {
             Column {
                 Stories(
                     stories = listOf(
-                        FakeHomepagePreview.pocketRecommendedStory(15),
-                        FakeHomepagePreview.pocketSponsoredStory(15),
                         FakeHomepagePreview.contentRecommendation(15),
                         FakeHomepagePreview.sponsoredContent(15),
-                        FakeHomepagePreview.pocketRecommendedStory(1),
-                        FakeHomepagePreview.pocketSponsoredStory(1),
                         FakeHomepagePreview.contentRecommendation(1),
                         FakeHomepagePreview.sponsoredContent(1),
                     ),
@@ -482,12 +320,8 @@ private fun StoriesPreview() {
         ) {
             Stories(
                 stories = listOf(
-                    FakeHomepagePreview.pocketRecommendedStory(15),
-                    FakeHomepagePreview.pocketSponsoredStory(15),
                     FakeHomepagePreview.contentRecommendation(15),
                     FakeHomepagePreview.sponsoredContent(15),
-                    FakeHomepagePreview.pocketRecommendedStory(1),
-                    FakeHomepagePreview.pocketSponsoredStory(1),
                     FakeHomepagePreview.contentRecommendation(1),
                     FakeHomepagePreview.sponsoredContent(1),
                 ),
