@@ -36,7 +36,10 @@ add_task(async function test_extension_tab_create() {
       browser_specific_settings: {
         gecko: { id },
       },
-      host_permissions: ["*://expected.example.org/*", "*://extra.example.org/*"],
+      host_permissions: [
+        "*://expected.example.org/*",
+        "*://extra.example.org/*",
+      ],
     },
     background() {
       const { browser } = this;
