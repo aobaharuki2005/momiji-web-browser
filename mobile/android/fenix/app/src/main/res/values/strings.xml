@@ -1387,6 +1387,8 @@
     <string name="delete_from_history">Delete from history</string>
     <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
     <string name="pwa_site_controls_title_private">%1$s (Private Mode)</string>
+    <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+    <string name="tab_manager_open_tab_search">Open tab search</string>
 
     <!-- History -->
     <!-- Text for the button to search all history -->
