@@ -4,12 +4,6 @@
 
 package org.mozilla.fenix.compose
 
-import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,16 +23,15 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import mozilla.components.compose.base.modifier.skeletonLoader
 import mozilla.components.compose.base.modifier.thenConditional
 import org.mozilla.fenix.theme.FirefoxTheme
 
@@ -139,40 +132,5 @@ private fun ListItemTabSurfaceWithCustomBackgroundPreview() {
                 fontSize = 14.sp,
             )
         }
-    }
-}
-
-/**
- * Applies a shimmering skeleton loading effect to the current [Modifier].
- *
- * This can be used as a placeholder for UI elements while their content is loading.
- *
- * @param durationMillis The duration in milliseconds of the shimmer animation cycle.
- * Defaults to `1000`.
- * @param initialColor The starting color of the gradient animation.
- * @param targetColor The ending color of the gradient animation.
- *
- * @return A [Modifier] that displays a skeleton loader effect.
- */
-@Composable
-fun Modifier.skeletonLoader(
-    durationMillis: Int = 1000,
-    initialColor: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
-    targetColor: Color = Color.White,
-): Modifier {
-    val transition = rememberInfiniteTransition(label = "")
-
-    val color by transition.animateColor(
-        initialValue = initialColor,
-        targetValue = targetColor,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "",
-    )
-
-    return drawBehind {
-        drawRect(color = color)
     }
 }

@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.modifier.skeletonLoader
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.ContentRecommendation
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
@@ -34,7 +35,6 @@ import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
 import mozilla.components.service.pocket.PocketStory.SponsoredContent
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.Image
-import org.mozilla.fenix.compose.skeletonLoader
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import kotlin.math.roundToInt
