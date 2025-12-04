@@ -75,4 +75,8 @@ bool CSSStyleValue::IsCSSUnitValue() const {
   return mValueType == ValueType::UnitValue;
 }
 
+bool CSSStyleValue::IsCSSMathSum() const {
+  return mValueType == ValueType::MathSum;
+}
+
 }  // namespace mozilla::dom

@@ -78,6 +78,9 @@ void StylePropertyMap::Set(
   nsAutoCString cssText;
 
   switch (styleValue.GetValueType()) {
+    case CSSStyleValue::ValueType::MathSum:
+      break;
+
     case CSSStyleValue::ValueType::UnitValue:
       break;
 
