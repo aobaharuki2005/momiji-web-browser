@@ -715,6 +715,8 @@ nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
                                  nsIHandlerApp** aApp) {
   *aApp = nullptr;
 
+  // Portals works with DBus only.
+#ifdef MOZ_ENABLE_DBUS
   // Application in flatpak sandbox does not have access to the list
   // of installed applications on the system. We use SchemeSupported
   // method to check if the URI scheme is supported and then use
@@ -777,6 +779,7 @@ nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
     mozApp.forget(aApp);
     return NS_OK;
   }
+#endif
 
   RefPtr<GAppInfo> app_info = dont_AddRef(g_app_info_get_default_for_uri_scheme(
       PromiseFlatCString(aURIScheme).get()));
