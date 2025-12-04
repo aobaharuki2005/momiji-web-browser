@@ -76,7 +76,6 @@ run-if = [
 support-files = ["helper_position_sticky_flicker.html"]
 skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && a11y_checks", # bug 1924676
-  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1924676
 ]
 
 ["browser_test_reset_scaling_zoom.js"]
