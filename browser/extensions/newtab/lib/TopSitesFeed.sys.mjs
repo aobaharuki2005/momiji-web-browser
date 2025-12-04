@@ -1377,7 +1377,7 @@ export class TopSitesFeed {
       const url = `https://${domainObj.domain}/`;
       const page = pagesMap.get(url);
 
-      if (!page) {
+      if (!page || lazy.NewTabUtils.blockedLinks.isBlocked({ url })) {
         continue;
       }
 
@@ -1409,7 +1409,11 @@ export class TopSitesFeed {
    * @returns {Array} An array of sponsored tile objects.
    */
   async fetchFrecencyBoostedSpocs() {
-    if (!this._contile.sovEnabled() || !this._linksWithDefaults?.length) {
+    if (
+      !this._contile.sovEnabled() ||
+      !this._linksWithDefaults?.length ||
+      !this.store.getState().Prefs.values[SHOW_SPONSORED_PREF]
+    ) {
       return [];
     }
 

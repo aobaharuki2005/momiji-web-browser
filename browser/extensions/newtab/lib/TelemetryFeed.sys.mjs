@@ -1921,7 +1921,7 @@ export class TelemetryFeed {
       if (action.source === "TOP_SITES") {
         const { position, advertiser_name, tile_id, isSponsoredTopSite } =
           datum;
-        if (this.sovEnabled()) {
+        if (this.sovEnabled() && isSponsoredTopSite) {
           if (this.privatePingEnabled) {
             this.newtabContentPing.recordEvent("topSitesDismiss", {
               advertiser_name,
