@@ -579,18 +579,29 @@ class PageStyleActor extends Actor {
   }
 
   /**
+   * @typedef {"user" | "ua" } GetAppliedFilterOption
+   */
+
+  /**
+   * @typedef {object} GetAppliedOptions
+   *
+   * @property {GetAppliedFilterOption} filter - A string filter that affects the "matched" handling.
+   *        Possible values are:
+   *        - 'user': Include properties from user style sheets.
+   *        - 'ua': Include properties from user and user-agent sheets.
+   *        Default value is 'ua'
+   * @property {boolean} inherited - Include styles inherited from parent nodes.
+   * @property {boolean} matchedSelectors - Include an array of specific selectors that
+   *        caused this rule to match its node.
+   * @property {boolean} skipPseudo - Exclude styles applied to pseudo elements of the
+   *        provided node.
+   */
+
+  /**
    * Get the set of styles that apply to a given node.
    *
-   * @param NodeActor node
-   * @param object options
-   *   `filter`: A string filter that affects the "matched" handling.
-   *     'user': Include properties from user style sheets.
-   *     'ua': Include properties from user and user-agent sheets.
-   *     Default value is 'ua'
-   *   `inherited`: Include styles inherited from parent nodes.
-   *   `matchedSelectors`: Include an array of specific selectors that
-   *     caused this rule to match its node.
-   *   `skipPseudo`: Exclude styles applied to pseudo elements of the provided node.
+   * @param {NodeActor} node
+   * @param {GetAppliedOptions} options
    */
   async getApplied(node, options) {
     // Clear any previous references to StyleRuleActor instances for CSS rules.
@@ -607,7 +618,10 @@ class PageStyleActor extends Actor {
 
     const entries = this.getAppliedProps(
       node,
-      this.#getAllElementRules(node, undefined, options),
+      this.#getAllElementRules(node, {
+        skipPseudo: options.skipPseudo,
+        filter: options.filter,
+      }),
       options
     );
 
@@ -654,19 +668,24 @@ class PageStyleActor extends Actor {
    * Helper function for getApplied, gets all the rules from a given
    * element. See getApplied for documentation on parameters.
    *
-   * @param NodeActor node
-   * @param bool inherited
-   * @param object options
-
+   * @param {NodeActor} node
+   * @param {object} options
+   * @param {boolean} options.isInherited - Set to true if we want to retrieve inherited rules,
+   *        i.e. the passed node actor is an ancestor of the node we want to retrieved the
+   *        applied rules for originally.
+   * @param {boolean} options.skipPseudo - Exclude styles applied to pseudo elements of the
+   *        provided node
+   * @param {GetAppliedFilterOption} options.filter - will be passed to #getElementRules
+   *
    * @return Array The rules for a given element. Each item in the
    *               array has the following signature:
    *                - rule RuleActor
+   *                - inherited NodeActor
    *                - isSystem Boolean
-   *                - inherited Boolean
    *                - pseudoElement String
    *                - darkColorScheme Boolean
    */
-  #getAllElementRules(node, inherited, options) {
+  #getAllElementRules(node, { isInherited, skipPseudo, filter }) {
     const { bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(
       node.rawNode
     );
@@ -682,14 +701,14 @@ class PageStyleActor extends Actor {
         // for inline style, we can't have a related pseudo element
         null
       );
-      const showElementStyles = !inherited && !pseudo;
+      const showElementStyles = !isInherited && !pseudo;
       const showInheritedStyles =
-        inherited && this.#hasInheritedProps(bindingElement.style);
+        isInherited && this.#hasInheritedProps(bindingElement.style);
 
       const rule = this.#getRuleItem(elementStyle, node.rawNode, {
         pseudoElement: null,
         isSystem: false,
-        inherited: false,
+        inherited: null,
       });
 
       // First any inline styles
@@ -699,7 +718,10 @@ class PageStyleActor extends Actor {
 
       // Now any inherited styles
       if (showInheritedStyles) {
-        rule.inherited = inherited;
+        // at this point `isInherited` is true, so we want to put the NodeActor in the
+        // `inherited` property so the client can show this information (for example in
+        // the "Inherited from X" section in the Rules view).
+        rule.inherited = node;
         rules.push(rule);
       }
     }
@@ -707,19 +729,22 @@ class PageStyleActor extends Actor {
     // Add normal rules.  Typically this is passing in the node passed into the
     // function, unless if that node was ::before/::after.  In which case,
     // it will pass in the parentNode along with "::before"/"::after".
-    this.#getElementRules(bindingElement, pseudo, inherited, options).forEach(
-      oneRule => {
-        // The only case when there would be a pseudo here is
-        // ::before/::after, and in this case we want to tell the
-        // view that it belongs to the element (which is a
-        // _moz_generated_content native anonymous element).
-        oneRule.pseudoElement = null;
-        rules.push(oneRule);
-      }
-    );
+    this.#getElementRules(
+      bindingElement,
+      pseudo,
+      isInherited ? node : null,
+      filter
+    ).forEach(oneRule => {
+      // The only case when there would be a pseudo here is
+      // ::before/::after, and in this case we want to tell the
+      // view that it belongs to the element (which is a
+      // _moz_generated_content native anonymous element).
+      oneRule.pseudoElement = null;
+      rules.push(oneRule);
+    });
 
     // If we don't want to check pseudo elements rules, we can stop here.
-    if (options.skipPseudo) {
+    if (skipPseudo) {
       return rules;
     }
 
@@ -732,7 +757,7 @@ class PageStyleActor extends Actor {
 
     const relevantPseudoElements = [];
     for (const readPseudo of PSEUDO_ELEMENTS) {
-      if (!this.#pseudoIsRelevant(elementForPseudo, readPseudo, inherited)) {
+      if (!this.#pseudoIsRelevant(elementForPseudo, readPseudo, isInherited)) {
         continue;
       }
 
@@ -754,15 +779,15 @@ class PageStyleActor extends Actor {
       const pseudoRules = this.#getElementRules(
         elementForPseudo,
         readPseudo,
-        inherited,
-        options
+        isInherited ? node : null,
+        filter
       );
       // inherited element backed pseudo element rules (e.g. `::details-content`) should
       // not be at the same "level" as rules inherited from the binding element (e.g. `<details>`),
       // so we need to put them before the "regular" rules.
       if (
         SharedCssLogic.ELEMENT_BACKED_PSEUDO_ELEMENTS.has(readPseudo) &&
-        inherited
+        isInherited
       ) {
         rules.unshift(...pseudoRules);
       } else {
@@ -777,7 +802,7 @@ class PageStyleActor extends Actor {
    * @param {DOMNode} rawNode
    * @param {StyleRuleActor} styleRuleActor
    * @param {object} params
-   * @param {boolean} params.inherited
+   * @param {NodeActor} params.inherited
    * @param {boolean} params.isSystem
    * @param {string | null} params.pseudoElement
    * @returns Object
@@ -815,8 +840,16 @@ class PageStyleActor extends Actor {
     return display.split(" ").includes("list-item");
   }
 
+  /**
+   * Returns whether or node the pseudo element is relevant for the passed node
+   *
+   * @param {DOMNode} node
+   * @param {string} pseudo
+   * @param {boolean} isInherited
+   * @returns {boolean}
+   */
   // eslint-disable-next-line complexity
-  #pseudoIsRelevant(node, pseudo, inherited = false) {
+  #pseudoIsRelevant(node, pseudo, isInherited = false) {
     switch (pseudo) {
       case "::after":
       case "::before":
@@ -825,22 +858,22 @@ class PageStyleActor extends Actor {
       case "::selection":
       case "::highlight":
       case "::target-text":
-        return !inherited;
+        return !isInherited;
       case "::marker":
-        return !inherited && this.#nodeIsListItem(node);
+        return !isInherited && this.#nodeIsListItem(node);
       case "::backdrop":
-        return !inherited && node.matches(":modal, :popover-open");
+        return !isInherited && node.matches(":modal, :popover-open");
       case "::cue":
-        return !inherited && node.nodeName == "VIDEO";
+        return !isInherited && node.nodeName == "VIDEO";
       case "::file-selector-button":
-        return !inherited && node.nodeName == "INPUT" && node.type == "file";
+        return !isInherited && node.nodeName == "INPUT" && node.type == "file";
       case "::details-content": {
         const isDetailsNode = node.nodeName == "DETAILS";
         if (!isDetailsNode) {
           return false;
         }
 
-        if (!inherited) {
+        if (!isInherited) {
           return true;
         }
 
@@ -868,20 +901,20 @@ class PageStyleActor extends Actor {
       }
       case "::placeholder":
       case "::-moz-placeholder":
-        return !inherited && this.#nodeIsTextfieldLike(node);
+        return !isInherited && this.#nodeIsTextfieldLike(node);
       case "::-moz-meter-bar":
-        return !inherited && node.nodeName == "METER";
+        return !isInherited && node.nodeName == "METER";
       case "::-moz-progress-bar":
-        return !inherited && node.nodeName == "PROGRESS";
+        return !isInherited && node.nodeName == "PROGRESS";
       case "::-moz-color-swatch":
-        return !inherited && node.nodeName == "INPUT" && node.type == "color";
+        return !isInherited && node.nodeName == "INPUT" && node.type == "color";
       case "::-moz-range-progress":
       case "::-moz-range-thumb":
       case "::-moz-range-track":
       case "::slider-fill":
       case "::slider-thumb":
       case "::slider-track":
-        return !inherited && node.nodeName == "INPUT" && node.type == "range";
+        return !isInherited && node.nodeName == "INPUT" && node.type == "range";
       case "::view-transition":
       case "::view-transition-group":
       case "::view-transition-image-pair":
@@ -900,14 +933,14 @@ class PageStyleActor extends Actor {
    * Helper function for #getAllElementRules, returns the rules from a given
    * element. See getApplied for documentation on parameters.
    *
-   * @param DOMNode node
-   * @param string pseudo
-   * @param DOMNode inherited
-   * @param object options
+   * @param {DOMNode} node
+   * @param {string} pseudo
+   * @param {NodeActor} inherited
+   * @param {GetAppliedFilterOption} filter
    *
    * @returns Array
    */
-  #getElementRules(node, pseudo, inherited, options) {
+  #getElementRules(node, pseudo, inherited, filter) {
     if (!Element.isInstance(node)) {
       return [];
     }
@@ -946,7 +979,7 @@ class PageStyleActor extends Actor {
         continue;
       }
 
-      if (isSystem && options.filter != SharedCssLogic.FILTER.UA) {
+      if (isSystem && filter != SharedCssLogic.FILTER.UA) {
         continue;
       }
 
@@ -990,18 +1023,14 @@ class PageStyleActor extends Actor {
    *                       matching the passed rule was find
    */
   findEntryMatchingRule(nodeActor, matchingRule) {
-    const options = { matchedSelectors: true, inherited: true };
     let currentNodeActor = nodeActor;
     while (
       currentNodeActor &&
       currentNodeActor.rawNode.nodeType != Node.DOCUMENT_NODE
     ) {
-      for (const entry of this.#getAllElementRules(
-        currentNodeActor,
-        // inherited
-        nodeActor !== currentNodeActor ? currentNodeActor : null,
-        options
-      )) {
+      for (const entry of this.#getAllElementRules(currentNodeActor, {
+        isInherited: nodeActor !== currentNodeActor,
+      })) {
         if (entry.rule.rawRule === matchingRule) {
           return entry;
         }
@@ -1018,21 +1047,13 @@ class PageStyleActor extends Actor {
    * Helper function for getApplied that fetches a set of style properties that
    * apply to the given node and associated rules
    *
-   * @param NodeActor node
-   * @param object options
-   *   `filter`: A string filter that affects the "matched" handling.
-   *     'user': Include properties from user style sheets.
-   *     'ua': Include properties from user and user-agent sheets.
-   *     Default value is 'ua'
-   *   `inherited`: Include styles inherited from parent nodes.
-   *   `matchedSelectors`: Include an array of specific (desugared) selectors that
-   *     caused this rule to match its node.
-   *   `skipPseudo`: Exclude styles applied to pseudo elements of the provided node.
-   * @param array entries
+   * @param {NodeActor} node
+   * @param {Array} entries
    *   List of appliedstyle objects that lists the rules that apply to the
    *   node. If adding a new rule to the stylesheet, only the new rule entry
    *   is provided and only the style properties that apply to the new
    *   rule is fetched.
+   * @param {GetAppliedOptions} options
    * @returns Array of rule entries that applies to the given node and its associated rules.
    */
   getAppliedProps(node, entries, options) {
@@ -1040,7 +1061,11 @@ class PageStyleActor extends Actor {
       let parent = this.walker.parentNode(node);
       while (parent && parent.rawNode.nodeType != Node.DOCUMENT_NODE) {
         entries = entries.concat(
-          this.#getAllElementRules(parent, parent, options)
+          this.#getAllElementRules(parent, {
+            isInherited: true,
+            skipPseudo: options.skipPseudo,
+            filter: options.filter,
+          })
         );
         parent = this.walker.parentNode(parent);
       }
