@@ -362,28 +362,26 @@ class EmulationModule extends RootBiDiModule {
     } = options;
 
     let locale;
-    if (localeArg !== undefined) {
-      if (localeArg === null) {
-        // The API requires an empty string to reset the override.
-        locale = "";
-      } else {
-        locale = lazy.assert.string(
-          localeArg,
-          lazy.pprint`Expected "locale" to be a string, got ${localeArg}`
-        );
+    if (localeArg === null) {
+      // The API requires an empty string to reset the override.
+      locale = "";
+    } else {
+      locale = lazy.assert.string(
+        localeArg,
+        lazy.pprint`Expected "locale" to be a string, got ${localeArg}`
+      );
 
-        // Validate if locale is a structurally valid language tag.
-        try {
-          Intl.getCanonicalLocales(localeArg);
-        } catch (err) {
-          if (err instanceof RangeError) {
-            throw new lazy.error.InvalidArgumentError(
-              `Expected "locale" to be a structurally valid language tag (e.g., "en-GB"), got ${localeArg}`
-            );
-          }
-
-          throw err;
+      // Validate if locale is a structurally valid language tag.
+      try {
+        Intl.getCanonicalLocales(localeArg);
+      } catch (err) {
+        if (err instanceof RangeError) {
+          throw new lazy.error.InvalidArgumentError(
+            `Expected "locale" to be a structurally valid language tag (e.g., "en-GB"), got ${localeArg}`
+          );
         }
+
+        throw err;
       }
     }
 
