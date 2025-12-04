@@ -3660,7 +3660,12 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
       // Set the persisted flag to true and also update origin access time
       // while we are here.
 
-      originStateMetadata.mLastAccessTime = PR_Now();
+      // See the documentation for this pref in StaticPrefList.yaml
+      if (StaticPrefs::
+              dom_quotaManager_temporaryStorage_updateOriginAccessTime()) {
+        originStateMetadata.mLastAccessTime = PR_Now();
+      }
+
       originStateMetadata.mPersisted = true;
 
       QM_TRY(MOZ_TO_RESULT(
