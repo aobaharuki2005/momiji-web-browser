@@ -1349,7 +1349,7 @@ template <>
 inline gfx::Point
 StyleControlPoint<StyleShapePosition<StyleCSSFloat>, StyleCSSFloat>::ToGfxPoint(
     const gfx::Point aStatePos, const gfx::Point aEndPoint,
-    const bool isRelativeEndPoint, const CSSSize* aBasis) const {
+    const CSSSize* aBasis) const {
   if (IsAbsolute()) {
     auto& pos = AsAbsolute();
     return pos.ToGfxPoint();
@@ -1358,11 +1358,7 @@ StyleControlPoint<StyleShapePosition<StyleCSSFloat>, StyleCSSFloat>::ToGfxPoint(
   // Else
   auto& point = AsRelative();
   auto cp = point.coord.ToGfxPoint();
-  bool isRelativeDefaultCase =
-      point.reference == StyleControlReference::None && isRelativeEndPoint;
-
-  if (point.reference == StyleControlReference::Start ||
-      isRelativeDefaultCase) {
+  if (point.reference == StyleControlReference::Start) {
     return cp + aStatePos;
   } else if (point.reference == StyleControlReference::End) {
     return cp + aEndPoint;
@@ -1376,7 +1372,6 @@ inline gfx::Point
 StyleControlPoint<StyleShapePosition<LengthPercentage>,
                   LengthPercentage>::ToGfxPoint(const gfx::Point aStatePos,
                                                 const gfx::Point aEndPoint,
-                                                const bool isRelativeEndPoint,
                                                 const CSSSize* aBasis) const {
   MOZ_ASSERT(aBasis);
   if (IsAbsolute()) {
@@ -1387,11 +1382,7 @@ StyleControlPoint<StyleShapePosition<LengthPercentage>,
   // Else
   auto& point = AsRelative();
   auto cp = point.coord.ToGfxPoint(aBasis);
-  bool isRelativeDefaultCase =
-      point.reference == StyleControlReference::None && isRelativeEndPoint;
-
-  if (point.reference == StyleControlReference::Start ||
-      isRelativeDefaultCase) {
+  if (point.reference == StyleControlReference::Start) {
     return cp + aStatePos;
   } else if (point.reference == StyleControlReference::End) {
     return cp + aEndPoint;
