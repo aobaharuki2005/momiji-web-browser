@@ -83,7 +83,7 @@ private fun Menu(
             offset = offset,
             scrollState = ScrollState(with(localDensity) { columnHeightDp.toPx() * selectedItemIndex }.toInt()),
             modifier = Modifier
-                .background(color = FirefoxTheme.colors.layer2)
+                .background(color = MaterialTheme.colorScheme.surfaceContainerLowest)
                 .then(modifier),
         ) {
             val hasCheckedItems = menuItems.any { it.isChecked }
@@ -109,7 +109,7 @@ private fun Menu(
                                 modifier = Modifier
                                     .size(24.dp),
                                 contentDescription = null,
-                                tint = FirefoxTheme.colors.iconPrimary,
+                                tint = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                 } else {
@@ -120,9 +120,9 @@ private fun Menu(
                     text = {
                         Text(
                             text = item.title,
-                            color = item.color ?: FirefoxTheme.colors.textPrimary,
+                            color = item.color ?: MaterialTheme.colorScheme.onSurface,
                             maxLines = 1,
-                            style = FirefoxTheme.typography.subtitle1,
+                            style = FirefoxTheme.typography.body1,
                         )
                     },
                     modifier = Modifier
