@@ -5,6 +5,347 @@
         "blocked": [],
         "unblocked": [],
         "softblocked": [
+          "{261a39da-f913-4c73-b956-239559e3ad64}:1.0",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.1.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.0.1204",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.11.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.2.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.3.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.4.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.5.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.6.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.7.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.8.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.9.1203",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.5.1201",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.10.1203",
+          "firefox-mobile.unopened558@slmail.me:1.0.0",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.3.1204",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.4.1204",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.5.1204",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.6.1205",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.8.1204",
+          "{a8554147-3da5-47ac-b78d-dd11afc9b996}:1.0"
+        ]
+      },
+      "schema": 1764814539298,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764830106314,
+      "id": "ab4b2bea-a536-4441-b3a3-63125fe88bbf",
+      "last_modified": 1764830190557
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "asasosuke0920addon@example.com:1.0",
+          "sosuke0920addon@example.com:1.0.0",
+          "{5cd8143b-7ea3-4c9b-8dcc-cfd787ce2ee7}:241029.5",
+          "civitai-private-tool@seunome.com:1.0.7"
+        ]
+      },
+      "schema": 1764787802547,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764808507282,
+      "id": "f876a54c-3860-4a94-ae32-06a85471fc19",
+      "last_modified": 1764808596284
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "plen@magnus:1.0.0",
+          "81bece25-d8c5-46fd-86b8-01e4b24796f1@swiftsecurity.ai:1.1.8",
+          "81bece25-d8c5-46fd-86b8-01e4b24796f1@swiftsecurity.ai:1.1.9",
+          "81bece25-d8c5-46fd-86b8-01e4b24796f1@swiftsecurity.ai:1.2.0",
+          "81bece25-d8c5-46fd-86b8-01e4b24796f1@swiftsecurity.ai:1.2.1",
+          "irctc-automation@example.com:1.5",
+          "upcextractor@local:1.2",
+          "{7fdea742-9b86-4c1f-a79b-e8b5c6aa21e7}:1.7",
+          "{8ec7be8e-ab51-4978-aa39-bf7b9459ec19}:3.0",
+          "{3a52074f-e718-4bc6-8f27-066a75f75982}:1.1",
+          "conrep-content-capture@conrep.com:1.1",
+          "conrep-content-capture@conrep.com:1.2",
+          "amazon-review-helper@example.com:1.1",
+          "magnolia@12.34:4.2.5.6",
+          "{52107386-e663-471f-adc1-e9f3a076bc72}:0.1",
+          "oldtweetdeck@ajim.dev:4.0.6",
+          "oldtweetdeck@ajim.dev:4.0.7",
+          "oldtweetdeck@ajim.dev:4.2.0",
+          "oldtweetdeck@ajim.dev:4.3.1",
+          "chat-plagin@chat.pokody.ru:1.0.0",
+          "save-to-notion-n8n@bibz.dev:1.2"
+        ]
+      },
+      "schema": 1764776147238,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764786906304,
+      "id": "13a4b60e-f595-44df-ad09-5b0fe040f173",
+      "last_modified": 1764786991987
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "contact@kalinotes.com:1.10",
+          "{9d512393-6113-4924-aa31-3c4a3b0b18c3}:1.2",
+          "{9d512393-6113-4924-aa31-3c4a3b0b18c3}:1.3",
+          "{9d512393-6113-4924-aa31-3c4a3b0b18c3}:1.4",
+          "{9d512393-6113-4924-aa31-3c4a3b0b18c3}:1.5",
+          "{9d512393-6113-4924-aa31-3c4a3b0b18c3}:1.6",
+          "{9d512393-6113-4924-aa31-3c4a3b0b18c3}:1.7",
+          "{f00ce5dc-ec40-41d1-abb5-8a974e97dae4}:1.0",
+          "@lecoinannote:1.4",
+          "@lecoinannote:1.5",
+          "ebdev@wukonig.com:0.0.2",
+          "DO@Alerter2024:2",
+          "{d2effd0b-da22-472d-a4ed-09759eb211b3}:1.0",
+          "darkDelta@example.com:0.1",
+          "dk-price-checker-misterbr@extension:1.0.0",
+          "cmds-save-check24@internal:1.0.0"
+        ]
+      },
+      "schema": 1764743789198,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764765305355,
+      "id": "2bb2b6d2-abbd-4ee6-831e-5d8dc7f3cd2e",
+      "last_modified": 1764765381657
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "nice@realnice.com:1.0a",
+          "{774584fa-54e2-437a-bf27-104f2bc04807}:1.28",
+          "{b9a13672-ebe9-4328-9212-df0bc1d7bf13}:1.0",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.0.1203",
+          "contact@kalinotes.com:1.2",
+          "contact@kalinotes.com:1.4",
+          "contact@kalinotes.com:1.5",
+          "contact@kalinotes.com:1.7",
+          "contact@kalinotes.com:1.8",
+          "contact@kalinotes.com:1.9"
+        ]
+      },
+      "schema": 1764728143172,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764743706299,
+      "id": "8a61a36a-c856-4675-94ef-42fc50a4c612",
+      "last_modified": 1764743789065
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "sound-tabs@soundtabs.addon:1.0.0",
+          "liquid-glass-nav@example.com:1.0",
+          "liquid-glass-nav@example.com:1.1",
+          "liquid-glass-nav@example.com:1.2",
+          "liquid-glass-nav@example.com:1.2.1",
+          "liquid-glass-nav@example.com:1.3.3",
+          "liquid-glass-nav@example.com:1.3.4",
+          "{3ef88308-eb0b-4978-a8ca-f7538ab61e21}:1.0",
+          "{d393866f-2ad8-4456-8493-2478ac782a84}:1.0",
+          "vocab-translator@michael.dev:1.0",
+          "{44eeab13-b15b-4f53-a86f-8b1c2df0853b}:3.4",
+          "altimer@qruciatus.com:1.1",
+          "altimer@qruciatus.com:1.2"
+        ]
+      },
+      "schema": 1764700589886,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764722106932,
+      "id": "2dbf6ac5-e84f-46c8-b1a6-fdf48bc26823",
+      "last_modified": 1764722190878
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "beta@premid.app:2.0.2",
+          "beta@premid.app:2.0.3",
+          "beta@premid.app:2.0.4",
+          "rotector@jaxron.me:2.6.0",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.0.1202",
+          "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.1.1202",
+          "@rf-extension-001:3.2",
+          "admin@minutesview.tech:2.4.36",
+          "louis2@lesniak.fr:1.0"
+        ]
+      },
+      "schema": 1764678989231,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764700506280,
+      "id": "da8e88b5-1243-48a4-a4ae-cd52d86b1dad",
+      "last_modified": 1764700589607
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{f0b3a684-6e1e-4e91-b9a4-b3ae3b85891f}:1.0.0",
+          "{125f9c2d-3a6d-4f94-9c96-daf96cc14d6e}:1.0.0",
+          "{4d6dd848-9248-492b-bcf3-fabf960b047b}:1.0.0",
+          "{9f90d3bc-f0f0-4161-a624-c369691e1304}:1.0.0",
+          "{adbc41af-2f40-4522-935e-b0af93c53209}:1.0.0",
+          "{3df4692a-2161-41ab-b683-07e29692fdb2}:1.0.0",
+          "{ed6c839a-25bc-43ed-a71a-c1529460bcd8}:1.0.0",
+          "metasite-mask@metasite:1.0"
+        ],
+        "unblocked": [],
+        "softblocked": [
+          "{7548f5f2-97bf-4c09-befb-f60628802c46}:2.6.6",
+          "{4de6f645-172d-486e-bfba-f18b371e70c9}:2.6.6.1",
+          "{71dc1c3b-2d04-43c9-adfb-0a53e172af7b}:2.6.5.1",
+          "{d942c724-cbbe-4ea3-8a56-3a477ebf4907}:2.6.5",
+          "navipartner-browser-extension@navipartner.com:1.0.0",
+          "{ae5fde37-1288-4c1f-9469-dd69b7f157d0}:0.0.22",
+          "{d28be68b-691c-413e-bab7-6f9d8aa4ab07}:1.1",
+          "aiwattch@antarcticaglobal.com:1.0.6",
+          "aiwattch@antarcticaglobal.com:1.0.5",
+          "aiwattch@antarcticaglobal.com:1.0.4",
+          "aiwattch@antarcticaglobal.com:1.0.0"
+        ]
+      },
+      "schema": 1764657390503,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764678906295,
+      "id": "72efaaf5-6882-476c-b202-119d0370b17e",
+      "last_modified": 1764678989112
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "floatingresumetoolbar@example.com:7.0",
+          "domrecon-scanner@test.com:1.0",
+          "{8d41eb56-1df6-483e-82b1-358d0dba62ee}:0.5",
+          "llm-history-search@conversai.us:1.2"
+        ]
+      },
+      "schema": 1764641740686,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764657307047,
+      "id": "ef520296-03ab-494f-a0ed-4cf06c27954d",
+      "last_modified": 1764657390328
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "lorduss21@gmail.com:0.2",
+          "ekici@yahoo.com:0.1",
+          "ekici@yahoo.com:0.2",
+          "{E30039D8-ED47-4A32-AEC8-2A951E1F55D5}:1.0.0",
+          "bettersnap-custom-123@local:1.4.0",
+          "@uuid-063caffc-ca2b-2783-c5dd-5be6adacc941:1.3",
+          "{722d1fd3-a381-4c5f-8a68-a3de45138817}:0.10.13",
+          "{a6fa8776-fe3c-491f-bb36-e9383e4abc95}:1.0.0",
+          "{a6fa8776-fe3c-491f-bb36-e9383e4abc95}:1.0.1",
+          "{a6fa8776-fe3c-491f-bb36-e9383e4abc95}:1.0.2",
+          "{a6fa8776-fe3c-491f-bb36-e9383e4abc95}:1.0.3",
+          "{a6fa8776-fe3c-491f-bb36-e9383e4abc95}:1.0.4",
+          "{a6fa8776-fe3c-491f-bb36-e9383e4abc95}:1.0.5"
+        ]
+      },
+      "schema": 1764614190630,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764635706624,
+      "id": "d8309d3d-fe16-4f84-a7fa-04643b04e015",
+      "last_modified": 1764635792363
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "youtube-speed-changer@example.com:1.23",
+          "{3341e51d-31a4-4fd7-83b2-07c3de5f4a92}:0.6",
+          "tasp-jira-extension@ibm.com:1.0.0",
+          "66d1aa1b-5805-4357-86a0-96e0c04704e6@concentric.ai:1.4.7",
+          "{945b3764-0836-4388-877f-f1b5dcbfa74a}:1.0",
+          "{ae5fde37-1288-4c1f-9469-dd69b7f157d0}:0.0.21",
+          "michoscheckin@your-domain.com:0.0.1.1",
+          "hogehuga@zozege.local:0.41.2",
+          "opinionrejector@melikechan.me:0.1",
+          "opinionrejector@melikechan.me:0.2",
+          "addon-TVer@uuid-c1372cd9-9607-67dc-3187-01857363bc0f:1.5",
+          "{cfb9019a-615c-4c7c-92f2-1a1c6da80a25}:1.0",
+          "97shop@97shop.com:0.1.0",
+          "97shop@97shop.com:1.0.0",
+          "97shop@97shop.com:1.1.1",
+          "97shop@97shop.com:1.2.0",
+          "97shop@97shop.com:1.3.0",
+          "97shop@97shop.com:1.5",
+          "97shop@97shop.com:1.5.4",
+          "97shop@97shop.com:1.5.20",
+          "97shop@97shop.com:1.5.21",
+          "97shop@97shop.com:1.5.22",
+          "97shop@97shop.com:1.5.23",
+          "97shop-firefox-android@97shop.com:0.0.1",
+          "97shop-firefox-android@97shop.com:1.1.1",
+          "97shop-firefox-android@97shop.com:1.1.2",
+          "97shop-firefox-android@97shop.com:1.5",
+          "97shop-firefox-android@97shop.com:1.5.4",
+          "97shop-firefox-android@97shop.com:1.5.5",
+          "97shop-firefox-android@97shop.com:1.5.6",
+          "97shop-firefox-android@97shop.com:1.5.7",
+          "97shop-firefox-android@97shop.com:1.5.8",
+          "97shop-firefox-android@97shop.com:1.5.9",
+          "97shop-firefox-android@97shop.com:1.5.10",
+          "97shop-firefox-android@97shop.com:1.5.11",
+          "97shop-firefox-android@97shop.com:1.5.13",
+          "97shop-firefox-android@97shop.com:1.5.15",
+          "97shop-firefox-android@97shop.com:1.5.16",
+          "97shop-firefox-android@97shop.com:1.5.20",
+          "97shop-firefox-android@97shop.com:1.5.21",
+          "97shop-firefox-android@97shop.com:1.5.22",
+          "97shop-firefox-android@97shop.com:1.5.24"
+        ]
+      },
+      "schema": 1764592592864,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764614106541,
+      "id": "16f2ec2b-ef7d-410a-941d-baff9384f729",
+      "last_modified": 1764614190520
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
+          "ews-auto-login@example.com:1.0",
+          "{3bb6a6f3-2ed4-4ec1-86d7-7cefa9ddea87}:1.5",
+          "{3bb6a6f3-2ed4-4ec1-86d7-7cefa9ddea87}:1.6",
+          "antilrp@example:1.3.5",
+          "anti-aitm@hob-it.nl:1.1.5",
+          "gemini-branch-editor@ushanov:2.2",
+          "youtube-scheduler@yourdomain.com:1.2.2",
+          "youtube-scheduler@yourdomain.com:1.3",
+          "youtube-scheduler@yourdomain.com:1.4",
+          "{d137b52b-3fb0-43c6-a564-051ab7273ae9}:1.0",
+          "{e4182e50-1974-4329-8745-50a09984be54}:1.0.0",
+          "{e4182e50-1974-4329-8745-50a09984be54}:1.0.1"
+        ]
+      },
+      "schema": 1764570990345,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1764592506692,
+      "id": "006d659c-a0b4-4d1f-8659-ae35fa8f3aac",
+      "last_modified": 1764592592670
+    },
+    {
+      "stash": {
+        "blocked": [],
+        "unblocked": [],
+        "softblocked": [
           "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.7.1130",
           "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.8.1130",
           "{dc5f5d17-0a0b-4576-b146-e92e5df164ac}:1.9.1130",
@@ -4867,5 +5208,5 @@
       "last_modified": 1761136764909
     }
   ],
-  "timestamp": 1764570990070
+  "timestamp": 1764830190557
 }

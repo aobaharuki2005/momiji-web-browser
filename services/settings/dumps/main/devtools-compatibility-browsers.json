@@ -1,13 +1,22 @@
 {
   "data": [
     {
-      "name": "Bun",
-      "schema": 1762992304400,
+      "name": "Node.js",
+      "schema": 1764115503977,
       "status": "current",
-      "version": "1.3.2",
+      "version": "25.2.0",
+      "browserid": "nodejs",
+      "id": "72793b48-82fb-4674-9659-b51e661cb10b",
+      "last_modified": 1764597259381
+    },
+    {
+      "name": "Bun",
+      "schema": 1764115503843,
+      "status": "current",
+      "version": "1.3.3",
       "browserid": "bun",
-      "id": "5034aa5c-d78a-4a4a-ade2-d9aaef93a941",
-      "last_modified": 1763038623318
+      "id": "3c93b6f2-ab78-4748-af16-aaf65f92884b",
+      "last_modified": 1764597259377
     },
     {
       "name": "Firefox",
@@ -199,15 +208,6 @@
       "last_modified": 1762424892927
     },
     {
-      "name": "Node.js",
-      "schema": 1761696314245,
-      "status": "current",
-      "version": "24.7.0",
-      "browserid": "nodejs",
-      "id": "91237d21-1b61-4fa2-8a8e-7d6237471e87",
-      "last_modified": 1761724372882
-    },
-    {
       "name": "WebView Android",
       "schema": 1761696314562,
       "status": "planned",
@@ -388,5 +388,5 @@
       "last_modified": 1665656484764
     }
   ],
-  "timestamp": 1763038623318
+  "timestamp": 1764597259381
 }
