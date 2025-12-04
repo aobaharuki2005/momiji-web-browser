@@ -130,7 +130,7 @@ class BrowserToolbarSearchMiddlewareTest {
     fun `WHEN the toolbar enters in edit mode THEN a new search selector button is added`() {
         val (_, store) = buildMiddlewareAndAddToStore()
 
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
 
         assertSearchSelectorEquals(
             expectedSearchSelector(),
@@ -142,7 +142,7 @@ class BrowserToolbarSearchMiddlewareTest {
     fun `WHEN the toolbar enters in edit mode with non-blank query THEN a clear button is shown`() {
         val (_, store) = buildMiddlewareAndAddToStore()
 
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         store.dispatch(SearchQueryUpdated(BrowserToolbarQuery("test")))
 
         assertEquals(
@@ -155,7 +155,7 @@ class BrowserToolbarSearchMiddlewareTest {
     fun `WHEN the toolbar enters in edit mode with blank query THEN a qr scanner button is shown`() {
         val (_, store) = buildMiddlewareAndAddToStore()
 
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         store.dispatch(SearchQueryUpdated(BrowserToolbarQuery("")))
 
         assertEquals(
@@ -168,7 +168,7 @@ class BrowserToolbarSearchMiddlewareTest {
     fun `WHEN the toolbar enters in edit mode with blank query AND user starts typing THEN qr button is replaced by clear button`() {
         val (_, store) = buildMiddlewareAndAddToStore()
 
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         store.dispatch(SearchQueryUpdated(BrowserToolbarQuery("")))
 
         assertEquals(
@@ -188,7 +188,7 @@ class BrowserToolbarSearchMiddlewareTest {
     fun `WHEN the toolbar enters in edit mode with non-blank query AND the clear button is clicked THEN text is cleared and telemetry is recorded`() {
         val (_, store) = buildMiddlewareAndAddToStore()
         store.dispatch(SearchQueryUpdated(BrowserToolbarQuery("test")))
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
 
         val clearButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
         assertEquals(expectedClearButton, clearButton)
@@ -205,7 +205,7 @@ class BrowserToolbarSearchMiddlewareTest {
                 fakeSearchState().customSearchEngines.first()
         }
         val (_, store) = buildMiddlewareAndAddToStore(appStore = appStore)
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
 
         val qrButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
         assertEquals(expectedQrButton, qrButton)
@@ -224,7 +224,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val middleware = spyk(buildMiddleware(appStore = appStore))
         every { middleware.isSpeechRecognitionAvailable() } returns true
         val store = buildStore(middleware)
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
 
         val voiceSearchButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
         assertEquals(expectedVoiceSearchButton, voiceSearchButton)
@@ -249,7 +249,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val appStore = AppStore(middlewares = listOf(captorMiddleware))
         val (_, store) = buildMiddlewareAndAddToStore(appStore = appStore)
         appStore.dispatch(SearchStarted())
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         store.dispatch(SearchQueryUpdated(BrowserToolbarQuery("test")))
         assertTrue(store.state.isEditMode())
         assertTrue(appStore.state.searchState.isSearchActive)
@@ -272,7 +272,7 @@ class BrowserToolbarSearchMiddlewareTest {
     fun `GIVEN the search selector menu is open WHEN a menu item is clicked THEN update the selected search engine and rebuild the menu`() {
         val (_, store) = buildMiddlewareAndAddToStore()
         val newEngineSelection = fakeSearchState().searchEngineShortcuts.last()
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         assertSearchSelectorEquals(
             expectedSearchSelector(),
             store.state.editState.editActionsStart[0] as SearchSelectorAction,
@@ -314,7 +314,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val store = buildStore(middleware)
         val autocompleteProvidersSlot = slot<List<AutocompleteProvider>>()
 
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         shadowOf(Looper.getMainLooper()).idle()
         coVerify(exactly = 0) {
             middleware.fetchAutocomplete(
@@ -364,7 +364,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val store = buildStore(middleware)
         val autocompleteProvidersSlot = slot<List<AutocompleteProvider>>()
 
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         shadowOf(Looper.getMainLooper()).idle()
         coVerify(exactly = 0) {
             middleware.fetchAutocomplete(
@@ -407,7 +407,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val store = buildStore(middleware)
         val autocompleteProvidersSlot = slot<List<AutocompleteProvider>>()
 
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         shadowOf(Looper.getMainLooper()).idle()
         coVerify(exactly = 0) {
             middleware.fetchAutocomplete(
@@ -451,7 +451,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val store = buildStore(middleware)
         val autocompleteProvidersSlot = slot<List<AutocompleteProvider>>()
 
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         shadowOf(Looper.getMainLooper()).idle()
         coVerify(exactly = 0) {
             middleware.fetchAutocomplete(
@@ -650,7 +650,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val store = buildStore(middleware)
 
         store.dispatch(SearchSelectorItemClicked(mockk(relaxed = true)))
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         shadowOf(Looper.getMainLooper()).idle()
 
         coVerify(exactly = 0) {
@@ -669,7 +669,7 @@ class BrowserToolbarSearchMiddlewareTest {
     fun `WHEN the search engines are updated in BrowserStore THEN update the search selector and search providers`() {
         val browserStore = BrowserStore()
         val (_, store) = buildMiddlewareAndAddToStore(browserStore = browserStore)
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         val newSearchEngines = fakeSearchState().applicationSearchEngines
 
         browserStore.dispatch(ApplicationSearchEnginesLoaded(newSearchEngines))
@@ -693,7 +693,7 @@ class BrowserToolbarSearchMiddlewareTest {
         )
         val browserStore = BrowserStore()
         val (_, store) = buildMiddlewareAndAddToStore(testContext, appStore, browserStore)
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         val newSearchEngines = fakeSearchState().applicationSearchEngines
 
         browserStore.dispatch(ApplicationSearchEnginesLoaded(newSearchEngines))
@@ -919,9 +919,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val middleware = spyk(buildMiddleware(appStore = appStore))
         every { middleware.isSpeechRecognitionAvailable() } returns true
         val store = buildStore(middleware)
-        store.dispatch(EnterEditMode)
-
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
 
         val actions = store.state.editState.editActionsEnd
         assertEquals(2, actions.size)
@@ -934,9 +932,8 @@ class BrowserToolbarSearchMiddlewareTest {
         val middleware = spyk(buildMiddleware(appStore = appStore))
         every { middleware.isSpeechRecognitionAvailable() } returns false
         val store = buildStore(middleware)
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         store.dispatch(SearchQueryUpdated(BrowserToolbarQuery("")))
-        store.dispatch(EnterEditMode)
 
         val actions = store.state.editState.editActionsEnd
         assertTrue(actions.size == 1)
@@ -957,7 +954,7 @@ class BrowserToolbarSearchMiddlewareTest {
             components = components,
             browsingModeManager = browsingModeManager,
         )
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
 
         store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
@@ -991,7 +988,7 @@ class BrowserToolbarSearchMiddlewareTest {
             components = components,
             browsingModeManager = browsingModeManager,
         )
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(true))
         val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
 
         store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
@@ -1030,7 +1027,7 @@ class BrowserToolbarSearchMiddlewareTest {
             components = components,
             browsingModeManager = browsingModeManager,
         )
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         val qrScannerButton = store.state.editState.editActionsEnd.last() as ActionButtonRes
 
         store.dispatch(qrScannerButton.onClick as BrowserToolbarEvent)
@@ -1059,7 +1056,7 @@ class BrowserToolbarSearchMiddlewareTest {
         val middleware = spyk(buildMiddleware(appStore = appStore))
         every { middleware.isSpeechRecognitionAvailable() } returns true
         val store = buildStore(middleware)
-        store.dispatch(EnterEditMode)
+        store.dispatch(EnterEditMode(false))
         val voiceAction = store.state.editState.editActionsEnd.first() as ActionButtonRes
 
         store.dispatch(voiceAction.onClick as BrowserToolbarEvent)

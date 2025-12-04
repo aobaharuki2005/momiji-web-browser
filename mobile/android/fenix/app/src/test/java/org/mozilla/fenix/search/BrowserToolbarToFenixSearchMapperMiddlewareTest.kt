@@ -7,11 +7,7 @@ package org.mozilla.fenix.search
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.test.TestScope
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -50,7 +46,7 @@ class BrowserToolbarToFenixSearchMapperMiddlewareTest {
         val captorMiddleware = CaptureActionsMiddleware<SearchFragmentState, SearchFragmentAction>()
         val searchStore = buildSearchStore(listOf(searchStatusMapperMiddleware, captorMiddleware))
 
-        toolbarStore.dispatch(EnterEditMode)
+        toolbarStore.dispatch(EnterEditMode(false))
         mainLooperRule.idle()
 
         captorMiddleware.assertLastAction(SearchStarted::class) {
@@ -62,7 +58,7 @@ class BrowserToolbarToFenixSearchMapperMiddlewareTest {
     @Test
     fun `GIVEN search was started WHEN there's a new query in the toolbar THEN update the search state`() {
         val searchStore = buildSearchStore(listOf(buildMiddleware()))
-        toolbarStore.dispatch(EnterEditMode)
+        toolbarStore.dispatch(EnterEditMode(false))
 
         searchStore.dispatch(SearchStarted(mockk(), false, false, searchStartedForCurrentUrl = false))
         mainLooperRule.idle()
@@ -94,7 +90,7 @@ class BrowserToolbarToFenixSearchMapperMiddlewareTest {
             ),
         )
         val searchStore = buildSearchStore(listOf(buildMiddleware(browserStore = browserStore)))
-        toolbarStore.dispatch(EnterEditMode)
+        toolbarStore.dispatch(EnterEditMode(false))
 
         toolbarStore.dispatch(
             SearchQueryUpdated(BrowserToolbarQuery("https://mozilla.org"), isQueryPrefilled = true),

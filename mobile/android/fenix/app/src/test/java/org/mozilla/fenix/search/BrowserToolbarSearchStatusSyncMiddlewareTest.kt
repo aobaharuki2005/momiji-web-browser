@@ -57,10 +57,11 @@ class BrowserToolbarSearchStatusSyncMiddlewareTest {
         assertFalse(toolbarStore.state.isEditMode())
         assertFalse(appStore.state.searchState.isSearchActive)
 
-        toolbarStore.dispatch(EnterEditMode)
+        toolbarStore.dispatch(EnterEditMode(false))
         mainLooperRule.idle()
 
         assertFalse(appStore.state.searchState.isSearchActive)
+        assertFalse(toolbarStore.state.editState.isQueryPrivate)
     }
 
     @Test

@@ -68,7 +68,7 @@ internal class BrowserToolbarMiddleware(
             }
 
             is PageOriginClicked -> {
-                next(EnterEditMode)
+                next(EnterEditMode(false))
             }
 
             is TabCounterClicked -> {

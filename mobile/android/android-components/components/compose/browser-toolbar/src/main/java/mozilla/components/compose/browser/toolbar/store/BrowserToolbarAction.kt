@@ -17,8 +17,10 @@ import mozilla.components.compose.browser.toolbar.concept.Action as ToolbarActio
 sealed interface BrowserToolbarAction : Action {
     /**
      * Allow typing a search term or URL.
+     *
+     * @property isPrivate [Boolean] Indicates that the toolbar is used for private mode / incognito queries.
      */
-    object EnterEditMode : BrowserToolbarAction
+    data class EnterEditMode(val isPrivate: Boolean) : BrowserToolbarAction
 
     /**
      * Show the current URL.
@@ -129,11 +131,6 @@ sealed class BrowserEditToolbarAction : BrowserToolbarAction {
         val query: BrowserToolbarQuery,
         val isQueryPrefilled: Boolean = false,
     ) : BrowserEditToolbarAction()
-
-    /**
-     * Indicates that the toolbar is used for private mode / incognito queries.
-     */
-    data class PrivateModeUpdated(val inPrivateMode: Boolean) : BrowserEditToolbarAction()
 
     /**
      * Indicates that a new autocomplete suggestion is available or that the previous one is not valid anymore.

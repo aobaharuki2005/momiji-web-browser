@@ -52,6 +52,9 @@ private fun reduce(state: BrowserToolbarState, action: BrowserToolbarAction): Br
 
         is BrowserToolbarAction.EnterEditMode -> state.copy(
             mode = Mode.EDIT,
+            editState = state.editState.copy(
+                isQueryPrivate = action.isPrivate,
+            ),
         )
 
         is BrowserToolbarAction.ExitEditMode -> state.copy(
@@ -107,12 +110,6 @@ private fun reduce(state: BrowserToolbarState, action: BrowserToolbarAction): Br
             editState = state.editState.copy(
                 query = action.query,
                 isQueryPrefilled = action.isQueryPrefilled,
-            ),
-        )
-
-        is BrowserEditToolbarAction.PrivateModeUpdated -> state.copy(
-            editState = state.editState.copy(
-                isQueryPrivate = action.inPrivateMode,
             ),
         )
 
