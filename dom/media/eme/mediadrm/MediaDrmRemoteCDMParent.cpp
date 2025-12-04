@@ -808,10 +808,31 @@ already_AddRefed<MediaDrmCryptoInfo> MediaDrmRemoteCDMParent::CreateCryptoInfo(
     plainSizes[0] = newLeadingPlainSize.value();
   }
 
+  const CopyableTArray<uint8_t>* srcIV;
+  cryptoinfo_mode_t mode;
+  switch (cryptoObj.mCryptoScheme) {
+    case CryptoScheme::None:
+      mode = AMEDIACODECRYPTOINFO_MODE_CLEAR;
+      srcIV = &cryptoObj.mIV;
+      break;
+    case CryptoScheme::Cenc:
+      mode = AMEDIACODECRYPTOINFO_MODE_AES_CTR;
+      srcIV = &cryptoObj.mIV;
+      break;
+    case CryptoScheme::Cbcs:
+    case CryptoScheme::Cbcs_1_9:
+      mode = AMEDIACODECRYPTOINFO_MODE_AES_CBC;
+      srcIV = &cryptoObj.mConstantIV;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled CryptoScheme!");
+      return nullptr;
+  }
+
   uint8_t key[16] = {};
   uint8_t iv[16] = {};
 
-  if (NS_WARN_IF(cryptoObj.mIV.Length() > sizeof(iv))) {
+  if (NS_WARN_IF(srcIV->Length() > sizeof(iv))) {
     MOZ_ASSERT_UNREACHABLE("IV too big for Android!");
     return nullptr;
   }
@@ -821,29 +842,12 @@ already_AddRefed<MediaDrmCryptoInfo> MediaDrmRemoteCDMParent::CreateCryptoInfo(
     return nullptr;
   }
 
-  if (!cryptoObj.mIV.IsEmpty()) {
-    memcpy(iv, cryptoObj.mIV.Elements(), cryptoObj.mIV.Length());
+  if (!srcIV->IsEmpty()) {
+    memcpy(iv, srcIV->Elements(), srcIV->Length());
   }
 
   if (!cryptoObj.mKeyId.IsEmpty()) {
     memcpy(key, cryptoObj.mKeyId.Elements(), cryptoObj.mKeyId.Length());
-  }
-
-  cryptoinfo_mode_t mode;
-  switch (cryptoObj.mCryptoScheme) {
-    case CryptoScheme::None:
-      mode = AMEDIACODECRYPTOINFO_MODE_CLEAR;
-      break;
-    case CryptoScheme::Cenc:
-      mode = AMEDIACODECRYPTOINFO_MODE_AES_CTR;
-      break;
-    case CryptoScheme::Cbcs:
-    case CryptoScheme::Cbcs_1_9:
-      mode = AMEDIACODECRYPTOINFO_MODE_AES_CBC;
-      break;
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unhandled CryptoScheme!");
-      return nullptr;
   }
 
   AMediaCodecCryptoInfo* cryptoInfo = AMediaCodecCryptoInfo_new(
