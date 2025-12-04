@@ -286,5 +286,4 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
   }
 }
 
-exports.InspectorFront = InspectorFront;
 registerFront(InspectorFront);

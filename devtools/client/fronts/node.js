@@ -63,7 +63,6 @@ class NodeListFront extends FrontClassWithSpec(nodeListSpec) {
   }
 }
 
-exports.NodeListFront = NodeListFront;
 registerFront(NodeListFront);
 
 /**

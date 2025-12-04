@@ -569,13 +569,8 @@ class ParentAccessibilityFront extends FrontClassWithSpec(
 
 const SimulatorFront = FrontClassWithSpec(simulatorSpec);
 
-exports.AccessibleFront = AccessibleFront;
 registerFront(AccessibleFront);
-exports.AccessibleWalkerFront = AccessibleWalkerFront;
 registerFront(AccessibleWalkerFront);
-exports.AccessibilityFront = AccessibilityFront;
 registerFront(AccessibilityFront);
-exports.ParentAccessibilityFront = ParentAccessibilityFront;
 registerFront(ParentAccessibilityFront);
-exports.SimulatorFront = SimulatorFront;
 registerFront(SimulatorFront);

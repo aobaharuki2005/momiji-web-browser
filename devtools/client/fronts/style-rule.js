@@ -201,7 +201,6 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   }
 }
 
-exports.StyleRuleFront = StyleRuleFront;
 registerFront(StyleRuleFront);
 
 /**

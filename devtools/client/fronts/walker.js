@@ -466,5 +466,4 @@ class WalkerFront extends FrontClassWithSpec(walkerSpec) {
   }
 }
 
-exports.WalkerFront = WalkerFront;
 registerFront(WalkerFront);

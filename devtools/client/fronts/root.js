@@ -332,5 +332,4 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     return !!rootForm[actorName + "Actor"];
   }
 }
-exports.RootFront = RootFront;
 registerFront(RootFront);

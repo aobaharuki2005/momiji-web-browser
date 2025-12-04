@@ -198,7 +198,6 @@ class AnimationPlayerFront extends FrontClassWithSpec(animationPlayerSpec) {
   }
 }
 
-exports.AnimationPlayerFront = AnimationPlayerFront;
 registerFront(AnimationPlayerFront);
 
 class AnimationsFront extends FrontClassWithSpec(animationsSpec) {
@@ -220,5 +219,4 @@ class AnimationsFront extends FrontClassWithSpec(animationsSpec) {
   }
 }
 
-exports.AnimationsFront = AnimationsFront;
 registerFront(AnimationsFront);

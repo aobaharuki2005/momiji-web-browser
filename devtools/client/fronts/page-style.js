@@ -123,5 +123,4 @@ class PageStyleFront extends FrontClassWithSpec(pageStyleSpec) {
   }
 }
 
-exports.PageStyleFront = PageStyleFront;
 registerFront(PageStyleFront);
