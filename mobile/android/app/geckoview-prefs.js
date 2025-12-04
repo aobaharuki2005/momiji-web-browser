@@ -10,9 +10,6 @@
 // improves readability, particular for conditional blocks that exceed a single
 // screen.
 
-// Caret browsing is disabled on mobile (bug 476009)
-pref("accessibility.browsewithcaret_shortcut.enabled", false);
-
 pref("accessibility.typeaheadfind", false);
 pref("accessibility.typeaheadfind.flashBar", 1);
 pref("accessibility.typeaheadfind.linksonly", false);
