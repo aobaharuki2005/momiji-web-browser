@@ -13,15 +13,9 @@ const { AppConstants } = ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-// eslint-disable-next-line mozilla/use-static-import
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AboutNewTabParent: "resource:///actors/AboutNewTabParent.sys.mjs",
   AboutPreferences: "resource://newtab/lib/AboutPreferences.sys.mjs",
   AdsFeed: "resource://newtab/lib/AdsFeed.sys.mjs",
   InferredPersonalizationFeed:
@@ -54,13 +48,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   WallpaperFeed: "resource://newtab/lib/Wallpapers/WallpaperFeed.sys.mjs",
   WeatherFeed: "resource://newtab/lib/WeatherFeed.sys.mjs",
 });
-
-XPCOMUtils.defineLazyServiceGetter(
-  lazy,
-  "ProxyService",
-  "@mozilla.org/network/protocol-proxy-service;1",
-  Ci.nsIProtocolProxyService
-);
 
 // NB: Eagerly load modules that will be loaded/constructed/initialized in the
 // common case to avoid the overhead of wrapping and detecting lazy loading.
@@ -112,12 +99,6 @@ const LOCALE_SECTIONS_CONFIG =
 
 const PREF_SHOULD_AS_INITIALIZE_FEEDS =
   "browser.newtabpage.activity-stream.testing.shouldInitializeFeeds";
-
-const PREF_INFERRED_ENABLED =
-  "discoverystream.sections.personalization.inferred.enabled";
-
-const PREF_IMAGE_PROXY_ENABLED =
-  "browser.newtabpage.activity-stream.discoverystream.imageProxy.enabled";
 
 export const WEATHER_OPTIN_REGIONS = [
   "AT", // Austria
@@ -936,13 +917,6 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
-    "discoverystream.imageProxy.enabled",
-    {
-      title: "Boolean flag to enable image proxying for images on newtab",
-      value: true,
-    },
-  ],
-  [
     "newtabWallpapers.highlightEnabled",
     {
       title: "Boolean flag to show the highlight about the Wallpaper feature",
@@ -1644,7 +1618,6 @@ export class ActivityStream {
     this.initialized = false;
     this.store = new lazy.Store();
     this._defaultPrefs = new lazy.DefaultPrefs(PREFS_CONFIG);
-    this._proxyRegistered = false;
   }
 
   get feeds() {
@@ -1666,7 +1639,6 @@ export class ActivityStream {
     this._updateDynamicPrefs();
     this._defaultPrefs.init();
     Services.obs.addObserver(this, "intl:app-locales-changed");
-    Services.prefs.addObserver(PREF_IMAGE_PROXY_ENABLED, this);
     lazy.NewTabActorRegistry.init();
 
     // Hook up the store and let all feeds and pages initialize
@@ -1684,113 +1656,8 @@ export class ActivityStream {
       { type: at.UNINIT }
     );
 
-    this.registerNetworkProxy();
     this.initialized = true;
   }
-
-  /**
-   * Registers network proxy channel filter for image requests.
-   * This enables privacy-preserving image proxy for newtab when
-   * inferred personalization is enabled.
-   */
-  registerNetworkProxy() {
-    const enabled = Services.prefs.getBoolPref(PREF_IMAGE_PROXY_ENABLED, false);
-    if (!this._proxyRegistered && enabled) {
-      lazy.ProxyService.registerChannelFilter(this, 0);
-      this._proxyRegistered = true;
-    }
-  }
-
-  /**
-   * Unregisters network proxy channel filter.
-   */
-  unregisterNetworkProxy() {
-    if (this._proxyRegistered) {
-      lazy.ProxyService.unregisterChannelFilter(this);
-      this._proxyRegistered = false;
-    }
-  }
-
-  /**
-   * Retrieves and validates image proxy configuration from prefs/nimbus.
-   *
-   * @returns {object|null} Image proxy config object, or null if disabled/invalid.
-   */
-  getImageProxyConfig() {
-    const { values } = this.store.getState().Prefs;
-
-    const config = values?.trainhopConfig?.imageProxy;
-    if (
-      !config ||
-      !config.enabled ||
-      !config.proxyHost ||
-      !config.proxyPort ||
-      !config.masqueTemplate ||
-      !config.proxyAuthHeader ||
-      !values?.[PREF_INFERRED_ENABLED] ||
-      !values?.[PREF_IMAGE_PROXY_ENABLED]
-    ) {
-      return null;
-    }
-    return {
-      proxyHost: config.proxyHost,
-      proxyPort: config.proxyPort,
-      proxyAuthHeader: config.proxyAuthHeader,
-      masqueTemplate: config.masqueTemplate,
-      connectionIsolationKey: config.connectionIsolationKey || "",
-      failoverProxy: config.failoverProxy,
-      imageProxyHosts: (config.imageProxyHosts || "")
-        .split(",")
-        .map(host => host.trim()),
-    };
-  }
-
-  /**
-   * nsIProtocolProxyChannelFilter implementation. Applies MASQUE proxy
-   * to image requests from newtab when configured.
-   *
-   * @param {nsIChannel} channel
-   * @param {nsIProxyInfo} proxyInfo
-   * @param {nsIProtocolProxyChannelFilter} callback
-   */
-  applyFilter(channel, proxyInfo, callback) {
-    const { browsingContext } = channel.loadInfo;
-    let browser = browsingContext?.top.embedderElement;
-
-    if (!browser || !lazy.AboutNewTabParent.loadedTabs.has(browser)) {
-      callback.onProxyFilterResult(proxyInfo);
-      return;
-    }
-
-    const config = this.getImageProxyConfig();
-
-    if (!config) {
-      callback.onProxyFilterResult(proxyInfo);
-      return;
-    }
-
-    if (
-      config.imageProxyHosts.includes(channel.URI.host) &&
-      channel.URI.scheme === "https"
-    ) {
-      callback.onProxyFilterResult(
-        lazy.ProxyService.newMASQUEProxyInfo(
-          config.proxyHost /* aHost */,
-          config.proxyPort /* aPort */,
-          config.masqueTemplate /* uMasqueTemplate */,
-          config.proxyAuthHeader /* aProxyAuthorizationHeader */,
-          config.connectionIsolationKey /* aConnectionIsolationKey */,
-          0 /* aFlags */,
-          5000 /* aFailoverTimeout */,
-          config.failoverProxy /* failover proxy */
-        )
-      );
-    } else {
-      callback.onProxyFilterResult(proxyInfo);
-    }
-  }
-
-  QueryInterface = ChromeUtils.generateQI([Ci.nsIProtocolProxyChannelFilter]);
 
   /**
    * Check if an old pref has a custom value to migrate. Clears the pref so that
@@ -1831,10 +1698,8 @@ export class ActivityStream {
     delete this.geo;
 
     Services.obs.removeObserver(this, "intl:app-locales-changed");
-    Services.prefs.removeObserver(PREF_IMAGE_PROXY_ENABLED, this);
 
     this.store.uninit();
-    this.unregisterNetworkProxy();
     this.initialized = false;
   }
 
@@ -1890,24 +1755,11 @@ export class ActivityStream {
     }
   }
 
-  observe(subject, topic, data) {
+  observe(subject, topic) {
     switch (topic) {
       case "intl:app-locales-changed":
       case lazy.Region.REGION_TOPIC:
         this._updateDynamicPrefs();
-        break;
-      case "nsPref:changed":
-        if (data === PREF_IMAGE_PROXY_ENABLED) {
-          const enabled = Services.prefs.getBoolPref(
-            PREF_IMAGE_PROXY_ENABLED,
-            false
-          );
-          if (enabled) {
-            this.registerNetworkProxy();
-          } else {
-            this.unregisterNetworkProxy();
-          }
-        }
         break;
     }
   }
