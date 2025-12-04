@@ -13,20 +13,28 @@ import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.CreditCardsAddressesStorage
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
+import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.GleanMetrics.CreditCards
+import org.mozilla.fenix.helpers.FenixGleanTestRule
 
 @RunWith(AndroidJUnit4::class)
 class CreditCardEditorStoreTest {
 
     @get:Rule
     val coroutinesTestRule = MainCoroutineRule()
+
+    @get:Rule
+    val gleanTestRule = FenixGleanTestRule(testContext)
+
     private val creditCardsStorage = FakeCreditCardsStorage()
     private val calendarDataProvider = FakeCalendarDataProvider(
         expectedMonths = listOf("January", "February", "March"),
@@ -299,6 +307,58 @@ class CreditCardEditorStoreTest {
                 store.state,
             )
         }
+
+    @Test
+    fun `WHEN a card is deleted, then a telemetry event is sent`() = runTest {
+        val store = makeStore(
+            state = createState(guid = "card-id"),
+        )
+
+        store.dispatch(CreditCardEditorAction.DeleteDialogAction.Confirm)
+
+        // verify that the event is sent
+        assertNotNull(CreditCards.deleted.testGetValue())
+    }
+
+    @Test
+    fun `WHEN a card is saved, THEN a telemetry event is sent`() = runTest {
+        val store = makeStore(
+            state = createState(
+                nameOnCard = "Jane Doe",
+                cardNumber = "5555444433331111",
+                expiryYears = listOf("2025", "2026", "2027"),
+                selectedExpiryYearIndex = 1,
+                expiryMonths = listOf("January", "February", "March"),
+                selectedExpiryMonthIndex = 0,
+            ),
+        )
+
+        store.dispatch(CreditCardEditorAction.Save)
+
+        // verify that the event is sent
+        assertNotNull(CreditCards.saved.testGetValue())
+    }
+
+    @Test
+    fun `WHEN a card is updated, THEN a telemetry event is sent`() = runTest {
+        val store = makeStore(
+            state = createState(
+                guid = "1234",
+                inEditMode = true,
+                nameOnCard = "Jane Doe",
+                cardNumber = "5555444433331111",
+                expiryYears = listOf("2025", "2026", "2027"),
+                selectedExpiryYearIndex = 1,
+                expiryMonths = listOf("January", "February", "March"),
+                selectedExpiryMonthIndex = 0,
+            ),
+        )
+
+        store.dispatch(CreditCardEditorAction.Save)
+
+        // verify that the event is sent
+        assertNotNull(CreditCards.modified.testGetValue())
+    }
 
     private fun makeStore(
         state: CreditCardEditorState = createState(),
