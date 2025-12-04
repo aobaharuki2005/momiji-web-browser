@@ -206,10 +206,6 @@
     /* Display split view footer within inactive panels. */
     .split-view-panel:not(.deck-selected) > split-view-footer {
       display: inherit;
-
-      &[hidden] {
-        display: none;
-      }
     }
   }
 }
