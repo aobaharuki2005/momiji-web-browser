@@ -1885,6 +1885,7 @@ HttpBaseChannel::GetRequestSize(uint64_t* aRequestSize) {
 
 NS_IMETHODIMP
 HttpBaseChannel::GetDecodedBodySize(uint64_t* aDecodedBodySize) {
+  MutexAutoLock lock(mOnDataFinishedMutex);
   *aDecodedBodySize = mDecodedBodySize;
   return NS_OK;
 }

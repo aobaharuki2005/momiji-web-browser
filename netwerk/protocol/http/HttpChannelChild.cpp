@@ -892,6 +892,7 @@ void HttpChannelChild::ProcessOnStopRequest(
     MutexAutoLock lock(mOnDataFinishedMutex);
     mTransferSize = aTiming.transferSize();
     mEncodedBodySize = aTiming.encodedBodySize();
+    mDecodedBodySize = aTiming.decodedBodySize();
   }
 
   if (StaticPrefs::network_send_OnDataFinished()) {
