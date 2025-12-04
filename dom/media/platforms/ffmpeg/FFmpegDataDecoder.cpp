@@ -161,6 +161,11 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::MaybeAttachCDM() {
     return NS_OK;
   }
 
+  if (!(mCodecContext->codec->capabilities & AV_CODEC_CAP_HARDWARE)) {
+    return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                       RESULT_DETAIL("CDM requires MediaCodec decoder"));
+  }
+
   mCrypto = mCDM->GetCrypto();
   if (NS_WARN_IF(!mCrypto)) {
     return MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
@@ -221,6 +226,14 @@ MediaResult FFmpegDataDecoder<LIBAV_VER>::InitDecoder(AVCodec* aCodec,
 #if LIBAVCODEC_VERSION_MAJOR < 57
   if (aCodec->capabilities & CODEC_CAP_DR1) {
     mCodecContext->flags |= CODEC_FLAG_EMU_EDGE;
+  }
+#endif
+
+#if defined(MOZ_WIDGET_ANDROID) && defined(USING_MOZFFVPX)
+  ret = MaybeAttachCDM();
+  if (NS_FAILED(ret)) {
+    ReleaseCodecContext();
+    return ret;
   }
 #endif
 
