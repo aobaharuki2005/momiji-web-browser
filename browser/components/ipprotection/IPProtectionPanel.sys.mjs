@@ -192,7 +192,7 @@ export class IPProtectionPanel {
    */
   static showHelpPage(e) {
     let win = e.target?.ownerGlobal;
-    if (win && !Cu.isInAutomation) {
+    if (win) {
       win.openWebLinkIn(LINKS.SUPPORT_URL, "tab");
     }
 
@@ -289,6 +289,11 @@ export class IPProtectionPanel {
 
     ownerDocument.l10n.setAttributes(headerButton, "ipprotection-help-button");
     headerButton.addEventListener("click", IPProtectionPanel.showHelpPage);
+    headerButton.addEventListener("keypress", e => {
+      if (e.code == "Space" || e.code == "Enter") {
+        IPProtectionPanel.showHelpPage(e);
+      }
+    });
     return headerButton;
   }
 
