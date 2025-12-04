@@ -91,13 +91,16 @@ const TOP_STORIES_SECTION_NAME = "top_stories_section";
     trainhopConfig.newtabPrivatePing.dailyEventCap
     Maximum newtab_content events that can be sent in 24 hour period.
 */
-const TRAINHOP_PREF_RANDOM_CONTENT_PROBABILITY_MICRO =
-  "randomContentProbabilityEpsilonMicro";
+const TRAINHOP_PREF_RANDOM_CLICK_PROBABILITY_MICRO =
+  "randomContentClickProbabilityEpsilonMicro";
 
 /**
  *    Maximum newtab_content events that can be sent in 24 hour period.
  */
 const TRAINHOP_PREF_DAILY_EVENT_CAP = "dailyEventCap";
+
+const TRAINHOP_PREF_DAILY_CLICK_EVENT_CAP = "dailyClickEventCap";
+const TRAINHOP_PREF_WEEKLY_CLICK_EVENT_CAP = "weeklyClickEventCap";
 
 // This is a mapping table between the user preferences and its encoding code
 export const USER_PREFS_ENCODING = {
@@ -825,7 +828,7 @@ export class TelemetryFeed {
     }
     const { n } = this._privateRandomContentTelemetryProbablityValues;
     if (!n || n < 10) {
-      // None or very view articles. We're in an intermediate or errorstate.
+      // None or very view articles. We're in an intermediate or error state.
       return item;
     }
     const cache_key = `probability_${epsilon}_${n}`; // Lookup of probability for a item size
@@ -1267,14 +1270,20 @@ export class TelemetryFeed {
     this._privateRandomContentTelemetryProbablityValues = {
       epsilon:
         (prefs?.trainhopConfig?.newtabPrivatePing?.[
-          TRAINHOP_PREF_RANDOM_CONTENT_PROBABILITY_MICRO
+          TRAINHOP_PREF_RANDOM_CLICK_PROBABILITY_MICRO
         ] || 0) / 1e6,
     };
-    const impressionCap =
-      prefs?.trainhopConfig?.newtabPrivatePing?.[
-        TRAINHOP_PREF_DAILY_EVENT_CAP
-      ] || 0;
+    const privatePingConfig = prefs?.trainhopConfig?.newtabPrivatePing || {};
+    // Set the daily cap for content pings
+    const impressionCap = privatePingConfig[TRAINHOP_PREF_DAILY_EVENT_CAP] || 0;
     this.newtabContentPing.setMaxEventsPerDay(impressionCap);
+    const clickDailyCap =
+      privatePingConfig[TRAINHOP_PREF_DAILY_CLICK_EVENT_CAP] || 0;
+    this.newtabContentPing.setMaxClickEventsPerDay(clickDailyCap);
+    const weeklyClickCap =
+      privatePingConfig[TRAINHOP_PREF_WEEKLY_CLICK_EVENT_CAP] || 0;
+    this.newtabContentPing.setMaxClickEventsPerWeek(weeklyClickCap);
+
     // When we have a coarse interest vector we want to make sure there isn't
     // anything additionaly identifable as a unique identifier. Therefore,
     // when interest vectors are used we reduce our context profile somewhat.
@@ -1948,10 +1957,7 @@ export class TelemetryFeed {
         newtab_visit_id: session.session_id,
       });
       if (this.privatePingEnabled) {
-        this.newtabContentPing.recordEvent(
-          "impression",
-          this.randomizeOrganicContentEvent(gleanData)
-        );
+        this.newtabContentPing.recordEvent("impression", gleanData);
       }
 
       if (tile.shim) {
