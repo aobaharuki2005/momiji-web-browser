@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
@@ -55,6 +56,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,6 +69,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
@@ -277,6 +281,8 @@ private fun BookmarksList(
         else -> null
     }
 
+    val fabHeight = remember { mutableIntStateOf(0) }
+
     LaunchedEffect(state.bookmarksSnackbarState) {
         when (state.bookmarksSnackbarState) {
             BookmarksSnackbarState.None -> return@LaunchedEffect
@@ -353,6 +359,7 @@ private fun BookmarksList(
         floatingActionButton = {
             if (!state.isLoading && state.emptyListState() == null) {
                 FloatingActionButton(
+                    modifier = Modifier.onPlaced { fabHeight.intValue = it.size.height },
                     icon = painterResource(iconsR.drawable.mozac_ic_search_24),
                     contentDescription = stringResource(R.string.bookmark_search_button_content_description),
                     onClick = { store.dispatch(SearchClicked) },
@@ -528,6 +535,8 @@ private fun BookmarksList(
                         }
                     }
                 }
+
+                fabOffsetSpace(fabHeight.intValue)
             }
         }
 
@@ -568,6 +577,15 @@ private fun BookmarksList(
                 }
             }
         }
+    }
+}
+
+private fun LazyListScope.fabOffsetSpace(fabHeight: Int) {
+    item {
+        val fabHeightDp = with(LocalDensity.current) {
+            fabHeight.toDp()
+        }
+        Spacer(modifier = Modifier.size(fabHeightDp))
     }
 }
 
