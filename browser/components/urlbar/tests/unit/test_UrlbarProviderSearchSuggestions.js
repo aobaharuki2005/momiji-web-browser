@@ -8,6 +8,8 @@ const { UrlbarProviderSearchSuggestions } = ChromeUtils.importESModule(
 );
 
 const KEYWORD_ENABLED = "keyword.enabled";
+const SUGGEST_ENABLED = "browser.search.suggest.enabled";
+const URLBAR_SUGGEST = "browser.urlbar.suggest.searches";
 
 add_setup(async function () {
   await Services.search.init();
@@ -50,4 +52,77 @@ add_task(async function test_allowRemoteSuggestions() {
   );
 
   Services.prefs.clearUserPref(KEYWORD_ENABLED);
+});
+
+add_task(async function test_allowSuggestions() {
+  let suggestionsProvider = new UrlbarProviderSearchSuggestions();
+
+  let context = createContext("bacon eggs", {
+    isPrivate: false,
+    sapName: "urlbar",
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+  });
+  Assert.ok(
+    suggestionsProvider._allowSuggestions(context),
+    "Suggestions in the urlbar should be enabled by default"
+  );
+
+  context = createContext("bacon eggs", {
+    isPrivate: false,
+    sapName: "searchbar",
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+  });
+  Assert.ok(
+    suggestionsProvider._allowSuggestions(context),
+    "Suggestions in the searchbar should be enabled by default"
+  );
+
+  info("Setting " + URLBAR_SUGGEST + "=false");
+  Services.prefs.setBoolPref(URLBAR_SUGGEST, false);
+
+  context = createContext("bacon eggs", {
+    isPrivate: false,
+    sapName: "urlbar",
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+  });
+  Assert.ok(
+    !suggestionsProvider._allowSuggestions(context),
+    "Suggestions in the urlbar should be disabled"
+  );
+
+  context = createContext("bacon eggs", {
+    isPrivate: false,
+    sapName: "searchbar",
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+  });
+  Assert.ok(
+    suggestionsProvider._allowSuggestions(context),
+    "Suggestions in the searchbar should still be enabled"
+  );
+
+  info("Setting " + SUGGEST_ENABLED + "=false");
+  Services.prefs.setBoolPref(SUGGEST_ENABLED, false);
+
+  context = createContext("bacon eggs", {
+    isPrivate: false,
+    sapName: "urlbar",
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+  });
+  Assert.ok(
+    !suggestionsProvider._allowSuggestions(context),
+    "Suggestions in the urlbar should be disabled"
+  );
+
+  context = createContext("bacon eggs", {
+    isPrivate: false,
+    sapName: "searchbar",
+    sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],
+  });
+  Assert.ok(
+    !suggestionsProvider._allowSuggestions(context),
+    "Suggestions in the urlbar should be disabled"
+  );
+
+  Services.prefs.clearUserPref(SUGGEST_ENABLED);
+  Services.prefs.clearUserPref(URLBAR_SUGGEST);
 });
