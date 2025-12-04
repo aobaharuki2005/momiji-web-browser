@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -108,13 +109,13 @@ private fun getMenuItems(
     return listOfNotNull(
         MenuItem(
             title = stringResource(R.string.collection_open_tabs),
-            color = FirefoxTheme.colors.textPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
         ) {
             onOpenTabsTapped(collection)
         },
         MenuItem(
             title = stringResource(R.string.collection_rename),
-            color = FirefoxTheme.colors.textPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
         ) {
             onRenameCollectionTapped(collection)
         },
@@ -122,7 +123,7 @@ private fun getMenuItems(
         if (showAddTabs) {
             MenuItem(
                 title = stringResource(R.string.add_tab),
-                color = FirefoxTheme.colors.textPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
             ) {
                 onAddTabTapped(collection)
             }
@@ -132,7 +133,7 @@ private fun getMenuItems(
 
         MenuItem(
             title = stringResource(R.string.collection_delete),
-            color = FirefoxTheme.colors.textCritical,
+            color = MaterialTheme.colorScheme.error,
         ) {
             onDeleteCollectionTapped(collection)
         },
@@ -145,7 +146,7 @@ private fun CollectionsPreview() {
     val expandedCollections: MutableState<Set<Long>> = remember { mutableStateOf(setOf(1L)) }
 
     FirefoxTheme {
-        Surface(color = FirefoxTheme.colors.layer1) {
+        Surface {
             Collections(
                 modifier = Modifier.padding(8.dp),
                 collections = listOf(
