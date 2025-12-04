@@ -13,6 +13,8 @@ import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
+import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.LocalState
@@ -43,6 +45,9 @@ abstract class NimbusAssembleToolsTask extends DefaultTask {
     @Inject
     abstract ArchiveOperations getArchiveOperations()
 
+    @Inject
+    abstract ProviderFactory getProviders()
+
     @Nested
     abstract FetchSpec getFetchSpec()
 
@@ -63,6 +68,51 @@ abstract class NimbusAssembleToolsTask extends DefaultTask {
     /** The location of the unzipped binary. */
     @OutputFile
     abstract RegularFileProperty getFmlBinary()
+
+    /** The platform string (e.g. "x86_64-pc-windows-gnu"). */
+    @Input
+    abstract Property<String> getPlatform()
+
+    NimbusAssembleToolsTask() {
+        platform.convention(detectPlatform(providers))
+    }
+
+    private static Provider<String> detectPlatform(ProviderFactory providers) {
+        def osProvider = providers.systemProperty("os.name").map { it.toLowerCase() }
+        def archProvider = providers.systemProperty("os.arch").map { it.toLowerCase() }
+
+        return osProvider.zip(archProvider) { os, arch ->
+            String osPart
+            if (os.contains("win")) {
+                osPart = "pc-windows-gnu"
+            } else if (os.contains("nix") || os.contains("nux") || os.contains("aix")) {
+                osPart = "unknown-linux"
+            } else if (os.contains("mac")) {
+                osPart = "apple-darwin"
+            } else {
+                osPart = "unknown"
+            }
+
+            String archPart
+            if (arch.contains("x86_64")) {
+                archPart = "x86_64"
+            } else if (arch.contains("amd64")) {
+                archPart = "x86_64"
+            } else if (arch.contains("aarch")) {
+                archPart = "aarch64"
+            } else {
+                archPart = "unknown"
+            }
+            return "${archPart}-${osPart}"
+        }
+    }
+
+    static String getBinaryName(String platform) {
+        if (platform.contains("windows")) {
+            return "nimbus-fml.exe"
+        }
+        return "nimbus-fml"
+    }
 
     /**
      * Configures the task to download the archive.
