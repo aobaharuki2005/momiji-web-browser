@@ -196,7 +196,7 @@ class StyleRuleActor extends Actor {
     let rule = this.rawRule;
 
     while (rule.parentRule) {
-      ancestors.unshift(this.pageStyle._styleRef(rule.parentRule));
+      ancestors.unshift(this.pageStyle.styleRef(rule.parentRule));
       rule = rule.parentRule;
     }
 
@@ -1365,7 +1365,7 @@ class StyleRuleActor extends Actor {
 
     if (editAuthored && newCssRule) {
       this.logSelectorChange(oldValue, value);
-      const style = this.pageStyle._styleRef(newCssRule);
+      const style = this.pageStyle.styleRef(newCssRule);
       // See the comment in |form| to understand this.
       await style.getAuthoredCssText();
     }

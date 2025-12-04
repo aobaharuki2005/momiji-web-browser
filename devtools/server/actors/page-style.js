@@ -101,15 +101,13 @@ class PageStyleActor extends Actor {
 
     this.inspector.targetActor.on("will-navigate", this.onFrameUnload);
 
-    this._observedRules = [];
-    this._styleApplied = this._styleApplied.bind(this);
-
     this.styleSheetsManager =
       this.inspector.targetActor.getStyleSheetsManager();
 
-    this._onStylesheetUpdated = this._onStylesheetUpdated.bind(this);
-    this.styleSheetsManager.on("stylesheet-updated", this._onStylesheetUpdated);
+    this.styleSheetsManager.on("stylesheet-updated", this.#onStylesheetUpdated);
   }
+
+  #observedRules = [];
 
   destroy() {
     if (!this.walker) {
@@ -124,7 +122,7 @@ class PageStyleActor extends Actor {
     this.cssLogic = null;
     this.styleSheetsByRootNode = null;
 
-    this._observedRules = [];
+    this.#observedRules = [];
   }
 
   get ownerWindow() {
@@ -159,14 +157,14 @@ class PageStyleActor extends Actor {
   /**
    * Called when a style sheet is updated.
    */
-  _styleApplied(kind) {
+  #styleApplied = kind => {
     // No matter what kind of update is done, we need to invalidate
     // the keyframe cache.
     this.cssLogic.reset();
     if (kind === UPDATE_GENERAL) {
       this.emit("stylesheet-updated");
     }
-  }
+  };
 
   /**
    * Return or create a StyleRuleActor for the given item.
@@ -177,7 +175,7 @@ class PageStyleActor extends Actor {
    * @param {boolean} userAdded: Optional boolean to distinguish rules added by the user.
    * @return {StyleRuleActor} The newly created, or cached, StyleRuleActor for this item.
    */
-  _styleRef(item, pseudoElement, userAdded = false) {
+  styleRef(item, pseudoElement, userAdded = false) {
     if (this.refMap.has(item)) {
       const styleRuleActor = this.refMap.get(item);
       if (pseudoElement) {
@@ -524,7 +522,7 @@ class PageStyleActor extends Actor {
       const cssRule = selectorInfo.selector.cssRule;
       const domRule = cssRule.sourceElement || cssRule.domRule;
 
-      const rule = this._styleRef(domRule);
+      const rule = this.styleRef(domRule);
       rules.add(rule);
 
       const match = {
@@ -598,7 +596,7 @@ class PageStyleActor extends Actor {
     // Clear any previous references to StyleRuleActor instances for CSS rules.
     // Assume the consumer has switched context to a new node and no longer
     // interested in state changes of previous rules.
-    this._observedRules = [];
+    this.#observedRules = [];
     this.selectedElement = node?.rawNode || null;
 
     if (!node) {
@@ -609,7 +607,7 @@ class PageStyleActor extends Actor {
 
     const entries = this.getAppliedProps(
       node,
-      this._getAllElementRules(node, undefined, options),
+      this.#getAllElementRules(node, undefined, options),
       options
     );
 
@@ -623,12 +621,12 @@ class PageStyleActor extends Actor {
     // Reference to instances of StyleRuleActor for CSS rules matching the node.
     // Assume these are used by a consumer which wants to be notified when their
     // state or declarations change either directly or indirectly.
-    this._observedRules = entryRules;
+    this.#observedRules = entryRules;
 
     return { entries };
   }
 
-  _hasInheritedProps(style) {
+  #hasInheritedProps(style) {
     const doc = this.inspector.targetActor.window.document;
     return Array.prototype.some.call(style, prop =>
       InspectorUtils.isInheritedProperty(doc, prop)
@@ -668,7 +666,7 @@ class PageStyleActor extends Actor {
    *                - pseudoElement String
    *                - darkColorScheme Boolean
    */
-  _getAllElementRules(node, inherited, options) {
+  #getAllElementRules(node, inherited, options) {
     const { bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(
       node.rawNode
     );
@@ -679,16 +677,16 @@ class PageStyleActor extends Actor {
     }
 
     if (bindingElement.style) {
-      const elementStyle = this._styleRef(
+      const elementStyle = this.styleRef(
         bindingElement,
         // for inline style, we can't have a related pseudo element
         null
       );
       const showElementStyles = !inherited && !pseudo;
       const showInheritedStyles =
-        inherited && this._hasInheritedProps(bindingElement.style);
+        inherited && this.#hasInheritedProps(bindingElement.style);
 
-      const rule = this._getRuleItem(elementStyle, node.rawNode, {
+      const rule = this.#getRuleItem(elementStyle, node.rawNode, {
         pseudoElement: null,
         isSystem: false,
         inherited: false,
@@ -709,7 +707,7 @@ class PageStyleActor extends Actor {
     // Add normal rules.  Typically this is passing in the node passed into the
     // function, unless if that node was ::before/::after.  In which case,
     // it will pass in the parentNode along with "::before"/"::after".
-    this._getElementRules(bindingElement, pseudo, inherited, options).forEach(
+    this.#getElementRules(bindingElement, pseudo, inherited, options).forEach(
       oneRule => {
         // The only case when there would be a pseudo here is
         // ::before/::after, and in this case we want to tell the
@@ -728,13 +726,13 @@ class PageStyleActor extends Actor {
     // Now retrieve any pseudo element rules.
     // We can have pseudo element that are children of other pseudo elements (e.g. with
     // ::before::marker , ::marker is a child of ::before).
-    // In such case, we want to call _getElementRules with the actual pseudo element node,
+    // In such case, we want to call #getElementRules with the actual pseudo element node,
     // not its binding element.
     const elementForPseudo = pseudo ? node.rawNode : bindingElement;
 
     const relevantPseudoElements = [];
     for (const readPseudo of PSEUDO_ELEMENTS) {
-      if (!this._pseudoIsRelevant(elementForPseudo, readPseudo, inherited)) {
+      if (!this.#pseudoIsRelevant(elementForPseudo, readPseudo, inherited)) {
         continue;
       }
 
@@ -753,7 +751,7 @@ class PageStyleActor extends Actor {
     }
 
     for (const readPseudo of relevantPseudoElements) {
-      const pseudoRules = this._getElementRules(
+      const pseudoRules = this.#getElementRules(
         elementForPseudo,
         readPseudo,
         inherited,
@@ -784,7 +782,7 @@ class PageStyleActor extends Actor {
    * @param {string | null} params.pseudoElement
    * @returns Object
    */
-  _getRuleItem(rule, rawNode, { inherited, isSystem, pseudoElement }) {
+  #getRuleItem(rule, rawNode, { inherited, isSystem, pseudoElement }) {
     return {
       rule,
       pseudoElement,
@@ -796,7 +794,7 @@ class PageStyleActor extends Actor {
     };
   }
 
-  _nodeIsTextfieldLike(node) {
+  #nodeIsTextfieldLike(node) {
     if (node.nodeName == "TEXTAREA") {
       return true;
     }
@@ -806,7 +804,7 @@ class PageStyleActor extends Actor {
     );
   }
 
-  _nodeIsListItem(node) {
+  #nodeIsListItem(node) {
     const computed = CssLogic.getComputedStyle(node);
     if (!computed) {
       return false;
@@ -818,7 +816,7 @@ class PageStyleActor extends Actor {
   }
 
   // eslint-disable-next-line complexity
-  _pseudoIsRelevant(node, pseudo, inherited = false) {
+  #pseudoIsRelevant(node, pseudo, inherited = false) {
     switch (pseudo) {
       case "::after":
       case "::before":
@@ -829,7 +827,7 @@ class PageStyleActor extends Actor {
       case "::target-text":
         return !inherited;
       case "::marker":
-        return !inherited && this._nodeIsListItem(node);
+        return !inherited && this.#nodeIsListItem(node);
       case "::backdrop":
         return !inherited && node.matches(":modal, :popover-open");
       case "::cue":
@@ -870,7 +868,7 @@ class PageStyleActor extends Actor {
       }
       case "::placeholder":
       case "::-moz-placeholder":
-        return !inherited && this._nodeIsTextfieldLike(node);
+        return !inherited && this.#nodeIsTextfieldLike(node);
       case "::-moz-meter-bar":
         return !inherited && node.nodeName == "METER";
       case "::-moz-progress-bar":
@@ -899,7 +897,7 @@ class PageStyleActor extends Actor {
   }
 
   /**
-   * Helper function for _getAllElementRules, returns the rules from a given
+   * Helper function for #getAllElementRules, returns the rules from a given
    * element. See getApplied for documentation on parameters.
    *
    * @param DOMNode node
@@ -909,7 +907,7 @@ class PageStyleActor extends Actor {
    *
    * @returns Array
    */
-  _getElementRules(node, pseudo, inherited, options) {
+  #getElementRules(node, pseudo, inherited, options) {
     if (!Element.isInstance(node)) {
       return [];
     }
@@ -970,10 +968,10 @@ class PageStyleActor extends Actor {
         }
       }
 
-      const ruleActor = this._styleRef(domRule, pseudo);
+      const ruleActor = this.styleRef(domRule, pseudo);
 
       rules.push(
-        this._getRuleItem(ruleActor, node, {
+        this.#getRuleItem(ruleActor, node, {
           inherited,
           isSystem,
           pseudoElement: pseudo,
@@ -988,7 +986,7 @@ class PageStyleActor extends Actor {
    *
    * @param {NodeActor} nodeActor the node
    * @param {CSSStyleRule} matchingRule the rule to find the entry for
-   * @return {object | null} An entry as returned by _getAllElementRules, or null if no entry
+   * @return {object | null} An entry as returned by #getAllElementRules, or null if no entry
    *                       matching the passed rule was find
    */
   findEntryMatchingRule(nodeActor, matchingRule) {
@@ -998,7 +996,7 @@ class PageStyleActor extends Actor {
       currentNodeActor &&
       currentNodeActor.rawNode.nodeType != Node.DOCUMENT_NODE
     ) {
-      for (const entry of this._getAllElementRules(
+      for (const entry of this.#getAllElementRules(
         currentNodeActor,
         // inherited
         nodeActor !== currentNodeActor ? currentNodeActor : null,
@@ -1042,7 +1040,7 @@ class PageStyleActor extends Actor {
       let parent = this.walker.parentNode(node);
       while (parent && parent.rawNode.nodeType != Node.DOCUMENT_NODE) {
         entries = entries.concat(
-          this._getAllElementRules(parent, parent, options)
+          this.#getAllElementRules(parent, parent, options)
         );
         parent = this.walker.parentNode(parent);
       }
@@ -1119,8 +1117,8 @@ class PageStyleActor extends Actor {
 
           for (const rule of keyframesRule.cssRules) {
             entries.push({
-              rule: this._styleRef(rule),
-              keyframes: this._styleRef(keyframesRule),
+              rule: this.styleRef(rule),
+              keyframes: this.styleRef(keyframesRule),
             });
           }
         }
@@ -1222,7 +1220,7 @@ class PageStyleActor extends Actor {
     this.styleSheetsByRootNode = new WeakMap();
   }
 
-  _onStylesheetUpdated({ resourceId, updateKind, updates = {} }) {
+  #onStylesheetUpdated = ({ resourceId, updateKind, updates = {} }) => {
     if (updateKind != "style-applied") {
       return;
     }
@@ -1241,8 +1239,8 @@ class PageStyleActor extends Actor {
         styleActor.onStyleApplied(kind);
       }
     }
-    this._styleApplied(kind);
-  }
+    this.#styleApplied(kind);
+  };
 
   /**
    * Helper function for adding a new rule and getting its applied style
@@ -1253,7 +1251,7 @@ class PageStyleActor extends Actor {
    * @returns Array containing its applied style properties
    */
   getNewAppliedProps(node, rule) {
-    const ruleActor = this._styleRef(rule);
+    const ruleActor = this.styleRef(rule);
     return this.getAppliedProps(node, [{ rule: ruleActor }], {
       matchedSelectors: true,
     });
@@ -1324,7 +1322,7 @@ class PageStyleActor extends Actor {
     await this.styleSheetsManager.setStyleSheetText(resourceId, authoredText);
 
     const cssRule = sheet.cssRules.item(index);
-    const ruleActor = this._styleRef(cssRule, null, true);
+    const ruleActor = this.styleRef(cssRule, null, true);
 
     this.inspector.targetActor.emit("track-css-change", {
       ...ruleActor.metadata,
@@ -1356,7 +1354,7 @@ class PageStyleActor extends Actor {
    *        didn't change.
    */
   refreshObservedRules(rulesToForceRefresh) {
-    for (const rule of this._observedRules) {
+    for (const rule of this.#observedRules) {
       const force = rulesToForceRefresh && rulesToForceRefresh.includes(rule);
       rule.maybeRefresh(force);
     }
@@ -1386,14 +1384,14 @@ class PageStyleActor extends Actor {
     // We store the result in a Set which will contain the attribute value
     const result = new Set();
     const lcSearch = search.toLowerCase();
-    this._collectAttributesFromDocumentDOM(
+    this.#collectAttributesFromDocumentDOM(
       result,
       lcSearch,
       attributeType,
       targetDocument,
       node.rawNode
     );
-    this._collectAttributesFromDocumentStyleSheets(
+    this.#collectAttributesFromDocumentStyleSheets(
       result,
       lcSearch,
       attributeType,
@@ -1413,7 +1411,7 @@ class PageStyleActor extends Actor {
    * @param {Document} targetDocument: The document the search occurs in.
    * @param {Node} currentNode: The current element rawNode
    */
-  _collectAttributesFromDocumentDOM(
+  #collectAttributesFromDocumentDOM(
     result,
     search,
     attributeType,
@@ -1462,7 +1460,7 @@ class PageStyleActor extends Actor {
    *                       It only supports "class" and "id" at the moment.
    * @param {Document} targetDocument: The document the search occurs in.
    */
-  _collectAttributesFromDocumentStyleSheets(
+  #collectAttributesFromDocumentStyleSheets(
     result,
     search,
     attributeType,
@@ -1476,7 +1474,7 @@ class PageStyleActor extends Actor {
     // nested rules, and then use the lexer to only get the attributes we're looking for.
     const traverseRules = ruleList => {
       for (const rule of ruleList) {
-        this._collectAttributesFromRule(result, rule, search, attributeType);
+        this.#collectAttributesFromRule(result, rule, search, attributeType);
         if (rule.cssRules) {
           traverseRules(rule.cssRules);
         }
@@ -1497,7 +1495,7 @@ class PageStyleActor extends Actor {
    * @param {string} attributeType: The type of attribute we want to retrieve the values.
    *                       It only supports "class" and "id" at the moment.
    */
-  _collectAttributesFromRule(result, rule, search, attributeType) {
+  #collectAttributesFromRule(result, rule, search, attributeType) {
     const shouldRetrieveClasses = attributeType === "class";
     const shouldRetrieveIds = attributeType === "id";
 
