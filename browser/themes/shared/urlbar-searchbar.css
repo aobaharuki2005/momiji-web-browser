@@ -48,7 +48,7 @@
 #urlbar:not([actiontype="switchtab"]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-switchtab,
 #urlbar:not([actiontype="extension"]) > .urlbar-input-container > #urlbar-label-box > #urlbar-label-extension,
 .urlbar-input-container[pageproxystate="invalid"] > #page-action-buttons > .urlbar-page-action,
-#identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
+#identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box, #split-view-button),
 #urlbar[usertyping] > .urlbar-input-container > #page-action-buttons > #urlbar-zoom-button,
 .urlbar:is(:not([usertyping]), :not([focused])) > .urlbar-input-container > .urlbar-go-button,
 .urlbar-revert-button-container {
@@ -533,6 +533,24 @@
   list-style-image: var(--pageAction-image, inherit);
   width: 16px;
   height: 16px;
+}
+
+#split-view-button {
+  &[data-active-index="0"] > #split-view-button-icon {
+    list-style-image: url("chrome://browser/skin/split-view-left-16.svg");
+  }
+  &[data-active-index="1"] > #split-view-button-icon {
+    list-style-image: url("chrome://browser/skin/split-view-right-16.svg");
+  }
+
+  &:dir(rtl) {
+    &[data-active-index="0"] > #split-view-button-icon {
+      list-style-image: url("chrome://browser/skin/split-view-right-16.svg");
+    }
+    &[data-active-index="1"] > #split-view-button-icon {
+      list-style-image: url("chrome://browser/skin/split-view-left-16.svg");
+    }
+  }
 }
 
 #pageAction-panel-bookmark,
