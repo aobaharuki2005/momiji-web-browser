@@ -4,3 +4,9 @@
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning: On Device")
+
+MOZ_SRC_FILES += ["InsightStore.sys.mjs"]
+
+XPCSHELL_TESTS_MANIFESTS += [
+    "tests/xpcshell/xpcshell.toml",
+]

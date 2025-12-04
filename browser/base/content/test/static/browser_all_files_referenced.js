@@ -350,6 +350,10 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   },
+  // Bug 2002906 - Add insights storage
+  {
+    file: "moz-src:///browser/components/aiwindow/services/InsightStore.sys.mjs",
+  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
