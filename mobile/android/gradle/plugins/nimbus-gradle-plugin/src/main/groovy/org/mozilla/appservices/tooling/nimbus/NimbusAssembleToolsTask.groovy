@@ -17,6 +17,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.OutputFile
@@ -73,8 +74,18 @@ abstract class NimbusAssembleToolsTask extends DefaultTask {
     @Input
     abstract Property<String> getPlatform()
 
+    /** Connection timeout in milliseconds. */
+    @Internal
+    abstract Property<Integer> getConnectTimeout()
+
+    /** Read timeout in milliseconds. */
+    @Internal
+    abstract Property<Integer> getReadTimeout()
+
     NimbusAssembleToolsTask() {
         platform.convention(detectPlatform(providers))
+        connectTimeout.convention(30000)
+        readTimeout.convention(60000)
     }
 
     private static Provider<String> detectPlatform(ProviderFactory providers) {
@@ -135,7 +146,12 @@ abstract class NimbusAssembleToolsTask extends DefaultTask {
     @TaskAction
     void assembleTools() {
         def sources = [fetchSpec, *fetchSpec.fallbackSources.get()].collect {
-            new Source(new URI(it.archive.get()), new URI(it.hash.get()))
+            new Source(
+                new URI(it.archive.get()),
+                new URI(it.hash.get()),
+                connectTimeout.get(),
+                readTimeout.get()
+            )
         }
 
         def successfulSource = sources.find { it.trySaveArchiveTo(archiveFile.get().asFile) }
@@ -238,6 +254,8 @@ abstract class NimbusAssembleToolsTask extends DefaultTask {
     static class Source {
         URI archiveURI
         URI hashURI
+        int connectTimeout
+        int readTimeout
 
         boolean trySaveArchiveTo(File destination) {
             try {
@@ -252,11 +270,25 @@ abstract class NimbusAssembleToolsTask extends DefaultTask {
             saveURITo(hashURI, destination)
         }
 
-        private static void saveURITo(URI source, File destination) {
-            source.toURL().withInputStream { from ->
-                destination.withOutputStream { out ->
-                    out << from
+        private void saveURITo(URI source, File destination) {
+            def connection = source.toURL().openConnection() as HttpURLConnection
+            connection.connectTimeout = connectTimeout
+            connection.readTimeout = readTimeout
+            connection.instanceFollowRedirects = true
+            connection.requestMethod = 'GET'
+
+            try {
+                if (connection.responseCode != 200) {
+                    throw new IOException("HTTP ${connection.responseCode}: ${connection.responseMessage}")
                 }
+                destination.parentFile?.mkdirs()
+                connection.inputStream.withStream { from ->
+                    destination.withOutputStream { out ->
+                        out << from
+                    }
+                }
+            } finally {
+                connection.disconnect()
             }
         }
     }
