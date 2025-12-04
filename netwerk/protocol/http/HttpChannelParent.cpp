@@ -1108,9 +1108,8 @@ static ResourceTimingStructArgs GetTimingAttributes(HttpBaseChannel* aChannel) {
 
   aChannel->GetEncodedBodySize(&size);
   args.encodedBodySize() = size;
-
-  aChannel->GetDecodedBodySize(&size);
-  args.decodedBodySize() = size;
+  // decodedBodySize can be computed in the child process so it doesn't need
+  // to be passed down.
 
   aChannel->GetCacheReadStart(&timeStamp);
   args.cacheReadStart() = timeStamp;

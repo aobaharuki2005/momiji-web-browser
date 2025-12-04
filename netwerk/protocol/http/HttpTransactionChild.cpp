@@ -490,7 +490,6 @@ ResourceTimingStructArgs HttpTransactionChild::GetTimingAttributes() {
   args.responseEnd() = mTransaction->GetResponseEnd();
   args.transferSize() = mTransaction->GetTransferSize();
   args.encodedBodySize() = mLogicalOffset;
-  args.decodedBodySize() = 0;
   args.redirectStart() = mRedirectStart;
   args.redirectEnd() = mRedirectEnd;
   args.transferSize() = mTransaction->GetTransferSize();
