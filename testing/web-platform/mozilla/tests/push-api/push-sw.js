@@ -5,11 +5,6 @@ async function postAll(data) {
   }
 }
 
-onpush = ev => postAll({
-  type: ev.type,
-  data: ev.data.text(),
-});
-
 onpushsubscriptionchange = ev => {
   postAll({
     type: ev.type,

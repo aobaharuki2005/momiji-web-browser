@@ -34,7 +34,6 @@ import ssl
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
-from uuid import uuid4
 
 from pywebsocket3 import msgutil
 
@@ -74,8 +73,6 @@ class DummyEndpointHandler(BaseHTTPRequestHandler):
                     "channelID": query["channelID"][0],
                     "data": base64.urlsafe_b64encode(post_body).decode(),
                     "headers": headers if len(post_body) > 0 else None,
-                    # without a version string the push client thinks it's a duplicate
-                    "version": str(uuid4()),
                 }
             ),
         )
