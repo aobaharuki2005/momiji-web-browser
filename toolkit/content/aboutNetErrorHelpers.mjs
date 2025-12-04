@@ -41,12 +41,7 @@ export function getCSSClass() {
 }
 
 export function getHostName() {
-  try {
-    return new URL(RPMGetInnerMostURI(document.location.href)).hostname;
-  } catch (error) {
-    console.error("Could not parse URL", error);
-  }
-  return "";
+  return RPMGetHostForDisplay(document);
 }
 
 export function retryThis(buttonEl) {

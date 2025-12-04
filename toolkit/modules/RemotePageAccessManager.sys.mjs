@@ -56,7 +56,7 @@ export let RemotePageAccessManager = {
         "services.settings.last_update_seconds",
       ],
       RPMGetAppBuildID: ["*"],
-      RPMGetInnerMostURI: ["*"],
+      RPMGetHostForDisplay: ["*"],
       RPMIsWindowPrivate: ["*"],
     },
     "about:home": {
@@ -110,7 +110,7 @@ export let RemotePageAccessManager = {
         "security.certerror.hideAddException",
         "security.certerrors.felt-privacy-v1",
       ],
-      RPMGetInnerMostURI: ["*"],
+      RPMGetHostForDisplay: ["*"],
       RPMGetHttpResponseHeader: ["*"],
       RPMIsTRROnlyFailure: ["*"],
       RPMIsFirefox: ["*"],
