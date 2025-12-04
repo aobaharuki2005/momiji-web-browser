@@ -195,8 +195,7 @@ document.addEventListener(
         #tracking-protection-icon-container,
         #identity-icon-box,
         #identity-permission-box,
-        #translations-button,
-        #split-view-button
+        #translations-button
         `);
       if (!element) {
         return;
@@ -285,12 +284,6 @@ document.addEventListener(
           FullPageTranslationsPanel.open(event);
           break;
 
-        case "split-view-button":
-          if (isLeftClick) {
-            gBrowser.openSplitViewMenu(element);
-          }
-          break;
-
         default:
           throw new Error(`Missing case for #${element.id}`);
       }
@@ -318,8 +311,7 @@ document.addEventListener(
         #downloads-button,
         #fxa-toolbar-menu-button,
         #unified-extensions-button,
-        #library-button,
-        #split-view-button
+        #library-button
       `);
       if (!element) {
         return;
@@ -403,12 +395,6 @@ document.addEventListener(
 
         case "library-button":
           PanelUI.showSubView("appMenu-libraryView", element, event);
-          break;
-
-        case "split-view-button":
-          if (isLikeLeftClick) {
-            gBrowser.openSplitViewMenu(element);
-          }
           break;
 
         default:

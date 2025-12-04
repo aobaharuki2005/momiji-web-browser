@@ -15,8 +15,6 @@ registerCleanupFunction(async function () {
   );
 });
 
-const urlbarButton = document.getElementById("split-view-button");
-
 async function addTabAndLoadBrowser() {
   const tab = BrowserTestUtils.addTab(gBrowser, "https://example.com");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -128,18 +126,6 @@ add_task(async function test_split_view_panels() {
   for (const tab of splitView.tabs) {
     await checkSplitViewPanelVisible(tab, true);
   }
-  await BrowserTestUtils.waitForMutationCondition(
-    urlbarButton,
-    { attributes: true, attributeFilter: ["hidden"] },
-    () => BrowserTestUtils.isVisible(urlbarButton)
-  );
-
-  info("Open split view menu.");
-  const menu = document.getElementById("split-view-menu");
-  const promiseMenuShown = BrowserTestUtils.waitForPopupEvent(menu, "shown");
-  EventUtils.synthesizeMouseAtCenter(urlbarButton, {});
-  await promiseMenuShown;
-  menu.hidePopup();
 
   info("Select tabs using tab panels.");
   await SimpleTest.promiseFocus(tab1.linkedBrowser);
@@ -148,22 +134,12 @@ add_task(async function test_split_view_panels() {
     panel.classList.contains("deck-selected"),
     "First panel is selected."
   );
-  await BrowserTestUtils.waitForMutationCondition(
-    urlbarButton,
-    { attributes: true, attributeFilter: ["data-active-index"] },
-    () => urlbarButton.dataset.activeIndex == "0"
-  );
 
   await SimpleTest.promiseFocus(tab2.linkedBrowser);
   panel = document.getElementById(tab2.linkedPanel);
   Assert.ok(
     panel.classList.contains("deck-selected"),
     "Second panel is selected."
-  );
-  await BrowserTestUtils.waitForMutationCondition(
-    urlbarButton,
-    { attributes: true },
-    () => urlbarButton.dataset.activeIndex == "1"
   );
 
   info("Switch to a non-split view tab.");
@@ -182,11 +158,6 @@ add_task(async function test_split_view_panels() {
   splitView.unsplitTabs();
   await checkSplitViewPanelVisible(tab1, false);
   await checkSplitViewPanelVisible(tab2, false);
-  await BrowserTestUtils.waitForMutationCondition(
-    urlbarButton,
-    { attributes: true },
-    () => BrowserTestUtils.isHidden(urlbarButton)
-  );
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);

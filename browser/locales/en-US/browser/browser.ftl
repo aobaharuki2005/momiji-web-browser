@@ -181,10 +181,6 @@ urlbar-star-edit-bookmark =
 urlbar-star-add-bookmark =
     .tooltiptext = Bookmark this page ({ $shortcut })
 
-urlbar-split-view-button =
-    .tooltiptext = Split view
-    .aria-label = Split view
-
 ## Page Action Context Menu
 
 page-action-manage-extension2 =
