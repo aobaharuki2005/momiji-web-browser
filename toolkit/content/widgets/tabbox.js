@@ -284,20 +284,19 @@
 
     handleEvent(e) {
       const browser = e.currentTarget;
-      const tabbrowser = browser.getTabBrowser();
       switch (e.type) {
         case "click":
         case "focus": {
-          const tab = tabbrowser.getTabForBrowser(browser);
+          const tab = gBrowser.getTabForBrowser(browser);
           const tabstrip = this.tabbox.tabs;
           tabstrip.selectedItem = tab;
           break;
         }
         case "mouseover":
-          tabbrowser.appendStatusPanel(browser);
+          gBrowser.appendStatusPanel(browser);
           break;
         case "mouseout":
-          tabbrowser.appendStatusPanel();
+          gBrowser.appendStatusPanel();
           break;
       }
     }
