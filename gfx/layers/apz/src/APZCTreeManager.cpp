@@ -519,9 +519,9 @@ std::vector<LayersId> APZCTreeManager::UpdateHitTestingTree(
             mGeckoFixedLayerMargins =
                 aLayerMetrics.Metrics().GetFixedLayerMargins();
             SetInteractiveWidgetMode(
-                aLayerMetrics.Metadata().GetInteractiveWidget(), lock);
+                aLayerMetrics.Metrics().GetInteractiveWidget(), lock);
             SetIsSoftwareKeyboardVisible(
-                aLayerMetrics.Metadata().IsSoftwareKeyboardVisible(), lock);
+                aLayerMetrics.Metrics().IsSoftwareKeyboardVisible(), lock);
             currentRootContentLayersId = layersId;
           } else {
             MOZ_ASSERT(aLayerMetrics.Metrics().GetFixedLayerMargins() ==

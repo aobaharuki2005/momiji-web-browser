@@ -5806,6 +5806,9 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     Metrics().SetHasNonZeroDisplayPortMargins(
         aLayerMetrics.HasNonZeroDisplayPortMargins());
     Metrics().SetMinimalDisplayPort(aLayerMetrics.IsMinimalDisplayPort());
+    Metrics().SetInteractiveWidget(aLayerMetrics.GetInteractiveWidget());
+    Metrics().SetIsSoftwareKeyboardVisible(
+        aLayerMetrics.IsSoftwareKeyboardVisible());
     mScrollMetadata.SetForceDisableApz(aScrollMetadata.IsApzForceDisabled());
     mScrollMetadata.SetIsRDMTouchSimulationActive(
         aScrollMetadata.GetIsRDMTouchSimulationActive());

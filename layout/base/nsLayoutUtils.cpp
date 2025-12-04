@@ -8759,9 +8759,9 @@ ScrollMetadata nsLayoutUtils::ComputeScrollMetadata(
         }
       }
 
-      metadata.SetIsSoftwareKeyboardVisible(presContext->GetKeyboardHeight() >
-                                            0);
-      metadata.SetInteractiveWidget(
+      metrics.SetIsSoftwareKeyboardVisible(presContext->GetKeyboardHeight() >
+                                           0);
+      metrics.SetInteractiveWidget(
           presContext->Document()->InteractiveWidget());
     }
 
