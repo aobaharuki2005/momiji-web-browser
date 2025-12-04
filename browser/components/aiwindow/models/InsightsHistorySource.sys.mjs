@@ -50,11 +50,50 @@ const SEARCH_ENGINE_PATTERN = new RegExp(
 
 /**
  * Fetch recent browsing history from Places (SQL), aggregate by URL,
- * tag "search" vs "history", and filter low-visit URLs.
+ * tag "search" vs "history", and attach simple frequency percentiles.
  *
- * @param {object} opts
- * @param {number} [opts.days=60]          How far back to look
- * @param {number} [opts.maxResults=3000]   Max rows to return (after sort)
+ * This API is designed to support both:
+ *   - Initial ("Day 0") backfills over a fixed time window, and
+ *   - Incremental reads using a visit_date watermark (`sinceMicros`).
+ *
+ * Callers can either:
+ *   1. Pass `sinceMicros` (microseconds since epoch, Places visit_date-style)
+ *      to fetch visits with `visit_date >= sinceMicros`, or
+ *   2. Omit `sinceMicros` and let `days` define a relative cutoff window
+ *      from "now" (e.g., last 60 days).
+ *
+ * Typical usage:
+ *   - Day 0:   getRecentHistory({ sinceMicros: 0, maxResults: 3000 })
+ *              // or: getRecentHistory({ days: 60, maxResults: 3000 })
+ *   - Incremental:
+ *        const rows = await getRecentHistory({ sinceMicros: lastWatermark });
+ *        const nextWatermark = Math.max(...rows.map(r => r.visitDateMicros));
+ *
+ * NOTE: `visitDateMicros` in the returned objects is the raw Places
+ *       visit_date (microseconds since epoch, UTC).
+ *
+ * @param {object} [opts]
+ * @param {number} [opts.sinceMicros=null]
+ *        Optional absolute cutoff in microseconds since epoch (Places
+ *        visit_date). If provided, this is used directly as the cutoff:
+ *        only visits with `visit_date >= sinceMicros` are returned.
+ *
+ *        This is the recommended way to implement incremental reads:
+ *        store the max `visitDateMicros` from the previous run and pass
+ *        it (or max + 1) back in as `sinceMicros`.
+ *
+ * @param {number} [opts.days=DEFAULT_DAYS]
+ *        How far back to look if `sinceMicros` is not provided.
+ *        The cutoff is computed as:
+ *          cutoff = now() - days * MS_PER_DAY
+ *
+ *        Ignored when `sinceMicros` is non-null.
+ *
+ * @param {number} [opts.maxResults=DEFAULT_MAX_RESULTS]
+ *        Maximum number of rows to return from the SQL query (after
+ *        sorting by most recent visit). Note that this caps the number
+ *        of visits, not distinct URLs.
+ *
  * @returns {Promise<Array<{
  *   url: string,
  *   title: string,
@@ -66,14 +105,24 @@ const SEARCH_ENGINE_PATTERN = new RegExp(
  * }>>}
  */
 export async function getRecentHistory(opts = {}) {
-  const days = opts.days ?? DEFAULT_DAYS;
-  const maxResults = opts.maxResults ?? DEFAULT_MAX_RESULTS;
+  // If provided, this is a Places visit_date-style cutoff in microseconds
+  // When non-null, `days` is ignored and we use `sinceMicros` directly.
+  const {
+    sinceMicros = null,
+    days = DEFAULT_DAYS,
+    maxResults = DEFAULT_MAX_RESULTS,
+  } = opts;
 
   // Places stores visit_date in microseconds since epoch.
-  const cutoffMicros = Math.max(
-    0,
-    (Date.now() - days * MS_PER_DAY) * MICROS_PER_MS
-  );
+  let cutoffMicros;
+  if (sinceMicros != null) {
+    cutoffMicros = Math.max(0, sinceMicros);
+  } else {
+    cutoffMicros = Math.max(
+      0,
+      (Date.now() - days * MS_PER_DAY) * MICROS_PER_MS
+    );
+  }
 
   const isSearchVisit = urlStr => {
     try {

@@ -376,6 +376,53 @@ add_task(function test_sessionizeVisits_basic() {
   }
 });
 
+add_task(async function test_sinceMicros_cutoff_and_overrides_days() {
+  await PlacesUtils.history.clear();
+  const nowMs = Date.now();
+
+  const early = makeVisit(
+    "https://early.example.com/",
+    "Early",
+    nowMs,
+    -60 * 60 * 1000 // 1 hour ago
+  );
+  const late = makeVisit(
+    "https://late.example.com/",
+    "Late",
+    nowMs,
+    -5 * 60 * 1000 // 5 minutes ago
+  );
+
+  await PlacesUtils.history.insertMany([early, late]);
+
+  // Get the raw visitDateMicros so we can compute a watermark between them.
+  const allRows = await getRecentHistory({ days: 1, maxResults: 10 });
+  const byUrl = new Map(allRows.map(r => [r.url, r]));
+  const earlyVisit = byUrl.get(early.url);
+  const lateVisit = byUrl.get(late.url);
+
+  Assert.ok(earlyVisit && lateVisit, "Both visits present in initial fetch");
+
+  const midMicros =
+    (earlyVisit.visitDateMicros + lateVisit.visitDateMicros) / 2;
+
+  // Get visits since midMicros
+  const rowsSince = await getRecentHistory({
+    sinceMicros: midMicros,
+    maxResults: 10,
+  });
+
+  const urlsSince = rowsSince.map(r => r.url);
+  Assert.ok(
+    urlsSince.includes(late.url),
+    "Late visit included when sinceMicros is between early and late"
+  );
+  Assert.ok(
+    !urlsSince.includes(early.url),
+    "Early visit excluded by sinceMicros cutoff"
+  );
+});
+
 add_task(function test_sessionizeVisits_empty_and_invalid() {
   // Empty input -> empty output
   let sessionized = sessionizeVisits([]);
