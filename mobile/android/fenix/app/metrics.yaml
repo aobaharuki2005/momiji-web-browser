@@ -14329,6 +14329,32 @@ client_association:
       - fx-accounts
 
 toolbar:
+  cfr_shown:
+    type: event
+    description: |
+      Toolbar cfr was shown to the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2000490
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2000490
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+  cfr_dismissed:
+    type: event
+    description: |
+      Toolbar cfr was dismissed by the user.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2000490
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2000490
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
   button_tapped:
     type: event
     description: |
