@@ -155,6 +155,8 @@ support-files = [
   "file_browser_refresh_iframe.sjs",
 ]
 
+["browser_screen_area_override.js"]
+
 ["browser_screen_orientation_override.js"]
 
 ["browser_script_loader_js_cache_basic.js"]

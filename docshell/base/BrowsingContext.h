@@ -207,6 +207,9 @@ struct EmbedderColorSchemes {
    * context. */                                                              \
   FIELD(GVAudibleAutoplayRequestStatus, GVAutoplayRequestStatus)              \
   FIELD(GVInaudibleAutoplayRequestStatus, GVAutoplayRequestStatus)            \
+  FIELD(ScreenHeightOverride, uint64_t)                                       \
+  FIELD(ScreenWidthOverride, uint64_t)                                        \
+  FIELD(HasScreenAreaOverride, bool)                                          \
   /* ScreenOrientation-related APIs */                                        \
   FIELD(CurrentOrientationAngle, float)                                       \
   FIELD(CurrentOrientationType, mozilla::dom::OrientationType)                \
@@ -710,6 +713,49 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
       return true;
     }
     return false;
+  }
+
+  [[nodiscard]] nsresult SetScreenAreaOverride(uint64_t aScreenWidth,
+                                               uint64_t aScreenHeight) {
+    if (GetHasScreenAreaOverride() &&
+        GetScreenWidthOverride() == aScreenWidth &&
+        GetScreenHeightOverride() == aScreenHeight) {
+      return NS_OK;
+    }
+
+    Transaction txn;
+    txn.SetScreenWidthOverride(aScreenWidth);
+    txn.SetScreenHeightOverride(aScreenHeight);
+    txn.SetHasScreenAreaOverride(true);
+    return txn.Commit(this);
+  }
+
+  void SetScreenAreaOverride(uint64_t aScreenWidth, uint64_t aScreenHeight,
+                             ErrorResult& aRv) {
+    MOZ_ASSERT(IsTop());
+
+    if (NS_FAILED(SetScreenAreaOverride(aScreenWidth, aScreenHeight))) {
+      aRv.ThrowInvalidStateError("Browsing context is discarded");
+    }
+  }
+
+  void ResetScreenAreaOverride() {
+    MOZ_ASSERT(IsTop());
+
+    (void)SetHasScreenAreaOverride(false);
+  }
+
+  bool HasScreenAreaOverride() const {
+    return Top()->GetHasScreenAreaOverride();
+  }
+
+  Maybe<CSSIntSize> GetScreenAreaOverride() {
+    if (!HasScreenAreaOverride()) {
+      return Nothing();
+    }
+    CSSIntSize screenSize(Top()->GetScreenWidthOverride(),
+                          Top()->GetScreenHeightOverride());
+    return Some(screenSize);
   }
 
   // ScreenOrientation related APIs
