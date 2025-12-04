@@ -337,6 +337,7 @@ export class TopSiteLink extends React.PureComponent {
             advertiser: title.toLocaleLowerCase(),
             source: NEWTAB_SOURCE,
             visible_topsites: visibleTopSites,
+            frecency_boosted: link.type === "frecency-boost",
           }}
           // For testing.
           IntersectionObserver={this.props.IntersectionObserver}
@@ -585,6 +586,7 @@ export class TopSite extends React.PureComponent {
               advertiser: title.toLocaleLowerCase(),
               source: NEWTAB_SOURCE,
               visible_topsites: this.props.visibleTopSites,
+              frecency_boosted: this.props.link.type === "frecency-boost",
             },
           })
         );

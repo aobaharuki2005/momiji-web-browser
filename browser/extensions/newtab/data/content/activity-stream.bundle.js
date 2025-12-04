@@ -8544,7 +8544,8 @@ class TopSiteLink extends (external_React_default()).PureComponent {
           reporting_url: link.sponsored_impression_url,
           advertiser: title.toLocaleLowerCase(),
           source: NEWTAB_SOURCE,
-          visible_topsites: visibleTopSites
+          visible_topsites: visibleTopSites,
+          frecency_boosted: link.type === "frecency-boost"
         }
         // For testing.
         ,
@@ -8764,7 +8765,8 @@ class TopSite extends (external_React_default()).PureComponent {
             reporting_url: this.props.link.sponsored_click_url,
             advertiser: title.toLocaleLowerCase(),
             source: NEWTAB_SOURCE,
-            visible_topsites: this.props.visibleTopSites
+            visible_topsites: this.props.visibleTopSites,
+            frecency_boosted: this.props.link.type === "frecency-boost"
           }
         }));
       } else {

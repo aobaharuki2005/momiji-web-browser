@@ -982,6 +982,14 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "sov.frecency.exposure",
+    {
+      title:
+        "Is or was the user eligible for frecency ranked sponsored shortcuts",
+      value: false,
+    },
+  ],
+  [
     "sov.amp.allocation",
     {
       title: "How many positions can be filled from amp",

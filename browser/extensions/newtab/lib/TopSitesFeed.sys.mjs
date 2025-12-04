@@ -107,6 +107,7 @@ const PREF_UNIFIED_ADS_BLOCKED_LIST = "unifiedAds.blockedAds";
 const PREF_UNIFIED_ADS_ADSFEED_ENABLED = "unifiedAds.adsFeed.enabled";
 
 const PREF_SOV_ENABLED = "sov.enabled";
+const PREF_SOV_FRECENCY_EXPOSURE = "sov.frecency.exposure";
 const PREF_SOV_NAME = "sov.name";
 const PREF_SOV_AMP_ALLOCATION = "sov.amp.allocation";
 const PREF_SOV_FRECENCY_ALLOCATION = "sov.frecency.allocation";
@@ -526,7 +527,7 @@ export class ContileIntegration {
   sovEnabled() {
     const { values } = this._topSitesFeed.store.getState().Prefs;
     const trainhopSovEnabled = values?.trainhopConfig?.sov?.enabled;
-    return trainhopSovEnabled || values[PREF_SOV_ENABLED];
+    return trainhopSovEnabled || values?.[PREF_SOV_ENABLED];
   }
 
   csvToInts(val) {
@@ -1364,7 +1365,7 @@ export class TopSitesFeed {
     let pagesMap;
     try {
       pagesMap = await lazy.PlacesUtils.history.fetchMany(
-        sponsorsToCheck.map(({ domain }) => `https://${domain}`)
+        sponsorsToCheck.map(({ domain }) => `https://${domain}/`)
       );
     } catch (error) {
       lazy.log.warn(`Failed to fetch history data: ${error.message}`);
@@ -1392,6 +1393,12 @@ export class TopSitesFeed {
       });
     }
 
+    // If we have a matched set of candidates,
+    // we can check if it's an exposure event.
+    if (candidates.length) {
+      this.frecencyBoostedSpocsExposureEvent();
+    }
+
     candidates.sort((a, b) => b.frecency - a.frecency);
     return candidates;
   }
@@ -1405,6 +1412,7 @@ export class TopSitesFeed {
     if (!this._contile.sovEnabled() || !this._linksWithDefaults?.length) {
       return [];
     }
+
     const domainData = {};
     // Get domains for current region
     const userRegion = lazy.Region.home || "";
@@ -1412,6 +1420,21 @@ export class TopSitesFeed {
 
     // Find all matches from the test domains, sorted by frecency
     return this.buildFrecencyBoostedSpocs(domainList);
+  }
+
+  /**
+   * Flip exposure event pref,
+   * if the user is in a SOV experiment,
+   * for both control and treatment,
+   * and had frecency boosted spocs because of it.
+   */
+  frecencyBoostedSpocsExposureEvent() {
+    const { values } = this.store.getState().Prefs;
+    const trainhopSovEnabled = values?.trainhopConfig?.sov?.enabled;
+
+    if (trainhopSovEnabled) {
+      this.store.dispatch(ac.SetPref(PREF_SOV_FRECENCY_EXPOSURE, true));
+    }
   }
 
   /**

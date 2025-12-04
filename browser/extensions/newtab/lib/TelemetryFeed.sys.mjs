@@ -78,6 +78,7 @@ const PREF_SYSTEM_INFERRED_PERSONALIZATION =
   "discoverystream.sections.personalization.inferred.enabled";
 const PREF_SECTIONS_PERSONALIZATION_ENABLED =
   "discoverystream.sections.personalization.enabled";
+const PREF_SOV_FRECENCY_EXPOSURE = "sov.frecency.exposure";
 
 const TOP_STORIES_SECTION_NAME = "top_stories_section";
 
@@ -606,6 +607,17 @@ export class TelemetryFeed {
     }
   }
 
+  sovEnabled() {
+    const { values } = this.store?.getState()?.Prefs || {};
+    const trainhopSovEnabled = values?.trainhopConfig?.sov?.enabled;
+    return trainhopSovEnabled;
+  }
+
+  frecencyBoostedHasExposure() {
+    const { values } = this.store?.getState()?.Prefs || {};
+    return values?.[PREF_SOV_FRECENCY_EXPOSURE];
+  }
+
   async handleTopSitesSponsoredImpressionStats(action) {
     const { data } = action;
     const {
@@ -615,6 +627,7 @@ export class TelemetryFeed {
       advertiser: advertiser_name,
       tile_id,
       visible_topsites,
+      frecency_boosted = false,
     } = data;
     // Legacy telemetry expects 1-based tile positions.
     const legacyTelemetryPosition = position + 1;
@@ -632,14 +645,28 @@ export class TelemetryFeed {
         `${source}_${legacyTelemetryPosition}`
       ].add(1);
       if (session) {
-        Glean.topsites.impression.record({
-          advertiser_name,
-          tile_id,
-          newtab_visit_id: session.session_id,
-          is_sponsored: true,
-          position,
-          visible_topsites,
-        });
+        if (this.sovEnabled()) {
+          if (this.privatePingEnabled) {
+            this.newtabContentPing.recordEvent("topSitesImpression", {
+              advertiser_name,
+              tile_id,
+              is_sponsored: true,
+              position,
+              visible_topsites,
+              frecency_boosted,
+              frecency_boosted_has_exposure: this.frecencyBoostedHasExposure(),
+            });
+          }
+        } else {
+          Glean.topsites.impression.record({
+            advertiser_name,
+            tile_id,
+            newtab_visit_id: session.session_id,
+            is_sponsored: true,
+            position,
+            visible_topsites,
+          });
+        }
       }
     } else if (type === "click") {
       pingType = "topsites-click";
@@ -647,30 +674,46 @@ export class TelemetryFeed {
         `${source}_${legacyTelemetryPosition}`
       ].add(1);
       if (session) {
-        Glean.topsites.click.record({
-          advertiser_name,
-          tile_id,
-          newtab_visit_id: session.session_id,
-          is_sponsored: true,
-          position,
-          visible_topsites,
-        });
+        if (this.sovEnabled()) {
+          if (this.privatePingEnabled) {
+            this.newtabContentPing.recordEvent("topSitesClick", {
+              advertiser_name,
+              tile_id,
+              is_sponsored: true,
+              position,
+              visible_topsites,
+              frecency_boosted,
+              frecency_boosted_has_exposure: this.frecencyBoostedHasExposure(),
+            });
+          }
+        } else {
+          Glean.topsites.click.record({
+            advertiser_name,
+            tile_id,
+            newtab_visit_id: session.session_id,
+            is_sponsored: true,
+            position,
+            visible_topsites,
+          });
+        }
       }
     } else {
       console.error("Unknown ping type for sponsored TopSites impression");
       return;
     }
 
-    Glean.topSites.pingType.set(pingType);
-    Glean.topSites.position.set(legacyTelemetryPosition);
-    Glean.topSites.source.set(source);
-    Glean.topSites.tileId.set(tile_id);
-    if (data.reporting_url && !unifiedAdsTilesEnabled) {
-      Glean.topSites.reportingUrl.set(data.reporting_url);
+    if (this.sovEnabled()) {
+      Glean.topSites.pingType.set(pingType);
+      Glean.topSites.position.set(legacyTelemetryPosition);
+      Glean.topSites.source.set(source);
+      Glean.topSites.tileId.set(tile_id);
+      if (data.reporting_url && !unifiedAdsTilesEnabled) {
+        Glean.topSites.reportingUrl.set(data.reporting_url);
+      }
+      Glean.topSites.advertiser.set(advertiser_name);
+      Glean.topSites.contextId.set(await lazy.ContextId.request());
+      GleanPings.topSites.submit();
     }
-    Glean.topSites.advertiser.set(advertiser_name);
-    Glean.topSites.contextId.set(await lazy.ContextId.request());
-    GleanPings.topSites.submit();
 
     if (data.reporting_url && this.canSendUnifiedAdsTilesCallbacks) {
       // Send callback events to MARS unified ads api
@@ -1878,13 +1921,24 @@ export class TelemetryFeed {
       if (action.source === "TOP_SITES") {
         const { position, advertiser_name, tile_id, isSponsoredTopSite } =
           datum;
-        Glean.topsites.dismiss.record({
-          advertiser_name,
-          tile_id,
-          newtab_visit_id: session.session_id,
-          is_sponsored: !!isSponsoredTopSite,
-          position,
-        });
+        if (this.sovEnabled()) {
+          if (this.privatePingEnabled) {
+            this.newtabContentPing.recordEvent("topSitesDismiss", {
+              advertiser_name,
+              tile_id,
+              is_sponsored: !!isSponsoredTopSite,
+              position,
+            });
+          }
+        } else {
+          Glean.topsites.dismiss.record({
+            advertiser_name,
+            tile_id,
+            newtab_visit_id: session.session_id,
+            is_sponsored: !!isSponsoredTopSite,
+            position,
+          });
+        }
       }
     }
   }
@@ -1895,12 +1949,22 @@ export class TelemetryFeed {
     const { position, advertiser_name, tile_id } = data;
 
     if (session) {
-      Glean.topsites.showPrivacyClick.record({
-        advertiser_name,
-        tile_id,
-        newtab_visit_id: session.session_id,
-        position,
-      });
+      if (this.sovEnabled()) {
+        if (this.privatePingEnabled) {
+          this.newtabContentPing.recordEvent("topSitesShowPrivacyClick", {
+            advertiser_name,
+            tile_id,
+            position,
+          });
+        }
+      } else {
+        Glean.topsites.showPrivacyClick.record({
+          advertiser_name,
+          tile_id,
+          newtab_visit_id: session.session_id,
+          position,
+        });
+      }
     }
   }
 
