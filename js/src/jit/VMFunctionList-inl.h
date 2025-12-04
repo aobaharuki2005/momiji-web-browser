@@ -205,10 +205,10 @@ namespace jit {
   _(GetImportOperation, js::GetImportOperation)                                \
   _(GetIntrinsicValue, js::jit::GetIntrinsicValue)                             \
   _(GetIterator, js::GetIterator)                                              \
-  _(GetIteratorUnregistered, js::GetIteratorUnregistered)                      \
+  _(GetIteratorForObjectKeys, js::GetIteratorForObjectKeys)                    \
   _(GetIteratorWithIndices, js::GetIteratorWithIndices)                        \
-  _(GetIteratorWithIndicesUnregistered,                                        \
-    js::GetIteratorWithIndicesUnregistered)                                    \
+  _(GetIteratorWithIndicesForObjectKeys,                                       \
+    js::GetIteratorWithIndicesForObjectKeys)                                   \
   _(GetNonSyntacticGlobalThis, js::GetNonSyntacticGlobalThis)                  \
   _(GetOrCreateModuleMetaObject, js::GetOrCreateModuleMetaObject)              \
   _(GetPendingExceptionStack, js::GetPendingExceptionStack)                    \

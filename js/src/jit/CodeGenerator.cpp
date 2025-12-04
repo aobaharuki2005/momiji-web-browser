@@ -18498,11 +18498,11 @@ void CodeGenerator::visitObjectToIterator(LObjectToIterator* lir) {
 
   if (lir->mir()->skipRegistration()) {
     if (lir->mir()->wantsIndices()) {
-      ool = oolCallVM<Fn, GetIteratorWithIndicesUnregistered>(
+      ool = oolCallVM<Fn, GetIteratorWithIndicesForObjectKeys>(
           lir, ArgList(obj), StoreRegisterTo(iterObj));
     } else {
-      ool = oolCallVM<Fn, GetIteratorUnregistered>(lir, ArgList(obj),
-                                                   StoreRegisterTo(iterObj));
+      ool = oolCallVM<Fn, GetIteratorForObjectKeys>(lir, ArgList(obj),
+                                                    StoreRegisterTo(iterObj));
     }
   } else {
     if (lir->mir()->wantsIndices()) {

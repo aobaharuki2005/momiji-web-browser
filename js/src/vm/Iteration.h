@@ -283,12 +283,15 @@ struct NativeIterator : public NativeIteratorListNode {
     // Whether indices are actually valid in the reserved area
     static constexpr uint32_t IndicesAvailable = 0x40;
 
+    // If this iterator was created only for own properties
+    static constexpr uint32_t OwnPropertiesOnly = 0x80;
+
     // If any of these bits are set on a |NativeIterator|, it isn't
     // currently reusable.  (An active |NativeIterator| can't be stolen
     // *right now*; a |NativeIterator| that's had its properties mutated
     // can never be reused, because it would give incorrect results.)
     static constexpr uint32_t NotReusable =
-        Active | HasUnvisitedPropertyDeletion;
+        Active | HasUnvisitedPropertyDeletion | OwnPropertiesOnly;
   };
 
   // We have a full u32 for this, but due to the way we compute the address
@@ -327,7 +330,8 @@ struct NativeIterator : public NativeIteratorListNode {
   NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
                  Handle<JSObject*> objBeingIterated, HandleIdVector props,
                  bool supportsIndices, PropertyIndexVector* indices,
-                 uint32_t numShapes, uint32_t ownPropertyCount, bool* hadError);
+                 uint32_t numShapes, uint32_t ownPropertyCount,
+                 bool forObjectKeys, bool* hadError);
 
   JSObject* objectBeingIterated() const { return objectBeingIterated_; }
 
@@ -486,6 +490,8 @@ struct NativeIterator : public NativeIteratorListNode {
   bool indicesAvailable() const { return flags_ & Flags::IndicesAvailable; }
 
   bool indicesSupported() const { return flags_ & Flags::IndicesSupported; }
+
+  bool ownPropertiesOnly() const { return flags_ & Flags::OwnPropertiesOnly; }
 
   // Whether this is the shared empty iterator object used for iterating over
   // null/undefined.
@@ -708,10 +714,10 @@ PropertyIteratorObject* LookupInShapeIteratorCache(JSContext* cx,
 PropertyIteratorObject* GetIterator(JSContext* cx, HandleObject obj);
 PropertyIteratorObject* GetIteratorWithIndices(JSContext* cx, HandleObject obj);
 
-PropertyIteratorObject* GetIteratorUnregistered(JSContext* cx,
-                                                HandleObject obj);
-PropertyIteratorObject* GetIteratorWithIndicesUnregistered(JSContext* cx,
-                                                           HandleObject obj);
+PropertyIteratorObject* GetIteratorForObjectKeys(JSContext* cx,
+                                                 HandleObject obj);
+PropertyIteratorObject* GetIteratorWithIndicesForObjectKeys(JSContext* cx,
+                                                            HandleObject obj);
 
 PropertyIteratorObject* ValueToIterator(JSContext* cx, HandleValue vp);
 
