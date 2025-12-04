@@ -14299,6 +14299,22 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
   isWallpaperColorDark([r, g, b]) {
     return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
   }
+  sortWallpapersByOrder(wallpapers) {
+    return wallpapers.sort((a, b) => {
+      const aOrder = a.order || 0;
+      const bOrder = b.order || 0;
+      if (aOrder === 0 && bOrder === 0) {
+        return 0;
+      }
+      if (aOrder === 0) {
+        return 1;
+      }
+      if (bOrder === 0) {
+        return -1;
+      }
+      return aOrder - bOrder;
+    });
+  }
   render() {
     const prefs = this.props.Prefs.values;
     const {
@@ -14399,10 +14415,11 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
       className: "category-list"
     }, categories.map((category, index) => {
       const filteredList = wallpaperList.filter(wallpaper => wallpaper.category === category);
-      const activeWallpaperObj = activeWallpaper && filteredList.find(wp => wp.title === activeWallpaper);
+      const sortedList = this.sortWallpapersByOrder(filteredList);
+      const activeWallpaperObj = activeWallpaper && sortedList.find(wp => wp.title === activeWallpaper);
       // Detect custom solid color
       const isCustomSolidColor = category === "solid-colors" && activeWallpaper.startsWith("solid-color-picker");
-      const thumbnail = activeWallpaperObj || filteredList[0];
+      const thumbnail = activeWallpaperObj || sortedList[0];
       let fluent_id;
       switch (category) {
         case "abstracts":
@@ -14506,7 +14523,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     }), /*#__PURE__*/external_React_default().createElement("div", {
       role: "grid",
       "aria-label": "Wallpaper selection. Use arrow keys to navigate."
-    }, /*#__PURE__*/external_React_default().createElement("fieldset", null, filteredWallpapers.map(({
+    }, /*#__PURE__*/external_React_default().createElement("fieldset", null, this.sortWallpapersByOrder(filteredWallpapers).map(({
       background_position,
       fluent_id,
       solid_color,
