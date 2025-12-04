@@ -254,8 +254,7 @@ UrlClassifierFeatureFactory::GetFeatureByName(const nsACString& aName) {
   }
 
   // Addon Protection
-  feature =
-      UrlClassifierFeatureHarmfulAddonProtection::GetIfNameMatches(aName);
+  feature = UrlClassifierFeatureHarmfulAddonProtection::GetIfNameMatches(aName);
   if (feature) {
     return feature.forget();
   }
