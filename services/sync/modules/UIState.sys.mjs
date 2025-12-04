@@ -10,10 +10,7 @@
  * @property {string} [avatarURL] The user's FxA avatar URL.
  * @property {Date} [lastSync] The last sync time.
  * @property {boolean} [syncing] Whether or not we are currently syncing.
- * @property {boolean} [hasSyncKeys] Whether the user has sync keys available.
  */
-
-import { SCOPE_APP_SYNC } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -176,8 +173,6 @@ const UIStateInternal = {
       state.avatarURL = userData.avatar;
       state.avatarIsDefault = userData.avatarDefault;
       state.syncEnabled = !!syncUserName;
-      state.hasSyncKeys =
-        await this.fxAccounts.keys.hasKeysForScope(SCOPE_APP_SYNC);
     }
     state.status = status;
   },

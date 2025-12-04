@@ -74,7 +74,6 @@ add_task(async function test_refreshState_signedin() {
     hasLocalSession: () => Promise.resolve(true),
     keys: {
       canGetKeyForScope: () => Promise.resolve(true),
-      hasKeysForScope: () => Promise.resolve(true),
     },
   };
 
@@ -87,7 +86,6 @@ add_task(async function test_refreshState_signedin() {
   equal(state.avatarURL, "https://foo/bar");
   equal(state.lastSync, now);
   equal(state.syncing, false);
-  equal(state.hasSyncKeys, true);
 
   UIStateInternal.fxAccounts = fxAccountsOrig;
   Services.prefs.clearUserPref("services.sync.username");
@@ -136,7 +134,6 @@ add_task(async function test_refreshState_signedin_profile_unavailable() {
     hasLocalSession: () => Promise.resolve(true),
     keys: {
       canGetKeyForScope: () => Promise.resolve(true),
-      hasKeysForScope: () => Promise.resolve(true),
     },
     _internal: {
       profile: {
@@ -219,7 +216,6 @@ add_task(async function test_refreshState_loginFailed() {
       Promise.resolve({ verified: true, uid: "123", email: "foo@bar.com" }),
     keys: {
       canGetKeyForScope: () => Promise.resolve(true),
-      hasKeysForScope: () => Promise.resolve(true),
     },
   };
 
@@ -275,7 +271,6 @@ async function configureUIState(syncing, lastSync = new Date()) {
     hasLocalSession: () => Promise.resolve(true),
     keys: {
       canGetKeyForScope: () => Promise.resolve(true),
-      hasKeysForScope: () => Promise.resolve(true),
     },
   };
   await UIState.refresh();
@@ -348,7 +343,6 @@ add_task(async function test_refreshState_signedin_with_synckeys() {
     hasLocalSession: () => Promise.resolve(true),
     keys: {
       canGetKeyForScope: () => Promise.resolve(true),
-      hasKeysForScope: () => Promise.resolve(true),
     },
   };
 
@@ -377,16 +371,13 @@ add_task(async function test_refreshState_third_party_auth_no_sync() {
         email: "foo@bar.com",
       }),
     hasLocalSession: () => Promise.resolve(true),
-    keys: {
-      hasKeysForScope: () => Promise.resolve(false),
-    },
+    keys: {},
   };
 
   let state = await UIState.refresh();
 
   equal(state.status, UIState.STATUS_SIGNED_IN);
   equal(state.syncEnabled, false);
-  equal(state.hasSyncKeys, false);
   equal(state.uid, "123");
   equal(state.email, "foo@bar.com");
 
