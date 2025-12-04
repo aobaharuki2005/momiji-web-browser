@@ -188,20 +188,24 @@ class NimbusPlugin implements Plugin<Project> {
     def setupAssembleNimbusTools(Project project) {
         def applicationServicesDir = project.nimbus.applicationServicesDir
         def asVersionProvider = getProjectVersionProvider(project)
+        def projectDir = project.layout.projectDirectory
 
         return project.tasks.register('assembleNimbusTools', NimbusAssembleToolsTask) { task ->
             group "Nimbus"
             description "Fetch the Nimbus FML tools from Application Services"
 
-            def fmlRoot = project.layout.buildDirectory.dir(asVersionProvider.map { version ->
-                "bin/nimbus/$version"
-            })
-
-            archiveFile = fmlRoot.map { it.file('nimbus-fml.zip') }
-            hashFile = fmlRoot.map { it.file('nimbus-fml.sha256') }
-            fmlBinary = fmlRoot.zip(platform) { root, plat ->
-                root.file(NimbusAssembleToolsTask.getBinaryName(plat))
+            def cacheDir = asVersionProvider.map { version ->
+                projectDir.dir(".gradle/caches/nimbus-fml/$version")
             }
+
+            archiveFile = cacheDir.map { it.file('nimbus-fml.zip') }
+            hashFile = cacheDir.map { it.file('nimbus-fml.sha256') }
+            fmlBinary = project.layout.buildDirectory.flatMap { buildDir ->
+                asVersionProvider.zip(platform) { version, plat ->
+                    buildDir.dir("bin/nimbus/$version").file(NimbusAssembleToolsTask.getBinaryName(plat))
+                }
+            }
+            cacheRoot = projectDir.dir(".gradle/caches/nimbus-fml").asFile
 
             fetch {
                 // Try archive.mozilla.org release first
