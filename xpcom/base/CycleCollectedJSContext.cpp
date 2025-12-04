@@ -984,6 +984,15 @@ static void MOZ_CAN_RUN_SCRIPT RunMicroTask(
     return;
   }
 
+  // After this point, if we fail to run, we
+  //
+  // 1. Know we have JS microtask
+  // 2. Can freely ignore it if we cannot execute it.
+  //
+  // Create a ScopeExit to handle this.
+  auto ignoreMicroTasks = mozilla::MakeScopeExit(
+      [&aMicroTask]() { aMicroTask.get().IgnoreJSMicroTask(); });
+
   // Avoid the overhead of GetFlowIdFromJSMicroTask in the common case
   // of not having the profiler enabled.
   mozilla::Maybe<AutoProfilerTerminatingFlowMarkerFlowOnly> terminatingMarker;
@@ -1080,11 +1089,12 @@ static void MOZ_CAN_RUN_SCRIPT RunMicroTask(
                   "promise callback" /* Some tests care about this string. */,
                   dom::CallbackObject::eReportExceptions);
   if (!setup.GetContext()) {
-    // We can't run, so we must ignore here!
-    aMicroTask.get().IgnoreJSMicroTask();
-
     return;
   }
+
+  // At this point we will definitely consume the task, so we
+  // no longer need the scope exit.
+  ignoreMicroTasks.release();
 
   // Note: We're dropping the return value on the floor here, however
   // cleanup and exception handling are done as part of the CallSetup
