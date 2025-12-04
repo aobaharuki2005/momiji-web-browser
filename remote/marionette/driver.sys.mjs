@@ -4055,10 +4055,10 @@ GeckoDriver.prototype.commands = {
   "WebDriver:SwitchToParentFrame": GeckoDriver.prototype.switchToParentFrame,
   "WebDriver:SwitchToWindow": GeckoDriver.prototype.switchToWindow,
   "WebDriver:TakeScreenshot": GeckoDriver.prototype.takeScreenshot,
-  "WebDriver:GetGlobalPrivacyControl":
-    GeckoDriver.prototype.getGlobalPrivacyControl,
-  "WebDriver:SetGlobalPrivacyControl":
-    GeckoDriver.prototype.setGlobalPrivacyControl,
+
+  // Global Privacy Control
+  "GPC:GetGlobalPrivacyControl": GeckoDriver.prototype.getGlobalPrivacyControl,
+  "GPC:SetGlobalPrivacyControl": GeckoDriver.prototype.setGlobalPrivacyControl,
 
   // WebAuthn
   "WebAuthn:AddVirtualAuthenticator":
