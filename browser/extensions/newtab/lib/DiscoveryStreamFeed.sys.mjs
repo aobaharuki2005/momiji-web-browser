@@ -1204,7 +1204,7 @@ export class DiscoveryStreamFeed {
           // mostly hit the HTTP cache rather than the network with these requests.
           if (preFlightConfig.enabled) {
             const preFlight = await this.fetchFromEndpoint(
-              `${endpointBaseUrl}v1/o`,
+              `${endpointBaseUrl}v1/ads-preflight`,
               {
                 method: "GET",
               }
@@ -1217,6 +1217,7 @@ export class DiscoveryStreamFeed {
                 preFlight.normalized_ua || lazy.userAgent
               );
               headers.append("X-Geoname-ID", preFlight.geoname_id);
+              headers.append("X-Geo-Location", preFlight.geo_location);
             }
           }
 

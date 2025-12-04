@@ -968,10 +968,11 @@ describe("DiscoveryStreamFeed", () => {
     it("should fetch MARS pre flight info", async () => {
       sandbox
         .stub(feed, "fetchFromEndpoint")
-        .withArgs("unifiedAdEndpoint/v1/o", { method: "GET" })
+        .withArgs("unifiedAdEndpoint/v1/ads-preflight", { method: "GET" })
         .resolves({
           normalized_ua: "normalized_ua",
           geoname_id: "geoname_id",
+          geo_location: "geo_location",
         });
 
       feed.store = createStore(combineReducers(reducers), {
@@ -993,7 +994,7 @@ describe("DiscoveryStreamFeed", () => {
 
       assert.equal(
         feed.fetchFromEndpoint.firstCall.args[0],
-        "unifiedAdEndpoint/v1/o"
+        "unifiedAdEndpoint/v1/ads-preflight"
       );
       assert.equal(feed.fetchFromEndpoint.firstCall.args[1].method, "GET");
       assert.equal(
@@ -1007,6 +1008,10 @@ describe("DiscoveryStreamFeed", () => {
       assert.equal(
         feed.fetchFromEndpoint.secondCall.args[1].headers.get("X-Geoname-ID"),
         "geoname_id"
+      );
+      assert.equal(
+        feed.fetchFromEndpoint.secondCall.args[1].headers.get("X-Geo-Location"),
+        "geo_location"
       );
     });
   });
