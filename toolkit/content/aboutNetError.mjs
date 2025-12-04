@@ -17,19 +17,15 @@ import {
   recordSecurityUITelemetry,
   getCSSClass,
   gNoConnectivity,
-  gOffline,
   retryThis,
   errorHasNoUserFix,
+  COOP_MDN_DOCS,
+  COEP_MDN_DOCS,
 } from "chrome://global/content/aboutNetErrorHelpers.mjs";
 
 const formatter = new Intl.DateTimeFormat();
 
 const HOST_NAME = getHostName();
-
-const FELT_PRIVACY_REFRESH = RPMGetBoolPref(
-  "security.certerrors.felt-privacy-v1",
-  false
-);
 
 // Used to check if we have a specific localized message for an error.
 const KNOWN_ERROR_TITLE_IDS = new Set([
@@ -78,11 +74,6 @@ const KNOWN_ERROR_TITLE_IDS = new Set([
  * aboutNetErrorCodes.js which is loaded before we are: */
 /* global KNOWN_ERROR_MESSAGE_IDS */
 const ERROR_MESSAGES_FTL = "toolkit/neterror/nsserrors.ftl";
-
-const MDN_DOCS_HEADERS =
-  "https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/";
-const COOP_MDN_DOCS = MDN_DOCS_HEADERS + "Cross-Origin-Opener-Policy";
-const COEP_MDN_DOCS = MDN_DOCS_HEADERS + "Cross-Origin-Embedder-Policy";
 const HTTPS_UPGRADES_MDN_DOCS = "https://support.mozilla.org/kb/https-upgrades";
 
 // If the location of the favicon changes, FAVICON_CERTERRORPAGE_URL and/or
@@ -1429,26 +1420,7 @@ function setFocus(selector, position = "afterbegin") {
   }
 }
 
-function shouldUseFeltPrivacyRefresh() {
-  if (!FELT_PRIVACY_REFRESH) {
-    return false;
-  }
-
-  const errorInfo = gIsCertError
-    ? document.getFailedCertSecurityInfo()
-    : document.getNetErrorInfo();
-  let errorCode = errorInfo.errorCodeString
-    ? errorInfo.errorCodeString
-    : gErrorCode;
-
-  if (gOffline) {
-    errorCode = "NS_ERROR_OFFLINE";
-  }
-
-  return NetErrorCard.ERROR_CODES.has(errorCode);
-}
-
-if (!shouldUseFeltPrivacyRefresh()) {
+if (!NetErrorCard.isSupported()) {
   for (let button of document.querySelectorAll(".try-again")) {
     button.addEventListener("click", function () {
       retryThis(this);

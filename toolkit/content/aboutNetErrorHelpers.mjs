@@ -23,7 +23,10 @@ import {
 export let searchParams = new URLSearchParams(
   document.documentURI.split("?")[1]
 );
-
+export const MDN_DOCS_HEADERS =
+  "https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/";
+export const COOP_MDN_DOCS = MDN_DOCS_HEADERS + "Cross-Origin-Opener-Policy";
+export const COEP_MDN_DOCS = MDN_DOCS_HEADERS + "Cross-Origin-Embedder-Policy";
 export let gErrorCode = searchParams.get("e");
 export let gIsCertError = gErrorCode == "nssBadCert";
 export let gHasSts = gIsCertError && getCSSClass() === "badStsCert";

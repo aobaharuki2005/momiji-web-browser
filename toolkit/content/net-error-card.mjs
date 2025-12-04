@@ -17,6 +17,8 @@ import {
   gOffline,
   retryThis,
   errorHasNoUserFix,
+  COOP_MDN_DOCS,
+  COEP_MDN_DOCS,
 } from "chrome://global/content/aboutNetErrorHelpers.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
@@ -25,6 +27,10 @@ import "chrome://global/content/elements/moz-button.mjs";
 import "chrome://global/content/elements/moz-support-link.mjs";
 
 const HOST_NAME = getHostName();
+const FELT_PRIVACY_REFRESH = RPMGetBoolPref(
+  "security.certerrors.felt-privacy-v1",
+  false
+);
 
 export class NetErrorCard extends MozLitElement {
   static properties = {
@@ -51,6 +57,7 @@ export class NetErrorCard extends MozLitElement {
     whatCanYouDo: "#whatCanYouDo",
     whyDangerous: "#fp-why-site-dangerous",
     netErrorTitleText: "#neterror-title-text",
+    netErrorLearnMoreLink: "#neterror-learn-more-link",
   };
 
   static ERROR_CODES = new Set([
@@ -63,7 +70,32 @@ export class NetErrorCard extends MozLitElement {
     "SSL_ERROR_NO_CYPHER_OVERLAP",
     "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY",
     "NS_ERROR_OFFLINE",
+    "NS_ERROR_DOM_COOP_FAILED",
+    "NS_ERROR_DOM_COEP_FAILED",
   ]);
+
+  static isSupported() {
+    if (!FELT_PRIVACY_REFRESH) {
+      return false;
+    }
+
+    const errorInfo = gIsCertError
+      ? document.getFailedCertSecurityInfo()
+      : document.getNetErrorInfo();
+    let errorCode = errorInfo.errorCodeString
+      ? errorInfo.errorCodeString
+      : gErrorCode;
+
+    if (gOffline) {
+      errorCode = "NS_ERROR_OFFLINE";
+    } else if (gErrorCode === "blockedByCOOP") {
+      errorCode = "NS_ERROR_DOM_COOP_FAILED";
+    } else if (gErrorCode === "blockedByCOEP") {
+      errorCode = "NS_ERROR_DOM_COEP_FAILED";
+    }
+
+    return NetErrorCard.ERROR_CODES.has(errorCode);
+  }
 
   constructor() {
     super();
@@ -74,6 +106,7 @@ export class NetErrorCard extends MozLitElement {
     this.certificateErrorText = null;
     this.domainMismatchNamesPromise = null;
     this.certificateErrorTextPromise = null;
+    this.showCustomNetErrorCard = false;
   }
 
   async getUpdateComplete() {
@@ -169,10 +202,18 @@ export class NetErrorCard extends MozLitElement {
       ? document.getFailedCertSecurityInfo()
       : document.getNetErrorInfo();
 
-    if (gOffline) {
-      errorInfo.errorCodeString = "NS_ERROR_OFFLINE";
-    }
+    if (!errorInfo.errorCodeString) {
+      this.showCustomNetErrorCard = true;
+      if (gOffline) {
+        errorInfo.errorCodeString = "NS_ERROR_OFFLINE";
+      } else if (gErrorCode === "blockedByCOOP") {
+        errorInfo.errorCodeString = "NS_ERROR_DOM_COOP_FAILED";
+      } else if (gErrorCode === "blockedByCOEP") {
+        errorInfo.errorCodeString = "NS_ERROR_DOM_COEP_FAILED";
+      }
 
+      errorInfo.errorCodeString = errorInfo.errorCodeString ?? gErrorCode;
+    }
     return errorInfo;
   }
 
@@ -208,6 +249,9 @@ export class NetErrorCard extends MozLitElement {
           data-l10n-id="fp-neterror-offline-intro"
           data-l10n-args='{"hostname": "${this.hostname}"}'
         ></p>`;
+      case "NS_ERROR_DOM_COOP_FAILED":
+      case "NS_ERROR_DOM_COEP_FAILED":
+        return html`<p data-l10n-id="fp-neterror-coop-coep-intro"></p>`;
     }
 
     return null;
@@ -451,6 +495,124 @@ export class NetErrorCard extends MozLitElement {
         : null} `;
   }
 
+  customNetErrorContainerTemplate() {
+    if (!this.showCustomNetErrorCard) {
+      return null;
+    }
+
+    let content;
+
+    switch (this.errorInfo.errorCodeString) {
+      case "NS_ERROR_OFFLINE": {
+        content = this.customNetErrorSectionTemplate({
+          titleL10nId: "fp-neterror-offline-body-title",
+          whatCanYouDoL10nId: "fp-neterror-offline-what-can-you-do-body",
+          whatCanYouDoL10nArgs: {
+            hostname: this.hostname,
+          },
+          buttons: {
+            tryAgain: true,
+          },
+        });
+        break;
+      }
+      case "NS_ERROR_DOM_COOP_FAILED":
+      case "NS_ERROR_DOM_COEP_FAILED": {
+        content = this.customNetErrorSectionTemplate({
+          titleL10nId: "fp-certerror-body-title",
+          whyDidThisHappenL10nId:
+            "fp-neterror-coop-coep-why-did-this-happen-body",
+          whyDidThisHappenL10nArgs: {
+            hostname: this.hostname,
+          },
+          learnMoreL10nId:
+            gErrorCode === "blockedByCOOP"
+              ? "certerror-coop-learn-more"
+              : "certerror-coep-learn-more",
+          learnMoreSupportPage:
+            gErrorCode === "blockedByCOOP" ? COOP_MDN_DOCS : COEP_MDN_DOCS,
+          buttons: {
+            goBack: window.self === window.top,
+          },
+        });
+        break;
+      }
+    }
+
+    return html`<div class="custom-net-error-card">${content}</div>`;
+  }
+
+  customNetErrorSectionTemplate(params) {
+    const {
+      titleL10nId,
+      whyDidThisHappenL10nId,
+      whyDidThisHappenL10nArgs,
+      whatCanYouDoL10nId,
+      whatCanYouDoL10nArgs,
+      learnMoreL10nId,
+      learnMoreSupportPage,
+      buttons = {},
+    } = params;
+
+    const { goBack = false, tryAgain = false } = buttons;
+
+    return html`<h1 id="neterror-title-text" data-l10n-id=${titleL10nId}></h1>
+      ${this.introContentTemplate()}
+      ${whatCanYouDoL10nId
+        ? html`<p>
+            <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
+            <span
+              data-l10n-id=${whatCanYouDoL10nId}
+              data-l10n-args=${JSON.stringify(whatCanYouDoL10nArgs)}
+            ></span>
+          </p>`
+        : null}
+      ${whyDidThisHappenL10nId
+        ? html`<p>
+            <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
+            <span
+              data-l10n-id=${whyDidThisHappenL10nId}
+              data-l10n-args=${JSON.stringify(whyDidThisHappenL10nArgs)}
+            ></span>
+          </p>`
+        : null}
+      ${learnMoreL10nId
+        ? html`<p>
+            <a
+              href=${learnMoreSupportPage}
+              data-l10n-id=${learnMoreL10nId}
+              data-telemetry-id="learn_more_link"
+              id="neterror-learn-more-link"
+              @click=${this.handleTelemetryClick}
+              rel="noopener noreferrer"
+              target="_blank"
+            ></a>
+          </p>`
+        : null}
+      ${tryAgain
+        ? html`<moz-button-group
+            ><moz-button
+              id="tryAgainButton"
+              type="primary"
+              data-l10n-id="neterror-try-again-button"
+              data-telemetry-id="try_again_button"
+              @click=${this.handleTryAgain}
+            ></moz-button
+          ></moz-button-group>`
+        : null}
+      ${goBack
+        ? html`<moz-button-group
+            ><moz-button
+              type="primary"
+              data-l10n-id="fp-certerror-return-to-previous-page-recommended-button"
+              data-telemetry-id="return_button_adv"
+              id="returnButton"
+              @click=${this.handleGoBackClick}
+            ></moz-button
+          ></moz-button-group>`
+        : null}`;
+  }
+
   async getDomainMismatchNames() {
     if (this.domainMismatchNamesPromise) {
       return;
@@ -646,31 +808,8 @@ export class NetErrorCard extends MozLitElement {
           <img src="chrome://global/skin/illustrations/security-error.svg" />
         </div>
         <div class="container">
-          ${this.errorInfo.errorCodeString === "NS_ERROR_OFFLINE"
-            ? html`<h1
-                  id="neterror-title-text"
-                  data-l10n-id="fp-neterror-offline-body-title"
-                ></h1>
-                ${this.introContentTemplate()}
-                <p>
-                  <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
-                </p>
-                <p>
-                  <span
-                    data-l10n-id="fp-neterror-offline-what-can-you-do-body"
-                    data-l10n-args='{"hostname": "${this.hostname}"}'
-                  ></span>
-                </p>
-                <moz-button-group>
-                  <moz-button
-                    id="neterrorTryAgainButton"
-                    class="try-again"
-                    type="primary"
-                    data-l10n-id="neterror-try-again-button"
-                    data-telemetry-id="try_again_button"
-                    @click=${this.handleTryAgain}
-                  ></moz-button>
-                </moz-button-group>`
+          ${this.showCustomNetErrorCard
+            ? html`${this.customNetErrorContainerTemplate()}`
             : html`<h1
                   id="certErrorBodyTitle"
                   data-l10n-id="fp-certerror-body-title"
