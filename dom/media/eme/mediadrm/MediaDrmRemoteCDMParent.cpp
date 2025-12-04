@@ -777,35 +777,45 @@ already_AddRefed<MediaDrmCryptoInfo> MediaDrmRemoteCDMParent::CreateCryptoInfo(
   // Deep copy the plain and encrypted sizes so we can modify them.
   nsTArray<size_t> plainSizes(cryptoObj.mPlainSizes.Length());
   nsTArray<size_t> encryptedSizes(cryptoObj.mEncryptedSizes.Length());
-  uint32_t totalSubSamplesSize = 0;
-  for (const auto& size : cryptoObj.mPlainSizes) {
-    plainSizes.AppendElement(size);
-    totalSubSamplesSize += size;
-  }
-  for (const auto& size : cryptoObj.mEncryptedSizes) {
-    encryptedSizes.AppendElement(size);
-    totalSubSamplesSize += size;
-  }
+  if (numSubSamples > 0) {
+    uint32_t totalSubSamplesSize = 0;
+    for (const auto& size : cryptoObj.mPlainSizes) {
+      plainSizes.AppendElement(size);
+      totalSubSamplesSize += size;
+    }
+    for (const auto& size : cryptoObj.mEncryptedSizes) {
+      encryptedSizes.AppendElement(size);
+      totalSubSamplesSize += size;
+    }
 
-  auto codecSpecificDataSize =
-      CheckedInt<size_t>(aSample->Size()) - totalSubSamplesSize;
-  if (!codecSpecificDataSize.isValid()) {
-    MOZ_ASSERT_UNREACHABLE("totalSubSamplesSize greater than sample size");
-    return nullptr;
-  }
-
-  // Size of codec specific data("CSD") for Android java::sdk::MediaCodec usage
-  // should be included in the 1st plain size if it exists.
-  if (codecSpecificDataSize.value() && !plainSizes.IsEmpty()) {
-    // This shouldn't overflow as the the plain size should be UINT16_MAX at
-    // most, and the CSD should never be that large. Checked int acts like a
-    // diagnostic assert here to help catch if we ever have insane inputs.
-    auto newLeadingPlainSize = codecSpecificDataSize + plainSizes[0];
-    if (!newLeadingPlainSize.isValid()) {
-      MOZ_ASSERT_UNREACHABLE("newLeadingPlainSize overflowed");
+    auto codecSpecificDataSize =
+        CheckedInt<size_t>(aSample->Size()) - totalSubSamplesSize;
+    if (!codecSpecificDataSize.isValid()) {
+      MOZ_ASSERT_UNREACHABLE("totalSubSamplesSize greater than sample size");
       return nullptr;
     }
-    plainSizes[0] = newLeadingPlainSize.value();
+
+    // Size of codec specific data("CSD") for Android java::sdk::MediaCodec
+    // usage should be included in the 1st plain size if it exists.
+    if (codecSpecificDataSize.value() && !plainSizes.IsEmpty()) {
+      // This shouldn't overflow as the the plain size should be UINT16_MAX at
+      // most, and the CSD should never be that large. Checked int acts like a
+      // diagnostic assert here to help catch if we ever have insane inputs.
+      auto newLeadingPlainSize = codecSpecificDataSize + plainSizes[0];
+      if (!newLeadingPlainSize.isValid()) {
+        MOZ_ASSERT_UNREACHABLE("newLeadingPlainSize overflowed");
+        return nullptr;
+      }
+      plainSizes[0] = newLeadingPlainSize.value();
+    }
+  } else {
+    // MediaCodec expects us to provide at least one subsample. Whole-block full
+    // sample encryption does not carry subsample information, so we need to
+    // synthesize it by creating a subsample as big as the sample itself. See
+    // bug 1759936.
+    numSubSamples = 1;
+    plainSizes.AppendElement(0);
+    encryptedSizes.AppendElement(aSample->Size());
   }
 
   const CopyableTArray<uint8_t>* srcIV;
