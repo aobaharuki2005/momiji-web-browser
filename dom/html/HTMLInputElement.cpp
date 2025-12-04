@@ -826,7 +826,7 @@ nsresult HTMLInputElement::InitColorPicker() {
   rv = colorPicker->Open(callback);
   if (NS_SUCCEEDED(rv)) {
     mPickerRunning = true;
-    SetStates(ElementState::OPEN, true);
+    SetOpenState(true);
   }
 
   return rv;
@@ -943,7 +943,7 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
     rv = filePicker->Open(callback);
     if (NS_SUCCEEDED(rv)) {
       mPickerRunning = true;
-      SetStates(ElementState::OPEN, true);
+      SetOpenState(true);
     }
 
     return rv;
@@ -952,7 +952,7 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
   HTMLInputElement::gUploadLastDir->FetchDirectoryAndDisplayPicker(
       doc, filePicker, callback);
   mPickerRunning = true;
-  SetStates(ElementState::OPEN, true);
+  SetOpenState(true);
   return NS_OK;
 }
 
@@ -2334,7 +2334,7 @@ void HTMLInputElement::CloseDateTimePicker() {
                                       CanBubble::eYes, Cancelable::eYes);
 }
 
-void HTMLInputElement::SetDateTimePickerState(bool aIsOpen) {
+void HTMLInputElement::SetOpenState(bool aIsOpen) {
   SetStates(ElementState::OPEN, aIsOpen);
 }
 
@@ -7439,7 +7439,7 @@ void HTMLInputElement::UpdateHasRange(bool aNotify) {
 
 void HTMLInputElement::PickerClosed() {
   mPickerRunning = false;
-  SetStates(ElementState::OPEN, false);
+  SetOpenState(false);
 }
 
 JSObject* HTMLInputElement::WrapNode(JSContext* aCx,
