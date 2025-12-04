@@ -3573,4 +3573,14 @@
     <string name="terms_of_use_prompt_accept">Accept</string>
     <!-- Label for a button to postpone accepting the terms of use -->
     <string name="terms_of_use_prompt_postpone">Remind me later</string>
+
+    <!-- Privacy notice homepage banner -->
+    <!-- A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more) -->
+    <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">We’ve updated our %1$s to reflect the latest features in Firefox. %2$s</string>
+    <!-- The first active link used in privacy_notice_updated_homepage_message -->
+    <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Privacy Notice</string>
+    <!-- The second active link used in privacy_notice_updated_homepage_message -->
+    <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Learn more</string>
 </resources>
