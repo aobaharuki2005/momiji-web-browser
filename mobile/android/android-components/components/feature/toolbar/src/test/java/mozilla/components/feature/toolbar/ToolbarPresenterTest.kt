@@ -11,7 +11,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ContentState
-import mozilla.components.browser.state.state.SecurityInfoState
+import mozilla.components.browser.state.state.SecurityInfo
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.TrackingProtectionState
 import mozilla.components.browser.state.state.content.PermissionHighlightsState
@@ -21,7 +21,6 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.support.test.any
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Rule
@@ -120,8 +119,7 @@ class ToolbarPresenterTest {
         store.dispatch(
             ContentAction.UpdateSecurityInfoAction(
                 "tab1",
-                SecurityInfoState(
-                    secure = true,
+                SecurityInfo.Secure(
                     host = "mozilla.org",
                     issuer = "Mozilla",
                 ),
@@ -144,7 +142,7 @@ class ToolbarPresenterTest {
                             id = "tab1",
                             content = ContentState(
                                 url = "https://www.mozilla.org",
-                                securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
+                                securityInfo = SecurityInfo.Secure("mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
                                 progress = 60,
                             ),
@@ -268,7 +266,7 @@ class ToolbarPresenterTest {
                             id = "tab1",
                             content = ContentState(
                                 url = "https://www.mozilla.org",
-                                securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
+                                securityInfo = SecurityInfo.Secure("mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
                                 progress = 60,
                             ),
@@ -311,7 +309,7 @@ class ToolbarPresenterTest {
                             id = "tab1",
                             content = ContentState(
                                 url = "https://www.mozilla.org",
-                                securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
+                                securityInfo = SecurityInfo.Secure("mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
                                 progress = 60,
                             ),
@@ -320,7 +318,7 @@ class ToolbarPresenterTest {
                             id = "tab2",
                             content = ContentState(
                                 url = "https://www.example.org",
-                                securityInfo = SecurityInfoState(false, "example.org", "Example"),
+                                securityInfo = SecurityInfo.Insecure("example.org", "Example"),
                                 searchTerms = "Example",
                                 permissionHighlights = PermissionHighlightsState(true),
                                 progress = 90,
@@ -375,7 +373,7 @@ class ToolbarPresenterTest {
                             id = "tab",
                             content = ContentState(
                                 url = "https://www.mozilla.org",
-                                securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
+                                securityInfo = SecurityInfo.Secure("mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
                                 progress = 60,
                             ),
@@ -425,7 +423,7 @@ class ToolbarPresenterTest {
                             id = "tab",
                             content = ContentState(
                                 url = "https://www.mozilla.org",
-                                securityInfo = SecurityInfoState(true, "mozilla.org", "Mozilla"),
+                                securityInfo = SecurityInfo.Secure("mozilla.org", "Mozilla"),
                                 searchTerms = "Hello World",
                                 progress = 60,
                             ),

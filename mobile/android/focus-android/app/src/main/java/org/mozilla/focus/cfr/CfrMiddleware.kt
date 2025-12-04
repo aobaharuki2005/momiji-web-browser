@@ -99,7 +99,7 @@ class CfrMiddleware(
     private fun isSessionSecure(browserState: BrowserState) =
         browserState.findTabOrCustomTabOrSelectedTab(
             browserState.selectedTabId,
-        )?.content?.securityInfo?.secure == true
+        )?.content?.securityInfo?.isSecure == true
 
     private fun shouldShowCfrForTrackingProtection(
         action: BrowserAction,

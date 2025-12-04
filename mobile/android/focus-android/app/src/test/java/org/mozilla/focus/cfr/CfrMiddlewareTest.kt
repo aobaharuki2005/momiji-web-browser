@@ -8,7 +8,7 @@ import mozilla.components.browser.state.action.CookieBannerAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.action.TrackingProtectionAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.SecurityInfoState
+import mozilla.components.browser.state.state.SecurityInfo
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -111,8 +111,7 @@ class CfrMiddlewareTest {
 
         val updateSecurityInfoAction = ContentAction.UpdateSecurityInfoAction(
             "1",
-            SecurityInfoState(
-                secure = false,
+            SecurityInfo.Insecure(
                 host = "test.org",
                 issuer = "Test",
             ),
@@ -145,8 +144,7 @@ class CfrMiddlewareTest {
 
         val updateSecurityInfoAction = ContentAction.UpdateSecurityInfoAction(
             "1",
-            SecurityInfoState(
-                secure = true,
+            SecurityInfo.Secure(
                 host = "test.org",
                 issuer = "Test",
             ),
@@ -303,7 +301,7 @@ class CfrMiddlewareTest {
         return tab.copy(
             content = tab.content.copy(
                 private = true,
-                securityInfo = SecurityInfoState(secure = isSecure),
+                securityInfo = SecurityInfo.from(isSecure),
             ),
         )
     }

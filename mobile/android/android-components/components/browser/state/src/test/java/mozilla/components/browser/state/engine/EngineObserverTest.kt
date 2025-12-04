@@ -25,7 +25,7 @@ import mozilla.components.browser.state.state.AppIntentState
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.LoadRequestState
 import mozilla.components.browser.state.state.MediaSessionState
-import mozilla.components.browser.state.state.SecurityInfoState
+import mozilla.components.browser.state.state.SecurityInfo
 import mozilla.components.browser.state.state.content.FindResultState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -242,12 +242,12 @@ class EngineObserverTest {
         engineSession.loadUrl("http://mozilla.org")
         advanceUntilIdle()
 
-        assertEquals(SecurityInfoState(secure = false), store.state.tabs[0].content.securityInfo)
+        assertEquals(SecurityInfo.Insecure(), store.state.tabs[0].content.securityInfo)
 
         engineSession.loadUrl("https://mozilla.org")
         advanceUntilIdle()
 
-        assertEquals(SecurityInfoState(secure = true, "host", "issuer"), store.state.tabs[0].content.securityInfo)
+        assertEquals(SecurityInfo.Secure("host", "issuer"), store.state.tabs[0].content.securityInfo)
     }
 
     @Test
