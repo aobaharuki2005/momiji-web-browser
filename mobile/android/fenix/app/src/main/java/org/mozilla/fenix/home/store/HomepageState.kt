@@ -136,8 +136,7 @@ internal sealed class HomepageState {
      */
     internal fun isMinimalLayout(): Boolean {
         return (this as? Normal)?.run {
-            !showRecentTabs && !showRecentSyncedTab && !showBookmarks && !showRecentlyVisited &&
-                    (!showCollections || collectionsState == CollectionsState.Gone) && !headerState.showHeader
+            !showRecentTabs && !showRecentSyncedTab && !showBookmarks && !showRecentlyVisited
         } ?: false
     }
 
