@@ -397,6 +397,15 @@ struct FrameMetrics {
                    CalculateCompositedSizeInCssPixels());
   }
 
+  // TODO Bug 2003420: This function should eventually be able to supercede
+  // GetVisualViewport and drop the default argument for
+  // |aFixedLayerBottomMargin|. The difference from GetVisualViewport is this
+  // function handles the current dynamic toolbar state. In other words
+  // GetVisualViewport always handles the toolbar state as if the dynamic
+  // toolbar is completely hidden.
+  CSSRect GetVisualViewportForLayoutViewportContainment(
+      ScreenCoord aFixedLayerBottomMargin = 0) const;
+
   void SetTransformToAncestorScale(
       const ParentLayerToScreenScale2D& aTransformToAncestorScale) {
     mTransformToAncestorScale = aTransformToAncestorScale;
@@ -472,7 +481,7 @@ struct FrameMetrics {
   // allow APZ to async-scroll the layout viewport.
   //
   // This is a no-op if mIsRootContent is false.
-  void RecalculateLayoutViewportOffset();
+  void RecalculateLayoutViewportOffset(ScreenCoord aFixedLayerBottomMargin = 0);
 
   void SetFixedLayerMargins(const ScreenMargin& aFixedLayerMargins) {
     mFixedLayerMargins = aFixedLayerMargins;

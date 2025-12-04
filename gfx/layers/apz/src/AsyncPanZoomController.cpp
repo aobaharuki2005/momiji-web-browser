@@ -5526,10 +5526,19 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     LayersUpdateFlags aLayersUpdateFlags) {
   AssertOnUpdaterThread();
 
+  const FrameMetrics& aLayerMetrics = aScrollMetadata.GetMetrics();
+  ScreenMargin fixedLayerMargins;
+  // Get the fixed layers margins for if the new data is the root content one.
+  // NOTE: This needs to be done before obtaining |mRecursiveMutex| below to
+  // respect the APZ lock ordering principle.
+  if (aLayerMetrics.IsRootContent()) {
+    if (APZCTreeManager* treeManagerLocal = GetApzcTreeManager()) {
+      fixedLayerMargins = treeManagerLocal->GetCompositorFixedLayerMargins();
+    }
+  }
+
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   bool isDefault = mScrollMetadata.IsDefault();
-
-  const FrameMetrics& aLayerMetrics = aScrollMetadata.GetMetrics();
 
   if ((aScrollMetadata == mLastContentPaintMetadata) && !isDefault) {
     // No new information here, skip it.
@@ -6113,7 +6122,19 @@ void AsyncPanZoomController::NotifyLayersUpdated(
     // The rest of this branch largely follows the code in the
     // |if (scrollOffsetUpdated)| branch above. Eventually it should get
     // merged into that branch.
-    Metrics().RecalculateLayoutViewportOffset();
+    //
+    // RecalculateLayoutViewportOffset tries to adjust the layout scroll offset
+    // if the updated visual scroll offset overflows the visual viewport from
+    // the layout viewport. Unfortunately the visual viewport calculated in APZ
+    // is basically including the dynamic toolbar area (because position:fixed
+    // (or sticky) elements are directly composited on the compositor in
+    // response to the dynamic toolbar movement), thus with the slightly larger
+    // visual viewport RecalculateLayoutViewportOffset unintentionally moves the
+    // layout scroll offset even if the dynamic toolbar is not collapsed at all.
+    // So we pass the compositor fixed layers margins which is representing the
+    // dynamic toolbar state to RecalculateLayoutViewportOffset to avoid such
+    // unintentional layout offset changes.
+    Metrics().RecalculateLayoutViewportOffset(fixedLayerMargins.bottom);
     mExpectedGeckoMetrics.UpdateFrom(aLayerMetrics);
     if (ShouldCancelAnimationForScrollUpdate(Nothing())) {
       CancelAnimation();
