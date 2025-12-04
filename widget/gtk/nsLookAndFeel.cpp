@@ -125,6 +125,7 @@ static float GetGtkTextScaleFactor() {
 
 static bool sCSDAvailable;
 
+#ifdef MOZ_ENABLE_DBUS
 static nsCString GVariantToString(GVariant* aVariant) {
   nsCString ret;
   gchar* s = g_variant_print(aVariant, TRUE);
@@ -325,6 +326,7 @@ void nsLookAndFeel::UnwatchDBus() {
   mDBusSettingsProxy = nullptr;
   nsAppShell::DBusConnectionCheck();
 }
+#endif
 
 nsLookAndFeel::nsLookAndFeel() {
   static constexpr nsLiteralCString kObservedSettings[] = {
@@ -370,6 +372,7 @@ nsLookAndFeel::nsLookAndFeel() {
   sCSDAvailable =
       nsWindow::GetSystemGtkWindowDecoration() != nsWindow::GTK_DECORATION_NONE;
 
+#ifdef MOZ_ENABLE_DBUS
   if (ShouldUsePortal(PortalKind::Settings)) {
     mDBusID = g_bus_watch_name(
         G_BUS_TYPE_SESSION, "org.freedesktop.portal.Desktop",
@@ -385,6 +388,7 @@ nsLookAndFeel::nsLookAndFeel() {
         },
         this, nullptr);
   }
+#endif
   if (IsKdeDesktopEnvironment()) {
     GUniquePtr<gchar> path(
         g_strconcat(g_get_user_config_dir(), "/gtk-3.0/colors.css", NULL));
@@ -402,11 +406,13 @@ nsLookAndFeel::nsLookAndFeel() {
 
 nsLookAndFeel::~nsLookAndFeel() {
   ClearRoundedCornerProvider();
+#ifdef MOZ_ENABLE_DBUS
   if (mDBusID) {
     g_bus_unwatch_name(mDBusID);
     mDBusID = 0;
   }
   UnwatchDBus();
+#endif
   if (GtkSettings* settings = gtk_settings_get_default()) {
     g_signal_handlers_disconnect_by_func(
         settings, FuncToGpointer(settings_changed_cb), nullptr);
