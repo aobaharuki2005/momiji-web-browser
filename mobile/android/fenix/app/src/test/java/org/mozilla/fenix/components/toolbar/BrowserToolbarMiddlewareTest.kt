@@ -1819,16 +1819,18 @@ class BrowserToolbarMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN the website is insecure WHEN initializing the toolbar THEN add an appropriate security indicator`() = runTest {
+    fun `GIVEN the website is unknown WHEN initializing the toolbar THEN add an appropriate security indicator`() = runTest {
         val middleware = buildMiddleware(
             browserStore = browserStore,
             useCases = useCases,
         )
-        every { tab.content.securityInfo } returns SecurityInfo.Insecure()
+        every { tab.content.securityInfo } returns SecurityInfo.Unknown
         val expectedSecurityIndicator = ActionButtonRes(
-            drawableResId = iconsR.drawable.mozac_ic_shield_slash_24,
+            drawableResId = iconsR.drawable.mozac_ic_globe_24,
             contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
-            onClick = StartPageActions.SiteInfoClicked,
+            state = ActionButton.State.DEFAULT,
+            highlighted = false,
+            onClick = object : BrowserToolbarEvent {},
         )
 
         val toolbarStore = buildStore(
@@ -1838,7 +1840,12 @@ class BrowserToolbarMiddlewareTest {
         val toolbarPageActions = toolbarStore.state.displayState.pageActionsStart
         assertEquals(1, toolbarPageActions.size)
         val securityIndicator = toolbarPageActions[0] as ActionButtonRes
-        assertEquals(expectedSecurityIndicator, securityIndicator)
+        assertEquals(expectedSecurityIndicator.drawableResId, securityIndicator.drawableResId)
+        assertEquals(expectedSecurityIndicator.contentDescription, securityIndicator.contentDescription)
+        assertEquals(expectedSecurityIndicator.state, securityIndicator.state)
+        assertEquals(expectedSecurityIndicator.highlighted, securityIndicator.highlighted)
+        assertFalse(securityIndicator.onClick is StartPageActions.SiteInfoClicked)
+        assertNull(securityIndicator.onLongClick)
     }
 
     @Test
@@ -1851,6 +1858,7 @@ class BrowserToolbarMiddlewareTest {
                     enabled = true,
                     ignoredOnTrackingProtection = false,
                 ),
+                securityInfo = SecurityInfo.Insecure(),
             )
             val browserStore = BrowserStore(
                 BrowserState(
@@ -1899,6 +1907,7 @@ class BrowserToolbarMiddlewareTest {
                     enabled = false,
                     ignoredOnTrackingProtection = false,
                 ),
+                securityInfo = SecurityInfo.Insecure(),
             )
             val browserStore = BrowserStore(
                 BrowserState(
@@ -2033,7 +2042,11 @@ class BrowserToolbarMiddlewareTest {
 
             every { browserScreenState.readerModeStatus } returns readerModeStatus
 
-            val tab = createTab(url = "URL", id = tabId)
+            val tab = createTab(
+                url = "URL",
+                id = tabId,
+                securityInfo = SecurityInfo.Insecure(),
+            )
 
             val browserScreenStore = buildBrowserScreenStore()
 
@@ -2536,7 +2549,11 @@ class BrowserToolbarMiddlewareTest {
 
     @Test
     fun `GIVEN site permissions different than default WHEN observing THEN SiteInfo button is highlighted`() = runTest {
-        val currentTab = createTab("example.com", private = false)
+        val currentTab = createTab(
+            url = "example.com",
+            private = false,
+            securityInfo = SecurityInfo.Secure(),
+        )
         val browserStore = BrowserStore(
             BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),
         )
@@ -2586,6 +2603,7 @@ class BrowserToolbarMiddlewareTest {
                 enabled = true,
                 ignoredOnTrackingProtection = true,
             ),
+            securityInfo = SecurityInfo.Secure(),
         )
         val browserStore = BrowserStore(
             BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),
@@ -2609,6 +2627,7 @@ class BrowserToolbarMiddlewareTest {
                 enabled = true,
                 ignoredOnTrackingProtection = false,
             ),
+            securityInfo = SecurityInfo.Secure(),
         )
         val browserStore = BrowserStore(
             BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),
@@ -2643,6 +2662,7 @@ class BrowserToolbarMiddlewareTest {
                 enabled = true,
                 ignoredOnTrackingProtection = true,
             ),
+            securityInfo = SecurityInfo.Secure(),
         )
         val browserStore = BrowserStore(
             BrowserState(tabs = listOf(currentTab), selectedTabId = currentTab.id),

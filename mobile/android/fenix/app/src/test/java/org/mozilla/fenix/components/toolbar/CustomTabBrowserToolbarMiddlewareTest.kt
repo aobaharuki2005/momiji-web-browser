@@ -36,6 +36,7 @@ import mozilla.components.compose.browser.toolbar.concept.Action.ActionButtonRes
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.ContextualMenuOption
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin.Companion.PageOriginContextualMenuInteractions.CopyToClipboardClicked
+import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.ProgressBarConfig
 import mozilla.components.concept.engine.cookiehandling.CookieBannersStorage
@@ -50,6 +51,7 @@ import mozilla.components.support.utils.ClipboardHandler
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -256,6 +258,32 @@ class CustomTabBrowserToolbarMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN the website's security is unknown WHEN initializing the toolbar THEN add an appropriate security indicator`() {
+        every { customTab.content.securityInfo } returns SecurityInfo.Unknown
+        every { customTab.trackingProtection.enabled } returns true
+        every { customTab.trackingProtection.ignoredOnTrackingProtection } returns false
+        val expectedSecurityIndicator = ActionButtonRes(
+            drawableResId = iconsR.drawable.mozac_ic_globe_24,
+            contentDescription = toolbarR.string.mozac_browser_toolbar_content_description_site_info,
+            state = ActionButton.State.DEFAULT,
+            highlighted = false,
+            onClick = object : BrowserToolbarEvent {},
+        )
+
+        val toolbarStore = buildStore()
+
+        val toolbarPageActions = toolbarStore.state.displayState.pageActionsStart
+        assertEquals(1, toolbarPageActions.size)
+        val securityIndicator = toolbarPageActions[0] as ActionButtonRes
+        assertEquals(expectedSecurityIndicator.drawableResId, securityIndicator.drawableResId)
+        assertEquals(expectedSecurityIndicator.contentDescription, securityIndicator.contentDescription)
+        assertEquals(expectedSecurityIndicator.state, securityIndicator.state)
+        assertEquals(expectedSecurityIndicator.highlighted, securityIndicator.highlighted)
+        assertFalse(securityIndicator.onClick is StartPageActions.SiteInfoClicked)
+        assertNull(securityIndicator.onLongClick)
+    }
+
+    @Test
     fun `GIVEN the website is secure WHEN initializing the toolbar THEN add an appropriate security indicator`() {
         every { customTab.content.securityInfo } returns SecurityInfo.Secure()
         every { customTab.trackingProtection.enabled } returns true
@@ -300,6 +328,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
                 enabled = true,
                 ignoredOnTrackingProtection = false,
             ),
+            securityInfo = SecurityInfo.Insecure(),
         )
         val browserStore = BrowserStore(
             BrowserState(customTabs = listOf(customTab)),
