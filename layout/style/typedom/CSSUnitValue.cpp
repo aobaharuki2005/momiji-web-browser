@@ -56,6 +56,12 @@ void CSSUnitValue::GetUnit(nsCString& aRetVal) const { aRetVal = mUnit; }
 
 // end of CSSUnitValue Web IDL implementation
 
+void CSSUnitValue::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
+                                         nsACString& aDest) const {
+  aDest.AppendFloat(mValue);
+  aDest.Append(mUnit);
+}
+
 CSSUnitValue& CSSStyleValue::GetAsCSSUnitValue() {
   MOZ_DIAGNOSTIC_ASSERT(mValueType == ValueType::UnitValue);
 

@@ -13,6 +13,7 @@
 #include "mozilla/dom/CSSNumericArray.h"
 #include "mozilla/dom/CSSNumericValueBinding.h"
 #include "mozilla/dom/CSSUnitValue.h"
+#include "nsString.h"
 
 namespace mozilla::dom {
 
@@ -76,6 +77,32 @@ already_AddRefed<CSSMathSum> CSSMathSum::Constructor(
 CSSNumericArray* CSSMathSum::Values() const { return mValues; }
 
 // end of CSSMathSum Web IDL implementation
+
+void CSSMathSum::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
+                                       nsACString& aDest) const {
+  aDest.Append("calc("_ns);
+
+  bool written = false;
+
+  for (uint32_t index = 0; index < mValues->Length(); index++) {
+    bool found;
+    CSSNumericValue* value = mValues->IndexedGetter(index, found);
+    MOZ_ASSERT(found);
+
+    if (value->IsCSSUnitValue()) {
+      CSSUnitValue& unitValue = value->GetAsCSSUnitValue();
+
+      if (written) {
+        aDest.Append(" + "_ns);
+      }
+
+      unitValue.ToCssTextWithProperty(aPropertyId, aDest);
+      written = true;
+    }
+  }
+
+  aDest.Append(")"_ns);
+}
 
 CSSMathSum& CSSStyleValue::GetAsCSSMathSum() {
   MOZ_DIAGNOSTIC_ASSERT(mValueType == ValueType::MathSum);

@@ -19,6 +19,7 @@ class nsISupports;
 
 namespace mozilla {
 
+struct CSSPropertyId;
 class ErrorResult;
 
 namespace dom {
@@ -48,6 +49,9 @@ class CSSUnitValue final : public CSSNumericValue {
   void GetUnit(nsCString& aRetVal) const;
 
   // end of CSSUnitValue Web IDL declarations
+
+  void ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
+                             nsACString& aDest) const;
 
  private:
   virtual ~CSSUnitValue() = default;

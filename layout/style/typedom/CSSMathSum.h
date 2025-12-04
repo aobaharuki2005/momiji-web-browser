@@ -21,6 +21,7 @@ class nsISupports;
 
 namespace mozilla {
 
+struct CSSPropertyId;
 class ErrorResult;
 
 namespace dom {
@@ -50,6 +51,9 @@ class CSSMathSum final : public CSSMathValue {
   CSSNumericArray* Values() const;
 
   // end of CSSMathSum Web IDL declarations
+
+  void ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
+                             nsACString& aDest) const;
 
  private:
   virtual ~CSSMathSum() = default;

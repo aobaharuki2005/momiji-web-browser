@@ -11,7 +11,9 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CSSKeywordValue.h"
+#include "mozilla/dom/CSSMathSum.h"
 #include "mozilla/dom/CSSStyleValue.h"
+#include "mozilla/dom/CSSUnitValue.h"
 #include "mozilla/dom/StylePropertyMapBinding.h"
 #include "nsCOMPtr.h"
 #include "nsCSSProps.h"
@@ -78,11 +80,19 @@ void StylePropertyMap::Set(
   nsAutoCString cssText;
 
   switch (styleValue.GetValueType()) {
-    case CSSStyleValue::ValueType::MathSum:
-      break;
+    case CSSStyleValue::ValueType::MathSum: {
+      CSSMathSum& mathSum = styleValue.GetAsCSSMathSum();
 
-    case CSSStyleValue::ValueType::UnitValue:
+      mathSum.ToCssTextWithProperty(propertyId, cssText);
       break;
+    }
+
+    case CSSStyleValue::ValueType::UnitValue: {
+      CSSUnitValue& unitValue = styleValue.GetAsCSSUnitValue();
+
+      unitValue.ToCssTextWithProperty(propertyId, cssText);
+      break;
+    }
 
     case CSSStyleValue::ValueType::KeywordValue: {
       CSSKeywordValue& keywordValue = styleValue.GetAsCSSKeywordValue();
