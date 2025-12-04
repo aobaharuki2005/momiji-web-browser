@@ -23,6 +23,7 @@ const Template = ({
   imageVerticalTopOffset,
   imageVerticalBottomOffset,
   containerVerticalBottomOffset,
+  containerPaddingBottom,
   layout,
   imageWidth,
   logoWidth,
@@ -36,11 +37,20 @@ const Template = ({
       imageURL=${imageURL}
       logoURL=${logoURL}
       style="
-        --illustration-margin-block-start-offset: ${imageVerticalTopOffset}px;
-        --illustration-margin-block-end-offset: ${imageVerticalBottomOffset}px;
-        --container-margin-block-end-offset: ${containerVerticalBottomOffset}px;
-        --image-width: ${imageWidth}px;
-        --logo-width: ${logoWidth}px;
+        ${imageVerticalTopOffset !== undefined
+        ? `--illustration-margin-block-start-offset: ${imageVerticalTopOffset}px;`
+        : ""}
+        ${imageVerticalBottomOffset !== undefined
+        ? `--illustration-margin-block-end-offset: ${imageVerticalBottomOffset}px;`
+        : ""}
+        ${containerVerticalBottomOffset !== undefined
+        ? `--container-margin-block-end-offset: ${containerVerticalBottomOffset}px;`
+        : ""}
+        ${imageWidth !== undefined ? `--image-width: ${imageWidth}px;` : ""}
+        ${logoWidth !== undefined ? `--logo-width: ${logoWidth}px;` : ""}
+        ${containerPaddingBottom !== undefined
+        ? `--container-padding-block-end: ${containerPaddingBottom}px;`
+        : ""}
       "
       layout=${layout}
     >
@@ -61,6 +71,7 @@ Default.args = {
   imageVerticalTopOffset: -20,
   imageVerticalBottomOffset: 0,
   containerVerticalBottomOffset: 0,
+  containerPaddingBottom: 8,
   layout: "column",
   imageWidth: 120,
   logoWidth: 18,

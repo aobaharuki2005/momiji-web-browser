@@ -189,18 +189,38 @@ async function assertMessageInMenuSource(source, message, win = window) {
 
   if (source === MenuMessage.SOURCES.APP_MENU) {
     // The zap gradient and the default sign-in button should be hidden.
-    Assert.ok(
-      BrowserTestUtils.isHidden(
-        win.PanelUI.mainView.querySelector("#appMenu-fxa-separator")
-      ),
-      "Zap gradient separator is hidden in the AppMenu."
-    );
-    Assert.ok(
-      BrowserTestUtils.isHidden(
-        win.PanelUI.mainView.querySelector("#appMenu-fxa-status2")
-      ),
-      "Default FxA sign-in button is hidden in the AppMenu."
-    );
+    const isFxAMessage =
+      message.content.messageType === MenuMessage.MESSAGE_TYPES.FXA_CTA;
+
+    if (isFxAMessage) {
+      // fxa_cta replaces the FxA row in the App Menu.
+      Assert.ok(
+        BrowserTestUtils.isHidden(
+          win.PanelUI.mainView.querySelector("#appMenu-fxa-separator")
+        ),
+        "Zap gradient separator is hidden in the AppMenu for fxa_cta."
+      );
+      Assert.ok(
+        BrowserTestUtils.isHidden(
+          win.PanelUI.mainView.querySelector("#appMenu-fxa-status2")
+        ),
+        "Default FxA sign-in button is hidden in the AppMenu for fxa_cta."
+      );
+    } else {
+      // default_cta should not replace fxa row in the App menu.
+      Assert.ok(
+        BrowserTestUtils.isVisible(
+          win.PanelUI.mainView.querySelector("#appMenu-fxa-separator")
+        ),
+        "Zap gradient separator is visible in the AppMenu for default_cta."
+      );
+      Assert.ok(
+        BrowserTestUtils.isVisible(
+          win.PanelUI.mainView.querySelector("#appMenu-fxa-status2")
+        ),
+        "Default FxA sign-in button is visible in the AppMenu for default_cta."
+      );
+    }
   } else if (source === MenuMessage.SOURCES.PXI_MENU) {
     Assert.ok(
       BrowserTestUtils.isHidden(
@@ -423,6 +443,31 @@ add_setup(async function () {
     await hideAllPopups();
   });
 });
+
+function buildDefaultCtaMessage({
+  id = "TEST_DEFAULT_CTA",
+  layout = "column",
+} = {}) {
+  return {
+    id,
+    template: "menu_message",
+    content: {
+      layout,
+      messageType: "default_cta",
+      primaryText: "Firefox is not your default browser",
+      primaryActionText: "Set as default",
+      primaryButtonSize: "small",
+      logoURL: "chrome://branding/content/about-logo.svg",
+      secondaryText:
+        "Make Firefox your default browser to open links from other apps.",
+      primaryAction: {},
+      closeAction: {},
+    },
+    targeting: "true",
+    trigger: { id: "menuOpened" },
+    groups: [],
+  };
+}
 
 /**
  * Tests that opening each menu source causes the menuOpened trigger to fire.
@@ -717,31 +762,6 @@ add_task(async function test_fxa_cta_notification_precedence() {
   sandbox.restore();
 });
 
-function buildDefaultCtaMessage({
-  id = "TEST_DEFAULT_CTA",
-  layout = "column",
-} = {}) {
-  return {
-    id,
-    template: "menu_message",
-    content: {
-      layout,
-      messageType: "default_cta",
-      primaryText: "Firefox is not your default browser",
-      primaryActionText: "Set as default",
-      primaryButtonSize: "small",
-      logoURL: "chrome://branding/content/about-logo.svg",
-      secondaryText:
-        "Make Firefox your default browser to open links from other apps.",
-      primaryAction: {},
-      closeAction: {},
-    },
-    targeting: "true",
-    trigger: { id: "menuOpened" },
-    groups: [],
-  };
-}
-
 add_task(async function test_default_cta_allowed_sources() {
   let sandbox = sinon.createSandbox();
 
@@ -796,5 +816,42 @@ add_task(async function test_message_type_suppression_rules() {
   });
 
   signedInStub.restore?.();
+  sandbox.restore();
+});
+
+/**
+ * 'default_cta' messages shown in the App Menu should not replace the FxA
+ * sign-in row and should appear as its own banner above it.
+ */
+add_task(async function test_default_cta_does_not_replace_fxa_row() {
+  let sandbox = sinon.createSandbox();
+
+  const defaultMsg = buildDefaultCtaMessage({
+    id: "TEST_DEFAULT_CTA_SIMPLE_LAYOUT",
+    layout: "simple",
+  });
+
+  await withTestMessage(sandbox, defaultMsg, async () => {
+    await reopenMenuSource(
+      MenuMessage.SOURCES.APP_MENU,
+      defaultMsg,
+      window,
+      async (_msgEl, panel) => {
+        const view = panel.ownerGlobal.PanelUI.mainView;
+        const separator = view.querySelector("#appMenu-fxa-separator");
+        const fxaRow = view.querySelector("#appMenu-fxa-status2");
+
+        Assert.ok(
+          BrowserTestUtils.isVisible(separator),
+          "FxA separator remains visible for default_cta."
+        );
+        Assert.ok(
+          BrowserTestUtils.isVisible(fxaRow),
+          "FxA sign-in row remains visible for default_cta."
+        );
+      }
+    );
+  });
+
   sandbox.restore();
 });
