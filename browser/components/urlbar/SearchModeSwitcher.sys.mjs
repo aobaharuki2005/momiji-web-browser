@@ -292,7 +292,11 @@ export class SearchModeSwitcher {
     const inSearchMode = this.#input.searchMode;
     if (!lazy.UrlbarPrefs.get("unifiedSearchButton.always")) {
       const keywordEnabled = lazy.UrlbarPrefs.get("keyword.enabled");
-      if (!keywordEnabled && !inSearchMode) {
+      if (
+        this.#input.sapName != "searchbar" &&
+        !keywordEnabled &&
+        !inSearchMode
+      ) {
         icon = SearchModeSwitcher.DEFAULT_ICON_KEYWORD_DISABLED;
       }
     } else if (!inSearchMode) {

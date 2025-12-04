@@ -106,6 +106,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
     }
 
     if (
+      queryContext.sapName == "searchbar" ||
       lazy.UrlbarPrefs.get("keyword.enabled") ||
       queryContext.restrictSource == UrlbarUtils.RESULT_SOURCE.SEARCH ||
       queryContext.searchMode

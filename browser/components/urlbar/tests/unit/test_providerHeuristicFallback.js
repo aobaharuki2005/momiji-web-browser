@@ -390,6 +390,23 @@ add_task(async function () {
     ],
   });
 
+  info("Forced search through searchbar, keyword.enabled = false");
+  query = "bacon";
+  context = createContext(query, {
+    isPrivate: false,
+    sapName: "searchbar",
+  });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+        query: "bacon",
+      }),
+    ],
+  });
+
   info("Non-search restriction token and invalid URL, keyword.enabled = false");
   query = "bacon *";
   context = createContext(query, { isPrivate: false });

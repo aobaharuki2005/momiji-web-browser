@@ -2634,7 +2634,12 @@ export class UrlbarQueryContext {
 
     // Disallow remote results for strings containing tokens that look like URIs
     // to avoid disclosing information about networks and passwords.
-    if (this.fixupInfo?.href && !this.fixupInfo?.isSearch) {
+    // (Unless the search is happening in the searchbar.)
+    if (
+      this.sapName != "searchbar" &&
+      this.fixupInfo?.href &&
+      !this.fixupInfo?.isSearch
+    ) {
       return false;
     }
 
