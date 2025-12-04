@@ -178,6 +178,7 @@ export class WallpaperFeed {
               }
             : {}),
           category: record.category || "",
+          background_position: record.background_position || "center",
         };
       }),
     ];

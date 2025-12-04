@@ -14427,6 +14427,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
       let style = {};
       if (thumbnail?.wallpaperUrl) {
         style.backgroundImage = `url(${thumbnail.wallpaperUrl})`;
+        style.backgroundPosition = thumbnail.background_position || "center";
       } else {
         style.backgroundColor = thumbnail?.solid_color || "";
       }
@@ -14506,15 +14507,17 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
       role: "grid",
       "aria-label": "Wallpaper selection. Use arrow keys to navigate."
     }, /*#__PURE__*/external_React_default().createElement("fieldset", null, filteredWallpapers.map(({
-      title,
-      theme,
+      background_position,
       fluent_id,
       solid_color,
+      theme,
+      title,
       wallpaperUrl
     }, index) => {
       let style = {};
       if (wallpaperUrl) {
         style.backgroundImage = `url(${wallpaperUrl})`;
+        style.backgroundPosition = background_position || "center";
       } else {
         style.backgroundColor = solid_color || "";
       }
@@ -16166,11 +16169,13 @@ class BaseContent extends (external_React_default()).PureComponent {
     let url = "";
     let color = "transparent";
     let newTheme = colorMode;
+    let backgroundPosition = "center";
 
     // if no selected wallpaper fallback to browser/theme styles
     if (!selectedWallpaper) {
       __webpack_require__.g.document?.body.style.removeProperty("--newtab-wallpaper");
       __webpack_require__.g.document?.body.style.removeProperty("--newtab-wallpaper-color");
+      __webpack_require__.g.document?.body.style.removeProperty("--newtab-wallpaper-backgroundPosition");
       __webpack_require__.g.document?.body.classList.remove("lightWallpaper", "darkWallpaper");
       return;
     }
@@ -16179,6 +16184,8 @@ class BaseContent extends (external_React_default()).PureComponent {
     if (selectedWallpaper === "custom" && uploadedWallpaperUrl) {
       url = uploadedWallpaperUrl;
       color = "transparent";
+      // Note: There is no method to set a specific background position for custom wallpapers
+      backgroundPosition = "center";
       newTheme = uploadedWallpaperTheme || colorMode;
     } else if (wallpaperList) {
       const wallpaper = wallpaperList.find(wp => wp.title === selectedWallpaper);
@@ -16193,6 +16200,7 @@ class BaseContent extends (external_React_default()).PureComponent {
         // standard wallpaper & solid colors
       } else if (selectedWallpaper) {
         url = wallpaper?.wallpaperUrl || "";
+        backgroundPosition = wallpaper?.background_position || "center";
         color = wallpaper?.solid_color || "transparent";
         newTheme = wallpaper?.theme || colorMode;
         // if a solid color, determine if dark or light
@@ -16204,6 +16212,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       }
     }
     __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper", `url(${url})`);
+    __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper-backgroundPosition", backgroundPosition);
     __webpack_require__.g.document?.body.style.setProperty("--newtab-wallpaper-color", color || "transparent");
     __webpack_require__.g.document?.body.classList.remove("lightWallpaper", "darkWallpaper");
     __webpack_require__.g.document?.body.classList.add(newTheme === "dark" ? "darkWallpaper" : "lightWallpaper");

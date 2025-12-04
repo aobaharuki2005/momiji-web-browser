@@ -340,7 +340,7 @@ body {
   font-size: var(--font-size-root);
   background-repeat: no-repeat;
   background-size: cover;
-  background-position: center;
+  background-position: var(--newtab-wallpaper-backgroundPosition);
   background-attachment: fixed;
   background-image: var(--newtab-wallpaper, ""), linear-gradient(to right, var(--newtab-wallpaper-color, ""), var(--newtab-wallpaper-color, ""));
 }

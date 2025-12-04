@@ -551,6 +551,8 @@ export class _WallpaperCategories extends React.PureComponent {
               let style = {};
               if (thumbnail?.wallpaperUrl) {
                 style.backgroundImage = `url(${thumbnail.wallpaperUrl})`;
+                style.backgroundPosition =
+                  thumbnail.background_position || "center";
               } else {
                 style.backgroundColor = thumbnail?.solid_color || "";
               }
@@ -645,12 +647,21 @@ export class _WallpaperCategories extends React.PureComponent {
               <fieldset>
                 {filteredWallpapers.map(
                   (
-                    { title, theme, fluent_id, solid_color, wallpaperUrl },
+                    {
+                      background_position,
+                      fluent_id,
+                      solid_color,
+                      theme,
+                      title,
+                      wallpaperUrl,
+                    },
                     index
                   ) => {
                     let style = {};
                     if (wallpaperUrl) {
                       style.backgroundImage = `url(${wallpaperUrl})`;
+                      style.backgroundPosition =
+                        background_position || "center";
                     } else {
                       style.backgroundColor = solid_color || "";
                     }

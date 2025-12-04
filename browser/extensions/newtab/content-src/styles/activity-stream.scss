@@ -34,7 +34,7 @@ body {
   // rules for HNT wallpapers
   background-repeat: no-repeat;
   background-size: cover;
-  background-position: center;
+  background-position: var(--newtab-wallpaper-backgroundPosition);
   background-attachment: fixed;
   background-image:
     var(--newtab-wallpaper, ''),
