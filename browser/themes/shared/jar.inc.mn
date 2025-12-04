@@ -236,6 +236,8 @@
   skin/classic/browser/sidebars.svg                   (../shared/icons/sidebars.svg)
   skin/classic/browser/sidebars-right.svg             (../shared/icons/sidebars-right.svg)
   skin/classic/browser/sort.svg                       (../shared/icons/sort.svg)
+  skin/classic/browser/split-view-left-16.svg         (../shared/icons/split-view-left-16.svg)
+  skin/classic/browser/split-view-right-16.svg        (../shared/icons/split-view-right-16.svg)
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
   skin/classic/browser/subtract-circle-fill.svg       (../shared/icons/subtract-circle-fill.svg)
   skin/classic/browser/success-animation.svg          (../shared/icons/success-animation.svg)
