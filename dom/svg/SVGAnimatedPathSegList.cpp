@@ -44,7 +44,7 @@ static StyleCurveControlPoint<float> MakeControlPoint(PositionType type,
     return StyleCurveControlPoint<float>::Absolute({x, y});
   } else {
     const auto rcp =
-        StyleRelativeControlPoint<float>{{x, y}, StyleControlReference::Start};
+        StyleRelativeControlPoint<float>{{x, y}, StyleControlReference::None};
     return StyleCurveControlPoint<float>::Relative(rcp);
   }
 }

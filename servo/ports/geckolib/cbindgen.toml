@@ -878,11 +878,11 @@ renaming_overrides_prefixing = true
 "ControlPoint" = """
   inline gfx::Point ToGfxPoint(
     const gfx::Point aStatePos, const gfx::Point aEndPoint,
-    const CSSSize* aBasis = nullptr) const;
+    const bool isRelativeEndPoint, const CSSSize* aBasis = nullptr) const;
   gfx::Point ToGfxPoint(
     const gfx::Point aStatePos, const gfx::Point aEndPoint,
-    const CSSSize& aBasis) const {
-    return ToGfxPoint(aStatePos, aEndPoint, &aBasis);
+    const bool isRelativeEndPoint, const CSSSize& aBasis) const {
+    return ToGfxPoint(aStatePos, aEndPoint, isRelativeEndPoint, &aBasis);
   }
 """
 
