@@ -141,7 +141,8 @@ class NimbusPlugin implements Plugin<Project> {
             }
         } else {
             // building from an app-services artifact.
-            def assembleToolsTask = setupAssembleNimbusTools(project)
+            def applicationServicesDir = project.nimbus.applicationServicesDir
+            def assembleToolsTask = getOrCreateAssembleToolsTask(project.rootProject, applicationServicesDir)
 
             validateTask.configure {
                 // Gradle tracks the dependency on the `nimbus-fml` binary that the
@@ -183,29 +184,38 @@ class NimbusPlugin implements Plugin<Project> {
     }
 
     // Everything below here is for downloading a binary.
+    private def getOrCreateAssembleToolsTask(Project rootProject, Property<String> applicationServicesDir) {
+        def taskName = 'assembleNimbusTools'
 
-    // Setup the tasks to download the binary.
-    def setupAssembleNimbusTools(Project project) {
-        def applicationServicesDir = project.nimbus.applicationServicesDir
-        def asVersionProvider = getProjectVersionProvider(project)
-        def projectDir = project.layout.projectDirectory
+        // Check if task already exists, since we only want to download/extract once.
+        def existingTask = rootProject.tasks.findByName(taskName)
+        if (existingTask != null) {
+            return rootProject.tasks.named(taskName)
+        }
 
-        return project.tasks.register('assembleNimbusTools', NimbusAssembleToolsTask) { task ->
+        def asVersionProvider = getProjectVersionProvider(rootProject)
+        def topsrcdir = rootProject.gradle.mozconfig.topsrcdir
+        def rootBuildDir = rootProject.layout.buildDirectory
+        def rootProjectLayout = rootProject.layout
+
+        return rootProject.tasks.register(taskName, NimbusAssembleToolsTask) { task ->
             group "Nimbus"
             description "Fetch the Nimbus FML tools from Application Services"
 
-            def cacheDir = asVersionProvider.map { version ->
-                projectDir.dir(".gradle/caches/nimbus-fml/$version")
+            def cacheDir = asVersionProvider.map { String version ->
+                def cachePath = new File(topsrcdir, ".gradle/caches/nimbus-fml/$version")
+                def relativePath = rootProjectLayout.projectDirectory.asFile.toPath().relativize(cachePath.toPath()).toString()
+                rootProjectLayout.projectDirectory.dir(relativePath)
             }
 
             archiveFile = cacheDir.map { it.file('nimbus-fml.zip') }
             hashFile = cacheDir.map { it.file('nimbus-fml.sha256') }
-            fmlBinary = project.layout.buildDirectory.flatMap { buildDir ->
+            fmlBinary = rootBuildDir.flatMap { buildDir ->
                 asVersionProvider.zip(platform) { version, plat ->
                     buildDir.dir("bin/nimbus/$version").file(NimbusAssembleToolsTask.getBinaryName(plat))
                 }
             }
-            cacheRoot = projectDir.dir(".gradle/caches/nimbus-fml").asFile
+            cacheRoot = new File(topsrcdir, ".gradle/caches/nimbus-fml")
 
             fetch {
                 // Try archive.mozilla.org release first
@@ -237,13 +247,13 @@ class NimbusPlugin implements Plugin<Project> {
         }
     }
 
-    Provider<String> getProjectVersionProvider(Project project) {
-        def topsrcdir = project.gradle.mozconfig.topsrcdir
-        def localPropertiesVersion = project.gradle.hasProperty("localProperties.branchBuild.application-services.version")
-            ? project.gradle["localProperties.branchBuild.application-services.version"]
+    Provider<String> getProjectVersionProvider(Project rootProject) {
+        def topsrcdir = rootProject.gradle.mozconfig.topsrcdir
+        def localPropertiesVersion = rootProject.gradle.hasProperty("localProperties.branchBuild.application-services.version")
+            ? rootProject.gradle["localProperties.branchBuild.application-services.version"]
             : null
 
-        return project.providers.of(ApplicationServicesVersionSource) { spec ->
+        return rootProject.providers.of(ApplicationServicesVersionSource) { spec ->
             spec.parameters.topsrcdir.set(topsrcdir)
             spec.parameters.localPropertiesVersion.set(localPropertiesVersion)
         }
