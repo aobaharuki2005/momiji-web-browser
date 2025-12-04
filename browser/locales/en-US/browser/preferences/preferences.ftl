@@ -865,12 +865,22 @@ home-prefs-sections-rows-option =
 
 ## Search Section
 
-search-engine-default-header = Default Search Engine
-search-engine-default-desc-2 = This is your default search engine in the address bar and search bar. You can switch it at any time.
-search-engine-default-private-desc-2 = Choose a different default search engine for Private Windows only
-search-separate-default-engine =
-    .label = Use this search engine in Private Windows
+search-engine-group =
+    .label = Default search engine
+search-default-engine =
+    .aria-label = Default search engine
+
+# With this option enabled, while on a SERP, the URL normally displayed in the
+# address bar will be replaced with the search term used to generate that SERP.
+search-show-search-term-option-2 =
+    .label = Show search terms in the address bar on results pages
+
+search-separate-default-engine-2 =
+    .label = Use a different default search engine in private windows
     .accesskey = U
+
+search-separate-default-engine-dropdown =
+    .aria-label = Default search engine in private windows
 
 search-suggestions-header = Search Suggestions
 search-suggestions-desc = Choose how suggestions from search engines appear.
@@ -882,13 +892,6 @@ search-show-suggestions-option =
 search-show-suggestions-url-bar-option =
     .label = Show search suggestions in address bar results
     .accesskey = l
-
-
-# With this option enabled, on the search results page
-# the URL will be replaced by the search terms in the address bar.
-search-show-search-term-option-2 =
-    .label = Show search terms in the address bar on results pages
-
 
 # This string describes what the user will observe when the system
 # prioritizes search suggestions over browsing history in the results
