@@ -190,12 +190,16 @@ def new_chrome_window(current_session):
                     ]);
                   }
 
+                  const isLoaded = window =>
+                    window?.document.readyState === "complete" &&
+                    !window?.document.isUncommittedInitialDocument;
+
                   (async function() {
                     // Open a window, wait for it to receive focus
-                    let win = window.openDialog(url, null, "chrome,centerscreen");
-                    let focused = waitForFocus(win);
+                    let newWindow = window.openDialog(url, null, "chrome,centerscreen");
+                    let focused = waitForFocus(newWindow);
 
-                    win.focus();
+                    newWindow.focus();
                     await focused;
 
                     // The new window shouldn't get focused. As such set the
@@ -206,7 +210,20 @@ def new_chrome_window(current_session):
                       await focused;
                     }
 
-                    resolve(win);
+                    // Wait for the new window to be finished loading
+                    if (isLoaded(newWindow)) {
+                      resolve(newWindow);
+                    } else {
+                      const onLoad = () => {
+                        if (isLoaded(newWindow)) {
+                          newWindow.removeEventListener("load", onLoad);
+                          resolve(newWindow);
+                        } else {
+                          dump(`** Target window not loaded yet.  Waiting for the next "load" event\n`);
+                        }
+                      };
+                      newWindow.addEventListener("load", onLoad);
+                    }
                   })();
                 """,
                 args=[url, focus],
