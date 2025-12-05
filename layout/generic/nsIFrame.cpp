@@ -835,14 +835,25 @@ void nsIFrame::HandlePrimaryFrameStyleChange(ComputedStyle* aOldStyle) {
   //        removed, or mutated.
   //
   // Case 1 will cause a reframe, so does not need to be handled here.
-  // Case 2 is what is handled here.
-  // TODO: cases 3 and 4, see bug 1987960 and bug 1962598.
+  // Cases 2 and 3 are handled here.
+  // TODO: case 4, see bug 1987960.
   if (aOldStyle && HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) &&
       HasProperty(LastSuccessfulPositionFallback())) {
     const auto* pos = StylePosition();
     const auto* oldPos = aOldStyle->StylePosition();
     if (pos->mPositionTryFallbacks != oldPos->mPositionTryFallbacks ||
-        pos->mPositionTryOrder != oldPos->mPositionTryOrder) {
+        pos->mPositionTryOrder != oldPos->mPositionTryOrder ||
+        pos->mOffset != oldPos->mOffset ||
+        pos->mAlignSelf != oldPos->mAlignSelf ||
+        pos->mJustifySelf != oldPos->mJustifySelf ||
+        pos->mPositionAnchor != oldPos->mPositionAnchor ||
+        pos->mPositionArea != oldPos->mPositionArea ||
+        pos->mMinWidth != oldPos->mMinWidth ||
+        pos->mMinHeight != oldPos->mMinHeight ||
+        pos->mMaxWidth != oldPos->mMaxWidth ||
+        pos->mMaxHeight != oldPos->mMaxHeight ||
+        pos->mWidth != oldPos->mWidth || pos->mHeight != oldPos->mHeight ||
+        StyleMargin()->mMargin != aOldStyle->StyleMargin()->mMargin) {
       RemoveProperty(LastSuccessfulPositionFallback());
     }
   }
