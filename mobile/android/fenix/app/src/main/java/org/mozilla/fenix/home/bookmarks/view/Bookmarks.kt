@@ -76,7 +76,8 @@ fun Bookmarks(
     onBookmarkClick: (Bookmark) -> Unit = {},
 ) {
     LazyRow(
-        modifier = Modifier.semantics {
+        modifier = Modifier.fillMaxWidth()
+            .semantics {
             testTagsAsResourceId = true
             testTag = "bookmarks"
         },
