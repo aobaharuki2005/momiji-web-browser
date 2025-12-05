@@ -3893,7 +3893,7 @@
   <!-- Message displayed when the search field in the Settings Search screen is empty -->
   <string name="settings_search_empty_query_placeholder">Ingen seneste søgninger</string>
   <!-- Message when error happens with Settings Search -->
-  <string name="settings_search_error_message">Der opstod en fejl</string>
+  <string name="settings_search_error_message" tools:ignore="UnusedResources" moz:removedIn="147">Der opstod en fejl</string>
   <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
   <string name="settings_search_clear_recent_searches_message">Ryd alt</string>
   <!-- Section header for recent search results -->

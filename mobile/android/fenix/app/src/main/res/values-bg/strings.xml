@@ -3895,13 +3895,13 @@
   -->
   <string name="settings_search_title">Настройки за търсене</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to clear the search field for settings search -->
-  <string name="content_description_settings_search_clear_search">Изчистване</string>
+  <string name="content_description_settings_search_clear_search">Изчистване на търсенето</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to navigate back to the Settings page from the Settings Search screen. -->
-  <string name="content_description_settings_search_navigate_back">Придвижване назад</string>
+  <string name="content_description_settings_search_navigate_back">Връщане назад</string>
   <!-- Message displayed when the search field in the Settings Search screen is empty -->
   <string name="settings_search_empty_query_placeholder">Няма скорошни търсения</string>
   <!-- Message when error happens with Settings Search -->
-  <string name="settings_search_error_message">Възникна грешка</string>
+  <string name="settings_search_error_message" tools:ignore="UnusedResources" moz:removedIn="147">Възникна грешка</string>
   <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
   <string name="settings_search_clear_recent_searches_message">Изчистване на всички</string>
   <!-- Section header for recent search results -->

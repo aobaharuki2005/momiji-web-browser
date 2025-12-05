@@ -51,6 +51,8 @@
     this button will not give access to this permission
   -->
   <string name="mozac_feature_sitepermissions_block">Blokiraj</string>
+  <!-- Message of a dialog offering more context about the app level notification permission request. %1$s will be replaced with the name of the app. -->
+  <string name="mozac_feature_sitepermissions_notification_permission_rationale_dialog_message">Za primanje obavijesti od ove web-stranice, moraš dopustiti aplikaciji %1$s da ti šalje obavijesti.</string>
   <!-- Button label in a notification permission request dialog to dismiss the dialog. -->
   <string name="mozac_feature_sitepermissions_notification_permission_rationale_dialog_dismiss_label">Odustani</string>
   <!-- Button label in a notification permission request dialog. It will let the user go to Android Settings to grant the permission. -->
@@ -80,5 +82,5 @@
   <!-- Text for a negative button in the storage access permission request dialog. This button will not give access to this permission. -->
   <string name="mozac_feature_sitepermissions_storage_access_not_allow">Blokiraj</string>
   <!-- Clickable text that will open a new tab navigating the user to online documentation about specific features. -->
-  <string name="mozac_feature_sitepermissions_learn_more_title">Saznajte više</string>
+  <string name="mozac_feature_sitepermissions_learn_more_title">Saznaj više</string>
 </resources>

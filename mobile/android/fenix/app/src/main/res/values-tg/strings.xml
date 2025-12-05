@@ -1481,6 +1481,14 @@
   <string name="tab_tray_menu_tab_settings">Танзимоти варақа</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">Пӯшидани ҳамаи варақаҳо</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">Ҳамаи варақаҳоро мепӯшед?</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">Ин амал ҳамаи варақаҳои кушодаро мепӯшад.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">Пӯшидани варақаҳо</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Бекор кардан</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Хатбарак</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
@@ -3893,7 +3901,7 @@
   <!-- Message displayed when the search field in the Settings Search screen is empty -->
   <string name="settings_search_empty_query_placeholder">Ягон ҷустуҷӯи охирин нест</string>
   <!-- Message when error happens with Settings Search -->
-  <string name="settings_search_error_message">Хатое ба миён омад</string>
+  <string name="settings_search_error_message" tools:ignore="UnusedResources" moz:removedIn="147">Хатое ба миён омад</string>
   <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
   <string name="settings_search_clear_recent_searches_message">Ҳамаро пок кунед</string>
   <!-- Section header for recent search results -->
