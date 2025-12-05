@@ -994,7 +994,8 @@ void WaylandSurface::SetSize(DesktopIntSize aSize) {
 }
 
 void WaylandSurface::ApplyEGLWindowSize(LayoutDeviceIntSize aEGLWindowSize) {
-  WaylandSurfaceLock lock(this);
+  // Apply the surface changes by OpenGL swap buffer operation.
+  WaylandSurfaceLock lock(this, /* aSkipCommit */ true);
 
   auto scale = GetScale();
   auto surfaceSize = GetScaledSize(mSize);
