@@ -634,3 +634,61 @@ add_task(async function test_support_links_non_embedded() {
     assertNonEmbeddedSupportLink(passwordErrorLink, "Password error link");
   });
 });
+
+add_task(async function test_error_about_welcome() {
+  await checkVisibleStatusTemplate({
+    status: "error",
+    aboutWelcome: true,
+    visible: ["error message"],
+  });
+});
+
+add_task(async function test_invalid_password_about_welcome() {
+  await checkVisibleStatusTemplate({
+    status: "wrong password",
+    aboutWelcome: true,
+    visible: ["size", "password error"],
+  });
+});
+
+async function checkVisibleStatusTemplate({ status, aboutWelcome, visible }) {
+  await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
+    let { restoreFromBackup } = await initializedBackupWidgets(browser);
+    restoreFromBackup.aboutWelcomeEmbedded = aboutWelcome;
+    restoreFromBackup.backupServiceState = {
+      ...restoreFromBackup.backupServiceState,
+      recoveryErrorCode:
+        {
+          "wrong password": ERRORS.UNAUTHORIZED,
+        }[status] ?? ERRORS.RECOVERY_FAILED,
+      backupFileInfo: {
+        date: new Date("2025-11-06T15:37-0500"),
+        isEncrypted: true,
+      },
+      defaultParent: {},
+      backupFileToRestore: "",
+    };
+    await restoreFromBackup.updateComplete;
+
+    const idIsVisible = id => {
+      const element = restoreFromBackup.shadowRoot.querySelector(`#${id}`);
+      return element ? BrowserTestUtils.isVisible(element) : false;
+    };
+
+    Assert.equal(
+      await idIsVisible("backup-generic-file-error"),
+      visible.includes("error message"),
+      `Error message is ${visible.includes("error message") ? "" : "not "}visible`
+    );
+    Assert.equal(
+      await idIsVisible("restore-from-backup-backup-found-info"),
+      visible.includes("size"),
+      `Size info is ${visible.includes("size") ? "" : "not "}visible`
+    );
+    Assert.equal(
+      await idIsVisible("backup-password-error"),
+      visible.includes("password error"),
+      `Password error is ${visible.includes("password error") ? "" : "not "}visible`
+    );
+  });
+}

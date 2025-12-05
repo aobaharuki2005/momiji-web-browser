@@ -354,7 +354,11 @@ export default class RestoreFromBackup extends MozLitElement {
     const { backupFileInfo, recoveryErrorCode } = this.backupServiceState || {};
 
     // We have errors and are embedded in about:welcome
-    if (recoveryErrorCode && this.aboutWelcomeEmbedded) {
+    if (
+      recoveryErrorCode &&
+      !this.isIncorrectPassword &&
+      this.aboutWelcomeEmbedded
+    ) {
       return this.genericFileErrorTemplate();
     }
 
@@ -420,7 +424,7 @@ export default class RestoreFromBackup extends MozLitElement {
     const { backupFileInfo, recoveryErrorCode } = this.backupServiceState || {};
 
     if (this.aboutWelcomeEmbedded) {
-      if (recoveryErrorCode) {
+      if (recoveryErrorCode && !this.isIncorrectPassword) {
         describedBy = "backup-generic-file-error";
       } else if (!backupFileInfo) {
         describedBy = "restore-from-backup-no-backup-file-link";
