@@ -148,24 +148,25 @@ def execute_tests(
     return exit_code
 
 
-def process_results(flank_config: str, test_type: str = "instrumentation") -> None:
+def process_results(
+    flank_config: str, test_type: str = "instrumentation", artifact_type: str = None
+) -> None:
     """Process and parse test results.
 
     Args:
         flank_config: The YML configuration for Flank to use e.g, automation/taskcluster/androidTest/flank-<config>.yml
         test_type: The type of test executed: 'instrumentation' or 'robo'
+        artifact_type: The type of the artifacts to copy after the test run
     """
 
     parse_junit_results_artifact = os.path.join(SCRIPT_DIR, "parse-junit-results.py")
-    copy_robo_crash_artifacts_script = os.path.join(
-        SCRIPT_DIR, "copy-artifacts-from-ftl.py"
-    )
+    copy_artifacts_script = os.path.join(SCRIPT_DIR, "copy-artifacts-from-ftl.py")
     generate_flaky_report_script = os.path.join(
         SCRIPT_DIR, "generate-flaky-report-from-ftl.py"
     )
 
     os.chmod(parse_junit_results_artifact, 0o755)
-    os.chmod(copy_robo_crash_artifacts_script, 0o755)
+    os.chmod(copy_artifacts_script, 0o755)
     os.chmod(generate_flaky_report_script, 0o755)
 
     # Process the results differently based on the test type: instrumentation or robo
@@ -183,8 +184,12 @@ def process_results(flank_config: str, test_type: str = "instrumentation") -> No
             "flank.log",
         )
 
+        # Copy artifacts if specified
+        if artifact_type:
+            run_command([copy_artifacts_script, artifact_type])
+
     if test_type == "robo":
-        run_command([copy_robo_crash_artifacts_script, "crash_log"])
+        run_command([copy_artifacts_script, "crash_log"])
 
 
 def main():
@@ -205,6 +210,11 @@ def main():
         help="Absolute path to a Android APK androidTest package",
         default=None,
     )
+    parser.add_argument(
+        "--artifact_type",
+        help="Type of artifact to copy after running the tests",
+        default=None,
+    )
     args = parser.parse_args()
 
     setup_environment()
@@ -219,7 +229,11 @@ def main():
 
     # Determine the instrumentation type to process the results differently
     instrumentation_type = "instrumentation" if args.apk_test else "robo"
-    process_results(flank_config=args.flank_config, test_type=instrumentation_type)
+    process_results(
+        flank_config=args.flank_config,
+        test_type=instrumentation_type,
+        artifact_type=args.artifact_type,
+    )
 
     sys.exit(exit_code)
 
