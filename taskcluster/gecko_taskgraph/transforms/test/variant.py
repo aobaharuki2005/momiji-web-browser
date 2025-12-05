@@ -124,7 +124,7 @@ def split_variants(config, tasks):
         variants = remove_expired(variants, expired_variants)
 
         if task.pop("run-without-variant"):
-            taskv = deepcopy(task) if variants else task
+            taskv = deepcopy(task)
             taskv["attributes"]["unittest_variant"] = None
             yield taskv
 

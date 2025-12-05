@@ -283,12 +283,12 @@ def split_chunks(config, tasks):
                 chunked_manifests[0].extend(
                     [m for m in manifests["skipped"] if not m.endswith(".list")]
                 )
-        last_chunk = task["chunks"]
+
         for i in range(task["chunks"]):
             this_chunk = i + 1
 
             # copy the test and update with the chunk number
-            chunked = deepcopy(task) if this_chunk != last_chunk else task
+            chunked = deepcopy(task)
             chunked["this-chunk"] = this_chunk
 
             if chunked_manifests is not None:
