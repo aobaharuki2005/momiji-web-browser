@@ -21,7 +21,6 @@
 #include "nsLineBreaker.h"
 #include "nsSpecialCasingData.h"
 #include "nsStyleConsts.h"
-#include "nsStyleUtil.h"
 #include "nsTextFrameUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUnicodeProperties.h"
@@ -262,25 +261,33 @@ static LanguageSpecificCasingBehavior GetCasingFor(const nsAtom* aLang) {
   if (!aLang) {
     return eLSCB_None;
   }
-  if (nsStyleUtil::MatchesLanguagePrefix(aLang, u"tr") ||
-      nsStyleUtil::MatchesLanguagePrefix(aLang, u"az") ||
-      nsStyleUtil::MatchesLanguagePrefix(aLang, u"ba") ||
-      nsStyleUtil::MatchesLanguagePrefix(aLang, u"crh") ||
-      nsStyleUtil::MatchesLanguagePrefix(aLang, u"tt")) {
+  if (aLang == nsGkAtoms::tr || aLang == nsGkAtoms::az ||
+      aLang == nsGkAtoms::ba || aLang == nsGkAtoms::crh ||
+      aLang == nsGkAtoms::tt) {
     return eLSCB_Turkish;
   }
-  if (nsStyleUtil::MatchesLanguagePrefix(aLang, u"nl")) {
+  if (aLang == nsGkAtoms::nl) {
     return eLSCB_Dutch;
   }
-  if (nsStyleUtil::MatchesLanguagePrefix(aLang, u"el")) {
+  if (aLang == nsGkAtoms::el) {
     return eLSCB_Greek;
   }
-  if (nsStyleUtil::MatchesLanguagePrefix(aLang, u"ga")) {
+  if (aLang == nsGkAtoms::ga) {
     return eLSCB_Irish;
   }
-  if (nsStyleUtil::MatchesLanguagePrefix(aLang, u"lt")) {
+  if (aLang == nsGkAtoms::lt) {
     return eLSCB_Lithuanian;
   }
+
+  // Is there a region subtag we should ignore?
+  nsAtomString langStr(const_cast<nsAtom*>(aLang));
+  int index = langStr.FindChar('-');
+  if (index > 0) {
+    langStr.Truncate(index);
+    RefPtr<nsAtom> truncatedLang = NS_Atomize(langStr);
+    return GetCasingFor(truncatedLang);
+  }
+
   return eLSCB_None;
 }
 
