@@ -470,5 +470,5 @@ tasks:
                               - treeherder:
                                     machine:
                                         platform: gecko-decision
-                                        symbol: D
+                                    symbol: D
                               - tasks_for: '${tasks_for}'
