@@ -74,25 +74,34 @@
     gap: var(--space-xs);
     margin: 0;
     user-select: none;
-    /* TODO: this could have been handled with just ::before with { content: '', icon stuff }*/
-    .chevron-icon {
-      background-image: url("chrome://global/skin/icons/arrow-down.svg");
-      background-position: center;
-      background-repeat: no-repeat;
-      background-size: contain;
-      display: inline-block;
-      fill: currentColor;
-      height: 16px;
-      margin-inline-end: 8px;
-      -moz-context-properties: fill;
-      transform: rotateZ(0deg);
+  }
+  .keypoints-header::before {
+    content: "";
+    background-image: url("chrome://global/skin/icons/arrow-down.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    display: inline-block;
+    fill: currentColor;
+    height: var(--icon-size);
+    margin-inline-end: var(--space-small);
+    -moz-context-properties: fill;
+    transform: rotateZ(0deg);
+    width: var(--icon-size);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .keypoints-header::before {
       transition: transform 0.3s ease;
-      width: 16px;
     }
   }
 
-  .keypoints-header:has(+ .keypoints-content:not(.hidden)) .chevron-icon {
+  .keypoints-header:has(+ .keypoints-content:not(.hidden))::before {
     transform: rotateZ(-180deg);
+  }
+
+  &:dir(rtl) .keypoints-header:has(+ .keypoints-content:not(.hidden))::before {
+    transform: rotateZ(180deg);
   }
 
   img.icon {

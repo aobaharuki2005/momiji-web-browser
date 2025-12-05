@@ -291,7 +291,6 @@ class LinkPreviewCard extends MozLitElement {
           role="button"
           aria-expanded=${!this.collapsed}
         >
-          <div class="chevron-icon"></div>
           <span data-l10n-id="link-preview-key-points-header"></span>
           <img
             class="icon"
