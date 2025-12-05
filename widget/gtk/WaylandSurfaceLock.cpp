@@ -15,11 +15,11 @@
 namespace mozilla::widget {
 
 WaylandSurfaceLock::WaylandSurfaceLock(RefPtr<WaylandSurface> aWaylandSurface,
-                                       bool aSkipCommit) {
+                                       bool aForceCommit) {
 #ifdef MOZ_WAYLAND
   MOZ_DIAGNOSTIC_ASSERT(aWaylandSurface);
   mWaylandSurface = std::move(aWaylandSurface);
-  mSkipCommit = aSkipCommit;
+  mForceCommit = aForceCommit;
   if (GdkIsWaylandDisplay()) {
     mSurface = mWaylandSurface->Lock(this);
   }
@@ -38,9 +38,7 @@ void WaylandSurfaceLock::Commit() {
 WaylandSurfaceLock::~WaylandSurfaceLock() {
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
-    if (mForceCommit || !mSkipCommit) {
-      Commit();
-    }
+    Commit();
     mWaylandSurface->Unlock(&mSurface, this);
   }
 #endif

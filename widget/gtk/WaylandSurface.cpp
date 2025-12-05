@@ -792,6 +792,20 @@ void WaylandSurface::SetCeiledScaleLocked(
   }
 }
 
+void WaylandSurface::SetRenderingSizeLocked(
+    const WaylandSurfaceLock& aProofOfLock, DesktopIntSize aSize) {
+  MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
+  LOGVERBOSE("WaylandSurface::SetRenderingSizeLocked(): size [%d x %d]",
+             aSize.width, aSize.height);
+  mSize = aSize;
+
+  // non-EGL rendering changes are applied at WaylandSurface::AttachLocked().
+  // We want to sync size changes with matching buffer.
+  if (mViewportFollowsSizeChanges && mEGLWindow) {
+    SetViewPortDestLocked(aProofOfLock, aSize);
+  }
+}
+
 void WaylandSurface::SetViewPortDestLocked(
     const WaylandSurfaceLock& aProofOfLock, DesktopIntSize aDestSize) {
   MOZ_DIAGNOSTIC_ASSERT(&aProofOfLock == mSurfaceLock);
@@ -958,7 +972,6 @@ wl_egl_window* WaylandSurface::GetEGLWindow(DesktopIntSize aSize) {
   WaylandSurfaceLock lock(this);
   MOZ_DIAGNOSTIC_ASSERT(mSurface, "Missing wl_surface!");
 
-  mSize = aSize;
   auto scaledSize = GetScaledSize(aSize);
 
   if (!mEGLWindow) {
@@ -977,13 +990,13 @@ wl_egl_window* WaylandSurface::GetEGLWindow(DesktopIntSize aSize) {
     wl_egl_window_resize(mEGLWindow, scaledSize.width, scaledSize.height, 0, 0);
   }
 
+  SetRenderingSizeLocked(lock, aSize);
   return mEGLWindow;
 }
 
 void WaylandSurface::SetSize(DesktopIntSize aSize) {
   WaylandSurfaceLock lock(this);
 
-  mSize = aSize;
   auto scaledSize = GetScaledSize(aSize);
 
   LOGVERBOSE(
@@ -991,37 +1004,11 @@ void WaylandSurface::SetSize(DesktopIntSize aSize) {
       "scale %f scaled [%d x %d]",
       aSize.width, aSize.height, GetScale(), scaledSize.width,
       scaledSize.height);
-}
 
-void WaylandSurface::ApplyEGLWindowSize(LayoutDeviceIntSize aEGLWindowSize) {
-  // Apply the surface changes by OpenGL swap buffer operation.
-  WaylandSurfaceLock lock(this, /* aSkipCommit */ true);
-
-  auto scale = GetScale();
-  auto surfaceSize = GetScaledSize(mSize);
-  bool sizeMatches = aEGLWindowSize == surfaceSize;
-
-  LOGWAYLAND(
-      "WaylandSurface::ApplyEGLWindowSize()"
-      " EGL window size [%d x %d] surface (scaled) size [%d x %d] "
-      "fractional scale %f matches %d",
-      aEGLWindowSize.width, aEGLWindowSize.height, surfaceSize.width,
-      surfaceSize.height, scale, sizeMatches);
-
-  if (mViewportFollowsSizeChanges) {
-    DesktopIntSize viewportSize;
-    if (!sizeMatches) {
-      viewportSize = DesktopIntSize::Round(aEGLWindowSize /
-                                           DesktopToLayoutDeviceScale(scale));
-    } else {
-      viewportSize = mSize;
-    }
-    SetViewPortDestLocked(lock, viewportSize);
-  }
   if (mEGLWindow) {
-    wl_egl_window_resize(mEGLWindow, aEGLWindowSize.width,
-                         aEGLWindowSize.height, 0, 0);
+    wl_egl_window_resize(mEGLWindow, scaledSize.width, scaledSize.height, 0, 0);
   }
+  SetRenderingSizeLocked(lock, aSize);
 }
 
 void WaylandSurface::InvalidateRegionLocked(
