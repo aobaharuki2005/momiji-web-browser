@@ -23,14 +23,14 @@ function getBlockedReasonString(blockedReason, extension) {
 
   if (extension?.blocking) {
     return exports.L10N.getFormatStr(
-      "networkMenu.addonBlocked",
+      "networkMenu.blockedby",
       extension.blocking
     );
   }
 
   if (extension?.blocked) {
     return exports.L10N.getFormatStr(
-      "networkMenu.blockedby",
+      "networkMenu.addonBlocked",
       extension.blocked
     );
   }
