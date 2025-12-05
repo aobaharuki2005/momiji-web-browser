@@ -68,7 +68,8 @@
 
 #mainPrefPane {
   width: 100%;
-  padding: 0;
+  /* at some point we'll end up removing the sticky element using z-index above this that cuts off the top of the focus outline in https://bugzilla.mozilla.org/show_bug.cgi?id=1867385, but we're adding padding intentionally until then */
+  padding: calc(var(--focus-outline-offset) + var(--focus-outline-width)) 0 0;
 }
 
 html|div[data-category],
