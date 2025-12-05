@@ -54,6 +54,8 @@
     <string name="tab_manager_empty_synced_tabs_page_description">Sign in to manage synced tabs from all your devices.</string>
     <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
     <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Sign in</string>
+    <!-- Text for the button used to show all stories -->
+    <string name="homepage_all_stories">All stories</string>
 
     <!-- Home - Bookmarks -->
     <!-- Title for the home screen section with bookmarks. -->

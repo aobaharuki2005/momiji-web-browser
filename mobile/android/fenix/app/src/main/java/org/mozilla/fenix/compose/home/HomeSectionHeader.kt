@@ -42,22 +42,24 @@ import mozilla.components.ui.icons.R as iconsR
  *
  * @param headerText The header string.
  * @param modifier Modifier to apply.
- * @param description The content description for the "Show all" button.
- * @param onShowAllClick Invoked when "Show all" button is clicked.
+ * @param description The content description for the button.
+ * @param buttonText The text to show for the button.
+ * @param onButtonClick Invoked when the button is clicked.
  */
 @Composable
 fun HomeSectionHeader(
     headerText: String,
     modifier: Modifier = Modifier,
     description: String = "",
-    onShowAllClick: (() -> Unit)? = null,
+    buttonText: String = stringResource(id = R.string.recent_tabs_show_all),
+    onButtonClick: (() -> Unit)? = null,
 ) {
     if (inComposePreview) {
         HomeSectionHeaderContent(
             headerText = headerText,
             modifier = modifier,
             description = description,
-            onShowAllClick = onShowAllClick,
+            onButtonClick = onButtonClick,
         )
     } else {
         val wallpaperState = components.appStore
@@ -77,7 +79,8 @@ fun HomeSectionHeader(
             } else {
                 wallpaperAdaptedTextColor ?: MaterialTheme.colorScheme.onSurface
             },
-            onShowAllClick = onShowAllClick,
+            buttonText = buttonText,
+            onButtonClick = onButtonClick,
         )
     }
 }
@@ -88,9 +91,10 @@ fun HomeSectionHeader(
  * @param headerText The header string.
  * @param modifier Modifier to apply.
  * @param textColor [Color] to apply to the text.
- * @param description The content description for the "Show all" button.
- * @param buttonColor [Color] for the "Show all" button contents.
- * @param onShowAllClick Invoked when "Show all" button is clicked.
+ * @param description The content description for the button.
+ * @param buttonColor [Color] for the button contents.
+ * @param buttonText The text to show for the button.
+ * @param onButtonClick Invoked when the button is clicked.
  */
 @Composable
 private fun HomeSectionHeaderContent(
@@ -99,7 +103,8 @@ private fun HomeSectionHeaderContent(
     textColor: Color = MaterialTheme.colorScheme.onSurface,
     description: String = "",
     buttonColor: Color = MaterialTheme.colorScheme.onSurface,
-    onShowAllClick: (() -> Unit)? = null,
+    buttonText: String = stringResource(id = R.string.recent_tabs_show_all),
+    onButtonClick: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -119,15 +124,15 @@ private fun HomeSectionHeaderContent(
 
         Spacer(modifier = Modifier.width(FirefoxTheme.layout.space.dynamic100))
 
-        onShowAllClick?.let {
+        onButtonClick?.let {
             TextButton(
-                onClick = { onShowAllClick() },
+                onClick = { onButtonClick() },
                 colors = ButtonDefaults.textButtonColors(
                     contentColor = buttonColor,
                 ),
             ) {
                 Text(
-                    text = stringResource(id = R.string.recent_tabs_show_all),
+                    text = buttonText,
                     modifier = Modifier
                         .semantics {
                             contentDescription = description
@@ -155,7 +160,7 @@ private fun HomeSectionsHeaderPreview() {
                 headerText = stringResource(R.string.home_bookmarks_title),
                 modifier = Modifier.padding(horizontal = FirefoxTheme.layout.size.static300),
                 description = stringResource(R.string.home_bookmarks_show_all_content_description),
-                onShowAllClick = {},
+                onButtonClick = {},
             )
         }
     }
@@ -170,7 +175,7 @@ private fun HomeSectionsHeaderPrivatePreview() {
                 headerText = stringResource(R.string.home_bookmarks_title),
                 modifier = Modifier.padding(horizontal = FirefoxTheme.layout.size.static300),
                 description = stringResource(R.string.home_bookmarks_show_all_content_description),
-                onShowAllClick = {},
+                onButtonClick = {},
             )
         }
     }

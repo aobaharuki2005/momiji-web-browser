@@ -54,7 +54,8 @@ fun PocketSection(
             headerText = stringResource(R.string.pocket_stories_header_2),
             modifier = Modifier.padding(horizontal = horizontalPadding),
             description = stringResource(R.string.stories_discover_more_content_description),
-            onShowAllClick = if (state.showDiscoverMoreButton) {
+            buttonText = stringResource(R.string.homepage_all_stories),
+            onButtonClick = if (state.showDiscoverMoreButton) {
                 interactor::onDiscoverMoreClicked
             } else {
                 null

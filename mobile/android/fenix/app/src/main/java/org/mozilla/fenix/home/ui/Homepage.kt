@@ -276,7 +276,7 @@ internal fun TopSitesSection(
         headerText = stringResource(R.string.homepage_shortcuts_title),
         modifier = Modifier.padding(horizontal = horizontalMargin),
         description = stringResource(R.string.homepage_shortcuts_show_all_content_description),
-        onShowAllClick = interactor::onShowAllTopSitesClicked,
+        onButtonClick = interactor::onShowAllTopSitesClicked,
     )
 
     Spacer(Modifier.height(16.dp))
@@ -301,7 +301,7 @@ private fun RecentTabsSection(
         HomeSectionHeader(
             headerText = stringResource(R.string.recent_tabs_header),
             description = stringResource(R.string.recent_tabs_show_all_content_description_2),
-            onShowAllClick = interactor::onRecentTabShowAllClicked,
+            onButtonClick = interactor::onRecentTabShowAllClicked,
         )
 
         Spacer(Modifier.height(16.dp))
@@ -336,7 +336,7 @@ private fun BookmarksSection(
         headerText = stringResource(R.string.home_bookmarks_title),
         modifier = Modifier.padding(horizontal = horizontalMargin),
         description = stringResource(R.string.home_bookmarks_show_all_content_description),
-        onShowAllClick = interactor::onShowAllBookmarksClicked,
+        onButtonClick = interactor::onShowAllBookmarksClicked,
     )
 
     Spacer(Modifier.height(16.dp))
@@ -366,7 +366,7 @@ private fun RecentlyVisitedSection(
         HomeSectionHeader(
             headerText = stringResource(R.string.history_metadata_header_2),
             description = stringResource(R.string.past_explorations_show_all_content_description_2),
-            onShowAllClick = interactor::onHistoryShowAllClicked,
+            onButtonClick = interactor::onHistoryShowAllClicked,
         )
     }
 
