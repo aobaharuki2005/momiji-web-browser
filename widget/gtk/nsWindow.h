@@ -345,6 +345,11 @@ class nsWindow final : public nsIWidget {
   GdkWindow* GetToplevelGdkWindow() const;
   GtkWidget* GetGtkWidget() const { return mShell; }
   nsWindow* GetEffectiveParent();
+#ifdef MOZ_WAYLAND
+  RefPtr<mozilla::widget::WaylandSurface> GetWaylandSurface() {
+    return mSurface;
+  }
+#endif
   bool IsDestroyed() const { return mIsDestroyed; }
   bool IsPopup() const;
   bool IsWaylandPopup() const;

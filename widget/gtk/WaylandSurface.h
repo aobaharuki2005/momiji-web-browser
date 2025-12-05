@@ -74,6 +74,15 @@ class WaylandSurface final {
   // Set WaylandSurface target size (viewport & ELG surface if it's present).
   void SetSize(DesktopIntSize aSize);
 
+  // Apply changes to EGLWindow size set by SetSize().
+  // ApplyEGLWindowSize() is called from compostor thread
+  // right before GL rendering to set EGLWindow size / viewport size
+  // for actual back buffer.
+  //
+  // aEGLWindowSize is scaled backbuffer size and it's used similary
+  // as WaylandBuffer size at Attach().
+  void ApplyEGLWindowSize(LayoutDeviceIntSize aEGLWindowSize);
+
   // Mapped means we have all internals created.
   bool IsMapped() const { return mIsMapped; }
 
@@ -278,9 +287,6 @@ class WaylandSurface final {
                  wl_surface* aParentWLSurface,
                  WaylandSurfaceLock* aParentWaylandSurfaceLock,
                  DesktopIntPoint aSubsurfacePosition, bool aSubsurfaceDesync);
-
-  void SetRenderingSizeLocked(const WaylandSurfaceLock& aProofOfLock,
-                              DesktopIntSize aSize);
 
   wl_surface* Lock(WaylandSurfaceLock* aWaylandSurfaceLock);
   void Unlock(struct wl_surface** aSurface,
