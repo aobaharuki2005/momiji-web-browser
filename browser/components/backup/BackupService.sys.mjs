@@ -3397,8 +3397,12 @@ export class BackupService extends EventTarget {
           profileSvc.defaultProfile = profile;
         }
 
-        // let's rename the old profile with a prefix old-[profile_name]
-        profileSvc.currentProfile.name = `old-${profileSvc.currentProfile.name}`;
+        // If the profile already has an [old-] prefix, let's skip adding new prefixes
+        if (!profileSvc.currentProfile.name.startsWith("old-")) {
+          // Looks like this is a new restoration of this profile,
+          // add the prefix old-[profile_name]
+          profileSvc.currentProfile.name = `old-${profileSvc.currentProfile.name}`;
+        }
       }
 
       await profileSvc.asyncFlush();
