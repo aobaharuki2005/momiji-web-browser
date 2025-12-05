@@ -2483,7 +2483,7 @@ SettingGroupManager.registerGroups({
       {
         id: "manageSavedPasswords",
         l10nId: "forms-saved-passwords-2",
-        control: "moz-box-button",
+        control: "moz-box-link",
       },
       {
         id: "additionalProtectionsGroup",
