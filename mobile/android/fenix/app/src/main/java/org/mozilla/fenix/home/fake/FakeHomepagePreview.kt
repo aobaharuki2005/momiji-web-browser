@@ -320,6 +320,14 @@ internal object FakeHomepagePreview {
 
     internal fun bookmarks(bookmarkCount: Int = 4) =
         mutableListOf<Bookmark>().apply {
+            add(
+                Bookmark(
+                    title = "A long long Other Bookmark Title",
+                    url = "https://www.example.com",
+                    previewImageUrl = null,
+                ),
+            )
+
             repeat(bookmarkCount) {
                 add(
                     Bookmark(

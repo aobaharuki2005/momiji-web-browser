@@ -18,9 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -50,15 +47,16 @@ import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.home.fake.FakeHomepagePreview.bookmarks
+import org.mozilla.fenix.home.topsites.ui.HomepageCard
+import org.mozilla.fenix.home.topsites.ui.homepageCardImageShape
 import org.mozilla.fenix.theme.FirefoxTheme
 
-private val cardShape = RoundedCornerShape(8.dp)
-
 private val imageWidth = 126.dp
+private val imageHeight = 82.dp
 
 private val imageModifier = Modifier
-    .size(width = imageWidth, height = 82.dp)
-    .clip(cardShape)
+    .size(width = imageWidth, height = imageHeight)
+    .clip(homepageCardImageShape)
 
 /**
  * A list of bookmarks.
@@ -76,11 +74,12 @@ fun Bookmarks(
     onBookmarkClick: (Bookmark) -> Unit = {},
 ) {
     LazyRow(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .fillMaxWidth()
             .semantics {
-            testTagsAsResourceId = true
-            testTag = "bookmarks"
-        },
+                testTagsAsResourceId = true
+                testTag = "bookmarks"
+            },
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -113,22 +112,25 @@ private fun BookmarkItem(
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
-    Card(
+    HomepageCard(
         modifier = Modifier
-            .width(158.dp)
+            .width(134.dp)
             .combinedClickable(
                 enabled = true,
                 onClick = { onBookmarkClick(bookmark) },
                 onLongClick = { isMenuExpanded = true },
             ),
-        shape = cardShape,
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        backgroundColor = backgroundColor,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                .padding(
+                    top = FirefoxTheme.layout.space.static50,
+                    bottom = FirefoxTheme.layout.space.static100,
+                    start = FirefoxTheme.layout.space.static50,
+                    end = FirefoxTheme.layout.space.static50,
+                ),
         ) {
             BookmarkImage(bookmark)
 
@@ -136,10 +138,12 @@ private fun BookmarkItem(
 
             Text(
                 text = bookmark.title ?: bookmark.url ?: "",
-                modifier = Modifier.semantics {
-                    testTagsAsResourceId = true
-                    testTag = "bookmark.title"
-                },
+                modifier = Modifier
+                    .padding(horizontal = FirefoxTheme.layout.space.static50)
+                    .semantics {
+                        testTagsAsResourceId = true
+                        testTag = "bookmark.title"
+                    },
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
                 style = FirefoxTheme.typography.caption,
