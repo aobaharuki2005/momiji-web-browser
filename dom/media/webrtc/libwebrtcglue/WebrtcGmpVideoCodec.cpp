@@ -340,12 +340,27 @@ void WebrtcGmpVideoEncoder::RegetEncoderForResolutionChange(uint32_t aWidth,
 void WebrtcGmpVideoEncoder::Encode_g(
     const webrtc::VideoFrame& aInputImage,
     std::vector<webrtc::VideoFrameType> aFrameTypes) {
+  auto reportDroppedOnExit = MakeScopeExit([&] {
+    MutexAutoLock lock(mCallbackMutex);
+    if (mCallback) {
+      mCallback->OnDroppedFrame(
+          webrtc::EncodedImageCallback::DropReason::kDroppedByEncoder);
+    }
+  });
+
   if (!mGMP) {
     // destroyed via Terminate(), failed to init, or just not initted yet
     GMP_LOG_DEBUG("GMP Encode: not initted yet");
     return;
   }
   MOZ_ASSERT(mHost);
+
+  if (mInputImageMap.Length() >= kMaxImagesInFlight) {
+    GMP_LOG_WARNING(
+        "GMP Encode: Max number of frames already in flight. Dropping this "
+        "one.");
+    return;
+  }
 
   if (static_cast<uint32_t>(aInputImage.width()) != mCodecParams.mWidth ||
       static_cast<uint32_t>(aInputImage.height()) != mCodecParams.mHeight) {
@@ -423,18 +438,23 @@ void WebrtcGmpVideoEncoder::Encode_g(
   MOZ_RELEASE_ASSERT(mInputImageMap.IsEmpty() ||
                      mInputImageMap.LastElement().ntp_timestamp_ms <
                          aInputImage.ntp_time_ms());
+
+  GMP_LOG_DEBUG("GMP Encode: %" PRIu64, (frame->Timestamp()));
+  err = mGMP->Encode(std::move(frame), codecSpecificInfo, gmp_frame_types);
+  if (err != GMPNoErr) {
+    GMP_LOG_DEBUG("GMP Encode: failed to encode frame");
+    return;
+  }
+
+  // Once in mInputImageMap, frame drops are reported by GMP callbacks
+  // (Encoded/Dropped).
+  reportDroppedOnExit.release();
   mInputImageMap.AppendElement(
       InputImageData{.gmp_timestamp_us = gmpTimestamp,
                      .ntp_timestamp_ms = aInputImage.ntp_time_ms(),
                      .timestamp_us = aInputImage.timestamp_us(),
                      .rtp_timestamp = aInputImage.rtp_timestamp(),
                      .frame_config = frameConfigs[0]});
-
-  GMP_LOG_DEBUG("GMP Encode: %" PRIu64, (frame->Timestamp()));
-  err = mGMP->Encode(std::move(frame), codecSpecificInfo, gmp_frame_types);
-  if (err != GMPNoErr) {
-    GMP_LOG_DEBUG("GMP Encode: failed to encode frame");
-  }
 }
 
 int32_t WebrtcGmpVideoEncoder::RegisterEncodeCompleteCallback(
