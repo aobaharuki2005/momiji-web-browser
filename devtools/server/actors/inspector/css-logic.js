@@ -51,6 +51,118 @@ class CssLogic {
     this._propertyInfos = {};
   }
 
+  /**
+   * If the element has an id, return '#id'. Otherwise return 'tagname[n]' where
+   * n is the index of this element in its siblings.
+   * <p>A technically more 'correct' output from the no-id case might be:
+   * 'tagname:nth-of-type(n)' however this is unlikely to be more understood
+   * and it is longer.
+   *
+   * @param {Element} element the element for which you want the short name.
+   * @return {string} the string to be displayed for element.
+   */
+  static getShortName(element) {
+    if (!element) {
+      return "null";
+    }
+    if (element.id) {
+      return "#" + element.id;
+    }
+    let priorSiblings = 0;
+    let temp = element;
+    while ((temp = temp.previousElementSibling)) {
+      priorSiblings++;
+    }
+    return element.tagName + "[" + priorSiblings + "]";
+  }
+
+  /**
+   * Get a string list of selectors for a given DOMRule.
+   *
+   * @param {DOMRule} domRule
+   *        The DOMRule to parse.
+   * @param {boolean} desugared
+   *        Set to true to get the desugared selector (see https://drafts.csswg.org/css-nesting-1/#nest-selector)
+   * @return {Array}
+   *         An array of string selectors.
+   */
+  static getSelectors(domRule, desugared = false) {
+    if (ChromeUtils.getClassName(domRule) !== "CSSStyleRule") {
+      // Return empty array since CSSRule#selectorCount assumes only STYLE_RULE type.
+      return [];
+    }
+
+    const selectors = [];
+
+    const len = domRule.selectorCount;
+    for (let i = 0; i < len; i++) {
+      selectors.push(domRule.selectorTextAt(i, desugared));
+    }
+    return selectors;
+  }
+
+  /**
+   * Given a node, check to see if it is a ::before or ::after element.
+   * If so, return the node that is accessible from within the document
+   * (the parent of the anonymous node), along with which pseudo element
+   * it was.  Otherwise, return the node itself.
+   *
+   * @returns {object}
+   *            - {DOMNode} node The non-anonymous node
+   *            - {string} pseudo One of ':marker', ':before', ':after', or null.
+   */
+  static getBindingElementAndPseudo = getBindingElementAndPseudo;
+
+  /**
+   * Get the computed style on a node.  Automatically handles reading
+   * computed styles on a ::before/::after element by reading on the
+   * parent node with the proper pseudo argument.
+   *
+   * @param {Node}
+   * @returns {CSSStyleDeclaration}
+   */
+  static getComputedStyle(node) {
+    if (
+      !node ||
+      Cu.isDeadWrapper(node) ||
+      node.nodeType !== nodeConstants.ELEMENT_NODE ||
+      !node.ownerGlobal
+    ) {
+      return null;
+    }
+
+    const { bindingElement, pseudo } =
+      CssLogic.getBindingElementAndPseudo(node);
+
+    // For reasons that still escape us, pseudo-elements can sometimes be "unattached" (i.e.
+    // not have a parentNode defined). This seems to happen when a page is reloaded while
+    // the inspector is open. Bailing out here ensures that the inspector does not fail at
+    // presenting DOM nodes and CSS styles when this happens. This is a temporary measure.
+    // See bug 1506792.
+    if (!bindingElement) {
+      return null;
+    }
+
+    return node.ownerGlobal.getComputedStyle(bindingElement, pseudo);
+  }
+
+  /**
+   * Get a source for a stylesheet, taking into account embedded stylesheets
+   * for which we need to use document.defaultView.location.href rather than
+   * sheet.href
+   *
+   * @param {CSSStyleSheet} sheet the DOM object for the style sheet.
+   * @return {string} the address of the stylesheet.
+   */
+  static href(sheet) {
+    return sheet.href || sheet.associatedDocument.location;
+  }
+
+  /**
+   * Returns true if the given node has visited state.
+   */
+  static hasVisitedState = hasVisitedState;
+
   // Both setup by highlight().
   viewedElement = null;
   viewedDocument = null;
@@ -681,117 +793,6 @@ class CssLogic {
     );
   }
 }
-
-/**
- * If the element has an id, return '#id'. Otherwise return 'tagname[n]' where
- * n is the index of this element in its siblings.
- * <p>A technically more 'correct' output from the no-id case might be:
- * 'tagname:nth-of-type(n)' however this is unlikely to be more understood
- * and it is longer.
- *
- * @param {Element} element the element for which you want the short name.
- * @return {string} the string to be displayed for element.
- */
-CssLogic.getShortName = function (element) {
-  if (!element) {
-    return "null";
-  }
-  if (element.id) {
-    return "#" + element.id;
-  }
-  let priorSiblings = 0;
-  let temp = element;
-  while ((temp = temp.previousElementSibling)) {
-    priorSiblings++;
-  }
-  return element.tagName + "[" + priorSiblings + "]";
-};
-
-/**
- * Get a string list of selectors for a given DOMRule.
- *
- * @param {DOMRule} domRule
- *        The DOMRule to parse.
- * @param {boolean} desugared
- *        Set to true to get the desugared selector (see https://drafts.csswg.org/css-nesting-1/#nest-selector)
- * @return {Array}
- *         An array of string selectors.
- */
-CssLogic.getSelectors = function (domRule, desugared = false) {
-  if (ChromeUtils.getClassName(domRule) !== "CSSStyleRule") {
-    // Return empty array since CSSRule#selectorCount assumes only STYLE_RULE type.
-    return [];
-  }
-
-  const selectors = [];
-
-  const len = domRule.selectorCount;
-  for (let i = 0; i < len; i++) {
-    selectors.push(domRule.selectorTextAt(i, desugared));
-  }
-  return selectors;
-};
-
-/**
- * Given a node, check to see if it is a ::before or ::after element.
- * If so, return the node that is accessible from within the document
- * (the parent of the anonymous node), along with which pseudo element
- * it was.  Otherwise, return the node itself.
- *
- * @returns {object}
- *            - {DOMNode} node The non-anonymous node
- *            - {string} pseudo One of ':marker', ':before', ':after', or null.
- */
-CssLogic.getBindingElementAndPseudo = getBindingElementAndPseudo;
-
-/**
- * Get the computed style on a node.  Automatically handles reading
- * computed styles on a ::before/::after element by reading on the
- * parent node with the proper pseudo argument.
- *
- * @param {Node}
- * @returns {CSSStyleDeclaration}
- */
-CssLogic.getComputedStyle = function (node) {
-  if (
-    !node ||
-    Cu.isDeadWrapper(node) ||
-    node.nodeType !== nodeConstants.ELEMENT_NODE ||
-    !node.ownerGlobal
-  ) {
-    return null;
-  }
-
-  const { bindingElement, pseudo } = CssLogic.getBindingElementAndPseudo(node);
-
-  // For reasons that still escape us, pseudo-elements can sometimes be "unattached" (i.e.
-  // not have a parentNode defined). This seems to happen when a page is reloaded while
-  // the inspector is open. Bailing out here ensures that the inspector does not fail at
-  // presenting DOM nodes and CSS styles when this happens. This is a temporary measure.
-  // See bug 1506792.
-  if (!bindingElement) {
-    return null;
-  }
-
-  return node.ownerGlobal.getComputedStyle(bindingElement, pseudo);
-};
-
-/**
- * Get a source for a stylesheet, taking into account embedded stylesheets
- * for which we need to use document.defaultView.location.href rather than
- * sheet.href
- *
- * @param {CSSStyleSheet} sheet the DOM object for the style sheet.
- * @return {string} the address of the stylesheet.
- */
-CssLogic.href = function (sheet) {
-  return sheet.href || sheet.associatedDocument.location;
-};
-
-/**
- * Returns true if the given node has visited state.
- */
-CssLogic.hasVisitedState = hasVisitedState;
 
 class CssSheet {
   /**
