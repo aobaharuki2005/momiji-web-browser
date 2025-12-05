@@ -395,7 +395,18 @@ export const GenAI = {
     }
     aiActionButton.initialized = true;
 
+    const setAIButtonAriaLabel = chatProvider => {
+      document.l10n.setAttributes(aiActionButton, "genai-shortcut-button", {
+        provider: chatProvider.name,
+      });
+    };
+
     const document = aiActionButton.ownerDocument;
+    const initialChatProvider = this.chatProviders.get(lazy.chatProvider);
+    setAIButtonAriaLabel(initialChatProvider);
+    const initialChatProviderName = {
+      name: initialChatProvider.name,
+    };
     const buttonActiveState = "icon";
     const buttonDefaultState = "icon ghost";
     const chatShortcutsOptionsPanel = document.getElementById(
@@ -460,8 +471,12 @@ export const GenAI = {
       const vbox = chatShortcutsOptionsPanel.querySelector("vbox");
       vbox.innerHTML = "";
 
-      const chatProvider = this.chatProviders.get(lazy.chatProvider);
       const showWarning = this.isContextTooLong(aiActionButton.data.selection);
+      const chatProvider = this.chatProviders.get(lazy.chatProvider);
+
+      if (initialChatProviderName !== chatProvider.name) {
+        setAIButtonAriaLabel(chatProvider);
+      }
 
       // Show warning if selection is too long
       if (showWarning) {
