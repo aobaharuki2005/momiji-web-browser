@@ -446,6 +446,11 @@ void GMPVideoEncoder::Encoded(GMPVideoEncodedFrame* aEncodedFrame,
   }
 }
 
+void GMPVideoEncoder::Dropped(uint64_t aTimestamp) {
+  MOZ_ASSERT(IsOnGMPThread());
+  // TODO: implement
+}
+
 void GMPVideoEncoder::Teardown(const MediaResult& aResult,
                                StaticString aCallSite) {
   GMP_LOG_DEBUG("[%p] GMPVideoEncoder::Teardown", this);
