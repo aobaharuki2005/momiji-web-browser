@@ -9,16 +9,6 @@ const { ERRORS } = ChromeUtils.importESModule(
 
 let TEST_PROFILE_PATH;
 
-// Helper function for when we need to wait for the backup state to update and
-// the UI to finish reacting to that.
-async function makeStateUpdatedPromise(restoreFromBackupEl) {
-  await BrowserTestUtils.waitForEvent(window, "BackupUI:StateWasUpdated");
-  // Wait for `restoreFromBackupEl` to handle this event.
-  await TestUtils.waitForTick();
-  // Then wait for it to finish updating all the UI.
-  await restoreFromBackupEl.updateComplete;
-}
-
 add_setup(async () => {
   MockFilePicker.init(window.browsingContext);
   TEST_PROFILE_PATH = await IOUtils.createUniqueDirectory(
@@ -41,13 +31,39 @@ add_setup(async () => {
   });
 });
 
-async function waitInitialRequestStateSettled() {
-  // restore-from-backup.mjs is rendered quite late during the load.
-  // Bug 543435 caused a timing change such that withNewTab resolves right after
-  // that component dispatches BackupUI:InitWidget. So BackupUIParent hasn't yet
-  // received RequestState. If the RequestState / StateUpdate happens during the test
-  // that can mess things up, so wait a tick. See bug 2001583
-  await new Promise(res => setTimeout(res));
+/**
+ * Gets most of the widgets that are used during tests.
+ *
+ * In addition to avoiding some boilerplate, this ensures that the first state
+ * update has been delivered. If we didn't wait, there'd be a timing problem;
+ * see bug 2001583 for more information.
+ *
+ * @param {Browser} browser
+ *   The XUL browser containing the preferences page.
+ * @returns {{restoreFromBackup:HTMLElement, settings:HTMLElement}}
+ *   Relevant widgets on the backup settings page.
+ */
+async function initializedBackupWidgets(browser) {
+  let settings = browser.contentDocument.querySelector("backup-settings");
+
+  await settings.updateComplete;
+
+  Assert.ok(
+    settings.restoreFromBackupButtonEl,
+    "Button to restore backups should be found"
+  );
+
+  settings.restoreFromBackupButtonEl.click();
+  await settings.updateComplete;
+
+  let restoreFromBackup = settings.restoreFromBackupEl;
+  Assert.ok(restoreFromBackup, "restore-from-backup should be found");
+
+  await restoreFromBackup.initializedPromise;
+  return {
+    restoreFromBackup,
+    settings,
+  };
 }
 
 /**
@@ -55,7 +71,6 @@ async function waitInitialRequestStateSettled() {
  */
 add_task(async function test_backup_failure() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    await waitInitialRequestStateSettled();
     const mockBackupFilePath = await IOUtils.createUniqueFile(
       TEST_PROFILE_PATH,
       "backup.html"
@@ -71,24 +86,12 @@ add_task(async function test_backup_failure() {
     };
     MockFilePicker.returnValue = MockFilePicker.returnOK;
 
-    let settings = browser.contentDocument.querySelector("backup-settings");
-
-    await settings.updateComplete;
-
-    Assert.ok(
-      settings.restoreFromBackupButtonEl,
-      "Button to restore backups should be found"
-    );
-
-    settings.restoreFromBackupButtonEl.click();
-    await settings.updateComplete;
-
-    let restoreFromBackup = settings.restoreFromBackupEl;
-    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
-
+    let { restoreFromBackup } = await initializedBackupWidgets(browser);
     Services.fog.testResetFOG();
 
-    let stateUpdatedPromise = makeStateUpdatedPromise(restoreFromBackup);
+    let stateUpdatedPromise = TestUtils.topicObserved(
+      "browser-backup-glean-sent"
+    );
     restoreFromBackup.chooseButtonEl.click();
     await stateUpdatedPromise;
 
@@ -111,7 +114,6 @@ add_task(async function test_backup_failure() {
  */
 add_task(async function test_restore_from_backup() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    await waitInitialRequestStateSettled();
     // Info about our mock backup
     const date = new Date().getTime();
     const deviceName = "test-device";
@@ -147,6 +149,7 @@ add_task(async function test_restore_from_backup() {
         healthTelemetryEnabled,
       },
       backupFileToRestore: mockBackupFilePath,
+      backupFileCoarseLocation: "other",
       restoreID,
       recoveryErrorCode: ERRORS.NONE,
     };
@@ -172,26 +175,12 @@ add_task(async function test_restore_from_backup() {
       }
     );
 
-    let settings = browser.contentDocument.querySelector("backup-settings");
-
-    await settings.updateComplete;
-
-    Assert.ok(
-      settings.restoreFromBackupButtonEl,
-      "Button to restore backups should be found"
-    );
-
-    settings.restoreFromBackupButtonEl.click();
-
-    await settings.updateComplete;
-
-    let restoreFromBackup = settings.restoreFromBackupEl;
-
-    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
-
+    let { restoreFromBackup } = await initializedBackupWidgets(browser);
     Services.fog.testResetFOG();
 
-    let stateUpdatedPromise = makeStateUpdatedPromise(restoreFromBackup);
+    let stateUpdatedPromise = TestUtils.topicObserved(
+      "browser-backup-glean-sent"
+    );
     restoreFromBackup.chooseButtonEl.click();
     await stateUpdatedPromise;
 
@@ -267,7 +256,6 @@ add_task(async function test_restore_from_backup() {
  */
 add_task(async function test_restore_uses_matching_initial_folder() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    await waitInitialRequestStateSettled();
     const mockBackupFilePath = await IOUtils.createUniqueFile(
       TEST_PROFILE_PATH,
       "backup.html"
@@ -291,20 +279,8 @@ add_task(async function test_restore_uses_matching_initial_folder() {
     });
     MockFilePicker.returnValue = MockFilePicker.returnOK;
 
-    let settings = browser.contentDocument.querySelector("backup-settings");
-    await settings.updateComplete;
-
-    Assert.ok(
-      settings.restoreFromBackupButtonEl,
-      "Button to restore backups should be found"
-    );
-
-    settings.restoreFromBackupButtonEl.click();
-    await settings.updateComplete;
-
-    let restoreFromBackup = settings.restoreFromBackupEl;
-    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
-
+    let { restoreFromBackup, settings } =
+      await initializedBackupWidgets(browser);
     let selectedFilePromise = BrowserTestUtils.waitForEvent(
       settings,
       "BackupUI:SelectNewFilepickerPath"
@@ -324,7 +300,6 @@ add_task(async function test_restore_uses_matching_initial_folder() {
  */
 add_task(async function test_restore_in_progress() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    await waitInitialRequestStateSettled();
     let sandbox = sinon.createSandbox();
     let bs = getAndMaybeInitBackupService();
 
@@ -343,23 +318,8 @@ add_task(async function test_restore_in_progress() {
       }
     );
 
-    let settings = browser.contentDocument.querySelector("backup-settings");
-
-    await settings.updateComplete;
-
-    Assert.ok(
-      settings.restoreFromBackupButtonEl,
-      "Button to restore backups should be found"
-    );
-
-    settings.restoreFromBackupButtonEl.click();
-
-    await settings.updateComplete;
-
-    let restoreFromBackup = settings.restoreFromBackupEl;
-
-    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
-
+    let { restoreFromBackup, settings } =
+      await initializedBackupWidgets(browser);
     Assert.equal(
       restoreFromBackup.filePicker.value,
       "",
@@ -406,16 +366,15 @@ add_task(async function test_restore_in_progress() {
     );
 
     restoreFromBackup.confirmButtonEl.click();
+    await restorePromise;
+
     restoreFromBackup.backupServiceState = {
       ...restoreFromBackup.backupServiceState,
       recoveryInProgress: true,
     };
     // Re-render since we've manually changed the component's state
     await restoreFromBackup.requestUpdate();
-
-    await restorePromise;
-
-    await settings.updateComplete;
+    await restoreFromBackup.updateComplete;
 
     Assert.ok(
       settings.restoreFromBackupDialogEl.open,
@@ -442,10 +401,10 @@ add_task(async function test_restore_in_progress() {
     recoverResolve();
     // Wait a tick of the event loop to let the BackupUIParent respond to
     // the promise resolution, and to send its message to the BackupUIChild.
-    await new Promise(resolve => SimpleTest.executeSoon(resolve));
+    await TestUtils.waitForTick();
     // Wait a second tick to let the BackupUIChild respond to the message
     // from BackupUIParent.
-    await new Promise(resolve => SimpleTest.executeSoon(resolve));
+    await TestUtils.waitForTick();
 
     await settings.updateComplete;
 
@@ -469,20 +428,13 @@ add_task(
     await BrowserTestUtils.withNewTab(
       "about:preferences#sync",
       async browser => {
-        await waitInitialRequestStateSettled();
         let sandbox = sinon.createSandbox();
-        let settings = browser.contentDocument.querySelector("backup-settings");
-        await settings.updateComplete;
+        let { restoreFromBackup } = await initializedBackupWidgets(browser);
 
-        Assert.ok(
-          settings.restoreFromBackupButtonEl,
-          "Restore button should exist"
-        );
-
-        settings.restoreFromBackupButtonEl.click();
-        await settings.updateComplete;
-        let restoreFromBackup = settings.restoreFromBackupEl;
-        Assert.ok(restoreFromBackup, "restore-from-backup should be found");
+        restoreFromBackup.backupServiceState = {
+          ...restoreFromBackup.backupServiceState,
+          backupFileToRestore: "",
+        };
 
         // When aboutWelcomeEmbedded is false, the file picker should be an input
         Assert.equal(
@@ -553,20 +505,7 @@ add_task(
  */
 add_task(async function test_restore_backup_file_info_display() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    await waitInitialRequestStateSettled();
-    let settings = browser.contentDocument.querySelector("backup-settings");
-    await settings.updateComplete;
-
-    Assert.ok(
-      settings.restoreFromBackupButtonEl,
-      "Restore button should exist"
-    );
-
-    settings.restoreFromBackupButtonEl.click();
-    await settings.updateComplete;
-
-    let restoreFromBackup = settings.restoreFromBackupEl;
-    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
+    let { restoreFromBackup } = await initializedBackupWidgets(browser);
 
     // Initially, backup file info should not be displayed underneath the input
     let fileInfoSpan = restoreFromBackup.shadowRoot.querySelector(
@@ -648,15 +587,7 @@ function assertNonEmbeddedSupportLink(link, linkName) {
  */
 add_task(async function test_support_links_non_embedded() {
   await BrowserTestUtils.withNewTab("about:preferences#sync", async browser => {
-    await waitInitialRequestStateSettled();
-    let settings = browser.contentDocument.querySelector("backup-settings");
-    await settings.updateComplete;
-
-    settings.restoreFromBackupButtonEl.click();
-    await settings.updateComplete;
-
-    let restoreFromBackup = settings.restoreFromBackupEl;
-    Assert.ok(restoreFromBackup, "restore-from-backup should be found");
+    let { restoreFromBackup } = await initializedBackupWidgets(browser);
 
     Assert.ok(
       !restoreFromBackup.aboutWelcomeEmbedded,

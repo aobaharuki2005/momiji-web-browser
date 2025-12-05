@@ -28,6 +28,14 @@ export default class RestoreFromBackup extends MozLitElement {
    */
   #backupFileReadPromise = null;
 
+  /**
+   * Resolves when BackupUIParent sends state for the first time.
+   */
+  get initializedPromise() {
+    return this.#initializedResolvers.promise;
+  }
+  #initializedResolvers = Promise.withResolvers();
+
   static properties = {
     _fileIconURL: { type: String },
     aboutWelcomeEmbedded: { type: Boolean },
@@ -175,6 +183,7 @@ export default class RestoreFromBackup extends MozLitElement {
 
       this.getBackupFileInfo(path);
     } else if (event.type == "BackupUI:StateWasUpdated") {
+      this.#initializedResolvers.resolve();
       if (this.#backupFileReadPromise) {
         this.#backupFileReadPromise.resolve();
         this.#backupFileReadPromise = null;
