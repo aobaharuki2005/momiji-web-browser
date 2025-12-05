@@ -415,10 +415,10 @@ struct AnchorResolvedMarginHelper {
   static AnchorResolvedMargin FromUnresolved(
       const mozilla::StyleMargin& aValue, mozilla::StylePhysicalAxis aAxis,
       const AnchorPosResolutionParams& aParams) {
-    if (!aValue.HasAnchorPositioningFunction()) {
-      return AnchorResolvedMargin::NonOwning(&aValue);
+    if (aValue.HasAnchorPositioningFunction()) {
+      return ResolveAnchor(aValue, aAxis, aParams);
     }
-    return ResolveAnchor(aValue, aAxis, aParams);
+    return AnchorResolvedMargin::NonOwning(&aValue);
   }
 
  private:
@@ -776,20 +776,21 @@ struct AnchorResolvedInsetHelper {
   static AnchorResolvedInset FromUnresolved(
       const mozilla::StyleInset& aValue, mozilla::Side aSide,
       const AnchorPosOffsetResolutionParams& aParams) {
-    if (!aValue.HasAnchorPositioningFunction()) {
-      // If `position-area` is used "Any auto inset properties resolve to 0":
-      // https://drafts.csswg.org/css-anchor-position-1/#valdef-position-area-position-area
-      // If `anchor-center` is used with a valid anchor, "auto inset
-      // properties resolve to 0":
-      // https://drafts.csswg.org/css-anchor-position-1/#anchor-center
-      if (aValue.IsAuto() && (!aParams.mBaseParams.mPositionArea.IsNone() ||
-                              SideUsesAnchorCenter(aSide, aParams))) {
-        return AnchorResolvedInset::UniquelyOwning(
-            new mozilla::StyleInset(mozilla::LengthPercentage::Zero()));
-      }
-      return AnchorResolvedInset::NonOwning(&aValue);
+    if (aValue.HasAnchorPositioningFunction()) {
+      return ResolveAnchor(aValue, mozilla::ToStylePhysicalSide(aSide),
+                           aParams);
     }
-    return ResolveAnchor(aValue, mozilla::ToStylePhysicalSide(aSide), aParams);
+    // If `position-area` is used "Any auto inset properties resolve to 0":
+    // https://drafts.csswg.org/css-anchor-position-1/#valdef-position-area-position-area
+    // If `anchor-center` is used with a valid anchor, "auto inset
+    // properties resolve to 0":
+    // https://drafts.csswg.org/css-anchor-position-1/#anchor-center
+    if (aValue.IsAuto() && (!aParams.mBaseParams.mPositionArea.IsNone() ||
+                            SideUsesAnchorCenter(aSide, aParams))) {
+      return AnchorResolvedInset::UniquelyOwning(
+          new mozilla::StyleInset(mozilla::LengthPercentage::Zero()));
+    }
+    return AnchorResolvedInset::NonOwning(&aValue);
   }
 
  private:
@@ -828,10 +829,10 @@ struct AnchorResolvedSizeHelper {
   static AnchorResolvedSize FromUnresolved(
       const mozilla::StyleSize& aValue, mozilla::StylePhysicalAxis aAxis,
       const AnchorPosResolutionParams& aParams) {
-    if (!aValue.HasAnchorPositioningFunction()) {
-      return AnchorResolvedSize::NonOwning(&aValue);
+    if (aValue.HasAnchorPositioningFunction()) {
+      return ResolveAnchor(aValue, aAxis, aParams);
     }
-    return ResolveAnchor(aValue, aAxis, aParams);
+    return AnchorResolvedSize::NonOwning(&aValue);
   }
 
   static AnchorResolvedSize Overridden(const mozilla::StyleSize& aSize) {
@@ -878,10 +879,10 @@ struct AnchorResolvedMaxSizeHelper {
   static AnchorResolvedMaxSize FromUnresolved(
       const mozilla::StyleMaxSize& aValue, mozilla::StylePhysicalAxis aAxis,
       const AnchorPosResolutionParams& aParams) {
-    if (!aValue.HasAnchorPositioningFunction()) {
-      return AnchorResolvedMaxSize::NonOwning(&aValue);
+    if (aValue.HasAnchorPositioningFunction()) {
+      return ResolveAnchor(aValue, aAxis, aParams);
     }
-    return ResolveAnchor(aValue, aAxis, aParams);
+    return AnchorResolvedMaxSize::NonOwning(&aValue);
   }
   static AnchorResolvedMaxSize MaxContent() {
     return AnchorResolvedMaxSize::NonOwning(&MaxContentValue());
