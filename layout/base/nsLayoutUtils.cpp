@@ -1410,7 +1410,7 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
       if (f->StyleDisplay()->mPosition == StylePositionProperty::Sticky) {
         auto* ssc = StickyScrollContainer::GetOrCreateForFrame(f);
         if (ssc && ssc->ScrollContainer()->IsMaybeAsynchronouslyScrolled()) {
-          return f;
+          return f->FirstContinuation();
         }
       }
     }
