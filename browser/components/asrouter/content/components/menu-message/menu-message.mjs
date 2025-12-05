@@ -12,7 +12,7 @@ import "chrome://global/content/elements/moz-button.mjs";
  * Can be used to message signed out users encouraging them to sign in or
  * asking users to set firefox as default.
  */
-export default class FxAMenuMessage extends MozLitElement {
+export default class MenuMessage extends MozLitElement {
   static shadowRootOptions = {
     ...MozLitElement.shadowRootOptions,
     delegatesFocus: true,
@@ -82,7 +82,7 @@ export default class FxAMenuMessage extends MozLitElement {
   render() {
     return html`<link
         rel="stylesheet"
-        href="chrome://browser/content/asrouter/components/fxa-menu-message.css"
+        href="chrome://browser/content/asrouter/components/menu-message.css"
       />
       <div
         id="container"
@@ -173,4 +173,4 @@ export default class FxAMenuMessage extends MozLitElement {
   }
 }
 
-customElements.define("fxa-menu-message", FxAMenuMessage);
+customElements.define("menu-message", MenuMessage);

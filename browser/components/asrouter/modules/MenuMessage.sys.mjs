@@ -245,7 +245,7 @@ export const MenuMessage = {
 
     win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
 
-    const msgElement = document.createElement("fxa-menu-message");
+    const msgElement = document.createElement("menu-message");
     msgElement.layout = message.content.layout ?? "column";
     msgElement.imageURL = message.content.imageURL;
     msgElement.logoURL = message.content.logoURL;

@@ -54,7 +54,7 @@ async function hideAllPopups(win = window) {
  * Asserts that a given message is correctly rendered and visible in the
  * opened menu source for `win`.
  *
- * This function checks if the `fxa-menu-message` element exists within the
+ * This function checks if the `menu-message` element exists within the
  * source panel and ensures that it contains the correct content and properties
  * based on the provided message object.
  *
@@ -83,16 +83,14 @@ async function hideAllPopups(win = window) {
 async function assertMessageInMenuSource(source, message, win = window) {
   let messageEl;
   if (source === MenuMessage.SOURCES.APP_MENU) {
-    messageEl = win.PanelUI.mainView.querySelector("fxa-menu-message");
+    messageEl = win.PanelUI.mainView.querySelector("menu-message");
   } else if (source === MenuMessage.SOURCES.PXI_MENU) {
-    messageEl = win.document.querySelector("#PanelUI-fxa fxa-menu-message");
+    messageEl = win.document.querySelector("#PanelUI-fxa menu-message");
   }
   await messageEl.updateComplete;
 
-  Assert.ok(messageEl, "Found the fxa-menu-message element.");
-  Assert.ok(
-    BrowserTestUtils.isVisible(messageEl, "fxa-menu-message is visible.")
-  );
+  Assert.ok(messageEl, "Found the menu-message element.");
+  Assert.ok(BrowserTestUtils.isVisible(messageEl, "menu-message is visible."));
 
   Assert.equal(
     messageEl.primaryText,
@@ -234,7 +232,7 @@ async function assertMessageInMenuSource(source, message, win = window) {
 }
 
 /**
- * Asserts that no fxa-menu-message is rendered in the opened menu source for
+ * Asserts that no menu-message is rendered in the opened menu source for
  * `win`.
  *
  * For the MenuMessage.SOURCES.APP_MENU source, it also ensures that the default
@@ -252,12 +250,12 @@ async function assertMessageInMenuSource(source, message, win = window) {
 function assertNoMessageInMenuSource(source, win = window) {
   let messageEl;
   if (source === MenuMessage.SOURCES.APP_MENU) {
-    messageEl = win.PanelUI.mainView.querySelector("fxa-menu-message");
+    messageEl = win.PanelUI.mainView.querySelector("menu-message");
   } else if (source === MenuMessage.SOURCES.PXI_MENU) {
-    messageEl = win.document.querySelector("#PanelUI-fxa fxa-menu-message");
+    messageEl = win.document.querySelector("#PanelUI-fxa menu-message");
   }
 
-  Assert.ok(!messageEl, "Should not have found an fxa-menu-message");
+  Assert.ok(!messageEl, "Should not have found an menu-message");
 
   if (source === MenuMessage.SOURCES.APP_MENU) {
     // The zap gradient and the default sign-in button should be visible.
@@ -343,11 +341,11 @@ async function reopenMenuSource(source, expectedMessage, win = window, taskFn) {
   }
 
   await hideAllPopups(win);
-  // Now ensure that there are no fxa-menu-message's in the window anymore,
+  // Now ensure that there are no menu-message's in the window anymore,
   // now that all the panels are closed.
   Assert.ok(
-    !win.document.querySelector("fxa-menu-message"),
-    "Should not find any fxa-menu-message elements"
+    !win.document.querySelector("menu-message"),
+    "Should not find any menu-message elements"
   );
 }
 
@@ -514,7 +512,7 @@ add_task(async function test_trigger() {
 
 /**
  * Tests that a registered MenuMessage of type fxa_cta will cause an
- * fxa-menu-message element to appear in either menu source panel with the right
+ * menu-message element to appear in either menu source panel with the right
  * attributes. This also tests that upon becoming visible, an impression is
  * recorded. This also tests that clicking upon a non-button part of the message
  * doesn't cause the panel to be closed.
@@ -573,7 +571,7 @@ add_task(async function test_show_fxa_cta_message() {
 
 /**
  * Tests that a registered MenuMessage of type fxa_cta will cause an
- * fxa-menu-message element to appear in the menu sources for all newly
+ * menu-message element to appear in the menu sources for all newly
  * opened windows - and that, once blocked, will disappear from all menu
  * sources.
  */
@@ -610,8 +608,7 @@ add_task(async function test_show_fxa_cta_message_multiple_windows() {
         gTestFxAMessage,
         win3,
         async () => {
-          let win3Message =
-            win3.PanelUI.mainView.querySelector("fxa-menu-message");
+          let win3Message = win3.PanelUI.mainView.querySelector("menu-message");
           await win3Message.updateComplete;
           win3Message.closeButton.click();
           Assert.ok(

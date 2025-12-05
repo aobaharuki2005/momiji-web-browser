@@ -5,11 +5,11 @@
 // eslint-disable-next-line import/no-unresolved
 import { html } from "lit.all.mjs";
 import "chrome://global/content/elements/moz-card.mjs";
-import "./fxa-menu-message.mjs";
+import "./menu-message.mjs";
 
 export default {
-  title: "Domain-specific UI Widgets/ASRouter/FxA Menu Message",
-  component: "fxa-menu-message",
+  title: "Domain-specific UI Widgets/ASRouter/Menu Message",
+  component: "menu-message",
   argTypes: {},
 };
 
@@ -29,7 +29,7 @@ const Template = ({
   logoWidth,
 }) => html`
   <moz-card style="width: 22.5rem;">
-    <fxa-menu-message
+    <menu-message
       buttonText=${buttonText}
       primaryText=${primaryText}
       primaryButtonSize=${primaryButtonSize}
@@ -54,7 +54,7 @@ const Template = ({
       "
       layout=${layout}
     >
-    </fxa-menu-message>
+    </menu-message>
   </moz-card>
 `;
 

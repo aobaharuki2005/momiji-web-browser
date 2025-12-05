@@ -6,7 +6,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
   <script
-  src="chrome://browser/content/asrouter/components/fxa-menu-message.mjs"
+  src="chrome://browser/content/asrouter/components/menu-message.mjs"
   type="module"
 ></script>
   <link rel="stylesheet" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
@@ -20,7 +20,7 @@
      * as expected in the shadow DOM.
      */
     add_task(async function test_exposed_properties() {
-      let message = document.createElement("fxa-menu-message");
+      let message = document.createElement("menu-message");
       const TEST_IMAGE_URL = "chrome://activity-stream/content/data/content/assets/fox-doodle-waving-static.png";
       message.imageURL = TEST_IMAGE_URL;
       const TEST_LOGO_URL = "chrome://branding/content/about-logo.svg";
@@ -68,7 +68,7 @@
      * events.
      */
     add_task(async function test_button_properties() {
-      let message = document.createElement("fxa-menu-message");
+      let message = document.createElement("menu-message");
       const TEST_BUTTON_TEXT = "Howdy, partner! Sign up!";
       message.buttonText = TEST_BUTTON_TEXT;
 
@@ -98,7 +98,7 @@
      * can be changed via the keyboard.
      */
     add_task(async function test_primary_button_focus() {
-      let message = document.createElement("fxa-menu-message");
+      let message = document.createElement("menu-message");
       const TEST_BUTTON_TEXT = "Howdy, partner! Sign up!";
       message.buttonText = TEST_BUTTON_TEXT;
 
@@ -139,7 +139,7 @@
      * not visible, and setting one makes it visible.
      */
     add_task(async function test_image_visibility() {
-      let message = document.createElement("fxa-menu-message");
+      let message = document.createElement("menu-message");
       const TEST_BUTTON_TEXT = "Howdy, partner! Sign up!";
       message.buttonText = TEST_BUTTON_TEXT;
 
@@ -169,7 +169,7 @@
       const TEST_IMAGE_URL =
         "chrome://activity-stream/content/data/content/assets/fox-doodle-waving-static.png";
 
-      let message = document.createElement("fxa-menu-message");
+      let message = document.createElement("menu-message");
       message.imageURL = TEST_IMAGE_URL;
       if (layout) {
         message.layout = layout;
@@ -252,7 +252,7 @@
      * Tests that the primary button supports a 'small' size and defaults to 'default'.
      */
      add_task(async function test_primary_button_size() {
-      let message = document.createElement("fxa-menu-message");
+      let message = document.createElement("menu-message");
       message.buttonText = "Test button";
       document.getElementById("content").appendChild(message);
       await message.updateComplete;
@@ -272,7 +272,7 @@
      * Tests "simple" layout, which only displays primary text and primary button.
      */
     add_task(async function test_simple_layout() {
-      let message = document.createElement("fxa-menu-message");
+      let message = document.createElement("menu-message");
       message.layout = "simple";
       message.buttonText = "Set as default";
       message.primaryText = "Firefox is not your default browser";
