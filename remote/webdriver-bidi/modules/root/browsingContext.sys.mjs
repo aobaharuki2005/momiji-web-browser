@@ -1980,6 +1980,15 @@ class BrowsingContextModule extends RootBiDiModule {
         "browsingContext.contextCreated",
         browsingContextInfo
       );
+
+      // This is an internal event is used by the script module
+      // to ensure that "script.realmCreated" event is emitted
+      // after "browsingContext.contextCreated".
+      this.messageHandler.emitEvent(
+        "browsingContext._contextCreatedEmitted",
+        { browsingContext },
+        browsingContextInfo
+      );
     }
   };
 
