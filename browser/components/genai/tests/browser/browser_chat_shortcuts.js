@@ -137,10 +137,9 @@ add_task(async function test_show_shortcuts() {
     );
 
     let beforeClick = Glean.genaiChatbot.shortcutsExpanded.testGetValue();
-    shortcuts.click();
+    EventUtils.sendMouseEvent({ type: "click" }, shortcuts);
     await BrowserTestUtils.waitForEvent(popup, "popupshown");
     Assert.equal(popup.state, "open", "Popup open with click");
-
     let afterClick = Glean.genaiChatbot.shortcutsExpanded.testGetValue();
     Assert.equal(
       afterClick.length,
@@ -214,7 +213,7 @@ add_task(async function test_show_shortcuts_second_tab() {
       const stub = sandbox.stub(GenAI, "addAskChatItems");
 
       const shortcuts = document.querySelector("#ai-action-button");
-      shortcuts.click();
+      EventUtils.sendMouseEvent({ type: "click" }, shortcuts);
 
       Assert.equal(stub.callCount, 1, "Shortcuts added on select");
       Assert.equal(stub.firstCall.args[0], browser, "Got correct browser");
@@ -272,7 +271,7 @@ add_task(async function test_show_warning_label() {
       );
 
       // Click button
-      aiActionButton.click();
+      EventUtils.sendMouseEvent({ type: "click" }, aiActionButton);
 
       const chatShortcutsOptionsPanel = document.getElementById(
         "chat-shortcuts-options-panel"
