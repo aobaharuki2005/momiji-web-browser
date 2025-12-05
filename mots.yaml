@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-11-25T05:26:10.720332+00:00'
+updated_at: '2025-12-04T14:55:53.808070+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -260,6 +260,10 @@ people:
     bmo_id: 7924
     name: ''
     nick: deanis74
+  - &decoder
+    bmo_id: 395101
+    name: Christian Holler
+    nick: decoder
   - &deian
     bmo_id: 637163
     name: Deian Stefan
@@ -1199,6 +1203,20 @@ modules:
           - *TLMC
         peers: []
         machine_name: performance_regression_policy
+
+      - name: Security Architecture
+        description: Submodule responsible for driving security architecture decisions,
+          performing security reviews, and guiding security decisions.
+        owners:
+          - *decoder
+        peers:
+          - *dveditz
+          - *freddy
+          - *tjr
+          - *bholley
+          - *ckerschb
+          - *sfriedberger
+        machine_name: security_architecture
 
   - machine_name: android_components
     name: Android Components
@@ -4650,5 +4668,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 314ba8587bb32d8e00fe77b708be928a87143258
-  export: 83464afd72538dc8596edd7b749d9f461fe35cea
+  config: 74d3e43232fd8791824228b47bf9d0de2e3e0ccc
+  export: 65ac11e9d29fb19a38fa449a050a80c42498370f
