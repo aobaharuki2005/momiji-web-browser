@@ -354,6 +354,10 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/services/InsightStore.sys.mjs",
   },
+  // Bug 2003623 - Add assistant system prompt
+  {
+    file: "moz-src:///browser/components/aiwindow/models/prompts/assistantPrompts.sys.mjs",
+  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
