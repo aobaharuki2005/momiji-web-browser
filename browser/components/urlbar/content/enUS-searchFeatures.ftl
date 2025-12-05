@@ -380,10 +380,3 @@ urlbar-result-dismissal-acknowledgment-sports = Thanks for your feedback. You wo
 # This a11y label is read by screen readers when an item in the row is selected.
 urlbar-result-aria-group-sports =
   .aria-label = Sports suggestions
-
-## These strings are used for market suggestions in the urlbar.
-## TODO: Move to browser.ftl with the other market strings.
-
-# This a11y label is read by screen readers when an item in the row is selected.
-urlbar-result-aria-group-market =
-  .aria-label = Stock market suggestions
