@@ -250,7 +250,6 @@ const TEST_GLOBAL = {
       MODE_REJECT_OR_ACCEPT: 2,
       MODE_UNSET: 3,
     },
-    nsIProtocolProxyChannelFilter: {},
   },
   Cu: {
     importGlobalProperties() {},
@@ -708,10 +707,6 @@ const TEST_GLOBAL = {
     SERVER_URL: "bogus://foo",
   },
   NewTabContentPing,
-  ProxyService: {
-    registerChannelFilter() {},
-    unregisterChannelFilter() {},
-  },
 };
 overrider.set(TEST_GLOBAL);
 
