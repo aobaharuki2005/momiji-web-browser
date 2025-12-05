@@ -318,7 +318,7 @@ class BrowsingContextModule extends RootBiDiModule {
       // Bug 1884142: It's not supported on Android for the TestRunner package.
       const selectedBrowser = lazy.TabManager.getBrowserForTab(selectedTab);
       activated.push(
-        this.#waitForVisibilityState(selectedBrowser.browsingContext, "hidden")
+        this.#waitForVisibilityChange(selectedBrowser.browsingContext)
       );
     }
 
@@ -686,7 +686,7 @@ class BrowsingContextModule extends RootBiDiModule {
       );
     }
 
-    let waitForVisibilityStatePromise;
+    let waitForVisibilityChangePromise;
     switch (type) {
       case "window": {
         const newWindow = await lazy.windowManager.openBrowserWindow({
@@ -717,9 +717,8 @@ class BrowsingContextModule extends RootBiDiModule {
 
           // Create the promise immediately, but await it later in parallel with
           // waitForInitialNavigationCompleted.
-          waitForVisibilityStatePromise = this.#waitForVisibilityState(
-            lazy.TabManager.getBrowserForTab(selectedTab).browsingContext,
-            "hidden"
+          waitForVisibilityChangePromise = this.#waitForVisibilityChange(
+            lazy.TabManager.getBrowserForTab(selectedTab).browsingContext
           );
         }
 
@@ -751,7 +750,7 @@ class BrowsingContextModule extends RootBiDiModule {
           unloadTimeout: 5000,
         }
       ),
-      waitForVisibilityStatePromise,
+      waitForVisibilityChangePromise,
       blocker.promise,
     ]);
 
@@ -769,12 +768,6 @@ class BrowsingContextModule extends RootBiDiModule {
 
     // Force a reflow by accessing `clientHeight` (see Bug 1847044).
     browser.parentElement.clientHeight;
-
-    if (!background && !lazy.AppInfo.isAndroid) {
-      // See Bug 2002097, on slow platforms, the newly created tab might not be
-      // visible immediately.
-      await this.#waitForVisibilityState(browser.browsingContext, "visible");
-    }
 
     return {
       context: lazy.NavigableManager.getIdForBrowser(browser),
@@ -2371,11 +2364,11 @@ class BrowsingContextModule extends RootBiDiModule {
     }
   }
 
-  #waitForVisibilityState(browsingContext, expectedState) {
+  #waitForVisibilityChange(browsingContext) {
     return this._forwardToWindowGlobal(
       "_awaitVisibilityState",
       browsingContext.id,
-      { value: expectedState },
+      { value: "hidden" },
       { retryOnAbort: true }
     );
   }
