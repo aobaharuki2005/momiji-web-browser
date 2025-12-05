@@ -769,6 +769,17 @@ class BrowsingContextModule extends RootBiDiModule {
     // Force a reflow by accessing `clientHeight` (see Bug 1847044).
     browser.parentElement.clientHeight;
 
+    if (!background && !lazy.AppInfo.isAndroid) {
+      // See Bug 2002097, on slow platforms, the newly created tab might not be
+      // visible immediately.
+      await this._forwardToWindowGlobal(
+        "_awaitVisibilityState",
+        browser.browsingContext.id,
+        { value: "visible" },
+        { retryOnAbort: true }
+      );
+    }
+
     return {
       context: lazy.NavigableManager.getIdForBrowser(browser),
     };
