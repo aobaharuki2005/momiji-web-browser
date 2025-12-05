@@ -11,4 +11,6 @@ skip-if = [
 https_first_disabled = true
 
 ["browser_focus_document.js"]
-skip-if = ["os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt"] # Bug 1962169
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt", # Bug 1962169
+]

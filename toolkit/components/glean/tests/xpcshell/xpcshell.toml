@@ -11,7 +11,7 @@ run-if = [
 
 ["test_FOGInit.js"]
 run-if = [
-  "!appname == 'thunderbird'", # Won't run on thunderbird due to a race condition with the generated serverknobs conf.
+  "appname != 'thunderbird'", # Won't run on thunderbird due to a race condition with the generated serverknobs conf.
 ]
 
 ["test_FOGPrefs.js"]
@@ -52,7 +52,7 @@ run-if = [
   "appname != 'thunderbird'", # interesting_serverknobs.json isn't applied before init.
 ]
 skip-if = [
-  "os != 'android'", # Android inits its own FOG, so the test won't work.
+  "os == 'android'", # Android inits its own FOG, so the test won't work.
 ]
 
 ["test_OHTTP.js"]

@@ -360,7 +360,7 @@ firefox-appdir = "browser"
 skip-if = [
   "appname == 'thunderbird'", # browser/modules/Sanitizer.sys.mjs used by the test isn't available in Thunderbird.
   "os == 'android'", # Sanitization works differently on Android - this doesn't apply.
-  "os == 'win' && os_version == '11.26100' && processor == 'x86_64' && opt", # Bug 1839376
+  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && opt", # Bug 1839376
 ]
 
 ["test_sss_sanitizeOnShutdown_v2.js"]

@@ -667,7 +667,7 @@ yellow = submarine
         manifest = parser.source_documents[before_path]
 
         manifestparser.toml.remove_skip_if(
-            manifest, os_name="linux", os_version="18.04"
+            manifest, os_name="linux", os_version="22.04"
         )
 
         manifest_str = manifestparser.toml.alphabetize_toml_str(manifest)
@@ -680,7 +680,7 @@ yellow = submarine
         manifest = parser.source_documents[before_path]
 
         manifestparser.toml.remove_skip_if(
-            manifest, os_name="linux", os_version="18.04", processor="x86"
+            manifest, os_name="linux", os_version="22.04", processor="x86"
         )
 
         manifest_str = manifestparser.toml.alphabetize_toml_str(manifest)
@@ -693,7 +693,7 @@ yellow = submarine
         manifest = parser.source_documents[before_path]
 
         manifestparser.toml.remove_skip_if(
-            manifest, os_name="unknown", os_version="18.04", processor="x86"
+            manifest, os_name="unknown", os_version="22.04", processor="x86"
         )
 
         manifest_str = manifestparser.toml.alphabetize_toml_str(manifest)

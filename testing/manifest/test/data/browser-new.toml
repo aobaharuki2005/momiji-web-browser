@@ -9,7 +9,11 @@ skip-if = [
 
 ["browser_cross_process_csp_inheritance.js"]
 https_first_disabled = true
-skip-if = ["os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt"] # Bug TBD
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt", # Bug TBD
+]
 
 ["browser_focus_document.js"]
-skip-if = ["os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt"] # Bug 1962169
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64' && opt", # Bug 1962169
+]

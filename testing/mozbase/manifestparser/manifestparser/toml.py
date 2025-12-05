@@ -889,13 +889,12 @@ def add_skip_if(
     mp_array: Array = array()
     if skip_if is None:  # add the first one line entry to the table
         if mode != Mode.CARRYOVER:
-            mp_array.add_line(condition, indent="", add_comma=False, newline=False)
             if create_bug_lambda is not None:
                 bug = create_bug_lambda()
                 if bug is not None:
                     bug_reference = f"Bug {bug.id}"
-            if bug_reference is not None:
-                mp_array.comment(bug_reference)
+            mp_array.add_line(condition, indent="  ", comment=bug_reference)
+            mp_array.add_line("", indent="")  # fixed in write_toml_str
             skip_if = {"skip-if": mp_array}
             keyvals.update(skip_if)
     else:
@@ -1034,25 +1033,10 @@ def remove_skip_if(
                         has_removed_items = True
 
                 if len(conditions_to_add) > 0:
-                    # If there is only one condition, make the skip-if a one-liner
-                    if len(conditions_to_add) > 1:
-                        for condition, comment in conditions_to_add:
-                            new_conditions.add_line(
-                                condition, comment=comment, indent="  "
-                            )
-                    else:
-                        condition, comment = conditions_to_add[0]
-                        new_conditions.add_line(
-                            condition, indent="", add_comma=False, newline=False
-                        )
-                        # Make sure the comment is added outside the array on one-liners
-                        if comment is not None:
-                            new_conditions.comment(comment)
-
-                # Do not keep an empty skip-if array if there are no conditions
+                    for condition, comment in conditions_to_add:
+                        new_conditions.add_line(condition, comment=comment, indent="  ")
                 if len(new_conditions) > 0:
-                    if len(new_conditions) > 1:
-                        new_conditions.add_line("", indent="")
+                    new_conditions.add_line("", indent="")
                     key_values.update({"skip-if": new_conditions})
                 else:
                     del key_values["skip-if"]
