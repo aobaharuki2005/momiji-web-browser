@@ -9145,6 +9145,7 @@ dialog:dir(rtl)::after {
     gap: var(--space-large);
   }
   .personalized-card-wrapper .personalized-card-inner img {
+    width: 100px;
     justify-self: initial;
   }
   .personalized-card-wrapper .personalized-card-inner h2 {
@@ -9157,7 +9158,9 @@ dialog:dir(rtl)::after {
     gap: var(--space-large);
   }
   .personalized-card-wrapper .personalized-card-inner img {
-    width: 75px;
+    width: 130px;
+    align-self: end;
+    grid-row: 1/span 2;
   }
   .personalized-card-wrapper .personalized-card-inner .personalized-card-cta-wrapper {
     align-items: center;
@@ -9165,9 +9168,14 @@ dialog:dir(rtl)::after {
     grid-template-columns: subgrid;
     grid-row: 2;
     grid-column: 2/span 2;
+    padding-block-end: var(--space-xxlarge);
   }
   .personalized-card-wrapper .personalized-card-inner p {
-    width: 230px;
+    width: 210px;
+    margin: 0;
+  }
+  .personalized-card-wrapper .personalized-card-inner h2 {
+    margin: 0;
   }
 }
 @media (min-width: 1122px) {
@@ -9176,7 +9184,8 @@ dialog:dir(rtl)::after {
     gap: var(--space-large);
   }
   .personalized-card-wrapper .personalized-card-inner img {
-    width: 75px;
+    width: 100px;
+    align-self: end;
   }
   .personalized-card-wrapper .personalized-card-inner h2 {
     grid-column: 2;
@@ -9215,6 +9224,6 @@ dialog:dir(rtl)::after {
 }
 @media (min-width: 724px) {
   .personalized-card-wrapper {
-    padding: var(--space-xxlarge);
+    padding-block-end: 0;
   }
 }
