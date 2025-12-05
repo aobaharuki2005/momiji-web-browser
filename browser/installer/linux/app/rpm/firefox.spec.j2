@@ -13,6 +13,8 @@ Source2:        %{name}.1
 Source{{ loop.index + 2 }}:        {{ metadata.extension_id }}.xpi
 {%- endfor %}
 
+%global __requires_exclude_from ^/usr/lib/firefox.*/libonnxruntime\\.so$
+
 %global mozappdir /{{ PKG_INSTALL_PATH }}
 %global appdir %{_datadir}/applications/
 
