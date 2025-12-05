@@ -13,6 +13,8 @@ MOZ_SRC_FILES += [
     "ChatUtils.sys.mjs",
     "InsightsHistorySource.sys.mjs",
     "IntentClassifier.sys.mjs",
+    "SearchBrowsingHistory.sys.mjs",
+    "Tools.sys.mjs",
     "Utils.sys.mjs",
 ]
 
