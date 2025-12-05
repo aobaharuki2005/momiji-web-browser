@@ -104,6 +104,8 @@ support-files = ["trendingSuggestionEngine.sjs"]
 
 ["browser_searchPanelHeader.js"]
 
+["browser_searchRestrictToken_privateWindow.js"]
+
 ["browser_search_annotation.js"]
 
 ["browser_search_discovery.js"]
