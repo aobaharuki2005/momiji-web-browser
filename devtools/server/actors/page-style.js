@@ -107,7 +107,7 @@ class PageStyleActor extends Actor {
     this.styleSheetsManager.on("stylesheet-updated", this.#onStylesheetUpdated);
   }
 
-  #observedRules = [];
+  #observedRules = new Set();
 
   destroy() {
     if (!this.walker) {
@@ -122,7 +122,7 @@ class PageStyleActor extends Actor {
     this.cssLogic = null;
     this.styleSheetsByRootNode = null;
 
-    this.#observedRules = [];
+    this.#observedRules = null;
   }
 
   get ownerWindow() {
@@ -607,7 +607,7 @@ class PageStyleActor extends Actor {
     // Clear any previous references to StyleRuleActor instances for CSS rules.
     // Assume the consumer has switched context to a new node and no longer
     // interested in state changes of previous rules.
-    this.#observedRules = [];
+    this.#observedRules.clear();
     this.selectedElement = node?.rawNode || null;
 
     if (!node) {
@@ -625,17 +625,20 @@ class PageStyleActor extends Actor {
       options
     );
 
-    const entryRules = new Set();
-    entries.forEach(entry => {
-      entryRules.add(entry.rule);
-    });
+    const promises = [];
+    for (const entry of entries) {
+      // Reference to instances of StyleRuleActor for CSS rules matching the node.
+      // Assume these are used by a consumer which wants to be notified when their
+      // state or declarations change either directly or indirectly.
+      this.#observedRules.add(entry.rule);
+      // We need to be sure that authoredText has been set before StyleRule#form is called.
+      // This has to be treated specially, for now, because we cannot synchronously compute
+      // the authored text and |form| can't return a promise.
+      // See bug 1205868.
+      promises.push(entry.rule.getAuthoredCssText());
+    }
 
-    await Promise.all(entries.map(entry => entry.rule.getAuthoredCssText()));
-
-    // Reference to instances of StyleRuleActor for CSS rules matching the node.
-    // Assume these are used by a consumer which wants to be notified when their
-    // state or declarations change either directly or indirectly.
-    this.#observedRules = entryRules;
+    await Promise.all(promises);
 
     return { entries };
   }
