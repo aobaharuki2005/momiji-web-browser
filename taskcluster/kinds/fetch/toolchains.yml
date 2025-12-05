@@ -426,7 +426,7 @@ rust-nightly:
         type: git
         include-dot-git: true
         repo: https://github.com/rust-lang/rust/
-        branch: master
+        branch: main
 
 wasi-sdk:
     description: wasi-sdk-20 source code
