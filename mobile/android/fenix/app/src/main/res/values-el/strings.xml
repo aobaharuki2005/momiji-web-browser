@@ -1481,6 +1481,14 @@
   <string name="tab_tray_menu_tab_settings">Ρυθμίσεις καρτελών</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">Κλείσιμο όλων των καρτελών</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">Κλείσιμο όλων των καρτελών;</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">Αυτό θα κλείσει όλες τις ανοικτές καρτέλες.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">Κλείσιμο καρτελών</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Ακύρωση</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Αποθήκευση</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
