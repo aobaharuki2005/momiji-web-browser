@@ -6142,11 +6142,6 @@
 
 # Disable storing the session history in the parent process, and accessing it
 # over IPC from the child processes.
-# WARNING: Until the test harness can understand ship-pref default values, this pref’s
-# default must be synchronized with the values set in testing/mochitest/runtests.py and in
-# testing/web-platform/tests/tools/wptrunner/wptrunner/browsers/firefox_android.py.
-# Changing the default here without updating the test harnesses will cause mismatches
-# in automation.
 - name: fission.disableSessionHistoryInParent
   type: bool
   value: false
