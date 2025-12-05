@@ -1417,13 +1417,17 @@ export class TopSitesFeed {
    * @param {Array} sponsors - List of sponsor domain objects
    * @returns {Array} Filtered list of sponsors not in organic topsites
    */
-  dedupeSponsorsAgainstTopsites(sponsors) {
+  dedupeSponsorsAgainstTopsites(sponsors = []) {
     const topsites = new Set(
       (this._linksWithDefaults || [])
         .filter(site => site.type !== "frecency-boost")
         .map(site => {
           try {
-            return new URL(site.url).hostname;
+            return (
+              site.label?.toLowerCase() ||
+              site.hostname ||
+              lazy.NewTabUtils.shortURL(site)
+            );
           } catch (e) {
             return null;
           }
@@ -1431,7 +1435,10 @@ export class TopSitesFeed {
         .filter(Boolean)
     );
 
-    return sponsors.filter(({ hostname }) => !topsites.has(hostname));
+    return sponsors.filter(
+      ({ hostname }) =>
+        !topsites.has(lazy.NewTabUtils.shortURL({ url: `https://${hostname}` }))
+    );
   }
 
   /**
