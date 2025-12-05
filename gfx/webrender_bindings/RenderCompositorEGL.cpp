@@ -88,7 +88,11 @@ bool RenderCompositorEGL::BeginFrame() {
         << "We don't have EGLSurface to draw into. Called too early?";
     return false;
   }
-
+#ifdef MOZ_WAYLAND
+  if (auto* gtkWidget = mWidget->AsGTK()) {
+    gtkWidget->SetEGLNativeWindowSize(GetBufferSize());
+  }
+#endif
   if (!MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
     return false;
