@@ -116,7 +116,12 @@ add_task(async function () {
 
   await selectNode("body", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `body, ~~[data-test="in-starting-style"]~~`,
       ancestorRulesData: ["@starting-style {"],
@@ -132,7 +137,12 @@ add_task(async function () {
 
   await selectNode("h1", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `h1, ~~[data-test="in-starting-style"]~~`,
       ancestorRulesData: ["@starting-style {"],
@@ -159,7 +169,12 @@ add_task(async function () {
 
   await selectNode("main", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: ``,
       ancestorRulesData: [

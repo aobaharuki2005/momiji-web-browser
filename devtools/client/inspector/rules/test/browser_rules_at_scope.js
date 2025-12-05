@@ -53,7 +53,12 @@ add_task(async function () {
   const { inspector, view } = await openRuleView();
   await selectNode("main", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `:scope, ~~[data-test="scoped-inline-style"]~~`,
       ancestorRulesData: ["@scope {"],
@@ -63,7 +68,12 @@ add_task(async function () {
 
   await selectNode("main #a", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `div, ~~[data-test="scoped-inline-style"]~~`,
       ancestorRulesData: ["@scope {"],
@@ -73,7 +83,12 @@ add_task(async function () {
 
   await selectNode("main #a #a-child", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `:scope, ~~[data-test="nested-scoped-inline-style"]~~`,
       ancestorRulesData: ["@scope {", "  @scope (:scope section) {"],
@@ -87,7 +102,12 @@ add_task(async function () {
 
   await selectNode("aside #b", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `div, ~~[data-test="start-and-end-inherit"]~~`,
       ancestorRulesData: ["@scope (aside) to (.limit) {"],
@@ -107,7 +127,12 @@ add_task(async function () {
 
   await selectNode("aside #b > span", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `& span`,
       ancestorRulesData: [
@@ -129,7 +154,12 @@ add_task(async function () {
 
   await selectNode("aside #c", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `div, ~~[data-test="start-no-end"]~~`,
       ancestorRulesData: ["@scope (aside) {"],
@@ -148,7 +178,12 @@ add_task(async function () {
 
   await selectNode("aside #c > span", inspector);
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       header: "Inherited from div#b",
     },

@@ -1371,6 +1371,8 @@ function getSmallIncrementKey() {
  * @param {object[]} expectedElements
  * @param {string} expectedElements[].selector - The expected selector of the rule. Wrap
  *        unmatched selector with `~~` characters (e.g. "div, ~~unmatched~~")
+ * @param {boolean} expectedElements[].selectorEditable - Whether or not the selector can
+ *        be edited. Defaults to true.
  * @param {string[]|null} expectedElements[].ancestorRulesData - An array of the parent
  *        selectors of the rule, with their indentations and the opening brace.
  *        e.g. for the following rule `html { body { span {} } }`, for the `span` rule,
@@ -1428,8 +1430,12 @@ function checkRuleViewContent(view, expectedElements) {
 
     const selector = [
       ...elementInView.querySelectorAll(
-        // Get the selector parts (.ruleview-selector), as well as the `element` "fake" selector
-        ".ruleview-selectors-container .ruleview-selector, .ruleview-selectors-container.alternative-selector"
+        // Get the selector parts (.ruleview-selector)
+        ".ruleview-selectors-container .ruleview-selector," +
+          // as well as the `element` "fake" selector
+          ".ruleview-selectors-container.alternative-selector," +
+          // and read-only selectors
+          `.ruleview-selectors-container.uneditable-selector`
       ),
     ]
       .map(selectorEl => {
@@ -1444,6 +1450,13 @@ function checkRuleViewContent(view, expectedElements) {
       selector,
       expectedElement.selector,
       `Expected selector for element #${i}`
+    );
+    is(
+      elementInView.querySelector(
+        `.ruleview-selectors-container:not(.uneditable-selector)`
+      ) !== null,
+      expectedElement.selectorEditable ?? true,
+      `Selector for element #${i} (${selector}) ${(expectedElement.selectorEditable ?? true) ? "is" : "isn't"} editable`
     );
 
     const ancestorData = elementInView.querySelector(

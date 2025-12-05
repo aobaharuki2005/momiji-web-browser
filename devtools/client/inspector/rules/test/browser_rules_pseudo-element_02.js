@@ -242,6 +242,7 @@ add_task(async function () {
     {
       selector: `element`,
       declarations: [],
+      selectorEditable: false,
     },
     {
       selector: `*`,

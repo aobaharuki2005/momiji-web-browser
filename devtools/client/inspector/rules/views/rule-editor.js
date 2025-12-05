@@ -381,6 +381,8 @@ RuleEditor.prototype = {
         // devtools.inspector.rule-view.focusNextOnEnter set to true
         stopOnReturn: this.ruleView.inplaceEditorFocusNextOnEnter !== true,
       });
+    } else {
+      this.selectorText.classList.add("uneditable-selector");
     }
 
     if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE) {

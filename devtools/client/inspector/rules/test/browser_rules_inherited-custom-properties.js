@@ -52,7 +52,12 @@ add_task(async function () {
   // The `main, [test="no-inherit"]` only has 1 definition that should be hidden,
   // which means that the whole rule should be hidden
   await checkRuleViewContent(view, [
-    { selector: `element`, ancestorRulesData: null, declarations: [] },
+    {
+      selector: `element`,
+      ancestorRulesData: null,
+      selectorEditable: false,
+      declarations: [],
+    },
     {
       selector: `h1`,
       declarations: [

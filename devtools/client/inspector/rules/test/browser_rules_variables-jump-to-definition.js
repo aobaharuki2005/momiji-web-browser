@@ -318,7 +318,7 @@ add_task(async function checkClearSearch() {
 
   // check that the rule view is filtered as expected
   await checkRuleViewContent(view, [
-    { selector: "element", declarations: [] },
+    { selector: "element", selectorEditable: false, declarations: [] },
     {
       selector: "h1",
       declarations: [
@@ -345,7 +345,7 @@ add_task(async function checkClearSearch() {
 
   // check that the rule view is no longer filtered
   await checkRuleViewContent(view, [
-    { selector: "element", declarations: [] },
+    { selector: "element", selectorEditable: false, declarations: [] },
     { selector: "h1#title", declarations: fillerDeclarations },
     {
       selector: "h1",
@@ -391,6 +391,7 @@ add_task(async function checkJumpToUnusedVariable() {
   await checkRuleViewContent(view, [
     {
       selector: "element",
+      selectorEditable: false,
       declarations: [],
     },
     {
@@ -423,6 +424,7 @@ add_task(async function checkJumpToUnusedVariable() {
   await checkRuleViewContent(view, [
     {
       selector: "element",
+      selectorEditable: false,
       declarations: [],
     },
     {
