@@ -2324,9 +2324,13 @@ export class UrlbarView {
   #setRowSelectable(item, isRowSelectable) {
     item.toggleAttribute("row-selectable", isRowSelectable);
     item._content.toggleAttribute("selectable", isRowSelectable);
+
+    // Set or remove role="option" on the inner. "option" should be set iff the
+    // row is selectable. Some providers may set a different role if the inner
+    // is not selectable, so when removing it, only do so if it's "option".
     if (isRowSelectable) {
       item._content.setAttribute("role", "option");
-    } else {
+    } else if (item._content.getAttribute("role") == "option") {
       item._content.removeAttribute("role");
     }
   }
@@ -2430,6 +2434,7 @@ export class UrlbarView {
       if (update.l10n) {
         this.#l10nCache.setElementL10n(node, update.l10n);
       } else if (update.hasOwnProperty("textContent")) {
+        this.#l10nCache.removeElementL10n(node);
         lazy.UrlbarUtils.addTextContentWithHighlights(
           node,
           update.textContent,

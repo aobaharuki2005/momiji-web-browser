@@ -123,6 +123,13 @@ export class RealtimeSuggestProvider extends SuggestProvider {
     };
   }
 
+  get ariaGroupL10n() {
+    return {
+      id: "urlbar-result-aria-group-" + this.realtimeTypeForFtl,
+      attribute: "aria-label",
+    };
+  }
+
   get isSponsored() {
     return false;
   }
@@ -436,6 +443,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
       overflowable: true,
       attributes: {
         selectable: hasMultipleItems ? null : "",
+        role: hasMultipleItems ? "group" : "option",
       },
       classList: ["urlbarView-realtime-root"],
       children: items.map((item, i) => ({
@@ -444,6 +452,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
         classList: ["urlbarView-realtime-item"],
         attributes: {
           selectable: !hasMultipleItems ? null : "",
+          role: hasMultipleItems ? "option" : "presentation",
         },
         children: [
           // Create an image inside a container so that the image appears inset
@@ -504,6 +513,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
 
   getViewUpdate(result) {
     let { items } = result.payload;
+    let hasMultipleItems = items.length > 1;
 
     let update = {
       root: {
@@ -512,6 +522,7 @@ export class RealtimeSuggestProvider extends SuggestProvider {
           url: items[0].url,
           query: items[0].query,
         },
+        l10n: hasMultipleItems ? this.ariaGroupL10n : null,
       },
     };
 
