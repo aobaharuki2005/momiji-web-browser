@@ -343,7 +343,7 @@
     }
 
     .urlbar-input-container[pageproxystate="valid"] > &:not(.chickletShown) {
-      display: flex;
+      display: inline-flex;
     }
   }
 
