@@ -169,8 +169,6 @@ export class SidebarTabList extends FxviewTabListBase {
     if ((this.searchQuery || this.sortOption == "lastvisited") && i == 0) {
       // Make the first row focusable if there is no header.
       tabIndex = 0;
-    } else if (!this.searchQuery) {
-      tabIndex = 0;
     }
     return html`
       <sidebar-tab-row
@@ -184,7 +182,6 @@ export class SidebarTabList extends FxviewTabListBase {
         .favicon=${tabItem.icon}
         .guid=${tabItem.guid}
         .hasPopup=${this.hasPopup}
-        .indicators=${tabItem.indicators}
         .primaryL10nArgs=${ifDefined(tabItem.primaryL10nArgs)}
         .primaryL10nId=${tabItem.primaryL10nId}
         role="listitem"
@@ -222,7 +219,6 @@ export class SidebarTabRow extends FxviewTabRowBase {
   static properties = {
     guid: { type: String },
     selected: { type: Boolean, reflect: true },
-    indicators: { type: Array },
   };
 
   /**
@@ -264,12 +260,6 @@ export class SidebarTabRow extends FxviewTabRowBase {
         class=${classMap({
           "fxview-tab-row-main": true,
           "no-action-button-row": this.canClose === false,
-          muted: this.indicators?.includes("muted"),
-          attention: this.indicators?.includes("attention"),
-          soundplaying: this.indicators?.includes("soundplaying"),
-          "activemedia-blocked": this.indicators?.includes(
-            "activemedia-blocked"
-          ),
         })}
         disabled=${this.closeRequested}
         data-l10n-args=${ifDefined(this.primaryL10nArgs)}
