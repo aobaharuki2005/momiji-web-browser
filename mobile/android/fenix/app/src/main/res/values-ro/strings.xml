@@ -237,7 +237,7 @@
   <!-- Browser menu toggle that requests a desktop site -->
   <string name="browser_menu_desktop_site">Versiune site de desktop</string>
   <!-- Browser menu button that reopens a private tab as a regular tab -->
-  <string name="browser_menu_open_in_regular_tab">Deschide într-o filă nouă</string>
+  <string name="browser_menu_open_in_regular_tab">Deschide într-o filă normală</string>
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
   <string name="browser_menu_add_to_homescreen">Adaugă în ecranul de pornire</string>
   <!-- Browser menu toggle that adds a PWA of the site on the device home screen. -->
@@ -552,7 +552,7 @@
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
   <string name="onboarding_term_of_service_line_three_link_text">Gestionează</string>
   <!-- Terms of use (ToU) onboarding redesign title. -->
-  <string name="onboarding_redesign_tou_title">Lansează browserul Android în ultima versiune</string>
+  <string name="onboarding_redesign_tou_title">Lansează ultima versiune a browserului Android</string>
   <!-- Terms of use (ToU) first subheader. -->
   <string name="onboarding_redesign_tou_subheader_one">Încarcă site-urile extrem de repede</string>
   <!-- Terms of use (ToU) second subheader. -->
@@ -648,7 +648,7 @@
   <!-- Onboarding theme selection card label for 'dark' option, used by Nimbus experiments. -->
   <string name="onboarding_customize_theme_dark_option">Întunecată</string>
   <!-- Onboarding theme selection card label for 'light' option, used by Nimbus experiments. -->
-  <string name="onboarding_customize_theme_light_option">Deschisă</string>
+  <string name="onboarding_customize_theme_light_option">Luminoasă</string>
   <!-- Onboarding theme selection card label for 'System auto' option, used by Nimbus experiments. -->
   <string name="onboarding_customize_theme_system_option">Sistem automat</string>
   <!-- Onboarding theme selection card content description for the main image. -->
@@ -1008,7 +1008,7 @@
   -->
   <string name="alternative_app_icon_option_default">Implicit</string>
   <!-- Title for the "Light" alternative app icon variant in the icon picker screen. -->
-  <string name="alternative_app_icon_option_light">Deschisă</string>
+  <string name="alternative_app_icon_option_light">Luminoasă</string>
   <!-- Title for the "Dark" alternative app icon variant in the icon picker screen. -->
   <string name="alternative_app_icon_option_dark">Întunecată</string>
   <!-- Title for the "Red" alternative app icon variant in the icon picker screen. -->
@@ -1034,7 +1034,7 @@
   <!-- Title for the "Midnight" gradient alternative app icon variant in the icon picker screen. The app icon features a dark gradient background, resembling the deep tones of the night sky. -->
   <string name="alternative_app_icon_option_gradient_midnight">Miezul nopții</string>
   <!-- Title for the "Northern Lights" gradient alternative app icon variant in the icon picker screen. The app icon has a dynamic green, blue, and purple gradient background, resembling the aurora borealis. -->
-  <string name="alternative_app_icon_option_gradient_northern_lights">Luminile nordului</string>
+  <string name="alternative_app_icon_option_gradient_northern_lights">Aurora boreală</string>
   <!-- Title for the "Retro 2004" themed alternative app icon variant in the icon picker screen. This app icon uses the classic Firefox logo from 2004. -->
   <string name="alternative_app_icon_option_retro_2004">Retro 2004</string>
   <!-- Title for the "Pixelated" themed alternative app icon variant in the icon picker screen. This app icon features a pixel-art style, resembling retro 8-bit graphics. -->
@@ -1269,7 +1269,7 @@
 
     Preference for using light theme
   -->
-  <string name="preference_light_theme">Deschisă</string>
+  <string name="preference_light_theme">Luminoasă</string>
   <!-- Preference for using dark theme -->
   <string name="preference_dark_theme">Întunecată</string>
   <!-- Preference for using using dark or light theme automatically set by battery -->
@@ -1373,7 +1373,7 @@
   <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
   <string name="preferences_close_tabs">Închide filele</string>
   <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
-  <string name="close_tabs_manually">Manual</string>
+  <string name="close_tabs_manually">Niciodată</string>
   <!-- Option for auto closing tabs that will auto close tabs after one day -->
   <string name="close_tabs_after_one_day">După o zi</string>
   <!-- Option for auto closing tabs that will auto close tabs after one week -->
@@ -2424,7 +2424,7 @@
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
   <string name="preference_enhanced_tracking_protection_custom_cryptominers">Criptomineri</string>
   <!-- Preference for enhanced tracking protection for the custom protection settings -->
-  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Amprente digitale cunoscute</string>
+  <string name="preference_enhanced_tracking_protection_custom_known_fingerprinters">Detectoare cunoscute de amprente digitale</string>
   <!-- Button label for navigating to the Enhanced Tracking Protection details -->
   <string name="enhanced_tracking_protection_details">Detalii</string>
   <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
@@ -2476,11 +2476,11 @@
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Șterge cookie-urile setate de redirecționări către site-uri web de urmărire cunoscute.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
-  <string name="etp_suspected_fingerprinters_title">Amprente digitale suspectate</string>
+  <string name="etp_suspected_fingerprinters_title">Detectoare suspecte de amprente digitale</string>
   <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
-  <string name="etp_suspected_fingerprinters_description">Activează protecția prin amprente digitale pentru a opri suspecții de amprentare.</string>
+  <string name="etp_suspected_fingerprinters_description">Activează protecția împotriva amprentării digitale pentru a opri detectoarele suspecte de amprente digitale.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_known_fingerprinters_title">Amprente digitale cunoscute</string>
+  <string name="etp_known_fingerprinters_title">Detectoare cunoscute de amprente digitale</string>
   <!--
     Description of the SmartBlock Enhanced Tracking Protection feature. The * symbol is intentionally hardcoded here,
     as we use it on the UI to indicate which trackers have been partially unblocked.
@@ -2848,7 +2848,7 @@
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
   <string name="addresses_island" tools:ignore="UnusedResources">Insulă</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Townland field, specific to Ireland is a specific type of land division used in rural areas. -->
-  <string name="addresses_townland" tools:ignore="UnusedResources">Municipiu</string>
+  <string name="addresses_townland" tools:ignore="UnusedResources">Comună</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
   <string name="addresses_district" tools:ignore="UnusedResources">Raion</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Used in the United Kingdom, Norway and Sweden -->
@@ -3635,7 +3635,7 @@
   -->
   <string name="debug_drawer_addresses_title">Adrese</string>
   <!-- The title of the section header for the list of debug locales that can be enabled and disabled. -->
-  <string name="debug_drawer_addresses_debug_locales_header">Depanează setările regionale pentru a activa</string>
+  <string name="debug_drawer_addresses_debug_locales_header">Depanează setările regionale pentru activare</string>
   <!-- The title of the header for the section for managing addresses. -->
   <string name="debug_drawer_addresses_management_header">Gestionează adresele</string>
   <!-- The title of the button in the debug drawer for adding a new address. -->
@@ -3823,7 +3823,7 @@
   <!-- The title of the explore extensions task for the setup checklist -->
   <string name="setup_checklist_task_explore_extensions">Explorează extensiile</string>
   <!-- The title of the search widget task for the setup checklist -->
-  <string name="setup_checklist_task_search_widget_2">Widgetul de căutare Explorează</string>
+  <string name="setup_checklist_task_search_widget_2">Descoperă widgeturi de căutare</string>
   <!--
     ===== Setup checklist feature: Group titles =====
 

@@ -1481,6 +1481,14 @@
   <string name="tab_tray_menu_tab_settings">Lapbeállítások</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">Az összes lap bezárása</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">Bezárja az összes lapot?</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">Ez bezárja az összes nyitott lapot.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">Lapok bezárása</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Mégse</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Könyvjelzőzés</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
@@ -2348,7 +2356,7 @@
   <!-- Preference for enhanced tracking protection for the standard protection settings -->
   <string name="preference_enhanced_tracking_protection_standard_default_1">Normál (alapértelmezett)</string>
   <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-  <string name="preference_enhanced_tracking_protection_standard_description_5">A lapok normálisan betöltenek, de néhány nyomkövető blokkolása.</string>
+  <string name="preference_enhanced_tracking_protection_standard_description_5">Az oldalak normálisan betöltődnek, de kevesebb nyomkövető lesz blokkolva.</string>
   <!-- Accessibility text for the Standard protection information icon -->
   <string name="preference_enhanced_tracking_protection_standard_info_button">Mit blokkol a szokásos követésvédelem</string>
   <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -2464,7 +2472,7 @@
   -->
   <string name="open_source_licenses_title">%s | Nyílt forráskódú programkönyvtárak</string>
   <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
-  <string name="etp_redirect_trackers_title">Nyomkövetők átirányítása</string>
+  <string name="etp_redirect_trackers_title">Átirányító nyomkövetők</string>
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Törli az ismert nyomkövető webhelyekre történő átirányítással beállított sütiket.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
