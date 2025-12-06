@@ -47,7 +47,7 @@
         <item name="mozacSelectAddressHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
 
         <!-- Material3 -->
-        <item name="colorPrimary">@color/fx_mobile_primary</item>
+        <item name="colorPrimarySurface">@color/fx_mobile_primary</item>
         <item name="colorOnPrimary">@color/fx_mobile_on_primary</item>
         <item name="colorPrimaryContainer">@color/fx_mobile_primary_container</item>
         <item name="colorOnPrimaryContainer">@color/fx_mobile_on_primary_container</item>
@@ -344,7 +344,7 @@
         <item name="mozacSelectAddressHeaderTextStyle" tools:ignore="UnusedResources">@style/SelectPromptHeaderTextStyle</item>
 
         <!-- Material3 -->
-        <item name="colorPrimary">@color/fx_mobile_private_primary</item>
+        <item name="colorPrimarySurface">@color/fx_mobile_private_primary</item>
         <item name="colorOnPrimary">@color/fx_mobile_private_on_primary</item>
         <item name="colorPrimaryContainer">@color/fx_mobile_private_primary_container</item>
         <item name="colorOnPrimaryContainer">@color/fx_mobile_private_on_primary_container</item>

@@ -608,13 +608,13 @@ private fun BookmarksListTopBar(
     val textColor = if (selectedItems.isEmpty()) {
         MaterialTheme.colorScheme.onSurface
     } else {
-        MaterialTheme.colorScheme.inverseOnSurface
+        MaterialTheme.colorScheme.onPrimary
     }
 
     val iconColor = if (selectedItems.isEmpty()) {
         MaterialTheme.colorScheme.onSurface
     } else {
-        MaterialTheme.colorScheme.inverseOnSurface
+        MaterialTheme.colorScheme.onPrimary
     }
 
     Box {

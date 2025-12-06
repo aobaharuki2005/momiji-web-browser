@@ -561,8 +561,8 @@ private fun getToolbarConfig(mode: Mode): ToolbarConfig {
                 mode.selectedItems.size,
             ),
             backgroundColor = MaterialTheme.colorScheme.primary,
-            textColor = MaterialTheme.colorScheme.inverseOnSurface,
-            iconColor = MaterialTheme.colorScheme.inverseOnSurface,
+            textColor = MaterialTheme.colorScheme.onPrimary,
+            iconColor = MaterialTheme.colorScheme.onPrimary,
         )
 
         is Mode.Normal -> ToolbarConfig(

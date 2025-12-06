@@ -7,7 +7,6 @@ package org.mozilla.fenix.library
 import android.content.Context
 import android.view.ViewGroup
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.ContextCompat
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
@@ -36,11 +35,8 @@ open class LibraryPageView(
     ) {
         updateToolbar(
             title = title,
-            foregroundColor = ContextCompat.getColor(
-                context,
-                R.color.fx_mobile_text_color_oncolor_primary,
-            ),
-            backgroundColor = context.getColorFromAttr(R.attr.accent),
+            foregroundColor = context.getColorFromAttr(materialR.attr.colorOnPrimary),
+            backgroundColor = context.getColorFromAttr(materialR.attr.colorPrimarySurface),
         )
     }
 
