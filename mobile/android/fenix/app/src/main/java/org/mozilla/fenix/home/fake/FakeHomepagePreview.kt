@@ -5,13 +5,13 @@
 package org.mozilla.fenix.home.fake
 
 import android.content.Context
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
-import mozilla.components.compose.base.SelectableChipColors
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.tab.collections.Tab
@@ -52,7 +52,6 @@ import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.home.store.NimbusMessageState
 import org.mozilla.fenix.home.topsites.interactor.TopSiteInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
-import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.WallpaperState
 import java.io.File
 import java.util.UUID
@@ -411,8 +410,8 @@ internal object FakeHomepagePreview {
             .split(" ")
             .map { PocketRecommendedStoriesCategory(it) },
         categoriesSelections = emptyList(),
-        categoryColors = SelectableChipColors.buildColors(),
-        textColor = FirefoxTheme.colors.textPrimary,
+        categoryColors = FilterChipDefaults.filterChipColors(),
+        textColor = MaterialTheme.colorScheme.onSurface,
         linkTextColor = MaterialTheme.colorScheme.tertiary,
         showDiscoverMoreButton = false,
     )
