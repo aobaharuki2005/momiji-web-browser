@@ -869,28 +869,11 @@ AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(
 }
 
 bool AnchorPositioningUtils::FitsInContainingBlock(
-    const ContainingBlockInfo& aContainingBlockInfo,
-    const nsIFrame* aPositioned, const AnchorPosReferenceData* aReferenceData) {
+    const nsIFrame* aPositioned, const AnchorPosReferenceData& aReferenceData) {
   MOZ_ASSERT(aPositioned->GetProperty(nsIFrame::AnchorPosReferences()) ==
-             aReferenceData);
-  const auto originalContainingBlockRect =
-      aContainingBlockInfo.GetContainingBlockRect();
-  const auto overflowCheckRect = aReferenceData->mContainingBlockRect -
-                                 aReferenceData->mDefaultScrollShift;
-  const auto rect = [&]() {
-    auto rect = aPositioned->GetMarginRect();
-    const auto* cb = aPositioned->GetParent();
-    if (!IsScrolled(cb)) {
-      return rect;
-    }
-    const ScrollContainerFrame* scrollContainer =
-        do_QueryFrame(cb->GetParent());
-    return rect - scrollContainer->GetScrollPosition();
-  }();
-
-  return overflowCheckRect.Intersect(originalContainingBlockRect)
-      .Union(originalContainingBlockRect)
-      .Contains(rect);
+             &aReferenceData);
+  return aReferenceData.mContainingBlockRect.Contains(
+      aPositioned->GetMarginRect());
 }
 
 nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
@@ -923,7 +906,7 @@ nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
 }
 
 static bool TriggerFallbackReflow(PresShell* aPresShell, nsIFrame* aPositioned,
-                                  AnchorPosReferenceData* aReferencedAnchors,
+                                  AnchorPosReferenceData& aReferencedAnchors,
                                   bool aEvaluateAllFallbacksIfNeeded) {
   auto totalFallbacks =
       aPositioned->StylePosition()->mPositionTryFallbacks._0.Length();
@@ -933,7 +916,6 @@ static bool TriggerFallbackReflow(PresShell* aPresShell, nsIFrame* aPositioned,
   }
 
   const bool positionedFitsInCB = AnchorPositioningUtils::FitsInContainingBlock(
-      AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(aPositioned),
       aPositioned, aReferencedAnchors);
   if (positionedFitsInCB) {
     return false;
@@ -969,7 +951,7 @@ static bool AnchorIsEffectivelyHidden(nsIFrame* aAnchor) {
 
 static bool ComputePositionVisibility(
     PresShell* aPresShell, nsIFrame* aPositioned,
-    AnchorPosReferenceData* aReferencedAnchors) {
+    AnchorPosReferenceData& aReferencedAnchors) {
   auto vis = aPositioned->StylePosition()->mPositionVisibility;
   if (vis & StylePositionVisibility::ALWAYS) {
     MOZ_ASSERT(vis == StylePositionVisibility::ALWAYS,
@@ -977,7 +959,7 @@ static bool ComputePositionVisibility(
     return true;
   }
   if (vis & StylePositionVisibility::ANCHORS_VALID) {
-    for (const auto& ref : *aReferencedAnchors) {
+    for (const auto& ref : aReferencedAnchors) {
       if (ref.GetData().isNothing()) {
         return false;
       }
@@ -985,17 +967,14 @@ static bool ComputePositionVisibility(
   }
   if (vis & StylePositionVisibility::NO_OVERFLOW) {
     const bool positionedFitsInCB =
-        AnchorPositioningUtils::FitsInContainingBlock(
-            AnchorPositioningUtils::ContainingBlockInfo::UseCBFrameSize(
-                aPositioned),
-            aPositioned, aReferencedAnchors);
+        AnchorPositioningUtils::FitsInContainingBlock(aPositioned,
+                                                      aReferencedAnchors);
     if (!positionedFitsInCB) {
       return false;
     }
   }
   if (vis & StylePositionVisibility::ANCHORS_VISIBLE) {
-    const auto* defaultAnchorName =
-        aReferencedAnchors->mDefaultAnchorName.get();
+    const auto* defaultAnchorName = aReferencedAnchors.mDefaultAnchorName.get();
     if (defaultAnchorName) {
       auto* defaultAnchor =
           aPresShell->GetAnchorPosAnchor(defaultAnchorName, aPositioned);
@@ -1056,7 +1035,7 @@ bool AnchorPositioningUtils::TriggerLayoutOnOverflow(
       continue;
     }
 
-    if (TriggerFallbackReflow(aPresShell, positioned, referencedAnchors,
+    if (TriggerFallbackReflow(aPresShell, positioned, *referencedAnchors,
                               aEvaluateAllFallbacksIfNeeded)) {
       didLayoutPositionedItems = true;
     }
@@ -1066,7 +1045,7 @@ bool AnchorPositioningUtils::TriggerLayoutOnOverflow(
       continue;
     }
     const bool shouldBeVisible =
-        ComputePositionVisibility(aPresShell, positioned, referencedAnchors);
+        ComputePositionVisibility(aPresShell, positioned, *referencedAnchors);
     const bool isVisible =
         !positioned->HasAnyStateBits(NS_FRAME_POSITION_VISIBILITY_HIDDEN);
     if (shouldBeVisible != isVisible) {

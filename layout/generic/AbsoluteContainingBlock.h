@@ -175,8 +175,9 @@ class AbsoluteContainingBlock {
   void ReflowAbsoluteFrame(
       nsContainerFrame* aDelegatingFrame, nsPresContext* aPresContext,
       const ReflowInput& aReflowInput,
-      const nsRect& aOriginalContainingBlockRect, AbsPosReflowFlags aFlags,
-      nsIFrame* aKidFrame, nsReflowStatus& aStatus,
+      const nsRect& aOriginalContainingBlockRect,
+      const nsRect& aOriginalScrollableContainingBlockRect,
+      AbsPosReflowFlags aFlags, nsIFrame* aKidFrame, nsReflowStatus& aStatus,
       OverflowAreas* aOverflowAreas,
       mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache = nullptr);
 

@@ -92,8 +92,6 @@ class AnchorPosReferenceData {
   struct PositionTryBackup {
     mozilla::PhysicalAxes mCompensatingForScroll;
     nsPoint mDefaultScrollShift;
-    nsRect mContainingBlockRect;
-    bool mUseScrollableContainingBlock = false;
   };
   using Value = mozilla::Maybe<AnchorPosResolutionData>;
 
@@ -128,15 +126,12 @@ class AnchorPosReferenceData {
   PositionTryBackup TryPositionWithSameDefaultAnchor() {
     auto compensatingForScroll = std::exchange(mCompensatingForScroll, {});
     auto defaultScrollShift = std::exchange(mDefaultScrollShift, {});
-    auto insetModifiedContainingBlock = std::exchange(mContainingBlockRect, {});
-    return {compensatingForScroll, defaultScrollShift,
-            insetModifiedContainingBlock};
+    return {compensatingForScroll, defaultScrollShift};
   }
 
   void UndoTryPositionWithSameDefaultAnchor(PositionTryBackup&& aBackup) {
     mCompensatingForScroll = aBackup.mCompensatingForScroll;
     mDefaultScrollShift = aBackup.mDefaultScrollShift;
-    mContainingBlockRect = aBackup.mContainingBlockRect;
   }
 
   // Distance from the default anchor to the nearest scroll container.
@@ -308,10 +303,8 @@ struct AnchorPositioningUtils {
     nsRect mRect;
   };
 
-  static bool FitsInContainingBlock(
-      const ContainingBlockInfo& aContainingBlockInfo,
-      const nsIFrame* aPositioned,
-      const AnchorPosReferenceData* aReferenceData);
+  static bool FitsInContainingBlock(const nsIFrame* aPositioned,
+                                    const AnchorPosReferenceData&);
 
   /**
    * If aFrame is positioned using CSS anchor positioning, and it scrolls with
