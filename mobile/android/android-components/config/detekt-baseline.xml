@@ -355,6 +355,7 @@
     <ID>UndocumentedPublicFunction:MemoryIconLoader.kt$MemoryIconLoader.LoaderMemoryCache$fun getBitmap(request: IconRequest, resource: IconRequest.Resource): Bitmap?</ID>
     <ID>UndocumentedPublicFunction:MemoryIconPreparer.kt$MemoryIconPreparer.PreparerMemoryCache$fun getResources(request: IconRequest): List&lt;IconRequest.Resource&gt;</ID>
     <ID>UndocumentedPublicFunction:MemoryIconProcessor.kt$MemoryIconProcessor.ProcessorMemoryCache$fun put(request: IconRequest, resource: IconRequest.Resource, icon: Icon)</ID>
+    <ID>UndocumentedPublicFunction:Nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
     <ID>UndocumentedPublicFunction:OkHttpClient.kt$OkHttpClient.Companion$fun getOrCreateCookieManager(): CookieManager</ID>
     <ID>UndocumentedPublicFunction:OriginVerifierFeature.kt$OriginVerifierFeature$suspend fun verify( state: CustomTabState, token: CustomTabsSessionToken, @Relation relation: Int, origin: Uri, ): Boolean</ID>
     <ID>UndocumentedPublicFunction:PermissionRequest.kt$PermissionRequest$fun containsVideoAndAudioSources()</ID>
@@ -422,6 +423,5 @@
     <ID>UndocumentedPublicFunction:Types.kt$fun mozilla.components.concept.sync.TabData.into(): TabHistoryEntry</ID>
     <ID>UndocumentedPublicFunction:WebAppManifestParser.kt$WebAppManifestParser$fun serialize(manifest: WebAppManifest)</ID>
     <ID>UndocumentedPublicFunction:WorkManagerSyncManager.kt$fun getLastSynced(context: Context): Long</ID>
-    <ID>UndocumentedPublicFunction:nodes.kt$AstNode$open fun toString(level: Int, isTopLevel: Boolean = true): String</ID>
   </CurrentIssues>
 </SmellBaseline>
