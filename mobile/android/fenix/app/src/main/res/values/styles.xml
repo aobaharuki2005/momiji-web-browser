@@ -635,10 +635,8 @@
         <item name="android:fontWeight">@integer/font_weight_medium</item>
     </style>
 
-    <style name="ToolbarTitleTextStyle" parent="HeaderTextStyle">
-        <item name="android:textSize">20sp</item>
-        <item name="android:textFontWeight" tools:ignore="NewApi">@integer/font_weight_medium</item>
-        <item name="android:fontWeight">@integer/font_weight_medium</item>
+    <style name="AppBarTitleTextStyle" parent="AcornHeadline5">
+        <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 
     <style name="ListItemTextStyle" parent="TextAppearance.MaterialComponents.Subtitle1">
@@ -647,6 +645,12 @@
 
     <style name="progressBarStyleHorizontal" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
         <item name="android:progressDrawable">@drawable/progress_gradient</item>
+    </style>
+
+    <style name="AcornHeadline5">
+        <item name="android:textSize">24sp</item>
+        <item name="android:letterSpacing">0.0075</item> <!-- 0.18sp / 24sp -->
+        <item name="android:lineHeight" tools:targetApi="28">32sp</item>
     </style>
 
     <style name="AcornHeadline8">
