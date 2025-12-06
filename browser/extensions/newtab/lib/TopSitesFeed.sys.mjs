@@ -113,6 +113,7 @@ const PREF_SOV_NAME = "sov.name";
 const PREF_SOV_AMP_ALLOCATION = "sov.amp.allocation";
 const PREF_SOV_FRECENCY_ALLOCATION = "sov.frecency.allocation";
 const DEFAULT_SOV_SLOT_COUNT = 3;
+const DEFAULT_SOV_NUM_ITEMS = 200;
 
 // Search experiment stuff
 const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
@@ -1372,6 +1373,7 @@ export class TopSitesFeed {
 
     const sponsorData = {
       title,
+      domain,
       hostname,
       redirectURL: redirect_url,
       faviconDataURI,
@@ -1418,8 +1420,14 @@ export class TopSitesFeed {
    * @returns {Array} Filtered list of sponsors not in organic topsites
    */
   dedupeSponsorsAgainstTopsites(sponsors = []) {
+    const topSitesCount =
+      this.store.getState().Prefs.values[ROWS_PREF] *
+      TOP_SITES_MAX_SITES_PER_ROW;
+
+    const linksWithDefaults = this._linksWithDefaults || [];
     const topsites = new Set(
-      (this._linksWithDefaults || [])
+      linksWithDefaults
+        .slice(0, topSitesCount)
         .filter(site => site.type !== "frecency-boost")
         .map(site => {
           try {
@@ -1460,40 +1468,45 @@ export class TopSitesFeed {
       return [];
     }
 
-    let pagesMap;
-    try {
-      pagesMap = await lazy.PlacesUtils.history.fetchMany(
-        sponsorsToCheck.map(({ hostname }) => `https://${hostname}`)
-      );
-    } catch (error) {
-      lazy.log.warn(`Failed to fetch history data: ${error.message}`);
-      return [];
-    }
+    const { values } = this.store.getState().Prefs;
+    const numItems =
+      values?.trainhopConfig?.sov?.numItems || DEFAULT_SOV_NUM_ITEMS;
+    const topsiteFrecency = lazy.pageFrecencyThreshold;
+
+    // Get all frecent sites from history.
+    const frecent = await this.frecentCache.request({
+      numItems,
+      topsiteFrecency,
+    });
 
     const candidates = [];
-    for (const domainObj of sponsorsToCheck) {
-      const url = `https://${domainObj.hostname}/`;
-      const page = pagesMap.get(url);
+    frecent.forEach(site => {
+      for (const domainObj of sponsorsToCheck) {
+        if (
+          !site.url.startsWith(domainObj.domain) ||
+          lazy.NewTabUtils.blockedLinks.isBlocked({ url: domainObj.domain })
+        ) {
+          continue;
+        }
 
-      if (!page || lazy.NewTabUtils.blockedLinks.isBlocked({ url })) {
-        continue;
+        const sponsorData = this._frecencyBoostedSponsors.get(
+          domainObj.hostname
+        );
+
+        candidates.push({
+          hostname: domainObj.hostname,
+          url: domainObj.redirectURL,
+          label: domainObj.title,
+          sponsored_position: 3,
+          partner: SPONSORED_TILE_PARTNER_FREC_BOOST,
+          type: "frecency-boost",
+          frecency: site.frecency,
+          show_sponsored_label: true,
+          favicon: sponsorData.faviconDataURI,
+          faviconSize: 96,
+        });
       }
-
-      const sponsorData = this._frecencyBoostedSponsors.get(domainObj.hostname);
-
-      candidates.push({
-        hostname: domainObj.hostname,
-        url: domainObj.redirectURL,
-        label: domainObj.title,
-        sponsored_position: 3,
-        partner: SPONSORED_TILE_PARTNER_FREC_BOOST,
-        type: "frecency-boost",
-        frecency: page.frecency,
-        show_sponsored_label: true,
-        favicon: sponsorData.faviconDataURI,
-        faviconSize: 96,
-      });
-    }
+    });
 
     // If we have a matched set of candidates,
     // we can check if it's an exposure event.
