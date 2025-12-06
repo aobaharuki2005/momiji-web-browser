@@ -132,7 +132,6 @@ private fun initialActions(): List<Action> {
             showPrivacyMask = false,
             onClick = object : BrowserToolbarEvent {},
         ),
-
         ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
             contentDescription = android.R.string.untitled,

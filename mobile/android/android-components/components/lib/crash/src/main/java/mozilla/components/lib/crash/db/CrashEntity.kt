@@ -31,74 +31,61 @@ data class CrashReporterUnableToRestoreException(override var message: String) :
 )
 internal data class CrashEntity(
     // shared fields- both uncaught exception and native crashes
-
     /**
      * Type of crash- either UNCAUGHT or NATIVE
      */
     @ColumnInfo(name = "crashType", defaultValue = "UNCAUGHT")
     var crashType: CrashType,
-
     /**
      * Generated UUID for this crash.
      */
     @PrimaryKey
     @ColumnInfo(name = "uuid")
     var uuid: String,
-
     /**
      * Runtime tags that should be attached to any report associated with this crash.
      */
     @ColumnInfo(name = "runtime_tags", defaultValue = "{}")
     var runtimeTags: Map<String, String>,
-
     /**
      * List of breadcrumbs to send with the crash report.
      */
     @ColumnInfo(name = "breadcrumbs", defaultValue = "null")
     var breadcrumbs: List<String>? = emptyList(),
-
     /**
      * Timestamp (in milliseconds) of when the crash happened.
      */
     @ColumnInfo(name = "created_at")
     var createdAt: Long,
-
     // Uncaught exception crash fields
-
     /**
      * The stacktrace of the crash (if this crash was caused by an exception/throwable): otherwise
      * a string describing the type of crash.
      */
     @ColumnInfo(name = "stacktrace")
     var stacktrace: String,
-
     /**
      * The serialized [Throwable] tht caused the crash.
      */
     @ColumnInfo(name = "throwable")
     val throwableData: ByteArray?,
-
     // Native crash fields
-
     /**
      * Path to a Breakpad minidump file containing information about the crash.
      */
     @ColumnInfo(name = "minidumpPath", defaultValue = "null")
     var minidumpPath: String?,
-
     /**
      * The type of process the crash occurred in. Affects whether or not the crash is fatal
      * or whether the application can recover from it.
      */
     @ColumnInfo(name = "processVisibility", defaultValue = "null")
     var processVisibility: String?,
-
     /**
      * The process type name reported by the crashing process.
      */
     @ColumnInfo(name = "processType", defaultValue = "null")
     var processType: String?,
-
     /**
      * Path to a file containing extra metadata about the crash. The file contains key-value pairs
      * in the form `Key=Value`. Be aware, it may contain sensitive data such as the URI that was
@@ -106,7 +93,6 @@ internal data class CrashEntity(
      */
     @ColumnInfo(name = "extrasPath", defaultValue = "null")
     var extrasPath: String?,
-
     /**
      * The type of child process (when available).
      */

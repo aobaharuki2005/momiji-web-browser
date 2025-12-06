@@ -92,7 +92,6 @@ class SettingsSubMenuAutofillRobot(private val composeTestRule: ComposeTestRule)
             saveAndAutofillCreditCardsOption(),
             saveAndAutofillCreditCardsSummary(),
             syncCreditCardsAcrossDevicesButton(),
-
         )
 
         if (userHasSavedCreditCard) {

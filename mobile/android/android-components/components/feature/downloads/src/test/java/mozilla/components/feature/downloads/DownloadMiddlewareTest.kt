@@ -699,7 +699,6 @@ class DownloadMiddlewareTest {
                 coroutineContext = dispatcher,
                 downloadStorage = downloadStorage,
                 deleteFileFromStorage = { false },
-
                 )
             val store = BrowserStore(
                 initialState = BrowserState(),

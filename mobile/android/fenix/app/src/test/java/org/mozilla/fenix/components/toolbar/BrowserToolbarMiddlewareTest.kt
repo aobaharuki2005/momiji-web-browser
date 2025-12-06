@@ -3151,16 +3151,13 @@ class BrowserToolbarMiddlewareTest {
                     contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_tab),
                     onClick = AddNewTab(source),
                 ),
-
                 BrowserToolbarMenuButton(
                     icon = DrawableResIcon(iconsR.drawable.mozac_ic_private_mode_24),
                     text = StringResText(tabcounterR.string.mozac_browser_menu_new_private_tab),
                     contentDescription = StringResContentDescription(tabcounterR.string.mozac_browser_menu_new_private_tab),
                     onClick = AddNewPrivateTab(source),
                 ),
-
                 BrowserToolbarMenuDivider,
-
                 BrowserToolbarMenuButton(
                     icon = DrawableResIcon(iconsR.drawable.mozac_ic_cross_24),
                     text = StringResText(tabcounterR.string.mozac_close_tab),

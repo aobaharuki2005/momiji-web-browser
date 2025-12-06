@@ -394,7 +394,6 @@ private fun DropdownMenuPreview() {
 
             Column(
                 modifier = Modifier.background(color = MaterialTheme.colorScheme.surfaceContainerLowest),
-
             ) {
                 val menuItems: List<MenuItem> by remember {
                     mutableStateOf(menuPreviewParameters.map { it.menuItems.first() })
@@ -411,7 +410,6 @@ private fun DropdownMenuPreview() {
 
             Column(
                 modifier = Modifier.background(color = MaterialTheme.colorScheme.surfaceContainerLowest),
-
             ) {
                 val menuItems: List<MenuItem> = remember {
                     val dividerList = mutableListOf<MenuItem>()

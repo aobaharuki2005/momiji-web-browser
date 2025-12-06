@@ -262,7 +262,6 @@ fun WebCompatReporter(
                     modifier = Modifier,
                     color = FirefoxTheme.colors.textPrimary,
                     style = FirefoxTheme.typography.subtitle2,
-
                 )
                 Icon(
                     painter = painterResource(R.drawable.ic_arrowhead_right),

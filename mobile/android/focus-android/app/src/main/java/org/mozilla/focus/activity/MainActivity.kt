@@ -86,7 +86,6 @@ open class MainActivity : EdgeToEdgeActivity() {
                 onEraseAction = ::reactToEraseAction,
             ),
             scope = lifecycleScope,
-
         )
     }
 

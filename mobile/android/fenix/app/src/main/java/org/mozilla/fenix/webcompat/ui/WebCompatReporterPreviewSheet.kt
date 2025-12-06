@@ -81,9 +81,7 @@ private fun PreviewSheetContent(
             .fillMaxSize()
             .padding(horizontal = FirefoxTheme.layout.space.dynamic200),
         horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.height(FirefoxTheme.layout.space.static150))
-
+        ) {
         Text(
             text = stringResource(id = R.string.webcompat_reporter_preview_bottom_sheet_header),
             style = FirefoxTheme.typography.headline7,

@@ -44,7 +44,6 @@ class TabManagerFloatingToolbarTest {
                 createTab(url = "https://www.google.com", id = "a"),
                 createTab(url = "https://www.duckduckgo.com", id = "b"),
             ),
-
         )
         composeTestRule.setContent {
             FirefoxTheme(theme = Theme.Light) {
@@ -79,7 +78,6 @@ class TabManagerFloatingToolbarTest {
                 createTab(url = "https://www.google.com", id = "a"),
                 createTab(url = "https://www.duckduckgo.com", id = "b"),
             ),
-
             )
         composeTestRule.setContent {
             FirefoxTheme(theme = Theme.Private) {
@@ -114,7 +112,6 @@ class TabManagerFloatingToolbarTest {
                 createTab(url = "https://www.google.com", id = "a"),
                 createTab(url = "https://www.duckduckgo.com", id = "b"),
             ),
-
             )
         composeTestRule.setContent {
             FirefoxTheme(theme = Theme.Dark) {

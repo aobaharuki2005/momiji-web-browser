@@ -339,7 +339,6 @@ class TabManagementFragment : DialogFragment() {
                                     onSaveToCollectionClick =
                                         tabManagerInteractor::onAddSelectedTabsToCollectionClicked,
                                     onShareSelectedTabsClick = tabManagerInteractor::onShareSelectedTabs,
-
                                     onTabSettingsClick = tabManagerController::onTabSettingsClicked,
                                     onRecentlyClosedClick = tabManagerController::onOpenRecentlyClosedClicked,
                                     onAccountSettingsClick = tabManagerController::onAccountSettingsClicked,
@@ -360,7 +359,6 @@ class TabManagementFragment : DialogFragment() {
                                         tabManagerInteractor::onBookmarkSelectedTabsClicked,
                                     onForceSelectedTabsAsInactiveClick =
                                         tabManagerInteractor::onForceSelectedTabsAsInactiveClicked,
-
                                     onTabsTrayPbmLockedClick = ::onTabsTrayPbmLockedClick,
                                     onTabsTrayPbmLockedDismiss = {
                                         requireContext().settings().shouldShowLockPbmBanner = false
@@ -555,7 +553,6 @@ class TabManagementFragment : DialogFragment() {
                 ),
                 positiveButtonRadius = pixelSizeFor(R.dimen.tab_corner_radius).toFloat(),
             ),
-
             onPositiveButtonClicked = ::onCancelDownloadWarningAccepted,
         )
         dialog.show(parentFragmentManager, DOWNLOAD_CANCEL_DIALOG_FRAGMENT_TAG)

@@ -119,7 +119,6 @@ private fun getMenuItems(
         ) {
             onRenameCollectionTapped(collection)
         },
-
         if (showAddTabs) {
             MenuItem(
                 title = stringResource(R.string.add_tab),
@@ -130,7 +129,6 @@ private fun getMenuItems(
         } else {
             null
         },
-
         MenuItem(
             title = stringResource(R.string.collection_delete),
             color = MaterialTheme.colorScheme.error,

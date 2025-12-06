@@ -285,7 +285,6 @@ class PromptFeatureTest {
                 tabsUseCases = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.start()
 
@@ -315,7 +314,6 @@ class PromptFeatureTest {
                 tabsUseCases = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.start()
 
@@ -334,7 +332,6 @@ class PromptFeatureTest {
                 tabsUseCases = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
 
@@ -359,7 +356,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
@@ -529,7 +525,6 @@ class PromptFeatureTest {
                 isSaveLoginEnabled = { true },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = {},
-
             ),
         )
         val session = tab()!!
@@ -592,7 +587,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
@@ -624,7 +618,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
@@ -655,7 +648,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         val selectLoginPrompt = mock<PromptRequest.SelectLoginPrompt>()
@@ -688,7 +680,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
@@ -720,7 +711,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
@@ -751,7 +741,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         val selectCreditCardRequest = mock<PromptRequest.SelectCreditCard>()
@@ -783,7 +772,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         feature.creditCardPicker = creditCardPicker
@@ -815,7 +803,6 @@ class PromptFeatureTest {
                 addressDelegate = addressDelegate,
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         feature.addressPicker = addressPicker
@@ -850,7 +837,6 @@ class PromptFeatureTest {
                 addressDelegate = addressDelegate,
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             ),
         )
         val selectAddressRequest = mock<PromptRequest.SelectAddress>()
@@ -876,7 +862,6 @@ class PromptFeatureTest {
                 tabsUseCases = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
 
         val singleChoiceRequest = SingleChoice(arrayOf(), {}, {})
@@ -900,7 +885,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.start()
 
@@ -925,7 +909,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.start()
 
@@ -950,7 +933,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.start()
 
@@ -975,7 +957,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
 
         var onShowNoMoreAlertsWasCalled = false
@@ -1012,7 +993,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         var onDismissWasCalled = false
         val promptRequest = Alert("title", "message", false, {}, { onDismissWasCalled = true })
@@ -1036,7 +1016,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         var onConfirmWasCalled = false
         var onDismissWasCalled = false
@@ -1074,7 +1053,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         var onDismissWasCalled = false
 
@@ -1114,7 +1092,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
             var onClearWasCalled = false
             var selectedDate: Date? = null
@@ -1156,7 +1133,6 @@ class PromptFeatureTest {
                 tabsUseCases = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.handleDialogsRequest(mock<PromptRequest.File>(), mock())
     }
@@ -1182,7 +1158,6 @@ class PromptFeatureTest {
                 tabsUseCases = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         val intent = Intent()
 
@@ -1215,7 +1190,6 @@ class PromptFeatureTest {
                 tabsUseCases = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         val intent = Intent()
 
@@ -1253,7 +1227,6 @@ class PromptFeatureTest {
                 tabsUseCases = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         val intent = Intent()
 
@@ -1281,7 +1254,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.creditCardPicker = creditCardPicker
         val intent = Intent()
@@ -1308,7 +1280,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.creditCardPicker = creditCardPicker
         val intent = Intent()
@@ -1335,7 +1306,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.creditCardPicker = creditCardPicker
 
@@ -1361,7 +1331,6 @@ class PromptFeatureTest {
                 },
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         feature.creditCardPicker = creditCardPicker
 
@@ -1448,7 +1417,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
 
         var onConfirmWasCalled = false
@@ -1536,7 +1504,6 @@ class PromptFeatureTest {
                 exitFullscreenUsecase = mock(),
                 fileUploadsDirCleaner = mock(),
                 onNeedToRequestPermissions = { },
-
             )
         var onDismissWasCalled = false
 

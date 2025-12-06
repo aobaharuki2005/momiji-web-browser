@@ -592,7 +592,6 @@ class TabsTrayFragment : AppCompatDialogFragment() {
                 ),
                 positiveButtonRadius = pixelSizeFor(R.dimen.tab_corner_radius).toFloat(),
             ),
-
             onPositiveButtonClicked = ::onCancelDownloadWarningAccepted,
         )
         dialog.show(parentFragmentManager, DOWNLOAD_CANCEL_DIALOG_FRAGMENT_TAG)

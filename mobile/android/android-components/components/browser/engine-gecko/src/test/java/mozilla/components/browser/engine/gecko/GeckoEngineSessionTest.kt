@@ -1841,7 +1841,6 @@ class GeckoEngineSessionTest {
         assertEquals(
             GeckoCookieBehavior.ACCEPT_FIRST_PARTY,
             CookiePolicy.ACCEPT_ONLY_FIRST_PARTY.id,
-
         )
         assertEquals(GeckoCookieBehavior.ACCEPT_VISITED, CookiePolicy.ACCEPT_VISITED.id)
     }

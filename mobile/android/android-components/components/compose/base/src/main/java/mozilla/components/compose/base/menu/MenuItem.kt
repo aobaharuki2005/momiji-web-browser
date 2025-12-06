@@ -71,7 +71,6 @@ sealed interface MenuItem {
         override val supportingText: Text? = null,
         override val enabled: Boolean = true,
         override val onClick: () -> Unit,
-
         ) : FixedItem(
         text = text,
         level = level,

@@ -1326,7 +1326,6 @@ class MainMenuTestCompose : TestSetup() {
             createCustomTabIntent(
                 customTabPage.url.toString(),
                 customMenuItem,
-
                 ),
         )
 
@@ -1350,7 +1349,6 @@ class MainMenuTestCompose : TestSetup() {
             createCustomTabIntent(
                 customTabPage.url.toString(),
                 customMenuItem,
-
                 ),
         )
 
@@ -1371,7 +1369,6 @@ class MainMenuTestCompose : TestSetup() {
             createCustomTabIntent(
                 customTabPDF.url.toString(),
                 customMenuItem,
-
                 ),
         )
 

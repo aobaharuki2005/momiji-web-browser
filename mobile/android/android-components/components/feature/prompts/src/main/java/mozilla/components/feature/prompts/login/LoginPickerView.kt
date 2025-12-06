@@ -174,7 +174,6 @@ private fun LoginPickerHeader(
             painter = painterResource(id = chevronResourceId),
             contentDescription = null,
             tint = loginPickerColors.header,
-
         )
     }
 }

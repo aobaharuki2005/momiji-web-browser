@@ -777,7 +777,6 @@ class EngineSessionTest {
         val all = TrackingProtectionPolicy.strict()
         val selected = TrackingProtectionPolicy.select(
             trackingCategories = arrayOf(TrackingCategory.AD),
-
         )
 
         // Tracking protection policies should be applied to all sessions by default
