@@ -1293,7 +1293,6 @@ nsresult Selection::StyledRanges::AddRangeAndIgnoreOverlaps(
   MOZ_ASSERT(mSelection.mSelectionType == SelectionType::eHighlight);
   if (aRange->IsStaticRange() && !aRange->AsStaticRange()->IsValid()) {
     mInvalidStaticRanges.AppendElement(StyledRange(aRange));
-    aRange->RegisterSelection(MOZ_KnownLive(mSelection));
     return NS_OK;
   }
 
@@ -1644,6 +1643,9 @@ void Selection::StyledRanges::ReorderRangesIfNecessary() {
       MOZ_ASSERT(iter->mRange->IsStaticRange());
       if (iter->mRange->AsStaticRange()->IsValid()) {
         mRanges.AppendElement(*iter);
+        if (!iter->mRange->IsInSelection(mSelection)) {
+          iter->mRange->RegisterSelection(MOZ_KnownLive(mSelection));
+        }
         iter = mInvalidStaticRanges.RemoveElementAt(iter);
       } else {
         ++iter;
