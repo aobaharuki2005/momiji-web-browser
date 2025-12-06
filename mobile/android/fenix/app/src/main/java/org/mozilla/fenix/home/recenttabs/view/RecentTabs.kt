@@ -14,15 +14,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,6 +57,8 @@ import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.TabThumbnail
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.home.recenttabs.RecentTab
+import org.mozilla.fenix.home.topsites.ui.HomepageCard
+import org.mozilla.fenix.home.topsites.ui.homepageCardImageShape
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private const val THUMBNAIL_SIZE = 108
@@ -121,33 +120,39 @@ private fun RecentTabItem(
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
-    Card(
+    HomepageCard(
         modifier = Modifier
             .fillMaxWidth()
-            .height(112.dp)
+            .wrapContentHeight()
             .combinedClickable(
                 enabled = true,
                 onClick = { onRecentTabClick(tab.state.id) },
                 onLongClick = { isMenuExpanded = true },
             ),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        backgroundColor = backgroundColor,
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(
+                start = FirefoxTheme.layout.space.static50,
+                top = FirefoxTheme.layout.space.static50,
+                bottom = FirefoxTheme.layout.space.static50,
+                end = FirefoxTheme.layout.space.static100,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             RecentTabImage(
                 tab = tab,
                 modifier = Modifier
                     .size(108.dp, 80.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(homepageCardImageShape),
             )
 
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(FirefoxTheme.layout.space.static100))
 
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
                 verticalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
@@ -162,7 +167,7 @@ private fun RecentTabItem(
                     overflow = TextOverflow.Ellipsis,
                 )
 
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     RecentTabIcon(
                         url = tab.state.content.url,
                         modifier = Modifier

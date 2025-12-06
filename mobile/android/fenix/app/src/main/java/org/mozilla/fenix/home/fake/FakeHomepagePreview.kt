@@ -301,6 +301,7 @@ internal object FakeHomepagePreview {
                             id = randomId(),
                             content = ContentState(
                                 url = URL,
+                                title = "A title that is really really really long",
                             ),
                         ),
                     ),
