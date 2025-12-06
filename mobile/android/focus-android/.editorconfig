@@ -23,6 +23,10 @@ ktlint_standard_if-else-wrapping = disabled
 ktlint_standard_no-blank-line-in-list = disabled
 ktlint_standard_condition-wrapping = disabled
 
+# disabled rules after 1.8.0 upgrade
+ktlint_standard_blank-line-between-when-conditions = disabled
+ktlint_standard_when-entry-bracing = disabled
+
 # rules that enforce style we don't want
 ktlint_standard_backing-property-naming = disabled # it would force making backed properties public.
 ktlint_standard_expression-operand-wrapping = disabled # noisy and doesn't improve readability much

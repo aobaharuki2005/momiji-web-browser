@@ -21,6 +21,10 @@ ktlint_standard_property-naming = disabled
 ktlint_standard_statement-wrapping = disabled
 ktlint_standard_string-template-indent = disabled
 
+# disabled rules after 1.8.0 upgrade
+ktlint_standard_blank-line-between-when-conditions = disabled
+ktlint_standard_when-entry-bracing = disabled
+
 # The following rules are different from the other projects
 ktlint_standard_no-single-line-block-comment = disabled
 ktlint_standard_try-catch-finally-spacing = disabled
