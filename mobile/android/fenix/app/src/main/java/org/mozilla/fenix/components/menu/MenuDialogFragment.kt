@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
@@ -234,7 +233,7 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
         }
     }
 
-    @Suppress("LongMethod", "CyclomaticComplexMethod", "MagicNumber", "CognitiveComplexMethod")
+    @Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -381,8 +380,6 @@ class MenuDialogFragment : BottomSheetDialogFragment() {
                             (isExtensionsExpanded || isMoreMenuExpanded) &&
                             args.accesspoint == MenuAccessPoint.Browser,
                     cornerShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                    handleColor = FirefoxTheme.colors.borderInverted.copy(0.4f),
-                    handleCornerRadius = CornerRadius(100f, 100f),
                     menuCfrState = if (settings.shouldShowMenuCFR) {
                         MenuCFRState(
                             showCFR = settings.shouldShowMenuCFR,

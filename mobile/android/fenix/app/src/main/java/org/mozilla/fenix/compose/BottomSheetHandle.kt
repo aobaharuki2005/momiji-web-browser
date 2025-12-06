@@ -4,18 +4,15 @@
 
 package org.mozilla.fenix.compose
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -23,7 +20,6 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -32,49 +28,42 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param onRequestDismiss Invoked on clicking the handle when talkback is enabled.
  * @param contentDescription Content Description of the composable.
  * @param modifier The modifier to be applied to the Composable.
- * @param cornerRadius The corner radius of the handle.
  * @param color Color of the handle.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetHandle(
     onRequestDismiss: () -> Unit,
     contentDescription: String,
     modifier: Modifier = Modifier,
-    cornerRadius: CornerRadius = CornerRadius.Zero,
-    color: Color = FirefoxTheme.colors.textSecondary,
+    color: Color = MaterialTheme.colorScheme.outline,
 ) {
-    Canvas(
-        modifier = modifier
-            .height(dimensionResource(id = R.dimen.bottom_sheet_handle_height))
-            .semantics(mergeDescendants = true) {
-                role = Role.Button
-                this.contentDescription = contentDescription
-                onClick {
-                    onRequestDismiss()
-                    true
-                }
-            },
-    ) {
-        drawRoundRect(color = color, cornerRadius = cornerRadius)
-    }
+    BottomSheetDefaults.DragHandle(
+        modifier = modifier.semantics(mergeDescendants = true) {
+            role = Role.Button
+            this.contentDescription = contentDescription
+            onClick {
+                onRequestDismiss()
+                true
+            }
+        },
+        color = color,
+    )
 }
 
 @Composable
 @PreviewLightDark
 private fun BottomSheetHandlePreview() {
     FirefoxTheme {
-        Column(
-            modifier = Modifier
-                .background(color = FirefoxTheme.colors.layer1)
-                .padding(16.dp),
-        ) {
-            BottomSheetHandle(
-                onRequestDismiss = {},
-                contentDescription = "",
-                modifier = Modifier
-                    .width(100.dp)
-                    .align(Alignment.CenterHorizontally),
-            )
+        Surface {
+            Column(
+                modifier = Modifier.padding(16.dp),
+            ) {
+                BottomSheetHandle(
+                    onRequestDismiss = {},
+                    contentDescription = "",
+                )
+            }
         }
     }
 }

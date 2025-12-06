@@ -87,7 +87,7 @@
     <ID>ForbiddenSuppress:MarketingDataOnboardingPage.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:MarketingDataOnboardingPageRedesign.kt$@Suppress("LongMethod")</ID>
     <ID>ForbiddenSuppress:Menu.kt$@Suppress("LongMethod", "CognitiveComplexMethod")</ID>
-    <ID>ForbiddenSuppress:MenuDialogFragment.kt$MenuDialogFragment$@Suppress("LongMethod", "CyclomaticComplexMethod", "MagicNumber", "CognitiveComplexMethod")</ID>
+    <ID>ForbiddenSuppress:MenuDialogFragment.kt$MenuDialogFragment$@Suppress("LongMethod", "CyclomaticComplexMethod", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:MenuDialogMiddleware.kt$MenuDialogMiddleware$@Suppress("LongParameterList", "CyclomaticComplexMethod")</ID>
     <ID>ForbiddenSuppress:MenuNavigationMiddleware.kt$MenuNavigationMiddleware$@Suppress("CyclomaticComplexMethod", "LongMethod", "CognitiveComplexMethod")</ID>
     <ID>ForbiddenSuppress:MenuTelemetryMiddleware.kt$MenuTelemetryMiddleware$@Suppress("CyclomaticComplexMethod", "LongMethod", "CognitiveComplexMethod")</ID>
