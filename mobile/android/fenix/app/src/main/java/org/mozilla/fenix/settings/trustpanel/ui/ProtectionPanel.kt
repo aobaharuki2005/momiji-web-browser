@@ -67,7 +67,10 @@ import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
 private val BANNER_ROUNDED_CORNER_SHAPE = RoundedCornerShape(
-    topStart = 28.dp, topEnd = 28.dp, bottomStart = 4.dp, bottomEnd = 4.dp,
+    topStart = 28.dp,
+    topEnd = 28.dp,
+    bottomStart = 4.dp,
+    bottomEnd = 4.dp,
 )
 
 private const val DROPDOWN_TEXT_WIDTH_FRACTION = 0.5f

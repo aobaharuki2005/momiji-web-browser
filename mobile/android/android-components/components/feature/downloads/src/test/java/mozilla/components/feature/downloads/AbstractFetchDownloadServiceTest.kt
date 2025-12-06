@@ -1788,8 +1788,15 @@ class AbstractFetchDownloadServiceTest {
 
             doAnswer { throw IllegalArgumentException() }.`when`(downloadManager)
                 .addCompletedDownload(
-                    anyString(), anyString(), anyBoolean(), anyString(),
-                    anyString(), anyLong(), anyBoolean(), isNull(), any(),
+                    anyString(),
+                    anyString(),
+                    anyBoolean(),
+                    anyString(),
+                    anyString(),
+                    anyLong(),
+                    anyBoolean(),
+                    isNull(),
+                    any(),
                 )
 
             try {
@@ -1852,8 +1859,15 @@ class AbstractFetchDownloadServiceTest {
         testsDispatcher.scheduler.advanceUntilIdle()
 
         verify(downloadManager).addCompletedDownload(
-            anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
-            anyString(), anyLong(), anyBoolean(), isNull(), any(),
+            anyString(),
+            anyString(),
+            anyBoolean(),
+            eq(defaultMimeType),
+            anyString(),
+            anyLong(),
+            anyBoolean(),
+            isNull(),
+            any(),
         )
 
         downloadManager = mock()
@@ -1862,8 +1876,15 @@ class AbstractFetchDownloadServiceTest {
         testsDispatcher.scheduler.advanceUntilIdle()
 
         verify(downloadManager).addCompletedDownload(
-            anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
-            anyString(), anyLong(), anyBoolean(), isNull(), any(),
+            anyString(),
+            anyString(),
+            anyBoolean(),
+            eq(defaultMimeType),
+            anyString(),
+            anyLong(),
+            anyBoolean(),
+            isNull(),
+            any(),
         )
     }
 
@@ -1885,16 +1906,30 @@ class AbstractFetchDownloadServiceTest {
 
         service.addToDownloadSystemDatabaseCompat(downloadWithNullMimeType, this)
         verify(downloadManager, never()).addCompletedDownload(
-            anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
-            anyString(), anyLong(), anyBoolean(), isNull(), any(),
+            anyString(),
+            anyString(),
+            anyBoolean(),
+            eq(defaultMimeType),
+            anyString(),
+            anyLong(),
+            anyBoolean(),
+            isNull(),
+            any(),
         )
 
         downloadManager = mock()
         doReturn(downloadManager).`when`(spyContext).getSystemService<DownloadManager>()
         service.addToDownloadSystemDatabaseCompat(downloadWithEmptyMimeType, this)
         verify(downloadManager, never()).addCompletedDownload(
-            anyString(), anyString(), anyBoolean(), eq(defaultMimeType),
-            anyString(), anyLong(), anyBoolean(), isNull(), any(),
+            anyString(),
+            anyString(),
+            anyBoolean(),
+            eq(defaultMimeType),
+            anyString(),
+            anyLong(),
+            anyBoolean(),
+            isNull(),
+            any(),
         )
     }
 

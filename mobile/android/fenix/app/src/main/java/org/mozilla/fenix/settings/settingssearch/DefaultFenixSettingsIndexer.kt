@@ -261,7 +261,9 @@ class DefaultFenixSettingsIndexer(private val context: Context) : SettingsIndexe
     private fun getStringResource(resourceName: String): String {
         return try {
             val resourceId = context.resources.getIdentifier(
-                resourceName, "string", context.packageName,
+                resourceName,
+                "string",
+                context.packageName,
             )
             if (resourceId == 0) {
                 return ""

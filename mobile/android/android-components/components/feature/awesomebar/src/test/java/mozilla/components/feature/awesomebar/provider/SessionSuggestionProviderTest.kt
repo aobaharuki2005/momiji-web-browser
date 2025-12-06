@@ -249,7 +249,9 @@ class SessionSuggestionProviderTest {
         val useCase: TabsUseCases.SelectTabUseCase = mock()
 
         val provider = SessionSuggestionProvider(
-            store, useCase, excludeSelectedSession = true,
+            store,
+            useCase,
+            excludeSelectedSession = true,
             switchToTabDescription = "Switch to tab",
         )
         val suggestions = provider.onInputChanged("org")

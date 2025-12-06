@@ -176,12 +176,20 @@ fun Window.setSystemBarsBackground(
 
     ViewCompat.getRootWindowInsets(decorView)?.let {
         decorView.setWindowInsetsBackgroundColors(
-            it, statusBarColor, navigationBarColor, navigationBarDividerColor, horizontalInsetsColor,
+            it,
+            statusBarColor,
+            navigationBarColor,
+            navigationBarDividerColor,
+            horizontalInsetsColor,
         )
     }
     ViewCompat.setOnApplyWindowInsetsListener(decorView) { _, windowInsets ->
         decorView.setWindowInsetsBackgroundColors(
-            windowInsets, statusBarColor, navigationBarColor, navigationBarDividerColor, horizontalInsetsColor,
+            windowInsets,
+            statusBarColor,
+            navigationBarColor,
+            navigationBarDividerColor,
+            horizontalInsetsColor,
         )
         windowInsets // return the insets to allow other listeners to use them as well
     }
@@ -227,7 +235,11 @@ private fun View.setWindowInsetsBackgroundColors(
     horizontalInsetsColor.toPaint()?.let {
         canvas.drawRect(0f, 0f, insets.left().toFloat(), screenHeight.toFloat(), it)
         canvas.drawRect(
-            screenWidth - insets.right().toFloat(), 0f, screenWidth.toFloat(), screenHeight.toFloat(), it,
+            screenWidth - insets.right().toFloat(),
+            0f,
+            screenWidth.toFloat(),
+            screenHeight.toFloat(),
+            it,
         )
     }
 

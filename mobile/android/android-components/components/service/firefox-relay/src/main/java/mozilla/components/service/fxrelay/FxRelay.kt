@@ -108,7 +108,8 @@ class FxRelay(
      */
     suspend fun fetchAllAddresses(): List<RelayAddress> = withContext(Dispatchers.IO) {
         handleRelayExceptions(
-            RelayOperation.FETCH_ALL_ADDRESSES, { emptyList() },
+            RelayOperation.FETCH_ALL_ADDRESSES,
+            { emptyList() },
         ) {
             client.fetchAddresses().map { it.into() }
         }

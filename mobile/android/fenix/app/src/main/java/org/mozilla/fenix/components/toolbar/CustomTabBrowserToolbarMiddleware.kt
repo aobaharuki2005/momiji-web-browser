@@ -396,7 +396,8 @@ class CustomTabBrowserToolbarMiddleware(
                 ActionButton(
                     drawable = when (customIconBitmap) {
                         null -> AppCompatResources.getDrawable(
-                            uiContext, iconsR.drawable.mozac_ic_cross_24,
+                            uiContext,
+                            iconsR.drawable.mozac_ic_cross_24,
                         )
 
                         else -> customIconBitmap.toDrawable(uiContext.resources)

@@ -121,7 +121,10 @@ fun HighlightedDomainUrl(
         maxLines = 1,
         modifier = modifier
             .focusTextIndexRange(
-                annotatedUrl.text, fadedTextStyle, registrableDomainIndexRange, fadeLength,
+                annotatedUrl.text,
+                fadedTextStyle,
+                registrableDomainIndexRange,
+                fadeLength,
             ),
     )
 }

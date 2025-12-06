@@ -822,7 +822,8 @@ class PanZoomControllerTest : BaseSessionTest() {
         )
         assertThat(
             "we waited a frame",
-                   promise.value as Boolean, equalTo(true),
+                   promise.value as Boolean,
+            equalTo(true),
         )
         mainSession.promiseAllPaintsDone()
         mainSession.flushApzRepaints()
@@ -843,7 +844,8 @@ class PanZoomControllerTest : BaseSessionTest() {
                     wasNotified = true
                     assertThat(
                         "notified scrollY is correct",
-                            scrollY, equalTo(50.0f),
+                            scrollY,
+                        equalTo(50.0f),
                     )
                     }
             },
@@ -855,7 +857,8 @@ class PanZoomControllerTest : BaseSessionTest() {
 
         assertThat(
             "delegate was notified on registration",
-                   wasNotified, equalTo(true),
+                   wasNotified,
+            equalTo(true),
         )
 
         // Clean up

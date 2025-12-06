@@ -1238,7 +1238,8 @@ class BrowserRobot {
         Log.i(TAG, "verifyWebCompatReporterViewItems: Verified that the \"Describe the problem (optional)\" field is displayed")
         if (appContext.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE) {
             Log.i(
-                TAG, "Release channel is ${appContext.components.core.engine.version.releaseChannel}",
+                TAG,
+                "Release channel is ${appContext.components.core.engine.version.releaseChannel}",
             )
             Log.i(
                 TAG,

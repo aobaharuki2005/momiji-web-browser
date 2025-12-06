@@ -191,8 +191,16 @@ class MozillaSocorroService(
             conn.setRequestProperty("Content-Encoding", "gzip")
 
             sendCrashData(
-                conn.outputStream, boundary, crash.timestamp, throwable, miniDumpFilePath, extrasFilePath,
-                isNativeCodeCrash, isFatalCrash, breadcrumbsJson.toString(), crashVersionName,
+                conn.outputStream,
+                boundary,
+                crash.timestamp,
+                throwable,
+                miniDumpFilePath,
+                extrasFilePath,
+                isNativeCodeCrash,
+                isFatalCrash,
+                breadcrumbsJson.toString(),
+                crashVersionName,
             )
 
             BufferedReader(InputStreamReader(conn.inputStream)).use { reader ->

@@ -135,7 +135,12 @@ class DownloadUIStoreTest {
 
         val initialState = DownloadUIState(
             items = listOf(
-                fileItem1, fileItem2, inProgressFileItem, pausedFileItem, failedFileItem, initiatedFileItem,
+                fileItem1,
+                fileItem2,
+                inProgressFileItem,
+                pausedFileItem,
+                failedFileItem,
+                initiatedFileItem,
             ),
             mode = DownloadUIState.Mode.Normal,
             pendingDeletionIds = emptySet(),
@@ -148,7 +153,12 @@ class DownloadUIStoreTest {
 
         val expected = DownloadUIState(
             items = listOf(
-                fileItem1, fileItem2, inProgressFileItem, pausedFileItem, failedFileItem, initiatedFileItem,
+                fileItem1,
+                fileItem2,
+                inProgressFileItem,
+                pausedFileItem,
+                failedFileItem,
+                initiatedFileItem,
             ),
             mode = DownloadUIState.Mode.Editing(selectedItems = setOf(fileItem1, fileItem2)),
             pendingDeletionIds = emptySet(),

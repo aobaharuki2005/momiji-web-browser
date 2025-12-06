@@ -135,7 +135,10 @@ class SearchTest : TestSetup() {
             verifySearchShortcutListContains(
                 *generalEnginesList.toTypedArray(),
                 *topicEnginesList.toTypedArray(),
-                "Bookmarks", "Tabs", "History", "Search settings",
+                "Bookmarks",
+                "Tabs",
+                "History",
+                "Search settings",
             )
         }
     }

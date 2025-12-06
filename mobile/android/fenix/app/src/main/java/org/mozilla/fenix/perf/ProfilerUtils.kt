@@ -93,8 +93,15 @@ private val networking_features = arrayOf(
 )
 
 private val networking_threads = arrayOf(
-    "Compositor", "DNS Resolver", "DOM Worker", "GeckoMain",
-    "Renderer", "Socket Thread", "StreamTrans", "SwComposite", "TRR Background",
+    "Compositor",
+    "DNS Resolver",
+    "DOM Worker",
+    "GeckoMain",
+    "Renderer",
+    "Socket Thread",
+    "StreamTrans",
+    "SwComposite",
+    "TRR Background",
 )
 
 private val debug_features = arrayOf(

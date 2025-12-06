@@ -368,7 +368,9 @@ class BrowserToolbarSearchMiddleware(
         searchEngineShortcuts: List<SearchEngine>,
     ) {
         val searchSelector = buildSearchSelector(
-            selectedSearchEngine, searchEngineShortcuts, uiContext.resources,
+            selectedSearchEngine,
+            searchEngineShortcuts,
+            uiContext.resources,
         )
         context.dispatch(
             SearchActionsStartUpdated(

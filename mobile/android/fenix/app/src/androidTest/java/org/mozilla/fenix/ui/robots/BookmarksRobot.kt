@@ -74,7 +74,8 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
     fun verifyBookmarkTitle(title: String) {
         Log.i(TAG, "verifyBookmarkTitle: Waiting for $waitingTime for bookmark with title: $title to exist.")
         composeTestRule.waitUntilExactlyOneExists(
-            hasText(title), waitingTime,
+            hasText(title),
+            waitingTime,
         )
         Log.i(TAG, "verifyBookmarkTitle: Waited for $waitingTime for bookmark with title: $title to exist.")
         Log.i(TAG, "verifyBookmarkTitle: Waited for bookmarks header to exist.")

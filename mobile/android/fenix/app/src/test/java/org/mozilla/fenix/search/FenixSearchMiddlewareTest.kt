@@ -295,7 +295,10 @@ class FenixSearchMiddlewareTest {
     @Test
     fun `WHEN a new search engine is selected THEN update it in search state and record telemetry`() {
         val newSearchEngineSelection = SearchEngine(
-            "engine-f", "Engine F", mockk(), type = SearchEngine.Type.BUNDLED_ADDITIONAL,
+            "engine-f",
+            "Engine F",
+            mockk(),
+            type = SearchEngine.Type.BUNDLED_ADDITIONAL,
         )
         val appStore = AppStore(
             AppState(

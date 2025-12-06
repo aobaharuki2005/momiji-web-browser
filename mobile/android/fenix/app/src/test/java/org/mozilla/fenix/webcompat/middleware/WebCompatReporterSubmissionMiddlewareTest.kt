@@ -642,7 +642,8 @@ class WebCompatReporterSubmissionMiddlewareTest {
                 createMiddleware(
                     browserStore = BrowserStore(
                         BrowserState(
-                        tabs = listOf(createTab("https://www.mozilla.org", id = "t1")), selectedTabId = "t1",
+                        tabs = listOf(createTab("https://www.mozilla.org", id = "t1")),
+                            selectedTabId = "t1",
                         ),
                     ),
                     service = FakeWebCompatReporterRetrievalService(),
