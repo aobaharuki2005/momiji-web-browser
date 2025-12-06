@@ -67,9 +67,7 @@ import org.mozilla.focus.utils.ViewUtils
 private const val REQUEST_TIME_OUT = 2000L
 
 @Suppress("LargeClass")
-/**
- * The main entry point for the app.
- */
+// The main entry point for the app.
 open class MainActivity : EdgeToEdgeActivity() {
     private var isToolbarInflated = false
     private val intentProcessor by lazy {

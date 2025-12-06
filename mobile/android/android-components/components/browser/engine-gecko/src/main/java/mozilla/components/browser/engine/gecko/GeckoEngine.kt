@@ -720,7 +720,7 @@ class GeckoEngine(
     override fun registerActivityDelegate(
         activityDelegate: ActivityDelegate,
     ) {
-        /**
+        /*
          * Having the activity delegate on the engine can cause issues with resolving multiple requests to the delegate
          * from different sessions. Ideally, this should be moved to the [EngineView].
          *

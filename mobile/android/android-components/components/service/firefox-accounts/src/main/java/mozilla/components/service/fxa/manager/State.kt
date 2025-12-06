@@ -8,7 +8,7 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.FxAEntryPoint
 import mozilla.components.service.fxa.FxaAuthData
 
-/**
+/*
  * This file is the "heart" of the accounts system. It's a finite state machine.
  * Described below are all of the possible states, transitions between them and events which can
  * trigger these transitions.

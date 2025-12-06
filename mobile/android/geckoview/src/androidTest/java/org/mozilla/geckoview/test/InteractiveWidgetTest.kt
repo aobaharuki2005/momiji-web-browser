@@ -64,7 +64,8 @@ class InteractiveWidgetTest : BaseSessionTest() {
             activityRule.scenario.onActivity { activity ->
                 activity.view.releaseSession()
             }
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+            }
     }
 
     private fun ensureKeyboardOpen() {

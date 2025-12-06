@@ -659,9 +659,7 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
     surfaceContainerLowest = PhotonColors.Ink90,
 )
 
-/**
- * M3 color scheme extensions
- */
+// M3 color scheme extensions
 
 /**
  * @see AcornColors.information

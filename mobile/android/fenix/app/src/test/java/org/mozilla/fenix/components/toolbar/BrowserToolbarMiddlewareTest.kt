@@ -2814,7 +2814,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
         mainLooperRule.idle()
 
-        val editButton = toolbarStore.state.displayState.browserActionsEnd [0] as ActionButtonRes
+        val editButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
         assertEquals(expectedEditBookmarkButton(Source.AddressBar), editButton)
     }
 

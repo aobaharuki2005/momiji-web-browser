@@ -6,7 +6,7 @@ package org.mozilla.fenix.ui.efficiency.factory.steps
 
 import org.mozilla.fenix.ui.efficiency.factory.logging.StepDescriptor
 
-/**
+/*
  * Collection of minimal [TestStep]s used for dry-run or synthetic tests.
  *
  * These steps allow developers to validate logging and control flow

@@ -701,7 +701,7 @@ abstract class AbstractFetchDownloadService : Service() {
 
         // If we are resuming a download and the response does not contain a CONTENT_RANGE
         // we cannot be sure that the request will properly be handled
-        if (response.status != PARTIAL_CONTENT_STATUS && response.status != OK_STATUS ||
+        if ((response.status != PARTIAL_CONTENT_STATUS && response.status != OK_STATUS) ||
             (isResumingDownload && !response.headers.contains(CONTENT_RANGE))
         ) {
             response.close()

@@ -294,10 +294,8 @@ class GeckoSitePermissionsStorage(
             val geckoLocalDeviceAccess = geckoPermissionByType[PERMISSION_LOCAL_DEVICE_ACCESS]?.firstOrNull()
             val geckoLocalNetworkAccess = geckoPermissionByType[PERMISSION_LOCAL_NETWORK_ACCESS]?.firstOrNull()
 
-            /**
-             * We only consider permissions from geckoView, when the values default value
-             * has been changed otherwise we favor the values [onDiskPermissions].
-             */
+            // We only consider permissions from GeckoView when the values default value
+            // has been changed. Otherwise we favor the values [onDiskPermissions].
             if (geckoNotification != null && geckoNotification.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions.copy(
                     notification = geckoNotification.value.toStatus(),
@@ -340,10 +338,8 @@ class GeckoSitePermissionsStorage(
                 )
             }
 
-            /**
-             * Autoplay permissions don't have initial values, so when the value is changed on
-             * the gecko storage we trust it.
-             */
+            // Autoplay permissions don't have initial values, so when the value is changed on
+            // the gecko storage we trust it.
             if (geckoAudible != null && geckoAudible.value != VALUE_PROMPT) {
                 combinedPermissions = combinedPermissions.copy(
                     autoplayAudible = geckoAudible.value.toAutoPlayStatus(),

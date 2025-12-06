@@ -8,7 +8,7 @@ import org.mozilla.fenix.ui.efficiency.factory.logging.StepDescriptor
 import org.mozilla.fenix.ui.efficiency.helpers.BasePage
 import org.mozilla.fenix.ui.efficiency.helpers.PageContext
 
-/**
+/*
  * NOTE: This is for demo/explanation purposes only and can be
  * replaced with current custom commands, one that start with 'moz',
  * e.g. mozVerifyElementsByGroup.

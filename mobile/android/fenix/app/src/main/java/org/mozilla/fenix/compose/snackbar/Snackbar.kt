@@ -154,11 +154,9 @@ class Snackbar private constructor(
             var fallback: ViewGroup? = null
 
             do {
-                /**
-                 * A [ConstraintLayout] parent overcomes the issue with snackbars internally
-                 * positioning themselves above the OS navigation bar or IMEs when using edge-to-edge
-                 * https://github.com/material-components/material-components-android/issues/3446
-                 */
+                // A [ConstraintLayout] parent overcomes the issue with snackbars internally
+                // positioning themselves above the OS navigation bar or IMEs when using edge-to-edge
+                // https://github.com/material-components/material-components-android/issues/3446
                 if (currentView is ConstraintLayout && currentView.id == R.id.dynamicSnackbarContainer) {
                     return currentView
                 }

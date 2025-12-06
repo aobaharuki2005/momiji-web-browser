@@ -58,9 +58,9 @@ class GleanApplication : Application() {
             buildInfo = GleanBuildInfo.buildInfo,
         )
 
-        /** Begin Nimbus component specific code. Note: this is not relevant to Glean */
+        // Begin Nimbus component specific code. Note: this is not relevant to Glean
         initNimbus(isFirstRun)
-        /** End Nimbus specific code. */
+        // End Nimbus specific code.
 
         Test.timespan.start()
 

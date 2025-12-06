@@ -292,9 +292,7 @@ private fun TermsOfUseBottomSheetMobilePortraitNoHandlePreview() {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-/**
- * Preview copied from [androidx.compose.ui.tooling.preview.PreviewScreenSizes].
- */
+// Preview copied from [androidx.compose.ui.tooling.preview.PreviewScreenSizes].
 @Preview(
     name = "Phone - Landscape",
     device = "spec:width=411dp,height=891dp,orientation=landscape,dpi=420",
@@ -313,9 +311,7 @@ private fun TermsOfUseBottomSheetMobileLandscapePreview() {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-/**
- * Preview copied from [androidx.compose.ui.tooling.preview.PreviewScreenSizes].
- */
+// Preview copied from [androidx.compose.ui.tooling.preview.PreviewScreenSizes].
 @Preview(
     name = "Tablet - Portrait",
     device = "spec:width=1280dp,height=800dp,dpi=240,orientation=portrait",
@@ -334,9 +330,7 @@ private fun TermsOfUseBottomSheetTabletPortraitPreview() {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-/**
- * Preview copied from [androidx.compose.ui.tooling.preview.PreviewScreenSizes].
- */
+// Preview copied from [androidx.compose.ui.tooling.preview.PreviewScreenSizes].
 @Preview(name = "Tablet - Landscape", device = TABLET, showSystemUi = true)
 @Composable
 private fun TermsOfUseBottomSheetTabletLandscapePreview() {

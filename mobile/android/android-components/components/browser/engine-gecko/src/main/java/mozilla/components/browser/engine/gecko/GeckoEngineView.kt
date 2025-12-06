@@ -102,7 +102,7 @@ class GeckoEngineView @JvmOverloads constructor(
     init {
         addView(geckoView)
 
-        /**
+        /*
          * With the current design, we have a [NestedGeckoView] inside this
          * [GeckoEngineView]. In our supported embedders, we wrap this with the
          * AndroidX `SwipeRefreshLayout` to enable features like Pull-To-Refresh:
