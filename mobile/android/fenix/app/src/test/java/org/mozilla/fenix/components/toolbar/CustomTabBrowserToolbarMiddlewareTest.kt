@@ -135,7 +135,7 @@ class CustomTabBrowserToolbarMiddlewareTest {
     @Test
     fun `GIVEN the custom tab is configured to show a custom close button WHEN initializing the toolbar THEN add a close button with a custom icon`() {
         every { customTab.config.showCloseButton } returns true
-        val closeButtonIcon: Bitmap = testContext.getDrawable(R.drawable.ic_back_button)!!.toBitmap(10, 10)
+        val closeButtonIcon: Bitmap = testContext.getDrawable(iconsR.drawable.mozac_ic_back_24)!!.toBitmap(10, 10)
         every { customTab.config.closeButtonIcon } returns closeButtonIcon
         val expectedCloseButton = ActionButton(
             drawable = closeButtonIcon.toDrawable(testContext.resources),

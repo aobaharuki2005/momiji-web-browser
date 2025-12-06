@@ -32,7 +32,6 @@ import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
-import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -140,10 +139,9 @@ private fun BackButton(
     ) {
         Icon(
             painter = painterResource(
-                R.drawable.ic_back_button,
+                iconsR.drawable.mozac_ic_back_24,
             ),
             contentDescription = null,
-            tint = FirefoxTheme.colors.textPrimary,
         )
     }
 }
@@ -161,7 +159,6 @@ private fun ClearTextButton(
         Icon(
             painter = painterResource(iconsR.drawable.mozac_ic_cross_circle_fill_24),
             contentDescription = null,
-            tint = FirefoxTheme.colors.textPrimary,
         )
     }
 }

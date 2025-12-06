@@ -37,6 +37,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.navigation.DefaultNavControllerProvider
 import org.mozilla.fenix.navigation.NavControllerProvider
 import org.mozilla.fenix.utils.isLargeScreenSize
+import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Get the requireComponents of this application.
@@ -73,7 +74,7 @@ fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String = getString(re
  */
 fun Fragment.showToolbar(title: String) {
     (requireActivity() as AppCompatActivity).title = title
-    activity?.setNavigationIcon(R.drawable.ic_back_button)
+    activity?.setNavigationIcon(iconsR.drawable.mozac_ic_back_24)
     (activity as? NavHostActivity)?.getSupportActionBarAndInflateIfNecessary()?.show()
 }
 
@@ -93,7 +94,7 @@ fun Fragment.showToolbarWithIconButton(
  ) {
     val activity = requireActivity() as AppCompatActivity
     activity.title = title
-    activity.setNavigationIcon(R.drawable.ic_back_button)
+    activity.setNavigationIcon(iconsR.drawable.mozac_ic_back_24)
     (activity as? NavHostActivity)?.getSupportActionBarAndInflateIfNecessary()?.show()
 
     val menuHost = activity as MenuHost
