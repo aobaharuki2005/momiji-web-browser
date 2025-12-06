@@ -425,6 +425,7 @@ private fun TopSiteFaviconCard(
             .size(TOP_SITES_FAVICON_CARD_SIZE.dp),
         shape = CircleShape,
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),

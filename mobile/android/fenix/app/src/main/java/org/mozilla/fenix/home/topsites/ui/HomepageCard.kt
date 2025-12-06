@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 
 private val homepageCardRadius = 16.dp
 private val homepageCardImageRadius = 12.dp
+private val cardElevation = 6.dp
 
 private val homepageCardShape = RoundedCornerShape(homepageCardRadius)
 val homepageCardImageShape = RoundedCornerShape(homepageCardImageRadius)
@@ -39,7 +40,7 @@ internal fun HomepageCard(
     backgroundColor: Color,
     modifier: Modifier = Modifier,
     shape: Shape = homepageCardShape,
-    elevation: CardElevation = CardDefaults.cardElevation(),
+    elevation: CardElevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
     border: BorderStroke? = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -68,7 +69,7 @@ internal fun HomepageCard(
     modifier: Modifier = Modifier,
     shape: Shape = homepageCardShape,
     colors: CardColors = CardDefaults.cardColors(),
-    elevation: CardElevation = CardDefaults.cardElevation(),
+    elevation: CardElevation = CardDefaults.cardElevation(defaultElevation = cardElevation),
     border: BorderStroke? = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     content: @Composable ColumnScope.() -> Unit,
 ) {
