@@ -224,6 +224,9 @@ document.addEventListener(
           case "cmd_openUnifiedExtensionsPanel":
             gUnifiedExtensions.openPanel(event);
             break;
+          case "Tools:ClassicWindow":
+            OpenBrowserWindow({ aiWindow: false });
+            break;
           case "Tools:AIWindow":
             OpenBrowserWindow({ aiWindow: true });
             break;

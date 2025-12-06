@@ -4,107 +4,237 @@
 "use strict";
 
 /**
- * Test that the 'New AI window' menu item visibility is controlled by the browser.aiwindow.enabled preference
- * and matches the PanelUI.isAIWindowEnabled state.
+ * Test window type detection and menu item visibility based on aiwindow pref and window type.
  */
-add_task(async function test_ai_menuitem_pref_connection() {
-  // Scenario 1: Pref is false: 'New AI window' menu item should be hidden
+add_task(async function test_window_type_and_menu_visibility() {
+  // AI Window disabled
   await SpecialPowers.pushPrefEnv({
     set: [["browser.aiwindow.enabled", false]],
   });
 
-  // Open the browser's hamburger menu
-  const menuButton = document.getElementById("PanelUI-menu-button");
-  const mainViewID = "appMenu-mainView";
-  const mainView = PanelMultiView.getViewNode(document, mainViewID);
-  let viewShownPromise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  menuButton.click();
-  await viewShownPromise;
-
-  // Get the 'New AI window' item
-  const aiMenuItem = document.getElementById("appMenu-new-ai-window-button");
-
-  // Verify that PanelUI.isAIWindowEnabled is false
-  Assert.equal(
-    PanelUI.isAIWindowEnabled,
+  await openHamburgerMenu();
+  checkMenuItemVisibility(
     false,
-    "PanelUI.isAIWindowEnabled should be false when pref is false"
+    document.getElementById("appMenu-new-ai-window-button"),
+    document.getElementById("appMenu-new-classic-window-button")
   );
+  await closeHamburgerMenu();
 
-  // Verify that the menu item is hidden
-  Assert.ok(
-    aiMenuItem.hidden,
-    "AI menu item should be hidden when pref is false"
-  );
+  let fileMenuPopup = document.getElementById("menu_FilePopup");
+  if (fileMenuPopup) {
+    await openFileMenu(fileMenuPopup);
+    checkMenuItemVisibility(
+      false,
+      document.getElementById("menu_newAIWindow"),
+      document.getElementById("menu_newClassicWindow")
+    );
+    await closeFileMenu(fileMenuPopup);
+  }
 
-  // Close the menu
-  let panelHiddenPromise = BrowserTestUtils.waitForEvent(
-    document.getElementById("appMenu-popup"),
-    "popuphidden"
-  );
-  PanelUI.hide();
-  await panelHiddenPromise;
+  await SpecialPowers.popPrefEnv();
 
-  // Test scenario 2: Pref is true: 'New AI window' menu item should NOT be hidden, etc.
+  // AI Window enabled
   await SpecialPowers.pushPrefEnv({
     set: [["browser.aiwindow.enabled", true]],
   });
 
-  viewShownPromise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  menuButton.click();
-  await viewShownPromise;
-
-  Assert.equal(
-    PanelUI.isAIWindowEnabled,
+  await openHamburgerMenu();
+  checkMenuItemVisibility(
     true,
-    "PanelUI.isAIWindowEnabled should be true when pref is true"
+    document.getElementById("appMenu-new-ai-window-button"),
+    document.getElementById("appMenu-new-classic-window-button")
   );
+  await closeHamburgerMenu();
 
-  Assert.ok(
-    !aiMenuItem.hidden,
-    "AI menu item should be visible when pref is true"
-  );
+  if (fileMenuPopup) {
+    await openFileMenu(fileMenuPopup);
+    checkMenuItemVisibility(
+      true,
+      document.getElementById("menu_newAIWindow"),
+      document.getElementById("menu_newClassicWindow")
+    );
+    await closeFileMenu(fileMenuPopup);
+  }
 
-  panelHiddenPromise = BrowserTestUtils.waitForEvent(
-    document.getElementById("appMenu-popup"),
-    "popuphidden"
-  );
-  PanelUI.hide();
-  await panelHiddenPromise;
-
-  // Clean up - reset pref
-  await SpecialPowers.popPrefEnv();
   await SpecialPowers.popPrefEnv();
 });
 
 /**
- * Test that clicking the 'New AI window' menu item opens a new window with the ai-window attribute.
+ * Test that clicking AI window and classic window buttons opens the correct window type.
  */
-add_task(async function test_ai_menuitem_opens_window_with_attribute() {
+add_task(async function test_button_actions() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.aiwindow.enabled", true]],
   });
 
-  const menuButton = document.getElementById("PanelUI-menu-button");
-  const mainView = document.getElementById("appMenu-mainView");
-  const viewShownPromise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
-  menuButton.click();
-  await viewShownPromise;
+  const currentWindowIsAIWindow = isAIWindow();
 
-  // Set up listeners for the new AI window
-  const delayedStartupPromise = BrowserTestUtils.waitForNewWindow();
+  await openHamburgerMenu();
 
-  const aiMenuItem = document.getElementById("appMenu-new-ai-window-button");
-  aiMenuItem.click();
+  const buttonId = currentWindowIsAIWindow
+    ? "appMenu-new-classic-window-button"
+    : "appMenu-new-ai-window-button";
+  const button = document.getElementById(buttonId);
 
-  // Wait for the new window to open
-  const newWin = await delayedStartupPromise;
+  if (button && !button.hidden) {
+    let delayedStartupPromise = BrowserTestUtils.waitForNewWindow();
+    button.click();
 
-  Assert.ok(
-    newWin.document.documentElement.hasAttribute("ai-window"),
-    "New window should have the ai-window attribute"
+    const newWin = await delayedStartupPromise;
+    const newWinIsAI =
+      newWin.document.documentElement.hasAttribute("ai-window");
+
+    Assert.equal(
+      newWinIsAI,
+      !currentWindowIsAIWindow,
+      `Clicking ${currentWindowIsAIWindow ? "classic" : "AI"} window button should open a ${currentWindowIsAIWindow ? "classic" : "AI"} window`
+    );
+
+    if (newWinIsAI) {
+      let fileMenuPopup = newWin.document.getElementById("menu_FilePopup");
+
+      await openHamburgerMenu(newWin);
+      checkMenuItemVisibility(
+        true,
+        newWin.document.getElementById("appMenu-new-ai-window-button"),
+        newWin.document.getElementById("appMenu-new-classic-window-button")
+      );
+      await closeHamburgerMenu(newWin);
+
+      if (fileMenuPopup) {
+        await openFileMenu(fileMenuPopup);
+        checkMenuItemVisibility(
+          true,
+          newWin.document.getElementById("menu_newAIWindow"),
+          newWin.document.getElementById("menu_newClassicWindow")
+        );
+        await closeFileMenu(fileMenuPopup);
+      }
+    }
+
+    await BrowserTestUtils.closeWindow(newWin);
+  } else {
+    await closeHamburgerMenu();
+  }
+
+  await openHamburgerMenu();
+
+  const appMenuNewWindow = document.getElementById(
+    "appMenu-new-window-button2"
   );
+  if (appMenuNewWindow && !appMenuNewWindow.hidden) {
+    let delayedStartupPromise = BrowserTestUtils.waitForNewWindow();
+    appMenuNewWindow.click();
 
-  await BrowserTestUtils.closeWindow(newWin);
+    const newWin = await delayedStartupPromise;
+    const newWinIsAI =
+      newWin.document.documentElement.hasAttribute("ai-window");
+
+    Assert.equal(
+      newWinIsAI,
+      currentWindowIsAIWindow,
+      "New window button should open same type as current window"
+    );
+
+    await BrowserTestUtils.closeWindow(newWin);
+  }
+
+  const appMenuPopup = document.getElementById("appMenu-popup");
+  if (appMenuPopup && appMenuPopup.state !== "closed") {
+    await closeHamburgerMenu();
+  }
+
   await SpecialPowers.popPrefEnv();
 });
+
+function checkMenuItemVisibility(
+  aiWindowEnabled,
+  aiOpenerButton,
+  classicOpenerButton
+) {
+  const doc =
+    aiOpenerButton?.ownerDocument ||
+    classicOpenerButton?.ownerDocument ||
+    document;
+  const currentWindowIsAIWindow = doc.documentElement.hasAttribute("ai-window");
+
+  if (!aiWindowEnabled) {
+    Assert.ok(
+      !aiOpenerButton || aiOpenerButton.hidden,
+      `AI Window button should not be visible when browser.aiwindow.enabled is false`
+    );
+    Assert.ok(
+      !classicOpenerButton || classicOpenerButton.hidden,
+      `Classic Window button should not be visible when browser.aiwindow.enabled is false`
+    );
+  } else if (currentWindowIsAIWindow) {
+    Assert.ok(
+      !aiOpenerButton || aiOpenerButton.hidden,
+      `AI Window button should be hidden in AI Window when browser.aiwindow.enabled is true`
+    );
+    Assert.ok(
+      classicOpenerButton && !classicOpenerButton.hidden,
+      `Classic Window button should be visible in AI Window when browser.aiwindow.enabled is true`
+    );
+  } else {
+    Assert.ok(
+      aiOpenerButton && !aiOpenerButton.hidden,
+      `AI Window button should be visible in Classic Window when browser.aiwindow.enabled is true`
+    );
+    Assert.ok(
+      !classicOpenerButton || classicOpenerButton.hidden,
+      `Classic Window button should be hidden in Classic Window when browser.aiwindow.enabled is true`
+    );
+  }
+}
+
+function isAIWindow() {
+  return window.document.documentElement.hasAttribute("ai-window");
+}
+
+async function openHamburgerMenu(aiWindow = null) {
+  let menuButton = aiWindow
+    ? aiWindow.document.getElementById("PanelUI-menu-button")
+    : document.getElementById("PanelUI-menu-button");
+  let mainView = aiWindow
+    ? PanelMultiView.getViewNode(aiWindow.document, "appMenu-mainView")
+    : PanelMultiView.getViewNode(document, "appMenu-mainView");
+
+  let viewShownPromise = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
+  menuButton.click();
+  await viewShownPromise;
+}
+
+async function closeHamburgerMenu(aiWindow = null) {
+  let appMenuPopup = aiWindow
+    ? aiWindow.document.getElementById("appMenu-popup")
+    : document.getElementById("appMenu-popup");
+
+  let panelHiddenPromise = BrowserTestUtils.waitForEvent(
+    appMenuPopup,
+    "popuphidden"
+  );
+
+  if (aiWindow) {
+    aiWindow.PanelUI.hide();
+  } else {
+    PanelUI.hide();
+  }
+  await panelHiddenPromise;
+}
+
+async function openFileMenu(menu) {
+  return new Promise(resolve => {
+    menu.addEventListener("popupshown", resolve, { once: true });
+    menu.dispatchEvent(new MouseEvent("popupshowing", { bubbles: true }));
+    menu.dispatchEvent(new MouseEvent("popupshown", { bubbles: true }));
+  });
+}
+
+async function closeFileMenu(menu) {
+  return new Promise(resolve => {
+    menu.addEventListener("popuphidden", resolve, { once: true });
+    menu.dispatchEvent(new MouseEvent("popuphiding", { bubbles: true }));
+    menu.dispatchEvent(new MouseEvent("popuphidden", { bubbles: true }));
+  });
+}

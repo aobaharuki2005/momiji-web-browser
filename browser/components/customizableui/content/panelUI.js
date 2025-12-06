@@ -1064,11 +1064,18 @@ const PanelUI = {
   },
 
   _showAIMenuItem() {
+    const isAIWindowActive = document.documentElement.hasAttribute("ai-window");
     const aiMenuItem = PanelMultiView.getViewNode(
       document,
       "appMenu-new-ai-window-button"
     );
-    aiMenuItem.hidden = !this.isAIWindowEnabled;
+    const classicWindowMenuItem = PanelMultiView.getViewNode(
+      document,
+      "appMenu-new-classic-window-button"
+    );
+
+    aiMenuItem.hidden = !this.isAIWindowEnabled || isAIWindowActive;
+    classicWindowMenuItem.hidden = !this.isAIWindowEnabled || !isAIWindowActive;
   },
 
   _showBadge(notification) {

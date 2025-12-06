@@ -13,6 +13,8 @@ var { AppConstants } = ChromeUtils.importESModule(
 // lazy module getters
 
 ChromeUtils.defineESModuleGetters(this, {
+  AIWindow:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
   AMTelemetry: "resource://gre/modules/AddonManager.sys.mjs",
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   AboutReaderParent: "resource:///actors/AboutReaderParent.sys.mjs",
@@ -1677,41 +1679,20 @@ function toOpenWindowByType(inType, uri, features) {
     );
   }
 }
-
 /**
  * Open a new browser window. See `BrowserWindowTracker.openWindow` for
  * options.
  *
  * @return a reference to the new window.
  */
-function OpenBrowserWindow(options = {}) {
+function OpenBrowserWindow(options) {
   let timerId = Glean.browserTimings.newWindow.start();
+  options ??= {};
+  options.openerWindow ??= window;
 
-  if (options?.aiWindow) {
-    options.args ??= Cc["@mozilla.org/array;1"].createInstance(
-      Ci.nsIMutableArray
-    );
+  AIWindow.handleAIWindowOptions(window, options);
 
-    if (!options.args.length) {
-      const aiWindowURI = Cc["@mozilla.org/supports-string;1"].createInstance(
-        Ci.nsISupportsString
-      );
-      aiWindowURI.data = "chrome://browser/content/genai/smartAssist.html";
-
-      const aiOption = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
-        Ci.nsIWritablePropertyBag2
-      );
-      aiOption.setPropertyAsBool("ai-window", options.aiWindow);
-
-      options.args.appendElement(aiWindowURI);
-      options.args.appendElement(aiOption);
-    }
-  }
-
-  let win = BrowserWindowTracker.openWindow({
-    openerWindow: window,
-    ...options,
-  });
+  let win = BrowserWindowTracker.openWindow(options);
 
   win.addEventListener(
     "MozAfterPaint",
@@ -1880,6 +1861,16 @@ let gFileMenu = {
       );
     }
     PrintUtils.updatePrintSetupMenuHiddenState();
+
+    const aiWindowMenu = event.target.querySelector("#menu_newAIWindow");
+    const classicWindowMenu = event.target.querySelector(
+      "#menu_newClassicWindow"
+    );
+
+    aiWindowMenu.hidden =
+      !AIWindow.isAIWindowEnabled() || AIWindow.isAIWindowActive(window);
+    classicWindowMenu.hidden =
+      !AIWindow.isAIWindowEnabled() || !AIWindow.isAIWindowActive(window);
   },
 };
 

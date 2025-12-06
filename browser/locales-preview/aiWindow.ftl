@@ -6,3 +6,12 @@
 
 appmenuitem-new-ai-window =
     .label = New AI window
+
+appmenuitem-new-classic-window =
+    .label = New classic window
+
+menu-file-new-ai-window =
+    .label = New AI Window
+
+menu-file-new-classic-window =
+    .label = New Classic Window
