@@ -52,7 +52,10 @@ class OriginVerifierFeature(
     }
 
     @VisibleForTesting
-    internal fun getVerifier(packageName: String, @Relation relation: Int): OriginVerifier {
+    internal fun getVerifier(
+        packageName: String,
+        @Relation relation: Int,
+    ): OriginVerifier {
         cachedVerifier?.let {
             val (cachedPackage, cachedRelation, verifier) = it
             if (cachedPackage == packageName && cachedRelation == relation) {

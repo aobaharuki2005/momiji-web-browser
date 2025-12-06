@@ -39,7 +39,9 @@ data class WebCompatReporterState(
      *
      * @property displayStringId The string ID corresponding to the reason.
      */
-    enum class BrokenSiteReason(@param:StringRes val displayStringId: Int) {
+    enum class BrokenSiteReason(
+        @param:StringRes val displayStringId: Int,
+    ) {
         Load(
             displayStringId = R.string.webcompat_reporter_reason_load,
         ),

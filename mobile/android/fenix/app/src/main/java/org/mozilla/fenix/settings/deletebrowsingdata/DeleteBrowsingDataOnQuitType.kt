@@ -18,7 +18,9 @@ import org.mozilla.fenix.ext.getPreferenceKey
  *
  * @param prefKey The string resource ID for the preference key.
  */
-enum class DeleteBrowsingDataOnQuitType(@param:StringRes private val prefKey: Int) {
+enum class DeleteBrowsingDataOnQuitType(
+    @param:StringRes private val prefKey: Int,
+) {
     TABS(R.string.pref_key_delete_open_tabs_on_quit),
     HISTORY(R.string.pref_key_delete_browsing_history_on_quit),
     COOKIES(R.string.pref_key_delete_cookies_and_site_data_on_quit),

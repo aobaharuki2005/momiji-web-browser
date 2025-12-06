@@ -66,7 +66,9 @@ fun Fragment.nav(
     navController.nav(id, directions, options)
 }
 
-fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String = getString(resourceId)
+fun Fragment.getPreferenceKey(
+    @StringRes resourceId: Int,
+): String = getString(resourceId)
 
 /**
  * Displays the activity toolbar with the given [title].
@@ -348,4 +350,6 @@ fun Fragment.updateMicrosurveyPromptForConfigurationChange(
  * @param resId Resource ID of the dimension.
  * @return The pixel size corresponding to the given dimension resource.
  */
-fun Fragment.pixelSizeFor(@DimenRes resId: Int) = resources.getDimensionPixelSize(resId)
+fun Fragment.pixelSizeFor(
+    @DimenRes resId: Int,
+) = resources.getDimensionPixelSize(resId)

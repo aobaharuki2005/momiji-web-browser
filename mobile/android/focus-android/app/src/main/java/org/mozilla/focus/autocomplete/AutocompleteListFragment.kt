@@ -255,7 +255,8 @@ open class AutocompleteListFragment : BaseSettingsLikeFragment() {
 
         internal suspend fun move(
             context: Context,
-            from: Int, to: Int,
+            from: Int,
+            to: Int,
             ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
         ) {
             Collections.swap(domains, from, to)

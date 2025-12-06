@@ -40,7 +40,9 @@ import mozilla.components.ui.autocomplete.OnFilterListener
 import mozilla.components.ui.widgets.behavior.EngineViewScrollingBehavior
 import kotlin.coroutines.CoroutineContext
 
-internal fun ImageView.setTintResource(@ColorRes tintColorResource: Int) {
+internal fun ImageView.setTintResource(
+    @ColorRes tintColorResource: Int,
+) {
     if (tintColorResource != NO_ID) {
         imageTintList = AppCompatResources.getColorStateList(context, tintColorResource)
     }

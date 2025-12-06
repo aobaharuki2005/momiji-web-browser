@@ -50,7 +50,9 @@ val Context.metrics: MetricController
 fun Context.asActivity() = (this as? ContextThemeWrapper)?.baseContext as? Activity
     ?: this as? Activity
 
-fun Context.getPreferenceKey(@StringRes resourceId: Int): String =
+fun Context.getPreferenceKey(
+    @StringRes resourceId: Int,
+): String =
     resources.getString(resourceId)
 
 /**
@@ -69,7 +71,10 @@ fun Context.settings() = components.settings
  *
  * @return the formatted string in locale language or English as a fallback
  */
-fun Context.getStringWithArgSafe(@StringRes resId: Int, formatArg: String): String {
+fun Context.getStringWithArgSafe(
+    @StringRes resId: Int,
+    formatArg: String,
+): String {
     return try {
         format(getString(resId), formatArg)
     } catch (e: IllegalArgumentException) {
@@ -214,4 +219,6 @@ fun Context.isToolbarAtBottom() =
  * @param resId Resource ID of the dimension.
  * @return The pixel size corresponding to the given dimension resource.
  */
-fun Context.pixelSizeFor(@DimenRes resId: Int) = resources.getDimensionPixelSize(resId)
+fun Context.pixelSizeFor(
+    @DimenRes resId: Int,
+) = resources.getDimensionPixelSize(resId)

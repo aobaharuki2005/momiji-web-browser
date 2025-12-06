@@ -557,7 +557,7 @@
     <ID>UndocumentedPublicFunction:CollectionCreationView.kt$CollectionCreationView$fun update(state: CollectionCreationState)</ID>
     <ID>UndocumentedPublicFunction:CollectionsListAdapter.kt$CollectionsListAdapter$fun getSelectedCollection()</ID>
     <ID>UndocumentedPublicFunction:Context.kt$fun Context.asActivity()</ID>
-    <ID>UndocumentedPublicFunction:Context.kt$fun Context.getPreferenceKey(@StringRes resourceId: Int): String</ID>
+    <ID>UndocumentedPublicFunction:Context.kt$fun Context.getPreferenceKey( @StringRes resourceId: Int, ): String</ID>
     <ID>UndocumentedPublicFunction:Context.kt$fun Context.settings()</ID>
     <ID>UndocumentedPublicFunction:CounterPreference.kt$CounterPreference$fun increment()</ID>
     <ID>UndocumentedPublicFunction:CounterPreference.kt$CounterPreference$fun underMaxCount()</ID>
@@ -585,7 +585,7 @@
     <ID>UndocumentedPublicFunction:FenixOnboarding.kt$FenixOnboarding$fun finish()</ID>
     <ID>UndocumentedPublicFunction:FenixOnboarding.kt$FenixOnboarding$fun userHasBeenOnboarded(): Boolean</ID>
     <ID>UndocumentedPublicFunction:Fragment.kt$fun Fragment.breadcrumb( message: String, data: Map&lt;String, String&gt; = emptyMap(), )</ID>
-    <ID>UndocumentedPublicFunction:Fragment.kt$fun Fragment.getPreferenceKey(@StringRes resourceId: Int): String</ID>
+    <ID>UndocumentedPublicFunction:Fragment.kt$fun Fragment.getPreferenceKey( @StringRes resourceId: Int, ): String</ID>
     <ID>UndocumentedPublicFunction:FxaServer.kt$FxaServer$fun config(context: Context): ServerConfig</ID>
     <ID>UndocumentedPublicFunction:GeckoProvider.kt$GeckoProvider$@Synchronized fun getOrCreateRuntime( context: Context, autofillStorage: Lazy&lt;CreditCardsAddressesStorage&gt;, loginStorage: Lazy&lt;LoginsStorage&gt;, trackingProtectionPolicy: TrackingProtectionPolicy, ): GeckoRuntime</ID>
     <ID>UndocumentedPublicFunction:GroupableRadioButton.kt$GroupableRadioButton$fun addToRadioGroup(radioButton: GroupableRadioButton)</ID>
@@ -638,7 +638,7 @@
     <ID>UndocumentedPublicFunction:MetricsService.kt$MetricsService$fun track(event: Event)</ID>
     <ID>UndocumentedPublicFunction:MozillaProductDetector.kt$MozillaProductDetector$fun getInstalledMozillaProducts(context: Context): List&lt;String&gt;</ID>
     <ID>UndocumentedPublicFunction:MozillaProductDetector.kt$MozillaProductDetector$fun packageIsInstalled(context: Context, packageName: String): Boolean</ID>
-    <ID>UndocumentedPublicFunction:NavController.kt$fun NavController.alreadyOnDestination(@IdRes destId: Int?): Boolean</ID>
+    <ID>UndocumentedPublicFunction:NavController.kt$fun NavController.alreadyOnDestination( @IdRes destId: Int?, ): Boolean</ID>
     <ID>UndocumentedPublicFunction:NavController.kt$fun NavController.navigateSafe( @IdRes resId: Int, directions: NavDirections, )</ID>
     <ID>UndocumentedPublicFunction:NimbusBranchesView.kt$NimbusBranchesView$fun update(state: NimbusBranchesState)</ID>
     <ID>UndocumentedPublicFunction:PasswordRevealHelper.kt$fun togglePasswordReveal(passwordText: TextView, revealPasswordButton: ImageButton)</ID>
@@ -744,8 +744,8 @@
     <ID>UndocumentedPublicFunction:SitePermissionsManageExceptionsPhoneFeatureFragment.kt$SitePermissionsManageExceptionsPhoneFeatureFragment$fun initAutoplay(sitePermissions: SitePermissions? = null)</ID>
     <ID>UndocumentedPublicFunction:SitePermissionsManageExceptionsPhoneFeatureFragment.kt$SitePermissionsManageExceptionsPhoneFeatureFragment$fun initNormalFeature()</ID>
     <ID>UndocumentedPublicFunction:SortingStrategy.kt$SortingStrategy$abstract operator fun invoke(logins: List&lt;SavedLogin&gt;): List&lt;SavedLogin&gt;</ID>
-    <ID>UndocumentedPublicFunction:SpannableString.kt$fun SpannableString.setTextColor(context: Context, @AttrRes colorResId: Int)</ID>
-    <ID>UndocumentedPublicFunction:SpannableString.kt$fun SpannableString.setTextSize(context: Context, @Dimension(unit = DP) textSize: Int)</ID>
+    <ID>UndocumentedPublicFunction:SpannableString.kt$fun SpannableString.setTextColor( context: Context, @AttrRes colorResId: Int, )</ID>
+    <ID>UndocumentedPublicFunction:SpannableString.kt$fun SpannableString.setTextSize( context: Context, @Dimension(unit = DP) textSize: Int, )</ID>
     <ID>UndocumentedPublicFunction:StartupActivityLog.kt$StartupActivityLog$@VisibleForTesting(otherwise = NONE) fun getObserversForTesting()</ID>
     <ID>UndocumentedPublicFunction:StartupActivityLog.kt$StartupActivityLog$@VisibleForTesting(otherwise = PRIVATE) fun logEntries(loggerArg: Logger = logger, logLevel: Log.Priority = Log.logLevel)</ID>
     <ID>UndocumentedPublicFunction:StartupActivityLog.kt$StartupActivityLog$fun registerInAppOnCreate( application: Application, processLifecycleOwner: LifecycleOwner = ProcessLifecycleOwner.get(), )</ID>
@@ -781,7 +781,7 @@
     <ID>UndocumentedPublicFunction:TrackingProtectionPanelView.kt$TrackingProtectionPanelView$fun onBackPressed(): Boolean</ID>
     <ID>UndocumentedPublicFunction:Utils.kt$fun BookmarkNode.flatNodeList(excludeSubtreeRoot: String?, depth: Int = 0): List&lt;BookmarkNodeWithDepth&gt;</ID>
     <ID>UndocumentedPublicFunction:Utils.kt$fun rootTitles(context: Context, withMobileRoot: Boolean): Map&lt;String, String&gt;</ID>
-    <ID>UndocumentedPublicFunction:View.kt$fun View.increaseTapArea(@Dimension(unit = DP) extraDps: Int)</ID>
+    <ID>UndocumentedPublicFunction:View.kt$fun View.increaseTapArea( @Dimension(unit = DP) extraDps: Int, )</ID>
     <ID>UndocumentedPublicFunction:View.kt$fun View.removeTouchDelegate()</ID>
     <ID>UndocumentedPublicFunction:WebPushEngineIntegration.kt$WebPushEngineIntegration$fun start()</ID>
     <ID>UndocumentedPublicFunction:WebPushEngineIntegration.kt$WebPushEngineIntegration$fun stop()</ID>

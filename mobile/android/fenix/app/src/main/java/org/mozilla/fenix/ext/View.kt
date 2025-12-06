@@ -23,7 +23,9 @@ import org.mozilla.fenix.components.Components
  */
 fun View.settings() = context.components.settings
 
-fun View.increaseTapArea(@Dimension(unit = DP) extraDps: Int) {
+fun View.increaseTapArea(
+    @Dimension(unit = DP) extraDps: Int,
+) {
     val extraPx = extraDps.dpToPx(resources.displayMetrics)
     increaseTapAreaInternal(extraPx)
 }
@@ -44,7 +46,9 @@ internal fun View.increaseTapAreaInternal(extraPx: Int) {
  *
  * @param extraDps the extra dps that's wanted to be added on top and bottom of the view
  */
-fun View.increaseTapAreaVertically(@Dimension(unit = DP) extraDps: Int) {
+fun View.increaseTapAreaVertically(
+    @Dimension(unit = DP) extraDps: Int,
+) {
     val dips = extraDps.dpToPx(resources.displayMetrics)
     val parent = this.parent as View
     parent.post {
@@ -144,4 +148,6 @@ internal fun getKeyboardHeight(
  * @param resId Resource ID of the dimension.
  * @return The pixel size corresponding to the given dimension resource.
  */
-fun View.pixelSizeFor(@DimenRes resId: Int) = resources.getDimensionPixelSize(resId)
+fun View.pixelSizeFor(
+    @DimenRes resId: Int,
+) = resources.getDimensionPixelSize(resId)

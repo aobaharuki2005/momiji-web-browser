@@ -373,7 +373,9 @@ inline fun Context.runOnlyInMainProcess(block: () -> Unit) {
  * Returns the color int corresponding to the attribute.
  */
 @ColorInt
-fun Context.getColorFromAttr(@AttrRes attr: Int) =
+fun Context.getColorFromAttr(
+    @AttrRes attr: Int,
+) =
     ContextCompat.getColor(this, theme.resolveAttribute(attr))
 
 /**
@@ -393,7 +395,10 @@ fun Context.getStatusBarColor() =
  * @param resId ID of the drawable to load.
  * @param tint Tint color int to apply to the drawable.
  */
-fun Context.getDrawableWithTint(@DrawableRes resId: Int, @ColorInt tint: Int) =
+fun Context.getDrawableWithTint(
+    @DrawableRes resId: Int,
+    @ColorInt tint: Int,
+) =
     AppCompatResources.getDrawable(this, resId)?.apply {
         mutate()
         setTint(tint)

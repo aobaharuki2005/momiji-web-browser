@@ -54,7 +54,10 @@ class EngineViewScrollingDataBehavior(
     }
 
     override fun onStopNestedScroll(
-        coordinatorLayout: CoordinatorLayout, child: View, target: View, type: Int,
+        coordinatorLayout: CoordinatorLayout,
+        child: View,
+        target: View,
+        type: Int,
     ) {
         scrollUpdatesJob?.cancel()
 

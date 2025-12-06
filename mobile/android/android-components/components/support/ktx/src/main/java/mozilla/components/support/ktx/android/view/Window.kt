@@ -35,7 +35,9 @@ import mozilla.components.support.utils.ext.top
  * Sets the status bar background color. If the color is light enough, a light navigation bar with
  * dark icons will be used.
  */
-fun Window.setStatusBarTheme(@ColorInt color: Int) {
+fun Window.setStatusBarTheme(
+    @ColorInt color: Int,
+) {
     createWindowInsetsController().isAppearanceLightStatusBars = !isDark(color)
     setStatusBarColorCompat(color)
 }
@@ -68,7 +70,9 @@ fun Window.createWindowInsetsController(): WindowInsetsControllerCompat {
  * @param color The color to set as the status bar color.
  * Note that if edge-to-edge behavior is enabled, the color will be transparent and cannot be changed.
  */
-fun Window.setStatusBarColorCompat(@ColorInt color: Int) {
+fun Window.setStatusBarColorCompat(
+    @ColorInt color: Int,
+) {
     if (context.isEdgeToEdgeDisabled()) {
         @Suppress("DEPRECATION")
         statusBarColor = color
@@ -83,7 +87,9 @@ fun Window.setStatusBarColorCompat(@ColorInt color: Int) {
  * @param color The color to set as the navigation bar color.
  * Note that if edge-to-edge behavior is enabled, the color will be transparent and cannot be changed.
  */
-fun Window.setNavigationBarColorCompat(@ColorInt color: Int) {
+fun Window.setNavigationBarColorCompat(
+    @ColorInt color: Int,
+) {
     if (context.isEdgeToEdgeDisabled()) {
         @Suppress("DEPRECATION")
         navigationBarColor = color
@@ -98,7 +104,9 @@ fun Window.setNavigationBarColorCompat(@ColorInt color: Int) {
  * @param color The color to set as the navigation bar divider color.
  * Note that if edge-to-edge behavior is enabled, the color will be transparent and cannot be changed.
  */
-fun Window.setNavigationBarDividerColorCompat(@ColorInt color: Int?) {
+fun Window.setNavigationBarDividerColorCompat(
+    @ColorInt color: Int?,
+) {
     if (SDK_INT >= VERSION_CODES.P && context.isEdgeToEdgeDisabled()) {
         @Suppress("DEPRECATION")
         navigationBarDividerColor = color ?: 0

@@ -150,7 +150,9 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
         return row
     }
 
-    private fun View.getMaterialColor(@AttrRes attr: Int): Int {
+    private fun View.getMaterialColor(
+        @AttrRes attr: Int,
+    ): Int {
         return MaterialColors.getColor(this, attr)
     }
 }

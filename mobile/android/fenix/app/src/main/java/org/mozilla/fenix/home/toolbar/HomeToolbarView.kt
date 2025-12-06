@@ -143,7 +143,9 @@ internal class HomeToolbarView(
      *
      * @param id The resource ID of the drawable to use as the background.
      */
-    fun updateBackground(@DrawableRes id: Int) {
+    fun updateBackground(
+        @DrawableRes id: Int,
+    ) {
         toolbarBinding.toolbar.setBackgroundResource(id)
     }
 

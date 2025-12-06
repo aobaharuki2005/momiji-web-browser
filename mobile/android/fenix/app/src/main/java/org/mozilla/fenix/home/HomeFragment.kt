@@ -818,7 +818,11 @@ class HomeFragment : Fragment() {
         )
     }
 
-    private fun updateToolbarViewUI(@DrawableRes id: Int, showDivider: Boolean, elevation: Float) {
+    private fun updateToolbarViewUI(
+        @DrawableRes id: Int,
+        showDivider: Boolean,
+        elevation: Float,
+    ) {
         (toolbarView as? HomeToolbarView)?.updateBackground(id)
         toolbarView.updateDividerVisibility(showDivider)
         toolbarView.layout.elevation = elevation

@@ -160,5 +160,7 @@ sealed class BrowserEditToolbarAction : BrowserToolbarAction {
     /**
      * Update the placeholder hint resource ID in edit mode.
      */
-    data class HintUpdated(@param:StringRes val hint: Int) : BrowserEditToolbarAction()
+    data class HintUpdated(
+        @param:StringRes val hint: Int,
+    ) : BrowserEditToolbarAction()
 }
