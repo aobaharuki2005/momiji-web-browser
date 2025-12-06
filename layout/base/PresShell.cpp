@@ -1114,18 +1114,6 @@ void PresShell::Destroy() {
     mMVMContext = nullptr;
   }
 
-#ifdef ACCESSIBILITY
-  if (mDocAccessible) {
-#  ifdef DEBUG
-    if (a11y::logging::IsEnabled(a11y::logging::eDocDestroy))
-      a11y::logging::DocDestroy("presshell destroyed", mDocument);
-#  endif
-
-    mDocAccessible->Shutdown();
-    mDocAccessible = nullptr;
-  }
-#endif  // ACCESSIBILITY
-
   MaybeReleaseCapturingContent();
 
   EventHandler::OnPresShellDestroy(mDocument);
@@ -1183,6 +1171,18 @@ void PresShell::Destroy() {
   }
 
   mIsDestroying = true;
+
+#ifdef ACCESSIBILITY
+  if (mDocAccessible) {
+#  ifdef DEBUG
+    if (a11y::logging::IsEnabled(a11y::logging::eDocDestroy))
+      a11y::logging::DocDestroy("presshell destroyed", mDocument);
+#  endif
+
+    mDocAccessible->Shutdown();
+    mDocAccessible = nullptr;
+  }
+#endif  // ACCESSIBILITY
 
   // We can't release all the event content in
   // mCurrentEventContentStack here since there might be code on the
