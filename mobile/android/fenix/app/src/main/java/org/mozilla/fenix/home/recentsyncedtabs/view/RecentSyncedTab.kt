@@ -18,9 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +51,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.ThumbnailCard
 import org.mozilla.fenix.home.recentsyncedtabs.RecentSyncedTab
+import org.mozilla.fenix.home.topsites.ui.HomepageCard
+import org.mozilla.fenix.home.topsites.ui.homepageCardImageShape
 import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
@@ -87,25 +87,23 @@ fun RecentSyncedTab(
         onRemoveSyncedTab(recentSyncedTab)
     }
 
-    Card(
+    HomepageCard(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
                 onClick = { tab?.let { onRecentSyncedTabClick(tab) } },
                 onLongClick = { isDropdownExpanded = true },
             ),
-        shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = backgroundColor),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(FirefoxTheme.layout.space.static200)) {
             Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                 if (tab == null) {
                     RecentTabImagePlaceholder()
                 } else {
                     val imageModifier = Modifier
                         .size(108.dp, 80.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(homepageCardImageShape)
 
                     if (tab.previewImageUrl != null) {
                         Image(
@@ -143,7 +141,9 @@ fun RecentSyncedTab(
                         )
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         if (tab == null) {
                             Box(
                                 modifier = Modifier
@@ -212,7 +212,7 @@ private fun RecentTabImagePlaceholder() {
     Box(
         modifier = Modifier
             .size(108.dp, 80.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(homepageCardImageShape)
             .background(color = MaterialTheme.colorScheme.surfaceContainerHighest),
     )
 }
