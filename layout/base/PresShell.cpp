@@ -12545,7 +12545,7 @@ void PresShell::PaintSynchronously() {
     return;
   }
   RefPtr widget = GetOwnWidget();
-  if (NS_WARN_IF(!widget)) {
+  if (!widget) {
     // We were asked to paint a non-root pres shell, or an already-detached
     // shell.
     return;
