@@ -9326,17 +9326,16 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aGridRI,
       *cb = itemCB.GetPhysicalRect(wm, gridCBPhysicalSize);
       ++i;
     }
-    // We pass a dummy rect as CB because each child has its own CB rect.
-    // The IsGridContainerCB flag tells AbsoluteContainingBlock::Reflow to
-    // use those instead.
-    nsRect dummyRect;
+    const auto border = aGridRI.mReflowInput->ComputedPhysicalBorder();
+    const nsPoint borderShift{border.left, border.top};
+    const nsRect paddingRect(borderShift, gridCBPhysicalSize);
     // XXX: To optimize the performance, set the flags only when the CB width
     // or height actually changes.
     AbsPosReflowFlags flags{
         AbsPosReflowFlag::AllowFragmentation, AbsPosReflowFlag::CBWidthChanged,
         AbsPosReflowFlag::CBHeightChanged, AbsPosReflowFlag::IsGridContainerCB};
     absoluteContainer->Reflow(this, PresContext(), *aGridRI.mReflowInput,
-                              aStatus, dummyRect, flags,
+                              aStatus, paddingRect, flags,
                               &aDesiredSize.mOverflowAreas);
   }
   return bSize;

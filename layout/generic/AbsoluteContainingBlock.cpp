@@ -1209,27 +1209,13 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
                                      aAnchorPosResolutionCache,
                                      firstTryIndex == currentFallbackIndex);
     auto cb = [&]() {
-      if (isGrid) {
-        // TODO(emilio): how does position-area interact with grid?
-        const auto border = aDelegatingFrame->GetUsedBorder();
-        const nsPoint borderShift{border.left, border.top};
-        // Shift in by border of the overall grid container.
-        return ContainingBlockRect{nsGridContainerFrame::GridItemCB(aKidFrame) +
-                                   borderShift};
-      }
-
-      auto positionArea = aKidFrame->StylePosition()->mPositionArea;
-      if (currentFallback && currentFallback->IsPositionArea()) {
-        MOZ_ASSERT(currentFallback->IsPositionArea());
-        positionArea = currentFallback->AsPositionArea();
-      }
-
       if (aAnchorPosResolutionCache) {
         const auto defaultAnchorInfo =
             AnchorPositioningUtils::ResolveAnchorPosRect(
                 aKidFrame, aDelegatingFrame, nullptr, false,
                 aAnchorPosResolutionCache);
         if (defaultAnchorInfo) {
+          auto positionArea = aKidFrame->StylePosition()->mPositionArea;
           if (!positionArea.IsNone()) {
             // Offset should be up to, but not including the containing block's
             // scroll offset.
@@ -1258,6 +1244,16 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
           }
           return ContainingBlockRect{aOriginalScrollableContainingBlockRect};
         }
+      }
+
+      if (isGrid) {
+        // TODO(emilio, bug 2004596): This adjustment is supposed to also
+        // restrict the position-area rect above...
+        const auto border = aDelegatingFrame->GetUsedBorder();
+        const nsPoint borderShift{border.left, border.top};
+        // Shift in by border of the overall grid container.
+        return ContainingBlockRect{nsGridContainerFrame::GridItemCB(aKidFrame) +
+                                   borderShift};
       }
 
       if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
