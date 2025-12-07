@@ -3498,17 +3498,18 @@ void nsHttpChannel::UpdateCacheDisposition(bool aSuccessfulReval,
       nsPrintfCString(
           !mDidReval ? "Missed"
                      : (aSuccessfulReval ? "HitViaReval" : "MissedViaReval")));
+  CacheDisposition cacheDisposition;
+  if (!mDidReval) {
+    cacheDisposition = kCacheMissed;
+  } else if (aSuccessfulReval) {
+    cacheDisposition = kCacheHitViaReval;
+  } else {
+    cacheDisposition = kCacheMissedViaReval;
+  }
+  mCacheDisposition = cacheDisposition;
+
   if (Telemetry::CanRecordPrereleaseData()) {
-    CacheDisposition cacheDisposition;
-    if (!mDidReval) {
-      cacheDisposition = kCacheMissed;
-    } else if (aSuccessfulReval) {
-      cacheDisposition = kCacheHitViaReval;
-    } else {
-      cacheDisposition = kCacheMissedViaReval;
-    }
     AccumulateCacheHitTelemetry(cacheDisposition, this);
-    mCacheDisposition = cacheDisposition;
   }
 
   ReportHttpResponseVersion(mResponseHead->Version());
