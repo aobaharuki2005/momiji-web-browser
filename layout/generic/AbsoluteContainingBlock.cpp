@@ -780,9 +780,9 @@ static nscoord OffsetToAlignedStaticPos(
       aKidSizeInAbsPosCBWM.ConvertTo(kidWM, aAbsPosCBWM);
   const LogicalAxis kidAxis = aAbsPosCBWM.ConvertAxisTo(aAbsPosCBAxis, kidWM);
 
-  // Build an Inset Modified rect from the anchor which can be used to align
-  // to the anchor-center, if AlignJustifySelf is AnchorCenter.
-  Maybe<LogicalRect> insetModifiedAnchorRect;
+  // Build an Inset Modified anchor info from the anchor which can be used to
+  // align to the anchor-center, if AlignJustifySelf is AnchorCenter.
+  Maybe<CSSAlignUtils::AnchorAlignInfo> anchorAlignInfo;
   if (alignConst == StyleAlignFlags::ANCHOR_CENTER &&
       aKidReflowInput.mAnchorPosResolutionCache) {
     const auto* referenceData =
@@ -793,14 +793,23 @@ static nscoord OffsetToAlignedStaticPos(
       if (cachedData && *cachedData) {
         const auto& data = cachedData->ref();
         if (data.mOffsetData) {
-          nsSize containerSize = aAbsPosCBSize.GetPhysicalSize(aAbsPosCBWM);
-          nsRect anchorRect(data.mOffsetData->mOrigin, data.mSize);
-          LogicalRect logicalAnchorRect(kidWM, anchorRect, containerSize);
+          const nsSize containerSize =
+              aAbsPosCBSize.GetPhysicalSize(aAbsPosCBWM);
+          const nsRect anchorRect(data.mOffsetData->mOrigin, data.mSize);
+          const LogicalRect logicalAnchorRect{aAbsPosCBWM, anchorRect,
+                                              containerSize};
+          const auto axisInAbsPosCBWM =
+              kidWM.ConvertAxisTo(kidAxis, aAbsPosCBWM);
+          const auto anchorStart =
+              logicalAnchorRect.Start(axisInAbsPosCBWM, aAbsPosCBWM);
+          const auto anchorSize =
+              logicalAnchorRect.Size(axisInAbsPosCBWM, aAbsPosCBWM);
+          anchorAlignInfo =
+              Some(CSSAlignUtils::AnchorAlignInfo{anchorStart, anchorSize});
           if (aNonAutoAlignParams) {
-            logicalAnchorRect.Start(kidAxis, kidWM) -=
+            anchorAlignInfo->mAnchorStart -=
                 aNonAutoAlignParams->mCurrentStartInset;
           }
-          insetModifiedAnchorRect = Some(logicalAnchorRect);
         }
       }
     }
@@ -808,7 +817,7 @@ static nscoord OffsetToAlignedStaticPos(
 
   nscoord offset = CSSAlignUtils::AlignJustifySelf(
       alignConst, kidAxis, flags, baselineAdjust, alignAreaSizeInAxis,
-      aKidReflowInput, kidSizeInOwnWM, insetModifiedAnchorRect);
+      aKidReflowInput, kidSizeInOwnWM, anchorAlignInfo);
 
   // Safe alignment clamping for anchor-center.
   // When using anchor-center with the safe keyword, or when both insets are
