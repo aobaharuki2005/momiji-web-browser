@@ -389,7 +389,7 @@
   <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_uninstall">A(z) %1$s eltávolítása sikertelen</string>
   <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
-  <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">A(z) %1$s eltávolítása sikertelen</string>
+  <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources">A(z) %1$s sikeresen eltávolítva</string>
   <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
   <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">A(z) %1$s eltávolítása sikertelen</string>
   <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
