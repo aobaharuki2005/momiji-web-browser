@@ -24,15 +24,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-let firstPaintNotification = "widget-first-paint";
+let firstPaintNotification = "xul-window-visible";
 // On Linux widget-first-paint fires much later than expected and
 // xul-window-visible fires too early for currently unknown reasons.
 if (AppConstants.platform == "linux") {
   firstPaintNotification = "document-shown";
-} else if (
-  Services.prefs.getBoolPref("browser.startup.preXulSkeletonUI", false)
-) {
-  firstPaintNotification = "xul-window-visible";
 }
 
 let win, canvas;
