@@ -164,13 +164,46 @@ enum TimerPrecisionType {
 
 // ============================================================================
 
-enum class CanvasFeatureUsage : uint8_t {
+enum class CanvasFeatureUsage : uint64_t {
   None = 0,
-  KnownFingerprintText = 1 << 0,
-  SetFont = 1 << 1,
-  FillRect = 1 << 2,
-  LineTo = 1 << 3,
-  Stroke = 1 << 4
+
+  KnownText_1 = 1llu << 0,
+  KnownText_2 = 1llu << 1,
+  KnownText_3 = 1llu << 2,
+  KnownText_4 = 1llu << 3,
+  KnownText_5 = 1llu << 4,
+  KnownText_6 = 1llu << 5,
+  KnownText_7 = 1llu << 6,
+  KnownText_8 = 1llu << 7,
+  KnownText_9 = 1llu << 8,
+  KnownText_10 = 1llu << 9,
+  KnownText_11 = 1llu << 10,
+  KnownText_12 = 1llu << 11,
+  KnownText_13 = 1llu << 12,
+  KnownText_14 = 1llu << 13,
+  KnownText_15 = 1llu << 14,
+  KnownText_16 = 1llu << 15,
+  KnownText_17 = 1llu << 16,
+  KnownText_18 = 1llu << 17,
+  KnownText_19 = 1llu << 18,
+  KnownText_20 = 1llu << 19,
+  KnownText_21 = 1llu << 20,
+  KnownText_22 = 1llu << 21,
+  KnownText_23 = 1llu << 22,
+  KnownText_24 = 1llu << 23,
+  KnownText_25 = 1llu << 24,
+  KnownText_26 = 1llu << 25,
+  KnownText_27 = 1llu << 26,
+  KnownText_28 = 1llu << 27,
+  KnownText_29 = 1llu << 28,
+  KnownText_30 = 1llu << 29,
+  KnownText_31 = 1llu << 30,
+  KnownText_32 = 1llu << 31,
+
+  SetFont = 1llu << 32,
+  FillRect = 1llu << 33,
+  LineTo = 1llu << 34,
+  Stroke = 1llu << 35,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CanvasFeatureUsage);
 
