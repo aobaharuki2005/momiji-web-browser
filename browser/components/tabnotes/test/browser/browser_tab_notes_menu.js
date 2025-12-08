@@ -4,12 +4,8 @@
 
 "use strict";
 
-const { TabNotes } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/tabnotes/TabNotes.sys.mjs"
-);
-
-registerCleanupFunction(() => {
-  TabNotes.reset();
+registerCleanupFunction(async () => {
+  await TabNotes.reset();
 });
 
 /**
@@ -95,7 +91,7 @@ async function addTabWithCanonicalUrl(url = "https://www.example.com") {
   return promise;
 }
 
-add_task(async function test_openTabNotePanelFromContextMenu() {
+add_task(async function test_tabContextMenu_prefDisabled() {
   // open context menu with tab notes disabled
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.notes.enabled", false]],
@@ -109,13 +105,19 @@ add_task(async function test_openTabNotePanelFromContextMenu() {
     "'Add Note' is hidden from context menu when pref disabled"
   );
   await closeContextMenu(tabContextMenu);
+  BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
+});
 
+add_task(async function test_openTabNotePanelFromContextMenu() {
   // open context menu with tab notes enabled
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.notes.enabled", true]],
   });
-  tabContextMenu = await getContextMenu(tab, "tabContextMenu");
+  let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  let addNoteElement = document.getElementById("context_addNote");
+  let tabContextMenu = await getContextMenu(tab, "tabContextMenu");
   Assert.ok(
     !addNoteElement.hidden,
     "'Add Note' is visible in context menu when pref enabled"
@@ -178,12 +180,18 @@ add_task(async function test_saveTabNote() {
   let tabNoteMenu = await openTabNoteMenu(tab);
   tabNoteMenu.querySelector("textarea").value = "Lorem ipsum dolor";
   let menuHidden = BrowserTestUtils.waitForPopupEvent(tabNoteMenu, "hidden");
+  let tabNoteCreated = observeTabNoteCreated(canonicalUrl);
   tabNoteMenu.querySelector("#tab-note-editor-button-save").click();
-  await menuHidden;
+  await Promise.all([menuHidden, tabNoteCreated]);
 
-  Assert.equal(TabNotes.get(canonicalUrl), "Lorem ipsum dolor");
+  const tabNote = await TabNotes.get(canonicalUrl);
+  Assert.equal(
+    tabNote.text,
+    "Lorem ipsum dolor",
+    "the text entered into the textarea should have been saved as a note"
+  );
 
-  TabNotes.delete(canonicalUrl);
+  await TabNotes.delete(canonicalUrl);
   BrowserTestUtils.removeTab(tab);
 
   await SpecialPowers.popPrefEnv();

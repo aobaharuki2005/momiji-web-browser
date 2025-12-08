@@ -9741,10 +9741,12 @@ var TabContextMenu = {
     let contextEditNote = document.getElementById("context_editNote");
     if (gBrowser._tabNotesEnabled) {
       let noteURL = this.contextTab.canonicalUrl;
-      let hasNote = this.TabNotes.has(noteURL);
       contextAddNote.disabled = !noteURL;
-      contextAddNote.hidden = hasNote;
-      contextEditNote.hidden = !hasNote;
+
+      this.TabNotes.has(noteURL).then(hasNote => {
+        contextAddNote.hidden = hasNote;
+        contextEditNote.hidden = !hasNote;
+      });
     } else {
       contextAddNote.hidden = true;
       contextEditNote.hidden = true;

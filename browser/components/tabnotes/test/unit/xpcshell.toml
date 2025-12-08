@@ -2,5 +2,6 @@
 prefs = [
   "browser.tabs.notes.enabled=true",
 ]
+head = "head.js"
 
 ["test_tab_notes.js"]

@@ -14,3 +14,10 @@ interface CanonicalURLIdentifiedEvent {
     canonicalUrl: string;
   };
 }
+
+interface TabNoteRecord {
+  id: number;
+  canonicalUrl: string;
+  created: Temporal.Instant;
+  text: string;
+}

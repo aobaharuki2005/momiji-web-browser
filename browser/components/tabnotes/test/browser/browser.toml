@@ -2,5 +2,8 @@
 prefs = [
   "browser.tabs.notes.enabled=true",
 ]
+support-files = [
+  "head.js",
+]
 
 ["browser_tab_notes_menu.js"]

@@ -50,6 +50,7 @@ class TabNotesControllerClass {
    */
   init() {
     if (lazy.TAB_NOTES_ENABLED) {
+      lazy.TabNotes.init();
       TOPICS.forEach(topicName => Services.obs.addObserver(this, topicName));
       lazy.logConsole.debug("init", TOPICS);
     } else {
@@ -101,6 +102,7 @@ class TabNotesControllerClass {
           );
         }
       });
+      lazy.TabNotes.deinit();
       lazy.logConsole.debug("quit", TOPICS);
     }
   }
@@ -120,7 +122,10 @@ class TabNotesControllerClass {
           const gBrowser = browser.getTabBrowser();
           const tab = gBrowser.getTabForBrowser(browser);
           tab.canonicalUrl = canonicalUrl;
-          tab.hasTabNote = lazy.TabNotes.has(canonicalUrl);
+          lazy.TabNotes.has(canonicalUrl).then(hasTabNote => {
+            tab.hasTabNote = hasTabNote;
+          });
+
           lazy.logConsole.debug("CanonicalURL:Identified", tab, canonicalUrl);
         }
         break;

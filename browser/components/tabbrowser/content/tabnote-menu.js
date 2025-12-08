@@ -150,35 +150,41 @@
       this.#currentTab = tab;
       let url = this.#currentTab.canonicalUrl;
 
-      if (url) {
-        let note = TabNotes.get(url);
+      if (!url) {
+        return;
+      }
+
+      TabNotes.get(url).then(note => {
         if (note) {
           this.createMode = false;
-          this.#noteField.value = note;
+          this.#noteField.value = note.text;
         } else {
           this.createMode = true;
         }
-      } else {
-        this.createMode = true;
-      }
-      this.#panel.addEventListener(
-        "popupshown",
-        () => {
-          this.#noteField.focus();
-        },
-        {
-          once: true,
-        }
-      );
-      this.#panel.openPopup(tab, {
-        position: this.#panelPosition,
+
+        this.#panel.addEventListener(
+          "popupshown",
+          () => {
+            this.#noteField.focus();
+          },
+          {
+            once: true,
+          }
+        );
+        this.#panel.openPopup(tab, {
+          position: this.#panelPosition,
+        });
       });
     }
 
     saveNote() {
       let url = this.#currentTab.canonicalUrl;
       let note = this.#noteField.value;
-      TabNotes.set(url, note);
+
+      if (url && note.length) {
+        TabNotes.set(url, note);
+      }
+
       this.#panel.hidePopup();
     }
   }
