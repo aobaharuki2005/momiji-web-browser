@@ -1255,6 +1255,17 @@ Preferences.addSetting({
   },
 });
 
+// Firefox support settings
+Preferences.addSetting({
+  id: "supportLinksGroup",
+});
+Preferences.addSetting({
+  id: "supportGetHelp",
+});
+Preferences.addSetting({
+  id: "supportShareIdeas",
+});
+
 // Performance settings
 Preferences.addSetting({
   id: "contentProcessCount",
@@ -2261,6 +2272,33 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  support: {
+    inProgress: true,
+    l10nId: "support-application-heading",
+    headingLevel: 2,
+    items: [
+      {
+        id: "supportLinksGroup",
+        control: "moz-box-group",
+        items: [
+          {
+            id: "supportGetHelp",
+            l10nId: "support-get-help",
+            control: "moz-box-link",
+            supportPage: "preferences",
+          },
+          {
+            id: "supportShareIdeas",
+            l10nId: "support-share-ideas",
+            control: "moz-box-link",
+            controlAttrs: {
+              href: "https://connect.mozilla.org/",
+            },
+          },
+        ],
+      },
+    ],
+  },
   performance: {
     items: [
       {
@@ -3207,6 +3245,7 @@ var gMainPane = {
     initSettingGroup("drm");
     initSettingGroup("browsing");
     initSettingGroup("zoom");
+    initSettingGroup("support");
     initSettingGroup("performance");
     initSettingGroup("startup");
     initSettingGroup("importBrowserData");

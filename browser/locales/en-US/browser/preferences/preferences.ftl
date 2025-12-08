@@ -602,6 +602,18 @@ update-in-progress-ok-button = &Discard
 # method of closing the UI will not discard the update.
 update-in-progress-cancel-button = &Continue
 
+## Firefox support
+
+support-application-heading =
+    .label = { -brand-short-name } support
+    .description = Troubleshoot issues or share ideas with the community.
+
+support-get-help =
+    .label = Get help
+
+support-share-ideas =
+    .label = Share ideas and feedback
+
 ## General Section - Performance
 
 performance-title = Performance
