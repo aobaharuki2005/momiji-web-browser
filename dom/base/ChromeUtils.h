@@ -366,6 +366,11 @@ class ChromeUtils {
       nsIPrincipal* aLoadingPrincipal, ErrorResult& aRv);
 
   static bool IsJSIdentifier(GlobalObject& aGlobal, const nsAString& aStr);
+
+  static already_AddRefed<Promise> FetchDecodedImage(GlobalObject& aGlobal,
+                                                     nsIURI* aURI,
+                                                     nsIChannel* aChannel,
+                                                     ErrorResult& aRv);
 };
 
 }  // namespace dom
