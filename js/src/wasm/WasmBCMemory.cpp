@@ -371,6 +371,9 @@ template <typename RegAddressType>
 void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
                                        AccessCheck* check, RegPtr instance,
                                        RegAddressType ptr) {
+  MOZ_ASSERT(codeMeta_.memories[access->memoryIndex()].pageSize() ==
+             PageSize::Standard);
+
   uint64_t offsetGuardLimit = GetMaxOffsetGuardLimit(
       codeMeta_.hugeMemoryEnabled(access->memoryIndex()));
 

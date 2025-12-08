@@ -818,7 +818,7 @@ bool ArrayBufferObject::resizeImpl(JSContext* cx, const CallArgs& args) {
     }
 
     Pages newPages =
-        Pages::fromByteLengthExact(newByteLength, wasm::PageSize::Standard);
+        Pages::fromByteLengthExact(newByteLength, obj->wasmPageSize());
     MOZ_RELEASE_ASSERT(WasmArrayBufferSourceMaxPages(obj).isSome());
     Rooted<ArrayBufferObject*> res(
         cx,
@@ -1979,12 +1979,20 @@ AddressType ArrayBufferObject::wasmAddressType() const {
   return wasm::AddressType::I32;
 }
 
+wasm::PageSize ArrayBufferObject::wasmPageSize() const {
+  if (isWasm()) {
+    return contents().wasmBuffer()->pageSize();
+  }
+  MOZ_ASSERT(isPreparedForAsmJS());
+  return wasm::PageSize::Standard;
+}
+
 Pages ArrayBufferObject::wasmPages() const {
   if (isWasm()) {
     return contents().wasmBuffer()->pages();
   }
   MOZ_ASSERT(isPreparedForAsmJS());
-  return Pages::fromByteLengthExact(byteLength(), wasm::PageSize::Standard);
+  return Pages::fromByteLengthExact(byteLength(), wasmPageSize());
 }
 
 Pages ArrayBufferObject::wasmClampedMaxPages() const {
@@ -1992,7 +2000,7 @@ Pages ArrayBufferObject::wasmClampedMaxPages() const {
     return contents().wasmBuffer()->clampedMaxPages();
   }
   MOZ_ASSERT(isPreparedForAsmJS());
-  return Pages::fromByteLengthExact(byteLength(), wasm::PageSize::Standard);
+  return Pages::fromByteLengthExact(byteLength(), wasmPageSize());
 }
 
 Maybe<Pages> ArrayBufferObject::wasmSourceMaxPages() const {
@@ -2000,8 +2008,7 @@ Maybe<Pages> ArrayBufferObject::wasmSourceMaxPages() const {
     return contents().wasmBuffer()->sourceMaxPages();
   }
   MOZ_ASSERT(isPreparedForAsmJS());
-  return Some<Pages>(
-      Pages::fromByteLengthExact(byteLength(), wasm::PageSize::Standard));
+  return Some<Pages>(Pages::fromByteLengthExact(byteLength(), wasmPageSize()));
 }
 
 size_t js::WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf) {
@@ -2017,6 +2024,13 @@ AddressType js::WasmArrayBufferAddressType(
     return buf->as<ArrayBufferObject>().wasmAddressType();
   }
   return buf->as<SharedArrayBufferObject>().wasmAddressType();
+}
+wasm::PageSize js::WasmArrayBufferPageSize(
+    const ArrayBufferObjectMaybeShared* buf) {
+  if (buf->is<ArrayBufferObject>()) {
+    return buf->as<ArrayBufferObject>().wasmPageSize();
+  }
+  return buf->as<SharedArrayBufferObject>().wasmPageSize();
 }
 Pages js::WasmArrayBufferPages(const ArrayBufferObjectMaybeShared* buf) {
   if (buf->is<ArrayBufferObject>()) {
@@ -2165,10 +2179,9 @@ ArrayBufferObject* ArrayBufferObject::wasmMovingGrowToPages(
 
   Pages clampedMaxPages =
       wasm::ClampedMaxPages(t, newPages, Nothing(), /* hugeMemory */ false);
-  wasm::PageSize pageSize = wasm::PageSize::Standard;
   WasmArrayRawBuffer* newRawBuf = WasmArrayRawBuffer::AllocateWasm(
-      oldBuf->wasmAddressType(), pageSize, newPages, clampedMaxPages, Nothing(),
-      Nothing());
+      oldBuf->wasmAddressType(), oldBuf->wasmPageSize(), newPages,
+      clampedMaxPages, Nothing(), Nothing());
   if (!newRawBuf) {
     return nullptr;
   }
