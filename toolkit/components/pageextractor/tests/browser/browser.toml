@@ -17,3 +17,5 @@ skip-if = [
 ]
 
 ["browser_headless_extractor.js"]
+
+["browser_viewport_extractor.js"]

@@ -48,6 +48,8 @@ async function html(strings, ...values) {
      */
     actor,
 
+    tab,
+
     /**
      * Get a new page extractor, which can change when navigating pages.
      *

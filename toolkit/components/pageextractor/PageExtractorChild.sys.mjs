@@ -5,7 +5,7 @@
 // @ts-check
 
 /**
- * @import { GetTextOptions } from './PageExtractor.js'
+ * @import { GetTextOptions } from './PageExtractor.d.ts'
  * @import { PageExtractorParent } from './PageExtractorParent.sys.mjs'
  */
 
@@ -140,16 +140,12 @@ export class PageExtractorChild extends JSWindowActorChild {
       throw new Error("Boilerplate removal is not supported yet.");
     }
 
-    if (options.justViewport) {
-      throw new Error("Just getting the viewport is not supported yet.");
-    }
-
     const text = lazy.extractTextFromDOM(document, options);
 
     lazy.console.log("GetText", options);
     lazy.console.debug(text);
 
-    return text.trim();
+    return text;
   }
 
   /**
