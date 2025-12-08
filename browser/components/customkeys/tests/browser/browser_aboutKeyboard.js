@@ -749,3 +749,45 @@ addAboutKbTask(async function testFunctionKey(tab) {
   });
   CustomKeys.resetAll();
 });
+
+// Test that changing to an arrow key works correctly.
+addAboutKbTask(async function testFunctionKey(tab) {
+  await SpecialPowers.spawn(tab, [consts], async _consts => {
+    content.backRow = content.document.querySelector(
+      '.key[data-id="goBackKb"]'
+    );
+    ok(
+      !content.backRow.classList.contains("customized"),
+      "goBackKb is not customized"
+    );
+    info("Clicking Change for goBackKb");
+    content.input = content.backRow.querySelector(".new");
+    let focused = ContentTaskUtils.waitForEvent(content.input, "focus");
+    content.change = content.backRow.querySelector(".change");
+    content.change.click();
+    await focused;
+    ok(true, "New key input got focus");
+    content.focused = ContentTaskUtils.waitForEvent(content.change, "focus");
+  });
+  await Services.fog.testFlushAllChildren();
+  is(
+    Glean.browserCustomkeys.actions.change.testGetValue(),
+    6,
+    "Correct telemetry for change action"
+  );
+  info(`Pressing ${consts.backDisplay}`);
+  EventUtils.synthesizeKey(...consts.backArgs, window);
+  await SpecialPowers.spawn(tab, [consts], async _consts => {
+    await content.focused;
+    ok(true, "Change button got focus");
+    ok(
+      !content.backRow.classList.contains("customized"),
+      "goBackKb is not customized"
+    );
+    is(
+      content.backRow.children[1].textContent,
+      _consts.backDisplay,
+      "Key is the default key"
+    );
+  });
+});
