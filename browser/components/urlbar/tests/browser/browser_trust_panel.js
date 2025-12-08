@@ -12,6 +12,10 @@ ChromeUtils.defineESModuleGetters(this, {
     "resource://gre/modules/ContentBlockingAllowList.sys.mjs",
 });
 
+const TRACKING_PAGE =
+  // eslint-disable-next-line @microsoft/sdl/no-insecure-url
+  "http://tracking.example.org/browser/browser/base/content/test/protectionsUI/trackingPage.html";
+
 const ETP_ACTIVE_ICON = 'url("chrome://browser/skin/trust-icon-active.svg")';
 const ETP_DISABLED_ICON =
   'url("chrome://browser/skin/trust-icon-disabled.svg")';
@@ -165,4 +169,64 @@ add_task(async function test_drag_and_drop() {
 
   await BrowserTestUtils.removeTab(tabByDnD);
   await BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_update() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "urlclassifier.features.cryptomining.blacklistHosts",
+        "cryptomining.example.com",
+      ],
+      [
+        "urlclassifier.features.cryptomining.annotate.blacklistHosts",
+        "cryptomining.example.com",
+      ],
+      [
+        "urlclassifier.features.fingerprinting.blacklistHosts",
+        "fingerprinting.example.com",
+      ],
+      [
+        "urlclassifier.features.fingerprinting.annotate.blacklistHosts",
+        "fingerprinting.example.com",
+      ],
+    ],
+  });
+
+  const tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: TRACKING_PAGE,
+    waitForLoad: true,
+  });
+
+  await UrlbarTestUtils.openTrustPanel(window);
+
+  let blockerSection = document.getElementById(
+    "trustpanel-blocker-section-header"
+  );
+  Assert.equal(
+    0,
+    parseInt(blockerSection.textContent, 10),
+    "Initially not blocked any trackers"
+  );
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
+    content.postMessage("cryptomining", "*");
+  });
+
+  await BrowserTestUtils.waitForCondition(
+    () => parseInt(blockerSection.textContent, 10) == 1,
+    "Updated to show new cryptominer blocked"
+  );
+
+  await SpecialPowers.spawn(tab.linkedBrowser, [], function () {
+    content.postMessage("fingerprinting", "*");
+  });
+
+  await BrowserTestUtils.waitForCondition(
+    () => parseInt(blockerSection.textContent, 10) == 2,
+    "Updated to show new fingerprinter blocked"
+  );
+
+  BrowserTestUtils.removeTab(tab);
 });
