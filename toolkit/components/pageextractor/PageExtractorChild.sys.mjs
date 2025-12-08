@@ -9,27 +9,23 @@
  * @import { PageExtractorParent } from './PageExtractorParent.sys.mjs'
  */
 
-/* eslint-disable jsdoc/require-property-description */
-
 /**
- * @typedef {object} Lazy
- * @property {typeof console} console
- * @property {typeof import("resource://gre/modules/Readerable.sys.mjs").isProbablyReaderable} isProbablyReaderable
- * @property {typeof import("moz-src:///toolkit/components/reader/ReaderMode.sys.mjs").ReaderMode} ReaderMode
- * @property {typeof import("./DOMExtractor.sys.mjs").extractTextFromDOM} extractTextFromDOM
+ * We wait for the page to be ready before extracting content headlessly. It's hard
+ * to know when a page is "ready", however the strategy here is to wait for
+ * DOMContentLoaded, and then a requestIdleCallback. This way the page has time
+ * to do an initial amount of work. However, if we wait too long, it will be felt by
+ * the user as lag. To mitigate this, wait for at least 2 seconds for the page to settle.
  */
+const MAX_REQUEST_IDLE_CALLBACK_DELAY_MS = 2000;
 
-/** @type {Lazy} */
-const lazy = /** @type {any} */ ({});
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-ChromeUtils.defineLazyGetter(lazy, "console", () => {
-  return console.createInstance({
-    prefix: "PageExtractorChild",
-    maxLogLevelPref: "browser.ml.logLevel",
-  });
-});
-
-ChromeUtils.defineESModuleGetters(lazy, {
+const lazy = XPCOMUtils.declareLazy({
+  console: () =>
+    console.createInstance({
+      prefix: "PageExtractorChild",
+      maxLogLevelPref: "browser.ml.logLevel",
+    }),
   ReaderMode: "moz-src:///toolkit/components/reader/ReaderMode.sys.mjs",
   extractTextFromDOM:
     "moz-src:///toolkit/components/pageextractor/DOMExtractor.sys.mjs",
@@ -61,8 +57,32 @@ export class PageExtractorChild extends JSWindowActorChild {
           return this.getAboutReaderContent();
         }
         return this.getText(data);
+      case "PageExtractorParent:WaitForPageReady":
+        return this.waitForPageReady();
     }
     return Promise.reject(new Error("Unknown message: " + name));
+  }
+
+  /**
+   * This function resolves once the page is ready after a requestIdleCallback.
+   *
+   * @returns {Promise<void>}
+   */
+  async waitForPageReady() {
+    return new Promise(resolve => {
+      const waitForIdle = () => {
+        this.document.ownerGlobal.requestIdleCallback(() => resolve(), {
+          timeout: MAX_REQUEST_IDLE_CALLBACK_DELAY_MS,
+        });
+      };
+
+      if (this.document.readyState == "loading") {
+        this.document.addEventListener("DOMContentLoaded", waitForIdle);
+      } else {
+        lazy.console.log("The page is already interactive");
+        waitForIdle();
+      }
+    });
   }
 
   /**

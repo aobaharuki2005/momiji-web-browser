@@ -4,6 +4,11 @@
 const BLANK_PAGE =
   "data:text/html;charset=utf-8,<!DOCTYPE html><title>Blank</title>Blank page";
 
+/** @type {import("../../../../../netwerk/test/httpserver/httpd.sys.mjs")} */
+const { HttpServer } = ChromeUtils.importESModule(
+  "resource://testing-common/httpd.sys.mjs"
+);
+
 /**
  * Use a tagged template literal to create a page extraction actor test. This spins
  * up an http server that serves the markup in a new tab. The page extractor can then
@@ -66,20 +71,18 @@ async function html(strings, ...values) {
  * Start an HTTP server that serves page.html with the provided HTML.
  *
  * @param {string} html
+ * @param {number} statusCode
  */
-function serveOnce(html) {
-  /** @type {import("../../../../../netwerk/test/httpserver/httpd.sys.mjs")} */
-  const { HttpServer } = ChromeUtils.importESModule(
-    "resource://testing-common/httpd.sys.mjs"
-  );
+function serveOnce(html, statusCode = 200) {
   info("Create server");
   const server = new HttpServer();
 
   const { promise, resolve } = Promise.withResolvers();
 
-  server.registerPathHandler("/page.html", (_request, response) => {
+  server.registerPathHandler("/page.html", (request, response) => {
     info("Request received for: " + url);
     response.setHeader("Content-Type", "text/html");
+    response.setStatusLine(request.httpVersion, statusCode);
     response.write(html);
     resolve(server.stop());
   });
