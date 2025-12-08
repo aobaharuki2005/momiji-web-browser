@@ -974,14 +974,22 @@ static bool WasmMaxMemoryPages(JSContext* cx, unsigned argc, Value* vp) {
   if (!ls) {
     return false;
   }
+  wasm::PageSize pageSize = wasm::PageSize::Standard;
+  if (argc > 1 && args.get(1).isInt32()) {
+    uint32_t pageSizeBytes = args.get(1).toInt32();
+    if (pageSizeBytes != PageSizeInBytes(wasm::PageSize::Standard)) {
+      JS_ReportErrorASCII(cx, "bad page size");
+      return false;
+    }
+  }
   if (StringEqualsLiteral(ls, "i32")) {
-    args.rval().setInt32(
-        int32_t(wasm::MaxMemoryPages(wasm::AddressType::I32).value()));
+    wasm::Pages pages = wasm::MaxMemoryPages(wasm::AddressType::I32, pageSize);
+    args.rval().setInt32(pages.pageCount());
     return true;
   }
   if (StringEqualsLiteral(ls, "i64")) {
-    args.rval().setInt32(
-        int32_t(wasm::MaxMemoryPages(wasm::AddressType::I64).value()));
+    wasm::Pages pages = wasm::MaxMemoryPages(wasm::AddressType::I64, pageSize);
+    args.rval().setNumber(pages.pageCount());
     return true;
   }
   JS_ReportErrorASCII(cx, "bad address type");

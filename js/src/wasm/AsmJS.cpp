@@ -7428,7 +7428,7 @@ bool js::IsValidAsmJSHeapLength(size_t length) {
   }
 
   // The heap length is limited by what a wasm memory32 can handle.
-  if (length > MaxMemoryBytes(AddressType::I32)) {
+  if (length > MaxMemoryBytes(AddressType::I32, wasm::PageSize::Standard)) {
     return false;
   }
 

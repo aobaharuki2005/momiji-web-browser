@@ -167,8 +167,8 @@ class WasmSharedArrayRawBuffer : public SharedArrayRawBuffer {
   };
 
   static WasmSharedArrayRawBuffer* AllocateWasm(
-      wasm::AddressType addressType, wasm::Pages initialPages,
-      wasm::Pages clampedMaxPages,
+      wasm::AddressType addressType, wasm::PageSize pageSize,
+      wasm::Pages initialPages, wasm::Pages clampedMaxPages,
       const mozilla::Maybe<wasm::Pages>& sourceMaxPages,
       const mozilla::Maybe<size_t>& mappedSize);
 
@@ -185,7 +185,7 @@ class WasmSharedArrayRawBuffer : public SharedArrayRawBuffer {
   wasm::AddressType wasmAddressType() const { return addressType_; }
 
   wasm::Pages volatileWasmPages() const {
-    return wasm::Pages::fromByteLengthExact(length_);
+    return wasm::Pages::fromByteLengthExact(length_, wasm::PageSize::Standard);
   }
 
   wasm::Pages wasmClampedMaxPages() const { return clampedMaxPages_; }

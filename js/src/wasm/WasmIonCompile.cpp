@@ -1579,6 +1579,8 @@ class FunctionCompiler {
   }
 
   MWasmLoadInstance* needBoundsCheck(uint32_t memoryIndex) {
+    MOZ_RELEASE_ASSERT(codeMeta().memories[memoryIndex].pageSize() ==
+                       PageSize::Standard);
 #ifdef JS_64BIT
     // For 32-bit base pointers:
     //
@@ -1592,7 +1594,8 @@ class FunctionCompiler {
     bool mem32LimitIs64Bits =
         isMem32(memoryIndex) &&
         !codeMeta().memories[memoryIndex].boundsCheckLimitIsAlways32Bits() &&
-        MaxMemoryBytes(codeMeta().memories[memoryIndex].addressType()) >=
+        MaxMemoryBytes(codeMeta().memories[memoryIndex].addressType(),
+                       codeMeta().memories[memoryIndex].pageSize()) >=
             0x100000000;
 #else
     // On 32-bit platforms we have no more than 2GB memory and the limit for a

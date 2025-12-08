@@ -96,12 +96,16 @@ SharedArrayRawBuffer* SharedArrayRawBuffer::Allocate(bool isGrowable,
 }
 
 WasmSharedArrayRawBuffer* WasmSharedArrayRawBuffer::AllocateWasm(
-    wasm::AddressType addressType, Pages initialPages,
+    wasm::AddressType addressType, wasm::PageSize pageSize, Pages initialPages,
     wasm::Pages clampedMaxPages,
     const mozilla::Maybe<wasm::Pages>& sourceMaxPages,
     const mozilla::Maybe<size_t>& mappedSize) {
   // Prior code has asserted that initial pages is within our implementation
   // limits (wasm::MaxMemoryPages()) and we can assume it is a valid size_t.
+  MOZ_RELEASE_ASSERT(initialPages.pageSize() == pageSize);
+  MOZ_RELEASE_ASSERT(clampedMaxPages.pageSize() == pageSize);
+  MOZ_RELEASE_ASSERT(!sourceMaxPages.isSome() ||
+                     (pageSize == sourceMaxPages->pageSize()));
   MOZ_ASSERT(initialPages.hasByteLength());
   size_t length = initialPages.byteLength();
 
@@ -130,7 +134,8 @@ WasmSharedArrayRawBuffer* WasmSharedArrayRawBuffer::AllocateWasm(
   uint8_t* base = buffer - sizeof(WasmSharedArrayRawBuffer);
   return new (base) WasmSharedArrayRawBuffer(
       buffer, length, addressType, clampedMaxPages,
-      sourceMaxPages.valueOr(Pages(0)), computedMappedSize);
+      sourceMaxPages.valueOr(Pages::fromPageCount(0, pageSize)),
+      computedMappedSize);
 }
 
 bool WasmSharedArrayRawBuffer::wasmGrowToPagesInPlace(const Lock&,
@@ -142,7 +147,7 @@ bool WasmSharedArrayRawBuffer::wasmGrowToPagesInPlace(const Lock&,
   if (newPages > clampedMaxPages_) {
     return false;
   }
-  MOZ_ASSERT(newPages <= wasm::MaxMemoryPages(t) &&
+  MOZ_ASSERT(newPages <= wasm::MaxMemoryPages(t, newPages.pageSize()) &&
              newPages.byteLength() <= ArrayBufferObject::ByteLengthLimit);
 
   // We have checked against the clamped maximum and so we know we can convert
@@ -426,7 +431,8 @@ bool SharedArrayBufferObject::growImpl(JSContext* cx, const CallArgs& args) {
       return false;
     }
 
-    Pages newPages = Pages::fromByteLengthExact(newByteLength);
+    Pages newPages =
+        Pages::fromByteLengthExact(newByteLength, wasm::PageSize::Standard);
     return buffer->rawWasmBufferObject()->wasmGrowToPagesInPlace(
         *lock, buffer->wasmAddressType(), newPages);
   }

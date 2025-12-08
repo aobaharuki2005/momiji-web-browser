@@ -614,9 +614,10 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count,
   Pages pages = instance->memory(memoryIndex)->volatilePages();
 #ifdef JS_64BIT
   // Ensure that the memory size is no more than 4GiB.
-  MOZ_ASSERT(pages <= Pages(MaxMemory32PagesValidation));
+  MOZ_ASSERT(pages <= Pages::fromPageCount(MaxMemory32PagesValidation,
+                                           pages.pageSize()));
 #endif
-  return uint32_t(pages.value());
+  return uint32_t(pages.pageCount());
 }
 
 /* static */ uint64_t Instance::memorySize_m64(Instance* instance,
@@ -630,9 +631,10 @@ static int32_t PerformWake(Instance* instance, PtrT byteOffset, int32_t count,
 
   Pages pages = instance->memory(memoryIndex)->volatilePages();
 #ifdef JS_64BIT
-  MOZ_ASSERT(pages <= Pages(MaxMemory64PagesValidation));
+  MOZ_ASSERT(pages <= Pages::fromPageCount(MaxMemory64PagesValidation,
+                                           pages.pageSize()));
 #endif
-  return pages.value();
+  return pages.pageCount();
 }
 
 template <typename PointerT, typename CopyFuncT, typename IndexT>

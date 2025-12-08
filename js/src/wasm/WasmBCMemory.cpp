@@ -422,8 +422,8 @@ void BaseCompiler::prepareMemoryAccess(MemoryAccessDesc* access,
     // bits are in the bound.
     if (!codeMeta_.memories[access->memoryIndex()]
              .boundsCheckLimitIsAlways32Bits() &&
-        MaxMemoryBytes(
-            codeMeta_.memories[access->memoryIndex()].addressType()) >=
+        MaxMemoryBytes(codeMeta_.memories[access->memoryIndex()].addressType(),
+                       codeMeta_.memories[access->memoryIndex()].pageSize()) >=
             0x100000000) {
       boundsCheck4GBOrLargerAccess(access->memoryIndex(), instance, ptr, &ok);
     } else {
