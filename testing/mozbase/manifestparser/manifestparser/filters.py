@@ -8,6 +8,7 @@ dictionary of values, and returns a new iterable of test objects. It is
 possible to define custom filters if the built-in ones are not enough.
 """
 
+import functools
 import itertools
 import os
 from collections import defaultdict
@@ -20,6 +21,7 @@ from .util import normsep
 # built-in filters
 
 
+@functools.lru_cache(maxsize=None)
 def _match(exprs, strict, **values):
     """Return the first matching expression, or None if no match."""
     for e in exprs.splitlines():
