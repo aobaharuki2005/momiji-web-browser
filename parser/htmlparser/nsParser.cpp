@@ -126,13 +126,13 @@ void nsParser::Cleanup() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsParser)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsParser)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mExpatDriver)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDTD)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSink)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_WEAK_REFERENCE
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsParser)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExpatDriver)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDTD)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSink)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -286,9 +286,9 @@ nsresult nsParser::WillBuildModel() {
   nsresult rv = expat->Initialize(mParserContext->mScanner.GetURI(), mSink);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mExpatDriver = expat.forget();
+  mDTD = expat.forget();
 
-  return mSink->WillBuildModel();
+  return mSink->WillBuildModel(mParserContext->mDTDMode);
 }
 
 /**
@@ -299,8 +299,8 @@ void nsParser::DidBuildModel() {
     // Let sink know if we're about to end load because we've been terminated.
     // In that case we don't want it to run deferred scripts.
     bool terminated = mInternalState == NS_ERROR_HTMLPARSER_STOPPARSING;
-    if (mExpatDriver && mSink) {
-      mExpatDriver->DidBuildModel();
+    if (mDTD && mSink) {
+      mDTD->DidBuildModel();
       mSink->DidBuildModel(terminated);
     }
 
@@ -339,8 +339,8 @@ nsParser::Terminate(void) {
     mFlags &= ~NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
   }
 
-  if (mExpatDriver) {
-    mExpatDriver->Terminate();
+  if (mDTD) {
+    mDTD->Terminate();
     DidBuildModel();
   } else if (mSink) {
     // We have no parser context or no DTD yet (so we got terminated before we
@@ -684,7 +684,7 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
       return result;
     }
 
-    if (mExpatDriver) {
+    if (mDTD) {
       mSink->WillResume();
       bool theIterationIsOk = true;
 
@@ -705,8 +705,9 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
           mParserContext->mScanner.Mark();
           if (mParserContext->mDocType == eXML &&
               mParserContext->mParserCommand != eViewSource) {
-            theTokenizerResult = mExpatDriver->ResumeParse(
-                mParserContext->mScanner, aIsFinalChunk);
+            nsExpatDriver* expat = static_cast<nsExpatDriver*>(mDTD.get());
+            theTokenizerResult =
+                expat->ResumeParse(mParserContext->mScanner, aIsFinalChunk);
             if (NS_FAILED(theTokenizerResult)) {
               mParserContext->mScanner.RewindToMark();
               if (NS_ERROR_HTMLPARSER_STOPPARSING == theTokenizerResult) {
@@ -724,7 +725,7 @@ nsresult nsParser::ResumeParse(bool allowIteration, bool aIsFinalChunk,
           theTokenizerResult = NS_OK;
         }
 
-        result = mExpatDriver->BuildModel();
+        result = mDTD->BuildModel(mSink);
         if (result == NS_ERROR_HTMLPARSER_INTERRUPTED && aIsFinalChunk) {
           PostContinueEvent();
         }
@@ -794,7 +795,7 @@ nsresult nsParser::OnStartRequest(nsIRequest* request) {
   mParserContext->mAutoDetectStatus = eUnknownDetect;
   mParserContext->mRequest = request;
 
-  mExpatDriver = nullptr;
+  mDTD = nullptr;
 
   nsresult rv;
   nsAutoCString contentType;

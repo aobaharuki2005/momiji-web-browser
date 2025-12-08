@@ -32,6 +32,7 @@
 #include "nsHtml5HtmlAttributes.h"
 #include "nsHtml5SVGLoadDispatcher.h"
 #include "nsHtml5TreeBuilder.h"
+#include "nsIDTD.h"
 #include "nsIFormControl.h"
 #include "nsIMutationObserver.h"
 #include "nsINode.h"

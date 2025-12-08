@@ -148,7 +148,7 @@ NS_IMETHODIMP
 nsXMLContentSink::WillParse(void) { return WillParseImpl(); }
 
 NS_IMETHODIMP
-nsXMLContentSink::WillBuildModel() {
+nsXMLContentSink::WillBuildModel(nsDTDMode aDTDMode) {
   WillBuildModelImpl();
 
   // Notify document that the load is beginning

@@ -21,6 +21,7 @@
 #include "nsString.h"
 #include "mozilla/FlushType.h"
 #include "mozilla/NotNull.h"
+#include "nsIDTD.h"
 
 class nsParserBase;
 namespace mozilla {
@@ -56,7 +57,7 @@ class nsIContentSink : public nsISupports {
    *
    * @update 5/7/98 gess
    */
-  NS_IMETHOD WillBuildModel() { return NS_OK; }
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) { return NS_OK; }
 
   /**
    * This method gets called when the parser concludes the process

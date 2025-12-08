@@ -52,7 +52,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
-class nsExpatDriver;
+class nsIDTD;
 class nsIRunnable;
 
 #ifdef _MSC_VER
@@ -296,9 +296,7 @@ class nsParser final : public nsIParser,
   //*********************************************
 
   mozilla::UniquePtr<CParserContext> mParserContext;
-  // mExpatDriver probably should be UniquePtr, but not changing
-  // for now due to cycle collection.
-  RefPtr<nsExpatDriver> mExpatDriver;
+  nsCOMPtr<nsIDTD> mDTD;
   nsCOMPtr<nsIContentSink> mSink;
   nsIRunnable* mContinueEvent;  // weak ref
 

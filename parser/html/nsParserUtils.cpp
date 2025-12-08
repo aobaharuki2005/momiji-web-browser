@@ -16,6 +16,7 @@
 #include "nsHtml5Module.h"
 #include "nsIContent.h"
 #include "nsIContentSink.h"
+#include "nsIDTD.h"
 #include "mozilla/dom/Document.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIFragmentContentSink.h"

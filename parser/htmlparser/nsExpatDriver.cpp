@@ -357,6 +357,7 @@ static void GetLocalDTDURI(const nsCatalogData* aCatalogData, nsIURI* aDTD,
 /***************************** END CATALOG UTILS *****************************/
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsExpatDriver)
+  NS_INTERFACE_MAP_ENTRY(nsIDTD)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
@@ -1655,7 +1656,8 @@ nsresult nsExpatDriver::Initialize(nsIURI* aURI, nsIContentSink* aSink) {
   return mInternalState;
 }
 
-nsresult nsExpatDriver::BuildModel() { return mInternalState; }
+NS_IMETHODIMP
+nsExpatDriver::BuildModel(nsIContentSink* aSink) { return mInternalState; }
 
 void nsExpatDriver::DidBuildModel() {
   if (!mInParser) {
@@ -1669,7 +1671,8 @@ void nsExpatDriver::DidBuildModel() {
   mSink = nullptr;
 }
 
-void nsExpatDriver::Terminate() {
+NS_IMETHODIMP_(void)
+nsExpatDriver::Terminate() {
   // XXX - not sure what happens to the unparsed data.
   if (mExpatParser) {
     RLBOX_EXPAT_MCALL(MOZ_XML_StopParser, XML_FALSE);
