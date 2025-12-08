@@ -8,6 +8,8 @@ support-files = []
 
 ["test_ChatUtils.js"]
 
+["test_Insights.js"]
+
 ["test_InsightsHistorySource.js"]
 
 ["test_SearchBrowsingHistory.js"]

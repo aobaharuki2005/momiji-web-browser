@@ -362,6 +362,19 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/Tools.sys.mjs",
   },
+  // Bug 2003330 - Implement initial insights list creation
+  {
+    file: "moz-src:///browser/components/aiwindow/models/Insights.sys.mjs",
+  },
+  {
+    file: "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs",
+  },
+  {
+    file: "moz-src:///browser/components/aiwindow/models/prompts/insightsPrompts.sys.mjs",
+  },
+  {
+    file: "moz-src:///browser/components/aiwindow/models/InsightsSchemas.sys.mjs",
+  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
