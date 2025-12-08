@@ -7134,9 +7134,9 @@ Element* HTMLEditor::ComputeEditingHostInternal(
       if (!selectionCommonAncestor) {
         selectionCommonAncestor = commonAncestor;
       } else {
-        selectionCommonAncestor =
+        selectionCommonAncestor = nsIContent::FromNodeOrNull(
             nsContentUtils::GetCommonFlattenedTreeAncestorForSelection(
-                commonAncestor, selectionCommonAncestor);
+                commonAncestor, selectionCommonAncestor));
       }
     }
     if (selectionCommonAncestor) {
