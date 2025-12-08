@@ -44,31 +44,35 @@ internal fun StartupCrashScreen(store: StartupCrashStore) {
     val state by store.observeAsComposableState { it }
     val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        ScreenImg()
+    Surface {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            ScreenImg()
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        ScreenText()
+            ScreenText()
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        when (state.uiState) {
-            UiState.Idle -> {
-                ReportButtons(store)
-            }
-            UiState.Loading -> {
-                CircularLoadButton()
-            }
-            UiState.Finished -> {
-                ReopenButton(store)
+            when (state.uiState) {
+                UiState.Idle -> {
+                    ReportButtons(store)
+                }
+
+                UiState.Loading -> {
+                    CircularLoadButton()
+                }
+
+                UiState.Finished -> {
+                    ReopenButton(store)
+                }
             }
         }
     }
@@ -182,8 +186,6 @@ internal fun StartupCrashScreenPreview(
         )
     }
     FirefoxTheme {
-        Surface {
-            StartupCrashScreen(store)
-        }
+        StartupCrashScreen(store)
     }
 }
