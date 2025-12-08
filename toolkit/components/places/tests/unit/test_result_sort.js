@@ -44,8 +44,8 @@ add_task(async function test() {
           },
           {
             type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
-            dateAdded: daysAgo(6),
-            lastModified: daysAgo(5),
+            dateAdded: daysAgo(10),
+            lastModified: daysAgo(9),
           },
         ],
       },
