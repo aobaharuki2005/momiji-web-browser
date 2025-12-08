@@ -772,7 +772,7 @@ export var UrlbarUtils = {
       Services.io.speculativeConnect(
         uri,
         window.gBrowser.contentPrincipal,
-        null,
+        window.docShell.QueryInterface(Ci.nsIInterfaceRequestor),
         false
       );
     } catch (ex) {
