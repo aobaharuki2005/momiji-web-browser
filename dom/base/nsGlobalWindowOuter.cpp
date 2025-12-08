@@ -1714,9 +1714,7 @@ nsIScriptContext* nsGlobalWindowOuter::GetScriptContext() { return mContext; }
 
 bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
   // We reuse the inner window when:
-  // a. The current document is transient, i.e. a temporary placeholder while
-  //    an async load is ongoing. This is equivalent to the uncommitted initial
-  //    document.
+  // a. We are currently at our original document.
   // b. At least one of the following conditions are true:
   // -- The new document is the same as the old document. This means that we're
   //    getting called from document.open().
@@ -1726,7 +1724,7 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
     return false;
   }
 
-  if (!mDoc->IsUncommittedInitialDocument()) {
+  if (!mDoc->IsInitialDocument()) {
     return false;
   }
 

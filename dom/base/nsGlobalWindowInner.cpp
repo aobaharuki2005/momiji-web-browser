@@ -1917,7 +1917,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
 
   // Try to get the reserved client from the LoadInfo.  A Client is
   // reserved at the start of the channel load if there is not an
-  // initial uncommitted about:blank whose window will be reused. It is also
+  // initial about:blank document that will be reused.  It is also
   // created if the channel load encounters a cross-origin redirect.
   if (loadInfo) {
     UniquePtr<ClientSource> reservedClient =

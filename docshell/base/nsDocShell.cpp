@@ -2525,8 +2525,7 @@ Maybe<ClientInfo> nsDocShell::GetInitialClientInfo() const {
       mScriptGlobal ? mScriptGlobal->GetCurrentInnerWindow() : nullptr;
   Document* doc = innerWindow ? innerWindow->GetExtantDoc() : nullptr;
 
-  if (!doc || !doc->IsUncommittedInitialDocument()) {
-    // We won't reuse the inner window so let the channel determine one
+  if (!doc || !doc->IsInitialDocument()) {
     return Maybe<ClientInfo>();
   }
 
