@@ -384,13 +384,6 @@ clang-17:
         repo: https://github.com/llvm/llvm-project
         revision: 6009708b4367171ccdbf4b5905cb6a803753fe18
 
-clang-19:
-    description: clang 19.1.7 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: cd708029e0b2869e80abe31ddb175f7c35361f90
-
 clang-20:
     description: clang 20.1.8 source code
     fetch:
