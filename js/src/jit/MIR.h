@@ -678,6 +678,8 @@ class MDefinition : public MNode {
   bool congruentIfOperandsEqual(const MDefinition* ins) const;
 
   virtual MDefinition* foldsTo(TempAllocator& alloc);
+  virtual void analyzeEdgeCasesForward();
+  virtual void analyzeEdgeCasesBackward();
 
   // |canTruncate| reports if this instruction supports truncation. If
   // |canTruncate| function returns true, then the |truncate| function is
@@ -3824,6 +3826,7 @@ class MToNumberInt32 : public MUnaryInstruction, public ToInt32Policy::Data {
   MDefinition* foldsTo(TempAllocator& alloc) override;
 
   // this only has backwards information flow.
+  void analyzeEdgeCasesBackward() override;
 
   bool needsNegativeZeroCheck() const { return needsNegativeZeroCheck_; }
   void setNeedsNegativeZeroCheck(bool needsCheck) {
@@ -5212,6 +5215,8 @@ class MMul : public MBinaryArithInstruction {
   }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
+  void analyzeEdgeCasesForward() override;
+  void analyzeEdgeCasesBackward() override;
   void collectRangeInfoPreTrunc() override;
 
   double getIdentity() const override { return 1; }
@@ -5309,6 +5314,8 @@ class MDiv : public MBinaryArithInstruction {
   }
 
   MDefinition* foldsTo(TempAllocator& alloc) override;
+  void analyzeEdgeCasesForward() override;
+  void analyzeEdgeCasesBackward() override;
 
   double getIdentity() const override { MOZ_CRASH("not used"); }
 
@@ -5444,6 +5451,8 @@ class MMod : public MBinaryArithInstruction {
     MOZ_ASSERT(type() == MIRType::Int32);
     return canBePowerOfTwoDivisor_;
   }
+
+  void analyzeEdgeCasesForward() override;
 
   bool isUnsigned() const { return unsigned_; }
 

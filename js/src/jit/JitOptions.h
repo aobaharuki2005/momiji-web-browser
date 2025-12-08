@@ -54,6 +54,7 @@ struct DefaultJitOptions {
   bool disableJitHints;
   bool disableAma;
   bool disableEaa;
+  bool disableEdgeCaseAnalysis;
   bool disableGvn;
   bool disableInlining;
   bool disableLicm;
