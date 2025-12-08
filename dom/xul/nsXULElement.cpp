@@ -2011,6 +2011,11 @@ void nsXULPrototypeScript::Set(JS::Stencil* aStencil) { mStencil = aStencil; }
 
 void nsXULPrototypeScript::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                                   size_t* aNodeSize) const {
+  // It is okay to include the size of mSrcURI here even though it might have
+  // strong references from elsewhere because the URI was created for this
+  // object, in XULContentSinkImpl::OpenScript() or
+  // nsXULPrototypeElement::Deserialize(). Only objects that created their own
+  // URI will call nsIURI::SizeOfIncludingThis().
   if (mSrcURI) {
     *aNodeSize += mSrcURI->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }

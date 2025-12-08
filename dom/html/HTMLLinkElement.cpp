@@ -407,6 +407,11 @@ Maybe<LinkStyle::SheetInfo> HTMLLinkElement::GetStyleSheetInfo() {
 void HTMLLinkElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                              size_t* aNodeSize) const {
   nsGenericHTMLElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
+
+  // It is okay to include the size of mCachedURI here even though it might have
+  // strong references from elsewhere because the URI was created for this
+  // object, in nsGenericHTMLElement::GetURIAttr(). Only objects that created
+  // their own URI will call nsIURI::SizeOfIncludingThis().
   if (mCachedURI) {
     *aNodeSize += mCachedURI->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }

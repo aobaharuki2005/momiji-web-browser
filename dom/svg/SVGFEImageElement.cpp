@@ -431,6 +431,11 @@ void SVGFEImageElement::NotifyImageContentChanged() {
 void SVGFEImageElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                                size_t* aNodeSize) const {
   SVGElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
+
+  // It is okay to include the size of mSrcURI here even though it might have
+  // strong references from elsewhere because the URI was created for this
+  // object, in nsImageLoadingContent::StringToURI(). Only objects that created
+  // their own URI will call nsIURI::SizeOfIncludingThis().
   if (mSrcURI) {
     *aNodeSize += mSrcURI->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }

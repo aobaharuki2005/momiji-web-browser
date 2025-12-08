@@ -441,6 +441,10 @@ void Link::SetHrefAttribute(nsIURI* aURI) {
 size_t Link::SizeOfExcludingThis(mozilla::SizeOfState& aState) const {
   size_t n = 0;
 
+  // It is okay to include the size of mCachedURI here even though it might have
+  // strong references from elsewhere because the URI was created for this
+  // object, in nsGenericHTMLElement::GetURIAttr(). Only objects that created
+  // their own URI will call nsIURI::SizeOfIncludingThis().
   if (mCachedURI) {
     n += mCachedURI->SizeOfIncludingThis(aState.mMallocSizeOf);
   }
