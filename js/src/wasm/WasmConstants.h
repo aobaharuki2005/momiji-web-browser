@@ -1133,7 +1133,7 @@ enum class FieldWideningOp { None, Signed, Unsigned };
 // The WebAssembly spec hard-codes the virtual page size to be 64KiB and
 // requires the size of linear memory to always be a multiple of 64KiB.
 
-static const unsigned StandardPageSize = 64 * 1024;
+enum class PageSize { Standard = 16 };
 
 // These limits are agreed upon with other engines for consistency.
 
@@ -1163,11 +1163,6 @@ static const uint64_t MaxMemory64PagesValidation = (uint64_t(1) << 37) - 1;
 static const unsigned MaxModuleBytes = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes = 7654321;
 static const unsigned MaxArrayNewFixedElements = 10000;
-
-// By spec, see
-// https://github.com/WebAssembly/spec/issues/1895#issuecomment-2895078022
-static_assert((StandardPageSize * MaxMemory64PagesValidation) <=
-              (uint64_t(1) << 53) - 1);
 
 // Maximum payload size, in bytes, of a gc-proposal Array.  Puts it fairly
 // close to 2^31 without exposing us to potential danger at the signed-i32

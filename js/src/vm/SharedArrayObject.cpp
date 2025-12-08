@@ -156,7 +156,7 @@ bool WasmSharedArrayRawBuffer::wasmGrowToPagesInPlace(const Lock&,
   }
 
   size_t delta = newLength - length_;
-  MOZ_ASSERT(delta % wasm::StandardPageSize == 0);
+  MOZ_ASSERT(delta % wasm::StandardPageSizeBytes == 0);
 
   uint8_t* dataEnd = dataPointerShared().unwrap(/* for resize */) + length_;
   MOZ_ASSERT(uintptr_t(dataEnd) % gc::SystemPageSize() == 0);
@@ -178,8 +178,8 @@ void WasmSharedArrayRawBuffer::discard(size_t byteOffset, size_t byteLen) {
 
   // The caller is responsible for ensuring these conditions are met; see this
   // function's comment in SharedArrayObject.h.
-  MOZ_ASSERT(byteOffset % wasm::StandardPageSize == 0);
-  MOZ_ASSERT(byteLen % wasm::StandardPageSize == 0);
+  MOZ_ASSERT(byteOffset % wasm::StandardPageSizeBytes == 0);
+  MOZ_ASSERT(byteLen % wasm::StandardPageSizeBytes == 0);
   MOZ_ASSERT(wasm::MemoryBoundsCheck(uint64_t(byteOffset), uint64_t(byteLen),
                                      volatileByteLength()));
 
@@ -213,12 +213,14 @@ void WasmSharedArrayRawBuffer::discard(size_t byteOffset, size_t byteLen) {
   // disastrous when discarding already-discarded memory. To mitigate this, we
   // discard a chunk of memory at a time - this comes at a small performance
   // cost from syscalls and potentially less-optimal memsets.
-  size_t numPages = byteLen / wasm::StandardPageSize;
+  size_t numPages = byteLen / wasm::StandardPageSizeBytes;
   for (size_t i = 0; i < numPages; i++) {
-    AtomicOperations::memsetSafeWhenRacy(addr + (i * wasm::StandardPageSize), 0,
-                                         wasm::StandardPageSize);
-    DebugOnly<bool> result = VirtualUnlock(
-        addr.unwrap() + (i * wasm::StandardPageSize), wasm::StandardPageSize);
+    AtomicOperations::memsetSafeWhenRacy(
+        addr + (i * wasm::StandardPageSizeBytes), 0,
+        wasm::StandardPageSizeBytes);
+    DebugOnly<bool> result =
+        VirtualUnlock(addr.unwrap() + (i * wasm::StandardPageSizeBytes),
+                      wasm::StandardPageSizeBytes);
     MOZ_ASSERT(!result);  // this always "fails" when unlocking unlocked
                           // memory...which is the only case we care about
   }
@@ -339,7 +341,7 @@ bool SharedArrayBufferObject::maxByteLengthGetterImpl(JSContext* cx,
     uint64_t sourceMaxBytes = sourceMaxPages.byteLength64();
 
     MOZ_ASSERT(sourceMaxBytes <=
-               wasm::StandardPageSize * wasm::MaxMemory64PagesValidation);
+               wasm::StandardPageSizeBytes * wasm::MaxMemory64PagesValidation);
     args.rval().setNumber(double(sourceMaxBytes));
 
     return true;
@@ -408,7 +410,7 @@ bool SharedArrayBufferObject::growImpl(JSContext* cx, const CallArgs& args) {
 
   if (buffer->isWasm()) {
     // Special case for resizing of Wasm buffers.
-    if (newByteLength % wasm::StandardPageSize != 0) {
+    if (newByteLength % wasm::StandardPageSizeBytes != 0) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_WASM_ARRAYBUFFER_PAGE_MULTIPLE);
       return false;
