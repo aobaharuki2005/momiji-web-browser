@@ -62,6 +62,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
     try {
       return new Map(JSON.parse(val));
     } catch (ex) {
+      lazy.logger.debug("Invalid json in supportedRegions pref.");
       // Supposing a user may empty the pref to disable the feature, as they
       // don't know it should be a JSON string, we'll treat that as an empty
       // Map, so the feature is disabled.
@@ -106,7 +107,7 @@ class PlacesSemanticHistoryManager {
   #updateTaskLatency = [];
   embedder;
   qualifiedForSemanticSearch = false;
-  #promiseRemoved = null;
+  #promiseInitialized = null;
   enoughEntries = false;
   #shutdownProgress = { state: "Not started" };
   #deferredTaskInterval = DEFERRED_TASK_INTERVAL_MS;
@@ -195,34 +196,45 @@ class PlacesSemanticHistoryManager {
     this.#updateTaskLatency = [];
     lazy.logger.trace("PlaceSemanticManager constructor");
 
-    // When semantic history is disabled or not available anymore due to system
-    // requirements, we want to remove the database files, though we don't want
-    // to check on disk on every startup, thus we use a pref. The removal is
-    // done on startup anyway, as it's less likely to fail.
-    // We check UserValue because users may set it to false to try to disable
-    // the feature, then if we'd check the value the files would not be removed.
-    let wasInitialized = Services.prefs.prefHasUserValue(
-      "places.semanticHistory.initialized"
-    );
-    let isAvailable = this.canUseSemanticSearch;
-    let removeFiles =
-      (wasInitialized && !isAvailable) ||
-      Services.prefs.getBoolPref(
-        "places.semanticHistory.removeOnStartup",
-        false
+    this.#promiseInitialized = (async () => {
+      // canUseSemanticSearch depends on Region being initialized.
+      if (!lazy.Region.home) {
+        await lazy.Region.init();
+      }
+
+      // When semantic history is disabled or not available anymore due to
+      // system requirements, we want to remove the database files, though we
+      // don't want to check on disk on every startup, thus we use a pref.
+      // The removal is done on startup anyway, as it's less likely to fail.
+      // We check prefHasUserValue instead of the value itself, because users
+      // may set it to false to try to disable the feature, then checking value
+      // the files would not be removed.
+      lazy.logger.debug(
+        "PlaceSemanticManager detected region:",
+        lazy.Region.home
       );
-    if (removeFiles) {
-      lazy.logger.info("Removing database files on startup");
-      Services.prefs.clearUserPref("places.semanticHistory.removeOnStartup");
-      this.#promiseRemoved = this.semanticDB
-        .removeDatabaseFiles()
-        .catch(console.error);
-    }
-    if (!isAvailable) {
-      Services.prefs.clearUserPref("places.semanticHistory.initialized");
-    } else if (!wasInitialized) {
-      Services.prefs.setBoolPref("places.semanticHistory.initialized", true);
-    }
+      let wasInitialized = Services.prefs.prefHasUserValue(
+        "places.semanticHistory.initialized"
+      );
+
+      let isAvailable = this.canUseSemanticSearch;
+      let removeFiles =
+        (wasInitialized && !isAvailable) ||
+        Services.prefs.getBoolPref(
+          "places.semanticHistory.removeOnStartup",
+          false
+        );
+      if (removeFiles) {
+        lazy.logger.info("Removing database files on startup");
+        Services.prefs.clearUserPref("places.semanticHistory.removeOnStartup");
+        await this.semanticDB.removeDatabaseFiles().catch(console.error);
+      }
+      if (!isAvailable) {
+        Services.prefs.clearUserPref("places.semanticHistory.initialized");
+      } else if (!wasInitialized) {
+        Services.prefs.setBoolPref("places.semanticHistory.initialized", true);
+      }
+    })();
   }
 
   /**
@@ -235,13 +247,16 @@ class PlacesSemanticHistoryManager {
     if (
       Services.startup.isInOrBeyondShutdownPhase(
         Ci.nsIAppStartup.SHUTDOWN_PHASE_APPSHUTDOWNCONFIRMED
-      ) ||
-      !this.canUseSemanticSearch
+      )
     ) {
       return null;
     }
-    // We must eventually wait for removal to finish.
-    await this.#promiseRemoved;
+
+    await this.#promiseInitialized;
+
+    if (!this.canUseSemanticSearch) {
+      return null;
+    }
 
     // Avoid re-entrance using a cached promise rather than handing off a conn.
     if (!this.#promiseConn) {
@@ -357,7 +372,7 @@ class PlacesSemanticHistoryManager {
       localePattern = localePattern.toLowerCase();
       if (
         localePattern.endsWith("*") &&
-        appLocale.startsWith(localePattern.slice(0, -1))
+        appLocale.startsWith(localePattern.replace(/-?\*$/, ""))
       ) {
         return true;
       } else if (localePattern == appLocale) {

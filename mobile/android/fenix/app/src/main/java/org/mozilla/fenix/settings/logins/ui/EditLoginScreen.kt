@@ -20,17 +20,25 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.IconButton
+import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsState
@@ -51,6 +59,7 @@ internal fun EditLoginScreen(store: LoginsStore) {
                 loginItem = editState.login,
             )
         },
+        modifier = Modifier.semantics { testTagsAsResourceId = true },
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -166,11 +175,16 @@ private fun EditLoginUsername(store: LoginsStore, user: String) {
                 horizontal = FirefoxTheme.layout.space.static200,
                 vertical = FirefoxTheme.layout.space.static100,
             )
-            .width(FirefoxTheme.layout.size.containerMaxWidth),
+            .width(FirefoxTheme.layout.size.containerMaxWidth)
+            .semantics {
+                testTag = LoginsTestingTags.EDIT_LOGIN_USERNAME_TEXT_FIELD
+            },
         label = stringResource(R.string.preferences_passwords_saved_logins_username),
         trailingIcon = {
             if (editState?.newUsername?.isNotEmpty() == true) {
-                CrossTextFieldButton {
+                CrossTextFieldButton(
+                    contentDescription = Text.Resource(R.string.saved_login_clear_username),
+                ) {
                     store.dispatch(EditLoginAction.UsernameChanged(""))
                 }
             }
@@ -183,6 +197,11 @@ private fun EditLoginPassword(store: LoginsStore, pass: String) {
     val editState by store.observeAsState(store.state.loginsEditLoginState) { it.loginsEditLoginState }
     val isPasswordVisible = editState?.isPasswordVisible ?: true
     val password = editState?.newPassword ?: pass
+
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         TextField(
@@ -198,10 +217,19 @@ private fun EditLoginPassword(store: LoginsStore, pass: String) {
                     horizontal = FirefoxTheme.layout.space.static200,
                     vertical = FirefoxTheme.layout.space.static100,
                 )
-                .width(FirefoxTheme.layout.size.containerMaxWidth),
+                .width(FirefoxTheme.layout.size.containerMaxWidth)
+                .semantics {
+                    testTag = LoginsTestingTags.EDIT_LOGIN_PASSWORD_TEXT_FIELD
+                }
+                .focusRequester(focusRequester),
             label = stringResource(R.string.preferences_passwords_saved_logins_password),
             trailingIcon = {
                 EyePasswordIconButton(
+                    contentDescription = if (isPasswordVisible) {
+                        Text.Resource(R.string.saved_login_hide_password)
+                    } else {
+                        Text.Resource(R.string.saved_login_reveal_password)
+                    },
                     isPasswordVisible = isPasswordVisible,
                     onTrailingIconClick = {
                         store.dispatch(
@@ -212,7 +240,9 @@ private fun EditLoginPassword(store: LoginsStore, pass: String) {
                     },
                 )
                 if (editState?.newPassword?.isNotEmpty() == true) {
-                    CrossTextFieldButton {
+                    CrossTextFieldButton(
+                        contentDescription = Text.Resource(R.string.saved_logins_clear_password),
+                    ) {
                         store.dispatch(EditLoginAction.PasswordChanged(""))
                     }
                 }

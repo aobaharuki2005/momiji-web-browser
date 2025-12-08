@@ -796,10 +796,8 @@ static auto* GetFlattenedTreeParent(const nsIContent* aContent) {
   return aContent->GetFlattenedTreeParent();
 }
 
-static nsIContent* GetFlattenedTreeParentNodeForSelection(
-    const nsIContent* aNode) {
-  nsINode* parent = aNode->GetFlattenedTreeParentNodeForSelection();
-  return parent && parent->IsContent() ? parent->AsContent() : nullptr;
+static nsINode* GetFlattenedTreeParentNodeForSelection(const nsINode* aNode) {
+  return aNode->GetFlattenedTreeParentNodeForSelection();
 }
 
 static auto* GetFlattenedTreeParentElementForStyle(const Element* aElement) {
@@ -3322,14 +3320,14 @@ nsIContent* nsContentUtils::GetCommonFlattenedTreeAncestorHelper(
 }
 
 /* static */
-nsIContent* nsContentUtils::GetCommonFlattenedTreeAncestorForSelection(
-    nsIContent* aContent1, nsIContent* aContent2) {
-  if (aContent1 == aContent2) {
-    return aContent1;
+nsINode* nsContentUtils::GetCommonFlattenedTreeAncestorForSelection(
+    nsINode* aNode1, nsINode* aNode2) {
+  if (aNode1 == aNode2) {
+    return aNode1;
   }
-  MOZ_ASSERT(aContent1);
-  MOZ_ASSERT(aContent2);
-  return CommonAncestors(*aContent1, *aContent2,
+  MOZ_ASSERT(aNode1);
+  MOZ_ASSERT(aNode2);
+  return CommonAncestors(*aNode1, *aNode2,
                          GetFlattenedTreeParentNodeForSelection)
       .GetClosestCommonAncestor();
 }
