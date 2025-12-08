@@ -1497,7 +1497,6 @@ export class TopSitesFeed {
           hostname: domainObj.hostname,
           url: domainObj.redirectURL,
           label: domainObj.title,
-          sponsored_position: 3,
           partner: SPONSORED_TILE_PARTNER_FREC_BOOST,
           type: "frecency-boost",
           frecency: site.frecency,
