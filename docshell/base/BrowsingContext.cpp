@@ -385,8 +385,6 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
     MOZ_DIAGNOSTIC_ASSERT(aOpener->mType == aType);
     fields.Get<IDX_OpenerId>() = aOpener->Id();
     fields.Get<IDX_HadOriginalOpener>() = true;
-    fields.Get<IDX_MessageManagerGroup>() =
-        aOpener->Top()->GetMessageManagerGroup();
 
     if (aType == Type::Chrome && !aParent) {
       // See SetOpener for why we do this inheritance.

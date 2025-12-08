@@ -46,7 +46,7 @@ export const navigate = {};
  *     True if the page load has been finished.
  */
 function checkReadyState(pageLoadStrategy, eventData = {}) {
-  const { documentURI, readyState, isUncommittedInitialDocument } = eventData;
+  const { documentURI, readyState } = eventData;
 
   const result = { error: null, finished: false };
 
@@ -77,9 +77,7 @@ function checkReadyState(pageLoadStrategy, eventData = {}) {
       break;
 
     case "complete":
-      if (!isUncommittedInitialDocument) {
-        result.finished = true;
-      }
+      result.finished = true;
       break;
   }
 
@@ -344,8 +342,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       case "pageshow": {
         // Don't require an unload event when a top-level browsing context
         // change occurred.
-        // The initial about:blank load has no previous page to unload.
-        if (!seenUnload && !browsingContextChanged && !data.isInitialDocument) {
+        if (!seenUnload && !browsingContextChanged) {
           return;
         }
         const result = checkReadyState(pageLoadStrategy, data);

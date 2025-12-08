@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 
   Deferred: "chrome://remote/content/shared/Sync.sys.mjs",
-  isUncommittedInitialDocument:
+  isInitialDocument:
     "chrome://remote/content/shared/messagehandler/transports/BrowsingContextUtils.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   NavigationListener:
@@ -94,16 +94,15 @@ export async function waitForInitialNavigationCompleted(
   });
   const navigated = listener.start();
 
-  const isUncommittedInitial =
-    lazy.isUncommittedInitialDocument(browsingContext);
+  const isInitial = lazy.isInitialDocument(browsingContext);
   const isLoadingDocument = listener.isLoadingDocument;
   lazy.logger.trace(
-    lazy.truncate`[${browsingContext.id}] Wait for initial navigation: isUncommittedInitial=${isUncommittedInitial}, isLoadingDocument=${isLoadingDocument}`
+    lazy.truncate`[${browsingContext.id}] Wait for initial navigation: isInitial=${isInitial}, isLoadingDocument=${isLoadingDocument}`
   );
 
   // If the current document is not the initial "about:blank" and is also
   // no longer loading, assume the navigation is done and return.
-  if (!isUncommittedInitial && !isLoadingDocument) {
+  if (!isInitial && !isLoadingDocument) {
     lazy.logger.trace(
       lazy.truncate`[${browsingContext.id}] Document already finished loading: ${browsingContext.currentURI?.spec}`
     );
@@ -356,8 +355,18 @@ export class ProgressListener {
           return;
         }
 
-        // If a page finished loading the navigation is done.
-        this.stop();
+        // If a non initial page finished loading the navigation is done.
+        if (!this.isInitialDocument) {
+          this.stop();
+          return;
+        }
+
+        // Otherwise wait for a potential additional page load.
+        this.#trace(
+          "Initial document loaded. Wait for a potential further navigation."
+        );
+        this.#seenStartFlag = false;
+        this.#setUnloadTimer();
       }
     }
   }

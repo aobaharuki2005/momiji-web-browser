@@ -39,9 +39,7 @@ export class MarionetteEventsChild extends JSWindowActorChild {
 
     // Ignore invalid combinations of load events and document's readyState.
     if (
-      (type === "DOMContentLoaded" &&
-        target.readyState != "interactive" &&
-        !target.isInitialDocument) ||
+      (type === "DOMContentLoaded" && target.readyState != "interactive") ||
       (type === "pageshow" && target.readyState != "complete")
     ) {
       lazy.logger.warn(
@@ -62,8 +60,6 @@ export class MarionetteEventsChild extends JSWindowActorChild {
           browsingContext: this.browsingContext,
           documentURI: target.documentURI,
           readyState: target.readyState,
-          isInitialDocument: target.isInitialDocument,
-          isUncommittedInitialDocument: target.isUncommittedInitialDocument,
           type,
           windowId: this.innerWindowId,
         });

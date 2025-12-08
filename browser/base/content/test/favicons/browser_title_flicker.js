@@ -52,7 +52,6 @@ add_task(async () => {
       await waitForAttributeChange(tab, "label");
       ok(tab.hasAttribute("busy"), "Should have seen the busy attribute");
       let label = tab.textLabel;
-      ok(label.textContent.includes("file_with_slow_favicon.html"));
       let bounds = label.getBoundingClientRect();
 
       await waitForAttributeChange(tab, "busy");
@@ -161,8 +160,6 @@ add_task(async () => {
 
       await waitForAttributeChange(tab, "label");
       ok(tab.hasAttribute("busy"), "Should have seen the busy attribute");
-      let label = tab.textLabel;
-      ok(label.textContent.includes("file_with_slow_favicon.html"));
       let newBounds = tab.getBoundingClientRect();
       is(
         bounds.width,

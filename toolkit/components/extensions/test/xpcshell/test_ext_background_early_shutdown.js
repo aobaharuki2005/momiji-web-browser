@@ -213,9 +213,8 @@ add_task(async function test_unload_extension_during_background_page_startup() {
           backgroundPageUrl,
           "Expected background page"
         );
-        // Reset URI to not load the actual background page.
-        // See Bug 1955324, loading about:blank with system principal crashes, so lets use data uri
-        arguments[0] = "data:text/html,";
+        // Reset to "about:blank" to not load the actual background page.
+        arguments[0] = "about:blank";
         browserFixupAndLoadURIString.apply(this, arguments);
 
         // And force the extension process to crash.

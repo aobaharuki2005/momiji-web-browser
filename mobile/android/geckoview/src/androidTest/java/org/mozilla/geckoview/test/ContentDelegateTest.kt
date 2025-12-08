@@ -410,8 +410,7 @@ class ContentDelegateTest : BaseSessionTest() {
             override fun onCloseRequest(session: GeckoSession) {
             }
 
-            // (1) artificial from GeckoViewProgress._fireInitialLoad (2) about:blank load
-            @AssertCalled(count = 2)
+            @AssertCalled(count = 1)
             override fun onPageStop(session: GeckoSession, success: Boolean) {
             }
         })

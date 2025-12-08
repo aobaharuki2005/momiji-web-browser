@@ -7,7 +7,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.sys.mjs",
-  isUncommittedInitialDocument:
+  isInitialDocument:
     "chrome://remote/content/shared/messagehandler/transports/BrowsingContextUtils.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   notifyFragmentNavigated:
@@ -143,9 +143,8 @@ export class ParentWebProgressListener {
 
     const url = targetURI?.spec;
 
-    const isUncommittedInitialDocument =
-      lazy.isUncommittedInitialDocument(context);
-    if (isUncommittedInitialDocument && url === "about:blank") {
+    const isInitialDocument = lazy.isInitialDocument(context);
+    if (isInitialDocument && url === "about:blank") {
       this.#trace("Skip initial navigation to about:blank", context.id);
       return;
     }

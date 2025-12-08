@@ -17,8 +17,9 @@ add_task(async function () {
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function () {
     await new Promise(resolve => {
       const iframe = content.document.createElement("iframe");
+      content.document.body.appendChild(iframe);
 
-      iframe.addEventListener("load", () => {
+      iframe.contentWindow.addEventListener("load", () => {
         // Create a div element and append it to the iframe
         const div = content.document.createElement("div");
         div.id = "in-frame";
@@ -29,7 +30,6 @@ add_task(async function () {
         frameContent.appendChild(div);
         resolve();
       });
-      content.document.body.appendChild(iframe);
     });
   });
   ok(

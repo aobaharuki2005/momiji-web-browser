@@ -6,8 +6,6 @@ import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 
 import { globals } from "resource://reftest/globals.sys.mjs";
 
-import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
-
 const {
   XHTML_NS,
   XUL_NS,
@@ -1946,13 +1944,8 @@ function RecvContentReady(info) {
     g.resolveContentReady();
     g.resolveContentReady = null;
   } else {
-    // Prevent a race with GeckoView:SetFocused, bug 1960620
-    // If about:blank loads synchronously, we'll RecvContentReady on the first tick,
-    // which is also the tick where GeckoViewContent processes messages from GeckoView.
-    setTimeout(() => {
-      g.contentGfxInfo = info.gfx;
-      InitAndStartRefTests();
-    }, 0);
+    g.contentGfxInfo = info.gfx;
+    InitAndStartRefTests();
   }
   return { remote: g.browserIsRemote };
 }

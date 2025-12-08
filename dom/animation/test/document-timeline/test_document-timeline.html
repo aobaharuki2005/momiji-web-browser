@@ -137,7 +137,7 @@ async_test(function(t) {
     }));
   });
 
-  if (hiddenIFrame.contentDocument.readyState === 'complete' && hiddenIFrame.contentDocument.location.href !== "about:blank") {
+  if (hiddenIFrame.contentDocument.readyState === 'complete') {
     testToRunOnLoad();
   } else {
     hiddenIFrame.addEventListener("load", testToRunOnLoad);

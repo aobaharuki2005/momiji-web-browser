@@ -16,7 +16,6 @@ promise_test(async t => {
   });
   document.body.appendChild(iframe);
   assert_equals(loadCount, 1);
-  assert_equals(iframe.contentDocument.location.href, "about:blank");
 }, "load event fires synchronously on <iframe> element created with no src");
 
 promise_test(async t => {
@@ -28,7 +27,6 @@ promise_test(async t => {
   });
   document.body.appendChild(iframe);
   assert_equals(loadCount, 1);
-  assert_equals(iframe.contentDocument.location.href, "about:blank");
 }, "load event fires synchronously on <iframe> element created with src=''");
 
 promise_test(async t => {
@@ -40,7 +38,6 @@ promise_test(async t => {
   });
   document.body.appendChild(iframe);
   assert_equals(loadCount, 1);
-  assert_equals(iframe.contentDocument.location.href, "about:blank");
 }, "load event fires synchronously on <iframe> element created with src='about:blank'");
 
 promise_test(async t => {
@@ -52,7 +49,6 @@ promise_test(async t => {
   });
   document.body.appendChild(iframe);
   assert_equals(loadCount, 1);
-  assert_equals(iframe.contentDocument.location.href, "about:blank#foo");
 }, "load event fires synchronously on <iframe> element created with src='about:blank#foo'");
 
 promise_test(async t => {
@@ -64,6 +60,5 @@ promise_test(async t => {
   });
   document.body.appendChild(iframe);
   assert_equals(loadCount, 1);
-  assert_equals(iframe.contentDocument.location.href, "about:blank?foo");
 }, "load event fires synchronously on <iframe> element created with src='about:blank?foo'");
 </script>

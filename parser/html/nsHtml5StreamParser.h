@@ -86,13 +86,7 @@ enum eParserMode {
   /**
    * Load as data (XHR)
    */
-  LOAD_AS_DATA,
-
-  /**
-   * Parse (non-initial) about:blank for normal viewing (not View Source or
-   * data).
-   */
-  ABOUT_BLANK,
+  LOAD_AS_DATA
 };
 
 enum eBomState {

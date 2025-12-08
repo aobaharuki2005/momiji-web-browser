@@ -14,30 +14,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1126851
 
   SimpleTest.waitForExplicitFinish();
 
-  let gotUnload = false;
-
   function runTest() {
     win = window.open("about:blank", "");
-    win.onunload = function() {
-      if (gotUnload) {
-        SimpleTest.finish();
-      } else {
-        gotUnload = true;
+    win.onload = function() {
+      win.onunload = function() {
         ok(true, "got unload");
         win.close();
+        SimpleTest.finish();
       }
-    }
-    // Bug 543435 caused there to be a resize event after `window.open` which
-    // is also there in other browsers. But now we must ensure to get the right
-    // resize event to avoid races.
-    let evt;
-    win.onresize = function(e) {
-      if (e == evt) {
+      win.onresize = function() {
         win.location.reload();
       }
+      win.document.dispatchEvent(new win.Event("resize", { bubbles: true }));
     }
-    evt = new win.Event("resize", { bubbles: true });
-    win.document.dispatchEvent(evt);
   }
 
 

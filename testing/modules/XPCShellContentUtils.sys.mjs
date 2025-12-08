@@ -146,6 +146,7 @@ export class ContentPage {
       Ci.nsIWebNavigation
     );
 
+    chromeShell.createAboutBlankDocumentViewer(system, system);
     this.windowlessBrowser.browsingContext.useGlobalHistory = false;
     let loadURIOptions = {
       triggeringPrincipal: system,
@@ -243,15 +244,10 @@ export class ContentPage {
   async loadURL(url, redirectUrl = undefined) {
     await this.browserReady;
 
-    let browserLoadedPromise = promiseBrowserLoaded(
-      this.browser,
-      url,
-      redirectUrl
-    );
     this.browser.fixupAndLoadURIString(url, {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
-    return browserLoadedPromise;
+    return promiseBrowserLoaded(this.browser, url, redirectUrl);
   }
 
   async fetch(...args) {

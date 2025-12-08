@@ -30,19 +30,13 @@ add_task(async function testStopStartingAutoScroll() {
           content.document.documentElement.scrollTop; // Flush layout.
           const iframe = content.document.querySelector("iframe");
           // If the test page has an iframe, we need to ensure it has loaded.
-          if (
-            !iframe ||
-            (iframe.contentDocument?.readyState == "complete" &&
-              !iframe.contentDocument?.isUncommittedInitialDocument)
-          ) {
+          if (!iframe || iframe.contentDocument?.readyState == "complete") {
             return;
           }
           // It's too late to check "load" event.  Let's check
           // Document#readyState instead.
           await ContentTaskUtils.waitForCondition(
-            () =>
-              iframe.contentDocument?.readyState == "complete" &&
-              !iframe.contentDocument?.isUncommittedInitialDocument,
+            () => iframe.contentDocument?.readyState == "complete",
             "Waiting for loading the subdocument"
           );
         });

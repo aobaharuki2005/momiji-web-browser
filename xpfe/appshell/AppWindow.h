@@ -40,7 +40,6 @@
 
 class nsAtom;
 class nsXULTooltipListener;
-class nsIOpenWindowInfo;
 
 namespace mozilla {
 class PresShell;
@@ -135,8 +134,7 @@ class AppWindow final : public nsIBaseWindow,
   // AppWindow methods...
   nsresult Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
                       int32_t aInitialWidth, int32_t aInitialHeight,
-                      bool aIsHiddenWindow, widget::InitData& widgetInitData,
-                      nsIOpenWindowInfo* aOpenWindowInfo);
+                      bool aIsHiddenWindow, widget::InitData& widgetInitData);
 
   nsDocShell* GetDocShell() { return mDocShell; }
 

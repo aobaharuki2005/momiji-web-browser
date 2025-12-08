@@ -880,8 +880,6 @@ void nsJSChannel::EvaluateScript() {
           // return from the javascript: URL...
           mStatus = NS_ERROR_DOM_RETVAL_UNDEFINED;
         }
-        // Note: `docShell` may have been destroyed in `PermitUnload`, so don't
-        // add uses of `docShell` later in this method!
       }
     }
 

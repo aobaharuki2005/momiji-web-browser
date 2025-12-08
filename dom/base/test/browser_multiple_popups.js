@@ -62,11 +62,7 @@ async function withTestPage(popupCount, optionsOrCallback, callback) {
   let windows = await obs;
   ok(true, `We had ${popupCount} windows.`);
   for (let win of windows) {
-    // wait for browser.xhtml being loaded to prevent shutdown hang
-    if (
-      win.document.readyState !== "complete" ||
-      win.location.href == "about:blank"
-    ) {
+    if (win.document.readyState !== "complete") {
       await BrowserTestUtils.waitForEvent(win, "load");
     }
     await BrowserTestUtils.closeWindow(win);

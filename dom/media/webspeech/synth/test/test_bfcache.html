@@ -34,8 +34,10 @@ SpecialPowers.pushPrefEnv({ set: [
   ['media.webspeech.synth.force_global_queue', true]] },
   function() {
     testWin = window.open("about:blank", "testWin");
-    waitForVoices(testWin)
-      .then(() => testWin.location = "file_bfcache_page1.html")
+    testWin.onload = function(e) {
+      waitForVoices(testWin)
+        .then(() => testWin.location = "file_bfcache_page1.html")
+    };
   });
 
 </script>

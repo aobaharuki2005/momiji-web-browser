@@ -458,6 +458,39 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       }
     }
   }
+
+  // For some emulations a value set per a browsing context overrides
+  // a value set per a user context or set globally. And a value set per
+  // a user context overrides a global value.
+  #findCorrectOverrideValue(contextValue, userContextValue, globalValue) {
+    if (typeof contextValue === "string") {
+      return contextValue;
+    }
+    if (typeof userContextValue === "string") {
+      return userContextValue;
+    }
+    if (typeof globalValue === "string") {
+      return globalValue;
+    }
+    return null;
+  }
+
+  async #onConfigurationComplete(window) {
+    // parser blocking doesn't work for initial about:blank, so ensure
+    // browsing_context.create waits for configuration to complete
+    if (window.location.href.startsWith("about:blank")) {
+      await this.messageHandler.forwardCommand({
+        moduleName: "browsingContext",
+        commandName: "_onConfigurationComplete",
+        destination: {
+          type: lazy.RootMessageHandler.type,
+        },
+        params: {
+          navigable: this.messageHandler.context,
+        },
+      });
+    }
+  }
 }
 
 export const _configuration = _ConfigurationModule;
