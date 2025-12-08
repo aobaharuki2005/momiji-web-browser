@@ -280,8 +280,7 @@ def setup_browsertime(
 ):
     r"""Install browsertime and visualmetrics.py prerequisites and the Node.js package."""
 
-    sys.path.append(mozpath.join(command_context.topsrcdir, "tools", "lint", "eslint"))
-    import setup_helper
+    from mozbuild.nodeutil import check_node_executables_valid, package_setup
 
     if not new_upstream_url:
         setup_prerequisites(command_context)
@@ -319,7 +318,7 @@ def setup_browsertime(
             f.write(updated_body)
 
     # Install the browsertime Node.js requirements.
-    if not setup_helper.check_node_executables_valid():
+    if not check_node_executables_valid():
         return 1
 
     # To use a custom `geckodriver`, set
@@ -353,7 +352,7 @@ def setup_browsertime(
     if IS_APPLE_SILICON and node_dir not in os.environ["PATH"]:
         os.environ["PATH"] += os.pathsep + node_dir
 
-    status = setup_helper.package_setup(
+    status = package_setup(
         BROWSERTIME_ROOT,
         "browsertime",
         should_update=new_upstream_url != "",
@@ -581,11 +580,10 @@ def extra_default_args(command_context, args=[]):
 
 def _verify_node_install(command_context):
     # check if Node is installed
-    sys.path.append(mozpath.join(command_context.topsrcdir, "tools", "lint", "eslint"))
-    import setup_helper
+    from mozbuild.nodeutil import check_node_executables_valid
 
     with silence():
-        node_valid = setup_helper.check_node_executables_valid()
+        node_valid = check_node_executables_valid()
     if not node_valid:
         print("Can't find Node. did you run ./mach bootstrap ?")
         return False
