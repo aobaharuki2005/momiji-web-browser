@@ -2215,6 +2215,7 @@ export class DiscoveryStreamFeed {
     await this.resetContentCache();
     // Reset in-memory caches.
     this._isContextualAds = undefined;
+    this._doLocalInferredRerank = undefined;
     this._spocsCacheUpdateTime = undefined;
     this._spocsOnDemand = undefined;
   }
@@ -2494,6 +2495,7 @@ export class DiscoveryStreamFeed {
       case PREF_USER_INFERRED_PERSONALIZATION:
         this.configReset();
         this._isContextualAds = undefined;
+        this._doLocalInferredRerank = undefined;
         await this.resetContentCache();
         break;
       case PREF_CONTEXTUAL_ADS:
