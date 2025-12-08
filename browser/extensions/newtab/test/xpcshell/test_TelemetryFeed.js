@@ -591,6 +591,10 @@ add_task(async function test_endSession_no_ping_on_no_visibility_event() {
   Services.prefs.setBoolPref(PREF_TELEMETRY, true);
   Services.prefs.setBoolPref(PREF_EVENT_TELEMETRY, true);
   let instance = new TelemetryFeed();
+
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(instance, "configureContentPing");
+
   instance.addSession("foo");
 
   Services.telemetry.clearEvents();
@@ -602,6 +606,8 @@ add_task(async function test_endSession_no_ping_on_no_visibility_event() {
 
   Services.prefs.clearUserPref(PREF_TELEMETRY);
   Services.prefs.clearUserPref(PREF_EVENT_TELEMETRY);
+
+  sandbox.restore();
 });
 
 add_task(async function test_endSession_send_ping() {
@@ -616,6 +622,7 @@ add_task(async function test_endSession_send_ping() {
   let sandbox = sinon.createSandbox();
   sandbox.stub(instance, "createSessionEndEvent");
   sandbox.stub(instance.utEvents, "sendSessionEndEvent");
+  sandbox.stub(instance, "configureContentPing");
 
   let session = instance.addSession("foo");
 
@@ -1417,6 +1424,7 @@ add_task(async function test_sendPageTakeoverData_homepage_category() {
 
   Services.prefs.setBoolPref(PREF_TELEMETRY, true);
   sandbox.stub(HomePage, "get").returns("https://searchprovider.com");
+  sandbox.stub(instance, "configureContentPing");
   instance._classifySite = () => Promise.resolve("other");
 
   await instance.sendPageTakeoverData();
@@ -1440,6 +1448,7 @@ add_task(async function test_sendPageTakeoverData_newtab_category_custom() {
     .stub(AboutNewTab, "newTabURL")
     .get(() => "https://searchprovider.com");
   Services.prefs.setBoolPref(PREF_TELEMETRY, true);
+  sandbox.stub(instance, "configureContentPing");
   instance._classifySite = () => Promise.resolve("other");
 
   await instance.sendPageTakeoverData();
@@ -1459,6 +1468,7 @@ add_task(async function test_sendPageTakeoverData_newtab_category_custom() {
   Services.fog.testResetFOG();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY, true);
+  sandbox.stub(instance, "configureContentPing");
   instance._classifySite = () => Promise.resolve("other");
 
   await instance.sendPageTakeoverData();
@@ -1482,6 +1492,7 @@ add_task(async function test_sendPageTakeoverData_newtab_category_extension() {
   sandbox.stub(ExtensionSettingsStore, "getSetting").returns({ id: ID });
 
   Services.prefs.setBoolPref(PREF_TELEMETRY, true);
+  sandbox.stub(instance, "configureContentPing");
   instance._classifySite = () => Promise.resolve("other");
 
   await instance.sendPageTakeoverData();
@@ -1502,6 +1513,7 @@ add_task(async function test_sendPageTakeoverData_newtab_disabled() {
 
   Services.prefs.setBoolPref(PREF_TELEMETRY, true);
   Services.prefs.setBoolPref("browser.newtabpage.enabled", false);
+  sandbox.stub(instance, "configureContentPing");
   instance._classifySite = () => Promise.resolve("other");
 
   await instance.sendPageTakeoverData();
@@ -1522,6 +1534,7 @@ add_task(async function test_sendPageTakeoverData_homepage_disabled() {
 
   Services.prefs.setBoolPref(PREF_TELEMETRY, true);
   sandbox.stub(HomePage, "overridden").get(() => true);
+  sandbox.stub(instance, "configureContentPing");
 
   await instance.sendPageTakeoverData();
   Assert.equal(Glean.newtab.homepageCategory.testGetValue(), "disabled");
@@ -1537,6 +1550,7 @@ add_task(async function test_sendPageTakeoverData_newtab_ping() {
   Services.fog.testResetFOG();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY, true);
+  sandbox.stub(instance, "configureContentPing");
 
   let pingSubmitted = new Promise(resolve => {
     GleanPings.newtab.testBeforeNextSubmit(reason => {
@@ -1598,13 +1612,14 @@ add_task(
           is_sponsored: String(false),
           position: String(POS_1),
           recommendation_id: "decaf-c0ff33",
-          tile_id: String(1),
+          content_redacted: String(true),
         });
         Assert.deepEqual(pocketImpressions[1].extra, {
           newtab_visit_id: SESSION_ID,
           is_sponsored: String(true),
           position: String(POS_2),
           tile_id: String(2),
+          content_redacted: String(true),
         });
         Assert.equal(Glean.pocket.shim.testGetValue(), SHIM);
         Assert.deepEqual(
@@ -2411,8 +2426,9 @@ add_task(
     Assert.deepEqual(clicks[0].extra, {
       newtab_visit_id: SESSION_ID,
       is_sponsored: String(true),
-      position: ACTION_POSITION,
+      position: String(ACTION_POSITION),
       tile_id: String(448685088),
+      content_redacted: String(true),
     });
 
     await pingSubmitted;
@@ -2454,9 +2470,9 @@ add_task(
     Assert.deepEqual(thumbVotes[0].extra, {
       newtab_visit_id: SESSION_ID,
       recommendation_id: "decaf-c0ff33",
-      tile_id: String(314623757745896),
       thumbs_down: String(true),
       thumbs_up: String(false),
+      content_redacted: String(true),
     });
 
     sandbox.restore();
@@ -2495,9 +2511,9 @@ add_task(async function test_handleDiscoveryStreamUserEvent_thumbs_up_event() {
   Assert.deepEqual(thumbVotes[0].extra, {
     newtab_visit_id: SESSION_ID,
     recommendation_id: "decaf-c0ff33",
-    tile_id: String(314623757745896),
     thumbs_down: String(false),
     thumbs_up: String(true),
+    content_redacted: String(true),
   });
 
   sandbox.restore();
