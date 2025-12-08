@@ -7,6 +7,7 @@ package org.mozilla.fenix.components.settings
 import androidx.core.content.edit
 import mozilla.components.support.ktx.android.content.PreferencesHolder
 import mozilla.components.support.ktx.android.content.booleanPreference
+import org.mozilla.fenix.FeatureFlags
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -40,11 +41,37 @@ private class LazyPreference(val key: String, val default: () -> Boolean) :
 }
 
 /**
- * Property delegate for getting and setting lazily a boolean shared preference gated by a feature flag.
+ * Property delegate for lazily getting and setting a boolean shared preference gated by a feature flag.
  *
- * @param key Key for the shared preference.
- * @param featureFlag If true, returns the shared preference value. If false, returns false.
- * @param default Default value to return.
+ * @param key The key for the shared preference.
+ * @param featureFlag If `true`, the shared preference value is returned; if `false`, this always
+ * returns `false`, regardless of the stored value.
+ *
+ * Note: If you intend to always pass `true` for [featureFlag], consider using [booleanPreference]
+ * directly instead, as the feature flag provides no additional behavior in that case.
+ *
+ * For example, this is **not** recommended:
+ * ```
+ * val isMyFeatureEnabled by lazyFeatureFlagPreference(
+ *     …
+ *     isMyFeatureEnabled = true,
+ *     …
+ * )
+ * ```
+ *
+ * [featureFlag] may be controlled through various mechanisms - for example, via an
+ * alternative feature-flag system like [FeatureFlags], or internal conditionals.
+ *
+ * For example, recommended use:
+ * ```
+ * val isMyFeatureEnabled by lazyFeatureFlagPreference(
+ *     …
+ *     isMyFeatureEnabled = FeatureFlags.onboardingFeatureEnabled,
+ *     …
+ * )
+ * ```
+ *
+ * @param default The default value to return when the preference is unset.
  */
 fun lazyFeatureFlagPreference(key: String, featureFlag: Boolean, default: () -> Boolean) =
     if (featureFlag) {
