@@ -16,6 +16,7 @@
 #include "WebGLChild.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Logging.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
@@ -32,6 +33,8 @@
 #include "nsProxyRelease.h"
 
 namespace mozilla::dom {
+
+static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
 
 OffscreenCanvasCloneData::OffscreenCanvasCloneData(
     OffscreenCanvasDisplayHelper* aDisplay, uint32_t aWidth, uint32_t aHeight,
@@ -638,6 +641,7 @@ FontVisibility OffscreenCanvas::GetFontVisibility() const {
 }
 
 void OffscreenCanvas::ReportBlockedFontFamily(const nsCString& aMsg) const {
+  MOZ_LOG(gFingerprinterDetection, mozilla::LogLevel::Info, ("%s", aMsg.get()));
   if (Maybe<uint64_t> windowID = GetWindowID()) {
     nsContentUtils::ReportToConsoleByWindowID(NS_ConvertUTF8toUTF16(aMsg),
                                               nsIScriptError::warningFlag,
