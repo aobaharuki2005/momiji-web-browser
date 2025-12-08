@@ -88,11 +88,7 @@ async function doTestInSameWindow({
   });
 }
 
-async function doTestWithNewWindow({
-  link,
-  expectedSetURICalled,
-  actionWhileLoading = async p => await p,
-}) {
+async function doTestWithNewWindow({ link, expectedSetURICalled }) {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.link.open_newwindow", 2]],
   });
@@ -125,10 +121,10 @@ async function doTestWithNewWindow({
         isSetURIWhileLoading = true;
       }
     });
-    await actionWhileLoading(
-      BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser, {
-        wantLoad: href || (() => true),
-      })
+    await BrowserTestUtils.browserLoaded(
+      win.gBrowser.selectedBrowser,
+      false,
+      href || (() => true)
     );
     sandbox.restore();
 

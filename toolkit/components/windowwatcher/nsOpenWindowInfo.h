@@ -23,7 +23,6 @@ class nsOpenWindowInfo : public nsIOpenWindowInfo {
   NS_DECL_NSIOPENWINDOWINFO
 
   nsOpenWindowInfo();
-  nsOpenWindowInfo(const nsOpenWindowInfo& aOther);
 
   bool mForceNoOpener = false;
   bool mIsRemote = false;
@@ -33,14 +32,9 @@ class nsOpenWindowInfo : public nsIOpenWindowInfo {
   bool mHasValidUserGestureActivation = false;
   bool mTextDirectiveUserActivation = false;
   RefPtr<mozilla::dom::BrowserParent> mNextRemoteBrowser;
+  mozilla::OriginAttributes mOriginAttributes;
   RefPtr<mozilla::dom::BrowsingContext> mParent;
   RefPtr<nsIBrowsingContextReadyCallback> mBrowsingContextReadyCallback;
-  nsCOMPtr<nsIPrincipal> mPrincipalToInheritForAboutBlank;
-  nsCOMPtr<nsIPrincipal> mPartitionedPrincipalToInheritForAboutBlank;
-  nsCOMPtr<nsIURI> mBaseUriToInheritForAboutBlank;
-  nsCOMPtr<nsIPolicyContainer> mPolicyContainerToInheritForAboutBlank;
-  mozilla::Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>
-      mCoepToInheritForAboutBlank;
 
  private:
   virtual ~nsOpenWindowInfo();

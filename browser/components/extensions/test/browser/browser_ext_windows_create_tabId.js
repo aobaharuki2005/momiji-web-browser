@@ -11,9 +11,8 @@ function assertNoLeaksInTabTracker() {
 
   for (const [tabId, nativeTab] of tabTracker._tabIds) {
     if (!nativeTab.ownerGlobal) {
-      // Disable this check due to bug 1987344, 1806361
-      //ok(false,
-      info(
+      ok(
+        false,
         `A tab with tabId ${tabId} has been leaked in the tabTracker ("${nativeTab.title}")`
       );
     }

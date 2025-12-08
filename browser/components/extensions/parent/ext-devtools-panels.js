@@ -16,6 +16,8 @@ ChromeUtils.defineESModuleGetters(this, {
 
 var { watchExtensionProxyContextLoad } = ExtensionParent;
 
+var { promiseDocumentLoaded } = ExtensionUtils;
+
 const WEBEXT_PANELS_URL = "chrome://browser/content/webext-panels.xhtml";
 
 class BaseDevToolsPanel {
@@ -487,17 +489,9 @@ class ParentDevToolsInspectorSidebar extends BaseDevToolsPanel {
 
     // Wait the webext-panel.xhtml page to have been loaded in the
     // inspector sidebar panel.
-    const onLoaded = () => {
+    promiseDocumentLoaded(containerEl.contentDocument).then(() => {
       this.createBrowserElement(containerEl.contentWindow);
-    };
-    // ExtensionUtils.promiseDocumentLoaded would attach a load listener to the
-    // container window, which will be replaced during the load (Bug 1955324).
-    const doc = containerEl.contentDocument;
-    if (doc.readyState == "complete" && doc.location.href != "about:blank") {
-      onLoaded();
-    } else {
-      containerEl.addEventListener("load", onLoaded, { once: true });
-    }
+    });
   }
 
   onExtensionPageUnmount() {

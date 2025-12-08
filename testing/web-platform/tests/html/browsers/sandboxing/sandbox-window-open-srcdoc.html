@@ -5,15 +5,6 @@
 <script src="/resources/testharnessreport.js"></script>
 <body>
 <script>
-function waitForEvent(name, target) {
-  return new Promise(resolve => {
-    function listener(event) {
-      resolve(event);
-      }
-    target.addEventListener(name, listener, { once: true });
-  });
-}
-
 // Check what happens when executing window.open("about:srcdoc") from a
 // sandboxed iframe. Srcdoc can't be loaded in the main frame. It should
 // result in an error page. The error page should be cross-origin with the
@@ -25,7 +16,7 @@ function waitForEvent(name, target) {
 // applies the sandbox flags of the opener to the internal error page document.
 //
 // This test is mainly a coverage test. It passes if it doesn't crash.
-promise_test(async t => {
+async_test(test => {
   let iframe = document.createElement("iframe");
   iframe.sandbox = "allow-scripts allow-popups allow-same-origin";
   iframe.srcdoc = `
@@ -49,31 +40,13 @@ promise_test(async t => {
     </scr`+`ipt>
   `;
 
-  let msg = waitForEvent("message", window);
-  document.body.appendChild(iframe);
-  while ( (await msg).data !== "done" ) {
+  let closed = false;
+  addEventListener("message", event => {
+    closed = (event.data === "done");
     iframe.contentWindow.postMessage("ping","*");
-    msg = waitForEvent("message", window);
-  }
-  iframe.remove();
+  });
+
+  document.body.appendChild(iframe);
+  test.step_wait_func_done(()=>closed);
 }, "window.open('about:srcdoc') from sandboxed srcdoc doesn't crash.");
-
-promise_test(async t => {
-  let ifr = document.createElement("iframe");
-  ifr.sandbox = "allow-scripts allow-popups";
-  ifr.srcdoc = `<script>
-    const w = window.open();
-    try {
-      w.document;
-      parent.postMessage("fail", "*")
-    } catch (e) {
-      parent.postMessage(e.name, "*")
-    }
-  </scri`+`pt>`;
-
-  const msg = waitForEvent("message", window);
-  document.body.appendChild(ifr);
-  const data = (await msg).data;
-  assert_equals(data, "SecurityError", "");
-}, "popup is isolated from an isolated iframe");
 </script>

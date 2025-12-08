@@ -9,7 +9,6 @@
 #include "ClientInfo.h"
 #include "ClientManager.h"
 #include "ClientState.h"
-#include "mozilla/NullPrincipal.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
@@ -502,11 +501,7 @@ RefPtr<ClientOpPromise> ClientOpenWindow(
 
   RefPtr<nsOpenWindowInfo> openInfo = new nsOpenWindowInfo();
   openInfo->mBrowsingContextReadyCallback = callback;
-  nsCOMPtr<nsIURI> nullPrincipalURI = NullPrincipal::CreateURI(nullptr);
-  nsCOMPtr<nsIPrincipal> initialPrincipal =
-      NullPrincipal::Create(principal->OriginAttributesRef(), nullPrincipalURI);
-  openInfo->mPrincipalToInheritForAboutBlank = initialPrincipal;
-  openInfo->mPartitionedPrincipalToInheritForAboutBlank = initialPrincipal;
+  openInfo->mOriginAttributes = principal->OriginAttributesRef();
   openInfo->mIsRemote = true;
 
   RefPtr<BrowsingContext> bc;

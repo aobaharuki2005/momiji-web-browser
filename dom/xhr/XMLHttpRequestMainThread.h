@@ -706,10 +706,6 @@ class XMLHttpRequestMainThread final : public XMLHttpRequest,
   bool mIsSystem;
   bool mIsAnon;
 
-  // Prevent duplicate OnStopRequest calls due to the explicit
-  // OnStopRequest in the sync path of SendInternal
-  bool mAlreadyGotStopRequest;
-
   /**
    * Close the XMLHttpRequest's channels.
    */

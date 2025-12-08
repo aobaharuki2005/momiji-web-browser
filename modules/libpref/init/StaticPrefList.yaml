@@ -5925,7 +5925,7 @@
 # Whether to enable about:blank async-load workaround for ckeditor.
 - name: dom.about-blank-ckeditor-hack.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 # Per-domain blocklist for the previous hack.

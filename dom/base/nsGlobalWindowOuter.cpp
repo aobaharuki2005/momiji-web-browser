@@ -64,7 +64,6 @@
 #include "nsIDOMStorageManager.h"
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "nsILoadGroup.h"
 #include "nsIPermissionManager.h"
 #include "nsIScriptContext.h"
 #include "nsISecureBrowserUI.h"
@@ -1714,9 +1713,7 @@ nsIScriptContext* nsGlobalWindowOuter::GetScriptContext() { return mContext; }
 
 bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
   // We reuse the inner window when:
-  // a. The current document is transient, i.e. a temporary placeholder while
-  //    an async load is ongoing. This is equivalent to the uncommitted initial
-  //    document.
+  // a. We are currently at our original document.
   // b. At least one of the following conditions are true:
   // -- The new document is the same as the old document. This means that we're
   //    getting called from document.open().
@@ -1726,7 +1723,7 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
     return false;
   }
 
-  if (!mDoc->IsUncommittedInitialDocument()) {
+  if (!mDoc->IsInitialDocument()) {
     return false;
   }
 
@@ -2499,10 +2496,11 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   }
 
   if (!newInnerWindow->mHasNotifiedGlobalCreated && mDoc) {
-    // We should probably notify, except if we have the initial about:blank
-    // in a chrome docshell, defer notification until the first non-initial
-    // document.
-    const bool isAboutBlankInChromeDocshell = [&] {
+    // We should probably notify. However if this is the, arguably bad,
+    // situation when we're creating a temporary non-chrome-about-blank
+    // document in a chrome docshell, don't notify just yet. Instead wait
+    // until we have a real chrome doc.
+    const bool isContentAboutBlankInChromeDocshell = [&] {
       if (!mDocShell) {
         return false;
       }
@@ -2512,10 +2510,10 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
         return false;
       }
 
-      return mDoc->IsInitialDocument();
+      return !mDoc->NodePrincipal()->IsSystemPrincipal();
     }();
 
-    if (!isAboutBlankInChromeDocshell) {
+    if (!isContentAboutBlankInChromeDocshell) {
       newInnerWindow->mHasNotifiedGlobalCreated = true;
       nsContentUtils::AddScriptRunner(NewRunnableMethod(
           "nsGlobalWindowOuter::DispatchDOMWindowCreated", this,
@@ -5901,13 +5899,7 @@ bool nsGlobalWindowOuter::CanClose() {
   if (viewer) {
     bool canClose;
     nsresult rv = viewer->PermitUnload(&canClose);
-    // PermitUnload can destroy the docshell.
-    if (!mDocShell || mDocShell->IsBeingDestroyed()) {
-      return true;
-    }
-    if (NS_SUCCEEDED(rv) && !canClose) {
-      return false;
-    }
+    if (NS_SUCCEEDED(rv) && !canClose) return false;
   }
 
   // If we still have to print, we delay the closing until print has happened.
@@ -6343,17 +6335,7 @@ Selection* nsGlobalWindowOuter::GetSelectionOuter() {
 
   PresShell* presShell = mDocShell->GetPresShell();
   if (!presShell) {
-    // Force layout of the containing frame.
-    // layout/reftests/selection/modify-range.html goes
-    // through here.
-    EnsureSizeAndPositionUpToDate();
-    if (!mDocShell) {
-      return nullptr;
-    }
-    presShell = mDocShell->GetPresShell();
-    if (!presShell) {
-      return nullptr;
-    }
+    return nullptr;
   }
   return presShell->GetCurrentSelection(SelectionType::eNormal);
 }

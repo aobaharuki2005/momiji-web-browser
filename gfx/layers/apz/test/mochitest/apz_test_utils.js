@@ -513,11 +513,8 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
       }
 
       function spawnTest(aFile) {
-        var subtestUrl =
-          location.href.substring(0, location.href.lastIndexOf("/") + 1) +
-          aFile;
         w = window.open(
-          subtestUrl,
+          "",
           "_blank",
           test.windowFeatures ? test.windowFeatures : ""
         );
@@ -561,6 +558,9 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
             { once: true }
           );
         }
+        var subtestUrl =
+          location.href.substring(0, location.href.lastIndexOf("/") + 1) +
+          aFile;
         function urlResolves(url) {
           var request = new XMLHttpRequest();
           request.open("GET", url, false);
@@ -578,6 +578,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
           reject();
           return undefined;
         }
+        w.location = subtestUrl;
         return w;
       }
 

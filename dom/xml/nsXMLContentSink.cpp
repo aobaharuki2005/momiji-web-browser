@@ -69,6 +69,10 @@ using namespace mozilla::dom;
 // 1) what's not allowed - We need to figure out which HTML tags
 //    (prefixed with a HTML namespace qualifier) are explicitly not
 //    allowed (if any).
+// 2) factoring code with nsHTMLContentSink - There's some amount of
+//    common code between this and the HTML content sink. This will
+//    increase as we support more and more HTML elements. How can code
+//    from the code be factored?
 
 nsresult NS_NewXMLContentSink(nsIXMLContentSink** aResult, Document* aDoc,
                               nsIURI* aURI, nsISupports* aContainer,
@@ -148,7 +152,7 @@ NS_IMETHODIMP
 nsXMLContentSink::WillParse(void) { return WillParseImpl(); }
 
 NS_IMETHODIMP
-nsXMLContentSink::WillBuildModel() {
+nsXMLContentSink::WillBuildModel(nsDTDMode aDTDMode) {
   WillBuildModelImpl();
 
   // Notify document that the load is beginning

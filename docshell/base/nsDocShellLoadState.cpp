@@ -118,8 +118,6 @@ nsDocShellLoadState::nsDocShellLoadState(
   mUnstrippedURI = aLoadState.UnstrippedURI();
   mRemoteTypeOverride = aLoadState.RemoteTypeOverride();
   mIsCaptivePortalTab = aLoadState.IsCaptivePortalTab();
-  mIsInitialAboutBlankHandlingProhibited =
-      aLoadState.IsInitialAboutBlankHandlingProhibited();
 
   if (aLoadState.NavigationAPIState()) {
     mNavigationAPIState = MakeRefPtr<nsStructuredCloneContainer>();
@@ -224,9 +222,7 @@ nsDocShellLoadState::nsDocShellLoadState(const nsDocShellLoadState& aOther)
       mSchemelessInput(aOther.mSchemelessInput),
       mForceMediaDocument(aOther.mForceMediaDocument),
       mHttpsUpgradeTelemetry(aOther.mHttpsUpgradeTelemetry),
-      mNavigationAPIState(aOther.mNavigationAPIState),
-      mIsInitialAboutBlankHandlingProhibited(
-          aOther.mIsInitialAboutBlankHandlingProhibited) {
+      mNavigationAPIState(aOther.mNavigationAPIState) {
   MOZ_DIAGNOSTIC_ASSERT(
       XRE_IsParentProcess(),
       "Cloning a nsDocShellLoadState with the same load identifier is only "
@@ -274,8 +270,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI, uint64_t aLoadIdentifier)
       mTriggeringRemoteType(XRE_IsContentProcess()
                                 ? ContentChild::GetSingleton()->GetRemoteType()
                                 : NOT_REMOTE_TYPE),
-      mSchemelessInput(nsILoadInfo::SchemelessInputTypeUnset),
-      mIsInitialAboutBlankHandlingProhibited(false) {
+      mSchemelessInput(nsILoadInfo::SchemelessInputTypeUnset) {
   MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
 
   // For https telemetry we set a flag indicating whether the load is https.
@@ -1457,8 +1452,6 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize(
   loadState.UnstrippedURI() = mUnstrippedURI;
   loadState.RemoteTypeOverride() = mRemoteTypeOverride;
   loadState.IsCaptivePortalTab() = mIsCaptivePortalTab;
-  loadState.IsInitialAboutBlankHandlingProhibited() =
-      mIsInitialAboutBlankHandlingProhibited;
 
   if (mNavigationAPIState) {
     loadState.NavigationAPIState().emplace();

@@ -23,12 +23,7 @@
         event.stopPropagation();
       }
 
-      function flushLayout(...iframes) {
-        document.body.offsetHeight;
-        iframes.forEach(ifr => ifr.contentDocument?.body.offsetHeight);
-      }
-
-      async function testTabbingThroughShadowDOMWithTabIndexes() {
+      function testTabbingThroughShadowDOMWithTabIndexes() {
         var anchor = document.createElement("a");
         anchor.onfocus = focusLogger;
         anchor.href = "#";
@@ -68,7 +63,7 @@
         input2.onfocus = focusLogger;
         document.body.appendChild(input2);
 
-        flushLayout(shadowIframe);
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, input, "Should have focused input element. (3)");
@@ -119,7 +114,7 @@
         document.body.innerHTML = null;
       }
 
-      async function testTabbingThroughSimpleShadowDOM() {
+      function testTabbingThroughSimpleShadowDOM() {
         var anchor = document.createElement("a");
         anchor.onfocus = focusLogger;
         anchor.href = "#";
@@ -151,7 +146,7 @@
         input2.onfocus = focusLogger;
         document.body.appendChild(input2);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, shadowAnchor, "Should have focused anchor element in shadow DOM.");
@@ -177,7 +172,7 @@
         input2.remove();
       }
 
-      async function testTabbingThroughNestedShadowDOM() {
+      function testTabbingThroughNestedShadowDOM() {
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (1)");
 
         var host = document.createElement("div");
@@ -205,7 +200,7 @@
         var input22 = sr2.getElementById("h22");
         input22.onfocus = focusLogger;
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, button, "[nested shadow] Should have focused button element. (1)");
@@ -242,7 +237,7 @@
         host.remove();
       }
 
-      async function testTabbingThroughDisplayContentsHost() {
+      function testTabbingThroughDisplayContentsHost() {
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus. (1)");
 
         var host = document.createElement("div");
@@ -270,7 +265,7 @@
         var shadowInput4 = sr1.getElementById("shadowInput2");
         shadowInput4.onfocus = focusLogger;
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, shadowInput1, "Should have focused input element. (1)");
@@ -302,7 +297,7 @@
         host1.remove();
       }
 
-      async function testTabbingThroughLightDOMShadowDOMLightDOM() {
+      function testTabbingThroughLightDOMShadowDOMLightDOM() {
         opener.is(document.activeElement, document.body.firstChild,
                   "body's first child should have focus.");
 
@@ -324,7 +319,7 @@
         a.onfocus = focusLogger;
         document.body.appendChild(p);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, p1, "Should have focused p1.");
@@ -350,7 +345,7 @@
         p.remove();
       }
 
-      async function testFocusableHost() {
+      function testFocusableHost() {
         opener.is(document.activeElement, document.body.firstChild,
                   "body's first child should have focus.");
 
@@ -374,7 +369,7 @@
         a.onfocus = focusLogger;
         document.body.appendChild(p);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, host, "Should have focused host.");
@@ -400,7 +395,7 @@
         p.remove();
       }
 
-      async function testShiftTabbingThroughFocusableHost() {
+      function testShiftTabbingThroughFocusableHost() {
         opener.is(document.activeElement, document.body.firstChild,
                   "body's first child should have focus.");
 
@@ -425,7 +420,7 @@
         input.onfocus = focusLogger;
         document.body.appendChild(input);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, host, "Should have focused host element. (1)");
@@ -459,7 +454,7 @@
         input.remove();
       }
 
-      async function testTabbingThroughNestedSlot() {
+      function testTabbingThroughNestedSlot() {
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
 
         var host0 = document.createElement("div");
@@ -514,7 +509,7 @@
         input11.onfocus = focusLogger;
         host11.appendChild(input11);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, div00, "Should have focused div element in shadow DOM. (1)");
@@ -546,7 +541,7 @@
         host1.remove();
       }
 
-      async function testTabbingThroughSlotInLightDOM() {
+      function testTabbingThroughSlotInLightDOM() {
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
 
         var input0 = document.createElement("input");
@@ -568,7 +563,7 @@
         input2.onfocus = focusLogger;
         document.body.appendChild(input2);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, input0, "Should have focused input element. (1)");
@@ -601,7 +596,7 @@
         input2.remove();
       }
 
-      async function testTabbingThroughFocusableSlotInLightDOM() {
+      function testTabbingThroughFocusableSlotInLightDOM() {
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
 
         var slot0 = document.createElement("slot");
@@ -628,7 +623,7 @@
         input1.onfocus = focusLogger;
         document.body.appendChild(input1);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, slot0, "Should have focused slot element. (1)");
@@ -666,7 +661,7 @@
         input1.remove();
       }
 
-      async function testTabbingThroughScrollableShadowDOM() {
+      function testTabbingThroughScrollableShadowDOM() {
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
 
         var host0 = document.createElement("div");
@@ -723,7 +718,7 @@
         input1.onfocus = focusLogger;
         document.body.appendChild(input1);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, host0, "Should have focused shadow host element. (1)");
@@ -788,7 +783,7 @@
       }
 
       // Bug 1604140
-      async function testTabbingThroughScrollableShadowHost() {
+      function testTabbingThroughScrollableShadowHost() {
         opener.is(document.activeElement, document.body.firstChild,
                   "body's first child should have focus.");
 
@@ -829,7 +824,7 @@
         belowSecondHost.onfocus = focusLogger;
         document.body.appendChild(belowSecondHost);
 
-        flushLayout();
+        document.body.offsetLeft;
 
         synthesizeKey("KEY_Tab");
         opener.is(lastFocusTarget, aboveFirstHost, "Should have focused div above first host element. (1)");
@@ -878,7 +873,7 @@
         belowSecondHost.remove();
       }
 
-      async function testDeeplyNestedShadowTree() {
+      function testDeeplyNestedShadowTree() {
         opener.is(document.activeElement, document.body.firstChild, "body's first child should have focus.");
         var host1 = document.createElement("test-node");
         var lastHost = host1;
@@ -890,8 +885,7 @@
         var input = document.createElement("input");
         document.body.appendChild(host1);
         document.body.appendChild(input);
-
-        flushLayout();
+        document.body.offsetLeft;
 
         // Test shadow tree which doesn't have anything tab-focusable.
         host1.shadowRoot.querySelector("div").focus();
@@ -907,9 +901,7 @@
         host2.insertBefore(input2, host3);
         var input3 = document.createElement("input");
         lastHost.appendChild(input3);
-
-        flushLayout();
-
+        document.body.offsetLeft;
         host3.shadowRoot.querySelector("div").focus();
         synthesizeKey("KEY_Tab");
         is(document.activeElement, input3, "Should have focused input3 element.");
@@ -928,7 +920,7 @@
       }
 
       // Bug 1558393
-      async function testBackwardsTabbingWithSlotsWithoutFocusableContent() {
+      function testBackwardsTabbingWithSlotsWithoutFocusableContent() {
         let first = document.createElement("div");
         first.tabIndex = 0;
         let host = document.createElement("div");
@@ -941,8 +933,7 @@
         document.body.appendChild(first);
         document.body.appendChild(host);
         document.body.appendChild(second);
-
-        flushLayout();
+        document.body.offsetLeft;
 
         first.focus();
         opener.is(document.activeElement, first, "First light div should have focus");
@@ -962,22 +953,22 @@
         first.remove();
       }
 
-      async function runTest() {
+      function runTest() {
 
-        await testTabbingThroughShadowDOMWithTabIndexes();
-        await testTabbingThroughSimpleShadowDOM();
-        await testTabbingThroughNestedShadowDOM();
-        await testTabbingThroughDisplayContentsHost();
-        await testTabbingThroughLightDOMShadowDOMLightDOM();
-        await testFocusableHost();
-        await testShiftTabbingThroughFocusableHost();
-        await testTabbingThroughNestedSlot();
-        await testTabbingThroughSlotInLightDOM();
-        await testTabbingThroughFocusableSlotInLightDOM();
-        await testTabbingThroughScrollableShadowDOM();
-        await testTabbingThroughScrollableShadowHost();
-        await testDeeplyNestedShadowTree();
-        await testBackwardsTabbingWithSlotsWithoutFocusableContent();
+        testTabbingThroughShadowDOMWithTabIndexes();
+        testTabbingThroughSimpleShadowDOM();
+        testTabbingThroughNestedShadowDOM();
+        testTabbingThroughDisplayContentsHost();
+        testTabbingThroughLightDOMShadowDOMLightDOM();
+        testFocusableHost();
+        testShiftTabbingThroughFocusableHost();
+        testTabbingThroughNestedSlot();
+        testTabbingThroughSlotInLightDOM();
+        testTabbingThroughFocusableSlotInLightDOM();
+        testTabbingThroughScrollableShadowDOM();
+        testTabbingThroughScrollableShadowHost();
+        testDeeplyNestedShadowTree();
+        testBackwardsTabbingWithSlotsWithoutFocusableContent();
 
         opener.didRunTests();
         window.close();

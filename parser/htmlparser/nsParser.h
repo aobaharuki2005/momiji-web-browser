@@ -52,7 +52,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 
-class nsExpatDriver;
+class nsIDTD;
 class nsIRunnable;
 
 #ifdef _MSC_VER
@@ -223,11 +223,6 @@ class nsParser final : public nsIParser,
   virtual bool IsScriptCreated() override;
 
   /**
-   * Always false.
-   */
-  virtual bool IsAboutBlankMode() override;
-
-  /**
    * This is called when the final chunk has been
    * passed to the parser and the content sink has
    * interrupted token processing. It schedules
@@ -244,6 +239,8 @@ class nsParser final : public nsIParser,
   void HandleParserContinueEvent(class nsParserContinueEvent*);
 
   void Reset() {
+    MOZ_ASSERT(!mIsAboutBlank,
+               "Only the XML fragment parsing case is supposed to call this.");
     Cleanup();
     mUnusedInput.Truncate();
     Initialize();
@@ -296,9 +293,7 @@ class nsParser final : public nsIParser,
   //*********************************************
 
   mozilla::UniquePtr<CParserContext> mParserContext;
-  // mExpatDriver probably should be UniquePtr, but not changing
-  // for now due to cycle collection.
-  RefPtr<nsExpatDriver> mExpatDriver;
+  nsCOMPtr<nsIDTD> mDTD;
   nsCOMPtr<nsIContentSink> mSink;
   nsIRunnable* mContinueEvent;  // weak ref
 
@@ -316,6 +311,7 @@ class nsParser final : public nsIParser,
 
   bool mProcessingNetworkData;
   bool mOnStopPending;
+  bool mIsAboutBlank;
 };
 
 #endif

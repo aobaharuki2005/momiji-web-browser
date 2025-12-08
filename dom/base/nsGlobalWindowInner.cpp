@@ -1838,11 +1838,6 @@ void nsGlobalWindowInner::InitDocumentDependentState(JSContext* aCx) {
 
   if (!mWindowGlobalChild) {
     mWindowGlobalChild = WindowGlobalChild::Create(this);
-  } else {
-    // If the window global existed before the window, it must've come from the
-    // AboutBlankInitializer
-    MOZ_ASSERT(NS_IsAboutBlankAllowQueryAndFragment(GetDocumentURI()),
-               "AboutBlankInitializer should only be used with about:blank");
   }
   MOZ_ASSERT(!GetWindowContext()->HasBeenUserGestureActivated(),
              "WindowContext should always not have user gesture activation at "
@@ -1917,7 +1912,7 @@ nsresult nsGlobalWindowInner::EnsureClientSource() {
 
   // Try to get the reserved client from the LoadInfo.  A Client is
   // reserved at the start of the channel load if there is not an
-  // initial uncommitted about:blank whose window will be reused. It is also
+  // initial about:blank document that will be reused.  It is also
   // created if the channel load encounters a cross-origin redirect.
   if (loadInfo) {
     UniquePtr<ClientSource> reservedClient =

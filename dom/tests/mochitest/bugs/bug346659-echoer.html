@@ -1,5 +1,4 @@
 <script>
-  const testNum = decodeURIComponent(window.location.search.substring(1));
-  (window.opener || window.parent).postMessage(testNum + " - " + window.x, "*");
+  window.opener.postMessage("1 - " + window.x, "http://mochi.test:8888");
   window.close();
 </script>

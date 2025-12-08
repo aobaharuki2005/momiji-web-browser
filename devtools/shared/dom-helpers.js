@@ -38,15 +38,10 @@ exports.DOMHelpers = {
         Services.tm.dispatchToMainThread(callback);
       }
     };
-    // The initial document is special in that, while uncommitted, its readyState
-    // will already be "complete" even though the document is still loading.
-    // It is either transient and will be replaced by a different document,
-    // or it will be committed to and a load event will be fired for it.
     if (
       (win.document.readyState == "complete" ||
         win.document.readyState == "interactive") &&
-      win.location.href == targetURL &&
-      !win.document.isUncommittedInitialDocument
+      win.location.href == targetURL
     ) {
       Services.tm.dispatchToMainThread(callback);
     } else {

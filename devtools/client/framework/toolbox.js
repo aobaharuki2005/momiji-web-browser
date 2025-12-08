@@ -2906,8 +2906,7 @@ Toolbox.prototype = {
       // on the DOM node every time because this won't work
       // if the (xul chrome) iframe is loaded in a content docshell.
       if (iframe.contentWindow) {
-        const loadingUrl = definition.url || "about:blank";
-        DOMHelpers.onceDOMReady(iframe.contentWindow, onLoad, loadingUrl);
+        DOMHelpers.onceDOMReady(iframe.contentWindow, onLoad);
       } else {
         const callback = () => {
           iframe.removeEventListener("DOMContentLoaded", callback);

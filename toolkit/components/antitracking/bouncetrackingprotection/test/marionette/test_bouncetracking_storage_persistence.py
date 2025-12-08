@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette_driver import Wait
 from marionette_harness import MarionetteTestCase
 
 # Tests the persistence of the bounce tracking protection storage across
@@ -49,23 +48,14 @@ class BounceTrackingStoragePersistenceTestCase(MarionetteTestCase):
 
     def test_state_after_restart(self):
         self.marionette.restart(clean=False, in_app=True)
-
-        def get_candidates(_):
-            return self.marionette.execute_script(
-                """
-                const bounceTrackingProtection = Cc["@mozilla.org/bounce-tracking-protection;1"].getService(
-                    Ci.nsIBounceTrackingProtection
+        bounceTrackerCandidates = self.marionette.execute_script(
+            """
+                let bounceTrackingProtection = Cc["@mozilla.org/bounce-tracking-protection;1"].getService(
+                Ci.nsIBounceTrackingProtection
                 );
-                return bounceTrackingProtection.testGetBounceTrackerCandidateHosts({})
-                    .map(entry => entry.siteHost)
-                    .sort();
-                """
-            )
-
-        bounceTrackerCandidates = Wait(self.marionette).until(
-            get_candidates, message="Wait for persistent state to be restored"
+                return bounceTrackingProtection.testGetBounceTrackerCandidateHosts({}).map(entry => entry.siteHost).sort();
+            """,
         )
-
         self.assertEqual(
             len(bounceTrackerCandidates),
             2,

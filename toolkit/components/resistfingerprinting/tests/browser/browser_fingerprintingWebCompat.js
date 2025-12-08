@@ -307,11 +307,7 @@ async function openAndSetupTestPageForPopup() {
           let win;
           let loading = new content.Promise(resolve => {
             win = content.open(src);
-            if (src == "about:blank") {
-              resolve();
-            } else {
-              win.onload = resolve;
-            }
+            win.onload = resolve;
           });
           await loading;
 

@@ -1094,10 +1094,9 @@ bool DocInfo::IsTopLevelOpaqueAboutBlank() const {
         bool isFinalAboutBlankDoc =
             mThis.URL().Scheme() == nsGkAtoms::about &&
             mThis.URL().Spec().EqualsLiteral("about:blank") &&
-            // Exclude uncommitted initial about:blank to avoid matching
-            // about:blank of pending non-blank loads in the parent process,
-            // see bug 1901894.
-            !aWin->GetDoc()->IsUncommittedInitialDocument();
+            // Exclude initial about:blank to avoid matching initial about:blank
+            // of pending loads in the parent process, see bug 1901894.
+            !aWin->GetDoc()->IsInitialDocument();
 
         // Principal() is expected to never be nullptr given a Window.
         MOZ_ASSERT(mThis.Principal());

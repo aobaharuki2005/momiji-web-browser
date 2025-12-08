@@ -21,6 +21,7 @@ class nsIChannel;
 class nsIContent;
 class nsIFragmentContentSink;
 class nsIFrame;
+class nsIHTMLContentSink;
 class nsIURI;
 class nsListControlFrame;
 class nsNodeInfoManager;
@@ -173,5 +174,14 @@ class nsTableCellFrame;
 nsTableCellFrame* NS_NewTableCellFrame(mozilla::PresShell* aPresShell,
                                        mozilla::ComputedStyle* aStyle,
                                        nsTableFrame* aTableFrame);
+
+nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
+                               mozilla::dom::Document* aDoc, nsIURI* aURL,
+                               nsISupports* aContainer,  // e.g. docshell
+                               nsIChannel* aChannel);
+nsresult NS_NewHTMLFragmentContentSink(
+    nsIFragmentContentSink** aInstancePtrResult);
+nsresult NS_NewHTMLFragmentContentSink2(
+    nsIFragmentContentSink** aInstancePtrResult);
 
 #endif /* nsHTMLParts_h___ */

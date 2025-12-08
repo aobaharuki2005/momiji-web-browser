@@ -1,8 +1,5 @@
 add_task(async function test_bug_1572798() {
   let tab = BrowserTestUtils.addTab(window.gBrowser, "about:blank");
-  await BrowserTestUtils.browserLoaded(tab.linkedBrowser, {
-    wantLoad: "about:blank",
-  });
   BrowserTestUtils.startLoadingURIString(
     tab.linkedBrowser,
     "https://example.com/browser/toolkit/content/tests/browser/file_document_open_audio.html"

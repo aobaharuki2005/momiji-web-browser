@@ -24,8 +24,12 @@ window.javascriptURLXhr = function() {
 };
 
 promise_test(async t => {
-  assert_true(iframeLoaded, "iframeLoaded", "Initial iframe load occured synchronously");
+  iframeLoaded = false;
   javascriptUrlRan = false;
+
+  await new Promise(resolve => {
+    window.addEventListener("load", resolve, { once: true });
+  });
 
   let scriptExecutePromise = new Promise(resolve => {
     document.addEventListener("scriptExecuted", function() {
@@ -33,6 +37,7 @@ promise_test(async t => {
     }, { once: true });
   });
 
+  assert_true(iframeLoaded, "iframeLoaded");
   const iframe = document.querySelector('iframe');
 
   // Load image on iframe.

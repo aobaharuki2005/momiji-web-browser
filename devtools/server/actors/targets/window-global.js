@@ -1176,7 +1176,7 @@ class WindowGlobalTargetActor extends BaseTargetActor {
         docShell.QueryInterface(Ci.nsIWebNavigation);
 
         // don't include transient about:blank documents
-        if (docShell.document.isUncommittedInitialDocument) {
+        if (docShell.document.isInitialDocument) {
           return false;
         }
 

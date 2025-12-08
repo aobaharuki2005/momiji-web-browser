@@ -9,9 +9,11 @@
     SimpleTest.waitForExplicitFinish();
     function runTest() {
       var win = window.open("about:blank");
-      is(win.navigator.maxTouchPoints, 5, "Should have max touch points");
-      win.close();
-      SimpleTest.finish();
+      win.onload = function() {
+        is(win.navigator.maxTouchPoints, 5, "Should have max touch points");
+        win.close();
+        SimpleTest.finish();
+      }
     }
     function init() {
       SpecialPowers.pushPrefEnv(

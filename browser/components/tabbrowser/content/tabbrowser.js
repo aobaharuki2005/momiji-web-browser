@@ -2591,7 +2591,6 @@
         // of those notifications can cause code to run that inspects our
         // state, so it is important that the tab element is fully
         // initialized by this point.
-        // AppendChild will cause a synchronous about:blank load.
         this.tabpanels.appendChild(panel);
       }
 
@@ -3121,7 +3120,7 @@
           fromExternal,
           forceAllowDataURI,
           isCaptivePortalTab,
-          skipLoad: skipLoad || uriIsAboutBlank,
+          skipLoad,
           referrerInfo,
           charset,
           postData,
@@ -3732,16 +3731,6 @@
       return t;
     }
 
-    /**
-     *
-     * @param {object} options
-     * @param {nsIPrincipal} [options.originPrincipal]
-     *   If uriString is given, uri might inherit principals, and no preloaded browser is used,
-     *   this is the origin principal to be inherited by the initial about:blank.
-     * @param {nsIPrincipal} [options.originStoragePrincipal]
-     *   If uriString is given, uri might inherit principals, and no preloaded browser is used,
-     *   this is the origin storage principal to be inherited by the initial about:blank.
-     */
     _createBrowserForTab(
       tab,
       {
@@ -3873,28 +3862,21 @@
         textDirectiveUserActivation,
       }
     ) {
-      const shouldInheritSecurityContext = (() => {
-        if (
-          !usingPreloadedContent &&
-          originPrincipal &&
-          originStoragePrincipal &&
-          uriString
-        ) {
-          let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
-          // Unless we know for sure we're not inheriting principals,
-          // force the about:blank viewer to have the right principal:
-          if (!uri || doGetProtocolFlags(uri) & URI_INHERITS_SECURITY_CONTEXT) {
-            return true;
-          }
+      if (
+        !usingPreloadedContent &&
+        originPrincipal &&
+        originStoragePrincipal &&
+        uriString
+      ) {
+        let { URI_INHERITS_SECURITY_CONTEXT } = Ci.nsIProtocolHandler;
+        // Unless we know for sure we're not inheriting principals,
+        // force the about:blank viewer to have the right principal:
+        if (!uri || doGetProtocolFlags(uri) & URI_INHERITS_SECURITY_CONTEXT) {
+          browser.createAboutBlankDocumentViewer(
+            originPrincipal,
+            originStoragePrincipal
+          );
         }
-        return false;
-      })();
-
-      if (shouldInheritSecurityContext) {
-        browser.createAboutBlankDocumentViewer(
-          originPrincipal,
-          originStoragePrincipal
-        );
       }
 
       // If we didn't swap docShells with a preloaded browser
@@ -3920,8 +3902,6 @@
         } else if (!triggeringPrincipal.isSystemPrincipal) {
           // XXX this code must be reviewed and changed when bug 1616353
           // lands.
-          // The purpose of LOAD_FLAGS_FIRST_LOAD is to close a new
-          // tab if it turns out to be a download.
           loadFlags |= LOAD_FLAGS_FIRST_LOAD;
         }
         if (!allowInheritPrincipal) {
@@ -6929,10 +6909,15 @@
         // new tab must have the same usercontextid as the old one
         params.userContextId = aTab.getAttribute("usercontextid");
       }
-      params.skipLoad = true;
       let newTab = this.addWebTab("about:blank", params);
+      let newBrowser = this.getBrowserForTab(newTab);
 
       aTab.container.tabDragAndDrop.finishAnimateTabMove();
+
+      if (!createLazyBrowser) {
+        // Stop the about:blank load.
+        newBrowser.stop();
+      }
 
       if (!this.swapBrowsersAndCloseOther(newTab, aTab)) {
         // Swapping wasn't permitted. Bail out.

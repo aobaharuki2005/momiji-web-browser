@@ -46,6 +46,7 @@
 #include "nsIChannel.h"
 #include "nsIContentSink.h"
 #include "nsID.h"
+#include "nsIDTD.h"
 #include "nsIDocShell.h"
 #include "nsIHttpChannel.h"
 #include "nsIInputStream.h"

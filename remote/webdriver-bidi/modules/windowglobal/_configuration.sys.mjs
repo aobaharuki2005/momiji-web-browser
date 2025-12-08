@@ -263,23 +263,6 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
     return null;
   }
 
-  async #onConfigurationComplete(window) {
-    // parser blocking doesn't work for initial about:blank, so ensure
-    // browsing_context.create waits for configuration to complete
-    if (window.document.isInitialDocument) {
-      await this.messageHandler.forwardCommand({
-        moduleName: "browsingContext",
-        commandName: "_onConfigurationComplete",
-        destination: {
-          type: lazy.RootMessageHandler.type,
-        },
-        params: {
-          navigable: this.messageHandler.context,
-        },
-      });
-    }
-  }
-
   #updatePreloadScripts(sessionData) {
     this.#preloadScripts.clear();
 
@@ -456,6 +439,23 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
           break;
         }
       }
+    }
+  }
+
+  async #onConfigurationComplete(window) {
+    // parser blocking doesn't work for initial about:blank, so ensure
+    // browsing_context.create waits for configuration to complete
+    if (window.location.href.startsWith("about:blank")) {
+      await this.messageHandler.forwardCommand({
+        moduleName: "browsingContext",
+        commandName: "_onConfigurationComplete",
+        destination: {
+          type: lazy.RootMessageHandler.type,
+        },
+        params: {
+          navigable: this.messageHandler.context,
+        },
+      });
     }
   }
 }

@@ -489,10 +489,7 @@ async function recordFrames(testPromise, win = window) {
   win.addEventListener("MozAfterPaint", afterPaintListener);
 
   // If the test is using an existing window, capture a frame immediately.
-  if (
-    win.document.readyState == "complete" &&
-    win.location.href != "about:blank"
-  ) {
+  if (win.document.readyState == "complete") {
     afterPaintListener();
   }
 

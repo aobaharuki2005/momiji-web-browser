@@ -7,6 +7,7 @@
 #include "nsAtom.h"
 #include "CParserContext.h"
 #include "prenv.h"
+#include "nsIHTMLContentSink.h"
 #include "nsMimeTypes.h"
 
 CParserContext::CParserContext(nsIURI* aURI, eParserCommands aCommand)
@@ -14,6 +15,7 @@ CParserContext::CParserContext(nsIURI* aURI, eParserCommands aCommand)
       mDTDMode(eDTDMode_autodetect),
       mDocType(eUnknown),
       mStreamListenerState(eNone),
+      mContextType(eCTURL),
       mParserCommand(aCommand),
       mMultipart(true),
       mCopyUnused(false) {
@@ -27,6 +29,7 @@ CParserContext::CParserContext(const nsAString& aBuffer,
       mDTDMode(eDTDMode_full_standards),
       mDocType(eXML),
       mStreamListenerState(aLastBuffer ? eOnStop : eOnDataAvail),
+      mContextType(eCTString),
       mParserCommand(aCommand),
       mMultipart(!aLastBuffer),
       mCopyUnused(aLastBuffer) {

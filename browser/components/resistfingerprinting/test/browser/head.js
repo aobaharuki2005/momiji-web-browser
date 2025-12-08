@@ -352,7 +352,12 @@ async function calcPopUpWindowChromeUISize() {
     tab.linkedBrowser,
     [],
     async function () {
-      let win = content.open("about:blank", "", "width=1000,height=1000");
+      let win;
+
+      await new Promise(resolve => {
+        win = content.open("about:blank", "", "width=1000,height=1000");
+        win.onload = () => resolve();
+      });
 
       let res = {
         chromeWidth: win.outerWidth - win.innerWidth,
