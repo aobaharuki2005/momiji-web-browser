@@ -1250,7 +1250,8 @@ static bool WasmDiscardCheck(Instance* instance, I byteOffset, I byteLen,
                              size_t memLen, bool shared) {
   JSContext* cx = instance->cx();
 
-  if (byteOffset % wasm::PageSize != 0 || byteLen % wasm::PageSize != 0) {
+  if (byteOffset % wasm::StandardPageSize != 0 ||
+      byteLen % wasm::StandardPageSize != 0) {
     ReportTrapError(cx, JSMSG_WASM_UNALIGNED_ACCESS);
     return false;
   }

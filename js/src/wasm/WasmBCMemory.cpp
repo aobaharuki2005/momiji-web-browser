@@ -147,7 +147,7 @@ RegI32 BaseCompiler::popConstMemoryAccess<RegI32>(MemoryAccessDesc* access,
   // Validation ensures that the offset is in 32-bit range, and the calculation
   // of the limit cannot overflow due to our choice of HugeOffsetGuardLimit.
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
-  static_assert(MaxMemory32PagesValidation * PageSize <=
+  static_assert(MaxMemory32PagesValidation * StandardPageSize <=
                 UINT64_MAX - HugeOffsetGuardLimit);
 #endif
   uint64_t ea = uint64_t(addr) + uint64_t(access->offset32());

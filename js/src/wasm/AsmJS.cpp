@@ -116,7 +116,7 @@ enum class MemoryUsage { None = false, Unshared = 1, Shared = 2 };
 
 // The asm.js valid heap lengths are precisely the WASM valid heap lengths for
 // ARM greater or equal to MinHeapLength
-static const size_t MinHeapLength = PageSize;
+static const size_t MinHeapLength = StandardPageSize;
 // An asm.js heap can in principle be up to INT32_MAX bytes but requirements
 // on the format restrict it further to the largest pseudo-ARM-immediate.
 // See IsValidAsmJSHeapLength().
@@ -134,7 +134,7 @@ static const uint64_t HighestValidARMImmediate = 0xff000000;
 static bool IsValidARMImmediate(uint32_t i) {
   bool valid = (IsPowerOfTwo(i) || (i & 0x00ffffff) == 0);
 
-  MOZ_ASSERT_IF(valid, i % PageSize == 0);
+  MOZ_ASSERT_IF(valid, i % StandardPageSize == 0);
 
   return valid;
 }
@@ -1112,7 +1112,9 @@ class MOZ_STACK_CLASS ModuleValidatorShared {
     MemoryUsage usage;
     uint64_t minLength;
 
-    uint64_t minPages() const { return DivideRoundingUp(minLength, PageSize); }
+    uint64_t minPages() const {
+      return DivideRoundingUp(minLength, StandardPageSize);
+    }
 
     Memory() = default;
   };

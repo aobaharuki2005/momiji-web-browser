@@ -251,7 +251,7 @@ bool wasm::HasPlatformSupport() {
     return false;
   }
 
-  if (gc::SystemPageSize() > wasm::PageSize) {
+  if (gc::SystemPageSize() > wasm::StandardPageSize) {
     return false;
   }
 
