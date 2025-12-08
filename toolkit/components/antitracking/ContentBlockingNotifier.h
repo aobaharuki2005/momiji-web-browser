@@ -9,6 +9,7 @@
 
 #include "nsStringFwd.h"
 #include "mozilla/Maybe.h"
+#include "nsRFPService.h"
 
 #define ANTITRACKING_CONSOLE_CATEGORY "Content Blocking"_ns
 
@@ -85,8 +86,8 @@ class ContentBlockingNotifier final {
       const nsACString& aTrackingOrigin,
       const ::mozilla::Maybe<StorageAccessPermissionGrantedReason>& aReason =
           Nothing(),
-      const Maybe<CanvasFingerprinter>& aCanvasFingerprinter = Nothing(),
-      const Maybe<bool> aCanvasFingerprinterKnownText = Nothing());
+      const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent =
+          Nothing());
 
   static void ReportUnblockingToConsole(
       dom::BrowsingContext* aBrowsingContext, const nsAString& aTrackingOrigin,
