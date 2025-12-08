@@ -69,6 +69,8 @@ struct JSContext;
 
 class nsIChannel;
 
+class nsICanvasRenderingContextInternal;
+
 namespace mozilla {
 class WidgetKeyboardEvent;
 class OriginAttributes;
@@ -234,15 +236,93 @@ enum CanvasFingerprinterAlias {
   eLastAlias = eVariant8
 };
 
+enum CanvasExtractionAPI : uint8_t {
+  ToDataURL = 0,
+  ToBlob = 1,
+  GetImageData = 2,
+  ReadPixels = 3
+};
+
+enum CanvasUsageSource : uint64_t {
+  Unknown = 0,
+  Impossible =
+      1llu << 0,  // This represents API calls that I don't believe are possible
+  MainThread_Canvas_ImageBitmap_toDataURL = 1llu << 1,
+  MainThread_Canvas_ImageBitmap_toBlob = 1llu << 2,
+  MainThread_Canvas_ImageBitmap_getImageData = 1llu << 3,
+
+  MainThread_Canvas_Canvas2D_toDataURL = 1llu << 4,
+  MainThread_Canvas_Canvas2D_toBlob = 1llu << 5,
+  MainThread_Canvas_Canvas2D_getImageData = 1llu << 6,
+
+  MainThread_Canvas_WebGL_toDataURL = 1llu << 7,
+  MainThread_Canvas_WebGL_toBlob = 1llu << 8,
+  MainThread_Canvas_WebGL_getImageData = 1llu << 9,
+  MainThread_Canvas_WebGL_readPixels = 1llu << 10,
+
+  MainThread_Canvas_WebGPU_toDataURL = 1llu << 11,
+  MainThread_Canvas_WebGPU_toBlob = 1llu << 12,
+  MainThread_Canvas_WebGPU_getImageData = 1llu << 13,
+
+  MainThread_OffscreenCanvas_ImageBitmap_toDataURL = 1llu << 14,
+  MainThread_OffscreenCanvas_ImageBitmap_toBlob = 1llu << 15,
+  MainThread_OffscreenCanvas_ImageBitmap_getImageData = 1llu << 16,
+
+  MainThread_OffscreenCanvas_Canvas2D_toDataURL = 1llu << 17,
+  MainThread_OffscreenCanvas_Canvas2D_toBlob = 1llu << 18,
+  MainThread_OffscreenCanvas_Canvas2D_getImageData = 1llu << 19,
+
+  MainThread_OffscreenCanvas_WebGL_toDataURL = 1llu << 20,
+  MainThread_OffscreenCanvas_WebGL_toBlob = 1llu << 21,
+  MainThread_OffscreenCanvas_WebGL_getImageData = 1llu << 22,
+  MainThread_OffscreenCanvas_WebGL_readPixels = 1llu << 23,
+
+  MainThread_OffscreenCanvas_WebGPU_toDataURL = 1llu << 24,
+  MainThread_OffscreenCanvas_WebGPU_toBlob = 1llu << 25,
+  MainThread_OffscreenCanvas_WebGPU_getImageData = 1llu << 26,
+
+  Worker_OffscreenCanvas_ImageBitmap_toBlob = 1llu << 27,
+  Worker_OffscreenCanvas_ImageBitmap_getImageData = 1llu << 28,
+
+  Worker_OffscreenCanvas_Canvas2D_toBlob = 1llu << 29,
+  Worker_OffscreenCanvas_Canvas2D_getImageData = 1llu << 30,
+
+  Worker_OffscreenCanvasCanvas2D_Canvas2D_toBlob = 1llu << 31,
+  Worker_OffscreenCanvasCanvas2D_Canvas2D_getImageData = 1llu << 32,
+
+  Worker_OffscreenCanvas_WebGL_toBlob = 1llu << 33,
+  Worker_OffscreenCanvas_WebGL_getImageData = 1llu << 34,
+  Worker_OffscreenCanvas_WebGL_readPixels = 1llu << 35,
+
+  Worker_OffscreenCanvas_WebGPU_toBlob = 1llu << 36,
+  Worker_OffscreenCanvas_WebGPU_getImageData = 1llu << 37,
+
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CanvasUsageSource);
+nsCString CanvasUsageSourceToString(CanvasUsageSource aSource);
+
 class CanvasUsage {
  public:
   CSSIntSize mSize;
   dom::CanvasContextType mType;
+  CanvasUsageSource mUsageSource;
   CanvasFeatureUsage mFeatureUsage;
 
   CanvasUsage(CSSIntSize aSize, dom::CanvasContextType aType,
-              CanvasFeatureUsage aFeatureUsage)
-      : mSize(aSize), mType(aType), mFeatureUsage(aFeatureUsage) {}
+              CanvasUsageSource aUsageSource, CanvasFeatureUsage aFeatureUsage)
+      : mSize(aSize),
+        mType(aType),
+        mUsageSource(aUsageSource),
+        mFeatureUsage(aFeatureUsage) {}
+
+  static CanvasUsage CreateUsage(
+      bool aIsOffscreen, dom::CanvasContextType aContextType,
+      CanvasExtractionAPI aApi, CSSIntSize aSize,
+      const nsICanvasRenderingContextInternal* aContext);
+
+  static inline CanvasUsageSource GetCanvasUsageSource(
+      bool isOffscreen, dom::CanvasContextType contextType,
+      CanvasExtractionAPI api);
 };
 struct CanvasFingerprintingEvent {
   // The identity or alias of the entity doing the fingerprinting.
@@ -251,21 +331,24 @@ struct CanvasFingerprintingEvent {
   //   non-zero indicates some known fingerprinting text was used, making the
   //   event highly likely to be fingerprinting.
   uint32_t knownTextBitmask;
-  // The API source of the fingerprinting, e.g. <canvas>.toDataURL
-  uint8_t source;
+  // A bitmap of all the sources that were used to extract canvas data
+  uint64_t sourcesBitmask;
 
   CanvasFingerprintingEvent()
       : alias(CanvasFingerprinterAlias::eNoneIdentified),
         knownTextBitmask(0),
-        source(0) {}
+        sourcesBitmask(0) {}
 
   CanvasFingerprintingEvent(CanvasFingerprinterAlias aAlias,
-                            uint32_t aKnownTextBitmask, uint8_t aSource)
-      : alias(aAlias), knownTextBitmask(aKnownTextBitmask), source(aSource) {}
+                            uint32_t aKnownTextBitmask,
+                            uint64_t aSourcesBitmask)
+      : alias(aAlias),
+        knownTextBitmask(aKnownTextBitmask),
+        sourcesBitmask(aSourcesBitmask) {}
 
   bool operator==(const CanvasFingerprintingEvent& other) const {
     return alias == other.alias && knownTextBitmask == other.knownTextBitmask &&
-           source == other.source;
+           sourcesBitmask == other.sourcesBitmask;
   }
 };
 
@@ -466,9 +549,11 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   static void MaybeReportCanvasFingerprinter(nsTArray<CanvasUsage>& aUses,
                                              nsIChannel* aChannel,
-                                             nsACString& aOriginNoSuffix);
+                                             const nsACString& aURI,
+                                             const nsACString& aOriginNoSuffix);
 
   static void MaybeReportFontFingerprinter(nsIChannel* aChannel,
+                                           const nsACString& aURI,
                                            const nsACString& aOriginNoSuffix);
 
   // --------------------------------------------------------------------------
