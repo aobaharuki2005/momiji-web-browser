@@ -1940,4 +1940,13 @@ function IteratorChunks(chunkSize) {
 function IteratorWindows(windowSize, undersized) {
   return false;
 }
+
+/**
+ *  Iterator.prototype.join ( separator )
+ *
+ *  https://tc39.es/proposal-iterator-join/#sec-iterator.prototype.join
+ */
+function IteratorJoin(separator) {
+	return false;
+}
 #endif

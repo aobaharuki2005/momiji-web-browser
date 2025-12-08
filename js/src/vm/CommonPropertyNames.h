@@ -284,6 +284,7 @@
   MACRO_(IteratorClose, "IteratorClose")                                       \
   MACRO_(Iterator_Helper_, "Iterator Helper")                                  \
   MACRO_(IteratorNext, "IteratorNext")                                         \
+  MACRO_(join, "join")                                                         \
   MACRO2(js, "js")                                                             \
   MACRO_(jsTag, "JSTag")                                                       \
   MACRO_(jsStringModule, "js-string")                                          \

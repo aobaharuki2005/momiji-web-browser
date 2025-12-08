@@ -2251,6 +2251,11 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
       return true;
     }
   }
+  if (key == JSProto_Iterator && !JS::Prefs::experimental_iterator_join()) {
+    if (id == NameToId(cx->names().join)) {
+      return true;
+    }
+  }
 #endif
 
   if (key == JSProto_Function &&
