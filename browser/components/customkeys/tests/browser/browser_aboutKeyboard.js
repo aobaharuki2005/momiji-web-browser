@@ -242,6 +242,13 @@ addAboutKbTask(async function testChange(tab) {
     1,
     "Correct telemetry for change action"
   );
+  info(`Pressing ${consts.unusedKey}`);
+  EventUtils.synthesizeKey(consts.unusedKey, {}, window);
+  await SpecialPowers.spawn(tab, [consts], async _consts => {
+    await content.selected;
+    is(content.input.value, "Invalid", "Input shows invalid");
+    content.selected = ContentTaskUtils.waitForEvent(content.input, "select");
+  });
   info(`Pressing ${consts.unusedModifiersDisplay}`);
   EventUtils.synthesizeKey(...consts.unusedModifiersArgs, window);
   await SpecialPowers.spawn(tab, [consts], async _consts => {
@@ -251,6 +258,13 @@ addAboutKbTask(async function testChange(tab) {
       _consts.unusedModifiersDisplay,
       "Input shows modifiers as they're pressed"
     );
+    content.selected = ContentTaskUtils.waitForEvent(content.input, "select");
+  });
+  info(`Pressing Shift+${consts.unusedKey}`);
+  EventUtils.synthesizeKey(consts.unusedKey, { shiftKey: true }, window);
+  await SpecialPowers.spawn(tab, [consts], async _consts => {
+    await content.selected;
+    is(content.input.value, "Invalid", "Input shows invalid");
     info(`Pressing ${_consts.unusedDisplay}`);
     content.focused = ContentTaskUtils.waitForEvent(content.change, "focus");
   });
