@@ -188,6 +188,7 @@ void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
     // in future if we get better at handling things like `lang=zh-Hant`, not
     // just resolving based on the Unicode text.
     case Script::TRADITIONAL_HAN:
+    case Script::TRADITIONAL_HAN_WITH_LATIN:
       aFontList.AppendElement("Songti TC");
       if (aCh > 0x10000) {
         // macOS installations with MS Office may have these -ExtB fonts
@@ -656,6 +657,10 @@ void gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, Script aRunScript,
     case Script::SUNUWAR:
     case Script::TODHRI:
     case Script::TULU_TIGALARI:
+    case Script::BERIA_ERFE:
+    case Script::SIDETIC:
+    case Script::TAI_YO:
+    case Script::TOLONG_SIKI:
       break;
   }
 

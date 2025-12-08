@@ -158,7 +158,8 @@ nsHtml5TreeOpExecutor::WillParse() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsHtml5TreeOpExecutor::WillBuildModel() {
+NS_IMETHODIMP
+nsHtml5TreeOpExecutor::WillBuildModel() {
   mDocument->AddObserver(this);
   WillBuildModelImpl();
   GetDocument()->BeginLoad();
@@ -186,9 +187,9 @@ nsHtml5TreeOpExecutor::DidBuildModel(bool aTerminated) {
     }
   });
 
-  // This comes from nsXMLContentSink and nsHTMLContentSink
-  // If this parser has been marked as broken, treat the end of parse as
-  // forced termination.
+  // This comes from nsXMLContentSink and the old (now removed)
+  // nsHTMLContentSink. If this parser has been marked as broken, treat the end
+  // of parse as forced termination.
   DidBuildModelImpl(aTerminated || NS_FAILED(IsBroken()));
 
   bool destroying = true;

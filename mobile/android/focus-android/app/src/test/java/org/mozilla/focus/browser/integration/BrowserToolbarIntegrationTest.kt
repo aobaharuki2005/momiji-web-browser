@@ -9,14 +9,12 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
-import mozilla.components.browser.state.state.SecurityInfoState
+import mozilla.components.browser.state.state.SecurityInfo
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.browser.toolbar.display.DisplayToolbar.Indicators
-import mozilla.components.support.test.ext.joinBlocking
-import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
@@ -202,27 +200,25 @@ class BrowserToolbarIntegrationTest {
         store.dispatch(
             ContentAction.UpdateSecurityInfoAction(
                 selectedTab.id,
-                SecurityInfoState(
-                    secure = secure,
+                SecurityInfo.from(
+                    isSecure = secure,
                     host = "mozilla.org",
                     issuer = "Mozilla",
                 ),
             ),
         )
-
-        store.waitUntilIdle()
     }
 
     private fun updateTabUrl(url: String) {
         store.dispatch(
             ContentAction.UpdateUrlAction(selectedTab.id, url),
-        ).joinBlocking()
+        )
     }
 
     private fun createSecureTab(): TabSessionState {
         val tab = createTab("https://www.mozilla.org", id = "1")
         return tab.copy(
-            content = tab.content.copy(securityInfo = SecurityInfoState(secure = true)),
+            content = tab.content.copy(securityInfo = SecurityInfo.Secure()),
         )
     }
 }

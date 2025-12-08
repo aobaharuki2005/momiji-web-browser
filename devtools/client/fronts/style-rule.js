@@ -109,7 +109,7 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
    * This is used for the selector highlighter, where we need to know what's
    * being highlighted.
    *
-   * @returns {String}
+   * @returns {string}
    */
   get computedSelector() {
     let selector = "";
@@ -201,7 +201,6 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
   }
 }
 
-exports.StyleRuleFront = StyleRuleFront;
 registerFront(StyleRuleFront);
 
 /**
@@ -218,6 +217,7 @@ registerFront(StyleRuleFront);
 class RuleModificationList {
   /**
    * Initialize a RuleModificationList.
+   *
    * @param {StyleRuleFront} rule the associated rule
    */
   constructor(rule) {
@@ -238,14 +238,14 @@ class RuleModificationList {
   /**
    * Add a "set" entry to the modification list.
    *
-   * @param {Number} index index of the property in the rule.
+   * @param {number} index index of the property in the rule.
    *                       This can be -1 in the case where
    *                       the rule does not support setRuleText;
    *                       generally for setting properties
    *                       on an element's style.
-   * @param {String} name the property's name
-   * @param {String} value the property's value
-   * @param {String} priority the property's priority, either the empty
+   * @param {string} name the property's name
+   * @param {string} value the property's value
+   * @param {string} priority the property's priority, either the empty
    *                          string or "important"
    */
   setProperty(index, name, value, priority) {
@@ -255,12 +255,12 @@ class RuleModificationList {
   /**
    * Add a "remove" entry to the modification list.
    *
-   * @param {Number} index index of the property in the rule.
+   * @param {number} index index of the property in the rule.
    *                       This can be -1 in the case where
    *                       the rule does not support setRuleText;
    *                       generally for setting properties
    *                       on an element's style.
-   * @param {String} name the name of the property to remove
+   * @param {string} name the name of the property to remove
    */
   removeProperty(index, name) {
     this.modifications.push({ type: "remove", index, name });
@@ -270,17 +270,17 @@ class RuleModificationList {
    * Rename a property.  This implementation acts like
    * |removeProperty|, because |setRuleText| is not available.
    *
-   * @param {Number} index index of the property in the rule.
+   * @param {number} index index of the property in the rule.
    *                       This can be -1 in the case where
    *                       the rule does not support setRuleText;
    *                       generally for setting properties
    *                       on an element's style.
-   * @param {String} name current name of the property
+   * @param {string} name current name of the property
    *
    * This parameter is also passed, but as it is not used in this
    * implementation, it is omitted.  It is documented here as this
    * code also defined the interface implemented by @see RuleRewriter.
-   * @param {String} newName new name of the property
+   * @param {string} newName new name of the property
    */
   renameProperty(index, name) {
     this.removeProperty(index, name);
@@ -290,13 +290,13 @@ class RuleModificationList {
    * Enable or disable a property.  This implementation acts like
    * a no-op when enabling, because |setRuleText| is not available.
    *
-   * @param {Number} index index of the property in the rule.
+   * @param {number} index index of the property in the rule.
    *                       This can be -1 in the case where
    *                       the rule does not support setRuleText;
    *                       generally for setting properties
    *                       on an element's style.
-   * @param {String} name current name of the property
-   * @param {Boolean} isEnabled true if the property should be enabled;
+   * @param {string} name current name of the property
+   * @param {boolean} isEnabled true if the property should be enabled;
    *                        false if it should be disabled
    */
   setPropertyEnabled(index, name, isEnabled) {
@@ -314,16 +314,16 @@ class RuleModificationList {
    * this code also defined the interface implemented by @see
    * RuleRewriter.
    *
-   * @param {Number} index index of the property in the rule.
+   * @param {number} index index of the property in the rule.
    *                       This can be -1 in the case where
    *                       the rule does not support setRuleText;
    *                       generally for setting properties
    *                       on an element's style.
-   * @param {String} name name of the new property
-   * @param {String} value value of the new property
-   * @param {String} priority priority of the new property; either
+   * @param {string} name name of the new property
+   * @param {string} value value of the new property
+   * @param {string} priority priority of the new property; either
    *                          the empty string or "important"
-   * @param {Boolean} enabled True if the new property should be
+   * @param {boolean} enabled True if the new property should be
    *                          enabled, false if disabled
    */
   createProperty() {

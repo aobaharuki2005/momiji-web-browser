@@ -42,8 +42,6 @@
 #define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"
 
-#include <algorithm>
-
 // 2^23
 #define CAIRO_COORD_MAX (Float(0x7fffff))
 

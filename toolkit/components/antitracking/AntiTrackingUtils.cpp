@@ -1252,7 +1252,7 @@ bool AntiTrackingUtils::IsThirdPartyContext(BrowsingContext* aBrowsingContext) {
     if (!parentDocShell) {
       return true;
     }
-    Document* parentDoc = parentDocShell->GetDocument();
+    Document* parentDoc = parentDocShell->GetExtantDocument();
     if (!parentDoc || parentDoc->GetSandboxFlags() & SANDBOXED_ORIGIN) {
       return true;
     }
@@ -1349,7 +1349,7 @@ void AntiTrackingUtils::UpdateAntiTrackingInfoForChannel(nsIChannel* aChannel) {
   // propagated to non-top level loads via CookieJarSetting.
   nsCOMPtr<nsIURI> uri;
   (void)aChannel->GetURI(getter_AddRefs(uri));
-  net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri, false);
+  net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
 
   // Generate the fingerprinting randomization key for top-level loads. The key
   // will automatically be propagated to sub loads.

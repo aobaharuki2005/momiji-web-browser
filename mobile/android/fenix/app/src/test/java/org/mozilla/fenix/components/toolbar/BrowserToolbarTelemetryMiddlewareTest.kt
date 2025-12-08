@@ -7,7 +7,6 @@ package org.mozilla.fenix.components.toolbar
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent.Source
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -41,109 +40,109 @@ class BrowserToolbarTelemetryMiddlewareTest {
 
     @Test
     fun `WHEN menu button is clicked THEN record telemetry based on addressBar or navbar source`() {
-        buildStore.dispatch(MenuClicked(Source.AddressBar)).joinBlocking()
+        buildStore.dispatch(MenuClicked(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.MenuClicked.action)
 
-        buildStore.dispatch(MenuClicked(Source.NavigationBar)).joinBlocking()
+        buildStore.dispatch(MenuClicked(Source.NavigationBar))
         assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.MenuClicked.action)
     }
 
     @Test
     fun `WHEN tab counter is clicked THEN record telemetry based on addressBar or navbar source`() {
-        buildStore.dispatch(TabCounterClicked(Source.AddressBar)).joinBlocking()
+        buildStore.dispatch(TabCounterClicked(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.TabCounterClicked.action)
 
-        buildStore.dispatch(TabCounterClicked(Source.NavigationBar)).joinBlocking()
+        buildStore.dispatch(TabCounterClicked(Source.NavigationBar))
         assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.TabCounterClicked.action)
     }
 
     @Test
     fun `WHEN tab counter is long clicked THEN record telemetry based on addressBar or navbar source`() {
-        buildStore.dispatch(TabCounterLongClicked(Source.AddressBar)).joinBlocking()
+        buildStore.dispatch(TabCounterLongClicked(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.TabCounterLongClicked.action)
 
-        buildStore.dispatch(TabCounterLongClicked(Source.NavigationBar)).joinBlocking()
+        buildStore.dispatch(TabCounterLongClicked(Source.NavigationBar))
         assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.TabCounterLongClicked.action)
     }
 
     @Test
     fun `WHEN adding a new tab THEN record telemetry based on addressBar or navbar source`() {
-        buildStore.dispatch(AddNewTab(Source.AddressBar)).joinBlocking()
+        buildStore.dispatch(AddNewTab(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.AddNewTab.action)
 
-        buildStore.dispatch(AddNewTab(Source.NavigationBar)).joinBlocking()
+        buildStore.dispatch(AddNewTab(Source.NavigationBar))
         assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.AddNewTab.action)
     }
 
     @Test
     fun `WHEN adding a new private tab THEN record telemetry based on addressBar or navbar source`() {
-        buildStore.dispatch(AddNewPrivateTab(Source.AddressBar)).joinBlocking()
+        buildStore.dispatch(AddNewPrivateTab(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.AddNewPrivateTab.action)
 
-        buildStore.dispatch(AddNewPrivateTab(Source.NavigationBar)).joinBlocking()
+        buildStore.dispatch(AddNewPrivateTab(Source.NavigationBar))
         assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.AddNewPrivateTab.action)
     }
 
     @Test
     fun `WHEN navigating back THEN record addressBar telemetry`() {
-        buildStore.dispatch(NavigateBackClicked).joinBlocking()
+        buildStore.dispatch(NavigateBackClicked)
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.NavigateBackClicked.action)
     }
 
     @Test
     fun `WHEN navigating back is long clicked THEN record addressBar telemetry`() {
-        buildStore.dispatch(NavigateBackLongClicked).joinBlocking()
+        buildStore.dispatch(NavigateBackLongClicked)
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.NavigateBackLongClicked.action)
     }
 
     @Test
     fun `WHEN navigating forward THEN record addressBar telemetry`() {
-        buildStore.dispatch(NavigateForwardClicked).joinBlocking()
+        buildStore.dispatch(NavigateForwardClicked)
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.NavigateForwardClicked.action)
     }
 
     @Test
     fun `WHEN navigating forward is long clicked THEN record addressBar telemetry`() {
-        buildStore.dispatch(NavigateForwardLongClicked).joinBlocking()
+        buildStore.dispatch(NavigateForwardLongClicked)
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.NavigateForwardLongClicked.action)
     }
 
     @Test
     fun `WHEN refreshing the page THEN record addressBar telemetry`() {
-        buildStore.dispatch(RefreshClicked(bypassCache = false)).joinBlocking()
+        buildStore.dispatch(RefreshClicked(bypassCache = false))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.RefreshClicked.action)
     }
 
     @Test
     fun `WHEN refreshing the page is stopped THEN record addressBar telemetry`() {
-        buildStore.dispatch(StopRefreshClicked).joinBlocking()
+        buildStore.dispatch(StopRefreshClicked)
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.StopRefreshClicked.action)
     }
 
     @Test
     fun `WHEN adding a bookmark THEN record telemetry based on addressBar or navbar source`() {
-        buildStore.dispatch(AddBookmarkClicked(Source.AddressBar)).joinBlocking()
+        buildStore.dispatch(AddBookmarkClicked(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.AddBookmarkClicked.action)
 
-        buildStore.dispatch(AddBookmarkClicked(Source.NavigationBar)).joinBlocking()
+        buildStore.dispatch(AddBookmarkClicked(Source.NavigationBar))
         assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.AddBookmarkClicked.action)
     }
 
     @Test
     fun `WHEN navigating to edit a bookmark THEN record telemetry based on addressBar or navbar source`() {
-        buildStore.dispatch(EditBookmarkClicked(Source.AddressBar)).joinBlocking()
+        buildStore.dispatch(EditBookmarkClicked(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.EditBookmarkClicked.action)
 
-        buildStore.dispatch(EditBookmarkClicked(Source.NavigationBar)).joinBlocking()
+        buildStore.dispatch(EditBookmarkClicked(Source.NavigationBar))
         assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.EditBookmarkClicked.action)
     }
 
     @Test
     fun `WHEN sharing a page THEN record telemetry based on addressBar or navbar source`() {
-        buildStore.dispatch(ShareClicked(Source.AddressBar)).joinBlocking()
+        buildStore.dispatch(ShareClicked(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.ShareClicked.action)
 
-        buildStore.dispatch(ShareClicked(Source.NavigationBar)).joinBlocking()
+        buildStore.dispatch(ShareClicked(Source.NavigationBar))
         assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.ShareClicked.action)
     }
 

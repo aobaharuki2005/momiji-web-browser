@@ -3893,7 +3893,7 @@
   <!-- Message displayed when the search field in the Settings Search screen is empty -->
   <string name="settings_search_empty_query_placeholder">Nisuna ricerca recente</string>
   <!-- Message when error happens with Settings Search -->
-  <string name="settings_search_error_message">Un sbagliu hè accadutu</string>
+  <string name="settings_search_error_message" tools:ignore="UnusedResources" moz:removedIn="147">Un sbagliu hè accadutu</string>
   <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
   <string name="settings_search_clear_recent_searches_message">Tuttu squassà</string>
   <!-- Section header for recent search results -->

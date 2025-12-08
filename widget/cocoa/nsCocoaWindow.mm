@@ -192,8 +192,7 @@ static void RollUpPopups(nsIRollupListener::AllowAnimations aAllowAnimations =
   if (!rollupWidget) {
     return;
   }
-  nsIRollupListener::RollupOptions options{
-      0, nsIRollupListener::FlushViews::Yes, nullptr, aAllowAnimations};
+  nsIRollupListener::RollupOptions options{0, nullptr, aAllowAnimations};
   rollupListener->Rollup(options);
 }
 
@@ -814,33 +813,17 @@ void nsCocoaWindow::Invalidate(const LayoutDeviceIntRect& aRect) {
 
 #pragma mark -
 
-void nsCocoaWindow::WillPaintWindow() {
+void nsCocoaWindow::PaintWindow() {
   if (nsIWidgetListener* listener = GetPaintListener()) {
-    listener->WillPaintWindow(this);
+    listener->PaintWindow(this);
   }
 }
 
-bool nsCocoaWindow::PaintWindow(LayoutDeviceIntRegion aRegion) {
-  nsIWidgetListener* listener = GetPaintListener();
-  if (!listener) {
-    return false;
-  }
-
-  bool returnValue = listener->PaintWindow(this, aRegion);
-
-  listener = GetPaintListener();
-  if (listener) {
-    listener->DidPaintWindow();
-  }
-
-  return returnValue;
-}
-
-bool nsCocoaWindow::PaintWindowInDrawTarget(gfx::DrawTarget* aDT,
+void nsCocoaWindow::PaintWindowInDrawTarget(gfx::DrawTarget* aDT,
     const LayoutDeviceIntRegion& aRegion,
     const gfx::IntSize& aSurfaceSize) {
   if (!aDT || !aDT->IsValid()) {
-    return false;
+    return;
   }
   gfxContext targetContext(aDT);
 
@@ -855,11 +838,9 @@ bool nsCocoaWindow::PaintWindowInDrawTarget(gfx::DrawTarget* aDT,
 
   nsAutoRetainCocoaObject kungFuDeathGrip(mChildView);
   if (GetWindowRenderer()->GetBackendType() == LayersBackend::LAYERS_NONE) {
-    nsIWidget::AutoLayerManagerSetup setupLayerManager(
-        this, &targetContext);
-    return PaintWindow(aRegion);
+    nsIWidget::AutoLayerManagerSetup setupLayerManager(this, &targetContext);
+    PaintWindow();
   }
-  return false;
 }
 
 bool nsCocoaWindow::PaintWindowInContext(CGContextRef aContext, 
@@ -875,7 +856,7 @@ bool nsCocoaWindow::PaintWindowInContext(CGContextRef aContext,
     }
   }
 
-  bool painted = PaintWindowInDrawTarget(mBackingSurface, aRegion, aSurfaceSize);
+  PaintWindowInDrawTarget(mBackingSurface, aRegion, aSurfaceSize);
 
   uint8_t* data;
   gfx::IntSize size;
@@ -904,7 +885,7 @@ bool nsCocoaWindow::PaintWindowInContext(CGContextRef aContext,
 
   mBackingSurface->ReleaseBits(data);
 
-  return painted;
+  return true;
 
 }
 
@@ -951,7 +932,6 @@ void nsCocoaWindow::PaintWindowInContentLayer() {
 
 void nsCocoaWindow::HandleMainThreadCATransaction() {
   AUTO_PROFILER_MARKER("HandleMainThreadCATransaction", GRAPHICS);
-  WillPaintWindow();
 
   if (GetWindowRenderer()->GetBackendType() == LayersBackend::LAYERS_NONE) {
     // We're in BasicLayers mode, i.e. main thread software compositing.
@@ -962,7 +942,7 @@ void nsCocoaWindow::HandleMainThreadCATransaction() {
       // NotifySurfaceReady on the compositor thread to update mNativeLayerRoot's
       // contents, and the main thread (this thread) will wait inside PaintWindow
       // during that time.
-      PaintWindow(LayoutDeviceIntRegion(GetClientBounds()));
+      PaintWindow();
   }
   
   {
@@ -1294,7 +1274,7 @@ MOZ_NO_THREAD_SAFETY_ANALYSIS {
     // composition is done, thus keeping the GL context locked forever.
     mCompositingLock.Lock();
     
-    if (aContext->mGL && gfxPlatform::CanMigrateMacGPUs()) {
+    if (aContext->mGL && StaticPrefs::gfx_compositor_gpu_migration()) {
         GLContextCGL::Cast(aContext->mGL)->MigrateToActiveGPU();
     }
     
@@ -1562,7 +1542,6 @@ void nsCocoaWindow::DispatchAPZWheelInputEvent(InputData& aEvent) {
     return;
   }
 
-  nsEventStatus status;
   switch (aEvent.mInputType) {
     case PANGESTURE_INPUT: {
                              if (MayStartSwipeForNonAPZ(aEvent.AsPanGestureInput())) {
@@ -1580,7 +1559,7 @@ void nsCocoaWindow::DispatchAPZWheelInputEvent(InputData& aEvent) {
                             return;
   }
   if (event.mMessage == eWheel && (event.mDeltaX != 0 || event.mDeltaY != 0)) {
-    DispatchEvent(&event, status);
+    DispatchEvent(&event);
   }
 }
 
@@ -2036,9 +2015,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     // OpenGL drawing's rounded corners.
     [self clearCorners];
     // Force a sync OMTC composite into the OpenGL context and return.
-    LayoutDeviceIntRect geckoBounds = mGeckoChild->GetBounds();
-    LayoutDeviceIntRegion region(geckoBounds);
-    mGeckoChild->PaintWindow(region);
+    mGeckoChild->PaintWindow();
     return;
   }
   AUTO_PROFILER_LABEL("ChildView::drawRect", OTHER);
@@ -2060,7 +2037,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   // Undo the scale transform so that from now on the context is in
   // CocoaPoints again.
   CGContextRestoreGState(cgContext);
-  if (!painted && [mPixelHostingView isOpaque]) {
+  if ([mPixelHostingView isOpaque]) {
     // Gecko refused to draw, but we've claimed to be opaque, so we have to
     // draw something--fill with white.
     CGContextSetRGBFillColor(cgContext, 1, 1, 1, 1);
@@ -2207,7 +2184,7 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
       }
     }
 
-    mGeckoChild->WillPaintWindow();
+    mGeckoChild->PaintWindow();
   }
   [super viewWillDraw];
 
@@ -2339,8 +2316,7 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
   }
 
   LayoutDeviceIntPoint devPoint;
-  nsIRollupListener::RollupOptions rollupOptions{
-    popupsToRollup, nsIRollupListener::FlushViews::Yes};
+  nsIRollupListener::RollupOptions rollupOptions{popupsToRollup};
   if ([theEvent type] == NSEventTypeLeftMouseDown) {
     NSPoint point = [NSEvent mouseLocation];
     FlipCocoaScreenCoordinate(point);
@@ -2796,8 +2772,7 @@ exitFrom:(WidgetMouseEvent::ExitFrom)aExitFrom {
   if (event.mMessage == eMouseExitFromWidget) {
     event.mExitFrom = Some(aExitFrom);
   }
-  nsEventStatus status;  // ignored
-  mGeckoChild->DispatchEvent(&event, status);
+  mGeckoChild->DispatchEvent(&event);
 }
 
 - (void)handleMouseMoved:(NSEvent*)theEvent {
@@ -4585,8 +4560,28 @@ returnType:(NSString*)returnType {
   trans->AddDataFlavor(kTextMime);
   trans->AddDataFlavor(kHTMLMime);
 
-  rv = nsClipboard::TransferableFromPasteboard(trans, pboard);
-  if (NS_FAILED(rv)) return NO;
+  // Try to get text/plain data first.
+  bool hasTextData = false;
+  auto textDataOrError =
+      nsClipboard::GetDataFromPasteboard(nsLiteralCString(kTextMime), pboard);
+  if (!textDataOrError.isErr()) {
+    if (auto data = textDataOrError.inspect()) {
+      trans->SetTransferData(kTextMime, data);
+      hasTextData = true;
+    }
+  }
+
+  // If there is no text/plain data, try to get text/html data.
+  // XXX: this is legacy behavior, should we alway get text/html data instead?
+  if (!hasTextData) {
+    auto htmlDataOrError =
+        nsClipboard::GetDataFromPasteboard(nsLiteralCString(kHTMLMime), pboard);
+    if (!htmlDataOrError.isErr()) {
+      if (auto data = htmlDataOrError.inspect()) {
+        trans->SetTransferData(kHTMLMime, data);
+      }
+    }
+  }
 
   NS_ENSURE_TRUE(mGeckoChild, false);
 
@@ -5017,7 +5012,6 @@ BOOL ChildViewMouseTracker::WindowAcceptsEvent(NSWindow* aWindow,
 
 nsCocoaWindow::nsCocoaWindow()
     : mWindow(nil),
-      mClosedRetainedWindow(nil),
       mDelegate(nil),
       mChildView(nil),
       mBackingScaleFactor(0.0),
@@ -5068,12 +5062,7 @@ void nsCocoaWindow::DestroyNativeWindow() {
   // sent to it after this object has been destroyed.
   mWindow.delegate = nil;
 
-  // Closing the window will also release it. Our second reference will
-  // keep it alive through our destructor. Release any reference we might
-  // have from an earlier call to DestroyNativeWindow, then create a new
-  // one.
-  [mClosedRetainedWindow autorelease];
-  mClosedRetainedWindow = [mWindow retain];
+  // Closing the window will also release it.
   MOZ_ASSERT(mWindow.releasedWhenClosed);
   [mWindow close];
 
@@ -5091,8 +5080,6 @@ nsCocoaWindow::~nsCocoaWindow() {
     CancelAllTransitions();
     DestroyNativeWindow();
   }
-
-  [mClosedRetainedWindow release];
 
   // Our NativeLayerRoot must be empty before it is destructed.
   if (mNativeLayerRoot) {
@@ -5479,7 +5466,7 @@ void* nsCocoaWindow::GetNativeData(uint32_t aDataType) {
       break;
 
     case NS_NATIVE_WINDOW:
-      retVal = mWindow;
+      retVal = [[mWindow retain] autorelease];
       break;
 
     case NS_NATIVE_GRAPHIC:
@@ -6478,16 +6465,22 @@ void nsCocoaWindow::ProcessTransitions() {
           // Run a local run loop until it is safe to start a native fullscreen
           // transition.
           NSRunLoop* localRunLoop = [NSRunLoop currentRunLoop];
-          while (mWindow && !CanStartNativeTransition() &&
+
+          // Retain our initial mWindow so it doesn't change under us. We'll
+          // release it after finishing the runloop.
+          NSWindow* initialWindow = mWindow;
+          [initialWindow retain];
+
+          while (!CanStartNativeTransition() &&
                  [localRunLoop runMode:NSDefaultRunLoopMode
                             beforeDate:[NSDate distantFuture]]) {
             // This loop continues to process events until
-            // CanStartNativeTransition() returns true or our native
-            // window has been destroyed.
+            // CanStartNativeTransition() returns true.
           }
 
           // This triggers an async animation, so continue.
-          [mWindow toggleFullScreen:nil];
+          [initialWindow toggleFullScreen:nil];
+          [initialWindow release];
           continue;
         }
         break;
@@ -6513,16 +6506,22 @@ void nsCocoaWindow::ProcessTransitions() {
             // Run a local run loop until it is safe to start a native
             // fullscreen transition.
             NSRunLoop* localRunLoop = [NSRunLoop currentRunLoop];
-            while (mWindow && !CanStartNativeTransition() &&
+
+            // Retain our initial mWindow so it doesn't change under us. We'll
+            // release it after finishing the runloop.
+            NSWindow* initialWindow = mWindow;
+            [initialWindow retain];
+
+            while (!CanStartNativeTransition() &&
                    [localRunLoop runMode:NSDefaultRunLoopMode
                               beforeDate:[NSDate distantFuture]]) {
               // This loop continues to process events until
-              // CanStartNativeTransition() returns true or our native
-              // window has been destroyed.
+              // CanStartNativeTransition() returns true.
             }
 
             // This triggers an async animation, so continue.
-            [mWindow toggleFullScreen:nil];
+            [initialWindow toggleFullScreen:nil];
+            [initialWindow release];
             continue;
           } else {
             mSuppressSizeModeEvents = true;
@@ -6917,29 +6916,17 @@ bool nsCocoaWindow::DragEvent(unsigned int aMessage,
 
 
 // Invokes callback and ProcessEvent methods on Event Listener object
-nsresult nsCocoaWindow::DispatchEvent(WidgetGUIEvent* event,
-                                      nsEventStatus& aStatus) {
+nsEventStatus nsCocoaWindow::DispatchEvent(WidgetGUIEvent* event) {
   RefPtr kungFuDeathGrip{this};
-  aStatus = nsEventStatus_eIgnore;
-
   if (event->mFlags.mIsSynthesizedForTests) {
     if (WidgetKeyboardEvent* keyEvent = event->AsKeyboardEvent()) {
       nsresult rv = mTextInputHandler->AttachNativeKeyEvent(*keyEvent);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (NS_FAILED(rv)) {
+        return nsEventStatus_eIgnore;
+      }
     }
   }
-
-  // Top level windows can have a view attached which requires events be sent
-  // to the underlying base window and the view. Added when we combined the
-  // base chrome window with the main content child for custom titlebar
-  // rendering.
-  if (mAttachedWidgetListener) {
-    aStatus = mAttachedWidgetListener->HandleEvent(event, mUseAttachedEvents);
-  } else if (mWidgetListener) {
-    aStatus = mWidgetListener->HandleEvent(event, mUseAttachedEvents);
-  }
-
-  return NS_OK;
+  return nsIWidget::DispatchEvent(event);
 }
 
 // aFullScreen should be the window's mInFullScreenMode. We don't have access to
@@ -7251,7 +7238,7 @@ void nsCocoaWindow::SetWindowTransform(const gfx::Matrix& aTransform) {
     return;
   }
 
-  if (StaticPrefs::widget_window_transforms_disabled()) {
+  if (StaticPrefs::widget_macos_window_transforms_disabled()) {
     // CGSSetWindowTransform is a private API. In case calling it causes
     // problems either now or in the future, we'll want to have an easy kill
     // switch. So we allow disabling it with a pref.

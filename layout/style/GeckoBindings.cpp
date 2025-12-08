@@ -660,11 +660,11 @@ static CSSTransition* GetCurrentTransitionAt(const Element* aElement,
   return collection->mAnimations.SafeElementAt(aIndex);
 }
 
-nsCSSPropertyID Gecko_ElementTransitions_PropertyAt(const Element* aElement,
-                                                    size_t aIndex) {
+NonCustomCSSPropertyId Gecko_ElementTransitions_PropertyAt(
+    const Element* aElement, size_t aIndex) {
   CSSTransition* transition = GetCurrentTransitionAt(aElement, aIndex);
-  return transition ? transition->TransitionProperty().mID
-                    : nsCSSPropertyID::eCSSProperty_UNKNOWN;
+  return transition ? transition->TransitionProperty().mId
+                    : NonCustomCSSPropertyId::eCSSProperty_UNKNOWN;
 }
 
 const StyleAnimationValue* Gecko_ElementTransitions_EndValueAt(
@@ -694,9 +694,9 @@ double Gecko_GetPositionInSegment(const AnimationPropertySegment* aSegment,
 
 const StyleAnimationValue* Gecko_AnimationGetBaseStyle(
     const RawServoAnimationValueTable* aBaseStyles,
-    const mozilla::AnimatedPropertyID* aProperty) {
+    const mozilla::CSSPropertyId* aProperty) {
   const auto* base = reinterpret_cast<const nsRefPtrHashtable<
-      nsGenericHashKey<AnimatedPropertyID>, StyleAnimationValue>*>(aBaseStyles);
+      nsGenericHashKey<CSSPropertyId>, StyleAnimationValue>*>(aBaseStyles);
   return base->GetWeak(*aProperty);
 }
 
@@ -804,6 +804,39 @@ bool Gecko_MatchViewTransitionClass(
   return vt->MatchClassList(name, *aPtNameAndClassSelector);
 }
 
+static bool IsValidViewTransitionType(nsAtom* aName) {
+  nsDependentAtomString str(aName);
+  return !StringBeginsWith(str, u"-ua-"_ns,
+                           nsASCIICaseInsensitiveStringComparator) &&
+         !str.LowerCaseEqualsASCII("none");
+}
+
+bool Gecko_HasActiveViewTransitionTypes(
+    const mozilla::dom::Document* aDoc,
+    const nsTArray<StyleCustomIdent>* aNames) {
+  MOZ_ASSERT(aDoc);
+  MOZ_ASSERT(aNames);
+  const ViewTransition* vt = aDoc->GetActiveViewTransition();
+  if (!vt) {
+    return false;
+  }
+  const auto& typeList = vt->GetTypeList();
+  if (typeList.IsEmpty()) {
+    return false;
+  }
+  for (const auto& name : *aNames) {
+    if (typeList.Contains(name.AsAtom())) {
+      // NOTE(emilio): This IsValidViewTransitionType() check is not in the spec
+      // and is rather weird, but matches other browsers for now, see:
+      // https://github.com/w3c/csswg-drafts/issues/13141
+      if (IsValidViewTransitionType(name.AsAtom())) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 nsAtom* Gecko_GetXMLLangValue(const Element* aElement) {
   const nsAttrValue* attr =
       aElement->GetParsedAttr(nsGkAtoms::lang, kNameSpaceID_XML);
@@ -834,6 +867,11 @@ bool Gecko_IsTableBorderNonzero(const Element* aElement) {
 bool Gecko_IsSelectListBox(const Element* aElement) {
   const auto* select = HTMLSelectElement::FromNode(aElement);
   return select && !select->IsCombobox();
+}
+
+bool Gecko_LookupAttrValue(const Element* aElement, const nsAtom& aName,
+                           nsAString& aResult) {
+  return aElement->GetAttr(&aName, aResult);
 }
 
 template <typename Implementor>
@@ -1443,7 +1481,7 @@ void Gecko_LoadStyleSheetAsync(SheetLoadDataHolder* aParentData,
 }
 
 void Gecko_AddPropertyToSet(nsCSSPropertyIDSet* aPropertySet,
-                            nsCSSPropertyID aProperty) {
+                            NonCustomCSSPropertyId aProperty) {
   aPropertySet->AddProperty(aProperty);
 }
 

@@ -8,8 +8,6 @@
 
 #include "nsVideoFrame.h"
 
-#include <algorithm>
-
 #include "ImageContainer.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLImageElement.h"

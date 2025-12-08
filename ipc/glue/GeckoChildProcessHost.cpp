@@ -1001,7 +1001,7 @@ IPCLaunchThreadObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return rv;
 }
 
-nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
+nsCOMPtr<nsISerialEventTarget> GetIPCLauncher() {
   StaticMutexAutoLock lock(gIPCLaunchThreadMutex);
   if (!gIPCLaunchThread) {
     nsCOMPtr<nsIThread> thread;
@@ -1018,7 +1018,7 @@ nsCOMPtr<nsIEventTarget> GetIPCLauncher() {
     }
   }
 
-  nsCOMPtr<nsIEventTarget> thread = gIPCLaunchThread.get();
+  nsCOMPtr<nsISerialEventTarget> thread = gIPCLaunchThread.get();
   MOZ_DIAGNOSTIC_ASSERT(thread);
   return thread;
 }

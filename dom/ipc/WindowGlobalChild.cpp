@@ -58,6 +58,8 @@ WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
       mDocumentURI(aDocumentURI) {
   MOZ_DIAGNOSTIC_ASSERT(mWindowContext);
   MOZ_DIAGNOSTIC_ASSERT(mDocumentPrincipal);
+  MOZ_DIAGNOSTIC_ASSERT(mDocumentPrincipal->GetIsLocalIpAddress() ==
+                        mWindowContext->IsLocalIP());
 
   if (!mDocumentURI) {
     NS_NewURI(getter_AddRefs(mDocumentURI), "about:blank");
@@ -569,19 +571,14 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvRestoreTabContent(
 }
 
 IPCResult WindowGlobalChild::RecvRawMessage(
-    const JSActorMessageMeta& aMeta, const UniquePtr<ClonedMessageData>& aData,
+    const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
     const UniquePtr<ClonedMessageData>& aStack) {
-  UniquePtr<StructuredCloneData> data;
-  if (aData) {
-    data = MakeUnique<StructuredCloneData>();
-    data->BorrowFromClonedMessageData(*aData);
-  }
   UniquePtr<StructuredCloneData> stack;
   if (aStack) {
     stack = MakeUnique<StructuredCloneData>();
     stack->BorrowFromClonedMessageData(*aStack);
   }
-  ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
+  ReceiveRawMessage(aMeta, std::move(aData), std::move(stack));
   return IPC_OK();
 }
 

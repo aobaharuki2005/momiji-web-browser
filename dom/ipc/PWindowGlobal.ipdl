@@ -19,6 +19,7 @@ include protocol PWebIdentity;
 
 include DOMTypes;
 include ClientIPCTypes;
+include JSIPCValue;
 include NeckoChannelParams;
 include SessionStoreTypes;
 
@@ -98,7 +99,7 @@ child:
   async RestoreTabContent(nullable SessionStoreRestoreData aData) returns (bool success);
 
 both:
-  async RawMessage(JSActorMessageMeta aMetadata, UniquePtr<ClonedMessageData> aData,
+  async RawMessage(JSActorMessageMeta aMetadata, JSIPCValue aData,
                    UniquePtr<ClonedMessageData> aStack);
 
 parent:
@@ -145,6 +146,9 @@ parent:
 
   /// Send down initial document bit to the parent.
   [LazySend] async SetIsInitialDocument(bool aIsInitialDocument);
+
+  /// Indicate that the initial document is being navigated to.
+  [LazySend] async CommitToInitialDocument();
 
   // Attempts to perform a "Web Share".
   async Share(IPCWebShareData aData) returns (nsresult rv);

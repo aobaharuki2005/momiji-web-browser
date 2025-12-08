@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.metrics
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.ext.packageManagerWrapper
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -19,16 +20,11 @@ import org.mozilla.fenix.distributions.DistributionSettings
 internal class MarketingAttributionServiceTest {
 
     private var providerValue: String? = null
-    private var legacyProviderValue: String? = null
     private var storedId: String? = null
     private var savedId: String = ""
 
     private val testDistributionProviderChecker = object : DistributionProviderChecker {
         override fun queryProvider(): String? = providerValue
-    }
-
-    private val testLegacyDistributionProviderChecker = object : DistributionProviderChecker {
-        override fun queryProvider(): String? = legacyProviderValue
     }
 
     private val testBrowserStoreProvider = object : DistributionBrowserStoreProvider {
@@ -48,10 +44,9 @@ internal class MarketingAttributionServiceTest {
     }
 
     val distributionIdManager = DistributionIdManager(
-        testContext,
+        packageManager = testContext.packageManagerWrapper,
         testBrowserStoreProvider,
         distributionProviderChecker = testDistributionProviderChecker,
-        legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
         distributionSettings = testDistributionSettings,
         appPreinstalledOnVivoDevice = { true },
     )

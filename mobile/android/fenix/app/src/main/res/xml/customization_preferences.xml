@@ -82,16 +82,29 @@
             app:trueOptionTitle="@string/preference_expanded_toolbar" />
     </androidx.preference.PreferenceCategory>
 
-    <!-- Toolbar shortcut picker (simple layout only) -->
+    <!-- Simple toolbar shortcut picker -->
     <androidx.preference.PreferenceCategory
         android:layout="@layout/preference_cat_style"
         android:title="@string/preferences_toolbar_shortcut"
-        android:key="@string/pref_key_customization_category_toolbar_shortcut"
+        android:key="@string/pref_key_customization_category_toolbar_simple_shortcut"
         app:iconSpaceReserved="false">
 
         <!-- Custom preference shows the selected option on top -->
-        <org.mozilla.fenix.settings.ToolbarShortcutPreference
-            android:key="@string/pref_key_toolbar_shortcut"
+        <org.mozilla.fenix.settings.ToolbarSimpleShortcutPreference
+            android:key="@string/pref_key_toolbar_simple_shortcut"
+            android:layout="@layout/preference_toolbar_shortcut"/>
+    </androidx.preference.PreferenceCategory>
+
+    <!-- Expanded toolbar shortcut picker -->
+    <androidx.preference.PreferenceCategory
+        android:layout="@layout/preference_cat_style"
+        android:title="@string/preferences_toolbar_shortcut"
+        android:key="@string/pref_key_customization_category_toolbar_expanded_shortcut"
+        app:iconSpaceReserved="false">
+
+        <!-- Custom preference shows the selected option on top -->
+        <org.mozilla.fenix.settings.ToolbarExpandedShortcutPreference
+            android:key="@string/pref_key_toolbar_expanded_shortcut"
             android:layout="@layout/preference_toolbar_shortcut"/>
     </androidx.preference.PreferenceCategory>
 

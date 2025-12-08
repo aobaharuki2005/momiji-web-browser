@@ -6,7 +6,6 @@
 #include "MacLaunchHelper.h"
 
 #include "MacAutoreleasePool.h"
-#include "MacUtils.h"
 
 #include <Cocoa/Cocoa.h>
 #include <crt_externs.h>
@@ -16,7 +15,6 @@
 #include <stdio.h>
 
 using namespace mozilla;
-using namespace mozilla::MacUtils;
 using namespace mozilla::MacLaunchHelper;
 
 static void RegisterAppWithLaunchServices(NSString* aBundlePath) {
@@ -29,6 +27,37 @@ static void RegisterAppWithLaunchServices(NSString* aBundlePath) {
       NSLog(@"We failed to register the app in the Launch Services database, "
             @"which may lead to a failure to launch the app. Launch path: %@",
             aBundlePath);
+    }
+  } @catch (NSException* e) {
+    NSLog(@"%@: %@", e.name, e.reason);
+  }
+}
+
+/**
+ * Helper to launch macOS tasks via NSTask and wait for the launched task to
+ * terminate.
+ */
+static void LaunchTask(NSString* aPath, NSArray* aArguments) {
+  MacAutoreleasePool pool;
+
+  @try {
+    NSTask* task = [[NSTask alloc] init];
+    if (@available(macOS 10.13, *)) {
+      [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+      if (aArguments) {
+        [task setArguments:aArguments];
+      }
+      [task launchAndReturnError:nil];
+    } else {
+      NSArray* arguments = aArguments;
+      if (!arguments) {
+        arguments = @[];
+      }
+      task = [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
+    }
+    [task waitUntilExit];
+    if (@available(macOS 10.13, *)) {
+      [task release];
     }
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);

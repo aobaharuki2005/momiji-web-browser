@@ -29,6 +29,7 @@
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/txMozillaXSLTProcessor.h"
+#include "mozilla/intl/LocaleService.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
@@ -68,10 +69,6 @@ using namespace mozilla::dom;
 // 1) what's not allowed - We need to figure out which HTML tags
 //    (prefixed with a HTML namespace qualifier) are explicitly not
 //    allowed (if any).
-// 2) factoring code with nsHTMLContentSink - There's some amount of
-//    common code between this and the HTML content sink. This will
-//    increase as we support more and more HTML elements. How can code
-//    from the code be factored?
 
 nsresult NS_NewXMLContentSink(nsIXMLContentSink** aResult, Document* aDoc,
                               nsIURI* aURI, nsISupports* aContainer,
@@ -151,7 +148,7 @@ NS_IMETHODIMP
 nsXMLContentSink::WillParse(void) { return WillParseImpl(); }
 
 NS_IMETHODIMP
-nsXMLContentSink::WillBuildModel(nsDTDMode aDTDMode) {
+nsXMLContentSink::WillBuildModel() {
   WillBuildModelImpl();
 
   // Notify document that the load is beginning
@@ -708,6 +705,7 @@ nsresult nsXMLContentSink::AddContentAsLeaf(nsIContent* aContent) {
 nsresult nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl) {
   nsCOMPtr<nsIDocumentTransformer> processor = new txMozillaXSLTProcessor();
   mDocument->SetUseCounter(eUseCounter_custom_XSLStylesheet);
+  mDocument->WarnOnceAbout(DeprecatedOperations::eXSLTDeprecated);
 
   processor->SetTransformObserver(this);
 
@@ -1394,12 +1392,6 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
   }
 
   // prepare to set <parsererror> as the document root
-  rv = HandleProcessingInstruction(
-      u"xml-stylesheet",
-      u"href=\"chrome://global/locale/intl.css\" type=\"text/css\"");
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  const char16_t* noAtts[] = {0, 0};
 
   constexpr auto errorNs =
       u"http://www.mozilla.org/newlayout/xml/parsererror.xml"_ns;
@@ -1408,7 +1400,12 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
   parsererror.Append((char16_t)0xFFFF);
   parsererror.AppendLiteral("parsererror");
 
-  rv = HandleStartElement(parsererror.get(), noAtts, 0, (uint32_t)-1, 0);
+  const char16_t* dirAttr[] = {u"dir", u"ltr", 0, 0};
+  if (intl::LocaleService::GetInstance()->IsAppLocaleRTL() &&
+      !mDocument->ShouldResistFingerprinting(RFPTarget::JSLocale)) {
+    dirAttr[1] = u"rtl";
+  }
+  rv = HandleStartElement(parsererror.get(), dirAttr, 0, 2, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = HandleCharacterData(aErrorText, NS_strlen(aErrorText), false);
@@ -1418,6 +1415,7 @@ nsXMLContentSink::ReportError(const char16_t* aErrorText,
   sourcetext.Append((char16_t)0xFFFF);
   sourcetext.AppendLiteral("sourcetext");
 
+  const char16_t* noAtts[] = {0, 0};
   rv = HandleStartElement(sourcetext.get(), noAtts, 0, (uint32_t)-1, 0);
   NS_ENSURE_SUCCESS(rv, rv);
 

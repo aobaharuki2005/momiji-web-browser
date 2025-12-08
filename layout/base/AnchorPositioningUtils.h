@@ -8,7 +8,6 @@
 #define AnchorPositioningUtils_h__
 
 #include "WritingModes.h"
-#include "mozilla/EnumSet.h"
 #include "mozilla/Maybe.h"
 #include "nsRect.h"
 #include "nsTHashMap.h"
@@ -34,16 +33,14 @@ struct AnchorPosInfo {
 
 class DistanceToNearestScrollContainer {
  public:
-  DistanceToNearestScrollContainer() : mDistance{kInvalid} {}
+  DistanceToNearestScrollContainer() = default;
   explicit DistanceToNearestScrollContainer(uint32_t aDistance)
       : mDistance{aDistance} {}
+
   bool Valid() const { return mDistance != kInvalid; }
-  bool operator==(const DistanceToNearestScrollContainer& aOther) const {
-    return mDistance == aOther.mDistance;
-  }
-  bool operator!=(const DistanceToNearestScrollContainer& aOther) const {
-    return !(*this == aOther);
-  }
+
+  bool operator==(const DistanceToNearestScrollContainer&) const = default;
+  bool operator!=(const DistanceToNearestScrollContainer&) const = default;
 
  private:
   // 0 is invalid - a frame itself cannot be its own nearest scroll container.
@@ -52,7 +49,7 @@ class DistanceToNearestScrollContainer {
   // between abspos/fixedpos frames and their containing blocks are irrelevant,
   // so the distance should be measured from the out-of-flow frame, not the
   // placeholder frame.
-  uint32_t mDistance;
+  uint32_t mDistance = kInvalid;
 };
 
 struct AnchorPosOffsetData {
@@ -95,8 +92,6 @@ class AnchorPosReferenceData {
   struct PositionTryBackup {
     mozilla::PhysicalAxes mCompensatingForScroll;
     nsPoint mDefaultScrollShift;
-    nsRect mContainingBlockRect;
-    bool mUseScrollableContainingBlock = false;
   };
   using Value = mozilla::Maybe<AnchorPosResolutionData>;
 
@@ -131,15 +126,12 @@ class AnchorPosReferenceData {
   PositionTryBackup TryPositionWithSameDefaultAnchor() {
     auto compensatingForScroll = std::exchange(mCompensatingForScroll, {});
     auto defaultScrollShift = std::exchange(mDefaultScrollShift, {});
-    auto insetModifiedContainingBlock = std::exchange(mContainingBlockRect, {});
-    return {compensatingForScroll, defaultScrollShift,
-            insetModifiedContainingBlock};
+    return {compensatingForScroll, defaultScrollShift};
   }
 
   void UndoTryPositionWithSameDefaultAnchor(PositionTryBackup&& aBackup) {
     mCompensatingForScroll = aBackup.mCompensatingForScroll;
     mDefaultScrollShift = aBackup.mDefaultScrollShift;
-    mContainingBlockRect = aBackup.mContainingBlockRect;
   }
 
   // Distance from the default anchor to the nearest scroll container.
@@ -160,6 +152,11 @@ class AnchorPosReferenceData {
   // Axes we need to compensate for scroll [1] in.
   // [1]: https://drafts.csswg.org/css-anchor-position-1/#compensate-for-scroll
   mozilla::PhysicalAxes mCompensatingForScroll;
+};
+
+struct LastSuccessfulPositionData {
+  uint32_t mIndex = 0;
+  bool mTriedAllFallbacks = false;
 };
 
 struct StylePositionArea;
@@ -279,7 +276,7 @@ struct AnchorPositioningUtils {
    * element. For popovers, this returns the primary frame of the invoker. In
    * all other cases, returns null.
    */
-  static const nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
+  static nsIFrame* GetAnchorPosImplicitAnchor(const nsIFrame* aFrame);
 
   struct NearestScrollFrameInfo {
     const nsIFrame* mScrollContainer = nullptr;
@@ -306,10 +303,19 @@ struct AnchorPositioningUtils {
     nsRect mRect;
   };
 
-  static bool FitsInContainingBlock(
-      const ContainingBlockInfo& aContainingBlockInfo,
-      const nsIFrame* aPositioned,
-      const AnchorPosReferenceData* aReferenceData);
+  static bool FitsInContainingBlock(const nsIFrame* aPositioned,
+                                    const AnchorPosReferenceData&);
+
+  /**
+   * If aFrame is positioned using CSS anchor positioning, and it scrolls with
+   * its anchor this function returns the anchor. Otherwise null.
+   */
+  static nsIFrame* GetAnchorThatFrameScrollsWith(nsIFrame* aFrame);
+
+  // Trigger a layout for positioned items that are currently overflowing their
+  // abs-cb and that have available fallbacks to try.
+  static bool TriggerLayoutOnOverflow(PresShell* aPresShell,
+                                      bool aEvaluateAllFallbacksIfNeeded);
 };
 
 }  // namespace mozilla

@@ -195,6 +195,19 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
+  "backupErrorCode",
+  BACKUP_ERROR_CODE_PREF_NAME,
+  0,
+  function onUpdateBackupErrorCode(_pref, _prevVal, newVal) {
+    let bs = BackupService.get();
+    if (bs) {
+      bs.onUpdateBackupErrorCode(newVal);
+    }
+  }
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
   "lastBackupFileName",
   LAST_BACKUP_FILE_NAME_PREF_NAME,
   ""
@@ -850,7 +863,6 @@ export class BackupService extends EventTarget {
     lastBackupFileName: "",
     supportBaseLink: Services.urlFormatter.formatURLPref("app.support.baseURL"),
     recoveryInProgress: false,
-    recoveryErrorCode: 0,
     /**
      * Every file we load successfully is going to get a restore ID which is
      * basically the identifier for that profile restore event. If we actually
@@ -861,6 +873,8 @@ export class BackupService extends EventTarget {
     restoreID: null,
     /** Utilized by the spotlight to persist information between screens */
     embeddedComponentPersistentData: {},
+    recoveryErrorCode: ERRORS.NONE,
+    backupErrorCode: lazy.backupErrorCode,
   };
 
   /**
@@ -1794,6 +1808,7 @@ export class BackupService extends EventTarget {
             })
           );
 
+          this.stateUpdate();
           throw e;
         } finally {
           this.#backupInProgress = false;
@@ -3382,14 +3397,23 @@ export class BackupService extends EventTarget {
           profileSvc.defaultProfile = profile;
         }
 
-        // let's rename the old profile with a prefix old-[profile_name]
-        profileSvc.currentProfile.name = `old-${profileSvc.currentProfile.name}`;
+        // If the profile already has an [old-] prefix, let's skip adding new prefixes
+        if (!profileSvc.currentProfile.name.startsWith("old-")) {
+          // Looks like this is a new restoration of this profile,
+          // add the prefix old-[profile_name]
+          profileSvc.currentProfile.name = `old-${profileSvc.currentProfile.name}`;
+        }
       }
 
       await profileSvc.asyncFlush();
 
       if (shouldLaunch) {
-        Services.startup.createInstanceWithProfile(profile);
+        // Launch with the user's default homepage instead of the last selected tab
+        // to avoid problems with the messaging system (see Bug 2002732)
+        Services.startup.createInstanceWithProfile(profile, [
+          "--url",
+          "about:home",
+        ]);
       }
 
       return profile;
@@ -3619,6 +3643,20 @@ export class BackupService extends EventTarget {
     Glean.browserBackup.changeLocation.record();
 
     this.#_state.backupDirPath = newDirPath;
+    this.stateUpdate();
+  }
+
+  /**
+   * Updates backupErrorCode in the backup service state. Should be called every time
+   * the value for browser.backup.errorCode changes.
+   *
+   * @param {number} newErrorCode
+   *    Any of the ERROR code's from backup-constants.mjs
+   */
+  onUpdateBackupErrorCode(newErrorCode) {
+    lazy.logConsole.debug(`Updating backup error code to ${newErrorCode}`);
+
+    this.#_state.backupErrorCode = newErrorCode;
     this.stateUpdate();
   }
 

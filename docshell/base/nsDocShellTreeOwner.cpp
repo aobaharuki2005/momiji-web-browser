@@ -492,12 +492,6 @@ nsDocShellTreeOwner::GetHasPrimaryContent(bool* aResult) {
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::InitWindow(nsIWidget* aParentWidget, int32_t aX,
-                                int32_t aY, int32_t aCX, int32_t aCY) {
-  return NS_ERROR_NULL_POINTER;
-}
-
-NS_IMETHODIMP
 nsDocShellTreeOwner::Destroy() {
   nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome = GetWebBrowserChrome();
   if (webBrowserChrome) {
@@ -595,9 +589,6 @@ nsDocShellTreeOwner::GetDimensions(DimensionKind aDimensionKind, int32_t* aX,
   NS_ENSURE_STATE(webBrowserChrome);
   return webBrowserChrome->GetDimensions(aDimensionKind, aX, aY, aCX, aCY);
 }
-
-NS_IMETHODIMP
-nsDocShellTreeOwner::Repaint(bool aForce) { return NS_ERROR_NULL_POINTER; }
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetParentWidget(nsIWidget** aParentWidget) {

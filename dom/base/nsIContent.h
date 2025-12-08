@@ -407,7 +407,7 @@ class nsIContent : public nsINode {
    * element (through createElement() or cloneNode() generally) then add a
    * uint32_t aFromParser to the NS_NewXXX() constructor for your element and
    * have the parser pass the appropriate flags. See HTMLInputElement.cpp and
-   * nsHTMLContentSink::MakeContentObject().
+   * nsHtml5TreeBuilder::elementPopped().
    *
    * DO NOT USE THIS METHOD to get around the fact that it's hard to deal with
    * attributes dynamically.  If you make attributes affect your element from
@@ -429,7 +429,7 @@ class nsIContent : public nsINode {
    * element (through createElement() or cloneNode() generally) then add a
    * boolean aFromParser to the NS_NewXXX() constructor for your element and
    * have the parser pass true.  See HTMLInputElement.cpp and
-   * nsHTMLContentSink::MakeContentObject().
+   * nsHtml5TreeBuilder::elementPopped().
    *
    * @param aHaveNotified Whether there has been a
    *        ContentInserted/ContentAppended notification for this content node
@@ -536,6 +536,21 @@ class nsIContent : public nsINode {
    * @return the primary frame
    */
   nsIFrame* GetPrimaryFrame(mozilla::FlushType aType);
+
+  /**
+   * Return true if the related frame is selectable or we need to treat the
+   * content as selectable (e.g., an editable node, a text control).  If the
+   * content does not have primary frame due to e.g., `display:contents`,
+   * `display:none`, `ShadowRoot`, etc, this refers the computed `user-select`
+   * style of this node.  If the `user-select` is `auto`, referring the same
+   * things of closest ancestor elements or shadow DOM host.
+   * NOTE: If this is a generated content like ::before or ::after or not
+   * connected to a Document, this returns false.  I.e., this returns false for
+   * DocumentFragment.
+   * NOTE: Returning true does NOT mean that the content is selectable with a
+   * user's operation.  E.g., can be selectable but invisible.
+   */
+  [[nodiscard]] bool IsSelectable() const;
 
   // Defined in nsIContentInlines.h because it needs nsIFrame.
   inline void SetPrimaryFrame(nsIFrame* aFrame);

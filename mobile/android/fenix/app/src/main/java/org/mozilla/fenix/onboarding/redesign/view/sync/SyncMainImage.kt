@@ -5,18 +5,12 @@
 package org.mozilla.fenix.onboarding.redesign.view.sync
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
-
-private val IMAGE_HEIGHT = 150.dp
 
 /**
  * Renders the main image for the "Sync" onboarding screen.
@@ -28,7 +22,6 @@ fun SyncMainImage() {
     Image(
         painter = painterResource(R.drawable.android_sync_illustration),
         contentDescription = null, // Decorative only
-        modifier = Modifier.height(IMAGE_HEIGHT),
     )
 }
 
@@ -36,7 +29,7 @@ fun SyncMainImage() {
 @Composable
 private fun SyncMainImagePreview() {
     FirefoxTheme {
-        Box(Modifier.background(FirefoxTheme.colors.layer1)) {
+        Surface {
             SyncMainImage()
         }
     }

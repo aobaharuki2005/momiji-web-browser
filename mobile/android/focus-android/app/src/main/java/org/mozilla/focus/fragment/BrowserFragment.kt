@@ -1078,7 +1078,7 @@ class BrowserFragment :
             cookieBannerReducerStore = cookieBannerReducerStore,
             tabUrl = tab.content.url,
             isTrackingProtectionOn = tab.trackingProtection.ignoredOnTrackingProtection.not(),
-            isConnectionSecure = tab.content.securityInfo.secure,
+            isConnectionSecure = tab.content.securityInfo.isSecure,
             blockedTrackersCount = requireContext().settings
                 .getTotalBlockedTrackersCount(),
             toggleTrackingProtection = ::toggleTrackingProtection,
@@ -1119,7 +1119,7 @@ class BrowserFragment :
             context = requireContext(),
             tabTitle = tab.content.title,
             tabUrl = tab.content.url,
-            isConnectionSecure = tab.content.securityInfo.secure,
+            isConnectionSecure = tab.content.securityInfo.isSecure,
             goBack = { trackingProtectionPanel?.show() },
         )
         trackingProtectionPanel?.hide()
@@ -1194,6 +1194,18 @@ class BrowserFragment :
                 putString(ARGUMENT_SESSION_UUID, tabId)
             }
             return fragment
+        }
+
+        /**
+         * Creates a [Bundle] containing the arguments needed for this fragment.
+         *
+         * @param tabId The ID of the tab to create the fragment for.
+         * @return A [Bundle] with the tab ID set.
+         */
+        fun bundleForTab(tabId: String): Bundle {
+            return Bundle().apply {
+                putString(ARGUMENT_SESSION_UUID, tabId)
+            }
         }
     }
 }

@@ -107,10 +107,15 @@ export class GuardianClient {
       });
       const finalEndpoint = waitUntilURL(browser, url => {
         const urlObj = new URL(url);
+        if (url === "about:blank") {
+          return false;
+        }
         if (!allowedOrigins.includes(urlObj.origin)) {
           browser.stop();
           browser.remove();
-          throw new Error(`URL origin ${urlObj.origin} is not allowed.`);
+          throw new Error(
+            `URL ${url} with origin ${urlObj.origin} is not allowed.`
+          );
         }
         if (
           finalizerURLs.some(

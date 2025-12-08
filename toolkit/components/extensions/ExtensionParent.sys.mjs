@@ -862,8 +862,8 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     if (!this._onNavigatedListeners) {
       this._onNavigatedListeners = new Set();
 
-      await this.devToolsToolbox.resourceCommand.watchResources(
-        [this.devToolsToolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
+      await this.devToolsToolbox.commands.resourceCommand.watchResources(
+        [this.devToolsToolbox.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
         {
           onAvailable: this._onResourceAvailable,
           ignoreExistingResources: true,
@@ -916,8 +916,8 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     }
 
     if (this._onNavigatedListeners) {
-      this.devToolsToolbox.resourceCommand.unwatchResources(
-        [this.devToolsToolbox.resourceCommand.TYPES.DOCUMENT_EVENT],
+      this.devToolsToolbox.commands.resourceCommand.unwatchResources(
+        [this.devToolsToolbox.commands.resourceCommand.TYPES.DOCUMENT_EVENT],
         { onAvailable: this._onResourceAvailable }
       );
     }
@@ -1489,6 +1489,9 @@ class HiddenXULWindow {
     if (browser.getAttribute("remote") === "true") {
       awaitFrameLoader = promiseEvent(browser, "XULFrameLoaderCreated");
     }
+
+    // Prevent initial about:blank load before navigating to extension URI
+    browser.setAttribute("nodefaultsrc", "true");
 
     chromeDoc.documentElement.appendChild(browser);
 

@@ -59,10 +59,16 @@ async function openProtectionsPanel(toast, win = window) {
     "shown"
   );
 
+  // nsXULTooltipListener will fail silently if no drag service is available
+  Assert.ok(
+    !SpecialPowers.isHeadless,
+    "openProtectionsPanel cannot be used in headless mode."
+  );
+
   // Move out than move over the shield icon to trigger the hover event in
   // order to fetch tracker count.
   EventUtils.synthesizeMouseAtCenter(
-    win.gURLBar.textbox,
+    win.gURLBar,
     {
       type: "mousemove",
     },

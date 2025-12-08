@@ -6,6 +6,8 @@ import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 
 import { globals } from "resource://reftest/globals.sys.mjs";
 
+import { setTimeout } from "resource://gre/modules/Timer.sys.mjs";
+
 const {
   XHTML_NS,
   XUL_NS,
@@ -1768,9 +1770,10 @@ async function RestoreChangedPreferences() {
   // SpecialPowers property because it was created before SpecialPowers was
   // registered.
   // Get a parent actor so that there is less waiting than with a child.
-  let { requiresRefresh } = g.browser.browsingContext.currentWindowGlobal
-    .getActor("SpecialPowers")
-    .flushPrefEnv();
+  let { requiresRefresh } =
+    g.containingWindow.browsingContext.currentWindowGlobal
+      .getActor("SpecialPowers")
+      .flushPrefEnv();
 
   if (!g.prefsToRestore.length && !requiresRefresh) {
     return;
@@ -1943,8 +1946,13 @@ function RecvContentReady(info) {
     g.resolveContentReady();
     g.resolveContentReady = null;
   } else {
-    g.contentGfxInfo = info.gfx;
-    InitAndStartRefTests();
+    // Prevent a race with GeckoView:SetFocused, bug 1960620
+    // If about:blank loads synchronously, we'll RecvContentReady on the first tick,
+    // which is also the tick where GeckoViewContent processes messages from GeckoView.
+    setTimeout(() => {
+      g.contentGfxInfo = info.gfx;
+      InitAndStartRefTests();
+    }, 0);
   }
   return { remote: g.browserIsRemote };
 }

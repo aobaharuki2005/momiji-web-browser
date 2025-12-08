@@ -1114,6 +1114,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   already_AddRefed<nsIBaseWindow> GetTreeOwnerWindow();
   already_AddRefed<nsIWebBrowserChrome> GetWebBrowserChrome();
 
+  virtual void UpdateParentTarget() = 0;
+
  protected:
   // Lazily instantiate an about:blank document if necessary, and if
   // we have what it takes to do so.
@@ -1121,8 +1123,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   void SetChromeEventHandlerInternal(
       mozilla::dom::EventTarget* aChromeEventHandler);
-
-  virtual void UpdateParentTarget() = 0;
 
   // These two variables are special in that they're set to the same
   // value on both the outer window and the current inner window. Make

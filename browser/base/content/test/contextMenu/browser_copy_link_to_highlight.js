@@ -10,7 +10,6 @@ add_setup(async function () {
     set: [
       ["privacy.query_stripping.strip_list", "stripParam"],
       ["privacy.query_stripping.strip_on_share.enabled", true],
-      ["dom.text_fragments.create_text_fragment.enabled", true],
     ],
   });
 

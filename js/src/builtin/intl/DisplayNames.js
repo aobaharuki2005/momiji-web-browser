@@ -76,6 +76,16 @@ function resolveDisplayNamesInternals(lazyDisplayNamesData) {
   }
 
   if (mozExtensions) {
+    // Changes from "Intl era and monthCode" proposal.
+    //
+    // https://tc39.es/proposal-intl-era-monthcode/#sec-createdatetimeformat
+    if (r.ca === "islamic" || r.ca === "islamic-rgsa") {
+      ReportWarning(JSMSG_DEPRECATED_CALENDAR, r.ca);
+
+      // Fallback to "islamic-tbla" calendar.
+      r.ca = "islamic-tbla";
+    }
+
     internalProps.calendar = r.ca;
   }
 
@@ -178,7 +188,7 @@ function InitializeDisplayNames(displayNames, locales, options, mozExtensions) {
   }
 
   // Step 5.
-  var opt = new_Record();
+  var opt = NEW_RECORD();
   lazyDisplayNamesData.opt = opt;
   lazyDisplayNamesData.mozExtensions = mozExtensions;
 

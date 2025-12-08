@@ -21,8 +21,8 @@ import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.utils.BrowsersCache
+import mozilla.components.support.utils.ext.packageManagerWrapper
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -34,6 +34,7 @@ import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.TabStrip
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
@@ -64,10 +65,6 @@ class FenixApplicationTest {
         override fun queryProvider(): String? = null
     }
 
-    private val testLegacyDistributionProviderChecker = object : DistributionProviderChecker {
-        override fun queryProvider(): String? = null
-    }
-
     private val testDistributionSettings = object : DistributionSettings {
         override fun getDistributionId(): String = ""
         override fun saveDistributionId(id: String) = Unit
@@ -82,10 +79,9 @@ class FenixApplicationTest {
 
         every { testContext.components.core } returns mockk(relaxed = true)
         every { testContext.components.distributionIdManager } returns DistributionIdManager(
-            context = testContext,
+            packageManager = testContext.packageManagerWrapper,
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(browserStore),
             distributionProviderChecker = testDistributionProviderChecker,
-            legacyDistributionProviderChecker = testLegacyDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
         )
     }
@@ -186,6 +182,7 @@ class FenixApplicationTest {
         every { dohSettingsProvider.getSelectedProtectionLevel() } returns ProtectionLevel.Max
         every { settings.getHttpsOnlyMode() } returns HttpsOnlyMode.ENABLED_PRIVATE_ONLY
         every { settings.shouldEnableGlobalPrivacyControl } returns true
+        every { settings.isTabStripEnabled } returns true
 
         assertTrue(settings.contileContextId.isNotEmpty())
         assertNotNull(TopSites.contextId.testGetValue())
@@ -244,6 +241,7 @@ class FenixApplicationTest {
         assertEquals("Max", Preferences.dohProtectionLevel.testGetValue())
         assertEquals("ENABLED_PRIVATE_ONLY", Preferences.httpsOnlyMode.testGetValue())
         assertEquals(true, Preferences.globalPrivacyControlEnabled.testGetValue())
+        assertEquals(true, TabStrip.enabled.testGetValue())
 
         val contextId = TopSites.contextId.testGetValue()!!.toString()
 

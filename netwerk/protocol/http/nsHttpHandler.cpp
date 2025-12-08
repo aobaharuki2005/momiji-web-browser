@@ -73,6 +73,7 @@
 #include "mozilla/net/SocketProcessChild.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/ipc/URIUtils.h"
+#include "mozilla/glean/GleanPings.h"
 #include "mozilla/glean/NetwerkProtocolHttpMetrics.h"
 #include "mozilla/AntiTrackingRedirectHeuristic.h"
 #include "mozilla/DynamicFpiRedirectHeuristic.h"
@@ -215,9 +216,9 @@ already_AddRefed<nsHttpHandler> nsHttpHandler::GetInstance() {
 static nsCString ImageAcceptHeader() {
   nsCString mimeTypes;
 
-  if (mozilla::StaticPrefs::image_avif_enabled()) {
-    mimeTypes.Append("image/avif,");
-  }
+#ifdef MOZ_AV1
+  mimeTypes.Append("image/avif,");
+#endif
 
   if (mozilla::StaticPrefs::image_jxl_enabled()) {
     mimeTypes.Append("image/jxl,");
@@ -240,9 +241,9 @@ static nsCString DocumentAcceptHeader() {
 
   // we also insert all of the image formats before */* when the pref is set
   if (mozilla::StaticPrefs::network_http_accept_include_images()) {
-    if (mozilla::StaticPrefs::image_avif_enabled()) {
-      mimeTypes.Append("image/avif,");
-    }
+#ifdef MOZ_AV1
+    mimeTypes.Append("image/avif,");
+#endif
 
     if (mozilla::StaticPrefs::image_jxl_enabled()) {
       mimeTypes.Append("image/jxl,");
@@ -322,7 +323,6 @@ static const char* gCallbackPrefs[] = {
     SECURITY_PREFIX,
     DOM_SECURITY_PREFIX,
     "image.http.accept",
-    "image.avif.enabled",
     "image.jxl.enabled",
     nullptr,
 };
@@ -510,6 +510,7 @@ nsresult nsHttpHandler::Init() {
     obsService->AddObserver(this, "network:socket-process-crashed", true);
     obsService->AddObserver(this, "network:reset_third_party_roots_check",
                             true);
+    obsService->AddObserver(this, "idle-daily", true);
 
     if (!IsNeckoChild()) {
       obsService->AddObserver(this, "net:current-browser-id", true);
@@ -734,7 +735,8 @@ nsresult nsHttpHandler::AddAcceptAndDictionaryHeaders(
 
 nsresult nsHttpHandler::AddStandardRequestHeaders(
     nsHttpRequestHead* request, nsIURI* aURI, bool aIsHTTPS,
-    ExtContentPolicyType aContentPolicyType, bool aShouldResistFingerprinting) {
+    ExtContentPolicyType aContentPolicyType, bool aShouldResistFingerprinting,
+    const nsCString& aLanguageOverride) {
   nsresult rv;
 
   // Add the "User-Agent" header
@@ -766,18 +768,26 @@ nsresult nsHttpHandler::AddStandardRequestHeaders(
                           nsHttpHeaderArray::eVarietyRequestOverride);
   if (NS_FAILED(rv)) return rv;
 
-  // Add the "Accept-Language" header.  This header is also exposed to the
-  // service worker.
-  if (mAcceptLanguagesIsDirty) {
-    rv = SetAcceptLanguages();
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
-
-  // Add the "Accept-Language" header
-  if (!mAcceptLanguages.IsEmpty()) {
-    rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages, false,
+  if (!aLanguageOverride.IsEmpty()) {
+    nsAutoCString acceptLanguage;
+    acceptLanguage.Assign(aLanguageOverride.get());
+    rv = request->SetHeader(nsHttp::Accept_Language, acceptLanguage, false,
                             nsHttpHeaderArray::eVarietyRequestOverride);
     if (NS_FAILED(rv)) return rv;
+  } else {
+    // Add the "Accept-Language" header.  This header is also exposed to the
+    // service worker.
+    if (mAcceptLanguagesIsDirty) {
+      rv = SetAcceptLanguages();
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
+
+    // Add the "Accept-Language" header
+    if (!mAcceptLanguages.IsEmpty()) {
+      rv = request->SetHeader(nsHttp::Accept_Language, mAcceptLanguages, false,
+                              nsHttpHeaderArray::eVarietyRequestOverride);
+      if (NS_FAILED(rv)) return rv;
+    }
   }
 
   // add the "Send Hint" header
@@ -1570,13 +1580,6 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     if (NS_SUCCEEDED(rv)) mEnablePersistentHttpsCaching = cVar;
   }
 
-  if (PREF_CHANGED(HTTP_PREF("phishy-userpass-length"))) {
-    rv = Preferences::GetInt(HTTP_PREF("phishy-userpass-length"), &val);
-    if (NS_SUCCEEDED(rv)) {
-      mPhishyUserPassLength = (uint8_t)std::clamp(val, 0, 0xff);
-    }
-  }
-
   if (PREF_CHANGED(HTTP_PREF("http2.timeout"))) {
     mSpdyTimeout = PR_SecondsToInterval(
         std::clamp(StaticPrefs::network_http_http2_timeout(), 1, 0xffff));
@@ -1936,9 +1939,8 @@ void nsHttpHandler::PrefsChanged(const char* pref) {
     }
   }
 
-  const bool imageAcceptPrefChanged = PREF_CHANGED("image.http.accept") ||
-                                      PREF_CHANGED("image.avif.enabled") ||
-                                      PREF_CHANGED("image.jxl.enabled");
+  const bool imageAcceptPrefChanged =
+      PREF_CHANGED("image.http.accept") || PREF_CHANGED("image.jxl.enabled");
 
   if (imageAcceptPrefChanged) {
     nsAutoCString userSetImageAcceptHeader;
@@ -2423,8 +2425,14 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     ShutdownConnectionManager();
     mConnMgr = nullptr;
     (void)InitConnectionMgr();
+  } else if (!strcmp(topic, "idle-daily")) {
+    // Submit the local-network-access ping once per day
+    if (XRE_IsParentProcess()) {
+#if defined(EARLY_BETA_OR_EARLIER)  // Submit custom telemetry ping.
+      glean_pings::LocalNetworkAccess.Submit();
+#endif
+    }
   }
-
   return NS_OK;
 }
 

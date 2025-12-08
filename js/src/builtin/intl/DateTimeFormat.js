@@ -70,6 +70,16 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     localeData
   );
 
+  // Changes from "Intl era and monthCode" proposal.
+  //
+  // https://tc39.es/proposal-intl-era-monthcode/#sec-createdatetimeformat
+  if (r.ca === "islamic" || r.ca === "islamic-rgsa") {
+    ReportWarning(JSMSG_DEPRECATED_CALENDAR, r.ca);
+
+    // Fallback to "islamic-tbla" calendar.
+    r.ca = "islamic-tbla";
+  }
+
   // Steps 19-22.
   internalProps.locale = r.locale;
   internalProps.calendar = r.ca;
@@ -268,7 +278,7 @@ function InitializeDateTimeFormat(
 
   // Compute options that impact interpretation of locale.
   // Step 4.
-  var localeOpt = new_Record();
+  var localeOpt = NEW_RECORD();
   lazyDateTimeFormatData.localeOpt = localeOpt;
 
   // Steps 5-6.
@@ -372,7 +382,7 @@ function InitializeDateTimeFormat(
   lazyDateTimeFormatData.timeZone = timeZone;
 
   // Step 34.
-  var formatOptions = new_Record();
+  var formatOptions = NEW_RECORD();
   lazyDateTimeFormatData.formatOptions = formatOptions;
 
   if (mozExtensions) {

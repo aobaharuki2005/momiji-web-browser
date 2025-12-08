@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "AnchorPositioningUtils.h"
 #include "CounterStyleManager.h"
 #include "LayoutLogging.h"
 #include "PresShell.h"
@@ -43,6 +44,41 @@ static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent) {
   nsIFrame* frameNext = aFrame->GetNextInFlow();
   nsIFrame* parentNext = aParent->GetNextInFlow();
   return frameNext && parentNext && frameNext->GetParent() == parentNext;
+}
+
+void ComputeAnchorCenterUsage(
+    const nsIFrame* aFrame,
+    mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache,
+    bool& aInlineUsesAnchorCenter, bool& aBlockUsesAnchorCenter) {
+  aInlineUsesAnchorCenter = false;
+  aBlockUsesAnchorCenter = false;
+  nsIFrame* parent = aFrame->GetParent();
+  if (!parent || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
+      !aAnchorPosResolutionCache ||
+      !aAnchorPosResolutionCache->mDefaultAnchorCache.mAnchor) {
+    return;
+  }
+
+  const auto* stylePos = aFrame->StylePosition();
+  WritingMode wm = aFrame->GetWritingMode();
+
+  auto checkAxis = [&](LogicalAxis aAxis) {
+    StyleAlignFlags alignment =
+        stylePos->UsedSelfAlignment(aAxis, parent->Style());
+    if ((alignment & ~StyleAlignFlags::FLAG_BITS) !=
+        StyleAlignFlags::ANCHOR_CENTER) {
+      return false;
+    }
+    LogicalSide startSide = aAxis == LogicalAxis::Inline ? LogicalSide::IStart
+                                                         : LogicalSide::BStart;
+    LogicalSide endSide =
+        aAxis == LogicalAxis::Inline ? LogicalSide::IEnd : LogicalSide::BEnd;
+    return stylePos->mOffset.Get(wm.PhysicalSide(startSide)).IsAuto() ||
+           stylePos->mOffset.Get(wm.PhysicalSide(endSide)).IsAuto();
+  };
+
+  aInlineUsesAnchorCenter = checkAxis(LogicalAxis::Inline);
+  aBlockUsesAnchorCenter = checkAxis(LogicalAxis::Block);
 }
 
 /**
@@ -292,6 +328,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mDummyParentReflowInput = false;
   mFlags.mStaticPosIsCBOrigin = aFlags.contains(InitFlag::StaticPosIsCBOrigin);
   mFlags.mIOffsetsNeedCSSAlign = mFlags.mBOffsetsNeedCSSAlign = false;
+  mFlags.mIAnchorCenter = mFlags.mBAnchorCenter = false;
 
   // We don't want the mOrthogonalCellFinalReflow flag to be inherited; it's up
   // to the table row frame to set it for its direct children as needed.
@@ -1327,33 +1364,6 @@ static bool AreAllEarlierInFlowFramesEmpty(nsIFrame* aFrame,
   return true;
 }
 
-static bool AxisPolarityFlipped(LogicalAxis aThisAxis, WritingMode aThisWm,
-                                WritingMode aOtherWm) {
-  if (MOZ_LIKELY(aThisWm == aOtherWm)) {
-    // Dedicated short circuit for the common case.
-    return false;
-  }
-  LogicalAxis otherAxis = aThisWm.IsOrthogonalTo(aOtherWm)
-                              ? GetOrthogonalAxis(aThisAxis)
-                              : aThisAxis;
-  NS_ASSERTION(
-      aThisWm.PhysicalAxis(aThisAxis) == aOtherWm.PhysicalAxis(otherAxis),
-      "Physical axes must match!");
-  Side thisStartSide =
-      aThisWm.PhysicalSide(MakeLogicalSide(aThisAxis, LogicalEdge::Start));
-  Side otherStartSide =
-      aOtherWm.PhysicalSide(MakeLogicalSide(otherAxis, LogicalEdge::Start));
-  return thisStartSide != otherStartSide;
-}
-
-static bool InlinePolarityFlipped(WritingMode aThisWm, WritingMode aOtherWm) {
-  return AxisPolarityFlipped(LogicalAxis::Inline, aThisWm, aOtherWm);
-}
-
-static bool BlockPolarityFlipped(WritingMode aThisWm, WritingMode aOtherWm) {
-  return AxisPolarityFlipped(LogicalAxis::Block, aThisWm, aOtherWm);
-}
-
 // In the code below, |aCBReflowInput->mFrame| is the absolute containing block,
 // while |blockContainer| is the nearest block container of the placeholder
 // frame, which may be different from the absolute containing block.
@@ -1592,13 +1602,15 @@ void ReflowInput::CalculateHypotheticalPosition(
   // padding edge and our current values are relative to the border edge, so
   // translate.
   const LogicalMargin border = aCBReflowInput->ComputedLogicalBorder(wm);
-  if (hypotheticalPosWillUseCbwm && InlinePolarityFlipped(wm, cbwm)) {
+  if (hypotheticalPosWillUseCbwm &&
+      !wm.ParallelAxisStartsOnSameSide(LogicalAxis::Inline, cbwm)) {
     aHypotheticalPos.mIStart += border.IEnd(wm);
   } else {
     aHypotheticalPos.mIStart -= border.IStart(wm);
   }
 
-  if (hypotheticalPosWillUseCbwm && BlockPolarityFlipped(wm, cbwm)) {
+  if (hypotheticalPosWillUseCbwm &&
+      !wm.ParallelAxisStartsOnSameSide(LogicalAxis::Block, cbwm)) {
     aHypotheticalPos.mBStart += border.BEnd(wm);
   } else {
     aHypotheticalPos.mBStart -= border.BStart(wm);
@@ -1708,6 +1720,16 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
   bool bStartIsAuto = bStartOffset->IsAuto();
   bool bEndIsAuto = bEndOffset->IsAuto();
 
+  mFlags.mIAnchorCenter = anchorResolutionParams.mBaseParams.mIAnchorCenter;
+  mFlags.mBAnchorCenter = anchorResolutionParams.mBaseParams.mBAnchorCenter;
+
+  // For anchor-center with both insets auto, insets need to be kept as 0
+  // so hypothetical position should be skipped.
+  const bool inlineBothInsetsAuto =
+      mFlags.mIAnchorCenter && iStartIsAuto && iEndIsAuto;
+  const bool blockBothInsetsAuto =
+      mFlags.mBAnchorCenter && bStartIsAuto && bEndIsAuto;
+
   // If both 'inline-start' and 'inline-end' are 'auto' or both 'block-start'
   // and 'block-end' are 'auto', then compute the hypothetical box position
   // where the element would have if it were in the flow.
@@ -1793,7 +1815,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
         nsLayoutUtils::ComputeCBDependentValue(aCBSize.ISize(cbwm), iEndOffset);
   }
 
-  if (iStartIsAuto && iEndIsAuto) {
+  if (iStartIsAuto && iEndIsAuto && !inlineBothInsetsAuto) {
     if (cbwm.IsInlineReversed() !=
         hypotheticalPos.mWritingMode.IsInlineReversed()) {
       offsets.IEnd(cbwm) = hypotheticalPos.mIStart;
@@ -1817,7 +1839,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
         nsLayoutUtils::ComputeCBDependentValue(aCBSize.BSize(cbwm), bEndOffset);
   }
 
-  if (bStartIsAuto && bEndIsAuto) {
+  if (bStartIsAuto && bEndIsAuto && !blockBothInsetsAuto) {
     // Treat 'top' like 'static-position'
     offsets.BStart(cbwm) = hypotheticalPos.mBStart;
     bStartIsAuto = false;
@@ -2131,15 +2153,6 @@ static nscoord CalcQuirkContainingBlockHeight(
 
 LogicalSize ReflowInput::ComputeContainingBlockRectangle(
     nsPresContext* aPresContext, const ReflowInput* aContainingBlockRI) const {
-  MOZ_ASSERT(!mFrame->IsAbsolutelyPositioned(mStyleDisplay) ||
-                 // XXX: We have a hack putting abspos continuations in overflow
-                 // container lists (bug 154892), so they are not reflowed by
-                 // AbsoluteContainingBlock until we revisit the abspos
-                 // continuations handling.
-                 mFrame->GetPrevInFlow(),
-             "AbsoluteContainingBlock always provides a containing-block size "
-             "when creating ReflowInput for its children!");
-
   LogicalSize cbSize = aContainingBlockRI->ComputedSize();
   WritingMode wm = aContainingBlockRI->GetWritingMode();
 
@@ -2222,6 +2235,19 @@ void ReflowInput::InitConstraints(
     // If we weren't given a containing block size, then compute one.
     if (aContainingBlockSize.isNothing()) {
       cbSize = ComputeContainingBlockRectangle(aPresContext, cbri);
+    } else if (aPresContext->FragmentainerAwarePositioningEnabled() &&
+               mFrame->IsAbsolutelyPositioned(mStyleDisplay) &&
+               mFrame->GetPrevInFlow()) {
+      // AbsoluteContainingBlock always provides a containing-block size to
+      // ReflowInput. However, if the delegating frame is a continuation or an
+      // overflow container (i.e. it has zero block-size), we'll need a
+      // containing-block size (padding-box size) suitable for resolving the
+      // abspos continuation's percentage block-size.
+      //
+      // Bug 1998818 is to fix the containing-block size for resolving
+      // percentage block-size for abspos's first-in-flow.
+      cbSize = ComputeContainingBlockRectangle(aPresContext, cbri) +
+               cbri->ComputedLogicalPadding(wm).Size(wm);
     }
 
     // See if the containing block height is based on the size of its
@@ -2385,8 +2411,8 @@ void ReflowInput::InitConstraints(
       mComputedMaxSize.SizeTo(mWritingMode, NS_UNCONSTRAINEDSIZE,
                               NS_UNCONSTRAINEDSIZE);
     } else if (mFrame->IsAbsolutelyPositioned(mStyleDisplay) &&
-               // XXXfr hack for making frames behave properly when in overflow
-               // container lists, see bug 154892; need to revisit later
+               // The absolute constraints are needed only for abspos
+               // first-in-flow, not continuations.
                !mFrame->GetPrevInFlow()) {
       InitAbsoluteConstraints(cbri,
                               cbSize.ConvertTo(cbri->GetWritingMode(), wm));

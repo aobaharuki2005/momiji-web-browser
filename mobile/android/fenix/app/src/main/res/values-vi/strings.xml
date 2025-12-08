@@ -1481,6 +1481,14 @@
   <string name="tab_tray_menu_tab_settings">Cài đặt thẻ</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">Đóng tất cả các thẻ</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">Đóng tất cả các thẻ?</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">Thao tác này sẽ đóng tất cả các thẻ đang mở.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">Đóng thẻ</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Hủy bỏ</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Đánh dấu</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
@@ -3893,7 +3901,7 @@
   <!-- Message displayed when the search field in the Settings Search screen is empty -->
   <string name="settings_search_empty_query_placeholder">Không có tìm kiếm gần đây</string>
   <!-- Message when error happens with Settings Search -->
-  <string name="settings_search_error_message">Có lỗi đã xảy ra</string>
+  <string name="settings_search_error_message" tools:ignore="UnusedResources" moz:removedIn="147">Có lỗi đã xảy ra</string>
   <!-- Text of button allowing to clear history of recent searches done in the settings screen. -->
   <string name="settings_search_clear_recent_searches_message">Xóa tất cả</string>
   <!-- Section header for recent search results -->

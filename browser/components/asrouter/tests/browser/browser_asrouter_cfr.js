@@ -418,7 +418,7 @@ add_task(async function test_cfr_notification_minimize_2() {
 
   Assert.ok(
     document.getElementById("contextual-feature-recommendation-notification"),
-    "The notification should not dissapear"
+    "The notification should not disappear"
   );
 
   await BrowserTestUtils.waitForCondition(

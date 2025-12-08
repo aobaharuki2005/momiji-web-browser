@@ -81,6 +81,7 @@ import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.GleanMetrics.TabStrip
 import org.mozilla.fenix.GleanMetrics.TermsOfUse
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.Core
@@ -735,7 +736,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
      * the current metrics ping design. The values set here will be sent in every metrics ping even
      * if these values have not changed since the last startup.
      */
-    @Suppress("ComplexMethod", "LongMethod")
+    @Suppress("CognitiveComplexMethod", "LongMethod", "CyclomaticComplexMethod")
     @VisibleForTesting
     internal fun setStartupMetrics(
         browserStore: BrowserStore,
@@ -903,7 +904,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     private fun isDeviceRamAboveThreshold() = deviceRamApproxMegabytes() > RAM_THRESHOLD_MEGABYTES
 
-    @Suppress("ComplexMethod")
+    @Suppress("CyclomaticComplexMethod")
     private fun setPreferenceMetrics(
         settings: Settings,
         dohSettingsProvider: DohSettingsProvider,
@@ -924,6 +925,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             signedInSync.set(settings.signedInFxaAccount)
             isolatedContentProcessesEnabled.set(settings.isIsolatedProcessEnabled)
             appZygoteIsolatedContentProcessesEnabled.set(settings.isAppZygoteEnabled)
+            TabStrip.enabled.set(settings.isTabStripEnabled)
 
             val syncedItems = SyncEnginesStorage(applicationContext).getStatus().entries.filter {
                 it.value

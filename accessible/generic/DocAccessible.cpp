@@ -33,7 +33,6 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsImageFrame.h"
 #include "nsIMutationObserver.h"
-#include "nsViewManager.h"
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
@@ -166,7 +165,7 @@ NS_IMPL_RELEASE_INHERITED(DocAccessible, HyperTextAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsIAccessible
 
-ENameValueFlag DocAccessible::Name(nsString& aName) const {
+ENameValueFlag DocAccessible::DirectName(nsString& aName) const {
   aName.Truncate();
 
   if (mParent) {
@@ -174,13 +173,17 @@ ENameValueFlag DocAccessible::Name(nsString& aName) const {
   }
   if (aName.IsEmpty()) {
     // Allow name via aria-labelledby or title attribute
-    LocalAccessible::Name(aName);
+    LocalAccessible::DirectName(aName);
   }
   if (aName.IsEmpty()) {
     Title(aName);  // Try title element
   }
   if (aName.IsEmpty()) {  // Last resort: use URL
     URL(aName);
+  }
+
+  if (aName.IsEmpty()) {
+    aName.SetIsVoid(true);
   }
 
   return eNameOK;
@@ -249,8 +252,7 @@ uint64_t DocAccessible::NativeState() const {
   // exposed on the root frame. Therefore, we explicitly use the body frame
   // here (if any).
   nsIFrame* bodyFrame = mContent ? mContent->GetPrimaryFrame() : nullptr;
-  if ((state & states::EDITABLE) ||
-      (bodyFrame && bodyFrame->IsSelectable(nullptr))) {
+  if ((state & states::EDITABLE) || (bodyFrame && bodyFrame->IsSelectable())) {
     // If the accessible is editable the layout selectable state only disables
     // mouse selection, but keyboard (shift+arrow) selection is still possible.
     state |= states::SELECTABLE_TEXT;
@@ -530,7 +532,8 @@ void DocAccessible::Init() {
   // this failed. The DocAccessible was subsequently created due to a layout
   // notification.
   if (mDocumentNode->GetReadyStateEnum() ==
-      dom::Document::READYSTATE_COMPLETE) {
+          dom::Document::READYSTATE_COMPLETE &&
+      !mDocumentNode->IsUncommittedInitialDocument()) {
     mLoadState |= eDOMLoaded;
     // If this happened due to reasons 1 or 2, it isn't *necessary* to fire a
     // doc load complete event. If it happened due to reason 3, we need to fire
@@ -540,9 +543,10 @@ void DocAccessible::Init() {
     // harm even if it isn't necessary. We set mLoadEventType here and it will
     // be fired in ProcessLoad as usual.
     mLoadEventType = nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE;
-  } else if (mDocumentNode->IsInitialDocument()) {
-    // The initial about:blank document will never finish loading, so we can
-    // immediately mark it loaded to avoid waiting for its load.
+  } else if (mDocumentNode->IsUncommittedInitialDocument()) {
+    // The initial about:blank always has its readyState as "complete"
+    // even if it didn't fire a load event yet. We cannot know whether
+    // it will load, so mark it loaded to avoid waiting for it.
     mLoadState |= eDOMLoaded;
   }
 

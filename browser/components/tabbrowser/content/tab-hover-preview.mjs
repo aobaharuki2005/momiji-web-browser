@@ -228,6 +228,7 @@ class TabPanel extends Panel {
   }
 
   activate(tab) {
+    let originalTab = this.#tab;
     this.#tab = tab;
 
     // Calling `moveToAnchor` in advance of the call to `openPopup` ensures
@@ -239,6 +240,9 @@ class TabPanel extends Panel {
     // If the popup is closed this call will be ignored.
     this.#movePanel();
 
+    originalTab?.removeEventListener("TabAttrModified", this);
+    this.#tab.addEventListener("TabAttrModified", this);
+
     this.#thumbnailElement = null;
     this.#maybeRequestThumbnail();
     if (
@@ -246,16 +250,16 @@ class TabPanel extends Panel {
       this.panelElement.state == "showing"
     ) {
       this.#updatePreview();
+    } else {
+      this.#panelSet.panelOpener.execute(() => {
+        if (!this.#panelSet.shouldActivate()) {
+          return;
+        }
+        this.panelElement.openPopup(this.#tab, this.popupOptions);
+      }, this);
+      this.win.addEventListener("TabSelect", this);
+      this.panelElement.addEventListener("popupshowing", this);
     }
-    this.#panelSet.panelOpener.execute(() => {
-      if (!this.#panelSet.shouldActivate()) {
-        return;
-      }
-      this.panelElement.openPopup(this.#tab, this.popupOptions);
-    }, this);
-    this.win.addEventListener("TabSelect", this);
-    this.panelElement.addEventListener("popupshowing", this);
-    this.#tab.addEventListener("TabAttrModified", this);
   }
 
   deactivate(leavingTab = null) {
@@ -501,13 +505,16 @@ class TabGroupPanel extends Panel {
     this.#group = group;
     this.#movePanel();
     this.#updatePanelContent();
+    Glean.tabgroup.groupInteractions.hover_preview.add();
 
-    this.#panelSet.panelOpener.execute(() => {
-      if (!this.#panelSet.shouldActivate() || !this.#group.collapsed) {
-        return;
-      }
-      this.#doOpenPanel();
-    }, this);
+    if (this.panelElement.state == "closed") {
+      this.#panelSet.panelOpener.execute(() => {
+        if (!this.#panelSet.shouldActivate() || !this.#group.collapsed) {
+          return;
+        }
+        this.#doOpenPanel();
+      }, this);
+    }
   }
 
   /**
@@ -576,8 +583,6 @@ class TabGroupPanel extends Panel {
     }
 
     this.panelElement.openPopup(this.#popupTarget, this.popupOptions);
-
-    Glean.tabgroup.groupInteractions.hover_preview.add();
   }
 
   #updatePanelContent() {
@@ -698,7 +703,7 @@ class TabPreviewPanelTimedFunction {
   /** @type {number | null} */
   #timer;
 
-  /** @type {boolean} */
+  /** @type {number | null} */
   #useZeroDelay;
 
   /** @type {function(): void | null} */
@@ -795,13 +800,12 @@ class TabPreviewPanelTimedFunction {
    */
   setZeroDelay() {
     if (this.#useZeroDelay) {
-      return;
+      this.#win.clearTimeout(this.#useZeroDelay);
     }
 
-    this.#win.setTimeout(() => {
-      this.#useZeroDelay = false;
+    this.#useZeroDelay = this.#win.setTimeout(() => {
+      this.#useZeroDelay = null;
     }, this.#zeroDelayTime);
-    this.#useZeroDelay = true;
   }
 
   get delayActive() {

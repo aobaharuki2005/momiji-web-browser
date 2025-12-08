@@ -1868,10 +1868,8 @@ struct nsRecessedBorder : public nsStyleBorder {
   explicit nsRecessedBorder(nscoord aBorderWidth) {
     for (const auto side : AllPhysicalSides()) {
       BorderColorFor(side) = StyleColor::Black();
-      mBorder.Side(side) = aBorderWidth;
-      // Note: use SetBorderStyle here because we want to affect
-      // mComputedBorder
-      SetBorderStyle(side, StyleBorderStyle::Inset);
+      mBorder.Get(side) = aBorderWidth;
+      mBorderStyle.Get(side) = StyleBorderStyle::Inset;
     }
   }
 };

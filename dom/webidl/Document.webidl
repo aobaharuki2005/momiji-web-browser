@@ -176,7 +176,7 @@ partial interface Document {
   boolean queryCommandIndeterm(DOMString commandId);
   [Throws]
   boolean queryCommandState(DOMString commandId);
-  [Throws, NeedsCallerType]
+  [Throws, NeedsSubjectPrincipal]
   boolean queryCommandSupported(DOMString commandId);
   [Throws]
   DOMString queryCommandValue(DOMString commandId);
@@ -445,6 +445,11 @@ partial interface Document {
   [ChromeOnly] readonly attribute nsILoadGroup? documentLoadGroup;
 
   // Blocks the initial document parser until the given promise is settled.
+  // Note: In order to prevent extension or test code from altering about:blank
+  // semantics, this cannot block about:blank.
+  //
+  // If the option `blockScriptCreated` is not set to `false` this alters
+  // the Web-exposed behavior of `document.open()`ed documents, which is bad.
   [ChromeOnly, NewObject]
   Promise<any> blockParsing(Promise<any> promise,
                             optional BlockParsingOptions options = {});
@@ -690,8 +695,28 @@ partial interface Document {
 
 // Extension to allow chrome code to detect initial about:blank documents.
 partial interface Document {
+  /**
+   * https://html.spec.whatwg.org/#is-initial-about:blank
+   *
+   * True if this is the initial about:blank document that the browsing context
+   * started with. Any web-observable browsing context starts out with such
+   * an empty document.
+   *
+   * This flag remains true for the entire lifetime of that document.
+   */
   [ChromeOnly]
   readonly attribute boolean isInitialDocument;
+
+  /**
+   * True if this is the initial about:blank document and it is still transient,
+   * i.e. it has not been committed to as a navigation destination.
+   *
+   * In this state, many actions (e.g. firing the load event) have not yet occurred.
+   * The browser may commit to it synchronously (causing those actions to run),
+   * but it could also remain transient or be replaced.
+   */
+  [ChromeOnly]
+  readonly attribute boolean isUncommittedInitialDocument;
 };
 
 // Extension to allow chrome code to get some wireframe-like structure.
@@ -739,14 +764,22 @@ partial interface Document {
     readonly attribute FragmentDirective fragmentDirective;
 };
 
-// https://drafts.csswg.org/css-view-transitions-1/#additions-to-document-api
-partial interface Document {
-  [Pref="dom.viewTransitions.enabled"]
-  ViewTransition startViewTransition(optional ViewTransitionUpdateCallback updateCallback);
+
+callback ViewTransitionUpdateCallback = Promise<any> ();
+dictionary StartViewTransitionOptions {
+  ViewTransitionUpdateCallback? update = null;
+  sequence<DOMString>? types = null;
 };
 
-// https://github.com/w3c/csswg-drafts/pull/10767 for the name divergence in the spec
-callback ViewTransitionUpdateCallback = Promise<any> ();
+// https://drafts.csswg.org/css-view-transitions-2/#idl-index
+partial interface Document {
+  [Pref="dom.viewTransitions.enabled"]
+  ViewTransition startViewTransition(
+    optional (ViewTransitionUpdateCallback or StartViewTransitionOptions) callbackOptions = {}
+  );
+  [Pref="dom.viewTransitions.enabled"]
+  readonly attribute ViewTransition? activeViewTransition;
+};
 
 // https://wicg.github.io/sanitizer-api/#sanitizer-api
 partial interface Document {

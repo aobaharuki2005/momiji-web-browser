@@ -16,60 +16,21 @@ import android.widget.RadioButton
 import android.widget.TextView
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.core.widget.ImageViewCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.color.MaterialColors
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.settings
 import com.google.android.material.R as materialR
-import mozilla.components.ui.icons.R as iconsR
 
 /**
  * Custom Preference that renders the options list.
  * Selecting an option moves it to the top and persists to SharedPreferences.
  */
-class ToolbarShortcutPreference @JvmOverloads constructor(
+internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
 ) : Preference(context, attrs) {
-
-    private val options: List<Option> by lazy {
-        listOf(
-            Option(
-                Keys.NEW_TAB,
-                iconsR.drawable.mozac_ic_plus_24,
-                R.string.toolbar_customize_shortcut_new_tab,
-            ),
-            Option(
-                Keys.SHARE,
-                iconsR.drawable.mozac_ic_share_android_24,
-                R.string.toolbar_customize_shortcut_share,
-            ),
-            Option(
-                Keys.BOOKMARK,
-                iconsR.drawable.mozac_ic_bookmark_24,
-                R.string.toolbar_customize_shortcut_add_bookmark,
-            ),
-            Option(
-                Keys.TRANSLATE,
-                iconsR.drawable.mozac_ic_translate_24,
-                R.string.toolbar_customize_shortcut_translate,
-            ),
-            Option(
-                Keys.HOMEPAGE,
-                iconsR.drawable.mozac_ic_home_24,
-                R.string.toolbar_customize_shortcut_homepage,
-            ),
-            Option(
-                Keys.BACK,
-                iconsR.drawable.mozac_ic_back_24,
-                R.string.toolbar_customize_shortcut_back,
-            ),
-        )
-    }
 
     @ColorInt
     private var colorTertiary: Int = 0
@@ -85,12 +46,15 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         isSelectable = false
     }
 
+    protected abstract val options: List<ShortcutOption>
+    protected abstract fun readSelectedKey(): String
+    protected abstract fun writeSelectedKey(key: String)
+    protected abstract fun getSelectedIconImageView(holder: PreferenceViewHolder): ImageView
+
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
 
-        val settings = context.settings()
-        val selectedKey = settings.toolbarShortcutKey
-
+        val selectedIcon = getSelectedIconImageView(holder)
         val selectedContainer = holder.findViewById(R.id.selected_container) as LinearLayout
         val optionsContainer = holder.findViewById(R.id.options_container) as LinearLayout
         val separator = holder.findViewById(R.id.separator) as View
@@ -99,8 +63,11 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
         colorOnSurface = holder.itemView.getMaterialColor(materialR.attr.colorOnSurface)
         colorOnSurfaceVariant = holder.itemView.getMaterialColor(materialR.attr.colorOnSurfaceVariant)
 
-        val selected = options.firstOrNull { it.key == selectedKey } ?: options.first()
-
+        val selectedKey = readSelectedKey()
+        val selected = options.firstOrNull {
+            it.key == ShortcutType.fromValue(selectedKey)
+        } ?: options.first()
+        selectedIcon.setImageResource(selected.icon)
         selectedContainer.removeAllViews()
         selectedContainer.addView(
             makeRow(
@@ -122,7 +89,8 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
                     isChecked = false,
                     isEnabled = true,
                 ) { newlySelected ->
-                    settings.toolbarShortcutKey = newlySelected.key
+                    writeSelectedKey(newlySelected.key.value)
+                    selectedIcon.setImageResource(newlySelected.icon)
                     notifyChanged()
                 },
             )
@@ -133,10 +101,10 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
 
     private fun makeRow(
         parent: ViewGroup,
-        option: Option,
+        option: ShortcutOption,
         isChecked: Boolean,
         isEnabled: Boolean,
-        onClick: (Option) -> Unit,
+        onClick: (ShortcutOption) -> Unit,
     ): View {
         val row = LayoutInflater.from(context)
             .inflate(R.layout.toolbar_shortcut_row, parent, false) as LinearLayout
@@ -171,38 +139,20 @@ class ToolbarShortcutPreference @JvmOverloads constructor(
             intArrayOf(colorTertiary, colorOnSurfaceVariant),
         )
 
+        row.isEnabled = isEnabled
+        row.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+
         if (isEnabled) {
-            val clicker = View.OnClickListener {
-                onClick(option)
-            }
+            val clicker = View.OnClickListener { onClick(option) }
             row.setOnClickListener(clicker)
         }
-
-        row.isEnabled = isEnabled
 
         return row
     }
 
-    private fun View.getMaterialColor(@AttrRes attr: Int): Int {
+    private fun View.getMaterialColor(
+        @AttrRes attr: Int,
+    ): Int {
         return MaterialColors.getColor(this, attr)
-    }
-
-    private data class Option(
-        val key: String,
-        @param:DrawableRes val icon: Int,
-        @param:StringRes val label: Int,
-    )
-
-    /**
-     * String keys used to persist and map the selected toolbar shortcut option.
-     * These values are stored in preferences and also used to resolve the UI/action.
-     */
-    object Keys {
-        const val NEW_TAB = "new_tab"
-        const val SHARE = "share"
-        const val BOOKMARK = "bookmark"
-        const val TRANSLATE = "translate"
-        const val HOMEPAGE = "homepage"
-        const val BACK = "back"
     }
 }

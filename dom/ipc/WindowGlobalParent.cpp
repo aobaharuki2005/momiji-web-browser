@@ -100,6 +100,7 @@ WindowGlobalParent::WindowGlobalParent(
     uint64_t aOuterWindowId, FieldValues&& aInit)
     : WindowContext(aBrowsingContext, aInnerWindowId, aOuterWindowId,
                     std::move(aInit)),
+      mIsUncommittedInitialDocument(false),
       mSandboxFlags(0),
       mDocumentHasLoaded(false),
       mDocumentHasUserInteracted(false),
@@ -127,6 +128,7 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
   wgp->mDocumentPrincipal = aInit.principal();
   wgp->mDocumentURI = aInit.documentURI();
   wgp->mIsInitialDocument = Some(aInit.isInitialDocument());
+  wgp->mIsUncommittedInitialDocument = aInit.isUncommittedInitialDocument();
   wgp->mBlockAllMixedContent = aInit.blockAllMixedContent();
   wgp->mUpgradeInsecureRequests = aInit.upgradeInsecureRequests();
   wgp->mSandboxFlags = aInit.sandboxFlags();
@@ -552,21 +554,14 @@ IPCResult WindowGlobalParent::RecvDestroy() {
 }
 
 IPCResult WindowGlobalParent::RecvRawMessage(
-    const JSActorMessageMeta& aMeta, const UniquePtr<ClonedMessageData>& aData,
+    const JSActorMessageMeta& aMeta, JSIPCValue&& aData,
     const UniquePtr<ClonedMessageData>& aStack) {
-  UniquePtr<StructuredCloneData> data;
-  if (aData) {
-    data = MakeUnique<StructuredCloneData>();
-    data->BorrowFromClonedMessageData(*aData);
-  }
   UniquePtr<StructuredCloneData> stack;
   if (aStack) {
     stack = MakeUnique<StructuredCloneData>();
     stack->BorrowFromClonedMessageData(*aStack);
   }
-  MMPrinter::Print("WindowGlobalParent::RecvRawMessage", aMeta.actorName(),
-                   aMeta.messageName(), aData);
-  ReceiveRawMessage(aMeta, std::move(data), std::move(stack));
+  ReceiveRawMessage(aMeta, std::move(aData), std::move(stack));
   return IPC_OK();
 }
 

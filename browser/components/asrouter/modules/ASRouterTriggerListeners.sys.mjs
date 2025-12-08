@@ -115,7 +115,6 @@ export const ASRouterTriggerListeners = new Map([
         "datareporting.healthreport.uploadEnabled",
         "datareporting.usage.uploadEnabled",
         "datareporting.policy.dataSubmissionEnabled",
-        "browser.urlbar.quicksuggest.dataCollection.enabled",
         "app.shield.optoutstudies.enabled",
         "browser.crashReports.unsubmittedCheck.autoSubmit2",
         "browser.discovery.enabled",
@@ -322,6 +321,7 @@ export const ASRouterTriggerListeners = new Map([
       /**
        * _updateVisits - Record visit timestamps for websites that match `this._hosts` and only
        * if it's been more than FEW_MINUTES since the last visit.
+       *
        * @param {string} host - Location host of current selected tab
        * @returns {boolean} - If the new visit has been recorded
        */

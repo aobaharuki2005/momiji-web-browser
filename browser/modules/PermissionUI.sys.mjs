@@ -736,7 +736,7 @@ class SitePermsAddonInstallRequest extends PermissionPromptForRequest {
    * This should be overriden by children classes.
    *
    * @param {Components.Exception} err
-   * @returns {String} The error message
+   * @returns {string} The error message
    */
   getInstallErrorMessage() {
     return null;
@@ -1508,7 +1508,7 @@ class MIDIPermissionPrompt extends SitePermsAddonInstallRequest {
   /**
    * @override
    * @param {Components.Exception} err
-   * @returns {String}
+   * @returns {string}
    */
   getInstallErrorMessage(err) {
     return `WebMIDI access request was denied: ❝${err.message}❞. See https://developer.mozilla.org/docs/Web/API/Navigator/requestMIDIAccess for more information`;

@@ -880,6 +880,7 @@ async function promiseNativePointerInput(
 
 /**
  * Function to generate native pointer events as a sequence.
+ *
  * @param aTarget is the element or window whose bounding rect the coordinates are
  *   relative to.
  * @param aPointerType "touch" or "pen".
@@ -1311,6 +1312,9 @@ function promiseMoveMouseAndScrollWheelOver(
   });
   if (waitForScroll) {
     p = p.then(() => {
+      info(
+        "Printing something here to avoid failure; see https://bugzilla.mozilla.org/show_bug.cgi?id=1776963"
+      );
       return promiseNativeWheelAndWaitForScrollEvent(
         target,
         dx,

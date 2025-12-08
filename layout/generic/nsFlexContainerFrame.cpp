@@ -1870,12 +1870,7 @@ class nsFlexContainerFrame::CachedBAxisMeasurement {
           mComputedMaxBSize(aRI.ComputedMaxBSize()),
           mAvailableBSize(aRI.AvailableBSize()) {}
 
-    bool operator==(const Key& aOther) const {
-      return mComputedSize == aOther.mComputedSize &&
-             mComputedMinBSize == aOther.mComputedMinBSize &&
-             mComputedMaxBSize == aOther.mComputedMaxBSize &&
-             mAvailableBSize == aOther.mAvailableBSize;
-    }
+    bool operator==(const Key& aOther) const = default;
   };
 
   const Key mKey;
@@ -2987,6 +2982,7 @@ void nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, tempLists);
+    DisplayAbsoluteContinuations(aBuilder, tempLists);
   }
 
   // Our children are all block-level, so their borders/backgrounds all go on
@@ -6265,8 +6261,6 @@ void nsFlexContainerFrame::MoveFlexItemToFinalPosition(
   FLEX_ITEM_LOG(aItem.Frame(), "Moving item to its desired position %s",
                 ToString(pos).c_str());
   aItem.Frame()->SetPosition(outerWM, pos, aContainerSize);
-  PositionFrameView(aItem.Frame());
-  PositionChildViews(aItem.Frame());
 }
 
 nsReflowStatus nsFlexContainerFrame::ReflowFlexItem(

@@ -75,6 +75,7 @@ static StaticAutoPtr<nsString> sBinDir;
 static StaticAutoPtr<nsString> sProfileDir;
 static StaticAutoPtr<nsString> sWindowsProfileDir;
 static StaticAutoPtr<nsString> sLocalAppDataDir;
+static StaticAutoPtr<nsString> sRoamingAppDataDir;
 static StaticAutoPtr<nsString> sSystemFontsDir;
 static StaticAutoPtr<nsString> sWindowsSystemDir;
 static StaticAutoPtr<nsString> sLocalAppDataLowDir;
@@ -148,6 +149,7 @@ void SandboxBroker::Initialize(sandbox::BrokerServices* aBrokerServices,
     sProfileDir = nullptr;
     sWindowsProfileDir = nullptr;
     sLocalAppDataDir = nullptr;
+    sRoamingAppDataDir = nullptr;
     sSystemFontsDir = nullptr;
     sWindowsSystemDir = nullptr;
     sLocalAppDataLowDir = nullptr;
@@ -249,12 +251,24 @@ static void AddCachedWindowsDirRule(
     AddCachedDirRule(aConfig, aAccess, sWindowsSystemDir, aRelativePath);
     return;
   }
+  if (aFolderID == FOLDERID_LocalAppData) {
+    EnsureWindowsDirCached(FOLDERID_LocalAppData, sLocalAppDataDir,
+                           "Failed to get Windows LocalAppData folder");
+    AddCachedDirRule(aConfig, aAccess, sLocalAppDataDir, aRelativePath);
+    return;
+  }
   if (aFolderID == FOLDERID_LocalAppDataLow) {
     // For LocalAppDataLow we also require the parent dir.
     EnsureWindowsDirCached(FOLDERID_LocalAppDataLow, sLocalAppDataLowDir,
                            "Failed to get Windows LocalAppDataLow folder",
                            &sLocalAppDataLowParentDir);
     AddCachedDirRule(aConfig, aAccess, sLocalAppDataLowDir, aRelativePath);
+    return;
+  }
+  if (aFolderID == FOLDERID_RoamingAppData) {
+    EnsureWindowsDirCached(FOLDERID_RoamingAppData, sRoamingAppDataDir,
+                           "Failed to get Windows RoamingAppData folder");
+    AddCachedDirRule(aConfig, aAccess, sRoamingAppDataDir, aRelativePath);
     return;
   }
   if (aFolderID == FOLDERID_Profile) {
@@ -287,7 +301,6 @@ void SandboxBroker::GeckoDependentInitialize() {
   }
 
   CacheDirectoryServiceDir(dirSvc, NS_APP_USER_PROFILE_50_DIR, sProfileDir);
-  CacheDirectoryServiceDir(dirSvc, NS_WIN_LOCAL_APPDATA_DIR, sLocalAppDataDir);
 #ifdef ENABLE_SYSTEM_EXTENSION_DIRS
   CacheDirectoryServiceDir(dirSvc, XRE_USER_SYS_EXTENSION_DIR,
                            sUserExtensionsDir);
@@ -1083,6 +1096,12 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     config->SetDesktop(sandbox::Desktop::kAlternateWinstation);
   }
 
+  if (StaticPrefs::security_sandbox_content_close_ksecdd_handle()) {
+    result = config->AddKernelObjectToClose(L"File", L"\\Device\\KsecDD");
+    MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                       "AddKernelObjectToClose should never fail.");
+  }
+
   sandbox::MitigationFlags mitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
@@ -1136,8 +1155,9 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                        "what happened?");
   } else {
     // Add rule to allow access to user specific fonts.
-    AddCachedDirRule(config, sandbox::FileSemantics::kAllowReadonly,
-                     sLocalAppDataDir, u"\\Microsoft\\Windows\\Fonts\\*"_ns);
+    AddCachedWindowsDirRule(config, sandbox::FileSemantics::kAllowReadonly,
+                            FOLDERID_LocalAppData,
+                            u"\\Microsoft\\Windows\\Fonts\\*"_ns);
 
     // Add rule to allow read access to installation directory.
     AddCachedDirRule(config, sandbox::FileSemantics::kAllowReadonly, sBinDir,
@@ -1348,17 +1368,21 @@ void SandboxBroker::SetSecurityLevelForGPUProcess(int32_t aSandboxLevel) {
 
   AddShaderCachesToPolicy(&trackingConfig, aSandboxLevel);
 
-  // The GPU process is launched without GeckoDependentInitialize for the
-  // profile picker making sLocalAppDataDir null.
-  if (aSandboxLevel >= 2 && sLocalAppDataDir) {
+  if (aSandboxLevel >= 2) {
     // We don't want to add a rule directly here but use the same retrieval and
-    // caching mechanism to get the Windows user profile dir.
+    // caching mechanism to get the Windows user's dirs.
     EnsureWindowsDirCached(FOLDERID_Profile, sWindowsProfileDir,
                            "Failed to get Windows Profile folder");
-    sandboxing::UserFontConfigHelper configHelper(
-        LR"(Software\Microsoft\Windows NT\CurrentVersion\Fonts)",
-        *sWindowsProfileDir, *sLocalAppDataDir);
-    configHelper.AddRules(trackingConfig);
+    EnsureWindowsDirCached(FOLDERID_LocalAppData, sLocalAppDataDir,
+                           "Failed to get Windows LocalAppData folder");
+    EnsureWindowsDirCached(FOLDERID_RoamingAppData, sRoamingAppDataDir,
+                           "Failed to get Windows RoamingAppData folder");
+    if (sWindowsProfileDir && sLocalAppDataDir && sRoamingAppDataDir) {
+      sandboxing::UserFontConfigHelper configHelper(
+          LR"(Software\Microsoft\Windows NT\CurrentVersion\Fonts)",
+          *sWindowsProfileDir, *sLocalAppDataDir, *sRoamingAppDataDir);
+      configHelper.AddRules(trackingConfig);
+    }
   }
 }
 

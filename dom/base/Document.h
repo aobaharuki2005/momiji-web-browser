@@ -11,7 +11,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <new>
-#include <utility>
 
 #include "ErrorList.h"
 #include "MainThreadUtils.h"
@@ -105,7 +104,6 @@
 #include "nsURIHashKey.h"
 #include "nsWeakReference.h"
 #include "nsWindowSizes.h"
-#include "nsXULElement.h"
 #include "nscore.h"
 
 // XXX We need to include this here to ensure that DefaultDeleter for Servo
@@ -185,6 +183,7 @@ class nsTextNode;
 class nsViewManager;
 class nsViewportInfo;
 class nsXULPrototypeDocument;
+class nsXULPrototypeElement;
 struct JSContext;
 struct nsFont;
 
@@ -289,7 +288,7 @@ class TrustedHTMLOrString;
 class OwningTrustedHTMLOrString;
 enum class ViewportFitType : uint8_t;
 class ViewTransition;
-class ViewTransitionUpdateCallback;
+class ViewTransitionUpdateCallbackOrStartViewTransitionOptions;
 class WakeLockSentinel;
 class WindowContext;
 class WindowGlobalChild;
@@ -669,6 +668,8 @@ class Document : public nsINode,
     }
   };
 
+  void ApplyCspFromLoadInfo(nsILoadInfo* aLoadInfo);
+
   /**
    * Let the document know that we're starting to load data into it.
    * @param aCommand The parser command. Must not be null.
@@ -832,6 +833,16 @@ class Document : public nsINode,
    * GetReferrerPolicy() for Document.webidl.
    */
   ReferrerPolicyEnum ReferrerPolicy() const { return GetReferrerPolicy(); }
+
+  /**
+   * The referrer policy that was used for the fetch of this document, what the
+   * spec calls "request referrer policy". Not to be confused with the history
+   * policy container's referrer policy, which dictates the policy for fetches
+   * made by this document (see ReferrerPolicy()).
+   *
+   * See: https://html.spec.whatwg.org/#document-state-request-referrer-policy
+   */
+  ReferrerPolicyEnum ReferrerPolicyUsedToFetchThisDocument() const;
 
   /**
    * If true, this flag indicates that all mixed content subresource
@@ -1015,22 +1026,35 @@ class Document : public nsINode,
    */
   void SetBidiEnabled() { mBidiEnabled = true; }
 
+  /**
+   * Whether a document is the initial document in its window, and if so,
+   * which stage of initialness it is in.
+   */
   enum class InitialStatus : uint8_t {
-    IsInitial,
+    // The first stage of an initial document. No navigation has occured,
+    // we might navigate away or commit to this document by firing load.
+    IsInitialUncommitted,
+    // An explicit navigation to `about:blank` occured. Load was fired or will
+    // be soon.
+    IsInitialCommitted,
+    // document.open() was called on the initial document.
     IsInitialButExplicitlyOpened,
-    WasInitial,
+    // This document is not initial
     NeverInitial,
   };
 
   /**
-   * Ask this document whether it's the initial document in its window.
+   * Ask this document if the "is initial about:blank" flag is set, i.e.
+   * it is the initial document in its window.
+   * https://html.spec.whatwg.org/#is-initial-about:blank
    */
   bool IsInitialDocument() const {
-    return mInitialStatus == InitialStatus::IsInitial;
+    return mInitialStatus == InitialStatus::IsInitialUncommitted ||
+           mInitialStatus == InitialStatus::IsInitialCommitted;
   }
 
   /**
-   * Ask this document whether it has ever been a initial document in its
+   * Ask this document whether it has ever been an initial document in its
    * window.
    */
   bool IsEverInitialDocument() const {
@@ -1038,14 +1062,36 @@ class Document : public nsINode,
   }
 
   /**
-   * Tell this document that it's the initial document in its window.  See
-   * comments on mIsInitialDocumentInWindow for when this should be called.
+   * Ask this document whether it is the initial document in its window and
+   * no navigation to about:blank has yet occured that would cause us to commit
+   * to it.
    */
-  void SetIsInitialDocument(bool aIsInitialDocument);
+  bool IsUncommittedInitialDocument() const {
+    return mInitialStatus == InitialStatus::IsInitialUncommitted;
+  }
 
   InitialStatus GetInitialStatus() const { return mInitialStatus; }
 
+  /**
+   * Tell this document whether it's the initial document in its window.
+   * Should be called when creating the initial `about:blank`, when committing
+   * to it, and from `document.open()`.
+   */
   void SetInitialStatus(Document::InitialStatus aStatus);
+
+  /**
+   * Returns true if this is the initial document in its window
+   * and we are currently committing to it.
+   */
+  bool InitialAboutBlankLoadCompleting() const {
+    return mInitialAboutBlankLoadCompleting;
+  }
+
+  void BeginInitialAboutBlankLoadCompleting(nsIChannel* aChannel);
+
+  void EndInitialAboutBlankLoadCompleting() {
+    mInitialAboutBlankLoadCompleting = false;
+  }
 
   void SetLoadedAsData(bool aLoadedAsData, bool aConsiderForMemoryReporting);
 
@@ -1175,7 +1221,7 @@ class Document : public nsINode,
    * presshell if the presshell should observe document mutations.
    */
   MOZ_CAN_RUN_SCRIPT already_AddRefed<PresShell> CreatePresShell(
-      nsPresContext* aContext, nsViewManager* aViewManager);
+      nsPresContext* aContext, nsSubDocumentFrame* aEmbedderFrame);
   void DeletePresShell();
 
   PresShell* GetPresShell() const {
@@ -3512,7 +3558,7 @@ class Document : public nsINode,
   MOZ_CAN_RUN_SCRIPT bool QueryCommandState(const nsAString& aHTMLCommandName,
                                             mozilla::ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT bool QueryCommandSupported(
-      const nsAString& aHTMLCommandName, mozilla::dom::CallerType aCallerType,
+      const nsAString& aHTMLCommandName, nsIPrincipal& aSubjectPrincipal,
       mozilla::ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT void QueryCommandValue(const nsAString& aHTMLCommandName,
                                             nsAString& aValue,
@@ -3769,10 +3815,10 @@ class Document : public nsINode,
   // effect once per document, and so is called during document destruction.
   void ReportDocumentUseCounters();
 
-  // Report the names of the HTMLDocument/HTMLFormElement properties that had
+  // Report the names of the HTMLDocument properties that had
   // been shadowed using ID/name, and which were subsequently accessed
   // ("DOM clobbering"). This data is collected by the corresponding NamedGetter
-  // methods and limited to 10 unique entries.
+  // method and limited to 10 unique entries.
   void ReportShadowedProperties();
 
   // Reports largest contentful paint via telemetry. We want the most up to
@@ -4028,7 +4074,7 @@ class Document : public nsINode,
   DetermineProximityToViewportAndNotifyResizeObservers();
 
   already_AddRefed<ViewTransition> StartViewTransition(
-      const Optional<OwningNonNull<ViewTransitionUpdateCallback>>&);
+      const ViewTransitionUpdateCallbackOrStartViewTransitionOptions&);
   ViewTransition* GetActiveViewTransition() const {
     return mActiveViewTransition;
   }
@@ -4150,6 +4196,8 @@ class Document : public nsINode,
   void ResumeDOMNotifications() { mSuspendDOMNotifications = false; }
 
   bool DOMNotificationsSuspended() const { return mSuspendDOMNotifications; }
+
+  bool IsExpectingEndLoad() { return mDidCallBeginLoad; }
 
  protected:
   RefPtr<DocumentL10n> mDocumentL10n;
@@ -4729,6 +4777,10 @@ class Document : public nsINode,
 
   nsCOMPtr<nsIReferrerInfo> mPreloadReferrerInfo;
   nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
+  // A request referrer policy, which is a referrer policy, initially the
+  // default referrer policy.
+  ReferrerPolicyEnum mRequestReferrerPolicy =
+      ReferrerPolicyEnum::Strict_origin_when_cross_origin;
 
   nsString mLastModified;
 
@@ -4874,6 +4926,13 @@ class Document : public nsINode,
   bool mBidiEnabled : 1;
   // True if we may need to recompute the language prefs for this document.
   bool mMayNeedFontPrefsUpdate : 1;
+
+  // True if we are trying to fire the load event for the initial about:blank.
+  // Since the initial about:blank is already in READYSTATE_COMPLETE when
+  // firing the load event, a different indicator is needed.
+  // IsInitialDocument() isn't a sufficient indicator, because it
+  // remains set, when navigating back in history.
+  bool mInitialAboutBlankLoadCompleting : 1;
 
   bool mIgnoreDocGroupMismatches : 1;
 
@@ -5035,6 +5094,7 @@ class Document : public nsINode,
 
   bool mDelayFrameLoaderInitialization : 1;
 
+  // True if we should fire load events synchronously
   bool mSynchronousDOMContentLoaded : 1;
 
   // Set to true when the document is possibly controlled by the ServiceWorker.
@@ -5662,10 +5722,6 @@ class Document : public nsINode,
   // Used by the shadowed_html_document_property_access telemetry probe to
   // collected shadowed HTMLDocument properties. (Limited to 10 entries)
   nsTArray<nsString> mShadowedHTMLDocumentProperties;
-
-  // Used by the shadowed_html_form_element_property_access telemetry probe to
-  // collected shadowed HTMLFormElement properties. (Limited to 10 entries)
-  nsTArray<nsString> mShadowedHTMLFormElementProperties;
 
   // Collection of data used by the pageload event.
   PageloadEventData mPageloadEventData;

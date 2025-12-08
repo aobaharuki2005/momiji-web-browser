@@ -1407,7 +1407,7 @@ bool nsObjectLoadingContent::IsAboutBlankLoadOntoInitialAboutBlank(
   return NS_IsAboutBlank(aURI) && aInheritPrincipal &&
          (!mFrameLoader || !mFrameLoader->GetExistingDocShell() ||
           mFrameLoader->GetExistingDocShell()
-              ->IsAboutBlankLoadOntoInitialAboutBlank(aURI, aInheritPrincipal,
+              ->IsAboutBlankLoadOntoInitialAboutBlank(aURI,
                                                       aPrincipalToInherit));
 }
 

@@ -36,6 +36,14 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
       const LayersId& aRootLayerTreeId) override {
     return IPC_FAIL_NO_REASON(this);
   }
+  mozilla::ipc::IPCResult RecvInitAPZInputBridge(
+      Endpoint<PAPZInputBridgeParent>&& aEndpoint) override {
+    return IPC_FAIL(this, "Must only be called for top-level compositors");
+  }
+  mozilla::ipc::IPCResult RecvInitUiCompositorController(
+      Endpoint<PUiCompositorControllerParent>&& aEndpoint) override {
+    return IPC_FAIL(this, "Must only be called for top-level compositors");
+  }
   mozilla::ipc::IPCResult RecvWillClose() override { return IPC_OK(); }
   mozilla::ipc::IPCResult RecvPause() override { return IPC_OK(); }
   mozilla::ipc::IPCResult RecvRequestFxrOutput() override {
