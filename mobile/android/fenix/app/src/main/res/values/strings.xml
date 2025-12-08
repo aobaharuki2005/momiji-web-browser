@@ -2475,7 +2475,10 @@
     <string name="edit_login_navigate_back_button_content_description">Navigate back</string>
     <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
     <string name="edit_login_button_content_description">Edit login</string>
-
+    <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+    <string name="saved_logins_add_new_login_button_content_description">Add new login</string>
+    <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+    <string name="saved_logins_clear_search_text_button_content_description">Clear search text</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Open site in browser</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

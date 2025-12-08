@@ -28,12 +28,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.IconButton
+import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.ktx.util.URLStringUtils.isHttpOrHttps
@@ -48,6 +52,9 @@ internal fun AddLoginScreen(store: LoginsStore) {
     Scaffold(
         topBar = {
             AddLoginTopBar(store)
+        },
+        modifier = Modifier.semantics {
+            testTagsAsResourceId = true
         },
     ) { paddingValues ->
         Column(
@@ -140,11 +147,16 @@ private fun AddLoginHost(store: LoginsStore) {
                 horizontal = FirefoxTheme.layout.space.static200,
                 vertical = FirefoxTheme.layout.space.static100,
             )
-            .width(FirefoxTheme.layout.size.containerMaxWidth),
+            .width(FirefoxTheme.layout.size.containerMaxWidth)
+            .semantics {
+                testTag = LoginsTestingTags.ADD_LOGIN_HOST_NAME_TEXT_FIELD
+            },
         label = stringResource(R.string.preferences_passwords_saved_logins_site),
         trailingIcon = {
             if (isFocused && isValidHost(host)) {
-                CrossTextFieldButton { store.dispatch(AddLoginAction.HostChanged("")) }
+                CrossTextFieldButton(
+                    contentDescription = Text.Resource(R.string.saved_login_clear_hostname),
+                ) { store.dispatch(AddLoginAction.HostChanged("")) }
             }
         },
     )
@@ -182,11 +194,18 @@ private fun AddLoginUsername(store: LoginsStore) {
                 horizontal = FirefoxTheme.layout.space.static200,
                 vertical = FirefoxTheme.layout.space.static100,
             )
-            .width(FirefoxTheme.layout.size.containerMaxWidth),
+            .width(FirefoxTheme.layout.size.containerMaxWidth)
+            .semantics {
+                testTag = LoginsTestingTags.ADD_LOGIN_USER_NAME_TEXT_FIELD
+            },
         label = stringResource(R.string.preferences_passwords_saved_logins_username),
         trailingIcon = {
             if (isFocused && addLoginState?.username?.isNotEmpty() == true) {
-                CrossTextFieldButton { store.dispatch(AddLoginAction.UsernameChanged("")) }
+                CrossTextFieldButton(contentDescription = Text.Resource(R.string.saved_login_clear_username)) {
+                    store.dispatch(
+                        AddLoginAction.UsernameChanged(""),
+                    )
+                }
             }
         },
     )
@@ -212,11 +231,18 @@ private fun AddLoginPassword(store: LoginsStore) {
                 horizontal = FirefoxTheme.layout.space.static200,
                 vertical = FirefoxTheme.layout.space.static100,
             )
-            .width(FirefoxTheme.layout.size.containerMaxWidth),
-        label = stringResource(R.string.preferences_passwords_saved_logins_password),
+            .width(FirefoxTheme.layout.size.containerMaxWidth)
+            .semantics {
+                testTag = LoginsTestingTags.ADD_LOGIN_PASSWORD_TEXT_FIELD
+            },
+        label = stringResource(R.string.saved_logins_clear_password),
         trailingIcon = {
             if (isFocused && state?.password?.isNotEmpty() == true) {
-                CrossTextFieldButton { store.dispatch(AddLoginAction.PasswordChanged("")) }
+                CrossTextFieldButton(contentDescription = Text.Resource(R.string.saved_logins_clear_password)) {
+                    store.dispatch(
+                        AddLoginAction.PasswordChanged(""),
+                    )
+                }
             }
         },
         visualTransformation = PasswordVisualTransformation(),
