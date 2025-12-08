@@ -1046,6 +1046,50 @@ def wasm_branch_hinting(value, no_experimental):
 set_config("ENABLE_WASM_BRANCH_HINTING", wasm_branch_hinting)
 set_define("ENABLE_WASM_BRANCH_HINTING", wasm_branch_hinting)
 
+# Support for WebAssembly Custom Page Sizes
+# =====================================================
+
+
+@depends(milestone.is_nightly, "--enable-simulator", target)
+def default_wasm_custom_page_sizes(is_nightly, simulator, target):
+    if simulator and (simulator[0] != "arm64"):
+        return
+
+    if is_nightly and target.cpu in ("x86_64", "x86", "aarch64"):
+        return True
+
+
+option(
+    "--enable-wasm-custom-page-sizes",
+    default=default_wasm_custom_page_sizes,
+    help="{Enable|Disable} WebAssembly Custom Page Sizes",
+)
+
+
+@depends(
+    "--enable-wasm-custom-page-sizes",
+    "--enable-simulator",
+    target,
+    "--wasm-no-experimental",
+)
+def wasm_custom_page_sizes(value, simulator, target, no_experimental):
+    if no_experimental or not value:
+        return
+
+    if simulator and (simulator[0] != "arm64"):
+        return
+
+    if target.cpu in ("x86_64", "x86", "aarch64"):
+        return True
+
+    die(
+        "--enable-wasm-custom-page-sizes only possible when targeting the x86_64/x86/arm64 jits"
+    )
+
+
+set_config("ENABLE_WASM_CUSTOM_PAGE_SIZES", wasm_custom_page_sizes)
+set_define("ENABLE_WASM_CUSTOM_PAGE_SIZES", wasm_custom_page_sizes)
+
 
 # Enable static checking using sixgill
 # ====================================
