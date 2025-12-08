@@ -476,7 +476,6 @@ DIRS += [
     "/third_party/libwebrtc/rtc_base/units/unit_base_gn",
     "/third_party/libwebrtc/rtc_base/weak_ptr_gn",
     "/third_party/libwebrtc/rtc_base/zero_memory_gn",
-    "/third_party/libwebrtc/system_wrappers/field_trial_gn",
     "/third_party/libwebrtc/system_wrappers/metrics_gn",
     "/third_party/libwebrtc/system_wrappers/system_wrappers_gn",
     "/third_party/libwebrtc/test/rtp_test_utils_gn",
