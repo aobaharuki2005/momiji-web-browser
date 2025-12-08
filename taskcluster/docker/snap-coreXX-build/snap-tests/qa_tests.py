@@ -811,8 +811,13 @@ class QATests(SnapTestsBase):
 
         self.open_tab("about:preferences")
         download_folder = self._wait.until(
-            EC.presence_of_element_located((By.ID, "downloadFolder"))
+            EC.presence_of_element_located((By.ID, "chooseFolder"))
         )
+        if not download_folder.get_property("value"):
+            # Fallback to "downloadFoler" for older Firefox versions
+            download_folder = self._wait.until(
+                EC.presence_of_element_located((By.ID, "downloadFolder"))
+            )
         previous_folder = (
             download_folder.get_property("value")
             .replace("\u2066", "")
