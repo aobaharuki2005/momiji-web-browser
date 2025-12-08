@@ -55,24 +55,22 @@ const SYNC_PARAM = "sync";
 
 export var FxAccountsConfig = {
   async promiseEmailURI(email, entrypoint, extraParams = {}) {
-    const authParams = await this._getAuthParams();
     return this._buildURL("", {
+      includeAuthParams: true,
       extraParams: {
         entrypoint,
         email,
-        ...authParams,
         ...extraParams,
       },
     });
   },
 
   async promiseConnectAccountURI(entrypoint, extraParams = {}) {
-    const authParams = await this._getAuthParams();
     return this._buildURL("", {
+      includeAuthParams: true,
       extraParams: {
         entrypoint,
         action: "email",
-        ...authParams,
         ...extraParams,
       },
     });
@@ -134,24 +132,26 @@ export var FxAccountsConfig = {
   /**
    * @param path should be parsable by the URL constructor first parameter.
    * @param {bool} [options.includeDefaultParams] If true include the default search params.
-   * @param {{[key: string]: string}} [options.extraParams] Additionnal search params.
+   * @param {bool} [options.includeAuthParams] If true include the auth params.
+   * @param {[key: string]: string} [options.extraParams] Additionnal search params.
    * @param {bool} [options.addAccountIdentifiers] if true we add the current logged-in user uid and email to the search params.
    */
   async _buildURL(
     path,
     {
       includeDefaultParams = true,
+      includeAuthParams = false,
       extraParams = {},
       addAccountIdentifiers = false,
     }
   ) {
     await this.ensureConfigured();
     const url = new URL(path, lazy.ROOT_URL);
-    if (lazy.REQUIRES_HTTPS && url.protocol != "https:") {
-      throw new Error("Firefox Accounts server must use HTTPS");
-    }
+    this.ensureHTTPS(url.protocol);
+    const authParams = includeAuthParams ? await this._getAuthParams() : {};
     const params = {
       ...(includeDefaultParams ? this.defaultParams : null),
+      ...authParams,
       ...extraParams,
     };
     for (let [k, v] of Object.entries(params)) {
@@ -168,6 +168,12 @@ export var FxAccountsConfig = {
     return url.href;
   },
 
+  ensureHTTPS(protocol) {
+    if (lazy.REQUIRES_HTTPS && protocol != "https:") {
+      throw new Error("Firefox Accounts server must use HTTPS");
+    }
+  },
+
   async _buildURLFromString(href, extraParams = {}) {
     const url = new URL(href);
     for (let [k, v] of Object.entries(extraParams)) {
@@ -177,15 +183,15 @@ export var FxAccountsConfig = {
   },
 
   resetConfigURLs() {
-    let autoconfigURL = this.getAutoConfigURL();
-    if (autoconfigURL) {
-      return;
-    }
-    // They have the autoconfig uri pref set, so we clear all the prefs that we
-    // will have initialized, which will leave them pointing at production.
+    // We unconditionally reset all the prefs, which will point them at prod. If the autoconfig URL is not set,
+    // these will be used next sign in. If the autoconfig pref *is* set then as we start the signin flow we
+    // will reconfigure all the prefs we just restored to whereever that autoconfig pref points now.
     for (let pref of CONFIG_PREFS) {
       Services.prefs.clearUserPref(pref);
     }
+    // Reset FxAccountsClient
+    lazy.fxAccounts.resetFxAccountsClient();
+
     // Reset the webchannel.
     lazy.EnsureFxAccountsWebChannel();
   },
@@ -207,6 +213,8 @@ export var FxAccountsConfig = {
   },
 
   async ensureConfigured() {
+    // We don't want to update any configuration if we are already signed in,
+    // or in the process of signing in.
     let isSignedIn = !!(await this.getSignedInUser());
     if (!isSignedIn) {
       await this.updateConfigURLs();
@@ -246,6 +254,9 @@ export var FxAccountsConfig = {
   async updateConfigURLs() {
     let rootURL = this.getAutoConfigURL();
     if (!rootURL) {
+      // just because there is currently no autoconfig URL doesn't mean all the dependent
+      // URLs are correctly set.
+      this.resetConfigURLs();
       return;
     }
     const config = await this.fetchConfigDocument(rootURL);
@@ -280,6 +291,9 @@ export var FxAccountsConfig = {
         config.sync_tokenserver_base_url + "/1.0/sync/1.5"
       );
       Services.prefs.setStringPref("identity.fxaccounts.remote.root", rootURL);
+
+      // Reset FxAccountsClient
+      lazy.fxAccounts.resetFxAccountsClient();
 
       // Ensure the webchannel is pointed at the correct uri
       lazy.EnsureFxAccountsWebChannel();

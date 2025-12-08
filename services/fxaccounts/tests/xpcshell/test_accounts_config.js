@@ -3,20 +3,37 @@
 
 "use strict";
 
+const lazy = {};
+
 const { FxAccounts } = ChromeUtils.importESModule(
   "resource://gre/modules/FxAccounts.sys.mjs"
 );
 
-add_task(async function test_non_https_remote_server_uri() {
-  Services.prefs.setStringPref(
-    "identity.fxaccounts.remote.root",
-    "http://example.com/"
-  );
-  await Assert.rejects(
-    FxAccounts.config.promiseConnectAccountURI(),
-    /Firefox Accounts server must use HTTPS/
-  );
-  Services.prefs.clearUserPref("identity.fxaccounts.remote.root");
+ChromeUtils.defineLazyGetter(lazy, "fxAccounts", () => {
+  return ChromeUtils.importESModule(
+    "resource://gre/modules/FxAccounts.sys.mjs"
+  ).getFxAccountsSingleton();
+});
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  FxAccountsConfig: "resource://gre/modules/FxAccountsConfig.sys.mjs",
+});
+
+add_task(async function test_non_https_with_requireHttps_false() {
+  Services.prefs.setBoolPref("identity.fxaccounts.allowHttp", true);
+
+  FxAccounts.config.ensureHTTPS("http://");
+  Assert.ok(true, "`ensureHTTPS did not throw an error");
+
+  Services.prefs.clearUserPref("identity.fxaccounts.allowHttp");
+});
+
+add_task(async function test_non_https_with_requireHttps_true() {
+  try {
+    FxAccounts.config.ensureHTTPS("http://");
+  } catch (error) {
+    Assert.ok(error.message, "Firefox Accounts server must use HTTPS");
+  }
 });
 
 add_task(async function test_is_production_config() {
@@ -38,4 +55,71 @@ add_task(async function test_is_production_config() {
   Services.prefs.setStringPref("identity.sync.tokenserver.uri", "http://t");
   Assert.ok(!FxAccounts.config.isProductionConfig());
   Services.prefs.clearUserPref("identity.sync.tokenserver.uri");
+});
+
+add_task(async function test_reset_fxAccounts_singleton_client() {
+  Services.prefs.setStringPref("identity.fxaccounts.autoconfig.uri", "");
+  let defaultHostUri = "https://api.accounts.firefox.com/v1";
+  let stage = "stage.mozaws.net";
+  let stageHostUri = `https://api-accounts.${stage}/v1`;
+
+  lazy.FxAccountsConfig.fetchConfigDocument = function () {
+    return {
+      auth_server_base_url: stageHostUri,
+      oauth_server_base_url: `https://oauth.${stage}`,
+      pairing_server_base_uri: `wss://stage.channelserver.nonprod.cloudops.mozgcp.net`,
+      profile_server_base_url: `https://profile.${stage}`,
+      sync_tokenserver_base_url: `https://token.${stage}`,
+    };
+  };
+
+  // Check that the host points to the default host
+  Assert.equal(lazy.fxAccounts._internal.fxAccountsClient.host, defaultHostUri);
+
+  Services.prefs.setStringPref(
+    "identity.fxaccounts.autoconfig.uri",
+    "https://accounts.stage.mozaws.net"
+  );
+  await lazy.FxAccountsConfig.updateConfigURLs();
+
+  // Check that the host points to the preset auth server URL
+  Assert.equal(lazy.fxAccounts._internal.fxAccountsClient.host, stageHostUri);
+
+  // Check that `resetConfigURLs` clears prefs
+  lazy.FxAccountsConfig.resetConfigURLs();
+
+  let clearedRootPref = Services.prefs.getStringPref(
+    "identity.fxaccounts.remote.root"
+  );
+  Assert.equal(clearedRootPref, "https://accounts.firefox.com/");
+
+  let clearedAuthPref = Services.prefs.getStringPref(
+    "identity.fxaccounts.auth.uri"
+  );
+  Assert.equal(clearedAuthPref, "https://api.accounts.firefox.com/v1");
+
+  let clearedOauthPref = Services.prefs.getStringPref(
+    "identity.fxaccounts.remote.oauth.uri"
+  );
+  Assert.equal(clearedOauthPref, "https://oauth.accounts.firefox.com/v1");
+
+  let clearedProfilePref = Services.prefs.getStringPref(
+    "identity.fxaccounts.remote.profile.uri"
+  );
+  Assert.equal(clearedProfilePref, "https://profile.accounts.firefox.com/v1");
+
+  let clearedPairingPref = Services.prefs.getStringPref(
+    "identity.fxaccounts.remote.pairing.uri"
+  );
+  Assert.equal(clearedPairingPref, "wss://channelserver.services.mozilla.com");
+
+  let clearedTokenServerPref = Services.prefs.getStringPref(
+    "identity.sync.tokenserver.uri"
+  );
+  Assert.equal(
+    clearedTokenServerPref,
+    "https://token.services.mozilla.com/1.0/sync/1.5"
+  );
+
+  Services.prefs.clearUserPref("identity.fxaccounts.autoconfig.uri");
 });
