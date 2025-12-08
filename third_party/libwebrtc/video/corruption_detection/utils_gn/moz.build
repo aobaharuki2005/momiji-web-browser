@@ -34,7 +34,7 @@ LOCAL_INCLUDES += [
 ]
 
 UNIFIED_SOURCES += [
-    "/third_party/libwebrtc/video/corruption_detection/frame_instrumentation_generator.cc"
+    "/third_party/libwebrtc/video/corruption_detection/utils.cc"
 ]
 
 if not CONFIG["MOZ_DEBUG"]:
@@ -62,7 +62,6 @@ if CONFIG["OS_TARGET"] == "Android":
     DEFINES["__STDC_FORMAT_MACROS"] = True
 
     OS_LIBS += [
-        "GLESv2",
         "log"
     ]
 
@@ -219,4 +218,4 @@ if CONFIG["OS_TARGET"] == "Linux" and CONFIG["TARGET_CPU"] == "x86_64":
 
     DEFINES["_GNU_SOURCE"] = True
 
-Library("frame_instrumentation_generator_gn")
+Library("utils_gn")
