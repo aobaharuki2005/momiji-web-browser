@@ -4,7 +4,9 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 147.0 (In Development)
+# 148.0 (In Development)
+
+# 147.0
 * **browser-state**:
   * ⚠️ **Breaking change**: New `Unknown` third state for the `SecurityStatus` of the connection used in a tab. The `secure` property has been migrated to `isSecure`. [Bug 2000617](https://bugzilla.mozilla.org/show_bug.cgi?id=2000617).
 * **lib-state**
