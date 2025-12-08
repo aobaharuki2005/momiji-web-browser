@@ -6,6 +6,7 @@
 
 import os
 import random
+import subprocess
 import tempfile
 import time
 
@@ -21,6 +22,8 @@ from selenium.webdriver.support.select import Select
 class QATests(SnapTestsBase):
     def __init__(self):
         self._dir = "qa_tests"
+        self._http_server = None
+        self._http_tmpdir = None
 
         super().__init__(
             exp=os.path.join(
@@ -37,6 +40,57 @@ class QATests(SnapTestsBase):
                 )
             )
             return f[0].split("=")[1].replace(".", "")
+
+    def _start_local_http_server(self, port=45678):
+        """Start a local HTTP server with a 1MB random file for download tests."""
+        # Create temporary directory
+        tmpdir = tempfile.mkdtemp(prefix="snap-test-http-")
+
+        # Generate 1MB random file
+        random_file = os.path.join(tmpdir, "testfile.iso")
+        with open(random_file, "wb") as f:
+            f.write(os.urandom(1024 * 1024))  # 1MB of random bytes
+
+        # Create simple HTML page with download link
+        html_file = os.path.join(tmpdir, "index.html")
+        with open(html_file, "w") as f:
+            f.write(
+                """<!DOCTYPE html>
+<html>
+<head><title>Test Download Page</title></head>
+<body>
+<h1>Download Test</h1>
+<a href="testfile.iso" id="download-link" download="testfile.iso">Download 1MB File</a>
+</body>
+</html>"""
+            )
+
+        # Start http.server as background process
+        server_process = subprocess.Popen(
+            ["python3", "-m", "http.server", str(port)],
+            cwd=tmpdir,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+        # Give server time to start
+        time.sleep(0.5)
+
+        self._logger.info(f"Started local HTTP server on port {port} in {tmpdir}")
+        return server_process, tmpdir
+
+    def _stop_local_http_server(self, server_process, tmpdir):
+        """Stop the local HTTP server and clean up."""
+        if server_process:
+            server_process.terminate()
+            server_process.wait()
+            self._logger.info("Stopped local HTTP server")
+
+        # Clean up temporary directory
+        if tmpdir and os.path.exists(tmpdir):
+            import shutil
+
+            shutil.rmtree(tmpdir)
 
     def _test_audio_playback(
         self, url, iframe_selector=None, click_to_play=False, video_selector=None
@@ -684,13 +738,13 @@ class QATests(SnapTestsBase):
         download_button.click()
         time.sleep(1)
 
-        blocked_item = self._wait.until(
+        download_item = self._wait.until(
             EC.visibility_of_element_located(
                 (By.CSS_SELECTOR, ".download-state .downloadTarget")
             )
         )
-        blocked_item.click()
-        download_name = blocked_item.get_property("value")
+        download_item.click()
+        download_name = download_item.get_property("value")
 
         download_allow = self._wait.until(
             EC.presence_of_element_located(
@@ -719,6 +773,7 @@ class QATests(SnapTestsBase):
             )
         )
         download_name = download_item.get_property("value")
+        self._logger.info(f"Waiting for download: {download_name}")
 
         download_progress = self._wait.until(
             EC.presence_of_element_located(
@@ -726,7 +781,7 @@ class QATests(SnapTestsBase):
             )
         )
         self._logger.info(
-            "Download process {}".format(download_progress.get_property("value"))
+            "Download progress {}%".format(download_progress.get_property("value"))
         )
 
         try:
@@ -782,17 +837,23 @@ class QATests(SnapTestsBase):
         )
         self._driver.set_context("content")
 
-    def open_lafibre(self):
+    def open_local(self):
         self.enable_downloads_debug()
-        download_site = self.open_tab("https://ip.lafibre.info/connectivite.php")
+        # Start local HTTP server with test file
+        server_process, tmpdir = self._start_local_http_server(port=45678)
+        # Store server info for cleanup
+        self._http_server = server_process
+        self._http_tmpdir = tmpdir
+        # Open local test page
+        download_site = self.open_tab("http://localhost:45678/")
         return download_site
 
-    def get_lafibre_1M(self):
+    def get_local_1M(self):
         return self._wait.until(
             EC.presence_of_element_located(
                 (
-                    By.CSS_SELECTOR,
-                    ".tableau tbody tr td a",
+                    By.ID,
+                    "download-link",
                 )
             )
         )
@@ -802,8 +863,8 @@ class QATests(SnapTestsBase):
         C1756713
         """
 
-        download_site = self.open_lafibre()
-        extra_small = self.get_lafibre_1M()
+        download_site = self.open_local()
+        extra_small = self.get_local_1M()
         self._driver.execute_script("arguments[0].click();", extra_small)
 
         download_name = self.accept_download()
@@ -846,6 +907,11 @@ class QATests(SnapTestsBase):
             self._logger.info(f"Download 2 assert: {download_2}")
             assert os.path.isfile(download_2), "downloaded file #2 should exists"
 
+        # Cleanup local HTTP server
+        self._stop_local_http_server(self._http_server, self._http_tmpdir)
+        self._http_server = None
+        self._http_tmpdir = None
+
         return True
 
     def test_download_folder_removal(self, exp):
@@ -853,8 +919,8 @@ class QATests(SnapTestsBase):
         C1756715
         """
 
-        download_site = self.open_lafibre()
-        extra_small = self.get_lafibre_1M()
+        download_site = self.open_local()
+        extra_small = self.get_local_1M()
 
         with tempfile.TemporaryDirectory(
             dir=os.environ.get("HOME"), prefix="snap-test-download-rm"
@@ -925,6 +991,11 @@ class QATests(SnapTestsBase):
         self._driver.execute_script("this.window.DownloadsButton.hide();")
 
         self._driver.set_context("content")
+
+        # Cleanup local HTTP server
+        self._stop_local_http_server(self._http_server, self._http_tmpdir)
+        self._http_server = None
+        self._http_tmpdir = None
 
         return True
 
