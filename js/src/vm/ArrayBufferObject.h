@@ -39,7 +39,7 @@ struct MemoryDesc;
 // of size `initialCommittedSize`.  Both arguments denote bytes and must be
 // multiples of the page size, with `initialCommittedSize` <= `mappedSize`.
 // Returns nullptr on failure.
-void* MapBufferMemory(wasm::AddressType, size_t mappedSize,
+void* MapBufferMemory(wasm::AddressType, wasm::PageSize, size_t mappedSize,
                       size_t initialCommittedSize);
 
 // Commit additional memory in an existing mapping.  `dataEnd` must be the

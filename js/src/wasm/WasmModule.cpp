@@ -263,10 +263,20 @@ bool wasm::GetOptimizedEncodingBuildId(JS::BuildIdCharVector* buildId) {
   buildId->infallibleAppend(')');
 
   buildId->infallibleAppend('m');
-  buildId->infallibleAppend(wasm::IsHugeMemoryEnabled(AddressType::I32) ? '+'
-                                                                        : '-');
-  buildId->infallibleAppend(wasm::IsHugeMemoryEnabled(AddressType::I64) ? '+'
-                                                                        : '-');
+  buildId->infallibleAppend(
+      wasm::IsHugeMemoryEnabled(AddressType::I32, PageSize::Standard) ? '+'
+                                                                      : '-');
+  buildId->infallibleAppend(
+      wasm::IsHugeMemoryEnabled(AddressType::I64, PageSize::Standard) ? '+'
+                                                                      : '-');
+
+  // We don't expect huge memory to be supported if custom page sizes are used.
+#ifdef ENABLE_WASM_CUSTOM_PAGE_SIZES
+  MOZ_RELEASE_ASSERT(
+      !wasm::IsHugeMemoryEnabled(AddressType::I32, PageSize::Tiny));
+  MOZ_RELEASE_ASSERT(
+      !wasm::IsHugeMemoryEnabled(AddressType::I64, PageSize::Tiny));
+#endif
 
   return true;
 }
@@ -538,15 +548,17 @@ bool Module::instantiateMemories(
 
       RootedObject proto(cx, &cx->global()->getPrototype(JSProto_WasmMemory));
       memory = WasmMemoryObject::create(
-          cx, buffer, IsHugeMemoryEnabled(desc.addressType()), proto);
+          cx, buffer, IsHugeMemoryEnabled(desc.addressType(), desc.pageSize()),
+          proto);
       if (!memory) {
         return false;
       }
     }
 
-    MOZ_RELEASE_ASSERT(codeMeta().isAsmJS() ||
-                       memory->isHuge() ==
-                           IsHugeMemoryEnabled(desc.addressType()));
+    MOZ_RELEASE_ASSERT(
+        codeMeta().isAsmJS() ||
+        memory->isHuge() ==
+            IsHugeMemoryEnabled(desc.addressType(), desc.pageSize()));
 
     if (!memoryObjs.get().append(memory)) {
       ReportOutOfMemory(cx);

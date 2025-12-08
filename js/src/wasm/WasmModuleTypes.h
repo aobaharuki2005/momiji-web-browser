@@ -833,7 +833,7 @@ struct MemoryDesc {
   // for "WASM Linear Memory structure".
   bool boundsCheckLimitIsAlways32Bits() const {
     return limits.maximum.isSome() &&
-           limits.maximum.value() < (0x100000000 / StandardPageSizeBytes);
+           limits.maximum.value() < (0x100000000 / PageSizeInBytes(pageSize()));
   }
 
   AddressType addressType() const { return limits.addressType; }

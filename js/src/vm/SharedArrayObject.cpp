@@ -124,7 +124,7 @@ WasmSharedArrayRawBuffer* WasmSharedArrayRawBuffer::AllocateWasm(
   uint64_t mappedSizeWithHeader = computedMappedSize + gc::SystemPageSize();
   uint64_t accessibleSizeWithHeader = accessibleSize + gc::SystemPageSize();
 
-  void* p = MapBufferMemory(addressType, mappedSizeWithHeader,
+  void* p = MapBufferMemory(addressType, pageSize, mappedSizeWithHeader,
                             accessibleSizeWithHeader);
   if (!p) {
     return nullptr;

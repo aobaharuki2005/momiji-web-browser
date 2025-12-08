@@ -157,6 +157,16 @@ struct MemoryInstanceData {
   // See "Linear memory addresses and bounds checking" in WasmMemory.cpp.
   uintptr_t boundsCheckLimit;
 
+  // The default boundsCheckLimit is used for standard page sizes and also 8-bit
+  // memory accesses on custom page sizes. These other limits are only used for
+  // accesses on memories with custom page sizes.
+#ifdef ENABLE_WASM_CUSTOM_PAGE_SIZES
+  uintptr_t boundsCheckLimit16;
+  uintptr_t boundsCheckLimit32;
+  uintptr_t boundsCheckLimit64;
+  uintptr_t boundsCheckLimit128;
+#endif
+
   // Whether this memory is shared or not.
   bool isShared;
 };

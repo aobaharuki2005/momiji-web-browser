@@ -299,11 +299,16 @@ static_assert(MaxMemoryAccessSize < GuardSize,
 static_assert(OffsetGuardLimit < UINT32_MAX,
               "checking for overflow against OffsetGuardLimit is enough.");
 
-uint64_t wasm::GetMaxOffsetGuardLimit(bool hugeMemory) {
+uint64_t wasm::GetMaxOffsetGuardLimit(bool hugeMemory, PageSize sz) {
+#ifndef ENABLE_WASM_CUSTOM_PAGE_SIZES
+  MOZ_ASSERT(sz == PageSize::Standard);
+#endif
+
+  uint64_t guardLimit = sz == PageSize::Standard ? OffsetGuardLimit : 0;
 #ifdef WASM_SUPPORTS_HUGE_MEMORY
-  return hugeMemory ? HugeOffsetGuardLimit : OffsetGuardLimit;
+  return hugeMemory ? HugeOffsetGuardLimit : guardLimit;
 #else
-  return OffsetGuardLimit;
+  return guardLimit;
 #endif
 }
 
@@ -315,7 +320,7 @@ static_assert(MaxInlineMemoryFillLength < MinOffsetGuardLimit, "precondition");
 
 wasm::Pages wasm::MaxMemoryPages(AddressType t, PageSize pageSize) {
 #ifdef JS_64BIT
-  MOZ_ASSERT_IF(t == AddressType::I64, !IsHugeMemoryEnabled(t));
+  MOZ_ASSERT_IF(t == AddressType::I64, !IsHugeMemoryEnabled(t, pageSize));
   size_t desired = MaxMemoryPagesValidation(t, pageSize);
   size_t actual =
       ArrayBufferObject::ByteLengthLimit / PageSizeInBytes(pageSize);
@@ -380,9 +385,37 @@ size_t wasm::ComputeMappedSize(wasm::Pages clampedMaxPages) {
   // implementation limits.
   size_t maxSize = clampedMaxPages.byteLength();
 
+  // For tiny page sizes, round up the mapped size to a multiple of the
+  // system page size after clamping.
+#ifdef ENABLE_WASM_CUSTOM_PAGE_SIZES
+  if (clampedMaxPages.pageSize() == wasm::PageSize::Tiny) {
+    mozilla::CheckedInt<size_t> length(maxSize);
+
+    if (length.value() % gc::SystemPageSize() != 0) {
+      length += ComputeByteAlignment(length.value(), gc::SystemPageSize());
+      // This should be valid because of previous clamping.
+      MOZ_RELEASE_ASSERT(length.isValid());
+      MOZ_ASSERT(length.value() % gc::SystemPageSize() == 0);
+      maxSize = length.value();
+    }
+
+    MOZ_ASSERT(maxSize <= clampedMaxPages.byteLength() + GuardSize);
+  }
+#endif
+
   MOZ_ASSERT(maxSize % gc::SystemPageSize() == 0);
   MOZ_ASSERT(GuardSize % gc::SystemPageSize() == 0);
-  maxSize += GuardSize;
+  if (clampedMaxPages.pageSize() == PageSize::Standard) {
+    maxSize += GuardSize;
+  } else {
+#ifdef ENABLE_WASM_CUSTOM_PAGE_SIZES
+    // In the case of a tiny page, we omit the guard page size
+    // because we can't use guard pages for tiny page bounds checks.
+    MOZ_ASSERT(clampedMaxPages.pageSize() == PageSize::Tiny);
+#else
+    MOZ_CRASH();
+#endif
+  }
 
   return maxSize;
 }

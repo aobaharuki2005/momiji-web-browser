@@ -1544,7 +1544,8 @@ class FunctionCompiler {
   // by both explicit bounds checking and bounds check elimination.
   void foldConstantPointer(MemoryAccessDesc* access, MDefinition** base) {
     uint64_t offsetGuardLimit = GetMaxOffsetGuardLimit(
-        codeMeta().hugeMemoryEnabled(access->memoryIndex()));
+        codeMeta().hugeMemoryEnabled(access->memoryIndex()),
+        codeMeta().memories[access->memoryIndex()].pageSize());
 
     if ((*base)->isConstant()) {
       uint64_t basePtr = 0;
@@ -1569,7 +1570,8 @@ class FunctionCompiler {
   void maybeComputeEffectiveAddress(MemoryAccessDesc* access,
                                     MDefinition** base, bool mustAddOffset) {
     uint64_t offsetGuardLimit = GetMaxOffsetGuardLimit(
-        codeMeta().hugeMemoryEnabled(access->memoryIndex()));
+        codeMeta().hugeMemoryEnabled(access->memoryIndex()),
+        codeMeta().memories[access->memoryIndex()].pageSize());
 
     if (access->offset64() >= offsetGuardLimit ||
         access->offset64() > UINT32_MAX || mustAddOffset ||
