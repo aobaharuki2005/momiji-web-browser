@@ -799,13 +799,17 @@ class ReadEvent : public Runnable, public IOPerfReportEvent {
       nsCOMPtr<nsIEventTarget> ioTarget = CacheFileIOManager::IOTarget();
       ioTarget->Dispatch(NS_NewRunnableFunction(
           "net::ReadEvent::Callback", [self = RefPtr(this), rv]() {
-            self->mCallback->OnDataRead(self->mHandle, self->mBuf, rv);
+            // Prevent calling back twice
+            nsCOMPtr<CacheFileIOListener> cb = std::move(self->mCallback);
+            cb->OnDataRead(self->mHandle, self->mBuf, rv);
           }));
       return NS_OK;
     }
 #endif
 
-    mCallback->OnDataRead(mHandle, mBuf, rv);
+    // Prevent calling back twice
+    nsCOMPtr<CacheFileIOListener> cb = std::move(mCallback);
+    cb->OnDataRead(mHandle, mBuf, rv);
     return NS_OK;
   }
 
@@ -819,7 +823,9 @@ class ReadEvent : public Runnable, public IOPerfReportEvent {
       Report(CacheFileIOManager::gInstance->mIOThread);
     }
 
-    mCallback->OnDataRead(mHandle, mBuf, result);
+    // Prevent calling back twice
+    nsCOMPtr<CacheFileIOListener> cb = std::move(mCallback);
+    cb->OnDataRead(mHandle, mBuf, result);
     mHandle->EndAsyncOperation();
     return NS_OK;
   }
