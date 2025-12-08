@@ -16,7 +16,6 @@
 #include "mozilla/gfx/2D.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
-#include "nsISizeOf.h"
 #include "nsNetUtil.h"
 
 NS_IMPL_NS_NEW_SVG_ELEMENT(Image)
@@ -339,8 +338,8 @@ void SVGImageElement::DidAnimateAttribute(int32_t aNameSpaceID,
 void SVGImageElement::AddSizeOfExcludingThis(nsWindowSizes& aSizes,
                                              size_t* aNodeSize) const {
   SVGElement::AddSizeOfExcludingThis(aSizes, aNodeSize);
-  if (nsCOMPtr<nsISizeOf> iface = do_QueryInterface(mSrcURI)) {
-    *aNodeSize += iface->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
+  if (mSrcURI) {
+    *aNodeSize += mSrcURI->SizeOfIncludingThis(aSizes.mState.mMallocSizeOf);
   }
 }
 
