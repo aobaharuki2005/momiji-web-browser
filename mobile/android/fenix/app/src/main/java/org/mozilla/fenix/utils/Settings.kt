@@ -45,8 +45,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.autofill.address.RegionAddressFeatureGate
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.settings.counterPreference
-import org.mozilla.fenix.components.settings.featureFlagPreference
-import org.mozilla.fenix.components.settings.lazyFeatureFlagPreference
+import org.mozilla.fenix.components.settings.featureFlagBooleanPreference
+import org.mozilla.fenix.components.settings.lazyFeatureFlagBooleanPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.debugsettings.addresses.EmptyAddressesDebugRegionRepository
 import org.mozilla.fenix.debugsettings.addresses.SharedPrefsAddressesDebugRegionRepository
@@ -199,10 +199,10 @@ class Settings(
     /**
      * Indicates if the stories homescreen section should be shown.
      */
-    var showPocketRecommendationsFeature by lazyFeatureFlagPreference(
+    var showPocketRecommendationsFeature by lazyFeatureFlagBooleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_pocket_homescreen_recommendations),
         featureFlag = ContentRecommendationsFeatureHelper.isContentRecommendationsFeatureEnabled(appContext),
-        default = { homescreenSections[HomeScreenSection.POCKET] == true },
+        defaultValue = { homescreenSections[HomeScreenSection.POCKET] == true },
     )
 
     /**
@@ -238,9 +238,9 @@ class Settings(
     /**
      * Indicates if the Pocket recommendations homescreen section should also show sponsored stories.
      */
-    val showPocketSponsoredStories by lazyFeatureFlagPreference(
+    val showPocketSponsoredStories by lazyFeatureFlagBooleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_pocket_sponsored_stories),
-        default = { homescreenSections[HomeScreenSection.POCKET_SPONSORED_STORIES] == true },
+        defaultValue = { homescreenSections[HomeScreenSection.POCKET_SPONSORED_STORIES] == true },
         featureFlag = ContentRecommendationsFeatureHelper.isPocketSponsoredStoriesFeatureEnabled(appContext),
     )
 
@@ -499,9 +499,8 @@ class Settings(
         default = false,
     )
 
-    val appIconSelection by lazyFeatureFlagPreference(
+    val appIconSelection by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_app_icon_selection_enabled),
-        featureFlag = true,
         default = { FxNimbus.features.appIconSelection.value().enabled },
     )
 
@@ -1967,15 +1966,15 @@ class Settings(
     /**
      * Address Sync feature.
      */
-    var isAddressSyncEnabled by featureFlagPreference(
+    var isAddressSyncEnabled by featureFlagBooleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_address_sync),
-        default = true,
+        defaultValue = true,
         featureFlag = isAddressFeatureEnabled(appContext),
     )
 
-    var addressFeature by featureFlagPreference(
+    var addressFeature by featureFlagBooleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_show_address_feature),
-        default = true,
+        defaultValue = true,
         featureFlag = isAddressFeatureEnabled(appContext),
     )
 
@@ -2403,9 +2402,9 @@ class Settings(
     /**
      * Indicates if Firefox Suggest is enabled.
      */
-    var enableFxSuggest by lazyFeatureFlagPreference(
+    var enableFxSuggest by lazyFeatureFlagBooleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_enable_fxsuggest),
-        default = { FxNimbus.features.fxSuggest.value().enabled },
+        defaultValue = { FxNimbus.features.fxSuggest.value().enabled },
         featureFlag = FeatureFlags.FX_SUGGEST,
     )
 
@@ -2427,9 +2426,9 @@ class Settings(
      * Indicates if the user has chosen to show sponsored search suggestions in the awesomebar.
      * The default value is computed lazily, and based on whether Firefox Suggest is enabled.
      */
-    var showSponsoredSuggestions by lazyFeatureFlagPreference(
+    var showSponsoredSuggestions by lazyFeatureFlagBooleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_show_sponsored_suggestions),
-        default = { enableFxSuggest },
+        defaultValue = { enableFxSuggest },
         featureFlag = FeatureFlags.FX_SUGGEST,
     )
 
@@ -2438,9 +2437,9 @@ class Settings(
      * awesomebar. The default value is computed lazily, and based on whether Firefox Suggest
      * is enabled.
      */
-    var showNonSponsoredSuggestions by lazyFeatureFlagPreference(
+    var showNonSponsoredSuggestions by lazyFeatureFlagBooleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_show_nonsponsored_suggestions),
-        default = { enableFxSuggest },
+        defaultValue = { enableFxSuggest },
         featureFlag = FeatureFlags.FX_SUGGEST,
     )
 

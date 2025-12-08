@@ -19,22 +19,47 @@ private class DummyProperty : ReadWriteProperty<PreferencesHolder, Boolean> {
 /**
  * Property delegate for getting and setting a boolean shared preference gated by a feature flag.
  *
- * @param key Key for the shared preference.
- * @param default Default value to return.
- * @param featureFlag If true, returns the shared preference value. If false, returns false.
+ * @param key The key for the shared preference.
+ * @param defaultValue The default value to return when the preference is unset.
+ * @param featureFlag If `true`, the shared preference value is returned; if `false`, this always
+ * returns `false`, regardless of the stored value.
+ *
+ * Note: If you intend to always pass `true` for [featureFlag], consider using [booleanPreference]
+ * directly instead, as the feature flag provides no additional behavior in that case.
+ *
+ * For example, this is **not** recommended:
+ * ```
+ * val isMyFeatureEnabled by lazyFeatureFlagPreference(
+ *     …
+ *     isMyFeatureEnabled = true,
+ *     …
+ * )
+ * ```
+ *
+ * [featureFlag] may be controlled through various mechanisms - for example, via an
+ * alternative feature-flag system like [FeatureFlags], or internal conditionals.
+ *
+ * For example, recommended use:
+ * ```
+ * val isMyFeatureEnabled by lazyFeatureFlagPreference(
+ *     …
+ *     isMyFeatureEnabled = FeatureFlags.onboardingFeatureEnabled,
+ *     …
+ * )
+ * ```
  */
-fun featureFlagPreference(key: String, default: Boolean, featureFlag: Boolean) =
+fun featureFlagBooleanPreference(key: String, defaultValue: Boolean, featureFlag: Boolean) =
     if (featureFlag) {
-        booleanPreference(key, default)
+        booleanPreference(key, defaultValue)
     } else {
         DummyProperty()
     }
 
-private class LazyPreference(val key: String, val default: () -> Boolean) :
+private class LazyBooleanPreference(val key: String, val defaultValue: () -> Boolean) :
     ReadWriteProperty<PreferencesHolder, Boolean> {
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): Boolean =
-        thisRef.preferences.getBoolean(key, default())
+        thisRef.preferences.getBoolean(key, defaultValue())
 
     override fun setValue(thisRef: PreferencesHolder, property: KProperty<*>, value: Boolean) =
         thisRef.preferences.edit { putBoolean(key, value) }
@@ -71,11 +96,11 @@ private class LazyPreference(val key: String, val default: () -> Boolean) :
  * )
  * ```
  *
- * @param default The default value to return when the preference is unset.
+ * @param defaultValue The default value to return when the preference is unset.
  */
-fun lazyFeatureFlagPreference(key: String, featureFlag: Boolean, default: () -> Boolean) =
+fun lazyFeatureFlagBooleanPreference(key: String, featureFlag: Boolean, defaultValue: () -> Boolean) =
     if (featureFlag) {
-        LazyPreference(key, default)
+        LazyBooleanPreference(key, defaultValue)
     } else {
         DummyProperty()
     }
