@@ -28,6 +28,7 @@
 #include "nsHTMLParts.h"
 #include "nsICachingChannel.h"
 #include "nsIDocumentViewer.h"
+#include "nsIHTMLContentSink.h"
 #include "nsIPrincipal.h"
 #include "nsIProtocolHandler.h"
 #include "nsIScriptContext.h"

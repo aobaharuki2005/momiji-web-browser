@@ -244,6 +244,8 @@ class nsParser final : public nsIParser,
   void HandleParserContinueEvent(class nsParserContinueEvent*);
 
   void Reset() {
+    MOZ_ASSERT(!mIsAboutBlank,
+               "Only the XML fragment parsing case is supposed to call this.");
     Cleanup();
     mUnusedInput.Truncate();
     Initialize();
@@ -314,6 +316,7 @@ class nsParser final : public nsIParser,
 
   bool mProcessingNetworkData;
   bool mOnStopPending;
+  bool mIsAboutBlank;
 };
 
 #endif
