@@ -136,10 +136,6 @@ export class PageExtractorChild extends JSWindowActorChild {
       return "";
     }
 
-    if (options.removeBoilerplate) {
-      throw new Error("Boilerplate removal is not supported yet.");
-    }
-
     const text = lazy.extractTextFromDOM(document, options);
 
     lazy.console.log("GetText", options);
