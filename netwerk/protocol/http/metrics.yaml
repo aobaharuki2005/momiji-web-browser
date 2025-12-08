@@ -1933,29 +1933,6 @@ http:
     expires: never
     telemetry_mirror: h#HTTP_ALTSVC_MAPPING_CHANGED_TARGET
 
-  upload_bandwidth_mbps:
-    type: labeled_custom_distribution
-    description: >
-      The upload bandwidth for requests larger than 10MB. Measured in megabits
-      per second, Mbps. Keyed by HTTP protocol version.
-
-      This metric was generated to correspond to the Legacy Telemetry
-      exponential histogram HTTP_UPLOAD_BANDWIDTH_MBPS.
-    range_min: 1
-    range_max: 10000
-    bucket_count: 100
-    histogram_type: exponential
-    unit: megabits per second
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1830087
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1830087
-    notification_emails:
-      - necko@mozilla.com
-      - acreskey@mozilla.com
-    expires: never
-    telemetry_mirror: HTTP_UPLOAD_BANDWIDTH_MBPS
-
   response_version:
     type: custom_distribution
     description: >

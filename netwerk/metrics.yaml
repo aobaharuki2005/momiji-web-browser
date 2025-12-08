@@ -966,6 +966,26 @@ networking:
     expires: never
     telemetry_mirror: HTTP_UPLOAD_THROUGHPUT_MBPS_HTTP_2_100
 
+  http_3_upload_throughput_1_10:
+    type: custom_distribution
+    unit: mbps
+    range_min: 0
+    range_max: 3000
+    bucket_count: 100
+    histogram_type: exponential
+    description: >
+     The upload throughput for http/3 request size between 1MB and 10MB. Measured in megabits per second, Mbps.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2003794
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2003794
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - omansfeld@mozilla.com
+    expires: 157
+
   http_3_upload_throughput_10_50:
     type: custom_distribution
     unit: mbps
