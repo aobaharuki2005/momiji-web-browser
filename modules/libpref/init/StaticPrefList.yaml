@@ -15659,6 +15659,13 @@
   value: ""
   mirror: never
 
+# When true, placing the most recent used cache entry
+# to the tail of the EvictionQ.
+- name: network.dns.mru_to_tail
+  type: RelaxedAtomicBool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
 # Whether to add additional record IPs to the cache
 - name: network.trr.add_additional_records
   type: RelaxedAtomicBool

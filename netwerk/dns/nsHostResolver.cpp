@@ -591,7 +591,7 @@ nsresult nsHostResolver::ResolveHost(const nsACString& aHost,
     } else if (!rec->mResolving) {
       result =
           FromUnspecEntry(rec, host, aTrrServer, originSuffix, type, flags, af,
-                          aOriginAttributes.IsPrivateBrowsing(), status);
+                          aOriginAttributes.IsPrivateBrowsing(), status, lock);
       // If this is a by-type request or if no valid record was found
       // in the cache or this is an AF_UNSPEC request, then start a
       // new lookup.
@@ -675,12 +675,14 @@ already_AddRefed<nsHostRecord> nsHostResolver::FromCache(
   // but start a new lookup in the background.
   //
   // Also records telemetry for type of cache hit (HIT/NEGATIVE_HIT/RENEWAL).
-  ConditionallyRefreshRecord(aRec, aHost, aLock);
+  bool refresh = ConditionallyRefreshRecord(aRec, aHost, aLock);
 
   if (aRec->negative) {
     LOG(("  Negative cache entry for host [%s].\n",
          nsPromiseFlatCString(aHost).get()));
     aStatus = NS_ERROR_UNKNOWN_HOST;
+  } else if (StaticPrefs::network_dns_mru_to_tail() && !refresh) {
+    mQueue.MoveToEvictionQueueTail(aRec, aLock);
   }
 
   return result.forget();
@@ -707,7 +709,8 @@ already_AddRefed<nsHostRecord> nsHostResolver::FromIPLiteral(
 already_AddRefed<nsHostRecord> nsHostResolver::FromUnspecEntry(
     nsHostRecord* aRec, const nsACString& aHost, const nsACString& aTrrServer,
     const nsACString& aOriginSuffix, uint16_t aType,
-    nsIDNSService::DNSFlags aFlags, uint16_t af, bool aPb, nsresult& aStatus) {
+    nsIDNSService::DNSFlags aFlags, uint16_t af, bool aPb, nsresult& aStatus,
+    const MutexAutoLock& aLock) {
   RefPtr<nsHostRecord> result = nullptr;
   // If this is an IPV4 or IPV6 specific request, check if there is
   // an AF_UNSPEC entry we can use. Otherwise, hit the resolver...
@@ -773,7 +776,10 @@ already_AddRefed<nsHostRecord> nsHostResolver::FromUnspecEntry(
         if (aRec->negative) {
           aStatus = NS_ERROR_UNKNOWN_HOST;
         }
-        ConditionallyRefreshRecord(aRec, aHost, lock);
+        bool refresh = ConditionallyRefreshRecord(aRec, aHost, lock);
+        if (!refresh) {
+          AddToEvictionQ(result, aLock);
+        }
       } else if (af == PR_AF_INET6) {
         // For AF_INET6, a new lookup means another AF_UNSPEC
         // lookup. We have already iterated through the
@@ -1183,14 +1189,15 @@ nsresult nsHostResolver::NameLookup(nsHostRecord* rec,
   return rv;
 }
 
-nsresult nsHostResolver::ConditionallyRefreshRecord(
-    nsHostRecord* rec, const nsACString& host, const MutexAutoLock& aLock) {
+bool nsHostResolver::ConditionallyRefreshRecord(nsHostRecord* rec,
+                                                const nsACString& host,
+                                                const MutexAutoLock& aLock) {
   if ((rec->CheckExpiration(TimeStamp::NowLoRes()) == nsHostRecord::EXP_GRACE ||
        rec->negative) &&
       !rec->mResolving && rec->RefreshForNegativeResponse()) {
     LOG(("  Using %s cache entry for host [%s] but starting async renewal.",
          rec->negative ? "negative" : "positive", host.BeginReading()));
-    NameLookup(rec, aLock);
+    nsresult rv = NameLookup(rec, aLock);
 
     if (rec->IsAddrRecord()) {
       if (!rec->negative) {
@@ -1199,6 +1206,8 @@ nsresult nsHostResolver::ConditionallyRefreshRecord(
         glean::dns::lookup_method.AccumulateSingleSample(METHOD_NEGATIVE_HIT);
       }
     }
+
+    return NS_SUCCEEDED(rv);
   } else if (rec->IsAddrRecord()) {
     // it could be that the record is negative, but we haven't entered the above
     // if condition due to the second expression being false. In that case we
@@ -1210,7 +1219,7 @@ nsresult nsHostResolver::ConditionallyRefreshRecord(
     }
   }
 
-  return NS_OK;
+  return false;
 }
 
 bool nsHostResolver::GetHostToLookup(nsHostRecord** result) {

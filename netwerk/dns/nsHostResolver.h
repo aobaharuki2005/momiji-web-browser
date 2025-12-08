@@ -234,12 +234,13 @@ class nsHostResolver : public nsISupports, public AHostResolver {
 
   /**
    * Starts a new lookup in the background for cached entries that are in the
-   * grace period or that are are negative.
+   * grace period or that are are negative. Return true when the new lookup
+   * starts.
    *
    * Also records telemetry for type of cache hit (HIT/NEGATIVE_HIT/RENEWAL).
    */
-  nsresult ConditionallyRefreshRecord(nsHostRecord* rec, const nsACString& host,
-                                      const mozilla::MutexAutoLock& aLock)
+  bool ConditionallyRefreshRecord(nsHostRecord* rec, const nsACString& host,
+                                  const mozilla::MutexAutoLock& aLock)
       MOZ_REQUIRES(mLock);
 
   void OnResolveComplete(nsHostRecord* aRec,
@@ -266,8 +267,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   already_AddRefed<nsHostRecord> FromUnspecEntry(
       nsHostRecord* aRec, const nsACString& aHost, const nsACString& aTrrServer,
       const nsACString& aOriginSuffix, uint16_t aType,
-      nsIDNSService::DNSFlags aFlags, uint16_t af, bool aPb, nsresult& aStatus)
-      MOZ_REQUIRES(mLock);
+      nsIDNSService::DNSFlags aFlags, uint16_t af, bool aPb, nsresult& aStatus,
+      const mozilla::MutexAutoLock& aLock) MOZ_REQUIRES(mLock);
 
   enum {
     METHOD_HIT = 1,
