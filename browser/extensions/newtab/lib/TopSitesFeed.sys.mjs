@@ -1449,6 +1449,19 @@ export class TopSitesFeed {
     );
   }
 
+  normalizeUrl(url) {
+    let normalized = url;
+    if (normalized.startsWith("https://")) {
+      normalized = normalized.slice(8);
+    } else if (normalized.startsWith("http://")) {
+      normalized = normalized.slice(7);
+    }
+    if (normalized.startsWith("www.")) {
+      normalized = normalized.slice(4);
+    }
+    return normalized;
+  }
+
   /**
    * Build frecency-boosted spocs from a list of sponsor domains by checking Places history.
    * Checks if domains exist in history, dedupes against organic topsites,
@@ -1481,9 +1494,13 @@ export class TopSitesFeed {
 
     const candidates = [];
     frecent.forEach(site => {
+      const normalizedSiteUrl = this.normalizeUrl(site.url);
+
       for (const domainObj of sponsorsToCheck) {
+        const normalizedDomain = this.normalizeUrl(domainObj.domain);
+
         if (
-          !site.url.startsWith(domainObj.domain) ||
+          !normalizedSiteUrl.startsWith(normalizedDomain) ||
           lazy.NewTabUtils.blockedLinks.isBlocked({ url: domainObj.domain })
         ) {
           continue;

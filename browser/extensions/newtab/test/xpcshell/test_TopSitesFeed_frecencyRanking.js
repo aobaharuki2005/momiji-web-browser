@@ -108,6 +108,7 @@ function getTopSitesFeedForTest(
   return feed;
 }
 
+// eslint-disable-next-line max-statements
 add_task(async function test_frecency_sponsored_topsites() {
   let sandbox = sinon.createSandbox();
   {
@@ -197,7 +198,7 @@ add_task(async function test_frecency_sponsored_topsites() {
 
     sandbox.restore();
   }
-  /*{
+  {
     info(
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should return a single match with a subdomain"
@@ -216,7 +217,7 @@ add_task(async function test_frecency_sponsored_topsites() {
     Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname1");
 
     sandbox.restore();
-  }*/
+  }
   {
     info(
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
@@ -263,6 +264,45 @@ add_task(async function test_frecency_sponsored_topsites() {
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
     Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname4");
+
+    sandbox.restore();
+  }
+  {
+    info(
+      "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
+        "Should not return a match with a different subdomain"
+    );
+    const feed = getTopSitesFeedForTest(sandbox, {
+      frecent: [
+        {
+          url: "https://bus.domain1.com",
+          frecency: 1234,
+        },
+      ],
+    });
+
+    const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
+    Assert.equal(frecencyBoostedSpocs.length, 0);
+
+    sandbox.restore();
+  }
+  {
+    info(
+      "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
+        "Should return a match with the same subdomain"
+    );
+    const feed = getTopSitesFeedForTest(sandbox, {
+      frecent: [
+        {
+          url: "https://sub.domain1.com",
+          frecency: 1234,
+        },
+      ],
+    });
+
+    const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
+    Assert.equal(frecencyBoostedSpocs.length, 1);
+    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname1sub");
 
     sandbox.restore();
   }
