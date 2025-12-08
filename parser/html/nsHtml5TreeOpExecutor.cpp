@@ -912,9 +912,7 @@ void nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement,
     MOZ_ASSERT(sele->GetScriptDeferred() || sele->GetScriptAsync() ||
                sele->GetScriptIsModule() || sele->GetScriptIsImportMap() ||
                aScriptElement->AsElement()->HasAttr(nsGkAtoms::nomodule));
-    DebugOnly<bool> block = sele->AttemptToExecute();
-    MOZ_ASSERT(!block,
-               "Defer, async, module, importmap, or nomodule tried to block.");
+    sele->AttemptToExecute(nullptr /* aParser */);
     return;
   }
 
@@ -927,15 +925,10 @@ void nsHtml5TreeOpExecutor::RunScript(nsIContent* aScriptElement,
   // Copied from nsXMLContentSink
   // Now tell the script that it's ready to go. This may execute the script
   // or return true, or neither if the script doesn't need executing.
-  bool block = sele->AttemptToExecute();
+  bool block = sele->AttemptToExecute(GetParser());
 
   // If the act of insertion evaluated the script, we're fine.
-  // Else, block the parser till the script has loaded.
-  if (block) {
-    if (mParser) {
-      GetParser()->BlockParser();
-    }
-  } else {
+  if (!block) {
     // mParser may have been nulled out by now, but the flusher deals
 
     // If this event isn't needed, it doesn't do anything. It is sometimes
