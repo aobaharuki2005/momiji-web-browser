@@ -796,16 +796,20 @@ struct Limits {
   // memories.
   Shareable shared;
 
-  WASM_CHECK_CACHEABLE_POD(addressType, initial, maximum, shared);
+  // `pageSize` is used only for memories. Defaults to the standard page size
+  // but may be set to other values with the custom page size proposal.
+  PageSize pageSize = PageSize::Standard;
+
+  WASM_CHECK_CACHEABLE_POD(addressType, initial, maximum, shared, pageSize);
 
   Limits() = default;
-  explicit Limits(uint64_t initial,
-                  const mozilla::Maybe<uint64_t>& maximum = mozilla::Nothing(),
-                  Shareable shared = Shareable::False)
+  Limits(uint64_t initial, const mozilla::Maybe<uint64_t>& maximum,
+         Shareable shared, PageSize pageSize)
       : addressType(AddressType::I32),
         initial(initial),
         maximum(maximum),
-        shared(shared) {}
+        shared(shared),
+        pageSize(pageSize) {}
 };
 
 WASM_DECLARE_CACHEABLE_POD(Limits);
@@ -834,7 +838,7 @@ struct MemoryDesc {
 
   AddressType addressType() const { return limits.addressType; }
 
-  PageSize pageSize() const { return PageSize::Standard; }
+  PageSize pageSize() const { return limits.pageSize; }
 
   // The initial length of this memory in pages.
   Pages initialPages() const {

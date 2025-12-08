@@ -789,6 +789,10 @@ static bool GetLimits(JSContext* cx, HandleObject obj, LimitsKind kind,
         }
       }
     }
+
+    // TODO: Should be updated when the JS API for custom page sizes
+    // is finalized, see https://bugzilla.mozilla.org/show_bug.cgi?id=1985679
+    limits->pageSize = PageSize::Standard;
   }
 
   return true;
@@ -2178,8 +2182,8 @@ bool WasmMemoryObject::construct(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (Pages::fromPageCount(limits.initial, PageSize::Standard) >
-      MaxMemoryPages(limits.addressType, PageSize::Standard)) {
+  if (Pages::fromPageCount(limits.initial, limits.pageSize) >
+      MaxMemoryPages(limits.addressType, limits.pageSize)) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_WASM_MEM_IMP_LIMIT);
     return false;
@@ -2662,7 +2666,7 @@ uint64_t WasmMemoryObject::grow(Handle<WasmMemoryObject*> memory,
   // TODO (large ArrayBuffer): See more information at the definition of
   // MaxMemoryBytes().
   MOZ_ASSERT(
-      MaxMemoryBytes(memory->addressType(), PageSize::Standard) <= UINT32_MAX,
+      MaxMemoryBytes(memory->addressType(), memory->pageSize()) <= UINT32_MAX,
       "Avoid 32-bit overflows");
 #endif
 
