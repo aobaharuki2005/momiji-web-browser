@@ -1092,6 +1092,9 @@ skip-if = [
 ]
 
 ["test_ckeditor4_compat_hack.html"]
+skip-if = [
+  "true", # https://bugzilla.mozilla.org/show_bug.cgi?id=2003720
+]
 
 ["test_clearTimeoutIntervalNoArg.html"]
 
