@@ -7151,6 +7151,16 @@ CSSPoint AsyncPanZoomController::MaybeFillOutOverscrollGutter(
   return Metrics().GetVisualScrollOffset() - origin;
 }
 
+ScreenMargin AsyncPanZoomController::GetFixedLayerMargins(
+    const RecursiveMutexAutoLock& aProofOfLock) const {
+  return mCompositorFixedLayerMargins;
+}
+
+void AsyncPanZoomController::SetFixedLayerMargins(const ScreenMargin& aMargin) {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  mCompositorFixedLayerMargins = aMargin;
+}
+
 std::ostream& operator<<(std::ostream& aOut,
                          const AsyncPanZoomController::PanZoomState& aState) {
   switch (aState) {
