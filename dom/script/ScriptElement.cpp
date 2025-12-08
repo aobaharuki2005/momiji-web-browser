@@ -15,6 +15,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TrustedTypeUtils.h"
 #include "mozilla/dom/TrustedTypesConstants.h"
+#include "mozilla/extensions/WebExtensionPolicy.h"
 #include "nsContentSink.h"
 #include "nsContentUtils.h"
 #include "nsGkAtoms.h"
@@ -159,18 +160,19 @@ bool ScriptElement::MaybeProcessScript() {
   //  use a void string.
   // - If it is an external script, we similarly just pass a void string.
   if (!HasExternalScriptContent() && !mIsTrusted) {
-    // TODO: We should likely block parser if IsClassicNonAsyncDefer() returns
-    // true but this is tricky because the default policy callback can actually
-    // change the script type.
-    nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
-        "ScriptElement::MaybeProcessScript",
-        [self = RefPtr<nsIScriptElement>(this)]()
-            MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
-              nsString sourceText;
-              self->GetTrustedTypesCompliantInlineScriptText(sourceText);
-              ((ScriptElement*)self.get())->MaybeProcessScript(sourceText);
-            }));
-    return false;
+    if (!TrustedTypeUtils::CanSkipTrustedTypesEnforcement(
+            *GetAsContent()->AsElement())) {
+      // TODO(bug 1997818): Ensure we properly block the parser.
+      nsContentUtils::AddScriptRunner(NS_NewRunnableFunction(
+          "ScriptElement::MaybeProcessScript",
+          [self = RefPtr<nsIScriptElement>(this)]()
+              MOZ_CAN_RUN_SCRIPT_BOUNDARY_LAMBDA {
+                nsString sourceText;
+                self->GetTrustedTypesCompliantInlineScriptText(sourceText);
+                ((ScriptElement*)self.get())->MaybeProcessScript(sourceText);
+              }));
+      return false;
+    }
   }
   return MaybeProcessScript(VoidString());
 }
@@ -178,9 +180,14 @@ bool ScriptElement::MaybeProcessScript() {
 bool ScriptElement::MaybeProcessScript(const nsAString& aSourceText) {
   nsIContent* cont = GetAsContent();
   if (!HasExternalScriptContent()) {
+    // If el has no src attribute, and source text is the empty string, then
+    // return (https://html.spec.whatwg.org/#prepare-the-script-element).
+    //
+    // A void aSourceText means we want to retrieve it lazily (bug 1376651), in
+    // that case we browse the subtree to try and find a non-empty text node.
     bool hasInlineScriptContent =
-        mIsTrusted ? nsContentUtils::HasNonEmptyTextContent(cont)
-                   : !aSourceText.IsEmpty();
+        aSourceText.IsVoid() ? nsContentUtils::HasNonEmptyTextContent(cont)
+                             : !aSourceText.IsEmpty();
     if (!hasInlineScriptContent) {
       // In the case of an empty, non-external classic script, there is nothing
       // to process. However, we must perform a microtask checkpoint afterwards,
@@ -191,7 +198,6 @@ bool ScriptElement::MaybeProcessScript(const nsAString& aSourceText) {
       }
       return false;
     }
-    MOZ_ASSERT(mIsTrusted == aSourceText.IsVoid());
   }
 
   // Check the type attribute to determine language and version. If type exists,
@@ -285,6 +291,19 @@ void ScriptElement::UpdateTrustWorthiness(
     MutationEffectOnScript aMutationEffectOnScript) {
   if (aMutationEffectOnScript == MutationEffectOnScript::DropTrustWorthiness &&
       StaticPrefs::dom_security_trusted_types_enabled()) {
+    nsCOMPtr<nsIPrincipal> subjectPrincipal;
+    if (JSContext* cx = nsContentUtils::GetCurrentJSContext()) {
+      subjectPrincipal = nsContentUtils::SubjectPrincipal(cx);
+      if (auto* principal = BasePrincipal::Cast(subjectPrincipal)) {
+        if (principal->IsSystemPrincipal() ||
+            principal->ContentScriptAddonPolicyCore()) {
+          // This script was modified by a priviledged scripts, so continue to
+          // consider it as trusted.
+          return;
+        }
+      }
+    }
+
     mIsTrusted = false;
   }
 }
@@ -303,15 +322,10 @@ nsresult ScriptElement::GetTrustedTypesCompliantInlineScriptText(
   constexpr nsLiteralString svgSinkName = u"SVGScriptElement text"_ns;
   ErrorResult error;
 
-  nsCOMPtr<nsIPrincipal> subjectPrincipal;
-  if (JSContext* cx = nsContentUtils::GetCurrentJSContext()) {
-    subjectPrincipal = nsContentUtils::SubjectPrincipal(cx);
-  }
   const nsAString* compliantString =
       TrustedTypeUtils::GetTrustedTypesCompliantStringForTrustedScript(
           sourceText, element->IsHTMLElement() ? htmlSinkName : svgSinkName,
-          kTrustedTypesOnlySinkGroup, *element, subjectPrincipal,
-          compliantStringHolder, error);
+          kTrustedTypesOnlySinkGroup, *element, compliantStringHolder, error);
   if (!error.Failed()) {
     aSourceText.Assign(*compliantString);
   }
