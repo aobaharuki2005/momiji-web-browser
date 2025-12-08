@@ -2078,7 +2078,8 @@ CanvasUsage CanvasUsage::CreateUsage(
   CanvasFeatureUsage featureUsage = CanvasFeatureUsage::None;
 
   // Only 2D contexts currently expose feature usage metrics.
-  if (aContextType == dom::CanvasContextType::Canvas2D && aContext) {
+  if (aContext && (aContextType == dom::CanvasContextType::Canvas2D ||
+                   aContextType == dom::CanvasContextType::OffscreenCanvas2D)) {
     // Downcast is safe because 2D contexts derive from
     // nsICanvasRenderingContextInternal and we gated on the supplied type. The
     // header is included so the relationship is known to the compiler.
@@ -2090,7 +2091,6 @@ CanvasUsage CanvasUsage::CreateUsage(
       CanvasUsage::GetCanvasUsageSource(aIsOffscreen, aContextType, aApi);
   return CanvasUsage(aSize, aContextType, usageSource, featureUsage);
 }
-
 CanvasUsageSource CanvasUsage::GetCanvasUsageSource(
     bool isOffscreen, dom::CanvasContextType contextType,
     CanvasExtractionAPI api) {
@@ -2312,52 +2312,64 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     return;
   }
 
-  uint32_t extractedWebGL = 0;
+  bool extractedWebGL = false;
   bool seenExtractedWebGL_300x150 = false;
+  bool seenExtractedWebGL_2000x200 = false;
 
   uint32_t extracted2D = 0;
-  bool seenExtracted2D_16x16 = false;
   bool seenExtracted2D_122x110 = false;
+  bool seenExtracted2D_220x30 = false;
   bool seenExtracted2D_240x60 = false;
-  bool seenExtracted2D_280x60 = false;
+  bool seenExtracted2D_250x80 = false;
+  bool seenExtracted2D_300x100 = false;
+  bool seenExtracted2D_650x12 = false;
   bool seenExtracted2D_860x6 = false;
+
   CanvasFeatureUsage accumulatedFeatureUsage = CanvasFeatureUsage::None;
   CanvasUsageSource accumulatedUsageSource = CanvasUsageSource::Unknown;
 
-  uint32_t extractedOther = 0;
+  MOZ_LOG(
+      gFingerprinterDetection, LogLevel::Debug,
+      ("MaybeReportCanvasFingerprinter: examining %zu uses", aUses.Length()));
 
   for (const auto& usage : aUses) {
     int32_t width = usage.mSize.width;
     int32_t height = usage.mSize.height;
 
-    if (width > 2000 || height > 1000) {
+    if (width > 2500 || height > 1000) {
       // Canvases used for fingerprinting are usually relatively small.
       continue;
     }
 
+    accumulatedFeatureUsage |= usage.mFeatureUsage;
     accumulatedUsageSource |= usage.mUsageSource;
 
-    if (usage.mType == dom::CanvasContextType::Canvas2D) {
+    if (usage.mType == dom::CanvasContextType::Canvas2D ||
+        usage.mType == dom::CanvasContextType::OffscreenCanvas2D) {
       accumulatedFeatureUsage |= usage.mFeatureUsage;
       extracted2D++;
-      if (width == 16 && height == 16) {
-        seenExtracted2D_16x16 = true;
+      if (width == 122 && height == 110) {
+        seenExtracted2D_122x110 = true;
+      } else if (width == 220 && height == 30) {
+        seenExtracted2D_220x30 = true;
       } else if (width == 240 && height == 60) {
         seenExtracted2D_240x60 = true;
-      } else if (width == 122 && height == 110) {
-        seenExtracted2D_122x110 = true;
-      } else if (width == 280 && height == 60) {
-        seenExtracted2D_280x60 = true;
+      } else if (width == 250 && height == 80) {
+        seenExtracted2D_250x80 = true;
+      } else if (width == 300 && height == 100) {
+        seenExtracted2D_300x100 = true;
+      } else if (width == 650 && height == 12) {
+        seenExtracted2D_650x12 = true;
       } else if (width == 860 && height == 6) {
         seenExtracted2D_860x6 = true;
       }
     } else if (usage.mType == dom::CanvasContextType::WebGL1) {
-      extractedWebGL++;
+      extractedWebGL = true;
       if (width == 300 && height == 150) {
         seenExtractedWebGL_300x150 = true;
+      } else if (width == 2000 && height == 200) {
+        seenExtractedWebGL_2000x200 = true;
       }
-    } else {
-      extractedOther++;
     }
   }
 
@@ -2368,15 +2380,40 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
   if (seenExtractedWebGL_300x150 && seenExtracted2D_240x60 &&
       seenExtracted2D_122x110) {
     fingerprinter = CanvasFingerprinterAlias::eFingerprintJS;
-  } else if (seenExtractedWebGL_300x150 && seenExtracted2D_280x60 &&
-             seenExtracted2D_16x16) {
+  } else if (seenExtractedWebGL_300x150 &&
+             accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_12 &&
+             accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_13) {
     fingerprinter = CanvasFingerprinterAlias::eAkamai;
+  } else if (accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_9 &&
+             accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_10 &&
+             accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_11) {
+    fingerprinter = CanvasFingerprinterAlias::eOzoki;
+  } else if (seenExtractedWebGL_2000x200 && knownTextBitmask == 0) {
+    fingerprinter = CanvasFingerprinterAlias::ePerimeterX;
+  } else if (seenExtracted2D_220x30 &&
+             accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_7) {
+    fingerprinter = CanvasFingerprinterAlias::eSignifyd;
+  } else if (seenExtracted2D_300x100 &&
+             accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_8) {
+    fingerprinter = CanvasFingerprinterAlias::eSignifyd;
+  } else if (seenExtracted2D_240x60 &&
+             accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_4) {
+    fingerprinter = CanvasFingerprinterAlias::eClaydar;
+  } else if (accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_23) {
+    fingerprinter = CanvasFingerprinterAlias::eForter;
+  } else if (seenExtracted2D_250x80 &&
+             accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_6) {
+    fingerprinter = CanvasFingerprinterAlias::eVariant5;
+  } else if (seenExtracted2D_650x12) {
+    fingerprinter = CanvasFingerprinterAlias::eVariant6;
+  } else if (seenExtracted2D_860x6) {
+    fingerprinter = CanvasFingerprinterAlias::eVariant7;
   } else if (seenExtractedWebGL_300x150 && extracted2D > 0 &&
              (accumulatedFeatureUsage & CanvasFeatureUsage::SetFont)) {
     fingerprinter = CanvasFingerprinterAlias::eVariant1;
   } else if (extractedWebGL > 0 && extracted2D > 1 && seenExtracted2D_860x6) {
     fingerprinter = CanvasFingerprinterAlias::eVariant2;
-  } else if (extractedOther > 0 && (extractedWebGL > 0 || extracted2D > 0)) {
+  } else if (extractedWebGL > 0 || extracted2D > 0) {
     fingerprinter = CanvasFingerprinterAlias::eVariant3;
   } else if (extracted2D > 0 &&
              (accumulatedFeatureUsage & CanvasFeatureUsage::SetFont) &&
@@ -2384,35 +2421,34 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
               (CanvasFeatureUsage::FillRect | CanvasFeatureUsage::LineTo |
                CanvasFeatureUsage::Stroke))) {
     fingerprinter = CanvasFingerprinterAlias::eVariant4;
-  } else if (extractedOther + extractedWebGL + extracted2D > 1) {
-    // This I added primarily to not miss anything, but it can cause false
-    // positives.
-    fingerprinter = CanvasFingerprinterAlias::eMaybe;
   }
 
-  if (knownTextBitmask == 0 && fingerprinter == eNoneIdentified) {
-    return;
-  }
-
-  auto event =
-      CanvasFingerprintingEvent(fingerprinter, knownTextBitmask, aSource);
-
+  nsAutoCString uri(aURI);
+  nsAutoCString origin(aOriginNoSuffix);
+  nsAutoCString filename;
   if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Info)) {
-    nsAutoCString filename;
     uint32_t lineNum = 0;
     uint32_t columnNum = 0;
     MaybeCurrentCaller(filename, lineNum, columnNum);
-
-    nsAutoCString origin(aOriginNoSuffix);
-    MOZ_LOG(
-        gFingerprinterDetection, LogLevel::Info,
-        ("Detected a potential canvas fingerprinter on %s in script %s:%d:%d "
-         "(KnownFingerprintTextBitmask: %u, CanvasFingerprinterAlias: %s, "
-         "CanvasUsageSource: %s)",
-         origin.get(), filename.get(), lineNum, columnNum, knownTextBitmask,
-         CanvasFingerprinterToString(fingerprinter),
-         CanvasUsageSourceToString(aSource)));
   }
+
+  if (knownTextBitmask == 0 && fingerprinter == eNoneIdentified) {
+    MOZ_LOG(gFingerprinterDetection, LogLevel::Debug,
+            ("Found no potential canvas fingerprinter on %s on %s in script %s",
+             origin.get(), uri.get(), filename.get()));
+    return;
+  }
+
+  auto event = CanvasFingerprintingEvent(fingerprinter, knownTextBitmask,
+                                         accumulatedUsageSource);
+
+  MOZ_LOG(gFingerprinterDetection, LogLevel::Info,
+          ("Detected a potential canvas fingerprinter on %s on %s in script %s "
+           "(KnownFingerprintTextBitmask: %u, CanvasFingerprinterAlias: %s, "
+           "AccumulatedCanvasUsageSource: %s)",
+           origin.get(), uri.get(), filename.get(), knownTextBitmask,
+           CanvasFingerprinterToString(fingerprinter),
+           CanvasUsageSourceToString(accumulatedUsageSource).get()));
 
   ContentBlockingNotifier::OnEvent(
       aChannel, false,
