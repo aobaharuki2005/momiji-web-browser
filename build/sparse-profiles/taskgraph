@@ -44,6 +44,8 @@ path:browser/components/aboutwelcome/package.json
 path:browser/components/aboutwelcome/package-lock.json
 path:browser/components/asrouter/package.json
 path:browser/components/asrouter/package-lock.json
+path:tools/terser/package.json
+path:tools/terser/package-lock.json
 
 # for new-style try pushes
 path:try_task_config.json
