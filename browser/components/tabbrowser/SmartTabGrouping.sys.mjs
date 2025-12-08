@@ -163,6 +163,7 @@ const TAB_URLS_TO_EXCLUDE = [
   "about:privatebrowsing",
   "chrome://browser/content/blanktab.html",
   "about:firefoxview",
+  "about:opentabs",
 ];
 
 const TITLE_DELIMETER_SET = new Set(["-", "|", "—"]);

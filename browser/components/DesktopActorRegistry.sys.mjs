@@ -506,6 +506,7 @@ let JSWINDOWACTORS = {
       "about:editprofile",
       "about:deleteprofile",
       "about:newprofile",
+      "about:opentabs",
     ],
   },
 
