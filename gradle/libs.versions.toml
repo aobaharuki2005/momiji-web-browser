@@ -91,7 +91,7 @@ junit4 = "4.13.2"
 junit6 = "6.0.1"
 leakcanary = "2.14"
 mockito = "5.20.0"
-mockk = "1.14.6"
+mockk = "1.14.7"
 robolectric = "4.16"
 
 # Third party libraries
