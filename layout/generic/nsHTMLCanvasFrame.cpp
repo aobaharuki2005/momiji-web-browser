@@ -463,20 +463,13 @@ void nsHTMLCanvasFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
-  auto clipAxes = ShouldApplyOverflowClipping(StyleDisplay());
-  if (!clipAxes.isEmpty()) {
-    nsRect clipRect;
-    nsRectCornerRadii radii;
-    bool haveRadii =
-        ComputeOverflowClipRectRelativeToSelf(clipAxes, clipRect, radii);
-    if (haveRadii ||
-        nsStyleUtil::ObjectPropsMightCauseOverflow(StylePosition())) {
-      clipState.ClipContainingBlockDescendants(
-          clipRect + aBuilder->ToReferenceFrame(this),
-          haveRadii ? &radii : nullptr);
-    }
-  }
+  uint32_t clipFlags =
+      nsStyleUtil::ObjectPropsMightCauseOverflow(StylePosition())
+          ? 0
+          : DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT;
+
+  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox clip(
+      aBuilder, this, clipFlags);
 
   aLists.Content()->AppendNewToTop<nsDisplayCanvas>(aBuilder, this);
 }

@@ -638,12 +638,6 @@ findbar {
   contain: inline-size;
 }
 
-/* Matches legacy behavior and <html:img> */
-image {
-  overflow-clip-margin: content-box;
-  overflow: clip;
-}
-
 /* Some elements that in HTML blocks should be inline-level by default */
 button,
 image {
