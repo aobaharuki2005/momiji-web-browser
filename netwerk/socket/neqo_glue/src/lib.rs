@@ -684,6 +684,21 @@ impl NeqoHttp3Conn {
                 debug_assert!(false, "{msg}");
             }
         }
+
+        // Ignore connections that never had loss induced congestion events (and prevent dividing by zero)
+        if stats.cc.congestion_events_loss != 0 {
+            if let Ok(spurious) = i64::try_from(
+                (stats.cc.congestion_events_spurious * PRECISION_FACTOR_USIZE)
+                    / stats.cc.congestion_events_loss,
+            ) {
+                glean::http_3_spurious_congestion_event_ratio
+                    .accumulate_single_sample_signed(spurious);
+            } else {
+                let msg = "Failed to convert ratio to i64 for use with glean";
+                qwarn!("{msg}");
+                debug_assert!(false, "{msg}");
+            }
+        }
     }
 
     fn increment_would_block_rx(&mut self) {

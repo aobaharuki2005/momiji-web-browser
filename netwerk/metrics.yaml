@@ -1094,6 +1094,26 @@ networking:
       - minden@mozilla.com
     expires: never
 
+  http_3_spurious_congestion_event_ratio:
+    type: custom_distribution
+    unit: integer
+    range_min: 0
+    range_max: 10000
+    bucket_count: 100
+    histogram_type: linear
+    description: >
+      HTTP3: spurious congestion event to loss induced congestion event ratio (10000 scaling factor).
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992148
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1992148
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - omansfeld@mozilla.com
+    expires: 157
+
   http_3_connection_close_reason:
     type: labeled_counter
     description: >
