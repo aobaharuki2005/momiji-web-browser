@@ -17600,7 +17600,6 @@ void Document::RecordCanvasUsage(CanvasUsage& aUsage) {
 
   uint64_t now = PR_Now();
 
-
   nsCString originNoSuffix;
   nsCString uri;
   if (NS_FAILED(NodePrincipal()->GetOriginNoSuffix(originNoSuffix))) {
@@ -17661,6 +17660,50 @@ void Document::RecordCanvasUsage(CanvasUsage& aUsage) {
   // Update the timestamp and append the new usage.
   mCanvasUsageLastTimestamp = now;
   mCanvasUsageData.AppendElement(aUsage);
+
+  nsIChannel* channel = GetChannel();
+  if (!channel) {
+    MOZ_LOG(
+        gFingerprinterDetection, LogLevel::Warning,
+        ("Document:: %p %s no channel available", this, originNoSuffix.get()));
+
+    // Borrowed from ReComputeResistFingerprinting
+    // which tells me this is probably a common problem...
+    auto shouldInheritFrom = [this](Document* aDoc) {
+      return aDoc && this->NodePrincipal() &&
+             (this->NodePrincipal()->Equals(aDoc->NodePrincipal()) ||
+              this->NodePrincipal()->GetIsNullPrincipal());
+    };
+
+    // Climb parent documents until we find a channel.
+    Document* docToCheck = this;
+    while (docToCheck && !channel) {
+      if (docToCheck->mParentDocument &&
+          shouldInheritFrom(docToCheck->mParentDocument)) {
+        channel = docToCheck->mParentDocument->GetChannel();
+      }
+      docToCheck = docToCheck->mParentDocument;
+    }
+
+    docToCheck = this;
+    while (docToCheck && !channel) {
+      RefPtr<BrowsingContext> opener =
+          docToCheck->GetBrowsingContext()
+              ? docToCheck->GetBrowsingContext()->GetOpener()
+              : nullptr;
+      docToCheck = opener ? opener->GetDocument() : nullptr;
+
+      if (docToCheck && shouldInheritFrom(docToCheck)) {
+        channel = docToCheck->GetChannel();
+      }
+    }
+
+    if (!channel) {
+      MOZ_LOG(gFingerprinterDetection, LogLevel::Warning,
+              ("Document:: %p %s still could not find a channel", this,
+               originNoSuffix.get()));
+    }
+  }
 
   nsRFPService::MaybeReportCanvasFingerprinter(mCanvasUsageData, channel, uri,
                                                originNoSuffix);
