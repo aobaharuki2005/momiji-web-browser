@@ -43,7 +43,6 @@ class ProfilerStopDialogFragment : DialogFragment() {
 
     override fun onDismiss(dialog: DialogInterface) {
         profilerViewModel.resetUiState()
-        profilerViewModel.updateProfilerActiveStatus()
         super.onDismiss(dialog)
         if (activity is StopProfilerActivity) {
             activity?.finish()

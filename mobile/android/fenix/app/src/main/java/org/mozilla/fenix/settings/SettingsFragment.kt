@@ -247,7 +247,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
         args.preferenceToScrollTo?.let {
             scrollToPreference(it)
         }
-        profilerViewModel.updateProfilerActiveStatus()
         // Consider finish of `onResume` to be the point at which we consider this fragment as 'created'.
         creatingFragment = false
     }
