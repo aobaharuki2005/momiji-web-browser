@@ -439,6 +439,7 @@ MSG_DEF(JSMSG_WASM_BAD_TAG_SIG,        2, JSEXN_WASMLINKERROR, "imported tag '{0
 MSG_DEF(JSMSG_WASM_BAD_IMP_ADDRESS,    2, JSEXN_WASMLINKERROR, "imported {0} with incompatible address type {1}")
 MSG_DEF(JSMSG_WASM_BAD_IMP_SIZE,       1, JSEXN_WASMLINKERROR, "imported {0} with incompatible size")
 MSG_DEF(JSMSG_WASM_BAD_IMP_MAX,        1, JSEXN_WASMLINKERROR, "imported {0} with incompatible maximum size")
+MSG_DEF(JSMSG_WASM_BAD_IMP_PAGE_SIZE,  0, JSEXN_WASMLINKERROR, "imported memory with incompatible page size")
 MSG_DEF(JSMSG_WASM_IMP_SHARED_REQD,    0, JSEXN_WASMLINKERROR, "imported unshared memory but shared required")
 MSG_DEF(JSMSG_WASM_IMP_SHARED_BANNED,  0, JSEXN_WASMLINKERROR, "imported shared memory but unshared required")
 MSG_DEF(JSMSG_WASM_NO_SHMEM_LINK,      0, JSEXN_WASMLINKERROR, "shared memory is disabled")

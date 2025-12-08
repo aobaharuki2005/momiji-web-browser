@@ -2626,6 +2626,13 @@ size_t WasmMemoryObject::boundsCheckLimit() const {
   return limit;
 }
 
+wasm::PageSize WasmMemoryObject::pageSize() const {
+  if (isShared()) {
+    return sharedArrayRawBuffer()->wasmPageSize();
+  }
+  return buffer().wasmPageSize();
+}
+
 bool WasmMemoryObject::addMovingGrowObserver(JSContext* cx,
                                              WasmInstanceObject* instance) {
   MOZ_ASSERT(movingGrowable());
