@@ -83,6 +83,9 @@ def get_digest_data(config, run, taskdesc):
     if tooltool_manifest:
         files.append(tooltool_manifest)
 
+    # Store resources as an attribute for verification
+    taskdesc.setdefault("attributes", {})["toolchain-resources"] = sorted(files)
+
     # Accumulate dependency hashes for index generation.
     data = [hash_paths(GECKO, files)]
 

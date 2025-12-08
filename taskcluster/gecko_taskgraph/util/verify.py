@@ -23,6 +23,9 @@ from gecko_taskgraph.util.attributes import (
     RUN_ON_PROJECT_ALIASES,
 )
 from gecko_taskgraph.util.constants import TEST_KINDS
+from gecko_taskgraph.util.sparse_profiles import (
+    is_path_covered_by_taskgraph_sparse_profile,
+)
 
 logger = logging.getLogger(__name__)
 doc_base_path = os.path.join(GECKO, "taskcluster", "docs")
@@ -295,6 +298,40 @@ def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config, paramet
                     raise Exception(
                         f"{task.label} ({printable_signoff(required_signoffs)}) cannot depend on {d} ({printable_signoff(all_required_signoffs[d])})"
                     )
+
+
+@verifications.add("full_task_graph")
+def verify_toolchain_resources_in_sparse_profile(
+    task, taskgraph, scratch_pad, graph_config, parameters
+):
+    """
+    Verify that all toolchain resources are covered by the taskgraph sparse profile.
+    If not, the decision task's sparse checkout won't have these files,
+    causing incorrect hashes and breaking 'mach bootstrap' for developers.
+    """
+    if task is not None:
+        if task.kind != "toolchain":
+            return
+        resources = task.attributes.get("toolchain-resources", [])
+        uncovered = [
+            f for f in resources if not is_path_covered_by_taskgraph_sparse_profile(f)
+        ]
+        if uncovered:
+            uncovered_list = "\n".join(f"  path:{path}" for path in uncovered)
+            scratch_pad.setdefault("errors", []).append(
+                f"Toolchain '{task.label}' has resources not covered "
+                f"by the taskgraph sparse profile.\n"
+                f"Uncovered resources:\n{uncovered_list}"
+            )
+    else:
+        errors = scratch_pad.get("errors", [])
+        if errors:
+            raise Exception(
+                "Found toolchain resource(s) not covered by taskgraph sparse profile.\n"
+                "This will cause incorrect hashes in the decision task.\n\n"
+                + "\n\n".join(errors)
+                + "\n\nTo fix, add the above path(s) to 'build/sparse-profiles/taskgraph'."
+            )
 
 
 @verifications.add("full_task_graph")
