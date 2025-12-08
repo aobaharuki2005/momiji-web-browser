@@ -45,6 +45,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanvasRenderingContextHelper.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
+#include "mozilla/dom/CanvasUtils.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
@@ -52,9 +53,9 @@
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/MediaDeviceInfoBinding.h"
 #include "mozilla/dom/quota/QuotaManager.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/XorShift128PlusRNG.h"
-#include "mozilla/dom/CanvasUtils.h"
 
 #include "nsAboutProtocolUtils.h"
 #include "nsBaseHashtable.h"
@@ -1730,16 +1731,66 @@ nsresult nsRFPService::GenerateCanvasKeyFromImageData(
 }
 
 // static
-nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
-                                       nsIPrincipal* aPrincipal, uint8_t* aData,
-                                       uint32_t aWidth, uint32_t aHeight,
-                                       uint32_t aSize,
-                                       gfx::SurfaceFormat aSurfaceFormat) {
-#ifdef __clang__
-#  pragma clang diagnostic push
-#  pragma clang diagnostic ignored "-Wunreachable-code"
-#endif
-  if (false) {
+void nsRFPService::PotentiallyDumpImage(nsIPrincipal* aPrincipal,
+                                        gfx::DataSourceSurface* aSurface) {
+  // Only dump from the content process to avoid unintended file writes from
+  // privileged or background processes.
+  if (XRE_GetProcessType() != GeckoProcessType_Content) {
+    return;
+  }
+  if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Debug)) {
+    int32_t format = 0;
+    UniquePtr<uint8_t[]> imageBuffer =
+        gfxUtils::GetImageBuffer(aSurface, true, &format);
+    nsRFPService::PotentiallyDumpImage(
+        aPrincipal, imageBuffer.get(), aSurface->GetSize().width,
+        aSurface->GetSize().height,
+        aSurface->GetSize().width * aSurface->GetSize().height * 4);
+  }
+}
+
+void nsRFPService::PotentiallyDumpImage(nsIPrincipal* aPrincipal,
+                                        uint8_t* aData, uint32_t aWidth,
+                                        uint32_t aHeight, uint32_t aSize) {
+  // Only dump from the content process to avoid unintended file writes from
+  // privileged or background processes.
+  if (XRE_GetProcessType() != GeckoProcessType_Content) {
+    return;
+  }
+  nsAutoCString safeSite;
+
+  if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Debug)) {
+    nsAutoCString site;
+    if (aPrincipal) {
+      nsCOMPtr<nsIURI> uri = aPrincipal->GetURI();
+      if (uri) {
+        site.Assign(uri->GetSpecOrDefault());
+      }
+    }
+    if (site.IsEmpty()) {
+      site.AssignLiteral("unknown");
+    }
+
+    safeSite.SetCapacity(site.Length());
+    // Build a sanitized site string from the principal's URI for filename.
+    // Allow alnum, '.', '_', '-', replace others with '_'.
+    for (uint32_t i = 0; i < site.Length() && safeSite.Length() < 80; ++i) {
+      char c = site[i];
+      if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+          (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-') {
+        safeSite.Append(c);
+      } else {
+        safeSite.Append('_');
+      }
+    }
+
+    MOZ_LOG(gFingerprinterDetection, LogLevel::Debug,
+            ("Would dump a canvas image from %s width: %i height: %i bytes: %i",
+             site.get(), aWidth, aHeight, aSize));
+  }
+
+  if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Verbose)) {
+    // Requires sandbox level 0
     // For debugging purposes you can dump the image with this code
     // then convert it with the image-magick command
     // convert -size WxH -depth 8 rgba:$i $i.png
@@ -1747,17 +1798,47 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
     // up...
     static int calls = 0;
     char filename[256];
-    SprintfLiteral(filename, "rendered_image_%dx%d_%d_pre", aWidth, aHeight,
-                   calls);
-    FILE* outputFile = fopen(filename, "wb");  // "wb" for binary write mode
-    fwrite(aData, 1, aSize, outputFile);
-    fclose(outputFile);
-    calls++;
-  }
-#ifdef __clang__
-#  pragma clang diagnostic pop
-#endif
+    SprintfLiteral(filename, "rendered_image_%s__%dx%d_%d", safeSite.get(),
+                   aWidth, aHeight, calls);
 
+    const char* logEnv = PR_GetEnv("MOZ_LOG_FILE");
+#ifdef XP_WIN
+    const char sep = '\\';
+#else
+    const char sep = '/';
+#endif
+    const char* dirEnd = nullptr;
+    if (logEnv) {
+      for (const char* it = logEnv; *it; ++it) {
+        if (*it == sep) {
+          dirEnd = it;
+        }
+      }
+    }
+
+    char outPath[512];
+    if (dirEnd) {
+      int dirLen = int(dirEnd - logEnv + 1);
+      SprintfLiteral(outPath, "%.*s%s", dirLen, logEnv, filename);
+    } else {
+      SprintfLiteral(outPath, "%s", filename);
+    }
+
+    FILE* outputFile = fopen(outPath, "wb");
+    if (outputFile) {
+      fwrite(aData, 1, aSize, outputFile);
+      fclose(outputFile);
+      calls++;
+    }
+  }
+}
+
+// static
+nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
+                                       nsIPrincipal* aPrincipal, uint8_t* aData,
+                                       uint32_t aWidth, uint32_t aHeight,
+                                       uint32_t aSize,
+                                       gfx::SurfaceFormat aSurfaceFormat) {
   constexpr uint8_t bytesPerChannel = 1;
   constexpr uint8_t bytesPerPixel = 4 * bytesPerChannel;
 

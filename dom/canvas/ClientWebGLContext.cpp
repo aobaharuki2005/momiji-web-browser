@@ -1358,6 +1358,7 @@ UniquePtr<uint8_t[]> ClientWebGLContext::GetImageBuffer(
   const auto& premultAlpha = notLost->info.options.premultipliedAlpha;
   *out_imageSize = dataSurface->GetSize();
 
+  nsRFPService::PotentiallyDumpImage(PrincipalOrNull(), dataSurface);
   if (aExtractionBehavior == CanvasUtils::ImageExtraction::Randomize) {
     return gfxUtils::GetImageBufferWithRandomNoise(
         dataSurface, premultAlpha, GetCookieJarSettings(), PrincipalOrNull(),
@@ -1385,6 +1386,7 @@ ClientWebGLContext::GetInputStream(
   RefPtr<gfx::DataSourceSurface> dataSurface = snapshot->GetDataSurface();
   const auto& premultAlpha = notLost->info.options.premultipliedAlpha;
 
+  nsRFPService::PotentiallyDumpImage(PrincipalOrNull(), dataSurface);
   if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
     return gfxUtils::GetInputStreamWithRandomNoise(
         dataSurface, premultAlpha, mimeType, encoderOptions,

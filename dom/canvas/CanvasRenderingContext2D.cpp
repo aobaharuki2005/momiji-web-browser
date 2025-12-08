@@ -2279,12 +2279,18 @@ UniquePtr<uint8_t[]> CanvasRenderingContext2D::GetImageBuffer(
 
   mBufferProvider->ReturnSnapshot(snapshot.forget());
 
-  if (ret && aExtractionBehavior == CanvasUtils::ImageExtraction::Randomize) {
-    nsRFPService::RandomizePixels(
-        GetCookieJarSettings(), PrincipalOrNull(), ret.get(),
-        out_imageSize->width, out_imageSize->height,
-        out_imageSize->width * out_imageSize->height * 4,
-        SurfaceFormat::A8R8G8B8_UINT32);
+  if (ret) {
+    nsRFPService::PotentiallyDumpImage(
+        PrincipalOrNull(), ret.get(), out_imageSize->width,
+        out_imageSize->height,
+        out_imageSize->width * out_imageSize->height * 4);
+    if (aExtractionBehavior == CanvasUtils::ImageExtraction::Randomize) {
+      nsRFPService::RandomizePixels(
+          GetCookieJarSettings(), PrincipalOrNull(), ret.get(),
+          out_imageSize->width, out_imageSize->height,
+          out_imageSize->width * out_imageSize->height * 4,
+          SurfaceFormat::A8R8G8B8_UINT32);
+    }
   }
 
   return ret;
@@ -6612,6 +6618,10 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
 
   do {
     uint8_t* randomData;
+    const IntSize size = readback->GetSize();
+    nsRFPService::PotentiallyDumpImage(PrincipalOrNull(), rawData.mData,
+                                       size.width, size.height,
+                                       size.height * size.width * 4);
     if (extractionBehavior == CanvasUtils::ImageExtraction::Placeholder) {
       // Since we cannot call any GC-able functions (like requesting the RNG
       // service) after we call JS_GetUint8ClampedArrayData, we will
@@ -6622,7 +6632,6 @@ nsresult CanvasRenderingContext2D::GetImageDataArray(
       // need to calculate random noises if we are going to use the place
       // holder.
 
-      const IntSize size = readback->GetSize();
       nsRFPService::RandomizePixels(GetCookieJarSettings(), PrincipalOrNull(),
                                     rawData.mData, size.width, size.height,
                                     size.height * size.width * 4,
