@@ -89,6 +89,13 @@ path:modules/libmar/
 path:other-licenses/bsdiff/
 path:other-licenses/nsis/Contrib/CityHash/cityhash/
 path:toolkit/mozapps/update/updater
+path:tools/update-packaging/
+
+# for the zucchini toolchain task
+path:third_party/abseil-cpp/
+path:third_party/googletest/
+path:third_party/zucchini/
+path:tools/zucchini/
 
 # for the minidump-stackwalk toolchain task
 path:toolkit/crashreporter
