@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.445
- * pdfjsBuild = ec5330f78
+ * pdfjsVersion = 5.4.466
+ * pdfjsBuild = 36de2d976
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -59757,7 +59757,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "5.4.445";
+    const workerVersion = "5.4.466";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }

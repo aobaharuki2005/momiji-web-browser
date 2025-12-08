@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.445
- * pdfjsBuild = ec5330f78
+ * pdfjsVersion = 5.4.466
+ * pdfjsBuild = 36de2d976
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -2456,13 +2456,16 @@ class CaretBrowsingMode {
 
 ;// ./web/sidebar.js
 
+const RESIZE_TIMEOUT = 400;
 class Sidebar {
-  #minWidth = 0;
-  #maxWidth = 0;
   #initialWidth = 0;
   #width = 0;
   #coefficient;
-  #visible = false;
+  #resizeTimeout = null;
+  #resizer;
+  #isResizerOnTheLeft;
+  #isKeyboardResizing = false;
+  #resizeObserver = null;
   constructor({
     sidebar,
     resizer,
@@ -2470,30 +2473,37 @@ class Sidebar {
   }, ltr, isResizerOnTheLeft) {
     this._sidebar = sidebar;
     this.#coefficient = ltr === isResizerOnTheLeft ? -1 : 1;
+    this.#resizer = resizer;
+    this.#isResizerOnTheLeft = isResizerOnTheLeft;
     const style = window.getComputedStyle(sidebar);
-    this.#minWidth = parseFloat(style.getPropertyValue("--sidebar-min-width"));
-    this.#maxWidth = parseFloat(style.getPropertyValue("--sidebar-max-width"));
     this.#initialWidth = this.#width = parseFloat(style.getPropertyValue("--sidebar-width"));
-    this.#makeSidebarResizable(resizer, isResizerOnTheLeft);
+    resizer.ariaValueMin = parseFloat(style.getPropertyValue("--sidebar-min-width"));
+    resizer.ariaValueMax = parseFloat(style.getPropertyValue("--sidebar-max-width"));
+    resizer.ariaValueNow = this.#width;
+    this.#makeSidebarResizable();
     toggleButton.addEventListener("click", this.toggle.bind(this));
+    this._isOpen = false;
     sidebar.hidden = true;
   }
-  #makeSidebarResizable(resizer, isResizerOnTheLeft) {
-    resizer.ariaValueMin = this.#minWidth;
-    resizer.ariaValueMax = this.#maxWidth;
-    resizer.ariaValueNow = this.#width;
+  #makeSidebarResizable() {
+    const sidebarStyle = this._sidebar.style;
     let pointerMoveAC;
     const cancelResize = () => {
-      this.#width = MathClamp(this.#width, this.#minWidth, this.#maxWidth);
+      this.#resizeTimeout = null;
       this._sidebar.classList.remove("resizing");
       pointerMoveAC?.abort();
       pointerMoveAC = null;
+      this.#resizeObserver?.disconnect();
+      this.#resizeObserver = null;
+      this.#isKeyboardResizing = false;
+      this.onStopResizing();
     };
-    resizer.addEventListener("pointerdown", e => {
+    this.#resizer.addEventListener("pointerdown", e => {
       if (pointerMoveAC) {
         cancelResize();
         return;
       }
+      this.onStartResizing();
       const {
         clientX
       } = e;
@@ -2504,10 +2514,19 @@ class Sidebar {
         signal
       } = pointerMoveAC;
       const sidebar = this._sidebar;
-      const sidebarStyle = sidebar.style;
       sidebar.classList.add("resizing");
       const parentStyle = sidebar.parentElement.style;
       parentStyle.minWidth = 0;
+      this.#resizeObserver?.disconnect();
+      this.#resizeObserver = new ResizeObserver(([{
+        borderBoxSize: [{
+          inlineSize
+        }]
+      }]) => {
+        prevX += this.#width - inlineSize;
+        this.#setWidth(inlineSize);
+      });
+      this.#resizeObserver.observe(sidebar);
       window.addEventListener("contextmenu", noContextMenu, {
         signal
       });
@@ -2516,11 +2535,7 @@ class Sidebar {
           return;
         }
         stopEvent(ev);
-        const {
-          clientX: x
-        } = ev;
-        this.#setNewWidth(x - prevX, parentStyle, resizer, sidebarStyle, isResizerOnTheLeft, false);
-        prevX = x;
+        sidebarStyle.width = `${Math.round(this.#width + this.#coefficient * (ev.clientX - prevX))}px`;
       }, {
         signal,
         capture: true
@@ -2537,39 +2552,69 @@ class Sidebar {
         signal
       });
     });
-    resizer.addEventListener("keydown", e => {
+    this.#resizer.addEventListener("keydown", e => {
       const {
         key
       } = e;
       const isArrowLeft = key === "ArrowLeft";
       if (isArrowLeft || key === "ArrowRight") {
+        if (!this.#isKeyboardResizing) {
+          this._sidebar.classList.add("resizing");
+          this.#isKeyboardResizing = true;
+          this.#resizeObserver?.disconnect();
+          this.#resizeObserver = new ResizeObserver(([{
+            borderBoxSize: [{
+              inlineSize
+            }]
+          }]) => {
+            this.#setWidth(inlineSize);
+          });
+          this.#resizeObserver.observe(this._sidebar);
+          this.onStartResizing();
+        }
         const base = e.ctrlKey || e.metaKey ? 10 : 1;
         const dx = base * (isArrowLeft ? -1 : 1);
-        this.#setNewWidth(dx, this._sidebar.parentElement.style, resizer, this._sidebar.style, isResizerOnTheLeft, true);
+        clearTimeout(this.#resizeTimeout);
+        this.#resizeTimeout = setTimeout(cancelResize, RESIZE_TIMEOUT);
+        sidebarStyle.width = `${Math.round(this.#width + this.#coefficient * dx)}px`;
         stopEvent(e);
       }
     });
   }
-  #setNewWidth(dx, parentStyle, resizer, sidebarStyle, isResizerOnTheLeft, isFromKeyboard) {
-    let newWidth = this.#width + this.#coefficient * dx;
-    if (!isFromKeyboard) {
-      this.#width = newWidth;
+  #setWidth(newWidth) {
+    this.#width = newWidth;
+    this.#resizer.ariaValueNow = Math.round(newWidth);
+    if (this.#isResizerOnTheLeft) {
+      this._sidebar.parentElement.style.insetInlineStart = `${(this.#initialWidth - newWidth).toFixed(3)}px`;
     }
-    if ((newWidth > this.#maxWidth || newWidth < this.#minWidth) && (this.#width === this.#maxWidth || this.#width === this.#minWidth)) {
-      return;
-    }
-    newWidth = MathClamp(newWidth, this.#minWidth, this.#maxWidth);
-    if (isFromKeyboard) {
-      this.#width = newWidth;
-    }
-    resizer.ariaValueNow = Math.round(newWidth);
-    sidebarStyle.width = `${newWidth.toFixed(3)}px`;
-    if (isResizerOnTheLeft) {
-      parentStyle.insetInlineStart = `${(this.#initialWidth - newWidth).toFixed(3)}px`;
-    }
+    this.onResizing(newWidth);
   }
-  toggle() {
-    this._sidebar.hidden = !(this.#visible = !this.#visible);
+  get width() {
+    return this.#width;
+  }
+  set width(newWidth) {
+    if (!this.#resizeObserver) {
+      this.#resizeObserver = new ResizeObserver(([{
+        borderBoxSize: [{
+          inlineSize
+        }]
+      }]) => {
+        this.#setWidth(inlineSize);
+      });
+      this.#resizeObserver.observe(this._sidebar);
+    }
+    this._sidebar.style.width = `${newWidth}px`;
+    clearTimeout(this.#resizeTimeout);
+    this.#resizeTimeout = setTimeout(() => {
+      this.#resizeObserver.disconnect();
+      this.#resizeObserver = null;
+    }, RESIZE_TIMEOUT);
+  }
+  onStartResizing() {}
+  onStopResizing() {}
+  onResizing(_newWidth) {}
+  toggle(visibility = !this._isOpen) {
+    this._sidebar.hidden = !(this._isOpen = visibility);
   }
 }
 
@@ -6926,7 +6971,27 @@ class StructTreeLayerBuilder {
       const {
         role
       } = node;
-      element = MathMLElements.has(role) ? document.createElementNS(MathMLNamespace, role) : document.createElement("span");
+      if (MathMLElements.has(role)) {
+        element = document.createElementNS(MathMLNamespace, role);
+        let text = "";
+        for (const {
+          type,
+          id
+        } of node.children || []) {
+          if (type !== "content" || !id) {
+            continue;
+          }
+          const elem = document.getElementById(id);
+          if (!elem) {
+            continue;
+          }
+          text += elem.textContent.trim() || "";
+          elem.ariaHidden = "true";
+        }
+        element.textContent = text;
+      } else {
+        element = document.createElement("span");
+      }
       const match = role.match(HEADING_PATTERN);
       if (match) {
         element.setAttribute("role", "heading");
@@ -6942,6 +7007,17 @@ class StructTreeLayerBuilder {
           element.setHTML(node.mathML, {
             sanitizer: MathMLSanitizer.sanitizer
           });
+          for (const {
+            id
+          } of node.children || []) {
+            if (!id) {
+              continue;
+            }
+            const elem = document.getElementById(id);
+            if (elem) {
+              elem.ariaHidden = true;
+            }
+          }
         }
         if (!node.mathML && node.children.length === 1 && node.children[0].role !== "math") {
           element = document.createElementNS(MathMLNamespace, "math");
@@ -8366,7 +8442,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.445";
+    const viewerVersion = "5.4.466";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9865,7 +9941,7 @@ class PDFViewer {
     const updater = async () => {
       this.#cleanupSwitchAnnotationEditorMode();
       this.#annotationEditorMode = mode;
-      await this.#annotationEditorUIManager.updateMode(mode, editId, isFromKeyboard, mustEnterInEditMode, editComment);
+      await this.#annotationEditorUIManager.updateMode(mode, editId, true, isFromKeyboard, mustEnterInEditMode, editComment);
       if (mode !== this.#annotationEditorMode || pdfDocument !== this.pdfDocument) {
         return;
       }

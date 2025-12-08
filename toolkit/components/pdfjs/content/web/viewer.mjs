@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.445
- * pdfjsBuild = ec5330f78
+ * pdfjsVersion = 5.4.466
+ * pdfjsBuild = 36de2d976
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -3313,13 +3313,16 @@ class CaretBrowsingMode {
 
 ;// ./web/sidebar.js
 
+const RESIZE_TIMEOUT = 400;
 class Sidebar {
-  #minWidth = 0;
-  #maxWidth = 0;
   #initialWidth = 0;
   #width = 0;
   #coefficient;
-  #visible = false;
+  #resizeTimeout = null;
+  #resizer;
+  #isResizerOnTheLeft;
+  #isKeyboardResizing = false;
+  #resizeObserver = null;
   constructor({
     sidebar,
     resizer,
@@ -3327,30 +3330,37 @@ class Sidebar {
   }, ltr, isResizerOnTheLeft) {
     this._sidebar = sidebar;
     this.#coefficient = ltr === isResizerOnTheLeft ? -1 : 1;
+    this.#resizer = resizer;
+    this.#isResizerOnTheLeft = isResizerOnTheLeft;
     const style = window.getComputedStyle(sidebar);
-    this.#minWidth = parseFloat(style.getPropertyValue("--sidebar-min-width"));
-    this.#maxWidth = parseFloat(style.getPropertyValue("--sidebar-max-width"));
     this.#initialWidth = this.#width = parseFloat(style.getPropertyValue("--sidebar-width"));
-    this.#makeSidebarResizable(resizer, isResizerOnTheLeft);
+    resizer.ariaValueMin = parseFloat(style.getPropertyValue("--sidebar-min-width"));
+    resizer.ariaValueMax = parseFloat(style.getPropertyValue("--sidebar-max-width"));
+    resizer.ariaValueNow = this.#width;
+    this.#makeSidebarResizable();
     toggleButton.addEventListener("click", this.toggle.bind(this));
+    this._isOpen = false;
     sidebar.hidden = true;
   }
-  #makeSidebarResizable(resizer, isResizerOnTheLeft) {
-    resizer.ariaValueMin = this.#minWidth;
-    resizer.ariaValueMax = this.#maxWidth;
-    resizer.ariaValueNow = this.#width;
+  #makeSidebarResizable() {
+    const sidebarStyle = this._sidebar.style;
     let pointerMoveAC;
     const cancelResize = () => {
-      this.#width = MathClamp(this.#width, this.#minWidth, this.#maxWidth);
+      this.#resizeTimeout = null;
       this._sidebar.classList.remove("resizing");
       pointerMoveAC?.abort();
       pointerMoveAC = null;
+      this.#resizeObserver?.disconnect();
+      this.#resizeObserver = null;
+      this.#isKeyboardResizing = false;
+      this.onStopResizing();
     };
-    resizer.addEventListener("pointerdown", e => {
+    this.#resizer.addEventListener("pointerdown", e => {
       if (pointerMoveAC) {
         cancelResize();
         return;
       }
+      this.onStartResizing();
       const {
         clientX
       } = e;
@@ -3361,10 +3371,19 @@ class Sidebar {
         signal
       } = pointerMoveAC;
       const sidebar = this._sidebar;
-      const sidebarStyle = sidebar.style;
       sidebar.classList.add("resizing");
       const parentStyle = sidebar.parentElement.style;
       parentStyle.minWidth = 0;
+      this.#resizeObserver?.disconnect();
+      this.#resizeObserver = new ResizeObserver(([{
+        borderBoxSize: [{
+          inlineSize
+        }]
+      }]) => {
+        prevX += this.#width - inlineSize;
+        this.#setWidth(inlineSize);
+      });
+      this.#resizeObserver.observe(sidebar);
       window.addEventListener("contextmenu", noContextMenu, {
         signal
       });
@@ -3373,11 +3392,7 @@ class Sidebar {
           return;
         }
         stopEvent(ev);
-        const {
-          clientX: x
-        } = ev;
-        this.#setNewWidth(x - prevX, parentStyle, resizer, sidebarStyle, isResizerOnTheLeft, false);
-        prevX = x;
+        sidebarStyle.width = `${Math.round(this.#width + this.#coefficient * (ev.clientX - prevX))}px`;
       }, {
         signal,
         capture: true
@@ -3394,39 +3409,69 @@ class Sidebar {
         signal
       });
     });
-    resizer.addEventListener("keydown", e => {
+    this.#resizer.addEventListener("keydown", e => {
       const {
         key
       } = e;
       const isArrowLeft = key === "ArrowLeft";
       if (isArrowLeft || key === "ArrowRight") {
+        if (!this.#isKeyboardResizing) {
+          this._sidebar.classList.add("resizing");
+          this.#isKeyboardResizing = true;
+          this.#resizeObserver?.disconnect();
+          this.#resizeObserver = new ResizeObserver(([{
+            borderBoxSize: [{
+              inlineSize
+            }]
+          }]) => {
+            this.#setWidth(inlineSize);
+          });
+          this.#resizeObserver.observe(this._sidebar);
+          this.onStartResizing();
+        }
         const base = e.ctrlKey || e.metaKey ? 10 : 1;
         const dx = base * (isArrowLeft ? -1 : 1);
-        this.#setNewWidth(dx, this._sidebar.parentElement.style, resizer, this._sidebar.style, isResizerOnTheLeft, true);
+        clearTimeout(this.#resizeTimeout);
+        this.#resizeTimeout = setTimeout(cancelResize, RESIZE_TIMEOUT);
+        sidebarStyle.width = `${Math.round(this.#width + this.#coefficient * dx)}px`;
         stopEvent(e);
       }
     });
   }
-  #setNewWidth(dx, parentStyle, resizer, sidebarStyle, isResizerOnTheLeft, isFromKeyboard) {
-    let newWidth = this.#width + this.#coefficient * dx;
-    if (!isFromKeyboard) {
-      this.#width = newWidth;
+  #setWidth(newWidth) {
+    this.#width = newWidth;
+    this.#resizer.ariaValueNow = Math.round(newWidth);
+    if (this.#isResizerOnTheLeft) {
+      this._sidebar.parentElement.style.insetInlineStart = `${(this.#initialWidth - newWidth).toFixed(3)}px`;
     }
-    if ((newWidth > this.#maxWidth || newWidth < this.#minWidth) && (this.#width === this.#maxWidth || this.#width === this.#minWidth)) {
-      return;
-    }
-    newWidth = MathClamp(newWidth, this.#minWidth, this.#maxWidth);
-    if (isFromKeyboard) {
-      this.#width = newWidth;
-    }
-    resizer.ariaValueNow = Math.round(newWidth);
-    sidebarStyle.width = `${newWidth.toFixed(3)}px`;
-    if (isResizerOnTheLeft) {
-      parentStyle.insetInlineStart = `${(this.#initialWidth - newWidth).toFixed(3)}px`;
-    }
+    this.onResizing(newWidth);
   }
-  toggle() {
-    this._sidebar.hidden = !(this.#visible = !this.#visible);
+  get width() {
+    return this.#width;
+  }
+  set width(newWidth) {
+    if (!this.#resizeObserver) {
+      this.#resizeObserver = new ResizeObserver(([{
+        borderBoxSize: [{
+          inlineSize
+        }]
+      }]) => {
+        this.#setWidth(inlineSize);
+      });
+      this.#resizeObserver.observe(this._sidebar);
+    }
+    this._sidebar.style.width = `${newWidth}px`;
+    clearTimeout(this.#resizeTimeout);
+    this.#resizeTimeout = setTimeout(() => {
+      this.#resizeObserver.disconnect();
+      this.#resizeObserver = null;
+    }, RESIZE_TIMEOUT);
+  }
+  onStartResizing() {}
+  onStopResizing() {}
+  onResizing(_newWidth) {}
+  toggle(visibility = !this._isOpen) {
+    this._sidebar.hidden = !(this._isOpen = visibility);
   }
 }
 
@@ -8510,16 +8555,16 @@ class PdfTextExtractor {
 const DRAW_UPSCALE_FACTOR = 2;
 const MAX_NUM_SCALING_STEPS = 3;
 const THUMBNAIL_WIDTH = 98;
-function zeroCanvas(c) {
-  c.width = 0;
-  c.height = 0;
-}
 class TempImageFactory {
-  static #tempCanvas = null;
   static getCanvas(width, height) {
-    const tempCanvas = this.#tempCanvas ||= document.createElement("canvas");
-    tempCanvas.width = width;
-    tempCanvas.height = height;
+    let tempCanvas;
+    if (FeatureTest.isOffscreenCanvasSupported) {
+      tempCanvas = new OffscreenCanvas(width, height);
+    } else {
+      tempCanvas = document.createElement("canvas");
+      tempCanvas.width = width;
+      tempCanvas.height = height;
+    }
     const ctx = tempCanvas.getContext("2d", {
       alpha: false
     });
@@ -8527,13 +8572,7 @@ class TempImageFactory {
     ctx.fillStyle = "rgb(255, 255, 255)";
     ctx.fillRect(0, 0, width, height);
     ctx.restore();
-    return [tempCanvas, tempCanvas.getContext("2d")];
-  }
-  static destroyCanvas() {
-    if (this.#tempCanvas) {
-      zeroCanvas(this.#tempCanvas);
-    }
-    this.#tempCanvas = null;
+    return [tempCanvas, ctx];
   }
 }
 class PDFThumbnailView {
@@ -8566,24 +8605,21 @@ class PDFThumbnailView {
     this.renderTask = null;
     this.renderingState = RenderingStates.INITIAL;
     this.resume = null;
-    const anchor = document.createElement("a");
-    anchor.href = linkService.getAnchorUrl("#page=" + id);
+    const anchor = this.anchor = document.createElement("a");
+    anchor.href = linkService.getAnchorUrl(`#page=${id}`);
     anchor.setAttribute("data-l10n-id", "pdfjs-thumb-page-title");
     anchor.setAttribute("data-l10n-args", this.#pageL10nArgs);
-    anchor.onclick = function () {
+    anchor.onclick = () => {
       linkService.goToPage(id);
       return false;
     };
-    this.anchor = anchor;
-    const div = document.createElement("div");
-    div.className = "thumbnail";
+    const div = this.div = document.createElement("div");
+    div.classList.add("thumbnail", "missingThumbnailImage");
     div.setAttribute("data-page-number", this.id);
-    this.div = div;
     this.#updateDims();
-    const img = document.createElement("div");
-    img.className = "thumbnailImage";
-    this._placeholderImg = img;
-    div.append(img);
+    const image = this.image = document.createElement("img");
+    image.className = "thumbnailImage";
+    div.append(image);
     anchor.append(div);
     container.append(anchor);
   }
@@ -8593,14 +8629,10 @@ class PDFThumbnailView {
       height
     } = this.viewport;
     const ratio = width / height;
-    this.canvasWidth = THUMBNAIL_WIDTH;
-    this.canvasHeight = this.canvasWidth / ratio | 0;
-    this.scale = this.canvasWidth / width;
-    const {
-      style
-    } = this.div;
-    style.setProperty("--thumbnail-width", `${this.canvasWidth}px`);
-    style.setProperty("--thumbnail-height", `${this.canvasHeight}px`);
+    const canvasWidth = this.canvasWidth = THUMBNAIL_WIDTH;
+    const canvasHeight = this.canvasHeight = canvasWidth / ratio | 0;
+    this.scale = canvasWidth / width;
+    this.div.style.height = `${canvasHeight}px`;
   }
   setPdfPage(pdfPage) {
     this.pdfPage = pdfPage;
@@ -8615,12 +8647,17 @@ class PDFThumbnailView {
   reset() {
     this.cancelRendering();
     this.renderingState = RenderingStates.INITIAL;
-    this.div.removeAttribute("data-loaded");
-    this.image?.replaceWith(this._placeholderImg);
     this.#updateDims();
-    if (this.image) {
-      this.image.removeAttribute("src");
-      delete this.image;
+    const {
+      image
+    } = this;
+    const url = image.src;
+    if (url) {
+      URL.revokeObjectURL(url);
+      image.removeAttribute("data-l10n-id");
+      image.removeAttribute("data-l10n-args");
+      image.src = "";
+      this.div.classList.add("missingThumbnailImage");
     }
   }
   update({
@@ -8644,11 +8681,11 @@ class PDFThumbnailView {
     this.resume = null;
   }
   #getPageDrawContext(upscaleFactor = 1) {
-    const canvas = document.createElement("canvas");
     const outputScale = new OutputScale();
     const width = upscaleFactor * this.canvasWidth,
       height = upscaleFactor * this.canvasHeight;
     outputScale.limitCanvas(width, height, this.maxCanvasPixels, this.maxCanvasDim);
+    const canvas = document.createElement("canvas");
     canvas.width = width * outputScale.sx | 0;
     canvas.height = height * outputScale.sy | 0;
     const transform = outputScale.scaled ? [outputScale.sx, 0, 0, outputScale.sy, 0, 0] : null;
@@ -8657,20 +8694,27 @@ class PDFThumbnailView {
       transform
     };
   }
-  #convertCanvasToImage(canvas) {
+  async #convertCanvasToImage(canvas) {
     if (this.renderingState !== RenderingStates.FINISHED) {
       throw new Error("#convertCanvasToImage: Rendering has not finished.");
     }
     const reducedCanvas = this.#reduceImage(canvas);
-    const image = document.createElement("img");
-    image.className = "thumbnailImage";
+    const {
+      image
+    } = this;
+    const {
+      promise,
+      resolve
+    } = Promise.withResolvers();
+    reducedCanvas.toBlob(resolve);
+    const blob = await promise;
+    image.src = URL.createObjectURL(blob);
     image.setAttribute("data-l10n-id", "pdfjs-thumb-page-canvas");
     image.setAttribute("data-l10n-args", this.#pageL10nArgs);
-    image.src = reducedCanvas.toDataURL();
-    this.image = image;
-    this.div.setAttribute("data-loaded", true);
-    this._placeholderImg.replaceWith(image);
-    zeroCanvas(reducedCanvas);
+    this.div.classList.remove("missingThumbnailImage");
+    if (!FeatureTest.isOffscreenCanvasSupported) {
+      reducedCanvas.width = reducedCanvas.height = 0;
+    }
   }
   async draw() {
     if (this.renderingState !== RenderingStates.INITIAL) {
@@ -8718,7 +8762,6 @@ class PDFThumbnailView {
       await renderTask.promise;
     } catch (e) {
       if (e instanceof RenderingCancelledException) {
-        zeroCanvas(canvas);
         return;
       }
       error = e;
@@ -8728,8 +8771,7 @@ class PDFThumbnailView {
       }
     }
     this.renderingState = RenderingStates.FINISHED;
-    this.#convertCanvasToImage(canvas);
-    zeroCanvas(canvas);
+    await this.#convertCanvasToImage(canvas);
     this.eventBus.dispatch("thumbnailrendered", {
       source: this,
       pageNumber: this.id,
@@ -8803,18 +8845,19 @@ class PDFThumbnailView {
   setPageLabel(label) {
     this.pageLabel = typeof label === "string" ? label : null;
     this.anchor.setAttribute("data-l10n-args", this.#pageL10nArgs);
-    if (this.renderingState !== RenderingStates.FINISHED) {
-      return;
-    }
-    this.image?.setAttribute("data-l10n-args", this.#pageL10nArgs);
+    this.image.setAttribute("data-l10n-args", this.#pageL10nArgs);
   }
 }
 
 ;// ./web/pdf_thumbnail_viewer.js
 
 
-const THUMBNAIL_SCROLL_MARGIN = -19;
 const THUMBNAIL_SELECTED_CLASS = "selected";
+const SCROLL_OPTIONS = {
+  behavior: "instant",
+  container: "nearest",
+  block: "nearest"
+};
 class PDFThumbnailViewer {
   constructor({
     container,
@@ -8886,9 +8929,7 @@ class PDFThumbnailViewer {
         }
       }
       if (shouldScroll) {
-        scrollIntoView(thumbnailView.div, {
-          top: THUMBNAIL_SCROLL_MARGIN
-        });
+        thumbnailView.div.scrollIntoView(SCROLL_OPTIONS);
       }
     }
     this._currentPageNumber = pageNumber;
@@ -8920,7 +8961,6 @@ class PDFThumbnailViewer {
         thumbnail.reset();
       }
     }
-    TempImageFactory.destroyCanvas();
   }
   #resetView() {
     this._thumbnails = [];
@@ -8947,9 +8987,10 @@ class PDFThumbnailViewer {
       const viewport = firstPdfPage.getViewport({
         scale: 1
       });
+      const fragment = document.createDocumentFragment();
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         const thumbnail = new PDFThumbnailView({
-          container: this.container,
+          container: fragment,
           eventBus: this.eventBus,
           id: pageNum,
           defaultViewport: viewport.clone(),
@@ -8966,6 +9007,7 @@ class PDFThumbnailViewer {
       this._thumbnails[0]?.setPdfPage(firstPdfPage);
       const thumbnailView = this._thumbnails[this._currentPageNumber - 1];
       thumbnailView.div.classList.add(THUMBNAIL_SELECTED_CLASS);
+      this.container.append(fragment);
     }).catch(reason => {
       console.error("Unable to initialize thumbnail viewer", reason);
     });
@@ -10121,7 +10163,27 @@ class StructTreeLayerBuilder {
       const {
         role
       } = node;
-      element = MathMLElements.has(role) ? document.createElementNS(MathMLNamespace, role) : document.createElement("span");
+      if (MathMLElements.has(role)) {
+        element = document.createElementNS(MathMLNamespace, role);
+        let text = "";
+        for (const {
+          type,
+          id
+        } of node.children || []) {
+          if (type !== "content" || !id) {
+            continue;
+          }
+          const elem = document.getElementById(id);
+          if (!elem) {
+            continue;
+          }
+          text += elem.textContent.trim() || "";
+          elem.ariaHidden = "true";
+        }
+        element.textContent = text;
+      } else {
+        element = document.createElement("span");
+      }
       const match = role.match(HEADING_PATTERN);
       if (match) {
         element.setAttribute("role", "heading");
@@ -10137,6 +10199,17 @@ class StructTreeLayerBuilder {
           element.setHTML(node.mathML, {
             sanitizer: MathMLSanitizer.sanitizer
           });
+          for (const {
+            id
+          } of node.children || []) {
+            if (!id) {
+              continue;
+            }
+            const elem = document.getElementById(id);
+            if (elem) {
+              elem.ariaHidden = true;
+            }
+          }
         }
         if (!node.mathML && node.children.length === 1 && node.children[0].role !== "math") {
           element = document.createElementNS(MathMLNamespace, "math");
@@ -11561,7 +11634,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.445";
+    const viewerVersion = "5.4.466";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -13090,7 +13163,7 @@ class PDFViewer {
     const updater = async () => {
       this.#cleanupSwitchAnnotationEditorMode();
       this.#annotationEditorMode = mode;
-      await this.#annotationEditorUIManager.updateMode(mode, editId, isFromKeyboard, mustEnterInEditMode, editComment);
+      await this.#annotationEditorUIManager.updateMode(mode, editId, true, isFromKeyboard, mustEnterInEditMode, editComment);
       if (mode !== this.#annotationEditorMode || pdfDocument !== this.pdfDocument) {
         return;
       }
