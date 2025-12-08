@@ -4199,7 +4199,9 @@ void BrowserChild::NotifyContentBlockingEvent(
     const Maybe<
         mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
         aReason,
-    const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent) {
+    const Maybe<ContentBlockingNotifier::CanvasFingerprinter>&
+        aCanvasFingerprinter,
+    const Maybe<bool> aCanvasFingerprinterKnownText) {
   if (!IPCOpen()) {
     return;
   }
@@ -4208,7 +4210,8 @@ void BrowserChild::NotifyContentBlockingEvent(
   if (NS_SUCCEEDED(PrepareRequestData(aChannel, requestData))) {
     (void)SendNotifyContentBlockingEvent(
         aEvent, requestData, aBlocked, PromiseFlatCString(aTrackingOrigin),
-        aTrackingFullHashes, aReason, aCanvasFingerprintingEvent);
+        aTrackingFullHashes, aReason, aCanvasFingerprinter,
+        aCanvasFingerprinterKnownText);
   }
 }
 

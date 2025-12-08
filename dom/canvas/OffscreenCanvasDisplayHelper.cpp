@@ -591,24 +591,21 @@ UniquePtr<uint8_t[]> OffscreenCanvasDisplayHelper::GetImageBuffer(
     return nullptr;
   }
 
-  nsIPrincipal* principal = nullptr;
-  nsICookieJarSettings* cookieJarSettings = nullptr;
-  {
-    // This function is never called with mOffscreenCanvas set, so we skip
-    // the check for it.
-    MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(!mOffscreenCanvas);
-
-    if (mCanvasElement) {
-      principal = mCanvasElement->NodePrincipal();
-      cookieJarSettings = mCanvasElement->OwnerDoc()->CookieJarSettings();
-    }
-  }
-  nsRFPService::PotentiallyDumpImage(
-      principal, imageBuffer.get(), dataSurface->GetSize().width,
-      dataSurface->GetSize().height,
-      dataSurface->GetSize().width * dataSurface->GetSize().height * 4);
   if (aExtractionBehavior == CanvasUtils::ImageExtraction::Randomize) {
+    nsIPrincipal* principal = nullptr;
+    nsICookieJarSettings* cookieJarSettings = nullptr;
+    {
+      // This function is never called with mOffscreenCanvas set, so we skip
+      // the check for it.
+      MutexAutoLock lock(mMutex);
+      MOZ_ASSERT(!mOffscreenCanvas);
+
+      if (mCanvasElement) {
+        principal = mCanvasElement->NodePrincipal();
+        cookieJarSettings = mCanvasElement->OwnerDoc()->CookieJarSettings();
+      }
+    }
+
     nsRFPService::RandomizePixels(
         cookieJarSettings, principal, imageBuffer.get(),
         dataSurface->GetSize().width, dataSurface->GetSize().height,

@@ -928,9 +928,16 @@ nsresult HTMLCanvasElement::ExtractData(JSContext* aCx,
 
   if (extractionBehaviour != CanvasUtils::ImageExtraction::Placeholder) {
     auto size = GetWidthHeight();
-    auto usage = CanvasUsage::CreateUsage(false, GetCurrentContextType(),
-                                          CanvasExtractionAPI::ToDataURL, size,
-                                          GetCurrentContext());
+    CanvasContextType type = GetCurrentContextType();
+    CanvasFeatureUsage featureUsage = CanvasFeatureUsage::None;
+    if (type == CanvasContextType::Canvas2D) {
+      if (auto ctx =
+              static_cast<CanvasRenderingContext2D*>(GetCurrentContext())) {
+        featureUsage = ctx->FeatureUsage();
+      }
+    }
+
+    CanvasUsage usage(size, type, featureUsage);
     OwnerDoc()->RecordCanvasUsage(usage);
   }
 
@@ -1089,13 +1096,6 @@ void HTMLCanvasElement::ToBlob(JSContext* aCx, BlobCallback& aCallback,
   RefPtr<EncodeCompleteCallback> callback = new EncodeCallback(
       global, &aCallback, recheckCanRead ? mOffscreenDisplay.get() : nullptr,
       recheckCanRead ? &aSubjectPrincipal : nullptr);
-
-  auto usage = CanvasUsage::CreateUsage(false, GetCurrentContextType(),
-                                        CanvasExtractionAPI::ToBlob,
-                                        GetWidthHeight(), GetCurrentContext());
-  if (extractionBehaviour != CanvasUtils::ImageExtraction::Placeholder) {
-    OwnerDoc()->RecordCanvasUsage(usage);
-  }
 
   CanvasRenderingContextHelper::ToBlob(aCx, callback, aType, aParams,
                                        extractionBehaviour, aRv);

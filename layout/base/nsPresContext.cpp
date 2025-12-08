@@ -113,8 +113,6 @@ using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-static LazyLogModule gFingerprinterDetection("FingerprinterDetection");
-
 /**
  * Layer UserData for ContainerLayers that want to be notified
  * of local invalidations of them and their descendant layers.
@@ -3083,7 +3081,6 @@ bool nsPresContext::ShouldResistFingerprinting(RFPTarget aTarget) const {
 }
 
 void nsPresContext::ReportBlockedFontFamily(const nsCString& aMsg) const {
-  MOZ_LOG(gFingerprinterDetection, LogLevel::Info, ("%s", aMsg.get()));
   nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(aMsg),
                                               nsIScriptError::warningFlag,
                                               "Security"_ns, Document());

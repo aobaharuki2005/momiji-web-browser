@@ -702,7 +702,9 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
       const Maybe<
           ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
           aReason,
-      const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent);
+      const Maybe<ContentBlockingNotifier::CanvasFingerprinter>&
+          aCanvasFingerprinter,
+      const Maybe<bool> aCanvasFingerprinterKnownText);
 
   already_AddRefed<nsIDragSession> GetDragSession();
   void SetDragSession(nsIDragSession* aSession);

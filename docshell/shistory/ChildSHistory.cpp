@@ -9,7 +9,6 @@
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "nsIXULRuntime.h"
 #include "nsComponentManagerUtils.h"
 #include "nsSHEntry.h"

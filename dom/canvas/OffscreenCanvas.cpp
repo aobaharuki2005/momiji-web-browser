@@ -16,7 +16,6 @@
 #include "WebGLChild.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Logging.h"
 #include "mozilla/dom/BlobImpl.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/OffscreenCanvasBinding.h"
@@ -33,8 +32,6 @@
 #include "nsProxyRelease.h"
 
 namespace mozilla::dom {
-
-static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
 
 OffscreenCanvasCloneData::OffscreenCanvasCloneData(
     OffscreenCanvasDisplayHelper* aDisplay, uint32_t aWidth, uint32_t aHeight,
@@ -518,14 +515,9 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
           this, nsContentUtils::GetCurrentJSContext(),
           mCurrentContext ? mCurrentContext->PrincipalOrNull() : nullptr);
 
-  if (extractionBehaviour != CanvasUtils::ImageExtraction::Placeholder) {
-    GetContext()->RecordCanvasUsage(CanvasExtractionAPI::ToBlob,
-                                    GetWidthHeight());
-  }
   CanvasRenderingContextHelper::ToBlob(callback, type, encodeOptions,
                                        /* aUsingCustomOptions */ false,
                                        extractionBehaviour, aRv);
-
   if (aRv.Failed()) {
     promise->MaybeReject(std::move(aRv));
   }
@@ -567,12 +559,6 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
       CanvasUtils::ImageExtractionResult(
           this, aCx,
           mCurrentContext ? mCurrentContext->PrincipalOrNull() : nullptr);
-
-  if (extractionBehaviour != CanvasUtils::ImageExtraction::Placeholder) {
-    GetContext()->RecordCanvasUsage(CanvasExtractionAPI::ToBlob,
-                                    GetWidthHeight());
-  }
-
   CanvasRenderingContextHelper::ToBlob(aCx, callback, aType, aParams,
                                        extractionBehaviour, aRv);
 
@@ -641,7 +627,6 @@ FontVisibility OffscreenCanvas::GetFontVisibility() const {
 }
 
 void OffscreenCanvas::ReportBlockedFontFamily(const nsCString& aMsg) const {
-  MOZ_LOG(gFingerprinterDetection, mozilla::LogLevel::Info, ("%s", aMsg.get()));
   if (Maybe<uint64_t> windowID = GetWindowID()) {
     nsContentUtils::ReportToConsoleByWindowID(NS_ConvertUTF8toUTF16(aMsg),
                                               nsIScriptError::warningFlag,

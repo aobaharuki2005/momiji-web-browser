@@ -21,6 +21,7 @@
 #include "nsIDocShell.h"
 #include "nsIInputStream.h"
 #include "nsISupports.h"
+#include "nsRFPService.h"
 #include "nsRefreshObservers.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
@@ -230,9 +231,6 @@ class nsICanvasRenderingContextInternal : public nsISupports,
 
   bool DispatchEvent(const nsAString& eventName, mozilla::CanBubble aCanBubble,
                      mozilla::Cancelable aIsCancelable) const;
-
-  void RecordCanvasUsage(mozilla::CanvasExtractionAPI aAPI,
-                         mozilla::CSSIntSize size) const;
 
  protected:
   RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;

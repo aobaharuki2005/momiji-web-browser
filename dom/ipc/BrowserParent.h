@@ -306,7 +306,9 @@ class BrowserParent final : public PBrowserParent,
       nsTArray<nsCString>&& aTrackingFullHashes,
       const Maybe<mozilla::ContentBlockingNotifier::
                       StorageAccessPermissionGrantedReason>& aReason,
-      const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent);
+      const Maybe<mozilla::ContentBlockingNotifier::CanvasFingerprinter>&
+          aCanvasFingerprinter,
+      const Maybe<bool>& aCanvasFingerprinterKnownText);
 
   mozilla::ipc::IPCResult RecvNavigationFinished();
 

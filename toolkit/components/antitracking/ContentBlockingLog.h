@@ -36,7 +36,8 @@ class ContentBlockingLog final {
     Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>
         mReason;
     nsTArray<nsCString> mTrackingFullHashes;
-    Maybe<CanvasFingerprintingEvent> mCanvasFingerprintingEvent;
+    Maybe<ContentBlockingNotifier::CanvasFingerprinter> mCanvasFingerprinter;
+    Maybe<bool> mCanvasFingerprinterKnownText;
   };
 
   struct OriginDataEntry {
@@ -93,8 +94,9 @@ class ContentBlockingLog final {
           ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
           aReason = Nothing(),
       const nsTArray<nsCString>& aTrackingFullHashes = nsTArray<nsCString>(),
-      const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent =
-          Nothing());
+      const Maybe<ContentBlockingNotifier::CanvasFingerprinter>&
+          aCanvasFingerprinter = Nothing(),
+      const Maybe<bool> aCanvasFingerprinterKnownText = Nothing());
 
   void RecordLog(
       const nsACString& aOrigin, uint32_t aType, bool aBlocked,
@@ -106,7 +108,8 @@ class ContentBlockingLog final {
   }
 
   void ReportLog();
-  void ReportCanvasFingerprintingLog(nsIPrincipal* aFirstPartyPrincipal);
+  void ReportCanvasFingerprintingLog(nsIPrincipal* aFirstPartyPrincipal,
+                                     bool aShouldReport);
   void ReportFontFingerprintingLog(nsIPrincipal* aFirstPartyPrincipal);
   void ReportEmailTrackingLog(nsIPrincipal* aFirstPartyPrincipal);
 
@@ -264,8 +267,9 @@ class ContentBlockingLog final {
           ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
           aReason = Nothing(),
       const nsTArray<nsCString>& aTrackingFullHashes = nsTArray<nsCString>(),
-      const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent =
-          Nothing());
+      const Maybe<ContentBlockingNotifier::CanvasFingerprinter>&
+          aCanvasFingerprinter = Nothing(),
+      const Maybe<bool> aCanvasFingerprinterKnownText = Nothing());
 
   bool RecordLogEntryInCustomField(uint32_t aType, OriginEntry& aEntry,
                                    bool aBlocked) {

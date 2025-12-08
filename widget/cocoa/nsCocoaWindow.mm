@@ -79,7 +79,6 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_apz.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_general.h"
 #include "mozilla/StaticPrefs_ui.h"

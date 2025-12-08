@@ -579,7 +579,9 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
     const nsTArray<nsCString>& aTrackingFullHashes,
     const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
         aReason,
-    const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent) {
+    const Maybe<ContentBlockingNotifier::CanvasFingerprinter>&
+        aCanvasFingerprinter,
+    const Maybe<bool> aCanvasFingerprinterKnownText) {
   MOZ_ASSERT(NS_IsMainThread());
   DebugOnly<bool> isCookiesBlocked =
       aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER ||
@@ -598,7 +600,7 @@ void WindowGlobalParent::NotifyContentBlockingEvent(
 
   Maybe<uint32_t> event = GetContentBlockingLog()->RecordLogParent(
       aTrackingOrigin, aEvent, aBlocked, aReason, aTrackingFullHashes,
-      aCanvasFingerprintingEvent);
+      aCanvasFingerprinter, aCanvasFingerprinterKnownText);
 
   // Notify the OnContentBlockingEvent if necessary.
   if (event) {
@@ -1656,8 +1658,12 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
         GetContentBlockingLog()->ReportLog();
 
         if (mDocumentURI && net::SchemeIsHttpOrHttps(mDocumentURI)) {
+          bool incrementedTopLevelContentDocumentsDestroyed =
+              pageUseCounterResult.contains(
+                  PageUseCounterResultBits::DATA_RECEIVED);
           GetContentBlockingLog()->ReportCanvasFingerprintingLog(
-              DocumentPrincipal());
+              DocumentPrincipal(),
+              incrementedTopLevelContentDocumentsDestroyed);
           GetContentBlockingLog()->ReportFontFingerprintingLog(
               DocumentPrincipal());
           GetContentBlockingLog()->ReportEmailTrackingLog(DocumentPrincipal());

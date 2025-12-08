@@ -196,7 +196,9 @@ class WindowGlobalParent final : public WindowContext,
       const Maybe<
           ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
           aReason,
-      const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent);
+      const Maybe<ContentBlockingNotifier::CanvasFingerprinter>&
+          aCanvasFingerprinter,
+      const Maybe<bool> aCanvasFingerprinterKnownText);
 
   ContentBlockingLog* GetContentBlockingLog() { return &mContentBlockingLog; }
 

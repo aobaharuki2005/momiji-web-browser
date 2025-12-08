@@ -3083,7 +3083,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
     const Maybe<
         mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
         aReason,
-    const Maybe<CanvasFingerprintingEvent>& aCanvasFingerprintingEvent) {
+    const Maybe<mozilla::ContentBlockingNotifier::CanvasFingerprinter>&
+        aCanvasFingerprinter,
+    const Maybe<bool>& aCanvasFingerprinterKnownText) {
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
 
   if (!bc || bc->IsDiscarded()) {
@@ -3107,9 +3109,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvNotifyContentBlockingEvent(
       aRequestData.matchedList());
   request->SetCanceledReason(aRequestData.canceledReason());
 
-  wgp->NotifyContentBlockingEvent(aEvent, request, aBlocked, aTrackingOrigin,
-                                  aTrackingFullHashes, aReason,
-                                  aCanvasFingerprintingEvent);
+  wgp->NotifyContentBlockingEvent(
+      aEvent, request, aBlocked, aTrackingOrigin, aTrackingFullHashes, aReason,
+      aCanvasFingerprinter, aCanvasFingerprinterKnownText);
 
   return IPC_OK();
 }

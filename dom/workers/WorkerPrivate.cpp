@@ -137,7 +137,6 @@
 
 static mozilla::LazyLogModule sWorkerPrivateLog("WorkerPrivate");
 static mozilla::LazyLogModule sWorkerTimeoutsLog("WorkerTimeouts");
-static mozilla::LazyLogModule gFingerprinterDetection("FingerprinterDetection");
 
 mozilla::LogModule* WorkerLog() { return sWorkerPrivateLog; }
 
@@ -6774,7 +6773,6 @@ FontVisibility WorkerPrivate::GetFontVisibility() const {
 }
 
 void WorkerPrivate::ReportBlockedFontFamily(const nsCString& aMsg) const {
-  MOZ_LOG(gFingerprinterDetection, mozilla::LogLevel::Info, ("%s", aMsg.get()));
   nsContentUtils::ReportToConsoleNonLocalized(NS_ConvertUTF8toUTF16(aMsg),
                                               nsIScriptError::warningFlag,
                                               "Security"_ns, GetDocument());
