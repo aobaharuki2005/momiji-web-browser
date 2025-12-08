@@ -237,42 +237,44 @@ export class FormAutofillPreferences {
       return [];
     }
 
-    const items = records.map(record => {
-      const config = {
-        id: "payment-item",
-        control: "moz-box-item",
-        l10nId: "payment-moz-box-item",
-        iconSrc: "chrome://formautofill/content/icon-credit-card-generic.svg",
-        l10nArgs: {
-          cardNumber: record["cc-number"].replace(/^(\*+)(\d+)$/, "$2$1"),
-          expDate: record["cc-exp"].replace(/^(\d{4})-\d{2}$/, "XX/$1"),
-        },
-        options: [
-          {
-            control: "moz-button",
-            iconSrc: "chrome://global/skin/icons/delete.svg",
-            type: "icon",
-            controlAttrs: {
-              slot: "actions",
-              action: "remove",
-              guid: record.guid,
-            },
+    const items = records
+      .sort(record => record.timeCreated)
+      .map(record => {
+        const config = {
+          id: "payment-item",
+          control: "moz-box-item",
+          l10nId: "payment-moz-box-item",
+          iconSrc: "chrome://formautofill/content/icon-credit-card-generic.svg",
+          l10nArgs: {
+            cardNumber: record["cc-number"].replace(/^(\*+)(\d+)$/, "$2$1"),
+            expDate: record["cc-exp"].replace(/^(\d{4})-\d{2}$/, "XX/$1"),
           },
-          {
-            control: "moz-button",
-            iconSrc: "chrome://global/skin/icons/edit.svg",
-            type: "icon",
-            controlAttrs: {
-              slot: "actions",
-              action: "edit",
-              guid: record.guid,
+          options: [
+            {
+              control: "moz-button",
+              iconSrc: "chrome://global/skin/icons/delete.svg",
+              type: "icon",
+              controlAttrs: {
+                slot: "actions",
+                action: "remove",
+                guid: record.guid,
+              },
             },
-          },
-        ],
-      };
+            {
+              control: "moz-button",
+              iconSrc: "chrome://global/skin/icons/edit.svg",
+              type: "icon",
+              controlAttrs: {
+                slot: "actions",
+                action: "edit",
+                guid: record.guid,
+              },
+            },
+          ],
+        };
 
-      return config;
-    });
+        return config;
+      });
 
     return [
       {
