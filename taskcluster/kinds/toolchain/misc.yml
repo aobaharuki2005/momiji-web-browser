@@ -296,6 +296,7 @@ macosx-arm64-custom-car:
 
 android-custom-car:
     description: "Custom chromium-as-release build for Android"
+    worker-type: b-linux-xlarge-amd
     attributes:
         cached_task: false
     treeherder:
@@ -328,6 +329,7 @@ android-custom-car:
 
 linux64-custom-car:
     description: "Custom chromium-as-release build for Linux"
+    worker-type: b-linux-xlarge-amd
     attributes:
         cached_task: false
     treeherder:
