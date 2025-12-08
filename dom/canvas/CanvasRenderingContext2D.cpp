@@ -71,6 +71,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/VideoFrame.h"
+#include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/CanvasShutdownManager.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -6510,6 +6511,8 @@ already_AddRefed<ImageData> CanvasRenderingContext2D::GetImageData(
   if (h == 0) {
     h = 1;
   }
+
+  RecordCanvasUsage(CanvasExtractionAPI::GetImageData, CSSIntSize(w, h));
 
   JS::Rooted<JSObject*> array(aCx);
   aError = GetImageDataArray(aCx, aSx, aSy, w, h, aSubjectPrincipal,

@@ -231,6 +231,9 @@ class nsICanvasRenderingContextInternal : public nsISupports,
   bool DispatchEvent(const nsAString& eventName, mozilla::CanBubble aCanBubble,
                      mozilla::Cancelable aIsCancelable) const;
 
+  void RecordCanvasUsage(mozilla::CanvasExtractionAPI aAPI,
+                         mozilla::CSSIntSize size) const;
+
  protected:
   RefPtr<mozilla::dom::HTMLCanvasElement> mCanvasElement;
   RefPtr<mozilla::dom::OffscreenCanvas> mOffscreenCanvas;
