@@ -34,7 +34,6 @@
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"
 #include "nsCSSProps.h"
-#include "nsContainerFrame.h"
 #include "nsDeviceContext.h"
 #include "nsIURI.h"
 #include "nsIURIMutator.h"
@@ -1333,12 +1332,8 @@ bool AnchorResolvedInsetHelper::SideUsesAnchorCenter(
   if (!frame) {
     return false;
   }
-  const nsIFrame* parent = frame->GetParent();
-  if (!parent) {
-    return false;
-  }
 
-  WritingMode wm = parent->GetWritingMode();
+  WritingMode wm = frame->GetWritingMode();
   LogicalSide logicalSide = wm.LogicalSideForPhysicalSide(aSide);
   LogicalAxis axis = GetAxis(logicalSide);
 

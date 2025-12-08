@@ -19,11 +19,13 @@ static nscoord SpaceToFill(WritingMode aWM, const LogicalSize& aSize,
   return aCBSize - (size + aMargin);
 }
 
-nscoord CSSAlignUtils::AlignJustifySelf(
-    const StyleAlignFlags& aAlignment, LogicalAxis aAxis,
-    AlignJustifyFlags aFlags, nscoord aBaselineAdjust, nscoord aCBSize,
-    const ReflowInput& aRI, const LogicalSize& aChildSize,
-    const Maybe<AnchorAlignInfo>& aAnchorInfo) {
+nscoord CSSAlignUtils::AlignJustifySelf(const StyleAlignFlags& aAlignment,
+                                        LogicalAxis aAxis,
+                                        AlignJustifyFlags aFlags,
+                                        nscoord aBaselineAdjust,
+                                        nscoord aCBSize, const ReflowInput& aRI,
+                                        const LogicalSize& aChildSize,
+                                        const Maybe<LogicalRect>& aAnchorRect) {
   MOZ_ASSERT(aAlignment != StyleAlignFlags::AUTO,
              "auto values should have resolved already");
   MOZ_ASSERT(aAlignment != StyleAlignFlags::LEFT &&
@@ -132,9 +134,9 @@ nscoord CSSAlignUtils::AlignJustifySelf(
   } else if (alignment == StyleAlignFlags::END) {
     nscoord size = aChildSize.Size(aAxis, wm);
     offset = aCBSize - (size + marginEnd);
-  } else if (alignment == StyleAlignFlags::ANCHOR_CENTER && aAnchorInfo) {
-    const nscoord anchorSize = aAnchorInfo->mAnchorSize;
-    const nscoord anchorStart = aAnchorInfo->mAnchorStart;
+  } else if (alignment == StyleAlignFlags::ANCHOR_CENTER && aAnchorRect) {
+    const nscoord anchorSize = aAnchorRect->Size(aAxis, wm);
+    const nscoord anchorStart = aAnchorRect->Start(aAxis, wm);
     const nscoord size = aChildSize.Size(aAxis, wm);
 
     // Offset relative to the anchors center, accounting for margins
