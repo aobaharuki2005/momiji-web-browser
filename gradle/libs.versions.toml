@@ -95,7 +95,7 @@ mockk = "1.14.7"
 robolectric = "4.16"
 
 # Third party libraries
-adjust = "5.4.6"
+adjust = "5.5.0"
 androidsvg = "1.4"
 disklrucache = "2.0.2"
 jna = "5.18.1"
