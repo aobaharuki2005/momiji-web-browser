@@ -697,19 +697,25 @@ void nsVideoFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   const bool shouldDisplayPoster = ShouldDisplayPoster();
 
-  // NOTE: If we're displaying a poster image (instead of video data), we can
-  // trust the nsImageFrame to constrain its drawing to its content rect
-  // (which happens to be the same as our content rect).
-  uint32_t clipFlags;
-  if (shouldDisplayPoster ||
-      !nsStyleUtil::ObjectPropsMightCauseOverflow(StylePosition())) {
-    clipFlags = DisplayListClipState::ASSUME_DRAWING_RESTRICTED_TO_CONTENT_RECT;
-  } else {
-    clipFlags = 0;
+  DisplayListClipState::AutoSaveRestore clipState(aBuilder);
+  auto clipAxes = ShouldApplyOverflowClipping(StyleDisplay());
+  if (!clipAxes.isEmpty()) {
+    nsRect clipRect;
+    nsRectCornerRadii radii;
+    const bool haveRadii =
+        ComputeOverflowClipRectRelativeToSelf(clipAxes, clipRect, radii);
+    // NOTE: If we're displaying a poster image (instead of video data), we can
+    // trust the nsImageFrame to constrain its drawing to its content rect
+    // (which happens to be the same as our content rect).
+    const bool canOverflowWithoutRadii =
+        !shouldDisplayPoster &&
+        nsStyleUtil::ObjectPropsMightCauseOverflow(StylePosition());
+    if (haveRadii || canOverflowWithoutRadii) {
+      clipState.ClipContainingBlockDescendants(
+          clipRect + aBuilder->ToReferenceFrame(this),
+          haveRadii ? &radii : nullptr);
+    }
   }
-
-  DisplayListClipState::AutoClipContainingBlockDescendantsToContentBox clip(
-      aBuilder, this, clipFlags);
 
   if (HasVideoElement() && !shouldDisplayPoster) {
     aLists.Content()->AppendNewToTop<nsDisplayVideo>(aBuilder, this);
