@@ -4,6 +4,7 @@
 
 package mozilla.components.lib.crash
 
+import android.app.ForegroundServiceStartNotAllowedException
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -397,6 +398,14 @@ class CrashReporter internal constructor(
             )
             logger.warn("replaced throwable for crash that could not be serialized")
         }
+    } catch (e: IllegalStateException) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S &&
+            e is ForegroundServiceStartNotAllowedException
+        ) {
+            logger.warn("ignored failed service start while backgrounded")
+        } else {
+            throw e
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -412,6 +421,14 @@ class CrashReporter internal constructor(
                 SendCrashTelemetryService.createReportIntent(context, updatedCrash),
             )
             logger.warn("replaced throwable for crash that could not be serialized")
+        }
+    } catch (e: IllegalStateException) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.S &&
+            e is ForegroundServiceStartNotAllowedException
+        ) {
+            logger.warn("ignored failed service start while backgrounded")
+        } else {
+            throw e
         }
     }
 
