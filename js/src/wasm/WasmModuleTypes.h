@@ -855,7 +855,8 @@ struct MemoryDesc {
     // See static_assert after MemoryDesc for why this is safe for memory32.
     MOZ_ASSERT_IF(addressType() == AddressType::I64,
                   limits.initial <= UINT64_MAX / PageSizeInBytes(pageSize()));
-    return initialPages().byteLength();
+    return addressType() == AddressType::I64 ? initialPages().byteLength64()
+                                             : initialPages().byteLength();
   }
 
   MemoryDesc() = default;
@@ -869,7 +870,11 @@ using MemoryDescVector = Vector<MemoryDesc, 1, SystemAllocPolicy>;
 
 // We never need to worry about overflow with a Memory32 field when
 // using a uint64_t.
-static_assert(MaxMemory32PagesValidation <= UINT64_MAX / StandardPageSizeBytes);
+static_assert(MaxMemory32StandardPagesValidation <=
+              UINT64_MAX / StandardPageSizeBytes);
+#ifdef ENABLE_WASM_CUSTOM_PAGE_SIZES
+static_assert(MaxMemory32TinyPagesValidation <= UINT64_MAX);
+#endif
 
 struct TableDesc {
   Limits limits;

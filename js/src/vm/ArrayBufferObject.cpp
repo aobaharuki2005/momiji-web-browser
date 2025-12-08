@@ -554,8 +554,8 @@ bool ArrayBufferObject::maxByteLengthGetterImpl(JSContext* cx,
     Pages sourceMaxPages = buffer->wasmSourceMaxPages().value();
     uint64_t sourceMaxBytes = sourceMaxPages.byteLength64();
 
-    MOZ_ASSERT(sourceMaxBytes <=
-               wasm::StandardPageSizeBytes * wasm::MaxMemory64PagesValidation);
+    MOZ_ASSERT(sourceMaxBytes <= wasm::StandardPageSizeBytes *
+                                     wasm::MaxMemory64StandardPagesValidation);
     args.rval().setNumber(double(sourceMaxBytes));
 
     return true;
@@ -1797,6 +1797,7 @@ ArrayBufferObjectMaybeShared* js::CreateWasmBuffer(
       memory.initialPages() <=
       wasm::MaxMemoryPages(memory.addressType(), memory.pageSize()));
   MOZ_RELEASE_ASSERT(cx->wasm().haveSignalHandlers);
+  MOZ_ASSERT(memory.pageSize() == wasm::PageSize::Standard);
 
   if (memory.isShared()) {
     if (!cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {

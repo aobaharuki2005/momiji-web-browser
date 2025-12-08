@@ -2857,6 +2857,20 @@ static bool DecodeLimits(Decoder& d, LimitsKind kind, Limits* limits) {
 
   if (kind == LimitsKind::Memory) {
     limits->pageSize = PageSize::Standard;
+#ifdef ENABLE_WASM_CUSTOM_PAGE_SIZES
+    if (flags & uint8_t(LimitsFlags::HasCustomPageSize)) {
+      uint32_t customPageSize;
+      if (!d.readVarU32(&customPageSize)) {
+        return d.fail("failed to decode custom page size");
+      }
+
+      if (customPageSize == static_cast<uint32_t>(PageSize::Tiny)) {
+        limits->pageSize = PageSize::Tiny;
+      } else if (customPageSize != static_cast<uint32_t>(PageSize::Standard)) {
+        return d.fail("bad custom page size");
+      }
+    }
+#endif
   }
 
   return true;
@@ -2962,7 +2976,8 @@ static bool DecodeMemoryTypeAndLimits(Decoder& d, CodeMetadata* codeMeta,
     return false;
   }
 
-  uint64_t maxField = MaxMemoryPagesValidation(limits.addressType);
+  uint64_t maxField =
+      MaxMemoryPagesValidation(limits.addressType, limits.pageSize);
 
   if (limits.initial > maxField) {
     return d.fail("initial memory size too big");
