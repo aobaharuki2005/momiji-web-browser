@@ -35,27 +35,6 @@ class ContentBlockingNotifier final {
     ePrivilegeStorageAccessForOriginAPI,
   };
 
-  // We try to classify observed canvas fingerprinting scripts into different
-  // classes, but we don't usually know the source/vendor of those scripts. The
-  // classification is based on a behavioral analysis, based on type of canvas,
-  // the extracted (e.g. toDataURL) size, the usage of functions like fillText
-  // etc. See `nsRFPService::MaybeReportCanvasFingerprinter` for the
-  // classification heuristic.
-  enum CanvasFingerprinter {
-    // Suspected fingerprint.com (FingerprintJS)
-    eFingerprintJS,
-    // Suspected Akamai fingerprinter
-    eAkamai,
-    // Unknown but distinct types of fingerprinters
-    eVariant1,
-    eVariant2,
-    eVariant3,
-    eVariant4,
-    // This just indicates that more than one canvas was extracted and is a
-    // very weak signal.
-    eMaybe
-  };
-
   // This method can be called on the parent process or on the content process.
   // The notification is propagated to the child channel if aChannel is a parent
   // channel proxy.

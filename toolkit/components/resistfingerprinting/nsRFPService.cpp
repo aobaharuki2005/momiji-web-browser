@@ -1912,23 +1912,42 @@ nsresult nsRFPService::RandomizeElements(
 }
 
 static const char* CanvasFingerprinterToString(
-    ContentBlockingNotifier::CanvasFingerprinter aFingerprinter) {
+    CanvasFingerprinterAlias aFingerprinter) {
   switch (aFingerprinter) {
-    case ContentBlockingNotifier::CanvasFingerprinter::eFingerprintJS:
+    case CanvasFingerprinterAlias::eNoneIdentified:
+      return "(None Identified)";
+    case CanvasFingerprinterAlias::eFingerprintJS:
       return "FingerprintJS";
-    case ContentBlockingNotifier::CanvasFingerprinter::eAkamai:
+    case CanvasFingerprinterAlias::eAkamai:
       return "Akamai";
-    case ContentBlockingNotifier::CanvasFingerprinter::eVariant1:
+    case CanvasFingerprinterAlias::eOzoki:
+      return "Ozoki";
+    case CanvasFingerprinterAlias::ePerimeterX:
+      return "PerimeterX";
+    case CanvasFingerprinterAlias::eSignifyd:
+      return "Signifyd";
+    case CanvasFingerprinterAlias::eClaydar:
+      return "Claydar";
+    case CanvasFingerprinterAlias::eForter:
+      return "Forter";
+    case CanvasFingerprinterAlias::eVariant1:
       return "Variant1";
-    case ContentBlockingNotifier::CanvasFingerprinter::eVariant2:
+    case CanvasFingerprinterAlias::eVariant2:
       return "Variant2";
-    case ContentBlockingNotifier::CanvasFingerprinter::eVariant3:
+    case CanvasFingerprinterAlias::eVariant3:
       return "Variant3";
-    case ContentBlockingNotifier::CanvasFingerprinter::eVariant4:
+    case CanvasFingerprinterAlias::eVariant4:
       return "Variant4";
-    case ContentBlockingNotifier::CanvasFingerprinter::eMaybe:
-      return "Maybe";
+    case CanvasFingerprinterAlias::eVariant5:
+      return "Variant5";
+    case CanvasFingerprinterAlias::eVariant6:
+      return "Variant6";
+    case CanvasFingerprinterAlias::eVariant7:
+      return "Variant7";
+    case CanvasFingerprinterAlias::eVariant8:
+      return "Variant8";
   }
+  MOZ_ASSERT(false, "Unhandled CanvasFingerprinterAlias enum value");
   return "<error>";
 }
 
@@ -2004,39 +2023,35 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     }
   }
 
-  Maybe<ContentBlockingNotifier::CanvasFingerprinter> fingerprinter;
+  CanvasFingerprinterAlias fingerprinter = eNoneIdentified;
+
   if (seenExtractedWebGL_300x150 && seenExtracted2D_240x60 &&
       seenExtracted2D_122x110) {
-    fingerprinter =
-        Some(ContentBlockingNotifier::CanvasFingerprinter::eFingerprintJS);
+    fingerprinter = CanvasFingerprinterAlias::eFingerprintJS;
   } else if (seenExtractedWebGL_300x150 && seenExtracted2D_280x60 &&
              seenExtracted2D_16x16) {
-    fingerprinter = Some(ContentBlockingNotifier::CanvasFingerprinter::eAkamai);
+    fingerprinter = CanvasFingerprinterAlias::eAkamai;
   } else if (seenExtractedWebGL_300x150 && extracted2D > 0 &&
              (featureUsage & CanvasFeatureUsage::SetFont)) {
-    fingerprinter =
-        Some(ContentBlockingNotifier::CanvasFingerprinter::eVariant1);
+    fingerprinter = CanvasFingerprinterAlias::eVariant1;
   } else if (extractedWebGL > 0 && extracted2D > 1 && seenExtracted2D_860x6) {
-    fingerprinter =
-        Some(ContentBlockingNotifier::CanvasFingerprinter::eVariant2);
+    fingerprinter = CanvasFingerprinterAlias::eVariant2;
   } else if (extractedOther > 0 && (extractedWebGL > 0 || extracted2D > 0)) {
-    fingerprinter =
-        Some(ContentBlockingNotifier::CanvasFingerprinter::eVariant3);
+    fingerprinter = CanvasFingerprinterAlias::eVariant3;
   } else if (extracted2D > 0 && (featureUsage & CanvasFeatureUsage::SetFont) &&
              (featureUsage &
               (CanvasFeatureUsage::FillRect | CanvasFeatureUsage::LineTo |
                CanvasFeatureUsage::Stroke))) {
-    fingerprinter =
-        Some(ContentBlockingNotifier::CanvasFingerprinter::eVariant4);
+    fingerprinter = CanvasFingerprinterAlias::eVariant4;
   } else if (extractedOther + extractedWebGL + extracted2D > 1) {
     // This I added primarily to not miss anything, but it can cause false
     // positives.
-    fingerprinter = Some(ContentBlockingNotifier::CanvasFingerprinter::eMaybe);
+    fingerprinter = CanvasFingerprinterAlias::eMaybe;
   }
 
   bool knownFingerprintText =
       bool(featureUsage & CanvasFeatureUsage::KnownFingerprintText);
-  if (!knownFingerprintText && fingerprinter.isNothing()) {
+  if (!knownFingerprintText && fingerprinter == eNoneIdentified) {
     return;
   }
 
