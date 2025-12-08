@@ -13732,7 +13732,8 @@ void Document::FlushAutoFocusCandidates() {
 
   nsTObserverArray<nsWeakPtr>::ForwardIterator iter(mAutoFocusCandidates);
   while (iter.HasMore()) {
-    nsCOMPtr<Element> autoFocusElement = do_QueryReferent(iter.GetNext());
+    nsWeakPtr weakElement = iter.GetNext();
+    nsCOMPtr<Element> autoFocusElement = do_QueryReferent(weakElement);
     if (!autoFocusElement) {
       continue;
     }
@@ -13741,8 +13742,9 @@ void Document::FlushAutoFocusCandidates() {
     // to run which might affect the focusability of this element.
     autoFocusElementDoc->FlushPendingNotifications(FlushType::Frames);
 
-    // Above layout flush may cause the PresShell to disappear.
-    if (!mPresShell) {
+    // Above layout flush may cause the PresShell to disappear or autofocus to
+    // complete. The iterator position might have changed.
+    if (!mPresShell || mAutoFocusFired) {
       return;
     }
 
@@ -13756,7 +13758,7 @@ void Document::FlushAutoFocusCandidates() {
     // If doc is not fully active, then remove element from candidates, and
     // continue.
     if (!autoFocusElementDoc->IsCurrentActiveDocument()) {
-      iter.Remove();
+      mAutoFocusCandidates.RemoveElement(weakElement);
       continue;
     }
 
@@ -13786,7 +13788,7 @@ void Document::FlushAutoFocusCandidates() {
       continue;
     }
 
-    iter.Remove();
+    mAutoFocusCandidates.RemoveElement(weakElement);
 
     // Let inclusiveAncestorDocuments be a list consisting of doc, plus the
     // active documents of each of doc's browsing context's ancestor browsing
