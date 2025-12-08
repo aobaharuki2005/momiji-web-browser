@@ -5704,7 +5704,8 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       WINDOWPOS* wp = (LPWINDOWPOS)lParam;
       OnWindowPosChanged(wp);
       TaskbarConcealer::OnWindowPosChanged(this);
-      result = true;
+      // We don't set result = true here so that the Windows app sdk
+      // can process this message if necessary.
     } break;
 
     case WM_INPUTLANGCHANGEREQUEST:
