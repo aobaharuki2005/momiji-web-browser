@@ -23,6 +23,7 @@ import org.mozilla.fenix.components.toolbar.DisplayActions.RefreshClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.ShareClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.StopRefreshClicked
 import org.mozilla.fenix.components.toolbar.PageEndActionsInteractions.ReaderModeClicked
+import org.mozilla.fenix.components.toolbar.StartPageActions.SiteInfoClicked
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewPrivateTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.TabCounterClicked
@@ -40,6 +41,7 @@ import org.mozilla.fenix.telemetry.ACTION_NAVIGATE_FORWARD_LONG_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_READER_MODE_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_REFRESH_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_SHARE_CLICKED
+import org.mozilla.fenix.telemetry.ACTION_SITE_INFO_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_STOP_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_TAB_COUNTER_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_TAB_COUNTER_LONG_CLICKED
@@ -105,6 +107,9 @@ class BrowserToolbarTelemetryMiddleware : Middleware<BrowserToolbarState, Browse
             is HomepageClicked -> {
                 trackToolbarEvent(ToolbarActionRecord.HomepageClicked, action.source)
             }
+            is SiteInfoClicked -> {
+                trackToolbarEvent(ToolbarActionRecord.SiteInfoClicked, action.source)
+            }
             else -> {}
         }
 
@@ -129,6 +134,7 @@ class BrowserToolbarTelemetryMiddleware : Middleware<BrowserToolbarState, Browse
         data object ShareClicked : ToolbarActionRecord(ACTION_SHARE_CLICKED)
         data object ReaderModeClicked : ToolbarActionRecord(ACTION_READER_MODE_CLICKED)
         data object HomepageClicked : ToolbarActionRecord(ACTION_HOME_CLICKED)
+        data object SiteInfoClicked : ToolbarActionRecord(ACTION_SITE_INFO_CLICKED)
     }
 
     private fun trackToolbarEvent(

@@ -274,6 +274,7 @@ class BrowserToolbarMiddleware(
 
             is StartPageActions.SiteInfoClicked -> {
                 onSiteInfoClicked()
+                next(action)
             }
 
             is MenuClicked -> {
