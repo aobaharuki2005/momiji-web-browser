@@ -102,6 +102,11 @@ run-if = [
   "os != 'android'", # Legacy telemetry is a lways disabled on Android
 ]
 
+["test_TelemetryController_pingDisablement.js"]
+run-if = [
+  "os != 'android'", # Legacy telemetry is always disabled on Android
+]
+
 ["test_TelemetryEnvironment.js"]
 requesttimeoutfactor = 2  # Slow on Windows
 skip-if = [
