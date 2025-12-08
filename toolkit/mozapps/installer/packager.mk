@@ -32,6 +32,7 @@ stage-package: multilocale.txt locale-manifest.in $(MOZ_PKG_MANIFEST) $(MOZ_PKG_
 		$(if $(MOZ_PACKAGER_MINIFY_JS),--minify-js \
 		  $(addprefix --js-binary ,$(JS_BINARY)) \
 		) \
+		$(if $(MOZ_PACKAGER_MINIFY_PDFJS),--minify-pdfjs) \
 		$(addprefix --jarlog ,$(wildcard $(JARLOG_FILE_AB_CD))) \
 		$(addprefix --compress ,$(JAR_COMPRESSION)) \
 		$(MOZ_PKG_MANIFEST) '$(DIST)' '$(DIST)'/$(MOZ_PKG_DIR)$(if $(MOZ_PKG_MANIFEST),,$(_BINPATH:%=/%)) \
