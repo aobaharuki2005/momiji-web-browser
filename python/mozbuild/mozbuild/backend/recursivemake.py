@@ -528,8 +528,6 @@ class RecursiveMakeBackend(MakeBackend):
             # skipped and must run during the 'tools' tier.
             if "XPI_PKGNAME" in obj.variables:
                 self._no_skip["tools"].add(backend_file.relobjdir)
-            if "XPI_TESTDIR" in obj.variables:
-                self._no_skip["misc"].add(backend_file.relobjdir)
 
         elif isinstance(obj, HostDefines):
             self._process_defines(obj, backend_file, which="HOST_DEFINES")

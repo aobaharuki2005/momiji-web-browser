@@ -901,14 +901,10 @@ $(4):: $$(abspath $(3))/$(1).xpi
 
 endef
 
-ifdef XPI_TESTDIR
-$(eval $(call xpi_package_rule,$(notdir $(CURDIR)),$(CURDIR),$(XPI_TESTDIR),misc))
-else
 # When you move this out of the tools tier, please remove the corresponding
 # hacks in recursivemake.py that check if Makefile.in sets the variable.
 ifdef XPI_PKGNAME
 $(eval $(call xpi_package_rule,$(XPI_PKGNAME),$(FINAL_TARGET),$(FINAL_TARGET)/..,tools realchrome))
-endif
 endif
 
 #############################################################################

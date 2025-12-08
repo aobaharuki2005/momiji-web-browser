@@ -2318,14 +2318,6 @@ VARIABLES = {
         Override the name of the package generated for an XPI extension.
         """,
     ),
-    "XPI_TESTDIR": (
-        ObjDirPath,
-        str,
-        """The name of the directory where the associated test XPI package must be generated.
-
-        XPI_PKGNAME must be set for this variable to matter.
-        """,
-    ),
     "DIST_SUBDIR": (
         str,
         str,
