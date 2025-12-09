@@ -12,7 +12,6 @@
 #include "mozilla/Result.h"
 #include "nsITimer.h"
 #include "nsTArray.h"
-#include "nsWeakReference.h"
 
 #include <functional>
 
@@ -30,9 +29,9 @@ enum class ResponseRejectReason;
  * Periodically gathers memory usage metrics after cycle collection, and
  * populates telemetry histograms with their values.
  */
-class MemoryTelemetry final : public nsSupportsWeakReference {
+class MemoryTelemetry final {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MemoryTelemetry)
 
   static RefPtr<MemoryTelemetry> Create();
 
@@ -56,8 +55,7 @@ class MemoryTelemetry final : public nsSupportsWeakReference {
 
  private:
   MemoryTelemetry();
-
-  ~MemoryTelemetry() = default;
+  ~MemoryTelemetry();
 
   static Result<uint32_t, nsresult> GetOpenTabsCount();
 

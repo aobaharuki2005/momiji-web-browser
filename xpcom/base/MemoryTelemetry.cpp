@@ -116,14 +116,14 @@ class TimeStampWindow {
   AutoCleanLinkedList<Event> mEvents;
 };
 
-NS_IMPL_ISUPPORTS(MemoryTelemetry, nsISupportsWeakReference)
-
 MemoryTelemetry::MemoryTelemetry()
     : mThreadPool(do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID)) {
   for (auto& val : gPrevValues) {
     val = kUninitialized;
   }
 }
+
+MemoryTelemetry::~MemoryTelemetry() {}
 
 static StaticRefPtr<MemoryTelemetry> sInstance;
 
