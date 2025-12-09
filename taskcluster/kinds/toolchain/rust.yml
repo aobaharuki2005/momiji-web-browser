@@ -128,6 +128,33 @@ linux64-rust-1.82-dev:
             - linux64-clang-toolchain
             - linux64-toolchain-sysroot
 
+win64-rust-1.82-dev:
+    description: "build rust from source"
+    worker-type: b-win2022
+    treeherder:
+        symbol: TW64(rust-dev)
+    run:
+        arguments: [
+            '--patch', 'rust-vendor-std.patch',
+            '--channel', 'dev',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+        ]
+        resources:
+            - build/build-rust/rust-vendor-std.patch
+        toolchain-alias:
+            by-project:
+                toolchains: null
+                default: win64-rust-dev
+    fetches:
+        fetch:
+            - rust-1.82.0
+            - win64-ninja
+        toolchain:
+            - win64-clang-toolchain
+            - win64-cmake
+            - vs
+
 linux64-rust-cross-1.90:
     description: "rust repack with macos and windows cross support"
     treeherder:
@@ -344,6 +371,35 @@ linux64-rust-nightly-dev:
         toolchain:
             - linux64-clang-toolchain
             - linux64-toolchain-sysroot
+
+win64-rust-nightly-dev:
+    attributes:
+        cached_task: false
+    description: "build rust from source"
+    worker-type: b-win2022
+    treeherder:
+        symbol: TW64(rust-dev-nightly)
+    run:
+        arguments: [
+            '--patch', 'rust-vendor-std.patch',
+            '--channel', 'dev',
+            '--host', 'x86_64-pc-windows-msvc',
+            '--target', 'x86_64-pc-windows-msvc',
+        ]
+        resources:
+            - build/build-rust/rust-vendor-std.patch
+        toolchain-alias:
+            by-project:
+                toolchains: win64-rust-dev
+                default: null
+    fetches:
+        fetch:
+            - rust-nightly
+            - win64-ninja
+        toolchain:
+            - win64-clang-toolchain
+            - win64-cmake
+            - vs
 
 linux64-rust-cross-nightly:
     attributes:
