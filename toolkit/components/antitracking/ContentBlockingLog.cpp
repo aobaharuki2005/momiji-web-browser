@@ -204,7 +204,7 @@ void ContentBlockingLog::ReportLog() {
 }
 
 void ContentBlockingLog::ReportCanvasFingerprintingLog(
-    nsIPrincipal* aFirstPartyPrincipal, bool aShouldReport) {
+    nsIPrincipal* aFirstPartyPrincipal) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aFirstPartyPrincipal);

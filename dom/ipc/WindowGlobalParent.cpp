@@ -1656,12 +1656,8 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
         GetContentBlockingLog()->ReportLog();
 
         if (mDocumentURI && net::SchemeIsHttpOrHttps(mDocumentURI)) {
-          bool incrementedTopLevelContentDocumentsDestroyed =
-              pageUseCounterResult.contains(
-                  PageUseCounterResultBits::DATA_RECEIVED);
           GetContentBlockingLog()->ReportCanvasFingerprintingLog(
-              DocumentPrincipal(),
-              incrementedTopLevelContentDocumentsDestroyed);
+              DocumentPrincipal());
           GetContentBlockingLog()->ReportFontFingerprintingLog(
               DocumentPrincipal());
           GetContentBlockingLog()->ReportEmailTrackingLog(DocumentPrincipal());
