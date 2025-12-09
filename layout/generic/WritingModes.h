@@ -71,6 +71,12 @@ using PhysicalAxes = EnumSet<PhysicalAxis>;
 static constexpr PhysicalAxes kPhysicalAxesBoth{PhysicalAxis::Vertical,
                                                 PhysicalAxis::Horizontal};
 
+inline StyleLogicalAxis ToStyleLogicalAxis(LogicalAxis aLogicalAxis) {
+  return StyleLogicalAxis(aLogicalAxis == LogicalAxis::Block
+                              ? StyleLogicalAxis::Block
+                              : StyleLogicalAxis::Inline);
+}
+
 inline LogicalAxis GetOrthogonalAxis(LogicalAxis aAxis) {
   return aAxis == LogicalAxis::Block ? LogicalAxis::Inline : LogicalAxis::Block;
 }
@@ -472,6 +478,10 @@ class WritingMode {
   explicit WritingMode(const ComputedStyle* aComputedStyle) {
     NS_ASSERTION(aComputedStyle, "we need an ComputedStyle here");
     mWritingMode = aComputedStyle->WritingMode();
+  }
+
+  inline StyleWritingMode ToStyleWritingMode() const {
+    return StyleWritingMode(GetBits());
   }
 
   /**
