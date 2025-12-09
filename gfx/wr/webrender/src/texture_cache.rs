@@ -1664,7 +1664,7 @@ mod test_texture_cache {
         use euclid::size2;
         let mut texture_cache = TextureCache::new_for_testing(2048, ImageFormat::BGRA8);
         let memory = FrameMemory::fallback();
-        let mut gpu_buffer = GpuBufferBuilderF::new(&memory);
+        let mut gpu_buffer = GpuBufferBuilderF::new(&memory, 0);
 
         let sizes: &[DeviceIntSize] = &[
             size2(23, 27),

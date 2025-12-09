@@ -3,12 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
-
     TODO:
-        Recycle GpuBuffers in a pool (support return from render thread)
         Efficiently allow writing to buffer (better push interface)
-        Support other texel types (e.g. i32)
-
  */
 
 use std::i32;
@@ -302,9 +298,9 @@ pub struct GpuBufferBuilderImpl<T> {
 }
 
 impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRect> {
-    pub fn new(memory: &FrameMemory) -> Self {
+    pub fn new(memory: &FrameMemory, capacity: usize) -> Self {
         GpuBufferBuilderImpl {
-            data: memory.new_vec(),
+            data: memory.new_vec_with_capacity(capacity),
             deferred: Vec::new(),
         }
     }
@@ -438,7 +434,7 @@ impl<T> GpuBuffer<T> {
 fn test_gpu_buffer_sizing_push() {
     let frame_memory = FrameMemory::fallback();
     let render_task_graph = RenderTaskGraph::new_for_testing();
-    let mut builder = GpuBufferBuilderF::new(&frame_memory);
+    let mut builder = GpuBufferBuilderF::new(&frame_memory, 0);
 
     let row = vec![GpuBufferBlockF::EMPTY; MAX_VERTEX_TEXTURE_WIDTH];
     builder.push(&row);
@@ -454,7 +450,7 @@ fn test_gpu_buffer_sizing_push() {
 fn test_gpu_buffer_sizing_writer() {
     let frame_memory = FrameMemory::fallback();
     let render_task_graph = RenderTaskGraph::new_for_testing();
-    let mut builder = GpuBufferBuilderF::new(&frame_memory);
+    let mut builder = GpuBufferBuilderF::new(&frame_memory, 0);
 
     let mut writer = builder.write_blocks(MAX_VERTEX_TEXTURE_WIDTH);
     for _ in 0 .. MAX_VERTEX_TEXTURE_WIDTH {
