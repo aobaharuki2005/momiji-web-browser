@@ -283,7 +283,7 @@ class nsMutationGuard {
    * years for sGeneration to fully wrap around so we can ignore a guard living
    * through a full wrap around.
    */
-  bool Mutated(uint8_t aIgnoreCount) {
+  bool Mutated(uint8_t aIgnoreCount) const {
     return (sGeneration - mStartingGeneration) > aIgnoreCount;
   }
 
