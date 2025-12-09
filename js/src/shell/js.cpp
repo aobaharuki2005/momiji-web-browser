@@ -13319,6 +13319,8 @@ bool InitOptionParser(OptionParser& op) {
       !op.addBoolOption('\0', "enable-temporal", "Enable Temporal") ||
       !op.addBoolOption('\0', "enable-upsert", "Enable Upsert proposal") ||
       !op.addBoolOption('\0', "enable-import-bytes", "Enable import bytes") ||
+      !op.addBoolOption('\0', "enable-promise-allkeyed",
+                        "Enable Promise.allKeyed") ||
       !op.addBoolOption('\0', "enable-arraybuffer-immutable",
                         "Enable immutable ArrayBuffers") ||
       !op.addBoolOption('\0', "enable-iterator-chunking",
@@ -13401,6 +13403,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   }
   if (op.getBoolOption("enable-import-bytes")) {
     JS::Prefs::setAtStartup_experimental_import_bytes(true);
+  }
+  if (op.getBoolOption("enable-promise-allkeyed")) {
+    JS::Prefs::setAtStartup_experimental_promise_allkeyed(true);
   }
   if (op.getBoolOption("enable-iterator-chunking")) {
     JS::Prefs::setAtStartup_experimental_iterator_chunking(true);

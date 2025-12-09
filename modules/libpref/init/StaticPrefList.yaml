@@ -9050,6 +9050,13 @@
   mirror: always
   set_spidermonkey_pref: startup
 
+  # Experimental support for Promise.allKeyed in JavaScript.
+- name: javascript.options.experimental.promise_allkeyed
+  type: bool
+  value: false
+  mirror: always
+  set_spidermonkey_pref: startup
+
  # Experimental support for Iterator Chunking in JavaScript.
 - name: javascript.options.experimental.iterator_chunking
   type: bool
