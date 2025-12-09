@@ -304,31 +304,6 @@ add_task(async function removesAllHighlightsWithNonEmptyFragment() {
   );
 });
 
-/* Bug 2004502: When strip_on_share is disabled, "Copy Link to Highlight"
- * should still be visible but "Copy Clean Link to Highlight" should be hidden.
- */
-add_task(async function copyLinkVisibleWhenStripOnShareDisabled() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["privacy.query_stripping.strip_on_share.enabled", false]],
-  });
-
-  await testCopyLinkToHighlight({
-    testPage: loremIpsumTestPage(true),
-    runTests: async ({ copyLinkToHighlight, copyCleanLinkToHighlight }) => {
-      Assert.ok(
-        BrowserTestUtils.isVisible(copyLinkToHighlight),
-        "Copy Link to Highlight Menu item is visible when strip_on_share is disabled"
-      );
-      Assert.ok(
-        !BrowserTestUtils.isVisible(copyCleanLinkToHighlight),
-        "Copy Clean Link to Highlight Menu item is not visible when strip_on_share is disabled"
-      );
-    },
-  });
-
-  await SpecialPowers.popPrefEnv();
-});
-
 /**
  * Creates a document which contains a contenteditable element with some content.
  * Additionally selects the editable content.

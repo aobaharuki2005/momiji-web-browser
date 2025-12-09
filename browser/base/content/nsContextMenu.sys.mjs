@@ -450,6 +450,7 @@ export class nsContextMenu {
   initTextFragmentItems() {
     const shouldShow =
       lazy.TEXT_FRAGMENTS_ENABLED &&
+      lazy.STRIP_ON_SHARE_ENABLED &&
       !(
         this.inPDFViewer ||
         this.inFrame ||
@@ -458,10 +459,7 @@ export class nsContextMenu {
       ) &&
       (this.hasTextFragments || this.isContentSelected);
     this.showItem("context-copy-link-to-highlight", shouldShow);
-    this.showItem(
-      "context-copy-clean-link-to-highlight",
-      shouldShow && lazy.STRIP_ON_SHARE_ENABLED
-    );
+    this.showItem("context-copy-clean-link-to-highlight", shouldShow);
 
     // disables both options by default, while API tries to build a text fragment
     this.setItemAttr("context-copy-link-to-highlight", "disabled", true);
