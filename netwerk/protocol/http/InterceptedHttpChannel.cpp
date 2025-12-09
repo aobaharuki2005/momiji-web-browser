@@ -1483,15 +1483,6 @@ InterceptedHttpChannel::GetAlternativeDataType(nsACString& aType) {
 }
 
 NS_IMETHODIMP
-InterceptedHttpChannel::GetCacheEntryWriteHandle(
-    nsICacheEntryWriteHandle** _retval) {
-  if (mSynthesizedCacheInfo) {
-    return mSynthesizedCacheInfo->GetCacheEntryWriteHandle(_retval);
-  }
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
 InterceptedHttpChannel::OpenAlternativeOutputStream(
     const nsACString& type, int64_t predictedSize,
     nsIAsyncOutputStream** _retval) {

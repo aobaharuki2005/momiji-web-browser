@@ -301,10 +301,10 @@ class LoadedScript : public nsIMemoryReporter {
 
   // Check the reference to the cache info channel, which is used by the disk
   // cache.
-  bool HasDiskCacheReference() const { return !!mCacheEntry; }
+  bool HasDiskCacheReference() const { return !!mCacheInfo; }
 
   // Drop the reference to the cache info channel.
-  void DropDiskCacheReference() { mCacheEntry = nullptr; }
+  void DropDiskCacheReference() { mCacheInfo = nullptr; }
 
   void DropDiskCacheReferenceAndSRI() {
     DropDiskCacheReference();
@@ -438,7 +438,7 @@ class LoadedScript : public nsIMemoryReporter {
   // This field is populated if the cache is enabled and this is either
   // IsTextSource() or IsCachedStencil(), and it's cleared after saving to the
   // necko cache, and thus, this field is used only once.
-  nsCOMPtr<nsICacheEntryWriteHandle> mCacheEntry;
+  nsCOMPtr<nsICacheInfoChannel> mCacheInfo;
 };
 
 // Provide accessors for any classes `Derived` which is providing the

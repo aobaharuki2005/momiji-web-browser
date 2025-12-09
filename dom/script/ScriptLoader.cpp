@@ -2872,7 +2872,27 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   // disk cache optimization, such that we do not waste time on entry which
   // are going to be dropped soon.
   if (strategy.mHasFetchCountMin) {
-    uint8_t fetchCount = aRequest->mLoadedScript->mFetchCount;
+    uint32_t fetchCount = 0;
+    if (aRequest->IsCachedStencil()) {
+      fetchCount = aRequest->mLoadedScript->mFetchCount;
+    } else {
+      if (NS_FAILED(
+              aRequest->getLoadedScript()->mCacheInfo->GetCacheTokenFetchCount(
+                  &fetchCount))) {
+        LOG(
+            ("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: Cannot get "
+             "fetchCount.",
+             aRequest));
+        aRequest->MarkSkippedDiskCaching();
+        aRequest->getLoadedScript()->DropDiskCacheReferenceAndSRI();
+        return;
+      }
+      if (fetchCount < UINT8_MAX) {
+        aRequest->mLoadedScript->mFetchCount = fetchCount;
+      } else {
+        aRequest->mLoadedScript->mFetchCount = UINT8_MAX;
+      }
+    }
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: fetchCount = %d.", aRequest,
          fetchCount));
     if (fetchCount < strategy.mFetchCountMin) {
@@ -3714,7 +3734,7 @@ bool ScriptLoader::SaveToDiskCache(
   // might fail if the stream is already open by another request, in which
   // case, we just ignore the current one.
   nsCOMPtr<nsIAsyncOutputStream> output;
-  nsresult rv = aLoadedScript->mCacheEntry->OpenAlternativeOutputStream(
+  nsresult rv = aLoadedScript->mCacheInfo->OpenAlternativeOutputStream(
       BytecodeMimeTypeFor(aLoadedScript),
       static_cast<int64_t>(aCompressed.length()), getter_AddRefs(output));
   if (NS_FAILED(rv)) {
@@ -4071,9 +4091,8 @@ nsresult ScriptLoader::OnStreamComplete(
     aLoader->GetRequest(getter_AddRefs(channelRequest));
 
     nsCOMPtr<nsICacheInfoChannel> cacheInfo = do_QueryInterface(channelRequest);
-    nsCOMPtr<nsICacheEntryWriteHandle> cacheEntry;
-    if (cacheInfo && NS_SUCCEEDED(cacheInfo->GetCacheEntryWriteHandle(
-                         getter_AddRefs(cacheEntry)))) {
+
+    if (cacheInfo) {
       uint64_t id;
       nsresult rv = cacheInfo->GetCacheEntryId(&id);
       if (NS_SUCCEEDED(rv)) {
@@ -4110,25 +4129,19 @@ nsresult ScriptLoader::OnStreamComplete(
 
         aRequest->getLoadedScript()->SetCacheEntryId(id);
       }
+    }
 
-      // If we are loading from source, store the cache info channel and
-      // save the computed SRI hash or a dummy SRI hash in case we are going to
-      // save the this script in the disk cache.
-      if (aRequest->IsTextSource() &&
-          StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
-        uint32_t fetchCount;
-        if (NS_SUCCEEDED(cacheInfo->GetCacheTokenFetchCount(&fetchCount))) {
-          if (fetchCount < UINT8_MAX) {
-            aRequest->getLoadedScript()->mFetchCount = fetchCount;
-          } else {
-            aRequest->getLoadedScript()->mFetchCount = UINT8_MAX;
-          }
-        }
+    // If we are loading from source, store the cache info channel and
+    // save the computed SRI hash or a dummy SRI hash in case we are going to
+    // save the this script in the disk cache.
+    if (aRequest->IsTextSource() &&
+        StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
+      aRequest->getLoadedScript()->mCacheInfo = cacheInfo;
+      LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", aRequest,
+           aRequest->getLoadedScript()->mCacheInfo.get()));
 
-        aRequest->getLoadedScript()->mCacheEntry = cacheEntry;
-        LOG(("ScriptLoadRequest (%p): nsICacheEntryWriteHandle = %p", aRequest,
-             (void*)cacheEntry));
-
+      // We need the SRI hash only when the channel has cache info.
+      if (aRequest->getLoadedScript()->mCacheInfo) {
         rv = SaveSRIHash(aRequest, aSRIDataVerifier);
       }
     }
