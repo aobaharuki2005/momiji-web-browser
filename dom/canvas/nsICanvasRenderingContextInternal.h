@@ -21,7 +21,6 @@
 #include "nsIDocShell.h"
 #include "nsIInputStream.h"
 #include "nsISupports.h"
-#include "nsRFPService.h"
 #include "nsRefreshObservers.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \

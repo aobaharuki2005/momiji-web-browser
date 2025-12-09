@@ -5744,8 +5744,10 @@ class Document : public nsINode,
 
   // Used for tracking a number of recent canvas extractions (e.g. toDataURL),
   // this is used for a canvas fingerprinter detection heuristic.
-  nsTArray<CanvasUsage> mCanvasUsage;
-  uint64_t mLastCanvasUsage = 0;
+  // Store all recent usages in a single nsTArray instead of a hash map.
+  nsTArray<CanvasUsage> mCanvasUsageData;
+  // Timestamp (PR_Now microseconds) of the last update to mCanvasUsageData.
+  uint64_t mCanvasUsageLastTimestamp = 0;
 
   RefPtr<class FragmentDirective> mFragmentDirective;
   UniquePtr<RadioGroupContainer> mRadioGroupContainer;

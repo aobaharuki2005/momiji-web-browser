@@ -44,6 +44,7 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/CanvasRenderingContextHelper.h"
+#include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
@@ -1951,6 +1952,340 @@ static const char* CanvasFingerprinterToString(
   return "<error>";
 }
 
+namespace mozilla {
+nsCString CanvasUsageSourceToString(CanvasUsageSource aSource) {
+  if (aSource == CanvasUsageSource::Unknown) {
+    return "None"_ns;
+  }
+
+  nsCString accumulated;
+
+  auto append = [&](const char* name) {
+    if (!accumulated.IsEmpty()) {
+      accumulated.AppendLiteral(", ");
+    }
+    accumulated.Append(name);
+  };
+
+#define APPEND_IF_SET(flag, name)     \
+  if ((aSource & (flag)) == (flag)) { \
+    append(name);                     \
+  }
+
+  APPEND_IF_SET(Impossible, "Impossible");
+
+  APPEND_IF_SET(MainThread_Canvas_ImageBitmap_toDataURL,
+                "MainThread_Canvas_ImageBitmap_toDataURL");
+  APPEND_IF_SET(MainThread_Canvas_ImageBitmap_toBlob,
+                "MainThread_Canvas_ImageBitmap_toBlob");
+  APPEND_IF_SET(MainThread_Canvas_ImageBitmap_getImageData,
+                "MainThread_Canvas_ImageBitmap_getImageData");
+
+  APPEND_IF_SET(MainThread_Canvas_Canvas2D_toDataURL,
+                "MainThread_Canvas_Canvas2D_toDataURL");
+  APPEND_IF_SET(MainThread_Canvas_Canvas2D_toBlob,
+                "MainThread_Canvas_Canvas2D_toBlob");
+  APPEND_IF_SET(MainThread_Canvas_Canvas2D_getImageData,
+                "MainThread_Canvas_Canvas2D_getImageData");
+
+  APPEND_IF_SET(MainThread_Canvas_WebGL_toDataURL,
+                "MainThread_Canvas_WebGL_toDataURL");
+  APPEND_IF_SET(MainThread_Canvas_WebGL_toBlob,
+                "MainThread_Canvas_WebGL_toBlob");
+  APPEND_IF_SET(MainThread_Canvas_WebGL_getImageData,
+                "MainThread_Canvas_WebGL_getImageData");
+  APPEND_IF_SET(MainThread_Canvas_WebGL_readPixels,
+                "MainThread_Canvas_WebGL_readPixels");
+
+  APPEND_IF_SET(MainThread_Canvas_WebGPU_toDataURL,
+                "MainThread_Canvas_WebGPU_toDataURL");
+  APPEND_IF_SET(MainThread_Canvas_WebGPU_toBlob,
+                "MainThread_Canvas_WebGPU_toBlob");
+  APPEND_IF_SET(MainThread_Canvas_WebGPU_getImageData,
+                "MainThread_Canvas_WebGPU_getImageData");
+
+  APPEND_IF_SET(MainThread_OffscreenCanvas_ImageBitmap_toDataURL,
+                "MainThread_OffscreenCanvas_ImageBitmap_toDataURL");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_ImageBitmap_toBlob,
+                "MainThread_OffscreenCanvas_ImageBitmap_toBlob");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_ImageBitmap_getImageData,
+                "MainThread_OffscreenCanvas_ImageBitmap_getImageData");
+
+  APPEND_IF_SET(MainThread_OffscreenCanvas_Canvas2D_toDataURL,
+                "MainThread_OffscreenCanvas_Canvas2D_toDataURL");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_Canvas2D_toBlob,
+                "MainThread_OffscreenCanvas_Canvas2D_toBlob");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_Canvas2D_getImageData,
+                "MainThread_OffscreenCanvas_Canvas2D_getImageData");
+
+  APPEND_IF_SET(Worker_OffscreenCanvas_Canvas2D_toBlob,
+                "Worker_OffscreenCanvas_Canvas2D_toBlob");
+  APPEND_IF_SET(Worker_OffscreenCanvas_Canvas2D_getImageData,
+                "Worker_OffscreenCanvas_Canvas2D_getImageData");
+
+  APPEND_IF_SET(MainThread_OffscreenCanvas_WebGL_toDataURL,
+                "MainThread_OffscreenCanvas_WebGL_toDataURL");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_WebGL_toBlob,
+                "MainThread_OffscreenCanvas_WebGL_toBlob");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_WebGL_getImageData,
+                "MainThread_OffscreenCanvas_WebGL_getImageData");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_WebGL_readPixels,
+                "MainThread_OffscreenCanvas_WebGL_readPixels");
+
+  APPEND_IF_SET(Worker_OffscreenCanvas_ImageBitmap_toBlob,
+                "Worker_OffscreenCanvas_ImageBitmap_toBlob");
+  APPEND_IF_SET(Worker_OffscreenCanvas_ImageBitmap_getImageData,
+                "Worker_OffscreenCanvas_ImageBitmap_getImageData");
+
+  APPEND_IF_SET(Worker_OffscreenCanvas_WebGL_toBlob,
+                "Worker_OffscreenCanvas_WebGL_toBlob");
+  APPEND_IF_SET(Worker_OffscreenCanvas_WebGL_getImageData,
+                "Worker_OffscreenCanvas_WebGL_getImageData");
+  APPEND_IF_SET(Worker_OffscreenCanvas_WebGL_readPixels,
+                "Worker_OffscreenCanvas_WebGL_readPixels");
+
+  APPEND_IF_SET(MainThread_OffscreenCanvas_WebGPU_toDataURL,
+                "MainThread_OffscreenCanvas_WebGPU_toDataURL");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_WebGPU_toBlob,
+                "MainThread_OffscreenCanvas_WebGPU_toBlob");
+  APPEND_IF_SET(MainThread_OffscreenCanvas_WebGPU_getImageData,
+                "MainThread_OffscreenCanvas_WebGPU_getImageData");
+
+  APPEND_IF_SET(Worker_OffscreenCanvas_WebGPU_toBlob,
+                "Worker_OffscreenCanvas_WebGPU_toBlob");
+  APPEND_IF_SET(Worker_OffscreenCanvas_WebGPU_getImageData,
+                "Worker_OffscreenCanvas_WebGPU_getImageData");
+
+  APPEND_IF_SET(Worker_OffscreenCanvasCanvas2D_Canvas2D_getImageData,
+                "Worker_OffscreenCanvasCanvas2D_Canvas2D_getImageData");
+  APPEND_IF_SET(Worker_OffscreenCanvasCanvas2D_Canvas2D_toBlob,
+                "Worker_OffscreenCanvasCanvas2D_Canvas2D_toBlob");
+
+#undef APPEND_IF_SET
+
+  if (accumulated.IsEmpty()) {
+    accumulated.AssignLiteral("<error>");
+  }
+
+  return accumulated;
+}
+}  // namespace mozilla
+
+CanvasUsage CanvasUsage::CreateUsage(
+    bool aIsOffscreen, dom::CanvasContextType aContextType,
+    CanvasExtractionAPI aApi, CSSIntSize aSize,
+    const nsICanvasRenderingContextInternal* aContext) {
+  CanvasFeatureUsage featureUsage = CanvasFeatureUsage::None;
+
+  // Only 2D contexts currently expose feature usage metrics.
+  if (aContextType == dom::CanvasContextType::Canvas2D && aContext) {
+    // Downcast is safe because 2D contexts derive from
+    // nsICanvasRenderingContextInternal and we gated on the supplied type. The
+    // header is included so the relationship is known to the compiler.
+    auto* ctx2D = static_cast<const dom::CanvasRenderingContext2D*>(aContext);
+    featureUsage = ctx2D->FeatureUsage();
+  }
+
+  CanvasUsageSource usageSource =
+      CanvasUsage::GetCanvasUsageSource(aIsOffscreen, aContextType, aApi);
+  return CanvasUsage(aSize, aContextType, usageSource, featureUsage);
+}
+
+CanvasUsageSource CanvasUsage::GetCanvasUsageSource(
+    bool isOffscreen, dom::CanvasContextType contextType,
+    CanvasExtractionAPI api) {
+  const bool isMainThread = NS_IsMainThread();
+
+  auto logImpossible = [&](const char* aComment = "") {
+    MOZ_LOG(gFingerprinterDetection, LogLevel::Error,
+            ("CanvasUsageSource impossible: comment=%s isOffscreen=%d "
+             "contextType=%d api=%d isMainThread=%d",
+             aComment, isOffscreen, static_cast<int>(contextType),
+             static_cast<int>(api), isMainThread));
+  };
+
+  // Non-offscreen (HTMLCanvasElement) path (always main thread).
+  if (!isOffscreen) {
+    if (!isMainThread) {
+      logImpossible("Non-offscreen canvas accessed off main thread");
+      return CanvasUsageSource::Impossible;
+    }
+    switch (contextType) {
+      case dom::CanvasContextType::Canvas2D:
+        switch (api) {
+          case CanvasExtractionAPI::ToDataURL:
+            return MainThread_Canvas_Canvas2D_toDataURL;
+          case CanvasExtractionAPI::ToBlob:
+            return MainThread_Canvas_Canvas2D_toBlob;
+          case CanvasExtractionAPI::GetImageData:
+            return MainThread_Canvas_Canvas2D_getImageData;
+          case CanvasExtractionAPI::ReadPixels:
+            logImpossible("ReadPixels invalid for Canvas2D");
+            return CanvasUsageSource::Impossible;
+          default:
+            logImpossible("Unknown API for Canvas2D");
+            return CanvasUsageSource::Impossible;
+        }
+      case dom::CanvasContextType::WebGL1:
+      case dom::CanvasContextType::WebGL2:
+        switch (api) {
+          case CanvasExtractionAPI::ToDataURL:
+            return MainThread_Canvas_WebGL_toDataURL;
+          case CanvasExtractionAPI::ToBlob:
+            return MainThread_Canvas_WebGL_toBlob;
+          case CanvasExtractionAPI::GetImageData:
+            return MainThread_Canvas_WebGL_getImageData;
+          case CanvasExtractionAPI::ReadPixels:
+            return MainThread_Canvas_WebGL_readPixels;
+          default:
+            logImpossible("Unknown API for WebGL");
+            return CanvasUsageSource::Impossible;
+        }
+      case dom::CanvasContextType::WebGPU:
+        switch (api) {
+          case CanvasExtractionAPI::ToDataURL:
+            return MainThread_Canvas_WebGPU_toDataURL;
+          case CanvasExtractionAPI::ToBlob:
+            return MainThread_Canvas_WebGPU_toBlob;
+          case CanvasExtractionAPI::GetImageData:
+            return MainThread_Canvas_WebGPU_getImageData;
+          case CanvasExtractionAPI::ReadPixels:
+            logImpossible("ReadPixels invalid for WebGPU");
+            return CanvasUsageSource::Impossible;
+          default:
+            logImpossible("Unknown API for WebGPU");
+            return CanvasUsageSource::Impossible;
+        }
+      case dom::CanvasContextType::ImageBitmap:
+        switch (api) {
+          case CanvasExtractionAPI::ToDataURL:
+            return MainThread_Canvas_ImageBitmap_toDataURL;
+          case CanvasExtractionAPI::ToBlob:
+            return MainThread_Canvas_ImageBitmap_toBlob;
+          case CanvasExtractionAPI::GetImageData:
+            return MainThread_Canvas_ImageBitmap_getImageData;
+          case CanvasExtractionAPI::ReadPixels:
+            logImpossible("ReadPixels invalid for ImageBitmap");
+            return CanvasUsageSource::Impossible;
+          default:
+            logImpossible("Unknown API for ImageBitmap");
+            return CanvasUsageSource::Impossible;
+        }
+      default:
+        logImpossible("Unknown context type (main thread, non-offscreen)");
+        return CanvasUsageSource::Impossible;
+    }
+  }
+
+  // OffscreenCanvas path.
+  switch (contextType) {
+    case dom::CanvasContextType::Canvas2D:
+      switch (api) {
+        case CanvasExtractionAPI::ToDataURL:
+          if (isMainThread) {
+            return MainThread_OffscreenCanvas_Canvas2D_toDataURL;
+          }
+          logImpossible("ToDataURL invalid for Offscreen Canvas2D on worker");
+          return CanvasUsageSource::Impossible;  // not supported
+        case CanvasExtractionAPI::ToBlob:
+          return isMainThread ? MainThread_OffscreenCanvas_Canvas2D_toBlob
+                              : Worker_OffscreenCanvas_Canvas2D_toBlob;
+        case CanvasExtractionAPI::GetImageData:
+          return isMainThread ? MainThread_OffscreenCanvas_Canvas2D_getImageData
+                              : Worker_OffscreenCanvas_Canvas2D_getImageData;
+        case CanvasExtractionAPI::ReadPixels:
+          logImpossible("ReadPixels invalid for Offscreen 2D");
+          return CanvasUsageSource::Impossible;
+        default:
+          logImpossible("Unknown API for Offscreen Canvas2D");
+          return CanvasUsageSource::Impossible;
+      }
+    case dom::CanvasContextType::OffscreenCanvas2D:
+      if (isMainThread) {
+        logImpossible("OffscreenCanvas2D on main thread");
+        return CanvasUsageSource::Impossible;
+      }
+      switch (api) {
+        case CanvasExtractionAPI::GetImageData:
+          return Worker_OffscreenCanvasCanvas2D_Canvas2D_getImageData;
+        case CanvasExtractionAPI::ToBlob:
+          return Worker_OffscreenCanvasCanvas2D_Canvas2D_toBlob;
+        default:
+          logImpossible("Unsupported API for OffscreenCanvas2D");
+          return CanvasUsageSource::Impossible;
+      }
+    case dom::CanvasContextType::WebGL1:
+    case dom::CanvasContextType::WebGL2:
+      switch (api) {
+        case CanvasExtractionAPI::ToDataURL:
+          if (!isMainThread) {
+            logImpossible("ToDataURL invalid for Offscreen WebGL on worker");
+            return CanvasUsageSource::Impossible;  // not supported
+          }
+          return MainThread_OffscreenCanvas_WebGL_toDataURL;
+        case CanvasExtractionAPI::ToBlob:
+          return isMainThread ? MainThread_OffscreenCanvas_WebGL_toBlob
+                              : Worker_OffscreenCanvas_WebGL_toBlob;
+        case CanvasExtractionAPI::GetImageData:
+          return isMainThread ? MainThread_OffscreenCanvas_WebGL_getImageData
+                              : Worker_OffscreenCanvas_WebGL_getImageData;
+        case CanvasExtractionAPI::ReadPixels:
+          return isMainThread ? MainThread_OffscreenCanvas_WebGL_readPixels
+                              : Worker_OffscreenCanvas_WebGL_readPixels;
+        default:
+          logImpossible("Unknown API for Offscreen WebGL");
+          return CanvasUsageSource::Impossible;
+      }
+    case dom::CanvasContextType::WebGPU:
+      switch (api) {
+        case CanvasExtractionAPI::ToDataURL:
+          if (!isMainThread) {
+            logImpossible("ToDataURL invalid for Offscreen WebGPU on worker");
+            return CanvasUsageSource::Impossible;  // not supported
+          }
+          return MainThread_OffscreenCanvas_WebGPU_toDataURL;
+        case CanvasExtractionAPI::ToBlob:
+          return isMainThread ? MainThread_OffscreenCanvas_WebGPU_toBlob
+                              : Worker_OffscreenCanvas_WebGPU_toBlob;
+        case CanvasExtractionAPI::GetImageData:
+          return isMainThread ? MainThread_OffscreenCanvas_WebGPU_getImageData
+                              : Worker_OffscreenCanvas_WebGPU_getImageData;
+        case CanvasExtractionAPI::ReadPixels:
+          logImpossible("ReadPixels invalid for Offscreen WebGPU");
+          return CanvasUsageSource::Impossible;
+        default:
+          logImpossible("Unknown API for Offscreen WebGPU");
+          return CanvasUsageSource::Impossible;
+      }
+    case dom::CanvasContextType::ImageBitmap:
+      switch (api) {
+        case CanvasExtractionAPI::ToDataURL:
+          if (!isMainThread) {
+            logImpossible(
+                "ToDataURL invalid for Offscreen ImageBitmap on worker");
+            return CanvasUsageSource::Impossible;  // not supported worker
+          }
+          return MainThread_OffscreenCanvas_ImageBitmap_toDataURL;
+        case CanvasExtractionAPI::ToBlob:
+          return isMainThread ? MainThread_OffscreenCanvas_ImageBitmap_toBlob
+                              : Worker_OffscreenCanvas_ImageBitmap_toBlob;
+        case CanvasExtractionAPI::GetImageData:
+          return isMainThread
+                     ? MainThread_OffscreenCanvas_ImageBitmap_getImageData
+                     : Worker_OffscreenCanvas_ImageBitmap_getImageData;
+        case CanvasExtractionAPI::ReadPixels:
+          logImpossible("ReadPixels invalid for Offscreen ImageBitmap");
+          return CanvasUsageSource::Impossible;
+        default:
+          logImpossible("Unknown API for Offscreen ImageBitmap");
+          return CanvasUsageSource::Impossible;
+      }
+    default:
+      logImpossible("Unknown context type (offscreen)");
+      return CanvasUsageSource::Impossible;
+  }
+}
+
 static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
                                uint32_t& aColumnNum) {
   aFilename.AssignLiteral("<unknown>");
@@ -1971,8 +2306,8 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
 }
 
 /* static */ void nsRFPService::MaybeReportCanvasFingerprinter(
-    nsTArray<CanvasUsage>& aUses, nsIChannel* aChannel,
-    nsACString& aOriginNoSuffix) {
+    nsTArray<CanvasUsage>& aUses, nsIChannel* aChannel, const nsACString& aURI,
+    const nsACString& aOriginNoSuffix) {
   if (!aChannel) {
     return;
   }
@@ -1987,6 +2322,7 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
   bool seenExtracted2D_280x60 = false;
   bool seenExtracted2D_860x6 = false;
   CanvasFeatureUsage accumulatedFeatureUsage = CanvasFeatureUsage::None;
+  CanvasUsageSource accumulatedUsageSource = CanvasUsageSource::Unknown;
 
   uint32_t extractedOther = 0;
 
@@ -1998,6 +2334,8 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
       // Canvases used for fingerprinting are usually relatively small.
       continue;
     }
+
+    accumulatedUsageSource |= usage.mUsageSource;
 
     if (usage.mType == dom::CanvasContextType::Canvas2D) {
       accumulatedFeatureUsage |= usage.mFeatureUsage;
@@ -2069,19 +2407,22 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     MOZ_LOG(
         gFingerprinterDetection, LogLevel::Info,
         ("Detected a potential canvas fingerprinter on %s in script %s:%d:%d "
-         "(KnownFingerprintTextBitmask: %u, CanvasFingerprinterAlias: %s)",
+         "(KnownFingerprintTextBitmask: %u, CanvasFingerprinterAlias: %s, "
+         "CanvasUsageSource: %s)",
          origin.get(), filename.get(), lineNum, columnNum, knownTextBitmask,
-         CanvasFingerprinterToString(fingerprinter)));
+         CanvasFingerprinterToString(fingerprinter),
+         CanvasUsageSourceToString(aSource)));
   }
 
   ContentBlockingNotifier::OnEvent(
       aChannel, false,
-      nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING,
-      aOriginNoSuffix, Nothing(), Some(event));
+      nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING, origin,
+      Nothing(), Some(event));
 }
 
 /* static */ void nsRFPService::MaybeReportFontFingerprinter(
-    nsIChannel* aChannel, const nsACString& aOriginNoSuffix) {
+    nsIChannel* aChannel, const nsACString& aURI,
+    const nsACString& aOriginNoSuffix) {
   if (!aChannel) {
     return;
   }
@@ -2093,12 +2434,16 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "nsRFPService::MaybeReportFontFingerprinter",
         [channel = nsCOMPtr{aChannel},
-         originNoSuffix = nsCString(aOriginNoSuffix)]() {
-          nsRFPService::MaybeReportFontFingerprinter(channel, originNoSuffix);
+         originNoSuffix = nsCString(aOriginNoSuffix), uri = nsCString(aURI)]() {
+          nsRFPService::MaybeReportFontFingerprinter(channel, uri,
+                                                     originNoSuffix);
         }));
 
     return;
   }
+
+  nsAutoCString uri(aURI);
+  nsAutoCString origin(aOriginNoSuffix);
 
   if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Info)) {
     nsAutoCString filename;
@@ -2106,16 +2451,15 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     uint32_t columnNum = 0;
     MaybeCurrentCaller(filename, lineNum, columnNum);
 
-    nsAutoCString origin(aOriginNoSuffix);
     MOZ_LOG(gFingerprinterDetection, LogLevel::Info,
-            ("Detected a potential font fingerprinter on %s in script %s:%d:%d",
-             origin.get(), filename.get(), lineNum, columnNum));
+            ("Detected a potential font fingerprinter on %s on %s in script "
+             "%s:%d:%d",
+             origin.get(), uri.get(), filename.get(), lineNum, columnNum));
   }
 
   ContentBlockingNotifier::OnEvent(
       aChannel, false,
-      nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING,
-      aOriginNoSuffix);
+      nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING, origin);
 }
 
 /* static */

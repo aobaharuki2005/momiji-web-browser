@@ -19,7 +19,7 @@ struct ParamTraits<mozilla::CanvasFingerprinterAlias>
     : public ContiguousEnumSerializerInclusive<
           mozilla::CanvasFingerprinterAlias,
           mozilla::CanvasFingerprinterAlias::eNoneIdentified,
-          mozilla::CanvasFingerprinterAlias::eMaybe> {};
+          mozilla::CanvasFingerprinterAlias::eLastAlias> {};
 
 // CanvasFingerprintingEvent
 template <>
@@ -29,21 +29,21 @@ struct ParamTraits<mozilla::CanvasFingerprintingEvent> {
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.alias);
     WriteParam(aWriter, aParam.knownTextBitmask);
-    WriteParam(aWriter, aParam.source);
+    WriteParam(aWriter, aParam.sourcesBitmask);
   }
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     mozilla::CanvasFingerprinterAlias alias;
     uint32_t knownTextBitmask;
-    uint8_t source;
+    uint64_t sourcesBitmask;
 
     if (!ReadParam(aReader, &alias) || !ReadParam(aReader, &knownTextBitmask) ||
-        !ReadParam(aReader, &source)) {
+        !ReadParam(aReader, &sourcesBitmask)) {
       return false;
     }
 
-    *aResult =
-        mozilla::CanvasFingerprintingEvent(alias, knownTextBitmask, source);
+    *aResult = mozilla::CanvasFingerprintingEvent(alias, knownTextBitmask,
+                                                  sourcesBitmask);
     return true;
   }
 };
