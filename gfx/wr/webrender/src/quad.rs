@@ -9,14 +9,14 @@ use crate::batch::{BatchKey, BatchKind, BatchTextures};
 use crate::clip::{ClipChainInstance, ClipIntern, ClipItemKind, ClipNodeRange, ClipSpaceConversion, ClipStore};
 use crate::command_buffer::{CommandBufferIndex, PrimitiveCommand, QuadFlags};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
-use crate::gpu_types::{PrimitiveInstanceData, QuadInstance, QuadPrimitive, QuadSegment, TransformPaletteId, ZBufferId};
+use crate::gpu_types::{PrimitiveInstanceData, QuadHeader, QuadInstance, QuadPrimitive, QuadSegment, TransformPaletteId, ZBufferId};
 use crate::intern::DataStore;
 use crate::internal_types::TextureSource;
 use crate::pattern::{Pattern, PatternBuilder, PatternBuilderContext, PatternBuilderState, PatternKind, PatternShaderInput};
 use crate::prim_store::{PrimitiveInstanceIndex, PrimitiveScratchBuffer};
 use crate::render_task::{MaskSubPass, RenderTask, RenderTaskAddress, RenderTaskKind, SubPass};
 use crate::render_task_graph::{RenderTaskGraph, RenderTaskGraphBuilder, RenderTaskId};
-use crate::renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF};
+use crate::renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF, GpuBufferDataI};
 use crate::segment::EdgeAaSegmentMask;
 use crate::space::SpaceMapper;
 use crate::spatial_tree::{CoordinateSpaceMapping, SpatialNodeIndex, SpatialTree};
@@ -1177,13 +1177,12 @@ pub fn add_to_batch<F>(
     }
 
     // See QuadHeader in ps_quad.glsl
-    let mut writer = gpu_buffer_builder.i32.write_blocks(1);
-    writer.push_one([
-        transform_id.0 as i32,
-        z_id.0,
-        pattern_input.0,
-        pattern_input.1,
-    ]);
+    let mut writer = gpu_buffer_builder.i32.write_blocks(QuadHeader::NUM_BLOCKS);
+    writer.push(&QuadHeader {
+        transform_id,
+        z_id,
+        pattern_input,
+    });
     let prim_address_i = writer.finish();
 
     let texture = match src_task_id {
