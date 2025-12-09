@@ -15,3 +15,9 @@ menu-file-new-ai-window =
 
 menu-file-new-classic-window =
     .label = New Classic Window
+
+## Input CTA
+
+aiwindow-input-cta-label-chat = Chat
+aiwindow-input-cta-label-search = Search
+aiwindow-input-cta-label-navigate = Navigate

@@ -307,7 +307,12 @@ export default class MozButton extends MozLitElement {
         @click=${e => e.stopPropagation()}
         @mousedown=${e => e.stopPropagation()}
       >
-        <span class="button-background" type=${this.type} size=${this.size}>
+        <span
+          class="button-background"
+          part="chevron-button"
+          type=${this.type}
+          size=${this.size}
+        >
           <img
             src="chrome://global/skin/icons/arrow-down.svg"
             role="presentation"

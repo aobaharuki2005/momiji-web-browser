@@ -37,6 +37,8 @@ module.exports = {
     `${projectRoot}/toolkit/components/satchel/megalist/content/**/*.stories.mjs`,
     // WebRTC components stories
     `${projectRoot}/browser/components/webrtc/content/**/*.stories.mjs`,
+    // AI Window components stories
+    `${projectRoot}/browser/components/aiwindow/ui/**/*.stories.mjs`,
     // Everything else
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
     // Design system files
