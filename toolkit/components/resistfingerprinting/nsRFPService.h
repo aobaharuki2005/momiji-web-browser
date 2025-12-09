@@ -185,6 +185,30 @@ class CanvasUsage {
               CanvasFeatureUsage aFeatureUsage)
       : mSize(aSize), mType(aType), mFeatureUsage(aFeatureUsage) {}
 };
+struct CanvasFingerprintingEvent {
+  // The identity or alias of the entity doing the fingerprinting.
+  CanvasFingerprinterAlias alias;
+  // A bitmask of all of the known canvas fingerprinting texts
+  //   non-zero indicates some known fingerprinting text was used, making the
+  //   event highly likely to be fingerprinting.
+  uint32_t knownTextBitmask;
+  // The API source of the fingerprinting, e.g. <canvas>.toDataURL
+  uint8_t source;
+
+  CanvasFingerprintingEvent()
+      : alias(CanvasFingerprinterAlias::eNoneIdentified),
+        knownTextBitmask(0),
+        source(0) {}
+
+  CanvasFingerprintingEvent(CanvasFingerprinterAlias aAlias,
+                            uint32_t aKnownTextBitmask, uint8_t aSource)
+      : alias(aAlias), knownTextBitmask(aKnownTextBitmask), source(aSource) {}
+
+  bool operator==(const CanvasFingerprintingEvent& other) const {
+    return alias == other.alias && knownTextBitmask == other.knownTextBitmask &&
+           source == other.source;
+  }
+};
 
 // ============================================================================
 

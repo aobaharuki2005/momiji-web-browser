@@ -2040,6 +2040,9 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     return;
   }
 
+  auto event =
+      CanvasFingerprintingEvent(fingerprinter, knownTextBitmask, aSource);
+
   if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Info)) {
     nsAutoCString filename;
     uint32_t lineNum = 0;
@@ -2061,8 +2064,7 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
   ContentBlockingNotifier::OnEvent(
       aChannel, false,
       nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING,
-      aOriginNoSuffix, Nothing(), fingerprinter,
-      Some(featureUsage & CanvasFeatureUsage::KnownFingerprintText));
+      aOriginNoSuffix, Nothing(), Some(event));
 }
 
 /* static */ void nsRFPService::MaybeReportFontFingerprinter(
