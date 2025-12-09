@@ -60,7 +60,7 @@ def test_lint_api_yml(lint):
                 ), f"{symbol} described as a {category} available in {header}, but cannot be found there"
 
 
-def test_lint_includes(lint, paths):
+def test_lint_mfbt_includes(lint, paths):
     results = lint(paths("correct_assert.h"))
     assert not results
 
@@ -77,6 +77,17 @@ def test_lint_includes(lint, paths):
     assert len(results) == 1
     assert results[0].message.endswith(
         "incorrect_literal.h includes Literals.h but does not reference any of its API"
+    )
+
+
+def test_lint_std_includes(lint, paths):
+    results = lint(paths("correct_tuple.h"))
+    assert not results
+
+    results = lint(paths("incorrect_tuple.h"))
+    assert len(results) == 1
+    assert results[0].message.endswith(
+        "incorrect_tuple.h includes <tuple> but does not reference any of its API"
     )
 
 
