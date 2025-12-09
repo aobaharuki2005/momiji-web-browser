@@ -17,10 +17,13 @@ import { InsightStore } from "moz-src:///browser/components/aiwindow/services/In
 import {
   CATEGORIES,
   INTENTS,
+  HISTORY as SOURCE_HISTORY,
+  CONVERSATION as SOURCE_CONVERSATION,
 } from "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs";
 import {
   getFormattedInsightAttributeList,
   parseAndExtractJSON,
+  generateInsights,
 } from "moz-src:///browser/components/aiwindow/models/Insights.sys.mjs";
 import {
   messageInsightClassificationSystemPrompt,
@@ -28,10 +31,19 @@ import {
 } from "moz-src:///browser/components/aiwindow/models/prompts/insightsPrompts.sys.mjs";
 import { INSIGHTS_MESSAGE_CLASSIFY_SCHEMA } from "moz-src:///browser/components/aiwindow/models/InsightsSchemas.sys.mjs";
 
-const K_DOMAINS = 30;
-const K_TITLES = 60;
-const K_SEARCHES = 10;
+const K_DOMAINS_FULL = 100;
+const K_TITLES_FULL = 60;
+const K_SEARCHES_FULL = 10;
+const K_DOMAINS_DELTA = 30;
+const K_TITLES_DELTA = 60;
+const K_SEARCHES_DELTA = 10;
 
+const DEFAULT_HISTORY_FULL_LOOKUP_DAYS = 60;
+const DEFAULT_HISTORY_FULL_MAX_RESULTS = 3000;
+const DEFAULT_HISTORY_DELTA_MAX_RESULTS = 500;
+
+const LAST_HISTORY_INSIGHTS_TS_ATTRIBUTE = "last_history_insight_ts";
+const LAST_CONVERSATION_INSIGHTS_TS_ATTRIBUTE = "last_chat_insight_ts";
 /**
  * InsightsManager class
  */
@@ -49,6 +61,89 @@ export class InsightsManager {
       this.#openAIEnginePromise = await openAIEngine.build();
     }
     return this.#openAIEnginePromise;
+  }
+
+  /**
+   * Generates and persists insights derived from the user's recent browsing history.
+   *
+   * This method:
+   *  1. Reads {@link last_history_insight_ts} via {@link getLastHistoryInsightsTimestamp}.
+   *  2. Decides between:
+   *     - Full processing (first run, no prior timestamp):
+   *         * Uses a days-based cutoff (DEFAULT_HISTORY_FULL_LOOKUP_DAYS).
+   *         * Uses max-results cap (DEFAULT_HISTORY_FULL_MAX_RESULTS).
+   *         * Uses full top-k settings (K_DOMAINS_FULL, K_TITLES_FULL, K_SEARCHES_FULL).
+   *     - Delta processing (subsequent runs, prior timestamp present):
+   *         * Uses an absolute cutoff via `sinceMicros = lastTsMs * 1000`.
+   *         * Uses a smaller max-results cap (DEFAULT_HISTORY_DELTA_MAX_RESULTS).
+   *         * Uses delta top-k settings (K_DOMAINS_DELTA, K_TITLES_DELTA, K_SEARCHES_DELTA).
+   *  3. Calls {@link getAggregatedBrowserHistory} with the computed options to obtain
+   *     domain, title, and search aggregates.
+   *  4. Fetches existing insights via {@link getAllInsights}.
+   *  5. Ensures a shared OpenAI engine via {@link ensureOpenAIEngine} and calls
+   *     {@link generateInsights} to produce new/updated insights.
+   *  6. Persists those insights via {@link saveInsights}, which also updates
+   *     `last_history_insight_ts` in {@link InsightStore.updateMeta}.
+   *
+   * @returns {Promise<Insight[]>}
+   *          A promise that resolves to the list of persisted history insights
+   *          (newly created or updated), sorted and shaped as returned by
+   *          {@link InsightStore.addInsight}.
+   */
+  static async generateInsightsFromBrowsingHistory() {
+    const now = Date.now();
+    // get last history insight timestamp in ms
+    const lastTsMs = await this.getLastHistoryInsightsTimestamp();
+    const isDelta = typeof lastTsMs === "number" && lastTsMs > 0;
+    // set up the options based on delta or full (first) run
+    let recentHistoryOpts = {};
+    let topkAggregatesOpts;
+    if (isDelta) {
+      recentHistoryOpts = {
+        sinceMicros: lastTsMs * 1000,
+        maxResults: DEFAULT_HISTORY_DELTA_MAX_RESULTS,
+      };
+      topkAggregatesOpts = {
+        k_domains: K_DOMAINS_DELTA,
+        k_titles: K_TITLES_DELTA,
+        k_searches: K_SEARCHES_DELTA,
+        now,
+      };
+    } else {
+      recentHistoryOpts = {
+        days: DEFAULT_HISTORY_FULL_LOOKUP_DAYS,
+        maxResults: DEFAULT_HISTORY_FULL_MAX_RESULTS,
+      };
+      topkAggregatesOpts = {
+        k_domains: K_DOMAINS_FULL,
+        k_titles: K_TITLES_FULL,
+        k_searches: K_SEARCHES_FULL,
+        now,
+      };
+    }
+
+    const [domainItems, titleItems, searchItems] =
+      await this.getAggregatedBrowserHistory(
+        recentHistoryOpts,
+        topkAggregatesOpts
+      );
+    const sources = { history: [domainItems, titleItems, searchItems] };
+    const existingInsights = await this.getAllInsights();
+    const existingInsightsSummaries = existingInsights.map(
+      i => i.insight_summary
+    );
+    const engine = await this.ensureOpenAIEngine();
+    const insights = await generateInsights(
+      engine,
+      sources,
+      existingInsightsSummaries
+    );
+    const { persistedInsights } = await this.saveInsights(
+      insights,
+      SOURCE_HISTORY,
+      now
+    );
+    return persistedInsights;
   }
 
   /**
@@ -85,9 +180,9 @@ export class InsightsManager {
   static async getAggregatedBrowserHistory(
     recentHistoryOpts = {},
     topkAggregatesOpts = {
-      k_domains: K_DOMAINS,
-      k_titles: K_TITLES,
-      k_searches: K_SEARCHES,
+      k_domains: K_DOMAINS_DELTA,
+      k_titles: K_TITLES_DELTA,
+      k_searches: K_SEARCHES_DELTA,
       now: undefined,
     }
   ) {
@@ -119,6 +214,77 @@ export class InsightsManager {
    */
   static async getAllInsights() {
     return await InsightStore.getInsights();
+  }
+
+  /**
+   * Returns the last timestamp (in ms since Unix epoch) when a history-based
+   * insight was generated, as persisted in InsightStore.meta.
+   *
+   * If the store has never been updated, this returns 0.
+   *
+   * @returns {Promise<number>}  Milliseconds since Unix epoch
+   */
+  static async getLastHistoryInsightsTimestamp() {
+    const meta = await InsightStore.getMeta();
+    return meta.last_history_insights_ts || 0;
+  }
+
+  /**
+   * Persist a list of generated insights and update the appropriate meta timestamp.
+   *
+   * @param {Array<object>|null|undefined} generatedInsights
+   *        Array of InsightPartial-like objects to persist.
+   * @param {"history"|"conversation"} source
+   *        Source of these insights; controls which meta timestamp to update.
+   * @param {number} [nowMs=Date.now()]
+   *        Optional "now" timestamp in ms, for meta update fallback.
+   *
+   * @returns {Promise<{ persistedInsights: Array<object>, newTimestampMs: number | null }>}
+   */
+  static async saveInsights(generatedInsights, source, nowMs = Date.now()) {
+    const persistedInsights = [];
+
+    if (Array.isArray(generatedInsights)) {
+      for (const insightPartial of generatedInsights) {
+        const stored = await InsightStore.addInsight(insightPartial);
+        persistedInsights.push(stored);
+      }
+    }
+
+    // Decide which meta field to update
+    let metaKey;
+    if (source === SOURCE_HISTORY) {
+      metaKey = LAST_HISTORY_INSIGHTS_TS_ATTRIBUTE;
+    } else if (source === SOURCE_CONVERSATION) {
+      metaKey = LAST_CONVERSATION_INSIGHTS_TS_ATTRIBUTE;
+    } else {
+      // Unknown source: don't update meta, just return persisted results.
+      return {
+        persistedInsights,
+        newTimestampMs: null,
+      };
+    }
+
+    // Compute new timestamp: prefer max(updated_at) if present, otherwise fall back to nowMs.
+    let newTsMs = nowMs;
+    if (persistedInsights.length) {
+      const maxUpdated = persistedInsights.reduce(
+        (max, i) => Math.max(max, i.updated_at ?? 0),
+        0
+      );
+      if (maxUpdated > 0) {
+        newTsMs = maxUpdated;
+      }
+    }
+
+    await InsightStore.updateMeta({
+      [metaKey]: newTsMs,
+    });
+
+    return {
+      persistedInsights,
+      newTimestampMs: newTsMs,
+    };
   }
 
   /**

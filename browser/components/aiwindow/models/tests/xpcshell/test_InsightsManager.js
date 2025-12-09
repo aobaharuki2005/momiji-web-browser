@@ -12,7 +12,12 @@ const { sinon } = ChromeUtils.importESModule(
 const { InsightsManager } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs"
 );
-const { CATEGORIES, INTENTS } = ChromeUtils.importESModule(
+const {
+  CATEGORIES,
+  INTENTS,
+  HISTORY: SOURCE_HISTORY,
+  CONVERSATION: SOURCE_CONVERSATION,
+} = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs"
 );
 const { getFormattedInsightAttributeList } = ChromeUtils.importESModule(
@@ -504,3 +509,152 @@ add_task(
     }
   }
 );
+
+/**
+ * Tests saveInsights correctly persists history insights and updates last_history_insight_ts.
+ */
+add_task(async function test_saveInsights_history_updates_meta() {
+  const sb = sinon.createSandbox();
+  try {
+    const now = Date.now();
+
+    const generatedInsights = [
+      {
+        insight_summary: "foo",
+        category: "A",
+        intent: "X",
+        score: 1,
+        updated_at: now - 1000,
+      },
+      {
+        insight_summary: "bar",
+        category: "B",
+        intent: "Y",
+        score: 2,
+        updated_at: now + 500,
+      },
+    ];
+
+    const storedInsights = generatedInsights.map((generatedInsight, idx) => ({
+      id: `id-${idx}`,
+      ...generatedInsight,
+    }));
+
+    const addInsightStub = sb
+      .stub(InsightStore, "addInsight")
+      .callsFake(async partial => {
+        // simple mapping: return first / second stored insight based on summary
+        return storedInsights.find(
+          s => s.insight_summary === partial.insight_summary
+        );
+      });
+
+    const updateMetaStub = sb.stub(InsightStore, "updateMeta").resolves();
+
+    const { persistedInsights, newTimestampMs } =
+      await InsightsManager.saveInsights(
+        generatedInsights,
+        SOURCE_HISTORY,
+        now
+      );
+
+    Assert.equal(
+      addInsightStub.callCount,
+      generatedInsights.length,
+      "addInsight should be called once per generated insight"
+    );
+    Assert.deepEqual(
+      persistedInsights.map(i => i.id),
+      storedInsights.map(i => i.id),
+      "Persisted insights should match stored insights"
+    );
+
+    Assert.ok(
+      updateMetaStub.calledOnce,
+      "updateMeta should be called once for history source"
+    );
+    const metaArg = updateMetaStub.firstCall.args[0];
+    Assert.ok(
+      "last_history_insight_ts" in metaArg,
+      "updateMeta should update last_history_insight_ts for history source"
+    );
+    Assert.equal(
+      metaArg.last_history_insight_ts,
+      storedInsights[1].updated_at,
+      "last_history_insight_ts should be set to max(updated_at) among persisted insights"
+    );
+    Assert.equal(
+      newTimestampMs,
+      storedInsights[1].updated_at,
+      "Returned newTimestampMs should match the updated meta timestamp"
+    );
+  } finally {
+    sb.restore();
+  }
+});
+
+/**
+ * Tests saveInsights correctly persists conversation insights and updates last_chat_insight_ts.
+ */
+add_task(async function test_saveInsights_conversation_updates_meta() {
+  const sb = sinon.createSandbox();
+  try {
+    const now = Date.now();
+
+    const generatedInsights = [
+      {
+        insight_summary: "chat-insight",
+        category: "Chat",
+        intent: "Talk",
+        score: 1,
+        updated_at: now,
+      },
+    ];
+    const storedInsight = { id: "chat-1", ...generatedInsights[0] };
+
+    const addInsightStub = sb
+      .stub(InsightStore, "addInsight")
+      .resolves(storedInsight);
+    const updateMetaStub = sb.stub(InsightStore, "updateMeta").resolves();
+
+    const { persistedInsights, newTimestampMs } =
+      await InsightsManager.saveInsights(
+        generatedInsights,
+        SOURCE_CONVERSATION,
+        now
+      );
+
+    Assert.equal(
+      addInsightStub.callCount,
+      1,
+      "addInsight should be called once for conversation insight"
+    );
+    Assert.equal(
+      persistedInsights[0].id,
+      storedInsight.id,
+      "Persisted insight should match stored insight"
+    );
+
+    Assert.ok(
+      updateMetaStub.calledOnce,
+      "updateMeta should be called once for conversation source"
+    );
+    const metaArg = updateMetaStub.firstCall.args[0];
+    Assert.ok(
+      "last_chat_insight_ts" in metaArg,
+      "updateMeta should update last_chat_insight_ts for conversation source"
+    );
+    Assert.equal(
+      metaArg.last_chat_insight_ts,
+      storedInsight.updated_at,
+      "last_chat_insight_ts should be set to insight.updated_at"
+    );
+    Assert.equal(
+      newTimestampMs,
+      storedInsight.updated_at,
+      "Returned newTimestampMs should match the updated meta timestamp"
+    );
+  } finally {
+    sb.restore();
+  }
+});
