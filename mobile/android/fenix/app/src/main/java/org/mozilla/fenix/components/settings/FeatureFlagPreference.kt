@@ -29,9 +29,9 @@ private class DummyProperty : ReadWriteProperty<PreferencesHolder, Boolean> {
  *
  * For example, this is **not** recommended:
  * ```
- * val isMyFeatureEnabled by lazyFeatureFlagPreference(
+ * val isMyFeatureEnabled by featureFlagBooleanPreference(
  *     …
- *     isMyFeatureEnabled = true,
+ *     featureFlag = true,
  *     …
  * )
  * ```
@@ -41,9 +41,9 @@ private class DummyProperty : ReadWriteProperty<PreferencesHolder, Boolean> {
  *
  * For example, recommended use:
  * ```
- * val isMyFeatureEnabled by lazyFeatureFlagPreference(
+ * val isMyFeatureEnabled by featureFlagBooleanPreference(
  *     …
- *     isMyFeatureEnabled = FeatureFlags.onboardingFeatureEnabled,
+ *     featureFlag = FeatureFlags.onboardingFeatureEnabled,
  *     …
  * )
  * ```
@@ -77,9 +77,9 @@ private class LazyBooleanPreference(val key: String, val defaultValue: () -> Boo
  *
  * For example, this is **not** recommended:
  * ```
- * val isMyFeatureEnabled by lazyFeatureFlagPreference(
+ * val isMyFeatureEnabled by lazyFeatureFlagBooleanPreference(
  *     …
- *     isMyFeatureEnabled = true,
+ *     featureFlag = true,
  *     …
  * )
  * ```
@@ -89,9 +89,9 @@ private class LazyBooleanPreference(val key: String, val defaultValue: () -> Boo
  *
  * For example, recommended use:
  * ```
- * val isMyFeatureEnabled by lazyFeatureFlagPreference(
+ * val isMyFeatureEnabled by lazyFeatureFlagBooleanPreference(
  *     …
- *     isMyFeatureEnabled = FeatureFlags.onboardingFeatureEnabled,
+ *     featureFlag = FeatureFlags.onboardingFeatureEnabled,
  *     …
  * )
  * ```
