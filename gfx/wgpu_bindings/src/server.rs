@@ -1794,6 +1794,7 @@ impl Global {
                 Some(Box::new(move || {
                     image_holder.destroy();
                 })),
+                None,
             );
 
             let (_, error) = self.create_texture_from_hal(
