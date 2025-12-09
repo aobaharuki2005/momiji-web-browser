@@ -353,7 +353,7 @@
   }
 
   .divider {
-    border-top: 1px var(--border-color) solid;
+    border-block-start: 1px var(--border-color) solid;
     margin: 0 calc(var(--space-large) * -1);
   }
 

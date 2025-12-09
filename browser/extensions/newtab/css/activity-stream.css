@@ -382,7 +382,7 @@ h2 {
 }
 
 .actions {
-  border-top: 1px solid var(--border-color);
+  border-block-start: 1px solid var(--border-color);
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -1765,7 +1765,7 @@ main section {
 
 @media (height > 700px) {
   .activity-stream .fixed-search .search-wrapper {
-    border-bottom: solid 1px var(--border-color);
+    border-block-end: solid 1px var(--border-color);
     padding: var(--space-xlarge) 0;
     background-color: var(--newtab-overlay-color);
     min-height: 95px;
@@ -1823,7 +1823,7 @@ main section {
   border: 0;
 }
 .contentSearchSuggestionTable .contentSearchOneOffsTable {
-  border-top: solid 1px var(--border-color);
+  border-block-start: solid 1px var(--border-color);
   background-color: var(--newtab-background-color);
 }
 .contentSearchSuggestionTable .contentSearchSearchWithHeaderSearchText {
@@ -1885,7 +1885,7 @@ main section {
   width: 100%;
 }
 .context-menu > ul > li.separator {
-  border-bottom: 1px solid var(--border-color);
+  border-block-end: 1px solid var(--border-color);
   margin: var(--space-xsmall) 0;
 }
 .context-menu > ul > li > a,
@@ -2256,7 +2256,7 @@ main section {
   color: var(--newtab-primary-action-background);
 }
 .home-section .divider {
-  border-top: 1px var(--border-color) solid;
+  border-block-start: 1px var(--border-color) solid;
   margin: 0 calc(var(--space-large) * -1);
 }
 .home-section .external-link {
@@ -2982,8 +2982,8 @@ main section {
   outline: var(--focus-outline);
 }
 .weatherOptIn dialog:focus-visible::after {
-  border-bottom: var(--focus-outline);
-  border-right: var(--focus-outline);
+  border-block-end: var(--focus-outline);
+  border-inline-end: var(--focus-outline);
 }
 .weatherOptIn dialog .weatherOptInContent {
   display: flex;
@@ -3617,7 +3617,7 @@ dialog:dir(rtl)::after {
   position: relative;
 }
 .card-outer .card-preview-image-outer::after {
-  border-bottom: 1px solid var(--newtab-card-hairline-color);
+  border-block-end: 1px solid var(--newtab-card-hairline-color);
   inset-block-end: 0;
   content: "";
   position: absolute;
@@ -3773,7 +3773,7 @@ dialog:dir(rtl)::after {
 }
 .compact-cards .card-outer .card-context::after {
   border: 1px solid var(--newtab-card-hairline-color);
-  border-bottom: 0;
+  border-block-end: 0;
   border-radius: var(--border-radius-medium);
   content: "";
   position: absolute;
@@ -4016,12 +4016,12 @@ dialog:dir(rtl)::after {
   overflow-y: scroll;
 }
 .discoverystream-admin .message-item:first-child td {
-  border-top: 1px solid var(--border-color);
+  border-block-start: 1px solid var(--border-color);
 }
 .discoverystream-admin .message-item td {
   vertical-align: top;
   padding: var(--space-small);
-  border-bottom: 1px solid var(--border-color);
+  border-block-end: 1px solid var(--border-color);
 }
 .discoverystream-admin .message-item td.min {
   width: 1%;
@@ -4293,7 +4293,7 @@ dialog:dir(rtl)::after {
   }
 }
 .modalOverlayInner .footer {
-  border-top: 1px solid var(--border-color);
+  border-block-start: 1px solid var(--border-color);
   border-radius: var(--border-radius-small);
   height: 70px;
   width: 100%;
@@ -6889,11 +6889,11 @@ dialog:dir(rtl)::after {
 
 .ds-hr {
   border: 0;
-  border-top: 1px solid #D7D7DB;
+  border-block-start: 1px solid #D7D7DB;
   height: 0;
 }
 [lwt-newtab-brighttext] .ds-hr {
-  border-top: 1px solid #4A4A4F;
+  border-block-start: 1px solid #4A4A4F;
 }
 
 /* stylelint-disable max-nesting-depth */
@@ -7007,7 +7007,7 @@ dialog:dir(rtl)::after {
   grid-template: repeat(8, 1fr)/repeat(1, 1fr);
 }
 .ds-navigation.ds-navigation-new-topics ul li {
-  border-top: 1px solid var(--border-color);
+  border-block-start: 1px solid var(--border-color);
   line-height: 24px;
   font-size: var(--font-size-small);
   /**
@@ -7025,14 +7025,14 @@ dialog:dir(rtl)::after {
   display: none;
 }
 .ds-navigation.ds-navigation-new-topics ul li:nth-last-child(1) {
-  border-bottom: 1px solid var(--border-color);
+  border-block-end: 1px solid var(--border-color);
 }
 @media (min-width: 610px) {
   .ds-navigation.ds-navigation-new-topics ul {
     grid-template: repeat(3, 1fr)/repeat(2, 1fr);
   }
   .ds-navigation.ds-navigation-new-topics ul li:nth-child(3) {
-    border-bottom: 1px solid var(--border-color);
+    border-block-end: 1px solid var(--border-color);
   }
 }
 @media (min-width: 866px) {
@@ -7040,10 +7040,10 @@ dialog:dir(rtl)::after {
     grid-template: repeat(2, 1fr)/repeat(3, 1fr);
   }
   .ds-navigation.ds-navigation-new-topics ul li:nth-child(odd) {
-    border-bottom: 0;
+    border-block-end: 0;
   }
   .ds-navigation.ds-navigation-new-topics ul li:nth-child(even) {
-    border-bottom: 1px solid var(--border-color);
+    border-block-end: 1px solid var(--border-color);
   }
 }
 @media (min-width: 1122px) {

@@ -362,7 +362,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       $search-icon-padding: 16px;
       $search-header-bar-height: 95px;
 
-      border-bottom: solid 1px var(--border-color);
+      border-block-end: solid 1px var(--border-color);
       padding: var(--space-xlarge) 0;
       background-color: var(--newtab-overlay-color);
       min-height: $search-header-bar-height;
@@ -436,7 +436,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
 
     .contentSearchOneOffsTable {
-      border-top: solid 1px var(--border-color);
+      border-block-start: solid 1px var(--border-color);
       background-color: var(--newtab-background-color);
     }
 

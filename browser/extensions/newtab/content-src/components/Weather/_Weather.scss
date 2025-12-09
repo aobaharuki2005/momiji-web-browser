@@ -303,8 +303,8 @@
       outline: var(--focus-outline);
 
       &::after {
-        border-bottom: var(--focus-outline);
-        border-right: var(--focus-outline);
+        border-block-end: var(--focus-outline);
+        border-inline-end: var(--focus-outline);
       }
     }
   }
