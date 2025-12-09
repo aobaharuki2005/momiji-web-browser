@@ -41,9 +41,9 @@ struct nsStyleVisibility;
 class nsComputedDOMStyle;
 namespace mozilla {
 class ComputedStyle;
-struct AnchorPosResolutionCache;
 struct IntrinsicSize;
-struct SizeComputationInput;
+struct ReflowInput;
+struct AnchorPosResolutionCache;
 
 }  // namespace mozilla
 
@@ -399,9 +399,8 @@ struct AnchorPosResolutionParams {
   static inline AnchorPosResolutionParams From(
       const nsIFrame* aFrame,
       mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache = nullptr);
-  static AnchorPosResolutionParams From(
-      const mozilla::SizeComputationInput* aSizingInput,
-      bool aIgnorePositionArea = false);
+  static inline AnchorPosResolutionParams From(
+      const mozilla::ReflowInput* aRI, bool aIgnorePositionArea = false);
   static inline AnchorPosResolutionParams From(
       const nsComputedDOMStyle* aComputedDOMStyle);
 };
