@@ -875,10 +875,11 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
     return mDoc;
   }
 
-  // Set the window up with an about:blank document with the given principal.
-  // Base URI, COEP and PolicyContainer of the current document will be
-  // retained.
-  virtual void SetInitialPrincipal(nsIPrincipal* aNewWindowPrincipal) = 0;
+  // Set the window up with an about:blank document with the given principal and
+  // potentially a policyContainer and a COEP.
+  virtual void SetInitialPrincipal(
+      nsIPrincipal* aNewWindowPrincipal, nsIPolicyContainer* aPolicyContainer,
+      const mozilla::Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCoep) = 0;
 
   // Returns an object containing the window's state.  This also suspends
   // all running timeouts in the window.

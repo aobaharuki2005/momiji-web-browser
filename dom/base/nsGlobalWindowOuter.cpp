@@ -1759,7 +1759,8 @@ bool nsGlobalWindowOuter::WouldReuseInnerWindow(Document* aNewDocument) {
 }
 
 void nsGlobalWindowOuter::SetInitialPrincipal(
-    nsIPrincipal* aNewWindowPrincipal) {
+    nsIPrincipal* aNewWindowPrincipal, nsIPolicyContainer* aPolicyContainer,
+    const Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCOEP) {
   // We should never create windows with an expanded principal.
   // If we have a system principal, make sure we're not using it for a content
   // docshell.
@@ -1771,28 +1772,30 @@ void nsGlobalWindowOuter::SetInitialPrincipal(
     aNewWindowPrincipal = nullptr;
   }
 
-  MOZ_ASSERT(mDoc, "Some document should've been eagerly created");
-
-  // Bail if the existing document is (a) not initial
-  if (!mDoc->IsUncommittedInitialDocument()) return;
-  // or (b) already has the correct principal.
-  if (mDoc->NodePrincipal() == aNewWindowPrincipal) return;
+  // If there's an existing document, bail if it either:
+  if (mDoc) {
+    // (a) is not an initial about:blank document, or
+    if (!mDoc->IsInitialDocument()) return;
+    // (b) already has the correct principal.
+    if (mDoc->NodePrincipal() == aNewWindowPrincipal) return;
 
 #ifdef DEBUG
-  // The current document should be a dummy and therefore have a null principal
-  bool isNullPrincipal;
-  MOZ_ASSERT(NS_SUCCEEDED(
-                 mDoc->NodePrincipal()->GetIsNullPrincipal(&isNullPrincipal)) &&
-             isNullPrincipal);
+    // If we have a document loaded at this point, it had better be about:blank.
+    // Otherwise, something is really weird. An about:blank page has a
+    // NullPrincipal.
+    bool isNullPrincipal;
+    MOZ_ASSERT(NS_SUCCEEDED(mDoc->NodePrincipal()->GetIsNullPrincipal(
+                   &isNullPrincipal)) &&
+               isNullPrincipal);
 #endif
+  }
 
   // Use the subject (or system) principal as the storage principal too until
   // the new window finishes navigating and gets a real storage principal.
   nsDocShell::Cast(GetDocShell())
-      ->CreateAboutBlankDocumentViewer(
-          aNewWindowPrincipal, aNewWindowPrincipal, mDoc->GetPolicyContainer(),
-          mDoc->GetDocBaseURI(),
-          /* aIsInitialDocument */ true, mDoc->GetEmbedderPolicy());
+      ->CreateAboutBlankDocumentViewer(aNewWindowPrincipal, aNewWindowPrincipal,
+                                       aPolicyContainer, nullptr,
+                                       /* aIsInitialDocument */ true, aCOEP);
 
   if (mDoc) {
     MOZ_ASSERT(mDoc->IsInitialDocument(),
