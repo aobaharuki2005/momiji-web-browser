@@ -3714,7 +3714,7 @@ bool ScriptLoader::SaveToDiskCache(
   // might fail if the stream is already open by another request, in which
   // case, we just ignore the current one.
   nsCOMPtr<nsIAsyncOutputStream> output;
-  nsresult rv = aLoadedScript->mCacheInfo->OpenAlternativeOutputStream(
+  nsresult rv = aLoadedScript->mCacheEntry->OpenAlternativeOutputStream(
       BytecodeMimeTypeFor(aLoadedScript),
       static_cast<int64_t>(aCompressed.length()), getter_AddRefs(output));
   if (NS_FAILED(rv)) {
@@ -4071,8 +4071,9 @@ nsresult ScriptLoader::OnStreamComplete(
     aLoader->GetRequest(getter_AddRefs(channelRequest));
 
     nsCOMPtr<nsICacheInfoChannel> cacheInfo = do_QueryInterface(channelRequest);
-
-    if (cacheInfo) {
+    nsCOMPtr<nsICacheEntryWriteHandle> cacheEntry;
+    if (cacheInfo && NS_SUCCEEDED(cacheInfo->GetCacheEntryWriteHandle(
+                         getter_AddRefs(cacheEntry)))) {
       uint64_t id;
       nsresult rv = cacheInfo->GetCacheEntryId(&id);
       if (NS_SUCCEEDED(rv)) {
@@ -4124,9 +4125,9 @@ nsresult ScriptLoader::OnStreamComplete(
           }
         }
 
-        aRequest->getLoadedScript()->mCacheInfo = cacheInfo;
-        LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", aRequest,
-             aRequest->getLoadedScript()->mCacheInfo.get()));
+        aRequest->getLoadedScript()->mCacheEntry = cacheEntry;
+        LOG(("ScriptLoadRequest (%p): nsICacheEntryWriteHandle = %p", aRequest,
+             (void*)cacheEntry));
 
         rv = SaveSRIHash(aRequest, aSRIDataVerifier);
       }

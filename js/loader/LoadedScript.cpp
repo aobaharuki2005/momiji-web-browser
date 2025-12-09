@@ -42,7 +42,7 @@ NS_INTERFACE_MAP_END
 //
 // NOTE: nsIURI doesn't have to be touched here because it cannot be a part
 //       of cycle.
-NS_IMPL_CYCLE_COLLECTION(LoadedScript, mFetchOptions, mCacheInfo)
+NS_IMPL_CYCLE_COLLECTION(LoadedScript, mFetchOptions, mCacheEntry)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(LoadedScript)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(LoadedScript)
