@@ -2038,6 +2038,10 @@ nsresult BrowsingContext::CheckFramebusting(nsDocShellLoadState* aLoadState) {
     return NS_OK;
   }
 
+  if (XRE_IsParentProcess()) {
+    return NS_OK;
+  }
+
   // Only applies to top-level navigations.
   if (!IsTop()) {
     return NS_OK;
