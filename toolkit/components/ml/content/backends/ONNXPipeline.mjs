@@ -12,6 +12,7 @@
 /**
  * @typedef {object} PipelineMetrics
  * @property {number} [preprocessingTime] - Time spent preprocessing inputs (ms).
+ * @property {number} [tokenizingTime] - Time spent tokenizing (same as preprocessingTime, for Glean consistency) (ms).
  * @property {number} [inferenceTime] - Time spent running the model (ms).
  * @property {number} [decodingTime] - Time spent decoding outputs (ms).
  * @property {number} inputTokens - Number of tokens in the input.
@@ -792,9 +793,12 @@ export class ONNXPipeline {
       inputTokens: 0,
       outputTokens: 0,
       preprocessingTime: 0,
+      tokenizingTime: 0, // Same as preprocessingTime, but named for Glean consistency
       inferenceTime: 0,
       decodingTime: 0,
       timeToFirstToken: null,
+      tokensPerSecond: 0,
+      timePerOutputToken: 0,
       runTimestamps: [],
     };
 
@@ -970,6 +974,17 @@ export class ONNXPipeline {
         metrics.decodingTime = runEndTime - firstTokenTimestamp;
       } else {
         metrics.decodingTime = metrics.inferenceTime;
+      }
+
+      // Sync tokenizingTime with preprocessingTime for Glean metrics consistency
+      metrics.tokenizingTime = metrics.preprocessingTime;
+
+      // Calculate throughput metrics if we have the necessary data
+      if (metrics.inferenceTime > 0 && metrics.outputTokens > 0) {
+        metrics.tokensPerSecond =
+          metrics.outputTokens / (metrics.inferenceTime / 1000);
+        metrics.timePerOutputToken =
+          metrics.inferenceTime / metrics.outputTokens;
       }
     } catch (e) {
       lazy.console.debug("Error computing throughput metrics", e);
