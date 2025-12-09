@@ -55,9 +55,10 @@ fog:
       Counts the number of times init had to be called during shutdown.
       Should never have a value for any session long enough to grow idle.
     bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1839433
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1839426
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2003372
     data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1839433
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1839426
     data_sensitivity:
       - technical
     notification_emails:
@@ -67,6 +68,7 @@ fog:
     send_in_pings:
       - temp-fog-initial-state
       - metrics
+      - health
 
   max_pings_per_minute:
     type: quantity
