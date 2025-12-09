@@ -15,17 +15,6 @@ export var LightweightThemeManager = {
     }
   },
 
-  /*
-   * Returns the currently active theme, taking the fallback theme into account
-   * if we'd be using the default theme otherwise.
-   *
-   * This will always return the original theme data and not make use of
-   * locally persisted resources.
-   */
-  get currentThemeWithFallback() {
-    return _fallbackThemeData && _fallbackThemeData.theme;
-  },
-
   get themeData() {
     return _fallbackThemeData || { theme: null };
   },

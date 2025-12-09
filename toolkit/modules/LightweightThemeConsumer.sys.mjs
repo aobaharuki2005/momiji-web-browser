@@ -12,6 +12,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ThemeContentPropertyList: "resource:///modules/ThemeVariableMap.sys.mjs",
   ThemeVariableMap: "resource:///modules/ThemeVariableMap.sys.mjs",
   BuiltInThemeConfig: "resource:///modules/BuiltInThemeConfig.sys.mjs",
+  LightweightThemeManager:
+    "resource://gre/modules/LightweightThemeManager.sys.mjs",
 });
 
 // Whether the content and chrome areas should always use the same color
@@ -238,10 +240,7 @@ export function LightweightThemeConsumer(aDocument) {
   this.forcedColorsMediaQuery = this._win.matchMedia("(forced-colors)");
   this.forcedColorsMediaQuery.addListener(this);
 
-  const { LightweightThemeManager } = ChromeUtils.importESModule(
-    "resource://gre/modules/LightweightThemeManager.sys.mjs"
-  );
-  this._update(LightweightThemeManager.themeData);
+  this._update(lazy.LightweightThemeManager.themeData);
 
   this._win.addEventListener("unload", this, { once: true });
 }
