@@ -30,7 +30,6 @@
 #include "nsImportModule.h"
 #include "nsITelemetry.h"
 #include "nsNetCID.h"
-#include "nsObserverService.h"
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -55,8 +54,6 @@ static constexpr uint32_t kTelemetryCooldownS = 10;
 // that counts as "active".
 static constexpr unsigned kPokeWindowEvents = 10;
 static constexpr unsigned kPokeWindowSeconds = 1;
-
-static constexpr const char* kTopicShutdown = "content-child-shutdown";
 
 namespace {
 
@@ -119,21 +116,12 @@ class TimeStampWindow {
   AutoCleanLinkedList<Event> mEvents;
 };
 
-NS_IMPL_ISUPPORTS(MemoryTelemetry, nsIObserver, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(MemoryTelemetry, nsISupportsWeakReference)
 
 MemoryTelemetry::MemoryTelemetry()
-    : mThreadPool(do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID)) {}
-
-void MemoryTelemetry::Init() {
+    : mThreadPool(do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID)) {
   for (auto& val : gPrevValues) {
     val = kUninitialized;
-  }
-
-  if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    MOZ_RELEASE_ASSERT(obs);
-
-    obs->AddObserver(this, kTopicShutdown, true);
   }
 }
 
@@ -144,7 +132,6 @@ static StaticRefPtr<MemoryTelemetry> sInstance;
 
   if (!sInstance) {
     sInstance = new MemoryTelemetry();
-    sInstance->Init();
     ClearOnShutdown(&sInstance);
   }
 
@@ -235,11 +222,6 @@ nsresult MemoryTelemetry::Shutdown() {
   if (mTimer) {
     mTimer->Cancel();
   }
-
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  MOZ_RELEASE_ASSERT(obs);
-
-  obs->RemoveObserver(this, kTopicShutdown);
 
   sInstance = nullptr;
 
@@ -586,15 +568,4 @@ nsresult MemoryTelemetry::FinishGatheringTotalMemory(
   }
 
   return total;
-}
-
-nsresult MemoryTelemetry::Observe(nsISupports* aSubject, const char* aTopic,
-                                  const char16_t* aData) {
-  if (strcmp(aTopic, kTopicShutdown) == 0) {
-    if (nsCOMPtr<nsITelemetry> telemetry =
-            do_GetService("@mozilla.org/base/telemetry;1")) {
-      telemetry->FlushBatchedChildTelemetry();
-    }
-  }
-  return NS_OK;
 }

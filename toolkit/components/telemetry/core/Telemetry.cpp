@@ -57,6 +57,8 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFileStreams.h"
 #include "nsIMemoryReporter.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
 #include "nsISeekableStream.h"
 #include "nsITelemetry.h"
 #if defined(XP_WIN)
@@ -110,10 +112,13 @@ void ClearIOReporting() {
   sTelemetryIOObserver = nullptr;
 }
 
-class TelemetryImpl final : public nsITelemetry, public nsIMemoryReporter {
+class TelemetryImpl final : public nsITelemetry,
+                            public nsIMemoryReporter,
+                            public nsIObserver {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSITELEMETRY
   NS_DECL_NSIMEMORYREPORTER
+  NS_DECL_NSIOBSERVER
 
  public:
   void InitMemoryReporter();
@@ -1019,6 +1024,8 @@ static const TrackedDBEntry kTrackedDBPrefixes[] = {
 
 #undef TRACKEDDB_ENTRY
 
+static constexpr const char* kTopicShutdown = "content-child-shutdown";
+
 // Slow SQL statements will be automatically
 // trimmed to kMaxSlowStatementLength characters.
 // This limit doesn't include the ellipsis and DB name,
@@ -1109,7 +1116,7 @@ bool TelemetryImpl::CanRecordReleaseData() { return CanRecordBase(); }
 
 bool TelemetryImpl::CanRecordPrereleaseData() { return CanRecordExtended(); }
 
-NS_IMPL_ISUPPORTS(TelemetryImpl, nsITelemetry, nsIMemoryReporter)
+NS_IMPL_ISUPPORTS(TelemetryImpl, nsITelemetry, nsIMemoryReporter, nsITelemetry)
 
 NS_IMETHODIMP
 TelemetryImpl::GetFileIOReports(JSContext* cx,
@@ -1214,6 +1221,14 @@ TelemetryImpl::EarlyInit() {
   }
   mMemoryTelemetry = MemoryTelemetry::Create();
   MOZ_ASSERT(mMemoryTelemetry);
+
+  if (XRE_IsContentProcess()) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    MOZ_RELEASE_ASSERT(obs);
+
+    obs->AddObserver(this, kTopicShutdown, true);
+  }
+
   return NS_OK;
 }
 
@@ -1228,9 +1243,14 @@ TelemetryImpl::DelayedInit() {
 
 NS_IMETHODIMP
 TelemetryImpl::Shutdown() {
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  MOZ_RELEASE_ASSERT(obs);
+  obs->RemoveObserver(this, kTopicShutdown);
+
   if (!mMemoryTelemetry) {
     return NS_ERROR_FAILURE;
   }
+
   mMemoryTelemetry->Shutdown();
   mMemoryTelemetry = nullptr;
   return NS_OK;
@@ -1290,6 +1310,14 @@ TelemetryImpl::GetAllStores(JSContext* aCx,
   }
   aResult.setObject(*rarray);
 
+  return NS_OK;
+}
+
+nsresult TelemetryImpl::Observe(nsISupports* aSubject, const char* aTopic,
+                                const char16_t* aData) {
+  if (strcmp(aTopic, kTopicShutdown) == 0) {
+    FlushBatchedChildTelemetry();
+  }
   return NS_OK;
 }
 
