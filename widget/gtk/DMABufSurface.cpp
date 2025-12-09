@@ -1533,8 +1533,9 @@ size_t DMABufSurfaceYUV::GetUsedMemoryYUV(int32_t aFOURCCFormat, int aWidth,
       // one plane 8b + two planes 8b (half sized).
       return aWidth * aHeight + (aWidth >> 1) * (aHeight >> 1) * 2;
     default:
-      MOZ_DIAGNOSTIC_CRASH(
-          "DMABufSurfaceYUV::GetUsedMemoryYUV(): unknown format!");
+      gfxCriticalError()
+          << "DMABufSurfaceYUV::GetUsedMemoryYUV(): unknown format: "
+          << gfx::hexa(aFOURCCFormat);
       return 0;
   }
 }
@@ -1745,7 +1746,8 @@ bool DMABufSurfaceYUV::CreateYUVPlaneExport(GLContext* aGLContext, int aPlane) {
       break;
     default:
       gfxCriticalError()
-          << "DMABufSurfaceYUV::CreateYUVPlaneExport(): Unsupported format";
+          << "DMABufSurfaceYUV::CreateYUVPlaneExport(): Unsupported format:"
+          << gfx::hexa(mDrmFormats[aPlane]);
       return false;
   }
 
