@@ -19,18 +19,34 @@ buildscript {
     }
 }
 
+plugins {
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlinx-serialization'
 
 android {
+    buildFeatures {
+        compose = true
+    }
+
     namespace = 'mozilla.components.service.fxrelay'
 }
 
 dependencies {
     implementation ComponentsDependencies.mozilla_appservices_fxrelay
     implementation project(':components:support-base')
+    implementation project(':components:compose-base')
+    implementation project(":components:ui-icons")
+
     implementation libs.kotlinx.coroutines.core
+    implementation libs.androidx.compose.foundation
+    implementation libs.androidx.compose.material3
+    implementation libs.androidx.compose.ui
+    implementation libs.androidx.compose.ui.tooling.preview
 }
 
 apply from: '../../../common-config.gradle'
