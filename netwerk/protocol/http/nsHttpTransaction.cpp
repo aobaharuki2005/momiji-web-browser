@@ -1724,11 +1724,6 @@ void nsHttpTransaction::Close(nsresult reason) {
       default:
         break;
     }
-
-    if (!serverKey.IsEmpty()) {
-      glean::network::http_fetch_duration.Get(serverKey).AccumulateRawDuration(
-          elapsed);
-    }
   }
 
   if (mTrafficCategory != HttpTrafficCategory::eInvalid) {
