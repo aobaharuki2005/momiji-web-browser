@@ -23,6 +23,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/HttpChannelChild.h"
+#include "mozilla/net/CacheEntryWriteHandleChild.h"
 #include "mozilla/net/PBackgroundDataBridge.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -2868,6 +2869,69 @@ HttpChannelChild::GetAlternativeDataType(nsACString& aType) {
   return NS_OK;
 }
 
+NS_IMPL_ADDREF(CacheEntryWriteHandleChild)
+NS_IMPL_RELEASE(CacheEntryWriteHandleChild)
+NS_INTERFACE_MAP_BEGIN(CacheEntryWriteHandleChild)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsICacheEntryWriteHandle)
+NS_INTERFACE_MAP_END
+
+void CacheEntryWriteHandleChild::AddIPDLReference() { AddRef(); }
+
+void CacheEntryWriteHandleChild::ReleaseIPDLReference() { Release(); }
+
+NS_IMETHODIMP
+CacheEntryWriteHandleChild::OpenAlternativeOutputStream(
+    const nsACString& aType, int64_t aPredictedSize,
+    nsIAsyncOutputStream** _retval) {
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (static_cast<ContentChild*>(gNeckoChild->Manager())->IsShuttingDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RefPtr<AltDataOutputStreamChild> stream = new AltDataOutputStreamChild();
+
+  if (!gNeckoChild->SendPAltDataOutputStreamConstructor(
+          stream, nsCString(aType), aPredictedSize, Nothing(),
+          Some(WrapNotNull(this)))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  stream->AddIPDLReference();
+  stream.forget(_retval);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetCacheEntryWriteHandle(nsICacheEntryWriteHandle** _retval) {
+  MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
+
+  if (!CanSend()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (static_cast<ContentChild*>(gNeckoChild->Manager())->IsShuttingDown()) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsCOMPtr<nsISerialEventTarget> neckoTarget = GetNeckoTarget();
+  MOZ_ASSERT(neckoTarget);
+
+  RefPtr<CacheEntryWriteHandleChild> handle = new CacheEntryWriteHandleChild();
+
+  if (!gNeckoChild->SendPCacheEntryWriteHandleConstructor(handle,
+                                                          WrapNotNull(this))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  handle->AddIPDLReference();
+  handle.forget(_retval);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 HttpChannelChild::OpenAlternativeOutputStream(const nsACString& aType,
                                               int64_t aPredictedSize,
@@ -2888,7 +2952,8 @@ HttpChannelChild::OpenAlternativeOutputStream(const nsACString& aType,
   stream->AddIPDLReference();
 
   if (!gNeckoChild->SendPAltDataOutputStreamConstructor(
-          stream, nsCString(aType), aPredictedSize, WrapNotNull(this))) {
+          stream, nsCString(aType), aPredictedSize, Some(WrapNotNull(this)),
+          Nothing())) {
     return NS_ERROR_FAILURE;
   }
 
