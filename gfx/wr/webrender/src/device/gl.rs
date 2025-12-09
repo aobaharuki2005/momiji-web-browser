@@ -117,6 +117,96 @@ pub struct VertexAttribute {
     pub kind: VertexAttributeKind,
 }
 
+impl VertexAttribute {
+    pub const fn quad_instance_vertex() -> Self {
+        VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::U8Norm,
+        }
+    }
+
+    pub const fn gpu_buffer_address(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 1,
+            kind: VertexAttributeKind::I32,
+        }
+    }
+
+    pub const fn f32x4(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 4,
+            kind: VertexAttributeKind::F32,
+        }
+    }
+
+    pub const fn f32x3(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 3,
+            kind: VertexAttributeKind::F32,
+        }
+    }
+
+    pub const fn f32x2(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 2,
+            kind: VertexAttributeKind::F32,
+        }
+    }
+
+    pub const fn f32(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 1,
+            kind: VertexAttributeKind::F32,
+        }
+    }
+
+    pub const fn i32x4(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 4,
+            kind: VertexAttributeKind::I32,
+        }
+    }
+
+    pub const fn i32x2(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 2,
+            kind: VertexAttributeKind::I32,
+        }
+    }
+
+    pub const fn i32(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 1,
+            kind: VertexAttributeKind::I32,
+        }
+    }
+
+    pub const fn u16(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 1,
+            kind: VertexAttributeKind::U16,
+        }
+    }
+
+    pub const fn u16x2(name: &'static str) -> Self {
+        VertexAttribute {
+            name,
+            count: 2,
+            kind: VertexAttributeKind::U16,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct VertexDescriptor {
     pub vertex_attributes: &'static [VertexAttribute],
