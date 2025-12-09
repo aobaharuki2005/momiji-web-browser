@@ -37,6 +37,9 @@ class MemoryTelemetry final : public nsIObserver,
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
+  static RefPtr<MemoryTelemetry> Create();
+
+  // May return null if instance hasn't been created or was destroyed.
   static RefPtr<MemoryTelemetry> Get();
 
   nsresult GatherReports(

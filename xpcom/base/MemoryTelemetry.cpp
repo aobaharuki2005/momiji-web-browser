@@ -139,7 +139,7 @@ void MemoryTelemetry::Init() {
 
 static StaticRefPtr<MemoryTelemetry> sInstance;
 
-/* static */ RefPtr<MemoryTelemetry> MemoryTelemetry::Get() {
+/* static */ RefPtr<MemoryTelemetry> MemoryTelemetry::Create() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sInstance) {
@@ -147,6 +147,12 @@ static StaticRefPtr<MemoryTelemetry> sInstance;
     sInstance->Init();
     ClearOnShutdown(&sInstance);
   }
+
+  return sInstance;
+}
+
+/* static */ RefPtr<MemoryTelemetry> MemoryTelemetry::Get() {
+  MOZ_ASSERT(NS_IsMainThread());
   return sInstance;
 }
 

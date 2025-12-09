@@ -1212,8 +1212,8 @@ TelemetryImpl::EarlyInit() {
     // Don't do anything if EarlyInit ran already.
     return NS_OK;
   }
-  mMemoryTelemetry = MemoryTelemetry::Get();
-
+  mMemoryTelemetry = MemoryTelemetry::Create();
+  MOZ_ASSERT(mMemoryTelemetry);
   return NS_OK;
 }
 
