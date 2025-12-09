@@ -2194,7 +2194,7 @@ impl TileCacheInstance {
                 &map_local_to_picture,
                 &pic_to_vis_mapper,
                 frame_context.spatial_tree,
-                frame_state.gpu_cache,
+                &mut frame_state.frame_gpu_data.f32,
                 frame_state.resource_cache,
                 frame_context.global_device_pixel_scale,
                 &surface.culling_rect,
@@ -2726,7 +2726,7 @@ impl TileCacheInstance {
         api_keys: &[ImageKey; 3],
         resource_cache: &mut ResourceCache,
         composite_state: &mut CompositeState,
-        gpu_cache: &mut GpuCache,
+        gpu_buffer: &mut GpuBufferBuilderF,
         image_rendering: ImageRendering,
         color_depth: ColorDepth,
         color_space: YuvRangedColorSpace,
@@ -2741,7 +2741,7 @@ impl TileCacheInstance {
                         rendering: image_rendering,
                         tile: None,
                     },
-                    gpu_cache,
+                    gpu_buffer,
                 );
             }
         }
@@ -2782,7 +2782,7 @@ impl TileCacheInstance {
         api_key: ImageKey,
         resource_cache: &mut ResourceCache,
         composite_state: &mut CompositeState,
-        gpu_cache: &mut GpuCache,
+        gpu_buffer: &mut GpuBufferBuilderF,
         image_rendering: ImageRendering,
         is_opaque: bool,
         surface_kind: CompositorSurfaceKind,
@@ -2801,7 +2801,7 @@ impl TileCacheInstance {
                 rendering: image_rendering,
                 tile: None,
             },
-            gpu_cache,
+            gpu_buffer,
         );
 
         self.setup_compositor_surfaces_impl(
@@ -3147,7 +3147,7 @@ impl TileCacheInstance {
         color_bindings: &ColorBindingStorage,
         surface_stack: &[(PictureIndex, SurfaceIndex)],
         composite_state: &mut CompositeState,
-        gpu_cache: &mut GpuCache,
+        gpu_buffer: &mut GpuBufferBuilderF,
         scratch: &mut PrimitiveScratchBuffer,
         is_root_tile_cache: bool,
         surfaces: &mut [SurfaceInfo],
@@ -3391,7 +3391,7 @@ impl TileCacheInstance {
                             image_data.key,
                             resource_cache,
                             composite_state,
-                            gpu_cache,
+                            gpu_buffer,
                             image_data.image_rendering,
                             is_opaque,
                             kind,
@@ -3509,7 +3509,7 @@ impl TileCacheInstance {
                             &prim_data.kind.yuv_key,
                             resource_cache,
                             composite_state,
-                            gpu_cache,
+                            gpu_buffer,
                             prim_data.kind.image_rendering,
                             prim_data.kind.color_depth,
                             prim_data.kind.color_space.with_range(prim_data.kind.color_range),
@@ -5510,7 +5510,7 @@ impl PicturePrimitive {
                         if let Some(TileSurface::Texture { descriptor, .. }) = tile.surface.as_ref() {
                             if let SurfaceTextureDescriptor::TextureCache { handle: Some(handle), .. } = descriptor {
                                 frame_state.resource_cache
-                                    .picture_textures.request(handle, frame_state.gpu_cache);
+                                    .picture_textures.request(handle, &mut frame_state.frame_gpu_data.f32);
                             }
                         }
 
@@ -5546,7 +5546,7 @@ impl PicturePrimitive {
                                         // TODO(gw): Consider switching to manual eviction policy?
                                         frame_state.resource_cache
                                             .picture_textures
-                                            .request(handle.as_ref().unwrap(), frame_state.gpu_cache);
+                                            .request(handle.as_ref().unwrap(), &mut frame_state.frame_gpu_data.f32);
                                     } else {
                                         // If the texture was evicted on a previous frame, we need to assume
                                         // that the entire tile rect is dirty.
@@ -5603,7 +5603,7 @@ impl PicturePrimitive {
                                         frame_state.resource_cache.picture_textures.update(
                                             tile_cache.current_tile_size,
                                             handle,
-                                            frame_state.gpu_cache,
+                                            &mut frame_state.frame_gpu_data.f32,
                                             &mut frame_state.resource_cache.texture_cache.next_id,
                                             &mut frame_state.resource_cache.texture_cache.pending_updates,
                                         );
@@ -6613,11 +6613,11 @@ impl PicturePrimitive {
                             &self.snapshot,
                             &surface_rects,
                             false,
-                            &mut|rg_builder, _, gpu_cache| {
+                            &mut|rg_builder, gpu_buffer, _| {
                                 RenderTask::new_svg_filter_graph(
                                     filters,
                                     rg_builder,
-                                    gpu_cache,
+                                    gpu_buffer,
                                     data_stores,
                                     surface_rects.uv_rect_kind,
                                     picture_task_id,
@@ -7323,7 +7323,7 @@ impl PicturePrimitive {
             }
             PictureCompositeMode::ComponentTransferFilter(handle) => {
                 let filter_data = &mut data_stores.filter_data[handle];
-                filter_data.update(&mut frame_state.gpu_cache);
+                filter_data.write_gpu_blocks(&mut frame_state.frame_gpu_data.f32);
             }
             PictureCompositeMode::MixBlend(..) |
             PictureCompositeMode::Blit(_) |
@@ -7335,7 +7335,7 @@ impl PicturePrimitive {
                     match op {
                         FilterGraphOp::SVGFEComponentTransferInterned { handle, creates_pixels: _ } => {
                             let filter_data = &mut data_stores.filter_data[*handle];
-                            filter_data.update(&mut frame_state.gpu_cache);
+                            filter_data.write_gpu_blocks(&mut frame_state.frame_gpu_data.f32);
                         }
                         _ => {}
                     }

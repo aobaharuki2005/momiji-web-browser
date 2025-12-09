@@ -854,16 +854,6 @@ impl GpuCache {
         }
     }
 
-    // Reserve space in the cache for per-frame blocks that
-    // will be resolved by the render thread via the
-    // external image callback.
-    pub fn push_deferred_per_frame_blocks(&mut self, block_count: usize) -> GpuCacheHandle {
-        let location = self.texture.push_data(None, block_count, self.now);
-        GpuCacheHandle {
-            location: Some(location),
-        }
-    }
-
     /// End the frame. Return the list of updates to apply to the
     /// device specific cache texture.
     pub fn end_frame(

@@ -4,15 +4,16 @@
 
 use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvRangedColorSpace};
 use api::units::*;
+use euclid::HomogeneousVector;
 use crate::composite::{CompositeFeatures, CompositorClip};
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
-use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
+use crate::gpu_cache::GpuCacheAddress;
 use crate::internal_types::{FastHashMap, FrameVec, FrameMemory};
 use crate::prim_store::ClipData;
 use crate::render_task::RenderTaskAddress;
 use crate::render_task_graph::RenderTaskId;
-use crate::renderer::{ShaderColorMode, GpuBufferAddress};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferWriterF, ShaderColorMode};
 use std::i32;
 use crate::util::{MatrixHelpers, TransformedRectKind};
 use glyph_rasterizer::SubpixelDirection;
@@ -172,7 +173,7 @@ pub struct SvgFilterInstance {
     pub input_count: u16,
     pub generic_int: u16,
     pub padding: u16,
-    pub extra_data_address: GpuCacheAddress,
+    pub extra_data_address: GpuBufferAddress,
 }
 
 #[derive(Clone, Debug)]
@@ -187,7 +188,7 @@ pub struct SVGFEFilterInstance {
     pub input_2_task_address: RenderTaskAddress,
     pub kind: u16,
     pub input_count: u16,
-    pub extra_data_address: GpuCacheAddress,
+    pub extra_data_address: GpuBufferAddress,
 }
 
 #[derive(Copy, Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
@@ -261,7 +262,7 @@ pub struct BoxShadowData {
 #[repr(C)]
 pub struct ClipMaskInstanceBoxShadow {
     pub common: ClipMaskInstanceCommon,
-    pub resource_address: GpuCacheAddress,
+    pub resource_address: GpuBufferAddress,
     pub shadow_data: BoxShadowData,
 }
 
@@ -571,7 +572,7 @@ impl GlyphInstance {
         clip_task: RenderTaskAddress,
         subpx_dir: SubpixelDirection,
         glyph_index_in_text_run: i32,
-        glyph_uv_rect: GpuCacheAddress,
+        glyph_uv_rect: GpuBufferAddress,
         color_mode: ShaderColorMode,
     ) -> PrimitiveInstanceData {
         PrimitiveInstanceData {
@@ -1006,25 +1007,34 @@ pub struct ImageSource {
 }
 
 impl ImageSource {
-    pub fn write_gpu_blocks(&self, request: &mut GpuDataRequest) {
+    pub fn write_gpu_blocks(&self, gpu_buffer: &mut GpuBufferBuilderF) -> GpuBufferAddress {
+        let mut writer = gpu_buffer.write_blocks(6);
+        self.push_gpu_blocks(&mut writer);
+        writer.finish()
+    }
+
+    pub fn push_gpu_blocks(&self, writer: &mut GpuBufferWriterF) {
         // see fetch_image_resource in GLSL
         // has to be VECS_PER_IMAGE_RESOURCE vectors
-        request.push([
+        writer.push_one([
             self.p0.x,
             self.p0.y,
             self.p1.x,
             self.p1.y,
         ]);
-        request.push(self.user_data);
+        writer.push_one(self.user_data);
 
         // If this is a polygon uv kind, then upload the four vertices.
         if let UvRectKind::Quad { top_left, top_right, bottom_left, bottom_right } = self.uv_rect_kind {
             // see fetch_image_resource_extra in GLSL
             //Note: we really need only 3 components per point here: X, Y, and W
-            request.push(top_left);
-            request.push(top_right);
-            request.push(bottom_left);
-            request.push(bottom_right);
+            fn to_array(v: HomogeneousVector<f32, DevicePixel>) -> [f32; 4] {
+                [v.x, v.y, v.z, v.w]
+            }
+            writer.push_one(to_array(top_left));
+            writer.push_one(to_array(top_right));
+            writer.push_one(to_array(bottom_left));
+            writer.push_one(to_array(bottom_right));
         }
     }
 }

@@ -4,7 +4,7 @@
 
 #define WR_FEATURE_TEXTURE_2D
 
-#include shared,prim_shared
+#include shared,prim_shared,image_source
 
 // interpolated UV coordinates to sample.
 varying highp vec2 vUv;

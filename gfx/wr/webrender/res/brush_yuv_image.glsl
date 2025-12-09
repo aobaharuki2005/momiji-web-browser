@@ -4,7 +4,7 @@
 
 #define VECS_PER_SPECIFIC_BRUSH 1
 
-#include shared,prim_shared,brush,yuv
+#include shared,prim_shared,brush,yuv,image_source
 
 varying highp vec2 vUv_Y;
 flat varying highp vec4 vUvBounds_Y;
