@@ -4109,28 +4109,25 @@ nsresult ScriptLoader::OnStreamComplete(
 
         aRequest->getLoadedScript()->SetCacheEntryId(id);
       }
-    }
 
-    // If we are loading from source, store the cache info channel and
-    // save the computed SRI hash or a dummy SRI hash in case we are going to
-    // save the this script in the disk cache.
-    if (aRequest->IsTextSource() &&
-        StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
-      uint32_t fetchCount;
-      if (NS_SUCCEEDED(cacheInfo->GetCacheTokenFetchCount(&fetchCount))) {
-        if (fetchCount < UINT8_MAX) {
-          aRequest->getLoadedScript()->mFetchCount = fetchCount;
-        } else {
-          aRequest->getLoadedScript()->mFetchCount = UINT8_MAX;
+      // If we are loading from source, store the cache info channel and
+      // save the computed SRI hash or a dummy SRI hash in case we are going to
+      // save the this script in the disk cache.
+      if (aRequest->IsTextSource() &&
+          StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
+        uint32_t fetchCount;
+        if (NS_SUCCEEDED(cacheInfo->GetCacheTokenFetchCount(&fetchCount))) {
+          if (fetchCount < UINT8_MAX) {
+            aRequest->getLoadedScript()->mFetchCount = fetchCount;
+          } else {
+            aRequest->getLoadedScript()->mFetchCount = UINT8_MAX;
+          }
         }
-      }
 
-      aRequest->getLoadedScript()->mCacheInfo = cacheInfo;
-      LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", aRequest,
-           aRequest->getLoadedScript()->mCacheInfo.get()));
+        aRequest->getLoadedScript()->mCacheInfo = cacheInfo;
+        LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", aRequest,
+             aRequest->getLoadedScript()->mCacheInfo.get()));
 
-      // We need the SRI hash only when the channel has cache info.
-      if (aRequest->getLoadedScript()->mCacheInfo) {
         rv = SaveSRIHash(aRequest, aSRIDataVerifier);
       }
     }
