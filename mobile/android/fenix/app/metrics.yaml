@@ -12916,6 +12916,28 @@ customization_settings:
     notification_emails:
       - android-probes@mozilla.com
     expires: never
+  toolbar_shortcut_selection:
+    type: event
+    description: When a toolbar shortcut is selected.
+    extra_keys:
+      toolbar_type:
+        description: |
+          Where the interaction occurred. One of: simple, expanded.
+        type: string
+      item:
+        description: |
+          A string containing the name of the shortcut the user selected. These items include:
+          new_tab, share, bookmark, translate, homepage, back
+        type: string
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2002636
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D274607
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
 
 app_icon_selection:
   app_icon_selection_confirmed:
