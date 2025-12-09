@@ -20,8 +20,6 @@ import tempfile
 import textwrap
 from contextlib import contextmanager
 
-import requests
-import toml
 import zstandard
 
 
@@ -33,6 +31,8 @@ def fetch_file(url):
     """Download a file from the given url if it's not already present.
 
     Returns the SHA-2 256-bit hash of the received file."""
+    import requests
+
     filename = os.path.basename(url)
     sha = hashlib.sha256()
     size = 4096
@@ -299,6 +299,9 @@ def build_tar_package(name, base, directory):
 
 
 def fetch_manifest(channel="stable", host=None, targets=()):
+    import requests
+    import toml
+
     if channel.startswith("bors-"):
         assert host
         rev = channel[len("bors-") :]
@@ -500,6 +503,7 @@ def repack(
                 'Patch specified, but channel "%s" is not "dev"!'
                 "\nPatches are only for building from source." % channel
             )
+        setup_gpg()
         log("Repacking rust for %s supporting %s..." % (host, targets))
         manifest = fetch_manifest(channel, host, targets)
         log("Using manifest for rust %s as of %s." % (channel, manifest["date"]))
@@ -662,5 +666,4 @@ def args():
 
 if __name__ == "__main__":
     args = vars(args())
-    setup_gpg()
     repack(**args)
