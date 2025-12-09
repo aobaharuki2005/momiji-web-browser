@@ -965,6 +965,23 @@ export var BrowserTestUtils = {
   },
 
   /**
+   * Loads a given URI in the specified tab and waits for the load to complete.
+   *
+   * @param {object} options
+   * @param {xul:browser} options.browser
+   *   The browser to load the URI into.
+   * @param {string} options.uriString
+   *   The string URI to load.
+   * @param {string} [options.finalURI]
+   *   The expected final URI to wait for, e.g. if the load is automatically
+   *   redirected.
+   */
+  loadURIString({ browser, uriString, finalURI = uriString }) {
+    this.startLoadingURIString(browser, uriString);
+    return this.browserLoaded(browser, { wantLoad: finalURI });
+  },
+
+  /**
    * Maybe create a preloaded browser and ensure it's finished loading.
    *
    * @param gBrowser (<xul:tabbrowser>)
