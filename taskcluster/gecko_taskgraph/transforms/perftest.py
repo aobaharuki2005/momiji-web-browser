@@ -277,10 +277,10 @@ def create_duplicate_simpleperf_jobs(config, jobs):
             new_job["dependencies"] = {
                 "android-aarch64-shippable": "build-android-aarch64-shippable/opt"
             }
-            new_job["name"] += "-profiling"
+            new_job["name"] += "-simpleperf"
             new_job["run"][
                 "command"
-            ] += " --simpleperf --simpleperf-path $MOZ_FETCHES_DIR/android-simpleperf --geckoprofiler"
+            ] += " --simpleperf --simpleperf-path $MOZ_FETCHES_DIR/android-simpleperf"
             new_job["description"] = str(new_job["description"]).replace(
                 "Run", "Profile"
             )
