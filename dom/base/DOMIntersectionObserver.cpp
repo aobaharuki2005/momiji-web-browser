@@ -839,7 +839,8 @@ IntersectionOutput DOMIntersectionObserver::Intersect(
     if (!clipAxes.isEmpty()) {
       targetRectRelativeToTarget = OverflowAreas::GetOverflowClipRect(
           targetRectRelativeToTarget, targetRectRelativeToTarget, clipAxes,
-          aTargetFrame->OverflowClipMargin(clipAxes));
+          aTargetFrame->OverflowClipMargin(clipAxes,
+                                           /* aAllowNegative = */ false));
     }
   }
 

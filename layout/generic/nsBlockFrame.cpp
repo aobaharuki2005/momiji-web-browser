@@ -2371,8 +2371,9 @@ void nsBlockFrame::ComputeOverflowAreas(OverflowAreas& aOverflowAreas,
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
   auto overflowClipAxes = ShouldApplyOverflowClipping(aDisplay);
-  auto overflowClipMargin = OverflowClipMargin(overflowClipAxes);
-  if (overflowClipAxes == kPhysicalAxesBoth && overflowClipMargin == nsSize()) {
+  auto overflowClipMargin =
+      OverflowClipMargin(overflowClipAxes, /* aAllowNegative = */ false);
+  if (overflowClipAxes == kPhysicalAxesBoth && overflowClipMargin.IsAllZero()) {
     return;
   }
 
