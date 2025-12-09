@@ -626,7 +626,6 @@ impl YamlWriter {
                     DisplayItem::Gradient(..) => {}
                     DisplayItem::RadialGradient(..) => {}
                     DisplayItem::ConicGradient(..) => {}
-                    DisplayItem::ClearRectangle(..) => {}
                     DisplayItem::Line(..) => {}
                     DisplayItem::HitTest(..) => {}
                     DisplayItem::PushReferenceFrame(..) => {}
