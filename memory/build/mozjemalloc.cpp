@@ -175,7 +175,7 @@ using namespace mozilla;
 // while another thread accesses it.  This means that clearing this value or
 // otherwise dropping a reference to it must not be done while holding an
 // arena's lock.
-MOZ_CONSTINIT static RefPtr<MallocProfilerCallbacks> sCallbacks;
+constinit static RefPtr<MallocProfilerCallbacks> sCallbacks;
 #endif
 
 // ***************************************************************************
@@ -203,7 +203,7 @@ static Atomic<bool, MemoryOrdering::Relaxed> malloc_initialized;
 #endif
 
 // This lock must be held while bootstrapping us.
-MOZ_CONSTINIT StaticMutex gInitLock MOZ_UNANNOTATED;
+constinit StaticMutex gInitLock MOZ_UNANNOTATED;
 
 // ***************************************************************************
 // Statistics data structures.
@@ -1219,7 +1219,7 @@ class ArenaCollection {
   Atomic<bool> mIsDeferredPurgeEnabled;
 };
 
-MOZ_CONSTINIT static ArenaCollection gArenas;
+constinit static ArenaCollection gArenas;
 
 // Protects huge allocation-related data structures.
 static Mutex huge_mtx;

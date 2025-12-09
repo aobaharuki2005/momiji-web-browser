@@ -494,8 +494,7 @@ void* pages_mmap_aligned(size_t size, size_t alignment,
   return ret;
 }
 
-MOZ_CONSTINIT AddressRadixTree<(sizeof(void*) << 3) - LOG2(kChunkSize)>
-    gChunkRTree;
+constinit AddressRadixTree<(sizeof(void*) << 3) - LOG2(kChunkSize)> gChunkRTree;
 
 // Protects chunk-related data structures.
 static Mutex chunks_mtx;
