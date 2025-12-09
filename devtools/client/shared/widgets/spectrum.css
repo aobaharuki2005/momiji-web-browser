@@ -262,9 +262,10 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
 
 .spectrum-color-contrast .accessibility-contrast-value {
   font-size: 10px;
+  font-variant-numeric: tabular-nums;
   border-bottom: 1px solid var(--learn-more-underline);
 
-  /* opt-out of forced colors to avoid the blackplaing that clips the border */
+  /* opt-out of forced colors to avoid the backplating that clips the border */
   forced-color-adjust: none;
 }
 
