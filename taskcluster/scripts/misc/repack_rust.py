@@ -423,8 +423,7 @@ def build_src(install_dir, host, targets, patches):
         use-lld = true
 
         [install]
-        prefix = "{install_dir}"
-        sysconfdir = "etc"
+        prefix = "/"
 
         [llvm]
         download-ci-llvm = false
@@ -472,6 +471,7 @@ def build_src(install_dir, host, targets, patches):
             {
                 "PATH": os.pathsep.join((tmpdir, clang_bin, os.environ["PATH"])),
                 "LD_LIBRARY_PATH": clang_lib,
+                "DESTDIR": install_dir,
             }
         )
 
