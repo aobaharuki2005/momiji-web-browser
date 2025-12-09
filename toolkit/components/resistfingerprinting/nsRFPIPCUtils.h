@@ -13,6 +13,14 @@
 
 namespace IPC {
 
+// CanvasFingerprinterAlias
+template <>
+struct ParamTraits<mozilla::CanvasFingerprinterAlias>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::CanvasFingerprinterAlias,
+          mozilla::CanvasFingerprinterAlias::eNoneIdentified,
+          mozilla::CanvasFingerprinterAlias::eMaybe> {};
+
 // CanvasFingerprintingEvent
 template <>
 struct ParamTraits<mozilla::CanvasFingerprintingEvent> {

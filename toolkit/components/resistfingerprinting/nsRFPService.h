@@ -11,7 +11,6 @@
 #include "ErrorList.h"
 #include "PLDHashTable.h"
 #include "mozilla/BasicEvents.h"
-#include "mozilla/ContentBlockingLog.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/dom/MediaDeviceInfoBinding.h"
@@ -174,6 +173,33 @@ enum class CanvasFeatureUsage : uint8_t {
   Stroke = 1 << 4
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CanvasFeatureUsage);
+
+// We try to classify observed canvas fingerprinting scripts into different
+// classes, but we don't usually know the source/vendor of those scripts. The
+// classification is based on a behavioral analysis covering things like the
+// functions called and size of the canvas. The alias given is a guess and
+// should not be considered definitive. The entity identified may not be doing
+// this behavior at all, they may be doing a diferent or additional behaviors.
+enum CanvasFingerprinterAlias {
+  eNoneIdentified = 0,
+  eFingerprintJS = 1,
+  eAkamai = 2,
+  eOzoki = 3,
+  ePerimeterX = 4,
+  eSignifyd = 5,
+  eClaydar = 6,
+  eForter = 7,
+  // Unknown but distinct types of fingerprinters
+  eVariant1 = 8,
+  eVariant2 = 9,
+  eVariant3 = 10,
+  eVariant4 = 11,
+  eVariant5 = 12,
+  eVariant6 = 13,
+  eVariant7 = 14,
+  eVariant8 = 15,
+  eLastAlias = eVariant8
+};
 
 class CanvasUsage {
  public:
