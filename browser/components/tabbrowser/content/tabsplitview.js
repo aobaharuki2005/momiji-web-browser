@@ -39,9 +39,6 @@
     /** @type {MozTabbrowserTab[]} */
     #tabs = [];
 
-    /** @type {boolean} */
-    #activated = false;
-
     /**
      * @returns {boolean}
      */
@@ -148,9 +145,6 @@
      * Show all Split View tabs in the content area.
      */
     #activate() {
-      if (this.#activated) {
-        return;
-      }
       gBrowser.showSplitViewPanels(this.#tabs);
       updateUrlbarButton.arm();
       this.container.dispatchEvent(
@@ -159,7 +153,6 @@
           bubbles: true,
         })
       );
-      this.#activated = true;
     }
 
     /**
@@ -174,7 +167,6 @@
           bubbles: true,
         })
       );
-      this.#activated = false;
     }
 
     /**
