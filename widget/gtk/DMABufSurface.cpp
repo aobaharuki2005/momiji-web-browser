@@ -131,7 +131,7 @@ static const std::string FormatEGLError(EGLint err) {
   }
 }
 
-MOZ_CONSTINIT static RefPtr<GLContext> sSnapshotContext;
+constinit static RefPtr<GLContext> sSnapshotContext;
 static StaticMutex sSnapshotContextMutex MOZ_UNANNOTATED;
 MOZ_RUNINIT static Atomic<int> gNewSurfaceUID(getpid());
 /* Memory reporter stuff */
