@@ -515,9 +515,16 @@ already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
           this, nsContentUtils::GetCurrentJSContext(),
           mCurrentContext ? mCurrentContext->PrincipalOrNull() : nullptr);
 
+  if (extractionBehaviour != CanvasUtils::ImageExtraction::Placeholder &&
+      GetContext()) {
+    GetContext()->RecordCanvasUsage(CanvasExtractionAPI::ToBlob,
+                                    GetWidthHeight());
+  }
+
   CanvasRenderingContextHelper::ToBlob(callback, type, encodeOptions,
                                        /* aUsingCustomOptions */ false,
                                        extractionBehaviour, aRv);
+
   if (aRv.Failed()) {
     promise->MaybeReject(std::move(aRv));
   }
@@ -559,6 +566,13 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
       CanvasUtils::ImageExtractionResult(
           this, aCx,
           mCurrentContext ? mCurrentContext->PrincipalOrNull() : nullptr);
+
+  if (extractionBehaviour != CanvasUtils::ImageExtraction::Placeholder &&
+      GetContext()) {
+    GetContext()->RecordCanvasUsage(CanvasExtractionAPI::ToBlob,
+                                    GetWidthHeight());
+  }
+
   CanvasRenderingContextHelper::ToBlob(aCx, callback, aType, aParams,
                                        extractionBehaviour, aRv);
 
