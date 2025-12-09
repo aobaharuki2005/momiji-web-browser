@@ -13,7 +13,6 @@
 #include <limits>
 
 #include "DOMSVGPoint.h"
-#include "LookAndFeel.h"
 #include "SVGAnimatedNumberList.h"
 #include "SVGContentUtils.h"
 #include "SVGContextPaint.h"
