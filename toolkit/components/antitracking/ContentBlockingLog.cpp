@@ -491,11 +491,8 @@ ContentBlockingLog::OriginEntry* ContentBlockingLog::RecordLogInternal(
     // been marked.
     // TODO(Bug 1864909): Moving the suspicious fingerprinting detection call
     // out of here.
-    if ((aType == nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING ||
-         aType == nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING) &&
-        !entry.mData->mHasSuspiciousFingerprintingActivity &&
-        nsRFPService::CheckSuspiciousFingerprintingActivity(
-            entry.mData->mLogs)) {
+    if (aType == nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING ||
+        aType == nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING) {
       entry.mData->mHasSuspiciousFingerprintingActivity = true;
     }
     return &entry;
@@ -533,10 +530,8 @@ ContentBlockingLog::OriginEntry* ContentBlockingLog::RecordLogInternal(
     // marked.
     // TODO(Bug 1864909): Moving the suspicious fingerprinting detection call
     // out of here.
-    if ((aType == nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING ||
-         aType == nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING) &&
-        nsRFPService::CheckSuspiciousFingerprintingActivity(
-            entry->mData->mLogs)) {
+    if (aType == nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING ||
+        aType == nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING) {
       entry->mData->mHasSuspiciousFingerprintingActivity = true;
     }
   }

@@ -390,12 +390,6 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   // --------------------------------------------------------------------------
 
-  // A helper function to check if there is a suspicious fingerprinting
-  // activity from given content blocking origin logs. It returns true if we
-  // detect suspicious fingerprinting activities.
-  static bool CheckSuspiciousFingerprintingActivity(
-      nsTArray<ContentBlockingLog::LogEntry>& aLogs);
-
   // Generates a fake media device name with given kind and index.
   // Example: Internal Microphone
   static void GetMediaDeviceName(nsString& aName,
