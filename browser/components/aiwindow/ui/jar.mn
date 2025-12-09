@@ -3,7 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 browser.jar:
-  content/browser/aiwindow/ui/aiChatContent.html
-  content/browser/aiwindow/ui/assets/input-cta-arrow-icon.svg  (assets/input-cta-arrow-icon.svg)
-  content/browser/aiwindow/ui/components/input-cta.css         (components/input-cta/input-cta.css)
-  content/browser/aiwindow/ui/components/input-cta.mjs         (components/input-cta/input-cta.mjs)
+  content/browser/aiwindow/aiChatContent.html               (content/aiChatContent.html)
+  content/browser/aiwindow/aiWindow.html                    (content/aiWindow.html)
+  content/browser/aiwindow/assets/input-cta-arrow-icon.svg  (assets/input-cta-arrow-icon.svg)
+  content/browser/aiwindow/components/input-cta.css         (components/input-cta/input-cta.css)
+  content/browser/aiwindow/components/input-cta.mjs         (components/input-cta/input-cta.mjs)

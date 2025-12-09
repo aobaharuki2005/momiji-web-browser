@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
-import "chrome://browser/content/aiwindow/ui/components/input-cta.mjs";
+import "chrome://browser/content/aiwindow/components/input-cta.mjs";
 
 export default {
   title: "Domain-specific UI Widgets/AI Window/Input CTA",

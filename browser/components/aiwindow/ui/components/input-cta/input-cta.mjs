@@ -82,7 +82,7 @@ export class InputCta extends MozLitElement {
     return html`
       <link
         rel="stylesheet"
-        href="chrome://browser/content/aiwindow/ui/components/input-cta.css"
+        href="chrome://browser/content/aiwindow/components/input-cta.css"
       />
       <moz-button
         type=${this.action ? "split" : "default"}
@@ -90,7 +90,7 @@ export class InputCta extends MozLitElement {
         menuId=${ifDefined(this.action ? this._menuId : undefined)}
         .iconSrc=${this.action
           ? undefined
-          : "chrome://browser/content/aiwindow/ui/assets/input-cta-arrow-icon.svg"}
+          : "chrome://browser/content/aiwindow/assets/input-cta-arrow-icon.svg"}
         ?disabled=${!this.action}
       >
         <slot>

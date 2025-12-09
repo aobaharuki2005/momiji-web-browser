@@ -64,7 +64,7 @@ export const AIWindow = {
       const aiWindowURI = Cc["@mozilla.org/supports-string;1"].createInstance(
         Ci.nsISupportsString
       );
-      aiWindowURI.data = "chrome://browser/content/genai/smartAssist.html";
+      aiWindowURI.data = "chrome://browser/content/aiwindow/aiWindow.html";
       options.args.appendElement(aiWindowURI);
 
       const aiOption = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
