@@ -32,6 +32,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ProgressListener: "chrome://remote/content/shared/Navigate.sys.mjs",
   PromptListener:
     "chrome://remote/content/shared/listeners/PromptListener.sys.mjs",
+  RemoteAgent: "chrome://remote/content/components/RemoteAgent.sys.mjs",
   SessionDataMethod:
     "chrome://remote/content/shared/messagehandler/sessiondata/SessionData.sys.mjs",
   setDefaultAndAssertSerializationOptions:
@@ -173,6 +174,17 @@ const WaitCondition = {
   None: "none",
   Interactive: "interactive",
   Complete: "complete",
+};
+
+/**
+ * An enum that specifies the scope of a browsing context.
+ *
+ * @readonly
+ * @enum {string}
+ */
+export const MozContextScope = {
+  CHROME: "chrome",
+  CONTENT: "content",
 };
 
 /**
@@ -774,6 +786,7 @@ class BrowsingContextModule extends RootBiDiModule {
     };
   }
 
+  /* eslint-disable jsdoc/valid-types */
   /**
    * An object that holds the WebDriver Bidi browsing context information.
    *
@@ -793,7 +806,12 @@ class BrowsingContextModule extends RootBiDiModule {
    *     reached yet.
    * @property {string} clientWindow
    *     The id of the window the browsing context belongs to.
+   * @property {string=} "moz:name"
+   *     Name of the browsing context.
+   * @property {MozContextScope=} "moz:scope"
+   *     The scope of the browsing context.
    */
+  /* eslint-enable jsdoc/valid-types */
 
   /**
    * An object that holds the WebDriver Bidi browsing context tree information.
@@ -805,7 +823,7 @@ class BrowsingContextModule extends RootBiDiModule {
    */
 
   /**
-   * Returns a tree of all browsing contexts that are descendents of the
+   * Returns a tree of all browsing contexts that are descendants of the
    * given context, or all top-level contexts when no root is provided.
    *
    * @param {object=} options
@@ -814,6 +832,8 @@ class BrowsingContextModule extends RootBiDiModule {
    *     the whole tree is returned.
    * @param {string=} options.root
    *     Id of the root browsing context.
+   * @param {MozContextScope=} options."moz:scope"
+   *     The scope to retrieve browsing contexts from.
    *
    * @returns {BrowsingContextGetTreeResult}
    *     Tree of browsing context information.
@@ -821,13 +841,29 @@ class BrowsingContextModule extends RootBiDiModule {
    *     If the browsing context cannot be found.
    */
   getTree(options = {}) {
-    const { maxDepth = null, root: rootId = null } = options;
+    const {
+      maxDepth = null,
+      root: rootId = null,
+      "moz:scope": scope = MozContextScope.CONTENT,
+    } = options;
 
     if (maxDepth !== null) {
       lazy.assert.positiveInteger(
         maxDepth,
         lazy.pprint`Expected "maxDepth" to be a positive integer, got ${maxDepth}`
       );
+    }
+
+    const contextScopes = Object.values(MozContextScope);
+    lazy.assert.that(
+      _scope => contextScopes.includes(_scope),
+      `Expected "moz:scope" to be one of ${contextScopes}, ` +
+        lazy.pprint`got ${scope}`
+    )(scope);
+
+    if (scope != MozContextScope.CONTENT) {
+      // By default only content browsing contexts are allowed.
+      lazy.assert.hasSystemAccess();
     }
 
     let contexts;
@@ -838,12 +874,22 @@ class BrowsingContextModule extends RootBiDiModule {
         rootId,
         lazy.pprint`Expected "root" to be a string, got ${rootId}`
       );
-      contexts = [this._getNavigable(rootId)];
+
+      contexts = [this._getNavigable(rootId, { scope })];
     } else {
-      // Return all top-level browsing contexts.
-      contexts = lazy.TabManager.getBrowsers().map(
-        browser => browser.browsingContext
-      );
+      switch (scope) {
+        case MozContextScope.CHROME: {
+          // Return all browsing contexts related to chrome windows.
+          contexts = lazy.windowManager.windows.map(win => win.browsingContext);
+          break;
+        }
+        default: {
+          // Return all top-level browsing contexts.
+          contexts = lazy.TabManager.getBrowsers().map(
+            browser => browser.browsingContext
+          );
+        }
+      }
     }
 
     const contextsInfo = contexts.map(context => {
@@ -2537,8 +2583,10 @@ export const getBrowsingContextInfo = (context, options = {}) => {
 
   let children = null;
   if (maxDepth === null || maxDepth > 0) {
-    children = context.children.map(context =>
-      getBrowsingContextInfo(context, {
+    // Bug 1996311: When executed for chrome browsing contexts as
+    // well include embedded browsers and their browsing context tree.
+    children = context.children.map(childContext =>
+      getBrowsingContextInfo(childContext, {
         maxDepth: maxDepth === null ? maxDepth : maxDepth - 1,
         includeParentId: false,
       })
@@ -2569,6 +2617,16 @@ export const getBrowsingContextInfo = (context, options = {}) => {
       context.parent
     );
     contextInfo.parent = parentId;
+  }
+
+  if (lazy.RemoteAgent.allowSystemAccess) {
+    contextInfo["moz:scope"] = context.isContent
+      ? MozContextScope.CONTENT
+      : MozContextScope.CHROME;
+
+    if ("name" in context) {
+      contextInfo["moz:name"] = context.name;
+    }
   }
 
   return contextInfo;

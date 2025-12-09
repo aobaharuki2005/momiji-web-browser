@@ -8,6 +8,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  MozContextScope:
+    "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
@@ -44,6 +46,9 @@ export class RootBiDiModule extends Module {
    *
    * @param {string} navigableId
    *     Unique id of the browsing context.
+   * @param {object=} options
+   * @param {MozContextScope=} options.scope
+   *     Scope of the browsing context. Defaults to "content".
    *
    * @returns {BrowsingContext|null}
    *     The browsing context, or null if `navigableId` is null.
@@ -51,14 +56,21 @@ export class RootBiDiModule extends Module {
    * @throws {NoSuchFrameError}
    *     If the browsing context cannot be found.
    */
-  _getNavigable(navigableId) {
+  _getNavigable(navigableId, options = {}) {
+    const { scope = lazy.MozContextScope.CONTENT } = options;
+
     if (navigableId === null) {
       // The WebDriver BiDi specification expects `null` to be
       // returned if navigable id is `null`.
       return null;
     }
 
-    const context = lazy.NavigableManager.getBrowsingContextById(navigableId);
+    let context = lazy.NavigableManager.getBrowsingContextById(navigableId);
+
+    // Only allow to retrieve contexts for chrome windows if explicitly allowed.
+    if (context && !context.isContent && scope != lazy.MozContextScope.CHROME) {
+      context = null;
+    }
 
     if (context === null) {
       throw new lazy.error.NoSuchFrameError(
