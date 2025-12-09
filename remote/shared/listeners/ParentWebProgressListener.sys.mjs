@@ -248,13 +248,18 @@ export class ParentWebProgressListener {
 
   #onContextAttached = async (eventName, data) => {
     const { browsingContext } = data;
-    this.#startWatchingBrowsingContextNavigation(browsingContext);
+
+    if (browsingContext.isContent) {
+      this.#startWatchingBrowsingContextNavigation(browsingContext);
+    }
   };
 
   #onContextDiscarded = async (eventName, data = {}) => {
     const { browsingContext } = data;
 
-    this.#stopWatchingBrowsingContextNavigation(browsingContext);
+    if (browsingContext.isContent) {
+      this.#stopWatchingBrowsingContextNavigation(browsingContext);
+    }
   };
 
   #startWatchingBrowsingContextNavigation(browsingContext) {
