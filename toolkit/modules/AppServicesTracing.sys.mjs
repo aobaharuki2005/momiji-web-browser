@@ -299,7 +299,8 @@ export function setupLoggerForTarget(target, log) {
   } else {
     tracing_level = TracingLevel.TRACE;
   }
-  targetToLogNames.set(target, log.name);
+  let logTargets = targetToLogNames.getOrInsert(target, []);
+  logTargets.push(log.name);
   tracingEventHandler.register(target, tracing_level, loggerEventHandler);
 }
 
