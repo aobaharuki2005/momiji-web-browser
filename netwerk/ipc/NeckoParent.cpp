@@ -25,7 +25,6 @@
 #  include "mozilla/net/GeckoViewContentChannelParent.h"
 #endif
 #include "mozilla/net/DocumentChannelParent.h"
-#include "mozilla/net/CacheEntryWriteHandleParent.h"
 #include "mozilla/net/AltDataOutputStreamParent.h"
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/IPCTransportProvider.h"
@@ -224,41 +223,13 @@ bool NeckoParent::DeallocPWebrtcTCPSocketParent(
   return true;
 }
 
-PCacheEntryWriteHandleParent* NeckoParent::AllocPCacheEntryWriteHandleParent(
-    PHttpChannelParent* channel) {
-  HttpChannelParent* chan = static_cast<HttpChannelParent*>(channel);
-  CacheEntryWriteHandleParent* parent = chan->AllocCacheEntryWriteHandle();
-  parent->AddRef();
-  return parent;
-}
-
-bool NeckoParent::DeallocPCacheEntryWriteHandleParent(
-    PCacheEntryWriteHandleParent* aActor) {
-  CacheEntryWriteHandleParent* parent =
-      static_cast<CacheEntryWriteHandleParent*>(aActor);
-  parent->Release();
-  return true;
-}
-
 PAltDataOutputStreamParent* NeckoParent::AllocPAltDataOutputStreamParent(
     const nsACString& type, const int64_t& predictedSize,
-    mozilla::Maybe<mozilla::NotNull<mozilla::net::PHttpChannelParent*>>&
-        channel,
-    mozilla::Maybe<mozilla::NotNull<PCacheEntryWriteHandleParent*>>& handle) {
-  MOZ_ASSERT(channel || handle);
-
-  nsresult rv;
+    PHttpChannelParent* channel) {
+  HttpChannelParent* chan = static_cast<HttpChannelParent*>(channel);
   nsCOMPtr<nsIAsyncOutputStream> stream;
-  if (channel) {
-    HttpChannelParent* chan = static_cast<HttpChannelParent*>(channel->get());
-    rv = chan->OpenAlternativeOutputStream(type, predictedSize,
-                                           getter_AddRefs(stream));
-  } else {
-    CacheEntryWriteHandleParent* h =
-        static_cast<CacheEntryWriteHandleParent*>(handle->get());
-    rv = h->OpenAlternativeOutputStream(type, predictedSize,
-                                        getter_AddRefs(stream));
-  }
+  nsresult rv = chan->OpenAlternativeOutputStream(type, predictedSize,
+                                                  getter_AddRefs(stream));
   AltDataOutputStreamParent* parent = new AltDataOutputStreamParent(stream);
   parent->AddRef();
   // If the return value was not NS_OK, the error code will be sent

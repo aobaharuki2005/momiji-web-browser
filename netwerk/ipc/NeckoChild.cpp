@@ -23,7 +23,6 @@
 #include "mozilla/dom/network/TCPServerSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
 #include "mozilla/net/AltDataOutputStreamChild.h"
-#include "mozilla/net/CacheEntryWriteHandleChild.h"
 #include "mozilla/net/SocketProcessBridgeChild.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/net/StunAddrsRequestChild.h"
@@ -112,27 +111,9 @@ bool NeckoChild::DeallocPWebrtcTCPSocketChild(PWebrtcTCPSocketChild* aActor) {
   return true;
 }
 
-PCacheEntryWriteHandleChild* NeckoChild::AllocPCacheEntryWriteHandleChild(
-    PHttpChannelChild* channel) {
-  // We don't allocate here: see HttpChannelChild::GetCacheEntryWriteHandle()
-  MOZ_ASSERT_UNREACHABLE(
-      "AllocPCacheEntryWriteHandleChild should not be called");
-  return nullptr;
-}
-
-bool NeckoChild::DeallocPCacheEntryWriteHandleChild(
-    PCacheEntryWriteHandleChild* aActor) {
-  CacheEntryWriteHandleChild* child =
-      static_cast<CacheEntryWriteHandleChild*>(aActor);
-  child->ReleaseIPDLReference();
-  return true;
-}
-
 PAltDataOutputStreamChild* NeckoChild::AllocPAltDataOutputStreamChild(
     const nsACString& type, const int64_t& predictedSize,
-    const mozilla::Maybe<mozilla::NotNull<PHttpChannelChild*>>& channel,
-    const mozilla::Maybe<mozilla::NotNull<PCacheEntryWriteHandleChild*>>&
-        handle) {
+    PHttpChannelChild* channel) {
   // We don't allocate here: see HttpChannelChild::OpenAlternativeOutputStream()
   MOZ_ASSERT_UNREACHABLE("AllocPAltDataOutputStreamChild should not be called");
   return nullptr;

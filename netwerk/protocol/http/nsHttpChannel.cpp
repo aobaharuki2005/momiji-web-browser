@@ -10829,53 +10829,6 @@ nsHttpChannel::GetAlternativeDataType(nsACString& aType) {
   return NS_OK;
 }
 
-class CacheEntryWriteHandle : public nsICacheEntryWriteHandle {
-  virtual ~CacheEntryWriteHandle() = default;
-
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSICACHEENTRYWRITEHANDLE
-
-  explicit CacheEntryWriteHandle(nsICacheEntry* aCacheEntry)
-      : mCacheEntry(aCacheEntry) {
-    MOZ_ASSERT(mCacheEntry);
-  }
-
- private:
-  nsCOMPtr<nsICacheEntry> mCacheEntry;
-};
-
-NS_IMPL_ADDREF(CacheEntryWriteHandle)
-NS_IMPL_RELEASE(CacheEntryWriteHandle)
-NS_INTERFACE_MAP_BEGIN(CacheEntryWriteHandle)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_INTERFACE_MAP_ENTRY(nsICacheEntryWriteHandle)
-NS_INTERFACE_MAP_END
-
-NS_IMETHODIMP
-CacheEntryWriteHandle::OpenAlternativeOutputStream(
-    const nsACString& type, int64_t predictedSize,
-    nsIAsyncOutputStream** _retval) {
-  nsresult rv =
-      mCacheEntry->OpenAlternativeOutputStream(type, predictedSize, _retval);
-  if (NS_SUCCEEDED(rv)) {
-    mCacheEntry->SetMetaDataElement("alt-data-from-child", nullptr);
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetCacheEntryWriteHandle(nsICacheEntryWriteHandle** _retval) {
-  if (!mCacheEntry) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsCOMPtr<nsICacheEntryWriteHandle> handle =
-      new CacheEntryWriteHandle(mCacheEntry);
-  handle.forget(_retval);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsHttpChannel::OpenAlternativeOutputStream(const nsACString& type,
                                            int64_t predictedSize,
