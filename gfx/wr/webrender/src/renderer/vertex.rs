@@ -518,56 +518,6 @@ pub mod desc {
         }],
     };
 
-    pub const SVG_FILTER: VertexDescriptor = VertexDescriptor {
-        vertex_attributes: &[VertexAttribute {
-            name: "aPosition",
-            count: 2,
-            kind: VertexAttributeKind::U8Norm,
-        }],
-        instance_attributes: &[
-            VertexAttribute {
-                name: "aFilterRenderTaskAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aFilterInput1TaskAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aFilterInput2TaskAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-            VertexAttribute {
-                name: "aFilterKind",
-                count: 1,
-                kind: VertexAttributeKind::U16,
-            },
-            VertexAttribute {
-                name: "aFilterInputCount",
-                count: 1,
-                kind: VertexAttributeKind::U16,
-            },
-            VertexAttribute {
-                name: "aFilterGenericInt",
-                count: 1,
-                kind: VertexAttributeKind::U16,
-            },
-            VertexAttribute {
-                name: "aUnused",
-                count: 1,
-                kind: VertexAttributeKind::U16,
-            },
-            VertexAttribute {
-                name: "aFilterExtraDataAddress",
-                count: 1,
-                kind: VertexAttributeKind::I32,
-            },
-        ],
-    };
-
     pub const SVG_FILTER_NODE: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
@@ -840,7 +790,6 @@ pub enum VertexArrayKind {
     RadialGradient,
     ConicGradient,
     Resolve,
-    SvgFilter,
     SvgFilterNode,
     Composite,
     Clear,
@@ -1065,7 +1014,6 @@ pub struct RendererVAOs {
     radial_gradient_vao: VAO,
     conic_gradient_vao: VAO,
     resolve_vao: VAO,
-    svg_filter_vao: VAO,
     svg_filter_node_vao: VAO,
     composite_vao: VAO,
     clear_vao: VAO,
@@ -1113,7 +1061,6 @@ impl RendererVAOs {
             radial_gradient_vao: device.create_vao_with_new_instances(&desc::RADIAL_GRADIENT, &prim_vao),
             conic_gradient_vao: device.create_vao_with_new_instances(&desc::CONIC_GRADIENT, &prim_vao),
             resolve_vao: device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao),
-            svg_filter_vao: device.create_vao_with_new_instances(&desc::SVG_FILTER, &prim_vao),
             svg_filter_node_vao: device.create_vao_with_new_instances(&desc::SVG_FILTER_NODE, &prim_vao),
             composite_vao: device.create_vao_with_new_instances(&desc::COMPOSITE, &prim_vao),
             clear_vao: device.create_vao_with_new_instances(&desc::CLEAR, &prim_vao),
@@ -1136,7 +1083,6 @@ impl RendererVAOs {
         device.delete_vao(self.line_vao);
         device.delete_vao(self.border_vao);
         device.delete_vao(self.scale_vao);
-        device.delete_vao(self.svg_filter_vao);
         device.delete_vao(self.svg_filter_node_vao);
         device.delete_vao(self.composite_vao);
         device.delete_vao(self.clear_vao);
@@ -1162,7 +1108,6 @@ impl ops::Index<VertexArrayKind> for RendererVAOs {
             VertexArrayKind::RadialGradient => &self.radial_gradient_vao,
             VertexArrayKind::ConicGradient => &self.conic_gradient_vao,
             VertexArrayKind::Resolve => &self.resolve_vao,
-            VertexArrayKind::SvgFilter => &self.svg_filter_vao,
             VertexArrayKind::SvgFilterNode => &self.svg_filter_node_vao,
             VertexArrayKind::Composite => &self.composite_vao,
             VertexArrayKind::Clear => &self.clear_vao,
