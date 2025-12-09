@@ -30,6 +30,7 @@
 #include "nsImportModule.h"
 #include "nsITelemetry.h"
 #include "nsNetCID.h"
+#include "nsObserverService.h"
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -54,6 +55,8 @@ static constexpr uint32_t kTelemetryCooldownS = 10;
 // that counts as "active".
 static constexpr unsigned kPokeWindowEvents = 10;
 static constexpr unsigned kPokeWindowSeconds = 1;
+
+static constexpr const char* kTopicShutdown = "content-child-shutdown";
 
 namespace {
 
@@ -116,31 +119,35 @@ class TimeStampWindow {
   AutoCleanLinkedList<Event> mEvents;
 };
 
+NS_IMPL_ISUPPORTS(MemoryTelemetry, nsIObserver, nsISupportsWeakReference)
+
 MemoryTelemetry::MemoryTelemetry()
-    : mThreadPool(do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID)) {
+    : mThreadPool(do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID)) {}
+
+void MemoryTelemetry::Init() {
   for (auto& val : gPrevValues) {
     val = kUninitialized;
   }
+
+  if (XRE_IsContentProcess()) {
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    MOZ_RELEASE_ASSERT(obs);
+
+    obs->AddObserver(this, kTopicShutdown, true);
+  }
 }
 
-MemoryTelemetry::~MemoryTelemetry() {}
+/* static */ MemoryTelemetry& MemoryTelemetry::Get() {
+  static RefPtr<MemoryTelemetry> sInstance;
 
-static StaticRefPtr<MemoryTelemetry> sInstance;
-
-/* static */ RefPtr<MemoryTelemetry> MemoryTelemetry::Create() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sInstance) {
     sInstance = new MemoryTelemetry();
+    sInstance->Init();
     ClearOnShutdown(&sInstance);
   }
-
-  return sInstance;
-}
-
-/* static */ RefPtr<MemoryTelemetry> MemoryTelemetry::Get() {
-  MOZ_ASSERT(NS_IsMainThread());
-  return sInstance;
+  return *sInstance;
 }
 
 void MemoryTelemetry::DelayedInit() {
@@ -223,7 +230,10 @@ nsresult MemoryTelemetry::Shutdown() {
     mTimer->Cancel();
   }
 
-  sInstance = nullptr;
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  MOZ_RELEASE_ASSERT(obs);
+
+  obs->RemoveObserver(this, kTopicShutdown);
 
   return NS_OK;
 }
@@ -432,10 +442,8 @@ void MemoryTelemetry::GatherTotalMemory() {
         infos.AppendElement(info);
       });
 
-  RefPtr<MemoryTelemetry> self = this;
   mThreadPool->Dispatch(NS_NewRunnableFunction(
-      "MemoryTelemetry::GatherTotalMemory",
-      [self = std::move(self), infos = std::move(infos)] {
+      "MemoryTelemetry::GatherTotalMemory", [infos = std::move(infos)] {
         RefPtr<nsMemoryReporterManager> mgr =
             nsMemoryReporterManager::GetOrCreate();
         MOZ_RELEASE_ASSERT(mgr);
@@ -477,9 +485,9 @@ void MemoryTelemetry::GatherTotalMemory() {
 
         NS_DispatchToMainThread(NS_NewRunnableFunction(
             "MemoryTelemetry::FinishGatheringTotalMemory",
-            [self = std::move(self), mbTotal,
-             childSizes = std::move(childSizes)] {
-              self->FinishGatheringTotalMemory(mbTotal, childSizes);
+            [mbTotal, childSizes = std::move(childSizes)] {
+              MemoryTelemetry::Get().FinishGatheringTotalMemory(mbTotal,
+                                                                childSizes);
             }));
       }));
 }
@@ -568,4 +576,15 @@ nsresult MemoryTelemetry::FinishGatheringTotalMemory(
   }
 
   return total;
+}
+
+nsresult MemoryTelemetry::Observe(nsISupports* aSubject, const char* aTopic,
+                                  const char16_t* aData) {
+  if (strcmp(aTopic, kTopicShutdown) == 0) {
+    if (nsCOMPtr<nsITelemetry> telemetry =
+            do_GetService("@mozilla.org/base/telemetry;1")) {
+      telemetry->FlushBatchedChildTelemetry();
+    }
+  }
+  return NS_OK;
 }
