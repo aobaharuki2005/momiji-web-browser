@@ -50,6 +50,32 @@ export class SettingPane extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
+
+    document.addEventListener(
+      "paneshown",
+      /**
+       * @param {CustomEvent} e
+       */
+      e => {
+        if (this.isSubPane && e.detail.category === this.name) {
+          /**
+           * Automatically focus to the first focusable element in the
+           * sub page when it's accessed, which is always the Back Button.
+           */
+          this.pageHeaderEl.backButtonEl.focus();
+          /**
+           * ...but execute moveFocus here to move to the very
+           * next focusable element after the Back button (if there is one).
+           */
+          Services.focus.moveFocus(
+            window,
+            null,
+            Services.focus.MOVEFOCUS_FORWARD,
+            Services.focus.FLAG_BYJS
+          );
+        }
+      }
+    );
     this.setAttribute("data-category", this.name);
     this.hidden = true;
     if (this.isSubPane) {
