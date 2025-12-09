@@ -1536,7 +1536,10 @@ void XPCJSContext::AfterProcessTask(uint32_t aNewRecursionDepth) {
 
   // Poke the memory telemetry reporter
   if (AppShutdown::GetCurrentShutdownPhase() == ShutdownPhase::NotInShutdown) {
-    MemoryTelemetry::Get().Poke();
+    RefPtr<MemoryTelemetry> telemetry = MemoryTelemetry::Get();
+    if (telemetry) {
+      telemetry->Poke();
+    }
   }
 
   // This exception might have been set if we called an XPCWrappedJS that threw,

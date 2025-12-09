@@ -137,9 +137,9 @@ void MemoryTelemetry::Init() {
   }
 }
 
-/* static */ MemoryTelemetry& MemoryTelemetry::Get() {
-  static RefPtr<MemoryTelemetry> sInstance;
+static StaticRefPtr<MemoryTelemetry> sInstance;
 
+/* static */ RefPtr<MemoryTelemetry> MemoryTelemetry::Get() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!sInstance) {
@@ -147,7 +147,7 @@ void MemoryTelemetry::Init() {
     sInstance->Init();
     ClearOnShutdown(&sInstance);
   }
-  return *sInstance;
+  return sInstance;
 }
 
 void MemoryTelemetry::DelayedInit() {
@@ -234,6 +234,8 @@ nsresult MemoryTelemetry::Shutdown() {
   MOZ_RELEASE_ASSERT(obs);
 
   obs->RemoveObserver(this, kTopicShutdown);
+
+  sInstance = nullptr;
 
   return NS_OK;
 }
@@ -442,8 +444,10 @@ void MemoryTelemetry::GatherTotalMemory() {
         infos.AppendElement(info);
       });
 
+  RefPtr<MemoryTelemetry> self = this;
   mThreadPool->Dispatch(NS_NewRunnableFunction(
-      "MemoryTelemetry::GatherTotalMemory", [infos = std::move(infos)] {
+      "MemoryTelemetry::GatherTotalMemory",
+      [self = std::move(self), infos = std::move(infos)] {
         RefPtr<nsMemoryReporterManager> mgr =
             nsMemoryReporterManager::GetOrCreate();
         MOZ_RELEASE_ASSERT(mgr);
@@ -485,9 +489,9 @@ void MemoryTelemetry::GatherTotalMemory() {
 
         NS_DispatchToMainThread(NS_NewRunnableFunction(
             "MemoryTelemetry::FinishGatheringTotalMemory",
-            [mbTotal, childSizes = std::move(childSizes)] {
-              MemoryTelemetry::Get().FinishGatheringTotalMemory(mbTotal,
-                                                                childSizes);
+            [self = std::move(self), mbTotal,
+             childSizes = std::move(childSizes)] {
+              self->FinishGatheringTotalMemory(mbTotal, childSizes);
             }));
       }));
 }

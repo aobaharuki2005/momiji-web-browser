@@ -34,10 +34,10 @@ enum class ResponseRejectReason;
 class MemoryTelemetry final : public nsIObserver,
                               public nsSupportsWeakReference {
  public:
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  static MemoryTelemetry& Get();
+  static RefPtr<MemoryTelemetry> Get();
 
   nsresult GatherReports(
       const std::function<void()>& aCompletionCallback = nullptr);

@@ -8,6 +8,10 @@ add_task(function test_compartment_realm_counts() {
 
   Cu.forceShrinkingGC();
 
+  // MemoryTelemetry class needs to be created and initialised.  
+  Services.telemetry.earlyInit();
+  Services.telemetry.delayedInit();
+
   Services.telemetry.gatherMemory();
   let snapshot1 = Services.telemetry.getSnapshotForHistograms("main", true).parent;
 
@@ -50,4 +54,6 @@ add_task(function test_compartment_realm_counts() {
             "There must be more system realms than system compartments now");
 
   arr[0].x = 10; // Ensure the JS engine keeps |arr| alive until this point.
+  
+  Services.telemetry.shutdown();
 });

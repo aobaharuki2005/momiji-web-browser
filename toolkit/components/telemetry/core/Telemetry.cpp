@@ -168,6 +168,7 @@ class TelemetryImpl final : public nsITelemetry, public nsIMemoryReporter {
   Mutex mHashMutex MOZ_UNANNOTATED;
   Atomic<bool, SequentiallyConsistent> mCanRecordBase;
   Atomic<bool, SequentiallyConsistent> mCanRecordExtended;
+  RefPtr<MemoryTelemetry> mMemoryTelemetry;
 
   bool mCachedTelemetryData;
   uint32_t mLastShutdownTime;
@@ -1207,32 +1208,47 @@ TelemetryImpl::FlushBatchedChildTelemetry() {
 
 NS_IMETHODIMP
 TelemetryImpl::EarlyInit() {
-  (void)MemoryTelemetry::Get();
+  if (mMemoryTelemetry) {
+    // Don't do anything if EarlyInit ran already.
+    return NS_OK;
+  }
+  mMemoryTelemetry = MemoryTelemetry::Get();
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TelemetryImpl::DelayedInit() {
-  MemoryTelemetry::Get().DelayedInit();
+  if (!mMemoryTelemetry) {
+    return NS_ERROR_FAILURE;
+  }
+  mMemoryTelemetry->DelayedInit();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TelemetryImpl::Shutdown() {
-  MemoryTelemetry::Get().Shutdown();
+  if (!mMemoryTelemetry) {
+    return NS_ERROR_FAILURE;
+  }
+  mMemoryTelemetry->Shutdown();
+  mMemoryTelemetry = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 TelemetryImpl::GatherMemory(JSContext* aCx, Promise** aResult) {
+  if (!mMemoryTelemetry) {
+    return NS_ERROR_FAILURE;
+  }
+
   ErrorResult rv;
   RefPtr<Promise> promise = Promise::Create(xpc::CurrentNativeGlobal(aCx), rv);
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
 
-  MemoryTelemetry::Get().GatherReports(
+  mMemoryTelemetry->GatherReports(
       [promise]() { promise->MaybeResolve(JS::UndefinedHandleValue); });
 
   promise.forget(aResult);
