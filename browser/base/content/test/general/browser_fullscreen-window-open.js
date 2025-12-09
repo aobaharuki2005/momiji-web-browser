@@ -23,7 +23,10 @@ async function test() {
 
   newWin = await BrowserTestUtils.openNewBrowserWindow();
   newBrowser = newWin.gBrowser;
-  await promiseTabLoadEvent(newBrowser.selectedTab, gHttpTestRoot + TEST_FILE);
+  await BrowserTestUtils.loadURIString({
+    browser: newBrowser.selectedTab.linkedBrowser,
+    uriString: gHttpTestRoot + TEST_FILE,
+  });
 
   // Enter browser fullscreen mode.
   newWin.BrowserCommands.fullScreen();
