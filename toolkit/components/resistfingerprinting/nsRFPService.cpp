@@ -144,7 +144,7 @@ static constexpr uint32_t kVideoDroppedRatio = 1;
 #  define DESKTOP_DEFAULT(name) RFPTarget::name,
 #endif
 
-MOZ_CONSTINIT const RFPTargetSet kDefaultFingerprintingProtectionsBase = {
+constinit const RFPTargetSet kDefaultFingerprintingProtectionsBase = {
 #include "RFPTargetsDefaultBaseline.inc"
 };
 
@@ -171,9 +171,9 @@ static inline StaticAutoPtr<nsTArray<nsCString>> sAllowedFonts;
 
 // Actually enabled fingerprinting protections.
 static StaticMutex sEnabledFingerprintingProtectionsMutex;
-MOZ_CONSTINIT static RFPTargetSet sEnabledFingerprintingProtectionsBase
+constinit static RFPTargetSet sEnabledFingerprintingProtectionsBase
     MOZ_GUARDED_BY(sEnabledFingerprintingProtectionsMutex);
-MOZ_CONSTINIT static RFPTargetSet sEnabledFingerprintingProtections
+constinit static RFPTargetSet sEnabledFingerprintingProtections
     MOZ_GUARDED_BY(sEnabledFingerprintingProtectionsMutex);
 
 /* static */
