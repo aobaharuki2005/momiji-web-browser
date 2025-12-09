@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">모든 기기에서 동기화된 탭을 관리하려면 로그인하세요.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">로그인</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">모든 이야기</string>
   <!--
     Home - Bookmarks
 
@@ -1142,7 +1144,7 @@
   -->
   <string name="default_device_name_2">%2$s %3$s의 %1$s</string>
   <!-- Preference for syncing payment methods -->
-  <string name="preferences_sync_credit_cards_2">결제 방법</string>
+  <string name="preferences_sync_credit_cards_2">결제 수단</string>
   <!-- Preference for syncing addresses -->
   <string name="preferences_sync_address">주소</string>
   <!--
@@ -1535,6 +1537,8 @@
   <string name="delete_from_history">기록에서 삭제</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (사생활 보호 모드)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">탭 검색 열기</string>
   <!--
     History
 
@@ -2740,11 +2744,11 @@
   <!-- Preference and title for managing the settings for addresses -->
   <string name="preferences_addresses">주소</string>
   <!-- Preference and title for managing the settings for payment methods -->
-  <string name="preferences_credit_cards_2">결제 방법</string>
+  <string name="preferences_credit_cards_2">결제 수단</string>
   <!-- Preference for saving and autofilling credit cards -->
-  <string name="preferences_credit_cards_save_and_autofill_cards_2">결제 방법 저장 및 채우기</string>
+  <string name="preferences_credit_cards_save_and_autofill_cards_2">결제 수단 저장 및 채우기</string>
   <!-- Preference summary for saving and autofilling payment method data. %s is the name of the app (for example "Firefox"). -->
-  <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s는 저장한 모든 결제 방법을 암호화합니다</string>
+  <string name="preferences_credit_cards_save_and_autofill_cards_summary_2">%s는 저장한 모든 결제 수단을 암호화합니다</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
   <string name="preferences_credit_cards_sync_cards_across_devices">기기 간에 카드 동기화</string>
   <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
@@ -2804,9 +2808,9 @@
   <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
   <string name="credit_cards_biometric_prompt_message">저장된 카드를 보시려면 잠금 해제하세요</string>
   <!-- Title of warning dialog if users have no device authentication set up -->
-  <string name="credit_cards_warning_dialog_title_2">저장된 결제 방법을 보호하세요</string>
+  <string name="credit_cards_warning_dialog_title_2">저장된 결제 수단을 보호하세요</string>
   <!-- Message of warning dialog if users have no device authentication set up -->
-  <string name="credit_cards_warning_dialog_message_3">다른 사람이 내 기기를 가지고 있는 경우, 저장된 결제 방법에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
+  <string name="credit_cards_warning_dialog_message_3">다른 사람이 내 기기를 가지고 있는 경우, 저장된 결제 수단에 접근하지 못하도록 기기 잠금 패턴, PIN 또는 비밀번호를 설정하세요.</string>
   <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
   <string name="credit_cards_warning_dialog_set_up_now">지금 설정</string>
   <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
@@ -2814,7 +2818,7 @@
   <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
   <string name="credit_cards_biometric_prompt_message_pin">기기 잠금 해제</string>
   <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored payment method information -->
-  <string name="credit_cards_biometric_prompt_unlock_message_2">저장된 결제 방법을 사용하려면 잠금 해제하세요</string>
+  <string name="credit_cards_biometric_prompt_unlock_message_2">저장된 결제 수단을 사용하려면 잠금 해제하세요</string>
   <!-- Title of the "Add address" screen -->
   <string name="addresses_add_address">주소 추가</string>
   <!-- Title of the "Edit address" screen -->
@@ -3938,4 +3942,16 @@
   <string name="terms_of_use_prompt_accept">동의</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">나중에 알림</string>
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">Firefox의 최신 기능을 반영하도록 %1$s을 업데이트했습니다. %2$s</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">개인정보처리방침</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">더 알아보기</string>
 </resources>

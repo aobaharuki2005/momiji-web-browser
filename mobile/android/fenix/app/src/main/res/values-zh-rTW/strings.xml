@@ -36,7 +36,7 @@
   <!-- No Private Tabs Message Description -->
   <string name="no_private_tabs_description">您開啟的隱私瀏覽分頁將顯示於此處。</string>
   <!-- The header text displayed on the private tabs page when no private tabs are open -->
-  <string name="tab_manager_empty_private_tabs_page_header">隱私瀏覽</string>
+  <string name="tab_manager_empty_private_tabs_page_header">隱私瀏覽模式</string>
   <!-- The supplementary text displayed on the private tabs page when no private tabs are open. %1$s is the name of the app (for example "Firefox") -->
   <string name="tab_manager_empty_private_tabs_page_description">%1$s 不會留下瀏覽紀錄或 Cookie，但會保留建立的書籤。</string>
   <!-- The header text displayed on the normal tabs page when no normal tabs are open -->
@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">登入後即可管理所有裝置已同步的分頁。</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">登入</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">所有文章</string>
   <!--
     Home - Bookmarks
 
@@ -265,7 +267,7 @@
     Browser menu text shown in custom tabs to indicate this is a Fenix tab
     %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="browser_menu_powered_by">由 %1$s 提供</string>
+  <string name="browser_menu_powered_by">POWERED BY %1$s</string>
   <!--
     Browser menu text shown in custom tabs to indicate this is a Fenix tab
     %1$s is the name of the app (for example "Firefox").
@@ -544,9 +546,9 @@
   <!-- Used as text for the link in onboarding_term_of_service_line_one_2. -->
   <string name="onboarding_term_of_service_line_one_link_text_2" tools:ignore="BrandUsage">Firefox 的使用條款</string>
   <!-- Line two of the terms of service onboarding page. 'Firefox' is intentionally hardcoded. %1$s is replaced by an active link, using onboarding_term_of_service_line_two_link_text as text (“Privacy Notice”). -->
-  <string name="onboarding_term_of_service_line_two_2" tools:ignore="BrandUsage">Firefox 關心您的隱私。到我們的 %1$s 閱讀更多資訊。</string>
+  <string name="onboarding_term_of_service_line_two_2" tools:ignore="BrandUsage">Firefox 關心您的隱私。到我們的%1$s閱讀更多資訊。</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_two. -->
-  <string name="onboarding_term_of_service_line_two_link_text">隱私權保護政策</string>
+  <string name="onboarding_term_of_service_line_two_link_text">隱私權公告</string>
   <!-- Line three of the terms of service onboarding page. 'Firefox' and 'Mozilla' are intentionally hardcoded. %1$s is replaced by an active link using onboarding_term_of_service_line_three_link_text as text (“Manage”). -->
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">為了幫助改善瀏覽器，Firefox 會將除錯與互動資料傳送回 Mozilla。%1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
@@ -570,7 +572,7 @@
     Terms of use (ToU) second body text. 'Firefox' is intentionally hardcoded.
     %1$s is replaced by an active link, using onboarding_redesign_tou_body_two_link_text as text (“Privacy Notice”).
   -->
-  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox 關心您的隱私。到我們的 %1$s 閱讀更多資訊。</string>
+  <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox 關心您的隱私。到我們的%1$s閱讀更多資訊。</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
   <string name="onboarding_redesign_tou_body_two_link_text">隱私權公告</string>
   <!--
@@ -1535,6 +1537,8 @@
   <string name="delete_from_history">從瀏覽紀錄刪除</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s（隱私瀏覽模式）</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">開啟分頁搜尋</string>
   <!--
     History
 
@@ -1651,9 +1655,9 @@
   <!-- Text for the header that groups the downloads for yesterday -->
   <string name="download_time_period_yesterday">昨天</string>
   <!-- Text for the header that groups the downloads the past 7 days -->
-  <string name="download_time_period_last_7_days">最近 7 天</string>
+  <string name="download_time_period_last_7_days">7 天內</string>
   <!-- Text for the header that groups the downloads the past 30 days -->
-  <string name="download_time_period_last_30_days">最近 30 天</string>
+  <string name="download_time_period_last_30_days">30 天內</string>
   <!-- Text for the header that groups the downloads older than other groups -->
   <string name="download_time_period_older">更久之前</string>
   <!-- Description of an in progress download item, displayed in the downloads list when the download has just started. -->
@@ -1740,7 +1744,7 @@
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">傳送</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
-  <string name="webcompat_reporter_success_snackbar_text_2">已送出回報</string>
+  <string name="webcompat_reporter_success_snackbar_text_2">已送出報告</string>
   <!-- Placeholder text for the description field to prompt the user on what they should type. -->
   <string name="webcompat_reporter_problem_description_placeholder_text">應該發生什麼事，卻又實際發生什麼事？</string>
   <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
@@ -2202,7 +2206,7 @@
   <!-- Text shown in snackbar when user bookmarks a list of tabs. %s is the name of the folder the bookmark was saved into. -->
   <string name="snackbar_message_bookmarks_saved_in_2">已將書籤儲存到「%s」</string>
   <!-- Text shown in snackbar when user adds a site to shortcuts -->
-  <string name="snackbar_added_to_shortcuts">已新增至捷徑！</string>
+  <string name="snackbar_added_to_shortcuts">已新增捷徑！</string>
   <!-- Text shown in snackbar when user closes a private tab -->
   <string name="snackbar_private_tab_closed">已關閉隱私分頁</string>
   <!-- Text shown in snackbar when user erases their private browsing data -->
@@ -2606,7 +2610,7 @@
   -->
   <string name="browser_toolbar_long_press_popup_copy">複製</string>
   <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
-  <string name="browser_toolbar_long_press_popup_paste_and_go">貼上並瀏覽</string>
+  <string name="browser_toolbar_long_press_popup_paste_and_go">貼上並前往</string>
   <!-- Paste the text in the clipboard -->
   <string name="browser_toolbar_long_press_popup_paste">貼上</string>
   <!-- Snackbar message shown after an URL has been copied to clipboard. -->
@@ -2718,7 +2722,7 @@
   <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
   <string name="logins_warning_dialog_later">稍後處理</string>
   <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
-  <string name="logins_warning_dialog_set_up_now">現在設定</string>
+  <string name="logins_warning_dialog_set_up_now">立即設定</string>
   <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
   <string name="logins_biometric_prompt_message_pin">裝置解鎖</string>
   <!-- Title for Accessibility Force Enable Zoom Preference -->
@@ -3938,4 +3942,16 @@
   <string name="terms_of_use_prompt_accept">接受</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">待會提醒我</string>
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">為了配合 Firefox 推出的最新功能，我們已更新%1$s。%2$s</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">隱私權公告</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">更多資訊</string>
 </resources>

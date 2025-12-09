@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Prijavi se za upravljanje sinkroniziranim karticama sa svih svojih uređaja.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Prijavi se</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Sve priče</string>
   <!--
     Home - Bookmarks
 
@@ -1535,6 +1537,8 @@
   <string name="delete_from_history">Izbriši iz povijesti</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (privatni modus)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">Otvori pretraživanje kartica</string>
   <!--
     History
 
@@ -2516,7 +2520,7 @@
   <!-- Bullet point 1 for "Default Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_default_protection_info_1">Koristi svog odabranog pružatelja usluge</string>
   <!-- Bullet point 2 for "Default Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_default_protection_info_2">Koristi svoj standarni DNS pretvarač, ako postoji problem s pružateljem sigurnog DNS-a</string>
+  <string name="preference_doh_default_protection_info_2">Koristi svoj standardni DNS pretvarač, ako postoji problem s pružateljem sigurnog DNS-a</string>
   <!-- Bullet point 3 for "Default Protection" information page under "DNS over HTTPS". %1$s is replaced by a link using `preference_doh_learn_more` at text ("Learn More"). -->
   <string name="preference_doh_default_protection_info_3">Koristi lokalnog pružatelja usluga, ukoliko je moguće. %1$s</string>
   <!-- Bullet point 4 for "Default Protection" information page under "DNS over HTTPS" -->
@@ -2530,7 +2534,7 @@
   <!-- Bullet point 1 for "Increased Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_increased_protection_info_1">Koristi svog odabranog pružatelja usluge</string>
   <!-- Bullet point 2 for "Increased Protection" information page under "DNS over HTTPS" -->
-  <string name="preference_doh_increased_protection_info_2">Koristi svoj standarni DNS pretvarač samo ako postoji problem sa sigurnim DNS-om</string>
+  <string name="preference_doh_increased_protection_info_2">Koristi svoj standardni DNS pretvarač samo ako postoji problem sa sigurnim DNS-om</string>
   <!-- Title displayed for "Max Protection" option under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection">Maksimalna zaštita</string>
   <!-- Summary displayed for "Max Protection" option under "DNS over HTTPS". %1$s is the name of the application (e.g. Fenix). -->
@@ -2544,7 +2548,7 @@
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off">Isključeno</string>
   <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->
-  <string name="preference_doh_off_summary">Koristi svoj standarni DNS pretvarač</string>
+  <string name="preference_doh_off_summary">Koristi svoj standardni DNS pretvarač</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
   <string name="preference_doh_choose_provider">Odaberi pružatelja usluge</string>
   <!-- Text displayed for "Default provider" under "DNS over HTTPS" providers -->
@@ -3938,4 +3942,16 @@
   <string name="terms_of_use_prompt_accept">Prihvati</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Podsjeti me kasnije</string>
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">Aktualizirali smo naš dokument %1$s kako bi odražavao najnovije funkcije u Firefoxu. %2$s</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Politika privatnosti</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Saznaj više</string>
 </resources>

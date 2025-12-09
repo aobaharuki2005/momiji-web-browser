@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Melden Sie sich an, um synchronisierte Tabs von allen Ihren Geräten zu verwalten.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Anmelden</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Alle Geschichten</string>
   <!--
     Home - Bookmarks
 
@@ -1535,6 +1537,8 @@
   <string name="delete_from_history">Aus Chronik löschen</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (Privater Modus)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">Tab-Suche öffnen</string>
   <!--
     History
 
@@ -3938,4 +3942,16 @@
   <string name="terms_of_use_prompt_accept">Annehmen</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Später erinnern</string>
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">Wir haben unseren %1$s aktualisiert, um die neuesten Funktionen in Firefox widerzuspiegeln. %2$s</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Datenschutzhinweis</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Weitere Informationen</string>
 </resources>
