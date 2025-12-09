@@ -173,16 +173,11 @@ private fun Throwable.serialize(): ByteArray {
         // If throwable isn't serializable, then use a placeholder Throwable with
         // the same stack and include basic name / message data. This gives us
         // at least some data to understand these crashes in the wild.
-
-        this.forceSerializable().serialize()
+        val innerMessage = "${javaClass.name}: $message"
+        val altThrowable = CrashReporterUnableToRestoreException(innerMessage)
+        altThrowable.stackTrace = stackTrace.clone()
+        altThrowable.serialize()
     }
-}
-
-internal fun Throwable.forceSerializable(): Throwable {
-    val innerMessage = "${javaClass.name}: $message"
-    val altThrowable = CrashReporterUnableToRestoreException(innerMessage)
-    altThrowable.stackTrace = stackTrace.clone()
-    return altThrowable
 }
 
 private fun ByteArray.deserializeThrowable(): Throwable {
