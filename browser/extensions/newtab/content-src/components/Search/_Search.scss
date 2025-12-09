@@ -295,7 +295,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   }
 
   .fake-focus:not(.search-disabled) & {
-    border: 1px solid var(--border-color-interactive);
+    border: $input-border-active;
     box-shadow: var(--newtab-textbox-focus-boxshadow);
 
     .fake-caret {
@@ -362,7 +362,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       $search-icon-padding: 16px;
       $search-header-bar-height: 95px;
 
-      border-block-end: solid 1px var(--border-color);
+      border-bottom: solid 1px var(--newtab-border-color);
       padding: var(--space-xlarge) 0;
       background-color: var(--newtab-overlay-color);
       min-height: $search-header-bar-height;
@@ -427,7 +427,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     .contentSearchHeader,
     .contentSearchSettingsButton {
-      border-color: var(--border-color);
+      border-color: var(--newtab-border-color);
     }
 
     .contentSearchSuggestionsList {
@@ -436,7 +436,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
 
     .contentSearchOneOffsTable {
-      border-block-start: solid 1px var(--border-color);
+      border-top: solid 1px var(--newtab-border-color);
       background-color: var(--newtab-background-color);
     }
 
@@ -464,7 +464,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       $border-offset: 18%;
 
       background-image: none;
-      border-image: linear-gradient(transparent $border-offset, var(--border-color) $border-offset, var(--border-color) 100% - $border-offset, transparent 100% - $border-offset) 1;
+      border-image: linear-gradient(transparent $border-offset, var(--newtab-border-color) $border-offset, var(--newtab-border-color) 100% - $border-offset, transparent 100% - $border-offset) 1;
       border-inline-end: 1px solid;
       position: relative;
 

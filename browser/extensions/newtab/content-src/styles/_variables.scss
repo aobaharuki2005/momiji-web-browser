@@ -195,7 +195,7 @@ $customize-menu-border-tint: 1px solid rgba(0, 0, 0, 15%);
     background-image: url('chrome://global/skin/icons/more.svg');
     background-position: 50.1%;
     border: 0;
-    outline: 1px solid var(--border-color);
+    outline: $border-primary;
     outline-width: 0;
     border-radius: var(--border-radius-circle);
     cursor: pointer;

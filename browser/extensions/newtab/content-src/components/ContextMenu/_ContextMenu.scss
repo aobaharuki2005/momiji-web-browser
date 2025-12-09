@@ -24,7 +24,7 @@
       width: 100%;
 
       &.separator {
-        border-block-end: 1px solid var(--border-color);
+        border-bottom: $border-secondary;
         margin: var(--space-xsmall) 0;
       }
 

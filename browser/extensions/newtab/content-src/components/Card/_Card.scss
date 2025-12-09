@@ -90,7 +90,7 @@
     position: relative;
 
     &::after {
-      border-block-end: 1px solid var(--newtab-card-hairline-color);
+      border-bottom: 1px solid var(--newtab-card-hairline-color);
       inset-block-end: 0;
       content: '';
       position: absolute;
@@ -293,7 +293,7 @@
 
       &::after {
         border: 1px solid var(--newtab-card-hairline-color);
-        border-block-end: 0;
+        border-bottom: 0;
         border-radius: var(--border-radius-medium);
         content: '';
         position: absolute;
