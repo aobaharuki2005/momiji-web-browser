@@ -106,7 +106,7 @@ use style::invalidation::element::relative_selector::{
 };
 use style::invalidation::element::restyle_hints::RestyleHint;
 use style::invalidation::stylesheets::RuleChangeKind;
-use style::logical_geometry::{PhysicalAxis, PhysicalSide, WritingMode};
+use style::logical_geometry::{LogicalAxis, PhysicalAxis, PhysicalSide, WritingMode};
 use style::media_queries::MediaList;
 use style::parser::{Parse, ParserContext};
 use style::properties::declaration_block::PropertyTypedValue;
@@ -165,7 +165,7 @@ use style::values::computed::length_percentage::{
 };
 use style::values::computed::position::{AnchorFunction, PositionArea};
 use style::values::computed::{
-    self, ContentVisibility, Context, PositionAreaKeyword, ToComputedValue,
+    self, ContentVisibility, Context, ToComputedValue,
 };
 use style::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use style::values::generics::color::ColorMixFlags;
@@ -10842,12 +10842,24 @@ pub extern "C" fn Servo_PhysicalizePositionArea(
     *area = area.to_physical(*cb_wm, *self_wm);
 }
 
+/// https://drafts.csswg.org/css-anchor-position-1/#position-area-alignment
 #[no_mangle]
 pub extern "C" fn Servo_ResolvePositionAreaSelfAlignment(
-    area: &PositionAreaKeyword,
+    area: &PositionArea,
+    axis: LogicalAxis,
+    cb_wm: &WritingMode,
+    self_wm: &WritingMode,
     out: &mut AlignFlags,
 ) {
-    let Some(align) = area.to_self_alignment() else {
+    // As well as converting `area` and `axis` to the same form for comparison
+    // this also makes sure `area`'s second keyword explicit (not none).
+    let physical_area = area.to_physical(*cb_wm, *self_wm);
+    let physical_axis = axis.to_physical(*cb_wm);
+    let area_keyword = match physical_axis {
+        PhysicalAxis::Horizontal => physical_area.first,
+        PhysicalAxis::Vertical => physical_area.second,
+    };
+    let Some(align) = area_keyword.to_self_alignment() else {
         debug_assert!(
             false,
             "ResolvePositionAreaSelfAlignment called on {:?}",

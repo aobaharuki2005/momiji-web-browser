@@ -2550,11 +2550,14 @@ nsContainerFrame::CSSAlignmentForAbsPosChildWithinContainingBlock(
                                                   : StyleAlignFlags::START;
       alignment |= StyleAlignFlags::UNSAFE;
     } else {
-      auto keyword = aLogicalAxis == LogicalAxis::Inline
-                         ? aResolvedPositionArea.first
-                         : aResolvedPositionArea.second;
-      // Use normal position-area alignment
-      Servo_ResolvePositionAreaSelfAlignment(&keyword, &alignment);
+      // Use default position-area self-alignment:
+      // https://drafts.csswg.org/css-anchor-position-1/#position-area-alignment
+      const auto axis = ToStyleLogicalAxis(aLogicalAxis);
+      const auto cbSWM = cbWM.ToStyleWritingMode();
+      const auto selfWM =
+          aChildRI.mFrame->GetWritingMode().ToStyleWritingMode();
+      Servo_ResolvePositionAreaSelfAlignment(&aResolvedPositionArea, axis,
+                                             &cbSWM, &selfWM, &alignment);
     }
   }
 
