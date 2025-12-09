@@ -98,11 +98,14 @@ pub struct CacheEntry {
     /// Arbitrary user data associated with this item.
     pub user_data: [f32; 4],
     /// The last frame this item was requested for rendering.
-    // TODO(gw): This stamp is only used for picture cache tiles, and some checks
-    //           in the glyph cache eviction code. We could probably remove it
-    //           entirely in future (or move to PictureCacheEntry).
     pub last_access: FrameStamp,
     /// Address of the resource rect in the GPU cache.
+    ///
+    /// The handle is stored in the cache entry to avoid duplicates when an
+    /// item is used multiple times per frame, but greate care must be taken
+    /// to not reuse a handle that was created in a previous frame.
+    /// TODO: For now the validity of the handle can be checked by comparing
+    /// last_access with the current FrameStamp, but this is error prone.
     pub uv_rect_handle: GpuBufferHandle,
     /// Image format of the data that the entry expects.
     pub input_format: ImageFormat,
@@ -581,7 +584,7 @@ pub struct TextureCache {
     pub pending_updates: TextureUpdateList,
 
     /// The current `FrameStamp`. Used for cache eviction policies.
-    now: FrameStamp,
+    pub now: FrameStamp,
 
     /// Cache of texture cache handles with automatic lifetime management, evicted
     /// in a least-recently-used order.
@@ -846,10 +849,12 @@ impl TextureCache {
             },
         };
         entry.map_or(true, |entry| {
-            // If an image is requested that is already in the cache,
-            // refresh the GPU buffer data associated with this item.
-            entry.last_access = now;
-            entry.write_gpu_blocks(gpu_buffer);
+            if entry.last_access != now {
+                // If an image is requested that is already in the cache,
+                // refresh the GPU buffer data associated with this item.
+                entry.last_access = now;
+                entry.write_gpu_blocks(gpu_buffer);
+            }
             false
         })
     }
@@ -941,6 +946,7 @@ impl TextureCache {
             dirty_rect = DirtyRect::All;
         }
 
+        let now = self.now;
         let entry = self.get_entry_opt_mut(handle)
             .expect("BUG: There must be an entry at this handle now");
 
@@ -948,8 +954,13 @@ impl TextureCache {
         entry.eviction_notice = eviction_notice.cloned();
         entry.uv_rect_kind = uv_rect_kind;
 
-        // Upload the resource rect and texture array layer.
-        entry.write_gpu_blocks(gpu_buffer);
+        // If we just allocated the entry, its framestamp is up to date but it does
+        // not uset have up-to-date gpu blocks.
+        if entry.last_access != now || realloc {
+            entry.last_access = now;
+            // Upload the resource rect and texture array layer.
+            entry.write_gpu_blocks(gpu_buffer);
+        }
 
         // Create an update command, which the render thread processes
         // to upload the new image data into the correct location
@@ -1025,6 +1036,12 @@ impl TextureCache {
     ) -> Option<(CacheTextureId, DeviceIntRect, Swizzle, GpuBufferHandle, [f32; 4])> {
         let entry = self.get_entry_opt(handle)?;
         let origin = entry.details.describe();
+        if entry.last_access != self.now {
+            // On rare occasions we may have an image request that does not materialize
+            // into up to date data in the cache. For example if we failed to produce a
+            // stacking context snapshot.
+            return None;
+        }
         Some((
             entry.texture_id,
             DeviceIntRect::from_origin_and_size(origin, entry.size),

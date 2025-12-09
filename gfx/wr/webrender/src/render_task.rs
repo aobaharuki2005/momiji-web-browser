@@ -15,7 +15,7 @@ use crate::profiler::{add_text_marker};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::FrameBuilderConfig;
-use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind, TransformPaletteId, BlurEdgeMode};
+use crate::gpu_types::{BorderInstance, UvRectKind, TransformPaletteId, BlurEdgeMode};
 use crate::internal_types::{CacheTextureId, FastHashMap, FilterGraphNode, FilterGraphOp, FilterGraphPictureReference, SVGFE_CONVOLVE_VALUES_LIMIT, TextureSource, Swizzle};
 use crate::picture::{ResolvedSurfaceTexture, MAX_SURFACE_SIZE};
 use crate::prim_store::ClipData;
@@ -1040,7 +1040,7 @@ pub struct RenderTask {
     /// manages the handle.
     pub uv_rect_handle: GpuBufferAddress,
     pub cache_handle: Option<RenderTaskCacheEntryHandle>,
-    uv_rect_kind: UvRectKind,
+    pub uv_rect_kind: UvRectKind,
 }
 
 impl RenderTask {
@@ -2753,39 +2753,6 @@ impl RenderTask {
 
     pub fn target_kind(&self) -> RenderTargetKind {
         self.kind.target_kind()
-    }
-
-    pub fn write_gpu_blocks(
-        &mut self,
-        target_rect: DeviceIntRect,
-        gpu_buffer: &mut GpuBufferBuilder,
-    ) {
-        profile_scope!("write_gpu_blocks");
-
-        self.kind.write_gpu_blocks(gpu_buffer);
-
-        // Render tasks are re-created each frame so we can safely check that we aren't
-        // producing their uv address multiple times. This is important because some
-        // code paths may produce a different uv rect than here, for example normalized
-        // uv rects coming from external images. In these cases we rely on the uv address
-        // being et earlier in the frame.
-        // Cases where we expect to already have a uv rect handle include:
-        // - cached render tasks,
-        // - Image requests (in some cases but not all).
-        if self.uv_rect_handle.is_valid() {
-            return;
-        }
-
-        let p0 = target_rect.min.to_f32();
-        let p1 = target_rect.max.to_f32();
-        let image_source = ImageSource {
-            p0,
-            p1,
-            user_data: [0.0; 4],
-            uv_rect_kind: self.uv_rect_kind,
-        };
-
-        self.uv_rect_handle = image_source.write_gpu_blocks(&mut gpu_buffer.f32).address_unchecked();
     }
 
     /// Called by the render task cache.
