@@ -364,6 +364,7 @@ fn prepare_interned_prim_for_render(
                 prim_data,
                 &prim_data.kind.outer_shadow_rect,
                 prim_instance_index,
+                &None,
                 prim_spatial_node_index,
                 &prim_instance.vis.clip_chain,
                 device_pixel_scale,
@@ -666,6 +667,7 @@ fn prepare_interned_prim_for_render(
                     prim_data,
                     &prim_data.common.prim_rect,
                     prim_instance_index,
+                    &None,
                     prim_spatial_node_index,
                     &prim_instance.vis.clip_chain,
                     device_pixel_scale,
@@ -746,6 +748,7 @@ fn prepare_interned_prim_for_render(
                     prim_data.stretch_size,
                     prim_data.tile_spacing,
                     prim_instance_index,
+                    &None,
                     prim_spatial_node_index,
                     &prim_instance.vis.clip_chain,
                     device_pixel_scale,
@@ -858,6 +861,7 @@ fn prepare_interned_prim_for_render(
                     prim_data.stretch_size,
                     prim_data.tile_spacing,
                     prim_instance_index,
+                    &None,
                     prim_spatial_node_index,
                     &prim_instance.vis.clip_chain,
                     device_pixel_scale,
@@ -905,12 +909,46 @@ fn prepare_interned_prim_for_render(
             let prim_data = &mut data_stores.conic_grad[*data_handle];
 
             if !*use_legacy_path {
+                // Conic gradients are quite slow with SWGL, so we want to cache
+                // them as much as we can, even large ones.
+                // TODO: get_surface_rect is not always cheap. We should reorganize
+                // the code so that we only call it as much as we really need it,
+                // while avoiding this much boilerplate for each primitive that uses
+                // caching.
+                let mut should_cache = frame_context.fb_config.is_software;
+                if should_cache {
+                    let surface = &frame_state.surfaces[pic_context.surface_index.0];
+                    let clipped_surface_rect = surface.get_surface_rect(
+                        &prim_instance.vis.clip_chain.pic_coverage_rect,
+                        frame_context.spatial_tree,
+                    );
+
+                    should_cache = if let Some(rect) = clipped_surface_rect {
+                        rect.width() < 4096 && rect.height() < 4096
+                    } else {
+                        false
+                    };
+                }
+
+                let cache_key = if should_cache {
+                    quad::cache_key(
+                        data_handle.uid(),
+                        prim_spatial_node_index,
+                        &prim_instance.vis.clip_chain,
+                        frame_state.clip_store,
+                        &data_stores.clip,
+                    )
+                } else {
+                    None
+                };
+
                 quad::prepare_repeatable_quad(
                     prim_data,
                     &prim_data.common.prim_rect,
                     prim_data.stretch_size,
                     prim_data.tile_spacing,
                     prim_instance_index,
+                    &cache_key,
                     prim_spatial_node_index,
                     &prim_instance.vis.clip_chain,
                     device_pixel_scale,

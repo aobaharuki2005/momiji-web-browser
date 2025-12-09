@@ -16,6 +16,7 @@ use crate::prim_store::gradient::{
     ConicGradientCacheKey,
 };
 use crate::prim_store::line_dec::LineDecorationCacheKey;
+use crate::quad::QuadCacheKey;
 use crate::resource_cache::CacheItem;
 use std::{mem, usize, f32, i32};
 use crate::surface::SurfaceBuilder;
@@ -52,6 +53,7 @@ pub enum RenderTaskCacheKeyKind {
     RadialGradient(RadialGradientCacheKey),
     ConicGradient(ConicGradientCacheKey),
     Snapshot(SnapshotImageKey),
+    Quad(QuadCacheKey),
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
