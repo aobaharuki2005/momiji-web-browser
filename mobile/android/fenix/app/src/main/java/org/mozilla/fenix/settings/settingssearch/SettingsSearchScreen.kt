@@ -48,11 +48,15 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param store [SettingsSearchStore] for the screen.
  * @param onBackClick Callback for when the back button is clicked.
+ * @param isSearchFocused Whether the search bar is currently focused.
+ * @param onSearchFocusChange Callback for when the search bar's focus state changes.
  */
 @Composable
 fun SettingsSearchScreen(
     store: SettingsSearchStore,
     onBackClick: () -> Unit,
+    isSearchFocused: Boolean,
+    onSearchFocusChange: (Boolean) -> Unit,
 ) {
     val state by store.observeAsComposableState { it }
     Scaffold(
@@ -61,6 +65,8 @@ fun SettingsSearchScreen(
                 SettingsSearchBar(
                     store = store,
                     onBackClick = onBackClick,
+                    isSearchFocused = isSearchFocused,
+                    onSearchFocusChange = onSearchFocusChange,
                 )
                 HorizontalDivider()
             }
@@ -299,6 +305,8 @@ private fun SettingsSearchScreenInitialStatePreview() {
         SettingsSearchScreen(
             store = SettingsSearchStore(),
             onBackClick = {},
+            isSearchFocused = false,
+            onSearchFocusChange = {},
         )
     }
 }
@@ -333,6 +341,8 @@ private fun SettingsSearchScreenWithRecentsPreview() {
         SettingsSearchScreen(
             store = storeWithRecents,
             onBackClick = {},
+            isSearchFocused = false,
+            onSearchFocusChange = {},
         )
     }
 }
@@ -390,6 +400,8 @@ private fun SettingsSearchScreenWithResultsPreview() {
         SettingsSearchScreen(
             store = storeWithResults,
             onBackClick = {},
+            isSearchFocused = false,
+            onSearchFocusChange = {},
         )
     }
 }
@@ -410,6 +422,8 @@ private fun SettingsSearchScreenNoResultsPreview() {
         SettingsSearchScreen(
             store = storeWithNoResults,
             onBackClick = {},
+            isSearchFocused = false,
+            onSearchFocusChange = {},
         )
     }
 }
