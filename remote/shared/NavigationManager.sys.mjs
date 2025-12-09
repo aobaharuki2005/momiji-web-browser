@@ -325,12 +325,13 @@ class NavigationRegistry extends EventEmitter {
   }
 
   /**
-   * Called when a navigation-committed event is recorded from the
-   * WebProgressListener actors.
+   * Called when a `document-inserted` event is recorded from the
+   * WebDriverDocumentInserted actors.
    *
    * This entry point is only intended to be called from
-   * WebProgressListenerParent, to avoid setting up observers or listeners,
-   * which are unnecessary since NavigationManager has to be a singleton.
+   * WebDriverDocumentInsertedParent, to avoid setting up
+   * observers or listeners, which are unnecessary since
+   * NavigationManager has to be a singleton.
    *
    * @param {object} data
    * @param {BrowsingContextDetails} data.contextDetails
@@ -347,7 +348,6 @@ class NavigationRegistry extends EventEmitter {
 
     const context = this.#getContextFromContextDetails(contextDetails);
     const navigableId = lazy.NavigableManager.getIdForBrowsingContext(context);
-
     const navigation = this.#navigations.get(navigableId);
 
     if (!navigation) {
@@ -668,7 +668,7 @@ class NavigationRegistry extends EventEmitter {
       return contextDetails.context;
     }
 
-    return contextDetails.isTopBrowsingContext
+    return contextDetails.isContent && contextDetails.isTopBrowsingContext
       ? BrowsingContext.getCurrentTopByBrowserId(contextDetails.browserId)
       : BrowsingContext.get(contextDetails.browsingContextId);
   }
