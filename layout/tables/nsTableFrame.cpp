@@ -1377,16 +1377,16 @@ nsTableFrame::IntrinsicISizeOffsets(nscoord aPercentageBasis) {
 
 /* virtual */
 nsIFrame::SizeComputationResult nsTableFrame::ComputeSize(
-    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
-    nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const SizeComputationInput& aSizingInput, WritingMode aWM,
+    const LogicalSize& aCBSize, nscoord aAvailableISize,
+    const LogicalSize& aMargin, const LogicalSize& aBorderPadding,
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   // Only table wrapper calls this method, and it should use our writing mode.
   MOZ_ASSERT(aWM == GetWritingMode(),
              "aWM should be the same as our writing mode!");
 
   auto result = nsContainerFrame::ComputeSize(
-      aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin, aBorderPadding,
+      aSizingInput, aWM, aCBSize, aAvailableISize, aMargin, aBorderPadding,
       aSizeOverrides, aFlags);
 
   // If our containing block wants to override inner table frame's inline-size
@@ -1402,7 +1402,8 @@ nsIFrame::SizeComputationResult nsTableFrame::ComputeSize(
   AutoMaybeDisableFontInflation an(this);
 
   // Tables never shrink below their min inline-size.
-  const IntrinsicSizeInput input(aRenderingContext, Some(aCBSize), Nothing());
+  const IntrinsicSizeInput input(aSizingInput.mRenderingContext, Some(aCBSize),
+                                 Nothing());
   nscoord minISize = GetMinISize(input);
   if (minISize > result.mLogicalSize.ISize(aWM)) {
     result.mLogicalSize.ISize(aWM) = minISize;
@@ -1442,15 +1443,16 @@ nscoord nsTableFrame::TableShrinkISizeToFit(gfxContext* aRenderingContext,
 
 /* virtual */
 LogicalSize nsTableFrame::ComputeAutoSize(
-    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
-    nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const SizeComputationInput& aSizingInput, WritingMode aWM,
+    const LogicalSize& aCBSize, nscoord aAvailableISize,
+    const LogicalSize& aMargin, const LogicalSize& aBorderPadding,
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   // Tables always shrink-wrap.
   nscoord cbBased =
       aAvailableISize - aMargin.ISize(aWM) - aBorderPadding.ISize(aWM);
-  return LogicalSize(aWM, TableShrinkISizeToFit(aRenderingContext, cbBased),
-                     NS_UNCONSTRAINEDSIZE);
+  return LogicalSize(
+      aWM, TableShrinkISizeToFit(aSizingInput.mRenderingContext, cbBased),
+      NS_UNCONSTRAINEDSIZE);
 }
 
 // Return true if aParentReflowInput.frame or any of its ancestors within

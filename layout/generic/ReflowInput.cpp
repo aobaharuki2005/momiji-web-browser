@@ -1859,7 +1859,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
     AutoMaybeDisableFontInflation an(mFrame);
 
     auto size = mFrame->ComputeSize(
-        mRenderingContext, wm, aCBSize.ConvertTo(wm, cbwm),
+        *this, wm, aCBSize.ConvertTo(wm, cbwm),
         aCBSize.ConvertTo(wm, cbwm).ISize(wm),  // XXX or AvailableISize()?
         ComputedLogicalMargin(wm).Size(wm) +
             ComputedLogicalOffsets(wm).Size(wm),
@@ -2415,11 +2415,10 @@ void ReflowInput::InitConstraints(
         }
       }
 
-      auto size =
-          mFrame->ComputeSize(mRenderingContext, wm, cbSize, AvailableISize(),
-                              ComputedLogicalMargin(wm).Size(wm),
-                              ComputedLogicalBorderPadding(wm).Size(wm),
-                              mStyleSizeOverrides, mComputeSizeFlags);
+      auto size = mFrame->ComputeSize(*this, wm, cbSize, AvailableISize(),
+                                      ComputedLogicalMargin(wm).Size(wm),
+                                      ComputedLogicalBorderPadding(wm).Size(wm),
+                                      mStyleSizeOverrides, mComputeSizeFlags);
 
       mComputedSize = size.mLogicalSize;
       NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");

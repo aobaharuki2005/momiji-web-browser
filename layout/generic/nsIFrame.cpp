@@ -6669,15 +6669,15 @@ static bool ShouldApplyAutomaticMinimumOnInlineAxis(
 
 /* virtual */
 nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
-    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
-    nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const SizeComputationInput& aSizingInput, WritingMode aWM,
+    const LogicalSize& aCBSize, nscoord aAvailableISize,
+    const LogicalSize& aMargin, const LogicalSize& aBorderPadding,
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   MOZ_ASSERT(!GetIntrinsicRatio(),
              "Please override this method and call "
              "nsContainerFrame::ComputeSizeWithIntrinsicDimensions instead.");
   LogicalSize result =
-      ComputeAutoSize(aRenderingContext, aWM, aCBSize, aAvailableISize, aMargin,
+      ComputeAutoSize(aSizingInput, aWM, aCBSize, aAvailableISize, aMargin,
                       aBorderPadding, aSizeOverrides, aFlags);
   const nsStylePosition* stylePos = StylePosition();
   const nsStyleDisplay* disp = StyleDisplay();
@@ -6768,9 +6768,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   const bool shouldComputeISize = !isAutoISize && !isSubgriddedInInlineAxis;
   if (shouldComputeISize) {
     auto iSizeResult =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, *styleISize, *styleBSize,
-                          aspectRatio, aFlags);
+        ComputeISizeValue(aSizingInput.mRenderingContext, aWM, aCBSize,
+                          boxSizingAdjust, boxSizingToMarginEdgeISize,
+                          *styleISize, *styleBSize, aspectRatio, aFlags);
     result.ISize(aWM) = iSizeResult.mISize;
     aspectRatioUsage = iSizeResult.mAspectRatioUsage;
   } else if (MOZ_UNLIKELY(isGridItem) && !IsTrueOverflowContainer()) {
@@ -6899,9 +6899,9 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
   nscoord maxISize = NS_UNCONSTRAINEDSIZE;
   if (!maxISizeCoord->IsNone() && !shouldIgnoreMinMaxISize) {
     maxISize =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, *maxISizeCoord,
-                          *styleBSize, aspectRatio, aFlags)
+        ComputeISizeValue(aSizingInput.mRenderingContext, aWM, aCBSize,
+                          boxSizingAdjust, boxSizingToMarginEdgeISize,
+                          *maxISizeCoord, *styleBSize, aspectRatio, aFlags)
             .mISize;
     result.ISize(aWM) = std::min(maxISize, result.ISize(aWM));
   }
@@ -6910,16 +6910,17 @@ nsIFrame::SizeComputationResult nsIFrame::ComputeSize(
       *styleBSize, *minBSizeCoord, *maxBSizeCoord, aCBSize.BSize(aWM),
       boxSizingAdjust.BSize(aWM));
   const IntrinsicSizeInput input(
-      aRenderingContext, Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
+      aSizingInput.mRenderingContext,
+      Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
       Some(LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, bSizeAsPercentageBasis)
                .ConvertTo(GetWritingMode(), aWM)));
   const auto minISizeCoord = stylePos->MinISize(aWM, anchorResolutionParams);
   nscoord minISize;
   if (!minISizeCoord->IsAuto() && !shouldIgnoreMinMaxISize) {
     minISize =
-        ComputeISizeValue(aRenderingContext, aWM, aCBSize, boxSizingAdjust,
-                          boxSizingToMarginEdgeISize, *minISizeCoord,
-                          *styleBSize, aspectRatio, aFlags)
+        ComputeISizeValue(aSizingInput.mRenderingContext, aWM, aCBSize,
+                          boxSizingAdjust, boxSizingToMarginEdgeISize,
+                          *minISizeCoord, *styleBSize, aspectRatio, aFlags)
             .mISize;
   } else if (MOZ_UNLIKELY(
                  aFlags.contains(ComputeSizeFlag::IApplyAutoMinSize))) {
@@ -7133,13 +7134,13 @@ nsresult nsIFrame::GetPrefWidthTightBounds(gfxContext* aContext, nscoord* aX,
 
 /* virtual */
 LogicalSize nsIFrame::ComputeAutoSize(
-    gfxContext* aRenderingContext, WritingMode aWM,
+    const SizeComputationInput& aSizingInput, WritingMode aWM,
     const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
     const mozilla::LogicalSize& aMargin,
     const mozilla::LogicalSize& aBorderPadding,
     const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   if (IsAbsolutelyPositionedWithDefiniteContainingBlock()) {
-    return ComputeAbsolutePosAutoSize(aRenderingContext, aWM, aCBSize,
+    return ComputeAbsolutePosAutoSize(aSizingInput, aWM, aCBSize,
                                       aAvailableISize, aMargin, aBorderPadding,
                                       aSizeOverrides, aFlags);
   }
@@ -7169,7 +7170,8 @@ LogicalSize nsIFrame::ComputeAutoSize(
         *stylePos->MaxBSize(aWM, anchorResolutionParams), aCBSize.BSize(aWM),
         contentEdgeToBoxSizing.BSize(aWM));
     const IntrinsicSizeInput input(
-        aRenderingContext, Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
+        aSizingInput.mRenderingContext,
+        Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
         Some(LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, bSize)
                  .ConvertTo(GetWritingMode(), aWM)));
     result.ISize(aWM) = ShrinkISizeToFit(input, availBased, aFlags);
@@ -7185,7 +7187,7 @@ bool nsIFrame::IsAbsolutelyPositionedWithDefiniteContainingBlock() const {
 }
 
 LogicalSize nsIFrame::ComputeAbsolutePosAutoSize(
-    gfxContext* aRenderingContext, WritingMode aWM,
+    const SizeComputationInput& aSizingInput, WritingMode aWM,
     const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
     const mozilla::LogicalSize& aMargin,
     const mozilla::LogicalSize& aBorderPadding,
@@ -7315,7 +7317,8 @@ LogicalSize nsIFrame::ComputeAbsolutePosAutoSize(
           aCBSize.BSize(aWM), boxSizingAdjust.BSize(aWM));
 
       const IntrinsicSizeInput input(
-          aRenderingContext, Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
+          aSizingInput.mRenderingContext,
+          Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
           Some(LogicalSize(aWM, NS_UNCONSTRAINEDSIZE, bSize)
                    .ConvertTo(GetWritingMode(), aWM)));
       result.ISize(aWM) = ShrinkISizeToFit(input, availBased, aFlags);

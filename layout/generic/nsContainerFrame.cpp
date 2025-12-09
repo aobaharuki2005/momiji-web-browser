@@ -638,14 +638,14 @@ void nsContainerFrame::DoInlinePrefISize(const IntrinsicSizeInput& aInput,
 
 /* virtual */
 LogicalSize nsContainerFrame::ComputeAutoSize(
-    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
-    nscoord aAvailableISize, const LogicalSize& aMargin,
-    const mozilla::LogicalSize& aBorderPadding,
+    const SizeComputationInput& aSizingInput, WritingMode aWM,
+    const LogicalSize& aCBSize, nscoord aAvailableISize,
+    const LogicalSize& aMargin, const mozilla::LogicalSize& aBorderPadding,
     const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   const bool isTableCaption = IsTableCaption();
   // Skip table caption, which requires special sizing - see bug 1109571.
   if (IsAbsolutelyPositionedWithDefiniteContainingBlock() && !isTableCaption) {
-    return ComputeAbsolutePosAutoSize(aRenderingContext, aWM, aCBSize,
+    return ComputeAbsolutePosAutoSize(aSizingInput, aWM, aCBSize,
                                       aAvailableISize, aMargin, aBorderPadding,
                                       aSizeOverrides, aFlags);
   }
@@ -653,7 +653,7 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
   if (aFlags.contains(ComputeSizeFlag::ShrinkWrap)) {
     // Delegate to nsIFrame::ComputeAutoSize() for computing the shrink-wrapping
     // size.
-    result = nsIFrame::ComputeAutoSize(aRenderingContext, aWM, aCBSize,
+    result = nsIFrame::ComputeAutoSize(aSizingInput, aWM, aCBSize,
                                        aAvailableISize, aMargin, aBorderPadding,
                                        aSizeOverrides, aFlags);
   } else {
@@ -668,8 +668,8 @@ LogicalSize nsContainerFrame::ComputeAutoSize(
 
     WritingMode tableWM = GetParent()->GetWritingMode();
     const IntrinsicSizeInput input(
-        aRenderingContext, Some(aCBSize.ConvertTo(GetWritingMode(), aWM)),
-        Nothing());
+        aSizingInput.mRenderingContext,
+        Some(aCBSize.ConvertTo(GetWritingMode(), aWM)), Nothing());
     if (aWM.IsOrthogonalTo(tableWM)) {
       // For an orthogonal caption on a block-dir side of the table, shrink-wrap
       // to min-isize.
