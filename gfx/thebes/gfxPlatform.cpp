@@ -539,7 +539,6 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".echo-driver-messages",
                       wr::DebugFlags::ECHO_DRIVER_MESSAGES)
   GFX_WEBRENDER_DEBUG(".show-overdraw", wr::DebugFlags::SHOW_OVERDRAW)
-  GFX_WEBRENDER_DEBUG(".gpu-cache", wr::DebugFlags::GPU_CACHE_DBG)
   GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted",
                       wr::DebugFlags::TEXTURE_CACHE_DBG_CLEAR_EVICTED)
   GFX_WEBRENDER_DEBUG(".picture-caching", wr::DebugFlags::PICTURE_CACHING_DBG)
@@ -732,8 +731,6 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
       [=](wr::MemoryReport aReport) {
         // CPU Memory.
         helper.Report(aReport.clip_stores, "clip-stores");
-        helper.Report(aReport.gpu_cache_metadata, "gpu-cache/metadata");
-        helper.Report(aReport.gpu_cache_cpu_mirror, "gpu-cache/cpu-mirror");
         helper.Report(aReport.hit_testers, "hit-testers");
         helper.Report(aReport.fonts, "resource-cache/fonts");
         helper.Report(aReport.weak_fonts, "resource-cache/weak-fonts");
@@ -753,7 +750,6 @@ WebRenderMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
         WEBRENDER_FOR_EACH_INTERNER(REPORT_DATA_STORE, );
 
         // GPU Memory.
-        helper.ReportTexture(aReport.gpu_cache_textures, "gpu-cache");
         helper.ReportTexture(aReport.vertex_data_textures, "vertex-data");
         helper.ReportTexture(aReport.render_target_textures, "render-targets");
         helper.ReportTexture(aReport.depth_target_textures, "depth-targets");
@@ -3648,8 +3644,7 @@ void gfxPlatform::GetFrameStats(mozilla::widget::InfoObject& aObj) {
         "Frame %" PRIu64
         "(%s) CONTENT_FRAME_TIME %d - Transaction start %f, main-thread time "
         "%f, full paint time %f, Skipped composites %u, Composite start %f, "
-        "Resource upload time %f, GPU cache upload time %f, Render time %f, "
-        "Composite time %f",
+        "Resource upload time %f, Render time %f, Composite time %f",
         f.id().mId, f.url().get(), f.contentFrameTime(),
         (f.transactionStart() - f.refreshStart()).ToMilliseconds(),
         (f.fwdTime() - f.transactionStart()).ToMilliseconds(),
@@ -3658,7 +3653,7 @@ void gfxPlatform::GetFrameStats(mozilla::widget::InfoObject& aObj) {
             : 0.0,
         f.skippedComposites(),
         (f.compositeStart() - f.refreshStart()).ToMilliseconds(),
-        f.resourceUploadTime(), f.gpuCacheUploadTime(),
+        f.resourceUploadTime(),
         (f.compositeEnd() - f.renderStart()).ToMilliseconds(),
         (f.compositeEnd() - f.compositeStart()).ToMilliseconds());
     aObj.DefineProperty(name.get(), value.get());
