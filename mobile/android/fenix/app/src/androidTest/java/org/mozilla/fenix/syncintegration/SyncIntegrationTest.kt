@@ -132,7 +132,7 @@ class SyncIntegrationTest {
             tapSetupLater()
             // Check the logins synced
             verifySavedLoginsAfterSync()
-        }.goBack(activityTestRule) {
+        }.goBack {
             // After checking the synced logins
             // on Logins and Passwords menu the Sync passwords option is set to On
             verifyDefaultViewAfterSync()
