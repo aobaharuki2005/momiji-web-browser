@@ -3501,8 +3501,10 @@ void nsWindow::RecomputeBounds(bool aMayChangeCsdMargin, bool aScaleChange) {
   LOG("RecomputeBounds() margin %d scale change %d", aMayChangeCsdMargin,
       aScaleChange);
 
-  mPendingBoundsChange = false;
-  mPendingBoundsChangeMayChangeCsdMargin = false;
+  if (aMayChangeCsdMargin || !mPendingBoundsChangeMayChangeCsdMargin) {
+    mPendingBoundsChange = false;
+    mPendingBoundsChangeMayChangeCsdMargin = false;
+  }
 
   auto* toplevel = GetToplevelGdkWindow();
   if (!toplevel || mIsDestroyed) {
