@@ -177,10 +177,6 @@ async function whenNewTabLoaded(aWindow, aCallback) {
   aCallback();
 }
 
-function whenTabLoaded(aTab, aCallback) {
-  promiseTabLoadEvent(aTab).then(aCallback);
-}
-
 /**
  * Waits for a load (or custom) event to finish in a given tab. If provided
  * load an uri into the tab.

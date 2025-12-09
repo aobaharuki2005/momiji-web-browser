@@ -199,26 +199,20 @@ function waitForTabOpen(aOptions) {
 
   info("Running test: " + message.title);
 
-  let onTabOpen = function onTabOpen(aEvent) {
-    newBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
+  BrowserTestUtils.waitForNewTab(newBrowser, null, true).then(tab => {
+    is(
+      tab.linkedBrowser.contentTitle,
+      message.title,
+      "Opened Tab is expected: " + message.title
+    );
 
-    let tab = aEvent.target;
-    whenTabLoaded(tab, function () {
-      is(
-        tab.linkedBrowser.contentTitle,
-        message.title,
-        "Opened Tab is expected: " + message.title
-      );
+    if (aOptions.successFn) {
+      aOptions.successFn();
+    }
 
-      if (aOptions.successFn) {
-        aOptions.successFn();
-      }
-
-      newBrowser.removeTab(tab);
-      finalize();
-    });
-  };
-  newBrowser.tabContainer.addEventListener("TabOpen", onTabOpen, true);
+    newBrowser.removeTab(tab);
+    finalize();
+  });
 
   let finalize = function () {
     aOptions.finalizeFn();
