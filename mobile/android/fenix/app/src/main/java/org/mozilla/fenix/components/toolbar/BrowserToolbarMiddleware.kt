@@ -141,8 +141,8 @@ import mozilla.components.ui.tabcounter.R as tabcounterR
 @VisibleForTesting
 internal sealed class DisplayActions : BrowserToolbarEvent {
     data class MenuClicked(override val source: Source) : DisplayActions()
-    data object NavigateBackClicked : DisplayActions()
-    data object NavigateBackLongClicked : DisplayActions()
+    data class NavigateBackClicked(override val source: Source) : DisplayActions()
+    data class NavigateBackLongClicked(override val source: Source) : DisplayActions()
     data object NavigateForwardClicked : DisplayActions()
     data object NavigateForwardLongClicked : DisplayActions()
     data class RefreshClicked(val bypassCache: Boolean) : DisplayActions()
@@ -150,7 +150,7 @@ internal sealed class DisplayActions : BrowserToolbarEvent {
     data class AddBookmarkClicked(override val source: Source) : DisplayActions()
     data class EditBookmarkClicked(override val source: Source) : DisplayActions()
     data class ShareClicked(override val source: Source) : DisplayActions()
-    data object TranslateClicked : DisplayActions()
+    data class TranslateClicked(override val source: Source) : DisplayActions()
     data class HomepageClicked(override val source: Source) : DisplayActions()
 }
 
@@ -1123,8 +1123,8 @@ class BrowserToolbarMiddleware(
             } else {
                 ActionButton.State.DISABLED
             },
-            onClick = NavigateBackClicked,
-            onLongClick = NavigateBackLongClicked,
+            onClick = NavigateBackClicked(source),
+            onLongClick = NavigateBackLongClicked(source),
         )
 
         ToolbarAction.Forward -> ActionButtonRes(
@@ -1186,7 +1186,7 @@ class BrowserToolbarMiddleware(
             } else {
                 ActionButton.State.DEFAULT
             },
-            onClick = TranslateClicked,
+            onClick = TranslateClicked(source),
         )
 
         ToolbarAction.TabCounter -> {

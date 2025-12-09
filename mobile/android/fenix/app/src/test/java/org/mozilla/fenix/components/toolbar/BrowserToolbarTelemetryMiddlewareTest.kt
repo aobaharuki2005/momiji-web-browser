@@ -85,15 +85,21 @@ class BrowserToolbarTelemetryMiddlewareTest {
     }
 
     @Test
-    fun `WHEN navigating back THEN record addressBar telemetry`() {
-        buildStore.dispatch(NavigateBackClicked)
+    fun `WHEN navigating back THEN record telemetry based on addressBar or navbar source`() {
+        buildStore.dispatch(NavigateBackClicked(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.NavigateBackClicked.action)
+
+        buildStore.dispatch(NavigateBackClicked(Source.NavigationBar))
+        assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.NavigateBackClicked.action)
     }
 
     @Test
-    fun `WHEN navigating back is long clicked THEN record addressBar telemetry`() {
-        buildStore.dispatch(NavigateBackLongClicked)
+    fun `WHEN navigating back is long clicked THEN record telemetry based on addressBar or navbar source`() {
+        buildStore.dispatch(NavigateBackLongClicked(Source.AddressBar))
         assertTelemetryRecorded(Source.AddressBar, item = ToolbarActionRecord.NavigateBackLongClicked.action)
+
+        buildStore.dispatch(NavigateBackLongClicked(Source.NavigationBar))
+        assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.NavigateBackLongClicked.action)
     }
 
     @Test
