@@ -613,13 +613,14 @@ AspectRatio nsSubDocumentFrame::GetIntrinsicRatio() const {
 
 /* virtual */
 nsIFrame::SizeComputationResult nsSubDocumentFrame::ComputeSize(
-    gfxContext* aRenderingContext, WritingMode aWM, const LogicalSize& aCBSize,
-    nscoord aAvailableISize, const LogicalSize& aMargin,
-    const LogicalSize& aBorderPadding, const StyleSizeOverrides& aSizeOverrides,
-    ComputeSizeFlags aFlags) {
+    const SizeComputationInput& aSizingInput, WritingMode aWM,
+    const LogicalSize& aCBSize, nscoord aAvailableISize,
+    const LogicalSize& aMargin, const LogicalSize& aBorderPadding,
+    const StyleSizeOverrides& aSizeOverrides, ComputeSizeFlags aFlags) {
   return {ComputeSizeWithIntrinsicDimensions(
-              aRenderingContext, aWM, GetIntrinsicSize(), GetAspectRatio(),
-              aCBSize, aMargin, aBorderPadding, aSizeOverrides, aFlags),
+              aSizingInput.mRenderingContext, aWM, GetIntrinsicSize(),
+              GetAspectRatio(), aCBSize, aMargin, aBorderPadding,
+              aSizeOverrides, aFlags),
           AspectRatioUsage::None};
 }
 
@@ -693,7 +694,7 @@ bool nsSubDocumentFrame::ReflowFinished() {
     // (but we should try to do so if we haven't shown it yet).
     return false;
   }
-  RefPtr { fl } -> UpdatePositionAndSize(this);
+  RefPtr{fl}->UpdatePositionAndSize(this);
   return false;
 }
 
