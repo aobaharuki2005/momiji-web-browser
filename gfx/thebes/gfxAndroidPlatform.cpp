@@ -77,7 +77,7 @@ NS_IMPL_ISUPPORTS(FreetypeReporter, nsIMemoryReporter)
 static FT_MemoryRec_ sFreetypeMemoryRecord;
 
 PRThread* gfxAndroidPlatform::sFontAPIInitializeThread = nullptr;
-MOZ_CONSTINIT nsCString gfxAndroidPlatform::sManufacturer;
+constinit nsCString gfxAndroidPlatform::sManufacturer;
 
 // static
 bool gfxAndroidPlatform::IsFontAPIDisabled(bool aDontCheckPref) {
