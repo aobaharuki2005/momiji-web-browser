@@ -2872,27 +2872,7 @@ void ScriptLoader::CalculateCacheFlag(ScriptLoadRequest* aRequest) {
   // disk cache optimization, such that we do not waste time on entry which
   // are going to be dropped soon.
   if (strategy.mHasFetchCountMin) {
-    uint32_t fetchCount = 0;
-    if (aRequest->IsCachedStencil()) {
-      fetchCount = aRequest->mLoadedScript->mFetchCount;
-    } else {
-      if (NS_FAILED(
-              aRequest->getLoadedScript()->mCacheInfo->GetCacheTokenFetchCount(
-                  &fetchCount))) {
-        LOG(
-            ("ScriptLoadRequest (%p): Bytecode-cache: Skip disk: Cannot get "
-             "fetchCount.",
-             aRequest));
-        aRequest->MarkSkippedDiskCaching();
-        aRequest->getLoadedScript()->DropDiskCacheReferenceAndSRI();
-        return;
-      }
-      if (fetchCount < UINT8_MAX) {
-        aRequest->mLoadedScript->mFetchCount = fetchCount;
-      } else {
-        aRequest->mLoadedScript->mFetchCount = UINT8_MAX;
-      }
-    }
+    uint8_t fetchCount = aRequest->mLoadedScript->mFetchCount;
     LOG(("ScriptLoadRequest (%p): Bytecode-cache: fetchCount = %d.", aRequest,
          fetchCount));
     if (fetchCount < strategy.mFetchCountMin) {
@@ -4136,6 +4116,15 @@ nsresult ScriptLoader::OnStreamComplete(
     // save the this script in the disk cache.
     if (aRequest->IsTextSource() &&
         StaticPrefs::dom_script_loader_bytecode_cache_enabled()) {
+      uint32_t fetchCount;
+      if (NS_SUCCEEDED(cacheInfo->GetCacheTokenFetchCount(&fetchCount))) {
+        if (fetchCount < UINT8_MAX) {
+          aRequest->getLoadedScript()->mFetchCount = fetchCount;
+        } else {
+          aRequest->getLoadedScript()->mFetchCount = UINT8_MAX;
+        }
+      }
+
       aRequest->getLoadedScript()->mCacheInfo = cacheInfo;
       LOG(("ScriptLoadRequest (%p): nsICacheInfoChannel = %p", aRequest,
            aRequest->getLoadedScript()->mCacheInfo.get()));
