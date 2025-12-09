@@ -979,23 +979,4 @@ void ComputeAnchorCenterUsage(
     mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache,
     bool& aInlineUsesAnchorCenter, bool& aBlockUsesAnchorCenter);
 
-inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
-    const mozilla::ReflowInput* aRI, bool aIgnorePositionArea) {
-  const mozilla::StylePositionArea posArea =
-      aIgnorePositionArea ? mozilla::StylePositionArea{}
-                          : aRI->mStylePosition->mPositionArea;
-  bool inlineUsesAnchorCenter = false;
-  bool blockUsesAnchorCenter = false;
-
-  ComputeAnchorCenterUsage(aRI->mFrame, aRI->mAnchorPosResolutionCache,
-                           inlineUsesAnchorCenter, blockUsesAnchorCenter);
-
-  return {aRI->mFrame,
-          aRI->mStyleDisplay->mPosition,
-          posArea,
-          aRI->mAnchorPosResolutionCache,
-          inlineUsesAnchorCenter,
-          blockUsesAnchorCenter};
-}
-
 #endif  // mozilla_ReflowInput_h
