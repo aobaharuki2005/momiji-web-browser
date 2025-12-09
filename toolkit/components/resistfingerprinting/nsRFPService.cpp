@@ -1986,7 +1986,7 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
   bool seenExtracted2D_240x60 = false;
   bool seenExtracted2D_280x60 = false;
   bool seenExtracted2D_860x6 = false;
-  CanvasFeatureUsage featureUsage = CanvasFeatureUsage::None;
+  CanvasFeatureUsage accumulatedFeatureUsage = CanvasFeatureUsage::None;
 
   uint32_t extractedOther = 0;
 
@@ -2000,7 +2000,7 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     }
 
     if (usage.mType == dom::CanvasContextType::Canvas2D) {
-      featureUsage |= usage.mFeatureUsage;
+      accumulatedFeatureUsage |= usage.mFeatureUsage;
       extracted2D++;
       if (width == 16 && height == 16) {
         seenExtracted2D_16x16 = true;
@@ -2024,6 +2024,8 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
   }
 
   CanvasFingerprinterAlias fingerprinter = eNoneIdentified;
+  uint32_t knownTextBitmask = static_cast<uint32_t>(
+      static_cast<uint64_t>(accumulatedFeatureUsage) & 0xFFFFFFFFu);
 
   if (seenExtractedWebGL_300x150 && seenExtracted2D_240x60 &&
       seenExtracted2D_122x110) {
@@ -2032,14 +2034,15 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
              seenExtracted2D_16x16) {
     fingerprinter = CanvasFingerprinterAlias::eAkamai;
   } else if (seenExtractedWebGL_300x150 && extracted2D > 0 &&
-             (featureUsage & CanvasFeatureUsage::SetFont)) {
+             (accumulatedFeatureUsage & CanvasFeatureUsage::SetFont)) {
     fingerprinter = CanvasFingerprinterAlias::eVariant1;
   } else if (extractedWebGL > 0 && extracted2D > 1 && seenExtracted2D_860x6) {
     fingerprinter = CanvasFingerprinterAlias::eVariant2;
   } else if (extractedOther > 0 && (extractedWebGL > 0 || extracted2D > 0)) {
     fingerprinter = CanvasFingerprinterAlias::eVariant3;
-  } else if (extracted2D > 0 && (featureUsage & CanvasFeatureUsage::SetFont) &&
-             (featureUsage &
+  } else if (extracted2D > 0 &&
+             (accumulatedFeatureUsage & CanvasFeatureUsage::SetFont) &&
+             (accumulatedFeatureUsage &
               (CanvasFeatureUsage::FillRect | CanvasFeatureUsage::LineTo |
                CanvasFeatureUsage::Stroke))) {
     fingerprinter = CanvasFingerprinterAlias::eVariant4;
@@ -2049,9 +2052,7 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     fingerprinter = CanvasFingerprinterAlias::eMaybe;
   }
 
-  bool knownFingerprintText =
-      bool(featureUsage & CanvasFeatureUsage::KnownFingerprintText);
-  if (!knownFingerprintText && fingerprinter == eNoneIdentified) {
+  if (knownTextBitmask == 0 && fingerprinter == eNoneIdentified) {
     return;
   }
 
@@ -2068,12 +2069,9 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     MOZ_LOG(
         gFingerprinterDetection, LogLevel::Info,
         ("Detected a potential canvas fingerprinter on %s in script %s:%d:%d "
-         "(KnownFingerprintText: %s, CanvasFingerprinter: %s)",
-         origin.get(), filename.get(), lineNum, columnNum,
-         knownFingerprintText ? "true" : "false",
-         fingerprinter.isSome()
-             ? CanvasFingerprinterToString(fingerprinter.value())
-             : "<none>"));
+         "(KnownFingerprintTextBitmask: %u, CanvasFingerprinterAlias: %s)",
+         origin.get(), filename.get(), lineNum, columnNum, knownTextBitmask,
+         CanvasFingerprinterToString(fingerprinter)));
   }
 
   ContentBlockingNotifier::OnEvent(
