@@ -1006,7 +1006,7 @@ fn prepare_interned_prim_for_render(
                 }
 
                 let pic_surface_index = pic.raster_config.as_ref().unwrap().surface_index;
-                let prim_local_rect = frame_state
+                let prim_local_rect: LayoutRect = frame_state
                     .surfaces[pic_surface_index.0]
                     .clipped_local_rect
                     .cast_unit();
@@ -1015,8 +1015,8 @@ fn prepare_interned_prim_for_render(
 
                 let prim_address_f = quad::write_prim_blocks(
                     &mut frame_state.frame_gpu_data.f32,
-                    prim_local_rect,
-                    prim_instance.vis.clip_chain.local_clip_rect,
+                    prim_local_rect.to_untyped(),
+                    prim_instance.vis.clip_chain.local_clip_rect.to_untyped(),
                     pattern.base_color,
                     pattern.texture_input.task_id,
                     &[],

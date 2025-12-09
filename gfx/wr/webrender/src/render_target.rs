@@ -1053,12 +1053,12 @@ fn build_mask_tasks(
                 for tile in clip_store.visible_mask_tiles(&clip_instance) {
                     let clip_prim_address = quad::write_prim_blocks(
                         &mut gpu_buffer_builder.f32,
-                        rect,
-                        rect,
+                        rect.to_untyped(),
+                        rect.to_untyped(),
                         pattern.base_color,
                         pattern.texture_input.task_id,
                         &[QuadSegment {
-                            rect: tile.tile_rect,
+                            rect: tile.tile_rect.to_untyped(),
                             task_id: tile.task_id,
                         }],
                         ScaleOffset::identity(),
@@ -1123,8 +1123,8 @@ fn build_mask_tasks(
 
             let main_prim_address = quad::write_prim_blocks(
                 &mut gpu_buffer_builder.f32,
-                task_world_rect.cast_unit(),
-                task_world_rect.cast_unit(),
+                task_world_rect.to_untyped(),
+                task_world_rect.to_untyped(),
                 pattern.base_color,
                 pattern.texture_input.task_id,
                 &[],
