@@ -10,8 +10,7 @@ pub fn ui(app: &mut Gui, ui: &mut egui::Ui) {
         app.net.post_with_content("render-cmd-log", &app.data_model.frame_log.enabled).ok();
     }
 
-    // TODO: select the frame using a timeline.
-    if let Some(frame) = app.data_model.frame_log.frames.back() {
+    if let Some(frame) = app.data_model.frame_log.frame(app.data_model.timeline.current_frame) {
         if let Some(cmds) = &frame.render_commands {
             draw_calls_ui(cmds, ui);
         }

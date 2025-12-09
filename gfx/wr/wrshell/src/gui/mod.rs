@@ -8,6 +8,7 @@ mod shell;
 mod textures;
 mod composite_view;
 mod draw_calls;
+mod timeline;
 
 use eframe::egui;
 use webrender_api::{DebugFlags, RenderCommandInfo};
@@ -33,6 +34,7 @@ struct LoggedFrame {
 struct FrameLog {
     pub frames: VecDeque<LoggedFrame>,
     pub enabled: bool,
+    pub frames_end: usize,
 }
 
 impl FrameLog {
@@ -40,7 +42,25 @@ impl FrameLog {
         FrameLog {
             frames: VecDeque::with_capacity(100),
             enabled: false,
+            frames_end: 0,
         }
+    }
+
+    pub fn first_frame_index(&self) -> usize {
+        self.frames_end - self.frames.len()
+    }
+
+    pub fn last_frame_index(&self) -> usize {
+        self.frames_end.max(1) - 1
+    }
+
+    pub fn frame(&self, idx: usize) -> Option<&LoggedFrame> {
+        let i = idx - self.first_frame_index();
+        if i < self.frames.len() {
+            return Some(&self.frames[i]);
+        }
+
+        None
     }
 }
 
@@ -53,6 +73,7 @@ struct DataModel {
     preview_doc_index: Option<usize>,
     profile_graphs: HashMap<ProfileCounterId, Graph>,
     frame_log: FrameLog,
+    timeline: timeline::Timeline,
 }
 
 impl DataModel {
@@ -66,6 +87,7 @@ impl DataModel {
             preview_doc_index: None,
             profile_graphs: HashMap::new(),
             frame_log: FrameLog::new(),
+            timeline: timeline::Timeline::new(),
         }
     }
 }
@@ -78,6 +100,7 @@ pub enum Tool {
     Documents,
     Preview,
     DrawCalls,
+    Timeline,
 }
 
 impl egui_tiles::Behavior<Tool> for Gui {
@@ -89,6 +112,7 @@ impl egui_tiles::Behavior<Tool> for Gui {
             Tool::Documents => { "Documents" }
             Tool::Preview => { "Preview" }
             Tool::DrawCalls => { "Draw calls" }
+            Tool::Timeline => { "Timeline" }
         };
 
         title.into()
@@ -106,6 +130,7 @@ impl egui_tiles::Behavior<Tool> for Gui {
                 Tool::Profiler => { profiler::ui(self, ui); }
                 Tool::Shell => { shell::ui(self, ui); }
                 Tool::DrawCalls => { draw_calls::ui(self, ui); }
+                Tool::Timeline => { timeline::ui(self, ui); }
             }
         });
 
@@ -197,12 +222,16 @@ impl Gui {
                     side,
                     main_tile,
                 ];
-                let main_and_side = tiles.insert_horizontal_tile(main_and_side);
-                let v = vec![
-                    main_and_side,
+                let shell_and_timeline = vec![
                     tiles.insert_pane(Tool::Shell),
+                    tiles.insert_pane(Tool::Timeline),
                 ];
-                let root = tiles.insert_vertical_tile(v);
+                let shell_and_timeline = tiles.insert_tab_tile(shell_and_timeline);
+                let main_and_side = tiles.insert_horizontal_tile(main_and_side);
+                let root = tiles.insert_vertical_tile(vec![
+                    main_and_side,
+                    shell_and_timeline,
+                ]);
 
                 GuiSavedState {
                     version: GuiSavedState::VERSION,
@@ -432,12 +461,24 @@ impl Gui {
                                 }
                             }
                         }
-                        if self.data_model.frame_log.frames.len() == self.data_model.frame_log.frames.capacity() {
-                            self.data_model.frame_log.frames.pop_front();
+                        let frame_log = &mut self.data_model.frame_log;
+                        if frame_log.frames.len() == frame_log.frames.capacity() {
+                            frame_log.frames.pop_front();
                         }
-                        self.data_model.frame_log.frames.push_back(LoggedFrame {
+                        frame_log.frames.push_back(LoggedFrame {
                             render_commands: info.render_commands.clone(),
                         });
+                        frame_log.frames_end += 1;
+                        let first = frame_log.first_frame_index();
+                        let last = frame_log.last_frame_index();
+
+                        if self.data_model.timeline.current_frame < first  {
+                            self.data_model.timeline.current_frame = first;
+                        }
+
+                        if self.data_model.timeline.current_frame >= last - 1  {
+                            self.data_model.timeline.current_frame = last;
+                        }
                     }
                 }
             }
@@ -565,5 +606,5 @@ struct GuiSavedState {
 impl GuiSavedState {
     /// Update this number to reset the configuration. This ensures that new
     /// panels are added.
-    const VERSION: u32 = 1;
+    const VERSION: u32 = 2;
 }
