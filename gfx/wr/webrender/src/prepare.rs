@@ -1228,8 +1228,7 @@ fn write_segment<F>(
         f(&mut writer);
 
         for segment in segments {
-            writer.push_one(segment.local_rect);
-            writer.push_one([0.0; 4]);
+            segment.write_gpu_blocks(&mut writer);
         }
 
         segment_instance.gpu_data = writer.finish();

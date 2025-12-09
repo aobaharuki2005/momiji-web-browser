@@ -92,11 +92,9 @@ impl NormalBorderData {
         writer: &mut GpuBufferWriterF,
     ) {
         for segment in &self.brush_segments {
-            // has to match VECS_PER_SEGMENT
-            writer.push_one(segment.local_rect);
-            writer.push_one(segment.extra_data);
+            segment.write_gpu_blocks(writer);
         }
-    }
+   }
 }
 
 pub type NormalBorderTemplate = PrimTemplate<NormalBorderData>;
@@ -289,9 +287,7 @@ impl ImageBorderData {
         writer: &mut GpuBufferWriterF,
     ) {
         for segment in &self.brush_segments {
-            // has to match VECS_PER_SEGMENT
-            writer.push_one(segment.local_rect);
-            writer.push_one(segment.extra_data);
+            segment.write_gpu_blocks(writer);
         }
     }
 }

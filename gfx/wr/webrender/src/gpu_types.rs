@@ -9,7 +9,7 @@ use crate::composite::{CompositeFeatures, CompositorClip};
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::internal_types::{FastHashMap, FrameVec, FrameMemory};
-use crate::prim_store::ClipData;
+use crate::prim_store::{ClipData, VECS_PER_SEGMENT};
 use crate::render_task::RenderTaskAddress;
 use crate::render_task_graph::RenderTaskId;
 use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferHandle, GpuBufferWriterF, GpuBufferDataF, ShaderColorMode};
@@ -1057,6 +1057,24 @@ impl GpuBufferDataF for ImageBrushPrimitiveData {
         writer.push_one([self.stretch_size.width, self.stretch_size.height, 0.0, 0.0]);
     }
 }
+
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, MallocSizeOf)]
+pub struct BrushSegmentGpuData {
+    pub local_rect: LayoutRect,
+    /// Each brush shader has its own interpretation of this field.
+    pub extra_data: [f32; 4],
+}
+
+impl GpuBufferDataF for BrushSegmentGpuData {
+    const NUM_BLOCKS: usize = VECS_PER_SEGMENT;
+    fn write(&self, writer: &mut GpuBufferWriterF) {
+        writer.push_one(self.local_rect);
+        writer.push_one(self.extra_data);
+    }
+}
+
 
 // Set the local -> world transform for a given spatial
 // node in the transform palette.
