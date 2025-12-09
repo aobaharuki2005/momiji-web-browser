@@ -959,10 +959,12 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       activeDocsSandboxFlags = parentDoc->GetSandboxFlags();
 
       if (!aForceNoOpener) {
-        openWindowInfo->mPolicyContainerToInheritForAboutBlank =
-            parentDoc->GetPolicyContainer();
-        openWindowInfo->mCoepToInheritForAboutBlank =
-            parentDoc->GetEmbedderPolicy();
+        if (Document* entryDoc = GetEntryDocument()) {
+          openWindowInfo->mPolicyContainerToInheritForAboutBlank =
+              entryDoc->GetPolicyContainer();
+          openWindowInfo->mCoepToInheritForAboutBlank =
+              entryDoc->GetEmbedderPolicy();
+        }
       }
 
       // Check to see if this frame is allowed to navigate, but don't check if
