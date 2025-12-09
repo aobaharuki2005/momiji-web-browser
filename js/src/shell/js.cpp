@@ -1704,8 +1704,8 @@ class MOZ_RAII AutoLockTelemetry : public LockGuard<Mutex> {
 };
 
 using TelemetrySamples = mozilla::Vector<uint32_t, 0, js::SystemAllocPolicy>;
-MOZ_CONSTINIT static mozilla::Array<UniquePtr<TelemetrySamples>,
-                                    size_t(JSMetric::Count)>
+constinit static mozilla::Array<UniquePtr<TelemetrySamples>,
+                                size_t(JSMetric::Count)>
     recordedTelemetrySamples;
 
 static void AccumulateTelemetryDataCallback(JSMetric id, uint32_t sample) {
