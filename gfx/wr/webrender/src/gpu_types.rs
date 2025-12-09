@@ -12,7 +12,7 @@ use crate::internal_types::{FastHashMap, FrameVec, FrameMemory};
 use crate::prim_store::ClipData;
 use crate::render_task::RenderTaskAddress;
 use crate::render_task_graph::RenderTaskId;
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferHandle, GpuBufferWriterF, ShaderColorMode};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferHandle, GpuBufferWriterF, GpuBufferDataF, ShaderColorMode};
 use std::i32;
 use crate::util::{MatrixHelpers, TransformedRectKind};
 use glyph_rasterizer::SubpixelDirection;
@@ -22,6 +22,7 @@ use crate::util::pack_as_float;
 // Contains type that must exactly match the same structures declared in GLSL.
 
 pub const VECS_PER_TRANSFORM: usize = 8;
+pub const VECS_PER_SPECIFIC_BRUSH: usize = 3;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 #[repr(C)]
@@ -1035,6 +1036,25 @@ impl ImageSource {
             writer.push_one(to_array(bottom_left));
             writer.push_one(to_array(bottom_right));
         }
+    }
+}
+
+// Must correspond to ImageBrushPrimitiveData in brush_image.glsl
+// Images are drawn as a white color, modulated by the total
+// opacity coming from any collapsed property bindings.
+#[derive(Copy, Clone, Debug)]
+pub struct ImageBrushPrimitiveData {
+    pub color: PremultipliedColorF,
+    pub background_color: PremultipliedColorF,
+    pub stretch_size: LayoutSize,
+}
+
+impl GpuBufferDataF for ImageBrushPrimitiveData {
+    const NUM_BLOCKS: usize = VECS_PER_SPECIFIC_BRUSH;
+    fn write(&self, writer: &mut GpuBufferWriterF) {
+        writer.push_one(self.color);
+        writer.push_one(self.background_color);
+        writer.push_one([self.stretch_size.width, self.stretch_size.height, 0.0, 0.0]);
     }
 }
 

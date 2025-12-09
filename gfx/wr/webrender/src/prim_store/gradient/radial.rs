@@ -11,6 +11,7 @@
 use euclid::{vec2, size2};
 use api::{ColorF, ColorU, ExtendMode, GradientStop, PremultipliedColorF};
 use api::units::*;
+use crate::gpu_types::ImageBrushPrimitiveData;
 use crate::pattern::{Pattern, PatternBuilder, PatternBuilderContext, PatternBuilderState, PatternKind, PatternShaderInput, PatternTextureInput};
 use crate::prim_store::gradient::GradientKind;
 use crate::scene_building::IsVisible;
@@ -231,14 +232,12 @@ impl RadialGradientTemplate {
         let mut writer = frame_state.frame_gpu_data.f32.write_blocks(3 + self.brush_segments.len() * VECS_PER_SEGMENT);
 
         // write_prim_gpu_blocks
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one([
-            self.stretch_size.width,
-            self.stretch_size.height,
-            0.0,
-            0.0,
-        ]);
+        writer.push(&ImageBrushPrimitiveData {
+            color: PremultipliedColorF::WHITE,
+            background_color: PremultipliedColorF::WHITE,
+            stretch_size: self.stretch_size,
+        });
+
         // write_segment_gpu_blocks
         for segment in &self.brush_segments {
             // has to match VECS_PER_SEGMENT

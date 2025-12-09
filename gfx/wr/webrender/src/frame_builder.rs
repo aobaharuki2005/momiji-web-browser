@@ -13,7 +13,7 @@ use crate::spatial_node::SpatialNodeType;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
 use crate::composite::{CompositorKind, CompositeState, CompositeStatePreallocator};
 use crate::debug_item::DebugItem;
-use crate::gpu_types::{PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
+use crate::gpu_types::{ImageBrushPrimitiveData, PrimitiveHeaders, TransformPalette, ZBufferIdGenerator};
 use crate::gpu_types::{QuadSegment, TransformData};
 use crate::internal_types::{FastHashMap, PlaneSplitter, FrameStamp};
 use crate::picture::{DirtyRegion, SliceId, TileCacheInstance};
@@ -24,7 +24,7 @@ use crate::prim_store::{PictureIndex, PrimitiveScratchBuffer};
 use crate::prim_store::{DeferredResolve, PrimitiveInstance};
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::{DataStores, ScratchBuffer};
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF, GpuBufferBuilderI, GpuBufferF, GpuBufferI};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF, GpuBufferBuilderI, GpuBufferF, GpuBufferI, GpuBufferDataF};
 use crate::render_target::{PictureCacheTarget, PictureCacheTargetKind};
 use crate::render_target::{RenderTargetContext, RenderTargetKind, RenderTarget};
 use crate::render_task_graph::{Pass, RenderTaskGraph, RenderTaskId, SubPassSurface};
@@ -100,15 +100,13 @@ impl FrameGlobalResources {
         &mut self,
         gpu_buffers: &mut GpuBufferBuilder,
     ) {
-        let mut writer = gpu_buffers.f32.write_blocks(3);
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one([
-            -1.0,       // -ve means use prim rect for stretch size
-            0.0,
-            0.0,
-            0.0,
-        ]);
+        let mut writer = gpu_buffers.f32.write_blocks(ImageBrushPrimitiveData::NUM_BLOCKS);
+        writer.push(&ImageBrushPrimitiveData {
+            color: PremultipliedColorF::WHITE,
+            background_color: PremultipliedColorF::WHITE,
+            // -ve means use prim rect for stretch size
+            stretch_size: LayoutSize::new(-1.0, 0.0),
+        });
         self.default_image_data = writer.finish();
 
         let mut writer = gpu_buffers.f32.write_blocks(1);

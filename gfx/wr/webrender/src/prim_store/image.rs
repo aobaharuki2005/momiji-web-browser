@@ -10,6 +10,7 @@ use api::{
 use api::units::*;
 use euclid::point2;
 use crate::composite::CompositorSurfaceKind;
+use crate::gpu_types::ImageBrushPrimitiveData;
 use crate::renderer::{GpuBufferBuilderF, GpuBufferWriterF};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
@@ -395,18 +396,14 @@ impl ImageData {
     }
 
     pub fn write_prim_gpu_blocks(&self, adjustment: &AdjustedImageSource, writer: &mut GpuBufferWriterF) {
-        let stretch_size = adjustment.map_stretch_size(self.stretch_size);
-        // Images are drawn as a white color, modulated by the total
-        // opacity coming from any collapsed property bindings.
-        // Size has to match `VECS_PER_SPECIFIC_BRUSH` from `brush_image.glsl` exactly.
-        writer.push_one(self.color.premultiplied());
-        writer.push_one(PremultipliedColorF::WHITE);
-        writer.push_one([
-            stretch_size.width + self.tile_spacing.width,
-            stretch_size.height + self.tile_spacing.height,
-            0.0,
-            0.0,
-        ]);
+        let stretch_size = adjustment.map_stretch_size(self.stretch_size)
+             + self.tile_spacing;
+
+        writer.push(&ImageBrushPrimitiveData {
+            color: self.color.premultiplied(),
+            background_color: PremultipliedColorF::WHITE,
+            stretch_size,
+        });
     }
 }
 

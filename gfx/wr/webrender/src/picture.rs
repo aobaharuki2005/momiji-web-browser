@@ -116,7 +116,7 @@ use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, FilterGraphOp, FilterGraphNode, Filter, FrameId};
 use crate::internal_types::{PlaneSplitterIndex, PlaneSplitAnchor, TextureSource};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureState, PictureContext};
-use crate::gpu_types::{UvRectKind, ZBufferId, BlurEdgeMode};
+use crate::gpu_types::{BlurEdgeMode, ImageBrushPrimitiveData, UvRectKind, ZBufferId};
 use peek_poke::{PeekPoke, poke_into_vec, peek_from_slice, ensure_red_zone};
 use plane_split::{Clipper, Polygon};
 use crate::prim_store::{PrimitiveTemplateKind, PictureIndex, PrimitiveInstance, PrimitiveInstanceKind};
@@ -7273,14 +7273,11 @@ impl PicturePrimitive {
                     ).translate(shadow.offset);
 
                     // ImageBrush colors
-                    writer.push_one(shadow.color.premultiplied());
-                    writer.push_one(PremultipliedColorF::WHITE);
-                    writer.push_one([
-                        shadow_rect.width(),
-                        shadow_rect.height(),
-                        0.0,
-                        0.0,
-                    ]);
+                    writer.push(&ImageBrushPrimitiveData {
+                        color: shadow.color.premultiplied(),
+                        background_color: PremultipliedColorF::WHITE,
+                        stretch_size: shadow_rect.size(),
+                    });
 
                     // segment rect / extra data
                     writer.push_one(shadow_rect);
