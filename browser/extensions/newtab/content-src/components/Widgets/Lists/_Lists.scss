@@ -114,6 +114,10 @@
     border: none;
     overflow-y: auto;
     max-height: 165px;
+
+    &:focus {
+      outline: var(--focus-outline);
+    }
   }
 
   .task-item {
@@ -238,6 +242,10 @@
 
   .completed-task-wrapper summary {
     list-style: none;
+
+    &:focus {
+      outline: var(--focus-outline);
+    }
 
     .completed-title {
       color: var(--text-color-deemphasized);

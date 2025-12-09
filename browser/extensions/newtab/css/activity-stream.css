@@ -4558,6 +4558,9 @@ dialog:dir(rtl)::after {
   overflow-y: auto;
   max-height: 165px;
 }
+.lists fieldset:focus {
+  outline: var(--focus-outline);
+}
 .lists .task-item {
   align-items: center;
   background: transparent;
@@ -4659,6 +4662,9 @@ dialog:dir(rtl)::after {
 }
 .lists .completed-task-wrapper summary {
   list-style: none;
+}
+.lists .completed-task-wrapper summary:focus {
+  outline: var(--focus-outline);
 }
 .lists .completed-task-wrapper summary .completed-title {
   color: var(--text-color-deemphasized);
