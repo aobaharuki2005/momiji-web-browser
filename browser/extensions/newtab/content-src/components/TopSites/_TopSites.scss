@@ -446,7 +446,7 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
 
 .edit-topsites-wrapper {
   .top-site-inner > .top-site-button > .tile {
-    border: 1px solid var(--newtab-border-color);
+    border: 1px solid var(--border-color);
   }
 
   .modal {
@@ -593,7 +593,7 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
     input {
       &[type='text'] {
         background-color: var(--newtab-background-color-secondary);
-        border: $input-border;
+        border: 1px solid var(--border-color-interactive);
         margin: var(--space-small) 0;
         padding: 0 var(--space-small);
         height: 32px;
@@ -601,7 +601,7 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
         font-size: inherit;
 
         &[disabled] {
-          border: $input-border;
+          border: 1px solid var(--border-color-interactive-disabled);
           box-shadow: none;
           opacity: 0.4;
         }
@@ -611,7 +611,7 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
     .invalid {
       input {
         &[type='text'] {
-          border: $input-error-border;
+          border: 1px solid var(--outline-color-error);
           box-shadow: $input-error-boxshadow;
         }
       }
@@ -689,7 +689,7 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
   [type='checkbox']:not(:checked) + label::before,
   [type='checkbox']:checked + label::before {
     background: var(--newtab-background-color);
-    border: $input-border;
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-small);
     content: '';
     height: 21px;

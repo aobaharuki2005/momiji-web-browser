@@ -127,7 +127,7 @@
       grid-template: repeat(8, 1fr) / repeat(1, 1fr);
 
       li {
-        border-top: $border-primary;
+        border-top: 1px solid var(--border-color);
         line-height: 24px;
         font-size: var(--font-size-small);
 
@@ -149,7 +149,7 @@
         }
 
         &:nth-last-child(1) {
-          border-bottom: $border-primary;
+          border-bottom: 1px solid var(--border-color);
         }
       }
 
@@ -158,7 +158,7 @@
 
         li {
           &:nth-child(3) {
-            border-bottom: $border-primary;
+            border-bottom: 1px solid var(--border-color);
           }
         }
       }
@@ -173,7 +173,7 @@
           }
 
           &:nth-child(even) {
-            border-bottom: $border-primary;
+            border-bottom: 1px solid var(--border-color);
           }
         }
       }

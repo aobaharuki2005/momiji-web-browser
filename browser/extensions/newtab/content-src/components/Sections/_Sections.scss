@@ -31,7 +31,7 @@
   }
 
   .section-empty-state {
-    border: $border-secondary;
+    border: 1px solid var(--border-color);
     border-radius: var(--border-radius-small);
     display: flex;
     height: $card-height;
