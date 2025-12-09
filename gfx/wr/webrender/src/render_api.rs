@@ -959,6 +959,8 @@ pub enum DebugCommand {
     SetFlags(DebugFlags),
     /// Get current debug flags
     GetDebugFlags(Sender<DebugFlags>),
+    /// Enable/Disable render command logging.
+    SetRenderCommandLog(bool),
     /// Save a capture of all the documents state.
     SaveCapture(PathBuf, CaptureBits),
     /// Load a capture of all the documents state.

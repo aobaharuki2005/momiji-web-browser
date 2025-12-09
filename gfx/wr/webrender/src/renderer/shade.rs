@@ -15,7 +15,7 @@ use crate::renderer::{
     BlendMode, DebugFlags, RendererError, WebRenderOptions,
     TextureSampler, VertexArrayKind, ShaderPrecacheFlags,
 };
-use crate::profiler::{self, TransactionProfile, ns_to_ms};
+use crate::profiler::{self, RenderCommandLog, TransactionProfile, ns_to_ms};
 
 use gleam::gl::GlType;
 
@@ -149,7 +149,11 @@ impl LazilyCompiledShader {
         texture_size: Option<DeviceSize>,
         renderer_errors: &mut Vec<RendererError>,
         profile: &mut TransactionProfile,
+        history: &mut Option<RenderCommandLog>,
     ) {
+        if let Some(history) = history {
+            history.set_shader(self.name);
+        }
         let update_projection = self.cached_projection != *projection;
         let program = match self.get_internal(device, ShaderPrecacheFlags::FULL_COMPILE, Some(profile)) {
             Ok(program) => program,

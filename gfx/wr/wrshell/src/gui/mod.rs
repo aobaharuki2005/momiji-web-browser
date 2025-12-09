@@ -7,12 +7,13 @@ mod profiler;
 mod shell;
 mod textures;
 mod composite_view;
+mod draw_calls;
 
 use eframe::egui;
-use webrender_api::DebugFlags;
+use webrender_api::{DebugFlags, RenderCommandInfo};
 use webrender_api::debugger::{DebuggerMessage, DebuggerTextureContent, ProfileCounterId, CompositorDebugInfo};
 use crate::{command, net};
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{HashMap, BTreeMap, VecDeque};
 use std::fs;
 use std::io::Write;
 use std::sync::mpsc;
@@ -25,6 +26,24 @@ enum ApplicationEvent {
     NetworkEvent(net::NetworkEvent),
 }
 
+struct LoggedFrame {
+    pub render_commands: Option<Vec<RenderCommandInfo>>,
+}
+
+struct FrameLog {
+    pub frames: VecDeque<LoggedFrame>,
+    pub enabled: bool,
+}
+
+impl FrameLog {
+    pub fn new() -> Self {
+        FrameLog {
+            frames: VecDeque::with_capacity(100),
+            enabled: false,
+        }
+    }
+}
+
 struct DataModel {
     is_connected: bool,
     debug_flags: DebugFlags,
@@ -33,6 +52,7 @@ struct DataModel {
     documents: Vec<Document>,
     preview_doc_index: Option<usize>,
     profile_graphs: HashMap<ProfileCounterId, Graph>,
+    frame_log: FrameLog,
 }
 
 impl DataModel {
@@ -45,6 +65,7 @@ impl DataModel {
             documents: Vec::new(),
             preview_doc_index: None,
             profile_graphs: HashMap::new(),
+            frame_log: FrameLog::new(),
         }
     }
 }
@@ -56,6 +77,7 @@ pub enum Tool {
     Shell,
     Documents,
     Preview,
+    DrawCalls,
 }
 
 impl egui_tiles::Behavior<Tool> for Gui {
@@ -66,6 +88,7 @@ impl egui_tiles::Behavior<Tool> for Gui {
             Tool::Shell => { "Shell" }
             Tool::Documents => { "Documents" }
             Tool::Preview => { "Preview" }
+            Tool::DrawCalls => { "Draw calls" }
         };
 
         title.into()
@@ -82,6 +105,7 @@ impl egui_tiles::Behavior<Tool> for Gui {
                 Tool::DebugFlags => { debug_flags::ui(self, ui); }
                 Tool::Profiler => { profiler::ui(self, ui); }
                 Tool::Shell => { shell::ui(self, ui); }
+                Tool::DrawCalls => { draw_calls::ui(self, ui); }
             }
         });
 
@@ -149,12 +173,19 @@ impl Gui {
                         e
                     })
                     .ok()
+            }).and_then(|save| {
+                if save.version == GuiSavedState::VERSION {
+                    Some(save)
+                } else {
+                    None
+                }
             }).unwrap_or_else(|| {
                 // Create default layout
                 let mut tiles = egui_tiles::Tiles::default();
                 let tabs = vec![
                     tiles.insert_pane(Tool::Profiler),
                     tiles.insert_pane(Tool::Preview),
+                    tiles.insert_pane(Tool::DrawCalls),
                 ];
                 let side = vec![
                     tiles.insert_pane(Tool::DebugFlags),
@@ -174,6 +205,7 @@ impl Gui {
                 let root = tiles.insert_vertical_tile(v);
 
                 GuiSavedState {
+                    version: GuiSavedState::VERSION,
                     cmd_history: Vec::new(),
                     ui_tiles: egui_tiles::Tree::new("WR debugger", root, tiles),
                 }
@@ -390,14 +422,22 @@ impl Gui {
                             }
                         }
                     }
-                    DebuggerMessage::UpdateProfileCounters(info) => {
-                        for counter in &info.updates {
-                            if let Some(graph) = self.data_model
-                                .profile_graphs
-                                .get_mut(&counter.id) {
-                                graph.push(counter.value);
+                    DebuggerMessage::UpdateFrameLog(info) => {
+                        if let Some(updates) = info.profile_counters {
+                            for counter in &updates {
+                                if let Some(graph) = self.data_model
+                                    .profile_graphs
+                                    .get_mut(&counter.id) {
+                                    graph.push(counter.value);
+                                }
                             }
                         }
+                        if self.data_model.frame_log.frames.len() == self.data_model.frame_log.frames.capacity() {
+                            self.data_model.frame_log.frames.pop_front();
+                        }
+                        self.data_model.frame_log.frames.push_back(LoggedFrame {
+                            render_commands: info.render_commands.clone(),
+                        });
                     }
                 }
             }
@@ -417,6 +457,7 @@ impl Drop for Gui {
         };
 
         let save = GuiSavedState {
+            version: GuiSavedState::VERSION,
             ui_tiles: self.ui_tiles.take().unwrap(),
             cmd_history: self.cmd_history.drain(range).collect(),
         };
@@ -516,6 +557,13 @@ fn config_path() -> std::path::PathBuf {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 struct GuiSavedState {
+    version: u32,
     cmd_history: Vec<String>,
     ui_tiles: egui_tiles::Tree<Tool>,
+}
+
+impl GuiSavedState {
+    /// Update this number to reset the configuration. This ensures that new
+    /// panels are added.
+    const VERSION: u32 = 1;
 }

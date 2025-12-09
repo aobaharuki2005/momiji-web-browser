@@ -80,7 +80,7 @@ use crate::internal_types::{TextureCacheAllocInfo, TextureCacheAllocationKind, T
 use crate::internal_types::{RenderTargetInfo, Swizzle, DeferredResolveIndex};
 use crate::picture::{ResolvedSurfaceTexture, TileId};
 use crate::prim_store::DeferredResolve;
-use crate::profiler::{self, GpuProfileTag, TransactionProfile};
+use crate::profiler::{self, RenderCommandLog, GpuProfileTag, TransactionProfile};
 use crate::profiler::{Profiler, add_event_marker, add_text_marker, thread_is_being_profiled};
 use crate::device::query::GpuProfiler;
 use crate::render_target::ResolveOp;
@@ -836,6 +836,7 @@ pub struct Renderer {
     frame_counter: u64,
     resource_upload_time: f64,
     profiler: Profiler,
+    command_log: Option<RenderCommandLog>,
     #[cfg(feature = "debugger")]
     debugger: Debugger,
 
@@ -1339,6 +1340,13 @@ impl Renderer {
             DebugCommand::GetDebugFlags(tx) => {
                 tx.send(self.debug_flags).unwrap();
             }
+            DebugCommand::SetRenderCommandLog(enabled) => {
+                if enabled && self.command_log.is_none() {
+                    self.command_log = Some(RenderCommandLog::new());
+                } else if !enabled {
+                    self.command_log = None;
+                }
+            }
             #[cfg(feature = "debugger")]
             DebugCommand::AddDebugClient(client) => {
                 self.debugger.add_client(
@@ -1619,6 +1627,10 @@ impl Renderer {
         self.profile.end_time_if_started(profiler::FRAME_SEND_TIME);
         self.profile.start_time(profiler::RENDERER_TIME);
 
+        if let Some(log) = &mut self.command_log {
+            log.clear();
+        }
+
         self.staging_texture_pool.begin_frame();
 
         let compositor_kind = active_doc.frame.composite_state.compositor_kind;
@@ -1841,6 +1853,7 @@ impl Renderer {
         self.debugger.update(
             self.debug_flags,
             &self.profiler,
+            &self.command_log,
         );
 
         // Note: profile counters must be set before this or they will count for next frame.
@@ -2006,6 +2019,7 @@ impl Renderer {
                         None,
                         &mut self.renderer_errors,
                         &mut self.profile,
+                        &mut self.command_log,
                     );
 
                 self.draw_instanced_batch(
@@ -2200,6 +2214,10 @@ impl Renderer {
         textures: &BatchTextures,
         stats: &mut RendererStats,
     ) {
+        if let Some(history) = &mut self.command_log {
+            history.draw(data.len() as u32);
+        }
+
         self.bind_textures(textures);
 
         // If we end up with an empty draw call here, that means we have
@@ -2398,6 +2416,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 for (texture_source, prim_instances) in prim_instances_map {
@@ -2428,6 +2447,7 @@ impl Renderer {
                             None,
                             &mut self.renderer_errors,
                             &mut self.profile,
+                            &mut self.command_log,
                         );
                     }
 
@@ -2472,6 +2492,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 self.draw_instanced_batch(
@@ -2489,6 +2510,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 self.device.enable_scissor();
@@ -2514,6 +2536,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 for (texture, prim_instances) in &masks.image_mask_instances {
@@ -2535,6 +2558,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 for ((scissor_rect, texture), prim_instances) in &masks.image_mask_instances_with_scissor {
@@ -2558,6 +2582,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 self.draw_instanced_batch(
@@ -2575,6 +2600,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 self.device.enable_scissor();
@@ -2688,6 +2714,7 @@ impl Renderer {
                     Some(self.texture_resolver.get_texture_size(source).to_f32()),
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
             self.draw_instanced_batch(
@@ -2718,6 +2745,7 @@ impl Renderer {
             None,
             &mut self.renderer_errors,
             &mut self.profile,
+            &mut self.command_log,
         );
 
         self.draw_instanced_batch(
@@ -2831,6 +2859,9 @@ impl Renderer {
         stats: &mut RendererStats,
     ) {
         profile_scope!("draw_picture_cache_target");
+        if let Some(history) = &mut self.command_log {
+            history.begin_render_target("Picture tile", draw_target.dimensions());
+        }
 
         self.profile.inc(profiler::RENDERED_PICTURE_TILES);
         let _gm = self.gpu_profiler.start_marker("picture cache target");
@@ -2885,6 +2916,7 @@ impl Renderer {
                         None,
                         &mut self.renderer_errors,
                         &mut self.profile,
+                        &mut self.command_log,
                     );
                     self.draw_instanced_batch(
                         &[instance],
@@ -3002,6 +3034,7 @@ impl Renderer {
                             &mut self.device, projection, None,
                             &mut self.renderer_errors,
                             &mut self.profile,
+                            &mut self.command_log,
                         );
 
                     let _timer = self.gpu_profiler.start_timer(batch.key.kind.sampler_tag());
@@ -3104,6 +3137,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 self.draw_instanced_batch(
@@ -3229,6 +3263,7 @@ impl Renderer {
                             None,
                             &mut self.renderer_errors,
                             &mut self.profile,
+                            &mut self.command_log,
                         );
 
                     ( textures, instance )
@@ -3259,6 +3294,7 @@ impl Renderer {
                             None,
                             &mut self.renderer_errors,
                             &mut self.profile,
+                            &mut self.command_log,
                         );
 
                     ( textures, instance )
@@ -3311,6 +3347,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
 
         for item in tiles_iter {
@@ -3486,6 +3523,7 @@ impl Renderer {
                         shader_params.3,
                         &mut self.renderer_errors,
                         &mut self.profile,
+                        &mut self.command_log,
                     );
 
                 current_shader_params = shader_params;
@@ -4376,6 +4414,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
             self.draw_instanced_batch(
                 &clear_instances,
@@ -4396,6 +4435,15 @@ impl Renderer {
         let needs_depth = target.needs_depth();
 
         let texture = self.texture_resolver.get_cache_texture_mut(&texture_id);
+
+        if let Some(history) = &mut self.command_log {
+            let label = match target.target_kind {
+                RenderTargetKind::Color => "color",
+                RenderTargetKind::Alpha => "alpha",
+            };
+            history.begin_render_target(label, texture.get_dimensions());
+        }
+
         if needs_depth {
             self.device.reuse_render_target::<u8>(
                 texture,
@@ -4508,6 +4556,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 self.draw_instanced_batch(
@@ -4525,6 +4574,7 @@ impl Renderer {
                     None,
                     &mut self.renderer_errors,
                     &mut self.profile,
+                    &mut self.command_log,
                 );
 
                 self.draw_instanced_batch(
@@ -4551,6 +4601,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
 
             self.draw_instanced_batch(
@@ -4575,6 +4626,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
 
             self.draw_instanced_batch(
@@ -4597,6 +4649,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
 
             if let Some(ref texture) = self.dither_matrix_texture {
@@ -4623,6 +4676,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
 
             if let Some(ref texture) = self.dither_matrix_texture {
@@ -4649,6 +4703,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
 
             if let Some(ref texture) = self.dither_matrix_texture {
@@ -4673,8 +4728,14 @@ impl Renderer {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_BLUR);
 
             self.set_blend(false, framebuffer_kind);
-            self.shaders.borrow_mut().cs_blur_rgba8()
-                .bind(&mut self.device, &projection, None, &mut self.renderer_errors, &mut self.profile);
+            self.shaders.borrow_mut().cs_blur_rgba8().bind(
+                &mut self.device,
+                &projection,
+                None,
+                &mut self.renderer_errors,
+                &mut self.profile,
+                &mut self.command_log,
+            );
 
             if !target.vertical_blurs.is_empty() {
                 self.draw_blurs(
@@ -4815,6 +4876,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
             self.draw_instanced_batch(
                 &list.slow_rectangles,
@@ -4831,6 +4893,7 @@ impl Renderer {
                 None,
                 &mut self.renderer_errors,
                 &mut self.profile,
+                &mut self.command_log,
             );
             self.draw_instanced_batch(
                 &list.fast_rectangles,
@@ -4844,8 +4907,14 @@ impl Renderer {
         for (mask_texture_id, items) in list.box_shadows.iter() {
             let _gm2 = self.gpu_profiler.start_marker("box-shadows");
             let textures = BatchTextures::composite_rgb(*mask_texture_id);
-            self.shaders.borrow_mut().cs_clip_box_shadow()
-                .bind(&mut self.device, projection, None, &mut self.renderer_errors, &mut self.profile);
+            self.shaders.borrow_mut().cs_clip_box_shadow().bind(
+                &mut self.device,
+                projection,
+                None,
+                &mut self.renderer_errors,
+                &mut self.profile,
+                &mut self.command_log,
+            );
             self.draw_instanced_batch(
                 items,
                 VertexArrayKind::ClipBoxShadow,
@@ -5501,8 +5570,11 @@ impl Renderer {
         present_mode: Option<PartialPresentMode>,
     ) {
         profile_scope!("main target");
-
         if let Some(device_size) = device_size {
+            if let Some(history) = &mut self.command_log {
+                history.begin_render_target("Window", device_size);
+            }
+
             results.stats.color_target_count += 1;
             results.picture_cache_debug = mem::replace(
                 &mut frame.composite_state.picture_cache_debug,

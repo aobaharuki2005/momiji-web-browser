@@ -19,7 +19,7 @@
 //! - A '|' token to start a new column.
 //! - A '_' token to start a new row.
 
-use api::{ColorF, ColorU};
+use api::{ColorF, ColorU, RenderCommandInfo};
 #[cfg(feature = "debugger")]
 use api::debugger::{ProfileCounterUpdate, ProfileCounterId};
 use glyph_rasterizer::profiler::GlyphRasterizeProfiler;
@@ -2043,4 +2043,42 @@ enum Item {
     Space,
     Column,
     Row,
+}
+
+pub struct RenderCommandLog {
+    items: Vec<RenderCommandInfo>,
+    current_shader: &'static str,
+}
+
+impl RenderCommandLog {
+    pub fn new() -> Self {
+        RenderCommandLog {
+            items: Vec::new(),
+            current_shader: "",
+        }
+    }
+
+    pub fn get(&self) -> &[RenderCommandInfo] {
+        &self.items
+    }
+
+    pub fn clear(&mut self) {
+        self.current_shader = "";
+        self.items.clear();
+    }
+
+    pub fn set_shader(&mut self, shader: &'static str) {
+        self.current_shader = shader;
+    }
+
+    pub fn begin_render_target(&mut self, label: &str, size: DeviceIntSize) {
+        self.items.push(RenderCommandInfo::RenderTarget { kind: label.into(), size })
+    }
+
+    pub fn draw(&mut self, instances: u32) {
+        self.items.push(RenderCommandInfo::DrawCall {
+            shader: self.current_shader.into(),
+            instances,
+        });
+    }
 }
