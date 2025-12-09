@@ -803,53 +803,37 @@ class PanZoomControllerTest : BaseSessionTest() {
         // Load a simple vertically scrollable page
         setupDocument(SIMPLE_SCROLL_TEST_PATH)
 
-        // Without a CompositorScrollDelegate registered yet,
-        // scroll down by 50 pixels, and wait for the change
-        // to be propagated to the compositor.
+        // Set up an initial CompositorScrollDelegate
+        // that appends updates to a local list
+        val updates: MutableList<ScrollPositionUpdate> = mutableListOf()
+        mainSession.setCompositorScrollDelegate(object : CompositorScrollDelegate {
+            override fun onScrollChanged(session: GeckoSession, update: ScrollPositionUpdate) {
+                updates.add(update)
+            }
+        })
+
+        // Scroll to y=50 and wait for the initial delegate to
+        // be notified on this
         mainSession.evaluateJS("window.scrollTo(0, 50)")
-        mainSession.promiseAllPaintsDone()
-        mainSession.flushApzRepaints()
+        while (updates.size == 0 || updates[updates.size - 1].scrollY != 50.0f) {
+            mainSession.promiseAllPaintsDone()
+            mainSession.flushApzRepaints()
+        }
 
-        // The compositor reports a scroll position updates
-        // delayed by one frame, so wait an additional frame
-        // to ensure the y=50 gets reported.
-        val promise = mainSession.evaluatePromiseJS(
-            """
-            new Promise(resolve => {
-                window.requestAnimationFrame(() => resolve(true));
-            });
-            """,
-        )
-        assertThat(
-            "we waited a frame",
-                   promise.value as Boolean,
-            equalTo(true),
-        )
-        mainSession.promiseAllPaintsDone()
-        mainSession.flushApzRepaints()
-
-        // Register a CompositorScrollDelegate, and check that it
-        // immediately gets notified about the scrollY=50, even
-        // though that scroll offset was reached before the delegate
-        // was registered.
+        // Register a second CompositorScrollDelegate, and check that it
+        // immediatley gets notified about the scrollY=50, even though
+        // that scroll offset was reached before the delegate was registered.
         var wasNotified = false
-        sessionRule.addExternalDelegateUntilTestEnd(
-            GeckoSession.CompositorScrollDelegate::class,
-            mainSession::setCompositorScrollDelegate,
-            { mainSession.setCompositorScrollDelegate(null) },
-            object : GeckoSession.CompositorScrollDelegate {
-                override fun onScrollChanged(session: GeckoSession, update: ScrollPositionUpdate) {
-                    var scrollY = update.scrollY
-                    Log.d(logTag, "test scroll delegate onScrollChanged, scrollY = " + scrollY)
-                    wasNotified = true
-                    assertThat(
-                        "notified scrollY is correct",
-                            scrollY,
+        mainSession.setCompositorScrollDelegate(object : CompositorScrollDelegate {
+            override fun onScrollChanged(session: GeckoSession, update: ScrollPositionUpdate) {
+                wasNotified = true
+                assertThat(
+                    "notified scrollY is correct",
+                        update.scrollY,
                         equalTo(50.0f),
-                    )
-                    }
-            },
-        )
+                )
+            }
+        })
 
         // setCompositorScrollDelegate() runs on the UI thread,
         // so the delegate callback may not be called synchronously.
