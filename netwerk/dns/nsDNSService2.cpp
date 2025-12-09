@@ -663,6 +663,8 @@ NS_IMPL_ISUPPORTS(DNSServiceWrapper, nsIDNSService, nsPIDNSService)
 already_AddRefed<nsIDNSService> DNSServiceWrapper::GetSingleton() {
   if (!gDNSServiceWrapper) {
     gDNSServiceWrapper = new DNSServiceWrapper();
+    // Not strictly needed, but simple and avoids bypassing lock-checking
+    MutexAutoLock lock(gDNSServiceWrapper->mLock);
     gDNSServiceWrapper->mDNSServiceInUse = ChildDNSService::GetSingleton();
     if (gDNSServiceWrapper->mDNSServiceInUse) {
       ClearOnShutdown(&gDNSServiceWrapper);
@@ -713,6 +715,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsDNSService, DNSServiceBase, nsIDNSService,
 static StaticRefPtr<nsDNSService> gDNSService;
 static Atomic<bool> gInited(false);
 
+// Note: be careful of races!  Called from multiple threads
 already_AddRefed<nsIDNSService> GetOrInitDNSService() {
   if (gInited) {
     return nsDNSService::GetXPCOMSingleton();
@@ -808,6 +811,7 @@ void nsDNSService::ReadPrefs(const char* name) {
     }
   }
   if (!name || !strcmp(name, kPrefIPv4OnlyDomains)) {
+    MutexAutoLock lock(mLock);
     Preferences::GetCString(kPrefIPv4OnlyDomains, mIPv4OnlyDomains);
   }
   if (!name || !strcmp(name, kPrefDnsLocalDomains)) {
@@ -842,7 +846,6 @@ void nsDNSService::ReadPrefs(const char* name) {
 
 NS_IMETHODIMP
 nsDNSService::Init() {
-  MOZ_ASSERT(!mResolver);
   MOZ_ASSERT(NS_IsMainThread());
 
   ReadPrefs(nullptr);
@@ -860,6 +863,7 @@ nsDNSService::Init() {
   if (NS_SUCCEEDED(rv)) {
     // now, set all of our member variables while holding the lock
     MutexAutoLock lock(mLock);
+    MOZ_ASSERT(!mResolver);
     mResolver = res;
   }
 
@@ -885,7 +889,12 @@ nsDNSService::Init() {
       do_GetService("@mozilla.org/network/oblivious-http-service;1"));
 
   mTrrService = new TRRService();
-  if (NS_FAILED(mTrrService->Init(mResolver->IsNativeHTTPSEnabled()))) {
+  bool httpsEnabled;
+  {
+    MutexAutoLock lock(mLock);
+    httpsEnabled = mResolver->IsNativeHTTPSEnabled();
+  }
+  if (NS_FAILED(mTrrService->Init(httpsEnabled))) {
     mTrrService = nullptr;
   }
 
@@ -1520,14 +1529,14 @@ nsresult nsDNSService::GetTRRDomainKey(nsACString& aTRRDomain) {
   return NS_OK;
 }
 
-size_t nsDNSService::SizeOfIncludingThis(
-    mozilla::MallocSizeOf mallocSizeOf) const {
+size_t nsDNSService::SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
   // Measurement of the following members may be added later if DMD finds it
   // is worthwhile:
   // - mIDN
   // - mLock
 
   size_t n = mallocSizeOf(this);
+  MutexAutoLock lock(mLock);
   n += mResolver ? mResolver->SizeOfIncludingThis(mallocSizeOf) : 0;
   n += mIPv4OnlyDomains.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mLocalDomains.SizeOfExcludingThis(mallocSizeOf);
