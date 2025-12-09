@@ -266,8 +266,8 @@ class DOM_Quota_EncryptedStream : public ::testing::Test {
   static std::unique_ptr<NSSInitContext, NSSInitContextDeleter> sNssContext;
 };
 
-MOZ_CONSTINIT std::unique_ptr<NSSInitContext,
-                              DOM_Quota_EncryptedStream::NSSInitContextDeleter>
+constinit std::unique_ptr<NSSInitContext,
+                          DOM_Quota_EncryptedStream::NSSInitContextDeleter>
     DOM_Quota_EncryptedStream::sNssContext;
 
 enum struct FlushMode { AfterEachChunk, Never };
