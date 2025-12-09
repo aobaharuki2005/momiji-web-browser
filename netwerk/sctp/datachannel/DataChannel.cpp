@@ -1042,8 +1042,8 @@ void DataChannelConnection::SetState(DataChannelConnectionState aState) {
   }
 }
 
-void DataChannelConnection::SendDataMessage(DataChannel& aChannel, nsACString&& aMsg,
-                                            bool aIsBinary) {
+void DataChannelConnection::SendDataMessage(DataChannel& aChannel,
+                                            nsACString&& aMsg, bool aIsBinary) {
   // Could be main, could be a worker
 
   nsCString temp(std::move(aMsg));
@@ -1051,8 +1051,9 @@ void DataChannelConnection::SendDataMessage(DataChannel& aChannel, nsACString&& 
   mSTS->Dispatch(
       NS_NewCancelableRunnableFunction(
           __func__,
-          [this, self = RefPtr<DataChannelConnection>(this), channel = RefPtr(&aChannel),
-           msg = std::move(temp), aIsBinary]() mutable {
+          [this, self = RefPtr<DataChannelConnection>(this),
+           channel = RefPtr(&aChannel), msg = std::move(temp),
+           aIsBinary]() mutable {
             Maybe<uint16_t> maxRetransmissions;
             Maybe<uint16_t> maxLifetimeMs;
 
