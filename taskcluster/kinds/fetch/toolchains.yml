@@ -391,6 +391,13 @@ clang-20:
         repo: https://github.com/llvm/llvm-project
         revision: 87f0227cb60147a26a1eeb4fb06e3b505e9c7261
 
+clang-21:
+    description: clang 21.1.7 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: 292dc2b86f66e39f4b85ec8b185fd8b60f5213ce
+
 clang-trunk:
     description: clang main branch source code
     attributes:

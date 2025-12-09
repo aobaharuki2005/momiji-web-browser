@@ -193,7 +193,7 @@ if [ "$what" = "compiler-rt" ]; then
   aarch64-pc-windows-msvc)
       # No pdb generated in that platform/arch configuration since
       # https://github.com/llvm/llvm-project/commit/655933070219f2b6f3a457c7e5af7edd4b5291b4
-      if echo "$@" | grep -q trunk
+      if echo "$@" | grep -q -v 'clang-\(1[0-9]\|20\)'
       then
         test -z "$(find -name "*.pdb")"
       else
