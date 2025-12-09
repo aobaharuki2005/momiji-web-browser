@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.recover.RecoverableTab
+import mozilla.components.compose.base.BannerColors
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.feature.tab.collections.Tab
@@ -27,7 +28,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
-import org.mozilla.fenix.compose.MessageCardColors
 import org.mozilla.fenix.compose.MessageCardState
 import org.mozilla.fenix.ext.CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT
 import org.mozilla.fenix.home.bookmarks.Bookmark
@@ -232,7 +232,7 @@ internal object FakeHomepagePreview {
         messageText = stringResource(id = R.string.default_browser_experiment_card_text),
         titleText = stringResource(id = R.string.default_browser_experiment_card_title),
         buttonText = "",
-        messageColors = MessageCardColors.buildMessageCardColors(),
+        bannerColors = BannerColors.bannerColors(),
     )
 
     internal fun message() = Message(
