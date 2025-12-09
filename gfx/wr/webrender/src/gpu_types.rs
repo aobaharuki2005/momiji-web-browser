@@ -1132,6 +1132,24 @@ impl GpuBufferDataF for BrushSegmentGpuData {
     }
 }
 
+/// Matches YuvPrimitive in yuv.glsl
+pub struct YuvPrimitive {
+    pub channel_bit_depth: u32,
+    pub color_space: YuvRangedColorSpace,
+    pub yuv_format: YuvFormat,
+}
+
+impl GpuBufferDataF for YuvPrimitive {
+    const NUM_BLOCKS: usize = 1;
+    fn write(&self, writer: &mut GpuBufferWriterF) {
+        writer.push_one([
+            pack_as_float(self.channel_bit_depth),
+            pack_as_float(self.color_space as u32),
+            pack_as_float(self.yuv_format as u32),
+            0.0
+        ]);
+    }
+}
 
 // Set the local -> world transform for a given spatial
 // node in the transform palette.

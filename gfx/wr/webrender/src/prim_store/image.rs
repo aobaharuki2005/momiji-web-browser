@@ -10,7 +10,7 @@ use api::{
 use api::units::*;
 use euclid::point2;
 use crate::composite::CompositorSurfaceKind;
-use crate::gpu_types::ImageBrushPrimitiveData;
+use crate::gpu_types::{ImageBrushPrimitiveData, YuvPrimitive};
 use crate::renderer::{GpuBufferBuilderF, GpuBufferWriterF};
 use crate::scene_building::{CreateShadow, IsVisible};
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
@@ -29,7 +29,6 @@ use crate::render_task_cache::{
     RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent
 };
 use crate::resource_cache::{ImageRequest, ImageProperties, ResourceCache};
-use crate::util::pack_as_float;
 use crate::visibility::{PrimitiveVisibility, compute_conservative_visible_rect};
 use crate::spatial_tree::SpatialNodeIndex;
 use crate::image_tiling;
@@ -711,13 +710,11 @@ impl YuvImageData {
     }
 
     pub fn write_prim_gpu_blocks(&self, writer: &mut GpuBufferWriterF) {
-        let ranged_color_space = self.color_space.with_range(self.color_range);
-        writer.push_one([
-            pack_as_float(self.color_depth.bit_depth()),
-            pack_as_float(ranged_color_space as u32),
-            pack_as_float(self.format as u32),
-            0.0
-        ]);
+        writer.push(&YuvPrimitive {
+            channel_bit_depth: self.color_depth.bit_depth(),
+            color_space: self.color_space.with_range(self.color_range),
+            yuv_format: self.format,
+        });
     }
 }
 
