@@ -15,6 +15,10 @@
 }
 .spacer {
   width: 1px;
+  height: 100px;
+}
+.largespacer {
+  width: 1px;
   height: 500px;
 }
 .anchor1 {
@@ -29,6 +33,8 @@
   top: anchor(bottom);
 }
 .anchor2 {
+  position: sticky;
+  top: 0;
   width: 50px;
   height: 50px;
   background: pink;
@@ -53,11 +59,12 @@
       reftest-displayport-x="0" reftest-displayport-y="0"
       reftest-displayport-w="150" reftest-displayport-h="500"
       reftest-async-scroll-y="50">
-      <div class="anchor2"></div>
       <div class="spacer"></div>
+      <div class="anchor2"></div>
+      <div class="largespacer"></div>
     </div>
     <div class="anchor1"></div>
-    <div class="spacer"></div>
+    <div class="largespacer"></div>
   </div>
   <div class="anchored"></div>
 </div>
