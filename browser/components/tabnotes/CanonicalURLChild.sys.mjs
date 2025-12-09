@@ -21,6 +21,7 @@ export class CanonicalURLChild extends JSWindowActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "DOMContentLoaded":
+      case "pageshow":
         this.#discoverCanonicalUrl();
     }
   }

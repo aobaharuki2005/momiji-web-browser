@@ -286,6 +286,7 @@ let JSWINDOWACTORS = {
       esModuleURI: "resource:///actors/CanonicalURLChild.sys.mjs",
       events: {
         DOMContentLoaded: {},
+        pageshow: {},
       },
     },
     enablePreference: "browser.tabs.notes.enabled",
