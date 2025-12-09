@@ -6,12 +6,6 @@
 
 "use strict";
 
-add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.trustPanel.featureGate", false]],
-  });
-});
-
 add_task(async function capture() {
   if (!shouldCapture()) {
     return;

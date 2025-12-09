@@ -13,10 +13,6 @@ support-files = [
   "trackingPage.html",
 ]
 
-prefs = [
-  "browser.urlbar.trustPanel.featureGate=false"
-]
-
 ["browser_protectionsUI.js"]
 https_first_disabled = true
 
