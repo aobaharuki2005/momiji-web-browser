@@ -22,8 +22,8 @@ gcloud:
     - model: MediumPhone.arm
       version: 32
       locale: en_US
-    - model: redfin
-      version: 30
+    - model: tokay
+      version: 35
       locale: en_US
     - model: oriole
       version: 31
