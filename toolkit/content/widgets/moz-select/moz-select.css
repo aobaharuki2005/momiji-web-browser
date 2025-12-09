@@ -65,6 +65,7 @@
   display: flex;
   align-items: center;
   outline: none;
+  font-family: inherit;
 }
 
 panel-item[icon]::part(button) {
@@ -104,6 +105,10 @@ select {
   & option {
     font-weight: var(--select-option-font-weight);
     color: var(--select-option-text-color);
+
+    &:disabled {
+      color: var(--text-color-disabled);
+    }
   }
 }
 
