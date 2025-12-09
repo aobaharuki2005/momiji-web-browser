@@ -65,7 +65,7 @@ pub fn resolve_image(
 
                     deferred_resolves.push(DeferredResolve {
                         image_properties,
-                        address: uv_rect_address,
+                        handle: uv_rect_address,
                         rendering: request.rendering,
                         is_composited,
                     });

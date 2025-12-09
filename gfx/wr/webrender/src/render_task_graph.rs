@@ -645,7 +645,7 @@ impl RenderTaskGraphBuilder {
                 // We'll handle it later and it's easier to not have to
                 // deal with unexpected location variants like
                 // RenderTaskLocation::CacheRequest when we do.
-                task.uv_rect_handle = cache_item.uv_rect_handle;
+                task.uv_rect_handle = gpu_buffers.f32.resolve_handle(cache_item.uv_rect_handle);
                 if let RenderTaskLocation::CacheRequest { .. } = &task.location {
                     let source = cache_item.texture_id;
                     task.location = RenderTaskLocation::Static {
@@ -1104,8 +1104,8 @@ impl RenderTaskGraphBuilder {
 
         let frame_memory = FrameMemory::fallback();
         let mut gpu_buffers = GpuBufferBuilder {
-            f32: GpuBufferBuilderF::new(&frame_memory, 0),
-            i32: GpuBufferBuilderI::new(&frame_memory, 0),
+            f32: GpuBufferBuilderF::new(&frame_memory, 0, FrameId::first()),
+            i32: GpuBufferBuilderI::new(&frame_memory, 0, FrameId::first()),
         };
         let g = self.end_frame(&mut rc, &mut gpu_buffers, &mut frame_memory.new_vec(), 2048, &frame_memory);
         g.print();

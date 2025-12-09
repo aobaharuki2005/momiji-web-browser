@@ -12,7 +12,7 @@ use crate::internal_types::{FastHashMap, FrameVec, FrameMemory};
 use crate::prim_store::ClipData;
 use crate::render_task::RenderTaskAddress;
 use crate::render_task_graph::RenderTaskId;
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferWriterF, ShaderColorMode};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF, GpuBufferHandle, GpuBufferWriterF, ShaderColorMode};
 use std::i32;
 use crate::util::{MatrixHelpers, TransformedRectKind};
 use glyph_rasterizer::SubpixelDirection;
@@ -1006,10 +1006,10 @@ pub struct ImageSource {
 }
 
 impl ImageSource {
-    pub fn write_gpu_blocks(&self, gpu_buffer: &mut GpuBufferBuilderF) -> GpuBufferAddress {
+    pub fn write_gpu_blocks(&self, gpu_buffer: &mut GpuBufferBuilderF) -> GpuBufferHandle {
         let mut writer = gpu_buffer.write_blocks(6);
         self.push_gpu_blocks(&mut writer);
-        writer.finish()
+        writer.finish_with_handle()
     }
 
     pub fn push_gpu_blocks(&self, writer: &mut GpuBufferWriterF) {

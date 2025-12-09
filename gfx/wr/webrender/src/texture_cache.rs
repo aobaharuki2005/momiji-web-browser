@@ -17,7 +17,7 @@ use crate::internal_types::{
 };
 use crate::lru_cache::LRUCache;
 use crate::profiler::{self, TransactionProfile};
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF};
+use crate::renderer::{GpuBufferBuilderF, GpuBufferHandle};
 use crate::resource_cache::{CacheItem, CachedImageData};
 use crate::texture_pack::{
     AllocatorList, AllocId, AtlasAllocatorList, ShelfAllocator, ShelfAllocatorOptions,
@@ -103,7 +103,7 @@ pub struct CacheEntry {
     //           entirely in future (or move to PictureCacheEntry).
     pub last_access: FrameStamp,
     /// Address of the resource rect in the GPU cache.
-    pub uv_rect_handle: GpuBufferAddress,
+    pub uv_rect_handle: GpuBufferHandle,
     /// Image format of the data that the entry expects.
     pub input_format: ImageFormat,
     pub filter: TextureFilter,
@@ -143,7 +143,7 @@ impl CacheEntry {
             input_format: params.descriptor.format,
             filter: params.filter,
             swizzle,
-            uv_rect_handle: GpuBufferAddress::INVALID,
+            uv_rect_handle: GpuBufferHandle::INVALID,
             eviction_notice: None,
             uv_rect_kind: params.uv_rect_kind,
             shader: TargetShader::Default,
@@ -803,7 +803,7 @@ impl TextureCache {
                 allocated_size_in_bytes: new_bytes,
             };
 
-            entry.uv_rect_handle = GpuBufferAddress::INVALID;
+            entry.uv_rect_handle = GpuBufferHandle::INVALID;
 
             let src_rect = DeviceIntRect::from_origin_and_size(change.old_rect.min, entry.size);
             let dst_rect = DeviceIntRect::from_origin_and_size(change.new_rect.min, entry.size);
@@ -1022,7 +1022,7 @@ impl TextureCache {
     pub fn try_get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> Option<(CacheTextureId, DeviceIntRect, Swizzle, GpuBufferAddress, [f32; 4])> {
+    ) -> Option<(CacheTextureId, DeviceIntRect, Swizzle, GpuBufferHandle, [f32; 4])> {
         let entry = self.get_entry_opt(handle)?;
         let origin = entry.details.describe();
         Some((
@@ -1042,7 +1042,7 @@ impl TextureCache {
     pub fn get_cache_location(
         &self,
         handle: &TextureCacheHandle,
-    ) -> (CacheTextureId, DeviceIntRect, Swizzle, GpuBufferAddress, [f32; 4]) {
+    ) -> (CacheTextureId, DeviceIntRect, Swizzle, GpuBufferHandle, [f32; 4]) {
         self.try_get_cache_location(handle).expect("BUG: was dropped from cache or not updated!")
     }
 
@@ -1349,7 +1349,7 @@ impl TextureCache {
                 alloc_id,
                 allocated_size_in_bytes,
             },
-            uv_rect_handle: GpuBufferAddress::INVALID,
+            uv_rect_handle: GpuBufferHandle::INVALID,
             input_format: params.descriptor.format,
             filter: params.filter,
             swizzle,
@@ -1648,6 +1648,7 @@ impl TextureCacheUpdate {
 #[cfg(test)]
 mod test_texture_cache {
     use crate::renderer::GpuBufferBuilderF;
+    use crate::internal_types::FrameId;
 
     #[test]
     fn check_allocation_size_balance() {
@@ -1664,7 +1665,7 @@ mod test_texture_cache {
         use euclid::size2;
         let mut texture_cache = TextureCache::new_for_testing(2048, ImageFormat::BGRA8);
         let memory = FrameMemory::fallback();
-        let mut gpu_buffer = GpuBufferBuilderF::new(&memory, 0);
+        let mut gpu_buffer = GpuBufferBuilderF::new(&memory, 0, FrameId::first());
 
         let sizes: &[DeviceIntSize] = &[
             size2(23, 27),

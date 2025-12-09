@@ -36,7 +36,7 @@ use crate::profiler::{self, TransactionProfile, bytes_to_mb};
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 use crate::render_task_cache::{RenderTaskCache, RenderTaskCacheKey, RenderTaskParent};
 use crate::render_task_cache::{RenderTaskCacheEntry, RenderTaskCacheEntryHandle};
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF};
+use crate::renderer::{GpuBufferAddress, GpuBufferBuilder, GpuBufferBuilderF, GpuBufferHandle};
 use crate::surface::SurfaceBuilder;
 use euclid::point2;
 use smallvec::SmallVec;
@@ -83,7 +83,7 @@ pub struct GlyphFetchResult {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct CacheItem {
     pub texture_id: TextureSource,
-    pub uv_rect_handle: GpuBufferAddress,
+    pub uv_rect_handle: GpuBufferHandle,
     pub uv_rect: DeviceIntRect,
     pub user_data: [f32; 4],
 }
@@ -92,7 +92,7 @@ impl CacheItem {
     pub fn invalid() -> Self {
         CacheItem {
             texture_id: TextureSource::Invalid,
-            uv_rect_handle: GpuBufferAddress::INVALID,
+            uv_rect_handle: GpuBufferHandle::INVALID,
             uv_rect: DeviceIntRect::zero(),
             user_data: [0.0; 4],
         }
@@ -1316,6 +1316,7 @@ impl ResourceCache {
         &self,
         mut font: FontInstance,
         glyph_keys: &[GlyphKey],
+        gpu_buffer: &GpuBufferBuilderF,
         fetch_buffer: &mut Vec<GlyphFetchResult>,
         mut f: F,
     ) where
@@ -1348,7 +1349,7 @@ impl ResourceCache {
             }
             fetch_buffer.push(GlyphFetchResult {
                 index_in_text_run: loop_index as i32,
-                uv_rect_address: cache_item.uv_rect_handle,
+                uv_rect_address: gpu_buffer.resolve_handle(cache_item.uv_rect_handle),
                 offset: DevicePoint::new(cache_item.user_data[0], cache_item.user_data[1]),
                 size: cache_item.uv_rect.size(),
                 scale: cache_item.user_data[2],

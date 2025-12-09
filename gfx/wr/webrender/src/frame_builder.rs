@@ -658,8 +658,8 @@ impl FrameBuilder {
         let mut frame_memory = FrameMemory::new(chunk_pool, stamp.frame_id());
         // TODO(gw): Recycle backing vec buffers for gpu buffer builder between frames
         let mut gpu_buffer_builder = GpuBufferBuilder {
-            f32: GpuBufferBuilderF::new(&frame_memory, 8 * 1024),
-            i32: GpuBufferBuilderI::new(&frame_memory, 2 * 1024),
+            f32: GpuBufferBuilderF::new(&frame_memory, 8 * 1024, stamp.frame_id()),
+            i32: GpuBufferBuilderI::new(&frame_memory, 2 * 1024, stamp.frame_id()),
         };
 
         profile.set(profiler::PRIMITIVES, scene.prim_instances.len());

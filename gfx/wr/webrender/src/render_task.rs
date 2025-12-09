@@ -2785,7 +2785,7 @@ impl RenderTask {
             uv_rect_kind: self.uv_rect_kind,
         };
 
-        self.uv_rect_handle = image_source.write_gpu_blocks(&mut gpu_buffer.f32);
+        self.uv_rect_handle = image_source.write_gpu_blocks(&mut gpu_buffer.f32).address_unchecked();
     }
 
     /// Called by the render task cache.

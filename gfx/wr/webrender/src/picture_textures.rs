@@ -14,7 +14,7 @@ use crate::internal_types::{
 use crate::profiler::{self, TransactionProfile};
 use crate::gpu_types::{ImageSource, UvRectKind};
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
-use crate::renderer::{GpuBufferAddress, GpuBufferBuilderF};
+use crate::renderer::{GpuBufferBuilderF, GpuBufferHandle};
 
 
 #[derive(Debug, PartialEq)]
@@ -43,7 +43,7 @@ pub struct PictureCacheEntry {
     //           entirely in future (or move to EntryDetails::Picture).
     pub last_access: FrameStamp,
     /// Handle to the resource rect in the float GPU buffer.
-    pub uv_rect_handle: GpuBufferAddress,
+    pub uv_rect_handle: GpuBufferHandle,
     /// The actual device texture ID this is part of.
     pub texture_id: CacheTextureId,
 }
@@ -218,7 +218,7 @@ impl PictureTextures {
         let cache_entry = PictureCacheEntry {
             size: tile_size,
             last_access: self.now,
-            uv_rect_handle: GpuBufferAddress::INVALID,
+            uv_rect_handle: GpuBufferHandle::INVALID,
             texture_id,
         };
 

@@ -1905,6 +1905,7 @@ impl BatchBuilder {
                 ctx.resource_cache.fetch_glyphs(
                     font,
                     &glyph_keys,
+                    &gpu_buffer_builder.f32,
                     &mut self.glyph_fetch_buffer,
                     |texture_id, glyph_format, glyphs| {
                         debug_assert_ne!(texture_id, TextureSource::Invalid);
@@ -2603,7 +2604,8 @@ impl BatchBuilder {
                     },
                 };
 
-                let uv_rect_address = source.write_gpu_blocks(&mut gpu_buffer_builder.f32);
+                let uv_rect_handle = source.write_gpu_blocks(&mut gpu_buffer_builder.f32);
+                let uv_rect_address = gpu_buffer_builder.f32.resolve_handle(uv_rect_handle);
 
                 self.add_brush_instance_to_batches(
                     key,

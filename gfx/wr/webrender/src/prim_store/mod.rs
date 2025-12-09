@@ -13,7 +13,7 @@ use crate::composite::CompositorSurfaceKind;
 use crate::clip::ClipLeafId;
 use crate::pattern::{Pattern, PatternBuilder, PatternBuilderContext, PatternBuilderState};
 use crate::quad::QuadTileClassifier;
-use crate::renderer::{GpuBufferAddress, GpuBufferWriterF};
+use crate::renderer::{GpuBufferAddress, GpuBufferHandle, GpuBufferWriterF};
 use crate::segment::EdgeAaSegmentMask;
 use crate::border::BorderSegmentCacheKey;
 use crate::debug_item::{DebugItem, DebugMessage};
@@ -90,7 +90,7 @@ impl PrimitiveOpacity {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct DeferredResolve {
-    pub address: GpuBufferAddress,
+    pub handle: GpuBufferHandle,
     pub image_properties: ImageProperties,
     pub rendering: ImageRendering,
     pub is_composited: bool,

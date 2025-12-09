@@ -10,7 +10,7 @@
 use std::i32;
 
 use crate::gpu_types::UvRectKind;
-use crate::internal_types::{FrameMemory, FrameVec};
+use crate::internal_types::{FrameId, FrameMemory, FrameVec};
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use crate::util::ScaleOffset;
 use api::units::{DeviceIntPoint, DeviceIntRect, DeviceIntSize, DeviceRect, LayoutRect, PictureRect};
@@ -66,6 +66,45 @@ pub struct GpuBufferBlockF {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct GpuBufferBlockI {
     data: [i32; 4],
+}
+
+/// GpuBuffer handle is similar to GpuBufferAddress with additional checks
+/// to avoid accidentally using the same handle in multiple frames.
+///
+/// Do not send GpuBufferHandle to the GPU directly. Instead use a GpuBuffer
+/// or GpuBufferBuilder to resolve the handle into a GpuBufferAddress that
+/// can be placed into GPU data.
+///
+/// The extra checks consists into storing an 8 bit epoch in the upper 8 bits
+/// of the handle. The epoch will be reused every 255 frames so this is not
+/// a mechanism that one can rely on to store and reuse handles over multiple
+/// frames. It is only a mechanism to catch mistakes where a handle is
+/// accidentally used in the wrong frame and panic.
+#[repr(transparent)]
+#[derive(Copy, Clone, MallocSizeOf, Eq, PartialEq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct GpuBufferHandle(u32);
+
+impl GpuBufferHandle {
+    pub const INVALID: GpuBufferHandle = GpuBufferHandle(u32::MAX - 1);
+    const EPOCH_MASK: u32 = 0xFF000000;
+
+    fn new(addr: u32, epoch: u32) -> Self {
+        Self(addr | epoch)
+    }
+
+    pub fn address_unchecked(&self) -> GpuBufferAddress {
+        GpuBufferAddress(self.0 & !Self::EPOCH_MASK)
+    }
+}
+
+impl std::fmt::Debug for GpuBufferHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let addr = self.0 & !Self::EPOCH_MASK;
+        let epoch = (self.0 & Self::EPOCH_MASK) >> 24;
+        write!(f, "#{addr}@{epoch}")
+    }
 }
 
 // TODO(gw): Temporarily encode GPU Cache addresses as a single int.
@@ -239,6 +278,7 @@ pub struct GpuBufferWriter<'a, T> {
     deferred: &'a mut Vec<DeferredBlock>,
     index: usize,
     max_block_count: usize,
+    epoch: u32,
 }
 
 impl<'a, T> GpuBufferWriter<'a, T> where T: Texel {
@@ -247,12 +287,14 @@ impl<'a, T> GpuBufferWriter<'a, T> where T: Texel {
         deferred: &'a mut Vec<DeferredBlock>,
         index: usize,
         max_block_count: usize,
+        epoch: u32,
     ) -> Self {
         GpuBufferWriter {
             buffer,
             deferred,
             index,
             max_block_count,
+            epoch,
         }
     }
 
@@ -280,6 +322,13 @@ impl<'a, T> GpuBufferWriter<'a, T> where T: Texel {
 
         GpuBufferAddress(self.index as u32)
     }
+
+    /// Close this writer, returning the GPU address of this set of block(s).
+    pub fn finish_with_handle(self) -> GpuBufferHandle {
+        assert!(self.buffer.len() <= self.index + self.max_block_count);
+
+        GpuBufferHandle::new(self.index as u32, self.epoch)
+    }
 }
 
 impl<'a, T> Drop for GpuBufferWriter<'a, T> {
@@ -295,13 +344,19 @@ pub struct GpuBufferBuilderImpl<T> {
     // `deferred` is only used during frame building and not sent with the
     // built frame, so it does not use the same allocator.
     deferred: Vec<DeferredBlock>,
+
+    epoch: u32,
 }
 
 impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRect> {
-    pub fn new(memory: &FrameMemory, capacity: usize) -> Self {
+    pub fn new(memory: &FrameMemory, capacity: usize, frame_id: FrameId) -> Self {
+        // Pick the first 8 bits of the frame id and store them in the upper bits
+        // of the handles.
+        let epoch = ((frame_id.as_u64() % 254) as u32 + 1) << 24;
         GpuBufferBuilderImpl {
             data: memory.new_vec_with_capacity(capacity),
             deferred: Vec::new(),
+            epoch,
         }
     }
 
@@ -318,7 +373,7 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
 
         self.data.extend_from_slice(blocks);
 
-        GpuBufferAddress(index as u32)
+        GpuBufferAddress(index as u32 | self.epoch)
     }
 
     /// Begin writing a specific number of blocks
@@ -337,12 +392,13 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
             &mut self.deferred,
             index,
             max_block_count,
+            self.epoch,
         )
     }
 
     // Reserve space in the gpu buffer for data that will be written by the
     // renderer.
-    pub fn reserve_renderer_deferred_blocks(&mut self, block_count: usize) -> GpuBufferAddress {
+    pub fn reserve_renderer_deferred_blocks(&mut self, block_count: usize) -> GpuBufferHandle {
         ensure_row_capacity(&mut self.data, block_count);
 
         let index = self.data.len();
@@ -352,7 +408,7 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
             self.data.push(Default::default());
         }
 
-        GpuBufferAddress(index as u32)
+        GpuBufferHandle::new(index as u32, self.epoch)
     }
 
     pub fn finalize(
@@ -399,7 +455,29 @@ impl<T> GpuBufferBuilderImpl<T> where T: Texel + std::convert::From<DeviceIntRec
             data: self.data,
             size: DeviceIntSize::new(MAX_VERTEX_TEXTURE_WIDTH as i32, (len / MAX_VERTEX_TEXTURE_WIDTH) as i32),
             format: T::image_format(),
+            epoch: self.epoch,
         }
+    }
+
+    pub fn resolve_handle(&self, handle: GpuBufferHandle) -> GpuBufferAddress {
+        if handle == GpuBufferHandle::INVALID {
+            return GpuBufferAddress::INVALID;
+        }
+
+        let epoch = handle.0 & GpuBufferHandle::EPOCH_MASK;
+        assert!(self.epoch == epoch);
+
+        GpuBufferAddress(handle.0 & !GpuBufferHandle::EPOCH_MASK)
+    }
+
+    /// Panics if the handle cannot be used this frame.
+    #[allow(unused)]
+    pub fn check_handle(&self, handle: GpuBufferHandle) {
+        if handle == GpuBufferHandle::INVALID {
+            return;
+        }
+        let epoch = handle.0 & GpuBufferHandle::EPOCH_MASK;
+        assert!(self.epoch == epoch);
     }
 }
 
@@ -422,11 +500,23 @@ pub struct GpuBuffer<T> {
     pub data: FrameVec<T>,
     pub size: DeviceIntSize,
     pub format: ImageFormat,
+    epoch: u32,
 }
 
 impl<T> GpuBuffer<T> {
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
+    }
+
+    pub fn resolve_handle(&self, handle: GpuBufferHandle) -> GpuBufferAddress {
+        if handle == GpuBufferHandle::INVALID {
+            return GpuBufferAddress::INVALID;
+        }
+
+        let epoch = handle.0 & GpuBufferHandle::EPOCH_MASK;
+        assert!(self.epoch == epoch);
+
+        GpuBufferAddress(handle.0 & !GpuBufferHandle::EPOCH_MASK)
     }
 }
 
@@ -434,7 +524,7 @@ impl<T> GpuBuffer<T> {
 fn test_gpu_buffer_sizing_push() {
     let frame_memory = FrameMemory::fallback();
     let render_task_graph = RenderTaskGraph::new_for_testing();
-    let mut builder = GpuBufferBuilderF::new(&frame_memory, 0);
+    let mut builder = GpuBufferBuilderF::new(&frame_memory, 0, FrameId::first());
 
     let row = vec![GpuBufferBlockF::EMPTY; MAX_VERTEX_TEXTURE_WIDTH];
     builder.push(&row);
@@ -450,7 +540,7 @@ fn test_gpu_buffer_sizing_push() {
 fn test_gpu_buffer_sizing_writer() {
     let frame_memory = FrameMemory::fallback();
     let render_task_graph = RenderTaskGraph::new_for_testing();
-    let mut builder = GpuBufferBuilderF::new(&frame_memory, 0);
+    let mut builder = GpuBufferBuilderF::new(&frame_memory, 0, FrameId::first());
 
     let mut writer = builder.write_blocks(MAX_VERTEX_TEXTURE_WIDTH);
     for _ in 0 .. MAX_VERTEX_TEXTURE_WIDTH {
