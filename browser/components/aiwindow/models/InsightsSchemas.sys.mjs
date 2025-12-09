@@ -112,3 +112,33 @@ export const INSIGHTS_NON_SENSITIVE_SCHEMA = {
     },
   },
 };
+
+/**
+ * JSON schema for classifying message category and intent
+ */
+export const INSIGHTS_MESSAGE_CLASSIFY_SCHEMA = {
+  name: "ClassifyMessage",
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["categories", "intents"],
+    properties: {
+      category: {
+        type: "array",
+        minItems: 1,
+        items: {
+          type: ["string", "null"],
+          enum: [...CATEGORIES_LIST, null],
+        },
+      },
+      intent: {
+        type: "array",
+        minItems: 1,
+        items: {
+          type: ["string", "null"],
+          enum: [...INTENTS_LIST, null],
+        },
+      },
+    },
+  },
+};

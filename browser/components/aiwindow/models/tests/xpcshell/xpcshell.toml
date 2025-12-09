@@ -12,6 +12,8 @@ support-files = []
 
 ["test_InsightsHistorySource.js"]
 
+["test_InsightsManager.js"]
+
 ["test_SearchBrowsingHistory.js"]
 
 ["test_Tools_SearchBrowsingHistory.js"]

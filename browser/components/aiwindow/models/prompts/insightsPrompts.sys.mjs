@@ -172,3 +172,32 @@ Return ONLY JSON per the schema below.
   ]
 }
 \`\`\``.trim();
+
+export const messageInsightClassificationSystemPromptMetadata = {
+  version: "0.1",
+};
+
+export const messageInsightClassificationSystemPrompt =
+  "Classify the user's message into one more more high-level Categories and Intents. Return ONLY valid JSON per schema.";
+
+export const messageInsightClassificationPrompt = `
+{message}
+
+Pick Categories from:
+{categories}
+
+Pick Intents from:
+{intents}
+
+Guidance:
+- Choose the most directly implied category/intent.
+- If ambiguous, pick the closest likely choice.
+- Keep it non-sensitive and general; do NOT fabricate specifics.
+
+Return ONLY JSON per the schema below.
+\`\`\`json
+{
+  "categories": ["<category 1>", "<category 2>", ...],
+  "intents": ["<intent 1>", "<intent 2>", ...]
+}
+\`\`\``.trim();

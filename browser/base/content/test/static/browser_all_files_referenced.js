@@ -331,12 +331,6 @@ var allowlist = [
   {
     file: "resource://app/modules/backup/CookiesBackupResource.sys.mjs",
   },
-
-  // Bug 2000725 importer lands (backed out due to unused file)
-  {
-    file: "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs",
-  },
-
   // Bug 2000945 - Move query intent detection to AI-window r?mardak (backed out due to unused file)
   {
     file: "moz-src:///browser/components/aiwindow/models/IntentClassifier.sys.mjs",
@@ -350,10 +344,6 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   },
-  // Bug 2002906 - Add insights storage
-  {
-    file: "moz-src:///browser/components/aiwindow/services/InsightStore.sys.mjs",
-  },
   // Bug 2003623 - Add assistant system prompt
   {
     file: "moz-src:///browser/components/aiwindow/models/prompts/assistantPrompts.sys.mjs",
@@ -362,18 +352,9 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/Tools.sys.mjs",
   },
-  // Bug 2003330 - Implement initial insights list creation
+  // Bug 2003671 - Fetch Insights - getRelevantInsights
   {
-    file: "moz-src:///browser/components/aiwindow/models/Insights.sys.mjs",
-  },
-  {
-    file: "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs",
-  },
-  {
-    file: "moz-src:///browser/components/aiwindow/models/prompts/insightsPrompts.sys.mjs",
-  },
-  {
-    file: "moz-src:///browser/components/aiwindow/models/InsightsSchemas.sys.mjs",
+    file: "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
   },
 ];
 

@@ -131,7 +131,7 @@ export function getFormattedInsightAttributeList(attributeName) {
  * @param {any} fallback  Fallback value if parsing fails to protect downstream code
  * @returns {Map}         Parsed JSON object
  */
-function parseAndExtractJSON(response, fallback) {
+export function parseAndExtractJSON(response, fallback) {
   const rawContent = response?.finalOutput ?? "";
   const markdownMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
   const payload = markdownMatch ? markdownMatch[1] : rawContent;
