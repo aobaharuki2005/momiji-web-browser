@@ -190,9 +190,11 @@ class MainMenuTestCompose : TestSetup() {
         }.openPasswords {
             verifySecurityPromptForLogins()
             tapSetupLater()
-            verifyEmptySavedLoginsListView()
-            exitMenu()
+            verifyEmptySavedLoginsListView(composeTestRule)
+        }.goBack(composeTestRule) {
         }
+
+        exitMenu()
         browserScreen {
             verifyPageContent(testPage.content)
         }
@@ -1088,8 +1090,13 @@ class MainMenuTestCompose : TestSetup() {
         }.openPasswords {
             verifySecurityPromptForLogins()
             tapSetupLater()
-            verifyEmptySavedLoginsListView()
-        }.goBackToHomeScreen {
+            verifyEmptySavedLoginsListView(composeTestRule)
+        }.goBack(composeTestRule) {
+        }
+
+        exitMenu()
+
+        homeScreen {
             verifyHomeComponent(composeTestRule)
         }
     }

@@ -87,8 +87,13 @@ class MainMenuTest : TestSetup() {
         }.openPasswords {
             verifySecurityPromptForLogins()
             tapSetupLater()
-            verifyEmptySavedLoginsListView()
-        }.goBackToHomeScreen {
+            verifyEmptySavedLoginsListView(composeTestRule)
+        }.goBack(composeTestRule) {
+        }
+
+        exitMenu()
+
+        homeScreen {
         }.openThreeDotMenu {
         }.openAddonsManagerMenu {
             verifyAddonsListIsDisplayed(true)

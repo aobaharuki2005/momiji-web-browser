@@ -5,38 +5,50 @@
 package org.mozilla.fenix.ui.robots
 
 import android.util.Log
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.Espresso.openActionBarOverflowOrOptionsMenu
 import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.assertion.ViewAssertions
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
-import androidx.test.espresso.matcher.ViewMatchers.withHint
-import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemIsEnabledAndVisible
+import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
-import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
-import org.mozilla.fenix.helpers.MatcherHelper.itemWithClassNameAndIndex
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndIndex
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
-import org.mozilla.fenix.helpers.click
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
+import org.mozilla.fenix.helpers.ext.clearAndSetText
 import org.mozilla.fenix.helpers.ext.waitNotNull
+import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.ADD_LOGIN_HOST_NAME_TEXT_FIELD
+import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.ADD_LOGIN_PASSWORD_TEXT_FIELD
+import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.ADD_LOGIN_USER_NAME_TEXT_FIELD
+import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.EDIT_LOGIN_PASSWORD_TEXT_FIELD
+import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.EDIT_LOGIN_USERNAME_TEXT_FIELD
+import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.LOGIN_DETAILS_PASSWORD_TEXT_FIELD
+import org.mozilla.fenix.settings.logins.ui.LoginsTestingTags.SAVED_LOGINS_PASSWORD_SEARCH_FIELD
 
 /**
  * Implementation of Robot Pattern for the Privacy Settings > saved logins sub menu
@@ -55,18 +67,16 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         Log.i(TAG, "verifySecurityPromptForLogins: Verified that the \"Secure your saved passwords\" dialog is visible")
     }
 
-    fun verifyEmptySavedLoginsListView() {
+    fun verifyEmptySavedLoginsListView(composeTestRule: HomeActivityComposeTestRule) {
         Log.i(TAG, "verifyEmptySavedLoginsListView: Trying to verify that the saved logins section description is displayed")
-        onView(withText(getStringResource(R.string.preferences_passwords_saved_logins_description_empty_text_2)))
-            .check(matches(isDisplayed()))
+        composeTestRule.onNodeWithText(getStringResource(R.string.preferences_passwords_saved_logins_description_empty_text_2)).assertIsDisplayed()
         Log.i(TAG, "verifyEmptySavedLoginsListView: Verified that the saved logins section description is displayed")
         Log.i(TAG, "verifyEmptySavedLoginsListView: Trying to verify that the \"Learn more about Sync\" link is displayed")
-        onView(withText(R.string.preferences_passwords_saved_logins_description_empty_learn_more_link_2))
-            .check(matches(isDisplayed()))
+        composeTestRule.onNodeWithContentDescription("Learn more about sync Links available", useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyEmptySavedLoginsListView: Verified that the \"Learn more about Sync\" link is displayed")
         Log.i(TAG, "verifyEmptySavedLoginsListView: Verified that the \"Learn more about Sync\" link is displayed")
         Log.i(TAG, "verifyEmptySavedLoginsListView: Trying to verify that the \"Add login\" button is displayed")
-        onView(withText(R.string.preferences_logins_add_login_2))
-            .check(matches(isDisplayed()))
+        composeTestRule.onNodeWithText(getStringResource(R.string.preferences_logins_add_login_2)).assertIsDisplayed()
         Log.i(TAG, "verifyEmptySavedLoginsListView: Verified that the \"Add login\" button is displayed")
     }
 
@@ -92,87 +102,107 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         Log.i(TAG, "clickAddLoginButton: Clicked the \"Add login\" button")
     }
 
-    fun verifyAddNewLoginView() {
-        assertUIObjectExists(
-            siteHeader(),
-            siteTextInput(),
-            usernameHeader(),
-            usernameTextInput(),
-            passwordHeader(),
-            passwordTextInput(),
-            siteDescription(),
-        )
-        Log.i(TAG, "verifyAddNewLoginView: Trying to verify the \"https://www.example.com\" site text box hint")
-        siteTextInputHint().check(matches(withHint(R.string.add_login_hostname_hint_text)))
-        Log.i(TAG, "verifyAddNewLoginView: Verified the \"https://www.example.com\" site text box hint")
+    fun verifyAddNewLoginView(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyAddNewLoginView: Trying to verify the \"Add login\" view items")
+        composeTestRule.onNodeWithText(getStringResource(R.string.preferences_passwords_saved_logins_site), useUnmergedTree = true).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(ADD_LOGIN_HOST_NAME_TEXT_FIELD).assertIsDisplayed()
+        composeTestRule.onNodeWithText(getStringResource(R.string.add_login_hostname_invalid_text_3), useUnmergedTree = true).assertIsDisplayed()
+        composeTestRule.onNodeWithText(getStringResource(R.string.preferences_passwords_saved_logins_username), useUnmergedTree = true).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(ADD_LOGIN_USER_NAME_TEXT_FIELD).assertIsDisplayed()
+        composeTestRule.onNodeWithText(getStringResource(R.string.preferences_passwords_saved_logins_password), useUnmergedTree = true).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(ADD_LOGIN_PASSWORD_TEXT_FIELD, useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyAddNewLoginView: Verified the \"Add login\" view items")
     }
 
-    fun enterSiteCredential(website: String) {
-        Log.i(TAG, "enterSiteCredential: Trying to set the \"Site\" text box text to: $website")
-        siteTextInput().setText(website)
-        Log.i(TAG, "enterSiteCredential: The \"Site\" text box text was set to: $website")
+    fun enterSiteCredentialWhileAddingALogin(composeTestRule: ComposeTestRule, website: String) {
+        Log.i(TAG, "enterSiteCredentialWhileAddingALogin: Trying to set the \"Site\" text box text to: $website")
+        composeTestRule.onNodeWithTag(ADD_LOGIN_HOST_NAME_TEXT_FIELD).performClick()
+        composeTestRule.onNodeWithTag(ADD_LOGIN_HOST_NAME_TEXT_FIELD).clearAndSetText(website)
+        Log.i(TAG, "enterSiteCredentialWhileAddingALogin: The \"Site\" text box text was set to: $website")
     }
 
-    fun verifyHostnameErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.add_login_hostname_invalid_text_2)))
+    fun verifyHostnameErrorMessage(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyHostnameErrorMessage: Trying to verify that the host name error message is displayed")
+        composeTestRule.onNodeWithText(getStringResource(R.string.add_login_hostname_invalid_text_2), useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyHostnameErrorMessage: Verified that the host name error message is displayed")
+    }
 
-    fun verifyPasswordErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_password_required_2)))
+    fun verifyPasswordErrorMessage(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyPasswordErrorMessage: Trying to verify that the password error message is displayed")
+        composeTestRule.onNodeWithText(getStringResource(R.string.saved_login_password_required_2), useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyPasswordErrorMessage: Verified that the password error message is displayed")
+    }
 
-    fun verifyPasswordClearButtonEnabled() =
-        assertItemIsEnabledAndVisible(itemWithResId("$packageName:id/clearPasswordTextButton"))
+    fun verifyPasswordClearButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyPasswordClearButton: Trying to verify that the clear password button is displayed")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_logins_clear_password)).assertIsDisplayed()
+        Log.i(TAG, "verifyPasswordClearButton: Verified that the clear password button is displayed")
+    }
 
-    fun verifyHostnameClearButtonEnabled() =
-        assertItemIsEnabledAndVisible(itemWithResId("$packageName:id/clearHostnameTextButton"))
+    fun verifyHostnameClearButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyHostnameClearButton: Trying to verify the clear host name button is displayed")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_login_clear_hostname), useUnmergedTree = true)
+        .assertIsDisplayed()
+        Log.i(TAG, "verifyHostnameClearButton: Verified that the clear host name button is displayed")
+    }
 
-    fun clickSearchLoginButton() {
+    fun clickSearchLoginButton(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickSearchLoginButton: Trying to click the search logins button")
-        itemWithResId("$packageName:id/search").click()
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.preferences_passwords_saved_logins_search_2)).performClick()
         Log.i(TAG, "clickSearchLoginButton: Clicked the search logins button")
     }
 
-    fun clickSavedLoginsChevronIcon() {
-        Log.i(TAG, "clickSavedLoginsChevronIcon: Trying to click the \"Saved logins\" chevron button")
-        itemWithResId("$packageName:id/toolbar_chevron_icon").click()
-        Log.i(TAG, "clickSavedLoginsChevronIcon: Clicked the \"Saved logins\" chevron button")
+    fun clickSortPasswordsButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickSortPasswordsButton: Trying to click the \"Saved logins\" sort button")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_logins_menu_dropdown_chevron_icon_content_description_2)).performClick()
+        Log.i(TAG, "clickSortPasswordsButton: Clicked the \"Saved logins\" sort button")
     }
 
-    fun verifyLoginsSortingOptions() {
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_logins_sort_strategy_alphabetically)))
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_logins_sort_strategy_last_used)))
+    fun verifyLoginsSortingOptions(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickSortPasswordsButton: Trying to verify that the logins sorting options are displayed")
+        composeTestRule.onNodeWithText(getStringResource(R.string.saved_logins_sort_strategy_alphabetically)).assertIsDisplayed()
+        composeTestRule.onNodeWithText(getStringResource(R.string.saved_logins_sort_strategy_last_used)).assertIsDisplayed()
+        Log.i(TAG, "clickSortPasswordsButton: Verified that the logins sorting options are displayed")
     }
 
-    fun clickLastUsedSortingOption() {
+    fun clickLastUsedSortingOption(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickLastUsedSortingOption: Trying to click the \"Last used\" sorting option")
-        itemContainingText(getStringResource(R.string.saved_logins_sort_strategy_last_used)).click()
+        composeTestRule.onNodeWithText(getStringResource(R.string.saved_logins_sort_strategy_last_used)).performClick()
         Log.i(TAG, "clickLastUsedSortingOption: Clicked the \"Last used\" sorting option")
+        Log.i(TAG, "clickLastUsedSortingOption: Waiting for compose rule to be idle")
+        composeTestRule.waitForIdle()
+        Log.i(TAG, "clickLastUsedSortingOption: Waited for compose rule to be idle")
     }
 
-    fun verifySortedLogin(position: Int, loginTitle: String) =
+    fun verifySortedLogin(position: Int, loginItemUrl: String) {
+        waitForAppWindowToBeUpdated()
         assertUIObjectExists(
-            itemWithClassNameAndIndex(className = "android.view.ViewGroup", index = position)
-                .getChild(
-                    UiSelector()
-                        .resourceId("$packageName:id/webAddressView")
-                        .textContains(loginTitle),
-                ),
+            itemWithResIdAndIndex(
+                "saved.logins.list.item.$loginItemUrl",
+                index = position - 1,
+            ),
         )
+    }
 
-    fun searchLogin(searchTerm: String) {
+    fun searchLogin(composeTestRule: ComposeTestRule, searchTerm: String) {
         Log.i(TAG, "searchLogin: Trying to set the search bar text to: $searchTerm")
-        itemWithResId("$packageName:id/search").setText(searchTerm)
+        composeTestRule.onNodeWithTag(SAVED_LOGINS_PASSWORD_SEARCH_FIELD).performClick()
+        composeTestRule.onNodeWithTag(SAVED_LOGINS_PASSWORD_SEARCH_FIELD).clearAndSetText(searchTerm)
         Log.i(TAG, "searchLogin: Search bar text was set to: $searchTerm")
     }
 
     fun verifySavedLoginsSectionUsername(username: String) =
         mDevice.waitNotNull(Until.findObjects(By.text(username)))
 
-    fun verifyLoginItemUsername(username: String) = assertUIObjectExists(itemContainingText(username))
+    fun verifyLoginItemUsername(composeTestRule: ComposeTestRule, loginUserName: String) = {
+        Log.i(TAG, "verifyLoginItemUsername: Trying to verify that the login item with user name: $loginUserName is displayed")
+        composeTestRule.onNodeWithText(loginUserName, useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyLoginItemUsername: Verified that the login item with user name: $loginUserName is displayed")
+    }
 
-    fun verifyNotSavedLoginFromPrompt() {
+    fun verifyNotSavedLoginFromPrompt(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "verifyNotSavedLoginFromPrompt: Trying to verify that \"test@example.com\" does not exist in the saved logins list")
-        onView(withText("test@example.com"))
-            .check(ViewAssertions.doesNotExist())
+        composeTestRule.onNodeWithText("test@example.com", useUnmergedTree = true).assertIsNotDisplayed()
         Log.i(TAG, "verifyNotSavedLoginFromPrompt: Verified that \"test@example.com\" does not exist in the saved logins list")
     }
 
@@ -183,100 +213,172 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         Log.i(TAG, "verifyLocalhostExceptionAdded: Verified that \"localhost\" is visible in the exceptions list")
     }
 
-    fun viewSavedLoginDetails(loginUserName: String) {
-        Log.i(TAG, "viewSavedLoginDetails: Trying to click $loginUserName saved login")
-        onView(withText(loginUserName)).click()
-        Log.i(TAG, "viewSavedLoginDetails: Clicked $loginUserName saved login")
+    fun viewSavedLoginDetails(composeTestRule: ComposeTestRule, loginDetail: String) {
+        waitForAppWindowToBeUpdated()
+        Log.i(TAG, "viewSavedLoginDetails: Trying to click $loginDetail saved login")
+        composeTestRule.onNodeWithText(loginDetail, useUnmergedTree = true).performClick()
+        Log.i(TAG, "viewSavedLoginDetails: Clicked $loginDetail saved login")
     }
 
-    fun clickThreeDotButton(activityTestRule: HomeActivityIntentTestRule) {
+    fun clickThreeDotButton(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickThreeDotButton: Trying to click the three dot button")
-        openActionBarOverflowOrOptionsMenu(activityTestRule.activity)
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.login_detail_menu_button_content_description))
+            .performClick()
         Log.i(TAG, "clickThreeDotButton: Clicked the three dot button")
     }
 
-    fun clickEditLoginButton() {
+    fun clickEditLoginButton(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickEditLoginButton: Trying to click the \"Edit\" button")
-        itemContainingText("Edit").click()
+        composeTestRule.onNodeWithText(
+            getStringResource(R.string.login_detail_menu_edit_button),
+            useUnmergedTree = true,
+        ).performClick()
         Log.i(TAG, "clickEditLoginButton: Clicked the \"Edit\" button")
     }
 
-    fun clickDeleteLoginButton() {
+    fun clickDeleteLoginButton(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickDeleteLoginButton: Trying to click the \"Delete\" button")
-        itemContainingText("Delete").click()
+        composeTestRule.onNodeWithText(
+            getStringResource(R.string.login_detail_menu_delete_button),
+            useUnmergedTree = true,
+        ).performClick()
         Log.i(TAG, "clickDeleteLoginButton: Clicked the \"Delete\" button")
     }
 
-    fun verifyLoginDeletionPrompt() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.login_deletion_confirmation_2)))
+    fun verifyLoginDeletionPrompt(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickDeleteLoginButton: Trying to verify that the login deletion prompt is displayed")
+        composeTestRule.onNodeWithText(
+            getStringResource(R.string.login_deletion_confirmation_2),
+            useUnmergedTree = true,
+        ).assertIsDisplayed()
+        Log.i(TAG, "clickDeleteLoginButton: Verified that the login deletion prompt is displayed")
+    }
 
-    fun clickConfirmDeleteLogin() {
+    fun clickConfirmDeleteLogin(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickConfirmDeleteLogin: Trying to click the \"Delete\" dialog button")
-        onView(withId(android.R.id.button1)).inRoot(RootMatchers.isDialog()).click()
+        composeTestRule.onNodeWithText(getStringResource(R.string.dialog_delete_positive))
+            .performClick()
         Log.i(TAG, "clickConfirmDeleteLogin: Clicked the \"Delete\" dialog button")
     }
 
-    fun clickCancelDeleteLogin() {
+    fun clickCancelDeleteLogin(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickCancelDeleteLogin: Trying to click the \"Cancel\" dialog button")
-        onView(withId(android.R.id.button2)).inRoot(RootMatchers.isDialog()).click()
+        composeTestRule.onNodeWithText(getStringResource(R.string.dialog_delete_negative))
+            .performClick()
         Log.i(TAG, "clickCancelDeleteLogin: Clicked the \"Cancel\" dialog button")
     }
 
-    fun setNewUserName(userName: String) {
-        Log.i(TAG, "setNewUserName: Trying to set \"Username\" text box to: $userName")
-        usernameTextInput().setText(userName)
-        Log.i(TAG, "setNewUserName: \"Username\" text box was set to: $userName")
+    fun setNewUserNameWhileEditingALogin(composeTestRule: ComposeTestRule, userName: String) {
+        Log.i(TAG, "setNewUserNameWhileEditingALogin: Trying to set \"Username\" text box to: $userName")
+        composeTestRule.onNodeWithTag(EDIT_LOGIN_USERNAME_TEXT_FIELD).performClick()
+        composeTestRule.onNodeWithTag(EDIT_LOGIN_USERNAME_TEXT_FIELD).clearAndSetText(userName)
+        Log.i(TAG, "setNewUserNameWhileEditingALogin: \"Username\" text box was set to: $userName")
     }
 
-    fun clickClearUserNameButton() {
+    fun setUserNameWhileAddingANewLogin(composeTestRule: ComposeTestRule, userName: String) {
+        Log.i(TAG, "setUserNameWhileAddingANewLogin: Trying to set \"Username\" text box to: $userName")
+        composeTestRule.onNodeWithTag(ADD_LOGIN_USER_NAME_TEXT_FIELD).performClick()
+        composeTestRule.onNodeWithTag(ADD_LOGIN_USER_NAME_TEXT_FIELD).clearAndSetText(userName)
+        Log.i(TAG, "setUserNameWhileAddingANewLogin: \"Username\" text box was set to: $userName")
+    }
+
+    fun clickClearUserNameButton(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickClearUserNameButton: Trying to click the clear username button")
-        itemWithResId("$packageName:id/clearUsernameTextButton").click()
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_login_clear_username))
+            .performClick()
         Log.i(TAG, "clickClearUserNameButton: Clicked the clear username button")
     }
 
-    fun setNewPassword(password: String) {
-        Log.i(TAG, "setNewPassword: Trying to set \"Password\" text box to: $password")
-        passwordTextInput().setText(password)
-        Log.i(TAG, "setNewPassword: \"Password\" text box was set to: $password")
+    fun setNewPasswordWhileEditingALogin(composeTestRule: ComposeTestRule, password: String) {
+        Log.i(TAG, "setNewPasswordWhileEditingALogin: Trying to set \"Password\" text box to: $password")
+        composeTestRule.onNodeWithTag(EDIT_LOGIN_PASSWORD_TEXT_FIELD).performClick()
+        composeTestRule.onNodeWithTag(EDIT_LOGIN_PASSWORD_TEXT_FIELD).clearAndSetText(password)
+        Log.i(TAG, "setNewPasswordWhileEditingALogin: \"Password\" text box was set to: $password")
     }
 
-    fun clickClearPasswordButton() {
+    fun setNewPasswordWhileAddingANewLogin(composeTestRule: ComposeTestRule, password: String) {
+        Log.i(TAG, "setNewPasswordWhileAddingANewLogin: Trying to set \"Password\" text box to: $password")
+        composeTestRule.onNodeWithTag(ADD_LOGIN_PASSWORD_TEXT_FIELD).performClick()
+        composeTestRule.onNodeWithTag(ADD_LOGIN_PASSWORD_TEXT_FIELD).clearAndSetText(password)
+        Log.i(TAG, "setNewPasswordWhileAddingANewLogin: \"Password\" text box was set to: $password")
+    }
+
+    fun clickClearPasswordButton(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "clickClearPasswordButton: Trying to click the clear password button")
-        itemWithResId("$packageName:id/clearPasswordTextButton").click()
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_logins_clear_password))
+            .performClick()
         Log.i(TAG, "clickClearPasswordButton: Clicked the clear password button")
     }
 
-    fun saveEditedLogin() {
+    fun saveEditedLogin(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "saveEditedLogin: Trying to click the toolbar save button")
-        itemWithResId("$packageName:id/save_login_button").click()
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.edit_login_button_content_description)).performClick()
         Log.i(TAG, "saveEditedLogin: Clicked the toolbar save button")
+        waitForAppWindowToBeUpdated()
     }
 
-    fun verifySaveLoginButtonIsEnabled(isEnabled: Boolean) =
-        assertUIObjectExists(
-            checkedItemWithResId("$packageName:id/save_login_button", isChecked = true),
-            exists = isEnabled,
-        )
+    fun saveNewLogin(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "saveNewLogin: Trying to click the toolbar save button")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.add_login_save_new_login_button_content_description))
+            .performClick()
+        Log.i(TAG, "saveNewLogin: Clicked the toolbar save button")
+        waitForAppWindowToBeUpdated()
+    }
 
-    fun revealPassword() {
+    fun verifySaveLoginButtonIsEnabled(composeTestRule: ComposeTestRule, isEnabled: Boolean) {
+        if (isEnabled) {
+            Log.i(TAG, "verifySaveLoginButtonIsEnabled: Trying to verify that the save login button is enabled")
+            composeTestRule.onNodeWithContentDescription(getStringResource(R.string.edit_login_button_content_description))
+                .assertIsEnabled()
+            Log.i(TAG, "verifySaveLoginButtonIsEnabled: Verified that the save login button is enabled")
+        } else {
+            Log.i(TAG, "verifySaveLoginButtonIsEnabled: Trying to verify that the save login button is not enabled")
+            composeTestRule.onNodeWithContentDescription(getStringResource(R.string.edit_login_button_content_description))
+                .assertIsNotEnabled()
+            Log.i(TAG, "verifySaveLoginButtonIsEnabled: Verified that the save login button is not enabled")
+        }
+    }
+
+    fun revealPassword(composeTestRule: ComposeTestRule) {
         Log.i(TAG, "revealPassword: Trying to click the reveal password button")
-        onView(withId(R.id.revealPasswordButton)).click()
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_login_reveal_password), useUnmergedTree = true)
+            .performClick()
         Log.i(TAG, "revealPassword: Clicked the reveal password button")
     }
 
-    fun verifyPasswordSaved(password: String) {
-        Log.i(TAG, "verifyPasswordSaved: Trying to verify that the \"Password\" text box is set to $password")
-        onView(withId(R.id.passwordText)).check(matches(withText(password)))
-        Log.i(TAG, "verifyPasswordSaved: Verified that the \"Password\" text box is set to $password")
+    fun verifyPasswordSaved(composeTestRule: ComposeTestRule, password: String) {
+        Log.i(TAG, "verifyPasswordSaved: Trying to verify that the saved login password is set to: $password")
+        composeTestRule.onNodeWithTag(LOGIN_DETAILS_PASSWORD_TEXT_FIELD).assert(hasText(password))
+        Log.i(TAG, "verifyPasswordSaved: Verified that the saved login password is set to: $password")
     }
 
-    fun verifyUserNameRequiredErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_username_required_2)))
+    fun verifyPasswordWhileEditingALogin(composeTestRule: ComposeTestRule, password: String) {
+        Log.i(TAG, "verifyPasswordWhileEditingALogin: Trying to verify that the saved login password while editing a login is set to: $password")
+        composeTestRule.onNodeWithTag(EDIT_LOGIN_PASSWORD_TEXT_FIELD).assert(hasText(password))
+        Log.i(TAG, "verifyPasswordWhileEditingALogin: Verified that the saved login password while editing a login is set to: $password")
+    }
 
-    fun verifyPasswordRequiredErrorMessage() =
-        assertUIObjectExists(itemContainingText(getStringResource(R.string.saved_login_password_required_2)))
+    fun verifyUserNameRequiredErrorMessage(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyUserNameRequiredErrorMessage: Trying to verify the user name required error message is displayed")
+        composeTestRule.onNodeWithText(getStringResource(R.string.saved_login_username_required_2))
+            .assertIsDisplayed()
+        Log.i(TAG, "verifyUserNameRequiredErrorMessage: Verified the user name required error message is displayed")
+    }
 
-    fun clickGoBackButton() = goBackButton().click()
+    fun verifyPasswordRequiredErrorMessage(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyUserNameRequiredErrorMessage: Trying to verify the password required error message is displayed")
+        composeTestRule.onNodeWithText(getStringResource(R.string.saved_login_password_required_2))
+            .assertIsDisplayed()
+        Log.i(TAG, "verifyUserNameRequiredErrorMessage: Verified the password required error message is displayed")
+    }
+
+    fun clickGoBackButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickGoBackButton: Trying to click the go back button")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.edit_login_navigate_back_button_content_description))
+            .performClick()
+        Log.i(TAG, "clickGoBackButton: Clicked the go back button")
+        waitForAppWindowToBeUpdated()
+    }
 
     fun clickCopyUserNameButton() =
         itemWithResId("$packageName:id/copyUsername").also {
@@ -299,9 +401,10 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         }
 
     class Transition {
-        fun goBack(interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
+        fun goBack(composeTestRule: ComposeTestRule, interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {
             Log.i(TAG, "goBack: Trying to click the navigate up button")
-            goBackButton().perform(ViewActions.click())
+            composeTestRule.onNodeWithContentDescription(getStringResource(R.string.logins_navigate_back_button_content_description))
+                .performClick()
             Log.i(TAG, "goBack: Clicked the navigate up button")
 
             SettingsSubMenuLoginsAndPasswordRobot().interact()
@@ -317,18 +420,10 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
             return HomeScreenRobot.Transition()
         }
 
-        fun goBackToSavedLogins(interact: SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition {
-            Log.i(TAG, "goBackToSavedLogins: Trying to click the navigate up button")
-            goBackButton().perform(ViewActions.click())
-            Log.i(TAG, "goBackToSavedLogins: Clicked the navigate up button")
-
-            SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot().interact()
-            return SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot.Transition()
-        }
-
-        fun goToSavedWebsite(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+        fun goToSavedWebsite(composeTestRule: ComposeTestRule, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             Log.i(TAG, "goToSavedWebsite: Trying to click the open web site button")
-            openWebsiteButton().click()
+            composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_login_open_site))
+                .performClick()
             Log.i(TAG, "goToSavedWebsite: Clicked the open web site button")
 
             BrowserRobot().interact()
@@ -339,14 +434,3 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
 private fun goBackButton() =
     onView(CoreMatchers.allOf(ViewMatchers.withContentDescription("Navigate up")))
-
-private fun openWebsiteButton() = onView(withId(R.id.openWebAddress))
-
-private fun siteHeader() = itemWithResId("$packageName:id/hostnameHeaderText")
-private fun siteTextInput() = itemWithResId("$packageName:id/hostnameText")
-private fun siteDescription() = itemContainingText(getStringResource(R.string.add_login_hostname_invalid_text_3))
-private fun siteTextInputHint() = onView(withId(R.id.hostnameText))
-private fun usernameHeader() = itemWithResId("$packageName:id/usernameHeader")
-private fun usernameTextInput() = itemWithResId("$packageName:id/usernameText")
-private fun passwordHeader() = itemWithResId("$packageName:id/passwordHeader")
-private fun passwordTextInput() = itemWithResId("$packageName:id/passwordText")

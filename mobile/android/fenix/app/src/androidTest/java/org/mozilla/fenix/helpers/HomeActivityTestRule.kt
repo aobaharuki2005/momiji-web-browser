@@ -71,7 +71,6 @@ class HomeActivityTestRule(
         isUseNewCrashReporterDialog: Boolean = false,
         isTabSwipeCFREnabled: Boolean = false,
         isTermsOfServiceAccepted: Boolean = true,
-        isComposeLoginsEnabled: Boolean = false,
         openLinksInExternalApp: OpenLinksInApp = getOpenLinksInApp(settings),
         hasSeenBrowserToolbarCFR: Boolean = true,
     ) : this(initialTouchMode, launchActivity, skipOnboarding) {
@@ -95,7 +94,6 @@ class HomeActivityTestRule(
         this.isUseNewCrashReporterDialog = isUseNewCrashReporterDialog
         this.isTabSwipeCFREnabled = isTabSwipeCFREnabled
         this.isTermsOfServiceAccepted = isTermsOfServiceAccepted
-        this.isComposeLoginsEnabled = isComposeLoginsEnabled
         this.openLinksInExternalApp = openLinksInExternalApp
         this.hasSeenBrowserToolbarCFR = hasSeenBrowserToolbarCFR
     }
@@ -162,7 +160,6 @@ class HomeActivityTestRule(
             isUseNewCrashReporterDialog = useNewCrashReporterDialog,
             isTabSwipeCFREnabled = true,
             isTermsOfServiceAccepted = true,
-            isComposeLoginsEnabled = false,
         )
     }
 }
@@ -208,7 +205,6 @@ class HomeActivityIntentTestRule internal constructor(
         onboardingFeatureEnabled: Boolean = true,
         isTabSwipeCFREnabled: Boolean = false,
         isTermsOfServiceAccepted: Boolean = true,
-        isComposeLoginsEnabled: Boolean = false,
         openLinksInExternalApp: OpenLinksInApp = getOpenLinksInApp(settings),
         tabManagerOpeningAnimationEnabled: Boolean = false,
         hasSeenBrowserToolbarCFR: Boolean = true,
@@ -233,7 +229,6 @@ class HomeActivityIntentTestRule internal constructor(
         this.onboardingFeatureEnabled = onboardingFeatureEnabled
         this.isTabSwipeCFREnabled = isTabSwipeCFREnabled
         this.isTermsOfServiceAccepted = isTermsOfServiceAccepted
-        this.isComposeLoginsEnabled = isComposeLoginsEnabled
         this.openLinksInExternalApp = openLinksInExternalApp
         this.tabManagerOpeningAnimationEnabled = tabManagerOpeningAnimationEnabled
         this.hasSeenBrowserToolbarCFR = hasSeenBrowserToolbarCFR
@@ -310,7 +305,6 @@ class HomeActivityIntentTestRule internal constructor(
         shouldUseBottomToolbar = settings.shouldUseBottomToolbar
         isTabSwipeCFREnabled = !settings.hasShownTabSwipeCFR
         isTermsOfServiceAccepted = settings.hasAcceptedTermsOfService
-        isComposeLoginsEnabled = settings.enableComposeLogins
         openLinksInExternalApp = getOpenLinksInApp(settings)
         tabManagerOpeningAnimationEnabled = settings.tabManagerOpeningAnimationEnabled
         hasSeenBrowserToolbarCFR = settings.hasSeenBrowserToolbarCFR
@@ -344,7 +338,6 @@ class HomeActivityIntentTestRule internal constructor(
             isPageLoadTranslationsPromptEnabled = false,
             isTabSwipeCFREnabled = true,
             isTermsOfServiceAccepted = true,
-            isComposeLoginsEnabled = false,
             tabManagerOpeningAnimationEnabled = false,
         )
     }
