@@ -5412,7 +5412,7 @@ impl PicturePrimitive {
                         if let Some(TileSurface::Texture { descriptor, .. }) = tile.surface.as_ref() {
                             if let SurfaceTextureDescriptor::TextureCache { handle: Some(handle), .. } = descriptor {
                                 frame_state.resource_cache
-                                    .picture_textures.request(handle, &mut frame_state.frame_gpu_data.f32);
+                                    .picture_textures.request(handle);
                             }
                         }
 
@@ -5448,7 +5448,7 @@ impl PicturePrimitive {
                                         // TODO(gw): Consider switching to manual eviction policy?
                                         frame_state.resource_cache
                                             .picture_textures
-                                            .request(handle.as_ref().unwrap(), &mut frame_state.frame_gpu_data.f32);
+                                            .request(handle.as_ref().unwrap());
                                     } else {
                                         // If the texture was evicted on a previous frame, we need to assume
                                         // that the entire tile rect is dirty.
@@ -5505,7 +5505,6 @@ impl PicturePrimitive {
                                         frame_state.resource_cache.picture_textures.update(
                                             tile_cache.current_tile_size,
                                             handle,
-                                            &mut frame_state.frame_gpu_data.f32,
                                             &mut frame_state.resource_cache.texture_cache.next_id,
                                             &mut frame_state.resource_cache.texture_cache.pending_updates,
                                         );
