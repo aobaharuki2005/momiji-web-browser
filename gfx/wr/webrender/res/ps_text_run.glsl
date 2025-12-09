@@ -45,7 +45,7 @@ Glyph fetch_glyph(int specific_prim_address,
     int glyph_address = specific_prim_address +
                         VECS_PER_TEXT_RUN +
                         int(uint(glyph_index) / GLYPHS_PER_GPU_BLOCK);
-    vec4 data = fetch_from_gpu_cache_1(glyph_address);
+    vec4 data = fetch_from_gpu_buffer_1f(glyph_address);
     // Select XY or ZW based on glyph index.
     vec2 glyph = mix(data.xy, data.zw,
                      bvec2(uint(glyph_index) % GLYPHS_PER_GPU_BLOCK == 1U));
@@ -69,7 +69,7 @@ struct TextRun {
 };
 
 TextRun fetch_text_run(int address) {
-    vec4 data = fetch_from_gpu_cache_1(address);
+    vec4 data = fetch_from_gpu_buffer_1f(address);
     return TextRun(data);
 }
 

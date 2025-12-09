@@ -4,7 +4,7 @@
 
 use api::units::PictureRect;
 use crate::pattern::{PatternKind, PatternShaderInput};
-use crate::{spatial_tree::SpatialNodeIndex, render_task_graph::RenderTaskId, surface::SurfaceTileDescriptor, picture::TileKey, renderer::GpuBufferAddress, FastHashMap, prim_store::PrimitiveInstanceIndex, gpu_cache::GpuCacheAddress};
+use crate::{spatial_tree::SpatialNodeIndex, render_task_graph::RenderTaskId, surface::SurfaceTileDescriptor, picture::TileKey, renderer::GpuBufferAddress, FastHashMap, prim_store::PrimitiveInstanceIndex};
 use crate::gpu_types::{QuadSegment, TransformPaletteId};
 use crate::segment::EdgeAaSegmentMask;
 
@@ -112,7 +112,7 @@ pub enum PrimitiveCommand {
     },
     Complex {
         prim_instance_index: PrimitiveInstanceIndex,
-        gpu_address: GpuCacheAddress,
+        gpu_address: GpuBufferAddress,
     },
     Instance {
         prim_instance_index: PrimitiveInstanceIndex,
@@ -142,7 +142,7 @@ impl PrimitiveCommand {
 
     pub fn complex(
         prim_instance_index: PrimitiveInstanceIndex,
-        gpu_address: GpuCacheAddress,
+        gpu_address: GpuBufferAddress,
     ) -> Self {
         PrimitiveCommand::Complex {
             prim_instance_index,
@@ -284,7 +284,7 @@ impl CommandBuffer {
                 Command::CMD_DRAW_COMPLEX_PRIM => {
                     let prim_instance_index = PrimitiveInstanceIndex(param);
                     let data = cmd_iter.next().unwrap();
-                    let gpu_address = GpuCacheAddress {
+                    let gpu_address = GpuBufferAddress {
                         u: (data.0 >> 16) as u16,
                         v: (data.0 & 0xffff) as u16,
                     };

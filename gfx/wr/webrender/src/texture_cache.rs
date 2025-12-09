@@ -849,7 +849,7 @@ impl TextureCache {
         };
         entry.map_or(true, |entry| {
             // If an image is requested that is already in the cache,
-            // refresh the GPU cache data associated with this item.
+            // refresh the GPU buffer data associated with this item.
             entry.last_access = now;
             entry.write_gpu_blocks(gpu_buffer);
             false

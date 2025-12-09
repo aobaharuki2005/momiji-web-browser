@@ -19,7 +19,7 @@ use crate::frame_builder::FrameBuildingState;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::image_tiling::simplify_repeated_primitive;
-use crate::prim_store::{BrushSegment, GradientTileRange};
+use crate::prim_store::{BrushSegment, GradientTileRange, VECS_PER_SEGMENT};
 use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity};
 use crate::prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
@@ -494,46 +494,43 @@ impl LinearGradientTemplate {
         &mut self,
         frame_state: &mut FrameBuildingState,
     ) {
-        if let Some(mut request) = frame_state.gpu_cache.request(
-            &mut self.common.gpu_cache_handle
-        ) {
+        let mut writer = frame_state.frame_gpu_data.f32.write_blocks(3 + self.brush_segments.len() * VECS_PER_SEGMENT);
 
-            // Write_prim_gpu_blocks
-            if self.cached {
-                // We are using the image brush.
-                request.push(PremultipliedColorF::WHITE);
-                request.push(PremultipliedColorF::WHITE);
-                request.push([
-                    self.stretch_size.width,
-                    self.stretch_size.height,
-                    0.0,
-                    0.0,
-                ]);
-            } else {
-                // We are using the gradient brush.
-                request.push([
-                    self.start_point.x,
-                    self.start_point.y,
-                    self.end_point.x,
-                    self.end_point.y,
-                ]);
-                request.push([
-                    pack_as_float(self.extend_mode as u32),
-                    self.stretch_size.width,
-                    self.stretch_size.height,
-                    0.0,
-                ]);
-            }
-
-            // write_segment_gpu_blocks
-            for segment in &self.brush_segments {
-                // has to match VECS_PER_SEGMENT
-                request.write_segment(
-                    segment.local_rect,
-                    segment.extra_data,
-                );
-            }
+        // Write_prim_gpu_blocks
+        if self.cached {
+            // We are using the image brush.
+            writer.push_one(PremultipliedColorF::WHITE);
+            writer.push_one(PremultipliedColorF::WHITE);
+            writer.push_one([
+                self.stretch_size.width,
+                self.stretch_size.height,
+                0.0,
+                0.0,
+            ]);
+        } else {
+            // We are using the gradient brush.
+            writer.push_one([
+                self.start_point.x,
+                self.start_point.y,
+                self.end_point.x,
+                self.end_point.y,
+            ]);
+            writer.push_one([
+                pack_as_float(self.extend_mode as u32),
+                self.stretch_size.width,
+                self.stretch_size.height,
+                0.0,
+            ]);
         }
+
+        // write_segment_gpu_blocks
+        for segment in &self.brush_segments {
+            // has to match VECS_PER_SEGMENT
+            writer.push_one(segment.local_rect);
+            writer.push_one(segment.extra_data);
+        }
+
+        self.common.gpu_buffer_address = writer.finish();
 
         // Tile spacing is always handled by decomposing into separate draw calls so the
         // primitive opacity is equivalent to stops opacity. This might change to being

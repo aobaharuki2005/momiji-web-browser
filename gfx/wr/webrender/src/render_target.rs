@@ -13,7 +13,6 @@ use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::SpatialTree;
 use crate::clip::{ClipStore, ClipItemKind};
 use crate::frame_builder::FrameGlobalResources;
-use crate::gpu_cache::GpuCache;
 use crate::gpu_types::{BorderInstance, SvgFilterInstance, SVGFEFilterInstance, BlurDirection, BlurInstance, PrimitiveHeaders, ScalingInstance};
 use crate::gpu_types::{TransformPalette, ZBufferIdGenerator, MaskInstance, ClipSpace, BlurEdgeMode};
 use crate::gpu_types::{ZBufferId, QuadSegment, PrimitiveInstanceData, TransformPaletteId};
@@ -108,7 +107,6 @@ impl RenderTargetList {
     pub fn build(
         &mut self,
         ctx: &mut RenderTargetContext,
-        gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskGraph,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -124,7 +122,6 @@ impl RenderTargetList {
         for target in &mut self.targets {
             target.build(
                 ctx,
-                gpu_cache,
                 render_tasks,
                 prim_headers,
                 transforms,
@@ -256,7 +253,6 @@ impl RenderTarget {
     pub fn build(
         &mut self,
         ctx: &mut RenderTargetContext,
-        gpu_cache: &mut GpuCache,
         render_tasks: &RenderTaskGraph,
         prim_headers: &mut PrimitiveHeaders,
         transforms: &mut TransformPalette,
@@ -313,7 +309,6 @@ impl RenderTarget {
                             cmd,
                             spatial_node_index,
                             ctx,
-                            gpu_cache,
                             render_tasks,
                             prim_headers,
                             transforms,
@@ -751,7 +746,7 @@ fn add_svg_filter_instances(
         input_count,
         generic_int,
         padding: 0,
-        extra_data_address: extra_data_address.unwrap_or(GpuBufferAddress::INVALID),
+        extra_data_address: extra_data_address.unwrap_or(GpuBufferAddress::INVALID).as_int(),
     };
 
     for (ref mut batch_textures, ref mut batch) in instances.iter_mut() {
@@ -806,7 +801,7 @@ fn add_svg_filter_node_instances(
         input_2_task_address: RenderTaskId::INVALID.into(),
         kind: 0,
         input_count: node.inputs.len() as u16,
-        extra_data_address: extra_data_address.unwrap_or(GpuBufferAddress::INVALID),
+        extra_data_address: extra_data_address.unwrap_or(GpuBufferAddress::INVALID).as_int(),
     };
 
     // Must match FILTER_* in cs_svg_filter_node.glsl
