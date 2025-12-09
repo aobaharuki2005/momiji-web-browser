@@ -7,6 +7,7 @@ import os
 import pathlib
 import re
 import shutil
+import sys
 from pathlib import Path
 
 from mozperftest.test.browsertime.visualtools import get_dependencies, xvfb
@@ -93,7 +94,18 @@ class BrowsertimeRunner(NodeRunner):
         self.virtualenv_manager = mach_cmd.virtualenv_manager
         self._created_dirs = []
         self._test_script = None
+        self._setup_helper = None
         self.get_binary_path = mach_cmd.get_binary_path
+
+    @property
+    def setup_helper(self):
+        if self._setup_helper is not None:
+            return self._setup_helper
+        sys.path.append(str(Path(self.topsrcdir, "tools", "lint", "eslint")))
+        import setup_helper
+
+        self._setup_helper = setup_helper
+        return self._setup_helper
 
     @property
     def artifact_cache_path(self):
@@ -240,9 +252,7 @@ class BrowsertimeRunner(NodeRunner):
 
     def _setup_node_packages(self, package_json_path):
         # Install the browsertime Node.js requirements.
-        from mozbuild.nodeutil import check_node_executables_valid, package_setup
-
-        if not check_node_executables_valid():
+        if not self.setup_helper.check_node_executables_valid():
             return
 
         should_clobber = self.get_arg("clobber")
@@ -261,7 +271,7 @@ class BrowsertimeRunner(NodeRunner):
         )
         install_url = self.get_arg("install-url")
 
-        package_setup(
+        self.setup_helper.package_setup(
             str(self.state_path),
             "browsertime",
             should_update=install_url is not None,

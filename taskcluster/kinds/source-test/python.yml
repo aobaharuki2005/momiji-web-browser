@@ -393,14 +393,11 @@ mozbuild:
             by-platform:
                 linux2404-64/opt:
                     - linux64-node
-                    - terser
                 macosx1470-64/opt:
                     - macosx64-node
-                    - terser
                 windows11-64/opt:
                     - win64-node
                     - win64-mozmake
-                    - terser
     when:
         files-changed:
             - '**/moz.configure'
