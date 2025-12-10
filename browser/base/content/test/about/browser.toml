@@ -32,6 +32,8 @@ support-files = [
 
 ["browser_aboutCertError_noSubjectAltName.js"]
 
+["browser_aboutCertError_notYetValid.js"]
+
 ["browser_aboutCertError_offlineSupport.js"]
 
 ["browser_aboutCertError_offlineSupport_feltPrivacyV1.js"]
