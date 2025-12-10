@@ -25,7 +25,6 @@ dependencies = [
     "importlib-metadata~=8.0",
     # Required for compatibility with Flask >= 2 in tools/tryselect/selectors/chooser
     "jinja2==3.1.6",
-    "jsmin~=3.0",
     "json-e~=4.5",
     "jsonschema==4.17.3",
     "looseversion~=1.0",
