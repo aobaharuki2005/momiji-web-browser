@@ -1927,6 +1927,37 @@ FFmpegVideoDecoder<LIBAV_VER>::ProcessFlush() {
   return FFmpegDataDecoder::ProcessFlush();
 }
 
+#ifdef MOZ_WIDGET_ANDROID
+Maybe<MediaDataDecoder::PropertyValue> FFmpegVideoDecoder<
+    LIBAV_VER>::GetDecodeProperty(MediaDataDecoder::PropertyName aName) const {
+  // If we are using a software decoder, then we aren't subject to platform
+  // limits. If we don't have mCodecContext, assume worst case.
+  if (mCodecContext) {
+    if (const auto* codec = mCodecContext->codec) {
+      if (!(codec->capabilities & AV_CODEC_CAP_HARDWARE)) {
+        return MediaDataDecoder::GetDecodeProperty(aName);
+      }
+    }
+  }
+
+  // Android has limited amount of output buffers. See Bug 794747.
+  static constexpr uint32_t kNumOutputBuffers = 3;
+  // SurfaceTexture can have only one current/renderable image at a time.
+  // See Bug 1299068
+  static constexpr uint32_t kNumCurrentImages = 1;
+  switch (aName) {
+    case PropertyName::MaxNumVideoBuffers:
+      [[fallthrough]];
+    case PropertyName::MinNumVideoBuffers:
+      return Some(PropertyValue(kNumOutputBuffers));
+    case PropertyName::MaxNumCurrentImages:
+      return Some(PropertyValue(kNumCurrentImages));
+    default:
+      return MediaDataDecoder::GetDecodeProperty(aName);
+  }
+}
+#endif
+
 AVCodecID FFmpegVideoDecoder<LIBAV_VER>::GetCodecId(
     const nsACString& aMimeType) {
   if (MP4Decoder::IsH264(aMimeType)) {

@@ -100,6 +100,11 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #endif
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  Maybe<MediaDataDecoder::PropertyValue> GetDecodeProperty(
+      MediaDataDecoder::PropertyName aName) const override;
+#endif
+
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 #if LIBAVCODEC_VERSION_MAJOR >= 57 && LIBAVUTIL_VERSION_MAJOR >= 56
