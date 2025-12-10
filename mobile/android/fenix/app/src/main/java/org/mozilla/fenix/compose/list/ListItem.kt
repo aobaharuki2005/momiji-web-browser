@@ -67,7 +67,6 @@ import mozilla.components.compose.base.badge.BADGE_SIZE_SMALL
 import mozilla.components.compose.base.badge.BadgedIcon
 import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.compose.base.theme.information
-import mozilla.components.compose.base.theme.surfaceDimVariant
 import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.button.RadioButton
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -340,21 +339,6 @@ fun IconListItem(
             )
         },
     )
-}
-
-@Composable
-@PreviewLightDark
-private fun IconListItemBeforeIconPreview() {
-    FirefoxTheme {
-        Box(Modifier.background(MaterialTheme.colorScheme.surfaceDimVariant)) {
-            IconListItemBeforeIcon(
-                isHighlighted = false,
-                painter = painterResource(iconsR.drawable.mozac_ic_shield_slash_critical_24),
-                description = "",
-                tint = Color.Unspecified,
-            )
-        }
-    }
 }
 
 @Composable
@@ -1542,6 +1526,30 @@ private fun SelectableListItemPreview() {
                 afterListItemAction = {},
                 showSelectableItemAfter = true,
             )
+        }
+    }
+}
+
+@Composable
+@PreviewLightDark
+private fun IconListItemBeforeIconPreview() {
+    FirefoxTheme {
+        Surface {
+            Row(modifier = Modifier.padding(all = FirefoxTheme.layout.space.static100)) {
+                IconListItemBeforeIcon(
+                    isHighlighted = false,
+                    painter = painterResource(iconsR.drawable.mozac_ic_shield_slash_critical_24),
+                    description = "",
+                    tint = Color.Unspecified,
+                )
+
+                IconListItemBeforeIcon(
+                    isHighlighted = true,
+                    painter = painterResource(iconsR.drawable.mozac_ic_shield_slash_critical_24),
+                    description = "",
+                    tint = Color.Unspecified,
+                )
+            }
         }
     }
 }
