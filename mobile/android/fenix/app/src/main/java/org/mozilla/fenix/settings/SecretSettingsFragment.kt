@@ -434,6 +434,11 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().isRelayFeatureEnabled
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_persistent_onboarding).apply {
+            isChecked = context.settings().enablePersistentOnboarding
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
