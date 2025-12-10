@@ -42,7 +42,6 @@ class AcornColors(
     formDefault: Color,
     textSecondary: Color,
     textCritical: Color,
-    textAccent: Color,
     textInverted: Color,
     textOnColorPrimary: Color,
     textActionSecondary: Color,
@@ -144,10 +143,6 @@ class AcornColors(
 
     // Warning text
     var textCritical by mutableStateOf(textCritical)
-        private set
-
-    // Small heading, Text link
-    var textAccent by mutableStateOf(textAccent)
         private set
 
     // Text Inverted
@@ -252,7 +247,6 @@ class AcornColors(
         formDefault = other.formDefault
         textSecondary = other.textSecondary
         textCritical = other.textCritical
-        textAccent = other.textAccent
         textOnColorPrimary = other.textOnColorPrimary
         textActionSecondary = other.textActionSecondary
         iconPrimary = other.iconPrimary
@@ -295,7 +289,6 @@ class AcornColors(
         formDefault: Color = this.formDefault,
         textSecondary: Color = this.textSecondary,
         textCritical: Color = this.textCritical,
-        textAccent: Color = this.textAccent,
         textInverted: Color = this.textInverted,
         textOnColorPrimary: Color = this.textOnColorPrimary,
         textActionSecondary: Color = this.textActionSecondary,
@@ -333,7 +326,6 @@ class AcornColors(
         formDefault = formDefault,
         textSecondary = textSecondary,
         textCritical = textCritical,
-        textAccent = textAccent,
         textInverted = textInverted,
         textOnColorPrimary = textOnColorPrimary,
         textActionSecondary = textActionSecondary,
@@ -374,7 +366,6 @@ val darkColorPalette = AcornColors(
     formDefault = PhotonColors.LightGrey05,
     textSecondary = PhotonColors.LightGrey40,
     textCritical = PhotonColors.Red20,
-    textAccent = PhotonColors.Violet20,
     textInverted = PhotonColors.DarkGrey90,
     textOnColorPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.LightGrey05,
@@ -414,7 +405,6 @@ val lightColorPalette = AcornColors(
     formDefault = PhotonColors.DarkGrey90,
     textSecondary = PhotonColors.DarkGrey05,
     textCritical = PhotonColors.Red70,
-    textAccent = PhotonColors.Violet70,
     textInverted = PhotonColors.LightGrey05,
     textOnColorPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
@@ -448,6 +438,7 @@ private fun AcornColors.toM3ColorScheme(
     primaryContainer: Color,
     inversePrimary: Color,
     secondaryContainer: Color,
+    tertiary: Color,
     tertiaryContainer: Color,
     surface: Color,
     onSurface: Color,
@@ -472,7 +463,7 @@ private fun AcornColors.toM3ColorScheme(
     onSecondary = textInverted,
     secondaryContainer = secondaryContainer,
     onSecondaryContainer = onSurface,
-    tertiary = textAccent,
+    tertiary = tertiary,
     onTertiary = textInverted,
     tertiaryContainer = tertiaryContainer,
     onTertiaryContainer = onSurface,
@@ -521,6 +512,7 @@ fun acornDarkColorScheme(): ColorScheme = darkColorPalette.toM3ColorScheme(
     primaryContainer = PhotonColors.Violet80,
     inversePrimary = PhotonColors.Violet70,
     secondaryContainer = Color(0xFF4B3974),
+    tertiary = PhotonColors.Violet20,
     tertiaryContainer = PhotonColors.Pink80,
     surface = PhotonColors.DarkGrey60,
     onSurface = PhotonColors.LightGrey05,
@@ -545,6 +537,7 @@ fun acornLightColorScheme(): ColorScheme = lightColorPalette.toM3ColorScheme(
     primaryContainer = PhotonColors.Violet05,
     inversePrimary = PhotonColors.Violet20,
     secondaryContainer = Color(0xFFE6E0F5),
+    tertiary = PhotonColors.Violet70,
     tertiaryContainer = PhotonColors.Pink05,
     surface = PhotonColors.LightGrey10,
     onSurface = PhotonColors.DarkGrey90,
@@ -569,6 +562,7 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
     primaryContainer = PhotonColors.Violet80,
     inversePrimary = PhotonColors.Violet70,
     secondaryContainer = Color(0xFF4B3974),
+    tertiary = PhotonColors.Violet20,
     tertiaryContainer = PhotonColors.Pink80,
     surface = Color(0xFF342B4A),
     onSurface = PhotonColors.LightGrey05,
