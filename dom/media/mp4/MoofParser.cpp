@@ -429,10 +429,10 @@ class CtsComparator {
   }
 };
 
-Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, const Trex& aTrex,
-           const Mvhd& aMvhd, const Mdhd& aMdhd, const Edts& aEdts,
-           const Sinf& aSinf, const bool aIsAudio, uint64_t* aDecodeTime,
-           nsTArray<TrackEndCts>& aTracksEndCts)
+Moof::Moof(const Box& aBox, const TrackParseMode& aTrackParseMode,
+           const Trex& aTrex, const Mvhd& aMvhd, const Mdhd& aMdhd,
+           const Edts& aEdts, const Sinf& aSinf, const bool aIsAudio,
+           uint64_t* aDecodeTime, nsTArray<TrackEndCts>& aTracksEndCts)
     : mRange(aBox.Range()),
       mTfhd(aTrex),
       // Do not reporting discontuities less than 35ms
@@ -725,7 +725,7 @@ const CencSampleEncryptionInfoEntry* Moof::GetSampleEncryptionEntry(
                                         : &entries->ElementAt(groupIndex - 1);
 }
 
-void Moof::ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode,
+void Moof::ParseTraf(const Box& aBox, const TrackParseMode& aTrackParseMode,
                      const Trex& aTrex, const Mvhd& aMvhd, const Mdhd& aMdhd,
                      const Edts& aEdts, const Sinf& aSinf, const bool aIsAudio,
                      uint64_t* aDecodeTime) {
@@ -834,7 +834,7 @@ void Moof::FixRounding(const Moof& aMoof) {
   }
 }
 
-Result<Ok, nsresult> Moof::ParseSenc(Box& aBox, const Sinf& aSinf) {
+Result<Ok, nsresult> Moof::ParseSenc(const Box& aBox, const Sinf& aSinf) {
   // If we already had a senc box, ignore following ones
   // Not sure how likely this could be in real life
   if (mSencValid) [[unlikely]] {
@@ -910,7 +910,7 @@ Result<Ok, nsresult> Moof::ParseSenc(Box& aBox, const Sinf& aSinf) {
   return Ok();
 }
 
-Result<Ok, nsresult> Moof::ParseTrun(Box& aBox, const Mvhd& aMvhd,
+Result<Ok, nsresult> Moof::ParseTrun(const Box& aBox, const Mvhd& aMvhd,
                                      const Mdhd& aMdhd, const Edts& aEdts,
                                      const bool aIsAudio,
                                      uint64_t* aDecodeTime) {

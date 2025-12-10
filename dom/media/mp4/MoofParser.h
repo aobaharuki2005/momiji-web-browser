@@ -246,10 +246,10 @@ using TrackParseMode = Variant<ParseAllTracks, uint32_t>;
 
 class Moof final : public Atom {
  public:
-  Moof(Box& aBox, const TrackParseMode& aTrackParseMode, const Trex& aTrex,
-       const Mvhd& aMvhd, const Mdhd& aMdhd, const Edts& aEdts,
-       const Sinf& aSinf, const bool aIsAudio, uint64_t* aDecodeTime,
-       nsTArray<TrackEndCts>& aTracksEndCts);
+  Moof(const Box& aBox, const TrackParseMode& aTrackParseMode,
+       const Trex& aTrex, const Mvhd& aMvhd, const Mdhd& aMdhd,
+       const Edts& aEdts, const Sinf& aSinf, const bool aIsAudio,
+       uint64_t* aDecodeTime, nsTArray<TrackEndCts>& aTracksEndCts);
   void FixRounding(const Moof& aMoof);
 
   // Retrieve CencSampleEncryptionInfoEntry for a given sample number.
@@ -282,15 +282,15 @@ class Moof final : public Atom {
 
  private:
   // aDecodeTime is updated to the end of the parsed TRAF on return.
-  void ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode,
+  void ParseTraf(const Box& aBox, const TrackParseMode& aTrackParseMode,
                  const Trex& aTrex, const Mvhd& aMvhd, const Mdhd& aMdhd,
                  const Edts& aEdts, const Sinf& aSinf, const bool aIsAudio,
                  uint64_t* aDecodeTime);
   // aDecodeTime is updated to the end of the parsed TRUN on return.
-  Result<Ok, nsresult> ParseTrun(Box& aBox, const Mvhd& aMvhd,
+  Result<Ok, nsresult> ParseTrun(const Box& aBox, const Mvhd& aMvhd,
                                  const Mdhd& aMdhd, const Edts& aEdts,
                                  const bool aIsAudio, uint64_t* aDecodeTime);
-  Result<Ok, nsresult> ParseSenc(Box& aBox, const Sinf& aSinf);
+  Result<Ok, nsresult> ParseSenc(const Box& aBox, const Sinf& aSinf);
   // Process the sample auxiliary information used by common encryption.
   // aScheme is used to select the appropriate auxiliary information and should
   // be set based on the encryption scheme used by the track being processed.
