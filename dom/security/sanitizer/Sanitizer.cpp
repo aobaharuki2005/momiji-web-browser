@@ -578,6 +578,9 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
       // Step 7.1.1 For any element in config[elements]:
       for (const auto& entry : *mElements) {
         const CanonicalElementAttributes& elemAttributes = entry.GetData();
+        MOZ_ASSERT(
+            elemAttributes.mAttributes || elemAttributes.mRemoveAttributes,
+            "Canonical elements must at least have removeAttributes");
 
         // Step 7.1.1.1. Neither element[attributes] or
         // element[removeAttributes], if they exist, has duplicates.
@@ -782,6 +785,11 @@ void Sanitizer::MaybeMaterializeDefaultConfig() {
         }
         i++;
         elementAttributes.mAttributes = Some(std::move(attributes));
+      } else {
+        // In the default config all elements have a (maybe empty) `attributes`
+        // list.
+        CanonicalAttributeSet set{};
+        elementAttributes.mAttributes = Some(std::move(set));
       }
 
       CanonicalElement elementName(name, aNamespace);
