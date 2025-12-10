@@ -5534,6 +5534,13 @@ bool nsWindow::ProcessMessageInternal(UINT msg, WPARAM& wParam, LPARAM& lParam,
       result = DispatchMouseEvent(eMouseUp, 0, lParamToClient(lParam), false,
                                   MouseButton::ePrimary, MOUSE_INPUT_SOURCE());
       DispatchPendingEvents();
+      // DefWindowProc handles vertical expansion, but the Windows App SDK
+      // breaks it, see bug 1994918. So bypass the app sdk by calling into the
+      // default proc here.
+      if (!result) {
+        *aRetValue = DefWindowProcW(mWnd, msg, wParam, lParam);
+        result = true;
+      }
       break;
 
     case WM_NCLBUTTONDOWN: {
