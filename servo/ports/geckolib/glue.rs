@@ -164,9 +164,7 @@ use style::values::computed::length_percentage::{
     AllowAnchorPosResolutionInCalcPercentage, Unpacked,
 };
 use style::values::computed::position::{AnchorFunction, PositionArea};
-use style::values::computed::{
-    self, ContentVisibility, Context, ToComputedValue,
-};
+use style::values::computed::{self, ContentVisibility, Context, ToComputedValue};
 use style::values::distance::{ComputeSquaredDistance, SquaredDistance};
 use style::values::generics::color::ColorMixFlags;
 use style::values::generics::easing::BeforeFlag;
@@ -10852,14 +10850,15 @@ pub extern "C" fn Servo_ResolvePositionAreaSelfAlignment(
     out: &mut AlignFlags,
 ) {
     // As well as converting `area` and `axis` to the same form for comparison
-    // this also makes sure `area`'s second keyword explicit (not none).
+    // this also makes sure `area`'s second keyword is explicit (not none).
     let physical_area = area.to_physical(*cb_wm, *self_wm);
     let physical_axis = axis.to_physical(*cb_wm);
     let area_keyword = match physical_axis {
         PhysicalAxis::Horizontal => physical_area.first,
         PhysicalAxis::Vertical => physical_area.second,
     };
-    let Some(align) = area_keyword.to_self_alignment() else {
+    // Note that area_keyword is a physical value (left/right/top/bottom).
+    let Some(align) = area_keyword.to_self_alignment(axis, cb_wm) else {
         debug_assert!(
             false,
             "ResolvePositionAreaSelfAlignment called on {:?}",
