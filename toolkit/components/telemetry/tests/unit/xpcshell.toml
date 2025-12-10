@@ -109,8 +109,9 @@ run-if = [
 ]
 
 ["test_TelemetryController_pingDisablement.js"]
-run-if = [
-  "os != 'android'", # Legacy telemetry is always disabled on Android
+skip-if = [
+  "appname == 'thunderbird'", # testing feature not applicable to Thunderbird
+  "os == 'android'", # Legacy telemetry is always disabled on Android
 ]
 
 ["test_TelemetryEnvironment.js"]
