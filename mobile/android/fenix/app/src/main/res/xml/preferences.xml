@@ -20,7 +20,7 @@
         android:layout="@layout/preference_category_no_icon_style">
 
         <org.mozilla.fenix.settings.account.AccountPreference
-            android:icon="@drawable/ic_account"
+            android:icon="@drawable/mozac_ic_avatar_circle_24"
             android:key="@string/pref_key_account" />
 
         <org.mozilla.fenix.settings.account.AccountAuthErrorPreference
