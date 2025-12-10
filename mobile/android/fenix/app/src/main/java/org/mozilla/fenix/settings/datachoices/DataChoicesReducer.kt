@@ -24,7 +24,6 @@ internal fun dataChoicesReducer(state: DataChoicesState, action: DataChoicesActi
             telemetryEnabled = action.telemetryEnabled,
             usagePingEnabled = action.usagePingEnabled,
             studiesEnabled = action.studiesEnabled,
-            showMeasurementDataSection = action.showMeasurementDataSection,
             measurementDataEnabled = action.measurementDataEnabled,
             selectedCrashOption = action.crashReportOption,
         )

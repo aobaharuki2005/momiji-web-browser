@@ -30,7 +30,6 @@ internal data class SettingsLoaded(
     val telemetryEnabled: Boolean,
     val usagePingEnabled: Boolean,
     val studiesEnabled: Boolean,
-    val showMeasurementDataSection: Boolean,
     val measurementDataEnabled: Boolean,
     val crashReportOption: CrashReportOption,
 ) : DataChoicesAction
