@@ -89,6 +89,8 @@ inactive-css-highlight-pseudo-elements-not-supported = <strong>{ $property }</st
 
 inactive-css-cue-pseudo-element-not-supported = <strong>{ $property }</strong> is not supported on ::cue pseudo-elements.
 
+inactive-css-at-position-try-not-supported = <strong>{ $property }</strong> is not supported in <strong>@position-try</strong> rules.
+
 # Variables:
 #   $lineCount (integer) - The number of lines the element has.
 inactive-css-text-wrap-balance-lines-exceeded =
