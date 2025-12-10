@@ -670,7 +670,7 @@ def load_tests(options, requested_paths, excluded_paths):
         test_count: [int] Number of tests that will be in test_gen
         test_gen: [iterable<Test>] Tests found that should be run.
     """
-    import lib.manifest as manifest
+    from lib import manifest
 
     if options.js_shell is None:
         xul_tester = manifest.NullXULInfoTester()

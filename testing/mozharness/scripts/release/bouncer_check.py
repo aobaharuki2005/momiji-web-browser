@@ -176,7 +176,7 @@ class BouncerCheck(BaseScript):
                         yield url
 
     def check_bouncer(self):
-        import concurrent.futures as futures
+        from concurrent import futures
 
         import requests
 

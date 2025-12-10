@@ -27,8 +27,8 @@ from run_glean_parser import GIFFT_TYPES
 MIRROR_TYPES = {
     metric_type: [
         probe_type
-        for probe_type in GIFFT_TYPES.keys()
-        if metric_type in GIFFT_TYPES[probe_type]
+        for probe_type, probe_metric_types in GIFFT_TYPES.items()
+        if metric_type in probe_metric_types
     ]
     for (probe_type, metric_types) in GIFFT_TYPES.items()
     for metric_type in metric_types

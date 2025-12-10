@@ -20,8 +20,8 @@ from tempfile import NamedTemporaryFile, mkstemp
 
 from jsmin import JavascriptMinify
 
-import mozbuild.makeutil as makeutil
 import mozpack.path as mozpath
+from mozbuild import makeutil
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import FileAvoidWrite, ensure_unicode, memoize
 from mozpack.chrome.manifest import ManifestEntry, ManifestInterfaces

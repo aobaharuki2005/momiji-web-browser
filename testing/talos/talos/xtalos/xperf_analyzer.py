@@ -207,11 +207,10 @@ class XPerfInterval(XPerfAttribute):
         super().__init__([startevt, endevt], **kwargs)
         if not attrs:
             self.attrs_during_interval = []
+        elif isinstance(attrs, list):
+            self.attrs_during_interval = attrs
         else:
-            if isinstance(attrs, list):
-                self.attrs_during_interval = attrs
-            else:
-                self.attrs_during_interval = [attrs]
+            self.attrs_during_interval = [attrs]
 
     def on_event_matched(self, evt):
         if evt == self.evtlist[0]:
@@ -681,13 +680,12 @@ class ProcessStart(XPerfEvent):
             if quoted:
                 if c == '"':
                     quoted = False
-            else:
-                if c == '"':
-                    quoted = True
-                elif c == " ":
-                    result.append(current)
-                    current = ""
-                    continue
+            elif c == '"':
+                quoted = True
+            elif c == " ":
+                result.append(current)
+                current = ""
+                continue
 
             current += c
 

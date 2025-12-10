@@ -34,9 +34,8 @@ def run_jsshell(command, label=None):
         shell = shutil.which("js")
         if shell is None:
             raise FileNotFoundError(shell)
-    else:
-        if not os.path.exists(shell) or not os.path.isfile(shell):
-            raise FileNotFoundError(shell)
+    elif not os.path.exists(shell) or not os.path.isfile(shell):
+        raise FileNotFoundError(shell)
 
     if label is None:
         label = command

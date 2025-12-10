@@ -344,11 +344,10 @@ def setup_clangd_rust_in_vscode(command_context):
             cargo_check_command = [sys.executable, "../../mach"]
         else:
             cargo_check_command = ["../../mach"]
+    elif sys.platform == "win32":
+        cargo_check_command = [sys.executable, "mach"]
     else:
-        if sys.platform == "win32":
-            cargo_check_command = [sys.executable, "mach"]
-        else:
-            cargo_check_command = ["./mach"]
+        cargo_check_command = ["./mach"]
 
     cargo_check_command += [
         "--log-no-times",

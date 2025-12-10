@@ -923,7 +923,7 @@ def write_ascii_lookup_tables(table, index, write, println):
 
 def write_latin1_lookup_tables(table, index, write, println):
     def case_info(code):
-        assert 0 <= code and code <= MAX_BMP
+        assert 0 <= code <= MAX_BMP
         (upper, lower, flags) = table[index[code]]
         return ((code + upper) & 0xFFFF, (code + lower) & 0xFFFF, flags)
 

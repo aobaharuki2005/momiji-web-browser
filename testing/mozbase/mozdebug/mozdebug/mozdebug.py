@@ -164,9 +164,8 @@ def get_debugger_info(debugger, debuggerArgs=None, debuggerInteractive=False):
                 if os.path.exists(candidate):
                     debuggerPath = candidate
                     break
-        else:
-            if os.path.exists(debugger):
-                debuggerPath = debugger
+        elif os.path.exists(debugger):
+            debuggerPath = debugger
 
     if not debuggerPath:
         print("Error: Could not find debugger %s." % debugger)

@@ -54,8 +54,7 @@ def set_test_verify_chunks(config, tasks):
             # >30 tests changed, this is probably an import of external tests,
             # or a patch renaming/moving files in bulk
             maximum_number_verify_chunks = 3
-            if task["chunks"] > maximum_number_verify_chunks:
-                task["chunks"] = maximum_number_verify_chunks
+            task["chunks"] = min(task["chunks"], maximum_number_verify_chunks)
 
         yield task
 

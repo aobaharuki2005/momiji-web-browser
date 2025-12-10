@@ -3,10 +3,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import unittest.mock as mock
 from argparse import Namespace
 from collections import defaultdict
 from textwrap import dedent
+from unittest import mock
 
 import mozunit
 import pytest

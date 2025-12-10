@@ -86,7 +86,6 @@ class DesktopPartnerRepacks(AutomationMixin, BaseScript, VirtualenvMixin, Secret
                 "workdir": "partner-repacks",
             },
         }
-        #
 
         BaseScript.__init__(
             self, config_options=self.config_options, **buildscript_kwargs

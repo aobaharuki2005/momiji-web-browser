@@ -169,11 +169,10 @@ class Output:
                     if test.using_xperf:
                         if len(vals) > 0:
                             subtest["value"] = vals[0]
-                    else:
-                        # calculate mean value
-                        if len(vals) > 0:
-                            varray = [float(v) for v in vals]
-                            subtest["value"] = filter.mean(varray)
+                    # calculate mean value
+                    elif len(vals) > 0:
+                        varray = [float(v) for v in vals]
+                        subtest["value"] = filter.mean(varray)
             if counter_subtests:
                 suites.append(
                     {

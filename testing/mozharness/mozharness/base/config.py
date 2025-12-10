@@ -213,8 +213,7 @@ def download_config_file(url, file_name):
         print("Sleeping %d seconds before retrying" % sleeptime)
         time.sleep(sleeptime)
         sleeptime = sleeptime * 2
-        if sleeptime > max_sleeptime:
-            sleeptime = max_sleeptime
+        sleeptime = min(sleeptime, max_sleeptime)
         n += 1
 
     try:

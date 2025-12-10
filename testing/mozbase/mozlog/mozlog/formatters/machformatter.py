@@ -174,14 +174,13 @@ class MachFormatter(base.BaseFormatter):
             if expected not in ("PASS", "OK"):
                 color = self.color_formatter.log_test_status_fail
                 status = "EXPECTED-%s" % status
+        elif status in known_intermittent:
+            color = self.color_formatter.log_test_status_known_intermittent
+            status = "KNOWN-INTERMITTENT-%s" % status
         else:
-            if status in known_intermittent:
-                color = self.color_formatter.log_test_status_known_intermittent
-                status = "KNOWN-INTERMITTENT-%s" % status
-            else:
-                color = self.color_formatter.log_test_status_fail
-                if status in ("PASS", "OK"):
-                    status = "UNEXPECTED-%s" % status
+            color = self.color_formatter.log_test_status_fail
+            if status in ("PASS", "OK"):
+                status = "UNEXPECTED-%s" % status
         return color(status)
 
     def _format_status(self, test, data):

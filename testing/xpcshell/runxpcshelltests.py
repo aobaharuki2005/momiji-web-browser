@@ -1452,13 +1452,12 @@ class XPCShellTests:
             self.env["DYLD_LIBRARY_PATH"] = os.path.join(
                 os.path.dirname(self.xrePath), "MacOS"
             )
-        else:  # unix or linux?
-            if "LD_LIBRARY_PATH" not in self.env or self.env["LD_LIBRARY_PATH"] is None:
-                self.env["LD_LIBRARY_PATH"] = self.xrePath
-            else:
-                self.env["LD_LIBRARY_PATH"] = ":".join(
-                    [self.xrePath, self.env["LD_LIBRARY_PATH"]]
-                )
+        elif "LD_LIBRARY_PATH" not in self.env or self.env["LD_LIBRARY_PATH"] is None:
+            self.env["LD_LIBRARY_PATH"] = self.xrePath
+        else:
+            self.env["LD_LIBRARY_PATH"] = ":".join(
+                [self.xrePath, self.env["LD_LIBRARY_PATH"]]
+            )
 
         usingASan = "asan" in self.mozInfo and self.mozInfo["asan"]
         usingTSan = "tsan" in self.mozInfo and self.mozInfo["tsan"]
@@ -1497,16 +1496,15 @@ class XPCShellTests:
         if self.interactive:
             pStdout = None
             pStderr = None
+        elif self.debuggerInfo and self.debuggerInfo.interactive:
+            pStdout = None
+            pStderr = None
         else:
-            if self.debuggerInfo and self.debuggerInfo.interactive:
+            if sys.platform == "os2emx":
                 pStdout = None
-                pStderr = None
             else:
-                if sys.platform == "os2emx":
-                    pStdout = None
-                else:
-                    pStdout = PIPE
-                pStderr = STDOUT
+                pStdout = PIPE
+            pStderr = STDOUT
         return pStdout, pStderr
 
     def verifyDirPath(self, dirname):

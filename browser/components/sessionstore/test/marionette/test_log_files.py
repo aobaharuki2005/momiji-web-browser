@@ -173,7 +173,6 @@ class TestSessionRestoreLogging(WindowManagerMixin, MarionetteTestCase):
             self.getLineCount(logFile) > startLineCount,
             "Debug log messages got flushed to disk",
         )
-        #
         self.assertEqual(
             len(self.getLogFiles()),
             logFileCount,

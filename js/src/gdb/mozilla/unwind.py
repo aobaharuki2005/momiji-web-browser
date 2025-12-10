@@ -239,8 +239,7 @@ class JitFrameDecorator(FrameDecorator):
         num_args = long(this_frame["numActualArgs_"])
         # Sometimes we see very large values here, so truncate it to
         # bypass the damage.
-        if num_args > 10:
-            num_args = 10
+        num_args = min(num_args, 10)
         args_ptr = (this_frame + 1).cast(self.cache.Value.pointer())
         for i in range(num_args + 1):
             # Synthesize names, since there doesn't seem to be
@@ -341,7 +340,7 @@ class UnwinderState:
             return False
 
         # If allocated, then we allocated MaxCodeBytesPerProcess.
-        return base <= pc and pc < base + length
+        return base <= pc < base + length
 
     # Check whether |self| is valid for the selected thread.
     def check(self):

@@ -767,7 +767,7 @@ class BaseMarionetteTestRunner:
                 if isinstance(v, dict) and isinstance(o, dict):
                     d[k] = update(d.get(k, {}), v)
                 else:
-                    d[k] = u[k]
+                    d[k] = v
             return d
 
         json_testvars = self._load_testvars()

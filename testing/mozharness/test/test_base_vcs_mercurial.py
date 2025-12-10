@@ -4,8 +4,8 @@ import shutil
 import tempfile
 import unittest
 
-import mozharness.base.vcs.mercurial as mercurial
 import mozunit
+from mozharness.base.vcs import mercurial
 
 test_string = """foo
 bar

@@ -570,13 +570,12 @@ class SingleTestMixin:
                     if key in all_suites.keys()
                 )
                 self.info("Per-test suites: %s" % suites)
-            else:
-                # Until test zips are downloaded, manifests are not available,
-                # so it is not possible to determine which suites are active/
-                # required for per-test mode; assume all suites from supported
-                # suite categories are required.
-                if category in ["mochitest", "xpcshell", "reftest"]:
-                    suites = all_suites
+            # Until test zips are downloaded, manifests are not available,
+            # so it is not possible to determine which suites are active/
+            # required for per-test mode; assume all suites from supported
+            # suite categories are required.
+            elif category in ["mochitest", "xpcshell", "reftest"]:
+                suites = all_suites
         return suites
 
     def log_per_test_status(self, test_name, tbpl_status, log_level):

@@ -727,19 +727,18 @@ class Descriptor(DescriptorProvider):
             # test bindings, which don't export, will work correctly.
             basename = os.path.basename(self.interface.filename)
             headerDefault = basename.replace(".webidl", "Binding.h")
+        elif not self.interface.isExternal() and self.interface.getExtendedAttribute(
+            "HeaderFile"
+        ):
+            headerDefault = self.interface.getExtendedAttribute("HeaderFile")[0]
+        elif (
+            self.interface.isIteratorInterface()
+            or self.interface.isAsyncIteratorInterface()
+        ):
+            headerDefault = "mozilla/dom/IterableIterator.h"
         else:
-            if not self.interface.isExternal() and self.interface.getExtendedAttribute(
-                "HeaderFile"
-            ):
-                headerDefault = self.interface.getExtendedAttribute("HeaderFile")[0]
-            elif (
-                self.interface.isIteratorInterface()
-                or self.interface.isAsyncIteratorInterface()
-            ):
-                headerDefault = "mozilla/dom/IterableIterator.h"
-            else:
-                headerDefault = self.nativeType
-                headerDefault = headerDefault.replace("::", "/") + ".h"
+            headerDefault = self.nativeType
+            headerDefault = headerDefault.replace("::", "/") + ".h"
         self.headerFile = desc.get("headerFile", headerDefault)
         self.headerIsDefault = self.headerFile == headerDefault
         if self.jsImplParent == self.nativeType:

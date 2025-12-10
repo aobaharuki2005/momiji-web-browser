@@ -16,7 +16,7 @@ except ImportError:
 else:
     JSON_TYPE = "simplejson"
 
-import mozharness.base.config as config
+from mozharness.base import config
 
 MH_DIR = os.path.dirname(os.path.dirname(__file__))
 

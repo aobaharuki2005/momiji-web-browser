@@ -1630,10 +1630,9 @@ def _generate_path_list(command_context, paths, verbose=True):
                     ):
                         # Supported extension and accepted path
                         path_list.append(f_in_dir)
-        else:
-            # Make sure that the file exists and it has a supported extension
-            if os.path.isfile(f) and f.endswith(extensions):
-                path_list.append(f)
+        # Make sure that the file exists and it has a supported extension
+        elif os.path.isfile(f) and f.endswith(extensions):
+            path_list.append(f)
 
     return path_list
 

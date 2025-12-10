@@ -856,9 +856,8 @@ class APIEntry:
                 return []
             if "allowedContexts" in self.schema_data_by_group[schema_group]:
                 return self.schema_data_by_group[schema_group]["allowedContexts"]
-        else:
-            if "allowedContexts" in self.schema_data_list[0]:
-                return self.schema_data_list[0]["allowedContexts"]
+        elif "allowedContexts" in self.schema_data_list[0]:
+            return self.schema_data_list[0]["allowedContexts"]
 
         if self.parent:
             return self.parent.default_contexts

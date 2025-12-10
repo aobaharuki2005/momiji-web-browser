@@ -169,7 +169,6 @@ class TaskPool:
                 # Remove the finished tasks from the running set. (Do this here
                 # to avoid mutating the set while iterating over it.)
                 running -= finished
-        return None
 
 
 def get_cpu_count():

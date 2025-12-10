@@ -1455,7 +1455,7 @@ def build_treescript_payload(config, task, task_def):
             if "l10n-repo-url" in lbi:
                 l10n_repo_urls.add(lbi["l10n-repo-url"])
             for k, v in lbi.items():
-                new_lbi[k.replace("-", "_")] = lbi[k]
+                new_lbi[k.replace("-", "_")] = v
             l10n_bump_info.append(new_lbi)
 
         task_def["payload"]["l10n_bump_info"] = l10n_bump_info
@@ -1638,7 +1638,7 @@ def build_landoscript_payload(config, task, task_def):
             if "l10n-repo-url" in lbi:
                 l10n_repo_urls.add(lbi["l10n-repo-url"])
             for k, v in lbi.items():
-                new_lbi[k.replace("-", "_")] = lbi[k]
+                new_lbi[k.replace("-", "_")] = v
             l10n_bump_info.append(new_lbi)
 
         task_def["payload"]["l10n_bump_info"] = l10n_bump_info

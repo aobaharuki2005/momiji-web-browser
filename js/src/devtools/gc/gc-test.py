@@ -70,11 +70,10 @@ def run_test(test):
     for i, currItem in enumerate(float_array):
         if i % 3 == 0:
             total.append(currItem)
+        elif i % 3 == 1:
+            mark.append(currItem)
         else:
-            if i % 3 == 1:
-                mark.append(currItem)
-            else:
-                sweep.append(currItem)
+            sweep.append(currItem)
 
     return max(total), avg(total), max(mark), avg(mark), max(sweep), avg(sweep)
 

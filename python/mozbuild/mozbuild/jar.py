@@ -47,7 +47,6 @@ class ZipEntry:
         """Append the given content to this zip entry"""
 
         self._inner.write(ensure_bytes(content))
-        return
 
     def close(self):
         """The close method writes the content back to the zip file."""

@@ -1278,8 +1278,7 @@ def gtest(
 
         # Clamp error code to 255 to prevent overflowing multiple of
         # 256 into 0
-        if exit_code > 255:
-            exit_code = 255
+        exit_code = min(exit_code, 255)
 
     # Show aggregated report information and any test errors.
     command_context.log(

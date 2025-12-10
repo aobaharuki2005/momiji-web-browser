@@ -695,7 +695,7 @@ def guess_best_assignment(source_assignments, filename_normalized):
                 length_of_longest_match = len(prefix)
                 source_assignment_location_of_longest_match = key
             elif len(prefix) == length_of_longest_match and len(
-                source_assignments[key]
+                list_of_normalized_filenames
             ) > len(source_assignments[source_assignment_location_of_longest_match]):
                 statistic_number_refinements += 1
                 statistic_length_logic += 1

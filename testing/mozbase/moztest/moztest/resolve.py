@@ -1225,9 +1225,7 @@ class TestResolver(MozbuildObject):
 
                 full_path = mozpath.join(tests_root, path)  # absolute path on disk
                 src_path = mozpath.relpath(full_path, self.topsrcdir)
-                test_tags = self.get_test_tags(
-                    [], manifests[manifest].get("metadata_path", ""), path
-                )
+                test_tags = self.get_test_tags([], data.get("metadata_path", ""), path)
 
                 for test in tests:
                     testobj = {

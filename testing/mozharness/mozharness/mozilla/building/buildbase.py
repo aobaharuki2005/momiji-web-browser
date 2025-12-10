@@ -211,7 +211,7 @@ class BuildingConfig(BaseConfig):
         # importance
         for i, cf in enumerate(all_config_files):
             if cf == options.build_variant:
-                variant_cfg_file = all_config_files[i]
+                variant_cfg_file = cf
 
         # now remove it from the list
         if variant_cfg_file:

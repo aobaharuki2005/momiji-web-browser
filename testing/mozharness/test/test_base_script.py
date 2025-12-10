@@ -19,9 +19,7 @@ if os.name == "nt":
         pass
 
 
-import mozharness.base.errors as errors
-import mozharness.base.log as log
-import mozharness.base.script as script
+from mozharness.base import errors, log, script
 from mozharness.base.config import parse_config_file
 from mozharness.base.log import CRITICAL, DEBUG, ERROR, FATAL, IGNORE, INFO, WARNING
 

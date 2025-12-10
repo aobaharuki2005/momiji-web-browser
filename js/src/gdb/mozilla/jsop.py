@@ -39,7 +39,7 @@ class JSOp:
         #
         # https://sourceware.org/bugzilla/show_bug.cgi?id=25325
         idx = int(self.value.cast(self.jotc.tJSOp.target()))
-        assert 0 <= idx and idx <= 255
+        assert 0 <= idx <= 255
         fields = self.jotc.tJSOp.fields()
         if idx < len(fields):
             return fields[idx].name

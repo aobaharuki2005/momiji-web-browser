@@ -218,14 +218,13 @@ class HTMLFormatter(base.BaseFormatter):
                 separator = line.startswith(" " * 10)
                 if separator:
                     log.append(line[:80])
+                elif (
+                    line.lower().find("error") != -1
+                    or line.lower().find("exception") != -1
+                ):
+                    log.append(html.span(raw(escape(line)), class_="error"))
                 else:
-                    if (
-                        line.lower().find("error") != -1
-                        or line.lower().find("exception") != -1
-                    ):
-                        log.append(html.span(raw(escape(line)), class_="error"))
-                    else:
-                        log.append(raw(escape(line)))
+                    log.append(raw(escape(line)))
                 log.append(html.br())
             additional_html.append(log)
 

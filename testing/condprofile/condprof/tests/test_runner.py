@@ -32,8 +32,7 @@ ADDON = re.compile("https://addons.mozilla.org/.*/.*xpi")
 
 
 async def fakesleep(duration):
-    if duration > 1:
-        duration = 1
+    duration = min(duration, 1)
     await asyncio.realsleep(duration)
 
 

@@ -679,9 +679,8 @@ def browsertime(
             should_clobber=clobber,
             install_vismet_reqs=install_vismet_reqs,
         )
-    else:
-        if not _verify_node_install(command_context):
-            return 1
+    elif not _verify_node_install(command_context):
+        return 1
 
     if check_browsertime:
         return check(command_context)

@@ -334,17 +334,16 @@ class TestingMixin(
         # URLs to the right place and enable http authentication
         if "developer_config.py" in self.config["config_files"]:
             return _urlopen_basic_auth(url, **kwargs)
+        # windows certificates need to be refreshed (https://bugs.python.org/issue36011)
+        elif self.platform_name() in ("win64",) and platform.architecture()[0] in (
+            "x64",
+        ):
+            if self.ssl_context is None:
+                self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                self.ssl_context.load_default_certs()
+            return urllib.request.urlopen(url, context=self.ssl_context, **kwargs)
         else:
-            # windows certificates need to be refreshed (https://bugs.python.org/issue36011)
-            if self.platform_name() in ("win64",) and platform.architecture()[0] in (
-                "x64",
-            ):
-                if self.ssl_context is None:
-                    self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
-                    self.ssl_context.load_default_certs()
-                return urllib.request.urlopen(url, context=self.ssl_context, **kwargs)
-            else:
-                return urllib.request.urlopen(url, **kwargs)
+            return urllib.request.urlopen(url, **kwargs)
 
     def _query_binary_version(self, regex, cmd):
         output = self.get_output_from_command(cmd, silent=False)

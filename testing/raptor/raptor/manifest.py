@@ -441,11 +441,10 @@ def get_raptor_test_list(args, oskey):
                         next_test["playback_pageset_manifest"], next_test["name"]
                     )
 
-        else:
-            if next_test.get("playback") is not None:
-                next_test["playback_pageset_manifest"] = transform_subtest(
-                    next_test["playback_pageset_manifest"], next_test["name"]
-                )
+        elif next_test.get("playback") is not None:
+            next_test["playback_pageset_manifest"] = transform_subtest(
+                next_test["playback_pageset_manifest"], next_test["name"]
+            )
 
         # Check if either --gecko-profiler or --extra-profiler-run is enabled.
         if args.gecko_profile or (

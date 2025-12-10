@@ -14,7 +14,7 @@ import sys
 # load modules from parent dir
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-import mozharness.base.script as script
+from mozharness.base import script
 from mozharness.mozilla.building.buildbase import (
     BUILD_BASE_CONFIG_OPTIONS,
     BuildingConfig,

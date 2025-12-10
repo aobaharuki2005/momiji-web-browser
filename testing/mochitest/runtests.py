@@ -2488,21 +2488,20 @@ toolbar#nav-bar {
         if options.flavor == "browser":
             if options.timeout:
                 test_timeout = options.timeout
+            elif mozinfo.info["asan"] or mozinfo.info["debug"]:
+                # browser-chrome tests use a fairly short default timeout of 45 seconds;
+                # this is sometimes too short on asan and debug, where we expect reduced
+                # performance.
+                self.log.info(
+                    "Increasing default timeout to 90 seconds (asan or debug)"
+                )
+                test_timeout = 90
+            elif mozinfo.info["tsan"]:
+                # tsan builds need even more time
+                self.log.info("Increasing default timeout to 120 seconds (tsan)")
+                test_timeout = 120
             else:
-                if mozinfo.info["asan"] or mozinfo.info["debug"]:
-                    # browser-chrome tests use a fairly short default timeout of 45 seconds;
-                    # this is sometimes too short on asan and debug, where we expect reduced
-                    # performance.
-                    self.log.info(
-                        "Increasing default timeout to 90 seconds (asan or debug)"
-                    )
-                    test_timeout = 90
-                elif mozinfo.info["tsan"]:
-                    # tsan builds need even more time
-                    self.log.info("Increasing default timeout to 120 seconds (tsan)")
-                    test_timeout = 120
-                else:
-                    test_timeout = 45
+                test_timeout = 45
         elif options.flavor in ("a11y", "chrome"):
             test_timeout = 45
 
@@ -3323,8 +3322,7 @@ toolbar#nav-bar {
                     for key in self.expectedError:
                         full_key = [x for x in testsToRun if key in x]
                         if full_key:
-                            if testsToRun.index(full_key[0]) < firstFail:
-                                firstFail = testsToRun.index(full_key[0])
+                            firstFail = min(firstFail, testsToRun.index(full_key[0]))
                     testsToRun = testsToRun[firstFail + 1 :]
                     if testsToRun == []:
                         status = -1

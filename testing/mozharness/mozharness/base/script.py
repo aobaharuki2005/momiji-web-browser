@@ -1337,8 +1337,7 @@ class ScriptMixin(PlatformMixin):
                     )
                     time.sleep(sleeptime)
                     sleeptime = sleeptime * 2
-                    if sleeptime > max_sleeptime:
-                        sleeptime = max_sleeptime
+                    sleeptime = min(sleeptime, max_sleeptime)
 
     def query_env(
         self,
@@ -1594,12 +1593,11 @@ class ScriptMixin(PlatformMixin):
             if partial_env:
                 self.info("Using partial env: %s" % pprint.pformat(partial_env))
                 env = self.query_env(partial_env=partial_env)
+        elif hasattr(self, "previous_env") and env == self.previous_env:
+            self.info("Using env: (same as previous command)")
         else:
-            if hasattr(self, "previous_env") and env == self.previous_env:
-                self.info("Using env: (same as previous command)")
-            else:
-                self.info("Using env: %s" % pprint.pformat(env))
-                self.previous_env = env
+            self.info("Using env: %s" % pprint.pformat(env))
+            self.previous_env = env
 
         if output_parser is None:
             parser = OutputParser(

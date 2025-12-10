@@ -69,11 +69,10 @@ class JSStringPtr(Common):
                     chars = d["inlineStorageLatin1"]
                 else:
                     chars = d["inlineStorageTwoByte"]
+            elif is_latin1:
+                chars = d["s"]["u2"]["nonInlineCharsLatin1"]
             else:
-                if is_latin1:
-                    chars = d["s"]["u2"]["nonInlineCharsLatin1"]
-                else:
-                    chars = d["s"]["u2"]["nonInlineCharsTwoByte"]
+                chars = d["s"]["u2"]["nonInlineCharsTwoByte"]
             for i in range(int(length)):
                 yield chars[i]
 

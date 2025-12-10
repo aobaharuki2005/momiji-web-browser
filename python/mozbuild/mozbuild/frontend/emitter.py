@@ -1565,18 +1565,17 @@ class TreeMetadataEmitter(LoggingMixin):
                                     % (var, f),
                                     context,
                                 )
-                        else:
-                            # Additionally, don't allow LOCALIZED_GENERATED_FILES to be used
-                            # in anything *but* LOCALIZED_FILES.
-                            if f.target_basename in localized_generated_files:
-                                raise SandboxValidationError(
-                                    (
-                                        "Outputs of LOCALIZED_GENERATED_FILES cannot "
-                                        "be used in %s: %s"
-                                    )
-                                    % (var, f),
-                                    context,
+                        # Additionally, don't allow LOCALIZED_GENERATED_FILES to be used
+                        # in anything *but* LOCALIZED_FILES.
+                        elif f.target_basename in localized_generated_files:
+                            raise SandboxValidationError(
+                                (
+                                    "Outputs of LOCALIZED_GENERATED_FILES cannot "
+                                    "be used in %s: %s"
                                 )
+                                % (var, f),
+                                context,
+                            )
 
             # Addons (when XPI_NAME is defined) and Applications (when
             # DIST_SUBDIR is defined) use a different preferences directory

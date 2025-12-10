@@ -299,22 +299,21 @@ class BrowsertimeRunner(NodeRunner):
             binary = self.get_arg("browsertime_binary")
             if binary is not None:
                 extra_args.extend(("--firefox.binaryPath", binary))
-            else:
-                # If --firefox.binaryPath is not specified, default to the objdir binary
-                # Note: --firefox.release is not a real browsertime option, but it will
-                #       silently ignore it instead and default to a release installation.
-                if (
-                    not matches(
-                        args,
-                        "--firefox.binaryPath",
-                        "--firefox.release",
-                        "--firefox.nightly",
-                        "--firefox.beta",
-                        "--firefox.developer",
-                    )
-                    and extract_browser_name(args) != "chrome"
-                ):
-                    extra_args.extend(("--firefox.binaryPath", self.get_binary_path()))
+            # If --firefox.binaryPath is not specified, default to the objdir binary
+            # Note: --firefox.release is not a real browsertime option, but it will
+            #       silently ignore it instead and default to a release installation.
+            elif (
+                not matches(
+                    args,
+                    "--firefox.binaryPath",
+                    "--firefox.release",
+                    "--firefox.nightly",
+                    "--firefox.beta",
+                    "--firefox.developer",
+                )
+                and extract_browser_name(args) != "chrome"
+            ):
+                extra_args.extend(("--firefox.binaryPath", self.get_binary_path()))
 
         geckodriver = self.get_arg("geckodriver")
         if geckodriver is not None:

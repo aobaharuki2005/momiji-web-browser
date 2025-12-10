@@ -576,11 +576,10 @@ class CommonBackend(BuildBackend):
                         localized_files_pp[path] += [src]
                     else:
                         files_pp[path] += [src]
+                elif e.is_locale:
+                    localized_files[path] += [src]
                 else:
-                    if e.is_locale:
-                        localized_files[path] += [src]
-                    else:
-                        files[path] += [src]
+                    files[path] += [src]
 
             if files:
                 self.consume_object(FinalTargetFiles(jar_context, files))

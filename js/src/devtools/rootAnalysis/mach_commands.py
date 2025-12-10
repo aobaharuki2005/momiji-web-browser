@@ -551,7 +551,7 @@ def annotated_source(filename, query):
     out = "<pre>"
     for lineno, line in enumerate(fh, 1):
         processed = f"{lineno} <span id='{lineno}'"
-        if line0 <= lineno and lineno <= line1:
+        if line0 <= lineno <= line1:
             processed += " style='background: yellow'"
         processed += ">" + html.escape(line.rstrip()) + "</span>\n"
         out += processed

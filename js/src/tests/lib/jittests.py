@@ -313,56 +313,48 @@ class JitTest:
                             f"{path}: warning: unrecognized |jit-test| attribute"
                             f" {part}"
                         )
+                elif name == "slow":
+                    test.slow = True
+                elif name == "heavy":
+                    test.heavy = True
+                elif name == "allow-oom":
+                    test.allow_oom = True
+                elif name == "allow-unhandlable-oom":
+                    test.allow_unhandlable_oom = True
+                elif name == "allow-overrecursed":
+                    test.allow_overrecursed = True
+                elif name == "valgrind":
+                    test.valgrind = options.valgrind
+                elif name == "tz-pacific":
+                    test.tz_pacific = True
+                elif name.startswith("test-also="):
+                    test.test_also.append(re.split(r"\s+", name[len("test-also=") :]))
+                elif name.startswith("test-join="):
+                    test.test_join.append(re.split(r"\s+", name[len("test-join=") :]))
+                elif name == "module":
+                    test.is_module = True
+                elif name == "crash":
+                    # Crashes are only allowed in self-test, as it is
+                    # intended to verify that our testing infrastructure
+                    # works, and not meant as a way to accept temporary
+                    # failing tests. These tests should either be fixed or
+                    # skipped.
+                    assert (
+                        "self-test" in path
+                    ), f"{path}: has an unexpected crash annotation."
+                    test.expect_crash = True
+                elif name.startswith("--"):
+                    # // |jit-test| --ion-gvn=off; --no-sse4
+                    test.jitflags.append(name)
+                elif name.startswith("-P"):
+                    prefAndValue = name.split()
+                    assert len(prefAndValue) == 2, f"{name}: failed to parse preference"
+                    # // |jit-test| -P pref(=value)?
+                    test.jitflags.append("--setpref=" + prefAndValue[1])
                 else:
-                    if name == "slow":
-                        test.slow = True
-                    elif name == "heavy":
-                        test.heavy = True
-                    elif name == "allow-oom":
-                        test.allow_oom = True
-                    elif name == "allow-unhandlable-oom":
-                        test.allow_unhandlable_oom = True
-                    elif name == "allow-overrecursed":
-                        test.allow_overrecursed = True
-                    elif name == "valgrind":
-                        test.valgrind = options.valgrind
-                    elif name == "tz-pacific":
-                        test.tz_pacific = True
-                    elif name.startswith("test-also="):
-                        test.test_also.append(
-                            re.split(r"\s+", name[len("test-also=") :])
-                        )
-                    elif name.startswith("test-join="):
-                        test.test_join.append(
-                            re.split(r"\s+", name[len("test-join=") :])
-                        )
-                    elif name == "module":
-                        test.is_module = True
-                    elif name == "crash":
-                        # Crashes are only allowed in self-test, as it is
-                        # intended to verify that our testing infrastructure
-                        # works, and not meant as a way to accept temporary
-                        # failing tests. These tests should either be fixed or
-                        # skipped.
-                        assert (
-                            "self-test" in path
-                        ), f"{path}: has an unexpected crash annotation."
-                        test.expect_crash = True
-                    elif name.startswith("--"):
-                        # // |jit-test| --ion-gvn=off; --no-sse4
-                        test.jitflags.append(name)
-                    elif name.startswith("-P"):
-                        prefAndValue = name.split()
-                        assert (
-                            len(prefAndValue) == 2
-                        ), f"{name}: failed to parse preference"
-                        # // |jit-test| -P pref(=value)?
-                        test.jitflags.append("--setpref=" + prefAndValue[1])
-                    else:
-                        print(
-                            f"{path}: warning: unrecognized |jit-test| attribute"
-                            f" {part}"
-                        )
+                    print(
+                        f"{path}: warning: unrecognized |jit-test| attribute" f" {part}"
+                    )
 
         if options.valgrind_all:
             test.valgrind = True

@@ -7,7 +7,7 @@ from threading import Thread
 
 import requests
 
-import mozperftest.utils as utils
+from mozperftest import utils
 from mozperftest.layers import Layer
 from mozperftest.runner import HERE
 

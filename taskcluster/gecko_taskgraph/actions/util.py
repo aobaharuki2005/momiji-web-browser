@@ -3,11 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
-import concurrent.futures as futures
 import copy
 import logging
 import os
 import re
+from concurrent import futures
 from functools import reduce
 
 import jsone

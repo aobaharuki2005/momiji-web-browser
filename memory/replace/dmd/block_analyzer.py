@@ -214,7 +214,6 @@ def show_block_info(args, blocks, stacks, block):
     sys.stdout.write("\n\n")
     sys.stdout.write("allocation stack:\n")
     print_trace_segment(args, stacks, b)
-    return
 
 
 def cleanupTraceTable(args, frameTable, traceTable):

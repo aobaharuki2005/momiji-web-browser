@@ -189,12 +189,11 @@ class PypiBasedTool:
                     "%s was updated to version %s. please"
                     " re-run your command." % (self.pypi_name, release)
                 )
+            # Tool is up to date, return the parser.
+            elif subcommand:
+                return tool.parser(subcommand)
             else:
-                # Tool is up to date, return the parser.
-                if subcommand:
-                    return tool.parser(subcommand)
-                else:
-                    return tool.parser()
+                return tool.parser()
         # exit if we updated or installed mozregression because
         # we may have already imported mozregression and running it
         # as this may cause issues.

@@ -3,9 +3,9 @@ import shutil
 import unittest
 from unittest import mock
 
-import mozharness.base.script as script
-import mozharness.mozilla.l10n.locales as locales
 import mozunit
+from mozharness.base import script
+from mozharness.mozilla.l10n import locales
 
 ALL_LOCALES = ["ar", "be", "de", "es-ES"]
 

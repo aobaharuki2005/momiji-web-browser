@@ -439,21 +439,20 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters
                             f"Build job {task.label} has tests dependent on it and does not specify "
                             "MOZ_AUTOMATION_PACKAGE_TESTS=1 in the environment"
                         )
-                else:
-                    # Build tasks that aren't in the scratch pad have no
-                    # dependent tests, so we shouldn't package tests.
-                    # With the caveat that we expect shippable jobs to always
-                    # produce tests.
-                    if not build_has_tests and not shippable:
-                        # If we have not generated all task kinds, we can't verify that
-                        # there are no dependent tests.
-                        if not missing_tests_allowed:
-                            exceptions.append(
-                                f"Build job {task.label} has no tests, but specifies "
-                                f"MOZ_AUTOMATION_PACKAGE_TESTS={package_tests} in the environment. "
-                                "Unset MOZ_AUTOMATION_PACKAGE_TESTS in the task definition "
-                                "to fix."
-                            )
+                # Build tasks that aren't in the scratch pad have no
+                # dependent tests, so we shouldn't package tests.
+                # With the caveat that we expect shippable jobs to always
+                # produce tests.
+                elif not build_has_tests and not shippable:
+                    # If we have not generated all task kinds, we can't verify that
+                    # there are no dependent tests.
+                    if not missing_tests_allowed:
+                        exceptions.append(
+                            f"Build job {task.label} has no tests, but specifies "
+                            f"MOZ_AUTOMATION_PACKAGE_TESTS={package_tests} in the environment. "
+                            "Unset MOZ_AUTOMATION_PACKAGE_TESTS in the task definition "
+                            "to fix."
+                        )
         if exceptions:
             raise Exception("\n".join(exceptions))
         return

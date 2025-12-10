@@ -1263,9 +1263,8 @@ def verify_layering(clazz):
                 for j in ranking[i]:
                     if p.startswith(j):
                         return i
-            else:
-                if p.startswith(ranking[i]):
-                    return i
+            elif p.startswith(ranking[i]):
+                return i
 
     cr = rank(clazz.pkg.name)
     if cr is None:

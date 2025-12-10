@@ -118,7 +118,7 @@ class UpdateVerifyConfig:
         releaseKeys = {}
         for k, v in entry.items():
             if k in self.global_keys:
-                setattr(self, k, entry[k])
+                setattr(self, k, v)
             elif k in self.release_keys:
                 # "from" is reserved in Python
                 if k == "from":

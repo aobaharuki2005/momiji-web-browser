@@ -190,11 +190,10 @@ class TestResult:
                 result = cls.FAIL
             else:
                 result = cls.CRASH
+        elif (rc or passes > 0) and failures == 0:
+            result = cls.PASS
         else:
-            if (rc or passes > 0) and failures == 0:
-                result = cls.PASS
-            else:
-                result = cls.FAIL
+            result = cls.FAIL
 
         return cls(test, result, results)
 
