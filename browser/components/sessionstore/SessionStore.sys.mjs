@@ -2142,16 +2142,21 @@ var SessionStoreInternal = {
       // after starting up with a single private or web app window.
       // Let's restore the session we actually wanted to restore at startup.
     } else if (this._deferredInitialState && isRegularWindow) {
-      // global data must be restored before restoreWindow is called so that
-      // it happens before observers are notified
-      this._globalState.setFromState(this._deferredInitialState);
-
-      this._restoreCount = this._deferredInitialState.windows
-        ? this._deferredInitialState.windows.length
-        : 0;
-      this.restoreWindows(aWindow, this._deferredInitialState, {
-        firstWindow: true,
-      });
+      // Only restore the deferred session if SessionStartup indicates we should
+      // restore (e.g., crash recovery or user preference to restore sessions).
+      // This prevents incorrect session restoration when a private window was
+      // opened first followed by a normal window. See Bug 1938752.
+      if (lazy.SessionStartup.willRestore()) {
+        // global data must be restored before restoreWindow is called so that
+        // it happens before observers are notified
+        this._globalState.setFromState(this._deferredInitialState);
+        this._restoreCount = this._deferredInitialState.windows
+          ? this._deferredInitialState.windows.length
+          : 0;
+        this.restoreWindows(aWindow, this._deferredInitialState, {
+          firstWindow: true,
+        });
+      }
       this._deferredInitialState = null;
     } else if (
       this._restoreLastWindow &&
