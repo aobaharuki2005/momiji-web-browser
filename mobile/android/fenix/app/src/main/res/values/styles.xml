@@ -101,7 +101,6 @@
         <item name="layer2">@color/fx_mobile_layer_color_2</item>
         <!-- Search -->
         <item name="layer3">@color/fx_mobile_layer_color_3</item>
-        <item name="layerSearch">@color/fx_mobile_layer_color_search</item>
         <!-- Selected tab -->
         <item name="layerNonOpaque">@color/fx_mobile_layer_color_accent_nonopaque</item>
         <item name="scrim">@color/fx_mobile_layer_color_scrim</item>
@@ -111,8 +110,6 @@
         <item name="actionPrimary">@color/fx_mobile_action_color_primary</item>
         <!-- Primary button in a disabled state -->
         <item name="actionPrimaryDisabled">@color/fx_mobile_action_color_primary_disabled</item>
-        <!-- Selected chip -->
-        <item name="actionChipSelected">@color/fx_mobile_action_color_chip_selected</item>
 
         <!-- Text -->
         <!-- Primary text -->
@@ -133,19 +130,13 @@
         <item name="textActionPrimaryDisabled">@color/fx_mobile_text_color_action_primary_disabled</item>
 
         <!-- Icon -->
-        <!-- Secondary icon -->
-        <item name="iconSecondary">@color/fx_mobile_icon_color_secondary</item>
-        <!-- Active tab -->
-        <item name="iconActive">@color/fx_mobile_icon_color_active</item>
         <!-- Icon inverted (on color) -->
         <item name="iconOnColor">@color/fx_mobile_icon_color_oncolor</item>
 
         <!-- Border -->
         <!-- Default, Divider, Dotted -->
         <item name="borderPrimary">@color/fx_mobile_border_color_primary</item>
-        <item name="borderSecondary">@color/fx_mobile_border_color_secondary</item>
-        <!-- Toolbar divider -->
-        <item name="borderToolbarDivider">@color/fx_mobile_border_color_toolbar_divider</item>
+
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="colorControlActivated">@color/accent_high_contrast_normal_theme</item>
         <!-- Inactive thumb color -->
@@ -398,7 +389,6 @@
         <item name="layer2">@color/fx_mobile_private_layer_color_2</item>
         <!-- Search -->
         <item name="layer3">@color/fx_mobile_private_layer_color_3</item>
-        <item name="layerSearch">@color/fx_mobile_private_layer_color_search</item>
         <!-- Selected tab -->
         <item name="layerNonOpaque">@color/fx_mobile_private_layer_color_accent_nonopaque</item>
         <item name="scrim">@color/fx_mobile_private_layer_color_scrim</item>
@@ -408,8 +398,7 @@
         <item name="actionPrimary">@color/fx_mobile_private_action_color_primary</item>
         <!-- Primary button in a disabled state -->
         <item name="actionPrimaryDisabled">@color/fx_mobile_private_action_color_primary_disabled</item>
-        <!-- Selected chip -->
-        <item name="actionChipSelected">@color/fx_mobile_private_action_color_chip_selected</item>
+
         <!-- Text -->
         <!-- Primary text -->
         <item name="textPrimary">@color/fx_mobile_private_text_color_primary</item>
@@ -429,19 +418,12 @@
         <item name="textActionPrimaryDisabled">@color/fx_mobile_private_text_color_action_primary_disabled</item>
 
         <!-- Icon -->
-        <!-- Secondary icon -->
-        <item name="iconSecondary">@color/fx_mobile_private_icon_color_secondary</item>
-        <!-- Active tab -->
-        <item name="iconActive">@color/fx_mobile_private_icon_color_active</item>
         <!-- Icon inverted (on color) -->
         <item name="iconOnColor">@color/fx_mobile_private_icon_color_oncolor</item>
 
         <!-- Border -->
         <!-- Default, Divider, Dotted -->
         <item name="borderPrimary">@color/fx_mobile_private_border_color_primary</item>
-        <item name="borderSecondary">@color/fx_mobile_private_border_color_secondary</item>
-        <!-- Toolbar divider -->
-        <item name="borderToolbarDivider">@color/fx_mobile_private_border_color_toolbar_divider</item>
 
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>
