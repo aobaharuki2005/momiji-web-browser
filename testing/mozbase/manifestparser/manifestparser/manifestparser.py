@@ -712,8 +712,8 @@ class ManifestParser:
         else:
 
             def accept_filename(filename):
-                for pattern in patterns:
-                    if fnmatch.fnmatch(filename, pattern):
+                for search_pattern in patterns:
+                    if fnmatch.fnmatch(filename, search_pattern):
                         return True
 
         if not ignore:

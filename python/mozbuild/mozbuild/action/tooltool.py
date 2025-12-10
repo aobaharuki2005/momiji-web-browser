@@ -991,9 +991,11 @@ class TarFile(tarfile.TarFile):
 
         extract(member, path, set_attrs, numeric_owner=numeric_owner, **kwargs)
         if deferred_links is not None:
-            for tarinfo, linkpath, numeric_owner in deferred_links.pop(targetpath, []):
+            for tarinfo, linkpath, deferred_numeric_owner in deferred_links.pop(
+                targetpath, []
+            ):
                 shutil.copy(targetpath, linkpath)
-                self.chown(tarinfo, linkpath, numeric_owner)
+                self.chown(tarinfo, linkpath, deferred_numeric_owner)
             self._extracted_members.add(targetpath)
 
     def extract(self, *args, **kwargs):

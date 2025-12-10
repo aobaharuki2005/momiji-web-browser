@@ -273,11 +273,11 @@ def get_ancestors_by_name(name, path, root):
     relevant configuration files.
     """
     configs = []
-    for path in ancestors(path):
-        config = os.path.join(path, name)
+    for ancestor_path in ancestors(path):
+        config = os.path.join(ancestor_path, name)
         if os.path.isfile(config):
             configs.append(config)
-        if path == root:
+        if ancestor_path == root:
             break
     return configs
 

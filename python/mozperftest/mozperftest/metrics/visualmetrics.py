@@ -208,8 +208,8 @@ class VisualMetrics(Layer):
         # we are keeping the last 5 percents
         percents = list(percents.items())
         percents.sort()
-        for percent, value in percents[:5]:
-            self.append_metrics(index, f"{name}{percent}", value, **fields)
+        for percent, progress_value in percents[:5]:
+            self.append_metrics(index, f"{name}{percent}", progress_value, **fields)
 
     def append_metrics(self, index, name, value, **fields):
         if name not in self.metrics_fields:

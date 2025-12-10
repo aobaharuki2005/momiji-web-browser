@@ -747,9 +747,9 @@ class PerftestOutput(metaclass=ABCMeta):
                 )
 
         vals = []
-        for name, test in _subtests.items():
-            test["value"] = filters.mean(test["replicates"])
-            vals.append([test["value"], name])
+        for name, subtest_data in _subtests.items():
+            subtest_data["value"] = filters.mean(subtest_data["replicates"])
+            vals.append([subtest_data["value"], name])
 
         # pylint W1656
         return list(_subtests.values()), sorted(vals, reverse=True)

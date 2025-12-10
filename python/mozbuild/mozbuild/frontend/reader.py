@@ -1407,9 +1407,9 @@ class BuildReader:
             all_contexts.append(context)
 
         result = {}
-        for path, paths in path_mozbuilds.items():
+        for path, mozbuild_paths in path_mozbuilds.items():
             result[path] = functools.reduce(
-                lambda x, y: x + y, (contexts[p] for p in paths), []
+                lambda x, y: x + y, (contexts[p] for p in mozbuild_paths), []
             )
 
         return result, all_contexts

@@ -58,7 +58,7 @@ def process_files(dirs, output_filename, digests):
         logger.debug('Creating a new checksums file "%s"' % output_filename)
     with open(output_filename, "w+") as output:
         for d in dirs:
-            for root, dirs, files in os.walk(d):
+            for root, _, files in os.walk(d):
                 for f in sorted(files):
                     full = os.path.join(root, f)
                     rel = os.path.relpath(full, d)

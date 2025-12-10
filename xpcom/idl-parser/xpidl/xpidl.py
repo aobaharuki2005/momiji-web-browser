@@ -598,19 +598,19 @@ class Native:
         self.nativename = nativename
         self.location = location
 
-        for name, value, aloc in attlist:
+        for attr_name, value, aloc in attlist:
             if value is not None:
                 raise IDLError("Unexpected attribute value", aloc)
-            if name in ("ptr", "ref"):
+            if attr_name in ("ptr", "ref"):
                 if self.modifier is not None:
                     raise IDLError("More than one ptr/ref modifier", aloc)
-                self.modifier = name
-            elif name in self.specialtypes.keys():
+                self.modifier = attr_name
+            elif attr_name in self.specialtypes.keys():
                 if self.specialtype is not None:
                     raise IDLError("More than one special type", aloc)
-                self.specialtype = name
-                if self.specialtypes[name] is not None:
-                    self.nativename = self.specialtypes[name]
+                self.specialtype = attr_name
+                if self.specialtypes[attr_name] is not None:
+                    self.nativename = self.specialtypes[attr_name]
             else:
                 raise IDLError("Unexpected attribute", aloc)
 
@@ -1357,8 +1357,8 @@ class Attribute:
         self.location = location
         self.doccomments = doccomments
 
-        for name, value, aloc in attlist:
-            if name == "binaryname":
+        for attr_name, value, aloc in attlist:
+            if attr_name == "binaryname":
                 if value is None:
                     raise IDLError("binaryname attribute requires a value", aloc)
 
@@ -1368,21 +1368,21 @@ class Attribute:
             if value is not None:
                 raise IDLError("Unexpected attribute value", aloc)
 
-            if name == "noscript":
+            if attr_name == "noscript":
                 self.noscript = True
-            elif name == "notxpcom":
+            elif attr_name == "notxpcom":
                 self.notxpcom = True
-            elif name == "symbol":
+            elif attr_name == "symbol":
                 self.symbol = True
-            elif name == "implicit_jscontext":
+            elif attr_name == "implicit_jscontext":
                 self.implicit_jscontext = True
-            elif name == "nostdcall":
+            elif attr_name == "nostdcall":
                 self.nostdcall = True
-            elif name == "must_use":
+            elif attr_name == "must_use":
                 self.must_use = True
-            elif name == "infallible":
+            elif attr_name == "infallible":
                 self.infallible = True
-            elif name == "can_run_script":
+            elif attr_name == "can_run_script":
                 if (
                     self.explicit_setter_can_run_script
                     or self.explicit_getter_can_run_script
@@ -1395,14 +1395,14 @@ class Attribute:
                     )
                 self.explicit_setter_can_run_script = True
                 self.explicit_getter_can_run_script = True
-            elif name == "setter_can_run_script":
+            elif attr_name == "setter_can_run_script":
                 if self.explicit_setter_can_run_script:
                     raise IDLError(
                         "Redundant setter_can_run_script annotation " "on attribute",
                         aloc,
                     )
                 self.explicit_setter_can_run_script = True
-            elif name == "getter_can_run_script":
+            elif attr_name == "getter_can_run_script":
                 if self.explicit_getter_can_run_script:
                     raise IDLError(
                         "Redundant getter_can_run_script annotation " "on attribute",
@@ -1410,7 +1410,7 @@ class Attribute:
                     )
                 self.explicit_getter_can_run_script = True
             else:
-                raise IDLError("Unexpected attribute '%s'" % name, aloc)
+                raise IDLError("Unexpected attribute '%s'" % attr_name, aloc)
 
     def resolve(self, iface):
         self.iface = iface
@@ -1465,8 +1465,8 @@ class Method:
         self.doccomments = doccomments
         self.raises = raises
 
-        for name, value, aloc in attlist:
-            if name == "binaryname":
+        for attr_name, value, aloc in attlist:
+            if attr_name == "binaryname":
                 if value is None:
                     raise IDLError("binaryname attribute requires a value", aloc)
 
@@ -1476,26 +1476,26 @@ class Method:
             if value is not None:
                 raise IDLError("Unexpected attribute value", aloc)
 
-            if name == "noscript":
+            if attr_name == "noscript":
                 self.noscript = True
-            elif name == "notxpcom":
+            elif attr_name == "notxpcom":
                 self.notxpcom = True
-            elif name == "symbol":
+            elif attr_name == "symbol":
                 self.symbol = True
-            elif name == "implicit_jscontext":
+            elif attr_name == "implicit_jscontext":
                 self.implicit_jscontext = True
-            elif name == "optional_argc":
+            elif attr_name == "optional_argc":
                 self.optional_argc = True
-            elif name == "nostdcall":
+            elif attr_name == "nostdcall":
                 self.nostdcall = True
-            elif name == "must_use":
+            elif attr_name == "must_use":
                 self.must_use = True
-            elif name == "can_run_script":
+            elif attr_name == "can_run_script":
                 self.explicit_can_run_script = True
-            elif name == "infallible":
+            elif attr_name == "infallible":
                 self.infallible = True
             else:
-                raise IDLError("Unexpected attribute '%s'" % name, aloc)
+                raise IDLError("Unexpected attribute '%s'" % attr_name, aloc)
 
         self.namemap = NameMap()
         for p in paramlist:
@@ -1607,36 +1607,38 @@ class Param:
         self.location = location
         self.realtype = realtype
 
-        for name, value, aloc in attlist:
+        for attr_name, value, aloc in attlist:
             # Put the value-taking attributes first!
-            if name == "size_is":
+            if attr_name == "size_is":
                 if value is None:
                     raise IDLError("'size_is' must specify a parameter", aloc)
                 self.size_is = value
-            elif name == "iid_is":
+            elif attr_name == "iid_is":
                 if value is None:
                     raise IDLError("'iid_is' must specify a parameter", aloc)
                 self.iid_is = value
-            elif name == "default":
+            elif attr_name == "default":
                 if value is None:
                     raise IDLError("'default' must specify a default value", aloc)
                 self.default_value = value
             else:
                 if value is not None:
-                    raise IDLError("Unexpected value for attribute '%s'" % name, aloc)
+                    raise IDLError(
+                        "Unexpected value for attribute '%s'" % attr_name, aloc
+                    )
 
-                if name == "const":
+                if attr_name == "const":
                     self.const = True
-                elif name == "array":
+                elif attr_name == "array":
                     self.array = True
-                elif name == "retval":
+                elif attr_name == "retval":
                     self.retval = True
-                elif name == "shared":
+                elif attr_name == "shared":
                     self.shared = True
-                elif name == "optional":
+                elif attr_name == "optional":
                     self.optional = True
                 else:
-                    raise IDLError("Unexpected attribute '%s'" % name, aloc)
+                    raise IDLError("Unexpected attribute '%s'" % attr_name, aloc)
 
     def resolve(self, method):
         self.realtype = method.iface.idl.getName(self.type, self.location)

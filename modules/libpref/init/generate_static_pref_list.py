@@ -455,21 +455,23 @@ def emit_code(fd, *pref_list_filenames):
     init_dirname = os.path.dirname(fd.name)
     dirname = os.path.dirname(init_dirname)
 
-    with FileAvoidWrite(os.path.join(dirname, "StaticPrefsAll.h")) as fd:
-        fd.write(code["static_prefs_all_h"])
+    with FileAvoidWrite(os.path.join(dirname, "StaticPrefsAll.h")) as output_file:
+        output_file.write(code["static_prefs_all_h"])
 
     for group, text in sorted(code["static_pref_list_group_h"].items()):
         filename = f"StaticPrefList_{group}.h"
-        with FileAvoidWrite(os.path.join(init_dirname, filename)) as fd:
-            fd.write(text)
+        with FileAvoidWrite(os.path.join(init_dirname, filename)) as group_file:
+            group_file.write(text)
 
     for group, text in sorted(code["static_prefs_group_h"].items()):
         filename = f"StaticPrefs_{group}.h"
-        with FileAvoidWrite(os.path.join(dirname, filename)) as fd:
-            fd.write(text)
+        with FileAvoidWrite(os.path.join(dirname, filename)) as prefs_file:
+            prefs_file.write(text)
 
-    with FileAvoidWrite(os.path.join(init_dirname, "StaticPrefsCGetters.cpp")) as fd:
-        fd.write(code["static_prefs_c_getters_cpp"])
+    with FileAvoidWrite(
+        os.path.join(init_dirname, "StaticPrefsCGetters.cpp")
+    ) as cpp_file:
+        cpp_file.write(code["static_prefs_c_getters_cpp"])
 
-    with FileAvoidWrite(os.path.join(dirname, "static_prefs.rs")) as fd:
-        fd.write(code["static_prefs_rs"])
+    with FileAvoidWrite(os.path.join(dirname, "static_prefs.rs")) as rust_file:
+        rust_file.write(code["static_prefs_rs"])

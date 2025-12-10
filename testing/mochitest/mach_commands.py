@@ -414,8 +414,8 @@ def run_mochitest_general(
     # filtered tests to the mochitest harness. Mochitest harness will read
     # the master manifest in that case.
     if not resolve_tests:
-        for flavor in flavors:
-            key = (flavor, kwargs.get("subsuite"))
+        for flavor_name in flavors:
+            key = (flavor_name, kwargs.get("subsuite"))
             suites[key] = []
 
     if not suites:
@@ -477,8 +477,8 @@ def run_mochitest_general(
         run_mochitest = mochitest.run_desktop_test
 
     overall = None
-    for (flavor, subsuite), tests in sorted(suites.items()):
-        suite_name, suite = get_suite_definition(flavor, subsuite)
+    for (test_flavor, subsuite), tests in sorted(suites.items()):
+        suite_name, suite = get_suite_definition(test_flavor, subsuite)
         if "test_paths" in suite["kwargs"]:
             del suite["kwargs"]["test_paths"]
 

@@ -1152,11 +1152,11 @@ class BaseMarionetteTestRunner:
                 )
 
             target_tests = []
-            for test in manifest_tests:
-                if test.get("disabled"):
-                    self.manifest_skipped_tests.append(test)
+            for manifest_test in manifest_tests:
+                if manifest_test.get("disabled"):
+                    self.manifest_skipped_tests.append(manifest_test)
                 else:
-                    target_tests.append(test)
+                    target_tests.append(manifest_test)
 
             for i in target_tests:
                 if not os.path.exists(i["path"]):

@@ -1120,8 +1120,8 @@ def expand_variables(s, variables):
     If a variable value is not a string, it is iterated and its items are
     joined with a whitespace."""
     result = ""
-    for s, name in pair(VARIABLES_RE.split(s)):
-        result += s
+    for text_part, name in pair(VARIABLES_RE.split(s)):
+        result += text_part
         value = variables.get(name)
         if not value:
             continue

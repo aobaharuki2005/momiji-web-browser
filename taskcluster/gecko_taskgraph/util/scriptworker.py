@@ -525,7 +525,7 @@ def generate_beetmover_upstream_artifacts(
         else:
             raise Exception(f"Unsupported type of dependency. Got job: {job}")
 
-    for locale, dep in itertools.product(locales, dependencies):
+    for current_locale, dep in itertools.product(locales, dependencies):
         paths = list()
 
         for filename in map_config["mapping"]:
@@ -537,7 +537,10 @@ def generate_beetmover_upstream_artifacts(
             )
             if dep not in map_config["mapping"][filename]["from"]:
                 continue
-            if locale != "en-US" and not map_config["mapping"][filename]["all_locales"]:
+            if (
+                current_locale != "en-US"
+                and not map_config["mapping"][filename]["all_locales"]
+            ):
                 continue
             if (
                 "only_for_platforms" in map_config["mapping"][filename]
@@ -563,10 +566,10 @@ def generate_beetmover_upstream_artifacts(
                 file_config,
                 "source_path_modifier",
                 "source path modifier",
-                locale=locale,
+                locale=current_locale,
             )
 
-            kwargs["locale"] = locale
+            kwargs["locale"] = current_locale
 
             paths.append(
                 os.path.join(
@@ -595,7 +598,7 @@ def generate_beetmover_upstream_artifacts(
                 "taskId": {"task-reference": f"<{dep}>"},
                 "taskType": map_config["tasktype_map"].get(dep),
                 "paths": sorted(paths),
-                "locale": locale,
+                "locale": current_locale,
             }
         )
 

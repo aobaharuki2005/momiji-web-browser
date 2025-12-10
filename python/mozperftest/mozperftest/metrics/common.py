@@ -296,17 +296,17 @@ class MetricsStorage:
     def _alter_name(self, filtered, res, filter):
         previous = []
         for data_type, data_info in filtered.items():
-            for res in data_info:
-                new = filter(res["subtest"])
+            for result in data_info:
+                new = filter(result["subtest"])
                 if new is None:
                     continue
                 if new in previous:
                     self.logger.warning(
                         f"Another metric which ends with `{new}` was already found. "
-                        f"{res['subtest']} will not be simplified."
+                        f"{result['subtest']} will not be simplified."
                     )
                     continue
-                res["subtest"] = new
+                result["subtest"] = new
                 previous.append(new)
 
 

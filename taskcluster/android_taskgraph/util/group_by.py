@@ -24,8 +24,8 @@ def component_grouping(config, tasks):
         # we have a single dependency for that kind
         and task.attributes.get("is_final_chunked_task", True)
     ]
-    for (_, build_type), tasks in groups.items():
-        tasks.extend(
+    for (_, build_type), group_tasks in groups.items():
+        group_tasks.extend(
             [
                 task
                 for task in tasks_for_all_components

@@ -258,16 +258,16 @@ def verify_dependency_tiers(task, taskgraph, scratch_pad, graph_config, paramete
                 return "unknown"
             return tier
 
-        for task in taskgraph.tasks.values():
-            tier = tiers[task.label]
-            for d in task.dependencies.values():
+        for current_task in taskgraph.tasks.values():
+            tier = tiers[current_task.label]
+            for d in current_task.dependencies.values():
                 if taskgraph[d].task.get("workerType") == "always-optimized":
                     continue
                 if "dummy" in taskgraph[d].kind:
                     continue
                 if tier < tiers[d]:
                     raise Exception(
-                        f"{task.label} (tier {printable_tier(tier)}) cannot depend on {d} (tier {printable_tier(tiers[d])})"
+                        f"{current_task.label} (tier {printable_tier(tier)}) cannot depend on {d} (tier {printable_tier(tiers[d])})"
                     )
 
 
@@ -291,12 +291,12 @@ def verify_required_signoffs(task, taskgraph, scratch_pad, graph_config, paramet
                 return "required signoffs {}".format(", ".join(signoffs))
             return "no required signoffs"
 
-        for task in taskgraph.tasks.values():
-            required_signoffs = all_required_signoffs[task.label]
-            for d in task.dependencies.values():
+        for current_task in taskgraph.tasks.values():
+            required_signoffs = all_required_signoffs[current_task.label]
+            for d in current_task.dependencies.values():
                 if required_signoffs < all_required_signoffs[d]:
                     raise Exception(
-                        f"{task.label} ({printable_signoff(required_signoffs)}) cannot depend on {d} ({printable_signoff(all_required_signoffs[d])})"
+                        f"{current_task.label} ({printable_signoff(required_signoffs)}) cannot depend on {d} ({printable_signoff(all_required_signoffs[d])})"
                     )
 
 
@@ -414,20 +414,20 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters
             missing_tests_allowed = True
 
         exceptions = []
-        for task in taskgraph.tasks.values():
-            if task.kind == "build" and not task.attributes.get(
+        for current_task in taskgraph.tasks.values():
+            if current_task.kind == "build" and not current_task.attributes.get(
                 "skip-verify-test-packaging"
             ):
-                build_env = task.task.get("payload", {}).get("env", {})
+                build_env = current_task.task.get("payload", {}).get("env", {})
                 package_tests = build_env.get("MOZ_AUTOMATION_PACKAGE_TESTS")
-                shippable = task.attributes.get("shippable", False)
-                build_has_tests = scratch_pad.get(task.label)
+                shippable = current_task.attributes.get("shippable", False)
+                build_has_tests = scratch_pad.get(current_task.label)
 
                 if package_tests != "1":
                     # Shippable builds should always package tests.
                     if shippable:
                         exceptions.append(
-                            f"Build job {task.label} is shippable and does not specify "
+                            f"Build job {current_task.label} is shippable and does not specify "
                             "MOZ_AUTOMATION_PACKAGE_TESTS=1 in the "
                             "environment."
                         )
@@ -436,7 +436,7 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters
                     # them, so we need to package tests during build.
                     if build_has_tests:
                         exceptions.append(
-                            f"Build job {task.label} has tests dependent on it and does not specify "
+                            f"Build job {current_task.label} has tests dependent on it and does not specify "
                             "MOZ_AUTOMATION_PACKAGE_TESTS=1 in the environment"
                         )
                 # Build tasks that aren't in the scratch pad have no
@@ -448,7 +448,7 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters
                     # there are no dependent tests.
                     if not missing_tests_allowed:
                         exceptions.append(
-                            f"Build job {task.label} has no tests, but specifies "
+                            f"Build job {current_task.label} has no tests, but specifies "
                             f"MOZ_AUTOMATION_PACKAGE_TESTS={package_tests} in the environment. "
                             "Unset MOZ_AUTOMATION_PACKAGE_TESTS in the task definition "
                             "to fix."
