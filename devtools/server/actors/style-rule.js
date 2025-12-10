@@ -547,10 +547,19 @@ class StyleRuleActor extends Actor {
           // In such case InspectorUtils.supports() would return false, but that would be
           // odd to show "invalid" pres hints declaration in the UI.
           this.ruleClassName === PRES_HINTS ||
-          InspectorUtils.supports(
+          (InspectorUtils.supports(
             `${decl.name}:${decl.value}`,
             supportsOptions
-          );
+          ) &&
+            // !important values are not valid in @position-try and @keyframes
+            // TODO: We might extend InspectorUtils.supports to take the actual rule
+            // so we wouldn't have to hardcode this, but this does come with some
+            // challenges (see Bug 2004379).
+            !(
+              decl.priority === "important" &&
+              (this.ruleClassName === "CSSPositionTryRule" ||
+                this.ruleClassName === "CSSKeyframesRule")
+            ));
         const inactiveCssData = getInactiveCssDataForProperty(
           el,
           style,
