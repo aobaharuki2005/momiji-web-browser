@@ -11,7 +11,6 @@
 #include <algorithm>
 
 #include "AnchorPositioningUtils.h"
-#include "CSSAlignUtils.h"
 #include "mozilla/AbsoluteContainingBlock.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/ComputedStyle.h"
@@ -2458,6 +2457,45 @@ void nsContainerFrame::ConsiderChildOverflow(OverflowAreas& aOverflowAreas,
   }
 }
 
+// Map a raw StyleAlignFlags value to the used one.
+static StyleAlignFlags MapCSSAlignment(StyleAlignFlags aFlags,
+                                       const ReflowInput& aChildRI,
+                                       LogicalAxis aLogicalAxis,
+                                       WritingMode aWM) {
+  // Extract and strip the flag bits
+  StyleAlignFlags alignmentFlags = aFlags & StyleAlignFlags::FLAG_BITS;
+  aFlags &= ~StyleAlignFlags::FLAG_BITS;
+
+  if (aFlags == StyleAlignFlags::NORMAL) {
+    // "the 'normal' keyword behaves as 'start' on replaced
+    // absolutely-positioned boxes, and behaves as 'stretch' on all other
+    // absolutely-positioned boxes."
+    // https://drafts.csswg.org/css-align/#align-abspos
+    // https://drafts.csswg.org/css-align/#justify-abspos
+    aFlags = aChildRI.mFrame->IsReplaced() ? StyleAlignFlags::START
+                                           : StyleAlignFlags::STRETCH;
+  } else if (aFlags == StyleAlignFlags::FLEX_START) {
+    aFlags = StyleAlignFlags::START;
+  } else if (aFlags == StyleAlignFlags::FLEX_END) {
+    aFlags = StyleAlignFlags::END;
+  } else if (aFlags == StyleAlignFlags::LEFT ||
+             aFlags == StyleAlignFlags::RIGHT) {
+    if (aLogicalAxis == LogicalAxis::Inline) {
+      const bool isLeft = (aFlags == StyleAlignFlags::LEFT);
+      aFlags = (isLeft == aWM.IsBidiLTR()) ? StyleAlignFlags::START
+                                           : StyleAlignFlags::END;
+    } else {
+      aFlags = StyleAlignFlags::START;
+    }
+  } else if (aFlags == StyleAlignFlags::BASELINE) {
+    aFlags = StyleAlignFlags::START;
+  } else if (aFlags == StyleAlignFlags::LAST_BASELINE) {
+    aFlags = StyleAlignFlags::END;
+  }
+
+  return (aFlags | alignmentFlags);
+}
+
 StyleAlignFlags nsContainerFrame::CSSAlignmentForAbsPosChild(
     const ReflowInput& aChildRI, LogicalAxis aLogicalAxis) const {
   MOZ_ASSERT(aChildRI.mFrame->IsAbsolutelyPositioned(),
@@ -2466,8 +2504,7 @@ StyleAlignFlags nsContainerFrame::CSSAlignmentForAbsPosChild(
   // `auto` takes from parent's `align-items`.
   StyleAlignFlags alignment =
       aChildRI.mStylePosition->UsedSelfAlignment(aLogicalAxis, Style());
-  return CSSAlignUtils::UsedAlignmentForAbsPos(aChildRI.mFrame, alignment,
-                                               aLogicalAxis, GetWritingMode());
+  return MapCSSAlignment(alignment, aChildRI, aLogicalAxis, GetWritingMode());
 }
 
 StyleAlignFlags
@@ -2524,8 +2561,7 @@ nsContainerFrame::CSSAlignmentForAbsPosChildWithinContainingBlock(
     }
   }
 
-  return CSSAlignUtils::UsedAlignmentForAbsPos(aChildRI.mFrame, alignment,
-                                               aLogicalAxis, GetWritingMode());
+  return MapCSSAlignment(alignment, aChildRI, aLogicalAxis, GetWritingMode());
 }
 
 nsOverflowContinuationTracker::nsOverflowContinuationTracker(

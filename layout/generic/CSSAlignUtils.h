@@ -20,14 +20,6 @@ struct StyleAlignFlags;
 class CSSAlignUtils {
  public:
   /**
-   * Map a raw StyleAlignFlags value to the used one.
-   */
-  static StyleAlignFlags UsedAlignmentForAbsPos(nsIFrame* aFrame,
-                                                StyleAlignFlags aFlags,
-                                                LogicalAxis aLogicalAxis,
-                                                WritingMode aCBWM);
-
-  /**
    * Flags to customize the behavior of AlignJustifySelf:
    */
   enum class AlignJustifyFlag {
