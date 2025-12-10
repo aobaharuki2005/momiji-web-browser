@@ -1295,8 +1295,7 @@ class ScrollContainerFrame : public nsContainerFrame,
   // We need this if a scrollbar frame is recreated.
   void ReloadChildFrames();
 
-  // NOTE: Use GetScrollStylesFromFrame() if you want to know `overflow`
-  // and `overflow-behavior` properties.
+  // NOTE: Use GetScrollStyles() if you want `overflow` property info.
   nsIFrame* GetFrameForStyle() const;
 
   // Compute all scroll snap related information and store eash snap target
