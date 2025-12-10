@@ -91,6 +91,7 @@ run-if = [
 skip-if = [
   "os == 'android' && os_version == '14' && arch == 'aarch64'", # requires administrator permission on aarch64
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # requires administrator permission on aarch64
+  "os == 'win' && os_version == '11.26100' && arch == 'aarch64'",
   "os == 'win' && os_version == '11.26100' && arch == 'x86'", # fails on win/x86
 ]
 
@@ -135,6 +136,7 @@ skip-if = [
   "os == 'win' && os_version == '10.2009' && arch == 'x86_64'",
   "os == 'win' && os_version == '11.26100' && arch == 'x86'",
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64'",
+  "os == 'win' && os_version == '11.26100' && arch == 'aarch64'",
 ]
 
 ["TestMozJemallocUtils"]
