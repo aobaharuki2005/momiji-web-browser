@@ -261,8 +261,7 @@ class ExpressionParser:
         """
         Lex the input text into tokens and yield them in sequence.
         """
-        for t in scan(self.text):
-            yield t
+        yield from scan(self.text)
         yield end_token()
 
     def value(self, ident):

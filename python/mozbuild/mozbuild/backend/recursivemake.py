@@ -302,11 +302,9 @@ class RecursiveMakeTraversal:
         if start not in self._traversal:
             return
         for node in parallel:
-            for n in self.traverse(node, filter):
-                yield n
+            yield from self.traverse(node, filter)
         for dir in sequential:
-            for d in self.traverse(dir, filter):
-                yield d
+            yield from self.traverse(dir, filter)
 
     def get_subdirs(self, dir):
         """

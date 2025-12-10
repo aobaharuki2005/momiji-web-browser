@@ -272,8 +272,7 @@ class chunk_by_dir(InstanceFilter):
             disabled_dirs = [
                 v for k, v in tests_by_dir.items() if k not in ordered_dirs
             ]
-            for disabled_test in itertools.chain(*disabled_dirs):
-                yield disabled_test
+            yield from itertools.chain(*disabled_dirs)
 
 
 class chunk_by_manifest(InstanceFilter):

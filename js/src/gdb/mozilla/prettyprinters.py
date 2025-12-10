@@ -267,8 +267,7 @@ def implemented_types(t):
                     yield t2
 
     yield t
-    for t2 in followers(t):
-        yield t2
+    yield from followers(t)
 
 
 template_regexp = re.compile(r"([\w_:]+)<")

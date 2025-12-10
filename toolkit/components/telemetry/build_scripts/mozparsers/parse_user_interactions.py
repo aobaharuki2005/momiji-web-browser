@@ -242,5 +242,4 @@ def from_files(filenames):
     for filename in filenames:
         all_user_interactions += load_user_interactions(filename)
 
-    for user_interaction in all_user_interactions:
-        yield user_interaction
+    yield from all_user_interactions

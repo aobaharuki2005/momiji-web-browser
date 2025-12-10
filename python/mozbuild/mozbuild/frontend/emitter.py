@@ -253,8 +253,7 @@ class TreeMetadataEmitter(LoggingMixin):
             for o in lib.refs:
                 yield o
                 if isinstance(o, StaticLibrary):
-                    for q in recurse_refs(o):
-                        yield q
+                    yield from recurse_refs(o)
 
         # Check that all static libraries refering shared libraries in
         # USE_LIBS are linked into a shared library or program.
@@ -1223,8 +1222,7 @@ class TreeMetadataEmitter(LoggingMixin):
 
         # We always emit a directory traversal descriptor. This is needed by
         # the recursive make backend.
-        for o in self._emit_directory_traversal_from_context(context):
-            yield o
+        yield from self._emit_directory_traversal_from_context(context)
 
         for obj in self._process_xpidl(context):
             yield obj

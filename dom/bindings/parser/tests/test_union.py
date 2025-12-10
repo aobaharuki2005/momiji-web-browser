@@ -8,8 +8,7 @@ import WebIDL
 def chain(*iterables):
     # chain('ABC', 'DEF') --> A B C D E F
     for it in iterables:
-        for element in it:
-            yield element
+        yield from it
 
 
 # We'd like to use itertools.combinations but it's 2.6 or higher.

@@ -2061,8 +2061,7 @@ def updateCLDRLangTags(args):
 def flines(filepath, encoding="utf-8"):
     """Open filepath and iterate over its content."""
     with open(filepath, encoding=encoding) as f:
-        for line in f:
-            yield line
+        yield from f
 
 
 @total_ordering

@@ -998,8 +998,7 @@ class FileFinder(BaseFinder):
                     continue
                 if not self.find_dotfiles:
                     continue
-            for p_, f in self._find(mozpath.join(path, p)):
-                yield p_, f
+            yield from self._find(mozpath.join(path, p))
 
     def get(self, path):
         srcpath = os.path.join(self.base, path)

@@ -133,8 +133,7 @@ def find_all_packages(paths):
     """
     for path in paths:
         logging.info(f"find_all_packages: {path}")
-        for pkg in find_packages(path):
-            yield pkg
+        yield from find_packages(path)
 
 
 def find_payloads(path):

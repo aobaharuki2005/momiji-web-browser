@@ -53,8 +53,7 @@ class JSStringPtr(Common):
             0xE5E5E5E5: "jemalloc freed memory",
         }.get(flags & 0xFFFFFFFF)
         if corrupt:
-            for ch in "<CORRUPT:%s>" % corrupt:
-                yield ch
+            yield from "<CORRUPT:%s>" % corrupt
             return
         is_rope = (flags & self.stc.LINEAR_BIT) == 0
         if is_rope:

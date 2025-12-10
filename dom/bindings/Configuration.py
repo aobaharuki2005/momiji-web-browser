@@ -1375,8 +1375,7 @@ def getDependentDictionariesFromDictionary(d):
     while d:
         yield d
         for member in d.members:
-            for next in getDictionariesFromType(member.type):
-                yield next
+            yield from getDictionariesFromType(member.type)
         d = d.parent
 
 
@@ -1393,13 +1392,11 @@ def getDictionariesFromType(type):
     if type.isUnion():
         # Look for dictionaries in all the member types
         for t in type.flatMemberTypes:
-            for next in getDictionariesFromType(t):
-                yield next
+            yield from getDictionariesFromType(t)
     elif type.isDictionary():
         # Find the dictionaries that are itself, any of its ancestors, or
         # contained in any of its member types.
-        for d in getDependentDictionariesFromDictionary(type.inner):
-            yield d
+        yield from getDependentDictionariesFromDictionary(type.inner)
 
 
 def getDictionariesConvertedToJS(descriptors, dictionaries, callbacks):

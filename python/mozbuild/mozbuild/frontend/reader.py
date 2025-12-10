@@ -898,8 +898,7 @@ class BuildReader:
         read, a new Context is created and emitted.
         """
         path = mozpath.join(self.config.topsrcdir, "moz.build")
-        for r in self.read_mozbuild(path, self.config):
-            yield r
+        yield from self.read_mozbuild(path, self.config)
         all_gyp_paths = set()
         for g in self._gyp_processors:
             for gyp_context in g.results:
@@ -1116,10 +1115,9 @@ class BuildReader:
         """
         self._execution_stack.append(path)
         try:
-            for s in self._read_mozbuild(
+            yield from self._read_mozbuild(
                 path, config, descend=descend, metadata=metadata
-            ):
-                yield s
+            )
 
         except BuildReaderError as bre:
             raise bre
@@ -1244,8 +1242,7 @@ class BuildReader:
             )
             self._gyp_processors.append(gyp_processor)
 
-        for subcontext in sandbox.subcontexts:
-            yield subcontext
+        yield from sandbox.subcontexts
 
         # Traverse into referenced files.
 
@@ -1294,10 +1291,9 @@ class BuildReader:
                 )
             self._read_files[child_relpath] = (relpath, path)
 
-            for res in self.read_mozbuild(
+            yield from self.read_mozbuild(
                 child_path, context.config, metadata=child_metadata
-            ):
-                yield res
+            )
 
         self._execution_stack.pop()
 

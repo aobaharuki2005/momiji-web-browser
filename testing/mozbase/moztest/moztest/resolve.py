@@ -920,8 +920,7 @@ class TestResolver(MozbuildObject):
 
         for p in sorted(candidate_paths):
             tests = self.tests_by_path[p]
-            for test in fltr(tests):
-                yield test
+            yield from fltr(tests)
 
     def is_puppeteer_path(self, path):
         if path is None:

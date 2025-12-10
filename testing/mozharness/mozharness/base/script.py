@@ -671,8 +671,7 @@ class ScriptMixin(PlatformMixin):
         filter_partial = functools.partial(fnmatch.filter, namelist)
         entries = itertools.chain(*map(filter_partial, extract_dirs or ["*"]))
 
-        for entry in entries:
-            yield entry
+        yield from entries
 
     def unzip(self, compressed_file, extract_to, extract_dirs="*", verbose=False):
         """This method allows to extract a zip file without writing to disk first.
