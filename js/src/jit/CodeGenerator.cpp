@@ -13528,6 +13528,14 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
   Label* ifTrueLabel = getJumpLabelForBranch(ifTrue);
   Label* ifFalseLabel = getJumpLabelForBranch(ifFalse);
 
+  bool extractObject = !intact;
+  Register objreg = Register::Invalid();
+#if defined(DEBUG) || defined(FUZZING)
+  // always extract objreg if we're in debug and
+  // assertObjectDoesNotEmulateUndefined;
+  extractObject = true;
+#endif
+
   {
     ScratchTagScope tag(masm, value);
     masm.splitTagForTest(value, tag);
@@ -13535,21 +13543,13 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
     masm.branchTestNull(Assembler::Equal, tag, ifTrueLabel);
     masm.branchTestUndefined(Assembler::Equal, tag, ifTrueLabel);
 
-    masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);
+    if (extractObject) {
+      masm.branchTestObject(Assembler::NotEqual, tag, ifFalseLabel);
+      objreg = masm.extractObject(value, ToTempUnboxRegister(lir->temp1()));
+    }
   }
 
-  bool extractObject = !intact;
-#if defined(DEBUG) || defined(FUZZING)
-  // always extract objreg if we're in debug and
-  // assertObjectDoesNotEmulateUndefined;
-  extractObject = true;
-#endif
-
-  Register objreg = Register::Invalid();
   Register scratch = ToRegister(lir->temp0());
-  if (extractObject) {
-    objreg = masm.extractObject(value, ToTempUnboxRegister(lir->temp1()));
-  }
   if (!intact) {
     // Objects that emulate undefined are loosely equal to null/undefined.
     OutOfLineTestObject* ool = new (alloc()) OutOfLineTestObject();
@@ -13559,7 +13559,9 @@ void CodeGenerator::visitIsNullOrLikeUndefinedAndBranchV(
   } else {
     assertObjectDoesNotEmulateUndefined(objreg, scratch, lir->cmpMir());
     // Bug 1874905. This would be nice to optimize out at the MIR level.
-    masm.jump(ifFalseLabel);
+    if (!isNextBlock(ifFalse->lir())) {
+      masm.jump(ifFalseLabel);
+    }
   }
 }
 
