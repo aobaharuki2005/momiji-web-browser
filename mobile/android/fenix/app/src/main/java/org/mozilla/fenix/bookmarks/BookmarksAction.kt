@@ -149,4 +149,5 @@ internal sealed class DeletionDialogAction : BookmarksAction {
 internal sealed class SnackbarAction : BookmarksAction {
     data object Undo : SnackbarAction()
     data object Dismissed : SnackbarAction()
+    data object SelectFolderFailed : SnackbarAction()
 }

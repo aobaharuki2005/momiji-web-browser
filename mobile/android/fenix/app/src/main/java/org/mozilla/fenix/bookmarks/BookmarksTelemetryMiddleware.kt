@@ -99,8 +99,9 @@ internal class BookmarksTelemetryMiddleware : Middleware<BookmarksState, Bookmar
                     MetricsUtils.recordBookmarkMetrics(MetricsUtils.BookmarkAction.DELETE, source)
                 }
             }
-
-            SnackbarAction.Undo -> Unit
+            SnackbarAction.SelectFolderFailed,
+            SnackbarAction.Undo,
+            -> Unit
         }
     }
 
