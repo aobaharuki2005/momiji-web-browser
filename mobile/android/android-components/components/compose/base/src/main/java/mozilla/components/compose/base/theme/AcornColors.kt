@@ -44,7 +44,6 @@ class AcornColors(
     actionCritical: Color,
     actionInformation: Color,
     formDefault: Color,
-    textPrimary: Color,
     textSecondary: Color,
     textCritical: Color,
     textAccent: Color,
@@ -161,10 +160,6 @@ class AcornColors(
         private set
 
     // Text
-
-    // Primary text
-    var textPrimary by mutableStateOf(textPrimary)
-        private set
 
     // Secondary text
     var textSecondary by mutableStateOf(textSecondary)
@@ -294,7 +289,6 @@ class AcornColors(
         actionCritical = other.actionCritical
         actionInformation = other.actionInformation
         formDefault = other.formDefault
-        textPrimary = other.textPrimary
         textSecondary = other.textSecondary
         textCritical = other.textCritical
         textAccent = other.textAccent
@@ -345,7 +339,6 @@ class AcornColors(
         actionCritical: Color = this.actionCritical,
         actionInformation: Color = this.actionInformation,
         formDefault: Color = this.formDefault,
-        textPrimary: Color = this.textPrimary,
         textSecondary: Color = this.textSecondary,
         textCritical: Color = this.textCritical,
         textAccent: Color = this.textAccent,
@@ -391,7 +384,6 @@ class AcornColors(
         actionCritical = actionCritical,
         actionInformation = actionInformation,
         formDefault = formDefault,
-        textPrimary = textPrimary,
         textSecondary = textSecondary,
         textCritical = textCritical,
         textAccent = textAccent,
@@ -440,7 +432,6 @@ val darkColorPalette = AcornColors(
     actionCritical = PhotonColors.Pink70A69,
     actionInformation = PhotonColors.Blue60,
     formDefault = PhotonColors.LightGrey05,
-    textPrimary = PhotonColors.LightGrey05,
     textSecondary = PhotonColors.LightGrey40,
     textCritical = PhotonColors.Red20,
     textAccent = PhotonColors.Violet20,
@@ -488,7 +479,6 @@ val lightColorPalette = AcornColors(
     actionCritical = PhotonColors.Red30,
     actionInformation = PhotonColors.Blue50,
     formDefault = PhotonColors.DarkGrey90,
-    textPrimary = PhotonColors.DarkGrey90,
     textSecondary = PhotonColors.DarkGrey05,
     textCritical = PhotonColors.Red70,
     textAccent = PhotonColors.Violet70,
@@ -532,6 +522,7 @@ private fun AcornColors.toM3ColorScheme(
     secondaryContainer: Color,
     tertiaryContainer: Color,
     surface: Color,
+    onSurface: Color,
     inverseSurface: Color,
     errorContainer: Color,
     outline: Color,
@@ -546,20 +537,20 @@ private fun AcornColors.toM3ColorScheme(
     primary = primary,
     onPrimary = textInverted,
     primaryContainer = primaryContainer,
-    onPrimaryContainer = textPrimary,
+    onPrimaryContainer = onSurface,
     inversePrimary = inversePrimary,
     secondary = textSecondary,
     onSecondary = textInverted,
     secondaryContainer = secondaryContainer,
-    onSecondaryContainer = textPrimary,
+    onSecondaryContainer = onSurface,
     tertiary = textAccent,
     onTertiary = textInverted,
     tertiaryContainer = tertiaryContainer,
-    onTertiaryContainer = textPrimary,
+    onTertiaryContainer = onSurface,
     background = surface,
-    onBackground = textPrimary, // onSurface
+    onBackground = onSurface,
     surface = surface,
-    onSurface = textPrimary,
+    onSurface = onSurface,
     surfaceVariant = surfaceContainerHighest,
     onSurfaceVariant = textSecondary,
     surfaceTint = layerAutofillText,
@@ -568,7 +559,7 @@ private fun AcornColors.toM3ColorScheme(
     error = textCritical,
     onError = textInverted,
     errorContainer = errorContainer,
-    onErrorContainer = textPrimary,
+    onErrorContainer = onSurface,
     outline = outline,
     outlineVariant = outlineVariant,
     scrim = layerScrim,
@@ -585,11 +576,11 @@ private fun AcornColors.toM3ColorScheme(
     onPrimaryFixedVariant = textInverted,
     secondaryFixed = secondaryContainer,
     secondaryFixedDim = secondaryContainer,
-    onSecondaryFixed = textPrimary,
+    onSecondaryFixed = onSurface,
     onSecondaryFixedVariant = textInverted,
     tertiaryFixed = tertiaryContainer,
     tertiaryFixedDim = tertiaryContainer,
-    onTertiaryFixed = textPrimary,
+    onTertiaryFixed = onSurface,
     onTertiaryFixedVariant = textInverted,
 )
 
@@ -603,6 +594,7 @@ fun acornDarkColorScheme(): ColorScheme = darkColorPalette.toM3ColorScheme(
     secondaryContainer = Color(0xFF4B3974),
     tertiaryContainer = PhotonColors.Pink80,
     surface = PhotonColors.DarkGrey60,
+    onSurface = PhotonColors.LightGrey05,
     inverseSurface = PhotonColors.LightGrey40,
     errorContainer = PhotonColors.Red80,
     outline = PhotonColors.LightGrey80,
@@ -625,6 +617,7 @@ fun acornLightColorScheme(): ColorScheme = lightColorPalette.toM3ColorScheme(
     secondaryContainer = Color(0xFFE6E0F5),
     tertiaryContainer = PhotonColors.Pink05,
     surface = PhotonColors.LightGrey10,
+    onSurface = PhotonColors.DarkGrey90,
     inverseSurface = PhotonColors.DarkGrey60,
     errorContainer = PhotonColors.Red05,
     outline = PhotonColors.LightGrey90,
@@ -647,6 +640,7 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
     secondaryContainer = Color(0xFF4B3974),
     tertiaryContainer = PhotonColors.Pink80,
     surface = Color(0xFF342B4A),
+    onSurface = PhotonColors.LightGrey05,
     inverseSurface = PhotonColors.LightGrey40,
     errorContainer = PhotonColors.Red80,
     outline = PhotonColors.LightGrey80,
