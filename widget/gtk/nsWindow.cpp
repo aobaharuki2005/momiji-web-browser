@@ -4235,11 +4235,14 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
 
 #ifdef MOZ_LOGGING
   if (LOG_ENABLED()) {
-    auto scale = FractionalScaleFactor();
-    LOG("nsWindow::OnShellConfigureEvent() [%d,%d] -> [%d x %d] scale %.2f "
-        "(scaled size %.2f x %.2f)\n",
-        aEvent->x, aEvent->y, aEvent->width, aEvent->height, scale,
-        aEvent->width * scale, aEvent->height * scale);
+    auto widgetArea =
+        DesktopIntRect(aEvent->x, aEvent->y, aEvent->width, aEvent->height);
+    auto scaledWidgetArea = ToLayoutDevicePixels(widgetArea);
+    LOG("nsWindow::OnShellConfigureEvent() [%d, %d] -> [%d x %d] scale %.2f "
+        "(scaled size %d x %d)\n",
+        widgetArea.x, widgetArea.y, widgetArea.width, widgetArea.height,
+        FractionalScaleFactor(), scaledWidgetArea.width,
+        scaledWidgetArea.height);
   }
 #endif
 
@@ -4265,15 +4268,19 @@ gboolean nsWindow::OnShellConfigureEvent(GdkEventConfigure* aEvent) {
 }
 
 void nsWindow::OnContainerSizeAllocate(GtkAllocation* aAllocation) {
-  LOG("nsWindow::OnContainerSizeAllocate [%d,%d] -> [%d x %d] scaled [%.2f] "
-      "[%.2f x %.2f]",
-      aAllocation->x, aAllocation->y, aAllocation->width, aAllocation->height,
-      FractionalScaleFactor(), aAllocation->width * FractionalScaleFactor(),
-      aAllocation->height * FractionalScaleFactor());
-
   mHasReceivedSizeAllocate = true;
   mReceivedClientArea = DesktopIntRect(aAllocation->x, aAllocation->y,
                                        aAllocation->width, aAllocation->height);
+#ifdef MOZ_LOGGING
+  if (LOG_ENABLED()) {
+    auto scaledClientAread = ToLayoutDevicePixels(mReceivedClientArea);
+    LOG("nsWindow::OnContainerSizeAllocate [%d,%d] -> [%d x %d] scaled [%.2f] "
+        "[%d x %d]",
+        aAllocation->x, aAllocation->y, aAllocation->width, aAllocation->height,
+        FractionalScaleFactor(), scaledClientAread.width,
+        scaledClientAread.height);
+  }
+#endif
 
   // Bounds will get updated on the main configure.
   // Gecko permits running nested event loops during processing of events,
