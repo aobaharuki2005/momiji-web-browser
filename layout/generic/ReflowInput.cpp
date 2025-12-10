@@ -40,28 +40,6 @@ using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
-AnchorPosResolutionParams AnchorPosResolutionParams::From(
-    const mozilla::SizeComputationInput* aSizingInput,
-    bool aIgnorePositionArea) {
-  const mozilla::StylePositionArea posArea =
-      aIgnorePositionArea
-          ? mozilla::StylePositionArea{}
-          : aSizingInput->mFrame->StylePosition()->mPositionArea;
-  bool inlineUsesAnchorCenter = false;
-  bool blockUsesAnchorCenter = false;
-
-  ComputeAnchorCenterUsage(aSizingInput->mFrame,
-                           aSizingInput->mAnchorPosResolutionCache,
-                           inlineUsesAnchorCenter, blockUsesAnchorCenter);
-
-  return {aSizingInput->mFrame,
-          aSizingInput->mFrame->StyleDisplay()->mPosition,
-          posArea,
-          aSizingInput->mAnchorPosResolutionCache,
-          inlineUsesAnchorCenter,
-          blockUsesAnchorCenter};
-}
-
 static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent) {
   nsIFrame* frameNext = aFrame->GetNextInFlow();
   nsIFrame* parentNext = aParent->GetNextInFlow();
