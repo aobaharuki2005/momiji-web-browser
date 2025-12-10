@@ -23,7 +23,7 @@ import org.mozilla.fenix.utils.Settings
  * This is an optimistic value taking into account that fewer than this stories may actually be available.
  */
 @VisibleForTesting
-internal const val CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT = 9
+internal const val CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT = 30
 
 /**
  * Total count of all sponsored Pocket stories to show.
