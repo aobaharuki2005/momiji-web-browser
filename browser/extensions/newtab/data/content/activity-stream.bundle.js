@@ -12744,10 +12744,17 @@ const FocusTimer = ({
   (0,external_React_namespaceObject.useEffect)(() => {
     // resets default values after timer ends
     let interval;
+    let hasReachedZero = false;
     if (isRunning && duration > 0) {
       interval = setInterval(() => {
+        const currentTime = Math.floor(Date.now() / 1000);
+        const elapsed = currentTime - startTime;
         const remaining = calculateTimeRemaining(duration, startTime);
-        if (remaining <= 0) {
+
+        // using setTimeLeft to trigger a re-render of the component to show live countdown each second
+        setTimeLeft(remaining);
+        setProgress((initialDuration - remaining) / initialDuration);
+        if (elapsed >= duration && hasReachedZero) {
           clearInterval(interval);
           (0,external_ReactRedux_namespaceObject.batch)(() => {
             dispatch(actionCreators.AlsoToMain({
@@ -12792,13 +12799,11 @@ const FocusTimer = ({
                   }
                 }));
               });
-            }, 1500);
-          }, 1500);
+            }, 500);
+          }, 1000);
+        } else if (elapsed >= duration) {
+          hasReachedZero = true;
         }
-
-        // using setTimeLeft to trigger a re-render of the component to show live countdown each second
-        setTimeLeft(remaining);
-        setProgress((initialDuration - remaining) / initialDuration);
       }, 1000);
     }
 
