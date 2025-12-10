@@ -350,7 +350,8 @@ export class NewTabContentPing {
    * Returns true or false with a certain proability specified
    *
    * @param {number} prob Probability
-   * @returns {boolean} Random boolean result of probability prob
+   * @returns {boolean} Random boolean result of probability prob. A higher prob
+   *   increases the chance of true being returned.
    */
   static decideWithProbability(prob) {
     if (prob <= 0) {
