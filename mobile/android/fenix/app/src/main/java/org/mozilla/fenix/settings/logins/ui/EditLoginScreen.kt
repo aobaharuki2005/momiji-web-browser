@@ -40,7 +40,6 @@ import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
@@ -137,8 +136,7 @@ internal fun EditLoginTopBar(store: LoginsStore, loginItem: LoginItem) {
 private fun EditLoginUrl(url: String) {
     Text(
         text = stringResource(R.string.preferences_passwords_saved_logins_site),
-        style = AcornTheme.typography.caption,
-        color = AcornTheme.colors.textPrimary,
+        style = FirefoxTheme.typography.caption,
         modifier = Modifier
             .padding(horizontal = FirefoxTheme.layout.space.static200)
             .width(FirefoxTheme.layout.size.containerMaxWidth),
@@ -146,7 +144,7 @@ private fun EditLoginUrl(url: String) {
 
     Text(
         text = url,
-        style = AcornTheme.typography.subtitle1,
+        style = FirefoxTheme.typography.subtitle1,
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
         modifier = Modifier
             .padding(

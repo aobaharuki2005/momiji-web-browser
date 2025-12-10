@@ -58,7 +58,6 @@ import mozilla.components.compose.base.menu.MenuItem
 import mozilla.components.compose.base.modifier.thenConditional
 import mozilla.components.compose.base.text.Text.Resource
 import mozilla.components.compose.base.textfield.TextField
-import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.Config
 import org.mozilla.fenix.R
@@ -232,13 +231,13 @@ fun WebCompatReporter(
                     Text(
                         text = stringResource(id = R.string.webcompat_reporter_etp_checkbox_text),
                         color = MaterialTheme.colorScheme.onSurface,
-                        style = AcornTheme.typography.body1,
+                        style = FirefoxTheme.typography.body1,
                     )
 
                     Text(
                         text = stringResource(id = R.string.webcompat_reporter_etp_checkbox_description),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = AcornTheme.typography.body2,
+                        style = FirefoxTheme.typography.body2,
                     )
                 }
             }

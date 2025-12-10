@@ -36,7 +36,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.GleanMetrics.SettingsSearch
 import org.mozilla.fenix.R
@@ -230,7 +229,7 @@ private fun RecentSearchesContent(
                Text(
                    text = stringResource(R.string.settings_search_clear_recent_searches_message),
                    color = colorResource(RECENT_SEARCHES_CLEAR_RECENTS_TEXT_COLOR),
-                   style = AcornTheme.typography.button,
+                   style = FirefoxTheme.typography.button,
                    maxLines = 1,
                )
             }

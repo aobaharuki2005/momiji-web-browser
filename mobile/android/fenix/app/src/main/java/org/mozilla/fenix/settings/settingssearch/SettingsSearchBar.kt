@@ -32,9 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import mozilla.components.compose.base.button.IconButton
-import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.theme.FirefoxTheme
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -99,7 +99,7 @@ private fun SettingsSearchField(
             searchQuery = value
             store.dispatch(SettingsSearchAction.SearchQueryUpdated(value.text))
         },
-        textStyle = AcornTheme.typography.body1,
+        textStyle = FirefoxTheme.typography.body1,
         modifier = Modifier
             .fillMaxWidth()
             .focusRequester(focusRequester)
@@ -111,7 +111,7 @@ private fun SettingsSearchField(
         placeholder = @Composable {
             Text(
                 text = stringResource(R.string.settings_search_title),
-                style = AcornTheme.typography.body1,
+                style = FirefoxTheme.typography.body1,
             )
         },
         singleLine = true,
