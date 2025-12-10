@@ -305,11 +305,19 @@ struct DirtyChunkListTrait {
   static DoublyLinkedListElement<arena_chunk_t>& Get(arena_chunk_t* aThis) {
     return aThis->mChunksDirtyElim;
   }
+  static const DoublyLinkedListElement<arena_chunk_t>& Get(
+      const arena_chunk_t* aThis) {
+    return aThis->mChunksDirtyElim;
+  }
 };
 
 #ifdef MALLOC_DOUBLE_PURGE
 struct MadvisedChunkListTrait {
   static DoublyLinkedListElement<arena_chunk_t>& Get(arena_chunk_t* aThis) {
+    return aThis->mChunksMavisedElim;
+  }
+  static const DoublyLinkedListElement<arena_chunk_t>& Get(
+      const arena_chunk_t* aThis) {
     return aThis->mChunksMavisedElim;
   }
 };
@@ -363,6 +371,10 @@ namespace mozilla {
 template <>
 struct GetDoublyLinkedListElement<arena_run_t> {
   static DoublyLinkedListElement<arena_run_t>& Get(arena_run_t* aThis) {
+    return aThis->mRunListElem;
+  }
+  static const DoublyLinkedListElement<arena_run_t>& Get(
+      const arena_run_t* aThis) {
     return aThis->mRunListElem;
   }
 };
@@ -882,6 +894,9 @@ namespace mozilla {
 template <>
 struct GetDoublyLinkedListElement<arena_t> {
   static DoublyLinkedListElement<arena_t>& Get(arena_t* aThis) {
+    return aThis->mPurgeListElem;
+  }
+  static const DoublyLinkedListElement<arena_t>& Get(const arena_t* aThis) {
     return aThis->mPurgeListElem;
   }
 };

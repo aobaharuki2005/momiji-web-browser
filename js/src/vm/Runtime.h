@@ -607,6 +607,9 @@ struct JSRuntime {
 
   template <typename T>
   struct GlobalObjectWatchersLinkAccess {
+    static const mozilla::DoublyLinkedListElement<T>& Get(const T* aThis) {
+      return aThis->onNewGlobalObjectWatchersLink;
+    }
     static mozilla::DoublyLinkedListElement<T>& Get(T* aThis) {
       return aThis->onNewGlobalObjectWatchersLink;
     }
@@ -614,6 +617,9 @@ struct JSRuntime {
 
   template <typename T>
   struct GarbageCollectionWatchersLinkAccess {
+    static const mozilla::DoublyLinkedListElement<T>& Get(const T* aThis) {
+      return aThis->onGarbageCollectionWatchersLink;
+    }
     static mozilla::DoublyLinkedListElement<T>& Get(T* aThis) {
       return aThis->onGarbageCollectionWatchersLink;
     }
