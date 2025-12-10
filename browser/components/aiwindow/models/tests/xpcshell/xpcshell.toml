@@ -16,6 +16,8 @@ support-files = []
 
 ["test_SearchBrowsingHistory.js"]
 
+["test_Tools_GetOpenTabs.js"]
+
 ["test_Tools_SearchBrowsingHistory.js"]
 
 ["test_Utils.js"]

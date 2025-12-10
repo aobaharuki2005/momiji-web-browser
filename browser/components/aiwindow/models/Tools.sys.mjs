@@ -10,11 +10,34 @@
 
 import { searchBrowsingHistory as implSearchBrowsingHistory } from "moz-src:///browser/components/aiwindow/models/SearchBrowsingHistory.sys.mjs";
 
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
+  PageDataService:
+    "moz-src:///browser/components/pagedata/PageDataService.sys.mjs",
+});
+
+// const GET_OPEN_TABS = "get_open_tabs";
 // const SEARCH_BROWSING_HISTORY = "search_browsing_history";
 
-// const TOOLS = [SEARCH_BROWSING_HISTORY];
+// const TOOLS = [
+//   GET_OPEN_TABS,
+//   SEARCH_BROWSING_HISTORY,
+// ];
 
 // const toolsConfig = [
+//   {
+//     type: "function",
+//     function: {
+//       name: GET_OPEN_TABS,
+//       description:
+//         "Access the user's browser and return a list of most recently browsed tabs. Each tab is represented by a JSON with the page's url, title and description if available. Default to return maximum 15 tabs.",
+//       parameters: {
+//         type: "object",
+//         properties: {}
+//       },
+//     },
+//   },
 //   {
 //     type: "function",
 //     function: {
@@ -47,6 +70,61 @@ import { searchBrowsingHistory as implSearchBrowsingHistory } from "moz-src:///b
 //     },
 //   },
 // ];
+
+/**
+ * Retrieves a list of (up to n) the latest open tabs from the current active browser window.
+ * Ignores config pages (about:xxx).
+ * TODO: Ignores chat-only pages (FE to implement isSidebarMode flag).
+ *
+ * @param {number} n
+ *  Maximum number of tabs to return. Defaults to 15.
+ * @returns {Promise<Array<object>>}
+ *  A promise resolving to an array of tab metadata objects, each containing:
+ *  - url {string}: The tab's current URL
+ *  - title {string}: The tab's title
+ *  - description {string}: Optional description (empty string if not available)
+ *  - lastAccessed {number}: Last accessed timestamp in milliseconds
+ *  Tabs are sorted by most recently accessed and limited to the first n results.
+ */
+export async function getOpenTabs(n = 15) {
+  const tabs = [];
+
+  const win = lazy.BrowserWindowTracker.getTopWindow();
+  if (!win || win.closed || !win.gBrowser) {
+    return [];
+  }
+
+  for (const tab of win.gBrowser.tabs) {
+    const browser = tab.linkedBrowser;
+    const url = browser?.currentURI?.spec;
+    const title = tab.label;
+
+    if (url && !url.startsWith("about:")) {
+      tabs.push({
+        url,
+        title,
+        lastAccessed: tab.lastAccessed,
+      });
+    }
+  }
+
+  tabs.sort((a, b) => b.lastAccessed - a.lastAccessed);
+
+  const topTabs = tabs.slice(0, n);
+
+  return Promise.all(
+    topTabs.map(async ({ url, title, lastAccessed }) => {
+      let description = "";
+      if (url) {
+        description =
+          lazy.PageDataService.getCached(url)?.description ||
+          (await lazy.PageDataService.fetchPageData(url))?.description ||
+          "";
+      }
+      return { url, title, description, lastAccessed };
+    })
+  );
+}
 
 /**
  * Tool entrypoint for browsing history search.
