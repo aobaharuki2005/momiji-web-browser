@@ -10,6 +10,7 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.core.net.toUri
 import androidx.test.filters.SdkSuppress
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SkipLeaks
@@ -43,7 +44,7 @@ import org.mozilla.fenix.ui.robots.setPageObjectText
  */
 class LoginsTest : TestSetup() {
     @get:Rule
-    val activityTestRule =
+    val composeTestRule =
         AndroidComposeTestRule(
             HomeActivityIntentTestRule.withDefaultSettingsOverrides(),
         ) { it.activity }
@@ -93,7 +94,7 @@ class LoginsTest : TestSetup() {
             verifySecurityPromptForLogins()
             tapSetupLater()
             // Verify that logins list is empty
-            verifyEmptySavedLoginsListView()
+            verifyEmptySavedLoginsListView(composeTestRule)
         }
     }
 
@@ -172,8 +173,8 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             verifySecurityPromptForLogins()
             tapSetupLater()
-            viewSavedLoginDetails(userName)
-        }.goToSavedWebsite {
+            viewSavedLoginDetails(composeTestRule, userName)
+        }.goToSavedWebsite(composeTestRule) {
             verifyUrl(originWebsite)
         }
     }
@@ -197,9 +198,9 @@ class LoginsTest : TestSetup() {
             verifySecurityPromptForLogins()
             tapSetupLater()
             // Verify that the login list is empty
-            verifyEmptySavedLoginsListView()
-            verifyNotSavedLoginFromPrompt()
-        }.goBack {
+            verifyEmptySavedLoginsListView(composeTestRule)
+            verifyNotSavedLoginFromPrompt(composeTestRule)
+        }.goBack(composeTestRule) {
         }.openLoginExceptions {
             // Verify localhost was added to exceptions list
             verifyLocalhostExceptionAdded()
@@ -236,9 +237,9 @@ class LoginsTest : TestSetup() {
             tapSetupLater()
             // Verify that the login appears correctly
             verifySavedLoginsSectionUsername("test@example.com")
-            viewSavedLoginDetails("test@example.com")
-            revealPassword()
-            verifyPasswordSaved("test") // failing here locally
+            viewSavedLoginDetails(composeTestRule, "test@example.com")
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "test")
         }
     }
 
@@ -274,11 +275,11 @@ class LoginsTest : TestSetup() {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
             clickPageObject(itemWithResId("username"))
             clickSuggestedLoginsButton()
-            verifySuggestedUserName(activityTestRule, firstUser)
-            verifySuggestedUserName(activityTestRule, secondUser)
-            clickSuggestedLogin(activityTestRule, firstUser)
+            verifySuggestedUserName(composeTestRule, firstUser)
+            verifySuggestedUserName(composeTestRule, secondUser)
+            clickSuggestedLogin(composeTestRule, firstUser)
             clickPageObject(itemWithResId("togglePassword"))
-            verifyPrefilledLoginCredentials(activityTestRule, firstUser, firstPass, true)
+            verifyPrefilledLoginCredentials(composeTestRule, firstUser, firstPass, true)
         }
     }
 
@@ -287,7 +288,7 @@ class LoginsTest : TestSetup() {
     @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1935209"])
     fun verifyEditLoginsViewTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
-        val originWebsite = "mozilla-mobile.github.io"
+        val originWebsite = "https://mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
@@ -304,13 +305,14 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule.activityRule)
-            clickEditLoginButton()
-            setNewPassword("fenix")
-            saveEditedLogin()
-            revealPassword()
-            verifyPasswordSaved("fenix")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            clickThreeDotButton(composeTestRule)
+            clickEditLoginButton(composeTestRule)
+            setNewPasswordWhileEditingALogin(composeTestRule, "fenix")
+            saveEditedLogin(composeTestRule)
+            clickThreeDotButton(composeTestRule)
+            clickEditLoginButton(composeTestRule)
+            verifyPasswordWhileEditingALogin(composeTestRule, "fenix")
         }
     }
 
@@ -318,7 +320,7 @@ class LoginsTest : TestSetup() {
     @Test
     fun verifyEditedLoginsAreSavedTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
-        val originWebsite = "mozilla-mobile.github.io"
+        val originWebsite = "https://mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
@@ -336,12 +338,14 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule.activityRule)
-            clickEditLoginButton()
-            setNewUserName("android")
-            setNewPassword("fenix")
-            saveEditedLogin()
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            clickThreeDotButton(composeTestRule)
+            clickEditLoginButton(composeTestRule)
+            setNewUserNameWhileEditingALogin(composeTestRule, "android")
+            setNewPasswordWhileEditingALogin(composeTestRule, "fenix")
+            saveEditedLogin(composeTestRule)
+            clickGoBackButton(composeTestRule)
+        }.goBack(composeTestRule) {
         }
 
         exitMenu()
@@ -351,7 +355,7 @@ class LoginsTest : TestSetup() {
         }.refreshPage {
             waitForPageToLoad(pageLoadWaitingTime = waitingTimeLong)
             clickPageObject(itemWithResId("togglePassword"))
-            verifyPrefilledLoginCredentials(activityTestRule, "android", "fenix", true)
+            verifyPrefilledLoginCredentials(composeTestRule, "android", "fenix", true)
         }
     }
 
@@ -360,7 +364,7 @@ class LoginsTest : TestSetup() {
     @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1935209"])
     fun verifyLoginWithNoUserNameCanNotBeSavedTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
-        val originWebsite = "mozilla-mobile.github.io"
+        val originWebsite = "https://mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
@@ -377,14 +381,14 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule.activityRule)
-            clickEditLoginButton()
-            clickClearUserNameButton()
-            verifyUserNameRequiredErrorMessage()
-            verifySaveLoginButtonIsEnabled(false)
-            clickGoBackButton()
-            verifyLoginItemUsername("mozilla")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            clickThreeDotButton(composeTestRule)
+            clickEditLoginButton(composeTestRule)
+            clickClearUserNameButton(composeTestRule)
+            verifyUserNameRequiredErrorMessage(composeTestRule)
+            verifySaveLoginButtonIsEnabled(composeTestRule, false)
+            clickGoBackButton(composeTestRule)
+            verifyLoginItemUsername(composeTestRule, "mozilla")
         }
     }
 
@@ -393,7 +397,7 @@ class LoginsTest : TestSetup() {
     @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1935209"])
     fun verifyLoginWithoutPasswordCanNotBeSavedTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
-        val originWebsite = "mozilla-mobile.github.io"
+        val originWebsite = "https://mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
@@ -410,15 +414,15 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule.activityRule)
-            clickEditLoginButton()
-            clickClearPasswordButton()
-            verifyPasswordRequiredErrorMessage()
-            verifySaveLoginButtonIsEnabled(false)
-            clickGoBackButton()
-            revealPassword()
-            verifyPasswordSaved("firefox")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            clickThreeDotButton(composeTestRule)
+            clickEditLoginButton(composeTestRule)
+            clickClearPasswordButton(composeTestRule)
+            verifyPasswordRequiredErrorMessage(composeTestRule)
+            verifySaveLoginButtonIsEnabled(composeTestRule, false)
+            clickGoBackButton(composeTestRule)
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
         }
     }
 
@@ -427,7 +431,7 @@ class LoginsTest : TestSetup() {
     @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1935209"])
     fun verifyEditModeDismissalDoesNotSaveLoginCredentialsTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/loginForm"
-        val originWebsite = "mozilla-mobile.github.io"
+        val originWebsite = "https://mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
@@ -444,15 +448,15 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            viewSavedLoginDetails(originWebsite)
-            clickThreeDotButton(activityTestRule.activityRule)
-            clickEditLoginButton()
-            setNewUserName("android")
-            setNewPassword("fenix")
-            clickGoBackButton()
-            verifyLoginItemUsername("mozilla")
-            revealPassword()
-            verifyPasswordSaved("firefox")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            clickThreeDotButton(composeTestRule)
+            clickEditLoginButton(composeTestRule)
+            setNewUserNameWhileEditingALogin(composeTestRule, "android")
+            setNewPasswordWhileEditingALogin(composeTestRule, "fenix")
+            clickGoBackButton(composeTestRule)
+            verifyLoginItemUsername(composeTestRule, "mozilla")
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
         }
     }
 
@@ -471,17 +475,17 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            viewSavedLoginDetails("test@example.com")
-            clickThreeDotButton(activityTestRule.activityRule)
-            clickDeleteLoginButton()
-            verifyLoginDeletionPrompt()
-            clickCancelDeleteLogin()
-            verifyLoginItemUsername("test@example.com")
-            viewSavedLoginDetails("test@example.com")
-            clickThreeDotButton(activityTestRule.activityRule)
-            clickDeleteLoginButton()
-            verifyLoginDeletionPrompt()
-            clickConfirmDeleteLogin()
+            viewSavedLoginDetails(composeTestRule, "test@example.com")
+            clickThreeDotButton(composeTestRule)
+            clickDeleteLoginButton(composeTestRule)
+            verifyLoginDeletionPrompt(composeTestRule)
+            clickCancelDeleteLogin(composeTestRule)
+            verifyLoginItemUsername(composeTestRule, "test@example.com")
+            viewSavedLoginDetails(composeTestRule, "test@example.com")
+            clickThreeDotButton(composeTestRule)
+            clickDeleteLoginButton(composeTestRule)
+            verifyLoginDeletionPrompt(composeTestRule)
+            clickConfirmDeleteLogin(composeTestRule)
             // The account remains displayed, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1812431
             // verifyNotSavedLoginFromPrompt()
         }
@@ -529,7 +533,7 @@ class LoginsTest : TestSetup() {
             waitForPageToLoad(pageLoadWaitingTime = waitingTimeLong)
             verifySaveLoginPromptIsDisplayed()
             clickPageObject(itemWithText("Save"))
-        }.openTabDrawer(activityTestRule) {
+        }.openTabDrawer(composeTestRule) {
             closeTab()
         }
 
@@ -537,8 +541,8 @@ class LoginsTest : TestSetup() {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
             waitForPageToLoad(pageLoadWaitingTime = waitingTimeLong)
             clickPageObject(itemWithResId("togglePassword"))
-            verifyPrefilledLoginCredentials(activityTestRule, "mozilla", "firefox", true)
-        }.openTabDrawer(activityTestRule) {
+            verifyPrefilledLoginCredentials(composeTestRule, "mozilla", "firefox", true)
+        }.openTabDrawer(composeTestRule) {
             closeTab()
         }
 
@@ -556,7 +560,7 @@ class LoginsTest : TestSetup() {
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
-            verifyPrefilledLoginCredentials(activityTestRule, "mozilla", "firefox", false)
+            verifyPrefilledLoginCredentials(composeTestRule, "mozilla", "firefox", false)
         }
     }
 
@@ -565,7 +569,7 @@ class LoginsTest : TestSetup() {
     @SkipLeaks(reasons = ["https://bugzilla.mozilla.org/show_bug.cgi?id=1935209"])
     fun doNotSaveOptionWillNotUpdateALoginTest() {
         val loginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
-        val originWebsite = "mozilla-mobile.github.io"
+        val originWebsite = "https://mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
@@ -590,9 +594,9 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            viewSavedLoginDetails(originWebsite)
-            revealPassword()
-            verifyPasswordSaved("firefox")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
         }
     }
 
@@ -602,7 +606,7 @@ class LoginsTest : TestSetup() {
     fun searchLoginsByUsernameTest() {
         val firstLoginPage = mockWebServer.saveLoginAsset
         val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
-        val originWebsite = "mozilla-mobile.github.io"
+        val originWebsite = "https://mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
@@ -621,24 +625,26 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            clickSearchLoginButton()
-            searchLogin("ANDROID")
-            viewSavedLoginDetails(originWebsite)
-            verifyLoginItemUsername("android")
-            revealPassword()
-            verifyPasswordSaved("firefox")
-        }.goBackToSavedLogins {
-            searchLogin("android")
-            viewSavedLoginDetails(originWebsite)
-            verifyLoginItemUsername("android")
-            revealPassword()
-            verifyPasswordSaved("firefox")
-        }.goBackToSavedLogins {
-            searchLogin("AnDrOiD")
-            viewSavedLoginDetails(originWebsite)
-            verifyLoginItemUsername("android")
-            revealPassword()
-            verifyPasswordSaved("firefox")
+            clickSearchLoginButton(composeTestRule)
+            searchLogin(composeTestRule, "ANDROID")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            verifyLoginItemUsername(composeTestRule, "android")
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
+            clickGoBackButton(composeTestRule)
+            clickSearchLoginButton(composeTestRule)
+            searchLogin(composeTestRule, "android")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            verifyLoginItemUsername(composeTestRule, "android")
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
+            clickGoBackButton(composeTestRule)
+            clickSearchLoginButton(composeTestRule)
+            searchLogin(composeTestRule, "AnDrOiD")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            verifyLoginItemUsername(composeTestRule, "android")
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
         }
     }
 
@@ -648,7 +654,7 @@ class LoginsTest : TestSetup() {
     fun searchLoginsByUrlTest() {
         val firstLoginPage = mockWebServer.saveLoginAsset
         val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
-        val originWebsite = "mozilla-mobile.github.io"
+        val originWebsite = "https://mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
@@ -667,24 +673,26 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            clickSearchLoginButton()
-            searchLogin("MOZILLA")
-            viewSavedLoginDetails(originWebsite)
-            verifyLoginItemUsername("android")
-            revealPassword()
-            verifyPasswordSaved("firefox")
-        }.goBackToSavedLogins {
-            searchLogin("mozilla")
-            viewSavedLoginDetails(originWebsite)
-            verifyLoginItemUsername("android")
-            revealPassword()
-            verifyPasswordSaved("firefox")
-        }.goBackToSavedLogins {
-            searchLogin("MoZiLlA")
-            viewSavedLoginDetails(originWebsite)
-            verifyLoginItemUsername("android")
-            revealPassword()
-            verifyPasswordSaved("firefox")
+            clickSearchLoginButton(composeTestRule)
+            searchLogin(composeTestRule, "MOZILLA")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            verifyLoginItemUsername(composeTestRule, "android")
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
+            clickGoBackButton(composeTestRule)
+            clickSearchLoginButton(composeTestRule)
+            searchLogin(composeTestRule, "mozilla")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            verifyLoginItemUsername(composeTestRule, "android")
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
+            clickGoBackButton(composeTestRule)
+            clickSearchLoginButton(composeTestRule)
+            searchLogin(composeTestRule, "MoZiLlA")
+            viewSavedLoginDetails(composeTestRule, originWebsite)
+            verifyLoginItemUsername(composeTestRule, "android")
+            revealPassword(composeTestRule)
+            verifyPasswordSaved(composeTestRule, "firefox")
         }
     }
 
@@ -693,7 +701,6 @@ class LoginsTest : TestSetup() {
     fun verifyLastUsedLoginSortingOptionTest() {
         val firstLoginPage = mockWebServer.saveLoginAsset
         val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
-        val originWebsite = "mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
@@ -712,26 +719,26 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            clickSavedLoginsChevronIcon()
-            verifyLoginsSortingOptions()
-            clickLastUsedSortingOption()
-            verifySortedLogin(0, originWebsite)
-            verifySortedLogin(1, firstLoginPage.url.authority.toString())
-        }.goBack {
+            clickSortPasswordsButton(composeTestRule)
+            verifyLoginsSortingOptions(composeTestRule)
+            clickLastUsedSortingOption(composeTestRule)
+            verifySortedLogin(1, "https://mozilla-mobile.github.io")
+            verifySortedLogin(2, "${firstLoginPage.url.scheme}://${firstLoginPage.url.authority}")
+        }.goBack(composeTestRule) {
         }.openSavedLogins {
-            verifySortedLogin(0, originWebsite)
-            verifySortedLogin(1, firstLoginPage.url.authority.toString())
+            verifySortedLogin(1, "https://mozilla-mobile.github.io")
+            verifySortedLogin(2, "${firstLoginPage.url.scheme}://${firstLoginPage.url.authority}")
         }
 
-        restartApp(activityTestRule.activityRule)
+        restartApp(composeTestRule.activityRule)
 
         browserScreen {
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
-            verifySortedLogin(0, originWebsite)
-            verifySortedLogin(1, firstLoginPage.url.authority.toString())
+            verifySortedLogin(1, "https://mozilla-mobile.github.io")
+            verifySortedLogin(2, "${firstLoginPage.url.scheme}://${firstLoginPage.url.authority}")
         }
     }
 
@@ -740,7 +747,6 @@ class LoginsTest : TestSetup() {
     fun verifyAlphabeticalLoginSortingOptionTest() {
         val firstLoginPage = mockWebServer.saveLoginAsset
         val secondLoginPage = "https://mozilla-mobile.github.io/testapp/v2.0/loginForm.html"
-        val originWebsite = "mozilla-mobile.github.io"
 
         navigationToolbar {
         }.enterURLAndEnterToBrowser(firstLoginPage.url) {
@@ -760,23 +766,23 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            verifySortedLogin(0, firstLoginPage.url.authority.toString())
-            verifySortedLogin(1, originWebsite)
-        }.goBack {
+            verifySortedLogin(1, "${firstLoginPage.url.scheme}://${firstLoginPage.url.authority}")
+            verifySortedLogin(2, "https://mozilla-mobile.github.io")
+        }.goBack(composeTestRule) {
         }.openSavedLogins {
-            verifySortedLogin(0, firstLoginPage.url.authority.toString())
-            verifySortedLogin(1, originWebsite)
+            verifySortedLogin(1, "${firstLoginPage.url.scheme}://${firstLoginPage.url.authority}")
+            verifySortedLogin(2, "https://mozilla-mobile.github.io")
         }
 
-        restartApp(activityTestRule.activityRule)
+        restartApp(composeTestRule.activityRule)
 
         browserScreen {
         }.openThreeDotMenu {
         }.openSettings {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
-            verifySortedLogin(0, firstLoginPage.url.authority.toString())
-            verifySortedLogin(1, originWebsite)
+            verifySortedLogin(1, "${firstLoginPage.url.scheme}://${firstLoginPage.url.authority}")
+            verifySortedLogin(2, "https://mozilla-mobile.github.io")
         }
     }
 
@@ -792,18 +798,20 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             tapSetupLater()
             clickAddLoginButton()
-            verifyAddNewLoginView()
-            enterSiteCredential("mozilla")
-            verifyHostnameErrorMessage()
-            enterSiteCredential(loginPage)
-            verifyHostnameClearButtonEnabled()
-            setNewUserName("mozilla")
-            setNewPassword("firefox")
-            clickClearPasswordButton()
-            verifyPasswordErrorMessage()
-            setNewPassword("firefox")
-            verifyPasswordClearButtonEnabled()
-            saveEditedLogin()
+            verifyAddNewLoginView(composeTestRule)
+            enterSiteCredentialWhileAddingALogin(composeTestRule, "mozilla")
+            verifyHostnameErrorMessage(composeTestRule)
+            enterSiteCredentialWhileAddingALogin(composeTestRule, loginPage)
+            verifyHostnameClearButton(composeTestRule)
+            setUserNameWhileAddingANewLogin(composeTestRule, "mozilla")
+            setNewPasswordWhileAddingANewLogin(composeTestRule, "firefox")
+            clickClearPasswordButton(composeTestRule)
+            verifyPasswordErrorMessage(composeTestRule)
+            setNewPasswordWhileAddingANewLogin(composeTestRule, "firefox")
+            verifyPasswordClearButton(composeTestRule)
+            saveNewLogin(composeTestRule)
+            clickGoBackButton(composeTestRule)
+        }.goBack(composeTestRule) {
         }
 
         exitMenu()
@@ -812,15 +820,16 @@ class LoginsTest : TestSetup() {
         }.enterURLAndEnterToBrowser(loginPage.toUri()) {
             clickPageObject(itemWithResId("username"))
             clickSuggestedLoginsButton()
-            verifySuggestedUserName(activityTestRule, "mozilla")
-            clickSuggestedLogin(activityTestRule, "mozilla")
+            verifySuggestedUserName(composeTestRule, "mozilla")
+            clickSuggestedLogin(composeTestRule, "mozilla")
             clickPageObject(itemWithResId("togglePassword"))
-            verifyPrefilledLoginCredentials(activityTestRule, "mozilla", "firefox", true)
+            verifyPrefilledLoginCredentials(composeTestRule, "mozilla", "firefox", true)
         }
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2068215
     // The snackbar is not displayed for devices running on Android <= 12
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=2005137")
     @Test
     @SdkSuppress(maxSdkVersion = 32)
     fun verifyCopyLoginCredentialsToClipboardTest() {
@@ -836,7 +845,7 @@ class LoginsTest : TestSetup() {
         }.openLoginsAndPasswordSubMenu {
         }.openSavedLogins {
             tapSetupLater()
-            viewSavedLoginDetails("test@example.com")
+            viewSavedLoginDetails(composeTestRule, "test@example.com")
             clickCopyUserNameButton()
             verifySnackBarText("Username copied to clipboard")
             clickCopyPasswordButton()

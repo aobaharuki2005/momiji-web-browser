@@ -235,7 +235,7 @@ private fun AddLoginPassword(store: LoginsStore) {
             .semantics {
                 testTag = LoginsTestingTags.ADD_LOGIN_PASSWORD_TEXT_FIELD
             },
-        label = stringResource(R.string.saved_logins_clear_password),
+        label = stringResource(R.string.preferences_passwords_saved_logins_password),
         trailingIcon = {
             if (isFocused && state?.password?.isNotEmpty() == true) {
                 CrossTextFieldButton(contentDescription = Text.Resource(R.string.saved_logins_clear_password)) {
