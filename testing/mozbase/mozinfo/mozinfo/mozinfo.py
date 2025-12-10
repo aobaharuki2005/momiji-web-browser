@@ -46,7 +46,7 @@ info = {
     "bits": unknown,
     "has_sandbox": unknown,
     "display": None,
-    "automation": bool(os.environ.get("MOZ_AUTOMATION", False)),  # noqa PLW1508
+    "automation": bool(os.environ.get("MOZ_AUTOMATION")),
 }
 (system, node, release, version, machine, processor) = platform.uname()
 (bits, linkage) = platform.architecture()

@@ -24,7 +24,7 @@ class ErrorSummaryFormatter(BaseFormatter):
         self.line_count = 0
         self.dump_passing_tests = False
 
-        if os.environ.get("MOZLOG_DUMP_ALL_TESTS", False):
+        if os.environ.get("MOZLOG_DUMP_ALL_TESTS"):
             self.dump_passing_tests = True
 
     def __call__(self, data):

@@ -19,7 +19,7 @@ log = logging.getLogger(__name__)
 UV_CACHE_PATH = os.getenv(
     "UV_CACHE_PATH", os.path.join(path.dirname(__file__), "../release/updates/cache/")
 )
-UV_PARALLEL_DOWNLOADS = os.getenv("UV_PARALLEL_DOWNLOADS", 20)
+UV_PARALLEL_DOWNLOADS = int(os.getenv("UV_PARALLEL_DOWNLOADS", "20"))
 
 FTP_SERVER_TO = os.getenv("ftp_server_to", "http://stage.mozilla.org/pub/mozilla.org")
 FTP_SERVER_FROM = os.getenv(

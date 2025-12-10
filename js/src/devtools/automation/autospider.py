@@ -50,7 +50,7 @@ def quote(s):
 # DIR, but when running under the shell, use POSIX style paths.
 DIR = directories(os.path, os.getcwd())
 
-AUTOMATION = env.get("AUTOMATION", False)
+AUTOMATION = bool(env.get("AUTOMATION"))
 
 parser = argparse.ArgumentParser(description="Run a spidermonkey shell build job")
 parser.add_argument(

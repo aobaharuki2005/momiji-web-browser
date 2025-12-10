@@ -12,7 +12,7 @@ from ..util.string import pluralize
 
 class SummaryFormatter:
     def __init__(self, depth=None):
-        self.depth = depth or int(os.environ.get("MOZLINT_SUMMARY_DEPTH", 1))
+        self.depth = depth or int(os.environ.get("MOZLINT_SUMMARY_DEPTH", "1"))
 
     def __call__(self, result):
         paths = set(

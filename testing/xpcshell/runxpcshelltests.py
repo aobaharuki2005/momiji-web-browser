@@ -188,7 +188,7 @@ class XPCShellTestThread(Thread):
         if retry is None:
             # Retry in CI, but report results without retry when run locally to
             # avoid confusion and ease local debugging.
-            self.retry = os.environ.get("MOZ_AUTOMATION", 0) != 0
+            self.retry = os.environ.get("MOZ_AUTOMATION") is not None
         self.verbose = verbose
         self.usingTSan = usingTSan
         self.usingCrashReporter = usingCrashReporter

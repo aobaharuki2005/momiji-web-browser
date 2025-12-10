@@ -434,7 +434,7 @@ class BaseMarionetteArguments(ArgumentParser):
             "--headless",
             action="store_true",
             dest="headless",
-            default=os.environ.get("MOZ_HEADLESS", False),
+            default=bool(os.environ.get("MOZ_HEADLESS")),
             help="Run tests in headless mode.",
         )
         self.add_argument(

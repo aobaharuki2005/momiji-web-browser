@@ -81,7 +81,7 @@ class RemoteContext(metaclass=ABCMeta):
         return self._remote_profile
 
     def which(self, binary):
-        paths = os.environ.get("PATH", {}).split(os.pathsep)
+        paths = os.environ.get("PATH", "").split(os.pathsep)
         if self.bindir is not None and os.path.abspath(self.bindir) not in paths:
             paths.insert(0, os.path.abspath(self.bindir))
             os.environ["PATH"] = os.pathsep.join(paths)
