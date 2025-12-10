@@ -308,7 +308,7 @@ impl KeyManager for NSSKeyManager {
             }
         }
 
-        let key = get_or_create_aes256_key(KEY_NAME).map_err(|_| LoginsApiError::MissingKey)?;
+        let key = get_or_create_aes256_key(KEY_NAME).expect("Could not get or create key via NSS");
         let mut bytes: Vec<u8> = Vec::new();
         serde_json::to_writer(
             &mut bytes,
@@ -358,7 +358,7 @@ pub mod test_utils {
 
 #[cfg(not(feature = "keydb"))]
 #[cfg(test)]
-mod tests {
+mod test {
     use super::*;
     use nss::ensure_initialized;
 
@@ -452,7 +452,7 @@ mod tests {
 
 #[cfg(feature = "keydb")]
 #[cfg(test)]
-mod tests_keydb {
+mod keydb_test {
     use super::*;
     use nss::ensure_initialized_with_profile_dir;
     use std::path::PathBuf;
@@ -475,8 +475,7 @@ mod tests_keydb {
     }
 
     fn profile_path() -> PathBuf {
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../support/rc_crypto/nss/fixtures/profile")
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("fixtures/profile")
     }
 
     #[test]

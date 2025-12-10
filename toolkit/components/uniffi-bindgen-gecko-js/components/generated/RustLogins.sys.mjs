@@ -121,7 +121,7 @@ const result = UniFFIScaffolding.callSync(
 return handleRustResult(
     result,
     FfiConverterTypeLoginStore.lift.bind(FfiConverterTypeLoginStore),
-    FfiConverterTypeLoginsApiError.lift.bind(FfiConverterTypeLoginsApiError),
+    null,
 )
 }
 

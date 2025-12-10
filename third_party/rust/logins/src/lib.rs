@@ -53,8 +53,7 @@ pub fn create_managed_encdec(key_manager: Arc<dyn KeyManager>) -> Arc<ManagedEnc
 pub fn create_login_store_with_static_key_manager(path: String, key: String) -> Arc<LoginStore> {
     let encdec: ManagedEncryptorDecryptor =
         ManagedEncryptorDecryptor::new(Arc::new(StaticKeyManager::new(key)));
-    let store = LoginStore::new(path, Arc::new(encdec)).expect("error setting up LoginStore");
-    Arc::new(store)
+    Arc::new(LoginStore::new(path, Arc::new(encdec)).unwrap())
 }
 
 // Create a LoginStore with NSSKeyManager by passing in a db path and a PrimaryPasswordAuthenticator.
@@ -66,10 +65,9 @@ pub fn create_login_store_with_static_key_manager(path: String, key: String) -> 
 pub fn create_login_store_with_nss_keymanager(
     path: String,
     primary_password_authenticator: Arc<dyn PrimaryPasswordAuthenticator>,
-) -> ApiResult<Arc<LoginStore>> {
+) -> Arc<LoginStore> {
     let encdec: ManagedEncryptorDecryptor = ManagedEncryptorDecryptor::new(Arc::new(
         NSSKeyManager::new(primary_password_authenticator),
     ));
-    let store = LoginStore::new(path, Arc::new(encdec))?;
-    Ok(Arc::new(store))
+    Arc::new(LoginStore::new(path, Arc::new(encdec)).unwrap())
 }
