@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { MLTelemetry } from "chrome://global/content/ml/MLTelemetry.sys.mjs";
 
 /**
  * @import { MLEngineChild } from "./MLEngineChild.sys.mjs"
@@ -16,6 +15,7 @@ const lazy = XPCOMUtils.declareLazy({
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   ModelHub: "chrome://global/content/ml/ModelHub.sys.mjs",
   Progress: "chrome://global/content/ml/Utils.sys.mjs",
+  isAddonEngineId: "chrome://global/content/ml/Utils.sys.mjs",
   OPFS: "chrome://global/content/ml/OPFS.sys.mjs",
   BACKENDS: "chrome://global/content/ml/EngineProcess.sys.mjs",
   stringifyForLog: "chrome://global/content/ml/Utils.sys.mjs",
@@ -222,7 +222,7 @@ export class MLEngineParent extends JSProcessActorParent {
       });
     }
 
-    const { featureId, engineId } = pipelineOptions;
+    const engineId = pipelineOptions.engineId;
 
     // Allow notifications callback changes even when reusing engine.
     this.notificationsCallback = notificationsCallback;
@@ -235,7 +235,6 @@ export class MLEngineParent extends JSProcessActorParent {
       Promise.withResolvers();
     MLEngineParent.engineLocks.set(engineId, lockPromise);
     MLEngineParent.engineCreationAbortSignal.set(engineId, abortSignal);
-
     try {
       const currentEngine = MLEngine.getInstance(engineId);
       if (currentEngine) {
@@ -274,24 +273,12 @@ export class MLEngineParent extends JSProcessActorParent {
 
       const creationTime = ChromeUtils.now() - start;
 
-      engine.telemetry.recordEngineCreationSuccessFlow({
-        engineId,
-        duration: creationTime,
-      });
+      Glean.firefoxAiRuntime.engineCreationSuccess[
+        engine.getGleanLabel()
+      ].accumulateSingleSample(creationTime);
 
       // TODO - What happens if the engine is already killed here?
       return engine;
-    } catch (error) {
-      const { modelId, taskName, flowId } = pipelineOptions;
-      const telemetry = new MLTelemetry({ featureId, flowId });
-      telemetry.recordEngineCreationFailure({
-        modelId,
-        featureId,
-        taskName,
-        engineId,
-        error,
-      });
-      throw error;
     } finally {
       MLEngineParent.engineLocks.delete(engineId);
       MLEngineParent.engineCreationAbortSignal.delete(engineId);
@@ -994,6 +981,18 @@ export class MLEngine {
   notificationsCallback = null;
 
   /**
+   * Returns the label used in telemetry for that engine id
+   *
+   * @returns {string}
+   */
+  getGleanLabel() {
+    if (lazy.isAddonEngineId(this.engineId)) {
+      return "webextension";
+    }
+    return this.engineId;
+  }
+
+  /**
    * Removes an instance of the MLEngine with the given engineId.
    *
    * @param {string} engineId - The ID of the engine instance to be removed.
@@ -1038,10 +1037,6 @@ export class MLEngine {
     this.mlEngineParent = mlEngineParent;
     this.pipelineOptions = pipelineOptions;
     this.notificationsCallback = notificationsCallback;
-    this.telemetry = new MLTelemetry({
-      featureId: pipelineOptions.featureId,
-      flowId: pipelineOptions.flowId,
-    });
   }
 
   /**
@@ -1330,20 +1325,28 @@ export class MLEngine {
         const request = this.#requests.get(requestId);
         if (request) {
           if (error) {
-            this.telemetry.recordRunInferenceFailure(error);
-            request.reject(error);
-          } else if (response) {
+            Glean.firefoxAiRuntime.runInferenceFailure.record({
+              engineId: this.engineId,
+              modelId: this.pipelineOptions.modelId,
+              featureId: this.pipelineOptions.featureId,
+            });
+          }
+          if (response) {
             // Validate response before returning to caller
             const validatedResponse = this.#validateResponse(response);
             if (!validatedResponse) {
               request.reject(new Error("Response failed security validation"));
             } else {
-              this.telemetry.recordRunInferenceSuccessFlow(
-                this.engineId,
-                validatedResponse.metrics
-              );
+              const totalTime =
+                validatedResponse.metrics.tokenizingTime +
+                validatedResponse.metrics.inferenceTime;
+              Glean.firefoxAiRuntime.runInferenceSuccess[
+                this.getGleanLabel()
+              ].accumulateSingleSample(totalTime);
               request.resolve(validatedResponse);
             }
+          } else {
+            request.reject(error);
           }
         } else {
           lazy.console.error(
@@ -1545,19 +1548,26 @@ export class MLEngine {
         (resourcesAfter.cpuTime - resourcesBefore.cpuTime) / 1_000_000;
       const wallMilliseconds = ChromeUtils.now() - beforeRun;
       const cores = lazy.mlUtils.getOptimalCPUConcurrency();
-      const cpuUtilization = (cpuMilliseconds / wallMilliseconds / cores) * 100;
+      const cpuUtilization = cpuMilliseconds / wallMilliseconds / cores;
       const memoryBytes = resourcesAfter.memory;
 
-      this.telemetry.recordEngineRun({
-        cpuMilliseconds,
-        wallMilliseconds,
+      const data = {
+        // Timing:
+        cpu_milliseconds: cpuMilliseconds,
+        wall_milliseconds: wallMilliseconds,
         cores,
-        cpuUtilization,
-        memoryBytes,
-        engineId: this.engineId,
-        modelId: this.pipelineOptions.modelId,
+        cpu_utilization: cpuUtilization,
+        memory_bytes: memoryBytes,
+
+        // Model information:
+        engine_id: this.engineId,
+        model_id: this.pipelineOptions.modelId,
+        feature_id: this.pipelineOptions.featureId,
         backend: this.pipelineOptions.backend,
-      });
+      };
+
+      lazy.console?.debug("[Glean.firefoxAiRuntime.engineRun]", data);
+      Glean.firefoxAiRuntime.engineRun.record(data);
     });
 
     return resolvers.promise;
