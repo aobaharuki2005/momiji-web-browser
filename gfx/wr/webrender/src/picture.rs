@@ -3428,13 +3428,8 @@ impl TileCacheInstance {
                     // is necessary for correct color display.
                     let force = prim_data.kind.color_depth.bit_depth() > 8;
 
-                    let clip_on_top = prim_clip_chain.needs_mask;
-                    let prefer_underlay = clip_on_top || !cfg!(target_os = "macos");
-                    let promotion_attempts = if prefer_underlay {
-                        [CompositorSurfaceKind::Underlay, CompositorSurfaceKind::Overlay]
-                    } else {
-                        [CompositorSurfaceKind::Overlay, CompositorSurfaceKind::Underlay]
-                    };
+                    let promotion_attempts =
+                        [CompositorSurfaceKind::Overlay, CompositorSurfaceKind::Underlay];
 
                     for kind in promotion_attempts {
                         // Since this might be an attempt after an earlier error, clear the flag
