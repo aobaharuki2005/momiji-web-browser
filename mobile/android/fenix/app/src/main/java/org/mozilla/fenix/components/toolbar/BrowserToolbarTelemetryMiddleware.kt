@@ -40,8 +40,8 @@ import org.mozilla.fenix.telemetry.ACTION_NAVIGATE_FORWARD_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_NAVIGATE_FORWARD_LONG_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_READER_MODE_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_REFRESH_CLICKED
+import org.mozilla.fenix.telemetry.ACTION_SECURITY_INDICATOR_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_SHARE_CLICKED
-import org.mozilla.fenix.telemetry.ACTION_SITE_INFO_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_STOP_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_TAB_COUNTER_CLICKED
 import org.mozilla.fenix.telemetry.ACTION_TAB_COUNTER_LONG_CLICKED
@@ -112,7 +112,7 @@ class BrowserToolbarTelemetryMiddleware : Middleware<BrowserToolbarState, Browse
                 trackToolbarEvent(ToolbarActionRecord.HomepageClicked, action.source)
             }
             is SiteInfoClicked -> {
-                trackToolbarEvent(ToolbarActionRecord.SiteInfoClicked, action.source)
+                trackToolbarEvent(ToolbarActionRecord.SecurityIndicatorClicked, action.source)
             }
             else -> {}
         }
@@ -138,7 +138,7 @@ class BrowserToolbarTelemetryMiddleware : Middleware<BrowserToolbarState, Browse
         data object ShareClicked : ToolbarActionRecord(ACTION_SHARE_CLICKED)
         data object ReaderModeClicked : ToolbarActionRecord(ACTION_READER_MODE_CLICKED)
         data object HomepageClicked : ToolbarActionRecord(ACTION_HOME_CLICKED)
-        data object SiteInfoClicked : ToolbarActionRecord(ACTION_SITE_INFO_CLICKED)
+        data object SecurityIndicatorClicked : ToolbarActionRecord(ACTION_SECURITY_INDICATOR_CLICKED)
     }
 
     private fun trackToolbarEvent(

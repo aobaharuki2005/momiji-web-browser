@@ -165,7 +165,7 @@ class BrowserToolbarTelemetryMiddlewareTest {
     @Test
     fun `WHEN site info is clicked THEN record page start telemetry`() {
         buildStore.dispatch(SiteInfoClicked)
-        assertTelemetryRecorded(Source.AddressBar.PageStart, item = ToolbarActionRecord.SiteInfoClicked.action)
+        assertTelemetryRecorded(Source.AddressBar.PageStart, item = ToolbarActionRecord.SecurityIndicatorClicked.action)
     }
 
     private fun assertTelemetryRecorded(

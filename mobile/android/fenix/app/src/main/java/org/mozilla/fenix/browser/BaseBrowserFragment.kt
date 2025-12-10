@@ -678,6 +678,7 @@ abstract class BaseBrowserFragment :
             view = view,
         )
 
+        // Site info telemetry for legacy toolbar
         (browserToolbarView as? BrowserToolbarView)?.toolbar?.display?.setOnSiteInfoClickedListener {
             showQuickSettingsDialog()
             Toolbar.buttonTapped.record(
