@@ -1375,6 +1375,13 @@ void BufferAllocator::abortMajorSweeping(const AutoLock& lock) {
 
   clearAllocatedDuringCollectionState(lock);
 
+  if (minorState == State::Sweeping) {
+    // If we are minor sweeping then chunks with allocatedDuringCollection set
+    // may be present in |mixedChunksToSweep|. Set a flag so these are cleared
+    // when they are merged later.
+    majorFinishedWhileMinorSweeping = true;
+  }
+
   for (BufferChunk* chunk : tenuredChunksToSweep.ref()) {
     MOZ_ASSERT(chunk->ownsFreeLists);
 
