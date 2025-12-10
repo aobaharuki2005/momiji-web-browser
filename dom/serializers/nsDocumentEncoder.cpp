@@ -1597,7 +1597,7 @@ already_AddRefed<nsIDocumentEncoder> do_createDocumentEncoder(
   return nullptr;
 }
 
-class nsHTMLCopyEncoder : public nsDocumentEncoder {
+class nsHTMLCopyEncoder final : public nsDocumentEncoder {
  private:
   class RangeNodeContext final : public nsDocumentEncoder::RangeNodeContext {
     bool IncludeInContext(nsINode& aNode) const final;
@@ -1638,13 +1638,11 @@ class nsHTMLCopyEncoder : public nsDocumentEncoder {
   static bool IsFirstNode(nsINode* aNode);
   static bool IsLastNode(nsINode* aNode);
 
-  bool mIsTextWidget;
+  bool mIsTextWidget{false};
 };
 
 nsHTMLCopyEncoder::nsHTMLCopyEncoder()
-    : nsDocumentEncoder{MakeUnique<nsHTMLCopyEncoder::RangeNodeContext>()} {
-  mIsTextWidget = false;
-}
+    : nsDocumentEncoder{MakeUnique<nsHTMLCopyEncoder::RangeNodeContext>()} {}
 
 nsHTMLCopyEncoder::~nsHTMLCopyEncoder() = default;
 
@@ -1659,14 +1657,14 @@ nsHTMLCopyEncoder::Init(Document* aDocument, const nsAString& aMimeType,
   mIsCopying = true;
   mDocument = aDocument;
 
-  // Hack, hack! Traditionally, the caller passes text/plain, which is
-  // treated as "guess text/html or text/plain" in this context. (It has a
-  // different meaning in other contexts. Sigh.) From now on, "text/plain"
-  // means forcing text/plain instead of guessing.
-  if (aMimeType.EqualsLiteral("text/plain")) {
-    mMimeType.AssignLiteral("text/plain");
+  // nsHTMLCopyEncoder only accepts "text/plain" or "text/html" MIME types, and
+  // the initial MIME type may change after setting the selection.
+  MOZ_ASSERT(aMimeType.EqualsLiteral(kTextMime) ||
+             aMimeType.EqualsLiteral(kHTMLMime));
+  if (aMimeType.EqualsLiteral(kTextMime)) {
+    mMimeType.AssignLiteral(kTextMime);
   } else {
-    mMimeType.AssignLiteral("text/html");
+    mMimeType.AssignLiteral(kHTMLMime);
   }
 
   // Make all links absolute when copying
@@ -1728,6 +1726,8 @@ nsHTMLCopyEncoder::SetSelection(Selection* aSelection) {
   // XXX bug 1245883
 
   // also consider ourselves in a text widget if we can't find an html document
+  // XXX: nsCopySupport relies on the MIME type not being updated immediately
+  // here, so it can apply different encoding for XHTML documents.
   if (!(mDocument && mDocument->IsHTMLDocument())) {
     mIsTextWidget = true;
     mEncodingScope.mSelection = aSelection;
