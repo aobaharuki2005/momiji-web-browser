@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Συνδεθείτε για να διαχειριστείτε τις συγχρονισμένες καρτέλες από όλες τις συσκευές σας.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Σύνδεση</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Όλα τα άρθρα</string>
   <!--
     Home - Bookmarks
 
@@ -3938,4 +3940,8 @@
   <string name="terms_of_use_prompt_accept">Αποδοχή</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Υπενθύμιση αργότερα</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Σημείωση απορρήτου</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Μάθετε περισσότερα</string>
 </resources>

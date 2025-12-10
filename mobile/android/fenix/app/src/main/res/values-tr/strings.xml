@@ -1481,6 +1481,14 @@
   <string name="tab_tray_menu_tab_settings">Sekme ayarları</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">Tüm sekmeleri kapat</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">Tüm sekmeler kapatılsın mı?</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">Bu işlem tüm açık sekmeleri kapatacaktır.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">Sekmeleri kapat</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Vazgeç</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Yer imlerine ekle</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
@@ -2761,6 +2769,8 @@
   <string name="autofill_settings_navigate_back_button_content_description">Geri</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Kart ekle</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Geri git</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Kartı düzenle</string>
   <!-- The header for the card number of a credit card -->
