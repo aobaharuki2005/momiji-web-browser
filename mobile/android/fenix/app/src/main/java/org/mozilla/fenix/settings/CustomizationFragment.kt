@@ -14,7 +14,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
-import org.mozilla.fenix.Config
 import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.GleanMetrics.AppTheme
 import org.mozilla.fenix.GleanMetrics.CustomizationSettings
@@ -105,14 +104,12 @@ class CustomizationFragment : PreferenceFragmentCompat() {
 
         simpleCategory.isVisible =
             settings.shouldShowToolbarCustomization &&
-                    Config.channel.isNightlyOrDebug &&
                     settings.shouldUseComposableToolbar &&
                     settings.toolbarRedesignEnabled &&
                     !isExpandedToolbarEnabled
 
         expandedCategory.isVisible =
             settings.shouldShowToolbarCustomization &&
-                    Config.channel.isNightlyOrDebug &&
                     settings.shouldUseComposableToolbar &&
                     settings.toolbarRedesignEnabled &&
                     isExpandedToolbarEnabled
