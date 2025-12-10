@@ -30,7 +30,7 @@ class TestParseConfigFile(unittest.TestCase):
         fh = open(filename)
         contents = json.load(fh)
         fh.close()
-        if "output" == "dict":
+        if output == "dict":
             return dict(contents)
         else:
             return contents
