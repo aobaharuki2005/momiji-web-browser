@@ -10846,6 +10846,18 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     inheritPrincipal = inheritAttrs && !uri->SchemeIs("data");
   }
 
+  // If a page opens about:blank, it will have a content principal.
+  // If it is then restored after a restart, we might not have initialized
+  // UsesOAC for it. If this is the case, do a normal load (bug 2004647).
+  // XXX bug 2005205 tracks removing this workaround.
+  const auto shouldSkipSyncLoadForSHRestore = [&] {
+    return aLoadState->LoadIsFromSessionHistory() &&
+           aLoadState->PrincipalToInherit() &&
+           !mBrowsingContext->Group()
+                ->UsesOriginAgentCluster(aLoadState->PrincipalToInherit())
+                .isSome();
+  };
+
   MOZ_ASSERT_IF(NS_IsAboutBlankAllowQueryAndFragment(uri) &&
                     aLoadState->PrincipalToInherit(),
                 inheritPrincipal);
@@ -10853,7 +10865,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   const bool isAboutBlankLoadOntoInitialAboutBlank =
       !aLoadState->IsInitialAboutBlankHandlingProhibited() &&
       IsAboutBlankLoadOntoInitialAboutBlank(uri,
-                                            aLoadState->PrincipalToInherit());
+                                            aLoadState->PrincipalToInherit()) &&
+      !shouldSkipSyncLoadForSHRestore();
 
   // FIXME We still have a ton of codepaths that don't pass through
   //       DocumentLoadListener, so probably need to create session history info
