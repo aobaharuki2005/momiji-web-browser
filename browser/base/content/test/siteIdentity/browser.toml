@@ -5,6 +5,7 @@ support-files = [
   "!/image/test/mochitest/blue.png",
 ]
 prefs = [
+  "browser.urlbar.trustPanel.featureGate=false",
   "security.certerrors.felt-privacy-v1=true"
 ]
 
