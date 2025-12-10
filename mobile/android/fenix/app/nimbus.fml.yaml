@@ -133,18 +133,6 @@ features:
           }
         }
 
-  growth-data:
-    description: A feature measuring campaign growth data
-    variables:
-      enabled:
-        description: If true, the feature is active
-        type: Boolean
-        default: false
-    defaults:
-      - channel: release
-        value:
-          enabled: true
-
   re-engagement-notification:
     description: A feature that shows the re-engagement notification if the user is inactive.
     variables:
