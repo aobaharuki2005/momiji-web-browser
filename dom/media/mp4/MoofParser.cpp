@@ -429,7 +429,7 @@ class CtsComparator {
   }
 };
 
-Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
+Moof::Moof(Box& aBox, const TrackParseMode& aTrackParseMode, const Trex& aTrex,
            const Mvhd& aMvhd, const Mdhd& aMdhd, const Edts& aEdts,
            const Sinf& aSinf, const bool aIsAudio, uint64_t* aDecodeTime,
            nsTArray<TrackEndCts>& aTracksEndCts)
@@ -726,7 +726,7 @@ const CencSampleEncryptionInfoEntry* Moof::GetSampleEncryptionEntry(
 }
 
 void Moof::ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode,
-                     Trex& aTrex, const Mvhd& aMvhd, const Mdhd& aMdhd,
+                     const Trex& aTrex, const Mvhd& aMvhd, const Mdhd& aMdhd,
                      const Edts& aEdts, const Sinf& aSinf, const bool aIsAudio,
                      uint64_t* aDecodeTime) {
   LOG_DEBUG(
@@ -1077,7 +1077,7 @@ Result<Ok, nsresult> Mvhd::Parse(Box& aBox) {
 
 Mdhd::Mdhd(Box& aBox) : Mvhd(aBox) {}
 
-Trex::Trex(Box& aBox)
+Trex::Trex(const Box& aBox)
     : mFlags(0),
       mTrackId(0),
       mDefaultSampleDescriptionIndex(0),
@@ -1090,7 +1090,7 @@ Trex::Trex(Box& aBox)
   }
 }
 
-Result<Ok, nsresult> Trex::Parse(Box& aBox) {
+Result<Ok, nsresult> Trex::Parse(const Box& aBox) {
   BoxReader reader(aBox);
 
   mFlags = MOZ_TRY(reader->ReadU32());
@@ -1103,7 +1103,7 @@ Result<Ok, nsresult> Trex::Parse(Box& aBox) {
   return Ok();
 }
 
-Tfhd::Tfhd(Box& aBox, Trex& aTrex) : Trex(aTrex), mBaseDataOffset(0) {
+Tfhd::Tfhd(Box& aBox, const Trex& aTrex) : Trex(aTrex), mBaseDataOffset(0) {
   mValid = Parse(aBox).isOk();
   if (!mValid) {
     LOG_WARN(Tfhd, "Parse failed");

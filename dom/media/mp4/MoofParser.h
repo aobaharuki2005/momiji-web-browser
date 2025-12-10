@@ -81,7 +81,7 @@ class Trex : public Atom {
         mDefaultSampleSize(0),
         mDefaultSampleFlags(0) {}
 
-  explicit Trex(Box& aBox);
+  explicit Trex(const Box& aBox);
 
   uint32_t mFlags;
   uint32_t mTrackId;
@@ -91,15 +91,15 @@ class Trex : public Atom {
   uint32_t mDefaultSampleFlags;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 class Tfhd : public Trex {
  public:
-  explicit Tfhd(Trex& aTrex) : Trex(aTrex), mBaseDataOffset(0) {
+  explicit Tfhd(const Trex& aTrex) : Trex(aTrex), mBaseDataOffset(0) {
     mValid = aTrex.IsValid();
   }
-  Tfhd(Box& aBox, Trex& aTrex);
+  Tfhd(Box& aBox, const Trex& aTrex);
 
   uint64_t mBaseDataOffset;
 
@@ -246,7 +246,7 @@ using TrackParseMode = Variant<ParseAllTracks, uint32_t>;
 
 class Moof final : public Atom {
  public:
-  Moof(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
+  Moof(Box& aBox, const TrackParseMode& aTrackParseMode, const Trex& aTrex,
        const Mvhd& aMvhd, const Mdhd& aMdhd, const Edts& aEdts,
        const Sinf& aSinf, const bool aIsAudio, uint64_t* aDecodeTime,
        nsTArray<TrackEndCts>& aTracksEndCts);
@@ -282,9 +282,10 @@ class Moof final : public Atom {
 
  private:
   // aDecodeTime is updated to the end of the parsed TRAF on return.
-  void ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode, Trex& aTrex,
-                 const Mvhd& aMvhd, const Mdhd& aMdhd, const Edts& aEdts,
-                 const Sinf& aSinf, const bool aIsAudio, uint64_t* aDecodeTime);
+  void ParseTraf(Box& aBox, const TrackParseMode& aTrackParseMode,
+                 const Trex& aTrex, const Mvhd& aMvhd, const Mdhd& aMdhd,
+                 const Edts& aEdts, const Sinf& aSinf, const bool aIsAudio,
+                 uint64_t* aDecodeTime);
   // aDecodeTime is updated to the end of the parsed TRUN on return.
   Result<Ok, nsresult> ParseTrun(Box& aBox, const Mvhd& aMvhd,
                                  const Mdhd& aMdhd, const Edts& aEdts,
