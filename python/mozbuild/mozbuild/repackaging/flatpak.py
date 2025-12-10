@@ -35,7 +35,7 @@ def run_command(log, *args, **kwargs):
         {"command": shlex.join(args[0]), "cwd": str(kwargs.get("cwd", os.getcwd()))},
         "Running: {command} (in {cwd})",
     )
-    return subprocess.run(*args, **kwargs)
+    return subprocess.run(*args, check=True, **kwargs)
 
 
 def _inject_flatpak_distribution_ini(log, target):

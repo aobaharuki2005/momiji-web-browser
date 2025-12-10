@@ -130,6 +130,7 @@ def run_diff(
                 right_file.flush()
                 diff_output = subprocess.run(
                     [diff_cmd, "-u", left_file.name, right_file.name],
+                    check=False,
                     capture_output=True,
                 ).stdout.decode("utf-8")
 

@@ -55,6 +55,7 @@ def runUtil(util, args):
             env[pathvar] = app_path
     proc = subprocess.run(
         [util] + args,
+        check=False,
         env=env,
         text=True,
     )

@@ -357,6 +357,7 @@ def _run_activation_script(
     source: str,
     site_name: str,
     invoking_python: str,
+    check: bool = False,
     **kwargs,
 ) -> CompletedProcess:
     return subprocess.run(
@@ -364,6 +365,7 @@ def _run_activation_script(
             invoking_python,
             str(Path(__file__).parent / "script_site_activation.py"),
         ],
+        check=check,
         stdout=subprocess.PIPE,
         text=True,
         env={

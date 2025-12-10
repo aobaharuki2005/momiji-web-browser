@@ -236,7 +236,7 @@ def run_cmd(args):
     if "-vv" not in ARGS:
         dest = subprocess.DEVNULL
     try:
-        subprocess.run(args, stderr=dest)
+        subprocess.run(args, check=False, stderr=dest)
     except FileNotFoundError:
         print("FileNotFoundError, is ffmpeg not in your PATH?")
         raise

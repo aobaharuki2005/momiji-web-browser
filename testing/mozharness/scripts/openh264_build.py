@@ -248,8 +248,12 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
 
     def _git_checkout(self, repo, repo_dir, rev):
         try:
-            subprocess.run(["git", "clone", "-q", "--no-checkout", repo, repo_dir])
-            subprocess.run(["git", "checkout", "-q", "-f", f"{rev}^0"], cwd=repo_dir)
+            subprocess.run(
+                ["git", "clone", "-q", "--no-checkout", repo, repo_dir], check=False
+            )
+            subprocess.run(
+                ["git", "checkout", "-q", "-f", f"{rev}^0"], check=False, cwd=repo_dir
+            )
         except Exception:
             self.rmtree(repo_dir)
             raise

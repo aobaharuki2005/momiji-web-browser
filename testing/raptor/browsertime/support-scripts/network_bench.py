@@ -62,6 +62,7 @@ class NetworkBench(BasePythonSupport):
         try:
             result = subprocess.run(
                 ["caddy", "version"],
+                check=False,
                 capture_output=True,
                 text=True,
             )
@@ -256,6 +257,7 @@ class NetworkBench(BasePythonSupport):
         try:
             result = subprocess.run(
                 ["sudo", "tc", "-help"],
+                check=False,
                 capture_output=True,
                 text=True,
             )

@@ -24,8 +24,7 @@ def fatal_err(msg):
 
 def run_cmd_checked(*args, **kwargs):
     """Run a command, throwing an exception if it exits with non-zero status."""
-    kwargs["check"] = True
-    return subprocess.run(*args, **kwargs)
+    return subprocess.run(*args, check=True, **kwargs)
 
 
 def find_project_root():

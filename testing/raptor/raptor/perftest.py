@@ -876,7 +876,7 @@ class PerftestDesktop(Perftest):
                 elif "linux" in self.config["platform"]:
                     command = [self.config["binary"], "--version"]
                     proc = subprocess.run(
-                        command, timeout=10, capture_output=True, text=True
+                        command, check=False, timeout=10, capture_output=True, text=True
                     )
 
                     bmeta = proc.stdout.split("\n")

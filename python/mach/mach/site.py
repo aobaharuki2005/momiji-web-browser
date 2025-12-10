@@ -764,10 +764,10 @@ class CommandSiteManager:
         check_errors: str = "\n"  # save output when check fails
         check_result = subprocess.run(
             pip_command(python_executable=self.python_path, subcommand="check"),
+            check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            check=False,
         )
 
         if not check_result.returncode:
@@ -826,10 +826,10 @@ class CommandSiteManager:
 
         check_result = subprocess.run(
             pip_command(python_executable=self.python_path, subcommand="check"),
+            check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            check=False,
         )
 
         if check_result.returncode:
@@ -1086,6 +1086,7 @@ class PythonVirtualenv:
                     subcommand="install",
                     args=pip_install_args,
                 ),
+                check=kwargs.pop("check", True),
                 **kwargs,
             )
         except subprocess.CalledProcessError as cpe:
@@ -1383,9 +1384,9 @@ def _assert_pip_check(pthfile_lines, virtualenv_name, requirements):
         # changes recently).
         process = subprocess.run(
             [sys.executable, "-m", "venv", "--without-pip", check_env_path],
+            check=False,
             capture_output=True,
             encoding="UTF-8",
-            check=False,
         )
 
         if process.returncode != 0:
@@ -1430,10 +1431,10 @@ def _assert_pip_check(pthfile_lines, virtualenv_name, requirements):
 
         check_result = subprocess.run(
             pip + ["check"],
+            check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            check=False,
         )
         if check_result.returncode:
             subprocess.check_call(pip + ["list", "-v"], stdout=sys.stderr)
@@ -1496,9 +1497,9 @@ def _create_venv_with_pthfile(
 
     process = subprocess.run(
         [sys.executable, "-m", "venv", "--without-pip", virtualenv_root],
+        check=False,
         capture_output=True,
         encoding="UTF-8",
-        check=False,
     )
 
     if process.returncode != 0:

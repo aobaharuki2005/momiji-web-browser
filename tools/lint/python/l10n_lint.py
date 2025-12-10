@@ -124,14 +124,17 @@ def source_repo_setup(**lint_args):
                 os.environ.pop("GIT_INDEX_FILE")
 
             kwargs = {
-                "check": False,
                 "stdout": subprocess.PIPE,
                 "stderr": subprocess.STDOUT,
             }
             if os.path.exists(gs):
-                proc = subprocess.run([git, "pull", L10N_SOURCE_REPO], cwd=gs, **kwargs)
+                proc = subprocess.run(
+                    [git, "pull", L10N_SOURCE_REPO], check=False, cwd=gs, **kwargs
+                )
             else:
-                proc = subprocess.run([git, "clone", L10N_SOURCE_REPO, gs], **kwargs)
+                proc = subprocess.run(
+                    [git, "clone", L10N_SOURCE_REPO, gs], check=False, **kwargs
+                )
 
             if proc.returncode != 0:
                 lint_args["log"].error(

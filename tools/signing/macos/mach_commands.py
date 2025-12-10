@@ -550,7 +550,7 @@ def run(ctx, cmd, **kwargs):
     cmd_as_str = " ".join(cmd)
     ctx.log(logging.DEBUG, "macos-sign", {"cmd": cmd_as_str}, "[{cmd}]")
     try:
-        subprocess.run(cmd, **kwargs)
+        subprocess.run(cmd, check=True, **kwargs)
     except subprocess.CalledProcessError as e:
         ctx.log(
             logging.ERROR,

@@ -75,7 +75,7 @@ class DesktopVersionProducer(BaseVersionProducer):
             elif "linux" in platform.system().lower():
                 command = [binary, "--version"]
                 proc = subprocess.run(
-                    command, timeout=10, capture_output=True, text=True
+                    command, check=True, timeout=10, capture_output=True, text=True
                 )
 
                 bmeta = proc.stdout.split("\n")

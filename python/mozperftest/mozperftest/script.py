@@ -151,7 +151,9 @@ class ScriptInfo(defaultdict):
         const builtins = Object.getOwnPropertyNames(globalThis);
         console.log(JSON.stringify(builtins));
         """
-        result = subprocess.run(["node", "-e", js], capture_output=True, text=True)
+        result = subprocess.run(
+            ["node", "-e", js], check=True, capture_output=True, text=True
+        )
         return set(json.loads(result.stdout))
 
     def _classify_globals(self):
@@ -295,6 +297,7 @@ class ScriptInfo(defaultdict):
 
         process = subprocess.run(
             ["node", "-e", js_code],
+            check=False,
             capture_output=True,
             text=True,
         )
