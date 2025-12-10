@@ -209,10 +209,18 @@ export const kTextureUsageInfo =
   [GPUConst.TextureUsage.COPY_DST]: {},
   [GPUConst.TextureUsage.TEXTURE_BINDING]: {},
   [GPUConst.TextureUsage.STORAGE_BINDING]: {},
-  [GPUConst.TextureUsage.RENDER_ATTACHMENT]: {}
+  [GPUConst.TextureUsage.RENDER_ATTACHMENT]: {},
+  [GPUConst.TextureUsage.TRANSIENT_ATTACHMENT]: {}
 };
 /** List of all GPUTextureUsage values. */
 export const kTextureUsages = numericKeysOf(kTextureUsageInfo);
+
+/** Check if `usage` is TRANSIENT_ATTACHMENT | RENDER_ATTACHMENT. */
+export function IsValidTransientAttachmentUsage(usage) {
+  return (
+    usage === (GPUConst.TextureUsage.TRANSIENT_ATTACHMENT | GPUConst.TextureUsage.RENDER_ATTACHMENT));
+
+}
 
 // Texture View
 
@@ -767,7 +775,8 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxComputeWorkgroupSizeX': [, 256, 128],
   'maxComputeWorkgroupSizeY': [, 256, 128],
   'maxComputeWorkgroupSizeZ': [, 64, 64],
-  'maxComputeWorkgroupsPerDimension': [, 65535, 65535]
+  'maxComputeWorkgroupsPerDimension': [, 65535, 65535],
+  'maxImmediateSize': [, 64, 64]
 }];
 
 // MAINTENANCE_TODO: Remove when the compat spec is merged.
