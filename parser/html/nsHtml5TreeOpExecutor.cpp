@@ -117,6 +117,7 @@ class MOZ_RAII nsHtml5AutoFlush final {
                "wasn't less than the length of the queue.");
     mOpsToRemove = aOpsToRemove;
   }
+  void RequestRemovalOfAllOps() { mOpsToRemove = mExecutor->OpQueueLength(); }
 };
 
 static LinkedList<nsHtml5TreeOpExecutor>* gBackgroundFlushList = nullptr;
@@ -679,6 +680,8 @@ void nsHtml5TreeOpExecutor::RunFlushLoop() {
 
       if (MOZ_UNLIKELY(!mParser)) {
         // The parse ended during an update pause.
+        // Undo possible previous `SetNumberOfOpsToRemove` call.
+        autoFlush.RequestRemovalOfAllOps();
         return;
       }
       if (streamEnded) {
@@ -789,6 +792,8 @@ nsresult nsHtml5TreeOpExecutor::FlushDocumentWrite() {
 
     if (MOZ_UNLIKELY(!mParser)) {
       // The parse ended during an update pause.
+      // No need to call `autoFlush.RequestRemovalOfAllOps();`, because there is
+      // no `SetNumberOfOpsToRemove` call.
       return rv;
     }
     if (streamEnded) {
