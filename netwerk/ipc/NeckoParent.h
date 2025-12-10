@@ -76,9 +76,16 @@ class NeckoParent : public PNeckoParent {
       const Maybe<TabId>& aTabId);
   bool DeallocPWebrtcTCPSocketParent(PWebrtcTCPSocketParent* aActor);
 
+  PCacheEntryWriteHandleParent* AllocPCacheEntryWriteHandleParent(
+      PHttpChannelParent* channel);
+  bool DeallocPCacheEntryWriteHandleParent(
+      PCacheEntryWriteHandleParent* aActor);
+
   PAltDataOutputStreamParent* AllocPAltDataOutputStreamParent(
       const nsACString& type, const int64_t& predictedSize,
-      PHttpChannelParent* channel);
+      mozilla::Maybe<mozilla::NotNull<mozilla::net::PHttpChannelParent*>>&
+          channel,
+      mozilla::Maybe<mozilla::NotNull<PCacheEntryWriteHandleParent*>>& handle);
   bool DeallocPAltDataOutputStreamParent(PAltDataOutputStreamParent* aActor);
 
   bool DeallocPCookieServiceParent(PCookieServiceParent*);

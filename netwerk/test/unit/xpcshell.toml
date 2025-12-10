@@ -372,6 +372,8 @@ skip-if = [
 
 ["test_cache-entry-id.js"]
 
+["test_cache-entry-write-handle.js"]
+
 ["test_cache2-00-service-get.js"]
 
 ["test_cache2-01-basic.js"]

@@ -7,6 +7,7 @@
 
 include protocol PContent;
 include protocol PHttpChannel;
+include protocol PCacheEntryWriteHandle;
 include protocol PCookieService;
 include protocol PBrowser;
 #ifdef MOZ_WIDGET_GTK
@@ -50,6 +51,7 @@ namespace net {
 {
   manager PContent;
   manages PHttpChannel;
+  manages PCacheEntryWriteHandle;
   manages PCookieService;
   manages PWebSocket;
   manages PWebSocketEventListener;
@@ -136,7 +138,10 @@ parent:
   async RequestContextAfterDOMContentLoaded(uint64_t rcid);
   async RemoveRequestContext(uint64_t rcid);
 
-  async PAltDataOutputStream(nsCString type, int64_t predictedSize, PHttpChannel channel);
+  async PCacheEntryWriteHandle(PHttpChannel channel);
+
+  async PAltDataOutputStream(nsCString type, int64_t predictedSize, PHttpChannel? channel, PCacheEntryWriteHandle? handle);
+
 
   async PStunAddrsRequest();
 
