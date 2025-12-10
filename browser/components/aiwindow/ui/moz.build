@@ -8,6 +8,8 @@ with Files("**"):
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
 
 MOZ_SRC_FILES += [
+    "actors/AIChatContentChild.sys.mjs",
+    "actors/AIChatContentParent.sys.mjs",
     "modules/AIWindow.sys.mjs",
 ]
 

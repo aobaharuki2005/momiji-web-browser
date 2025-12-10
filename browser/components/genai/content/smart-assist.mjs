@@ -298,7 +298,7 @@ export class SmartAssist extends MozLitElement {
 
       browser.setAttribute(
         "src",
-        "chrome://browser/content/genai/smartAssist.html"
+        "chrome://browser/content/aiwindow/aiWindow.html"
       );
 
       stack.appendChild(browser);

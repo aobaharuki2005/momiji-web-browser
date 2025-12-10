@@ -6,5 +6,8 @@ browser.jar:
   content/browser/aiwindow/aiChatContent.html               (content/aiChatContent.html)
   content/browser/aiwindow/aiWindow.html                    (content/aiWindow.html)
   content/browser/aiwindow/assets/input-cta-arrow-icon.svg  (assets/input-cta-arrow-icon.svg)
+  content/browser/aiwindow/components/ai-chat-content.mjs   (components/ai-chat-content/ai-chat-content.mjs)
+  content/browser/aiwindow/components/ai-window.mjs         (components/ai-window/ai-window.mjs)
+  content/browser/aiwindow/components/ai-window.css         (components/ai-window/ai-window.css)
   content/browser/aiwindow/components/input-cta.css         (components/input-cta/input-cta.css)
   content/browser/aiwindow/components/input-cta.mjs         (components/input-cta/input-cta.mjs)

@@ -218,6 +218,20 @@ let JSWINDOWACTORS = {
     enablePreference: "browser.aboutwelcome.enabled",
   },
 
+  AIChatContent: {
+    parent: {
+      esModuleURI:
+        "moz-src:///browser/components/aiwindow/ui/actors/AIChatContentParent.sys.mjs",
+    },
+    child: {
+      esModuleURI:
+        "moz-src:///browser/components/aiwindow/ui/actors/AIChatContentChild.sys.mjs",
+    },
+    allFrames: true,
+    matches: ["about:aichatcontent"],
+    enablePreference: "browser.aiwindow.enabled",
+  },
+
   BackupUI: {
     parent: {
       esModuleURI: "resource:///actors/BackupUIParent.sys.mjs",

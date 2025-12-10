@@ -16,10 +16,13 @@
     <title>AI Chat Content</title>
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
     <script src="chrome://browser/content/contentTheme.js"></script>
-    <!-- TODO: load appropriate component modules
-    -->
+    <script
+      type="module"
+      src="chrome://browser/content/aiwindow/components/ai-chat-content.mjs"
+    ></script>
   </head>
   <body id="ai-window-wrapper">
     Placeholder for AI Chat Content
+    <ai-chat-content></ai-chat-content>
   </body>
 </html>

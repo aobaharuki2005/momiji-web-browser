@@ -13,11 +13,21 @@
     <meta name="color-scheme" content="light dark" />
     <!-- TODO : Add localization preview -->
     <title>AI Window</title>
-    <!-- TODO: load appropriate component modules
-      "chrome://browser/content/aiwindow/components/input-cta.mjs"
-    -->
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css" />
+    <link
+      rel="stylesheet"
+      href="chrome://browser/content/sidebar/sidebar.css"
+    />
+    <script
+      type="module"
+      src="chrome://browser/content/aiwindow/components/ai-window.mjs"
+    ></script>
+    <script
+      type="module"
+      src="chrome://browser/content/aiwindow/components/input-cta.mjs"
+    ></script>
   </head>
   <body>
-    Placeholder for AI Window
+    <ai-window></ai-window>
   </body>
 </html>
