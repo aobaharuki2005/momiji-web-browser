@@ -3732,14 +3732,6 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     // Step 28.g.
     auto targetDateTime = ISODateTime{targetDate, targetTime.time};
 
-    // DifferencePlainDateTimeWithRounding, step 2.
-    if (!ISODateTimeWithinLimits(isoDateTime) ||
-        !ISODateTimeWithinLimits(targetDateTime)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID);
-      return false;
-    }
-
     // Step 28.h.
     if (!DifferencePlainDateTimeWithRounding(cx, isoDateTime, targetDateTime,
                                              calendar,
@@ -3953,14 +3945,6 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
 
     // Step 13.g.
     auto targetDateTime = ISODateTime{targetDate, targetTime.time};
-
-    // DifferencePlainDateTimeWithTotal, step 2.
-    if (!ISODateTimeWithinLimits(isoDateTime) ||
-        !ISODateTimeWithinLimits(targetDateTime)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_PLAIN_DATE_TIME_INVALID);
-      return false;
-    }
 
     // Step 13.h.
     if (!DifferencePlainDateTimeWithTotal(cx, isoDateTime, targetDateTime,
