@@ -57,9 +57,6 @@ using AudioDeviceID = CubebUtils::AudioDeviceID;
 using IsInShutdown = MediaTrack::IsInShutdown;
 
 LazyLogModule gMediaTrackGraphLog("MediaTrackGraph");
-#ifdef LOG
-#  undef LOG
-#endif  // LOG
 #define LOG(type, msg) MOZ_LOG(gMediaTrackGraphLog, type, msg)
 
 NativeInputTrack* DeviceInputTrackManager::GetNativeInputTrack() {
@@ -4413,3 +4410,5 @@ MediaTrackGraphImpl::AfterProcessNextEvent(nsIThreadInternal*, bool) {
   return NS_OK;
 }
 }  // namespace mozilla
+
+#undef LOG

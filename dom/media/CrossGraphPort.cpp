@@ -12,13 +12,6 @@
 
 namespace mozilla {
 
-#ifdef LOG
-#  undef LOG
-#endif
-#ifdef LOG_TEST
-#  undef LOG_TEST
-#endif
-
 extern LazyLogModule gMediaTrackGraphLog;
 #define LOG(type, msg) MOZ_LOG(gMediaTrackGraphLog, type, msg)
 #define LOG_TEST(type) MOZ_LOG_TEST(gMediaTrackGraphLog, type)
@@ -161,3 +154,6 @@ int CrossGraphReceiver::EnqueueAudio(AudioChunk& aChunk) {
 }
 
 }  // namespace mozilla
+
+#undef LOG
+#undef LOG_TEST
