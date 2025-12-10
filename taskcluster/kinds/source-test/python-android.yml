@@ -42,6 +42,7 @@ android-gradle-build:
             - linux64-android-sdk-linux-repack
             - linux64-jdk-repack
             - linux64-node
+            - terser
     when:
         files-changed:
             # Build stuff.
