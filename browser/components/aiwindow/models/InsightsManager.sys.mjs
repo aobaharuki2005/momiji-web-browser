@@ -42,8 +42,8 @@ const DEFAULT_HISTORY_FULL_LOOKUP_DAYS = 60;
 const DEFAULT_HISTORY_FULL_MAX_RESULTS = 3000;
 const DEFAULT_HISTORY_DELTA_MAX_RESULTS = 500;
 
-const LAST_HISTORY_INSIGHTS_TS_ATTRIBUTE = "last_history_insight_ts";
-const LAST_CONVERSATION_INSIGHTS_TS_ATTRIBUTE = "last_chat_insight_ts";
+const LAST_HISTORY_INSIGHT_TS_ATTRIBUTE = "last_history_insight_ts";
+const LAST_CONVERSATION_INSIGHT_TS_ATTRIBUTE = "last_chat_insight_ts";
 /**
  * InsightsManager class
  */
@@ -67,7 +67,7 @@ export class InsightsManager {
    * Generates and persists insights derived from the user's recent browsing history.
    *
    * This method:
-   *  1. Reads {@link last_history_insight_ts} via {@link getLastHistoryInsightsTimestamp}.
+   *  1. Reads {@link last_history_insight_ts} via {@link getLastHistoryInsightTimestamp}.
    *  2. Decides between:
    *     - Full processing (first run, no prior timestamp):
    *         * Uses a days-based cutoff (DEFAULT_HISTORY_FULL_LOOKUP_DAYS).
@@ -93,7 +93,7 @@ export class InsightsManager {
   static async generateInsightsFromBrowsingHistory() {
     const now = Date.now();
     // get last history insight timestamp in ms
-    const lastTsMs = await this.getLastHistoryInsightsTimestamp();
+    const lastTsMs = await this.getLastHistoryInsightTimestamp();
     const isDelta = typeof lastTsMs === "number" && lastTsMs > 0;
     // set up the options based on delta or full (first) run
     let recentHistoryOpts = {};
@@ -224,9 +224,9 @@ export class InsightsManager {
    *
    * @returns {Promise<number>}  Milliseconds since Unix epoch
    */
-  static async getLastHistoryInsightsTimestamp() {
+  static async getLastHistoryInsightTimestamp() {
     const meta = await InsightStore.getMeta();
-    return meta.last_history_insights_ts || 0;
+    return meta.last_history_insight_ts || 0;
   }
 
   /**
@@ -254,9 +254,9 @@ export class InsightsManager {
     // Decide which meta field to update
     let metaKey;
     if (source === SOURCE_HISTORY) {
-      metaKey = LAST_HISTORY_INSIGHTS_TS_ATTRIBUTE;
+      metaKey = LAST_HISTORY_INSIGHT_TS_ATTRIBUTE;
     } else if (source === SOURCE_CONVERSATION) {
-      metaKey = LAST_CONVERSATION_INSIGHTS_TS_ATTRIBUTE;
+      metaKey = LAST_CONVERSATION_INSIGHT_TS_ATTRIBUTE;
     } else {
       // Unknown source: don't update meta, just return persisted results.
       return {

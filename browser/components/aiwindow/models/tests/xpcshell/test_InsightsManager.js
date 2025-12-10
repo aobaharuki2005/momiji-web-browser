@@ -658,3 +658,24 @@ add_task(async function test_saveInsights_conversation_updates_meta() {
     sb.restore();
   }
 });
+
+/**
+ * Tests that getLastHistoryInsightTimestamp reads the same value written via InsightStore.updateMeta.
+ */
+add_task(async function test_getLastHistoryInsightTimestamp_reads_meta() {
+  const ts = Date.now() - 12345;
+
+  // Write meta directly
+  await InsightStore.updateMeta({
+    last_history_insight_ts: ts,
+  });
+
+  // Read via InsightsManager helper
+  const readTs = await InsightsManager.getLastHistoryInsightTimestamp();
+
+  Assert.equal(
+    readTs,
+    ts,
+    "getLastHistoryInsightTimestamp should return last_history_insight_ts from InsightStore meta"
+  );
+});
