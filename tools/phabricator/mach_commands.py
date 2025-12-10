@@ -65,7 +65,7 @@ def install_moz_phab(command_context, force=False):
         if not moz_phab_path.exists():
             moz_phab_path = moz_phab_path.with_suffix(".exe")
 
-        subprocess.run([moz_phab_path, "install-certificate"], check=False)
+        subprocess.run([moz_phab_path, "install-certificate"], check=True)
     else:
         command_context.log(
             logging.WARNING,
@@ -75,4 +75,4 @@ def install_moz_phab(command_context, force=False):
         )
 
     # We run this last, since it instructs the user to restart their shell (if necessary)
-    subprocess.run(["uv", "tool", "update-shell"], check=False)
+    subprocess.run(["uv", "tool", "update-shell"], check=True)

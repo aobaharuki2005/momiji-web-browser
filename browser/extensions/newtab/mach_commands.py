@@ -284,7 +284,7 @@ def get_message_dates(fluent_file_path):
         ["git", "blame", "--line-porcelain", fluent_file_path],
         stdout=subprocess.PIPE,
         text=True,
-        check=False,
+        check=True,
     )
 
     pattern = re.compile(r"^([a-z-]+[^\s]+) ")

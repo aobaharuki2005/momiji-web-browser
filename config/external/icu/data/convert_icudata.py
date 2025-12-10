@@ -17,5 +17,5 @@ def main(output, data_file):
             data_file,
             output.name,
         ],
-        check=False,
+        check=True,
     )
