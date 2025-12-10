@@ -19,7 +19,7 @@ from pathlib import Path
 
 def fatal_err(msg):
     print(f"\033[31mError: {msg}\033[0m")
-    exit(1)
+    sys.exit(1)
 
 
 def run_cmd_checked(*args, **kwargs):

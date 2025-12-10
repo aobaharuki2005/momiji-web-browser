@@ -226,7 +226,7 @@ for args in todo:
 
 if "--write" not in ARGS:
     print("Use --write to write. Exiting...")
-    exit(0)
+    sys.exit(0)
 
 # -
 

@@ -279,7 +279,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
     def check_errors(self):
         if self._errored:
             self.info("Errors encountered, terminating with error code...")
-            exit(EXIT_STATUS_DICT[TBPL_FAILURE])
+            sys.exit(EXIT_STATUS_DICT[TBPL_FAILURE])
 
 
 if __name__ == "__main__":

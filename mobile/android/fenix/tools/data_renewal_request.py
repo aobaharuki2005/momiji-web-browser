@@ -16,7 +16,7 @@ try:
     version = sys.argv[1]
 except Exception:
     print("usage is to include arguments of the form <version>")
-    quit()
+    sys.exit()
 
 expiry_filename = version + "_expiry_list.csv"
 filled_renewal_filename = version + "_filled_renewal_request.txt"

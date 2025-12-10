@@ -267,7 +267,8 @@ def npm(command_context, args):
     # in the wrong places and probably other badness too without this:
     npm_path, _ = find_npm_executable()
     if not npm_path:
-        exit(-1, "could not find npm executable")
+        print("error: could not find npm executable")
+        sys.exit(-1)
     path = os.path.abspath(os.path.dirname(npm_path))
     os.environ["PATH"] = "{}{}{}".format(path, os.pathsep, os.environ["PATH"])
 

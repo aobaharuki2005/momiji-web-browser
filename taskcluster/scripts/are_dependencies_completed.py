@@ -6,6 +6,7 @@
 
 import argparse
 import os
+import sys
 
 import taskcluster
 
@@ -52,7 +53,7 @@ def main():
     result = parser.parse_args()
     check_all_dependencies_are_completed(result.current_task_id)
     print("All dependencies are completed. Reporting a green task!")
-    exit(0)
+    sys.exit(0)
 
 
 if __name__ == "__main__":

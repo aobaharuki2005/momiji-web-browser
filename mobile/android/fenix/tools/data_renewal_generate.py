@@ -116,7 +116,7 @@ with open(METRICS_FILENAME) as f:
         arg1 = sys.argv[1]
     except Exception:
         print("usage is to include argument of the form `100`")
-        quit()
+        sys.exit()
 
     # parse metrics.yaml to json
     write_header = True
