@@ -88,7 +88,7 @@ linux64-rust-1.90:
 
 # A patched rust toolchain that allows us to use sanitizers in our vendored
 # build environment. See the rust fetch's comments for more details.
-linux64-rust-1.90-dev:
+linux64-rust-1.83-dev:
     description: "build rust from source"
     worker-type: b-linux-docker-large-amd
     treeherder:
@@ -101,26 +101,24 @@ linux64-rust-1.90-dev:
     run:
         arguments: [
             '--patch', 'rust-vendor-std.patch',
-            '--patch', 'Zprofile.patch',
             '--channel', 'dev',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
         ]
         resources:
             - build/build-rust/rust-vendor-std.patch
-            - build/build-rust/Zprofile.patch
         toolchain-alias:
             by-project:
                 toolchains: null
                 default: linux64-rust-dev
     fetches:
         fetch:
-            - rust-1.90.0
+            - rust-1.83.0
         toolchain:
             - linux64-clang-toolchain
             - linux64-toolchain-sysroot
 
-win64-rust-1.90-dev:
+win64-rust-1.83-dev:
     description: "build rust from source"
     worker-type: b-win2022
     treeherder:
@@ -128,21 +126,19 @@ win64-rust-1.90-dev:
     run:
         arguments: [
             '--patch', 'rust-vendor-std.patch',
-            '--patch', 'Zprofile.patch',
             '--channel', 'dev',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
         ]
         resources:
             - build/build-rust/rust-vendor-std.patch
-            - build/build-rust/Zprofile.patch
         toolchain-alias:
             by-project:
                 toolchains: null
                 default: win64-rust-dev
     fetches:
         fetch:
-            - rust-1.90.0
+            - rust-1.83.0
             - win64-ninja
         toolchain:
             - win64-clang-toolchain
@@ -349,14 +345,12 @@ linux64-rust-nightly-dev:
     run:
         arguments: [
             '--patch', 'rust-vendor-std.patch',
-            '--patch', 'Zprofile-1.92.patch',
             '--channel', 'dev',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
         ]
         resources:
             - build/build-rust/rust-vendor-std.patch
-            - build/build-rust/Zprofile-1.92.patch
         toolchain-alias:
             by-project:
                 toolchains: linux64-rust-dev
@@ -378,14 +372,12 @@ win64-rust-nightly-dev:
     run:
         arguments: [
             '--patch', 'rust-vendor-std.patch',
-            '--patch', 'Zprofile-1.92.patch',
             '--channel', 'dev',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
         ]
         resources:
             - build/build-rust/rust-vendor-std.patch
-            - build/build-rust/Zprofile-1.92.patch
         toolchain-alias:
             by-project:
                 toolchains: win64-rust-dev
