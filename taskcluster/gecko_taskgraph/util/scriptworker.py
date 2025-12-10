@@ -555,7 +555,7 @@ def generate_beetmover_upstream_artifacts(
                 continue
             if (
                 "not_for_locales" in map_config["mapping"][filename]
-                and locale in map_config["mapping"][filename]["not_for_locales"]
+                and current_locale in map_config["mapping"][filename]["not_for_locales"]
             ):
                 continue
             if "partials_only" in map_config["mapping"][filename]:
