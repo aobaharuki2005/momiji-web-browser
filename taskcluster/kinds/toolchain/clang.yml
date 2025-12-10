@@ -849,10 +849,12 @@ linux64-clang-21-raw:
             - 'build/build-clang/use-clang-artifact.json'
             - 'build/build-clang/clang-21.json'
             - 'build/build-clang/stage-4-pgo.json'
+            - 'build/build-clang/stage-4-bolt.json'
         resources:
             - 'build/build-clang/use-clang-artifact.json'
             - 'build/build-clang/clang-21.json'
             - 'build/build-clang/stage-4-pgo.json'
+            - 'build/build-clang/stage-4-bolt.json'
         toolchain-artifact: public/build/clang.tar.zst
     fetches:
         fetch:
