@@ -286,27 +286,6 @@ class DisplayPortUtils {
       ScrollContainerFrame* aScrollContainerFrame, RepaintMode aRepaintMode);
 
   /**
-   * Step up one frame in the async scrollable ancestor chain, to be used in
-   * conjunction with GetAsyncScrollableAncestorFrame to walk the async
-   * scrollable ancestor chain. Note this doesn't go from one async scrollable
-   * frame to the next. Rather this walks all frame types, taking only one
-   * ancestor step per call.
-   */
-  static nsIFrame* OneStepInAsyncScrollableAncestorChain(nsIFrame* aFrame);
-
-  /**
-   * Step up one frame in the ASR chain, to be used in conjunction with
-   * GetASRAncestorFrame to walk the ASR chain. Note this doesn't go from one
-   * ASR frame to the next. Rather this walks all frame types, taking only one
-   * ancestor step per call. Note that a frame returned from this function could
-   * generate two ASRs: an inner one corresponding to an activated scroll frame,
-   * and an outer one corresponding to sticky pos. Returns null if we hit
-   * aLimitAncestor.
-   */
-  static nsIFrame* OneStepInASRChain(nsIFrame* aFrame,
-                                     nsIFrame* aLimitAncestor = nullptr);
-
-  /**
    * Sets a zero margin display port on all proper ancestors of aFrame that
    * are async scrollable.
    */
@@ -338,6 +317,51 @@ class DisplayPortUtils {
    * of displayports.
    */
   static bool WillUseEmptyDisplayPortMargins(nsIContent* aContent);
+
+  /**
+   * Step up one frame in the async scrollable ancestor chain, to be used in
+   * conjunction with GetAsyncScrollableAncestorFrame to walk the async
+   * scrollable ancestor chain. Note this doesn't go from one async scrollable
+   * frame to the next. Rather this walks all frame types, taking only one
+   * ancestor step per call.
+   */
+  static nsIFrame* OneStepInAsyncScrollableAncestorChain(nsIFrame* aFrame);
+
+  /**
+   * Follows the ASR (ActiveScrolledRoot) chain of frames, so that if
+   * f is the frame of an ASR A, then calling this function on
+   * OneStepInASRChain(f) will return the frame of parent ASR of A. Frames that
+   * generate an ASR are scroll frames for which IsMaybeAsynchronouslyScrolled()
+   * returns true (aka mWillBuildScrollableLayer == true) or they are sticky
+   * position frames for which their corresponding scroll frame will generate an
+   * ASR. This function is different from
+   * nsLayoutUtils::GetAsyncScrollableAncestorFrame because
+   * GetAsyncScrollableAncestorFrame looks only for scroll frames that
+   * WantAsyncScroll that that function walks from fixed pos to the root scroll
+   * frame. Because that status (ie mWillBuildScrollableLayer) can change this
+   * should only be called during a paint to the window after BuildDisplayList
+   * has been called on aTarget so that mWillBuildScrollableLayer will have been
+   * updated for this paint already for any frame we need to consult. Or for
+   * some other reason you know that mWillBuildScrollableLayer is up to date for
+   * this paint for any frame that might need to be consulted, ie you just
+   * updated them yourself. Note that a frame returned from this function could
+   * generate two ASRs: an inner one corresponding to an activated scroll frame,
+   * and an outer one corresponding to sticky pos.
+   */
+  static nsIFrame* GetASRAncestorFrame(nsIFrame* aFrame,
+                                       nsDisplayListBuilder* aBuilder);
+
+  /**
+   * Step up one frame in the ASR chain, to be used in conjunction with
+   * GetASRAncestorFrame to walk the ASR chain. Note this doesn't go from one
+   * ASR frame to the next. Rather this walks all frame types, taking only one
+   * ancestor step per call. Note that a frame returned from this function could
+   * generate two ASRs: an inner one corresponding to an activated scroll frame,
+   * and an outer one corresponding to sticky pos. Returns null if we hit
+   * aLimitAncestor.
+   */
+  static nsIFrame* OneStepInASRChain(nsIFrame* aFrame,
+                                     nsIFrame* aLimitAncestor = nullptr);
 
   /**
    * Calls DecideScrollableLayerEnsureDisplayport on all proper ancestors of
