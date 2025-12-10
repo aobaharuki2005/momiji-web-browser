@@ -335,6 +335,10 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/IntentClassifier.sys.mjs",
   },
+  //  Bug 2003598 - Add Chat service with fetch with history  (backed out due to unused file)
+  {
+    file: "moz-src:///browser/components/aiwindow/models/Chat.sys.mjs",
+  },
   // Bug 2002840 - add function to return real time info injection message & tests (backed out due to unused file)
   {
     file: "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs",
