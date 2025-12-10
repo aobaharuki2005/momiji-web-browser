@@ -81,13 +81,8 @@ add_task(async function test_cleanup_theme_processedColors() {
     !("_processedColors" in themeFromFile.startupData.lwtData.theme),
     "No _processedColor property"
   );
-  Assert.equal(
-    themeFromFile.startupData.lwtStyles.foo,
-    "bar",
-    "The sentinel value is found"
-  );
   Assert.ok(
-    !("_processedColors" in themeFromFile.startupData.lwtStyles),
-    "No _processedColor property"
+    !("lwtStyles" in themeFromFile.startupData),
+    "No lwtStyles property"
   );
 });
