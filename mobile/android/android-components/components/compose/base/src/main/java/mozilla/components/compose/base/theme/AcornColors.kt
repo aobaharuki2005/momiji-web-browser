@@ -33,7 +33,6 @@ class AcornColors(
     layerSuccess: Color,
     layerCritical: Color,
     layerInformation: Color,
-    layerSearch: Color,
     layerAutofillText: Color,
     actionSecondary: Color,
     actionWarning: Color,
@@ -104,10 +103,6 @@ class AcornColors(
 
     // Info background
     var layerInformation by mutableStateOf(layerInformation)
-        private set
-
-    // Search
-    var layerSearch by mutableStateOf(layerSearch)
         private set
 
     // Autofill text background
@@ -249,7 +244,6 @@ class AcornColors(
         layerSuccess = other.layerSuccess
         layerCritical = other.layerCritical
         layerInformation = other.layerInformation
-        layerSearch = other.layerSearch
         actionSecondary = other.actionSecondary
         actionWarning = other.actionWarning
         actionSuccess = other.actionSuccess
@@ -292,7 +286,6 @@ class AcornColors(
         layerSuccess: Color = this.layerSuccess,
         layerCritical: Color = this.layerCritical,
         layerInformation: Color = this.layerInformation,
-        layerSearch: Color = this.layerSearch,
         layerAutofillText: Color = this.layerAutofillText,
         actionSecondary: Color = this.actionSecondary,
         actionWarning: Color = this.actionWarning,
@@ -331,7 +324,6 @@ class AcornColors(
         layerSuccess = layerSuccess,
         layerCritical = layerCritical,
         layerInformation = layerInformation,
-        layerSearch = layerSearch,
         layerAutofillText = layerAutofillText,
         actionSecondary = actionSecondary,
         actionWarning = actionWarning,
@@ -373,7 +365,6 @@ val darkColorPalette = AcornColors(
     layerSuccess = PhotonColors.Green80,
     layerCritical = PhotonColors.Pink80,
     layerInformation = PhotonColors.Blue50,
-    layerSearch = PhotonColors.DarkGrey80,
     layerAutofillText = PhotonColors.LightGrey05A34,
     actionSecondary = PhotonColors.DarkGrey05,
     actionWarning = PhotonColors.Yellow40A41,
@@ -414,7 +405,6 @@ val lightColorPalette = AcornColors(
     layerSuccess = PhotonColors.Green20,
     layerCritical = PhotonColors.Red10,
     layerInformation = PhotonColors.Blue50A44,
-    layerSearch = PhotonColors.LightGrey30,
     layerAutofillText = PhotonColors.DarkGrey05A43,
     actionSecondary = PhotonColors.LightGrey30,
     actionWarning = PhotonColors.Yellow60A40,
@@ -446,7 +436,6 @@ val lightColorPalette = AcornColors(
 val privateColorPalette = darkColorPalette.copy(
     layer2 = PhotonColors.Violet90,
     layer3 = PhotonColors.Ink90,
-    layerSearch = PhotonColors.Ink90,
     layerAutofillText = PhotonColors.Violet60,
     tabActive = PhotonColors.Purple60,
     tabInactive = PhotonColors.Ink90,
@@ -467,6 +456,7 @@ private fun AcornColors.toM3ColorScheme(
     outline: Color,
     outlineVariant: Color,
     surfaceBright: Color,
+    surfaceDim: Color,
     surfaceContainer: Color,
     surfaceContainerHigh: Color,
     surfaceContainerHighest: Color,
@@ -503,7 +493,7 @@ private fun AcornColors.toM3ColorScheme(
     outlineVariant = outlineVariant,
     scrim = layerScrim,
     surfaceBright = surfaceBright,
-    surfaceDim = layerSearch,
+    surfaceDim = surfaceDim,
     surfaceContainer = surfaceContainer,
     surfaceContainerHigh = surfaceContainerHigh,
     surfaceContainerHighest = surfaceContainerHighest,
@@ -539,6 +529,7 @@ fun acornDarkColorScheme(): ColorScheme = darkColorPalette.toM3ColorScheme(
     outline = PhotonColors.LightGrey80,
     outlineVariant = PhotonColors.DarkGrey05,
     surfaceBright = PhotonColors.DarkGrey40,
+    surfaceDim = PhotonColors.DarkGrey80,
     surfaceContainer = PhotonColors.DarkGrey60,
     surfaceContainerHigh = PhotonColors.DarkGrey50,
     surfaceContainerHighest = PhotonColors.DarkGrey40,
@@ -562,6 +553,7 @@ fun acornLightColorScheme(): ColorScheme = lightColorPalette.toM3ColorScheme(
     outline = PhotonColors.LightGrey90,
     outlineVariant = PhotonColors.LightGrey30,
     surfaceBright = PhotonColors.White,
+    surfaceDim = PhotonColors.LightGrey30,
     surfaceContainer = PhotonColors.LightGrey10,
     surfaceContainerHigh = PhotonColors.LightGrey20,
     surfaceContainerHighest = PhotonColors.LightGrey30,
@@ -585,6 +577,7 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
     outline = PhotonColors.LightGrey80,
     outlineVariant = PhotonColors.DarkGrey05,
     surfaceBright = Color(0xFF413857),
+    surfaceDim = PhotonColors.Ink90,
     surfaceContainer = Color(0xFF342B4A),
     surfaceContainerHigh = Color(0xFF3B3251),
     surfaceContainerHighest = Color(0xFF413857),
