@@ -56,8 +56,6 @@
     <color name="fx_mobile_layer_color_2">@color/photonWhite</color>
     <!-- Search -->
     <color name="fx_mobile_layer_color_3">@color/photonLightGrey20</color>
-    <!-- Selected tab -->
-    <color name="fx_mobile_layer_color_accent_nonopaque">@color/photonViolet70A12</color>
     <color name="fx_mobile_layer_color_scrim">@color/photonDarkGrey30A95</color>
     <!-- Tooltip -->
     <color name="fx_mobile_layer_color_gradient_start">@color/photonViolet70</color>
@@ -185,8 +183,6 @@
     <color name="fx_mobile_private_layer_color_2">@color/photonViolet90</color>
     <!-- Search -->
     <color name="fx_mobile_private_layer_color_3">@color/photonInk90</color>
-    <!-- Selected tab -->
-    <color name="fx_mobile_private_layer_color_accent_nonopaque">@color/photonViolet50A32</color>
     <color name="fx_mobile_private_layer_color_scrim">@color/photonDarkGrey90A95</color>
 
     <!-- Action -->

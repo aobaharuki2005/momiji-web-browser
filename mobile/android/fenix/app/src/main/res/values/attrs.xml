@@ -10,8 +10,6 @@
     <attr name="layer2" format="reference" />
     <!-- Search -->
     <attr name="layer3" format="reference" />
-    <!-- Selected tab -->
-    <attr name="layerNonOpaque" format="reference" />
     <attr name="scrim" format="reference" />
 
     <!-- Action -->
