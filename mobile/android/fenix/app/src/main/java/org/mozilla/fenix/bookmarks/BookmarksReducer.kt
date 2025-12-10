@@ -269,11 +269,24 @@ private fun BookmarksState.updateSelectedFolder(folder: SelectFolderItem): Bookm
         } else {
             alwaysTryUpdate.copy(
                 bookmarksEditBookmarkState = bookmarksEditBookmarkState.copy(folder = folder.folder, edited = true),
+                bookmarksSnackbarState = BookmarksSnackbarState.BookmarkMoved(
+                    formatBookmarkTitle(bookmarksEditBookmarkState.bookmark.title),
+                    folder.folder.title,
+                ),
             )
         }
     }
 
     else -> this
+}
+
+internal fun formatBookmarkTitle(raw: String, max: Int = 25): String {
+    val cleaned = raw
+        .removePrefix("https://")
+        .removePrefix("http://")
+        .removePrefix("www.")
+
+    return if (cleaned.length <= max) cleaned else cleaned.take(max) + "…"
 }
 
 private fun BookmarksState.toggleSelectionOf(item: BookmarkItem): BookmarksState =

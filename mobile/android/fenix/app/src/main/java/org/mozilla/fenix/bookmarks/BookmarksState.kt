@@ -193,6 +193,8 @@ internal sealed class BookmarksSnackbarState {
     data object None : BookmarksSnackbarState()
     data object CantEditDesktopFolders : BookmarksSnackbarState()
     data class UndoDeletion(val guidsToDelete: List<String>) : BookmarksSnackbarState()
+    data class BookmarkMoved(val from: String, val to: String) : BookmarksSnackbarState()
+    data object SelectFolderFailed : BookmarksSnackbarState()
 }
 
 internal fun BookmarksSnackbarState.addGuidToDelete(guid: String) = when (this) {
