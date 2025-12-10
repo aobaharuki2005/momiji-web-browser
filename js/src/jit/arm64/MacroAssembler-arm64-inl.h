@@ -512,6 +512,14 @@ void MacroAssembler::mulPtr(Register rhs, Register srcDest) {
   Mul(ARMRegister(srcDest, 64), ARMRegister(srcDest, 64), ARMRegister(rhs, 64));
 }
 
+void MacroAssembler::mulPtr(ImmWord rhs, Register srcDest) {
+  vixl::UseScratchRegisterScope temps(this);
+  const ARMRegister scratch64 = temps.AcquireX();
+  MOZ_ASSERT(srcDest != scratch64.asUnsized());
+  mov(rhs, scratch64.asUnsized());
+  mulPtr(scratch64.asUnsized(), srcDest);
+}
+
 void MacroAssembler::mul64(Imm64 imm, const Register64& dest) {
   vixl::UseScratchRegisterScope temps(this);
   const ARMRegister scratch64 = temps.AcquireX();
