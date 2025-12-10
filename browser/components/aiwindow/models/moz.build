@@ -10,6 +10,7 @@ DIRS += [
 ]
 
 MOZ_SRC_FILES += [
+    "Chat.sys.mjs",
     "ChatUtils.sys.mjs",
     "Insights.sys.mjs",
     "InsightsConstants.sys.mjs",
