@@ -102,10 +102,9 @@ def show_kinds(options):
             overrides={"target-kinds": target_kinds},
             strict=False,
         )
-    else:
+    elif target_kinds:
         # Parameters object already exists (from tests)
-        if target_kinds:
-            parameters["target-kinds"] = target_kinds
+        parameters["target-kinds"] = target_kinds
 
     tgg = get_taskgraph_generator(options.get("root"), parameters)
     kind_graph = tgg.kind_graph

@@ -39,20 +39,19 @@ if os.sep != "/":
             else:
                 return path.replace(os.sep, "/")
 
+elif os.altsep and os.altsep != "/":
+
+    def normsep(path):
+        if isinstance(path, bytes):
+            return path.replace(altsep_b, b"/")
+        else:
+            return path.replace(os.altsep, "/")
+        return path
+
 else:
-    if os.altsep and os.altsep != "/":
 
-        def normsep(path):
-            if isinstance(path, bytes):
-                return path.replace(altsep_b, b"/")
-            else:
-                return path.replace(os.altsep, "/")
-            return path
-
-    else:
-
-        def normsep(path):
-            return path
+    def normsep(path):
+        return path
 
 
 def evaluate_list_from_string(list_string):

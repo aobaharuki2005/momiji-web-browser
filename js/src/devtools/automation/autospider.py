@@ -317,9 +317,8 @@ if word_bits == 32:
             sse_flags = "-msse -msse2 -mfpmath=sse"
         env["CCFLAGS"] = "{} {}".format(env.get("CCFLAGS", ""), sse_flags)
         env["CXXFLAGS"] = "{} {}".format(env.get("CXXFLAGS", ""), sse_flags)
-else:
-    if platform.system() == "Windows":
-        CONFIGURE_ARGS += " --target=x86_64-pc-windows-msvc"
+elif platform.system() == "Windows":
+    CONFIGURE_ARGS += " --target=x86_64-pc-windows-msvc"
 
 if platform.system() == "Linux" and AUTOMATION:
     CONFIGURE_ARGS = "--enable-stdcxx-compat " + CONFIGURE_ARGS
