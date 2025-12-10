@@ -104,6 +104,7 @@ def create_payload(destination: Path, root_path: Path, cpio_tool: str):
                     "--owner",
                     "0:80",  # clean ownership
                 ],
+                check=False,
                 stdout=tmp_payload,
                 stderr=subprocess.PIPE,
                 input="\n".join(file_list) + "\n",

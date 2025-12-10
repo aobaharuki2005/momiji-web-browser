@@ -84,7 +84,7 @@ class OutputHandler:
 
 
 def test_help():
-    p = subprocess.run([sys.executable, "-m", "mozproxy", "--help"])
+    p = subprocess.run([sys.executable, "-m", "mozproxy", "--help"], check=False)
     assert p.returncode == 0
 
 

@@ -57,7 +57,7 @@ def create_test_file():
         print("File Exists, you need to delete it to create a new one.")
         return
     # file exists
-    subprocess.run([f"touch {final_path}"], encoding="utf8", shell=True)
+    subprocess.run([f"touch {final_path}"], check=False, encoding="utf8", shell=True)
     assert final_path.exists()
     with open(final_path, "w") as file:
         file.write("import pytest\n\n")

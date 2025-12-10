@@ -438,6 +438,7 @@ class BaseBootstrapper:
 
         process = subprocess.run(
             [str(path), version_param],
+            check=False,
             env=env,
             text=True,
             stdout=subprocess.PIPE,

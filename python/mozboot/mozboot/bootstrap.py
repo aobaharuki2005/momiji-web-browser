@@ -172,7 +172,10 @@ def check_for_hgrc_state_dir_mismatch(state_dir):
     import subprocess
 
     result = subprocess.run(
-        ["hg", "config", "--source", "-T", "json"], capture_output=True, text=True
+        ["hg", "config", "--source", "-T", "json"],
+        check=False,
+        capture_output=True,
+        text=True,
     )
 
     if result.returncode:
@@ -779,6 +782,7 @@ def _warn_if_risky_revision(path: Path):
 def _macos_is_running_under_rosetta():
     proc = subprocess.run(
         ["sysctl", "-n", "sysctl.proc_translated"],
+        check=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )

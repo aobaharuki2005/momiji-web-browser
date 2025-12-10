@@ -409,5 +409,4 @@ class MarionetteTestCase(CommonTestCase):
             if value:
                 return value
             time.sleep(0.5)
-        else:
-            raise TimeoutException("wait_for_condition timed out")
+        raise TimeoutException("wait_for_condition timed out")
