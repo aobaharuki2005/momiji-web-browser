@@ -42,6 +42,7 @@ task-defaults:
     fetches:
         toolchain:
             - linux64-sccache
+            - terser
 
 tasks:
     linux64-shippable/opt:
