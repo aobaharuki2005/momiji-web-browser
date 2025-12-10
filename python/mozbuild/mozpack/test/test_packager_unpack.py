@@ -15,9 +15,9 @@ class TestUnpack(TestWithTmpDir):
     maxDiff = None
 
     @staticmethod
-    def _get_copier(cls):
+    def _get_copier(formatter_class):
         copier = FileCopier()
-        formatter = cls(copier)
+        formatter = formatter_class(copier)
         fill_formatter(formatter, CONTENTS)
         return copier
 

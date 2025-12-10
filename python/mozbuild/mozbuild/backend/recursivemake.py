@@ -208,8 +208,8 @@ class RecursiveMakeTraversal:
     SubDirectoriesTuple = namedtuple("SubDirectories", SubDirectoryCategories)
 
     class SubDirectories(SubDirectoriesTuple):
-        def __new__(self):
-            return RecursiveMakeTraversal.SubDirectoriesTuple.__new__(self, [], [])
+        def __new__(cls):
+            return RecursiveMakeTraversal.SubDirectoriesTuple.__new__(cls, [], [])
 
     def __init__(self):
         self._traversal = {}
