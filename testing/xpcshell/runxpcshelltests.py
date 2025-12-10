@@ -1934,7 +1934,6 @@ class XPCShellTests:
         """
         Run xpcshell tests.
         """
-        global gotSIGINT
 
         # Number of times to repeat test(s) in --verify mode
         VERIFY_REPEAT = 10

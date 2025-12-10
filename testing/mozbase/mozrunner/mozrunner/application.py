@@ -112,7 +112,6 @@ class FennecContext(RemoteContext):
         # Create a mozdevice.ADBDevice object for the specified device_serial
         # and cache it for future use. If the same device_serial is subsequently
         # requested, retrieve it from the cache to avoid costly re-initialization.
-        global devices
         if device_serial in devices:
             device = devices[device_serial]
         else:

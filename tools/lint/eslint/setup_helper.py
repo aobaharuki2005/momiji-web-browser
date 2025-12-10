@@ -396,7 +396,6 @@ def get_project_root():
     """Returns the absolute path to the root of the project, see set_project_root()
     for how this is determined.
     """
-    global project_root
 
     if not project_root:
         set_project_root()

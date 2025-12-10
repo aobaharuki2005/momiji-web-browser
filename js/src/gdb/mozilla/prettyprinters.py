@@ -127,8 +127,7 @@ def pretty_printer_for_regexp(pattern, name):
 
 
 def clear_module_printers(module_name):
-    global printers_by_tag, ptr_printers_by_tag, ref_printers_by_tag
-    global template_printers_by_tag, printers_by_regexp
+    global printers_by_regexp
 
     # Remove all pretty-printers defined in the module named |module_name|
     # from d.

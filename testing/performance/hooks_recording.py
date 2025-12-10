@@ -105,7 +105,6 @@ def before_iterations(kw):
 
 
 def before_runs(env):
-    global next_site
     print("Running before_runs")
     add_options(env, options)
 

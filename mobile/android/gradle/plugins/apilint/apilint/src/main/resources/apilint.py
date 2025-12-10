@@ -594,7 +594,6 @@ failures = {}
 
 def _fail(clazz, detail, error, rule, msg):
     """Records an API failure to be processed later."""
-    global failures
 
     sig = "%s-%s-%s" % (clazz.fullname, repr(detail), msg)
     sig = sig.replace(" deprecated ", " ")
@@ -614,7 +613,6 @@ noticed = {}
 
 
 def notice(clazz):
-    global noticed
 
     noticed[clazz.fullname] = clazz
 
@@ -2630,7 +2628,6 @@ def verify_compat(cur, prev):
 
 def show_deprecations_at_birth(cur, prev):
     """Show API deprecations at birth."""
-    global failures
 
     # Remove all existing things so we're left with new
     for prev_clazz in prev.values():

@@ -225,7 +225,6 @@ def trackProcess(row, firstFirefoxPID):
 
 
 def getBrowserPID():
-    global gBrowserPID
     return gBrowserPID
 
 
@@ -348,7 +347,6 @@ def etlparser(
     all_threads=False,
     debug=False,
 ):
-    global NAME_SUBSTITUTIONS
 
     # setup output file
     if outputFile:
