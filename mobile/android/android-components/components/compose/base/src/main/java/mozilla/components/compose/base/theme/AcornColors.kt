@@ -35,10 +35,7 @@ class AcornColors(
     layerInformation: Color,
     layerSearch: Color,
     layerAutofillText: Color,
-    actionPrimary: Color,
-    actionPrimaryDisabled: Color,
     actionSecondary: Color,
-    actionTertiary: Color,
     actionWarning: Color,
     actionSuccess: Color,
     actionCritical: Color,
@@ -49,8 +46,6 @@ class AcornColors(
     textAccent: Color,
     textInverted: Color,
     textOnColorPrimary: Color,
-    textActionPrimary: Color,
-    textActionPrimaryDisabled: Color,
     textActionSecondary: Color,
     iconPrimary: Color,
     iconPrimaryInactive: Color,
@@ -59,7 +54,6 @@ class AcornColors(
     iconOnColor: Color,
     iconOnColorDisabled: Color,
     iconActionPrimary: Color,
-    borderPrimary: Color,
     borderAccent: Color,
     ripple: Color,
     tabActive: Color,
@@ -123,20 +117,8 @@ class AcornColors(
 
     // Actions
 
-    // Primary button, Snackbar, Floating action button, Chip selected
-    var actionPrimary by mutableStateOf(actionPrimary)
-        private set
-
-    // Primary disabled button background
-    var actionPrimaryDisabled by mutableStateOf(actionPrimaryDisabled)
-        private set
-
     // Secondary button
     var actionSecondary by mutableStateOf(actionSecondary)
-        private set
-
-    // Filter
-    var actionTertiary by mutableStateOf(actionTertiary)
         private set
 
     // Warning button
@@ -181,14 +163,6 @@ class AcornColors(
     var textOnColorPrimary by mutableStateOf(textOnColorPrimary)
         private set
 
-    // Action Primary text
-    var textActionPrimary by mutableStateOf(textActionPrimary)
-        private set
-
-    // Disabled Action Primary text
-    var textActionPrimaryDisabled by mutableStateOf(textActionPrimaryDisabled)
-        private set
-
     // Action Secondary text
     var textActionSecondary by mutableStateOf(textActionSecondary)
         private set
@@ -224,10 +198,6 @@ class AcornColors(
         private set
 
     // Border
-
-    // Default, Divider, Dotted
-    var borderPrimary by mutableStateOf(borderPrimary)
-        private set
 
     // Active tab (Nav), Selected tab, Active form
     var borderAccent by mutableStateOf(borderAccent)
@@ -280,10 +250,7 @@ class AcornColors(
         layerCritical = other.layerCritical
         layerInformation = other.layerInformation
         layerSearch = other.layerSearch
-        actionPrimary = other.actionPrimary
-        actionPrimaryDisabled = other.actionPrimaryDisabled
         actionSecondary = other.actionSecondary
-        actionTertiary = other.actionTertiary
         actionWarning = other.actionWarning
         actionSuccess = other.actionSuccess
         actionCritical = other.actionCritical
@@ -293,8 +260,6 @@ class AcornColors(
         textCritical = other.textCritical
         textAccent = other.textAccent
         textOnColorPrimary = other.textOnColorPrimary
-        textActionPrimary = other.textActionPrimary
-        textActionPrimaryDisabled = other.textActionPrimaryDisabled
         textActionSecondary = other.textActionSecondary
         iconPrimary = other.iconPrimary
         iconPrimaryInactive = other.iconPrimaryInactive
@@ -303,7 +268,6 @@ class AcornColors(
         iconOnColor = other.iconOnColor
         iconOnColorDisabled = other.iconOnColorDisabled
         iconActionPrimary = other.iconActionPrimary
-        borderPrimary = other.borderPrimary
         borderAccent = other.borderAccent
         ripple = other.ripple
         tabActive = other.tabActive
@@ -330,10 +294,7 @@ class AcornColors(
         layerInformation: Color = this.layerInformation,
         layerSearch: Color = this.layerSearch,
         layerAutofillText: Color = this.layerAutofillText,
-        actionPrimary: Color = this.actionPrimary,
-        actionPrimaryDisabled: Color = this.actionPrimaryDisabled,
         actionSecondary: Color = this.actionSecondary,
-        actionTertiary: Color = this.actionTertiary,
         actionWarning: Color = this.actionWarning,
         actionSuccess: Color = this.actionSuccess,
         actionCritical: Color = this.actionCritical,
@@ -344,8 +305,6 @@ class AcornColors(
         textAccent: Color = this.textAccent,
         textInverted: Color = this.textInverted,
         textOnColorPrimary: Color = this.textOnColorPrimary,
-        textActionPrimary: Color = this.textActionPrimary,
-        textActionPrimaryDisabled: Color = this.textActionPrimaryDisabled,
         textActionSecondary: Color = this.textActionSecondary,
         iconPrimary: Color = this.iconPrimary,
         iconPrimaryInactive: Color = this.iconPrimaryInactive,
@@ -354,7 +313,6 @@ class AcornColors(
         iconOnColor: Color = this.iconOnColor,
         iconOnColorDisabled: Color = this.iconOnColorDisabled,
         iconActionPrimary: Color = this.iconActionPrimary,
-        borderPrimary: Color = this.borderPrimary,
         borderAccent: Color = this.borderAccent,
         ripple: Color = this.ripple,
         tabActive: Color = this.tabActive,
@@ -375,10 +333,7 @@ class AcornColors(
         layerInformation = layerInformation,
         layerSearch = layerSearch,
         layerAutofillText = layerAutofillText,
-        actionPrimary = actionPrimary,
-        actionPrimaryDisabled = actionPrimaryDisabled,
         actionSecondary = actionSecondary,
-        actionTertiary = actionTertiary,
         actionWarning = actionWarning,
         actionSuccess = actionSuccess,
         actionCritical = actionCritical,
@@ -389,8 +344,6 @@ class AcornColors(
         textAccent = textAccent,
         textInverted = textInverted,
         textOnColorPrimary = textOnColorPrimary,
-        textActionPrimary = textActionPrimary,
-        textActionPrimaryDisabled = textActionPrimaryDisabled,
         textActionSecondary = textActionSecondary,
         iconPrimary = iconPrimary,
         iconPrimaryInactive = iconPrimaryInactive,
@@ -399,7 +352,6 @@ class AcornColors(
         iconOnColor = iconOnColor,
         iconOnColorDisabled = iconOnColorDisabled,
         iconActionPrimary = iconActionPrimary,
-        borderPrimary = borderPrimary,
         borderAccent = borderAccent,
         ripple = ripple,
         tabActive = tabActive,
@@ -423,10 +375,7 @@ val darkColorPalette = AcornColors(
     layerInformation = PhotonColors.Blue50,
     layerSearch = PhotonColors.DarkGrey80,
     layerAutofillText = PhotonColors.LightGrey05A34,
-    actionPrimary = PhotonColors.Violet60,
-    actionPrimaryDisabled = PhotonColors.Violet60A50,
     actionSecondary = PhotonColors.DarkGrey05,
-    actionTertiary = PhotonColors.DarkGrey10,
     actionWarning = PhotonColors.Yellow40A41,
     actionSuccess = PhotonColors.Green70,
     actionCritical = PhotonColors.Pink70A69,
@@ -437,8 +386,6 @@ val darkColorPalette = AcornColors(
     textAccent = PhotonColors.Violet20,
     textInverted = PhotonColors.DarkGrey90,
     textOnColorPrimary = PhotonColors.LightGrey05,
-    textActionPrimary = PhotonColors.LightGrey05,
-    textActionPrimaryDisabled = PhotonColors.LightGrey05A50,
     textActionSecondary = PhotonColors.LightGrey05,
     iconPrimary = PhotonColors.LightGrey05,
     iconPrimaryInactive = PhotonColors.LightGrey05A60,
@@ -447,7 +394,6 @@ val darkColorPalette = AcornColors(
     iconOnColor = PhotonColors.LightGrey05,
     iconOnColorDisabled = PhotonColors.LightGrey05A40,
     iconActionPrimary = PhotonColors.LightGrey05,
-    borderPrimary = PhotonColors.DarkGrey05,
     borderAccent = PhotonColors.Violet40,
     ripple = PhotonColors.White,
     tabActive = PhotonColors.DarkGrey30,
@@ -470,10 +416,7 @@ val lightColorPalette = AcornColors(
     layerInformation = PhotonColors.Blue50A44,
     layerSearch = PhotonColors.LightGrey30,
     layerAutofillText = PhotonColors.DarkGrey05A43,
-    actionPrimary = PhotonColors.Ink20,
-    actionPrimaryDisabled = PhotonColors.Ink20A20,
     actionSecondary = PhotonColors.LightGrey30,
-    actionTertiary = PhotonColors.LightGrey40,
     actionWarning = PhotonColors.Yellow60A40,
     actionSuccess = PhotonColors.Green60,
     actionCritical = PhotonColors.Red30,
@@ -484,8 +427,6 @@ val lightColorPalette = AcornColors(
     textAccent = PhotonColors.Violet70,
     textInverted = PhotonColors.LightGrey05,
     textOnColorPrimary = PhotonColors.LightGrey05,
-    textActionPrimary = PhotonColors.LightGrey05,
-    textActionPrimaryDisabled = PhotonColors.DarkGrey90A50,
     textActionSecondary = PhotonColors.DarkGrey90,
     iconPrimary = PhotonColors.DarkGrey90,
     iconPrimaryInactive = PhotonColors.DarkGrey90A60,
@@ -494,7 +435,6 @@ val lightColorPalette = AcornColors(
     iconOnColor = PhotonColors.LightGrey05,
     iconOnColorDisabled = PhotonColors.LightGrey05A40,
     iconActionPrimary = PhotonColors.LightGrey05,
-    borderPrimary = PhotonColors.LightGrey30,
     borderAccent = PhotonColors.Ink20,
     ripple = PhotonColors.Black,
     tabActive = PhotonColors.LightGrey10,
@@ -508,7 +448,6 @@ val privateColorPalette = darkColorPalette.copy(
     layer3 = PhotonColors.Ink90,
     layerSearch = PhotonColors.Ink90,
     layerAutofillText = PhotonColors.Violet60,
-    borderPrimary = PhotonColors.Ink05,
     tabActive = PhotonColors.Purple60,
     tabInactive = PhotonColors.Ink90,
     surfaceDimVariant = PhotonColors.Ink90,
