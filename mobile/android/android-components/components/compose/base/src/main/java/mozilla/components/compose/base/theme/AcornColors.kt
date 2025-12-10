@@ -39,7 +39,6 @@ class AcornColors(
     actionInformation: Color,
     formDefault: Color,
     textSecondary: Color,
-    textCritical: Color,
     textInverted: Color,
     textOnColorPrimary: Color,
     textActionSecondary: Color,
@@ -129,10 +128,6 @@ class AcornColors(
 
     // Secondary text
     var textSecondary by mutableStateOf(textSecondary)
-        private set
-
-    // Warning text
-    var textCritical by mutableStateOf(textCritical)
         private set
 
     // Text Inverted
@@ -235,7 +230,6 @@ class AcornColors(
         actionInformation = other.actionInformation
         formDefault = other.formDefault
         textSecondary = other.textSecondary
-        textCritical = other.textCritical
         textOnColorPrimary = other.textOnColorPrimary
         textActionSecondary = other.textActionSecondary
         iconPrimary = other.iconPrimary
@@ -275,7 +269,6 @@ class AcornColors(
         actionInformation: Color = this.actionInformation,
         formDefault: Color = this.formDefault,
         textSecondary: Color = this.textSecondary,
-        textCritical: Color = this.textCritical,
         textInverted: Color = this.textInverted,
         textOnColorPrimary: Color = this.textOnColorPrimary,
         textActionSecondary: Color = this.textActionSecondary,
@@ -310,7 +303,6 @@ class AcornColors(
         actionInformation = actionInformation,
         formDefault = formDefault,
         textSecondary = textSecondary,
-        textCritical = textCritical,
         textInverted = textInverted,
         textOnColorPrimary = textOnColorPrimary,
         textActionSecondary = textActionSecondary,
@@ -348,7 +340,6 @@ val darkColorPalette = AcornColors(
     actionInformation = PhotonColors.Blue60,
     formDefault = PhotonColors.LightGrey05,
     textSecondary = PhotonColors.LightGrey40,
-    textCritical = PhotonColors.Red20,
     textInverted = PhotonColors.DarkGrey90,
     textOnColorPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.LightGrey05,
@@ -385,7 +376,6 @@ val lightColorPalette = AcornColors(
     actionInformation = PhotonColors.Blue50,
     formDefault = PhotonColors.DarkGrey90,
     textSecondary = PhotonColors.DarkGrey05,
-    textCritical = PhotonColors.Red70,
     textInverted = PhotonColors.LightGrey05,
     textOnColorPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
@@ -424,6 +414,7 @@ private fun AcornColors.toM3ColorScheme(
     onSurface: Color,
     surfaceTint: Color,
     inverseSurface: Color,
+    error: Color,
     errorContainer: Color,
     outline: Color,
     outlineVariant: Color,
@@ -458,7 +449,7 @@ private fun AcornColors.toM3ColorScheme(
     surfaceTint = surfaceTint,
     inverseSurface = inverseSurface,
     inverseOnSurface = textInverted,
-    error = textCritical,
+    error = error,
     onError = textInverted,
     errorContainer = errorContainer,
     onErrorContainer = onSurface,
@@ -500,6 +491,7 @@ fun acornDarkColorScheme(): ColorScheme = darkColorPalette.toM3ColorScheme(
     onSurface = PhotonColors.LightGrey05,
     surfaceTint = PhotonColors.LightGrey05A34,
     inverseSurface = PhotonColors.LightGrey40,
+    error = PhotonColors.Red20,
     errorContainer = PhotonColors.Red80,
     outline = PhotonColors.LightGrey80,
     outlineVariant = PhotonColors.DarkGrey05,
@@ -527,6 +519,7 @@ fun acornLightColorScheme(): ColorScheme = lightColorPalette.toM3ColorScheme(
     onSurface = PhotonColors.DarkGrey90,
     surfaceTint = PhotonColors.DarkGrey05A43,
     inverseSurface = PhotonColors.DarkGrey60,
+    error = PhotonColors.Red70,
     errorContainer = PhotonColors.Red05,
     outline = PhotonColors.LightGrey90,
     outlineVariant = PhotonColors.LightGrey30,
@@ -554,6 +547,7 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
     onSurface = PhotonColors.LightGrey05,
     surfaceTint = PhotonColors.Violet60,
     inverseSurface = PhotonColors.LightGrey40,
+    error = PhotonColors.Red20,
     errorContainer = PhotonColors.Red80,
     outline = PhotonColors.LightGrey80,
     outlineVariant = PhotonColors.DarkGrey05,
