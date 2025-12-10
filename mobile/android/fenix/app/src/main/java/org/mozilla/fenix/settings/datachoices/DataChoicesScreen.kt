@@ -72,7 +72,7 @@ internal fun DataChoicesScreen(
             onStudiesClick = onStudiesClick,
             onTelemetryToggle = onTelemetryToggle,
             onUsagePingToggle = onUsagePingToggle,
-            onMarketingDataToggled = onMarketingDataToggled,
+            onMeasurementDataToggled = onMarketingDataToggled,
             onCrashOptionSelected = onCrashOptionSelected,
             learnMoreTechnicalData = learnMoreTechnicalData,
             learnMoreDailyUsage = learnMoreDailyUsage,
@@ -89,7 +89,7 @@ internal fun DataChoicesUi(
     onStudiesClick: () -> Unit,
     onTelemetryToggle: () -> Unit,
     onUsagePingToggle: () -> Unit,
-    onMarketingDataToggled: () -> Unit,
+    onMeasurementDataToggled: () -> Unit,
     onCrashOptionSelected: (CrashReportOption) -> Unit,
     learnMoreTechnicalData: () -> Unit,
     learnMoreDailyUsage: () -> Unit,
@@ -147,15 +147,17 @@ internal fun DataChoicesUi(
         HorizontalDivider(modifier = Modifier.padding(top = 16.dp, bottom = 24.dp))
 
         // Campaign measurement Section
-        TogglePreferenceSection(
-            categoryTitle = stringResource(R.string.preferences_marketing_data_title),
-            preferenceTitle = stringResource(R.string.preferences_marketing_data_2),
-            preferenceSummary = stringResource(R.string.preferences_marketing_data_description_4),
-            learnMoreText = stringResource(R.string.preferences_marketing_data_learn_more),
-            isToggled = state.measurementDataEnabled,
-            onToggleChanged = onMarketingDataToggled,
-            onLearnMoreClicked = learnMoreMarketingData,
-        )
+        if (state.showMeasurementDataSection) {
+            TogglePreferenceSection(
+                categoryTitle = stringResource(R.string.preferences_marketing_data_title),
+                preferenceTitle = stringResource(R.string.preferences_marketing_data_2),
+                preferenceSummary = stringResource(R.string.preferences_marketing_data_description_4),
+                learnMoreText = stringResource(R.string.preferences_marketing_data_learn_more),
+                isToggled = state.measurementDataEnabled,
+                onToggleChanged = onMeasurementDataToggled,
+                onLearnMoreClicked = learnMoreMarketingData,
+            )
+        }
     }
 }
 
@@ -379,6 +381,22 @@ private fun DataChoicesTelemetryDisabledPrivatePreview() {
                 initialState = DataChoicesState(
                     studiesEnabled = false,
                     telemetryEnabled = false,
+                ),
+            ),
+        )
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun DataChoicesMarketingSectionDisabledPreview() {
+    FirefoxTheme {
+        DataChoicesScreen(
+            store = DataChoicesStore(
+                initialState = DataChoicesState(
+                    studiesEnabled = false,
+                    telemetryEnabled = false,
+                    showMeasurementDataSection = false,
                 ),
             ),
         )
