@@ -56,7 +56,7 @@ class GitRepository(Repository):
     """An implementation of `Repository` for Git repositories."""
 
     def __init__(self, path: Path, git="git"):
-        super(GitRepository, self).__init__(path, tool=git)
+        super().__init__(path, tool=git)
 
     @property
     def name(self):

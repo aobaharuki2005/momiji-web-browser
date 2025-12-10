@@ -21,7 +21,7 @@ class TestSessionRestore(SessionStoreTestCase):
     """
 
     def setUp(self):
-        super(TestSessionRestore, self).setUp(
+        super().setUp(
             startup_page=1,
             include_private=False,
             restore_on_demand=True,

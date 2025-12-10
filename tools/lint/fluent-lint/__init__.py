@@ -142,7 +142,7 @@ class Linter(visitor.Visitor):
             # Only debug print the root node.
             self.debug_print_json = False
 
-        super(Linter, self).generic_visit(node)
+        super().generic_visit(node)
 
     def visit_Attribute(self, node):
         # Only visit values for Attribute nodes, the identifier comes from dom.

@@ -141,7 +141,7 @@ class VirtualenvMixin:
 
     def __init__(self, *args, **kwargs):
         self._virtualenv_modules = []
-        super(VirtualenvMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def register_virtualenv_module(
         self,
@@ -816,7 +816,7 @@ class ResourceMonitoringMixin(PerfherderResourceOptionsMixin):
     """
 
     def __init__(self, *args, **kwargs):
-        super(ResourceMonitoringMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.register_virtualenv_module("psutil>=5.9.0", method="pip", optional=True)
         self.register_virtualenv_module("jsonschema==2.5.1", method="pip")

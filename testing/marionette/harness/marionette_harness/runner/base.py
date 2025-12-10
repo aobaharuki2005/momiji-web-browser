@@ -160,7 +160,7 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
         self.add_test_result(
             test, output=self._exc_info_to_string(err, test), result_actual="ERROR"
         )
-        super(MarionetteTestResult, self).addError(test, err)
+        super().addError(test, err)
 
     def addFailure(self, test, err):
         self.add_test_result(
@@ -168,28 +168,28 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
             output=self._exc_info_to_string(err, test),
             result_actual="UNEXPECTED-FAIL",
         )
-        super(MarionetteTestResult, self).addFailure(test, err)
+        super().addFailure(test, err)
 
     def addSuccess(self, test):
         self.passed += 1
         self.add_test_result(test, result_actual="PASS")
-        super(MarionetteTestResult, self).addSuccess(test)
+        super().addSuccess(test)
 
     def addExpectedFailure(self, test, err):
         """Called when an expected failure/error occured."""
         self.add_test_result(
             test, output=self._exc_info_to_string(err, test), result_actual="KNOWN-FAIL"
         )
-        super(MarionetteTestResult, self).addExpectedFailure(test, err)
+        super().addExpectedFailure(test, err)
 
     def addUnexpectedSuccess(self, test):
         """Called when a test was expected to fail, but succeed."""
         self.add_test_result(test, result_actual="UNEXPECTED-PASS")
-        super(MarionetteTestResult, self).addUnexpectedSuccess(test)
+        super().addUnexpectedSuccess(test)
 
     def addSkip(self, test, reason):
         self.add_test_result(test, output=reason, result_actual="SKIPPED")
-        super(MarionetteTestResult, self).addSkip(test, reason)
+        super().addSkip(test, reason)
 
     def getInfo(self, test):
         return test.test_name
@@ -250,7 +250,7 @@ class MarionetteTextTestRunner(StructuredTestRunner):
         )
 
     def run(self, test):
-        result = super(MarionetteTextTestRunner, self).run(test)
+        result = super().run(test)
         result.printLogs(test)
         return result
 

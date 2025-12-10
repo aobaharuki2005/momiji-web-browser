@@ -281,9 +281,7 @@ class RaptorGatherer(FrameworkGatherer):
         :return str: A formatted string containing the reference link to the
             documented metric.
         """
-        metric_heading = super(RaptorGatherer, self)._get_metric_heading(
-            metric, metrics_info
-        )
+        metric_heading = super()._get_metric_heading(metric, metrics_info)
         return f"`{metric} <raptor-metrics.html#{metric_heading.lower().replace(' ', '-')}>`__"
 
     def get_test_list(self):

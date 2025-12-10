@@ -70,7 +70,7 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
         return set(sorted(files))
 
     def setUp(self):
-        super(TestSafeBrowsingInitialDownload, self).setUp()
+        super().setUp()
 
         self.safebrowsing_shavar_files = self.get_safebrowsing_files(False)
         if any(
@@ -121,7 +121,7 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
             # Restart with a fresh profile
             self.marionette.restart(in_app=False, clean=True)
         finally:
-            super(TestSafeBrowsingInitialDownload, self).tearDown()
+            super().tearDown()
 
     def test_safe_browsing_initial_download(self):
         def check_downloaded(_):

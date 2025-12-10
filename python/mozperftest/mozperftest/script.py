@@ -103,7 +103,7 @@ class ScriptInfo(defaultdict):
     """Loads and parses a Browsertime test script."""
 
     def __init__(self, path):
-        super(ScriptInfo, self).__init__()
+        super().__init__()
         try:
             self.script = Path(path).resolve()
             if self.script.suffix == ".html":

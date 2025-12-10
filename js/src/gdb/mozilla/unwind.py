@@ -75,7 +75,7 @@ class UnwinderTypeCache(TypeCache):
         self.d = None
         self.frame_enum_names = {}
         self.frame_class_types = {}
-        super(UnwinderTypeCache, self).__init__(None)
+        super().__init__(None)
 
     # We take this bizarre approach to defer trying to look up any
     # symbols until absolutely needed.  Without this, the loading
@@ -164,7 +164,7 @@ class JitFrameDecorator(FrameDecorator):
     JIT frame in the stack."""
 
     def __init__(self, base, info, cache):
-        super(JitFrameDecorator, self).__init__(base)
+        super().__init__(base)
         self.info = info
         self.cache = cache
 
@@ -517,7 +517,7 @@ class SpiderMonkeyUnwinder(Unwinder):
     UNWINDERS = [x64UnwinderState]
 
     def __init__(self, typecache):
-        super(SpiderMonkeyUnwinder, self).__init__("SpiderMonkey")
+        super().__init__("SpiderMonkey")
         self.typecache = typecache
         self.unwinder_state = None
 

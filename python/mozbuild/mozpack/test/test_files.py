@@ -1248,7 +1248,7 @@ class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
 @unittest.skipIf(os.name == "nt", "Does not currently work in Python3 on Windows")
 class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
     def setUp(self):
-        super(TestMercurialRevisionFinder, self).setUp()
+        super().setUp()
         hglib.init(self.tmpdir)
         self._clients = []
 
@@ -1262,7 +1262,7 @@ class TestMercurialRevisionFinder(MatchTestTemplate, TestWithTmpDir):
 
         self._clients[:] = []
 
-        super(TestMercurialRevisionFinder, self).tearDown()
+        super().tearDown()
 
     def _client(self):
         configs = (

@@ -116,7 +116,7 @@ class WebPlatformTestsCreator(Creator):
     local_path = os.path.join("testing", "web-platform", "mozilla", "tests")
 
     def __init__(self, *args, **kwargs):
-        super(WebPlatformTestsCreator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.reftest = self.suite == "web-platform-tests-reftest"
 
     @classmethod

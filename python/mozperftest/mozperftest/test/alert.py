@@ -305,7 +305,7 @@ class AlertTestRunner(Layer):
     }
 
     def __init__(self, env, mach_cmd):
-        super(AlertTestRunner, self).__init__(env, mach_cmd)
+        super().__init__(env, mach_cmd)
         self.perfherder_data = {}
 
     def _get_task_info(self, task_id):

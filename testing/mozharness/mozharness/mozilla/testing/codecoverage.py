@@ -79,7 +79,7 @@ class CodeCoverageMixin(SingleTestMixin):
         else:
             raise Exception(f"Unexpected OS: {mozinfo.os}")
 
-        super(CodeCoverageMixin, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def code_coverage_enabled(self):

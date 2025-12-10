@@ -17,7 +17,7 @@ class IniParseError(Exception):
         else:
             path = getattr(fp, "path", "unknown")
         msg = f"Error parsing manifest file '{path}', line {linenum}: {msg}"
-        super(IniParseError, self).__init__(msg)
+        super().__init__(msg)
 
 
 def read_ini(

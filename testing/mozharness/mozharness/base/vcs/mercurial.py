@@ -52,7 +52,7 @@ class RepositoryUpdateRevisionParser(OutputParser):
         if m:
             self.revision = m.group(1)
 
-        return super(RepositoryUpdateRevisionParser, self).parse_single_line(line)
+        return super().parse_single_line(line)
 
 
 def make_hg_url(hg_host, repo_path, protocol="http", revision=None, filename=None):
@@ -80,7 +80,7 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
     #  get_branches, cleanOutgoingRevs
 
     def __init__(self, log_obj=None, config=None, vcs_config=None, script_obj=None):
-        super(MercurialVCS, self).__init__()
+        super().__init__()
         self.can_share = None
         self.log_obj = log_obj
         self.script_obj = script_obj

@@ -29,7 +29,7 @@ class CppEclipseBackend(CommonBackend):
                 "Eclipse is not supported on Windows. "
                 "Consider using Visual Studio instead."
             )
-        super(CppEclipseBackend, self).__init__(environment)
+        super().__init__(environment)
 
     def _init(self):
         CommonBackend._init(self)

@@ -14,7 +14,7 @@ LOG = RaptorLogger(component="raptor-browsertime-desktop")
 
 class BrowsertimeDesktop(PerftestDesktop, Browsertime):
     def __init__(self, *args, **kwargs):
-        super(BrowsertimeDesktop, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def browsertime_args(self):

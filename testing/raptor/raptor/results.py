@@ -301,7 +301,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
     """Process Browsertime results"""
 
     def __init__(self, config, root_results_dir=None):
-        super(BrowsertimeResultsHandler, self).__init__(**config)
+        super().__init__(**config)
         self._root_results_dir = root_results_dir
         self.browsertime_visualmetrics = False
         self.failed_vismets = []

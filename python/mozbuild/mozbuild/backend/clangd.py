@@ -128,9 +128,7 @@ class ClangdBackend(CompileDBBackend):
         CompileDBBackend._init(self)
 
     def _get_compiler_args(self, cenv, canonical_suffix):
-        compiler_args = super(ClangdBackend, self)._get_compiler_args(
-            cenv, canonical_suffix
-        )
+        compiler_args = super()._get_compiler_args(cenv, canonical_suffix)
         if compiler_args is None:
             return None
 

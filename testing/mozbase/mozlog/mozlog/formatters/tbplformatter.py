@@ -29,7 +29,7 @@ class TbplFormatter(BaseFormatter):
     """
 
     def __init__(self, compact=False, summary_on_shutdown=False, **kwargs):
-        super(TbplFormatter, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.suite_start_time = None
         self.test_start_times = {}
         self.buffer = None
@@ -42,7 +42,7 @@ class TbplFormatter(BaseFormatter):
     def __call__(self, data):
         if self.summary_on_shutdown:
             self.summary(data)
-        return super(TbplFormatter, self).__call__(data)
+        return super().__call__(data)
 
     @property
     def compact(self):

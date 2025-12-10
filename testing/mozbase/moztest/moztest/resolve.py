@@ -605,7 +605,7 @@ class BuildBackendLoader(TestLoader):
 
 class TestManifestLoader(TestLoader):
     def __init__(self, *args, **kwargs):
-        super(TestManifestLoader, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.finder = FileFinder(self.topsrcdir)
         self.reader = self.mozbuild_reader(config_mode="empty")
         self.variables = {f"{k}_MANIFESTS": v[0] for k, v in TEST_MANIFESTS.items()}
@@ -670,7 +670,7 @@ class TestResolver(MozbuildObject):
 
     def __init__(self, *args, **kwargs):
         loader_cls = kwargs.pop("loader_cls", BuildBackendLoader)
-        super(TestResolver, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.load_tests = self._spawn(loader_cls)
         self._tests = []

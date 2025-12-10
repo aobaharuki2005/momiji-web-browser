@@ -79,7 +79,7 @@ class TalosOutputParser(OutputParser):
     worst_tbpl_status = TBPL_SUCCESS
 
     def __init__(self, **kwargs):
-        super(TalosOutputParser, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.minidump_output = None
         self.found_perf_data = []
 
@@ -122,7 +122,7 @@ class TalosOutputParser(OutputParser):
         elif line.startswith("Running cycle ") or line.startswith("PROCESS-CRASH "):
             SystemResourceMonitor.record_event(line)
 
-        super(TalosOutputParser, self).parse_single_line(line)
+        super().parse_single_line(line)
 
 
 class Talos(
@@ -321,7 +321,7 @@ class Talos(
             ],
         )
         kwargs.setdefault("config", {})
-        super(Talos, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.workdir = self.query_abs_dirs()["abs_work_dir"]  # convenience
 
@@ -374,7 +374,7 @@ class Talos(
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
-        abs_dirs = super(Talos, self).query_abs_dirs()
+        abs_dirs = super().query_abs_dirs()
         abs_dirs["abs_blob_upload_dir"] = os.path.join(
             abs_dirs["abs_work_dir"], "blobber_upload_dir"
         )
@@ -754,7 +754,7 @@ class Talos(
             "tools/wpt_third_party/h2/*",
             "tools/wpt_third_party/pywebsocket3/*",
         ]
-        return super(Talos, self).download_and_extract(
+        return super().download_and_extract(
             extract_dirs=extract_dirs, suite_categories=["common", "talos"]
         )
 
@@ -809,7 +809,7 @@ class Talos(
             requirements=[mozbase_requirements],
             editable=True,
         )
-        super(Talos, self).create_virtualenv()
+        super().create_virtualenv()
         # talos in harness requires what else is
         # listed in talos requirements.txt file.
         self.install_module(requirements=[talos_requirements])

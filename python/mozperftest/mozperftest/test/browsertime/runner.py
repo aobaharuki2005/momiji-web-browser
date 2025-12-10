@@ -88,7 +88,7 @@ class BrowsertimeRunner(NodeRunner):
     }
 
     def __init__(self, env, mach_cmd):
-        super(BrowsertimeRunner, self).__init__(env, mach_cmd)
+        super().__init__(env, mach_cmd)
         self.topsrcdir = mach_cmd.topsrcdir
         self._mach_context = mach_cmd._mach_context
         self.virtualenv_manager = mach_cmd.virtualenv_manager
@@ -198,7 +198,7 @@ class BrowsertimeRunner(NodeRunner):
         if node is not None:
             os.environ["NODEJS"] = node
 
-        super(BrowsertimeRunner, self).setup()
+        super().setup()
         install_url = self.get_arg("install-url")
 
         # installing Python deps on the fly

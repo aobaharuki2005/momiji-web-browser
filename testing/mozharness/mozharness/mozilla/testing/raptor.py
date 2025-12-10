@@ -667,7 +667,7 @@ class Raptor(
             ],
         )
         kwargs.setdefault("config", {})
-        super(Raptor, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Convenience
         self.workdir = self.query_abs_dirs()["abs_work_dir"]
@@ -796,7 +796,7 @@ class Raptor(
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
-        abs_dirs = super(Raptor, self).query_abs_dirs()
+        abs_dirs = super().query_abs_dirs()
         abs_dirs["abs_blob_upload_dir"] = os.path.join(
             abs_dirs["abs_work_dir"], "blobber_upload_dir"
         )
@@ -1147,7 +1147,7 @@ class Raptor(
     def clobber(self):
         # Recreate the upload directory for storing the logcat collected
         # during APK installation.
-        super(Raptor, self).clobber()
+        super().clobber()
         upload_dir = self.query_abs_dirs()["abs_blob_upload_dir"]
         if not os.path.isdir(upload_dir):
             self.mkdir_p(upload_dir)
@@ -1158,7 +1158,7 @@ class Raptor(
         # the logcat file will be left in the upload directory.
         self.logcat_start()
         try:
-            super(Raptor, self).install_android_app(apk, replace=replace)
+            super().install_android_app(apk, replace=replace)
         finally:
             self.logcat_stop()
 
@@ -1170,7 +1170,7 @@ class Raptor(
             "tools/wpt_third_party/h2/*",
             "tools/wpt_third_party/pywebsocket3/*",
         ]
-        return super(Raptor, self).download_and_extract(
+        return super().download_and_extract(
             extract_dirs=extract_dirs, suite_categories=["common", "condprof", "raptor"]
         )
 
@@ -1273,7 +1273,7 @@ class Raptor(
             self.setup_local_ffmpeg()
 
         # Require pip >= 1.5 so pip will prefer .whl files to install
-        super(Raptor, self).create_virtualenv(modules=modules)
+        super().create_virtualenv(modules=modules)
 
         # Install Raptor dependencies
         self.install_module(requirements=[raptor_requirements])
@@ -1337,7 +1337,7 @@ class Raptor(
                 else:
                     self.install_android_app(str(installer_path))
             else:
-                super(Raptor, self).install()
+                super().install()
 
     def _artifact_perf_data(self, src, dest):
         if not os.path.isdir(os.path.dirname(dest)):
@@ -1522,7 +1522,7 @@ class RaptorOutputParser(OutputParser):
     RE_PERF_DATA = re.compile(r".*PERFHERDER_DATA:\s+(\{.*\})")
 
     def __init__(self, **kwargs):
-        super(RaptorOutputParser, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.minidump_output = None
         self.found_perf_data = []
         self.tbpl_status = TBPL_SUCCESS
@@ -1557,4 +1557,4 @@ class RaptorOutputParser(OutputParser):
                 return
             else:
                 SystemResourceMonitor.record_event(raptor_line)
-        super(RaptorOutputParser, self).parse_single_line(line)
+        super().parse_single_line(line)

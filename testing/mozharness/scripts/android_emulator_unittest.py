@@ -184,7 +184,7 @@ class AndroidEmulatorTest(
     )
 
     def __init__(self, require_config_file=False):
-        super(AndroidEmulatorTest, self).__init__(
+        super().__init__(
             config_options=self.config_options,
             all_actions=[
                 "clobber",
@@ -232,7 +232,7 @@ class AndroidEmulatorTest(
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
-        abs_dirs = super(AndroidEmulatorTest, self).query_abs_dirs()
+        abs_dirs = super().query_abs_dirs()
         dirs = {}
         dirs["abs_test_install_dir"] = os.path.join(abs_dirs["abs_work_dir"], "tests")
         dirs["abs_test_bin_dir"] = os.path.join(
@@ -494,9 +494,7 @@ class AndroidEmulatorTest(
         """
         Download and extract product APK, tests.zip, and host utils.
         """
-        super(AndroidEmulatorTest, self).download_and_extract(
-            suite_categories=self._query_suite_categories()
-        )
+        super().download_and_extract(suite_categories=self._query_suite_categories())
         dirs = self.query_abs_dirs()
         self.xre_path = dirs["abs_xre_dir"]
 

@@ -17,7 +17,7 @@ class SingleTestMixin:
     """Utility functions for per-test testing like test verification and per-test coverage."""
 
     def __init__(self, **kwargs):
-        super(SingleTestMixin, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.suites = {}
         self.tests_downloaded = False

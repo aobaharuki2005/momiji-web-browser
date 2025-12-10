@@ -22,7 +22,7 @@ DEFAULT_TIMEOUT = 125
 
 class TestBrowserThread(threading.Thread):
     def __init__(self, raptor_instance, tests, names):
-        super(TestBrowserThread, self).__init__()
+        super().__init__()
         self.raptor_instance = raptor_instance
         self.tests = tests
         self.names = names

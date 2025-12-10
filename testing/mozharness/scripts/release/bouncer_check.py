@@ -79,7 +79,7 @@ class BouncerCheck(BaseScript):
     ]
 
     def __init__(self, require_config_file=True):
-        super(BouncerCheck, self).__init__(
+        super().__init__(
             config_options=self.config_options,
             require_config_file=require_config_file,
             config={
@@ -99,7 +99,7 @@ class BouncerCheck(BaseScript):
         )
 
     def _pre_config_lock(self, rw_config):
-        super(BouncerCheck, self)._pre_config_lock(rw_config)
+        super()._pre_config_lock(rw_config)
 
         if "product_field" not in self.config:
             return

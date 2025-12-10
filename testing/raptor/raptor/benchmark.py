@@ -81,7 +81,7 @@ class Benchmark:
 
             def log_message(self, *args):
                 if CustomHandler.verbose:
-                    super(CustomHandler, self).log_message(*args)
+                    super().log_message(*args)
 
             def end_headers(self):
                 self.send_header("Access-Control-Allow-Origin", "*")

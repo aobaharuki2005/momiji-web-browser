@@ -67,7 +67,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
     config_options = copy.deepcopy(testing_config_options)
 
     def __init__(self, require_config_file=False):
-        super(AndroidProfileRun, self).__init__(
+        super().__init__(
             config_options=self.config_options,
             all_actions=[
                 "download",
@@ -94,7 +94,7 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
-        abs_dirs = super(AndroidProfileRun, self).query_abs_dirs()
+        abs_dirs = super().query_abs_dirs()
         dirs = {}
 
         dirs["abs_test_install_dir"] = os.path.join(abs_dirs["abs_src_dir"], "testing")

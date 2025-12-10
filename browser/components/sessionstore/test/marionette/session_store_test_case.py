@@ -45,7 +45,7 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
         test_windows=DEFAULT_WINDOWS,
         taskbartabs_enable=False,
     ):
-        super(SessionStoreTestCase, self).setUp()
+        super().setUp()
         self.marionette.set_context("chrome")
 
         platform = self.marionette.session_capabilities["platformName"]
@@ -97,7 +97,7 @@ class SessionStoreTestCase(WindowManagerMixin, MarionetteTestCase):
             # Create a fresh profile for subsequent tests.
             self.marionette.restart(in_app=False, clean=True)
         finally:
-            super(SessionStoreTestCase, self).tearDown()
+            super().tearDown()
 
     def open_windows(self, window_sets, is_private=False):
         """Open a set of windows with tabs pointing at some URLs.

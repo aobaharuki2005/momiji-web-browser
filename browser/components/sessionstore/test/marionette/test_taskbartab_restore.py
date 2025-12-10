@@ -19,7 +19,7 @@ def inline(title):
 
 class TestManualRestoreWithTaskbarTabs(SessionStoreTestCase):
     def setUp(self):
-        super(TestManualRestoreWithTaskbarTabs, self).setUp(
+        super().setUp(
             startup_page=1,
             include_private=False,
             restore_on_demand=False,
@@ -89,7 +89,7 @@ class TestManualRestoreWithTaskbarTabs(SessionStoreTestCase):
 
 class TestAutoRestoreWithTaskbarTabs(SessionStoreTestCase):
     def setUp(self):
-        super(TestAutoRestoreWithTaskbarTabs, self).setUp(
+        super().setUp(
             startup_page=3,
             include_private=False,
             restore_on_demand=False,

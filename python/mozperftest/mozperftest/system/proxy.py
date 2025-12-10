@@ -109,7 +109,7 @@ class ProxyRunner(Layer):
     }
 
     def __init__(self, env, mach_cmd):
-        super(ProxyRunner, self).__init__(env, mach_cmd)
+        super().__init__(env, mach_cmd)
         self.proxy = None
         self.tmpdir = None
 

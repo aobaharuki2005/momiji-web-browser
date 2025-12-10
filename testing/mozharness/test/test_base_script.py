@@ -34,7 +34,7 @@ baz"""
 
 class CleanupObj(script.ScriptMixin, log.LogMixin):
     def __init__(self):
-        super(CleanupObj, self).__init__()
+        super().__init__()
         self.log_obj = None
         self.config = {"log_level": ERROR}
 
@@ -796,7 +796,7 @@ class BaseScriptWithDecorators(script.BaseScript):
         option_args.extend(["--base-work-dir", self._tmpdir])
         kwargs["option_args"] = option_args
 
-        super(BaseScriptWithDecorators, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.pre_run_1_args = []
         self.raise_during_pre_run_1 = False

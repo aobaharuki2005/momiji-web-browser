@@ -445,7 +445,7 @@ class XPCShellTestsTests(unittest.TestCase):
     """
 
     def __init__(self, name):
-        super(XPCShellTestsTests, self).__init__(name)
+        super().__init__(name)
         from buildconfig import substs
         from mozbuild.base import MozbuildObject
 

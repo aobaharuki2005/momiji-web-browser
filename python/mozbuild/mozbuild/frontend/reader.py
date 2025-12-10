@@ -498,12 +498,7 @@ class SandboxValidationError(Exception):
         s.write("The error occurred when validating the result of ")
         s.write("the execution. The reported error is:\n")
         s.write("\n")
-        s.write(
-            "".join(
-                "    %s\n" % l
-                for l in super(SandboxValidationError, self).__str__().splitlines()
-            )
-        )
+        s.write("".join("    %s\n" % l for l in super().__str__().splitlines()))
         s.write("\n")
 
         return s.getvalue()

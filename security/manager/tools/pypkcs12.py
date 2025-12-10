@@ -37,7 +37,7 @@ class OpenSSLError(Error):
     """Class for handling errors when calling OpenSSL."""
 
     def __init__(self, status):
-        super(OpenSSLError, self).__init__()
+        super().__init__()
         self.status = status
 
     def __str__(self):

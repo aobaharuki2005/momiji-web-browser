@@ -199,7 +199,7 @@ class Profile(BaseProfile):
         :param allowlistpaths: List of paths to pass to Firefox to allow read
             access to from the content process sandbox.
         """
-        super(Profile, self).__init__(
+        super().__init__(
             profile=profile,
             addons=addons,
             preferences=preferences,
@@ -281,7 +281,7 @@ class Profile(BaseProfile):
             self.clean_preferences()
             if getattr(self, "addons", None) is not None:
                 self.addons.clean()
-        super(Profile, self).cleanup()
+        super().cleanup()
 
     def clean_preferences(self):
         """Removed preferences added by mozrunner."""
@@ -517,7 +517,7 @@ class ChromiumProfile(BaseProfile):
             return False
 
     def __init__(self, **kwargs):
-        super(ChromiumProfile, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         if self.create_new:
             self.profile = os.path.join(self.profile, "Default")

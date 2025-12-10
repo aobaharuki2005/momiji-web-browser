@@ -40,7 +40,7 @@ class Repackage(BaseScript):
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
-        abs_dirs = super(Repackage, self).query_abs_dirs()
+        abs_dirs = super().query_abs_dirs()
         config = self.config
 
         dirs = {}

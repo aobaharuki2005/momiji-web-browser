@@ -27,7 +27,7 @@ class HgRepository(Repository):
     def __init__(self, path: Path, hg="hg"):
         import hglib.client
 
-        super(HgRepository, self).__init__(path, tool=hg)
+        super().__init__(path, tool=hg)
         self._env["HGPLAIN"] = "1"
 
         # Setting this modifies a global variable and makes all future hglib
@@ -91,7 +91,7 @@ class HgRepository(Repository):
 
     def _run(self, *args, **runargs):
         if not self._client.server:
-            return super(HgRepository, self)._run(*args, **runargs)
+            return super()._run(*args, **runargs)
 
         # hglib requires bytes on python 3
         args = [a.encode("utf-8") if not isinstance(a, bytes) else a for a in args]

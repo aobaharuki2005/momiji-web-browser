@@ -49,7 +49,7 @@ class JujutsuRepository(Repository):
     HEAD_REVSET = 'coalesce(@ ~ (empty() & description(exact:"")) ~ bookmarks(), @-)'
 
     def __init__(self, path: Path, jj="jj", git="git"):
-        super(JujutsuRepository, self).__init__(path, tool=jj)
+        super().__init__(path, tool=jj)
         self._git = GitRepository(path, git=git)
 
         # Find git root. Newer jj has `jj git root`, but this should support

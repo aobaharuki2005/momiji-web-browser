@@ -58,12 +58,12 @@ class FxDesktopBuild(BuildScript):
             },
             "ConfigClass": BuildingConfig,
         }
-        super(FxDesktopBuild, self).__init__(**buildscript_kwargs)
+        super().__init__(**buildscript_kwargs)
 
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
-        abs_dirs = super(FxDesktopBuild, self).query_abs_dirs()
+        abs_dirs = super().query_abs_dirs()
 
         dirs = {
             # BuildFactories in factory.py refer to a 'build' dir on the slave.

@@ -30,7 +30,7 @@ DEFAULT_WINDOWS = set(
 
 class TestAutoRestoreWithTabGroups(SessionStoreTestCase):
     def setUp(self):
-        super(TestAutoRestoreWithTabGroups, self).setUp(
+        super().setUp(
             startup_page=3,
             include_private=False,
             restore_on_demand=True,

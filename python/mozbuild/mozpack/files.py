@@ -433,7 +433,7 @@ class HardlinkFile(File):
         assert isinstance(dest, str)
 
         if not hasattr(os, "link"):
-            return super(HardlinkFile, self).copy(dest, skip_if_older=skip_if_older)
+            return super().copy(dest, skip_if_older=skip_if_older)
 
         try:
             path_st = os.stat(self.path)
@@ -463,7 +463,7 @@ class HardlinkFile(File):
             os.link(self.path, dest)
         except OSError:
             # If we can't hard link, fall back to copying
-            return super(HardlinkFile, self).copy(dest, skip_if_older=skip_if_older)
+            return super().copy(dest, skip_if_older=skip_if_older)
         return True
 
 
@@ -1166,7 +1166,7 @@ class MercurialRevisionFinder(BaseFinder):
         if not hglib:
             raise Exception("hglib package not found")
 
-        super(MercurialRevisionFinder, self).__init__(base=repo, **kwargs)
+        super().__init__(base=repo, **kwargs)
 
         self._root = mozpath.normpath(repo).rstrip("/")
         self._recognize_repo_paths = recognize_repo_paths

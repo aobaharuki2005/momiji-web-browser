@@ -116,7 +116,7 @@ class OpenH264Build(TransferMixin, VCSScript, TooltoolMixin):
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
-        dirs = super(OpenH264Build, self).query_abs_dirs()
+        dirs = super().query_abs_dirs()
         dirs["abs_upload_dir"] = os.path.join(dirs["abs_work_dir"], "upload")
         self.abs_dirs = dirs
         return self.abs_dirs

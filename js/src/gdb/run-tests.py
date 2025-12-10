@@ -61,7 +61,7 @@ def make_shell_cmd(l):
 class Summary:
     class SummaryBar(progressbar.ProgressBar):
         def __init__(self, limit):
-            super(Summary.SummaryBar, self).__init__("", limit, 24)
+            super().__init__("", limit, 24)
 
         def start(self):
             self.label = "[starting           ]"
@@ -152,7 +152,7 @@ class Summary:
 
 class Test(TaskPool.Task):
     def __init__(self, path, summary):
-        super(Test, self).__init__()
+        super().__init__()
         self.test_path = path  # path to .py test file
         self.summary = summary
 
@@ -188,7 +188,7 @@ class Test(TaskPool.Task):
         ]
 
     def start(self, pipe, deadline):
-        super(Test, self).start(pipe, deadline)
+        super().start(pipe, deadline)
         if OPTIONS.show_cmd:
             self.summary.interleave_output(lambda: self.show_cmd(sys.stdout))
 

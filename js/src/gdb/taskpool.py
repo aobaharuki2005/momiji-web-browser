@@ -211,11 +211,11 @@ if __name__ == "__main__":
 
         class SortableTask(TaskPool.Task):
             def __init__(self, n):
-                super(SortableTask, self).__init__()
+                super().__init__()
                 self.n = n
 
             def start(self, pipe, deadline):
-                super(SortableTask, self).start(pipe, deadline)
+                super().start(pipe, deadline)
 
             def cmd(self):
                 return ["sh", "-c", "echo out; sleep %d; echo err>&2" % (self.n,)]

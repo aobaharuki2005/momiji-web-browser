@@ -749,7 +749,7 @@ class PerftestAndroid(Perftest):
             LOG.info("Reverse port forwarding is used only on local devices")
 
     def build_browser_profile(self):
-        super(PerftestAndroid, self).build_browser_profile()
+        super().build_browser_profile()
 
         if self.config["app"] in FIREFOX_ANDROID_APPS:
             # Merge in the Android profile.
@@ -803,7 +803,7 @@ class PerftestDesktop(Perftest):
     """Mixin class for Desktop-specific Perftest subclasses"""
 
     def __init__(self, *args, **kwargs):
-        super(PerftestDesktop, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def setup_chrome_args(self, test):
         """Sets up chrome/chromium cmd-line arguments.

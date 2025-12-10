@@ -41,7 +41,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
     """
 
     def __init__(self, app, binary, activity=None, intent=None, **kwargs):
-        super(BrowsertimeAndroid, self).__init__(
+        super().__init__(
             app,
             binary,
             **kwargs,
@@ -202,7 +202,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         return args_list
 
     def build_browser_profile(self):
-        super(BrowsertimeAndroid, self).build_browser_profile()
+        super().build_browser_profile()
 
         if self.config["app"] in FIREFOX_ANDROID_APPS:
             # Merge in the Android profile.
@@ -232,7 +232,7 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             self.device.rm(self.geckodriver_profile, force=True, recursive=True)
 
     def run_test_setup(self, test):
-        super(BrowsertimeAndroid, self).run_test_setup(test)
+        super().run_test_setup(test)
 
         self.set_reverse_ports()
 
@@ -248,10 +248,10 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             # Make sure that chrome is enabled on the device
             self.device.shell_output("pm enable com.android.chrome")
 
-        return super(BrowsertimeAndroid, self).run_tests(tests, test_names)
+        return super().run_tests(tests, test_names)
 
     def run_test_teardown(self, test):
         LOG.info("removing reverse socket connections")
         self.device.remove_socket_connections("reverse")
 
-        super(BrowsertimeAndroid, self).run_test_teardown(test)
+        super().run_test_teardown(test)

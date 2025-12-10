@@ -59,7 +59,7 @@ class TelemetryTestRunner(BaseMarionetteTestRunner):
             }
         )
 
-        super(TelemetryTestRunner, self).__init__(prefs=prefs, **kwargs)
+        super().__init__(prefs=prefs, **kwargs)
 
         self.testvars["server_root"] = kwargs["server_root"]
         self.testvars["server_url"] = SERVER_URL

@@ -221,7 +221,7 @@ class SubStatus(Status):
 
 class Dict(ContainerType):
     def _format_item_type(self, item_type):
-        superfmt = super(Dict, self)._format_item_type
+        superfmt = super()._format_item_type
 
         if isinstance(item_type, dict):
             if len(item_type) != 1:
@@ -276,7 +276,7 @@ class Boolean(DataType):
 
 class Tuple(ContainerType):
     def _format_item_type(self, item_type):
-        superfmt = super(Tuple, self)._format_item_type
+        superfmt = super()._format_item_type
 
         if isinstance(item_type, (tuple, list)):
             return [superfmt(t) for t in item_type]

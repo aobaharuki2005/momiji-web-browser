@@ -474,7 +474,7 @@ class TestConfigure(unittest.TestCase):
         class CountApplyImportsSandbox(ConfigureSandbox):
             def _apply_imports(self, *args, **kwargs):
                 imports.append((args, kwargs))
-                super(CountApplyImportsSandbox, self)._apply_imports(*args, **kwargs)
+                super()._apply_imports(*args, **kwargs)
 
         config = {}
         out = StringIO()

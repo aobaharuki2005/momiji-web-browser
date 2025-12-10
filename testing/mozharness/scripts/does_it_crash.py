@@ -72,7 +72,7 @@ class DoesItCrash(BaseScript):
     ]
 
     def __init__(self):
-        super(DoesItCrash, self).__init__(
+        super().__init__(
             all_actions=[
                 "download",
                 "run-thing",

@@ -8,7 +8,7 @@ from marionette_harness.marionette_test import MarionetteTestCase
 
 class TestPingSubmitted(MarionetteTestCase):
     def setUp(self):
-        super(TestPingSubmitted, self).setUp()
+        super().setUp()
 
         self.marionette.set_context(self.marionette.CONTEXT_CHROME)
 

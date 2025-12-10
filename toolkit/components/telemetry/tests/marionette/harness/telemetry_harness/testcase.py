@@ -25,7 +25,7 @@ UUID_PATTERN = re.compile(
 class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
     def __init__(self, *args, **kwargs):
         """Initialize the test case and create a ping server."""
-        super(TelemetryTestCase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def setUp(self, *args, **kwargs):
         """Set up the test case and start the ping server."""
@@ -35,7 +35,7 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         )
         self.ping_server.start()
 
-        super(TelemetryTestCase, self).setUp(*args, **kwargs)
+        super().setUp(*args, **kwargs)
 
         # Store IDs of addons installed via self.install_addon()
         self.addon_ids = []
@@ -232,6 +232,6 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
 
     def tearDown(self, *args, **kwargs):
         """Stop the ping server and tear down the testcase."""
-        super(TelemetryTestCase, self).tearDown()
+        super().tearDown()
         self.ping_server.stop()
         self.marionette.quit(in_app=False, clean=True)

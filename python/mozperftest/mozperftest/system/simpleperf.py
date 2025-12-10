@@ -159,7 +159,7 @@ class SimpleperfProfiler(Layer):
     }
 
     def __init__(self, env, mach_cmd):
-        super(SimpleperfProfiler, self).__init__(env, mach_cmd)
+        super().__init__(env, mach_cmd)
         self.device = ADBDevice()
 
     @staticmethod

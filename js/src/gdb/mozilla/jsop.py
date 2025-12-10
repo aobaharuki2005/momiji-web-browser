@@ -49,7 +49,7 @@ class JSOp:
 @ptr_pretty_printer("jsbytecode")
 class JSBytecodePtr(mozilla.prettyprinters.Pointer):
     def __init__(self, value, cache):
-        super(JSBytecodePtr, self).__init__(value, cache)
+        super().__init__(value, cache)
         self.jotc = JSOpTypeCache.get_or_create(cache)
 
     def to_string(self):

@@ -998,17 +998,17 @@ class TarFile(tarfile.TarFile):
             self._extracted_members.add(targetpath)
 
     def extract(self, *args, **kwargs):
-        self._tooltool_do_extract(super(TarFile, self).extract, *args, **kwargs)
+        self._tooltool_do_extract(super().extract, *args, **kwargs)
 
     # extractall in versions for cpython that implement PEP 706 call _extract_one
     # instead of extract.
     def _extract_one(self, *args, **kwargs):
-        self._tooltool_do_extract(super(TarFile, self)._extract_one, *args, **kwargs)
+        self._tooltool_do_extract(super()._extract_one, *args, **kwargs)
 
     def extractall(self, *args, **kwargs):
         self._deferred_links = {}
         self._extracted_members = set()
-        super(TarFile, self).extractall(*args, **kwargs)
+        super().extractall(*args, **kwargs)
         for links in self._deferred_links.values():
             for tarinfo, linkpath, numeric_owner in links:
                 log.warn("Cannot create dangling symbolic link: %s", linkpath)

@@ -653,7 +653,7 @@ class _StopAction(argparse.Action):
         default=argparse.SUPPRESS,
         help=None,
     ):
-        super(_StopAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             default=default,
@@ -664,7 +664,7 @@ class _StopAction(argparse.Action):
 
 class _PrintTests(_StopAction):
     def __init__(self, integrated_apps=INTEGRATED_APPS, *args, **kwargs):
-        super(_PrintTests, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.integrated_apps = integrated_apps
 
     def __call__(self, parser, namespace, values, option_string=None):

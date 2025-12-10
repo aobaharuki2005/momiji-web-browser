@@ -768,7 +768,7 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?"""
             self._run_cmd_checks(c.get("postflight_run_cmd_suites", []))
 
     def query_abs_dirs(self):
-        abs_dirs = super(TestingMixin, self).query_abs_dirs()
+        abs_dirs = super().query_abs_dirs()
         if "MOZ_FETCHES_DIR" in os.environ:
             abs_dirs["abs_fetches_dir"] = os.environ["MOZ_FETCHES_DIR"]
         return abs_dirs

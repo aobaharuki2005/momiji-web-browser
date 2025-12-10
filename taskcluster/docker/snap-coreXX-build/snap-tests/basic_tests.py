@@ -429,7 +429,7 @@ class SnapTestsBase:
 class SnapTests(SnapTestsBase):
     def __init__(self, exp):
         self._dir = "basic_tests"
-        super(__class__, self).__init__(exp)
+        super().__init__(exp)
 
     def test_snap_core_base(self, exp):
         assert self.snap_core_base() in ["22", "24"], "Core base should be 22 or 24"

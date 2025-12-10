@@ -386,7 +386,7 @@ class RecursiveMakeBackend(MakeBackend):
         }
 
     def summary(self):
-        summary = super(RecursiveMakeBackend, self).summary()
+        summary = super().summary()
         summary.extend(
             "; {makefile_in:d} -> {makefile_out:d} Makefile",
             makefile_in=self._makefile_in_count,

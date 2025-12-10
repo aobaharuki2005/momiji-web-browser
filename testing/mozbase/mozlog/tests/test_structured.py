@@ -52,7 +52,7 @@ class BaseStructuredTest(unittest.TestCase):
 
 class TestStatusHandler(BaseStructuredTest):
     def setUp(self):
-        super(TestStatusHandler, self).setUp()
+        super().setUp()
         self.handler = handlers.StatusHandler()
         self.logger.add_handler(self.handler)
 
@@ -109,7 +109,7 @@ class TestStatusHandler(BaseStructuredTest):
 
 class TestSummaryHandler(BaseStructuredTest):
     def setUp(self):
-        super(TestSummaryHandler, self).setUp()
+        super().setUp()
         self.handler = handlers.SummaryHandler()
         self.logger.add_handler(self.handler)
 

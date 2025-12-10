@@ -479,7 +479,7 @@ class JunitArgumentParser(argparse.ArgumentParser):
     """
 
     def __init__(self, **kwargs):
-        super(JunitArgumentParser, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.add_argument(
             "--appname",

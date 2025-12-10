@@ -349,7 +349,7 @@ def HybridBackend(*backends):
     class TheHybridBackend(BuildBackend):
         def __init__(self, environment):
             self._backends = [b(environment) for b in backends]
-            super(TheHybridBackend, self).__init__(environment)
+            super().__init__(environment)
 
         def consume_object(self, obj):
             return any(b.consume_object(obj) for b in self._backends)

@@ -12,7 +12,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 
 class ReftestArgumentsParser(argparse.ArgumentParser):
     def __init__(self, **kwargs):
-        super(ReftestArgumentsParser, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         # Try to import a MozbuildObject. Success indicates that we are
         # running from a source tree. This allows some defaults to be set
@@ -465,7 +465,7 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
 
 class DesktopArgumentsParser(ReftestArgumentsParser):
     def __init__(self, **kwargs):
-        super(DesktopArgumentsParser, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.add_argument(
             "--run-tests-in-parallel",
@@ -476,7 +476,7 @@ class DesktopArgumentsParser(ReftestArgumentsParser):
         )
 
     def validate(self, options, reftest):
-        super(DesktopArgumentsParser, self).validate(options, reftest)
+        super().validate(options, reftest)
 
         if options.runTestsInParallel:
             if options.logFile is not None:
@@ -525,7 +525,7 @@ class DesktopArgumentsParser(ReftestArgumentsParser):
 
 class RemoteArgumentsParser(ReftestArgumentsParser):
     def __init__(self, **kwargs):
-        super(RemoteArgumentsParser, self).__init__()
+        super().__init__()
 
         # app, xrePath and utilityPath variables are set in main function
         self.set_defaults(

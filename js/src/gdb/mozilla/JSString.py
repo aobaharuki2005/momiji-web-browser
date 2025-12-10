@@ -32,7 +32,7 @@ class JSStringTypeCache:
 
 class Common(mozilla.prettyprinters.Pointer):
     def __init__(self, value, cache):
-        super(Common, self).__init__(value, cache)
+        super().__init__(value, cache)
         if not cache.mod_JSString:
             cache.mod_JSString = JSStringTypeCache(cache)
         self.stc = cache.mod_JSString

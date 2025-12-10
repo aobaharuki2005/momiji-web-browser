@@ -26,7 +26,7 @@ from mozbuild.makeutil import Makefile
 
 class FasterMakeBackend(MakeBackend, PartialBackend):
     def _init(self):
-        super(FasterMakeBackend, self)._init()
+        super()._init()
 
         self._manifest_entries = defaultdict(set)
 

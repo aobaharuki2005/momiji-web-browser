@@ -63,7 +63,7 @@ class Browsertime(Perftest, metaclass=ABCMeta):
             # use the chrome-m profile class for both chrome-m and CaR-m
             profile_class = "chrome-m"
 
-        super(Browsertime, self).__init__(
+        super().__init__(
             app,
             binary,
             profile_class=profile_class,
@@ -101,7 +101,7 @@ class Browsertime(Perftest, metaclass=ABCMeta):
         return self._crash_directory
 
     def build_browser_profile(self):
-        super(Browsertime, self).build_browser_profile()
+        super().build_browser_profile()
         if self.profile is not None:
             self.remove_mozprofile_delimiters_from_profile()
 
@@ -157,7 +157,7 @@ class Browsertime(Perftest, metaclass=ABCMeta):
         if test.get("preferences", ""):
             test["preferences"] = self._convert_prefs_to_dict(test["preferences"])
 
-        super(Browsertime, self).run_test_setup(test)
+        super().run_test_setup(test)
 
         if test.get("type") == "benchmark" or test.get("benchmark_webserver", False):
             # benchmark-type tests require the benchmark test to be served out
@@ -253,7 +253,7 @@ class Browsertime(Perftest, metaclass=ABCMeta):
         LOG.info(f"test: {test}")
 
     def run_test_teardown(self, test):
-        super(Browsertime, self).run_test_teardown(test)
+        super().run_test_teardown(test)
 
         # If we were using a playback tool, stop it
         if self.playback is not None:
@@ -269,13 +269,13 @@ class Browsertime(Perftest, metaclass=ABCMeta):
             test.get("support_class").clean_up()
 
     def check_for_crashes(self):
-        super(Browsertime, self).check_for_crashes()
+        super().check_for_crashes()
         self.crashes += mozcrash.log_crashes(
             LOG, self.crash_directory, self.config["symbols_path"]
         )
 
     def clean_up(self):
-        super(Browsertime, self).clean_up()
+        super().clean_up()
 
     def _expose_browser_profiler(self, extra_profiler_run, test):
         """Use this method to check if we will use an exposed gecko profiler via browsertime.

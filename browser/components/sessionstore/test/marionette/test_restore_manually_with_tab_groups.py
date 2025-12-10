@@ -19,7 +19,7 @@ def inline(doc):
 
 class TestSessionRestoreWithTabGroups(SessionStoreTestCase):
     def setUp(self):
-        super(TestSessionRestoreWithTabGroups, self).setUp(
+        super().setUp(
             startup_page=1,
             include_private=False,
             restore_on_demand=True,

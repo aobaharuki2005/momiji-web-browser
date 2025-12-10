@@ -23,7 +23,7 @@ class LocalesTest(locales.LocalesMixin, script.BaseScript):
             kwargs["config"] = {"log_type": "simple", "log_level": "error"}
         if "initial_config_file" not in kwargs:
             kwargs["initial_config_file"] = "test/test.json"
-        super(LocalesTest, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.config = {}
         self.log_obj = None
 

@@ -11,7 +11,7 @@ from marionette_harness import MarionetteTestCase
 
 class BounceTrackingStoragePersistenceTestCase(MarionetteTestCase):
     def setUp(self):
-        super(BounceTrackingStoragePersistenceTestCase, self).setUp()
+        super().setUp()
         self.marionette.enforce_gecko_prefs(
             {
                 "privacy.bounceTrackingProtection.enabled": True,
@@ -25,7 +25,7 @@ class BounceTrackingStoragePersistenceTestCase(MarionetteTestCase):
     def tearDown(self):
         self.marionette.restart(in_app=False, clean=True)
 
-        super(BounceTrackingStoragePersistenceTestCase, self).tearDown()
+        super().tearDown()
 
     def populate_state(self):
         # Add some data to test persistence.

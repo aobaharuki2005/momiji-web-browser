@@ -15,7 +15,7 @@ class _StopAction(argparse.Action):
         default=argparse.SUPPRESS,
         help=None,
     ):
-        super(_StopAction, self).__init__(
+        super().__init__(
             option_strings=option_strings,
             dest=dest,
             default=default,

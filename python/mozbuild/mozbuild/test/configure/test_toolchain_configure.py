@@ -343,7 +343,7 @@ LIBRARY_NAME_INFOS = {
 
 class BaseToolchainTest(BaseConfigureTest):
     def setUp(self):
-        super(BaseToolchainTest, self).setUp()
+        super().setUp()
         self.maxDiff = None
         self.out = StringIO()
         self.logger = logging.getLogger("BaseToolchainTest")
@@ -355,7 +355,7 @@ class BaseToolchainTest(BaseConfigureTest):
         self.logger.removeHandler(self.handler)
         del self.handler
         del self.out
-        super(BaseToolchainTest, self).tearDown()
+        super().tearDown()
 
     def do_toolchain_test(self, paths, results, args=[], environ={}):
         """Helper to test the toolchain checks from toolchain.configure.

@@ -259,7 +259,7 @@ class GTests:
 
 class gtestOptions(argparse.ArgumentParser):
     def __init__(self):
-        super(gtestOptions, self).__init__()
+        super().__init__()
 
         self.add_argument(
             "--cwd",

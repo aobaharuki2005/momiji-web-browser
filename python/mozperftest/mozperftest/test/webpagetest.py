@@ -132,7 +132,7 @@ class PropagatingErrorThread(Thread):
             self.exc = e
 
     def join(self, timeout=None):
-        super(PropagatingErrorThread, self).join()
+        super().join()
         if self.exc:
             raise self.exc
 
@@ -177,7 +177,7 @@ class WebPageTest(Layer):
     }
 
     def __init__(self, env, mach_cmd):
-        super(WebPageTest, self).__init__(env, mach_cmd)
+        super().__init__(env, mach_cmd)
         if utils.ON_TRY:
             self.WPT_key = utils.get_tc_secret(wpt=True)["wpt_key"]
         else:

@@ -344,7 +344,7 @@ class CompilerResult(ReadOnlyNamespace):
             flags = []
         if wrapper is None:
             wrapper = []
-        super(CompilerResult, self).__init__(
+        super().__init__(
             flags=flags,
             version=version,
             type=type,

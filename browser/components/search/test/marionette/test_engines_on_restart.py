@@ -9,7 +9,7 @@ from marionette_harness.marionette_test import MarionetteTestCase
 
 class TestEnginesOnRestart(MarionetteTestCase):
     def setUp(self):
-        super(TestEnginesOnRestart, self).setUp()
+        super().setUp()
         self.marionette.enforce_gecko_prefs(
             {
                 "browser.search.log": True,

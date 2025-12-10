@@ -18,7 +18,7 @@ class SummaryHandler(LogHandler):
     """
 
     def __init__(self, **kwargs):
-        super(SummaryHandler, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.summary = OrderedDict()
         self.current_suite = None

@@ -17,7 +17,7 @@ def inline(title):
 
 class TestTaskbarTabSessionState(SessionStoreTestCase):
     def setUp(self):
-        super(TestTaskbarTabSessionState, self).setUp(
+        super().setUp(
             startup_page=1,
             include_private=False,
             restore_on_demand=False,

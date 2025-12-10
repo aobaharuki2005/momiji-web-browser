@@ -58,7 +58,7 @@ class Tag(list):
             self.__dict__.update(kwargs)
 
     def __init__(self, *args, **kwargs):
-        super(Tag, self).__init__(args)
+        super().__init__(args)
         self.attr = self.Attr(**kwargs)
 
     def __unicode__(self):
@@ -269,7 +269,7 @@ class HtmlVisitor(SimpleUnicodeVisitor):
             value = getattr(attrs, name)
             if value is None:
                 return
-        return super(HtmlVisitor, self).repr_attribute(attrs, name)
+        return super().repr_attribute(attrs, name)
 
     def _issingleton(self, tagname):
         return tagname in self.single

@@ -70,7 +70,7 @@ class ShellScriptRunner(Layer):
     }
 
     def __init__(self, env, mach_cmd):
-        super(ShellScriptRunner, self).__init__(env, mach_cmd)
+        super().__init__(env, mach_cmd)
         self.metrics = []
         self.timed_out = False
         self.output_timed_out = False

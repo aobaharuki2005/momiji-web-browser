@@ -72,7 +72,7 @@ class XPCShell(Layer):
     }
 
     def __init__(self, env, mach_cmd):
-        super(XPCShell, self).__init__(env, mach_cmd)
+        super().__init__(env, mach_cmd)
         self.topsrcdir = mach_cmd.topsrcdir
         self._mach_context = mach_cmd._mach_context
         self.python_path = mach_cmd.virtualenv_manager.python_path

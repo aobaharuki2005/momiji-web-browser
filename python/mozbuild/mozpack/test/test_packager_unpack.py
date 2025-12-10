@@ -52,7 +52,7 @@ class TestUnpack(TestWithTmpDir):
             OMNIJAR_NAME = name
 
             def __init__(self, registry):
-                super(OmniFooFormatter, self).__init__(registry, name)
+                super().__init__(registry, name)
 
         return OmniFooFormatter
 

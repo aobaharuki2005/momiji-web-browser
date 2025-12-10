@@ -15,7 +15,7 @@ def inline(doc):
 
 class TestSessionRestoreLogging(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
-        super(TestSessionRestoreLogging, self).setUp()
+        super().setUp()
         self.marionette.enforce_gecko_prefs(
             {
                 "browser.sessionstore.loglevel": "Debug",
@@ -28,7 +28,7 @@ class TestSessionRestoreLogging(WindowManagerMixin, MarionetteTestCase):
             # Create a fresh profile for subsequent tests.
             self.marionette.restart(in_app=False, clean=True)
         finally:
-            super(TestSessionRestoreLogging, self).tearDown()
+            super().tearDown()
 
     def getSessionFilePath(self):
         profilePath = self.marionette.instance.profile.profile

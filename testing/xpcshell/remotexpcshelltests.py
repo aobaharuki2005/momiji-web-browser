@@ -539,7 +539,7 @@ class XPCShellRemote(xpcshell.XPCShellTests):
         RemoteProcessMonitor.freeProcess(test.selectedProcess)
 
     def buildPrefsFile(self, extraPrefs):
-        prefs = super(XPCShellRemote, self).buildPrefsFile(extraPrefs)
+        prefs = super().buildPrefsFile(extraPrefs)
         remotePrefsFile = posixpath.join(self.remoteTestRoot, "user.js")
         self.device.push(self.prefsFile, remotePrefsFile)
         self.device.chmod(remotePrefsFile)
@@ -692,7 +692,7 @@ class XPCShellRemote(xpcshell.XPCShellTests):
         self.device.chmod(self.remoteScriptsDir, recursive=True)
 
     def trySetupNode(self):
-        super(XPCShellRemote, self).trySetupNode()
+        super().trySetupNode()
         # make node host ports visible to device
         if "MOZHTTP2_PORT" in self.env:
             port = "tcp:{}".format(self.env["MOZHTTP2_PORT"])
@@ -708,7 +708,7 @@ class XPCShellRemote(xpcshell.XPCShellTests):
             self.log.info("reversed MOZNODE_EXEC_PORT connection for port " + port)
 
     def shutdownNode(self):
-        super(XPCShellRemote, self).shutdownNode()
+        super().shutdownNode()
 
         if "MOZHTTP2_PORT" in self.env:
             port = "tcp:{}".format(self.env["MOZHTTP2_PORT"])

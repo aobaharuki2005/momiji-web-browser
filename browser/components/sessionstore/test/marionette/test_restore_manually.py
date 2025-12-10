@@ -22,7 +22,7 @@ class TestSessionRestoreManually(SessionStoreTestCase):
     """
 
     def setUp(self):
-        super(TestSessionRestoreManually, self).setUp(
+        super().setUp(
             startup_page=1,
             include_private=False,
             restore_on_demand=True,

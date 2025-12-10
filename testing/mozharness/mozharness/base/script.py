@@ -2092,7 +2092,7 @@ class BaseScript(ScriptMixin, LogMixin):
         **kwargs,
     ):
         self._return_code = 0
-        super(BaseScript, self).__init__()
+        super().__init__()
 
         self.log_obj = None
         self.abs_dirs = None

@@ -77,7 +77,7 @@ class MachFormatter(base.BaseFormatter):
         enable_screenshot=False,
         **kwargs,
     ):
-        super(MachFormatter, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         if start_time is None:
             start_time = time.time()
@@ -115,7 +115,7 @@ class MachFormatter(base.BaseFormatter):
     def __call__(self, data):
         self.summary(data)
 
-        s = super(MachFormatter, self).__call__(data)
+        s = super().__call__(data)
         if s is None:
             return
 

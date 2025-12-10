@@ -18,7 +18,7 @@ class GroupingFormatter(base.BaseFormatter):
     together in a readable format."""
 
     def __init__(self):
-        super(GroupingFormatter, self).__init__()
+        super().__init__()
         self.number_of_tests = 0
         self.completed_tests = 0
         self.need_to_erase_last_line = False
