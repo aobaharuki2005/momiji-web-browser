@@ -490,7 +490,7 @@ class JarMaker:
             if jf is not None:
                 jf.close()
             raise RuntimeError(
-                'File "{0}" not found in {1}'.format(src, ", ".join(src_base))
+                'File "{}" not found in {}'.format(src, ", ".join(src_base))
             )
 
         if out in self._seen_output:

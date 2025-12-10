@@ -48,7 +48,7 @@ class MarionetteTest(TestResult):
     @property
     def test_name(self):
         if self.test_class is not None:
-            return "{0}.py {1}.{2}".format(
+            return "{}.py {}.{}".format(
                 self.test_class.split(".")[0], self.test_class, self.name
             )
         else:

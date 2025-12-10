@@ -63,7 +63,7 @@ class GeckoProfile(RaptorProfiling):
         # Make sure no archive already exists in the location where
         # we plan to output our profiler archive
         self.profile_arcname = os.path.join(
-            self.upload_dir, "profile_{0}.zip".format(self.test_config["name"])
+            self.upload_dir, "profile_{}.zip".format(self.test_config["name"])
         )
         LOG.info(f"Clearing archive {self.profile_arcname}")
         mozfile.remove(self.profile_arcname)
@@ -193,7 +193,7 @@ class GeckoProfile(RaptorProfiling):
                     # to clearly indicate without redundant information.
                     # For example, "browser-cycle-1".
                     test_run_type = (
-                        "{0}-{1}".format(test_type, profile_info["type"])
+                        "{}-{}".format(test_type, profile_info["type"])
                         if test_type == "pageload"
                         else test_type
                     )

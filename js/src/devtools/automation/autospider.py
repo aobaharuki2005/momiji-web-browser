@@ -315,8 +315,8 @@ if word_bits == 32:
             sse_flags = "-arch:SSE2"
         else:
             sse_flags = "-msse -msse2 -mfpmath=sse"
-        env["CCFLAGS"] = "{0} {1}".format(env.get("CCFLAGS", ""), sse_flags)
-        env["CXXFLAGS"] = "{0} {1}".format(env.get("CXXFLAGS", ""), sse_flags)
+        env["CCFLAGS"] = "{} {}".format(env.get("CCFLAGS", ""), sse_flags)
+        env["CXXFLAGS"] = "{} {}".format(env.get("CXXFLAGS", ""), sse_flags)
 else:
     if platform.system() == "Windows":
         CONFIGURE_ARGS += " --target=x86_64-pc-windows-msvc"

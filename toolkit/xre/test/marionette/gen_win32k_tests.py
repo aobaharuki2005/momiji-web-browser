@@ -28,7 +28,7 @@ def start_test(line):
 def set_default(d):
     output.write(
         """
-        if self.default_is is not {0}:
+        if self.default_is is not {}:
             return\n""".format(
             "True" if d == "T" else "False"
         )
@@ -75,7 +75,7 @@ def set_header(enable):
 def set_bad_requirements(enabled):
     output.write(
         """
-        self.marionette.set_pref(Prefs.WEBGL, {0})\n""".format(
+        self.marionette.set_pref(Prefs.WEBGL, {})\n""".format(
             "False" if enabled else "True"
         )
     )
@@ -91,11 +91,11 @@ def print_assertion(assertion):
     output.write(
         """
         self.check_win32k_status(
-            status=ContentWin32kLockdownState.{0},
-            sessionStatus=ContentWin32kLockdownState.{1},
-            experimentStatus=ExperimentStatus.{2},
-            pref={3},
-            enrollmentStatusPref=ExperimentStatus.{4},
+            status=ContentWin32kLockdownState.{},
+            sessionStatus=ContentWin32kLockdownState.{},
+            experimentStatus=ExperimentStatus.{},
+            pref={},
+            enrollmentStatusPref=ExperimentStatus.{},
         )\n""".format(
             *assertion
         )

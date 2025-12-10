@@ -717,7 +717,7 @@ class _PrintTests(_StopAction):
                         subtest = next_test["name"]
                         measure = next_test.get("measure")
                         if measure is not None:
-                            subtest = "{0} ({1})".format(
+                            subtest = "{} ({})".format(
                                 subtest, measure.replace("\n", ", ")
                             )
                         test_list[suite]["subtests"].append(subtest)

@@ -273,7 +273,7 @@ class GitRepository(Repository):
         if pattern.startswith("^"):
             magics += ["top"]
             pattern = pattern[1:]
-        return ":({0}){1}".format(",".join(magics), pattern)
+        return ":({}){}".format(",".join(magics), pattern)
 
     def diff_stream(self, rev=None, extensions=(), exclude_file=None, context=8):
         commit_range = "HEAD"  # All uncommitted changes.

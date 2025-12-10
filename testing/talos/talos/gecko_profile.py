@@ -61,7 +61,7 @@ class GeckoProfile:
         # the test name
         self.profile_arcname = os.path.join(
             self.upload_dir,
-            "profile_{0}.zip".format(test_config.get("suite", test_config["name"])),
+            "profile_{}.zip".format(test_config.get("suite", test_config["name"])),
         )
 
         # We delete the archive if the current test is the first in the suite
@@ -214,7 +214,7 @@ class GeckoProfile:
                 # 'profile_tscrollx/iframe.svg/cycle_0.profile'.
                 cycle_name = f"cycle_{cycle}.profile"
                 path_in_zip = os.path.join(
-                    "profile_{0}".format(self.test_config["name"]), testname, cycle_name
+                    "profile_{}".format(self.test_config["name"]), testname, cycle_name
                 )
                 LOG.info(
                     f"Adding profile {path_in_zip} to archive {self.profile_arcname}"

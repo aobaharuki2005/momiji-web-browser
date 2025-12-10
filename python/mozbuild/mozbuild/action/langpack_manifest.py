@@ -525,7 +525,7 @@ def create_webmanifest(
                 assert entry["alias"] not in cr
                 cr[entry["alias"]] = entry["path"]
         else:
-            raise Exception("Unknown type {0}".format(entry["type"]))
+            raise Exception("Unknown type {}".format(entry["type"]))
 
     for loc in locales:
         manifest["languages"][loc] = {
