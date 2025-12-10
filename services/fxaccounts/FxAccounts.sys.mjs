@@ -527,10 +527,6 @@ export class FxAccounts {
     });
   }
 
-  resetFxAccountsClient() {
-    this._internal.resetFxAccountsClient();
-  }
-
   /**
    * Remove an OAuth token from the token cache. Callers should call this
    * after they determine a token is invalid, so a new token will be fetched
@@ -854,11 +850,6 @@ FxAccountsInternal.prototype = {
     } catch (err) {
       return this._handleTokenError(err);
     }
-  },
-
-  resetFxAccountsClient() {
-    this._fxAccountsClient = null;
-    this._oauth = null;
   },
 
   get fxAccountsClient() {
