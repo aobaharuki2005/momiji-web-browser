@@ -84,8 +84,10 @@ const MAX_NON_SUMMARIZED_SEARCH_LENGTH = 26;
 
 export const DIM_REDUCTION_METHODS = {};
 const MISSING_ANCHOR_IN_CLUSTER_PENALTY = 0.2;
-const MAX_NN_GROUPED_TABS = 3;
+const MAX_GROUPED_TABS = 3;
 const MAX_SUGGESTED_TABS = 10;
+// limit number of tabs to be processed so inference process doesn't crash
+const MAX_TABS_TO_PROCESS = 300;
 
 const DISSIMILAR_TAB_LABEL = "none";
 const ADULT_TAB_LABEL = "adult content";
@@ -260,6 +262,66 @@ export class SmartTabGroupingManager {
   }
 
   /**
+   * Generates tabs to process with a limit. First MAX_GROUPED_TABS are tabs that are
+   * present in the group of the anchor tab. The remaining "ungrouped" tabs fill the
+   * slots up to MAX_TABS_TO_PROCESS
+   *
+   * @param {Array} tabsInGroup active tabs in anchor group we are adding tabs to
+   * @param {Array} allTabs list of tabs from gbrowser, some of which may be grouped in other groups
+   * @param {number} max_limit_to_process max number of tabs we want to process as part of the flow
+   * @returns a list of suggested new tabs. If no new tabs are suggested an empty list is returned.
+   */
+  getTabsToProcess(
+    tabsInGroup,
+    allTabs,
+    max_limit_to_process = MAX_TABS_TO_PROCESS
+  ) {
+    const seen = new Set();
+    let tabsToProcess = [];
+
+    const shouldInclude = tab => {
+      if (tab.pinned) {
+        return false;
+      }
+      if (!tab?.linkedBrowser?.currentURI?.spec) {
+        return false;
+      }
+      return true;
+    };
+
+    // include tabs in the anchor group first
+    for (const tab of tabsInGroup) {
+      if (!shouldInclude(tab)) {
+        continue;
+      }
+      if (!seen.has(tab)) {
+        // make sure we have "seen" all the
+        // tabs already in the current group
+        seen.add(tab);
+        tabsToProcess.push(tab);
+      }
+    }
+
+    // when generating embeddings, we only look at the first MAX_GROUPED_TABS
+    // so use that limit here
+    tabsToProcess = tabsToProcess.slice(0, MAX_GROUPED_TABS);
+    // fill remaining slots with ungrouped tabs from the window
+    for (const tab of allTabs) {
+      if (tabsToProcess.length >= max_limit_to_process) {
+        break;
+      }
+      if (!shouldInclude(tab)) {
+        continue;
+      }
+      if (!seen.has(tab)) {
+        seen.add(tab);
+        tabsToProcess.push(tab);
+      }
+    }
+    return tabsToProcess;
+  }
+
+  /**
    * Generates suggested tabs for an existing or provisional group
    *
    * @param {object} group active group we are adding tabs to
@@ -269,21 +331,14 @@ export class SmartTabGroupingManager {
   async smartTabGroupingForGroup(group, tabs) {
     // Add tabs to suggested group
     const groupTabs = group.tabs;
-    const allTabs = tabs.filter(tab => {
-      // Don't include tabs already pinned
-      if (tab.pinned) {
-        return false;
+    const allTabs = this.getTabsToProcess(groupTabs, tabs, MAX_TABS_TO_PROCESS);
+    // first (1 up to MAX_GROUPED_TABS) are tabs in the group
+    const groupIndices = [];
+    for (let i = 0; i < MAX_GROUPED_TABS; i++) {
+      if (groupTabs.includes(allTabs[i])) {
+        groupIndices.push(i);
       }
-      if (!tab?.linkedBrowser?.currentURI?.spec) {
-        return false;
-      }
-      return true;
-    });
-
-    // find tabs that are part of the group
-    const groupIndices = groupTabs
-      .map(a => allTabs.indexOf(a))
-      .filter(a => a >= 0);
+    }
 
     // find tabs that are part of other groups
     const alreadyGroupedIndices = allTabs
@@ -409,7 +464,7 @@ export class SmartTabGroupingManager {
       let closestScore = null;
       for (
         let j = 0;
-        j < Math.min(groupedIndices.length, MAX_NN_GROUPED_TABS);
+        j < Math.min(groupedIndices.length, MAX_GROUPED_TABS);
         j++
       ) {
         const cosineSim = cosSim(
@@ -654,7 +709,7 @@ export class SmartTabGroupingManager {
 
     const anchorTabsPrep = groupedIndices
       .map(gi => tabData[gi])
-      .slice(0, MAX_NN_GROUPED_TABS);
+      .slice(0, MAX_GROUPED_TABS);
 
     // generate embeddings for both anchor and candidate titles
     const titleEmbeddings = await this._generateEmbeddings(
