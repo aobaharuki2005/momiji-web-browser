@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -148,7 +149,7 @@ internal fun MiddleSearchHomepage(
 private fun Scrim(onDismiss: () -> Unit) {
     Box(
         modifier = Modifier
-            .background(FirefoxTheme.colors.layerScrim.copy(alpha = 0.75f))
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.75f))
             .fillMaxSize()
             .pointerInput(Unit) {
                 detectTapGestures(onTap = { onDismiss() })

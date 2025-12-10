@@ -26,7 +26,6 @@ class AcornColors(
     layer3: Color,
     layerAccent: Color,
     layerAccentNonOpaque: Color,
-    layerScrim: Color,
     layerGradientStart: Color,
     layerGradientEnd: Color,
     layerWarning: Color,
@@ -74,9 +73,6 @@ class AcornColors(
 
     // Selected tab
     var layerAccentNonOpaque by mutableStateOf(layerAccentNonOpaque)
-        private set
-
-    var layerScrim by mutableStateOf(layerScrim)
         private set
 
     // Tooltip
@@ -226,7 +222,6 @@ class AcornColors(
         layer3 = other.layer3
         layerAccent = other.layerAccent
         layerAccentNonOpaque = other.layerAccentNonOpaque
-        layerScrim = other.layerScrim
         layerGradientStart = other.layerGradientStart
         layerGradientEnd = other.layerGradientEnd
         layerWarning = other.layerWarning
@@ -267,7 +262,6 @@ class AcornColors(
         layer3: Color = this.layer3,
         layerAccent: Color = this.layerAccent,
         layerAccentNonOpaque: Color = this.layerAccentNonOpaque,
-        layerScrim: Color = this.layerScrim,
         layerGradientStart: Color = this.layerGradientStart,
         layerGradientEnd: Color = this.layerGradientEnd,
         layerWarning: Color = this.layerWarning,
@@ -303,7 +297,6 @@ class AcornColors(
         layer3 = layer3,
         layerAccent = layerAccent,
         layerAccentNonOpaque = layerAccentNonOpaque,
-        layerScrim = layerScrim,
         layerGradientStart = layerGradientStart,
         layerGradientEnd = layerGradientEnd,
         layerWarning = layerWarning,
@@ -342,7 +335,6 @@ val darkColorPalette = AcornColors(
     layer3 = PhotonColors.DarkGrey80,
     layerAccent = PhotonColors.Violet40,
     layerAccentNonOpaque = PhotonColors.Violet50A32,
-    layerScrim = PhotonColors.DarkGrey90A95,
     layerGradientStart = PhotonColors.Violet70,
     layerGradientEnd = PhotonColors.Violet60,
     layerWarning = PhotonColors.Yellow70A77,
@@ -380,7 +372,6 @@ val lightColorPalette = AcornColors(
     layer3 = PhotonColors.LightGrey20,
     layerAccent = PhotonColors.Ink20,
     layerAccentNonOpaque = PhotonColors.Violet70A12,
-    layerScrim = PhotonColors.DarkGrey30A95,
     layerGradientStart = PhotonColors.Violet70,
     layerGradientEnd = PhotonColors.Violet60,
     layerWarning = PhotonColors.Yellow20,
@@ -436,6 +427,7 @@ private fun AcornColors.toM3ColorScheme(
     errorContainer: Color,
     outline: Color,
     outlineVariant: Color,
+    scrim: Color,
     surfaceBright: Color,
     surfaceDim: Color,
     surfaceContainer: Color,
@@ -472,7 +464,7 @@ private fun AcornColors.toM3ColorScheme(
     onErrorContainer = onSurface,
     outline = outline,
     outlineVariant = outlineVariant,
-    scrim = layerScrim,
+    scrim = scrim,
     surfaceBright = surfaceBright,
     surfaceDim = surfaceDim,
     surfaceContainer = surfaceContainer,
@@ -511,6 +503,7 @@ fun acornDarkColorScheme(): ColorScheme = darkColorPalette.toM3ColorScheme(
     errorContainer = PhotonColors.Red80,
     outline = PhotonColors.LightGrey80,
     outlineVariant = PhotonColors.DarkGrey05,
+    scrim = PhotonColors.DarkGrey90A95,
     surfaceBright = PhotonColors.DarkGrey40,
     surfaceDim = PhotonColors.DarkGrey80,
     surfaceContainer = PhotonColors.DarkGrey60,
@@ -537,6 +530,7 @@ fun acornLightColorScheme(): ColorScheme = lightColorPalette.toM3ColorScheme(
     errorContainer = PhotonColors.Red05,
     outline = PhotonColors.LightGrey90,
     outlineVariant = PhotonColors.LightGrey30,
+    scrim = PhotonColors.DarkGrey30A95,
     surfaceBright = PhotonColors.White,
     surfaceDim = PhotonColors.LightGrey30,
     surfaceContainer = PhotonColors.LightGrey10,
@@ -563,6 +557,7 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
     errorContainer = PhotonColors.Red80,
     outline = PhotonColors.LightGrey80,
     outlineVariant = PhotonColors.DarkGrey05,
+    scrim = PhotonColors.DarkGrey90A95,
     surfaceBright = Color(0xFF413857),
     surfaceDim = PhotonColors.Ink90,
     surfaceContainer = Color(0xFF342B4A),

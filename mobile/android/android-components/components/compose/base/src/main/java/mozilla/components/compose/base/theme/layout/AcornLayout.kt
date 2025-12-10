@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -86,38 +87,39 @@ private const val GRID_ITEMS = 200
 @Composable
 private fun AcornLayoutPreview() {
     AcornTheme {
-        FlowRow(
-            modifier = Modifier
-                .background(color = AcornTheme.colors.layerScrim)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(AcornTheme.layout.space.dynamic400),
-            verticalArrangement = Arrangement.spacedBy(AcornTheme.layout.space.dynamic400),
-        ) {
-            repeat(GRID_ITEMS) {
-                val color = Color(
-                    red = it,
-                    green = 0,
-                    blue = it,
-                )
+        Surface {
+            FlowRow(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(AcornTheme.layout.space.dynamic400),
+                verticalArrangement = Arrangement.spacedBy(AcornTheme.layout.space.dynamic400),
+            ) {
+                repeat(GRID_ITEMS) {
+                    val color = Color(
+                        red = it,
+                        green = 0,
+                        blue = it,
+                    )
 
-                Box(
-                    modifier = Modifier
-                        .size(size = AcornTheme.layout.size.static800)
-                        .background(
-                            color = color,
-                            shape = RoundedCornerShape(size = AcornTheme.layout.corner.small),
-                        )
-                        .border(
-                            width = AcornTheme.layout.border.normal,
-                            color = Color(
-                                red = color.red * 0.8f,
-                                green = color.green * 0.8f,
-                                blue = color.blue * 0.8f,
+                    Box(
+                        modifier = Modifier
+                            .size(size = AcornTheme.layout.size.static800)
+                            .background(
+                                color = color,
+                                shape = RoundedCornerShape(size = AcornTheme.layout.corner.small),
+                            )
+                            .border(
+                                width = AcornTheme.layout.border.normal,
+                                color = Color(
+                                    red = color.red * 0.8f,
+                                    green = color.green * 0.8f,
+                                    blue = color.blue * 0.8f,
+                                ),
+                                shape = RoundedCornerShape(size = AcornTheme.layout.corner.small),
                             ),
-                            shape = RoundedCornerShape(size = AcornTheme.layout.corner.small),
-                        ),
-                )
+                    )
+                }
             }
         }
     }
