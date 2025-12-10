@@ -35,7 +35,7 @@ class Mvhd : public Atom {
  public:
   Mvhd()
       : mCreationTime(0), mModificationTime(0), mTimescale(0), mDuration(0) {}
-  explicit Mvhd(Box& aBox);
+  explicit Mvhd(const Box& aBox);
 
   Result<media::TimeUnit, nsresult> ToTimeUnit(int64_t aTimescaleUnits) const {
     if (!mTimescale) {
@@ -51,24 +51,24 @@ class Mvhd : public Atom {
   uint64_t mDuration;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 class Tkhd : public Mvhd {
  public:
   Tkhd() : mTrackId(0) {}
-  explicit Tkhd(Box& aBox);
+  explicit Tkhd(const Box& aBox);
 
   uint32_t mTrackId;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 class Mdhd : public Mvhd {
  public:
   Mdhd() = default;
-  explicit Mdhd(Box& aBox);
+  explicit Mdhd(const Box& aBox);
 };
 
 class Trex : public Atom {
@@ -99,29 +99,29 @@ class Tfhd : public Trex {
   explicit Tfhd(const Trex& aTrex) : Trex(aTrex), mBaseDataOffset(0) {
     mValid = aTrex.IsValid();
   }
-  Tfhd(Box& aBox, const Trex& aTrex);
+  Tfhd(const Box& aBox, const Trex& aTrex);
 
   uint64_t mBaseDataOffset;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 class Tfdt : public Atom {
  public:
   Tfdt() : mBaseMediaDecodeTime(0) {}
-  explicit Tfdt(Box& aBox);
+  explicit Tfdt(const Box& aBox);
 
   uint64_t mBaseMediaDecodeTime;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 class Edts : public Atom {
  public:
   Edts() : mMediaStart(0), mEmptyOffset(0) {}
-  explicit Edts(Box& aBox);
+  explicit Edts(const Box& aBox);
   virtual bool IsValid() const override {
     // edts is optional
     return true;
@@ -131,7 +131,7 @@ class Edts : public Atom {
   int64_t mEmptyOffset;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 struct Sample {
@@ -152,26 +152,26 @@ struct Sample {
 
 class Saiz final : public Atom {
  public:
-  Saiz(Box& aBox, AtomType aDefaultType);
+  Saiz(const Box& aBox, AtomType aDefaultType);
 
   AtomType mAuxInfoType;
   uint32_t mAuxInfoTypeParameter;
   FallibleTArray<uint8_t> mSampleInfoSize;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 class Saio final : public Atom {
  public:
-  Saio(Box& aBox, AtomType aDefaultType);
+  Saio(const Box& aBox, AtomType aDefaultType);
 
   AtomType mAuxInfoType;
   uint32_t mAuxInfoTypeParameter;
   FallibleTArray<uint64_t> mOffsets;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 struct SampleToGroupEntry {
@@ -190,14 +190,14 @@ struct SampleToGroupEntry {
 class Sbgp final : public Atom  // SampleToGroup box.
 {
  public:
-  explicit Sbgp(Box& aBox);
+  explicit Sbgp(const Box& aBox);
 
   AtomType mGroupingType;
   uint32_t mGroupingTypeParam;
   FallibleTArray<SampleToGroupEntry> mEntries;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 // Stores information form CencSampleEncryptionInformationGroupEntry (seig).
@@ -221,13 +221,13 @@ struct CencSampleEncryptionInfoEntry final {
 class Sgpd final : public Atom  // SampleGroupDescription box.
 {
  public:
-  explicit Sgpd(Box& aBox);
+  explicit Sgpd(const Box& aBox);
 
   AtomType mGroupingType;
   FallibleTArray<CencSampleEncryptionInfoEntry> mEntries;
 
  protected:
-  Result<Ok, nsresult> Parse(Box& aBox);
+  Result<Ok, nsresult> Parse(const Box& aBox);
 };
 
 // Audio/video entries from the sample description box (stsd). We only need to
@@ -335,15 +335,15 @@ class MoofParser : public DecoderDoctorLifeLogger<MoofParser> {
   MP4Interval<media::TimeUnit> GetCompositionRange(
       const mozilla::MediaByteRangeSet& aByteRanges);
   bool ReachedEnd();
-  void ParseMoov(Box& aBox);
-  void ParseTrak(Box& aBox);
-  void ParseMdia(Box& aBox);
-  void ParseMvex(Box& aBox);
+  void ParseMoov(const Box& aBox);
+  void ParseTrak(const Box& aBox);
+  void ParseMdia(const Box& aBox);
+  void ParseMvex(const Box& aBox);
 
-  void ParseMinf(Box& aBox);
-  void ParseStbl(Box& aBox);
-  void ParseStsd(Box& aBox);
-  void ParseEncrypted(Box& aBox);
+  void ParseMinf(const Box& aBox);
+  void ParseStbl(const Box& aBox);
+  void ParseStsd(const Box& aBox);
+  void ParseEncrypted(const Box& aBox);
 
   // Similar to RebuildFragmentedIndex(), but advance only as far as the next
   // moof, only if there is a next moof, and block, waiting for the read, if
