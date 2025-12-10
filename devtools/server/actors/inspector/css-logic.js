@@ -195,6 +195,9 @@ class CssLogic {
   // Cached keyframes rules in all stylesheets
   #keyframesRules = null;
 
+  // Cached @position-try rules in all stylesheets
+  #positionTryRules = null;
+
   /**
    * Reset various properties
    */
@@ -207,6 +210,7 @@ class CssLogic {
     this.#matchedRules = null;
     this.#matchedSelectors = null;
     this.#keyframesRules = [];
+    this.#positionTryRules = [];
   }
 
   /**
@@ -350,7 +354,7 @@ class CssLogic {
    * Cache a stylesheet if it falls within the requirements: if it's enabled,
    * and if the @media is allowed. This method also walks through the stylesheet
    * cssRules to find @imported rules, to cache the stylesheets of those rules
-   * as well. In addition, the @keyframes rules in the stylesheet are cached.
+   * as well. In addition, @keyframes and @position-try rules in the stylesheet are cached.
    *
    * @private
    * @param {CSSStyleSheet} domSheet the CSSStyleSheet object to cache.
@@ -370,8 +374,8 @@ class CssLogic {
     if (cssSheet.passId != this.passId) {
       cssSheet.passId = this.passId;
 
-      // Find import and keyframes rules. We loop through all the stylesheet recursively,
-      // so we can go through nested rules.
+      // Find import, keyframes and position-try rules. We loop through all the stylesheet
+      // recursively, so we can go through nested rules.
       const traverseRules = ruleList => {
         for (const aDomRule of ruleList) {
           const ruleClassName = ChromeUtils.getClassName(aDomRule);
@@ -383,6 +387,8 @@ class CssLogic {
             this.#cacheSheet(aDomRule.styleSheet);
           } else if (ruleClassName === "CSSKeyframesRule") {
             this.#keyframesRules.push(aDomRule);
+          } else if (ruleClassName === "CSSPositionTryRule") {
+            this.#positionTryRules.push(aDomRule);
           }
 
           if (aDomRule.cssRules) {
@@ -425,6 +431,18 @@ class CssLogic {
       this.#cacheSheets();
     }
     return this.#keyframesRules;
+  }
+
+  /**
+   * Retrieve the list of @position-try rules in the document.
+   *
+   * @returns {CSSPositionTryRule[]} the list of @position-try rules in the document.
+   */
+  get positionTryRules() {
+    if (!this.#sheetsCached) {
+      this.#cacheSheets();
+    }
+    return this.#positionTryRules;
   }
 
   /**

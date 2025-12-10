@@ -406,6 +406,7 @@ class StyleRuleActor extends Actor {
     const form = {
       actor: this.actorID,
       type: this.type,
+      className: this.ruleClassName,
       line: this.line || undefined,
       column: this.column,
       traits: {
@@ -483,6 +484,7 @@ class StyleRuleActor extends Actor {
         form.href = this.rawRule.href;
         break;
       case "CSSKeyframesRule":
+      case "CSSPositionTryRule":
         form.name = this.rawRule.name;
         break;
       case "CSSKeyframeRule":
@@ -641,6 +643,7 @@ class StyleRuleActor extends Actor {
   _getCssText() {
     switch (this.ruleClassName) {
       case "CSSNestedDeclarations":
+      case "CSSPositionTryRule":
       case "CSSStyleRule":
       case ELEMENT_STYLE:
       case PRES_HINTS:
@@ -870,6 +873,7 @@ class StyleRuleActor extends Actor {
     "CSSLayerBlockRule",
     "CSSMediaRule",
     "CSSNestedDeclarations",
+    "CSSPositionTryRule",
     "CSSStyleRule",
     "CSSSupportsRule",
   ]);

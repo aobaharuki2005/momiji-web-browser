@@ -1373,6 +1373,8 @@ function getSmallIncrementKey() {
  *        unmatched selector with `~~` characters (e.g. "div, ~~unmatched~~")
  * @param {boolean} expectedElements[].selectorEditable - Whether or not the selector can
  *        be edited. Defaults to true.
+ * @param {boolean} expectedElements[].hasSelectorHighlighterButton - Whether or not a
+ *        selector highlighter button is visible. Defaults to true.
  * @param {string[]|null} expectedElements[].ancestorRulesData - An array of the parent
  *        selectors of the rule, with their indentations and the opening brace.
  *        e.g. for the following rule `html { body { span {} } }`, for the `span` rule,
@@ -1457,6 +1459,11 @@ function checkRuleViewContent(view, expectedElements) {
       ) !== null,
       expectedElement.selectorEditable ?? true,
       `Selector for element #${i} (${selector}) ${(expectedElement.selectorEditable ?? true) ? "is" : "isn't"} editable`
+    );
+    is(
+      elementInView.querySelector(`.ruleview-selectorhighlighter`) !== null,
+      expectedElement.hasSelectorHighlighterButton ?? true,
+      `Element #${i} (${selector}) ${(expectedElement.hasSelectorHighlighterButton ?? true) ? "has" : "does not have"} a selector highlighter button`
     );
 
     const ancestorData = elementInView.querySelector(

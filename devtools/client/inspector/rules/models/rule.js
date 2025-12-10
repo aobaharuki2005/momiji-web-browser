@@ -904,7 +904,12 @@ class Rule {
    * @returns {boolean} Whether or not the rule can be edited
    */
   isEditable() {
-    return !this.isSystem && this.domRule.type !== PRES_HINTS;
+    return (
+      !this.isSystem &&
+      this.domRule.type !== PRES_HINTS &&
+      // FIXME: Should be removed as part of Bug 2004046
+      this.domRule.className !== "CSSPositionTryRule"
+    );
   }
 
   /**
