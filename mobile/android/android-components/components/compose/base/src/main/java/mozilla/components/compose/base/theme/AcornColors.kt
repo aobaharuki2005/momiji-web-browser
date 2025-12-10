@@ -38,7 +38,6 @@ class AcornColors(
     actionCritical: Color,
     actionInformation: Color,
     formDefault: Color,
-    textSecondary: Color,
     textInverted: Color,
     textOnColorPrimary: Color,
     textActionSecondary: Color,
@@ -125,10 +124,6 @@ class AcornColors(
         private set
 
     // Text
-
-    // Secondary text
-    var textSecondary by mutableStateOf(textSecondary)
-        private set
 
     // Text Inverted
     var textInverted by mutableStateOf(textInverted)
@@ -229,7 +224,6 @@ class AcornColors(
         actionCritical = other.actionCritical
         actionInformation = other.actionInformation
         formDefault = other.formDefault
-        textSecondary = other.textSecondary
         textOnColorPrimary = other.textOnColorPrimary
         textActionSecondary = other.textActionSecondary
         iconPrimary = other.iconPrimary
@@ -268,7 +262,6 @@ class AcornColors(
         actionCritical: Color = this.actionCritical,
         actionInformation: Color = this.actionInformation,
         formDefault: Color = this.formDefault,
-        textSecondary: Color = this.textSecondary,
         textInverted: Color = this.textInverted,
         textOnColorPrimary: Color = this.textOnColorPrimary,
         textActionSecondary: Color = this.textActionSecondary,
@@ -302,7 +295,6 @@ class AcornColors(
         actionCritical = actionCritical,
         actionInformation = actionInformation,
         formDefault = formDefault,
-        textSecondary = textSecondary,
         textInverted = textInverted,
         textOnColorPrimary = textOnColorPrimary,
         textActionSecondary = textActionSecondary,
@@ -339,7 +331,6 @@ val darkColorPalette = AcornColors(
     actionCritical = PhotonColors.Pink70A69,
     actionInformation = PhotonColors.Blue60,
     formDefault = PhotonColors.LightGrey05,
-    textSecondary = PhotonColors.LightGrey40,
     textInverted = PhotonColors.DarkGrey90,
     textOnColorPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.LightGrey05,
@@ -375,7 +366,6 @@ val lightColorPalette = AcornColors(
     actionCritical = PhotonColors.Red30,
     actionInformation = PhotonColors.Blue50,
     formDefault = PhotonColors.DarkGrey90,
-    textSecondary = PhotonColors.DarkGrey05,
     textInverted = PhotonColors.LightGrey05,
     textOnColorPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
@@ -407,6 +397,7 @@ private fun AcornColors.toM3ColorScheme(
     primary: Color,
     primaryContainer: Color,
     inversePrimary: Color,
+    secondary: Color,
     secondaryContainer: Color,
     tertiary: Color,
     tertiaryContainer: Color,
@@ -432,7 +423,7 @@ private fun AcornColors.toM3ColorScheme(
     primaryContainer = primaryContainer,
     onPrimaryContainer = onSurface,
     inversePrimary = inversePrimary,
-    secondary = textSecondary,
+    secondary = secondary,
     onSecondary = textInverted,
     secondaryContainer = secondaryContainer,
     onSecondaryContainer = onSurface,
@@ -445,7 +436,7 @@ private fun AcornColors.toM3ColorScheme(
     surface = surface,
     onSurface = onSurface,
     surfaceVariant = surfaceContainerHighest,
-    onSurfaceVariant = textSecondary,
+    onSurfaceVariant = secondary,
     surfaceTint = surfaceTint,
     inverseSurface = inverseSurface,
     inverseOnSurface = textInverted,
@@ -484,6 +475,7 @@ fun acornDarkColorScheme(): ColorScheme = darkColorPalette.toM3ColorScheme(
     primary = PhotonColors.Violet10,
     primaryContainer = PhotonColors.Violet80,
     inversePrimary = PhotonColors.Violet70,
+    secondary = PhotonColors.LightGrey40,
     secondaryContainer = Color(0xFF4B3974),
     tertiary = PhotonColors.Violet20,
     tertiaryContainer = PhotonColors.Pink80,
@@ -512,6 +504,7 @@ fun acornLightColorScheme(): ColorScheme = lightColorPalette.toM3ColorScheme(
     primary = PhotonColors.Ink20,
     primaryContainer = PhotonColors.Violet05,
     inversePrimary = PhotonColors.Violet20,
+    secondary = PhotonColors.DarkGrey05,
     secondaryContainer = Color(0xFFE6E0F5),
     tertiary = PhotonColors.Violet70,
     tertiaryContainer = PhotonColors.Pink05,
@@ -540,6 +533,7 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
     primary = PhotonColors.Violet10,
     primaryContainer = PhotonColors.Violet80,
     inversePrimary = PhotonColors.Violet70,
+    secondary = PhotonColors.LightGrey40,
     secondaryContainer = Color(0xFF4B3974),
     tertiary = PhotonColors.Violet20,
     tertiaryContainer = PhotonColors.Pink80,
