@@ -187,7 +187,7 @@ class AcornColors(
      * Attention-grabbing color against surface for fills, icons, and text,
      * indicating neutral information.
      */
-    var information by mutableStateOf(information)
+    internal var information by mutableStateOf(information)
         private set
 
     /**
@@ -195,7 +195,7 @@ class AcornColors(
      *
      * Slightly dimmer surface color in light theme.
      */
-    var surfaceDimVariant by mutableStateOf(surfaceDimVariant)
+    internal var surfaceDimVariant by mutableStateOf(surfaceDimVariant)
         private set
 
     /**
