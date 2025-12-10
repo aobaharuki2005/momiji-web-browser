@@ -162,6 +162,12 @@ const DISPLAY_FAIL_REASON_UNRESOLVED = "unresolved";
 const RS_FALLBACK_BASE_URL =
   "https://firefox-settings-attachments.cdn.mozilla.net/";
 
+ChromeUtils.defineLazyGetter(lazy, "userAgent", () => {
+  return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
+    Ci.nsIHttpProtocolHandler
+  ).userAgent;
+});
+
 // Smart shortcuts
 import { RankShortcutsProvider } from "resource://newtab/lib/SmartShortcutsRanker/RankShortcuts.mjs";
 
@@ -644,6 +650,32 @@ export class ContileIntegration {
 
           const endpointBaseUrl = state.Prefs.values[PREF_UNIFIED_ADS_ENDPOINT];
 
+          const preFlightConfig =
+            state.Prefs.values?.trainhopConfig?.marsPreFlight || {};
+
+          // We need some basic data that we can pass along to the ohttp request.
+          // We purposefully don't use ohttp on this request. We also expect to
+          // mostly hit the HTTP cache rather than the network with these requests.
+          if (preFlightConfig.enabled) {
+            const preflightResponse = await this._topSitesFeed.fetch(
+              `${endpointBaseUrl}v1/ads-preflight`,
+              {
+                method: "GET",
+              }
+            );
+            const preFlight = await preflightResponse.json();
+
+            if (preFlight) {
+              // If we don't get a normalized_ua, it means it matched the default userAgent.
+              headers.append(
+                "X-User-Agent",
+                preFlight.normalized_ua || lazy.userAgent
+              );
+              headers.append("X-Geoname-ID", preFlight.geoname_id);
+              headers.append("X-Geo-Location", preFlight.geo_location);
+            }
+          }
+
           let blockedSponsors =
             this._topSitesFeed.store.getState().Prefs.values[
               PREF_UNIFIED_ADS_BLOCKED_LIST
@@ -693,6 +725,17 @@ export class ContileIntegration {
               );
               return null;
             }
+
+            // ObliviousHTTP.ohttpRequest only accepts a key/value object, and not
+            // a Headers instance. We normalize any headers to a key/value object.
+            //
+            // We use instanceof here since isInstance isn't available for
+            // Headers, it seems.
+            // eslint-disable-next-line mozilla/use-isInstance
+            if (options.headers && options.headers instanceof Headers) {
+              options.headers = Object.fromEntries(options.headers);
+            }
+
             fetchPromise = lazy.ObliviousHTTP.ohttpRequest(
               ohttpRelayURL,
               config,
