@@ -398,10 +398,10 @@ def check_mount_lastaccess(mount: str) -> DoctorCheck:
         else:
             option = "noatime"
         desc = "%s has no explicit %s mount option" % (mount, option)
-    elif option == "atime" or option == "norelatime":
+    elif option in {"atime", "norelatime"}:
         status = CheckStatus.WARNING
         desc = "%s has %s mount option" % (mount, option)
-    elif option == "noatime" or option == "relatime":
+    elif option in {"noatime", "relatime"}:
         status = CheckStatus.OK
         desc = "%s has %s mount option" % (mount, option)
 

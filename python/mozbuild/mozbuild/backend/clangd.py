@@ -16,7 +16,7 @@ from mozbuild.compilation.database import CompileDBBackend
 
 
 def find_vscode_or_vscodium_cmd(ide):
-    if ide != "vscode" and ide != "vscodium":
+    if ide not in {"vscode", "vscodium"}:
         return None
 
     import shutil

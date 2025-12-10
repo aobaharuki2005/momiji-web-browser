@@ -174,10 +174,10 @@ class JitFrameDecorator(FrameDecorator):
         calleetoken = calleetoken ^ tag
         function = None
         script = None
-        if (
-            tag == self.cache.CalleeToken_Function
-            or tag == self.cache.CalleeToken_FunctionConstructing
-        ):
+        if tag in {
+            self.cache.CalleeToken_Function,
+            self.cache.CalleeToken_FunctionConstructing,
+        }:
             value = gdb.Value(calleetoken)
             function = get_function_name(value, self.cache)
             script = get_function_script(value, self.cache)

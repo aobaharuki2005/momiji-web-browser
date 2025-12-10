@@ -224,8 +224,7 @@ def WebIDLTest(parser, harness):
         return [
             a
             for a in list1
-            if a not in list2
-            and (a != "any" and a != "Promise<any>" and a != "Promise<any>?")
+            if a not in list2 and a not in {"any", "Promise<any>", "Promise<any>?"}
         ]
 
     unionsWithCallback = ["(long or Callback)"]

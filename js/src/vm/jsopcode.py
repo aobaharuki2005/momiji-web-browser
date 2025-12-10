@@ -341,13 +341,13 @@ def get_opcodes(dir):
             stack_nuses = get_stack_count(opcode.stack_uses)
             stack_ndefs = get_stack_count(opcode.stack_defs)
 
-            if nuses != -1 and stack_nuses != -1 and nuses != stack_nuses:
+            if (nuses != -1 and stack_nuses != -1) and nuses != stack_nuses:
                 raise Exception(
                     f"nuses should match stack notation: {op}: "
                     f"{nuses} != {stack_nuses} "
                     "(stack_nuses)"
                 )
-            if ndefs != -1 and stack_ndefs != -1 and ndefs != stack_ndefs:
+            if (ndefs != -1 and stack_ndefs != -1) and ndefs != stack_ndefs:
                 raise Exception(
                     f"ndefs should match stack notation: {op}: "
                     f"{ndefs} != {stack_ndefs} "

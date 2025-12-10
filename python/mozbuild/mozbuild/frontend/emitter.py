@@ -1421,10 +1421,7 @@ class TreeMetadataEmitter(LoggingMixin):
                         "(resolved to %s)" % (local_include, full_path),
                         context,
                     )
-            if (
-                full_path == context.config.topsrcdir
-                or full_path == context.config.topobjdir
-            ):
+            if full_path in {context.config.topsrcdir, context.config.topobjdir}:
                 raise SandboxValidationError(
                     "Path specified in LOCAL_INCLUDES "
                     "(%s) resolves to the topsrcdir or topobjdir (%s), which is "

@@ -1067,12 +1067,10 @@ def readSupplementalData(core_file):
                     # subtags are present. A single variant subtags may be present
                     # in |type|. And |i_type| definitely has a single variant subtag.
                     # Should this ever change, update this code accordingly.
-                    assert type == (Any, None, None, None) or type == (
-                        Any,
-                        None,
-                        None,
-                        Any,
-                    )
+                    assert type in {
+                        (Any, None, None, None),
+                        (Any, None, None, Any),
+                    }
                     assert replacement == (Any, None, None, None)
                     assert i_type == (Any, None, None, Any)
                     assert i_replacement == (Any, None, None, None)
@@ -1157,12 +1155,10 @@ def readSupplementalData(core_file):
         if modified_rules and loop_count > 1:
             new_rules = {k for k in transitive_rules.keys() if k not in rules}
             for k in new_rules:
-                assert k == (Any, None, None, "guoyu-hakka") or k == (
-                    Any,
-                    None,
-                    None,
-                    "guoyu-xiang",
-                )
+                assert k in {
+                    (Any, None, None, "guoyu-hakka"),
+                    (Any, None, None, "guoyu-xiang"),
+                }
 
         # Merge the transitive rules.
         rules.update(transitive_rules)
@@ -1446,9 +1442,7 @@ def readUnicodeExtensions(core_file):
         tree = ET.parse(file)
         for keyword in tree.iterfind(".//keyword/key"):
             extension = keyword.get("extension", "u")
-            assert (
-                extension == "u" or extension == "t"
-            ), f"unknown extension type: {extension}"
+            assert extension in {"u", "t"}, f"unknown extension type: {extension}"
 
             extension_name = keyword.get("name")
 
@@ -3496,7 +3490,7 @@ def readICUUnitResourceFile(filepath):
         for unit_display in ("units", "unitsNarrow", "unitsShort")
         if unit_display in unit_table
         for (unit_type, unit_names) in unit_table[unit_display].items()
-        if unit_type != "compound" and unit_type != "coordinate"
+        if unit_type not in {"compound", "coordinate"}
         for unit_name in unit_names.keys()
     }
 

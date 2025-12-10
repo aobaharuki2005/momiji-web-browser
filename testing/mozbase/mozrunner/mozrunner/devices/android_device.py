@@ -297,11 +297,11 @@ def metadata_for_app(app, aab=False):
     activity_name = None
     subcommand = None
 
-    if app == "org.mozilla.fenix.release" or app == "org.mozilla.firefox":
+    if app in {"org.mozilla.fenix.release", "org.mozilla.firefox"}:
         package_name = "org.mozilla.firefox"
         activity_name = "org.mozilla.firefox.App"
         subcommand = "installFenixRelease"
-    elif app == "org.mozilla.fenix.nightly" or app == "fenix.nightly":
+    elif app in {"org.mozilla.fenix.nightly", "fenix.nightly"}:
         # Likely only works for --no-install.
         package_name = "org.mozilla.fenix"
         activity_name = "org.mozilla.fenix.App"

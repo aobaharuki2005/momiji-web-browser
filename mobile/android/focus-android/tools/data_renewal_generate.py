@@ -43,7 +43,7 @@ def response(last_key, content, expire_version, writer, renewal):
     global write_header
     global total_count
     for key, value in content.items():
-        if (key == "$schema") or (key == "no_lint"):
+        if key in {"$schema", "no_lint"}:
             continue
         if key == "disabled":
             continue

@@ -1513,7 +1513,7 @@ class RecursiveMakeBackend(MakeBackend):
             backend_file.write_once("%s: %s\n" % (obj_target, obj.symbols_file))
 
         for lib in shared_libs:
-            assert obj.KIND != "host" and obj.KIND != "wasm"
+            assert obj.KIND not in {"host", "wasm"}
             backend_file.write_once(
                 "SHARED_LIBS += %s\n" % self._pretty_path(lib.import_path, backend_file)
             )

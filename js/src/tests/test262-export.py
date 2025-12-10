@@ -676,7 +676,7 @@ def exportTest262(
 
             for fileName in fileNames:
                 # Skip browser.js files
-                if fileName == "browser.js" or fileName == "shell.js":
+                if fileName in {"browser.js", "shell.js"}:
                     continue
 
                 if fileName.endswith("~"):

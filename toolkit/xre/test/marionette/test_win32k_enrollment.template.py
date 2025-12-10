@@ -101,9 +101,7 @@ class TestWin32kAutostart(MarionetteTestCase):
         self.marionette.set_pref(Prefs.ENROLLMENT_STATUS, status, default_branch=True)
 
         updated_status = self.marionette.get_pref(Prefs.ENROLLMENT_STATUS)
-        self.assertTrue(
-            status == updated_status or updated_status == ExperimentStatus.DISQUALIFIED
-        )
+        self.assertTrue(updated_status in {status, ExperimentStatus.DISQUALIFIED})
         startup_status = self.marionette.get_pref(Prefs.STARTUP_ENROLLMENT_STATUS)
         self.assertEqual(
             startup_status,

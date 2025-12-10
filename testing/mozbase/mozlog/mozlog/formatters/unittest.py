@@ -32,7 +32,7 @@ class UnittestFormatter(base.BaseFormatter):
                 status
             ]
 
-            if status == "FAIL" or status == "PRECONDITION_FAILED":
+            if status in {"FAIL", "PRECONDITION_FAILED"}:
                 self.fails.append(data)
             elif status == "ERROR":
                 self.errors.append(data)

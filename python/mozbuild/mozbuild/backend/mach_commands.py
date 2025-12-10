@@ -78,7 +78,7 @@ def run(command_context, ide, no_interactive, args):
         backend = "CppEclipse"
     elif ide == "visualstudio":
         backend = "VisualStudio"
-    elif ide == "vscode" or ide == "vscodium":
+    elif ide in {"vscode", "vscodium"}:
         if not command_context.config_environment.is_artifact_build:
             backend = "Clangd"
 
@@ -97,7 +97,7 @@ def run(command_context, ide, no_interactive, args):
     elif ide == "visualstudio":
         visual_studio_workspace_dir = get_visualstudio_workspace_path(command_context)
         subprocess.call(["explorer.exe", visual_studio_workspace_dir])
-    elif ide == "vscode" or ide == "vscodium":
+    elif ide in {"vscode", "vscodium"}:
         return setup_vscode_or_vscodium(ide, command_context, interactive)
 
 

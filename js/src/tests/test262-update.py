@@ -785,12 +785,7 @@ def fetch_pr_files(inDir, outDir, prNumber, strictTests):
                 assert pageUrl.startswith("https://api.github.com/")
 
                 # Ensure the relative URL marker has the expected format.
-                assert (
-                    rel == 'rel="prev"'
-                    or rel == 'rel="next"'
-                    or rel == 'rel="first"'
-                    or rel == 'rel="last"'
-                )
+                assert rel in {'rel="prev"', 'rel="next"', 'rel="first"', 'rel="last"'}
 
                 # We only need the URL for the next page.
                 if rel == 'rel="next"':

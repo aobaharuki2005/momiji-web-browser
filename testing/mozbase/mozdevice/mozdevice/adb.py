@@ -1329,7 +1329,7 @@ class ADBDevice(ADBCommand):
             char = file_obj.read(1).decode()
             if not char:
                 break
-            if char != "\r" and char != "\n":
+            if char not in {"\r", "\n"}:
                 line = char + line
             elif line:
                 # we have collected everything up to the beginning of the line

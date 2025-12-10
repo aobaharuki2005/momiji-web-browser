@@ -184,7 +184,7 @@ def check_pref_list(pref_list):
         if "value" not in pref:
             error(f"missing `value` key for pref `{name}`")
         value = pref["value"]
-        if typ == "String" or typ == "DataMutexString":
+        if typ in {"String", "DataMutexString"}:
             if type(value) is not str:
                 error(
                     f"non-string `value` value `{value}` for `{typ}` pref `{name}`; "

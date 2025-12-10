@@ -682,7 +682,7 @@ def show_log(command_context, log_file=None):
         except OSError as os_error:
             # (POSIX)   errno.EPIPE: BrokenPipeError: [Errno 32] Broken pipe
             # (Windows) errno.EINVAL: OSError:        [Errno 22] Invalid argument
-            if os_error.errno == errno.EPIPE or os_error.errno == errno.EINVAL:
+            if os_error.errno in {errno.EPIPE, errno.EINVAL}:
                 # If the user manually terminates 'less' before the entire log file
                 # is piped (without scrolling close enough to the bottom) we will get
                 # one of these errors (depends on the OS) because the logger will still

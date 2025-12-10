@@ -72,7 +72,7 @@ class CodeCoverageMixin(SingleTestMixin):
     per_test_reports = {}
 
     def __init__(self, **kwargs):
-        if mozinfo.os == "linux" or mozinfo.os == "mac":
+        if mozinfo.os in {"linux", "mac"}:
             self.grcov_bin = "grcov"
         elif mozinfo.os == "win":
             self.grcov_bin = "grcov.exe"
@@ -324,7 +324,7 @@ class CodeCoverageMixin(SingleTestMixin):
         if merge:
             grcov_command += [jsvm_output_file]
 
-        if mozinfo.os == "win" or mozinfo.os == "mac":
+        if mozinfo.os in {"win", "mac"}:
             grcov_command += ["--llvm"]
 
         if filter_covered:

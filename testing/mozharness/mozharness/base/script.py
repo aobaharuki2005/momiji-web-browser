@@ -390,7 +390,7 @@ class ScriptMixin(PlatformMixin):
         for ffrec in win32api.FindFiles("\\\\?\\" + path + "\\*.*"):
             file_attr = ffrec[0]
             name = ffrec[8]
-            if name == "." or name == "..":
+            if name in {".", ".."}:
                 continue
             full_name = os.path.join(path, name)
 
@@ -1039,7 +1039,7 @@ class ScriptMixin(PlatformMixin):
             if overwrite == "clobber" or not os.path.exists(dest):
                 self.rmtree(dest)
                 shutil.copytree(src, dest)
-            elif overwrite == "no_overwrite" or overwrite == "overwrite_if_exists":
+            elif overwrite in {"no_overwrite", "overwrite_if_exists"}:
                 files = os.listdir(src)
                 for f in files:
                     abs_src_f = os.path.join(src, f)

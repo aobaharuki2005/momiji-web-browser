@@ -2125,7 +2125,7 @@ class Marionette:
 
         data = self._send_message("WebDriver:TakeScreenshot", body, key="value")
 
-        if format == "base64" or format == "hash":
+        if format in {"base64", "hash"}:
             return data
         elif format == "binary":
             return base64.b64decode(data.encode("ascii"))

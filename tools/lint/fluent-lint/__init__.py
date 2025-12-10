@@ -127,12 +127,9 @@ class Linter(visitor.Visitor):
         self.state["node_can_be_resource_comment"] = self.state[
             "node_can_be_resource_comment"
         ] and (
-            # This is the root node.
-            node_name == "Resource"
-            # Empty space is allowed.
-            or node_name == "Span"
-            # Comments are allowed
-            or node_name == "Comment"
+            # This is the root node, empty space is allowed, comments are allowed
+            node_name
+            in {"Resource", "Span", "Comment"}
         )
 
         if self.debug_print_json:

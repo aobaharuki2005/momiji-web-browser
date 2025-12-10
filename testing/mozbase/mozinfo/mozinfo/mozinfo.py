@@ -65,7 +65,7 @@ if system in ["Microsoft", "Windows"]:
 
     # 2009 == 22H2 software update.  These are the build numbers
     # we use 2009 as the "build" which maps to what taskcluster tasks see
-    if build_number in [22621, 19045]:
+    if build_number in {22621, 19045}:
         build_number = 2009
 
     os_version = f"{major}.{build_number}"

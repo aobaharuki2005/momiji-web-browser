@@ -513,7 +513,7 @@ def sign_with_codesign(
                     entitlement_file = signing_group["entitlements"][
                         "by-build-platform"
                     ][".*devedition.*"]
-                elif channel == "release" or channel == "beta":
+                elif channel in {"release", "beta"}:
                     entitlement_file = signing_group["entitlements"][
                         "by-build-platform"
                     ]["default"]["by-project"]["default"]
@@ -649,7 +649,7 @@ def sign_with_rcodesign(
                     entitlement_file = signing_group["entitlements"][
                         "by-build-platform"
                     ][".*devedition.*"]
-                elif channel == "release" or channel == "beta":
+                elif channel in {"release", "beta"}:
                     entitlement_file = signing_group["entitlements"][
                         "by-build-platform"
                     ]["default"]["by-project"]["default"]

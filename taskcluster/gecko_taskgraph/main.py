@@ -354,11 +354,9 @@ def show_taskgraph(options):
 
         # Reload taskgraph modules to pick up changes and clear global state.
         for mod in sys.modules.copy():
-            if (
-                mod != __name__
-                and mod != "taskgraph.main"
-                and mod.split(".", 1)[0].endswith(("taskgraph", "mozbuild"))
-            ):
+            if mod not in {__name__, "taskgraph.main"} and mod.split(".", 1)[
+                0
+            ].endswith(("taskgraph", "mozbuild")):
                 del sys.modules[mod]
 
         # Ensure gecko_taskgraph is ahead of taskcluster_taskgraph in sys.path.

@@ -508,7 +508,7 @@ def check_output(out, err, rc, timed_out, test, options):
         # When running jittests on Android, SEGV results in a return code of
         # 128 + 11 = 139. Due to a bug in tinybox, we have to check for 138 as
         # well.
-        if rc == 139 or rc == 138:
+        if rc in {139, 138}:
             return OutputStatus.OK
 
         # Crashing test should always crash as expected, otherwise this is an

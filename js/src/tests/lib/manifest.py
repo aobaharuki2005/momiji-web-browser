@@ -288,12 +288,10 @@ def _build_manifest_script_entry(script_name, test):
                 term
                 for term in test.terms.split()
                 if not (
-                    term == "module"
-                    or term == "async"
+                    term in {"module", "async", "test262-raw"}
                     or term.startswith("error:")
                     or term.startswith("ignore-flag(")
                     or term.startswith("shell-option(")
-                    or term == "test262-raw"
                 )
             ]
         )
