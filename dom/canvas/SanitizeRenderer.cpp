@@ -300,7 +300,7 @@ std::string SanitizeRenderer(const std::string& raw_renderer) {
         "ANGLE [(]([^,]*), ([^,]*)( Direct3D[^,]*), .*[)]");
     // e.g. "ANGLE (Samsung Xclipse 940) on Vulkan 1.3.264"
     static const std::regex kReAngleVulkan(
-        "ANGLE [(](.*)[)]( on Vulkan) [0-9\\.]*");
+        "ANGLE [(]+(.*)[)]( on Vulkan) [0-9\\.]*[)]*");
 
     if (std::regex_match(raw_renderer, m, kReAngleDirect3D)) {
       const auto& vendor = m.str(1);
