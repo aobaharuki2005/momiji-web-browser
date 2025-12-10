@@ -9,6 +9,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   PageDataService:
     "moz-src:///browser/components/pagedata/PageDataService.sys.mjs",
+  InsightsManager:
+    "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
+  renderPrompt: "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
+  relevantInsightsContextPrompt:
+    "moz-src:///browser/components/aiwindow/models/prompts/insightsPrompts.sys.mjs",
 });
 
 /**
@@ -108,4 +113,39 @@ export async function constructRealTimeInfoInjectionMessage(depsOverride) {
     role: "system",
     content,
   };
+}
+
+/**
+ * Constructs the relevant insights context message to be inejcted before the user message.
+ *
+ * @param {string} message                                                          User message to find relevant insights for
+ * @returns {Promise<null|{role: string, tool_call_id: string, content: string}>}   Relevant insights context message or null if no relevant insights
+ */
+export async function constructRelevantInsightsContextMessage(message) {
+  const relevantInsights =
+    await lazy.InsightsManager.getRelevantInsights(message);
+
+  // If there are relevant insights, render and return the context message
+  if (relevantInsights.length) {
+    const relevantInsightsList =
+      "- " +
+      relevantInsights
+        .map(insight => {
+          return insight.insight_summary;
+        })
+        .join("\n- ");
+    const content = await lazy.renderPrompt(
+      lazy.relevantInsightsContextPrompt,
+      {
+        relevantInsightsList,
+      }
+    );
+
+    return {
+      role: "system",
+      content,
+    };
+  }
+  // If there aren't any relevant insights, return null
+  return null;
 }

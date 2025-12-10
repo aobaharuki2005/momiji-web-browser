@@ -201,3 +201,22 @@ Return ONLY JSON per the schema below.
   "intents": ["<intent 1>", "<intent 2>", ...]
 }
 \`\`\``.trim();
+
+export const relevantInsightsContextPromptMetadata = {
+  version: "0.1",
+};
+
+export const relevantInsightsContextPrompt = `
+# Existing Insights
+
+Below is a list of existing insights:
+
+{relevantInsightsList}
+
+Use them to personalized your response using the following guidelines:
+
+1. Consider the user message below
+2. Choose SPECIFIC and RELEVANT insights from the list above to personalize your response to the user
+3. Write those SPECIFIC insights into your response to make it more helpful and tailored, then tag them AFTER your response using the format: \`§existing_insight: insight text§\`
+
+- NEVER tag insights you DID NOT USE in your response.`.trim();
