@@ -33,7 +33,6 @@ class AcornColors(
     layerSuccess: Color,
     layerCritical: Color,
     layerInformation: Color,
-    layerAutofillText: Color,
     actionSecondary: Color,
     actionWarning: Color,
     actionSuccess: Color,
@@ -102,11 +101,6 @@ class AcornColors(
 
     // Info background
     var layerInformation by mutableStateOf(layerInformation)
-        private set
-
-    // Autofill text background
-    // Use for the background of autofill text in the address bar.
-    var layerAutofillText by mutableStateOf(layerAutofillText)
         private set
 
     // Actions
@@ -280,7 +274,6 @@ class AcornColors(
         layerSuccess: Color = this.layerSuccess,
         layerCritical: Color = this.layerCritical,
         layerInformation: Color = this.layerInformation,
-        layerAutofillText: Color = this.layerAutofillText,
         actionSecondary: Color = this.actionSecondary,
         actionWarning: Color = this.actionWarning,
         actionSuccess: Color = this.actionSuccess,
@@ -317,7 +310,6 @@ class AcornColors(
         layerSuccess = layerSuccess,
         layerCritical = layerCritical,
         layerInformation = layerInformation,
-        layerAutofillText = layerAutofillText,
         actionSecondary = actionSecondary,
         actionWarning = actionWarning,
         actionSuccess = actionSuccess,
@@ -357,7 +349,6 @@ val darkColorPalette = AcornColors(
     layerSuccess = PhotonColors.Green80,
     layerCritical = PhotonColors.Pink80,
     layerInformation = PhotonColors.Blue50,
-    layerAutofillText = PhotonColors.LightGrey05A34,
     actionSecondary = PhotonColors.DarkGrey05,
     actionWarning = PhotonColors.Yellow40A41,
     actionSuccess = PhotonColors.Green70,
@@ -396,7 +387,6 @@ val lightColorPalette = AcornColors(
     layerSuccess = PhotonColors.Green20,
     layerCritical = PhotonColors.Red10,
     layerInformation = PhotonColors.Blue50A44,
-    layerAutofillText = PhotonColors.DarkGrey05A43,
     actionSecondary = PhotonColors.LightGrey30,
     actionWarning = PhotonColors.Yellow60A40,
     actionSuccess = PhotonColors.Green60,
@@ -426,7 +416,6 @@ val lightColorPalette = AcornColors(
 val privateColorPalette = darkColorPalette.copy(
     layer2 = PhotonColors.Violet90,
     layer3 = PhotonColors.Ink90,
-    layerAutofillText = PhotonColors.Violet60,
     tabActive = PhotonColors.Purple60,
     tabInactive = PhotonColors.Ink90,
     surfaceDimVariant = PhotonColors.Ink90,
@@ -442,6 +431,7 @@ private fun AcornColors.toM3ColorScheme(
     tertiaryContainer: Color,
     surface: Color,
     onSurface: Color,
+    surfaceTint: Color,
     inverseSurface: Color,
     errorContainer: Color,
     outline: Color,
@@ -473,7 +463,7 @@ private fun AcornColors.toM3ColorScheme(
     onSurface = onSurface,
     surfaceVariant = surfaceContainerHighest,
     onSurfaceVariant = textSecondary,
-    surfaceTint = layerAutofillText,
+    surfaceTint = surfaceTint,
     inverseSurface = inverseSurface,
     inverseOnSurface = textInverted,
     error = textCritical,
@@ -516,6 +506,7 @@ fun acornDarkColorScheme(): ColorScheme = darkColorPalette.toM3ColorScheme(
     tertiaryContainer = PhotonColors.Pink80,
     surface = PhotonColors.DarkGrey60,
     onSurface = PhotonColors.LightGrey05,
+    surfaceTint = PhotonColors.LightGrey05A34,
     inverseSurface = PhotonColors.LightGrey40,
     errorContainer = PhotonColors.Red80,
     outline = PhotonColors.LightGrey80,
@@ -541,6 +532,7 @@ fun acornLightColorScheme(): ColorScheme = lightColorPalette.toM3ColorScheme(
     tertiaryContainer = PhotonColors.Pink05,
     surface = PhotonColors.LightGrey10,
     onSurface = PhotonColors.DarkGrey90,
+    surfaceTint = PhotonColors.DarkGrey05A43,
     inverseSurface = PhotonColors.DarkGrey60,
     errorContainer = PhotonColors.Red05,
     outline = PhotonColors.LightGrey90,
@@ -566,6 +558,7 @@ fun acornPrivateColorScheme(): ColorScheme = privateColorPalette.toM3ColorScheme
     tertiaryContainer = PhotonColors.Pink80,
     surface = Color(0xFF342B4A),
     onSurface = PhotonColors.LightGrey05,
+    surfaceTint = PhotonColors.Violet60,
     inverseSurface = PhotonColors.LightGrey40,
     errorContainer = PhotonColors.Red80,
     outline = PhotonColors.LightGrey80,
