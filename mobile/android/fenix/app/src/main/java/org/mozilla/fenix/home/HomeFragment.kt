@@ -154,7 +154,7 @@ import org.mozilla.fenix.pbmlock.NavigationOrigin
 import org.mozilla.fenix.pbmlock.observePrivateModeLock
 import org.mozilla.fenix.perf.MarkersFragmentLifecycleCallbacks
 import org.mozilla.fenix.perf.StartupTimeline
-import org.mozilla.fenix.reviewprompt.ShowPlayStoreReviewPrompt
+import org.mozilla.fenix.reviewprompt.ShowReviewPromptBinding
 import org.mozilla.fenix.search.SearchDialogFragment
 import org.mozilla.fenix.search.awesomebar.AwesomeBarComposable
 import org.mozilla.fenix.search.toolbar.DefaultSearchSelectorController
@@ -267,7 +267,7 @@ class HomeFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             voiceSearchFeature?.get()?.handleVoiceSearchResult(result.resultCode, result.data)
         }
-    private val showPlayStoreReviewPrompt = ViewBoundFeatureWrapper<ShowPlayStoreReviewPrompt>()
+    private val showReviewPromptBinding = ViewBoundFeatureWrapper<ShowReviewPromptBinding>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
@@ -956,8 +956,8 @@ class HomeFragment : Fragment() {
             view = view,
         )
 
-        showPlayStoreReviewPrompt.set(
-            feature = ShowPlayStoreReviewPrompt(
+        showReviewPromptBinding.set(
+            feature = ShowReviewPromptBinding(
                 appStore = requireComponents.appStore,
                 promptController = requireComponents.playStoreReviewPromptController,
                 activityRef = WeakReference(activity),

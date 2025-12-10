@@ -26,7 +26,7 @@ import java.lang.ref.WeakReference
  * A feature that shows either the Google Play Review Prompt or the built-in review prompt based
  * on the eligibility.
  */
-class ShowPlayStoreReviewPrompt(
+class ShowReviewPromptBinding(
     private val appStore: AppStore,
     private val promptController: PlayStoreReviewPromptController,
     private val activityRef: WeakReference<Activity>,
