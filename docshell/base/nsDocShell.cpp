@@ -12847,7 +12847,7 @@ void nsDocShell::MaybeFireTraverseHistory(nsDocShellLoadState* aLoadState) {
                                     ->mInfo.GetURIOrInheritedForAboutBlank();
   if (NS_FAILED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
           activeURI, loadingURI,
-          /*reportError=*/true,
+          /*reportError=*/false,
           /*fromPrivateWindow=*/false))) {
     return;
   }
