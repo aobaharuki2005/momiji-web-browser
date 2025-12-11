@@ -31,7 +31,7 @@ body {
 
 h3 {
   color: var(--text-color);
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-space-tokens */
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   margin-block-start: calc(var(--size-item-large) * 3.375);
   height: min-content;
 }

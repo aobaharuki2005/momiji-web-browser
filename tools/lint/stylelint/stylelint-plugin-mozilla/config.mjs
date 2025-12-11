@@ -175,6 +175,21 @@ const TextColor = {
   customFixes: customColorFixes,
 };
 
+/** @type {PropertyTypeConfig} */
+const Space = {
+  allow: ["0", "auto"],
+  tokenTypes: ["space"],
+  customFixes: {
+    "2px": "var(--space-xxsmall)",
+    "4px": "var(--space-xsmall)",
+    "8px": "var(--space-small)",
+    "12px": "var(--space-medium)",
+    "16px": "var(--space-large)",
+    "24px": "var(--space-xlarge)",
+    "32px": "var(--space-xxlarge)",
+  },
+};
+
 /**
  * @typedef {object} PropertyConfig
  * @property {PropertyTypeConfig[]} validTypes Valid type configurations for this property
@@ -326,5 +341,123 @@ export const propertyConfig = {
   },
   "font-weight": {
     validTypes: [FontWeight],
+  },
+  margin: {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "margin-block": {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "margin-block-end": {
+    validTypes: [Space],
+  },
+  "margin-block-start": {
+    validTypes: [Space],
+  },
+  "margin-inline": {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "margin-inline-end": {
+    validTypes: [Space],
+  },
+  "margin-inline-start": {
+    validTypes: [Space],
+  },
+  "margin-top": {
+    validTypes: [Space],
+  },
+  "margin-right": {
+    validTypes: [Space],
+  },
+  "margin-bottom": {
+    validTypes: [Space],
+  },
+  "margin-left": {
+    validTypes: [Space],
+  },
+  padding: {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "padding-block": {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "padding-block-end": {
+    validTypes: [Space],
+  },
+  "padding-block-start": {
+    validTypes: [Space],
+  },
+  "padding-inline": {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "padding-inline-end": {
+    validTypes: [Space],
+  },
+  "padding-inline-start": {
+    validTypes: [Space],
+  },
+  "padding-top": {
+    validTypes: [Space],
+  },
+  "padding-right": {
+    validTypes: [Space],
+  },
+  "padding-bottom": {
+    validTypes: [Space],
+  },
+  "padding-left": {
+    validTypes: [Space],
+  },
+  gap: {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "column-gap": {
+    validTypes: [Space],
+  },
+  "row-gap": {
+    validTypes: [Space],
+  },
+  inset: {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "inset-block": {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "inset-block-end": {
+    validTypes: [Space],
+  },
+  "inset-block-start": {
+    validTypes: [Space],
+  },
+  "inset-inline": {
+    validTypes: [Space],
+    shorthand: true,
+  },
+  "inset-inline-end": {
+    validTypes: [Space],
+  },
+  "inset-inline-start": {
+    validTypes: [Space],
+  },
+  top: {
+    validTypes: [Space],
+  },
+  right: {
+    validTypes: [Space],
+  },
+  bottom: {
+    validTypes: [Space],
+  },
+  left: {
+    validTypes: [Space],
   },
 };

@@ -1,11 +1,11 @@
-================
-use-space-tokens
-================
+=====
+space
+=====
 
-This rule checks that CSS declarations use space design token variables
-instead of hardcoded values. This ensures consistent spacing (e.g. margins,
-padding, gaps, etc.) across the application and makes it easier to maintain
-design system consistency.
+The ``use-design-tokens`` rule checks that CSS spacing declarations (e.g. margins,
+padding, gaps, inset, etc.) use design token variables instead of hardcoded values.
+This ensures consistent spacing across the application and makes it easier to
+maintain design system consistency.
 
 Examples of incorrect code for this rule:
 -----------------------------------------
@@ -78,7 +78,6 @@ Examples of correct token usage for this rule:
     margin-inline-end: var(--custom-space, --space-xlarge);
   }
 
-
 The rule also allows these values to be non-token values:
 
 .. code-block:: css
@@ -97,4 +96,58 @@ The rule also allows these values to be non-token values:
 
   .initial-row-gap {
     row-gap: initial;
+  }
+
+.. code-block:: css
+
+  .auto-margin {
+    margin-inline: auto;
+  }
+
+.. code-block:: css
+
+  .zero-padding {
+    padding: 0;
+  }
+
+Autofix functionality
+---------------------
+
+This rule can automatically fix some violations by replacing common pixel values with
+appropriate space tokens. Examples of autofixable violations:
+
+.. code-block:: css
+
+  /* Before */
+  .a {
+    margin: 2px;
+  }
+
+  /* After autofix */
+  .a {
+    margin: var(--space-xxsmall);
+  }
+
+.. code-block:: css
+
+  /* Before */
+  .a {
+    padding: 8px 16px;
+  }
+
+  /* After autofix */
+  .a {
+    padding: var(--space-small) var(--space-large);
+  }
+
+.. code-block:: css
+
+  /* Before */
+  .a {
+    gap: 24px 32px;
+  }
+
+  /* After autofix */
+  .a {
+    gap: var(--space-xlarge) var(--space-xxlarge);
   }
