@@ -37,13 +37,13 @@ ChromeUtils.defineESModuleGetters(lazy, {
  */
 export class UrlbarResult {
   /**
-   * @typedef {object} Payload
-   * @property {string} [qsSuggestion]
-   *   The suggestion text from quick suggest.
+   * @typedef {{ [name: string]: any }} Payload
+   * @typedef {Record<string, typeof lazy.UrlbarUtils.HIGHLIGHT>} Highlights
    */
 
   /**
    * @param {object} params
+   * @param {object} [params.queryContext] Used for highlighting.
    * @param {Values<typeof lazy.UrlbarUtils.RESULT_TYPE>} params.type
    * @param {Values<typeof lazy.UrlbarUtils.RESULT_SOURCE>} params.source
    * @param {UrlbarAutofillData} [params.autofill]
@@ -63,9 +63,11 @@ export class UrlbarResult {
    * @param {number} [params.suggestedIndex]
    * @param {Payload} [params.payload]
    * @param {object} [params.payloadHighlights]
+   * @param {Highlights} [params.highlights]
    * @param {boolean} [params.testForceNewContent] Used for test only.
    */
   constructor({
+    queryContext,
     type,
     source,
     autofill,
@@ -85,6 +87,7 @@ export class UrlbarResult {
     suggestedIndex,
     payload,
     payloadHighlights = {},
+    highlights = null,
     testForceNewContent,
   }) {
     // Type describes the payload and visualization that should be used for
@@ -106,11 +109,28 @@ export class UrlbarResult {
     if (!payload || typeof payload != "object") {
       throw new Error("Invalid result payload");
     }
-    this.#payload = this.#validatePayload(payload);
 
     if (!payloadHighlights || typeof payloadHighlights != "object") {
       throw new Error("Invalid result payload highlights");
     }
+
+    payload = Object.fromEntries(
+      Object.entries(payload).filter(([_, v]) => v != undefined)
+    );
+
+    if (highlights) {
+      if (!queryContext) {
+        throw new Error("queryContext is needed to highlight");
+      }
+      this.#initPayloadAndHighlights({
+        payload,
+        payloadHighlights,
+        tokens: queryContext.tokens,
+        highlightTargets: highlights,
+      });
+    }
+
+    this.#payload = this.#validatePayload(payload);
     this.#payloadHighlights = Object.freeze(payloadHighlights);
 
     this.#autofill = autofill;
@@ -375,54 +395,12 @@ export class UrlbarResult {
     return payload;
   }
 
-  /**
-   * A convenience function that takes a payload annotated with
-   * UrlbarUtils.HIGHLIGHT enums and returns the payload and the payload's
-   * highlights. Use this function when the highlighting required by your
-   * payload is based on simple substring matching, as done by
-   * UrlbarUtils.getTokenMatches(). Pass the return values as the `payload` and
-   * `payloadHighlights` params of the UrlbarResult constructor.
-   * `payloadHighlights` is optional. If omitted, payload will not be
-   * highlighted.
-   *
-   * If the payload doesn't have a title or has an empty title, and it also has
-   * a URL, then this function also sets the title to the URL's domain.
-   *
-   * @param {Array} tokens The tokens that should be highlighted in each of the
-   *        payload properties.
-   * @param {object} payloadInfo An object that looks like this:
-   *        { payloadPropertyName: payloadPropertyInfo }
-   *
-   *        Each payloadPropertyInfo may be either a string or an array.  If
-   *        it's a string, then the property value will be that string, and no
-   *        highlighting will be applied to it.  If it's an array, then it
-   *        should look like this: [payloadPropertyValue, highlightType].
-   *        payloadPropertyValue may be a string or an array of strings.  If
-   *        it's a string, then the payloadHighlights in the return value will
-   *        be an array of match highlights as described in
-   *        UrlbarUtils.getTokenMatches().  If it's an array, then
-   *        payloadHighlights will be an array of arrays of match highlights,
-   *        one element per element in payloadPropertyValue.
-   * @returns {{ payload: object, payloadHighlights: object }}
-   */
-  static payloadAndSimpleHighlights(tokens, payloadInfo) {
-    let payload = {};
-    let highlightTypes = {};
-
-    for (let [name, valueOrValues] of Object.entries(payloadInfo)) {
-      if (Array.isArray(valueOrValues)) {
-        if (valueOrValues.length) {
-          payload[name] = valueOrValues[0];
-          let highlightType = valueOrValues[1];
-          if (highlightType) {
-            highlightTypes[name] = highlightType;
-          }
-        }
-      } else if (valueOrValues != undefined) {
-        payload[name] = valueOrValues;
-      }
-    }
-
+  #initPayloadAndHighlights({
+    payload,
+    payloadHighlights,
+    tokens,
+    highlightTargets,
+  }) {
     if (
       !payload.title &&
       !payload.fallbackTitle &&
@@ -431,16 +409,16 @@ export class UrlbarResult {
     ) {
       // If there's no title, show the domain as the title. Not all valid URLs
       // have a domain.
-      highlightTypes.title = lazy.UrlbarUtils.HIGHLIGHT.TYPED;
       try {
         payload.title = new URL(payload.url).URI.displayHostPort;
+        highlightTargets.title = lazy.UrlbarUtils.HIGHLIGHT.TYPED;
       } catch (e) {}
     }
 
     if (payload.url) {
       // For display purposes we need to unescape the url.
       payload.displayUrl = lazy.UrlbarUtils.prepareUrlForDisplay(payload.url);
-      highlightTypes.displayUrl = highlightTypes.url;
+      highlightTargets.displayUrl = highlightTargets.url;
     }
 
     // For performance reasons limit excessive string lengths, to reduce the
@@ -453,26 +431,29 @@ export class UrlbarResult {
       }
     }
 
-    let payloadHighlights = {};
-    if (tokens) {
-      for (let [name, highlightType] of Object.entries(highlightTypes)) {
-        let value = payload[name];
-        let highlights = Array.isArray(value)
-          ? value.map(subval =>
-              lazy.UrlbarUtils.getTokenMatches(tokens, subval, highlightType)
-            )
-          : lazy.UrlbarUtils.getTokenMatches(
-              tokens,
-              value || "",
-              highlightType
-            );
-        if (highlights.length) {
-          payloadHighlights[name] = highlights;
-        }
-      }
+    if (!tokens?.length) {
+      return;
     }
 
-    return { payload, payloadHighlights };
+    for (let [name, highlightType] of Object.entries(highlightTargets)) {
+      if (!highlightType) {
+        continue;
+      }
+
+      let value = payload[name];
+      if (!value) {
+        continue;
+      }
+
+      let highlights = Array.isArray(value)
+        ? value.map(subval =>
+            lazy.UrlbarUtils.getTokenMatches(tokens, subval, highlightType)
+          )
+        : lazy.UrlbarUtils.getTokenMatches(tokens, value || "", highlightType);
+      if (highlights.length) {
+        payloadHighlights[name] = highlights;
+      }
+    }
   }
 
   static _dynamicResultTypesByName = new Map();

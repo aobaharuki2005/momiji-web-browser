@@ -159,13 +159,18 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
         !lazy.UrlbarPrefs.get("keyword.enabled")
       ) {
         return new lazy.UrlbarResult({
+          queryContext,
           type: UrlbarUtils.RESULT_TYPE.URL,
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           heuristic: true,
-          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            fallbackTitle: [searchUrl, UrlbarUtils.HIGHLIGHT.NONE],
-            url: [searchUrl, UrlbarUtils.HIGHLIGHT.NONE],
-          }),
+          payload: {
+            fallbackTitle: searchUrl,
+            url: searchUrl,
+          },
+          highlights: {
+            fallbackTitle: UrlbarUtils.HIGHLIGHT.NONE,
+            url: UrlbarUtils.HIGHLIGHT.NONE,
+          },
         });
       }
 
@@ -221,14 +226,19 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
     }
 
     return new lazy.UrlbarResult({
+      queryContext,
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       heuristic: true,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        fallbackTitle: [displayURL, UrlbarUtils.HIGHLIGHT.NONE],
-        url: [escapedURL, UrlbarUtils.HIGHLIGHT.NONE],
+      payload: {
+        fallbackTitle: displayURL,
+        url: escapedURL,
         icon: iconUri,
-      }),
+      },
+      highlights: {
+        fallbackTitle: UrlbarUtils.HIGHLIGHT.NONE,
+        url: UrlbarUtils.HIGHLIGHT.NONE,
+      },
     });
   }
 
@@ -277,13 +287,18 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
     }
 
     return new lazy.UrlbarResult({
+      queryContext,
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       heuristic: true,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        query: [query.trimStart(), UrlbarUtils.HIGHLIGHT.NONE],
-        keyword: [firstToken, UrlbarUtils.HIGHLIGHT.NONE],
-      }),
+      payload: {
+        query: query.trimStart(),
+        keyword: firstToken,
+      },
+      highlights: {
+        query: UrlbarUtils.HIGHLIGHT.NONE,
+        keyword: UrlbarUtils.HIGHLIGHT.NONE,
+      },
     });
   }
 
@@ -321,15 +336,21 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
     }
 
     return new lazy.UrlbarResult({
+      queryContext,
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       heuristic,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
+      payload: {
+        engine: engine.name,
         icon: UrlbarUtils.ICON.SEARCH_GLASS,
-        query: [query, UrlbarUtils.HIGHLIGHT.NONE],
-        keyword: keyword ? [keyword, UrlbarUtils.HIGHLIGHT.NONE] : undefined,
-      }),
+        query,
+        keyword,
+      },
+      highlights: {
+        engine: UrlbarUtils.HIGHLIGHT.TYPED,
+        query: UrlbarUtils.HIGHLIGHT.NONE,
+        keyword: UrlbarUtils.HIGHLIGHT.NONE,
+      },
     });
   }
 }

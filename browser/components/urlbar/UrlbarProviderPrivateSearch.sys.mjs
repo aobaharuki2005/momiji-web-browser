@@ -103,16 +103,21 @@ export class UrlbarProviderPrivateSearch extends UrlbarProvider {
     }
 
     let result = new lazy.UrlbarResult({
+      queryContext,
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       suggestedIndex: 1,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-        query: [searchString, UrlbarUtils.HIGHLIGHT.NONE],
+      payload: {
+        engine: engine.name,
+        query: searchString,
         icon,
         inPrivateWindow: true,
         isPrivateEngine,
-      }),
+      },
+      highlights: {
+        engine: UrlbarUtils.HIGHLIGHT.TYPED,
+        query: UrlbarUtils.HIGHLIGHT.NONE,
+      },
     });
     addCallback(this, result);
   }

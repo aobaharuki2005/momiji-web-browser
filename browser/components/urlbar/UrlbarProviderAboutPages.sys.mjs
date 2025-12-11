@@ -52,13 +52,18 @@ export class UrlbarProviderAboutPages extends UrlbarProvider {
     for (const aboutUrl of lazy.AboutPagesUtils.visibleAboutUrls) {
       if (aboutUrl.startsWith(searchString)) {
         let result = new lazy.UrlbarResult({
+          queryContext,
           type: UrlbarUtils.RESULT_TYPE.URL,
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            title: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
-            url: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
+          payload: {
+            title: aboutUrl,
+            url: aboutUrl,
             icon: UrlbarUtils.getIconForUrl(aboutUrl),
-          }),
+          },
+          highlights: {
+            title: UrlbarUtils.HIGHLIGHT.TYPED,
+            url: UrlbarUtils.HIGHLIGHT.TYPED,
+          },
         });
         addCallback(this, result);
       }

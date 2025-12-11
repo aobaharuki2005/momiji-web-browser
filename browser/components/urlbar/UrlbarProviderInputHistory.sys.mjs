@@ -136,23 +136,24 @@ export class UrlbarProviderInputHistory extends UrlbarProvider {
           continue;
         }
         let userContextId = row.getResultByName("userContextId") || 0;
-        let { payload, payloadHighlights } =
-          lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
-            title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
+        let result = new lazy.UrlbarResult({
+          queryContext,
+          type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
+          source: UrlbarUtils.RESULT_SOURCE.TABS,
+          payload: {
+            url,
+            title: resultTitle,
             icon: UrlbarUtils.getIconForUrl(url),
             userContextId,
             lastVisit,
-          });
-        if (lazy.UrlbarPrefs.get("secondaryActions.switchToTab")) {
-          payload.action =
-            UrlbarUtils.createTabSwitchSecondaryAction(userContextId);
-        }
-        let result = new lazy.UrlbarResult({
-          type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
-          source: UrlbarUtils.RESULT_SOURCE.TABS,
-          payload,
-          payloadHighlights,
+            action: lazy.UrlbarPrefs.get("secondaryActions.switchToTab")
+              ? UrlbarUtils.createTabSwitchSecondaryAction(userContextId)
+              : undefined,
+          },
+          highlights: {
+            url: UrlbarUtils.HIGHLIGHT.TYPED,
+            title: UrlbarUtils.HIGHLIGHT.TYPED,
+          },
         });
         addCallback(this, result);
         continue;
@@ -178,12 +179,13 @@ export class UrlbarProviderInputHistory extends UrlbarProvider {
       let isBlockable = resultSource == UrlbarUtils.RESULT_SOURCE.HISTORY;
 
       let result = new lazy.UrlbarResult({
+        queryContext,
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: resultSource,
-        ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-          url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
-          title: [resultTitle, UrlbarUtils.HIGHLIGHT.TYPED],
-          tags: [resultTags, UrlbarUtils.HIGHLIGHT.TYPED],
+        payload: {
+          url,
+          title: resultTitle,
+          tags: resultTags,
           icon: UrlbarUtils.getIconForUrl(url),
           isBlockable,
           blockL10n: isBlockable
@@ -194,7 +196,12 @@ export class UrlbarProviderInputHistory extends UrlbarProvider {
               "awesome-bar-result-menu"
             : undefined,
           lastVisit,
-        }),
+        },
+        highlights: {
+          url: UrlbarUtils.HIGHLIGHT.TYPED,
+          title: UrlbarUtils.HIGHLIGHT.TYPED,
+          tags: UrlbarUtils.HIGHLIGHT.TYPED,
+        },
       });
 
       addCallback(this, result);

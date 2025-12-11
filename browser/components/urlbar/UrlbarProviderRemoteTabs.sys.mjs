@@ -206,15 +206,20 @@ export class UrlbarProviderRemoteTabs extends UrlbarProvider {
         }
 
         let result = new lazy.UrlbarResult({
+          queryContext,
           type: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
           source: UrlbarUtils.RESULT_SOURCE.TABS,
-          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            url: [tab.url, UrlbarUtils.HIGHLIGHT.TYPED],
-            title: [tab.title, UrlbarUtils.HIGHLIGHT.TYPED],
+          payload: {
+            url: tab.url,
+            title: tab.title,
             device: client.name,
             icon: lazy.showRemoteIconsPref ? tab.icon : "",
             lastUsed: (tab.lastUsed || 0) * 1000,
-          }),
+          },
+          highlights: {
+            url: UrlbarUtils.HIGHLIGHT.TYPED,
+            title: UrlbarUtils.HIGHLIGHT.TYPED,
+          },
         });
 
         // We want to return the most relevant remote tabs and thus the most

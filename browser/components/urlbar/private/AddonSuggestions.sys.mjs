@@ -87,21 +87,8 @@ export class AddonSuggestions extends SuggestProvider {
       }
     }
 
-    const payload = {
-      url: url.href,
-      originalUrl: suggestion.url,
-      shouldShowUrl: true,
-      // Rust uses `iconUrl` but Merino uses `icon`.
-      icon: suggestion.iconUrl ?? suggestion.icon,
-      title: suggestion.title,
-      description: suggestion.description,
-      bottomTextL10n: {
-        id: "firefox-suggest-addons-recommended",
-      },
-      helpUrl: lazy.QuickSuggest.HELP_URL,
-    };
-
     return new lazy.UrlbarResult({
+      queryContext,
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       isBestMatch: true,
@@ -109,10 +96,23 @@ export class AddonSuggestions extends SuggestProvider {
       isRichSuggestion: true,
       richSuggestionIconSize: 24,
       showFeedbackMenu: true,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
-      ),
+      payload: {
+        url: url.href,
+        originalUrl: suggestion.url,
+        shouldShowUrl: true,
+        // Rust uses `iconUrl` but Merino uses `icon`.
+        icon: suggestion.iconUrl ?? suggestion.icon,
+        title: suggestion.title,
+        description: suggestion.description,
+        bottomTextL10n: {
+          id: "firefox-suggest-addons-recommended",
+        },
+        helpUrl: lazy.QuickSuggest.HELP_URL,
+      },
+      // TODO: We have to set highlights to calculate displayUrl now. But, since
+      //       it is not related to the higilights, think about it with another
+      //       way.
+      highlights: {},
     });
   }
 

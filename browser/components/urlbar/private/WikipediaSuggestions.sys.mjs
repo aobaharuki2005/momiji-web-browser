@@ -49,19 +49,21 @@ export class WikipediaSuggestions extends SuggestProvider {
 
   makeResult(queryContext, suggestion) {
     return new lazy.UrlbarResult({
+      queryContext,
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      payload: {
         url: suggestion.url,
         title: suggestion.title,
-        qsSuggestion: [
+        qsSuggestion:
           // Merino uses snake_case, so this will be `full_keyword` for it.
           suggestion.fullKeyword ?? suggestion.full_keyword,
-          lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
-        ],
         isBlockable: true,
         isManageable: true,
-      }),
+      },
+      highlights: {
+        qsSuggestion: lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      },
     });
   }
 

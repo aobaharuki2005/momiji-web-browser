@@ -10,12 +10,14 @@ add_task(async function test_receive_punycode_result() {
   class ResultWithHighlightsProvider extends UrlbarTestUtils.TestProvider {
     startQuery(context, addCallback) {
       let result = new UrlbarResult({
+        queryContext: context,
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         suggestedIndex: 0,
-        ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
-          url: [url, UrlbarUtils.HIGHLIGHT.TYPED],
-        }),
+        payload: { url },
+        highlights: {
+          url: UrlbarUtils.HIGHLIGHT.TYPED,
+        },
       });
       addCallback(this, result);
     }

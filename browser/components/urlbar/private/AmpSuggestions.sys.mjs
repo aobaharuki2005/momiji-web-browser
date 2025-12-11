@@ -114,6 +114,7 @@ export class AmpSuggestions extends SuggestProvider {
       url: normalized.url,
       originalUrl: normalized.rawUrl,
       title: normalized.title,
+      qsSuggestion: normalized.fullKeyword,
       requestId: normalized.requestId,
       urlTimestampIndex: normalized.urlTimestampIndex,
       sponsoredImpressionUrl: normalized.impressionUrl,
@@ -129,13 +130,6 @@ export class AmpSuggestions extends SuggestProvider {
       lazy.UrlbarPrefs.get("quickSuggestAmpTopPickCharThreshold") &&
       lazy.UrlbarPrefs.get("quickSuggestAmpTopPickCharThreshold") <=
         queryContext.trimmedLowerCaseSearchString.length;
-
-    payload.qsSuggestion = [
-      normalized.fullKeyword,
-      isTopPick
-        ? lazy.UrlbarUtils.HIGHLIGHT.TYPED
-        : lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
-    ];
 
     let resultParams = {};
     if (isTopPick) {
@@ -154,14 +148,17 @@ export class AmpSuggestions extends SuggestProvider {
     }
 
     return new lazy.UrlbarResult({
+      queryContext,
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       isRichSuggestion: true,
       ...resultParams,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
-      ),
+      payload,
+      highlights: {
+        qsSuggestion: isTopPick
+          ? lazy.UrlbarUtils.HIGHLIGHT.TYPED
+          : lazy.UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      },
     });
   }
 

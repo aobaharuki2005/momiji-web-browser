@@ -109,14 +109,19 @@ export class UrlbarProviderHistoryUrlHeuristic extends UrlbarProvider {
     }
 
     return new lazy.UrlbarResult({
+      queryContext,
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.HISTORY,
       heuristic: true,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-        url: [inputedURL, UrlbarUtils.HIGHLIGHT.TYPED],
-        title: [title, UrlbarUtils.HIGHLIGHT.NONE],
+      payload: {
+        url: inputedURL,
+        title,
         icon: UrlbarUtils.getIconForUrl(resultSet[0].getResultByName("url")),
-      }),
+      },
+      highlights: {
+        url: UrlbarUtils.HIGHLIGHT.TYPED,
+        title: UrlbarUtils.HIGHLIGHT.NONE,
+      },
     });
   }
 }

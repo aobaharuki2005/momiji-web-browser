@@ -492,33 +492,33 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       }
 
       try {
-        let payload = {
-          engine: [engine.name, UrlbarUtils.HIGHLIGHT.TYPED],
-          suggestion: [entry.value, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-          lowerCaseSuggestion: entry.value.toLocaleLowerCase(),
-          tailPrefix,
-          tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
-          tailOffsetIndex: tail ? entry.tailOffsetIndex : undefined,
-          keyword: [alias ? alias : undefined, UrlbarUtils.HIGHLIGHT.TYPED],
-          trending: entry.trending,
-          description: entry.description || undefined,
-          query: [searchString.trim(), UrlbarUtils.HIGHLIGHT.NONE],
-          icon: !entry.value ? await engine.getIconURL() : entry.icon,
-        };
-
-        if (entry.trending) {
-          payload.helpUrl = TRENDING_HELP_URL;
-        }
-
         results.push(
           new lazy.UrlbarResult({
+            queryContext,
             type: UrlbarUtils.RESULT_TYPE.SEARCH,
             source: UrlbarUtils.RESULT_SOURCE.SEARCH,
             isRichSuggestion: !!entry.icon,
-            ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-              queryContext.tokens,
-              payload
-            ),
+            payload: {
+              engine: engine.name,
+              suggestion: entry.value,
+              lowerCaseSuggestion: entry.value.toLocaleLowerCase(),
+              tailPrefix,
+              tail,
+              tailOffsetIndex: tail ? entry.tailOffsetIndex : undefined,
+              keyword: alias || undefined,
+              trending: entry.trending,
+              description: entry.description || undefined,
+              query: searchString.trim(),
+              icon: !entry.value ? await engine.getIconURL() : entry.icon,
+              helpUrl: entry.trending ? TRENDING_HELP_URL : undefined,
+            },
+            highlights: {
+              engine: UrlbarUtils.HIGHLIGHT.TYPED,
+              suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+              tail: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+              keyword: UrlbarUtils.HIGHLIGHT.TYPED,
+              query: UrlbarUtils.HIGHLIGHT.NONE,
+            },
           })
         );
       } catch (err) {
@@ -639,17 +639,21 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
 
 function makeFormHistoryResult(queryContext, engine, entry) {
   return new lazy.UrlbarResult({
+    queryContext,
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-    ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+    payload: {
       engine: engine.name,
-      suggestion: [entry.value, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+      suggestion: entry.value,
       lowerCaseSuggestion: entry.value.toLocaleLowerCase(),
       isBlockable: true,
       blockL10n: { id: "urlbar-result-menu-remove-from-history" },
       helpUrl:
         Services.urlFormatter.formatURLPref("app.support.baseURL") +
         "awesome-bar-result-menu",
-    }),
+    },
+    highlights: {
+      suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+    },
   });
 }

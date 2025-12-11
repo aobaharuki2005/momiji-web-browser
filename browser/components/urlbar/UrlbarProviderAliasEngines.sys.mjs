@@ -70,12 +70,12 @@ export class UrlbarProviderAliasEngines extends UrlbarProvider {
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       heuristic: true,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+      payload: {
         engine: engine.name,
         keyword: alias,
         query: query.trimStart(),
         icon,
-      }),
+      },
     });
     addCallback(this, result);
   }

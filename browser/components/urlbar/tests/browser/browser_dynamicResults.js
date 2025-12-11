@@ -574,13 +574,17 @@ add_task(async function highlighting() {
   class TestHighlightProvider extends TestProvider {
     startQuery(context, addCallback) {
       let result = new UrlbarResult({
+        queryContext: context,
         type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         suggestedIndex: 1,
-        ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
+        payload: {
           dynamicType: DYNAMIC_TYPE_NAME,
-          text: ["Test title", UrlbarUtils.HIGHLIGHT.TYPED],
-        }),
+          text: "Test title",
+        },
+        highlights: {
+          text: UrlbarUtils.HIGHLIGHT.TYPED,
+        },
       });
       addCallback(this, result);
     }

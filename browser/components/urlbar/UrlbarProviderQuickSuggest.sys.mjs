@@ -472,23 +472,22 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
 
     if (suggestion.full_keyword) {
       payload.title = suggestion.title;
-      payload.qsSuggestion = [
-        suggestion.full_keyword,
-        UrlbarUtils.HIGHLIGHT.SUGGESTED,
-      ];
+      payload.qsSuggestion = suggestion.full_keyword;
     } else {
-      payload.title = [suggestion.title, UrlbarUtils.HIGHLIGHT.TYPED];
+      payload.title = suggestion.title;
       payload.shouldShowUrl = true;
     }
 
     return new lazy.UrlbarResult({
+      queryContext,
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       isBestMatch: !!suggestion.is_top_pick,
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
-      ),
+      payload,
+      highlights: {
+        qsSuggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+        title: UrlbarUtils.HIGHLIGHT.TYPED,
+      },
     });
   }
 

@@ -1732,7 +1732,7 @@ export var UrlbarUtils = {
    *   The text content to give the node.
    * @param {Array} highlights
    *   Array of highlights as returned by `UrlbarUtils.getTokenMatches()` or
-   *   `UrlbarResult.payloadAndSimpleHighlights()`.
+   *   `UrlbarResult.payloadHighlights`.
    */
   addTextContentWithHighlights(parentNode, textContent, highlights) {
     parentNode.textContent = "";
@@ -3394,7 +3394,7 @@ export class L10nCache {
    *   If this is set, apply substring highlighting to the corresponding l10n
    *   arguments in `args`. Each value in this object should be an array of
    *   highlights as returned by `UrlbarUtils.getTokenMatches()` or
-   *   `UrlbarResult.payloadAndSimpleHighlights()`.
+   *   `UrlbarResult.payloadHighlights`.
    * @param {string} [options.attribute]
    *   If the string applies to an attribute on the element, pass the name of
    *   the attribute. The string in the Fluent file should define a value for
