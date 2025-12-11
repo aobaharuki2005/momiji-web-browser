@@ -21,7 +21,3 @@ menu-file-new-classic-window =
 aiwindow-input-cta-label-chat = Chat
 aiwindow-input-cta-label-search = Search
 aiwindow-input-cta-label-navigate = Navigate
-
-## Firstrun onboarding
-
-aiwindow-firstrun-title = Welcome to Smart Window
