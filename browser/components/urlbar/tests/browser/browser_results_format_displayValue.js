@@ -49,7 +49,7 @@ add_task(async function test_receive_punycode_result() {
     "Result is trimmed and formatted correctly."
   );
   is(
-    row.result.payload.title,
+    row.result.getDisplayableValueAndHighlights("title").value,
     "www.اختبار.اختبار.org:5000",
     "Result is trimmed and formatted correctly."
   );

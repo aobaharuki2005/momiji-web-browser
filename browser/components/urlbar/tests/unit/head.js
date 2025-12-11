@@ -430,7 +430,7 @@ async function cleanupPlaces() {
  *   The context that this result will be displayed in.
  * @param {object} options
  *   Options for the result.
- * @param {string} options.title
+ * @param {string} [options.title]
  *   The page title.
  * @param {string} options.uri
  *   The page URI.
@@ -898,7 +898,7 @@ function makeVisitResult(
     url: uri,
   };
 
-  if (title) {
+  if (title != undefined) {
     payload.title = title;
   }
 

@@ -690,7 +690,6 @@ add_task(async function dismissals_unmanaged_1() {
       heuristic: false,
       payload: {
         provider,
-        title: "example.com",
         url: suggestion.url,
         originalUrl: suggestion.original_url,
         dismissalKey: suggestion.dismissal_key,
@@ -811,7 +810,6 @@ add_task(async function dismissals_unmanaged_2() {
     heuristic: false,
     payload: {
       provider,
-      title: "example.com",
       url: "https://example.com/url",
       source: "merino",
       isSponsored: false,

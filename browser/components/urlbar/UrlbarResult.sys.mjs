@@ -463,30 +463,6 @@ export class UrlbarResult {
     tokens,
     highlightTargets,
   }) {
-    if (
-      !payload.title &&
-      !payload.fallbackTitle &&
-      payload.url &&
-      typeof payload.url == "string"
-    ) {
-      // If there's no title, show the domain as the title. Not all valid URLs
-      // have a domain.
-      try {
-        payload.title = new URL(payload.url).URI.displayHostPort;
-        highlightTargets.title = lazy.UrlbarUtils.HIGHLIGHT.TYPED;
-      } catch (e) {}
-    }
-
-    // For performance reasons limit excessive string lengths, to reduce the
-    // amount of string matching we do here, and avoid wasting resources to
-    // handle long textruns that the user would never see anyway.
-    for (let prop of ["title", "suggestion"]) {
-      let value = payload[prop];
-      if (typeof value == "string") {
-        payload[prop] = value.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH);
-      }
-    }
-
     if (!tokens?.length) {
       return;
     }

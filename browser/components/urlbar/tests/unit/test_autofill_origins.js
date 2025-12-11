@@ -967,7 +967,7 @@ add_task(async function domainTitle() {
         }),
         makeVisitResult(context, {
           uri: "https://www.example.com/",
-          title: "www.example.com",
+          title: "",
         }),
       ],
     },

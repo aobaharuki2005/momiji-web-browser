@@ -40,7 +40,8 @@ add_task(async function () {
       }),
       makeBookmarkResult(context, {
         uri: `https://${host}/`,
-        title: `${host}`,
+        // This empty title is set in UrlbarProviderPlaces
+        title: "",
       }),
     ],
   });
@@ -69,7 +70,8 @@ add_task(async function () {
       }),
       makeBookmarkResult(context, {
         uri: `https://www.${host}/`,
-        title: `www.${host}`,
+        // This empty title is set in UrlbarProviderPlaces
+        title: "",
       }),
     ],
   });
