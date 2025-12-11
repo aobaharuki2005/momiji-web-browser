@@ -284,10 +284,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
       mozilla::dom::EventTarget* aChromeEventHandler) override;
 
   // Outer windows only.
-  virtual void SetInitialPrincipal(
-      nsIPrincipal* aNewWindowPrincipal, nsIPolicyContainer* aPolicyContainer,
-      const mozilla::Maybe<nsILoadInfo::CrossOriginEmbedderPolicy>& aCoep)
-      override;
+  virtual void SetInitialPrincipal(nsIPrincipal* aNewWindowPrincipal) override;
 
   virtual already_AddRefed<nsISupports> SaveWindowState() override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual nsresult RestoreWindowState(

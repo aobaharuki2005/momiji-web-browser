@@ -1170,9 +1170,7 @@ nsresult ContentChild::ProvideWindowCommon(
   // This creates a new document and the timing is quite fragile.
   NS_ENSURE_TRUE(browsingContext->GetDOMWindow(), NS_ERROR_ABORT);
   browsingContext->GetDOMWindow()->SetInitialPrincipal(
-      aOpenWindowInfo->PrincipalToInheritForAboutBlank(),
-      aOpenWindowInfo->PolicyContainerToInheritForAboutBlank(),
-      aOpenWindowInfo->CoepToInheritForAboutBlank());
+      aOpenWindowInfo->PrincipalToInheritForAboutBlank());
 
   // Set to true when we're ready to return from this function.
   bool ready = false;

@@ -969,6 +969,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
             creator->GetPolicyContainer();
         openWindowInfo->mCoepToInheritForAboutBlank =
             creator->GetEmbedderPolicy();
+        openWindowInfo->mBaseUriToInheritForAboutBlank = creator->GetBaseURI();
       }
 
       // Check to see if this frame is allowed to navigate, but don't check if
