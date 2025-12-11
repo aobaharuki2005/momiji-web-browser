@@ -1037,6 +1037,66 @@ export class TelemetryFeed {
 
         break;
       }
+      case "POCKET_THUMBS_DOWN":
+      case "POCKET_THUMBS_UP": {
+        const {
+          corpus_item_id,
+          format,
+          is_section_followed,
+          action_position,
+          received_rank,
+          recommendation_id,
+          recommended_at,
+          scheduled_corpus_item_id,
+          section_position,
+          section,
+          thumbs_down,
+          thumbs_up,
+          tile_id,
+          topic,
+        } = action.data.value ?? {};
+
+        const gleanData = {
+          tile_id,
+          position: action_position,
+          // We conditionally add in a few props.
+          ...(corpus_item_id ? { corpus_item_id } : {}),
+          ...(scheduled_corpus_item_id ? { scheduled_corpus_item_id } : {}),
+          ...(corpus_item_id || scheduled_corpus_item_id
+            ? {
+                received_rank,
+                recommended_at,
+              }
+            : {
+                recommendation_id,
+              }),
+          thumbs_up,
+          thumbs_down,
+          topic,
+          ...(format ? { format } : {}),
+          ...(section
+            ? {
+                section,
+                section_position,
+                ...(this.sectionsPersonalizationEnabled
+                  ? { is_section_followed: !!is_section_followed }
+                  : {}),
+              }
+            : {}),
+        };
+        Glean.pocket.thumbVotingInteraction.record({
+          ...this.redactNewTabPing(gleanData),
+          newtab_visit_id: session.session_id,
+        });
+        if (this.privatePingEnabled) {
+          // eslint-disable-next-line no-unused-vars
+          this.newtabContentPing.recordEvent(
+            "thumbVotingInteraction",
+            gleanData
+          );
+        }
+        break;
+      }
       // Bug 1969452 - Feature Highlight Telemetry Events
       case "FEATURE_HIGHLIGHT_DISMISS":
       case "FEATURE_HIGHLIGHT_IMPRESSION":

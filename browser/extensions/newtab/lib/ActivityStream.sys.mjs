@@ -95,6 +95,11 @@ const LOCALE_TOPIC_LABEL_CONFIG =
 const REGION_BASIC_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.region-basic-config";
 
+const REGION_THUMBS_CONFIG =
+  "browser.newtabpage.activity-stream.discoverystream.thumbsUpDown.region-thumbs-config";
+const LOCALE_THUMBS_CONFIG =
+  "browser.newtabpage.activity-stream.discoverystream.thumbsUpDown.locale-thumbs-config";
+
 const REGION_CONTEXTUAL_AD_CONFIG =
   "browser.newtabpage.activity-stream.discoverystream.sections.contextualAds.region-config";
 const LOCALE_CONTEXTUAL_AD_CONFIG =
@@ -227,6 +232,13 @@ function showTopicLabels({ geo, locale }) {
   return (
     csvPrefHasValue(REGION_TOPIC_LABEL_CONFIG, geo) &&
     csvPrefHasValue(LOCALE_TOPIC_LABEL_CONFIG, locale)
+  );
+}
+
+function showThumbsUpDown({ geo, locale }) {
+  return (
+    csvPrefHasValue(REGION_THUMBS_CONFIG, geo) &&
+    csvPrefHasValue(LOCALE_THUMBS_CONFIG, locale)
   );
 }
 
@@ -818,6 +830,14 @@ export const PREFS_CONFIG = new Map([
     },
   ],
   [
+    "discoverystream.sections.cards.thumbsUpDown.enabled",
+    {
+      title:
+        "Boolean flag to enable thumbs up/down buttons in the new card UI in recommended stories",
+      value: true,
+    },
+  ],
+  [
     "discoverystream.reportAds.enabled",
     {
       title: "Boolean flag to enable reporting ads from the context menu",
@@ -1193,6 +1213,22 @@ export const PREFS_CONFIG = new Map([
         "Endpoint prefixes (comma-separated) that are allowed to be requested",
       value:
         "https://getpocket.cdn.mozilla.net/,https://firefox-api-proxy.cdn.mozilla.net/,https://spocs.getpocket.com/,https://merino.services.mozilla.com/,https://ads.mozilla.org/",
+    },
+  ],
+  [
+    "discoverystream.thumbsUpDown.enabled",
+    {
+      title: "Allow users to give thumbs up/down on recommended stories",
+      // pref is dynamic
+      getValue: showThumbsUpDown,
+    },
+  ],
+  [
+    "discoverystream.thumbsUpDown.searchTopsitesCompact",
+    {
+      title:
+        "A compact layout of the search/topsites/stories sections to account for new height from thumbs up/down icons ",
+      value: false,
     },
   ],
   [

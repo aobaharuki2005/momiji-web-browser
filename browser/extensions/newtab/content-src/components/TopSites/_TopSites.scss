@@ -153,8 +153,7 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
 // container for drop zone
 .top-site-outer {
   width: 120px;
-  // Compact layout spacing migrated from .thumbs-ui-compact
-  margin-block-end: var(--space-medium);
+  margin-block-end: 0;
   border-radius: var(--border-radius-large);
   display: inline-block;
 
@@ -442,13 +441,6 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
     .title {
       visibility: hidden;
     }
-  }
-}
-
-// Preserve shortcuts-refresh variant from compact thumbs UI
-.shortcuts-refresh {
-  .top-site-outer {
-    margin-block-end: 0;
   }
 }
 

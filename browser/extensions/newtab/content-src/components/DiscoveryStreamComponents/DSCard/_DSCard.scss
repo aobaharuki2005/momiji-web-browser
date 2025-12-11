@@ -182,6 +182,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
     }
   }
 
+  // Note: `.ds-card .active,:focus-within,:hover` is also utilized by DSThumbsUpDownButtons
   // The active class is added when the context menu is open.
   &.active,
   &:focus-within,
@@ -646,6 +647,17 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       margin-block-end: 0;
       margin-inline-end: var(--space-xxsmall);
       max-width: 175px;
+    }
+
+    .card-stp-thumbs-buttons-wrapper {
+      position: static;
+      inset-block-start: 0;
+      transform: translateY(0);
+      margin-block-start: 0;
+
+      .card-stp-thumbs-buttons {
+        pointer-events: auto;
+      }
     }
   }
 

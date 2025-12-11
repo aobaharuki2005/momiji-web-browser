@@ -1,9 +1,7 @@
 /* stylelint-disable max-nesting-depth */
 
 .collapsible-section {
-  // Compact layout padding and spacing from thumbs UI overrides
-  padding: 0 var(--space-xlarge);
-  margin-block-end: var(--space-xxlarge);
+  padding: var(--space-small) var(--space-xlarge);
 
   .section-title-container {
     margin: 0;
