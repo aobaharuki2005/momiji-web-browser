@@ -17,6 +17,12 @@ run-if = [
   "os != 'win'", # The popupmenus dismiss when access keys for disabled items are pressed on windows
 ]
 
+["browser_navigator_clipboard_contextmenu_dismiss.js"]
+support-files = [
+  "file_toplevel.html",
+  "file_iframe.html",
+]
+
 ["browser_navigator_clipboard_contextmenu_suppression.js"]
 support-files = [
   "file_toplevel.html",
