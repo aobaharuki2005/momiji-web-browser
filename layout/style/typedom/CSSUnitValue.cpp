@@ -73,8 +73,17 @@ void CSSUnitValue::ToCssTextWithProperty(const CSSPropertyId& aPropertyId,
   // and fully spec-compliant manner. See bug 2005142
   const bool isValueOutOfRange = [](NonCustomCSSPropertyId aId, double aValue) {
     switch (aId) {
-      case eCSSProperty_perspective:
       case eCSSProperty_column_width:
+      case eCSSProperty_perspective:
+      case eCSSProperty_border_block_end_width:
+      case eCSSProperty_border_block_start_width:
+      case eCSSProperty_border_bottom_width:
+      case eCSSProperty_border_inline_end_width:
+      case eCSSProperty_border_inline_start_width:
+      case eCSSProperty_border_left_width:
+      case eCSSProperty_border_right_width:
+      case eCSSProperty_border_top_width:
+      case eCSSProperty_outline_width:
         return aValue < 0;
 
       default:
