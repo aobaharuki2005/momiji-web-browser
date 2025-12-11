@@ -353,9 +353,6 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
     this.props.dispatch(
       ac.SetPref("discoverystream.sections.cards.enabled", pressed)
     );
-    this.props.dispatch(
-      ac.SetPref("discoverystream.sections.cards.thumbsUpDown.enabled", pressed)
-    );
   }
 
   sendConversionEvent() {
