@@ -4,18 +4,5 @@
 
 import { GeckoViewActorParent } from "resource://gre/modules/GeckoViewActorParent.sys.mjs";
 
-export class ScrollDelegateParent extends GeckoViewActorParent {
-  async receiveMessage({ name, data }) {
-    switch (name) {
-      case "GeckoView:ScrollChanged": {
-        return this.eventDispatcher.sendRequest({
-          ...data,
-          type: "GeckoView:ScrollChanged",
-        });
-      }
-      default: {
-        return super.receiveMessage({ name, data });
-      }
-    }
-  }
-}
+// For this.eventDispatcher in the child
+export class ScrollDelegateParent extends GeckoViewActorParent {}

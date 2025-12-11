@@ -27,7 +27,10 @@ export class ContentDelegateChild extends GeckoViewActorChild {
           return;
         }
         this.lastViewportFit = viewportFit;
-        this.sendAsyncMessage("GeckoView:DOMMetaViewportFit", viewportFit);
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:DOMMetaViewportFit",
+          viewportfit: viewportFit,
+        });
       }
     );
   }
@@ -176,6 +179,7 @@ export class ContentDelegateChild extends GeckoViewActorChild {
 
         if (uri || isImage || isMedia) {
           const msg = {
+            type: "GeckoView:ContextMenu",
             // We don't have full zoom on Android, so using CSS coordinates
             // here is fine, since the CSS coordinate spaces match between the
             // child and parent processes.
@@ -196,13 +200,13 @@ export class ContentDelegateChild extends GeckoViewActorChild {
               null,
           };
 
-          this.sendAsyncMessage("GeckoView:ContextMenu", msg);
+          this.eventDispatcher.sendRequest(msg);
           aEvent.preventDefault();
         }
         break;
       }
       case "MozDOMFullscreen:Request": {
-        this.sendAsyncMessage("GeckoView:DOMFullscreenRequest");
+        this.sendAsyncMessage("GeckoView:DOMFullscreenRequest", {});
         break;
       }
       case "MozDOMFullscreen:Entered":
@@ -215,7 +219,7 @@ export class ContentDelegateChild extends GeckoViewActorChild {
         }
       // fall-through
       case "MozDOMFullscreen:Exit":
-        this.sendAsyncMessage("GeckoView:DOMFullscreenExit");
+        this.sendAsyncMessage("GeckoView:DOMFullscreenExit", {});
         break;
       case "DOMMetaViewportFitChanged":
         if (aEvent.originalTarget.ownerGlobal == this.contentWindow) {
@@ -237,17 +241,24 @@ export class ContentDelegateChild extends GeckoViewActorChild {
             this.contentWindow
           );
           if (manifest) {
-            this.sendAsyncMessage("GeckoView:WebAppManifest", manifest);
+            this.eventDispatcher.sendRequest({
+              type: "GeckoView:WebAppManifest",
+              manifest,
+            });
           }
         });
         break;
       }
       case "MozFirstContentfulPaint": {
-        this.sendAsyncMessage("GeckoView:FirstContentfulPaint");
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:FirstContentfulPaint",
+        });
         break;
       }
       case "MozPaintStatusReset": {
-        this.sendAsyncMessage("GeckoView:PaintStatusReset");
+        this.eventDispatcher.sendRequest({
+          type: "GeckoView:PaintStatusReset",
+        });
         break;
       }
     }
