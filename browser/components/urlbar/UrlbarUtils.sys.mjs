@@ -186,6 +186,7 @@ export var UrlbarUtils = {
     NONE: 0,
     TYPED: 1,
     SUGGESTED: 2,
+    ALL: 3,
   }),
 
   // UrlbarProviderPlaces's autocomplete results store their titles and tags
@@ -407,6 +408,7 @@ export var UrlbarUtils = {
    *     TYPED: match ranges matching the tokens; or
    *     SUGGESTED: match ranges for words not matching the tokens and the
    *                endings of words that start with a token.
+   *     ALL: match all ranges of str.
    * @returns {Array} An array: [
    *            [matchIndex_0, matchLength_0],
    *            [matchIndex_1, matchLength_1],
@@ -416,6 +418,14 @@ export var UrlbarUtils = {
    *          The array is sorted by match indexes ascending.
    */
   getTokenMatches(tokens, str, highlightType) {
+    if (highlightType == this.HIGHLIGHT.ALL) {
+      return [[0, str.length]];
+    }
+
+    if (!tokens?.length) {
+      return [];
+    }
+
     // Only search a portion of the string, because not more than a certain
     // amount of characters are visible in the UI, matching over what is visible
     // would be expensive and pointless.

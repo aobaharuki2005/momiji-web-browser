@@ -32,13 +32,38 @@ add_task(function type_suggested() {
   let queryContext = createContext("test");
   let result = new UrlbarResult({
     queryContext,
+    type: UrlbarUtils.RESULT_TYPE.SEARCH,
+    source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+    payload: {
+      suggestion: "test search test",
+    },
+    highlights: {
+      suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+    },
+  });
+
+  doTest({
+    result,
+    target: "suggestion",
+    options: { tokens: queryContext.tokens },
+    expected: {
+      value: "test search test",
+      highlights: [[4, 8]],
+    },
+  });
+});
+
+add_task(function type_all() {
+  let queryContext = createContext("test");
+  let result = new UrlbarResult({
+    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {
       url: "https://test.example.com/",
     },
     highlights: {
-      url: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      url: UrlbarUtils.HIGHLIGHT.ALL,
     },
   });
 
