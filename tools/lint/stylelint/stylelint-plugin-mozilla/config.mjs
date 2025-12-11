@@ -56,6 +56,18 @@ const FontWeight = {
   },
 };
 
+/** @type {PropertyTypeConfig} */
+const TextColor = {
+  allow: ["currentColor", "white", "black"],
+  tokenTypes: ["text-color"],
+  customFixes: {
+    "#000": "black",
+    "#000000": "black",
+    "#fff": "white",
+    "#ffffff": "white",
+  },
+};
+
 /**
  * @typedef {object} PropertyConfig
  * @property {PropertyTypeConfig[]} validTypes Valid type configurations for this property
@@ -69,6 +81,9 @@ export const propertyConfig = {
   "box-shadow": {
     validTypes: [BoxShadow],
     multiple: true,
+  },
+  color: {
+    validTypes: [TextColor],
   },
   "font-size": {
     validTypes: [FontSize],

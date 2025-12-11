@@ -1,10 +1,11 @@
-=====================
-use-text-color-tokens
-=====================
+=====
+color
+=====
 
-This rule checks that CSS declarations use text-color design token variables
-instead of hard-coded values. This ensures consistent text-color across
-the application and makes it easier to maintain design system adoption.
+The ``use-design-tokens`` rule checks that CSS ``color`` declarations use
+design token variables instead of hardcoded values. This ensures consistent
+text-color usage across the application and makes it easier to maintain design
+system consistency.
 
 Examples of incorrect code for this rule:
 -----------------------------------------
@@ -25,6 +26,12 @@ Examples of incorrect code for this rule:
 
   button:hover {
     color: rgba(0 0 0 / 0.25);
+  }
+
+.. code-block:: css
+
+  .element {
+    color: oklch(69% 0.19 15);
   }
 
 .. code-block:: css
@@ -55,7 +62,7 @@ Examples of correct token usage for this rule:
 .. code-block:: css
 
   button:hover {
-    color: --text-color;
+    color: var(--text-color);
   }
 
 .. code-block:: css
@@ -75,27 +82,39 @@ Examples of correct token usage for this rule:
   }
 
   .my-button {
-    color: var(--my-token, oklch(55% 0.21 15));
+    color: var(--my-token);
   }
 
-The rule also allows these values non-token values:
+The rule also allows these non-token values:
 
 .. code-block:: css
 
-  .inherited-text-color{
+  .inherited-text-color {
     color: inherit;
-  }
-
-.. code-block:: css
-
-  .unset-text-color {
-    color: unset;
   }
 
 .. code-block:: css
 
   .initial-text-color {
     color: initial;
+  }
+
+.. code-block:: css
+
+  .revert-text-color {
+    color: revert;
+  }
+
+.. code-block:: css
+
+  .revert-layer-text-color {
+    color: revert-layer;
+  }
+
+.. code-block:: css
+
+  .unset-text-color {
+    color: unset;
   }
 
 .. code-block:: css

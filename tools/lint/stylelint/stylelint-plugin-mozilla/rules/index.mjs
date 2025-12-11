@@ -10,7 +10,6 @@ import useBorderRadiusTokens from "./use-border-radius-tokens.mjs";
 import useBorderColorTokens from "./use-border-color-tokens.mjs";
 import useSpaceTokens from "./use-space-tokens.mjs";
 import useBackgroundColorTokens from "./use-background-color-tokens.mjs";
-import useTextColorTokens from "./use-text-color-tokens.mjs";
 import useDesignTokens from "./use-design-tokens.mjs";
 import noNonSemanticTokenUsage from "./no-non-semantic-token-usage.mjs";
 import useSizeTokens from "./use-size-tokens.mjs";
@@ -22,7 +21,6 @@ export default {
   "use-border-color-tokens": useBorderColorTokens,
   "use-space-tokens": useSpaceTokens,
   "use-background-color-tokens": useBackgroundColorTokens,
-  "use-text-color-tokens": useTextColorTokens,
   "use-design-tokens": useDesignTokens,
   "no-non-semantic-token-usage": noNonSemanticTokenUsage,
   "use-size-tokens": useSizeTokens,
