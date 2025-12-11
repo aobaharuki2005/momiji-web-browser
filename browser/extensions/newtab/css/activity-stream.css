@@ -2631,6 +2631,7 @@ main section {
   border: none;
 }
 .wallpaper-list.category {
+  --wallpaper-panel-width: 430px;
   background-color: var(--newtab-background-color-secondary);
   color: var(--newtab-text-primary-color);
   display: unset;
@@ -2638,17 +2639,13 @@ main section {
   grid-auto-rows: unset;
   grid-template-columns: unset;
   height: 100%;
-  padding-block-end: var(--space-xxlarge);
-  inset-inline-start: var(--space-xlarge);
+  padding: var(--space-xlarge);
   position: absolute;
   inset-block-start: 0;
-  width: 380px;
+  inset-inline-start: 100%;
+  width: var(--wallpaper-panel-width);
   z-index: 2;
-  transform: translateX(100%);
   overflow-y: auto;
-}
-.wallpaper-list.category:dir(rtl) {
-  transform: translateX(-100%);
 }
 .wallpaper-list.category fieldset {
   border: none;
@@ -2659,11 +2656,11 @@ main section {
 }
 @media (prefers-reduced-motion: no-preference) {
   .wallpaper-list.category.wallpaper-list-enter, .wallpaper-list.category.wallpaper-list-exit, .wallpaper-list.category.wallpaper-list-enter-done, .wallpaper-list.category.wallpaper-list-exit-done {
-    transition: transform 300ms;
+    transition: inset-inline-start 300ms;
   }
 }
 .wallpaper-list.category.wallpaper-list-enter-done, .wallpaper-list.category.wallpaper-list-enter-active {
-  transform: translateX(0);
+  inset-inline-start: calc(100% - var(--wallpaper-panel-width));
 }
 .wallpaper-list:not(.ignore-color-mode) .wallpaper-input.theme-light, .wallpaper-list:not(.ignore-color-mode) .sr-only.theme-light {
   display: inline-block;
