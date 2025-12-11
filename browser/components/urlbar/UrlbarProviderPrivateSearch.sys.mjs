@@ -109,6 +109,7 @@ export class UrlbarProviderPrivateSearch extends UrlbarProvider {
       payload: {
         engine: engine.name,
         query: searchString,
+        title: searchString,
         icon,
         inPrivateWindow: true,
         isPrivateEngine,

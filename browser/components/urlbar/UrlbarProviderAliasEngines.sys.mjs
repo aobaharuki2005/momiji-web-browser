@@ -65,7 +65,10 @@ export class UrlbarProviderAliasEngines extends UrlbarProvider {
     if (!engine || instance != this.queryInstance) {
       return;
     }
-    let query = UrlbarUtils.substringAfter(queryContext.searchString, alias);
+    let query = UrlbarUtils.substringAfter(
+      queryContext.searchString,
+      alias
+    ).trimStart();
     let result = new lazy.UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
@@ -73,7 +76,8 @@ export class UrlbarProviderAliasEngines extends UrlbarProvider {
       payload: {
         engine: engine.name,
         keyword: alias,
-        query: query.trimStart(),
+        query,
+        title: query,
         icon,
       },
     });

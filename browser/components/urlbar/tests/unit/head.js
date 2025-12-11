@@ -505,6 +505,7 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
     payload: {
       engine: engineName,
       suggestion,
+      title: suggestion,
       lowerCaseSuggestion: suggestion.toLocaleLowerCase(),
       isBlockable: true,
       blockL10n: { id: "urlbar-result-menu-remove-from-history" },
@@ -514,6 +515,7 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
     },
     highlights: {
       suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      title: UrlbarUtils.HIGHLIGHT.SUGGESTED,
     },
   });
 }
@@ -804,9 +806,20 @@ function makeSearchResult(
     isPrivateEngine,
   };
 
+  if (providesSearchMode) {
+    // No title.
+  } else if (payload.tail && payload.tailOffsetIndex >= 0) {
+    payload.title = payload.tail;
+  } else if (payload.suggestion != undefined) {
+    payload.title = payload.suggestion;
+  } else if (payload.query != undefined) {
+    payload.title = payload.query;
+  }
+
   if (uri) {
     payload.url = uri;
   }
+
   if (providerName == "UrlbarProviderTabToSearch") {
     if (searchUrlDomainWithoutSuffix.startsWith("www.")) {
       searchUrlDomainWithoutSuffix = searchUrlDomainWithoutSuffix.substring(4);

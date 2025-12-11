@@ -318,11 +318,6 @@ export class UrlbarResult {
       }
     }
 
-    let isTitle = payloadName == "title";
-    if (isTitle) {
-      payloadName = this.#getDisplayableTitlePayloadName();
-    }
-
     let value = this.payload[payloadName];
     if (!value) {
       return {};
@@ -361,31 +356,6 @@ export class UrlbarResult {
     let cached = { value, highlights, options };
     this.#displayValuesCache.set(payloadName, cached);
     return cached;
-  }
-
-  #getDisplayableTitlePayloadName() {
-    switch (this.type) {
-      case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
-      case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-      case lazy.UrlbarUtils.RESULT_TYPE.URL:
-      case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
-      case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        return "title";
-      case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
-        if (this.payload.title) {
-          return "title";
-        }
-        if (this.payload.providesSearchMode) {
-          return null;
-        }
-        if (this.payload.tail && this.payload.tailOffsetIndex >= 0) {
-          return "tail";
-        } else if (this.payload.suggestion) {
-          return "suggestion";
-        }
-        return "query";
-    }
-    return null;
   }
 
   /**

@@ -328,6 +328,7 @@ function makeUrlbarResult(queryContext, info) {
               Services.urlFormatter.formatURLPref("app.support.baseURL") +
               "awesome-bar-result-menu",
             suggestion: action.params.searchSuggestion,
+            title: action.params.searchSuggestion,
             lowerCaseSuggestion:
               action.params.searchSuggestion.toLocaleLowerCase(),
           },

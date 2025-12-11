@@ -276,12 +276,14 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
       });
     }
 
+    query = query.trimStart();
     return new lazy.UrlbarResult({
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       heuristic: true,
       payload: {
-        query: query.trimStart(),
+        query,
+        title: query,
         keyword: firstToken,
       },
     });
@@ -328,6 +330,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
         engine: engine.name,
         icon: UrlbarUtils.ICON.SEARCH_GLASS,
         query,
+        title: query,
         keyword,
       },
       highlights: {

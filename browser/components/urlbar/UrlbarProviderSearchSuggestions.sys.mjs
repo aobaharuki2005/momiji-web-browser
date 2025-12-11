@@ -492,14 +492,26 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
       }
 
       try {
+        let query = searchString.trim();
+        let suggestion = entry.value;
+        let title;
+        if (tail && entry.tailOffsetIndex >= 0) {
+          title = tail;
+        } else if (suggestion) {
+          title = suggestion;
+        } else {
+          title = query;
+        }
+
         results.push(
           new lazy.UrlbarResult({
             type: UrlbarUtils.RESULT_TYPE.SEARCH,
             source: UrlbarUtils.RESULT_SOURCE.SEARCH,
             isRichSuggestion: !!entry.icon,
             payload: {
+              title,
               engine: engine.name,
-              suggestion: entry.value,
+              suggestion,
               lowerCaseSuggestion: entry.value.toLocaleLowerCase(),
               tailPrefix,
               tail,
@@ -507,7 +519,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
               keyword: alias || undefined,
               trending: entry.trending,
               description: entry.description || undefined,
-              query: searchString.trim(),
+              query,
               icon: !entry.value ? await engine.getIconURL() : entry.icon,
               helpUrl: entry.trending ? TRENDING_HELP_URL : undefined,
             },
@@ -642,6 +654,7 @@ function makeFormHistoryResult(queryContext, engine, entry) {
     payload: {
       engine: engine.name,
       suggestion: entry.value,
+      title: entry.value,
       lowerCaseSuggestion: entry.value.toLocaleLowerCase(),
       isBlockable: true,
       blockL10n: { id: "urlbar-result-menu-remove-from-history" },
