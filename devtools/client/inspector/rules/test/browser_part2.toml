@@ -246,6 +246,8 @@ fail-if = [
   "a11y_checks", # Bug 1849028 clicked element may not be focusable and/or labeled
 ]
 
+["browser_rules_position-try.js"]
+
 ["browser_rules_preview-tooltips-sizes.js"]
 
 ["browser_rules_print_media_simulation.js"]

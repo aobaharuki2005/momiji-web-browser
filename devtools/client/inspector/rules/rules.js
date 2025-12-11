@@ -94,6 +94,7 @@ const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
 const RULE_VIEW_HEADER_CLASSNAME = "ruleview-header";
 const PSEUDO_ELEMENTS_CONTAINER_ID = "pseudo-elements-container";
 const REGISTERED_PROPERTIES_CONTAINER_ID = "registered-properties-container";
+const POSITION_TRY_CONTAINER_ID = "position-try-container";
 
 /**
  * Our model looks like this:
@@ -1606,6 +1607,17 @@ CssRuleView.prototype = {
             )
           );
         }
+      } else if (rule.domRule.className === "CSSPositionTryRule") {
+        containerKey = POSITION_TRY_CONTAINER_ID;
+        if (!containers.has(containerKey)) {
+          containers.set(
+            containerKey,
+            this.createExpandableContainer(
+              `@position-try`,
+              `position-try-container`
+            )
+          );
+        }
       }
 
       rule.editor.element.setAttribute("role", "article");
@@ -1696,7 +1708,10 @@ CssRuleView.prototype = {
     let isSelectorHighlighted = false;
 
     let selectorNodes = [...rule.editor.selectorText.childNodes];
-    if (rule.domRule.type === CSSRule.KEYFRAME_RULE) {
+    if (
+      rule.domRule.type === CSSRule.KEYFRAME_RULE ||
+      rule.domRule.className === "CSSPositionTryRule"
+    ) {
       selectorNodes = [rule.editor.selectorText];
     } else if (rule.domRule.type === ELEMENT_STYLE) {
       selectorNodes = [];
