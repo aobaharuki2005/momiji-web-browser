@@ -5639,6 +5639,40 @@ void LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot* ins) {
   }
 }
 
+void LIRGenerator::visitStoreFixedSlotFromOffset(
+    MStoreFixedSlotFromOffset* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  if (ins->value()->type() == MIRType::Value) {
+    LStoreFixedSlotFromOffsetV* lir = new (alloc()) LStoreFixedSlotFromOffsetV(
+        useRegister(ins->object()), useRegister(ins->offset()),
+        useBox(ins->value()), temp());
+    add(lir, ins);
+  } else {
+    LStoreFixedSlotFromOffsetT* lir = new (alloc()) LStoreFixedSlotFromOffsetT(
+        useRegister(ins->object()), useRegister(ins->offset()),
+        useRegisterOrConstant(ins->value()), temp());
+    add(lir, ins);
+  }
+}
+
+void LIRGenerator::visitStoreDynamicSlotFromOffset(
+    MStoreDynamicSlotFromOffset* ins) {
+  MOZ_ASSERT(ins->slots()->type() == MIRType::Slots);
+
+  if (ins->value()->type() == MIRType::Value) {
+    auto* lir = new (alloc()) LStoreDynamicSlotFromOffsetV(
+        useRegister(ins->slots()), useRegister(ins->offset()),
+        useBox(ins->value()), temp());
+    add(lir, ins);
+  } else {
+    auto* lir = new (alloc()) LStoreDynamicSlotFromOffsetT(
+        useRegister(ins->slots()), useRegister(ins->offset()),
+        useRegisterOrConstant(ins->value()), temp());
+    add(lir, ins);
+  }
+}
+
 void LIRGenerator::visitGetNameCache(MGetNameCache* ins) {
   MOZ_ASSERT(ins->envObj()->type() == MIRType::Object);
 

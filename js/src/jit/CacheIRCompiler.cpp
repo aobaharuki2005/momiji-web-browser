@@ -2574,6 +2574,46 @@ bool CacheIRCompiler::emitLoadFixedSlotFromOffsetResult(
   return true;
 }
 
+bool CacheIRCompiler::emitStoreFixedSlotFromOffset(ObjOperandId objId,
+                                                   Int32OperandId offsetId,
+                                                   ValOperandId rhsId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  AutoScratchRegister scratch(allocator, masm);
+  Register obj = allocator.useRegister(masm, objId);
+  Register offset = allocator.useRegister(masm, offsetId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+
+  BaseIndex slot(obj, offset, TimesOne);
+  EmitPreBarrier(masm, slot, MIRType::Value);
+
+  masm.storeValue(val, slot);
+
+  emitPostBarrierSlot(obj, val, scratch);
+
+  return true;
+}
+
+bool CacheIRCompiler::emitStoreDynamicSlotFromOffset(ObjOperandId objId,
+                                                     Int32OperandId offsetId,
+                                                     ValOperandId rhsId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+
+  Register obj = allocator.useRegister(masm, objId);
+  Register offset = allocator.useRegister(masm, offsetId);
+  ValueOperand val = allocator.useValueRegister(masm, rhsId);
+
+  AutoScratchRegister slots(allocator, masm);
+
+  masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), slots);
+  BaseIndex slot(slots, offset, TimesOne);
+  EmitPreBarrier(masm, slot, MIRType::Value);
+  masm.storeValue(val, slot);
+
+  emitPostBarrierSlot(obj, val, /*scratch=*/slots);
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadDynamicSlot(ValOperandId resultId,
                                           ObjOperandId objId,
                                           uint32_t slotOffset) {

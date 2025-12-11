@@ -4345,6 +4345,47 @@ void CodeGenerator::visitStoreDynamicSlotV(LStoreDynamicSlotV* lir) {
   masm.storeValue(value, Address(base, offset));
 }
 
+void CodeGenerator::visitStoreDynamicSlotFromOffsetV(
+    LStoreDynamicSlotFromOffsetV* lir) {
+  Register slots = ToRegister(lir->slots());
+  Register offset = ToRegister(lir->offset());
+  ValueOperand value = ToValue(lir->value());
+  Register temp = ToRegister(lir->temp0());
+
+  BaseIndex baseIndex(slots, offset, TimesOne);
+  masm.computeEffectiveAddress(baseIndex, temp);
+
+  Address address(temp, 0);
+
+  emitPreBarrier(address);
+
+  // obj->slots[offset]
+  masm.storeValue(value, address);
+}
+
+void CodeGenerator::visitStoreDynamicSlotFromOffsetT(
+    LStoreDynamicSlotFromOffsetT* lir) {
+  Register slots = ToRegister(lir->slots());
+  Register offset = ToRegister(lir->offset());
+  const LAllocation* value = lir->value();
+  MIRType valueType = lir->mir()->value()->type();
+  Register temp = ToRegister(lir->temp0());
+
+  BaseIndex baseIndex(slots, offset, TimesOne);
+  masm.computeEffectiveAddress(baseIndex, temp);
+
+  Address address(temp, 0);
+
+  emitPreBarrier(address);
+
+  // obj->slots[offset]
+  ConstantOrRegister nvalue =
+      value->isConstant()
+          ? ConstantOrRegister(value->toConstant()->toJSValue())
+          : TypedOrValueRegister(valueType, ToAnyRegister(value));
+  masm.storeConstantOrRegister(nvalue, address);
+}
+
 void CodeGenerator::visitElements(LElements* lir) {
   Address elements(ToRegister(lir->object()), NativeObject::offsetOfElements());
   masm.loadPtr(elements, ToRegister(lir->output()));
@@ -18009,6 +18050,49 @@ void CodeGenerator::visitLoadFixedSlotFromOffset(
 
   // obj[offset]
   masm.loadValue(BaseIndex(obj, offset, TimesOne), out);
+}
+
+void CodeGenerator::visitStoreFixedSlotFromOffsetV(
+    LStoreFixedSlotFromOffsetV* lir) {
+  Register obj = ToRegister(lir->object());
+  Register offset = ToRegister(lir->offset());
+  ValueOperand value = ToValue(lir->value());
+  Register temp = ToRegister(lir->temp0());
+
+  BaseIndex baseIndex(obj, offset, TimesOne);
+  masm.computeEffectiveAddress(baseIndex, temp);
+
+  Address slot(temp, 0);
+  if (lir->mir()->needsBarrier()) {
+    emitPreBarrier(slot);
+  }
+
+  // obj[offset]
+  masm.storeValue(value, slot);
+}
+
+void CodeGenerator::visitStoreFixedSlotFromOffsetT(
+    LStoreFixedSlotFromOffsetT* lir) {
+  Register obj = ToRegister(lir->object());
+  Register offset = ToRegister(lir->offset());
+  const LAllocation* value = lir->value();
+  MIRType valueType = lir->mir()->value()->type();
+  Register temp = ToRegister(lir->temp0());
+
+  BaseIndex baseIndex(obj, offset, TimesOne);
+  masm.computeEffectiveAddress(baseIndex, temp);
+
+  Address slot(temp, 0);
+  if (lir->mir()->needsBarrier()) {
+    emitPreBarrier(slot);
+  }
+
+  // obj[offset]
+  ConstantOrRegister nvalue =
+      value->isConstant()
+          ? ConstantOrRegister(value->toConstant()->toJSValue())
+          : TypedOrValueRegister(valueType, ToAnyRegister(value));
+  masm.storeConstantOrRegister(nvalue, slot);
 }
 
 template <typename T>

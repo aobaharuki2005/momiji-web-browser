@@ -2149,6 +2149,12 @@
 - name: StoreFixedSlot
   gen_boilerplate: false
 
+- name: StoreFixedSlotFromOffset
+  gen_boilerplate: false
+
+- name: StoreDynamicSlotFromOffset
+  gen_boilerplate: false
+
 - name: GetPropertyCache
   gen_boilerplate: false
 
