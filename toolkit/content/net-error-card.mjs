@@ -61,6 +61,7 @@ export class NetErrorCard extends MozLitElement {
   };
 
   static ERROR_CODES = new Set([
+    "SEC_ERROR_UNTRUSTED_ISSUER",
     "SEC_ERROR_REVOKED_CERTIFICATE",
     "SEC_ERROR_UNKNOWN_ISSUER",
     "SSL_ERROR_BAD_CERT_DOMAIN",
@@ -220,6 +221,7 @@ export class NetErrorCard extends MozLitElement {
 
   introContentTemplate() {
     switch (this.errorInfo.errorCodeString) {
+      case "SEC_ERROR_UNTRUSTED_ISSUER":
       case "SEC_ERROR_REVOKED_CERTIFICATE":
       case "SEC_ERROR_UNKNOWN_ISSUER":
       case "SSL_ERROR_BAD_CERT_DOMAIN":
@@ -267,6 +269,21 @@ export class NetErrorCard extends MozLitElement {
     let content;
 
     switch (this.errorInfo.errorCodeString) {
+      case "SEC_ERROR_UNTRUSTED_ISSUER": {
+        content = this.advancedSectionTemplate({
+          whyDangerousL10nId:
+            "fp-certerror-untrusted-issuer-why-dangerous-body",
+          whyDangerousL10nArgs: {
+            hostname: this.hostname,
+          },
+          whatCanYouDoL10nId:
+            "fp-certerror-untrusted-issuer-what-can-you-do-body",
+          learnMoreL10nId: "fp-learn-more-about-cert-issues",
+          learnMoreSupportPage: "connection-not-secure",
+          viewCert: true,
+        });
+        break;
+      }
       case "SEC_ERROR_REVOKED_CERTIFICATE": {
         content = this.advancedSectionTemplate({
           whyDangerousL10nId: "fp-certerror-revoked-why-dangerous-body",

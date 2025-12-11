@@ -42,6 +42,8 @@ support-files = [
 
 ["browser_aboutCertError_telemetry.js"]
 
+["browser_aboutCertError_untrustedIssuer.js"]
+
 ["browser_aboutDialog_distribution.js"]
 skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && msix && verify-standalone",
