@@ -17,6 +17,7 @@ import org.mozilla.fenix.GleanMetrics.Toolbar
 import org.mozilla.fenix.components.toolbar.BrowserToolbarTelemetryMiddleware.ToolbarActionRecord
 import org.mozilla.fenix.components.toolbar.DisplayActions.AddBookmarkClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.EditBookmarkClicked
+import org.mozilla.fenix.components.toolbar.DisplayActions.HomepageClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.MenuClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.NavigateBackClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.NavigateBackLongClicked
@@ -25,6 +26,8 @@ import org.mozilla.fenix.components.toolbar.DisplayActions.NavigateForwardLongCl
 import org.mozilla.fenix.components.toolbar.DisplayActions.RefreshClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.ShareClicked
 import org.mozilla.fenix.components.toolbar.DisplayActions.StopRefreshClicked
+import org.mozilla.fenix.components.toolbar.DisplayActions.TranslateClicked
+import org.mozilla.fenix.components.toolbar.PageEndActionsInteractions.ReaderModeClicked
 import org.mozilla.fenix.components.toolbar.StartPageActions.SiteInfoClicked
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewPrivateTab
 import org.mozilla.fenix.components.toolbar.TabCounterInteractions.AddNewTab
@@ -166,6 +169,36 @@ class BrowserToolbarTelemetryMiddlewareTest {
     fun `WHEN site info is clicked THEN record page start telemetry`() {
         buildStore.dispatch(SiteInfoClicked)
         assertTelemetryRecorded(Source.AddressBar.PageStart, item = ToolbarActionRecord.SecurityIndicatorClicked.action)
+    }
+
+    @Test
+    fun `WHEN reader mode is clicked THEN record page end telemetry`() {
+        buildStore.dispatch(ReaderModeClicked(isActive = false))
+        assertTelemetryRecorded(Source.AddressBar.PageEnd, item = ToolbarActionRecord.ReaderModeClicked.action)
+
+        buildStore.dispatch(ReaderModeClicked(isActive = true))
+        assertTelemetryRecorded(Source.AddressBar.PageEnd, item = ToolbarActionRecord.ReaderModeClicked.action)
+    }
+
+    @Test
+    fun `WHEN translating a page THEN record telemetry based on page end, browser end or navbar source`() {
+        buildStore.dispatch(TranslateClicked(Source.AddressBar.PageEnd))
+        assertTelemetryRecorded(Source.AddressBar.PageEnd, item = ToolbarActionRecord.TranslateClicked.action)
+
+        buildStore.dispatch(TranslateClicked(Source.AddressBar.BrowserEnd))
+        assertTelemetryRecorded(Source.AddressBar.BrowserEnd, item = ToolbarActionRecord.TranslateClicked.action)
+
+        buildStore.dispatch(TranslateClicked(Source.NavigationBar))
+        assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.TranslateClicked.action)
+    }
+
+    @Test
+    fun `WHEN homepage is clicked THEN record telemetry based on browser end or navbar source`() {
+        buildStore.dispatch(HomepageClicked(Source.AddressBar.BrowserEnd))
+        assertTelemetryRecorded(Source.AddressBar.BrowserEnd, item = ToolbarActionRecord.HomepageClicked.action)
+
+        buildStore.dispatch(HomepageClicked(Source.NavigationBar))
+        assertTelemetryRecorded(Source.NavigationBar, item = ToolbarActionRecord.HomepageClicked.action)
     }
 
     private fun assertTelemetryRecorded(

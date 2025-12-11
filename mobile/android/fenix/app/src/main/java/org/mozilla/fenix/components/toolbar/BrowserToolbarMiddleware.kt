@@ -479,6 +479,7 @@ class BrowserToolbarMiddleware(
                     resId = R.id.browserFragment,
                     directions = BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(),
                 )
+                next(action)
             }
 
             is RefreshClicked -> {
