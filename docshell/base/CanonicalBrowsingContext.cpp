@@ -634,6 +634,25 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
   }
   MOZ_DIAGNOSTIC_ASSERT(entry);
 
+  // https://html.spec.whatwg.org/#finalize-a-cross-document-navigation
+  // 9. If entryToReplace is null, then: ...
+  //    Otherwise: ...
+  //      4. If historyEntry's document state's origin is same origin with
+  //         entryToReplace's document state's origin, then set
+  //         historyEntry's navigation API key to entryToReplace's
+  //         navigation API key.
+  if (mActiveEntry &&
+      aLoadState->GetNavigationType() == NavigationType::Replace) {
+    nsCOMPtr<nsIURI> uri = mActiveEntry->GetURIOrInheritedForAboutBlank();
+    nsCOMPtr<nsIURI> targetURI = entry->GetURIOrInheritedForAboutBlank();
+    bool sameOrigin =
+        NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
+            targetURI, uri, false, false));
+    if (sameOrigin) {
+      entry->SetNavigationKey(mActiveEntry->Info().NavigationKey());
+    }
+  }
+
   UniquePtr<LoadingSessionHistoryInfo> loadingInfo;
   if (existingLoadingInfo) {
     loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(*existingLoadingInfo);
