@@ -9,12 +9,9 @@
 // eslint-disable-next-line import/no-unresolved
 import { testRule } from "stylelint-test-rule-node";
 import stylelint from "stylelint";
-import useBackgroundColorTokens from "../rules/use-background-color-tokens.mjs";
+import useDesignTokens from "../rules/use-design-tokens.mjs";
 
-let plugin = stylelint.createPlugin(
-  useBackgroundColorTokens.ruleName,
-  useBackgroundColorTokens
-);
+let plugin = stylelint.createPlugin(useDesignTokens.ruleName, useDesignTokens);
 let {
   ruleName,
   rule: { messages },
@@ -178,49 +175,81 @@ testRule({
       code: ".bg { background: none; }",
       description: "Using a keyword is valid in the shorthand.",
     },
+    {
+      code: ".bg { background-color: calc(2 * var(--background-color-box)); }",
+      description: "Using calc() with a valid token inside is valid.",
+    },
+    {
+      code: ".bg { background-color: calc(var(--background-color-box) * -1); }",
+      description:
+        "Using calc() with negative number and background-color token is valid.",
+    },
+    {
+      code: ".bg { background-color: calc(var(--background-color-box) * -0.5); }",
+      description:
+        "Using calc() with negative decimal and background-color token is valid.",
+    },
+    {
+      code: ".bg { background-color: light-dark(var(--background-color-box), var(--background-color-box)); }",
+      description: "Using light-dark() with valid tokens is valid.",
+    },
+    {
+      code: ".bg { background-color: light-dark(transparent, transparent); }",
+      description: "Using light-dark() with valid keywords is valid.",
+    },
+    {
+      code: ".bg { background-color: color-mix(in srgb, currentColor 10%, transparent); }",
+      description: "Using color-mix() with valid colors is valid.",
+    },
+    {
+      code: ".bg { background-color: color-mix(in srgb, var(--background-color-box) 20%, transparent); }",
+      description: "Using color-mix() with valid token and keyword is valid.",
+    },
   ],
 
   reject: [
     {
       code: ".bg { background-color: #666; }",
-      message: messages.rejected("#666"),
+      message: messages.rejected("#666", ["background-color"]),
       description: "#666 should use a background-color design token.",
     },
     {
       code: ".bg { background-color: #fff0; }",
-      message: messages.rejected("#fff0"),
+      message: messages.rejected("#fff0", ["background-color"]),
       description: "#fff0 should use a background-color design token.",
     },
     {
       code: ".bg { background-color: #666666; }",
-      message: messages.rejected("#666666"),
+      message: messages.rejected("#666666", ["background-color"]),
       description: "#666666 should use a background-color design token.",
     },
     {
       code: ".bg { background-color: #ffffff00; }",
-      message: messages.rejected("#ffffff00"),
+      message: messages.rejected("#ffffff00", ["background-color"]),
       description: "#ffffff00 should use a background-color design token.",
     },
     {
       code: ".bg { background-color: oklch(69% 0.19 15); }",
-      message: messages.rejected("oklch(69% 0.19 15)"),
+      message: messages.rejected("oklch(69% 0.19 15)", ["background-color"]),
       description:
         "oklch(69% 0.19 15) should use a background-color design token.",
     },
     {
       code: ".bg { background-color: rgba(42 42 42 / 0.15); }",
-      message: messages.rejected("rgba(42 42 42 / 0.15)"),
+      message: messages.rejected("rgba(42 42 42 / 0.15)", ["background-color"]),
       description:
         "rgba(42 42 42 / 0.15) should use a background-color design token.",
     },
     {
       code: ".bg { background-color: ButtonFace; }",
-      message: messages.rejected("ButtonFace"),
+      message: messages.rejected("ButtonFace", ["background-color"]),
       description: "ButtonFace should use a background-color design token.",
     },
     {
       code: ".bg { background-color: var(--random-token, oklch(69% 0.19 15)); }",
-      message: messages.rejected("var(--random-token, oklch(69% 0.19 15))"),
+      message: messages.rejected("var(--random-token, oklch(69% 0.19 15))", [
+        "background-color",
+      ]),
       description:
         "var(--random-token, oklch(69% 0.19 15)) should use a background-color design token.",
     },
@@ -229,89 +258,138 @@ testRule({
         :root { --custom-token: #666; }
         .bg { background-color: var(--custom-token); }
       `,
-      message: messages.rejected("var(--custom-token)"),
+      message: messages.rejected("var(--custom-token)", ["background-color"]),
       description:
         "var(--custom-token) should use a background-color design token.",
     },
     {
       code: ".bg { background: #666; }",
-      message: messages.rejected("#666"),
-      description: "#666 should use a background-color design token.",
+      message: messages.rejected("#666", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
+      description: "#666 should use a background design token.",
     },
     {
       code: ".bg { background: #fff0; }",
-      message: messages.rejected("#fff0"),
-      description: "#fff0 should use a background-color design token.",
+      message: messages.rejected("#fff0", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
+      description: "#fff0 should use a background design token.",
     },
     {
       code: ".bg { background: #666666; }",
-      message: messages.rejected("#666666"),
-      description: "#666666 should use a background-color design token.",
+      message: messages.rejected("#666666", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
+      description: "#666666 should use a background design token.",
     },
     {
       code: ".bg { background: #ffffff00; }",
-      message: messages.rejected("#ffffff00"),
-      description: "#ffffff00 should use a background-color design token.",
+      message: messages.rejected("#ffffff00", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
+      description: "#ffffff00 should use a background design token.",
     },
     {
       code: ".bg { background: oklch(69% 0.19 15); }",
-      message: messages.rejected("oklch(69% 0.19 15)"),
-      description:
-        "oklch(69% 0.19 15) should use a background-color design token.",
+      message: messages.rejected("oklch(69% 0.19 15)", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
+      description: "oklch(69% 0.19 15) should use a background design token.",
     },
     {
       code: ".bg { background: rgba(42 42 42 / 0.15); }",
-      message: messages.rejected("rgba(42 42 42 / 0.15)"),
+      message: messages.rejected("rgba(42 42 42 / 0.15)", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
       description:
-        "rgba(42 42 42 / 0.15) should use a background-color design token.",
+        "rgba(42 42 42 / 0.15) should use a background design token.",
     },
     {
       code: ".bg { background: border-box #666; }",
-      message: messages.rejected("border-box #666"),
-      description:
-        "border-box #666 should use a background-color design token.",
+      message: messages.rejected("border-box #666", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
+      description: "border-box #666 should use a background design token.",
     },
     {
       code: ".bg { background: url('image.png') #fff0, #666; }",
-      message: messages.rejected("url('image.png') #fff0, #666"),
+      message: messages.rejected("url('image.png') #fff0, #666", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
       description:
-        "url('image.png') #fff0, #666 should use a background-color design token.",
+        "url('image.png') #fff0, #666 should use a background design token.",
     },
     {
       code: ".bg { background: url('image.png') oklch(69% 0.19 15) repeat-y; }",
       message: messages.rejected(
-        "url('image.png') oklch(69% 0.19 15) repeat-y"
+        "url('image.png') oklch(69% 0.19 15) repeat-y",
+        ["background-color", "size", "space", "icon-size"]
       ),
       description:
-        "url('image.png') oklch(69% 0.19 15) repeat-y should use a background-color design token.",
+        "url('image.png') oklch(69% 0.19 15) repeat-y should use a background design token.",
     },
     {
       code: ".bg { background: url('image.png') top center fixed #ffffff00; }",
-      message: messages.rejected("url('image.png') top center fixed #ffffff00"),
+      message: messages.rejected(
+        "url('image.png') top center fixed #ffffff00",
+        ["background-color", "size", "space", "icon-size"]
+      ),
       description:
-        "url('image.png') top center fixed #ffffff00 should use a background-color design token.",
+        "url('image.png') top center fixed #ffffff00 should use a background design token.",
     },
     {
       code: ".bg { background: url('image.png') center left / auto no-repeat scroll content-box padding-box red, rgba(42 42 42 / 0.15); }",
       message: messages.rejected(
-        "url('image.png') center left / auto no-repeat scroll content-box padding-box red, rgba(42 42 42 / 0.15)"
+        "url('image.png') center left / auto no-repeat scroll content-box padding-box red, rgba(42 42 42 / 0.15)",
+        ["background-color", "size", "space", "icon-size"]
       ),
       description:
-        "url('image.png') center left / auto no-repeat scroll content-box padding-box red, rgba(42 42 42 / 0.15) should use a background-color design token.",
+        "url('image.png') center left / auto no-repeat scroll content-box padding-box red, rgba(42 42 42 / 0.15) should use a background design token.",
     },
     {
       code: ".bg { background: url('image.png') var(--random-token, rgba(42 42 42 / 0.15)); }",
       message: messages.rejected(
-        "url('image.png') var(--random-token, rgba(42 42 42 / 0.15))"
+        "url('image.png') var(--random-token, rgba(42 42 42 / 0.15))",
+        ["background-color", "size", "space", "icon-size"]
       ),
       description:
-        "url('image.png') var(--random-token, rgba(42 42 42 / 0.15)) should use a background-color design token.",
+        "url('image.png') var(--random-token, rgba(42 42 42 / 0.15)) should use a background design token.",
     },
     {
       code: ".bg { background: url('image.png') Canvas; }",
-      message: messages.rejected("url('image.png') Canvas"),
+      message: messages.rejected("url('image.png') Canvas", [
+        "background-color",
+        "size",
+        "space",
+        "icon-size",
+      ]),
       description:
-        "url('image.png') Canvas should use a background-color design token.",
+        "url('image.png') Canvas should use a background design token.",
     },
     {
       code: `
@@ -319,10 +397,46 @@ testRule({
         .bg { background: url('image.png') no-repeat center / auto var(--custom-token); }
       `,
       message: messages.rejected(
-        "url('image.png') no-repeat center / auto var(--custom-token)"
+        "url('image.png') no-repeat center / auto var(--custom-token)",
+        ["background-color", "size", "space", "icon-size"]
       ),
       description:
-        "url('image.png') no-repeat center / auto var(--custom-token) should use a background-color design token.",
+        "url('image.png') no-repeat center / auto var(--custom-token) should use a background design token.",
+    },
+    {
+      code: ".bg { background-color: calc(2 * #666); }",
+      message: messages.rejected("calc(2 * #666)", ["background-color"]),
+      description: "calc() with invalid color inside should be rejected.",
+    },
+    {
+      code: ".bg { background-color: light-dark(#666, var(--background-color-box)); }",
+      message: messages.rejected(
+        "light-dark(#666, var(--background-color-box))",
+        ["background-color"]
+      ),
+      description: "light-dark() with invalid first color should be rejected.",
+    },
+    {
+      code: ".bg { background-color: light-dark(var(--background-color-box), #666); }",
+      message: messages.rejected(
+        "light-dark(var(--background-color-box), #666)",
+        ["background-color"]
+      ),
+      description: "light-dark() with invalid second color should be rejected.",
+    },
+    {
+      code: ".bg { background-color: color-mix(in srgb, #666 10%, transparent); }",
+      message: messages.rejected("color-mix(in srgb, #666 10%, transparent)", [
+        "background-color",
+      ]),
+      description: "color-mix() with invalid first color should be rejected.",
+    },
+    {
+      code: ".bg { background-color: color-mix(in srgb, currentColor 10%, #666); }",
+      message: messages.rejected("color-mix(in srgb, currentColor 10%, #666)", [
+        "background-color",
+      ]),
+      description: "color-mix() with invalid second color should be rejected.",
     },
   ],
 });
@@ -336,74 +450,98 @@ testRule({
     {
       code: ".bg { background-color: #fff; }",
       fixed: ".bg { background-color: white; }",
-      message: messages.rejected("#fff"),
+      message: messages.rejected("#fff", ["background-color"], "white"),
       description: "#fff should be fixed to white.",
     },
     {
       code: ".bg { background-color: #ffffff; }",
       fixed: ".bg { background-color: white; }",
-      message: messages.rejected("#ffffff"),
+      message: messages.rejected("#ffffff", ["background-color"], "white"),
       description: "#ffffff should be fixed to white.",
     },
     {
       code: ".bg { background-color: #FFF; }",
       fixed: ".bg { background-color: white; }",
-      message: messages.rejected("#FFF"),
+      message: messages.rejected("#FFF", ["background-color"], "white"),
       description: "#FFF should be fixed to white.",
     },
     {
       code: ".bg { background-color: #FFFFFF; }",
       fixed: ".bg { background-color: white; }",
-      message: messages.rejected("#FFFFFF"),
+      message: messages.rejected("#FFFFFF", ["background-color"], "white"),
       description: "#FFFFFF should be fixed to white.",
     },
     {
       code: ".bg { background-color: #000; }",
       fixed: ".bg { background-color: black; }",
-      message: messages.rejected("#000"),
+      message: messages.rejected("#000", ["background-color"], "black"),
       description: "#000 should be fixed to black.",
     },
     {
       code: ".bg { background-color: #000000; }",
       fixed: ".bg { background-color: black; }",
-      message: messages.rejected("#000000"),
+      message: messages.rejected("#000000", ["background-color"], "black"),
       description: "#000000 should be fixed to black.",
     },
     {
       code: ".bg { background: #fff; }",
       fixed: ".bg { background: white; }",
-      message: messages.rejected("#fff"),
+      message: messages.rejected(
+        "#fff",
+        ["background-color", "size", "space", "icon-size"],
+        "white"
+      ),
       description: "#fff should be fixed to white in background shorthand.",
     },
     {
       code: ".bg { background: #ffffff; }",
       fixed: ".bg { background: white; }",
-      message: messages.rejected("#ffffff"),
+      message: messages.rejected(
+        "#ffffff",
+        ["background-color", "size", "space", "icon-size"],
+        "white"
+      ),
       description: "#ffffff should be fixed to white in background shorthand.",
     },
     {
       code: ".bg { background: #000; }",
       fixed: ".bg { background: black; }",
-      message: messages.rejected("#000"),
+      message: messages.rejected(
+        "#000",
+        ["background-color", "size", "space", "icon-size"],
+        "black"
+      ),
       description: "#000 should be fixed to black in background shorthand.",
     },
     {
       code: ".bg { background: #000000; }",
       fixed: ".bg { background: black; }",
-      message: messages.rejected("#000000"),
+      message: messages.rejected(
+        "#000000",
+        ["background-color", "size", "space", "icon-size"],
+        "black"
+      ),
       description: "#000000 should be fixed to black in background shorthand.",
     },
     {
       code: ".bg { background: url('image.png') #fff; }",
       fixed: ".bg { background: url('image.png') white; }",
-      message: messages.rejected("url('image.png') #fff"),
+      message: messages.rejected(
+        "url('image.png') #fff",
+        ["background-color", "size", "space", "icon-size"],
+        "url('image.png') white"
+      ),
       description:
         "#fff should be fixed to white in background shorthand with other properties.",
     },
     {
       code: ".bg { background: url('image.png') #000 repeat-y; }",
       fixed: ".bg { background: url('image.png') black repeat-y; }",
-      message: messages.rejected("url('image.png') #000 repeat-y"),
+      message: messages.rejected(
+        "url('image.png') #000 repeat-y",
+        ["background-color", "size", "space", "icon-size"],
+        "url('image.png') black repeat-y"
+      ),
       description:
         "#000 should be fixed to black in background shorthand with other properties.",
     },

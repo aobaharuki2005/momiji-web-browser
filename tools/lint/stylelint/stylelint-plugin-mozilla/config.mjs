@@ -15,6 +15,72 @@ import { createRawValuesObject } from "./helpers.mjs";
  * @property {Record<string, string>} [customFixes] Map of raw values to their token replacements for autofix
  */
 
+const customColorFixes = {
+  "#000": "black",
+  "#000000": "black",
+  "#fff": "white",
+  "#ffffff": "white",
+};
+
+/** @type {PropertyTypeConfig} */
+const BackgroundColor = {
+  allow: [
+    "transparent",
+    "currentColor",
+    "auto",
+    "normal",
+    "none",
+    "white",
+    "black",
+  ],
+  tokenTypes: ["background-color"],
+  customFixes: customColorFixes,
+};
+
+/** @type {PropertyTypeConfig} */
+const BackgroundAttachment = {
+  allow: ["scroll", "fixed", "local"],
+};
+
+/** @type {PropertyTypeConfig} */
+const BackgroundImage = {
+  allow: ["none"],
+  allowFunctions: [
+    "url",
+    "linear-gradient",
+    "radial-gradient",
+    "conic-gradient",
+    "repeating-linear-gradient",
+    "repeating-radial-gradient",
+    "repeating-conic-gradient",
+    "image-set",
+  ],
+};
+
+/** @type {PropertyTypeConfig} */
+const BackgroundPosition = {
+  allow: ["top", "bottom", "left", "right", "center"],
+  tokenTypes: ["size", "space"],
+  allowUnits: true,
+};
+
+/** @type {PropertyTypeConfig} */
+const BackgroundSize = {
+  allow: ["auto", "cover", "contain"],
+  tokenTypes: ["size", "space", "icon-size"],
+  allowUnits: true,
+};
+
+/** @type {PropertyTypeConfig} */
+const BackgroundRepeat = {
+  allow: ["repeat", "repeat-x", "repeat-y", "no-repeat", "space", "round"],
+};
+
+/** @type {PropertyTypeConfig} */
+const BackgroundClip = {
+  allow: ["border-box", "padding-box", "content-box"],
+};
+
 /** @type {PropertyTypeConfig} */
 const BoxShadow = {
   allow: ["none"],
@@ -60,12 +126,7 @@ const FontWeight = {
 const TextColor = {
   allow: ["currentColor", "white", "black"],
   tokenTypes: ["text-color"],
-  customFixes: {
-    "#000": "black",
-    "#000000": "black",
-    "#fff": "white",
-    "#ffffff": "white",
-  },
+  customFixes: customColorFixes,
 };
 
 /**
@@ -78,6 +139,23 @@ const TextColor = {
 
 /** @type {Record<string, PropertyConfig>} */
 export const propertyConfig = {
+  "background-color": {
+    validTypes: [BackgroundColor],
+  },
+  background: {
+    validTypes: [
+      BackgroundColor,
+      BackgroundImage,
+      BackgroundPosition,
+      BackgroundSize,
+      BackgroundRepeat,
+      BackgroundAttachment,
+      BackgroundClip,
+    ],
+    shorthand: true,
+    multiple: true,
+    slash: true,
+  },
   "box-shadow": {
     validTypes: [BoxShadow],
     multiple: true,

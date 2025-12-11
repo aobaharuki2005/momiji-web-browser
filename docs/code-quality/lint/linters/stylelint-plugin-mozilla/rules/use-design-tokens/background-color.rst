@@ -1,10 +1,11 @@
-===========================
-use-background-color-tokens
-===========================
+================
+background-color
+================
 
-This rule checks that CSS declarations use background-color design token variables
-instead of hard-coded values. This ensures consistent background-color across
-the application and makes it easier to maintain design system adoption.
+The ``use-design-tokens`` rule checks that CSS ``background-color`` and
+``background`` declarations use design token variables instead of hardcoded
+values. This ensures consistent background-color usage across the application
+and makes it easier to maintain design system consistency.
 
 Examples of incorrect code for this rule:
 -----------------------------------------
@@ -74,7 +75,7 @@ Examples of correct token usage for this rule:
 
 .. code-block:: css
 
-  /* Local CSS variables that reference valid border-radius tokens are allowed */
+  /* Local CSS variables that reference valid background-color tokens are allowed */
 
   :root {
     --my-token: var(--background-color-box);
@@ -94,7 +95,7 @@ The rule also allows these non-token values:
 
 .. code-block:: css
 
-  .inherited-background-color{
+  .inherited-background-color {
     background-color: inherit;
   }
 
