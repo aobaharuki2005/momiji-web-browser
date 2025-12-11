@@ -157,6 +157,18 @@ const BorderWidth = {
 };
 
 /** @type {PropertyTypeConfig} */
+const BorderRadius = {
+  allow: ["0"],
+  tokenTypes: ["border-radius"],
+  customFixes: {
+    ...createRawValuesObject(["border-radius"]),
+    "50%": "var(--border-radius-circle)",
+    "100%": "var(--border-radius-circle)",
+    "1000px": "var(--border-radius-circle)",
+  },
+};
+
+/** @type {PropertyTypeConfig} */
 const TextColor = {
   allow: ["currentColor", "white", "black"],
   tokenTypes: ["text-color"],
@@ -277,6 +289,34 @@ export const propertyConfig = {
   },
   "outline-color": {
     validTypes: [BorderColor],
+  },
+  "border-radius": {
+    validTypes: [BorderRadius],
+    shorthand: true,
+  },
+  "border-top-left-radius": {
+    validTypes: [BorderRadius],
+  },
+  "border-top-right-radius": {
+    validTypes: [BorderRadius],
+  },
+  "border-bottom-right-radius": {
+    validTypes: [BorderRadius],
+  },
+  "border-bottom-left-radius": {
+    validTypes: [BorderRadius],
+  },
+  "border-start-start-radius": {
+    validTypes: [BorderRadius],
+  },
+  "border-start-end-radius": {
+    validTypes: [BorderRadius],
+  },
+  "border-end-start-radius": {
+    validTypes: [BorderRadius],
+  },
+  "border-end-end-radius": {
+    validTypes: [BorderRadius],
   },
   color: {
     validTypes: [TextColor],

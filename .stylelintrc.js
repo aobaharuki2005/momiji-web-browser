@@ -275,7 +275,6 @@ module.exports = {
     "csstools/use-logical": null,
     "stylelint-plugin-mozilla/no-base-design-tokens": true,
     "stylelint-plugin-mozilla/use-design-tokens": true,
-    "stylelint-plugin-mozilla/use-border-radius-tokens": true,
     "stylelint-plugin-mozilla/use-space-tokens": true,
     "stylelint-plugin-mozilla/no-non-semantic-token-usage": true,
     "stylelint-plugin-mozilla/use-size-tokens": true,
@@ -427,7 +426,6 @@ module.exports = {
       ],
       rules: {
         "stylelint-plugin-mozilla/use-design-tokens": null,
-        "stylelint-plugin-mozilla/use-border-radius-tokens": null,
         "stylelint-plugin-mozilla/use-space-tokens": null,
         "stylelint-plugin-mozilla/no-non-semantic-token-usage": null,
         "stylelint-plugin-mozilla/use-size-tokens": null,
@@ -441,7 +439,6 @@ module.exports = {
       ],
       rules: {
         "stylelint-plugin-mozilla/use-design-tokens": true,
-        "stylelint-plugin-mozilla/use-border-radius-tokens": true,
         "stylelint-plugin-mozilla/use-space-tokens": true,
         "stylelint-plugin-mozilla/no-non-semantic-token-usage": true,
         "stylelint-plugin-mozilla/use-size-tokens": true,

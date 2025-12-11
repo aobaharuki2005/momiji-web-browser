@@ -9,12 +9,9 @@
 // eslint-disable-next-line import/no-unresolved
 import { testRule } from "stylelint-test-rule-node";
 import stylelint from "stylelint";
-import useBorderRadiusTokens from "../rules/use-border-radius-tokens.mjs";
+import useDesignTokens from "../rules/use-design-tokens.mjs";
 
-let plugin = stylelint.createPlugin(
-  useBorderRadiusTokens.ruleName,
-  useBorderRadiusTokens
-);
+let plugin = stylelint.createPlugin(useDesignTokens.ruleName, useDesignTokens);
 let {
   ruleName,
   rule: { messages },
@@ -89,57 +86,82 @@ testRule({
   reject: [
     {
       code: ".a { border-radius: 2px; }",
-      message: messages.rejected("2px"),
+      message: messages.rejected(
+        "2px",
+        ["border-radius"],
+        "var(--border-radius-xsmall)"
+      ),
       description: "Using a pixel value should use a design token.",
     },
     {
       code: ".a { border-radius: 1rem; }",
-      message: messages.rejected("1rem"),
+      message: messages.rejected("1rem", ["border-radius"]),
       description: "Using a rem value should use a design token.",
     },
     {
       code: ".a { border-radius: 50%; }",
-      message: messages.rejected("50%"),
+      message: messages.rejected(
+        "50%",
+        ["border-radius"],
+        "var(--border-radius-circle)"
+      ),
       description: "Using a percentage value should use a design token.",
     },
     {
       code: ".a { border-radius: 2px 4px; }",
-      message: messages.rejected("2px 4px"),
+      message: messages.rejected(
+        "2px 4px",
+        ["border-radius"],
+        "var(--border-radius-xsmall) var(--border-radius-small)"
+      ),
       description:
         "Using shorthand with non-token values should use design tokens.",
     },
     {
       code: ".a { border-radius: 2px var(--border-radius-small); }",
-      message: messages.rejected("2px var(--border-radius-small)"),
+      message: messages.rejected(
+        "2px var(--border-radius-small)",
+        ["border-radius"],
+        "var(--border-radius-xsmall) var(--border-radius-small)"
+      ),
       description:
         "Using a disallowed value in a shorthand value should use a design token.",
     },
     {
       code: ".a { border-radius: var(--border-radius-small) 2px; }",
-      message: messages.rejected("var(--border-radius-small) 2px"),
+      message: messages.rejected(
+        "var(--border-radius-small) 2px",
+        ["border-radius"],
+        "var(--border-radius-small) var(--border-radius-xsmall)"
+      ),
       description:
         "Using a disallowed value in a shorthand value should use a design token regardless of order.",
     },
     {
       code: ".a { border-radius: var(--invalid-radius); }",
-      message: messages.rejected("var(--invalid-radius)"),
+      message: messages.rejected("var(--invalid-radius)", ["border-radius"]),
       description: "Using a custom variable should use a design token.",
     },
     {
       code: ".a { border-radius: calc(var(--tab-border-radius) + 4px); }",
-      message: messages.rejected("calc(var(--tab-border-radius) + 4px)"),
+      message: messages.rejected(
+        "calc(var(--tab-border-radius) + 4px)",
+        ["border-radius"],
+        "calc(var(--tab-border-radius) + var(--border-radius-small))"
+      ),
       description:
         "Using calc() with custom variables should use design tokens.",
     },
     {
       code: ".a { border-radius: env(-moz-gtk-csd-titlebar-radius); }",
-      message: messages.rejected("env(-moz-gtk-csd-titlebar-radius)"),
+      message: messages.rejected("env(-moz-gtk-csd-titlebar-radius)", [
+        "border-radius",
+      ]),
       description: "Using env() function should use design tokens.",
     },
   ],
 });
 
-// autofix tests
 testRule({
   plugins: [plugin],
   ruleName,
@@ -149,57 +171,93 @@ testRule({
     {
       code: ".a { border-radius: 50%; }",
       fixed: ".a { border-radius: var(--border-radius-circle); }",
-      message: messages.rejected("50%"),
+      message: messages.rejected(
+        "50%",
+        ["border-radius"],
+        "var(--border-radius-circle)"
+      ),
       description: "Percentage value should be fixed to use design token.",
     },
     {
       code: ".a { border-radius: 100%; }",
       fixed: ".a { border-radius: var(--border-radius-circle); }",
-      message: messages.rejected("100%"),
+      message: messages.rejected(
+        "100%",
+        ["border-radius"],
+        "var(--border-radius-circle)"
+      ),
       description: "100% value should be fixed to use design token.",
     },
     {
       code: ".a { border-radius: 1000px; }",
       fixed: ".a { border-radius: var(--border-radius-circle); }",
-      message: messages.rejected("1000px"),
+      message: messages.rejected(
+        "1000px",
+        ["border-radius"],
+        "var(--border-radius-circle)"
+      ),
       description: "1000px value should be fixed to use design token.",
     },
     {
       code: ".a { border-radius: 9999px; }",
       fixed: ".a { border-radius: var(--border-radius-circle); }",
-      message: messages.rejected("9999px"),
+      message: messages.rejected(
+        "9999px",
+        ["border-radius"],
+        "var(--border-radius-circle)"
+      ),
       description: "9999px value should be fixed to use design token.",
     },
     {
       code: ".a { border-radius: 4px; }",
       fixed: ".a { border-radius: var(--border-radius-small); }",
-      message: messages.rejected("4px"),
+      message: messages.rejected(
+        "4px",
+        ["border-radius"],
+        "var(--border-radius-small)"
+      ),
       description: "4px should be fixed to use --border-radius-small token.",
     },
     {
       code: ".a { border-radius: 8px; }",
       fixed: ".a { border-radius: var(--border-radius-medium); }",
-      message: messages.rejected("8px"),
+      message: messages.rejected(
+        "8px",
+        ["border-radius"],
+        "var(--border-radius-medium)"
+      ),
       description: "8px should be fixed to use --border-radius-medium token.",
     },
     {
       code: ".a { border-radius: 16px; }",
       fixed: ".a { border-radius: var(--border-radius-large); }",
-      message: messages.rejected("16px"),
+      message: messages.rejected(
+        "16px",
+        ["border-radius"],
+        "var(--border-radius-large)"
+      ),
       description: "16px should be fixed to use --border-radius-large token.",
     },
     {
       code: ".a { border-radius: 4px 8px; }",
       fixed:
         ".a { border-radius: var(--border-radius-small) var(--border-radius-medium); }",
-      message: messages.rejected("4px 8px"),
+      message: messages.rejected(
+        "4px 8px",
+        ["border-radius"],
+        "var(--border-radius-small) var(--border-radius-medium)"
+      ),
       description: "Shorthand values should be fixed to use design tokens.",
     },
     {
       code: ".a { border-radius: 0 4px 8px; }",
       fixed:
         ".a { border-radius: 0 var(--border-radius-small) var(--border-radius-medium); }",
-      message: messages.rejected("0 4px 8px"),
+      message: messages.rejected(
+        "0 4px 8px",
+        ["border-radius"],
+        "0 var(--border-radius-small) var(--border-radius-medium)"
+      ),
       description:
         "Mixed shorthand values should be fixed to use design tokens where possible.",
     },
@@ -207,7 +265,11 @@ testRule({
       code: ".a { border-radius: var(--my-local, 4px); }",
       fixed:
         ".a { border-radius: var(--my-local, var(--border-radius-small)); }",
-      message: messages.rejected("var(--my-local, 4px)"),
+      message: messages.rejected(
+        "var(--my-local, 4px)",
+        ["border-radius"],
+        "var(--my-local, var(--border-radius-small))"
+      ),
       description:
         "custom property with fallback should be fixed to use design token.",
     },
