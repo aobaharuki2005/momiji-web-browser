@@ -1125,6 +1125,8 @@ class ADBDevice(ADBCommand):
         self.run_as_package = run_as_package
 
         self._logger.debug("ADBDevice: %s" % self.__dict__)
+        self.shell("settings put system accelerometer_rotation 0")
+        self.shell("settings put system user_rotation 0")
 
     @property
     def is_rooted(self):
