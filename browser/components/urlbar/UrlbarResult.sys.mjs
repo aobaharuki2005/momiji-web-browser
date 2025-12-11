@@ -370,9 +370,6 @@ export class UrlbarResult {
       case lazy.UrlbarUtils.RESULT_TYPE.URL:
       case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
       case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        if (this.payload.fallbackTitle) {
-          return "fallbackTitle";
-        }
         return "title";
       case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
         if (this.payload.title) {

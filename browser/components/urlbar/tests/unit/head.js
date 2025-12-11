@@ -856,9 +856,6 @@ function makeSearchResult(
  * @param {object} options Options for the result.
  * @param {string} options.title
  *   The page title.
- * @param {string} [options.fallbackTitle]
- *   The provider has capability to use the actual page title though,
- *   when the provider can’t get the page title, use this value as the fallback.
  * @param {string} options.uri
  *   The page URI.
  * @param {Array} [options.tags]
@@ -878,7 +875,6 @@ function makeVisitResult(
   queryContext,
   {
     title,
-    fallbackTitle,
     uri,
     iconUri,
     providerName,
@@ -893,10 +889,6 @@ function makeVisitResult(
 
   if (title != undefined) {
     payload.title = title;
-  }
-
-  if (fallbackTitle) {
-    payload.fallbackTitle = fallbackTitle;
   }
 
   if (

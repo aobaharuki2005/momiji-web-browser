@@ -2002,9 +2002,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       dupedHeuristic: {
         type: "boolean",
       },
-      fallbackTitle: {
-        type: "string",
-      },
       frecency: {
         type: "number",
       },

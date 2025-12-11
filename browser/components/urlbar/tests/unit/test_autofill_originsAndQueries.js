@@ -171,7 +171,7 @@ add_autofill_task(async function wwwShouldNotMatchNoWWW() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://www." + search + "/",
-          fallbackTitle: "www." + search + "/",
+          title: "www." + search + "/",
           heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
         }),
@@ -188,7 +188,7 @@ add_autofill_task(async function wwwShouldNotMatchNoWWW() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://www." + search,
-          fallbackTitle: "www." + search,
+          title: "www." + search,
           iconUri: `page-icon:http://www.${host}/`,
           heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -306,7 +306,7 @@ add_autofill_task(async function prefixWWWShouldNotMatchNoWWW() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:http://www.${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -331,7 +331,7 @@ add_autofill_task(async function httpPrefixShouldNotMatchHTTPS() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:http://${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -407,7 +407,7 @@ add_autofill_task(async function httpsWWWShouldNotMatchNoWWW() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://www." + search + "/",
-          fallbackTitle: "www." + search + "/",
+          title: "www." + search + "/",
           heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
         }),
@@ -424,7 +424,7 @@ add_autofill_task(async function httpsWWWShouldNotMatchNoWWW() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://www." + search,
-          fallbackTitle: "www." + search,
+          title: "www." + search,
           iconUri: `page-icon:http://www.${host}/`,
           heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -498,7 +498,7 @@ add_autofill_task(async function httpsPrefixWWWShouldNotMatchNoWWW() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:https://www.${host}/`,
         providerame: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -523,7 +523,7 @@ add_autofill_task(async function httpsPrefixShouldNotMatchHTTP() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:https://${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -829,7 +829,7 @@ add_autofill_task(async function frecency() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://" + search,
-          fallbackTitle: search,
+          title: search,
           iconUri: `page-icon:http://${host}/`,
           heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1055,7 +1055,7 @@ add_autofill_task(async function suggestHistoryFalse_visit() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://" + search,
-          fallbackTitle: search,
+          title: search,
           iconUri: `page-icon:http://${host}/`,
           heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1113,7 +1113,7 @@ add_autofill_task(async function suggestHistoryFalse_visit_prefix() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://" + search,
-          fallbackTitle: search,
+          title: search,
           iconUri: `page-icon:http://${host}/`,
           heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1217,7 +1217,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_1() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://" + search,
-        fallbackTitle: search,
+        title: search,
         iconUri: `page-icon:http://${host}/`,
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1315,7 +1315,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_1() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:http://${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1355,7 +1355,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:http://${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1395,7 +1395,7 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_3() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:http://${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1477,7 +1477,7 @@ add_autofill_task(async function suggestBookmarkFalse_visit_1() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: UrlbarUtils.stripPrefixAndTrim(prefixedUrl, {
+        title: UrlbarUtils.stripPrefixAndTrim(prefixedUrl, {
           stripHttp: true,
           stripHttps: true,
         })[0],
@@ -1548,7 +1548,7 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_1() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:http://${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1586,7 +1586,7 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:http://${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1624,7 +1624,7 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_3() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: prefixedUrl,
-        fallbackTitle: prefixedUrl,
+        title: prefixedUrl,
         heuristic: true,
         iconUri: origins ? "" : `page-icon:http://${host}/`,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1689,7 +1689,7 @@ add_autofill_task(async function suggestBookmarkFalse_unvisitedBookmark() {
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: "http://" + search,
-          fallbackTitle: search,
+          title: search,
           iconUri: `page-icon:http://${host}/`,
           heuristic: true,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1740,7 +1740,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: prefixedUrl,
-          fallbackTitle: prefixedUrl,
+          title: prefixedUrl,
           heuristic: true,
           iconUri: origins ? "" : `page-icon:http://${host}/`,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1778,7 +1778,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: prefixedUrl,
-          fallbackTitle: prefixedUrl,
+          title: prefixedUrl,
           heuristic: true,
           iconUri: origins ? "" : `page-icon:http://${host}/`,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1816,7 +1816,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: prefixedUrl,
-          fallbackTitle: prefixedUrl,
+          title: prefixedUrl,
           heuristic: true,
           iconUri: origins ? "" : `page-icon:http://${host}/`,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1854,7 +1854,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: prefixedUrl,
-          fallbackTitle: prefixedUrl,
+          title: prefixedUrl,
           heuristic: true,
           iconUri: origins ? "" : `page-icon:http://${host}/`,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -1965,7 +1965,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: prefixedUrl,
-          fallbackTitle: prefixedUrl,
+          title: prefixedUrl,
           heuristic: true,
           iconUri: origins ? "" : `page-icon:http://${host}/`,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2009,7 +2009,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: prefixedUrl,
-          fallbackTitle: prefixedUrl,
+          title: prefixedUrl,
           heuristic: true,
           iconUri: origins ? "" : `page-icon:http://${host}/`,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2053,7 +2053,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: prefixedUrl,
-          fallbackTitle: prefixedUrl,
+          title: prefixedUrl,
           heuristic: true,
           iconUri: origins ? "" : `page-icon:http://${host}/`,
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2187,7 +2187,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: `http://${search}/`,
-          fallbackTitle: `http://${search}/`,
+          title: `http://${search}/`,
           heuristic: true,
           iconUri: "",
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2217,7 +2217,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: `http://${search}/`,
-          fallbackTitle: `http://${search}/`,
+          title: `http://${search}/`,
           heuristic: true,
           iconUri: "",
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2268,7 +2268,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: `http://${search}/`,
-          fallbackTitle: `http://${search}/`,
+          title: `http://${search}/`,
           heuristic: true,
           iconUri: "",
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2298,7 +2298,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: `http://${search}/`,
-          fallbackTitle: `http://${search}/`,
+          title: `http://${search}/`,
           heuristic: true,
           iconUri: "",
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2349,7 +2349,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: `http://${search}/`,
-          fallbackTitle: `http://${search}/`,
+          title: `http://${search}/`,
           heuristic: true,
           iconUri: "",
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2379,7 +2379,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: `http://${search}/`,
-          fallbackTitle: `http://${search}/`,
+          title: `http://${search}/`,
           heuristic: true,
           iconUri: "",
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2430,7 +2430,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: `http://${search}/`,
-          fallbackTitle: `http://${search}/`,
+          title: `http://${search}/`,
           heuristic: true,
           iconUri: "",
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -2460,7 +2460,7 @@ add_autofill_task(
         makeVisitResult(context, {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           uri: `http://${search}/`,
-          fallbackTitle: `http://${search}/`,
+          title: `http://${search}/`,
           heuristic: true,
           iconUri: "",
           providerName: HEURISTIC_FALLBACK_PROVIDERNAME,

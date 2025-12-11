@@ -182,7 +182,7 @@ add_task(async function portNoMatch1() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${origin}:89/`,
-        fallbackTitle: `${origin}:89/`,
+        title: `${origin}:89/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -206,7 +206,7 @@ add_task(async function portNoMatch2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `http://${origin}:9/`,
-        fallbackTitle: `${origin}:9/`,
+        title: `${origin}:9/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -230,7 +230,7 @@ add_task(async function trailingSlash_2() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: "http://example/",
-        fallbackTitle: "example/",
+        title: "example/",
         iconUri: "page-icon:http://example/",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -549,7 +549,7 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
     matches: [
       makeVisitResult(context, {
         uri: baseURL,
-        fallbackTitle: UrlbarTestUtils.trimURL(baseURL),
+        title: UrlbarTestUtils.trimURL(baseURL),
         heuristic: true,
       }),
       makeBookmarkResult(context, {
@@ -592,7 +592,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
-        fallbackTitle: `${search}/`,
+        title: `${search}/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -612,7 +612,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
-        fallbackTitle: `${search}/`,
+        title: `${search}/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -632,7 +632,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         uri: `${search}/`,
-        fallbackTitle: `${search}/`,
+        title: `${search}/`,
         iconUri: "",
         heuristic: true,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
@@ -652,7 +652,7 @@ add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
     matches: [
       makeVisitResult(context, {
         uri: baseURL,
-        fallbackTitle: UrlbarTestUtils.trimURL(baseURL),
+        title: UrlbarTestUtils.trimURL(baseURL),
         heuristic: true,
       }),
       makeBookmarkResult(context, {
@@ -841,7 +841,7 @@ add_task(async function about() {
         context =>
           makeVisitResult(context, {
             uri: "about:blan",
-            fallbackTitle: "about:blan",
+            title: "about:blan",
             source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
             heuristic: true,
           }),

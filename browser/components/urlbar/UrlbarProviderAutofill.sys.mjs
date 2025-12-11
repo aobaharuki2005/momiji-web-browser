@@ -866,6 +866,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
       icon: UrlbarUtils.getIconForUrl(finalCompleteValue),
     };
 
+    let noVisitAction = !!title;
     if (title) {
       payload.title = title;
     } else {
@@ -879,7 +880,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
         trimEmptyQuery: true,
         trimSlash: !this._searchString.includes("/"),
       });
-      payload.fallbackTitle = fallbackTitle;
+      payload.title = fallbackTitle;
     }
 
     return new lazy.UrlbarResult({
@@ -892,6 +893,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
         selectionStart: queryContext.searchString.length,
         selectionEnd: autofilledValue.length,
         type: autofilledType,
+        noVisitAction,
       },
       payload,
       highlights: {

@@ -2241,7 +2241,12 @@ export class UrlbarView {
         }
       // fall-through
       default:
-        if (result.heuristic && !result.payload.title) {
+        if (
+          result.heuristic &&
+          result.payload.url &&
+          result.providerName != "UrlbarProviderHistoryUrlHeuristic" &&
+          !result.autofill?.noVisitAction
+        ) {
           isVisitAction = true;
         } else if (
           (result.providerName != lazy.UrlbarProviderQuickSuggest.name ||

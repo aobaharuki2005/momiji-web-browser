@@ -119,12 +119,9 @@ export class UrlbarProviderClipboard extends UrlbarProvider {
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       payload: {
-        fallbackTitle: UrlbarUtils.prepareUrlForDisplay(
-          this.#previousClipboard.value,
-          {
-            trimURL: false,
-          }
-        ),
+        title: UrlbarUtils.prepareUrlForDisplay(this.#previousClipboard.value, {
+          trimURL: false,
+        }),
         url: this.#previousClipboard.value,
         icon: "chrome://global/skin/icons/clipboard.svg",
         isBlockable: true,

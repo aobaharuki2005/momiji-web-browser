@@ -163,7 +163,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           heuristic: true,
           payload: {
-            fallbackTitle: searchUrl,
+            title: searchUrl,
             url: searchUrl,
           },
         });
@@ -225,7 +225,7 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       heuristic: true,
       payload: {
-        fallbackTitle: displayURL,
+        title: displayURL,
         url: escapedURL,
         icon: iconUri,
       },

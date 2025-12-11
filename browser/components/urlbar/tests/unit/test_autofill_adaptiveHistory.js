@@ -244,7 +244,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
         context =>
@@ -307,7 +307,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.org/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.org/"),
+            title: UrlbarTestUtils.trimURL("http://example.org/"),
             heuristic: true,
           }),
         context =>
@@ -331,7 +331,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
         context =>
@@ -936,7 +936,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
         context =>
@@ -1001,7 +1001,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
         context =>
@@ -1059,7 +1059,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/test",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/test"),
+            title: UrlbarTestUtils.trimURL("http://example.com/test"),
             heuristic: true,
           }),
         context =>
@@ -1128,7 +1128,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
         context =>
@@ -1155,7 +1155,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
         context =>
@@ -1179,7 +1179,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
         context =>
@@ -1203,7 +1203,7 @@ const TEST_DATA = [
         context =>
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
         context =>
@@ -1320,7 +1320,7 @@ add_task(async function urlCase() {
         matches: [
           makeVisitResult(context, {
             uri: "http://example.com/",
-            fallbackTitle: UrlbarTestUtils.trimURL("http://example.com/"),
+            title: UrlbarTestUtils.trimURL("http://example.com/"),
             heuristic: true,
           }),
           makeVisitResult(context, {
@@ -1353,9 +1353,7 @@ add_task(async function urlCase() {
         matches: [
           makeVisitResult(context, {
             uri: "http://example.com/abc/def",
-            fallbackTitle: UrlbarTestUtils.trimURL(
-              "http://example.com/abc/def"
-            ),
+            title: UrlbarTestUtils.trimURL("http://example.com/abc/def"),
             heuristic: true,
           }),
           makeVisitResult(context, {
@@ -1428,7 +1426,7 @@ add_task(async function decayTest() {
     matches: [
       makeVisitResult(context, {
         uri: "http://example.com/",
-        fallbackTitle: UrlbarTestUtils.trimURL("http://example.com"),
+        title: UrlbarTestUtils.trimURL("http://example.com"),
         heuristic: true,
       }),
       makeVisitResult(context, {
