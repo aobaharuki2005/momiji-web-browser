@@ -507,10 +507,11 @@ function internalPersist(persistArgs) {
       filesFolder = persistArgs.targetFile.clone();
 
       var nameWithoutExtension = getFileBaseName(filesFolder.leafName);
-      var filesFolderLeafName =
-        ContentAreaUtils.stringBundle.formatStringFromName("filesFolder", [
-          nameWithoutExtension,
-        ]);
+      // Given the minimal benefits, the "_files" suffix is intentionally not
+      // localized. Localizing it introduces complexity in handling OS filename
+      // length limits (e.g. bug 1959738) and risks breaking the folder-linking
+      // feature if an unsupported suffix is used.
+      var filesFolderLeafName = nameWithoutExtension + "_files";
 
       filesFolder.leafName = filesFolderLeafName;
     }
