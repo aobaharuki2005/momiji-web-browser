@@ -6980,6 +6980,9 @@ nsHttpChannel::Cancel(nsresult status) {
 
   LOG(("nsHttpChannel::Cancel [this=%p status=%" PRIx32 ", reason=%s]\n", this,
        static_cast<uint32_t>(status), mCanceledReason.get()));
+  PROFILER_MARKER("nsHttpChannel::Cancel", NETWORK, {}, FlowMarker,
+                  Flow::FromPointer(this));
+
   MOZ_ASSERT_IF(!(mConnectionInfo && mConnectionInfo->UsingConnect()) &&
                     NS_SUCCEEDED(mStatus),
                 !AllowedErrorForTransactionRetry(status));

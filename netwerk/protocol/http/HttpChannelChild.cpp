@@ -2154,6 +2154,10 @@ HttpChannelChild::Cancel(nsresult aStatus) {
         "[this=%p] cancelled call in child process from script: %s", this,
         logStack->get());
   }
+  PROFILER_MARKER("HttpChannelChild::Cancel", NETWORK,
+                  {MarkerStack::MaybeCapture(
+                      profiler_feature_active(ProfilerFeature::Flows))},
+                  Tracing, "Http");
 
   MOZ_ASSERT(NS_IsMainThread());
 
