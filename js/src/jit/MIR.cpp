@@ -570,6 +570,10 @@ const MDefinition* MDefinition::skipObjectGuards() const {
       result = result->toGuardMultipleShapes()->object();
       continue;
     }
+    if (result->isGuardShapeListToOffset()) {
+      result = result->toGuardShapeListToOffset()->object();
+      continue;
+    }
     if (result->isGuardMultipleShapesToOffset()) {
       result = result->toGuardMultipleShapesToOffset()->object();
       continue;
@@ -7226,6 +7230,28 @@ bool MGuardShapeList::congruentTo(const MDefinition* ins) const {
 }
 
 AliasSet MGuardShapeList::getAliasSet() const {
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+bool MGuardShapeListToOffset::congruentTo(const MDefinition* ins) const {
+  if (!congruentIfOperandsEqual(ins)) {
+    return false;
+  }
+
+  const auto& shapesA = this->shapeList()->shapes();
+  const auto& shapesB = ins->toGuardShapeListToOffset()->shapeList()->shapes();
+  if (!std::equal(shapesA.begin(), shapesA.end(), shapesB.begin(),
+                  shapesB.end()))
+    return false;
+
+  const auto& offsetsA = this->shapeList()->offsets();
+  const auto& offsetsB =
+      ins->toGuardShapeListToOffset()->shapeList()->offsets();
+  return std::equal(offsetsA.begin(), offsetsA.end(), offsetsB.begin(),
+                    offsetsB.end());
+}
+
+AliasSet MGuardShapeListToOffset::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 

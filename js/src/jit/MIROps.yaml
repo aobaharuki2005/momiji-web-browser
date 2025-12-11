@@ -2238,6 +2238,19 @@
   generate_lir: true
   lir_temps: 2
 
+- name: GuardShapeListToOffset
+  operands:
+    object: Object
+  arguments:
+    shapeList: const ShapeListWithOffsetsSnapshot*
+  result_type: Int32
+  guard: true
+  movable: true
+  congruent_to: custom
+  alias_set: custom
+  generate_lir: true
+  lir_temps: 2
+
 - name: GuardMultipleShapesToOffset
   operands:
     object: Object

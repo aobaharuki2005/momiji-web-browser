@@ -5825,6 +5825,22 @@ void LIRGenerator::visitGuardShapeList(MGuardShapeList* ins) {
   }
 }
 
+void LIRGenerator::visitGuardShapeListToOffset(MGuardShapeListToOffset* ins) {
+  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
+
+  if (JitOptions.spectreObjectMitigations) {
+    auto* lir = new (alloc())
+        LGuardShapeListToOffset(useRegister(ins->object()), temp(), temp());
+    assignSnapshot(lir, ins->bailoutKind());
+    define(lir, ins);
+  } else {
+    auto* lir = new (alloc()) LGuardShapeListToOffset(
+        useRegister(ins->object()), temp(), LDefinition::BogusTemp());
+    assignSnapshot(lir, ins->bailoutKind());
+    define(lir, ins);
+  }
+}
+
 void LIRGenerator::visitGuardMultipleShapesToOffset(
     MGuardMultipleShapesToOffset* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);

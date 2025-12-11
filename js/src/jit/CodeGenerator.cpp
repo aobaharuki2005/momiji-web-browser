@@ -4538,6 +4538,56 @@ void CodeGenerator::visitGuardShapeList(LGuardShapeList* guard) {
   bailoutFrom(&bail, guard->snapshot());
 }
 
+void CodeGenerator::visitGuardShapeListToOffset(
+    LGuardShapeListToOffset* guard) {
+  Register obj = ToRegister(guard->object());
+  Register temp = ToRegister(guard->temp0());
+  Register spectre = ToTempRegisterOrInvalid(guard->temp1());
+  Register offset = ToRegister(guard->output());
+
+  Label done, bail;
+  masm.loadObjShapeUnsafe(obj, temp);
+
+  // Count the number of branches to emit.
+  const auto& shapes = guard->mir()->shapeList()->shapes();
+  const auto& offsets = guard->mir()->shapeList()->offsets();
+  size_t branchesLeft = std::count_if(shapes.begin(), shapes.end(),
+                                      [](Shape* s) { return s != nullptr; });
+  MOZ_RELEASE_ASSERT(branchesLeft > 0);
+
+  size_t index = 0;
+  for (Shape* shape : shapes) {
+    if (!shape) {
+      index++;
+      continue;
+    }
+
+    if (branchesLeft > 1) {
+      Label next;
+      masm.branchPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), &next);
+      if (spectre != InvalidReg) {
+        masm.spectreMovePtr(Assembler::NotEqual, spectre, obj);
+      }
+      masm.move32(Imm32(offsets[index]), offset);
+      masm.jump(&done);
+      masm.bind(&next);
+    } else {
+      masm.branchPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), &bail);
+      if (spectre != InvalidReg) {
+        masm.spectreMovePtr(Assembler::NotEqual, spectre, obj);
+      }
+      masm.move32(Imm32(offsets[index]), offset);
+    }
+
+    branchesLeft--;
+    index++;
+  }
+  MOZ_ASSERT(branchesLeft == 0);
+
+  masm.bind(&done);
+  bailoutFrom(&bail, guard->snapshot());
+}
+
 void CodeGenerator::visitGuardMultipleShapesToOffset(
     LGuardMultipleShapesToOffset* guard) {
   Register obj = ToRegister(guard->object());
