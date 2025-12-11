@@ -5,7 +5,7 @@
 /*---
 esid: sec-temporal.zoneddatetime.from
 description: Calendar era code is canonicalized
-features: [Temporal, Intl.Era-monthcode]
+features: [Temporal]
 ---*/
 
 const date1 = Temporal.ZonedDateTime.from({

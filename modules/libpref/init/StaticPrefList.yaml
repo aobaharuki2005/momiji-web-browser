@@ -9025,18 +9025,11 @@
   set_spidermonkey_pref: startup
 
   # Experimental support for Iterator Sequencing in JavaScript.
-- name: javascript.options.experimental.iterator_sequencing
-  type: bool
-  value: true
-  mirror: always
-  set_spidermonkey_pref: startup
-
-  # Experimental support for Joint Iteration in JavaScript.
-- name: javascript.options.experimental.joint_iteration
-  type: bool
-  value: true
-  mirror: always
-  set_spidermonkey_pref: startup
+-   name: javascript.options.experimental.iterator_sequencing
+    type: bool
+    value: true
+    mirror: always
+    set_spidermonkey_pref: startup
 
 #ifdef NIGHTLY_BUILD
   # Experimental support for Async Iterator Helpers in JavaScript.
@@ -9048,6 +9041,13 @@
 
   # Experimental support for Iterator.range in JavaScript.
 -   name: javascript.options.experimental.iterator_range
+    type: bool
+    value: false
+    mirror: always
+    set_spidermonkey_pref: startup
+
+  # Experimental support for Joint Iteration in JavaScript.
+-   name: javascript.options.experimental.joint_iteration
     type: bool
     value: false
     mirror: always

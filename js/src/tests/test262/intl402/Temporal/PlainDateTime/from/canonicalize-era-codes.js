@@ -6,7 +6,7 @@
 esid: sec-temporal.plaindatetime.from
 description: Calendar era code is canonicalized
 includes: [temporalHelpers.js]
-features: [Temporal, Intl.Era-monthcode]
+features: [Temporal]
 ---*/
 
 const date1 = Temporal.PlainDateTime.from({
