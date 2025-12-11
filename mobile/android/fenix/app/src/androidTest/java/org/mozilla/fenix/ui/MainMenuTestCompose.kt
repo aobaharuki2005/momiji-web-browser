@@ -562,6 +562,7 @@ class MainMenuTestCompose : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080156
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=2005535")
     @SmokeTest
     @Test
     fun verifyTheExtensionInstallationTest() {
