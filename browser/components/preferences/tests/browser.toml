@@ -53,6 +53,8 @@ support-files = ["browser_bug1184989_prevent_scrolling_when_preferences_flipped.
 
 ["browser_bug1579418.js"]
 
+["browser_capability_filter.js"]
+
 ["browser_cert_export.js"]
 
 ["browser_change_app_handler.js"]

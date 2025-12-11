@@ -202,7 +202,6 @@ Preferences.addAll([
   // Firefox VPN
   { id: "browser.ipProtection.variant", type: "string" },
   { id: "browser.ipProtection.features.siteExceptions", type: "bool" },
-  { id: "browser.ipProtection.exceptionsMode", type: "string" },
   { id: "browser.ipProtection.features.autoStart", type: "bool" },
   { id: "browser.ipProtection.autoStartEnabled", type: "bool" },
   { id: "browser.ipProtection.autoStartPrivateEnabled", type: "bool" },
@@ -1419,10 +1418,8 @@ Preferences.addSetting({
   id: "ipProtectionSiteExceptionsFeatureEnabled",
   pref: "browser.ipProtection.features.siteExceptions",
 });
-// This setting also affects the radio group for site exceptions
 Preferences.addSetting({
-  id: "ipProtectionExceptionsMode",
-  pref: "browser.ipProtection.exceptionsMode",
+  id: "ipProtectionExceptions",
   deps: ["ipProtectionVisible", "ipProtectionSiteExceptionsFeatureEnabled"],
   visible: ({
     ipProtectionVisible,
@@ -1430,11 +1427,15 @@ Preferences.addSetting({
   }) =>
     ipProtectionVisible.value && ipProtectionSiteExceptionsFeatureEnabled.value,
 });
+
 Preferences.addSetting({
   id: "ipProtectionExceptionAllListButton",
-  deps: ["ipProtectionVisible", "ipProtectionExceptionsMode"],
-  visible: ({ ipProtectionVisible, ipProtectionExceptionsMode }) =>
-    ipProtectionVisible.value && ipProtectionExceptionsMode.value == "all",
+  deps: ["ipProtectionVisible", "ipProtectionSiteExceptionsFeatureEnabled"],
+  visible: ({
+    ipProtectionVisible,
+    ipProtectionSiteExceptionsFeatureEnabled,
+  }) =>
+    ipProtectionVisible.value && ipProtectionSiteExceptionsFeatureEnabled.value,
   onUserClick() {
     let params = {
       blockVisible: true,
@@ -1442,27 +1443,6 @@ Preferences.addSetting({
       prefilledHost: "",
       permissionType: "ipp-vpn",
       capabilityFilter: Ci.nsIPermissionManager.DENY_ACTION,
-    };
-
-    gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/permissions.xhtml",
-      { features: "resizable=yes" },
-      params
-    );
-  },
-});
-Preferences.addSetting({
-  id: "ipProtectionExceptionSelectListButton",
-  deps: ["ipProtectionVisible", "ipProtectionExceptionsMode"],
-  visible: ({ ipProtectionVisible, ipProtectionExceptionsMode }) =>
-    ipProtectionVisible.value && ipProtectionExceptionsMode.value == "select",
-  onUserClick() {
-    let params = {
-      allowVisible: true,
-      hideStatusColumn: true,
-      prefilledHost: "",
-      permissionType: "ipp-vpn",
-      capabilityFilter: Ci.nsIPermissionManager.ALLOW_ACTION,
     };
 
     gSubDialog.open(

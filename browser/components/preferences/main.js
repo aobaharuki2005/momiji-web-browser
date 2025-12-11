@@ -2319,36 +2319,17 @@ SettingGroupManager.registerGroups({
     supportPage: "ip-protection",
     items: [
       {
-        id: "ipProtectionExceptionsMode",
+        id: "ipProtectionExceptions",
         l10nId: "ip-protection-site-exceptions",
-        control: "moz-radio-group",
+        control: "moz-fieldset",
         controlAttrs: {
           ".headingLevel": 3,
         },
-        options: [
+        items: [
           {
-            id: "ipProtectionExceptionRadioAll",
-            value: "all",
-            l10nId: "ip-protection-site-exceptions-all-sites-radio",
-            items: [
-              {
-                id: "ipProtectionExceptionAllListButton",
-                l10nId: "ip-protection-site-exceptions-all-sites-button",
-                control: "moz-box-button",
-              },
-            ],
-          },
-          {
-            id: "ipProtectionExceptionRadioSelect",
-            value: "select",
-            l10nId: "ip-protection-site-exceptions-select-sites-radio",
-            items: [
-              {
-                id: "ipProtectionExceptionSelectListButton",
-                l10nId: "ip-protection-site-exceptions-select-sites-button",
-                control: "moz-box-button",
-              },
-            ],
+            id: "ipProtectionExceptionAllListButton",
+            l10nId: "ip-protection-site-exceptions-all-sites-button",
+            control: "moz-box-button",
           },
         ],
       },

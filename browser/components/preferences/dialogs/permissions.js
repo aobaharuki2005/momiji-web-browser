@@ -111,25 +111,7 @@ var gPermissionManager = {
 
     let permissionsText = document.getElementById("permissionsText");
 
-    let l10n;
-
-    // For ipp-vpn, we want to override strings based on capability.
-    // Valid capabilities for this permission are ALLOW and DENY.
-    if (this._type === "ipp-vpn") {
-      if (params.capabilityFilter === Ci.nsIPermissionManager.ALLOW_ACTION) {
-        l10n = {
-          window: "ip-protection-exceptions-dialog-window",
-          description: "ip-protection-inclusions-desc",
-        };
-      } else {
-        l10n = {
-          window: "ip-protection-exceptions-dialog-window",
-          description: "ip-protection-exclusions-desc",
-        };
-      }
-    } else {
-      l10n = permissionExceptionsL10n[this._type];
-    }
+    let l10n = permissionExceptionsL10n[this._type];
 
     document.l10n.setAttributes(permissionsText, l10n.description);
     document.l10n.setAttributes(document.documentElement, l10n.window);
