@@ -2238,6 +2238,16 @@
   generate_lir: true
   lir_temps: 2
 
+- name: GuardMultipleShapesToOffset
+  operands:
+    object: Object
+    shapeList: Object
+  result_type: Int32
+  guard: true
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+
 - name: GuardProto
   gen_boilerplate: false
 

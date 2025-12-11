@@ -1478,19 +1478,26 @@ bool CacheIRWriter::stubDataEquals(const uint8_t* stubData) const {
   return true;
 }
 
-bool CacheIRWriter::stubDataEqualsIgnoring(const uint8_t* stubData,
-                                           uint32_t ignoreOffset) const {
+bool CacheIRWriter::stubDataEqualsIgnoringShapeAndOffset(
+    const uint8_t* stubData, uint32_t shapeFieldOffset,
+    mozilla::Maybe<uint32_t> offsetFieldOffset) const {
   MOZ_ASSERT(!failed());
 
   uint32_t offset = 0;
   for (const StubField& field : stubFields_) {
-    if (offset != ignoreOffset) {
+    if (offset == shapeFieldOffset) {
+      // Don't compare shapeField.
+    } else if (offsetFieldOffset.isSome() && offset == *offsetFieldOffset) {
+      // Skip offsetField, the "FromOffset" variant doesn't have this.
+      continue;
+    } else {
       if (field.sizeIsWord()) {
         uintptr_t raw = *reinterpret_cast<const uintptr_t*>(stubData + offset);
         if (field.asWord() != raw) {
           return false;
         }
       } else {
+        MOZ_ASSERT(field.sizeIsInt64());
         uint64_t raw = *reinterpret_cast<const uint64_t*>(stubData + offset);
         if (field.asInt64() != raw) {
           return false;
@@ -9919,8 +9926,39 @@ bool CacheIRCompiler::emitGuardMultipleShapes(ObjOperandId objId,
   emitLoadStubField(shapeArray, shapes);
   masm.loadPtr(Address(shapes, NativeObject::offsetOfElements()), shapes);
 
-  masm.branchTestObjShapeList(Assembler::NotEqual, obj, shapes, scratch,
-                              scratch2, spectreScratch, failure->label());
+  masm.branchTestObjShapeList(obj, shapes, scratch, scratch2, spectreScratch,
+                              failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardMultipleShapesToOffset(ObjOperandId objId,
+                                                      uint32_t shapesOffset,
+                                                      Int32OperandId offsetId) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  Register obj = allocator.useRegister(masm, objId);
+  Register offset = allocator.defineRegister(masm, offsetId);
+  AutoScratchRegister shapes(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+
+  bool needSpectreMitigations = objectGuardNeedsSpectreMitigations(objId);
+
+  // We can re-use the output (offset) as scratch spectre register,
+  // since the output is only set after all branches.
+  Register spectreScratch = needSpectreMitigations ? offset : InvalidReg;
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // The stub field contains a ListObject. Load its elements.
+  StubFieldOffset shapeArray(shapesOffset, StubField::Type::JSObject);
+  emitLoadStubField(shapeArray, shapes);
+  masm.loadPtr(Address(shapes, NativeObject::offsetOfElements()), shapes);
+
+  masm.branchTestObjShapeListSetOffset(obj, shapes, offset, scratch, scratch2,
+                                       spectreScratch, failure->label());
   return true;
 }
 

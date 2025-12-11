@@ -3034,6 +3034,14 @@
     num: WordSized
   mir_op: true
 
+- name: GuardMultipleShapesToOffset
+  result_type: WordSized
+  operands:
+    object: WordSized
+    shapeList: WordSized
+  num_temps: 3
+  mir_op: true
+
 - name: GuardProto
   operands:
     object: WordSized

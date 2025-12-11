@@ -4496,8 +4496,7 @@ void CodeGenerator::visitGuardMultipleShapes(LGuardMultipleShapes* guard) {
 
   Label bail;
   masm.loadPtr(Address(shapeList, NativeObject::offsetOfElements()), temp);
-  masm.branchTestObjShapeList(Assembler::NotEqual, obj, temp, temp2, temp3,
-                              spectre, &bail);
+  masm.branchTestObjShapeList(obj, temp, temp2, temp3, spectre, &bail);
   bailoutFrom(&bail, guard->snapshot());
 }
 
@@ -4536,6 +4535,23 @@ void CodeGenerator::visitGuardShapeList(LGuardShapeList* guard) {
   MOZ_ASSERT(branchesLeft == 0);
 
   masm.bind(&done);
+  bailoutFrom(&bail, guard->snapshot());
+}
+
+void CodeGenerator::visitGuardMultipleShapesToOffset(
+    LGuardMultipleShapesToOffset* guard) {
+  Register obj = ToRegister(guard->object());
+  Register shapeList = ToRegister(guard->shapeList());
+  Register temp = ToRegister(guard->temp0());
+  Register temp1 = ToRegister(guard->temp1());
+  Register temp2 = ToRegister(guard->temp2());
+  Register offset = ToRegister(guard->output());
+  Register spectre = JitOptions.spectreObjectMitigations ? offset : InvalidReg;
+
+  Label bail;
+  masm.loadPtr(Address(shapeList, NativeObject::offsetOfElements()), temp);
+  masm.branchTestObjShapeListSetOffset(obj, temp, offset, temp1, temp2, spectre,
+                                       &bail);
   bailoutFrom(&bail, guard->snapshot());
 }
 
