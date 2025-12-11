@@ -181,7 +181,7 @@ class InactivePropertyHelper {
         fixId: "inactive-css-not-grid-container-fix",
         msgId: "inactive-css-not-grid-container",
       },
-      // Grid item property used on non-grid item.
+      // Grid/absolutely positioned item property used on non-grid/non-absolutely positioned item.
       {
         invalidProperties: [
           "grid-area",
@@ -206,12 +206,21 @@ class InactivePropertyHelper {
       // Absolutely positioned, grid and flex item properties used on non absolutely positioned,
       // non-grid or non-flex item.
       {
-        invalidProperties: ["align-self", "justify-self", "place-self"],
+        invalidProperties: ["align-self", "place-self"],
         when: () =>
           !this.gridItem && !this.flexItem && !this.isAbsolutelyPositioned,
         fixId:
           "inactive-css-not-grid-or-flex-or-absolutely-positioned-item-fix",
         msgId: "inactive-css-not-grid-or-flex-or-absolutely-positioned-item",
+      },
+      // Absolutely positioned and grid item properties used on non absolutely positioned,
+      // or non-grid item.
+      {
+        invalidProperties: ["justify-self"],
+        // This should be updated when justify-self support is added on block level boxes (see Bug 2005203)
+        when: () => !this.gridItem && !this.isAbsolutelyPositioned,
+        fixId: "inactive-css-not-grid-or-absolutely-positioned-item-fix",
+        msgId: "inactive-css-not-grid-or-absolutely-positioned-item",
       },
       // Grid and flex container properties used on non-grid or non-flex container.
       {
