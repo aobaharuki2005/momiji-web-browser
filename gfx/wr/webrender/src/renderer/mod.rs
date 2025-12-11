@@ -3661,6 +3661,8 @@ impl Renderer {
                 is_opaque: false,
                 offset: DeviceIntPoint::zero(),
                 clip_rect: device_size.into(),
+                rounded_clip_rect: device_size.into(),
+                rounded_clip_radii: ClipRadius::EMPTY,                
             });
 
             swapchain_layers.push(SwapChainLayer {
@@ -3798,12 +3800,14 @@ impl Renderer {
             };
 
             if let Some(new_layer_kind) = new_layer_kind {
-                let (offset, clip_rect, is_opaque) = match usage {
+                let (offset, clip_rect, is_opaque, rounded_clip_rect, rounded_clip_radii) = match usage {
                     CompositorSurfaceUsage::Content => {
                         (
                             DeviceIntPoint::zero(),
                             device_size.into(),
                             false,      // Assume not opaque, we'll calculate this later
+                            device_size.into(),
+                            ClipRadius::EMPTY,
                         )
                     }
                     CompositorSurfaceUsage::External { .. } => {
@@ -3824,7 +3828,29 @@ impl Renderer {
                             });
                         }
 
-                        (rect.min.to_i32(), clip_rect, is_opaque)
+                        let (rounded_clip_rect, rounded_clip_radii) = match tile.clip_index {
+                            Some(clip_index) => {
+                                let clip = composite_state.get_compositor_clip(clip_index);
+                                let radius = ClipRadius {
+                                    top_left: clip.radius.top_left.width.round() as i32,
+                                    top_right: clip.radius.top_right.width.round() as i32,
+                                    bottom_left: clip.radius.bottom_left.width.round() as i32,
+                                    bottom_right: clip.radius.bottom_right.width.round() as i32,
+                                };
+                                (clip.rect.to_i32(), radius)
+                            }
+                            None => {
+                                (clip_rect, ClipRadius::EMPTY)
+                            }
+                        };
+
+                        (
+                            rect.min.to_i32(),
+                            clip_rect,
+                            is_opaque,
+                            rounded_clip_rect,
+                            rounded_clip_radii,
+                        )
                     }
                     CompositorSurfaceUsage::DebugOverlay => unreachable!(),
                 };
@@ -3834,6 +3860,8 @@ impl Renderer {
                     is_opaque,
                     offset,
                     clip_rect,
+                    rounded_clip_rect,
+                    rounded_clip_radii,
                 });
 
                 swapchain_layers.push(SwapChainLayer {
@@ -3901,6 +3929,8 @@ impl Renderer {
                         is_opaque: true,
                         offset: DeviceIntPoint::zero(),
                         clip_rect: device_size.into(),
+                        rounded_clip_rect: device_size.into(),
+                        rounded_clip_radii: ClipRadius::EMPTY,
                     });
 
                     swapchain_layers.push(SwapChainLayer {
@@ -4216,6 +4246,8 @@ impl Renderer {
                     transform,
                     layer.clip_rect,
                     ImageRendering::Auto,
+                    layer.rounded_clip_rect,
+                    layer.rounded_clip_radii,
                 );
             }
         }
