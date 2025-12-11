@@ -13419,6 +13419,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   }
   JS::Prefs::setAtStartup_experimental_symbols_as_weakmap_keys(
       symbolsAsWeakMapKeys);
+  if (op.getBoolOption("enable-joint-iteration")) {
+    JS::Prefs::setAtStartup_experimental_joint_iteration(true);
+  }
 
 #ifdef NIGHTLY_BUILD
   if (op.getBoolOption("enable-async-iterator-helpers")) {
@@ -13429,9 +13432,6 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
   }
   if (op.getBoolOption("enable-iterator-range")) {
     JS::Prefs::setAtStartup_experimental_iterator_range(true);
-  }
-  if (op.getBoolOption("enable-joint-iteration")) {
-    JS::Prefs::setAtStartup_experimental_joint_iteration(true);
   }
   if (op.getBoolOption("enable-upsert")) {
     JS::Prefs::setAtStartup_experimental_upsert(true);
