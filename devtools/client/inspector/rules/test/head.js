@@ -1531,12 +1531,14 @@ function checkRuleViewContent(view, expectedElements) {
         !!expectedDeclaration?.inactiveCSS,
         `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.inactiveCSS ? "inactive" : "not inactive"} `
       );
+      const isWarningIconDisplayed = !!ruleViewPropertyElement.querySelector(
+        ".ruleview-warning:not([hidden])"
+      );
+      const expectedValid = expectedDeclaration?.valid ?? true;
       is(
-        !!ruleViewPropertyElement.querySelector(
-          ".ruleview-warning:not([hidden])"
-        ),
-        !!expectedDeclaration?.valid,
-        `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedDeclaration?.valid === false ? "not valid" : "valid"}`
+        !isWarningIconDisplayed,
+        expectedValid,
+        `Element #${i} ("${selector}") declaration #${j} ("${propName.innerText}: ${propValue.innerText}") is ${expectedValid ? "valid" : "invalid"}`
       );
       is(
         !!ruleViewPropertyElement.hasAttribute("dirty"),
