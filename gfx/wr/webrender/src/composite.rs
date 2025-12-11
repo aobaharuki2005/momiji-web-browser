@@ -613,6 +613,7 @@ pub struct CompositorTransform {
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug)]
 pub struct CompositorClip {
     pub rect: DeviceRect,
     pub radius: BorderRadius,
@@ -1609,6 +1610,8 @@ pub struct CompositorInputLayer {
     pub usage: CompositorSurfaceUsage,
     // If true, layer is opaque, blend can be disabled
     pub is_opaque: bool,
+    pub rounded_clip_rect: DeviceIntRect,
+    pub rounded_clip_radii: ClipRadius,
 }
 
 // Provides the parameters about the frame to the compositor implementation.
@@ -1650,6 +1653,8 @@ pub trait LayerCompositor {
         transform: CompositorSurfaceTransform,
         clip_rect: DeviceIntRect,
         image_rendering: ImageRendering,
+        rounded_clip_rect: DeviceIntRect,
+        rounded_clip_radii: ClipRadius,
     );
 
     // Finish compositing this frame - commit the visual tree to the OS
