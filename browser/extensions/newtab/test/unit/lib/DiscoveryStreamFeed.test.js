@@ -1037,9 +1037,7 @@ describe("DiscoveryStreamFeed", () => {
             "unifiedAds.spocs.enabled": true,
             "discoverystream.placements.spocs": "newtab_stories_1",
             "discoverystream.placements.spocs.counts": "1",
-            trainhopConfig: {
-              marsPreFlight: { enabled: true },
-            },
+            "unifiedAds.ohttp.enabled": true,
           },
         },
       });

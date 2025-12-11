@@ -650,13 +650,10 @@ export class ContileIntegration {
 
           const endpointBaseUrl = state.Prefs.values[PREF_UNIFIED_ADS_ENDPOINT];
 
-          const preFlightConfig =
-            state.Prefs.values?.trainhopConfig?.marsPreFlight || {};
-
           // We need some basic data that we can pass along to the ohttp request.
           // We purposefully don't use ohttp on this request. We also expect to
           // mostly hit the HTTP cache rather than the network with these requests.
-          if (preFlightConfig.enabled) {
+          if (marsOhttpEnabled) {
             const preflightResponse = await this._topSitesFeed.fetch(
               `${endpointBaseUrl}v1/ads-preflight`,
               {

@@ -3400,7 +3400,7 @@ add_task(async function test_ContileIntegration() {
     info(
       "TopSitesFeed._fetchSites should cast headers from a Headers object to JS object when using OHTTP"
     );
-    let { feed } = prepFeed(getTopSitesFeedForTest(sandbox));
+    let { feed, fetchStub } = prepFeed(getTopSitesFeedForTest(sandbox));
 
     Services.prefs.setStringPref(
       "browser.newtabpage.activity-stream.discoverystream.ohttp.relayURL",
@@ -3422,6 +3422,21 @@ add_task(async function test_ContileIntegration() {
     feed.store.state.Prefs.values["discoverystream.placements.tiles.counts"] =
       "1";
     feed.store.state.Prefs.values["unifiedAds.blockedAds"] = "";
+
+    const TEST_PREFLIGHT_UA_STRING = "Some test UA";
+    const TEST_PREFLIGHT_GEONAME_ID = "Some geo name";
+    const TEST_PREFLIGHT_GEO_LOCATION = "Some geo location";
+
+    fetchStub.resolves({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          normalized_ua: TEST_PREFLIGHT_UA_STRING,
+          geoname_id: TEST_PREFLIGHT_GEONAME_ID,
+          geo_location: TEST_PREFLIGHT_GEO_LOCATION,
+        }),
+    });
 
     const fakeOhttpConfig = { config: "config" };
     sandbox.stub(ObliviousHTTP, "getOHTTPConfig").resolves(fakeOhttpConfig);
@@ -3453,6 +3468,8 @@ add_task(async function test_ContileIntegration() {
 
     let fetched = await feed._contile._fetchSites();
 
+    Assert.ok(fetchStub.calledOnce, "The preflight request was made.");
+
     Assert.ok(fetched);
     Assert.ok(
       ohttpRequestStub.calledOnce,
@@ -3465,8 +3482,10 @@ add_task(async function test_ContileIntegration() {
       fakeOhttpConfig,
       "config should be passed through"
     );
+
+    const sentHeaders = callArgs[3].headers;
     Assert.equal(
-      typeof callArgs[3].headers,
+      typeof sentHeaders,
       "object",
       "headers should be a plain object"
     );
@@ -3474,8 +3493,24 @@ add_task(async function test_ContileIntegration() {
       // We use instanceof here since isInstance isn't available for
       // Headers, it seems.
       // eslint-disable-next-line mozilla/use-isInstance
-      !(callArgs[3].headers instanceof Headers),
+      !(sentHeaders instanceof Headers),
       "headers should not be a Headers instance"
+    );
+
+    Assert.equal(
+      sentHeaders["x-user-agent"],
+      TEST_PREFLIGHT_UA_STRING,
+      "Sent the x-user-agent header from preflight"
+    );
+    Assert.equal(
+      sentHeaders["x-geoname-id"],
+      TEST_PREFLIGHT_GEONAME_ID,
+      "Sent the x-geoname-id header from preflight"
+    );
+    Assert.equal(
+      sentHeaders["x-geo-location"],
+      TEST_PREFLIGHT_GEO_LOCATION,
+      "Sent the x-geo-location header from preflight"
     );
 
     Services.prefs.clearUserPref(

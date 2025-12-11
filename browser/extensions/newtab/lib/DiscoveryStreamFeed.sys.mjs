@@ -1200,6 +1200,8 @@ export class DiscoveryStreamFeed {
           ...(placements.length ? { placements } : {}),
         };
 
+        const marsOhttpEnabled = state.Prefs.values[PREF_UNIFIED_ADS_OHTTP];
+
         // Bug 1964715: Remove this logic when AdsFeed is 100% enabled
         if (unifiedAdsEnabled && !adsFeedEnabled) {
           const endpointBaseUrl = state.Prefs.values[PREF_UNIFIED_ADS_ENDPOINT];
@@ -1207,13 +1209,11 @@ export class DiscoveryStreamFeed {
           unifiedAdsPlacements = this.getAdsPlacements();
           const blockedSponsors =
             state.Prefs.values[PREF_UNIFIED_ADS_BLOCKED_LIST];
-          const preFlightConfig =
-            state.Prefs.values?.trainhopConfig?.marsPreFlight || {};
 
           // We need some basic data that we can pass along to the ohttp request.
           // We purposefully don't use ohttp on this request. We also expect to
           // mostly hit the HTTP cache rather than the network with these requests.
-          if (preFlightConfig.enabled) {
+          if (marsOhttpEnabled) {
             const preFlight = await this.fetchFromEndpoint(
               `${endpointBaseUrl}v1/ads-preflight`,
               {
@@ -1238,8 +1238,6 @@ export class DiscoveryStreamFeed {
             blocks: blockedSponsors.split(","),
           };
         }
-
-        const marsOhttpEnabled = state.Prefs.values[PREF_UNIFIED_ADS_OHTTP];
 
         let spocsResponse;
         // Logic decision point: Query ads servers in this file or utilize AdsFeed method
