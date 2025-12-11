@@ -1904,7 +1904,6 @@ impl BatchBuilder {
                                 SubpixelDirection::None => DeviceVector2D::new(0.5, 0.5),
                                 SubpixelDirection::Horizontal => DeviceVector2D::new(0.125, 0.5),
                                 SubpixelDirection::Vertical => DeviceVector2D::new(0.5, 0.125),
-                                SubpixelDirection::Mixed => DeviceVector2D::new(0.125, 0.125),
                             };
                             let text_offset = prim_header.local_rect.max.to_vector();
 

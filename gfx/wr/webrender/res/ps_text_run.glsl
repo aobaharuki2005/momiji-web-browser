@@ -90,8 +90,6 @@ vec2 get_snap_bias(int subpx_dir) {
             return vec2(0.125, 0.5);
         case SUBPX_DIR_VERTICAL:
             return vec2(0.5, 0.125);
-        case SUBPX_DIR_MIXED:
-            return vec2(0.125);
     }
 }
 

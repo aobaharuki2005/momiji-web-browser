@@ -41,14 +41,14 @@ platform(linux) options(disable-subpixel) == border-radius.yaml border-radius-al
 platform(linux) == border-radius.yaml border-radius-subpx.png
 options(disable-aa) == transparent-no-aa.yaml transparent-no-aa-ref.yaml
 != diacritics.yaml diacritics-ref.yaml
-fuzzy(1,30) platform(linux) options(disable-subpixel) == alpha-transform.yaml alpha-transform.png
-fuzzy(1,20) platform(linux) == subpixel-rotate.yaml subpixel-rotate.png
+fuzzy(1,42) platform(linux) options(disable-subpixel) == alpha-transform.yaml alpha-transform.png
+fuzzy(1,39) platform(linux) == subpixel-rotate.yaml subpixel-rotate.png
 fuzzy(1,72) platform(linux) == subpixel-scale.yaml subpixel-scale.png
 fuzzy(1,26) platform(linux) == subpixel-skew.yaml subpixel-skew.png
 fuzzy(1,381) platform(linux) == subpixel-translate.yaml subpixel-translate-ref.yaml
 != shadow-rotate.yaml blank.yaml
 platform(linux) == embedded-bitmaps.yaml embedded-bitmaps.png
-fuzzy(1,13) platform(linux) == clipped-transform.yaml clipped-transform.png
+fuzzy(1,21) platform(linux) == clipped-transform.yaml clipped-transform.png
 platform(mac) fuzzy(195,30) == color-bitmap-shadow.yaml color-bitmap-shadow-ref.yaml
 platform(linux) == writing-modes.yaml writing-modes-ref.yaml
 fuzzy(1,5) platform(linux) == blurred-shadow-local-clip-rect.yaml blurred-shadow-local-clip-rect-ref.png
