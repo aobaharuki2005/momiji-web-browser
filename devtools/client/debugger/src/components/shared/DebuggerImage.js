@@ -7,15 +7,17 @@ import PropTypes from "devtools/client/shared/vendor/react-prop-types";
 
 const classnames = require("resource://devtools/client/shared/classnames.js");
 
-const AccessibleImage = props => {
+const DebuggerImage = props => {
+  const { name, className, ...attributes } = props;
   return React.createElement("span", {
-    ...props,
-    className: classnames("img", props.className),
+    ...attributes,
+    className: classnames("dbg-img", `dbg-img-${name}`, className),
   });
 };
 
-AccessibleImage.propTypes = {
-  className: PropTypes.string.isRequired,
+DebuggerImage.propTypes = {
+  name: PropTypes.string.isRequired,
+  className: PropTypes.string,
 };
 
-export default AccessibleImage;
+export default DebuggerImage;

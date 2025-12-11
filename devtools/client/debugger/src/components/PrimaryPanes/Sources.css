@@ -165,7 +165,7 @@ html[dir="rtl"] .sources-list .tree .node > div {
   margin-right: 10px;
 }
 
-.sources-list .img {
+.sources-list .dbg-img {
   margin-inline-end: 4px;
 }
 
@@ -183,7 +183,7 @@ html[dir="rtl"] .sources-list .tree .node > div {
   color: #806414;
 }
 
-.sources-list .img.blackBox {
+.sources-list .dbg-img.dbg-img-blackBox {
   mask-size: 13px;
   background-color: #806414;
 }
