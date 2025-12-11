@@ -470,11 +470,20 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
       isManageable: true,
     };
 
+    let titleHighlights;
     if (suggestion.full_keyword) {
-      payload.title = suggestion.title;
-      payload.qsSuggestion = suggestion.full_keyword;
+      let { value, highlights } =
+        lazy.QuickSuggest.getFullKeywordTitleAndHighlights({
+          tokens: queryContext.tokens,
+          highlightType: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+          fullKeyword: suggestion.full_keyword,
+          title: suggestion.title,
+        });
+      payload.title = value;
+      titleHighlights = highlights;
     } else {
       payload.title = suggestion.title;
+      titleHighlights = UrlbarUtils.HIGHLIGHT.TYPED;
       payload.shouldShowUrl = true;
     }
 
@@ -484,8 +493,7 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
       isBestMatch: !!suggestion.is_top_pick,
       payload,
       highlights: {
-        qsSuggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-        title: UrlbarUtils.HIGHLIGHT.TYPED,
+        title: titleHighlights,
       },
     });
   }

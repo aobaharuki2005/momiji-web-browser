@@ -39,7 +39,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class UrlbarResult {
   /**
    * @typedef {{ [name: string]: any }} Payload
-   * @typedef {Record<string, typeof lazy.UrlbarUtils.HIGHLIGHT>} Highlights
+   *
+   * @typedef {typeof lazy.UrlbarUtils.HIGHLIGHT} HighlightType
+   * @typedef {Array<[number, number]>} HighlightIndexes e.g. [[index, length],,]
+   * @typedef {Record<string, HighlightType | HighlightIndexes>} Highlights
    */
 
   /**
@@ -331,21 +334,21 @@ export class UrlbarResult {
 
     let highlightable = value;
     let highlightType;
-    if (isTitle) {
-      if (payloadName == "qsSuggestion") {
-        value = this.payload.qsSuggestion + " — " + this.payload.title;
-      } else if (payloadName == "url") {
-        // If there's no title, show the domain as the title. Not all valid URLs
-        // have a domain.
-        try {
-          value = highlightable = new URL(this.payload.url).URI.displayHostPort;
-          highlightType = lazy.UrlbarUtils.HIGHLIGHT.TYPED;
-        } catch (e) {}
-      }
+    if (isTitle && payloadName == "url") {
+      // If there's no title, show the domain as the title. Not all valid URLs
+      // have a domain.
+      try {
+        value = highlightable = new URL(this.payload.url).URI.displayHostPort;
+        highlightType = lazy.UrlbarUtils.HIGHLIGHT.TYPED;
+      } catch (e) {}
     }
 
     if (typeof value == "string") {
       value = value.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH);
+    }
+
+    if (Array.isArray(this.#highlights?.[payloadName])) {
+      return { value, highlights: this.#highlights[payloadName] };
     }
 
     highlightType ??= this.#highlights?.[payloadName];
@@ -384,9 +387,6 @@ export class UrlbarResult {
       case lazy.UrlbarUtils.RESULT_TYPE.URL:
       case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
       case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        if (this.payload.qsSuggestion) {
-          return "qsSuggestion";
-        }
         if (this.payload.fallbackTitle) {
           return "fallbackTitle";
         }

@@ -525,7 +525,9 @@ add_task(async function dismissals_amp() {
       heuristic: false,
       payload: {
         provider: suggestion.provider,
-        title: suggestion.title,
+        title: suggestion.full_keyword
+          ? `${suggestion.full_keyword} — ${suggestion.title}`
+          : suggestion.title,
         url: suggestion.url,
         originalUrl: suggestion.original_url || suggestion.url,
         dismissalKey: suggestion.dismissal_key,
@@ -535,7 +537,6 @@ add_task(async function dismissals_amp() {
         sponsoredBlockId: suggestion.block_id,
         sponsoredAdvertiser: suggestion.advertiser,
         sponsoredIabCategory: suggestion.iab_category,
-        qsSuggestion: suggestion.full_keyword,
         isBlockable: true,
         isManageable: true,
         isSponsored: true,
@@ -985,10 +986,9 @@ add_task(async function bestMatch() {
         heuristic: false,
         payload: {
           telemetryType: provider,
-          title: "title",
+          title: "full_keyword — title",
           url: "url",
           icon: null,
-          qsSuggestion: "full_keyword",
           isSponsored: false,
           isBlockable: true,
           isManageable: true,

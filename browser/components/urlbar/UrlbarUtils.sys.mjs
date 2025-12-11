@@ -2039,9 +2039,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       provider: {
         type: "string",
       },
-      qsSuggestion: {
-        type: "string",
-      },
       requestId: {
         type: "string",
       },
