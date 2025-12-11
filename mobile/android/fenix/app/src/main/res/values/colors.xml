@@ -299,8 +299,8 @@
     <!-- App Spinners colors -->
     <color name="spinner_selected_item">#1415141A</color>
 
-    <!-- Material Design colors -->
-    <color name="material_scrim_color" tools:ignore="UnusedResources">#52000000</color>
+    <!-- Icon colors -->
+    <color name="mozac_ui_icons_fill">@color/fx_mobile_on_surface</color>
 
     <!-- Add-ons colors -->
     <color name="mozac_feature_addons_messagebar_error_background_color" tools:ignore="UnusedResources">@color/fx_mobile_layer_color_critical</color>
