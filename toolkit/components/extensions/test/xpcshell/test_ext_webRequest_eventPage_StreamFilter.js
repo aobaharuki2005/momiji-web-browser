@@ -204,14 +204,19 @@ add_task(
   }
 );
 
-add_task(async function test_idletimeout_on_active_streamfilter_mv3() {
-  await test_idletimeout_on_streamfilter({
-    manifest_version: 3,
-    requestUrlPath: "pending_request",
-    expectStreamFilterStop: false,
-    expectResetIdle: true,
-  });
-});
+add_task(
+  {
+    pref_set: [["extensions.manifestV3.enabled", true]],
+  },
+  async function test_idletimeout_on_active_streamfilter_mv3() {
+    await test_idletimeout_on_streamfilter({
+      manifest_version: 3,
+      requestUrlPath: "pending_request",
+      expectStreamFilterStop: false,
+      expectResetIdle: true,
+    });
+  }
+);
 
 add_task(
   {
@@ -227,14 +232,19 @@ add_task(
   }
 );
 
-add_task(async function test_idletimeout_on_inactive_streamfilter_mv3() {
-  await test_idletimeout_on_streamfilter({
-    manifest_version: 3,
-    requestUrlPath: "completed_request",
-    expectStreamFilterStop: true,
-    expectResetIdle: false,
-  });
-});
+add_task(
+  {
+    pref_set: [["extensions.manifestV3.enabled", true]],
+  },
+  async function test_idletimeout_on_inactive_streamfilter_mv3() {
+    await test_idletimeout_on_streamfilter({
+      manifest_version: 3,
+      requestUrlPath: "completed_request",
+      expectStreamFilterStop: true,
+      expectResetIdle: false,
+    });
+  }
+);
 
 async function test_create_new_streamfilter_while_suspending({
   manifest_version,
@@ -340,6 +350,9 @@ add_task(
 );
 
 add_task(
+  {
+    pref_set: [["extensions.manifestV3.enabled", true]],
+  },
   async function test_error_creating_new_streamfilter_while_suspending_mv3() {
     await test_create_new_streamfilter_while_suspending({
       manifest_version: 3,

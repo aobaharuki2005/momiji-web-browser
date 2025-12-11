@@ -27,6 +27,7 @@ server.registerPathHandler("/", (req, res) => {
 });
 
 add_setup(async () => {
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
   Services.prefs.setBoolPref("extensions.dnr.enabled", true);
   Services.prefs.setBoolPref("extensions.dnr.feedback", true);
 

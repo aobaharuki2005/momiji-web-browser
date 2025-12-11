@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+
 async function testManifest(manifest, expectedError) {
   ExtensionTestUtils.failOnSchemaWarnings(false);
   let normalized = await ExtensionTestUtils.normalizeManifest(manifest);

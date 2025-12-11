@@ -2,6 +2,8 @@
 
 const HOSTS = new Set(["example.com"]);
 
+Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+
 const server = createHttpServer({ hosts: HOSTS });
 
 const BASE_URL = `http://example.com`;

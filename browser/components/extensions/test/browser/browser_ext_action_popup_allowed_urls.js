@@ -3,6 +3,12 @@
 
 "use strict";
 
+add_setup(async () => {
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.manifestV3.enabled", true]],
+  });
+});
+
 add_task(async function test_actions_setPopup_allowed_urls() {
   const otherExtension = ExtensionTestUtils.loadExtension({});
   const extensionDefinition = {

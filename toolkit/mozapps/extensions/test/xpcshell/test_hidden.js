@@ -79,6 +79,9 @@ add_task(async function test_hidden() {
 });
 
 add_task(
+  {
+    pref_set: [["extensions.manifestV3.enabled", true]],
+  },
   async function test_hidden_and_browser_action_props_are_mutually_exclusive() {
     const TEST_CASES = [
       {

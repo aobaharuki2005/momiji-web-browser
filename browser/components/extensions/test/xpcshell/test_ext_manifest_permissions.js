@@ -4,6 +4,8 @@
 
 /* globals chrome */
 
+Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+
 async function testPermission(options) {
   function background(bgOptions) {
     browser.test.sendMessage("typeof-namespace", {

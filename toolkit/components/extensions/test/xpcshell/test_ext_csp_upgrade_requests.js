@@ -5,6 +5,10 @@ server.registerPathHandler("/", (req, res) => {
   res.write("ok");
 });
 
+add_setup(async () => {
+  Services.prefs.setBoolPref("extensions.manifestV3.enabled", true);
+});
+
 add_task(async function test_csp_upgrade() {
   async function background() {
     browser.webRequest.onBeforeRequest.addListener(

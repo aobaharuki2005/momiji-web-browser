@@ -128,7 +128,10 @@ const verifyRegisterContentScripts = async ({ manifest_version }) => {
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["extensions.webextOptionalPermissionPrompts", false]],
+    set: [
+      ["extensions.manifestV3.enabled", true],
+      ["extensions.webextOptionalPermissionPrompts", false],
+    ],
   });
 });
 
