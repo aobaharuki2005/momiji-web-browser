@@ -4452,8 +4452,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
         // frame's BuildDisplayList, so don't bother to async scroll with an
         // anchor in that case. Bug 2001861 tracks removing this check.
         !PresContext()->Document()->GetActiveViewTransition()) {
-      scrollsWithAnchor = AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
-          child, aBuilder);
+      scrollsWithAnchor =
+          AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(child);
 
       if (scrollsWithAnchor && aBuilder->IsRetainingDisplayList()) {
         if (aBuilder->IsPartialUpdate()) {

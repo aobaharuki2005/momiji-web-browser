@@ -196,4 +196,3 @@ pref(layout.css.anchor-positioning.enabled,true) == anchor-pos-sticky-1.html anc
 pref(layout.css.anchor-positioning.enabled,true) == anchor-pos-sticky-2.html anchor-pos-sticky-2-ref.html
 pref(layout.css.anchor-positioning.enabled,true) == anchor-pos-sticky-3.html anchor-pos-sticky-3-ref.html
 pref(layout.css.anchor-positioning.enabled,true) == anchor-pos-sticky-4.html anchor-pos-sticky-4-ref.html
-pref(layout.css.anchor-positioning.enabled,true) == anchor-pos-one-axis-1.html anchor-pos-one-axis-1-ref.html

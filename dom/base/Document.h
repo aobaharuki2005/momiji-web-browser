@@ -3945,10 +3945,7 @@ class Document : public nsINode,
 
   bool HasScriptsBlockedBySandbox() const;
 
-  enum class ReportToConsole : bool { No, Yes };
-  void ReportHasScrollLinkedEffect(
-      const TimeStamp& aTimeStamp,
-      ReportToConsole aReportToConsole = ReportToConsole::Yes);
+  void ReportHasScrollLinkedEffect(const TimeStamp& aTimeStamp);
   bool HasScrollLinkedEffect() const;
 
 #ifdef DEBUG

@@ -872,7 +872,6 @@ void nsDisplayListBuilder::EndFrame() {
   mActiveScrolledRoots.Clear();
   FreeClipChains();
   FreeTemporaryItems();
-  mAsyncScrollsWithAnchor.Clear();
   nsCSSRendering::EndFrameTreesLocked();
 }
 

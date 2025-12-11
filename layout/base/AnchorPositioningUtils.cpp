@@ -6,7 +6,6 @@
 
 #include "AnchorPositioningUtils.h"
 
-#include "DisplayPortUtils.h"
 #include "ScrollContainerFrame.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
@@ -16,7 +15,6 @@
 #include "mozilla/dom/Element.h"
 #include "nsCanvasFrame.h"
 #include "nsContainerFrame.h"
-#include "nsDisplayList.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
@@ -879,20 +877,13 @@ bool AnchorPositioningUtils::FitsInContainingBlock(
 }
 
 nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
-    nsIFrame* aFrame, nsDisplayListBuilder* aBuilder,
-    bool aSkipAsserts /* = false */) {
-#ifdef DEBUG
-  if (!aSkipAsserts) {
-    MOZ_ASSERT(!aBuilder || aBuilder->IsPaintingToWindow());
-    MOZ_ASSERT_IF(!aBuilder, aFrame->PresContext()->LayoutPhaseCount(
-                                 nsLayoutPhase::DisplayListBuilding) == 0);
-  }
-#endif
-
+    nsIFrame* aFrame) {
   if (!StaticPrefs::apz_async_scroll_css_anchor_pos_AtStartup()) {
     return nullptr;
   }
-  PhysicalAxes axes = aFrame->GetAnchorPosCompensatingForScroll();
+  mozilla::PhysicalAxes axes = aFrame->GetAnchorPosCompensatingForScroll();
+  // TODO for now we return the anchor if we are compensating in either axis.
+  // This is not fully spec compliant, bug 1988034 tracks this.
   if (axes.isEmpty()) {
     return nullptr;
   }
@@ -911,19 +902,7 @@ nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
                     aFrame->GetParent(), anchor)) {
     return nullptr;
   }
-  if (!aBuilder) {
-    return anchor;
-  }
-  // TODO for now ShouldAsyncScrollWithAnchor will return false if we are
-  // compensating in only one axis and there is a scroll frame between the
-  // anchor and the positioned's containing block that can scroll in the "wrong"
-  // axis so that we don't async scroll in the wrong axis because ASRs/APZ only
-  // support scrolling in both axes. This is not fully spec compliant, bug
-  // 1988034 tracks this.
-  return DisplayPortUtils::ShouldAsyncScrollWithAnchor(aFrame, anchor, aBuilder,
-                                                       axes)
-             ? anchor
-             : nullptr;
+  return anchor;
 }
 
 static bool TriggerFallbackReflow(PresShell* aPresShell, nsIFrame* aPositioned,

@@ -1327,8 +1327,8 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
 
   // This should be kept in sync with
   // DisplayPortUtils::OneStepInAsyncScrollableAncestorChain,
-  // DisplayPortUtils::OneStepInASRChain, DisplayPortUtils::GetASRAncestorFrame,
-  // and ShouldAsyncScrollWithAnchorNotCached.
+  // DisplayPortUtils::OneStepInASRChain, and
+  // DisplayPortUtils::GetASRAncestorFrame.
   for (nsIFrame* f = aFrame; f; f = GetNextFrame(f)) {
     if (aClipFrameCheck && aClipFrameCheck(f)) {
       return f;
@@ -1384,8 +1384,8 @@ static nsIFrame* GetNearestScrollableOrOverflowClipFrame(
     // via the special fixed pos behaviour below or the next iteration of the
     // outer for loop.
     if (aFlags & nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE) {
-      while ((anchor = AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
-                  f, /* aBuilder */ nullptr))) {
+      while (
+          (anchor = AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(f))) {
         f = anchor;
       }
     }
