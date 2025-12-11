@@ -959,10 +959,16 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       activeDocsSandboxFlags = parentDoc->GetSandboxFlags();
 
       if (!aForceNoOpener) {
+        // Inherit from the entry global, e.g. for window.open and fall
+        // back to the parent, e.g. for link clicks.
+        Document* creator = GetEntryDocument();
+        if (!creator) {
+          creator = parentDoc;
+        }
         openWindowInfo->mPolicyContainerToInheritForAboutBlank =
-            parentDoc->GetPolicyContainer();
+            creator->GetPolicyContainer();
         openWindowInfo->mCoepToInheritForAboutBlank =
-            parentDoc->GetEmbedderPolicy();
+            creator->GetEmbedderPolicy();
       }
 
       // Check to see if this frame is allowed to navigate, but don't check if
