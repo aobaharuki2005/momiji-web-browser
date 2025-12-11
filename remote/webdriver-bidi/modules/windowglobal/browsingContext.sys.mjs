@@ -14,6 +14,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ClipRectangleType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
+  EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   LoadListener: "chrome://remote/content/shared/listeners/LoadListener.sys.mjs",
   LocatorType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
@@ -488,22 +489,37 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
    * Waits until the visibility state of the document has the expected value.
    *
    * @param {object} options
+   * @param {number=} options.timeout
+   *     Timeout in ms. Optional, if not provided, the command will only resolve
+   *     when the expected state is met.
    * @param {number} options.value
    *     Expected value of the visibility state.
    *
    * @returns {Promise}
-   *     Promise that resolves when the visibility state has the expected value.
+   *     Promise that resolves when the visibility state has the expected value,
+   *     or the timeout has been reached.
    */
   async _awaitVisibilityState(options) {
-    const { value } = options;
+    const { timeout = null, value } = options;
     const win = this.messageHandler.window;
-    if (win.document.visibilityState !== value) {
-      await new Promise(r => {
-        // The visibilityState can only be hidden or visible, so if the current
-        // value is not the expected one, the next visibilitychange event is
-        // guaranteed to have the correct value.
-        win.document.addEventListener("visibilitychange", r, { once: true });
-      });
+
+    if (win.document.visibilityState === value) {
+      // If the document visibilityState already has the expected value, resolve
+      // immediately.
+      return;
+    }
+
+    try {
+      // Otherwise, wait for the next visibilitychange event.
+      await new lazy.EventPromise(win, "visibilitychange", { timeout });
+    } catch (e) {
+      if (e instanceof lazy.error.TimeoutError) {
+        // Swallow the exception thrown by the EventPromise if we simply
+        // reached the timeout. Here the timeout is meant as an escape hatch,
+        // but we should still resolve
+        return;
+      }
+      throw e;
     }
   }
 

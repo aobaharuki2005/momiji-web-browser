@@ -135,6 +135,7 @@ export const OriginType = {
 };
 
 const TIMEOUT_SET_HISTORY_INDEX = 1000;
+const TIMEOUT_WAIT_FOR_VISIBILITY = 250;
 
 /**
  * Enum of user prompt types supported by the browsingContext.handleUserPrompt
@@ -781,6 +782,19 @@ class BrowsingContextModule extends RootBiDiModule {
 
     // Force a reflow by accessing `clientHeight` (see Bug 1847044).
     browser.parentElement.clientHeight;
+
+    if (!background && !lazy.AppInfo.isAndroid) {
+      // See Bug 2002097, on slow platforms, the newly created tab might not be
+      // visible immediately.
+      await this.#waitForVisibilityState(
+        browser.browsingContext,
+        "visible",
+        // Waiting for visibility can potentially be racy. If several contexts
+        // are created in parallel, we might not be able to catch the document
+        // in the expected state.
+        { timeout: TIMEOUT_WAIT_FOR_VISIBILITY * lazy.getTimeoutMultiplier() }
+      );
+    }
 
     return {
       context: lazy.NavigableManager.getIdForBrowser(browser),
@@ -2420,11 +2434,12 @@ class BrowsingContextModule extends RootBiDiModule {
     }
   }
 
-  #waitForVisibilityState(browsingContext, expectedState) {
+  #waitForVisibilityState(browsingContext, expectedState, options = {}) {
+    const { timeout } = options;
     return this._forwardToWindowGlobal(
       "_awaitVisibilityState",
       browsingContext.id,
-      { value: expectedState },
+      { value: expectedState, timeout },
       { retryOnAbort: true }
     );
   }
