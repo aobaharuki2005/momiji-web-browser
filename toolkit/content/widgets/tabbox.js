@@ -415,11 +415,16 @@
     set #isSplitViewActive(isActive) {
       this.toggleAttribute("splitview", isActive);
       this.splitViewSplitter.hidden = !isActive;
+      const selectedPanel = this.selectedPanel;
       if (isActive) {
         // Place splitter after first panel, so that it can be resized.
         const firstPanel = document.getElementById(this.splitViewPanels[0]);
         firstPanel?.after(this.#splitViewSplitter);
       }
+
+      // Ensure that selected index stays up to date, in case the splitter
+      // offsets it.
+      this.selectedPanel = selectedPanel;
     }
   }
 
