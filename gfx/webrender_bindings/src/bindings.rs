@@ -1784,8 +1784,6 @@ impl LayerCompositor for WrLayerCompositor {
         transform: CompositorSurfaceTransform,
         clip_rect: DeviceIntRect,
         image_rendering: ImageRendering,
-        rounded_clip_rect: DeviceIntRect,
-        rounded_clip_radii: ClipRadius,
     ) {
         let layer = &self.visual_tree[index];
 
@@ -1796,8 +1794,8 @@ impl LayerCompositor for WrLayerCompositor {
                 &transform,
                 clip_rect,
                 image_rendering,
-                rounded_clip_rect,
-                rounded_clip_radii,
+                clip_rect,
+                ClipRadius::EMPTY,
             );
         }
     }
