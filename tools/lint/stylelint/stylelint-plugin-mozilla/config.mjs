@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+import { createRawValuesObject } from "./helpers.mjs";
+
 /**
  * @typedef {object} PropertyTypeConfig
  * @property {string[]} allow Allowed keyword values (e.g., "auto", "none", "transparent")
@@ -36,6 +38,24 @@ const FontSize = {
   tokenTypes: ["font-size"],
 };
 
+/** @type {PropertyTypeConfig} */
+const FontWeight = {
+  allow: ["normal"],
+  tokenTypes: ["font-weight"],
+  customFixes: {
+    ...createRawValuesObject(["font-weight"]),
+    200: "normal",
+    300: "normal",
+    400: "normal",
+    lighter: "normal",
+    500: "var(--font-weight-semibold)",
+    510: "var(--font-weight-semibold)",
+    800: "var(--font-weight-bold)",
+    bold: "var(--font-weight-bold)",
+    bolder: "var(--font-weight-bold)",
+  },
+};
+
 /**
  * @typedef {object} PropertyConfig
  * @property {PropertyTypeConfig[]} validTypes Valid type configurations for this property
@@ -52,5 +72,8 @@ export const propertyConfig = {
   },
   "font-size": {
     validTypes: [FontSize],
+  },
+  "font-weight": {
+    validTypes: [FontWeight],
   },
 };

@@ -360,9 +360,15 @@ export const isValidFallback = (value, tokenCSS) => {
  * @param {string} value some CSS declaration to match
  * @param {object} cssCustomProperties
  * @param {string[]} tokenCSS
+ * @param {string[]} allowList
  * @returns {boolean}
  */
-export const isValidLocalProperty = (value, cssCustomProperties, tokenCSS) => {
+export const isValidLocalProperty = (
+  value,
+  cssCustomProperties,
+  tokenCSS,
+  allowList = ALLOW_LIST
+) => {
   const parsed = valueParser(String(value));
   let customProperty = null;
 
@@ -380,7 +386,7 @@ export const isValidLocalProperty = (value, cssCustomProperties, tokenCSS) => {
       cssCustomProperties[customProperty],
       tokenCSS,
       cssCustomProperties,
-      ALLOW_LIST
+      allowList
     );
   }
   return false;
@@ -451,7 +457,12 @@ export const isValidTokenUsage = (
           let variableNode = `var(${node.nodes[0].value})`;
           isValid =
             isToken(variableNode, tokenCSS) ||
-            isValidLocalProperty(variableNode, cssCustomProperties, tokenCSS);
+            isValidLocalProperty(
+              variableNode,
+              cssCustomProperties,
+              tokenCSS,
+              allowList
+            );
         }
         break;
       }

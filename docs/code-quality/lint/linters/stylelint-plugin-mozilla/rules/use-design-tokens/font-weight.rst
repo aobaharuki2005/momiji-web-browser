@@ -1,22 +1,17 @@
-========================
-use-font-weight-tokens
-========================
+===========
+font-weight
+===========
 
-This rule checks that CSS declarations use font-weight design token variables
-instead of hardcoded values. This ensures consistent font-weight usage across
-the application and makes it easier to maintain design system consistency.
+The ``use-design-tokens`` rule checks that CSS ``font-weight`` declarations use
+design token variables instead of hardcoded values. This ensures consistent
+font-weight usage across the application and makes it easier to maintain design
+system consistency.
 
 This rule is autofixable and can automatically replace some font-weight values
 with appropriate design tokens where possible.
 
 Examples of incorrect code for this rule:
 -----------------------------------------
-
-.. code-block:: css
-
-  .normal-text {
-    font-weight: normal;
-  }
 
 .. code-block:: css
 
@@ -101,6 +96,17 @@ Examples of correct token usage for this rule:
 
 .. code-block:: css
 
+  /* Local CSS variables that reference valid font-weight keywords are allowed */
+  :root {
+    --custom-font-weight: normal;
+  }
+
+  .custom-text {
+    font-weight: var(--custom-font-weight);
+  }
+
+.. code-block:: css
+
   /* Local CSS variables that reference valid font-weight tokens are allowed */
   :root {
     --custom-font-weight: var(--font-weight-semibold);
@@ -120,6 +126,12 @@ The rule also allows these non-token values:
 
 .. code-block:: css
 
+  .normal-text {
+    font-weight: normal;
+  }
+
+.. code-block:: css
+
   .inherited-text {
     font-weight: inherit;
   }
@@ -128,6 +140,18 @@ The rule also allows these non-token values:
 
   .initial-text {
     font-weight: initial;
+  }
+
+.. code-block:: css
+
+  .revert-text {
+    font-weight: revert;
+  }
+
+.. code-block:: css
+
+  .revert-layer-text {
+    font-weight: revert-layer;
   }
 
 .. code-block:: css
@@ -142,11 +166,10 @@ Autofix functionality
 This rule can automatically fix some violations by replacing values with
 appropriate design tokens:
 
-- ``200`` → ``var(--font-weight)``
-- ``300`` → ``var(--font-weight)``
-- ``400`` → ``var(--font-weight)``
-- ``lighter`` → ``var(--font-weight)``
-- ``normal`` → ``var(--font-weight)``
+- ``200`` → ``normal``
+- ``300`` → ``normal``
+- ``400`` → ``normal``
+- ``lighter`` → ``normal``
 - ``500`` → ``var(--font-weight-semibold)``
 - ``510`` → ``var(--font-weight-semibold)``
 - ``600`` → ``var(--font-weight-semibold)``
@@ -161,12 +184,12 @@ Examples of autofixable violations:
 
   /* Before */
   .normal-text {
-    font-weight: normal;
+    font-weight: 400;
   }
 
   /* After autofix */
   .normal-text {
-    font-weight: var(--font-weight);
+    font-weight: normal;
   }
 
 .. code-block:: css
