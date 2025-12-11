@@ -68,6 +68,10 @@ add_task(async function validate_filename_method() {
     "whit\u180ee.png"
   );
   Assert.equal(checkFilename("簡単簡単簡単", 0), "簡単簡単簡単.png");
+  Assert.equal(
+    checkFilename("\u3000簡単\u3000\u3000簡単簡単\u3000\u3000.png\u3000", 0),
+    "簡単\u3000簡単簡単\u3000.png"
+  );
   Assert.equal(checkFilename(" happy\u061c\u2069.png", 0), "happy__.png");
   Assert.equal(
     checkFilename("12345678".repeat(30) + "abcdefghijk.png", 0),
@@ -216,6 +220,26 @@ add_task(async function validate_filename_method() {
   Assert.equal(checkFilename("test😀", 0, ""), "test😀");
   Assert.equal(checkFilename("test😀😀", 0, ""), "test😀😀");
 
+  // Some examples with unpaired surrogate code units.
+  Assert.equal(
+    checkFilename(
+      "file\uD800name with <unpaired surrogate> and invalid chars.png",
+      0
+    ),
+    "file\uFFFDname with _unpaired surrogate_ and invalid chars.png"
+  );
+  Assert.equal(
+    checkFilename(
+      "name with <unpaired surrogate> in.exten\uDFFFsion",
+      mimeService.VALIDATE_SANITIZE_ONLY
+    ),
+    "name with _unpaired surrogate_ in.exten\uFFFDsion"
+  );
+  Assert.equal(
+    checkFilename("." + "\uDC00\uDC01".repeat(4) + repeatStr, 0),
+    "\uFFFD".repeat(8) + repeatStr.substring(0, 224) + ".png"
+  );
+
   // Now check some media types
   Assert.equal(
     mimeService.validateFileNameForSaving("video.ogg", "video/ogg", 0),
@@ -294,6 +318,18 @@ add_task(async function validate_filename_method() {
     ),
     "라이브9.9만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑.등-유산균-컬처렐-특가!",
     "very long filename with extension"
+  );
+
+  // Trailing ideographic spaces left at the truncation position should be trimmed.
+  Assert.equal(
+    mimeService.validateFileNameForSaving(
+      "라이브9.9만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용\u3000\u3000\u3000\u3000\u3000.등-유산균-컬처렐-특가!",
+      "text/unknown",
+      mimeService.VALIDATE_SANITIZE_ONLY |
+        mimeService.VALIDATE_DONT_COLLAPSE_WHITESPACE
+    ),
+    "라이브9.9만 시청컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용 쇼핑백 2장컬처렐 다이제스티브 3박스 - 3박스 더 (뚱랑이 굿즈 증정) - 선물용.등-유산균-컬처렐-특가!",
+    "very long filename with extension truncated among spaces"
   );
 
   // This filename has a very long extension, almost the entire filename.
