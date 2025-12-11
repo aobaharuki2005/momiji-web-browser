@@ -98,7 +98,7 @@ class UrlbarInputTestUtils {
   /**
    * Waits to a search to be complete.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    */
   async promiseSearchComplete(win) {
     let waitForQuery = () => {
@@ -130,7 +130,7 @@ class UrlbarInputTestUtils {
    * Starts a search for a given string and waits for the search to be complete.
    *
    * @param {object} options The options object.
-   * @param {object} options.window The window containing the urlbar
+   * @param {ChromeWindow} options.window The window containing the urlbar
    * @param {string} options.value the search string
    * @param {Function} options.waitForFocus The SimpleTest function
    * @param {boolean} [options.fireInputEvent] whether an input event should be
@@ -214,7 +214,7 @@ class UrlbarInputTestUtils {
    * results replacement, even if we have a result at an index, it may be
    * related to the previous query, this methods ensures the result is current.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @param {number} index The index to look for
    * @throws {Error} When the index exceeds the number of available results
    */
@@ -231,7 +231,7 @@ class UrlbarInputTestUtils {
   /**
    * Returns the oneOffSearchButtons object for the urlbar.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @returns {object} The oneOffSearchButtons
    */
   getOneOffSearchButtons(win) {
@@ -241,7 +241,7 @@ class UrlbarInputTestUtils {
   /**
    * Returns a specific button of a result.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @param {string} buttonName The name of the button, e.g. "menu", "0", etc.
    * @param {number} resultIndex The index of the result
    * @returns {HTMLSpanElement} The button
@@ -256,7 +256,7 @@ class UrlbarInputTestUtils {
    * Show the result menu button regardless of the result being hovered or
    + selected.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    */
   disableResultMenuAutohide(win) {
     let container = this.getResultsContainer(win);
@@ -270,7 +270,7 @@ class UrlbarInputTestUtils {
   /**
    * Opens the result menu of a specific result.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @param {object} [options] The options object.
    * @param {number} [options.resultIndex] The index of the result. Defaults
    *        to the current selected index.
@@ -343,7 +343,7 @@ class UrlbarInputTestUtils {
    *
    * @param {object} options
    *   The options object.
-   * @param {object} options.window
+   * @param {ChromeWindow} options.window
    *   The window containing the urlbar.
    * @param {string} [options.accesskey]
    *   The access key of the menu item to return.
@@ -424,7 +424,7 @@ class UrlbarInputTestUtils {
    * Opens the result menu of a specific result and presses an access key to
    * activate a menu item.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @param {string} accesskey The access key to press once the menu is open
    * @param {object} [options] The options object.
    * @param {number} [options.resultIndex] The index of the result. Defaults
@@ -474,7 +474,7 @@ class UrlbarInputTestUtils {
    * Opens the result menu of a specific result and clicks a menu item with a
    * specified command name.
    *
-   * @param {object} win
+   * @param {ChromeWindow} win
    *   The window containing the urlbar.
    * @param {string|Array} commandOrArray
    *   If the command is in the top-level result menu, set this to the command
@@ -535,7 +535,7 @@ class UrlbarInputTestUtils {
   /**
    * Returns true if the oneOffSearchButtons are visible.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @returns {boolean} True if the buttons are visible.
    */
   getOneOffSearchButtonsVisible(win) {
@@ -546,7 +546,7 @@ class UrlbarInputTestUtils {
   /**
    * Gets an abstracted representation of the result at an index.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @param {number} index The index to look for
    * @returns {Promise<object>} An object with numerous properties describing the result.
    */
@@ -609,7 +609,7 @@ class UrlbarInputTestUtils {
   /**
    * Gets the currently selected element.
    *
-   * @param {object} win The window containing the urlbar.
+   * @param {ChromeWindow} win The window containing the urlbar.
    * @returns {HtmlElement|XulElement} The selected element.
    */
   getSelectedElement(win) {
@@ -619,7 +619,7 @@ class UrlbarInputTestUtils {
   /**
    * Gets the index of the currently selected element.
    *
-   * @param {object} win The window containing the urlbar.
+   * @param {ChromeWindow} win The window containing the urlbar.
    * @returns {number} The selected index.
    */
   getSelectedElementIndex(win) {
@@ -629,7 +629,7 @@ class UrlbarInputTestUtils {
   /**
    * Gets the row at a specific index.
    *
-   * @param {object} win The window containing the urlbar.
+   * @param {ChromeWindow} win The window containing the urlbar.
    * @param {number} index The index to look for.
    * @returns {HTMLElement|XulElement} The selected row.
    */
@@ -641,7 +641,7 @@ class UrlbarInputTestUtils {
    * Gets the currently selected row. If the selected element is a descendant of
    * a row, this will return the ancestor row.
    *
-   * @param {object} win The window containing the urlbar.
+   * @param {ChromeWindow} win The window containing the urlbar.
    * @returns {HTMLElement|XulElement} The selected row.
    */
   getSelectedRow(win) {
@@ -651,7 +651,7 @@ class UrlbarInputTestUtils {
   /**
    * Gets the index of the currently selected element.
    *
-   * @param {object} win The window containing the urlbar.
+   * @param {ChromeWindow} win The window containing the urlbar.
    * @returns {number} The selected row index.
    */
   getSelectedRowIndex(win) {
@@ -661,7 +661,7 @@ class UrlbarInputTestUtils {
   /**
    * Selects the element at the index specified.
    *
-   * @param {object} win The window containing the urlbar.
+   * @param {ChromeWindow} win The window containing the urlbar.
    * @param {number} index The index to select.
    */
   setSelectedRowIndex(win, index) {
@@ -671,7 +671,7 @@ class UrlbarInputTestUtils {
   /**
    * Gets the results container div for the address bar.
    *
-   * @param {Window} win
+   * @param {ChromeWindow} win
    * @returns {HTMLDivElement}
    */
   getResultsContainer(win) {
@@ -682,7 +682,7 @@ class UrlbarInputTestUtils {
    * Gets the number of results.
    * You must wait for the query to be complete before using this.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @returns {number} the number of results.
    */
   getResultCount(win) {
@@ -692,7 +692,7 @@ class UrlbarInputTestUtils {
   /**
    * Ensures at least one search suggestion is present.
    *
-   * @param {Window} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @returns {Promise<number>}
    *   The index of the first suggestion
    * @throws {Error} When the index exceeds the number of available results
@@ -734,7 +734,7 @@ class UrlbarInputTestUtils {
   /**
    * Waits for the popup to be shown.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @param {Function} openFn Function to be used to open the popup.
    * @returns {Promise} resolved once the popup is closed
    */
@@ -762,7 +762,7 @@ class UrlbarInputTestUtils {
   /**
    * Waits for the popup to be hidden.
    *
-   * @param {object} win The window containing the urlbar
+   * @param {ChromeWindow} win The window containing the urlbar
    * @param {Function} [closeFn] Function to be used to close the popup, if not
    *        supplied it will default to a closing the popup directly.
    * @returns {Promise} resolved once the popup is closed
@@ -797,7 +797,7 @@ class UrlbarInputTestUtils {
   /**
    * Open the input field context menu and run a task on it.
    *
-   * @param {Window} win the current window
+   * @param {ChromeWindow} win the current window
    * @param {Function} task a task function to run, gets the contextmenu popup
    *        as argument.
    */
@@ -832,7 +832,7 @@ class UrlbarInputTestUtils {
   }
 
   /**
-   * @param {object} win The browser window
+   * @param {ChromeWindow} win The browser window
    * @returns {boolean} Whether the popup is open
    */
   isPopupOpen(win) {
@@ -843,7 +843,7 @@ class UrlbarInputTestUtils {
    * Asserts that the input is in a given search mode, or no search mode. Can
    * only be used if UrlbarTestUtils has been initialized with init().
    *
-   * @param {Window} window
+   * @param {ChromeWindow} window
    *   The browser window.
    * @param {object} expectedSearchMode
    *   The expected search mode object.
@@ -1040,7 +1040,7 @@ class UrlbarInputTestUtils {
    * before you call this. Can only be used if UrlbarTestUtils has been
    * initialized with init().
    *
-   * @param {object} window
+   * @param {ChromeWindow} window
    *   The window to operate on.
    * @param {object} searchMode
    *   If given, the one-off matching this search mode will be clicked; it
@@ -1143,7 +1143,7 @@ class UrlbarInputTestUtils {
    * default to backspacing. Can only be used if UrlbarTestUtils has been
    * initialized with init().
    *
-   * @param {object} window
+   * @param {ChromeWindow} window
    *   The window to operate on.
    * @param {object} options
    *   Options object
@@ -1221,7 +1221,7 @@ class UrlbarInputTestUtils {
   /**
    * Returns the userContextId (container id) for the last search.
    *
-   * @param {object} win The browser window
+   * @param {ChromeWindow} win The browser window
    * @returns {Promise<number>}
    *   resolved when fetching is complete. Its value is a userContextId
    */
@@ -1234,7 +1234,7 @@ class UrlbarInputTestUtils {
   /**
    * Dispatches an input event to the input field.
    *
-   * @param {object} win The browser window
+   * @param {ChromeWindow} win The browser window
    */
   fireInputEvent(win) {
     // Set event.data to the last character in the input, for a couple of
@@ -1350,7 +1350,7 @@ class UrlbarInputTestUtils {
   /**
    * Simulate that user clicks moz-urlbar and inputs text into it.
    *
-   * @param {object} win
+   * @param {ChromeWindow} win
    *   The browser window containing target moz-urlbar.
    * @param {string} text
    *   The text to be input.
@@ -1378,7 +1378,7 @@ class UrlbarInputTestUtils {
   /**
    * Checks the urlbar value fomatting for a given URL.
    *
-   * @param {window} win
+   * @param {ChromeWindow} win
    *   The input in this window will be tested.
    * @param {string} urlFormatString
    *   The URL to test. The parts the are expected to be de-emphasized should be
