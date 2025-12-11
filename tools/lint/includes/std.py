@@ -101,6 +101,7 @@ api = {
     ],
     "array": [
         "array",
+        "to_array",
         "size",
     ],
     "map": [
@@ -231,6 +232,8 @@ api = {
         "as_const",
         "declval",
         "cmp_equal",
+        "in_range",
+        "make_pair",
         "pair",
         "tuple_size",
         "get",
