@@ -9,12 +9,9 @@
 // eslint-disable-next-line import/no-unresolved
 import { testRule } from "stylelint-test-rule-node";
 import stylelint from "stylelint";
-import useFontSizeTokens from "../rules/use-font-size-tokens.mjs";
+import useDesignTokens from "../rules/use-design-tokens.mjs";
 
-let plugin = stylelint.createPlugin(
-  useFontSizeTokens.ruleName,
-  useFontSizeTokens
-);
+let plugin = stylelint.createPlugin(useDesignTokens.ruleName, useDesignTokens);
 let {
   ruleName,
   rule: { messages },
@@ -23,7 +20,7 @@ let {
 testRule({
   plugins: [plugin],
   ruleName,
-  config: [true, { tokenType: "brand" }],
+  config: true,
   fix: false,
   accept: [
     // allowed token values
@@ -138,38 +135,38 @@ testRule({
   reject: [
     {
       code: ".a { font-size: 12px; }",
-      message: messages.rejected("12px"),
+      message: messages.rejected("12px", ["font-size"]),
       description: "Using a pixel value should use a design token.",
     },
     {
       code: ".a { font-size: 1rem; }",
-      message: messages.rejected("1rem"),
+      message: messages.rejected("1rem", ["font-size"]),
       description: "Using a rem value should use a design token.",
     },
     {
       code: ".a { font-size: 1.2em; }",
-      message: messages.rejected("1.2em"),
+      message: messages.rejected("1.2em", ["font-size"]),
       description: "Using an em value should use a design token.",
     },
     {
       code: ".a { font-size: 100%; }",
-      message: messages.rejected("100%"),
+      message: messages.rejected("100%", ["font-size"]),
       description: "Using a percentage value should use a design token.",
     },
     {
       code: ".a { font-size: 16pt; }",
-      message: messages.rejected("16pt"),
+      message: messages.rejected("16pt", ["font-size"]),
       description: "Using a pt value should use a design token.",
     },
     {
       code: ".a { font-size: calc(var(--my-local) + 2px); }",
-      message: messages.rejected("calc(var(--my-local) + 2px)"),
+      message: messages.rejected("calc(var(--my-local) + 2px)", ["font-size"]),
       description:
         "Using a calc() with custom variables should use a design token.",
     },
     {
       code: ".a { font-size: var(--random-token, 14px); }",
-      message: messages.rejected("var(--random-token, 14px)"),
+      message: messages.rejected("var(--random-token, 14px)", ["font-size"]),
       description: "Using a custom property should use a design token.",
     },
     {
@@ -177,7 +174,7 @@ testRule({
         :root { --custom-token: 14px; }
         .a { font-size: var(--custom-token); }
       `,
-      message: messages.rejected("var(--custom-token)"),
+      message: messages.rejected("var(--custom-token)", ["font-size"]),
       description:
         "Using a custom property that does not resolve to a design token should use a design token.",
     },

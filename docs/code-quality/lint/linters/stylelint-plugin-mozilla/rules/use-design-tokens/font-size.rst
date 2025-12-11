@@ -1,10 +1,11 @@
-========================
-use-font-size-tokens
-========================
+==========
+font-size
+==========
 
-This rule checks that CSS declarations use font-size design token variables
-instead of hardcoded values. This ensures consistent font-size usage across
-the application and makes it easier to maintain design system consistency.
+The ``use-design-tokens`` rule checks that CSS ``font-size`` declarations use
+design token variables instead of hardcoded values. This ensures consistent
+font-size usage across the application and makes it easier to maintain design
+system consistency.
 
 Examples of incorrect code for this rule:
 -----------------------------------------
@@ -124,13 +125,13 @@ The rule also allows these non-token values:
 .. code-block:: css
 
   .xxsmall-text {
-    font-size: xxsmall;
+    font-size: xx-small;
   }
 
 .. code-block:: css
 
   .xsmall-text {
-    font-size: xsmall;
+    font-size: x-small;
   }
 
 .. code-block:: css

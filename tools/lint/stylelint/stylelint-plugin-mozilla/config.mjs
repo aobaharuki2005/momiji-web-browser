@@ -19,6 +19,23 @@ const BoxShadow = {
   tokenTypes: ["box-shadow"],
 };
 
+/** @type {PropertyTypeConfig} */
+const FontSize = {
+  allow: [
+    "xx-small",
+    "x-small",
+    "small",
+    "medium",
+    "large",
+    "x-large",
+    "xx-large",
+    "xxx-large",
+    "smaller",
+    "larger",
+  ],
+  tokenTypes: ["font-size"],
+};
+
 /**
  * @typedef {object} PropertyConfig
  * @property {PropertyTypeConfig[]} validTypes Valid type configurations for this property
@@ -32,5 +49,8 @@ export const propertyConfig = {
   "box-shadow": {
     validTypes: [BoxShadow],
     multiple: true,
+  },
+  "font-size": {
+    validTypes: [FontSize],
   },
 };
