@@ -1279,8 +1279,15 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       return ContainingBlockRect{aOriginalContainingBlockRect};
     }();
     if (aAnchorPosResolutionCache) {
-      aAnchorPosResolutionCache->mReferenceData->mContainingBlockRect =
-          cb.mMaybeScrollableRect;
+      const auto& originalCb = cb.mMaybeScrollableRect;
+      aAnchorPosResolutionCache->mReferenceData->mOriginalContainingBlockRect =
+          originalCb;
+      // Stash the adjusted containing block as well, since the insets need to
+      // resolve against the adjusted CB, e.g. With `position-area: bottom
+      // right;`, + `left: anchor(right);`
+      // resolves to 0.
+      aAnchorPosResolutionCache->mReferenceData->mAdjustedContainingBlock =
+          cb.mFinalRect;
     }
     const WritingMode outerWM = aReflowInput.GetWritingMode();
     const WritingMode wm = aKidFrame->GetWritingMode();
