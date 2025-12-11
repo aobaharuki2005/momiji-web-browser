@@ -30,8 +30,8 @@ StyleAlignFlags CSSAlignUtils::UsedAlignmentForAbsPos(nsIFrame* aFrame,
     // absolutely-positioned boxes."
     // https://drafts.csswg.org/css-align/#align-abspos
     // https://drafts.csswg.org/css-align/#justify-abspos
-    aFlags = aFrame->IsReplaced() ? StyleAlignFlags::START
-                                  : StyleAlignFlags::STRETCH;
+    aFlags = aFrame->HasReplacedSizing() ? StyleAlignFlags::START
+                                         : StyleAlignFlags::STRETCH;
   } else if (aFlags == StyleAlignFlags::FLEX_START) {
     aFlags = StyleAlignFlags::START;
   } else if (aFlags == StyleAlignFlags::FLEX_END) {
