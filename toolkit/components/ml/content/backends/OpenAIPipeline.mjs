@@ -331,7 +331,10 @@ export class OpenAIPipeline {
         ? request.fxAccountToken
         : null;
       const defaultHeaders = fxAccountToken
-        ? { Authorization: `Bearer ${fxAccountToken}` }
+        ? {
+            Authorization: `Bearer ${fxAccountToken}`,
+            "service-type": "ai",
+          }
         : undefined;
       const client = new OpenAIPipeline.OpenAILib.OpenAI({
         baseURL: baseURL ? baseURL : "http://localhost:11434/v1",
