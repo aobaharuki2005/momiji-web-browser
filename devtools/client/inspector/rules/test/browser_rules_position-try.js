@@ -41,6 +41,7 @@ const TEST_URI = `https://example.org/document-builder.sjs?html=${encodeURICompo
     @position-try --custom-right {
       top: anchor(bottom);
       left: anchor(right);
+      left: 10px !important;
       color: tomato;
       --m: 10px;
     }
@@ -177,6 +178,7 @@ add_task(async function () {
       declarations: [
         { name: "top", value: "anchor(bottom)" },
         { name: "left", value: "anchor(right)" },
+        { name: "left", value: "10px !important", valid: false },
         // we have this here to make sure it's not marked as overridden / does not override
         // color declaration for regular rules.
         { name: "color", value: "tomato", inactiveCSS: true },
@@ -214,6 +216,7 @@ add_task(async function () {
       declarations: [
         { name: "top", value: "anchor(bottom)" },
         { name: "left", value: "anchor(right)" },
+        { name: "left", value: "10px !important", valid: false },
         { name: "color", value: "tomato", inactiveCSS: true },
         { name: "--m", value: "10px", inactiveCSS: true },
       ],
