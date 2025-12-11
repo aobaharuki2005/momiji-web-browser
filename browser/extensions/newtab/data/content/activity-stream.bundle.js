@@ -13501,9 +13501,11 @@ function SectionsMgmtPanel_extends() { return SectionsMgmtPanel_extends = Object
 function SectionsMgmtPanel({
   exitEventFired,
   pocketEnabled,
-  onSubpanelToggle
+  onSubpanelToggle,
+  togglePanel,
+  showPanel
 }) {
-  const [showPanel, setShowPanel] = (0,external_React_namespaceObject.useState)(false); // State management with useState
+  const arrowButtonRef = (0,external_React_namespaceObject.useRef)(null);
   const {
     sectionPersonalization
   } = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.DiscoveryStream);
@@ -13616,10 +13618,10 @@ function SectionsMgmtPanel({
 
   // Close followed/blocked topic subpanel when parent menu is closed
   (0,external_React_namespaceObject.useEffect)(() => {
-    if (exitEventFired) {
-      setShowPanel(false);
+    if (exitEventFired && showPanel) {
+      togglePanel();
     }
-  }, [exitEventFired]);
+  }, [exitEventFired, showPanel, togglePanel]);
 
   // Notify parent menu when subpanel opens/closes
   (0,external_React_namespaceObject.useEffect)(() => {
@@ -13627,13 +13629,14 @@ function SectionsMgmtPanel({
       onSubpanelToggle(showPanel);
     }
   }, [showPanel, onSubpanelToggle]);
-  const togglePanel = () => {
-    setShowPanel(prevShowPanel => !prevShowPanel);
-
-    // Fire when the panel is open
-    if (!showPanel) {
+  (0,external_React_namespaceObject.useEffect)(() => {
+    if (showPanel) {
       updateCachedData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPanel]);
+  const handlePanelEntered = () => {
+    arrowButtonRef.current?.focus();
   };
   const followedSectionsList = followedSectionsData.map(({
     sectionKey,
@@ -13702,10 +13705,12 @@ function SectionsMgmtPanel({
     in: showPanel,
     timeout: 300,
     classNames: "sections-mgmt-panel",
-    unmountOnExit: true
+    unmountOnExit: true,
+    onEntered: handlePanelEntered
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: "sections-mgmt-panel"
   }, /*#__PURE__*/external_React_default().createElement("button", {
+    ref: arrowButtonRef,
     className: "arrow-button",
     onClick: togglePanel
   }, /*#__PURE__*/external_React_default().createElement("h1", {
@@ -14457,7 +14462,9 @@ class ContentSection extends (external_React_default()).PureComponent {
       setPref,
       mayHaveTopicSections,
       exitEventFired,
-      onSubpanelToggle
+      onSubpanelToggle,
+      toggleSectionsMgmtPanel,
+      showSectionsMgmtPanel
     } = this.props;
     const {
       topSitesEnabled,
@@ -14617,7 +14624,9 @@ class ContentSection extends (external_React_default()).PureComponent {
     })), mayHaveTopicSections && /*#__PURE__*/external_React_default().createElement(SectionsMgmtPanel, {
       exitEventFired: exitEventFired,
       pocketEnabled: pocketEnabled,
-      onSubpanelToggle: onSubpanelToggle
+      onSubpanelToggle: onSubpanelToggle,
+      togglePanel: toggleSectionsMgmtPanel,
+      showPanel: showSectionsMgmtPanel
     }))))))), /*#__PURE__*/external_React_default().createElement("span", {
       className: "divider",
       role: "separator"
@@ -14730,7 +14739,9 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
       mayHaveListsWidget: this.props.mayHaveListsWidget,
       dispatch: this.props.dispatch,
       exitEventFired: this.state.exitEventFired,
-      onSubpanelToggle: this.onSubpanelToggle
+      onSubpanelToggle: this.onSubpanelToggle,
+      toggleSectionsMgmtPanel: this.props.toggleSectionsMgmtPanel,
+      showSectionsMgmtPanel: this.props.showSectionsMgmtPanel
     })))));
   }
 }
@@ -15612,6 +15623,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.toggleDownloadHighlight = this.toggleDownloadHighlight.bind(this);
     this.handleDismissDownloadHighlight = this.handleDismissDownloadHighlight.bind(this);
     this.applyBodyClasses = this.applyBodyClasses.bind(this);
+    this.toggleSectionsMgmtPanel = this.toggleSectionsMgmtPanel.bind(this);
     this.state = {
       fixedSearch: false,
       firstVisibleTimestamp: null,
@@ -15619,7 +15631,8 @@ class BaseContent extends (external_React_default()).PureComponent {
       fixedNavStyle: {},
       wallpaperTheme: "",
       showDownloadHighlightOverride: null,
-      visible: false
+      visible: false,
+      showSectionsMgmtPanel: false
     };
   }
   setFirstVisibleTimestamp() {
@@ -15713,6 +15726,17 @@ class BaseContent extends (external_React_default()).PureComponent {
     if (wallpapersEnabled) {
       this.updateWallpaper();
     }
+    this._onHashChange = () => {
+      const hash = globalThis.location?.hash || "";
+      if (hash === "#customize" || hash === "#customize-topics") {
+        this.openCustomizationMenu();
+        if (hash === "#customize-topics") {
+          this.toggleSectionsMgmtPanel();
+        }
+      }
+    };
+    this._onHashChange();
+    globalThis.addEventListener("hashchange", this._onHashChange);
   }
   componentDidUpdate(prevProps) {
     this.applyBodyClasses();
@@ -15779,6 +15803,9 @@ class BaseContent extends (external_React_default()).PureComponent {
     __webpack_require__.g.removeEventListener("keydown", this.handleOnKeyDown);
     if (this._onVisibilityChange) {
       this.props.document.removeEventListener(Base_VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
+    }
+    if (this._onHashChange) {
+      globalThis.removeEventListener("hashchange", this._onHashChange);
     }
   }
   onWindowScroll() {
@@ -16025,6 +16052,11 @@ class BaseContent extends (external_React_default()).PureComponent {
   isWallpaperColorDark([r, g, b]) {
     return 0.2125 * r + 0.7154 * g + 0.0721 * b <= 110;
   }
+  toggleSectionsMgmtPanel() {
+    this.setState(prevState => ({
+      showSectionsMgmtPanel: !prevState.showSectionsMgmtPanel
+    }));
+  }
   shouldDisplayTopicSelectionModal() {
     const prefs = this.props.Prefs.values;
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
@@ -16192,7 +16224,9 @@ class BaseContent extends (external_React_default()).PureComponent {
       mayHaveWidgets: mayHaveWidgets,
       mayHaveTimerWidget: mayHaveTimerWidget,
       mayHaveListsWidget: mayHaveListsWidget,
-      showing: customizeMenuVisible
+      showing: customizeMenuVisible,
+      toggleSectionsMgmtPanel: this.toggleSectionsMgmtPanel,
+      showSectionsMgmtPanel: this.state.showSectionsMgmtPanel
     }), this.shouldShowOMCHighlight("CustomWallpaperHighlight") && /*#__PURE__*/external_React_default().createElement(MessageWrapper, {
       dispatch: this.props.dispatch
     }, /*#__PURE__*/external_React_default().createElement(WallpaperFeatureHighlight, {

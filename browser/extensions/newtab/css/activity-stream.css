@@ -2395,6 +2395,8 @@ main section {
   -moz-context-properties: fill;
   fill: currentColor;
   min-height: var(--space-large);
+  margin-inline-start: var(--space-xsmall);
+  margin-block-start: var(--space-xsmall);
 }
 .sections-mgmt-panel .arrow-button:dir(rtl) {
   background: url("chrome://global/skin/icons/arrow-right.svg") no-repeat right center;

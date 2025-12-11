@@ -510,6 +510,8 @@
     -moz-context-properties: fill;
     fill: currentColor;
     min-height: var(--space-large);
+    margin-inline-start: var(--space-xsmall);
+    margin-block-start: var(--space-xsmall);
 
     h1 {
       font-size: var(--font-size-root);

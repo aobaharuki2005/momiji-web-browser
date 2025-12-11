@@ -89,6 +89,22 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
       type: "bool",
     },
     {
+      id: "browser.newtabpage.activity-stream.discoverystream.sections.enabled",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.discoverystream.topicLabels.enabled",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.discoverystream.sections.personalization.enabled",
+      type: "bool",
+    },
+    {
+      id: "browser.newtabpage.activity-stream.discoverystream.sections.customizeMenuPanel.enabled",
+      type: "bool",
+    },
+    {
       id: "browser.newtabpage.activity-stream.showSponsoredCheckboxes",
       type: "bool",
     },
@@ -191,6 +207,44 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
     id: "stories",
     pref: "browser.newtabpage.activity-stream.feeds.section.topstories",
   });
+  Preferences.addSetting({
+    id: "sectionsEnabled",
+    pref: "browser.newtabpage.activity-stream.discoverystream.sections.enabled",
+  });
+  Preferences.addSetting({
+    id: "topicLabelsEnabled",
+    pref: "browser.newtabpage.activity-stream.discoverystream.topicLabels.enabled",
+  });
+  Preferences.addSetting({
+    id: "sectionsPersonalizationEnabled",
+    pref: "browser.newtabpage.activity-stream.discoverystream.sections.personalization.enabled",
+  });
+  Preferences.addSetting({
+    id: "sectionsCustomizeMenuPanelEnabled",
+    pref: "browser.newtabpage.activity-stream.discoverystream.sections.customizeMenuPanel.enabled",
+  });
+  Preferences.addSetting({
+    id: "manageTopics",
+    deps: [
+      "sectionsEnabled",
+      "topicLabelsEnabled",
+      "sectionsPersonalizationEnabled",
+      "sectionsCustomizeMenuPanelEnabled",
+      "sectionTopstories",
+    ],
+    visible: ({
+      sectionsEnabled,
+      topicLabelsEnabled,
+      sectionsPersonalizationEnabled,
+      sectionsCustomizeMenuPanelEnabled,
+      sectionTopstories,
+    }) =>
+      sectionsEnabled.value &&
+      topicLabelsEnabled.value &&
+      sectionsPersonalizationEnabled.value &&
+      sectionsCustomizeMenuPanelEnabled.value &&
+      sectionTopstories.value,
+  });
 
   // Dependency prefs for sponsored stories visibility
   Preferences.addSetting({
@@ -255,6 +309,10 @@ if (Services.prefs.getBoolPref("browser.settings-redesign.enabled")) {
   Preferences.addSetting({
     id: "recentActivityDownloads",
     pref: "browser.newtabpage.activity-stream.section.highlights.includeDownloads",
+  });
+
+  Preferences.addSetting({
+    id: "chooseWallpaper",
   });
 }
 
