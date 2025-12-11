@@ -2115,15 +2115,23 @@ export class UrlbarView {
     let tagsContainer = item._elements.get("tagsContainer");
     if (tagsContainer) {
       tagsContainer.textContent = "";
-      if (result.payload.tags && result.payload.tags.length) {
+
+      let { value: tags, highlights } = result.getDisplayableValueAndHighlights(
+        "tags",
+        {
+          tokens: this.#queryContext.tokens,
+        }
+      );
+
+      if (tags?.length) {
         tagsContainer.append(
-          ...result.payload.tags.map((tag, i) => {
+          ...tags.map((tag, i) => {
             const element = this.#createElement("span");
             element.className = "urlbarView-tag";
             lazy.UrlbarUtils.addTextContentWithHighlights(
               element,
               tag,
-              result.payloadHighlights.tags[i]
+              highlights[i]
             );
             return element;
           })
