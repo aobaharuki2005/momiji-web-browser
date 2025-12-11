@@ -7896,30 +7896,6 @@ nsresult nsDocShell::CreateDocumentViewer(const nsACString& aContentType,
   nsCOMPtr<nsIChannel> failedChannel = mFailedChannel;
   nsCOMPtr<nsIURI> failedURI;
 
-  // https://html.spec.whatwg.org/#finalize-a-cross-document-navigation
-  // 9. If entryToReplace is null, then: ...
-  //    Otherwise: ...
-  //      4. If historyEntry's document state's origin is same origin with
-  //         entryToReplace's document state's origin, then set
-  //         historyEntry's navigation API key to entryToReplace's
-  //         navigation API key.
-  bool isReplace =
-      mActiveEntry && mLoadingEntry && IsValidLoadType(mLoadType) &&
-      NavigationUtils::NavigationTypeFromLoadType(mLoadType)
-          .map([](auto type) { return type == NavigationType::Replace; })
-          .valueOr(false);
-  if (isReplace) {
-    nsCOMPtr<nsIURI> uri = mActiveEntry->GetURIOrInheritedForAboutBlank();
-    nsCOMPtr<nsIURI> targetURI =
-        mLoadingEntry->mInfo.GetURIOrInheritedForAboutBlank();
-    bool sameOrigin =
-        NS_SUCCEEDED(nsContentUtils::GetSecurityManager()->CheckSameOriginURI(
-            targetURI, uri, false, false));
-    if (sameOrigin) {
-      mLoadingEntry->mInfo.NavigationKey() = mActiveEntry->NavigationKey();
-    }
-  }
-
   if (mLoadType == LOAD_ERROR_PAGE) {
     // We need to set the SH entry and our current URI here and not
     // at the moment we load the page. We want the same behavior
