@@ -7989,25 +7989,6 @@ mozilla::ipc::IPCResult ContentParent::RecvSetContainerFeaturePolicy(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvSetEmbedderFrameReferrerPolicy(
-    const MaybeDiscardedBrowsingContext& aContainerContext,
-    ReferrerPolicy&& aPolicy) {
-  if (!aContainerContext.IsNullOrDiscarded()) {
-    aContainerContext.get_canonical()->SetEmbedderFrameReferrerPolicy(aPolicy);
-  }
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvUpdateAncestorOriginsList(
-    const MaybeDiscardedBrowsingContext& aContext) {
-  if (!aContext.IsNullOrDiscarded()) {
-    aContext.get_canonical()->CreateRedactedAncestorOriginsList();
-  }
-
-  return IPC_OK();
-}
-
 NS_IMETHODIMP ContentParent::GetCanSend(bool* aCanSend) {
   *aCanSend = CanSend();
   return NS_OK;
