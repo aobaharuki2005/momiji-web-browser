@@ -20,7 +20,8 @@ const MAPPED_TO_EXTENSION_PERMISSIONS = [
 
 export class GeckoViewPermissionChild extends GeckoViewActorChild {
   getMediaPermission(aPermission) {
-    return this.sendQuery("GeckoView:MediaPermission", {
+    return this.eventDispatcher.sendRequestForResult({
+      type: "GeckoView:MediaPermission",
       ...aPermission,
     });
   }
@@ -34,7 +35,8 @@ export class GeckoViewPermissionChild extends GeckoViewActorChild {
   }
 
   mediaRecordingStatusChanged(aDevices) {
-    return this.sendAsyncMessage("GeckoView:MediaRecordingStatusChanged", {
+    return this.eventDispatcher.sendRequest({
+      type: "GeckoView:MediaRecordingStatusChanged",
       devices: aDevices,
     });
   }
@@ -130,7 +132,8 @@ export class GeckoViewPermissionChild extends GeckoViewActorChild {
 
     let allowOrDeny;
     try {
-      allowOrDeny = await this.sendQuery("GeckoView:ContentPermission", {
+      allowOrDeny = await this.eventDispatcher.sendRequestForResult({
+        type: "GeckoView:ContentPermission",
         uri: principal.URI.displaySpec,
         thirdPartyOrigin: aRequest.principal.origin,
         principal: lazy.E10SUtils.serializePrincipal(principal),

@@ -36,6 +36,13 @@ export class GeckoViewActorParent extends JSWindowActorParent {
       return null;
     }
 
+    switch (aMessage.name) {
+      case "DispatcherMessage":
+        return this.eventDispatcher.sendRequest(aMessage.data);
+      case "DispatcherQuery":
+        return this.eventDispatcher.sendRequestForResult(aMessage.data);
+    }
+
     // By default messages are forwarded to the module.
     return this.window.moduleManager.onMessageFromActor(this.name, aMessage);
   }

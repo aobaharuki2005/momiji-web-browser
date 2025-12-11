@@ -44,9 +44,25 @@ export const LoadURIDelegate = {
     }
   },
 
-  handleLoadError(aWindow, aErrorPagePromise) {
+  handleLoadError(aWindow, aEventDispatcher, aUri, aError, aErrorModule) {
+    let errorClass = 0;
+    try {
+      const nssErrorsService = Cc[
+        "@mozilla.org/nss_errors_service;1"
+      ].getService(Ci.nsINSSErrorsService);
+      errorClass = nssErrorsService.getErrorClass(aError);
+    } catch (e) {}
+
+    const msg = {
+      type: "GeckoView:OnLoadError",
+      uri: aUri && aUri.spec,
+      error: aError,
+      errorModule: aErrorModule,
+      errorClass,
+    };
+
     let errorPageURI = undefined;
-    aErrorPagePromise.then(
+    aEventDispatcher.sendRequestForResult(msg).then(
       response => {
         try {
           errorPageURI = response ? Services.io.newURI(response) : null;
