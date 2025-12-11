@@ -116,7 +116,6 @@ export class UrlbarProviderPrivateSearch extends UrlbarProvider {
       },
       highlights: {
         engine: UrlbarUtils.HIGHLIGHT.TYPED,
-        query: UrlbarUtils.HIGHLIGHT.NONE,
       },
     });
     addCallback(this, result);

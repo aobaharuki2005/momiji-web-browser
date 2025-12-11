@@ -517,7 +517,6 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
               suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
               tail: UrlbarUtils.HIGHLIGHT.SUGGESTED,
               keyword: UrlbarUtils.HIGHLIGHT.TYPED,
-              query: UrlbarUtils.HIGHLIGHT.NONE,
             },
           })
         );

@@ -167,10 +167,6 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
             fallbackTitle: searchUrl,
             url: searchUrl,
           },
-          highlights: {
-            fallbackTitle: UrlbarUtils.HIGHLIGHT.NONE,
-            url: UrlbarUtils.HIGHLIGHT.NONE,
-          },
         });
       }
 
@@ -235,10 +231,6 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
         url: escapedURL,
         icon: iconUri,
       },
-      highlights: {
-        fallbackTitle: UrlbarUtils.HIGHLIGHT.NONE,
-        url: UrlbarUtils.HIGHLIGHT.NONE,
-      },
     });
   }
 
@@ -295,10 +287,6 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
         query: query.trimStart(),
         keyword: firstToken,
       },
-      highlights: {
-        query: UrlbarUtils.HIGHLIGHT.NONE,
-        keyword: UrlbarUtils.HIGHLIGHT.NONE,
-      },
     });
   }
 
@@ -348,8 +336,6 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
       },
       highlights: {
         engine: UrlbarUtils.HIGHLIGHT.TYPED,
-        query: UrlbarUtils.HIGHLIGHT.NONE,
-        keyword: UrlbarUtils.HIGHLIGHT.NONE,
       },
     });
   }

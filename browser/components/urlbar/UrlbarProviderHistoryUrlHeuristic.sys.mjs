@@ -120,7 +120,6 @@ export class UrlbarProviderHistoryUrlHeuristic extends UrlbarProvider {
       },
       highlights: {
         url: UrlbarUtils.HIGHLIGHT.TYPED,
-        title: UrlbarUtils.HIGHLIGHT.NONE,
       },
     });
   }

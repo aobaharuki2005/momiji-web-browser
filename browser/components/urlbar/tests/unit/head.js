@@ -849,9 +849,7 @@ function makeSearchResult(
       engine: UrlbarUtils.HIGHLIGHT.TYPED,
       suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
       tail: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-      keyword: providesSearchMode
-        ? UrlbarUtils.HIGHLIGHT.TYPED
-        : UrlbarUtils.HIGHLIGHT.NONE,
+      keyword: providesSearchMode ? UrlbarUtils.HIGHLIGHT.TYPED : undefined,
       query: UrlbarUtils.HIGHLIGHT.TYPED,
     },
   });

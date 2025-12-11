@@ -153,10 +153,6 @@ export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
               "awesome-bar-result-menu",
             frecency: res.frecency,
           },
-          highlights: {
-            title: UrlbarUtils.HIGHLIGHT.NONE,
-            url: UrlbarUtils.HIGHLIGHT.NONE,
-          },
         });
         addCallback(this, result);
       }
@@ -219,10 +215,6 @@ export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
           action: lazy.UrlbarPrefs.get("secondaryActions.switchToTab")
             ? UrlbarUtils.createTabSwitchSecondaryAction(tabUserContextId)
             : undefined,
-        },
-        highlights: {
-          url: UrlbarUtils.HIGHLIGHT.NONE,
-          title: UrlbarUtils.HIGHLIGHT.NONE,
         },
       });
       addCallback(this, result);

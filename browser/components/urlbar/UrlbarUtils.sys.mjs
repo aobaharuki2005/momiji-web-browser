@@ -183,7 +183,6 @@ export var UrlbarUtils = {
   // Whether a result should be highlighted up to the point the user has typed
   // or after that point.
   HIGHLIGHT: Object.freeze({
-    NONE: 0,
     TYPED: 1,
     SUGGESTED: 2,
     ALL: 3,

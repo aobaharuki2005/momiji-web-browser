@@ -130,10 +130,6 @@ export class UrlbarProviderClipboard extends UrlbarProvider {
         icon: "chrome://global/skin/icons/clipboard.svg",
         isBlockable: true,
       },
-      highlights: {
-        title: UrlbarUtils.HIGHLIGHT.NONE,
-        url: UrlbarUtils.HIGHLIGHT.NONE,
-      },
     });
 
     addCallback(this, result);
