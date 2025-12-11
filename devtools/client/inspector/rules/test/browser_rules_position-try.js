@@ -42,6 +42,7 @@ const TEST_URI = `https://example.org/document-builder.sjs?html=${encodeURICompo
       top: anchor(bottom);
       left: anchor(right);
       color: tomato;
+      --m: 10px;
     }
   </style>
   <main>
@@ -132,8 +133,7 @@ add_task(async function () {
         { name: "top", value: "anchor(bottom)" },
         // we have this here to make sure it's not marked as overridden / does not override
         // color declaration for regular rules.
-        // Ultimately this should be marked as inactive (see Bug 1895178)
-        { name: "color", value: "gold" },
+        { name: "color", value: "gold", inactiveCSS: true },
       ],
     },
   ]);
@@ -167,8 +167,7 @@ add_task(async function () {
         { name: "top", value: "anchor(bottom)" },
         // we have this here to make sure it's not marked as overridden / does not override
         // color declaration for regular rules.
-        // Ultimately this should be marked as inactive (see Bug 1895178)
-        { name: "color", value: "gold" },
+        { name: "color", value: "gold", inactiveCSS: true },
       ],
     },
     {
@@ -180,8 +179,8 @@ add_task(async function () {
         { name: "left", value: "anchor(right)" },
         // we have this here to make sure it's not marked as overridden / does not override
         // color declaration for regular rules.
-        // Ultimately this should be marked as inactive (see Bug 1895178)
-        { name: "color", value: "tomato" },
+        { name: "color", value: "tomato", inactiveCSS: true },
+        { name: "--m", value: "10px", inactiveCSS: true },
       ],
     },
   ]);
@@ -215,7 +214,8 @@ add_task(async function () {
       declarations: [
         { name: "top", value: "anchor(bottom)" },
         { name: "left", value: "anchor(right)" },
-        { name: "color", value: "tomato" },
+        { name: "color", value: "tomato", inactiveCSS: true },
+        { name: "--m", value: "10px", inactiveCSS: true },
       ],
     },
   ]);

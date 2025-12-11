@@ -97,6 +97,9 @@ const FIRST_LETTER_PSEUDO_ELEMENT_STYLING_SPEC_URL =
 const PLACEHOLDER_PSEUDO_ELEMENT_STYLING_SPEC_URL =
   "https://www.w3.org/TR/css-pseudo-4/#placeholder-pseudo";
 
+const AT_POSITION_TRY_MDN_URL =
+  "https://developer.mozilla.org/docs/Web/CSS/Reference/At-rules/@position-try";
+
 class InactivePropertyHelper {
   /**
    * A list of rules for when CSS properties have no effect.
@@ -787,6 +790,66 @@ class InactivePropertyHelper {
       fixId: "learn-more",
       learnMoreURL: CUE_PSEUDO_ELEMENT_STYLING_SPEC_URL,
     },
+    // Constrained set of properties on @position-try rules
+    {
+      // List from Object.keys(CSSPositionTryDescriptors.prototype)
+      // We should directly retrieve the properties from the CSSPositionTryDescriptors.prototype
+      // See Bug 2005233
+      acceptedProperties: new Set([
+        "position-anchor",
+        "position-area",
+        // Inset property descriptors
+        "top",
+        "left",
+        "bottom",
+        "right",
+        "inset-block-start",
+        "inset-block-end",
+        "inset-inline-start",
+        "inset-inline-end",
+        "inset-block",
+        "inset-inline",
+        "inset",
+        // Margin property descriptors
+        "margin-top",
+        "margin-left",
+        "margin-bottom",
+        "margin-right",
+        "margin-block-start",
+        "margin-block-end",
+        "margin-inline-start",
+        "margin-inline-end",
+        "margin",
+        "margin-block",
+        "margin-inline",
+        "-moz-margin-start",
+        "-moz-margin-end",
+        // Sizing property descriptors
+        "width",
+        "height",
+        "min-width",
+        "min-height",
+        "max-width",
+        "max-height",
+        "block-size",
+        "inline-size",
+        "min-block-size",
+        "min-inline-size",
+        "max-block-size",
+        "max-inline-size",
+        // Self-alignment property descriptors
+        "align-self",
+        "justify-self",
+        "place-self",
+        "-webkit-align-self",
+      ]),
+      rejectCustomProperties: true,
+      when: () =>
+        ChromeUtils.getClassName(this.cssRule) === "CSSPositionTryRule",
+      msgId: "inactive-css-at-position-try-not-supported",
+      fixId: "learn-more",
+      learnMoreURL: AT_POSITION_TRY_MDN_URL,
+    },
   ];
 
   /**
@@ -851,8 +914,7 @@ class InactivePropertyHelper {
       } else if (validator.acceptedProperties) {
         isRuleConcerned =
           !validator.acceptedProperties.has(property) &&
-          // custom properties can always be set
-          !property.startsWith("--");
+          (!property.startsWith("--") || validator.rejectCustomProperties);
       }
 
       if (!isRuleConcerned) {
