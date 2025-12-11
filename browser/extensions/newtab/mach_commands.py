@@ -888,3 +888,72 @@ def install(command_context):
 
     # Swallow errors (no exception raising). Return the process returncode for mach to surface.
     return 0 if proc is None else proc.returncode
+
+
+@SubCommand(
+    "newtab",
+    "get-unbranded-builds",
+    description="Get URLs for the latest unbranded Firefox builds for add-on development.",
+)
+@CommandArgument(
+    "--channel",
+    default="release",
+    choices=["beta", "release"],
+    help="Which channel to get unbranded builds for",
+)
+def get_unbranded_builds(command_context, channel):
+    """
+    Prints the latest unbranded Firefox build artifact URLs for Mac, Windows, and Linux.
+    These builds allow testing unsigned extensions without enforcing signature requirements.
+    """
+    TASKCLUSTER_INDEX_URL = (
+        "https://firefox-ci-tc.services.mozilla.com/api/index/v1/task"
+    )
+
+    repo = f"mozilla-{channel}"
+
+    platforms = {
+        "macOS (Intel)": {
+            "namespace": f"gecko.v2.{repo}.latest.firefox.macosx64-add-on-devel",
+            "artifact": "public/build/target.dmg",
+        },
+        "Windows 32-bit": {
+            "namespace": f"gecko.v2.{repo}.latest.firefox.win32-add-on-devel",
+            "artifact": "public/build/target.zip",
+        },
+        "Windows 64-bit": {
+            "namespace": f"gecko.v2.{repo}.latest.firefox.win64-add-on-devel",
+            "artifact": "public/build/target.zip",
+        },
+        "Linux 64-bit": {
+            "namespace": f"gecko.v2.{repo}.latest.firefox.linux64-add-on-devel",
+            "artifact": "public/build/target.tar.bz2",
+        },
+    }
+
+    print(f"Fetching latest unbranded builds for {channel} channel...\n")
+
+    for platform_name, platform_info in platforms.items():
+        namespace = platform_info["namespace"]
+        artifact = platform_info["artifact"]
+
+        try:
+            index_url = f"{TASKCLUSTER_INDEX_URL}/{namespace}"
+            response = requests.get(index_url, timeout=10)
+            response.raise_for_status()
+            task_data = response.json()
+            task_id = task_data["taskId"]
+
+            artifact_url = f"https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/{task_id}/runs/0/artifacts/{artifact}"
+
+            print(f"{platform_name}:")
+            print(f"  {artifact_url}\n")
+        except requests.RequestException as e:
+            print(f"{platform_name}: Failed to fetch ({e})\n")
+
+    print(
+        "For more information, see: https://wiki.mozilla.org/Add-ons/Extension_Signing#Unbranded_Builds"
+    )
+    print(
+        f"Manual search: https://treeherder.mozilla.org/#/jobs?repo={repo}&searchStr=addon"
+    )
