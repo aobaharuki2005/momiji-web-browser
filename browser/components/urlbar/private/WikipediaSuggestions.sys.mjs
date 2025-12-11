@@ -49,7 +49,6 @@ export class WikipediaSuggestions extends SuggestProvider {
 
   makeResult(queryContext, suggestion) {
     return new lazy.UrlbarResult({
-      queryContext,
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       payload: {

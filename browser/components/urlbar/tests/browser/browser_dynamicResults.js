@@ -573,8 +573,8 @@ add_task(async function highlighting() {
    */
   class TestHighlightProvider extends TestProvider {
     startQuery(context, addCallback) {
+      this._tokens = context.tokens;
       let result = new UrlbarResult({
-        queryContext: context,
         type: UrlbarUtils.RESULT_TYPE.DYNAMIC,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         suggestedIndex: 1,
@@ -590,11 +590,12 @@ add_task(async function highlighting() {
     }
 
     getViewUpdate(result, _idsByName) {
+      let { value: textContent, highlights } =
+        result.getDisplayableValueAndHighlights("text", {
+          tokens: this._tokens,
+        });
       return {
-        text: {
-          textContent: result.payload.text,
-          highlights: result.payloadHighlights.text,
-        },
+        text: { textContent, highlights },
       };
     }
   }

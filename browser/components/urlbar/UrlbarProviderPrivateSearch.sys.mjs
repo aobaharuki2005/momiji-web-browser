@@ -103,7 +103,6 @@ export class UrlbarProviderPrivateSearch extends UrlbarProvider {
     }
 
     let result = new lazy.UrlbarResult({
-      queryContext,
       type: UrlbarUtils.RESULT_TYPE.SEARCH,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       suggestedIndex: 1,

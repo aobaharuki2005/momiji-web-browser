@@ -139,7 +139,6 @@ export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
         )
       ) {
         const result = new lazy.UrlbarResult({
-          queryContext,
           type: UrlbarUtils.RESULT_TYPE.URL,
           source: UrlbarUtils.RESULT_SOURCE.HISTORY,
           payload: {
@@ -202,7 +201,6 @@ export class UrlbarProviderSemanticHistorySearch extends UrlbarProvider {
         continue;
       }
       let result = new lazy.UrlbarResult({
-        queryContext,
         type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
         source: UrlbarUtils.RESULT_SOURCE.TABS,
         payload: {

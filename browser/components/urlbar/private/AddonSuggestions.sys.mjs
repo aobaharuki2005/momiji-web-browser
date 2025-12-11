@@ -88,7 +88,6 @@ export class AddonSuggestions extends SuggestProvider {
     }
 
     return new lazy.UrlbarResult({
-      queryContext,
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       isBestMatch: true,

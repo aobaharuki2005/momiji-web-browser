@@ -123,7 +123,6 @@ export class UrlbarProviderTokenAliasEngines extends UrlbarProvider {
         engine.name != this._autofillData?.result.payload.engine
       ) {
         let result = new lazy.UrlbarResult({
-          queryContext,
           type: UrlbarUtils.RESULT_TYPE.SEARCH,
           source: UrlbarUtils.RESULT_SOURCE.SEARCH,
           hideRowLabel: true,
@@ -195,7 +194,6 @@ export class UrlbarProviderTokenAliasEngines extends UrlbarProvider {
             alias.substr(queryContext.searchString.length);
           let value = aliasPreservingUserCase + " ";
           return new lazy.UrlbarResult({
-            queryContext,
             type: UrlbarUtils.RESULT_TYPE.SEARCH,
             source: UrlbarUtils.RESULT_SOURCE.SEARCH,
             // We set suggestedIndex = 0 instead of the heuristic because we

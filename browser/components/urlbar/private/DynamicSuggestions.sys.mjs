@@ -109,7 +109,6 @@ export class DynamicSuggestions extends SuggestProvider {
     let resultProperties = { ...result };
     delete resultProperties.payload;
     return new lazy.UrlbarResult({
-      queryContext,
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...resultProperties,

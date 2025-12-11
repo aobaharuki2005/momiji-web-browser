@@ -86,7 +86,6 @@ export class UrlbarProviderBookmarkKeywords extends UrlbarProvider {
     }
 
     let result = new lazy.UrlbarResult({
-      queryContext,
       type: UrlbarUtils.RESULT_TYPE.KEYWORD,
       source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
       heuristic: true,

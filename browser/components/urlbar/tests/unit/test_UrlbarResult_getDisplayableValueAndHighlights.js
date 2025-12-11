@@ -6,7 +6,6 @@
 add_task(function type_typed() {
   let queryContext = createContext("test");
   let result = new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {
@@ -31,7 +30,6 @@ add_task(function type_typed() {
 add_task(function type_suggested() {
   let queryContext = createContext("test");
   let result = new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {
@@ -56,7 +54,6 @@ add_task(function type_suggested() {
 add_task(function type_all() {
   let queryContext = createContext("test");
   let result = new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {
@@ -81,7 +78,6 @@ add_task(function type_all() {
 add_task(function option_isURL() {
   let queryContext = createContext("test");
   let result = new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {
@@ -106,7 +102,6 @@ add_task(function option_isURL() {
 add_task(function option_no_tokens() {
   let queryContext = createContext("");
   let result = new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {
@@ -130,7 +125,6 @@ add_task(function option_no_tokens() {
 
 add_task(function option_nothing() {
   let result = new UrlbarResult({
-    queryContext: createContext(""),
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {
@@ -154,7 +148,6 @@ add_task(function option_nothing() {
 add_task(function invalid_target() {
   let queryContext = createContext("test");
   let result = new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {
@@ -179,7 +172,6 @@ add_task(function invalid_target() {
 add_task(function cache() {
   let queryContext = createContext("test");
   let result = new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
     payload: {

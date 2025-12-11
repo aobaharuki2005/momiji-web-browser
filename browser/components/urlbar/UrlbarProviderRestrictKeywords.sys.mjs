@@ -70,7 +70,6 @@ export class UrlbarProviderRestrictKeywords extends UrlbarProvider {
       )?.icon;
 
       let result = new lazy.UrlbarResult({
-        queryContext,
         type: UrlbarUtils.RESULT_TYPE.RESTRICT,
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         hideRowLabel: true,

@@ -883,7 +883,6 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
     }
 
     return new lazy.UrlbarResult({
-      queryContext,
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.HISTORY,
       heuristic: true,
@@ -937,7 +936,6 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
           queryContext.searchString +
           aboutUrl.substring(queryContext.searchString.length);
         return new lazy.UrlbarResult({
-          queryContext,
           type: UrlbarUtils.RESULT_TYPE.URL,
           source: UrlbarUtils.RESULT_SOURCE.HISTORY,
           heuristic: true,

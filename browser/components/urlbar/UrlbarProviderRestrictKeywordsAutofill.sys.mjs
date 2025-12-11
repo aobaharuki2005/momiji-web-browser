@@ -189,7 +189,6 @@ export class UrlbarProviderRestrictKeywordsAutofill extends UrlbarProvider {
         )?.icon;
 
         return new lazy.UrlbarResult({
-          queryContext,
           type: UrlbarUtils.RESULT_TYPE.RESTRICT,
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
           hideRowLabel: true,

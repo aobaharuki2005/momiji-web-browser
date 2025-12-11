@@ -206,7 +206,6 @@ export class UrlbarProviderRemoteTabs extends UrlbarProvider {
         }
 
         let result = new lazy.UrlbarResult({
-          queryContext,
           type: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
           source: UrlbarUtils.RESULT_SOURCE.TABS,
           payload: {

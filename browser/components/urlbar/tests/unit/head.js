@@ -456,7 +456,6 @@ function makeBookmarkResult(
   }
 ) {
   return new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source,
     heuristic,
@@ -501,7 +500,6 @@ function makeBookmarkResult(
  */
 function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
   return new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.HISTORY,
     payload: {
@@ -544,7 +542,6 @@ function makeOmniboxResult(
   { content, description, keyword, heuristic = false }
 ) {
   return new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.OMNIBOX,
     source: UrlbarUtils.RESULT_SOURCE.ADDON,
     heuristic,
@@ -586,7 +583,6 @@ function makeTabSwitchResult(
   { uri, title, iconUri, userContextId, tabGroup }
 ) {
   return new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
     source: UrlbarUtils.RESULT_SOURCE.TABS,
     payload: {
@@ -630,7 +626,6 @@ function makeKeywordSearchResult(
   { uri, keyword, title, iconUri, postData, heuristic = false }
 ) {
   return new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.KEYWORD,
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     heuristic,
@@ -691,7 +686,6 @@ function makeRemoteTabResult(
   }
 
   return new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
     source: UrlbarUtils.RESULT_SOURCE.TABS,
     payload,
@@ -838,7 +832,6 @@ function makeSearchResult(
   }
 
   return new UrlbarResult({
-    queryContext,
     type,
     source,
     heuristic,
@@ -932,7 +925,6 @@ function makeVisitResult(
   }
 
   return new UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source,
     heuristic,

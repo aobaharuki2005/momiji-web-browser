@@ -318,7 +318,6 @@ function makeUrlbarResult(queryContext, info) {
       case "searchengine":
         // Return a form history result.
         return new lazy.UrlbarResult({
-          queryContext,
           type: UrlbarUtils.RESULT_TYPE.SEARCH,
           source: UrlbarUtils.RESULT_SOURCE.HISTORY,
           payload: {
@@ -338,7 +337,6 @@ function makeUrlbarResult(queryContext, info) {
         });
       case "switchtab": {
         return new lazy.UrlbarResult({
-          queryContext,
           type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
           source: UrlbarUtils.RESULT_SOURCE.TABS,
           payload: {
@@ -411,7 +409,6 @@ function makeUrlbarResult(queryContext, info) {
   }
 
   return new lazy.UrlbarResult({
-    queryContext,
     type: UrlbarUtils.RESULT_TYPE.URL,
     source,
     payload: {

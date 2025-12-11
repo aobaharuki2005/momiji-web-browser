@@ -56,7 +56,6 @@ export class MDNSuggestions extends SuggestProvider {
     url.searchParams.set("utm_content", "treatment");
 
     return new lazy.UrlbarResult({
-      queryContext,
       type: lazy.UrlbarUtils.RESULT_TYPE.URL,
       source: lazy.UrlbarUtils.RESULT_SOURCE.OTHER_NETWORK,
       isBestMatch: true,

@@ -137,7 +137,6 @@ export class UrlbarProviderInputHistory extends UrlbarProvider {
         }
         let userContextId = row.getResultByName("userContextId") || 0;
         let result = new lazy.UrlbarResult({
-          queryContext,
           type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
           source: UrlbarUtils.RESULT_SOURCE.TABS,
           payload: {
@@ -179,7 +178,6 @@ export class UrlbarProviderInputHistory extends UrlbarProvider {
       let isBlockable = resultSource == UrlbarUtils.RESULT_SOURCE.HISTORY;
 
       let result = new lazy.UrlbarResult({
-        queryContext,
         type: UrlbarUtils.RESULT_TYPE.URL,
         source: resultSource,
         payload: {

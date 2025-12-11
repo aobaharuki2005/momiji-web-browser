@@ -479,7 +479,6 @@ export class UrlbarProviderQuickSuggest extends UrlbarProvider {
     }
 
     return new lazy.UrlbarResult({
-      queryContext,
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.SEARCH,
       isBestMatch: !!suggestion.is_top_pick,

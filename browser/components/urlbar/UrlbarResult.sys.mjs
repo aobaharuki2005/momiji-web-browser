@@ -44,7 +44,6 @@ export class UrlbarResult {
 
   /**
    * @param {object} params
-   * @param {object} [params.queryContext] Used for highlighting.
    * @param {Values<typeof lazy.UrlbarUtils.RESULT_TYPE>} params.type
    * @param {Values<typeof lazy.UrlbarUtils.RESULT_SOURCE>} params.source
    * @param {UrlbarAutofillData} [params.autofill]
@@ -63,12 +62,10 @@ export class UrlbarResult {
    * @param {boolean} [params.showFeedbackMenu]
    * @param {number} [params.suggestedIndex]
    * @param {Payload} [params.payload]
-   * @param {object} [params.payloadHighlights]
    * @param {Highlights} [params.highlights]
    * @param {boolean} [params.testForceNewContent] Used for test only.
    */
   constructor({
-    queryContext,
     type,
     source,
     autofill,
@@ -87,7 +84,6 @@ export class UrlbarResult {
     showFeedbackMenu = false,
     suggestedIndex,
     payload,
-    payloadHighlights = {},
     highlights = null,
     testForceNewContent,
   }) {
@@ -111,29 +107,15 @@ export class UrlbarResult {
       throw new Error("Invalid result payload");
     }
 
-    if (!payloadHighlights || typeof payloadHighlights != "object") {
-      throw new Error("Invalid result payload highlights");
-    }
-
     payload = Object.fromEntries(
       Object.entries(payload).filter(([_, v]) => v != undefined)
     );
 
     if (highlights) {
-      if (!queryContext) {
-        throw new Error("queryContext is needed to highlight");
-      }
-      this.#initPayloadAndHighlights({
-        payload,
-        payloadHighlights,
-        tokens: queryContext.tokens,
-        highlightTargets: highlights,
-      });
       this.#highlights = Object.freeze(highlights);
     }
 
     this.#payload = this.#validatePayload(payload);
-    this.#payloadHighlights = Object.freeze(payloadHighlights);
 
     this.#autofill = autofill;
     this.#exposureTelemetry = exposureTelemetry;
@@ -266,10 +248,6 @@ export class UrlbarResult {
 
   get payload() {
     return this.#payload;
-  }
-
-  get payloadHighlights() {
-    return this.#payloadHighlights;
   }
 
   get testForceNewContent() {
@@ -457,37 +435,6 @@ export class UrlbarResult {
     return payload;
   }
 
-  #initPayloadAndHighlights({
-    payload,
-    payloadHighlights,
-    tokens,
-    highlightTargets,
-  }) {
-    if (!tokens?.length) {
-      return;
-    }
-
-    for (let [name, highlightType] of Object.entries(highlightTargets)) {
-      if (!highlightType) {
-        continue;
-      }
-
-      let value = payload[name];
-      if (!value) {
-        continue;
-      }
-
-      let highlights = Array.isArray(value)
-        ? value.map(subval =>
-            lazy.UrlbarUtils.getTokenMatches(tokens, subval, highlightType)
-          )
-        : lazy.UrlbarUtils.getTokenMatches(tokens, value || "", highlightType);
-      if (highlights.length) {
-        payloadHighlights[name] = highlights;
-      }
-    }
-  }
-
   static _dynamicResultTypesByName = new Map();
 
   /**
@@ -579,7 +526,6 @@ export class UrlbarResult {
   #showFeedbackMenu;
   #suggestedIndex;
   #payload;
-  #payloadHighlights;
   #highlights;
   #displayValuesCache;
   #testForceNewContent;

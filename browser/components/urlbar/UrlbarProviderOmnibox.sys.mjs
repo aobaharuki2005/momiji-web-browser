@@ -99,7 +99,6 @@ export class UrlbarProviderOmnibox extends UrlbarProvider {
     let keyword = queryContext.tokens[0].value;
     let description = lazy.ExtensionSearchHandler.getDescription(keyword);
     let heuristicResult = new lazy.UrlbarResult({
-      queryContext,
       type: UrlbarUtils.RESULT_TYPE.OMNIBOX,
       source: UrlbarUtils.RESULT_SOURCE.ADDON,
       heuristic: true,
@@ -135,7 +134,6 @@ export class UrlbarProviderOmnibox extends UrlbarProvider {
             continue;
           }
           let result = new lazy.UrlbarResult({
-            queryContext,
             type: UrlbarUtils.RESULT_TYPE.OMNIBOX,
             source: UrlbarUtils.RESULT_SOURCE.ADDON,
             payload: {

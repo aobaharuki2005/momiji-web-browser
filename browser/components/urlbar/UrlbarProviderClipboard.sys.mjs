@@ -116,7 +116,6 @@ export class UrlbarProviderClipboard extends UrlbarProvider {
   async startQuery(queryContext, addCallback) {
     // If the query was started, isActive should have cached a url already.
     let result = new lazy.UrlbarResult({
-      queryContext,
       type: UrlbarUtils.RESULT_TYPE.URL,
       source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
       payload: {
