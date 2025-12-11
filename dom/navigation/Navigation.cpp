@@ -1830,6 +1830,7 @@ void Navigation::SetCurrentEntryIndex(const SessionHistoryInfo* aTargetInfo) {
   if (auto* entry = FindNavigationHistoryEntry(*aTargetInfo)) {
     MOZ_ASSERT(entry->Index() >= 0);
     mCurrentEntryIndex = Some(entry->Index());
+    return;
   }
 
   LOG_FMTW("Session history entry did not exist");
