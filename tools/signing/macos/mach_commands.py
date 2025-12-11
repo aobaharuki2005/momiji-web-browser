@@ -332,7 +332,10 @@ def macos_sign(
     # non-Mach-O executables such as script files. We want to avoid
     # any complications that might be caused by existing extended
     # attributes.
-    xattr_cmd = ["xattr", "-cr", app]
+    # Bug 2005439: xattr -r is not valid on linux
+    xattr_cmd = (
+        ["xattr", "-c", app] if sys.platform == "linux" else ["xattr", "-cr", app]
+    )
     run(command_context, xattr_cmd, capture_output=not verbose_arg)
 
     # Remove existing signatures. The codesign command only replaces
