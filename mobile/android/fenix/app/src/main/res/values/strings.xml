@@ -1737,8 +1737,6 @@
     <string name="bookmark_empty_list_folder_description">Add bookmarks as you browse so you can find your favorite sites later.</string>
     <!-- Description for the add new folder button when selecting a folder. -->
     <string name="bookmark_select_folder_new_folder_button_title">New folder</string>
-    <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
-    <string name="bookmark_moved_single_item">Moved %1$s to %2$s</string>
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
