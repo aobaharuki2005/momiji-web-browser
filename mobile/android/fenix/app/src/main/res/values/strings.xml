@@ -1319,6 +1319,8 @@
     <string name="tab_drawer_fab_content">Private</string>
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Sync</string>
+    <!-- Text for the tab search bar placeholder -->
+    <string name="tab_manager_search_bar_placeholder">Search your tabs</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Share all tabs</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -1367,6 +1369,8 @@
     <string name="close_tab_title">Close tab %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Open tabs menu</string>
+    <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+    <string name="tab_manager_search_bar_back_content_description">Return to tab manager</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Save tabs to collection</string>
     <!-- Text for the menu button to delete a collection -->
