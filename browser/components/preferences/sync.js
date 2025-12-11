@@ -30,6 +30,389 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BackupService: "resource:///modules/backup/BackupService.sys.mjs",
 });
 
+Preferences.addAll([
+  // sync
+  { id: "services.sync.engine.bookmarks", type: "bool" },
+  { id: "services.sync.engine.history", type: "bool" },
+  { id: "services.sync.engine.tabs", type: "bool" },
+  { id: "services.sync.engine.passwords", type: "bool" },
+  { id: "services.sync.engine.addresses", type: "bool" },
+  { id: "services.sync.engine.creditcards", type: "bool" },
+  { id: "services.sync.engine.addons", type: "bool" },
+  { id: "services.sync.engine.prefs", type: "bool" },
+]);
+
+/**
+ * A helper class for managing sync related UI behavior.
+ */
+var SyncHelpers = new (class SyncHelpers {
+  /**
+   * href for Connect another device link.
+   *
+   * @type {string}
+   */
+  connectAnotherDeviceHref = "";
+
+  /**
+   * Returns the current global UIState.
+   *
+   * @type {object}
+   * @readonly
+   */
+  get uiState() {
+    let state = UIState.get();
+    return state;
+  }
+
+  /**
+   * Retrieves the current UI state status from the global UIState.
+   *
+   * @type {string}
+   * @readonly
+   */
+  get uiStateStatus() {
+    return this.uiState.status;
+  }
+
+  /**
+   * Whether Sync is currently enabled in the UIState.
+   *
+   * @type {boolean}
+   * @readonly
+   */
+  get isSyncEnabled() {
+    return this.uiState.syncEnabled;
+  }
+
+  /**
+   * Extracts and sanitizes the `entrypoint` parameter from the current document URL.
+   *
+   * @returns {string} The sanitized entry point name.
+   */
+  getEntryPoint() {
+    let params = URL.fromURI(document.documentURIObject).searchParams;
+    let entryPoint = params.get("entrypoint") || "preferences";
+    entryPoint = entryPoint.replace(/[^-.\w]/g, "");
+    return entryPoint;
+  }
+
+  /**
+   * Replace the current tab with the specified URL.
+   *
+   * @param {string} url
+   */
+  replaceTabWithUrl(url) {
+    // Get the <browser> element hosting us.
+    let browser = window.docShell.chromeEventHandler;
+    // And tell it to load our URL.
+    browser.loadURI(Services.io.newURI(url), {
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+        {}
+      ),
+    });
+  }
+
+  /**
+   * Opens the "Choose What to Sync" dialog and handles user interaction.
+   *
+   * @param {boolean} isSyncConfigured
+   *        Whether Sync is already configured for this profile.
+   * @param {string|null} [why=null]
+   *        Optional reason or event name indicating why the dialog was opened.
+   * @returns {Promise<void>}
+   *          Resolves when the dialog flow and any post-actions have completed.
+   */
+  async _chooseWhatToSync(isSyncConfigured, why = null) {
+    // Record the user opening the choose what to sync menu.
+    fxAccounts.telemetry.recordOpenCWTSMenu(why).catch(err => {
+      console.error("Failed to record open CWTS menu event", err);
+    });
+
+    // Assuming another device is syncing and we're not,
+    // we update the engines selection so the correct
+    // checkboxes are pre-filed.
+    if (!isSyncConfigured) {
+      try {
+        await Weave.Service.updateLocalEnginesState();
+      } catch (err) {
+        console.error("Error updating the local engines state", err);
+      }
+    }
+    let params = {};
+    if (isSyncConfigured) {
+      // If we are already syncing then we also offer to disconnect.
+      params.disconnectFun = () => this.disconnectSync();
+    }
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/syncChooseWhatToSync.xhtml",
+      {
+        closingCallback: event => {
+          if (event.detail.button == "accept") {
+            // Sync wasn't previously configured, but the user has accepted
+            // so we want to now start syncing!
+            if (!isSyncConfigured) {
+              fxAccounts.telemetry
+                .recordConnection(["sync"], "ui")
+                .then(() => {
+                  return Weave.Service.configure();
+                })
+                .catch(err => {
+                  console.error("Failed to enable sync", err);
+                });
+            } else {
+              // User is already configured and have possibly changed the engines they want to
+              // sync, so we should let the server know immediately
+              // if the user is currently syncing, we queue another sync after
+              // to ensure we caught their updates
+              Services.tm.dispatchToMainThread(() => {
+                Weave.Service.queueSync("cwts");
+              });
+            }
+          }
+          // When the modal closes we want to remove any query params
+          // so it doesn't open on subsequent visits (and will reload)
+          const browser = window.docShell.chromeEventHandler;
+          browser.loadURI(Services.io.newURI("about:preferences#sync"), {
+            triggeringPrincipal:
+              Services.scriptSecurityManager.getSystemPrincipal(),
+          });
+        },
+      },
+      params /* aParams */
+    );
+  }
+
+  // Disconnect sync, leaving the account connected.
+  disconnectSync() {
+    return window.browsingContext.topChromeWindow.gSync.disconnect({
+      confirm: true,
+      disconnectAccount: false,
+    });
+  }
+
+  async setupSync() {
+    try {
+      const hasKeys = await fxAccounts.keys.hasKeysForScope(SCOPE_APP_SYNC);
+      if (hasKeys) {
+        // User has keys - open the choose what to sync dialog
+        this._chooseWhatToSync(false, "setupSync");
+      } else {
+        // User signed in via third-party auth without sync keys.
+        // Redirect to FxA to create a password and generate sync keys.
+        // canConnectAccount() checks if the Primary Password is locked and
+        // prompts the user to unlock it. Returns false if the user cancels.
+        if (!(await FxAccounts.canConnectAccount())) {
+          return;
+        }
+        const url = await FxAccounts.config.promiseConnectAccountURI(
+          this.getEntryPoint()
+        );
+        this.replaceTabWithUrl(url);
+      }
+    } catch (err) {
+      console.error("Failed to check for sync keys", err);
+      // Fallback to opening CWTS dialog
+      this._chooseWhatToSync(false, "setupSync");
+    }
+  }
+
+  async signIn() {
+    if (!(await FxAccounts.canConnectAccount())) {
+      return;
+    }
+    const url = await FxAccounts.config.promiseConnectAccountURI(
+      this.getEntryPoint()
+    );
+    this.replaceTabWithUrl(url);
+  }
+})();
+
+// Sync section
+Preferences.addSetting({
+  id: "uiStateUpdate",
+  setup(emitChange) {
+    Weave.Svc.Obs.add(UIState.ON_UPDATE, emitChange);
+    return () => Weave.Svc.Obs.remove(UIState.ON_UPDATE, emitChange);
+  },
+});
+
+// Sync section - no Firefox account
+Preferences.addSetting({
+  id: "syncNoFxaSignIn",
+  deps: ["uiStateUpdate"],
+  visible() {
+    return SyncHelpers.uiStateStatus === UIState.STATUS_NOT_CONFIGURED;
+  },
+  onUserClick: () => {
+    SyncHelpers.signIn();
+  },
+});
+
+// Sync section - Syncing is OFF
+Preferences.addSetting({
+  id: "syncNotConfigured",
+  deps: ["uiStateUpdate"],
+  visible() {
+    return (
+      SyncHelpers.uiStateStatus === UIState.STATUS_SIGNED_IN &&
+      !SyncHelpers.isSyncEnabled
+    );
+  },
+});
+Preferences.addSetting({
+  id: "syncSetup",
+  onUserClick: () => SyncHelpers.setupSync(),
+});
+
+// Sync section - Syncing is ON
+Preferences.addSetting({
+  id: "syncConfigured",
+  deps: ["uiStateUpdate"],
+  visible() {
+    return (
+      SyncHelpers.uiStateStatus === UIState.STATUS_SIGNED_IN &&
+      SyncHelpers.isSyncEnabled
+    );
+  },
+});
+
+Preferences.addSetting({
+  id: "syncStatus",
+});
+Preferences.addSetting({
+  id: "syncNow",
+  deps: ["uiStateUpdate"],
+  onUserClick() {
+    Weave.Service.sync({ why: "aboutprefs" });
+  },
+  visible: () => !SyncHelpers.uiState.syncing,
+  // Bug 2004864 - add tooltip
+});
+Preferences.addSetting({
+  id: "syncing",
+  deps: ["uiStateUpdate"],
+  disabled: () => SyncHelpers.uiState.syncing,
+  visible: () => SyncHelpers.uiState.syncing,
+});
+
+const SYNC_ENGINE_SETTINGS = [
+  {
+    id: "syncBookmarks",
+    pref: "services.sync.engine.bookmarks",
+    type: "bookmarks",
+  },
+  { id: "syncHistory", pref: "services.sync.engine.history", type: "history" },
+  { id: "syncTabs", pref: "services.sync.engine.tabs", type: "tabs" },
+  {
+    id: "syncPasswords",
+    pref: "services.sync.engine.passwords",
+    type: "passwords",
+  },
+  {
+    id: "syncAddresses",
+    pref: "services.sync.engine.addresses",
+    type: "addresses",
+  },
+  {
+    id: "syncPayments",
+    pref: "services.sync.engine.creditcards",
+    type: "payments",
+  },
+  { id: "syncAddons", pref: "services.sync.engine.addons", type: "addons" },
+  { id: "syncSettings", pref: "services.sync.engine.prefs", type: "settings" },
+];
+
+SYNC_ENGINE_SETTINGS.forEach(({ id, pref }) => {
+  Preferences.addSetting({ id, pref });
+});
+
+Preferences.addSetting({
+  id: "syncEnginesList",
+  deps: SYNC_ENGINE_SETTINGS.map(({ id }) => id),
+  getControlConfig(config, deps) {
+    const engines = SYNC_ENGINE_SETTINGS.filter(
+      ({ id }) => deps[id]?.value
+    ).map(({ type }) => type);
+
+    return {
+      ...config,
+      controlAttrs: {
+        ...config.controlAttrs,
+        ".engines": engines,
+      },
+    };
+  },
+});
+
+Preferences.addSetting({
+  id: "syncChangeOptions",
+  onUserClick: () => {
+    SyncHelpers._chooseWhatToSync(true, "manageSyncSettings");
+  },
+});
+
+// Sync section - Device name
+Preferences.addSetting({
+  id: "fxaDeviceNameSection",
+  deps: ["uiStateUpdate"],
+  visible() {
+    return SyncHelpers.uiStateStatus !== UIState.STATUS_NOT_CONFIGURED;
+  },
+});
+Preferences.addSetting({
+  id: "fxaDeviceNameGroup",
+});
+Preferences.addSetting({
+  id: "fxaDeviceName",
+  deps: ["uiStateUpdate"],
+  get: () => Weave.Service.clientsEngine.localName,
+  set(val) {
+    Weave.Service.clientsEngine.localName = val;
+  },
+  disabled() {
+    return SyncHelpers.uiStateStatus !== UIState.STATUS_SIGNED_IN;
+  },
+  getControlConfig(config) {
+    if (config.controlAttrs?.defaultvalue) {
+      return config;
+    }
+    const deviceDefaultLocalName = fxAccounts?.device?.getDefaultLocalName();
+    if (deviceDefaultLocalName) {
+      return {
+        ...config,
+        controlAttrs: {
+          ...config.controlAttrs,
+          defaultvalue: deviceDefaultLocalName,
+        },
+      };
+    }
+    return config;
+  },
+});
+Preferences.addSetting({
+  id: "fxaConnectAnotherDevice",
+  getControlConfig(config) {
+    if (SyncHelpers.connectAnotherDeviceHref) {
+      return {
+        ...config,
+        controlAttrs: {
+          ...config.controlAttrs,
+          href: SyncHelpers.connectAnotherDeviceHref,
+        },
+      };
+    }
+    return config;
+  },
+  setup(emitChange) {
+    FxAccounts.config
+      .promiseConnectDeviceURI(SyncHelpers.getEntryPoint())
+      .then(connectURI => {
+        SyncHelpers.connectAnotherDeviceHref = connectURI;
+        emitChange();
+      });
+  },
+});
+
 var gSyncPane = {
   get page() {
     return document.getElementById("weavePrefsDeck").selectedIndex;
@@ -121,6 +504,8 @@ var gSyncPane = {
   },
 
   _init() {
+    initSettingGroup("sync");
+
     Weave.Svc.Obs.add(UIState.ON_UPDATE, this.updateWeavePrefs, this);
 
     window.addEventListener("unload", () => {
@@ -128,12 +513,13 @@ var gSyncPane = {
     });
 
     FxAccounts.config
-      .promiseConnectDeviceURI(this._getEntryPoint())
+      .promiseConnectDeviceURI(SyncHelpers.getEntryPoint())
       .then(connectURI => {
         document
           .getElementById("connect-another-device")
           .setAttribute("href", connectURI);
       });
+
     // Links for mobile devices.
     for (let platform of ["android", "ios"]) {
       let url =
@@ -164,7 +550,7 @@ var gSyncPane = {
       if (location.href.includes("action=pair")) {
         gSyncPane.pairAnotherDevice();
       } else if (location.href.includes("action=choose-what-to-sync")) {
-        gSyncPane._chooseWhatToSync(false, "callToAction");
+        SyncHelpers._chooseWhatToSync(false, "callToAction");
       }
     }
   },
@@ -241,7 +627,7 @@ var gSyncPane = {
       this._focusAfterComputerNameTextbox();
     });
     setEventListener("noFxaSignIn", "command", function () {
-      gSyncPane.signIn();
+      SyncHelpers.signIn();
       return false;
     });
     setEventListener("fxaUnlinkButton", "command", function () {
@@ -257,7 +643,7 @@ var gSyncPane = {
       gSyncPane.unlinkFirefoxAccount(false);
     });
     setEventListener("rejectReSignIn", "command", function () {
-      gSyncPane.reSignIn(this._getEntryPoint());
+      gSyncPane.reSignIn(SyncHelpers.getEntryPoint());
     });
     setEventListener("rejectUnlinkFxaAccount", "command", function () {
       gSyncPane.unlinkFirefoxAccount(true);
@@ -269,34 +655,9 @@ var gSyncPane = {
         document.getElementById("fxaCancelChangeDeviceName").click();
       }
     });
-    setEventListener("syncSetup", "command", async function () {
-      // Check if the user has sync keys before opening CWTS
-      try {
-        const hasKeys = await fxAccounts.keys.hasKeysForScope(SCOPE_APP_SYNC);
-        if (hasKeys) {
-          // User has keys - open the choose what to sync dialog
-          this._chooseWhatToSync(false, "setupSync");
-        } else {
-          // User signed in via third-party auth without sync keys.
-          // Redirect to FxA to create a password and generate sync keys.
-          // canConnectAccount() checks if the Primary Password is locked and
-          // prompts the user to unlock it. Returns false if the user cancels.
-          if (!(await FxAccounts.canConnectAccount())) {
-            return;
-          }
-          const url = await FxAccounts.config.promiseConnectAccountURI(
-            this._getEntryPoint()
-          );
-          this.replaceTabWithUrl(url);
-        }
-      } catch (err) {
-        console.error("Failed to check for sync keys", err);
-        // Fallback to opening CWTS dialog
-        this._chooseWhatToSync(false, "setupSync");
-      }
-    });
+    setEventListener("syncSetup", "command", () => SyncHelpers.setupSync());
     setEventListener("syncChangeOptions", "command", function () {
-      this._chooseWhatToSync(true, "manageSyncSettings");
+      SyncHelpers._chooseWhatToSync(true, "manageSyncSettings");
     });
     setEventListener("syncNow", "command", function () {
       // syncing can take a little time to send the "started" notification, so
@@ -320,14 +681,12 @@ var gSyncPane = {
   },
 
   updateSyncUI() {
-    const state = UIState.get();
-    const isSyncEnabled = state.syncEnabled;
     let syncStatusTitle = document.getElementById("syncStatusTitle");
     let syncNowButton = document.getElementById("syncNow");
     let syncNotConfiguredEl = document.getElementById("syncNotConfigured");
     let syncConfiguredEl = document.getElementById("syncConfigured");
 
-    if (isSyncEnabled) {
+    if (SyncHelpers.isSyncEnabled) {
       syncStatusTitle.setAttribute("data-l10n-id", "prefs-syncing-on");
       syncNowButton.hidden = false;
       syncConfiguredEl.hidden = false;
@@ -338,67 +697,6 @@ var gSyncPane = {
       syncConfiguredEl.hidden = true;
       syncNotConfiguredEl.hidden = false;
     }
-  },
-
-  async _chooseWhatToSync(isSyncConfigured, why = null) {
-    // Record the user opening the choose what to sync menu.
-    fxAccounts.telemetry.recordOpenCWTSMenu(why).catch(err => {
-      console.error("Failed to record open CWTS menu event", err);
-    });
-
-    // Assuming another device is syncing and we're not,
-    // we update the engines selection so the correct
-    // checkboxes are pre-filed.
-    if (!isSyncConfigured) {
-      try {
-        await Weave.Service.updateLocalEnginesState();
-      } catch (err) {
-        console.error("Error updating the local engines state", err);
-      }
-    }
-    let params = {};
-    if (isSyncConfigured) {
-      // If we are already syncing then we also offer to disconnect.
-      params.disconnectFun = () => this.disconnectSync();
-    }
-    gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/syncChooseWhatToSync.xhtml",
-      {
-        closingCallback: event => {
-          if (event.detail.button == "accept") {
-            // Sync wasn't previously configured, but the user has accepted
-            // so we want to now start syncing!
-            if (!isSyncConfigured) {
-              fxAccounts.telemetry
-                .recordConnection(["sync"], "ui")
-                .then(() => {
-                  this.updateSyncUI();
-                  return Weave.Service.configure();
-                })
-                .catch(err => {
-                  console.error("Failed to enable sync", err);
-                });
-            } else {
-              // User is already configured and have possibly changed the engines they want to
-              // sync, so we should let the server know immediately
-              // if the user is currently syncing, we queue another sync after
-              // to ensure we caught their updates
-              Services.tm.dispatchToMainThread(() => {
-                Weave.Service.queueSync("cwts");
-              });
-            }
-          }
-          // When the modal closes we want to remove any query params
-          // so it doesn't open on subsequent visits (and will reload)
-          const browser = window.docShell.chromeEventHandler;
-          browser.loadURI(Services.io.newURI("about:preferences#sync"), {
-            triggeringPrincipal:
-              Services.scriptSecurityManager.getSystemPrincipal(),
-          });
-        },
-      },
-      params /* aParams */
-    );
   },
 
   _updateSyncNow(syncing) {
@@ -494,7 +792,7 @@ var gSyncPane = {
     // The "manage account" link embeds the uid, so we need to update this
     // if the account state changes.
     FxAccounts.config
-      .promiseManageURI(this._getEntryPoint())
+      .promiseManageURI(SyncHelpers.getEntryPoint())
       .then(accountsManageURI => {
         document
           .getElementById("verifiedManage")
@@ -507,13 +805,6 @@ var gSyncPane = {
     this.updateSyncUI();
   },
 
-  _getEntryPoint() {
-    let params = URL.fromURI(document.documentURIObject).searchParams;
-    let entryPoint = params.get("entrypoint") || "preferences";
-    entryPoint = entryPoint.replace(/[^-.\w]/g, "");
-    return entryPoint;
-  },
-
   openContentInBrowser(url, options) {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     if (!win) {
@@ -521,28 +812,6 @@ var gSyncPane = {
       return;
     }
     win.switchToTabHavingURI(url, true, options);
-  },
-
-  // Replace the current tab with the specified URL.
-  replaceTabWithUrl(url) {
-    // Get the <browser> element hosting us.
-    let browser = window.docShell.chromeEventHandler;
-    // And tell it to load our URL.
-    browser.loadURI(Services.io.newURI(url), {
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-        {}
-      ),
-    });
-  },
-
-  async signIn() {
-    if (!(await FxAccounts.canConnectAccount())) {
-      return;
-    }
-    const url = await FxAccounts.config.promiseConnectAccountURI(
-      this._getEntryPoint()
-    );
-    this.replaceTabWithUrl(url);
   },
 
   /**
@@ -554,7 +823,7 @@ var gSyncPane = {
    */
   async reSignIn(entrypoint) {
     const url = await FxAccounts.config.promiseConnectAccountURI(entrypoint);
-    this.replaceTabWithUrl(url);
+    SyncHelpers.replaceTabWithUrl(url);
   },
 
   clickOrSpaceOrEnterPressed(event) {
@@ -571,7 +840,7 @@ var gSyncPane = {
   openChangeProfileImage(event) {
     if (this.clickOrSpaceOrEnterPressed(event)) {
       FxAccounts.config
-        .promiseChangeAvatarURI(this._getEntryPoint())
+        .promiseChangeAvatarURI(SyncHelpers.getEntryPoint())
         .then(url => {
           this.openContentInBrowser(url, {
             replaceQueryString: true,
@@ -592,14 +861,6 @@ var gSyncPane = {
   unlinkFirefoxAccount(confirm) {
     window.browsingContext.topChromeWindow.gSync.disconnect({
       confirm,
-    });
-  },
-
-  // Disconnect sync, leaving the account connected.
-  disconnectSync() {
-    return window.browsingContext.topChromeWindow.gSync.disconnect({
-      confirm: true,
-      disconnectAccount: false,
     });
   },
 

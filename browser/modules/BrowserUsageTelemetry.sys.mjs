@@ -82,6 +82,7 @@ const UI_TARGET_CHANGE_ELEMENTS = new Set([
   "moz-input-search",
   "moz-input-text",
   "moz-visual-picker-item",
+  "sync-device-name",
 ]);
 const UI_TARGET_COMMAND_ELEMENTS = new Set([
   "menuitem",

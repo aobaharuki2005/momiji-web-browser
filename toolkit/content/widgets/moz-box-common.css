@@ -61,6 +61,11 @@
     -moz-context-properties: fill, stroke;
     fill: var(--box-icon-fill);
     stroke: var(--box-icon-stroke);
+
+    &:not(.nav-icon) {
+      fill: var(--box-icon-start-fill, var(--box-icon-fill));
+      stroke: var(--box-icon-start-stroke, var(--box-icon-stroke));
+    }
   }
 
   .description {

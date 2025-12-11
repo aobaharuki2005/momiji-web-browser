@@ -736,8 +736,26 @@ html|dialog,
   margin-block: 0 4px;
 }
 
-#noFxaSignIn {
+button#noFxaSignIn {
   margin-inline-start: 8px;
+}
+
+#syncConfigured {
+  --box-icon-start-fill: var(--icon-color-success);
+}
+
+#syncNotConfigured,
+#noFxaSignIn {
+  --box-icon-start-fill: var(--icon-color-warning);
+}
+
+#syncSetup {
+  white-space: nowrap;
+}
+
+#syncNow,
+#syncing {
+  min-width: 150px;
 }
 
 .fxaSyncIllustration {

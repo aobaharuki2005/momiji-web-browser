@@ -3125,6 +3125,101 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  sync: {
+    inProgress: true,
+    l10nId: "sync-group-label",
+    headingLevel: 2,
+    items: [
+      {
+        id: "syncNoFxaSignIn",
+        l10nId: "sync-signedout-account-signin-4",
+        control: "moz-box-link",
+        iconSrc: "chrome://global/skin/icons/warning.svg",
+        controlAttrs: {
+          id: "noFxaSignIn",
+        },
+      },
+      {
+        id: "syncConfigured",
+        control: "moz-box-group",
+        items: [
+          {
+            id: "syncStatus",
+            l10nId: "prefs-syncing-on-2",
+            control: "moz-box-item",
+            iconSrc: "chrome://global/skin/icons/check-filled.svg",
+            items: [
+              {
+                id: "syncNow",
+                control: "moz-button",
+                l10nId: "prefs-sync-now-button-2",
+                slot: "actions",
+              },
+              {
+                id: "syncing",
+                control: "moz-button",
+                l10nId: "prefs-syncing-button-2",
+                slot: "actions",
+              },
+            ],
+          },
+          {
+            id: "syncEnginesList",
+            control: "sync-engines-list",
+          },
+          {
+            id: "syncChangeOptions",
+            control: "moz-box-button",
+            l10nId: "sync-manage-options-2",
+          },
+        ],
+      },
+      {
+        id: "syncNotConfigured",
+        l10nId: "prefs-syncing-off-2",
+        control: "moz-box-item",
+        iconSrc: "chrome://global/skin/icons/warning.svg",
+        items: [
+          {
+            id: "syncSetup",
+            control: "moz-button",
+            l10nId: "prefs-sync-turn-on-syncing-2",
+            slot: "actions",
+          },
+        ],
+      },
+      {
+        id: "fxaDeviceNameSection",
+        l10nId: "sync-device-name-header-2",
+        control: "moz-fieldset",
+        controlAttrs: {
+          ".headingLevel": 3,
+        },
+        items: [
+          {
+            id: "fxaDeviceNameGroup",
+            control: "moz-box-group",
+            items: [
+              {
+                id: "fxaDeviceName",
+                control: "sync-device-name",
+              },
+              {
+                id: "fxaConnectAnotherDevice",
+                l10nId: "sync-connect-another-device-2",
+                control: "moz-box-link",
+                iconSrc: "chrome://browser/skin/device-phone.svg",
+                controlAttrs: {
+                  id: "connect-another-device",
+                  href: "https://accounts.firefox.com/pair",
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 });
 
 /**

@@ -980,6 +980,11 @@ containers-settings-button =
 containers-remove-button =
     .label = Remove
 
+## Account and sync
+
+sync-group-label =
+    .label = Sync
+
 ## Firefox account - Signed out. Note that "Sync" and "Firefox account" are now
 ## more discrete ("signed in" no longer means "and sync is connected").
 
@@ -988,6 +993,10 @@ sync-signedout-description2 = Synchronize your bookmarks, history, tabs, passwor
 
 sync-signedout-account-signin3 =
     .label = Sign in to sync…
+    .accesskey = i
+
+sync-signedout-account-signin-4 =
+    .label = Sign in to your account to start syncing
     .accesskey = i
 
 # This message contains two links and two icon images.
@@ -1043,10 +1052,21 @@ sync-sign-in =
 
 prefs-syncing-on = Syncing: ON
 
+prefs-syncing-on-2 =
+    .label = Syncing is ON
+
 prefs-syncing-off = Syncing: OFF
+
+prefs-syncing-off-2 =
+    .label = Syncing is OFF
+    .description = Turn on sync to get your your bookmarks, passwords, history, and more on any device.
 
 prefs-sync-turn-on-syncing =
     .label = Turn on syncing…
+    .accesskey = s
+
+prefs-sync-turn-on-syncing-2 =
+    .label = Turn on syncing
     .accesskey = s
 
 prefs-sync-offer-setup-label2 = Synchronize your bookmarks, history, tabs, passwords, add-ons, and settings across all your devices.
@@ -1055,8 +1075,16 @@ prefs-sync-now-button =
     .label = Sync Now
     .accesskey = N
 
+prefs-sync-now-button-2 =
+    .label = Sync now
+    .accesskey = N
+
 prefs-syncing-button =
     .label = Syncing…
+
+prefs-syncing-button-2 =
+    .label = Syncing…
+    .title = Sync now
 
 ## The list of things currently syncing.
 
@@ -1079,6 +1107,10 @@ sync-currently-syncing-settings = Settings
 
 sync-manage-options =
     .label = Manage sync…
+    .accesskey = M
+
+sync-manage-options-2 =
+    .label = Manage synced data
     .accesskey = M
 
 ## The "Choose what to sync" dialog.
@@ -1133,6 +1165,9 @@ sync-engine-settings =
 
 sync-device-name-header = Device Name
 
+sync-device-name-header-2 =
+    .label = Device Name
+
 # Variables:
 #   $placeholder (string) - The placeholder text of the input
 sync-device-name-input =
@@ -1156,6 +1191,9 @@ sync-device-name-save =
     .accesskey = v
 
 sync-connect-another-device = Connect another device
+
+sync-connect-another-device-2 =
+    .label = Connect another device
 
 ## Privacy Section
 
