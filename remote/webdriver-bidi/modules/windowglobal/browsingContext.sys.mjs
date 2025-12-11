@@ -20,7 +20,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   OriginType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   OwnershipModel: "chrome://remote/content/webdriver-bidi/RemoteValue.sys.mjs",
-  PollPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
 });
 
@@ -498,14 +497,14 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
   async _awaitVisibilityState(options) {
     const { value } = options;
     const win = this.messageHandler.window;
-
-    await lazy.PollPromise((resolve, reject) => {
-      if (win.document.visibilityState === value) {
-        resolve();
-      } else {
-        reject();
-      }
-    });
+    if (win.document.visibilityState !== value) {
+      await new Promise(r => {
+        // The visibilityState can only be hidden or visible, so if the current
+        // value is not the expected one, the next visibilitychange event is
+        // guaranteed to have the correct value.
+        win.document.addEventListener("visibilitychange", r, { once: true });
+      });
+    }
   }
 
   _getBaseURL() {
