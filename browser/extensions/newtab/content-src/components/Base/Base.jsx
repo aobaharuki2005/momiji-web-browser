@@ -723,10 +723,6 @@ export class BaseContent extends React.PureComponent {
       mayHaveWeather
         ? "is-tall"
         : "";
-
-    const hasThumbsUpDownLayout =
-      prefs["discoverystream.thumbsUpDown.searchTopsitesCompact"];
-    const hasThumbsUpDown = prefs["discoverystream.thumbsUpDown.enabled"];
     const sectionsEnabled = prefs["discoverystream.sections.enabled"];
     const topicLabelsEnabled = prefs["discoverystream.topicLabels.enabled"];
     const sectionsCustomizeMenuPanelEnabled =
@@ -771,7 +767,6 @@ export class BaseContent extends React.PureComponent {
         "only-topsites",
       noSectionsEnabled && "no-sections",
       prefs["logowordmark.alwaysVisible"] && "visible-logo",
-      hasThumbsUpDownLayout && hasThumbsUpDown && "thumbs-ui-compact",
     ]
       .filter(v => v)
       .join(" ");

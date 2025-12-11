@@ -7,13 +7,26 @@ $search-button-width: var(--size-item-xlarge);
 $glyph-forward: url('chrome://browser/skin/forward.svg');
 
 .search-wrapper {
-  padding: 0 0 var(--space-xxlarge);
+  // Compact layout defaults formerly under .thumbs-ui-compact
+  padding: 0;
+  margin-block: var(--space-xxlarge);
+  margin-block-start: 0;
 
+  .logo-and-wordmark {
+    margin-block-end: var(--space-xxlarge);
+  }
 
-  // Edge case for users who have pocket stories turned off
-  .no-recommended-stories & {
-    // Bug 1967304 - Large number (40px)
-    padding-block-end: calc(var(--space-large) + var(--space-xlarge));
+  .logo-and-wordmark-wrapper {
+    margin-block-end: 0;
+  }
+
+  @media (height <=700px) {
+    padding: 0;
+    margin-block-start: 0;
+  }
+
+  @media (height > 700px) {
+    padding: 0;
   }
 
   // Edge case for users who have only search enabled
@@ -50,6 +63,22 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       }
     }
 
+  }
+
+  .search-inner-wrapper:has(.trending-searches-pill-wrapper) {
+    display: flex;
+    flex-direction: column;
+
+    .search-handoff-button {
+      height: 52px;
+    }
+
+    &.no-handoff {
+      #newtab-search-text,
+      .search-button {
+        height: 52px;
+      }
+    }
   }
 
   .search-handoff-button,
@@ -144,13 +173,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
         fill: var(--newtab-wordmark-color);
       }
     }
-  }
-}
-
-.shortcuts-refresh.has-recommended-stories {
-  .outer-wrapper:not(.fixed-search) .search-wrapper {
-    margin-block-end: var(--space-xlarge);
-    padding: 0;
   }
 }
 
@@ -267,12 +289,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     @media (min-width: $break-point-large) {
       display: block;
     }
-  }
-}
-
-@media (height <= 700px) {
-  .search-wrapper {
-    padding: 0 0 var(--space-xxlarge);
   }
 }
 
