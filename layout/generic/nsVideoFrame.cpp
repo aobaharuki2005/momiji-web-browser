@@ -219,12 +219,6 @@ bool nsVideoFrame::ReflowFinished() {
   return false;
 }
 
-nsRect nsVideoFrame::GetDestRect(const nsRect& aContentBox) const {
-  return nsLayoutUtils::ComputeObjectDestRect(
-      aContentBox, GetIntrinsicSize(/* aIgnoreContainment = */ true),
-      GetIntrinsicRatio(/* aIgnoreContainment = */ true), StylePosition());
-}
-
 void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
                           const ReflowInput& aReflowInput,
                           nsReflowStatus& aStatus) {
@@ -341,8 +335,6 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   aMetrics.SetSize(myWM, logicalDesiredSize);
 
   aMetrics.SetOverflowAreasToDesiredBounds();
-  aMetrics.mOverflowAreas.UnionAllWith(
-      GetDestRect(aReflowInput.ComputedPhysicalContentBoxRelativeToSelf()));
 
   FinishAndStoreOverflow(&aMetrics);
 
@@ -393,17 +385,13 @@ Maybe<nsSize> nsVideoFrame::PosterImageSize() const {
 }
 
 AspectRatio nsVideoFrame::GetIntrinsicRatio() const {
-  return GetIntrinsicRatio(/* aIgnoreContainment = */ false);
-}
-
-AspectRatio nsVideoFrame::GetIntrinsicRatio(bool aIgnoreContainment) const {
   if (!HasVideoElement()) {
     // Audio elements have no intrinsic ratio.
     return AspectRatio();
   }
 
   // 'contain:[inline-]size' replaced elements have no intrinsic ratio.
-  if (!aIgnoreContainment && GetContainSizeAxes().IsAny()) {
+  if (GetContainSizeAxes().IsAny()) {
     return AspectRatio();
   }
 
@@ -454,9 +442,8 @@ bool nsVideoFrame::ShouldDisplayPoster() const {
   return true;
 }
 
-IntrinsicSize nsVideoFrame::GetIntrinsicSize(bool aIgnoreContainment) const {
-  const auto containAxes =
-      aIgnoreContainment ? ContainSizeAxes(false, false) : GetContainSizeAxes();
+IntrinsicSize nsVideoFrame::GetIntrinsicSize() {
+  const auto containAxes = GetContainSizeAxes();
   const auto isVideo = HasVideoElement();
   // Intrinsic size will be given by contain-intrinsic-size if the element is
   // size-contained. If both axes have containment, FinishIntrinsicSize() will
@@ -495,10 +482,6 @@ IntrinsicSize nsVideoFrame::GetIntrinsicSize(bool aIgnoreContainment) const {
 
   return FinishIntrinsicSize(containAxes,
                              IntrinsicSize(kFallbackIntrinsicSize));
-}
-
-IntrinsicSize nsVideoFrame::GetIntrinsicSize() {
-  return GetIntrinsicSize(/* aIgnoreContainment = */ false);
 }
 
 void nsVideoFrame::UpdatePosterSource(bool aNotify) {
@@ -568,9 +551,9 @@ class nsDisplayVideo final : public nsPaintedDisplayItem {
   NS_DISPLAY_DECL_NAME("Video", TYPE_VIDEO)
 
   already_AddRefed<ImageContainer> GetImageContainer(gfxRect& aDestGFXRect) {
-    auto* f = static_cast<nsVideoFrame*>(Frame());
-    nsRect area = f->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
-    auto* element = static_cast<HTMLVideoElement*>(f->GetContent());
+    nsRect area = Frame()->GetContentRectRelativeToSelf() + ToReferenceFrame();
+    HTMLVideoElement* element =
+        static_cast<HTMLVideoElement*>(Frame()->GetContent());
 
     Maybe<CSSIntSize> videoSizeInPx = element->GetVideoSize();
     if (videoSizeInPx.isNothing() || area.IsEmpty()) {
@@ -590,9 +573,12 @@ class nsDisplayVideo final : public nsPaintedDisplayItem {
       return nullptr;
     }
 
-    nsRect dest =
-        f->GetDestRect(f->GetContentRectRelativeToSelf() + ToReferenceFrame());
-    aDestGFXRect = f->PresContext()->AppUnitsToGfxUnits(dest);
+    const auto aspectRatio = AspectRatio::FromSize(*videoSizeInPx);
+    const IntrinsicSize intrinsicSize(CSSPixel::ToAppUnits(*videoSizeInPx));
+    nsRect dest = nsLayoutUtils::ComputeObjectDestRect(
+        area, intrinsicSize, aspectRatio, Frame()->StylePosition());
+
+    aDestGFXRect = Frame()->PresContext()->AppUnitsToGfxUnits(dest);
     aDestGFXRect.Round();
     if (aDestGFXRect.IsEmpty()) {
       return nullptr;
@@ -601,7 +587,7 @@ class nsDisplayVideo final : public nsPaintedDisplayItem {
     return container.forget();
   }
 
-  bool CreateWebRenderCommands(
+  virtual bool CreateWebRenderCommands(
       mozilla::wr::DisplayListBuilder& aBuilder,
       mozilla::wr::IpcResourceUpdateQueue& aResources,
       const mozilla::layers::StackingContextHelper& aSc,
@@ -630,10 +616,11 @@ class nsDisplayVideo final : public nsPaintedDisplayItem {
   // For opaque videos, we will want to override GetOpaqueRegion here.
   // This is tracked by bug 1545498.
 
-  nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) const override {
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override {
     *aSnap = true;
     nsIFrame* f = Frame();
-    return f->InkOverflowRectRelativeToSelf() + ToReferenceFrame();
+    return f->GetContentRectRelativeToSelf() + ToReferenceFrame();
   }
 
   // Only report FirstContentfulPaint when the video is set
@@ -643,7 +630,8 @@ class nsDisplayVideo final : public nsPaintedDisplayItem {
     return video->VideoWidth() > 0;
   }
 
-  void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override {
+  virtual void Paint(nsDisplayListBuilder* aBuilder,
+                     gfxContext* aCtx) override {
     HTMLVideoElement* element =
         static_cast<HTMLVideoElement*>(Frame()->GetContent());
     gfxRect destGFXRect;

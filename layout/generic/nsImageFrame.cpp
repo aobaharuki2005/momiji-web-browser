@@ -1635,11 +1635,15 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
 
   aMetrics.SetOverflowAreasToDesiredBounds();
-  const bool imageOK = mKind != Kind::ImageLoadingContent ||
-                       ImageOk(mContent->AsElement()->State());
+  bool imageOK = mKind != Kind::ImageLoadingContent ||
+                 ImageOk(mContent->AsElement()->State());
 
   // Determine if the size is available
-  const bool haveSize = loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE;
+  bool haveSize = false;
+  if (loadStatus & imgIRequest::STATUS_SIZE_AVAILABLE) {
+    haveSize = true;
+  }
+
   if (!imageOK || !haveSize) {
     nsRect altFeedbackSize(
         0, 0,
@@ -1652,19 +1656,10 @@ void nsImageFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     // outside the image.
     nsRect& inkOverflow = aMetrics.InkOverflow();
     inkOverflow.UnionRect(inkOverflow, altFeedbackSize);
-  } else {
-    // Union with our dest rect (note that it will most likely get clipped in
-    // FinishAndStoreOverflow). Only do this if we're not fragmented, since in
-    // that case overflow goes into our continuation.
-    if (aStatus.IsComplete()) {
-      aMetrics.mOverflowAreas.UnionAllWith(
-          GetDestRect(aReflowInput.ComputedPhysicalContentBoxRelativeToSelf()));
-    }
-    if (PresShell()->IsActive()) {
-      // We've just reflowed and we should have an accurate size, so we're ready
-      // to request a decode.
-      MaybeDecodeForPredictedSize();
-    }
+  } else if (PresShell()->IsActive()) {
+    // We've just reflowed and we should have an accurate size, so we're ready
+    // to request a decode.
+    MaybeDecodeForPredictedSize();
   }
   FinishAndStoreOverflow(&aMetrics, aReflowInput.mStyleDisplay);
 
@@ -2356,8 +2351,10 @@ void nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
 }
 
 nsRect nsDisplayImage::GetDestRect() const {
-  auto* f = static_cast<nsImageFrame*>(mFrame);
-  return f->GetDestRect(f->GetContentRectRelativeToSelf() + ToReferenceFrame());
+  bool snap = true;
+  const nsRect frameContentBox = GetBounds(&snap);
+  nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
+  return imageFrame->GetDestRect(frameContentBox);
 }
 
 nsRect nsDisplayImage::GetDestRectViewTransition() const {
@@ -2584,8 +2581,7 @@ ImgDrawResult nsImageFrame::PaintImage(gfxContext& aRenderingContext,
                "bad width");
 
   nsPoint anchorPoint;
-  const nsRect dest =
-      GetDestRect(GetContentRectRelativeToSelf() + aPt, &anchorPoint);
+  nsRect dest = GetDestRect(GetContentRectRelativeToSelf() + aPt, &anchorPoint);
 
   SVGImageContext svgContext;
   SVGImageContext::MaybeStoreContextPaint(svgContext, this, aImage);
