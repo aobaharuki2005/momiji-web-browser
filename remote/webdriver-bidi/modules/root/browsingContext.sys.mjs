@@ -330,7 +330,7 @@ class BrowsingContextModule extends RootBiDiModule {
       // Bug 1884142: It's not supported on Android for the TestRunner package.
       const selectedBrowser = lazy.TabManager.getBrowserForTab(selectedTab);
       activated.push(
-        this.#waitForVisibilityChange(selectedBrowser.browsingContext)
+        this.#waitForVisibilityState(selectedBrowser.browsingContext, "hidden")
       );
     }
 
@@ -698,7 +698,7 @@ class BrowsingContextModule extends RootBiDiModule {
       );
     }
 
-    let waitForVisibilityChangePromise;
+    let waitForVisibilityStatePromise;
     switch (type) {
       case "window": {
         const newWindow = await lazy.windowManager.openBrowserWindow({
@@ -729,8 +729,9 @@ class BrowsingContextModule extends RootBiDiModule {
 
           // Create the promise immediately, but await it later in parallel with
           // waitForInitialNavigationCompleted.
-          waitForVisibilityChangePromise = this.#waitForVisibilityChange(
-            lazy.TabManager.getBrowserForTab(selectedTab).browsingContext
+          waitForVisibilityStatePromise = this.#waitForVisibilityState(
+            lazy.TabManager.getBrowserForTab(selectedTab).browsingContext,
+            "hidden"
           );
         }
 
@@ -762,7 +763,7 @@ class BrowsingContextModule extends RootBiDiModule {
           unloadTimeout: 5000,
         }
       ),
-      waitForVisibilityChangePromise,
+      waitForVisibilityStatePromise,
       blocker.promise,
     ]);
 
@@ -2419,11 +2420,11 @@ class BrowsingContextModule extends RootBiDiModule {
     }
   }
 
-  #waitForVisibilityChange(browsingContext) {
+  #waitForVisibilityState(browsingContext, expectedState) {
     return this._forwardToWindowGlobal(
       "_awaitVisibilityState",
       browsingContext.id,
-      { value: "hidden" },
+      { value: expectedState },
       { retryOnAbort: true }
     );
   }
