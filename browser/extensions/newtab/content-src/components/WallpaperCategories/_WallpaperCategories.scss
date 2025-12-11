@@ -39,6 +39,8 @@
   -moz-context-properties: fill;
   fill: currentColor;
   min-height: 1rem;
+  margin-inline-start: var(--space-xsmall);
+  margin-block-start: var(--space-xsmall);
 }
 
 .wallpaper-input {

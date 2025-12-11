@@ -13990,11 +13990,13 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     this.focusCategory = this.focusCategory.bind(this);
     this.handleUpload = this.handleUpload.bind(this);
     this.handleBack = this.handleBack.bind(this);
+    this.handleWallpaperListEntered = this.handleWallpaperListEntered.bind(this);
     this.getRGBColors = this.getRGBColors.bind(this);
     this.prefersHighContrastQuery = null;
     this.prefersDarkQuery = null;
     this.categoryRef = []; // store references for wallpaper category list
     this.wallpaperRef = []; // store reference for wallpaper selection list
+    this.arrowButtonRef = /*#__PURE__*/external_React_default().createRef(); // Used to focus arrow button when category opens
     this.customColorPickerRef = /*#__PURE__*/external_React_default().createRef(); // Used to determine contrast icon color for custom color picker
     this.customColorInput = /*#__PURE__*/external_React_default().createRef(); // Used to determine contrast icon color for custom color picker
     this.state = {
@@ -14107,7 +14109,7 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
     if (event.key === "Tab") {
       if (event.shiftKey) {
         event.preventDefault();
-        this.backToMenuButton?.focus();
+        this.arrowButtonRef.current?.focus();
       } else {
         event.preventDefault(); // prevent tabbing within wallpaper selection. We should only be using the Tab key to tab between groups
       }
@@ -14280,6 +14282,9 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
         this.focusCategory(this.state.focusedCategoryIndex);
       });
     });
+  }
+  handleWallpaperListEntered() {
+    this.arrowButtonRef.current?.focus();
   }
 
   // Record user interaction when changing wallpaper and reseting wallpaper to default
@@ -14517,16 +14522,15 @@ class _WallpaperCategories extends (external_React_default()).PureComponent {
       in: !!activeCategory,
       timeout: 300,
       classNames: "wallpaper-list",
-      unmountOnExit: true
+      unmountOnExit: true,
+      onEntered: this.handleWallpaperListEntered
     }, /*#__PURE__*/external_React_default().createElement("section", {
       className: "category wallpaper-list ignore-color-mode"
     }, /*#__PURE__*/external_React_default().createElement("button", {
+      ref: this.arrowButtonRef,
       className: "arrow-button",
       "data-l10n-id": activeCategoryFluentID,
-      onClick: this.handleBack,
-      ref: el => {
-        this.backToMenuButton = el;
-      }
+      onClick: this.handleBack
     }), /*#__PURE__*/external_React_default().createElement("div", {
       role: "grid",
       "aria-label": "Wallpaper selection. Use arrow keys to navigate."
