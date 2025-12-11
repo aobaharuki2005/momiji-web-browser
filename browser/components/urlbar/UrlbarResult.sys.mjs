@@ -111,14 +111,6 @@ export class UrlbarResult {
     if (!payloadHighlights || typeof payloadHighlights != "object") {
       throw new Error("Invalid result payload highlights");
     }
-    // Make sure every property in the payload has an array of highlights.  If a
-    // payload property does not have a highlights array, then give it one now.
-    // That way the consumer doesn't need to check whether it exists.
-    for (let name in payload) {
-      if (!(name in payloadHighlights)) {
-        payloadHighlights[name] = [];
-      }
-    }
     this.#payloadHighlights = Object.freeze(payloadHighlights);
 
     this.#autofill = autofill;
@@ -268,7 +260,8 @@ export class UrlbarResult {
    * @returns {string} The label to show in a simplified title / url view.
    */
   get title() {
-    return this._titleAndHighlights[0];
+    let value = this.#getTitleOrHighlights(this.payload);
+    return !value || Array.isArray(value) ? "" : value;
   }
 
   /**
@@ -277,58 +270,8 @@ export class UrlbarResult {
    * @returns {Array} The array of highlights.
    */
   get titleHighlights() {
-    return this._titleAndHighlights[1];
-  }
-
-  /**
-   * Returns an array [title, highlights].
-   *
-   * @returns {Array} The title and array of highlights.
-   */
-  get _titleAndHighlights() {
-    switch (this.type) {
-      case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
-      case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
-      case lazy.UrlbarUtils.RESULT_TYPE.URL:
-      case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
-      case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
-        if (this.payload.qsSuggestion) {
-          return [
-            // We will initially only be targeting en-US users with this experiment
-            // but will need to change this to work properly with l10n.
-            this.payload.qsSuggestion + " — " + this.payload.title,
-            this.payloadHighlights.qsSuggestion,
-          ];
-        }
-
-        if (this.payload.fallbackTitle) {
-          return [
-            this.payload.fallbackTitle,
-            this.payloadHighlights.fallbackTitle,
-          ];
-        }
-
-        if (this.payload.title) {
-          return [this.payload.title, this.payloadHighlights.title];
-        }
-
-        return [this.payload.url ?? "", this.payloadHighlights.url ?? []];
-      case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
-        if (this.payload.title) {
-          return [this.payload.title, this.payloadHighlights.title];
-        }
-        if (this.payload.providesSearchMode) {
-          return ["", []];
-        }
-        if (this.payload.tail && this.payload.tailOffsetIndex >= 0) {
-          return [this.payload.tail, this.payloadHighlights.tail];
-        } else if (this.payload.suggestion) {
-          return [this.payload.suggestion, this.payloadHighlights.suggestion];
-        }
-        return [this.payload.query, this.payloadHighlights.query];
-      default:
-        return ["", []];
-    }
+    let value = this.#getTitleOrHighlights(this.payloadHighlights);
+    return Array.isArray(value) ? value : [];
   }
 
   /**
@@ -360,6 +303,52 @@ export class UrlbarResult {
    */
   get isHiddenExposure() {
     return this.exposureTelemetry == lazy.UrlbarUtils.EXPOSURE_TELEMETRY.HIDDEN;
+  }
+
+  /**
+   * Returns title or highlights of given payload or payloadHighlights.
+   *
+   * @param {object} target payload or payloadHighlights
+   * @returns {string|Array} The title or array of highlights.
+   */
+  #getTitleOrHighlights(target) {
+    switch (this.type) {
+      case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
+      case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+      case lazy.UrlbarUtils.RESULT_TYPE.URL:
+      case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
+      case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+        if (this.payload.qsSuggestion) {
+          if (this.payload == target) {
+            // We will initially only be targeting en-US users with this
+            // experiment but will need to change this to work properly with
+            // l10n.
+            return target.qsSuggestion + " — " + target.title;
+          }
+          return target.qsSuggestion;
+        }
+        if (this.payload.fallbackTitle) {
+          return target.fallbackTitle;
+        }
+        if (this.payload.title) {
+          return target.title;
+        }
+        return target.url;
+      case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
+        if (this.payload.title) {
+          return target.title;
+        }
+        if (this.payload.providesSearchMode) {
+          return null;
+        }
+        if (this.payload.tail && this.payload.tailOffsetIndex >= 0) {
+          return target.tail;
+        } else if (this.payload.suggestion) {
+          return target.suggestion;
+        }
+        return target.query;
+    }
+    return null;
   }
 
   /**
@@ -417,79 +406,73 @@ export class UrlbarResult {
    * @returns {{ payload: object, payloadHighlights: object }}
    */
   static payloadAndSimpleHighlights(tokens, payloadInfo) {
-    // Convert scalar values in payloadInfo to [value] arrays.
-    for (let [name, info] of Object.entries(payloadInfo)) {
-      if (!Array.isArray(info)) {
-        payloadInfo[name] = [info];
+    let payload = {};
+    let highlightTypes = {};
+
+    for (let [name, valueOrValues] of Object.entries(payloadInfo)) {
+      if (Array.isArray(valueOrValues)) {
+        if (valueOrValues.length) {
+          payload[name] = valueOrValues[0];
+          let highlightType = valueOrValues[1];
+          if (highlightType) {
+            highlightTypes[name] = highlightType;
+          }
+        }
+      } else if (valueOrValues != undefined) {
+        payload[name] = valueOrValues;
       }
     }
 
     if (
-      (!payloadInfo.title || !payloadInfo.title[0]) &&
-      !payloadInfo.fallbackTitle &&
-      payloadInfo.url &&
-      typeof payloadInfo.url[0] == "string"
+      !payload.title &&
+      !payload.fallbackTitle &&
+      payload.url &&
+      typeof payload.url == "string"
     ) {
-      // If there's no title, show the domain as the title.  Not all valid URLs
+      // If there's no title, show the domain as the title. Not all valid URLs
       // have a domain.
-      payloadInfo.title = payloadInfo.title || [
-        "",
-        lazy.UrlbarUtils.HIGHLIGHT.TYPED,
-      ];
+      highlightTypes.title = lazy.UrlbarUtils.HIGHLIGHT.TYPED;
       try {
-        payloadInfo.title[0] = new URL(payloadInfo.url[0]).URI.displayHostPort;
+        payload.title = new URL(payload.url).URI.displayHostPort;
       } catch (e) {}
     }
 
-    if (payloadInfo.url) {
+    if (payload.url) {
       // For display purposes we need to unescape the url.
-      payloadInfo.displayUrl = [
-        lazy.UrlbarUtils.prepareUrlForDisplay(payloadInfo.url[0]),
-        payloadInfo.url[1],
-      ];
+      payload.displayUrl = lazy.UrlbarUtils.prepareUrlForDisplay(payload.url);
+      highlightTypes.displayUrl = highlightTypes.url;
     }
 
     // For performance reasons limit excessive string lengths, to reduce the
     // amount of string matching we do here, and avoid wasting resources to
     // handle long textruns that the user would never see anyway.
     for (let prop of ["displayUrl", "title", "suggestion"]) {
-      let val = payloadInfo[prop]?.[0];
-      if (typeof val == "string") {
-        payloadInfo[prop][0] = val.substring(
-          0,
-          lazy.UrlbarUtils.MAX_TEXT_LENGTH
-        );
+      let value = payload[prop];
+      if (typeof value == "string") {
+        payload[prop] = value.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH);
       }
     }
 
-    let entries = Object.entries(payloadInfo);
-    return {
-      payload: entries.reduce((payload, [name, [val, _]]) => {
-        payload[name] = val;
-        return payload;
-      }, {}),
-      payloadHighlights: entries.reduce(
-        (highlights, [name, [val, highlightType]]) => {
-          if (highlightType) {
-            highlights[name] = !Array.isArray(val)
-              ? lazy.UrlbarUtils.getTokenMatches(
-                  tokens,
-                  val || "",
-                  highlightType
-                )
-              : val.map(subval =>
-                  lazy.UrlbarUtils.getTokenMatches(
-                    tokens,
-                    subval,
-                    highlightType
-                  )
-                );
-          }
-          return highlights;
-        },
-        {}
-      ),
-    };
+    let payloadHighlights = {};
+    if (tokens) {
+      for (let [name, highlightType] of Object.entries(highlightTypes)) {
+        let value = payload[name];
+        let highlights = Array.isArray(value)
+          ? value.map(subval =>
+              lazy.UrlbarUtils.getTokenMatches(tokens, subval, highlightType)
+            )
+          : lazy.UrlbarUtils.getTokenMatches(
+              tokens,
+              value || "",
+              highlightType
+            );
+        if (highlights.length) {
+          payloadHighlights[name] = highlights;
+        }
+      }
+    }
+
+    return { payload, payloadHighlights };
   }
 
   static _dynamicResultTypesByName = new Map();
