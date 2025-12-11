@@ -3297,19 +3297,6 @@
     }
 
     /**
-     * Toggle split view active attribute
-     *
-     * @param {boolean} isActive
-     * @param {MozTabbrowserTab[]} tabs
-     */
-    setIsSplitViewActive(isActive, tabs) {
-      for (const tab of tabs) {
-        this.tabpanels.setSplitViewPanelActive(isActive, tab.linkedPanel);
-      }
-      this.tabpanels.isSplitViewActive = gBrowser.selectedTab.splitview;
-    }
-
-    /**
      * Ensures the split view footer exists for the given tab.
      *
      * @param {MozTabbrowserTab} tab

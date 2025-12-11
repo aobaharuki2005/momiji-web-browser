@@ -156,21 +156,16 @@
     -moz-user-focus: none !important;
   }
 
-  .split-view-panel {
-    --panel-min-width: 140px;
-    min-width: var(--panel-min-width);
-    max-width: calc(100% - var(--panel-min-width));
-    width: 49.4%;
-  }
-
   &[splitview] {
-    .split-view-panel.split-view-panel-active {
-      margin: var(--space-xsmall);
-      flex: 1;
-      position: relative;
-      width: unset;
-    }
+    --panel-min-width: 140px;
 
+    .split-view-panel {
+      position: relative;
+      flex: 1;
+      min-width: var(--panel-min-width);
+      max-width: calc(100% - var(--panel-min-width));
+      margin: var(--space-xsmall);
+    }
     /* Ensure any dialogs are clipped in an inactive/not-selected panel. */
     :root:not([inDOMFullscreen]) & > .split-view-panel:not(.deck-selected) {
       overflow: clip;

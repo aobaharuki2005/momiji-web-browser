@@ -28,8 +28,19 @@ async function checkSplitViewPanelVisible(tab, isVisible) {
   await BrowserTestUtils.waitForMutationCondition(
     panel,
     { attributes: true },
-    () => panel.classList.contains("split-view-panel-active") == isVisible
+    () => panel.classList.contains("split-view-panel") == isVisible
   );
+  if (isVisible) {
+    Assert.ok(
+      gBrowser.splitViewBrowsers.includes(tab.linkedBrowser),
+      "Split view panel is active."
+    );
+  } else {
+    Assert.ok(
+      !gBrowser.splitViewBrowsers.includes(tab.linkedBrowser),
+      "Split view panel is inactive."
+    );
+  }
 }
 
 function dragSplitter(deltaX, splitter) {
