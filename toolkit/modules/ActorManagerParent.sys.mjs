@@ -701,7 +701,6 @@ if (AppConstants.platform != "android") {
       esModuleURI: "resource://gre/actors/DateTimePickerChild.sys.mjs",
       events: {
         MozOpenDateTimePicker: {},
-        MozUpdateDateTimePicker: {},
         MozCloseDateTimePicker: {},
       },
     },

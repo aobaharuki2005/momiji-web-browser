@@ -81,16 +81,6 @@ export class DateTimePickerPanel {
     this.element.hidePopup();
   }
 
-  setPopupValue(data) {
-    const detail = data.value;
-    // Month value from input box starts from 1 instead of 0
-    detail.month = detail.month == undefined ? undefined : detail.month - 1;
-    this.postMessageToPicker({
-      name: "PickerSetValue",
-      detail,
-    });
-  }
-
   initPicker(detail) {
     let locale = new Services.intl.Locale(
       Services.locale.webExposedLocales[0],

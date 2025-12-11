@@ -35,13 +35,6 @@ export class DateTimePickerParent extends JSWindowActorParent {
         this.close();
         break;
       }
-      case "FormDateTime:UpdatePicker": {
-        if (!this._picker) {
-          return;
-        }
-        this._picker.setPopupValue(aMessage.data);
-        break;
-      }
       default:
         break;
     }

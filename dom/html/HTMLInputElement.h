@@ -778,11 +778,10 @@ class HTMLInputElement final : public TextControlElement,
   Element* GetDateTimeBoxElement();
 
   /*
-   * The following functions are called from datetime input box XBL to control
+   * The following functions are called from the datetimebox element to control
    * and update the picker.
    */
   void OpenDateTimePicker(const DateTimeValue& aInitialValue);
-  void UpdateDateTimePicker(const DateTimeValue& aValue);
   void CloseDateTimePicker();
 
   /**

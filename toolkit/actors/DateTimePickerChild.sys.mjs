@@ -176,12 +176,6 @@ export class DateTimePickerChild extends JSWindowActorChild {
         });
         break;
       }
-      case "MozUpdateDateTimePicker": {
-        let value = this._inputElement.getDateTimeInputBoxValue();
-        value.type = this._inputElement.type;
-        this.sendAsyncMessage("FormDateTime:UpdatePicker", { value });
-        break;
-      }
       case "MozCloseDateTimePicker": {
         this.sendAsyncMessage("FormDateTime:ClosePicker", {});
         this.close();

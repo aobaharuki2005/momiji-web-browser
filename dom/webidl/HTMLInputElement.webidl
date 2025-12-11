@@ -271,9 +271,6 @@ partial interface HTMLInputElement {
   undefined openDateTimePicker(optional DateTimeValue initialValue = {});
 
   [Func="IsChromeOrUAWidget"]
-  undefined updateDateTimePicker(optional DateTimeValue value = {});
-
-  [Func="IsChromeOrUAWidget"]
   undefined closeDateTimePicker();
 
   [Func="IsChromeOrUAWidget"]

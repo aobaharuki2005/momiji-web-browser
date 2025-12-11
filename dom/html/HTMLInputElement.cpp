@@ -2313,17 +2313,6 @@ void HTMLInputElement::OpenDateTimePicker(const DateTimeValue& aInitialValue) {
                                       CanBubble::eYes, Cancelable::eYes);
 }
 
-void HTMLInputElement::UpdateDateTimePicker(const DateTimeValue& aValue) {
-  if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
-    return;
-  }
-
-  mDateTimeInputBoxValue = MakeUnique<DateTimeValue>(aValue);
-  nsContentUtils::DispatchChromeEvent(OwnerDoc(), static_cast<Element*>(this),
-                                      u"MozUpdateDateTimePicker"_ns,
-                                      CanBubble::eYes, Cancelable::eYes);
-}
-
 void HTMLInputElement::CloseDateTimePicker() {
   if (NS_WARN_IF(!IsDateTimeInputType(mType))) {
     return;
