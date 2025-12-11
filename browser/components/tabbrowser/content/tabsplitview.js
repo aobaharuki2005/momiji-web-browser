@@ -39,9 +39,6 @@
     /** @type {MozTabbrowserTab[]} */
     #tabs = [];
 
-    /** @type {boolean} */
-    #activated = false;
-
     /**
      * @returns {boolean}
      */
@@ -147,26 +144,26 @@
     /**
      * Show all Split View tabs in the content area.
      */
-    #activate() {
+    #activate(skipShowPanels = false) {
       updateUrlbarButton.arm();
-      if (this.#activated) {
-        return;
+      if (!skipShowPanels) {
+        gBrowser.showSplitViewPanels(this.#tabs);
       }
-      gBrowser.showSplitViewPanels(this.#tabs);
       this.container.dispatchEvent(
         new CustomEvent("TabSplitViewActivate", {
           detail: { tabs: this.#tabs, splitview: this },
           bubbles: true,
         })
       );
-      this.#activated = true;
     }
 
     /**
      * Remove Split View tabs from the content area.
      */
-    #deactivate() {
-      gBrowser.hideSplitViewPanels(this.#tabs);
+    #deactivate(skipHidePanels = false) {
+      if (!skipHidePanels) {
+        gBrowser.hideSplitViewPanels(this.#tabs);
+      }
       updateUrlbarButton.arm();
       this.container.dispatchEvent(
         new CustomEvent("TabSplitViewDeactivate", {
@@ -174,7 +171,6 @@
           bubbles: true,
         })
       );
-      this.#activated = false;
     }
 
     /**
@@ -202,6 +198,7 @@
       }
       if (this.hasActiveTab) {
         this.#activate();
+        gBrowser.setIsSplitViewActive(true, this.#tabs);
       }
     }
 
@@ -210,6 +207,7 @@
      */
     unsplitTabs() {
       gBrowser.unsplitTabs(this);
+      gBrowser.setIsSplitViewActive(false, this.#tabs);
     }
 
     /**
@@ -244,10 +242,11 @@
      */
     on_TabSelect(event) {
       this.hasActiveTab = event.target.splitview === this;
+      gBrowser.setIsSplitViewActive(this.hasActiveTab, this.#tabs);
       if (this.hasActiveTab) {
-        this.#activate();
+        this.#activate(true);
       } else {
-        this.#deactivate();
+        this.#deactivate(true);
       }
     }
   }
