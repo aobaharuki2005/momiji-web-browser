@@ -331,6 +331,10 @@ var allowlist = [
   {
     file: "resource://app/modules/backup/CookiesBackupResource.sys.mjs",
   },
+  // Bug 2000725 importer lands (backed out due to unused file)
+  {
+    file: "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs",
+  },
   // Bug 2000945 - Move query intent detection to AI-window r?mardak (backed out due to unused file)
   {
     file: "moz-src:///browser/components/aiwindow/models/IntentClassifier.sys.mjs",
@@ -348,6 +352,10 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   },
+  // Bug 2002906 - Add insights storage
+  {
+    file: "moz-src:///browser/components/aiwindow/services/InsightStore.sys.mjs",
+  },
   // Bug 2003623 - Add assistant system prompt
   {
     file: "moz-src:///browser/components/aiwindow/models/prompts/AssistantPrompts.sys.mjs",
@@ -360,6 +368,10 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
   },
+  // Bug 2004888 - [FirstRun] Create Firstrun.html opening firstrun welcome screen
+  { file: "chrome://browser/content/aiwindow/ui/content/firstrun.html" },
+  { file: "chrome://browser/content/aiwindow/ui/content/firstrun.css" },
+  { file: "chrome://browser/content/aiwindow/ui/content/firstrun.js" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
