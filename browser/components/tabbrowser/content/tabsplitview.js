@@ -39,9 +39,6 @@
     /** @type {MozTabbrowserTab[]} */
     #tabs = [];
 
-    /** @type {boolean} */
-    #activated = false;
-
     /**
      * @returns {boolean}
      */
@@ -149,9 +146,6 @@
      */
     #activate() {
       updateUrlbarButton.arm();
-      if (this.#activated) {
-        return;
-      }
       gBrowser.showSplitViewPanels(this.#tabs);
       this.container.dispatchEvent(
         new CustomEvent("TabSplitViewActivate", {
@@ -159,7 +153,6 @@
           bubbles: true,
         })
       );
-      this.#activated = true;
     }
 
     /**
@@ -174,7 +167,6 @@
           bubbles: true,
         })
       );
-      this.#activated = false;
     }
 
     /**
