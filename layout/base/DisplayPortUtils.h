@@ -388,6 +388,7 @@ class DisplayPortUtils {
    * aLimitAncestor.
    */
   static FrameAndASRKind OneStepInASRChain(FrameAndASRKind aFrameAndASRKind,
+                                           nsDisplayListBuilder* aBuilder,
                                            nsIFrame* aLimitAncestor = nullptr);
 
   /**
@@ -406,6 +407,14 @@ class DisplayPortUtils {
       nsIFrame* aAnchor, nsIFrame* aLimitAncestor,
       const ActiveScrolledRoot* aASRofLimitAncestor,
       nsDisplayListBuilder* aBuilder);
+
+  /**
+   * aFrame is an absolutely positioned frame that is anchor positioned and
+   * compensates for scroll in at least one axis.
+   */
+  static bool ShouldAsyncScrollWithAnchor(nsIFrame* aFrame, nsIFrame* aAnchor,
+                                          nsDisplayListBuilder* aBuilder,
+                                          PhysicalAxes aAxes);
 };
 
 }  // namespace mozilla
