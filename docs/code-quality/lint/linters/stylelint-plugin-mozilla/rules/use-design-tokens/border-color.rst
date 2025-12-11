@@ -1,31 +1,39 @@
-=======================
-use-border-color-tokens
-=======================
+============
+border-color
+============
 
-This rule checks that CSS declarations use border-color design token variables
-instead of hard-coded values. This ensures consistent border-color across
-the application and makes it easier to maintain design system adoption.
+The ``use-design-tokens`` rule checks that CSS border-color related declarations
+(border-color, border, outline, outline-color, and their variants) use design
+token variables instead of hardcoded values. This ensures consistent border-color
+usage across the application and makes it easier to maintain design system
+consistency.
 
 Examples of incorrect code for this rule:
 -----------------------------------------
 
 .. code-block:: css
 
-    .card {
-      border-color: #191919;
-    }
+  .card {
+    border-color: #191919;
+  }
 
 .. code-block:: css
 
-    .custom-button {
-      border: 3px dashed rgba(42 42 42 / 0.15);
-    }
+  .custom-button {
+    border: 3px dashed rgba(42 42 42 / 0.15);
+  }
 
 .. code-block:: css
 
-    button:hover {
-      outline-color: rgba(0 0 0 / 0.25);
-    }
+  .error {
+    outline-color: rgba(255 0 0 / 0.25);
+  }
+
+.. code-block:: css
+
+  .element {
+    border-top-color: oklch(69% 0.19 15);
+  }
 
 .. code-block:: css
 
@@ -54,8 +62,8 @@ Examples of correct token usage for this rule:
 
 .. code-block:: css
 
-  button:hover {
-    outline-color: --outline-color;
+  .error {
+    outline-color: var(--outline-color-error);
   }
 
 .. code-block:: css
@@ -68,17 +76,17 @@ Examples of correct token usage for this rule:
 
 .. code-block:: css
 
-  /* Local CSS variables that reference valid border-radius tokens are allowed */
+  /* Local CSS variables that reference valid border-color tokens are allowed */
 
   :root {
     --my-token: var(--border-color);
   }
 
   .my-button {
-    border: 1px solid var(--my-token, oklch(55% 0.21 15));
+    border: 1px solid var(--my-token);
   }
 
-The rule also allows these values non-token values:
+The rule also allows these non-token values:
 
 .. code-block:: css
 
@@ -106,14 +114,8 @@ The rule also allows these values non-token values:
 
 .. code-block:: css
 
-  .inherited-border-color{
-    border-colors: inherit;
-  }
-
-.. code-block:: css
-
-  .unset-border-color {
-    border-color: unset;
+  .inherited-border-color {
+    border-color: inherit;
   }
 
 .. code-block:: css
@@ -124,8 +126,32 @@ The rule also allows these values non-token values:
 
 .. code-block:: css
 
-  .current-border-color {
-    border-color: currentColor;
+  .revert-border-color {
+    border-color: revert;
+  }
+
+.. code-block:: css
+
+  .revert-layer-border-color {
+    border-color: revert-layer;
+  }
+
+.. code-block:: css
+
+  .unset-border-color {
+    border-color: unset;
+  }
+
+.. code-block:: css
+
+  .border-none {
+    border: none;
+  }
+
+.. code-block:: css
+
+  .border-zero {
+    border: 0;
   }
 
 Autofix functionality

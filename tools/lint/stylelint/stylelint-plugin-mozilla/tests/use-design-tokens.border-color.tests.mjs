@@ -9,12 +9,9 @@
 // eslint-disable-next-line import/no-unresolved
 import { testRule } from "stylelint-test-rule-node";
 import stylelint from "stylelint";
-import useBorderColorTokens from "../rules/use-border-color-tokens.mjs";
+import useDesignTokens from "../rules/use-design-tokens.mjs";
 
-let plugin = stylelint.createPlugin(
-  useBorderColorTokens.ruleName,
-  useBorderColorTokens
-);
+let plugin = stylelint.createPlugin(useDesignTokens.ruleName, useDesignTokens);
 let {
   ruleName,
   rule: { messages },
@@ -142,92 +139,165 @@ testRule({
   reject: [
     {
       code: ".a { border-color: #666; }",
-      message: messages.rejected("#666"),
+      message: messages.rejected("#666", ["border-color", "border", "outline"]),
       description: "#666 should use a border-color design token.",
     },
     {
       code: ".a { border: 2px solid #666; }",
-      message: messages.rejected("2px solid #666"),
+      message: messages.rejected("2px solid #666", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description: "2px solid #666 should use a border-color design token.",
     },
     {
       code: ".a { border-color: oklch(69% 0.19 15); }",
-      message: messages.rejected("oklch(69% 0.19 15)"),
+      message: messages.rejected("oklch(69% 0.19 15)", [
+        "border-color",
+        "border",
+        "outline",
+      ]),
       description: "oklch(69% 0.19 15) should use a border-color design token.",
     },
     {
       code: ".a { border: 3px dashed oklch(42 42 42); }",
-      message: messages.rejected("3px dashed oklch(42 42 42)"),
+      message: messages.rejected("3px dashed oklch(42 42 42)", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description:
         "3px dashed oklch(42 42 42) should use a border-color design token.",
     },
     {
       code: ".a { border-color: rgba(42 42 42 / 0.15); }",
-      message: messages.rejected("rgba(42 42 42 / 0.15)"),
+      message: messages.rejected("rgba(42 42 42 / 0.15)", [
+        "border-color",
+        "border",
+        "outline",
+      ]),
       description:
         "rgba(42 42 42 / 0.15) should use a border-color design token.",
     },
     {
       code: ".a { border: 3px dashed rgba(42 42 42 / 0.15); }",
-      message: messages.rejected("3px dashed rgba(42 42 42 / 0.15)"),
+      message: messages.rejected("3px dashed rgba(42 42 42 / 0.15)", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description:
         "3px dashed rgba(42 42 42 / 0.15) should use a border-color design token.",
     },
     {
       code: ".a { border-top: 1px solid #666666; }",
-      message: messages.rejected("1px solid #666666"),
+      message: messages.rejected("1px solid #666666", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description: "1px solid #666666 should use a border-color design token.",
     },
     {
       code: ".a { border-top-color: rgb(10 20 30); }",
-      message: messages.rejected("rgb(10 20 30)"),
+      message: messages.rejected("rgb(10 20 30)", [
+        "border-color",
+        "border",
+        "outline",
+      ]),
       description: "rgb(10 20 30) should use a border-color design token.",
     },
     {
       code: ".a { border-right: 4px dotted #666; }",
-      message: messages.rejected("4px dotted #666"),
+      message: messages.rejected("4px dotted #666", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description: "4px dotted #666 should use a border-color design token.",
     },
     {
       code: ".a { border-right-color: oklch(69% 0.19 15); }",
-      message: messages.rejected("oklch(69% 0.19 15)"),
+      message: messages.rejected("oklch(69% 0.19 15)", [
+        "border-color",
+        "border",
+        "outline",
+      ]),
       description: "oklch(69% 0.19 15) should use a border-color design token.",
     },
     {
       code: ".a { border-bottom: medium solid color-mix(in srgb, red, blue); }",
-      message: messages.rejected("medium solid color-mix(in srgb, red, blue)"),
+      message: messages.rejected("medium solid color-mix(in srgb, red, blue)", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description:
         "color-mix(in srgb, red, blue) should use a border-color design token.",
     },
     {
       code: ".a { border-bottom-color: oklch(69% 0.19 15); }",
-      message: messages.rejected("oklch(69% 0.19 15)"),
+      message: messages.rejected("oklch(69% 0.19 15)", [
+        "border-color",
+        "border",
+        "outline",
+      ]),
       description: "oklch(69% 0.19 15) should use a border-color design token.",
     },
     {
       code: ".a { border-left: thin double #191919; }",
-      message: messages.rejected("thin double #191919"),
+      message: messages.rejected("thin double #191919", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description:
         "thin double #989898 should use a border-color design token.",
     },
     {
       code: ".a { border-left-color: oklch(69% 0.19 15); }",
-      message: messages.rejected("oklch(69% 0.19 15)"),
+      message: messages.rejected("oklch(69% 0.19 15)", [
+        "border-color",
+        "border",
+        "outline",
+      ]),
       description: "oklch(69% 0.19 15) should use a border-color design token.",
     },
     {
       code: ".a { outline: 2px solid #666; }",
-      message: messages.rejected("2px solid #666"),
+      message: messages.rejected("2px solid #666", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description: "2px solid #616263 should use a border-color design token.",
     },
     {
       code: ".a { outline-color: rgba(0 0 0 / 0.25); }",
-      message: messages.rejected("rgba(0 0 0 / 0.25)"),
+      message: messages.rejected("rgba(0 0 0 / 0.25)", [
+        "border-color",
+        "border",
+        "outline",
+      ]),
       description: "rgba(0 0 0 / 0.25) should use a border-color design token.",
     },
     {
       code: ".a { border: 1px solid var(--random-token, #666); }",
-      message: messages.rejected("1px solid var(--random-token, #666)"),
+      message: messages.rejected("1px solid var(--random-token, #666)", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description:
         "1px solid var(--random-token, #666) should use a border-color design token.",
     },
@@ -236,7 +306,11 @@ testRule({
         :root { --custom-token: #666; }
         .a { border-color: var(--custom-token); }
       `,
-      message: messages.rejected("var(--custom-token)"),
+      message: messages.rejected("var(--custom-token)", [
+        "border-color",
+        "border",
+        "outline",
+      ]),
       description:
         "var(--custom-token) should use a border-color design token.",
     },
@@ -245,7 +319,12 @@ testRule({
         :root { --custom-token: oklch(69% 0.19 15); }
         .a { border: 1px solid var(--custom-token); }
       `,
-      message: messages.rejected("1px solid var(--custom-token)"),
+      message: messages.rejected("1px solid var(--custom-token)", [
+        "border-color",
+        "border",
+        "outline",
+        "border-width",
+      ]),
       description:
         "1px solid var(--custom-token) should use a border-color design token.",
     },
@@ -261,37 +340,61 @@ testRule({
     {
       code: ".a { border-color: #fff; }",
       fixed: ".a { border-color: white; }",
-      message: messages.rejected("#fff"),
+      message: messages.rejected(
+        "#fff",
+        ["border-color", "border", "outline"],
+        "white"
+      ),
       description: "#fff should be fixed to white",
     },
     {
       code: ".a { border: 1px solid #ffffff; }",
       fixed: ".a { border: 1px solid white; }",
-      message: messages.rejected("1px solid #ffffff"),
+      message: messages.rejected(
+        "1px solid #ffffff",
+        ["border-color", "border", "outline", "border-width"],
+        "1px solid white"
+      ),
       description: "#ffffff should be fixed to white",
     },
     {
       code: ".a { outline-color: #FFF; }",
       fixed: ".a { outline-color: white; }",
-      message: messages.rejected("#FFF"),
+      message: messages.rejected(
+        "#FFF",
+        ["border-color", "border", "outline"],
+        "white"
+      ),
       description: "#FFF should be fixed to white",
     },
     {
       code: ".a { border-left-color: #FFFFFF; }",
       fixed: ".a { border-left-color: white; }",
-      message: messages.rejected("#FFFFFF"),
+      message: messages.rejected(
+        "#FFFFFF",
+        ["border-color", "border", "outline"],
+        "white"
+      ),
       description: "#FFFFFF should be fixed to white",
     },
     {
       code: ".a { outline: 1px solid #000; }",
       fixed: ".a { outline: 1px solid black; }",
-      message: messages.rejected("1px solid #000"),
+      message: messages.rejected(
+        "1px solid #000",
+        ["border-color", "border", "outline", "border-width"],
+        "1px solid black"
+      ),
       description: "#000 should be fixed to black",
     },
     {
       code: ".a { border-block-end-color: #000000; }",
       fixed: ".a { border-block-end-color: black; }",
-      message: messages.rejected("#000000"),
+      message: messages.rejected(
+        "#000000",
+        ["border-color", "border", "outline"],
+        "black"
+      ),
       description: "#000000 should be fixed to black",
     },
   ],

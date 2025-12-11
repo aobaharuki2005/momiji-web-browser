@@ -123,6 +123,40 @@ const FontWeight = {
 };
 
 /** @type {PropertyTypeConfig} */
+const BorderColor = {
+  allow: [
+    "transparent",
+    "currentColor",
+    "white",
+    "black",
+    "auto",
+    "normal",
+    "none",
+    "0",
+  ],
+  tokenTypes: ["border-color", "border", "outline"],
+  customFixes: customColorFixes,
+};
+
+/** @type {PropertyTypeConfig} */
+const BorderWidth = {
+  allow: [
+    "solid",
+    "dashed",
+    "dotted",
+    "double",
+    "groove",
+    "ridge",
+    "inset",
+    "outset",
+    "none",
+    "hidden",
+  ],
+  tokenTypes: ["border-width"],
+  allowUnits: true,
+};
+
+/** @type {PropertyTypeConfig} */
 const TextColor = {
   allow: ["currentColor", "white", "black"],
   tokenTypes: ["text-color"],
@@ -159,6 +193,90 @@ export const propertyConfig = {
   "box-shadow": {
     validTypes: [BoxShadow],
     multiple: true,
+  },
+  border: {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-block": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-block-color": {
+    validTypes: [BorderColor],
+  },
+  "border-block-end": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-block-end-color": {
+    validTypes: [BorderColor],
+  },
+  "border-block-start": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-block-start-color": {
+    validTypes: [BorderColor],
+  },
+  "border-color": {
+    validTypes: [BorderColor],
+  },
+  "border-inline": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-inline-color": {
+    validTypes: [BorderColor],
+  },
+  "border-inline-end": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-inline-end-color": {
+    validTypes: [BorderColor],
+  },
+  "border-inline-start": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-inline-start-color": {
+    validTypes: [BorderColor],
+  },
+  "border-bottom": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-bottom-color": {
+    validTypes: [BorderColor],
+  },
+  "border-left": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-left-color": {
+    validTypes: [BorderColor],
+  },
+  "border-right": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-right-color": {
+    validTypes: [BorderColor],
+  },
+  "border-top": {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "border-top-color": {
+    validTypes: [BorderColor],
+  },
+  outline: {
+    validTypes: [BorderColor, BorderWidth],
+    shorthand: true,
+  },
+  "outline-color": {
+    validTypes: [BorderColor],
   },
   color: {
     validTypes: [TextColor],
