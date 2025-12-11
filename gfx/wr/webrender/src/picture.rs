@@ -5324,8 +5324,16 @@ impl PicturePrimitive {
                             // code below.
                             match world_draw_rect {
                                 Some(world_draw_rect) => {
-                                    // Only check for occlusion on visible tiles that are fixed position.
-                                    if tile_cache.spatial_node_index == frame_context.root_spatial_node_index &&
+                                    let check_occluded_tiles = match frame_state.composite_state.compositor_kind {
+                                        CompositorKind::Layer { .. } => {
+                                            true
+                                        }
+                                        CompositorKind::Native { .. } | CompositorKind::Draw { .. } => {
+                                            // Only check for occlusion on visible tiles that are fixed position.
+                                            tile_cache.spatial_node_index == frame_context.root_spatial_node_index
+                                        }
+                                    };
+                                    if check_occluded_tiles &&
                                        frame_state.composite_state.occluders.is_tile_occluded(tile.z_id, world_draw_rect) {
                                         // If this tile has an allocated native surface, free it, since it's completely
                                         // occluded. We will need to re-allocate this surface if it becomes visible,
