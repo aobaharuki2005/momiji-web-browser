@@ -907,7 +907,6 @@ add_task(async function formatPunycodeResultCorrectly() {
       makeVisitResult(context, {
         uri: "http://test.xn--e1afmkfd.com/",
         title: "test visit for http://test.xn--e1afmkfd.com/",
-        displayUrl: "http://test.пример.com",
         heuristic: true,
       }),
     ],

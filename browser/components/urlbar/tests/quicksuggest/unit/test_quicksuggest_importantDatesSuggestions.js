@@ -351,7 +351,6 @@ add_task(async function testTwoSuggestions() {
       title: "Top Pick Suggestion 1",
       url: "https://foo.com/",
       telemetryType: "other_suggestions",
-      displayUrl: "foo.com",
       description: "A suggestion that just so happens to have the same keyword",
       isManageable: true,
       isSponsored: false,

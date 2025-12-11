@@ -528,7 +528,6 @@ add_task(async function dismissals_amp() {
         title: suggestion.title,
         url: suggestion.url,
         originalUrl: suggestion.original_url || suggestion.url,
-        displayUrl: suggestion.url.replace(/^https:\/\//, ""),
         dismissalKey: suggestion.dismissal_key,
         requestId: suggestion.request_id,
         sponsoredImpressionUrl: suggestion.impression_url,
@@ -559,7 +558,6 @@ add_task(async function dismissals_amp() {
       conditionalPayloadProperties: {
         url: { ignore: true },
         urlTimestampIndex: { ignore: true },
-        displayUrl: { ignore: true },
       },
     });
 
@@ -616,7 +614,6 @@ add_task(async function dismissals_amp() {
       conditionalPayloadProperties: {
         url: { ignore: true },
         urlTimestampIndex: { ignore: true },
-        displayUrl: { ignore: true },
       },
     });
   }
@@ -696,7 +693,6 @@ add_task(async function dismissals_unmanaged_1() {
         title: "example.com",
         url: suggestion.url,
         originalUrl: suggestion.original_url,
-        displayUrl: suggestion.url.replace(/^https:\/\//, ""),
         dismissalKey: suggestion.dismissal_key,
         source: "merino",
         isSponsored: false,
@@ -817,7 +813,6 @@ add_task(async function dismissals_unmanaged_2() {
       provider,
       title: "example.com",
       url: "https://example.com/url",
-      displayUrl: "example.com/url",
       source: "merino",
       isSponsored: false,
       shouldShowUrl: true,
@@ -999,7 +994,6 @@ add_task(async function bestMatch() {
           isSponsored: false,
           isBlockable: true,
           isManageable: true,
-          displayUrl: "url",
           source: "merino",
           provider,
         },
@@ -1091,7 +1085,6 @@ async function doUnmanagedTest({ pref, suggestion, shouldBeAdded }) {
     payload: {
       title: suggestion.title,
       url: suggestion.url,
-      displayUrl: suggestion.url.substring("https://".length),
       provider: suggestion.provider,
       telemetryType: suggestion.provider,
       isSponsored: !!suggestion.is_sponsored,

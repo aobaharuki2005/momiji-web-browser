@@ -143,7 +143,7 @@ async function checkBestMatchRow({ result, hasHelpUrl = false }) {
   Assert.ok(url.textContent, "Row URL has non-empty textContext");
   Assert.equal(
     url.textContent,
-    result.payload.displayUrl,
+    result.getDisplayableValueAndHighlights("url", { isURL: true }).value,
     "Row URL is correct"
   );
 
@@ -187,9 +187,5 @@ function makeBestMatchResult(payloadExtra = {}) {
       url: "https://example.com/best-match",
       ...payloadExtra,
     },
-    // TODO: We have to set highlights to calculate displayUrl now. But, since
-    //       it is not related to the higilights, think about it with another
-    //       way.
-    highlights: {},
   });
 }

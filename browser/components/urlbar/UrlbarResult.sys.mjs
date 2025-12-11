@@ -15,6 +15,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchemaValidator:
     "resource://gre/modules/components-utils/JsonSchemaValidator.sys.mjs",
+  ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   UrlbarUtils: "moz-src:///browser/components/urlbar/UrlbarUtils.sys.mjs",
 });
 
@@ -128,6 +129,7 @@ export class UrlbarResult {
         tokens: queryContext.tokens,
         highlightTargets: highlights,
       });
+      this.#highlights = Object.freeze(highlights);
     }
 
     this.#payload = this.#validatePayload(payload);
@@ -326,6 +328,67 @@ export class UrlbarResult {
   }
 
   /**
+   * Get value and highlights of given payloadName that can display in the view.
+   *
+   * @param {string} payloadName
+   *   The payload name to want to get the value.
+   * @param {object} options
+   * @param {object} [options.tokens]
+   *   Make highlighting that matches this tokens.
+   *   If no specific tokens, this function returns only value.
+   * @param {object} [options.isURL]
+   *   If true, the value will be from UrlbarUtils.prepareUrlForDisplay().
+   */
+  getDisplayableValueAndHighlights(payloadName, options = {}) {
+    if (!this.#displayValuesCache) {
+      this.#displayValuesCache = new Map();
+    }
+
+    if (this.#displayValuesCache.has(payloadName)) {
+      let cached = this.#displayValuesCache.get(payloadName);
+      // If the different options are specified, ignore the cache.
+      // NOTE: If options.tokens is undefined, use cache as it is.
+      if (
+        options.isURL == cached.options.isURL &&
+        (options.tokens == undefined ||
+          lazy.ObjectUtils.deepEqual(options.tokens, cached.options.tokens))
+      ) {
+        return this.#displayValuesCache.get(payloadName);
+      }
+    }
+
+    let value = this.payload[payloadName];
+    if (!value) {
+      return {};
+    }
+
+    if (options.isURL) {
+      value = lazy.UrlbarUtils.prepareUrlForDisplay(value);
+    }
+
+    if (typeof value == "string") {
+      value = value.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH);
+    }
+
+    if (!options.tokens?.length || !this.#highlights?.[payloadName]) {
+      let cached = { value, options };
+      this.#displayValuesCache.set(payloadName, cached);
+      return cached;
+    }
+
+    let type = this.#highlights[payloadName];
+    let highlights = Array.isArray(value)
+      ? value.map(subval =>
+          lazy.UrlbarUtils.getTokenMatches(options.tokens, subval, type)
+        )
+      : lazy.UrlbarUtils.getTokenMatches(options.tokens, value || "", type);
+
+    let cached = { value, highlights, options };
+    this.#displayValuesCache.set(payloadName, cached);
+    return cached;
+  }
+
+  /**
    * Returns title or highlights of given payload or payloadHighlights.
    *
    * @param {object} target payload or payloadHighlights
@@ -415,16 +478,10 @@ export class UrlbarResult {
       } catch (e) {}
     }
 
-    if (payload.url) {
-      // For display purposes we need to unescape the url.
-      payload.displayUrl = lazy.UrlbarUtils.prepareUrlForDisplay(payload.url);
-      highlightTargets.displayUrl = highlightTargets.url;
-    }
-
     // For performance reasons limit excessive string lengths, to reduce the
     // amount of string matching we do here, and avoid wasting resources to
     // handle long textruns that the user would never see anyway.
-    for (let prop of ["displayUrl", "title", "suggestion"]) {
+    for (let prop of ["title", "suggestion"]) {
       let value = payload[prop];
       if (typeof value == "string") {
         payload[prop] = value.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH);
@@ -548,5 +605,7 @@ export class UrlbarResult {
   #suggestedIndex;
   #payload;
   #payloadHighlights;
+  #highlights;
+  #displayValuesCache;
   #testForceNewContent;
 }

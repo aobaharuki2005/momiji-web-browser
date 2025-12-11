@@ -2209,7 +2209,6 @@ export class UrlbarView {
         break;
       case lazy.UrlbarUtils.RESULT_TYPE.URL:
         if (result.providerName == "UrlbarProviderClipboard") {
-          result.payload.displayUrl = "";
           actionSetter = () => {
             this.#l10nCache.setElementL10n(action, {
               id: "urlbar-result-action-visit-from-clipboard",
@@ -2273,21 +2272,25 @@ export class UrlbarView {
     item.toggleAttribute("has-url", setURL);
     let url = item._elements.get("url");
     if (setURL) {
-      let displayedUrl = result.payload.displayUrl;
-      let urlHighlights = result.payloadHighlights.displayUrl || [];
+      let { value: displayedUrl, highlights } =
+        result.getDisplayableValueAndHighlights("url", {
+          tokens: this.#queryContext.tokens,
+          isURL: true,
+        });
+      this.#updateOverflowTooltip(url, displayedUrl);
+
       if (lazy.UrlbarUtils.isTextDirectionRTL(displayedUrl, this.window)) {
         // Stripping the url prefix may change the initial text directionality,
         // causing parts of it to jump to the end. To prevent that we insert a
         // LRM character in place of the prefix.
         displayedUrl = "\u200e" + displayedUrl;
-        urlHighlights = this.#offsetHighlights(urlHighlights, 1);
+        highlights = this.#offsetHighlights(highlights, 1);
       }
       lazy.UrlbarUtils.addTextContentWithHighlights(
         url,
         displayedUrl,
-        urlHighlights
+        highlights
       );
-      this.#updateOverflowTooltip(url, result.payload.displayUrl);
     } else {
       url.textContent = "";
       this.#updateOverflowTooltip(url, "");

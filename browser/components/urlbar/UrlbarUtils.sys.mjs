@@ -1869,9 +1869,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
           },
         },
       },
-      displayUrl: {
-        type: "string",
-      },
       frecency: {
         type: "number",
       },
@@ -1909,9 +1906,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         type: "string",
       },
       descriptionL10n: L10N_SCHEMA,
-      displayUrl: {
-        type: "string",
-      },
       engine: {
         type: "string",
       },
@@ -1994,9 +1988,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
       },
       descriptionL10n: L10N_SCHEMA,
       dismissalKey: {
-        type: "string",
-      },
-      displayUrl: {
         type: "string",
       },
       dupedHeuristic: {
@@ -2103,9 +2094,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
     type: "object",
     required: ["keyword", "url"],
     properties: {
-      displayUrl: {
-        type: "string",
-      },
       icon: {
         type: "string",
       },
@@ -2153,9 +2141,6 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
     required: ["device", "url", "lastUsed"],
     properties: {
       device: {
-        type: "string",
-      },
-      displayUrl: {
         type: "string",
       },
       icon: {

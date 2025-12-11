@@ -44,7 +44,7 @@ add_task(async function test_receive_punycode_result() {
   let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 0);
   is(row.result.type, UrlbarUtils.RESULT_TYPE.URL, "row.result.type");
   is(
-    row.result.payload.displayUrl,
+    row.result.getDisplayableValueAndHighlights("url", { isURL: true }).value,
     "اختبار.اختبار.org:5000",
     "Result is trimmed and formatted correctly."
   );

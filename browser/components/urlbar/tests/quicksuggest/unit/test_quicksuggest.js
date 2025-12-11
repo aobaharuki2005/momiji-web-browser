@@ -1197,7 +1197,7 @@ add_task(async function dedupeAgainstURL_timestamps() {
   // Check the quick suggest's payload excluding the timestamp-related
   // properties.
   let actualQuickSuggest = context.results[QUICK_SUGGEST_INDEX];
-  let ignore = ["displayUrl", "sponsoredClickUrl", "url", "urlTimestampIndex"];
+  let ignore = ["sponsoredClickUrl", "url", "urlTimestampIndex"];
   Assert.deepEqual(
     getPayload(actualQuickSuggest, { ignore }),
     getPayload(expectedQuickSuggest, { ignore }),

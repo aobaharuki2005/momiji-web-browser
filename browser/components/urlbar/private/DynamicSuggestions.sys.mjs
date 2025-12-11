@@ -114,10 +114,6 @@ export class DynamicSuggestions extends SuggestProvider {
       source: lazy.UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...resultProperties,
       payload,
-      // TODO: We have to set highlights to calculate displayUrl now. But, since
-      //       it is not related to the higilights, think about it with another
-      //       way.
-      highlights: {},
     });
   }
 

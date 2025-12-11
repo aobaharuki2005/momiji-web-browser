@@ -761,7 +761,6 @@ add_task(async function () {
       makeVisitResult(context, {
         source: UrlbarUtils.RESULT_SOURCE.HISTORY,
         uri: `http://test.xn--e1afmkfd.com/`,
-        displayUrl: `test.пример.com`,
         heuristic: true,
         iconUri: "page-icon:http://test.xn--e1afmkfd.com/",
       }),

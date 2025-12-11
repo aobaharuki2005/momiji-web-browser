@@ -810,8 +810,6 @@ function makeSearchResult(
     isPrivateEngine,
   };
 
-  // Passing even an undefined URL in the payload creates a potentially-unwanted
-  // displayUrl parameter, so we add it only if specified.
   if (uri) {
     payload.url = uri;
   }

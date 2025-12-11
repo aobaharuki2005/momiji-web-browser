@@ -109,10 +109,6 @@ export class AddonSuggestions extends SuggestProvider {
         },
         helpUrl: lazy.QuickSuggest.HELP_URL,
       },
-      // TODO: We have to set highlights to calculate displayUrl now. But, since
-      //       it is not related to the higilights, think about it with another
-      //       way.
-      highlights: {},
     });
   }
 
