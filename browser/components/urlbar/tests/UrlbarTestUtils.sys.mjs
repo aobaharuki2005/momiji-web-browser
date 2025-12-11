@@ -564,7 +564,7 @@ class UrlbarInputTestUtils {
     details.autofill = !!result.autofill;
     details.image =
       element.getElementsByClassName("urlbarView-favicon")[0]?.src;
-    details.title = result.title;
+    details.title = result.getDisplayableValueAndHighlights("title").value;
     details.tags = "tags" in result.payload ? result.payload.tags : [];
     details.isSponsored = result.payload.isSponsored;
     details.userContextId = result.payload.userContextId;

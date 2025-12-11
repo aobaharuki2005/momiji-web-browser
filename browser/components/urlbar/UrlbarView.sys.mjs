@@ -2110,7 +2110,10 @@ export class UrlbarView {
       title.removeAttribute("aria-label");
     }
 
-    this.#updateOverflowTooltip(title, result.title);
+    this.#updateOverflowTooltip(
+      title,
+      result.getDisplayableValueAndHighlights("title").value
+    );
 
     let tagsContainer = item._elements.get("tagsContainer");
     if (tagsContainer) {
@@ -3147,10 +3150,14 @@ export class UrlbarView {
     }
 
     this.#l10nCache.removeElementL10n(titleNode);
+
+    let titleAndHighlights = result.getDisplayableValueAndHighlights("title", {
+      tokens: this.#queryContext.tokens,
+    });
     lazy.UrlbarUtils.addTextContentWithHighlights(
       titleNode,
-      result.title,
-      result.titleHighlights
+      titleAndHighlights.value,
+      titleAndHighlights.highlights
     );
   }
 
@@ -3723,7 +3730,7 @@ export class UrlbarView {
         title.textContent =
           localSearchMode || engine
             ? this.#queryContext.searchString
-            : result.title;
+            : result.getDisplayableValueAndHighlights("title").value;
 
         // Set the restyled-search attribute so the action text and title
         // separator are shown or hidden via CSS as appropriate.

@@ -279,16 +279,15 @@ add_task(async function allEnabled_sponsoredEnabled_sponsoredSearch() {
   // The title should include the full keyword and em dash, and the part of the
   // title that the search string does not match should be highlighted.
   let result = context.results[0];
+  let { value, highlights } = result.getDisplayableValueAndHighlights("title", {
+    tokens: context.tokens,
+  });
   Assert.equal(
-    result.title,
+    value,
     `${SPONSORED_SEARCH_STRING} — Amp Suggestion`,
-    "result.title should be correct"
+    "The title should be correct"
   );
-  Assert.deepEqual(
-    result.titleHighlights,
-    [],
-    "result.titleHighlights should be correct"
-  );
+  Assert.deepEqual(highlights, [], "The highlights should be correct");
 });
 
 // Tests with both `all` and sponsored enabled with a non-sponsored search
@@ -310,16 +309,15 @@ add_task(async function allEnabled_sponsoredEnabled_nonsponsoredSearch() {
   // The title should include the full keyword and em dash, and the part of the
   // title that the search string does not match should be highlighted.
   let result = context.results[0];
+  let { value, highlights } = result.getDisplayableValueAndHighlights("title", {
+    tokens: context.tokens,
+  });
   Assert.equal(
-    result.title,
+    value,
     `${NONSPONSORED_SEARCH_STRING} — Wikipedia Suggestion`,
-    "result.title should be correct"
+    "The title should be correct"
   );
-  Assert.deepEqual(
-    result.titleHighlights,
-    [],
-    "result.titleHighlights should be correct"
-  );
+  Assert.deepEqual(highlights, [], "The highlights should be correct");
 });
 
 // Tests with both `all` and sponsored enabled with a search string that doesn't

@@ -277,26 +277,6 @@ export class UrlbarResult {
   }
 
   /**
-   * Returns a title that could be used as a label for this result.
-   *
-   * @returns {string} The label to show in a simplified title / url view.
-   */
-  get title() {
-    let value = this.#getTitleOrHighlights(this.payload);
-    return !value || Array.isArray(value) ? "" : value;
-  }
-
-  /**
-   * Returns an array of highlights for the title.
-   *
-   * @returns {Array} The array of highlights.
-   */
-  get titleHighlights() {
-    let value = this.#getTitleOrHighlights(this.payloadHighlights);
-    return Array.isArray(value) ? value : [];
-  }
-
-  /**
    * Returns an icon url.
    *
    * @returns {string} url of the icon.
@@ -357,6 +337,11 @@ export class UrlbarResult {
       }
     }
 
+    let isTitle = payloadName == "title";
+    if (isTitle) {
+      payloadName = this.#getDisplayableTitlePayloadName();
+    }
+
     let value = this.payload[payloadName];
     if (!value) {
       return {};
@@ -366,35 +351,55 @@ export class UrlbarResult {
       value = lazy.UrlbarUtils.prepareUrlForDisplay(value);
     }
 
+    let highlightable = value;
+    let highlightType;
+    if (isTitle) {
+      if (payloadName == "qsSuggestion") {
+        value = this.payload.qsSuggestion + " — " + this.payload.title;
+      } else if (payloadName == "url") {
+        // If there's no title, show the domain as the title. Not all valid URLs
+        // have a domain.
+        try {
+          value = highlightable = new URL(this.payload.url).URI.displayHostPort;
+          highlightType = lazy.UrlbarUtils.HIGHLIGHT.TYPED;
+        } catch (e) {}
+      }
+    }
+
     if (typeof value == "string") {
       value = value.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH);
     }
 
-    if (!options.tokens?.length || !this.#highlights?.[payloadName]) {
+    highlightType ??= this.#highlights?.[payloadName];
+
+    if (!options.tokens?.length || !highlightType) {
       let cached = { value, options };
       this.#displayValuesCache.set(payloadName, cached);
       return cached;
     }
 
-    let type = this.#highlights[payloadName];
-    let highlights = Array.isArray(value)
+    let highlights = Array.isArray(highlightable)
       ? value.map(subval =>
-          lazy.UrlbarUtils.getTokenMatches(options.tokens, subval, type)
+          lazy.UrlbarUtils.getTokenMatches(
+            options.tokens,
+            subval,
+            highlightType
+          )
         )
-      : lazy.UrlbarUtils.getTokenMatches(options.tokens, value || "", type);
+      : lazy.UrlbarUtils.getTokenMatches(
+          options.tokens,
+          highlightable
+            ? highlightable.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH)
+            : "",
+          highlightType
+        );
 
     let cached = { value, highlights, options };
     this.#displayValuesCache.set(payloadName, cached);
     return cached;
   }
 
-  /**
-   * Returns title or highlights of given payload or payloadHighlights.
-   *
-   * @param {object} target payload or payloadHighlights
-   * @returns {string|Array} The title or array of highlights.
-   */
-  #getTitleOrHighlights(target) {
+  #getDisplayableTitlePayloadName() {
     switch (this.type) {
       case lazy.UrlbarUtils.RESULT_TYPE.KEYWORD:
       case lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
@@ -402,34 +407,28 @@ export class UrlbarResult {
       case lazy.UrlbarUtils.RESULT_TYPE.OMNIBOX:
       case lazy.UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
         if (this.payload.qsSuggestion) {
-          if (this.payload == target) {
-            // We will initially only be targeting en-US users with this
-            // experiment but will need to change this to work properly with
-            // l10n.
-            return target.qsSuggestion + " — " + target.title;
-          }
-          return target.qsSuggestion;
+          return "qsSuggestion";
         }
         if (this.payload.fallbackTitle) {
-          return target.fallbackTitle;
+          return "fallbackTitle";
         }
         if (this.payload.title) {
-          return target.title;
+          return "title";
         }
-        return target.url;
+        return "url";
       case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
         if (this.payload.title) {
-          return target.title;
+          return "title";
         }
         if (this.payload.providesSearchMode) {
           return null;
         }
         if (this.payload.tail && this.payload.tailOffsetIndex >= 0) {
-          return target.tail;
+          return "tail";
         } else if (this.payload.suggestion) {
-          return target.suggestion;
+          return "suggestion";
         }
-        return target.query;
+        return "query";
     }
     return null;
   }
