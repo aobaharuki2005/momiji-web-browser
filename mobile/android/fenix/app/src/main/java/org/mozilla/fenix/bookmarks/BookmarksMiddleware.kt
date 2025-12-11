@@ -208,15 +208,11 @@ internal class BookmarksMiddleware(
                                 return@also
                             }
                             scope.launch {
-                                val successes = preReductionState.createMovePairs()
-                                    ?.mapNotNull { item ->
-                                        bookmarksStorage.updateNode(item.first, item.second)
-                                            .takeIf { result ->
-                                                result.isSuccess
-                                            }
-                                }
-                                if (successes.isNullOrEmpty()) {
-                                    context.store.dispatch(SnackbarAction.SelectFolderFailed)
+                                preReductionState.createMovePairs()?.forEach {
+                                    val result = bookmarksStorage.updateNode(it.first, it.second)
+                                    if (result.isFailure) {
+                                        reportResultGlobally(BookmarksGlobalResultReport.SelectFolderFailed)
+                                    }
                                 }
                                 context.store.tryDispatchLoadFor(preReductionState.currentFolder.guid)
                             }
@@ -381,7 +377,6 @@ internal class BookmarksMiddleware(
             }
             is InitEditLoaded,
             SnackbarAction.Undo,
-            SnackbarAction.SelectFolderFailed,
             is OpenTabsConfirmationDialogAction.Present,
             OpenTabsConfirmationDialogAction.CancelTapped,
             DeletionDialogAction.CancelTapped,
@@ -696,10 +691,7 @@ private suspend fun BookmarksStorage.hasDesktopBookmarks(): Boolean {
 
 private fun BookmarksState.createMovePairs() = bookmarksMultiselectMoveState?.let { moveState ->
     moveState.guidsToMove.map { guid ->
-        val bookmarkItem = bookmarkItems.firstOrNull { it.guid == guid }
-        if (bookmarkItem == null) {
-            return null
-        }
+        val bookmarkItem = bookmarkItems.first { it.guid == guid }
         guid to BookmarkInfo(
             moveState.destination,
             // Setting position to 'null' is treated as a 'move to the end' by the storage API.
