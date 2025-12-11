@@ -421,7 +421,7 @@ export const isValidValue = (
 /**
  * Checks if CSS value uses tokens correctly (as a group).
  *
- * @param {string} value some CSS declaration to match
+ * @param {string | import('postcss').Node} value some CSS declaration to match
  * @param {string[]} tokenCSS
  * @param {object} cssCustomProperties
  * @param {string[]} allowList defaults to the base list in this file
@@ -433,7 +433,9 @@ export const isValidTokenUsage = (
   cssCustomProperties,
   allowList = ALLOW_LIST
 ) => {
-  const parsed = valueParser(value);
+  // TODO: this handles both string and postcss node values to support the old rule implementation
+  // once all design token rules are consolidated, we can remove this and use only postcss nodes
+  const parsed = typeof value === "string" ? valueParser(value) : value;
   let isValid = false;
 
   parsed.walk(node => {

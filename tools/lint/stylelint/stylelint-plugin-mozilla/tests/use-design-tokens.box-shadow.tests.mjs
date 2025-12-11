@@ -9,12 +9,9 @@
 // eslint-disable-next-line import/no-unresolved
 import { testRule } from "stylelint-test-rule-node";
 import stylelint from "stylelint";
-import useBoxShadowTokens from "../rules/use-box-shadow-tokens.mjs";
+import useDesignTokens from "../rules/use-design-tokens.mjs";
 
-let plugin = stylelint.createPlugin(
-  useBoxShadowTokens.ruleName,
-  useBoxShadowTokens
-);
+let plugin = stylelint.createPlugin(useDesignTokens.ruleName, useDesignTokens);
 let {
   ruleName,
   rule: { messages },
@@ -23,7 +20,7 @@ let {
 testRule({
   plugins: [plugin],
   ruleName,
-  config: [true, { tokenType: "brand" }],
+  config: true,
   fix: false,
   accept: [
     // allowed token values
@@ -42,6 +39,10 @@ testRule({
     {
       code: ".a { box-shadow: var(--box-shadow-level-2); }",
       description: "Using box-shadow-level-2 token is valid.",
+    },
+    {
+      code: ".a { box-shadow: var(--box-shadow-level-2), var(--box-shadow-level-1); }",
+      description: "Multiple shadows using tokens is allowed.",
     },
     {
       code: ".a { box-shadow: var(--box-shadow-level-3); }",
@@ -103,20 +104,24 @@ testRule({
   reject: [
     {
       code: ".a { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }",
-      message: messages.rejected("0 1px 3px rgba(0, 0, 0, 0.12)"),
+      message: messages.rejected("0 1px 3px rgba(0, 0, 0, 0.12)", [
+        "box-shadow",
+      ]),
       description: "Using hardcoded box-shadow should use a design token.",
     },
     {
       code: ".a { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24); }",
       message: messages.rejected(
-        "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)"
+        "0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24)",
+        ["box-shadow"]
       ),
       description: "Using multiple box-shadows should use a design token.",
     },
     {
       code: ".a { box-shadow: calc(var(--my-local) + 1px) 2px 4px rgba(0, 0, 0, 0.1); }",
       message: messages.rejected(
-        "calc(var(--my-local) + 1px) 2px 4px rgba(0, 0, 0, 0.1)"
+        "calc(var(--my-local) + 1px) 2px 4px rgba(0, 0, 0, 0.1)",
+        ["box-shadow"]
       ),
       description:
         "Using a calc() with custom variables should use a design token.",
@@ -124,7 +129,8 @@ testRule({
     {
       code: ".a { box-shadow: var(--random-token, 0 2px 4px rgba(0, 0, 0, 0.1)); }",
       message: messages.rejected(
-        "var(--random-token, 0 2px 4px rgba(0, 0, 0, 0.1))"
+        "var(--random-token, 0 2px 4px rgba(0, 0, 0, 0.1))",
+        ["box-shadow"]
       ),
       description: "Using a custom property should use a design token.",
     },
@@ -133,9 +139,31 @@ testRule({
         :root { --custom-token: 0 2px 4px rgba(0, 0, 0, 0.1); }
         .a { box-shadow: var(--custom-token); }
       `,
-      message: messages.rejected("var(--custom-token)"),
+      message: messages.rejected("var(--custom-token)", ["box-shadow"]),
       description:
         "Using a custom property that does not resolve to a design token should use a design token.",
+    },
+    {
+      code: `
+        :root { --custom-token: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .a { box-shadow: var(--custom-token), var(--box-shadow-level-1); }
+      `,
+      message: messages.rejected(
+        "var(--custom-token), var(--box-shadow-level-1)",
+        ["box-shadow"]
+      ),
+      description: "All shadows must use a design token (invalid first)",
+    },
+    {
+      code: `
+        :root { --custom-token: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .a { box-shadow: var(--box-shadow-level-1), var(--custom-token); }
+      `,
+      message: messages.rejected(
+        "var(--box-shadow-level-1), var(--custom-token)",
+        ["box-shadow"]
+      ),
+      description: "All shadows must use a design token (invalid second)",
     },
   ],
 });

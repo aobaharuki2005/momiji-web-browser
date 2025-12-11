@@ -13,7 +13,7 @@ import useFontWeightTokens from "./use-font-weight-tokens.mjs";
 import useSpaceTokens from "./use-space-tokens.mjs";
 import useBackgroundColorTokens from "./use-background-color-tokens.mjs";
 import useTextColorTokens from "./use-text-color-tokens.mjs";
-import useBoxShadowTokens from "./use-box-shadow-tokens.mjs";
+import useDesignTokens from "./use-design-tokens.mjs";
 import noNonSemanticTokenUsage from "./no-non-semantic-token-usage.mjs";
 import useSizeTokens from "./use-size-tokens.mjs";
 
@@ -27,7 +27,7 @@ export default {
   "use-space-tokens": useSpaceTokens,
   "use-background-color-tokens": useBackgroundColorTokens,
   "use-text-color-tokens": useTextColorTokens,
-  "use-box-shadow-tokens": useBoxShadowTokens,
+  "use-design-tokens": useDesignTokens,
   "no-non-semantic-token-usage": noNonSemanticTokenUsage,
   "use-size-tokens": useSizeTokens,
 };

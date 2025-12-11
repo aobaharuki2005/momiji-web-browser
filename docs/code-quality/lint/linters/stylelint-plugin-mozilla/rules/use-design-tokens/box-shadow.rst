@@ -1,10 +1,11 @@
-========================
-use-box-shadow-tokens
-========================
+==========
+box-shadow
+==========
 
-This rule checks that CSS declarations use box-shadow design token variables
-instead of hardcoded values. This ensures consistent box-shadow usage across
-the application and makes it easier to maintain design system consistency.
+The ``use-design-tokens`` rule checks that CSS ``box-shadow`` declarations use
+design token variables instead of hardcoded values. This ensures consistent
+box-shadow usage across the application and makes it easier to maintain design
+system consistency.
 
 Examples of incorrect code for this rule:
 -----------------------------------------
@@ -71,7 +72,6 @@ Examples of correct token usage for this rule:
   .tab {
     box-shadow: var(--box-shadow-tab);
   }
-
 
 The rule also allows these non-token values:
 
