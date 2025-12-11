@@ -362,11 +362,15 @@ class GeckoSitePermissionsStorage(
         private: Boolean,
     ): List<ContentPermission>? {
         return withContext(mainScope.coroutineContext) {
-            val geckoPermissions = geckoStorage.getPermissions(origin, private).await()
-            if (includeTemporary) {
-                geckoPermissions
-            } else {
-                geckoPermissions.filterNotTemporaryPermissions(geckoTemporaryPermissions)
+            try {
+                val geckoPermissions = geckoStorage.getPermissions(origin, private).await()
+                if (includeTemporary) {
+                    geckoPermissions
+                } else {
+                    geckoPermissions.filterNotTemporaryPermissions(geckoTemporaryPermissions)
+                }
+            } catch (_: Exception) {
+                 null
             }
         }
     }
