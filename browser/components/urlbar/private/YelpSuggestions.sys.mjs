@@ -222,6 +222,8 @@ export class YelpSuggestions extends SuggestProvider {
           service: titleHighlights,
         },
       };
+      // Used for the tooltip.
+      payload.title = title;
     } else {
       payload.title = title;
       highlights = {

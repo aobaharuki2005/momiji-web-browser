@@ -332,17 +332,6 @@ export class UrlbarResult {
       value = lazy.UrlbarUtils.prepareUrlForDisplay(value);
     }
 
-    let highlightable = value;
-    let highlightType;
-    if (isTitle && payloadName == "url") {
-      // If there's no title, show the domain as the title. Not all valid URLs
-      // have a domain.
-      try {
-        value = highlightable = new URL(this.payload.url).URI.displayHostPort;
-        highlightType = lazy.UrlbarUtils.HIGHLIGHT.TYPED;
-      } catch (e) {}
-    }
-
     if (typeof value == "string") {
       value = value.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH);
     }
@@ -351,7 +340,7 @@ export class UrlbarResult {
       return { value, highlights: this.#highlights[payloadName] };
     }
 
-    highlightType ??= this.#highlights?.[payloadName];
+    let highlightType = this.#highlights?.[payloadName];
 
     if (!options.tokens?.length || !highlightType) {
       let cached = { value, options };
@@ -359,7 +348,7 @@ export class UrlbarResult {
       return cached;
     }
 
-    let highlights = Array.isArray(highlightable)
+    let highlights = Array.isArray(value)
       ? value.map(subval =>
           lazy.UrlbarUtils.getTokenMatches(
             options.tokens,
@@ -367,13 +356,7 @@ export class UrlbarResult {
             highlightType
           )
         )
-      : lazy.UrlbarUtils.getTokenMatches(
-          options.tokens,
-          highlightable
-            ? highlightable.substring(0, lazy.UrlbarUtils.MAX_TEXT_LENGTH)
-            : "",
-          highlightType
-        );
+      : lazy.UrlbarUtils.getTokenMatches(options.tokens, value, highlightType);
 
     let cached = { value, highlights, options };
     this.#displayValuesCache.set(payloadName, cached);
@@ -390,10 +373,7 @@ export class UrlbarResult {
         if (this.payload.fallbackTitle) {
           return "fallbackTitle";
         }
-        if (this.payload.title) {
-          return "title";
-        }
-        return "url";
+        return "title";
       case lazy.UrlbarUtils.RESULT_TYPE.SEARCH:
         if (this.payload.title) {
           return "title";
