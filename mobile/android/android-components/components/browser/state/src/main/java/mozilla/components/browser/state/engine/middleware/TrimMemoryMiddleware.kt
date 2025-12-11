@@ -52,7 +52,7 @@ internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
         // This is not the most efficient way of doing this. We are looping over all tabs and then
         // dispatching a SuspendEngineSessionAction for each tab that is no longer needed.
         suspendTabs.forEach { tab ->
-            context.dispatch(EngineAction.SuspendEngineSessionAction(tab.id))
+            context.store.dispatch(EngineAction.SuspendEngineSessionAction(tab.id))
         }
     }
 

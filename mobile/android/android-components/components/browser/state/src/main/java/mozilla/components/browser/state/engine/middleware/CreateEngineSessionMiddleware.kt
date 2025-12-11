@@ -37,7 +37,7 @@ internal class CreateEngineSessionMiddleware(
         if (action is EngineAction.CreateEngineSessionAction) {
             val engineState = context.state.findTabOrCustomTab(action.tabId)?.engineState
             if (engineState?.initializing == false && engineState.engineSession == null && !engineState.crashed) {
-                context.dispatch(EngineAction.UpdateEngineSessionInitializingAction(action.tabId, true))
+                context.store.dispatch(EngineAction.UpdateEngineSessionInitializingAction(action.tabId, true))
                 createEngineSession(context.store, action)
                 next(action)
             } else {

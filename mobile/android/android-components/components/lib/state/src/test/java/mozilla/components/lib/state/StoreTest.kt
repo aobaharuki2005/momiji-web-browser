@@ -125,17 +125,17 @@ class StoreTest {
 
     @Test
     fun `Middleware chain gets executed in order`() {
-        val incrementMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
+        val incrementMiddleware: Middleware<TestState, TestAction> = { middlewareContext, next, action ->
             if (action == TestAction.DoNothingAction) {
-                store.dispatch(TestAction.IncrementAction)
+                middlewareContext.store.dispatch(TestAction.IncrementAction)
             }
 
             next(action)
         }
 
-        val doubleMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
+        val doubleMiddleware: Middleware<TestState, TestAction> = { middlewareContext, next, action ->
             if (action == TestAction.DoNothingAction) {
-                store.dispatch(TestAction.DoubleAction)
+                middlewareContext.store.dispatch(TestAction.DoubleAction)
             }
 
             next(action)
@@ -213,9 +213,9 @@ class StoreTest {
 
     @Test
     fun `Middleware can intercept and dispatch other action instead`() {
-        val rewritingMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
+        val rewritingMiddleware: Middleware<TestState, TestAction> = { middlewareContext, next, action ->
             if (action == TestAction.IncrementAction) {
-                store.dispatch(TestAction.DecrementAction)
+                middlewareContext.store.dispatch(TestAction.DecrementAction)
             } else {
                 next(action)
             }

@@ -116,7 +116,7 @@ class FenixSearchMiddleware(
 
                 setupSuggestionsProvidersCleanup(context)
 
-                context.dispatch(
+                context.store.dispatch(
                     SearchFragmentAction.UpdateSearchState(
                         browserStore.state.search,
                         true,
@@ -239,7 +239,7 @@ class FenixSearchMiddleware(
         }
         val shouldShowSuggestions = shouldShowTrendingSearches || shouldShowSearchSuggestions
 
-        context.dispatch(SearchSuggestionsVisibilityUpdated(shouldShowSuggestions))
+        context.store.dispatch(SearchSuggestionsVisibilityUpdated(shouldShowSuggestions))
 
         val showPrivatePrompt = with(context.state) {
             !settings.showSearchSuggestionsInPrivateOnboardingFinished &&
@@ -247,7 +247,7 @@ class FenixSearchMiddleware(
                     !isSearchSuggestionsFeatureEnabled() && !showSearchShortcuts && url != query
         }
 
-        context.dispatch(
+        context.store.dispatch(
             SearchFragmentAction.AllowSearchSuggestionsInPrivateModePrompt(
                 showPrivatePrompt,
             ),
@@ -259,7 +259,7 @@ class FenixSearchMiddleware(
      */
     private fun updateSearchProviders(context: MiddlewareContext<SearchFragmentState, SearchFragmentAction>) {
         val suggestionsProvidersBuilder = suggestionsProvidersBuilder ?: return
-        context.dispatch(
+        context.store.dispatch(
             SearchProvidersUpdated(
                 buildList {
                     if (context.state.showSearchShortcuts) {
@@ -431,16 +431,16 @@ class FenixSearchMiddleware(
     ) {
         when {
             searchEngine.type == SearchEngine.Type.APPLICATION && searchEngine.id == HISTORY_SEARCH_ENGINE_ID -> {
-                context.dispatch(SearchFragmentAction.SearchHistoryEngineSelected(searchEngine))
+                context.store.dispatch(SearchFragmentAction.SearchHistoryEngineSelected(searchEngine))
             }
             searchEngine.type == SearchEngine.Type.APPLICATION && searchEngine.id == BOOKMARKS_SEARCH_ENGINE_ID -> {
-                context.dispatch(SearchFragmentAction.SearchBookmarksEngineSelected(searchEngine))
+                context.store.dispatch(SearchFragmentAction.SearchBookmarksEngineSelected(searchEngine))
             }
             searchEngine.type == SearchEngine.Type.APPLICATION && searchEngine.id == TABS_SEARCH_ENGINE_ID -> {
-                context.dispatch(SearchFragmentAction.SearchTabsEngineSelected(searchEngine))
+                context.store.dispatch(SearchFragmentAction.SearchTabsEngineSelected(searchEngine))
             }
             searchEngine == context.state.defaultEngine -> {
-                context.dispatch(
+                context.store.dispatch(
                     SearchFragmentAction.SearchDefaultEngineSelected(
                         engine = searchEngine,
                         browsingMode = browsingModeManager.mode,
@@ -449,7 +449,7 @@ class FenixSearchMiddleware(
                 )
             }
             else -> {
-                context.dispatch(
+                context.store.dispatch(
                     SearchFragmentAction.SearchShortcutEngineSelected(
                         engine = searchEngine,
                         browsingMode = browsingModeManager.mode,
@@ -483,7 +483,7 @@ class FenixSearchMiddleware(
                 override fun onDestroy(owner: LifecycleOwner) {
                     // Search providers may keep hard references to lifecycle dependent objects
                     // so we need to reset them when the environment is cleared.
-                    context.dispatch(SearchProvidersUpdated(emptyList()))
+                    context.store.dispatch(SearchProvidersUpdated(emptyList()))
                 }
             },
         )

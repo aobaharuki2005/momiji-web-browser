@@ -71,8 +71,8 @@ internal class LinkingMiddleware(
         }
 
         engineObserver?.let {
-            context.dispatch(EngineAction.UpdateEngineSessionObserverAction(it.first, it.second))
-            context.dispatch(EngineAction.UpdateEngineSessionInitializingAction(it.first, false))
+            context.store.dispatch(EngineAction.UpdateEngineSessionObserverAction(it.first, it.second))
+            context.store.dispatch(EngineAction.UpdateEngineSessionInitializingAction(it.first, false))
         }
     }
 

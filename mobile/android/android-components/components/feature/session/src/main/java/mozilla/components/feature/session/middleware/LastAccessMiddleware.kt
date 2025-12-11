@@ -73,6 +73,6 @@ class LastAccessMiddleware : Middleware<BrowserState, BrowserAction> {
     }
 
     private fun MiddlewareContext<BrowserState, BrowserAction>.dispatchUpdateActionForId(id: String) {
-        dispatch(LastAccessAction.UpdateLastAccessAction(id, System.currentTimeMillis()))
+        store.dispatch(LastAccessAction.UpdateLastAccessAction(id, System.currentTimeMillis()))
     }
 }

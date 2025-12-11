@@ -238,7 +238,7 @@ class BrowserToolbarMiddleware(
         searchTerms: String? = null,
     ) {
         browsingMode?.let { browsingModeManager.mode = it }
-        context.dispatch(SearchQueryUpdated(BrowserToolbarQuery(searchTerms ?: "")))
+        context.store.dispatch(SearchQueryUpdated(BrowserToolbarQuery(searchTerms ?: "")))
         appStore.dispatch(SearchStarted())
     }
 
@@ -273,14 +273,14 @@ class BrowserToolbarMiddleware(
     private fun updateStartPageActions(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         selectedSearchEngine: SearchEngine?,
-    ) = context.dispatch(
+    ) = context.store.dispatch(
         PageActionsStartUpdated(
             buildStartPageActions(selectedSearchEngine),
         ),
     )
 
     private fun updatePageOrigin(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) =
-        context.dispatch(
+        context.store.dispatch(
             PageOriginUpdated(
                 PageOrigin(
                     hint = R.string.search_hint,
@@ -293,7 +293,7 @@ class BrowserToolbarMiddleware(
         )
 
     private fun updateEndBrowserActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
-        context.dispatch(
+        context.store.dispatch(
             BrowserActionsEndUpdated(
                 buildEndBrowserActions(),
             ),
@@ -330,7 +330,7 @@ class BrowserToolbarMiddleware(
     }
 
     private fun updateNavigationActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
-        context.dispatch(
+        context.store.dispatch(
             NavigationActionsUpdated(
                 buildNavigationActions(),
             ),

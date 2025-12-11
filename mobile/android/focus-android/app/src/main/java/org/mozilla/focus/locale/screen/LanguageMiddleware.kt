@@ -49,7 +49,7 @@ class LanguageMiddleware(
             }
             is LanguageScreenAction.InitLanguages -> {
                 // The initial LanguageScreenState when the user enters first in the screen
-                context.dispatch(
+                context.store.dispatch(
                     LanguageScreenAction.UpdateLanguages(
                         storage.languages,
                         storage.selectedLanguage,

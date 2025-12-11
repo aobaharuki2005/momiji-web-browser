@@ -212,7 +212,7 @@ class BrowserToolbarSearchMiddleware(
             }
 
             is SearchSettingsItemClicked -> {
-                context.dispatch(SearchQueryUpdated(BrowserToolbarQuery("")))
+                context.store.dispatch(SearchQueryUpdated(BrowserToolbarQuery("")))
                 appStore.dispatch(SearchEnded)
                 browserStore.dispatch(EngagementFinished(abandoned = true))
                 navController.navigate(
@@ -272,7 +272,7 @@ class BrowserToolbarSearchMiddleware(
                 Toolbar.buttonTapped.record(
                     Toolbar.ButtonTappedExtra(source = SOURCE_ADDRESS_BAR, item = ACTION_CLEAR_CLICKED),
                 )
-                context.dispatch(SearchQueryUpdated(BrowserToolbarQuery("")))
+                context.store.dispatch(SearchQueryUpdated(BrowserToolbarQuery("")))
             }
 
             is SearchQueryUpdated -> {
@@ -356,7 +356,7 @@ class BrowserToolbarSearchMiddleware(
     ) {
         val defaultEngine = browserStore.state.search.selectedOrDefaultSearchEngine
         val hintRes = engine.toolbarHintRes(defaultEngine)
-        context.dispatch(HintUpdated(hintRes))
+        context.store.dispatch(HintUpdated(hintRes))
     }
 
     /**
@@ -372,7 +372,7 @@ class BrowserToolbarSearchMiddleware(
             searchEngineShortcuts,
             uiContext.resources,
         )
-        context.dispatch(
+        context.store.dispatch(
             SearchActionsStartUpdated(
                 when (searchSelector == null) {
                     true -> emptyList()
@@ -423,7 +423,7 @@ class BrowserToolbarSearchMiddleware(
                 query.previous?.length == query.current.length + 1
         if (shouldCheckForSuggestions && !isBackspacing) {
             updateAutocompleteJob = scope.launch {
-                context.dispatch(
+                context.store.dispatch(
                     BrowserEditToolbarAction.AutocompleteSuggestionUpdated(
                         withContext(autocompleteDispatcher) {
                             fetchAutocomplete(
@@ -437,7 +437,7 @@ class BrowserToolbarSearchMiddleware(
                 )
             }
         } else {
-            context.dispatch(BrowserEditToolbarAction.AutocompleteSuggestionUpdated(null))
+            context.store.dispatch(BrowserEditToolbarAction.AutocompleteSuggestionUpdated(null))
         }
     }
 
@@ -483,7 +483,7 @@ class BrowserToolbarSearchMiddleware(
     private fun updateSearchEndPageActions(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         selectedSearchEngine: SearchEngine? = reconcileSelectedEngine(),
-    ) = context.dispatch(
+    ) = context.store.dispatch(
         SearchActionsEndUpdated(
             buildSearchEndPageActions(
                 context.state.editState.query.current,
@@ -538,7 +538,7 @@ class BrowserToolbarSearchMiddleware(
                         observeQRScannerInputJob?.cancel()
 
                         appStore.dispatch(AppAction.QrScannerAction.QrScannerInputConsumed)
-                        context.dispatch(
+                        context.store.dispatch(
                             SearchQueryUpdated(
                                 BrowserToolbarQuery(it.qrScannerState.lastScanData),
                             ),
@@ -564,7 +564,7 @@ class BrowserToolbarSearchMiddleware(
                 .distinctUntilChanged()
                 .collect { voiceInputResult ->
                     if (!voiceInputResult.isNullOrEmpty()) {
-                        context.dispatch(
+                        context.store.dispatch(
                             SearchQueryUpdated(
                                 query = BrowserToolbarQuery(voiceInputResult),
                                 isQueryPrefilled = true,

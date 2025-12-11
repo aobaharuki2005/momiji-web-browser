@@ -38,10 +38,6 @@ internal class ReducerChainBuilder<S : State, A : Action>(
             override val state: S
                 get() = store.state
 
-            override fun dispatch(action: A) {
-                get(store).invoke(action)
-            }
-
             override val store: Store<S, A>
                 get() = store
         }

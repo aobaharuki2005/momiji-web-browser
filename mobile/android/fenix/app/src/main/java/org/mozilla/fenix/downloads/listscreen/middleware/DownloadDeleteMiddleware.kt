@@ -66,7 +66,7 @@ class DownloadDeleteMiddleware(
             try {
                 delay(delay)
                 items.forEach { removeDownloadUseCase(it) }
-                context.dispatch(DownloadUIAction.FileItemDeletedSuccessfully)
+                context.store.dispatch(DownloadUIAction.FileItemDeletedSuccessfully)
             } catch (e: CancellationException) {
                 context.store.dispatch(DownloadUIAction.UndoPendingDeletionSet(items))
             } finally {

@@ -60,9 +60,9 @@ class BrowserToolbarSearchStatusSyncMiddleware(
                 .distinctUntilChangedBy { it.searchState.isSearchActive }
                 .collect {
                     if (it.searchState.isSearchActive) {
-                        context.dispatch(EnterEditMode(browsingModeManager.mode.isPrivate))
+                        context.store.dispatch(EnterEditMode(browsingModeManager.mode.isPrivate))
                     } else {
-                        context.dispatch(ExitEditMode)
+                        context.store.dispatch(ExitEditMode)
                     }
                 }
         }

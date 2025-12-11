@@ -40,7 +40,7 @@ internal class CrashMiddleware : Middleware<BrowserState, BrowserAction> {
         // We suspend the crashed session here. After that the reducer will mark it as "crashed".
         // That will prevent it from getting recreated until explicitly handling the crash by
         // restoring.
-        context.dispatch(
+        context.store.dispatch(
             EngineAction.SuspendEngineSessionAction(action.tabId),
         )
     }

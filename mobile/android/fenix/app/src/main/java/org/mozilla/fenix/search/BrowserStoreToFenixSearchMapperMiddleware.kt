@@ -53,7 +53,7 @@ class BrowserStoreToFenixSearchMapperMiddleware(
             map { it.search }
                 .distinctUntilChanged()
                 .collect { searchState ->
-                    context.dispatch(
+                    context.store.dispatch(
                         UpdateSearchState(searchState, true),
                     )
                 }

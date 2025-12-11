@@ -221,7 +221,7 @@ class HistoryMetadataMiddleware(
         }
 
         val key = historyMetadataService.createMetadata(tab, searchTerm, referrerUrl)
-        context.dispatch(HistoryMetadataAction.SetHistoryMetadataKeyAction(tab.id, key))
+        context.store.dispatch(HistoryMetadataAction.SetHistoryMetadataKeyAction(tab.id, key))
     }
 
     private fun updateHistoryMetadata(tab: TabSessionState) {

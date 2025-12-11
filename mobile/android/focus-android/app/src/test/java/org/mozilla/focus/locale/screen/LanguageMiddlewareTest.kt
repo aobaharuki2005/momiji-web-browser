@@ -10,6 +10,7 @@ import android.content.res.Configuration
 import android.content.res.Resources
 import kotlinx.coroutines.test.runTest
 import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import mozilla.components.support.locale.LocaleUseCases
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -110,11 +111,12 @@ class LanguageMiddlewareTest {
         val action = LanguageScreenAction.InitLanguages
         `when`(mockStorage.languages).thenReturn(languages)
         `when`(mockStorage.selectedLanguage).thenReturn(selectedLanguage)
-
+        val mockStore = mock<Store<LanguageScreenState, LanguageScreenAction>>()
+        `when`(mockMiddlewareContext.store).thenReturn(mockStore)
         middleware.invoke(mockMiddlewareContext, mockNext, action)
 
         val dispatchedActionCaptor = argumentCaptor<LanguageScreenAction>()
-        verify(mockMiddlewareContext).dispatch(dispatchedActionCaptor.capture())
+        verify(mockStore).dispatch(dispatchedActionCaptor.capture())
         val dispatchedAction = dispatchedActionCaptor.value
         assertTrue(dispatchedAction is LanguageScreenAction.UpdateLanguages)
         dispatchedAction as LanguageScreenAction.UpdateLanguages

@@ -303,7 +303,7 @@ class CustomTabBrowserToolbarMiddleware(
             mapNotNull { state -> state.findCustomTab(customTabId) }
                 .distinctUntilChangedBy { it.content.progress }
                 .collect {
-                    context.dispatch(
+                    context.store.dispatch(
                         UpdateProgressBarConfig(
                             buildProgressBar(it.content.progress),
                         ),
@@ -335,7 +335,7 @@ class CustomTabBrowserToolbarMiddleware(
     private fun updateStartBrowserActions(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
-    ) = context.dispatch(
+    ) = context.store.dispatch(
         BrowserActionsStartUpdated(
             buildStartBrowserActions(customTab),
         ),
@@ -344,7 +344,7 @@ class CustomTabBrowserToolbarMiddleware(
     private fun updateStartPageActions(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
-    ) = context.dispatch(
+    ) = context.store.dispatch(
         PageActionsStartUpdated(
             buildStartPageActions(customTab),
         ),
@@ -355,7 +355,7 @@ class CustomTabBrowserToolbarMiddleware(
         customTab: CustomTabSessionState?,
     ) {
         scope.launch {
-            context.dispatch(
+            context.store.dispatch(
                 BrowserDisplayToolbarAction.PageOriginUpdated(
                     PageOrigin(
                         hint = R.string.search_hint,
@@ -372,7 +372,7 @@ class CustomTabBrowserToolbarMiddleware(
     private fun updateEndPageActions(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
-    ) = context.dispatch(
+    ) = context.store.dispatch(
         BrowserDisplayToolbarAction.PageActionsEndUpdated(
             buildEndPageActions(customTab),
         ),
@@ -381,7 +381,7 @@ class CustomTabBrowserToolbarMiddleware(
     private fun updateEndBrowserActions(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
-    ) = context.dispatch(
+    ) = context.store.dispatch(
         BrowserActionsEndUpdated(
             buildEndBrowserActions(customTab),
         ),

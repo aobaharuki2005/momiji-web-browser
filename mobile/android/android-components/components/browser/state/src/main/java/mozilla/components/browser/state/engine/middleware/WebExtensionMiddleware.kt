@@ -67,12 +67,12 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
 
         if (engineSession == null) {
             logger.debug("No engine session for new active tab (${nextActiveTab?.id})")
-            context.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(null))
+            context.store.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(null))
             return
         } else {
             logger.debug("New active tab (${nextActiveTab.id})")
             engineSession.markActiveForWebExtensions(true)
-            context.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(nextActiveTab.id))
+            context.store.dispatch(WebExtensionAction.UpdateActiveWebExtensionTabAction(nextActiveTab.id))
         }
     }
 }

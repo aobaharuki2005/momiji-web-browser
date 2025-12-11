@@ -374,7 +374,7 @@ class BrowserToolbarMiddleware(
                         ),
                     )
                 } else {
-                    context.dispatch(SearchQueryUpdated(BrowserToolbarQuery(searchTerms)))
+                    context.store.dispatch(SearchQueryUpdated(BrowserToolbarQuery(searchTerms)))
                     appStore.dispatch(SearchStarted(selectedTab.id))
                 }
             }
@@ -394,7 +394,7 @@ class BrowserToolbarMiddleware(
                 }
             }
             is PasteFromClipboardClicked -> {
-                context.dispatch(SearchQueryUpdated(BrowserToolbarQuery(clipboard.text.orEmpty())))
+                context.store.dispatch(SearchQueryUpdated(BrowserToolbarQuery(clipboard.text.orEmpty())))
                 appStore.dispatch(SearchStarted(browserStore.state.selectedTabId))
             }
             is LoadFromClipboardClicked -> {
@@ -661,21 +661,21 @@ class BrowserToolbarMiddleware(
     }
 
     private fun updateStartBrowserActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) =
-        context.dispatch(
+        context.store.dispatch(
             BrowserActionsStartUpdated(
                 buildStartBrowserActions(),
             ),
         )
 
     private fun updateStartPageActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) =
-        context.dispatch(
+        context.store.dispatch(
             BrowserDisplayToolbarAction.PageActionsStartUpdated(
                 buildStartPageActions(),
             ),
     )
 
     private suspend fun updateEndBrowserActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
-        context.dispatch(
+        context.store.dispatch(
             BrowserActionsEndUpdated(
                 buildEndBrowserActions(),
             ),
@@ -695,7 +695,7 @@ class BrowserToolbarMiddleware(
     }
 
     private fun updateEndPageActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) =
-        context.dispatch(
+        context.store.dispatch(
             PageActionsEndUpdated(
                 buildEndPageActions(),
             ),
@@ -806,7 +806,7 @@ class BrowserToolbarMiddleware(
     }
 
     private suspend fun updateNavigationActions(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
-        context.dispatch(
+        context.store.dispatch(
             NavigationActionsUpdated(
                 buildNavigationActions(),
             ),
@@ -870,7 +870,7 @@ class BrowserToolbarMiddleware(
         browserStore.observeWhileActive {
             distinctUntilChangedBy { it.selectedTab?.content?.progress }
             .collect {
-                context.dispatch(
+                context.store.dispatch(
                     UpdateProgressBarConfig(
                         buildProgressBar(it.selectedTab?.content?.progress ?: 0),
                     ),
@@ -941,7 +941,7 @@ class BrowserToolbarMiddleware(
             }
         }
 
-        context.dispatch(
+        context.store.dispatch(
             BrowserDisplayToolbarAction.PageOriginUpdated(
                 PageOrigin(
                     hint = R.string.search_hint,
@@ -970,7 +970,7 @@ class BrowserToolbarMiddleware(
             distinctUntilChangedBy { it.cancelPrivateDownloadsAccepted }
             .collect {
                 if (it.cancelPrivateDownloadsAccepted) {
-                    context.dispatch(CloseCurrentTab)
+                    context.store.dispatch(CloseCurrentTab)
                 }
             }
         }

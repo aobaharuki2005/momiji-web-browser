@@ -83,16 +83,16 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
                 val tab = context.state.findTab(action.sessionId)
                 if (isReaderUrl(tab, action.url)) {
                     val urlReplaced = tab?.readerState?.activeUrl?.let { activeUrl ->
-                        context.dispatch(ContentAction.UpdateUrlAction(action.sessionId, activeUrl))
+                        context.store.dispatch(ContentAction.UpdateUrlAction(action.sessionId, activeUrl))
                         true
                     } ?: false
-                    context.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, true))
+                    context.store.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, true))
                     !urlReplaced
                 } else {
-                    context.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, false))
-                    context.dispatch(ReaderAction.UpdateReaderableAction(action.sessionId, false))
-                    context.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.sessionId, true))
-                    context.dispatch(ReaderAction.ClearReaderActiveUrlAction(action.sessionId))
+                    context.store.dispatch(ReaderAction.UpdateReaderActiveAction(action.sessionId, false))
+                    context.store.dispatch(ReaderAction.UpdateReaderableAction(action.sessionId, false))
+                    context.store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.sessionId, true))
+                    context.store.dispatch(ReaderAction.ClearReaderActiveUrlAction(action.sessionId))
                     true
                 }
             }
@@ -106,12 +106,12 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
     ) {
         when (action) {
             is TabListAction.SelectTabAction -> {
-                context.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.tabId, true))
-                context.dispatch(ReaderAction.UpdateReaderableAction(action.tabId, false))
-                context.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.tabId, true))
+                context.store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.tabId, true))
+                context.store.dispatch(ReaderAction.UpdateReaderableAction(action.tabId, false))
+                context.store.dispatch(ReaderAction.UpdateReaderableCheckRequiredAction(action.tabId, true))
             }
             is EngineAction.LinkEngineSessionAction -> {
-                context.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.tabId, true))
+                context.store.dispatch(ReaderAction.UpdateReaderConnectRequiredAction(action.tabId, true))
             }
             is ReaderAction.UpdateReaderActiveUrlAction -> {
                 // When a tab is restored, the reader page will connect, but we won't get a
@@ -120,7 +120,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
                 val tab = context.state.findTab(action.tabId)
                 val url = tab?.content?.url
                 if (url != null && isReaderUrl(tab, url)) {
-                    context.dispatch(ContentAction.UpdateUrlAction(tab.id, url))
+                    context.store.dispatch(ContentAction.UpdateUrlAction(tab.id, url))
                 }
             }
             else -> {

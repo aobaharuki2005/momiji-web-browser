@@ -123,12 +123,12 @@ class ReviewPromptMiddleware(
             if (isTelemetryEnabled()) {
                 // This is a temporary change while investigating repeated custom review prompts as
                 // filed in https://bugzilla.mozilla.org/show_bug.cgi?id=2001801.
-                context.dispatch(ShowPlayStorePrompt)
+                context.store.dispatch(ShowPlayStorePrompt)
             } else {
-                context.dispatch(ShowPlayStorePrompt)
+                context.store.dispatch(ShowPlayStorePrompt)
             }
         } else {
-            context.dispatch(DoNotShowReviewPrompt)
+            context.store.dispatch(DoNotShowReviewPrompt)
         }
     }
 }

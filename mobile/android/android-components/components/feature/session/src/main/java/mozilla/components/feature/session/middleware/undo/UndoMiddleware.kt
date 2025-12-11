@@ -109,7 +109,7 @@ class UndoMiddleware(
             recoverableTabs.find { it.state.id == selectedTabId }?.state?.id
         }
 
-        context.dispatch(
+        context.store.dispatch(
             UndoAction.AddRecoverableTabs(tag, recoverableTabs, selectionToRestore),
         )
 

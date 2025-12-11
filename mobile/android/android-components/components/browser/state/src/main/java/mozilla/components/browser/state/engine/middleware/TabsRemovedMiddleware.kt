@@ -60,7 +60,7 @@ internal class TabsRemovedMiddleware(
     ) {
         tabs.forEach { tab ->
             if (tab.engineState.engineSession != null) {
-                context.dispatch(
+                context.store.dispatch(
                     EngineAction.UnlinkEngineSessionAction(
                         tab.id,
                     ),

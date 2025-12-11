@@ -32,21 +32,6 @@ interface MiddlewareContext<S : State, A : Action> {
     val state: S
 
     /**
-     * Dispatches an [Action] synchronously on the [Store]. Other than calling [Store.dispatch], this
-     * will block and return after all [Store] observers have been notified about the state change.
-     * The dispatched [Action] will go through the whole chain of middleware again.
-     *
-     * This method is particular useful if a middleware wants to dispatch an additional [Action] and
-     * wait until the [state] has been updated to further process it.
-     *
-     * Note that this method should only ever be called from a [Middleware] and the calling thread.
-     * Calling it from another thread may throw an exception. For dispatching an [Action] from
-     * asynchronous code in the [Middleware] or another component use [store] which returns a
-     * reference to the underlying [Store] that offers methods for asynchronous dispatching.
-     */
-    fun dispatch(action: A)
-
-    /**
      * Returns a reference to the [Store] the [Middleware] is running in.
      */
     val store: Store<S, A>

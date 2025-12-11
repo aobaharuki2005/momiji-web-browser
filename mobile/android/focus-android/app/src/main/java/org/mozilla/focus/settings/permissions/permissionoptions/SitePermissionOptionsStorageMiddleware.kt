@@ -27,7 +27,7 @@ class SitePermissionOptionsStorageMiddleware(
                 next(action)
             }
             is SitePermissionOptionsScreenAction.InitSitePermissionOptions -> {
-                context.dispatch(
+                context.store.dispatch(
                     SitePermissionOptionsScreenAction.UpdateSitePermissionOptions(
                         storage.getSitePermissionOptions(sitePermission),
                         storage.permissionSelectedOption(sitePermission),

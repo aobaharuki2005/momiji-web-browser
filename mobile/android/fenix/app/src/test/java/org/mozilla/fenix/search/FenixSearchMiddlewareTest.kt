@@ -563,10 +563,6 @@ class FenixSearchMiddlewareTest {
         override val state: SearchFragmentState
             get() = store.state
 
-        override fun dispatch(action: SearchFragmentAction) {
-            store.dispatch(action)
-        }
-
         override val store: Store<SearchFragmentState, SearchFragmentAction> = store
     }
 

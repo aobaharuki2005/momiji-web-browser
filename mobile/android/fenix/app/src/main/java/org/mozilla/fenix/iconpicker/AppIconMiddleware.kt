@@ -26,9 +26,9 @@ class AppIconMiddleware(
         when (action) {
             is UserAction.Confirmed -> {
                 if (updateAppIcon(old = action.newIcon, new = action.oldIcon)) {
-                    context.dispatch(SystemAction.Applied(action.newIcon))
+                    context.store.dispatch(SystemAction.Applied(action.newIcon))
                 } else {
-                    context.dispatch(
+                    context.store.dispatch(
                         SystemAction.UpdateFailed(
                             oldIcon = action.oldIcon,
                             newIcon = action.newIcon,

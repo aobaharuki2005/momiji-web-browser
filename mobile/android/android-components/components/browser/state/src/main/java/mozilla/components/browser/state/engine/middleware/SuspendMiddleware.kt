@@ -49,7 +49,7 @@ internal class SuspendMiddleware(
         val tab = context.state.findTabOrCustomTab(sessionId) ?: return
 
         // First we unlink (which clearsEngineSession and state)
-        context.dispatch(
+        context.store.dispatch(
             EngineAction.UnlinkEngineSessionAction(
                 tab.id,
             ),
