@@ -4300,6 +4300,16 @@ void CodeGenerator::visitLoadDynamicSlotV(LLoadDynamicSlotV* lir) {
   masm.loadValue(Address(base, offset), dest);
 }
 
+void CodeGenerator::visitLoadDynamicSlotFromOffset(
+    LLoadDynamicSlotFromOffset* lir) {
+  ValueOperand dest = ToOutValue(lir);
+  Register slots = ToRegister(lir->slots());
+  Register offset = ToRegister(lir->offset());
+
+  // slots[offset]
+  masm.loadValue(BaseIndex(slots, offset, TimesOne), dest);
+}
+
 static ConstantOrRegister ToConstantOrRegister(const LAllocation* value,
                                                MIRType valueType) {
   if (value->isConstant()) {
@@ -17989,6 +17999,16 @@ void CodeGenerator::visitLoadFixedSlotT(LLoadFixedSlotT* ins) {
 
   masm.loadUnboxedValue(Address(obj, NativeObject::getFixedSlotOffset(slot)),
                         type, result);
+}
+
+void CodeGenerator::visitLoadFixedSlotFromOffset(
+    LLoadFixedSlotFromOffset* lir) {
+  Register obj = ToRegister(lir->object());
+  Register offset = ToRegister(lir->offset());
+  ValueOperand out = ToOutValue(lir);
+
+  // obj[offset]
+  masm.loadValue(BaseIndex(obj, offset, TimesOne), out);
 }
 
 template <typename T>

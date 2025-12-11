@@ -2130,6 +2130,16 @@
 - name: LoadFixedSlot
   gen_boilerplate: false
 
+- name: LoadFixedSlotFromOffset
+  operands:
+    object: Object
+    offset: Int32
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  generate_lir: true
+
 - name: LoadFixedSlotAndUnbox
   gen_boilerplate: false
 
@@ -2703,6 +2713,16 @@
 
 - name: LoadDynamicSlot
   gen_boilerplate: false
+
+- name: LoadDynamicSlotFromOffset
+  operands:
+    slots: Slots
+    offset: Int32
+  result_type: Value
+  movable: true
+  congruent_to: if_operands_equal
+  alias_set: custom
+  generate_lir: true
 
 # Inline call to access a function's environment (scope chain).
 - name: FunctionEnvironment

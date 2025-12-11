@@ -7341,6 +7341,15 @@ AliasSet MGuardMultipleShapesToOffset::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 
+AliasSet MLoadFixedSlotFromOffset::getAliasSet() const {
+  return AliasSet::Load(AliasSet::FixedSlot);
+}
+
+AliasSet MLoadDynamicSlotFromOffset::getAliasSet() const {
+  MOZ_ASSERT(slots()->type() == MIRType::Slots);
+  return AliasSet::Load(AliasSet::DynamicSlot);
+}
+
 AliasSet MGuardGlobalGeneration::getAliasSet() const {
   return AliasSet::Load(AliasSet::GlobalGenerationCounter);
 }

@@ -4207,6 +4207,15 @@ void LIRGenerator::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
   }
 }
 
+void LIRGenerator::visitLoadDynamicSlotFromOffset(
+    MLoadDynamicSlotFromOffset* ins) {
+  MOZ_ASSERT(ins->slots()->type() == MIRType::Slots);
+
+  auto* lir = new (alloc()) LLoadDynamicSlotFromOffset(
+      useRegisterAtStart(ins->slots()), useRegisterAtStart(ins->offset()));
+  defineBox(lir, ins);
+}
+
 void LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment* ins) {
   define(new (alloc())
              LFunctionEnvironment(useRegisterAtStart(ins->function())),
@@ -5494,6 +5503,16 @@ void LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot* ins) {
         new (alloc()) LLoadFixedSlotT(useRegisterForTypedLoad(obj, type));
     define(lir, ins);
   }
+}
+
+void LIRGenerator::visitLoadFixedSlotFromOffset(MLoadFixedSlotFromOffset* ins) {
+  MDefinition* obj = ins->object();
+  MOZ_ASSERT(obj->type() == MIRType::Object);
+  MOZ_ASSERT(ins->type() == MIRType::Value);
+
+  auto* lir = new (alloc()) LLoadFixedSlotFromOffset(
+      useRegisterAtStart(obj), useRegisterAtStart(ins->offset()));
+  defineBox(lir, ins);
 }
 
 void LIRGenerator::visitLoadFixedSlotAndUnbox(MLoadFixedSlotAndUnbox* ins) {

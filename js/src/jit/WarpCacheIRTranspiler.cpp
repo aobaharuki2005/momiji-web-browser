@@ -1043,6 +1043,21 @@ bool WarpCacheIRTranspiler::emitLoadDynamicSlot(ValOperandId resultId,
   return defineOperand(resultId, load);
 }
 
+bool WarpCacheIRTranspiler::emitLoadDynamicSlotFromOffsetResult(
+    ObjOperandId objId, Int32OperandId offsetId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* offset = getOperand(offsetId);
+
+  auto* slots = MSlots::New(alloc(), obj);
+  add(slots);
+
+  auto* load = MLoadDynamicSlotFromOffset::New(alloc(), slots, offset);
+  add(load);
+
+  pushResult(load);
+  return true;
+}
+
 bool WarpCacheIRTranspiler::emitGuardDynamicSlotIsNotObject(
     ObjOperandId objId, uint32_t slotOffset) {
   size_t slotIndex = int32StubField(slotOffset);
@@ -1932,6 +1947,18 @@ bool WarpCacheIRTranspiler::emitLoadFixedSlot(ValOperandId resultId,
   add(load);
 
   return defineOperand(resultId, load);
+}
+
+bool WarpCacheIRTranspiler::emitLoadFixedSlotFromOffsetResult(
+    ObjOperandId objId, Int32OperandId offsetId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* offset = getOperand(offsetId);
+
+  auto* ins = MLoadFixedSlotFromOffset::New(alloc(), obj, offset);
+  add(ins);
+
+  pushResult(ins);
+  return true;
 }
 
 bool WarpCacheIRTranspiler::emitLoadFixedSlotResult(ObjOperandId objId,

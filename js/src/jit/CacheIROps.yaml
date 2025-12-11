@@ -806,6 +806,14 @@
     obj: ObjId
     offset: RawInt32Field
 
+- name: LoadFixedSlotFromOffsetResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+    offset: Int32Id
+
 - name: LoadDynamicSlot
   shared: true
   transpile: true
@@ -814,6 +822,14 @@
     result: ValId
     obj: ObjId
     slot: RawInt32Field
+
+- name: LoadDynamicSlotFromOffsetResult
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  args:
+    obj: ObjId
+    offset: Int32Id
 
 - name: GuardNoAllocationMetadataBuilder
   shared: true
