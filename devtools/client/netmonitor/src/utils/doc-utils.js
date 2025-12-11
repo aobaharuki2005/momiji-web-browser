@@ -7,7 +7,9 @@
 const {
   SUPPORTED_HTTP_CODES,
 } = require("resource://devtools/client/netmonitor/src/constants.js");
-
+const { getMdnLinkParams } = ChromeUtils.importESModule(
+  "resource://devtools/shared/mdn.mjs"
+);
 /**
  * A mapping of header names to external documentation. Any header included
  * here will show a MDN link alongside it.
@@ -125,7 +127,7 @@ const SUPPORTED_HEADERS = [
 const MDN_URL = "https://developer.mozilla.org/docs/";
 const MDN_STATUS_CODES_LIST_URL = `${MDN_URL}Web/HTTP/Reference/Status`;
 const getGAParams = (panelId = "netmonitor") => {
-  return `?utm_source=mozilla&utm_medium=devtools-${panelId}&utm_campaign=default`;
+  return `?` + getMdnLinkParams(`devtools-${panelId}`);
 };
 
 // Base URL to DevTools user docs

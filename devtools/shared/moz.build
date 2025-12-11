@@ -64,6 +64,7 @@ DevToolsModules(
     "indentation.js",
     "indexed-db.js",
     "l10n.js",
+    "mdn.mjs",
     "natural-sort.js",
     "path.js",
     "picker-constants.js",
