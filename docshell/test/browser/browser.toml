@@ -274,6 +274,8 @@ skip-if = [
 
 ["browser_bug1798780.js"]
 
+["browser_bug2002654.js"]
+
 ["browser_bug2004165.js"]
 skip-if = [
   "debug", # bug 2005202
