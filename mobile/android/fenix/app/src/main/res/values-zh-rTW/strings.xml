@@ -822,8 +822,6 @@
   <string name="preferences_gestures">手勢</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">自訂</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">登入後即可同步分頁、書籤、密碼與其他資料。</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">同步分頁、書籤、密碼等資訊。</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1219,10 +1217,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">同步並儲存您的資料</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">登入</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">登入即可重新連線</string>
@@ -1509,8 +1505,6 @@
   <string name="tab_tray_multiselect_menu_content_description">選擇分頁選單</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">首頁</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s 首頁</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">將分頁從收藏集移除</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2113,8 +2107,6 @@
   <string name="toast_copy_link_to_clipboard">已複製至剪貼簿</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">登入 Sync</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">同步並儲存資料</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">登入</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
@@ -2703,6 +2695,10 @@
   <string name="edit_login_navigate_back_button_content_description">瀏覽上一頁</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">編輯登入資訊</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">新增登入資訊</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">清除搜尋文字</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">用瀏覽器開啟</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

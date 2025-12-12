@@ -820,8 +820,6 @@
   <string name="preferences_gestures">מחוות</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">התאמה אישית</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">יש להתחבר כדי לסנכרן את הלשוניות, הסימניות הססמאות ועוד.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">סנכרון לשוניות, סימניות, ססמאות ועוד.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1217,10 +1215,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">סנכרון ושמירת הנתונים שלך</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">כניסה</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">יש להיכנס כדי להתחבר מחדש</string>
@@ -1507,8 +1503,6 @@
   <string name="tab_tray_multiselect_menu_content_description">תפריט לשוניות נבחרות</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">דף הבית</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">דף הבית של %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">הסרת לשונית מהאוסף</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2111,8 +2105,6 @@
   <string name="toast_copy_link_to_clipboard">הועתק ללוח</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">התחברות אל Sync</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">סנכרון ושמירת נתונים</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">כניסה</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
@@ -2699,6 +2691,10 @@
   <string name="edit_login_navigate_back_button_content_description">ניווט אחורה</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">עריכת כניסה</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">הוספת כניסה חדשה</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">ניקוי טקסט החיפוש</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">פתיחת אתר בדפדפן</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

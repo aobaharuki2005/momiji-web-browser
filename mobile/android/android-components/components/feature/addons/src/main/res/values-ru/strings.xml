@@ -216,7 +216,7 @@
   <!-- Long description for the browsingActivity data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_browsingActivity_long_description">Предоставлять данные об интернет-активности разработчику расширения</string>
   <!-- Long description for the financialAndPaymentInfo data collection permission -->
-  <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_long_description">Поделиться финансовой и платежной информацией с разработчиком расширения</string>
+  <string name="mozac_feature_addons_permissions_data_collection_financialAndPaymentInfo_long_description">Поделиться финансовой и платёжной информацией с разработчиком расширения</string>
   <!-- Long description for the healthInfo data collection permission -->
   <string name="mozac_feature_addons_permissions_data_collection_healthInfo_long_description">Предоставлять данные о здоровье разработчику расширения</string>
   <!-- Long description for the locationInfo data collection permission -->

@@ -772,8 +772,6 @@
   <string name="preferences_gestures">اشارات</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">سفارشی‌سازی</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">برای همگام‌سازی زبانه‌ها، نشانک‌ها، گذرواژه‌ها و… وارد شوید.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">حساب کاربری Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1107,10 +1105,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">همگام‌سازی و ذخیرهٔ داده‌های شما</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">ورود</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">برای اتصال مجدد وارد شوید</string>
@@ -1879,8 +1875,6 @@
   <string name="toast_copy_link_to_clipboard">به تخته‌گیره رونوشت شد</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">برای همگام‌سازی وارد شوید</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">همگام‌سازی و ذخیرهٔ داده‌ها</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">ورود</string>
   <!-- An option from the share dialog to send link to all other sync devices -->

@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Eşitlenmiş sekmeleri tüm cihazlarınızdan yönetmek için giriş yapın.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Giriş yap</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Tüm yazılar</string>
   <!--
     Home - Bookmarks
 
@@ -820,8 +822,6 @@
   <string name="preferences_gestures">Parmak hareketleri</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Özelleştir</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Sekmeleri, yer imlerini, parolaları ve daha fazlasını eşitlemek için giriş yapın.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">Sekmeleri, yer imlerini, parolaları ve daha fazlasını eşitleyin.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1217,10 +1217,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Verilerinizi eşitleyin ve kaydedin</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">Giriş yap</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Yeniden bağlanmak için giriş yapın</string>
@@ -1507,8 +1505,6 @@
   <string name="tab_tray_multiselect_menu_content_description">Seçili sekmeler menüsü</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Giriş sayfası</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s giriş sayfası</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Sekmeyi koleksiyondan çıkar</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1535,6 +1531,8 @@
   <string name="delete_from_history">Geçmişten sil</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (Gizli Mod)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">Sekme aramayı aç</string>
   <!--
     History
 
@@ -2109,8 +2107,6 @@
   <string name="toast_copy_link_to_clipboard">Panoya kopyalandı</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Sync’e giriş yap</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Verileri eşitle ve kaydet</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Giriş yap</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
@@ -3938,4 +3934,16 @@
   <string name="terms_of_use_prompt_accept">Kabul et</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Daha sonra hatırlat</string>
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">%1$smizi Firefox’taki en yeni özellikleri yansıtacak şekilde güncelledik. %2$s</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Gizlilik Bildirimi</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Daha fazla bilgi al</string>
 </resources>

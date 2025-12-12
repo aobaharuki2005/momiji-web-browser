@@ -820,8 +820,6 @@
   <string name="preferences_gestures">Gestoj</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Personecigi</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Komencu seancon por speguli langetojn, legosignojn, pasvortojn kaj pli.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">Speguli langetojn, legosignojn, pasvortojn kaj pli.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1217,10 +1215,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Speguli kaj konservi viajn datumojn</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">Komenci seancon</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Komenci seancon por rekonekti</string>
@@ -1499,8 +1495,6 @@
   <string name="tab_tray_multiselect_menu_content_description">Dividi menuon de langetoj</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Eka paĝo</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Eka paĝo de %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Forigi langeton el kolekto</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2101,8 +2095,6 @@
   <string name="toast_copy_link_to_clipboard">Kopiita al la tondujo</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Komenci seancon en Speguli</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Speguli kaj konservi datumojn</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Komenci seancon</string>
   <!-- An option from the share dialog to send link to all other sync devices -->

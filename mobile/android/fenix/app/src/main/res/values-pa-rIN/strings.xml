@@ -820,8 +820,6 @@
   <string name="preferences_gestures">ਇਸ਼ਾਰੇ</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">ਚੁਣਿੰਦਾ ਕਰੋ</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕਾਂ, ਪਾਸਵਰਡਾ ਤੇ ਹੋਰਾਂ ਨੂੰ ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">ਟੈਬਾਂ, ਬੁੱਕਮਾਰਕ, ਪਾਸਵਰਡਾਂ ਅਤੇ ਹੋਰਾਂ ਚੀਜ਼ਾਂ ਨੂੰ ਸਿੰਕ ਕਰੋ।</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1217,10 +1215,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">ਆਪਣਾ ਡਾਟਾ ਸਿੰਕ ਕਰੋ ਤੇ ਸੰਭਾਲੋ</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">ਸਾਈਨ ਇਨ</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">ਮੁੜ-ਕਨੈਕਟ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ</string>
@@ -1499,8 +1495,6 @@
   <string name="tab_tray_multiselect_menu_content_description">ਚੁਣੀਆਂ ਟੈਬਾਂ ਦਾ ਮੇਨੂ</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">ਮੁੱਖ ਸਫ਼ਾ</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s ਮੁੱਖ ਸਫ਼ਾ</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">ਟੈਬ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚੋਂ ਹਟਾਓ</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2101,8 +2095,6 @@
   <string name="toast_copy_link_to_clipboard">ਕਲਿੱਪਬੋਰਡ ਵਿੱਚ ਕਾਪੀ ਕੀਤਾ</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">ਸਿੰਕ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">ਡਾਟਾ ਸਿੰਕ ਕਰੋ ਤੇ ਸੰਭਾਲੋ</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">ਸਾਈਨ ਇਨ</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
