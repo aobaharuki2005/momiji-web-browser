@@ -6229,15 +6229,15 @@ void LIRGenerator::visitAssertShape(MAssertShape* ins) {
 }
 
 void LIRGenerator::visitDeleteProperty(MDeleteProperty* ins) {
-  LCallDeleteProperty* lir =
-      new (alloc()) LCallDeleteProperty(useBoxAtStart(ins->value()));
+  LDeleteProperty* lir =
+      new (alloc()) LDeleteProperty(useBoxAtStart(ins->value()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }
 
 void LIRGenerator::visitDeleteElement(MDeleteElement* ins) {
-  LCallDeleteElement* lir = new (alloc()) LCallDeleteElement(
-      useBoxAtStart(ins->value()), useBoxAtStart(ins->index()));
+  LDeleteElement* lir = new (alloc())
+      LDeleteElement(useBoxAtStart(ins->value()), useBoxAtStart(ins->index()));
   defineReturn(lir, ins);
   assignSafepoint(lir, ins);
 }

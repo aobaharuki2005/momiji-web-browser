@@ -18464,7 +18464,7 @@ void CodeGenerator::visitNewPrivateName(LNewPrivateName* ins) {
   callVM<Fn, NewPrivateName>(ins);
 }
 
-void CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty* lir) {
+void CodeGenerator::visitDeleteProperty(LDeleteProperty* lir) {
   pushArg(ImmGCPtr(lir->mir()->name()));
   pushArg(ToValue(lir->value()));
 
@@ -18476,7 +18476,7 @@ void CodeGenerator::visitCallDeleteProperty(LCallDeleteProperty* lir) {
   }
 }
 
-void CodeGenerator::visitCallDeleteElement(LCallDeleteElement* lir) {
+void CodeGenerator::visitDeleteElement(LDeleteElement* lir) {
   pushArg(ToValue(lir->index()));
   pushArg(ToValue(lir->value()));
 

@@ -2629,21 +2629,6 @@
   call_instruction: true
   mir_op: true
 
-- name: CallDeleteProperty
-  result_type: WordSized
-  operands:
-    value: BoxedValue
-  call_instruction: true
-  mir_op: DeleteProperty
-
-- name: CallDeleteElement
-  result_type: WordSized
-  operands:
-    value: BoxedValue
-    index: BoxedValue
-  call_instruction: true
-  mir_op: DeleteElement
-
 - name: ObjectToIterator
   result_type: WordSized
   operands:

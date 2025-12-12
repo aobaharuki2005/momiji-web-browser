@@ -2875,6 +2875,8 @@
     name: PropertyName*
     strict: bool
   result_type: Boolean
+  possibly_calls: true
+  generate_lir: true
 
 - name: DeleteElement
   operands:
@@ -2883,6 +2885,8 @@
   arguments:
     strict: bool
   result_type: Boolean
+  possibly_calls: true
+  generate_lir: true
 
 - name: SetPropertyCache
   gen_boilerplate: false
