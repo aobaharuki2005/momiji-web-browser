@@ -358,6 +358,9 @@ Element* CSSStyleRule::GetScopeRootFor(uint32_t aSelectorIndex,
 
 SelectorWarningKind ToWebIDLSelectorWarningKind(
     StyleSelectorWarningKind aKind) {
+  // Whenever an entry is modified here, file a DevTools follow-up bug to make
+  // use of the warning, e.g. Like it is done in
+  // `css-selector-warnings-tooltip-helper.js`.
   switch (aKind) {
     case StyleSelectorWarningKind::UnconstraintedRelativeSelector:
       return SelectorWarningKind::UnconstrainedHas;
