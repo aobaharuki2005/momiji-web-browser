@@ -303,6 +303,7 @@
   MACRO_(literal, "literal")                                                   \
   MACRO_(loc, "loc")                                                           \
   MACRO_(locale, "locale")                                                     \
+  MACRO_(localeMatcher, "localeMatcher")                                       \
   MACRO_(many, "many")                                                         \
   MACRO_(MapConstructorInit, "MapConstructorInit")                             \
   MACRO_(MapIteratorNext, "MapIteratorNext")                                   \

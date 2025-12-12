@@ -12,6 +12,10 @@
 
 class JSLinearString;
 
+namespace js {
+class ArrayObject;
+}
+
 namespace js::intl {
 
 enum class AvailableLocaleKind;
@@ -44,6 +48,15 @@ bool BestAvailableLocale(JSContext* cx, AvailableLocaleKind availableLocales,
                          JS::Handle<JSLinearString*> locale,
                          JS::Handle<JSLinearString*> defaultLocale,
                          JS::MutableHandle<JSLinearString*> result);
+
+/**
+ * Return the supported locales in |locales| which are supported according to
+ * |availableLocales|.
+ */
+ArrayObject* SupportedLocalesOf(JSContext* cx,
+                                AvailableLocaleKind availableLocales,
+                                JS::Handle<JS::Value> locales,
+                                JS::Handle<JS::Value> options);
 
 /**
  * Return the supported locale for the default locale if ICU supports that

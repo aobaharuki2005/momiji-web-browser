@@ -11,16 +11,75 @@
 
 #include <algorithm>
 #include <iterator>
+#include <stddef.h>
 
+#include "builtin/Array.h"
+#include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "builtin/intl/StringAsciiChars.h"
+#include "js/Conversions.h"
 #include "js/Result.h"
+#include "vm/ArrayObject.h"
+#include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
+#include "vm/Realm.h"
 #include "vm/StringType.h"
+
+#include "vm/NativeObject-inl.h"
+#include "vm/ObjectOperations-inl.h"
 
 using namespace js;
 using namespace js::intl;
+
+static bool AssertCanonicalLocaleWithoutUnicodeExtension(
+    JSContext* cx, Handle<JSLinearString*> locale) {
+#ifdef DEBUG
+  MOZ_ASSERT(StringIsAscii(locale), "language tags are ASCII-only");
+
+  // |locale| is a structurally valid language tag.
+  mozilla::intl::Locale tag;
+
+  using ParserError = mozilla::intl::LocaleParser::ParserError;
+  mozilla::Result<mozilla::Ok, ParserError> parse_result = Ok();
+  {
+    intl::StringAsciiChars chars(locale);
+    if (!chars.init(cx)) {
+      return false;
+    }
+
+    parse_result = mozilla::intl::LocaleParser::TryParse(chars, tag);
+  }
+
+  if (parse_result.isErr()) {
+    MOZ_ASSERT(parse_result.unwrapErr() == ParserError::OutOfMemory,
+               "locale is a structurally valid language tag");
+
+    intl::ReportInternalError(cx);
+    return false;
+  }
+
+  MOZ_ASSERT(!tag.GetUnicodeExtension(),
+             "locale must contain no Unicode extensions");
+
+  if (auto result = tag.Canonicalize(); result.isErr()) {
+    MOZ_ASSERT(result.unwrapErr() !=
+               mozilla::intl::Locale::CanonicalizationError::DuplicateVariant);
+    intl::ReportInternalError(cx);
+    return false;
+  }
+
+  intl::FormatBuffer<char, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
+  if (auto result = tag.ToString(buffer); result.isErr()) {
+    intl::ReportInternalError(cx, result.unwrapErr());
+    return false;
+  }
+
+  MOZ_ASSERT(StringEqualsAscii(locale, buffer.data(), buffer.length()),
+             "locale is a canonicalized language tag");
+#endif
+  return true;
+}
 
 static bool SameOrParentLocale(const JSLinearString* locale,
                                const JSLinearString* otherLocale) {
@@ -38,7 +97,16 @@ static bool SameOrParentLocale(const JSLinearString* locale,
   return false;
 }
 
-// 9.2.2 BestAvailableLocale ( availableLocales, locale )
+/**
+ * 9.2.2 BestAvailableLocale ( availableLocales, locale )
+ *
+ * Compares a BCP 47 language tag against the locales in availableLocales and
+ * returns the best available match. Uses the fallback mechanism of RFC 4647,
+ * section 3.4.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.2.
+ * Spec: RFC 4647, section 3.4.
+ */
 static JS::Result<JSLinearString*> BestAvailableLocale(
     JSContext* cx, AvailableLocaleKind availableLocales,
     Handle<JSLinearString*> locale, Handle<JSLinearString*> defaultLocale) {
@@ -70,6 +138,10 @@ static JS::Result<JSLinearString*> BestAvailableLocale(
     // to one element past the forward iterator value.
     return r - 1;
   };
+
+  if (!AssertCanonicalLocaleWithoutUnicodeExtension(cx, locale)) {
+    return cx->alreadyReportedError();
+  }
 
   // Step 1.
   Rooted<JSLinearString*> candidate(cx, locale);
@@ -127,54 +199,6 @@ bool js::intl::BestAvailableLocale(JSContext* cx,
                                    Handle<JSLinearString*> locale,
                                    Handle<JSLinearString*> defaultLocale,
                                    MutableHandle<JSLinearString*> result) {
-#ifdef DEBUG
-  {
-    MOZ_ASSERT(StringIsAscii(locale), "language tags are ASCII-only");
-
-    // |locale| is a structurally valid language tag.
-    mozilla::intl::Locale tag;
-
-    using ParserError = mozilla::intl::LocaleParser::ParserError;
-    mozilla::Result<mozilla::Ok, ParserError> parse_result = Ok();
-    {
-      intl::StringAsciiChars chars(locale);
-      if (!chars.init(cx)) {
-        return false;
-      }
-
-      parse_result = mozilla::intl::LocaleParser::TryParse(chars, tag);
-    }
-
-    if (parse_result.isErr()) {
-      MOZ_ASSERT(parse_result.unwrapErr() == ParserError::OutOfMemory,
-                 "locale is a structurally valid language tag");
-
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    MOZ_ASSERT(!tag.GetUnicodeExtension(),
-               "locale must contain no Unicode extensions");
-
-    if (auto result = tag.Canonicalize(); result.isErr()) {
-      MOZ_ASSERT(
-          result.unwrapErr() !=
-          mozilla::intl::Locale::CanonicalizationError::DuplicateVariant);
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    intl::FormatBuffer<char, intl::INITIAL_CHAR_BUFFER_SIZE> buffer(cx);
-    if (auto result = tag.ToString(buffer); result.isErr()) {
-      intl::ReportInternalError(cx, result.unwrapErr());
-      return false;
-    }
-
-    MOZ_ASSERT(StringEqualsAscii(locale, buffer.data(), buffer.length()),
-               "locale is a canonicalized language tag");
-  }
-#endif
-
   JSLinearString* res;
   JS_TRY_VAR_OR_RETURN_FALSE(
       cx, res,
@@ -185,6 +209,170 @@ bool js::intl::BestAvailableLocale(JSContext* cx,
     result.set(nullptr);
   }
   return true;
+}
+
+template <typename CharT>
+static size_t BaseNameLength(mozilla::Range<const CharT> locale) {
+  // Search for the start of the first singleton subtag.
+  for (size_t i = 0; i < locale.length(); i++) {
+    if (locale[i] == '-') {
+      MOZ_RELEASE_ASSERT(i + 2 < locale.length(), "invalid locale");
+      if (locale[i + 2] == '-') {
+        return i;
+      }
+    }
+  }
+  return locale.length();
+}
+
+static size_t BaseNameLength(JSLinearString* locale) {
+  JS::AutoCheckCannotGC nogc;
+  if (locale->hasLatin1Chars()) {
+    return BaseNameLength(locale->latin1Range(nogc));
+  }
+  return BaseNameLength(locale->twoByteRange(nogc));
+}
+
+/**
+ * Returns the subset of requestedLocales for which availableLocales has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.7.
+ * Spec: ECMAScript Internationalization API Specification, 9.2.8.
+ */
+static bool LookupSupportedLocales(
+    JSContext* cx, AvailableLocaleKind availableLocales,
+    Handle<LocalesList> requestedLocales,
+    MutableHandle<LocalesList> supportedLocales) {
+  // Step 1.
+  MOZ_ASSERT(supportedLocales.empty());
+
+  Rooted<JSLinearString*> defaultLocale(
+      cx, cx->global()->globalIntlData().defaultLocale(cx));
+  if (!defaultLocale) {
+    return false;
+  }
+
+  // Step 2.
+  Rooted<JSLinearString*> noExtensionsLocale(cx);
+  Rooted<JSLinearString*> availableLocale(cx);
+  for (size_t i = 0; i < requestedLocales.length(); i++) {
+    auto locale = requestedLocales[i];
+
+    // Step 2.a.
+    //
+    // Use the base name to ignore any extension sequences.
+    noExtensionsLocale =
+        NewDependentString(cx, locale, 0, BaseNameLength(locale));
+    if (!noExtensionsLocale) {
+      return false;
+    }
+
+    // Step 2.b.
+    JSLinearString* availableLocale;
+    JS_TRY_VAR_OR_RETURN_FALSE(
+        cx, availableLocale,
+        BestAvailableLocale(cx, availableLocales, noExtensionsLocale,
+                            defaultLocale));
+
+    // Step 2.c.
+    if (availableLocale) {
+      if (!supportedLocales.append(locale)) {
+        return false;
+      }
+    }
+  }
+
+  // Step 3.
+  return true;
+}
+
+/**
+ * Returns the subset of requestedLocales for which availableLocales has a
+ * matching (possibly fallback) locale. Locales appear in the same order in the
+ * returned list as in the input list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.9.
+ */
+static bool SupportedLocales(JSContext* cx,
+                             AvailableLocaleKind availableLocales,
+                             Handle<LocalesList> requestedLocales,
+                             Handle<Value> options,
+                             MutableHandle<LocalesList> supportedLocales) {
+  // Step 1.
+  if (!options.isUndefined()) {
+    // Step 1.a.
+    Rooted<JSObject*> obj(cx, ToObject(cx, options));
+    if (!obj) {
+      return false;
+    }
+
+    // Step 1.b.
+    Rooted<Value> localeMatcher(cx);
+    if (!GetProperty(cx, obj, obj, cx->names().localeMatcher, &localeMatcher)) {
+      return false;
+    }
+
+    if (!localeMatcher.isUndefined()) {
+      JSString* str = ToString(cx, localeMatcher);
+      if (!str) {
+        return false;
+      }
+
+      JSLinearString* linear = str->ensureLinear(cx);
+      if (!linear) {
+        return false;
+      }
+
+      if (!StringEqualsLiteral(linear, "lookup") &&
+          !StringEqualsLiteral(linear, "best fit")) {
+        if (auto chars = QuoteString(cx, linear)) {
+          JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                    JSMSG_INVALID_LOCALE_MATCHER, chars.get());
+        }
+        return false;
+      }
+    }
+  }
+
+  // Steps 2-5.
+  //
+  // We don't yet support anything better than the lookup matcher.
+  return LookupSupportedLocales(cx, availableLocales, requestedLocales,
+                                supportedLocales);
+}
+
+static ArrayObject* LocalesListToArray(JSContext* cx,
+                                       Handle<LocalesList> locales) {
+  auto* array = NewDenseFullyAllocatedArray(cx, locales.length());
+  if (!array) {
+    return nullptr;
+  }
+  array->setDenseInitializedLength(locales.length());
+
+  for (size_t i = 0; i < locales.length(); i++) {
+    array->initDenseElement(i, StringValue(locales[i]));
+  }
+  return array;
+}
+
+ArrayObject* js::intl::SupportedLocalesOf(JSContext* cx,
+                                          AvailableLocaleKind availableLocales,
+                                          Handle<Value> locales,
+                                          Handle<Value> options) {
+  Rooted<LocalesList> requestedLocales(cx, cx);
+  if (!CanonicalizeLocaleList(cx, locales, &requestedLocales)) {
+    return nullptr;
+  }
+
+  Rooted<LocalesList> supportedLocales(cx, cx);
+  if (!SupportedLocales(cx, availableLocales, requestedLocales, options,
+                        &supportedLocales)) {
+    return nullptr;
+  }
+
+  return LocalesListToArray(cx, supportedLocales);
 }
 
 JSLinearString* js::intl::ComputeDefaultLocale(JSContext* cx) {
