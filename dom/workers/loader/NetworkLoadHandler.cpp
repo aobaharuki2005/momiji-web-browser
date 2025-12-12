@@ -341,8 +341,15 @@ nsresult NetworkLoadHandler::PrepareForRequest(nsIRequest* aRequest) {
     auto mimeTypeUTF16 = NS_ConvertUTF8toUTF16(mimeType);
     if (!nsContentUtils::IsJavascriptMIMEType(mimeTypeUTF16)) {
       // JSON is allowed as a non-toplevel.
-      if (loadContext->IsTopLevel() ||
-          !nsContentUtils::IsJsonMimeType(mimeTypeUTF16)) {
+      if (!((!loadContext->IsTopLevel() &&
+             nsContentUtils::IsJsonMimeType(mimeTypeUTF16))
+#ifdef NIGHTLY_BUILD
+            // Allow wasm modules.
+            || (StaticPrefs::
+                    javascript_options_experimental_wasm_esm_integration() &&
+                nsContentUtils::HasWasmMimeTypeEssence(mimeTypeUTF16))
+#endif
+                )) {
         const nsCString& scope = mWorkerRef->Private()
                                      ->GetServiceWorkerRegistrationDescriptor()
                                      .Scope();
