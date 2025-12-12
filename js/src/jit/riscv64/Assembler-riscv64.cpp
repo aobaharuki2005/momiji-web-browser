@@ -1011,18 +1011,23 @@ int Assembler::jumpChainTargetAt(Instruction* instruction, BufferOffset pos,
   }
 }
 
-uint32_t Assembler::jumpChainNextLink(Label* L, bool is_internal) {
-  MOZ_ASSERT(L->used());
-  BufferOffset pos(L);
+BufferOffset Assembler::jumpChainGetNextLink(BufferOffset pos,
+                                             bool is_internal) {
   int link = jumpChainTargetAt(pos, is_internal);
-  if (link == kEndOfChain) {
+  return link == kEndOfChain ? BufferOffset() : BufferOffset(link);
+}
+
+uint32_t Assembler::jumpChainUseNextLink(Label* L, bool is_internal) {
+  MOZ_ASSERT(L->used());
+  BufferOffset link = jumpChainGetNextLink(BufferOffset(L), is_internal);
+  if (!link.assigned()) {
     L->reset();
     return LabelBase::INVALID_OFFSET;
   }
-  MOZ_ASSERT(link >= 0);
-  DEBUG_PRINTF("next: %p to offset %d\n", L, link);
-  L->use(link);
-  return link;
+  int offset = link.getOffset();
+  DEBUG_PRINTF("next: %p to offset %d\n", L, offset);
+  L->use(offset);
+  return offset;
 }
 
 void Assembler::bind(Label* label, BufferOffset boff) {
@@ -1036,7 +1041,7 @@ void Assembler::bind(Label* label, BufferOffset boff) {
 
     do {
       // A used label holds a link to branch that uses it.
-      // It's okay we use it here since jumpChainNextLink() mutates `label`.
+      // It's okay we use it here since jumpChainUseNextLink() mutates `label`.
       BufferOffset b(label);
       DEBUG_PRINTF("\tbind next:%d\n", b.getOffset());
       // Even a 0 offset may be invalid if we're out of memory.
@@ -1045,7 +1050,7 @@ void Assembler::bind(Label* label, BufferOffset boff) {
       }
       int fixup_pos = b.getOffset();
       int dist = dest.getOffset() - fixup_pos;
-      next = jumpChainNextLink(label, false);
+      next = jumpChainUseNextLink(label, false);
       DEBUG_PRINTF(
           "\t%p fixup: %d next: %u dest: %d dist: %d nextOffset: %d "
           "currOffset: %d\n",
@@ -1188,8 +1193,7 @@ int32_t Assembler::branchLongOffsetHelper(Label* L) {
     BufferOffset exbr;
     do {
       exbr = next;
-      const int link = jumpChainTargetAt(next, false);
-      next = link == kEndOfChain ? BufferOffset() : BufferOffset(link);
+      next = jumpChainGetNextLink(next, false);
     } while (next.assigned());
     mozilla::DebugOnly<bool> ok = jumpChainPutTargetAt(exbr, next_instr_offset);
     MOZ_ASSERT(ok, "Still can't reach list head");
@@ -1276,8 +1280,7 @@ int32_t Assembler::branchOffsetHelper(Label* L, OffsetSize bits) {
     BufferOffset exbr;
     do {
       exbr = next;
-      const int link = jumpChainTargetAt(next, false);
-      next = link == kEndOfChain ? BufferOffset() : BufferOffset(link);
+      next = jumpChainGetNextLink(next, false);
     } while (next.assigned());
     mozilla::DebugOnly<bool> ok = jumpChainPutTargetAt(exbr, next_instr_offset);
     MOZ_ASSERT(ok, "Still can't reach list head");
@@ -1506,7 +1509,7 @@ void Assembler::retarget(Label* label, Label* target) {
 
       // Find the head of the use chain for label.
       do {
-        next = jumpChainNextLink(label, false);
+        next = jumpChainUseNextLink(label, false);
         labelBranchOffset = BufferOffset(next);
       } while (next != LabelBase::INVALID_OFFSET);
 
