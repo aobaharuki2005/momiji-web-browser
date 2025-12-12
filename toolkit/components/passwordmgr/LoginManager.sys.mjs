@@ -397,8 +397,10 @@ LoginManager.prototype = {
       `Searching for matching logins for origin: ${matchData.origin}`
     );
 
-    if (!matchData.origin) {
-      throw new Error("searchLoginsAsync: An `origin` is required");
+    if (!matchData.guid && !matchData.origin) {
+      lazy.log.warn(
+        "A `guid` or `origin` field is recommended for searchLoginsAsync matchData."
+      );
     }
 
     return this._storage.searchLoginsAsync(matchData);
@@ -406,6 +408,7 @@ LoginManager.prototype = {
 
   /**
    * @return {nsILoginInfo[]} which are decrypted.
+   * Deprecated: use searchLoginsAsync instead
    */
   searchLogins(matchData) {
     lazy.log.debug(

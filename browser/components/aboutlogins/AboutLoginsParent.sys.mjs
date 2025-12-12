@@ -142,7 +142,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
         break;
       }
       case "AboutLogins:UpdateLogin": {
-        this.#updateLogin(message.data.login);
+        await this.#updateLogin(message.data.login);
         break;
       }
       case "AboutLogins:ExportPasswords": {
@@ -341,8 +341,8 @@ export class AboutLoginsParent extends JSWindowActorParent {
     }
   }
 
-  #updateLogin(loginUpdates) {
-    let logins = lazy.LoginHelper.searchLoginsWithObject({
+  async #updateLogin(loginUpdates) {
+    let logins = await Services.logins.searchLoginsAsync({
       guid: loginUpdates.guid,
     });
     if (logins.length != 1) {

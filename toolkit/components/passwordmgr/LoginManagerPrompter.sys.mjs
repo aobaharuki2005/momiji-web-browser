@@ -248,11 +248,8 @@ export class LoginManagerPrompter {
       }
     };
 
-    const updateButtonLabel = () => {
-      if (!currentNotification) {
-        console.error("updateButtonLabel, no currentNotification");
-      }
-      const foundLogins = lazy.LoginHelper.searchLoginsWithObject({
+    const updateButtonLabel = async () => {
+      const foundLogins = await Services.logins.searchLoginsAsync({
         formActionOrigin: login.formActionOrigin,
         origin: login.origin,
         httpRealm: login.httpRealm,
@@ -269,6 +266,11 @@ export class LoginManagerPrompter {
       // Update the label based on whether this will be a new login or not.
 
       const mainButton = this.getLabelAndAccessKey(messageIds.mainButton);
+
+      if (!currentNotification) {
+        console.error("updateButtonLabel, no currentNotification");
+        return;
+      }
 
       // Update the labels for the next time the panel is opened.
       currentNotification.mainAction.label = mainButton.label;
@@ -352,7 +354,7 @@ export class LoginManagerPrompter {
     };
 
     const persistData = async () => {
-      const foundLogins = lazy.LoginHelper.searchLoginsWithObject({
+      const foundLogins = await Services.logins.searchLoginsAsync({
         formActionOrigin: login.formActionOrigin,
         origin: login.origin,
         httpRealm: login.httpRealm,
