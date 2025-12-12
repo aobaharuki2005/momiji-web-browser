@@ -79,8 +79,6 @@ skip-if = [
 
 ["browser_displayNotification.js"]
 
-["browser_google_behavior.js"]
-
 ["browser_hiddenOneOffs_diacritics.js"]
 
 ["browser_ime_composition.js"]
@@ -99,8 +97,6 @@ skip-if = [
 
 ["browser_rich_suggestions.js"]
 support-files = ["trendingSuggestionEngine.sjs"]
-
-["browser_searchEngine_behaviors.js"]
 
 ["browser_searchPanelHeader.js"]
 
