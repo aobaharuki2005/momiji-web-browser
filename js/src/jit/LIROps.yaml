@@ -3697,13 +3697,6 @@
   num_temps: 1
   call_instruction: true
 
-# Math.random()
-- name: Random
-  result_type: WordSized
-  num_temps: 1
-  num_temps64: 2
-  mir_op: true
-
 - name: CheckObjCoercible
   operands:
     value: BoxedValue

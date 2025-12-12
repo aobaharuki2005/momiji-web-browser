@@ -1009,10 +1009,12 @@
 - name: Random
   result_type: Double
   alias_set: custom
-  possibly_calls: true
   compute_range: custom
   can_recover: custom
   clone: true
+  generate_lir: true
+  lir_temps: 1
+  lir_temps64: 2
 
 - name: Sign
   gen_boilerplate: false
