@@ -27,6 +27,8 @@ inactive-css-not-grid-or-flex-item = <strong>{ $property }</strong> has no effec
 
 inactive-css-not-grid-or-flex-or-absolutely-positioned-item = <strong>{ $property }</strong> has no effect on this element since it’s not a grid or flex item, nor an absolutely positioned element.
 
+inactive-css-not-grid-or-absolutely-positioned-item = <strong>{ $property }</strong> has no effect on this element since it’s not a grid item nor an absolutely positioned element.
+
 inactive-css-not-grid-item = <strong>{ $property }</strong> has no effect on this element since it’s not a grid item.
 
 inactive-css-not-grid-container = <strong>{ $property }</strong> has no effect on this element since it’s not a grid container.
@@ -121,6 +123,8 @@ inactive-css-not-multicol-container-fix = Try adding either <strong>column-count
 inactive-css-column-span-fix = Try adding <strong>column-count</strong> or <strong>column-width</strong> to one of its ancestor elements. { learn-more }
 
 inactive-css-not-grid-or-flex-or-absolutely-positioned-item-fix = Try adding <strong>position:absolute</strong> to the element, or <strong>display:grid</strong>, <strong>display:flex</strong>, <strong>display:inline-grid</strong>, or <strong>display:inline-flex</strong> to the element’s parent. { learn-more }
+
+inactive-css-not-grid-or-absolutely-positioned-item-fix = Try adding <strong>position:absolute</strong> to the element, or <strong>display:grid</strong> or <strong>display:inline-grid</strong> to the element’s parent. { learn-more }
 
 inactive-css-not-grid-or-flex-item-fix-3 = Try adding <strong>display:grid</strong>, <strong>display:flex</strong>, <strong>display:inline-grid</strong>, or <strong>display:inline-flex</strong> to the element’s parent. { learn-more }
 

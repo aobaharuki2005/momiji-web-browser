@@ -4,10 +4,46 @@
 
 // InactivePropertyHelper test cases:
 // `justify-self`, `align-self` and `place-self`.
-let tests = [];
+let tests = [
+  {
+    info: `"justify-self" is inactive on a flex item`,
+    property: "justify-self",
+    createTestElement,
+    rules: [
+      `#container { display:flex; }`,
+      `#container-item { justify-self: start; }`,
+    ],
+    ruleIndex: 1,
+    isActive: false,
+  },
+  {
+    info: `"justify-self" is inactive on a block`,
+    property: "justify-self",
+    tagName: `div`,
+    rules: [`div { display:block; justify-self: start; }`],
+    isActive: false,
+  },
+  {
+    info: `"justify-self" is active on an absolutely positioned element`,
+    property: "justify-self",
+    tagName: `div`,
+    rules: [`div { display:block; justify-self: start; position: absolute;}`],
+    isActive: true,
+  },
+  {
+    info: `"justify-self" is active on a grid item`,
+    property: "justify-self",
+    createTestElement,
+    rules: [
+      `#container { display:grid; }`,
+      `#container-item { justify-self: start; }`,
+    ],
+    ruleIndex: 1,
+    isActive: true,
+  },
+];
 
 for (const { propertyName, propertyValue } of [
-  { propertyName: "justify-self", propertyValue: "start" },
   { propertyName: "align-self", propertyValue: "auto" },
   { propertyName: "place-self", propertyValue: "auto center" },
 ]) {
