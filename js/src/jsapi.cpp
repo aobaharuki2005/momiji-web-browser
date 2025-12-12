@@ -3179,18 +3179,11 @@ JS_PUBLIC_API JSObject* JS::GetWaitForAllPromise(
   return js::GetWaitForAllPromise(cx, promises);
 }
 
-JS_PUBLIC_API void JS::InitAsyncTaskCallbacks(
-    JSContext* cx, JS::DispatchToEventLoopCallback dispatchCallback,
-    JS::DelayedDispatchToEventLoopCallback delayedDispatchCallback,
-    JS::AsyncTaskStartedCallback asyncTaskStartedCallback,
-    JS::AsyncTaskFinishedCallback asyncTaskFinishedCallback, void* closure) {
-  cx->runtime()->offThreadPromiseState.ref().init(
-      dispatchCallback, delayedDispatchCallback, asyncTaskStartedCallback,
-      asyncTaskFinishedCallback, closure);
-}
-
-JS_PUBLIC_API void JS::CancelAsyncTasks(JSContext* cx) {
-  cx->runtime()->offThreadPromiseState.ref().cancelTasks(cx);
+JS_PUBLIC_API void JS::InitDispatchsToEventLoop(
+    JSContext* cx, JS::DispatchToEventLoopCallback callback,
+    JS::DelayedDispatchToEventLoopCallback delayCallback, void* closure) {
+  cx->runtime()->offThreadPromiseState.ref().init(callback, delayCallback,
+                                                  closure);
 }
 
 JS_PUBLIC_API void JS::ShutdownAsyncTasks(JSContext* cx) {

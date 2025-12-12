@@ -257,8 +257,6 @@ class OffThreadPromiseRuntimeState {
   // not require a lock.
   JS::DispatchToEventLoopCallback dispatchToEventLoopCallback_;
   JS::DelayedDispatchToEventLoopCallback delayedDispatchToEventLoopCallback_;
-  JS::AsyncTaskStartedCallback asyncTaskStartedCallback_;
-  JS::AsyncTaskFinishedCallback asyncTaskFinishedCallback_;
   void* dispatchToEventLoopClosure_;
 
 #ifdef DEBUG
@@ -307,6 +305,7 @@ class OffThreadPromiseRuntimeState {
   // mean "the DispatchToEventLoopCallback failed after this task was dispatched
   // for execution".
   HelperThreadLockData<ConditionVariable> allFailed_;
+  HelperThreadLockData<size_t> numFailed_;
 
   // The queue of JS::Dispatchables used by the DispatchToEventLoopCallback that
   // calling js::UseInternalJobQueues installs.
@@ -342,17 +341,11 @@ class OffThreadPromiseRuntimeState {
   void operator=(const OffThreadPromiseRuntimeState&) = delete;
   OffThreadPromiseRuntimeState(const OffThreadPromiseRuntimeState&) = delete;
 
-  // Used by OffThreadPromiseTask
-  void registerTask(JSContext* cx, OffThreadPromiseTask* task);
-  void unregisterTask(OffThreadPromiseTask* task);
-
  public:
   OffThreadPromiseRuntimeState();
   ~OffThreadPromiseRuntimeState();
-  void init(JS::DispatchToEventLoopCallback dispatchCallback,
-            JS::DelayedDispatchToEventLoopCallback delayedDispatchCallback,
-            JS::AsyncTaskStartedCallback asyncTaskStartedCallback,
-            JS::AsyncTaskFinishedCallback asyncTaskFinishedCallback,
+  void init(JS::DispatchToEventLoopCallback callback,
+            JS::DelayedDispatchToEventLoopCallback delayCallback,
             void* closure);
   void initInternalDispatchQueue();
   bool initialized() const;
@@ -368,9 +361,6 @@ class OffThreadPromiseRuntimeState {
   bool dispatchToEventLoop(js::UniquePtr<JS::Dispatchable>&& dispatchable);
   bool delayedDispatchToEventLoop(
       js::UniquePtr<JS::Dispatchable>&& dispatchable, uint32_t delay);
-
-  void cancelTasks(JSContext* cx);
-  void cancelTasks(AutoLockHelperThreadState& lock, JSContext* cx);
 
   // shutdown() must be called by the JSRuntime while the JSRuntime is valid.
   void shutdown(JSContext* cx);
