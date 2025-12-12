@@ -1111,37 +1111,6 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
       case ValType::Ref: {
         // Guarded against by temporarilyUnsupportedReftypeForEntry()
         MOZ_RELEASE_ASSERT(funcType.args()[i].refType().isExtern());
-
-        // If the value is a double that is a negative denormal and denormals
-        // are disabled, then `branchValueConvertsToWasmAnyRefInline` will view
-        // it as '-0' (which must be boxed in the OOL path). However, the
-        // AnyRef boxing code uses `mozilla::NumberIsInt32` which does not
-        // properly handle the CPU DAZ/FTZ flags and returns true and therefore
-        // doesn't box the double. This leads to an assertion below where we
-        // expected the value to be boxed.
-        //
-        // Making `mozilla::NumberIsInt32` handle the CPU DAZ/FTZ flags would
-        // add a significant cost to many hot-paths. We instead just
-        // eagerly canonicalize denormals to +-0.0 here to avoid inconsistent
-        // results (see Bug 1971519).
-        {
-          ScratchDoubleScope tmpD(masm);
-
-          Label notDouble;
-          masm.branchTestDouble(Assembler::NotEqual, scratchV, &notDouble);
-
-          // Unbox the double and canonicalize any denormal values
-          masm.unboxDouble(scratchV, scratchF);
-          masm.canonicalizeDoubleZero(scratchF, tmpD);
-
-          // Box the value back into scratchV and also store it back to the
-          // stack.
-          masm.boxDouble(scratchF, scratchV, tmpD);
-          masm.storeValue(scratchV, jitArgAddr);
-
-          masm.bind(&notDouble);
-        }
-
         masm.branchValueConvertsToWasmAnyRefInline(scratchV, scratchG, scratchF,
                                                    &next);
         masm.jump(&oolCall);
@@ -1285,7 +1254,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         masm.boxNonDouble(JSVAL_TYPE_INT32, ReturnReg, JSReturnOperand);
         break;
       case ValType::F32: {
-        masm.canonicalizeFloatNaN(ReturnFloat32Reg);
+        masm.canonicalizeFloat(ReturnFloat32Reg);
         masm.convertFloat32ToDouble(ReturnFloat32Reg, ReturnDoubleReg);
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         ScratchDoubleScope fpscratch(masm);
@@ -1293,7 +1262,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         break;
       }
       case ValType::F64: {
-        masm.canonicalizeDoubleNaN(ReturnDoubleReg);
+        masm.canonicalizeDouble(ReturnDoubleReg);
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         ScratchDoubleScope fpscratch(masm);
         masm.boxDouble(ReturnDoubleReg, JSReturnOperand, fpscratch);
@@ -1587,11 +1556,11 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         GenPrintI64(DebugChannel::Function, masm, ReturnReg64);
         break;
       case wasm::ValType::F32:
-        masm.canonicalizeFloatNaN(ReturnFloat32Reg);
+        masm.canonicalizeFloat(ReturnFloat32Reg);
         GenPrintF32(DebugChannel::Function, masm, ReturnFloat32Reg);
         break;
       case wasm::ValType::F64:
-        masm.canonicalizeDoubleNaN(ReturnDoubleReg);
+        masm.canonicalizeDouble(ReturnDoubleReg);
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         break;
       case wasm::ValType::Ref:
@@ -1825,14 +1794,14 @@ static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register instance,
           // Preserve the NaN pattern in the input.
           ScratchDoubleScope fpscratch(masm);
           masm.moveDouble(srcReg, fpscratch);
-          masm.canonicalizeDoubleNaN(fpscratch);
+          masm.canonicalizeDouble(fpscratch);
           GenPrintF64(DebugChannel::Import, masm, fpscratch);
           masm.boxDouble(fpscratch, dst);
         } else if (type == MIRType::Float32) {
           // JS::Values can't store Float32, so convert to a Double.
           ScratchDoubleScope fpscratch(masm);
           masm.convertFloat32ToDouble(srcReg, fpscratch);
-          masm.canonicalizeDoubleNaN(fpscratch);
+          masm.canonicalizeDouble(fpscratch);
           GenPrintF64(DebugChannel::Import, masm, fpscratch);
           masm.boxDouble(fpscratch, dst);
         } else if (type == MIRType::Simd128) {
@@ -1875,7 +1844,7 @@ static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register instance,
           } else {
             masm.loadDouble(src, dscratch);
           }
-          masm.canonicalizeDoubleNaN(dscratch);
+          masm.canonicalizeDouble(dscratch);
           GenPrintF64(DebugChannel::Import, masm, dscratch);
           masm.boxDouble(dscratch, dst);
         } else if (type == MIRType::Simd128) {

@@ -166,15 +166,15 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
       break;
     case Scalar::Float16:
       loadFloat16(src, dest.fpu(), temp1, temp2, volatileLiveRegs);
-      canonicalizeFloatNaN(dest.fpu());
+      canonicalizeFloat(dest.fpu());
       break;
     case Scalar::Float32:
       loadFloat32(src, dest.fpu());
-      canonicalizeFloatNaN(dest.fpu());
+      canonicalizeFloat(dest.fpu());
       break;
     case Scalar::Float64:
       loadDouble(src, dest.fpu());
-      canonicalizeDoubleNaN(dest.fpu());
+      canonicalizeDouble(dest.fpu());
       break;
     case Scalar::BigInt64:
     case Scalar::BigUint64:
@@ -7467,7 +7467,8 @@ void MacroAssembler::branchValueConvertsToWasmAnyRefInline(
   bind(&checkDouble);
   {
     unboxDouble(src, scratchFloat);
-    convertDoubleToInt32(scratchFloat, scratchInt, &fallthrough);
+    convertDoubleToInt32(scratchFloat, scratchInt, &fallthrough,
+                         /*negativeZeroCheck=*/false);
     branch32(Assembler::GreaterThan, scratchInt,
              Imm32(wasm::AnyRef::MaxI31Value), &fallthrough);
     branch32(Assembler::LessThan, scratchInt, Imm32(wasm::AnyRef::MinI31Value),
@@ -7496,7 +7497,8 @@ void MacroAssembler::convertValueToWasmAnyRef(ValueOperand src, Register dest,
   bind(&doubleValue);
   {
     unboxDouble(src, scratchFloat);
-    convertDoubleToInt32(scratchFloat, dest, oolConvert);
+    convertDoubleToInt32(scratchFloat, dest, oolConvert,
+                         /*negativeZeroCheck=*/false);
     branch32(Assembler::GreaterThan, dest, Imm32(wasm::AnyRef::MaxI31Value),
              oolConvert);
     branch32(Assembler::LessThan, dest, Imm32(wasm::AnyRef::MinI31Value),
@@ -10753,7 +10755,7 @@ void MacroAssembler::touchFrameValues(Register numStackValues,
 #ifdef FUZZING_JS_FUZZILLI
 void MacroAssembler::fuzzilliHashDouble(FloatRegister src, Register result,
                                         Register temp) {
-  canonicalizeDoubleNaN(src);
+  canonicalizeDouble(src);
 
 #  ifdef JS_PUNBOX64
   Register64 r64(temp);
