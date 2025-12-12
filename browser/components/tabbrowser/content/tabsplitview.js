@@ -39,6 +39,8 @@
     /** @type {MozTabbrowserTab[]} */
     #tabs = [];
 
+    #storedPanelWidths = new WeakMap();
+
     /**
      * @returns {boolean}
      */
@@ -72,6 +74,7 @@
       this.ownerGlobal.addEventListener("TabSelect", this);
 
       this.#observeTabChanges();
+      this.#restorePanelWidths();
 
       if (this.hasActiveTab) {
         this.#activate();
@@ -93,6 +96,7 @@
       this.#tabChangeObserver?.disconnect();
       this.ownerGlobal.removeEventListener("TabSelect", this);
       this.#deactivate();
+      this.#resetPanelWidths();
       this.container.dispatchEvent(
         new CustomEvent("SplitViewRemoved", {
           bubbles: true,
@@ -142,6 +146,22 @@
     }
 
     /**
+     * Get the list of tab panels from this split view.
+     *
+     * @returns {XULElement[]}
+     */
+    get panels() {
+      const panels = [];
+      for (const { linkedPanel } of this.#tabs) {
+        const el = document.getElementById(linkedPanel);
+        if (el) {
+          panels.push(el);
+        }
+      }
+      return panels;
+    }
+
+    /**
      * Show all Split View tabs in the content area.
      */
     #activate() {
@@ -167,6 +187,34 @@
           bubbles: true,
         })
       );
+    }
+
+    /**
+     * Remove customized panel widths. Cache width values so that they can be
+     * restored if this Split View is later reactivated.
+     */
+    #resetPanelWidths() {
+      for (const panel of this.panels) {
+        const width = panel.getAttribute("width");
+        if (width) {
+          this.#storedPanelWidths.set(panel, width);
+          panel.removeAttribute("width");
+          panel.style.removeProperty("width");
+        }
+      }
+    }
+
+    /**
+     * Resize panel widths back to cached values.
+     */
+    #restorePanelWidths() {
+      for (const panel of this.panels) {
+        const width = this.#storedPanelWidths.get(panel);
+        if (width) {
+          panel.setAttribute("width", width);
+          panel.style.setProperty("width", width + "px");
+        }
+      }
     }
 
     /**

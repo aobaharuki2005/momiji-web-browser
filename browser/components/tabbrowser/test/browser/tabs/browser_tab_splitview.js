@@ -231,6 +231,7 @@ add_task(async function test_split_view_preserves_multiple_pairings() {
 add_task(async function test_resize_split_view_panels() {
   const tab1 = await addTabAndLoadBrowser();
   const tab2 = await addTabAndLoadBrowser();
+  const originalTab = gBrowser.selectedTab;
   await BrowserTestUtils.switchTab(gBrowser, tab1);
 
   info("Activate split view.");
@@ -264,5 +265,30 @@ add_task(async function test_resize_split_view_panels() {
     "Right panel is larger."
   );
 
-  splitView.close();
+  info("Ensure that custom width persists after switching tabs.");
+  await BrowserTestUtils.switchTab(gBrowser, originalTab);
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+  Assert.less(
+    leftPanel.getBoundingClientRect().width,
+    originalLeftWidth,
+    "Left panel is smaller."
+  );
+  Assert.greater(
+    rightPanel.getBoundingClientRect().width,
+    originalRightWidth,
+    "Right panel is larger."
+  );
+
+  info("Separate split view panels to remove the custom width.");
+  splitView.unsplitTabs();
+  for (const panel of [leftPanel, rightPanel]) {
+    await BrowserTestUtils.waitForMutationCondition(
+      panel,
+      { attributeFilter: ["width"] },
+      () => !panel.hasAttribute("width")
+    );
+  }
+
+  BrowserTestUtils.removeTab(tab1);
+  BrowserTestUtils.removeTab(tab2);
 });
