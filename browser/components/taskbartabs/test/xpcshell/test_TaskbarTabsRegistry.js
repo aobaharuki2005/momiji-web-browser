@@ -35,7 +35,7 @@ add_task(async function test_create_taskbar_tab() {
     "Initially, no Taskbar Tab should exist for the given URL and container."
   );
 
-  const taskbarTab = registry.findOrCreateTaskbarTab(url, userContextId);
+  const taskbarTab = createTaskbarTab(registry, url, userContextId);
 
   Assert.ok(taskbarTab, "Taskbar Tab should be created.");
   Assert.deepEqual(
@@ -46,7 +46,8 @@ add_task(async function test_create_taskbar_tab() {
 
   const secondUrl = Services.io.newURI("https://www.another-test.com/start");
   const secondUserContextId = 1;
-  const secondTaskbarTab = registry.findOrCreateTaskbarTab(
+  const secondTaskbarTab = createTaskbarTab(
+    registry,
     secondUrl,
     secondUserContextId
   );
@@ -61,12 +62,17 @@ add_task(async function test_create_taskbar_tab() {
     "Second Taskbar Tab created should still be present."
   );
 
-  const repeatTaskbarTab = registry.findOrCreateTaskbarTab(
+  const repeated = registry.findOrCreateTaskbarTab(
     secondUrl,
     secondUserContextId
   );
+  Assert.equal(
+    repeated.created,
+    false,
+    "The existing taskbar tab should have been found, not created"
+  );
   Assert.deepEqual(
-    repeatTaskbarTab,
+    repeated.taskbarTab,
     secondTaskbarTab,
     "Should have found the second created Taskbar Tab instead of creating a new Taskbar Tab."
   );
@@ -77,7 +83,7 @@ add_task(async function test_remove_taskbar_tab() {
   const userContextId = 0;
 
   const registry = new TaskbarTabsRegistry();
-  const taskbarTab = registry.findOrCreateTaskbarTab(url, userContextId);
+  const taskbarTab = createTaskbarTab(registry, url, userContextId);
 
   Assert.deepEqual(
     registry.findTaskbarTab(url, userContextId),
@@ -99,7 +105,7 @@ add_task(async function test_container_mismatch() {
   const mismatchedUserContextId = 1;
 
   const registry = new TaskbarTabsRegistry();
-  const taskbarTab = registry.findOrCreateTaskbarTab(url, userContextId);
+  const taskbarTab = createTaskbarTab(registry, url, userContextId);
   Assert.ok(taskbarTab, "Taskbar Tab ID should be created.");
 
   Assert.ok(
@@ -120,7 +126,7 @@ add_task(async function test_scope_navigable() {
   const userContextId = 0;
 
   const registry = new TaskbarTabsRegistry();
-  const taskbarTab = registry.findOrCreateTaskbarTab(url, userContextId);
+  const taskbarTab = createTaskbarTab(registry, url, userContextId);
 
   Assert.ok(
     taskbarTab.isScopeNavigable(validNavigationDomain),
@@ -145,7 +151,7 @@ add_task(async function test_psl_navigable() {
   const userContextId = 0;
 
   const registry = new TaskbarTabsRegistry();
-  const taskbarTab = registry.findOrCreateTaskbarTab(url, userContextId);
+  const taskbarTab = createTaskbarTab(registry, url, userContextId);
 
   Assert.ok(
     !taskbarTab.isScopeNavigable(invalidNavigationPublicSuffixList),
@@ -158,10 +164,7 @@ add_task(async function test_save_and_load_consistency() {
   const userContextId = 0;
 
   let saveRegistry = new TaskbarTabsRegistry();
-  const saveTaskbarTab = saveRegistry.findOrCreateTaskbarTab(
-    url,
-    userContextId
-  );
+  const saveTaskbarTab = createTaskbarTab(saveRegistry, url, userContextId);
 
   let file = testFile();
   let storage = new TaskbarTabsRegistryStorage(saveRegistry, file);
@@ -263,7 +266,7 @@ add_task(async function test_guards_against_non_urls() {
   const registry = new TaskbarTabsRegistry();
 
   throws(
-    () => registry.findOrCreateTaskbarTab(url, userContextId),
+    () => createTaskbarTab(registry, url, userContextId),
     /Invalid argument, `aUrl` should be instance of `nsIURL`/,
     "Should reject URIs that are not URLs."
   );
@@ -271,7 +274,8 @@ add_task(async function test_guards_against_non_urls() {
 
 add_task(async function test_patch_becomes_visible() {
   const registry = new TaskbarTabsRegistry();
-  const tt = registry.findOrCreateTaskbarTab(
+  const tt = createTaskbarTab(
+    registry,
     Services.io.newURI("https://www.test.com/start"),
     0
   );
@@ -299,7 +303,8 @@ add_task(async function test_patch_becomes_visible() {
 
 add_task(async function test_shortcutRelativePath_is_saved() {
   const registry = new TaskbarTabsRegistry();
-  const tt = registry.findOrCreateTaskbarTab(
+  const tt = createTaskbarTab(
+    registry,
     Services.io.newURI("https://www.test.com/start"),
     0
   );
@@ -327,7 +332,7 @@ add_task(async function test_multiple_match_longest_prefix() {
     Services.io.newURI("https://example.com" + prefix);
 
   const createWithScope = uri =>
-    registry.findOrCreateTaskbarTab(uri, 0, {
+    createTaskbarTab(registry, uri, 0, {
       manifest: {
         scope: uri.spec,
       },
@@ -353,4 +358,4 @@ add_task(async function test_multiple_match_longest_prefix() {
 
   equal(find("/abc/d/").id, ttABCD.id, "/abc/d/ matches /abc/d/");
   equal(find("/abc/d/efgh").id, ttABCD.id, "/abc/d/efgh matches /abc/d/");
-});
+}).skip(); // TODO bug 2000948

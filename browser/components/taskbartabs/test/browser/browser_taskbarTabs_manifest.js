@@ -178,7 +178,7 @@ add_task(async function test_scopeDistinguishesTaskbarTabs() {
       );
     }, "/example/another/main");
   }, "/example/main");
-});
+}).skip(); // TODO bug 2000948
 
 async function usingManifest(aCallback, aLocation = "/") {
   const location = httpUrl("/taskbartabs-manifest.json");

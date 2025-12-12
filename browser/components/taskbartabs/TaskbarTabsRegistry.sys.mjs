@@ -236,12 +236,16 @@ export class TaskbarTabsRegistry {
    * created.
    * @param {object} aDetails.manifest - The Web app manifest that should be
    * associated with this Taskbar Tab.
-   * @returns {TaskbarTab} The matching or created Taskbar Tab.
+   * @returns {{taskbarTab:TaskbarTab, created:bool}}
+   *   The matching or created Taskbar Tab, along with whether it was created.
    */
   findOrCreateTaskbarTab(aUrl, aUserContextId, { manifest = {} } = {}) {
-    let taskbarTab = this.findTaskbarTab(aUrl, aUserContextId);
-    if (taskbarTab) {
-      return taskbarTab;
+    let existing = this.findTaskbarTab(aUrl, aUserContextId);
+    if (existing) {
+      return {
+        created: false,
+        taskbarTab: existing,
+      };
     }
 
     let scope = { hostname: aUrl.host };
@@ -258,7 +262,7 @@ export class TaskbarTabsRegistry {
     }
 
     let id = Services.uuid.generateUUID().toString().slice(1, -1);
-    taskbarTab = new TaskbarTab({
+    let taskbarTab = new TaskbarTab({
       id,
       scopes: [scope],
       userContextId: aUserContextId,
@@ -272,7 +276,10 @@ export class TaskbarTabsRegistry {
     Glean.webApp.install.record({});
     this.#emitter.emit(kTaskbarTabsRegistryEvents.created, taskbarTab);
 
-    return taskbarTab;
+    return {
+      created: true,
+      taskbarTab,
+    };
   }
 
   /**

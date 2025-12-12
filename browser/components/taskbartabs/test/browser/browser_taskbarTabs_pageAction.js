@@ -179,7 +179,7 @@ add_task(async function testRightClick() {
   });
 
   const uri = Services.io.newURI(BASE_URL);
-  const taskbarTab = await TaskbarTabs.findOrCreateTaskbarTab(uri, 0);
+  const taskbarTab = await createTaskbarTab(TaskbarTabs, uri, 0);
   is(
     await TaskbarTabs.getCountForId(taskbarTab.id),
     0,
@@ -354,7 +354,7 @@ add_task(async function test_moveTabIntoTaskbarTabCreation() {
 add_task(async function test_moveTabIntoTaskbarTabReuse() {
   // Ensure example.com has a Taskbar Tab.
   const uri = Services.io.newURI(BASE_URL);
-  const tt = await TaskbarTabs.findOrCreateTaskbarTab(uri, 0);
+  const tt = await createTaskbarTab(TaskbarTabs, uri, 0);
 
   await BrowserTestUtils.withNewTab("https://example.com/", async browser => {
     const tab = window.gBrowser.getTabForBrowser(browser);
