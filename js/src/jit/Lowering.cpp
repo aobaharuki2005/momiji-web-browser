@@ -4458,20 +4458,6 @@ void LIRGenerator::visitGetNextEntryForIterator(MGetNextEntryForIterator* ins) {
   define(lir, ins);
 }
 
-static auto SynchronizeLoad(MemoryBarrierRequirement requiresBarrier) {
-  if (requiresBarrier == MemoryBarrierRequirement::Required) {
-    return Synchronization::Load();
-  }
-  return Synchronization::None();
-}
-
-static auto SynchronizeStore(MemoryBarrierRequirement requiresBarrier) {
-  if (requiresBarrier == MemoryBarrierRequirement::Required) {
-    return Synchronization::Store();
-  }
-  return Synchronization::None();
-}
-
 void LIRGenerator::visitArrayBufferByteLength(MArrayBufferByteLength* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::IntPtr);
@@ -4530,9 +4516,8 @@ void LIRGenerator::visitResizableTypedArrayLength(
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::IntPtr);
 
-  auto sync = SynchronizeLoad(ins->requiresMemoryBarrier());
   auto* lir = new (alloc())
-      LResizableTypedArrayLength(useRegister(ins->object()), temp(), sync);
+      LResizableTypedArrayLength(useRegister(ins->object()), temp());
   define(lir, ins);
 }
 
@@ -4541,9 +4526,8 @@ void LIRGenerator::visitResizableDataViewByteLength(
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
   MOZ_ASSERT(ins->type() == MIRType::IntPtr);
 
-  auto sync = SynchronizeLoad(ins->requiresMemoryBarrier());
   auto* lir = new (alloc())
-      LResizableDataViewByteLength(useRegister(ins->object()), temp(), sync);
+      LResizableDataViewByteLength(useRegister(ins->object()), temp());
   define(lir, ins);
 }
 

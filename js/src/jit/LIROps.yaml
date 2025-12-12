@@ -1964,24 +1964,6 @@
   num_temps: 3
   mir_op: true
 
-# Read the length of a resizable typed array.
-- name: ResizableTypedArrayLength
-  result_type: WordSized
-  operands:
-    object: WordSized
-  arguments:
-    synchronization: js::jit::Synchronization
-  num_temps: 1
-
-# Read the byte length of a resizable data view.
-- name: ResizableDataViewByteLength
-  result_type: WordSized
-  operands:
-    object: WordSized
-  arguments:
-    synchronization: js::jit::Synchronization
-  num_temps: 1
-
 # Double to IntPtr, eligible for accessing into a TypedArray or DataView. If
 # the index isn't exactly representable as an IntPtr, depending on the
 # supportOOB flag on the MIR instruction, either bail out or produce an IntPtr

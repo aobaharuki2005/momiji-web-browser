@@ -11502,8 +11502,8 @@ void CodeGenerator::visitResizableTypedArrayLength(
   Register out = ToRegister(lir->output());
   Register temp = ToRegister(lir->temp0());
 
-  masm.loadResizableTypedArrayLengthIntPtr(lir->synchronization(), obj, out,
-                                           temp);
+  auto sync = SynchronizeLoad(lir->mir()->requiresMemoryBarrier());
+  masm.loadResizableTypedArrayLengthIntPtr(sync, obj, out, temp);
 }
 
 void CodeGenerator::visitResizableDataViewByteLength(
@@ -11512,8 +11512,8 @@ void CodeGenerator::visitResizableDataViewByteLength(
   Register out = ToRegister(lir->output());
   Register temp = ToRegister(lir->temp0());
 
-  masm.loadResizableDataViewByteLengthIntPtr(lir->synchronization(), obj, out,
-                                             temp);
+  auto sync = SynchronizeLoad(lir->mir()->requiresMemoryBarrier());
+  masm.loadResizableDataViewByteLengthIntPtr(sync, obj, out, temp);
 }
 
 void CodeGenerator::visitGrowableSharedArrayBufferByteLength(

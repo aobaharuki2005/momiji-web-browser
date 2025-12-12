@@ -1842,6 +1842,8 @@
   congruent_to: custom
   alias_set: custom
   compute_range: custom
+  generate_lir: true
+  lir_temps: 1
 
 # Read the byteLength of a resizable dataview.
 - name: ResizableDataViewByteLength
@@ -1856,6 +1858,8 @@
   congruent_to: custom
   alias_set: custom
   compute_range: custom
+  generate_lir: true
+  lir_temps: 1
 
 # Read the byte length of a growable shared array buffer as IntPtr.
 - name: GrowableSharedArrayBufferByteLength
