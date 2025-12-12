@@ -17,6 +17,7 @@
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
+#include "builtin/intl/LocaleNegotiation.h"
 #include "builtin/intl/SharedIntlData.h"
 #include "gc/GCContext.h"
 #include "js/PropertySpec.h"
@@ -32,6 +33,7 @@
 #include "vm/JSObject-inl.h"
 
 using namespace js;
+using namespace js::intl;
 
 using JS::AutoStableStringChars;
 
@@ -62,6 +64,9 @@ const JSClass CollatorObject::class_ = {
 
 const JSClass& CollatorObject::protoClass_ = PlainObject::class_;
 
+static bool collator_supportedLocalesOf(JSContext* cx, unsigned argc,
+                                        Value* vp);
+
 static bool collator_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setString(cx->names().Collator);
@@ -69,8 +74,7 @@ static bool collator_toSource(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSFunctionSpec collator_static_methods[] = {
-    JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_Collator_supportedLocalesOf",
-                      1, 0),
+    JS_FN("supportedLocalesOf", collator_supportedLocalesOf, 1, 0),
     JS_FS_END,
 };
 
@@ -503,5 +507,22 @@ bool js::intl_isIgnorePunctuation(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   args.rval().setBoolean(isIgnorePunctuation);
+  return true;
+}
+
+/**
+ * Intl.Collator.supportedLocalesOf ( locales [ , options ] )
+ */
+static bool collator_supportedLocalesOf(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Steps 1-3.
+  auto* array = SupportedLocalesOf(cx, AvailableLocaleKind::Collator,
+                                   args.get(0), args.get(1));
+  if (!array) {
+    return false;
+  }
+  args.rval().setObject(*array);
   return true;
 }
