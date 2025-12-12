@@ -20,6 +20,7 @@ import androidx.core.widget.ImageViewCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.color.MaterialColors
+import org.mozilla.fenix.GleanMetrics.CustomizationSettings
 import org.mozilla.fenix.R
 import com.google.android.material.R as materialR
 
@@ -49,6 +50,7 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
     protected abstract val options: List<ShortcutOption>
     protected abstract fun readSelectedKey(): String
     protected abstract fun writeSelectedKey(key: String)
+    protected abstract fun getToolbarType(): String
     protected abstract fun getSelectedIconImageView(holder: PreferenceViewHolder): ImageView
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
@@ -89,6 +91,12 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
                     isChecked = false,
                     isEnabled = true,
                 ) { newlySelected ->
+                    CustomizationSettings.toolbarShortcutSelection.record(
+                        CustomizationSettings.ToolbarShortcutSelectionExtra(
+                            toolbarType = getToolbarType(),
+                            item = newlySelected.key.value,
+                        ),
+                    )
                     writeSelectedKey(newlySelected.key.value)
                     selectedIcon.setImageResource(newlySelected.icon)
                     notifyChanged()

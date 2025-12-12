@@ -13,6 +13,8 @@ import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.settings
 
+const val EXPANDED_TOOLBAR_TYPE = "expanded"
+
 internal class ToolbarExpandedShortcutPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -25,6 +27,8 @@ internal class ToolbarExpandedShortcutPreference @JvmOverloads constructor(
     override fun writeSelectedKey(key: String) {
         context.settings().toolbarExpandedShortcutKey = key
     }
+
+    override fun getToolbarType(): String = EXPANDED_TOOLBAR_TYPE
 
     override fun getSelectedIconImageView(holder: PreferenceViewHolder): ImageView {
         val simplePreview = holder.findViewById(R.id.toolbar_simple_shortcut_preview)
