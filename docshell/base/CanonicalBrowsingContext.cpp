@@ -2339,8 +2339,6 @@ nsresult CanonicalBrowsingContext::PendingRemotenessChange::FinishSubframe() {
       NullPrincipal::Create(target->OriginAttributesRef());
   RefPtr<nsOpenWindowInfo> openWindowInfo = new nsOpenWindowInfo();
   openWindowInfo->mPrincipalToInheritForAboutBlank = initialPrincipal;
-  openWindowInfo->mPartitionedPrincipalToInheritForAboutBlank =
-      initialPrincipal;
   WindowGlobalInit windowInit =
       WindowGlobalActor::AboutBlankInitializer(target, initialPrincipal);
 

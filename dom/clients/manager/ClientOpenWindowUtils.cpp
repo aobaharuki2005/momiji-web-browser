@@ -506,7 +506,6 @@ RefPtr<ClientOpPromise> ClientOpenWindow(
   nsCOMPtr<nsIPrincipal> initialPrincipal =
       NullPrincipal::Create(principal->OriginAttributesRef(), nullPrincipalURI);
   openInfo->mPrincipalToInheritForAboutBlank = initialPrincipal;
-  openInfo->mPartitionedPrincipalToInheritForAboutBlank = initialPrincipal;
   openInfo->mIsRemote = true;
 
   RefPtr<BrowsingContext> bc;

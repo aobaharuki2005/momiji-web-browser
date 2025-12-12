@@ -79,6 +79,20 @@ WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
       embedderInnerWindowID, BrowsingContext()->UsePrivateBrowsing());
 }
 
+void VerifyStoragePrincipalMatchesDocumentPrincipal(WindowGlobalInit aInit) {
+  // WindowGlobalParent::CreateDisconnected performs similar checks in
+  // SetDocumentStoragePrincipal. If they fail, the parent process crashes.
+  // Let's ensure we crash in content instead, and assert each condition
+  // separately to find out what fails. See bug 2003449.
+  nsCString noSuffix, storageNoSuffix;
+  aInit.principal()->GetOriginNoSuffix(noSuffix);
+  aInit.storagePrincipal()->GetOriginNoSuffix(storageNoSuffix);
+  MOZ_RELEASE_ASSERT(noSuffix == storageNoSuffix);
+  MOZ_RELEASE_ASSERT(
+      aInit.principal()->OriginAttributesRef().EqualsIgnoringPartitionKey(
+          aInit.storagePrincipal()->OriginAttributesRef()));
+}
+
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     nsGlobalWindowInner* aWindow) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
@@ -124,6 +138,8 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
 
     MOZ_DIAGNOSTIC_ASSERT(bc->AncestorsAreCurrent());
     MOZ_DIAGNOSTIC_ASSERT(bc->IsInProcess());
+
+    VerifyStoragePrincipalMatchesDocumentPrincipal(init);
 
     ManagedEndpoint<PWindowGlobalParent> endpoint =
         browserChild->OpenPWindowGlobalEndpoint(wgc);
