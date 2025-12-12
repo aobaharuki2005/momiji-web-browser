@@ -1459,9 +1459,10 @@ AutoClonedSelectionRangeArray::ExtendAnchorFocusRangeFor(
       // Different from the `eNext` case, we look for character boundary.
       // I'm not sure whether this inconsistency between "Delete" and
       // "Backspace" is intentional or not.
-      result = nsFrameSelection::CreateRangeExtendedToPreviousCharacterBoundary<
-          nsRange>(*presShell, limitersAndCaretData, anchorFocusRange,
-                   rangeDirection);
+      result = nsFrameSelection::
+          CreateRangeExtendedToPreviousGraphemeClusterBoundary<nsRange>(
+              *presShell, limitersAndCaretData, anchorFocusRange,
+              rangeDirection);
       if (NS_WARN_IF(aEditorBase.Destroyed())) {
         return Err(NS_ERROR_EDITOR_DESTROYED);
       }

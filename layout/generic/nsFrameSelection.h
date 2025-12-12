@@ -681,9 +681,9 @@ class nsFrameSelection final {
   }
 
   /**
-   * CreateRangeExtendedToPreviousCharacterBoundary() returns range which is
-   * extended from normal selection range to start of previous character
-   * boundary.
+   * CreateRangeExtendedToPreviousGraphemeClusterBoundary() returns range
+   * which is extended from normal selection range to start of previous
+   * grapheme cluster boundary.
    *
    * @param aLimitersAndCaretData       The data of limiters and additional
    *                                    caret data.
@@ -695,13 +695,13 @@ class nsFrameSelection final {
    */
   template <typename RangeType>
   MOZ_CAN_RUN_SCRIPT static mozilla::Result<RefPtr<RangeType>, nsresult>
-  CreateRangeExtendedToPreviousCharacterBoundary(
+  CreateRangeExtendedToPreviousGraphemeClusterBoundary(
       mozilla::PresShell& aPresShell,
       const mozilla::LimitersAndCaretData& aLimitersAndCaretData,
       const mozilla::dom::AbstractRange& aRange, nsDirection aRangeDirection) {
     return CreateRangeExtendedToSomewhere<RangeType>(
         aPresShell, aLimitersAndCaretData, aRange, aRangeDirection,
-        eDirPrevious, eSelectCharacter, eLogical);
+        eDirPrevious, eSelectCluster, eLogical);
   }
 
   /**
