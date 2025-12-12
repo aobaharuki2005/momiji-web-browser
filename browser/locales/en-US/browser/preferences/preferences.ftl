@@ -347,11 +347,9 @@ preferences-web-appearance-override-warning3 =
 preferences-web-appearance-link =
     .label = Manage { -brand-short-name } themes in Extensions & Themes
 
-preferences-contrast-control-group =
-    .label = Website contrast
-    .description = Websites use a variety of foreground and background colors. For consistent contrast, you can use the same colors across websites.
-preferences-contrast-control-radio-group =
-    .label = Override colors
+preferences-contrast-control-header = Contrast Control
+
+preferences-contrast-control-description = Websites have a variety of foreground and background colors. Configure { -brand-short-name } to use the same colors across websites for improved readability.
 
 preferences-contrast-control-use-platform-settings =
     .label = Automatic (use system settings)
@@ -381,11 +379,9 @@ advanced-fonts =
     .accesskey = A
 
 # Zoom is a noun, and the message is used as header for a group of options
-preferences-zoom-header2 =
-  .label = Zoom
+preferences-zoom-header = Zoom
 
-preferences-default-zoom-label =
-    .label = Default zoom
+preferences-default-zoom = Default zoom
     .accesskey = z
 
 # Variables:

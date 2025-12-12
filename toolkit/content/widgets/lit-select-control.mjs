@@ -196,14 +196,9 @@ export class SelectControlBaseElement extends MozLitElement {
     this.focusedIndex = undefined;
   }
 
-  /**
-   * @param {KeyboardEvent & { target: HTMLElement }} event
-   */
+  // NB: We may need to revise this to avoid bugs when we add more focusable
+  // elements to select control base/items.
   handleKeydown(event) {
-    if (event.target.parentElement != this) {
-      // Ignore events from nested controls.
-      return;
-    }
     let directions = this.getNavigationDirections();
     switch (event.key) {
       case "Down":

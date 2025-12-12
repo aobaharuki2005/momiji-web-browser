@@ -106,10 +106,10 @@ export default class MozFieldset extends MozLitElement {
 
   descriptionTemplate() {
     if (this.description) {
-      return html`<div class="description">
-        <span id="description">${this.description}</span>
-        ${this.supportPageTemplate()}
-      </div>`;
+      return html`<span id="description" class="description">
+          ${this.description}
+        </span>
+        ${this.supportPageTemplate()}`;
     }
     return "";
   }

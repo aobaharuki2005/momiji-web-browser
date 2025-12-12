@@ -14,7 +14,6 @@
   --heading-font-size-xlarge: var(--font-size-xlarge);
   --heading-font-size-large: var(--font-size-large);
   --heading-font-size-medium: var(--font-size-medium);
-  --select-max-width: 20rem;
   user-select: text;
 }
 
