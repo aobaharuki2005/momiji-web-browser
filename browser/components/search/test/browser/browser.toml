@@ -85,6 +85,8 @@ skip-if = [
 
 ["browser_new_searchbar_init.js"]
 
+["browser_new_searchbar_searchmode.js"]
+
 ["browser_oneOff.js"]
 
 ["browser_oneOffContextMenu.js"]

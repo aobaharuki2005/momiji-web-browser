@@ -2256,35 +2256,38 @@ export class UrlbarInput extends HTMLElement {
   }
 
   /**
-   * Gets the search mode for a specific browser instance.
+   * Addressbar: Gets the search mode for a specific browser instance.
+   * Searchbar: Gets the window-global search mode.
    *
    * @param {MozBrowser} browser
    *   The search mode for this browser will be returned.
+   *   Pass the selected browser for the searchbar.
    * @param {boolean} [confirmedOnly]
    *   Normally, if the browser has both preview and confirmed modes, preview
    *   mode will be returned since it takes precedence.  If this argument is
    *   true, then only confirmed search mode will be returned, or null if
    *   search mode hasn't been confirmed.
-   * @returns {object}
-   *   A search mode object.  See setSearchMode documentation.  If the browser
-   *   is not in search mode, then null is returned.
+   * @returns {?object}
+   *   A search mode object or null if the browser/window is not in search mode.
+   *   See setSearchMode documentation.
    */
   getSearchMode(browser, confirmedOnly = false) {
-    let modes = this.getBrowserState(browser).searchModes;
+    let modes = this.#getSearchModesObject(browser);
 
     // Return copies so that callers don't modify the stored values.
-    if (!confirmedOnly && modes?.preview) {
+    if (!confirmedOnly && modes.preview) {
       return { ...modes.preview };
     }
-    if (modes?.confirmed) {
+    if (modes.confirmed) {
       return { ...modes.confirmed };
     }
     return null;
   }
 
   /**
-   * Sets search mode for a specific browser instance.  If the given browser is
-   * selected, then this will also enter search mode.
+   * Addressbar: Sets the search mode for a specific browser instance.
+   * Searchbar: Sets the window-global search mode.
+   * If the given browser is selected, then this will also enter search mode.
    *
    * @param {object} searchMode
    *   A search mode object.
@@ -2303,6 +2306,7 @@ export class UrlbarInput extends HTMLElement {
    *   be interacted with right away. Defaults to true.
    * @param {MozBrowser} browser
    *   The browser for which to set search mode.
+   *   Pass the selected browser for the searchbar.
    */
   async setSearchMode(searchMode, browser) {
     let currentSearchMode = this.getSearchMode(browser);
@@ -2354,7 +2358,7 @@ export class UrlbarInput extends HTMLElement {
       }
     }
 
-    let state = this.getBrowserState(browser);
+    let modes = this.#getSearchModesObject(browser);
 
     if (searchMode) {
       searchMode.isPreview = isPreview;
@@ -2366,16 +2370,15 @@ export class UrlbarInput extends HTMLElement {
         searchMode.entry = "other";
       }
 
-      // Add the search mode to the map.
       if (!searchMode.isPreview) {
-        state.searchModes = { confirmed: searchMode };
+        modes.confirmed = searchMode;
+        delete modes.preview;
       } else {
-        let modes = state.searchModes || {};
         modes.preview = searchMode;
-        state.searchModes = modes;
       }
     } else {
-      delete state.searchModes;
+      delete modes.preview;
+      delete modes.confirmed;
     }
 
     if (restrictType) {
@@ -2402,11 +2405,50 @@ export class UrlbarInput extends HTMLElement {
   }
 
   /**
+   * @typedef {object} SearchModesObject
+   *
+   * @property {object} [preview] preview search mode
+   * @property {object} [confirmed] confirmed search mode
+   */
+
+  /**
+   * @type {SearchModesObject|undefined}
+   *
+   * The (lazily initialized) search mode object for the searchbar.
+   * This is needed because the searchbar has one search mode per window that
+   * shouldn't change when switching tabs. For the address bar, the search mode
+   * is stored per browser in #browserStates and this is always undefined.
+   */
+  #searchbarSearchModes;
+
+  /**
+   * Addressbar: Gets the search modes object for a specific browser instance.
+   * Searchbar: Gets the window-global search modes object.
+   *
+   * @param {MozBrowser} browser
+   *   The browser to get the search modes object for.
+   *   Pass the selected browser for the searchbar.
+   * @returns {SearchModesObject}
+   */
+  #getSearchModesObject(browser) {
+    if (!this.#isAddressbar) {
+      // The passed browser doesn't matter here, but it does in setSearchMode.
+      this.#searchbarSearchModes ??= {};
+      return this.#searchbarSearchModes;
+    }
+
+    let state = this.getBrowserState(browser);
+    state.searchModes ??= {};
+    return state.searchModes;
+  }
+
+  /**
    * Restores the current browser search mode from a previously stored state.
    */
   restoreSearchModeState() {
-    let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
-    this.searchMode = state.searchModes?.confirmed;
+    this.searchMode = this.#getSearchModesObject(
+      this.window.gBrowser.selectedBrowser
+    ).confirmed;
   }
 
   /**

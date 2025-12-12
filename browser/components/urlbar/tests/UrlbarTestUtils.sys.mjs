@@ -951,37 +951,46 @@ class UrlbarInputTestUtils {
       "Expected searchMode"
     );
 
-    // Check the textContent and l10n attributes of the indicator and label.
-    let expectedTextContent = "";
-    let expectedL10n = { id: null, args: null };
-    if (expectedSearchMode.engineName) {
-      expectedTextContent = expectedSearchMode.engineName;
-    } else if (expectedSearchMode.source) {
-      let name = UrlbarUtils.getResultSourceName(expectedSearchMode.source);
-      this.Assert.ok(name, "Expected result source should have a name");
-      expectedL10n = { id: `urlbar-search-mode-${name}`, args: null };
-    } else {
-      this.Assert.ok(false, "Unexpected searchMode");
-    }
+    // Only the addressbar still has the legacy search mode indicator.
+    if (this.#urlbar(window).sapName == "urlbar") {
+      // Check the textContent and l10n attributes of the indicator and label.
+      let expectedTextContent = "";
+      let expectedL10n = { id: null, args: null };
+      if (expectedSearchMode.engineName) {
+        expectedTextContent = expectedSearchMode.engineName;
+      } else if (expectedSearchMode.source) {
+        let name = UrlbarUtils.getResultSourceName(expectedSearchMode.source);
+        this.Assert.ok(name, "Expected result source should have a name");
+        expectedL10n = { id: `urlbar-search-mode-${name}`, args: null };
+      } else {
+        this.Assert.ok(false, "Unexpected searchMode");
+      }
 
-    if (expectedTextContent) {
-      this.Assert.equal(
-        this.#urlbar(window)._searchModeIndicatorTitle.textContent,
-        expectedTextContent,
-        "Expected textContent"
+      if (expectedTextContent) {
+        this.Assert.equal(
+          this.#urlbar(window)._searchModeIndicatorTitle.textContent,
+          expectedTextContent,
+          "Expected textContent"
+        );
+      }
+      this.Assert.deepEqual(
+        window.document.l10n.getAttributes(
+          this.#urlbar(window)._searchModeIndicatorTitle
+        ),
+        expectedL10n,
+        "Expected l10n"
       );
     }
-    this.Assert.deepEqual(
-      window.document.l10n.getAttributes(
-        this.#urlbar(window)._searchModeIndicatorTitle
-      ),
-      expectedL10n,
-      "Expected l10n"
-    );
 
     // Check the input's placeholder.
     let expectedPlaceholderL10n;
-    if (expectedSearchMode.engineName) {
+    if (this.#urlbar(window).sapName == "searchbar") {
+      // Placeholder stays constant in searchbar.
+      expectedPlaceholderL10n = {
+        id: "searchbar-input",
+        args: null,
+      };
+    } else if (expectedSearchMode.engineName) {
       expectedPlaceholderL10n = {
         id: isGeneralPurposeEngine
           ? "urlbar-placeholder-search-mode-web-2"
