@@ -216,20 +216,6 @@ void WarpCacheIRWithShapeList::dumpData(GenericPrinter& out) const {
   }
 }
 
-void WarpCacheIRWithShapeListAndOffsets::dumpData(GenericPrinter& out) const {
-  WarpCacheIRBase::dumpData(out);
-  uint32_t index = 0;
-  for (Shape* shape : shapes_.shapes()) {
-    out.printf("    shape %u: 0x%p\n", index, shape);
-    index++;
-  }
-  index = 0;
-  for (uint32_t offset : shapes_.offsets()) {
-    out.printf("    offset %u: %u\n", index, offset);
-    index++;
-  }
-}
-
 void WarpInlinedCall::dumpData(GenericPrinter& out) const {
   out.printf("    scriptSnapshot: 0x%p\n", scriptSnapshot_);
   out.printf("    info: 0x%p\n", info_);
@@ -463,11 +449,6 @@ void ShapeListSnapshot::trace(JSTracer* trc) const {
 }
 
 void WarpCacheIRWithShapeList::traceData(JSTracer* trc) {
-  WarpCacheIRBase::traceData(trc);
-  shapes_.trace(trc);
-}
-
-void WarpCacheIRWithShapeListAndOffsets::traceData(JSTracer* trc) {
   WarpCacheIRBase::traceData(trc);
   shapes_.trace(trc);
 }

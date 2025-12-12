@@ -2130,16 +2130,6 @@
 - name: LoadFixedSlot
   gen_boilerplate: false
 
-- name: LoadFixedSlotFromOffset
-  operands:
-    object: Object
-    offset: Int32
-  result_type: Value
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: custom
-  generate_lir: true
-
 - name: LoadFixedSlotAndUnbox
   gen_boilerplate: false
 
@@ -2147,12 +2137,6 @@
   gen_boilerplate: false
 
 - name: StoreFixedSlot
-  gen_boilerplate: false
-
-- name: StoreFixedSlotFromOffset
-  gen_boilerplate: false
-
-- name: StoreDynamicSlotFromOffset
   gen_boilerplate: false
 
 - name: GetPropertyCache
@@ -2253,29 +2237,6 @@
   alias_set: custom
   generate_lir: true
   lir_temps: 2
-
-- name: GuardShapeListToOffset
-  operands:
-    object: Object
-  arguments:
-    shapeList: const ShapeListWithOffsetsSnapshot*
-  result_type: Int32
-  guard: true
-  movable: true
-  congruent_to: custom
-  alias_set: custom
-  generate_lir: true
-  lir_temps: 2
-
-- name: GuardMultipleShapesToOffset
-  operands:
-    object: Object
-    shapeList: Object
-  result_type: Int32
-  guard: true
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: custom
 
 - name: GuardProto
   gen_boilerplate: false
@@ -2719,16 +2680,6 @@
 
 - name: LoadDynamicSlot
   gen_boilerplate: false
-
-- name: LoadDynamicSlotFromOffset
-  operands:
-    slots: Slots
-    offset: Int32
-  result_type: Value
-  movable: true
-  congruent_to: if_operands_equal
-  alias_set: custom
-  generate_lir: true
 
 # Inline call to access a function's environment (scope chain).
 - name: FunctionEnvironment

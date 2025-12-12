@@ -1843,21 +1843,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                                      const Shape* shape,
                                                      Label* label);
 
- private:
-  void branchTestObjShapeListImpl(Register obj, Register shapeElements,
-                                  size_t itemSize, Register shapeScratch,
-                                  Register endScratch, Register spectreScratch,
-                                  Label* fail);
-
- public:
-  void branchTestObjShapeList(Register obj, Register shapeElements,
-                              Register shapeScratch, Register endScratch,
-                              Register spectreScratch, Label* fail);
-
-  void branchTestObjShapeListSetOffset(Register obj, Register shapeElements,
-                                       Register offset, Register shapeScratch,
-                                       Register endScratch,
-                                       Register spectreScratch, Label* fail);
+  void branchTestObjShapeList(Condition cond, Register obj,
+                              Register shapeElements, Register shapeScratch,
+                              Register endScratch, Register spectreScratch,
+                              Label* label);
 
   inline void branchTestClassIsFunction(Condition cond, Register clasp,
                                         Label* label);

@@ -4300,16 +4300,6 @@ void CodeGenerator::visitLoadDynamicSlotV(LLoadDynamicSlotV* lir) {
   masm.loadValue(Address(base, offset), dest);
 }
 
-void CodeGenerator::visitLoadDynamicSlotFromOffset(
-    LLoadDynamicSlotFromOffset* lir) {
-  ValueOperand dest = ToOutValue(lir);
-  Register slots = ToRegister(lir->slots());
-  Register offset = ToRegister(lir->offset());
-
-  // slots[offset]
-  masm.loadValue(BaseIndex(slots, offset, TimesOne), dest);
-}
-
 static ConstantOrRegister ToConstantOrRegister(const LAllocation* value,
                                                MIRType valueType) {
   if (value->isConstant()) {
@@ -4343,47 +4333,6 @@ void CodeGenerator::visitStoreDynamicSlotV(LStoreDynamicSlotV* lir) {
   }
 
   masm.storeValue(value, Address(base, offset));
-}
-
-void CodeGenerator::visitStoreDynamicSlotFromOffsetV(
-    LStoreDynamicSlotFromOffsetV* lir) {
-  Register slots = ToRegister(lir->slots());
-  Register offset = ToRegister(lir->offset());
-  ValueOperand value = ToValue(lir->value());
-  Register temp = ToRegister(lir->temp0());
-
-  BaseIndex baseIndex(slots, offset, TimesOne);
-  masm.computeEffectiveAddress(baseIndex, temp);
-
-  Address address(temp, 0);
-
-  emitPreBarrier(address);
-
-  // obj->slots[offset]
-  masm.storeValue(value, address);
-}
-
-void CodeGenerator::visitStoreDynamicSlotFromOffsetT(
-    LStoreDynamicSlotFromOffsetT* lir) {
-  Register slots = ToRegister(lir->slots());
-  Register offset = ToRegister(lir->offset());
-  const LAllocation* value = lir->value();
-  MIRType valueType = lir->mir()->value()->type();
-  Register temp = ToRegister(lir->temp0());
-
-  BaseIndex baseIndex(slots, offset, TimesOne);
-  masm.computeEffectiveAddress(baseIndex, temp);
-
-  Address address(temp, 0);
-
-  emitPreBarrier(address);
-
-  // obj->slots[offset]
-  ConstantOrRegister nvalue =
-      value->isConstant()
-          ? ConstantOrRegister(value->toConstant()->toJSValue())
-          : TypedOrValueRegister(valueType, ToAnyRegister(value));
-  masm.storeConstantOrRegister(nvalue, address);
 }
 
 void CodeGenerator::visitElements(LElements* lir) {
@@ -4547,7 +4496,8 @@ void CodeGenerator::visitGuardMultipleShapes(LGuardMultipleShapes* guard) {
 
   Label bail;
   masm.loadPtr(Address(shapeList, NativeObject::offsetOfElements()), temp);
-  masm.branchTestObjShapeList(obj, temp, temp2, temp3, spectre, &bail);
+  masm.branchTestObjShapeList(Assembler::NotEqual, obj, temp, temp2, temp3,
+                              spectre, &bail);
   bailoutFrom(&bail, guard->snapshot());
 }
 
@@ -4586,73 +4536,6 @@ void CodeGenerator::visitGuardShapeList(LGuardShapeList* guard) {
   MOZ_ASSERT(branchesLeft == 0);
 
   masm.bind(&done);
-  bailoutFrom(&bail, guard->snapshot());
-}
-
-void CodeGenerator::visitGuardShapeListToOffset(
-    LGuardShapeListToOffset* guard) {
-  Register obj = ToRegister(guard->object());
-  Register temp = ToRegister(guard->temp0());
-  Register spectre = ToTempRegisterOrInvalid(guard->temp1());
-  Register offset = ToRegister(guard->output());
-
-  Label done, bail;
-  masm.loadObjShapeUnsafe(obj, temp);
-
-  // Count the number of branches to emit.
-  const auto& shapes = guard->mir()->shapeList()->shapes();
-  const auto& offsets = guard->mir()->shapeList()->offsets();
-  size_t branchesLeft = std::count_if(shapes.begin(), shapes.end(),
-                                      [](Shape* s) { return s != nullptr; });
-  MOZ_RELEASE_ASSERT(branchesLeft > 0);
-
-  size_t index = 0;
-  for (Shape* shape : shapes) {
-    if (!shape) {
-      index++;
-      continue;
-    }
-
-    if (branchesLeft > 1) {
-      Label next;
-      masm.branchPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), &next);
-      if (spectre != InvalidReg) {
-        masm.spectreMovePtr(Assembler::NotEqual, spectre, obj);
-      }
-      masm.move32(Imm32(offsets[index]), offset);
-      masm.jump(&done);
-      masm.bind(&next);
-    } else {
-      masm.branchPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), &bail);
-      if (spectre != InvalidReg) {
-        masm.spectreMovePtr(Assembler::NotEqual, spectre, obj);
-      }
-      masm.move32(Imm32(offsets[index]), offset);
-    }
-
-    branchesLeft--;
-    index++;
-  }
-  MOZ_ASSERT(branchesLeft == 0);
-
-  masm.bind(&done);
-  bailoutFrom(&bail, guard->snapshot());
-}
-
-void CodeGenerator::visitGuardMultipleShapesToOffset(
-    LGuardMultipleShapesToOffset* guard) {
-  Register obj = ToRegister(guard->object());
-  Register shapeList = ToRegister(guard->shapeList());
-  Register temp = ToRegister(guard->temp0());
-  Register temp1 = ToRegister(guard->temp1());
-  Register temp2 = ToRegister(guard->temp2());
-  Register offset = ToRegister(guard->output());
-  Register spectre = JitOptions.spectreObjectMitigations ? offset : InvalidReg;
-
-  Label bail;
-  masm.loadPtr(Address(shapeList, NativeObject::offsetOfElements()), temp);
-  masm.branchTestObjShapeListSetOffset(obj, temp, offset, temp1, temp2, spectre,
-                                       &bail);
   bailoutFrom(&bail, guard->snapshot());
 }
 
@@ -18040,59 +17923,6 @@ void CodeGenerator::visitLoadFixedSlotT(LLoadFixedSlotT* ins) {
 
   masm.loadUnboxedValue(Address(obj, NativeObject::getFixedSlotOffset(slot)),
                         type, result);
-}
-
-void CodeGenerator::visitLoadFixedSlotFromOffset(
-    LLoadFixedSlotFromOffset* lir) {
-  Register obj = ToRegister(lir->object());
-  Register offset = ToRegister(lir->offset());
-  ValueOperand out = ToOutValue(lir);
-
-  // obj[offset]
-  masm.loadValue(BaseIndex(obj, offset, TimesOne), out);
-}
-
-void CodeGenerator::visitStoreFixedSlotFromOffsetV(
-    LStoreFixedSlotFromOffsetV* lir) {
-  Register obj = ToRegister(lir->object());
-  Register offset = ToRegister(lir->offset());
-  ValueOperand value = ToValue(lir->value());
-  Register temp = ToRegister(lir->temp0());
-
-  BaseIndex baseIndex(obj, offset, TimesOne);
-  masm.computeEffectiveAddress(baseIndex, temp);
-
-  Address slot(temp, 0);
-  if (lir->mir()->needsBarrier()) {
-    emitPreBarrier(slot);
-  }
-
-  // obj[offset]
-  masm.storeValue(value, slot);
-}
-
-void CodeGenerator::visitStoreFixedSlotFromOffsetT(
-    LStoreFixedSlotFromOffsetT* lir) {
-  Register obj = ToRegister(lir->object());
-  Register offset = ToRegister(lir->offset());
-  const LAllocation* value = lir->value();
-  MIRType valueType = lir->mir()->value()->type();
-  Register temp = ToRegister(lir->temp0());
-
-  BaseIndex baseIndex(obj, offset, TimesOne);
-  masm.computeEffectiveAddress(baseIndex, temp);
-
-  Address slot(temp, 0);
-  if (lir->mir()->needsBarrier()) {
-    emitPreBarrier(slot);
-  }
-
-  // obj[offset]
-  ConstantOrRegister nvalue =
-      value->isConstant()
-          ? ConstantOrRegister(value->toConstant()->toJSValue())
-          : TypedOrValueRegister(valueType, ToAnyRegister(value));
-  masm.storeConstantOrRegister(nvalue, slot);
 }
 
 template <typename T>

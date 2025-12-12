@@ -529,28 +529,6 @@ bool WarpCacheIRTranspiler::emitGuardMultipleShapes(ObjOperandId objId,
   return true;
 }
 
-bool WarpCacheIRTranspiler::emitGuardMultipleShapesToOffset(
-    ObjOperandId objId, uint32_t shapesOffset, Int32OperandId offsetId) {
-  MDefinition* obj = getOperand(objId);
-
-  // Use MGuardShapeListToOffset if we snapshotted the list of shapes on the
-  // main thread.
-  MInstruction* ins;
-  if (cacheIRSnapshot_->is<WarpCacheIRWithShapeListAndOffsets>()) {
-    auto* shapes = (ShapeListWithOffsetsSnapshot*)cacheIRSnapshot_
-                       ->as<WarpCacheIRWithShapeListAndOffsets>()
-                       ->shapes();
-    ins = MGuardShapeListToOffset::New(alloc(), obj, shapes);
-  } else {
-    MInstruction* shapeList = objectStubField(shapesOffset);
-    ins = MGuardMultipleShapesToOffset::New(alloc(), obj, shapeList);
-    ins->setBailoutKind(BailoutKind::StubFoldingGuardMultipleShapes);
-  }
-  add(ins);
-
-  return defineOperand(offsetId, ins);
-}
-
 bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
   MDefinition* def = getOperand(objId);
 
@@ -1041,21 +1019,6 @@ bool WarpCacheIRTranspiler::emitLoadDynamicSlot(ValOperandId resultId,
   add(load);
 
   return defineOperand(resultId, load);
-}
-
-bool WarpCacheIRTranspiler::emitLoadDynamicSlotFromOffsetResult(
-    ObjOperandId objId, Int32OperandId offsetId) {
-  MDefinition* obj = getOperand(objId);
-  MDefinition* offset = getOperand(offsetId);
-
-  auto* slots = MSlots::New(alloc(), obj);
-  add(slots);
-
-  auto* load = MLoadDynamicSlotFromOffset::New(alloc(), slots, offset);
-  add(load);
-
-  pushResult(load);
-  return true;
 }
 
 bool WarpCacheIRTranspiler::emitGuardDynamicSlotIsNotObject(
@@ -1947,52 +1910,6 @@ bool WarpCacheIRTranspiler::emitLoadFixedSlot(ValOperandId resultId,
   add(load);
 
   return defineOperand(resultId, load);
-}
-
-bool WarpCacheIRTranspiler::emitLoadFixedSlotFromOffsetResult(
-    ObjOperandId objId, Int32OperandId offsetId) {
-  MDefinition* obj = getOperand(objId);
-  MDefinition* offset = getOperand(offsetId);
-
-  auto* ins = MLoadFixedSlotFromOffset::New(alloc(), obj, offset);
-  add(ins);
-
-  pushResult(ins);
-  return true;
-}
-
-bool WarpCacheIRTranspiler::emitStoreFixedSlotFromOffset(
-    ObjOperandId objId, Int32OperandId offsetId, ValOperandId rhsId) {
-  MDefinition* obj = getOperand(objId);
-  MDefinition* offset = getOperand(offsetId);
-  MDefinition* rhs = getOperand(rhsId);
-
-  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
-  add(barrier);
-
-  auto* store =
-      MStoreFixedSlotFromOffset::NewBarriered(alloc(), obj, offset, rhs);
-  addEffectful(store);
-
-  return resumeAfter(store);
-}
-
-bool WarpCacheIRTranspiler::emitStoreDynamicSlotFromOffset(
-    ObjOperandId objId, Int32OperandId offsetId, ValOperandId rhsId) {
-  MDefinition* obj = getOperand(objId);
-  MDefinition* offset = getOperand(offsetId);
-  MDefinition* rhs = getOperand(rhsId);
-
-  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
-  add(barrier);
-
-  auto* slots = MSlots::New(alloc(), obj);
-  add(slots);
-
-  auto* store = MStoreDynamicSlotFromOffset::New(alloc(), slots, offset, rhs);
-  addEffectful(store);
-
-  return resumeAfter(store);
 }
 
 bool WarpCacheIRTranspiler::emitLoadFixedSlotResult(ObjOperandId objId,

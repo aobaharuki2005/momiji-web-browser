@@ -4207,15 +4207,6 @@ void LIRGenerator::visitLoadDynamicSlot(MLoadDynamicSlot* ins) {
   }
 }
 
-void LIRGenerator::visitLoadDynamicSlotFromOffset(
-    MLoadDynamicSlotFromOffset* ins) {
-  MOZ_ASSERT(ins->slots()->type() == MIRType::Slots);
-
-  auto* lir = new (alloc()) LLoadDynamicSlotFromOffset(
-      useRegisterAtStart(ins->slots()), useRegisterAtStart(ins->offset()));
-  defineBox(lir, ins);
-}
-
 void LIRGenerator::visitFunctionEnvironment(MFunctionEnvironment* ins) {
   define(new (alloc())
              LFunctionEnvironment(useRegisterAtStart(ins->function())),
@@ -5505,16 +5496,6 @@ void LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot* ins) {
   }
 }
 
-void LIRGenerator::visitLoadFixedSlotFromOffset(MLoadFixedSlotFromOffset* ins) {
-  MDefinition* obj = ins->object();
-  MOZ_ASSERT(obj->type() == MIRType::Object);
-  MOZ_ASSERT(ins->type() == MIRType::Value);
-
-  auto* lir = new (alloc()) LLoadFixedSlotFromOffset(
-      useRegisterAtStart(obj), useRegisterAtStart(ins->offset()));
-  defineBox(lir, ins);
-}
-
 void LIRGenerator::visitLoadFixedSlotAndUnbox(MLoadFixedSlotAndUnbox* ins) {
   MDefinition* obj = ins->object();
   MOZ_ASSERT(obj->type() == MIRType::Object);
@@ -5635,40 +5616,6 @@ void LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot* ins) {
   } else {
     LStoreFixedSlotT* lir = new (alloc()) LStoreFixedSlotT(
         useRegister(ins->object()), useRegisterOrConstant(ins->value()));
-    add(lir, ins);
-  }
-}
-
-void LIRGenerator::visitStoreFixedSlotFromOffset(
-    MStoreFixedSlotFromOffset* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-  if (ins->value()->type() == MIRType::Value) {
-    LStoreFixedSlotFromOffsetV* lir = new (alloc()) LStoreFixedSlotFromOffsetV(
-        useRegister(ins->object()), useRegister(ins->offset()),
-        useBox(ins->value()), temp());
-    add(lir, ins);
-  } else {
-    LStoreFixedSlotFromOffsetT* lir = new (alloc()) LStoreFixedSlotFromOffsetT(
-        useRegister(ins->object()), useRegister(ins->offset()),
-        useRegisterOrConstant(ins->value()), temp());
-    add(lir, ins);
-  }
-}
-
-void LIRGenerator::visitStoreDynamicSlotFromOffset(
-    MStoreDynamicSlotFromOffset* ins) {
-  MOZ_ASSERT(ins->slots()->type() == MIRType::Slots);
-
-  if (ins->value()->type() == MIRType::Value) {
-    auto* lir = new (alloc()) LStoreDynamicSlotFromOffsetV(
-        useRegister(ins->slots()), useRegister(ins->offset()),
-        useBox(ins->value()), temp());
-    add(lir, ins);
-  } else {
-    auto* lir = new (alloc()) LStoreDynamicSlotFromOffsetT(
-        useRegister(ins->slots()), useRegister(ins->offset()),
-        useRegisterOrConstant(ins->value()), temp());
     add(lir, ins);
   }
 }
@@ -5876,33 +5823,6 @@ void LIRGenerator::visitGuardShapeList(MGuardShapeList* ins) {
     add(lir, ins);
     redefine(ins, ins->object());
   }
-}
-
-void LIRGenerator::visitGuardShapeListToOffset(MGuardShapeListToOffset* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-  if (JitOptions.spectreObjectMitigations) {
-    auto* lir = new (alloc())
-        LGuardShapeListToOffset(useRegister(ins->object()), temp(), temp());
-    assignSnapshot(lir, ins->bailoutKind());
-    define(lir, ins);
-  } else {
-    auto* lir = new (alloc()) LGuardShapeListToOffset(
-        useRegister(ins->object()), temp(), LDefinition::BogusTemp());
-    assignSnapshot(lir, ins->bailoutKind());
-    define(lir, ins);
-  }
-}
-
-void LIRGenerator::visitGuardMultipleShapesToOffset(
-    MGuardMultipleShapesToOffset* ins) {
-  MOZ_ASSERT(ins->object()->type() == MIRType::Object);
-
-  auto* lir = new (alloc()) LGuardMultipleShapesToOffset(
-      useRegister(ins->object()), useRegister(ins->shapeList()), temp(), temp(),
-      temp());
-  assignSnapshot(lir, ins->bailoutKind());
-  define(lir, ins);
 }
 
 void LIRGenerator::visitGuardProto(MGuardProto* ins) {

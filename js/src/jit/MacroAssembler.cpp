@@ -5763,13 +5763,16 @@ void MacroAssembler::branchTestType(Condition cond, Register tag,
   }
 }
 
-void MacroAssembler::branchTestObjShapeListImpl(
-    Register obj, Register shapeElements, size_t itemSize,
-    Register shapeScratch, Register endScratch, Register spectreScratch,
-    Label* fail) {
+void MacroAssembler::branchTestObjShapeList(
+    Condition cond, Register obj, Register shapeElements, Register shapeScratch,
+    Register endScratch, Register spectreScratch, Label* label) {
+  MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
+
   bool needSpectreMitigations = spectreScratch != InvalidReg;
 
   Label done;
+  Label* onMatch = cond == Assembler::Equal ? label : &done;
+  Label* onNoMatch = cond == Assembler::Equal ? &done : label;
 
   // Load the object's shape pointer into shapeScratch, and prepare to compare
   // it with the shapes in the list. The shapes are stored as private values so
@@ -5780,7 +5783,7 @@ void MacroAssembler::branchTestObjShapeListImpl(
   Address lengthAddr(shapeElements,
                      ObjectElements::offsetOfInitializedLength());
   load32(lengthAddr, endScratch);
-  branch32(Assembler::Equal, endScratch, Imm32(0), fail);
+  branch32(Assembler::Equal, endScratch, Imm32(0), onNoMatch);
   BaseObjectElementIndex endPtrAddr(shapeElements, endScratch);
   computeEffectiveAddress(endPtrAddr, endScratch);
 
@@ -5794,36 +5797,19 @@ void MacroAssembler::branchTestObjShapeListImpl(
   if (needSpectreMitigations) {
     move32(Imm32(0), spectreScratch);
   }
-  branchPtr(Assembler::Equal, Address(shapeElements, 0), shapeScratch, &done);
+  branchPtr(Assembler::Equal, Address(shapeElements, 0), shapeScratch, onMatch);
   if (needSpectreMitigations) {
     spectreMovePtr(Assembler::Equal, spectreScratch, obj);
   }
 
   // Advance to next shape and loop if not finished.
-  addPtr(Imm32(itemSize), shapeElements);
+  addPtr(Imm32(sizeof(Value)), shapeElements);
   branchPtr(Assembler::Below, shapeElements, endScratch, &loop);
 
-  jump(fail);
+  if (cond == Assembler::NotEqual) {
+    jump(label);
+  }
   bind(&done);
-}
-
-void MacroAssembler::branchTestObjShapeList(
-    Register obj, Register shapeElements, Register shapeScratch,
-    Register endScratch, Register spectreScratch, Label* fail) {
-  branchTestObjShapeListImpl(obj, shapeElements, sizeof(Value), shapeScratch,
-                             endScratch, spectreScratch, fail);
-}
-
-void MacroAssembler::branchTestObjShapeListSetOffset(
-    Register obj, Register shapeElements, Register offset,
-    Register shapeScratch, Register endScratch, Register spectreScratch,
-    Label* fail) {
-  branchTestObjShapeListImpl(obj, shapeElements, 2 * sizeof(Value),
-                             shapeScratch, endScratch, spectreScratch, fail);
-
-  // The shapeElements register points to the matched shape (if found).
-  // The corresponding offset is saved in the array as the next value.
-  load32(Address(shapeElements, sizeof(Value)), offset);
 }
 
 void MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,

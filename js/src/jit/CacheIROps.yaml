@@ -248,16 +248,6 @@
     obj: ObjId
     shapes: ObjectField
 
-- name: GuardMultipleShapesToOffset
-  shared: true
-  transpile: true
-  cost_estimate: 2
-  custom_writer: true
-  args:
-    obj: ObjId
-    shapes: ObjectField
-    result: Int32Id
-
 - name: GuardProto
   shared: false
   transpile: true
@@ -806,32 +796,6 @@
     obj: ObjId
     offset: RawInt32Field
 
-- name: LoadFixedSlotFromOffsetResult
-  shared: true
-  transpile: true
-  cost_estimate: 2
-  args:
-    obj: ObjId
-    offset: Int32Id
-
-- name: StoreFixedSlotFromOffset
-  shared: true
-  transpile: true
-  cost_estimate: 6
-  args:
-    obj: ObjId
-    offset: Int32Id
-    rhs: ValId
-
-- name: StoreDynamicSlotFromOffset
-  shared: true
-  transpile: true
-  cost_estimate: 6
-  args:
-    obj: ObjId
-    offset: Int32Id
-    rhs: ValId
-
 - name: LoadDynamicSlot
   shared: true
   transpile: true
@@ -840,14 +804,6 @@
     result: ValId
     obj: ObjId
     slot: RawInt32Field
-
-- name: LoadDynamicSlotFromOffsetResult
-  shared: true
-  transpile: true
-  cost_estimate: 2
-  args:
-    obj: ObjId
-    offset: Int32Id
 
 - name: GuardNoAllocationMetadataBuilder
   shared: true

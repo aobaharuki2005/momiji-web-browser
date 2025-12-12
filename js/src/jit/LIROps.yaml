@@ -2598,22 +2598,6 @@
     value: WordSized
   mir_op: StoreFixedSlot
 
-- name: StoreFixedSlotFromOffsetV
-  operands:
-    object: WordSized
-    offset: WordSized
-    value: BoxedValue
-  num_temps: 1
-  mir_op: StoreFixedSlotFromOffset
-
-- name: StoreFixedSlotFromOffsetT
-  operands:
-    object: WordSized
-    offset: WordSized
-    value: WordSized
-  num_temps: 1
-  mir_op: StoreFixedSlotFromOffset
-
 - name: GetPropSuperCache
   result_type: BoxedValue
   operands:
@@ -2665,22 +2649,6 @@
     slots: WordSized
     value: WordSized
   mir_op: StoreDynamicSlot
-
-- name: StoreDynamicSlotFromOffsetV
-  operands:
-    slots: WordSized
-    offset: WordSized
-    value: BoxedValue
-  num_temps: 1
-  mir_op: StoreDynamicSlotFromOffset
-
-- name: StoreDynamicSlotFromOffsetT
-  operands:
-    slots: WordSized
-    offset: WordSized
-    value: WordSized
-  num_temps: 1
-  mir_op: StoreDynamicSlotFromOffset
 
 # Take the floor of a double precision number and converts it to an int32.
 # Implements Math.floor().
@@ -3064,14 +3032,6 @@
 - name: GuardSpecificInt32
   operands:
     num: WordSized
-  mir_op: true
-
-- name: GuardMultipleShapesToOffset
-  result_type: WordSized
-  operands:
-    object: WordSized
-    shapeList: WordSized
-  num_temps: 3
   mir_op: true
 
 - name: GuardProto
