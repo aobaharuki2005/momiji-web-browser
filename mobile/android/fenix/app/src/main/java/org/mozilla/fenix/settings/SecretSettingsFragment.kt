@@ -221,6 +221,11 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_enable_firefox_labs).apply {
+            isChecked = context.settings().enableFirefoxLabs
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
         requirePreference<SwitchPreference>(R.string.pref_key_enable_mozilla_ads_client).apply {
             isChecked = context.settings().enableMozillaAdsClient
             onPreferenceChangeListener = SharedPreferenceUpdater()

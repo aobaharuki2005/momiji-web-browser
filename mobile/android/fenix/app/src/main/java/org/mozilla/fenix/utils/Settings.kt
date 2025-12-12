@@ -2355,6 +2355,14 @@ class Settings(
     )
 
     /**
+     * Indicates if Firefox Labs is enabled.
+     */
+    var enableFirefoxLabs by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_enable_firefox_labs),
+        default = FeatureFlags.FIREFOX_LABS,
+    )
+
+    /**
      * Indicates if the Unified Trust Panel is enabled.
      */
     var enableUnifiedTrustPanel by booleanPreference(
