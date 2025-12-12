@@ -1538,7 +1538,7 @@
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (modo privado)</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
-  <string name="tab_manager_open_tab_search">Abrir pestaña de búsqueda</string>
+  <string name="tab_manager_open_tab_search">Abrir búsqueda en pestañas</string>
   <!--
     History
 
