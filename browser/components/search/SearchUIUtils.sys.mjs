@@ -361,9 +361,7 @@ export var SearchUIUtils = {
   },
 
   /**
-   * Opens a search results page, given a set of search terms. Uses the given
-   * engine if specified and the current default engine appropriate for
-   * `usePrivate` otherwise.
+   * Opens a search results page, given a set of search terms.
    *
    * @param {object} options
    *   Options objects.
@@ -373,10 +371,10 @@ export var SearchUIUtils = {
    *   The search terms to use for the search.
    * @param {?string} [options.where]
    *   String indicating where the search should load. Most commonly used
-   *   are 'tab' or 'window', defaults to 'current'.
-   * @param {boolean} [options.usePrivate]
-   *   Whether to use the Private Browsing mode default search engine.
-   *   Defaults to `false`.
+   *   are ``tab`` or ``window``, defaults to ``current``.
+   * @param {boolean} [options.usePrivateWindow]
+   *   Whether to open the window in private browsing mode (if opening a window).
+   *   Defaults to the type of window that ``options.window` is.
    * @param {nsIPrincipal} options.triggeringPrincipal
    *   The principal to use for a new window or tab.
    * @param {nsIPolicyContainer} [options.policyContainer]
@@ -384,7 +382,9 @@ export var SearchUIUtils = {
    * @param {boolean} [options.inBackground]
    *   Set to true for the tab to be loaded in the background.
    * @param {?nsISearchEngine} [options.engine]
-   *   The search engine to use for the search.
+   *   The search engine to use for the search. If not supplied, this will default
+   *   to the default search engine for normal or private mode, depending on
+   *   ``options.usePrivateWindow``.
    * @param {?MozTabbrowserTab} [options.tab]
    *   The tab to show the search result.
    * @param {?Values<typeof SearchUtils.URL_TYPE>} [options.searchUrlType]
@@ -399,7 +399,7 @@ export var SearchUIUtils = {
     window,
     searchText,
     where,
-    usePrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(window),
+    usePrivateWindow = lazy.PrivateBrowsingUtils.isWindowPrivate(window),
     triggeringPrincipal,
     policyContainer,
     inBackground = false,
@@ -415,7 +415,7 @@ export var SearchUIUtils = {
     }
 
     if (!engine) {
-      engine = usePrivate
+      engine = usePrivateWindow
         ? await Services.search.getDefaultPrivate()
         : await Services.search.getDefault();
     }
@@ -431,7 +431,7 @@ export var SearchUIUtils = {
     }
 
     window.openLinkIn(submission.uri.spec, where || "current", {
-      private: usePrivate,
+      private: usePrivateWindow,
       postData: submission.postData,
       inBackground,
       relatedToCurrent: true,
@@ -453,7 +453,7 @@ export var SearchUIUtils = {
 
   /**
    * Perform a search initiated from the context menu.
-   * This should only be called from the context menu.
+   * Note: This should only be called from the context menu.
    *
    * @param {object} options
    *   Options object.
@@ -463,9 +463,9 @@ export var SearchUIUtils = {
    *   The window where the search was triggered.
    * @param {string} options.searchText
    *   The search terms to use for the search.
-   * @param {boolean} options.usePrivate
-   *   Whether to use the Private Browsing mode default search engine.
-   *   Defaults to `false`.
+   * @param {boolean} [options.usePrivateWindow]
+   *   Whether to open the window in private browsing mode (if opening a window).
+   *   Defaults to the type of window that ``options.window` is.
    * @param {nsIPrincipal} options.triggeringPrincipal
    *   The principal of the document whose context menu was clicked.
    * @param {nsIPolicyContainer} options.policyContainer
@@ -481,7 +481,7 @@ export var SearchUIUtils = {
     window,
     engine,
     searchText,
-    usePrivate,
+    usePrivateWindow,
     triggeringPrincipal,
     policyContainer,
     event,
@@ -493,7 +493,10 @@ export var SearchUIUtils = {
       // override: historically search opens in new tab
       where = "tab";
     }
-    if (usePrivate && !lazy.PrivateBrowsingUtils.isWindowPrivate(window)) {
+    if (
+      usePrivateWindow &&
+      !lazy.PrivateBrowsingUtils.isWindowPrivate(window)
+    ) {
       where = "window";
     }
     let inBackground = Services.prefs.getBoolPref(
@@ -509,7 +512,7 @@ export var SearchUIUtils = {
       searchText,
       searchUrlType,
       where,
-      usePrivate,
+      usePrivateWindow,
       triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
         triggeringPrincipal.originAttributes
       ),

@@ -384,7 +384,7 @@ async function doSearch(searchText, cmdLine) {
   lazy.SearchUIUtils.loadSearch({
     window: win,
     searchText,
-    usePrivate:
+    usePrivateWindow:
       lazy.PrivateBrowsingUtils.isInTemporaryAutoStartMode ||
       lazy.PrivateBrowsingUtils.isWindowPrivate(win),
     triggeringPrincipal: lazy.gSystemPrincipal,
