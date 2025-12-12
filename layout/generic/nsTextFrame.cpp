@@ -40,6 +40,7 @@
 #include "mozilla/intl/Bidi.h"
 #include "mozilla/intl/Segmenter.h"
 #include "mozilla/intl/UnicodeProperties.h"
+#include "mozilla/widget/ThemeDrawing.h"
 #include "nsBlockFrame.h"
 #include "nsCOMPtr.h"
 #include "nsCSSColorUtils.h"
@@ -5690,14 +5691,14 @@ static gfxFloat ComputeDecorationLineThickness(
     const gfxFont::Metrics& aFontMetrics, const gfxFloat aAppUnitsPerDevPixel,
     const nsIFrame* aFrame) {
   if (aThickness.IsAuto()) {
-    return aAutoValue;
+    return widget::ThemeDrawing::SnapBorderWidth(aAutoValue);
   }
-
   if (aThickness.IsFromFont()) {
-    return aFontMetrics.underlineSize;
+    return widget::ThemeDrawing::SnapBorderWidth(aFontMetrics.underlineSize);
   }
   auto em = [&] { return aFrame->StyleFont()->mSize.ToAppUnits(); };
-  return aThickness.AsLengthPercentage().Resolve(em) / aAppUnitsPerDevPixel;
+  return widget::ThemeDrawing::SnapBorderWidth(
+      aThickness.AsLengthPercentage().Resolve(em) / aAppUnitsPerDevPixel);
 }
 
 // Helper function for implementing text-underline-offset and -position
@@ -6005,7 +6006,6 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
       decorationStyle = StyleTextDecorationStyle::Solid;
     }
     nsCSSRendering::DecorationRectParams params;
-
     bool useVerticalMetrics = verticalRun && mTextRun->UseCenterBaseline();
     nsFontMetrics* fontMetrics = aProvider.GetFontMetrics();
     RefPtr<gfxFont> font =
