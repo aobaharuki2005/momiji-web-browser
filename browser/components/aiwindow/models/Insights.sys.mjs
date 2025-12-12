@@ -41,7 +41,7 @@ import {
   insightsDeduplicationPrompt,
   insightSensitivityFilterSystemPrompt,
   insightsSensitivityFilterPrompt,
-} from "moz-src:///browser/components/aiwindow/models/prompts/insightsPrompts.sys.mjs";
+} from "moz-src:///browser/components/aiwindow/models/prompts/InsightsPrompts.sys.mjs";
 
 import {
   INITIAL_INSIGHTS_SCHEMA,

@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
   renderPrompt: "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
   relevantInsightsContextPrompt:
-    "moz-src:///browser/components/aiwindow/models/prompts/insightsPrompts.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/prompts/InsightsPrompts.sys.mjs",
 });
 
 /**

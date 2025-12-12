@@ -28,7 +28,7 @@ import {
 import {
   messageInsightClassificationSystemPrompt,
   messageInsightClassificationPrompt,
-} from "moz-src:///browser/components/aiwindow/models/prompts/insightsPrompts.sys.mjs";
+} from "moz-src:///browser/components/aiwindow/models/prompts/InsightsPrompts.sys.mjs";
 import { INSIGHTS_MESSAGE_CLASSIFY_SCHEMA } from "moz-src:///browser/components/aiwindow/models/InsightsSchemas.sys.mjs";
 
 const K_DOMAINS_FULL = 100;
