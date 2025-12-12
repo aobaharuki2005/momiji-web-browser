@@ -23,6 +23,8 @@ class CopyableTArray;
 
 namespace mozilla {
 
+class nsDisplayListBuilder;
+
 struct AnchorPosInfo {
   // Border-box of the anchor frame, offset against the positioned frame's
   // absolute containing block's padding box.
@@ -315,8 +317,12 @@ struct AnchorPositioningUtils {
   /**
    * If aFrame is positioned using CSS anchor positioning, and it scrolls with
    * its anchor this function returns the anchor. Otherwise null.
+   * Note that this function has different behaviour if it called during paint
+   * (ie aBuilder not null) or not during painting (aBuilder null).
    */
-  static nsIFrame* GetAnchorThatFrameScrollsWith(nsIFrame* aFrame);
+  static nsIFrame* GetAnchorThatFrameScrollsWith(nsIFrame* aFrame,
+                                                 nsDisplayListBuilder* aBuilder,
+                                                 bool aSkipAsserts = false);
 
   // Trigger a layout for positioned items that are currently overflowing their
   // abs-cb and that have available fallbacks to try.
