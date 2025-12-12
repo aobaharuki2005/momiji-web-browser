@@ -148,7 +148,7 @@ class CustomTabBrowserToolbarMiddleware(
                 updateStartBrowserActions(context, customTab)
                 updateCurrentPageOrigin(context, customTab)
                 updateEndPageActions(context, customTab)
-                updateEndBrowserActions(context, customTab)
+                updateEndBrowserActions(context)
 
                 observePageLoadUpdates(context)
                 observePageOriginUpdates(context)
@@ -380,10 +380,9 @@ class CustomTabBrowserToolbarMiddleware(
 
     private fun updateEndBrowserActions(
         context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
-        customTab: CustomTabSessionState?,
     ) = context.store.dispatch(
         BrowserActionsEndUpdated(
-            buildEndBrowserActions(customTab),
+            buildEndBrowserActions(),
         ),
     )
 
@@ -472,17 +471,7 @@ class CustomTabBrowserToolbarMiddleware(
         }
     }
 
-    private fun buildEndBrowserActions(customTab: CustomTabSessionState?) = buildList {
-        if (customTab?.config?.showShareMenuItem == true) {
-            add(
-                ActionButtonRes(
-                    drawableResId = iconsR.drawable.mozac_ic_share_android_24,
-                    contentDescription = customtabsR.string.mozac_feature_customtabs_share_link,
-                    onClick = ShareClicked,
-                ),
-            )
-        }
-
+    private fun buildEndBrowserActions() = buildList {
         add(
             ActionButtonRes(
                 drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,

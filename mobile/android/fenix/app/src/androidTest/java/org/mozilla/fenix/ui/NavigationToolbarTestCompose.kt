@@ -992,7 +992,6 @@ class NavigationToolbarTestCompose : TestSetup() {
                 verifyCustomTabToolbarTitleWithComposableToolbar(composeTestRule, customTabPage.title)
                 verifyCustomTabUrlWithComposableToolbar(composeTestRule, customTabPage.url.toString())
                 verifyCustomTabActionButtonWithComposableToolbar(composeTestRule, customTabActionButton)
-                verifyCustomTabsShareButtonWithComposableToolbar(composeTestRule)
                 verifyMainMenuComposeButtonWithComposableToolbar(composeTestRule)
                 clickCustomTabCloseButtonWithComposableToolbar(composeTestRule)
             }
