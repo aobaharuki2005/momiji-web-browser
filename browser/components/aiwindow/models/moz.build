@@ -13,6 +13,7 @@ MOZ_SRC_FILES += [
     "Chat.sys.mjs",
     "ChatUtils.sys.mjs",
     "Insights.sys.mjs",
+    "InsightsChatSource.sys.mjs",
     "InsightsConstants.sys.mjs",
     "InsightsDriftDetector.sys.mjs",
     "InsightsHistorySource.sys.mjs",

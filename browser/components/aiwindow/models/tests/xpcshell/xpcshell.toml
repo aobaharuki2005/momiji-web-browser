@@ -12,6 +12,8 @@ support-files = []
 
 ["test_Insights.js"]
 
+["test_InsightsChatSource.js"]
+
 ["test_InsightsDriftDetector.js"]
 
 ["test_InsightsHistorySource.js"]

@@ -368,6 +368,10 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/InsightsDriftDetector.sys.mjs",
   },
+  // Bug 2000987 - get user messages from chat source
+  {
+    file: "moz-src:///browser/components/aiwindow/models/InsightsChatSource.sys.mjs",
+  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {
