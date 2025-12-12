@@ -361,17 +361,18 @@ class Assembler : public AssemblerShared,
   Register getStackPointer() const { return StackPointer; }
   void flushBuffer() {}
   static int disassembleInstr(Instr instr, bool enable_spew = false);
-  int target_at(BufferOffset pos, bool is_internal);
-  static int target_at(Instruction* instruction, BufferOffset pos,
-                       bool is_internal, Instruction* instruction2 = nullptr);
-  uint32_t next_link(Label* label, bool is_internal);
-  static uint64_t target_address_at(Instruction* pos);
-  static void set_target_value_at(Instruction* pc, uint64_t target);
+  int jumpChainTargetAt(BufferOffset pos, bool is_internal);
+  static int jumpChainTargetAt(Instruction* instruction, BufferOffset pos,
+                               bool is_internal,
+                               Instruction* instruction2 = nullptr);
+  uint32_t jumpChainNextLink(Label* label, bool is_internal);
+  static uint64_t jumpChainTargetAddressAt(Instruction* pos);
+  static void jumpChainSetTargetValueAt(Instruction* pc, uint64_t target);
   // Returns true if the target was successfully assembled and spewed.
-  bool target_at_put(BufferOffset pos, BufferOffset target_pos,
-                     bool trampoline = false);
-  int32_t branch_offset_helper(Label* L, OffsetSize bits);
-  int32_t branch_long_offset(Label* L);
+  bool jumpChainPutTargetAt(BufferOffset pos, BufferOffset target_pos,
+                            bool trampoline = false);
+  int32_t branchOffsetHelper(Label* L, OffsetSize bits);
+  int32_t branchLongOffset(Label* L);
 
   // Determines if Label is bound and near enough so that branch instruction
   // can be used to reach it, instead of jump instruction.

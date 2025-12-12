@@ -4812,7 +4812,7 @@ void MacroAssemblerRiscv64::ma_mulPtrTestOverflow(Register rd, Register rj,
 int32_t MacroAssemblerRiscv64::GetOffset(int32_t offset, Label* L,
                                          OffsetSize bits) {
   if (L) {
-    offset = branch_offset_helper(L, bits);
+    offset = branchOffsetHelper(L, bits);
   } else {
     MOZ_ASSERT(is_intn(offset, bits));
   }
@@ -4999,13 +4999,13 @@ void MacroAssemblerRiscv64::BranchLong(Label* L) {
   // Generate position independent long branch.
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
-  int32_t imm = branch_long_offset(L);
+  int32_t imm = branchLongOffset(L);
   GenPCRelativeJump(scratch, imm);
 }
 
 CodeOffset MacroAssemblerRiscv64::BranchAndLinkLong(Label* L) {
   // Generate position independent long branch and link.
-  int32_t imm = branch_long_offset(L);
+  int32_t imm = branchLongOffset(L);
   UseScratchRegisterScope temps(this);
   Register scratch = temps.Acquire();
   GenPCRelativeJumpAndLink(scratch, imm);

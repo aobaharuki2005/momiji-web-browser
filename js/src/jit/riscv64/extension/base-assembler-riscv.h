@@ -107,7 +107,7 @@ Register ToRegister(uint32_t num);
 
 class AssemblerRiscvBase {
  protected:
-  virtual int32_t branch_offset_helper(Label* L, OffsetSize bits) = 0;
+  virtual int32_t branchOffsetHelper(Label* L, OffsetSize bits) = 0;
 
   virtual BufferOffset emit(Instr x) = 0;
   virtual BufferOffset emit(ShortInstr x) = 0;
