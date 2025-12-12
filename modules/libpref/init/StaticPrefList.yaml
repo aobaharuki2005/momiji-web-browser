@@ -9080,6 +9080,12 @@
   mirror: always
   set_spidermonkey_pref: startup
 
+  # Experimental support for WASM/EcmaScript module integration in JavaScript.
+- name: javascript.options.experimental.wasm_esm_integration
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  set_spidermonkey_pref: startup
 #endif  // NIGHTLY_BUILD
 
 # Whether to Baseline-compile self-hosted functions the first time they are
