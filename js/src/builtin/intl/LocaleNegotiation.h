@@ -16,6 +16,16 @@ namespace js::intl {
 
 enum class AvailableLocaleKind;
 
+using LocalesList = JS::StackGCVector<JSLinearString*>;
+
+/**
+ * Canonicalizes a locale list.
+ *
+ * Spec: ECMAScript Internationalization API Specification, 9.2.1.
+ */
+bool CanonicalizeLocaleList(JSContext* cx, JS::Handle<JS::Value> locales,
+                            JS::MutableHandle<LocalesList> result);
+
 /**
  * Compares a BCP 47 language tag against the locales in availableLocales and
  * returns the best available match -- or |nullptr| if no match was found.
