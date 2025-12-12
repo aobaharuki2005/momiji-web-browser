@@ -392,9 +392,7 @@ PromiseCombinatorDataHolder* PromiseCombinatorDataHolder::New(
     return nullptr;
   }
 
-  cx->check(resultPromise);
-  cx->check(elements.value());
-  cx->check(resolveOrReject);
+  cx->check(resultPromise, elements.value(), resolveOrReject);
 
   dataHolder->setFixedSlot(Slot_Promise, ObjectValue(*resultPromise));
   dataHolder->setFixedSlot(Slot_RemainingElements, Int32Value(1));
@@ -3805,9 +3803,7 @@ static bool CallDefaultPromiseRejectFunction(
                                                      HandleObject resolveFun,
                                                      HandleValue value,
                                                      HandleObject promiseObj) {
-  cx->check(resolveFun);
-  cx->check(value);
-  cx->check(promiseObj);
+  cx->check(resolveFun, value, promiseObj);
 
   // NewPromiseReactionJob
   // Step 1.g. Assert: promiseCapability is a PromiseCapability Record.
@@ -3877,9 +3873,7 @@ static bool CallDefaultPromiseRejectFunction(
     JSContext* cx, HandleObject rejectFun, HandleValue reason,
     HandleObject promiseObj, Handle<SavedFrame*> unwrappedRejectionStack,
     UnhandledRejectionBehavior behavior) {
-  cx->check(rejectFun);
-  cx->check(reason);
-  cx->check(promiseObj);
+  cx->check(rejectFun, reason, promiseObj);
 
   // NewPromiseReactionJob
   // Step 1.g. Assert: promiseCapability is a PromiseCapability Record.
@@ -5657,13 +5651,9 @@ static PromiseReactionRecord* NewReactionRecord(
   if (!reaction) {
     return nullptr;
   }
-
-  cx->check(resultCapability.promise());
-  cx->check(onFulfilled);
-  cx->check(onRejected);
-  cx->check(resultCapability.resolve());
-  cx->check(resultCapability.reject());
-  cx->check(hostDefinedData);
+  cx->check(resultCapability.promise(), onFulfilled, onRejected,
+            resultCapability.resolve(), resultCapability.reject(),
+            hostDefinedData);
 
   // Step 7. Let fulfillReaction be the PromiseReaction
   //         { [[Capability]]: resultCapability, [[Type]]: Fulfill,
@@ -5758,9 +5748,7 @@ static bool PromiseThenNewPromiseCapability(
                                                      HandleObject promiseObj,
                                                      HandleObject onFulfilled,
                                                      HandleObject onRejected) {
-  cx->check(promiseObj);
-  cx->check(onFulfilled);
-  cx->check(onRejected);
+  cx->check(promiseObj, onFulfilled, onRejected);
 
   RootedValue promiseVal(cx, ObjectValue(*promiseObj));
   Rooted<PromiseObject*> unwrappedPromise(
@@ -5836,8 +5824,7 @@ static bool PromiseThenNewPromiseCapability(
     JSContext* cx, Handle<PromiseObject*> unwrappedPromise,
     HandleObject onFulfilled_, HandleObject onRejected_,
     UnhandledRejectionBehavior behavior) {
-  cx->check(onFulfilled_);
-  cx->check(onRejected_);
+  cx->check(onFulfilled_, onRejected_);
 
   MOZ_ASSERT_IF(onFulfilled_, IsCallable(onFulfilled_));
   MOZ_ASSERT_IF(onRejected_, IsCallable(onRejected_));

@@ -1677,8 +1677,7 @@ JS_PUBLIC_API bool JS_InstanceOf(JSContext* cx, HandleObject obj,
   CHECK_THREAD(cx);
 #ifdef DEBUG
   if (args) {
-    cx->check(obj);
-    cx->check(args->thisv(), args->calleev());
+    cx->check(obj, args->thisv(), args->calleev());
   }
 #endif
   if (!obj || obj->getClass() != clasp) {
