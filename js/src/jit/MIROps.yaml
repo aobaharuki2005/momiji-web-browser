@@ -944,6 +944,8 @@
     iterator: Object
     nextMethod: Value
   result_type: Object
+  possibly_calls: true
+  generate_lir: true
 
 - name: ToPropertyKeyCache
   operands:
@@ -2125,6 +2127,8 @@
     resultShape: Shape*
   result_type: Object
   can_recover: custom
+  possibly_calls: true
+  generate_lir: true
 
 - name: ObjectKeysFromIterator
   operands:
@@ -2147,6 +2151,8 @@
   congruent_to: if_operands_equal
   alias_set: custom
   clone: true
+  possibly_calls: true
+  generate_lir: true
 
 - name: LoadUnboxedScalar
   gen_boilerplate: false
@@ -4328,6 +4334,8 @@
     data: WasmAnyRef
   result_type: WasmAnyRef
   type_policy: none
+  possibly_calls: true
+  generate_lir: true
 
 - name: WasmStackSwitchToSuspendable
   operands:
@@ -4493,4 +4501,6 @@
     suppressed: Value
   result_type: Object
   alias_set: none
+  possibly_calls: true
+  generate_lir: true
 #endif

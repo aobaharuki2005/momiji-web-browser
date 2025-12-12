@@ -374,14 +374,6 @@
   mir_op: Rotate
   defer_init: true
 
-- name: WasmStackSwitchToMain
-  result_type: WordSized
-  operands:
-    suspender: WordSized
-    fn: WordSized
-    data: WordSized
-  call_instruction: true
-
 - name: WasmInterruptCheck
   operands:
     instance: WordSized
@@ -418,13 +410,6 @@
   operands:
     input: BoxedValue
   mir_op: TypeOfIs
-
-- name: ToAsyncIter
-  result_type: WordSized
-  operands:
-    iterator: WordSized
-    nextMethod: BoxedValue
-  call_instruction: true
 
 # Allocate a new arguments object for the frame.
 - name: CreateArgumentsObject
@@ -2098,20 +2083,6 @@
 
 - name: InlineArgumentsSlice
   gen_boilerplate: false
-
-- name: ObjectKeys
-  result_type: WordSized
-  operands:
-    object: WordSized
-  num_temps: 0
-  call_instruction: true
-
-- name: ObjectKeysLength
-  result_type: WordSized
-  operands:
-    object: WordSized
-  num_temps: 0
-  call_instruction: true
 
 - name: LoadUnboxedScalar
   result_type: WordSized
@@ -4593,13 +4564,4 @@
     value: WordSized
   num_temps: 2
   mir_op: FuzzilliHashStore
-#endif
-
-#ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-- name: CreateSuppressedError
-  operands:
-    error: BoxedValue
-    suppressed: BoxedValue
-  result_type: WordSized
-  call_instruction: true
 #endif
