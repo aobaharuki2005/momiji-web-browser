@@ -367,10 +367,6 @@
     }
 
     set splitViewPanels(newPanels) {
-      const oldPanels = this.#splitViewPanels;
-      for (const panel of oldPanels) {
-        this.removePanelFromSplitView(panel, false);
-      }
       for (const [i, panel] of newPanels.entries()) {
         const panelEl = document.getElementById(panel);
         panelEl?.classList.add("split-view-panel");
@@ -381,7 +377,7 @@
         }
       }
       this.#splitViewPanels = newPanels;
-      this.#isSplitViewActive = !!newPanels.length;
+      this.isSplitViewActive = !!newPanels.length;
     }
 
     get splitViewPanels() {
@@ -409,10 +405,10 @@
           this.#splitViewPanels.splice(index, 1);
         }
       }
-      this.#isSplitViewActive = !!this.#splitViewPanels.length;
+      this.isSplitViewActive = !!this.#splitViewPanels.length;
     }
 
-    set #isSplitViewActive(isActive) {
+    set isSplitViewActive(isActive) {
       this.toggleAttribute("splitview", isActive);
       this.splitViewSplitter.hidden = !isActive;
       const selectedPanel = this.selectedPanel;
@@ -425,6 +421,11 @@
       // Ensure that selected index stays up to date, in case the splitter
       // offsets it.
       this.selectedPanel = selectedPanel;
+    }
+
+    setSplitViewPanelActive(isActive, panel) {
+      const panelEl = document.getElementById(panel);
+      panelEl?.classList.toggle("split-view-panel-active", isActive);
     }
   }
 
