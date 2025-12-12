@@ -488,6 +488,7 @@ let WasmNonAnyrefValues = [
     {x:1337},
     ["abracadabra"],
     13.37,
+    -0,
     0x7fffffff + 0.1,
     -0x7fffffff - 0.1,
     0x80000000 + 0.1,
