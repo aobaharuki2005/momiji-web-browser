@@ -63,27 +63,19 @@ export class TimerFeed {
 
       /**
        * @backward-compat { version 147 }
-       * Remove`alertsService.showAlertNotification` call once Firefox 147
+       * Remove `alertsService.showAlertNotification` call once Firefox 147
        * makes it to the release channel.
        */
 
       if (Services.vc.compare(AppConstants.MOZ_APP_VERSION, "147.0a1") >= 0) {
         alertsService.showAlert(
           new AlertNotification({
-            imageURL: "chrome://branding/content/icon64.png",
             title,
             text: body,
           })
         );
       } else {
-        alertsService.showAlertNotification(
-          "chrome://branding/content/icon64.png",
-          title,
-          body,
-          false,
-          "",
-          null
-        );
+        alertsService.showAlertNotification(null, title, body, false, "", null);
       }
     } catch (err) {
       console.error("Failed to show system notification", err);
