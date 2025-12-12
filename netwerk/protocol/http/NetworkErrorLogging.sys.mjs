@@ -270,7 +270,7 @@ export class NetworkErrorLogging {
       !Services.scriptSecurityManager.getChannelResultPrincipal(aChannel)
         .isOriginPotentiallyTrustworthy
     ) {
-      return;
+      return null;
     }
     // 2. Let origin be request's origin.
     let origin =
@@ -283,7 +283,7 @@ export class NetworkErrorLogging {
       origin: policyOrigin,
     } = this.choosePolicyForRequest(aChannel);
     if (!policy) {
-      return;
+      return null;
     }
 
     // 4. Determine the active sampling rate for this request:
@@ -302,7 +302,7 @@ export class NetworkErrorLogging {
 
     // 5. Decide whether or not to report on this request. Let roll be a random number between 0.0 and 1.0, inclusive. If roll ≥ sampling rate, return null.
     if (Math.random() >= samplingRate) {
-      return;
+      return null;
     }
 
     // 6. Let report body be a new ECMAScript object with the following properties:
@@ -342,7 +342,7 @@ export class NetworkErrorLogging {
       policy.subdomains &&
       report_body.phase != "dns"
     ) {
-      return;
+      return null;
     }
 
     // 10. If report body's phase property is not dns, and report body's server_ip property is non-empty and not equal to policy's received IP address:
@@ -378,35 +378,25 @@ export class NetworkErrorLogging {
     if (report_body.phase == "dns" || report_body.phase == "connection") {
       uriMutator.setPathQueryRef("");
     }
+    if (aChannel.URI.hasUserPass) {
+      uriMutator.setUserPass("");
+    }
+    let url = uriMutator.finalize().spec;
 
     // 4. Generate a network report given these parameters:
-    let report = {
-      type: "network-error",
-      url: uriMutator.finalize().spec,
-      user_agent: Cc["@mozilla.org/network/protocol;1?name=http"].getService(
-        Ci.nsIHttpProtocolHandler
-      ).userAgent,
-      body: report_body,
+    // nsINetworkErrorReport
+    let retObj = {
+      body: JSON.stringify(report_body),
+      group: policy.reportTo.group,
+      url,
     };
-    // XXX: this would benefit from using the actual reporting API,
-    //      but it's not clear how easy it is to:
-    //        - use it in the parent process
-    //        - have it use the Report-To header
-    // https://w3c.github.io/reporting/#queue-report
+
     if (policy && policy.reportTo.group === policy.nel.report_to) {
-      // TODO: defer to later.
-      fetch(policy.reportTo.endpoints[0].url, {
-        method: "POST",
-        mode: "cors",
-        credentials: "omit",
-        headers: {
-          "Content-Type": "application/reports+json",
-        },
-        body: JSON.stringify([report]),
-        triggeringPrincipal:
-          Services.scriptSecurityManager.getChannelResultPrincipal(aChannel),
-      });
+      // nsHttpChannel will call ReportDeliver::Fetch
+      return retObj;
     }
+
+    return null;
   }
 
   QueryInterface = ChromeUtils.generateQI(["nsINetworkErrorLogging"]);
