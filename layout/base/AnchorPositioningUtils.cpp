@@ -208,7 +208,8 @@ bool IsAnchorLaidOutStrictlyBeforeElement(
     // possible anchor's containing block isn't.
     if (positionedContainingBlock->IsViewportFrame() &&
         !anchorContainingBlock->IsViewportFrame()) {
-      return true;
+      return !nsLayoutUtils::IsProperAncestorFrame(aPositionedFrame,
+                                                   aPossibleAnchorFrame);
     }
 
     auto isLastContainingBlockOrderable =
