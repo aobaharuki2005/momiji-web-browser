@@ -8683,6 +8683,15 @@ bool nsContentUtils::HasCssMimeTypeEssence(const nsAString& aMimeType) {
   return false;
 }
 
+// https://html.spec.whatwg.org/#fetch-a-single-module-script, 13.6
+bool nsContentUtils::HasWasmMimeTypeEssence(const nsAString& aMimeType) {
+  nsString contentType, contentCharset;
+  if (MimeType::Parse(aMimeType, contentType, contentCharset)) {
+    return contentType.LowerCaseEqualsLiteral("application/wasm");
+  }
+  return false;
+}
+
 bool nsContentUtils::PrefetchPreloadEnabled(nsIDocShell* aDocShell) {
   //
   // SECURITY CHECK: disable prefetching and preloading from mailnews!
