@@ -91,12 +91,9 @@ bool isGroupDelim(char16_t aSymbol) {
           aSymbol == '\\' || aSymbol == ']' || aSymbol == '"');
 }
 
-bool nsCSPParser::isValidBase64Value(const nsAString& aValue) {
+static bool isValidBase64Value(const char16_t* cur, const char16_t* end) {
   // Using grammar at
   // https://w3c.github.io/webappsec-csp/#grammardef-nonce-source
-
-  const char16_t* cur = aValue.BeginReading();
-  const char16_t* end = aValue.EndReading();
 
   // May end with one or two =
   if (end > cur && *(end - 1) == EQUALS) end--;
@@ -567,7 +564,8 @@ nsCSPNonceSrc* nsCSPParser::nonceSource() {
   if (dashIndex < 0) {
     return nullptr;
   }
-  if (!isValidBase64Value(Substring(expr, dashIndex + 1))) {
+  if (!isValidBase64Value(expr.BeginReading() + dashIndex + 1,
+                          expr.EndReading())) {
     return nullptr;
   }
 
@@ -596,7 +594,8 @@ nsCSPHashSrc* nsCSPParser::hashSource() {
     return nullptr;
   }
 
-  if (!isValidBase64Value(Substring(expr, dashIndex + 1))) {
+  if (!isValidBase64Value(expr.BeginReading() + dashIndex + 1,
+                          expr.EndReading())) {
     return nullptr;
   }
 
