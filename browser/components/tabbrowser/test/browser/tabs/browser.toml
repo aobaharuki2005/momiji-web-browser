@@ -202,8 +202,6 @@ skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1904826
 ]
 
-["browser_list_all_tabs_telemetry.js"]
-
 ["browser_long_data_url_label_truncation.js"]
 tags = "vertical-tabs"
 
