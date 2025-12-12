@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const { sinon } = ChromeUtils.importESModule(
+  "resource://testing-common/Sinon.sys.mjs"
+);
+
 ChromeUtils.defineESModuleGetters(this, {
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.sys.mjs",
 });
@@ -96,7 +100,8 @@ add_task(async function test_sidebar_onboarding() {
   Services.fog.testResetFOG();
   await SidebarController.show("viewGenaiChatSidebar");
 
-  const { document, browserPromise } = SidebarController.browser.contentWindow;
+  const win = SidebarController.browser.contentWindow;
+  const { document, browserPromise } = win;
   const label = await TestUtils.waitForCondition(() =>
     document.querySelector("label:has(.localhost)")
   );
@@ -116,6 +121,18 @@ add_task(async function test_sidebar_onboarding() {
     () => browser.currentURI.spec != "about:blank",
     "Should have previewed provider"
   );
+
+  const link = await TestUtils.waitForCondition(() =>
+    document.querySelector(".link-paragraph a")
+  );
+  const expectedURL = link.href;
+
+  const stub = sinon.stub(win, "openLink");
+
+  link.click();
+
+  Assert.ok(stub.calledOnce, "openLink should call once");
+  Assert.equal(stub.firstCall.args[0], expectedURL);
 
   const pickButton = await TestUtils.waitForCondition(() =>
     document.querySelector(".chat_pick .primary:not([disabled])")
