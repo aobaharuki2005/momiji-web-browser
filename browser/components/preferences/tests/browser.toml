@@ -353,6 +353,8 @@ support-files = [
 
 ["browser_sync_pairing.js"]
 
+["browser_sync_settings_ui.js"]
+
 ["browser_tabs_open_external_next_to_active_tab.js"]
 
 ["browser_trendingsuggestions.js"]
