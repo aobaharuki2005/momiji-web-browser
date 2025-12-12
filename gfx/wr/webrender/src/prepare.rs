@@ -23,9 +23,8 @@ use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainInstance, ClipItemKind}
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use crate::gpu_types::{BrushFlags, LinearGradientBrushData};
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor, Filter};
-use crate::picture::{ClusterFlags, PictureCompositeMode, PicturePrimitive};
-use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, SubpixelMode, Picture3DContext};
-use crate::tile_cache::{SliceId, TileCacheInstance};
+use crate::picture::{ClusterFlags, PictureCompositeMode, PicturePrimitive, SliceId};
+use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance, SubpixelMode, Picture3DContext};
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
 use crate::quad;

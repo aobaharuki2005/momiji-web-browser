@@ -20,6 +20,7 @@ use crate::glyph_cache::GlyphCache;
 use glyph_rasterizer::{GlyphRasterThread, GlyphRasterizer, SharedFontResources};
 use crate::gpu_types::PrimitiveInstanceData;
 use crate::internal_types::{FastHashMap, FastHashSet};
+use crate::picture;
 use crate::profiler::{self, Profiler, TransactionProfile};
 use crate::device::query::{GpuProfiler, GpuDebugMethod};
 use crate::render_backend::RenderBackend;
@@ -666,7 +667,7 @@ pub fn create_webrender_instance(
         .map(|handler| handler.create_similar());
 
     let texture_cache_config = options.texture_cache_config.clone();
-    let mut picture_tile_size = options.picture_tile_size.unwrap_or(crate::tile_cache::TILE_SIZE_DEFAULT);
+    let mut picture_tile_size = options.picture_tile_size.unwrap_or(picture::TILE_SIZE_DEFAULT);
     // Clamp the picture tile size to reasonable values.
     picture_tile_size.width = picture_tile_size.width.max(128).min(4096);
     picture_tile_size.height = picture_tile_size.height.max(128).min(4096);
