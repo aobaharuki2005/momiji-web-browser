@@ -91,11 +91,21 @@ add_task(async function test_remove_taskbar_tab() {
     "Taskbar Tab ID should match the ID returned on creation."
   );
 
-  registry.removeTaskbarTab(taskbarTab.id);
+  Assert.deepEqual(
+    registry.removeTaskbarTab(taskbarTab.id),
+    taskbarTab,
+    "The removed Taskbar Tab was removed"
+  );
 
   Assert.ok(
     !registry.findTaskbarTab(url, userContextId),
     "Taskbar Tab ID should be removed."
+  );
+
+  Assert.strictEqual(
+    registry.removeTaskbarTab(taskbarTab.id),
+    null,
+    "Null was returned since no Taskbar Tab with that ID exists"
   );
 });
 
