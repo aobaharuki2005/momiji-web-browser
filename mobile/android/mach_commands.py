@@ -264,7 +264,7 @@ def android_install_geckoview_example(command_context, args):
 def android_install_fenix(command_context, args):
     gradle(
         command_context,
-        ["fenix:installFenixDebug"] + args,
+        ["fenix:installDebug"] + args,
         verbose=True,
     )
     return 0
@@ -300,7 +300,7 @@ def android_install_geckoview_test_runner(command_context, args):
 def android_install_fenix_release(command_context, args):
     gradle(
         command_context,
-        ["-p", "mobile/android/fenix", "installFenixRelease"] + args,
+        ["-p", "mobile/android/fenix", "installRelease"] + args,
         verbose=True,
     )
     return 0

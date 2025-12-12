@@ -261,6 +261,12 @@ def add_artifacts(config, tasks):
         if "apk-artifact-template" in task:
             artifact_template = task.pop("apk-artifact-template")
 
+            # Fenix has no product flavor, so APK paths don't include it.
+            if gradle_build == "fenix":
+                apk_path = gradle_build_type
+            else:
+                apk_path = f"{gradle_build}/{gradle_build_type}"
+
             for apk in variant_config["apks"]:
                 apk_name = artifact_template["name"].format(
                     gradle_build=gradle_build, **apk
@@ -272,6 +278,7 @@ def add_artifacts(config, tasks):
                         "path": artifact_template["path"].format(
                             gradle_build_type=gradle_build_type,
                             gradle_build=gradle_build,
+                            apk_path=apk_path,
                             source_project_name=source_project_name,
                             **apk,
                         ),
@@ -283,6 +290,13 @@ def add_artifacts(config, tasks):
         elif "aab-artifact-template" in task:
             variant_name = variant_config["name"]
             artifact_template = task.pop("aab-artifact-template")
+
+            # Fenix has no product flavor, so AAB filenames don't include it.
+            if gradle_build == "fenix":
+                aab_filename = f"app-{gradle_build_type}.aab"
+            else:
+                aab_filename = f"app-{gradle_build}-{gradle_build_type}.aab"
+
             artifacts.append(
                 {
                     "type": artifact_template["type"],
@@ -292,6 +306,7 @@ def add_artifacts(config, tasks):
                         gradle_build=gradle_build,
                         source_project_name=source_project_name,
                         variant_name=variant_name,
+                        aab_filename=aab_filename,
                     ),
                 }
             )

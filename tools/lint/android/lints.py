@@ -164,7 +164,7 @@ def fenix_format(_paths, config, fix=None, **lintargs):
         os.path.join("mobile", "android", "fenix"),
         lint_tasks=[
             "fenix:lint",
-            "fenix:lintFenixDebug",
+            "fenix:lintDebug",
         ],
         **lintargs,
     )

@@ -254,21 +254,17 @@ def test_artifact_build(objdir, mozconfig, run_mach):
 
 
 def test_minify_fenix_incremental_build(objdir, mozconfig, run_mach):
-    """Verify that minifyFenixReleaseWithR8 is UP-TO-DATE on a subsequent
+    """Verify that minifyReleaseWithR8 is UP-TO-DATE on a subsequent
     run when there are no code changes.
     """
 
     # Ensure a clean state
-    assert_success(*run_mach(["gradle", ":fenix:cleanMinifyFenixReleaseWithR8"]))
-    assert_success(*run_mach(["gradle", ":fenix:minifyFenixReleaseWithR8"]))
-    assert_ordered_task_outcomes(
-        objdir, [(":fenix:minifyFenixReleaseWithR8", "EXECUTED")]
-    )
+    assert_success(*run_mach(["gradle", ":fenix:cleanMinifyReleaseWithR8"]))
+    assert_success(*run_mach(["gradle", ":fenix:minifyReleaseWithR8"]))
+    assert_ordered_task_outcomes(objdir, [(":fenix:minifyReleaseWithR8", "EXECUTED")])
 
-    assert_success(*run_mach(["gradle", ":fenix:minifyFenixReleaseWithR8"]))
-    assert_ordered_task_outcomes(
-        objdir, [(":fenix:minifyFenixReleaseWithR8", "UP-TO-DATE")]
-    )
+    assert_success(*run_mach(["gradle", ":fenix:minifyReleaseWithR8"]))
+    assert_ordered_task_outcomes(objdir, [(":fenix:minifyReleaseWithR8", "UP-TO-DATE")])
 
 
 def test_geckoview_build(objdir, mozconfig, run_mach):
