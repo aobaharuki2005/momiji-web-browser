@@ -30,7 +30,7 @@ def generate_diff(path, raw_content, line_to_delete):
     return diff
 
 
-def fix(path, raw_content, line_to_delete):
+def fix_includes(path, raw_content, line_to_delete):
     prev_content = raw_content.split("\n")
     new_content = [
         raw_line
@@ -80,7 +80,7 @@ def lint_mfbt_headers(results, path, raw_content, config, fix):
             lineno = 1 + raw_content.count("\n", 0, match.start())
 
             if fix:
-                fix(path, raw_content, lineno)
+                fix_includes(path, raw_content, lineno)
                 results["fixed"] += 1
             else:
                 diff = generate_diff(path, raw_content, lineno)
@@ -116,7 +116,7 @@ def lint_std_headers(results, path, raw_content, config, fix):
         lineno = 1 + raw_content.count("\n", 0, match.start())
 
         if fix:
-            fix(path, raw_content, lineno)
+            fix_includes(path, raw_content, lineno)
             results["fixed"] += 1
         else:
             diff = generate_diff(path, raw_content, lineno)
