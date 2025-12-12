@@ -325,7 +325,7 @@ class BrowserToolbarMiddleware(
         ).filter { config ->
             config.isVisible()
         }.map { config ->
-            buildHomeAction(config.action, Source.AddressBar)
+            buildHomeAction(config.action, Source.AddressBar.BrowserEnd)
         }
     }
 
@@ -469,7 +469,7 @@ class BrowserToolbarMiddleware(
     @VisibleForTesting
     internal fun buildHomeAction(
         action: HomeToolbarAction,
-        source: Source = Source.AddressBar,
+        source: Source = Source.Unknown,
     ): Action = when (action) {
         HomeToolbarAction.TabCounter -> {
             val isInPrivateMode = browsingModeManager.mode.isPrivate

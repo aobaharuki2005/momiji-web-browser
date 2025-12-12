@@ -139,24 +139,24 @@ import mozilla.components.ui.icons.R as iconsR
 import mozilla.components.ui.tabcounter.R as tabcounterR
 
 @VisibleForTesting
-internal sealed class DisplayActions : BrowserToolbarEvent {
-    data class MenuClicked(override val source: Source) : DisplayActions()
-    data class NavigateBackClicked(override val source: Source) : DisplayActions()
-    data class NavigateBackLongClicked(override val source: Source) : DisplayActions()
-    data object NavigateForwardClicked : DisplayActions()
-    data object NavigateForwardLongClicked : DisplayActions()
-    data class RefreshClicked(val bypassCache: Boolean) : DisplayActions()
-    data object StopRefreshClicked : DisplayActions()
-    data class AddBookmarkClicked(override val source: Source) : DisplayActions()
-    data class EditBookmarkClicked(override val source: Source) : DisplayActions()
-    data class ShareClicked(override val source: Source) : DisplayActions()
-    data class TranslateClicked(override val source: Source) : DisplayActions()
-    data class HomepageClicked(override val source: Source) : DisplayActions()
+internal sealed class DisplayActions(override val source: Source) : BrowserToolbarEvent {
+    data class MenuClicked(override val source: Source) : DisplayActions(source)
+    data class NavigateBackClicked(override val source: Source) : DisplayActions(source)
+    data class NavigateBackLongClicked(override val source: Source) : DisplayActions(source)
+    data object NavigateForwardClicked : DisplayActions(Source.AddressBar.BrowserStart)
+    data object NavigateForwardLongClicked : DisplayActions(Source.AddressBar.BrowserStart)
+    data class RefreshClicked(val bypassCache: Boolean) : DisplayActions(Source.AddressBar.BrowserStart)
+    data object StopRefreshClicked : DisplayActions(Source.AddressBar.BrowserStart)
+    data class AddBookmarkClicked(override val source: Source) : DisplayActions(source)
+    data class EditBookmarkClicked(override val source: Source) : DisplayActions(source)
+    data class ShareClicked(override val source: Source) : DisplayActions(source)
+    data class TranslateClicked(override val source: Source) : DisplayActions(source)
+    data class HomepageClicked(override val source: Source) : DisplayActions(source)
 }
 
 @VisibleForTesting
-internal sealed class StartPageActions : BrowserToolbarEvent {
-    data object SiteInfoClicked : StartPageActions()
+internal sealed class StartPageActions(override val source: Source) : BrowserToolbarEvent {
+    data object SiteInfoClicked : StartPageActions(Source.AddressBar.PageStart)
 }
 
 @VisibleForTesting
@@ -174,10 +174,10 @@ internal sealed class PageOriginInteractions : BrowserToolbarEvent {
 }
 
 @VisibleForTesting
-internal sealed class PageEndActionsInteractions : BrowserToolbarEvent {
+internal sealed class PageEndActionsInteractions(override val source: Source) : BrowserToolbarEvent {
     data class ReaderModeClicked(
         val isActive: Boolean,
-    ) : PageEndActionsInteractions()
+    ) : PageEndActionsInteractions(Source.AddressBar.PageEnd)
 }
 
 /**
@@ -690,7 +690,7 @@ class BrowserToolbarMiddleware(
         ).filter { config ->
             config.isVisible()
         }.map { config ->
-            buildAction(config.action)
+            buildAction(config.action, Source.AddressBar.PageStart)
         }
     }
 
@@ -715,7 +715,7 @@ class BrowserToolbarMiddleware(
         ).filter { config ->
             config.isVisible()
         }.map { config ->
-            buildAction(config.action)
+            buildAction(config.action, Source.AddressBar.BrowserStart)
         }
     }
 
@@ -745,7 +745,7 @@ class BrowserToolbarMiddleware(
         ).filter { config ->
             config.isVisible()
         }.map { config ->
-            buildAction(config.action)
+            buildAction(config.action, Source.AddressBar.PageEnd)
         }
     }
 
@@ -769,7 +769,7 @@ class BrowserToolbarMiddleware(
         )
 
         return configs.mapNotNull { config ->
-            config.takeIf { it.isVisible() }?.let { buildAction(it.action) }
+            config.takeIf { it.isVisible() }?.let { buildAction(it.action, Source.AddressBar.BrowserEnd) }
         }
     }
 
@@ -1099,7 +1099,7 @@ class BrowserToolbarMiddleware(
     @VisibleForTesting
     internal fun buildAction(
         toolbarAction: ToolbarAction,
-        source: Source = Source.AddressBar,
+        source: Source = Source.Unknown,
     ): Action = when (toolbarAction) {
         ToolbarAction.NewTab -> ActionButtonRes(
             drawableResId = iconsR.drawable.mozac_ic_plus_24,
@@ -1287,7 +1287,7 @@ class BrowserToolbarMiddleware(
     }
 
     private fun Source.toMetricSource() = when (this) {
-        Source.AddressBar -> MetricsUtils.BookmarkAction.Source.BROWSER_TOOLBAR
+        is Source.AddressBar, Source.Unknown -> MetricsUtils.BookmarkAction.Source.BROWSER_TOOLBAR
         Source.NavigationBar -> MetricsUtils.BookmarkAction.Source.BROWSER_NAVBAR
     }
 

@@ -26,7 +26,7 @@ sealed interface BrowserToolbarInteraction {
          * @see [Source]
          */
         val source: Source
-            get() = Source.AddressBar
+            get() = Source.Unknown
 
         /**
          * Convenience method to combine dispatching a [BrowserToolbarEvent] with
@@ -44,14 +44,42 @@ sealed interface BrowserToolbarInteraction {
          */
         sealed interface Source {
             /**
-             * The user interacted with a address bar element.
+             * Sources representing parts of the address bar where an interaction originated.
+             *
+             * Use these to differentiate interactions on the browser/page start/end areas
+             * of the address bar.
              */
-            data object AddressBar : Source
+            sealed interface AddressBar : Source {
+                /**
+                 * The user interacted with a browser start toolbar element.
+                 */
+                data object BrowserStart : AddressBar
+
+                /**
+                 * The user interacted with a page start toolbar element.
+                 */
+                data object PageStart : AddressBar
+
+                /**
+                 * The user interacted with a page end toolbar element.
+                 */
+                data object PageEnd : AddressBar
+
+                /**
+                 * The user interacted with a browser end toolbar element.
+                 */
+                data object BrowserEnd : AddressBar
+            }
 
             /**
              * The user interacted with a navigation bar element.
              */
             data object NavigationBar : Source
+
+            /**
+             * Default/unknown source when none of the specific sources apply.
+             */
+            data object Unknown : Source
         }
     }
 

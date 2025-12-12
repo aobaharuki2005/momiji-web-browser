@@ -65,10 +65,10 @@ class BrowserToolbarTelemetryMiddleware : Middleware<BrowserToolbarState, Browse
 
     private fun trackToolbarEvent(
         toolbarActionRecord: ToolbarActionRecord,
-        source: Source = Source.AddressBar,
+        source: Source = Source.Unknown,
     ) {
         when (source) {
-            Source.AddressBar ->
+            is Source.AddressBar ->
                 Toolbar.buttonTapped.record(
                     Toolbar.ButtonTappedExtra(
                         source = SOURCE_ADDRESS_BAR,
@@ -83,6 +83,8 @@ class BrowserToolbarTelemetryMiddleware : Middleware<BrowserToolbarState, Browse
                         item = toolbarActionRecord.action,
                     ),
                 )
+
+            Source.Unknown -> return
         }
     }
 }
