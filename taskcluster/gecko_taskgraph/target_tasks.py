@@ -1574,7 +1574,7 @@ def target_tasks_perftest_fenix_startup(full_task_graph, parameters, graph_confi
     for name, task in full_task_graph.tasks.items():
         if task.kind != "perftest":
             continue
-        if "fenix" in name and "startup" in name and "simpleperf" not in name:
+        if "fenix" in name and "startup" in name and "profiling" not in name:
             yield name
 
 
