@@ -87,6 +87,9 @@ class BrowserToolbarTelemetryMiddlewareTest {
         }
         assertEquals(item, last.extra?.get("item"))
         assertEquals(expectedSource, last.extra?.get("source"))
+        if (source is Source.AddressBar) {
+            assertEquals(source.telemetryName(), last.extra?.get("extra"))
+        }
     }
 
     private val buildStore = BrowserToolbarStore(
