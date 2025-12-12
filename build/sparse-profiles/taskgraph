@@ -50,6 +50,10 @@ path:tools/terser/package-lock.json
 # for new-style try pushes
 path:try_task_config.json
 
+# app-services tooling.
+path:services/app-services-tools/embedded-uniffi-bindgen
+path:services/app-services-tools/nimbus-fml
+
 # Moz.build files are read in filesystem mode
 glob:**/moz.build
 glob:**/*.mozbuild
