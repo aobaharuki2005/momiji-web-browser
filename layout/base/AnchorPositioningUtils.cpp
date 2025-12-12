@@ -320,21 +320,21 @@ bool IsPositionedElementAlsoSkippedWhenAnchorIsSkipped(
   return true;
 }
 
-struct LazyAncestorHolder {
+class LazyAncestorHolder {
   const nsIFrame* mFrame;
-  Maybe<nsTArray<const nsIFrame*>> mAncestors;
+  AutoTArray<const nsIFrame*, 8> mAncestors;
+  bool mFilled = false;
+
+ public:
+  const nsTArray<const nsIFrame*>& GetAncestors() {
+    if (!mFilled) {
+      nsLayoutUtils::FillAncestors(mFrame, nullptr, &mAncestors);
+      mFilled = true;
+    }
+    return mAncestors;
+  }
 
   explicit LazyAncestorHolder(const nsIFrame* aFrame) : mFrame(aFrame) {}
-
-  const nsTArray<const nsIFrame*>& GetAncestors() {
-    if (!mAncestors) {
-      AutoTArray<const nsIFrame*, 8> ancestors;
-      nsLayoutUtils::FillAncestors(mFrame, nullptr, &ancestors);
-      mAncestors.emplace(std::move(ancestors));
-    }
-
-    return *mAncestors;
-  }
 };
 
 bool IsAcceptableAnchorElement(
