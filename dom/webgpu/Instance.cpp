@@ -214,10 +214,18 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
 
   ffi::WGPUPowerPreference power_preference;
   if (aOptions.mPowerPreference.WasPassed()) {
-    power_preference = static_cast<ffi::WGPUPowerPreference>(
-        aOptions.mPowerPreference.Value());
+    switch (aOptions.mPowerPreference.Value()) {
+      case dom::GPUPowerPreference::Low_power:
+        power_preference = ffi::WGPUPowerPreference_LowPower;
+        break;
+      case dom::GPUPowerPreference::High_performance:
+        power_preference = ffi::WGPUPowerPreference_HighPerformance;
+        break;
+      default:
+        MOZ_CRASH("Unexpected `dom::GPUPowerPreference`");
+    }
   } else {
-    power_preference = ffi::WGPUPowerPreference_LowPower;
+    power_preference = ffi::WGPUPowerPreference_None;
   }
 
   RawId adapter_id = ffi::wgpu_client_request_adapter(
