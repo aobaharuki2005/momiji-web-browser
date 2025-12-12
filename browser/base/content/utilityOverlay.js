@@ -23,6 +23,8 @@ ChromeUtils.defineESModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   ShellService: "moz-src:///browser/components/shell/ShellService.sys.mjs",
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
+  AIWindow:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(this, "ReferrerInfo", () =>
@@ -62,6 +64,9 @@ Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
       ) {
         return "about:privatebrowsing";
       }
+    }
+    if (AIWindow.isAIWindowActive(window)) {
+      return AIWindow.newTabURL;
     }
     return AboutNewTab.newTabURL;
   },

@@ -5,6 +5,8 @@
  */
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
+const AIWINDOW_URL = "chrome://browser/content/aiwindow/aiWindow.html";
+
 /**
  * AI Window Service
  */
@@ -70,7 +72,7 @@ export const AIWindow = {
       const aiWindowURI = Cc["@mozilla.org/supports-string;1"].createInstance(
         Ci.nsISupportsString
       );
-      aiWindowURI.data = "chrome://browser/content/aiwindow/aiWindow.html";
+      aiWindowURI.data = AIWINDOW_URL;
       args.appendElement(aiWindowURI);
 
       const aiOption = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
@@ -102,5 +104,9 @@ export const AIWindow = {
 
   isAIWindowEnabled() {
     return this.AIWindowEnabled;
+  },
+
+  get newTabURL() {
+    return AIWINDOW_URL;
   },
 };
