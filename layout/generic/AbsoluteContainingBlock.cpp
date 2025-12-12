@@ -867,17 +867,19 @@ static nscoord OffsetToAlignedStaticPos(
       // 1. We fit inside the IMCB, no action needed.
     } else if (kidSize <= overflowLimitRectEnd - overflowLimitRectStart) {
       // 2. We overflowed IMCB, try to cover IMCB completely, if it's not.
-      if (kidEnd < imcbEnd) {
-        offset += imcbEnd - kidEnd;
-      } else if (kidStart > imcbStart) {
-        offset -= kidStart - imcbStart;
-      } else {
+      if (kidStart <= imcbStart && kidEnd >= imcbEnd) {
         // IMCB already covered, ensure that we aren't escaping the limit rect.
         if (kidStart < overflowLimitRectStart) {
           offset += overflowLimitRectStart - kidStart;
         } else if (kidEnd > overflowLimitRectEnd) {
           offset -= kidEnd - overflowLimitRectEnd;
         }
+      } else if (kidEnd < imcbEnd && kidStart < imcbStart) {
+        // Space to end, overflowing on start - nudge to end.
+        offset += std::min(imcbStart - kidStart, imcbEnd - kidEnd);
+      } else if (kidStart > imcbStart && kidEnd > imcbEnd) {
+        // Space to start, overflowing on end - nudge to start.
+        offset -= std::min(kidEnd - imcbEnd, kidStart - imcbStart);
       }
     } else {
       // 3. We'll overflow the limit rect. Start align the subject int overflow
