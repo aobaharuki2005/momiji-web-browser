@@ -354,8 +354,13 @@ void OffThreadPromiseRuntimeState::dispatchDelayedTasks() {
     return;
   }
 
-  mozilla::TimeStamp now = mozilla::TimeStamp::Now();
   auto& queue = internalDelayedDispatchPriorityQueue();
+
+  if (queue.empty()) {
+    return;
+  }
+
+  mozilla::TimeStamp now = mozilla::TimeStamp::Now();
 
   while (!queue.empty() && queue.highest().endTime() <= now) {
     DelayedDispatchable d(std::move(queue.highest()));
