@@ -25,6 +25,7 @@ XREAppData& XREAppData::operator=(const StaticXREAppData& aOther) {
   UAName = aOther.UAName;
   sourceURL = aOther.sourceURL;
   updateURL = aOther.updateURL;
+  sourceStamp = aOther.sourceStamp;
 
   return *this;
 }

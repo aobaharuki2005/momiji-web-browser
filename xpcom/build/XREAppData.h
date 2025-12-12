@@ -178,6 +178,11 @@ class XREAppData {
    */
   CharPtr updateURL;
 
+  /**
+   * The changeset to the source revision for this build of the application.
+   */
+  CharPtr sourceStamp;
+
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   /**
    * Chromium sandbox BrokerServices.
@@ -225,6 +230,7 @@ struct StaticXREAppData {
   const char* UAName;
   const char* sourceURL;
   const char* updateURL;
+  const char* sourceStamp;
 };
 
 }  // namespace mozilla
