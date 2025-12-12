@@ -526,6 +526,7 @@ export class ContileIntegration {
           image_url: tile.image_url,
           impression_url: tile.callbacks.impression,
           image_size: 200,
+          attribution: tile.attributions || null,
         };
 
         formattedTileData.push(formattedData);
@@ -1057,6 +1058,7 @@ export class TopSitesFeed {
           sponsored_tile_id: site.id,
           partner: SPONSORED_TILE_PARTNER_AMP,
           block_key: site.id,
+          attribution: site.attribution,
         };
         if (site.image_url && site.image_size >= MIN_FAVICON_SIZE) {
           // Only use the image from Contile if it's hi-res, otherwise, fallback

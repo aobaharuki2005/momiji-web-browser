@@ -264,6 +264,7 @@ describe("<DSCard>", () => {
             features: undefined,
             matches_selected_topic: undefined,
             selected_topics: undefined,
+            attribution: undefined,
             format: "medium-card",
           },
         })
@@ -325,6 +326,7 @@ describe("<DSCard>", () => {
             features: undefined,
             matches_selected_topic: undefined,
             selected_topics: undefined,
+            attribution: undefined,
             format: "spoc",
           },
         })
@@ -389,6 +391,7 @@ describe("<DSCard>", () => {
             features: undefined,
             matches_selected_topic: undefined,
             selected_topics: undefined,
+            attribution: undefined,
             format: "medium-card",
           },
         })

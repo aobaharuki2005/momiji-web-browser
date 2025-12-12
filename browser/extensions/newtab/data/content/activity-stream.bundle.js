@@ -2907,7 +2907,8 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
               advertiser: card.advertiser,
               // Keep the 0-based position, can be adjusted by the telemetry
               // sender if necessary.
-              position: card.pos
+              position: card.pos,
+              attribution: card.attribution
             }
           }));
         }
@@ -2933,6 +2934,7 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
           received_rank: link.received_rank,
           topic: link.topic,
           features: link.features,
+          attribution: link.attribution,
           ...(link.format ? {
             format: link.format
           } : {
@@ -3634,6 +3636,7 @@ class _DSCard extends (external_React_default()).PureComponent {
           features: this.props.features,
           matches_selected_topic: matchesSelectedTopic,
           selected_topics: this.props.selectedTopics,
+          attribution: this.props.attribution,
           ...(this.props.format ? {
             format: this.props.format
           } : {
@@ -3951,6 +3954,7 @@ class _DSCard extends (external_React_default()).PureComponent {
           format
         } : {}),
         category: this.props.category,
+        attribution: this.props.attribution,
         ...(this.props.section ? {
           section: this.props.section,
           section_position: this.props.sectionPosition,
@@ -4790,7 +4794,8 @@ class _CardGrid extends (external_React_default()).PureComponent {
           alt_text: rec.alt_text,
           isTimeSensitive: rec.isTimeSensitive,
           tabIndex: currentCardIndex === this.state.focusedIndex ? 0 : -1,
-          onFocus: () => this.onCardFocus(currentCardIndex)
+          onFocus: () => this.onCardFocus(currentCardIndex),
+          attribution: rec.attribution
         }));
       }
     }
@@ -8331,7 +8336,8 @@ class TopSiteLink extends (external_React_default()).PureComponent {
           advertiser: title.toLocaleLowerCase(),
           source: NEWTAB_SOURCE,
           visible_topsites: visibleTopSites,
-          frecency_boosted: link.type === "frecency-boost"
+          frecency_boosted: link.type === "frecency-boost",
+          attribution: link.attribution
         }
         // For testing.
         ,
@@ -8523,7 +8529,8 @@ class TopSite extends (external_React_default()).PureComponent {
           value: {
             card_type: "spoc",
             tile_id: this.props.link.id,
-            shim: this.props.link.shim && this.props.link.shim.click
+            shim: this.props.link.shim && this.props.link.shim.click,
+            attribution: this.props.link.attribution
           }
         }));
 
@@ -8536,7 +8543,8 @@ class TopSite extends (external_React_default()).PureComponent {
             position: this.props.link.pos,
             tile_id: this.props.link.id,
             advertiser: title.toLocaleLowerCase(),
-            source: NEWTAB_SOURCE
+            source: NEWTAB_SOURCE,
+            attribution: this.props.link.attribution
           }
         }));
       } else if (isSponsored(this.props.link)) {
@@ -8552,7 +8560,8 @@ class TopSite extends (external_React_default()).PureComponent {
             advertiser: title.toLocaleLowerCase(),
             source: NEWTAB_SOURCE,
             visible_topsites: this.props.visibleTopSites,
-            frecency_boosted: this.props.link.type === "frecency-boost"
+            frecency_boosted: this.props.link.type === "frecency-boost",
+            attribution: this.props.link.attribution
           }
         }));
       } else {
@@ -11443,7 +11452,8 @@ function CardSection({
       sectionLayoutName: layoutName,
       isTimeSensitive: rec.isTimeSensitive,
       tabIndex: index === focusedIndex ? 0 : -1,
-      onFocus: () => onCardFocus(index)
+      onFocus: () => onCardFocus(index),
+      attribution: rec.attribution
     });
     return [card];
   })));

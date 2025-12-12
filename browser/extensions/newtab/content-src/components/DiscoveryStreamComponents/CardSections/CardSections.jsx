@@ -458,6 +458,7 @@ function CardSection({
               isTimeSensitive={rec.isTimeSensitive}
               tabIndex={index === focusedIndex ? 0 : -1}
               onFocus={() => onCardFocus(index)}
+              attribution={rec.attribution}
             />
           );
           return [card];

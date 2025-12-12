@@ -998,6 +998,7 @@ export class DiscoveryStreamFeed {
           sponsor: spoc.sponsor,
           title: spoc.title,
           url: spoc.url,
+          attribution: spoc.attributions || null,
         })),
       };
     }

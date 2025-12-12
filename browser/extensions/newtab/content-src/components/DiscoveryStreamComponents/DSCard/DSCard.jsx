@@ -317,6 +317,7 @@ export class _DSCard extends React.PureComponent {
             features: this.props.features,
             matches_selected_topic: matchesSelectedTopic,
             selected_topics: this.props.selectedTopics,
+            attribution: this.props.attribution,
             ...(this.props.format
               ? { format: this.props.format }
               : {
@@ -709,6 +710,7 @@ export class _DSCard extends React.PureComponent {
                 features: this.props.features,
                 ...(format ? { format } : {}),
                 category: this.props.category,
+                attribution: this.props.attribution,
                 ...(this.props.section
                   ? {
                       section: this.props.section,

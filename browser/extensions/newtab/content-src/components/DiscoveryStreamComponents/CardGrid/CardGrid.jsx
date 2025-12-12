@@ -196,6 +196,7 @@ export class _CardGrid extends React.PureComponent {
             isTimeSensitive={rec.isTimeSensitive}
             tabIndex={currentCardIndex === this.state.focusedIndex ? 0 : -1}
             onFocus={() => this.onCardFocus(currentCardIndex)}
+            attribution={rec.attribution}
           />
         );
       }
