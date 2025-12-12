@@ -8,7 +8,7 @@ use crate::clip::{ClipItemKeyKind, ClipNodeId, ClipTreeBuilder};
 use crate::frame_builder::FrameBuilderConfig;
 use crate::internal_types::FastHashMap;
 use crate::picture::{PrimitiveList, PictureCompositeMode, PicturePrimitive, SliceId};
-use crate::picture::{Picture3DContext, TileCacheParams, TileOffset, PictureFlags};
+use crate::picture::{Picture3DContext, TileCacheParams, PictureFlags};
 use crate::prim_store::{PrimitiveInstance, PrimitiveStore, PictureIndex};
 use crate::scene_building::SliceFlags;
 use crate::scene_builder_thread::Interners;

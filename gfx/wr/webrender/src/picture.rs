@@ -109,7 +109,7 @@ use crate::composite::{tile_kind, CompositeState, CompositeTileSurface, Composit
 use crate::composite::{ExternalSurfaceDescriptor, ExternalSurfaceDependency, CompositeTileDescriptor, CompositeTile};
 use crate::composite::{CompositorTransformIndex, CompositorSurfaceKind};
 use crate::debug_colors;
-use euclid::{vec3, Point2D, Scale, Vector2D, Box2D};
+use euclid::{vec3, Scale, Vector2D, Box2D};
 use euclid::approxeq::ApproxEq;
 use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FastHashSet, PlaneSplitter, FilterGraphOp, FilterGraphNode, Filter, FrameId};
@@ -133,19 +133,27 @@ use crate::scene::SceneProperties;
 use crate::spatial_tree::CoordinateSystemId;
 use crate::surface::{SurfaceDescriptor, SurfaceTileDescriptor};
 use smallvec::SmallVec;
-use std::{mem, u8, marker, u32};
+use std::{mem, u8, u32};
 use std::fmt::{Display, Error, Formatter};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::collections::hash_map::Entry;
 use std::ops::Range;
 use crate::picture_textures::PictureCacheTextureHandle;
 use crate::util::{MaxRect, VecHelper, MatrixHelpers, Recycler, ScaleOffset};
 use crate::filterdata::FilterDataHandle;
 use crate::tile_cache::{SliceDebugInfo, TileDebugInfo, DirtyTileDebugInfo};
+use crate::tile_cache::{TileKey, TileId, TileRect, TileOffset, SubSliceIndex};
+use crate::invalidation::InvalidationReason;
+use crate::tile_cache::{MAX_SURFACE_SIZE, MAX_COMPOSITOR_SURFACES};
+use crate::tile_cache::{TileDescriptor, PrimitiveDescriptor, PrimitiveDependencyIndex};
+use crate::tile_cache::{TILE_SIZE_SCROLLBAR_VERTICAL, TILE_SIZE_SCROLLBAR_HORIZONTAL};
 use crate::visibility::{PrimitiveVisibilityFlags, FrameVisibilityContext};
 use crate::visibility::{VisibilityState, FrameVisibilityState};
 use crate::scene_building::SliceFlags;
 use core::time::Duration;
+
+pub use crate::invalidation::DirtyRegion;
+
+use crate::invalidation::PrimitiveCompareResult;
 
 // Maximum blur radius for blur filter (different than box-shadow blur).
 // Taken from FilterNodeSoftware.cpp in Gecko.
@@ -249,50 +257,8 @@ impl<Src, Dst> From<CoordinateSpaceMapping<Src, Dst>> for TransformKey {
     }
 }
 
-/// Unit for tile coordinates.
-#[derive(Hash, Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd)]
-pub struct TileCoordinate;
-
-// Geometry types for tile coordinates.
-pub type TileOffset = Point2D<i32, TileCoordinate>;
-pub type TileRect = Box2D<i32, TileCoordinate>;
-
-/// The maximum number of compositor surfaces that are allowed per picture cache. This
-/// is an arbitrary number that should be enough for common cases, but low enough to
-/// prevent performance and memory usage drastically degrading in pathological cases.
-pub const MAX_COMPOSITOR_SURFACES: usize = 4;
-
-/// The size in device pixels of a normal cached tile.
-pub const TILE_SIZE_DEFAULT: DeviceIntSize = DeviceIntSize {
-    width: 1024,
-    height: 512,
-    _unit: marker::PhantomData,
-};
-
-/// The size in device pixels of a tile for horizontal scroll bars
-pub const TILE_SIZE_SCROLLBAR_HORIZONTAL: DeviceIntSize = DeviceIntSize {
-    width: 1024,
-    height: 32,
-    _unit: marker::PhantomData,
-};
-
-/// The size in device pixels of a tile for vertical scroll bars
-pub const TILE_SIZE_SCROLLBAR_VERTICAL: DeviceIntSize = DeviceIntSize {
-    width: 32,
-    height: 1024,
-    _unit: marker::PhantomData,
-};
-
-/// The maximum size per axis of a surface, in DevicePixel coordinates.
-/// Render tasks larger than this size are scaled down to fit, which may cause
-/// some blurriness.
-pub const MAX_SURFACE_SIZE: usize = 4096;
 /// Maximum size of a compositor surface.
 const MAX_COMPOSITOR_SURFACES_SIZE: f32 = 8192.0;
-
-/// Used to get unique tile IDs, even when the tile cache is
-/// destroyed between display lists / scenes.
-static NEXT_TILE_ID: AtomicUsize = AtomicUsize::new(0);
 
 fn clamp(value: i32, low: i32, high: i32) -> i32 {
     value.max(low).min(high)
@@ -301,12 +267,6 @@ fn clamp(value: i32, low: i32, high: i32) -> i32 {
 fn clampf(value: f32, low: f32, high: f32) -> f32 {
     value.max(low).min(high)
 }
-
-/// An index into the prims array in a TileDescriptor.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct PrimitiveDependencyIndex(pub u32);
 
 /// Information about the state of a binding.
 #[derive(Debug)]
@@ -590,25 +550,6 @@ impl PrimitiveDependencyInfo {
     }
 }
 
-/// A stable ID for a given tile, to help debugging. These are also used
-/// as unique identifiers for tile surfaces when using a native compositor.
-#[derive(Debug, Copy, Clone, PartialEq, PartialOrd, Ord, Eq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Hash)]
-pub struct TileId(pub usize);
-
-/// Uniquely identifies a tile within a picture cache slice
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
-pub struct TileKey {
-    // Tile index (x,y)
-    pub tile_offset: TileOffset,
-    // Sub-slice (z)
-    pub sub_slice_index: SubSliceIndex,
-}
-
 /// A descriptor for the kind of texture that a picture cache tile will
 /// be drawn into.
 #[derive(Debug)]
@@ -691,83 +632,6 @@ impl TileSurface {
     }
 }
 
-/// Optional extra information returned by is_same when
-/// logging is enabled.
-#[derive(Debug, Copy, Clone, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum CompareHelperResult<T> {
-    /// Primitives match
-    Equal,
-    /// Counts differ
-    Count {
-        prev_count: u8,
-        curr_count: u8,
-    },
-    /// Sentinel
-    Sentinel,
-    /// Two items are not equal
-    NotEqual {
-        prev: T,
-        curr: T,
-    },
-    /// User callback returned true on item
-    PredicateTrue {
-        curr: T
-    },
-}
-
-/// The result of a primitive dependency comparison. Size is a u8
-/// since this is a hot path in the code, and keeping the data small
-/// is a performance win.
-#[derive(Debug, Copy, Clone, PartialEq)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[repr(u8)]
-pub enum PrimitiveCompareResult {
-    /// Primitives match
-    Equal,
-    /// Something in the PrimitiveDescriptor was different
-    Descriptor,
-    /// The clip node content or spatial node changed
-    Clip,
-    /// The value of the transform changed
-    Transform,
-    /// An image dependency was dirty
-    Image,
-    /// The value of an opacity binding changed
-    OpacityBinding,
-    /// The value of a color binding changed
-    ColorBinding,
-}
-
-/// Debugging information about why a tile was invalidated
-#[derive(Debug,Clone)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub enum InvalidationReason {
-    /// The background color changed
-    BackgroundColor,
-    /// The opaque state of the backing native surface changed
-    SurfaceOpacityChanged,
-    /// There was no backing texture (evicted or never rendered)
-    NoTexture,
-    /// There was no backing native surface (never rendered, or recreated)
-    NoSurface,
-    /// The primitive count in the dependency list was different
-    PrimCount,
-    /// The content of one of the primitives was different
-    Content,
-    // The compositor type changed
-    CompositorKindChanged,
-    // The valid region of the tile changed
-    ValidRectChanged,
-    // The overall scale of the picture cache changed
-    ScaleChanged,
-    // The content of the sampling surface changed
-    SurfaceContentChanged,
-}
-
 /// Information about a cached tile.
 pub struct Tile {
     /// The grid position of this tile within the picture cache
@@ -822,7 +686,7 @@ pub struct Tile {
 impl Tile {
     /// Construct a new, invalid tile.
     fn new(tile_offset: TileOffset) -> Self {
-        let id = TileId(NEXT_TILE_ID.fetch_add(1, Ordering::Relaxed));
+        let id = TileId(crate::tile_cache::next_tile_id());
 
         Tile {
             tile_offset,
@@ -1366,173 +1230,6 @@ impl Tile {
     }
 }
 
-/// Defines a key that uniquely identifies a primitive instance.
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct PrimitiveDescriptor {
-    pub prim_uid: ItemUid,
-    pub prim_clip_box: PictureBox2D,
-    // TODO(gw): These two fields could be packed as a u24/u8
-    pub dep_offset: u32,
-    pub dep_count: u32,
-}
-
-impl PartialEq for PrimitiveDescriptor {
-    fn eq(&self, other: &Self) -> bool {
-        const EPSILON: f32 = 0.001;
-
-        if self.prim_uid != other.prim_uid {
-            return false;
-        }
-
-        if !self.prim_clip_box.min.x.approx_eq_eps(&other.prim_clip_box.min.x, &EPSILON) {
-            return false;
-        }
-        if !self.prim_clip_box.min.y.approx_eq_eps(&other.prim_clip_box.min.y, &EPSILON) {
-            return false;
-        }
-        if !self.prim_clip_box.max.x.approx_eq_eps(&other.prim_clip_box.max.x, &EPSILON) {
-            return false;
-        }
-        if !self.prim_clip_box.max.y.approx_eq_eps(&other.prim_clip_box.max.y, &EPSILON) {
-            return false;
-        }
-
-        if self.dep_count != other.dep_count {
-            return false;
-        }
-
-        true
-    }
-}
-
-/// Uniquely describes the content of this tile, in a way that can be
-/// (reasonably) efficiently hashed and compared.
-#[cfg_attr(any(feature="capture",feature="replay"), derive(Clone))]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct TileDescriptor {
-    /// List of primitive instance unique identifiers. The uid is guaranteed
-    /// to uniquely describe the content of the primitive template, while
-    /// the other parameters describe the clip chain and instance params.
-    prims: Vec<PrimitiveDescriptor>,
-
-    /// Picture space rect that contains valid pixels region of this tile.
-    pub local_valid_rect: PictureRect,
-
-    /// The last frame this tile had its dependencies updated (dependency updating is
-    /// skipped if a tile is off-screen).
-    last_updated_frame_id: FrameId,
-
-    /// Packed per-prim dependency information
-    dep_data: Vec<u8>,
-}
-
-impl TileDescriptor {
-    fn new() -> Self {
-        TileDescriptor {
-            local_valid_rect: PictureRect::zero(),
-            dep_data: Vec::new(),
-            prims: Vec::new(),
-            last_updated_frame_id: FrameId::INVALID,
-        }
-    }
-
-    /// Print debug information about this tile descriptor to a tree printer.
-    fn print(&self, pt: &mut dyn PrintTreePrinter) {
-        pt.new_level("current_descriptor".to_string());
-
-        pt.new_level("prims".to_string());
-        for prim in &self.prims {
-            pt.new_level(format!("prim uid={}", prim.prim_uid.get_uid()));
-            pt.add_item(format!("clip: p0={},{} p1={},{}",
-                prim.prim_clip_box.min.x,
-                prim.prim_clip_box.min.y,
-                prim.prim_clip_box.max.x,
-                prim.prim_clip_box.max.y,
-            ));
-            pt.end_level();
-        }
-        pt.end_level();
-
-        pt.end_level();
-    }
-
-    /// Clear the dependency information for a tile, when the dependencies
-    /// are being rebuilt.
-    fn clear(&mut self) {
-        self.local_valid_rect = PictureRect::zero();
-        self.prims.clear();
-        self.dep_data.clear();
-    }
-}
-
-/// Represents the dirty region of a tile cache picture, relative to a
-/// "visibility" spatial node. At the moment the visibility node is
-/// world space, but the plan is to switch to raster space.
-///
-/// The plan is to move away from these world space representation and
-/// compute dirty regions in raster space instead.
-#[derive(Clone)]
-pub struct DirtyRegion {
-    /// The overall dirty rect, a combination of dirty_rects
-    pub combined: VisRect,
-
-    /// The corrdinate space used to do clipping, visibility, and
-    /// dirty rect calculations.
-    pub visibility_spatial_node: SpatialNodeIndex,
-    /// Spatial node of the picture this region represents.
-    local_spatial_node: SpatialNodeIndex,
-}
-
-impl DirtyRegion {
-    /// Construct a new dirty region tracker.
-    pub fn new(
-        visibility_spatial_node: SpatialNodeIndex,
-        local_spatial_node: SpatialNodeIndex,
-    ) -> Self {
-        DirtyRegion {
-            combined: VisRect::zero(),
-            visibility_spatial_node,
-            local_spatial_node,
-        }
-    }
-
-    /// Reset the dirty regions back to empty
-    pub fn reset(
-        &mut self,
-        visibility_spatial_node: SpatialNodeIndex,
-        local_spatial_node: SpatialNodeIndex,
-    ) {
-        self.combined = VisRect::zero();
-        self.visibility_spatial_node = visibility_spatial_node;
-        self.local_spatial_node = local_spatial_node;
-    }
-
-    /// Add a dirty region to the tracker. Returns the visibility mask that corresponds to
-    /// this region in the tracker.
-    pub fn add_dirty_region(
-        &mut self,
-        rect_in_pic_space: PictureRect,
-        spatial_tree: &SpatialTree,
-    ) {
-        let map_pic_to_raster = SpaceMapper::new_with_target(
-            self.visibility_spatial_node,
-            self.local_spatial_node,
-            VisRect::max_rect(),
-            spatial_tree,
-        );
-
-        let raster_rect = map_pic_to_raster
-            .map(&rect_in_pic_space)
-            .expect("bug");
-
-        // Include this in the overall dirty rect
-        self.combined = self.combined.union(&raster_rect);
-    }
-}
-
 // TODO(gw): Tidy this up by:
 //      - Add an Other variant for things like opaque gradient backdrops
 #[derive(Debug, Copy, Clone)]
@@ -1654,32 +1351,6 @@ pub struct TileCacheParams {
     // This is only a suggestion - the tile cache will clamp this as a reasonable number
     // and only promote a limited number of surfaces.
     pub yuv_image_surface_count: usize,
-}
-
-/// Defines which sub-slice (effectively a z-index) a primitive exists on within
-/// a picture cache instance.
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub struct SubSliceIndex(u8);
-
-impl SubSliceIndex {
-    pub const DEFAULT: SubSliceIndex = SubSliceIndex(0);
-
-    pub fn new(index: usize) -> Self {
-        SubSliceIndex(index as u8)
-    }
-
-    /// Return true if this sub-slice is the primary sub-slice (for now, we assume
-    /// that only the primary sub-slice may be opaque and support subpixel AA, for example).
-    pub fn is_primary(&self) -> bool {
-        self.0 == 0
-    }
-
-    /// Get an array index for this sub-slice
-    pub fn as_usize(&self) -> usize {
-        self.0 as usize
-    }
 }
 
 /// Wrapper struct around an external surface descriptor with a little more information

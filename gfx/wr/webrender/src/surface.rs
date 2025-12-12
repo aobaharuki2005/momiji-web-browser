@@ -5,7 +5,8 @@
 use api::units::*;
 use crate::command_buffer::{CommandBufferBuilderKind, CommandBufferList, CommandBufferBuilder, CommandBufferIndex};
 use crate::internal_types::FastHashMap;
-use crate::picture::{SurfaceInfo, SurfaceIndex, TileKey, SubSliceIndex, MAX_COMPOSITOR_SURFACES};
+use crate::picture::{SurfaceIndex, SurfaceInfo};
+use crate::tile_cache::{TileKey, SubSliceIndex, MAX_COMPOSITOR_SURFACES};
 use crate::prim_store::PictureIndex;
 use crate::render_task_graph::{RenderTaskId, RenderTaskGraphBuilder};
 use crate::render_target::ResolveOp;

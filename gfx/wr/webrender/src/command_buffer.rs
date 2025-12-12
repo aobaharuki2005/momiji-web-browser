@@ -4,7 +4,7 @@
 
 use api::units::PictureRect;
 use crate::pattern::{PatternKind, PatternShaderInput};
-use crate::{spatial_tree::SpatialNodeIndex, render_task_graph::RenderTaskId, surface::SurfaceTileDescriptor, picture::TileKey, renderer::GpuBufferAddress, FastHashMap, prim_store::PrimitiveInstanceIndex};
+use crate::{spatial_tree::SpatialNodeIndex, render_task_graph::RenderTaskId, surface::SurfaceTileDescriptor, tile_cache::TileKey, renderer::GpuBufferAddress, FastHashMap, prim_store::PrimitiveInstanceIndex};
 use crate::gpu_types::{QuadSegment, TransformPaletteId};
 use crate::segment::EdgeAaSegmentMask;
 

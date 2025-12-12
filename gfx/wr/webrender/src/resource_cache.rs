@@ -574,7 +574,7 @@ impl ResourceCache {
         let cached_glyphs = GlyphCache::new();
         let fonts = SharedFontResources::new(IdNamespace(0));
         let picture_textures = PictureTextures::new(
-            crate::picture::TILE_SIZE_DEFAULT,
+            crate::tile_cache::TILE_SIZE_DEFAULT,
             TextureFilter::Nearest,
         );
 
