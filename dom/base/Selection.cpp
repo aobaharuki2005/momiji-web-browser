@@ -3880,10 +3880,6 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
     return NS_ERROR_FAILURE;
   }
 
-  // Scroll vertically to get the caret into view, but only if the container
-  // is perceived to be scrollable in that direction (i.e. there is a visible
-  // vertical scrollbar or the scroll range is at least one device pixel)
-  aVertical.mOnlyIfPerceivedScrollableDirection = true;
   presShell->ScrollFrameIntoView(frame, Some(rect), aVertical, aHorizontal,
                                  aScrollFlags);
   return NS_OK;

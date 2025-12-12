@@ -3512,13 +3512,9 @@ static Maybe<nsPoint> ScrollToShowRect(
   }
   ScrollStyles ss = aScrollContainerFrame->GetScrollStyles();
   nsRect allowedRange(scrollPt, nsSize(0, 0));
-  ScrollDirections directions =
-      aScrollContainerFrame->GetAvailableScrollingDirections();
 
-  if (((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
-       ss.mVertical != StyleOverflow::Hidden) &&
-      (!aVertical.mOnlyIfPerceivedScrollableDirection ||
-       (directions.contains(ScrollDirection::eVertical)))) {
+  if ((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
+      ss.mVertical != StyleOverflow::Hidden) {
     if (ComputeNeedToScroll(aVertical.mWhenToScroll, lineSize.height, aRect.y,
                             aRect.YMost(), visibleRect.y + padding.top,
                             visibleRect.YMost() - padding.bottom)) {
@@ -3536,10 +3532,8 @@ static Maybe<nsPoint> ScrollToShowRect(
     }
   }
 
-  if (((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
-       ss.mHorizontal != StyleOverflow::Hidden) &&
-      (!aHorizontal.mOnlyIfPerceivedScrollableDirection ||
-       (directions.contains(ScrollDirection::eHorizontal)))) {
+  if ((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
+      ss.mHorizontal != StyleOverflow::Hidden) {
     if (ComputeNeedToScroll(aHorizontal.mWhenToScroll, lineSize.width, aRect.x,
                             aRect.XMost(), visibleRect.x + padding.left,
                             visibleRect.XMost() - padding.right)) {
