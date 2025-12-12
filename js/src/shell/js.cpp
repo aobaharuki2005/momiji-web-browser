@@ -1519,7 +1519,13 @@ static bool GlobalOfFirstJobInQueue(JSContext* cx, unsigned argc, Value* vp) {
 
     auto& genericJob = cx->microTaskQueues->microTaskQueue.front();
     JS::JSMicroTask* job = JS::ToUnwrappedJSMicroTask(genericJob);
-    MOZ_ASSERT(job);
+    if (!job) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEAD_OBJECT);
+
+      return false;
+    }
+
     RootedObject global(cx, JS::GetExecutionGlobalFromJSMicroTask(job));
     if (!global) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
