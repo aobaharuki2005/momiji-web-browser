@@ -587,6 +587,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void GetContiguousEntriesForLoad(LoadingSessionHistoryInfo& aLoadingInfo,
                                    const RefPtr<SessionHistoryEntry>& aEntry);
 
+  void MaybeReuseNavigationKeyFromActiveEntry(SessionHistoryEntry* aEntry);
+
   EntryList* GetActiveEntries();
 
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
