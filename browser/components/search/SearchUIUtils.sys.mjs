@@ -12,14 +12,9 @@
  */
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-const lazy = {};
-
-ChromeUtils.defineLazyGetter(lazy, "SearchUIUtilsL10n", () => {
-  return new Localization(["browser/search.ftl", "branding/brand.ftl"]);
-});
-
-ChromeUtils.defineESModuleGetters(lazy, {
+const lazy = XPCOMUtils.declareLazy({
   BrowserSearchTelemetry:
     "moz-src:///browser/components/search/BrowserSearchTelemetry.sys.mjs",
   BrowserUtils: "resource://gre/modules/BrowserUtils.sys.mjs",
@@ -28,6 +23,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
+  SearchUIUtilsL10n: () => {
+    return new Localization(["browser/search.ftl", "branding/brand.ftl"]);
+  },
 });
 
 export var SearchUIUtils = {
@@ -373,7 +371,7 @@ export var SearchUIUtils = {
    *   The window where the search was triggered.
    * @param {string} options.searchText
    *   The search terms to use for the search.
-   * @param {?string} options.where
+   * @param {?string} [options.where]
    *   String indicating where the search should load. Most commonly used
    *   are 'tab' or 'window', defaults to 'current'.
    * @param {boolean} options.usePrivate
@@ -393,10 +391,9 @@ export var SearchUIUtils = {
    *   A `SearchUtils.URL_TYPE` value indicating the type of search that should
    *   be performed. A falsey value is equivalent to
    *   `SearchUtils.URL_TYPE.SEARCH`, which will perform a usual web search.
-   *
-   * @returns {Promise<?{engine: nsISearchEngine, url: nsIURI}>}
-   *   Object containing the search engine used to perform the
-   *   search and the url, or null if no search was performed.
+   * @param {string} options.sapSource
+   *   The search access point source, see
+   *   {@link lazy.BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES}
    */
   async _loadSearch({
     window,
@@ -406,9 +403,10 @@ export var SearchUIUtils = {
     triggeringPrincipal,
     policyContainer,
     inBackground = false,
-    engine = null,
-    tab = null,
-    searchUrlType = null,
+    engine,
+    tab,
+    searchUrlType,
+    sapSource,
   }) {
     if (!triggeringPrincipal) {
       throw new Error(
@@ -425,11 +423,11 @@ export var SearchUIUtils = {
     let submission = engine.getSubmission(searchText, searchUrlType);
 
     // getSubmission can return null if the engine doesn't have a URL
-    // with a text/html response type. This is unlikely (since
-    // SearchService._addEngineToStore() should fail for such an engine),
-    // but let's be on the safe side.
+    // for the given response type. This is an error if it occurs, since
+    // we should only get here if the engine supports the URL type begin
+    // passed.
     if (!submission) {
-      return null;
+      throw new Error(`No submission URL found for ${searchUrlType}`);
     }
 
     window.openLinkIn(submission.uri.spec, where || "current", {
@@ -445,7 +443,12 @@ export var SearchUIUtils = {
       },
     });
 
-    return { engine, url: submission.uri };
+    lazy.BrowserSearchTelemetry.recordSearch(
+      window.gBrowser.selectedBrowser,
+      engine,
+      sapSource,
+      { searchUrlType }
+    );
   },
 
   /**
@@ -500,7 +503,7 @@ export var SearchUIUtils = {
       inBackground = !inBackground;
     }
 
-    let searchInfo = await SearchUIUtils._loadSearch({
+    return SearchUIUtils._loadSearch({
       window,
       engine,
       searchText,
@@ -512,20 +515,11 @@ export var SearchUIUtils = {
       ),
       policyContainer,
       inBackground,
-    });
-
-    if (searchInfo) {
-      let source =
+      sapSource:
         searchUrlType == lazy.SearchUtils.URL_TYPE.VISUAL_SEARCH
           ? "contextmenu_visual"
-          : "contextmenu";
-      lazy.BrowserSearchTelemetry.recordSearch(
-        window.gBrowser.selectedBrowser,
-        searchInfo.engine,
-        source,
-        { searchUrlType }
-      );
-    }
+          : "contextmenu",
+    });
   },
 
   /**
@@ -550,21 +544,15 @@ export var SearchUIUtils = {
     triggeringPrincipal,
     policyContainer
   ) {
-    let searchInfo = await SearchUIUtils._loadSearch({
+    return SearchUIUtils._loadSearch({
       window,
       searchText,
       where: "current",
       usePrivate,
       triggeringPrincipal,
       policyContainer,
+      sapSource: "system",
     });
-    if (searchInfo) {
-      lazy.BrowserSearchTelemetry.recordSearch(
-        window.gBrowser.selectedBrowser,
-        searchInfo.engine,
-        "system"
-      );
-    }
   },
 
   /**
@@ -593,7 +581,7 @@ export var SearchUIUtils = {
     tab,
     triggeringPrincipal,
   }) {
-    let searchInfo = await SearchUIUtils._loadSearch({
+    return SearchUIUtils._loadSearch({
       window,
       searchText: query,
       where,
@@ -603,14 +591,7 @@ export var SearchUIUtils = {
       inBackground: false,
       engine,
       tab,
+      sapSource: "webextension",
     });
-
-    if (searchInfo) {
-      lazy.BrowserSearchTelemetry.recordSearch(
-        window.gBrowser.selectedBrowser,
-        searchInfo.engine,
-        "webextension"
-      );
-    }
   },
 };
