@@ -15,7 +15,8 @@ use crate::spatial_tree::SpatialNodeIndex;
 use crate::frame_builder::FrameBuilderConfig;
 use crate::gpu_types::{BorderInstance, UvRectKind, TransformPaletteId, BlurEdgeMode};
 use crate::internal_types::{CacheTextureId, FastHashMap, FilterGraphNode, FilterGraphOp, FilterGraphPictureReference, SVGFE_CONVOLVE_VALUES_LIMIT, TextureSource, Swizzle};
-use crate::picture::{ResolvedSurfaceTexture, MAX_SURFACE_SIZE};
+use crate::picture::ResolvedSurfaceTexture;
+use crate::tile_cache::MAX_SURFACE_SIZE;
 use crate::prim_store::ClipData;
 use crate::prim_store::gradient::{
     FastLinearGradientTask, RadialGradientTask,
