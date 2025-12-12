@@ -4560,7 +4560,13 @@ static bool MimeTypeMatchesExpectedModuleType(
   NS_ConvertUTF8toUTF16 typeString(mimeType);
 
   switch (expectedModuleType) {
-    case JS::ModuleType::JavaScript:
+    case JS::ModuleType::JavaScriptOrWasm:
+#ifdef NIGHTLY_BUILD
+      if (StaticPrefs::javascript_options_experimental_wasm_esm_integration()) {
+        return nsContentUtils::IsJavascriptMIMEType(typeString) ||
+               nsContentUtils::HasWasmMimeTypeEssence(typeString);
+      }
+#endif
       return nsContentUtils::IsJavascriptMIMEType(typeString);
     case JS::ModuleType::JSON:
       return nsContentUtils::IsJsonMimeType(typeString);
