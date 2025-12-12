@@ -1083,3 +1083,17 @@ function isLikelyFocusChange(rects, frame) {
   }
   return false;
 }
+
+// See if the rect might match the coordinates of the bottom-border of an element
+// given its DOMRect.
+function rectMatchesBottomBorder(r, domRect) {
+  return (
+    r.h <= 2 &&
+    r.x1 >= domRect.x &&
+    r.x1 < domRect.x + domRect.width &&
+    r.x2 > domRect.x &&
+    r.x2 <= domRect.x + domRect.width &&
+    r.y1 >= domRect.bottom - 1.5 &&
+    r.y2 <= domRect.bottom + 1.5
+  );
+}

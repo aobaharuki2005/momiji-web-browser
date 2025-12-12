@@ -50,6 +50,7 @@ add_task(async function () {
   let alreadyFocused = false;
   let inRange = (val, min, max) => min <= val && val <= max;
   let tabBoundingRect = undefined;
+  let urlbarBoundingRect = undefined;
   let expectations = {
     expectedReflows: EXPECTED_REFLOWS,
     frames: {
@@ -95,6 +96,17 @@ add_task(async function () {
               r.y1 >= inputFieldRect.top &&
               r.y2 <= inputFieldRect.bottom
             );
+          },
+        },
+        {
+          name: "Pixel snapping on urlbar bottom border on MacOS & Windows",
+          condition(r) {
+            if (!urlbarBoundingRect) {
+              urlbarBoundingRect = document
+                .getElementById("urlbar")
+                .getBoundingClientRect();
+            }
+            return rectMatchesBottomBorder(r, urlbarBoundingRect);
           },
         },
         {
