@@ -869,14 +869,14 @@ void MacroAssembler::branchFloat32NotInUInt64Range(Address src, Register temp,
 
 // ========================================================================
 // Canonicalization primitives.
-void MacroAssembler::canonicalizeFloat(FloatRegister reg) {
+void MacroAssembler::canonicalizeFloatNaN(FloatRegister reg) {
   Label notNaN;
   branchFloat(DoubleOrdered, reg, reg, &notNaN);
   loadConstantFloat32(float(JS::GenericNaN()), reg);
   bind(&notNaN);
 }
 
-void MacroAssembler::canonicalizeDouble(FloatRegister reg) {
+void MacroAssembler::canonicalizeDoubleNaN(FloatRegister reg) {
   Label notNaN;
   branchDouble(DoubleOrdered, reg, reg, &notNaN);
   loadConstantDouble(JS::GenericNaN(), reg);

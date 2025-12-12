@@ -1254,7 +1254,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         masm.boxNonDouble(JSVAL_TYPE_INT32, ReturnReg, JSReturnOperand);
         break;
       case ValType::F32: {
-        masm.canonicalizeFloat(ReturnFloat32Reg);
+        masm.canonicalizeFloatNaN(ReturnFloat32Reg);
         masm.convertFloat32ToDouble(ReturnFloat32Reg, ReturnDoubleReg);
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         ScratchDoubleScope fpscratch(masm);
@@ -1262,7 +1262,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         break;
       }
       case ValType::F64: {
-        masm.canonicalizeDouble(ReturnDoubleReg);
+        masm.canonicalizeDoubleNaN(ReturnDoubleReg);
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         ScratchDoubleScope fpscratch(masm);
         masm.boxDouble(ReturnDoubleReg, JSReturnOperand, fpscratch);
@@ -1556,11 +1556,11 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
         GenPrintI64(DebugChannel::Function, masm, ReturnReg64);
         break;
       case wasm::ValType::F32:
-        masm.canonicalizeFloat(ReturnFloat32Reg);
+        masm.canonicalizeFloatNaN(ReturnFloat32Reg);
         GenPrintF32(DebugChannel::Function, masm, ReturnFloat32Reg);
         break;
       case wasm::ValType::F64:
-        masm.canonicalizeDouble(ReturnDoubleReg);
+        masm.canonicalizeDoubleNaN(ReturnDoubleReg);
         GenPrintF64(DebugChannel::Function, masm, ReturnDoubleReg);
         break;
       case wasm::ValType::Ref:
@@ -1794,14 +1794,14 @@ static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register instance,
           // Preserve the NaN pattern in the input.
           ScratchDoubleScope fpscratch(masm);
           masm.moveDouble(srcReg, fpscratch);
-          masm.canonicalizeDouble(fpscratch);
+          masm.canonicalizeDoubleNaN(fpscratch);
           GenPrintF64(DebugChannel::Import, masm, fpscratch);
           masm.boxDouble(fpscratch, dst);
         } else if (type == MIRType::Float32) {
           // JS::Values can't store Float32, so convert to a Double.
           ScratchDoubleScope fpscratch(masm);
           masm.convertFloat32ToDouble(srcReg, fpscratch);
-          masm.canonicalizeDouble(fpscratch);
+          masm.canonicalizeDoubleNaN(fpscratch);
           GenPrintF64(DebugChannel::Import, masm, fpscratch);
           masm.boxDouble(fpscratch, dst);
         } else if (type == MIRType::Simd128) {
@@ -1844,7 +1844,7 @@ static void FillArgumentArrayForJitExit(MacroAssembler& masm, Register instance,
           } else {
             masm.loadDouble(src, dscratch);
           }
-          masm.canonicalizeDouble(dscratch);
+          masm.canonicalizeDoubleNaN(dscratch);
           GenPrintF64(DebugChannel::Import, masm, dscratch);
           masm.boxDouble(dscratch, dst);
         } else if (type == MIRType::Simd128) {

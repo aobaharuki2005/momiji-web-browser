@@ -166,15 +166,15 @@ void MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src,
       break;
     case Scalar::Float16:
       loadFloat16(src, dest.fpu(), temp1, temp2, volatileLiveRegs);
-      canonicalizeFloat(dest.fpu());
+      canonicalizeFloatNaN(dest.fpu());
       break;
     case Scalar::Float32:
       loadFloat32(src, dest.fpu());
-      canonicalizeFloat(dest.fpu());
+      canonicalizeFloatNaN(dest.fpu());
       break;
     case Scalar::Float64:
       loadDouble(src, dest.fpu());
-      canonicalizeDouble(dest.fpu());
+      canonicalizeDoubleNaN(dest.fpu());
       break;
     case Scalar::BigInt64:
     case Scalar::BigUint64:
@@ -10753,7 +10753,7 @@ void MacroAssembler::touchFrameValues(Register numStackValues,
 #ifdef FUZZING_JS_FUZZILLI
 void MacroAssembler::fuzzilliHashDouble(FloatRegister src, Register result,
                                         Register temp) {
-  canonicalizeDouble(src);
+  canonicalizeDoubleNaN(src);
 
 #  ifdef JS_PUNBOX64
   Register64 r64(temp);
