@@ -4819,8 +4819,8 @@ int32_t MacroAssemblerRiscv64::GetOffset(int32_t offset, Label* L,
   return offset;
 }
 
-bool MacroAssemblerRiscv64::CalculateOffset(Label* L, int32_t* offset,
-                                            OffsetSize bits) {
+bool MacroAssemblerRiscv64::CalculateOffset(Label* L, OffsetSize bits,
+                                            int32_t* offset) {
   if (!is_near(L, bits)) return false;
   *offset = GetOffset(*offset, L, bits);
   return true;
@@ -4855,16 +4855,16 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
     BlockTrampolinePoolScope block_trampoline_pool(this, 2, 1);
     switch (cond) {
       case Always:
-        if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
+        if (!CalculateOffset(L, OffsetSize::kOffset21, &offset)) return false;
         Assembler::j(offset);
         break;
       case Equal:
         // rs == rt
         if (rt.is_reg() && rs == rt.rm()) {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset21, &offset)) return false;
           Assembler::j(offset);
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::beq(rs, scratch, offset);
         }
         break;
@@ -4873,7 +4873,7 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
         if (rt.is_reg() && rs == rt.rm()) {
           break;  // No code needs to be emitted
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::bne(rs, scratch, offset);
         }
         break;
@@ -4884,17 +4884,17 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
         if (rt.is_reg() && rs == rt.rm()) {
           break;  // No code needs to be emitted.
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::bgt(rs, scratch, offset);
         }
         break;
       case GreaterThanOrEqual:
         // rs >= rt
         if (rt.is_reg() && rs == rt.rm()) {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset21, &offset)) return false;
           Assembler::j(offset);
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::bge(rs, scratch, offset);
         }
         break;
@@ -4903,17 +4903,17 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
         if (rt.is_reg() && rs == rt.rm()) {
           break;  // No code needs to be emitted.
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::blt(rs, scratch, offset);
         }
         break;
       case LessThanOrEqual:
         // rs <= rt
         if (rt.is_reg() && rs == rt.rm()) {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset21, &offset)) return false;
           Assembler::j(offset);
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::ble(rs, scratch, offset);
         }
         break;
@@ -4924,17 +4924,17 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
         if (rt.is_reg() && rs == rt.rm()) {
           break;  // No code needs to be emitted.
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::bgtu(rs, scratch, offset);
         }
         break;
       case AboveOrEqual:
         // rs >= rt
         if (rt.is_reg() && rs == rt.rm()) {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset21, &offset)) return false;
           Assembler::j(offset);
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::bgeu(rs, scratch, offset);
         }
         break;
@@ -4943,17 +4943,17 @@ bool MacroAssemblerRiscv64::BranchShortHelper(int32_t offset, Label* L,
         if (rt.is_reg() && rs == rt.rm()) {
           break;  // No code needs to be emitted.
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           bltu(rs, scratch, offset);
         }
         break;
       case BelowOrEqual:
         // rs <= rt
         if (rt.is_reg() && rs == rt.rm()) {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset21)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset21, &offset)) return false;
           Assembler::j(offset);
         } else {
-          if (!CalculateOffset(L, &offset, OffsetSize::kOffset13)) return false;
+          if (!CalculateOffset(L, OffsetSize::kOffset13, &offset)) return false;
           Assembler::bleu(rs, scratch, offset);
         }
         break;

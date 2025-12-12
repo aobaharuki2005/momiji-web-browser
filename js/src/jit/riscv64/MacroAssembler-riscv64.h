@@ -117,8 +117,7 @@ class MacroAssemblerRiscv64 : public Assembler {
     nopAlign(alignment);
   }
 
-  // TODO(RISCV) Reorder parameters so out parameters come last.
-  bool CalculateOffset(Label* L, int32_t* offset, OffsetSize bits);
+  bool CalculateOffset(Label* L, OffsetSize bits, int32_t* offset);
   int32_t GetOffset(int32_t offset, Label* L, OffsetSize bits);
 
   inline void GenPCRelativeJump(Register rd, int32_t imm32) {
