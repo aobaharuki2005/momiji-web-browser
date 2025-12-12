@@ -12,6 +12,7 @@ use crate::command_buffer::{CommandBufferBuilderKind, CommandBufferList, Command
 use crate::gpu_types::UvRectKind;
 use crate::internal_types::{FastHashMap, Filter};
 use crate::picture::PictureCompositeMode;
+use crate::svg_filter::get_coverage_source_svgfe;
 use crate::tile_cache::{TileKey, SubSliceIndex, MAX_COMPOSITOR_SURFACES};
 use crate::prim_store::PictureIndex;
 use crate::profiler;
@@ -970,7 +971,7 @@ pub fn get_surface_rects(
             // to produce to satisfy the invalidation rect, then clip it by the
             // original primitive rect because we have no reason to produce any
             // out of bounds pixels; they would just be blank anyway.
-            let source_potential_subregion = composite_mode.get_coverage_source_svgfe(
+            let source_potential_subregion = get_coverage_source_svgfe(
                 filters, visible_subregion.cast_unit());
             let source_subregion =
                 source_potential_subregion

@@ -140,6 +140,7 @@ mod rectangle_occlusion;
 mod picture_textures;
 mod frame_allocator;
 mod bump_allocator;
+mod svg_filter;
 
 ///
 pub mod intern;
