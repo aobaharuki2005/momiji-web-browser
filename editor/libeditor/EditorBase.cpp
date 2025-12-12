@@ -1928,6 +1928,7 @@ nsresult EditorBase::PasteAsAction(nsIClipboard::ClipboardType aClipboardType,
       // This method is not set up to pass back the new aDataTransfer
       // if it changes. If we need this in the future, we can change
       // aDataTransfer to be a RefPtr<DataTransfer>*.
+      MOZ_ASSERT(!aDataTransfer);
       AutoTrackDataTransferForPaste trackDataTransfer(*this, dataTransfer);
 
       ret = DispatchClipboardEventAndUpdateClipboard(

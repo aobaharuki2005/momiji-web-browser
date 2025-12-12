@@ -13,43 +13,6 @@ const kBaseUrlForContent = getRootDirectory(gTestPath).replace(
   "https://example.com"
 );
 
-const kPasteCommandTests = [
-  { description: "Test paste command without editing" },
-  {
-    description: "Test paste command on <textarea>",
-    setupFn: aBrowser => {
-      return SpecialPowers.spawn(aBrowser, [], () => {
-        const textarea = content.document.createElement("textarea");
-        content.document.body.appendChild(textarea);
-        textarea.focus();
-      });
-    },
-    additionalCheckFunc: (aBrowser, aClipboardData) => {
-      return SpecialPowers.spawn(aBrowser, [aClipboardData], aClipboardData => {
-        const textarea = content.document.querySelector("textarea");
-        is(textarea.value, aClipboardData, "check <textarea> value");
-      });
-    },
-  },
-  {
-    description: "Test paste command on <div contenteditable=true>",
-    setupFn: aBrowser => {
-      return SpecialPowers.spawn(aBrowser, [], () => {
-        const div = content.document.createElement("div");
-        div.setAttribute("contenteditable", "true");
-        content.document.body.appendChild(div);
-        div.focus();
-      });
-    },
-    additionalCheckFunc: (aBrowser, aClipboardData) => {
-      return SpecialPowers.spawn(aBrowser, [aClipboardData], aClipboardData => {
-        const div = content.document.querySelector("div");
-        is(div.innerText, aClipboardData, "check contenteditable innerText");
-      });
-    },
-  },
-];
-
 Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js",
   this
@@ -87,12 +50,10 @@ function promisePasteButtonIsShown() {
     ok(true, "Witnessed 'popupshown' event for 'Paste' button.");
 
     const pasteButton = document.getElementById(kPasteMenuItemId);
-    if (Services.prefs.getIntPref("security.dialog_enable_delay") > 0) {
-      ok(
-        pasteButton.disabled,
-        "Paste button should be shown with disabled by default"
-      );
-    }
+    ok(
+      pasteButton.disabled,
+      "Paste button should be shown with disabled by default"
+    );
     await BrowserTestUtils.waitForMutationCondition(
       pasteButton,
       { attributeFilter: ["disabled"] },

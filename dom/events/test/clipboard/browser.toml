@@ -11,20 +11,6 @@ support-files = [
 
 ["browser_document_command_paste.js"]
 
-["browser_document_command_paste_contextmenu.js"]
-skip-if = [
-  "headless", # bug 1989339
-]
-
-["browser_document_command_paste_contextmenu_ext.js"]
-skip-if = [
-  "headless", # bug 1989339
-]
-
-["browser_document_command_paste_contextmenu_suppression.js"]
-
-["browser_document_command_paste_contextmenu_suppression_ext.js"]
-
 ["browser_navigator_clipboard_clickjacking.js"]
 support-files = ["simple_navigator_clipboard_keydown.html"]
 run-if = [
@@ -80,7 +66,6 @@ support-files = [
 skip-if = [
   "headless", # bug 1989339
 ]
-
 ["browser_navigator_clipboard_read_ext.js"]
 support-files = ["simple_page_ext.html"]
 skip-if = [

@@ -3021,12 +3021,6 @@
   value: true
   mirror: always
 
-# Whether to expose execCommand("paste") to web content.
-- name: dom.execCommand.paste.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether to expose test interfaces of various sorts
 - name: dom.expose_test_interfaces
   type: bool
