@@ -2115,8 +2115,8 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(iconsR.drawable.mozac_ic_back_24, result.drawableResId)
         assertEquals(R.string.browser_menu_back, result.contentDescription)
         assertEquals(ActionButton.State.DISABLED, result.state)
-        assertEquals(NavigateBackClicked, result.onClick)
-        assertEquals(NavigateBackLongClicked, result.onLongClick)
+        assertEquals(NavigateBackClicked(Source.AddressBar), result.onClick)
+        assertEquals(NavigateBackLongClicked(Source.AddressBar), result.onLongClick)
     }
 
     @Test
@@ -2312,7 +2312,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(iconsR.drawable.mozac_ic_translate_24, result.drawableResId)
         assertEquals(R.string.browser_toolbar_translate, result.contentDescription)
         assertEquals(ActionButton.State.DEFAULT, result.state)
-        assertEquals(TranslateClicked, result.onClick)
+        assertEquals(TranslateClicked(Source.AddressBar), result.onClick)
     }
 
     @Test
@@ -2942,7 +2942,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore()
 
         val translateButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
-        assertEquals(expectedTranslateButton(), translateButton)
+        assertEquals(expectedTranslateButton(source = Source.NavigationBar), translateButton)
     }
 
     @Test
@@ -2962,7 +2962,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore()
 
         val translateButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
-        assertEquals(expectedTranslateButton(isActive = true), translateButton)
+        assertEquals(expectedTranslateButton(isActive = true, source = Source.NavigationBar), translateButton)
     }
 
     @Test
@@ -2986,7 +2986,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore()
 
         val backButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
-        assertEquals(expectedGoBackButton(isActive = false), backButton)
+        assertEquals(expectedGoBackButton(isActive = false, source = Source.NavigationBar), backButton)
     }
 
     @Test
@@ -3011,7 +3011,7 @@ class BrowserToolbarMiddlewareTest {
         mainLooperRule.idle()
 
         val backButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
-        assertEquals(expectedGoBackButton(), backButton)
+        assertEquals(expectedGoBackButton(source = Source.NavigationBar), backButton)
     }
 
     @Test
@@ -3102,25 +3102,31 @@ class BrowserToolbarMiddlewareTest {
         onLongClick = NavigateForwardLongClicked,
     )
 
-    private fun expectedGoBackButton(isActive: Boolean = true) = ActionButtonRes(
+    private fun expectedGoBackButton(
+        isActive: Boolean = true,
+        source: Source = Source.AddressBar,
+    ) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_back_24,
         contentDescription = R.string.browser_menu_back,
         state = when (isActive) {
             true -> ActionButton.State.DEFAULT
             false -> ActionButton.State.DISABLED
         },
-        onClick = NavigateBackClicked,
-        onLongClick = NavigateBackLongClicked,
+        onClick = NavigateBackClicked(source),
+        onLongClick = NavigateBackLongClicked(source),
     )
 
-    private fun expectedTranslateButton(isActive: Boolean = false) = ActionButtonRes(
+    private fun expectedTranslateButton(
+        isActive: Boolean = false,
+        source: Source = Source.AddressBar,
+    ) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_translate_24,
         contentDescription = R.string.browser_toolbar_translate,
         state = when (isActive) {
             true -> ActionButton.State.ACTIVE
             false -> ActionButton.State.DEFAULT
         },
-        onClick = TranslateClicked,
+        onClick = TranslateClicked(source),
     )
 
     private fun expectedTabCounterButton(
