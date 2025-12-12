@@ -545,12 +545,6 @@
     proxy: WordSized
   mir_op: true
 
-- name: GuardDOMExpandoMissingOrGuardShape
-  operands:
-    input: BoxedValue
-  num_temps: 1
-  mir_op: true
-
 - name: ApplyArgsGeneric
   gen_boilerplate: false
 
@@ -2973,11 +2967,6 @@
   call_instruction: true
   mir_op: true
 
-- name: GuardNoDenseElements
-  operands:
-    input: WordSized
-  num_temps: 1
-
 - name: InCache
   result_type: WordSized
   operands:
@@ -3559,16 +3548,6 @@
   num_temps: 1
   mir_op: true
 
-- name: GuardNullOrUndefined
-  operands:
-    input: BoxedValue
-  mir_op: true
-
-- name: GuardIsNotObject
-  operands:
-    input: BoxedValue
-  mir_op: true
-
 - name: GuardFunctionFlags
   operands:
     function: WordSized
@@ -3591,14 +3570,6 @@
   num_temps: 1
   call_instruction: true
 
-- name: CheckObjCoercible
-  operands:
-    value: BoxedValue
-
-- name: CheckThis
-  operands:
-    value: BoxedValue
-
 - name: Generator
   result_type: WordSized
   operands:
@@ -3615,11 +3586,6 @@
     canSkip: WordSized
   call_instruction: true
   mir_op: true
-
-- name: DebugCheckSelfHosted
-  operands:
-    value: BoxedValue
-  call_instruction: true
 
 - name: ObjectStaticProto
   result_type: WordSized

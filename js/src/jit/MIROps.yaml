@@ -2607,6 +2607,8 @@
   congruent_to: if_operands_equal
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
 
 - name: GuardIsNotObject
   operands:
@@ -2617,6 +2619,8 @@
   congruent_to: if_operands_equal
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
 
 - name: GuardFunctionFlags
   gen_boilerplate: false
@@ -2753,6 +2757,9 @@
   guard: true
   movable: true
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardTagNotEqual
   gen_boilerplate: false
@@ -2994,6 +3001,9 @@
   movable: true
   congruent_to: custom
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 # Read length field of a JSString*.
 - name: StringLength
@@ -3291,6 +3301,8 @@
   guard: true
   folds_to: custom
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
 
 - name: AsyncResolve
   operands:
@@ -3397,6 +3409,8 @@
   folds_to: custom
   # Throws on null or undefined.
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
 
 - name: CheckClassHeritage
   operands:
@@ -3412,6 +3426,9 @@
     checkValue: Value
   result_type: Value
   guard: true
+  possibly_calls: true
+  generate_lir: true
+  lir_result_type: none
 
 - name: IsPackedArray
   operands:
