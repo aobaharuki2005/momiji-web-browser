@@ -185,6 +185,15 @@
 #   - attribute not specified (default): number of temps is set to 0
 #   - number: sets number of temps max 15
 #
+# lir_result_type
+# ===============
+# Specifies the result_type of the corresponding LIR op in case generate_lir is
+# true.
+# Possible values:
+#   - attribute not specified (default): the LIR result type is based on the MIR
+#     op's result_type
+#   - none: the LIR instruction does not produce a result
+#   - result type: the LIR op's result type
 
 # TODO(no-TI): try to remove this instruction.
 - name: Start
@@ -403,6 +412,8 @@
   congruent_to: if_operands_equal
   # The is-constructor flag is immutable for a bound function.
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
 
 # Setting __proto__ in an object literal.
 - name: MutateProto
@@ -663,6 +674,9 @@
   congruent_to: custom
   # The flags are packed with the length in a fixed private slot.
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 # Guard cx->realm() == obj->realm().
 - name: GuardObjectHasSameRealm
@@ -675,6 +689,9 @@
   # The object's realm is immutable. The context's realm must always be the same
   # realm for this compilation.
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: LoadScriptedProxyHandler
   operands:
@@ -1870,6 +1887,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 # Guard a resizable typed array is in-bounds.
 - name: GuardResizableArrayBufferViewInBounds
@@ -1880,6 +1900,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 # Guard a resizable typed array is in-bounds or detached.
 - name: GuardResizableArrayBufferViewInBoundsOrDetached
@@ -1890,6 +1913,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 # Inline TypedArray.prototype.fill
 - name: TypedArrayFill
@@ -2265,6 +2291,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardGlobalGeneration
   arguments:
@@ -2286,6 +2315,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardIsNotDOMProxy
   operands:
@@ -2295,6 +2327,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardIsNotProxy
   operands:
@@ -2305,6 +2340,9 @@
   congruent_to: if_operands_equal
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: ProxyGet
   operands:
@@ -2491,6 +2529,9 @@
   congruent_to: if_operands_equal
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardIsTypedArray
   operands:
@@ -2500,6 +2541,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardIsNonResizableTypedArray
   operands:
@@ -2509,6 +2553,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardIsResizableTypedArray
   operands:
@@ -2518,6 +2565,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardHasProxyHandler
   operands:
@@ -2529,6 +2579,8 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
 
 # Loads a specific JSObject* that was originally nursery-allocated.
 # See also WarpObjectField.
@@ -2577,6 +2629,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardFunctionKind
   operands:
@@ -2589,6 +2644,9 @@
   movable: true
   congruent_to: custom
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardFunctionScript
   operands:
@@ -2606,6 +2664,8 @@
   # self-hosted functions is an exception to this, but we don't use this
   # guard for self-hosted functions.
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
 
 - name: GuardObjectIdentity
   gen_boilerplate: false
@@ -2624,6 +2684,9 @@
   congruent_to: custom
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardSpecificSymbol
   gen_boilerplate: false
@@ -2638,6 +2701,8 @@
   movable: true
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
 
 - name: GuardStringToIndex
   operands:
@@ -3269,6 +3334,8 @@
   guard: true
   folds_to: custom
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
 
 - name: Generator
   gen_boilerplate: false
@@ -3336,6 +3403,9 @@
     heritage: Value
   result_type: Value
   guard: true
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 2
 
 - name: DebugCheckSelfHosted
   operands:
@@ -3360,6 +3430,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 2
 
 - name: GuardElementsArePacked
   operands:
@@ -3495,6 +3568,9 @@
   possibly_calls: true
   congruent_to: custom
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 3
 
 - name: GuardIsExtensible
   operands:
@@ -3504,6 +3580,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 1
 
 - name: GuardInt32IsNonNegative
   operands:
@@ -3514,6 +3593,8 @@
   congruent_to: if_operands_equal
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
 
 - name: GuardIntPtrIsNonNegative
   operands:
@@ -3538,6 +3619,8 @@
   congruent_to: if_operands_equal
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
 
 # Guard the input index is either greater than the dense initialized length of
 # an object, or a hole element.
@@ -3550,6 +3633,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 2
 
 # Guard an array object's length can be updated successfully when adding an
 # element at the input index.
@@ -3562,6 +3648,9 @@
   movable: true
   congruent_to: if_operands_equal
   alias_set: custom
+  generate_lir: true
+  lir_result_type: none
+  lir_temps: 2
 
 # Add or update a sparse element of an ArrayObject or PlainObject. It's allowed
 # for the sparse element to be already present on the object. It may also be an
@@ -3653,6 +3742,8 @@
   congruent_to: if_operands_equal
   folds_to: custom
   alias_set: none
+  generate_lir: true
+  lir_result_type: none
 
 - name: ToHashableNonGCThing
   operands:

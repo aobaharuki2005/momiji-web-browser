@@ -464,23 +464,6 @@
 - name: GetInlinedArgumentHole
   gen_boilerplate: false
 
-# Guard that the given flags are not set on the arguments object.
-- name: GuardArgumentsObjectFlags
-  operands:
-    argsObject: WordSized
-  num_temps: 1
-  mir_op: true
-
-- name: GuardObjectHasSameRealm
-  operands:
-    object: WordSized
-  num_temps: 1
-  mir_op: true
-
-- name: GuardBoundFunctionIsConstructor
-  operands:
-    object: WordSized
-
 - name: BoxNonStrictThis
   result_type: WordSized
   operands:
@@ -2035,23 +2018,6 @@
     synchronization: js::jit::Synchronization
   num_temps: 1
 
-# Guard a resizable array buffer view is in-bounds.
-- name: GuardResizableArrayBufferViewInBounds
-  operands:
-    object: WordSized
-  num_temps: 1
-
-# Guard a resizable array buffer view is in-bounds.
-- name: GuardResizableArrayBufferViewInBoundsOrDetached
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardHasAttachedArrayBuffer
-  operands:
-    object: WordSized
-  num_temps: 1
-
 # Double to IntPtr, eligible for accessing into a TypedArray or DataView. If
 # the index isn't exactly representable as an IntPtr, depending on the
 # supportOOB flag on the MIR instruction, either bail out or produce an IntPtr
@@ -2983,20 +2949,9 @@
     input: WordSized
     expected: WordSized
 
-- name: GuardSpecificAtom
-  operands:
-    str: WordSized
-  num_temps: 1
-  mir_op: true
-
 - name: GuardSpecificSymbol
   operands:
     symbol: WordSized
-  mir_op: true
-
-- name: GuardSpecificInt32
-  operands:
-    num: WordSized
   mir_op: true
 
 - name: GuardProto
@@ -3010,57 +2965,12 @@
     object: WordSized
   num_temps: 1
 
-- name: GuardIsNativeObject
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardIsProxy
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardIsNotProxy
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardIsNotDOMProxy
-  operands:
-    proxy: WordSized
-  num_temps: 1
-
 - name: ProxyHasProp
   result_type: BoxedValue
   operands:
     proxy: WordSized
     id: BoxedValue
   call_instruction: true
-  mir_op: true
-
-- name: GuardIsNotArrayBufferMaybeShared
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardIsTypedArray
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardIsNonResizableTypedArray
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardIsResizableTypedArray
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardHasProxyHandler
-  operands:
-    object: WordSized
   mir_op: true
 
 - name: GuardNoDenseElements
@@ -3664,22 +3574,6 @@
     function: WordSized
   mir_op: true
 
-- name: GuardFunctionIsNonBuiltinCtor
-  operands:
-    function: WordSized
-  num_temps: 1
-
-- name: GuardFunctionKind
-  operands:
-    function: WordSized
-  num_temps: 1
-  mir_op: true
-
-- name: GuardFunctionScript
-  operands:
-    function: WordSized
-  mir_op: true
-
 - name: LexicalCheck
   operands:
     input: BoxedValue
@@ -3701,18 +3595,9 @@
   operands:
     value: BoxedValue
 
-- name: CheckClassHeritage
-  operands:
-    heritage: BoxedValue
-  num_temps: 2
-
 - name: CheckThis
   operands:
     value: BoxedValue
-
-- name: CheckThisReinit
-  operands:
-    thisValue: BoxedValue
 
 - name: Generator
   result_type: WordSized
@@ -3736,12 +3621,6 @@
     value: BoxedValue
   call_instruction: true
 
-- name: GuardArrayIsPacked
-  operands:
-    array: WordSized
-  num_temps: 2
-  mir_op: true
-
 - name: ObjectStaticProto
   result_type: WordSized
   operands:
@@ -3751,43 +3630,6 @@
   operands:
     lhs: WordSized
     rhs: WordSized
-
-- name: GuardHasGetterSetter
-  operands:
-    object: WordSized
-  num_temps: 3
-  call_instruction: true
-  mir_op: true
-
-- name: GuardIsExtensible
-  operands:
-    object: WordSized
-  num_temps: 1
-
-- name: GuardInt32IsNonNegative
-  operands:
-    index: WordSized
-
-- name: GuardInt32Range
-  operands:
-    input: WordSized
-  mir_op: true
-
-- name: GuardIndexIsNotDenseElement
-  operands:
-    object: WordSized
-    index: WordSized
-  num_temps: 2
-
-- name: GuardIndexIsValidUpdateOrAdd
-  operands:
-    object: WordSized
-    index: WordSized
-  num_temps: 2
-
-- name: GuardNonGCThing
-  operands:
-    input: BoxedValue
 
 # Canonicalize a double value.
 - name: CanonicalizeNaND
