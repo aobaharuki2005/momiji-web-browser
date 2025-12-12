@@ -27,6 +27,7 @@ UNIFIED_SOURCES += [
     "LanguageTag.cpp",
     "ListFormat.cpp",
     "Locale.cpp",
+    "LocaleNegotiation.cpp",
     "NumberFormat.cpp",
     "PluralRules.cpp",
     "RelativeTimeFormat.cpp",
