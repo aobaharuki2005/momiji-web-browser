@@ -16,7 +16,6 @@
 
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
-#include "builtin/intl/LocaleNegotiation.h"
 #include "builtin/intl/StringAsciiChars.h"
 #include "gc/AllocKind.h"
 #include "gc/GCContext.h"
@@ -42,7 +41,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace js::intl;
 
 const JSClassOps SegmenterObject::classOps_ = {
     nullptr,                    // addProperty
@@ -68,9 +66,6 @@ const JSClass SegmenterObject::class_ = {
 
 const JSClass& SegmenterObject::protoClass_ = PlainObject::class_;
 
-static bool segmenter_supportedLocalesOf(JSContext* cx, unsigned argc,
-                                         Value* vp);
-
 static bool segmenter_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setString(cx->names().Segmenter);
@@ -78,7 +73,8 @@ static bool segmenter_toSource(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSFunctionSpec segmenter_static_methods[] = {
-    JS_FN("supportedLocalesOf", segmenter_supportedLocalesOf, 1, 0),
+    JS_SELF_HOSTED_FN("supportedLocalesOf", "Intl_Segmenter_supportedLocalesOf",
+                      1, 0),
     JS_FS_END,
 };
 
@@ -1025,22 +1021,5 @@ bool js::intl_FindNextSegmentBoundaries(JSContext* cx, unsigned argc,
   }
 
   args.rval().setObject(*result);
-  return true;
-}
-
-/**
- * Intl.Segmenter.supportedLocalesOf ( locales [ , options ] )
- */
-static bool segmenter_supportedLocalesOf(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Steps 1-3.
-  auto* array = SupportedLocalesOf(cx, AvailableLocaleKind::Segmenter,
-                                   args.get(0), args.get(1));
-  if (!array) {
-    return false;
-  }
-  args.rval().setObject(*array);
   return true;
 }

@@ -14,7 +14,6 @@
 #include "builtin/Array.h"
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
-#include "builtin/intl/LocaleNegotiation.h"
 #include "gc/GCContext.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
@@ -27,7 +26,6 @@
 #include "vm/ObjectOperations-inl.h"
 
 using namespace js;
-using namespace js::intl;
 
 const JSClassOps ListFormatObject::classOps_ = {
     nullptr,                     // addProperty
@@ -52,9 +50,6 @@ const JSClass ListFormatObject::class_ = {
 
 const JSClass& ListFormatObject::protoClass_ = PlainObject::class_;
 
-static bool listFormat_supportedLocalesOf(JSContext* cx, unsigned argc,
-                                          Value* vp);
-
 static bool listFormat_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setString(cx->names().ListFormat);
@@ -62,7 +57,8 @@ static bool listFormat_toSource(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSFunctionSpec listFormat_static_methods[] = {
-    JS_FN("supportedLocalesOf", listFormat_supportedLocalesOf, 1, 0),
+    JS_SELF_HOSTED_FN("supportedLocalesOf",
+                      "Intl_ListFormat_supportedLocalesOf", 1, 0),
     JS_FS_END,
 };
 
@@ -380,21 +376,4 @@ bool js::intl_FormatList(JSContext* cx, unsigned argc, Value* vp) {
     return FormatListToParts(cx, lf, list, args.rval());
   }
   return FormatList(cx, lf, list, args.rval());
-}
-
-/**
- * Intl.ListFormat.supportedLocalesOf ( locales [ , options ] )
- */
-static bool listFormat_supportedLocalesOf(JSContext* cx, unsigned argc,
-                                          Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Steps 1-3.
-  auto* array = SupportedLocalesOf(cx, AvailableLocaleKind::ListFormat,
-                                   args.get(0), args.get(1));
-  if (!array) {
-    return false;
-  }
-  args.rval().setObject(*array);
-  return true;
 }

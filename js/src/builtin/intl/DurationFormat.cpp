@@ -24,7 +24,6 @@
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
 #include "builtin/intl/ListFormat.h"
-#include "builtin/intl/LocaleNegotiation.h"
 #include "builtin/intl/NumberFormat.h"
 #include "builtin/temporal/Duration.h"
 #include "gc/AllocKind.h"
@@ -69,8 +68,6 @@ const JSClass& DurationFormatObject::protoClass_ = PlainObject::class_;
 static bool durationFormat_format(JSContext* cx, unsigned argc, Value* vp);
 static bool durationFormat_formatToParts(JSContext* cx, unsigned argc,
                                          Value* vp);
-static bool durationFormat_supportedLocalesOf(JSContext* cx, unsigned argc,
-                                              Value* vp);
 
 static bool durationFormat_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -79,7 +76,8 @@ static bool durationFormat_toSource(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSFunctionSpec durationFormat_static_methods[] = {
-    JS_FN("supportedLocalesOf", durationFormat_supportedLocalesOf, 1, 0),
+    JS_SELF_HOSTED_FN("supportedLocalesOf",
+                      "Intl_DurationFormat_supportedLocalesOf", 1, 0),
     JS_FS_END,
 };
 
@@ -1800,23 +1798,6 @@ static bool durationFormat_formatToParts(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsDurationFormat, durationFormat_formatToParts>(
       cx, args);
-}
-
-/**
- * Intl.DurationFormat.supportedLocalesOf ( locales [ , options ] )
- */
-static bool durationFormat_supportedLocalesOf(JSContext* cx, unsigned argc,
-                                              Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Steps 1-3.
-  auto* array = SupportedLocalesOf(cx, AvailableLocaleKind::DurationFormat,
-                                   args.get(0), args.get(1));
-  if (!array) {
-    return false;
-  }
-  args.rval().setObject(*array);
-  return true;
 }
 
 bool js::TemporalDurationToLocaleString(JSContext* cx,

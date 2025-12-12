@@ -32,7 +32,6 @@
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
-#include "builtin/intl/LocaleNegotiation.h"
 #include "builtin/intl/RelativeTimeFormat.h"
 #include "gc/GCContext.h"
 #include "js/CharacterEncoding.h"
@@ -51,7 +50,6 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-using namespace js::intl;
 
 using mozilla::AssertedCast;
 
@@ -81,9 +79,6 @@ const JSClass NumberFormatObject::class_ = {
 
 const JSClass& NumberFormatObject::protoClass_ = PlainObject::class_;
 
-static bool numberFormat_supportedLocalesOf(JSContext* cx, unsigned argc,
-                                            Value* vp);
-
 static bool numberFormat_toSource(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setString(cx->names().NumberFormat);
@@ -91,7 +86,8 @@ static bool numberFormat_toSource(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSFunctionSpec numberFormat_static_methods[] = {
-    JS_FN("supportedLocalesOf", numberFormat_supportedLocalesOf, 1, 0),
+    JS_SELF_HOSTED_FN("supportedLocalesOf",
+                      "Intl_NumberFormat_supportedLocalesOf", 1, 0),
     JS_FS_END,
 };
 
@@ -1444,21 +1440,4 @@ ArrayObject* js::intl::FormatNumberToParts(
   }
   return FormattedNumberToParts(cx, str, parts, DisplayNumberPartSource::No,
                                 DisplayLiteralUnit::Yes, unit);
-}
-
-/**
- * Intl.NumberFormat.supportedLocalesOf ( locales [ , options ] )
- */
-static bool numberFormat_supportedLocalesOf(JSContext* cx, unsigned argc,
-                                            Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  // Steps 1-3.
-  auto* array = SupportedLocalesOf(cx, AvailableLocaleKind::NumberFormat,
-                                   args.get(0), args.get(1));
-  if (!array) {
-    return false;
-  }
-  args.rval().setObject(*array);
-  return true;
 }

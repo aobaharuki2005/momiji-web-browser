@@ -9795,9 +9795,9 @@ static bool GetAvailableLocalesOf(JSContext* cx, unsigned argc, Value* vp) {
 
   ArrayObject* result;
 #ifdef JS_HAS_INTL_API
-  using AvailableLocaleKind = js::intl::AvailableLocaleKind;
+  using SupportedLocaleKind = js::intl::SharedIntlData::SupportedLocaleKind;
 
-  AvailableLocaleKind kind;
+  SupportedLocaleKind kind;
   {
     JSLinearString* typeStr = arg.toString()->ensureLinear(cx);
     if (!typeStr) {
@@ -9805,23 +9805,23 @@ static bool GetAvailableLocalesOf(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     if (StringEqualsLiteral(typeStr, "Collator")) {
-      kind = AvailableLocaleKind::Collator;
+      kind = SupportedLocaleKind::Collator;
     } else if (StringEqualsLiteral(typeStr, "DateTimeFormat")) {
-      kind = AvailableLocaleKind::DateTimeFormat;
+      kind = SupportedLocaleKind::DateTimeFormat;
     } else if (StringEqualsLiteral(typeStr, "DisplayNames")) {
-      kind = AvailableLocaleKind::DisplayNames;
+      kind = SupportedLocaleKind::DisplayNames;
     } else if (StringEqualsLiteral(typeStr, "DurationFormat")) {
-      kind = AvailableLocaleKind::DurationFormat;
+      kind = SupportedLocaleKind::DurationFormat;
     } else if (StringEqualsLiteral(typeStr, "ListFormat")) {
-      kind = AvailableLocaleKind::ListFormat;
+      kind = SupportedLocaleKind::ListFormat;
     } else if (StringEqualsLiteral(typeStr, "NumberFormat")) {
-      kind = AvailableLocaleKind::NumberFormat;
+      kind = SupportedLocaleKind::NumberFormat;
     } else if (StringEqualsLiteral(typeStr, "PluralRules")) {
-      kind = AvailableLocaleKind::PluralRules;
+      kind = SupportedLocaleKind::PluralRules;
     } else if (StringEqualsLiteral(typeStr, "RelativeTimeFormat")) {
-      kind = AvailableLocaleKind::RelativeTimeFormat;
+      kind = SupportedLocaleKind::RelativeTimeFormat;
     } else if (StringEqualsLiteral(typeStr, "Segmenter")) {
-      kind = AvailableLocaleKind::Segmenter;
+      kind = SupportedLocaleKind::Segmenter;
     } else {
       ReportUsageErrorASCII(cx, callee, "Unsupported Intl constructor name");
       return false;

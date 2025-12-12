@@ -25,7 +25,6 @@
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/FormatBuffer.h"
 #include "builtin/intl/LanguageTag.h"
-#include "builtin/intl/LocaleNegotiation.h"
 #include "builtin/intl/StringAsciiChars.h"
 #include "builtin/String.h"
 #include "js/Conversions.h"

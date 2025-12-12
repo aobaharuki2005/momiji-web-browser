@@ -561,21 +561,21 @@ static bool IsSameAvailableLocales(const AvailableLocales1& availableLocales1,
 }
 #endif
 
-bool js::intl::SharedIntlData::ensureAvailableLocales(JSContext* cx) {
-  if (availableLocalesInitialized) {
+bool js::intl::SharedIntlData::ensureSupportedLocales(JSContext* cx) {
+  if (supportedLocalesInitialized) {
     return true;
   }
 
-  // If ensureAvailableLocales() was called previously, but didn't complete due
+  // If ensureSupportedLocales() was called previously, but didn't complete due
   // to OOM, clear all data and start from scratch.
-  availableLocales.clearAndCompact();
-  collatorAvailableLocales.clearAndCompact();
+  supportedLocales.clearAndCompact();
+  collatorSupportedLocales.clearAndCompact();
 
-  if (!getAvailableLocales(cx, availableLocales,
+  if (!getAvailableLocales(cx, supportedLocales,
                            mozilla::intl::Locale::GetAvailableLocales())) {
     return false;
   }
-  if (!getAvailableLocales(cx, collatorAvailableLocales,
+  if (!getAvailableLocales(cx, collatorSupportedLocales,
                            mozilla::intl::Collator::GetAvailableLocales())) {
     return false;
   }
@@ -588,61 +588,66 @@ bool js::intl::SharedIntlData::ensureAvailableLocales(JSContext* cx) {
       mozilla::intl::Locale::GetAvailableLocales(),
       mozilla::intl::NumberFormat::GetAvailableLocales()));
 
-  MOZ_ASSERT(!availableLocalesInitialized,
-             "ensureAvailableLocales is neither reentrant nor thread-safe");
-  availableLocalesInitialized = true;
+  MOZ_ASSERT(!supportedLocalesInitialized,
+             "ensureSupportedLocales is neither reentrant nor thread-safe");
+  supportedLocalesInitialized = true;
 
   return true;
 }
 
-bool js::intl::SharedIntlData::isAvailableLocale(JSContext* cx,
-                                                 AvailableLocaleKind kind,
-                                                 Handle<JSLinearString*> locale,
-                                                 bool* available) {
-  if (!ensureAvailableLocales(cx)) {
+bool js::intl::SharedIntlData::isSupportedLocale(JSContext* cx,
+                                                 SupportedLocaleKind kind,
+                                                 HandleString locale,
+                                                 bool* supported) {
+  if (!ensureSupportedLocales(cx)) {
     return false;
   }
 
-  LocaleHasher::Lookup lookup(locale);
+  JSLinearString* localeLinear = locale->ensureLinear(cx);
+  if (!localeLinear) {
+    return false;
+  }
+
+  LocaleHasher::Lookup lookup(localeLinear);
 
   switch (kind) {
-    case AvailableLocaleKind::Collator:
-      *available = collatorAvailableLocales.has(lookup);
+    case SupportedLocaleKind::Collator:
+      *supported = collatorSupportedLocales.has(lookup);
       return true;
-    case AvailableLocaleKind::DateTimeFormat:
-    case AvailableLocaleKind::DisplayNames:
-    case AvailableLocaleKind::DurationFormat:
-    case AvailableLocaleKind::ListFormat:
-    case AvailableLocaleKind::NumberFormat:
-    case AvailableLocaleKind::PluralRules:
-    case AvailableLocaleKind::RelativeTimeFormat:
-    case AvailableLocaleKind::Segmenter:
-      *available = availableLocales.has(lookup);
+    case SupportedLocaleKind::DateTimeFormat:
+    case SupportedLocaleKind::DisplayNames:
+    case SupportedLocaleKind::DurationFormat:
+    case SupportedLocaleKind::ListFormat:
+    case SupportedLocaleKind::NumberFormat:
+    case SupportedLocaleKind::PluralRules:
+    case SupportedLocaleKind::RelativeTimeFormat:
+    case SupportedLocaleKind::Segmenter:
+      *supported = supportedLocales.has(lookup);
       return true;
   }
   MOZ_CRASH("Invalid Intl constructor");
 }
 
 js::ArrayObject* js::intl::SharedIntlData::availableLocalesOf(
-    JSContext* cx, AvailableLocaleKind kind) {
-  if (!ensureAvailableLocales(cx)) {
+    JSContext* cx, SupportedLocaleKind kind) {
+  if (!ensureSupportedLocales(cx)) {
     return nullptr;
   }
 
   LocaleSet* localeSet = nullptr;
   switch (kind) {
-    case AvailableLocaleKind::Collator:
-      localeSet = &collatorAvailableLocales;
+    case SupportedLocaleKind::Collator:
+      localeSet = &collatorSupportedLocales;
       break;
-    case AvailableLocaleKind::DateTimeFormat:
-    case AvailableLocaleKind::DisplayNames:
-    case AvailableLocaleKind::DurationFormat:
-    case AvailableLocaleKind::ListFormat:
-    case AvailableLocaleKind::NumberFormat:
-    case AvailableLocaleKind::PluralRules:
-    case AvailableLocaleKind::RelativeTimeFormat:
-    case AvailableLocaleKind::Segmenter:
-      localeSet = &availableLocales;
+    case SupportedLocaleKind::DateTimeFormat:
+    case SupportedLocaleKind::DisplayNames:
+    case SupportedLocaleKind::DurationFormat:
+    case SupportedLocaleKind::ListFormat:
+    case SupportedLocaleKind::NumberFormat:
+    case SupportedLocaleKind::PluralRules:
+    case SupportedLocaleKind::RelativeTimeFormat:
+    case SupportedLocaleKind::Segmenter:
+      localeSet = &supportedLocales;
       break;
     default:
       MOZ_CRASH("Invalid Intl constructor");
@@ -720,7 +725,7 @@ bool js::intl::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx) {
 #endif  // DEBUG || MOZ_SYSTEM_ICU
 
 bool js::intl::SharedIntlData::isUpperCaseFirst(JSContext* cx,
-                                                Handle<JSLinearString*> locale,
+                                                HandleString locale,
                                                 bool* isUpperFirst) {
 #if DEBUG || MOZ_SYSTEM_ICU
   if (!ensureUpperCaseFirstLocales(cx)) {
@@ -728,17 +733,23 @@ bool js::intl::SharedIntlData::isUpperCaseFirst(JSContext* cx,
   }
 #endif
 
+  JSLinearString* localeLinear = locale->ensureLinear(cx);
+  if (!localeLinear) {
+    return false;
+  }
+
 #if !MOZ_SYSTEM_ICU
   // "da" (Danish) and "mt" (Maltese) are the only two supported locales using
   // upper-case first. CLDR also lists "cu" (Church Slavic) as an upper-case
   // first locale, but since it's not supported in ICU, we don't care about it
   // here.
-  bool isDefaultUpperCaseFirstLocale = js::StringEqualsLiteral(locale, "da") ||
-                                       js::StringEqualsLiteral(locale, "mt");
+  bool isDefaultUpperCaseFirstLocale =
+      js::StringEqualsLiteral(localeLinear, "da") ||
+      js::StringEqualsLiteral(localeLinear, "mt");
 #endif
 
 #if DEBUG || MOZ_SYSTEM_ICU
-  LocaleHasher::Lookup lookup(locale);
+  LocaleHasher::Lookup lookup(localeLinear);
   *isUpperFirst = upperCaseFirstLocales.has(lookup);
 #else
   *isUpperFirst = isDefaultUpperCaseFirstLocale;
@@ -804,22 +815,29 @@ bool js::intl::SharedIntlData::ensureIgnorePunctuationLocales(JSContext* cx) {
 }
 #endif  // DEBUG || MOZ_SYSTEM_ICU
 
-bool js::intl::SharedIntlData::isIgnorePunctuation(
-    JSContext* cx, Handle<JSLinearString*> locale, bool* ignorePunctuation) {
+bool js::intl::SharedIntlData::isIgnorePunctuation(JSContext* cx,
+                                                   HandleString locale,
+                                                   bool* ignorePunctuation) {
 #if DEBUG || MOZ_SYSTEM_ICU
   if (!ensureIgnorePunctuationLocales(cx)) {
     return false;
   }
 #endif
 
+  JSLinearString* localeLinear = locale->ensureLinear(cx);
+  if (!localeLinear) {
+    return false;
+  }
+
 #if !MOZ_SYSTEM_ICU
   // "th" (Thai) is the only supported locale which ignores punctuation by
   // default.
-  bool isDefaultIgnorePunctuationLocale = js::StringEqualsLiteral(locale, "th");
+  bool isDefaultIgnorePunctuationLocale =
+      js::StringEqualsLiteral(localeLinear, "th");
 #endif
 
 #if DEBUG || MOZ_SYSTEM_ICU
-  LocaleHasher::Lookup lookup(locale);
+  LocaleHasher::Lookup lookup(localeLinear);
   *ignorePunctuation = ignorePunctuationLocales.has(lookup);
 #else
   *ignorePunctuation = isDefaultIgnorePunctuationLocale;
@@ -877,8 +895,8 @@ void js::intl::SharedIntlData::destroyInstance() {
   availableTimeZones.clearAndCompact();
   ianaZonesTreatedAsLinksByICU.clearAndCompact();
   ianaLinksCanonicalizedDifferentlyByICU.clearAndCompact();
-  availableLocales.clearAndCompact();
-  collatorAvailableLocales.clearAndCompact();
+  supportedLocales.clearAndCompact();
+  collatorSupportedLocales.clearAndCompact();
 #if DEBUG || MOZ_SYSTEM_ICU
   upperCaseFirstLocales.clearAndCompact();
   ignorePunctuationLocales.clearAndCompact();
@@ -891,8 +909,8 @@ void js::intl::SharedIntlData::trace(JSTracer* trc) {
     availableTimeZones.trace(trc);
     ianaZonesTreatedAsLinksByICU.trace(trc);
     ianaLinksCanonicalizedDifferentlyByICU.trace(trc);
-    availableLocales.trace(trc);
-    collatorAvailableLocales.trace(trc);
+    supportedLocales.trace(trc);
+    collatorSupportedLocales.trace(trc);
 #if DEBUG || MOZ_SYSTEM_ICU
     upperCaseFirstLocales.trace(trc);
     ignorePunctuationLocales.trace(trc);
@@ -906,8 +924,8 @@ size_t js::intl::SharedIntlData::sizeOfExcludingThis(
          ianaZonesTreatedAsLinksByICU.shallowSizeOfExcludingThis(mallocSizeOf) +
          ianaLinksCanonicalizedDifferentlyByICU.shallowSizeOfExcludingThis(
              mallocSizeOf) +
-         availableLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
-         collatorAvailableLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
+         supportedLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
+         collatorSupportedLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
 #if DEBUG || MOZ_SYSTEM_ICU
          upperCaseFirstLocales.shallowSizeOfExcludingThis(mallocSizeOf) +
          ignorePunctuationLocales.shallowSizeOfExcludingThis(mallocSizeOf) +

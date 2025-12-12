@@ -67,6 +67,17 @@ extern const JSClass IntlClass;
  */
 [[nodiscard]] extern bool intl_SupportedValuesOf(JSContext* cx, unsigned argc,
                                                  JS::Value* vp);
+
+namespace intl {
+
+/**
+ * Return the supported locale for the default locale if ICU supports that
+ * default locale (perhaps via fallback, e.g. supporting "de-CH" through "de"
+ * support implied by a "de-DE" locale). Otherwise uses the last-ditch locale.
+ */
+JSLinearString* ComputeDefaultLocale(JSContext* cx);
+
+}  // namespace intl
 }  // namespace js
 
 #endif /* builtin_intl_IntlObject_h */
