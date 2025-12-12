@@ -6613,9 +6613,14 @@ bool nsDocShell::VerifyDocumentViewer() {
   if (mIsBeingDestroyed) {
     return false;
   }
-  // The viewer should be created during docshell initialization. So unless
-  // we're being destroyed, there always needs to be a viewer.
-  MOZ_ASSERT_UNREACHABLE("The content viewer should've been created eagerly.");
+  if (!mInitialized) {
+    // The viewer should be created during docshell initialization. If something
+    // wants a viewer or document, it has to initialize the docshell first.
+    MOZ_ASSERT_UNREACHABLE(
+        "The docshell should be initialized to get a viewer.");
+  } else {
+    NS_WARNING("No document viewer, docshell failed to initialize.");
+  }
   return false;
 }
 

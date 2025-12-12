@@ -581,8 +581,9 @@ class nsDocShell final : public nsDocLoader,
   // Content Viewer Management
   //
 
-  // Assert the document viewer exists or we are being destroyed
-  // and return true if a viewer exists.
+  // Return whether a viewer exists and assert that we aren't
+  // trying to get a viewer before it's eager creation during docshell
+  // initialization.
   bool VerifyDocumentViewer();
 
   void DestroyDocumentViewer();
