@@ -2233,6 +2233,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void canonicalizeFloatNaN(FloatRegister reg);
 
+  // If denormal support is disabled, there are 2^53 ways to represent zero.
+  // This function canonicalizes the representation to either -0.0 or +0.0,
+  // maintaining the sign bit of the input.
+  //
+  // This function will not change the value of the double if denormals are
+  // enabled.
+  inline void canonicalizeDoubleZero(FloatRegister reg, FloatRegister scratch);
+
  public:
   // ========================================================================
   // Memory access primitives.

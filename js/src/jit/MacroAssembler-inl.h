@@ -883,6 +883,20 @@ void MacroAssembler::canonicalizeDoubleNaN(FloatRegister reg) {
   bind(&notNaN);
 }
 
+void MacroAssembler::canonicalizeDoubleZero(FloatRegister reg,
+                                            FloatRegister scratch) {
+  // If denormals are disabled, then operations on them will flush denormal
+  // values to zero (FTZ flag). We need the cheapest operation that is the
+  // identity function.
+  //
+  // Unfortunately, just moving the float register doesn't trigger FTZ. Adding
+  // '+-0' isn't an identity function, because it can toggle the sign bit.
+  //
+  // Therefore we choose to multiply by 1.0, which won't change the result.
+  loadConstantDouble(1.0, scratch);
+  mulDouble(scratch, reg);
+}
+
 // ========================================================================
 // Memory access primitives.
 

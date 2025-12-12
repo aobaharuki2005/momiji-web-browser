@@ -1111,6 +1111,37 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
       case ValType::Ref: {
         // Guarded against by temporarilyUnsupportedReftypeForEntry()
         MOZ_RELEASE_ASSERT(funcType.args()[i].refType().isExtern());
+
+        // If the value is a double that is a negative denormal and denormals
+        // are disabled, then `branchValueConvertsToWasmAnyRefInline` will view
+        // it as '-0' (which must be boxed in the OOL path). However, the
+        // AnyRef boxing code uses `mozilla::NumberIsInt32` which does not
+        // properly handle the CPU DAZ/FTZ flags and returns true and therefore
+        // doesn't box the double. This leads to an assertion below where we
+        // expected the value to be boxed.
+        //
+        // Making `mozilla::NumberIsInt32` handle the CPU DAZ/FTZ flags would
+        // add a significant cost to many hot-paths. We instead just
+        // eagerly canonicalize denormals to +-0.0 here to avoid inconsistent
+        // results (see Bug 1971519).
+        {
+          ScratchDoubleScope tmpD(masm);
+
+          Label notDouble;
+          masm.branchTestDouble(Assembler::NotEqual, scratchV, &notDouble);
+
+          // Unbox the double and canonicalize any denormal values
+          masm.unboxDouble(scratchV, scratchF);
+          masm.canonicalizeDoubleZero(scratchF, tmpD);
+
+          // Box the value back into scratchV and also store it back to the
+          // stack.
+          masm.boxDouble(scratchF, scratchV, tmpD);
+          masm.storeValue(scratchV, jitArgAddr);
+
+          masm.bind(&notDouble);
+        }
+
         masm.branchValueConvertsToWasmAnyRefInline(scratchV, scratchG, scratchF,
                                                    &next);
         masm.jump(&oolCall);
