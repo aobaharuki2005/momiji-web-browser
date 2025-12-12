@@ -17,59 +17,58 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/pagedata/PageDataService.sys.mjs",
 });
 
-// const GET_OPEN_TABS = "get_open_tabs";
-// const SEARCH_BROWSING_HISTORY = "search_browsing_history";
+const GET_OPEN_TABS = "get_open_tabs";
+const SEARCH_BROWSING_HISTORY = "search_browsing_history";
 
-// const TOOLS = [
-//   GET_OPEN_TABS,
-//   SEARCH_BROWSING_HISTORY,
-// ];
+// eslint-disable-next-line no-unused-vars
+const TOOLS = [GET_OPEN_TABS, SEARCH_BROWSING_HISTORY];
 
-// const toolsConfig = [
-//   {
-//     type: "function",
-//     function: {
-//       name: GET_OPEN_TABS,
-//       description:
-//         "Access the user's browser and return a list of most recently browsed tabs. Each tab is represented by a JSON with the page's url, title and description if available. Default to return maximum 15 tabs.",
-//       parameters: {
-//         type: "object",
-//         properties: {}
-//       },
-//     },
-//   },
-//   {
-//     type: "function",
-//     function: {
-//       name: SEARCH_BROWSING_HISTORY,
-//       description:
-//         "Search the user's browser history stored in sqlite-vec using an embedding model. If a search term is provided, performs vector search and ranks by semantic distance with frecency tie-breaks. If no search term is provided, returns the most relevant pages within a time window ranked by recency and frecency. Supports optional time range filtering using ISO 8601 datetime strings. This is to find previously visited pages related to specific keywords or topics. This helps find relevant pages the user has visited before, even if they're not currently open. All datetime must be before the user's current datetime. For parsing time window from dates and holidays, must depend on the user's current datetime, timezone, and locale.",
-//       parameters: {
-//         type: "object",
-//         properties: {
-//           searchTerm: {
-//             type: "string",
-//             description:
-//               "A detailed, noun-heavy phrase (~5-12 meaningful tokens) summarizing the user's intent for semantic retrieval. Include the main entity/topic plus 1-3 contextual qualifiers (e.g., library name, purpose, site, or timeframe). Avoid vague or single-word queries.",
-//           },
-//           startTs: {
-//             type: "string",
-//             description:
-//               "Inclusive lower bound of the time window as an ISO 8601 datetime string (e.g., '2025-11-07T09:00:00-05:00'). Use when the user asks for results within a time or range start, such as 'last week', 'since yesterday', or 'last night'. This must be before the user's current datetime.",
-//             default: null,
-//           },
-//           endTs: {
-//             type: "string",
-//             description:
-//               "Inclusive upper bound of the time window as an ISO 8601 datetime string (e.g., '2025-11-07T21:00:00-05:00'). Use when the user asks for results within a time or range end, such as 'last week', 'between 2025-10-01 and 2025-10-31', or 'before Monday'. This must be before the user's current datetime.",
-//             default: null,
-//           },
-//         },
-//         required: [],
-//       },
-//     },
-//   },
-// ];
+// eslint-disable-next-line no-unused-vars
+const toolsConfig = [
+  {
+    type: "function",
+    function: {
+      name: GET_OPEN_TABS,
+      description:
+        "Access the user's browser and return a list of most recently browsed tabs. Each tab is represented by a JSON with the page's url, title and description if available. Default to return maximum 15 tabs.",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: SEARCH_BROWSING_HISTORY,
+      description:
+        'Refind pages from the user\'s PAST BROWSING HISTORY. Use this whenever the user wants to recall, review, list, or see pages they visited earlier (for a topic, site, or time period). Also use this when the user requests all pages from a past time period (e.g., "yesterday", "last week"), even if no topic is specified. Do NOT use for open tabs, completely general web questions, or abstract questions about "history" or habits.',
+      parameters: {
+        type: "object",
+        properties: {
+          searchTerm: {
+            type: "string",
+            description:
+              "A detailed, noun-heavy phrase (~2-12 meaningful tokens) summarizing the user's intent for semantic retrieval. Include the main entity/topic plus 1-3 contextual qualifiers (e.g., library name, purpose, site, or timeframe). Avoid vague or single-word queries.",
+          },
+          startTs: {
+            type: "string",
+            description:
+              "Inclusive lower bound of the time window as an ISO 8601 datetime string (e.g., '2025-11-07T09:00:00-05:00'). Use when the user asks for results within a time or range start, such as 'last week', 'since yesterday', or 'last night'. This must be before the user's current datetime.",
+            default: null,
+          },
+          endTs: {
+            type: "string",
+            description:
+              "Inclusive upper bound of the time window as an ISO 8601 datetime string (e.g., '2025-11-07T21:00:00-05:00'). Use when the user asks for results within a time or range end, such as 'last week', 'between 2025-10-01 and 2025-10-31', or 'before Monday'. This must be before the user's current datetime.",
+            default: null,
+          },
+        },
+        required: [],
+      },
+    },
+  },
+];
 
 /**
  * Retrieves a list of (up to n) the latest open tabs from the current active browser window.
