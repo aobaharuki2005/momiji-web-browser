@@ -521,37 +521,4 @@ export var SearchUIUtils = {
           : "contextmenu",
     });
   },
-
-  /**
-   * Perform a search initiated from the command line.
-   *
-   * @param {WindowProxy} window
-   *   The window where the search was triggered.
-   * @param {string} searchText
-   *   The search terms to use for the search.
-   * @param {boolean} usePrivate
-   *   Whether to use the Private Browsing mode default search engine.
-   *   Defaults to `false`.
-   * @param {nsIPrincipal} triggeringPrincipal
-   *   The principal to use for a new window or tab.
-   * @param {nsIPolicyContainer} policyContainer
-   *   The policyContainer to use for a new window or tab.
-   */
-  async loadSearchFromCommandLine(
-    window,
-    searchText,
-    usePrivate,
-    triggeringPrincipal,
-    policyContainer
-  ) {
-    return SearchUIUtils.loadSearch({
-      window,
-      searchText,
-      where: "current",
-      usePrivate,
-      triggeringPrincipal,
-      policyContainer,
-      sapSource: "system",
-    });
-  },
 };
