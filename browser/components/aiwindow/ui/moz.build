@@ -11,6 +11,15 @@ MOZ_SRC_FILES += [
     "actors/AIChatContentChild.sys.mjs",
     "actors/AIChatContentParent.sys.mjs",
     "modules/AIWindow.sys.mjs",
+    "modules/ChatConstants.sys.mjs",
+    "modules/ChatConversation.sys.mjs",
+    "modules/ChatMessage.sys.mjs",
+    "modules/ChatMigrations.sys.mjs",
+    "modules/ChatSql.sys.mjs",
+    "modules/ChatStore.sys.mjs",
+    "modules/ChatUtils.sys.mjs",
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
