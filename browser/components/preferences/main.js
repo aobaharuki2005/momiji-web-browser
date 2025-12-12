@@ -1771,6 +1771,19 @@ Preferences.addSetting({
   deps: ["zoomText"],
   visible: ({ zoomText }) => Boolean(zoomText.value),
 });
+Preferences.addSetting({
+  id: "contrastControlSettings",
+  pref: "browser.display.document_color_use",
+});
+Preferences.addSetting({
+  id: "colors",
+  onUserClick() {
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/colors.xhtml",
+      { features: "resizable=no" }
+    );
+  },
+});
 
 SettingGroupManager.registerGroups({
   containers: {
@@ -2193,6 +2206,45 @@ SettingGroupManager.registerGroups({
         id: "playDRMContent",
         l10nId: "play-drm-content",
         supportPage: "drm-content",
+      },
+    ],
+  },
+  contrast: {
+    l10nId: "preferences-contrast-control-group",
+    headingLevel: 2,
+    items: [
+      {
+        id: "contrastControlSettings",
+        control: "moz-radio-group",
+        l10nId: "preferences-contrast-control-radio-group",
+        options: [
+          {
+            id: "contrastSettingsAuto",
+            value: 0,
+            l10nId: "preferences-contrast-control-use-platform-settings",
+          },
+          {
+            id: "contrastSettingsOff",
+            value: 1,
+            l10nId: "preferences-contrast-control-off",
+          },
+          {
+            id: "contrastSettingsOn",
+            value: 2,
+            l10nId: "preferences-contrast-control-custom",
+            items: [
+              {
+                id: "colors",
+                l10nId: "preferences-colors-manage-button",
+                control: "moz-box-button",
+                controlAttrs: {
+                  "search-l10n-ids":
+                    "colors-text-and-background, colors-text.label, colors-text-background.label, colors-links-header, colors-links-unvisited.label, colors-links-visited.label",
+                },
+              },
+            ],
+          },
+        ],
       },
     ],
   },
@@ -3446,6 +3498,7 @@ var gMainPane = {
     initSettingGroup("appearance");
     initSettingGroup("downloads");
     initSettingGroup("drm");
+    initSettingGroup("contrast");
     initSettingGroup("browsing");
     initSettingGroup("zoom");
     initSettingGroup("support");
@@ -3494,12 +3547,6 @@ var gMainPane = {
       gMainPane._rebuildFonts.bind(gMainPane)
     );
     setEventListener("advancedFonts", "command", gMainPane.configureFonts);
-    setEventListener("colors", "command", gMainPane.configureColors);
-    Preferences.get("browser.display.document_color_use").on(
-      "change",
-      gMainPane.updateColorsButton.bind(gMainPane)
-    );
-    gMainPane.updateColorsButton();
 
     document
       .getElementById("browserLayoutShowSidebar")
@@ -3808,11 +3855,6 @@ var gMainPane = {
     var preference = Preferences.get(aPreferenceID);
     button.disabled = !preference.value;
     return undefined;
-  },
-
-  updateColorsButton() {
-    document.getElementById("colors").disabled =
-      Preferences.get("browser.display.document_color_use").value != 2;
   },
 
   /**
@@ -4625,17 +4667,6 @@ var gMainPane = {
   configureFonts() {
     gSubDialog.open(
       "chrome://browser/content/preferences/dialogs/fonts.xhtml",
-      { features: "resizable=no" }
-    );
-  },
-
-  /**
-   * Displays the colors dialog, where default web page/link/etc. colors can be
-   * configured.
-   */
-  configureColors() {
-    gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/colors.xhtml",
       { features: "resizable=no" }
     );
   },
