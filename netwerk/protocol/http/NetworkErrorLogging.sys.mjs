@@ -216,12 +216,7 @@ export class NetworkErrorLogging {
     policy.successful_sampling_rate = item.success_fraction || 0.0;
     policy.failure_sampling_rate = item.failure_fraction || 1.0;
 
-    // TODO: Remove these when no longer needed
     policy.nel = item;
-    let reportTo = JSON.parse(
-      aChannel.QueryInterface(Ci.nsIHttpChannel).getResponseHeader("Report-To")
-    );
-    policy.reportTo = reportTo;
 
     // 15. If there is already an entry in the policy cache for (key, origin), replace it with policy; otherwise, insert policy into the policy cache for (key, origin).
     this.policyCache[String([key, origin])] = policy;
@@ -387,16 +382,12 @@ export class NetworkErrorLogging {
     // nsINetworkErrorReport
     let retObj = {
       body: JSON.stringify(report_body),
-      group: policy.reportTo.group,
+      group: policy.nel.report_to,
       url,
     };
 
-    if (policy && policy.reportTo.group === policy.nel.report_to) {
-      // nsHttpChannel will call ReportDeliver::Fetch
-      return retObj;
-    }
-
-    return null;
+    // nsHttpChannel will call ReportDeliver::Fetch
+    return retObj;
   }
 
   QueryInterface = ChromeUtils.generateQI(["nsINetworkErrorLogging"]);
