@@ -24,11 +24,11 @@
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/LayersMessageUtils.h"
 #include "mozilla/layers/PAPZ.h"
+#include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
 #include "nsRefreshDriver.h"
 #include "nsSubDocumentFrame.h"
-#include "nsIFrameInlines.h"
 
 namespace mozilla {
 
