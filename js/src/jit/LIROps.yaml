@@ -267,27 +267,12 @@
   num_temps: 1
   mir_op: true
 
-- name: InitElemGetterSetter
-  operands:
-    object: WordSized
-    id: BoxedValue
-    value: WordSized
-  call_instruction: true
-  mir_op: true
-
 # Takes in an Object and a Value.
 - name: MutateProto
   operands:
     object: WordSized
     value: BoxedValue
   call_instruction: true
-
-- name: InitPropGetterSetter
-  operands:
-    object: WordSized
-    value: WordSized
-  call_instruction: true
-  mir_op: true
 
 - name: WasmRefAsNonNull
   operands:
@@ -1999,19 +1984,6 @@
   num_temps: 2
   mir_op: BinaryCache
 
-- name: ModuleMetadata
-  result_type: WordSized
-  call_instruction: true
-  mir_op: true
-
-- name: DynamicImport
-  result_type: WordSized
-  operands:
-    specifier: BoxedValue
-    options: BoxedValue
-  call_instruction: true
-  mir_op: true
-
 - name: Lambda
   result_type: WordSized
   operands:
@@ -2796,13 +2768,6 @@
   num_temps: 3
   mir_op: true
 
-- name: ValueToIterator
-  result_type: WordSized
-  operands:
-    value: BoxedValue
-  call_instruction: true
-  mir_op: ValueToIterator
-
 - name: IteratorHasIndicesAndBranch
   successors: [ifTrue, ifFalse]
   operands:
@@ -3048,10 +3013,6 @@
 - name: GuardIsNativeObject
   operands:
     object: WordSized
-  num_temps: 1
-
-- name: GuardGlobalGeneration
-  mir_op: true
   num_temps: 1
 
 - name: GuardIsProxy
@@ -3724,10 +3685,6 @@
     input: BoxedValue
   mir_op: true
 
-- name: ThrowRuntimeLexicalError
-  call_instruction: true
-  mir_op: true
-
 - name: ThrowMsg
   call_instruction: true
   mir_op: true
@@ -3770,38 +3727,6 @@
     callee: WordSized
     environmentChain: WordSized
     argsObject: WordSized
-  call_instruction: true
-  mir_op: true
-
-- name: AsyncResolve
-  result_type: WordSized
-  operands:
-    generator: WordSized
-    value: BoxedValue
-  call_instruction: true
-  mir_op: true
-
-- name: AsyncReject
-  result_type: WordSized
-  operands:
-    generator: WordSized
-    reason: BoxedValue
-    stack: BoxedValue
-  call_instruction: true
-  mir_op: true
-
-- name: AsyncAwait
-  result_type: WordSized
-  operands:
-    value: BoxedValue
-    generator: WordSized
-  call_instruction: true
-  mir_op: true
-
-- name: CanSkipAwait
-  result_type: WordSized
-  operands:
-    value: BoxedValue
   call_instruction: true
   mir_op: true
 

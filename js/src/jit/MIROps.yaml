@@ -418,12 +418,16 @@
     value: Object
   arguments:
     name: PropertyName*
+  possibly_calls: true
+  generate_lir: true
 
 - name: InitElemGetterSetter
   operands:
     object: Object
     id: Value
     value: Object
+  possibly_calls: true
+  generate_lir: true
 
 - name: Call
   gen_boilerplate: false
@@ -1528,6 +1532,8 @@
   result_type: None
   guard: true
   alias_set: custom
+  possibly_calls: true
+  generate_lir: true
 
 - name: ThrowMsg
   gen_boilerplate: false
@@ -1620,12 +1626,16 @@
   arguments:
     module: JSObject*
   result_type: Object
+  possibly_calls: true
+  generate_lir: true
 
 - name: DynamicImport
   operands:
     specifier: Value
     options: Value
   result_type: Object
+  possibly_calls: true
+  generate_lir: true
 
 - name: Lambda
   gen_boilerplate: false
@@ -2263,6 +2273,8 @@
   movable: true
   alias_set: custom
   congruent_to: custom
+  generate_lir: true
+  lir_temps: 1
 
 - name: GuardIsProxy
   operands:
@@ -2818,6 +2830,8 @@
   operands:
     value: Value
   result_type: Object
+  possibly_calls: true
+  generate_lir: true
 
 - name: IteratorHasIndices
   operands:
@@ -3216,6 +3230,8 @@
     generator: Object
     value: Value
   result_type: Object
+  possibly_calls: true
+  generate_lir: true
 
 - name: AsyncReject
   operands:
@@ -3223,6 +3239,8 @@
     reason: Value
     stack: Value
   result_type: Object
+  possibly_calls: true
+  generate_lir: true
 
 # Returns from this function to the previous caller; this looks like a regular
 # Unary instruction and is used to lie to the MIR generator about suspending
@@ -3239,6 +3257,8 @@
     value: Value
     generator: Object
   result_type: Object
+  possibly_calls: true
+  generate_lir: true
 
 - name: CheckThisReinit
   operands:
@@ -3255,6 +3275,8 @@
   operands:
     value: Value
   result_type: Boolean
+  possibly_calls: true
+  generate_lir: true
 
 - name: MaybeExtractAwaitValue
   gen_boilerplate: false
