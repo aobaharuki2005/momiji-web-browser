@@ -21,6 +21,8 @@ def add_common_config(config, tasks):
         fetches = task.setdefault("fetches", {})
         fetches["toolchain"] = [
             "android-sdk-linux",
+            "linux64-embedded-uniffi-bindgen",
+            "linux64-nimbus-fml",
             "android-gradle-dependencies",
             "linux64-jdk",
         ]
