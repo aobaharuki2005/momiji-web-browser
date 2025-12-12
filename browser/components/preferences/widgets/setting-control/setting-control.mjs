@@ -33,6 +33,8 @@ import MozInputFolder from "chrome://global/content/elements/moz-input-folder.mj
  * @property {string} [control]
  * The element tag to render, default assumed based on parent control.
  * @property {any} [value] A value to set on the option.
+ * @property {boolean} [disabled] If the option should be disabled.
+ * @property {boolean} [hidden] If the option should be hidden.
  */
 
 /**
@@ -222,7 +224,6 @@ export class SettingControl extends SettingElement {
    *
    * @override
    * @param {SettingElementConfig} config
-   * @returns {ReturnType<SettingElement['getCommonPropertyMapping']>}
    */
   getCommonPropertyMapping(config) {
     return {
@@ -238,11 +239,12 @@ export class SettingControl extends SettingElement {
    * @param {SettingOptionConfig} config
    */
   getOptionPropertyMapping(config) {
-    const props = this.getCommonPropertyMapping(config);
-    props[".value"] = config.value;
-    props[".disabled"] = config.disabled;
-    props[".hidden"] = config.hidden;
-    return props;
+    return {
+      ...this.getCommonPropertyMapping(config),
+      ".value": config.value,
+      ".disabled": config.disabled,
+      ".hidden": config.hidden,
+    };
   }
 
   /**
@@ -251,14 +253,17 @@ export class SettingControl extends SettingElement {
    * @param {SettingControlConfig} config
    */
   getControlPropertyMapping(config) {
-    const props = this.getCommonPropertyMapping(config);
-    props[".parentDisabled"] = this.parentDisabled;
-    props["?disabled"] =
-      this.setting.disabled ||
-      this.setting.locked ||
-      this.isControlledByExtension();
-
-    return props;
+    return {
+      ...this.getCommonPropertyMapping(config),
+      ".parentDisabled": this.parentDisabled,
+      "?disabled":
+        this.setting.disabled ||
+        this.setting.locked ||
+        this.isControlledByExtension(),
+      // Hide moz-message-bar directly to maintain the role=alert functionality.
+      // This setting-control will be visually hidden in CSS.
+      ".hidden": config.control == "moz-message-bar" && this.hidden,
+    };
   }
 
   getValue() {

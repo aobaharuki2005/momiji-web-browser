@@ -142,6 +142,9 @@ Preferences.addAll([
   { id: "accessibility.typeaheadfind", type: "bool" },
   { id: "accessibility.blockautorefresh", type: "bool" },
 
+  /* Zoom */
+  { id: "browser.zoom.full", type: "bool" },
+
   /* Browsing
    * general.autoScroll
      - when set to true, clicking the scroll wheel on the mouse activates a
@@ -633,7 +636,6 @@ Preferences.addSetting({
   },
 });
 
-Preferences.addSetting({ id: "zoomPlaceholder" });
 Preferences.addSetting({
   id: "containersPane",
   onUserClick(e) {
@@ -1662,6 +1664,114 @@ Preferences.addSetting({
   },
 });
 
+/**
+ * Helper object for managing the various zoom related settings.
+ */
+const ZoomHelpers = {
+  win: window.browsingContext.topChromeWindow,
+  get FullZoom() {
+    return this.win.FullZoom;
+  },
+  get ZoomManager() {
+    return this.win.ZoomManager;
+  },
+
+  /**
+   * Set the global default zoom value.
+   *
+   * @param {number} newZoom - The new zoom
+   * @returns {Promise<void>}
+   */
+  async setDefaultZoom(newZoom) {
+    let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
+      Ci.nsIContentPrefService2
+    );
+    let nonPrivateLoadContext = Cu.createLoadContext();
+    let resolvers = Promise.withResolvers();
+    /* Because our setGlobal function takes in a browsing context, and
+     * because we want to keep this property consistent across both private
+     * and non-private contexts, we create a non-private context and use that
+     * to set the property, regardless of our actual context.
+     */
+    cps2.setGlobal(this.FullZoom.name, newZoom, nonPrivateLoadContext, {
+      handleCompletion: resolvers.resolve,
+      handleError: resolvers.reject,
+    });
+    return resolvers.promise;
+  },
+
+  async getDefaultZoom() {
+    /** @import { ZoomUI as GlobalZoomUI } from "resource:///modules/ZoomUI.sys.mjs" */
+    /** @type {GlobalZoomUI} */
+    let ZoomUI = this.win.ZoomUI;
+    return await ZoomUI.getGlobalValue();
+  },
+
+  /**
+   * The possible zoom values.
+   *
+   * @returns {number[]}
+   */
+  get zoomValues() {
+    return this.ZoomManager.zoomValues;
+  },
+
+  toggleFullZoom() {
+    this.ZoomManager.toggleZoom();
+  },
+};
+Preferences.addSetting(
+  class extends Preferences.AsyncSetting {
+    static id = "defaultZoom";
+    /** @type {Record<"options", object[]>} */
+    optionsConfig;
+
+    /**
+     * @param {string} val - zoom value as a string
+     */
+    async set(val) {
+      ZoomHelpers.setDefaultZoom(
+        parseFloat((parseInt(val, 10) / 100).toFixed(2))
+      );
+    }
+    async get() {
+      return Math.round((await ZoomHelpers.getDefaultZoom()) * 100);
+    }
+    async getControlConfig() {
+      if (!this.optionsConfig) {
+        this.optionsConfig = {
+          options: ZoomHelpers.zoomValues.map(a => {
+            let value = Math.round(a * 100);
+            return {
+              value,
+              l10nId: "preferences-default-zoom-value",
+              l10nArgs: { percentage: value },
+            };
+          }),
+        };
+      }
+      return this.optionsConfig;
+    }
+  }
+);
+Preferences.addSetting({
+  id: "zoomTextPref",
+  pref: "browser.zoom.full",
+});
+Preferences.addSetting({
+  id: "zoomText",
+  deps: ["zoomTextPref"],
+  // Use the Setting since the ZoomManager getter may not have updated yet.
+  get: (_, { zoomTextPref }) => !zoomTextPref.value,
+  set: () => ZoomHelpers.toggleFullZoom(),
+  disabled: ({ zoomTextPref }) => zoomTextPref.locked,
+});
+Preferences.addSetting({
+  id: "zoomWarning",
+  deps: ["zoomText"],
+  visible: ({ zoomText }) => Boolean(zoomText.value),
+});
+
 SettingGroupManager.registerGroups({
   containers: {
     // This section is marked as in progress for testing purposes
@@ -1978,21 +2088,24 @@ SettingGroupManager.registerGroups({
     ],
   },
   zoom: {
-    // This section is marked as in progress for testing purposes
-    inProgress: true,
+    l10nId: "preferences-zoom-header2",
+    headingLevel: 2,
     items: [
       {
-        id: "zoomPlaceholder",
-        control: "moz-message-bar",
-        controlAttrs: {
-          message: "Placeholder for updated zoom controls",
-        },
+        id: "defaultZoom",
+        l10nId: "preferences-default-zoom-label",
+        control: "moz-select",
       },
       {
-        id: "containersPane",
-        control: "moz-button",
+        id: "zoomText",
+        l10nId: "preferences-zoom-text-only",
+      },
+      {
+        id: "zoomWarning",
+        l10nId: "preferences-text-zoom-override-warning",
+        control: "moz-message-bar",
         controlAttrs: {
-          label: "Manage container settings",
+          type: "warning",
         },
       },
     ],
@@ -3327,11 +3440,6 @@ var gMainPane = {
       gMainPane.initPrimaryBrowserLanguageUI();
     }
 
-    // We call `initDefaultZoomValues` to set and unhide the
-    // default zoom preferences menu, and to establish a
-    // listener for future menu changes.
-    gMainPane.initDefaultZoomValues();
-
     gMainPane.initTranslations();
 
     // Initialize settings groups from the config object.
@@ -3700,53 +3808,6 @@ var gMainPane = {
     var preference = Preferences.get(aPreferenceID);
     button.disabled = !preference.value;
     return undefined;
-  },
-
-  /**
-   * Fetch the existing default zoom value, initialise and unhide
-   * the preferences menu. This method also establishes a listener
-   * to ensure handleDefaultZoomChange is called on future menu
-   * changes.
-   */
-  async initDefaultZoomValues() {
-    let win = window.browsingContext.topChromeWindow;
-    let selected = await win.ZoomUI.getGlobalValue();
-    let menulist = document.getElementById("defaultZoom");
-
-    new SelectionChangedMenulist(menulist, event => {
-      let parsedZoom = parseFloat((event.target.value / 100).toFixed(2));
-      gMainPane.handleDefaultZoomChange(parsedZoom);
-    });
-
-    setEventListener("zoomText", "command", function () {
-      win.ZoomManager.toggleZoom();
-      document.getElementById("text-zoom-override-warning").hidden =
-        !document.getElementById("zoomText").checked;
-    });
-
-    let zoomValues = win.ZoomManager.zoomValues.map(a => {
-      return Math.round(a * 100);
-    });
-
-    let fragment = document.createDocumentFragment();
-    for (let zoomLevel of zoomValues) {
-      let menuitem = document.createXULElement("menuitem");
-      document.l10n.setAttributes(menuitem, "preferences-default-zoom-value", {
-        percentage: zoomLevel,
-      });
-      menuitem.setAttribute("value", zoomLevel);
-      fragment.appendChild(menuitem);
-    }
-
-    let menupopup = menulist.querySelector("menupopup");
-    menupopup.appendChild(fragment);
-    menulist.value = Math.round(selected * 100);
-
-    let checkbox = document.getElementById("zoomText");
-    checkbox.checked = !win.ZoomManager.useFullZoom;
-    document.getElementById("text-zoom-override-warning").hidden =
-      !checkbox.checked;
-    document.getElementById("zoomBox").hidden = false;
   },
 
   updateColorsButton() {
@@ -4367,27 +4428,6 @@ var gMainPane = {
       default:
         throw new Error("Unhandled transition type.");
     }
-  },
-
-  /**
-   * Takes as newZoom a floating point value representing the
-   * new default zoom. This value should not be a string, and
-   * should not carry a percentage sign/other localisation
-   * characteristics.
-   */
-  handleDefaultZoomChange(newZoom) {
-    let cps2 = Cc["@mozilla.org/content-pref/service;1"].getService(
-      Ci.nsIContentPrefService2
-    );
-    let nonPrivateLoadContext = Cu.createLoadContext();
-    /* Because our setGlobal function takes in a browsing context, and
-     * because we want to keep this property consistent across both private
-     * and non-private contexts, we crate a non-private context and use that
-     * to set the property, regardless of our actual context.
-     */
-
-    let win = window.browsingContext.topChromeWindow;
-    cps2.setGlobal(win.FullZoom.name, newZoom, nonPrivateLoadContext);
   },
 
   /**
