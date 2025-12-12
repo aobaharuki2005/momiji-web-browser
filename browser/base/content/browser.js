@@ -1692,8 +1692,6 @@ function OpenBrowserWindow(options) {
   options ??= {};
   options.openerWindow ??= window;
 
-  AIWindow.handleAIWindowOptions(window, options);
-
   let win = BrowserWindowTracker.openWindow(options);
 
   win.addEventListener(

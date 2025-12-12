@@ -147,6 +147,43 @@ add_task(async function test_button_actions() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function test_openNewBrowserWindow_and_ai_inherit() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.aiwindow.enabled", true]],
+  });
+
+  const newAIWindow = await BrowserTestUtils.openNewBrowserWindow({
+    openerWindow: null,
+    aiWindow: true,
+  });
+
+  Assert.ok(
+    newAIWindow.document.documentElement.hasAttribute("ai-window"),
+    "BrowserTestUtils.openNewBrowserWindow({ aiWindow: true }) should open an AI Window"
+  );
+
+  await SpecialPowers.popPrefEnv();
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.aiwindow.enabled", false]],
+  });
+
+  const newWindowAfterDisabledAI = await BrowserTestUtils.openNewBrowserWindow({
+    openerWindow: newAIWindow,
+    aiWindow: false,
+  });
+
+  Assert.ok(
+    !newWindowAfterDisabledAI.document.documentElement.hasAttribute(
+      "ai-window"
+    ),
+    "BrowserTestUtils.openNewBrowserWindow({ aiWindow: false }) should not open a new AI Window from an existing AI Window"
+  );
+
+  await BrowserTestUtils.closeWindow(newAIWindow);
+  await BrowserTestUtils.closeWindow(newWindowAfterDisabledAI);
+  await SpecialPowers.popPrefEnv();
+});
+
 function checkMenuItemVisibility(
   aiWindowEnabled,
   aiOpenerButton,
