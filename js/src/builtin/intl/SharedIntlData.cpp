@@ -725,7 +725,7 @@ bool js::intl::SharedIntlData::ensureUpperCaseFirstLocales(JSContext* cx) {
 #endif  // DEBUG || MOZ_SYSTEM_ICU
 
 bool js::intl::SharedIntlData::isUpperCaseFirst(JSContext* cx,
-                                                HandleString locale,
+                                                Handle<JSLinearString*> locale,
                                                 bool* isUpperFirst) {
 #if DEBUG || MOZ_SYSTEM_ICU
   if (!ensureUpperCaseFirstLocales(cx)) {
@@ -733,23 +733,17 @@ bool js::intl::SharedIntlData::isUpperCaseFirst(JSContext* cx,
   }
 #endif
 
-  JSLinearString* localeLinear = locale->ensureLinear(cx);
-  if (!localeLinear) {
-    return false;
-  }
-
 #if !MOZ_SYSTEM_ICU
   // "da" (Danish) and "mt" (Maltese) are the only two supported locales using
   // upper-case first. CLDR also lists "cu" (Church Slavic) as an upper-case
   // first locale, but since it's not supported in ICU, we don't care about it
   // here.
-  bool isDefaultUpperCaseFirstLocale =
-      js::StringEqualsLiteral(localeLinear, "da") ||
-      js::StringEqualsLiteral(localeLinear, "mt");
+  bool isDefaultUpperCaseFirstLocale = js::StringEqualsLiteral(locale, "da") ||
+                                       js::StringEqualsLiteral(locale, "mt");
 #endif
 
 #if DEBUG || MOZ_SYSTEM_ICU
-  LocaleHasher::Lookup lookup(localeLinear);
+  LocaleHasher::Lookup lookup(locale);
   *isUpperFirst = upperCaseFirstLocales.has(lookup);
 #else
   *isUpperFirst = isDefaultUpperCaseFirstLocale;
@@ -815,29 +809,22 @@ bool js::intl::SharedIntlData::ensureIgnorePunctuationLocales(JSContext* cx) {
 }
 #endif  // DEBUG || MOZ_SYSTEM_ICU
 
-bool js::intl::SharedIntlData::isIgnorePunctuation(JSContext* cx,
-                                                   HandleString locale,
-                                                   bool* ignorePunctuation) {
+bool js::intl::SharedIntlData::isIgnorePunctuation(
+    JSContext* cx, Handle<JSLinearString*> locale, bool* ignorePunctuation) {
 #if DEBUG || MOZ_SYSTEM_ICU
   if (!ensureIgnorePunctuationLocales(cx)) {
     return false;
   }
 #endif
 
-  JSLinearString* localeLinear = locale->ensureLinear(cx);
-  if (!localeLinear) {
-    return false;
-  }
-
 #if !MOZ_SYSTEM_ICU
   // "th" (Thai) is the only supported locale which ignores punctuation by
   // default.
-  bool isDefaultIgnorePunctuationLocale =
-      js::StringEqualsLiteral(localeLinear, "th");
+  bool isDefaultIgnorePunctuationLocale = js::StringEqualsLiteral(locale, "th");
 #endif
 
 #if DEBUG || MOZ_SYSTEM_ICU
-  LocaleHasher::Lookup lookup(localeLinear);
+  LocaleHasher::Lookup lookup(locale);
   *ignorePunctuation = ignorePunctuationLocales.has(lookup);
 #else
   *ignorePunctuation = isDefaultIgnorePunctuationLocale;
