@@ -6,7 +6,7 @@ use crate::frame_builder::FrameBuildingContext;
 use crate::internal_types::FastHashMap;
 use crate::prim_store::PictureIndex;
 use crate::picture::{PicturePrimitive, SurfaceIndex, SurfaceInfo};
-use crate::picture::{TileCacheInstance, SliceId};
+use crate::tile_cache::{TileCacheInstance, SliceId};
 use smallvec::SmallVec;
 
 #[derive(Debug)]
