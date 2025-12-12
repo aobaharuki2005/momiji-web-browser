@@ -196,6 +196,7 @@ static void ReleaseData(void* aData) {
 }
 
 static cairo_surface_t* CopyToImageSurface(unsigned char* aData,
+                                           const IntSize& aSize,
                                            const IntRect& aRect,
                                            int32_t aStride,
                                            SurfaceFormat aFormat) {
@@ -219,7 +220,8 @@ static cairo_surface_t* CopyToImageSurface(unsigned char* aData,
   size_t surfStride = cairo_image_surface_get_stride(surf);
   size_t pixelWidth = BytesPerPixel(aFormat);
   size_t rowDataWidth = size_t(aRectWidth) * pixelWidth;
-  if (rowDataWidth > surfStride || rowDataWidth > size_t(aStride)) {
+  if (rowDataWidth > surfStride || rowDataWidth > size_t(aStride) ||
+      !IntRect(IntPoint(), aSize).Contains(aRect)) {
     cairo_surface_destroy(surf);
     return nullptr;
   }
@@ -255,9 +257,10 @@ static cairo_surface_t* GetAsImageSurface(cairo_surface_t* aSurface) {
 }
 
 static cairo_surface_t* CreateSubImageForData(unsigned char* aData,
+                                              const IntSize& aSize,
                                               const IntRect& aRect, int aStride,
                                               SurfaceFormat aFormat) {
-  if (!aData || aStride < 0) {
+  if (!aData || aStride < 0 || !IntRect(IntPoint(), aSize).Contains(aRect)) {
     gfxWarning() << "DrawTargetCairo.CreateSubImageForData null aData";
     return nullptr;
   }
@@ -286,9 +289,11 @@ static cairo_surface_t* ExtractSubImage(cairo_surface_t* aSurface,
 
   cairo_surface_t* image = GetAsImageSurface(aSurface);
   if (image) {
-    image =
-        CreateSubImageForData(cairo_image_surface_get_data(image), aSubImage,
-                              cairo_image_surface_get_stride(image), aFormat);
+    image = CreateSubImageForData(
+        cairo_image_surface_get_data(image),
+        IntSize(cairo_image_surface_get_width(image),
+                cairo_image_surface_get_height(image)),
+        aSubImage, cairo_image_surface_get_stride(image), aFormat);
     return image;
   }
 
@@ -363,8 +368,8 @@ static cairo_surface_t* GetCairoSurfaceForSourceSurface(
     return nullptr;
   }
 
-  cairo_surface_t* surf = CreateSubImageForData(map.mData, subimage,
-                                                map.mStride, data->GetFormat());
+  cairo_surface_t* surf = CreateSubImageForData(
+      map.mData, data->GetSize(), subimage, map.mStride, data->GetFormat());
 
   // In certain scenarios, requesting larger than 8k image fails.  Bug 803568
   // covers the details of how to run into it, but the full detailed
@@ -377,7 +382,7 @@ static cairo_surface_t* GetCairoSurfaceForSourceSurface(
       // set user data since we're not dependent on the original
       // data.
       cairo_surface_t* result = CopyToImageSurface(
-          map.mData, subimage, map.mStride, data->GetFormat());
+          map.mData, data->GetSize(), subimage, map.mStride, data->GetFormat());
       data->Unmap();
       return result;
     }
@@ -1867,8 +1872,8 @@ already_AddRefed<SourceSurface> DrawTargetCairo::CreateSourceSurfaceFromData(
     return nullptr;
   }
 
-  cairo_surface_t* surf =
-      CopyToImageSurface(aData, IntRect(IntPoint(), aSize), aStride, aFormat);
+  cairo_surface_t* surf = CopyToImageSurface(
+      aData, aSize, IntRect(IntPoint(), aSize), aStride, aFormat);
   if (!surf) {
     return nullptr;
   }
