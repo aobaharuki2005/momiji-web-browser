@@ -52,14 +52,13 @@ add_task(async function test_installedCounterMetric() {
 
   equal(value(), 1, "The existing Taskbar Tab was counted");
 
-  const { taskbarTab, created } = await TaskbarTabs.findOrCreateTaskbarTab(
+  const tt = await TaskbarTabs.findOrCreateTaskbarTab(
     Services.io.newURI("https://www.test.com"),
     0
   );
-  equal(created, false, "No new Taskbar Tab was created");
-  equal(taskbarTab.id, kId, "Correct Taskbar Tab was found");
+  equal(tt.id, kId, "Correct Taskbar Tab was found");
   equal(value(), 1, "Finding a Taskbar Tab does not affect the count");
 
-  await TaskbarTabs.removeTaskbarTab(taskbarTab.id);
+  await TaskbarTabs.removeTaskbarTab(tt.id);
   equal(value(), 0, "Removing the taskbar tab was accounted for");
 });

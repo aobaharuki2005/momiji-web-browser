@@ -45,13 +45,20 @@ export const TaskbarTabs = new (class {
     this.#ready = initRegistry().then(registry => {
       this.#registry = registry;
       this.#windowManager = initWindowManager(registry);
+      initPinManager(registry);
 
-      this.#updateMetrics();
+      this.#setupTelemetry(registry);
     });
   }
 
-  #updateMetrics() {
-    Glean.webApp.installedWebAppCount.set(this.#registry.countTaskbarTabs());
+  #setupTelemetry(aRegistry) {
+    function updateMetrics() {
+      Glean.webApp.installedWebAppCount.set(aRegistry.countTaskbarTabs());
+    }
+
+    aRegistry.on(kTaskbarTabsRegistryEvents.created, updateMetrics);
+    aRegistry.on(kTaskbarTabsRegistryEvents.removed, updateMetrics);
+    updateMetrics();
   }
 
   async waitUntilReady() {
@@ -65,16 +72,7 @@ export const TaskbarTabs = new (class {
 
   async findOrCreateTaskbarTab(...args) {
     await this.#ready;
-    let result = this.#registry.findOrCreateTaskbarTab(...args);
-
-    if (result.created) {
-      this.#updateMetrics();
-
-      // Don't wait for the pinning to complete.
-      TaskbarTabsPin.pinTaskbarTab(result.taskbarTab, this.#registry);
-    }
-
-    return result;
+    return this.#registry.findOrCreateTaskbarTab(...args);
   }
 
   async findTaskbarTab(...args) {
@@ -105,7 +103,7 @@ export const TaskbarTabs = new (class {
       }),
     ]);
 
-    let { taskbarTab } = await this.findOrCreateTaskbarTab(
+    let taskbarTab = await this.findOrCreateTaskbarTab(
       url,
       userContextId,
       // 'manifest' can be null if the site doesn't have a manifest.
@@ -126,12 +124,7 @@ export const TaskbarTabs = new (class {
 
   async removeTaskbarTab(...args) {
     await this.#ready;
-
-    let taskbarTab = this.#registry.removeTaskbarTab(...args);
-    this.#updateMetrics();
-
-    // Don't wait for unpinning to finish.
-    TaskbarTabsPin.unpinTaskbarTab(taskbarTab, this.#registry);
+    return this.#registry.removeTaskbarTab(...args);
   }
 
   async openWindow(...args) {
@@ -197,4 +190,18 @@ function initWindowManager() {
   let wm = new TaskbarTabsWindowManager();
 
   return wm;
+}
+
+/**
+ * Taskbar Tabs Pinning initialization.
+ *
+ * @param {TaskbarTabsRegistry} aRegistry - A registry to drive events to trigger pinning.
+ */
+function initPinManager(aRegistry) {
+  aRegistry.on(kTaskbarTabsRegistryEvents.created, (_, taskbarTab) => {
+    return TaskbarTabsPin.pinTaskbarTab(taskbarTab, aRegistry);
+  });
+  aRegistry.on(kTaskbarTabsRegistryEvents.removed, (_, taskbarTab) => {
+    return TaskbarTabsPin.unpinTaskbarTab(taskbarTab, aRegistry);
+  });
 }

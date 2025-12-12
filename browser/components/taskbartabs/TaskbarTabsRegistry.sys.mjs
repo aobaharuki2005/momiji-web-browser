@@ -236,16 +236,12 @@ export class TaskbarTabsRegistry {
    * created.
    * @param {object} aDetails.manifest - The Web app manifest that should be
    * associated with this Taskbar Tab.
-   * @returns {{taskbarTab:TaskbarTab, created:bool}}
-   *   The matching or created Taskbar Tab, along with whether it was created.
+   * @returns {TaskbarTab} The matching or created Taskbar Tab.
    */
   findOrCreateTaskbarTab(aUrl, aUserContextId, { manifest = {} } = {}) {
-    let existing = this.findTaskbarTab(aUrl, aUserContextId);
-    if (existing) {
-      return {
-        created: false,
-        taskbarTab: existing,
-      };
+    let taskbarTab = this.findTaskbarTab(aUrl, aUserContextId);
+    if (taskbarTab) {
+      return taskbarTab;
     }
 
     let scope = { hostname: aUrl.host };
@@ -262,7 +258,7 @@ export class TaskbarTabsRegistry {
     }
 
     let id = Services.uuid.generateUUID().toString().slice(1, -1);
-    let taskbarTab = new TaskbarTab({
+    taskbarTab = new TaskbarTab({
       id,
       scopes: [scope],
       userContextId: aUserContextId,
@@ -276,18 +272,13 @@ export class TaskbarTabsRegistry {
     Glean.webApp.install.record({});
     this.#emitter.emit(kTaskbarTabsRegistryEvents.created, taskbarTab);
 
-    return {
-      created: true,
-      taskbarTab,
-    };
+    return taskbarTab;
   }
 
   /**
    * Removes a Taskbar Tab.
    *
    * @param {string} aId - The ID of the TaskbarTab to remove.
-   * @returns {TaskbarTab?} The removed taskbar tab, or null if it wasn't
-   * found.
    */
   removeTaskbarTab(aId) {
     let tts = this.#taskbarTabs;
@@ -301,11 +292,9 @@ export class TaskbarTabsRegistry {
 
       Glean.webApp.uninstall.record({});
       this.#emitter.emit(kTaskbarTabsRegistryEvents.removed, removed[0]);
-      return removed[0];
+    } else {
+      lazy.logConsole.error(`Taskbar Tab ID ${aId} not found.`);
     }
-
-    lazy.logConsole.error(`Taskbar Tab ID ${aId} not found.`);
-    return null;
   }
 
   /**
