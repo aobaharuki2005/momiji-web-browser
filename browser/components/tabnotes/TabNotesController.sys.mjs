@@ -25,9 +25,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-const EVENTS = ["CanonicalURL:Identified"];
-
-const TOPICS = ["TabNote:Created", "TabNote:Edited", "TabNote:Removed"];
+const EVENTS = [
+  "CanonicalURL:Identified",
+  "TabNote:Created",
+  "TabNote:Edited",
+  "TabNote:Removed",
+];
 
 /**
  * Orchestrates the tab notes life cycle.
@@ -51,8 +54,6 @@ class TabNotesControllerClass {
   init() {
     if (lazy.TAB_NOTES_ENABLED) {
       lazy.TabNotes.init();
-      TOPICS.forEach(topicName => Services.obs.addObserver(this, topicName));
-      lazy.logConsole.debug("init", TOPICS);
     } else {
       lazy.logConsole.info("Tab notes disabled");
     }
@@ -95,22 +96,12 @@ class TabNotesControllerClass {
    */
   quit() {
     if (lazy.TAB_NOTES_ENABLED) {
-      TOPICS.forEach(topicName => {
-        try {
-          Services.obs.removeObserver(this, topicName);
-        } catch (e) {
-          lazy.logConsole.warn(
-            `Failed to remove self from topic '${topicName}'`
-          );
-        }
-      });
       lazy.TabNotes.deinit();
-      lazy.logConsole.debug("quit", TOPICS);
     }
   }
 
   /**
-   * @param {CanonicalURLIdentifiedEvent} event
+   * @param {CanonicalURLIdentifiedEvent|TabNoteCreatedEvent|TabNoteRemovedEvent} event
    */
   handleEvent(event) {
     switch (event.type) {
@@ -124,29 +115,19 @@ class TabNotesControllerClass {
           const gBrowser = browser.getTabBrowser();
           const tab = gBrowser.getTabForBrowser(browser);
           tab.canonicalUrl = canonicalUrl;
-          lazy.TabNotes.has(canonicalUrl).then(hasTabNote => {
+          lazy.TabNotes.has(tab).then(hasTabNote => {
             tab.hasTabNote = hasTabNote;
           });
 
           lazy.logConsole.debug("CanonicalURL:Identified", tab, canonicalUrl);
         }
         break;
-    }
-  }
-
-  /**
-   * @param {nsISupports} subject
-   * @param {string} topic
-   * @param {string} data
-   */
-  observe(subject, topic, data) {
-    switch (topic) {
       case "TabNote:Created":
         {
           // A new tab note was created for a specific canonical URL. Ensure that
           // all tabs with the same canonical URL also indicate that there is a
           // tab note.
-          const canonicalUrl = data;
+          const { canonicalUrl } = event.target;
           for (const win of lazy.BrowserWindowTracker.orderedWindows) {
             for (const tab of win.gBrowser.tabs) {
               if (tab.canonicalUrl == canonicalUrl) {
@@ -162,7 +143,7 @@ class TabNotesControllerClass {
           // A new tab note was removed from a specific canonical URL. Ensure that
           // all tabs with the same canonical URL also indicate that there is no
           // longer a tab note.
-          const canonicalUrl = data;
+          const { canonicalUrl } = event.target;
           for (const win of lazy.BrowserWindowTracker.orderedWindows) {
             for (const tab of win.gBrowser.tabs) {
               if (tab.canonicalUrl == canonicalUrl) {

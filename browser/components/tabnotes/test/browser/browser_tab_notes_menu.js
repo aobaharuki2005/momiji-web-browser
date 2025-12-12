@@ -61,36 +61,6 @@ async function closeTabNoteMenu() {
   return menuHidden;
 }
 
-/**
- * Adds a tab, waits for it to load, and waits for the canonical URL to be
- * identified from the loaded contents of the tab. This ensures that the tab
- * meets the requirements to have a tab note.
- *
- * @param {string} [url="https://www.example.com"]
- * @returns {Promise<{tab: MozTabbrowserTab, canonicalUrl: string}>}
- */
-async function addTabWithCanonicalUrl(url = "https://www.example.com") {
-  const { promise, resolve } = Promise.withResolvers();
-  BrowserTestUtils.addTab(
-    gBrowser,
-    url,
-    {
-      skipAnimation: true,
-    },
-    tab => {
-      BrowserTestUtils.waitForEvent(
-        window,
-        "CanonicalURL:Identified",
-        false,
-        e => e.target == tab.linkedBrowser
-      ).then(e => {
-        resolve({ tab, canonicalUrl: e.detail.canonicalUrl });
-      });
-    }
-  );
-  return promise;
-}
-
 add_task(async function test_tabContextMenu_prefDisabled() {
   // open context menu with tab notes disabled
   await SpecialPowers.pushPrefEnv({
@@ -176,22 +146,23 @@ add_task(async function test_saveTabNote() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.tabs.notes.enabled", true]],
   });
-  let { tab, canonicalUrl } = await addTabWithCanonicalUrl();
+  let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let tabNoteMenu = await openTabNoteMenu(tab);
   tabNoteMenu.querySelector("textarea").value = "Lorem ipsum dolor";
   let menuHidden = BrowserTestUtils.waitForPopupEvent(tabNoteMenu, "hidden");
-  let tabNoteCreated = observeTabNoteCreated(canonicalUrl);
+  let tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
   tabNoteMenu.querySelector("#tab-note-editor-button-save").click();
   await Promise.all([menuHidden, tabNoteCreated]);
 
-  const tabNote = await TabNotes.get(canonicalUrl);
+  const tabNote = await TabNotes.get(tab);
   Assert.equal(
     tabNote.text,
     "Lorem ipsum dolor",
     "the text entered into the textarea should have been saved as a note"
   );
 
-  await TabNotes.delete(canonicalUrl);
+  await TabNotes.delete(tab);
   BrowserTestUtils.removeTab(tab);
 
   await SpecialPowers.popPrefEnv();

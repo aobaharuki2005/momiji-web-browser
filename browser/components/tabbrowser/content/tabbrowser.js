@@ -9774,10 +9774,9 @@ var TabContextMenu = {
     let contextAddNote = document.getElementById("context_addNote");
     let contextEditNote = document.getElementById("context_editNote");
     if (gBrowser._tabNotesEnabled) {
-      let noteURL = this.contextTab.canonicalUrl;
-      contextAddNote.disabled = !noteURL;
+      contextAddNote.disabled = !this.TabNotes.isEligible(this.contextTab);
 
-      this.TabNotes.has(noteURL).then(hasNote => {
+      this.TabNotes.has(this.contextTab).then(hasNote => {
         contextAddNote.hidden = hasNote;
         contextEditNote.hidden = !hasNote;
       });

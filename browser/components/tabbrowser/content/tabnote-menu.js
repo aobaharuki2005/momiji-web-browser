@@ -66,7 +66,9 @@
     #panel;
     #noteField;
     #titleNode;
+    /** @type {MozTabbrowserTab} */
     #currentTab = null;
+    /** @type {boolean} */
     #createMode;
 
     connectedCallback() {
@@ -146,15 +148,16 @@
       return "bottomleft topleft";
     }
 
+    /**
+     * @param {MozTabbrowserTab} tab
+     */
     openPanel(tab) {
-      this.#currentTab = tab;
-      let url = this.#currentTab.canonicalUrl;
-
-      if (!url) {
+      if (!TabNotes.isEligible(tab)) {
         return;
       }
+      this.#currentTab = tab;
 
-      TabNotes.get(url).then(note => {
+      TabNotes.get(tab).then(note => {
         if (note) {
           this.createMode = false;
           this.#noteField.value = note.text;
@@ -178,11 +181,10 @@
     }
 
     saveNote() {
-      let url = this.#currentTab.canonicalUrl;
       let note = this.#noteField.value;
 
-      if (url && note.length) {
-        TabNotes.set(url, note);
+      if (TabNotes.isEligible(this.#currentTab) && note.length) {
+        TabNotes.set(this.#currentTab, note);
       }
 
       this.#panel.hidePopup();

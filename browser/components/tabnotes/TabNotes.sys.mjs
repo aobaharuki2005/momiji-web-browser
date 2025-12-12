@@ -63,15 +63,8 @@ DELETE FROM
   tabnotes
 WHERE
   canonical_url = :url
-`;
-
-/**
- * Get the number of rows affected by the last INSERT/UPDATE/DELETE statement.
- *
- * @see https://sqlite.org/lang_corefunc.html#changes
- */
-const RETURN_CHANGED = `
-SELECT changes();
+RETURNING
+  id, canonical_url, created, note_text
 `;
 
 /**
@@ -135,15 +128,29 @@ export class TabNotesStorage {
   }
 
   /**
-   * Retrieve a note for a URL, if it exists.
+   * @param {MozTabbrowserTab} tab
+   * @returns {boolean}
+   */
+  isEligible(tab) {
+    if (tab?.canonicalUrl && URL.canParse(tab.canonicalUrl)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Retrieve a note for a tab, if it exists.
    *
-   * @param {string} url
-   *   The URL that the note is associated with
+   * @param {MozTabbrowserTab} tab
+   *   The tab to check for a note
    * @returns {Promise<TabNoteRecord|undefined>}
    */
-  async get(url) {
+  async get(tab) {
+    if (!this.isEligible(tab)) {
+      return undefined;
+    }
     const results = await this.#connection.executeCached(GET_NOTE_BY_URL, {
-      url,
+      url: tab.canonicalUrl,
     });
     if (!results?.length) {
       return undefined;
@@ -154,88 +161,109 @@ export class TabNotesStorage {
   }
 
   /**
-   * Set a note for a URL.
+   * Set a note for a tab.
    *
-   * @param {string} url
-   *   The URL that the note should be associated with
+   * @param {MozTabbrowserTab} tab
+   *   The tab that the note should be associated with
    * @param {string} note
    *   The note itself
    * @returns {Promise<TabNoteRecord>}
    *   The actual note that was set after sanitization
    * @throws {RangeError}
-   *   if `url` is not a valid URL or `note` is empty
+   *   if `tab` is not eligible for a tab note or `note` is empty
    */
-  async set(url, note) {
-    if (!URL.canParse(url)) {
-      throw new RangeError("Tab notes must be associated to a valid URL");
+  async set(tab, note) {
+    if (!this.isEligible(tab)) {
+      throw new RangeError("Tab notes must be associated to an eligible tab");
     }
     if (!note) {
       throw new RangeError("Tab note text must be provided");
     }
 
-    let existingNote = await this.get(url);
+    let existingNote = await this.get(tab);
     let sanitized = this.#sanitizeInput(note);
 
     if (existingNote && existingNote.text == sanitized) {
-      return Promise.resolve(existingNote);
+      return existingNote;
     }
 
     return this.#connection.executeTransaction(async () => {
       if (!existingNote) {
         const insertResult = await this.#connection.executeCached(CREATE_NOTE, {
-          url,
+          url: tab.canonicalUrl,
           note: sanitized,
         });
 
         const insertedRecord = this.#mapDbRowToRecord(insertResult[0]);
-        Services.obs.notifyObservers(null, "TabNote:Created", url);
+        tab.dispatchEvent(
+          new CustomEvent("TabNote:Created", {
+            bubbles: true,
+            detail: {
+              note: insertedRecord,
+            },
+          })
+        );
         return insertedRecord;
       }
 
       const updateResult = await this.#connection.executeCached(UPDATE_NOTE, {
-        url,
+        url: tab.canonicalUrl,
         note: sanitized,
       });
 
       const updatedRecord = this.#mapDbRowToRecord(updateResult[0]);
-      Services.obs.notifyObservers(null, "TabNote:Edited", url);
+      tab.dispatchEvent(
+        new CustomEvent("TabNote:Edited", {
+          bubbles: true,
+          detail: {
+            note: updatedRecord,
+          },
+        })
+      );
       return updatedRecord;
     });
   }
 
   /**
-   * Delete a note for a URL.
+   * Delete a note for a tab.
    *
-   * @param {string} url
-   *   The URL of the note
+   * @param {MozTabbrowserTab} tab
+   *   The tab that has a note
    * @returns {Promise<boolean>}
    *   True if there was a note and it was deleted; false otherwise
    */
-  async delete(url) {
-    return this.#connection.executeTransaction(async () => {
-      await this.#connection.executeCached(DELETE_NOTE, { url });
-      /** @type {mozIStorageRow[]} */
-      const changes = await this.#connection.execute(RETURN_CHANGED);
-      const wasDeleted = changes?.length && changes[0].getInt64(0) > 0;
-
-      if (wasDeleted) {
-        Services.obs.notifyObservers(null, "TabNote:Removed", url.toString());
-      }
-
-      return wasDeleted;
+  async delete(tab) {
+    /** @type {mozIStorageRow[]} */
+    const deleteResult = await this.#connection.executeCached(DELETE_NOTE, {
+      url: tab.canonicalUrl,
     });
+
+    if (deleteResult?.length > 0) {
+      const deletedRecord = this.#mapDbRowToRecord(deleteResult[0]);
+      tab.dispatchEvent(
+        new CustomEvent("TabNote:Removed", {
+          bubbles: true,
+          detail: {
+            note: deletedRecord,
+          },
+        })
+      );
+      return true;
+    }
+
+    return false;
   }
 
   /**
-   * Check if a URL has a note.
+   * Check if a tab has a note.
    *
-   * @param {string} url
-   *   The URL of the note
+   * @param {MozTabbrowserTab} tab
+   *   The tab to check for a tab note
    * @returns {Promise<boolean>}
    *   True if a note is associated with this URL; false otherwise
    */
-  async has(url) {
-    const record = await this.get(url);
+  async has(tab) {
+    const record = await this.get(tab);
     return record !== undefined;
   }
 
