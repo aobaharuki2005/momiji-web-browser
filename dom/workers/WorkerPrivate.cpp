@@ -2999,6 +2999,7 @@ WorkerPrivate::WorkerPrivate(
 WorkerPrivate::~WorkerPrivate() {
   MOZ_DIAGNOSTIC_ASSERT(mTopLevelWorkerFinishedRunnableCount == 0);
   MOZ_DIAGNOSTIC_ASSERT(mWorkerFinishedRunnableCount == 0);
+  MOZ_DIAGNOSTIC_ASSERT(mPendingJSAsyncTasks.empty());
 
   mWorkerDebuggerEventTarget->ForgetWorkerPrivate(this);
 
@@ -5040,6 +5041,19 @@ nsresult WorkerPrivate::UnregisterShutdownTask(nsITargetShutdownTask* aTask) {
   return mShutdownTasks.RemoveTask(aTask);
 }
 
+void WorkerPrivate::JSAsyncTaskStarted(JS::Dispatchable* aDispatchable) {
+  RefPtr<StrongWorkerRef> ref = StrongWorkerRef::Create(this, "JSAsyncTask");
+  MOZ_ASSERT_DEBUG_OR_FUZZING(ref);
+  if (NS_WARN_IF(!ref)) {
+    return;
+  }
+  MOZ_ALWAYS_TRUE(mPendingJSAsyncTasks.putNew(aDispatchable, std::move(ref)));
+}
+
+void WorkerPrivate::JSAsyncTaskFinished(JS::Dispatchable* aDispatchable) {
+  mPendingJSAsyncTasks.remove(aDispatchable);
+}
+
 void WorkerPrivate::RunShutdownTasks() {
   TargetShutdownTaskSet::TasksArray shutdownTasks;
 
@@ -5796,6 +5810,19 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
 
   if (aStatus >= Closing) {
     CancelAllTimeouts();
+
+    JSContext* cx = GetJSContext();
+    if (cx) {
+      // This will invoke the JS async task finished callback for cancellable
+      // JS tasks, which will invoke JSAsyncTaskFinished and remove from
+      // mPendingJSAsyncTasks.
+      //
+      // There may still be outstanding JS tasks for things that couldn't be
+      // cancelled. These must either finish normally, or be blocked on
+      // through a call to JS::ShutdownAsyncTasks. Cycle collector shutdown
+      // will call this during worker shutdown.
+      JS::CancelAsyncTasks(cx);
+    }
   }
 
   if (aStatus == Closing && GlobalScope()) {
