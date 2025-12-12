@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 /* eslint-env node */
 
+const path = require("path");
 const [prefixMap, aliasMap, sourceMap] = require("./chrome-map.js");
+const projectRoot = path.resolve(__dirname, "../../../../");
 
 function rewriteChromeUri(uri) {
   if (uri in aliasMap) {
@@ -27,4 +29,19 @@ function rewriteChromeUri(uri) {
   return "";
 }
 
-module.exports = rewriteChromeUri;
+function rewriteMozSrcUri(uri) {
+  if (!uri.startsWith("moz-src:///")) {
+    return "";
+  }
+  const relativePath = uri.replace(/^moz-src:\/\/\//, "");
+  const resolvedPath = path.resolve(projectRoot, relativePath);
+  if (!resolvedPath.startsWith(projectRoot)) {
+    return "";
+  }
+  return resolvedPath;
+}
+
+module.exports = {
+  rewriteChromeUri,
+  rewriteMozSrcUri,
+};
