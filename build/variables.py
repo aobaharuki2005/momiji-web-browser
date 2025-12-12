@@ -100,6 +100,9 @@ def source_repo_header(output):
                 "could not resolve changeset; " "try setting MOZ_SOURCE_CHANGESET"
             )
 
+    if changeset:
+        output.write("#define MOZ_SOURCE_STAMP %s\n" % changeset)
+
     if repo and buildconfig.substs.get("MOZ_INCLUDE_SOURCE_INFO"):
         source = "%s/rev/%s" % (repo, changeset)
         output.write("#define MOZ_SOURCE_REPO %s\n" % repo)

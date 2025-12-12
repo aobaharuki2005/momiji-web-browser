@@ -57,9 +57,6 @@ def main(output, file):
     else:
         appdata["App:sourceurl"] = "NULL"
 
-    if "App:sourcestamp" not in appdata:
-        appdata["App:sourcestamp"] = "NULL"
-
     if "AppUpdate:url" not in appdata:
         appdata["AppUpdate:url"] = ""
 
@@ -80,8 +77,7 @@ def main(output, file):
                  %(App:profile)s,
                  NULL, // UAName
                  %(App:sourceurl)s,
-                 "%(AppUpdate:url)s",
-                 %(App:sourcestamp)s
+                 "%(AppUpdate:url)s"
              };"""
         % appdata
     )

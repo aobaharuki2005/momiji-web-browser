@@ -11,13 +11,13 @@
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorThread.h"
+#include "mozilla/HelperMacros.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_webgl.h"
 #include "mozilla/ToString.h"
 #include "mozilla/webrender/RenderCompositor.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/layers/SynchronousTask.h"
-#include "mozilla/XREAppData.h"
 #include "nsDisplayList.h"
 #include "nsThreadUtils.h"
 #include "TextDrawTarget.h"
@@ -26,14 +26,17 @@
 
 #include "source-repo.h"
 
+#ifdef MOZ_SOURCE_STAMP
+#  define MOZ_SOURCE_STAMP_VALUE MOZ_STRINGIFY(MOZ_SOURCE_STAMP)
+#else
+#  define MOZ_SOURCE_STAMP_VALUE nullptr
+#endif
+
 static mozilla::LazyLogModule sWrDLLog("wr.dl");
 #define WRDL_LOG(...) \
   MOZ_LOG(sWrDLLog, LogLevel::Debug, ("WRDL(%p): " __VA_ARGS__))
 
-extern const mozilla::XREAppData* gAppData;
-
 namespace mozilla {
-
 using namespace layers;
 
 namespace wr {
@@ -904,7 +907,7 @@ void WebRenderAPI::Capture() {
   // SCENE | FRAME | TILE_CACHE
   uint8_t bits = 15;                // TODO: get from JavaScript
   const char* path = "wr-capture";  // TODO: get from JavaScript
-  const char* revision = gAppData->sourceStamp;
+  const char* revision = MOZ_SOURCE_STAMP_VALUE;
   wr_api_capture(mDocHandle, path, revision, bits);
 }
 
@@ -915,7 +918,7 @@ void WebRenderAPI::StartCaptureSequence(const nsACString& aPath,
   }
 
   wr_api_start_capture_sequence(mDocHandle, PromiseFlatCString(aPath).get(),
-                                gAppData->sourceStamp, aFlags);
+                                MOZ_SOURCE_STAMP_VALUE, aFlags);
 
   mCaptureSequence = true;
 }
