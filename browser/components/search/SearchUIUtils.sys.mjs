@@ -361,7 +361,7 @@ export var SearchUIUtils = {
   },
 
   /**
-   * Loads a search results page, given a set of search terms. Uses the given
+   * Opens a search results page, given a set of search terms. Uses the given
    * engine if specified and the current default engine appropriate for
    * `usePrivate` otherwise.
    *
@@ -374,20 +374,20 @@ export var SearchUIUtils = {
    * @param {?string} [options.where]
    *   String indicating where the search should load. Most commonly used
    *   are 'tab' or 'window', defaults to 'current'.
-   * @param {boolean} options.usePrivate
+   * @param {boolean} [options.usePrivate]
    *   Whether to use the Private Browsing mode default search engine.
    *   Defaults to `false`.
    * @param {nsIPrincipal} options.triggeringPrincipal
    *   The principal to use for a new window or tab.
-   * @param {nsIPolicyContainer} options.policyContainer
+   * @param {nsIPolicyContainer} [options.policyContainer]
    *   The policyContainer to use for a new window or tab.
-   * @param {boolean} [options.inBackground=false]
+   * @param {boolean} [options.inBackground]
    *   Set to true for the tab to be loaded in the background.
-   * @param {?nsISearchEngine} [options.engine=null]
+   * @param {?nsISearchEngine} [options.engine]
    *   The search engine to use for the search.
-   * @param {?MozTabbrowserTab} [options.tab=null]
+   * @param {?MozTabbrowserTab} [options.tab]
    *   The tab to show the search result.
-   * @param {?Values<typeof SearchUtils.URL_TYPE>} [options.searchUrlType=null]
+   * @param {?Values<typeof SearchUtils.URL_TYPE>} [options.searchUrlType]
    *   A `SearchUtils.URL_TYPE` value indicating the type of search that should
    *   be performed. A falsey value is equivalent to
    *   `SearchUtils.URL_TYPE.SEARCH`, which will perform a usual web search.
@@ -395,11 +395,11 @@ export var SearchUIUtils = {
    *   The search access point source, see
    *   {@link lazy.BrowserSearchTelemetry.KNOWN_SEARCH_SOURCES}
    */
-  async _loadSearch({
+  async loadSearch({
     window,
     searchText,
     where,
-    usePrivate,
+    usePrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(window),
     triggeringPrincipal,
     policyContainer,
     inBackground = false,
@@ -410,7 +410,7 @@ export var SearchUIUtils = {
   }) {
     if (!triggeringPrincipal) {
       throw new Error(
-        "Required argument triggeringPrincipal missing within _loadSearch"
+        "Required argument triggeringPrincipal missing within loadSearch"
       );
     }
 
@@ -431,7 +431,7 @@ export var SearchUIUtils = {
     }
 
     window.openLinkIn(submission.uri.spec, where || "current", {
-      private: usePrivate && !lazy.PrivateBrowsingUtils.isWindowPrivate(window),
+      private: usePrivate,
       postData: submission.postData,
       inBackground,
       relatedToCurrent: true,
@@ -503,7 +503,7 @@ export var SearchUIUtils = {
       inBackground = !inBackground;
     }
 
-    return SearchUIUtils._loadSearch({
+    return this.loadSearch({
       window,
       engine,
       searchText,
@@ -544,7 +544,7 @@ export var SearchUIUtils = {
     triggeringPrincipal,
     policyContainer
   ) {
-    return SearchUIUtils._loadSearch({
+    return SearchUIUtils.loadSearch({
       window,
       searchText,
       where: "current",
@@ -552,46 +552,6 @@ export var SearchUIUtils = {
       triggeringPrincipal,
       policyContainer,
       sapSource: "system",
-    });
-  },
-
-  /**
-   * Perform a search initiated from an extension.
-   *
-   * @param {object} params
-   *   The params.
-   * @param {WindowProxy} params.window
-   *   The window where the search was triggered.
-   * @param {string} params.query
-   *   The search terms to use for the search.
-   * @param {nsISearchEngine} params.engine
-   *   The search engine to use for the search.
-   * @param {string} params.where
-   *   String indicating where the search should load.
-   * @param {MozTabbrowserTab} params.tab
-   *   The tab to show the search result.
-   * @param {nsIPrincipal} params.triggeringPrincipal
-   *   The principal to use for a new window or tab.
-   */
-  async loadSearchFromExtension({
-    window,
-    query,
-    engine,
-    where,
-    tab,
-    triggeringPrincipal,
-  }) {
-    return SearchUIUtils._loadSearch({
-      window,
-      searchText: query,
-      where,
-      usePrivate: lazy.PrivateBrowsingUtils.isWindowPrivate(window),
-      triggeringPrincipal,
-      policyContainer: null,
-      inBackground: false,
-      engine,
-      tab,
-      sapSource: "webextension",
     });
   },
 };
