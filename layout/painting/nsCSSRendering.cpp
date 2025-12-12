@@ -4207,10 +4207,11 @@ void nsCSSRendering::PaintDecorationLine(
 void nsCSSRendering::PaintDecorationLineInternal(
     nsIFrame* aFrame, DrawTarget& aDrawTarget,
     const PaintDecorationLineParams& aParams, Rect aRect) {
-  const Float lineThickness = aParams.lineSize.height;
+  Float lineThickness = std::max(NS_round(aParams.lineSize.height), 1.0);
+
   DeviceColor color = ToDeviceColor(aParams.color);
   ColorPattern colorPat(color);
-  StrokeOptions strokeOptions(aParams.lineSize.height);
+  StrokeOptions strokeOptions(lineThickness);
   DrawOptions drawOptions;
 
   Float dash[2];
@@ -4488,7 +4489,8 @@ Rect nsCSSRendering::DecorationLineToPath(
     return path;
   }
 
-  const Float lineThickness = aParams.lineSize.height;
+  Float lineThickness = std::max(NS_round(aParams.lineSize.height), 1.0);
+
   // The block-direction position should be set to the middle of the line.
   if (aParams.vertical) {
     rect.x += lineThickness / 2;
@@ -4544,7 +4546,8 @@ gfxRect nsCSSRendering::GetTextDecorationRectInternal(
   // and horizontal coordinates at the end if vertical was requested.
   gfxRect r(left, 0, right - left, 0);
 
-  const gfxFloat lineThickness = aParams.lineSize.height;
+  gfxFloat lineThickness = NS_round(aParams.lineSize.height);
+  lineThickness = std::max(lineThickness, 1.0);
   gfxFloat defaultLineThickness = NS_round(aParams.defaultLineThickness);
   defaultLineThickness = std::max(defaultLineThickness, 1.0);
 
