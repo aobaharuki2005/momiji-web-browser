@@ -216,6 +216,22 @@ extern JS_PUBLIC_API JSObject* CreateDefaultExportSyntheticModule(
     JSContext* cx, const Value& defaultExport);
 
 /**
+ * Parse the given source buffer as a module in the scope of the current global
+ * of cx and return a source text module record.
+ */
+extern JS_PUBLIC_API JSObject* CompileWasmModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf);
+
+/**
+ * Parse the given source buffer as a module in the scope of the current global
+ * of cx and return a source text module record.
+ */
+extern JS_PUBLIC_API JSObject* CompileWasmModule(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf);
+
+/**
  * Set a private value associated with a source text module record.
  */
 extern JS_PUBLIC_API void SetModulePrivate(JSObject* module,
