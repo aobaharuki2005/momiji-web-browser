@@ -92,6 +92,7 @@ class AnchorPosReferenceData {
   struct PositionTryBackup {
     mozilla::PhysicalAxes mCompensatingForScroll;
     nsPoint mDefaultScrollShift;
+    nsRect mAdjustedContainingBlock;
   };
   using Value = mozilla::Maybe<AnchorPosResolutionData>;
 
@@ -126,21 +127,26 @@ class AnchorPosReferenceData {
   PositionTryBackup TryPositionWithSameDefaultAnchor() {
     auto compensatingForScroll = std::exchange(mCompensatingForScroll, {});
     auto defaultScrollShift = std::exchange(mDefaultScrollShift, {});
-    return {compensatingForScroll, defaultScrollShift};
+    auto adjustedContainingBlock = std::exchange(mAdjustedContainingBlock, {});
+    return {compensatingForScroll, defaultScrollShift, adjustedContainingBlock};
   }
 
   void UndoTryPositionWithSameDefaultAnchor(PositionTryBackup&& aBackup) {
     mCompensatingForScroll = aBackup.mCompensatingForScroll;
     mDefaultScrollShift = aBackup.mDefaultScrollShift;
+    mAdjustedContainingBlock = aBackup.mAdjustedContainingBlock;
   }
 
   // Distance from the default anchor to the nearest scroll container.
   DistanceToNearestScrollContainer mDistanceToDefaultScrollContainer;
   // https://drafts.csswg.org/css-anchor-position-1/#default-scroll-shift
   nsPoint mDefaultScrollShift;
-  // Rect of containing block before being inset-modified, at the time of
-  // resolution.
-  nsRect mContainingBlockRect;
+  // Rect of the original containg block.
+  nsRect mOriginalContainingBlockRect;
+  // Adjusted containing block, by position-area or grid, as per
+  // https://drafts.csswg.org/css-position/#original-cb
+  // TODO(dshin, bug 2004596): "or" should be "and/or."
+  nsRect mAdjustedContainingBlock;
   // TODO(dshin, bug 1987962): Remembered scroll offset
   // https://drafts.csswg.org/css-anchor-position-1/#remembered-scroll-offset
   // Name of the default used anchor. Not necessarily positioned frame's

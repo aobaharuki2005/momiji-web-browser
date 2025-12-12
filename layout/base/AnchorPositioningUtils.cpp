@@ -872,7 +872,7 @@ bool AnchorPositioningUtils::FitsInContainingBlock(
     const nsIFrame* aPositioned, const AnchorPosReferenceData& aReferenceData) {
   MOZ_ASSERT(aPositioned->GetProperty(nsIFrame::AnchorPosReferences()) ==
              &aReferenceData);
-  return aReferenceData.mContainingBlockRect.Contains(
+  return aReferenceData.mOriginalContainingBlockRect.Contains(
       aPositioned->GetMarginRect());
 }
 
