@@ -23126,7 +23126,7 @@ void CodeGenerator::visitAddDisposableResource(LAddDisposableResource* lir) {
   ValueOperand resource = ToValue(lir->resource());
   ValueOperand method = ToValue(lir->method());
   Register needsClosure = ToRegister(lir->needsClosure());
-  uint8_t hint = lir->hint();
+  uint8_t hint = lir->mir()->hint();
 
   pushArg(Imm32(hint));
   pushArg(needsClosure);

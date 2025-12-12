@@ -422,6 +422,7 @@
     value: Value
   result_type: None
   possibly_calls: true
+  generate_lir: true
 
 - name: InitPropGetterSetter
   operands:
@@ -1980,16 +1981,21 @@
     object: Object
   result_type: None
   guard: true
+  generate_lir: true
 
 - name: DebugEnterGCUnsafeRegion
   result_type: None
   guard: true
   alias_set: none
+  generate_lir: true
+  lir_temps: 1
 
 - name: DebugLeaveGCUnsafeRegion
   result_type: None
   guard: true
   alias_set: none
+  generate_lir: true
+  lir_temps: 1
 
 - name: Not
   gen_boilerplate: false
@@ -3191,6 +3197,8 @@
   result_type: None
   guard: true
   alias_set: none
+  generate_lir: true
+  lir_temps: 1
 
 # Allocates a new NamedLambdaObject.
 #
@@ -4323,12 +4331,16 @@
     fn: Object
     data: WasmAnyRef
   type_policy: none
+  possibly_calls: true
+  generate_lir: true
 
 - name: WasmStackContinueOnSuspendable
   operands:
     suspender: Object
     result: WasmAnyRef
   type_policy: none
+  possibly_calls: true
+  generate_lir: true
 
 - name: WasmBinarySimd128
   gen_boilerplate: false
@@ -4462,6 +4474,8 @@
     needsClosure: Boolean
   arguments:
     hint: uint8_t
+  possibly_calls: true
+  generate_lir: true
 
 - name: TakeDisposeCapability
   operands:

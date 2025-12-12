@@ -267,13 +267,6 @@
   num_temps: 1
   mir_op: true
 
-# Takes in an Object and a Value.
-- name: MutateProto
-  operands:
-    object: WordSized
-    value: BoxedValue
-  call_instruction: true
-
 - name: WasmRefAsNonNull
   operands:
     ref: WordSized
@@ -387,19 +380,6 @@
     suspender: WordSized
     fn: WordSized
     data: WordSized
-  call_instruction: true
-
-- name: WasmStackSwitchToSuspendable
-  operands:
-    suspender: WordSized
-    fn: WordSized
-    data: WordSized
-  call_instruction: true
-
-- name: WasmStackContinueOnSuspendable
-  operands:
-    suspender: WordSized
-    result: WordSized
   call_instruction: true
 
 - name: WasmInterruptCheck
@@ -1976,16 +1956,6 @@
   call_instruction: true
   mir_op: true
 
-- name: KeepAliveObject
-  operands:
-    object: WordSized
-
-- name: DebugEnterGCUnsafeRegion
-  num_temps: 1
-
-- name: DebugLeaveGCUnsafeRegion
-  num_temps: 1
-
 - name: GetNextEntryForIterator
   result_type: WordSized
   operands:
@@ -2922,13 +2892,6 @@
     value: BoxedValue
   num_temps: 1
   mir_op: PostWriteElementBarrier
-
-# Assert in debug mode that a post write barrier can be elided.
-- name: AssertCanElidePostWriteBarrier
-  operands:
-    object: WordSized
-    value: BoxedValue
-  num_temps: 1
 
 # Guard against an object's identity.
 - name: GuardObjectIdentity
@@ -4651,16 +4614,6 @@
 #endif
 
 #ifdef ENABLE_EXPLICIT_RESOURCE_MANAGEMENT
-- name: AddDisposableResource
-  operands:
-    environment: WordSized
-    resource: BoxedValue
-    method: BoxedValue
-    needsClosure: WordSized
-  arguments:
-    hint: uint8_t
-  call_instruction: true
-
 - name: CreateSuppressedError
   operands:
     error: BoxedValue

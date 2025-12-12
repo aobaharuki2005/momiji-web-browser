@@ -8855,11 +8855,9 @@ void LIRGenerator::visitAddDisposableResource(MAddDisposableResource* ins) {
   MDefinition* method = ins->method();
   MDefinition* needsClosure = ins->needsClosure();
 
-  uint8_t hint = ins->hint();
-
   auto* lir = new (alloc()) LAddDisposableResource(
       useRegisterAtStart(env), useBoxAtStart(resource), useBoxAtStart(method),
-      useRegisterAtStart(needsClosure), hint);
+      useRegisterAtStart(needsClosure));
   add(lir, ins);
   assignSafepoint(lir, ins);
 }
