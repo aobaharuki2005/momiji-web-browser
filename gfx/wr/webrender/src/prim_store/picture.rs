@@ -11,8 +11,8 @@ use crate::scene_building::IsVisible;
 use crate::gpu_types::BlurEdgeMode;
 use crate::intern::ItemUid;
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
-use crate::internal_types::{LayoutPrimitiveInfo, FilterGraphPictureReference,
-    FilterGraphOp, FilterGraphNode, SVGFE_CONVOLVE_VALUES_LIMIT, Filter};
+use crate::internal_types::{LayoutPrimitiveInfo, Filter};
+use crate::svg_filter::{FilterGraphPictureReference, FilterGraphOp, FilterGraphNode, SVGFE_CONVOLVE_VALUES_LIMIT};
 use crate::picture::PictureCompositeMode;
 use crate::prim_store::{
     PrimitiveInstanceKind, PrimitiveStore, VectorKey,
