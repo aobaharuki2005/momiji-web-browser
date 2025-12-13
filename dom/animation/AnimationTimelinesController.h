@@ -11,6 +11,7 @@
 
 namespace mozilla::dom {
 class DocumentTimeline;
+class ScrollTimeline;
 
 /**
  * The controller which keeps track of all timelines in a document. So basically
@@ -22,10 +23,12 @@ class AnimationTimelinesController final {
   ~AnimationTimelinesController() {
     // We expect the timelines should remove themself from the controller
     // already.
-    MOZ_ASSERT(mTimelines.isEmpty());
+    MOZ_ASSERT(mDocumentTimelines.isEmpty());
+    MOZ_ASSERT(mScrollTimelines.isEmpty());
   }
 
   void AddDocumentTimeline(DocumentTimeline& aTimeline);
+  void AddScrollTimeline(ScrollTimeline& aTimeline);
 
   void WillRefresh();
   void UpdateLastRefreshDriverTime();
@@ -33,9 +36,12 @@ class AnimationTimelinesController final {
   void UpdateHiddenByContentVisibility();
 
  private:
-  LinkedList<DocumentTimeline> mTimelines;
-
-  // TODO: add scroll timelines (and view timelines)
+  LinkedList<DocumentTimeline> mDocumentTimelines;
+  // Note: we use a separate linked list for scroll timelines (and
+  // view-timelines) because some utility functions don't need to traverse this
+  // list for now. If all functions have to check both lists, we should merge
+  // them.
+  LinkedList<ScrollTimeline> mScrollTimelines;
 };
 
 }  // namespace mozilla::dom

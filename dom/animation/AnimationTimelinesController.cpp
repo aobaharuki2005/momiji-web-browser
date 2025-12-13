@@ -7,32 +7,43 @@
 #include "AnimationTimelinesController.h"
 
 #include "mozilla/dom/DocumentTimeline.h"
+#include "mozilla/dom/ScrollTimeline.h"
 
 namespace mozilla::dom {
 
 void AnimationTimelinesController::AddDocumentTimeline(
     DocumentTimeline& aTimeline) {
-  mTimelines.insertBack(&aTimeline);
+  mDocumentTimelines.insertBack(&aTimeline);
+}
+
+void AnimationTimelinesController::AddScrollTimeline(
+    ScrollTimeline& aTimeline) {
+  mScrollTimelines.insertBack(&aTimeline);
 }
 
 void AnimationTimelinesController::WillRefresh() {
   for (DocumentTimeline* tl :
-       ToTArray<AutoTArray<RefPtr<DocumentTimeline>, 32>>(mTimelines)) {
+       ToTArray<AutoTArray<RefPtr<DocumentTimeline>, 32>>(mDocumentTimelines)) {
     tl->WillRefresh();
   }
 
-  // TODO: Add scroll timelines in the following patches.
+  // TODO: Switch to sample scroll timelines in HTML event loop in the following
+  // patches.
+  /*for (ScrollTimeline* tl :
+       ToTArray<AutoTArray<RefPtr<ScrollTimeline>, 32>>(mScrollTimelines)) {
+    tl->WillRefresh();
+  }*/
 }
 
 void AnimationTimelinesController::UpdateLastRefreshDriverTime() {
-  for (DocumentTimeline* timeline : mTimelines) {
+  for (DocumentTimeline* timeline : mDocumentTimelines) {
     timeline->UpdateLastRefreshDriverTime();
   }
   // We don't use refresh driver time stamp for scroll timelines.
 }
 
 void AnimationTimelinesController::TriggerAllPendingAnimationsNow() {
-  for (DocumentTimeline* timeline : mTimelines) {
+  for (DocumentTimeline* timeline : mDocumentTimelines) {
     timeline->TriggerAllPendingAnimationsNow();
   }
 
@@ -41,11 +52,15 @@ void AnimationTimelinesController::TriggerAllPendingAnimationsNow() {
 }
 
 void AnimationTimelinesController::UpdateHiddenByContentVisibility() {
-  for (AnimationTimeline* timeline : mTimelines) {
+  for (AnimationTimeline* timeline : mDocumentTimelines) {
     timeline->UpdateHiddenByContentVisibility();
   }
 
-  // TODO: Add scroll timelines in the following patches.
+  // TODO: Uncomment this once we start to sample scroll timelines in HTML event
+  // loop in the following patches.
+  /*for (AnimationTimeline* timeline : mScrollTimelines) {
+    timeline->UpdateHiddenByContentVisibility();
+  }*/
 }
 
 }  // namespace mozilla::dom
