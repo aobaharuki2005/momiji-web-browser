@@ -2458,4 +2458,14 @@ CacheStorageService::Flush(nsIObserver* aObserver) {
   return thread->Dispatch(r, CacheIOThread::WRITE);
 }
 
+NS_IMETHODIMP
+CacheStorageService::ClearDictionaryCacheMemory() {
+  LOG(("CacheStorageService::ClearDictionaryCacheMemory"));
+  RefPtr<DictionaryCache> cache = DictionaryCache::GetInstance();
+  if (cache) {
+    cache->Clear();
+  }
+  return NS_OK;
+}
+
 }  // namespace mozilla::net

@@ -17,4 +17,9 @@ interface nsICacheTesting : nsISupports
   void suspendCacheIOThread(in uint32_t aLevel);
   void resumeCacheIOThread();
   void flush(in nsIObserver aObserver);
+  /**
+   * Clear the in-memory DictionaryCache but keep disk data intact.
+   * This forces dictionary entries to be reloaded from disk on next access.
+   */
+  void clearDictionaryCacheMemory();
 };
