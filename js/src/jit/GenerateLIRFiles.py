@@ -392,6 +392,8 @@ class {class_name} : public {parent_class}<{num_defs}, {num_operands}, {num_temp
 
 
 def mir_type_to_lir_type(mir_type):
+    assert mir_type and mir_type != "None"
+
     if mir_type == "Value":
         return "BoxedValue"
 
@@ -491,7 +493,7 @@ def generate_lir_header(c_out, yaml_path, mir_yaml_path):
                     lir_result_type = None
                 else:
                     assert lir_result_type in result_types
-            elif result_type:
+            elif result_type and result_type != "None":
                 lir_result_type = mir_type_to_lir_type(result_type)
                 assert lir_result_type in result_types
 
