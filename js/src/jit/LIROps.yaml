@@ -3127,7 +3127,6 @@
   mir_op: true
 
 - name: AsmJSStoreHeap
-  result_type: WordSized
   operands:
     ptr: WordSized
     value: WordSized
@@ -3683,7 +3682,6 @@
   mir_op: true
 
 - name: WasmStoreLaneSimd128
-  result_type: WordSized
   operands:
     ptr: WordSized
     src: WordSized

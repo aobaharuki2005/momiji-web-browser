@@ -1964,6 +1964,7 @@
   congruent_to: if_operands_equal
   alias_set: none
   generate_lir: true
+  lir_result_type: none
   lir_temps: 1
 
 # Inlined TypedArray.prototype.subarray
@@ -3543,6 +3544,7 @@
   result_type: Object
   alias_set: custom
   generate_lir: true
+  lir_result_type: none
 
 # Return true if the object is definitely a TypedArray constructor, but not
 # necessarily from the currently active realm. Return false if the object is
@@ -3645,6 +3647,7 @@
   folds_to: custom
   alias_set: none
   generate_lir: true
+  lir_result_type: none
 
 - name: GuardInt32Range
   operands:
@@ -4179,6 +4182,7 @@
   congruent_to: if_operands_equal
   type_policy: none
   generate_lir: true
+  lir_result_type: none
   lir_temps: 1
   alias_set: none
   guard: true
