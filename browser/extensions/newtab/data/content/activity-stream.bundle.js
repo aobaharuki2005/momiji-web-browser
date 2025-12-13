@@ -621,6 +621,11 @@ const PREF_SPOC_COUNTS = "discoverystream.placements.spocs.counts";
 const PREF_CONTEXTUAL_ADS_ENABLED = "discoverystream.sections.contextualAds.enabled";
 const PREF_CONTEXTUAL_BANNER_PLACEMENTS = "discoverystream.placements.contextualBanners";
 const PREF_CONTEXTUAL_BANNER_COUNTS = "discoverystream.placements.contextualBanners.counts";
+const PREF_UNIFIED_ADS_ENABLED = "unifiedAds.spocs.enabled";
+const PREF_UNIFIED_ADS_ENDPOINT = "unifiedAds.endpoint";
+const PREF_ALLOWED_ENDPOINTS = "discoverystream.endpoints";
+const PREF_OHTTP_CONFIG = "discoverystream.ohttp.configURL";
+const PREF_OHTTP_RELAY = "discoverystream.ohttp.relayURL";
 const Row = props => /*#__PURE__*/external_React_default().createElement("tr", _extends({
   className: "message-item"
 }, props), props.children);
@@ -719,6 +724,7 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
     this.refreshTopicSelectionCache = this.refreshTopicSelectionCache.bind(this);
     this.handleSectionsToggle = this.handleSectionsToggle.bind(this);
     this.toggleIABBanners = this.toggleIABBanners.bind(this);
+    this.handleAllizomToggle = this.handleAllizomToggle.bind(this);
     this.sendConversionEvent = this.sendConversionEvent.bind(this);
     this.state = {
       toggledStories: {},
@@ -983,25 +989,71 @@ class DiscoveryStreamAdminUI extends (external_React_default()).PureComponent {
       }, key));
     }))));
   }
+  handleAllizomToggle(e) {
+    const prefs = this.props.otherPrefs;
+    const unifiedAdsSpocsEnabled = prefs[PREF_UNIFIED_ADS_ENABLED];
+    if (!unifiedAdsSpocsEnabled) {
+      return;
+    }
+    const {
+      pressed
+    } = e.target;
+    const {
+      dispatch
+    } = this.props;
+    const allowedEndpoints = prefs[PREF_ALLOWED_ENDPOINTS];
+    const setPref = (pref = "", value = "") => {
+      dispatch(actionCreators.SetPref(pref, value));
+    };
+    const clearPref = (pref = "") => {
+      dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.CLEAR_PREF,
+        data: {
+          name: pref
+        }
+      }));
+    };
+    if (pressed) {
+      setPref(PREF_UNIFIED_ADS_ENDPOINT, "https://ads.allizom.org/");
+      setPref(PREF_ALLOWED_ENDPOINTS, `${allowedEndpoints},https://ads.allizom.org/`);
+      setPref(PREF_OHTTP_CONFIG, "https://stage.ohttp-gateway.nonprod.webservices.mozgcp.net/ohttp-configs");
+      setPref(PREF_OHTTP_RELAY, "https://mozilla-ohttp-relay-test.edgecompute.app/");
+    } else {
+      clearPref(PREF_UNIFIED_ADS_ENDPOINT);
+      clearPref(PREF_ALLOWED_ENDPOINTS);
+      clearPref(PREF_OHTTP_CONFIG);
+      clearPref(PREF_OHTTP_RELAY);
+    }
+  }
   renderSpocs() {
     const {
       spocs
     } = this.props.state.DiscoveryStream;
-    const unifiedAdsSpocsEnabled = this.props.otherPrefs["unifiedAds.spocs.enabled"];
+    const unifiedAdsSpocsEnabled = this.props.otherPrefs[PREF_UNIFIED_ADS_ENABLED];
 
     // Determine which mechanism is querying the UAPI ads server
     const PREF_UNIFIED_ADS_ADSFEED_ENABLED = "unifiedAds.adsFeed.enabled";
     const adsFeedEnabled = this.props.otherPrefs[PREF_UNIFIED_ADS_ADSFEED_ENABLED];
-    const unifiedAdsEndpoint = this.props.otherPrefs["unifiedAds.endpoint"];
+    const unifiedAdsEndpoint = this.props.otherPrefs[PREF_UNIFIED_ADS_ENDPOINT];
+    const spocsEndpoint = unifiedAdsSpocsEnabled ? unifiedAdsEndpoint : spocs.spocs_endpoint;
     let spocsData = [];
+    let allizomEnabled = spocsEndpoint?.includes("allizom");
     if (spocs.data && spocs.data.newtab_spocs && spocs.data.newtab_spocs.items) {
       spocsData = spocs.data.newtab_spocs.items || [];
     }
     return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
+      colSpan: "2"
+    }, /*#__PURE__*/external_React_default().createElement("moz-toggle", {
+      id: "sections-toggle",
+      disabled: !unifiedAdsSpocsEnabled || null,
+      pressed: allizomEnabled || null,
+      onToggle: this.handleAllizomToggle,
+      label: "Toggle allizom"
+    }))), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
     }, "adsfeed enabled"), /*#__PURE__*/external_React_default().createElement("td", null, adsFeedEnabled ? "true" : "false")), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
-    }, "spocs_endpoint"), /*#__PURE__*/external_React_default().createElement("td", null, unifiedAdsSpocsEnabled ? unifiedAdsEndpoint : spocs.spocs_endpoint)), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
+    }, "spocs endpoint"), /*#__PURE__*/external_React_default().createElement("td", null, spocsEndpoint)), /*#__PURE__*/external_React_default().createElement(Row, null, /*#__PURE__*/external_React_default().createElement("td", {
       className: "min"
     }, "Data last fetched"), /*#__PURE__*/external_React_default().createElement("td", null, relativeTime(spocs.lastUpdated))))), /*#__PURE__*/external_React_default().createElement("h4", null, "Spoc data"), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, spocsData.map(spoc => this.renderStoryData(spoc)))), /*#__PURE__*/external_React_default().createElement("h4", null, "Spoc frequency caps"), /*#__PURE__*/external_React_default().createElement("table", null, /*#__PURE__*/external_React_default().createElement("tbody", null, spocs.frequency_caps.map(spoc => this.renderStoryData(spoc)))));
   }
