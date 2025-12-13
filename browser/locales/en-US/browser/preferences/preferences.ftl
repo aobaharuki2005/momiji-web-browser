@@ -901,8 +901,8 @@ search-separate-default-engine-2 =
 search-separate-default-engine-dropdown =
     .aria-label = Default search engine in private windows
 
-search-suggestions-header = Search Suggestions
-search-suggestions-desc = Choose how suggestions from search engines appear.
+search-suggestions-header-2 =
+    .label = Search engine suggestions
 
 search-show-suggestions-option =
     .label = Show search suggestions
@@ -915,15 +915,16 @@ search-show-suggestions-url-bar-option =
 # This string describes what the user will observe when the system
 # prioritizes search suggestions over browsing history in the results
 # that extend down from the address bar. In the original English string,
-# "ahead" refers to location (appearing most proximate to), not time
+# "before" refers to location (appearing most proximate to), not time
 # (appearing before).
-search-show-suggestions-above-history-option =
-    .label = Show search suggestions ahead of browsing history in address bar results
+search-show-suggestions-above-history-option-2 =
+    .label = Show search suggestions before browsing history in address bar results
 
-search-show-suggestions-private-windows =
-    .label = Show search suggestions in Private Windows
+search-show-suggestions-private-windows-2 =
+    .label = Search suggestions in private windows
 
-search-suggestions-cant-show = Search suggestions will not be shown in location bar results because you have configured { -brand-short-name } to never remember history.
+search-suggestions-cant-show-2 =
+    .message = Search suggestions will not be shown in location bar results because you have configured { -brand-short-name } to never remember history.
 
 search-one-click-header2 = Search Shortcuts
 
@@ -1519,11 +1520,11 @@ addressbar-locbar-engines-option-1 =
 addressbar-locbar-quickactions-option =
     .label = Quick actions
     .accesskey = Q
-addressbar-locbar-showrecentsearches-option =
-    .label = Show recent searches
+addressbar-locbar-showrecentsearches-option-2 =
+    .label = Recent searches
     .accesskey = r
-addressbar-locbar-showtrendingsuggestions-option =
-    .label = Show trending search suggestions
+addressbar-locbar-showtrendingsuggestions-option-2 =
+    .label = Trending search suggestions
     .accesskey = t
 
 # Toggles whether suggestions are obtained from Firefox Suggest or not (local or online).

@@ -2843,6 +2843,40 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  searchSuggestions: {
+    l10nId: "search-suggestions-header-2",
+    headingLevel: 2,
+    items: [
+      {
+        id: "suggestionsInSearchFieldsCheckbox",
+        l10nId: "search-show-suggestions-option",
+        items: [
+          {
+            id: "urlBarSuggestionCheckbox",
+            l10nId: "search-show-suggestions-url-bar-option",
+          },
+          {
+            id: "showSearchSuggestionsFirstCheckbox",
+            l10nId: "search-show-suggestions-above-history-option-2",
+          },
+          {
+            id: "showSearchSuggestionsPrivateWindowsCheckbox",
+            l10nId: "search-show-suggestions-private-windows-2",
+          },
+          {
+            id: "showTrendingSuggestionsCheckbox",
+            l10nId: "addressbar-locbar-showtrendingsuggestions-option-2",
+            supportPage: "use-google-trending-search-firefox-address-bar",
+          },
+          {
+            id: "urlBarSuggestionPermanentPBMessage",
+            l10nId: "search-suggestions-cant-show-2",
+            control: "moz-message-bar",
+          },
+        ],
+      },
+    ],
+  },
   dnsOverHttpsAdvanced: {
     inProgress: true,
     l10nId: "preferences-doh-advanced-section",

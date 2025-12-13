@@ -179,12 +179,8 @@ Preferences.addSetting({
         }
       },
     };
-
     lazy.CustomizableUI.addListener(customizableUIListener);
-
-    window.addEventListener("unload", () => {
-      lazy.CustomizableUI.removeListener(customizableUIListener);
-    });
+    return () => lazy.CustomizableUI.removeListener(customizableUIListener);
   },
 });
 
@@ -220,6 +216,180 @@ Preferences.addSetting(
   })
 );
 
+Preferences.addSetting({
+  id: "searchSuggestionsEnabledPref",
+  pref: "browser.search.suggest.enabled",
+});
+
+Preferences.addSetting({
+  id: "permanentPBEnabledPref",
+  pref: "browser.privatebrowsing.autostart",
+});
+
+Preferences.addSetting({
+  id: "urlbarSuggestionsEnabledPref",
+  pref: "browser.urlbar.suggest.searches",
+});
+
+Preferences.addSetting({
+  id: "trendingFeaturegatePref",
+  pref: "browser.urlbar.trending.featureGate",
+});
+
+// The show search suggestion box behaves differently depending on whether the
+// separate search bar is shown. When the separate search bar is shown, it
+// controls just the search suggestion preference, and the
+// `urlBarSuggestionCheckbox` handles the urlbar suggestions. When the separate
+// search bar is not shown, this checkbox toggles both preferences to ensure
+// that the urlbar suggestion preference is set correctly, since that will be
+// the only bar visible.
+Preferences.addSetting({
+  id: "suggestionsInSearchFieldsCheckbox",
+  deps: ["searchSuggestionsEnabledPref", "urlbarSuggestionsEnabledPref"],
+  get(_, deps) {
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    return (
+      deps.searchSuggestionsEnabledPref.value &&
+      (searchBarVisible || deps.urlbarSuggestionsEnabledPref.value)
+    );
+  },
+  set(newCheckedValue, deps) {
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    if (!searchBarVisible) {
+      deps.urlbarSuggestionsEnabledPref.value = newCheckedValue;
+    }
+    deps.searchSuggestionsEnabledPref.value = newCheckedValue;
+    return newCheckedValue;
+  },
+});
+
+Preferences.addSetting({
+  id: "urlBarSuggestionCheckbox",
+  deps: [
+    "urlbarSuggestionsEnabledPref",
+    "suggestionsInSearchFieldsCheckbox",
+    "searchSuggestionsEnabledPref",
+    "permanentPBEnabledPref",
+  ],
+  get: (_, deps) => {
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    if (
+      deps.suggestionsInSearchFieldsCheckbox.value &&
+      searchBarVisible &&
+      deps.urlbarSuggestionsEnabledPref.value
+    ) {
+      return true;
+    }
+    return false;
+  },
+  set: (newCheckedValue, deps, setting) => {
+    if (setting.disabled) {
+      deps.urlbarSuggestionsEnabledPref.value = false;
+      return false;
+    }
+
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    if (deps.suggestionsInSearchFieldsCheckbox.value && searchBarVisible) {
+      deps.urlbarSuggestionsEnabledPref.value = newCheckedValue;
+    }
+    return newCheckedValue;
+  },
+  setup: onChange => {
+    // Add observer of CustomizableUI as checkbox should be hidden while
+    // searchbar is enabled.
+    let customizableUIListener = {
+      onWidgetAfterDOMChange: node => {
+        if (node.id == "search-container") {
+          onChange();
+        }
+      },
+    };
+    lazy.CustomizableUI.addListener(customizableUIListener);
+    return () => lazy.CustomizableUI.removeListener(customizableUIListener);
+  },
+  disabled: deps => {
+    return (
+      !deps.searchSuggestionsEnabledPref.value ||
+      deps.permanentPBEnabledPref.value
+    );
+  },
+  visible: () => {
+    let searchBarVisible =
+      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
+    return searchBarVisible;
+  },
+});
+
+Preferences.addSetting({
+  id: "showSearchSuggestionsFirstCheckbox",
+  pref: "browser.urlbar.showSearchSuggestionsFirst",
+  deps: [
+    "suggestionsInSearchFieldsCheckbox",
+    "urlbarSuggestionsEnabledPref",
+    "searchSuggestionsEnabledPref",
+    "permanentPBEnabledPref",
+  ],
+  get: (newCheckedValue, deps) => {
+    if (!deps.searchSuggestionsEnabledPref.value) {
+      return false;
+    }
+    return deps.urlbarSuggestionsEnabledPref.value ? newCheckedValue : false;
+  },
+  disabled: deps => {
+    return (
+      !deps.suggestionsInSearchFieldsCheckbox.value ||
+      !deps.urlbarSuggestionsEnabledPref.value ||
+      deps.permanentPBEnabledPref.value
+    );
+  },
+});
+
+Preferences.addSetting({
+  id: "showSearchSuggestionsPrivateWindowsCheckbox",
+  pref: "browser.search.suggest.enabled.private",
+  deps: ["searchSuggestionsEnabledPref"],
+  disabled: deps => {
+    return !deps.searchSuggestionsEnabledPref.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "showTrendingSuggestionsCheckbox",
+  pref: "browser.urlbar.suggest.trending",
+  deps: [
+    "searchSuggestionsEnabledPref",
+    "permanentPBEnabledPref",
+    // Required to dynamically update the disabled state when the default engine is changed.
+    "defaultEngineNormal",
+    "trendingFeaturegatePref",
+  ],
+  visible: deps => deps.trendingFeaturegatePref.value,
+  disabled: deps => {
+    let trendingSupported = Services.search.defaultEngine.supportsResponseType(
+      lazy.SearchUtils.URL_TYPE.TRENDING_JSON
+    );
+    return (
+      !deps.searchSuggestionsEnabledPref.value ||
+      deps.permanentPBEnabledPref.value ||
+      !trendingSupported
+    );
+  },
+});
+
+Preferences.addSetting({
+  id: "urlBarSuggestionPermanentPBMessage",
+  deps: ["urlBarSuggestionCheckbox", "permanentPBEnabledPref"],
+  visible: deps => {
+    return (
+      deps.urlBarSuggestionCheckbox.visible && deps.permanentPBEnabledPref.value
+    );
+  },
+});
+
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 const SEARCH_TYPE = "default_search";
 const SEARCH_KEY = "defaultSearch";
@@ -231,7 +401,7 @@ var gSearchPane = {
 
   init() {
     initSettingGroup("defaultEngine");
-
+    initSettingGroup("searchSuggestions");
     this._engineStore = new EngineStore();
     gEngineView = new EngineView(this._engineStore);
 
@@ -258,59 +428,11 @@ var gSearchPane = {
       Services.obs.removeObserver(this, "quicksuggest-dismissals-changed");
     });
 
-    let suggestsPref = Preferences.get("browser.search.suggest.enabled");
-    let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
-    let privateSuggestsPref = Preferences.get(
-      "browser.search.suggest.enabled.private"
-    );
-
-    let updateSuggestionCheckboxes =
-      this._updateSuggestionCheckboxes.bind(this);
-    suggestsPref.on("change", updateSuggestionCheckboxes);
-    urlbarSuggestsPref.on("change", updateSuggestionCheckboxes);
-    let customizableUIListener = {
-      onWidgetAfterDOMChange: node => {
-        if (node.id == "search-container") {
-          updateSuggestionCheckboxes();
-        }
-      },
-    };
-    lazy.CustomizableUI.addListener(customizableUIListener);
-    window.addEventListener("unload", () => {
-      lazy.CustomizableUI.removeListener(customizableUIListener);
-    });
-
-    let urlbarSuggests = document.getElementById("urlBarSuggestion");
-    urlbarSuggests.addEventListener("command", () => {
-      urlbarSuggestsPref.value = urlbarSuggests.checked;
-    });
-    let suggestionsInSearchFieldsCheckbox = document.getElementById(
-      "suggestionsInSearchFieldsCheckbox"
-    );
-    // We only want to call _updateSuggestionCheckboxes once after updating
-    // all prefs.
-    suggestionsInSearchFieldsCheckbox.addEventListener("command", () => {
-      this._skipUpdateSuggestionCheckboxesFromPrefChanges = true;
-      if (!lazy.CustomizableUI.getPlacementOfWidget("search-container")) {
-        urlbarSuggestsPref.value = suggestionsInSearchFieldsCheckbox.checked;
-      }
-      suggestsPref.value = suggestionsInSearchFieldsCheckbox.checked;
-      this._skipUpdateSuggestionCheckboxesFromPrefChanges = false;
-      this._updateSuggestionCheckboxes();
-    });
-    let privateWindowCheckbox = document.getElementById(
-      "showSearchSuggestionsPrivateWindows"
-    );
-    privateWindowCheckbox.addEventListener("command", () => {
-      privateSuggestsPref.value = privateWindowCheckbox.checked;
-    });
-
     Preferences.addSyncFromPrefListener(
       document.getElementById("firefoxSuggestAll"),
       this._onFirefoxSuggestAllChange.bind(this)
     );
 
-    this._updateSuggestionCheckboxes();
     this._initRecentSeachesCheckbox();
     this._initAddressBar();
   },
@@ -326,73 +448,6 @@ var gSearchPane = {
     return undefined;
   },
 
-  _updateSuggestionCheckboxes() {
-    if (this._skipUpdateSuggestionCheckboxesFromPrefChanges) {
-      return;
-    }
-    let suggestsPref = Preferences.get("browser.search.suggest.enabled");
-    let permanentPB = Services.prefs.getBoolPref(
-      "browser.privatebrowsing.autostart"
-    );
-    let urlbarSuggests = document.getElementById("urlBarSuggestion");
-    let suggestionsInSearchFieldsCheckbox = document.getElementById(
-      "suggestionsInSearchFieldsCheckbox"
-    );
-    let positionCheckbox = document.getElementById(
-      "showSearchSuggestionsFirstCheckbox"
-    );
-    let privateWindowCheckbox = document.getElementById(
-      "showSearchSuggestionsPrivateWindows"
-    );
-    let urlbarSuggestsPref = Preferences.get("browser.urlbar.suggest.searches");
-    let searchBarVisible =
-      !!lazy.CustomizableUI.getPlacementOfWidget("search-container");
-
-    suggestionsInSearchFieldsCheckbox.checked =
-      suggestsPref.value && (searchBarVisible || urlbarSuggestsPref.value);
-
-    urlbarSuggests.disabled = !suggestsPref.value || permanentPB;
-    urlbarSuggests.hidden = !searchBarVisible;
-
-    privateWindowCheckbox.disabled = !suggestsPref.value;
-    privateWindowCheckbox.checked = Preferences.get(
-      "browser.search.suggest.enabled.private"
-    ).value;
-    if (privateWindowCheckbox.disabled) {
-      privateWindowCheckbox.checked = false;
-    }
-
-    urlbarSuggests.checked = urlbarSuggestsPref.value;
-    if (urlbarSuggests.disabled) {
-      urlbarSuggests.checked = false;
-    }
-    if (urlbarSuggests.checked) {
-      positionCheckbox.disabled = false;
-      // Update the checked state of the show-suggestions-first checkbox.  Note
-      // that this does *not* also update its pref, it only checks the box.
-      positionCheckbox.checked = Preferences.get(
-        positionCheckbox.getAttribute("preference")
-      ).value;
-    } else {
-      positionCheckbox.disabled = true;
-      positionCheckbox.checked = false;
-    }
-    if (
-      suggestionsInSearchFieldsCheckbox.checked &&
-      !searchBarVisible &&
-      !urlbarSuggests.checked
-    ) {
-      urlbarSuggestsPref.value = true;
-    }
-
-    let permanentPBLabel = document.getElementById(
-      "urlBarSuggestionPermanentPBLabel"
-    );
-    permanentPBLabel.hidden = urlbarSuggests.hidden || !permanentPB;
-
-    this._updateTrendingCheckbox(!suggestsPref.value || permanentPB);
-  },
-
   _initRecentSeachesCheckbox() {
     this._recentSearchesEnabledPref = Preferences.get(
       "browser.urlbar.recentsearches.featureGate"
@@ -406,17 +461,6 @@ var gSearchPane = {
 
     this._recentSearchesEnabledPref.on("change", listener);
     listener();
-  },
-
-  async _updateTrendingCheckbox(suggestDisabled) {
-    let trendingBox = document.getElementById("showTrendingSuggestionsBox");
-    let trendingCheckBox = document.getElementById("showTrendingSuggestions");
-    let trendingSupported = (
-      await Services.search.getDefault()
-    ).supportsResponseType(lazy.SearchUtils.URL_TYPE.TRENDING_JSON);
-    trendingBox.hidden = !Preferences.get("browser.urlbar.trending.featureGate")
-      .value;
-    trendingCheckBox.disabled = suggestDisabled || !trendingSupported;
   },
 
   // ADDRESS BAR
@@ -568,7 +612,6 @@ var gSearchPane = {
           case "engine-default": {
             // Pass through to the engine store to handle updates.
             this._engineStore.browserSearchEngineModified(engine, data);
-            gSearchPane._updateSuggestionCheckboxes();
             break;
           }
           default:
