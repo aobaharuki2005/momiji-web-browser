@@ -212,7 +212,7 @@
   <!-- Browser menu button that opens the extensions manager -->
   <string name="browser_menu_manage_extensions">확장 기능 관리</string>
   <!-- Browser menu group that contains additional settings in collapsed state -->
-  <string name="browser_menu_more_settings">더 보기</string>
+  <string name="browser_menu_more_settings">더보기</string>
   <!--
     Content description (not visible, for screen readers etc.): Label for plus icon used to add extension.
     %1$s is the name of the extension (for example: ClearURLs).
@@ -822,8 +822,6 @@
   <string name="preferences_gestures">제스처</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">사용자 지정</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">탭, 북마크, 비밀번호 등을 동기화하려면 로그인하세요.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">탭, 북마크, 비밀번호 등을 동기화하세요.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1219,10 +1217,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">데이터 동기화 및 저장</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">로그인</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">재연결을 위해 로그인</string>
@@ -1509,8 +1505,6 @@
   <string name="tab_tray_multiselect_menu_content_description">선택한 탭 메뉴</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">홈페이지</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s 홈페이지</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">모음집에서 탭 삭제</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2113,8 +2107,6 @@
   <string name="toast_copy_link_to_clipboard">클립보드에 복사됨</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Sync에 로그인</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">데이터 동기화 및 저장</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">로그인</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
@@ -2703,6 +2695,10 @@
   <string name="edit_login_navigate_back_button_content_description">뒤로</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">로그인 편집</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">새 로그인 추가</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">검색 텍스트 지우기</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">브라우저에서 사이트 열기</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

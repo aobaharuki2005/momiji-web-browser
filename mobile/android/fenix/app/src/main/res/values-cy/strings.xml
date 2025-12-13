@@ -822,8 +822,6 @@
   <string name="preferences_gestures">Ystumiau</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Cyfaddasu</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Mewngofnodwch i gydweddu tabiau, nodau tudalen, cyfrineiriau, a rhagor.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">Cydweddu tabiau, nodau tudalen, cyfrineiriau, a rhagor.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1219,10 +1217,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Cydweddu a chadw eich data</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">Mewngofnodi</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Mewngofnodi i ailgysylltu</string>
@@ -1486,11 +1482,11 @@
   <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
   <string name="tab_manager_close_all_tabs_dialog_title">Cau pob tab?</string>
   <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
-  <string name="tab_manager_close_all_tabs_dialog_body">Bydd hyn yn cau pob tab agored.</string>
+  <string name="tab_manager_close_all_tabs_dialog_body">Bydd hyn yn cau pob tab sydd ar agor.</string>
   <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
   <string name="tab_manager_close_all_tabs_dialog_confirm">Cau tabiau</string>
   <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
-  <string name="tab_manager_close_all_tabs_dialog_cancel">Diddymu</string>
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Na</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Nod Tudalen</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
@@ -1509,8 +1505,6 @@
   <string name="tab_tray_multiselect_menu_content_description">Dewislen tabiau penodol</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Tudalen Cartref</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Tudalen cartref %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Tynnu tab o’r casgliad</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1538,7 +1532,7 @@
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (Modd Preifat)</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
-  <string name="tab_manager_open_tab_search">Agor chwiliad tab</string>
+  <string name="tab_manager_open_tab_search">Agor chwilio tabiau</string>
   <!--
     History
 
@@ -2113,8 +2107,6 @@
   <string name="toast_copy_link_to_clipboard">Copïwyd i’r clipfwrdd</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Mewngofnodi i Sync</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Cydweddu a chadw data</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Mewngofnodi</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
@@ -2703,6 +2695,10 @@
   <string name="edit_login_navigate_back_button_content_description">Symud nôl</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">Golygu\'r mewngofnod</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">Ychwanegu mewngofnod newydd</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">Clirio testun chwilio</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Agor y wefan yn y porwr</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

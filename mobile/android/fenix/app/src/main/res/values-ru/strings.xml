@@ -591,7 +591,7 @@
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Помогите нам в развитии Firefox</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Расскажите маркетинговым партнерам Mozilla о том, как вы открыли для себя Firefox и о том, что вы его используете. Эти данные никогда не продаются.</string>
+  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Расскажите маркетинговым партнёрам Mozilla о том, как вы открыли для себя Firefox и о том, что вы его используете. Эти данные никогда не продаются.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_redesign_learn_more">Как мы используем данные</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -621,7 +621,7 @@
   <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
   <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">И ещё одно</string>
   <!-- Marketing onboarding page body variant. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Расскажите маркетинговым партнерам Mozilla о том, как вы открыли для себя Firefox и о том, что вы его используете. Эти данные никогда не продаются.</string>
+  <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Расскажите маркетинговым партнёрам Mozilla о том, как вы открыли для себя Firefox и о том, что вы его используете. Эти данные никогда не продаются.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Согласиться и начать веб-сёрфинг</string>
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
@@ -822,8 +822,6 @@
   <string name="preferences_gestures">Жесты</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Персонализация</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Войдите для синхронизации вкладок, закладок, паролей и многого другого.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">Синхронизация вкладок, закладок, паролей и пр.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1219,10 +1217,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Синхронизация</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">Войти</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Войти, чтобы подключиться снова</string>
@@ -1397,7 +1393,7 @@
   <!-- Option for always opening the user's last-open tab when re-opening the app -->
   <string name="opening_screen_last_tab">Последняя вкладка</string>
   <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
-  <string name="opening_screen_after_four_hours_of_inactivity">Домашняя страница после четырех часов бездействия</string>
+  <string name="opening_screen_after_four_hours_of_inactivity">Домашняя страница после четырёх часов бездействия</string>
   <!-- Summary for tabs preference when auto closing tabs setting is set to manual close -->
   <string name="close_tabs_manually_summary">Закрывать вручную</string>
   <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day -->
@@ -1509,8 +1505,6 @@
   <string name="tab_tray_multiselect_menu_content_description">Меню выбранных вкладок</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Домашняя страница</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Домашняя страница %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Удалить вкладку из коллекции</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2113,8 +2107,6 @@
   <string name="toast_copy_link_to_clipboard">Скопировано в буфер обмена</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Войти в синхронизацию</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Синхронизация и сохранение данных</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Войти</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
@@ -2703,6 +2695,10 @@
   <string name="edit_login_navigate_back_button_content_description">Перейти назад</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">Изменить логин</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">Добавить новый логин</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">Очистить поисковый запрос</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Открыть сайт в браузере</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->

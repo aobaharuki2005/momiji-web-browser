@@ -822,8 +822,6 @@
   <string name="preferences_gestures">ท่าทาง</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">ปรับแต่ง</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">ลงชื่อเข้าเพื่อซิงค์แท็บ ที่คั่นหน้า รหัสผ่าน และอื่น ๆ ของคุณ</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">ซิงค์แท็บ ที่คั่นหน้า รหัสผ่าน และอื่น ๆ</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1219,10 +1217,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">ซิงค์และบันทึกข้อมูลของคุณ</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">ลงชื่อเข้าใช้</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">ลงชื่อเข้าเพื่อเชื่อมต่ออีกครั้ง</string>
@@ -1509,8 +1505,6 @@
   <string name="tab_tray_multiselect_menu_content_description">เมนูแท็บที่เลือก</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">หน้าแรก</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">หน้าแรกของ %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">เอาแท็บออกจากชุดสะสม</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2113,8 +2107,6 @@
   <string name="toast_copy_link_to_clipboard">คัดลอกไปยังคลิปบอร์ดแล้ว</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">ลงชื่อเข้าไปยัง Sync</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">ซิงค์และบันทึกข้อมูล</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">ลงชื่อเข้า</string>
   <!-- An option from the share dialog to send link to all other sync devices -->

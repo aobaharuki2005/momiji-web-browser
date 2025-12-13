@@ -812,8 +812,6 @@
   <string name="preferences_gestures">Poteze</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Prilagoditev</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Prijavite se in sinhronizirajte zavihke, zaznamke, gesla in še kaj.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">Sinhronizirajte zavihke, zaznamke, gesla in drugo.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1209,10 +1207,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Sinhronizirajte in shranite podatke</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">Prijava</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Prijavite se, če se želite ponovno povezati</string>
@@ -1499,8 +1495,6 @@
   <string name="tab_tray_multiselect_menu_content_description">Meni izbranih zavihkov</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Domača stran</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Domača stran %sa</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Odstrani zavihek iz zbirke</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2103,8 +2097,6 @@
   <string name="toast_copy_link_to_clipboard">Kopirano v odložišče</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Prijava v Sync</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Sinhroniziraj in shrani podatke</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Prijava</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
@@ -2691,6 +2683,8 @@
   <string name="edit_login_navigate_back_button_content_description">Pojdi nazaj</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">Uredi prijavo</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">Dodaj novo prijavo</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Odpri stran v brskalniku</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
