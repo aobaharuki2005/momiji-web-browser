@@ -47,11 +47,13 @@ export async function getRecentChats(
   maxResults = DEFAULT_MAX_RESULTS,
   halfLifeDays = DEFAULT_HALF_LIFE_DAYS
 ) {
-  const endTime = Date.now();
+  // Underlying Chatstore uses Date type but InsightsStore maintains in TS
+  const startDate = new Date(startTime);
+  const endDate = new Date();
   const chatStore = new ChatStore();
   const messages = await chatStore.findMessagesByDate(
-    startTime,
-    endTime,
+    startDate,
+    endDate,
     MESSAGE_ROLE.USER,
     maxResults
   );

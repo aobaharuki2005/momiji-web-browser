@@ -15,6 +15,18 @@ const { sinon } = ChromeUtils.importESModule(
 );
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+function normalizeToMs(value) {
+  if (value instanceof Date) {
+    return value.getTime();
+  }
+  if (typeof value === "number") {
+    return value;
+  }
+  // assume string (e.g. ISO date)
+  return Date.parse(value);
+}
+
 let sandbox;
 
 add_setup(function () {
@@ -26,7 +38,7 @@ add_setup(function () {
 
 // past date check
 add_task(function test_computeFreshnessScore_past_date_check() {
-  const createdDate = Date.now() - 10 * MS_PER_DAY;
+  const createdDate = new Date(Date.now() - 10 * MS_PER_DAY);
   const score = computeFreshnessScore(createdDate, 7);
 
   Assert.less(score, 0.5, "Freshness score should be < 0.5");
@@ -34,21 +46,23 @@ add_task(function test_computeFreshnessScore_past_date_check() {
 
 // future date check
 add_task(function test_computeFreshnessScore_future_date_check() {
-  const createdDate = Date.now() + 1 * MS_PER_DAY;
+  const createdDate = new Date(Date.now() + 1 * MS_PER_DAY);
   const score = computeFreshnessScore(createdDate, 7);
   Assert.equal(score, 1, "Freshness score should be 1");
 });
 
 // current date check
 add_task(function test_computeFreshnessScore_current_date_check() {
-  const createdDate = Date.now();
+  const createdDate = new Date();
   const score = computeFreshnessScore(createdDate, 7);
-  Assert.equal(score, 1, "Freshness score should be 1");
+  // allow tiny floating point / timing jitter
+  Assert.greaterOrEqual(score, 0.9999, "Freshness score should be ≈ 1");
+  Assert.lessOrEqual(score, 1, "Freshness score must be <= 1");
 });
 
 // approx halflife check
 add_task(function test_computeFreshnessScore_halflife_approx_check() {
-  const createdDate = Date.now() - 7 * MS_PER_DAY;
+  const createdDate = new Date(Date.now() - 7 * MS_PER_DAY);
   const score = computeFreshnessScore(createdDate, 7);
   // making sure that score in between 0.49 & 0.51 (closer to halflife)
   Assert.less(score, 0.51, "Freshness score should be < 0.51");
@@ -57,8 +71,8 @@ add_task(function test_computeFreshnessScore_halflife_approx_check() {
 
 // older vs recent score check
 add_task(function test_computeFreshnessScore_older_vs_recent_check() {
-  const olderDate = Date.now() - 30 * MS_PER_DAY;
-  const recentDate = Date.now() - 1 * MS_PER_DAY;
+  const olderDate = new Date(Date.now() - 30 * MS_PER_DAY);
+  const recentDate = new Date(Date.now() - 1 * MS_PER_DAY);
   const olderScore = computeFreshnessScore(olderDate, 7);
   const recentScore = computeFreshnessScore(recentDate, 7);
   Assert.less(olderScore, recentScore, "Older score should be < recent score");
@@ -123,11 +137,9 @@ add_task(async function test_getRecentChats_basic_mapping_and_limit() {
         MESSAGE_ROLE.USER,
         "Role passed to findMessagesByDate should be USER"
       );
-      Assert.greaterOrEqual(
-        endTimeArg,
-        startTimeArg,
-        "endTime should be >= startTime"
-      );
+      const startMs = normalizeToMs(startTimeArg);
+      const endMs = normalizeToMs(endTimeArg);
+      Assert.greaterOrEqual(endMs, startMs, "endTime should be >= startTime");
       Assert.equal(limitArg, maxResults, "limit should match maxResults");
       return messages;
     });
@@ -139,10 +151,12 @@ add_task(async function test_getRecentChats_basic_mapping_and_limit() {
 
   const [startTimeArg, , roleArg] = stub.firstCall.args;
   Assert.equal(roleArg, MESSAGE_ROLE.USER, "Role should be USER");
+  const startMs = normalizeToMs(startTimeArg);
+
   Assert.equal(
-    startTimeArg,
+    startMs,
     fixedNow - 1_000_000,
-    "startTime should be fixedNow - 1_000_000"
+    "startTime should be fixedNow - 1_000_000 in ms"
   );
 
   Assert.equal(result.length, maxResults, "Should respect maxResults");
