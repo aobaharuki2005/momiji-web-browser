@@ -200,21 +200,7 @@
 </groupbox>
 
 <!-- Zoom -->
-<groupbox id="zoomGroup" data-category="paneGeneral" hidden="true" data-srd-groupid="zoom">
-  <label><html:h2 data-l10n-id="preferences-zoom-header"/></label>
-  <hbox id="zoomBox" align="center" hidden="true">
-    <label control="defaultZoom" data-l10n-id="preferences-default-zoom"/>
-    <menulist id="defaultZoom">
-      <menupopup/>
-    </menulist>
-  </hbox>
-  <html:moz-message-bar id="text-zoom-override-warning" data-l10n-id="preferences-text-zoom-override-warning"/>
-  <checkbox id="zoomText"
-    data-l10n-id="preferences-zoom-text-only"/>
-
-</groupbox>
-
-<html:setting-group hidden="true" data-category="paneGeneral" groupid="zoom" />
+<html:setting-group id="zoomGroup" groupid="zoom" data-category="paneGeneral" hidden="true" />
 
 <!-- Languages -->
 <groupbox id="languagesGroup" data-category="paneGeneral" hidden="true">
