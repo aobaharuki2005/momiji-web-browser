@@ -375,6 +375,10 @@ var allowlist = [
   // Bug 2000987 - get user messages from chat source
   {
     file: "moz-src:///browser/components/aiwindow/models/InsightsChatSource.sys.mjs",
+    // Bug 2003303 - Implement Title Generation (backed out due to unused file)
+  },
+  {
+    file: "moz-src:///browser/components/aiwindow/models/TitleGeneration.sys.mjs",
   },
 ];
 
