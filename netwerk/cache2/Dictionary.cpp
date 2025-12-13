@@ -728,18 +728,16 @@ NS_IMETHODIMP DictionaryOriginReader::OnCacheEntryAvailable(
     return NS_OK;
   }
 
+  mOrigin->SetCacheEntry(aCacheEntry);
   AUTO_PROFILER_FLOW_MARKER("DictionaryOriginReader::VisitMetaData", NETWORK,
                             Flow::FromPointer(this));
   bool empty = false;
   aCacheEntry->GetIsEmpty(&empty);
-  if (empty) {
-    // New cache entry, set type
-    mOrigin->SetCacheEntry(aCacheEntry);
-  } else {
+  if (!empty) {
     // There's no data in the cache entry, just metadata
     nsCOMPtr<nsICacheEntryMetaDataVisitor> metadata(mOrigin);
     aCacheEntry->VisitMetaData(metadata);
-  }
+  }  // else new cache entry
 
   // This list is the only thing keeping us alive
   RefPtr<DictionaryOriginReader> safety(this);
@@ -905,9 +903,12 @@ nsresult DictionaryCache::RemoveEntry(nsIURI* aURI, const nsACString& aKey) {
 }
 
 void DictionaryCache::Clear() {
-  // There may be active Prefetch()es running, note, and active
-  // fetches using dictionaries.  They will stay alive until the
-  // channels using them go away.
+  // There may be active Prefetch()es running, note, and active fetches
+  // using dictionaries.  They will stay alive until the channels using
+  // them go away.  However, no new requests will see them.
+
+  // This can be used to make the cache return to the state it has at
+  // startup, especially useful for tests.
   mDictionaryCache.Clear();
 }
 

@@ -596,6 +596,9 @@ prefs = ["content.cors.use_triggering_principal=true"] # See bug 1982916.
 ["test_dictionary_compression_dcb.js"]
 run-sequentially = ["true"]
 
+["test_dictionary_replacement.js"]
+run-sequentially = ["true"]
+
 ["test_dictionary_retrieval.js"]
 run-sequentially = ["true"]
 
