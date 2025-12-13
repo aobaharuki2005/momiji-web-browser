@@ -364,6 +364,10 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
   },
+  // Bug 2004888 - [FirstRun] Create Firstrun.html opening firstrun welcome screen
+  {
+    file: "chrome://browser/content/aiwindow/firstrun.html",
+  },
   // Bug 2005524 - Insights drift detector for generation from history
   {
     file: "moz-src:///browser/components/aiwindow/models/InsightsDriftDetector.sys.mjs",

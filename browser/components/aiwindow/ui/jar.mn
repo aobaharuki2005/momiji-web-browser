@@ -11,3 +11,6 @@ browser.jar:
   content/browser/aiwindow/components/ai-window.css         (components/ai-window/ai-window.css)
   content/browser/aiwindow/components/input-cta.css         (components/input-cta/input-cta.css)
   content/browser/aiwindow/components/input-cta.mjs         (components/input-cta/input-cta.mjs)
+  content/browser/aiwindow/firstrun.html                    (content/firstrun.html)
+  content/browser/aiwindow/firstrun.css                     (content/firstrun.css)
+  content/browser/aiwindow/firstrun.js                      (content/firstrun.js)
