@@ -977,7 +977,7 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
   const auto anchorResolutionParams =
       AnchorPosResolutionParams::From(&aKidReflowInput);
 
-  auto ResolveMarginsInAxis = [&](LogicalAxis aAxis) {
+  auto ResolveMarginsInAxis = [&](LogicalAxis aAxis, bool aAnchorCenter) {
     const auto startSide = MakeLogicalSide(aAxis, LogicalEdge::Start);
     const auto endSide = MakeLogicalSide(aAxis, LogicalEdge::End);
 
@@ -1006,18 +1006,20 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
             ->IsAuto();
 
     if (aAxis == LogicalAxis::Inline) {
-      ReflowInput::ComputeAbsPosInlineAutoMargin(availMarginSpace, outerWM,
-                                                 startSideMarginIsAuto,
-                                                 endSideMarginIsAuto, aMargin);
+      ReflowInput::ComputeAbsPosInlineAutoMargin(
+          availMarginSpace, outerWM, startSideMarginIsAuto, endSideMarginIsAuto,
+          aAnchorCenter, aMargin);
     } else {
-      ReflowInput::ComputeAbsPosBlockAutoMargin(availMarginSpace, outerWM,
-                                                startSideMarginIsAuto,
-                                                endSideMarginIsAuto, aMargin);
+      ReflowInput::ComputeAbsPosBlockAutoMargin(
+          availMarginSpace, outerWM, startSideMarginIsAuto, endSideMarginIsAuto,
+          aAnchorCenter, aMargin);
     }
   };
 
-  ResolveMarginsInAxis(LogicalAxis::Inline);
-  ResolveMarginsInAxis(LogicalAxis::Block);
+  ResolveMarginsInAxis(LogicalAxis::Inline,
+                       aKidReflowInput.mFlags.mIAnchorCenter);
+  ResolveMarginsInAxis(LogicalAxis::Block,
+                       aKidReflowInput.mFlags.mBAnchorCenter);
   aKidReflowInput.SetComputedLogicalMargin(outerWM, aMargin);
 
   nsMargin* propValue =
@@ -1415,12 +1417,10 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       // margin for us in that axis (since the thing that's aligned is the
       // margin box).  So, we clear out the margin here to avoid applying it
       // twice.
-      if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign ||
-          kidReflowInput.mFlags.mIAnchorCenter) {
+      if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign) {
         margin.IStart(outerWM) = margin.IEnd(outerWM) = 0;
       }
-      if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign ||
-          kidReflowInput.mFlags.mBAnchorCenter) {
+      if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign) {
         margin.BStart(outerWM) = margin.BEnd(outerWM) = 0;
       }
 

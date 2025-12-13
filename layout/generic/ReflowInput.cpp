@@ -1188,7 +1188,18 @@ void ReflowInput::ComputeAbsPosInlineAutoMargin(nscoord aAvailMarginSpace,
                                                 WritingMode aContainingBlockWM,
                                                 bool aIsMarginIStartAuto,
                                                 bool aIsMarginIEndAuto,
+                                                bool aIsIAnchorCenter,
                                                 LogicalMargin& aMargin) {
+  if (aIsIAnchorCenter) {
+    // `anchor-center` sets any use of `auto` margin to 0.
+    if (aIsMarginIStartAuto) {
+      aMargin.IStart(aContainingBlockWM) = 0;
+    }
+    if (aIsMarginIEndAuto) {
+      aMargin.IEnd(aContainingBlockWM) = 0;
+    }
+    return;
+  }
   if (aIsMarginIStartAuto) {
     if (aIsMarginIEndAuto) {
       if (aAvailMarginSpace < 0) {
@@ -1222,7 +1233,18 @@ void ReflowInput::ComputeAbsPosBlockAutoMargin(nscoord aAvailMarginSpace,
                                                WritingMode aContainingBlockWM,
                                                bool aIsMarginBStartAuto,
                                                bool aIsMarginBEndAuto,
+                                               bool aIsBAnchorCenter,
                                                LogicalMargin& aMargin) {
+  if (aIsBAnchorCenter) {
+    // `anchor-center` sets any use of `auto` margin to 0.
+    if (aIsMarginBStartAuto) {
+      aMargin.BStart(aContainingBlockWM) = 0;
+    }
+    if (aIsMarginBEndAuto) {
+      aMargin.BEnd(aContainingBlockWM) = 0;
+    }
+    return;
+  }
   if (aIsMarginBStartAuto) {
     if (aIsMarginBEndAuto) {
       // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
