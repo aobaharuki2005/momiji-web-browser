@@ -471,13 +471,11 @@ LightweightThemeConsumer.prototype = {
     this._lastExperimentData.usedVariables = usedVariables;
 
     if (experiment.stylesheet) {
-      /* Stylesheet URLs are validated using WebExtension schemas */
-      let stylesheetAttr = `href="${experiment.stylesheet}" type="text/css"`;
-      let stylesheet = this._doc.createProcessingInstruction(
-        "xml-stylesheet",
-        stylesheetAttr
-      );
-      this._doc.insertBefore(stylesheet, root);
+      let stylesheet = this._doc.createElement("link");
+      stylesheet.rel = "stylesheet";
+      // Stylesheet URLs are validated using WebExtension schemas
+      stylesheet.href = experiment.stylesheet;
+      this._doc.head.appendChild(stylesheet);
       this._lastExperimentData.stylesheet = stylesheet;
     }
   },
