@@ -51,8 +51,6 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, const Scroller& aScroller,
       mAxis(aAxis) {
   MOZ_ASSERT(aDocument);
 
-  RegisterWithScrollSource();
-
   mDocument->TimelinesController().AddScrollTimeline(*this);
 }
 
@@ -126,43 +124,18 @@ already_AddRefed<ScrollTimeline> ScrollTimeline::MakeNamed(
                                        aStyleTimeline.GetAxis());
 }
 
-// TODO: Update this function to use the cached values in the following patches.
 Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
-  // If no layout box, this timeline is inactive.
-  if (!mSource || !mSource.mElement->GetPrimaryFrame()) {
+  if (!mCachedCurrentTime) {
     return nullptr;
   }
 
-  // if this is not a scroller container, this timeline is inactive.
-  const ScrollContainerFrame* scrollContainerFrame = GetScrollContainerFrame();
-  if (!scrollContainerFrame) {
-    return nullptr;
-  }
-
-  const auto orientation = Axis();
-
-  // If there is no scrollable overflow, then the ScrollTimeline is inactive.
-  // https://drafts.csswg.org/scroll-animations-1/#scrolltimeline-interface
-  if (!scrollContainerFrame->GetAvailableScrollingDirections().contains(
-          orientation)) {
-    return nullptr;
-  }
-
-  const bool isHorizontal = orientation == layers::ScrollDirection::eHorizontal;
-  const nsPoint& scrollPosition = scrollContainerFrame->GetScrollPosition();
-  const Maybe<ScrollOffsets>& offsets =
-      ComputeOffsets(scrollContainerFrame, orientation);
-  if (!offsets) {
-    return nullptr;
-  }
-
-  // Note: For RTL, scrollPosition.x or scrollPosition.y may be negative,
-  // e.g. the range of its value is [0, -range], so we have to use the
-  // absolute value.
-  nscoord position =
-      std::abs(isHorizontal ? scrollPosition.x : scrollPosition.y);
-  double progress = static_cast<double>(position - offsets->mStart) /
-                    static_cast<double>(offsets->mEnd - offsets->mStart);
+  const CurrentTimeData& data = mCachedCurrentTime.ref();
+  // FIXME: Scroll offsets on the RTL container is complicated specifically on
+  // mobile, see https://github.com/w3c/csswg-drafts/issues/12893. For now, we
+  // use the absoluate value to make things simple.
+  double progress =
+      static_cast<double>(std::abs(data.mPosition) - data.mOffsets.mStart) /
+      static_cast<double>(data.mOffsets.mEnd - data.mOffsets.mStart);
   return TimeDuration::FromMilliseconds(progress *
                                         PROGRESS_TIMELINE_DURATION_MILLISEC);
 }
@@ -287,43 +260,6 @@ void ScrollTimeline::UpdateCachedCurrentTime() {
       offsets.value()});
 }
 
-void ScrollTimeline::RegisterWithScrollSource() {
-  if (!mSource) {
-    return;
-  }
-
-  auto& scheduler = ProgressTimelineScheduler::Ensure(
-      mSource.mElement, PseudoStyleRequest(mSource.mPseudoType));
-  scheduler.AddTimeline(this);
-}
-
-void ScrollTimeline::UnregisterFromScrollSource() {
-  if (!mSource) {
-    return;
-  }
-
-  auto* scheduler = ProgressTimelineScheduler::Get(
-      mSource.mElement, PseudoStyleRequest(mSource.mPseudoType));
-  if (!scheduler) {
-    return;
-  }
-
-  // If we are trying to unregister this timeline from the scheduler in
-  // ProgressTimelineScheduler::ScheduleAnimations(), we have to unregister this
-  // after we finish the scheduling, to avoid mutating the hashtset
-  // and destroying the scheduler here.
-  if (scheduler->IsInScheduling()) {
-    mState = TimelineState::PendingRemove;
-    return;
-  }
-
-  scheduler->RemoveTimeline(this);
-  if (scheduler->IsEmpty()) {
-    ProgressTimelineScheduler::Destroy(mSource.mElement,
-                                       PseudoStyleRequest(mSource.mPseudoType));
-  }
-}
-
 const ScrollContainerFrame* ScrollTimeline::GetScrollContainerFrame() const {
   if (!mSource) {
     return nullptr;
@@ -346,102 +282,36 @@ const ScrollContainerFrame* ScrollTimeline::GetScrollContainerFrame() const {
   return nullptr;
 }
 
+static nsRefreshDriver* GetRefreshDriver(Document* aDocument) {
+  nsPresContext* presContext = aDocument->GetPresContext();
+  if (MOZ_UNLIKELY(!presContext)) {
+    return nullptr;
+  }
+  return presContext->RefreshDriver();
+}
+
 void ScrollTimeline::NotifyAnimationUpdated(Animation& aAnimation) {
   AnimationTimeline::NotifyAnimationUpdated(aAnimation);
 
-  // TODO: Switch to sample scroll timelines in HTML event loop in the following
-  // patches.
-  /*if (!mAnimationOrder.isEmpty()) {
+  if (!mAnimationOrder.isEmpty()) {
     if (auto* rd = GetRefreshDriver(mDocument)) {
       MOZ_ASSERT(isInList(),
                  "We should not register with the refresh driver if we are not"
                  " in the document's list of timelines");
       rd->EnsureAnimationUpdate();
     }
-  }*/
+  }
 }
 
 void ScrollTimeline::NotifyAnimationContentVisibilityChanged(
     Animation* aAnimation, bool aIsVisible) {
   AnimationTimeline::NotifyAnimationContentVisibilityChanged(aAnimation,
                                                              aIsVisible);
-  if (mAnimationOrder.isEmpty()) {
-    UnregisterFromScrollSource();
-  } else {
-    RegisterWithScrollSource();
-  }
-
-  // TODO: Switch to sample scroll timelines in HTML event loop in the following
-  // patches.
-  /*if (auto* rd = GetRefreshDriver(mDocument)) {
+  if (auto* rd = GetRefreshDriver(mDocument)) {
     MOZ_ASSERT(isInList(),
                "We should not register with the refresh driver if we are not"
                " in the document's list of timelines");
     rd->EnsureAnimationUpdate();
-  }*/
-}
-
-// ------------------------------------
-// Methods of ProgressTimelineScheduler
-// ------------------------------------
-/* static */ ProgressTimelineScheduler* ProgressTimelineScheduler::Get(
-    const Element* aElement, const PseudoStyleRequest& aPseudoRequest) {
-  MOZ_ASSERT(aElement);
-  auto* data = aElement->GetAnimationData();
-  if (!data) {
-    return nullptr;
-  }
-
-  return data->GetProgressTimelineScheduler(aPseudoRequest);
-}
-
-/* static */ ProgressTimelineScheduler& ProgressTimelineScheduler::Ensure(
-    Element* aElement, const PseudoStyleRequest& aPseudoRequest) {
-  MOZ_ASSERT(aElement);
-  return aElement->EnsureAnimationData().EnsureProgressTimelineScheduler(
-      aPseudoRequest);
-}
-
-/* static */
-void ProgressTimelineScheduler::Destroy(
-    const Element* aElement, const PseudoStyleRequest& aPseudoRequest) {
-  auto* data = aElement->GetAnimationData();
-  MOZ_ASSERT(data);
-  data->ClearProgressTimelineScheduler(aPseudoRequest);
-}
-
-/* static */
-void ProgressTimelineScheduler::ScheduleAnimations(
-    const Element* aElement, const PseudoStyleRequest& aRequest) {
-  auto* scheduler = Get(aElement, aRequest);
-  if (!scheduler) {
-    return;
-  }
-
-  // Note: We only need to handle the removal. It's impossible to iterate the
-  // non-existing timelines and add them into the hashset.
-  nsTArray<ScrollTimeline*> timelinesToBeRemoved;
-
-  scheduler->mIsInScheduling = true;
-  for (auto iter = scheduler->mTimelines.iter(); !iter.done(); iter.next()) {
-    auto* timeline = iter.get();
-    const auto state = timeline->ScheduleAnimations();
-    if (state == ScrollTimeline::TimelineState::PendingRemove) {
-      timelinesToBeRemoved.AppendElement(timeline);
-    }
-  }
-  MOZ_ASSERT(Get(aElement, aRequest), "Make sure the scheduler still exists");
-  scheduler->mIsInScheduling = false;
-
-  // In the common case, this array is empty. It could be non-empty only when
-  // we change the content-visibility in their Tick()s.
-  for (auto* timeline : timelinesToBeRemoved) {
-    timeline->ResetState();
-    scheduler->RemoveTimeline(timeline);
-  }
-
-  if (scheduler->IsEmpty()) {
-    ProgressTimelineScheduler::Destroy(aElement, aRequest);
   }
 }
 

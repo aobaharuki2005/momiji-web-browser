@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_ScrollTimeline_h
 #define mozilla_dom_ScrollTimeline_h
 
-#include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/WritingModes.h"
@@ -156,25 +155,6 @@ class ScrollTimeline : public AnimationTimeline,
     return TimeDuration::FromMilliseconds(PROGRESS_TIMELINE_DURATION_MILLISEC);
   }
 
-  enum class TimelineState : uint8_t {
-    // Normal case. The timeline is still in the scheduler.
-    None,
-    // This timeline is pending for removal from the scheduler.
-    PendingRemove,
-  };
-  TimelineState ScheduleAnimations() {
-    MOZ_ASSERT(mState == TimelineState::None);
-
-    // FIXME: Bug 1737927: Need to check the animation mutation observers for
-    // animations with scroll timelines.
-    // nsAutoAnimationMutationBatch mb(mDocument);
-    TickState state;
-    Tick(state);
-    // TODO: Do we need to synchronize scroll animations?
-
-    return mState;
-  }
-
   void WillRefresh();
 
   // If the source of a ScrollTimeline is an element whose principal box does
@@ -209,8 +189,6 @@ class ScrollTimeline : public AnimationTimeline,
   void NotifyAnimationContentVisibilityChanged(Animation* aAnimation,
                                                bool aIsVisible) override;
 
-  void ResetState() { mState = TimelineState::None; }
-
  protected:
   virtual ~ScrollTimeline() { Teardown(); }
   ScrollTimeline() = delete;
@@ -234,14 +212,7 @@ class ScrollTimeline : public AnimationTimeline,
     if (isInList()) {
       remove();
     }
-    UnregisterFromScrollSource();
   }
-
-  // Register this scroll timeline to the element property.
-  void RegisterWithScrollSource();
-
-  // Unregister this scroll timeline from the element property.
-  void UnregisterFromScrollSource();
 
   const ScrollContainerFrame* GetScrollContainerFrame() const;
 
@@ -256,11 +227,6 @@ class ScrollTimeline : public AnimationTimeline,
   Scroller mSource;
   StyleScrollAxis mAxis;
 
-  // The current state of this timeline. We set this flag during scheduling
-  // because we shouldn't remove this timeline from the scheduler immediately
-  // while scheduling, to avoid any unexpected behaviors.
-  TimelineState mState = TimelineState::None;
-
   struct CurrentTimeData {
     // The position of the scroller, and this may be negative for RTL or
     // sideways, e.g. the range of its value could be [0, -range]. The user
@@ -269,51 +235,6 @@ class ScrollTimeline : public AnimationTimeline,
     ScrollOffsets mOffsets;
   };
   Maybe<CurrentTimeData> mCachedCurrentTime;
-};
-
-/**
- * A wrapper around a hashset of ScrollTimeline objects to handle the scheduling
- * of scroll driven animations. This is used for all kinds of progress
- * timelines, i.e. anonymous/named scroll timelines and anonymous/named view
- * timelines. And this object is owned by the scroll source (See
- * ElementAnimationData and ScrollContainerFrame for the usage).
- */
-class ProgressTimelineScheduler {
- public:
-  ProgressTimelineScheduler() { MOZ_COUNT_CTOR(ProgressTimelineScheduler); }
-  ~ProgressTimelineScheduler() { MOZ_COUNT_DTOR(ProgressTimelineScheduler); }
-
-  static ProgressTimelineScheduler* Get(
-      const Element* aElement, const PseudoStyleRequest& aPseudoRequest);
-  static ProgressTimelineScheduler& Ensure(
-      Element* aElement, const PseudoStyleRequest& aPseudoRequest);
-  static void Destroy(const Element* aElement,
-                      const PseudoStyleRequest& aPseudoRequest);
-
-  void AddTimeline(ScrollTimeline* aScrollTimeline) {
-    MOZ_ASSERT(!mIsInScheduling, "Do not mutate the hashset during scheduling");
-    (void)mTimelines.put(aScrollTimeline);
-  }
-  void RemoveTimeline(ScrollTimeline* aScrollTimeline) {
-    MOZ_ASSERT(!mIsInScheduling, "Do not mutate the hashset during scheduling");
-    mTimelines.remove(aScrollTimeline);
-  }
-
-  bool IsEmpty() const { return mTimelines.empty(); }
-  bool IsInScheduling() const { return mIsInScheduling; }
-
-  // Note: Use static function because this may destroy the scheduler if all
-  // timelines are removed.
-  static void ScheduleAnimations(const Element* aElement,
-                                 const PseudoStyleRequest& aRequest);
-
- private:
-  // We let Animations own its scroll timeline or view timeline if it is
-  // anonymous. For named progress timelines, they are created and destroyed by
-  // TimelineCollection.
-  HashSet<ScrollTimeline*> mTimelines;
-  // Used to avoid mutating |mTimelines| while scheduling.
-  bool mIsInScheduling = false;
 };
 
 }  // namespace dom

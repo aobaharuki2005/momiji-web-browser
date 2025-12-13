@@ -7851,28 +7851,10 @@ void ScrollContainerFrame::AppendScrollUpdate(
 }
 
 void ScrollContainerFrame::ScheduleScrollAnimations() {
-  nsIContent* content = GetContent();
-  MOZ_ASSERT(content && content->IsElement(),
-             "The ScrollContainerFrame should have the element.");
-
-  const Element* elementOrPseudo = content->AsElement();
-  PseudoStyleType pseudo = elementOrPseudo->GetPseudoElementType();
-  if (pseudo != PseudoStyleType::NotPseudo &&
-      !AnimationUtils::IsSupportedPseudoForAnimations(pseudo)) {
-    // This is not an animatable pseudo element, and so we don't generate
-    // scroll-timeline for it.
-    return;
-  }
-
-  const auto [element, request] =
-      AnimationUtils::GetElementPseudoPair(elementOrPseudo);
-  ProgressTimelineScheduler::ScheduleAnimations(element, request);
-
-  // TODO: Switch to sample scroll timelines in HTML event loop in the following
-  // patches.
-  // auto* rd = PresContext()->RefreshDriver();
-  // MOZ_ASSERT(rd);
-  // rd->EnsureAnimationUpdate();
+  auto* rd = PresContext()->RefreshDriver();
+  MOZ_ASSERT(rd);
+  // This schedules UpdateAnimationsAndSendEvents in the HTML loop.
+  rd->EnsureAnimationUpdate();
 }
 
 nsSize ScrollContainerFrame::GetSizeForWindowInnerSize() const {
