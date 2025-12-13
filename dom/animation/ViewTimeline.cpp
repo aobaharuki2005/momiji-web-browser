@@ -72,13 +72,9 @@ Maybe<ScrollTimeline::ScrollOffsets> ViewTimeline::ComputeOffsets(
   MOZ_ASSERT(mSubject);
   MOZ_ASSERT(aScrollContainerFrame);
 
-  // Note: We may fail to get the pseudo element (or its primary frame) if it is
-  // not generated yet or just get destroyed, while we are sampling this view
-  // timeline.
   const Element* subjectElement =
       mSubject->GetPseudoElement(PseudoStyleRequest(mSubjectPseudoType));
-  const nsIFrame* subject =
-      subjectElement ? subjectElement->GetPrimaryFrame() : nullptr;
+  const nsIFrame* subject = subjectElement->GetPrimaryFrame();
   if (!subject) {
     // No principal box of the subject, so we cannot compute the offset. This
     // may happen when we clear all animation collections during unbinding from

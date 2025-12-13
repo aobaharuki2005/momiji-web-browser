@@ -3060,6 +3060,7 @@ void nsPresContext::DoUpdateHiddenByContentVisibilityForAnimations() {
   MOZ_ASSERT(NeedsToUpdateHiddenByContentVisibilityForAnimations());
   mNeedsToUpdateHiddenByContentVisibilityForAnimations = false;
   mDocument->UpdateHiddenByContentVisibilityForAnimations();
+  TimelineManager()->UpdateHiddenByContentVisibilityForAnimations();
 }
 
 #ifdef DEBUG

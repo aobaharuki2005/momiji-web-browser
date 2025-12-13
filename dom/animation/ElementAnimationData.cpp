@@ -51,6 +51,7 @@ void ElementAnimationData::ClearAllAnimationCollections() {
   mElementData.mTransitions = nullptr;
   mElementData.mScrollTimelines = nullptr;
   mElementData.mViewTimelines = nullptr;
+  mElementData.mProgressTimelineScheduler = nullptr;
   ClearAllPseudos(false);
 }
 
@@ -76,6 +77,7 @@ void ElementAnimationData::ClearAllPseudos(bool aOnlyViewTransitions) {
     data->mTransitions = nullptr;
     data->mScrollTimelines = nullptr;
     data->mViewTimelines = nullptr;
+    data->mProgressTimelineScheduler = nullptr;
 
     if (data->IsEmpty()) {
       iter.Remove();
@@ -176,6 +178,13 @@ void ElementAnimationData::ClearViewTimelineCollectionFor(
   });
 }
 
+void ElementAnimationData::ClearProgressTimelineScheduler(
+    const PseudoStyleRequest& aRequest) {
+  WithDataForRemoval(aRequest, [](PerElementOrPseudoData& aData) {
+    aData.mProgressTimelineScheduler = nullptr;
+  });
+}
+
 ElementAnimationData::PerElementOrPseudoData::PerElementOrPseudoData() =
     default;
 ElementAnimationData::PerElementOrPseudoData::~PerElementOrPseudoData() =
@@ -226,6 +235,13 @@ ElementAnimationData::PerElementOrPseudoData::DoEnsureViewTimelines(
   MOZ_ASSERT(!mViewTimelines);
   mViewTimelines = MakeUnique<ViewTimelineCollection>(aOwner, aRequest);
   return *mViewTimelines;
+}
+
+dom::ProgressTimelineScheduler& ElementAnimationData::PerElementOrPseudoData::
+    DoEnsureProgressTimelineScheduler() {
+  MOZ_ASSERT(!mProgressTimelineScheduler);
+  mProgressTimelineScheduler = MakeUnique<dom::ProgressTimelineScheduler>();
+  return *mProgressTimelineScheduler;
 }
 
 }  // namespace mozilla

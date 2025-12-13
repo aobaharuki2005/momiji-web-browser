@@ -60,7 +60,6 @@
 #include "mozilla/TaskController.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/VsyncTaskManager.h"
-#include "mozilla/dom/AnimationTimelinesController.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/CallbackDebuggerNotification.h"
 #include "mozilla/dom/ContentChild.h"
@@ -2040,7 +2039,11 @@ void nsRefreshDriver::UpdateRemoteFrameEffects() {
 }
 
 static void UpdateAndReduceAnimations(Document& aDocument) {
-  aDocument.TimelinesController().WillRefresh();
+  for (DocumentTimeline* tl :
+       ToTArray<AutoTArray<RefPtr<DocumentTimeline>, 32>>(
+           aDocument.Timelines())) {
+    tl->WillRefresh();
+  }
 
   if (nsPresContext* pc = aDocument.GetPresContext()) {
     if (pc->EffectCompositor()->NeedsReducing()) {
