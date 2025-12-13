@@ -47,6 +47,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/css/StylePreloadKind.h"
 #include "mozilla/dom/AnimationFrameProvider.h"
+#include "mozilla/dom/AnimationTimelinesController.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/EventTarget.h"
@@ -3223,7 +3224,12 @@ class Document : public nsINode,
   using DocumentOrShadowRoot::GetElementsByTagNameNS;
 
   DocumentTimeline* Timeline();
-  LinkedList<DocumentTimeline>& Timelines() { return mTimelines; }
+  const AnimationTimelinesController& TimelinesController() const {
+    return mTimelinesController;
+  }
+  AnimationTimelinesController& TimelinesController() {
+    return mTimelinesController;
+  }
   void UpdateHiddenByContentVisibilityForAnimations();
 
   SVGSVGElement* GetSVGRootElement() const;
@@ -5554,8 +5560,11 @@ class Document : public nsINode,
   // A set of responsive images keyed by address pointer.
   nsTHashSet<HTMLImageElement*> mResponsiveContent;
 
+  // The default document timeline associated to this document.
   RefPtr<DocumentTimeline> mDocumentTimeline;
-  LinkedList<DocumentTimeline> mTimelines;
+  // The timeline controller which holds the timelines attached to this
+  // document.
+  AnimationTimelinesController mTimelinesController;
 
   RefPtr<dom::ScriptLoader> mScriptLoader;
 

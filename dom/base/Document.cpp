@@ -2566,8 +2566,6 @@ Document::~Document() {
     mAnimationController->Disconnect();
   }
 
-  MOZ_ASSERT(mTimelines.isEmpty());
-
   mParentDocument = nullptr;
 
   // Kill the subdocument map, doing this will release its strong
@@ -20829,9 +20827,7 @@ RadioGroupContainer& Document::OwnedRadioGroupContainer() {
 }
 
 void Document::UpdateHiddenByContentVisibilityForAnimations() {
-  for (AnimationTimeline* timeline : Timelines()) {
-    timeline->UpdateHiddenByContentVisibility();
-  }
+  mTimelinesController.UpdateHiddenByContentVisibility();
 }
 
 void Document::SetAllowDeclarativeShadowRoots(
