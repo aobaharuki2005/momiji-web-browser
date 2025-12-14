@@ -2015,6 +2015,9 @@ impl BatchBuilder {
                                 glyph.index_in_text_run,
                                 glyph.uv_rect_address,
                                 color_mode,
+                                glyph.subpx_offset_x,
+                                glyph.subpx_offset_y,
+                                glyph.is_packed_glyph,
                             ));
                         }
                     },
