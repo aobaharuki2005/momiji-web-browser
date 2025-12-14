@@ -94,7 +94,8 @@ void SVGScriptElement::SetCrossOrigin(const nsAString& aCrossOrigin,
 }
 
 already_AddRefed<DOMSVGAnimatedString> SVGScriptElement::Href() {
-  return mStringAttributes[HREF].IsExplicitlySet()
+  return mStringAttributes[HREF].IsExplicitlySet() ||
+                 !mStringAttributes[XLINK_HREF].IsExplicitlySet()
              ? mStringAttributes[HREF].ToDOMAnimatedString(this)
              : mStringAttributes[XLINK_HREF].ToDOMAnimatedString(this);
 }
