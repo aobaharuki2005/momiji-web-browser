@@ -4,10 +4,10 @@
 
 package org.mozilla.fenix.compose
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -22,6 +22,10 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.theme.FirefoxTheme
 
+private val BottomSheetHandleWidth = 32.dp
+private val BottomSheetHandleHeight = 4.dp
+private val BottomSheetHandleShape = RoundedCornerShape(100.dp)
+
 /**
  * A handle present on top of a bottom sheet. This is selectable when talkback is enabled.
  *
@@ -30,7 +34,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param modifier The modifier to be applied to the Composable.
  * @param color Color of the handle.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetHandle(
     onRequestDismiss: () -> Unit,
@@ -38,7 +41,7 @@ fun BottomSheetHandle(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.outline,
 ) {
-    BottomSheetDefaults.DragHandle(
+    Surface(
         modifier = modifier.semantics(mergeDescendants = true) {
             role = Role.Button
             this.contentDescription = contentDescription
@@ -47,8 +50,11 @@ fun BottomSheetHandle(
                 true
             }
         },
+        shape = BottomSheetHandleShape,
         color = color,
-    )
+    ) {
+        Box(modifier = Modifier.size(width = BottomSheetHandleWidth, height = BottomSheetHandleHeight))
+    }
 }
 
 @Composable
@@ -56,14 +62,11 @@ fun BottomSheetHandle(
 private fun BottomSheetHandlePreview() {
     FirefoxTheme {
         Surface {
-            Column(
-                modifier = Modifier.padding(16.dp),
-            ) {
-                BottomSheetHandle(
-                    onRequestDismiss = {},
-                    contentDescription = "",
-                )
-            }
+            BottomSheetHandle(
+                onRequestDismiss = {},
+                modifier = Modifier.padding(all = 16.dp),
+                contentDescription = "",
+            )
         }
     }
 }
