@@ -101,11 +101,8 @@ void main() {
     PictureTask task = fetch_picture_task(ph.picture_task_address);
 
     int glyph_index = instance.segment_index;
-    int color_mode = instance.flags & 0xF;
-    int subpx_offset_x = (instance.flags >> 4) & 0x3;
-    int subpx_offset_y = (instance.flags >> 6) & 0x3;
-    int subpx_dir = (instance.flags >> 8) & 0x3;
-    int is_packed_glyph = (instance.flags >> 10) & 0x1;
+    int subpx_dir = (instance.flags >> 8) & 0xff;
+    int color_mode = instance.flags & 0xff;
 
     // Note that the reference frame relative offset is stored in the prim local
     // rect size during batching, instead of the actual size of the primitive.
@@ -120,16 +117,6 @@ void main() {
     glyph.offset += ph.local_rect.p0;
 
     GlyphResource res = fetch_glyph_resource(instance.resource_address);
-
-    // For multi-variant glyphs, adjust the UV rect to select the correct quarter
-    // of the packed texture based on subpixel offset.
-    // This must happen before geometry calculations since the glyph rect size depends on the UV rect.
-    if (is_packed_glyph != 0) {
-        int variant_index = (subpx_dir == SUBPX_DIR_HORIZONTAL) ? subpx_offset_x : subpx_offset_y;
-        float quarter_width = (res.uv_rect.z - res.uv_rect.x) * 0.25;
-        res.uv_rect.x = res.uv_rect.x + float(variant_index) * quarter_width;
-        res.uv_rect.z = res.uv_rect.x + quarter_width;
-    }
 
     vec2 snap_bias = get_snap_bias(subpx_dir);
 

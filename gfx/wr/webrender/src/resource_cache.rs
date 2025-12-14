@@ -67,9 +67,6 @@ pub struct GlyphFetchResult {
     pub offset: DevicePoint,
     pub size: DeviceIntSize,
     pub scale: f32,
-    pub subpx_offset_x: u8,
-    pub subpx_offset_y: u8,
-    pub is_packed_glyph: bool,
 }
 
 // These coordinates are always in texels.
@@ -1286,8 +1283,7 @@ impl ResourceCache {
             font,
             glyph_keys,
             |key| {
-                let cache_key = key.cache_key();
-                if let Some(entry) = glyph_key_cache.try_get(&cache_key) {
+                if let Some(entry) = glyph_key_cache.try_get(key) {
                     match entry {
                         GlyphCacheEntry::Cached(ref glyph) => {
                             if !texture_cache.request(&glyph.texture_cache_handle, gpu_buffer) {
@@ -1302,7 +1298,7 @@ impl ResourceCache {
                     }
                 };
 
-                glyph_key_cache.add_glyph(cache_key, GlyphCacheEntry::Pending);
+                glyph_key_cache.add_glyph(*key, GlyphCacheEntry::Pending);
 
                 true
             }
@@ -1336,10 +1332,9 @@ impl ResourceCache {
         debug_assert!(fetch_buffer.is_empty());
 
         for (loop_index, key) in glyph_keys.iter().enumerate() {
-            let cache_key = key.cache_key();
-            let (cache_item, glyph_format, is_packed_glyph) = match *glyph_key_cache.get(&cache_key) {
+            let (cache_item, glyph_format) = match *glyph_key_cache.get(key) {
                 GlyphCacheEntry::Cached(ref glyph) => {
-                    (self.texture_cache.get(&glyph.texture_cache_handle), glyph.format, glyph.is_packed_glyph)
+                    (self.texture_cache.get(&glyph.texture_cache_handle), glyph.format)
                 }
                 GlyphCacheEntry::Blank | GlyphCacheEntry::Pending => continue,
             };
@@ -1352,16 +1347,12 @@ impl ResourceCache {
                 current_texture_id = cache_item.texture_id;
                 current_glyph_format = glyph_format;
             }
-            let (subpx_offset_x, subpx_offset_y) = key.subpixel_offset();
             fetch_buffer.push(GlyphFetchResult {
                 index_in_text_run: loop_index as i32,
                 uv_rect_address: gpu_buffer.resolve_handle(cache_item.uv_rect_handle),
                 offset: DevicePoint::new(cache_item.user_data[0], cache_item.user_data[1]),
                 size: cache_item.uv_rect.size(),
                 scale: cache_item.user_data[2],
-                subpx_offset_x: subpx_offset_x as u8,
-                subpx_offset_y: subpx_offset_y as u8,
-                is_packed_glyph,
             });
         }
 
@@ -1513,7 +1504,6 @@ impl ResourceCache {
         self.glyph_rasterizer.resolve_glyphs(
             |job, can_use_r8_format| {
                 let GlyphRasterJob { font, key, result } = job;
-                let cache_key = key.cache_key();
                 let glyph_key_cache = cached_glyphs.get_glyph_key_cache_for_font_mut(&*font);
                 let glyph_info = match result {
                     Err(_) => GlyphCacheEntry::Blank,
@@ -1546,11 +1536,10 @@ impl ResourceCache {
                         GlyphCacheEntry::Cached(CachedGlyphInfo {
                             texture_cache_handle,
                             format: glyph.format,
-                            is_packed_glyph: glyph.is_packed_glyph,
                         })
                     }
                 };
-                glyph_key_cache.insert(cache_key, glyph_info);
+                glyph_key_cache.insert(key, glyph_info);
             },
             profile,
         );
