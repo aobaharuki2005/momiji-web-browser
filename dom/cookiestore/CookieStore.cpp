@@ -35,15 +35,6 @@ namespace mozilla::dom {
 
 namespace {
 
-int64_t ComputeExpiry(const CookieInit& aOptions) {
-  if (aOptions.mExpires.IsNull()) {  // Session cookie
-    return INT64_MAX;
-  }
-
-  return CookieCommons::MaybeCapExpiry(PR_Now() / PR_USEC_PER_MSEC,
-                                       aOptions.mExpires.Value());
-}
-
 int32_t SameSiteToConst(const CookieSameSite& aSameSite) {
   switch (aSameSite) {
     case CookieSameSite::Strict:
@@ -180,6 +171,36 @@ bool ValidateCookieDomain(nsIPrincipal* aPrincipal, const nsAString& aName,
     aPromise->MaybeRejectWithTypeError(
         "Cookie domain size cannot be greater than 1024 bytes");
     return false;
+  }
+
+  return true;
+}
+
+bool ValidateExpiresAndMaxAge(const Nullable<double>& aExpires,
+                              const Nullable<int64_t>& aMaxAge,
+                              int64_t& aComputedExpiry, Promise* aPromise) {
+  MOZ_ASSERT(aPromise);
+
+  if (aExpires.IsNull() && aMaxAge.IsNull()) {
+    // Session cookie
+    aComputedExpiry = INT64_MAX;
+    return true;
+  }
+
+  if (!aExpires.IsNull() && !aMaxAge.IsNull()) {
+    aPromise->MaybeRejectWithTypeError(
+        "Cookie expires and maxAge attributes cannot both be set");
+    return false;
+  }
+
+  int64_t creationTimeInMSec = PR_Now() / PR_USEC_PER_MSEC;
+
+  if (!aExpires.IsNull()) {
+    aComputedExpiry =
+        CookieCommons::MaybeCapExpiry(creationTimeInMSec, aExpires.Value());
+  } else {
+    aComputedExpiry =
+        CookieCommons::MaybeCapMaxAge(creationTimeInMSec, aMaxAge.Value());
   }
 
   return true;
@@ -461,6 +482,12 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
           return;
         }
 
+        int64_t expiry;
+        if (!ValidateExpiresAndMaxAge(aOptions.mExpires, aOptions.mMaxAge,
+                                      expiry, promise)) {
+          return;
+        }
+
         nsString path;
         if (!ValidateCookiePath(cookieURI, aOptions.mPath, path, promise)) {
           return;
@@ -506,10 +533,8 @@ already_AddRefed<Promise> CookieStore::Set(const CookieInit& aOptions,
                 mozilla::WrapNotNull(cookieURI.get()),
                 cookiePrincipal->OriginAttributesRef(), thirdPartyContext,
                 partitionForeign, usingStorageAccess, isOn3PCBExceptionList,
-                name, value,
-                // If expires is not set, it's a session cookie.
-                aOptions.mExpires.IsNull(), ComputeExpiry(aOptions), domain,
-                path, SameSiteToConst(aOptions.mSameSite),
+                name, value, /* session cookie: */ expiry == INT64_MAX, expiry,
+                domain, path, SameSiteToConst(aOptions.mSameSite),
                 aOptions.mPartitioned, operationID);
         if (NS_WARN_IF(!ipcPromise)) {
           promise->MaybeResolveWithUndefined();
