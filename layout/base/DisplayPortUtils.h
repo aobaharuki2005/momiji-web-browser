@@ -124,6 +124,15 @@ struct DisplayPortMarginsPropertyData {
   bool mPainted;
 };
 
+struct FrameAndASRKind {
+  nsIFrame* mFrame;
+  ActiveScrolledRoot::ASRKind mASRKind;
+  bool operator==(const FrameAndASRKind&) const = default;
+  static FrameAndASRKind default_value() {
+    return {nullptr, ActiveScrolledRoot::ASRKind::Scroll};
+  }
+};
+
 class DisplayPortUtils {
  public:
   /**
@@ -328,6 +337,24 @@ class DisplayPortUtils {
   static nsIFrame* OneStepInAsyncScrollableAncestorChain(nsIFrame* aFrame);
 
   /**
+   * The next two functions (GetASRAncestorFrame and OneStepInASRChain) use
+   * FrameAndASRKind (a pair of a nsIFrame pointer an an ASRKind enum) as a
+   * cursor iterating up the frame tree. Each frame can potential generate two
+   * ASRs: an inner one corresponding to scrolling with the contents of the
+   * frame if it is a scroll frame, and an outer one correspnding to scrolling
+   * with the frame itself if it is a sticky position frame. Its meaning is
+   * different for each of the two functions but is natural when considering
+   * what each function does. When passed into GetASRAncestorFrame it specifies
+   * the first frame and type for the function to check. When returned from
+   * GetASRAncestorFrame it specifies the frame and type of the ASR (because
+   * GetASRAncestorFrame only returns ASRs). When passed into OneStepInASRChain
+   * it specifies the last spot that was checked, and OneStepInASRChain's job is
+   * to move one iteration from that, so it returns the next frame and ASR kind
+   * to be checked (which may not generate an ASR, just that it needs to be
+   * checked because it could generate an ASR).
+   */
+
+  /**
    * Follows the ASR (ActiveScrolledRoot) chain of frames, so that if
    * f is the frame of an ASR A, then calling this function on
    * OneStepInASRChain(f) will return the frame of parent ASR of A. Frames that
@@ -348,8 +375,8 @@ class DisplayPortUtils {
    * generate two ASRs: an inner one corresponding to an activated scroll frame,
    * and an outer one corresponding to sticky pos.
    */
-  static nsIFrame* GetASRAncestorFrame(nsIFrame* aFrame,
-                                       nsDisplayListBuilder* aBuilder);
+  static FrameAndASRKind GetASRAncestorFrame(FrameAndASRKind aFrameAndASRKind,
+                                             nsDisplayListBuilder* aBuilder);
 
   /**
    * Step up one frame in the ASR chain, to be used in conjunction with
@@ -360,8 +387,8 @@ class DisplayPortUtils {
    * and an outer one corresponding to sticky pos. Returns null if we hit
    * aLimitAncestor.
    */
-  static nsIFrame* OneStepInASRChain(nsIFrame* aFrame,
-                                     nsIFrame* aLimitAncestor = nullptr);
+  static FrameAndASRKind OneStepInASRChain(FrameAndASRKind aFrameAndASRKind,
+                                           nsIFrame* aLimitAncestor = nullptr);
 
   /**
    * Calls DecideScrollableLayerEnsureDisplayport on all proper ancestors of
