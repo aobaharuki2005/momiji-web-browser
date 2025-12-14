@@ -6837,14 +6837,18 @@ void CanvasRenderingContext2D::PutImageData_explicit(
                         dirtyRect.Size());
       });
 
-  if (aRv.Failed()) {
-    return;
-  }
-
+  // Ensure surfaces unmapped before potential error exit.
   if (lockedBits) {
     mTarget->ReleaseBits(lockedBits);
   } else if (sourceSurface) {
     sourceSurface->Unmap();
+  }
+
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (sourceSurface) {
     mTarget->CopySurface(sourceSurface, dirtyRect - dirtyRect.TopLeft(),
                          dirtyRect.TopLeft());
   }
