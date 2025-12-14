@@ -27,6 +27,7 @@
 #include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
 #include "nsPlaceholderFrame.h"
+#include "nsRefreshDriver.h"
 #include "nsSubDocumentFrame.h"
 
 namespace mozilla {
@@ -1316,12 +1317,15 @@ static bool CheckForStickyAndAxes(nsIFrame* aFrame, PhysicalAxes aAxes,
 static bool ShouldAsyncScrollWithAnchorNotCached(nsIFrame* aFrame,
                                                  nsIFrame* aAnchor,
                                                  nsDisplayListBuilder* aBuilder,
-                                                 PhysicalAxes aAxes) {
+                                                 PhysicalAxes aAxes,
+                                                 bool* aReportToDoc) {
   // This has the same basic structure as GetASRAncestorFrame and
   // OneStepInASRChain. They should all be kept in sync.
   if (aFrame->IsMenuPopupFrame()) {
+    *aReportToDoc = false;
     return false;
   }
+  *aReportToDoc = true;
   nsIFrame* limitAncestor = aFrame->GetParent();
   MOZ_ASSERT(limitAncestor);
   // Start from aAnchor (not aFrame) so we don't infinite loop.
@@ -1400,8 +1404,15 @@ bool DisplayPortUtils::ShouldAsyncScrollWithAnchor(
         return true;
       });
   if (!wasPresent) {
-    entry =
-        ShouldAsyncScrollWithAnchorNotCached(aFrame, aAnchor, aBuilder, aAxes);
+    bool reportToDoc = false;
+    entry = ShouldAsyncScrollWithAnchorNotCached(aFrame, aAnchor, aBuilder,
+                                                 aAxes, &reportToDoc);
+    if (!entry && reportToDoc) {
+      auto* pc = aFrame->PresContext();
+      pc->Document()->ReportHasScrollLinkedEffect(
+          pc->RefreshDriver()->MostRecentRefresh(),
+          dom::Document::ReportToConsole::No);
+    }
   }
 
   return entry;
