@@ -820,8 +820,6 @@
   <string name="preferences_gestures">ჟესტები</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">მორგება</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">შედით ანგარიშზე, რომ დაასინქრონოთ თქვენი ჩანართები, სანიშნები, პაროლები და სხვ.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">დაასინქრონეთ ჩანართები, სანიშნები, პაროლები და ა. შ.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1217,10 +1215,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">დაასინქრონეთ და გადაინახეთ თქვენი მონაცემები</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">შესვლა</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">შესვლა ხელახლა დასაკავშირებლად</string>
@@ -1507,8 +1503,6 @@
   <string name="tab_tray_multiselect_menu_content_description">არჩეული ჩანართების მენიუ</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">საწყისი გვერდი</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s – საწყისი გვერდი</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">ჩანართის მოცილება კრებულიდან</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2109,8 +2103,6 @@
   <string name="toast_copy_link_to_clipboard">ასლი აღებულია</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">დასინქ. შესვლა</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">დასინქ. და შენახვა</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">შესვლა</string>
   <!-- An option from the share dialog to send link to all other sync devices -->

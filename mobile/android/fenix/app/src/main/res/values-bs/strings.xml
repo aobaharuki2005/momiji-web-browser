@@ -809,8 +809,6 @@
   <string name="preferences_gestures">Gestovi</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Prilagodi</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Prijavite se da sinhronizujete tabove, oznake, lozinke i još mnogo toga.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">Sinhronizujte svoje tabove, zabilješke, lozinke i više.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1200,10 +1198,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Sinhronizujte i sačuvajte svoje podatke</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">Prijava</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Prijavite se radi ponovnog povezivanja</string>
@@ -2060,8 +2056,6 @@
   <string name="toast_copy_link_to_clipboard">Kopirano u međuspremnik</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Prijavite se na Sync</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Sinhroniziraj i sačuvaj podatke</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Prijava</string>
   <!-- An option from the share dialog to send link to all other sync devices -->

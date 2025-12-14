@@ -203,7 +203,7 @@ class nsContainerFrame : public nsSplittableFrame {
    * classes derived from nsContainerFrame want.
    */
   virtual mozilla::LogicalSize ComputeAutoSize(
-      gfxContext* aRenderingContext, mozilla::WritingMode aWM,
+      const SizeComputationInput& aSizingInput, mozilla::WritingMode aWM,
       const mozilla::LogicalSize& aCBSize, nscoord aAvailableISize,
       const mozilla::LogicalSize& aMargin,
       const mozilla::LogicalSize& aBorderPadding,
@@ -481,7 +481,8 @@ class nsContainerFrame : public nsSplittableFrame {
    * on its type (By overriding `CSSAlignmentForAbsPosChild`).
    */
   mozilla::StyleAlignFlags CSSAlignmentForAbsPosChildWithinContainingBlock(
-      const ReflowInput& aChildRI, mozilla::LogicalAxis aLogicalAxis,
+      const SizeComputationInput& aSizingInput,
+      mozilla::LogicalAxis aLogicalAxis,
       const mozilla::StylePositionArea& aResolvedPositionArea,
       const mozilla::LogicalSize& aContainingBlockSize) const;
 

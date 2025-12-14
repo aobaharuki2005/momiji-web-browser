@@ -681,8 +681,6 @@
   <string name="preferences_gestures">Gèstes</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Personalizacion</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Connectatz-vos per sincronizar onglets, marcapaginas, senhals e plan mai encara.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Compte Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1011,12 +1009,6 @@
   <string name="preference_experiments_2">Estudis</string>
   <!-- Summary for studies preferences -->
   <string name="preference_experiments_summary_2">Permet a Mozilla d’installar e lançar estudis</string>
-  <!--
-    Turn On Sync Preferences
-
-    Header of the Sync and save your data preference view
-  -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Sincronizar e enregistrar vòstras donadas</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">S’identificar per se reconnectar</string>
   <!-- Preference for removing FxA account -->
@@ -1854,8 +1846,6 @@
   <string name="toast_copy_link_to_clipboard">Copiat dins lo quichapapièrs</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Se connectar a Sync</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Sincronizar e enregistrar las donadas</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Connexion</string>
   <!-- An option from the share dialog to send link to all other sync devices -->

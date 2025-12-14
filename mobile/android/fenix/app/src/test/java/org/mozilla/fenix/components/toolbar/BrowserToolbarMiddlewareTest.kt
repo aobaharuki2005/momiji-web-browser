@@ -1187,7 +1187,7 @@ class BrowserToolbarMiddlewareTest {
         mainLooperRule.idle()
 
         val translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertEquals(expectedTranslateButton(), translateButton)
+        assertEquals(expectedTranslateButton(source = Source.AddressBar.PageEnd), translateButton)
     }
 
     @Test
@@ -1212,7 +1212,7 @@ class BrowserToolbarMiddlewareTest {
         )
         mainLooperRule.idle()
         var translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertEquals(expectedTranslateButton(), translateButton)
+        assertEquals(expectedTranslateButton(source = Source.AddressBar.PageEnd), translateButton)
 
         browserScreenStore.dispatch(
             PageTranslationStatusUpdated(
@@ -1226,7 +1226,7 @@ class BrowserToolbarMiddlewareTest {
         mainLooperRule.idle()
         translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
         assertEquals(
-            expectedTranslateButton(isActive = true),
+            expectedTranslateButton(isActive = true, source = Source.AddressBar.PageEnd),
             translateButton,
         )
     }
@@ -1295,7 +1295,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
 
         val shareButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertEquals(expectedShareButton(), shareButton)
+        assertEquals(expectedShareButton(source = Source.AddressBar.PageEnd), shareButton)
     }
 
     @Test
@@ -1490,8 +1490,8 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(
             listOf(
                 expectedReaderModeButton(false),
-                expectedTranslateButton(),
-                expectedShareButton(),
+                expectedTranslateButton(source = Source.AddressBar.PageEnd),
+                expectedShareButton(source = Source.AddressBar.PageEnd),
             ),
             toolbarStore.state.displayState.pageActionsEnd,
         )
@@ -1518,7 +1518,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore(middleware)
 
         val displayGoBackButton = toolbarStore.state.displayState.browserActionsStart[0]
-        assertEquals(displayGoBackButton, expectedGoBackButton(isActive = false))
+        assertEquals(displayGoBackButton, expectedGoBackButton(isActive = false, source = Source.AddressBar.BrowserStart))
         val displayGoForwardButton = toolbarStore.state.displayState.browserActionsStart[1]
         assertEquals(displayGoForwardButton, expectedGoForwardButton.copy(state = ActionButton.State.DISABLED))
     }
@@ -2101,7 +2101,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(iconsR.drawable.mozac_ic_plus_24, result.drawableResId)
         assertEquals(R.string.home_screen_shortcut_open_new_tab_2, result.contentDescription)
         assertEquals(ActionButton.State.DEFAULT, result.state)
-        assertEquals(AddNewTab(Source.AddressBar), result.onClick)
+        assertEquals(AddNewTab(Source.Unknown), result.onClick)
         assertNull(result.onLongClick)
     }
 
@@ -2115,8 +2115,8 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(iconsR.drawable.mozac_ic_back_24, result.drawableResId)
         assertEquals(R.string.browser_menu_back, result.contentDescription)
         assertEquals(ActionButton.State.DISABLED, result.state)
-        assertEquals(NavigateBackClicked, result.onClick)
-        assertEquals(NavigateBackLongClicked, result.onLongClick)
+        assertEquals(NavigateBackClicked(Source.Unknown), result.onClick)
+        assertEquals(NavigateBackLongClicked(Source.Unknown), result.onLongClick)
     }
 
     @Test
@@ -2251,7 +2251,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(iconsR.drawable.mozac_ic_ellipsis_vertical_24, result.drawableResId)
         assertEquals(R.string.content_description_menu, result.contentDescription)
         assertEquals(ActionButton.State.DEFAULT, result.state)
-        assertEquals(MenuClicked(Source.AddressBar), result.onClick)
+        assertEquals(MenuClicked(Source.Unknown), result.onClick)
         assertNull(result.onLongClick)
     }
 
@@ -2312,7 +2312,7 @@ class BrowserToolbarMiddlewareTest {
         assertEquals(iconsR.drawable.mozac_ic_translate_24, result.drawableResId)
         assertEquals(R.string.browser_toolbar_translate, result.contentDescription)
         assertEquals(ActionButton.State.DEFAULT, result.state)
-        assertEquals(TranslateClicked, result.onClick)
+        assertEquals(TranslateClicked(Source.Unknown), result.onClick)
     }
 
     @Test
@@ -2358,7 +2358,7 @@ class BrowserToolbarMiddlewareTest {
             action.contentDescription,
         )
         assertFalse(action.showPrivacyMask)
-        assertEquals(TabCounterClicked(Source.AddressBar), action.onClick)
+        assertEquals(TabCounterClicked(Source.Unknown), action.onClick)
         assertNotNull(action.onLongClick)
     }
 
@@ -2386,7 +2386,7 @@ class BrowserToolbarMiddlewareTest {
 
         assertEquals(iconsR.drawable.mozac_ic_bookmark_fill_24, result.drawableResId)
         assertEquals(R.string.browser_menu_edit_bookmark, result.contentDescription)
-        assertEquals(EditBookmarkClicked(Source.AddressBar), result.onClick)
+        assertEquals(EditBookmarkClicked(Source.Unknown), result.onClick)
     }
 
     @Test
@@ -2400,7 +2400,7 @@ class BrowserToolbarMiddlewareTest {
 
         assertEquals(iconsR.drawable.mozac_ic_bookmark_24, result.drawableResId)
         assertEquals(R.string.browser_menu_bookmark_this_page_2, result.contentDescription)
-        assertEquals(AddBookmarkClicked(Source.AddressBar), result.onClick)
+        assertEquals(AddBookmarkClicked(Source.Unknown), result.onClick)
     }
 
     @Test
@@ -2725,8 +2725,8 @@ class BrowserToolbarMiddlewareTest {
         )
 
         val translateButton = toolbarStore.state.displayState.pageActionsEnd[0]
-        assertNotEquals(expectedTranslateButton(), translateButton)
-        assertEquals(expectedShareButton(), translateButton)
+        assertNotEquals(expectedTranslateButton(source = Source.AddressBar.PageEnd), translateButton)
+        assertEquals(expectedShareButton(source = Source.AddressBar.PageEnd), translateButton)
     }
 
     @Test
@@ -2787,7 +2787,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore()
 
         val bookmarkButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
-        assertEquals(expectedBookmarkButton(Source.AddressBar), bookmarkButton)
+        assertEquals(expectedBookmarkButton(), bookmarkButton)
     }
 
     @Test
@@ -2816,7 +2816,7 @@ class BrowserToolbarMiddlewareTest {
         mainLooperRule.idle()
 
         val editButton = toolbarStore.state.displayState.browserActionsEnd[0] as ActionButtonRes
-        assertEquals(expectedEditBookmarkButton(Source.AddressBar), editButton)
+        assertEquals(expectedEditBookmarkButton(), editButton)
     }
 
     @Test
@@ -2942,7 +2942,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore()
 
         val translateButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
-        assertEquals(expectedTranslateButton(), translateButton)
+        assertEquals(expectedTranslateButton(source = Source.NavigationBar), translateButton)
     }
 
     @Test
@@ -2962,7 +2962,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore()
 
         val translateButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
-        assertEquals(expectedTranslateButton(isActive = true), translateButton)
+        assertEquals(expectedTranslateButton(isActive = true, source = Source.NavigationBar), translateButton)
     }
 
     @Test
@@ -2986,7 +2986,7 @@ class BrowserToolbarMiddlewareTest {
         val toolbarStore = buildStore()
 
         val backButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
-        assertEquals(expectedGoBackButton(isActive = false), backButton)
+        assertEquals(expectedGoBackButton(isActive = false, source = Source.NavigationBar), backButton)
     }
 
     @Test
@@ -3011,7 +3011,7 @@ class BrowserToolbarMiddlewareTest {
         mainLooperRule.idle()
 
         val backButton = toolbarStore.state.displayState.navigationActions.first() as ActionButtonRes
-        assertEquals(expectedGoBackButton(), backButton)
+        assertEquals(expectedGoBackButton(source = Source.NavigationBar), backButton)
     }
 
     @Test
@@ -3102,32 +3102,38 @@ class BrowserToolbarMiddlewareTest {
         onLongClick = NavigateForwardLongClicked,
     )
 
-    private fun expectedGoBackButton(isActive: Boolean = true) = ActionButtonRes(
+    private fun expectedGoBackButton(
+        isActive: Boolean = true,
+        source: Source = Source.AddressBar.BrowserEnd,
+    ) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_back_24,
         contentDescription = R.string.browser_menu_back,
         state = when (isActive) {
             true -> ActionButton.State.DEFAULT
             false -> ActionButton.State.DISABLED
         },
-        onClick = NavigateBackClicked,
-        onLongClick = NavigateBackLongClicked,
+        onClick = NavigateBackClicked(source),
+        onLongClick = NavigateBackLongClicked(source),
     )
 
-    private fun expectedTranslateButton(isActive: Boolean = false) = ActionButtonRes(
+    private fun expectedTranslateButton(
+        isActive: Boolean = false,
+        source: Source = Source.AddressBar.BrowserEnd,
+    ) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_translate_24,
         contentDescription = R.string.browser_toolbar_translate,
         state = when (isActive) {
             true -> ActionButton.State.ACTIVE
             false -> ActionButton.State.DEFAULT
         },
-        onClick = TranslateClicked,
+        onClick = TranslateClicked(source),
     )
 
     private fun expectedTabCounterButton(
         tabCount: Int = 0,
         isPrivate: Boolean = false,
         shouldUseBottomToolbar: Boolean = false,
-        source: Source = Source.AddressBar,
+        source: Source = Source.AddressBar.BrowserEnd,
     ) = TabCounterAction(
         count = tabCount,
         contentDescription = if (isPrivate) {
@@ -3176,7 +3182,7 @@ class BrowserToolbarMiddlewareTest {
         tabCount: Int = 0,
         isPrivate: Boolean = false,
         shouldUseBottomToolbar: Boolean = false,
-        source: Source = Source.AddressBar,
+        source: Source = Source.AddressBar.BrowserEnd,
     ) = expectedTabCounterButton(
         tabCount = tabCount,
         isPrivate = isPrivate,
@@ -3190,7 +3196,7 @@ class BrowserToolbarMiddlewareTest {
         )
     }
 
-    private fun expectedNewTabButton(source: Source = Source.AddressBar) = ActionButtonRes(
+    private fun expectedNewTabButton(source: Source = Source.AddressBar.BrowserEnd) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_plus_24,
         contentDescription = R.string.home_screen_shortcut_open_new_tab_2,
         onClick = AddNewTab(source),
@@ -3198,7 +3204,7 @@ class BrowserToolbarMiddlewareTest {
 
     private fun expectedMenuButton(
         highlighted: Boolean = false,
-        source: Source = Source.AddressBar,
+        source: Source = Source.AddressBar.BrowserEnd,
     ) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_ellipsis_vertical_24,
         contentDescription = R.string.content_description_menu,
@@ -3206,26 +3212,26 @@ class BrowserToolbarMiddlewareTest {
         onClick = MenuClicked(source),
     )
 
-    private fun expectedBookmarkButton(source: Source = Source.AddressBar) = ActionButtonRes(
+    private fun expectedBookmarkButton(source: Source = Source.AddressBar.BrowserEnd) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_bookmark_24,
         contentDescription = R.string.browser_menu_bookmark_this_page_2,
         onClick = AddBookmarkClicked(source),
     )
 
-    private fun expectedEditBookmarkButton(source: Source = Source.AddressBar) = ActionButtonRes(
+    private fun expectedEditBookmarkButton(source: Source = Source.AddressBar.BrowserEnd) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_bookmark_fill_24,
         contentDescription = R.string.browser_menu_edit_bookmark,
         onClick = EditBookmarkClicked(source),
         state = ActionButton.State.ACTIVE,
     )
 
-    private fun expectedShareButton(source: Source = Source.AddressBar) = ActionButtonRes(
+    private fun expectedShareButton(source: Source = Source.AddressBar.BrowserEnd) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_share_android_24,
         contentDescription = R.string.browser_menu_share,
         onClick = ShareClicked(source),
     )
 
-    private fun expectedHomepageButton(source: Source = Source.AddressBar) = ActionButtonRes(
+    private fun expectedHomepageButton(source: Source = Source.AddressBar.BrowserEnd) = ActionButtonRes(
         drawableResId = iconsR.drawable.mozac_ic_home_24,
         contentDescription = R.string.browser_menu_homepage,
         onClick = HomepageClicked(source),

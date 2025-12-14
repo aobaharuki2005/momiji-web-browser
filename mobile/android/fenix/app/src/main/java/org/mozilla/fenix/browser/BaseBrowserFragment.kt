@@ -680,6 +680,7 @@ abstract class BaseBrowserFragment :
             view = view,
         )
 
+        // Site info telemetry for legacy toolbar
         (browserToolbarView as? BrowserToolbarView)?.toolbar?.display?.setOnSiteInfoClickedListener {
             showQuickSettingsDialog()
             Toolbar.buttonTapped.record(
@@ -1650,7 +1651,8 @@ abstract class BaseBrowserFragment :
                 state.findCustomTabOrSelectedTab(customTabSessionId)
             }
                 .ifAnyChanged { tab ->
-                    arrayOf(tab.content.url, tab.content.loadRequest)
+                    val urlWithoutFragment = tab.content.url.substringBefore("#")
+                    arrayOf(urlWithoutFragment, tab.content.loadRequest)
                 }
                 .collect {
                     findInPageIntegration.onBackPressed()

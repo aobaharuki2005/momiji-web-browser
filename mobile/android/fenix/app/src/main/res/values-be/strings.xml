@@ -702,8 +702,6 @@
   <string name="preferences_gestures">Жэсты</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Уладкаванне</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Увайсці, каб сінхранізаваць карткі, закладкі, паролі і іншае.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
   <string name="preferences_account_default_name_2">Уліковы запіс Mozilla</string>
   <!-- Preference text for account title when there was an error syncing FxA -->
@@ -1045,10 +1043,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Сінхранізацыя і захаванне вашых дадзеных</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">Увайсці</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Увайдзіце, каб злучыцца зноў</string>
@@ -1293,8 +1289,6 @@
   <string name="tab_tray_multiselect_menu_content_description">Меню выбраных картак</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Хатняя старонка</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Хатняя старонка %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Выдаліць картку з калекцыі</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1751,8 +1745,6 @@
   <string name="toast_copy_link_to_clipboard">Скапіявана ў буфер абмену</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Увайсці ў сінхранізацыю</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Сінхранізаваць і захаваць дадзеныя</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Увайсці</string>
   <!-- An option from the share dialog to send link to all other sync devices -->

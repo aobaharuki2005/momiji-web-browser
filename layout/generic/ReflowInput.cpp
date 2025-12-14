@@ -40,6 +40,28 @@ using namespace mozilla::css;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
+AnchorPosResolutionParams AnchorPosResolutionParams::From(
+    const mozilla::SizeComputationInput* aSizingInput,
+    bool aIgnorePositionArea) {
+  const mozilla::StylePositionArea posArea =
+      aIgnorePositionArea
+          ? mozilla::StylePositionArea{}
+          : aSizingInput->mFrame->StylePosition()->mPositionArea;
+  bool inlineUsesAnchorCenter = false;
+  bool blockUsesAnchorCenter = false;
+
+  ComputeAnchorCenterUsage(aSizingInput->mFrame,
+                           aSizingInput->mAnchorPosResolutionCache,
+                           inlineUsesAnchorCenter, blockUsesAnchorCenter);
+
+  return {aSizingInput->mFrame,
+          aSizingInput->mFrame->StyleDisplay()->mPosition,
+          posArea,
+          aSizingInput->mAnchorPosResolutionCache,
+          inlineUsesAnchorCenter,
+          blockUsesAnchorCenter};
+}
+
 static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent) {
   nsIFrame* frameNext = aFrame->GetNextInFlow();
   nsIFrame* parentNext = aParent->GetNextInFlow();
@@ -60,7 +82,7 @@ void ComputeAnchorCenterUsage(
   }
 
   const auto* stylePos = aFrame->StylePosition();
-  WritingMode wm = aFrame->GetWritingMode();
+  const auto parentWM = parent->GetWritingMode();
 
   auto checkAxis = [&](LogicalAxis aAxis) {
     StyleAlignFlags alignment =
@@ -69,12 +91,10 @@ void ComputeAnchorCenterUsage(
         StyleAlignFlags::ANCHOR_CENTER) {
       return false;
     }
-    LogicalSide startSide = aAxis == LogicalAxis::Inline ? LogicalSide::IStart
-                                                         : LogicalSide::BStart;
-    LogicalSide endSide =
-        aAxis == LogicalAxis::Inline ? LogicalSide::IEnd : LogicalSide::BEnd;
-    return stylePos->mOffset.Get(wm.PhysicalSide(startSide)).IsAuto() ||
-           stylePos->mOffset.Get(wm.PhysicalSide(endSide)).IsAuto();
+    LogicalSide startSide = MakeLogicalSide(aAxis, LogicalEdge::Start);
+    LogicalSide endSide = MakeLogicalSide(aAxis, LogicalEdge::End);
+    return stylePos->mOffset.Get(parentWM.PhysicalSide(startSide)).IsAuto() ||
+           stylePos->mOffset.Get(parentWM.PhysicalSide(endSide)).IsAuto();
   };
 
   aInlineUsesAnchorCenter = checkAxis(LogicalAxis::Inline);
@@ -1861,7 +1881,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
     AutoMaybeDisableFontInflation an(mFrame);
 
     auto size = mFrame->ComputeSize(
-        mRenderingContext, wm, aCBSize.ConvertTo(wm, cbwm),
+        *this, wm, aCBSize.ConvertTo(wm, cbwm),
         aCBSize.ConvertTo(wm, cbwm).ISize(wm),  // XXX or AvailableISize()?
         ComputedLogicalMargin(wm).Size(wm) +
             ComputedLogicalOffsets(wm).Size(wm),
@@ -2509,11 +2529,10 @@ void ReflowInput::InitConstraints(
         }
       }
 
-      auto size =
-          mFrame->ComputeSize(mRenderingContext, wm, cbSize, AvailableISize(),
-                              ComputedLogicalMargin(wm).Size(wm),
-                              ComputedLogicalBorderPadding(wm).Size(wm),
-                              mStyleSizeOverrides, mComputeSizeFlags);
+      auto size = mFrame->ComputeSize(*this, wm, cbSize, AvailableISize(),
+                                      ComputedLogicalMargin(wm).Size(wm),
+                                      ComputedLogicalBorderPadding(wm).Size(wm),
+                                      mStyleSizeOverrides, mComputeSizeFlags);
 
       mComputedSize = size.mLogicalSize;
       NS_ASSERTION(ComputedISize() >= 0, "Bogus inline-size");

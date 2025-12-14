@@ -9,8 +9,50 @@
 #include "CSSAlignUtils.h"
 
 #include "ReflowInput.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 
 namespace mozilla {
+
+StyleAlignFlags CSSAlignUtils::UsedAlignmentForAbsPos(nsIFrame* aFrame,
+                                                      StyleAlignFlags aFlags,
+                                                      LogicalAxis aLogicalAxis,
+                                                      WritingMode aCBWM) {
+  MOZ_ASSERT(aFrame->IsAbsolutelyPositioned());
+
+  // Extract and strip the flag bits
+  StyleAlignFlags alignmentFlags = aFlags & StyleAlignFlags::FLAG_BITS;
+  aFlags &= ~StyleAlignFlags::FLAG_BITS;
+
+  if (aFlags == StyleAlignFlags::NORMAL) {
+    // "the 'normal' keyword behaves as 'start' on replaced
+    // absolutely-positioned boxes, and behaves as 'stretch' on all other
+    // absolutely-positioned boxes."
+    // https://drafts.csswg.org/css-align/#align-abspos
+    // https://drafts.csswg.org/css-align/#justify-abspos
+    aFlags = aFrame->HasReplacedSizing() ? StyleAlignFlags::START
+                                         : StyleAlignFlags::STRETCH;
+  } else if (aFlags == StyleAlignFlags::FLEX_START) {
+    aFlags = StyleAlignFlags::START;
+  } else if (aFlags == StyleAlignFlags::FLEX_END) {
+    aFlags = StyleAlignFlags::END;
+  } else if (aFlags == StyleAlignFlags::LEFT ||
+             aFlags == StyleAlignFlags::RIGHT) {
+    if (aLogicalAxis == LogicalAxis::Inline) {
+      const bool isLeft = (aFlags == StyleAlignFlags::LEFT);
+      aFlags = (isLeft == aCBWM.IsBidiLTR()) ? StyleAlignFlags::START
+                                             : StyleAlignFlags::END;
+    } else {
+      aFlags = StyleAlignFlags::START;
+    }
+  } else if (aFlags == StyleAlignFlags::BASELINE) {
+    aFlags = StyleAlignFlags::START;
+  } else if (aFlags == StyleAlignFlags::LAST_BASELINE) {
+    aFlags = StyleAlignFlags::END;
+  }
+
+  return (aFlags | alignmentFlags);
+}
 
 static nscoord SpaceToFill(WritingMode aWM, const LogicalSize& aSize,
                            nscoord aMargin, LogicalAxis aAxis,
@@ -19,13 +61,11 @@ static nscoord SpaceToFill(WritingMode aWM, const LogicalSize& aSize,
   return aCBSize - (size + aMargin);
 }
 
-nscoord CSSAlignUtils::AlignJustifySelf(const StyleAlignFlags& aAlignment,
-                                        LogicalAxis aAxis,
-                                        AlignJustifyFlags aFlags,
-                                        nscoord aBaselineAdjust,
-                                        nscoord aCBSize, const ReflowInput& aRI,
-                                        const LogicalSize& aChildSize,
-                                        const Maybe<LogicalRect>& aAnchorRect) {
+nscoord CSSAlignUtils::AlignJustifySelf(
+    const StyleAlignFlags& aAlignment, LogicalAxis aAxis,
+    AlignJustifyFlags aFlags, nscoord aBaselineAdjust, nscoord aCBSize,
+    const ReflowInput& aRI, const LogicalSize& aChildSize,
+    const Maybe<AnchorAlignInfo>& aAnchorInfo) {
   MOZ_ASSERT(aAlignment != StyleAlignFlags::AUTO,
              "auto values should have resolved already");
   MOZ_ASSERT(aAlignment != StyleAlignFlags::LEFT &&
@@ -134,9 +174,9 @@ nscoord CSSAlignUtils::AlignJustifySelf(const StyleAlignFlags& aAlignment,
   } else if (alignment == StyleAlignFlags::END) {
     nscoord size = aChildSize.Size(aAxis, wm);
     offset = aCBSize - (size + marginEnd);
-  } else if (alignment == StyleAlignFlags::ANCHOR_CENTER && aAnchorRect) {
-    const nscoord anchorSize = aAnchorRect->Size(aAxis, wm);
-    const nscoord anchorStart = aAnchorRect->Start(aAxis, wm);
+  } else if (alignment == StyleAlignFlags::ANCHOR_CENTER && aAnchorInfo) {
+    const nscoord anchorSize = aAnchorInfo->mAnchorSize;
+    const nscoord anchorStart = aAnchorInfo->mAnchorStart;
     const nscoord size = aChildSize.Size(aAxis, wm);
 
     // Offset relative to the anchors center, accounting for margins

@@ -771,8 +771,6 @@
   <string name="preferences_gestures">ആംഗ്യങ്ങൾ</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">ഇച്ഛാനുസൃതമാക്കുക</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">ടാബുകളും അടയാളക്കുറിപ്പുകളും ഒളിവാക്കുകളും മറ്റും സമന്വയിപ്പിക്കാൻ പ്രവേശിക്കുക.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">അടയാളക്കുറിപ്പുകളും ഒളിവാക്കുകളും ടാബുകളും എന്നിവയും മറ്റും സമന്വയിപ്പിക്കുക.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1107,10 +1105,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">ദത്ത സമന്വയിപ്പിച്ച് കരുതിവയ്ക്കുക</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">പ്രവേശിക്കുക</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">വീണ്ടും ബന്ധിപ്പിക്കുന്നതിന് പ്രവേശിക്കുക</string>
@@ -1397,8 +1393,6 @@
   <string name="tab_tray_multiselect_menu_content_description">തിരഞ്ഞെടുത്ത ടാബുകളുടെ കുറിപ്പടികട്ട</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">ആമുഖതാൾ</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">%s പൂമുറ്റം</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">ശേഖരത്തിൽ നിന്ന് ടാബ് നീക്കം ചെയ്യുക</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -1981,8 +1975,6 @@
   <string name="toast_copy_link_to_clipboard">പകർത്തൽപെട്ടിയിലേക്കു് പകര്‍ത്തിയിരിയ്ക്കുന്നു</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">സമന്വയിപ്പിക്കാനായി പ്രവേശിക്കുക</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">ദത്ത സമന്വയിപ്പിച്ച് കരുതിവയ്ക്കുക</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">പ്രവേശിക്കുക</string>
   <!-- An option from the share dialog to send link to all other sync devices -->

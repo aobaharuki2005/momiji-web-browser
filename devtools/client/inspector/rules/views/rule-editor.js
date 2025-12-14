@@ -144,7 +144,15 @@ RuleEditor.prototype = {
     return (
       this.isEditable &&
       this.rule.domRule.type !== ELEMENT_STYLE &&
-      this.rule.domRule.type !== CSSRule.KEYFRAME_RULE
+      this.rule.domRule.type !== CSSRule.KEYFRAME_RULE &&
+      this.rule.domRule.className !== "CSSPositionTryRule"
+    );
+  },
+
+  get showSelectorHighlighterButton() {
+    return (
+      this.rule.domRule.type !== CSSRule.KEYFRAME_RULE &&
+      this.rule.domRule.className !== "CSSPositionTryRule"
     );
   },
 
@@ -394,18 +402,20 @@ RuleEditor.prototype = {
         // be computed on demand when the highlighter is requested.
       }
 
-      const isHighlighted =
-        this.ruleView.isSelectorHighlighted(computedSelector);
-      // Handling of click events is delegated to CssRuleView.handleEvent()
-      createChild(header, "button", {
-        class:
-          "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
-          (isHighlighted ? " highlighted" : ""),
-        "aria-pressed": isHighlighted,
-        // This is used in rules.js for the selector highlighter
-        "data-computed-selector": computedSelector,
-        title: l10n("rule.selectorHighlighter.tooltip"),
-      });
+      if (this.showSelectorHighlighterButton) {
+        const isHighlighted =
+          this.ruleView.isSelectorHighlighted(computedSelector);
+        // Handling of click events is delegated to CssRuleView.handleEvent()
+        createChild(header, "button", {
+          class:
+            "ruleview-selectorhighlighter js-toggle-selector-highlighter" +
+            (isHighlighted ? " highlighted" : ""),
+          "aria-pressed": isHighlighted,
+          // This is used in rules.js for the selector highlighter
+          "data-computed-selector": computedSelector,
+          title: l10n("rule.selectorHighlighter.tooltip"),
+        });
+      }
     }
 
     this.openBrace = createChild(header, "span", {
@@ -662,6 +672,8 @@ RuleEditor.prototype = {
       this.selectorText.textContent = this.rule.selectorText;
     } else if (this.rule.domRule.type === CSSRule.KEYFRAME_RULE) {
       this.selectorText.textContent = this.rule.domRule.keyText;
+    } else if (this.rule.domRule.className === "CSSPositionTryRule") {
+      this.selectorText.textContent = this.rule.domRule.name;
     } else {
       this.rule.domRule.selectors.forEach((selector, i) => {
         this._populateSelector(selector, i);

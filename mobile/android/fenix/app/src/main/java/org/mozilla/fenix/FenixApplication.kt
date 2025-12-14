@@ -947,6 +947,11 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 },
             )
 
+            if (settings.shouldShowToolbarCustomization) {
+                toolbarSimpleShortcut.set(settings.toolbarSimpleShortcut)
+                toolbarExpandedShortcut.set(settings.toolbarExpandedShortcut)
+            }
+
             enhancedTrackingProtection.set(
                 when {
                     !settings.shouldUseTrackingProtection -> ""

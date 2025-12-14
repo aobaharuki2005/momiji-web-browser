@@ -865,15 +865,9 @@ void nsFrameConstructorState::PushAbsoluteContainingBlock(
     return mFixedList;
   }();
 
-  if (aNewAbsoluteContainingBlock) {
-    if (!aNewAbsoluteContainingBlock->GetPrevContinuation()) {
-      aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
-    } else {
-      MOZ_ASSERT(
-          aNewAbsoluteContainingBlock->GetAbsoluteContainingBlock(),
-          "nsIFrame::Init() should've constructed AbsoluteContainingBlock in "
-          "this case, since the frame is a continuation!");
-    }
+  if (aNewAbsoluteContainingBlock &&
+      !aNewAbsoluteContainingBlock->IsAbsoluteContainer()) {
+    aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
   }
 }
 

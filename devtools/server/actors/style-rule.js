@@ -406,6 +406,7 @@ class StyleRuleActor extends Actor {
     const form = {
       actor: this.actorID,
       type: this.type,
+      className: this.ruleClassName,
       line: this.line || undefined,
       column: this.column,
       traits: {
@@ -483,6 +484,7 @@ class StyleRuleActor extends Actor {
         form.href = this.rawRule.href;
         break;
       case "CSSKeyframesRule":
+      case "CSSPositionTryRule":
         form.name = this.rawRule.name;
         break;
       case "CSSKeyframeRule":
@@ -545,10 +547,19 @@ class StyleRuleActor extends Actor {
           // In such case InspectorUtils.supports() would return false, but that would be
           // odd to show "invalid" pres hints declaration in the UI.
           this.ruleClassName === PRES_HINTS ||
-          InspectorUtils.supports(
+          (InspectorUtils.supports(
             `${decl.name}:${decl.value}`,
             supportsOptions
-          );
+          ) &&
+            // !important values are not valid in @position-try and @keyframes
+            // TODO: We might extend InspectorUtils.supports to take the actual rule
+            // so we wouldn't have to hardcode this, but this does come with some
+            // challenges (see Bug 2004379).
+            !(
+              decl.priority === "important" &&
+              (this.ruleClassName === "CSSPositionTryRule" ||
+                this.ruleClassName === "CSSKeyframesRule")
+            ));
         const inactiveCssData = getInactiveCssDataForProperty(
           el,
           style,
@@ -641,6 +652,7 @@ class StyleRuleActor extends Actor {
   _getCssText() {
     switch (this.ruleClassName) {
       case "CSSNestedDeclarations":
+      case "CSSPositionTryRule":
       case "CSSStyleRule":
       case ELEMENT_STYLE:
       case PRES_HINTS:
@@ -870,6 +882,7 @@ class StyleRuleActor extends Actor {
     "CSSLayerBlockRule",
     "CSSMediaRule",
     "CSSNestedDeclarations",
+    "CSSPositionTryRule",
     "CSSStyleRule",
     "CSSSupportsRule",
   ]);

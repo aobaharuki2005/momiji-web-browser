@@ -1129,9 +1129,9 @@ class PageStyleActor extends Actor {
       }
     }
 
-    // Add all the keyframes rule associated with the element
     const computedStyle = this.cssLogic.computedStyle;
     if (computedStyle) {
+      // Add all the keyframes rule associated with the element
       let animationNames = computedStyle.animationName.split(",");
       animationNames = animationNames.map(name => name.trim());
 
@@ -1150,6 +1150,25 @@ class PageStyleActor extends Actor {
             });
           }
         }
+      }
+
+      // Add all the @position-try associated with the element
+      const positionTryIdents = new Set();
+      for (const part of computedStyle.positionTryFallbacks.split(",")) {
+        const name = part.trim();
+        if (name.startsWith("--")) {
+          positionTryIdents.add(name);
+        }
+      }
+
+      for (const positionTryRule of this.cssLogic.positionTryRules) {
+        if (!positionTryIdents.has(positionTryRule.name)) {
+          continue;
+        }
+
+        entries.push({
+          rule: this.styleRef(positionTryRule),
+        });
       }
     }
 

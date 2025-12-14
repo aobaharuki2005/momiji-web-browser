@@ -1893,13 +1893,13 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
   }
   const auto* positioned = aParams->mBaseParams.mFrame;
   const auto* containingBlock = positioned->GetParent();
+  auto* cache = aParams->mBaseParams.mCache;
   const auto info = AnchorPositioningUtils::ResolveAnchorPosRect(
-      positioned, containingBlock, aAnchorName, !aParams->mCBSize,
-      aParams->mBaseParams.mCache);
+      positioned, containingBlock, aAnchorName, !aParams->mCBSize, cache);
   if (!info) {
     return false;
   }
-  if (info->mCompensatesForScroll && aParams->mBaseParams.mCache) {
+  if (info->mCompensatesForScroll && cache) {
     // Without cache (Containing information on default anchor) being available,
     // we woudln't be able to determine scroll compensation status.
     const auto axis = [aPropSide]() {
@@ -1915,19 +1915,38 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
       }
       return PhysicalAxis::Vertical;
     }();
-    aParams->mBaseParams.mCache->mReferenceData->AdjustCompensatingForScroll(
-        axis);
+    cache->mReferenceData->AdjustCompensatingForScroll(axis);
   }
   // Compute the offset here in C++, where translating between physical/logical
   // coordinates is easier.
-  const auto& rect = info->mRect;
+
   const auto usesCBWM = AnchorSideUsesCBWM(aAnchorSideKeyword);
   const auto cbwm = containingBlock->GetWritingMode();
   const auto wm =
       usesCBWM ? aParams->mBaseParams.mFrame->GetWritingMode() : cbwm;
-  const auto logicalCBSize = aParams->mCBSize
-                                 ? aParams->mCBSize->ConvertTo(wm, cbwm)
-                                 : containingBlock->PaddingSize(wm);
+  const auto [rect, logicalCBSize] = [&] {
+    // We need `AnchorPosReferenceData` to compute the anchor offset against
+    // the adjusted CB, so make the best attempt to retrieve it.
+    // TODO(dshin, bug 2005207): We really need to unify containing block
+    // lookups and clean up cache lookups here.
+    const auto* referenceData =
+        cache ? cache->mReferenceData
+              : positioned->GetProperty(nsIFrame::AnchorPosReferences());
+    if (!referenceData) {
+      return std::make_pair(
+          info->mRect, aParams->mCBSize ? aParams->mCBSize->ConvertTo(wm, cbwm)
+                                        : containingBlock->PaddingSize(wm));
+    }
+    // Offset happens from padding rect.
+    const auto offset = referenceData->mAdjustedContainingBlock.TopLeft() -
+                        referenceData->mOriginalContainingBlockRect.TopLeft();
+    return std::make_pair(
+        info->mRect - offset,
+        aParams->mCBSize
+            ? aParams->mCBSize->ConvertTo(wm, cbwm)
+            : LogicalSize{cbwm, referenceData->mAdjustedContainingBlock.Size()}
+                  .ConvertTo(wm, cbwm));
+  }();
   const LogicalRect logicalAnchorRect{wm, rect,
                                       logicalCBSize.GetPhysicalSize(wm)};
   const auto logicalPropSide = wm.LogicalSideForPhysicalSide(ToSide(aPropSide));

@@ -820,8 +820,6 @@
   <string name="preferences_gestures">Gestur</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Ubahsuai</string>
-  <!-- Preference description for banner about signing in -->
-  <string name="preferences_sign_in_description_2" tools:ignore="UnusedResources" moz:removedIn="145">Masuk untuk menyinkronkan tab, markah, sandi, dan yang lainnya.</string>
   <!-- Preference description shown in the banner prompting the user to sign in for sync features -->
   <string name="preferences_sign_in_description">Sinkronkan tab, markah, sandi, dan yang lain.</string>
   <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
@@ -1217,10 +1215,8 @@
   <!--
     Turn On Sync Preferences
 
-    Header of the Sync and save your data preference view
+    Header of the Sign in preference view
   -->
-  <string name="preferences_sync_2" tools:ignore="UnusedResources" moz:removedIn="145">Sinkronkan dan simpan data Anda</string>
-  <!-- Header of the Sign in preference view -->
   <string name="preferences_sign_in">Masuk</string>
   <!-- Preference for reconnecting to FxA sync -->
   <string name="preferences_sync_sign_in_to_reconnect">Masuk untuk menghubungkan ulang</string>
@@ -1499,8 +1495,6 @@
   <string name="tab_tray_multiselect_menu_content_description">Menu tab terpilih</string>
   <!-- Title text displayed for a homepage tab in the tabs tray. -->
   <string name="tab_tray_homepage_tab">Beranda</string>
-  <!-- Title text displayed for a homepage tab in the tabs tray. %s is a placeholder that will be replaced by app name. -->
-  <string name="tab_tray_homepage_tab_2" tools:ignore="UnusedResources" moz:removedIn="145">Beranda %s</string>
   <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
   <string name="remove_tab_from_collection">Hapus tab dari koleksi</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
@@ -2101,8 +2095,6 @@
   <string name="toast_copy_link_to_clipboard">Tersalin ke papan klip</string>
   <!-- An option from the share dialog to sign into sync -->
   <string name="sync_sign_in">Masuk ke Sync</string>
-  <!-- An option from the three dot menu to sync and save data -->
-  <string name="sync_menu_sync_and_save_data" tools:ignore="UnusedResources" moz:removedIn="145">Sinkronkan dan simpan data</string>
   <!-- An option from the three dot menu to sign in -->
   <string name="sync_menu_sign_in">Masuk</string>
   <!-- An option from the share dialog to send link to all other sync devices -->
