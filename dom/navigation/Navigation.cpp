@@ -1471,6 +1471,7 @@ struct NavigationWaitForAllScope final : public nsISupports,
                             mNavigation->mOngoingAPIMethodTracker);
       // Step 11
       mAPIMethodTracker->CleanUp();
+      mNavigation->mOngoingNavigateEvent = nullptr;
     } else {
       // It needs to be ensured that the ongoing navigate event is cleared in
       // every code path (e.g. for download events), so that we don't keep
