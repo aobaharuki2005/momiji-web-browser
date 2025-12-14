@@ -1310,9 +1310,9 @@ Preferences.addSetting({
     const guid = e.target.getAttribute("guid");
     if (action === "remove") {
       let [title, confirm, cancel] = await document.l10n.formatValues([
-        { id: "payments-remove-payment-prompt-title" },
-        { id: "payments-remove-payment-prompt-confirm-button" },
-        { id: "payments-remove-payment-prompt-cancel-button" },
+        { id: "payments-delete-payment-prompt-title" },
+        { id: "payments-delete-payment-prompt-confirm-button" },
+        { id: "payments-delete-payment-prompt-cancel-button" },
       ]);
       FormAutofillPreferences.prototype.openRemovePaymentDialog(
         guid,
