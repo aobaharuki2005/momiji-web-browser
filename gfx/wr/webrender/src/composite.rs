@@ -214,6 +214,7 @@ pub struct ExternalSurfaceDescriptor {
     pub local_clip_rect: PictureRect,
     pub clip_rect: DeviceRect,
     pub transform_index: CompositorTransformIndex,
+    pub compositor_clip_index: Option<CompositorClipIndex>,
     pub image_rendering: ImageRendering,
     pub z_id: ZBufferId,
     pub dependency: ExternalSurfaceDependency,
@@ -1106,6 +1107,13 @@ impl CompositeState {
             // For each compositor surface that was promoted, build the
             // information required for the compositor to draw it
             for compositor_surface in &sub_slice.compositor_surfaces {
+                let compositor_clip_index = if compositor_surface.descriptor.compositor_clip_index.is_some() {
+                    assert!(tile_cache.compositor_clip.is_none());
+                    compositor_surface.descriptor.compositor_clip_index
+                } else {
+                    tile_cache.compositor_clip
+                };
+
                 self.push_compositor_surface(
                     &compositor_surface.descriptor,
                     compositor_surface.is_opaque,
@@ -1113,7 +1121,7 @@ impl CompositeState {
                     resource_cache,
                     gpu_buffer,
                     deferred_resolves,
-                    tile_cache.compositor_clip,
+                    compositor_clip_index,
                 );
             }
         }

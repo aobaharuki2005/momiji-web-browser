@@ -1842,6 +1842,9 @@ impl TileCacheInstance {
         surface_kind: CompositorSurfaceKind,
         pic_coverage_rect: PictureRect,
         frame_context: &FrameVisibilityContext,
+        data_stores: &DataStores,
+        clip_store: &ClipStore,
+        composite_state: &CompositeState,
         force: bool,
     ) -> Result<CompositorSurfaceKind, SurfacePromotionFailure> {
         use SurfacePromotionFailure::*;
@@ -1859,7 +1862,33 @@ impl TileCacheInstance {
                 // If a complex clip is being applied to this primitive, it can't be
                 // promoted directly to a compositor surface.
                 if prim_clip_chain.needs_mask {
-                    return Err(OverlayNeedsMask);
+                    let mut is_supported_rounded_rect = false;
+                    if let CompositorKind::Layer { .. } = composite_state.compositor_kind {
+                        if prim_clip_chain.clips_range.count == 1 && self.compositor_clip.is_none() {
+                            let clip_instance = clip_store.get_instance_from_range(&prim_clip_chain.clips_range, 0);
+                            let clip_node = &data_stores.clip[clip_instance.handle];
+
+                            if let ClipItemKind::RoundedRectangle { ref radius, mode: ClipMode::Clip, rect, .. } = clip_node.item.kind {
+                                let max_corner_width = radius.top_left.width
+                                                            .max(radius.bottom_left.width)
+                                                            .max(radius.top_right.width)
+                                                            .max(radius.bottom_right.width);
+                                let max_corner_height = radius.top_left.height
+                                                            .max(radius.bottom_left.height)
+                                                            .max(radius.top_right.height)
+                                                            .max(radius.bottom_right.height);
+
+                                if max_corner_width <= 0.5 * rect.size().width &&
+                                    max_corner_height <= 0.5 * rect.size().height {
+                                    is_supported_rounded_rect = true;
+                                }
+                            }
+                        }
+                    }
+
+                    if !is_supported_rounded_rect {
+                        return Err(OverlayNeedsMask);
+                    }
                 }
             }
             CompositorSurfaceKind::Underlay => {
@@ -1943,9 +1972,12 @@ impl TileCacheInstance {
         prim_info: &mut PrimitiveDependencyInfo,
         flags: PrimitiveFlags,
         local_prim_rect: LayoutRect,
+        prim_clip_chain: &ClipChainInstance,
         prim_spatial_node_index: SpatialNodeIndex,
         pic_coverage_rect: PictureRect,
         frame_context: &FrameVisibilityContext,
+        data_stores: &DataStores,
+        clip_store: &ClipStore,
         image_dependencies: &[ImageDependency;3],
         api_keys: &[ImageKey; 3],
         resource_cache: &mut ResourceCache,
@@ -1975,9 +2007,12 @@ impl TileCacheInstance {
             prim_info,
             flags,
             local_prim_rect,
+            prim_clip_chain,
             prim_spatial_node_index,
             pic_coverage_rect,
             frame_context,
+            data_stores,
+            clip_store,
             ExternalSurfaceDependency::Yuv {
                 image_dependencies: *image_dependencies,
                 color_space,
@@ -1999,9 +2034,12 @@ impl TileCacheInstance {
         prim_info: &mut PrimitiveDependencyInfo,
         flags: PrimitiveFlags,
         local_prim_rect: LayoutRect,
+        prim_clip_chain: &ClipChainInstance,
         prim_spatial_node_index: SpatialNodeIndex,
         pic_coverage_rect: PictureRect,
         frame_context: &FrameVisibilityContext,
+        data_stores: &DataStores,
+        clip_store: &ClipStore,
         image_dependency: ImageDependency,
         api_key: ImageKey,
         resource_cache: &mut ResourceCache,
@@ -2033,9 +2071,12 @@ impl TileCacheInstance {
             prim_info,
             flags,
             local_prim_rect,
+            prim_clip_chain,
             prim_spatial_node_index,
             pic_coverage_rect,
             frame_context,
+            data_stores,
+            clip_store,
             ExternalSurfaceDependency::Rgb {
                 image_dependency,
             },
@@ -2056,9 +2097,12 @@ impl TileCacheInstance {
         prim_info: &mut PrimitiveDependencyInfo,
         flags: PrimitiveFlags,
         local_prim_rect: LayoutRect,
+        prim_clip_chain: &ClipChainInstance,
         prim_spatial_node_index: SpatialNodeIndex,
         pic_coverage_rect: PictureRect,
         frame_context: &FrameVisibilityContext,
+        data_stores: &DataStores,
+        clip_store: &ClipStore,
         dependency: ExternalSurfaceDependency,
         api_keys: &[ImageKey; 3],
         resource_cache: &mut ResourceCache,
@@ -2156,6 +2200,57 @@ impl TileCacheInstance {
         ).size();
 
         let clip_rect = (world_clip_rect * frame_context.global_device_pixel_scale).round();
+
+
+        let mut compositor_clip_index = None;
+
+        if surface_kind == CompositorSurfaceKind::Overlay &&
+            prim_clip_chain.needs_mask {
+            assert!(prim_clip_chain.clips_range.count == 1);
+            assert!(self.compositor_clip.is_none());
+
+            let clip_instance = clip_store.get_instance_from_range(&prim_clip_chain.clips_range, 0);
+            let clip_node = &data_stores.clip[clip_instance.handle];
+            if let ClipItemKind::RoundedRectangle { radius, mode: ClipMode::Clip, rect, .. } = clip_node.item.kind {
+                // Map the clip in to device space. We know from the shared
+                // clip creation logic it's in root coord system, so only a
+                // 2d axis-aligned transform can apply. For example, in the
+                // case of a pinch-zoom effect.
+                let map = ClipSpaceConversion::new(
+                    frame_context.root_spatial_node_index,
+                    clip_node.item.spatial_node_index,
+                    frame_context.root_spatial_node_index,
+                    frame_context.spatial_tree,
+                );
+
+                let (rect, radius) = match map {
+                    ClipSpaceConversion::Local => {
+                        (rect.cast_unit(), radius)
+                    }
+                    ClipSpaceConversion::ScaleOffset(scale_offset) => {
+                        (
+                            scale_offset.map_rect(&rect),
+                            BorderRadius {
+                                top_left: scale_offset.map_size(&radius.top_left),
+                                top_right: scale_offset.map_size(&radius.top_right),
+                                bottom_left: scale_offset.map_size(&radius.bottom_left),
+                                bottom_right: scale_offset.map_size(&radius.bottom_right),
+                            },
+                        )
+                    }
+                    ClipSpaceConversion::Transform(..) => {
+                        unreachable!();
+                    }
+                };
+
+                compositor_clip_index = Some(composite_state.register_clip(
+                    rect,
+                    radius,
+                ));
+            } else {
+                unreachable!();
+            }
+        }
 
         if surface_size.width >= MAX_COMPOSITOR_SURFACES_SIZE ||
            surface_size.height >= MAX_COMPOSITOR_SURFACES_SIZE {
@@ -2265,6 +2360,7 @@ impl TileCacheInstance {
             image_rendering,
             clip_rect,
             transform_index: compositor_transform_index,
+            compositor_clip_index: compositor_clip_index,
             z_id: ZBufferId::invalid(),
             native_surface_id,
             update_params,
@@ -2593,6 +2689,9 @@ impl TileCacheInstance {
                                                           CompositorSurfaceKind::Overlay,
                                                           pic_coverage_rect,
                                                           frame_context,
+                                                          data_stores,
+                                                          clip_store,
+                                                          composite_state,
                                                           false);
                     }
 
@@ -2608,9 +2707,12 @@ impl TileCacheInstance {
                             &mut prim_info,
                             image_key.common.flags,
                             local_prim_rect,
+                            prim_clip_chain,
                             prim_spatial_node_index,
                             pic_coverage_rect,
                             frame_context,
+                            data_stores,
+                            clip_store,
                             ImageDependency {
                                 key: image_data.key,
                                 generation: resource_cache.get_image_generation(image_data.key),
@@ -2682,6 +2784,9 @@ impl TileCacheInstance {
                                                     kind,
                                                     pic_coverage_rect,
                                                     frame_context,
+                                                    data_stores,
+                                                    clip_store,
+                                                    composite_state,
                                                     force);
                         if promotion_result.is_ok() {
                             break;
@@ -2724,9 +2829,12 @@ impl TileCacheInstance {
                             &mut prim_info,
                             prim_data.common.flags,
                             local_prim_rect,
+                            prim_clip_chain,
                             prim_spatial_node_index,
                             pic_coverage_rect,
                             frame_context,
+                            data_stores,
+                            clip_store,
                             &image_dependencies,
                             &prim_data.kind.yuv_key,
                             resource_cache,
@@ -3352,7 +3460,7 @@ impl SubSlice {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 enum SurfacePromotionFailure {
     ImageWaitingOnYuvImage,
     NotPremultipliedAlpha,
