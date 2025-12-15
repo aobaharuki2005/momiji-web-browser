@@ -225,10 +225,10 @@
         --tab-min-width-extra-icons: 24px;
       }
       &[tab-note]:not([muted], [soundplaying], [activemedia-blocked]) {
-        --tab-min-width-extra-icons: 20px;
+        --tab-min-width-extra-icons: 24px;
       }
       &[tab-note]:is([muted], [soundplaying], [activemedia-blocked]) {
-        --tab-min-width-extra-icons: 44px;
+        --tab-min-width-extra-icons: 48px;
       }
     }
   }
@@ -2557,12 +2557,12 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
   display: none;
   box-sizing: border-box;
 
-  width: calc(var(--icon-size-xsmall) + 8px);
-  height: calc(var(--icon-size-xsmall) + 8px);
+  width: calc(var(--icon-size) + 8px);
+  height: calc(var(--icon-size) + 8px);
   padding: 4px;
-  margin-inline-end: calc(var(--tab-close-button-padding) / -2);
+  margin-inline-end: calc(var(--tab-inline-padding) / -2);
 
-  list-style-image: url("chrome://global/skin/icons/tab-notes-12.svg");
+  list-style-image: url("chrome://global/skin/icons/tab-notes.svg");
   -moz-context-properties: fill;
   fill: var(--icon-color);
 
@@ -2572,8 +2572,7 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
      * the close button is not showing because the tab is not being hovered.
      */
     .tabbrowser-tab:not(:hover) & {
-      /* .tab-close-button is 24px wide with border-box sizing */
-      margin-inline-end: calc(24px - var(--tab-close-button-padding));
+      margin-inline-end: calc(var(--icon-size) + 8px - var(--tab-close-button-padding));
     }
     .tabbrowser-tab:is([visuallyselected], :hover) & {
       margin-inline-end: calc(var(--tab-close-button-padding) / -2);
