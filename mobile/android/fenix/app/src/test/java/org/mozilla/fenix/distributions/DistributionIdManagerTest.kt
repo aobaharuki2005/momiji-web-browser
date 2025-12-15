@@ -10,9 +10,12 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.fake.FakeMetricController
+import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.UTMParams
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.shadows.ShadowBuild
+import kotlin.collections.listOf
 
 @RunWith(RobolectricTestRunner::class)
 class DistributionIdManagerTest {
@@ -40,6 +43,8 @@ class DistributionIdManagerTest {
         override fun saveDistributionId(id: String) {
             savedId = id
         }
+
+        override fun setMarketingTelemetryPreferences() = Unit
     }
 
     @After
@@ -58,6 +63,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             appPreinstalledOnVivoDevice = { true },
         )
 
@@ -76,6 +82,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             appPreinstalledOnVivoDevice = { true },
         )
 
@@ -91,6 +98,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             appPreinstalledOnVivoDevice = { false },
         )
 
@@ -109,6 +117,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         val distributionId = subject.getDistributionId()
@@ -123,6 +132,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             isDtTelefonicaInstalled = { true },
         )
 
@@ -139,6 +149,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             isDtTelefonicaInstalled = { true },
         )
 
@@ -155,6 +166,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             isDtTelefonicaInstalled = { false },
         )
 
@@ -171,6 +183,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             isDtTelefonicaInstalled = { true },
         )
 
@@ -187,6 +200,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             isDtTelefonicaInstalled = { false },
         )
 
@@ -203,6 +217,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         subject.setDistribution(DistributionIdManager.Distribution.DEFAULT)
@@ -228,12 +243,13 @@ class DistributionIdManagerTest {
     }
 
     @Test
-    fun `WHEN the distribution is vivo THEN the marketing screen should be skipped`() {
+    fun `WHEN the distribution should skip the marketing screen THEN the marketing screen is skipped`() {
         val subject = DistributionIdManager(
             packageManager = testContext.packageManagerWrapper,
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         subject.setDistribution(DistributionIdManager.Distribution.DEFAULT)
@@ -243,13 +259,13 @@ class DistributionIdManagerTest {
         assertEquals(true, subject.shouldSkipMarketingConsentScreen())
 
         subject.setDistribution(DistributionIdManager.Distribution.DT_001)
-        assertEquals(false, subject.shouldSkipMarketingConsentScreen())
+        assertEquals(true, subject.shouldSkipMarketingConsentScreen())
 
         subject.setDistribution(DistributionIdManager.Distribution.DT_002)
-        assertEquals(false, subject.shouldSkipMarketingConsentScreen())
+        assertEquals(true, subject.shouldSkipMarketingConsentScreen())
 
         subject.setDistribution(DistributionIdManager.Distribution.DT_003)
-        assertEquals(false, subject.shouldSkipMarketingConsentScreen())
+        assertEquals(true, subject.shouldSkipMarketingConsentScreen())
 
         subject.setDistribution(DistributionIdManager.Distribution.AURA_001)
         assertEquals(false, subject.shouldSkipMarketingConsentScreen())
@@ -265,6 +281,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         providerValue = "aura"
@@ -280,6 +297,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             isDtUsaInstalled = { true },
         )
 
@@ -296,6 +314,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
             isDtUsaInstalled = { true },
         )
 
@@ -312,6 +331,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         providerValue = "digital_turbine"
@@ -327,6 +347,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         subject.updateDistributionIdFromUtmParams(
@@ -351,6 +372,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         subject.updateDistributionIdFromUtmParams(
@@ -375,6 +397,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         subject.updateDistributionIdFromUtmParams(
@@ -399,6 +422,7 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         testDistributionSettings.saveDistributionId("vivo-001")
@@ -415,10 +439,31 @@ class DistributionIdManagerTest {
             testBrowserStoreProvider,
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
 
         val distributionId = subject.getDistributionId()
 
         assertEquals("Mozilla", distributionId)
+    }
+
+    @Test
+    fun `GIVEN the marketing screen should be skipped WHEN we try to start marketing metrics services THEN the services are started`() {
+        val metricsController = FakeMetricController()
+
+        val subject = DistributionIdManager(
+            packageManager = testContext.packageManagerWrapper,
+            testBrowserStoreProvider,
+            distributionProviderChecker = testDistributionProviderChecker,
+            distributionSettings = testDistributionSettings,
+            metricController = metricsController,
+        )
+        subject.setDistribution(DistributionIdManager.Distribution.VIVO_001)
+        subject.startAdjustIfSkippingConsentScreen()
+
+        assertEquals(
+            listOf(MetricServiceType.Marketing),
+            metricsController.startedServiceTypes,
+        )
     }
 }

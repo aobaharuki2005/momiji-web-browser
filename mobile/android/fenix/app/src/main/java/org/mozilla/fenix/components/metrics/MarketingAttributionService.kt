@@ -60,12 +60,7 @@ class MarketingAttributionService(private val context: Context) {
                                 val utmParams = UTMParams.parseUTMParameters(installReferrerResponse)
 
                                 distributionIdManager.updateDistributionIdFromUtmParams(utmParams)
-
-                                if (distributionIdManager.shouldSkipMarketingConsentScreen()) {
-                                    context.components.settings.isMarketingTelemetryEnabled = true
-                                    context.components.settings.hasMadeMarketingTelemetrySelection = true
-                                    context.components.analytics.metrics.start(MetricServiceType.Marketing)
-                                }
+                                distributionIdManager.startAdjustIfSkippingConsentScreen()
                             }
 
                             context.settings().shouldShowMarketingOnboarding =

@@ -11,6 +11,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.components.fake.FakeMetricController
 import org.mozilla.fenix.distributions.DistributionBrowserStoreProvider
 import org.mozilla.fenix.distributions.DistributionIdManager
 import org.mozilla.fenix.distributions.DistributionProviderChecker
@@ -41,6 +42,8 @@ internal class MarketingAttributionServiceTest {
         override fun saveDistributionId(id: String) {
             savedId = id
         }
+
+        override fun setMarketingTelemetryPreferences() = Unit
     }
 
     val distributionIdManager = DistributionIdManager(
@@ -48,6 +51,7 @@ internal class MarketingAttributionServiceTest {
         testBrowserStoreProvider,
         distributionProviderChecker = testDistributionProviderChecker,
         distributionSettings = testDistributionSettings,
+        metricController = FakeMetricController(),
         appPreinstalledOnVivoDevice = { true },
     )
 
@@ -81,19 +85,19 @@ internal class MarketingAttributionServiceTest {
     fun `GIVEN a partnership distribution WHEN we should skip the marketing screen THEN we skip it`() {
         distributionIdManager.setDistribution(DistributionIdManager.Distribution.VIVO_001)
         assertFalse(MarketingAttributionService.shouldShowMarketingOnboarding(null, distributionIdManager))
+
+        distributionIdManager.setDistribution(DistributionIdManager.Distribution.DT_001)
+        assertFalse(MarketingAttributionService.shouldShowMarketingOnboarding(null, distributionIdManager))
+
+        distributionIdManager.setDistribution(DistributionIdManager.Distribution.DT_002)
+        assertFalse(MarketingAttributionService.shouldShowMarketingOnboarding(null, distributionIdManager))
+
+        distributionIdManager.setDistribution(DistributionIdManager.Distribution.DT_003)
+        assertFalse(MarketingAttributionService.shouldShowMarketingOnboarding(null, distributionIdManager))
     }
 
     @Test
     fun `GIVEN a partnership distribution WHEN we should not skip the marketing screen THEN we do not skip it`() {
-        distributionIdManager.setDistribution(DistributionIdManager.Distribution.DT_001)
-        assertTrue(MarketingAttributionService.shouldShowMarketingOnboarding(null, distributionIdManager))
-
-        distributionIdManager.setDistribution(DistributionIdManager.Distribution.DT_002)
-        assertTrue(MarketingAttributionService.shouldShowMarketingOnboarding(null, distributionIdManager))
-
-        distributionIdManager.setDistribution(DistributionIdManager.Distribution.DT_003)
-        assertTrue(MarketingAttributionService.shouldShowMarketingOnboarding(null, distributionIdManager))
-
         distributionIdManager.setDistribution(DistributionIdManager.Distribution.AURA_001)
         assertTrue(MarketingAttributionService.shouldShowMarketingOnboarding(null, distributionIdManager))
 
