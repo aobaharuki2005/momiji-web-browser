@@ -25,6 +25,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -104,7 +105,8 @@ fun TabCounter(
 
     Box(
         modifier = Modifier
-            .semantics(mergeDescendants = true) {
+            .semantics(mergeDescendants = false) {
+                this.contentDescription = tabsCounterDescription
                 testTag = NORMAL_TABS_COUNTER
             },
         contentAlignment = Alignment.Center,
@@ -113,7 +115,7 @@ fun TabCounter(
             painter = painterResource(
                 id = counterBoxBackground,
             ),
-            contentDescription = tabsCounterDescription,
+            contentDescription = null,
             tint = contentColor,
         )
 
