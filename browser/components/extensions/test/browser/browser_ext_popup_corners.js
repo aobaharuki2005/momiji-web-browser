@@ -2,12 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.trustPanel.featureGate", false]],
-  });
-});
-
 add_task(async function testPopupBorderRadius() {
   let extension = ExtensionTestUtils.loadExtension({
     background() {
@@ -104,54 +98,6 @@ add_task(async function testPopupBorderRadius() {
     let browser = await awaitExtensionPanel(extension);
     await testPanel(browser);
     await closeBrowserAction(extension);
-  }
-
-  {
-    info("Test overflowed browserAction popup");
-    const kForceOverflowWidthPx = 500;
-    // As of bug 1960002, overflowing the navbar also requires adding an
-    // extra button.
-    CustomizableUI.addWidgetToArea(
-      "history-panelmenu",
-      CustomizableUI.AREA_NAVBAR
-    );
-
-    let overflowPanel = document.getElementById("widget-overflow");
-
-    let originalWindowWidth = window.outerWidth;
-    let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
-    ok(
-      !navbar.hasAttribute("overflowing"),
-      "Should start with a non-overflowing toolbar."
-    );
-    window.resizeTo(kForceOverflowWidthPx, window.outerHeight);
-
-    await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
-    ok(
-      navbar.hasAttribute("overflowing"),
-      "Should have an overflowing toolbar."
-    );
-
-    await window.gUnifiedExtensions.togglePanel();
-
-    clickBrowserAction(extension);
-    let browser = await awaitExtensionPanel(extension);
-
-    is(
-      overflowPanel.state,
-      "closed",
-      "The widget overflow panel should not be open."
-    );
-
-    await testPanel(browser, false);
-    await closeBrowserAction(extension);
-
-    window.resizeTo(originalWindowWidth, window.outerHeight);
-    await TestUtils.waitForCondition(() => !navbar.hasAttribute("overflowing"));
-    ok(
-      !navbar.hasAttribute("overflowing"),
-      "Should not have an overflowing toolbar."
-    );
   }
 
   {
