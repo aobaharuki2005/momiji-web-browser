@@ -61,6 +61,9 @@ Networking and routing
 ``browser.ipProtection.domainExclusions`` (string)
   Comma‑separated list of domains to exclude from the proxy.
 
+``browser.ipProtection.override.serverlist`` (string)
+  A JSON Payload that overrides the server list. Follows the Remote-Settings Schema.
+
 Diagnostics
 ~~~~~~~~~~~
 
