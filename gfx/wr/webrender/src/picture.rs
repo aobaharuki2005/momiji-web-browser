@@ -1560,537 +1560,28 @@ impl PicturePrimitive {
                     None => return None,
                 };
 
-                let (raster_spatial_node_index, device_pixel_scale) = {
-                    let surface = &frame_state.surfaces[surface_index.0];
-                    (surface.raster_spatial_node_index, surface.device_pixel_scale)
-                };
-                let can_use_shared_surface = !self.flags.contains(PictureFlags::IS_RESOLVE_TARGET);
-
-                let primary_render_task_id;
-                let surface_descriptor;
-                match raster_config.composite_mode {
-                    PictureCompositeMode::TileCache { .. } => {
-                        unreachable!("handled above");
-                    }
-                    PictureCompositeMode::Filter(Filter::Blur { width, height, edge_mode, .. }) => {
-                        let surface = &frame_state.surfaces[raster_config.surface_index.0];
-                        let (width, height) = surface.clamp_blur_radius(width, height);
-
-                        let width_std_deviation = width * surface.local_scale.0 * device_pixel_scale.0;
-                        let height_std_deviation = height * surface.local_scale.1 * device_pixel_scale.0;
-                        let blur_std_deviation = DeviceSize::new(
-                            width_std_deviation,
-                            height_std_deviation,
-                        );
-
-                        let original_size = surface_rects.clipped.size();
-
-                        // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
-                        // what would be even better is to rasterize the picture at the down-scaled size
-                        // directly.
-                        let adjusted_size = BlurTask::adjusted_blur_source_size(
-                            original_size,
-                            blur_std_deviation,
-                        );
-
-                        // If we have extended the size of the picture for blurring downscaling
-                        // accuracy, ensure we clear it so that any stray pixels don't affect the
-                        // downscaling passes. If not, the picture / resolve consumes the full
-                        // task size anyway, so we will clamp as usual to the task rect.
-                        let clear_color = if adjusted_size == original_size {
-                            None
-                        } else {
-                            Some(ColorF::TRANSPARENT)
-                        };
-
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-                        let adjusted_size = adjusted_size.to_i32();
-
-                        // Since we (may have) adjusted the render task size for downscaling accuracy
-                        // above, recalculate the uv rect for tasks that may sample from this blur output
-                        let uv_rect_kind = calculate_uv_rect_kind(
-                            DeviceRect::from_origin_and_size(surface_rects.clipped.min, adjusted_size.to_f32()),
-                            surface_rects.unclipped,
-                        );
-
-                        let picture_task_id = frame_state.rg_builder.add().init(
-                            RenderTask::new_dynamic(
-                                adjusted_size,
-                                RenderTaskKind::new_picture(
-                                    adjusted_size,
-                                    surface_rects.needs_scissor_rect,
-                                    surface_rects.clipped.min,
-                                    surface_spatial_node_index,
-                                    raster_spatial_node_index,
-                                    device_pixel_scale,
-                                    None,
-                                    None,
-                                    clear_color,
-                                    cmd_buffer_index,
-                                    can_use_shared_surface,
-                                    Some(original_size.round().to_i32()),
-                                )
-                            ).with_uv_rect_kind(uv_rect_kind)
-                        );
-
-
-                        let blur_render_task_id = request_render_task(
-                            frame_state,
-                            &self.snapshot,
-                            &surface_rects,
-                            false,
-                            &mut|rg_builder, _| {
-                                RenderTask::new_blur(
-                                    blur_std_deviation,
-                                    picture_task_id,
-                                    rg_builder,
-                                    RenderTargetKind::Color,
-                                    None,
-                                    original_size.to_i32(),
-                                    edge_mode,
-                                )
-                            }
-                        );
-                        primary_render_task_id = blur_render_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_chained(
-                            picture_task_id,
-                            blur_render_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
-                    PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
-                        let surface = &frame_state.surfaces[raster_config.surface_index.0];
-
-                        let device_rect = surface_rects.clipped;
-
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        let picture_task_id = frame_state.rg_builder.add().init(
-                            RenderTask::new_dynamic(
-                                surface_rects.task_size,
-                                RenderTaskKind::new_picture(
-                                    surface_rects.task_size,
-                                    surface_rects.needs_scissor_rect,
-                                    device_rect.min,
-                                    surface_spatial_node_index,
-                                    raster_spatial_node_index,
-                                    device_pixel_scale,
-                                    None,
-                                    None,
-                                    None,
-                                    cmd_buffer_index,
-                                    can_use_shared_surface,
-                                    None,
-                                ),
-                            ).with_uv_rect_kind(surface_rects.uv_rect_kind)
-                        );
-
-                        let mut blur_tasks = BlurTaskCache::default();
-
-                        self.extra_gpu_data.resize(shadows.len(), GpuBufferAddress::INVALID);
-
-                        let mut blur_render_task_id = picture_task_id;
-                        for shadow in shadows {
-                            let (blur_radius_x, blur_radius_y) = surface.clamp_blur_radius(
-                                shadow.blur_radius,
-                                shadow.blur_radius,
-                            );
-
-                            blur_render_task_id = RenderTask::new_blur(
-                                DeviceSize::new(
-                                    blur_radius_x * surface.local_scale.0 * device_pixel_scale.0,
-                                    blur_radius_y * surface.local_scale.1 * device_pixel_scale.0,
-                                ),
-                                picture_task_id,
-                                frame_state.rg_builder,
-                                RenderTargetKind::Color,
-                                Some(&mut blur_tasks),
-                                device_rect.size().to_i32(),
-                                BlurEdgeMode::Duplicate,
-                            );
-                        }
-
-                        // TODO: Ensure that snapshots bake their shadow.
-
-                        // Add this content picture as a dependency of the parent surface, to
-                        // ensure it isn't free'd after the shadow uses it as an input.
-                        frame_state.surface_builder.add_picture_render_task(picture_task_id);
-
-                        primary_render_task_id = blur_render_task_id;
-                        self.secondary_render_task_id = Some(picture_task_id);
-
-                        surface_descriptor = SurfaceDescriptor::new_chained(
-                            picture_task_id,
-                            blur_render_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
-                    PictureCompositeMode::MixBlend(mode) if BlendMode::from_mix_blend_mode(
-                        mode,
-                        frame_context.fb_config.gpu_supports_advanced_blend,
-                        frame_context.fb_config.advanced_blend_is_coherent,
-                        frame_context.fb_config.dual_source_blending_is_supported,
-                    ).is_none() => {
-                        let parent_surface = &frame_state.surfaces[parent_surface_index.0];
-
-                        // Create a space mapper that will allow mapping from the local rect
-                        // of the mix-blend primitive into the space of the surface that we
-                        // need to read back from. Note that we use the parent's raster spatial
-                        // node here, so that we are in the correct device space of the parent
-                        // surface, whether it establishes a raster root or not.
-                        let map_pic_to_parent = SpaceMapper::new_with_target(
-                            parent_surface.surface_spatial_node_index,
-                            surface_spatial_node_index,
-                            parent_surface.clipping_rect,
-                            frame_context.spatial_tree,
-                        );
-                        let pic_in_raster_space = map_pic_to_parent
-                            .map(&pic_rect)
-                            .expect("bug: unable to map mix-blend content into parent");
-
-                        // Apply device pixel ratio for parent surface to get into device
-                        // pixels for that surface.
-                        let backdrop_rect = pic_in_raster_space;
-                        let parent_surface_rect = parent_surface.clipping_rect;
-
-                        // If there is no available parent surface to read back from (for example, if
-                        // the parent surface is affected by a clip that doesn't affect the child
-                        // surface), then create a dummy 16x16 readback. In future, we could alter
-                        // the composite mode of this primitive to skip the mix-blend, but for simplicity
-                        // we just create a dummy readback for now.
-
-                        let readback_task_id = match backdrop_rect.intersection(&parent_surface_rect) {
-                            Some(available_rect) => {
-                                // Calculate the UV coords necessary for the shader to sampler
-                                // from the primitive rect within the readback region. This is
-                                // 0..1 for aligned surfaces, but doing it this way allows
-                                // accurate sampling if the primitive bounds have fractional values.
-
-                                let backdrop_rect = parent_surface.map_to_device_rect(
-                                    &backdrop_rect,
-                                    frame_context.spatial_tree,
-                                );
-
-                                let available_rect = parent_surface.map_to_device_rect(
-                                    &available_rect,
-                                    frame_context.spatial_tree,
-                                ).round_out();
-
-                                let backdrop_uv = calculate_uv_rect_kind(
-                                    available_rect,
-                                    backdrop_rect,
-                                );
-
-                                frame_state.rg_builder.add().init(
-                                    RenderTask::new_dynamic(
-                                        available_rect.size().to_i32(),
-                                        RenderTaskKind::new_readback(Some(available_rect.min)),
-                                    ).with_uv_rect_kind(backdrop_uv)
-                                )
-                            }
-                            None => {
-                                frame_state.rg_builder.add().init(
-                                    RenderTask::new_dynamic(
-                                        DeviceIntSize::new(16, 16),
-                                        RenderTaskKind::new_readback(None),
-                                    )
-                                )
-                            }
-                        };
-
-                        frame_state.surface_builder.add_child_render_task(
-                            readback_task_id,
-                            frame_state.rg_builder,
-                        );
-
-                        self.secondary_render_task_id = Some(readback_task_id);
-
-                        let task_size = surface_rects.clipped.size().to_i32();
-
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        let is_opaque = false; // TODO
-                        let render_task_id = request_render_task(
-                            frame_state,
-                            &self.snapshot,
-                            &surface_rects,
-                            is_opaque,
-                            &mut|rg_builder, _| {
-                                rg_builder.add().init(
-                                    RenderTask::new_dynamic(
-                                        task_size,
-                                        RenderTaskKind::new_picture(
-                                            task_size,
-                                            surface_rects.needs_scissor_rect,
-                                            surface_rects.clipped.min,
-                                            surface_spatial_node_index,
-                                            raster_spatial_node_index,
-                                            device_pixel_scale,
-                                            None,
-                                            None,
-                                            None,
-                                            cmd_buffer_index,
-                                            can_use_shared_surface,
-                                            None,
-                                        )
-                                    ).with_uv_rect_kind(surface_rects.uv_rect_kind)
-                                )
-                            }
-                        );
-
-                        primary_render_task_id = render_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_simple(
-                            render_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
-                    PictureCompositeMode::Filter(..) => {
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        let is_opaque = false; // TODO
-                        let render_task_id = request_render_task(
-                            frame_state,
-                            &self.snapshot,
-                            &surface_rects,
-                            is_opaque,
-                            &mut|rg_builder, _| {
-                                rg_builder.add().init(
-                                    RenderTask::new_dynamic(
-                                        surface_rects.task_size,
-                                        RenderTaskKind::new_picture(
-                                            surface_rects.task_size,
-                                            surface_rects.needs_scissor_rect,
-                                            surface_rects.clipped.min,
-                                            surface_spatial_node_index,
-                                            raster_spatial_node_index,
-                                            device_pixel_scale,
-                                            None,
-                                            None,
-                                            None,
-                                            cmd_buffer_index,
-                                            can_use_shared_surface,
-                                            None,
-                                        )
-                                    ).with_uv_rect_kind(surface_rects.uv_rect_kind)
-                                )
-                            },
-                        );
-
-                        primary_render_task_id = render_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_simple(
-                            render_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
-                    PictureCompositeMode::ComponentTransferFilter(..) => {
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        let is_opaque = false; // TODO
-                        let render_task_id = request_render_task(
-                            frame_state,
-                            &self.snapshot,
-                            &surface_rects,
-                            is_opaque,
-                            &mut|rg_builder, _| {
-                                rg_builder.add().init(
-                                    RenderTask::new_dynamic(
-                                        surface_rects.task_size,
-                                        RenderTaskKind::new_picture(
-                                            surface_rects.task_size,
-                                            surface_rects.needs_scissor_rect,
-                                            surface_rects.clipped.min,
-                                            surface_spatial_node_index,
-                                            raster_spatial_node_index,
-                                            device_pixel_scale,
-                                            None,
-                                            None,
-                                            None,
-                                            cmd_buffer_index,
-                                            can_use_shared_surface,
-                                            None,
-                                        )
-                                    ).with_uv_rect_kind(surface_rects.uv_rect_kind)
-                                )
-                            }
-                        );
-
-                        primary_render_task_id = render_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_simple(
-                            render_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
-                    PictureCompositeMode::MixBlend(..) |
-                    PictureCompositeMode::Blit(_) => {
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        let is_opaque = false; // TODO
-                        let render_task_id = request_render_task(
-                            frame_state,
-                            &self.snapshot,
-                            &surface_rects,
-                            is_opaque,
-                            &mut|rg_builder, _| {
-                                rg_builder.add().init(
-                                    RenderTask::new_dynamic(
-                                        surface_rects.task_size,
-                                        RenderTaskKind::new_picture(
-                                            surface_rects.task_size,
-                                            surface_rects.needs_scissor_rect,
-                                            surface_rects.clipped.min,
-                                            surface_spatial_node_index,
-                                            raster_spatial_node_index,
-                                            device_pixel_scale,
-                                            None,
-                                            None,
-                                            None,
-                                            cmd_buffer_index,
-                                            can_use_shared_surface,
-                                            None,
-                                        )
-                                    ).with_uv_rect_kind(surface_rects.uv_rect_kind)
-                                )
-                            }
-                        );
-
-                        primary_render_task_id = render_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_simple(
-                            render_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
-                    PictureCompositeMode::IntermediateSurface => {
-                        if !scratch.required_sub_graphs.contains(&pic_index) {
-                            return None;
-                        }
-
-                        // TODO(gw): Remove all the mostly duplicated code in each of these
-                        //           match cases (they used to be quite different).
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        let is_opaque = false; // TODO
-                        let render_task_id = request_render_task(
-                            frame_state,
-                            &self.snapshot,
-                            &surface_rects,
-                            is_opaque,
-                            &mut|rg_builder, _| {
-                                rg_builder.add().init(
-                                    RenderTask::new_dynamic(
-                                        surface_rects.task_size,
-                                        RenderTaskKind::new_picture(
-                                            surface_rects.task_size,
-                                            surface_rects.needs_scissor_rect,
-                                            surface_rects.clipped.min,
-                                            surface_spatial_node_index,
-                                            raster_spatial_node_index,
-                                            device_pixel_scale,
-                                            None,
-                                            None,
-                                            None,
-                                            cmd_buffer_index,
-                                            can_use_shared_surface,
-                                            None,
-                                        )
-                                    ).with_uv_rect_kind(surface_rects.uv_rect_kind)
-                                )
-                            }
-                        );
-
-                        primary_render_task_id = render_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_simple(
-                            render_task_id,
-                            surface_rects.clipped_local,
-                        );
-                    }
-                    PictureCompositeMode::SVGFEGraph(ref filters) => {
-                        let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
-
-                        // Whole target without regard to clipping.
-                        let prim_subregion = surface_rects.unclipped;
-                        // Visible (clipped) subregion within prim_subregion.
-                        let target_subregion = surface_rects.clipped;
-                        // Subregion of the SourceGraphic that we need to render
-                        // all pixels within target_subregion.
-                        let source_subregion = surface_rects.source;
-
-                        // Produce the source pixels, this task will be consumed
-                        // by the RenderTask graph we build
-                        let source_task_size = source_subregion.round_out().size().to_i32();
-                        let source_task_size = if source_task_size.width > 0 && source_task_size.height > 0 {
-                            source_task_size
-                        } else {
-                            DeviceIntSize::new(1,1)
-                        };
-                        let picture_task_id = frame_state.rg_builder.add().init(
-                            RenderTask::new_dynamic(
-                                source_task_size,
-                                RenderTaskKind::new_picture(
-                                    source_task_size,
-                                    surface_rects.needs_scissor_rect,
-                                    source_subregion.min,
-                                    surface_spatial_node_index,
-                                    raster_spatial_node_index,
-                                    device_pixel_scale,
-                                    None,
-                                    None,
-                                    None,
-                                    cmd_buffer_index,
-                                    can_use_shared_surface,
-                                    None,
-                                )
-                            )
-                        );
-
-                        // Determine the local space to device pixel scaling in the most robust
-                        // way, this accounts for local to device transform and
-                        // device_pixel_scale (if the task is shrunk in get_surface_rects).
-                        let subregion_to_device_scale_x = surface_rects.clipped_notsnapped.width() / surface_rects.clipped_local.width();
-                        let subregion_to_device_scale_y = surface_rects.clipped_notsnapped.height() / surface_rects.clipped_local.height();
-                        let subregion_to_device_offset_x = surface_rects.clipped_notsnapped.min.x - (surface_rects.clipped_local.min.x * subregion_to_device_scale_x).floor();
-                        let subregion_to_device_offset_y = surface_rects.clipped_notsnapped.min.y - (surface_rects.clipped_local.min.y * subregion_to_device_scale_y).floor();
-
-                        // Produce the target pixels, this is the result of the
-                        // composite op
-                        let filter_task_id = request_render_task(
-                            frame_state,
-                            &self.snapshot,
-                            &surface_rects,
-                            false,
-                            &mut|rg_builder, gpu_buffer| {
-                                RenderTask::new_svg_filter_graph(
-                                    filters,
-                                    rg_builder,
-                                    gpu_buffer,
-                                    data_stores,
-                                    surface_rects.uv_rect_kind,
-                                    picture_task_id,
-                                    source_subregion.cast_unit(),
-                                    target_subregion.cast_unit(),
-                                    prim_subregion.cast_unit(),
-                                    subregion_to_device_scale_x,
-                                    subregion_to_device_scale_y,
-                                    subregion_to_device_offset_x,
-                                    subregion_to_device_offset_y,
-                                )
-                            }
-                        );
-
-                        primary_render_task_id = filter_task_id;
-
-                        surface_descriptor = SurfaceDescriptor::new_chained(
-                            picture_task_id,
-                            filter_task_id,
-                            surface_rects.clipped_local,
-                        );
+                if let PictureCompositeMode::IntermediateSurface = raster_config.composite_mode {
+                    if !scratch.required_sub_graphs.contains(&pic_index) {
+                        return None;
                     }
                 }
+
+                let can_use_shared_surface = !self.flags.contains(PictureFlags::IS_RESOLVE_TARGET);
+                let (surface_descriptor, render_tasks) = prepare_composite_mode(
+                    &raster_config.composite_mode,
+                    surface_index,
+                    parent_surface_index,
+                    &surface_rects,
+                    &self.snapshot,
+                    can_use_shared_surface,
+                    frame_context,
+                    frame_state,
+                    data_stores,
+                    &mut self.extra_gpu_data,
+                );
+
+                self.primary_render_task_id = render_tasks[0];
+                self.secondary_render_task_id = render_tasks[1];
 
                 let is_sub_graph = self.flags.contains(PictureFlags::IS_SUB_GRAPH);
 
@@ -2102,8 +1593,6 @@ impl PicturePrimitive {
                     frame_state.surfaces,
                     frame_state.rg_builder,
                 );
-
-                self.primary_render_task_id = Some(primary_render_task_id);
             }
             None => {}
         };
@@ -2988,6 +2477,556 @@ pub fn get_relative_scale_offset(
     scale_offset.offset = scale_offset.offset.round();
 
     scale_offset
+}
+
+fn prepare_composite_mode(
+    composite_mode: &PictureCompositeMode,
+    surface_index: SurfaceIndex,
+    parent_surface_index: SurfaceIndex,
+    surface_rects: &SurfaceAllocInfo,
+    snapshot: &Option<SnapshotInfo>,
+    can_use_shared_surface: bool,
+    frame_context: &FrameBuildingContext,
+    frame_state: &mut FrameBuildingState,
+    data_stores: &mut DataStores,
+    extra_gpu_data: &mut SmallVec<[GpuBufferAddress; 1]>,
+) -> (SurfaceDescriptor, [Option<RenderTaskId>; 2]) {
+    let surface = &frame_state.surfaces[surface_index.0];
+    let surface_spatial_node_index = surface.surface_spatial_node_index;
+    let raster_spatial_node_index = surface.raster_spatial_node_index;
+    let device_pixel_scale = surface.device_pixel_scale;
+
+    let primary_render_task_id;
+    let surface_descriptor;
+    let mut secondary_render_task_id = None;
+    match *composite_mode {
+        PictureCompositeMode::TileCache { .. } => {
+            unreachable!("handled above");
+        }
+        PictureCompositeMode::Filter(Filter::Blur { width, height, edge_mode, .. }) => {
+            //let surface = &frame_state.surfaces[raster_config.surface_index.0];
+            let (width, height) = surface.clamp_blur_radius(width, height);
+
+            let width_std_deviation = width * surface.local_scale.0 * device_pixel_scale.0;
+            let height_std_deviation = height * surface.local_scale.1 * device_pixel_scale.0;
+            let blur_std_deviation = DeviceSize::new(
+                width_std_deviation,
+                height_std_deviation,
+            );
+
+            let original_size = surface_rects.clipped.size();
+
+            // Adjust the size to avoid introducing sampling errors during the down-scaling passes.
+            // what would be even better is to rasterize the picture at the down-scaled size
+            // directly.
+            let adjusted_size = BlurTask::adjusted_blur_source_size(
+                original_size,
+                blur_std_deviation,
+            );
+
+            // If we have extended the size of the picture for blurring downscaling
+            // accuracy, ensure we clear it so that any stray pixels don't affect the
+            // downscaling passes. If not, the picture / resolve consumes the full
+            // task size anyway, so we will clamp as usual to the task rect.
+            let clear_color = if adjusted_size == original_size {
+                None
+            } else {
+                Some(ColorF::TRANSPARENT)
+            };
+
+            let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+            let adjusted_size = adjusted_size.to_i32();
+
+            // Since we (may have) adjusted the render task size for downscaling accuracy
+            // above, recalculate the uv rect for tasks that may sample from this blur output
+            let uv_rect_kind = calculate_uv_rect_kind(
+                DeviceRect::from_origin_and_size(surface_rects.clipped.min, adjusted_size.to_f32()),
+                surface_rects.unclipped,
+            );
+
+            let picture_task_id = frame_state.rg_builder.add().init(
+                RenderTask::new_dynamic(
+                    adjusted_size,
+                    RenderTaskKind::new_picture(
+                        adjusted_size,
+                        surface_rects.needs_scissor_rect,
+                        surface_rects.clipped.min,
+                        surface_spatial_node_index,
+                        raster_spatial_node_index,
+                        device_pixel_scale,
+                        None,
+                        None,
+                        clear_color,
+                        cmd_buffer_index,
+                        can_use_shared_surface,
+                        Some(original_size.round().to_i32()),
+                    )
+                ).with_uv_rect_kind(uv_rect_kind)
+            );
+
+
+            let blur_render_task_id = request_render_task(
+                frame_state,
+                snapshot,
+                &surface_rects,
+                false,
+                &mut|rg_builder, _| {
+                    RenderTask::new_blur(
+                        blur_std_deviation,
+                        picture_task_id,
+                        rg_builder,
+                        RenderTargetKind::Color,
+                        None,
+                        original_size.to_i32(),
+                        edge_mode,
+                    )
+                }
+            );
+            primary_render_task_id = blur_render_task_id;
+
+            surface_descriptor = SurfaceDescriptor::new_chained(
+                picture_task_id,
+                blur_render_task_id,
+                surface_rects.clipped_local,
+            );
+        }
+        PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
+            let surface = &frame_state.surfaces[surface_index.0];
+
+            let device_rect = surface_rects.clipped;
+
+            let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+
+            let picture_task_id = frame_state.rg_builder.add().init(
+                RenderTask::new_dynamic(
+                    surface_rects.task_size,
+                    RenderTaskKind::new_picture(
+                        surface_rects.task_size,
+                        surface_rects.needs_scissor_rect,
+                        device_rect.min,
+                        surface_spatial_node_index,
+                        raster_spatial_node_index,
+                        device_pixel_scale,
+                        None,
+                        None,
+                        None,
+                        cmd_buffer_index,
+                        can_use_shared_surface,
+                        None,
+                    ),
+                ).with_uv_rect_kind(surface_rects.uv_rect_kind)
+            );
+
+            let mut blur_tasks = BlurTaskCache::default();
+
+            extra_gpu_data.resize(shadows.len(), GpuBufferAddress::INVALID);
+
+            let mut blur_render_task_id = picture_task_id;
+            for shadow in shadows {
+                let (blur_radius_x, blur_radius_y) = surface.clamp_blur_radius(
+                    shadow.blur_radius,
+                    shadow.blur_radius,
+                );
+
+                blur_render_task_id = RenderTask::new_blur(
+                    DeviceSize::new(
+                        blur_radius_x * surface.local_scale.0 * device_pixel_scale.0,
+                        blur_radius_y * surface.local_scale.1 * device_pixel_scale.0,
+                    ),
+                    picture_task_id,
+                    frame_state.rg_builder,
+                    RenderTargetKind::Color,
+                    Some(&mut blur_tasks),
+                    device_rect.size().to_i32(),
+                    BlurEdgeMode::Duplicate,
+                );
+            }
+
+            // TODO: Ensure that snapshots bake their shadow.
+
+            // Add this content picture as a dependency of the parent surface, to
+            // ensure it isn't free'd after the shadow uses it as an input.
+            frame_state.surface_builder.add_picture_render_task(picture_task_id);
+
+            primary_render_task_id = blur_render_task_id;
+            secondary_render_task_id = Some(picture_task_id);
+
+            surface_descriptor = SurfaceDescriptor::new_chained(
+                picture_task_id,
+                blur_render_task_id,
+                surface_rects.clipped_local,
+            );
+        }
+        PictureCompositeMode::MixBlend(mode) if BlendMode::from_mix_blend_mode(
+            mode,
+            frame_context.fb_config.gpu_supports_advanced_blend,
+            frame_context.fb_config.advanced_blend_is_coherent,
+            frame_context.fb_config.dual_source_blending_is_supported,
+        ).is_none() => {
+            let parent_surface = &frame_state.surfaces[parent_surface_index.0];
+
+            // Create a space mapper that will allow mapping from the local rect
+            // of the mix-blend primitive into the space of the surface that we
+            // need to read back from. Note that we use the parent's raster spatial
+            // node here, so that we are in the correct device space of the parent
+            // surface, whether it establishes a raster root or not.
+            let map_pic_to_parent = SpaceMapper::new_with_target(
+                parent_surface.surface_spatial_node_index,
+                surface_spatial_node_index,
+                parent_surface.clipping_rect,
+                frame_context.spatial_tree,
+            );
+            let pic_rect = surface.clipped_local_rect;
+            let pic_in_raster_space = map_pic_to_parent
+                .map(&pic_rect)
+                .expect("bug: unable to map mix-blend content into parent");
+
+            // Apply device pixel ratio for parent surface to get into device
+            // pixels for that surface.
+            let backdrop_rect = pic_in_raster_space;
+            let parent_surface_rect = parent_surface.clipping_rect;
+
+            // If there is no available parent surface to read back from (for example, if
+            // the parent surface is affected by a clip that doesn't affect the child
+            // surface), then create a dummy 16x16 readback. In future, we could alter
+            // the composite mode of this primitive to skip the mix-blend, but for simplicity
+            // we just create a dummy readback for now.
+
+            let readback_task_id = match backdrop_rect.intersection(&parent_surface_rect) {
+                Some(available_rect) => {
+                    // Calculate the UV coords necessary for the shader to sampler
+                    // from the primitive rect within the readback region. This is
+                    // 0..1 for aligned surfaces, but doing it this way allows
+                    // accurate sampling if the primitive bounds have fractional values.
+
+                    let backdrop_rect = parent_surface.map_to_device_rect(
+                        &backdrop_rect,
+                        frame_context.spatial_tree,
+                    );
+
+                    let available_rect = parent_surface.map_to_device_rect(
+                        &available_rect,
+                        frame_context.spatial_tree,
+                    ).round_out();
+
+                    let backdrop_uv = calculate_uv_rect_kind(
+                        available_rect,
+                        backdrop_rect,
+                    );
+
+                    frame_state.rg_builder.add().init(
+                        RenderTask::new_dynamic(
+                            available_rect.size().to_i32(),
+                            RenderTaskKind::new_readback(Some(available_rect.min)),
+                        ).with_uv_rect_kind(backdrop_uv)
+                    )
+                }
+                None => {
+                    frame_state.rg_builder.add().init(
+                        RenderTask::new_dynamic(
+                            DeviceIntSize::new(16, 16),
+                            RenderTaskKind::new_readback(None),
+                        )
+                    )
+                }
+            };
+
+            frame_state.surface_builder.add_child_render_task(
+                readback_task_id,
+                frame_state.rg_builder,
+            );
+
+            secondary_render_task_id = Some(readback_task_id);
+
+            let task_size = surface_rects.clipped.size().to_i32();
+
+            let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+
+            let is_opaque = false; // TODO
+            let render_task_id = request_render_task(
+                frame_state,
+                &snapshot,
+                &surface_rects,
+                is_opaque,
+                &mut|rg_builder, _| {
+                    rg_builder.add().init(
+                        RenderTask::new_dynamic(
+                            task_size,
+                            RenderTaskKind::new_picture(
+                                task_size,
+                                surface_rects.needs_scissor_rect,
+                                surface_rects.clipped.min,
+                                surface_spatial_node_index,
+                                raster_spatial_node_index,
+                                device_pixel_scale,
+                                None,
+                                None,
+                                None,
+                                cmd_buffer_index,
+                                can_use_shared_surface,
+                                None,
+                            )
+                        ).with_uv_rect_kind(surface_rects.uv_rect_kind)
+                    )
+                }
+            );
+
+            primary_render_task_id = render_task_id;
+
+            surface_descriptor = SurfaceDescriptor::new_simple(
+                render_task_id,
+                surface_rects.clipped_local,
+            );
+        }
+        PictureCompositeMode::Filter(..) => {
+            let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+
+            let is_opaque = false; // TODO
+            let render_task_id = request_render_task(
+                frame_state,
+                snapshot,
+                &surface_rects,
+                is_opaque,
+                &mut|rg_builder, _| {
+                    rg_builder.add().init(
+                        RenderTask::new_dynamic(
+                            surface_rects.task_size,
+                            RenderTaskKind::new_picture(
+                                surface_rects.task_size,
+                                surface_rects.needs_scissor_rect,
+                                surface_rects.clipped.min,
+                                surface_spatial_node_index,
+                                raster_spatial_node_index,
+                                device_pixel_scale,
+                                None,
+                                None,
+                                None,
+                                cmd_buffer_index,
+                                can_use_shared_surface,
+                                None,
+                            )
+                        ).with_uv_rect_kind(surface_rects.uv_rect_kind)
+                    )
+                },
+            );
+
+            primary_render_task_id = render_task_id;
+
+            surface_descriptor = SurfaceDescriptor::new_simple(
+                render_task_id,
+                surface_rects.clipped_local,
+            );
+        }
+        PictureCompositeMode::ComponentTransferFilter(..) => {
+            let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+
+            let is_opaque = false; // TODO
+            let render_task_id = request_render_task(
+                frame_state,
+                snapshot,
+                &surface_rects,
+                is_opaque,
+                &mut|rg_builder, _| {
+                    rg_builder.add().init(
+                        RenderTask::new_dynamic(
+                            surface_rects.task_size,
+                            RenderTaskKind::new_picture(
+                                surface_rects.task_size,
+                                surface_rects.needs_scissor_rect,
+                                surface_rects.clipped.min,
+                                surface_spatial_node_index,
+                                raster_spatial_node_index,
+                                device_pixel_scale,
+                                None,
+                                None,
+                                None,
+                                cmd_buffer_index,
+                                can_use_shared_surface,
+                                None,
+                            )
+                        ).with_uv_rect_kind(surface_rects.uv_rect_kind)
+                    )
+                }
+            );
+
+            primary_render_task_id = render_task_id;
+
+            surface_descriptor = SurfaceDescriptor::new_simple(
+                render_task_id,
+                surface_rects.clipped_local,
+            );
+        }
+        PictureCompositeMode::MixBlend(..) |
+        PictureCompositeMode::Blit(_) => {
+            let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+
+            let is_opaque = false; // TODO
+            let render_task_id = request_render_task(
+                frame_state,
+                snapshot,
+                &surface_rects,
+                is_opaque,
+                &mut|rg_builder, _| {
+                    rg_builder.add().init(
+                        RenderTask::new_dynamic(
+                            surface_rects.task_size,
+                            RenderTaskKind::new_picture(
+                                surface_rects.task_size,
+                                surface_rects.needs_scissor_rect,
+                                surface_rects.clipped.min,
+                                surface_spatial_node_index,
+                                raster_spatial_node_index,
+                                device_pixel_scale,
+                                None,
+                                None,
+                                None,
+                                cmd_buffer_index,
+                                can_use_shared_surface,
+                                None,
+                            )
+                        ).with_uv_rect_kind(surface_rects.uv_rect_kind)
+                    )
+                }
+            );
+
+            primary_render_task_id = render_task_id;
+
+            surface_descriptor = SurfaceDescriptor::new_simple(
+                render_task_id,
+                surface_rects.clipped_local,
+            );
+        }
+        PictureCompositeMode::IntermediateSurface => {
+            // TODO(gw): Remove all the mostly duplicated code in each of these
+            //           match cases (they used to be quite different).
+            let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+
+            let is_opaque = false; // TODO
+            let render_task_id = request_render_task(
+                frame_state,
+                snapshot,
+                &surface_rects,
+                is_opaque,
+                &mut|rg_builder, _| {
+                    rg_builder.add().init(
+                        RenderTask::new_dynamic(
+                            surface_rects.task_size,
+                            RenderTaskKind::new_picture(
+                                surface_rects.task_size,
+                                surface_rects.needs_scissor_rect,
+                                surface_rects.clipped.min,
+                                surface_spatial_node_index,
+                                raster_spatial_node_index,
+                                device_pixel_scale,
+                                None,
+                                None,
+                                None,
+                                cmd_buffer_index,
+                                can_use_shared_surface,
+                                None,
+                            )
+                        ).with_uv_rect_kind(surface_rects.uv_rect_kind)
+                    )
+                }
+            );
+
+            primary_render_task_id = render_task_id;
+
+            surface_descriptor = SurfaceDescriptor::new_simple(
+                render_task_id,
+                surface_rects.clipped_local,
+            );
+        }
+        PictureCompositeMode::SVGFEGraph(ref filters) => {
+            let cmd_buffer_index = frame_state.cmd_buffers.create_cmd_buffer();
+
+            // Whole target without regard to clipping.
+            let prim_subregion = surface_rects.unclipped;
+            // Visible (clipped) subregion within prim_subregion.
+            let target_subregion = surface_rects.clipped;
+            // Subregion of the SourceGraphic that we need to render
+            // all pixels within target_subregion.
+            let source_subregion = surface_rects.source;
+
+            // Produce the source pixels, this task will be consumed
+            // by the RenderTask graph we build
+            let source_task_size = source_subregion.round_out().size().to_i32();
+            let source_task_size = if source_task_size.width > 0 && source_task_size.height > 0 {
+                source_task_size
+            } else {
+                DeviceIntSize::new(1,1)
+            };
+            let picture_task_id = frame_state.rg_builder.add().init(
+                RenderTask::new_dynamic(
+                    source_task_size,
+                    RenderTaskKind::new_picture(
+                        source_task_size,
+                        surface_rects.needs_scissor_rect,
+                        source_subregion.min,
+                        surface_spatial_node_index,
+                        raster_spatial_node_index,
+                        device_pixel_scale,
+                        None,
+                        None,
+                        None,
+                        cmd_buffer_index,
+                        can_use_shared_surface,
+                        None,
+                    )
+                )
+            );
+
+            // Determine the local space to device pixel scaling in the most robust
+            // way, this accounts for local to device transform and
+            // device_pixel_scale (if the task is shrunk in get_surface_rects).
+            let subregion_to_device_scale_x = surface_rects.clipped_notsnapped.width() / surface_rects.clipped_local.width();
+            let subregion_to_device_scale_y = surface_rects.clipped_notsnapped.height() / surface_rects.clipped_local.height();
+            let subregion_to_device_offset_x = surface_rects.clipped_notsnapped.min.x - (surface_rects.clipped_local.min.x * subregion_to_device_scale_x).floor();
+            let subregion_to_device_offset_y = surface_rects.clipped_notsnapped.min.y - (surface_rects.clipped_local.min.y * subregion_to_device_scale_y).floor();
+
+            // Produce the target pixels, this is the result of the
+            // composite op
+            let filter_task_id = request_render_task(
+                frame_state,
+                snapshot,
+                &surface_rects,
+                false,
+                &mut|rg_builder, gpu_buffer| {
+                    RenderTask::new_svg_filter_graph(
+                        filters,
+                        rg_builder,
+                        gpu_buffer,
+                        data_stores,
+                        surface_rects.uv_rect_kind,
+                        picture_task_id,
+                        source_subregion.cast_unit(),
+                        target_subregion.cast_unit(),
+                        prim_subregion.cast_unit(),
+                        subregion_to_device_scale_x,
+                        subregion_to_device_scale_y,
+                        subregion_to_device_offset_x,
+                        subregion_to_device_offset_y,
+                    )
+                }
+            );
+
+            primary_render_task_id = filter_task_id;
+
+            surface_descriptor = SurfaceDescriptor::new_chained(
+                picture_task_id,
+                filter_task_id,
+                surface_rects.clipped_local,
+            );
+        }
+    }
+
+    (
+        surface_descriptor,
+        [
+            Some(primary_render_task_id),
+            secondary_render_task_id,
+        ]
+    )
 }
 
 #[test]
