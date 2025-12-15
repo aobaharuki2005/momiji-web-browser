@@ -51,6 +51,12 @@ a {
   color: inherit;
 }
 
+a:hover,
+a:hover:active {
+  color: inherit;
+  text-decoration: none;
+}
+
 #heading {
   font-size: var(--font-size-root);
   font-weight: var(--heading-font-weight);
