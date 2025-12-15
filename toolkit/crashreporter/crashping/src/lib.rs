@@ -15,6 +15,8 @@ mod glean_metrics {
     include!(env!("GLEAN_METRICS_FILE"));
 }
 mod annotations;
+mod single_instance;
+
 use annotations::ANNOTATIONS;
 
 const TELEMETRY_SERVER: &str = "https://incoming.telemetry.mozilla.org";
@@ -42,6 +44,18 @@ pub struct InitGlean {
     pub clear_uploader_for_tests: bool,
 }
 
+/// A handle taking ownership of the Glean store.
+pub struct GleanHandle {
+    single_instance: single_instance::SingleInstance,
+}
+
+impl GleanHandle {
+    /// Own the Glean store for the lifetime of the application.
+    pub fn application_lifetime(self) {
+        self.single_instance.retain_until_application_exit();
+    }
+}
+
 impl InitGlean {
     /// The data_dir should be a dedicated directory for use by Glean.
     pub fn new(data_dir: PathBuf, app_id: &str, client_info_metrics: ClientInfoMetrics) -> Self {
@@ -56,15 +70,36 @@ impl InitGlean {
         }
     }
 
-    pub fn initialize(self) {
+    pub fn initialize(self) -> std::io::Result<GleanHandle> {
         self.init_with(glean::initialize)
     }
 
+    /// Initialize using glean::test_reset_glean.
+    ///
+    /// This will not do any process locking of the Glean store.
     pub fn test_reset_glean(self, clear_stores: bool) {
-        self.init_with(move |c, m| glean::test_reset_glean(c, m, clear_stores))
+        self.init_with_no_lock(move |c, m| glean::test_reset_glean(c, m, clear_stores))
     }
 
-    pub fn init_with<F: FnOnce(Configuration, ClientInfoMetrics)>(self, f: F) {
+    /// Initialize with the given function.
+    ///
+    /// This will take exclusive ownership of the Glean store for the current process (potentially
+    /// blocking). The returned GleanHandle tracks ownership.
+    pub fn init_with<F: FnOnce(Configuration, ClientInfoMetrics)>(
+        self,
+        f: F,
+    ) -> std::io::Result<GleanHandle> {
+        std::fs::create_dir_all(&self.configuration.data_path)?;
+        let handle = GleanHandle {
+            single_instance: single_instance::SingleInstance::acquire(
+                &self.configuration.data_path.join("crashping.pid"),
+            )?,
+        };
+        self.init_with_no_lock(f);
+        Ok(handle)
+    }
+
+    pub fn init_with_no_lock<F: FnOnce(Configuration, ClientInfoMetrics)>(mut self, f: F) {
         // Clear the uploader for tests, if configured.
         // No need to check `cfg!(test)`, since we don't set an uploader in unit tests (and if we
         // did, it would be test-specific).
@@ -74,9 +109,8 @@ impl InitGlean {
             self.configuration.uploader = None;
             self.configuration.server_endpoint = None;
         }
-
         init();
-        f(self.configuration, self.client_info_metrics)
+        f(self.configuration, self.client_info_metrics);
     }
 }
 
