@@ -8,14 +8,10 @@
  * when enabled/disabled.
  */
 
-add_setup(async function () {
-  await gCUITestUtils.addSearchBar();
-  registerCleanupFunction(async function () {
-    gCUITestUtils.removeSearchBar();
-  });
-});
-
 add_task(async function () {
+  SpecialPowers.pushPrefEnv({
+    set: [["browser.search.widget.new", false]],
+  });
   info("Opening new window (browser.search.widget.new=false).");
   let win = await BrowserTestUtils.openNewBrowserWindow();
   let newSearchbar = win.document.querySelector("#searchbar-new");
@@ -24,9 +20,7 @@ add_task(async function () {
   Assert.ok(!!oldSearchbar.firstChild, "Old searchbar was initialized");
 
   info("Enabling new searchbar.");
-  SpecialPowers.pushPrefEnv({
-    set: [["browser.search.widget.new", true]],
-  });
+  SpecialPowers.popPrefEnv();
   await TestUtils.waitForTick();
   Assert.ok(!!newSearchbar.controller, "New searchbar was initialized");
   Assert.ok(!oldSearchbar.firstChild, "Old searchbar was uninitialized");
@@ -41,11 +35,14 @@ add_task(async function () {
 
   info("Disabling new searchbar.");
   let spy = sinon.spy(newSearchbar, "_removeObservers");
-  SpecialPowers.popPrefEnv();
+  SpecialPowers.pushPrefEnv({
+    set: [["browser.search.widget.new", false]],
+  });
   await TestUtils.waitForTick();
   Assert.ok(spy.calledOnce, "New searchbar was uninitialized");
   Assert.ok(!!oldSearchbar.firstChild, "Old searchbar was initialized");
 
   sinon.restore();
   await BrowserTestUtils.closeWindow(win);
+  SpecialPowers.popPrefEnv();
 });
