@@ -10117,7 +10117,7 @@
 # Is support for shape() enabled?
 - name: layout.css.basic-shape-shape.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
