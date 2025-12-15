@@ -5,10 +5,6 @@ permalink: /changelog/
 ---
 
 # 148.0 (In Development)
-* **browser-engine-gecko** and **concept-engine**
-  * Add optional link text support to HitResult.UNKNOWN to allow getting the text associated with a link in response to a long click
-* **feature-contextmenu**
-  * 🆕 New: "Copy link text" context menu candidate to allow for the ability to copy link text [Bug 1809303](https://bugzilla.mozilla.org/show_bug.cgi?id=1809303)
 
 # 147.0
 * **browser-state**:

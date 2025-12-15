@@ -1261,13 +1261,7 @@ class GeckoEngineSession(
             screenY: Int,
             element: GeckoSession.ContentDelegate.ContextElement,
         ) {
-            val hitResult = handleLongClick(
-                elementSrc = element.srcUri,
-                elementType = element.type,
-                uri = element.linkUri,
-                title = element.title,
-                linkText = element.linkText,
-            )
+            val hitResult = handleLongClick(element.srcUri, element.type, element.linkUri, element.title)
             hitResult?.let {
                 notifyObservers { onLongPress(it) }
             }
@@ -1523,22 +1517,7 @@ class GeckoEngineSession(
         }
     }
 
-    /**
-     * Handles long click events.
-     *
-     * @param elementSrc The source of the element.
-     * @param elementType The type of the element.
-     * @param uri The (optional) URI of the element.
-     * @param title The (optional) title of the element.
-     * @param linkText The (optional) link text of the element.
-     */
-    fun handleLongClick(
-        elementSrc: String?,
-        elementType: Int,
-        uri: String? = null,
-        title: String? = null,
-        linkText: String? = null,
-    ): HitResult? {
+    fun handleLongClick(elementSrc: String?, elementType: Int, uri: String? = null, title: String? = null): HitResult? {
         return when (elementType) {
             GeckoSession.ContentDelegate.ContextElement.TYPE_AUDIO ->
                 elementSrc?.let {
@@ -1566,7 +1545,7 @@ class GeckoEngineSession(
                         else -> HitResult.UNKNOWN(it)
                     }
                 } ?: uri?.let {
-                    HitResult.UNKNOWN(src = it, linkText = linkText)
+                    HitResult.UNKNOWN(it)
                 }
             }
             else -> HitResult.UNKNOWN("")

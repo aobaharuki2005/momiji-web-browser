@@ -586,8 +586,7 @@ public class GeckoSession {
                     message.getString("alt"),
                     message.getString("elementType"),
                     message.getString("elementSrc"),
-                    message.getString("textContent"),
-                    message.getString("linkText"));
+                    message.getString("textContent"));
 
             delegate.onContextMenu(
                 GeckoSession.this, message.getInt("screenX"), message.getInt("screenY"), elem);
@@ -3938,18 +3937,8 @@ public class GeckoSession {
       /** The source URI (src) of the element. Set for (nested) media elements. */
       public final @Nullable String srcUri;
 
-      /**
-       * The text content of the element
-       *
-       * @deprecated This field is deprecated, please use {@link ContextElement#linkText} to
-       *     retrieve the text associated with a link element.
-       */
-      @Deprecated
-      @DeprecationSchedule(id = "context-element-api-updates", version = 151)
+      /** The text content of the element */
       public final @Nullable String textContent;
-
-      /** The link text of the element */
-      public final @Nullable String linkText;
 
       // TODO: Bug 1595822 make public
       final List<WebExtension.Menu> extensionMenus;
@@ -3964,7 +3953,6 @@ public class GeckoSession {
        * @param typeStr The type of the element.
        * @param srcUri The source URI (src).
        * @param textContent The text content.
-       * @param linkText The link text content.
        */
       protected ContextElement(
           final @Nullable String baseUri,
@@ -3973,8 +3961,7 @@ public class GeckoSession {
           final @Nullable String altText,
           final @NonNull String typeStr,
           final @Nullable String srcUri,
-          final @Nullable String textContent,
-          final @Nullable String linkText) {
+          final @Nullable String textContent) {
         this.baseUri = baseUri;
         this.linkUri = linkUri;
         this.title = title;
@@ -3983,7 +3970,6 @@ public class GeckoSession {
         this.srcUri = srcUri;
         this.textContent = textContent;
         this.extensionMenus = null;
-        this.linkText = linkText;
       }
 
       /**
@@ -3995,11 +3981,7 @@ public class GeckoSession {
        * @param altText The alternative text (alt).
        * @param typeStr The type of the element.
        * @param srcUri The source URI (src).
-       * @deprecated This constructor has been deprecated and will be removed in a future version.
-       *     Please use the other overloaded constructors.
        */
-      @Deprecated
-      @DeprecationSchedule(id = "context-element-api-updates", version = 151)
       protected ContextElement(
           final @Nullable String baseUri,
           final @Nullable String linkUri,
@@ -4007,7 +3989,7 @@ public class GeckoSession {
           final @Nullable String altText,
           final @NonNull String typeStr,
           final @Nullable String srcUri) {
-        this(baseUri, linkUri, title, altText, typeStr, srcUri, null, null);
+        this(baseUri, linkUri, title, altText, typeStr, srcUri, null);
       }
 
       private static int getType(final String name) {
