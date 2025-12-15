@@ -1004,6 +1004,7 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
         styleMargin
             ->GetMargin(LogicalSide::IEnd, outerWM, anchorResolutionParams)
             ->IsAuto(),
+        aKidReflowInput.mFlags.mIAnchorCenter,
         aMargin);
   } else {
     ReflowInput::ComputeAbsPosBlockAutoMargin(
@@ -1014,6 +1015,7 @@ void AbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
         styleMargin
             ->GetMargin(LogicalSide::BEnd, outerWM, anchorResolutionParams)
             ->IsAuto(),
+        aKidReflowInput.mFlags.mBAnchorCenter,
         aMargin);
   }
 
@@ -1415,12 +1417,10 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       // margin for us in that axis (since the thing that's aligned is the
       // margin box).  So, we clear out the margin here to avoid applying it
       // twice.
-      if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign ||
-          kidReflowInput.mFlags.mIAnchorCenter) {
+      if (kidReflowInput.mFlags.mIOffsetsNeedCSSAlign) {
         margin.IStart(outerWM) = margin.IEnd(outerWM) = 0;
       }
-      if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign ||
-          kidReflowInput.mFlags.mBAnchorCenter) {
+      if (kidReflowInput.mFlags.mBOffsetsNeedCSSAlign) {
         margin.BStart(outerWM) = margin.BEnd(outerWM) = 0;
       }
 
