@@ -164,6 +164,8 @@ class ContainerType(DataType):
 
 class Unicode(DataType):
     def convert(self, data):
+        if data is None:
+            return None
         if isinstance(data, str):
             return data
         if isinstance(data, str):
