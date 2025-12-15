@@ -429,7 +429,7 @@ Tester.prototype = {
     aCallback();
   },
 
-  waitForWindowsState: function Tester_waitForWindowsState(aCallback) {
+  checkWindowsState: function Tester_checkWindowsState() {
     let timedOut = this.currentTest && this.currentTest.timedOut;
     // eslint-disable-next-line no-nested-ternary
     let baseMsg = timedOut
@@ -478,19 +478,14 @@ Tester.prototype = {
         }
       }
 
-      // Replace the last tab with a fresh one
-      if (window.gBrowser) {
-        gBrowser.addTab("about:blank", {
-          skipAnimation: true,
-          triggeringPrincipal:
-            Services.scriptSecurityManager.getSystemPrincipal(),
-        });
-        gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
-        gBrowser.stop();
-      }
-
       // Tests shouldn't leave sidebars open
-      this.structuredLogger.info("checking for open sidebars");
+      if (this.currentTest) {
+        this.currentTest.addResult(
+          new testMessage("checking for open sidebars")
+        );
+      } else {
+        this.structuredLogger.info("checking for open sidebars");
+      }
       const sidebarContainer = document.getElementById("sidebar-box");
       if (!sidebarContainer.hidden) {
         window.SidebarController.hide({ dismissPanel: true });
@@ -504,7 +499,11 @@ Tester.prototype = {
     }
 
     // Remove stale windows
-    this.structuredLogger.info("checking window state");
+    if (this.currentTest) {
+      this.currentTest.addResult(new testMessage("checking window state"));
+    } else {
+      this.structuredLogger.info("checking window state");
+    }
     for (let win of Services.wm.getEnumerator(null)) {
       let type = win.document.documentElement.getAttribute("windowtype");
       if (
@@ -545,9 +544,6 @@ Tester.prototype = {
         win.close();
       }
     }
-
-    // Make sure the window is raised before each test.
-    this.SimpleTest.waitForFocus(aCallback);
   },
 
   finish: function Tester_finish() {
@@ -871,7 +867,10 @@ Tester.prototype = {
   },
 
   async nextTest() {
-    if (this.currentTest) {
+    // On first call (no currentTest yet), check for initial window state issues
+    if (!this.currentTest) {
+      this.checkWindowsState();
+    } else {
       if (this._coverageCollector) {
         this._coverageCollector.recordTestCoverage(this.currentTest.path);
       }
@@ -1118,6 +1117,11 @@ Tester.prototype = {
       this.PromiseTestUtils.assertNoUncaughtRejections();
 
       await this.notifyProfilerOfTestEnd();
+
+      // Check the window state before logging testEnd so that any cleanup
+      // assertions are included in the test result, not logged after test_end.
+      this.checkWindowsState();
+
       let time = Date.now() - this.lastStartTime;
 
       this.structuredLogger.testEnd(
@@ -1142,10 +1146,22 @@ Tester.prototype = {
       this.currentTest.scope = null;
     }
 
-    // Check the window state for the current test before moving to the next one.
-    // This also causes us to check before starting any tests, since nextTest()
-    // is invoked to start the tests.
-    this.waitForWindowsState(() => {
+    // Replace the current tab with about:blank. For the first test, this ensures
+    // we start with a clean slate. For subsequent tests, this must happen AFTER
+    // test_end is logged, otherwise the new windows created by addTab will be
+    // tracked by ShutdownLeaks as belonging to the test and cause false leak reports.
+    if (window.gBrowser) {
+      gBrowser.addTab("about:blank", {
+        skipAnimation: true,
+        triggeringPrincipal:
+          Services.scriptSecurityManager.getSystemPrincipal(),
+      });
+      gBrowser.removeTab(gBrowser.selectedTab, { skipPermitUnload: true });
+      gBrowser.stop();
+    }
+
+    // Make sure the window is raised before starting the next test.
+    this.SimpleTest.waitForFocus(() => {
       if (this.done) {
         if (this._coverageCollector) {
           this._coverageCollector.finalize();
