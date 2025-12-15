@@ -6,8 +6,7 @@ package org.mozilla.fenix.settings.address.store
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.autofill.AddressStructure
 import mozilla.components.lib.state.Middleware
@@ -45,8 +44,8 @@ data class UnknownLocalizationKey(
  */
 class AddressStructureMiddleware(
     private val environment: AddressEnvironment,
-    private val scope: CoroutineScope = MainScope(),
-    private val ioDispatcher: CoroutineDispatcher = IO,
+    private val scope: CoroutineScope,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Middleware<AddressState, AddressAction> {
     override fun invoke(
         context: MiddlewareContext<AddressState, AddressAction>,
@@ -69,7 +68,7 @@ class AddressStructureMiddleware(
         store: Store<AddressState, AddressAction>,
         initialLoad: Boolean,
     ) = scope.launch(ioDispatcher) {
-        val structure = environment?.getAddressStructure(store.state.address.country) ?: return@launch
+        val structure = environment.getAddressStructure(store.state.address.country)
         structure.validate(store.state.address.country)
         store.dispatch(
             AddressStructureLoaded(
@@ -89,7 +88,7 @@ class AddressStructureMiddleware(
             }
 
             if (localizationKey is AddressStructure.Field.LocalizationKey.Unknown) {
-                environment?.submitCaughtException(
+                environment.submitCaughtException(
                     UnknownLocalizationKey(countryCode, localizationKey.value),
                 )
             }
