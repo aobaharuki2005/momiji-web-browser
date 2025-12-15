@@ -293,8 +293,6 @@
     --size-item-medium: 24px;
     --size-item-large: 32px;
     --size-item-xlarge: 48px;
-    --size-sidebar: 280px;
-    --size-sidebar-narrow: 118px;
 
     /** Space **/
     --space-xxsmall: calc(0.5 * var(--space-xsmall)); /* 2px */
@@ -304,11 +302,6 @@
     --space-large: calc(4 * var(--space-xsmall)); /* 16px */
     --space-xlarge: calc(6 * var(--space-xsmall)); /* 24px */
     --space-xxlarge: calc(8 * var(--space-xsmall)); /* 32px */
-
-    /** Table **/
-    --table-background-color: light-dark(#f8f8fa, rgb(35, 34, 43));
-    --table-border-color: color-mix(in srgb, currentColor 41%, transparent);
-    --table-header-background-color: var(--color-accent-primary);
 
     /** Text **/
     --text-color-disabled: color-mix(in srgb, currentColor 40%, transparent);
@@ -432,12 +425,6 @@
       --link-color-hover: LinkText;
       --link-color-active: ActiveText;
       --link-color-visited: var(--link-color);
-
-      /** Table **/
-      --table-background-color: Canvas;
-      --table-border-color: CanvasText;
-      --table-header-background-color: AccentColor;
-      --table-header-text-color: AccentColorText;
 
       /** Text **/
       --text-color-disabled: GrayText;

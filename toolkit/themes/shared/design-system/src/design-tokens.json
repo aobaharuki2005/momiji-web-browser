@@ -1361,14 +1361,6 @@
       "xlarge": {
         "value": "48px"
       }
-    },
-    "sidebar": {
-      "@base": {
-        "value": "280px"
-      },
-      "narrow": {
-        "value": "118px"
-      }
     }
   },
   "space": {
@@ -1460,49 +1452,6 @@
     }
   },
   "table": {
-    "background": {
-      "color": {
-        "value": {
-          "light": "#f8f8fa",
-          "dark": "rgb(35, 34, 43)",
-          "forcedColors": "Canvas"
-        }
-      }
-    },
-    "border": {
-      "color": {
-        "value": {
-          "default": "color-mix(in srgb, currentColor 41%, transparent)",
-          "forcedColors": "CanvasText"
-        }
-      }
-    },
-    "header": {
-      "background": {
-        "color": {
-          "value": {
-            "default": "{color.accent.primary.@base}",
-            "forcedColors": "AccentColor"
-          }
-        }
-      },
-      "text": {
-        "color": {
-          "@base": {
-            "value": {
-              "forcedColors": "AccentColorText",
-              "brand": {
-                "light": "{color.white}",
-                "dark": "{color.gray.100}"
-              },
-              "platform": {
-                "default": "AccentColorText"
-              }
-            }
-          }
-        }
-      }
-    },
     "row": {
       "background": {
         "color": {

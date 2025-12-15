@@ -54,9 +54,6 @@
     --link-color-active: color-mix(in srgb, black 20%, var(--link-color));
     --link-color-visited: var(--link-color);
 
-    /** Table **/
-    --table-header-text-color: AccentColorText;
-
     /** Text **/
     --text-color: currentColor;
     --text-color-accent-primary-selected: SelectedItemText;
