@@ -394,11 +394,11 @@ PromiseCombinatorDataHolder* PromiseCombinatorDataHolder::New(
 
   cx->check(resultPromise, elements.value(), resolveOrReject);
 
-  dataHolder->setFixedSlot(Slot_Promise, ObjectValue(*resultPromise));
-  dataHolder->setFixedSlot(Slot_RemainingElements, Int32Value(1));
-  dataHolder->setFixedSlot(Slot_ValuesArray, elements.value());
-  dataHolder->setFixedSlot(Slot_ResolveOrRejectFunction,
-                           ObjectValue(*resolveOrReject));
+  dataHolder->initFixedSlot(Slot_Promise, ObjectValue(*resultPromise));
+  dataHolder->initFixedSlot(Slot_RemainingElements, Int32Value(1));
+  dataHolder->initFixedSlot(Slot_ValuesArray, elements.value());
+  dataHolder->initFixedSlot(Slot_ResolveOrRejectFunction,
+                            ObjectValue(*resolveOrReject));
   return dataHolder;
 }
 

@@ -1119,22 +1119,25 @@ static DurationObject* CreateTemporalDuration(JSContext* cx,
 
   // Steps 4-13.
   // Add zero to convert -0 to +0.
-  object->setFixedSlot(DurationObject::YEARS_SLOT, NumberValue(years + (+0.0)));
-  object->setFixedSlot(DurationObject::MONTHS_SLOT,
-                       NumberValue(months + (+0.0)));
-  object->setFixedSlot(DurationObject::WEEKS_SLOT, NumberValue(weeks + (+0.0)));
-  object->setFixedSlot(DurationObject::DAYS_SLOT, NumberValue(days + (+0.0)));
-  object->setFixedSlot(DurationObject::HOURS_SLOT, NumberValue(hours + (+0.0)));
-  object->setFixedSlot(DurationObject::MINUTES_SLOT,
-                       NumberValue(minutes + (+0.0)));
-  object->setFixedSlot(DurationObject::SECONDS_SLOT,
-                       NumberValue(seconds + (+0.0)));
-  object->setFixedSlot(DurationObject::MILLISECONDS_SLOT,
-                       NumberValue(milliseconds + (+0.0)));
-  object->setFixedSlot(DurationObject::MICROSECONDS_SLOT,
-                       NumberValue(microseconds + (+0.0)));
-  object->setFixedSlot(DurationObject::NANOSECONDS_SLOT,
-                       NumberValue(nanoseconds + (+0.0)));
+  object->initFixedSlot(DurationObject::YEARS_SLOT,
+                        NumberValue(years + (+0.0)));
+  object->initFixedSlot(DurationObject::MONTHS_SLOT,
+                        NumberValue(months + (+0.0)));
+  object->initFixedSlot(DurationObject::WEEKS_SLOT,
+                        NumberValue(weeks + (+0.0)));
+  object->initFixedSlot(DurationObject::DAYS_SLOT, NumberValue(days + (+0.0)));
+  object->initFixedSlot(DurationObject::HOURS_SLOT,
+                        NumberValue(hours + (+0.0)));
+  object->initFixedSlot(DurationObject::MINUTES_SLOT,
+                        NumberValue(minutes + (+0.0)));
+  object->initFixedSlot(DurationObject::SECONDS_SLOT,
+                        NumberValue(seconds + (+0.0)));
+  object->initFixedSlot(DurationObject::MILLISECONDS_SLOT,
+                        NumberValue(milliseconds + (+0.0)));
+  object->initFixedSlot(DurationObject::MICROSECONDS_SLOT,
+                        NumberValue(microseconds + (+0.0)));
+  object->initFixedSlot(DurationObject::NANOSECONDS_SLOT,
+                        NumberValue(nanoseconds + (+0.0)));
 
   // Step 14.
   return object;
@@ -1173,22 +1176,25 @@ DurationObject* js::temporal::CreateTemporalDuration(JSContext* cx,
 
   // Steps 4-13.
   // Add zero to convert -0 to +0.
-  object->setFixedSlot(DurationObject::YEARS_SLOT, NumberValue(years + (+0.0)));
-  object->setFixedSlot(DurationObject::MONTHS_SLOT,
-                       NumberValue(months + (+0.0)));
-  object->setFixedSlot(DurationObject::WEEKS_SLOT, NumberValue(weeks + (+0.0)));
-  object->setFixedSlot(DurationObject::DAYS_SLOT, NumberValue(days + (+0.0)));
-  object->setFixedSlot(DurationObject::HOURS_SLOT, NumberValue(hours + (+0.0)));
-  object->setFixedSlot(DurationObject::MINUTES_SLOT,
-                       NumberValue(minutes + (+0.0)));
-  object->setFixedSlot(DurationObject::SECONDS_SLOT,
-                       NumberValue(seconds + (+0.0)));
-  object->setFixedSlot(DurationObject::MILLISECONDS_SLOT,
-                       NumberValue(milliseconds + (+0.0)));
-  object->setFixedSlot(DurationObject::MICROSECONDS_SLOT,
-                       NumberValue(microseconds + (+0.0)));
-  object->setFixedSlot(DurationObject::NANOSECONDS_SLOT,
-                       NumberValue(nanoseconds + (+0.0)));
+  object->initFixedSlot(DurationObject::YEARS_SLOT,
+                        NumberValue(years + (+0.0)));
+  object->initFixedSlot(DurationObject::MONTHS_SLOT,
+                        NumberValue(months + (+0.0)));
+  object->initFixedSlot(DurationObject::WEEKS_SLOT,
+                        NumberValue(weeks + (+0.0)));
+  object->initFixedSlot(DurationObject::DAYS_SLOT, NumberValue(days + (+0.0)));
+  object->initFixedSlot(DurationObject::HOURS_SLOT,
+                        NumberValue(hours + (+0.0)));
+  object->initFixedSlot(DurationObject::MINUTES_SLOT,
+                        NumberValue(minutes + (+0.0)));
+  object->initFixedSlot(DurationObject::SECONDS_SLOT,
+                        NumberValue(seconds + (+0.0)));
+  object->initFixedSlot(DurationObject::MILLISECONDS_SLOT,
+                        NumberValue(milliseconds + (+0.0)));
+  object->initFixedSlot(DurationObject::MICROSECONDS_SLOT,
+                        NumberValue(microseconds + (+0.0)));
+  object->initFixedSlot(DurationObject::NANOSECONDS_SLOT,
+                        NumberValue(nanoseconds + (+0.0)));
 
   // Step 14.
   return object;
