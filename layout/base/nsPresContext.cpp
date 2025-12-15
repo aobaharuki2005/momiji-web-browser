@@ -917,9 +917,12 @@ void nsPresContext::RecomputeBrowsingContextDependentData() {
   auto* top = browsingContext->Top();
   SetColorSchemeOverride([&] {
     auto overriden = top->PrefersColorSchemeOverride();
-    if (browsingContext == top &&
-        overriden != PrefersColorSchemeOverride::None) {
+    if (overriden != PrefersColorSchemeOverride::None) {
       return overriden;
+    }
+    if (!StaticPrefs::
+            layout_css_iframe_embedder_prefers_color_scheme_content_enabled()) {
+      return top->GetEmbedderColorSchemes().mPreferred;
     }
     return browsingContext->GetEmbedderColorSchemes().mPreferred;
   }());
