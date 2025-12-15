@@ -47,19 +47,22 @@ class SimpleMap {
 
   // Check if aKey is in the map.
   bool Contains(const K& aKey) {
-    struct Comparator {
-      bool Equals(const ElementType& aElement, const K& aKey) const {
-        return aElement.first == aKey;
-      }
-    };
     Policy guard(mLock);
-    return mMap.Contains(aKey, Comparator());
+    return FindIndex(aKey).isSome();
   }
+
   // Insert Key and Value pair at the end of our map.
-  void Insert(const K& aKey, const V& aValue) {
+  // Returns true if the insertion succeeded, or false if the key already
+  // exists.
+  bool Insert(const K& aKey, const V& aValue) {
     Policy guard(mLock);
+    if (FindIndex(aKey).isSome()) {
+      return false;
+    }
     mMap.AppendElement(std::make_pair(aKey, aValue));
+    return true;
   }
+
   // Sets aValue matching aKey and remove it from the map if found.
   // The element returned is the first one found.
   // Returns true if found, false otherwise.
@@ -70,24 +73,24 @@ class SimpleMap {
     }
     return false;
   }
+
   // Take the value matching aKey and remove it from the map if found.
   Maybe<V> Take(const K& aKey) {
     Policy guard(mLock);
-    for (uint32_t i = 0; i < mMap.Length(); i++) {
-      ElementType& element = mMap[i];
-      if (element.first == aKey) {
-        Maybe<V> value = Some(element.second);
-        mMap.RemoveElementAt(i);
-        return value;
-      }
+    if (Maybe<size_t> index = FindIndex(aKey)) {
+      Maybe<V> value = Some(std::move(mMap[*index].second));
+      mMap.UnorderedRemoveElementAt(*index);
+      return value;
     }
     return Nothing();
   }
+
   // Remove all elements of the map.
   void Clear() {
     Policy guard(mLock);
     mMap.Clear();
   }
+
   // Iterate through all elements of the map and call the function F.
   template <typename F>
   void ForEach(F&& aCallback) {
@@ -97,7 +100,24 @@ class SimpleMap {
     }
   }
 
+  // Return the number of elements in the map.
+  size_t Count() {
+    Policy guard(mLock);
+    return mMap.Length();
+  }
+
  private:
+  // Return the index of the first element matching aKey, or Nothing() if not
+  // found.
+  Maybe<size_t> FindIndex(const K& aKey) const {
+    for (size_t i = 0; i < mMap.Length(); ++i) {
+      if (mMap[i].first == aKey) {
+        return Some(i);
+      }
+    }
+    return Nothing();
+  }
+
   typename Policy::PolicyLock mLock;
   MapType mMap;
 };

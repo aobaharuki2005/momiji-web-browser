@@ -336,6 +336,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
     // after decoding. As such we instead use a map using the given ts as key
     // that we will retrieve later. The map will have a typical size of 16
     // entry.
+    MOZ_DIAGNOSTIC_ASSERT(!mInputInfo.Contains(GetSampleInputKey(aSample)));
     mInputInfo.Insert(GetSampleInputKey(aSample), InputInfo(aSample));
   }
 

@@ -617,6 +617,7 @@ Result<MediaDataEncoder::EncodedData, MediaResult> FFmpegVideoEncoder<
   // Provide fake pts, see header file.
   if (mConfig.mCodec == CodecType::AV1) {
     mFrame->pts = mFakePts;
+    MOZ_DIAGNOSTIC_ASSERT(!mPtsMap.Contains(mFakePts));
     mPtsMap.Insert(mFakePts, aSample->mTime.ToMicroseconds());
     mFakePts += aSample->mDuration.ToMicroseconds();
     mCurrentFramePts = aSample->mTime.ToMicroseconds();
@@ -627,6 +628,7 @@ Result<MediaDataEncoder::EncodedData, MediaResult> FFmpegVideoEncoder<
   mFrame->duration = aSample->mDuration.ToMicroseconds();
 #  else
   // Save duration in the time_base unit.
+  MOZ_DIAGNOSTIC_ASSERT(!mDurationMap.Contains(mFrame->pts));
   mDurationMap.Insert(mFrame->pts, aSample->mDuration.ToMicroseconds());
 #  endif
   Duration(mFrame) = aSample->mDuration.ToMicroseconds();
