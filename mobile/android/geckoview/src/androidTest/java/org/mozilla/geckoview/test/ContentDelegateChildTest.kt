@@ -21,6 +21,7 @@ import org.hamcrest.Matchers.endsWith
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.startsWith
 import org.junit.Assert.assertNull
+import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoSession
@@ -394,11 +395,6 @@ class ContentDelegateChildTest : BaseSessionTest() {
                         element.textContent,
                         equalTo("Hello World"),
                     )
-                    assertThat(
-                        "The element link text should be the link text of the anchor.",
-                        element.linkText,
-                        equalTo("Hello World"),
-                    )
                 }
             },
         )
@@ -406,7 +402,7 @@ class ContentDelegateChildTest : BaseSessionTest() {
 
     @WithDisplay(width = 100, height = 100)
     @Test
-    fun requestContextMenuOnLinkTextLimits() {
+    fun requestContextMenuOnLinkText() {
         mainSession.loadTestPath(CONTEXT_MENU_LINK_TEXT_HTML_PATH)
         mainSession.waitForPageStop()
         sendLongPress(50f, 50f)
@@ -434,59 +430,6 @@ class ContentDelegateChildTest : BaseSessionTest() {
                         "The element link text content should not exceed a maximum of 4096 chars.",
                         element.textContent?.length,
                         equalTo(4096),
-                    )
-                    assertThat(
-                        "The element link text should not exceed a maximum of 4096 chars.",
-                        element.linkText?.length,
-                        equalTo(4096),
-                    )
-                }
-            },
-        )
-    }
-
-    @WithDisplay(width = 100, height = 100)
-    @Test
-    fun requestContextMenuOnLinkText() {
-        mainSession.loadTestPath(CONTEXT_MENU_LINK_TEXT_HTML_NORMAL_LENGTH_PATH)
-        mainSession.waitForPageStop()
-        sendLongPress(50f, 50f)
-
-        mainSession.waitUntilCalled(
-            object : ContentDelegate {
-                @AssertCalled(count = 1)
-                override fun onContextMenu(
-                    session: GeckoSession,
-                    screenX: Int,
-                    screenY: Int,
-                    element: ContextElement,
-                ) {
-                    assertThat(
-                        "Type should be none.",
-                        element.type,
-                        equalTo(ContextElement.TYPE_NONE),
-                    )
-                    assertThat(
-                        "The element link title should be the title of the anchor.",
-                        element.title,
-                        equalTo("Lorem ipsum dolor sit amet cillum amet minim."),
-                    )
-                    assertThat(
-                        "The element link URI should be the href of the anchor.",
-                        element.linkUri,
-                        endsWith("hello.html"),
-                    )
-                    assertThat(
-                        "The element link text content should be the text content of the " +
-                                "anchor including white spaces.",
-                        element.textContent,
-                        equalTo("\n      Lorem ipsum dolor sit amet cillum amet minim."),
-                    )
-                    assertThat(
-                        "The element link text should be the link text of the " +
-                                "anchor without white spaces.",
-                        element.linkText,
-                        equalTo("Lorem ipsum dolor sit amet cillum amet minim."),
                     )
                 }
             },
@@ -580,11 +523,6 @@ class ContentDelegateChildTest : BaseSessionTest() {
                         element.textContent,
                         equalTo("Hello World"),
                     )
-                    assertThat(
-                        "The element link text should be the link text of the anchor.",
-                        element.linkText,
-                        equalTo("Hello World"),
-                    )
                 }
             },
         )
@@ -630,11 +568,6 @@ class ContentDelegateChildTest : BaseSessionTest() {
                     assertThat(
                         "The element link text content should be the text content of the anchor.",
                         element.textContent,
-                        equalTo("Hello World"),
-                    )
-                    assertThat(
-                        "The element link text should be the link text of the anchor.",
-                        element.linkText,
                         equalTo("Hello World"),
                     )
                 }

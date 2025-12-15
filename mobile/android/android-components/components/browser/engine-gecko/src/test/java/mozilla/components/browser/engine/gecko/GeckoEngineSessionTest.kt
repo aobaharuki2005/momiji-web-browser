@@ -2520,15 +2520,6 @@ class GeckoEngineSessionTest {
 
         result = engineSession.handleLongClick(null, TYPE_NONE, null)
         assertNull(result)
-
-        result = engineSession.handleLongClick(
-            elementSrc = null,
-            elementType = TYPE_NONE,
-            uri = "https://mozilla.org",
-            linkText = "Mozilla",
-        )
-        assertTrue(result is HitResult.UNKNOWN && result.src == "https://mozilla.org")
-        assertTrue(result is HitResult.UNKNOWN && result.linkText == "Mozilla")
     }
 
     @Test
