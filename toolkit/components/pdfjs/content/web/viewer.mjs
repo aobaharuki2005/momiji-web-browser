@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.466
- * pdfjsBuild = 36de2d976
+ * pdfjsVersion = 5.4.486
+ * pdfjsBuild = ff4529d12
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -3322,7 +3322,8 @@ class Sidebar {
   #resizer;
   #isResizerOnTheLeft;
   #isKeyboardResizing = false;
-  #resizeObserver = null;
+  #resizeObserver;
+  #prevX = 0;
   constructor({
     sidebar,
     resizer,
@@ -3341,6 +3342,17 @@ class Sidebar {
     toggleButton.addEventListener("click", this.toggle.bind(this));
     this._isOpen = false;
     sidebar.hidden = true;
+    this.#resizeObserver = new ResizeObserver(([{
+      borderBoxSize: [{
+        inlineSize
+      }]
+    }]) => {
+      if (!isNaN(this.#prevX)) {
+        this.#prevX += this.#coefficient * (inlineSize - this.#width);
+      }
+      this.#setWidth(inlineSize);
+    });
+    this.#resizeObserver.observe(sidebar);
   }
   #makeSidebarResizable() {
     const sidebarStyle = this._sidebar.style;
@@ -3350,10 +3362,9 @@ class Sidebar {
       this._sidebar.classList.remove("resizing");
       pointerMoveAC?.abort();
       pointerMoveAC = null;
-      this.#resizeObserver?.disconnect();
-      this.#resizeObserver = null;
       this.#isKeyboardResizing = false;
       this.onStopResizing();
+      this.#prevX = NaN;
     };
     this.#resizer.addEventListener("pointerdown", e => {
       if (pointerMoveAC) {
@@ -3365,7 +3376,7 @@ class Sidebar {
         clientX
       } = e;
       stopEvent(e);
-      let prevX = clientX;
+      this.#prevX = clientX;
       pointerMoveAC = new AbortController();
       const {
         signal
@@ -3374,16 +3385,6 @@ class Sidebar {
       sidebar.classList.add("resizing");
       const parentStyle = sidebar.parentElement.style;
       parentStyle.minWidth = 0;
-      this.#resizeObserver?.disconnect();
-      this.#resizeObserver = new ResizeObserver(([{
-        borderBoxSize: [{
-          inlineSize
-        }]
-      }]) => {
-        prevX += this.#width - inlineSize;
-        this.#setWidth(inlineSize);
-      });
-      this.#resizeObserver.observe(sidebar);
       window.addEventListener("contextmenu", noContextMenu, {
         signal
       });
@@ -3392,7 +3393,7 @@ class Sidebar {
           return;
         }
         stopEvent(ev);
-        sidebarStyle.width = `${Math.round(this.#width + this.#coefficient * (ev.clientX - prevX))}px`;
+        sidebarStyle.width = `${Math.round(this.#width + this.#coefficient * (ev.clientX - this.#prevX))}px`;
       }, {
         signal,
         capture: true
@@ -3418,15 +3419,6 @@ class Sidebar {
         if (!this.#isKeyboardResizing) {
           this._sidebar.classList.add("resizing");
           this.#isKeyboardResizing = true;
-          this.#resizeObserver?.disconnect();
-          this.#resizeObserver = new ResizeObserver(([{
-            borderBoxSize: [{
-              inlineSize
-            }]
-          }]) => {
-            this.#setWidth(inlineSize);
-          });
-          this.#resizeObserver.observe(this._sidebar);
           this.onStartResizing();
         }
         const base = e.ctrlKey || e.metaKey ? 10 : 1;
@@ -3450,28 +3442,17 @@ class Sidebar {
     return this.#width;
   }
   set width(newWidth) {
-    if (!this.#resizeObserver) {
-      this.#resizeObserver = new ResizeObserver(([{
-        borderBoxSize: [{
-          inlineSize
-        }]
-      }]) => {
-        this.#setWidth(inlineSize);
-      });
-      this.#resizeObserver.observe(this._sidebar);
-    }
     this._sidebar.style.width = `${newWidth}px`;
-    clearTimeout(this.#resizeTimeout);
-    this.#resizeTimeout = setTimeout(() => {
-      this.#resizeObserver.disconnect();
-      this.#resizeObserver = null;
-    }, RESIZE_TIMEOUT);
   }
   onStartResizing() {}
   onStopResizing() {}
   onResizing(_newWidth) {}
   toggle(visibility = !this._isOpen) {
     this._sidebar.hidden = !(this._isOpen = visibility);
+  }
+  destroy() {
+    this.#resizeObserver?.disconnect();
+    this.#resizeObserver = null;
   }
 }
 
@@ -11634,7 +11615,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.466";
+    const viewerVersion = "5.4.486";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }

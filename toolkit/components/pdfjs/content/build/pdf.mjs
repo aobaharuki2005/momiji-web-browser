@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.466
- * pdfjsBuild = 36de2d976
+ * pdfjsVersion = 5.4.486
+ * pdfjsBuild = ff4529d12
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -7090,7 +7090,7 @@ class FontFaceObject {
     } catch (ex) {
       warn(`getPathGenerator - ignoring character: "${ex}".`);
     }
-    const path = makePathFromDrawOPS(cmds);
+    const path = makePathFromDrawOPS(cmds.path);
     if (!this.fontExtraProperties) {
       objs.delete(objId);
     }
@@ -7827,6 +7827,23 @@ class PatternInfo {
       return ["Mesh", shadingType, coords, colors, figures, bounds, bbox, background];
     }
     throw new Error(`Unsupported pattern kind: ${kind}`);
+  }
+}
+class FontPathInfo {
+  static write(path) {
+    let data;
+    let buffer;
+    buffer = new ArrayBuffer(path.length * 2);
+    data = new Float16Array(buffer);
+    data.set(path);
+    return buffer;
+  }
+  #buffer;
+  constructor(buffer) {
+    this.#buffer = buffer;
+  }
+  get path() {
+    return new Float16Array(this.#buffer);
   }
 }
 
@@ -10772,14 +10789,17 @@ class CanvasGraphics {
       ctx.scale(textHScale, 1);
     }
     let patternFillTransform, patternStrokeTransform;
-    if (current.patternFill) {
+    const fillStrokeMode = current.textRenderingMode & TextRenderingMode.FILL_STROKE_MASK;
+    const needsFill = fillStrokeMode === TextRenderingMode.FILL || fillStrokeMode === TextRenderingMode.FILL_STROKE;
+    const needsStroke = fillStrokeMode === TextRenderingMode.STROKE || fillStrokeMode === TextRenderingMode.FILL_STROKE;
+    if (needsFill && current.patternFill) {
       ctx.save();
       const pattern = current.fillColor.getPattern(ctx, this, getCurrentTransformInverse(ctx), PathType.FILL, opIdx);
       patternFillTransform = getCurrentTransform(ctx);
       ctx.restore();
       ctx.fillStyle = pattern;
     }
-    if (current.patternStroke) {
+    if (needsStroke && current.patternStroke) {
       ctx.save();
       const pattern = current.strokeColor.getPattern(ctx, this, getCurrentTransformInverse(ctx), PathType.STROKE, opIdx);
       patternStrokeTransform = getCurrentTransform(ctx);
@@ -10789,8 +10809,7 @@ class CanvasGraphics {
     let lineWidth = current.lineWidth;
     const scale = current.textMatrixScale;
     if (scale === 0 || lineWidth === 0) {
-      const fillStrokeMode = current.textRenderingMode & TextRenderingMode.FILL_STROKE_MASK;
-      if (fillStrokeMode === TextRenderingMode.STROKE || fillStrokeMode === TextRenderingMode.FILL_STROKE) {
+      if (needsStroke) {
         lineWidth = this.getSinglePixelWidth();
       }
     } else {
@@ -12698,6 +12717,7 @@ class TextLayer {
     this.#pageWidth = pageWidth;
     this.#pageHeight = pageHeight;
     TextLayer.#ensureMinFontSizeComputed();
+    container.style.setProperty("--min-font-size", TextLayer.#minFontSize);
     setLayerDimensions(container, viewport);
     this.#capability.promise.finally(() => {
       TextLayer.#pendingTextLayers.delete(this);
@@ -12832,16 +12852,10 @@ class TextLayer {
       left = tx[4] + fontAscent * Math.sin(angle);
       top = tx[5] - fontAscent * Math.cos(angle);
     }
-    const scaleFactorStr = "calc(var(--total-scale-factor) *";
     const divStyle = textDiv.style;
-    if (this.#container === this.#rootContainer) {
-      divStyle.left = `${(100 * left / this.#pageWidth).toFixed(2)}%`;
-      divStyle.top = `${(100 * top / this.#pageHeight).toFixed(2)}%`;
-    } else {
-      divStyle.left = `${scaleFactorStr}${left.toFixed(2)}px)`;
-      divStyle.top = `${scaleFactorStr}${top.toFixed(2)}px)`;
-    }
-    divStyle.fontSize = `${scaleFactorStr}${(TextLayer.#minFontSize * fontHeight).toFixed(2)}px)`;
+    divStyle.left = `${(100 * left / this.#pageWidth).toFixed(2)}%`;
+    divStyle.top = `${(100 * top / this.#pageHeight).toFixed(2)}%`;
+    divStyle.setProperty("--font-height", `${fontHeight.toFixed(2)}px`);
     divStyle.fontFamily = fontFamily;
     textDivProperties.fontSize = fontHeight;
     textDiv.setAttribute("role", "presentation");
@@ -12888,10 +12902,6 @@ class TextLayer {
     const {
       style
     } = div;
-    let transform = "";
-    if (TextLayer.#minFontSize > 1) {
-      transform = `scale(${1 / TextLayer.#minFontSize})`;
-    }
     if (properties.canvasWidth !== 0 && properties.hasText) {
       const {
         fontFamily
@@ -12905,14 +12915,11 @@ class TextLayer {
         width
       } = ctx.measureText(div.textContent);
       if (width > 0) {
-        transform = `scaleX(${canvasWidth * this.#scale / width}) ${transform}`;
+        style.setProperty("--scale-x", canvasWidth * this.#scale / width);
       }
     }
     if (properties.angle !== 0) {
-      transform = `rotate(${properties.angle}deg) ${transform}`;
-    }
-    if (transform.length > 0) {
-      style.transform = transform;
+      style.setProperty("--rotate", `${properties.angle}deg`);
     }
   }
   static cleanup() {
@@ -13092,7 +13099,7 @@ function getDocument(src = {}) {
   }
   const docParams = {
     docId,
-    apiVersion: "5.4.466",
+    apiVersion: "5.4.486",
     data,
     password,
     disableAutoFetch,
@@ -14279,6 +14286,8 @@ class WorkerTransport {
           }
           break;
         case "FontPath":
+          this.commonObjs.resolve(id, new FontPathInfo(exportedData));
+          break;
         case "Image":
           this.commonObjs.resolve(id, exportedData);
           break;
@@ -14681,8 +14690,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = "5.4.466";
-const build = "36de2d976";
+const version = "5.4.486";
+const build = "ff4529d12";
 
 ;// ./src/display/editor/color_picker.js
 

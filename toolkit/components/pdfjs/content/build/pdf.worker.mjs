@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.466
- * pdfjsBuild = 36de2d976
+ * pdfjsVersion = 5.4.486
+ * pdfjsBuild = ff4529d12
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -9126,15 +9126,15 @@ function readSegmentHeader(data, start) {
   let referredToCount = referredFlags >> 5 & 7;
   const retainBits = [referredFlags & 31];
   let position = start + 6;
-  if (referredFlags === 7) {
+  if (referredToCount === 7) {
     referredToCount = readUint32(data, position - 1) & 0x1fffffff;
     position += 3;
-    let bytes = referredToCount + 7 >> 3;
+    let bytes = referredToCount + 8 >> 3;
     retainBits[0] = data[position++];
     while (--bytes > 0) {
       retainBits.push(data[position++]);
     }
-  } else if (referredFlags === 5 || referredFlags === 6) {
+  } else if (referredToCount === 5 || referredToCount === 6) {
     throw new Jbig2Error("invalid referred-to flags");
   }
   segmentHeader.retainBits = retainBits;
@@ -18924,6 +18924,39 @@ const getGlyphMapForStandardFonts = getLookupTableFactory(function (t) {
   t[598] = 1068;
   t[599] = 1069;
   t[600] = 1070;
+  t[601] = 1071;
+  t[602] = 1072;
+  t[603] = 1073;
+  t[604] = 1074;
+  t[605] = 1075;
+  t[606] = 1076;
+  t[607] = 1077;
+  t[608] = 1078;
+  t[609] = 1079;
+  t[610] = 1080;
+  t[611] = 1081;
+  t[612] = 1082;
+  t[613] = 1083;
+  t[614] = 1084;
+  t[615] = 1085;
+  t[616] = 1086;
+  t[617] = 1087;
+  t[618] = 1088;
+  t[619] = 1089;
+  t[620] = 1090;
+  t[621] = 1091;
+  t[622] = 1092;
+  t[623] = 1093;
+  t[624] = 1094;
+  t[625] = 1095;
+  t[626] = 1096;
+  t[627] = 1097;
+  t[628] = 1098;
+  t[629] = 1099;
+  t[630] = 1100;
+  t[631] = 1101;
+  t[632] = 1102;
+  t[633] = 1103;
   t[672] = 1488;
   t[673] = 1489;
   t[674] = 1490;
@@ -27868,6 +27901,23 @@ class PatternInfo {
     throw new Error(`Unsupported pattern kind: ${kind}`);
   }
 }
+class FontPathInfo {
+  static write(path) {
+    let data;
+    let buffer;
+    buffer = new ArrayBuffer(path.length * 2);
+    data = new Float16Array(buffer);
+    data.set(path);
+    return buffer;
+  }
+  #buffer;
+  constructor(buffer) {
+    this.#buffer = buffer;
+  }
+  get path() {
+    return new Float16Array(this.#buffer);
+  }
+}
 
 ;// ./src/core/pattern.js
 
@@ -35098,7 +35148,8 @@ class PartialEvaluator {
         if (font.renderer.hasBuiltPath(fontChar)) {
           return;
         }
-        handler.send("commonobj", [glyphName, "FontPath", font.renderer.getPathJs(fontChar)]);
+        const buffer = FontPathInfo.write(font.renderer.getPathJs(fontChar));
+        handler.send("commonobj", [glyphName, "FontPath", buffer], [buffer]);
       } catch (reason) {
         if (evaluatorOptions.ignoreErrors) {
           warn(`buildFontPaths - ignoring ${glyphName} glyph: "${reason}".`);
@@ -59757,7 +59808,7 @@ class WorkerMessageHandler {
       docId,
       apiVersion
     } = docParams;
-    const workerVersion = "5.4.466";
+    const workerVersion = "5.4.486";
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
     }
