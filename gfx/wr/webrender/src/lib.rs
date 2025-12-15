@@ -108,6 +108,7 @@ mod internal_types;
 mod lru_cache;
 mod pattern;
 mod picture;
+mod picture_composite_mode;
 mod picture_graph;
 mod invalidation;
 mod prepare;
