@@ -211,6 +211,7 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/PolicyContainer.h"
+#include "mozilla/dom/PopoverData.h"
 #include "mozilla/dom/PostMessageEvent.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/Promise.h"
@@ -16224,8 +16225,11 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
     }
   });
 
+  PopoverData* popoverData = popoverHTMLEl->GetPopoverData();
+
   // 7. If element's opened in popover mode is "auto" or "hint", then:
-  if (popoverHTMLEl->IsAutoPopover()) {
+  if (popoverData &&
+      popoverData->GetOpenedInMode() == PopoverAttributeState::Auto) {
     // 7.1. Run hide all popovers until given element, focusPreviousElement, and
     // fireEvents.
     HideAllPopoversUntil(*popoverHTMLEl, aFocusPreviousElement, fireEvents);
@@ -16299,6 +16303,8 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
   data->SetInvoker(nullptr);
 
   // 12. Set element's opened in popover mode to null.
+  popoverHTMLEl->GetPopoverData()->SetOpenedInMode(PopoverAttributeState::None);
+
   // 13. Set element's popover visibility state to hidden.
   popoverHTMLEl->PopoverPseudoStateUpdate(false, true);
   popoverHTMLEl->GetPopoverData()->SetPopoverVisibilityState(

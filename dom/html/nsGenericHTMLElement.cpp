@@ -3577,6 +3577,8 @@ void nsGenericHTMLElement::ShowPopoverInternal(Element* aSource,
 
   {
     auto* popoverData = GetPopoverData();
+    // 18.5.2. Set element's opened in popover mode to "auto".
+    popoverData->SetOpenedInMode(GetPopoverAttributeState());
     // 22. Set element's popover visibility state to showing.
     popoverData->SetPopoverVisibilityState(PopoverVisibilityState::Showing);
     // 23. Set element's popover trigger to source.
