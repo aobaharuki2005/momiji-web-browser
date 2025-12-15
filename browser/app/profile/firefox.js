@@ -2250,6 +2250,8 @@ pref("browser.ml.smartAssist.overrideNewTab", false);
 // AI Window Feature
 pref("browser.aiwindow.enabled", false);
 pref("browser.aiwindow.chatStore.loglevel", "Error");
+pref("browser.aiwindow.insights", false);
+pref("browser.aiwindow.insightsLogLevel", "Warn");
 
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);

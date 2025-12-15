@@ -16,6 +16,7 @@ MOZ_SRC_FILES += [
     "InsightsChatSource.sys.mjs",
     "InsightsConstants.sys.mjs",
     "InsightsDriftDetector.sys.mjs",
+    "InsightsHistoryScheduler.sys.mjs",
     "InsightsHistorySource.sys.mjs",
     "InsightsManager.sys.mjs",
     "InsightsSchemas.sys.mjs",

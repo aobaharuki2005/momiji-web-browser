@@ -368,9 +368,9 @@ var allowlist = [
   {
     file: "chrome://browser/content/aiwindow/firstrun.html",
   },
-  // Bug 2005524 - Insights drift detector for generation from history
+  // Bug 2005768 - Insights scheduler for generation from history
   {
-    file: "moz-src:///browser/components/aiwindow/models/InsightsDriftDetector.sys.mjs",
+    file: "moz-src:///browser/components/aiwindow/models/InsightsHistoryScheduler.sys.mjs",
   },
   // Bug 2000987 - get user messages from chat source
   {

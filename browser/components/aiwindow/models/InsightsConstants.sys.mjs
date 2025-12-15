@@ -50,3 +50,13 @@ export const INTENTS_LIST = [
   "Entertain / Relax",
   "Resume / Revisit",
 ];
+
+// if generate insights is enabled. This is used by
+// - InsightsScheduler
+export const PREF_GENERATE_INSIGHTS = "browser.aiwindow.insights";
+
+// Number of latest sessions to check drift
+export const DRIFT_EVAL_DELTA_COUNT = 3;
+
+// Quantile of baseline scores used as a threshold (e.g. 0.9 => 90th percentile).
+export const DRIFT_TRIGGER_QUANTILE = 0.9;

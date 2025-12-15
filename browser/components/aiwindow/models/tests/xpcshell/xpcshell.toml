@@ -16,6 +16,8 @@ support-files = []
 
 ["test_InsightsDriftDetector.js"]
 
+["test_InsightsHistoryScheduler.js"]
+
 ["test_InsightsHistorySource.js"]
 
 ["test_InsightsManager.js"]

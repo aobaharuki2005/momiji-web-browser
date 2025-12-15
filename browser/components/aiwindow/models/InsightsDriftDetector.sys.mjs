@@ -7,6 +7,13 @@ import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
 import { InsightsManager } from "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs";
 import { sessionizeVisits } from "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs";
 
+import {
+  // How many of the most recent delta sessions to evaluate against thresholds.
+  DRIFT_EVAL_DELTA_COUNT as DEFAULT_EVAL_DELTA_COUNT,
+  // Quantile of baseline scores used as a threshold (e.g. 0.9 => 90th percentile).
+  DRIFT_TRIGGER_QUANTILE as DEFAULT_TRIGGER_QUANTILE,
+} from "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs";
+
 /**
  * @typedef {object} SessionMetric
  * @property {string|number} sessionId  Unique identifier for the session
@@ -34,15 +41,10 @@ import { sessionizeVisits } from "moz-src:///browser/components/aiwindow/models/
  *     and compare recent delta sessions to those thresholds to decide a trigger.
  */
 
-// Quantile of baseline scores used as a threshold (e.g. 0.9 => 90th percentile).
-const DEFAULT_TRIGGER_QUANTILE = 0.9;
 // Lookback period before lastHistoryInsightTS to define the baseline window.
 const DRIFT_LOOKBACK_DAYS = 14;
 // Cap on how many visits to fetch from Places.
 const DRIFT_HISTORY_LIMIT = 5000;
-
-// How many of the most recent delta sessions to evaluate against thresholds.
-const DEFAULT_EVAL_DELTA_COUNT = 3;
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const MICROS_PER_MS = 1000;
