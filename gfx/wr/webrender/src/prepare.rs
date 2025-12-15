@@ -1157,31 +1157,29 @@ fn prepare_interned_prim_for_render(
                 }
             }
 
-            if pic.prepare_for_render(
+            pic.write_gpu_blocks(
                 frame_state,
                 data_stores,
-            ) {
-                if let Picture3DContext::In { root_data: None, plane_splitter_index, .. } = pic.context_3d {
-                    let dirty_rect = frame_state.current_dirty_region().combined;
-                    let visibility_node = frame_state.current_dirty_region().visibility_spatial_node;
-                    let splitter = &mut frame_state.plane_splitters[plane_splitter_index.0];
-                    let surface_index = pic.raster_config.as_ref().unwrap().surface_index;
-                    let surface = &frame_state.surfaces[surface_index.0];
-                    let local_prim_rect = surface.clipped_local_rect.cast_unit();
+            );
 
-                    PicturePrimitive::add_split_plane(
-                        splitter,
-                        frame_context.spatial_tree,
-                        prim_spatial_node_index,
-                        visibility_node,
-                        local_prim_rect,
-                        &prim_instance.vis.clip_chain.local_clip_rect,
-                        dirty_rect,
-                        plane_split_anchor,
-                    );
-                }
-            } else {
-                prim_instance.clear_visibility();
+            if let Picture3DContext::In { root_data: None, plane_splitter_index, .. } = pic.context_3d {
+                let dirty_rect = frame_state.current_dirty_region().combined;
+                let visibility_node = frame_state.current_dirty_region().visibility_spatial_node;
+                let splitter = &mut frame_state.plane_splitters[plane_splitter_index.0];
+                let surface_index = pic.raster_config.as_ref().unwrap().surface_index;
+                let surface = &frame_state.surfaces[surface_index.0];
+                let local_prim_rect = surface.clipped_local_rect.cast_unit();
+
+                PicturePrimitive::add_split_plane(
+                    splitter,
+                    frame_context.spatial_tree,
+                    prim_spatial_node_index,
+                    visibility_node,
+                    local_prim_rect,
+                    &prim_instance.vis.clip_chain.local_clip_rect,
+                    dirty_rect,
+                    plane_split_anchor,
+                );
             }
         }
         PrimitiveInstanceKind::BackdropCapture { .. } => {

@@ -2,20 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, ColorU, SnapshotInfo, PropertyBinding, PropertyBindingId};
+use api::{ColorF, ColorU, PremultipliedColorF, PropertyBinding, PropertyBindingId, SnapshotInfo};
 use api::units::*;
 use crate::prim_store::image::AdjustedImageSource;
 use crate::{render_task_graph::RenderTaskGraphBuilder, renderer::GpuBufferBuilderF};
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
-use crate::gpu_types::{BlurEdgeMode, UvRectKind};
+use crate::gpu_types::{BlurEdgeMode, BrushSegmentGpuData, ImageBrushPrimitiveData, UvRectKind};
 use crate::intern::ItemUid;
 use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
 use crate::render_target::RenderTargetKind;
 use crate::render_task::{BlurTask, RenderTask, BlurTaskCache};
 use crate::render_task::RenderTaskKind;
-use crate::renderer::{BlendMode, GpuBufferAddress};
+use crate::renderer::{BlendMode, GpuBufferAddress, GpuBufferBuilder};
 use crate::space::SpaceMapper;
 use crate::spatial_tree::SpatialTree;
 use crate::surface::{SurfaceDescriptor, SurfaceInfo, calculate_screen_uv};
@@ -163,6 +163,102 @@ impl PictureCompositeMode {
             }
             _ => {
                 surface_rect
+            }
+        }
+    }
+
+    pub fn write_gpu_blocks(
+        &self,
+        surface: &SurfaceInfo,
+        gpu_buffers: &mut GpuBufferBuilder,
+        data_stores: &mut DataStores,
+        extra_gpu_data: &mut SmallVec<[GpuBufferAddress; 1]>,
+    ) {
+        // TODO(gw): Almost all of the composite modes below use extra_gpu_data
+        //           to store the same type of data. The exception is the filter
+        //           with a ColorMatrix, which stores the color matrix here. It's
+        //           probably worth tidying this code up to be a bit more consistent.
+        //           Perhaps store the color matrix after the common data, even though
+        //           it's not used by that shader.
+
+        match *self {
+            PictureCompositeMode::TileCache { .. } => {}
+            PictureCompositeMode::Filter(Filter::Blur { .. }) => {}
+            PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
+                extra_gpu_data.resize(shadows.len(), GpuBufferAddress::INVALID);
+                for (shadow, extra_handle) in shadows.iter().zip(extra_gpu_data.iter_mut()) {
+                    let mut writer = gpu_buffers.f32.write_blocks(5);
+                    let prim_rect = surface.clipped_local_rect.cast_unit();
+
+                    // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
+                    //  [brush specific data]
+                    //  [segment_rect, segment data]
+                    let (blur_inflation_x, blur_inflation_y) = surface.clamp_blur_radius(
+                        shadow.blur_radius,
+                        shadow.blur_radius,
+                    );
+
+                    let shadow_rect = prim_rect.inflate(
+                        blur_inflation_x * BLUR_SAMPLE_SCALE,
+                        blur_inflation_y * BLUR_SAMPLE_SCALE,
+                    ).translate(shadow.offset);
+
+                    // ImageBrush colors
+                    writer.push(&ImageBrushPrimitiveData {
+                        color: shadow.color.premultiplied(),
+                        background_color: PremultipliedColorF::WHITE,
+                        stretch_size: shadow_rect.size(),
+                    });
+
+                    writer.push(&BrushSegmentGpuData {
+                        local_rect: shadow_rect,
+                        extra_data: [0.0; 4],
+                    });
+
+                    *extra_handle = writer.finish();
+                }
+            }
+            PictureCompositeMode::Filter(ref filter) => {
+                match *filter {
+                    Filter::ColorMatrix(ref m) => {
+                        if extra_gpu_data.is_empty() {
+                            extra_gpu_data.push(GpuBufferAddress::INVALID);
+                        }
+                        let mut writer = gpu_buffers.f32.write_blocks(5);
+                        for i in 0..5 {
+                            writer.push_one([m[i*4], m[i*4+1], m[i*4+2], m[i*4+3]]);
+                        }
+                        extra_gpu_data[0] = writer.finish();
+                    }
+                    Filter::Flood(ref color) => {
+                        if extra_gpu_data.is_empty() {
+                            extra_gpu_data.push(GpuBufferAddress::INVALID);
+                        }
+                        let mut writer = gpu_buffers.f32.write_blocks(1);
+                        writer.push_one(color.to_array());
+                        extra_gpu_data[0] = writer.finish();
+                    }
+                    _ => {}
+                }
+            }
+            PictureCompositeMode::ComponentTransferFilter(handle) => {
+                let filter_data = &mut data_stores.filter_data[handle];
+                filter_data.write_gpu_blocks(&mut gpu_buffers.f32);
+            }
+            PictureCompositeMode::MixBlend(..) |
+            PictureCompositeMode::Blit(_) |
+            PictureCompositeMode::IntermediateSurface => {}
+            PictureCompositeMode::SVGFEGraph(ref filters) => {
+                // Update interned filter data
+                for (_node, op) in filters {
+                    match op {
+                        FilterGraphOp::SVGFEComponentTransferInterned { handle, creates_pixels: _ } => {
+                            let filter_data = &mut data_stores.filter_data[*handle];
+                            filter_data.write_gpu_blocks(&mut gpu_buffers.f32);
+                        }
+                        _ => {}
+                    }
+                }
             }
         }
     }
