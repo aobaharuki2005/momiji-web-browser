@@ -76,12 +76,12 @@ class JSWindowActorProtocol final : public JSActorProtocol,
                const nsACString& aRemoteType, ErrorResult& aRv);
 
  private:
-  explicit JSWindowActorProtocol(const nsACString& aName) : mName(aName) {}
+  explicit JSWindowActorProtocol(const nsACString& aName)
+      : JSActorProtocol(aName) {}
   extensions::MatchPatternSetCore* GetURIMatcher();
   bool MessageManagerGroupMatches(BrowsingContext* aBrowsingContext);
   ~JSWindowActorProtocol() = default;
 
-  nsCString mName;
   bool mAllFrames = false;
   bool mIncludeChrome = false;
   nsTArray<nsString> mMatches;

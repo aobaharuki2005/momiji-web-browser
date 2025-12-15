@@ -10,7 +10,6 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/JSActorService.h"
 #include "nsIObserver.h"
-#include "nsIURI.h"
 #include "nsString.h"
 #include "nsTArray.h"
 
@@ -59,10 +58,10 @@ class JSProcessActorProtocol final : public JSActorProtocol,
   bool Matches(const nsACString& aRemoteType, ErrorResult& aRv);
 
  private:
-  explicit JSProcessActorProtocol(const nsACString& aName) : mName(aName) {}
+  explicit JSProcessActorProtocol(const nsACString& aName)
+      : JSActorProtocol(aName) {}
   ~JSProcessActorProtocol() = default;
 
-  nsCString mName;
   bool mIncludeParent = false;
 
   friend class JSActorProtocolUtils;

@@ -106,8 +106,10 @@ class JSActorProtocol : public nsISupports {
   bool mLoadInDevToolsLoader = false;
 
  protected:
+  explicit JSActorProtocol(const nsACString& aName) : mName(aName) {}
   bool RemoteTypePrefixMatches(const nsACString& aRemoteType);
 
+  nsCString mName;
   nsTArray<nsCString> mRemoteTypes;
 };
 
