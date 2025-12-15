@@ -305,7 +305,7 @@ export class SelectControlBaseElement extends MozLitElement {
         support-page=${ifDefined(this.supportPage)}
         role=${this.type == "radio" ? "radiogroup" : "listbox"}
         ?disabled=${this.disabled}
-        label=${this.label}
+        label=${ifDefined(this.label)}
         headinglevel=${this.headingLevel}
         exportparts="inputs, support-link"
         aria-orientation=${ifDefined(this.constructor.orientation)}
