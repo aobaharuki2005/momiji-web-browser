@@ -59,6 +59,9 @@ class WebTransportParent : public PWebTransportParent,
   ::mozilla::ipc::IPCResult RecvGetMaxDatagramSize(
       GetMaxDatagramSizeResolver&& aResolver);
 
+  ::mozilla::ipc::IPCResult RecvGetHttpChannelID(
+      GetHttpChannelIDResolver&& aResolver);
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   class OnResetOrStopSendingCallback final {
