@@ -3482,13 +3482,7 @@ cookieStore:
         branch: default
         pref: dom.cookieStore.enabled
       description: >-
-        Enablement of the cookie store API to CRUD and monitor cookies from window JS.
-    managerEnabled:
-      description: Enablement of ServiceWorker access to cookie-change events.
-      type: boolean
-      setPref:
-        branch: default
-        pref: dom.cookieStore.manager.enabled
+        Enablement of the cookie store API to CRUD and monitor cookies from window JS and ServiceWorkers.
 
 pingsender:
   description: "In-product usage of the pingsender telemetry reporter."
