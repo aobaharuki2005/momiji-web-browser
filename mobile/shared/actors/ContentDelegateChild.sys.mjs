@@ -194,6 +194,10 @@ export class ContentDelegateChild extends GeckoViewActorChild {
               (node.textContent &&
                 node.textContent.substring(0, MAX_TEXT_LENGTH)) ||
               null,
+            linkText:
+              (node.innerText &&
+                node.innerText.substring(0, MAX_TEXT_LENGTH)) ||
+              null,
           };
 
           this.sendAsyncMessage("GeckoView:ContextMenu", msg);
