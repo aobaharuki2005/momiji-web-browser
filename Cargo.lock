@@ -1203,6 +1203,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "crashping"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "env_logger",
+ "glean",
+ "log",
+ "mozbuild",
+ "mozilla-central-workspace-hack",
+ "serde_json",
+ "time",
+]
+
+[[package]]
 name = "crashreporter"
 version = "1.0.0"
 dependencies = [

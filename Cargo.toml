@@ -24,6 +24,7 @@ members = [
   "toolkit/crashreporter/client/app",
   "toolkit/crashreporter/crash_helper_server",
   "toolkit/crashreporter/crash_helper_client",
+  "toolkit/crashreporter/crashping",
   "toolkit/crashreporter/minidump-analyzer/android/export",
   "toolkit/crashreporter/mozwer-rust",
   "toolkit/library/gtest/rust",
