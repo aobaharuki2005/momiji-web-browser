@@ -7,7 +7,7 @@
 //! This module contains types and logic for tracking dirty regions and
 //! dependencies used to determine what needs to be redrawn each frame.
 
-pub mod dependency;
+pub mod compare;
 pub mod quadtree;
 pub mod cached_surface;
 

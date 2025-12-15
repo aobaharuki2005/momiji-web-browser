@@ -15,7 +15,7 @@ use crate::prim_store::PrimitiveScratchBuffer;
 use crate::space::SpaceMapper;
 use crate::invalidation::{InvalidationReason, PrimitiveCompareResult};
 use crate::invalidation::cached_surface::{PrimitiveDescriptor, PrimitiveDependencyIndex};
-use crate::invalidation::dependency::PrimitiveComparer;
+use crate::invalidation::compare::{PrimitiveComparer, PrimitiveComparisonKey};
 use crate::visibility::FrameVisibilityContext;
 use std::mem;
 
@@ -376,7 +376,7 @@ impl TileNode {
         curr_prims: &[PrimitiveDescriptor],
         prim_comparer: &mut PrimitiveComparer,
         dirty_rect: &mut PictureBox2D,
-        compare_cache: &mut FastHashMap<crate::invalidation::dependency::PrimitiveComparisonKey, PrimitiveCompareResult>,
+        compare_cache: &mut FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
         invalidation_reason: &mut Option<InvalidationReason>,
         frame_context: &FrameVisibilityContext,
     ) {
@@ -404,7 +404,7 @@ impl TileNode {
 
                         // Compare the primitives, caching the result in a hash map
                         // to save comparisons in other tree nodes.
-                        let key = crate::invalidation::dependency::PrimitiveComparisonKey {
+                        let key = PrimitiveComparisonKey {
                             prev_index: *prev_index,
                             curr_index: *curr_index,
                         };
