@@ -362,9 +362,6 @@ https_first_disabled = true
 
 ["browser_newwindow_focus.js"]
 https_first_disabled = true
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && processor == 'x86_64' && opt", # Bug 2002330
-]
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_printpreview.js"]
