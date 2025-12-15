@@ -125,6 +125,21 @@ class ContextMenusTest : TestSetup() {
         }
     }
 
+    @Test
+    fun verifyCopyLinkTextContextMenuOptionTest() {
+        val pageLinks = mockWebServer.getGenericAsset(4)
+        val genericURL = mockWebServer.getGenericAsset(3)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(pageLinks.url) {
+            mDevice.waitForIdle()
+            longClickPageObject(itemWithText("Link 3"))
+            verifyContextMenuForLocalHostLinks(genericURL.url)
+            clickContextMenuItem("Copy link text")
+            verifySnackBarText("Link text copied to clipboard")
+        }
+    }
+
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/243838
     @Test
     fun verifyShareLinkContextMenuOptionTest() {
