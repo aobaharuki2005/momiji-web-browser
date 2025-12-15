@@ -1438,7 +1438,7 @@ Preferences.addSetting({
     ipProtectionVisible.value && ipProtectionSiteExceptionsFeatureEnabled.value,
   onUserClick() {
     let params = {
-      blockVisible: true,
+      addVisible: true,
       hideStatusColumn: true,
       prefilledHost: "",
       permissionType: "ipp-vpn",
