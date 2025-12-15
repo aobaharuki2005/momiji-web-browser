@@ -5,11 +5,13 @@
 package org.mozilla.fenix.ui.robots
 
 import android.util.Log
+import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -29,6 +31,7 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
+import org.mozilla.fenix.compose.snackbar.SNACKBAR_TEST_TAG
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
@@ -380,25 +383,36 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         waitForAppWindowToBeUpdated()
     }
 
-    fun clickCopyUserNameButton() =
-        itemWithResId("$packageName:id/copyUsername").also {
-            Log.i(TAG, "clickCopyUserNameButton: Waiting for $waitingTime ms for the copy username button to exist")
-            it.waitForExists(waitingTime)
-            Log.i(TAG, "clickCopyUserNameButton: Waited for $waitingTime ms for the copy username button to exist")
-            Log.i(TAG, "clickCopyUserNameButton:Trying to click the copy username button")
-            it.click()
-            Log.i(TAG, "clickCopyUserNameButton:Clicked the copy username button")
-        }
+    fun clickCopyUserNameButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickCopyUserNameButton: Trying to click the copy username button")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_login_copy_username)).performClick()
+        Log.i(TAG, "clickCopyUserNameButton:Clicked the copy username button")
+    }
 
-    fun clickCopyPasswordButton() =
-        itemWithResId("$packageName:id/copyPassword").also {
-            Log.i(TAG, "clickCopyPasswordButton: Waiting for $waitingTime ms for the copy password button to exist")
-            it.waitForExists(waitingTime)
-            Log.i(TAG, "clickCopyPasswordButton: Waited for $waitingTime ms for the copy password button to exist")
-            Log.i(TAG, "clickCopyPasswordButton:Trying to click the copy password button")
-            it.click()
-            Log.i(TAG, "clickCopyPasswordButton:Clicked the copy password button")
-        }
+    fun clickCopyPasswordButton(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "clickCopyPasswordButton: Trying to click the copy password button")
+        composeTestRule.onNodeWithContentDescription(getStringResource(R.string.saved_logins_copy_password)).performClick()
+        Log.i(TAG, "clickCopyPasswordButton:Clicked the copy password button")
+    }
+
+    fun verifyCopyUserNameLoginCredentialsSnackBar(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyCopyUserNameLoginCredentialsSnackBar: Trying to verify that the \"Username copied to clipboard\" snackbar is displayed")
+        composeTestRule.onNodeWithText(getStringResource(R.string.logins_username_copied), useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyCopyUserNameLoginCredentialsSnackBar: Verified that the \"Username copied to clipboard\" snackbar is displayed")
+    }
+
+    fun verifyCopyPasswordLoginCredentialsSnackBar(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "verifyCopyPasswordLoginCredentialsSnackBar: Trying to verify that the \"Password copied to clipboard\" snackbar is displayed")
+        composeTestRule.onNodeWithText(getStringResource(R.string.logins_password_copied), useUnmergedTree = true).assertIsDisplayed()
+        Log.i(TAG, "verifyCopyPasswordLoginCredentialsSnackBar: Verified that the \"Password copied to clipboard\" snackbar is displayed")
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    fun waitUntilCopyLoginCredentialsSnackBarIsGone(composeTestRule: ComposeTestRule) {
+        Log.i(TAG, "waitUntilCopyLoginCredentialsSnackBarIsGone: Waiting for $waitingTime until the snackbar does not exist")
+        composeTestRule.waitUntilDoesNotExist(hasTestTag(SNACKBAR_TEST_TAG), waitingTime)
+        Log.i(TAG, "waitUntilCopyLoginCredentialsSnackBarIsGone: Waited for $waitingTime until the snackbar does not exist")
+    }
 
     class Transition {
         fun goBack(composeTestRule: ComposeTestRule, interact: SettingsSubMenuLoginsAndPasswordRobot.() -> Unit): SettingsSubMenuLoginsAndPasswordRobot.Transition {

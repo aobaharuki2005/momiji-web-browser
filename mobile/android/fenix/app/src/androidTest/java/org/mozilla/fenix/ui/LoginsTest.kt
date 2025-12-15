@@ -829,7 +829,6 @@ class LoginsTest : TestSetup() {
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/2068215
     // The snackbar is not displayed for devices running on Android <= 12
-    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=2005137")
     @Test
     @SdkSuppress(maxSdkVersion = 32)
     fun verifyCopyLoginCredentialsToClipboardTest() {
@@ -846,10 +845,11 @@ class LoginsTest : TestSetup() {
         }.openSavedLogins {
             tapSetupLater()
             viewSavedLoginDetails(composeTestRule, "test@example.com")
-            clickCopyUserNameButton()
-            verifySnackBarText("Username copied to clipboard")
-            clickCopyPasswordButton()
-            verifySnackBarText("Password copied to clipboard")
+            clickCopyUserNameButton(composeTestRule)
+            verifyCopyUserNameLoginCredentialsSnackBar(composeTestRule)
+            waitUntilCopyLoginCredentialsSnackBarIsGone(composeTestRule)
+            clickCopyPasswordButton(composeTestRule)
+            verifyCopyPasswordLoginCredentialsSnackBar(composeTestRule)
         }
     }
 }
