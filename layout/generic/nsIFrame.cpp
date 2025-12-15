@@ -4432,8 +4432,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
         // frame's BuildDisplayList, so don't bother to async scroll with an
         // anchor in that case. Bug 2001861 tracks removing this check.
         !PresContext()->Document()->GetActiveViewTransition()) {
-      scrollsWithAnchor =
-          AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(child);
+      scrollsWithAnchor = AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
+          child, aBuilder);
 
       if (scrollsWithAnchor && aBuilder->IsRetainingDisplayList()) {
         if (aBuilder->IsPartialUpdate()) {
@@ -4453,9 +4453,11 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
       if (savedOutOfFlowData->mContainingBlockInViewTransitionCapture) {
         MOZ_ASSERT(asr == nullptr);
         MOZ_ASSERT(aBuilder->IsInViewTransitionCapture());
-      } else if ((asr ? asr->mFrame : nullptr) !=
-                 DisplayPortUtils::GetASRAncestorFrame(child->GetParent(),
-                                                       aBuilder)) {
+      } else if ((asr ? FrameAndASRKind{asr->mFrame, asr->mKind}
+                      : FrameAndASRKind::default_value()) !=
+                 DisplayPortUtils::GetASRAncestorFrame(
+                     {child->GetParent(), ActiveScrolledRoot::ASRKind::Scroll},
+                     aBuilder)) {
         // A weird case for native anonymous content in the custom content
         // container when the root is captured by a view transition. This
         // content is built outside of the view transition capture but the

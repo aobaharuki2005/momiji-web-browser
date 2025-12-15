@@ -419,6 +419,12 @@ struct AnchorResolvedMarginHelper {
     if (aValue.HasAnchorPositioningFunction()) {
       return ResolveAnchor(aValue, aAxis, aParams);
     }
+    // For `position-area` values other than `none`, the used value of `auto`
+    // margin properties resolves to 0:
+    // <https://drafts.csswg.org/css-anchor-position-1/#valdef-position-area-position-area>
+    if (aValue.IsAuto() && !aParams.mPositionArea.IsNone()) {
+      return Zero();
+    }
     return AnchorResolvedMargin::NonOwning(&aValue);
   }
 

@@ -883,7 +883,7 @@ export class TelemetryFeed {
 
     const { p } =
       this._privateRandomContentTelemetryProbablityValues[cache_key];
-    if (!lazy.NewTabContentPing.decideWithProbability(p)) {
+    if (lazy.NewTabContentPing.decideWithProbability(p)) {
       return item;
     }
     const allRecs = this.getAllRecommendations(); // Number of recommendations has changed
@@ -905,7 +905,11 @@ export class TelemetryFeed {
     };
     // If we're replacing a non top stories item, then assign the appropriate
     // section to the item
-    if (resultItem.section !== TOP_STORIES_SECTION_NAME && randomItem.section) {
+    if (
+      resultItem.section &&
+      resultItem.section !== TOP_STORIES_SECTION_NAME &&
+      randomItem.section
+    ) {
       resultItem.section = randomItem.section;
       resultItem.section_position = randomItem.section_position;
     }
