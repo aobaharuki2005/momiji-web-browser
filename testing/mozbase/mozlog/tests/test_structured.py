@@ -106,6 +106,75 @@ class TestStatusHandler(BaseStructuredTest):
         self.assertIn("OK", summary.expected_statuses)
         self.assertEqual(2, summary.expected_statuses["OK"])
 
+    def test_crash_with_expected_crash_status(self):
+        # Test that crashes are accounted for when test ends with expected CRASH status
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.crash(
+            test="test1",
+            process=1234,
+            signature="test_signature",
+            minidump_path="/path/to/dump",
+        )
+        self.logger.crash(
+            test="test1",
+            process=5678,
+            signature="test_signature2",
+            minidump_path="/path/to/dump2",
+        )
+        self.logger.test_end("test1", "CRASH", expected="CRASH")
+        self.logger.suite_end()
+        summary = self.handler.summarize()
+        # Extra crashes were subtracted, keeping 1 to match the CRASH status
+        self.assertEqual(1, summary.action_counts.get("crash", 0))
+        # Test had expected CRASH status
+        self.assertEqual(1, summary.expected_statuses["CRASH"])
+
+    def test_crash_with_retry_pass(self):
+        # Simulates xpcshell retry: test crashes producing 2 dumps, then passes on retry
+        self.logger.suite_start([])
+        # First run: test crashes
+        self.logger.test_start("test1")
+        self.logger.crash(
+            test="test1",
+            process=1234,
+            signature="test_signature",
+            minidump_path="/path/to/dump",
+        )
+        self.logger.crash(
+            test="test1",
+            process=5678,
+            signature="test_signature2",
+            minidump_path="/path/to/dump2",
+        )
+        self.logger.test_end("test1", "CRASH", expected="CRASH")
+        # Retry: test passes
+        self.logger.test_start("test1")
+        self.logger.test_end("test1", "PASS", expected="PASS")
+        self.logger.suite_end()
+        summary = self.handler.summarize()
+        # Extra crashes were subtracted, keeping 1 to match the CRASH status
+        self.assertEqual(1, summary.action_counts.get("crash", 0))
+        # Both test runs are counted
+        self.assertEqual(1, summary.expected_statuses["CRASH"])
+        self.assertEqual(1, summary.expected_statuses["PASS"])
+
+    def test_crash_without_test_name(self):
+        # Orphaned crash (e.g., shutdown crash) without associated test
+        self.logger.suite_start([])
+        self.logger.test_start("test1")
+        self.logger.test_end("test1", "PASS", expected="PASS")
+        self.logger.crash(
+            process=9999,
+            signature="shutdown_crash",
+            minidump_path="/path/to/dump",
+        )
+        self.logger.suite_end()
+        summary = self.handler.summarize()
+        # Crash without test name remains unaccounted
+        self.assertEqual(1, summary.action_counts["crash"])
+        self.assertEqual(1, summary.expected_statuses["PASS"])
+
 
 class TestSummaryHandler(BaseStructuredTest):
     def setUp(self):
