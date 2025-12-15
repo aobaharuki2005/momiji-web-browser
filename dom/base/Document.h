@@ -3584,11 +3584,21 @@ class Document : public nsINode,
   MOZ_CAN_RUN_SCRIPT void GetWireframe(bool aIncludeNodes,
                                        Nullable<Wireframe>&);
 
+  // https://html.spec.whatwg.org/#close-entire-popover-list
+  MOZ_CAN_RUN_SCRIPT void CloseEntirePopoverList(bool aFocusPreviousElement,
+                                                 bool aFireEvents);
+
   // Hides all popovers until the given end point, see
   // https://html.spec.whatwg.org/multipage/popover.html#hide-all-popovers-until
   MOZ_CAN_RUN_SCRIPT void HideAllPopoversUntil(nsINode& aEndpoint,
                                                bool aFocusPreviousElement,
                                                bool aFireEvents);
+
+  // Hides all popovers, until the given end point, see
+  // https://html.spec.whatwg.org/#hide-popover-stack-until
+  MOZ_CAN_RUN_SCRIPT void HidePopoverStackUntil(nsINode& aEndpoint,
+                                                bool aFocusPreviousElement,
+                                                bool aFireEvents);
 
   // Hides the given popover element, see
   // https://html.spec.whatwg.org/multipage/popover.html#hide-popover-algorithm

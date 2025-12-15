@@ -16057,18 +16057,22 @@ bool Document::TopLayerContains(Element& aElement) const {
   return mTopLayer.Contains(weakElement);
 }
 
+// https://html.spec.whatwg.org/#close-entire-popover-list
+void Document::CloseEntirePopoverList(bool aFocusPreviousElement,
+                                      bool aFireEvents) {
+  // 1. While popoverList is not empty:
+  while (RefPtr<Element> topmost = GetTopmostAutoPopover()) {
+    // 1.1. Run the hide popover algorithm given popoverList's last item,
+    // focusPreviousElement, fireEvents, false, and null.
+    HidePopover(*topmost, aFocusPreviousElement, aFireEvents,
+                /* aSource */ nullptr, IgnoreErrors());
+  }
+}
+
 // https://html.spec.whatwg.org/#hide-all-popovers-until
 void Document::HideAllPopoversUntil(nsINode& aEndpoint,
                                     bool aFocusPreviousElement,
                                     bool aFireEvents) {
-  auto closeAllOpenPopovers = [&aFocusPreviousElement, &aFireEvents,
-                               this]() MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
-    while (RefPtr<Element> topmost = GetTopmostAutoPopover()) {
-      HidePopover(*topmost, aFocusPreviousElement, aFireEvents,
-                  /* aSource */ nullptr, IgnoreErrors());
-    }
-  };
-
   const auto* endpointHTMLEl = nsGenericHTMLElement::FromNodeOrNull(&aEndpoint);
 
   // 1. If endpoint is an HTML element and endpoint is not in the popover
@@ -16090,7 +16094,7 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
     // list, focusPreviousElement, and fireEvents.
     // 5.2. Run close entire popover list given document's showing auto popover
     // list, focusPreviousElement, and fireEvents.
-    closeAllOpenPopovers();
+    CloseEntirePopoverList(aFocusPreviousElement, aFireEvents);
     // 5.3. Return.
     return;
   }
@@ -16109,17 +16113,18 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
 
   // 9. Run hide popover stack until given endpoint, document's showing auto
   // popover list, focusPreviousElement, and fireEvents.
+  HidePopoverStackUntil(aEndpoint, aFocusPreviousElement, aFireEvents);
+}
 
-  // ---------
-
-  // https://html.spec.whatwg.org/#hide-popover-stack-until
+// https://html.spec.whatwg.org/#hide-popover-stack-until
+void Document::HidePopoverStackUntil(nsINode& aEndpoint,
+                                     bool aFocusPreviousElement,
+                                     bool aFireEvents) {
   auto needRepeatingHide = [&]() {
     auto autoList = AutoPopoverList();
     return autoList.Contains(&aEndpoint) &&
            &aEndpoint != autoList.LastElement();
   };
-
-  MOZ_ASSERT(endpointHTMLEl && endpointHTMLEl->IsAutoPopover());
 
   // 1. Let repeatingHide be false.
   bool repeatingHide = false;
@@ -16145,7 +16150,7 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
 
     // 2.3. If lastToHide is null, then return.
     if (!foundEndpoint) {
-      closeAllOpenPopovers();
+      CloseEntirePopoverList(aFocusPreviousElement, fireEvents);
       return;
     }
 
