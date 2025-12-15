@@ -2485,6 +2485,36 @@ void nsDocShell::MaybeCreateInitialClientSource(nsIPrincipal* aPrincipal) {
   MaybeInheritController(mInitialClientSource.get(), principal);
 }
 
+void VerifyCientPrincipalInfosMatch(const mozilla::ipc::PrincipalInfo& aLeft,
+                                    const mozilla::ipc::PrincipalInfo& aRight) {
+  // Inheriting a controller when the principals don't match would cause a
+  // crash. Let's do the checks earlier to crash here already instead of
+  // ClientSource::SetController. And assert each condition separately. See bug
+  // 1880012.
+  MOZ_RELEASE_ASSERT(aLeft.type() == aRight.type());
+
+  switch (aLeft.type()) {
+    case mozilla::ipc::PrincipalInfo::TContentPrincipalInfo: {
+      const mozilla::ipc::ContentPrincipalInfo& leftContent =
+          aLeft.get_ContentPrincipalInfo();
+      const mozilla::ipc::ContentPrincipalInfo& rightContent =
+          aRight.get_ContentPrincipalInfo();
+      MOZ_RELEASE_ASSERT(leftContent.attrs() == rightContent.attrs() &&
+                         leftContent.originNoSuffix() ==
+                             rightContent.originNoSuffix());
+      return;
+    }
+    case mozilla::ipc::PrincipalInfo::TNullPrincipalInfo: {
+      // null principal never matches
+      MOZ_RELEASE_ASSERT(false, "Clients have null principals");
+      return;
+    }
+    default: {
+      break;
+    }
+  }
+}
+
 void nsDocShell::MaybeInheritController(
     mozilla::dom::ClientSource* aClientSource, nsIPrincipal* aPrincipal) {
   nsCOMPtr<nsIDocShell> parent = GetInProcessParentDocshell();
@@ -2511,6 +2541,8 @@ void nsDocShell::MaybeInheritController(
     return;
   }
 
+  VerifyCientPrincipalInfosMatch(aClientSource->Info().PrincipalInfo(),
+                                 controller->PrincipalInfo());
   aClientSource->InheritController(controller.ref());
 }
 
