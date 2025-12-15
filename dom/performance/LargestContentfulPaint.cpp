@@ -151,8 +151,9 @@ void LargestContentfulPaint::MaybeProcessImageForElementTiming(
     return;
   }
 
-  nsPresContext* pc = document->GetPresContext();
-  if (!pc || pc->HasStoppedGeneratingLCP()) {
+  nsPresContext* pc =
+      aElement->GetPresContext(Element::PresContextFor::eForComposedDoc);
+  if (!pc) {
     return;
   }
 
