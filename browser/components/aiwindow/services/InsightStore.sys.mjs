@@ -279,13 +279,22 @@ export const InsightStore = {
    *   Field to sort by.
    * @param {"asc"|"desc"} [options.sortDir="desc"]
    *   Sort direction.
+   * @param {boolean} [options.includeSoftDeleted=false]
+   *   Whether to include soft-deleted insights.
    * @returns {Promise<Insight[]>}
    */
-  async getInsights({ sortBy = "updated_at", sortDir = "desc" } = {}) {
+  async getInsights({
+    sortBy = "updated_at",
+    sortDir = "desc",
+    includeSoftDeleted = false,
+  } = {}) {
     await this.ensureInitialized();
 
     let res = gState.insights;
-    res = res.filter(i => !i.is_deleted);
+
+    if (!includeSoftDeleted) {
+      res = res.filter(i => !i.is_deleted);
+    }
 
     if (sortBy) {
       res = [...res].sort((a, b) => {

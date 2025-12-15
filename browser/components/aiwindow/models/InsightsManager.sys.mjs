@@ -205,6 +205,9 @@ export class InsightsManager {
    * Retrieves all stored insights.
    * This is a quick-access wrapper around InsightStore.getInsights() with no additional processing.
    *
+   * @param {object} [opts={}]
+   * @param {boolean} [opts.includeSoftDeleted=false]
+   *        Whether to include soft-deleted insights.
    * @returns {Promise<Array<Map<{
    *  insight_summary: string,
    *  category: string,
@@ -212,8 +215,8 @@ export class InsightsManager {
    *  score: number,
    * }>>>}                                    List of insights
    */
-  static async getAllInsights() {
-    return await InsightStore.getInsights();
+  static async getAllInsights(opts = { includeSoftDeleted: false }) {
+    return await InsightStore.getInsights(opts);
   }
 
   /**
@@ -285,6 +288,32 @@ export class InsightsManager {
       persistedInsights,
       newTimestampMs: newTsMs,
     };
+  }
+
+  /**
+   * Soft deletes an insight by its ID.
+   * Soft deletion sets the insight's `is_deleted` flag to true. This prevents insight getter functions
+   * from returning the insight when using default parameters. It does not delete the insight from storage.
+   *
+   * From the user's perspective, soft-deleted insights will not be used in assistant responses but will still exist in storage.
+   *
+   * @param {string} insightId        ID of the insight to soft-delete
+   * @returns {Promise<Insight|null>} The soft-deleted insight, or null if not found
+   */
+  static async softDeleteInsightById(insightId) {
+    return await InsightStore.softDeleteInsight(insightId);
+  }
+
+  /**
+   * Hard deletes an insight by its ID.
+   * Hard deletion permenantly removes the insight from storage entirely. This method should be used
+   * by UI to allow users to delete insights they no longer want stored.
+   *
+   * @param {string} insightId        ID of the insight to hard-delete
+   * @returns {Promise<boolean>}      True if the insight was found and deleted, false otherwise
+   */
+  static async hardDeleteInsightById(insightId) {
+    return await InsightStore.hardDeleteInsight(insightId);
   }
 
   /**

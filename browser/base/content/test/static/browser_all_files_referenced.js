@@ -360,10 +360,6 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/Tools.sys.mjs",
   },
-  // Bug 2003671 - Fetch Insights - getRelevantInsights
-  {
-    file: "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
-  },
   // Bug 2004888 - [FirstRun] Create Firstrun.html opening firstrun welcome screen
   {
     file: "chrome://browser/content/aiwindow/firstrun.html",

@@ -58,21 +58,22 @@ const ENDPOINT = "https://api.fake-endpoint.com/v1";
 const MODEL = "fake-model";
 
 /**
- * Helper function bulk-add insights
+ * Helper function to delete all insights before and after a test
  */
-async function addInsights() {
-  for (const insight of TEST_INSIGHTS) {
-    await InsightStore.addInsight(insight);
+async function deleteAllInsights() {
+  const insights = await InsightStore.getInsights({ includeSoftDeleted: true });
+  for (const insight of insights) {
+    await InsightStore.hardDeleteInsight(insight.id);
   }
 }
 
 /**
- * Helper function to delete all insights after a test
+ * Helper function to bulk-add insights
  */
-async function deleteAllInsights() {
-  const insights = await InsightStore.getInsights();
-  for (const insight of insights) {
-    await InsightStore.hardDeleteInsight(insight.id);
+async function addInsights() {
+  await deleteAllInsights();
+  for (const insight of TEST_INSIGHTS) {
+    await InsightStore.addInsight(insight);
   }
 }
 
@@ -177,6 +178,173 @@ add_task(async function test_getAllInsights() {
       `Insight summary "${insightSummary}" should be in the test insights.`
     );
   });
+
+  await deleteAllInsights();
+});
+
+/**
+ * Tests soft deleting an insight by ID
+ */
+add_task(async function test_softDeleteInsightById() {
+  await addInsights();
+
+  // Pull insights that aren't already soft deleted
+  const insightsBeforeSoftDelete = await InsightsManager.getAllInsights();
+
+  // Pick an insight off the top to soft delete
+  const insightBeforeSoftDelete = insightsBeforeSoftDelete[0];
+
+  // Double check that the insight isn't already soft deleted
+  Assert.equal(
+    insightBeforeSoftDelete.is_deleted,
+    false,
+    "Insight should not be soft deleted initially."
+  );
+
+  // Soft delete the insight
+  const insightAfterSoftDelete = await InsightsManager.softDeleteInsightById(
+    insightBeforeSoftDelete.id
+  );
+
+  // Check that the insight is soft deleted
+  Assert.equal(
+    insightAfterSoftDelete.is_deleted,
+    true,
+    "Insight should be soft deleted after calling softDeleteInsightById."
+  );
+
+  // Retrieve all insights again, including soft deleted ones this time to make sure the deletion saved correctly
+  const insightsAfterSoftDelete = await InsightsManager.getAllInsights({
+    includeSoftDeleted: true,
+  });
+  const softDeletedInsights = insightsAfterSoftDelete.filter(
+    insight => insight.is_deleted
+  );
+  Assert.equal(
+    softDeletedInsights.length,
+    1,
+    "There should be one soft deleted insight."
+  );
+
+  await deleteAllInsights();
+});
+
+/**
+ * Tests attempting to soft delete an insight that doesn't exist by ID
+ */
+add_task(async function test_softDeleteInsightById_not_found() {
+  await addInsights();
+
+  // Retrieve all insights, including soft deleted ones
+  const insightsBeforeSoftDelete = await InsightsManager.getAllInsights({
+    includeSoftDeleted: true,
+  });
+
+  // Check that no insights are soft deleted initially
+  const softDeletedInsightsBefore = insightsBeforeSoftDelete.filter(
+    insight => insight.is_deleted
+  );
+  Assert.equal(
+    softDeletedInsightsBefore.length,
+    0,
+    "There should be no soft deleted insights initially."
+  );
+
+  // Attempt to soft delete a non-existent insight
+  const insightAfterSoftDelete =
+    await InsightsManager.softDeleteInsightById("non-existent-id");
+
+  // Check that the result is null (no insights were soft deleted)
+  Assert.equal(
+    insightAfterSoftDelete,
+    null,
+    "softDeleteInsightById should return null for non-existent insight ID."
+  );
+
+  // Retrieve all insights again to confirm no insights were soft deleted
+  const insightsAfterSoftDelete = await InsightsManager.getAllInsights({
+    includeSoftDeleted: true,
+  });
+  const softDeletedInsightsAfter = insightsAfterSoftDelete.filter(
+    insight => insight.is_deleted
+  );
+  Assert.equal(
+    softDeletedInsightsAfter.length,
+    0,
+    "There should be no soft deleted insights after attempting to delete a non-existent insight."
+  );
+
+  await deleteAllInsights();
+});
+
+/**
+ * Tests hard deleting an insight by ID
+ */
+add_task(async function test_hardDeleteInsightById() {
+  await addInsights();
+
+  // Retrieve all insights, including soft deleted ones
+  const insightsBeforeHardDelete = await InsightsManager.getAllInsights({
+    includeSoftDeleted: true,
+  });
+
+  // Pick an insight off the top to test hard deletion
+  const insightBeforeHardDelete = insightsBeforeHardDelete[0];
+
+  // Hard delete the insight
+  const deletionResult = await InsightsManager.hardDeleteInsightById(
+    insightBeforeHardDelete.id
+  );
+
+  // Check that the deletion was successful
+  Assert.ok(
+    deletionResult,
+    "hardDeleteInsightById should return true on successful deletion."
+  );
+
+  // Retrieve all insights again to confirm the hard deletion was saved correctly
+  const insightsAfterHardDelete = await InsightsManager.getAllInsights({
+    includeSoftDeleted: true,
+  });
+  Assert.equal(
+    insightsAfterHardDelete.length,
+    insightsBeforeHardDelete.length - 1,
+    "There should be one fewer insight after hard deletion."
+  );
+
+  await deleteAllInsights();
+});
+
+/**
+ * Tests attempting to hard delete an insight that doesn't exist by ID
+ */
+add_task(async function test_hardDeleteInsightById_not_found() {
+  await addInsights();
+
+  // Retrieve all insights, including soft deleted ones
+  const insightsBeforeHardDelete = await InsightsManager.getAllInsights({
+    includeSoftDeleted: true,
+  });
+
+  // Hard delete the insight
+  const deletionResult =
+    await InsightsManager.hardDeleteInsightById("non-existent-id");
+
+  // Check that the result is false (no insights were hard deleted)
+  Assert.ok(
+    !deletionResult,
+    "hardDeleteInsightById should return false for non-existent insight ID."
+  );
+
+  // Retrieve all insights again to make sure no insights were hard deleted
+  const insightsAfterHardDelete = await InsightsManager.getAllInsights({
+    includeSoftDeleted: true,
+  });
+  Assert.equal(
+    insightsAfterHardDelete.length,
+    insightsBeforeHardDelete.length,
+    "Insight count before and after failed hard deletion should be the same."
+  );
 
   await deleteAllInsights();
 });
