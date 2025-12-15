@@ -517,6 +517,139 @@ add_task(async function test_dictionary_multiple_replacements() {
   dump("**** Test passed: Multiple replacements work correctly\n");
 });
 
+/**
+ * Test that hash mismatch during dictionary load causes the request to fail
+ * and the corrupted dictionary entry to be removed.
+ *
+ * Steps:
+ * 1. Load a resource with Use-As-Dictionary header (creates dictionary entry)
+ * 2. Verify Available-Dictionary is sent for matching resources
+ * 3. Corrupt the hash using the testing API
+ * 4. Clear memory cache to force reload from disk
+ * 5. Request a matching resource - dictionary prefetch should fail
+ * 6. Verify the dictionary entry was removed (Available-Dictionary no longer sent)
+ */
+add_task(async function test_dictionary_hash_mismatch() {
+  dump("**** Clear cache and start fresh\n");
+  let lci = Services.loadContextInfo.custom(false, {
+    partitionKey: `(https,localhost)`,
+  });
+  evict_cache_entries("all", lci);
+
+  let testingInterface = Services.cache2.QueryInterface(Ci.nsICacheTesting);
+  testingInterface.clearDictionaryCacheMemory();
+
+  await syncCache();
+
+  let receivedAvailableDictionary = null;
+
+  // Register dictionary endpoint
+  await server.registerPathHandler(
+    "/dict/hash-test",
+    function (request, response) {
+      response.writeHead(200, {
+        "Content-Type": "application/octet-stream",
+        "Use-As-Dictionary":
+          'match="/hash-match/*", id="hash-test-dict", type=raw',
+        "Cache-Control": "max-age=3600",
+      });
+      response.end("DICTIONARY_FOR_HASH_TEST", "binary");
+    }
+  );
+
+  // Register matching resource endpoint
+  await server.registerPathHandler(
+    "/hash-match/test",
+    function (request, response) {
+      global.lastHashTestAvailDict =
+        request.headers["available-dictionary"] || null;
+      response.writeHead(200, {
+        "Content-Type": "text/plain",
+        "Cache-Control": "no-cache",
+      });
+      response.end("HASH_MATCHING_CONTENT", "binary");
+    }
+  );
+
+  dump("**** Step 1: Load dictionary resource with Use-As-Dictionary\n");
+
+  let dictUrl = `https://localhost:${server.port()}/dict/hash-test`;
+  let chan = makeChan(dictUrl);
+  let [, data] = await channelOpenPromise(chan);
+
+  Assert.equal(
+    data,
+    "DICTIONARY_FOR_HASH_TEST",
+    "Dictionary content should match"
+  );
+  await verifyDictionaryStored(dictUrl, true);
+  await syncCache();
+
+  dump("**** Step 2: Verify Available-Dictionary is sent\n");
+
+  let matchingUrl = `https://localhost:${server.port()}/hash-match/test`;
+  chan = makeChan(matchingUrl);
+  await channelOpenPromise(chan);
+
+  receivedAvailableDictionary = await server.execute(
+    "global.lastHashTestAvailDict"
+  );
+  Assert.notStrictEqual(
+    receivedAvailableDictionary,
+    null,
+    "Available-Dictionary should be sent initially"
+  );
+
+  dump("**** Step 3: Corrupt the dictionary hash\n");
+
+  testingInterface.corruptDictionaryHash(dictUrl);
+
+  dump("**** Step 4: Clear dictionary data to force reload from disk\n");
+
+  // Clear dictionary data while keeping the corrupted hash.
+  // When next prefetch happens, data will be reloaded and compared
+  // against the corrupted hash, causing a mismatch.
+  testingInterface.clearDictionaryDataForTesting(dictUrl);
+
+  dump(
+    "**** Step 5: Request matching resource - should fail due to hash mismatch\n"
+  );
+
+  await server.execute("global.lastHashTestAvailDict = null");
+
+  // The request for the matching resource will try to prefetch the dictionary,
+  // which will fail due to hash mismatch. The channel should be cancelled.
+  chan = makeChan(matchingUrl);
+  try {
+    await channelOpenPromise(chan);
+  } catch (e) {
+    dump(`**** Request failed with: ${e}\n`);
+  }
+
+  // Note: The request may or may not fail depending on timing. The important
+  // thing is that the dictionary entry should be removed.
+
+  dump("**** Step 6: Verify dictionary entry was removed\n");
+
+  // Wait a bit for the removal to complete
+  await syncCache();
+
+  await server.execute("global.lastHashTestAvailDict = null");
+  chan = makeChan(matchingUrl);
+  await channelOpenPromise(chan);
+
+  receivedAvailableDictionary = await server.execute(
+    "global.lastHashTestAvailDict"
+  );
+  Assert.equal(
+    receivedAvailableDictionary,
+    null,
+    "Available-Dictionary should NOT be sent after dictionary was removed due to hash mismatch"
+  );
+
+  dump("**** Test passed: Hash mismatch properly handled\n");
+});
+
 // Cleanup
 add_task(async function cleanup() {
   let lci = Services.loadContextInfo.custom(false, {

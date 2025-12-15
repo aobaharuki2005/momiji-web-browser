@@ -674,9 +674,29 @@ nsresult nsHttpChannel::PrepareToConnect() {
           // weird cases like no storage service.
           return NS_SUCCEEDED(self->mDictDecompress->Prefetch(
               GetLoadContextInfo(self), self->mShouldSuspendForDictionary,
-              [self]() {
+              [self](nsresult aResult) {
                 // this is called when the prefetch is complete to
                 // un-Suspend the channel
+                PROFILER_MARKER("Dictionary Prefetch", NETWORK,
+                                MarkerTiming::IntervalEnd(), FlowMarker,
+                                Flow::FromPointer(self));
+                if (NS_FAILED(aResult)) {
+                  LOG(
+                      ("nsHttpChannel::SetupChannelForTransaction [this=%p] "
+                       "Dictionary prefetch failed: 0x%08" PRIx32,
+                       self.get(), static_cast<uint32_t>(aResult)));
+                  if (self->mUsingDictionary) {
+                    self->mDictDecompress->UseCompleted();
+                    self->mUsingDictionary = false;
+                  }
+                  self->mDictDecompress = nullptr;
+                  if (self->mSuspendedForDictionary) {
+                    self->mSuspendedForDictionary = false;
+                    self->Cancel(aResult);
+                    self->Resume();
+                  }
+                  return;
+                }
                 MOZ_ASSERT(self->mDictDecompress->DictionaryReady());
                 if (self->mSuspendedForDictionary) {
                   LOG(
@@ -687,9 +707,6 @@ nsresult nsHttpChannel::PrepareToConnect() {
                   self->mSuspendedForDictionary = false;
                   self->Resume();
                 }
-                PROFILER_MARKER("Dictionary Prefetch", NETWORK,
-                                MarkerTiming::IntervalEnd(), FlowMarker,
-                                Flow::FromPointer(self));
               }));
         }
         return true;
@@ -6298,7 +6315,7 @@ bool nsHttpChannel::ParseDictionary(nsICacheEntry* aEntry,
       if (mDictSaving->ShouldSuspendUntilCacheRead()) {
         LOG_DICTIONARIES(("Suspending %p to wait for cache read", this));
         mTransactionPump->Suspend();
-        mDictSaving->CallbackOnCacheRead([self = RefPtr(this)]() {
+        mDictSaving->CallbackOnCacheRead([self = RefPtr(this)](nsresult) {
           LOG_DICTIONARIES(("Resuming %p after cache read", self.get()));
           self->Resume();
         });
