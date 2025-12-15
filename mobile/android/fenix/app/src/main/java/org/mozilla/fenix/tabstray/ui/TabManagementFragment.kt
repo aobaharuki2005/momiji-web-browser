@@ -184,7 +184,7 @@ class TabManagementFragment : DialogFragment() {
 
         tabManagerController = DefaultTabManagerController(
             accountManager = requireComponents.backgroundServices.accountManager,
-            activity = activity,
+            context = requireContext(),
             appStore = requireComponents.appStore,
             tabsTrayStore = tabsTrayStore,
             browserStore = requireComponents.core.store,
@@ -289,7 +289,7 @@ class TabManagementFragment : DialogFragment() {
                                         requireContext().settings().shouldShowAutoCloseTabsBanner &&
                                             requireContext().settings().canShowCfr,
                                     shouldShowLockPbmBanner = shouldShowLockPbmBanner(
-                                        isPrivateMode = (activity as HomeActivity).browsingModeManager.mode.isPrivate,
+                                        isPrivateMode = requireComponents.appStore.state.mode.isPrivate,
                                         hasPrivateTabs = requireComponents.core.store.state.privateTabs.isNotEmpty(),
                                         biometricAvailable = BiometricManager.from(requireContext())
                                             .isHardwareAvailable(),

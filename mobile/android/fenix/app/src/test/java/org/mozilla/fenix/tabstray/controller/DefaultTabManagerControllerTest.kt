@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray.controller
 
+import android.content.Context
 import androidx.navigation.NavController
 import androidx.navigation.NavDirections
 import androidx.navigation.NavOptions
@@ -30,10 +31,13 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.storage.sync.Tab
 import mozilla.components.browser.storage.sync.TabEntry
 import mozilla.components.concept.base.profiler.Profiler
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.feature.accounts.push.CloseTabsUseCases
+import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
@@ -52,11 +56,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.RuleChain
 import org.junit.runner.RunWith
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -64,7 +66,9 @@ import org.mozilla.fenix.browser.browsingmode.DefaultBrowsingModeManager
 import org.mozilla.fenix.components.AppStore
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
+import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.maxActiveTime
 import org.mozilla.fenix.helpers.FenixGleanTestRule
 import org.mozilla.fenix.home.HomeScreenViewModel.Companion.ALL_NORMAL_TABS
@@ -102,10 +106,13 @@ class DefaultTabManagerControllerTest {
     private lateinit var fenixBrowserUseCases: FenixBrowserUseCases
 
     @MockK(relaxed = true)
-    private lateinit var activity: HomeActivity
-
-    @MockK(relaxed = true)
     private lateinit var accountManager: FxaAccountManager
+
+    private lateinit var addNewTabUseCase: TabsUseCases.AddNewTabUseCase
+    private lateinit var loadUrlUseCase: SessionUseCases.DefaultLoadUrlUseCase
+    private lateinit var searchUseCases: SearchUseCases
+    private lateinit var homepageTitle: String
+    private lateinit var context: Context
 
     private val appStore: AppStore = mockk(relaxed = true)
     private val settings: Settings = mockk(relaxed = true)
@@ -133,6 +140,15 @@ class DefaultTabManagerControllerTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this)
+        context = spyk(testContext)
+        addNewTabUseCase = mockk(relaxed = true)
+        loadUrlUseCase = mockk(relaxed = true)
+        searchUseCases = mockk(relaxed = true)
+        homepageTitle = testContext.getString(R.string.tab_tray_homepage_tab)
+        profiler = mockk(relaxed = true) {
+            every { getProfilerTime() } returns PROFILER_START_TIME
+            every { isProfilerActive() } returns true
+        }
     }
 
     @Test
@@ -621,15 +637,30 @@ class DefaultTabManagerControllerTest {
         every { tab.active() }.answers { entry }
         every { entry.url }.answers { "https://mozilla.org" }
 
+        val appStore = AppStore(initialState = AppState(mode = BrowsingMode.Normal))
+        fenixBrowserUseCases = FenixBrowserUseCases(
+            appStore = appStore,
+            addNewTabUseCase = addNewTabUseCase,
+            loadUrlUseCase = loadUrlUseCase,
+            searchUseCases = searchUseCases,
+            homepageTitle = homepageTitle,
+            profiler = profiler,
+        )
+        every { testContext.components.useCases.fenixBrowserUseCases } returns fenixBrowserUseCases
+
         createController().handleSyncedTabClicked(tab)
 
         assertNotNull(Events.syncedTabOpened.testGetValue())
 
+        val url = "https://mozilla.org"
+
         verify {
-            activity.openToBrowserAndLoad(
-                searchTermOrURL = "https://mozilla.org",
-                newTab = true,
-                from = BrowserDirection.FromTabManager,
+            addNewTabUseCase.invoke(
+                url = url,
+                flags = EngineSession.LoadUrlFlags.none(),
+                private = false,
+                historyMetadata = null,
+                originalInput = url,
             )
         }
     }
@@ -1523,7 +1554,7 @@ class DefaultTabManagerControllerTest {
     ): DefaultTabManagerController {
         return DefaultTabManagerController(
             accountManager = accountManager,
-            activity = activity,
+            context = context,
             appStore = appStore,
             tabsTrayStore = trayStore,
             browserStore = browserStore,
@@ -1558,4 +1589,8 @@ class DefaultTabManagerControllerTest {
         lastModified = 0L,
         children = null,
     )
+
+    companion object {
+        private const val PROFILER_START_TIME = Double.MAX_VALUE
+    }
 }

@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray.controller
 
+import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavController
 import kotlinx.coroutines.CoroutineScope
@@ -30,11 +31,9 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.DelicateAction
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.telemetry.glean.private.NoExtras
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.TabsTray
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.browser.browsingmode.BrowsingModeManager
@@ -46,6 +45,7 @@ import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.appstate.AppAction
 import org.mozilla.fenix.components.usecases.FenixBrowserUseCases
 import org.mozilla.fenix.ext.DEFAULT_ACTIVE_DAYS
+import org.mozilla.fenix.ext.openToBrowser
 import org.mozilla.fenix.ext.potentialInactiveTabs
 import org.mozilla.fenix.home.HomeScreenViewModel.Companion.ALL_NORMAL_TABS
 import org.mozilla.fenix.home.HomeScreenViewModel.Companion.ALL_PRIVATE_TABS
@@ -211,7 +211,7 @@ interface TabManagerController : SyncedTabsController, InactiveTabsController, T
  * Default implementation of [TabManagerController].
  *
  * @param accountManager [FxaAccountManager] used to determine signed in status.
- * @param activity [HomeActivity] used to perform top-level app actions.
+ * @param context [Context] used for showing dialogs.
  * @param appStore [AppStore] used to dispatch any [AppAction].
  * @param tabsTrayStore [TabsTrayStore] used to read/update the [TabsTrayState].
  * @param browserStore [BrowserStore] used to read/update the current [BrowserState].
@@ -237,7 +237,7 @@ interface TabManagerController : SyncedTabsController, InactiveTabsController, T
 @Suppress("TooManyFunctions", "LongParameterList")
 class DefaultTabManagerController(
     private val accountManager: FxaAccountManager,
-    private val activity: HomeActivity,
+    private val context: Context,
     private val appStore: AppStore,
     private val tabsTrayStore: TabsTrayStore,
     private val browserStore: BrowserStore,
@@ -508,7 +508,7 @@ class DefaultTabManagerController(
                 }
             },
             onNegativeButtonClick = {},
-        ).show(activity)
+        ).show(context)
     }
 
     override fun handleShareSelectedTabsClicked() {
@@ -542,10 +542,11 @@ class DefaultTabManagerController(
     override fun handleSyncedTabClicked(tab: Tab) {
         Events.syncedTabOpened.record(NoExtras())
 
-        activity.openToBrowserAndLoad(
+        navController.openToBrowser()
+
+        fenixBrowserUseCases.loadUrlOrSearch(
             searchTermOrURL = tab.active().url,
             newTab = true,
-            from = BrowserDirection.FromTabManager,
         )
     }
 
