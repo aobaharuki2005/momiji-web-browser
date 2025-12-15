@@ -49,9 +49,37 @@
 #include "vm/Realm.h"
 #include "wasm/WasmFrame.h"
 
+#if defined(__linux__) && !defined(JS_SIMULATOR_RISCV64)
+#  include <sys/syscall.h>
+#  if __has_include(<asm/hwprobe.h>)
+#    include <asm/hwprobe.h>
+#  endif
+#endif
+
 using mozilla::DebugOnly;
 namespace js {
 namespace jit {
+
+// static
+void RVFlags::Init() {
+  MOZ_ASSERT(!sComputed);
+#if defined(__linux__) && !defined(JS_SIMULATOR_RISCV64) && \
+    __has_include(<asm/hwprobe.h>)
+  riscv_hwprobe probe[1] = {{RISCV_HWPROBE_KEY_IMA_EXT_0, 0}};
+  if (syscall(__NR_riscv_hwprobe, probe, 1, 0, nullptr, 0) == 0) {
+    if (probe[0].value & RISCV_HWPROBE_EXT_ZBB) {
+      sZbbExtension = true;
+    }
+  }
+#else
+  if (getenv("RISCV_EXT_ZBB")) {
+    // Force on Zbb extension for testing purposes or on non-linux platforms.
+    sZbbExtension = true;
+  }
+#endif
+
+  sComputed = true;
+}
 
 #define UNIMPLEMENTED_RISCV() MOZ_CRASH("RISC_V not implemented");
 

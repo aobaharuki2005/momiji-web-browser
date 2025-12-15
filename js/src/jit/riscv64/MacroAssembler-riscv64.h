@@ -1071,11 +1071,19 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
   FaultingCodeOffset load16ZeroExtend(const BaseIndex& src, Register dest);
 
   void SignExtendByte(Register rd, Register rs) {
+    if (HasZbbExtension()) {
+      sextb(rd, rs);
+      return;
+    }
     slli(rd, rs, xlen - 8);
     srai(rd, rd, xlen - 8);
   }
 
   void SignExtendShort(Register rd, Register rs) {
+    if (HasZbbExtension()) {
+      sexth(rd, rs);
+      return;
+    }
     slli(rd, rs, xlen - 16);
     srai(rd, rd, xlen - 16);
   }

@@ -11,6 +11,7 @@
 
 #include "jit/riscv64/constant/Base-constant-riscv.h"
 #include "jit/riscv64/constant/Constant-riscv-a.h"
+#include "jit/riscv64/constant/Constant-riscv-b.h"
 #include "jit/riscv64/constant/Constant-riscv-c.h"
 #include "jit/riscv64/constant/Constant-riscv-d.h"
 #include "jit/riscv64/constant/Constant-riscv-f.h"
