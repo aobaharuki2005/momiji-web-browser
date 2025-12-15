@@ -57,10 +57,10 @@ use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use crate::composite::{CompositeState, CompositeTileSurface, CompositorInputLayer, CompositorSurfaceTransform, ResolvedExternalSurface};
 use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeFeatures, CompositeSurfaceFormat, ResolvedExternalSurfaceColorData};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation, ClipRadius};
-use crate::composite::TileKind;
+use crate::composite::{CompositeRoundedCorner, TileKind};
 #[cfg(feature = "debugger")]
 use api::debugger::{CompositorDebugInfo, DebuggerTextureContent};
-use crate::segment::SegmentBuilder;
+use crate::segment::{EdgeAaSegmentMask, SegmentBuilder};
 use crate::{debug_colors, CompositorInputConfig, CompositorSurfaceUsage};
 use crate::device::{DepthFunction, Device, DrawTarget, ExternalTexture, GpuFrameId, UploadPBOPool};
 use crate::device::{ReadTarget, ShaderError, Texture, TextureFilter, TextureFlags, TextureSlot, Texel};
@@ -108,6 +108,7 @@ use std::sync::Arc;
 
 use std::{
     cell::RefCell,
+    collections::HashSet,
     collections::VecDeque,
     f32,
     ffi::c_void,
@@ -4082,6 +4083,8 @@ impl Renderer {
 
         // Check tiles handling with partial_present_mode
 
+        let mut opaque_rounded_corners: HashSet<CompositeRoundedCorner> = HashSet::new();
+
         // NOTE: Tiles here are being iterated in front-to-back order by
         //       z-id, due to the sort in composite_state.end_frame()
         for (idx, tile) in composite_state.tiles.iter().enumerate() {
@@ -4141,6 +4144,43 @@ impl Renderer {
                     );
                     segment_builder.build(|segment| {
                         let key = OcclusionItemKey { tile_index: idx, needs_mask: segment.has_mask };
+
+                        let radius = if segment.edge_flags ==
+                            EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::LEFT &&
+                            !clip.radius.top_left.is_empty() {
+                            Some(clip.radius.top_left)
+                        } else if segment.edge_flags ==
+                            EdgeAaSegmentMask::TOP | EdgeAaSegmentMask::RIGHT &&
+                            !clip.radius.top_right.is_empty() {
+                            Some(clip.radius.top_right)
+                        } else if segment.edge_flags ==
+                            EdgeAaSegmentMask::BOTTOM | EdgeAaSegmentMask::LEFT &&
+                            !clip.radius.bottom_left.is_empty() {
+                            Some(clip.radius.bottom_left)
+                        } else if segment.edge_flags ==
+                            EdgeAaSegmentMask::BOTTOM | EdgeAaSegmentMask::RIGHT &&
+                            !clip.radius.bottom_right.is_empty() {
+                            Some(clip.radius.bottom_right)
+                        } else {
+                            None
+                        };
+
+                        if let Some(radius) = radius {
+                            let rounded_corner = CompositeRoundedCorner {
+                                    rect: segment.rect.cast_unit(),
+                                    radius: radius,
+                                    edge_flags: segment.edge_flags,
+                            };
+
+                            // Drop overdraw rounded rect
+                            if opaque_rounded_corners.contains(&rounded_corner) {
+                                return;
+                            }
+                            
+                            if is_opaque {
+                                opaque_rounded_corners.insert(rounded_corner);
+                            }
+                        }
 
                         layer.occlusion.add(
                             &segment.rect.cast_unit(),

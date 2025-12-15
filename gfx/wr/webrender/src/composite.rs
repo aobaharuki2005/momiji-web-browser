@@ -15,11 +15,12 @@ use crate::tile_cache::{TileCacheInstance, TileSurface};
 use crate::tile_cache::TileId;
 use crate::prim_store::DeferredResolve;
 use crate::resource_cache::{ImageRequest, ResourceCache};
+use crate::segment::EdgeAaSegmentMask;
 use crate::util::{extract_inner_rect_safe, Preallocator, ScaleOffset};
 use crate::tile_cache::PictureCacheDebugInfo;
 use crate::device::Device;
 use crate::space::SpaceMapper;
-use std::{ops, u64, os::raw::c_void};
+use std::{ops, u64, os::raw::c_void, hash};
 use std::num::NonZeroUsize;
 
 /*
@@ -619,6 +620,27 @@ pub struct CompositorTransform {
 pub struct CompositorClip {
     pub rect: DeviceRect,
     pub radius: BorderRadius,
+}
+
+#[derive(PartialEq, Debug)]
+pub struct CompositeRoundedCorner {
+    pub rect: LayoutRect,
+    pub radius: LayoutSize,
+    pub edge_flags: EdgeAaSegmentMask,
+}
+
+impl Eq for CompositeRoundedCorner {}
+
+impl hash::Hash for CompositeRoundedCorner {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.rect.min.x.to_bits().hash(state);
+        self.rect.min.y.to_bits().hash(state);
+        self.rect.max.x.to_bits().hash(state);
+        self.rect.max.y.to_bits().hash(state);
+        self.radius.width.to_bits().hash(state);
+        self.radius.height.to_bits().hash(state);
+        self.edge_flags.bits().hash(state);
+    }
 }
 
 /// The list of tiles to be drawn this frame
