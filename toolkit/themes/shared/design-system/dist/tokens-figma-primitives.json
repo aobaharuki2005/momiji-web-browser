@@ -32,6 +32,8 @@
   "size/item/medium": 24,
   "size/item/large": 32,
   "size/item/xlarge": 48,
+  "size/sidebar": 280,
+  "size/sidebar/narrow": 118,
   "space/xxsmall": "0.1335rem",
   "space/xsmall": "0.267rem",
   "space/small": "0.534rem",

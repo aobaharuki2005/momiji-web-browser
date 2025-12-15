@@ -22,12 +22,6 @@
 
   --in-content-border-invalid: light-dark(var(--red-50), rgb(255, 132, 139));
 
-  --in-content-table-background: light-dark(#f8f8fa, rgb(35, 34, 43));
-  --in-content-table-border-color: var(--border-color);
-  --in-content-table-header-background: var(--button-background-color-primary);
-  --in-content-table-header-color: var(--button-text-color-primary);
-  --in-content-sidebar-width: 280px;
-
   --dialog-warning-text-color: light-dark(var(--red-60), var(--red-40));
 
   --blue-40: #45a1ff;
@@ -572,7 +566,7 @@ xul|label[disabled="true"] {
   background-color: initial; /* override the background-color set on all richlistboxes in common.inc.css */
   margin: 70px 0 0;
   border-width: 0;
-  width: var(--in-content-sidebar-width);
+  width: var(--size-sidebar);
   outline: none;
 }
 
@@ -697,8 +691,8 @@ html|*#categories[last-input-type="mouse"] > html|button.category:focus-visible 
 }
 
 @media (max-width: 830px) {
-  :root {
-    --in-content-sidebar-width: 118px;
+  #categories {
+    width: var(--size-sidebar-narrow);
   }
 
   html|*.category:not(.category-no-icon) > html|*.category-name,

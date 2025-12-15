@@ -5,7 +5,7 @@
 :root {
   --addon-icon-size: 32px;
   --main-margin-start: 28px;
-  --sidebar-width: var(--in-content-sidebar-width);
+  --sidebar-width: var(--size-sidebar);
   --z-index-sticky-container: 5;
   --z-index-popup: 10;
 }
@@ -14,7 +14,7 @@
   :root {
     --main-margin-start: 16px;
     /* Maintain a main margin so card shadows don't overlap the sidebar. */
-    --sidebar-width: calc(var(--in-content-sidebar-width) - var(--main-margin-start));
+    --sidebar-width: calc(var(--size-sidebar) - var(--main-margin-start));
   }
 }
 
