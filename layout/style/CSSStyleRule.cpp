@@ -203,10 +203,6 @@ const StyleLockedDeclarationBlock* CSSStyleRule::RawStyle() const {
   return mDecls.mDecls->Raw();
 }
 
-DeclarationBlock& CSSStyleRule::GetDeclarationBlock() const {
-  return *mDecls.mDecls;
-}
-
 void CSSStyleRule::GetSelectorText(nsACString& aSelectorText) {
   Servo_StyleRule_GetSelectorText(mRawRule, &aSelectorText);
 }
@@ -409,7 +405,7 @@ already_AddRefed<nsINodeList> CSSStyleRule::QuerySelectorAll(nsINode& aRoot) {
 
 StylePropertyMap* CSSStyleRule::StyleMap() {
   if (!mStyleMap) {
-    mStyleMap = MakeRefPtr<StylePropertyMap>(this);
+    mStyleMap = MakeRefPtr<StylePropertyMap>(this, /* aComputed */ false);
   }
 
   return mStyleMap;

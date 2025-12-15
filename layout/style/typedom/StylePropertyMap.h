@@ -28,8 +28,7 @@ class Sequence;
 
 class StylePropertyMap final : public StylePropertyMapReadOnly {
  public:
-  StylePropertyMap(Element* aElement, bool aComputed);
-  explicit StylePropertyMap(CSSStyleRule* aRule);
+  StylePropertyMap(nsCOMPtr<nsISupports> aParent, bool aComputed);
 
   JSObject* WrapObject(JSContext*, JS::Handle<JSObject*> aGivenProto) override;
 
