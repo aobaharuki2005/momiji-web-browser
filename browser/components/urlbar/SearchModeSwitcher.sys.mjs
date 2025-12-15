@@ -200,7 +200,12 @@ export class SearchModeSwitcher {
   }
 
   observe(_subject, topic, data) {
-    if (!this.#input.window || this.#input.window.closed) {
+    if (
+      !this.#input.window ||
+      this.#input.window.closed ||
+      // TODO bug 2005783 stop observing when input is disconnected.
+      !this.#input.isConnected
+    ) {
       return;
     }
 
