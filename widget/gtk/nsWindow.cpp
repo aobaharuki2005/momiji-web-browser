@@ -357,7 +357,6 @@ static nsWindow* gFocusWindow = nullptr;
 static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gUseAspectRatio = true;
-bool gUseStableRounding = true;
 static uint32_t gLastTouchID = 0;
 // See Bug 1777269 for details. We don't know if the suspected leave notify
 // event is a correct one when we get it.
@@ -593,10 +592,7 @@ void nsWindow::DispatchResized() {
     return;
   }
 
-  auto clientSize = gUseStableRounding
-                        ? GetClientSize()
-                        : LayoutDeviceIntSize::Round(mClientArea.Size() *
-                                                     GetDesktopToDeviceScale());
+  auto clientSize = GetClientSize();
 
   LOG("nsWindow::DispatchResized() client scaled size [%d, %d]",
       (int)clientSize.width, (int)clientSize.height);
@@ -8808,9 +8804,6 @@ static nsresult initialize_prefs(void) {
   } else {
     gUseAspectRatio = IsGnomeDesktopEnvironment() || IsKdeDesktopEnvironment();
   }
-  // 'Stable' Wayland subsurface rounding algorithm is used by all compositors
-  // except KDE.
-  gUseStableRounding = !IsKdeDesktopEnvironment() || GdkIsX11Display();
   return NS_OK;
 }
 
