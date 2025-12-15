@@ -23,14 +23,13 @@ use crate::print_tree::PrintTreePrinter;
 use crate::resource_cache::ResourceCache;
 use crate::space::SpaceMapper;
 use crate::spatial_tree::SpatialNodeIndex;
-use crate::tile_cache::{TileDescriptor, PrimitiveDescriptor, PrimitiveDependencyIndex};
 use crate::visibility::FrameVisibilityContext;
 use peek_poke::poke_into_vec;
 use std::mem;
 
 pub struct CachedSurface {
-    pub current_descriptor: TileDescriptor,
-    pub prev_descriptor: TileDescriptor,
+    pub current_descriptor: CachedSurfaceDescriptor,
+    pub prev_descriptor: CachedSurfaceDescriptor,
     pub is_valid: bool,
     pub local_valid_rect: PictureBox2D,
     pub local_dirty_rect: PictureRect,
@@ -44,8 +43,8 @@ pub struct CachedSurface {
 impl CachedSurface {
     pub fn new() -> Self {
         CachedSurface {
-            current_descriptor: TileDescriptor::new(),
-            prev_descriptor: TileDescriptor::new(),
+            current_descriptor: CachedSurfaceDescriptor::new(),
+            prev_descriptor: CachedSurfaceDescriptor::new(),
             is_valid: false,
             local_valid_rect: PictureBox2D::zero(),
             local_dirty_rect: PictureRect::zero(),
@@ -378,5 +377,120 @@ impl PrimitiveDependencyInfo {
             clips: smallvec::SmallVec::new(),
             spatial_nodes: smallvec::SmallVec::new(),
         }
+    }
+}
+
+/// Information about a primitive that is a dependency for a cached surface.
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PrimitiveDescriptor {
+    pub prim_uid: ItemUid,
+    pub prim_clip_box: PictureBox2D,
+    // TODO(gw): These two fields could be packed as a u24/u8
+    pub dep_offset: u32,
+    pub dep_count: u32,
+}
+
+impl PartialEq for PrimitiveDescriptor {
+    fn eq(&self, other: &Self) -> bool {
+        const EPSILON: f32 = 0.001;
+
+        if self.prim_uid != other.prim_uid {
+            return false;
+        }
+
+        use euclid::approxeq::ApproxEq;
+        if !self.prim_clip_box.min.x.approx_eq_eps(&other.prim_clip_box.min.x, &EPSILON) {
+            return false;
+        }
+        if !self.prim_clip_box.min.y.approx_eq_eps(&other.prim_clip_box.min.y, &EPSILON) {
+            return false;
+        }
+        if !self.prim_clip_box.max.x.approx_eq_eps(&other.prim_clip_box.max.x, &EPSILON) {
+            return false;
+        }
+        if !self.prim_clip_box.max.y.approx_eq_eps(&other.prim_clip_box.max.y, &EPSILON) {
+            return false;
+        }
+
+        if self.dep_count != other.dep_count {
+            return false;
+        }
+
+        true
+    }
+}
+
+impl PartialEq<PrimitiveDescriptor> for (&ItemUid, &PictureBox2D) {
+    fn eq(&self, other: &PrimitiveDescriptor) -> bool {
+        self.0 == &other.prim_uid && self.1 == &other.prim_clip_box
+    }
+}
+
+/// An index into the prims array in a TileDescriptor.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct PrimitiveDependencyIndex(pub u32);
+
+/// Uniquely describes the content of this cached surface, in a way that can be
+/// (reasonably) efficiently hashed and compared.
+#[cfg_attr(any(feature="capture",feature="replay"), derive(Clone))]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct CachedSurfaceDescriptor {
+    /// List of primitive instance unique identifiers. The uid is guaranteed
+    /// to uniquely describe the content of the primitive template, while
+    /// the other parameters describe the clip chain and instance params.
+    pub prims: Vec<PrimitiveDescriptor>,
+
+    /// Picture space rect that contains valid pixels region of this tile.
+    pub local_valid_rect: PictureRect,
+
+    /// The last frame this tile had its dependencies updated (dependency updating is
+    /// skipped if a tile is off-screen).
+    pub last_updated_frame_id: FrameId,
+
+    /// Packed per-prim dependency information
+    pub dep_data: Vec<u8>,
+}
+
+impl CachedSurfaceDescriptor {
+    pub fn new() -> Self {
+        CachedSurfaceDescriptor {
+            local_valid_rect: PictureRect::zero(),
+            dep_data: Vec::new(),
+            prims: Vec::new(),
+            last_updated_frame_id: FrameId::INVALID,
+        }
+    }
+
+    /// Print debug information about this tile descriptor to a tree printer.
+    pub fn print(&self, pt: &mut dyn crate::print_tree::PrintTreePrinter) {
+        pt.new_level("current_descriptor".to_string());
+
+        pt.new_level("prims".to_string());
+        for prim in &self.prims {
+            pt.new_level(format!("prim uid={}", prim.prim_uid.get_uid()));
+            pt.add_item(format!("clip: p0={},{} p1={},{}",
+                prim.prim_clip_box.min.x,
+                prim.prim_clip_box.min.y,
+                prim.prim_clip_box.max.x,
+                prim.prim_clip_box.max.y,
+            ));
+            pt.end_level();
+        }
+        pt.end_level();
+
+        pt.end_level();
+    }
+
+    /// Clear the dependency information for a tile, when the dependencies
+    /// are being rebuilt.
+    pub fn clear(&mut self) {
+        self.local_valid_rect = PictureRect::zero();
+        self.prims.clear();
+        self.dep_data.clear();
     }
 }
