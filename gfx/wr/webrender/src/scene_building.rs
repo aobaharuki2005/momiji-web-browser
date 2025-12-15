@@ -78,7 +78,8 @@ use crate::prim_store::gradient::{
 };
 use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::{LineDecoration, LineDecorationCacheKey, get_line_decoration_size};
-use crate::prim_store::picture::{Picture, PictureCompositeKey, PictureKey};
+use crate::prim_store::picture::{Picture, PictureKey};
+use crate::picture_composite_mode::PictureCompositeKey;
 use crate::prim_store::text_run::TextRun;
 use crate::render_backend::SceneView;
 use crate::resource_cache::ImageRequest;

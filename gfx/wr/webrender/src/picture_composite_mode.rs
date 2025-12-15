@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ColorF, SnapshotInfo};
+use api::{ColorF, ColorU, SnapshotInfo, PropertyBinding, PropertyBindingId};
 use api::units::*;
 use crate::prim_store::image::AdjustedImageSource;
 use crate::{render_task_graph::RenderTaskGraphBuilder, renderer::GpuBufferBuilderF};
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
 use crate::gpu_types::{BlurEdgeMode, UvRectKind};
+use crate::intern::ItemUid;
 use crate::render_backend::DataStores;
 use crate::render_task_graph::RenderTaskId;
 use crate::render_target::RenderTargetKind;
@@ -19,7 +20,7 @@ use crate::space::SpaceMapper;
 use crate::spatial_tree::SpatialTree;
 use crate::surface::{SurfaceDescriptor, SurfaceInfo, calculate_screen_uv};
 use crate::surface::SurfaceIndex;
-use crate::svg_filter::get_coverage_source_svgfe;
+use crate::svg_filter::{get_coverage_source_svgfe, FilterGraphNodeKey, FilterGraphOpKey};
 use crate::util::MaxRect;
 use smallvec::SmallVec;
 use crate::internal_types::Filter;
@@ -31,6 +32,7 @@ use crate::filterdata::FilterDataHandle;
 use crate::tile_cache::SliceId;
 use crate::svg_filter::{FilterGraphNode, FilterGraphOp, get_coverage_target_svgfe};
 use crate::picture::BlitReason;
+use crate::prim_store::VectorKey;
 #[cfg(feature = "capture")]
 use serde::Serialize;
 
@@ -1007,5 +1009,144 @@ pub fn calculate_uv_rect_kind(
         top_right,
         bottom_left,
         bottom_right,
+    }
+}
+
+/// Represents a hashable description of how a picture primitive
+/// will be composited into its parent.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Clone, MallocSizeOf, PartialEq, Hash, Eq)]
+pub enum PictureCompositeKey {
+    // No visual compositing effect
+    Identity,
+
+    // FilterOp
+    Blur(Au, Au, bool, BlurEdgeMode),
+    Brightness(Au),
+    Contrast(Au),
+    Grayscale(Au),
+    HueRotate(Au),
+    Invert(Au),
+    Opacity(Au),
+    OpacityBinding(PropertyBindingId, Au),
+    Saturate(Au),
+    Sepia(Au),
+    DropShadows(Vec<(VectorKey, Au, ColorU)>),
+    ColorMatrix([Au; 20]),
+    SrgbToLinear,
+    LinearToSrgb,
+    ComponentTransfer(ItemUid),
+    Flood(ColorU),
+    SVGFEGraph(Vec<(FilterGraphNodeKey, FilterGraphOpKey)>),
+
+    // MixBlendMode
+    Multiply,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    ColorBurn,
+    HardLight,
+    SoftLight,
+    Difference,
+    Exclusion,
+    Hue,
+    Saturation,
+    Color,
+    Luminosity,
+    PlusLighter,
+}
+
+impl From<Option<PictureCompositeMode>> for PictureCompositeKey {
+    fn from(mode: Option<PictureCompositeMode>) -> Self {
+        match mode {
+            Some(PictureCompositeMode::MixBlend(mode)) => {
+                match mode {
+                    MixBlendMode::Normal => PictureCompositeKey::Identity,
+                    MixBlendMode::Multiply => PictureCompositeKey::Multiply,
+                    MixBlendMode::Screen => PictureCompositeKey::Screen,
+                    MixBlendMode::Overlay => PictureCompositeKey::Overlay,
+                    MixBlendMode::Darken => PictureCompositeKey::Darken,
+                    MixBlendMode::Lighten => PictureCompositeKey::Lighten,
+                    MixBlendMode::ColorDodge => PictureCompositeKey::ColorDodge,
+                    MixBlendMode::ColorBurn => PictureCompositeKey::ColorBurn,
+                    MixBlendMode::HardLight => PictureCompositeKey::HardLight,
+                    MixBlendMode::SoftLight => PictureCompositeKey::SoftLight,
+                    MixBlendMode::Difference => PictureCompositeKey::Difference,
+                    MixBlendMode::Exclusion => PictureCompositeKey::Exclusion,
+                    MixBlendMode::Hue => PictureCompositeKey::Hue,
+                    MixBlendMode::Saturation => PictureCompositeKey::Saturation,
+                    MixBlendMode::Color => PictureCompositeKey::Color,
+                    MixBlendMode::Luminosity => PictureCompositeKey::Luminosity,
+                    MixBlendMode::PlusLighter => PictureCompositeKey::PlusLighter,
+                }
+            }
+            Some(PictureCompositeMode::Filter(op)) => {
+                match op {
+                    Filter::Blur { width, height, should_inflate, edge_mode } => {
+                        PictureCompositeKey::Blur(
+                            Au::from_f32_px(width),
+                            Au::from_f32_px(height),
+                            should_inflate,
+                            edge_mode,
+                        )
+                    }
+                    Filter::Brightness(value) => PictureCompositeKey::Brightness(Au::from_f32_px(value)),
+                    Filter::Contrast(value) => PictureCompositeKey::Contrast(Au::from_f32_px(value)),
+                    Filter::Grayscale(value) => PictureCompositeKey::Grayscale(Au::from_f32_px(value)),
+                    Filter::HueRotate(value) => PictureCompositeKey::HueRotate(Au::from_f32_px(value)),
+                    Filter::Invert(value) => PictureCompositeKey::Invert(Au::from_f32_px(value)),
+                    Filter::Saturate(value) => PictureCompositeKey::Saturate(Au::from_f32_px(value)),
+                    Filter::Sepia(value) => PictureCompositeKey::Sepia(Au::from_f32_px(value)),
+                    Filter::SrgbToLinear => PictureCompositeKey::SrgbToLinear,
+                    Filter::LinearToSrgb => PictureCompositeKey::LinearToSrgb,
+                    Filter::Identity => PictureCompositeKey::Identity,
+                    Filter::DropShadows(ref shadows) => {
+                        PictureCompositeKey::DropShadows(
+                            shadows.iter().map(|shadow| {
+                                (shadow.offset.into(), Au::from_f32_px(shadow.blur_radius), shadow.color.into())
+                            }).collect()
+                        )
+                    }
+                    Filter::Opacity(binding, _) => {
+                        match binding {
+                            PropertyBinding::Value(value) => {
+                                PictureCompositeKey::Opacity(Au::from_f32_px(value))
+                            }
+                            PropertyBinding::Binding(key, default) => {
+                                PictureCompositeKey::OpacityBinding(key.id, Au::from_f32_px(default))
+                            }
+                        }
+                    }
+                    Filter::ColorMatrix(values) => {
+                        let mut quantized_values: [Au; 20] = [Au(0); 20];
+                        for (value, result) in values.iter().zip(quantized_values.iter_mut()) {
+                            *result = Au::from_f32_px(*value);
+                        }
+                        PictureCompositeKey::ColorMatrix(quantized_values)
+                    }
+                    Filter::ComponentTransfer => unreachable!(),
+                    Filter::Flood(color) => PictureCompositeKey::Flood(color.into()),
+                    Filter::SVGGraphNode(_node, _op) => unreachable!(),
+                }
+            }
+            Some(PictureCompositeMode::ComponentTransferFilter(handle)) => {
+                PictureCompositeKey::ComponentTransfer(handle.uid())
+            }
+            Some(PictureCompositeMode::SVGFEGraph(filter_nodes)) => {
+                PictureCompositeKey::SVGFEGraph(
+                    filter_nodes.into_iter().map(|(node, op)| {
+                        (node.into(), op.into())
+                    }).collect())
+            }
+            Some(PictureCompositeMode::Blit(_)) |
+            Some(PictureCompositeMode::TileCache { .. }) |
+            Some(PictureCompositeMode::IntermediateSurface) |
+            None => {
+                PictureCompositeKey::Identity
+            }
+        }
     }
 }
