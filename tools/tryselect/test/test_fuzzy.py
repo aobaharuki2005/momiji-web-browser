@@ -71,7 +71,7 @@ def test_query_paths_no_chunks(run_mach, capfd, show_chunk_numbers):
 
 
 @pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
-@pytest.mark.parametrize("variant", ["", "spi-nw"])
+@pytest.mark.parametrize("variant", [""])
 def test_query_paths_variants(monkeypatch, run_mach, capfd, variant):
     # Freeze time to avoid test failures due to an expired variant
     datetime_mock = MagicMock(wraps=datetime.datetime)
@@ -104,7 +104,6 @@ def test_query_paths_variants(monkeypatch, run_mach, capfd, variant):
         expected = ["test-linux2404-64/debug-mochitest-browser-chrome%s-*" % variant]
     else:
         expected = [
-            "test-linux2404-64/debug-mochitest-browser-chrome-spi-nw-*",
             "test-linux2404-64/debug-mochitest-browser-chrome-swr-*",
         ]
 
