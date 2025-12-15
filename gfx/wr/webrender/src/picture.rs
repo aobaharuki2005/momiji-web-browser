@@ -137,10 +137,6 @@ use crate::tile_cache::{TileKey, SubSliceIndex};
 use crate::invalidation::InvalidationReason;
 use crate::tile_cache::MAX_SURFACE_SIZE;
 
-pub use crate::invalidation::DirtyRegion;
-pub use crate::invalidation::compare::ImageDependency;
-pub use crate::invalidation::quadtree::{TileNode, TileNodeKind};
-
 pub use crate::picture_composite_mode::{PictureCompositeMode, prepare_composite_mode};
 
 // Maximum blur radius for blur filter (different than box-shadow blur).

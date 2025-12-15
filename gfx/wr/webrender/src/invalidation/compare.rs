@@ -10,7 +10,7 @@
 
 use api::{ImageKey, PropertyBindingId, ColorU};
 use euclid::approxeq::ApproxEq;
-use crate::PrimitiveCompareResult;
+use crate::invalidation::PrimitiveCompareResult;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex, CoordinateSpaceMapping};
 use crate::internal_types::{FastHashMap, FastHashSet, FrameId};
 use crate::intern::ItemUid;

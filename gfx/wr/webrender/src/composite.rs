@@ -6,11 +6,12 @@ use api::{BorderRadius, ColorF, ExternalImageId, ImageBufferKind, ImageKey, Imag
 use api::units::*;
 use api::ColorDepth;
 use crate::image_source::resolve_image;
+use crate::picture::ResolvedSurfaceTexture;
 use crate::renderer::GpuBufferBuilderF;
 use euclid::Box2D;
 use crate::gpu_types::{ZBufferId, ZBufferIdGenerator};
 use crate::internal_types::{FrameAllocator, FrameMemory, FrameVec, TextureSource};
-use crate::picture::{ImageDependency, ResolvedSurfaceTexture};
+use crate::invalidation::compare::ImageDependency;
 use crate::tile_cache::{TileCacheInstance, TileSurface};
 use crate::tile_cache::TileId;
 use crate::prim_store::DeferredResolve;
