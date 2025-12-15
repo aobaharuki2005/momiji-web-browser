@@ -3607,10 +3607,6 @@ class Document : public nsINode,
   // https://html.spec.whatwg.org/multipage/popover.html#topmost-auto-popover
   Element* GetTopmostAutoPopover() const;
 
-  // Adds/removes an element to/from the auto popover list.
-  void AddToAutoPopoverList(Element&);
-  void RemoveFromAutoPopoverList(Element&);
-
   void AddPopoverToTopLayer(Element&);
   void RemovePopoverFromTopLayer(Element&);
 
