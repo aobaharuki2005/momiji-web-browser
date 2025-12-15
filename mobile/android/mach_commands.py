@@ -270,6 +270,39 @@ def android_install_fenix(command_context, args):
     return 0
 
 
+@SubCommand("android", "install-fenix-nightly", """Install fenix Nightly""")
+@CommandArgument("args", nargs=argparse.REMAINDER)
+def android_install_fenix_nightly(command_context, args):
+    gradle(
+        command_context,
+        ["fenix:installNightly"] + args,
+        verbose=True,
+    )
+    return 0
+
+
+@SubCommand("android", "install-fenix-beta", """Install fenix Beta""")
+@CommandArgument("args", nargs=argparse.REMAINDER)
+def android_install_fenix_beta(command_context, args):
+    gradle(
+        command_context,
+        ["fenix:installBeta"] + args,
+        verbose=True,
+    )
+    return 0
+
+
+@SubCommand("android", "install-fenix-release", """Install fenix Release""")
+@CommandArgument("args", nargs=argparse.REMAINDER)
+def android_install_fenix_release(command_context, args):
+    gradle(
+        command_context,
+        ["fenix:installRelease"] + args,
+        verbose=True,
+    )
+    return 0
+
+
 @SubCommand("android", "install-focus", """Install focus """)
 @CommandArgument("args", nargs=argparse.REMAINDER)
 def android_install_focus(command_context, args):
@@ -290,17 +323,6 @@ def android_install_geckoview_test_runner(command_context, args):
         command_context,
         command_context.substs["GRADLE_ANDROID_INSTALL_GECKOVIEW_TEST_RUNNER_TASKS"]
         + args,
-        verbose=True,
-    )
-    return 0
-
-
-@SubCommand("android", "installFenixRelease", """Install fenix Release""")
-@CommandArgument("args", nargs=argparse.REMAINDER)
-def android_install_fenix_release(command_context, args):
-    gradle(
-        command_context,
-        ["-p", "mobile/android/fenix", "installRelease"] + args,
         verbose=True,
     )
     return 0
