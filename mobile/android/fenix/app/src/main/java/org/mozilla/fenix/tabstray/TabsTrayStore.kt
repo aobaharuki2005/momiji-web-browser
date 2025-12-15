@@ -13,6 +13,8 @@ import mozilla.components.lib.state.Store
 import org.mozilla.fenix.tabstray.navigation.TabManagerNavDestination
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 
+private const val DEFAULT_SYNCED_TABS_EXPANDED_STATE = true
+
 /**
  * Value type that represents the state of the tabs tray.
  *
@@ -28,6 +30,7 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
  * @property syncing Whether the Synced Tabs feature should fetch the latest tabs from paired devices.
  * @property selectedTabId The ID of the currently selected (active) tab.
  * @property backStack The navigation history of the Tab Manager feature.
+ * @property expandedSyncedTabs The list of expansion states for the syncedTabs.
  */
 data class TabsTrayState(
     val selectedPage: Page = Page.NormalTabs,
@@ -40,6 +43,7 @@ data class TabsTrayState(
     val syncing: Boolean = false,
     val selectedTabId: String? = null,
     val backStack: List<TabManagerNavDestination> = listOf(TabManagerNavDestination.Root),
+    val expandedSyncedTabs: List<Boolean> = emptyList(),
 ) : State {
 
     /**
@@ -228,6 +232,13 @@ sealed class TabsTrayAction : Action {
     data class UpdateSelectedTabId(val tabId: String?) : TabsTrayAction()
 
     /**
+     * Expands or collapses the header on the synced tabs page.
+     *
+     * @property index The index of the header.
+     */
+    data class SyncedTabsHeaderToggled(val index: Int) : TabsTrayAction()
+
+    /**
      * [TabsTrayAction] fired when the tab auto close dialog is shown.
      */
     object TabAutoCloseDialogShown : TabsTrayAction()
@@ -309,8 +320,7 @@ internal object TabsTrayReducer {
                 state.copy(normalTabs = action.tabs)
             is TabsTrayAction.UpdatePrivateTabs ->
                 state.copy(privateTabs = action.tabs)
-            is TabsTrayAction.UpdateSyncedTabs ->
-                state.copy(syncedTabs = action.tabs)
+            is TabsTrayAction.UpdateSyncedTabs -> handleSyncedTabUpdate(state, action)
             is TabsTrayAction.UpdateSelectedTabId ->
                 state.copy(selectedTabId = action.tabId)
             is TabsTrayAction.TabAutoCloseDialogShown -> state
@@ -328,8 +338,63 @@ internal object TabsTrayReducer {
                     else -> state.copy(backStack = state.backStack.dropLast(1))
                 }
             }
+            is TabsTrayAction.SyncedTabsHeaderToggled -> handleSyncedTabHeaderToggle(state, action)
         }
     }
+}
+
+/**
+ * Updates the synced tabs list.  Also updates the expansion state of the tabs.
+ * If items are identical in an existing list, their selection state will be preserved
+ * (pressing sync tab on an already synced tab will not reset your expansion selections).
+ * If the tab list is updated or no tabs existed previously, selections will be the default value.
+ *
+ * @param state the existing state object
+ * @param action the action containing updated tabs.
+ */
+private fun handleSyncedTabUpdate(state: TabsTrayState, action: TabsTrayAction.UpdateSyncedTabs): TabsTrayState {
+    return if (state.syncedTabs.isNotEmpty() && action.tabs.isNotEmpty()) {
+        state.copy(
+            syncedTabs = action.tabs,
+            expandedSyncedTabs = action.tabs.mapIndexed { index, item ->
+                if (state.syncedTabs[index] == item) {
+                    state.expandedSyncedTabs[index]
+                } else {
+                    DEFAULT_SYNCED_TABS_EXPANDED_STATE
+                }
+            },
+        )
+    } else if (action.tabs.isNotEmpty()) {
+        state.copy(
+            syncedTabs = action.tabs,
+            expandedSyncedTabs =
+            action.tabs.map { DEFAULT_SYNCED_TABS_EXPANDED_STATE },
+        )
+    } else {
+        state.copy(syncedTabs = action.tabs, expandedSyncedTabs = emptyList())
+    }
+}
+
+/**
+ * When a synced tab header's expansion is toggled, that item should be expanded or collapsed.
+ * The rest of the list should be unchanged.
+ *
+ * @param state the existing state object
+ * @param action the action containing the index of the toggled header.
+ */
+private fun handleSyncedTabHeaderToggle(
+    state: TabsTrayState,
+    action: TabsTrayAction.SyncedTabsHeaderToggled,
+): TabsTrayState {
+    return state.copy(
+        expandedSyncedTabs = state.expandedSyncedTabs.mapIndexed { index, isExpanded ->
+            if (index == action.index) {
+                !isExpanded
+            } else {
+                isExpanded
+            }
+        },
+    )
 }
 
 /**
