@@ -9,6 +9,7 @@
 #include "ErrorList.h"
 #include "WordMovementType.h"
 #include "mozilla/CaretAssociationHint.h"
+#include "mozilla/ContentIterator.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
@@ -408,6 +409,250 @@ nsIFrame* SelectionMovementUtils::GetFrameForNodeOffset(
     *aReturnOffset = offsetInFrameContent;
   }
   return returnFrame;
+}
+
+// static
+RawRangeBoundary SelectionMovementUtils::GetFirstVisiblePointAtLeaf(
+    const AbstractRange& aRange) {
+  MOZ_ASSERT(aRange.IsPositioned());
+  MOZ_ASSERT_IF(aRange.IsStaticRange(), aRange.AsStaticRange()->IsValid());
+
+  // Currently, this is designed for non-collapsed range because this tries to
+  // return a point in aRange.  Therefore, if we need to return a nearest point
+  // even outside aRange, we should add another utility method for making it
+  // accept the outer range.
+  MOZ_ASSERT(!aRange.Collapsed());
+
+  // The result should be a good point to put a UI to show something about the
+  // start boundary of aRange.  Therefore, we should find a content which is
+  // visible or first unselectable one.
+
+  // FIXME: ContentIterator does not support iterating content across shadow DOM
+  // boundaries.  We should improve it and here support it as an option.
+
+  // If the start boundary is in a visible and selectable `Text`, let's return
+  // the start boundary as-is.
+  if (Text* const text = Text::FromNode(aRange.GetStartContainer())) {
+    nsIFrame* const textFrame = text->GetPrimaryFrame();
+    if (textFrame && textFrame->IsSelectable()) {
+      return aRange.StartRef().AsRaw();
+    }
+  }
+
+  // Iterate start of each node in the range so that the following loop checks
+  // containers first, then, inner containers and leaf nodes.
+  UnsafePreContentIterator iter;
+  if (aRange.IsDynamicRange()) {
+    if (NS_WARN_IF(NS_FAILED(iter.InitWithoutValidatingPoints(
+            aRange.StartRef().AsRaw(), aRange.EndRef().AsRaw())))) {
+      return {nullptr, nullptr};
+    }
+  } else {
+    if (NS_WARN_IF(NS_FAILED(
+            iter.Init(aRange.StartRef().AsRaw(), aRange.EndRef().AsRaw())))) {
+      return {nullptr, nullptr};
+    }
+  }
+
+  // We need to ignore unselectable nodes if the range started from an
+  // unselectable node, for example, if starting from the document start but
+  // only in <dialog> which is shown as a modal one is selectable, we want to
+  // treat the visible selection starts from the start of the first visible
+  // thing in the <dialog>.
+  // Additionally, let's stop when we find first unselectable element in a
+  // selectable node.  Then, the caller can show something at the end edge of
+  // the unselectable element rather than the leaf to make it clear that the
+  // selection range starts before the unselectable element.
+  bool foundSelectableContainer = [&]() {
+    nsIContent* const startContainer =
+        nsIContent::FromNode(aRange.GetStartContainer());
+    return startContainer && startContainer->IsSelectable();
+  }();
+  for (iter.First(); !iter.IsDone(); iter.Next()) {
+    nsIContent* const content =
+        nsIContent::FromNodeOrNull(iter.GetCurrentNode());
+    if (MOZ_UNLIKELY(!content)) {
+      break;
+    }
+    nsIFrame* const primaryFrame = content->GetPrimaryFrame();
+    // If the content does not have any layout information, let's continue.
+    if (!primaryFrame) {
+      continue;
+    }
+
+    // FYI: We don't need to skip invisible <br> at scanning start of visible
+    // thing like what we're doing in GetVisibleRangeEnd() because if we reached
+    // it, the selection range starts from end of the line so that putting UI
+    // around it is reasonable.
+
+    // If the frame is unselectable, we need to stop scanning now if we're
+    // scanning in a selectable range.
+    if (!primaryFrame->IsSelectable()) {
+      // If we have not found a selectable content yet (this is the case when
+      // only a part of the document is selectable like the <dialog> case
+      // explained above), we should just ignore the unselectable content until
+      // we find first selectable element.  Then, the caller can show something
+      // before the first child of the first selectable container in the range.
+      if (!foundSelectableContainer) {
+        continue;
+      }
+      // If we have already found a selectable content and now we reached an
+      // unselectable element, we should return the point of the unselectable
+      // element.  Then, the caller can show something at the start edge of the
+      // unselectable element to show users that the range contains the
+      // unselectable element.
+      return {content->GetParentNode(), content->GetPreviousSibling()};
+    }
+    // We found a visible (and maybe selectable) Text, return the start of it.
+    if (content->IsText()) {
+      return {content, 0u};
+    }
+    // We found a replaced element such as <br>, <img>, form widget return the
+    // point at the content.
+    if (primaryFrame->IsReplaced()) {
+      return {content->GetParentNode(), content->GetPreviousSibling()};
+    }
+    // <button> is a special case, whose frame is not treated as a replaced
+    // element, but we don't want to shrink the range into it.
+    if (content->IsHTMLElement(nsGkAtoms::button)) {
+      return {content->GetParentNode(), content->GetPreviousSibling()};
+    }
+    // We found a leaf node like <span></span>.  Return start of it.
+    if (!content->HasChildren()) {
+      return {content, 0u};
+    }
+    foundSelectableContainer = true;
+  }
+  // If there is no visible and selectable things but the start container is
+  // selectable, return the original point as is.
+  if (foundSelectableContainer) {
+    return aRange.StartRef().AsRaw();
+  }
+  // If the range is completely invisible, return unset boundary.
+  return {nullptr, nullptr};
+}
+
+// static
+RawRangeBoundary SelectionMovementUtils::GetLastVisiblePointAtLeaf(
+    const AbstractRange& aRange) {
+  MOZ_ASSERT(aRange.IsPositioned());
+  MOZ_ASSERT_IF(aRange.IsStaticRange(), aRange.AsStaticRange()->IsValid());
+
+  // Currently, this is designed for non-collapsed range because this tries to
+  // return a point in aRange.  Therefore, if we need to return a nearest point
+  // even outside aRange, we should add another utility method for making it
+  // accept the outer range.
+  MOZ_ASSERT(!aRange.Collapsed());
+
+  // The result should be a good point to put a UI to show something about the
+  // end boundary of aRange.  Therefore, we should find a leaf content which is
+  // visible or first unselectable one.
+
+  // FIXME: ContentIterator does not support iterating content across shadow DOM
+  // boundaries.  We should improve it and here support it as an option.
+
+  // If the end boundary is in a visible and selectable `Text`, let's return the
+  // end boundary as-is.
+  if (Text* const text = Text::FromNode(aRange.GetEndContainer())) {
+    nsIFrame* const textFrame = text->GetPrimaryFrame();
+    if (textFrame && textFrame->IsSelectable()) {
+      return aRange.EndRef().AsRaw();
+    }
+  }
+
+  // Iterate end of each node in the range so that the following loop checks
+  // containers first, then, inner containers and leaf nodes.
+  UnsafePostContentIterator iter;
+  if (aRange.IsDynamicRange()) {
+    if (NS_WARN_IF(NS_FAILED(iter.InitWithoutValidatingPoints(
+            aRange.StartRef().AsRaw(), aRange.EndRef().AsRaw())))) {
+      return {nullptr, nullptr};
+    }
+  } else {
+    if (NS_WARN_IF(NS_FAILED(
+            iter.Init(aRange.StartRef().AsRaw(), aRange.EndRef().AsRaw())))) {
+      return {nullptr, nullptr};
+    }
+  }
+
+  // We need to ignore unselectable nodes if the range ends in an unselectable
+  // node, for example, if ending at the document end but only in <dialog> which
+  // is shown as a modal one, is selectable, we want to treat the visible
+  // selection ends at the end of the last visible thing in the <dialog>.
+  // Additionally, let's stop when we find first unselectable element in a
+  // selectable node.  Then, the caller can show something at the end edge of
+  // the unselectable element rather than the leaf to make it clear that the
+  // selection range ends are the unselectable element.
+  bool foundSelectableContainer = [&]() {
+    nsIContent* const endContainer =
+        nsIContent::FromNode(aRange.GetEndContainer());
+    return endContainer && endContainer->IsSelectable();
+  }();
+  for (iter.Last(); !iter.IsDone(); iter.Prev()) {
+    nsIContent* const content =
+        nsIContent::FromNodeOrNull(iter.GetCurrentNode());
+    if (!content) {
+      break;
+    }
+    nsIFrame* const primaryFrame = content->GetPrimaryFrame();
+    // If the content does not have any layout information, let's continue.
+    if (!primaryFrame) {
+      continue;
+    }
+    // If we reached an invisible <br>, we should skip it because
+    // AccessibleCaretManager wants to put the caret for end boundary before the
+    // <br> instead of at the end edge of the block.
+    if (nsLayoutUtils::IsInvisibleBreak(content)) {
+      if (primaryFrame->IsSelectable()) {
+        foundSelectableContainer = true;
+      }
+      continue;
+    }
+    // If the frame is unselectable, we need to stop scanning now if we're
+    // scanning in a selectable range.
+    if (!primaryFrame->IsSelectable()) {
+      // If we have not found a selectable content yet (this is the case when
+      // only a part of the document is selectable like the <dialog> case
+      // explained above), we should just ignore the unselectable content until
+      // we find first selectable element.  Then, the caller can show something
+      // after the last child of the last selectable container in the range.
+      if (!foundSelectableContainer) {
+        continue;
+      }
+      // If we have already found a selectable content and now we reached an
+      // unselectable element, we should return the point after the unselectable
+      // element.  Then, the caller can show something at the end edge of the
+      // unselectable element to show users that the range contains the
+      // unselectable element.
+      return {content->GetParentNode(), content};
+    }
+    // We found a visible (and maybe selectable) Text, return the end of it.
+    if (Text* const text = Text::FromNode(content)) {
+      return {text, text->TextDataLength()};
+    }
+    // We found a replaced element such as <br>, <img>, form widget return the
+    // point after the content.
+    if (primaryFrame->IsReplaced()) {
+      return {content->GetParentNode(), content};
+    }
+    // <button> is a special case, whose frame is not treated as a replaced
+    // element, but we don't want to shrink the range into it.
+    if (content->IsHTMLElement(nsGkAtoms::button)) {
+      return {content->GetParentNode(), content};
+    }
+    // We found a leaf node like <span></span>.  Return end of it.
+    if (!content->HasChildren()) {
+      return {content, 0u};
+    }
+    foundSelectableContainer = true;
+  }
+  // If there is no visible and selectable things but the end container is
+  // selectable, return the original point as is.
+  if (foundSelectableContainer) {
+    return aRange.EndRef().AsRaw();
+  }
+  // If the range is completely invisible, return unset boundary.
+  return {nullptr, nullptr};
 }
 
 /**
