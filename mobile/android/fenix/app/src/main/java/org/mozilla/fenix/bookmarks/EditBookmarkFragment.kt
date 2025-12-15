@@ -19,7 +19,6 @@ import mozilla.components.compose.browser.toolbar.store.BrowserToolbarState
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarStore
 import mozilla.components.compose.browser.toolbar.store.Mode
 import mozilla.components.lib.state.helpers.StoreProvider.Companion.fragmentStore
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.accounts.FenixFxAEntryPoint
 import org.mozilla.fenix.components.appstate.AppAction
@@ -48,7 +47,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
         return ComposeView(requireContext()).apply {
                 setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
                 val buildStore = { composeNavController: NavHostController ->
-                    val homeActivity = (requireActivity() as HomeActivity)
+                    val appStore = requireComponents.appStore
                     val navController = findNavController()
                     val isSignedIntoSync = requireComponents
                         .backgroundServices.accountManager.authenticatedAccount() != null
@@ -70,7 +69,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                                     openBookmarksInNewTab = if (settings().enableHomepageAsNewTab) {
                                         false
                                     } else {
-                                        homeActivity.browsingModeManager.mode.isPrivate
+                                        appStore.state.mode.isPrivate
                                     },
                                     getNavController = { composeNavController },
                                     exitBookmarks = { navController.popBackStack() },
@@ -103,7 +102,7 @@ class EditBookmarkFragment : Fragment(R.layout.fragment_edit_bookmark) {
                                         ) ?: ""
                                     },
                                     getBrowsingMode = {
-                                        homeActivity.browsingModeManager.mode
+                                        appStore.state.mode
                                     },
                                     lastSavedFolderCache = context.settings().lastSavedFolderCache,
                                     saveBookmarkSortOrder = {},
