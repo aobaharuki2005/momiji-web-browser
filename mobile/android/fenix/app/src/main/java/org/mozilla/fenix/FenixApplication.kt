@@ -280,6 +280,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                     settings().hasMadeMarketingTelemetrySelection,
                 isDailyUsagePingEnabled = settings().isDailyUsagePingEnabled,
             )
+        } else {
+            components.distributionIdManager.startAdjustIfSkippingConsentScreen()
         }
         setupPush()
 
