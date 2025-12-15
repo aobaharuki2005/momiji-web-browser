@@ -471,35 +471,18 @@ Result<Ok, mozilla::ipc::LaunchError> SandboxBroker::LaunchApp(
         "Setting the reduced set of flags should always succeed");
   }
 
-  sandbox::MitigationFlags delayedMitigations =
-      config->GetDelayedProcessMitigations();
-
-  // Only prefer loading from the system directory as a delayed mitigation, and
-  // always enable this delayed mitigation. This means that:
-  //  - if the launcher or browser process chose to apply the mitigation, child
-  //    processes will have it enabled at startup automatically anyway;
-  //  - even if the launcher or browser process chose not to apply the
-  //    mitigation, at least sandboxed child processes will run with the
-  //    mitigation once the sandbox starts (by this time, they will already
-  //    have loaded the Visual C++ runtime DLLs, so these are no longer a
-  //    concern; also, although some sandboxed child processes can start new
-  //    processes, they never start new *Firefox* processes).
-  // Refer to EnablePreferLoadFromSystem32IfCompatible for more details.
-  MOZ_ASSERT(!(config->GetProcessMitigations() &
-               sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32));
-  delayedMitigations |= sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
-
   // Bug 1936749: MpDetours.dll injection is incompatible with ACG.
   constexpr sandbox::MitigationFlags kDynamicCodeFlags =
       sandbox::MITIGATION_DYNAMIC_CODE_DISABLE |
       sandbox::MITIGATION_DYNAMIC_CODE_DISABLE_WITH_OPT_OUT;
+  sandbox::MitigationFlags delayedMitigations =
+      config->GetDelayedProcessMitigations();
   if ((delayedMitigations & kDynamicCodeFlags) &&
       ::GetModuleHandleW(L"MpDetours.dll")) {
     delayedMitigations &= ~kDynamicCodeFlags;
+    SANDBOX_SUCCEED_OR_CRASH(
+        config->SetDelayedProcessMitigations(delayedMitigations));
   }
-
-  SANDBOX_SUCCEED_OR_CRASH(
-      config->SetDelayedProcessMitigations(delayedMitigations));
 
   EnsureAppLockerAccess(config);
 
@@ -1125,7 +1108,8 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       sandbox::MITIGATION_DEP | sandbox::MITIGATION_EXTENSION_POINT_DISABLE |
       sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
-      sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
+      sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
+      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
 #if defined(_M_ARM64)
   // Disable CFG on older versions of ARM64 Windows to avoid a crash in COM.
@@ -1446,7 +1430,8 @@ bool SandboxBroker::SetSecurityLevelForRDDProcess() {
       sandbox::MITIGATION_NONSYSTEM_FONT_DISABLE |
       sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
-      sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
+      sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
+      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
   if (StaticPrefs::security_sandbox_rdd_shadow_stack_enabled()) {
     mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
@@ -1529,7 +1514,8 @@ bool SandboxBroker::SetSecurityLevelForSocketProcess() {
       sandbox::MITIGATION_NONSYSTEM_FONT_DISABLE |
       sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
-      sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
+      sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
+      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32;
 
   if (StaticPrefs::security_sandbox_socket_shadow_stack_enabled()) {
     mitigations |= sandbox::MITIGATION_CET_COMPAT_MODE;
@@ -1601,6 +1587,7 @@ struct UtilitySandboxProps {
       sandbox::MITIGATION_KTM_COMPONENT | sandbox::MITIGATION_FSCTL_DISABLED |
       sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
       sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL |
+      sandbox::MITIGATION_IMAGE_LOAD_PREFER_SYS32 |
       sandbox::MITIGATION_CET_COMPAT_MODE;
 
   sandbox::MitigationFlags mExcludedInitialMitigations = 0;
