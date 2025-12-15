@@ -23,11 +23,12 @@ use crate::composite::{CompositeTileDescriptor, CompositeTile};
 use crate::gpu_types::ZBufferId;
 use crate::intern::ItemUid;
 use crate::internal_types::{FastHashMap, FrameId, Filter};
-use crate::invalidation::{InvalidationReason, DirtyRegion, PrimitiveCompareResult, quadtree::TileNode};
-use crate::invalidation::dependency::{PrimitiveComparer, PrimitiveDependency, ImageDependency};
+use crate::invalidation::{InvalidationReason, DirtyRegion, PrimitiveCompareResult};
+use crate::invalidation::cached_surface::{CachedSurface, TileUpdateDirtyContext, TileUpdateDirtyState, PrimitiveDependencyInfo};
+use crate::invalidation::dependency::{PrimitiveDependency, ImageDependency};
 use crate::invalidation::dependency::{SpatialNodeComparer, PrimitiveComparisonKey};
-use crate::invalidation::dependency::{OpacityBindingInfo, ColorBindingInfo, OpacityBinding, ColorBinding};
-use crate::picture::{SurfaceTextureDescriptor, PictureCompositeMode, SurfaceIndex, clamp, clampf};
+use crate::invalidation::dependency::{OpacityBindingInfo, ColorBindingInfo};
+use crate::picture::{SurfaceTextureDescriptor, PictureCompositeMode, SurfaceIndex, clamp};
 use crate::picture::{get_relative_scale_offset, PicturePrimitive};
 use crate::picture::MAX_COMPOSITOR_SURFACES_SIZE;
 use crate::prim_store::{PrimitiveInstance, PrimitiveInstanceKind, PrimitiveScratchBuffer, PictureIndex};
@@ -45,8 +46,7 @@ use crate::util::{ScaleOffset, MatrixHelpers, MaxRect};
 use crate::visibility::{FrameVisibilityContext, FrameVisibilityState, VisibilityState, PrimitiveVisibilityFlags};
 use euclid::approxeq::ApproxEq;
 use euclid::Box2D;
-use peek_poke::{PeekPoke, poke_into_vec, ensure_red_zone};
-use smallvec::SmallVec;
+use peek_poke::{PeekPoke, ensure_red_zone};
 use std::fmt::{Display, Error, Formatter};
 use std::{marker, mem, u32};
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -339,10 +339,6 @@ pub struct Tile {
     pub tile_offset: TileOffset,
     /// The current world rect of this tile.
     pub world_tile_rect: WorldRect,
-    /// The current local rect of this tile.
-    pub local_tile_rect: PictureRect,
-    /// The picture space dirty rect for this tile.
-    pub local_dirty_rect: PictureRect,
     /// The device space dirty rect for this tile.
     /// TODO(gw): We have multiple dirty rects available due to the quadtree above. In future,
     ///           expose these as multiple dirty rects, which will help in some cases.
@@ -351,17 +347,8 @@ pub struct Tile {
     pub world_valid_rect: WorldRect,
     /// Device space rect that contains valid pixels region of this tile.
     pub device_valid_rect: DeviceRect,
-    /// Uniquely describes the content of this tile, in a way that can be
-    /// (reasonably) efficiently hashed and compared.
-    pub current_descriptor: TileDescriptor,
-    /// The content descriptor for this tile from the previous frame.
-    pub prev_descriptor: TileDescriptor,
     /// Handle to the backing surface for this tile.
     pub surface: Option<TileSurface>,
-    /// If true, this tile is marked valid, and the existing texture
-    /// cache handle can be used. Tiles are invalidated during the
-    /// build_dirty_regions method.
-    pub is_valid: bool,
     /// If true, this tile intersects with the currently visible screen
     /// rect, and will be drawn.
     pub is_visible: bool,
@@ -371,17 +358,10 @@ pub struct Tile {
     /// If true, the tile was determined to be opaque, which means blending
     /// can be disabled when drawing it.
     pub is_opaque: bool,
-    /// Root node of the quadtree dirty rect tracker.
-    pub root: TileNode,
-    /// The last rendered background color on this tile.
-    background_color: Option<ColorF>,
-    /// The first reason the tile was invalidated this frame.
-    invalidation_reason: Option<InvalidationReason>,
-    /// The local space valid rect for all primitives that affect this tile.
-    pub local_valid_rect: PictureBox2D,
     /// z-buffer id for this tile
     pub z_id: ZBufferId,
-    pub sub_graphs: Vec<(PictureRect, Vec<(PictureCompositeMode, SurfaceIndex)>)>,
+    /// Cached surface state (content tracking, invalidation, dependencies)
+    pub cached_surface: CachedSurface,
 }
 
 impl Tile {
@@ -391,67 +371,25 @@ impl Tile {
 
         Tile {
             tile_offset,
-            local_tile_rect: PictureRect::zero(),
             world_tile_rect: WorldRect::zero(),
             world_valid_rect: WorldRect::zero(),
             device_valid_rect: DeviceRect::zero(),
-            local_dirty_rect: PictureRect::zero(),
             device_dirty_rect: DeviceRect::zero(),
             surface: None,
-            current_descriptor: TileDescriptor::new(),
-            prev_descriptor: TileDescriptor::new(),
-            is_valid: false,
             is_visible: false,
             id,
             is_opaque: false,
-            root: TileNode::new_leaf(Vec::new()),
-            background_color: None,
-            invalidation_reason: None,
-            local_valid_rect: PictureBox2D::zero(),
             z_id: ZBufferId::invalid(),
-            sub_graphs: Vec::new(),
+            cached_surface: CachedSurface::new(),
         }
     }
 
     /// Print debug information about this tile to a tree printer.
     fn print(&self, pt: &mut dyn PrintTreePrinter) {
         pt.new_level(format!("Tile {:?}", self.id));
-        pt.add_item(format!("local_tile_rect: {:?}", self.local_tile_rect));
-        pt.add_item(format!("background_color: {:?}", self.background_color));
-        pt.add_item(format!("invalidation_reason: {:?}", self.invalidation_reason));
-        self.current_descriptor.print(pt);
+        pt.add_item(format!("local_rect: {:?}", self.cached_surface.local_rect));
+        self.cached_surface.print(pt);
         pt.end_level();
-    }
-
-    /// Check if the content of the previous and current tile descriptors match
-    fn update_dirty_rects(
-        &mut self,
-        ctx: &TileUpdateDirtyContext,
-        state: &mut TileUpdateDirtyState,
-        invalidation_reason: &mut Option<InvalidationReason>,
-        frame_context: &FrameVisibilityContext,
-    ) -> PictureRect {
-        let mut prim_comparer = PrimitiveComparer::new(
-            &self.prev_descriptor,
-            &self.current_descriptor,
-            state.resource_cache,
-            state.spatial_node_comparer,
-            ctx.opacity_bindings,
-            ctx.color_bindings,
-        );
-
-        let mut dirty_rect = PictureBox2D::zero();
-        self.root.update_dirty_rects(
-            &self.prev_descriptor.prims,
-            &self.current_descriptor.prims,
-            &mut prim_comparer,
-            &mut dirty_rect,
-            state.compare_cache,
-            invalidation_reason,
-            frame_context,
-        );
-
-        dirty_rect
     }
 
     /// Invalidate a tile based on change in content. This
@@ -464,31 +402,11 @@ impl Tile {
         state: &mut TileUpdateDirtyState,
         frame_context: &FrameVisibilityContext,
     ) {
-        // Check if the contents of the primitives, clips, and
-        // other dependencies are the same.
-        state.compare_cache.clear();
-        let mut invalidation_reason = None;
-        let dirty_rect = self.update_dirty_rects(
+        self.cached_surface.update_content_validity(
             ctx,
             state,
-            &mut invalidation_reason,
             frame_context,
         );
-        if !dirty_rect.is_empty() {
-            self.invalidate(
-                Some(dirty_rect),
-                invalidation_reason.expect("bug: no invalidation_reason"),
-            );
-        }
-        if ctx.invalidate_all {
-            self.invalidate(None, InvalidationReason::ScaleChanged);
-        }
-        // TODO(gw): We can avoid invalidating the whole tile in some cases here,
-        //           but it should be a fairly rare invalidation case.
-        if self.current_descriptor.local_valid_rect != self.prev_descriptor.local_valid_rect {
-            self.invalidate(None, InvalidationReason::ValidRectChanged);
-            state.composite_state.dirty_rects_are_valid = false;
-        }
     }
 
     /// Invalidate this tile. If `invalidation_rect` is None, the entire
@@ -498,20 +416,7 @@ impl Tile {
         invalidation_rect: Option<PictureRect>,
         reason: InvalidationReason,
     ) {
-        self.is_valid = false;
-
-        match invalidation_rect {
-            Some(rect) => {
-                self.local_dirty_rect = self.local_dirty_rect.union(&rect);
-            }
-            None => {
-                self.local_dirty_rect = self.local_tile_rect;
-            }
-        }
-
-        if self.invalidation_reason.is_none() {
-            self.invalidation_reason = Some(reason);
-        }
+        self.cached_surface.invalidate(invalidation_rect, reason);
     }
 
     /// Called during pre_update of a tile cache instance. Allows the
@@ -520,7 +425,7 @@ impl Tile {
         &mut self,
         ctx: &TilePreUpdateContext,
     ) {
-        self.local_tile_rect = PictureRect::new(
+        self.cached_surface.local_rect = PictureRect::new(
             PicturePoint::new(
                 self.tile_offset.x as f32 * ctx.tile_size.width,
                 self.tile_offset.y as f32 * ctx.tile_size.height,
@@ -530,47 +435,21 @@ impl Tile {
                 (self.tile_offset.y + 1) as f32 * ctx.tile_size.height,
             ),
         );
-        // TODO(gw): This is a hack / fix for Box2D::union in euclid not working with
-        //           zero sized rect accumulation. Once that lands, we'll revert this
-        //           to be zero.
-        self.local_valid_rect = PictureBox2D::new(
-            PicturePoint::new( 1.0e32,  1.0e32),
-            PicturePoint::new(-1.0e32, -1.0e32),
-        );
-        self.invalidation_reason  = None;
-        self.sub_graphs.clear();
 
         self.world_tile_rect = ctx.pic_to_world_mapper
-            .map(&self.local_tile_rect)
+            .map(&self.cached_surface.local_rect)
             .expect("bug: map local tile rect");
 
         // Check if this tile is currently on screen.
         self.is_visible = self.world_tile_rect.intersects(&ctx.global_screen_world_rect);
 
-        // If the tile isn't visible, early exit, skipping the normal set up to
-        // validate dependencies. Instead, we will only compare the current tile
-        // dependencies the next time it comes into view.
-        if !self.is_visible {
-            return;
-        }
-
-        if ctx.background_color != self.background_color {
-            self.invalidate(None, InvalidationReason::BackgroundColor);
-            self.background_color = ctx.background_color;
-        }
-
-        // Clear any dependencies so that when we rebuild them we
-        // can compare if the tile has the same content.
-        mem::swap(
-            &mut self.current_descriptor,
-            &mut self.prev_descriptor,
+        // Delegate to CachedSurface for content tracking setup
+        self.cached_surface.pre_update(
+            ctx.background_color,
+            self.cached_surface.local_rect,
+            ctx.frame_id,
+            self.is_visible,
         );
-        self.current_descriptor.clear();
-        self.root.clear(self.local_tile_rect);
-
-        // Since this tile is determined to be visible, it will get updated
-        // dependencies, so update the frame id we are storing dependencies for.
-        self.current_descriptor.last_updated_frame_id = ctx.frame_id;
     }
 
     /// Add dependencies for a given primitive to this tile.
@@ -584,104 +463,7 @@ impl Tile {
             return;
         }
 
-        // Incorporate the bounding rect of the primitive in the local valid rect
-        // for this tile. This is used to minimize the size of the scissor rect
-        // during rasterization and the draw rect during composition of partial tiles.
-        self.local_valid_rect = self.local_valid_rect.union(&info.prim_clip_box);
-
-        // TODO(gw): The prim_clip_rect can be impacted by the clip rect of the display port,
-        //           which can cause invalidations when a new display list with changed
-        //           display port is received. To work around this, clamp the prim clip rect
-        //           to the tile boundaries - if the clip hasn't affected the tile, then the
-        //           changed clip can't affect the content of the primitive on this tile.
-        //           In future, we could consider supplying the display port clip from Gecko
-        //           in a different way (e.g. as a scroll frame clip) which still provides
-        //           the desired clip for checkerboarding, but doesn't require this extra
-        //           work below.
-
-        // TODO(gw): This is a hot part of the code - we could probably optimize further by:
-        //           - Using min/max instead of clamps below (if we guarantee the rects are well formed)
-
-        let tile_p0 = self.local_tile_rect.min;
-        let tile_p1 = self.local_tile_rect.max;
-
-        let prim_clip_box = PictureBox2D::new(
-            PicturePoint::new(
-                clampf(info.prim_clip_box.min.x, tile_p0.x, tile_p1.x),
-                clampf(info.prim_clip_box.min.y, tile_p0.y, tile_p1.y),
-            ),
-            PicturePoint::new(
-                clampf(info.prim_clip_box.max.x, tile_p0.x, tile_p1.x),
-                clampf(info.prim_clip_box.max.y, tile_p0.y, tile_p1.y),
-            ),
-        );
-
-        // Update the tile descriptor, used for tile comparison during scene swaps.
-        let prim_index = PrimitiveDependencyIndex(self.current_descriptor.prims.len() as u32);
-
-        // Encode the deps for this primitive in the `dep_data` byte buffer
-        let dep_offset = self.current_descriptor.dep_data.len() as u32;
-        let mut dep_count = 0;
-
-        for clip in &info.clips {
-            dep_count += 1;
-            poke_into_vec(
-                &PrimitiveDependency::Clip {
-                    clip: *clip,
-                },
-                &mut self.current_descriptor.dep_data,
-            );
-        }
-
-        for spatial_node_index in &info.spatial_nodes {
-            dep_count += 1;
-            poke_into_vec(
-                &PrimitiveDependency::SpatialNode {
-                    index: *spatial_node_index,
-                },
-                &mut self.current_descriptor.dep_data,
-            );
-        }
-
-        for image in &info.images {
-            dep_count += 1;
-            poke_into_vec(
-                &PrimitiveDependency::Image {
-                    image: *image,
-                },
-                &mut self.current_descriptor.dep_data,
-            );
-        }
-
-        for binding in &info.opacity_bindings {
-            dep_count += 1;
-            poke_into_vec(
-                &PrimitiveDependency::OpacityBinding {
-                    binding: *binding,
-                },
-                &mut self.current_descriptor.dep_data,
-            );
-        }
-
-        if let Some(ref binding) = info.color_binding {
-            dep_count += 1;
-            poke_into_vec(
-                &PrimitiveDependency::ColorBinding {
-                    binding: *binding,
-                },
-                &mut self.current_descriptor.dep_data,
-            );
-        }
-
-        self.current_descriptor.prims.push(PrimitiveDescriptor {
-            prim_uid: info.prim_uid,
-            prim_clip_box,
-            dep_offset,
-            dep_count,
-        });
-
-        // Add this primitive to the dirty rect quadtree.
-        self.root.add_prim(prim_index, &info.prim_clip_box);
+        self.cached_surface.add_prim_dependency(info, self.cached_surface.local_rect);
     }
 
     /// Called during tile cache instance post_update. Allows invalidation and dirty
@@ -693,13 +475,13 @@ impl Tile {
         frame_context: &FrameVisibilityContext,
     ) {
         // Ensure peek-poke constraint is met, that `dep_data` is large enough
-        ensure_red_zone::<PrimitiveDependency>(&mut self.current_descriptor.dep_data);
+        ensure_red_zone::<PrimitiveDependency>(&mut self.cached_surface.current_descriptor.dep_data);
 
         // Register the frame id of this tile with the spatial node comparer, to ensure
         // that it doesn't GC any spatial nodes from the comparer that are referenced
         // by this tile. Must be done before we early exit below, so that we retain
         // spatial node info even for tiles that are currently not visible.
-        state.spatial_node_comparer.retain_for_frame(self.current_descriptor.last_updated_frame_id);
+        state.spatial_node_comparer.retain_for_frame(self.cached_surface.current_descriptor.last_updated_frame_id);
 
         // If tile is not visible, just early out from here - we don't update dependencies
         // so don't want to invalidate, merge, split etc. The tile won't need to be drawn
@@ -709,7 +491,7 @@ impl Tile {
         }
 
         // Calculate the overall valid rect for this tile.
-        self.current_descriptor.local_valid_rect = self.local_valid_rect;
+        self.cached_surface.current_descriptor.local_valid_rect = self.cached_surface.local_valid_rect;
 
         // TODO(gw): In theory, the local tile rect should always have an
         //           intersection with the overall picture rect. In practice,
@@ -721,15 +503,15 @@ impl Tile {
         //           accuracy issue above, so that this assumption holds, but
         //           it shouldn't have any noticeable effect on performance
         //           or memory usage (textures should never get allocated).
-        self.current_descriptor.local_valid_rect = self.local_tile_rect
+        self.cached_surface.current_descriptor.local_valid_rect = self.cached_surface.local_rect
             .intersection(&ctx.local_rect)
-            .and_then(|r| r.intersection(&self.current_descriptor.local_valid_rect))
+            .and_then(|r| r.intersection(&self.cached_surface.current_descriptor.local_valid_rect))
             .unwrap_or_else(PictureRect::zero);
 
         // The device_valid_rect is referenced during `update_content_validity` so it
         // must be updated here first.
         self.world_valid_rect = ctx.pic_to_world_mapper
-            .map(&self.current_descriptor.local_valid_rect)
+            .map(&self.cached_surface.current_descriptor.local_valid_rect)
             .expect("bug: map local valid rect");
 
         // The device rect is guaranteed to be aligned on a device pixel - the round
@@ -764,7 +546,7 @@ impl Tile {
         // If there are no primitives there is no need to draw or cache it.
         // Bug 1719232 - The final device valid rect does not always describe a non-empty
         // region. Cull the tile as a workaround.
-        if self.current_descriptor.prims.is_empty() || self.device_valid_rect.is_empty() {
+        if self.cached_surface.current_descriptor.prims.is_empty() || self.device_valid_rect.is_empty() {
             // If there is a native compositor surface allocated for this (now empty) tile
             // it must be freed here, otherwise the stale tile with previous contents will
             // be composited. If the tile subsequently gets new primitives added to it, the
@@ -782,11 +564,11 @@ impl Tile {
         // Check if this tile can be considered opaque. Opacity state must be updated only
         // after all early out checks have been performed. Otherwise, we might miss updating
         // the native surface next time this tile becomes visible.
-        let clipped_rect = self.current_descriptor.local_valid_rect
+        let clipped_rect = self.cached_surface.current_descriptor.local_valid_rect
             .intersection(&ctx.local_clip_rect)
             .unwrap_or_else(PictureRect::zero);
 
-        let has_opaque_bg_color = self.background_color.map_or(false, |c| c.a >= 1.0);
+        let has_opaque_bg_color = self.cached_surface.background_color.map_or(false, |c| c.a >= 1.0);
         let has_opaque_backdrop = ctx.backdrop.map_or(false, |b| b.opaque_rect.contains_box(&clipped_rect));
         let mut is_opaque = has_opaque_bg_color || has_opaque_backdrop;
 
@@ -842,9 +624,9 @@ impl Tile {
                 let max_split_level = 3;
 
                 // Consider splitting / merging dirty regions
-                self.root.maybe_merge_or_split(
+                self.cached_surface.root.maybe_merge_or_split(
                     0,
-                    &self.current_descriptor.prims,
+                    &self.cached_surface.current_descriptor.prims,
                     max_split_level,
                 );
             }
@@ -853,8 +635,8 @@ impl Tile {
         // The dirty rect will be set correctly by now. If the underlying platform
         // doesn't support partial updates, and this tile isn't valid, force the dirty
         // rect to be the size of the entire tile.
-        if !self.is_valid && !supports_dirty_rects {
-            self.local_dirty_rect = self.local_tile_rect;
+        if !self.cached_surface.is_valid && !supports_dirty_rects {
+            self.cached_surface.local_dirty_rect = self.cached_surface.local_rect;
         }
 
         // See if this tile is a simple color, in which case we can just draw
@@ -864,7 +646,7 @@ impl Tile {
         //           should be added as a follow up.
         let is_simple_prim =
             ctx.backdrop.map_or(false, |b| b.kind.is_some()) &&
-            self.current_descriptor.prims.len() == 1 &&
+            self.cached_surface.current_descriptor.prims.len() == 1 &&
             self.is_opaque &&
             supports_simple_prims;
 
@@ -2961,7 +2743,7 @@ impl TileCacheInstance {
                         for x in p0.x .. p1.x {
                             let key = TileOffset::new(x, y);
                             let tile = sub_slice.tiles.get_mut(&key).expect("bug: no tile");
-                            tile.sub_graphs.push((pic_coverage_rect, surface_info.clone()));
+                            tile.cached_surface.sub_graphs.push((pic_coverage_rect, surface_info.clone()));
                         }
                     }
 
@@ -3277,7 +3059,7 @@ impl TileCacheInstance {
                     for x in dirty_test.tile_rect.min.x .. dirty_test.tile_rect.max.x {
                         let key = TileOffset::new(x, y);
                         let tile = sub_slice.tiles.get_mut(&key).expect("bug: no tile");
-                        total_dirty_rect = total_dirty_rect.union(&tile.local_dirty_rect);
+                        total_dirty_rect = total_dirty_rect.union(&tile.cached_surface.local_dirty_rect);
                     }
                 }
 
@@ -3527,43 +3309,6 @@ struct TilePreUpdateContext {
     frame_id: FrameId,
 }
 
-// Immutable context passed to picture cache tiles during update_dirty_and_valid_rects
-struct TileUpdateDirtyContext<'a> {
-    /// Maps from picture cache coords -> world space coords.
-    pic_to_world_mapper: SpaceMapper<PicturePixel, WorldPixel>,
-
-    /// Global scale factor from world -> device pixels.
-    global_device_pixel_scale: DevicePixelScale,
-
-    /// Information about opacity bindings from the picture cache.
-    opacity_bindings: &'a FastHashMap<PropertyBindingId, OpacityBindingInfo>,
-
-    /// Information about color bindings from the picture cache.
-    color_bindings: &'a FastHashMap<PropertyBindingId, ColorBindingInfo>,
-
-    /// The local rect of the overall picture cache
-    local_rect: PictureRect,
-
-    /// If true, the scale factor of the root transform for this picture
-    /// cache changed, so we need to invalidate the tile and re-render.
-    invalidate_all: bool,
-}
-
-// Mutable state passed to picture cache tiles during update_dirty_and_valid_rects
-struct TileUpdateDirtyState<'a> {
-    /// Allow access to the texture cache for requesting tiles
-    resource_cache: &'a mut ResourceCache,
-
-    /// Current configuration and setup for compositing all the picture cache tiles in renderer.
-    composite_state: &'a mut CompositeState,
-
-    /// A cache of comparison results to avoid re-computation during invalidation.
-    compare_cache: &'a mut FastHashMap<PrimitiveComparisonKey, PrimitiveCompareResult>,
-
-    /// Information about transform node differences from last frame.
-    spatial_node_comparer: &'a mut SpatialNodeComparer,
-}
-
 // Immutable context passed to picture cache tiles during post_update
 struct TilePostUpdateContext<'a> {
     /// The local clip rect (in picture space) of the entire picture cache
@@ -3589,46 +3334,4 @@ struct TilePostUpdateState<'a> {
 
     /// Current configuration and setup for compositing all the picture cache tiles in renderer.
     composite_state: &'a mut CompositeState,
-}
-
-/// Information about the dependencies of a single primitive instance.
-struct PrimitiveDependencyInfo {
-    /// Unique content identifier of the primitive.
-    prim_uid: ItemUid,
-
-    /// The (conservative) clipped area in picture space this primitive occupies.
-    prim_clip_box: PictureBox2D,
-
-    /// Image keys this primitive depends on.
-    images: SmallVec<[ImageDependency; 8]>,
-
-    /// Opacity bindings this primitive depends on.
-    opacity_bindings: SmallVec<[OpacityBinding; 4]>,
-
-    /// Color binding this primitive depends on.
-    color_binding: Option<ColorBinding>,
-
-    /// Clips that this primitive depends on.
-    clips: SmallVec<[ItemUid; 8]>,
-
-    /// Spatial nodes references by the clip dependencies of this primitive.
-    spatial_nodes: SmallVec<[SpatialNodeIndex; 4]>,
-}
-
-impl PrimitiveDependencyInfo {
-    /// Construct dependency info for a new primitive.
-    fn new(
-        prim_uid: ItemUid,
-        prim_clip_box: PictureBox2D,
-    ) -> Self {
-        PrimitiveDependencyInfo {
-            prim_uid,
-            images: SmallVec::new(),
-            opacity_bindings: SmallVec::new(),
-            color_binding: None,
-            prim_clip_box,
-            clips: SmallVec::new(),
-            spatial_nodes: SmallVec::new(),
-        }
-    }
 }

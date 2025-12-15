@@ -1451,7 +1451,7 @@ impl PicturePrimitive {
                         if !tile.is_visible {
                             continue;
                         }
-                        let rect = tile.local_tile_rect.intersection(&tile_cache.local_rect);
+                        let rect = tile.cached_surface.local_rect.intersection(&tile_cache.local_rect);
                         if let Some(rect) = rect {
                             draw_debug_border(
                                 &rect,
@@ -1494,10 +1494,10 @@ impl PicturePrimitive {
                         if !tile.is_visible {
                             continue;
                         }
-                        tile.root.draw_debug_rects(
+                        tile.cached_surface.root.draw_debug_rects(
                             &map_pic_to_world,
                             tile.is_opaque,
-                            tile.current_descriptor.local_valid_rect,
+                            tile.cached_surface.current_descriptor.local_valid_rect,
                             scratch,
                             frame_context.global_device_pixel_scale,
                         );
@@ -1587,19 +1587,19 @@ fn prepare_tiled_picture_surface(
     for (sub_slice_index, sub_slice) in tile_cache.sub_slices.iter_mut().enumerate() {
         for tile in sub_slice.tiles.values_mut() {
             // Ensure that the dirty rect doesn't extend outside the local valid rect.
-            tile.local_dirty_rect = tile.local_dirty_rect
-                .intersection(&tile.current_descriptor.local_valid_rect)
-                .unwrap_or_else(|| { tile.is_valid = true; PictureRect::zero() });
+            tile.cached_surface.local_dirty_rect = tile.cached_surface.local_dirty_rect
+                .intersection(&tile.cached_surface.current_descriptor.local_valid_rect)
+                .unwrap_or_else(|| { tile.cached_surface.is_valid = true; PictureRect::zero() });
 
             let valid_rect = frame_state.composite_state.get_surface_rect(
-                &tile.current_descriptor.local_valid_rect,
-                &tile.local_tile_rect,
+                &tile.cached_surface.current_descriptor.local_valid_rect,
+                &tile.cached_surface.local_rect,
                 tile_cache.transform_index,
             ).to_i32();
 
             let scissor_rect = frame_state.composite_state.get_surface_rect(
-                &tile.local_dirty_rect,
-                &tile.local_tile_rect,
+                &tile.cached_surface.local_dirty_rect,
+                &tile.cached_surface.local_rect,
                 tile_cache.transform_index,
             ).to_i32().intersection(&valid_rect).unwrap_or_else(|| { Box2D::zero() });
 
@@ -1658,7 +1658,7 @@ fn prepare_tiled_picture_surface(
                 // that here and mark the tile non-visible. This is a bit of a hack - we should
                 // ideally handle these in a more accurate way so we don't end up with an empty
                 // rect here.
-                if !tile.is_valid && (scissor_rect.is_empty() || valid_rect.is_empty()) {
+                if !tile.cached_surface.is_valid && (scissor_rect.is_empty() || valid_rect.is_empty()) {
                     tile.is_visible = false;
                 }
             }
@@ -1724,14 +1724,14 @@ fn prepare_tiled_picture_surface(
 
             // Ensure - again - that the dirty rect doesn't extend outside the local valid rect,
             // as the tile could have been invalidated since the first computation.
-            tile.local_dirty_rect = tile.local_dirty_rect
-                .intersection(&tile.current_descriptor.local_valid_rect)
-                .unwrap_or_else(|| { tile.is_valid = true; PictureRect::zero() });
+            tile.cached_surface.local_dirty_rect = tile.cached_surface.local_dirty_rect
+                .intersection(&tile.cached_surface.current_descriptor.local_valid_rect)
+                .unwrap_or_else(|| { tile.cached_surface.is_valid = true; PictureRect::zero() });
 
-            surface_local_dirty_rect = surface_local_dirty_rect.union(&tile.local_dirty_rect);
+            surface_local_dirty_rect = surface_local_dirty_rect.union(&tile.cached_surface.local_dirty_rect);
 
             // Update the world/device dirty rect
-            let world_dirty_rect = map_pic_to_world.map(&tile.local_dirty_rect).expect("bug");
+            let world_dirty_rect = map_pic_to_world.map(&tile.cached_surface.local_dirty_rect).expect("bug");
 
             let device_rect = (tile.world_tile_rect * frame_context.global_device_pixel_scale).round();
             tile.device_dirty_rect = (world_dirty_rect * frame_context.global_device_pixel_scale)
@@ -1739,7 +1739,7 @@ fn prepare_tiled_picture_surface(
                 .intersection(&device_rect)
                 .unwrap_or_else(DeviceRect::zero);
 
-            if tile.is_valid {
+            if tile.cached_surface.is_valid {
                 if frame_context.fb_config.testing {
                     debug_info.tiles.insert(
                         tile.tile_offset,
@@ -1751,7 +1751,7 @@ fn prepare_tiled_picture_surface(
                 // so that we include in the dirty region tiles that are handled by a background color only (no
                 // surface allocation).
                 tile_cache.dirty_region.add_dirty_region(
-                    tile.local_dirty_rect,
+                    tile.cached_surface.local_dirty_rect,
                     frame_context.spatial_tree,
                 );
 
@@ -1821,7 +1821,7 @@ fn prepare_tiled_picture_surface(
                     // TODO(gw): `content_origin` should actually be in RasterPixels to be consistent
                     //           with both local / screen raster modes, but this involves a lot of
                     //           changes to render task and picture code.
-                    let content_origin_f = tile.local_tile_rect.min.cast_unit() * device_pixel_scale;
+                    let content_origin_f = tile.cached_surface.local_rect.min.cast_unit() * device_pixel_scale;
                     let content_origin = content_origin_f.round();
                     // TODO: these asserts used to have a threshold of 0.01 but failed intermittently the
                     // gfx/layers/apz/test/mochitest/test_group_double_tap_zoom-2.html test on android.
@@ -1837,8 +1837,8 @@ fn prepare_tiled_picture_surface(
 
                     // Recompute the scissor rect as the tile could have been invalidated since the first computation.
                     let scissor_rect = frame_state.composite_state.get_surface_rect(
-                        &tile.local_dirty_rect,
-                        &tile.local_tile_rect,
+                        &tile.cached_surface.local_dirty_rect,
+                        &tile.cached_surface.local_rect,
                         tile_cache.transform_index,
                     ).to_i32();
 
@@ -1871,13 +1871,13 @@ fn prepare_tiled_picture_surface(
                     // TODO(gw): As a performance optimization, we could skip the resolve picture
                     //           if the dirty rect is the same as the resolve rect (probably quite
                     //           common for effects that scroll underneath a backdrop-filter, for example).
-                    let use_tile_composite = !tile.sub_graphs.is_empty();
+                    let use_tile_composite = !tile.cached_surface.sub_graphs.is_empty();
 
                     if use_tile_composite {
-                        let mut local_content_rect = tile.local_dirty_rect;
+                        let mut local_content_rect = tile.cached_surface.local_dirty_rect;
 
-                        for (sub_graph_rect, surface_stack) in &tile.sub_graphs {
-                            if let Some(dirty_sub_graph_rect) = sub_graph_rect.intersection(&tile.local_dirty_rect) {
+                        for (sub_graph_rect, surface_stack) in &tile.cached_surface.sub_graphs {
+                            if let Some(dirty_sub_graph_rect) = sub_graph_rect.intersection(&tile.cached_surface.local_dirty_rect) {
                                 for (composite_mode, surface_index) in surface_stack {
                                     let surface = &frame_state.surfaces[surface_index.0];
 
@@ -1894,7 +1894,7 @@ fn prepare_tiled_picture_surface(
                         // We know that we'll never need to sample > 300 device pixels outside the tile
                         // for blurring, so clamp the content rect here so that we don't try to allocate
                         // a really large surface in the case of a drop-shadow with large offset.
-                        let max_content_rect = (tile.local_dirty_rect.cast_unit() * device_pixel_scale)
+                        let max_content_rect = (tile.cached_surface.local_dirty_rect.cast_unit() * device_pixel_scale)
                             .inflate(
                                 MAX_BLUR_RADIUS * BLUR_SAMPLE_SCALE,
                                 MAX_BLUR_RADIUS * BLUR_SAMPLE_SCALE,
@@ -1960,7 +1960,7 @@ fn prepare_tiled_picture_surface(
                             SurfaceTileDescriptor {
                                 current_task_id: render_task_id,
                                 composite_task_id: Some(composite_task_id),
-                                dirty_rect: tile.local_dirty_rect,
+                                dirty_rect: tile.cached_surface.local_dirty_rect,
                             },
                         );
                     } else {
@@ -1995,7 +1995,7 @@ fn prepare_tiled_picture_surface(
                             SurfaceTileDescriptor {
                                 current_task_id: render_task_id,
                                 composite_task_id: None,
-                                dirty_rect: tile.local_dirty_rect,
+                                dirty_rect: tile.cached_surface.local_dirty_rect,
                             },
                         );
                     }
@@ -2005,8 +2005,8 @@ fn prepare_tiled_picture_surface(
                     debug_info.tiles.insert(
                         tile.tile_offset,
                         TileDebugInfo::Dirty(DirtyTileDebugInfo {
-                            local_valid_rect: tile.current_descriptor.local_valid_rect,
-                            local_dirty_rect: tile.local_dirty_rect,
+                            local_valid_rect: tile.cached_surface.current_descriptor.local_valid_rect,
+                            local_dirty_rect: tile.cached_surface.local_dirty_rect,
                         }),
                     );
                 }
@@ -2041,9 +2041,9 @@ fn prepare_tiled_picture_surface(
             let composite_tile = CompositeTile {
                 kind: tile_kind(&surface, is_opaque),
                 surface,
-                local_rect: tile.local_tile_rect,
-                local_valid_rect: tile.current_descriptor.local_valid_rect,
-                local_dirty_rect: tile.local_dirty_rect,
+                local_rect: tile.cached_surface.local_rect,
+                local_valid_rect: tile.cached_surface.current_descriptor.local_valid_rect,
+                local_dirty_rect: tile.cached_surface.local_dirty_rect,
                 device_clip_rect,
                 z_id: tile.z_id,
                 transform_index: tile_cache.transform_index,
@@ -2054,8 +2054,8 @@ fn prepare_tiled_picture_surface(
             sub_slice.composite_tiles.push(composite_tile);
 
             // Now that the tile is valid, reset the dirty rect.
-            tile.local_dirty_rect = PictureRect::zero();
-            tile.is_valid = true;
+            tile.cached_surface.local_dirty_rect = PictureRect::zero();
+            tile.cached_surface.is_valid = true;
         }
 
         // Sort the tile descriptor lists, since iterating values in the tile_cache.tiles

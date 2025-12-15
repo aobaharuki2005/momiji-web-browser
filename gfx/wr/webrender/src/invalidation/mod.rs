@@ -9,6 +9,7 @@
 
 pub mod dependency;
 pub mod quadtree;
+pub mod cached_surface;
 
 use api::units::*;
 use crate::spatial_tree::{SpatialTree, SpatialNodeIndex};
