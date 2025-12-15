@@ -25,12 +25,17 @@ namespace intl {
 class BidiEmbeddingLevel;
 }
 
-struct MOZ_STACK_CLASS PrimaryFrameData {
-  // The frame which should be used to layout the caret.
+struct MOZ_STACK_CLASS FrameAndOffset {
+  [[nodiscard]] nsIContent* GetFrameContent() const {
+    return mFrame ? mFrame->GetContent() : nullptr;
+  }
+
   nsIFrame* mFrame = nullptr;
-  // The offset in content of mFrame.  This is valid only when mFrame is not
-  // nullptr.
+  // The offset in mFrame->GetContent().
   uint32_t mOffsetInFrameContent = 0;
+};
+
+struct MOZ_STACK_CLASS PrimaryFrameData : public FrameAndOffset {
   // Whether the caret should be put before or after the point. This is valid
   // only when mFrame is not nullptr.
   CaretAssociationHint mHint{0};  // Before

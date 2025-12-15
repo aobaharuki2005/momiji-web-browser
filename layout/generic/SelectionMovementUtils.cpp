@@ -981,13 +981,13 @@ PrimaryFrameData SelectionMovementUtils::GetPrimaryOrCaretFrameForNodeOffset(
             nullptr, aContent, aOffset, aHint, aCaretBidiLevel,
             aContent && aContent->IsEditable() ? ForceEditableRegion::Yes
                                                : ForceEditableRegion::No);
-    return {result.mFrame, result.mOffsetInFrameContent, result.mHint};
+    return {{result.mFrame, result.mOffsetInFrameContent}, result.mHint};
   }
 
   uint32_t offset = 0;
   nsIFrame* theFrame = SelectionMovementUtils::GetFrameForNodeOffset(
       aContent, aOffset, aHint, &offset);
-  return {theFrame, offset, aHint};
+  return {{theFrame, offset}, aHint};
 }
 
 }  // namespace mozilla
