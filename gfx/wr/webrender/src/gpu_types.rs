@@ -561,14 +561,25 @@ impl GlyphInstance {
         glyph_index_in_text_run: i32,
         glyph_uv_rect: GpuBufferAddress,
         color_mode: ShaderColorMode,
+        subpx_offset_x: u8,
+        subpx_offset_y: u8,
+        is_packed_glyph: bool,
     ) -> PrimitiveInstanceData {
+        // Pack subpixel offsets and multi-variant flag into upper 16 bits of data[2]
+        // After instance.flags extraction (>> 16), shader sees:
+        // bits 0-3: color_mode, bits 4-5: subpx_offset_x, bits 6-7: subpx_offset_y,
+        // bits 8-9: subpx_dir, bit 10: is_packed_glyph
+        let packed_flags = (((is_packed_glyph as u32) & 0x1) << 26)
+            | (((subpx_dir as u32) & 0x3) << 24)
+            | (((subpx_offset_y as u32) & 0x3) << 22)
+            | (((subpx_offset_x as u32) & 0x3) << 20)
+            | (((color_mode as u32) & 0xF) << 16);
+
         PrimitiveInstanceData {
             data: [
                 self.prim_header_index.0 as i32,
                 clip_task.0 as i32,
-                (subpx_dir as u32 as i32) << 24
-                | (color_mode as u32 as i32) << 16
-                | glyph_index_in_text_run,
+                packed_flags as i32 | glyph_index_in_text_run,
                 glyph_uv_rect.as_int(),
             ],
         }
