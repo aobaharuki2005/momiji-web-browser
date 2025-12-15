@@ -5664,19 +5664,19 @@ static PromiseReactionRecord* NewReactionRecord(
 
   // See comments for ReactionRecordSlots for the relation between
   // spec record fields and PromiseReactionRecord slots.
-  reaction->setFixedSlot(PromiseReactionRecord::Promise,
-                         ObjectOrNullValue(resultCapability.promise()));
+  reaction->initFixedSlot(PromiseReactionRecord::Promise,
+                          ObjectOrNullValue(resultCapability.promise()));
   // We set [[Type]] in EnqueuePromiseReactionJob, by calling
   // setTargetStateAndHandlerArg.
-  reaction->setFixedSlot(PromiseReactionRecord::Flags, Int32Value(0));
-  reaction->setFixedSlot(PromiseReactionRecord::OnFulfilled, onFulfilled);
-  reaction->setFixedSlot(PromiseReactionRecord::OnRejected, onRejected);
-  reaction->setFixedSlot(PromiseReactionRecord::Resolve,
-                         ObjectOrNullValue(resultCapability.resolve()));
-  reaction->setFixedSlot(PromiseReactionRecord::Reject,
-                         ObjectOrNullValue(resultCapability.reject()));
-  reaction->setFixedSlot(PromiseReactionRecord::HostDefinedData,
-                         ObjectOrNullValue(hostDefinedData));
+  reaction->initFixedSlot(PromiseReactionRecord::Flags, Int32Value(0));
+  reaction->initFixedSlot(PromiseReactionRecord::OnFulfilled, onFulfilled);
+  reaction->initFixedSlot(PromiseReactionRecord::OnRejected, onRejected);
+  reaction->initFixedSlot(PromiseReactionRecord::Resolve,
+                          ObjectOrNullValue(resultCapability.resolve()));
+  reaction->initFixedSlot(PromiseReactionRecord::Reject,
+                          ObjectOrNullValue(resultCapability.reject()));
+  reaction->initFixedSlot(PromiseReactionRecord::HostDefinedData,
+                          ObjectOrNullValue(hostDefinedData));
 
   return reaction;
 }
