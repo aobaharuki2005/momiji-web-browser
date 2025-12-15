@@ -90,11 +90,46 @@ function setupStubs(
   sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").resolves({
     status: 200,
     error: undefined,
-    pass: {
-      isValid: () => options.validProxyPass,
-      shouldRotate: () => !options.validProxyPass,
-      asBearerToken: () => "Bearer helloworld",
-      rotationTimePoint: Temporal.Now.instant().add({ hours: 1 }),
-    },
+    pass: new ProxyPass(
+      options.validProxyPass
+        ? createProxyPassToken()
+        : createExpiredProxyPassToken()
+    ),
   });
 }
+
+/**
+ * Creates a Token that can be fed as a Network Response from Guardian
+ * to simulate a Proxy Pass.
+ *
+ * @param {Temporal.Instant} from
+ * @param {Temporal.Instant} until
+ * @returns {string} JWT Token
+ */
+function createProxyPassToken(
+  from = Temporal.Now.instant(),
+  until = from.add({ hours: 24 })
+) {
+  const header = {
+    alg: "HS256",
+    typ: "JWT",
+  };
+  const body = {
+    iat: Math.floor(from.add({ seconds: 1 }).epochMilliseconds / 1000),
+    nbf: Math.floor(from.epochMilliseconds / 1000),
+    exp: Math.floor(until.epochMilliseconds / 1000),
+    sub: "proxy-pass-user-42",
+    aud: "guardian-proxy",
+    iss: "vpn.mozilla.org",
+  };
+  const encode = obj => btoa(JSON.stringify(obj));
+  return [encode(header), encode(body), "signature"].join(".");
+}
+/* exported createExpiredProxyPassToken */
+function createExpiredProxyPassToken() {
+  return createProxyPassToken(
+    Temporal.Now.instant().subtract({ hours: 2 }),
+    Temporal.Now.instant().subtract({ hours: 1 })
+  );
+}
+/* exported createExpiredProxyPassToken */

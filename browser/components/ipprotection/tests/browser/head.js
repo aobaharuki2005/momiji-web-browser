@@ -387,10 +387,25 @@ async function cleanupExperiment() {
 }
 /* exported cleanupExperiment */
 
-function makePass() {
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
-  return new ProxyPass(token, Temporal.Now.instant().add({ hours: 24 }));
+function makePass(
+  from = Temporal.Now.instant(),
+  until = from.add({ hours: 24 })
+) {
+  const header = {
+    alg: "HS256",
+    typ: "JWT",
+  };
+  const body = {
+    iat: Math.floor(from.add({ seconds: 1 }).epochMilliseconds / 1000),
+    nbf: Math.floor(from.epochMilliseconds / 1000),
+    exp: Math.floor(until.epochMilliseconds / 1000),
+    sub: "proxy-pass-user-42",
+    aud: "guardian-proxy",
+    iss: "vpn.mozilla.org",
+  };
+  const encode = obj => btoa(JSON.stringify(obj));
+  const token = [encode(header), encode(body), "signature"].join(".");
+  return new ProxyPass(token);
 }
 /* exported makePass */
 

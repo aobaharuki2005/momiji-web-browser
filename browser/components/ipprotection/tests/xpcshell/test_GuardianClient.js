@@ -310,7 +310,7 @@ add_task(async function test_fetchProxyPass() {
   const testcases = [
     {
       name: "It should parse a valid response",
-      sends: ok({ token: "header.payload.signature" }),
+      sends: ok({ token: createProxyPassToken() }),
       expects: {
         status: 200,
         error: null,
@@ -336,17 +336,8 @@ add_task(async function test_fetchProxyPass() {
       },
     },
     {
-      name: "It should handle a missing Cache-Control header",
-      sends: ok({ token: "header.payload.signature" }, { "Cache-Control": "" }),
-      expects: {
-        status: 200,
-        error: "invalid_response",
-        validPass: false,
-      },
-    },
-    {
       name: "It should handle an invalid token format",
-      sends: ok({ token: "invalid-token-format" }),
+      sends: ok({ token: "header.body.signature" }),
       expects: {
         status: 200,
         error: "invalid_response",
@@ -435,11 +426,6 @@ add_task(async function test_parseGuardianSuccessURL() {
 });
 
 add_task(async function test_proxyPassShouldRotate() {
-  // Create a static synthetic JWT-like token for testing
-  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
-  const payload = btoa(JSON.stringify({ sub: "test", exp: 1702032000 }));
-  const testToken = `${header}.${payload}.signature`;
-
   const oneHour = Temporal.Duration.from({ hours: 1 });
   const from = Temporal.Instant.from("2025-12-08T12:00:00Z"); // Static point in time
   // The pass is valid for 1 hour from 'from'
@@ -471,7 +457,7 @@ add_task(async function test_proxyPassShouldRotate() {
 
   testcases.forEach(({ name, currentTime, expects }) => {
     info(`Running test case: ${name}`);
-    const proxyPass = new ProxyPass(testToken, until, from);
+    const proxyPass = new ProxyPass(createProxyPassToken(from, until));
     const result = proxyPass.shouldRotate(currentTime);
     Assert.equal(
       result,

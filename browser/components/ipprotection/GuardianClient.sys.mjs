@@ -278,12 +278,16 @@ export class GuardianClient {
  * Immutable after creation.
  */
 export class ProxyPass extends EventTarget {
+  #body = {
+    /** Not Before */
+    nbf: 0,
+    /** Expiration */
+    exp: 0,
+  };
   /**
    * @param {string} token - The JWT to use for authentication.
-   * @param {Temporal.Instant} until -The Point in time when the token becomes invalid.
-   * @param {Temporal.Instant} from - The Point in time when the token becomes valid.
    */
-  constructor(token, until, from = Temporal.Now.instant()) {
+  constructor(token) {
     super();
     if (typeof token !== "string") {
       throw new TypeError(
@@ -291,16 +295,19 @@ export class ProxyPass extends EventTarget {
       );
     }
     this.token = token;
-    this.from = from;
-    this.until = until;
-    const [header, body] = this.token.split(".");
+    // Contains [header.body.signature]
+    const parts = this.token.split(".");
+    if (parts.length !== 3) {
+      throw new TypeError("Invalid token format");
+    }
     try {
-      const parses = [header, body].every(json =>
-        JSON.parse(atob(json) != null)
-      );
-      if (!parses) {
-        throw new TypeError("Invalid token format");
+      const body = JSON.parse(atob(parts[1]));
+      if (
+        !lazy.JsonSchemaValidator.validate(body, ProxyPass.bodySchema).valid
+      ) {
+        throw new TypeError("Token body does not match schema");
       }
+      this.#body = body;
     } catch (error) {
       throw new TypeError("Invalid token format: " + error.message);
     }
@@ -308,7 +315,10 @@ export class ProxyPass extends EventTarget {
 
   isValid(now = Temporal.Now.instant()) {
     // If the remaining duration is zero or positive, the pass is still valid.
-    return Temporal.Instant.compare(now, this.until) < 0;
+    return (
+      Temporal.Instant.compare(now, this.from) >= 0 &&
+      Temporal.Instant.compare(now, this.until) < 0
+    );
   }
 
   shouldRotate(now = Temporal.Now.instant()) {
@@ -316,6 +326,16 @@ export class ProxyPass extends EventTarget {
       return true;
     }
     return Temporal.Instant.compare(now, this.rotationTimePoint) >= 0;
+  }
+
+  get from() {
+    // nbf is in seconds since epoch
+    return Temporal.Instant.fromEpochMilliseconds(this.#body.nbf * 1000);
+  }
+
+  get until() {
+    // exp is in seconds since epoch
+    return Temporal.Instant.fromEpochMilliseconds(this.#body.exp * 1000);
   }
 
   /**
@@ -334,23 +354,6 @@ export class ProxyPass extends EventTarget {
     }
 
     try {
-      // Get cache_control max-age value
-      const cache_control = response.headers
-        .get("cache-control")
-        ?.match(/max-age=(\d+)/)?.[1];
-
-      if (!cache_control) {
-        console.error("Missing or invalid Cache-Control header");
-        return null;
-      }
-
-      const max_age = parseInt(cache_control, 10);
-      if (isNaN(max_age)) {
-        console.error("Invalid max-age value in Cache-Control header");
-        return null;
-      }
-      const from = Temporal.Now.instant();
-      const until = from.add(Temporal.Duration.from({ seconds: max_age }));
       // Parse JSON response
       const responseData = await response.json();
       const token = responseData?.token;
@@ -359,8 +362,7 @@ export class ProxyPass extends EventTarget {
         console.error("Missing or invalid token in response");
         return null;
       }
-
-      return new ProxyPass(token, until, from);
+      return new ProxyPass(token);
     } catch (error) {
       console.error("Error parsing proxy pass response:", error);
       return null;
@@ -378,6 +380,43 @@ export class ProxyPass extends EventTarget {
   }
   // Rotate 10 Minutes from the End Time
   static ROTATION_TIME = Temporal.Duration.from({ minutes: 10 });
+
+  static get bodySchema() {
+    return {
+      $schema: "http://json-schema.org/draft-07/schema#",
+      title: "JWT Claims",
+      type: "object",
+      properties: {
+        sub: {
+          type: "string",
+          description: "Subject identifier",
+        },
+        aud: {
+          type: "string",
+          format: "uri",
+          description: "Audience for which the token is intended",
+        },
+        iat: {
+          type: "integer",
+          description: "Issued-at time (seconds since Unix epoch)",
+        },
+        nbf: {
+          type: "integer",
+          description: "Not-before time (seconds since Unix epoch)",
+        },
+        exp: {
+          type: "integer",
+          description: "Expiration time (seconds since Unix epoch)",
+        },
+        iss: {
+          type: "string",
+          description: "Issuer identifier",
+        },
+      },
+      required: ["sub", "aud", "iat", "nbf", "exp", "iss"],
+      additionalProperties: true,
+    };
+  }
 }
 
 /**

@@ -240,12 +240,7 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
   sandbox.stub(IPProtectionService.guardian, "fetchProxyPass").resolves({
     status: 200,
     error: undefined,
-    pass: {
-      isValid: () => true,
-      shouldRotate: () => false,
-      asBearerToken: () => "Bearer helloworld",
-      rotationTimePoint: Temporal.Now.instant().add({ hours: 1 }),
-    },
+    pass: new ProxyPass(createProxyPassToken()),
   });
 
   IPProtectionService.updateState();
