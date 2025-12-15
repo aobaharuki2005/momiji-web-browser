@@ -3278,6 +3278,8 @@
         return;
       }
 
+      gBrowser.setIsSplitViewActive(false, splitview.tabs);
+
       for (let i = splitview.tabs.length - 1; i >= 0; i--) {
         this.#handleTabMove(splitview.tabs[i], () =>
           gBrowser.tabContainer.insertBefore(

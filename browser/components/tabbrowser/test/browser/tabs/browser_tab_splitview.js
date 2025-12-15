@@ -98,6 +98,15 @@ add_task(async function test_splitViewCreateAndAddTabs() {
     "Tabs have been unsplit from split view"
   );
 
+  let tab3Panel = tab3.linkedBrowser.closest(".browserSidebarContainer");
+  let tab4Panel = tab4.linkedBrowser.closest(".browserSidebarContainer");
+
+  Assert.ok(
+    !tab3Panel.classList.contains("split-view-panel-active") &&
+      !tab4Panel.classList.contains("split-view-panel-active"),
+    "Split view active classes have been removed from the tab panels"
+  );
+
   // Add tabs back to split view
   splitview = gBrowser.addTabSplitView([tab1, tab2]);
 
