@@ -15,6 +15,7 @@
 #include <fcntl.h>
 #include "ScreenHelperGTK.h"
 #include "DMABufFormats.h"
+#include "nsWindow.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #ifdef MOZ_LOGGING
@@ -945,9 +946,12 @@ bool WaylandSurface::RemoveOpaqueSurfaceHandlerLocked(
 
 LayoutDeviceIntSize WaylandSurface::GetScaledSize(
     const DesktopIntSize& aSize) const {
-  DesktopIntRect rect(mSubsurfacePosition, aSize);
+  DesktopIntRect rect(
+      gUseStableRounding ? mSubsurfacePosition : DesktopIntPoint(), aSize);
+
   auto scaledRect =
       LayoutDeviceIntRect::Round(rect * DesktopToLayoutDeviceScale(GetScale()));
+
   LOGVERBOSE(
       "WaylandSurface::GetScaledSize() pos [%d, %d] size [%d x %d] scale %f "
       "scaled [%d x %d]",
