@@ -102,7 +102,7 @@ use crate::renderer::GpuBufferBuilderF;
 use crate::box_shadow::BLUR_SAMPLE_SCALE;
 use crate::clip::{ClipNodeId, ClipTreeBuilder};
 use crate::spatial_tree::{SpatialTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace};
-use crate::composite::{tile_kind, CompositeState, CompositeTileSurface, CompositorKind, NativeTileId};
+use crate::composite::{tile_kind, CompositeTileSurface, CompositorKind, NativeTileId};
 use crate::composite::{CompositeTileDescriptor, CompositeTile};
 use crate::debug_colors;
 use euclid::{vec3, Scale, Vector2D, Box2D};
@@ -134,7 +134,7 @@ use crate::picture_textures::PictureCacheTextureHandle;
 use crate::util::{MaxRect, Recycler, ScaleOffset};
 use crate::tile_cache::{SliceDebugInfo, TileDebugInfo, DirtyTileDebugInfo};
 use crate::tile_cache::{SliceId, TileCacheInstance, TileSurface, NativeSurface};
-use crate::tile_cache::{BackdropKind, BackdropSurface, Tile};
+use crate::tile_cache::{BackdropKind, BackdropSurface};
 use crate::tile_cache::{TileKey, SubSliceIndex};
 use crate::invalidation::InvalidationReason;
 use crate::tile_cache::MAX_SURFACE_SIZE;
@@ -1620,32 +1620,6 @@ impl PicturePrimitive {
                                 ),
                             );
                         }
-                    }
-                }
-            }
-        }
-    }
-}
-
-impl CompositeState {
-    // A helper function to destroy all native surfaces for a given list of tiles
-    pub fn destroy_native_tiles<'a, I: Iterator<Item = &'a mut Box<Tile>>>(
-        &mut self,
-        tiles_iter: I,
-        resource_cache: &mut ResourceCache,
-    ) {
-        // Any old tiles that remain after the loop above are going to be dropped. For
-        // simple composite mode, the texture cache handle will expire and be collected
-        // by the texture cache. For native compositor mode, we need to explicitly
-        // invoke a callback to the client to destroy that surface.
-        if let CompositorKind::Native { .. } = self.compositor_kind {
-            for tile in tiles_iter {
-                // Only destroy native surfaces that have been allocated. It's
-                // possible for display port tiles to be created that never
-                // come on screen, and thus never get a native surface allocated.
-                if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { ref mut id, .. }, .. }) = tile.surface {
-                    if let Some(id) = id.take() {
-                        resource_cache.destroy_compositor_tile(id);
                     }
                 }
             }

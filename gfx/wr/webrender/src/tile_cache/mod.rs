@@ -1741,10 +1741,18 @@ impl TileCacheInstance {
                 // simple composite mode, the texture cache handle will expire and be collected
                 // by the texture cache. For native compositor mode, we need to explicitly
                 // invoke a callback to the client to destroy that surface.
-                frame_state.composite_state.destroy_native_tiles(
-                    old_tiles.values_mut(),
-                    frame_state.resource_cache,
-                );
+                if let CompositorKind::Native { .. } = frame_state.composite_state.compositor_kind {
+                    for tile in old_tiles.values_mut() {
+                        // Only destroy native surfaces that have been allocated. It's
+                        // possible for display port tiles to be created that never
+                        // come on screen, and thus never get a native surface allocated.
+                        if let Some(TileSurface::Texture { descriptor: SurfaceTextureDescriptor::Native { ref mut id, .. }, .. }) = tile.surface {
+                            if let Some(id) = id.take() {
+                                frame_state.resource_cache.destroy_compositor_tile(id);
+                            }
+                        }
+                    }
+                }
             }
         }
 
