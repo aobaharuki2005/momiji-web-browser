@@ -2128,13 +2128,20 @@ impl TileCacheInstance {
             None
         };
 
-
-        if let CompositorKind::Native { capabilities, .. } = composite_state.compositor_kind {
-            if external_image_id.is_some() &&
-               !capabilities.supports_external_compositor_surface_negative_scaling &&
-               (raster_to_device.scale.x < 0.0 || raster_to_device.scale.y < 0.0) {
-                external_image_id = None;
+        match composite_state.compositor_kind {
+            CompositorKind::Native { capabilities, .. } => {
+                if external_image_id.is_some() &&
+                !capabilities.supports_external_compositor_surface_negative_scaling &&
+                (raster_to_device.scale.x < 0.0 || raster_to_device.scale.y < 0.0) {
+                    external_image_id = None;
+                }
             }
+            CompositorKind::Layer { .. } => {
+                if raster_to_device.scale.x < 0.0 || raster_to_device.scale.y < 0.0 {
+                    return Err(NegativeScaling);
+                }
+            }
+            CompositorKind::Draw { .. } => {}
         }
 
         let compositor_transform_index = composite_state.register_transform(
@@ -3359,6 +3366,7 @@ enum SurfacePromotionFailure {
     ComplexTransform,
     SliceAtomic,
     SizeTooLarge,
+    NegativeScaling,
 }
 
 impl Display for SurfacePromotionFailure {
@@ -3379,6 +3387,7 @@ impl Display for SurfacePromotionFailure {
                 SurfacePromotionFailure::ComplexTransform => "has a complex transform",
                 SurfacePromotionFailure::SliceAtomic => "slice is atomic",
                 SurfacePromotionFailure::SizeTooLarge => "surface is too large for compositor",
+                SurfacePromotionFailure::NegativeScaling => "negative scaling is not supported",
             }.to_owned()
         )
     }
