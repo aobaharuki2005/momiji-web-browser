@@ -2371,6 +2371,11 @@ SettingGroupManager.registerGroups({
     headingLevel: 2,
     items: [
       {
+        id: "certEnableThirdPartyToggle",
+        l10nId: "certs-thirdparty-toggle",
+        supportPage: "automatically-trust-third-party-certificates",
+      },
+      {
         id: "certificateButtonGroup",
         control: "moz-box-group",
         items: [
@@ -2393,12 +2398,6 @@ SettingGroupManager.registerGroups({
             },
           },
         ],
-      },
-
-      {
-        id: "certEnableThirdPartyToggle",
-        l10nId: "certs-thirdparty-toggle",
-        supportPage: "automatically-trust-third-party-certificates",
       },
     ],
   },
