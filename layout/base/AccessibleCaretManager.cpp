@@ -675,9 +675,11 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
   if (offsets.content) {
     RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
     if (frameSelection) {
-      nsIFrame* theFrame = SelectionMovementUtils::GetFrameForNodeOffset(
-          offsets.content, offsets.offset, offsets.associate);
-      if (theFrame && theFrame != ptFrame) {
+      const FrameAndOffset textFrameAndOffsetContainingWordBoundary =
+          SelectionMovementUtils::GetFrameForNodeOffset(
+              offsets.content, offsets.offset, offsets.associate);
+      if (textFrameAndOffsetContainingWordBoundary &&
+          textFrameAndOffsetContainingWordBoundary != ptFrame) {
         SetSelectionDragState(true);
         frameSelection->HandleClick(
             MOZ_KnownLive(offsets.content) /* bug 1636889 */,
@@ -1221,7 +1223,7 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
                       : GetLastVisibleLeafFrameOrUnselectableChildFrame(
                             *GetSelection()->GetLastRange(),
                             getter_AddRefs(content), &offsetInContent);
-  if (!frameAndOffset.mFrame) {
+  if (!frameAndOffset) {
     return false;
   }
 
@@ -1248,7 +1250,7 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
       eSelectCluster, dir,
       static_cast<int32_t>(frameAndOffset.mOffsetInFrameContent), nsPoint(0, 0),
       {PeekOffsetOption::JumpLines, PeekOffsetOption::StopAtScroller});
-  nsresult rv = frameAndOffset.mFrame->PeekOffset(&limit);
+  nsresult rv = frameAndOffset->PeekOffset(&limit);
   if (NS_FAILED(rv)) {
     limit.mResultContent = content;
     limit.mContentOffset = offsetInContent;

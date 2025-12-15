@@ -5338,14 +5338,14 @@ nsresult nsIFrame::SelectByTypeAtPoint(const nsPoint& aPoint,
     return NS_ERROR_FAILURE;
   }
 
-  uint32_t offset;
-  nsIFrame* frame = SelectionMovementUtils::GetFrameForNodeOffset(
-      offsets.content, offsets.offset, offsets.associate, &offset);
-  if (!frame) {
+  FrameAndOffset frameAndOffset = SelectionMovementUtils::GetFrameForNodeOffset(
+      offsets.content, offsets.offset, offsets.associate);
+  if (!frameAndOffset) {
     return NS_ERROR_FAILURE;
   }
-  return frame->PeekBackwardAndForwardForSelection(
-      aBeginAmountType, aEndAmountType, static_cast<int32_t>(offset),
+  return frameAndOffset->PeekBackwardAndForwardForSelection(
+      aBeginAmountType, aEndAmountType,
+      static_cast<int32_t>(frameAndOffset.mOffsetInFrameContent),
       aBeginAmountType != eSelectWord, aSelectFlags);
 }
 

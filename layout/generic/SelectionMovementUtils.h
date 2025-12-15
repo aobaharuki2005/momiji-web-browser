@@ -30,6 +30,16 @@ struct MOZ_STACK_CLASS FrameAndOffset {
     return mFrame ? mFrame->GetContent() : nullptr;
   }
 
+  operator nsIFrame*() const { return mFrame; }
+
+  explicit operator bool() const { return !!mFrame; }
+  [[nodiscard]] bool operator!() const { return !mFrame; }
+
+  nsIFrame* operator->() const {
+    MOZ_ASSERT(mFrame);
+    return mFrame;
+  }
+
   nsIFrame* mFrame = nullptr;
   // The offset in mFrame->GetContent().
   uint32_t mOffsetInFrameContent = 0;
@@ -87,13 +97,11 @@ class SelectionMovementUtils final {
    * that frame.
    *
    * @param aNode input parameter for the node to look at
-   *              TODO: Make this `const nsIContent*` for `ContentEventHandler`.
    * @param aOffset offset into above node.
-   * @param aReturnOffset will contain offset into frame.
    */
-  static nsIFrame* GetFrameForNodeOffset(nsIContent* aNode, uint32_t aOffset,
-                                         CaretAssociationHint aHint,
-                                         uint32_t* aReturnOffset = nullptr);
+  static FrameAndOffset GetFrameForNodeOffset(const nsIContent* aNode,
+                                              uint32_t aOffset,
+                                              CaretAssociationHint aHint);
 
   /**
    * Return the first visible point in or at a leaf node in aRange or the first

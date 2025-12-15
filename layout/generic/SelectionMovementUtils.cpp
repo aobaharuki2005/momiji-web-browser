@@ -97,7 +97,7 @@ SelectionMovementUtils::PeekOffsetForCaretMove(
       SelectionMovementUtils::GetPrimaryFrameForCaret(
           aContent, aOffset, aOptions.contains(PeekOffsetOption::Visual), aHint,
           aCaretBidiLevel);
-  if (!frameForFocus.mFrame) {
+  if (!frameForFocus) {
     return Err(NS_ERROR_FAILURE);
   }
 
@@ -106,7 +106,7 @@ SelectionMovementUtils::PeekOffsetForCaretMove(
       aAmount, aDirection,
       static_cast<int32_t>(frameForFocus.mOffsetInFrameContent),
       aDesiredCaretPos, aOptions, eDefaultBehavior, aAncestorLimiter);
-  nsresult rv = frameForFocus.mFrame->PeekOffset(&pos);
+  nsresult rv = frameForFocus->PeekOffset(&pos);
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
@@ -118,33 +118,36 @@ nsPrevNextBidiLevels SelectionMovementUtils::GetPrevNextBidiLevels(
     nsIContent* aNode, uint32_t aContentOffset, CaretAssociationHint aHint,
     bool aJumpLines, const Element* aAncestorLimiter) {
   // Get the level of the frames on each side
-  nsIFrame* currentFrame;
-  uint32_t currentOffset;
   nsDirection direction;
 
   nsPrevNextBidiLevels levels{};
   levels.SetData(nullptr, nullptr, intl::BidiEmbeddingLevel::LTR(),
                  intl::BidiEmbeddingLevel::LTR());
 
-  currentFrame = SelectionMovementUtils::GetFrameForNodeOffset(
-      aNode, aContentOffset, aHint, &currentOffset);
-  if (!currentFrame) {
+  FrameAndOffset currentFrameAndOffset =
+      SelectionMovementUtils::GetFrameForNodeOffset(aNode, aContentOffset,
+                                                    aHint);
+  if (!currentFrameAndOffset) {
     return levels;
   }
 
-  auto [frameStart, frameEnd] = currentFrame->GetOffsets();
+  auto [frameStart, frameEnd] = currentFrameAndOffset->GetOffsets();
 
   if (0 == frameStart && 0 == frameEnd) {
     direction = eDirPrevious;
-  } else if (static_cast<uint32_t>(frameStart) == currentOffset) {
+  } else if (static_cast<uint32_t>(frameStart) ==
+             currentFrameAndOffset.mOffsetInFrameContent) {
     direction = eDirPrevious;
-  } else if (static_cast<uint32_t>(frameEnd) == currentOffset) {
+  } else if (static_cast<uint32_t>(frameEnd) ==
+             currentFrameAndOffset.mOffsetInFrameContent) {
     direction = eDirNext;
   } else {
     // we are neither at the beginning nor at the end of the frame, so we have
     // no worries
-    intl::BidiEmbeddingLevel currentLevel = currentFrame->GetEmbeddingLevel();
-    levels.SetData(currentFrame, currentFrame, currentLevel, currentLevel);
+    intl::BidiEmbeddingLevel currentLevel =
+        currentFrameAndOffset->GetEmbeddingLevel();
+    levels.SetData(currentFrameAndOffset.mFrame, currentFrameAndOffset.mFrame,
+                   currentLevel, currentLevel);
     return levels;
   }
 
@@ -152,12 +155,12 @@ nsPrevNextBidiLevels SelectionMovementUtils::GetPrevNextBidiLevels(
   if (aJumpLines) {
     peekOffsetOptions += PeekOffsetOption::JumpLines;
   }
-  nsIFrame* newFrame = currentFrame
+  nsIFrame* newFrame = currentFrameAndOffset
                            ->GetFrameFromDirection(direction, peekOffsetOptions,
                                                    aAncestorLimiter)
                            .mFrame;
 
-  FrameBidiData currentBidi = currentFrame->GetBidiData();
+  FrameBidiData currentBidi = currentFrameAndOffset->GetBidiData();
   intl::BidiEmbeddingLevel currentLevel = currentBidi.embeddingLevel;
   intl::BidiEmbeddingLevel newLevel =
       newFrame ? newFrame->GetEmbeddingLevel() : currentBidi.baseLevel;
@@ -166,8 +169,8 @@ nsPrevNextBidiLevels SelectionMovementUtils::GetPrevNextBidiLevels(
   // incorrectly.
   // XXX This could be removed once bug 339786 is fixed.
   if (!aJumpLines) {
-    if (currentFrame->IsBrFrame()) {
-      currentFrame = nullptr;
+    if (currentFrameAndOffset->IsBrFrame()) {
+      currentFrameAndOffset = {nullptr, 0u};
       currentLevel = currentBidi.baseLevel;
     }
     if (newFrame && newFrame->IsBrFrame()) {
@@ -177,9 +180,11 @@ nsPrevNextBidiLevels SelectionMovementUtils::GetPrevNextBidiLevels(
   }
 
   if (direction == eDirNext) {
-    levels.SetData(currentFrame, newFrame, currentLevel, newLevel);
+    levels.SetData(currentFrameAndOffset.mFrame, newFrame, currentLevel,
+                   newLevel);
   } else {
-    levels.SetData(newFrame, currentFrame, newLevel, currentLevel);
+    levels.SetData(newFrame, currentFrameAndOffset.mFrame, newLevel,
+                   currentLevel);
   }
 
   return levels;
@@ -246,23 +251,22 @@ static bool IsDisplayContents(const nsIContent* aContent) {
 }
 
 // static
-nsIFrame* SelectionMovementUtils::GetFrameForNodeOffset(
-    nsIContent* aNode, uint32_t aOffset, CaretAssociationHint aHint,
-    uint32_t* aReturnOffset /* = nullptr */) {
+FrameAndOffset SelectionMovementUtils::GetFrameForNodeOffset(
+    const nsIContent* aNode, uint32_t aOffset, CaretAssociationHint aHint) {
   if (!aNode) {
-    return nullptr;
+    return {};
   }
 
   if (static_cast<int32_t>(aOffset) < 0) {
-    return nullptr;
+    return {};
   }
 
   if (!aNode->GetPrimaryFrame() && !IsDisplayContents(aNode)) {
-    return nullptr;
+    return {};
   }
 
   nsIFrame *returnFrame = nullptr, *lastFrame = aNode->GetPrimaryFrame();
-  nsCOMPtr<nsIContent> theNode;
+  const nsIContent* theNode = nullptr;
   uint32_t offsetInFrameContent, offsetInLastFrameContent = aOffset;
 
   while (true) {
@@ -316,11 +320,10 @@ nsIFrame* SelectionMovementUtils::GetFrameForNodeOffset(
         aOffset = aOffset > childIndex ? theNode->GetChildCount() : 0;
         continue;
       }
+
       // Check to see if theNode is a text node. If it is, translate
       // aOffset into an offset into the text node.
-
-      RefPtr<Text> textNode = theNode->GetAsText();
-      if (textNode) {
+      if (const Text* textNode = Text::FromNode(theNode)) {
         if (theNode->GetPrimaryFrame()) {
           if (aOffset > childIndex) {
             uint32_t textLength = textNode->Length();
@@ -339,7 +342,7 @@ nsIFrame* SelectionMovementUtils::GetFrameForNodeOffset(
             nsCOMPtr<nsIContent> newChildNode =
                 aNode->GetChildAt_Deprecated(newChildIndex);
             if (!newChildNode) {
-              return nullptr;
+              return {};
             }
 
             aNode = newChildNode;
@@ -357,32 +360,36 @@ nsIFrame* SelectionMovementUtils::GetFrameForNodeOffset(
     // If the node is a ShadowRoot, the frame needs to be adjusted,
     // because a ShadowRoot does not get a frame. Its children are rendered
     // as children of the host.
-    if (ShadowRoot* shadow = ShadowRoot::FromNode(theNode)) {
+    if (const ShadowRoot* shadow = ShadowRoot::FromNode(theNode)) {
       theNode = shadow->GetHost();
     }
 
     returnFrame = theNode->GetPrimaryFrame();
-    if (!returnFrame) {
-      if (aHint == CaretAssociationHint::Before) {
-        if (aOffset > 0) {
-          --aOffset;
-          continue;
-        }
-        break;
-      }
-      if (aOffset < theNode->GetChildCount()) {
-        ++aOffset;
+    if (returnFrame) {
+      // FIXME: offsetInFrameContent has not been updated for theNode yet when
+      // theNode is different from aNode. E.g., if a child at aNode and aOffset
+      // is an <img>, theNode is now the <img> but offsetInFrameContent is the
+      // offset for aNode.
+      break;
+    }
+
+    if (aHint == CaretAssociationHint::Before) {
+      if (aOffset > 0) {
+        --aOffset;
         continue;
       }
       break;
     }
-
+    if (aOffset < theNode->GetChildCount()) {
+      ++aOffset;
+      continue;
+    }
     break;
   }  // end while
 
   if (!returnFrame) {
     if (!lastFrame) {
-      return nullptr;
+      return {};
     }
     returnFrame = lastFrame;
     offsetInFrameContent = offsetInLastFrameContent;
@@ -405,10 +412,7 @@ nsIFrame* SelectionMovementUtils::GetFrameForNodeOffset(
   returnFrame->GetChildFrameContainingOffset(
       static_cast<int32_t>(offsetInFrameContent),
       aHint == CaretAssociationHint::After, &unused, &returnFrame);
-  if (aReturnOffset) {
-    *aReturnOffset = offsetInFrameContent;
-  }
-  return returnFrame;
+  return {returnFrame, offsetInFrameContent};
 }
 
 // static
@@ -755,12 +759,14 @@ CaretFrameData SelectionMovementUtils::GetCaretFrameForNodeOffset(
   MOZ_ASSERT_IF(aForceEditableRegion == ForceEditableRegion::Yes,
                 aContentNode->IsEditable());
 
-  result.mFrame = result.mUnadjustedFrame =
-      SelectionMovementUtils::GetFrameForNodeOffset(
-          aContentNode, aOffset, aFrameHint, &result.mOffsetInFrameContent);
-  if (!result.mFrame) {
+  const FrameAndOffset frameAndOffset =
+      SelectionMovementUtils::GetFrameForNodeOffset(aContentNode, aOffset,
+                                                    aFrameHint);
+  if (!frameAndOffset) {
     return {};
   }
+  result.mFrame = result.mUnadjustedFrame = frameAndOffset.mFrame;
+  result.mOffsetInFrameContent = frameAndOffset.mOffsetInFrameContent;
 
   if (SelectionMovementUtils::AdjustFrameForLineStart(
           result.mFrame, result.mOffsetInFrameContent)) {
@@ -779,14 +785,14 @@ CaretFrameData SelectionMovementUtils::GetCaretFrameForNodeOffset(
   //
   // Direction Style from visibility->mDirection
   // ------------------
-  if (!result.mFrame->PresContext()->BidiEnabled()) {
+  if (!result->PresContext()->BidiEnabled()) {
     return result;
   }
 
   // If there has been a reflow, take the caret Bidi level to be the level of
   // the current frame
   if (aBidiLevel & BIDI_LEVEL_UNDEFINED) {
-    aBidiLevel = result.mFrame->GetEmbeddingLevel();
+    aBidiLevel = result->GetEmbeddingLevel();
   }
 
   nsIFrame* frameBefore;
@@ -796,7 +802,7 @@ CaretFrameData SelectionMovementUtils::GetCaretFrameForNodeOffset(
   intl::BidiEmbeddingLevel
       levelAfter;  // Bidi level of the character after the caret
 
-  auto [start, end] = result.mFrame->GetOffsets();
+  auto [start, end] = result->GetOffsets();
   if (start == 0 || end == 0 ||
       static_cast<uint32_t>(start) == result.mOffsetInFrameContent ||
       static_cast<uint32_t>(end) == result.mOffsetInFrameContent) {
@@ -829,7 +835,7 @@ CaretFrameData SelectionMovementUtils::GetCaretFrameForNodeOffset(
           if (result.mFrame != frameBefore) {
             if (frameBefore) {  // if there is a frameBefore, move into it
               result.mFrame = frameBefore;
-              std::tie(start, end) = result.mFrame->GetOffsets();
+              std::tie(start, end) = result->GetOffsets();
               result.mOffsetInFrameContent = end;
             } else {
               // if there is no frameBefore, we must be at the beginning of
@@ -860,7 +866,7 @@ CaretFrameData SelectionMovementUtils::GetCaretFrameForNodeOffset(
             if (frameAfter) {
               // if there is a frameAfter, move into it
               result.mFrame = frameAfter;
-              std::tie(start, end) = result.mFrame->GetOffsets();
+              std::tie(start, end) = result->GetOffsets();
               result.mOffsetInFrameContent = start;
             } else {
               // if there is no frameAfter, we must be at the end of the line
@@ -895,8 +901,8 @@ CaretFrameData SelectionMovementUtils::GetCaretFrameForNodeOffset(
                                                         aBidiLevel);
           if (MOZ_LIKELY(frameOrError.isOk())) {
             result.mFrame = frameOrError.unwrap();
-            std::tie(start, end) = result.mFrame->GetOffsets();
-            levelAfter = result.mFrame->GetEmbeddingLevel();
+            std::tie(start, end) = result->GetOffsets();
+            levelAfter = result->GetEmbeddingLevel();
             if (aBidiLevel.IsRTL()) {
               // c8: caret to the right of the rightmost character
               result.mOffsetInFrameContent = levelAfter.IsRTL() ? start : end;
@@ -919,8 +925,8 @@ CaretFrameData SelectionMovementUtils::GetCaretFrameForNodeOffset(
                   frameBefore, eDirPrevious, aBidiLevel);
           if (MOZ_LIKELY(frameOrError.isOk())) {
             result.mFrame = frameOrError.unwrap();
-            std::tie(start, end) = result.mFrame->GetOffsets();
-            levelBefore = result.mFrame->GetEmbeddingLevel();
+            std::tie(start, end) = result->GetOffsets();
+            levelBefore = result->GetEmbeddingLevel();
             if (aBidiLevel.IsRTL()) {
               // c12: caret to the left of the leftmost character
               result.mOffsetInFrameContent = levelBefore.IsRTL() ? end : start;
@@ -947,7 +953,7 @@ PrimaryFrameData SelectionMovementUtils::GetPrimaryFrameForCaret(
     const PrimaryFrameData result =
         SelectionMovementUtils::GetPrimaryOrCaretFrameForNodeOffset(
             aContent, aOffset, aVisual, aHint, aCaretBidiLevel);
-    if (result.mFrame) {
+    if (result) {
       return result;
     }
   }
@@ -981,13 +987,12 @@ PrimaryFrameData SelectionMovementUtils::GetPrimaryOrCaretFrameForNodeOffset(
             nullptr, aContent, aOffset, aHint, aCaretBidiLevel,
             aContent && aContent->IsEditable() ? ForceEditableRegion::Yes
                                                : ForceEditableRegion::No);
-    return {{result.mFrame, result.mOffsetInFrameContent}, result.mHint};
+    return result;
   }
 
-  uint32_t offset = 0;
-  nsIFrame* theFrame = SelectionMovementUtils::GetFrameForNodeOffset(
-      aContent, aOffset, aHint, &offset);
-  return {{theFrame, offset}, aHint};
+  return {
+      SelectionMovementUtils::GetFrameForNodeOffset(aContent, aOffset, aHint),
+      aHint};
 }
 
 }  // namespace mozilla
