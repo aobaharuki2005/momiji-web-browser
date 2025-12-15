@@ -6,7 +6,6 @@ const locales = [
 
 const deprecated = [
   "islamic",
-  "islamic-rgsa"
 ];
 
 const supportedCalendars = Intl.supportedValuesOf("calendar");

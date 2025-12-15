@@ -76,16 +76,7 @@ function resolveDisplayNamesInternals(lazyDisplayNamesData) {
   }
 
   if (mozExtensions) {
-    // Changes from "Intl era and monthCode" proposal.
-    //
-    // https://tc39.es/proposal-intl-era-monthcode/#sec-createdatetimeformat
-    if (r.ca === "islamic" || r.ca === "islamic-rgsa") {
-      ReportWarning(JSMSG_DEPRECATED_CALENDAR, r.ca);
-
-      // Fallback to "islamic-tbla" calendar.
-      r.ca = "islamic-tbla";
-    }
-
+    // Note that special casing applies in DateTimeFormat.
     internalProps.calendar = r.ca;
   }
 
