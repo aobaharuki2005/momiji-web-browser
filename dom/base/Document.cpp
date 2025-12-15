@@ -16083,6 +16083,7 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
   }
 
   // 2. Let document be endpoint's node document.
+  MOZ_ASSERT(aEndpoint.OwnerDoc() == this);
   // 3. Assert: endpoint is a Document or endpoint's popover visibility state is
   // showing.
   // 4. Assert: endpoint is a Document or endpoint's popover attribute is in the
