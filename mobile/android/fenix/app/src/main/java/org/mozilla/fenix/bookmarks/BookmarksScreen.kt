@@ -35,6 +35,7 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -44,6 +45,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -85,6 +87,8 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -931,11 +935,38 @@ private fun SelectFolderScreen(
         store.dispatch(SelectFolderAction.ViewAppeared)
     }
 
+    BackInvokedHandler(state?.isSearching ?: false) {
+        store.dispatch(SelectFolderAction.SearchDismissed)
+    }
+
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Scaffold(
+        modifier = Modifier
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onTap = {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                                store.dispatch(SelectFolderAction.SearchDismissed)
+                            },
+                        )
+                    },
         topBar = {
-            SelectFolderTopBar(store = store)
+            if (state?.isSearching ?: false) {
+                SelectFolderSearchTopBar(store = store)
+            } else {
+                SelectFolderTopBar(store = store)
+            }
         },
     ) { paddingValues ->
+        if (state?.isLoading ?: false) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+            return@Scaffold
+        }
         LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
@@ -943,10 +974,13 @@ private fun SelectFolderScreen(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            items(state?.folders.orEmpty()) { folder ->
+            items(
+                items = state?.visibleFolders ?: listOf(),
+            ) { folder ->
                 FolderListItem(
                     folder = folder,
                     isSelected = folder.guid == state?.selectedGuid,
+                    showPadding = state?.isSearching ?: true,
                     onClick = { store.dispatch(SelectFolderAction.ItemClicked(folder)) },
                 )
             }
@@ -961,13 +995,75 @@ private fun SelectFolderScreen(
 }
 
 @Composable
+private fun SelectFolderSearchTopBar(store: BookmarksStore) {
+    val focusRequester = remember { FocusRequester() }
+    var text by remember {
+        mutableStateOf(
+            TextFieldValue(
+                store.state.bookmarksSelectFolderState?.searchQuery.orEmpty(),
+                selection = TextRange(
+                    store.state.bookmarksSelectFolderState?.searchQuery?.length ?: 0,
+                ),
+            ),
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+        val value = text.text
+        text = text.copy(selection = TextRange(value.length))
+    }
+
+    TopAppBar(
+        title = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { newValue ->
+                    text = newValue
+                    store.dispatch(
+                        SelectFolderAction.SearchQueryUpdated(newValue.text),
+                    )
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+                placeholder = {
+                    stringResource(R.string.select_bookmark_search_button_content_description)
+                },
+                leadingIcon = {
+                    Icon(
+                        painter = painterResource(iconsR.drawable.mozac_ic_search_24),
+                        contentDescription = stringResource(
+                            R.string.select_bookmark_search_button_content_description,
+                            ),
+                        )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+            )
+        },
+        navigationIcon = {},
+        actions = {},
+        windowInsets = WindowInsets(
+            top = 0.dp,
+            bottom = 0.dp,
+        ),
+    )
+}
+
+@Composable
 private fun FolderListItem(
     folder: SelectFolderItem,
     isSelected: Boolean,
+    showPadding: Boolean = true,
     onClick: () -> Unit,
 ) {
     if (folder.isDesktopRoot) {
-        Box(modifier = Modifier.padding(start = folder.startPadding)) {
+        Box(
+            modifier = Modifier.padding(
+            start = folder.startPadding,
+            ),
+        ) {
             Row(modifier = Modifier.width(FirefoxTheme.layout.size.containerMaxWidth)) {
                 Spacer(modifier = Modifier.width(56.dp))
                 Text(
@@ -978,7 +1074,7 @@ private fun FolderListItem(
             }
         }
     } else {
-        Box(modifier = Modifier.padding(start = folder.startPadding)) {
+        Box(modifier = Modifier.padding(start = if (!showPadding) folder.startPadding else 0.dp)) {
             SelectableIconListItem(
                 label = folder.title,
                 isSelected = isSelected,
@@ -1044,6 +1140,17 @@ private fun SelectFolderTopBar(store: BookmarksStore) {
                 }
 
                 SelectFolderSortOverflowMenu(store = store)
+            }
+
+            IconButton(onClick = {
+                store.dispatch(SelectFolderAction.SearchClicked)
+            }) {
+                Icon(
+                    painter = painterResource(iconsR.drawable.mozac_ic_search_24),
+                    contentDescription = stringResource(
+                        R.string.select_bookmark_search_button_content_description,
+                    ),
+                )
             }
 
             if (onNewFolderClick != null) {

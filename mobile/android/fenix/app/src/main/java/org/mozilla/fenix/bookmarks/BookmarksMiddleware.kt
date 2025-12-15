@@ -375,6 +375,23 @@ internal class BookmarksMiddleware(
                 context.store.tryDispatchLoadFolders()
                 saveBookmarkSortOrder(context.store.state.sortOrder)
             }
+            is SelectFolderAction.SearchQueryUpdated -> {
+                scope.launch {
+                    val state = context.store.state.bookmarksSelectFolderState
+                    val filteredFolders = state?.folders
+                        ?.filter {
+                            it.title.startsWith(
+                                state.searchQuery,
+                                ignoreCase = true,
+                            )
+                        }
+                    filteredFolders?.let {
+                        context.store.dispatch(SelectFolderAction.FilteredFoldersLoaded(it))
+                    }
+                }
+            }
+            SelectFolderAction.SearchClicked,
+            SelectFolderAction.SearchDismissed,
             is InitEditLoaded,
             SnackbarAction.Undo,
             is OpenTabsConfirmationDialogAction.Present,
@@ -390,6 +407,7 @@ internal class BookmarksMiddleware(
             is AddFolderAction.FolderCreated,
             is AddFolderAction.TitleChanged,
             is SelectFolderAction.FoldersLoaded,
+            is SelectFolderAction.FilteredFoldersLoaded,
             is SelectFolderAction.ItemClicked,
             EditFolderAction.DeleteClicked,
             is ReceivedSyncSignInUpdate,

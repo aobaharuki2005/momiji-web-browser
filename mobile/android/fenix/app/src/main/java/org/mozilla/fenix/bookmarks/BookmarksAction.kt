@@ -117,7 +117,11 @@ internal sealed class EditBookmarkAction : BookmarksAction {
 internal sealed class SelectFolderAction : BookmarksAction {
     data object ViewAppeared : SelectFolderAction()
     data class FoldersLoaded(val folders: List<SelectFolderItem>) : SelectFolderAction()
+    data class FilteredFoldersLoaded(val folders: List<SelectFolderItem>) : SelectFolderAction()
     data class ItemClicked(val folder: SelectFolderItem) : SelectFolderAction()
+    data object SearchClicked : SelectFolderAction()
+    data object SearchDismissed : SelectFolderAction()
+    data class SearchQueryUpdated(val query: String) : SelectFolderAction()
 
     internal sealed class SortMenu : SelectFolderAction() {
         data object SortMenuButtonClicked : SortMenu()

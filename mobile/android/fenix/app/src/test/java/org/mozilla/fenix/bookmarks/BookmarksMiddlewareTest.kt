@@ -991,6 +991,38 @@ class BookmarksMiddlewareTest {
     }
 
     @Test
+    fun `GIVEN current screen select folder WHEN the search query is updated THEN FilteredFoldersLoaded gets dispatched with the filtered folders`() = runTestOnMain {
+        val bookmarksFolder = SelectFolderItem(0, BookmarkItem.Folder("Bookmarks", "guid0", null))
+        val folders = listOf(
+            bookmarksFolder,
+            SelectFolderItem(1, BookmarkItem.Folder("Nested One", "guid0", null)),
+            SelectFolderItem(2, BookmarkItem.Folder("Nested Two", "guid0", null)),
+            SelectFolderItem(2, BookmarkItem.Folder("Nested Two", "guid0", null)),
+            SelectFolderItem(1, BookmarkItem.Folder("Nested One", "guid0", null)),
+            SelectFolderItem(2, BookmarkItem.Folder("Nested Two", "guid1", null)),
+            SelectFolderItem(3, BookmarkItem.Folder("Nested Three", "guid0", null)),
+            SelectFolderItem(0, BookmarkItem.Folder("Nested 0", "guid0", null)),
+        )
+
+        val middleware = buildMiddleware()
+        val store = middleware.makeStore(
+            initialState = BookmarksState.default.copy(
+                bookmarksSelectFolderState = BookmarksSelectFolderState(
+                    outerSelectionGuid = "selection guid",
+                    isSearching = true,
+                    folders = folders,
+                    filteredFolders = folders,
+                ),
+            ),
+        )
+
+        val searchQueryNew = "bookmarks"
+
+        store.dispatch(SelectFolderAction.SearchQueryUpdated(searchQueryNew))
+        assertEquals(listOf(bookmarksFolder), store.state.bookmarksSelectFolderState?.filteredFolders)
+    }
+
+    @Test
     fun `WHEN edit clicked in bookmark item menu THEN nav to edit screen`() = runTestOnMain {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(generateBookmarkTree()))

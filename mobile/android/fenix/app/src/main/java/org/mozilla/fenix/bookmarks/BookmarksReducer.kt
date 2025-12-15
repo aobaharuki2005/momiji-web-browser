@@ -22,7 +22,9 @@ internal fun bookmarksReducer(state: BookmarksState, action: BookmarksAction) = 
         bookmarkItems = action.bookmarkItems.sortedWith(state.sortOrder.comparator),
         isLoading = false,
     )
-    is SearchClicked -> state.copy(isSearching = true)
+    is SearchClicked -> {
+        state.copy(isSearching = true)
+    }
     is SearchDismissed -> state.copy(isSearching = false)
     is RecursiveSelectionCountLoaded -> state.copy(recursiveSelectedCount = action.count)
     is BookmarkLongClicked -> state.toggleSelectionOf(action.item)
@@ -94,13 +96,44 @@ private fun BookmarksState.handleOpenTabsConfirmationDialogAction(
 
 private fun BookmarksState.handleSelectFolderAction(action: SelectFolderAction): BookmarksState {
     return when (action) {
+        is SelectFolderAction.SearchQueryUpdated -> copy(
+            bookmarksSelectFolderState =
+                bookmarksSelectFolderState?.copy(
+                    searchQuery = action.query,
+                    isLoading = true,
+                ),
+        )
+        is SelectFolderAction.SearchClicked -> copy(
+            bookmarksSelectFolderState =
+                bookmarksSelectFolderState?.copy(
+                    isSearching = true,
+                ),
+        )
+        is SelectFolderAction.SearchDismissed -> copy(
+            bookmarksSelectFolderState =
+                bookmarksSelectFolderState?.copy(
+                    isSearching = false,
+                ),
+        )
         is SelectFolderAction.ItemClicked -> updateSelectedFolder(action.folder)
         is SelectFolderAction.FoldersLoaded -> copy(
             bookmarksSelectFolderState = bookmarksSelectFolderState?.copy(
                 folders = action.folders,
+                // If filtered folders is not set on Folders loaded, when the search button is
+                // clicked, nothing will display until the query gets updated.
+                filteredFolders = action.folders,
+                isLoading = false,
             ) ?: BookmarksSelectFolderState(
                 folders = action.folders,
+                filteredFolders = action.folders,
                 outerSelectionGuid = BookmarkRoot.Mobile.id,
+                isLoading = false,
+            ),
+        )
+        is SelectFolderAction.FilteredFoldersLoaded -> copy(
+            bookmarksSelectFolderState = bookmarksSelectFolderState?.copy(
+                filteredFolders = action.folders,
+                isLoading = false,
             ),
         )
         is SelectFolderAction.SortMenu -> this.handleSortMenuAction(action)

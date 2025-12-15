@@ -251,12 +251,26 @@ internal data class SelectFolderItem(
  * this represents the selection GUID for the nest select screen where the newly added folder is being
  * placed. Optional since this screen may never be displayed.
  * @property folders The folders to display.
+ * @property filteredFolders The currently filtered collection of [folders]
+ * @property searchQuery The term used to filter the folders displayed.
+ * @property isLoading State representing if the initial load or the search has completed.
+ * @property isSearching State representing if currently in search mode.
  */
 internal data class BookmarksSelectFolderState(
     val outerSelectionGuid: String,
     val innerSelectionGuid: String? = null,
     val folders: List<SelectFolderItem> = listOf(),
-) {
+    val filteredFolders: List<SelectFolderItem> = listOf(),
+    val searchQuery: String = "",
+    val isLoading: Boolean = true,
+    val isSearching: Boolean = false,
+    ) {
+    val visibleFolders: List<SelectFolderItem>
+        get() = if (isSearching) {
+            filteredFolders.map { it.copy(indentation = 0) }
+        } else {
+            folders
+        }
     val selectedGuid: String
         get() = innerSelectionGuid ?: outerSelectionGuid
 }
