@@ -616,7 +616,7 @@ impl PicturePrimitive {
         pt.end_level();
     }
 
-    fn resolve_scene_properties(&mut self, properties: &SceneProperties) {
+    pub fn resolve_scene_properties(&mut self, properties: &SceneProperties) {
         match self.composite_mode {
             Some(PictureCompositeMode::Filter(ref mut filter)) => {
                 match *filter {
@@ -1069,16 +1069,6 @@ impl PicturePrimitive {
                 gpu_address,
             });
         }
-    }
-
-    /// Do initial checks to determine whether this picture should be drawn as part of the
-    /// frame build.
-    pub fn pre_update(
-        &mut self,
-        frame_context: &FrameBuildingContext,
-    ) {
-        // Resolve animation properties
-        self.resolve_scene_properties(frame_context.scene_properties);
     }
 
     /// Called during initial picture traversal, before we know the
