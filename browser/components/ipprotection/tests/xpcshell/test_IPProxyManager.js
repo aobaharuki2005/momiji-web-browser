@@ -256,6 +256,8 @@ add_task(async function test_IPPProxytates_active() {
     error: undefined,
     pass: {
       isValid: () => options.validProxyPass,
+      shouldRotate: () => !options.validProxyPass,
+      rotationTimePoint: Temporal.Now.instant().add({ hours: 1 }),
       asBearerToken: () => "Bearer helloworld",
     },
   });
@@ -329,6 +331,8 @@ add_task(async function test_IPPProxytates_start_stop() {
     error: undefined,
     pass: {
       isValid: () => options.validProxyPass,
+      shouldRotate: () => !options.validProxyPass,
+      rotationTimePoint: Temporal.Now.instant().add({ hours: 1 }),
       asBearerToken: () => "Bearer helloworld",
     },
   });

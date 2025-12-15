@@ -384,13 +384,8 @@ add_task(async function test_fetchProxyPass() {
             "string",
             `${name}: pass.token should be a string`
           );
-          Assert.strictEqual(
-            typeof pass.until,
-            "number",
-            `${name}: pass.until should be a number`
-          );
           Assert.greater(
-            pass.until,
+            pass.until.epochMilliseconds,
             Date.now(),
             `${name}: pass.until should be in the future`
           );
@@ -436,5 +431,52 @@ add_task(async function test_parseGuardianSuccessURL() {
 
     Assert.equal(result.ok, expects.ok, `${name}: ok should match`);
     Assert.equal(result.error, expects.error, `${name}: error should match`);
+  });
+});
+
+add_task(async function test_proxyPassShouldRotate() {
+  // Create a static synthetic JWT-like token for testing
+  const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }));
+  const payload = btoa(JSON.stringify({ sub: "test", exp: 1702032000 }));
+  const testToken = `${header}.${payload}.signature`;
+
+  const oneHour = Temporal.Duration.from({ hours: 1 });
+  const from = Temporal.Instant.from("2025-12-08T12:00:00Z"); // Static point in time
+  // The pass is valid for 1 hour from 'from'
+  const until = from.add(oneHour);
+  const rotationTime = ProxyPass.ROTATION_TIME;
+
+  const testcases = [
+    {
+      name: "Should not rotate when before rotation time",
+      currentTime: until.subtract(rotationTime).subtract({ seconds: 1 }),
+      expects: { shouldRotate: false },
+    },
+    {
+      name: "Should rotate when at rotation time",
+      currentTime: until.subtract(rotationTime),
+      expects: { shouldRotate: true },
+    },
+    {
+      name: "Should rotate when after rotation time",
+      currentTime: until.subtract(rotationTime).add({ seconds: 1 }),
+      expects: { shouldRotate: true },
+    },
+    {
+      name: "Should rotate when pass is expired",
+      currentTime: until.add({ seconds: 1 }),
+      expects: { shouldRotate: true },
+    },
+  ];
+
+  testcases.forEach(({ name, currentTime, expects }) => {
+    info(`Running test case: ${name}`);
+    const proxyPass = new ProxyPass(testToken, until, from);
+    const result = proxyPass.shouldRotate(currentTime);
+    Assert.equal(
+      result,
+      expects.shouldRotate,
+      `${name}: shouldRotate should match`
+    );
   });
 });

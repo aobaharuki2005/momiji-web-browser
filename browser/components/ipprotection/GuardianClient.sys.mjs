@@ -173,6 +173,7 @@ export class GuardianClient {
     const response = await this.withToken(async token => {
       return await fetch(this.#tokenURL, {
         method: "GET",
+        cache: "no-cache",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -276,18 +277,22 @@ export class GuardianClient {
  *
  * Immutable after creation.
  */
-export class ProxyPass {
+export class ProxyPass extends EventTarget {
   /**
    * @param {string} token - The JWT to use for authentication.
-   * @param {number} until - The timestamp until which the token is valid.
+   * @param {Temporal.Instant} until -The Point in time when the token becomes invalid.
+   * @param {Temporal.Instant} from - The Point in time when the token becomes valid.
    */
-  constructor(token, until) {
-    if (typeof token !== "string" || typeof until !== "number") {
-      throw new TypeError("Invalid arguments for ProxyPass constructor");
+  constructor(token, until, from = Temporal.Now.instant()) {
+    super();
+    if (typeof token !== "string") {
+      throw new TypeError(
+        "Invalid arguments for ProxyPass constructor, token is not a string"
+      );
     }
     this.token = token;
+    this.from = from;
     this.until = until;
-    this.from = Date.now();
     const [header, body] = this.token.split(".");
     try {
       const parses = [header, body].every(json =>
@@ -299,21 +304,18 @@ export class ProxyPass {
     } catch (error) {
       throw new TypeError("Invalid token format: " + error.message);
     }
-    Object.freeze(this);
-  }
-  isValid() {
-    const now = Date.now();
-    return this.until > now;
   }
 
-  shouldRotate() {
-    if (!this.isValid) {
+  isValid(now = Temporal.Now.instant()) {
+    // If the remaining duration is zero or positive, the pass is still valid.
+    return Temporal.Instant.compare(now, this.until) < 0;
+  }
+
+  shouldRotate(now = Temporal.Now.instant()) {
+    if (!this.isValid(now)) {
       return true;
     }
-    const totalLifespan = this.until - this.from;
-    const rotationPoint =
-      this.from + totalLifespan * (ProxyPass.ROTATION_PERCENTAGE / 100);
-    return Date.now() > rotationPoint;
+    return Temporal.Instant.compare(now, this.rotationTimePoint) >= 0;
   }
 
   /**
@@ -347,9 +349,8 @@ export class ProxyPass {
         console.error("Invalid max-age value in Cache-Control header");
         return null;
       }
-
-      const until = Date.now() + max_age * 1000;
-
+      const from = Temporal.Now.instant();
+      const until = from.add(Temporal.Duration.from({ seconds: max_age }));
       // Parse JSON response
       const responseData = await response.json();
       const token = responseData?.token;
@@ -359,18 +360,24 @@ export class ProxyPass {
         return null;
       }
 
-      return new ProxyPass(token, until);
+      return new ProxyPass(token, until, from);
     } catch (error) {
       console.error("Error parsing proxy pass response:", error);
       return null;
     }
   }
+  /**
+   * @type {Temporal.Instant} - The Point in time when the token should be rotated.
+   */
+  get rotationTimePoint() {
+    return this.until.subtract(ProxyPass.ROTATION_TIME);
+  }
 
   asBearerToken() {
     return `Bearer ${this.token}`;
   }
-
-  static ROTATION_PERCENTAGE = 90; // 0-100 % - how long in the duration until the pass should be rotated.
+  // Rotate 10 Minutes from the End Time
+  static ROTATION_TIME = Temporal.Duration.from({ minutes: 10 });
 }
 
 /**

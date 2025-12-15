@@ -92,7 +92,9 @@ function setupStubs(
     error: undefined,
     pass: {
       isValid: () => options.validProxyPass,
+      shouldRotate: () => !options.validProxyPass,
       asBearerToken: () => "Bearer helloworld",
+      rotationTimePoint: Temporal.Now.instant().add({ hours: 1 }),
     },
   });
 }

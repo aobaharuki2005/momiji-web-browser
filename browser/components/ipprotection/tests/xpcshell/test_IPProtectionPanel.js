@@ -242,7 +242,9 @@ add_task(async function test_IPProtectionPanel_started_stopped() {
     error: undefined,
     pass: {
       isValid: () => true,
+      shouldRotate: () => false,
       asBearerToken: () => "Bearer helloworld",
+      rotationTimePoint: Temporal.Now.instant().add({ hours: 1 }),
     },
   });
 
