@@ -12,3 +12,5 @@ run-if = [
 ["test_ChatStore.js"]
 
 ["test_chat-utils.js"]
+
+["theme_aiwindow.js"]

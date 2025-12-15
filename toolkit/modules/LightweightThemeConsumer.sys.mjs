@@ -223,6 +223,7 @@ export function LightweightThemeConsumer(aDocument) {
   this._doc = aDocument;
   this._win = aDocument.defaultView;
   this._winId = this._win.docShell.outerWindowID;
+  this._isAIWindow = this._doc.documentElement.hasAttribute("ai-window");
 
   XPCOMUtils.defineLazyPreferenceGetter(
     this,
@@ -240,7 +241,19 @@ export function LightweightThemeConsumer(aDocument) {
   this.forcedColorsMediaQuery = this._win.matchMedia("(forced-colors)");
   this.forcedColorsMediaQuery.addListener(this);
 
-  this._update(lazy.LightweightThemeManager.themeData);
+  const manager = lazy.LightweightThemeManager;
+  const theme =
+    this._isAIWindow && manager.aiThemeData
+      ? manager.aiThemeData
+      : manager.themeData;
+
+  this._update(theme);
+
+  if (this._isAIWindow && !manager.aiThemeData) {
+    manager.promiseAIThemeData().then(() => {
+      this._update(manager.aiThemeData);
+    });
+  }
 
   this._win.addEventListener("unload", this, { once: true });
 }
@@ -258,7 +271,9 @@ LightweightThemeConsumer.prototype = {
       return;
     }
 
-    this._update(data);
+    if (!this._isAIWindow) {
+      this._update(data);
+    }
   },
 
   handleEvent(aEvent) {

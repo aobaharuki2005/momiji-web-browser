@@ -6,6 +6,7 @@ with Files("**"):
     BUG_COMPONENT = ("Core", "Machine Learning: Frontend")
 
 BROWSER_CHROME_MANIFESTS += ["test/browser/browser.toml"]
+XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]
 
 MOZ_SRC_FILES += [
     "actors/AIChatContentChild.sys.mjs",
@@ -21,5 +22,3 @@ MOZ_SRC_FILES += [
 ]
 
 JAR_MANIFESTS += ["jar.mn"]
-
-XPCSHELL_TESTS_MANIFESTS += ["test/xpcshell/xpcshell.toml"]

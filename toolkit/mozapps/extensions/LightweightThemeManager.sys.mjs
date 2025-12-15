@@ -215,6 +215,42 @@ function loadDetails(details, experiment, baseURI, id, version, logger) {
 }
 
 export var LightweightThemeManager = {
+  aiThemeData: null,
+  _aiThemeDataPromise: null,
+
+  async promiseAIThemeData() {
+    if (this.aiThemeData) {
+      return this.aiThemeData;
+    }
+
+    if (this._aiThemeDataPromise) {
+      return this._aiThemeDataPromise;
+    }
+
+    this._aiThemeDataPromise = this._fetchThemeDataFromBuiltinManifest(
+      "resource://builtin-themes/aiwindow/"
+    ).then(data => {
+      this.aiThemeData = data;
+      this._aiThemeDataPromise = null;
+      return data;
+    });
+
+    return this._aiThemeDataPromise;
+  },
+  async _fetchThemeDataFromBuiltinManifest(baseURI) {
+    let baseURIObj = Services.io.newURI(baseURI);
+    let res = await fetch(baseURIObj.resolve("./manifest.json"));
+    let manifest = await res.json();
+    return this.themeDataFrom(
+      manifest.theme,
+      manifest.dark_theme,
+      manifest.theme_experiment,
+      baseURIObj,
+      manifest.browser_specific_settings.gecko.id,
+      manifest.version,
+      /* logger = */ null
+    );
+  },
   // Reads theme data from either an extension manifest or a dynamic theme,
   // and converts it to an internal format used by our theming code.
   //
