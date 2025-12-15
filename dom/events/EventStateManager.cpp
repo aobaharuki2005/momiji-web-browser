@@ -68,6 +68,7 @@
 #include "mozilla/dom/HTMLLabelElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/PointerEventHandler.h"
+#include "mozilla/dom/PopoverData.h"
 #include "mozilla/dom/Record.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/UIEvent.h"
@@ -1529,7 +1530,8 @@ void EventStateManager::LightDismissOpenPopovers(WidgetEvent* aEvent,
     return;
   }
 
-  Element* topmostPopover = aTargetContent->OwnerDoc()->GetTopmostAutoPopover();
+  Element* topmostPopover = aTargetContent->OwnerDoc()->GetTopmostPopoverOf(
+      PopoverAttributeState::Auto);
   if (!topmostPopover) {
     return;
   }

@@ -150,6 +150,7 @@ class Optional;
 enum class CallerType : uint32_t;
 enum class ReferrerPolicy : uint8_t;
 enum class FetchPriority : uint8_t;
+enum class PopoverAttributeState : uint8_t;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -610,7 +611,7 @@ class Element : public FragmentOrElement {
     return CreatePopoverData();
   }
 
-  bool IsAutoPopover() const;
+  bool IsPopoverOpenedInMode(PopoverAttributeState aMode) const;
   bool IsPopoverOpen() const;
 
   void SetAssociatedPopover(nsGenericHTMLElement& aPopover);
@@ -619,7 +620,8 @@ class Element : public FragmentOrElement {
   /**
    * https://html.spec.whatwg.org/multipage/popover.html#topmost-popover-ancestor
    */
-  Element* GetTopmostPopoverAncestor(const Element* aInvoker,
+  Element* GetTopmostPopoverAncestor(PopoverAttributeState aMode,
+                                     const Element* aInvoker,
                                      bool isPopover) const;
 
   ElementAnimationData* GetAnimationData() const {

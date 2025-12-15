@@ -270,6 +270,7 @@ class NodeFilter;
 class NodeInfo;
 class NodeIterator;
 enum class OrientationType : uint8_t;
+enum class PopoverAttributeState : uint8_t;
 class ProcessingInstruction;
 class Promise;
 class ScriptLoader;
@@ -3585,7 +3586,8 @@ class Document : public nsINode,
                                        Nullable<Wireframe>&);
 
   // https://html.spec.whatwg.org/#close-entire-popover-list
-  MOZ_CAN_RUN_SCRIPT void CloseEntirePopoverList(bool aFocusPreviousElement,
+  MOZ_CAN_RUN_SCRIPT void CloseEntirePopoverList(PopoverAttributeState aMode,
+                                                 bool aFocusPreviousElement,
                                                  bool aFireEvents);
 
   // Hides all popovers until the given end point, see
@@ -3596,7 +3598,8 @@ class Document : public nsINode,
 
   // Hides all popovers, until the given end point, see
   // https://html.spec.whatwg.org/#hide-popover-stack-until
-  MOZ_CAN_RUN_SCRIPT void HidePopoverStackUntil(nsINode& aEndpoint,
+  MOZ_CAN_RUN_SCRIPT void HidePopoverStackUntil(PopoverAttributeState aMode,
+                                                nsINode& aEndpoint,
                                                 bool aFocusPreviousElement,
                                                 bool aFireEvents);
 
@@ -3608,14 +3611,15 @@ class Document : public nsINode,
                                       ErrorResult& aRv);
 
   // Returns a list of all the elements in the Document's top layer whose
-  // popover attribute is in the auto state.
+  // popover opened in mode is in the given state.
   // See https://html.spec.whatwg.org/multipage/popover.html#auto-popover-list
-  nsTArray<Element*> AutoPopoverList() const;
+  // See https://html.spec.whatwg.org/#showing-hint-popover-list
+  nsTArray<Element*> PopoverListOf(PopoverAttributeState aMode) const;
 
-  // Return document's auto popover list's last element.
+  // Return document's popover list's last element of a particular mode.
   // See
   // https://html.spec.whatwg.org/multipage/popover.html#topmost-auto-popover
-  Element* GetTopmostAutoPopover() const;
+  Element* GetTopmostPopoverOf(PopoverAttributeState aMode) const;
 
   void AddPopoverToTopLayer(Element&);
   void RemovePopoverFromTopLayer(Element&);

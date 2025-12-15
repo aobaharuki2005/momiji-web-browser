@@ -15353,7 +15353,7 @@ void Document::HandleEscKey() {
   for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
     if (RefPtr popoverHTMLEl = nsGenericHTMLElement::FromNodeOrNull(element)) {
-      if (element->IsAutoPopover() && element->IsPopoverOpen()) {
+      if (element->IsPopoverOpenedInMode(PopoverAttributeState::Auto)) {
         popoverHTMLEl->HidePopover(IgnoreErrors());
         return;
       }
@@ -16059,13 +16059,15 @@ bool Document::TopLayerContains(Element& aElement) const {
 }
 
 // https://html.spec.whatwg.org/#close-entire-popover-list
-void Document::CloseEntirePopoverList(bool aFocusPreviousElement,
+void Document::CloseEntirePopoverList(PopoverAttributeState aMode,
+                                      bool aFocusPreviousElement,
                                       bool aFireEvents) {
   // 1. While popoverList is not empty:
-  while (RefPtr<Element> topmost = GetTopmostAutoPopover()) {
+  // XXX: Rather than computing the list, find from top layer elements
+  while (RefPtr popover = GetTopmostPopoverOf(aMode)) {
     // 1.1. Run the hide popover algorithm given popoverList's last item,
     // focusPreviousElement, fireEvents, false, and null.
-    HidePopover(*topmost, aFocusPreviousElement, aFireEvents,
+    HidePopover(*popover, aFocusPreviousElement, aFireEvents,
                 /* aSource */ nullptr, IgnoreErrors());
   }
 }
@@ -16096,7 +16098,8 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
     // list, focusPreviousElement, and fireEvents.
     // 5.2. Run close entire popover list given document's showing auto popover
     // list, focusPreviousElement, and fireEvents.
-    CloseEntirePopoverList(aFocusPreviousElement, aFireEvents);
+    CloseEntirePopoverList(PopoverAttributeState::Auto, aFocusPreviousElement,
+                           aFireEvents);
     // 5.3. Return.
     return;
   }
@@ -16115,15 +16118,17 @@ void Document::HideAllPopoversUntil(nsINode& aEndpoint,
 
   // 9. Run hide popover stack until given endpoint, document's showing auto
   // popover list, focusPreviousElement, and fireEvents.
-  HidePopoverStackUntil(aEndpoint, aFocusPreviousElement, aFireEvents);
+  HidePopoverStackUntil(PopoverAttributeState::Auto, aEndpoint,
+                        aFocusPreviousElement, aFireEvents);
 }
 
 // https://html.spec.whatwg.org/#hide-popover-stack-until
-void Document::HidePopoverStackUntil(nsINode& aEndpoint,
+void Document::HidePopoverStackUntil(PopoverAttributeState aMode,
+                                     nsINode& aEndpoint,
                                      bool aFocusPreviousElement,
                                      bool aFireEvents) {
   auto needRepeatingHide = [&]() {
-    auto autoList = AutoPopoverList();
+    auto autoList = PopoverListOf(aMode);
     return autoList.Contains(&aEndpoint) &&
            &aEndpoint != autoList.LastElement();
   };
@@ -16138,7 +16143,7 @@ void Document::HidePopoverStackUntil(nsINode& aEndpoint,
     RefPtr<const Element> lastToHide = nullptr;
     bool foundEndpoint = false;
     // 2.2. For each popover in popoverList:
-    for (const Element* popover : AutoPopoverList()) {
+    for (const Element* popover : PopoverListOf(aMode)) {
       // 2.2.1. If popover is endpoint, then break.
       // todo(keithamus): Get this logic closer to spec.
       if (popover == &aEndpoint) {
@@ -16152,7 +16157,8 @@ void Document::HidePopoverStackUntil(nsINode& aEndpoint,
 
     // 2.3. If lastToHide is null, then return.
     if (!foundEndpoint) {
-      CloseEntirePopoverList(aFocusPreviousElement, fireEvents);
+      CloseEntirePopoverList(PopoverAttributeState::Auto, aFocusPreviousElement,
+                             fireEvents);
       return;
     }
 
@@ -16163,7 +16169,8 @@ void Document::HidePopoverStackUntil(nsINode& aEndpoint,
 
       // 2.4.2. Run the hide popover algorithm given the last item in
       // popoverList, focusPreviousElement, fireEvents, false, and null.
-      RefPtr<Element> topmost = GetTopmostAutoPopover();
+      RefPtr<Element> topmost =
+          GetTopmostPopoverOf(PopoverAttributeState::Auto);
       if (!topmost) {
         break;
       }
@@ -16247,14 +16254,16 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
     // See, https://github.com/whatwg/html/issues/9197
     // If popoverHTMLEl is not on top, hide popovers again without firing
     // events.
-    if (NS_WARN_IF(GetTopmostAutoPopover() != popoverHTMLEl)) {
+    if (NS_WARN_IF(GetTopmostPopoverOf(PopoverAttributeState::Auto) !=
+                   popoverHTMLEl)) {
       HideAllPopoversUntil(*popoverHTMLEl, aFocusPreviousElement, false);
       if (!popoverHTMLEl->CheckPopoverValidity(PopoverVisibilityState::Showing,
                                                nullptr, aRv)) {
         return;
       }
-      MOZ_ASSERT(GetTopmostAutoPopover() == popoverHTMLEl,
-                 "popoverHTMLEl should be on top of auto popover list");
+      MOZ_ASSERT(
+          GetTopmostPopoverOf(PopoverAttributeState::Auto) == popoverHTMLEl,
+          "popoverHTMLEl should be on top of auto popover list");
     }
   }
 
@@ -16276,9 +16285,8 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
     // auto popover list's last item is not element, then run hide all popovers
     // until given element, focusPreviousElement, and false. Hide all popovers
     // when beforetoggle shows a popover.
-    if (popoverHTMLEl->IsAutoPopover() &&
-        GetTopmostAutoPopover() != popoverHTMLEl &&
-        popoverHTMLEl->PopoverOpen()) {
+    if (popoverHTMLEl->IsPopoverOpenedInMode(PopoverAttributeState::Auto) &&
+        GetTopmostPopoverOf(PopoverAttributeState::Auto) != popoverHTMLEl) {
       HideAllPopoversUntil(*popoverHTMLEl, aFocusPreviousElement, false);
     }
 
@@ -16332,11 +16340,11 @@ void Document::HidePopover(Element& aPopover, bool aFocusPreviousElement,
   }
 }
 
-nsTArray<Element*> Document::AutoPopoverList() const {
+nsTArray<Element*> Document::PopoverListOf(PopoverAttributeState aMode) const {
   nsTArray<Element*> elements;
   for (const nsWeakPtr& ptr : mTopLayer) {
     if (nsCOMPtr<Element> element = do_QueryReferent(ptr)) {
-      if (element && element->IsAutoPopover() && element->IsPopoverOpen()) {
+      if (element && element->IsPopoverOpenedInMode(aMode)) {
         elements.AppendElement(element);
       }
     }
@@ -16344,10 +16352,10 @@ nsTArray<Element*> Document::AutoPopoverList() const {
   return elements;
 }
 
-Element* Document::GetTopmostAutoPopover() const {
+Element* Document::GetTopmostPopoverOf(PopoverAttributeState aMode) const {
   for (const nsWeakPtr& weakPtr : Reversed(mTopLayer)) {
     nsCOMPtr<Element> element(do_QueryReferent(weakPtr));
-    if (element && element->IsAutoPopover() && element->IsPopoverOpen()) {
+    if (element && element->IsPopoverOpenedInMode(aMode)) {
       return element;
     }
   }
@@ -16743,7 +16751,8 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
 
   Element* elem = aRequest->Element();
 
-  RefPtr<nsINode> hideUntil = elem->GetTopmostPopoverAncestor(nullptr, false);
+  RefPtr<nsINode> hideUntil = elem->GetTopmostPopoverAncestor(
+      PopoverAttributeState::Auto, nullptr, false);
   if (!hideUntil) {
     hideUntil = OwnerDoc();
   }
