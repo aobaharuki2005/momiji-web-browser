@@ -1113,6 +1113,24 @@ networking:
       - omansfeld@mozilla.com
     expires: 157
 
+  http_3_slow_start_exited:
+    type: labeled_counter
+    description: >
+      Counts whether an HTTP3 connections exited slow start.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004717
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004717
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - omansfeld@mozilla.com
+    expires: 157
+    labels:
+      - exited
+      - not_exited
+
   http_3_connection_close_reason:
     type: labeled_counter
     description: >

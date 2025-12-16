@@ -672,8 +672,9 @@ impl NeqoHttp3Conn {
             }
         }
 
-        // Ignore connections into the void.
+        // Ignore connections into the void for metrics where it makes sense.
         if stats.packets_rx != 0 {
+            // Calculate and collect packet loss ratio.
             if let Ok(loss) =
                 i64::try_from((stats.lost * PRECISION_FACTOR_USIZE) / stats.packets_tx)
             {
@@ -683,9 +684,16 @@ impl NeqoHttp3Conn {
                 qwarn!("{msg}");
                 debug_assert!(false, "{msg}");
             }
+
+            // Count whether the connection exited slow start.
+            if stats.cc.slow_start_exited {
+                glean::http_3_slow_start_exited.get("exited").add(1);
+            } else {
+                glean::http_3_slow_start_exited.get("not_exited").add(1);
+            }
         }
 
-        // Ignore connections that never had loss induced congestion events (and prevent dividing by zero)
+        // Ignore connections that never had loss induced congestion events (and prevent dividing by zero).
         if stats.cc.congestion_events_loss != 0 {
             if let Ok(spurious) = i64::try_from(
                 (stats.cc.congestion_events_spurious * PRECISION_FACTOR_USIZE)
