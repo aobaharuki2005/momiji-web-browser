@@ -16,15 +16,6 @@ namespace net {
 
 NS_IMPL_ISUPPORTS(nsHttpAuthManager, nsIHttpAuthManager)
 
-/* static */
-already_AddRefed<nsIHttpAuthCache>
-nsHttpAuthManager::GetHttpAuthCacheSingleton() {
-  NS_ASSERTION(!IsNeckoChild(), "not a parent process");
-
-  // Return only the non-private cache
-  return do_AddRef(gHttpHandler->AuthCache(/* aPrivate = */ false));
-}
-
 nsresult nsHttpAuthManager::Init() {
   // get reference to the auth cache.  we assume that we will live
   // as long as gHttpHandler.  instantiate it if necessary.
@@ -55,9 +46,8 @@ nsHttpAuthManager::GetAuthIdentity(
     const nsACString& aAuthType, const nsACString& aRealm,
     const nsACString& aPath, nsAString& aUserDomain, nsAString& aUserName,
     nsAString& aUserPassword, bool aIsPrivate, nsIPrincipal* aPrincipal) {
-  RefPtr<nsHttpAuthCache> auth_cache =
-      aIsPrivate ? mPrivateAuthCache : mAuthCache;
-  RefPtr<nsHttpAuthEntry> entry = nullptr;
+  nsHttpAuthCache* auth_cache = aIsPrivate ? mPrivateAuthCache : mAuthCache;
+  nsHttpAuthEntry* entry = nullptr;
   nsresult rv;
 
   nsAutoCString originSuffix;
@@ -67,10 +57,10 @@ nsHttpAuthManager::GetAuthIdentity(
 
   if (!aPath.IsEmpty()) {
     rv = auth_cache->GetAuthEntryForPath(aScheme, aHost, aPort, aPath,
-                                         originSuffix, entry);
+                                         originSuffix, &entry);
   } else {
     rv = auth_cache->GetAuthEntryForDomain(aScheme, aHost, aPort, aRealm,
-                                           originSuffix, entry);
+                                           originSuffix, &entry);
   }
 
   if (NS_FAILED(rv)) return rv;
@@ -96,8 +86,7 @@ nsHttpAuthManager::SetAuthIdentity(
     aPrincipal->OriginAttributesRef().CreateSuffix(originSuffix);
   }
 
-  RefPtr<nsHttpAuthCache> auth_cache =
-      aIsPrivate ? mPrivateAuthCache : mAuthCache;
+  nsHttpAuthCache* auth_cache = aIsPrivate ? mPrivateAuthCache : mAuthCache;
   return auth_cache->SetAuthEntry(aScheme, aHost, aPort, aPath, aRealm,
                                   ""_ns,  // credentials
                                   ""_ns,  // challenge

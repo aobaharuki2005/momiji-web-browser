@@ -37,47 +37,14 @@ static inline void GetAuthKey(const nsACString& scheme, const nsACString& host,
 //-----------------------------------------------------------------------------
 // nsHttpAuthCache <public>
 //-----------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS(nsHttpAuthCache, nsIHttpAuthCache)
 
-NS_IMETHODIMP
-nsHttpAuthCache::GetEntries(nsTArray<RefPtr<nsIHttpAuthEntry>>& aEntries) {
-  for (auto iter = mDB.Iter(); !iter.Done(); iter.Next()) {
-    nsHttpAuthNode* node = iter.Data().get();
-    for (auto& entry : node->mList) {
-      auto* tmp = entry.get();
-      aEntries.AppendElement(tmp);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpAuthCache::ClearEntry(nsIHttpAuthEntry* aEntry) {
-  NS_ENSURE_ARG_POINTER(aEntry);
-
-  for (auto iter = mDB.Iter(); !iter.Done(); iter.Next()) {
-    nsHttpAuthNode* node = iter.Data().get();
-
-    for (auto& entry : node->mList) {
-      if (entry.get() == aEntry) {
-        node->mList.RemoveElement(entry);
-        if (node->EntryCount() == 0) {
-          iter.Remove();
-        }
-        return NS_OK;
-      }
-    }
-  }
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-nsHttpAuthCache::nsHttpAuthCache() : mDB(128) {
+nsHttpAuthCache::nsHttpAuthCache()
+    : mDB(128), mObserver(new OriginClearObserver(this)) {
   LOG(("nsHttpAuthCache::nsHttpAuthCache %p", this));
 
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   if (obsSvc) {
-    obsSvc->AddObserver(this, "clear-origin-attributes-data", true);
+    obsSvc->AddObserver(mObserver, "clear-origin-attributes-data", false);
   }
 }
 
@@ -87,7 +54,8 @@ nsHttpAuthCache::~nsHttpAuthCache() {
   ClearAll();
   nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
   if (obsSvc) {
-    obsSvc->RemoveObserver(this, "clear-origin-attributes-data");
+    obsSvc->RemoveObserver(mObserver, "clear-origin-attributes-data");
+    mObserver->mOwner = nullptr;
   }
 }
 
@@ -96,7 +64,7 @@ nsresult nsHttpAuthCache::GetAuthEntryForPath(const nsACString& scheme,
                                               int32_t port,
                                               const nsACString& path,
                                               nsACString const& originSuffix,
-                                              RefPtr<nsHttpAuthEntry>& entry) {
+                                              nsHttpAuthEntry** entry) {
   LOG(("nsHttpAuthCache::GetAuthEntryForPath %p [path=%s]\n", this,
        path.BeginReading()));
 
@@ -104,9 +72,9 @@ nsresult nsHttpAuthCache::GetAuthEntryForPath(const nsACString& scheme,
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
   if (!node) return NS_ERROR_NOT_AVAILABLE;
 
-  entry = node->LookupEntryByPath(path);
-  LOG(("  returning %p", entry.get()));
-  return entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+  *entry = node->LookupEntryByPath(path);
+  LOG(("  returning %p", *entry));
+  return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
 nsresult nsHttpAuthCache::GetAuthEntryForDomain(const nsACString& scheme,
@@ -114,7 +82,7 @@ nsresult nsHttpAuthCache::GetAuthEntryForDomain(const nsACString& scheme,
                                                 int32_t port,
                                                 const nsACString& realm,
                                                 nsACString const& originSuffix,
-                                                RefPtr<nsHttpAuthEntry>& entry)
+                                                nsHttpAuthEntry** entry)
 
 {
   LOG(("nsHttpAuthCache::GetAuthEntryForDomain %p [realm=%s]\n", this,
@@ -124,9 +92,9 @@ nsresult nsHttpAuthCache::GetAuthEntryForDomain(const nsACString& scheme,
   nsHttpAuthNode* node = LookupAuthNode(scheme, host, port, originSuffix, key);
   if (!node) return NS_ERROR_NOT_AVAILABLE;
 
-  entry = node->LookupEntryByRealm(realm);
-  LOG(("  returning %p", entry.get()));
-  return entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
+  *entry = node->LookupEntryByRealm(realm);
+  LOG(("  returning %p", *entry));
+  return *entry ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
 nsresult nsHttpAuthCache::SetAuthEntry(
@@ -190,16 +158,21 @@ nsHttpAuthNode* nsHttpAuthCache::LookupAuthNode(const nsACString& scheme,
   return result;
 }
 
+NS_IMPL_ISUPPORTS(nsHttpAuthCache::OriginClearObserver, nsIObserver)
+
 NS_IMETHODIMP
-nsHttpAuthCache::Observe(nsISupports* subject, const char* topic,
-                         const char16_t* data_unicode) {
+nsHttpAuthCache::OriginClearObserver::Observe(nsISupports* subject,
+                                              const char* topic,
+                                              const char16_t* data_unicode) {
+  NS_ENSURE_TRUE(mOwner, NS_ERROR_NOT_AVAILABLE);
+
   OriginAttributesPattern pattern;
   if (!pattern.Init(nsDependentString(data_unicode))) {
     NS_ERROR("Cannot parse origin attributes pattern");
     return NS_ERROR_FAILURE;
   }
 
-  ClearOriginData(pattern);
+  mOwner->ClearOriginData(pattern);
   return NS_OK;
 }
 
@@ -246,74 +219,9 @@ bool nsHttpAuthIdentity::Equals(const nsHttpAuthIdentity& ident) const {
          mDomain == ident.mDomain;
 }
 
-NS_IMPL_ISUPPORTS(AuthIdentity, nsIHttpAuthIdentity)
-
-NS_IMETHODIMP
-AuthIdentity::GetDomain(nsAString& aDomain) {
-  aDomain = mIdent.Domain();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AuthIdentity::GetUser(nsAString& aUser) {
-  aUser = mIdent.User();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-AuthIdentity::GetPassword(nsAString& aPassword) {
-  aPassword = mIdent.Password();
-  return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpAuthEntry
 //-----------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS(nsHttpAuthEntry, nsIHttpAuthEntry)
-
-NS_IMETHODIMP
-nsHttpAuthEntry::GetRealm(nsACString& aRealm) {
-  aRealm = mRealm;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpAuthEntry::GetCreds(nsACString& aCreds) {
-  aCreds = mCreds;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpAuthEntry::GetChallenge(nsACString& aChallenge) {
-  aChallenge = mChallenge;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpAuthEntry::GetDomain(nsAString& aDomain) {
-  aDomain = mIdent.Domain();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpAuthEntry::GetUser(nsAString& aUser) {
-  aUser = mIdent.User();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpAuthEntry::GetPassword(nsAString& aPass) {
-  aPass = mIdent.Password();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpAuthEntry::GetIdentity(nsIHttpAuthIdentity** aIdentity) {
-  NS_ENSURE_ARG_POINTER(aIdentity);
-  RefPtr<nsIHttpAuthIdentity> ident = new AuthIdentity(mIdent);
-  ident.forget(aIdentity);
-  return NS_OK;
-}
 
 nsresult nsHttpAuthEntry::AddPath(const nsACString& aPath) {
   for (const auto& p : mPaths) {
@@ -412,13 +320,14 @@ nsresult nsHttpAuthNode::SetAuthEntry(const nsACString& path,
                                       const nsHttpAuthIdentity* ident,
                                       nsISupports* metadata) {
   // look for an entry with a matching realm
-  RefPtr<nsHttpAuthEntry> entry = LookupEntryByRealm(realm);
+  nsHttpAuthEntry* entry = LookupEntryByRealm(realm);
   if (!entry) {
     // We want the latest identity be at the begining of the list so that
     // the newest working credentials are sent first on new requests.
     // Changing a realm is sometimes used to "timeout" authrozization.
-    entry = new nsHttpAuthEntry(path, realm, creds, challenge, ident, metadata);
-    mList.InsertElementAt(0, entry);
+    mList.InsertElementAt(
+        0, WrapUnique(new nsHttpAuthEntry(path, realm, creds, challenge, ident,
+                                          metadata)));
   } else {
     // update the entry...
     nsresult rv = entry->Set(path, realm, creds, challenge, ident, metadata);

@@ -259,9 +259,7 @@ static nsCString DocumentAcceptHeader() {
 Atomic<bool, Relaxed> nsHttpHandler::sParentalControlsEnabled(false);
 
 nsHttpHandler::nsHttpHandler()
-    : mAuthCache(new nsHttpAuthCache()),
-      mPrivateAuthCache(new nsHttpAuthCache()),
-      mIdleTimeout(PR_SecondsToInterval(10)),
+    : mIdleTimeout(PR_SecondsToInterval(10)),
       mSpdyTimeout(
           PR_SecondsToInterval(StaticPrefs::network_http_http2_timeout())),
       mResponseTimeout(PR_SecondsToInterval(300)),
@@ -2271,8 +2269,8 @@ nsHttpHandler::GetAltSvcCacheKeys(nsTArray<nsCString>& value) {
 
 NS_IMETHODIMP
 nsHttpHandler::GetAuthCacheKeys(nsTArray<nsCString>& aValues) {
-  mAuthCache->CollectKeys(aValues);
-  mPrivateAuthCache->CollectKeys(aValues);
+  mAuthCache.CollectKeys(aValues);
+  mPrivateAuthCache.CollectKeys(aValues);
   return NS_OK;
 }
 
@@ -2292,8 +2290,8 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     mHandlerActive = false;
 
     // clear cache of all authentication credentials.
-    mAuthCache->ClearAll();
-    mPrivateAuthCache->ClearAll();
+    mAuthCache.ClearAll();
+    mPrivateAuthCache.ClearAll();
     if (mWifiTickler) mWifiTickler->Cancel();
 
     // Inform nsIOService that network is tearing down.
@@ -2322,8 +2320,8 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     mAltSvcCache = MakeUnique<AltSvcCache>();
   } else if (!strcmp(topic, "net:clear-active-logins")) {
-    mAuthCache->ClearAll();
-    mPrivateAuthCache->ClearAll();
+    mAuthCache.ClearAll();
+    mPrivateAuthCache.ClearAll();
   } else if (!strcmp(topic, "net:cancel-all-connections")) {
     if (mConnMgr) {
       mConnMgr->AbortAndCloseAllConnections(0, nullptr);
@@ -2356,7 +2354,7 @@ nsHttpHandler::Observe(nsISupports* subject, const char* topic,
          nsCOMPtr<nsIURI> uri = do_QueryInterface(subject);
 #endif
   } else if (!strcmp(topic, "last-pb-context-exited")) {
-    mPrivateAuthCache->ClearAll();
+    mPrivateAuthCache.ClearAll();
     if (mAltSvcCache) {
       mAltSvcCache->ClearAltServiceMappings();
     }

@@ -18,16 +18,14 @@ class nsHttpAuthManager : public nsIHttpAuthManager {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIHTTPAUTHMANAGER
 
-  static already_AddRefed<nsIHttpAuthCache> GetHttpAuthCacheSingleton();
-
   nsHttpAuthManager() = default;
   [[nodiscard]] nsresult Init();
 
  protected:
   virtual ~nsHttpAuthManager() = default;
 
-  RefPtr<nsHttpAuthCache> mAuthCache;
-  RefPtr<nsHttpAuthCache> mPrivateAuthCache;
+  nsHttpAuthCache* mAuthCache{nullptr};
+  nsHttpAuthCache* mPrivateAuthCache{nullptr};
 };
 
 }  // namespace net

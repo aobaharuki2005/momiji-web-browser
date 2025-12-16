@@ -12,7 +12,6 @@
 #include "nsCOMPtr.h"
 #include "nsHashKeys.h"
 #include "nsStringFwd.h"
-#include "nsIHttpAuthCache.h"
 #include "nsIObserver.h"
 
 namespace mozilla {
@@ -50,36 +49,12 @@ class nsHttpAuthIdentity {
   nsString mDomain;
 };
 
-// This is an XPCOM wrapper for nsHttpAuthIdentity
-class AuthIdentity final : public nsIHttpAuthIdentity {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIHTTPAUTHIDENTITY
-
-  explicit AuthIdentity(const nsHttpAuthIdentity& aIdent) : mIdent(aIdent) {}
-
- private:
-  virtual ~AuthIdentity() = default;
-  nsHttpAuthIdentity mIdent;
-};
-
 //-----------------------------------------------------------------------------
 // nsHttpAuthEntry
 //-----------------------------------------------------------------------------
 
-class nsHttpAuthEntry : public nsIHttpAuthEntry {
+class nsHttpAuthEntry {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIHTTPAUTHENTRY
-
-  nsHttpAuthEntry(const nsACString& path, const nsACString& realm,
-                  const nsACString& creds, const nsACString& challenge,
-                  const nsHttpAuthIdentity* ident, nsISupports* metadata) {
-    DebugOnly<nsresult> rv =
-        Set(path, realm, creds, challenge, ident, metadata);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-  }
-
   const nsCString& Realm() const { return mRealm; }
   const nsCString& Creds() const { return mCreds; }
   const nsCString& Challenge() const { return mChallenge; }
@@ -94,7 +69,14 @@ class nsHttpAuthEntry : public nsIHttpAuthEntry {
   nsCOMPtr<nsISupports> mMetaData;
 
  private:
-  virtual ~nsHttpAuthEntry() = default;
+  nsHttpAuthEntry(const nsACString& path, const nsACString& realm,
+                  const nsACString& creds, const nsACString& challenge,
+                  const nsHttpAuthIdentity* ident, nsISupports* metadata) {
+    DebugOnly<nsresult> rv =
+        Set(path, realm, creds, challenge, ident, metadata);
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+  }
+  ~nsHttpAuthEntry() = default;
 
   [[nodiscard]] nsresult Set(const nsACString& path, const nsACString& realm,
                              const nsACString& creds,
@@ -122,7 +104,7 @@ class nsHttpAuthEntry : public nsIHttpAuthEntry {
 
 class nsHttpAuthNode {
  private:
-  using EntryList = nsTArray<RefPtr<nsHttpAuthEntry>>;
+  using EntryList = nsTArray<UniquePtr<nsHttpAuthEntry>>;
 
   nsHttpAuthNode();
   ~nsHttpAuthNode();
@@ -161,13 +143,10 @@ class nsHttpAuthNode {
 //  (holds a hash table from host:port to nsHttpAuthNode)
 //-----------------------------------------------------------------------------
 
-class nsHttpAuthCache : public nsIHttpAuthCache, public nsIObserver {
+class nsHttpAuthCache {
  public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIHTTPAUTHCACHE
-  NS_DECL_NSIOBSERVER
-
   nsHttpAuthCache();
+  ~nsHttpAuthCache();
 
   // |scheme|, |host|, and |port| are required
   // |path| can be null
@@ -177,7 +156,7 @@ class nsHttpAuthCache : public nsIHttpAuthCache, public nsIObserver {
                                              int32_t port,
                                              const nsACString& path,
                                              nsACString const& originSuffix,
-                                             RefPtr<nsHttpAuthEntry>& entry);
+                                             nsHttpAuthEntry** entry);
 
   // |scheme|, |host|, and |port| are required
   // |realm| must not be null
@@ -187,7 +166,7 @@ class nsHttpAuthCache : public nsIHttpAuthCache, public nsIObserver {
                                                int32_t port,
                                                const nsACString& realm,
                                                nsACString const& originSuffix,
-                                               RefPtr<nsHttpAuthEntry>& entry);
+                                               nsHttpAuthEntry** entry);
 
   // |scheme|, |host|, and |port| are required
   // |path| can be null
@@ -215,13 +194,23 @@ class nsHttpAuthCache : public nsIHttpAuthCache, public nsIObserver {
                                  const nsACString& host, int32_t port,
                                  nsACString const& originSuffix,
                                  nsCString& key);
+
+  class OriginClearObserver : public nsIObserver {
+    virtual ~OriginClearObserver() = default;
+
+   public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+    explicit OriginClearObserver(nsHttpAuthCache* aOwner) : mOwner(aOwner) {}
+    nsHttpAuthCache* mOwner;
+  };
+
   void ClearOriginData(OriginAttributesPattern const& pattern);
 
  private:
-  virtual ~nsHttpAuthCache();
-
   using AuthNodeTable = nsClassHashtable<nsCStringHashKey, nsHttpAuthNode>;
   AuthNodeTable mDB;  // "host:port" --> nsHttpAuthNode
+  RefPtr<OriginClearObserver> mObserver;
 };
 
 }  // namespace net
