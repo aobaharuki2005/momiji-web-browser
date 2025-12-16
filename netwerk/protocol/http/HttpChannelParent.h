@@ -84,9 +84,6 @@ class HttpChannelParent final : public nsIInterfaceRequestor,
       const nsACString& type, int64_t predictedSize,
       nsIAsyncOutputStream** _retval);
 
-  [[nodiscard]] nsresult GetCacheEntryWriteHandle(
-      nsICacheEntryWriteHandle** _retval);
-
   [[nodiscard]] CacheEntryWriteHandleParent* AllocCacheEntryWriteHandle();
 
   // Callbacks for each asynchronous tasks required in AsyncOpen

@@ -1980,14 +1980,6 @@ CacheEntryWriteHandleParent::OpenAlternativeOutputStream(
   return rv;
 }
 
-nsresult HttpChannelParent::GetCacheEntryWriteHandle(
-    nsICacheEntryWriteHandle** _retval) {
-  nsCOMPtr<nsICacheEntryWriteHandle> handle =
-      new CacheEntryWriteHandleParent(mCacheEntry);
-  handle.forget(_retval);
-  return NS_OK;
-}
-
 CacheEntryWriteHandleParent* HttpChannelParent::AllocCacheEntryWriteHandle() {
   return new CacheEntryWriteHandleParent(mCacheEntry);
 }
