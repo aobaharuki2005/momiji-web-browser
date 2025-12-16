@@ -596,6 +596,12 @@ uiaRawElmProvider::GetPropertyValue(PROPERTYID aPropertyId,
           ariaProperties.AppendLiteral("atomic=false");
         }
       }
+      if (acc->HasCustomActions()) {
+        if (!ariaProperties.IsEmpty()) {
+          ariaProperties += ';';
+        }
+        ariaProperties.AppendLiteral("hasactions=true");
+      }
       if (!ariaProperties.IsEmpty()) {
         aPropertyValue->vt = VT_BSTR;
         aPropertyValue->bstrVal = ::SysAllocString(ariaProperties.get());
