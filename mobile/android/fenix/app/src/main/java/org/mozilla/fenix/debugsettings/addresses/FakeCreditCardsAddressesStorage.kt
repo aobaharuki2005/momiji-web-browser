@@ -104,9 +104,7 @@ internal class FakeCreditCardsAddressesStorage : CreditCardsAddressesStorage {
         throw UnsupportedOperationException()
     }
 
-    override suspend fun getAllCreditCards(): Result<List<CreditCard>> {
-        return Result.success(creditCards)
-    }
+    override suspend fun getAllCreditCards(): List<CreditCard> = creditCards
 
     override suspend fun deleteCreditCard(guid: String): Boolean {
         return creditCards.remove(creditCards.find { it.guid == guid })
@@ -125,8 +123,9 @@ internal class FakeCreditCardsAddressesStorage : CreditCardsAddressesStorage {
         return addresses.find { it.guid == guid }
     }
 
-    override suspend fun getAllAddresses(): Result<List<Address>> =
-        Result.success(addresses)
+    override suspend fun getAllAddresses(): List<Address> {
+        return addresses
+    }
 
     override suspend fun updateAddress(guid: String, address: UpdatableAddressFields) {
         throw UnsupportedOperationException()

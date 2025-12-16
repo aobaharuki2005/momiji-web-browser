@@ -32,7 +32,6 @@ import mozilla.components.feature.prompts.dialog.KEY_SHOULD_DISMISS_ON_LOAD
 import mozilla.components.feature.prompts.dialog.PromptDialogFragment
 import mozilla.components.feature.prompts.facts.emitCreditCardAutofillCreatedFact
 import mozilla.components.feature.prompts.facts.emitCreditCardAutofillUpdatedFact
-import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.appName
 import mozilla.components.support.ktx.android.view.toScope
 import mozilla.components.support.utils.creditCardIssuerNetwork
@@ -54,8 +53,6 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var confirmResult: Result = Result.CanBeCreated
-
-    private val logger = Logger("CreditCardSaveDialogFragment")
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return BottomSheetDialog(requireContext(), R.style.MozDialogStyle).apply {
@@ -128,7 +125,6 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
             is Result.CanBeUpdated -> {
                 emitCreditCardAutofillUpdatedFact()
             }
-            else -> {}
         }
     }
 
@@ -145,8 +141,7 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
      */
     private fun updateUI(view: View) = view.toScope().launch(IO) {
         val validationDelegate = feature?.creditCardValidationDelegate ?: return@launch
-        val result = validationDelegate.shouldCreateOrUpdate(creditCard)
-        confirmResult = result
+        confirmResult = validationDelegate.shouldCreateOrUpdate(creditCard)
 
         withContext(Main) {
             when (confirmResult) {
@@ -163,14 +158,6 @@ internal class CreditCardSaveDialogFragment : PromptDialogFragment() {
                     confirmButtonText = requireContext().getString(R.string.mozac_feature_prompt_update_confirmation),
                     showMessageBody = false,
                 )
-                is Result.StorageFailure -> {
-                    logger.error("Failed to validate credit card before showing prompt")
-                    feature?.onCancel(
-                        sessionId = sessionId,
-                        promptRequestUID = promptRequestUID,
-                    )
-                    dismiss()
-                }
             }
         }
     }

@@ -24,7 +24,6 @@ import androidx.preference.Preference
 import androidx.preference.SwitchPreference
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -403,21 +402,12 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
             val creditCards = requireComponents.core.autofillStorage.getAllCreditCards()
 
             lifecycleScope.launch(Dispatchers.Main) {
-                addresses.onSuccess { store.dispatch(AutofillAction.UpdateAddresses(it)) }
-                creditCards.onSuccess { store.dispatch(AutofillAction.UpdateCreditCards(it)) }
-                val errorMessageId = when {
-                    addresses.isFailure && creditCards.isFailure -> R.string.autofill_load_error
-                    addresses.isFailure -> R.string.autofill_addresses_load_error
-                    creditCards.isFailure -> R.string.autofill_credit_card_load_error
-                    else -> null
-                }
-
-                errorMessageId?.let {
-                    Snackbar.make(requireView(), it, Snackbar.LENGTH_LONG).show()
-                }
+                store.dispatch(AutofillAction.UpdateAddresses(addresses))
+                store.dispatch(AutofillAction.UpdateCreditCards(creditCards))
             }
-            isAutofillStateLoaded = true
         }
+
+        isAutofillStateLoaded = true
     }
 
     /**

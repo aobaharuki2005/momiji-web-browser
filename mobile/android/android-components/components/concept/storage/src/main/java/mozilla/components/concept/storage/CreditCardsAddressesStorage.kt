@@ -49,10 +49,9 @@ interface CreditCardsAddressesStorage {
     /**
      * Retrieves a list of all the credit cards.
      *
-     * @return A [Result] containing the list of [CreditCard]s on success, or a failure if the
-     *         underlying autofill storage throws an [AutofillApiException].
+     * @return A list of all [CreditCard].
      */
-    suspend fun getAllCreditCards(): Result<List<CreditCard>>
+    suspend fun getAllCreditCards(): List<CreditCard>
 
     /**
      * Deletes the credit card with the given [guid].
@@ -89,10 +88,9 @@ interface CreditCardsAddressesStorage {
     /**
      * Retrieves a list of all the addresses.
      *
-     * @return A [Result] containing the list of [Address]s on success, or a failure if the
-     *         underlying autofill storage throws an [AutofillApiException].
+     * @return A list of all [Address].
      */
-    suspend fun getAllAddresses(): Result<List<Address>>
+    suspend fun getAllAddresses(): List<Address>
 
     /**
      * Updates the fields in the provided address.
@@ -443,11 +441,6 @@ interface CreditCardValidationDelegate {
          * can be used to update its information.
          */
         data class CanBeUpdated(val foundCreditCard: CreditCard) : Result()
-
-        /**
-         * Indicates that an error occurred in the storage layer.
-         */
-        data object StorageFailure : Result()
     }
 
     /**

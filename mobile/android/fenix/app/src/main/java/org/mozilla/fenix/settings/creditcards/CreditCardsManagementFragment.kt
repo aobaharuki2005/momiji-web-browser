@@ -10,7 +10,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
@@ -102,10 +101,7 @@ class CreditCardsManagementFragment : SecureFragment() {
             val creditCards = requireContext().components.core.autofillStorage.getAllCreditCards()
 
             lifecycleScope.launch(Dispatchers.Main) {
-                creditCards.onSuccess { store.dispatch(AutofillAction.UpdateCreditCards(it)) }
-                creditCards.onFailure {
-                    Snackbar.make(requireView(), R.string.autofill_load_error, Snackbar.LENGTH_LONG).show()
-                }
+                store.dispatch(AutofillAction.UpdateCreditCards(creditCards))
             }
         }
     }

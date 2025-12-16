@@ -1002,10 +1002,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         GlobalScope.launch(IO) {
             try {
                 val autoFillStorage = applicationContext.components.core.autofillStorage
-                val addresses = autoFillStorage.getAllAddresses().getOrElse { throw it }
-                Addresses.savedAll.set(addresses.size.toLong())
-                val ccs = autoFillStorage.getAllCreditCards().getOrElse { throw it }
-                CreditCards.savedAll.set(ccs.size.toLong())
+                Addresses.savedAll.set(autoFillStorage.getAllAddresses().size.toLong())
+                CreditCards.savedAll.set(autoFillStorage.getAllCreditCards().size.toLong())
             } catch (e: AutofillApiException) {
                 logger.error("Failed to fetch autofill data", e)
             }

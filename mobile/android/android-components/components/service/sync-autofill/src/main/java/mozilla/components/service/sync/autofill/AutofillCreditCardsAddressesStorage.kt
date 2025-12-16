@@ -123,8 +123,8 @@ class AutofillCreditCardsAddressesStorage(
         }
     }
 
-    override suspend fun getAllCreditCards(): Result<List<CreditCard>> = withContext(coroutineContext) {
-        Result.runCatching { conn.getStorage().getAllCreditCards().map { it.into() } }
+    override suspend fun getAllCreditCards(): List<CreditCard> = withContext(coroutineContext) {
+        conn.getStorage().getAllCreditCards().map { it.into() }
     }
 
     override suspend fun deleteCreditCard(guid: String): Boolean = withContext(coroutineContext) {
@@ -148,8 +148,8 @@ class AutofillCreditCardsAddressesStorage(
         }
     }
 
-    override suspend fun getAllAddresses(): Result<List<Address>> = withContext(coroutineContext) {
-        Result.runCatching { conn.getStorage().getAllAddresses().map { it.into() } }
+    override suspend fun getAllAddresses(): List<Address> = withContext(coroutineContext) {
+        conn.getStorage().getAllAddresses().map { it.into() }
     }
 
     override suspend fun updateAddress(guid: String, address: UpdatableAddressFields) =

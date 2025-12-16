@@ -128,7 +128,7 @@ class AutofillCreditCardsAddressesStorageTest {
         val creditCard2 = storage.addCreditCard(creditCardFields2)
         val creditCard3 = storage.addCreditCard(creditCardFields3)
 
-        val creditCards = storage.getAllCreditCards().getOrThrow()
+        val creditCards = storage.getAllCreditCards()
         val key = storage.crypto.getOrGenerateKey()
 
         val savedCreditCard1 = creditCards.find { it == creditCard1 }
@@ -317,7 +317,7 @@ class AutofillCreditCardsAddressesStorageTest {
         val address2 = storage.addAddress(addressFields2)
         val address3 = storage.addAddress(addressFields3)
 
-        val addresses = storage.getAllAddresses().getOrThrow()
+        val addresses = storage.getAllAddresses()
 
         val savedAddress1 = addresses.find { it == address1 }
         assertNotNull(savedAddress1)
