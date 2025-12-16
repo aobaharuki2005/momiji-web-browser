@@ -75,8 +75,6 @@ interface nsIWebTransport : nsISupports {
 
   void getMaxDatagramSize();
 
-  uint64_t getHttpChannelID();
-
   // This can be only called after onSessionReady().
   // After this point, we can retarget the underlying WebTransportSessionProxy
   // object off main thread.
