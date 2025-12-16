@@ -3,7 +3,6 @@
 }
 
 @mixin textbox-focus($color) {
-  --newtab-textbox-focus-color: #{$color};
   --newtab-textbox-focus-boxshadow: #{textbox-shadow($color)};
 }
 
