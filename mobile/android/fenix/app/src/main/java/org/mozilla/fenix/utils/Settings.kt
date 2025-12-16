@@ -600,6 +600,11 @@ class Settings(
         },
     )
 
+    var privacyNoticeBannerLastDisplayedTimeInMillis by longPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_privacy_notice_banner_last_displayed_time),
+        default = 0,
+    )
+
     /**
      * The version of the Terms of Use that the user has accepted.
      */

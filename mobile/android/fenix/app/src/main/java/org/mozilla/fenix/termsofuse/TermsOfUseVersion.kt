@@ -8,3 +8,8 @@ package org.mozilla.fenix.termsofuse
  * The current version of the Terms of Use.
  */
 const val TOU_VERSION = 5
+
+/**
+ * The timestamp of the latest Terms of Use published date.
+ */
+const val TOU_TIME_IN_MILLIS = 1765800000000 // December 15th, 2025

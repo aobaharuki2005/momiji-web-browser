@@ -96,6 +96,7 @@
     <string name="pref_key_crash_pull_never_show_again" translatable="false">pref_key_crash_pull_never_show_again</string>
     <string name="pref_key_crash_pull_dont_show_before" translatable="false">pref_key_crash_pull_dont_show_before</string>
     <string name="pref_key_enable_relay_email_masks" translatable="false">pref_key_enable_relay_email_masks</string>
+    <string name="pref_key_privacy_notice_banner_last_displayed_time" translatable="false">pref_key_privacy_notice_banner_last_displayed_time</string>
 
     <!-- Data Choices -->
     <string name="pref_key_telemetry" translatable="false">pref_key_telemetry</string>
