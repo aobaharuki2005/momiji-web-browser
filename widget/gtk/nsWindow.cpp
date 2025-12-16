@@ -3405,7 +3405,7 @@ void nsWindow::RecomputeBoundsX11(bool aMayChangeCsdMargin) {
     return result;
   };
 
-  // Window position and size with decoration byt WITHOUT system titlebar.
+  // Window position and size with decoration but WITHOUT system titlebar.
   auto GetBounds = [&](GdkWindow* aWin) {
     GdkRectangle b{0};
     if (IsTopLevelWidget() && aWin == toplevel) {
@@ -3428,57 +3428,39 @@ void nsWindow::RecomputeBoundsX11(bool aMayChangeCsdMargin) {
              ToString(toplevelBoundsWithTitlebar).c_str());
   LOGVERBOSE("  toplevelBounds %s", ToString(toplevelBounds).c_str());
 
-  // Unscaled bounds include decorations and titlebar (X11)
-  DesktopIntRect finalBounds = [&] {
-    auto bounds = toplevelBoundsWithTitlebar;
-    // The toplevelBoundsWithTitlebar should always really be as wide as the
-    // toplevel bounds, but when opening multiple windows in quick succession on
-    // X11 they might not (see bug 1988787). This prevents having a really small
-    // window in such case.
-    bounds.width = std::max(bounds.width, toplevelBounds.width);
-    bounds.height = std::max(bounds.height, toplevelBounds.height);
-    return bounds;
-  }();
-  LOGVERBOSE("  finalBounds %s", ToString(finalBounds).c_str());
+  // Offset from system decoration to gtk decoration.
+  const auto systemDecorationOffset =
+      toplevelBounds.TopLeft() - toplevelBoundsWithTitlebar.TopLeft();
+
+  // This is relative to our parent window, that is, to topLevelBounds.
+  mClientArea = GetBounds(mGdkWindow);
+  // Make it relative to topLevelBoundsWithTitlebar
+  mClientArea.MoveBy(systemDecorationOffset);
+  LOGVERBOSE("  mClientArea %s", ToString(mClientArea).c_str());
+
+  if (mClientArea.X() < 0 || mClientArea.Y() < 0 || mClientArea.Width() <= 1 ||
+      mClientArea.Height() <= 1) {
+    // If we don't have gdkwindow bounds, assume we take the whole toplevel
+    // except system decorations.
+    mClientArea = DesktopIntRect(systemDecorationOffset, toplevelBounds.Size());
+  }
+
   const bool decorated =
       IsTopLevelWidget() && mSizeMode != nsSizeMode_Fullscreen && !mUndecorated;
-  LOGVERBOSE("  decorated %d", decorated);
   if (!decorated) {
     mClientMargin = {};
   } else if (aMayChangeCsdMargin) {
-    // TODO: Do we really need so complex margin calculation on X11?
-    const DesktopIntRect clientRectRelativeToFrame = [&] {
-      auto topLevelBoundsRelativeToFrame = toplevelBounds;
-      topLevelBoundsRelativeToFrame -= toplevelBoundsWithTitlebar.TopLeft();
-
-      LOGVERBOSE("  topLevelBoundsRelativeToFrame %s",
-                 ToString(topLevelBoundsRelativeToFrame).c_str());
-      if (!mGdkWindow) {
-        return topLevelBoundsRelativeToFrame;
-      }
-      auto gdkWindowBounds = GetBounds(mGdkWindow);
-      if (gdkWindowBounds.X() < 0 || gdkWindowBounds.Y() < 0 ||
-          gdkWindowBounds.Width() <= 1 || gdkWindowBounds.Height() <= 1) {
-        // If we don't have gdkwindow bounds, assume we take the whole toplevel.
-        return topLevelBoundsRelativeToFrame;
-      }
-      LOGVERBOSE("  gdkWindowBounds %s", ToString(gdkWindowBounds).c_str());
-      // gdkWindowBounds is relative to topLevelBounds already.
-      return gdkWindowBounds + topLevelBoundsRelativeToFrame.TopLeft();
-    }();
-
-    auto relative = clientRectRelativeToFrame;
-    LOGVERBOSE("  clientRectRelativeToFrame %s", ToString(relative).c_str());
-    mClientMargin = DesktopIntRect(DesktopIntPoint(), finalBounds.Size()) -
-                    clientRectRelativeToFrame;
-    LOGVERBOSE("  mClientMargin %s", ToString(mClientMargin).c_str());
+    mClientMargin =
+        DesktopIntRect(DesktopIntPoint(), toplevelBoundsWithTitlebar.Size()) -
+        mClientArea;
     mClientMargin.EnsureAtLeast(DesktopIntMargin());
   } else {
     // Assume the client margin remains the same.
   }
 
-  mClientArea = finalBounds;
-  mClientArea.Deflate(mClientMargin);
+  // We want mClientArea in global coordinates. We derive everything from here,
+  // so move it to global coords.
+  mClientArea.MoveBy(toplevelBoundsWithTitlebar.TopLeft());
 }
 #endif
 #ifdef MOZ_WAYLAND
