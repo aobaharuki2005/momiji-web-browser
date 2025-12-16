@@ -3602,6 +3602,31 @@ static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
   return CommonPromiseCombinator(cx, args, CombinatorKind::All);
 }
 
+#ifdef NIGHTLY_BUILD
+/**
+ * Await Dictionary Proposal
+ *
+ * Promise.allKeyed
+ * https://tc39.es/proposal-await-dictionary/#sec-promise.allkeyed
+ */
+static bool Promise_static_allKeyed(JSContext* cx, unsigned argc, Value* vp) {
+  JS_ReportErrorASCII(cx, "Promise.allKeyed is not yet implemented");
+  return false;
+}
+
+/**
+ * Await Dictionary Proposal
+ *
+ * Promise.allSettledKeyed
+ * https://tc39.es/proposal-await-dictionary/#sec-promise.allsettledkeyed
+ */
+static bool Promise_static_allSettledKeyed(JSContext* cx, unsigned argc,
+                                           Value* vp) {
+  JS_ReportErrorASCII(cx, "Promise.allSettledKeyed is not yet implemented");
+  return false;
+}
+#endif
+
 [[nodiscard]] static bool PerformPromiseThen(
     JSContext* cx, Handle<PromiseObject*> promise, HandleValue onFulfilled_,
     HandleValue onRejected_, Handle<PromiseCapability> resultCapability);
@@ -7906,6 +7931,10 @@ static const JSPropertySpec promise_properties[] = {
 static const JSFunctionSpec promise_static_methods[] = {
     JS_FN("all", Promise_static_all, 1, 0),
     JS_FN("allSettled", Promise_static_allSettled, 1, 0),
+#ifdef NIGHTLY_BUILD
+    JS_FN("allKeyed", Promise_static_allKeyed, 1, 0),
+    JS_FN("allSettledKeyed", Promise_static_allSettledKeyed, 1, 0),
+#endif
     JS_FN("any", Promise_static_any, 1, 0),
     JS_FN("race", Promise_static_race, 1, 0),
     JS_FN("reject", Promise_reject, 1, 0),

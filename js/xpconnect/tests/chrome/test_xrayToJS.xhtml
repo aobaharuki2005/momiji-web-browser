@@ -299,9 +299,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   gPrototypeProperties.Promise =
     ["constructor", "catch", "then", "finally", Symbol.toStringTag];
-  gConstructorProperties.Promise =
-    constructorProps(["resolve", "reject", "all", "allSettled", "any", "race", "try",
-                      "withResolvers", Symbol.species]);
+
+  if ("allKeyed" in Promise) {
+    gConstructorProperties.Promise =
+      constructorProps(["resolve", "reject", "all", "allSettled", "allKeyed", "allSettledKeyed", "any", "race", "try",
+                        "withResolvers", Symbol.species]);
+  } else {
+    gConstructorProperties.Promise =
+      constructorProps(["resolve", "reject", "all", "allSettled", "any", "race", "try",
+                        "withResolvers", Symbol.species]);
+  }
 
   gPrototypeProperties.ArrayBuffer =
     ["constructor", "byteLength", "detached", "slice", Symbol.toStringTag, "transfer", "transferToFixedLength", "maxByteLength", "resizable", "resize"];

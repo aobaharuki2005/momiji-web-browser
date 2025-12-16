@@ -2256,6 +2256,12 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
       return true;
     }
   }
+  if (key == JSProto_Promise && !JS::Prefs::experimental_promise_allkeyed()) {
+    if (id == NameToId(cx->names().allKeyed) ||
+        id == NameToId(cx->names().allSettledKeyed)) {
+      return true;
+    }
+  }
 #endif
 
   if (key == JSProto_Function &&
