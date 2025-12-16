@@ -57,7 +57,8 @@ def get_secret(name):
     secret = None
     if "TASK_ID" in os.environ:
         secrets_url = (
-            "http://taskcluster/secrets/v1/secret/project/updatebot/"
+            os.environ.get("TASKCLUSTER_PROXY_URL", "http://taskcluster")
+            + "/secrets/v1/secret/project/updatebot/"
             + ("3" if OPERATING_MODE == "prod" else "2")
             + "/"
             + name
