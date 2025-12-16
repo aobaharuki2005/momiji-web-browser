@@ -190,8 +190,8 @@ class nsDocShell final : public nsDocLoader,
       mozilla::dom::BrowsingContext* aBrowsingContext,
       uint64_t aContentWindowID = 0);
 
-  nsresult Initialize(nsIOpenWindowInfo* aOpenWindowInfo,
-                      mozilla::dom::WindowGlobalChild* aWindowActor);
+  bool Initialize(nsIOpenWindowInfo* aOpenWindowInfo,
+                  mozilla::dom::WindowGlobalChild* aWindowActor);
 
   nsresult InitWindow(nsIWidget* aParentWidget, int32_t aX, int32_t aY,
                       int32_t aWidth, int32_t aHeight,

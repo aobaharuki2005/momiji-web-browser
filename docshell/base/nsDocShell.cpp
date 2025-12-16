@@ -444,19 +444,19 @@ nsresult nsDocShell::InitWindow(nsIWidget* aParentWidget, int32_t aX,
                                 mozilla::dom::WindowGlobalChild* aWindowActor) {
   SetParentWidget(aParentWidget);
   SetPositionAndSize(aX, aY, aWidth, aHeight, 0);
-  return Initialize(aOpenWindowInfo, aWindowActor);
+  NS_ENSURE_TRUE(Initialize(aOpenWindowInfo, aWindowActor), NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
-nsresult nsDocShell::Initialize(nsIOpenWindowInfo* aOpenWindowInfo,
-                                mozilla::dom::WindowGlobalChild* aWindowActor) {
+bool nsDocShell::Initialize(nsIOpenWindowInfo* aOpenWindowInfo,
+                            mozilla::dom::WindowGlobalChild* aWindowActor) {
   if (mInitialized) {
     // We've already been initialized.
     MOZ_ASSERT(!aOpenWindowInfo,
                "Tried to reinitialize with override principal");
     MOZ_ASSERT(!aWindowActor, "Tried to reinitialize with a window actor");
-    CrashReporter::AppendAppNotesToCrashReport(
-        "nsDocShell::Initialize mInitialized."_ns);
-    return NS_ERROR_UNEXPECTED;
+    return true;
   }
 
   MOZ_ASSERT(aOpenWindowInfo,
@@ -465,14 +465,15 @@ nsresult nsDocShell::Initialize(nsIOpenWindowInfo* aOpenWindowInfo,
   NS_ASSERTION(mItemType == typeContent || mItemType == typeChrome,
                "Unexpected item type in docshell");
 
-  NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_NOT_AVAILABLE);
+  NS_ENSURE_TRUE(Preferences::GetRootBranch(), false);
   mInitialized = true;
 
   mDisableMetaRefreshWhenInactive =
       Preferences::GetBool("browser.meta_refresh_when_inactive.disabled",
                            mDisableMetaRefreshWhenInactive);
 
-  nsresult rv = CreateInitialDocumentViewer(aOpenWindowInfo, aWindowActor);
+  bool succeeded =
+      NS_SUCCEEDED(CreateInitialDocumentViewer(aOpenWindowInfo, aWindowActor));
 
   if (nsCOMPtr<nsIObserverService> serv = services::GetObserverService()) {
     const char* msg = mItemType == typeContent ? NS_WEBNAVIGATION_CREATE
@@ -480,7 +481,7 @@ nsresult nsDocShell::Initialize(nsIOpenWindowInfo* aOpenWindowInfo,
     serv->NotifyWhenScriptSafe(GetAsSupports(this), msg, nullptr);
   }
 
-  return rv;
+  return succeeded;
 }
 
 /* static */
@@ -6659,8 +6660,6 @@ nsresult nsDocShell::CreateInitialDocumentViewer(
     nsIOpenWindowInfo* aOpenWindowInfo,
     mozilla::dom::WindowGlobalChild* aWindowActor) {
   if (mIsBeingDestroyed) {
-    CrashReporter::AppendAppNotesToCrashReport(
-        "nsDocShell initially mIsBeingDestroyed."_ns);
     return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(!mDocumentViewer);
@@ -6686,10 +6685,6 @@ nsresult nsDocShell::CreateInitialDocumentViewer(
       /* aTryToSaveOldPresentation */ true,
       /* aCheckPermitUnload */ true, aWindowActor);
 
-  if (!mDocumentViewer) {
-    CrashReporter::AppendAppNotesToCrashReport(
-        "nsDocShell no viewer after create viewer."_ns);
-  }
   NS_ENSURE_STATE(mDocumentViewer);
 
   if (NS_SUCCEEDED(rv)) {
@@ -6734,15 +6729,12 @@ nsresult nsDocShell::CreateAboutBlankDocumentViewer(
   NS_ASSERTION(!mCreatingDocument,
                "infinite(?) loop creating document averted");
   if (mCreatingDocument) {
-    CrashReporter::AppendAppNotesToCrashReport(
-        "nsDocShell mCreatingDocument."_ns);
     return NS_ERROR_FAILURE;
   }
 
   if (!mBrowsingContext->AncestorsAreCurrent() ||
       (mozilla::SessionHistoryInParent() && mBrowsingContext->IsInBFCache())) {
     mBrowsingContext->RemoveRootFromBFCacheSync();
-    CrashReporter::AppendAppNotesToCrashReport("nsDocShell BFCache check."_ns);
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -6790,20 +6782,12 @@ nsresult nsDocShell::CreateAboutBlankDocumentViewer(
       rv = mDocumentViewer->PermitUnload(&okToUnload);
       if (mIsBeingDestroyed) {
         // unload handler destroyed this docshell.
-        CrashReporter::AppendAppNotesToCrashReport(
-            "nsDocShell mIsBeingDestroyed after PermitUnload."_ns);
         return NS_ERROR_NOT_AVAILABLE;
       }
       if (NS_SUCCEEDED(rv) && !okToUnload) {
         // The user chose not to unload the page, interrupt the load.
         MaybeResetInitTiming(toBeReset);
-        CrashReporter::AppendAppNotesToCrashReport(
-            "nsDocShell !okToUnload."_ns);
         return NS_ERROR_FAILURE;
-      }
-      if (NS_FAILED(rv)) {
-        CrashReporter::AppendAppNotesToCrashReport(
-            "nsDocShell failed PermitUnload."_ns);
       }
       if (mTiming) {
         mTiming->NotifyUnloadAccepted(mCurrentURI);
@@ -6832,8 +6816,6 @@ nsresult nsDocShell::CreateAboutBlankDocumentViewer(
     (void)FirePageHideNotification(!mSavingOldViewer);
     // pagehide notification might destroy this docshell.
     if (mIsBeingDestroyed) {
-      CrashReporter::AppendAppNotesToCrashReport(
-          "nsDocShell mIsBeingDestroyed after PageHide."_ns);
       return NS_ERROR_DOCSHELL_DYING;
     }
   }
@@ -6903,8 +6885,6 @@ nsresult nsDocShell::CreateAboutBlankDocumentViewer(
         };
         nsresult rv = csp->SetRequestContextWithDocument(blankDoc);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          CrashReporter::AppendAppNotesToCrashReport(
-              "nsDocShell failed SetRequestContextWithDocument."_ns);
           return rv;
         }
       }
@@ -6948,20 +6928,12 @@ nsresult nsDocShell::CreateAboutBlankDocumentViewer(
           mLoadingEntry->mInfo.SetTransient();
         }
         rv = Embed(viewer, aActor, true, nullptr, mCurrentURI);
-        if (NS_FAILED(rv)) {
-          CrashReporter::AppendAppNotesToCrashReport(
-              "nsDocShell failed Embed."_ns);
-        }
         NS_ENSURE_SUCCESS(rv, rv);
 
         SetCurrentURI(blankDoc->GetDocumentURI(), nullptr,
                       /* aFireLocationChange */ true,
                       /* aIsInitialAboutBlank */ aIsInitialDocument,
                       /* aLocationFlags */ 0);
-        if (mIsBeingDestroyed) {
-          CrashReporter::AppendAppNotesToCrashReport(
-              "nsDocShell mIsBeingDestroyed at the end."_ns);
-        }
         rv = mIsBeingDestroyed ? NS_ERROR_NOT_AVAILABLE : NS_OK;
       }
 
@@ -8291,8 +8263,6 @@ nsresult nsDocShell::SetupNewViewer(nsIDocumentViewer* aNewViewer,
     mDocumentViewer = nullptr;
     SetCurrentURIInternal(nullptr);
     NS_WARNING("DocumentViewer Initialization failed");
-    CrashReporter::AppendAppNotesToCrashReport(
-        "nsDocShell failed viewer init."_ns);
     return NS_ERROR_FAILURE;
   }
 
@@ -8302,10 +8272,6 @@ nsresult nsDocShell::SetupNewViewer(nsIDocumentViewer* aNewViewer,
     newViewer->SetReloadEncodingAndSource(reloadEncoding, reloadEncodingSource);
   }
 
-  if (!mDocumentViewer) {
-    CrashReporter::AppendAppNotesToCrashReport(
-        "nsDocShell no viewer after initializing viewer."_ns);
-  }
   NS_ENSURE_TRUE(mDocumentViewer, NS_ERROR_FAILURE);
 
   // Stuff the bgcolor from the old pres shell into the new
