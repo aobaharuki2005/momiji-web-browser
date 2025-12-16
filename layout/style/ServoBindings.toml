@@ -308,7 +308,6 @@ opaque-types = [
     "std::unique_ptr.*",
     "std::.*::unique_ptr.*",
     "mozilla::dom::FrameRequestManager",
-
     "mozilla::dom::Touch",
     "mozilla::dom::Sequence",
     "mozilla::SmallPointerArray",
