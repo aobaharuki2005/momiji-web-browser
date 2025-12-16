@@ -1943,10 +1943,15 @@ class RecursiveMakeBackend(MakeBackend):
         for source in sorted(webidls.all_preprocessed_sources()):
             basename = os.path.basename(source)
             rule = mk.create_rule([basename])
-            # GLOBAL_DEPS would be used here, but due to the include order of
-            # our makefiles it's not set early enough to be useful, so we use
-            # WEBIDL_PP_DEPS, which has analagous content.
-            rule.add_dependencies([source, "$(WEBIDL_PP_DEPS)"])
+            rule.add_dependencies(
+                [
+                    source,
+                    "backend.mk",
+                    "Makefile",
+                    "$(DEPTH)/config/autoconf.mk",
+                    "$(topsrcdir)/config/config.mk",
+                ]
+            )
             rule.add_commands(
                 [
                     # Remove the file before writing so bindings that go from
