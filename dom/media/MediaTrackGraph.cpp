@@ -449,11 +449,6 @@ void MediaTrackGraphImpl::CheckDriver() {
     return;
   }
 
-  bool needInputProcessingParamUpdate =
-      processingRequest &&
-      processingRequest->mGeneration !=
-          audioCallbackDriver->RequestedInputProcessingParams().mGeneration;
-
   // Check if this graph should switch to a different number of output channels.
   // Generally, a driver switch is explicitly made by an event (e.g., setting
   // the AudioDestinationNode channelCount), but if an HTMLMediaElement is
@@ -461,18 +456,17 @@ void MediaTrackGraphImpl::CheckDriver() {
   // of the media determines how many channels to output, and it can change
   // dynamically.
   if (primaryOutputChannelCount != audioCallbackDriver->OutputChannelCount()) {
-    if (needInputProcessingParamUpdate) {
-      needInputProcessingParamUpdate = false;
-    }
     AudioCallbackDriver* driver = new AudioCallbackDriver(
         this, CurrentDriver(), mSampleRate, primaryOutputChannelCount,
         inputChannelCount, PrimaryOutputDeviceID(), inputDevice,
         inputPreference, processingRequest);
     SwitchAtNextIteration(driver);
+    return;
   }
 
-  if (needInputProcessingParamUpdate) {
-    needInputProcessingParamUpdate = false;
+  if (processingRequest &&
+      processingRequest->mGeneration !=
+          audioCallbackDriver->RequestedInputProcessingParams().mGeneration) {
     LOG(LogLevel::Debug,
         ("%p: Setting on the fly requested processing params %s (Gen %d)", this,
          CubebUtils::ProcessingParamsToString(processingRequest->mParams).get(),
