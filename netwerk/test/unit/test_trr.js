@@ -23,7 +23,9 @@ add_setup(async function setup() {
     trr_clear_prefs();
     Services.prefs.clearUserPref("network.dns.get-ttl");
     Services.prefs.clearUserPref("network.dns.disableIPv6");
-    await trrServer.stop();
+    if (trrServer) {
+      await trrServer.stop();
+    }
   });
 });
 
