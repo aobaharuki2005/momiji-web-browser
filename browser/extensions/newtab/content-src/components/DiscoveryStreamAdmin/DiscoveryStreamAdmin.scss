@@ -119,13 +119,13 @@
 
   .message-item {
     &:first-child td {
-      border-top: 1px solid var(--border-color);
+      border-block-start: 1px solid var(--border-color);
     }
 
     td {
       vertical-align: top;
       padding: var(--space-small);
-      border-bottom: 1px solid var(--border-color);
+      border-block-end: 1px solid var(--border-color);
 
       &.min {
         width: 1%;

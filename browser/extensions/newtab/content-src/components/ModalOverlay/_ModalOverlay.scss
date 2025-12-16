@@ -65,7 +65,7 @@ $modal-scrollbar-z-index: 1100;
   }
 
   .footer {
-    border-top: 1px solid var(--border-color);
+    border-block-start: 1px solid var(--border-color);
     border-radius: var(--border-radius-small);
     height: 70px;
     width: 100%;
