@@ -19,6 +19,7 @@ import {
   errorHasNoUserFix,
   COOP_MDN_DOCS,
   COEP_MDN_DOCS,
+  HTTPS_UPGRADES_MDN_DOCS,
 } from "chrome://global/content/aboutNetErrorHelpers.mjs";
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
@@ -58,6 +59,7 @@ export class NetErrorCard extends MozLitElement {
     whyDangerous: "#fp-why-site-dangerous",
     netErrorTitleText: "#neterror-title-text",
     netErrorLearnMoreLink: "#neterror-learn-more-link",
+    httpAuthIntroText: "#fp-http-auth-disabled-intro-text",
   };
 
   static ERROR_CODES = new Set([
@@ -74,7 +76,20 @@ export class NetErrorCard extends MozLitElement {
     "NS_ERROR_DOM_COOP_FAILED",
     "NS_ERROR_DOM_COEP_FAILED",
     "MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE",
+    "NS_ERROR_BASIC_HTTP_AUTH_DISABLED",
   ]);
+
+  static CUSTOM_ERROR_CODES = {
+    blockedByCOOP: "NS_ERROR_DOM_COOP_FAILED",
+    blockedByCOEP: "NS_ERROR_DOM_COEP_FAILED",
+    basicHttpAuthDisabled: "NS_ERROR_BASIC_HTTP_AUTH_DISABLED",
+  };
+
+  static getCustomErrorCode(defaultCode) {
+    return gOffline
+      ? "NS_ERROR_OFFLINE"
+      : (NetErrorCard.CUSTOM_ERROR_CODES[defaultCode] ?? defaultCode);
+  }
 
   static isSupported() {
     if (!FELT_PRIVACY_REFRESH) {
@@ -84,17 +99,10 @@ export class NetErrorCard extends MozLitElement {
     const errorInfo = gIsCertError
       ? document.getFailedCertSecurityInfo()
       : document.getNetErrorInfo();
-    let errorCode = errorInfo.errorCodeString
+    const defaultErrorCode = errorInfo.errorCodeString
       ? errorInfo.errorCodeString
       : gErrorCode;
-
-    if (gOffline) {
-      errorCode = "NS_ERROR_OFFLINE";
-    } else if (gErrorCode === "blockedByCOOP") {
-      errorCode = "NS_ERROR_DOM_COOP_FAILED";
-    } else if (gErrorCode === "blockedByCOEP") {
-      errorCode = "NS_ERROR_DOM_COEP_FAILED";
-    }
+    const errorCode = NetErrorCard.getCustomErrorCode(defaultErrorCode);
 
     return NetErrorCard.ERROR_CODES.has(errorCode);
   }
@@ -206,15 +214,7 @@ export class NetErrorCard extends MozLitElement {
 
     if (!errorInfo.errorCodeString) {
       this.showCustomNetErrorCard = true;
-      if (gOffline) {
-        errorInfo.errorCodeString = "NS_ERROR_OFFLINE";
-      } else if (gErrorCode === "blockedByCOOP") {
-        errorInfo.errorCodeString = "NS_ERROR_DOM_COOP_FAILED";
-      } else if (gErrorCode === "blockedByCOEP") {
-        errorInfo.errorCodeString = "NS_ERROR_DOM_COEP_FAILED";
-      }
-
-      errorInfo.errorCodeString = errorInfo.errorCodeString ?? gErrorCode;
+      errorInfo.errorCodeString = NetErrorCard.getCustomErrorCode(gErrorCode);
     }
     return errorInfo;
   }
@@ -256,6 +256,17 @@ export class NetErrorCard extends MozLitElement {
       case "NS_ERROR_DOM_COOP_FAILED":
       case "NS_ERROR_DOM_COEP_FAILED":
         return html`<p data-l10n-id="fp-neterror-coop-coep-intro"></p>`;
+      case "NS_ERROR_BASIC_HTTP_AUTH_DISABLED":
+        return html`<p
+            id="fp-http-auth-disabled-intro-text"
+            data-l10n-id="fp-neterror-http-auth-disabled-intro"
+          ></p>
+          ${this.hideExceptionButton
+            ? html`<p
+                id="fp-http-auth-disabled-secure-connection-text"
+                data-l10n-id="fp-neterror-http-auth-disabled-secure-connection"
+              ></p> `
+            : null} `;
     }
 
     return null;
@@ -437,6 +448,20 @@ export class NetErrorCard extends MozLitElement {
         });
         break;
       }
+      case "NS_ERROR_BASIC_HTTP_AUTH_DISABLED": {
+        content = this.advancedSectionTemplate({
+          whyDangerousL10nId:
+            "fp-neterror-http-auth-disabled-why-dangerous-body",
+          whyDangerousL10nArgs: {
+            hostname: this.hostname,
+          },
+          whatCanYouDoL10nId:
+            "fp-neterror-http-auth-disabled-what-can-you-do-body",
+          learnMoreL10nId: "fp-learn-more-about-https-connections",
+          learnMoreSupportPage: HTTPS_UPGRADES_MDN_DOCS,
+        });
+        break;
+      }
     }
 
     return html`<div class="advanced-container">
@@ -575,6 +600,16 @@ export class NetErrorCard extends MozLitElement {
         });
         break;
       }
+      case "NS_ERROR_BASIC_HTTP_AUTH_DISABLED": {
+        content = this.customNetErrorSectionTemplate({
+          titleL10nId: "fp-certerror-body-title",
+          buttons: {
+            goBack: window.self === window.top,
+          },
+          useAdvancedSection: true,
+        });
+        break;
+      }
     }
 
     return html`<div class="custom-net-error-card">${content}</div>`;
@@ -583,6 +618,8 @@ export class NetErrorCard extends MozLitElement {
   customNetErrorSectionTemplate(params) {
     const {
       titleL10nId,
+      whyDangerousL10nId,
+      whyDangerousL10nArgs,
       whyDidThisHappenL10nId,
       whyDidThisHappenL10nArgs,
       whatCanYouDoL10nId,
@@ -590,12 +627,21 @@ export class NetErrorCard extends MozLitElement {
       learnMoreL10nId,
       learnMoreSupportPage,
       buttons = {},
+      useAdvancedSection,
     } = params;
 
     const { goBack = false, tryAgain = false } = buttons;
 
-    return html`<h1 id="neterror-title-text" data-l10n-id=${titleL10nId}></h1>
-      ${this.introContentTemplate()}
+    const content = html`
+      ${whyDangerousL10nId
+        ? html`<p>
+            <strong data-l10n-id="fp-certerror-why-site-dangerous"></strong>
+            <span
+              data-l10n-id=${whyDangerousL10nId}
+              data-l10n-args=${JSON.stringify(whyDangerousL10nArgs)}
+            ></span>
+          </p>`
+        : null}
       ${whatCanYouDoL10nId
         ? html`<p>
             <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
@@ -648,7 +694,42 @@ export class NetErrorCard extends MozLitElement {
               @click=${this.handleGoBackClick}
             ></moz-button
           ></moz-button-group>`
-        : null}`;
+        : null}
+    `;
+
+    return html`<h1 id="neterror-title-text" data-l10n-id=${titleL10nId}></h1>
+      ${this.introContentTemplate()}
+      ${useAdvancedSection
+        ? html`<moz-button-group>
+            ${goBack
+              ? html`<moz-button
+                  type="primary"
+                  data-l10n-id="fp-certerror-return-to-previous-page-recommended-button"
+                  data-telemetry-id="return_button_adv"
+                  id="returnButton"
+                  @click=${this.handleGoBackClick}
+                ></moz-button>`
+              : null}
+            ${tryAgain
+              ? html`<moz-button
+                  id="tryAgainButton"
+                  type="primary"
+                  data-l10n-id="neterror-try-again-button"
+                  data-telemetry-id="try_again_button"
+                  @click=${this.handleTryAgain}
+                ></moz-button>`
+              : null}
+            <moz-button
+              id="advanced-button"
+              data-l10n-id=${this.advancedShowing
+                ? "fp-certerror-hide-advanced-button"
+                : "fp-certerror-advanced-button"}
+              data-telemetry-id="advanced_button"
+              @click=${this.toggleAdvancedShowing}
+            ></moz-button
+          ></moz-button-group>`
+        : content}
+      ${useAdvancedSection ? this.advancedContainerTemplate() : null} `;
   }
 
   async getDomainMismatchNames() {

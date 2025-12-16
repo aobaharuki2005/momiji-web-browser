@@ -21,6 +21,7 @@ import {
   errorHasNoUserFix,
   COOP_MDN_DOCS,
   COEP_MDN_DOCS,
+  HTTPS_UPGRADES_MDN_DOCS,
 } from "chrome://global/content/aboutNetErrorHelpers.mjs";
 
 const formatter = new Intl.DateTimeFormat();
@@ -74,7 +75,6 @@ const KNOWN_ERROR_TITLE_IDS = new Set([
  * aboutNetErrorCodes.js which is loaded before we are: */
 /* global KNOWN_ERROR_MESSAGE_IDS */
 const ERROR_MESSAGES_FTL = "toolkit/neterror/nsserrors.ftl";
-const HTTPS_UPGRADES_MDN_DOCS = "https://support.mozilla.org/kb/https-upgrades";
 
 // If the location of the favicon changes, FAVICON_CERTERRORPAGE_URL and/or
 // FAVICON_ERRORPAGE_URL in toolkit/components/places/nsFaviconService.idl
