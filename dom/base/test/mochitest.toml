@@ -307,8 +307,6 @@ run-if = [
 
 ["test_bug254337.html"]
 
-["test_bug270145.xhtml"]
-
 ["test_bug276037-1.html"]
 
 ["test_bug276037-2.xhtml"]
