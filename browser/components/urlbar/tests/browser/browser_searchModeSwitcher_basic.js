@@ -273,7 +273,7 @@ add_task(async function test_icon_new_window() {
   let expectedIcon = await Services.search.defaultEngine.getIconURL();
 
   Assert.equal(
-    await getSearchModeSwitcherIcon(newWin),
+    UrlbarTestUtils.getSearchModeSwitcherIcon(newWin),
     expectedIcon,
     "The search mode switcher should already have the engine favicon."
   );
@@ -290,7 +290,7 @@ add_task(async function test_search_icon_change() {
   const globeIconUrl = UrlbarUtils.ICON.GLOBE;
 
   Assert.equal(
-    await getSearchModeSwitcherIcon(newWin),
+    UrlbarTestUtils.getSearchModeSwitcherIcon(newWin),
     globeIconUrl,
     "The search mode switcher should have the globe icon url since keyword.enabled is false"
   );
@@ -313,7 +313,7 @@ add_task(async function test_search_icon_change() {
     .getIconURL();
 
   Assert.equal(
-    await getSearchModeSwitcherIcon(newWin),
+    UrlbarTestUtils.getSearchModeSwitcherIcon(newWin),
     bingSearchEngineIconUrl,
     "The search mode switcher should have the bing icon url since we are in \
      search mode"
@@ -329,7 +329,7 @@ add_task(async function test_search_icon_change() {
   await UrlbarTestUtils.assertSearchMode(newWin, null);
 
   let searchModeSwitcherIconUrl = await BrowserTestUtils.waitForCondition(
-    () => getSearchModeSwitcherIcon(newWin),
+    () => UrlbarTestUtils.getSearchModeSwitcherIcon(newWin),
     "Waiting for the search mode switcher icon to update after exiting search mode."
   );
 
@@ -734,7 +734,7 @@ add_task(async function test_search_service_fail() {
   });
 
   let searchModeSwitcherIconUrl = await BrowserTestUtils.waitForCondition(
-    () => getSearchModeSwitcherIcon(newWin),
+    () => UrlbarTestUtils.getSearchModeSwitcherIcon(newWin),
     "Waiting for the search mode switcher icon to update after exiting search mode."
   );
 
@@ -788,7 +788,7 @@ add_task(async function test_search_mode_switcher_engine_no_icon() {
   await popupHidden;
 
   Assert.equal(
-    await getSearchModeSwitcherIcon(window),
+    UrlbarTestUtils.getSearchModeSwitcherIcon(window),
     UrlbarUtils.ICON.SEARCH_GLASS,
     "The search mode switcher should display the default search glass icon when the engine has no icon."
   );
@@ -844,7 +844,7 @@ add_task(async function test_search_mode_switcher_private_engine_icon() {
   );
 
   Assert.equal(
-    await getSearchModeSwitcherIcon(window),
+    UrlbarTestUtils.getSearchModeSwitcherIcon(window),
     defaultEngineIcon,
     "Is the icon of the default engine."
   );
@@ -861,7 +861,7 @@ add_task(async function test_search_mode_switcher_private_engine_icon() {
   });
 
   Assert.equal(
-    await getSearchModeSwitcherIcon(privateWin),
+    UrlbarTestUtils.getSearchModeSwitcherIcon(privateWin),
     defaultPrivateEngineIcon,
     "Is the icon of the default private engine."
   );
@@ -874,7 +874,8 @@ add_task(async function test_search_mode_switcher_private_engine_icon() {
 
   info("Waiting for the icon to be updated.");
   await TestUtils.waitForCondition(
-    () => getSearchModeSwitcherIcon(privateWin) == defaultEngineIcon
+    () =>
+      UrlbarTestUtils.getSearchModeSwitcherIcon(privateWin) == defaultEngineIcon
   );
   Assert.ok(true, "The icon was updated.");
 
@@ -901,14 +902,3 @@ add_task(async function open_with_option() {
   EventUtils.synthesizeKey("KEY_Escape");
   await popupHidden;
 });
-
-function getSearchModeSwitcherIcon(window) {
-  let searchModeSwitcherButton = window.gURLBar.querySelector(
-    ".searchmode-switcher-icon"
-  );
-
-  // match and capture the URL inside `url("...")`
-  let re = /url\("([^"]+)"\)/;
-  let { listStyleImage } = window.getComputedStyle(searchModeSwitcherButton);
-  return listStyleImage.match(re)?.[1] ?? null;
-}

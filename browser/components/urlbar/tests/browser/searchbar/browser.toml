@@ -11,4 +11,6 @@ prefs = [
 
 ["browser_search.js"]
 
+["browser_searchModeSwitcher.js"]
+
 ["browser_searchmode.js"]

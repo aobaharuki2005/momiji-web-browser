@@ -338,8 +338,10 @@ export class SearchModeSwitcher {
       labelEl.textContent = label;
     }
 
-    // If keyword.enabled is true, then the tooltip is already set.
-    if (!lazy.UrlbarPrefs.get("keyword.enabled")) {
+    if (
+      !lazy.UrlbarPrefs.get("keyword.enabled") &&
+      this.#input.sapName != "searchbar"
+    ) {
       this.#input.document.l10n.setAttributes(
         this.#toolbarbutton,
         "urlbar-searchmode-no-keyword"

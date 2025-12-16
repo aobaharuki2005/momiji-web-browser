@@ -1463,6 +1463,23 @@ class UrlbarInputTestUtils {
     );
   }
 
+  /**
+   * Gets the icon url of the search mode switcher icon.
+   *
+   * @param {ChromeWindow} win
+   * @returns {?string}
+   */
+  getSearchModeSwitcherIcon(win) {
+    let searchModeSwitcherButton = this.#urlbar(win).querySelector(
+      ".searchmode-switcher-icon"
+    );
+
+    // match and capture the URL inside `url("...")`
+    let re = /url\("([^"]+)"\)/;
+    let { listStyleImage } = win.getComputedStyle(searchModeSwitcherButton);
+    return listStyleImage.match(re)?.[1] ?? null;
+  }
+
   async openTrustPanel(win) {
     let btn = win.document.getElementById("trust-icon");
     let popupShown = lazy.BrowserTestUtils.waitForEvent(

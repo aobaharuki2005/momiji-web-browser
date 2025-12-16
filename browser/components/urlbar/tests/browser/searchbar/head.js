@@ -6,7 +6,6 @@
 ChromeUtils.defineESModuleGetters(this, {
   CustomizableUITestUtils:
     "resource://testing-common/CustomizableUITestUtils.sys.mjs",
-  SearchbarTestUtils: "resource://testing-common/UrlbarTestUtils.sys.mjs",
   SearchUITestUtils: "resource://testing-common/SearchUITestUtils.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.sys.mjs",
@@ -24,7 +23,6 @@ Services.scriptloader.loadSubScript(
 
 let gCUITestUtils = new CustomizableUITestUtils(window);
 gCUITestUtils.addSearchBar();
-SearchbarTestUtils.init(this);
 
 registerCleanupFunction(async () => {
   gCUITestUtils.removeSearchBar();
