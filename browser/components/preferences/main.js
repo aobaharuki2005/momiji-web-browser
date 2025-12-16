@@ -1785,6 +1785,85 @@ Preferences.addSetting({
   },
 });
 
+Preferences.addSetting({
+  /** @type {{ _removeAddressDialogStrings: string[] } & SettingConfig} */
+  id: "address-item",
+  _removeAddressDialogStrings: [],
+  onUserClick(e) {
+    const action = e.target.getAttribute("action");
+    const guid = e.target.getAttribute("guid");
+    if (action === "remove") {
+      let [title, confirm, cancel] = this._removeAddressDialogStrings;
+      FormAutofillPreferences.prototype.openRemoveAddressDialog(
+        guid,
+        window.browsingContext.topChromeWindow.browsingContext,
+        title,
+        confirm,
+        cancel
+      );
+    } else if (action === "edit") {
+      FormAutofillPreferences.prototype.openEditAddressDialog(guid, window);
+    }
+  },
+  setup(emitChange) {
+    document.l10n
+      .formatValues([
+        { id: "addresses-delete-address-prompt-title" },
+        { id: "addresses-delete-address-prompt-confirm-button" },
+        { id: "addresses-delete-address-prompt-cancel-button" },
+      ])
+      .then(val => (this._removeAddressDialogStrings = val))
+      .then(emitChange);
+  },
+  disabled() {
+    return !!this._removeAddressDialogStrings.length;
+  },
+});
+
+Preferences.addSetting({
+  id: "add-address-button",
+  deps: ["saveAndFillAddresses"],
+  onUserClick: () => {
+    FormAutofillPreferences.prototype.openEditAddressDialog(undefined, window);
+  },
+  disabled: ({ saveAndFillAddresses }) => !saveAndFillAddresses.value,
+});
+
+Preferences.addSetting({
+  id: "addresses-list-header",
+});
+
+Preferences.addSetting(
+  class extends Preferences.AsyncSetting {
+    static id = "addresses-list";
+
+    async getAddresses() {
+      await FormAutofillPreferences.prototype.initializeAddressesStorage();
+      return FormAutofillPreferences.prototype.makeAddressesListItems();
+    }
+
+    async getControlConfig() {
+      return {
+        items: await this.getAddresses(),
+      };
+    }
+
+    setup() {
+      Services.obs.addObserver(this.emitChange, "formautofill-storage-changed");
+      return () =>
+        Services.obs.removeObserver(
+          this.emitChange,
+          "formautofill-storage-changed"
+        );
+    }
+
+    async visible() {
+      const items = await this.getAddresses();
+      return !!items.length;
+    }
+  }
+);
+
 SettingGroupManager.registerGroups({
   containers: {
     // This section is marked as in progress for testing purposes
@@ -3109,9 +3188,7 @@ SettingGroupManager.registerGroups({
       {
         id: "payments-list",
         control: "moz-box-group",
-        l10nId: "payments-list-header",
         controlAttrs: {
-          hasHeader: true,
           type: "list",
         },
       },
@@ -3320,6 +3397,22 @@ SettingGroupManager.registerGroups({
         id: "etpManageExceptionsButton",
         l10nId: "preferences-etp-manage-exceptions-button",
         control: "moz-box-button",
+      },
+    ],
+  },
+  manageAddresses: {
+    items: [
+      {
+        id: "add-address-button",
+        control: "moz-button",
+        l10nId: "autofill-addresses-add-button",
+      },
+      {
+        id: "addresses-list",
+        control: "moz-box-group",
+        controlAttrs: {
+          type: "list",
+        },
       },
     ],
   },

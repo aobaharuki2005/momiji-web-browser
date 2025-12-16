@@ -1341,19 +1341,9 @@ autofill-reauth-payment-methods-checkbox-2 =
 autofill-payment-methods-add-button = Add new payment method
 payments-list-header =
   .label = Payment methods
-payments-list-item-label = <strong>Payment methods</strong>
 payments-delete-payment-prompt-title = Delete this payment method?
 payments-delete-payment-prompt-confirm-button = Delete
 payments-delete-payment-prompt-cancel-button = Cancel
-autofill-addresses-title = Addresses and more
-autofill-addresses-header =
-    .aria-label = Addresses and more
-autofill-addresses-checkbox-message =
-    .label = Save and autofill addresses
-    .accesskey = S
-autofill-addresses-manage-addresses-button =
-    .label = Manage addresses and more
-    .accesskey = M
 
 # These values are displayed for each credit card record listed on the Manage Payment methods
 # settings page.
@@ -1363,6 +1353,36 @@ autofill-addresses-manage-addresses-button =
 payment-moz-box-item =
   .label = { $cardNumber }
   .description = { $expDate }
+
+autofill-addresses-title = Addresses and more
+autofill-addresses-header =
+    .aria-label = Addresses and more
+autofill-addresses-checkbox-message =
+    .label = Save and autofill addresses
+    .accesskey = S
+autofill-addresses-manage-addresses-button =
+    .label = Manage addresses and more
+    .accesskey = M
+addresses-list-header =
+    .label = Addresses
+addreses-delete-address-button-label =
+    .aria-label = Delete
+addreses-edit-address-button-label =
+    .aria-label = Edit
+addresses-delete-address-prompt-title = Delete this address?
+addresses-delete-address-prompt-confirm-button = Delete
+addresses-delete-address-prompt-cancel-button = Cancel
+autofill-addresses-add-button = Add new address
+autofill-addresses-manage-addresses-title =
+    .heading = Manage addresses and more
+
+# These values are displayed for each address record listed on the "Manage addresses and more" subpage.
+# Variables:
+#   $name (string) - The name associated with the address
+#   $address (string) - The address
+address-moz-box-item =
+  .label = { $name }
+  .description = { $address }
 
 ## Privacy Section - History
 

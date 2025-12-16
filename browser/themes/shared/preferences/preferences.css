@@ -1529,3 +1529,8 @@ setting-group[groupid="home"] {
 #etpLevelWarning {
   --promo-image-position: top;
 }
+
+#addresses-list-header,
+#payments-list-header {
+  --box-label-font-weight: var(--heading-font-weight);
+}
