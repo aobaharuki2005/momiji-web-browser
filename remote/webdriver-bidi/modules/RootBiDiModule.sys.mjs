@@ -7,9 +7,8 @@ import { Module } from "chrome://remote/content/shared/messagehandler/Module.sys
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
-  MozContextScope:
-    "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
   WindowGlobalMessageHandler:
     "chrome://remote/content/shared/messagehandler/WindowGlobalMessageHandler.sys.mjs",
@@ -47,8 +46,9 @@ export class RootBiDiModule extends Module {
    * @param {string} navigableId
    *     Unique id of the browsing context.
    * @param {object=} options
-   * @param {MozContextScope=} options.scope
-   *     Scope of the browsing context. Defaults to "content".
+   * @param {boolean=} options.supportsChromeScope
+   *     If set to `true` chrome browsing contexts are supported
+   *     for the BiDi command. Defaults to `false`.
    *
    * @returns {BrowsingContext|null}
    *     The browsing context, or null if `navigableId` is null.
@@ -57,7 +57,7 @@ export class RootBiDiModule extends Module {
    *     If the browsing context cannot be found.
    */
   _getNavigable(navigableId, options = {}) {
-    const { scope = lazy.MozContextScope.CONTENT } = options;
+    const { supportsChromeScope = false } = options;
 
     if (navigableId === null) {
       // The WebDriver BiDi specification expects `null` to be
@@ -65,11 +65,16 @@ export class RootBiDiModule extends Module {
       return null;
     }
 
-    let context = lazy.NavigableManager.getBrowsingContextById(navigableId);
+    const context = lazy.NavigableManager.getBrowsingContextById(navigableId);
 
-    // Only allow to retrieve contexts for chrome windows if explicitly allowed.
-    if (context && !context.isContent && scope != lazy.MozContextScope.CHROME) {
-      context = null;
+    if (context && !context.isContent) {
+      lazy.assert.hasSystemAccess();
+
+      if (!supportsChromeScope) {
+        throw new lazy.error.UnsupportedOperationError(
+          "The command does not support browsing contexts in privileged (chrome) scope"
+        );
+      }
     }
 
     if (context === null) {
