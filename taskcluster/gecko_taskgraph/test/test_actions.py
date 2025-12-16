@@ -622,9 +622,6 @@ def test_add_all_browsertime(mocker, run_action, get_artifact):
     assert "build" not in to_run
 
 
-@pytest.mark.xfail(
-    reason="Index API artifact handling issue - _handle_artifact doesn't parse YAML correctly for index artifacts"
-)
 def test_gecko_profile(mocker, responses, run_action, get_artifact):
     task_id = "tid"
     task_def = {
