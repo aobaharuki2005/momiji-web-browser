@@ -124,6 +124,7 @@ tasks:
             - conditioned_profile
             - xorigin
             - no-fission
+            - socketprocess_networking
             - headless
             - http3
             - http2
@@ -151,6 +152,13 @@ tasks:
                         linux.*64-ccov/opt: ['mozilla-central']
                         android-em.*/debug-isolated-process: ['trunk']
                         android-em.*: ['trunk']
+                        default: []
+                socketprocess_networking:
+                    by-test-platform:
+                        .*-ccov.*: []
+                        .*-asan.*: []
+                        .*-wayland.*: []
+                        linux2404-64/debug: ['autoland', 'mozilla-central']
                         default: []
                 aab+no-fission:
                     by-test-platform:
@@ -271,9 +279,14 @@ tasks:
         run-without-variant: false
         variants:
             - 1proc
+            - socketprocess_networking+1proc
             - webrender-sw+1proc
         run-on-projects:
             by-variant:
+                socketprocess_networking+1proc:
+                    by-test-platform:
+                        linux.*64/debug: ['autoland', 'mozilla-central']
+                        default: []
                 webrender-sw+1proc:
                     by-test-platform:
                         android-em.*/debug: built-projects
@@ -293,6 +306,7 @@ tasks:
         variants:
             - webrender-sw
             - webrender-sw+a11y-checks
+            - socketprocess_networking
             - msix
             - vertical-tabs
             - inc-origin-init
@@ -329,6 +343,14 @@ tasks:
                 webrender-sw+a11y-checks:
                     by-test-platform:
                         linux.*64(-shippable)?/opt: ['trunk']
+                        default: []
+                socketprocess_networking:
+                    by-test-platform:
+                        .*-asan.*: []
+                        .*-ccov.*: []
+                        linux.*64(-shippable)?/.*: ['autoland', 'mozilla-central']
+                        macosx.*64(-shippable)?(-qr)?/.*: ['autoland', 'mozilla-central']
+                        windows1.*-64.*(-shippable)?/.*: ['autoland', 'mozilla-central']
                         default: []
                 msix:
                     by-test-platform:
@@ -382,6 +404,10 @@ tasks:
         max-run-time:
             by-variant:
                 msix: 5400
+                socketprocess_networking:
+                    by-test-platform:
+                        linux.*/debug: 7200
+                        default: 5400
                 default:
                     by-test-platform:
                         linux.*64-ccov/opt: 9000
@@ -558,10 +584,17 @@ tasks:
         run-without-variant: false
         variants:
             - 1proc
+            - socketprocess_networking+1proc
             - webrender-sw+1proc
             - inc-origin-init
         run-on-projects:
             by-variant:
+                socketprocess_networking+1proc:
+                    by-test-platform:
+                        .*-asan.*: []
+                        .*-ccov.*: []
+                        linux2404-64/debug: ['autoland', 'mozilla-central']
+                        default: []
                 webrender-sw+1proc:
                     by-test-platform:
                         android-em.*/debug: built-projects
@@ -597,6 +630,7 @@ tasks:
         loopback-video: true
         variants:
             - a11y-checks
+            - socketprocess_networking
             - http3
         run-on-projects:
             by-variant:
@@ -607,6 +641,12 @@ tasks:
                 http3:
                     by-test-platform:
                         linux2404-64/debug: built-projects
+                        default: []
+                socketprocess_networking:
+                    by-test-platform:
+                        .*-asan.*: []
+                        .*-ccov.*: []
+                        linux2404-64/debug: ['autoland', 'mozilla-central']
                         default: []
                 default:
                     by-test-platform:
@@ -779,9 +819,11 @@ tasks:
         run-without-variant: false
         variants:
             - 1proc
+            - socketprocess_networking+1proc
             - webrender-sw+1proc
         run-on-projects:
             by-variant:
+                socketprocess_networking+1proc: []
                 webrender-sw+1proc:
                     by-test-platform:
                         android-em.*/debug: built-projects
@@ -1211,8 +1253,15 @@ tasks:
         loopback-video: true
         variants:
             - no-fission
+            - socketprocess_networking
         run-on-projects:
             by-variant:
+                socketprocess_networking:
+                    by-test-platform:
+                        .*-asan.*: []
+                        .*-ccov.*: []
+                        linux2404-64/debug: ['autoland', 'mozilla-central']
+                        default: []
                 no-fission:
                     by-test-platform:
                         linux2404-64/.*: ['trunk']
