@@ -1251,9 +1251,12 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
                     aKidFrame->GetWritingMode(),
                     aDelegatingFrame->GetWritingMode(), positionArea,
                     &resolvedPositionArea);
-            return ContainingBlockRect{offset, resolvedPositionArea,
-                                       aOriginalScrollableContainingBlockRect,
-                                       scrolledAnchorCb};
+            return ContainingBlockRect{
+                offset, resolvedPositionArea,
+                aOriginalScrollableContainingBlockRect,
+                // Unscroll the CB by canceling out the previously applied
+                // scroll offset (See above), the offset will be applied later.
+                scrolledAnchorCb + offset};
           }
           return ContainingBlockRect{aOriginalScrollableContainingBlockRect};
         }
@@ -1521,10 +1524,6 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       // block, which is necessary for inset computation. However, the position
       // of a frame originates against the border box.
       r += cb.mFinalRect.TopLeft();
-      if (cb.mAnchorShiftInfo) {
-        // Push the frame out to where the anchor is.
-        r += cb.mAnchorShiftInfo->mOffset;
-      }
 
       aKidFrame->SetRect(r);
     }
