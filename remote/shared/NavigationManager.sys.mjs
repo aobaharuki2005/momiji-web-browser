@@ -763,8 +763,7 @@ class NavigationRegistry extends EventEmitter {
     const { download } = data;
 
     const contextId = download.source.browsingContextId;
-    const browsingContext =
-      lazy.NavigableManager.getBrowsingContextById(contextId);
+    const browsingContext = BrowsingContext.get(contextId);
     if (!browsingContext) {
       return;
     }
@@ -801,8 +800,7 @@ class NavigationRegistry extends EventEmitter {
     const { download } = data;
 
     const contextId = download.source.browsingContextId;
-    const browsingContext =
-      lazy.NavigableManager.getBrowsingContextById(contextId);
+    const browsingContext = BrowsingContext.get(contextId);
     if (!browsingContext) {
       return;
     }
