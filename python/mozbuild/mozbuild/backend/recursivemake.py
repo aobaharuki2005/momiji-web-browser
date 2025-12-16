@@ -1853,7 +1853,15 @@ class RecursiveMakeBackend(MakeBackend):
             basename = os.path.basename(source)
             sorted_nonstatic_ipdl_basenames.append(basename)
             rule = mk.create_rule([basename])
-            rule.add_dependencies([source])
+            rule.add_dependencies(
+                [
+                    source,
+                    "backend.mk",
+                    "Makefile",
+                    "$(DEPTH)/config/autoconf.mk",
+                    "$(topsrcdir)/config/config.mk",
+                ]
+            )
             rule.add_commands(
                 [
                     "$(RM) $@",
