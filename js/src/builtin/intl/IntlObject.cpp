@@ -253,8 +253,8 @@ static ArrayObject* CreateArrayFromSortedList(
 /**
  * Create an array from an intl::Enumeration.
  */
-template <const auto& unsupported, class Enumeration>
-static bool EnumerationIntoList(JSContext* cx, Enumeration values,
+template <const auto& unsupported>
+static bool EnumerationIntoList(JSContext* cx, auto values,
                                 MutableHandle<StringList> list) {
   for (auto value : values) {
     if (value.isErr()) {
@@ -293,10 +293,6 @@ static constexpr auto UnsupportedCalendars() {
   };
 }
 
-// Defined outside of the function to workaround bugs in GCC<9.
-// Also see <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85589>.
-static constexpr auto UnsupportedCalendarsArray = UnsupportedCalendars();
-
 /**
  * AvailableCalendars ( )
  */
@@ -314,7 +310,7 @@ static ArrayObject* AvailableCalendars(JSContext* cx) {
       return nullptr;
     }
 
-    static constexpr auto& unsupported = UnsupportedCalendarsArray;
+    static constexpr auto unsupported = UnsupportedCalendars();
 
     if (!EnumerationIntoList<unsupported>(cx, keywords.unwrap(), &list)) {
       return nullptr;
@@ -335,10 +331,6 @@ static constexpr auto UnsupportedCollations() {
   };
 }
 
-// Defined outside of the function to workaround bugs in GCC<9.
-// Also see <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85589>.
-static constexpr auto UnsupportedCollationsArray = UnsupportedCollations();
-
 /**
  * AvailableCollations ( )
  */
@@ -356,7 +348,7 @@ static ArrayObject* AvailableCollations(JSContext* cx) {
       return nullptr;
     }
 
-    static constexpr auto& unsupported = UnsupportedCollationsArray;
+    static constexpr auto unsupported = UnsupportedCollations();
 
     if (!EnumerationIntoList<unsupported>(cx, keywords.unwrap(), &list)) {
       return nullptr;
@@ -380,22 +372,6 @@ static constexpr auto UnsupportedCurrencies() {
 }
 
 /**
- * Return a list of known, missing currencies which aren't returned by
- * |Currency::GetISOCurrencies()|.
- */
-static constexpr auto MissingCurrencies() {
-  return std::array{
-      "SLE",  // https://unicode-org.atlassian.net/browse/ICU-21989
-      "VED",  // https://unicode-org.atlassian.net/browse/ICU-21989
-  };
-}
-
-// Defined outside of the function to workaround bugs in GCC<9.
-// Also see <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85589>.
-static constexpr auto UnsupportedCurrenciesArray = UnsupportedCurrencies();
-static constexpr auto MissingCurrenciesArray = MissingCurrencies();
-
-/**
  * AvailableCurrencies ( )
  */
 static ArrayObject* AvailableCurrencies(JSContext* cx) {
@@ -412,20 +388,9 @@ static ArrayObject* AvailableCurrencies(JSContext* cx) {
       return nullptr;
     }
 
-    static constexpr auto& unsupported = UnsupportedCurrenciesArray;
+    static constexpr auto unsupported = UnsupportedCurrencies();
 
     if (!EnumerationIntoList<unsupported>(cx, currencies.unwrap(), &list)) {
-      return nullptr;
-    }
-  }
-
-  // Add known missing values.
-  for (const char* value : MissingCurrenciesArray) {
-    auto* string = NewStringCopyZ<CanGC>(cx, value);
-    if (!string) {
-      return nullptr;
-    }
-    if (!list.append(string)) {
       return nullptr;
     }
   }
