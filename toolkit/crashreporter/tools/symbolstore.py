@@ -809,10 +809,7 @@ class Dumper:
                 print(
                     "PERFHERDER_DATA: %s" % json.dumps(perfherder_data), file=sys.stderr
                 )
-                if (
-                    "MOZ_AUTOMATION" in os.environ
-                    or "SNAPCRAFT_BUILD_INFO" in os.environ
-                ):
+                if "MOZ_AUTOMATION" in os.environ or "MOZ_SNAP_BUILD" in os.environ:
                     upload_dir = Path(os.environ.get("UPLOAD_DIR"))
                     upload_dir.mkdir(parents=True, exist_ok=True)
                     upload_path = upload_dir / "perfherder-data-compiler-metrics.json"
