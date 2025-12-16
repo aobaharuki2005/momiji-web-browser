@@ -6545,7 +6545,7 @@ void nsCocoaWindow::ReportMoveEvent() {
 
   // Dispatch the move event to Gecko, if we're visible.
   if (IsVisible()) {
-    NotifyWindowMoved(mBounds.x, mBounds.y);
+    NotifyWindowMoved(mBounds.TopLeft());
   }
 
   mInReportMoveEvent = false;
