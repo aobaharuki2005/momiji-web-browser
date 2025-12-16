@@ -249,7 +249,6 @@ class TRRDNSListener {
 // This is for reteriiving the raw bytes from a DNS answer.
 function answerHandler(req, resp) {
   let searchParams = new URL(req.url, "http://example.com").searchParams;
-  console.log("req.searchParams:" + searchParams);
   if (!searchParams.get("host")) {
     resp.writeHead(400);
     resp.end("Missing search parameter");
@@ -287,7 +286,7 @@ function answerHandler(req, resp) {
 /// This is the default handler for /dns-query
 /// It implements basic functionality for parsing the DoH packet, then
 /// queries global.dns_query_answers for available answers for the DNS query.
-function trrQueryHandler(req, resp, url) {
+function trrQueryHandler(req, resp) {
   let requestBody = Buffer.from("");
   let method = req.headers[global.http2.constants.HTTP2_HEADER_METHOD];
   let contentLength = req.headers["content-length"];
@@ -300,13 +299,14 @@ function trrQueryHandler(req, resp, url) {
       }
     });
   } else if (method == "GET") {
-    if (!url.query.dns) {
+    let searchParams = new URL(req.url, "http://example.com").searchParams;
+    if (!searchParams.get("dns")) {
       resp.writeHead(400);
       resp.end("Missing dns parameter");
       return;
     }
 
-    requestBody = Buffer.from(url.query.dns, "base64");
+    requestBody = Buffer.from(searchParams.get("dns"), "base64");
     processRequest(req, resp, requestBody);
   } else {
     // unexpected method.
