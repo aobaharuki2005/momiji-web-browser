@@ -49,6 +49,7 @@
 #include "nsIDocShell.h"
 #include "nsIInputStream.h"
 #include "nsILoadContext.h"
+#include "nsINetworkPredictor.h"
 #include "nsIPrincipal.h"
 #include "nsIWebNavigation.h"
 #include "nsLayoutUtils.h"

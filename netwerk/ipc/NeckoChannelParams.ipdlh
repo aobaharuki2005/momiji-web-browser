@@ -648,6 +648,7 @@ struct TransactionObserverResult
 struct SpeculativeConnectionOverriderArgs {
   uint32_t parallelSpeculativeConnectLimit;
   bool ignoreIdle;
+  bool isFromPredictor;
   bool allow1918;
 };
 

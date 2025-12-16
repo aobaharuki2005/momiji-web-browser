@@ -13876,6 +13876,12 @@
   value: false
   mirror: always
 
+# Enables the predictive service.
+- name: network.predictor.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Disable requests to 0.0.0.0
 # See Bug 1889130
 - name: network.socket.ip_addr_any.disabled
@@ -13918,6 +13924,94 @@
   mirror: always
 
 - name: network.predictor.enable-hover-on-ssl
+  type: bool
+  value: false
+  mirror: always
+
+- name: network.predictor.enable-prefetch
+  type: bool
+  value: false
+  mirror: always
+
+- name: network.predictor.page-degradation.day
+  type: int32_t
+  value: 0
+  mirror: always
+- name: network.predictor.page-degradation.week
+  type: int32_t
+  value: 5
+  mirror: always
+- name: network.predictor.page-degradation.month
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.predictor.page-degradation.year
+  type: int32_t
+  value: 25
+  mirror: always
+- name: network.predictor.page-degradation.max
+  type: int32_t
+  value: 50
+  mirror: always
+
+- name: network.predictor.subresource-degradation.day
+  type: int32_t
+  value: 1
+  mirror: always
+- name: network.predictor.subresource-degradation.week
+  type: int32_t
+  value: 10
+  mirror: always
+- name: network.predictor.subresource-degradation.month
+  type: int32_t
+  value: 25
+  mirror: always
+- name: network.predictor.subresource-degradation.year
+  type: int32_t
+  value: 50
+  mirror: always
+- name: network.predictor.subresource-degradation.max
+  type: int32_t
+  value: 100
+  mirror: always
+
+- name: network.predictor.prefetch-rolling-load-count
+  type: int32_t
+  value: 10
+  mirror: always
+
+- name: network.predictor.prefetch-min-confidence
+  type: int32_t
+  value: 100
+  mirror: always
+- name: network.predictor.preconnect-min-confidence
+  type: int32_t
+  value: 90
+  mirror: always
+- name: network.predictor.preresolve-min-confidence
+  type: int32_t
+  value: 60
+  mirror: always
+
+- name: network.predictor.prefetch-force-valid-for
+  type: int32_t
+  value: 10
+  mirror: always
+
+- name: network.predictor.max-resources-per-entry
+  type: int32_t
+  value: 100
+  mirror: always
+
+# This is selected in concert with max-resources-per-entry to keep memory
+# usage low-ish. The default of the combo of the two is ~50k.
+- name: network.predictor.max-uri-length
+  type: uint32_t
+  value: 500
+  mirror: always
+
+# A testing flag.
+- name: network.predictor.doing-tests
   type: bool
   value: false
   mirror: always

@@ -115,6 +115,7 @@
 #include "nsCORSListenerProxy.h"
 #include "nsISocketProvider.h"
 #include "mozilla/extensions/StreamFilterParent.h"
+#include "mozilla/net/Predictor.h"
 #include "mozilla/net/SFVService.h"
 #include "mozilla/NullPrincipal.h"
 #include "CacheControlParser.h"
@@ -3034,6 +3035,20 @@ nsresult nsHttpChannel::ProcessResponse(nsHttpConnectionInfo* aConnInfo) {
   // We use GetReferringPage because mReferrerInfo may not be set at all(this is
   // especially useful in xpcshell tests, where we don't have an actual pageload
   // to get a referrer from).
+  if (StaticPrefs::network_predictor_enabled()) {
+    nsCOMPtr<nsIURI> referrer = GetReferringPage();
+    if (!referrer && mReferrerInfo) {
+      referrer = mReferrerInfo->GetOriginalReferrer();
+    }
+
+    if (referrer) {
+      nsCOMPtr<nsILoadContextInfo> lci = GetLoadContextInfo(this);
+      mozilla::net::Predictor::UpdateCacheability(
+          referrer, mURI, httpStatus, mRequestHead, mResponseHead.get(), lci,
+          IsThirdPartyTrackingResource());
+    }
+  }
+
   // Only allow 407 (authentication required) to continue
   if (mTransaction && mTransaction->ProxyConnectFailed() && httpStatus != 407) {
     return ProcessFailedProxyConnect(httpStatus);
