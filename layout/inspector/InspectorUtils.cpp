@@ -289,6 +289,9 @@ class ReadOnlyInspectorDeclaration final : public nsDOMCSSDeclaration {
   void GetPropertyValue(NonCustomCSSPropertyId aId, nsACString& aValue) final {
     Servo_DeclarationBlock_GetPropertyValueByNonCustomId(mRaw, aId, &aValue);
   }
+  bool HasLonghandProperty(const nsACString& aPropName) final {
+    return Servo_DeclarationBlock_HasLonghandProperty(mRaw, &aPropName);
+  }
   void IndexedGetter(uint32_t aIndex, bool& aFound,
                      nsACString& aPropName) final {
     aFound = Servo_DeclarationBlock_GetNthProperty(mRaw, aIndex, &aPropName);
