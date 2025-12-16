@@ -717,6 +717,7 @@ RollingMean.h:
 
 Saturate.h:
   types:
+    - Saturate
     - SaturateInt8
     - SaturateInt16
     - SaturateInt32
