@@ -170,6 +170,7 @@ import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerAction
 import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerMiddleware
 import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerState
 import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerStore
+import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerTelemetryMiddleware
 import org.mozilla.fenix.termsofuse.store.Surface
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.allowUndo
@@ -483,6 +484,7 @@ class HomeFragment : Fragment() {
                 PrivacyNoticeBannerMiddleware(
                     repository = privacyNoticeBannerRepository,
                 ),
+                PrivacyNoticeBannerTelemetryMiddleware(),
             ),
         )
 

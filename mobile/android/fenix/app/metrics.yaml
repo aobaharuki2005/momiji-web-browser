@@ -2342,6 +2342,74 @@ private_browsing_locked:
       - android-probes@mozilla.com
     expires: never
 
+privacy_notice_banner:
+  displayed_date:
+    type: datetime
+    lifetime: application
+    description: The timestamp when the user was shown the privacy notice banner.
+    time_unit: millisecond
+    send_in_pings:
+      - metrics
+    notification_emails:
+      - android-probes@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004413
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D276081
+    expires: never
+
+  displayed:
+    type: event
+    description: The user was shown the privacy notice banner.
+    notification_emails:
+      - android-probes@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004413
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D276081
+    data_sensitivity:
+      - interaction
+    expires: never
+
+  close_clicked:
+    type: event
+    description: The user clicked the 'x' to close the banner.
+    notification_emails:
+      - android-probes@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004413
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D276081
+    data_sensitivity:
+      - interaction
+    expires: never
+
+  privacy_notice_link_clicked:
+    type: event
+    description: The user clicked the Privacy Notice link on the banner.
+    notification_emails:
+      - android-probes@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004413
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D276081
+    data_sensitivity:
+      - interaction
+    expires: never
+
+  learn_more_link_clicked:
+    type: event
+    description: The user clicked the Learn More link on the banner.
+    notification_emails:
+      - android-probes@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004413
+    data_reviews:
+      - https://phabricator.services.mozilla.com/D276081
+    data_sensitivity:
+      - interaction
+    expires: never
+
 custom_review_prompt:
   prompt_displayed:
     type: event
