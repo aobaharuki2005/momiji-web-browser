@@ -7867,6 +7867,12 @@ void ScrollContainerFrame::ScheduleScrollAnimations() {
   const auto [element, request] =
       AnimationUtils::GetElementPseudoPair(elementOrPseudo);
   ProgressTimelineScheduler::ScheduleAnimations(element, request);
+
+  // TODO: Switch to sample scroll timelines in HTML event loop in the following
+  // patches.
+  // auto* rd = PresContext()->RefreshDriver();
+  // MOZ_ASSERT(rd);
+  // rd->EnsureAnimationUpdate();
 }
 
 nsSize ScrollContainerFrame::GetSizeForWindowInnerSize() const {
