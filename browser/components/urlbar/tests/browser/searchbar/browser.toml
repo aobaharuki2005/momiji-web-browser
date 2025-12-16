@@ -9,4 +9,6 @@ prefs = [
 
 ["browser_new_searchbar_init.js"]
 
+["browser_search.js"]
+
 ["browser_searchmode.js"]
