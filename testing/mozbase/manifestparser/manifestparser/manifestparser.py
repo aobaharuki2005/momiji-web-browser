@@ -905,7 +905,7 @@ class TestManifest(ManifestParser):
         :param exists: filter out non-existing tests (default True)
         :param disabled: whether to return disabled tests (default True)
         :param values: keys and values to filter on (e.g. `os = linux mac`)
-        :param filters: list of filters to apply to the tests
+        :param filters: list of filters to apply to the tests. Applied before any others
         :returns: list of test objects that were not filtered out
         """
         tests = [i.copy() for i in self.tests]  # shallow copy
@@ -915,10 +915,15 @@ class TestManifest(ManifestParser):
             test["expected"] = test.get("expected", "pass")
 
         # make a copy so original doesn't get modified
-        if noDefaultFilters:
-            fltrs = []
+        if filters:
+            # Insert them before any other tests, experimental setup shows they
+            # filter more stuff in the default, full & costly setup.
+            fltrs = filters[:]
         else:
-            fltrs = self.filters[:]
+            fltrs = []
+
+        if not noDefaultFilters:
+            fltrs.extend(self.filters)
 
         if exists:
             if self.strict:
@@ -929,10 +934,7 @@ class TestManifest(ManifestParser):
         if not disabled:
             fltrs.append(enabled)
 
-        if filters:
-            fltrs += filters
-
-        self.last_used_filters = fltrs[:]
+        self.last_used_filters = fltrs
         for fn in fltrs:
             tests = fn(tests, values, strict=strictExpressions)
         return list(tests)
