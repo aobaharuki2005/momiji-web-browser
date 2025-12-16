@@ -140,6 +140,9 @@ skip-if = [
 
 ["test_fetch_lnk.html"]
 
+["test_http_auth_cache.html"]
+support-files = ["authenticate.sjs"]
+
 ["test_idn_redirect.html"]
 skip-if = [
   "http2",

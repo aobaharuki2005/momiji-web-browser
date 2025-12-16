@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  </head>
+<body>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  async function populateHttpAuthCache() {
+    await fetch("authenticate.sjs");
+  }
+
+  async function clearHttpAuthCacheTest() {
+    let script = SpecialPowers.loadChromeScript(function () {
+    /* eslint-env mozilla/frame-script */
+      addMessageListener("start", function () {
+        try {
+          let httpAuthCache = Cc["@mozilla.org/network/http-auth-cache;1"]
+            .getService(Ci.nsIHttpAuthCache);
+
+          // for(let k in httpAuthCache) {
+          //   console.log("Method:", k);
+          // }
+          let entries = httpAuthCache.getEntries();
+          sendAsyncMessage("before", entries.length);
+
+          for (let entry of entries) {
+            console.log(entry.realm);
+            httpAuthCache.clearEntry(entry);
+          }
+
+          let afterEntries = httpAuthCache.getEntries(1);
+          sendAsyncMessage("after", afterEntries.length);
+        } catch (e) {
+          console.error("Failed to get or clear the HTTP auth cache", e);
+          sendAsyncMessage("before", -1);
+          sendAsyncMessage("after", -1);
+        }
+      });
+    });
+
+    script.sendAsyncMessage("start");
+    await script.promiseOneMessage("before").then(val => {
+      ok(val > 0, `got ${val}, cache size before clearing should be above 0`);
+    });
+    await script.promiseOneMessage("after").then(val => {
+      is(val, 0, "cache should be empty after clearing");
+    });
+  }
+
+  add_task(async function () {
+    await populateHttpAuthCache();
+    await clearHttpAuthCacheTest();
+    SimpleTest.finish();
+  });
+
+</script>
+</body>
+</html>
