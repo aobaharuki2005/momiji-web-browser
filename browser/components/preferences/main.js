@@ -2008,6 +2008,49 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  homepage: {
+    inProgress: true,
+    headingLevel: 2,
+    l10nId: "home-homepage-title",
+    items: [
+      {
+        id: "homepageNewWindows",
+        control: "moz-select",
+        l10nId: "home-homepage-new-windows",
+        options: [
+          {
+            value: "home",
+            l10nId: "home-mode-choice-default-fx",
+          },
+          { value: "blank", l10nId: "home-mode-choice-blank" },
+          { value: "custom", l10nId: "home-mode-choice-custom" },
+        ],
+      },
+      {
+        id: "homepageGoToCustomHomepageUrlPanel",
+        control: "moz-box-button",
+        l10nId: "home-homepage-custom-homepage-button",
+      },
+      {
+        id: "homepageNewTabs",
+        control: "moz-select",
+        l10nId: "home-homepage-new-tabs",
+        options: [
+          {
+            value: "true",
+            l10nId: "home-mode-choice-default-fx",
+          },
+          { value: "false", l10nId: "home-mode-choice-blank" },
+        ],
+      },
+      {
+        id: "homepageRestoreDefaults",
+        control: "moz-button",
+        l10nId: "home-restore-defaults",
+        controlAttrs: { id: "restoreDefaultHomePageBtn" },
+      },
+    ],
+  },
   home: {
     inProgress: true,
     headingLevel: 2,

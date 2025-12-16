@@ -722,13 +722,18 @@ home-new-windows-tabs-description2 = Choose what you see when you open your home
 
 ## Home Section - Home Page Customization
 
-home-homepage-header = Homepage
+home-homepage-title =
+    .label = Homepage
 
 home-homepage-mode-label = Homepage and new windows
 
-home-homepage-mode-label2 = New windows
+home-homepage-new-windows =
+    .label = New windows
 
 home-newtabs-mode-label = New tabs
+
+home-homepage-new-tabs =
+    .label = New tabs
 
 home-restore-defaults =
     .label = Restore Defaults
@@ -751,7 +756,8 @@ home-homepage-manage-extension-button =
     .label = Manage extension
 
 # This option leads to the "Custom Homepage" subpage
-home-homepage-custom-homepage-url = Choose a specific site
+home-homepage-custom-homepage-button =
+    .label = Choose a specific site
 
 ## Custom Homepage subpage
 

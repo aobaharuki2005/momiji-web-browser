@@ -1406,6 +1406,13 @@ richlistitem .text-link:hover {
 }
 /** SRD web-appearance-chooser control END **/
 
+/** SRD rows control for Homepage START **/
+setting-group[groupid="homepage"] {
+  --select-max-width: fit-content;
+  --select-min-width: 15em;
+}
+/** SRD rows control for Homepage END **/
+
 /** SRD rows control for New Tab START **/
 setting-group[groupid="home"] {
   --select-max-width: 17rem;
