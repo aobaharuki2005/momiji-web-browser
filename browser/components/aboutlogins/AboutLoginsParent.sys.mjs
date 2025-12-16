@@ -360,7 +360,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
       modifiedLogin.password = loginUpdates.password;
     }
     try {
-      Services.logins.modifyLogin(logins[0], modifiedLogin);
+      await Services.logins.modifyLoginAsync(logins[0], modifiedLogin);
     } catch (error) {
       this.#handleLoginStorageErrors(modifiedLogin, error);
     }

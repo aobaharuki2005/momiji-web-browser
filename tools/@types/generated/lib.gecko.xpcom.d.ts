@@ -5440,6 +5440,7 @@ interface nsILoginManager extends nsISupports {
   addLogins(aLogins: any): Promise<any>;
   removeLogin(aLogin: nsILoginInfo): void;
   modifyLogin(oldLogin: nsILoginInfo, newLoginData: nsISupports): void;
+  modifyLoginAsync(oldLogin: nsILoginInfo, newLoginData: nsISupports): Promise<any>;
   recordPasswordUse(aLogin: nsILoginInfo, aPrivateContextWithoutExplicitConsent: boolean, aLoginType: string, aFilled: boolean): void;
   removeAllUserFacingLogins(): void;
   removeAllLogins(): void;

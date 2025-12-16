@@ -74,7 +74,7 @@ add_task(async function test_mirror_modifyLogin() {
   const modifyLoginFinishedPromise = TestUtils.topicObserved(
     "rust-mirror.event.modifyLogin.finished"
   );
-  Services.logins.modifyLogin(storedLoginInfo, modifiedLoginInfo);
+  await Services.logins.modifyLoginAsync(storedLoginInfo, modifiedLoginInfo);
   await modifyLoginFinishedPromise;
 
   const rustStorage = new LoginManagerRustStorage();

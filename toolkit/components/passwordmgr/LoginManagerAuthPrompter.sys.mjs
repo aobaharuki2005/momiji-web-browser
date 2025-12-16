@@ -489,7 +489,7 @@ LoginManagerAuthPrompter.prototype = {
     } else if (aPassword.value != selectedLogin.password) {
       // update password
       this.log(`Updating password for ${realm}.`);
-      this._updateLogin(selectedLogin, newLogin);
+      await this._updateLogin(selectedLogin, newLogin);
     } else {
       this.log("Login unchanged, no further action needed.");
       Services.logins.recordPasswordUse(
@@ -896,7 +896,7 @@ LoginManagerAuthPrompter.prototype = {
 
   /* ---------- Internal Methods ---------- */
 
-  _updateLogin(login, aNewLogin) {
+  async _updateLogin(login, aNewLogin) {
     var now = Date.now();
     var propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag
@@ -913,7 +913,7 @@ LoginManagerAuthPrompter.prototype = {
     propBag.setProperty("timesUsedIncrement", 1);
     // Note that we don't call `recordPasswordUse` so we won't potentially record
     // both a use and a save/update. See bug 1640096.
-    Services.logins.modifyLogin(login, propBag);
+    await Services.logins.modifyLoginAsync(login, propBag);
   },
 
   /**

@@ -428,7 +428,7 @@ export class LoginManagerPrompter {
         );
       } else {
         lazy.log.debug(`Update matched login: ${loginToUpdate.guid}.`);
-        this._updateLogin(loginToUpdate, login);
+        await this._updateLogin(loginToUpdate, login);
         // notify that this auto-saved login has been merged
         if (loginToRemove && loginToRemove.guid == autoSavedLoginGuid) {
           Services.obs.notifyObservers(
@@ -824,7 +824,7 @@ export class LoginManagerPrompter {
    *       function fills in .username and .usernameField with the values
    *       from the login selected by the user.
    */
-  promptToChangePasswordWithUsernames(browser, logins, aNewLogin) {
+  async promptToChangePasswordWithUsernames(browser, logins, aNewLogin) {
     lazy.log.debug(
       `Prompting user to change passowrd for username with count: ${logins.length}.`
     );
@@ -866,7 +866,10 @@ export class LoginManagerPrompter {
         selectedLogin.usernameField,
         aNewLogin.passwordField
       );
-      LoginManagerPrompter._updateLogin(selectedLogin, newLoginWithUsername);
+      await LoginManagerPrompter._updateLogin(
+        selectedLogin,
+        newLoginWithUsername
+      );
     }
   }
 
@@ -875,7 +878,7 @@ export class LoginManagerPrompter {
   /**
    * Helper method to update and persist an existing nsILoginInfo object with new property values.
    */
-  static _updateLogin(login, aNewLogin) {
+  static async _updateLogin(login, aNewLogin) {
     const now = Date.now();
     const propBag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(
       Ci.nsIWritablePropertyBag
@@ -894,7 +897,8 @@ export class LoginManagerPrompter {
     // use in this case though that is normally correct since we would instead
     // record the save/update in a separate probe and recording it in both would
     // be wrong.
-    Services.logins.modifyLogin(login, propBag);
+
+    await Services.logins.modifyLoginAsync(login, propBag);
   }
 
   /**

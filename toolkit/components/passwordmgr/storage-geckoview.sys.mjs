@@ -61,6 +61,10 @@ export class LoginManagerStorage extends LoginManagerStorage_json {
     throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   }
 
+  async modifyLoginAsync(_oldLogin, _newLoginData) {
+    throw Components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
+  }
+
   recordPasswordUse(login) {
     lazy.GeckoViewAutocomplete.onLoginPasswordUsed(
       lazy.LoginEntry.fromLoginInfo(login)

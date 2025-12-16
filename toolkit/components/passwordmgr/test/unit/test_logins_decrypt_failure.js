@@ -38,8 +38,8 @@ add_task(async function test_logins_decrypt_failure() {
   Assert.equal(savedLogins.length, 0, "getAllLogins length");
   const result = await Services.logins.searchLoginsAsync({});
   Assert.equal(result.length, 0);
-  Assert.throws(
-    () => Services.logins.modifyLogin(logins[0], newPropertyBag()),
+  await Assert.rejects(
+    Services.logins.modifyLoginAsync(logins[0], newPropertyBag()),
     /No matching logins/
   );
   Assert.throws(
