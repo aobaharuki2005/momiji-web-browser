@@ -74,10 +74,11 @@ internal fun MenuNavigation(
             .semantics(mergeDescendants = true) {
                 contentDescription = navigationHeaderContentDescription
             },
-        horizontalArrangement = Arrangement.SpaceAround,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.Top,
     ) {
         MenuNavItem(
+            modifier = Modifier.weight(1f),
             state = goBackState,
             painter = painterResource(id = iconsR.drawable.mozac_ic_back_24),
             label = stringResource(id = R.string.browser_menu_back),
@@ -86,6 +87,7 @@ internal fun MenuNavigation(
         )
 
         MenuNavItem(
+            modifier = Modifier.weight(1f),
             state = goForwardState,
             painter = painterResource(id = iconsR.drawable.mozac_ic_forward_24),
             label = stringResource(id = R.string.browser_menu_forward),
@@ -94,6 +96,7 @@ internal fun MenuNavigation(
         )
 
         MenuNavItem(
+            modifier = Modifier.weight(1f),
             state = state,
             painter = painterResource(id = iconsR.drawable.mozac_ic_share_android_24),
             label = stringResource(id = R.string.browser_menu_share),
@@ -102,6 +105,7 @@ internal fun MenuNavigation(
 
         if (isSiteLoading) {
             MenuNavItem(
+                modifier = Modifier.weight(1f),
                 state = state,
                 painter = painterResource(id = iconsR.drawable.mozac_ic_stop),
                 label = stringResource(id = R.string.browser_menu_stop),
@@ -109,6 +113,7 @@ internal fun MenuNavigation(
             )
         } else {
             MenuNavItem(
+                modifier = Modifier.weight(1f),
                 state = state,
                 painter = painterResource(id = iconsR.drawable.mozac_ic_arrow_clockwise_24),
                 label = stringResource(id = R.string.browser_menu_refresh),
@@ -121,6 +126,7 @@ internal fun MenuNavigation(
 
 @Composable
 private fun MenuNavItem(
+    modifier: Modifier = Modifier,
     state: MenuItemState = MenuItemState.ENABLED,
     painter: Painter,
     label: String,
@@ -128,7 +134,7 @@ private fun MenuNavItem(
     onLongClick: (() -> Unit)? = null,
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxHeight()
             .combinedClickable(
                 interactionSource = null,
