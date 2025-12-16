@@ -549,7 +549,7 @@ $calculated-max-width-twice-widest: $break-point-widest + 2 * $card-width;
 
         &:not(:placeholder-shown) {
           direction: ltr;
-          text-align: right;
+          text-align: end;
         }
       }
     }

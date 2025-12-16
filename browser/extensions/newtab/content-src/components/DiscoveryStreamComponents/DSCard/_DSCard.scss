@@ -583,8 +583,8 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
       @include newtab-card-style;
 
       .img-wrapper .ds-image img {
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
+        border-end-start-radius: 0;
+        border-end-end-radius: 0;
       }
 
       &:hover .img-wrapper .ds-image img {
@@ -611,7 +611,7 @@ $ds-card-image-gradient-solid: rgba(0, 0, 0, 100%);
 
       .card-stp-button-position-wrapper {
         z-index: 10;
-        bottom: 0;
+        inset-block-end: 0;
         position: absolute;
 
       }

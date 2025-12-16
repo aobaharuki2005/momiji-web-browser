@@ -384,6 +384,14 @@ module.exports = {
               "Avoid literal values. Use variables (e.g. var(--font-size-small)) or inherit/unset/etc.",
           },
         ],
+        "csstools/use-logical": [
+          "always",
+          {
+            // Bug 2003301: Do not enforce logical properties for any height/width properties
+            except: [/^(min-|max-)?width/i, /^(min-|max-)?height/i],
+            severity: "error",
+          },
+        ],
       },
     },
     {
