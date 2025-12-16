@@ -116,8 +116,9 @@ android {
             buildConfigField("String", "VCS_HASH", "\"" + gradle.mozconfig.source_repo.MOZ_SOURCE_STAMP + "\"")
         }
 
-        if (gradle.hasProperty("localProperties.autosignReleaseWithDebugKey") ||
-            gradle.mozconfig.substs.DEVELOPER_OPTIONS) {
+	// If building locally, just use debug signing. In official automation builds, the
+	// files are signed using a separate service and not within gradle.
+        if (!gradle.mozconfig.substs.MOZ_AUTOMATION) {
             signingConfig signingConfigs.debug
         }
 
