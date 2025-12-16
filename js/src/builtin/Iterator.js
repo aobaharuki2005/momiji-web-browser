@@ -1929,7 +1929,67 @@ function IteratorRange(start, end, optionOrStep) {
  *  https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.chunks
  */
 function IteratorChunks(chunkSize) {
-  return false;
+  // Step 1. Let O be the this value.
+  var iterator = this;
+
+  // Step 2. If O is not an Object, throw a TypeError exception.
+  if (!IsObject(iterator)) {
+    ThrowTypeError(JSMSG_OBJECT_REQUIRED, iterator === null ? "null" : typeof iterator);
+  }
+
+  // Step 3. Let iterated be the Iterator Record
+  //  { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+
+  // Step 4. If chunkSize is not an integral Number in the inclusive interval
+  // from 1𝔽 to 𝔽(2**32 - 1), then
+  if (!Number_isInteger(chunkSize) || (chunkSize < 1 || chunkSize > (2 ** 32) - 1)) {
+    // Step 4.a. Let error be ThrowCompletion(a newly created RangeError object).
+    // Step 4.b. Return ? IteratorClose(iterated, error).
+    try {
+      IteratorClose(iterator);
+    } catch {}
+    ThrowRangeError(JSMSG_INVALID_CHUNKSIZE);
+  }
+
+  // Step 5. Set iterated to ? GetIteratorDirect(O).
+  var nextMethod = iterator.next;
+
+  // Step 6. Let closure be a new Abstract Closure with ...
+  // (Handled in IteratorChunksGenerator.)
+
+  // Step 7. Let result be CreateIteratorFromClosure(
+  //   closure, "Iterator Helper", %IteratorHelperPrototype%,
+  //   « [[UnderlyingIterators]] »
+  // ).
+  var result = NewIteratorHelper();
+  var generator = IteratorChunksGenerator(iterator, nextMethod, chunkSize);
+
+  // Step 8. Set result.[[UnderlyingIterators]] to « iterated ».
+  UnsafeSetReservedSlot(
+    result,
+    ITERATOR_HELPER_GENERATOR_SLOT,
+    generator
+  );
+  UnsafeSetReservedSlot(
+    result,
+    ITERATOR_HELPER_UNDERLYING_ITERATOR_SLOT,
+    iterator
+  );
+
+  // Step 9. Return result.
+  return result;
+}
+
+/**
+ *  Iterator.prototype.chunks ( chunkSize )
+ *
+ *  Abstract closure definition.
+ *
+ *  https://tc39.es/proposal-iterator-chunking/#sec-iterator.prototype.chunks
+ */
+/* eslint-disable-next-line require-yield */
+function* IteratorChunksGenerator(iterator, nextMethod, chunkSize) {
+  IteratorClose(iterator);
 }
 
 /**
