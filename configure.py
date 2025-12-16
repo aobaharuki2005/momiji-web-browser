@@ -32,6 +32,7 @@ from mach.site import (
 from mozbuild.backend.configenvironment import PartialConfigEnvironment
 from mozbuild.configure import TRACE, ConfigureSandbox
 from mozbuild.pythonutil import iter_modules_in_path
+from mozbuild.util import FileAvoidWrite
 
 if "MOZ_CONFIGURE_BUILDSTATUS" in os.environ:
 
@@ -259,8 +260,9 @@ def config_status(config, execute=True):
     partial_config.write_vars(sanitized_config)
 
     # Write out a file so the build backend knows to re-run configure when
-    # relevant Python changes.
-    with open("config_status_deps.in", "w", encoding="utf-8", newline="\n") as fh:
+    # relevant Python changes. Use FileAvoidWrite to only write if the
+    # deps_content has changed to avoid invalidating Gradle's configuration cache
+    with FileAvoidWrite("config_status_deps.in") as fh:
         for f in sorted(
             itertools.chain(
                 config["CONFIG_STATUS_DEPS"],
