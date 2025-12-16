@@ -777,12 +777,14 @@ static nscoord OffsetToAlignedStaticPos(
   Maybe<CSSAlignUtils::AnchorAlignInfo> anchorAlignInfo;
   if (alignConst == StyleAlignFlags::ANCHOR_CENTER &&
       aKidReflowInput.mAnchorPosResolutionCache) {
-    const auto* referenceData =
+    auto* referenceData =
         aKidReflowInput.mAnchorPosResolutionCache->mReferenceData;
     if (referenceData) {
       const auto* cachedData =
           referenceData->Lookup(referenceData->mDefaultAnchorName);
       if (cachedData && *cachedData) {
+        referenceData->AdjustCompensatingForScroll(
+            aAbsPosCBWM.PhysicalAxis(aAbsPosCBAxis));
         const auto& data = cachedData->ref();
         if (data.mOffsetData) {
           const nsSize containerSize =
