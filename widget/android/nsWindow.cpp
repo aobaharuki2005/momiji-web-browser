@@ -2510,7 +2510,7 @@ void nsWindow::DoResize(double aX, double aY, double aWidth, double aHeight,
   bool needSizeDispatch = mBounds.Size() != oldBounds.Size();
 
   if (needSizeDispatch) {
-    OnSizeChanged(mBounds.Size().ToUnknownSize());
+    OnSizeChanged(mBounds.Size());
   }
 
   if (needPositionDispatch) {
@@ -2842,21 +2842,20 @@ void nsWindow::UpdateDragImage(java::sdk::Bitmap::LocalRef aBitmap) {
   }
 }
 
-void nsWindow::OnSizeChanged(const gfx::IntSize& aSize) {
+void nsWindow::OnSizeChanged(const LayoutDeviceIntSize& aSize) {
   ALOG("nsWindow: %p OnSizeChanged [%d %d]", (void*)this, aSize.width,
        aSize.height);
 
   if (mWidgetListener) {
-    mWidgetListener->WindowResized(this, aSize.width, aSize.height);
+    mWidgetListener->WindowResized(this, aSize);
   }
 
   if (mAttachedWidgetListener) {
-    mAttachedWidgetListener->WindowResized(this, aSize.width, aSize.height);
+    mAttachedWidgetListener->WindowResized(this, aSize);
   }
 
   if (mCompositorWidgetDelegate) {
-    mCompositorWidgetDelegate->NotifyClientSizeChanged(
-        LayoutDeviceIntSize::FromUnknownSize(aSize));
+    mCompositorWidgetDelegate->NotifyClientSizeChanged(aSize);
   }
 }
 

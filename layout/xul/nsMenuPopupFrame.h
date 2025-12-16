@@ -200,8 +200,9 @@ class nsMenuPopupFrame final : public nsBlockFrame, public nsIWidgetListener {
   // nsIWidgetListener
   mozilla::PresShell* GetPresShell() override { return PresShell(); }
   nsMenuPopupFrame* GetAsMenuPopupFrame() override { return this; }
-  bool WindowMoved(nsIWidget*, int32_t aX, int32_t aY, ByMoveToRect) override;
-  bool WindowResized(nsIWidget*, int32_t aWidth, int32_t aHeight) override;
+  void WindowMoved(nsIWidget*, const mozilla::LayoutDeviceIntPoint&,
+                   ByMoveToRect) override;
+  void WindowResized(nsIWidget*, const mozilla::LayoutDeviceIntSize&) override;
   bool RequestWindowClose(nsIWidget*) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsEventStatus HandleEvent(mozilla::WidgetGUIEvent* aEvent) override;

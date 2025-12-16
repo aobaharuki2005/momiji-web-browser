@@ -1300,7 +1300,9 @@ class nsIWidget : public nsSupportsWeakReference {
   void NotifyWindowDestroyed();
   void NotifySizeMoveDone();
   using ByMoveToRect = nsIWidgetListener::ByMoveToRect;
-  void NotifyWindowMoved(int32_t aX, int32_t aY,
+  void NotifyWindowMoved(const LayoutDeviceIntPoint&,
+                         ByMoveToRect = ByMoveToRect::No);
+  void NotifyWindowMoved(const DesktopIntPoint&,
                          ByMoveToRect = ByMoveToRect::No);
   // Should be called by derived implementations to notify on system color and
   // theme changes. (Only one invocation per change is needed, not one

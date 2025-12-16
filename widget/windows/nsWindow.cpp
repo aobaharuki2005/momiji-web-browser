@@ -6382,7 +6382,7 @@ void nsWindow::OnWindowPosChanged(WINDOWPOS* wp) {
   // Handle window position changes
   if (!(wp->flags & SWP_NOMOVE)) {
     mBounds.MoveTo(wp->x, wp->y);
-    NotifyWindowMoved(wp->x, wp->y);
+    NotifyWindowMoved(mBounds.TopLeft());
   }
 
   // Handle window size changes
@@ -6912,25 +6912,21 @@ void nsWindow::OnDestroy() {
 }
 
 // Send a resize message to the listener
-bool nsWindow::OnResize(const LayoutDeviceIntSize& aSize) {
+void nsWindow::OnResize(const LayoutDeviceIntSize& aSize) {
   if (mCompositorWidgetDelegate &&
       !mCompositorWidgetDelegate->OnWindowResize(aSize)) {
-    return false;
+    return;
   }
 
-  bool result = false;
   if (mWidgetListener) {
-    result = mWidgetListener->WindowResized(this, aSize.width, aSize.height);
+    mWidgetListener->WindowResized(this, aSize);
   }
 
   // If there is an attached view, inform it as well as the normal widget
   // listener.
   if (mAttachedWidgetListener) {
-    return mAttachedWidgetListener->WindowResized(this, aSize.width,
-                                                  aSize.height);
+    mAttachedWidgetListener->WindowResized(this, aSize);
   }
-
-  return result;
 }
 
 void nsWindow::OnSizeModeChange() {

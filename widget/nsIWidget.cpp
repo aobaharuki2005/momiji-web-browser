@@ -1896,15 +1896,21 @@ void nsIWidget::NotifyWindowDestroyed() {
   }
 }
 
-void nsIWidget::NotifyWindowMoved(int32_t aX, int32_t aY,
+void nsIWidget::NotifyWindowMoved(const LayoutDeviceIntPoint& aPoint,
                                   ByMoveToRect aByMoveToRect) {
   if (mWidgetListener) {
-    mWidgetListener->WindowMoved(this, aX, aY, aByMoveToRect);
+    mWidgetListener->WindowMoved(this, aPoint, aByMoveToRect);
   }
 
   if (mIMEHasFocus && IMENotificationRequestsRef().WantPositionChanged()) {
     NotifyIME(IMENotification(IMEMessage::NOTIFY_IME_OF_POSITION_CHANGE));
   }
+}
+
+void nsIWidget::NotifyWindowMoved(const DesktopIntPoint& aPoint,
+                                  ByMoveToRect aByMoveToRect) {
+  return NotifyWindowMoved(
+      LayoutDeviceIntPoint::Round(aPoint * GetDesktopToDeviceScale()));
 }
 
 void nsIWidget::NotifySizeMoveDone() {

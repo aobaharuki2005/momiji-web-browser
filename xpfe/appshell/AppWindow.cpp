@@ -2621,9 +2621,8 @@ PresShell* AppWindow::GetPresShell() {
   return mDocShell->GetPresShell();
 }
 
-bool AppWindow::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) {
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-  if (pm) {
+void AppWindow::WindowMoved(nsIWidget*, const LayoutDeviceIntPoint&) {
+  if (nsXULPopupManager* pm = nsXULPopupManager::GetInstance()) {
     nsCOMPtr<nsPIDOMWindowOuter> window =
         mDocShell ? mDocShell->GetWindow() : nullptr;
     pm->AdjustPopupsOnWindowChange(window);
@@ -2641,14 +2640,13 @@ bool AppWindow::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) {
   // Persist position, but not immediately, in case this OS is firing
   // repeated move events as the user drags the window
   PersistentAttributesDirty(PersistentAttribute::Position, Async);
-  return false;
 }
 
-bool AppWindow::WindowResized(nsIWidget* aWidget, int32_t aWidth,
-                              int32_t aHeight) {
+void AppWindow::WindowResized(nsIWidget* aWidget,
+                              const LayoutDeviceIntSize& aSize) {
   mDominantClientSize = false;
   if (mDocShell) {
-    mDocShell->SetPositionAndSize(0, 0, aWidth, aHeight, 0);
+    mDocShell->SetPositionAndSize(0, 0, aSize.width, aSize.height, 0);
   }
   // Persist size, but not immediately, in case this OS is firing
   // repeated size events as the user drags the sizing handle
@@ -2670,7 +2668,6 @@ bool AppWindow::WindowResized(nsIWidget* aWidget, int32_t aWidth,
     case FullscreenChangeState::NotChanging:
       break;
   }
-  return true;
 }
 
 bool AppWindow::RequestWindowClose(nsIWidget* aWidget) {
@@ -3192,18 +3189,16 @@ PresShell* AppWindow::WidgetListenerDelegate::GetPresShell() {
   return mAppWindow->GetPresShell();
 }
 
-bool AppWindow::WidgetListenerDelegate::WindowMoved(nsIWidget* aWidget,
-                                                    int32_t aX, int32_t aY,
-                                                    ByMoveToRect) {
+void AppWindow::WidgetListenerDelegate::WindowMoved(
+    nsIWidget* aWidget, const LayoutDeviceIntPoint& aPoint, ByMoveToRect) {
   RefPtr<AppWindow> holder = mAppWindow;
-  return holder->WindowMoved(aWidget, aX, aY);
+  holder->WindowMoved(aWidget, aPoint);
 }
 
-bool AppWindow::WidgetListenerDelegate::WindowResized(nsIWidget* aWidget,
-                                                      int32_t aWidth,
-                                                      int32_t aHeight) {
+void AppWindow::WidgetListenerDelegate::WindowResized(
+    nsIWidget* aWidget, const LayoutDeviceIntSize& aSize) {
   RefPtr<AppWindow> holder = mAppWindow;
-  return holder->WindowResized(aWidget, aWidth, aHeight);
+  holder->WindowResized(aWidget, aSize);
 }
 
 bool AppWindow::WidgetListenerDelegate::RequestWindowClose(nsIWidget* aWidget) {

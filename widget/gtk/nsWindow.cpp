@@ -622,11 +622,10 @@ void nsWindow::DispatchResized() {
   }
 
   if (mWidgetListener) {
-    mWidgetListener->WindowResized(this, clientSize.width, clientSize.height);
+    mWidgetListener->WindowResized(this, clientSize);
   }
   if (mAttachedWidgetListener) {
-    mAttachedWidgetListener->WindowResized(this, clientSize.width,
-                                           clientSize.height);
+    mAttachedWidgetListener->WindowResized(this, clientSize);
   }
 }
 
@@ -2070,9 +2069,8 @@ void nsWindow::WaylandPopupPropagateChangesToLayout(bool aMove, bool aResize) {
     }
   }
   if (aMove) {
-    auto pos = ToLayoutDevicePixels(mClientArea);
-    LOG("  needPositionUpdate, bounds [%d, %d]", pos.x, pos.y);
-    NotifyWindowMoved(pos.x, pos.y, ByMoveToRect::Yes);
+    LOG("  needPositionUpdate, bounds [%d, %d]", mClientArea.x, mClientArea.y);
+    NotifyWindowMoved(mClientArea.TopLeft(), ByMoveToRect::Yes);
   }
 }
 
@@ -3587,8 +3585,7 @@ void nsWindow::RecomputeBounds(bool aMayChangeCsdMargin, bool aScaleChange) {
                        oldClientArea.Size() != mClientArea.Size();
 
   if (moved) {
-    auto pos = ToLayoutDevicePixels(mClientArea.TopLeft());
-    NotifyWindowMoved(pos.x, pos.y);
+    NotifyWindowMoved(GetScreenBoundsUnscaled().TopLeft());
   }
   if (resized) {
     DispatchResized();
@@ -6858,8 +6855,7 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
     }
     if (aMoved) {
       mClientArea.MoveTo(mLastMoveRequest);
-      auto pos = ToLayoutDevicePixels(mLastMoveRequest);
-      NotifyWindowMoved(pos.x, pos.y);
+      NotifyWindowMoved(mClientArea.TopLeft());
     }
     if (aResized) {
       DispatchResized();

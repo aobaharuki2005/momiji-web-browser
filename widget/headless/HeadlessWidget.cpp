@@ -223,7 +223,7 @@ void HeadlessWidget::MoveInternal(int32_t aX, int32_t aY) {
   }
 
   mBounds.MoveTo(aX, aY);
-  NotifyWindowMoved(aX, aY);
+  NotifyWindowMoved(mBounds.TopLeft());
 }
 
 LayoutDeviceIntPoint HeadlessWidget::WidgetToScreenOffset() {
@@ -264,11 +264,10 @@ void HeadlessWidget::ResizeInternal(int32_t aWidth, int32_t aHeight,
     mCompositorWidget->NotifyClientSizeChanged(mBounds.Size());
   }
   if (mWidgetListener) {
-    mWidgetListener->WindowResized(this, mBounds.Width(), mBounds.Height());
+    mWidgetListener->WindowResized(this, mBounds.Size());
   }
   if (mAttachedWidgetListener) {
-    mAttachedWidgetListener->WindowResized(this, mBounds.Width(),
-                                           mBounds.Height());
+    mAttachedWidgetListener->WindowResized(this, mBounds.Size());
   }
 }
 

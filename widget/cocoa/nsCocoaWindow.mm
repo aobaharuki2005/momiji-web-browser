@@ -6606,11 +6606,10 @@ void nsCocoaWindow::ReportSizeEvent() {
   UpdateBounds();
   LayoutDeviceIntRect innerBounds = GetClientBounds();
   if (mWidgetListener) {
-    mWidgetListener->WindowResized(this, innerBounds.width, innerBounds.height);
+    mWidgetListener->WindowResized(this, innerBounds.Size());
   }
   if (mAttachedWidgetListener) {
-    mAttachedWidgetListener->WindowResized(this, innerBounds.width,
-                                           innerBounds.height);
+    mAttachedWidgetListener->WindowResized(this, innerBounds.Size());
   }
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
