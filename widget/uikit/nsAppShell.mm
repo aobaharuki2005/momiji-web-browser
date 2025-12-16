@@ -8,6 +8,7 @@
 #import <UIKit/UIWindow.h>
 
 #include "mozilla/Components.h"
+#include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "gfxPlatform.h"
 #include "nsAppShell.h"
@@ -21,6 +22,7 @@
 #include "nsThreadUtils.h"
 #include "nsMemoryPressure.h"
 #include "nsServiceManagerUtils.h"
+#include "mozilla/widget/EventDispatcher.h"
 #include "mozilla/widget/ScreenManager.h"
 #include "ScreenHelperUIKit.h"
 #include "mozilla/Hal.h"
@@ -149,6 +151,7 @@ nsresult nsAppShell::Init() {
       mozilla::services::GetObserverService();
   if (obsServ) {
     obsServ->AddObserver(this, "profile-after-change", false);
+    obsServ->AddObserver(this, "chrome-document-loaded", false);
   }
 
   return rv;
@@ -156,6 +159,8 @@ nsresult nsAppShell::Init() {
 
 NS_IMETHODIMP nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
                                   const char16_t* aData) {
+  AssertIsOnMainThread();
+
   bool removeObserver = false;
   if (!strcmp(aTopic, "profile-after-change")) {
     // Gecko on iOS follows the iOS app model where it never stops until it is
@@ -167,6 +172,15 @@ NS_IMETHODIMP nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
       appStartup->EnterLastWindowClosingSurvivalArea();
     }
     removeObserver = true;
+  } else if (!strcmp(aTopic, "chrome-document-loaded")) {
+    // Set the global ready state and enable the window event dispatcher
+    // for this particular GeckoView.
+    nsCOMPtr<dom::Document> doc = do_QueryInterface(aSubject);
+    MOZ_ASSERT(doc);
+    if (const RefPtr<nsWindow> window = nsWindow::From(doc->GetWindow())) {
+      RefPtr<EventDispatcher> dispatcher = window->GetEventDispatcher();
+      dispatcher->Activate();
+    }
   } else {
     return nsBaseAppShell::Observe(aSubject, aTopic, aData);
   }
