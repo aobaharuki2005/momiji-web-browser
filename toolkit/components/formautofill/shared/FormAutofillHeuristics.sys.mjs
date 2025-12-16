@@ -347,15 +347,25 @@ export const FormAutofillHeuristics = {
       }
     }
 
-    // If the previous parsed field is a "tel" field, run heuristic to see
-    // if the current field is a "tel-extension" field
     const field = scanner.getFieldDetailByIndex(scanner.parsingIndex);
-    if (field && field.reason != "autocomplete") {
+    if (field) {
       const prev = scanner.getFieldDetailByIndex(scanner.parsingIndex - 1);
+
+      // If there is a country code, then the next field should be
+      // 'tel-national' not 'tel'.
       if (
+        prev?.fieldName == "tel-country-code" &&
+        field.fieldName == "tel" &&
+        field.reason != "autocomplete"
+      ) {
+        scanner.updateFieldName(scanner.parsingIndex, "tel-national");
+        scanner.parsingIndex++;
+      } else if (
         prev &&
         lazy.FormAutofillUtils.getCategoryFromFieldName(prev.fieldName) == "tel"
       ) {
+        // If the previous parsed field is a "tel" field, run heuristic to see
+        // if the current field is a "tel-extension" field
         const regExpTelExtension = new RegExp(
           "\\bext|ext\\b|extension|ramal", // pt-BR, pt-PT
           "iug"
@@ -1113,7 +1123,12 @@ export const FormAutofillHeuristics = {
               countryDisplayNames.includes(option.text)
           )
       ) {
-        return ["country", inferredInfo];
+        // Now that it is likely a country dropdown field, check if it is
+        // a telephone country prefix or a separate country field.
+        return this._findMatchedFieldNames(element, ["tel-country-code"])
+          ?.length
+          ? ["tel-country-code", inferredInfo]
+          : ["country", inferredInfo];
       }
     }
 
