@@ -82,19 +82,12 @@ void ComputeAnchorCenterUsage(
   }
 
   const auto* stylePos = aFrame->StylePosition();
-  const auto parentWM = parent->GetWritingMode();
 
   auto checkAxis = [&](LogicalAxis aAxis) {
     StyleAlignFlags alignment =
         stylePos->UsedSelfAlignment(aAxis, parent->Style());
-    if ((alignment & ~StyleAlignFlags::FLAG_BITS) !=
-        StyleAlignFlags::ANCHOR_CENTER) {
-      return false;
-    }
-    LogicalSide startSide = MakeLogicalSide(aAxis, LogicalEdge::Start);
-    LogicalSide endSide = MakeLogicalSide(aAxis, LogicalEdge::End);
-    return stylePos->mOffset.Get(parentWM.PhysicalSide(startSide)).IsAuto() ||
-           stylePos->mOffset.Get(parentWM.PhysicalSide(endSide)).IsAuto();
+    return (alignment & ~StyleAlignFlags::FLAG_BITS) ==
+           StyleAlignFlags::ANCHOR_CENTER;
   };
 
   aInlineUsesAnchorCenter = checkAxis(LogicalAxis::Inline);
