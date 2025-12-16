@@ -3052,11 +3052,16 @@
 
 # Whether the Document PictureInPicture API is enabled
 # https://wicg.github.io/document-picture-in-picture/#api
-# Always disable on android (unsupported) so that webpages aren't
-# confused by the webidl bindings being exposed
 - name: dom.documentpip.enabled
   type: RelaxedAtomicBool
+#ifdef ANDROID
+# Always disable on android (unsupported) so that webpages aren't
+# confused by the webidl bindings being exposed
   value: false
+#else
+# Probably only enable by default after bug 543435
+  value: @IS_NIGHTLY_BUILD@
+#endif
   mirror: always
   rust: true
 
