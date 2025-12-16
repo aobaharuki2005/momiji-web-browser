@@ -29,10 +29,10 @@ void AnimationTimelinesController::WillRefresh() {
 
   // TODO: Switch to sample scroll timelines in HTML event loop in the following
   // patches.
-  /*for (ScrollTimeline* tl :
+  for (ScrollTimeline* tl :
        ToTArray<AutoTArray<RefPtr<ScrollTimeline>, 32>>(mScrollTimelines)) {
     tl->WillRefresh();
-  }*/
+  }
 }
 
 void AnimationTimelinesController::UpdateLastRefreshDriverTime() {
@@ -56,11 +56,9 @@ void AnimationTimelinesController::UpdateHiddenByContentVisibility() {
     timeline->UpdateHiddenByContentVisibility();
   }
 
-  // TODO: Uncomment this once we start to sample scroll timelines in HTML event
-  // loop in the following patches.
-  /*for (AnimationTimeline* timeline : mScrollTimelines) {
+  for (AnimationTimeline* timeline : mScrollTimelines) {
     timeline->UpdateHiddenByContentVisibility();
-  }*/
+  }
 }
 
 }  // namespace mozilla::dom
