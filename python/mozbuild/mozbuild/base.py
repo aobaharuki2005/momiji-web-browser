@@ -998,6 +998,20 @@ class MachCommandConditions:
         return False
 
     @staticmethod
+    def is_ios(build_obj):
+        """Must have an iOS build."""
+        if hasattr(build_obj, "substs"):
+            return build_obj.substs.get("TARGET_OS") == "iOS"
+        return False
+
+    @staticmethod
+    def is_ios_simulator(build_obj):
+        """Must have an iOS simulator build."""
+        if hasattr(build_obj, "substs"):
+            return build_obj.substs.get("IPHONEOS_IS_SIMULATOR", False)
+        return False
+
+    @staticmethod
     def is_android_cpu(build_obj):
         """Targeting Android CPU."""
         if hasattr(build_obj, "substs"):

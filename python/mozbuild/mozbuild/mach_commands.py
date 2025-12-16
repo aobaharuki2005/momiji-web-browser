@@ -1514,6 +1514,10 @@ def install(command_context, **kwargs):
 
         return 0
 
+    elif conditions.is_ios(command_context):
+        from mozrunner.devices.ios_device import verify_ios_device
+
+        ret = verify_ios_device(command_context, install=True, **kwargs) == 0
     else:
         ret = command_context._run_make(
             directory=".", target="install", ensure_exit_code=False
@@ -2181,6 +2185,38 @@ process attach {continue_flag}-p {pid!s}
         device.shell("pkill -f lldb-server", enable_run_as=True)
         if not use_existing_process:
             device.shell("am clear-debug-app")
+
+
+def _run_ios(command_context, no_install=None, debug=False):
+    from mozdevice.ios import IosDevice
+    from mozrunner.devices.ios_device import (
+        verify_ios_device,
+    )
+
+    app = "org.mozilla.ios.GeckoTestBrowser"
+
+    # `verify_ios_device` respects sets `DEVICE_UUID`
+    verify_ios_device(
+        command_context,
+        app=app,
+        install=not no_install,
+    )
+    device_serial = os.environ.get("DEVICE_UUID")
+    if not device_serial:
+        print("No iOS devices connected.")
+        return 1
+
+    device = IosDevice.select_device(conditions.is_ios_simulator(command_context))
+    if debug:
+        print("Application will pause after starting until a debugger is connected...")
+    proc = device.launch_process(
+        app,
+        wait_for_debugger=debug,
+        stdout=None,
+        stderr=None,
+    )
+    proc.run()
+    proc.wait()
 
 
 def _run_jsshell(command_context, params, debug, debugger, debugger_args):
