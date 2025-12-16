@@ -847,9 +847,8 @@ class MOZ_GSL_POINTER Span {
           ,
           data_(elements ? elements
                          : reinterpret_cast<pointer>(alignof(element_type))) {
-      const size_t extentSize = ExtentType::size();
-      MOZ_RELEASE_ASSERT((!elements && extentSize == 0) ||
-                         (elements && extentSize != dynamic_extent));
+      MOZ_ASSERT((!elements && ExtentType::size() == 0) ||
+                 (elements && ExtentType::size() != dynamic_extent));
     }
 
     constexpr pointer data() const { return data_; }
