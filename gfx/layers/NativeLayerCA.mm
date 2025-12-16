@@ -1028,26 +1028,11 @@ bool NativeLayerCA::ShouldSpecializeVideo(const MutexAutoLock& aProofOfLock) {
     return false;
   }
 
-  MOZ_ASSERT(mTextureHost);
-
-  // DRM video is supported in macOS 10.15 and beyond, and such video must use
-  // a specialized video layer.
-  if (@available(macOS 10.15, iOS 13.0, *)) {
-      if (mTextureHost->IsFromDRMSource()) {
-          return true;
-      }
-  }
-  // Beyond this point, we need to know about the format of the video.
-  MacIOSurface* macIOSurface = mTextureHost->GetSurface();
-  if (macIOSurface->GetYUVColorSpace() == gfx::YUVColorSpace::BT2020) {
-    // BT2020 is a signifier of HDR color space, whether or not the bit depth
-    // is expanded to cover that color space. This video needs a specialized
-    // video layer.
+  if (mIsDRM) {
     return true;
   }
 
-  if (macIOSurface->GetColorDepth() == gfx::ColorDepth::COLOR_10) {
-    // 10-bit videos require specialized video layers.
+  if (mIsHDR) {
     return true;
   }
 
