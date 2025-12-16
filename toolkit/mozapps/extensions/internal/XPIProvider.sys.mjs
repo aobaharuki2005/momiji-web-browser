@@ -1478,6 +1478,7 @@ var XPIStates = {
           // while at it.
           delete data.startupData.lwtDarkStyles;
           delete data.startupData.lwtStyles;
+          delete data.startupData.experiment;
         }
       }
     }

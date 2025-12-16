@@ -57,6 +57,8 @@ add_task(async function test_cleanup_theme_processedColors() {
       _processedColors: 42,
       foo: "bar",
     },
+    lwtDarkStyles: {},
+    experiment: null,
   };
 
   const jsonFile = new JSONFile({
@@ -81,8 +83,9 @@ add_task(async function test_cleanup_theme_processedColors() {
     !("_processedColors" in themeFromFile.startupData.lwtData.theme),
     "No _processedColor property"
   );
-  Assert.ok(
-    !("lwtStyles" in themeFromFile.startupData),
-    "No lwtStyles property"
+  Assert.deepEqual(
+    ["lwtData"],
+    Object.keys(themeFromFile.startupData),
+    "No legacy properties (lwtStyles, lwtDarkStyles, experiment)"
   );
 });
