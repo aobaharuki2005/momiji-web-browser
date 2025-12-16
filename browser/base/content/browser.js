@@ -2215,16 +2215,19 @@ var XULBrowserWindow = {
       aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SESSION_STORE
     );
 
-    // We want to update the popup visibility if we received this notification
-    // via simulated locationchange events such as switching between tabs, however
-    // if this is a document navigation then PopupNotifications will be updated
-    // via TabsProgressListener.onLocationChange and we do not want it called twice
-    gURLBar.setURI({
-      uri: aLocationURI,
-      dueToTabSwitch: aIsSimulated,
-      dueToSessionRestore: isSessionRestore,
-      isSameDocument,
-    });
+    // Don't update URL for document PiP window as it shows its opener url
+    if (!window.browsingContext.isDocumentPiP) {
+      // We want to update the popup visibility if we received this notification
+      // via simulated locationchange events such as switching between tabs, however
+      // if this is a document navigation then PopupNotifications will be updated
+      // via TabsProgressListener.onLocationChange and we do not want it called twice
+      gURLBar.setURI({
+        uri: aLocationURI,
+        dueToTabSwitch: aIsSimulated,
+        dueToSessionRestore: isSessionRestore,
+        isSameDocument,
+      });
+    }
 
     BookmarkingUI.onLocationChange();
     // If we've actually changed document, update the toolbar visibility.
@@ -2540,6 +2543,13 @@ var XULBrowserWindow = {
     if (uriOverride) {
       uri = uriOverride;
       aState |= Ci.nsIWebProgressListener.STATE_IDENTITY_ASSOCIATED;
+    }
+
+    if (window.browsingContext.isDocumentPiP) {
+      gURLBar.setURI({
+        uri,
+        isSameDocument: true,
+      });
     }
 
     try {

@@ -2260,6 +2260,12 @@ var SessionStoreInternal = {
    *        Window reference
    */
   onBeforeBrowserWindowShown(aWindow) {
+    // Do not track Document Picture-in-Picture windows since these are
+    // ephemeral and tied to a specific tab's browser document.
+    if (aWindow.browsingContext.isDocumentPiP) {
+      return;
+    }
+
     // Register the window.
     this.onLoad(aWindow);
 

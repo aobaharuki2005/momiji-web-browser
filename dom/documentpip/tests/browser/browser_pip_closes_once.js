@@ -13,14 +13,31 @@
 add_task(async function closing_pip_sends_exactly_one_DOMWindowClosed() {
   const [tab, chromePiP] = await newTabWithPiP();
 
-  let closeCount = 0;
-  chromePiP.addEventListener("DOMWindowClose", () => closeCount++);
+  // Note: Counting DOMWindowClose in the parent process isn't the same.
+  // - The parent might have multiple, i.e. for closing tab and native window
+  // - Sending the second event up to the parent might fail if closing has progressed far enough
+  await SpecialPowers.spawn(chromePiP.gBrowser.selectedBrowser, [], () => {
+    content.opener.closeCount = 0;
+    SpecialPowers.addChromeEventListener(
+      "DOMWindowClose",
+      () => content.opener.closeCount++,
+      true,
+      false
+    );
+  });
 
+  // close PiP
   await SpecialPowers.spawn(tab.linkedBrowser, [], () => {
     content.documentPictureInPicture.window.close();
   });
   await BrowserTestUtils.windowClosed(chromePiP);
 
+  const closeCount = await SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [],
+    () => content.closeCount
+  );
   is(closeCount, 1, "Received a single DOMWindowClosed");
+
   BrowserTestUtils.removeTab(tab);
 });

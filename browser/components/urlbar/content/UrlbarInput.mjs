@@ -717,6 +717,14 @@ export class UrlbarInput extends HTMLElement {
         "Cannot set URI for UrlbarInput that is not an address bar"
       );
     }
+    if (
+      this.window.browsingContext.isDocumentPiP &&
+      uri.spec.startsWith("about:blank")
+    ) {
+      // If this is a Document PiP, its url will be about:blank while
+      // the opener will be a secure context, i.e. no about:blank
+      throw new Error("Document PiP should show its opener URL");
+    }
     // We only need to update the searchModeUI on tab switch conditionally
     // as we only persist searchMode with ScotchBonnet enabled.
     if (

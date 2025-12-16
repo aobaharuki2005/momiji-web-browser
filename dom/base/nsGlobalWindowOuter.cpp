@@ -4223,6 +4223,12 @@ nsresult nsGlobalWindowOuter::SetFullscreenInternal(FullscreenReason aReason,
     return NS_OK;
   }
 
+  // Element.requestFullscreen() is already blocked, but also block
+  // fullscreening for other callers, especially the chrome window.
+  if (GetBrowsingContext()->Top()->GetIsDocumentPiP()) {
+    return NS_OK;
+  }
+
   // SetFullscreen needs to be called on the root window, so get that
   // via the DocShell tree, and if we are not already the root,
   // call SetFullscreen on that window instead.
