@@ -12,6 +12,18 @@ function testUiaRelationArray(id, prop, targets) {
   );
 }
 
+function testCustomUiaRelationArray(id, prop, targets) {
+  return isUiaElementArray(
+    `
+      findUiaByDomId(doc, "${id}")
+      .GetCurrentPropertyValue(uia${prop}PropertyId)
+      .QueryInterface(IUIAutomationElementArray)
+    `,
+    targets,
+    `${id} has correct ${prop} targets`
+  );
+}
+
 /**
  * Test the ControllerFor property.
  */
@@ -139,5 +151,26 @@ addUiaTask(
     );
   },
   // The IA2 -> UIA proxy doesn't expose LabeledBy properly.
+  { uiaEnabled: true, uiaDisabled: false }
+);
+
+/**
+ * Test the AccessibleActions property.
+ */
+addUiaTask(
+  `
+<dialog aria-actions="btn" id="dlg" onclick="" open>
+  Dialog with its own click listener
+  <form method="dialog">
+    <button id="btn">Close</button>
+  </form>
+</dialog>
+  `,
+  async function testActions() {
+    await definePyVar("doc", `getDocUia()`);
+    await testCustomUiaRelationArray("dlg", "AccessibleActions", ["btn"]);
+    await testCustomUiaRelationArray("btn", "AccessibleActions", []);
+  },
+  // The IA2 -> UIA proxy doesn't support AccessibleActions.
   { uiaEnabled: true, uiaDisabled: false }
 );
