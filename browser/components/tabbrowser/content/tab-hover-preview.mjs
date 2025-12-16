@@ -10,7 +10,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PageWireframes: "resource:///modules/sessionstore/PageWireframes.sys.mjs",
   SponsorProtection:
     "moz-src:///browser/components/newtab/SponsorProtection.sys.mjs",
-  TabNotes: "moz-src:///browser/components/tabnotes/TabNotes.sys.mjs",
 });
 
 // Denotes the amount of time (in ms) that the panel will *not* respect
@@ -408,11 +407,6 @@ class TabPanel extends Panel {
       this.panelElement.querySelector(".tab-preview-activeness").textContent =
         "";
     }
-
-    lazy.TabNotes.get(this.#tab.canonicalUrl).then(note => {
-      this.panelElement.querySelector(".tab-note-text-container").textContent =
-        note?.text || "";
-    });
 
     let thumbnailContainer = this.panelElement.querySelector(
       ".tab-preview-thumbnail-container"
