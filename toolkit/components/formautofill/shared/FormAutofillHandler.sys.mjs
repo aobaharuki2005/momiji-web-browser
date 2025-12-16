@@ -436,7 +436,10 @@ export class FormAutofillHandler {
         // Unlike text input, select element is always previewed even if
         // the option is already selected.
         const option = this.matchSelectOptions(fieldDetail, profile);
-        value = option?.text ?? "";
+        if (!option) {
+          continue;
+        }
+        value = option.text ?? "";
       } else {
         continue;
       }
