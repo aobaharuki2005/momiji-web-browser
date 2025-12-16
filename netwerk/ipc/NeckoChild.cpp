@@ -33,8 +33,6 @@
 #include "SerializedLoadContext.h"
 #include "nsGlobalWindowInner.h"
 #include "nsIOService.h"
-#include "nsINetworkPredictor.h"
-#include "nsINetworkPredictorVerifier.h"
 #include "nsINetworkLinkService.h"
 #include "nsQueryObject.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -256,60 +254,6 @@ PTransportProviderChild* NeckoChild::AllocPTransportProviderChild() {
 bool NeckoChild::DeallocPTransportProviderChild(
     PTransportProviderChild* aActor) {
   return true;
-}
-
-/* Predictor Messages */
-mozilla::ipc::IPCResult NeckoChild::RecvPredOnPredictPrefetch(
-    nsIURI* aURI, const uint32_t& aHttpStatus) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "PredictorChild::RecvOnPredictPrefetch "
-             "off main thread.");
-  if (!aURI) {
-    return IPC_FAIL(this, "aURI is null");
-  }
-
-  // Get the current predictor
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictorVerifier> predictor;
-  predictor = mozilla::components::Predictor::Service(&rv);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
-
-  predictor->OnPredictPrefetch(aURI, aHttpStatus);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult NeckoChild::RecvPredOnPredictPreconnect(nsIURI* aURI) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "PredictorChild::RecvOnPredictPreconnect "
-             "off main thread.");
-  if (!aURI) {
-    return IPC_FAIL(this, "aURI is null");
-  }
-  // Get the current predictor
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictorVerifier> predictor;
-  predictor = mozilla::components::Predictor::Service(&rv);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
-
-  predictor->OnPredictPreconnect(aURI);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult NeckoChild::RecvPredOnPredictDNS(nsIURI* aURI) {
-  MOZ_ASSERT(NS_IsMainThread(),
-             "PredictorChild::RecvOnPredictDNS off "
-             "main thread.");
-  if (!aURI) {
-    return IPC_FAIL(this, "aURI is null");
-  }
-  // Get the current predictor
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsINetworkPredictorVerifier> predictor;
-  predictor = mozilla::components::Predictor::Service(&rv);
-  NS_ENSURE_SUCCESS(rv, IPC_FAIL_NO_REASON(this));
-
-  predictor->OnPredictDNS(aURI);
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult NeckoChild::RecvSpeculativeConnectRequest() {

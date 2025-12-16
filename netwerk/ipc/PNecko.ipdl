@@ -93,15 +93,6 @@ parent:
 
   async PWebSocketEventListener(uint64_t aInnerWindowID);
 
-  /* Predictor Methods */
-  async PredPredict(nullable nsIURI targetURI, nullable nsIURI sourceURI,
-                    uint32_t reason, OriginAttributes originAttributes,
-                    bool hasVerifier);
-  [Priority=low]
-  async PredLearn(nullable nsIURI targetURI, nullable nsIURI sourceURI,
-                  uint32_t reason, OriginAttributes originAttributes);
-  async PredReset();
-
   async SpeculativeConnect(nullable nsIURI uri,
                            nullable nsIPrincipal principal,
                            OriginAttributes? originAttributes,
@@ -168,11 +159,6 @@ parent:
   async GetPageIconStream(nullable nsIURI uri, LoadInfoArgs loadInfo) returns (RemoteStreamInfo? info);
 
 child:
-  /* Predictor Methods */
-  async PredOnPredictPrefetch(nullable nsIURI uri, uint32_t httpStatus);
-  async PredOnPredictPreconnect(nullable nsIURI uri);
-  async PredOnPredictDNS(nullable nsIURI uri);
-
   async SpeculativeConnectRequest();
 
   // Using medium high priority to deliver this notification possibly sooner than we
