@@ -50,6 +50,8 @@ import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
 import org.mozilla.fenix.home.search.HomeSearchInteractor
 import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
 import org.mozilla.fenix.home.store.NimbusMessageState
+import org.mozilla.fenix.home.termsofuse.PrivacyNoticeBannerInteractor
+import org.mozilla.fenix.home.termsofuse.PrivacyNoticeBannerInteractorNoOp
 import org.mozilla.fenix.home.topsites.interactor.TopSiteInteractor
 import org.mozilla.fenix.search.toolbar.SearchSelectorMenu
 import org.mozilla.fenix.wallpapers.WallpaperState
@@ -74,7 +76,8 @@ internal object FakeHomepagePreview {
             RecentVisitsInteractor by recentVisitsInteractor,
             HomeSearchInteractor by homeSearchInteractor,
             CollectionInteractor by collectionInteractor,
-            PocketStoriesInteractor by storiesInteractor {
+            PocketStoriesInteractor by storiesInteractor,
+            PrivacyNoticeBannerInteractor by PrivacyNoticeBannerInteractorNoOp {
             override fun reportSessionMetrics(state: AppState) { /* no op */ }
 
             override fun onPasteAndGo(clipboardText: String) { /* no op */ }

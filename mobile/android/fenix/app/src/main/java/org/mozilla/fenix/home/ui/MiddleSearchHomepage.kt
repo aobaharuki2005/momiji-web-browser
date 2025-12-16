@@ -163,6 +163,7 @@ private fun MiddleSearchHomepagePreview() {
     FirefoxTheme {
         MiddleSearchHomepage(
             HomepageState.Normal(
+                shouldShowPrivacyNoticeBanner = false,
                 nimbusMessage = null,
                 topSites = FakeHomepagePreview.topSites(),
                 recentTabs = FakeHomepagePreview.recentTabs(),

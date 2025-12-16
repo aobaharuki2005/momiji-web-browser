@@ -126,6 +126,7 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlControllerCallback
 import org.mozilla.fenix.home.sessioncontrol.SessionControlInteractor
 import org.mozilla.fenix.home.store.HomeToolbarStoreBuilder
 import org.mozilla.fenix.home.store.HomepageState
+import org.mozilla.fenix.home.termsofuse.DefaultPrivacyNoticeBannerController
 import org.mozilla.fenix.home.toolbar.DefaultToolbarController
 import org.mozilla.fenix.home.toolbar.FenixHomeToolbar
 import org.mozilla.fenix.home.toolbar.HomeNavigationBar
@@ -164,6 +165,11 @@ import org.mozilla.fenix.snackbar.FenixSnackbarDelegate
 import org.mozilla.fenix.snackbar.SnackbarBinding
 import org.mozilla.fenix.tabstray.Page
 import org.mozilla.fenix.tabstray.TabsTrayAccessPoint
+import org.mozilla.fenix.termsofuse.store.DefaultPrivacyNoticeBannerRepository
+import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerAction
+import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerMiddleware
+import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerState
+import org.mozilla.fenix.termsofuse.store.PrivacyNoticeBannerStore
 import org.mozilla.fenix.termsofuse.store.Surface
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.utils.allowUndo
@@ -222,6 +228,14 @@ class HomeFragment : Fragment() {
 
     private val store: BrowserStore
         get() = requireComponents.core.store
+
+    private val privacyNoticeBannerRepository by lazy {
+        DefaultPrivacyNoticeBannerRepository(
+            settings = requireComponents.settings,
+        )
+    }
+
+    private lateinit var privacyNoticeBannerStore: PrivacyNoticeBannerStore
 
     private var _sessionControlController: SessionControlController? = null
     private val sessionControlController: SessionControlController
@@ -461,6 +475,17 @@ class HomeFragment : Fragment() {
             view = binding.root,
         )
 
+        privacyNoticeBannerStore = PrivacyNoticeBannerStore(
+            initialState = PrivacyNoticeBannerState(
+                visible = privacyNoticeBannerRepository.shouldShowPrivacyNoticeBanner(),
+            ),
+            middleware = listOf(
+                PrivacyNoticeBannerMiddleware(
+                    repository = privacyNoticeBannerRepository,
+                ),
+            ),
+        )
+
         _sessionControlController = DefaultSessionControlController(
             activityRef = WeakReference(activity),
             settings = components.settings,
@@ -573,6 +598,9 @@ class HomeFragment : Fragment() {
                 topSitesUseCases = components.useCases.topSitesUseCase,
                 marsUseCases = components.useCases.marsUseCases,
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
+            ),
+            privacyNoticeBannerController = DefaultPrivacyNoticeBannerController(
+                privacyNoticeBannerStore = privacyNoticeBannerStore,
             ),
         )
 
@@ -1000,6 +1028,9 @@ class HomeFragment : Fragment() {
                         }
                     }
                     val keyboardState by keyboardAsState()
+                    val privacyNoticeBannerState = privacyNoticeBannerStore.flow().collectAsState(
+                        initial = privacyNoticeBannerStore.state,
+                    )
 
                     LaunchedEffect(isInPortrait, keyboardState) {
                         updateLayoutParams<ViewGroup.MarginLayoutParams> {
@@ -1015,6 +1046,7 @@ class HomeFragment : Fragment() {
                         MiddleSearchHomepage(
                             state = HomepageState.build(
                                 appState = appState.value,
+                                privacyNoticeBannerState = privacyNoticeBannerState.value,
                                 settings = settings,
                                 browsingModeManager = browsingModeManager,
                             ),
@@ -1032,6 +1064,7 @@ class HomeFragment : Fragment() {
                         Homepage(
                             state = HomepageState.build(
                                 appState = appState.value,
+                                privacyNoticeBannerState = privacyNoticeBannerState.value,
                                 settings = settings,
                                 browsingModeManager = browsingModeManager,
                             ),
@@ -1277,6 +1310,12 @@ class HomeFragment : Fragment() {
         // Counterpart to the update in onResume to keep the last access timestamp of the selected
         // tab up-to-date.
         requireComponents.useCases.sessionUseCases.updateLastAccess()
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        privacyNoticeBannerStore.dispatch(PrivacyNoticeBannerAction.OnFragmentStopped)
     }
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
