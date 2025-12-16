@@ -39,3 +39,22 @@ add_task(async function test_no_canonization() {
   Assert.equal(searchbar.value, searchTerm, "Search term was persisted");
   searchbar.value = "";
 });
+
+add_task(async function test_newtab() {
+  let searchTerm = "test3";
+  let expectedUrl = defaultEngine.getSubmission(searchTerm).uri.spec;
+
+  searchbar.focus();
+  EventUtils.sendString(searchTerm);
+
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+  EventUtils.synthesizeKey("KEY_Enter", { altKey: true });
+  let newTab = await newTabPromise;
+  let newBrowser = gBrowser.getBrowserForTab(newTab);
+
+  Assert.equal(gBrowser.selectedBrowser, newBrowser, "Opened in foreground");
+  Assert.equal(newBrowser.currentURI.spec, expectedUrl, "Search successful");
+  Assert.equal(searchbar.value, searchTerm, "Search term was persisted");
+  searchbar.value = "";
+  BrowserTestUtils.removeTab(newTab);
+});
