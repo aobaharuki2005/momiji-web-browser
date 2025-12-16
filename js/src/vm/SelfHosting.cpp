@@ -1939,7 +1939,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_NumberFormat", intl_NumberFormat, 2, 0),
     JS_FN("intl_SelectPluralRule", intl_SelectPluralRule, 2, 0),
     JS_FN("intl_SelectPluralRuleRange", intl_SelectPluralRuleRange, 3, 0),
-    JS_FN("intl_SupportedValuesOf", intl_SupportedValuesOf, 1, 0),
     JS_FN("intl_TryValidateAndCanonicalizeLanguageTag",
           intl_TryValidateAndCanonicalizeLanguageTag, 1, 0),
     JS_FN("intl_ValidateAndCanonicalizeLanguageTag",

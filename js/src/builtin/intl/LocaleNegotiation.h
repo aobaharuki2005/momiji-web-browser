@@ -30,6 +30,8 @@ using LocalesList = JS::StackGCVector<JSLinearString*>;
 bool CanonicalizeLocaleList(JSContext* cx, JS::Handle<JS::Value> locales,
                             JS::MutableHandle<LocalesList> result);
 
+ArrayObject* LocalesListToArray(JSContext* cx, JS::Handle<LocalesList> locales);
+
 /**
  * Compares a BCP 47 language tag against the locales in availableLocales and
  * returns the best available match -- or |nullptr| if no match was found.

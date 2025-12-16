@@ -343,8 +343,8 @@ static bool SupportedLocales(JSContext* cx,
                                 supportedLocales);
 }
 
-static ArrayObject* LocalesListToArray(JSContext* cx,
-                                       Handle<LocalesList> locales) {
+ArrayObject* js::intl::LocalesListToArray(JSContext* cx,
+                                          Handle<LocalesList> locales) {
   auto* array = NewDenseFullyAllocatedArray(cx, locales.length());
   if (!array) {
     return nullptr;

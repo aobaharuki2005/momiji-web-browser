@@ -42,6 +42,7 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
+using namespace js::intl;
 
 /******************** Intl ********************/
 
@@ -103,13 +104,6 @@ bool js::intl_GetCalendarInfo(JSContext* cx, unsigned argc, Value* vp) {
 
   args.rval().setObject(*info);
   return true;
-}
-
-static void ReportBadKey(JSContext* cx, JSString* key) {
-  if (UniqueChars chars = QuoteString(cx, key, '"')) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
-                              chars.get());
-  }
 }
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale )
@@ -501,37 +495,70 @@ static ArrayObject* AvailableUnits(JSContext* cx) {
   return CreateArrayFromSortedList(cx, simpleMeasureUnitNames);
 }
 
-bool js::intl_SupportedValuesOf(JSContext* cx, unsigned argc, JS::Value* vp) {
+/**
+ * Intl.getCanonicalLocales ( locales )
+ */
+static bool intl_getCanonicalLocales(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 1);
-  MOZ_ASSERT(args[0].isString());
 
-  JSLinearString* key = args[0].toString()->ensureLinear(cx);
+  // Step 1.
+  Rooted<LocalesList> locales(cx, cx);
+  if (!CanonicalizeLocaleList(cx, args.get(0), &locales)) {
+    return false;
+  }
+
+  // Step 2.
+  auto* array = LocalesListToArray(cx, locales);
+  if (!array) {
+    return false;
+  }
+  args.rval().setObject(*array);
+  return true;
+}
+
+/**
+ * Intl.supportedValuesOf ( key )
+ */
+static bool intl_supportedValuesOf(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  // Step 1.
+  auto* key = ToString(cx, args.get(0));
   if (!key) {
     return false;
   }
 
+  auto* linearKey = key->ensureLinear(cx);
+  if (!linearKey) {
+    return false;
+  }
+
+  // Steps 2-8.
   ArrayObject* list;
-  if (StringEqualsLiteral(key, "calendar")) {
+  if (StringEqualsLiteral(linearKey, "calendar")) {
     list = AvailableCalendars(cx);
-  } else if (StringEqualsLiteral(key, "collation")) {
+  } else if (StringEqualsLiteral(linearKey, "collation")) {
     list = AvailableCollations(cx);
-  } else if (StringEqualsLiteral(key, "currency")) {
+  } else if (StringEqualsLiteral(linearKey, "currency")) {
     list = AvailableCurrencies(cx);
-  } else if (StringEqualsLiteral(key, "numberingSystem")) {
+  } else if (StringEqualsLiteral(linearKey, "numberingSystem")) {
     list = AvailableNumberingSystems(cx);
-  } else if (StringEqualsLiteral(key, "timeZone")) {
+  } else if (StringEqualsLiteral(linearKey, "timeZone")) {
     list = AvailableTimeZones(cx);
-  } else if (StringEqualsLiteral(key, "unit")) {
+  } else if (StringEqualsLiteral(linearKey, "unit")) {
     list = AvailableUnits(cx);
   } else {
-    ReportBadKey(cx, key);
+    if (UniqueChars chars = QuoteString(cx, linearKey, '"')) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_INVALID_KEY,
+                                chars.get());
+    }
     return false;
   }
   if (!list) {
     return false;
   }
 
+  // Step 9.
   args.rval().setObject(*list);
   return true;
 }
@@ -544,8 +571,8 @@ static bool intl_toSource(JSContext* cx, unsigned argc, Value* vp) {
 
 static const JSFunctionSpec intl_static_methods[] = {
     JS_FN("toSource", intl_toSource, 0, 0),
-    JS_SELF_HOSTED_FN("getCanonicalLocales", "Intl_getCanonicalLocales", 1, 0),
-    JS_SELF_HOSTED_FN("supportedValuesOf", "Intl_supportedValuesOf", 1, 0),
+    JS_FN("getCanonicalLocales", intl_getCanonicalLocales, 1, 0),
+    JS_FN("supportedValuesOf", intl_supportedValuesOf, 1, 0),
     JS_FS_END,
 };
 
