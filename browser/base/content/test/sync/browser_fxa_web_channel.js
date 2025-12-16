@@ -117,20 +117,13 @@ var gTests = [
           content_uri: TEST_HTTP_PATH,
           channel_id: TEST_CHANNEL_ID,
           helpers: {
-            shouldAllowRelink(acctData) {
-              if (acctData.uid == "uid") {
-                Assert.equal(acctData.email, "testuser@testuser.com");
-                return true;
-              }
-              Assert.notEqual(acctData.email, "testuser@testuser.com");
-              return false;
+            shouldAllowRelink(acctName) {
+              return acctName === "testuser@testuser.com";
             },
-            promptProfileSyncWarningIfNeeded(acctData) {
-              if (acctData.uid == "uid") {
-                Assert.equal(acctData.email, "testuser@testuser.com");
+            promptProfileSyncWarningIfNeeded(acctName) {
+              if (acctName === "testuser@testuser.com") {
                 return { action: "continue" };
               }
-              Assert.notEqual(acctData.email, "testuser@testuser.com");
               return { action: "cancel" };
             },
           },

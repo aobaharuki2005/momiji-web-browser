@@ -13,9 +13,6 @@ const { FxAccountsWebChannel, FxAccountsWebChannelHelpers } =
     "resource://gre/modules/FxAccountsWebChannel.sys.mjs"
   );
 
-const { PREF_LAST_FXA_USER_EMAIL, PREF_LAST_FXA_USER_UID } =
-  ChromeUtils.importESModule("resource://gre/modules/FxAccountsCommon.sys.mjs");
-
 const URL_STRING = "https://example.com";
 
 const mockSendingContext = {
@@ -66,7 +63,7 @@ add_task(async function test_rejection_reporting() {
   let mockMessage = {
     command: "fxaccounts:login",
     messageId: "1234",
-    data: { email: "testuser@testuser.com", uid: "testuser" },
+    data: { email: "testuser@testuser.com" },
   };
 
   let channel = new FxAccountsWebChannel({
@@ -335,15 +332,19 @@ add_test(function test_delete_message() {
 add_test(function test_can_link_account_message() {
   let mockMessage = {
     command: "fxaccounts:can_link_account",
-    data: { email: "testuser@testuser.com", uid: "testuser" },
+    data: { email: "testuser@testuser.com" },
   };
 
   let channel = new FxAccountsWebChannel({
     channel_id: WEBCHANNEL_ID,
     content_uri: URL_STRING,
     helpers: {
-      shouldAllowRelink(acctData) {
-        Assert.deepEqual(acctData, mockMessage.data);
+      shouldAllowRelink(email) {
+        Assert.equal(email, "testuser@testuser.com");
+        run_next_test();
+      },
+      promptProfileSyncWarningIfNeeded(acctName) {
+        Assert.equal(acctName, "testuser@testuser.com");
         run_next_test();
       },
     },
@@ -434,7 +435,45 @@ add_test(function test_fxa_status_message() {
   channel._channelCallback(WEBCHANNEL_ID, mockMessage, mockSendingContext);
 });
 
-add_test(function test_respond_to_invalid_commands() {
+add_test(function test_respond_to_device_commands() {
+  let mockMessageLoggedOut = {
+    command: "fxaccounts:logout",
+    messageId: 123,
+    data: {},
+  };
+  let mockMessageLoggedIn = {
+    command: "fxaccounts:login",
+    messageId: 123,
+    data: {},
+  };
+
+  let channel = new FxAccountsWebChannel({
+    channel_id: WEBCHANNEL_ID,
+    content_uri: URL_STRING,
+  });
+  channel._channel = {
+    send(response) {
+      Assert.ok(!!response.data);
+      Assert.equal(response.data.ok, true);
+
+      run_next_test();
+    },
+  };
+
+  channel._channelCallback(
+    WEBCHANNEL_ID,
+    mockMessageLoggedOut,
+    mockSendingContext
+  );
+
+  channel._channelCallback(
+    WEBCHANNEL_ID,
+    mockMessageLoggedIn,
+    mockSendingContext
+  );
+});
+
+add_test(function test_respond_to_incorrect_device_commands() {
   let mockMessageLogout = {
     command: "fxaccounts:lagaut", // intentional typo.
     messageId: 123,
@@ -478,16 +517,11 @@ add_test(function test_unrecognized_message() {
   run_next_test();
 });
 
-add_test(function test_helpers_should_allow_relink_same_account() {
+add_test(function test_helpers_should_allow_relink_same_email() {
   let helpers = new FxAccountsWebChannelHelpers();
 
-  helpers.setPreviousAccountHashPref("testuser");
-  Assert.ok(
-    helpers.shouldAllowRelink({
-      email: "testuser@testuser.com",
-      uid: "testuser",
-    })
-  );
+  helpers.setPreviousAccountNameHashPref("testuser@testuser.com");
+  Assert.ok(helpers.shouldAllowRelink("testuser@testuser.com"));
 
   run_next_test();
 });
@@ -495,7 +529,7 @@ add_test(function test_helpers_should_allow_relink_same_account() {
 add_test(function test_helpers_should_allow_relink_different_email() {
   let helpers = new FxAccountsWebChannelHelpers();
 
-  helpers.setPreviousAccountHashPref("testuser");
+  helpers.setPreviousAccountNameHashPref("testuser@testuser.com");
 
   helpers._promptForRelink = acctName => {
     return acctName === "allowed_to_relink@testuser.com";
@@ -541,10 +575,9 @@ add_task(async function test_helpers_login_without_customize_sync() {
   });
 
   // ensure the previous account pref is overwritten.
-  helpers.setPreviousAccountHashPref("lastuser");
+  helpers.setPreviousAccountNameHashPref("lastuser@testuser.com");
 
   await helpers.login({
-    uid: "testuser",
     email: "testuser@testuser.com",
     verifiedCanLinkAccount: true,
     customizeSync: false,
@@ -554,7 +587,7 @@ add_task(async function test_helpers_login_without_customize_sync() {
   );
 });
 
-add_task(async function test_helpers_login_set_previous_account_hash() {
+add_task(async function test_helpers_login_set_previous_account_name_hash() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
       getSignedInUser() {
@@ -565,12 +598,8 @@ add_task(async function test_helpers_login_set_previous_account_hash() {
           return new Promise(resolve => {
             // previously signed in user preference is updated.
             Assert.equal(
-              Services.prefs.getStringPref(PREF_LAST_FXA_USER_UID),
-              CryptoUtils.sha256Base64("new_uid")
-            );
-            Assert.equal(
-              Services.prefs.getStringPref(PREF_LAST_FXA_USER_EMAIL, ""),
-              ""
+              helpers.getPreviousAccountNameHashPref(),
+              CryptoUtils.sha256Base64("newuser@testuser.com")
             );
             resolve();
           });
@@ -591,10 +620,9 @@ add_task(async function test_helpers_login_set_previous_account_hash() {
   });
 
   // ensure the previous account pref is overwritten.
-  helpers.setPreviousAccountHashPref("last_uid");
+  helpers.setPreviousAccountNameHashPref("lastuser@testuser.com");
 
   await helpers.login({
-    uid: "new_uid",
     email: "newuser@testuser.com",
     verifiedCanLinkAccount: true,
     customizeSync: false,
@@ -633,7 +661,6 @@ add_task(async function test_helpers_login_another_user_signed_in() {
   helpers._disconnect = sinon.spy();
 
   await helpers.login({
-    uid: "testuser",
     email: "testuser@testuser.com",
     verifiedCanLinkAccount: true,
     customizeSync: false,
@@ -678,7 +705,6 @@ add_task(async function test_helpers_login_with_customize_sync() {
   });
 
   await helpers.login({
-    uid: "testuser",
     email: "testuser@testuser.com",
     verifiedCanLinkAccount: true,
     customizeSync: true,
