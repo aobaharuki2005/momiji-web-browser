@@ -749,8 +749,8 @@ void wasm::DumpMemoryDesc(const MemoryDesc& memDesc, StructuredPrinter& out,
     out.printf(" %" PRIu64, memDesc.maximumPages().value().pageCount());
   }
   if (memDesc.initialPages().pageSize() != PageSize::Standard) {
-    out.printf("(pagesize %" PRIu32 ")",
-               static_cast<uint32_t>(memDesc.initialPages().pageSize()));
+    out.printf(" (pagesize %d)",
+               PageSizeInBytes(memDesc.initialPages().pageSize()));
   }
   out.printf(")");
 }
