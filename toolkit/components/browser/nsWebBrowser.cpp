@@ -112,6 +112,12 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   RefPtr<nsDocShell> docShell =
       nsDocShell::Create(aBrowsingContext, outerWindowId);
   if (NS_WARN_IF(!docShell)) {
+    if (aInitialWindowChild) {
+      // If aInitialWindowChild, we were called from
+      // ContentChild::RecvConstructBrowser and would crash there. Let's already
+      // crash here to help diagnose bug 2003244.
+      MOZ_CRASH("Failed to create docshell.");
+    }
     return nullptr;
   }
   browser->SetDocShell(docShell);
@@ -142,6 +148,14 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   nsresult rv = docShell->InitWindow(docShellParentWidget, 0, 0, 0, 0,
                                      aOpenWindowInfo, aInitialWindowChild);
   if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (aInitialWindowChild) {
+      // If aInitialWindowChild, we were called from
+      // ContentChild::RecvConstructBrowser and would crash there. Let's already
+      // crash here to help diagnose bug 2003244. Since bug 543435, InitWindow
+      // also involves creating viewer and document.
+      CrashReporter::AppendAppNotesToCrashReport(nsPrintfCString("rv=%u.", rv));
+      MOZ_CRASH("Failed to initialize docshell, check app notes.");
+    }
     return nullptr;
   }
 
