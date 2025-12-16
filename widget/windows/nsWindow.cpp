@@ -1525,7 +1525,7 @@ bool nsWindow::ShouldAssociateWithWinAppSDK() const {
   //
   // TODO(emilio): That might not be true anymore after bug 1993474,
   // consider re-testing and removing that special-case.
-  return IsTopLevelWidget() && !mIsPIPWindow;
+  return IsTopLevelWidget() && mPiPType == PiPType::NoPiP;
 }
 
 bool nsWindow::AssociateWithNativeWindow() {
@@ -2805,7 +2805,7 @@ bool nsWindow::UpdateNonClientMargins(bool aReflowWindow) {
     // frame sizes for left, right and bottom since Windows will automagically
     // position the edges "offscreen" for maximized windows.
     metrics.mOffset.top = metrics.mCaptionHeight;
-  } else if (mIsPIPWindow &&
+  } else if (mPiPType == PiPType::MediaPiP &&
              !StaticPrefs::widget_windows_pip_decorations_enabled()) {
     metrics.mOffset = metrics.DefaultMargins();
   } else {

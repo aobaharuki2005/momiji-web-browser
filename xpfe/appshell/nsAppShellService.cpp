@@ -522,7 +522,7 @@ nsresult nsAppShellService::JustCreateTopWindow(
                      nsIWebBrowserChrome::CHROME_STATUSBAR;
   if (widgetInitData.mWindowType == widget::WindowType::Dialog &&
       ((aChromeMask & pipMask) == pipMask) && !(aChromeMask & barMask)) {
-    widgetInitData.mPIPWindow = true;
+    widgetInitData.mPiPType = mozilla::widget::PiPType::MediaPiP;
   }
 #endif
 

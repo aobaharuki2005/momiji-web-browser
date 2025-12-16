@@ -313,7 +313,7 @@ nsIWidget::nsIWidget(BorderStyle aBorderStyle)
       mIsFullyOccluded(false),
       mNeedFastSnaphot(false),
       mCurrentPanGestureBelongsToSwipe(false),
-      mIsPIPWindow(false) {
+      mPiPType(PiPType::NoPiP) {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
   printf("WIDGETS+ = %d\n", gNumWidgets);
@@ -458,7 +458,7 @@ void nsIWidget::BaseCreate(nsIWidget* aParent,
   mPopupLevel = aInitData.mPopupLevel;
   mPopupType = aInitData.mPopupHint;
   mHasRemoteContent = aInitData.mHasRemoteContent;
-  mIsPIPWindow = aInitData.mPIPWindow;
+  mPiPType = aInitData.mPiPType;
 
   mParent = aParent;
   if (mParent) {
@@ -2311,7 +2311,7 @@ WidgetWheelEvent nsIWidget::MayStartSwipeForAPZ(
   WidgetWheelEvent event = aPanInput.ToWidgetEvent(this);
 
   // Ignore swipe-to-navigation in PiP window.
-  if (mIsPIPWindow) {
+  if (mPiPType != PiPType::NoPiP) {
     return event;
   }
 
@@ -2357,7 +2357,7 @@ WidgetWheelEvent nsIWidget::MayStartSwipeForAPZ(
 
 bool nsIWidget::MayStartSwipeForNonAPZ(const PanGestureInput& aPanInput) {
   // Ignore swipe-to-navigation in PiP window.
-  if (mIsPIPWindow) {
+  if (mPiPType != PiPType::NoPiP) {
     return false;
   }
 
