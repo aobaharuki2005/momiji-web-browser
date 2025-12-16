@@ -3093,25 +3093,25 @@ TEST(TestAudioTrackGraph, PlatformProcessingNonNativeToNativeSwitch)
     // On non-native device's start.
     EXPECT_CALL(*secondListener,
                 NotifySetRequestedInputProcessingParams(
-                    graph, 1, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION));
+                    graph, 3, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION));
     EXPECT_CALL(*secondListener, NotifySetRequestedInputProcessingParamsResult(
-                                     graph, 1, Eq(std::ref(echoResult))))
+                                     graph, 3, Eq(std::ref(echoResult))))
         .WillOnce([&] { ++numProcessingParamsResults; });
     // After switch to native device for second device.
     EXPECT_CALL(*firstListener, Disconnect);
     EXPECT_CALL(*secondListener, Disconnect);
     EXPECT_CALL(*secondListener,
                 NotifySetRequestedInputProcessingParams(
-                    graph, 1, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION));
+                    graph, 4, CUBEB_INPUT_PROCESSING_PARAM_ECHO_CANCELLATION));
     EXPECT_CALL(*secondListener, NotifySetRequestedInputProcessingParamsResult(
-                                     graph, 1, Eq(std::ref(echoResult))))
+                                     graph, 4, Eq(std::ref(echoResult))))
         .WillOnce([&] { ++numProcessingParamsResults; });
     // After param update.
     EXPECT_CALL(*secondListener,
                 NotifySetRequestedInputProcessingParams(
-                    graph, 2, CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION));
+                    graph, 5, CUBEB_INPUT_PROCESSING_PARAM_NOISE_SUPPRESSION));
     EXPECT_CALL(*secondListener, NotifySetRequestedInputProcessingParamsResult(
-                                     graph, 2, Eq(std::ref(noiseResult))))
+                                     graph, 5, Eq(std::ref(noiseResult))))
         .WillOnce([&] { ++numProcessingParamsResults; });
     EXPECT_CALL(*secondListener, Disconnect);
   }
