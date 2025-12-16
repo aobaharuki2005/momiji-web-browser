@@ -3207,6 +3207,9 @@
       if (this.isTabGroupLabel(element)) {
         element = element.group.tabs[0];
       }
+      if (this.isSplitViewWrapper(element)) {
+        element = element.tabs[0];
+      }
       return element._tPos;
     }
 
@@ -3605,6 +3608,8 @@
 
       let oldSelectedTab = selectTab && group.ownerGlobal.gBrowser.selectedTab;
       let newTabs = [];
+      let adoptedTab;
+      let splitview;
 
       // bug1969925 adopting a tab group will cause the window to close if it
       // is the only thing on the tab strip
@@ -3613,24 +3618,38 @@
         t => t.group == group
       );
 
-      for (let tab of group.tabs) {
-        if (noOtherTabsInWindow) {
+      // We dispatch this event in a separate for loop because the tab extension API
+      // expects event.detail to be a tab.
+      if (noOtherTabsInWindow) {
+        for (let element of group.tabs) {
           group.dispatchEvent(
             new CustomEvent("TabUngrouped", {
               bubbles: true,
-              detail: tab,
+              detail: element,
             })
           );
         }
-        let adoptedTab = this.adoptTab(tab, {
-          elementIndex,
-          tabIndex,
-          selectTab: tab === oldSelectedTab,
-        });
-        newTabs.push(adoptedTab);
-        // Put next tab after current one.
-        elementIndex = undefined;
-        tabIndex = adoptedTab._tPos + 1;
+      }
+
+      for (let element of group.tabsAndSplitViews) {
+        if (element.tagName == "tab-split-view-wrapper") {
+          splitview = this.adoptSplitView(element, {
+            elementIndex,
+            tabIndex,
+          });
+          newTabs.push(splitview);
+          tabIndex = splitview.tabs[0]._tPos + splitview.tabs.length;
+        } else {
+          adoptedTab = this.adoptTab(element, {
+            elementIndex,
+            tabIndex,
+            selectTab: element === oldSelectedTab,
+          });
+          newTabs.push(adoptedTab);
+          // Put next tab after current one.
+          elementIndex = undefined;
+          tabIndex = adoptedTab._tPos + 1;
+        }
       }
 
       return this.addTabGroup(newTabs, {
@@ -3639,6 +3658,39 @@
         color: group.color,
         insertBefore: newTabs[0],
         isAdoptingGroup: true,
+      });
+    }
+
+    /**
+     * @param {MozSplitViewWrapper} container
+     * @param {object} [options]
+     * @param {number} [options.elementIndex]
+     * @param {number} [options.tabIndex]
+     * @param {boolean} [options.selectTab]
+     * @returns {MozSplitViewWrapper}
+     */
+    adoptSplitView(container, { elementIndex, tabIndex } = {}) {
+      if (container.ownerDocument == document) {
+        return container;
+      }
+
+      let newTabs = [];
+
+      if (!tabIndex) {
+        tabIndex = this.#elementIndexToTabIndex(elementIndex);
+      }
+
+      for (let tab of container.tabs) {
+        let adoptedTab = this.adoptTab(tab, {
+          tabIndex,
+        });
+        newTabs.push(adoptedTab);
+        tabIndex = adoptedTab._tPos + 1;
+      }
+
+      return this.addTabSplitView(newTabs, {
+        id: container.splitViewId,
+        insertBefore: newTabs[0],
       });
     }
 
@@ -6817,6 +6869,9 @@
       if (tab.group) {
         state.tabGroupId = tab.group.id;
       }
+      if (tab.splitview) {
+        state.splitViewId = tab.splitview.splitViewId;
+      }
       return state;
     }
 
@@ -6862,9 +6917,7 @@
       let tabs;
       if (this.isTab(element)) {
         tabs = [element];
-      } else if (this.isTabGroup(element)) {
-        tabs = element.tabs;
-      } else if (this.isSplitViewWrapper(element)) {
+      } else if (this.isTabGroup(element) || this.isSplitViewWrapper(element)) {
         tabs = element.tabs;
       } else {
         throw new Error(
