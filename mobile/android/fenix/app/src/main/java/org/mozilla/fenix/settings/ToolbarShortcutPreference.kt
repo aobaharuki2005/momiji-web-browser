@@ -5,23 +5,17 @@
 package org.mozilla.fenix.settings
 
 import android.content.Context
-import android.content.res.ColorStateList
 import android.util.AttributeSet
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RadioButton
-import android.widget.TextView
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
-import androidx.core.widget.ImageViewCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import com.google.android.material.color.MaterialColors
 import org.mozilla.fenix.GleanMetrics.CustomizationSettings
 import org.mozilla.fenix.R
+import org.mozilla.fenix.utils.view.addToRadioGroup
 import com.google.android.material.R as materialR
 
 /**
@@ -57,105 +51,53 @@ internal abstract class ToolbarShortcutPreference @JvmOverloads constructor(
         super.onBindViewHolder(holder)
 
         val selectedIcon = getSelectedIconImageView(holder)
-        val selectedContainer = holder.findViewById(R.id.selected_container) as LinearLayout
-        val optionsContainer = holder.findViewById(R.id.options_container) as LinearLayout
-        val separator = holder.findViewById(R.id.separator) as View
 
         colorTertiary = holder.itemView.getMaterialColor(materialR.attr.colorTertiary)
         colorOnSurface = holder.itemView.getMaterialColor(materialR.attr.colorOnSurface)
         colorOnSurfaceVariant = holder.itemView.getMaterialColor(materialR.attr.colorOnSurfaceVariant)
 
-        val selectedKey = readSelectedKey()
-        val selected = options.firstOrNull {
-            it.key == ShortcutType.fromValue(selectedKey)
-        } ?: options.first()
-        selectedIcon.setImageResource(selected.icon)
-        selectedContainer.removeAllViews()
-        selectedContainer.addView(
-            makeRow(
-                parent = selectedContainer,
-                option = selected,
-                isChecked = true,
-                isEnabled = false,
-                onClick = {},
-            ),
-        )
-
-        val remaining = options.filter { it.key != selected.key }.distinctBy { it.key }
-        optionsContainer.removeAllViews()
-        remaining.forEach { opt ->
-            optionsContainer.addView(
-                makeRow(
-                    parent = optionsContainer,
-                    option = opt,
-                    isChecked = false,
-                    isEnabled = true,
-                ) { newlySelected ->
-                    CustomizationSettings.toolbarShortcutSelection.record(
-                        CustomizationSettings.ToolbarShortcutSelectionExtra(
-                            toolbarType = getToolbarType(),
-                            item = newlySelected.key.value,
-                        ),
-                    )
-                    writeSelectedKey(newlySelected.key.value)
-                    selectedIcon.setImageResource(newlySelected.icon)
-                    notifyChanged()
-                },
-            )
-        }
-
-        separator.visibility = if (remaining.isEmpty()) View.GONE else View.VISIBLE
+        selectedIcon.setImageResource(getSelectedOption().icon)
     }
 
-    private fun makeRow(
-        parent: ViewGroup,
-        option: ShortcutOption,
-        isChecked: Boolean,
-        isEnabled: Boolean,
-        onClick: (ShortcutOption) -> Unit,
-    ): View {
-        val row = LayoutInflater.from(context)
-            .inflate(R.layout.toolbar_shortcut_row, parent, false) as LinearLayout
+    private fun getSelectedOption(): ShortcutOption {
+        val selectedKey = readSelectedKey()
+        return options.firstOrNull {
+            it.key == ShortcutType.fromValue(selectedKey)
+        } ?: options.first()
+    }
 
-        val radio = row.findViewById<RadioButton>(R.id.row_radio)
-        val icon = row.findViewById<ImageView>(R.id.row_icon)
-        val label = row.findViewById<TextView>(R.id.row_label)
+    @Suppress("SpreadOperator")
+    fun getShortcutOptions(): List<RadioButtonPreference> {
+        val shortcutOptions = options
+            .distinctBy { it.key }
+            .map { newOption ->
+                createShortcutRadioButton(
+                    newOption = newOption,
+                    selectedOption = getSelectedOption(),
+                )
+            }
 
-        icon.setImageResource(option.icon)
-        label.setText(option.label)
+        addToRadioGroup(*shortcutOptions.toTypedArray())
+        return shortcutOptions
+    }
 
-        radio?.setStartCheckedIndicator()
-        radio.isChecked = isChecked
-        radio.isEnabled = true
-
-        label.setTextColor(
-            if (isChecked) colorTertiary else colorOnSurface,
-        )
-
-        ImageViewCompat.setImageTintList(
-            icon,
-            ColorStateList.valueOf(
-                if (isChecked) colorTertiary else colorOnSurface,
-            ),
-        )
-
-        radio.buttonTintList = ColorStateList(
-            arrayOf(
-                intArrayOf(android.R.attr.state_checked),
-                intArrayOf(-android.R.attr.state_checked),
-            ),
-            intArrayOf(colorTertiary, colorOnSurfaceVariant),
-        )
-
-        row.isEnabled = isEnabled
-        row.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
-
-        if (isEnabled) {
-            val clicker = View.OnClickListener { onClick(option) }
-            row.setOnClickListener(clicker)
+    private fun createShortcutRadioButton(
+        newOption: ShortcutOption,
+        selectedOption: ShortcutOption,
+    ): RadioButtonPreference = RadioButtonPreference(context).apply {
+        key = newOption.key.value
+        title = context.getString(newOption.label)
+        setCheckedWithoutClickListener(newOption == selectedOption)
+        onClickListener {
+            CustomizationSettings.toolbarShortcutSelection.record(
+                CustomizationSettings.ToolbarShortcutSelectionExtra(
+                    toolbarType = getToolbarType(),
+                    item = newOption.key.value,
+                ),
+            )
+            writeSelectedKey(newOption.key.value)
+            notifyChanged()
         }
-
-        return row
     }
 
     private fun View.getMaterialColor(
