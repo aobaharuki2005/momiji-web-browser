@@ -997,6 +997,13 @@ containers-remove-button =
 sync-group-label =
     .label = Sync
 
+account-group-label =
+    .label = { -vendor-short-name } account
+
+account-placeholder =
+    .label = You’re not signed in
+    .description = Sign in to keep your data private, encrypted, and synced across devices.
+
 ## Firefox account - Signed out. Note that "Sync" and "Firefox account" are now
 ## more discrete ("signed in" no longer means "and sync is connected").
 
@@ -1009,6 +1016,10 @@ sync-signedout-account-signin3 =
 
 sync-signedout-account-signin-4 =
     .label = Sign in to your account to start syncing
+    .accesskey = i
+
+sync-signedout-account-short =
+    .label = Sign in
     .accesskey = i
 
 # This message contains two links and two icon images.
@@ -1037,14 +1048,39 @@ sync-sign-out =
     .label = Sign Out…
     .accesskey = g
 
+sync-sign-out2 =
+    .label = Sign out
+    .accesskey = g
+
 sync-manage-account = Manage account
+    .accesskey = o
+
+sync-manage-account2 =
+    .label = Manage account
     .accesskey = o
 
 ## Variables
 ## $email (string) - Email used for Firefox account
+## $name (string) - Name used for Firefox account
+
+sync-account-signed-in =
+    .label = { $email }
+
+sync-account-signed-in-display-name =
+    .label = { $name }
+    .description = { $email }
 
 sync-signedin-unverified = { $email } is not verified.
+
+sync-signedin-unverified2 =
+    .label = { $email } isn’t confirmed yet
+    .description = Check your inbox to confirm your account and make it official.
+
 sync-signedin-login-failure = Please sign in to reconnect { $email }
+
+sync-signedin-login-failure2 =
+    .label = You’re signed out of { $email }
+    .description = Sign back in to reconnect and start syncing your data.
 
 ##
 

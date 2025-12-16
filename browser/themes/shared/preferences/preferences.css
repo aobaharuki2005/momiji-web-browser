@@ -792,6 +792,16 @@ button#noFxaSignIn {
   margin-inline: 4px 8px;
 }
 
+#fxaLoginVerified {
+  --box-icon-size: calc(var(--icon-size-xlarge) * 2);
+  --box-icon-border-radius: var(--border-radius-circle);
+
+  &[description] {
+    --box-label-alignment: end;
+    --box-description-alignment: start;
+  }
+}
+
 #syncStatusContainer {
   margin-top: 32px;
 }

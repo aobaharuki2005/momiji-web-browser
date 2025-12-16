@@ -225,9 +225,37 @@ var SyncHelpers = new (class SyncHelpers {
     );
     this.replaceTabWithUrl(url);
   }
+
+  /**
+   * Attempts to take the user through the sign in flow by opening the web content
+   * with the given entrypoint as a query parameter
+   *
+   * @param {string} entrypoint
+   *        An string appended to the query parameters, used in telemetry to differentiate
+   *        different entrypoints to accounts
+   */
+  async reSignIn(entrypoint) {
+    const url = await FxAccounts.config.promiseConnectAccountURI(entrypoint);
+    this.replaceTabWithUrl(url);
+  }
+
+  async verifyFirefoxAccount() {
+    return this.reSignIn("preferences-reverify");
+  }
+
+  /**
+   * Disconnect the account, including everything linked.
+   *
+   * @param {boolean} confirm
+   *        Whether to show a confirmation dialog before disconnecting
+   */
+  unlinkFirefoxAccount(confirm) {
+    window.browsingContext.topChromeWindow.gSync.disconnect({
+      confirm,
+    });
+  }
 })();
 
-// Sync section
 Preferences.addSetting({
   id: "uiStateUpdate",
   setup(emitChange) {
@@ -236,7 +264,171 @@ Preferences.addSetting({
   },
 });
 
-// Sync section - no Firefox account
+// Mozilla accounts section
+
+// Logged out of Mozilla account
+Preferences.addSetting({
+  id: "noFxaAccountGroup",
+  deps: ["uiStateUpdate"],
+  visible() {
+    return SyncHelpers.uiStateStatus == UIState.STATUS_NOT_CONFIGURED;
+  },
+});
+Preferences.addSetting({
+  id: "noFxaAccount",
+});
+Preferences.addSetting({
+  id: "noFxaSignIn",
+  onUserClick: () => {
+    SyncHelpers.signIn();
+  },
+});
+
+// Logged in and verified and all is good
+Preferences.addSetting({
+  id: "fxaSignedInGroup",
+  deps: ["uiStateUpdate"],
+  visible() {
+    return SyncHelpers.uiStateStatus == UIState.STATUS_SIGNED_IN;
+  },
+});
+Preferences.addSetting({
+  id: "fxaLoginVerified",
+  deps: ["uiStateUpdate"],
+  _failedAvatarURLs: new Set(),
+  getControlConfig(config, _, setting) {
+    let state = SyncHelpers.uiState;
+
+    if (state.displayName) {
+      config.l10nId = "sync-account-signed-in-display-name";
+      config.l10nArgs = {
+        name: state.displayName,
+        email: state.email || "",
+      };
+    } else {
+      config.l10nId = "sync-account-signed-in";
+      config.l10nArgs = {
+        email: state.email || "",
+      };
+    }
+
+    // Reset the image to default avatar if we encounter an error.
+    if (this._failedAvatarURLs.has(state.avatarURL)) {
+      config.iconSrc = "chrome://browser/skin/fxa/avatar-color.svg";
+      return config;
+    }
+
+    if (state.avatarURL && !state.avatarIsDefault) {
+      config.iconSrc = state.avatarURL;
+      let img = new Image();
+      img.onerror = () => {
+        this._failedAvatarURLs.add(state.avatarURL);
+        setting.onChange();
+      };
+      img.src = state.avatarURL;
+    }
+    return config;
+  },
+});
+Preferences.addSetting(
+  class extends Preferences.AsyncSetting {
+    static id = "verifiedManage";
+
+    setup() {
+      Weave.Svc.Obs.add(UIState.ON_UPDATE, this.emitChange);
+      return () => Weave.Svc.Obs.remove(UIState.ON_UPDATE, this.emitChange);
+    }
+
+    // The "manage account" link embeds the uid, so we need to update this
+    // if the account state changes.
+    async getControlConfig() {
+      let href = await FxAccounts.config.promiseManageURI(
+        SyncHelpers.getEntryPoint()
+      );
+      return {
+        controlAttrs: {
+          href: href ?? "https://accounts.firefox.com/settings",
+        },
+      };
+    }
+  }
+);
+
+Preferences.addSetting({
+  id: "fxaUnlinkButton",
+  onUserClick: () => {
+    SyncHelpers.unlinkFirefoxAccount(true);
+  },
+});
+
+// Logged in to an unverified account
+Preferences.addSetting({
+  id: "fxaUnverifiedGroup",
+  deps: ["uiStateUpdate"],
+  visible() {
+    return SyncHelpers.uiStateStatus == UIState.STATUS_NOT_VERIFIED;
+  },
+});
+Preferences.addSetting({
+  id: "fxaLoginUnverified",
+  deps: ["uiStateUpdate"],
+  getControlConfig(config) {
+    let state = SyncHelpers.uiState;
+    config.l10nArgs = {
+      email: state.email || "",
+    };
+    return config;
+  },
+});
+Preferences.addSetting({
+  id: "verifyFxaAccount",
+  onUserClick: () => {
+    SyncHelpers.verifyFirefoxAccount();
+  },
+});
+Preferences.addSetting({
+  id: "unverifiedUnlinkFxaAccount",
+  onUserClick: () => {
+    /* no warning as account can't have previously synced */
+    SyncHelpers.unlinkFirefoxAccount(false);
+  },
+});
+
+// Logged in locally but server rejected credentials
+Preferences.addSetting({
+  id: "fxaLoginRejectedGroup",
+  deps: ["uiStateUpdate"],
+  visible() {
+    return SyncHelpers.uiStateStatus == UIState.STATUS_LOGIN_FAILED;
+  },
+});
+Preferences.addSetting({
+  id: "fxaLoginRejected",
+  deps: ["uiStateUpdate"],
+  getControlConfig(config) {
+    let state = SyncHelpers.uiState;
+    config.l10nArgs = {
+      email: state.email || "",
+    };
+    return config;
+  },
+});
+Preferences.addSetting({
+  id: "rejectReSignIn",
+  onUserClick: () => {
+    SyncHelpers.reSignIn(SyncHelpers.getEntryPoint());
+  },
+});
+Preferences.addSetting({
+  id: "rejectUnlinkFxaAccount",
+  onUserClick: () => {
+    SyncHelpers.unlinkFirefoxAccount(true);
+  },
+});
+
+//Sync section
+
+//Sync section - no Firefox account
 Preferences.addSetting({
   id: "syncNoFxaSignIn",
   deps: ["uiStateUpdate"],
@@ -505,6 +697,7 @@ var gSyncPane = {
 
   _init() {
     initSettingGroup("sync");
+    initSettingGroup("account");
 
     Weave.Svc.Obs.add(UIState.ON_UPDATE, this.updateWeavePrefs, this);
 
@@ -631,22 +824,20 @@ var gSyncPane = {
       return false;
     });
     setEventListener("fxaUnlinkButton", "command", function () {
-      gSyncPane.unlinkFirefoxAccount(true);
+      SyncHelpers.unlinkFirefoxAccount(true);
     });
-    setEventListener(
-      "verifyFxaAccount",
-      "command",
-      gSyncPane.verifyFirefoxAccount
+    setEventListener("verifyFxaAccount", "command", () =>
+      SyncHelpers.verifyFirefoxAccount()
     );
     setEventListener("unverifiedUnlinkFxaAccount", "command", function () {
       /* no warning as account can't have previously synced */
-      gSyncPane.unlinkFirefoxAccount(false);
+      SyncHelpers.unlinkFirefoxAccount(false);
     });
     setEventListener("rejectReSignIn", "command", function () {
-      gSyncPane.reSignIn(SyncHelpers.getEntryPoint());
+      SyncHelpers.reSignIn(SyncHelpers.getEntryPoint());
     });
     setEventListener("rejectUnlinkFxaAccount", "command", function () {
-      gSyncPane.unlinkFirefoxAccount(true);
+      SyncHelpers.unlinkFirefoxAccount(true);
     });
     setEventListener("fxaSyncComputerName", "keypress", function (e) {
       if (e.keyCode == KeyEvent.DOM_VK_RETURN) {
@@ -814,16 +1005,16 @@ var gSyncPane = {
     win.switchToTabHavingURI(url, true, options);
   },
 
-  /**
-   * Attempts to take the user through the sign in flow by opening the web content
-   * with the given entrypoint as a query parameter
-   *
-   * @param entrypoint: An string appended to the query parameters, used in telemtry to differentiate
-   * different entrypoints to accounts
-   */
-  async reSignIn(entrypoint) {
-    const url = await FxAccounts.config.promiseConnectAccountURI(entrypoint);
-    SyncHelpers.replaceTabWithUrl(url);
+  // Replace the current tab with the specified URL.
+  replaceTabWithUrl(url) {
+    // Get the <browser> element hosting us.
+    let browser = window.docShell.chromeEventHandler;
+    // And tell it to load our URL.
+    browser.loadURI(Services.io.newURI(url), {
+      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
+        {}
+      ),
+    });
   },
 
   clickOrSpaceOrEnterPressed(event) {
@@ -851,17 +1042,6 @@ var gSyncPane = {
       // Prevent page from scrolling on the space key.
       event.preventDefault();
     }
-  },
-
-  async verifyFirefoxAccount() {
-    return this.reSignIn("preferences-reverify");
-  },
-
-  // Disconnect the account, including everything linked.
-  unlinkFirefoxAccount(confirm) {
-    window.browsingContext.topChromeWindow.gSync.disconnect({
-      confirm,
-    });
   },
 
   pairAnotherDevice() {
