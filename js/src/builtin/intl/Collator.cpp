@@ -471,7 +471,11 @@ bool js::intl_isUpperCaseFirst(JSContext* cx, unsigned argc, Value* vp) {
 
   SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
 
-  RootedString locale(cx, args[0].toString());
+  Rooted<JSLinearString*> locale(cx, args[0].toString()->ensureLinear(cx));
+  if (!locale) {
+    return false;
+  }
+
   bool isUpperFirst;
   if (!sharedIntlData.isUpperCaseFirst(cx, locale, &isUpperFirst)) {
     return false;
@@ -488,7 +492,11 @@ bool js::intl_isIgnorePunctuation(JSContext* cx, unsigned argc, Value* vp) {
 
   SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
 
-  RootedString locale(cx, args[0].toString());
+  Rooted<JSLinearString*> locale(cx, args[0].toString()->ensureLinear(cx));
+  if (!locale) {
+    return false;
+  }
+
   bool isIgnorePunctuation;
   if (!sharedIntlData.isIgnorePunctuation(cx, locale, &isIgnorePunctuation)) {
     return false;

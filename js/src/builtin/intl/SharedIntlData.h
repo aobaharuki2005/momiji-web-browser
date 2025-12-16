@@ -361,7 +361,7 @@ class SharedIntlData {
    * Sets |isUpperFirst| to true if |locale| sorts upper-case characters
    * before lower-case characters.
    */
-  bool isUpperCaseFirst(JSContext* cx, JS::Handle<JSString*> locale,
+  bool isUpperCaseFirst(JSContext* cx, JS::Handle<JSLinearString*> locale,
                         bool* isUpperFirst);
 
  private:
@@ -380,7 +380,7 @@ class SharedIntlData {
   /**
    * Sets |ignorePunctuation| to true if |locale| ignores punctuation.
    */
-  bool isIgnorePunctuation(JSContext* cx, JS::Handle<JSString*> locale,
+  bool isIgnorePunctuation(JSContext* cx, JS::Handle<JSLinearString*> locale,
                            bool* ignorePunctuation);
 
  private:
