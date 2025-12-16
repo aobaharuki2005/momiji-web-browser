@@ -75,9 +75,6 @@
       if (!tab) {
         return;
       }
-      if (tab.splitview) {
-        tab = tab.splitview;
-      }
 
       this._tabbrowserTabs.previewPanel?.deactivate(null, { force: true });
       this.startTabDrag(event, tab);
@@ -382,7 +379,6 @@
           !shouldCreateGroupOnDrop &&
           !shouldDropIntoCollapsedTabGroup &&
           !isTabGroupLabel(draggedTab) &&
-          !isSplitViewWrapper(draggedTab) &&
           !shouldPin &&
           !shouldUnpin;
         if (this._isContainerVerticalPinnedGrid(draggedTab)) {
@@ -503,10 +499,6 @@
         }
       } else if (isTabGroupLabel(draggedTab)) {
         gBrowser.adoptTabGroup(draggedTab.group, {
-          elementIndex: this._getDropIndex(event),
-        });
-      } else if (isSplitViewWrapper(draggedTab)) {
-        gBrowser.adoptSplitView(draggedTab, {
           elementIndex: this._getDropIndex(event),
         });
       } else if (draggedTab) {
@@ -819,7 +811,7 @@
     }
 
     /**
-     * Returns the tab, tab group label or split view wrapper where an event happened,
+     * Returns the tab or tab group label where an event happened, or null if
      * it didn't occur on a tab or tab group label.
      *
      * @param {Event} event
@@ -833,11 +825,7 @@
     _getDragTarget(event, { ignoreSides = false } = {}) {
       let { target } = event;
       while (target) {
-        if (
-          isTab(target) ||
-          isTabGroupLabel(target) ||
-          isSplitViewWrapper(target)
-        ) {
+        if (isTab(target) || isTabGroupLabel(target)) {
           break;
         }
         target = target.parentNode;
@@ -996,7 +984,7 @@
       }
 
       let dataTransferOrderedTabs;
-      if (fromTabList || isTabGroupLabel(tab) || isSplitViewWrapper(tab)) {
+      if (fromTabList || isTabGroupLabel(tab)) {
         // Dragging a group label or an item in the all tabs menu doesn't
         // change the currently selected tabs, and it's not possible to select
         // multiple tabs from the list, thus handle only the dragged tab in
@@ -2536,9 +2524,7 @@
       if (isMovingTab) {
         let sourceNode = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
         if (
-          (isTab(sourceNode) ||
-            isTabGroupLabel(sourceNode) ||
-            isSplitViewWrapper(sourceNode)) &&
+          (isTab(sourceNode) || isTabGroupLabel(sourceNode)) &&
           sourceNode.ownerGlobal.isChromeWindow &&
           sourceNode.ownerDocument.documentElement.getAttribute("windowtype") ==
             "navigator:browser"

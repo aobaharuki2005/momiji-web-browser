@@ -188,22 +188,6 @@
   position: relative;
 }
 
-.tabbrowser-tab[dragtarget],
-tab-split-view-wrapper[dragtarget] {
-  /* Margin needs to be at least 4px to not clip multiselect stacking effect */
-  overflow-clip-margin: 4px;
-  z-index: 3 !important;
-  position: absolute !important;
-  pointer-events: none; /* avoid blocking dragover events on scroll buttons */
-
-  /* stylelint-disable-next-line media-query-no-invalid */
-  @media -moz-pref("browser.tabs.dragDrop.multiselectStacking") {
-    &[multiselected]:not([small-stack], [big-stack]) {
-      visibility: hidden;
-    }
-  }
-}
-
 .tabbrowser-tab {
   --tab-label-mask-size: 1em;
 
@@ -245,6 +229,21 @@ tab-split-view-wrapper[dragtarget] {
       }
       &[tab-note]:is([muted], [soundplaying], [activemedia-blocked]) {
         --tab-min-width-extra-icons: 48px;
+      }
+    }
+  }
+
+  &[dragtarget] {
+    /* Margin needs to be at least 4px to not clip multiselect stacking effect */
+    overflow-clip-margin: 4px;
+    z-index: 3 !important;
+    position: absolute !important;
+    pointer-events: none; /* avoid blocking dragover events on scroll buttons */
+
+    /* stylelint-disable-next-line media-query-no-invalid */
+    @media -moz-pref("browser.tabs.dragDrop.multiselectStacking") {
+      &[multiselected]:not([small-stack], [big-stack]) {
+        visibility: hidden;
       }
     }
   }
@@ -1324,7 +1323,6 @@ tab-group > tab-split-view-wrapper {
   margin-inline: var(--space-small);
   padding: var(--space-xsmall);
   border-radius: var(--tab-border-radius);
-  position: relative; /* prevents splitview wrappers from shifting during other drag events*/
 
   &[hasactivetab] {
     background-color: var(--tab-hover-background-color);

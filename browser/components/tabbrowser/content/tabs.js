@@ -1003,13 +1003,14 @@
           child.labelElement.elementIndex = elementIndex++;
           dragAndDropElements.push(child.labelElement);
 
-          let tabsAndSplitViews = child.tabsAndSplitViews.filter(
-            node => node.visible
+          let visibleChildren = Array.from(child.children).filter(
+            ele => ele.visible || ele.tagName == "tab-split-view-wrapper"
           );
-          tabsAndSplitViews.forEach(ele => {
-            ele.elementIndex = elementIndex++;
+
+          visibleChildren.forEach(tab => {
+            tab.elementIndex = elementIndex++;
           });
-          dragAndDropElements.push(...tabsAndSplitViews);
+          dragAndDropElements.push(...visibleChildren);
         } else {
           child.elementIndex = elementIndex++;
           dragAndDropElements.push(child);

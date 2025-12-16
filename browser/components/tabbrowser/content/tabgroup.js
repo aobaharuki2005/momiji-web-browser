@@ -476,15 +476,6 @@
     }
 
     /**
-     * @returns {MozTabbrowserTab|MozTabSplitViewWrapper[]}
-     */
-    get tabsAndSplitViews() {
-      return Array.from(this.children).filter(
-        node => node.matches("tab") || node.tagName == "tab-split-view-wrapper"
-      );
-    }
-
-    /**
      * @param {MozTabbrowserTab} tab
      * @returns {boolean}
      */

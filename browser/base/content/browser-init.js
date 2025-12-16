@@ -301,13 +301,6 @@ var gBrowserInit = {
           gBrowser.adoptTabGroup(tabToAdopt, { tabIndex: 0, selectTab: true });
           gBrowser.removeTab(tempBlankTab);
           Glean.tabgroup.groupInteractions.move_window.add(1);
-        } else if (gBrowser.isSplitViewWrapper(tabToAdopt)) {
-          let tempBlankTab = gBrowser.selectedTab;
-          gBrowser.adoptSplitView(tabToAdopt, {
-            elementIndex: 0,
-            selectTab: true,
-          });
-          gBrowser.removeTab(tempBlankTab);
         } else {
           if (tabToAdopt.group) {
             Glean.tabgroup.tabInteractions.remove_new_window.add();
