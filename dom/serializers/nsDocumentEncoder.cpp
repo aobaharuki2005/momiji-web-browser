@@ -1627,9 +1627,9 @@ class nsHTMLCopyEncoder final : public nsDocumentEncoder {
   nsresult PromoteRange(nsRange* inRange);
   nsresult PromoteAncestorChain(nsCOMPtr<nsINode>* ioNode,
                                 int32_t* ioStartOffset, int32_t* ioEndOffset);
-  nsresult GetPromotedPoint(Endpoint aWhere, nsINode* aNode, int32_t aOffset,
-                            nsCOMPtr<nsINode>* outNode, int32_t* outOffset,
-                            nsINode* aCommon);
+  nsresult GetPromotedPoint(const Endpoint aWhere, nsINode* const aNode,
+                            const int32_t aOffset, nsCOMPtr<nsINode>* aOutNode,
+                            int32_t* aOutOffset, nsINode* const aCommon);
   static nsCOMPtr<nsINode> GetChildAt(nsINode* aParent, int32_t aOffset);
   static bool IsMozBR(Element* aNode);
   nsresult GetNodeLocation(nsINode* inChild, nsCOMPtr<nsINode>* outParent,
@@ -1965,52 +1965,74 @@ nsresult nsHTMLCopyEncoder::PromoteAncestorChain(nsCOMPtr<nsINode>* ioNode,
   return rv;
 }
 
-nsresult nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsINode* aNode,
-                                             int32_t aOffset,
-                                             nsCOMPtr<nsINode>* outNode,
-                                             int32_t* outOffset,
-                                             nsINode* common) {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsINode> node = aNode;
-  nsCOMPtr<nsINode> parent = aNode;
-  int32_t offset = aOffset;
-  bool bResetPromotion = false;
+nsresult nsHTMLCopyEncoder::GetPromotedPoint(
+    const Endpoint aWhere, nsINode* const aNode, const int32_t aOffset,
+    nsCOMPtr<nsINode>* aOutNode, int32_t* aOutOffset, nsINode* const aCommon) {
+  MOZ_ASSERT(aOutNode);
+  MOZ_ASSERT(aOutOffset);
 
   // default values
-  *outNode = node;
-  *outOffset = offset;
+  *aOutNode = aNode;
+  *aOutOffset = aOffset;
 
-  if (common == node) return NS_OK;
+  if (aCommon == aNode) {
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  // XXX: These don’t seem to need to be strong pointers.
+  nsCOMPtr<nsINode> node;
+  nsCOMPtr<nsINode> parent;
+  int32_t offsetInParent = -1;
+  bool bResetPromotion = false;
 
   if (aWhere == kStart) {
     // some special casing for text nodes
     if (auto nodeAsText = aNode->GetAsText()) {
       // if not at beginning of text node, we are done
-      if (offset > 0) {
+      if (aOffset > 0) {
         // unless everything before us in just whitespace.  NOTE: we need a more
         // general solution that truly detects all cases of non-significant
         // whitesace with no false alarms.
-        if (!nodeAsText->TextStartsWithOnlyWhitespace(offset)) {
+        if (!nodeAsText->TextStartsWithOnlyWhitespace(aOffset)) {
           return NS_OK;
         }
         bResetPromotion = true;
       }
       // else
-      rv = GetNodeLocation(aNode, address_of(parent), &offset);
+      rv = GetNodeLocation(aNode, address_of(parent), &offsetInParent);
       NS_ENSURE_SUCCESS(rv, rv);
+      node = aNode;
     } else {
-      node = GetChildAt(parent, offset);
+      node = GetChildAt(aNode, aOffset);
+      if (node) {
+        parent = aNode;
+        offsetInParent = aOffset;
+      } else {
+        // XXX: Should we only start from aNode when aOffset is 0 and aNode has
+        // no children? Currently we start from aNode even when aOffset is an
+        // invalid offset, which seems wrong.
+        node = aNode;
+      }
     }
-    if (!node) node = parent;
+    MOZ_ASSERT(node);
 
     // finding the real start for this point.  look up the tree for as long as
     // we are the first node in the container, and as long as we haven't hit the
     // body node.
-    if (!IsRoot(node) && (parent != common)) {
-      rv = GetNodeLocation(node, address_of(parent), &offset);
+    if (!IsRoot(node) && parent != aCommon) {
+      // XXX: We need to do this again because parent and offsetInParent might
+      // not be set up properly above, but this also means it will be performed
+      // twice on text nodes. Perhaps we could move this above and only do it
+      // when needed?
+      rv = GetNodeLocation(node, address_of(parent), &offsetInParent);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (offset == -1) return NS_OK;  // we hit generated content; STOP
-      while ((IsFirstNode(node)) && (!IsRoot(parent)) && (parent != common)) {
+      // we hit generated content; STOP
+      if (offsetInParent == -1) {
+        return NS_OK;
+      }
+
+      while (IsFirstNode(node) && !IsRoot(parent) && parent != aCommon) {
         if (bResetPromotion) {
           nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(parent);
           if (content && content->IsHTMLElement()) {
@@ -2022,22 +2044,23 @@ nsresult nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsINode* aNode,
         }
 
         node = parent;
-        rv = GetNodeLocation(node, address_of(parent), &offset);
+        rv = GetNodeLocation(node, address_of(parent), &offsetInParent);
         NS_ENSURE_SUCCESS(rv, rv);
-        if (offset == -1)  // we hit generated content; STOP
-        {
+        // we hit generated content; STOP
+        if (offsetInParent == -1) {
           // back up a bit
           parent = node;
-          offset = 0;
+          offsetInParent = 0;
           break;
         }
       }
+
       if (bResetPromotion) {
-        *outNode = aNode;
-        *outOffset = aOffset;
+        *aOutNode = aNode;
+        *aOutOffset = aOffset;
       } else {
-        *outNode = parent;
-        *outOffset = offset;
+        *aOutNode = parent;
+        *aOutOffset = offsetInParent;
       }
       return rv;
     }
@@ -2048,31 +2071,49 @@ nsresult nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsINode* aNode,
     if (auto nodeAsText = aNode->GetAsText()) {
       // if not at end of text node, we are done
       uint32_t len = aNode->Length();
-      if (offset < (int32_t)len) {
+      if (aOffset < (int32_t)len) {
         // unless everything after us in just whitespace.  NOTE: we need a more
         // general solution that truly detects all cases of non-significant
         // whitespace with no false alarms.
-        if (!nodeAsText->TextEndsWithOnlyWhitespace(offset)) {
+        if (!nodeAsText->TextEndsWithOnlyWhitespace(aOffset)) {
           return NS_OK;
         }
         bResetPromotion = true;
       }
-      rv = GetNodeLocation(aNode, address_of(parent), &offset);
+      rv = GetNodeLocation(aNode, address_of(parent), &offsetInParent);
       NS_ENSURE_SUCCESS(rv, rv);
+      node = aNode;
     } else {
-      if (offset) offset--;  // we want node _before_ offset
-      node = GetChildAt(parent, offset);
+      // we want node _before_ offset
+      node = GetChildAt(aNode, aOffset ? aOffset - 1 : aOffset);
+      if (node) {
+        parent = aNode;
+        offsetInParent = aOffset;
+      } else {
+        // XXX: Should we only start from aNode when aOffset is 0 and aNode has
+        // no children? Currently we start from aNode even when aOffset is an
+        // invalid offset, which seems wrong.
+        node = aNode;
+      }
     }
-    if (!node) node = parent;
+    MOZ_ASSERT(node);
 
     // finding the real end for this point.  look up the tree for as long as we
     // are the last node in the container, and as long as we haven't hit the
     // body node.
-    if (!IsRoot(node) && (parent != common)) {
-      rv = GetNodeLocation(node, address_of(parent), &offset);
+    if (!IsRoot(node) && parent != aCommon) {
+      // XXX: We need to do this again because parent and offsetInParent might
+      // not be set up properly above, but this also means it will be performed
+      // twice on text nodes. Perhaps we could move this above and only do it
+      // when needed?
+      rv = GetNodeLocation(node, address_of(parent), &offsetInParent);
       NS_ENSURE_SUCCESS(rv, rv);
-      if (offset == -1) return NS_OK;  // we hit generated content; STOP
-      while (IsLastNode(node) && !IsRoot(parent) && parent != common) {
+      // we hit generated content; STOP
+      if (offsetInParent == -1) {
+        return NS_OK;
+      }
+
+      while (IsLastNode(node) && !IsRoot(parent) && parent != aCommon) {
         if (bResetPromotion) {
           nsCOMPtr<nsIContent> content = nsIContent::FromNodeOrNull(parent);
           if (content && content->IsHTMLElement()) {
@@ -2084,30 +2125,31 @@ nsresult nsHTMLCopyEncoder::GetPromotedPoint(Endpoint aWhere, nsINode* aNode,
         }
 
         node = parent;
-        rv = GetNodeLocation(node, address_of(parent), &offset);
+        rv = GetNodeLocation(node, address_of(parent), &offsetInParent);
         NS_ENSURE_SUCCESS(rv, rv);
 
         // When node is the shadow root and parent is the shadow host,
-        // the offset would also be -1, and we'd like to keep going.
+        // the offsetInParent would also be -1, and we'd like to keep going.
         const bool isGeneratedContent =
-            offset == -1 &&
+            offsetInParent == -1 &&
             ShadowDOMSelectionHelpers::GetShadowRoot(
                 parent, GetAllowRangeCrossShadowBoundary(mFlags)) != node;
-        if (isGeneratedContent)  // we hit generated content; STOP
-        {
+        // we hit generated content; STOP
+        if (isGeneratedContent) {
           // back up a bit
           parent = node;
-          offset = 0;
+          offsetInParent = 0;
           break;
         }
       }
+
       if (bResetPromotion) {
-        *outNode = aNode;
-        *outOffset = aOffset;
+        *aOutNode = aNode;
+        *aOutOffset = aOffset;
       } else {
-        *outNode = parent;
-        offset++;  // add one since this in an endpoint - want to be AFTER node.
-        *outOffset = offset;
+        *aOutNode = parent;
+        // add one since this in an endpoint - want to be AFTER node.
+        *aOutOffset = offsetInParent + 1;
       }
       return rv;
     }
