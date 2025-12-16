@@ -728,6 +728,31 @@ class StyleSheetsManager extends EventEmitter {
           line: InspectorUtils.getRelativeRuleLine(rule),
           column: InspectorUtils.getRuleColumn(rule),
         });
+      } else if (className === "CSSCustomMediaRule") {
+        const customMediaQuery = [];
+        if (typeof rule.query === "boolean") {
+          customMediaQuery.push({
+            text: rule.query.toString(),
+            matches: rule.query === true,
+          });
+        } else {
+          // if query is not a boolean, it's a MediaList
+          for (let i = 0, len = rule.query.length; i < len; i++) {
+            customMediaQuery.push({
+              text: rule.query[i],
+              // For now always consider the media query as matching.
+              // This should be changed as part of Bug 2006379
+              matches: true,
+            });
+          }
+        }
+        atRules.push({
+          type: "custom-media",
+          customMediaName: rule.name,
+          customMediaQuery,
+          line: InspectorUtils.getRelativeRuleLine(rule),
+          column: InspectorUtils.getRuleColumn(rule),
+        });
       }
     }
     return {

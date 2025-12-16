@@ -1446,6 +1446,23 @@ export class StyleEditorUI extends EventEmitter {
           type.append(
             this.#panelDoc.createTextNode(`${rule.positionTryName}\u00A0`)
           );
+        } else if (rule.type === "custom-media") {
+          const parts = [];
+          const { customMediaName, customMediaQuery } = rule;
+          for (let i = 0, len = customMediaQuery.length; i < len; i++) {
+            const media = customMediaQuery[i];
+            const queryEl = this.#panelDoc.createElementNS(HTML_NS, "span");
+            queryEl.textContent = media.text;
+            if (!media.matches) {
+              queryEl.classList.add("media-condition-unmatched");
+            }
+            parts.push(queryEl);
+            if (len > 1 && i !== len - 1) {
+              parts.push(", ");
+            }
+          }
+
+          type.append(`${customMediaName} `, ...parts);
         }
 
         const cond = this.#panelDoc.createElementNS(HTML_NS, "span");
