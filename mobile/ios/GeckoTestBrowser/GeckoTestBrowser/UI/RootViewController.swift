@@ -84,7 +84,9 @@ class RootViewController: UIViewController {
 
         geckoview.session = session
 
-        if !homepage.isEmpty {
+        if let testUrl = ProcessInfo.processInfo.environment["MOZ_TEST_URL"] {
+            browse(to: testUrl)
+        } else if !homepage.isEmpty {
             browse(to: homepage)
         }
     }
