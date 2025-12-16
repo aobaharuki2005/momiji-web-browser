@@ -295,7 +295,6 @@ treeherder:
         'samples-crash': 'samples-crash'
         'samples-dataprotect': 'samples-dataprotect'
         'samples-firefox-accounts': 'samples-firefox-accounts'
-        'samples-firefox-relay': 'samples-firefox-relay'
         'samples-glean-library': 'samples-glean-library'
         'samples-glean': 'samples-glean'
         'samples-sync-logins': 'samples-sync-logins'
