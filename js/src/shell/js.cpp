@@ -8944,7 +8944,7 @@ static bool AddMarkObservers(JSContext* cx, unsigned argc, Value* vp) {
       return false;
     }
 
-    if (!CanBeHeldWeakly(value)) {
+    if (!value.isObject() && !value.isSymbol()) {
       JS_ReportErrorASCII(cx, "Can only observe objects and symbols");
       return false;
     }
