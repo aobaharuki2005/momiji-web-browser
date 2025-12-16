@@ -14,8 +14,6 @@ if os.altsep and os.altsep != "/":
 if os.sep != "/":
     sep_b = os.sep.encode("ascii")
 
-norm_needed = True
-
 if os.sep != "/":
     if os.altsep and os.altsep != "/":
 
@@ -54,8 +52,6 @@ else:
 
     def normsep(path):
         return path
-
-        norm_needed = False
 
 
 def evaluate_list_from_string(list_string):
