@@ -17,6 +17,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   FormAutofillNameUtils:
     "resource://gre/modules/shared/FormAutofillNameUtils.sys.mjs",
   LabelUtils: "resource://gre/modules/shared/LabelUtils.sys.mjs",
+  PhoneNumber: "resource://gre/modules/shared/PhoneNumber.sys.mjs",
   clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -949,12 +950,31 @@ export class FormAutofillHandler {
     }
 
     const cache = this.#matchingSelectOption.get(element) || {};
-    const value = profile[fieldName];
+
+    let value;
+    if (fieldName == "tel-country-code") {
+      // Since some telephone country codes are for multiple countries, search
+      // the options by the country name instead.
+      let countries = lazy.PhoneNumber.FindCountriesForCountryCode(
+        profile[fieldName]
+      );
+      if (countries.length > 1 && countries.includes(profile.country)) {
+        value = profile.country;
+      } else {
+        value = countries[0];
+      }
+    } else {
+      value = profile[fieldName];
+    }
 
     let option = cache[value]?.deref();
-
     if (!option || !option.isConnected) {
-      option = FormAutofillUtils.findSelectOption(element, profile, fieldName);
+      option = FormAutofillUtils.findSelectOption(
+        element,
+        profile,
+        fieldName,
+        value
+      );
 
       if (option) {
         cache[value] = new WeakRef(option);
