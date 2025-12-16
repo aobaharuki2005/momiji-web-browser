@@ -36,6 +36,16 @@ class VPNAddonHelperSingleton {
           lazy.IPProtectionService.updateState();
         }
       },
+
+      onUninstalling(addon) {
+        // In some scenarios, the add-on is not fully uninstalled, but it's set
+        // in a pending state. When this happens, `onUninstalled` is not
+        // triggered. Let's use `onUninstalling` instead.
+        if (addon.id === VPN_ADDON_ID) {
+          self.#vpnAddonDetected = false;
+          lazy.IPProtectionService.updateState();
+        }
+      },
     };
     lazy.AddonManager.addAddonListener(this.addonVPNListener);
 
