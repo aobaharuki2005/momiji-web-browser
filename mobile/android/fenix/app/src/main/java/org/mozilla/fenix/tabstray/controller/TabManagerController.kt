@@ -225,6 +225,7 @@ interface TabManagerController : SyncedTabsController, InactiveTabsController, T
  * @param bookmarksStorage Storage layer for retrieving and saving bookmarks.
  * @param closeSyncedTabsUseCases Use cases for closing synced tabs.
  * @param ioDispatcher [CoroutineContext] used for storage operations.
+ * @param mainDispatcher [CoroutineContext] used for UI operations.
  * @param collectionStorage Storage layer for interacting with collections.
  * @param showUndoSnackbarForTab Lambda used to display an undo snackbar when a normal or private tab is closed.
  * @param showUndoSnackbarForInactiveTab Lambda used to display an undo snackbar when an inactive tab is closed.
@@ -250,7 +251,8 @@ class DefaultTabManagerController(
     private val fenixBrowserUseCases: FenixBrowserUseCases,
     private val bookmarksStorage: BookmarksStorage,
     private val closeSyncedTabsUseCases: CloseTabsUseCases,
-    private val ioDispatcher: CoroutineContext,
+    private val ioDispatcher: CoroutineContext = Dispatchers.IO,
+    private val mainDispatcher: CoroutineContext = Dispatchers.Main,
     private val collectionStorage: TabCollectionStorage,
     private val showUndoSnackbarForTab: (Boolean) -> Unit,
     private val showUndoSnackbarForInactiveTab: (Int) -> Unit,
@@ -458,7 +460,7 @@ class DefaultTabManagerController(
                         position = null,
                     )
                 }
-                withContext(Dispatchers.Main) {
+                withContext(mainDispatcher) {
                     showBookmarkSnackbar(tabs.size, parentNode?.title)
                 }
             }.getOrElse {
@@ -553,7 +555,7 @@ class DefaultTabManagerController(
     override fun handleSyncedTabClosed(deviceId: String, tab: Tab) {
         CoroutineScope(ioDispatcher).launch {
             val operation = closeSyncedTabsUseCases.close(deviceId, tab.active().url)
-            withContext(Dispatchers.Main) {
+            withContext(mainDispatcher) {
                 showUndoSnackbarForSyncedTab(operation)
             }
         }
