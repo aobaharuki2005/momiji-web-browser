@@ -5914,6 +5914,10 @@ nsresult XREMain::XRE_mainRun() {
   }
 #endif
 
+  // We're entering the main run loop now, so we don't need to keep holding onto
+  // the `nsICommandLineRunner` anymore.
+  cmdLine = nullptr;
+
   {
     rv = appStartup->Run();
     if (NS_FAILED(rv)) {
