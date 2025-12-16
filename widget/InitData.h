@@ -75,7 +75,9 @@ enum class TransparencyMode : uint8_t {
 enum class PiPType : uint8_t {
   NoPiP,
   // https://w3c.github.io/picture-in-picture
-  MediaPiP
+  MediaPiP,
+  // https://wicg.github.io/document-picture-in-picture
+  DocumentPiP
 };
 
 // Basic struct for widget initialization data.
