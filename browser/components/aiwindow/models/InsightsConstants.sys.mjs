@@ -4,6 +4,7 @@
 
 export const HISTORY = "history";
 export const CONVERSATION = "conversation";
+export const ALL_SOURCES = new Set([HISTORY, CONVERSATION]);
 
 /**
  * Insight categories

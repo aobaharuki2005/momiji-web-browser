@@ -28,6 +28,8 @@ import { renderPrompt } from "./Utils.sys.mjs";
 
 import {
   HISTORY,
+  CONVERSATION,
+  ALL_SOURCES,
   CATEGORIES,
   CATEGORIES_LIST,
   INTENTS,
@@ -193,6 +195,18 @@ export async function renderRecentHistoryForPrompt(
   return finalCSV.trim();
 }
 
+export async function renderRecentConversationForPrompt(conversationMessages) {
+  let finalCSV = "";
+  if (conversationMessages.length) {
+    let conversationRecordsTable = ["Message"];
+    for (const message of conversationMessages) {
+      conversationRecordsTable.push(`${message.content}`);
+    }
+    finalCSV += "# Chat History\n" + conversationRecordsTable.join("\n");
+  }
+  return finalCSV.trim();
+}
+
 /**
  * Builds the initial insights generation prompt, pulling profile information based on given source
  *
@@ -200,6 +214,12 @@ export async function renderRecentHistoryForPrompt(
  * @returns {Promise<string>}   Promise resolving the generated insights generation prompt with profile records injected
  */
 export async function buildInitialInsightsGenerationPrompt(sources) {
+  if (ALL_SOURCES.intersection(new Set(Object.keys(sources))).size === 0) {
+    throw new Error(
+      `No valid sources provided to build insights generation prompt: ${Object.keys(sources).join(", ")}`
+    );
+  }
+
   let profileRecordsRenderedStr = "";
 
   // Allow for multiple sources in the future
@@ -211,10 +231,9 @@ export async function buildInitialInsightsGenerationPrompt(sources) {
       searchItems
     );
   }
-
-  if (!profileRecordsRenderedStr) {
-    throw new Error(
-      `No valid sources provided to build insights generation prompt: ${Object.keys(sources).join(", ")}`
+  if (sources.hasOwnProperty(CONVERSATION)) {
+    profileRecordsRenderedStr += await renderRecentConversationForPrompt(
+      sources[CONVERSATION]
     );
   }
 

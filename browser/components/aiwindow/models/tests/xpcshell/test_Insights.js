@@ -2,6 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+do_get_profile();
+
+const { ChatStore, ChatMessage, MESSAGE_ROLE } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs"
+);
 const {
   getRecentHistory,
   generateProfileInputs,
@@ -10,7 +15,9 @@ const {
 } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs"
 );
-
+const { getRecentChats } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/models/InsightsChatSource.sys.mjs"
+);
 const { openAIEngine } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs"
 );
@@ -26,6 +33,7 @@ const {
   formatListForPrompt,
   getFormattedInsightAttributeList,
   renderRecentHistoryForPrompt,
+  renderRecentConversationForPrompt,
   mapFilteredInsightsToInitialList,
   buildInitialInsightsGenerationPrompt,
   buildInsightsDeduplicationPrompt,
@@ -103,6 +111,9 @@ async function buildFakeBrowserHistory() {
   await PlacesUtils.history.insertMany(seeded);
 }
 
+/**
+ * Shortcut for full browser history aggregation pipeline
+ */
 async function getBrowserHistoryAggregates() {
   const profileRecords = await getRecentHistory();
   const profilePreparedInputs = await generateProfileInputs(profileRecords);
@@ -110,8 +121,44 @@ async function getBrowserHistoryAggregates() {
     profilePreparedInputs
   );
 
-  //const [domainItems, titleItems, searchItems] =
   return await topkAggregates(domainAgg, titleAgg, searchAgg);
+}
+
+/**
+ * Builds fake chat history data for testing
+ */
+async function buildFakeChatHistory() {
+  const fixedNow = 1_700_000_000_000;
+
+  return [
+    new ChatMessage({
+      createdDate: fixedNow - 1_000,
+      ordinal: 1,
+      role: MESSAGE_ROLE.USER,
+      content: { type: "text", body: "I like dogs." },
+      pageUrl: "https://example.com/1",
+      turnIndex: 0,
+    }),
+    new ChatMessage({
+      createdDate: fixedNow - 10_000,
+      ordinal: 2,
+      role: MESSAGE_ROLE.USER,
+      content: { type: "text", body: "I also like cats." },
+      pageUrl: "https://example.com/2",
+      turnIndex: 0,
+    }),
+    new ChatMessage({
+      createdDate: fixedNow - 100_000,
+      ordinal: 3,
+      role: MESSAGE_ROLE.USER,
+      content: {
+        type: "text",
+        body: "Tell me a joke about my favorite animals.",
+      },
+      pageUrl: "https://example.com/3",
+      turnIndex: 0,
+    }),
+  ];
 }
 
 /**
@@ -249,6 +296,68 @@ Title,Importance Score
 Hacker News,100
 Internet for people, not profit — Mozilla,100`.trim()
   );
+});
+
+/**
+ * Tests building the prompt for initial insights generation with only chat data
+ */
+add_task(async function test_buildInitialInsightsGenerationPrompt_only_chat() {
+  const messages = await buildFakeChatHistory();
+  const sb = sinon.createSandbox();
+  const maxResults = 3;
+  const halfLifeDays = 7;
+  const startTime = 1_700_000_000_000 - 1_000_000;
+
+  try {
+    // Stub the method
+    const stub = sb
+      .stub(ChatStore.prototype, "findMessagesByDate")
+      .callsFake(async () => {
+        return messages;
+      });
+
+    const recentMessages = await getRecentChats(
+      startTime,
+      maxResults,
+      halfLifeDays
+    );
+
+    // Assert stub was actually called
+    Assert.equal(stub.callCount, 1, "findMessagesByDate should be called once");
+
+    // Double check we get only the 3 expected messages back
+    Assert.equal(recentMessages.length, 3, "Should return 3 chat messages");
+
+    // Render the messages into CSV format and check correctness
+    const renderedConversationHistory =
+      await renderRecentConversationForPrompt(recentMessages);
+    Assert.equal(
+      renderedConversationHistory,
+      `# Chat History
+Message
+I like dogs.
+I also like cats.
+Tell me a joke about my favorite animals.`.trim(),
+      "Rendered conversation history should match expected CSV format"
+    );
+
+    // Build the actual prompt and check its contents
+    const sources = { conversation: recentMessages };
+    const initialInsightsPrompt =
+      await buildInitialInsightsGenerationPrompt(sources);
+    Assert.ok(
+      initialInsightsPrompt.includes(
+        "You are an expert at extracting insights from user browser data."
+      ),
+      "Initial insights generation prompt should pull from the correct base"
+    );
+    Assert.ok(
+      initialInsightsPrompt.includes(renderedConversationHistory),
+      "Prompt should include rendered conversation history"
+    );
+  } finally {
+    sb.restore();
+  }
 });
 
 /**
