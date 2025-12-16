@@ -334,6 +334,8 @@ with only_when(target_is_ios):
         # aarch64-apple-ios-sim is simulator
         return target.cpu == "x86_64" or target.raw_os == "ios-sim"
 
+    set_config("IPHONEOS_IS_SIMULATOR", target_is_ios_simulator)
+
     def ios_sdk_min_version():
         return "18.4"
 
