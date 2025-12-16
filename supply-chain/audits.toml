@@ -1732,13 +1732,6 @@ delta = "0.6.0 -> 0.6.1"
 [[audits.cssparser-macros]]
 who = "Emilio Cobos Álvarez <emilio@crisal.io>"
 criteria = "safe-to-deploy"
-delta = "0.6.1 -> 0.6.1@git:71b7cfe6f1cd85427ca905a41be31ca9f6af29a5"
-importable = false
-notes = "Only formatting changes."
-
-[[audits.cssparser-macros]]
-who = "Emilio Cobos Álvarez <emilio@crisal.io>"
-criteria = "safe-to-deploy"
 delta = "0.6.1 -> 0.6.1@git:aaa966d9d6ae70c4b8a62bb5e3a14c068bb7dff0"
 notes = "No changes from already-certified upstream, but needed because it lives in the same git repo as the cssparser crate."
 
