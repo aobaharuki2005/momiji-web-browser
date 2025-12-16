@@ -10929,12 +10929,14 @@ CacheEntryWriteHandle::OpenAlternativeOutputStream(
 
 NS_IMETHODIMP
 nsHttpChannel::GetCacheEntryWriteHandle(nsICacheEntryWriteHandle** _retval) {
-  if (!mCacheEntry) {
+  nsCOMPtr<nsICacheEntry> cacheEntry =
+      mCacheEntry ? mCacheEntry : mAltDataCacheEntry;
+  if (!cacheEntry) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   nsCOMPtr<nsICacheEntryWriteHandle> handle =
-      new CacheEntryWriteHandle(mCacheEntry);
+      new CacheEntryWriteHandle(cacheEntry);
   handle.forget(_retval);
   return NS_OK;
 }

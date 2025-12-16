@@ -14,7 +14,7 @@ const responseContent = "response body";
 
 // NOTE: This is executed both on the parent process and the content process.
 //       Some variables are re-defined.
-async function testTask(port, path, responseContent) {
+async function testTask(port, path, responseContent, getHandleOnStopRequest) {
   const { NetUtil } = ChromeUtils.importESModule(
     "resource://gre/modules/NetUtil.sys.mjs"
   );
@@ -36,9 +36,6 @@ async function testTask(port, path, responseContent) {
       "",
       Ci.nsICacheInfoChannel.ASYNC
     );
-
-  const { promise: handlePromise, resolve: handleResolve } =
-    Promise.withResolvers();
 
   function ChannelListener(callback) {
     this._callback = callback;
@@ -69,6 +66,9 @@ async function testTask(port, path, responseContent) {
     },
   };
 
+  const { promise: handleOrCcPromise, resolve: handleOrCcResolve } =
+    Promise.withResolvers();
+
   nonAltChan.asyncOpen(
     new ChannelListener((request, buffer) => {
       const cc = request.QueryInterface(Ci.nsICacheInfoChannel);
@@ -76,11 +76,23 @@ async function testTask(port, path, responseContent) {
       Assert.equal(buffer, responseContent);
       Assert.equal(cc.alternativeDataType, "");
 
-      handleResolve(cc.getCacheEntryWriteHandle());
+      if (getHandleOnStopRequest) {
+        handleOrCcResolve(cc.getCacheEntryWriteHandle());
+      } else {
+        handleOrCcResolve(cc);
+      }
     })
   );
 
-  const handle = await handlePromise;
+  let handle;
+  if (getHandleOnStopRequest) {
+    handle = await handleOrCcPromise;
+  } else {
+    const cc = await handleOrCcPromise;
+    // In nsHttpChannel's case, this is after clearing the mCacheEntry field,
+    // and this should fallback to mAltDataCacheEntry field.
+    handle = cc.getCacheEntryWriteHandle();
+  }
 
   const os = handle.openAlternativeOutputStream(
     altContentType,
@@ -125,18 +137,14 @@ add_setup(async function setup() {
 
     response.bodyOutputStream.write("", 0);
   });
-  httpServer.registerPathHandler("/content1", (metadata, response) => {
-    response.setHeader("Content-Type", "text/plain");
-    response.setHeader("Cache-Control", "max-age=86400");
+  for (let i = 1; i <= 4; i++) {
+    httpServer.registerPathHandler(`/content${i}`, (metadata, response) => {
+      response.setHeader("Content-Type", "text/plain");
+      response.setHeader("Cache-Control", "max-age=86400");
 
-    response.bodyOutputStream.write(responseContent, responseContent.length);
-  });
-  httpServer.registerPathHandler("/content2", (metadata, response) => {
-    response.setHeader("Content-Type", "text/plain");
-    response.setHeader("Cache-Control", "max-age=86400");
-
-    response.bodyOutputStream.write(responseContent, responseContent.length);
-  });
+      response.bodyOutputStream.write(responseContent, responseContent.length);
+    });
+  }
   httpServer.start(-1);
 
   registerCleanupFunction(async () => {
@@ -147,7 +155,8 @@ add_setup(async function setup() {
 add_task(async function test_CacheEntryWriteHandle_ParentProcess() {
   const port = httpServer.identity.primaryPort;
 
-  testTask(port, "/content1", responseContent);
+  testTask(port, "/content1", responseContent, true);
+  testTask(port, "/content2", responseContent, false);
 });
 
 add_task(async function test_CacheEntryWriteHandle_ContentProcess() {
@@ -158,5 +167,6 @@ add_task(async function test_CacheEntryWriteHandle_ContentProcess() {
     remote: true,
   });
 
-  await page.spawn([port, "/content2", responseContent], testTask);
+  await page.spawn([port, "/content3", responseContent, true], testTask);
+  await page.spawn([port, "/content4", responseContent, false], testTask);
 });
