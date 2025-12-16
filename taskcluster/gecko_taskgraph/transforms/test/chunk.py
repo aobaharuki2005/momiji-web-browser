@@ -126,6 +126,7 @@ def set_test_manifests(config, tasks):
             remaining_manifests = []
 
             # if we have web-platform tests incoming, just yield task
+            found_wpt = False
             for m in input_paths:
                 if m.startswith("testing/web-platform/tests/"):
                     found_subsuite = [
@@ -141,7 +142,10 @@ def set_test_manifests(config, tasks):
                         if not isinstance(loader, DefaultLoader):
                             task["chunks"] = "dynamic"
                         yield task
+                    found_wpt = True
                     break
+            if found_wpt:
+                continue
 
             # input paths can exist in other directories (i.e. [../../dir/test.js])
             # we need to look for all [active] manifests that include tests in the path
