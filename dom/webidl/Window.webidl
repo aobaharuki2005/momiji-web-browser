@@ -915,3 +915,9 @@ partial interface Window {
 partial interface Window {
   [Pref="dom.origin_agent_cluster.enabled"] readonly attribute boolean originAgentCluster;
 };
+
+// https://wicg.github.io/document-picture-in-picture/#api
+partial interface Window {
+  [SameObject, SecureContext, Pref="dom.documentpip.enabled"]
+  readonly attribute DocumentPictureInPicture documentPictureInPicture;
+};

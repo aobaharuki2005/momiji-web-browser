@@ -2506,6 +2506,9 @@ class Document : public nsINode,
    */
   virtual void Destroy();
 
+  // https://wicg.github.io/document-picture-in-picture/#close-on-destroy
+  void CloseAnyAssociatedDocumentPiPWindows();
+
   /**
    * Notify the document that its associated DocumentViewer is no longer
    * the current viewer for the docshell. The document might still

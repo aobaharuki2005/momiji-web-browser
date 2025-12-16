@@ -1,0 +1,5 @@
+[DEFAULT]
+support-files = ["head.js"]
+prefs = ["dom.documentpip.enabled=true"]
+
+["browser_pip_closes_once.js"]

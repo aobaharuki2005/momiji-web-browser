@@ -72,6 +72,7 @@ class WebIdentityHandler;
 class WindowContext;
 class WindowGlobalChild;
 class CustomElementRegistry;
+class DocumentPictureInPicture;
 enum class CallerType : uint32_t;
 }  // namespace mozilla::dom
 
@@ -628,6 +629,9 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   // Called when a CloseWatcher is removed from the manager
   void NotifyCloseWatcherRemoved();
+
+  virtual mozilla::dom::DocumentPictureInPicture*
+  GetExtantDocumentPictureInPicture() = 0;
 
  protected:
   void CreatePerformanceObjectIfNeeded();

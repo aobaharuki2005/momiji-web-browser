@@ -29,6 +29,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/DocumentPictureInPicture.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/LSObject.h"
@@ -4581,7 +4582,13 @@ void nsGlobalWindowOuter::MakeMessageWithPrincipal(
   }
 }
 
-bool nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType) {
+bool nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType,
+                                               bool aIsMove,
+                                               ErrorResult& aError) {
+  if (mBrowsingContext->IsSubframe()) {
+    return false;
+  }
+
   // When called from chrome, we can avoid the following checks.
   if (aCallerType != CallerType::System) {
     // Don't allow scripts to move or resize windows that were not opened by a
@@ -4604,6 +4611,25 @@ bool nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType) {
     bool allow;
     nsresult rv = mDocShell->GetAllowWindowControl(&allow);
     if (NS_SUCCEEDED(rv) && !allow) return false;
+  }
+
+  if (mBrowsingContext->GetIsDocumentPiP()) {
+    // https://wicg.github.io/document-picture-in-picture/#positioning
+    if (aIsMove) {
+      nsLiteralString errorMsg(
+          u"Picture-in-Picture windows cannot be moved by script.");
+      nsContentUtils::ReportToConsoleNonLocalized(
+          errorMsg, nsIScriptError::warningFlag, "Window"_ns, GetDocument());
+      return false;
+    }
+
+    // https://wicg.github.io/document-picture-in-picture/#resizing-the-pip-window
+    WindowContext* wc = mInnerWindow->GetWindowContext();
+    if (!wc || !wc->ConsumeTransientUserGestureActivation()) {
+      aError.ThrowNotAllowedError(
+          "Resizing a Picture-in-Picture window requires transient activation");
+      return false;
+    }
   }
 
   if (nsGlobalWindowInner::sMouseDown &&
@@ -5223,7 +5249,7 @@ void nsGlobalWindowOuter::MoveToOuter(int32_t aXPos, int32_t aYPos,
    * prevent window.moveTo() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
+  if (!CanMoveResizeWindows(aCallerType, true, aError)) {
     return;
   }
 
@@ -5259,7 +5285,7 @@ void nsGlobalWindowOuter::MoveByOuter(int32_t aXDif, int32_t aYDif,
    * prevent window.moveBy() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
+  if (!CanMoveResizeWindows(aCallerType, true, aError)) {
     return;
   }
 
@@ -5308,7 +5334,7 @@ void nsGlobalWindowOuter::ResizeToOuter(int32_t aWidth, int32_t aHeight,
    * prevent window.resizeTo() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
+  if (!CanMoveResizeWindows(aCallerType, false, aError)) {
     return;
   }
 
@@ -5319,6 +5345,20 @@ void nsGlobalWindowOuter::ResizeToOuter(int32_t aWidth, int32_t aHeight,
   }
 
   CSSIntSize cssSize(aWidth, aHeight);
+
+  if (mBrowsingContext->GetIsDocumentPiP()) {
+    if (Maybe<CSSIntRect> screen =
+            DocumentPictureInPicture::GetScreenRect(this)) {
+      CSSIntSize maxSize =
+          DocumentPictureInPicture::CalcMaxDimensions(screen.value());
+      cssSize.width = std::min(cssSize.width, maxSize.width);
+      cssSize.height = std::min(cssSize.height, maxSize.height);
+    } else {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+  }
+
   CheckSecurityWidthAndHeight(&cssSize.width, &cssSize.height, aCallerType);
 
   LayoutDeviceIntSize devSize =
@@ -5336,7 +5376,7 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
    * prevent window.resizeBy() by exiting early
    */
 
-  if (!CanMoveResizeWindows(aCallerType) || mBrowsingContext->IsSubframe()) {
+  if (!CanMoveResizeWindows(aCallerType, false, aError)) {
     return;
   }
 
@@ -5357,6 +5397,19 @@ void nsGlobalWindowOuter::ResizeByOuter(int32_t aWidthDif, int32_t aHeightDif,
 
   cssSize.width += aWidthDif;
   cssSize.height += aHeightDif;
+
+  if (mBrowsingContext->GetIsDocumentPiP()) {
+    if (Maybe<CSSIntRect> screen =
+            DocumentPictureInPicture::GetScreenRect(this)) {
+      CSSIntSize maxSize =
+          DocumentPictureInPicture::CalcMaxDimensions(screen.value());
+      cssSize.width = std::min(cssSize.width, maxSize.width);
+      cssSize.height = std::min(cssSize.height, maxSize.height);
+    } else {
+      aError.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+  }
 
   CheckSecurityWidthAndHeight(&cssSize.width, &cssSize.height, aCallerType);
 

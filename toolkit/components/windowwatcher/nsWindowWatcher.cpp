@@ -553,8 +553,8 @@ nsWindowWatcher::OpenWindowWithRemoteTab(
   // don't need to propagate isPopupRequested out-parameter to the resulting
   // browsing context.
   bool unused = false;
-  uint32_t chromeFlags =
-      CalculateChromeFlagsForContent(aFeatures, aModifiers, &unused);
+  uint32_t chromeFlags = CalculateChromeFlagsForContent(aFeatures, aModifiers,
+                                                        aCalledFromJS, &unused);
 
   if (isPrivateBrowsingWindow) {
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
@@ -804,8 +804,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   } else {
     MOZ_DIAGNOSTIC_ASSERT(parentBC && parentBC->IsContent(),
                           "content caller must provide content parent");
-    chromeFlags =
-        CalculateChromeFlagsForContent(features, aModifiers, &isPopupRequested);
+    chromeFlags = CalculateChromeFlagsForContent(
+        features, aModifiers, aCalledFromJS, &isPopupRequested);
 
     if (aDialog) {
       MOZ_ASSERT(XRE_IsParentProcess());
@@ -1885,6 +1885,9 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures) {
  * from a child process. The feature string can only control whether to open a
  * new tab or a new popup.
  * @param aFeatures a string containing a list of named features
+ * @param aCalledFromJS a bool indicating whether the features were provided by
+ content JS. If not, we can expose non-standard, more powerful features to
+ content callers.
  * @param aIsPopupRequested an out parameter that indicates whether a popup
  *        is requested by aFeatures
  * @return the chrome bitmask
@@ -1893,7 +1896,12 @@ bool nsWindowWatcher::ShouldOpenPopup(const WindowFeatures& aFeatures) {
 uint32_t nsWindowWatcher::CalculateChromeFlagsForContent(
     const WindowFeatures& aFeatures,
     const mozilla::dom::UserActivation::Modifiers& aModifiers,
-    bool* aIsPopupRequested) {
+    bool aCalledFromJS, bool* aIsPopupRequested) {
+  if (!aCalledFromJS &&
+      aFeatures.GetBoolWithDefault("pictureinpicture", false)) {
+    return nsIWebBrowserChrome::CHROME_DOCUMENT_PICTURE_IN_PICTURE;
+  }
+
   if (aFeatures.IsEmpty() || !ShouldOpenPopup(aFeatures)) {
     // Open the current/new tab in the current/new window
     // (depends on browser.link.open_newwindow).
@@ -2661,6 +2669,12 @@ int32_t nsWindowWatcher::GetWindowOpenLocation(
         return nsIBrowserDOMWindow::OPEN_NEWWINDOW;
       }
     }
+  }
+
+  if ((aChromeFlags &
+       nsIWebBrowserChrome::CHROME_DOCUMENT_PICTURE_IN_PICTURE) ==
+      nsIWebBrowserChrome::CHROME_DOCUMENT_PICTURE_IN_PICTURE) {
+    return nsIBrowserDOMWindow::OPEN_NEWWINDOW;
   }
 #endif
 

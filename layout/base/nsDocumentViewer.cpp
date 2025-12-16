@@ -1149,6 +1149,11 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
     return NS_OK;
   }
 
+  if (bc->GetIsDocumentPiP()) {
+    // https://wicg.github.io/document-picture-in-picture/#close-document-pip-window
+    return NS_OK;
+  }
+
   // Per spec, we need to increase the ignore-opens-during-unload counter while
   // dispatching the "beforeunload" event on both the document we're currently
   // dispatching the event to and the document that we explicitly asked to

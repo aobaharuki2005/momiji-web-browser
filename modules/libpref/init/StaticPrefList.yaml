@@ -3050,6 +3050,16 @@
   value: true
   mirror: always
 
+# Whether the Document PictureInPicture API is enabled
+# https://wicg.github.io/document-picture-in-picture/#api
+# Always disable on android (unsupported) so that webpages aren't
+# confused by the webidl bindings being exposed
+- name: dom.documentpip.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Allow the content process to create a File from a path. This is allowed just
 # on parent process, on 'file' Content process, or for testing.
 - name: dom.file.createInChild

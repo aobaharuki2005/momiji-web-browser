@@ -781,7 +781,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   // Outer windows only.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  bool CanMoveResizeWindows(mozilla::dom::CallerType aCallerType);
+  bool CanMoveResizeWindows(mozilla::dom::CallerType aCallerType, bool aIsMove,
+                            mozilla::ErrorResult& aError);
 
   // If aDoFlush is true, we'll flush our own layout; otherwise we'll try to
   // just flush our parent and only flush ourselves if we think we need to.

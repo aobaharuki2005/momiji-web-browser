@@ -30,6 +30,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentPictureInPicture.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Geolocation.h"
 #include "mozilla/dom/HTMLEmbedElement.h"
@@ -2680,6 +2681,28 @@ void BrowsingContext::IncrementHistoryEntryCountForBrowsingContext() {
   (void)SetHistoryEntryCount(GetHistoryEntryCount() + 1);
 }
 
+// https://wicg.github.io/document-picture-in-picture/#focusing-the-opener-window
+static bool ConsumePiPWindowTransientActivation(nsPIDOMWindowOuter* outer) {
+  NS_ENSURE_TRUE(outer, false);
+
+  nsPIDOMWindowInner* inner = outer->GetCurrentInnerWindow();
+  NS_ENSURE_TRUE(inner, false);
+
+  DocumentPictureInPicture* dpip = inner->GetExtantDocumentPictureInPicture();
+  if (!dpip) {
+    return false;
+  }
+  nsGlobalWindowInner* pipWindow = dpip->GetWindow();
+  if (!pipWindow) {
+    return false;
+  }
+
+  WindowContext* wc = pipWindow->GetWindowContext();
+  NS_ENSURE_TRUE(wc, false);
+
+  return wc->ConsumeTransientUserGestureActivation();
+}
+
 std::tuple<bool, bool> BrowsingContext::CanFocusCheck(CallerType aCallerType) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
@@ -2701,6 +2724,13 @@ std::tuple<bool, bool> BrowsingContext::CanFocusCheck(CallerType aCallerType) {
         (callerBC ? callerBC : this)
             ->RevisePopupAbuseLevel(PopupBlocker::GetPopupControlState()) <
         PopupBlocker::openBlocked;
+  }
+
+  // Allow the opener to get system focus if the PIP window has transient
+  // activation
+  if (!canFocus && IsTopContent() &&
+      ConsumePiPWindowTransientActivation(GetDOMWindow())) {
+    canFocus = true;
   }
 
   bool isActive = false;

@@ -119,6 +119,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/DocumentPictureInPicture.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
@@ -1273,6 +1274,7 @@ void nsGlobalWindowInner::FreeInnerObjects() {
 
   mConsole = nullptr;
   mCookieStore = nullptr;
+  mDocumentPiP = nullptr;
 
   mPaintWorklet = nullptr;
 
@@ -1468,6 +1470,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowInner)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCrypto)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConsole)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCookieStore)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPiP)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaintWorklet)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mExternal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mIntlUtils)
@@ -7401,6 +7404,14 @@ already_AddRefed<CookieStore> nsGlobalWindowInner::CookieStore() {
   }
 
   return do_AddRef(mCookieStore);
+}
+
+DocumentPictureInPicture* nsGlobalWindowInner::DocumentPictureInPicture() {
+  if (!mDocumentPiP) {
+    mDocumentPiP = MakeRefPtr<class DocumentPictureInPicture>(this);
+  }
+
+  return mDocumentPiP;
 }
 
 bool nsGlobalWindowInner::IsSecureContext() const {

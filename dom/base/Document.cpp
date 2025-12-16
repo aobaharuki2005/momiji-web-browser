@@ -162,6 +162,7 @@
 #include "mozilla/dom/DocumentFragment.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/DocumentL10n.h"
+#include "mozilla/dom/DocumentPictureInPicture.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/ElementBinding.h"
@@ -12269,6 +12270,35 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
   return ret;
 }
 
+// https://wicg.github.io/document-picture-in-picture/#close-any-associated-document-picture-in-picture-windows
+void Document::CloseAnyAssociatedDocumentPiPWindows() {
+  BrowsingContext* bc = GetBrowsingContext();
+  if (!bc || !bc->IsTop()) {
+    return;
+  }
+
+  // 3. Close us if we're a PIP window
+  // Note that this method is called when the opener or pip document is
+  // destroyed, which might mean the PiP is already closing.
+  if (bc->GetIsDocumentPiP() && !bc->GetClosed()) {
+    if (IsUncommittedInitialDocument()) {
+      // Don't close us if we're just doing the initial about:blank load.
+      return;
+    }
+    return bc->Close(CallerType::System, IgnoreErrors());
+  }
+
+  // 4,5. Close a PIP window opened by us
+  if (nsPIDOMWindowInner* inner = GetInnerWindow()) {
+    if (DocumentPictureInPicture* dpip =
+            inner->GetExtantDocumentPictureInPicture()) {
+      if (RefPtr<nsGlobalWindowInner> pipWindow = dpip->GetWindow()) {
+        pipWindow->Close();
+      }
+    }
+  }
+}
+
 void Document::Destroy() {
   // The DocumentViewer wants to release the document now.  So, tell our content
   // to drop any references to the document so that it can be destroyed.
@@ -12678,6 +12708,9 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
     mIsShowing = false;
     mVisible = false;
   }
+
+  // https://wicg.github.io/document-picture-in-picture/#close-on-destroy
+  CloseAnyAssociatedDocumentPiPWindows();
 
   PointerLockManager::Unlock("Document::OnPageHide", this);
 
@@ -16450,6 +16483,12 @@ const char* Document::GetFullscreenError(CallerType aCallerType) {
     return "FullscreenDeniedDisabled";
   }
 
+  BrowsingContext* bc = GetBrowsingContext();
+  // https://github.com/WICG/document-picture-in-picture/issues/133
+  if (!bc || bc->Top()->GetIsDocumentPiP()) {
+    return "FullscreenDeniedPiP";
+  }
+
   if (aCallerType == CallerType::System) {
     // Chrome code can always use the fullscreen API, provided it's not
     // explicitly disabled.
@@ -16466,8 +16505,7 @@ const char* Document::GetFullscreenError(CallerType aCallerType) {
 
   // Ensure that all containing elements are <iframe> and have allowfullscreen
   // attribute set.
-  BrowsingContext* bc = GetBrowsingContext();
-  if (!bc || !bc->FullscreenAllowed()) {
+  if (!bc->FullscreenAllowed()) {
     return "FullscreenDeniedContainerNotAllowed";
   }
 
@@ -18369,6 +18407,62 @@ BrowsingContext* Document::GetBrowsingContext() const {
                             : nullptr;
 }
 
+static void PropagateUserGestureActivationBetweenPiP(
+    BrowsingContext* currentBC, UserActivation::Modifiers aModifiers) {
+  // https://wicg.github.io/document-picture-in-picture/#user-activation-propagation
+  // Monkey patch to activation notification
+  if (currentBC->Top()->GetIsDocumentPiP()) {
+    // 5. If we are in a PIP window, give transient activation to the opener
+    // window
+    // This means activation in a cross-origin subframe in the PIP window
+    // will cause the opener to get activation.
+    RefPtr<BrowsingContext> opener = currentBC->Top()->GetOpener();
+    if (!opener) {
+      return;
+    }
+    WindowContext* wc = opener->GetCurrentWindowContext();
+    NS_ENSURE_TRUE_VOID(wc);
+    wc->NotifyUserGestureActivation(aModifiers);
+  } else {
+    // 6. Get top-level navigable's last opened PiP window
+    // this means activation in a cross-origin subframe in the opener will
+    // cause the PIP window to get activation.
+    nsPIDOMWindowOuter* outer = currentBC->Top()->GetDOMWindow();
+    NS_ENSURE_TRUE_VOID(outer);
+    nsPIDOMWindowInner* inner = outer->GetCurrentInnerWindow();
+    NS_ENSURE_TRUE_VOID(inner);
+    DocumentPictureInPicture* dpip = inner->GetExtantDocumentPictureInPicture();
+    if (!dpip) {
+      return;
+    }
+    nsGlobalWindowInner* pip = dpip->GetWindow();
+    if (!pip) {
+      return;
+    }
+
+    // 7. Give transient activation to the pip window and it's same origin
+    // descendants
+    BrowsingContext* pipBC = pip->GetBrowsingContext();
+    NS_ENSURE_TRUE_VOID(pipBC);
+    WindowContext* pipWC = pipBC->GetCurrentWindowContext();
+    NS_ENSURE_TRUE_VOID(pipWC);
+    pipBC->PreOrderWalk([&](BrowsingContext* bc) {
+      WindowContext* wc = bc->GetCurrentWindowContext();
+      if (!wc) {
+        return;
+      }
+
+      // Check same-origin as current document
+      WindowGlobalChild* wgc = wc->GetWindowGlobalChild();
+      if (!wgc || !wgc->IsSameOriginWith(pipWC)) {
+        return;
+      }
+
+      wc->NotifyUserGestureActivation(aModifiers);
+    });
+  }
+}
+
 void Document::NotifyUserGestureActivation(
     UserActivation::Modifiers
         aModifiers /* = UserActivation::Modifiers::None() */) {
@@ -18414,6 +18508,8 @@ void Document::NotifyUserGestureActivation(
 
     wc->NotifyUserGestureActivation(aModifiers);
   });
+
+  PropagateUserGestureActivationBetweenPiP(currentBC, aModifiers);
 
   // If there has been a user activation, mark the current session history entry
   // as having been interacted with.

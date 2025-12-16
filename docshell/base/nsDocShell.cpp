@@ -10929,6 +10929,19 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
                                             aLoadState->PrincipalToInherit()) &&
       !shouldSkipSyncLoadForSHRestore();
 
+  if (!isAboutBlankLoadOntoInitialAboutBlank) {
+    // https://wicg.github.io/document-picture-in-picture/#close-on-navigate
+    if (Document* doc = GetExtantDocument()) {
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "Close PIP window on navigate", [doc = RefPtr(doc)]() {
+            doc->CloseAnyAssociatedDocumentPiPWindows();
+          }));
+    }
+    if (GetBrowsingContext()->GetIsDocumentPiP()) {
+      return NS_OK;
+    }
+  }
+
   // FIXME We still have a ton of codepaths that don't pass through
   //       DocumentLoadListener, so probably need to create session history info
   //       in more places.

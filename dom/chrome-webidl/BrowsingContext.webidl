@@ -43,6 +43,7 @@ enum DisplayMode {
   "minimal-ui",
   "standalone",
   "fullscreen",
+  "picture-in-picture"
 };
 
 /**
