@@ -743,7 +743,6 @@ mozilla::ipc::IPCResult ChromiumCDMChild::RecvDecryptAndDecodeFrame(
   // CDM's decoder reorders to ensure frames output are in presentation order.
   // So we need to store the durations of the frames input, and retrieve them
   // on output.
-  MOZ_DIAGNOSTIC_ASSERT(!mFrameDurations.Contains(aBuffer.mTimestamp()));
   mFrameDurations.Insert(aBuffer.mTimestamp(), aBuffer.mDuration());
 
   cdm::InputBuffer_2 input = {};

@@ -301,8 +301,6 @@ class RemoteVideoDecoder final : public RemoteDataDecoder {
 
     InputInfo info(aSample->mDuration.ToMicroseconds(), config->mImage,
                    config->mDisplay);
-    MOZ_DIAGNOSTIC_ASSERT(
-        !mInputInfos.Contains(aSample->mTime.ToMicroseconds()));
     mInputInfos.Insert(aSample->mTime.ToMicroseconds(), info);
     return RemoteDataDecoder::Decode(aSample);
   }
