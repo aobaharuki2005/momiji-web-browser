@@ -1613,7 +1613,10 @@ void Sanitizer::SanitizeChildren(nsINode* aNode, bool aSafe) {
       // and if configuration["replaceWithChildrenElements"] contains
       // elementName:
       if (mReplaceWithChildrenElements &&
-          mReplaceWithChildrenElements->Contains(*elementName)) {
+          mReplaceWithChildrenElements->Contains(*elementName) &&
+          // Temporary fix for Bug 2004112
+          // To be specified by https://github.com/WICG/sanitizer-api/issues/365
+          !!child->GetParent()) {
         // Note: This follows nsTreeSanitizer by first inserting the
         // child's children in place of the current child and then
         // continueing the sanitization from the first inserted grandchild.
