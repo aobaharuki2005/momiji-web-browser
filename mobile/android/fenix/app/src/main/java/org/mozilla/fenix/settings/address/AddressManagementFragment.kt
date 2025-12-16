@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.compose.content
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
@@ -95,10 +96,16 @@ class AddressManagementFragment : Fragment() {
      */
     private fun loadAddresses() {
         lifecycleScope.launch {
-            val addresses = requireContext().components.core.autofillStorage.getAllAddresses()
-
+            val result = requireContext().components.core.autofillStorage.getAllAddresses()
             lifecycleScope.launch(Dispatchers.Main) {
-                store.dispatch(AutofillAction.UpdateAddresses(addresses))
+                result.onSuccess { store.dispatch(AutofillAction.UpdateAddresses(it)) }
+                result.onFailure {
+                    Snackbar.make(
+                        requireView(),
+                        R.string.autofill_addresses_load_error,
+                        Snackbar.LENGTH_LONG,
+                    ).show()
+                }
             }
         }
     }

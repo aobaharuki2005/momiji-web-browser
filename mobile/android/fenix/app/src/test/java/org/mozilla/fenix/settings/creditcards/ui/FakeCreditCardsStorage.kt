@@ -96,7 +96,7 @@ class FakeCreditCardsStorage(
 
     override suspend fun getAddress(guid: String): Address? = null
 
-    override suspend fun getAllAddresses(): List<Address> = emptyList()
+    override suspend fun getAllAddresses(): Result<List<Address>> = Result.success(emptyList())
 
     override suspend fun updateAddress(guid: String, address: UpdatableAddressFields) = Unit
 

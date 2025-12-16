@@ -2533,6 +2533,8 @@
     <string name="preferences_addresses_add_address">Add address</string>
     <!-- Preference option for managing saved addresses -->
     <string name="preferences_addresses_manage_addresses">Manage addresses</string>
+    <!-- Snackbar message shown when autofill addresses data cannot be loaded -->
+    <string name="autofill_addresses_load_error">Could not load addresses autofill data</string>
     <!-- Preference for saving and filling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses_2">Save and fill addresses</string>
     <!-- Preference summary for saving and filling address data -->

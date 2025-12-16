@@ -16,6 +16,7 @@ import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.settings.autofill.AutofillScreenDestination
 import org.mozilla.fenix.settings.logins.ui.LoginsAction
 
@@ -42,6 +43,8 @@ internal class AutofillSettingsMiddleware(
 
     private val scope = CoroutineScope(ioDispatcher)
     private lateinit var observer: AccountObserver
+
+    private val logger = Logger
 
     override fun invoke(
         context: MiddlewareContext<AutofillSettingsState, AutofillSettingsAction>,
@@ -108,8 +111,12 @@ internal class AutofillSettingsMiddleware(
             val addresses = autofillSettingsStorage.getAllAddresses()
             val creditCards = autofillSettingsStorage.getAllCreditCards()
 
-            dispatch(UpdateAddresses(addresses = addresses))
+            addresses.onSuccess { dispatch(UpdateAddresses(addresses = it)) }
             dispatch(UpdateCreditCards(creditCards = creditCards))
+            val failure = addresses.exceptionOrNull()
+            if (failure != null) {
+                logger.error("Failed to load autofill data", failure)
+            }
         }
 
     private fun Store<AutofillSettingsState, AutofillSettingsAction>.registerObserverForAccountChanges(

@@ -88,9 +88,10 @@ interface CreditCardsAddressesStorage {
     /**
      * Retrieves a list of all the addresses.
      *
-     * @return A list of all [Address].
+     * @return A [Result] containing the list of [Address]s on success, or a failure if the
+     *         underlying autofill storage throws an [AutofillApiException].
      */
-    suspend fun getAllAddresses(): List<Address>
+    suspend fun getAllAddresses(): Result<List<Address>>
 
     /**
      * Updates the fields in the provided address.

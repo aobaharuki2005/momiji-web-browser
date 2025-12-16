@@ -17,6 +17,7 @@ import mozilla.components.concept.storage.CreditCardsAddressesStorageDelegate
 import mozilla.components.concept.storage.ManagedKey
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
+import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlin.last4Digits
 
 /**
@@ -35,6 +36,7 @@ class GeckoCreditCardsAddressesStorageDelegate(
     private val isCreditCardAutofillEnabled: () -> Boolean = { false },
     private val isAddressAutofillEnabled: () -> Boolean = { false },
 ) : CreditCardsAddressesStorageDelegate {
+    private val logger = Logger("GeckoCCAddressesStorageDelegate")
 
     override suspend fun getOrGenerateKey(): ManagedKey {
         val crypto = storage.value.getCreditCardCrypto()
@@ -53,7 +55,10 @@ class GeckoCreditCardsAddressesStorageDelegate(
         if (!isAddressAutofillEnabled()) {
             emptyList()
         } else {
-            storage.value.getAllAddresses()
+            storage.value.getAllAddresses().getOrElse {
+                logger.error("Failed to load addresses for autofill", it)
+                emptyList()
+            }
         }
     }
 

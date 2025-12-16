@@ -31,6 +31,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCardsAddressesStorage
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.SwitchWithLabel
 import org.mozilla.fenix.compose.list.RadioButtonListItem
@@ -55,29 +56,43 @@ fun AddressesTools(
         possibleDebugRegions = possibleDebugRegions.updateRegionEnabled(region, isEnabled)
     }
 
+    val logger = Logger
+
     val scope = rememberCoroutineScope()
     var addresses by remember { mutableStateOf(listOf<Address>()) }
     LaunchedEffect(Unit) {
-        addresses = creditCardsAddressesStorage.getAllAddresses()
+        creditCardsAddressesStorage.getAllAddresses()
+            .onSuccess { addresses = it }
+            .onFailure { logger.error("Failed to load addresses", it) }
     }
     val onAddAddress: (String) -> Unit = { selectedLangTag ->
         scope.launch {
             creditCardsAddressesStorage.addAddress(selectedLangTag.generateFakeAddressForLangTag())
-            addresses = creditCardsAddressesStorage.getAllAddresses()
+            creditCardsAddressesStorage.getAllAddresses()
+                .onSuccess { addresses = it }
+                .onFailure { logger.error("Failed to reload addresses after add", it) }
         }
     }
     val onDeleteAddress: (Address) -> Unit = { address ->
         scope.launch {
             creditCardsAddressesStorage.deleteAddress(address.guid)
-            addresses = creditCardsAddressesStorage.getAllAddresses()
+            creditCardsAddressesStorage.getAllAddresses()
+                .onSuccess { addresses = it }
+                .onFailure { logger.error("Failed to reload addresses after delete", it) }
         }
     }
     val onDeleteAllAddresses: () -> Unit = {
         scope.launch {
-            creditCardsAddressesStorage.getAllAddresses().forEach { address ->
-                creditCardsAddressesStorage.deleteAddress(address.guid)
-            }
-            addresses = creditCardsAddressesStorage.getAllAddresses()
+            creditCardsAddressesStorage.getAllAddresses()
+                .onSuccess { loaded ->
+                    loaded.forEach { address ->
+                        creditCardsAddressesStorage.deleteAddress(address.guid)
+                    }
+                    creditCardsAddressesStorage.getAllAddresses()
+                        .onSuccess { addresses = it }
+                        .onFailure { logger.error("Failed to reload addresses after delete all", it) }
+                }
+                .onFailure { logger.error("Failed to load addresses before delete all", it) }
         }
     }
 
