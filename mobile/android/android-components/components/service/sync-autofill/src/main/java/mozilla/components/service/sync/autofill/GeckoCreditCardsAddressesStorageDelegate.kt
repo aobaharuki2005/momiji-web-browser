@@ -71,7 +71,10 @@ class GeckoCreditCardsAddressesStorageDelegate(
             if (!isCreditCardAutofillEnabled()) {
                 emptyList()
             } else {
-                storage.value.getAllCreditCards()
+                storage.value.getAllCreditCards().getOrElse {
+                    logger.error("Failed to load credit cards for autofill", it)
+                    emptyList()
+                }
             }
         }
 
@@ -105,6 +108,7 @@ class GeckoCreditCardsAddressesStorageDelegate(
                         ),
                     )
                 }
+                is CreditCardValidationDelegate.Result.StorageFailure -> {}
             }
         }
     }

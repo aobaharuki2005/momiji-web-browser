@@ -404,13 +404,16 @@ class AutofillSettingFragment : BiometricPromptPreferenceFragment() {
 
             lifecycleScope.launch(Dispatchers.Main) {
                 addresses.onSuccess { store.dispatch(AutofillAction.UpdateAddresses(it)) }
-                store.dispatch(AutofillAction.UpdateCreditCards(creditCards))
-                if (addresses.isFailure) {
-                    Snackbar.make(
-                        requireView(),
-                        R.string.autofill_addresses_load_error,
-                        Snackbar.LENGTH_LONG,
-                    ).show()
+                creditCards.onSuccess { store.dispatch(AutofillAction.UpdateCreditCards(it)) }
+                val errorMessageId = when {
+                    addresses.isFailure && creditCards.isFailure -> R.string.autofill_load_error
+                    addresses.isFailure -> R.string.autofill_addresses_load_error
+                    creditCards.isFailure -> R.string.autofill_credit_card_load_error
+                    else -> null
+                }
+
+                errorMessageId?.let {
+                    Snackbar.make(requireView(), it, Snackbar.LENGTH_LONG).show()
                 }
             }
             isAutofillStateLoaded = true

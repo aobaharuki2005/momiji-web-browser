@@ -26,7 +26,9 @@ class DefaultCreditCardValidationDelegate(
 
     override suspend fun shouldCreateOrUpdate(creditCard: CreditCardEntry): Result =
         withContext(coroutineContext) {
-            val creditCards = storage.value.getAllCreditCards()
+            val creditCards = storage.value.getAllCreditCards().getOrElse {
+                return@withContext Result.StorageFailure
+            }
 
             val foundCreditCard = if (creditCards.isEmpty()) {
                 // No credit cards exist in the storage -> create a new credit card

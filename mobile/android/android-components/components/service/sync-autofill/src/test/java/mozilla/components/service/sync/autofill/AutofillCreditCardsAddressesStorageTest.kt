@@ -128,7 +128,7 @@ class AutofillCreditCardsAddressesStorageTest {
         val creditCard2 = storage.addCreditCard(creditCardFields2)
         val creditCard3 = storage.addCreditCard(creditCardFields3)
 
-        val creditCards = storage.getAllCreditCards()
+        val creditCards = storage.getAllCreditCards().getOrThrow()
         val key = storage.crypto.getOrGenerateKey()
 
         val savedCreditCard1 = creditCards.find { it == creditCard1 }

@@ -79,7 +79,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
         runTest(testDispatcher) {
             val storage: AutofillCreditCardsAddressesStorage = mock()
             val storedCards = listOf<CreditCard>(mock())
-            doReturn(storedCards).`when`(storage).getAllCreditCards()
+            doReturn(Result.success(storedCards)).`when`(storage).getAllCreditCards()
             delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, testDispatcher, isCreditCardAutofillEnabled = { true })
 
             val result = delegate.onCreditCardsFetch()
@@ -93,7 +93,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
         runTest(testDispatcher) {
             val storage: AutofillCreditCardsAddressesStorage = mock()
             val storedCards = listOf<CreditCard>(mock())
-            doReturn(storedCards).`when`(storage).getAllCreditCards()
+            doReturn(Result.success(storedCards)).`when`(storage).getAllCreditCards()
             delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, testDispatcher, isCreditCardAutofillEnabled = { false })
 
             val result = delegate.onCreditCardsFetch()
@@ -228,7 +228,7 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
         runTest(testDispatcher) {
             val storage: AutofillCreditCardsAddressesStorage = mock()
             val storedCards = listOf<CreditCard>(mock())
-            doReturn(storedCards).`when`(storage).getAllCreditCards()
+            doReturn(Result.success(storedCards)).`when`(storage).getAllCreditCards()
             delegate = GeckoCreditCardsAddressesStorageDelegate(lazy { storage }, testDispatcher, isAddressAutofillEnabled = { false })
 
             val result = delegate.onAddressesFetch()

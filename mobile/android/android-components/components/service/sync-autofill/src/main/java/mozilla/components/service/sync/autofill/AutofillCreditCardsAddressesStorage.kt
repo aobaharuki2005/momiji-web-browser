@@ -123,8 +123,8 @@ class AutofillCreditCardsAddressesStorage(
         }
     }
 
-    override suspend fun getAllCreditCards(): List<CreditCard> = withContext(coroutineContext) {
-        conn.getStorage().getAllCreditCards().map { it.into() }
+    override suspend fun getAllCreditCards(): Result<List<CreditCard>> = withContext(coroutineContext) {
+        Result.runCatching { conn.getStorage().getAllCreditCards().map { it.into() } }
     }
 
     override suspend fun deleteCreditCard(guid: String): Boolean = withContext(coroutineContext) {

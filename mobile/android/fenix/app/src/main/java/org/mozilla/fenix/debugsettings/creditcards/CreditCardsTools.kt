@@ -45,26 +45,27 @@ fun CreditCardsTools(
     val scope = rememberCoroutineScope()
     var creditCards by remember { mutableStateOf(listOf<CreditCard>()) }
     LaunchedEffect(Unit) {
-        creditCards = creditCardsAddressesStorage.getAllCreditCards()
+        creditCards = creditCardsAddressesStorage.getAllCreditCards().getOrDefault(emptyList())
     }
     val onAddCreditCard: () -> Unit = {
         scope.launch {
             creditCardsAddressesStorage.addCreditCard(FakeCreditCardsAddressesStorage.generateCreditCard())
-            creditCards = creditCardsAddressesStorage.getAllCreditCards()
+            creditCards = creditCardsAddressesStorage.getAllCreditCards().getOrDefault(emptyList())
         }
     }
     val onDeleteCreditCard: (CreditCard) -> Unit = { creditCard ->
         scope.launch {
             creditCardsAddressesStorage.deleteCreditCard(creditCard.guid)
-            creditCards = creditCardsAddressesStorage.getAllCreditCards()
+            creditCards = creditCardsAddressesStorage.getAllCreditCards().getOrDefault(emptyList())
         }
     }
     val onDeleteAllCreditCards: () -> Unit = {
         scope.launch {
-            creditCardsAddressesStorage.getAllCreditCards().forEach { creditCard ->
-                creditCardsAddressesStorage.deleteCreditCard(creditCard.guid)
-            }
-            creditCards = creditCardsAddressesStorage.getAllCreditCards()
+            creditCardsAddressesStorage.getAllCreditCards().getOrDefault(emptyList())
+                .forEach { creditCard ->
+                    creditCardsAddressesStorage.deleteCreditCard(creditCard.guid)
+                }
+            creditCards = creditCardsAddressesStorage.getAllCreditCards().getOrDefault(emptyList())
         }
     }
 

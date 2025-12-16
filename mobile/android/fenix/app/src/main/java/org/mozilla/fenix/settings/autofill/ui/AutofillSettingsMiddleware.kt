@@ -112,8 +112,8 @@ internal class AutofillSettingsMiddleware(
             val creditCards = autofillSettingsStorage.getAllCreditCards()
 
             addresses.onSuccess { dispatch(UpdateAddresses(addresses = it)) }
-            dispatch(UpdateCreditCards(creditCards = creditCards))
-            val failure = addresses.exceptionOrNull()
+            creditCards.onSuccess { dispatch(UpdateCreditCards(creditCards = it)) }
+            val failure = addresses.exceptionOrNull() ?: creditCards.exceptionOrNull()
             if (failure != null) {
                 logger.error("Failed to load autofill data", failure)
             }
