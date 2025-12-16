@@ -132,11 +132,11 @@ static bool SameOrParentLocale(const JSLinearString* locale,
   return false;
 }
 
-using SupportedLocaleKind = js::intl::SharedIntlData::SupportedLocaleKind;
+using AvailableLocaleKind = js::intl::AvailableLocaleKind;
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale )
 static JS::Result<JSLinearString*> BestAvailableLocale(
-    JSContext* cx, SupportedLocaleKind kind, Handle<JSLinearString*> locale,
+    JSContext* cx, AvailableLocaleKind kind, Handle<JSLinearString*> locale,
     Handle<JSLinearString*> defaultLocale) {
   // In the spec, [[availableLocales]] is formally a list of all available
   // locales. But in our implementation, it's an *incomplete* list, not
@@ -174,7 +174,7 @@ static JS::Result<JSLinearString*> BestAvailableLocale(
   while (true) {
     // Step 2.a.
     bool supported = false;
-    if (!sharedIntlData.isSupportedLocale(cx, kind, candidate, &supported)) {
+    if (!sharedIntlData.isAvailableLocale(cx, kind, candidate, &supported)) {
       return cx->alreadyReportedError();
     }
     if (supported) {
@@ -221,7 +221,7 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 3);
 
-  SupportedLocaleKind kind;
+  AvailableLocaleKind kind;
   {
     JSLinearString* typeStr = args[0].toString()->ensureLinear(cx);
     if (!typeStr) {
@@ -229,24 +229,24 @@ bool js::intl_BestAvailableLocale(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     if (StringEqualsLiteral(typeStr, "Collator")) {
-      kind = SupportedLocaleKind::Collator;
+      kind = AvailableLocaleKind::Collator;
     } else if (StringEqualsLiteral(typeStr, "DateTimeFormat")) {
-      kind = SupportedLocaleKind::DateTimeFormat;
+      kind = AvailableLocaleKind::DateTimeFormat;
     } else if (StringEqualsLiteral(typeStr, "DisplayNames")) {
-      kind = SupportedLocaleKind::DisplayNames;
+      kind = AvailableLocaleKind::DisplayNames;
     } else if (StringEqualsLiteral(typeStr, "DurationFormat")) {
-      kind = SupportedLocaleKind::DurationFormat;
+      kind = AvailableLocaleKind::DurationFormat;
     } else if (StringEqualsLiteral(typeStr, "ListFormat")) {
-      kind = SupportedLocaleKind::ListFormat;
+      kind = AvailableLocaleKind::ListFormat;
     } else if (StringEqualsLiteral(typeStr, "NumberFormat")) {
-      kind = SupportedLocaleKind::NumberFormat;
+      kind = AvailableLocaleKind::NumberFormat;
     } else if (StringEqualsLiteral(typeStr, "PluralRules")) {
-      kind = SupportedLocaleKind::PluralRules;
+      kind = AvailableLocaleKind::PluralRules;
     } else if (StringEqualsLiteral(typeStr, "RelativeTimeFormat")) {
-      kind = SupportedLocaleKind::RelativeTimeFormat;
+      kind = AvailableLocaleKind::RelativeTimeFormat;
     } else {
       MOZ_ASSERT(StringEqualsLiteral(typeStr, "Segmenter"));
-      kind = SupportedLocaleKind::Segmenter;
+      kind = AvailableLocaleKind::Segmenter;
     }
   }
 
@@ -390,13 +390,13 @@ JSLinearString* js::intl::ComputeDefaultLocale(JSContext* cx) {
   Rooted<JSLinearString*> supportedCollator(cx);
   JS_TRY_VAR_OR_RETURN_NULL(
       cx, supportedCollator,
-      BestAvailableLocale(cx, SupportedLocaleKind::Collator, candidate,
+      BestAvailableLocale(cx, AvailableLocaleKind::Collator, candidate,
                           nullptr));
 
   Rooted<JSLinearString*> supportedDateTimeFormat(cx);
   JS_TRY_VAR_OR_RETURN_NULL(
       cx, supportedDateTimeFormat,
-      BestAvailableLocale(cx, SupportedLocaleKind::DateTimeFormat, candidate,
+      BestAvailableLocale(cx, AvailableLocaleKind::DateTimeFormat, candidate,
                           nullptr));
 
 #ifdef DEBUG
@@ -404,13 +404,13 @@ JSLinearString* js::intl::ComputeDefaultLocale(JSContext* cx) {
   // constructors, because the set of supported locales is exactly equal to
   // the set of supported locales of Intl.DateTimeFormat.
   for (auto kind : {
-           SupportedLocaleKind::DisplayNames,
-           SupportedLocaleKind::DurationFormat,
-           SupportedLocaleKind::ListFormat,
-           SupportedLocaleKind::NumberFormat,
-           SupportedLocaleKind::PluralRules,
-           SupportedLocaleKind::RelativeTimeFormat,
-           SupportedLocaleKind::Segmenter,
+           AvailableLocaleKind::DisplayNames,
+           AvailableLocaleKind::DurationFormat,
+           AvailableLocaleKind::ListFormat,
+           AvailableLocaleKind::NumberFormat,
+           AvailableLocaleKind::PluralRules,
+           AvailableLocaleKind::RelativeTimeFormat,
+           AvailableLocaleKind::Segmenter,
        }) {
     JSLinearString* supported;
     JS_TRY_VAR_OR_RETURN_NULL(
