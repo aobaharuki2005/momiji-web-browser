@@ -791,7 +791,7 @@ nsSHistory::AddToRootSessionHistory(bool aCloneChildren, nsISHEntry* aOSHE,
     // Replace current entry in session history; If the requested index is
     // valid, it indicates the loading was triggered by a history load, and
     // we should replace the entry at requested index instead.
-    int32_t index = GetIndexForReplace();
+    int32_t index = GetTargetIndexForHistoryOperation();
 
     // Replace the current entry with the new entry
     if (index >= 0) {

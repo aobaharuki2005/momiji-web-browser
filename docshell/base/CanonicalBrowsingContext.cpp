@@ -1244,7 +1244,7 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
         if (LOAD_TYPE_HAS_FLAGS(aLoadType,
                                 nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY)) {
           // Replace the current entry with the new entry.
-          int32_t index = shistory->GetIndexForReplace();
+          int32_t index = shistory->GetTargetIndexForHistoryOperation();
 
           // If we're trying to replace an inexistant shistory entry then we
           // should append instead.
@@ -1613,9 +1613,7 @@ Maybe<int32_t> CanonicalBrowsingContext::HistoryGo(
     return Nothing();
   }
 
-  CheckedInt<int32_t> index = shistory->GetRequestedIndex() >= 0
-                                  ? shistory->GetRequestedIndex()
-                                  : shistory->Index();
+  CheckedInt<int32_t> index = shistory->GetTargetIndexForHistoryOperation();
   MOZ_LOG(gSHLog, LogLevel::Debug,
           ("HistoryGo(%d->%d) epoch %" PRIu64 "/id %" PRIu64, aOffset,
            (index + aOffset).value(), aHistoryEpoch,
@@ -1716,10 +1714,12 @@ void CanonicalBrowsingContext::NavigationTraverse(
         return true;
       });
 
+  // Step 12.2
   if (!targetEntry) {
     return aResolver(NS_ERROR_DOM_INVALID_STATE_ERR);
   }
 
+  // Step 12.3
   if (targetEntry == mActiveEntry) {
     return aResolver(NS_OK);
   }
@@ -1736,8 +1736,16 @@ void CanonicalBrowsingContext::NavigationTraverse(
   }
 
   int32_t offset = targetIndex - activeIndex;
-  MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Debug, "Performing traversal by {}",
-              offset);
+
+  int32_t requestedIndex = shistory->GetTargetIndexForHistoryOperation();
+  // Step 12.3
+  if (requestedIndex == targetIndex) {
+    return aResolver(NS_OK);
+  }
+
+  // Reset the requested index since this is not a relative traversal, and the
+  // offset is overriding any currently ongoing history traversals.
+  shistory->InternalSetRequestedIndex(-1);
 
   HistoryGo(offset, aHistoryEpoch, false, aUserActivation, aCheckForCancelation,
             aContentId, std::move(aResolver));
