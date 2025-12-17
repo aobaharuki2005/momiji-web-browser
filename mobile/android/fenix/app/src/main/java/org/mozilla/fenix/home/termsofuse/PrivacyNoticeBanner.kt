@@ -50,7 +50,7 @@ fun PrivacyNoticeBanner(
                 linkTextStates = listOf(
                     LinkTextState(
                         text = stringResource(R.string.privacy_notice_updated_homepage_message_privacy_notice),
-                        url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE_NEXT),
+                        url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVACY_NOTICE_NEXT),
                         onClick = { url ->
                             interactor.onPrivacyNoticeBannerPrivacyNoticeClicked()
                             SupportUtils.launchSandboxCustomTab(
@@ -61,7 +61,7 @@ fun PrivacyNoticeBanner(
                     ),
                     LinkTextState(
                         text = stringResource(R.string.privacy_notice_updated_homepage_message_learn_more),
-                        url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE_UPDATE),
+                        url = SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVACY_NOTICE_UPDATE),
                         onClick = { url ->
                             interactor.onPrivacyNoticeBannerLearnMoreClicked()
                             SupportUtils.launchSandboxCustomTab(

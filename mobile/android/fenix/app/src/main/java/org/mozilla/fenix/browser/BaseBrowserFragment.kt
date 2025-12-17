@@ -2524,7 +2524,7 @@ abstract class BaseBrowserFragment :
         private const val LAST_SAVED_GENERATED_PASSWORD = "last_saved_generated_password"
 
         val onboardingLinksList: List<String> = listOf(
-            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVATE_NOTICE),
+            SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.PRIVACY_NOTICE),
             SupportUtils.FXACCOUNT_SUMO_URL,
         )
     }
