@@ -2058,91 +2058,6 @@ void Document::LoadEventFired() {
   }
 }
 
-static void RecordExecutionTimeForAsmJS(Document* aDoc) {
-  if (aDoc->GetScopeObject()) {
-    AutoJSAPI jsapi;
-    if (!jsapi.Init(aDoc->GetScopeObject())) {
-      return;
-    }
-
-    if (JSContext* cx = jsapi.cx()) {
-      // Disable the execution timer.
-      JS::SetMeasuringExecutionTimeEnabled(cx, false);
-
-      // Get the execution time and accumulate it.
-      JS::JSTimers timers = JS::GetJSTimers(cx);
-      mozilla::glean::perf::js_exec_asm_js.AccumulateRawDuration(
-          timers.executionTime);
-    }
-  }
-}
-
-class ASMJSExecutionTimeRecorder final : public nsITimerCallback,
-                                         public nsINamed {
- public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
-
-  explicit ASMJSExecutionTimeRecorder(Document* aDocument)
-      : mDocument(aDocument) {}
-
- private:
-  ~ASMJSExecutionTimeRecorder() = default;
-  WeakPtr<Document> mDocument;
-};
-
-NS_IMPL_ISUPPORTS(ASMJSExecutionTimeRecorder, nsITimerCallback, nsINamed)
-
-NS_IMETHODIMP
-ASMJSExecutionTimeRecorder::Notify(nsITimer* aTimer) {
-  RefPtr<Document> doc(mDocument);
-  if (!doc) {
-    return NS_OK;
-  }
-
-  // Record the JS execution time to Glean.
-  RecordExecutionTimeForAsmJS(doc);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ASMJSExecutionTimeRecorder::GetName(nsACString& aName) {
-  aName.AssignLiteral("ASMJSExecutionTimeRecorder");
-  return NS_OK;
-}
-
-// If an asm.js use counter is set, then enable the JS execution
-// timer and record it after 5 minutes of activity.
-void Document::RecordASMJSExecutionTime() {
-  // Skip if the document is being destroyed.
-  if (mIsGoingAway) {
-    return;
-  }
-
-  // If the timer has already fired, or the use counter is already set,
-  // then nothing more needs to be done.
-  if (mASMJSExecutionTimer || HasUseCounter(eUseCounter_custom_JS_use_asm)) {
-    return;
-  }
-
-  AutoJSContext cx;
-  if (static_cast<JSContext*>(cx)) {
-    JS::SetMeasuringExecutionTimeEnabled(cx, true);
-  }
-
-  RefPtr<ASMJSExecutionTimeRecorder> callback =
-      new ASMJSExecutionTimeRecorder(this);
-  nsresult rv =
-      NS_NewTimerWithCallback(getter_AddRefs(mASMJSExecutionTimer), callback,
-                              5 * 60 * 1000,  // 5min delay
-                              nsITimer::TYPE_ONE_SHOT);
-
-  if (NS_FAILED(rv)) {
-    mASMJSExecutionTimer = nullptr;
-  }
-}
-
 void Document::RecordPageLoadEventTelemetry() {
   // If the page load time is empty, then the content wasn't something we want
   // to report (i.e. not a top level document).
@@ -12325,11 +12240,6 @@ void Document::Destroy() {
 
   mIsGoingAway = true;
 
-  if (mASMJSExecutionTimer) {
-    mASMJSExecutionTimer->Cancel();
-    mASMJSExecutionTimer = nullptr;
-    RecordExecutionTimeForAsmJS(this);
-  }
   if (mScriptLoader) {
     mScriptLoader->Destroy();
   }
@@ -20821,9 +20731,7 @@ void Document::RemoveToplevelLoadingDocument(Document* aDoc) {
   }
 
   // Stop the JS execution timer once the page is loaded.
-  // If the asm.js counter is active, then continue the timer
-  // for telemetry purposes.
-  if (!aDoc->HasUseCounter(eUseCounter_custom_JS_use_asm)) {
+  {
     AutoJSContext cx;
     if (static_cast<JSContext*>(cx)) {
       JS::SetMeasuringExecutionTimeEnabled(cx, false);
