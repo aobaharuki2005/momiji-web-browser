@@ -10,6 +10,8 @@ import mozilla.components.compose.browser.toolbar.BrowserToolbar
  * Test tags for the [BrowserToolbar] composable.
  */
 object BrowserToolbarTestTags {
+    const val MINIMAL_ADDRESS_BAR = "MINIMAL_ADDRESS_BAR"
+
     /**
      * Test tag for the website origin box while in "display" mode.
      */
