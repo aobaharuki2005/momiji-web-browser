@@ -251,6 +251,9 @@ enum class BatchRemovalOrder {
 };
 
 struct BatchRemovalState {
+  // Whether we're the fist kid getting removed in the batch. Note that that's
+  // different to whether we're the first _child_, if we're removing
+  // back-to-front.
   bool mIsFirst = true;
 };
 
