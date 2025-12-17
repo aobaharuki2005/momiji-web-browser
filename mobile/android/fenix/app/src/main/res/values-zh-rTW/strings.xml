@@ -3867,7 +3867,7 @@
   <!-- Title text for the contextual feature recommendation (CFR) suggesting the user enable a screen lock to protect private tabs -->
   <string name="private_tab_cfr_title">要鎖定螢幕來隱藏隱私分頁嗎？</string>
   <!-- Negative button text for the contextual feature recommendation (CFR) dismissing the screen lock suggestion -->
-  <string name="private_tab_cfr_negative">不用了，謝謝</string>
+  <string name="private_tab_cfr_negative">不要，謝謝</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
   <string name="private_tab_cfr_positive">鎖定分頁</string>
   <!--

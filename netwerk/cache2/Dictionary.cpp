@@ -215,9 +215,9 @@ void DictionaryCacheEntry::UseCompleted() {
 }
 
 // returns aShouldSuspend=true if we should suspend to wait for the prefetch
-nsresult DictionaryCacheEntry::Prefetch(nsILoadContextInfo* aLoadContextInfo,
-                                        bool& aShouldSuspend,
-                                        const std::function<void()>& aFunc) {
+nsresult DictionaryCacheEntry::Prefetch(
+    nsILoadContextInfo* aLoadContextInfo, bool& aShouldSuspend,
+    const std::function<void(nsresult)>& aFunc) {
   DICTIONARY_LOG(("Prefetch for %s", mURI.get()));
   // Start reading the cache entry into memory and call completion
   // function when done
@@ -532,19 +532,43 @@ DictionaryCacheEntry::OnStopRequest(nsIRequest* request, nsresult result) {
   DICTIONARY_LOG(("DictionaryCacheEntry %s OnStopRequest", mURI.get()));
   if (NS_SUCCEEDED(result)) {
     mDictionaryDataComplete = true;
+
+    // Validate that the loaded dictionary data matches the stored hash
+    if (!mHash.IsEmpty()) {
+      nsCOMPtr<nsICryptoHash> hasher =
+          do_CreateInstance(NS_CRYPTO_HASH_CONTRACTID);
+      if (hasher) {
+        hasher->Init(nsICryptoHash::SHA256);
+        hasher->Update(mDictionaryData.begin(),
+                       static_cast<uint32_t>(mDictionaryData.length()));
+        nsAutoCString computedHash;
+        MOZ_ALWAYS_SUCCEEDS(hasher->Finish(true, computedHash));
+
+        if (!computedHash.Equals(mHash)) {
+          DICTIONARY_LOG(("Hash mismatch for %s: expected %s, computed %s",
+                          mURI.get(), mHash.get(), computedHash.get()));
+          result = NS_ERROR_CORRUPTED_CONTENT;
+          mDictionaryDataComplete = false;
+          mDictionaryData.clear();
+          // Remove this corrupted dictionary entry
+          DictionaryCache::RemoveDictionaryFor(mURI);
+        }
+      }
+    }
+
     DICTIONARY_LOG(("Unsuspending %zu channels, Dictionary len %zu",
                     mWaitingPrefetch.Length(), mDictionaryData.length()));
     // if we suspended, un-suspend the channel(s)
     for (auto& lambda : mWaitingPrefetch) {
-      (lambda)();
+      (lambda)(result);
     }
     mWaitingPrefetch.Clear();
   } else {
-    // XXX
-    // This is problematic - we requested with dcb/dcz, but can't actually
-    // decode them. Probably we should re-request without dcb/dcz, and also nuke
-    // the entry
-    // XXX
+    // Pass error to waiting callbacks
+    for (auto& lambda : mWaitingPrefetch) {
+      (lambda)(result);
+    }
+    mWaitingPrefetch.Clear();
   }
 
   // If we're being replaced by a new entry, swap now
@@ -910,6 +934,60 @@ void DictionaryCache::Clear() {
   // This can be used to make the cache return to the state it has at
   // startup, especially useful for tests.
   mDictionaryCache.Clear();
+}
+
+void DictionaryCache::CorruptHashForTesting(const nsACString& aURI) {
+  DICTIONARY_LOG(("DictionaryCache::CorruptHashForTesting for %s",
+                  PromiseFlatCString(aURI).get()));
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aURI))) {
+    return;
+  }
+  nsAutoCString prepath;
+  if (NS_FAILED(GetDictPath(uri, prepath))) {
+    return;
+  }
+  if (auto origin = mDictionaryCache.Lookup(prepath)) {
+    for (auto& entry : origin.Data()->mEntries) {
+      if (entry->GetURI().Equals(aURI)) {
+        DICTIONARY_LOG(("Corrupting hash for %s",
+                        PromiseFlatCString(entry->GetURI()).get()));
+        entry->SetHash("CORRUPTED_FOR_TESTING"_ns);
+        return;
+      }
+    }
+    for (auto& entry : origin.Data()->mPendingEntries) {
+      if (entry->GetURI().Equals(aURI)) {
+        DICTIONARY_LOG(("Corrupting hash for %s (pending)",
+                        PromiseFlatCString(entry->GetURI()).get()));
+        entry->SetHash("CORRUPTED_FOR_TESTING"_ns);
+        return;
+      }
+    }
+  }
+}
+
+void DictionaryCache::ClearDictionaryDataForTesting(const nsACString& aURI) {
+  DICTIONARY_LOG(("DictionaryCache::ClearDictionaryDataForTesting for %s",
+                  PromiseFlatCString(aURI).get()));
+  nsCOMPtr<nsIURI> uri;
+  if (NS_FAILED(NS_NewURI(getter_AddRefs(uri), aURI))) {
+    return;
+  }
+  nsAutoCString prepath;
+  if (NS_FAILED(GetDictPath(uri, prepath))) {
+    return;
+  }
+  if (auto origin = mDictionaryCache.Lookup(prepath)) {
+    for (auto& entry : origin.Data()->mEntries) {
+      if (entry->GetURI().Equals(aURI)) {
+        DICTIONARY_LOG(("Clearing data for %s",
+                        PromiseFlatCString(entry->GetURI()).get()));
+        entry->ClearDataForTesting();
+        return;
+      }
+    }
+  }
 }
 
 // Remove a dictionary if it exists for the key given

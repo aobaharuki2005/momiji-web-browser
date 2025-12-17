@@ -832,6 +832,7 @@ struct ReflowInput : public SizeComputationInput {
                                            WritingMode aContainingBlockWM,
                                            bool aIsMarginBStartAuto,
                                            bool aIsMarginBEndAuto,
+                                           bool aIsIAnchorCenter,
                                            LogicalMargin& aMargin);
 
   // Resolve any inline-axis 'auto' margins (if any) for an absolutely
@@ -841,6 +842,7 @@ struct ReflowInput : public SizeComputationInput {
                                             WritingMode aContainingBlockWM,
                                             bool aIsMarginIStartAuto,
                                             bool aIsMarginIEndAuto,
+                                            bool aIsBAnchorCenter,
                                             LogicalMargin& aMargin);
 
  protected:

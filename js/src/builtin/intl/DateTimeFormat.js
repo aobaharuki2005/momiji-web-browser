@@ -73,10 +73,15 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
   // Changes from "Intl era and monthCode" proposal.
   //
   // https://tc39.es/proposal-intl-era-monthcode/#sec-createdatetimeformat
-  if (r.ca === "islamic" || r.ca === "islamic-rgsa") {
-    ReportWarning(JSMSG_DEPRECATED_CALENDAR, r.ca);
+  if (r.ca === "islamic") {
+    ReportWarning(JSMSG_ISLAMIC_FALLBACK);
 
     // Fallback to "islamic-tbla" calendar.
+    r.ca = "islamic-tbla";
+  } else if (r.ca === "islamic-rgsa") {
+    // Fallback to "islamic-tbla" calendar for 147 uplift compatibility.
+    // The above warning text isn't suitable, and per 2025-12 TG2 meeting
+    // treatment as unknown is expected going forward (bug 2005702).
     r.ca = "islamic-tbla";
   }
 

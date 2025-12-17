@@ -36,6 +36,7 @@ import org.mozilla.fenix.GleanMetrics.Preferences
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.GleanMetrics.TabStrip
 import org.mozilla.fenix.GleanMetrics.TopSites
+import org.mozilla.fenix.components.fake.FakeMetricController
 import org.mozilla.fenix.components.metrics.MozillaProductDetector
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.distributions.DefaultDistributionBrowserStoreProvider
@@ -69,6 +70,7 @@ class FenixApplicationTest {
     private val testDistributionSettings = object : DistributionSettings {
         override fun getDistributionId(): String = ""
         override fun saveDistributionId(id: String) = Unit
+        override fun setMarketingTelemetryPreferences() = Unit
     }
 
     @Before
@@ -84,6 +86,7 @@ class FenixApplicationTest {
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(browserStore),
             distributionProviderChecker = testDistributionProviderChecker,
             distributionSettings = testDistributionSettings,
+            metricController = FakeMetricController(),
         )
     }
 

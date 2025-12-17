@@ -357,6 +357,7 @@ static nsWindow* gFocusWindow = nullptr;
 static bool gBlockActivateEvent = false;
 static bool gGlobalsInitialized = false;
 static bool gUseAspectRatio = true;
+bool gUseStableRounding = true;
 static uint32_t gLastTouchID = 0;
 // See Bug 1777269 for details. We don't know if the suspected leave notify
 // event is a correct one when we get it.
@@ -588,7 +589,10 @@ void nsWindow::DispatchResized() {
     return;
   }
 
-  auto clientSize = GetClientSize();
+  auto clientSize = gUseStableRounding
+                        ? GetClientSize()
+                        : LayoutDeviceIntSize::Round(mClientArea.Size() *
+                                                     GetDesktopToDeviceScale());
 
   LOG("nsWindow::DispatchResized() client scaled size [%d, %d]",
       (int)clientSize.width, (int)clientSize.height);
@@ -5604,19 +5608,23 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
     return result;
   }();
 
+  const bool fullscreenChanging =
+      mSizeMode != oldSizeMode && (mSizeMode == nsSizeMode_Fullscreen ||
+                                   oldSizeMode == nsSizeMode_Fullscreen);
+
   if (mSizeMode != oldSizeMode || mIsTiled != oldIsTiled) {
-    RecomputeBounds(/* MayChangeCsdMargin */ false);
+    // When going to fullscreen to non-fullscreen our client margin may change
+    // without other notifications (because we assume fullscreen windows are not
+    // decorated).
+    RecomputeBounds(/* MayChangeCSDMargin */ fullscreenChanging);
   }
   if (mSizeMode != oldSizeMode) {
     if (mWidgetListener) {
       mWidgetListener->SizeModeChanged(mSizeMode);
     }
-    if (mSizeMode == nsSizeMode_Fullscreen ||
-        oldSizeMode == nsSizeMode_Fullscreen) {
-      if (mCompositorWidgetDelegate) {
-        mCompositorWidgetDelegate->NotifyFullscreenChanged(
-            mSizeMode == nsSizeMode_Fullscreen);
-      }
+    if (fullscreenChanging && mCompositorWidgetDelegate) {
+      mCompositorWidgetDelegate->NotifyFullscreenChanged(mSizeMode ==
+                                                         nsSizeMode_Fullscreen);
     }
   }
 }
@@ -8778,6 +8786,9 @@ static nsresult initialize_prefs(void) {
   } else {
     gUseAspectRatio = IsGnomeDesktopEnvironment() || IsKdeDesktopEnvironment();
   }
+  // 'Stable' Wayland subsurface rounding algorithm is used by all compositors
+  // except KDE.
+  gUseStableRounding = !IsKdeDesktopEnvironment() || GdkIsX11Display();
   return NS_OK;
 }
 
