@@ -112,3 +112,13 @@ def detect_repo_type():
     elif os.path.exists(".hg"):
         return RepoType.HG
     return None
+
+
+def check_repo_status(repo_type):
+    if not isinstance(repo_type, RepoType):
+        print("check_repo_status requires type RepoType")
+        raise TypeError
+    if repo_type == RepoType.GIT:
+        return run_git("git status -s third_party/libwebrtc", ".")
+    else:
+        return run_hg("hg status third_party/libwebrtc")

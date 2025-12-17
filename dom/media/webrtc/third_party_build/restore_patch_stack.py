@@ -10,11 +10,10 @@ from pathlib import Path
 
 from fetch_github_repo import fetch_repo
 from run_operations import (
-    RepoType,
+    check_repo_status,
     detect_repo_type,
     get_last_line,
     run_git,
-    run_hg,
     run_shell,
 )
 
@@ -23,16 +22,6 @@ from run_operations import (
 # various rebase conflict resolution operations, the patch-stack can be
 # restored rather than requiring the user to restart the fast-forward
 # process from the beginning.
-
-
-def check_repo_status(repo_type):
-    if not isinstance(repo_type, RepoType):
-        print("check_repo_status requires type RepoType")
-        raise TypeError
-    if repo_type == RepoType.GIT:
-        return run_git("git status -s third_party/libwebrtc", ".")
-    else:
-        return run_hg("hg status third_party/libwebrtc")
 
 
 def restore_patch_stack(
