@@ -959,11 +959,6 @@ class nsWindow final : public nsIWidget {
   void LogPopupGravity(GdkGravity aGravity);
 #endif
 
-  // mPopupPosition is the original popup position/size from layout, set by
-  // nsWindow::Move() or nsWindow::Resize().
-  // Popup position is relative to main (toplevel) window.
-  GdkPoint mPopupPosition{};
-
   // Toplevel window (first element) of linked list of Wayland popups. It's null
   // if we're the toplevel.
   RefPtr<nsWindow> mWaylandToplevel;

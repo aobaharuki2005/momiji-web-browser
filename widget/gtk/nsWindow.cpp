@@ -2182,7 +2182,6 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   LOG("nsWindow::WaylandPopupSetDirectPosition %d,%d -> %d x %d\n", rect.x,
       rect.y, rect.width, rect.height);
 
-  mPopupPosition = {rect.x, rect.y};
   mClientArea.MoveTo(mLastMoveRequest);
   mClientArea.SizeTo(mLastSizeRequest);
 
@@ -2211,27 +2210,28 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   int x;
   gdk_window_get_position(gdkWindow, &x, nullptr);
 
+  auto pos = mClientArea.TopLeft();
   // If popup is bigger than main window just center it.
   if (popupWidth > parentWidth) {
-    mPopupPosition.x = -(parentWidth - popupWidth) / 2 + x;
+    pos.x = -(parentWidth - popupWidth) / 2 + x;
   } else {
-    if (mPopupPosition.x < x) {
+    if (pos.x < x) {
       // Stick with left window edge if it's placed too left
-      mPopupPosition.x = x;
-    } else if (mPopupPosition.x + popupWidth > parentWidth + x) {
+      pos.x = x;
+    } else if (pos.x + popupWidth > parentWidth + x) {
       // Stick with right window edge otherwise
-      mPopupPosition.x = parentWidth + x - popupWidth;
+      pos.x = parentWidth + x - popupWidth;
     }
   }
 
-  LOG("  set position [%d, %d]\n", mPopupPosition.x, mPopupPosition.y);
-  gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
+  LOG("  set position [%d, %d]\n", pos.x.value, pos.y.value);
+  gtk_window_move(GTK_WINDOW(mShell), pos.x, pos.y);
 
   LOG("  set size [%d, %d]\n", rect.width, rect.height);
   gtk_window_resize(GTK_WINDOW(mShell), rect.width, rect.height);
 
-  if (mPopupPosition.x != rect.x) {
-    mClientArea.MoveTo(mPopupPosition.x, mPopupPosition.y);
+  if (pos.x != rect.x) {
+    mClientArea.MoveTo(pos.x, pos.y);
     LOG("  setting new client area [%d, %d]\n", mClientArea.x, mClientArea.y);
     WaylandPopupPropagateChangesToLayout(/* move */ true, /* resize */ false);
   }
@@ -2332,11 +2332,6 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
   // Mark popup as changed as we're updating position/size.
   mPopupChanged = true;
 
-  // Save popup position for former re-calculations when popup hierarchy
-  // is changed.
-  LOG("  popup position changed from [%d, %d] to [%d, %d]\n", mPopupPosition.x,
-      mPopupPosition.y, rect.x, rect.y);
-  mPopupPosition = {rect.x, rect.y};
   mClientArea.MoveTo(mLastMoveRequest);
   mClientArea.SizeTo(mLastSizeRequest);
 
@@ -2504,10 +2499,6 @@ nsWindow::WaylandPopupGetPositionFromLayout() {
     anchorAlign = -anchorAlign;
   }
 
-  // Although we have mPopupPosition / mRelativePopupPosition here
-  // we can't use it. move-to-rect needs anchor rectangle to position a popup
-  // but we have only a point from Resize().
-  //
   // So we need to extract popup position from nsMenuPopupFrame() and duplicate
   // the layout work here.
   LayoutDeviceIntRect anchorRect;
@@ -2766,8 +2757,6 @@ void nsWindow::WaylandPopupMoveImpl() {
   }
 
   LOG("nsWindow::WaylandPopupMove");
-  LOG("  original widget popup position [%d, %d]\n", mPopupPosition.x,
-      mPopupPosition.y);
   LOG("  popup use move to rect %d", mPopupUseMoveToRect);
 
   WaylandPopupPrepareForMove();
@@ -6744,10 +6733,7 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
   if (aMoved && GdkIsX11Display() && IsPopup() &&
       !gtk_widget_get_visible(GTK_WIDGET(mShell))) {
     mX11HiddenPopupPositioned = true;
-    mPopupPosition = {moveResizeRect.x, moveResizeRect.y};
     mClientArea.MoveTo(mLastMoveRequest);
-    LOG("  store position of hidden popup window [%d, %d]", mPopupPosition.x,
-        mPopupPosition.y);
   }
 
   if (IsWaylandPopup()) {
@@ -6896,9 +6882,9 @@ void nsWindow::NativeShow(bool aAction) {
 #endif
     }
     if (mX11HiddenPopupPositioned) {
-      LOG("  re-position hidden popup window [%d, %d]", mPopupPosition.x,
-          mPopupPosition.y);
-      gtk_window_move(GTK_WINDOW(mShell), mPopupPosition.x, mPopupPosition.y);
+      LOG("  re-position hidden popup window [%d, %d]", mClientArea.x,
+          mClientArea.y);
+      gtk_window_move(GTK_WINDOW(mShell), mClientArea.x, mClientArea.y);
       mX11HiddenPopupPositioned = false;
     }
   } else {
