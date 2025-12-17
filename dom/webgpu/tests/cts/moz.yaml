@@ -57,6 +57,16 @@ vendoring:
         - -i
         - ../patches/0001-base-resource-path.patch
 
+    # Patch the `serviceWorkerURL` used by the CTS so that the tests we generate are able to load
+    # resources correctly.
+    - action: run-command
+      cwd: '{yaml_dir}/checkout/'
+      command: patch
+      args:
+        - -p1
+        - -i
+        - ../patches/0002-service-worker-url.patch
+
     - action: run-command
       cwd: '{yaml_dir}/vendor/'
       command: cargo
