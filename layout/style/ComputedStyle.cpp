@@ -432,11 +432,10 @@ void ComputedStyle::DumpMatchedRules() const {
 
 bool ComputedStyle::HasAnchorPosReference() const {
   const auto* pos = StylePosition();
-  if (pos->mPositionAnchor.IsIdent()) {
-    // Short circuit if there's a default anchor defined, even if
-    // it may not end up being referenced.
-    // If this early return is removed, we'll need to handle mPositionArea
-    // explicitly.
+  if (pos->mPositionAnchor.IsIdent() || pos->mPositionAnchor.IsAuto()) {
+    // Short circuit if there's a default anchor defined (Or an implicit one),
+    // even if it may not end up being referenced. If this early return is
+    // removed, we'll need to handle mPositionArea explicitly.
     return true;
   }
 
