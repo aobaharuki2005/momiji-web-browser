@@ -1559,6 +1559,13 @@ export class BackupService extends EventTarget {
             continue;
           }
 
+          if (!resourceClass.canBackupResource) {
+            lazy.logConsole.debug(
+              `We cannot backup ${resourceClass.key}. Skipping.`
+            );
+            continue;
+          }
+
           let resourcePath = PathUtils.join(stagingPath, resourceClass.key);
           await IOUtils.makeDirectory(resourcePath);
 
@@ -1726,7 +1733,6 @@ export class BackupService extends EventTarget {
           );
 
           let result = await this.createAndPopulateStagingFolder(profilePath);
-          this.#backupInProgress = true;
           currentStep = result.currentStep;
           if (result.error) {
             // Re-throw the error so we can catch it below for telemetry

@@ -2,17 +2,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { BackupResource } from "resource:///modules/backup/BackupResource.sys.mjs";
 import { MeasurementUtils } from "resource:///modules/backup/MeasurementUtils.sys.mjs";
 
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  BookmarkJSONUtils: "resource://gre/modules/BookmarkJSONUtils.sys.mjs",
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-const BOOKMARKS_BACKUP_FILENAME = "bookmarks.jsonlz4";
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isBrowsingHistoryEnabled",
+  "places.history.enabled",
+  true
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isSanitizeOnShutdownEnabled",
+  "privacy.sanitize.sanitizeOnShutdown",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isHistoryClearedOnShutdown2",
+  "privacy.clearOnShutdown_v2.browsingHistoryAndDownloads",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "useOldClearHistoryDialog",
+  "privacy.sanitize.useOldClearHistoryDialog",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isHistoryClearedOnShutdown",
+  "privacy.clearOnShutdown.history",
+  false
+);
 
 /**
  * Class representing Places database related files within a user profile.
@@ -30,26 +64,34 @@ export class PlacesBackupResource extends BackupResource {
     return 1;
   }
 
+  static get canBackupResource() {
+    if (
+      lazy.PrivateBrowsingUtils.permanentPrivateBrowsing ||
+      !lazy.isBrowsingHistoryEnabled
+    ) {
+      return false;
+    }
+
+    if (!lazy.isSanitizeOnShutdownEnabled) {
+      return true;
+    }
+
+    if (!lazy.useOldClearHistoryDialog) {
+      if (lazy.isHistoryClearedOnShutdown2) {
+        return false;
+      }
+    } else if (lazy.isHistoryClearedOnShutdown) {
+      return false;
+    }
+
+    return true;
+  }
+
   async backup(
     stagingPath,
     profilePath = PathUtils.profileDir,
     _isEncrypting = false
   ) {
-    /**
-     * Do not backup places.sqlite and favicons.sqlite if users have history disabled, want history cleared on shutdown or are using permanent private browsing mode.
-     * Instead, export all existing bookmarks to a compressed JSON file that we can read when restoring the backup.
-     */
-    if (!BackupResource.canBackupHistory()) {
-      let bookmarksBackupFile = PathUtils.join(
-        stagingPath,
-        BOOKMARKS_BACKUP_FILENAME
-      );
-      await lazy.BookmarkJSONUtils.exportToFile(bookmarksBackupFile, {
-        compress: true,
-      });
-      return { bookmarksOnly: true };
-    }
-
     // These are copied in parallel because they're attached[1], and we don't
     // want them to get out of sync with one another.
     //
@@ -80,41 +122,13 @@ export class PlacesBackupResource extends BackupResource {
   }
 
   async recover(manifestEntry, recoveryPath, destProfilePath) {
-    if (!manifestEntry) {
-      const simpleCopyFiles = ["places.sqlite", "favicons.sqlite"];
-      await BackupResource.copyFiles(
-        recoveryPath,
-        destProfilePath,
-        simpleCopyFiles
-      );
-    } else {
-      const { bookmarksOnly } = manifestEntry;
-
-      /**
-       * If the recovery file only has bookmarks backed up, pass the file path to postRecovery()
-       * so that we can import all bookmarks into the new profile once it's been launched and restored.
-       */
-      if (bookmarksOnly) {
-        let bookmarksBackupPath = PathUtils.join(
-          recoveryPath,
-          BOOKMARKS_BACKUP_FILENAME
-        );
-        return { bookmarksBackupPath };
-      }
-    }
-
+    const simpleCopyFiles = ["places.sqlite", "favicons.sqlite"];
+    await BackupResource.copyFiles(
+      recoveryPath,
+      destProfilePath,
+      simpleCopyFiles
+    );
     return null;
-  }
-
-  async postRecovery(postRecoveryEntry) {
-    if (postRecoveryEntry?.bookmarksBackupPath) {
-      await lazy.BookmarkJSONUtils.importFromFile(
-        postRecoveryEntry.bookmarksBackupPath,
-        {
-          replace: true,
-        }
-      );
-    }
   }
 
   async measure(profilePath = PathUtils.profileDir) {

@@ -10,21 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
   BackupError: "resource:///modules/backup/BackupError.mjs",
   ERRORS: "chrome://browser/content/backup/backup-constants.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "isBrowsingHistoryEnabled",
-  "places.history.enabled",
-  true
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "isSanitizeOnShutdownEnabled",
-  "privacy.sanitize.sanitizeOnShutdown",
-  false
-);
 
 // Convert from bytes to kilobytes (not kibibytes).
 export const BYTES_IN_KB = 1000;
@@ -245,12 +231,16 @@ export class BackupResource {
    *
    * @returns {boolean}
    */
-  static canBackupHistory() {
-    return (
-      !lazy.PrivateBrowsingUtils.permanentPrivateBrowsing &&
-      !lazy.isSanitizeOnShutdownEnabled &&
-      lazy.isBrowsingHistoryEnabled
-    );
+
+  /**
+   * Returns true if the resource is enabled for backup based on different
+   * browser preferences and configurations. Otherwise, returns false.
+   *
+   * @returns {boolean}
+   */
+  static get canBackupResource() {
+    // This is meant to be overridden if a resource requires checks; default is true.
+    return true;
   }
 
   constructor() {}
