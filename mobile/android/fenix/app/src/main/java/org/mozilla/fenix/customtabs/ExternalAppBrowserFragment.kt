@@ -51,7 +51,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
     private val customTabColorsBinding = ViewBoundFeatureWrapper<CustomTabColorsBinding>()
     private val windowFeature = ViewBoundFeatureWrapper<CustomTabWindowFeature>()
-    private val hideToolbarFeature = ViewBoundFeatureWrapper<WebAppHideToolbarFeature>()
 
     @Suppress("LongMethod")
     override fun initializeUI(view: View, tab: SessionState) {

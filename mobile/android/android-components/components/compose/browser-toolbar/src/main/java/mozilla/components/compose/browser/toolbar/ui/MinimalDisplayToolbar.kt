@@ -18,6 +18,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -25,7 +26,6 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.theme.AcornTheme
 import mozilla.components.compose.browser.toolbar.ActionContainer
 import mozilla.components.compose.browser.toolbar.R
@@ -40,8 +40,6 @@ import mozilla.components.compose.browser.toolbar.store.ToolbarGravity.Top
 import mozilla.components.compose.browser.toolbar.utils.DisplayToolbarDataProvider
 import mozilla.components.compose.browser.toolbar.utils.DisplayToolbarPreviewModel
 import mozilla.components.support.ktx.kotlin.getRegistrableDomainIndexRange
-
-private const val MINIMAL_TOOLBAR_HEIGHT_DP = 32
 
 @Composable
 internal fun MinimalDisplayToolbar(
@@ -69,7 +67,7 @@ internal fun MinimalDisplayToolbar(
         Box {
             Row(
                 modifier = modifier
-                    .requiredHeight(MINIMAL_TOOLBAR_HEIGHT_DP.dp)
+                    .requiredHeight(dimensionResource(R.dimen.mozac_minimal_display_toolbar_height))
                     .clearAndSetSemantics {
                         this.contentDescription = contentDescription
                         testTagsAsResourceId = true
