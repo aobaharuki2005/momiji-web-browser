@@ -131,6 +131,7 @@ add_setup(async function () {
       // onorous and creates issues with existing tests without improving test
       // coverage, so disable it herein.
       ["browser.taskbarTabs.enabled", false],
+      ["browser.search.widget.new", false],
     ],
   });
   resetToolbarWithoutDevEditionButtons();

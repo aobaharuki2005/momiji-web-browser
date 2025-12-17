@@ -15,6 +15,7 @@ support-files = [
   "tooManyEnginesOffered.html",
 ]
 tags = "searchnontelem"
+prefs = ["browser.search.widget.new=false"]
 
 ["browser_426329.js"]
 support-files = ["test.html", "discovery.html", "426329.xml"]
