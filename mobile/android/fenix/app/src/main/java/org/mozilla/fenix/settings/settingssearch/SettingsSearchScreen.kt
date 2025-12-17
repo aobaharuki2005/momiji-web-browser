@@ -210,7 +210,7 @@ private fun RecentSearchesContent(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .padding(start = 16.dp, top = 12.dp, bottom = 8.dp),
+                .padding(start = 16.dp, top = 12.dp, bottom = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
