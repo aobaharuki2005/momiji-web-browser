@@ -213,6 +213,21 @@ if CONFIG["OS_ARCH"] == "WINNT":
         "CredentialManagerSecret.cpp",
     ]
 
+if not CONFIG["MOZ_NO_SMART_CARDS"]:
+    EXPORTS.mozilla.psm += [
+        "PKCS11ModuleChild.h",
+        "PKCS11ModuleParent.h",
+    ]
+
+    UNIFIED_SOURCES += [
+        "PKCS11ModuleChild.cpp",
+        "PKCS11ModuleParent.cpp",
+    ]
+
+    IPDL_SOURCES += [
+        "PPKCS11Module.ipdl",
+    ]
+
 FINAL_LIBRARY = "xul"
 
 LOCAL_INCLUDES += [

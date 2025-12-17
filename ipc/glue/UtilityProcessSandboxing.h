@@ -31,6 +31,9 @@ enum SandboxingKind : uint64_t {
   WINDOWS_UTILS,
   WINDOWS_FILE_DIALOG,
 #endif
+#ifndef MOZ_NO_SMART_CARDS
+  PKCS11_MODULE,
+#endif  // !MOZ_NO_SMART_CARDS
 
   COUNT,
 

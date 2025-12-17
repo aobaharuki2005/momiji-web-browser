@@ -15,6 +15,11 @@ SOURCES += [
     "TLSIntoleranceTest.cpp",
 ]
 
+if not CONFIG["MOZ_NO_SMART_CARDS"]:
+    SOURCES += [
+        "UtilityPKCS11ModuleTest.cpp",
+    ]
+
 LOCAL_INCLUDES += [
     "/security/certverifier",
     "/security/manager/ssl",

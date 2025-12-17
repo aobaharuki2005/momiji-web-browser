@@ -29,6 +29,10 @@
 
 #include "mozilla/GeckoArgs.h"
 
+#ifndef MOZ_NO_SMART_CARDS
+#  include "mozilla/psm/PPKCS11ModuleChild.h"
+#endif  // !MOZ_NO_SMART_CARDS
+
 namespace mozilla::ipc {
 
 extern LazyLogModule gUtilityProcessLog;
@@ -513,6 +517,31 @@ UtilityProcessManager::CreateWinFileDialogActor() {
 }
 
 #endif  // XP_WIN
+
+#ifndef MOZ_NO_SMART_CARDS
+RefPtr<UtilityProcessManager::PKCS11ModulePromise>
+UtilityProcessManager::StartPKCS11Module() {
+  using RetPromise = PKCS11ModulePromise;
+  auto parent = MakeRefPtr<psm::PKCS11ModuleParent>();
+  auto startPromise = StartUtility(parent, SandboxingKind::PKCS11_MODULE);
+  return startPromise->Then(
+      GetMainThreadSerialEventTarget(), __func__,
+      [parent = std::move(parent)]() mutable {
+        if (!parent->CanSend()) {
+          MOZ_ASSERT(false, "PKCS11ModuleParent lost in the middle");
+          return RetPromise::CreateAndReject(
+              LaunchError("StartPKCS11Module: !parent->CanSend()"),
+              __PRETTY_FUNCTION__);
+        }
+        return RetPromise::CreateAndResolve(std::move(parent), __func__);
+      },
+      [](LaunchError&& aError) {
+        MOZ_ASSERT_UNREACHABLE(
+            "StartPKCS11Module: failure when starting actor");
+        return RetPromise::CreateAndReject(std::move(aError), __func__);
+      });
+}
+#endif  // !MOZ_NO_SMART_CARDS
 
 bool UtilityProcessManager::IsProcessLaunching(SandboxingKind aSandbox) {
   MOZ_ASSERT(NS_IsMainThread());
