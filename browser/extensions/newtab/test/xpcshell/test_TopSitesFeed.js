@@ -2792,6 +2792,14 @@ add_task(async function test_ContileIntegration() {
 
     Assert.ok(fetched);
     Assert.equal(feed._contile.sites.length, 2);
+
+    info("TopSitesFeed._fetchSites should not send cookies");
+    Assert.ok(fetchStub.calledOnce, "fetch should be called once");
+    Assert.equal(
+      fetchStub.firstCall.args[1].credentials,
+      "omit",
+      "should not send cookies"
+    );
     sandbox.restore();
   }
 
@@ -3512,6 +3520,9 @@ add_task(async function test_ContileIntegration() {
       TEST_PREFLIGHT_GEO_LOCATION,
       "Sent the x-geo-location header from preflight"
     );
+
+    info("TopSitesFeed._fetchSites should not send cookies via OHTTP");
+    Assert.equal(callArgs[3].credentials, "omit", "should not send cookies");
 
     Services.prefs.clearUserPref(
       "browser.newtabpage.activity-stream.discoverystream.ohttp.relayURL"

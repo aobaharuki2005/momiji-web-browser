@@ -707,8 +707,8 @@ export class ContileIntegration {
                 count: countsArray[index],
               })),
               blocks: blockedSponsors.split(","),
-              credentials: "omit",
             }),
+            credentials: "omit",
             signal,
           };
 
