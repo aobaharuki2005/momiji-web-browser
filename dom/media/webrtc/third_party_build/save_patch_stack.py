@@ -8,21 +8,31 @@ import re
 import shutil
 import sys
 
-from run_operations import run_git, run_hg, run_shell
+from run_operations import (
+    ErrorHelp,
+    RepoType,
+    check_repo_status,
+    detect_repo_type,
+    git_status,
+    run_git,
+    run_hg,
+    run_shell,
+)
 
 # This script saves the mozilla patch stack and no-op commit tracking
 # files.  This makes our fast-forward process much more resilient by
 # saving the intermediate state after each upstream commit is processed.
 
-error_help = None
 script_name = os.path.basename(__file__)
+error_help = ErrorHelp()
+error_help.set_prefix(f"*** ERROR *** {script_name} did not complete successfully")
+
+repo_type = None
 
 
 @atexit.register
 def early_exit_handler():
-    print(f"*** ERROR *** {script_name} did not complete successfully")
-    if error_help is not None:
-        print(error_help)
+    error_help.print_help()
 
 
 def build_repo_name_from_path(input_dir):
@@ -65,13 +75,12 @@ def write_prestack_and_standard_patches(
 ):
     # grab the log of our patches that live on top of libwebrtc, and find
     # the commit of our base patch.
-    cmd = f"cd {github_path} ; git log --oneline {start_commit_sha}..{end_commit_sha}"
-    stdout_lines = run_shell(cmd)
+    cmd = f"git log --oneline {start_commit_sha}..{end_commit_sha}"
+    stdout_lines = run_git(cmd, github_path)
     base_commit_summary = "Bug 1376873 - Rollup of local modifications"
     found_lines = [s for s in stdout_lines if base_commit_summary in s]
     if len(found_lines) == 0:
-        global error_help
-        error_help = (
+        error_help.set_help(
             "The base commit for Mozilla's patch-stack was not found in the\n"
             "git log.  The commit summary we're looking for is:\n"
             f"{base_commit_summary}"
@@ -121,6 +130,58 @@ def write_prestack_and_standard_patches(
     write_patch_files_with_prefix(
         github_path, patch_directory, f"{base_commit_sha}^", f"{end_commit_sha}", "s"
     )
+
+
+def handle_missing_files(patch_directory):
+    # get missing files (that should be marked removed)
+    if repo_type == RepoType.GIT:
+        stdout_lines = git_status(".", patch_directory)
+        stdout_lines = [
+            m[0] for m in (re.findall(r"^ D (.*)", line) for line in stdout_lines) if m
+        ]
+        if len(stdout_lines) != 0:
+            cmd = f"git rm {' '.join(stdout_lines)}"
+            run_git(cmd, ".")
+    else:
+        cmd = f"hg status --no-status --deleted {patch_directory}"
+        stdout_lines = run_hg(cmd)
+        if len(stdout_lines) != 0:
+            cmd = f"hg rm {' '.join(stdout_lines)}"
+            run_hg(cmd)
+
+
+def handle_unknown_files(patch_directory):
+    # get unknown files (that should be marked added)
+    if repo_type == RepoType.GIT:
+        stdout_lines = git_status(".", patch_directory)
+        stdout_lines = [
+            m[0]
+            for m in (re.findall(r"^\?\? (.*)", line) for line in stdout_lines)
+            if m
+        ]
+        if len(stdout_lines) != 0:
+            cmd = f"git add {' '.join(stdout_lines)}"
+            run_git(cmd, ".")
+    else:
+        cmd = f"hg status --no-status --unknown {patch_directory}"
+        stdout_lines = run_hg(cmd)
+        if len(stdout_lines) != 0:
+            cmd = f"hg add {' '.join(stdout_lines)}"
+            run_hg(cmd)
+
+
+def handle_modified_files(patch_directory):
+    if repo_type == RepoType.HG:
+        # for the mercurial case, there is no work to be done here
+        return
+
+    stdout_lines = git_status(".", patch_directory)
+    stdout_lines = [
+        m[0] for m in (re.findall(r"^ M (.*)", line) for line in stdout_lines) if m
+    ]
+    if len(stdout_lines) != 0:
+        cmd = f"git add {' '.join(stdout_lines)}"
+        run_git(cmd, ".")
 
 
 def save_patch_stack(
@@ -173,36 +234,43 @@ def save_patch_stack(
         for file in no_op_files:
             shutil.copy(os.path.join(state_directory, file), patch_directory)
 
-    # get missing files (that should be marked removed)
-    cmd = f"hg status --no-status --deleted {patch_directory}"
-    stdout_lines = run_hg(cmd)
-    if len(stdout_lines) != 0:
-        cmd = f"hg rm {' '.join(stdout_lines)}"
-        run_hg(cmd)
-
-    # get unknown files (that should be marked added)
-    cmd = f"hg status --no-status --unknown {patch_directory}"
-    stdout_lines = run_hg(cmd)
-    if len(stdout_lines) != 0:
-        cmd = f"hg add {' '.join(stdout_lines)}"
-        run_hg(cmd)
+    handle_missing_files(patch_directory)
+    handle_unknown_files(patch_directory)
+    handle_modified_files(patch_directory)
 
     # if any files are marked for add/remove/modify, commit them
-    cmd = f"hg status --added --removed --modified {patch_directory}"
-    stdout_lines = run_hg(cmd)
+    if repo_type == RepoType.GIT:
+        stdout_lines = git_status(".", patch_directory)
+        stdout_lines = [
+            line for line in stdout_lines if re.findall(r"^(M|A|D)  .*", line)
+        ]
+    else:
+        cmd = f"hg status --added --removed --modified {patch_directory}"
+        stdout_lines = run_hg(cmd)
     if (len(stdout_lines)) != 0:
         print(f"Updating {len(stdout_lines)} files in {patch_directory}")
         if bug_number is None:
-            run_hg("hg amend")
+            if repo_type == RepoType.GIT:
+                run_git("git commit --amend --no-edit", ".")
+            else:
+                run_hg("hg amend")
         else:
-            run_shell(
-                f"hg commit --message 'Bug {bug_number} - "
+            cmd = (
+                f"{'git commit -m' if repo_type == RepoType.GIT else 'hg commit --message'} "
+                f"'Bug {bug_number} - "
                 f"updated {build_repo_name_from_path(patch_directory)} "
                 f"patch stack' {patch_directory}"
             )
+            stdout_lines = run_shell(cmd)
 
 
 if __name__ == "__main__":
+    # first, check which repo we're in, git or hg
+    repo_type = detect_repo_type()
+    if repo_type is None:
+        error_help.set_help("Unable to detect repo (git or hg)")
+        sys.exit(1)
+
     default_patch_dir = "third_party/libwebrtc/moz-patch-stack"
     default_script_dir = "dom/media/webrtc/third_party_build"
     default_state_dir = ".moz-fast-forward"
@@ -261,22 +329,22 @@ if __name__ == "__main__":
 
     if not args.skip_startup_sanity:
         # make sure the mercurial repo is clean before beginning
-        error_help = (
-            "There are modified or untracked files in the mercurial repo.\n"
+        error_help.set_help(
+            "There are modified or untracked files in the repo.\n"
             f"Please start with a clean repo before running {script_name}"
         )
-        stdout_lines = run_hg("hg status")
+        stdout_lines = check_repo_status(repo_type)
         if len(stdout_lines) != 0:
             sys.exit(1)
 
         # make sure the github repo exists
-        error_help = (
+        error_help.set_help(
             f"No moz-libwebrtc github repo found at {args.repo_path}\n"
             f"Please run restore_patch_stack.py before running {script_name}"
         )
         if not os.path.exists(args.repo_path):
             sys.exit(1)
-        error_help = None
+        error_help.set_help(None)
 
         print("Verifying vendoring before saving patch-stack...")
         run_shell(f"bash {args.script_path}/verify_vendoring.sh", False)
