@@ -114,11 +114,39 @@ def detect_repo_type():
     return None
 
 
+def git_status(working_dir, search_path="."):
+    # We don't use run_git above because it strips all leading
+    # whitespace, which causes issues with the output of
+    # git status --porcelain since leading spaces matter in the output.
+    # For example, the following two lines mean different things:
+    #  M file1.txt
+    # M  file2.txt
+    # file2.txt is staged, while file1.txt is modified, but unstaged.
+    cmd = f"git --no-optional-locks status --porcelain {search_path}"
+    cmd_list = cmd.split(" ")
+    res = subprocess.run(
+        cmd_list,
+        capture_output=True,
+        text=True,
+        cwd=working_dir,
+        check=False,
+    )
+    if res.returncode != 0:
+        print(
+            f"Hit return code {res.returncode} running '{cmd}'. Aborting.",
+            file=sys.stderr,
+        )
+        print(res.stderr)
+        sys.exit(1)
+    stdout = res.stdout.strip("\n")
+    return [] if len(stdout) == 0 else stdout.split("\n")
+
+
 def check_repo_status(repo_type):
     if not isinstance(repo_type, RepoType):
         print("check_repo_status requires type RepoType")
         raise TypeError
     if repo_type == RepoType.GIT:
-        return run_git("git status -s third_party/libwebrtc", ".")
+        return git_status(".", "third_party/libwebrtc")
     else:
         return run_hg("hg status third_party/libwebrtc")
