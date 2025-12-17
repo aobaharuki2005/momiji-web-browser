@@ -277,6 +277,18 @@ private fun BookmarksList(
             val (id, titleOrCount) = state.undoSnackbarText()
             stringResource(id, titleOrCount)
         }
+        is BookmarksSnackbarState.BookmarkMoved -> {
+            stringResource(
+                R.string.bookmark_moved_single_item,
+                formatArgs = arrayOf(
+                    (state.bookmarksSnackbarState as BookmarksSnackbarState.BookmarkMoved).from,
+                    (state.bookmarksSnackbarState as BookmarksSnackbarState.BookmarkMoved).to,
+                ),
+            )
+        }
+        BookmarksSnackbarState.SelectFolderFailed -> {
+            stringResource(R.string.bookmark_error_select_folder)
+        }
         else -> ""
     }
 
@@ -303,6 +315,18 @@ private fun BookmarksList(
                 )
             }
             BookmarksSnackbarState.CantEditDesktopFolders -> scope.launch {
+                snackbarHostState.displaySnackbar(
+                    message = snackbarMessage,
+                    onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },
+                )
+            }
+            is BookmarksSnackbarState.BookmarkMoved -> scope.launch {
+                snackbarHostState.displaySnackbar(
+                    message = snackbarMessage,
+                    onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },
+                )
+            }
+            BookmarksSnackbarState.SelectFolderFailed -> scope.launch {
                 snackbarHostState.displaySnackbar(
                     message = snackbarMessage,
                     onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },

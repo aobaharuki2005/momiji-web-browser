@@ -10,6 +10,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.mozilla.fenix.components.appstate.AppAction
 
 class BookmarksReducerTest {
     @Test
@@ -695,9 +696,52 @@ class BookmarksReducerTest {
             bookmarksSelectFolderState = state.bookmarksSelectFolderState?.copy(
                 outerSelectionGuid = "guid0",
             ),
+            bookmarksSnackbarState = BookmarksSnackbarState.BookmarkMoved("title", "Nested 0"),
         )
 
         assertEquals(expected, result)
+    }
+
+    @Test
+    fun `GIVEN we are on the select folder screen and the bookmark has a url longer than 25 characters WHEN a folder is clicked THEN update the truncate the title and display a snackbar with the truncated title`() {
+        val longTitle = "https://www.firefox.com/en-US/?utm_source=www.mozilla.org&utm_medium=referral&utm_campaign=nav&utm_content=firefox"
+        val state = BookmarksState.default.copy(
+            bookmarksEditBookmarkState = BookmarksEditBookmarkState(
+                bookmark = generateBookmark().copy(title = longTitle),
+                folder = BookmarkItem.Folder("Bookmarks", "guid0", null),
+            ),
+            bookmarksSelectFolderState = BookmarksSelectFolderState(
+                outerSelectionGuid = "guid0",
+                folders = listOf(
+                    SelectFolderItem(0, BookmarkItem.Folder("Bookmarks", "guid0", null)),
+                    SelectFolderItem(0, BookmarkItem.Folder("Nested 0", "guid0", null)),
+                ),
+            ),
+        )
+
+        val result = bookmarksReducer(
+            state = state,
+            action = SelectFolderAction.ItemClicked(
+                folder = SelectFolderItem(0, BookmarkItem.Folder("Nested 0", "guid0", null)),
+            ),
+        )
+
+        val expected = state.copy(
+            bookmarksEditBookmarkState = state.bookmarksEditBookmarkState?.copy(
+                folder = BookmarkItem.Folder("Nested 0", "guid0", null),
+                edited = true,
+            ),
+            bookmarksSelectFolderState = state.bookmarksSelectFolderState?.copy(
+                outerSelectionGuid = "guid0",
+            ),
+            bookmarksSnackbarState = BookmarksSnackbarState.BookmarkMoved(formatBookmarkTitle(longTitle), "Nested 0"),
+        )
+
+        assertEquals(expected, result)
+
+        val finalResult = bookmarksReducer(result, BackClicked)
+
+        assertEquals(BookmarksSnackbarState.BookmarkMoved(formatBookmarkTitle(longTitle), "Nested 0"), finalResult.bookmarksSnackbarState)
     }
 
     @Test
