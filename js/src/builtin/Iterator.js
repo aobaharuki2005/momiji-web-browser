@@ -1090,7 +1090,6 @@ function* IteratorConcatGenerator(iterables) {
   }
 }
 
-#ifdef NIGHTLY_BUILD
 /**
  * Iterator.zip (iterables [, options])
  *
@@ -1670,6 +1669,7 @@ function IteratorCloseAllForException(iters) {
   // Step 2. (Performed in caller)
 }
 
+#ifdef NIGHTLY_BUILD
 /**
  * CreateNumericRangeIterator (start, end, optionOrStep, type)
  * Step 18

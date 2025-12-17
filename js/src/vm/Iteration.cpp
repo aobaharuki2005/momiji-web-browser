@@ -1955,9 +1955,9 @@ static const JSFunctionSpec iterator_static_methods[] = {
     JS_SELF_HOSTED_FN("concat", "IteratorConcat", 0, 0),
 #ifdef NIGHTLY_BUILD
     JS_SELF_HOSTED_FN("range", "IteratorRange", 3, 0),
+#endif
     JS_SELF_HOSTED_FN("zip", "IteratorZip", 2, 0),
     JS_SELF_HOSTED_FN("zipKeyed", "IteratorZipKeyed", 2, 0),
-#endif
     JS_FS_END,
 };
 
