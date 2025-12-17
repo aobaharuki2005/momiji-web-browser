@@ -12,6 +12,7 @@ import sys
 from filter_git_changes import filter_git_changes
 from restore_patch_stack import restore_patch_stack
 from run_operations import (
+    ErrorHelp,
     get_last_line,
     run_git,
     run_hg,
@@ -24,14 +25,13 @@ from vendor_and_commit import vendor_and_commit
 # commit message, and adds the no-op commit tracking file for the when
 # we vendor the upstream commit later.
 
-error_help = None
 script_name = os.path.basename(__file__)
+error_help = ErrorHelp()
+error_help.set_prefix(f"*** ERROR *** {script_name} did not complete successfully")
 
 
 def early_exit_handler():
-    print(f"*** ERROR *** {script_name} did not complete successfully")
-    if error_help is not None:
-        print(error_help)
+    error_help.print_help()
 
 
 def write_commit_message_file(
@@ -210,16 +210,18 @@ if __name__ == "__main__":
     print(f"resume_state: '{resume_state}'")
 
     # don't allow abort/continue flags if not in resume state
-    error_help = "--abort or --continue flags are not allowed when not in resume state"
+    error_help.set_help(
+        "--abort or --continue flags are not allowed when not in resume state"
+    )
     if len(resume_state) == 0 and (args.abort or args.cont):
         sys.exit(1)
-    error_help = None
+    error_help.set_help(None)
 
     # detect missing abort/continue flags if in resume state
-    error_help = "cherry-pick in progress, use --abort or --continue"
+    error_help.set_help("cherry-pick in progress, use --abort or --continue")
     if len(resume_state) != 0 and not args.abort and not args.cont:
         sys.exit(1)
-    error_help = None
+    error_help.set_help(None)
 
     # handle aborting cherry-pick
     if args.abort:
@@ -260,14 +262,14 @@ if __name__ == "__main__":
         sys.exit(0)
 
     # make sure the relevant bits of the mercurial repo is clean before beginning
-    error_help = (
+    error_help.set_help(
         f"There are modified or untracked files under {args.target_path}.\n"
         f"Please cleanup the repo under {args.target_path} before running {script_name}"
     )
     stdout_lines = run_hg(f"hg status {args.target_path}")
     if len(stdout_lines) != 0:
         sys.exit(1)
-    error_help = None
+    error_help.set_help(None)
 
     if len(resume_state) == 0:
         if args.skip_restore is False:
@@ -286,13 +288,13 @@ if __name__ == "__main__":
         update_resume_state("resume2", resume_state_filename)
 
     # make sure the github repo exists
-    error_help = (
+    error_help.set_help(
         f"No moz-libwebrtc github repo found at {args.repo_path}\n"
         f"Please run restore_patch_stack.py before running {script_name}"
     )
     if not os.path.exists(args.repo_path):
         sys.exit(1)
-    error_help = None
+    error_help.set_help(None)
 
     # Other scripts assume the short-sha is used for various comparisons, so
     # make sure the provided sha is in the short form.
@@ -327,7 +329,7 @@ if __name__ == "__main__":
         print(f"------- cherry-pick {args.commit_sha} into {args.repo_path}")
         print("-------")
         full_commit_message_filename = os.path.abspath(commit_message_filename)
-        error_help = (
+        error_help.set_help(
             f"The cherry-pick operation of {args.commit_sha} has failed.\n"
             "To fix this issue, you will need to jump to the github\n"
             f"repo at {args.repo_path} .\n"
@@ -343,7 +345,7 @@ if __name__ == "__main__":
             args.repo_path,
             args.commit_sha,
         )
-        error_help = None
+        error_help.set_help(None)
 
     if len(resume_state) == 0 or resume_state == "resume5":
         resume_state = ""
@@ -351,7 +353,7 @@ if __name__ == "__main__":
         print("-------")
         print(f"------- vendor from {args.repo_path}")
         print("-------")
-        error_help = (
+        error_help.set_help(
             f"Vendoring the newly cherry-picked git commit ({args.commit_sha}) has failed.\n"
             "The mercurial repo is in an unknown state.  This failure is\n"
             "rare and thus makes it difficult to provide definitive guidance.\n"
@@ -382,12 +384,12 @@ if __name__ == "__main__":
             args.log_path,
             commit_message_filename,
         )
-        error_help = None
+        error_help.set_help(None)
 
     if len(resume_state) == 0 or resume_state == "resume6":
         resume_state = ""
         update_resume_state("resume7", resume_state_filename)
-        error_help = (
+        error_help.set_help(
             "Reverting change to 'third_party/libwebrtc/README.mozilla.last-vendor'\n"
             "has failed.  The cherry-pick commit should not modify\n"
             "'third_party/libwebrtc/README.mozilla'.  If necessary\n"
@@ -403,7 +405,7 @@ if __name__ == "__main__":
         run_hg(cmd)
         cmd = "hg amend"
         run_hg(cmd)
-        error_help = None
+        error_help.set_help(None)
 
     if len(resume_state) == 0 or resume_state == "resume7":
         resume_state = ""
@@ -421,7 +423,7 @@ if __name__ == "__main__":
         print(f"github changes:\n{git_paths_changed}")
         git_file_change_cnt = len(git_paths_changed)
 
-        error_help = (
+        error_help.set_help(
             f"Vendoring the cherry-pick of commit {args.commit_sha} has failed due to mismatched\n"
             f"changed file counts between mercurial ({hg_file_change_cnt}) and git ({git_file_change_cnt}).\n"
             "This may be because the mozilla patch-stack was not verified after\n"
@@ -431,7 +433,7 @@ if __name__ == "__main__":
         )
         if hg_file_change_cnt != git_file_change_cnt:
             sys.exit(1)
-        error_help = None
+        error_help.set_help(None)
 
     if len(resume_state) == 0 or resume_state == "resume8":
         resume_state = ""

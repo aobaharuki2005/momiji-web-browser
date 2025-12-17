@@ -7,33 +7,27 @@ import os
 import re
 
 from filter_git_changes import filter_git_changes
-from run_operations import get_last_line, run_hg, run_shell, update_resume_state
+from run_operations import (
+    ErrorHelp,
+    get_last_line,
+    run_hg,
+    run_shell,
+    update_resume_state,
+)
 
 # This script vendors moz-libwebrtc, handles add/deletes/renames and
 # commits the newly vendored code with the provided commit message.
 
 script_name = os.path.basename(__file__)
-
-
-class ErrorHelp:
-    def __init__(self, help_string):
-        self.help_string = help_string
-
-    def set_help(self, help_string):
-        self.help_string = help_string
-
-    def show_help(self):
-        if self.help_string is not None:
-            print(self.help_string)
-            print(f"Please resolve the error and then continue running {script_name}")
-
-
-error_help = ErrorHelp(None)
+error_help = ErrorHelp()
+error_help.set_prefix(f"*** ERROR *** {script_name} did not complete successfully")
+error_help.set_postfix(
+    f"Please resolve the error and then continue running {script_name}"
+)
 
 
 def early_exit_handler():
-    print(f"*** ERROR *** {script_name} did not complete successfully")
-    error_help.show_help()
+    error_help.print_help()
 
 
 def log_output_lines(lines, log_dir, filename):

@@ -101,6 +101,30 @@ def update_resume_state(state, resume_state_filename):
         ofile.write("\n")
 
 
+class ErrorHelp:
+    def __init__(self):
+        self.prefix = None
+        self.error_help = None
+        self.postfix = None
+
+    def set_prefix(self, prefix):
+        self.prefix = prefix
+
+    def set_postfix(self, postfix):
+        self.postfix = postfix
+
+    def set_help(self, error_help):
+        self.error_help = error_help
+
+    def print_help(self):
+        if self.prefix is not None:
+            print(self.prefix)
+        if self.error_help is not None:
+            print(self.error_help)
+        if self.postfix is not None:
+            print(self.postfix)
+
+
 class RepoType(Enum):
     HG = auto()
     GIT = auto()
