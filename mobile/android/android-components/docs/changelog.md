@@ -5,6 +5,8 @@ permalink: /changelog/
 ---
 
 # 148.0 (In Development)
+* **support-utils**
+  * 🆕 New `keyboardAsState` available to use in Jetpack Compose code to know when the IME is shown or hidden. This works more reliably on older Android versions than the frameworks `isImeVisible` API. [Bug 1988730](https://bugzilla.mozilla.org/show_bug.cgi?id=1988730).
 * **browser-engine-gecko** and **concept-engine**
   * Add optional link text support to HitResult.UNKNOWN to allow getting the text associated with a link in response to a long click
 * **feature-contextmenu**
