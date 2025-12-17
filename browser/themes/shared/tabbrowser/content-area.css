@@ -176,6 +176,20 @@
       overflow: clip;
     }
 
+    /* Ensure split view panels can display in fullscreen mode */
+    :root[inDOMFullscreen] & > .split-view-panel-active:not(.deck-selected) {
+      -moz-subtree-hidden-only-visually: 1;
+    }
+    :root[inDOMFullscreen] & > .split-view-panel-active.deck-selected {
+      margin: 0;
+      position: absolute;
+      max-width: none;
+
+      & > .browserContainer {
+        border-radius: 0;
+      }
+    }
+
     .browserContainer {
       border-radius: var(--border-radius-medium);
       overflow: clip;
