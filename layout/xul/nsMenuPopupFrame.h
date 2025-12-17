@@ -392,8 +392,6 @@ class nsMenuPopupFrame final : public nsBlockFrame, public nsIWidgetListener {
     bool mHFlip = false;
     bool mVFlip = false;
     bool mConstrainedByLayout = false;
-    // The client offset of our widget.
-    mozilla::LayoutDeviceIntPoint mClientOffset;
     nsPoint mViewPoint;
   };
 
@@ -421,10 +419,6 @@ class nsMenuPopupFrame final : public nsBlockFrame, public nsIWidgetListener {
   // or (-1, -1, 0, 0) if anchored.
   mozilla::CSSIntRect GetScreenAnchorRect() const {
     return mozilla::CSSRect::FromAppUnitsRounded(mScreenRect);
-  }
-
-  mozilla::LayoutDeviceIntPoint GetLastClientOffset() const {
-    return mLastClientOffset;
   }
 
   mozilla::LayoutDeviceIntRect CalcWidgetBounds() const;
@@ -619,11 +613,6 @@ class nsMenuPopupFrame final : public nsBlockFrame, public nsIWidgetListener {
   // positioned at this offset (along either the x or y axis, depending on
   // mPosition)
   nscoord mAlignmentOffset = 0;
-
-  // The value of the client offset of our widget the last time we positioned
-  // ourselves. We store this so that we can detect when it changes but the
-  // position of our widget didn't change.
-  mozilla::LayoutDeviceIntPoint mLastClientOffset;
 
   // The focus sequence number of the last processed input event
   uint64_t mAPZFocusSequenceNumber = 0;
