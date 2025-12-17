@@ -56,10 +56,6 @@ LazyLogModule gUtilityProcessLog("utilityproc");
             ("UtilityProcessHost=%p, " msg, this, ##__VA_ARGS__))
 #endif
 
-#if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-bool UtilityProcessHost::sLaunchWithMacSandbox = false;
-#endif
-
 UtilityProcessHost::UtilityProcessHost(SandboxingKind aSandbox,
                                        RefPtr<Listener> aListener)
     : GeckoChildProcessHost(GeckoProcessType_Utility),
@@ -71,10 +67,7 @@ UtilityProcessHost::UtilityProcessHost(SandboxingKind aSandbox,
        this, aSandbox);
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
-  if (!sLaunchWithMacSandbox) {
-    sLaunchWithMacSandbox = IsUtilitySandboxEnabled(aSandbox);
-  }
-  mDisableOSActivityMode = sLaunchWithMacSandbox;
+  mDisableOSActivityMode = IsUtilitySandboxEnabled(aSandbox);
 #endif
 #if defined(MOZ_SANDBOX)
   mSandbox = aSandbox;
@@ -196,15 +189,17 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   UniquePtr<SandboxBroker::Policy> policy;
-  switch (mSandbox) {
-    case SandboxingKind::GENERIC_UTILITY:
-      policy = SandboxBrokerPolicyFactory::GetUtilityProcessPolicy(
-          GetActor()->OtherPid());
-      break;
+  if (IsUtilitySandboxEnabled(mSandbox)) {
+    switch (mSandbox) {
+      case SandboxingKind::GENERIC_UTILITY:
+        policy = SandboxBrokerPolicyFactory::GetUtilityProcessPolicy(
+            GetActor()->OtherPid());
+        break;
 
-    default:
-      MOZ_ASSERT(false, "Invalid SandboxingKind");
-      break;
+      default:
+        MOZ_ASSERT(false, "Invalid SandboxingKind");
+        break;
+    }
   }
   if (policy != nullptr) {
     brokerFd = Some(FileDescriptor());
