@@ -686,6 +686,12 @@ Preferences.addSetting({
 });
 
 Preferences.addSetting({
+  id: "allowWindowSSO",
+  pref: "network.http.windows-sso.enabled",
+  visible: () => AppConstants.platform === "win",
+});
+
+Preferences.addSetting({
   id: "manageSavedPasswords",
   onUserClick: ({ target }) => {
     target.ownerGlobal.gPrivacyPane.showPasswords();

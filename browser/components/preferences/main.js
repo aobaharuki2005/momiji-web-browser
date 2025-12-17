@@ -2805,6 +2805,11 @@ SettingGroupManager.registerGroups({
         l10nId: "forms-os-reauth",
       },
       {
+        id: "allowWindowSSO",
+        l10nId: "forms-windows-sso",
+        supportPage: "windows-sso",
+      },
+      {
         id: "manageSavedPasswords",
         l10nId: "forms-saved-passwords-2",
         control: "moz-box-link",
