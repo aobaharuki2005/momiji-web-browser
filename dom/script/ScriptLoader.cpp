@@ -49,6 +49,7 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/DocGroup.h"
+#include "mozilla/dom/DocumentInlines.h"  // Document::GetPresContext
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FetchPriority.h"
 #include "mozilla/dom/JSExecutionUtils.h"  // mozilla::dom::Compile, mozilla::dom::InstantiateStencil, mozilla::dom::EvaluationExceptionToNSResult
@@ -93,6 +94,7 @@
 #include "nsJSPrincipals.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
+#include "nsPresContext.h"  // nsPresContext
 #include "nsProxyRelease.h"
 #include "nsQueryObject.h"
 #include "nsThreadUtils.h"
@@ -207,6 +209,7 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mLoadEventFired(false),
       mGiveUpDiskCaching(false),
       mContinueParsingDocumentAfterCurrentScript(false),
+      mHadFCPDoNotUseDirectly(false),
       mReporter(new ConsoleReportCollector()) {
   LOG(("ScriptLoader::ScriptLoader %p", this));
 
@@ -3514,7 +3517,18 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
 
     MOZ_ASSERT(options.noScriptRval);
     TRACE_FOR_TEST(aRequest, "evaluate:classic");
+
+    auto start = TimeStamp::Now();
+
     ExecuteCompiledScript(cx, classicScript, script, erv);
+
+    auto end = TimeStamp::Now();
+    auto duration = (end - start).ToMilliseconds();
+
+    static constexpr double LongScriptThresholdInMilliseconds = 1.0;
+    if (duration > LongScriptThresholdInMilliseconds) {
+      aRequest->SetTookLongInPreviousRuns();
+    }
   }
   rv = EvaluationExceptionToNSResult(erv);
 
@@ -3907,6 +3921,13 @@ void ScriptLoader::ProcessPendingRequests(bool aAllowBypassingParserBlocking) {
   if (mDeferCheckpointReached && mXSLTRequests.isEmpty()) {
     while (ReadyToExecuteScripts() && !mDeferRequests.isEmpty() &&
            mDeferRequests.getFirst()->IsFinished()) {
+      if (mDeferRequests.getFirst()->TookLongInPreviousRuns() &&
+          !mDeferRequests.getFirst()->HadPostponed() && IsBeforeFCP()) {
+        mDeferRequests.getFirst()->SetHadPostponed();
+        ProcessPendingRequestsAsync();
+        return;
+      }
+
       request = mDeferRequests.StealFirst();
       ProcessRequest(request);
     }
@@ -3936,6 +3957,32 @@ void ScriptLoader::ProcessPendingRequests(bool aAllowBypassingParserBlocking) {
     mDeferCheckpointReached = false;
     mDocument->UnblockOnload(true);
   }
+}
+
+bool ScriptLoader::IsBeforeFCP() {
+  if (mHadFCPDoNotUseDirectly) {
+    return false;
+  }
+
+  if (mLoadEventFired) {
+    return false;
+  }
+
+  if (!mDocument) {
+    return false;
+  }
+
+  nsPresContext* context = mDocument->GetPresContext();
+  if (!context) {
+    return false;
+  }
+
+  if (context->HadFirstContentfulPaint()) {
+    mHadFCPDoNotUseDirectly = true;
+    return false;
+  }
+
+  return true;
 }
 
 bool ScriptLoader::ReadyToExecuteParserBlockingScripts() {

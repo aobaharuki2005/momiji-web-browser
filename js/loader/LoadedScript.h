@@ -315,6 +315,9 @@ class LoadedScript : public nsIMemoryReporter {
 
   // ==== Other methods ====
 
+  void SetTookLongInPreviousRuns() { mTookLongInPreviousRuns = true; }
+  bool TookLongInPreviousRuns() const { return mTookLongInPreviousRuns; }
+
   /*
    * Set the mBaseURL, based on aChannel.
    * aOriginalURI is the result of aChannel->GetOriginalURI.
@@ -404,6 +407,14 @@ class LoadedScript : public nsIMemoryReporter {
   // NOTE: In order to pack this with the mCacheEntryId above on windows,
   //       this must be uint64_t.
   uint64_t mIsDirty : 1;
+
+  // Set to true if executing the top-level script takes long.
+  // This can be used for scheduling the script execution in subsequent loads.
+  // The threshold of "takes long" is user-defined.
+  // See dom::ScriptLoader::EvaluateScript for the example case
+  //
+  // TODO: Move this into JS::Stencil, and save to the disk cache (bug 2005128)
+  uint64_t mTookLongInPreviousRuns : 1;
 
   RefPtr<ScriptFetchOptions> mFetchOptions;
   nsCOMPtr<nsIURI> mURI;
@@ -562,6 +573,13 @@ class LoadedScriptDelegate {
     GetLoadedScript()->SetStencil(aStencil);
   }
   void ClearStencil() { GetLoadedScript()->ClearStencil(); }
+
+  void SetTookLongInPreviousRuns() {
+    GetLoadedScript()->SetTookLongInPreviousRuns();
+  }
+  bool TookLongInPreviousRuns() const {
+    return GetLoadedScript()->TookLongInPreviousRuns();
+  }
 };
 
 class ClassicScript final : public LoadedScript {
