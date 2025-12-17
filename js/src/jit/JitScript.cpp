@@ -950,7 +950,7 @@ void JitScript::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                        size_t* data, size_t* allocSites) const {
   *data += mallocSizeOf(this);
 
-  forEachICScript([=](const ICScript* script) {
+  forEachICScript([=, this](const ICScript* script) {
     // |data| already includes the outer ICScript because it's part of the
     // JitScript.
     if (script != &icScript_) {

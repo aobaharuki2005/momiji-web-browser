@@ -83,7 +83,7 @@ void CodeGeneratorARM::bailoutIf(Assembler::Condition condition,
 
   InlineScriptTree* tree = snapshot->mir()->block()->trackedTree();
   auto* ool = new (alloc()) LambdaOutOfLineCode(
-      [=](OutOfLineCode& ool) { emitBailoutOOL(snapshot); });
+      [=, this](OutOfLineCode& ool) { emitBailoutOOL(snapshot); });
 
   // All bailout code is associated with the bytecodeSite of the block we are
   // bailing out from.
@@ -101,7 +101,7 @@ void CodeGeneratorARM::bailoutFrom(Label* label, LSnapshot* snapshot) {
 
   InlineScriptTree* tree = snapshot->mir()->block()->trackedTree();
   auto* ool = new (alloc()) LambdaOutOfLineCode(
-      [=](OutOfLineCode& ool) { emitBailoutOOL(snapshot); });
+      [=, this](OutOfLineCode& ool) { emitBailoutOOL(snapshot); });
 
   // All bailout code is associated with the bytecodeSite of the block we are
   // bailing out from.
@@ -1826,7 +1826,7 @@ void CodeGenerator::visitWasmAddOffset(LWasmAddOffset* lir) {
 
   ScratchRegisterScope scratch(masm);
   masm.ma_add(base, Imm32(mir->offset()), out, scratch, SetCC);
-  auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
+  auto* ool = new (alloc()) LambdaOutOfLineCode([=, this](OutOfLineCode& ool) {
     masm.wasmTrap(wasm::Trap::OutOfBounds, mir->trapSiteDesc());
   });
   addOutOfLineCode(ool, mir);
@@ -1842,7 +1842,7 @@ void CodeGenerator::visitWasmAddOffset64(LWasmAddOffset64* lir) {
   ScratchRegisterScope scratch(masm);
   masm.ma_add(base.low, Imm32(mir->offset()), out.low, scratch, SetCC);
   masm.ma_adc(base.high, Imm32(mir->offset() >> 32), out.high, scratch, SetCC);
-  auto* ool = new (alloc()) LambdaOutOfLineCode([=](OutOfLineCode& ool) {
+  auto* ool = new (alloc()) LambdaOutOfLineCode([=, this](OutOfLineCode& ool) {
     masm.wasmTrap(wasm::Trap::OutOfBounds, mir->trapSiteDesc());
   });
   addOutOfLineCode(ool, mir);
