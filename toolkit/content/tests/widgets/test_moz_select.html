@@ -231,6 +231,13 @@
         mozOptions[0].disabled = false;
         mozOptions[1].hidden = false;
       });
+
+      add_task(async function testEmptyMozSelect() {
+        // The only thing we test is that this doesn't throw.
+        await testHelpers.renderTemplate(
+          testHelpers.html`<moz-select></moz-select>`
+        );
+      });
     </script>
   </head>
   <body></body>

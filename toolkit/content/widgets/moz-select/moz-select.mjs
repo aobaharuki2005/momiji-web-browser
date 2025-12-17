@@ -108,6 +108,12 @@ export default class MozSelect extends MozBaseInputElement {
    * Internal - populates the select element with options from the light DOM slot.
    */
   populateOptions() {
+    if (!this.slotRef.value) {
+      this.options = [];
+      this.usePanelList = false;
+      return;
+    }
+
     let options = [];
 
     for (const node of this.slotRef.value.assignedNodes()) {
