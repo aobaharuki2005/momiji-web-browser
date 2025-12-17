@@ -641,6 +641,26 @@ export class BackupService extends EventTarget {
   static #errorRetries = 0;
 
   /**
+   * Time to wait (in seconds) until the next backup attempt.
+   *
+   * This uses exponential backoff based on the number of consecutive
+   * failed backup attempts since the last successful backup.
+   *
+   * Backoff formula:
+   *   2^(retryCount) * 60
+   *
+   * Example:
+   *   If 2 backup attempts have failed since the last successful backup,
+   *   the next attempt will occur after:
+   *
+   *     2^2 * 60 = 240 seconds (4 minutes)
+   *
+   * This differs from minimumTimeBetweenBackupsSeconds, which is used to determine
+   * the time between successful backups.
+   */
+  static backoffSeconds = () => Math.pow(2, BackupService.#errorRetries) * 60;
+
+  /**
    * @typedef {object} EnabledStatus
    * @property {boolean} enabled
    *   True if the feature is enabled.
@@ -4434,6 +4454,73 @@ export class BackupService extends EventTarget {
   }
 
   /**
+   * Decide whether we should attempt a backup now.
+   *
+   * @returns {boolean}
+   */
+  shouldAttemptBackup() {
+    let now = Math.floor(Date.now() / 1000);
+    const debugInfoStr = Services.prefs.getStringPref(
+      BACKUP_DEBUG_INFO_PREF_NAME,
+      ""
+    );
+
+    let parsed = null;
+    if (debugInfoStr) {
+      try {
+        parsed = JSON.parse(debugInfoStr);
+      } catch (e) {
+        lazy.logConsole.warn(
+          "Invalid backup debug-info pref; ignoring and allowing backup attempt.",
+          e
+        );
+        parsed = null;
+      }
+    }
+
+    const lastBackupAttempt = parsed?.lastBackupAttempt;
+    const hasErroredLastAttempt = Number.isFinite(lastBackupAttempt);
+
+    if (!hasErroredLastAttempt) {
+      lazy.logConsole.debug(
+        `There have been no errored last attempts, let's do a backup`
+      );
+      return true;
+    }
+
+    const secondsSinceLastAttempt = now - lastBackupAttempt;
+
+    if (lazy.isRetryDisabledOnIdle) {
+      // Let's add a buffer before restarting the retries. Dividing by 2
+      // since currently minimumTimeBetweenBackupsSeconds is set to 24 hours
+      // We want to approximately keep a backup for each day, so let's retry
+      // in about 12 hours again.
+      if (secondsSinceLastAttempt < lazy.minimumTimeBetweenBackupsSeconds / 2) {
+        lazy.logConsole.debug(
+          `Retrying is disabled, we have to wait for ${lazy.minimumTimeBetweenBackupsSeconds / 2}s to retry`
+        );
+        return false;
+      }
+      // Looks like we've waited enough, reset the retry states and try to create
+      // a backup again.
+      BackupService.#errorRetries = 0;
+      Services.prefs.clearUserPref(DISABLED_ON_IDLE_RETRY_PREF_NAME);
+
+      return true;
+    }
+
+    // Exponential backoff guard, avoids throttling the same error again and again
+    if (secondsSinceLastAttempt < BackupService.backoffSeconds()) {
+      lazy.logConsole.debug(
+        `backoff: elapsed ${secondsSinceLastAttempt}s < backoff ${BackupService.backoffSeconds()}s`
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
    * Calls BackupService.createBackup at the next moment when the event queue
    * is not busy with higher priority events. This is intentionally broken out
    * into its own method to make it easier to stub out in tests.
@@ -4441,28 +4528,14 @@ export class BackupService extends EventTarget {
    * @param {object} [options]
    * @param {boolean} [options.deletePreviousBackup]
    * @param {string} [options.reason]
+   *
+   * @returns {Promise} A backup promise to hold onto
    */
   createBackupOnIdleDispatch({ deletePreviousBackup = true, reason }) {
-    let now = Math.floor(Date.now() / 1000);
-    let errorStateDebugInfo = Services.prefs.getStringPref(
-      BACKUP_DEBUG_INFO_PREF_NAME,
-      ""
-    );
-
-    // we retry failing backups every minimumTimeBetweenBackupsSeconds if
-    // isRetryDisabledOnIdle is true. If isRetryDisabledOnIdle is false,
-    // we retry on next idle until we hit backupRetryLimit and switch isRetryDisabledOnIdle to true
-    if (
-      lazy.isRetryDisabledOnIdle &&
-      errorStateDebugInfo &&
-      now - JSON.parse(errorStateDebugInfo).lastBackupAttempt <
-        lazy.minimumTimeBetweenBackupsSeconds
-    ) {
-      lazy.logConsole.debug(
-        `We've already retried in the last ${lazy.minimumTimeBetweenBackupsSeconds}s. Waiting for next valid idleDispatch to try again.`
-      );
+    if (!this.shouldAttemptBackup()) {
       return Promise.resolve();
     }
+
     // Determine path to old backup file
     const oldBackupFile = this.#_state.lastBackupFileName;
     const isScheduledBackupsEnabled = lazy.scheduledBackupsPref;
@@ -4488,8 +4561,10 @@ export class BackupService extends EventTarget {
 
         BackupService.#errorRetries += 1;
         if (BackupService.#errorRetries > lazy.backupRetryLimit) {
-          // We've had too many errors with retries, let's only backup on next timestamp
           Services.prefs.setBoolPref(DISABLED_ON_IDLE_RETRY_PREF_NAME, true);
+          // Next retry will be 24 hours later (backoffSeconds = 2^(11) * 60s),
+          // let's just restart our backoff heuristic
+          BackupService.#errorRetries = 0;
           Glean.browserBackup.backupThrottled.record();
         }
       } finally {

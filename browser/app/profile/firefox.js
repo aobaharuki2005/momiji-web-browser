@@ -3487,7 +3487,7 @@ pref("browser.backup.template.fallback-download.aurora", "https://www.firefox.co
 pref("browser.backup.template.fallback-download.nightly", "https://www.firefox.com/channel/desktop/?utm_medium=firefox-desktop&utm_source=html-backup");
 pref("browser.backup.template.fallback-download.esr", " https://www.firefox.com/download/all/desktop-esr/?utm_medium=firefox-desktop&utm_source=html-backup");
 pref("browser.backup.errorCode", 0);
-pref("browser.backup.backup-retry-limit", 100);
+pref("browser.backup.backup-retry-limit", 10);
 pref("browser.backup.disabled-on-idle-backup-retry", false);
 // Limit of number of unremovable staging directories and archives that are
 // permitted before backup will stop making additional backups.  Unremovable
