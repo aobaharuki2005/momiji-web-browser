@@ -58,11 +58,14 @@ data class BrowserToolbarCFR(
  *
  * @param store The [BrowserToolbarStore] to observe the UI state from.
  * @param cfr The [BrowserToolbarCFR] to hold properties of Toolbar's CFR.
+ * @property useMinimalBottomToolbarWhenEnteringText Whether to show a smaller height addressbar
+ * with just the URL when using a bottom toolbar and the user is entering text in a website.
  */
 @Composable
 fun BrowserToolbar(
     store: BrowserToolbarStore,
     cfr: BrowserToolbarCFR? = null,
+    useMinimalBottomToolbarWhenEnteringText: Boolean = false,
 ) {
     val uiState by store.observeAsComposableState { it }
     val cfrProperties = browserToolbarCFRProperties(uiState.gravity)
@@ -92,6 +95,7 @@ fun BrowserToolbar(
                 pageActionsEnd = uiState.displayState.pageActionsEnd,
                 browserActionsEnd = uiState.displayState.browserActionsEnd,
                 onInteraction = { store.dispatch(it) },
+                useMinimalBottomToolbarWhenEnteringText = useMinimalBottomToolbarWhenEnteringText,
             )
         }
 

@@ -2194,6 +2194,11 @@ class Settings(
         default = { FxNimbus.features.composableToolbar.value().enabled },
     )
 
+    var shouldUseMinimalBottomToolbarWhenEnteringText by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_use_minimal_bottom_toolbar_while_entering_text),
+        default = { FxNimbus.features.minimalAddressbar.value().atBottomWhileEnteringText },
+    )
+
     /**
      * Indicates if the user has access to the toolbar redesign option in settings.
      */

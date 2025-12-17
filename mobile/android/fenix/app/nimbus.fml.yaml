@@ -394,6 +394,22 @@ features:
         type: Boolean
         default: true
 
+  minimal-addressbar:
+    description: Show a smaller height bottom addressbar with just the URL.
+    variables:
+      at-bottom-while-entering-text:
+        description: >
+          Whether to show the smaller height bottom addressbar with just the URL when entering text in a website.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: nightly
+        value:
+          at-bottom-while-entering-text: true
+      - channel: developer
+        value:
+          at-bottom-while-entering-text: true
+
   remote-tab-management:
     description: >
       Features that let users manage tabs on other devices that are

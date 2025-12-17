@@ -51,20 +51,24 @@ class ToolbarsIntegration(
     private var layoutListener: ViewTreeObserver.OnGlobalLayoutListener? = null
 
     override fun start() {
-        var wasKeyboardShown = false
+        if (settings.shouldUseMinimalBottomToolbarWhenEnteringText) {
+            var wasKeyboardShown = false
 
-        layoutListener = ViewTreeObserver.OnGlobalLayoutListener {
-            val isKeyboardShown = browserLayout.isKeyboardVisible()
-            if (wasKeyboardShown != isKeyboardShown) {
-                wasKeyboardShown = isKeyboardShown
-                onKeyboardShown(isKeyboardShown)
+            layoutListener = ViewTreeObserver.OnGlobalLayoutListener {
+                val isKeyboardShown = browserLayout.isKeyboardVisible()
+                if (wasKeyboardShown != isKeyboardShown) {
+                    wasKeyboardShown = isKeyboardShown
+                    onKeyboardShown(isKeyboardShown)
+                }
             }
+            browserLayout.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
         }
-        browserLayout.viewTreeObserver.addOnGlobalLayoutListener(layoutListener)
     }
 
     override fun stop() {
-        browserLayout.viewTreeObserver.removeOnGlobalLayoutListener(layoutListener)
+        layoutListener?.let {
+            browserLayout.viewTreeObserver.removeOnGlobalLayoutListener(it)
+        }
     }
 
     @VisibleForTesting

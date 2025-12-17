@@ -17,6 +17,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
@@ -80,8 +81,12 @@ fun BrowserDisplayToolbar(
     pageActionsEnd: List<Action> = emptyList(),
     browserActionsEnd: List<Action> = emptyList(),
     onInteraction: (BrowserToolbarEvent) -> Unit,
+    useMinimalBottomToolbarWhenEnteringText: Boolean = false,
 ) {
-    val isKeyboardShowing by keyboardAsState()
+    val isKeyboardShowing by when (useMinimalBottomToolbarWhenEnteringText) {
+        true -> keyboardAsState()
+        false -> remember { mutableStateOf(KeyboardState.Closed) }
+    }
 
     val toolbarsTransitionAnimationSpec = remember {
         tween<Float>(
