@@ -21,11 +21,6 @@ add_setup(async function () {
       ["network.predictor.enable-hover-on-ssl", true],
       // Enable network debugging observations
       ["network.http.debug-observations", true],
-      // disable image proxy for newtab until Bug #2005048 is fixed
-      [
-        "browser.newtabpage.activity-stream.discoverystream.imageProxy.enabled",
-        false,
-      ],
     ],
   });
 
