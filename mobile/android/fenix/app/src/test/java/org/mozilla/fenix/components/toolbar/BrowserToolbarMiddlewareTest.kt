@@ -2269,7 +2269,7 @@ class BrowserToolbarMiddlewareTest {
             toolbarAction = ToolbarAction.ReaderMode,
         ) as ActionButtonRes
 
-        assertEquals(R.drawable.ic_readermode, result.drawableResId)
+        assertEquals(iconsR.drawable.mozac_ic_reader_view_24, result.drawableResId)
         assertEquals(R.string.browser_menu_read, result.contentDescription)
         assertEquals(ActionButton.State.DEFAULT, result.state)
         assertEquals(ReaderModeClicked(false), result.onClick)
@@ -2289,6 +2289,7 @@ class BrowserToolbarMiddlewareTest {
             toolbarAction = ToolbarAction.ReaderMode,
         ) as ActionButtonRes
 
+        assertEquals(iconsR.drawable.mozac_ic_reader_view_fill_24, result.drawableResId)
         assertEquals(R.string.browser_menu_read_close, result.contentDescription)
         assertEquals(ActionButton.State.ACTIVE, result.state)
         assertEquals(ReaderModeClicked(true), result.onClick)
@@ -3083,7 +3084,10 @@ class BrowserToolbarMiddlewareTest {
     )
 
     private fun expectedReaderModeButton(isActive: Boolean = false) = ActionButtonRes(
-        drawableResId = R.drawable.ic_readermode,
+        drawableResId = when (isActive) {
+            true -> iconsR.drawable.mozac_ic_reader_view_fill_24
+            false -> iconsR.drawable.mozac_ic_reader_view_24
+        },
         contentDescription = when (isActive) {
             true -> R.string.browser_menu_read_close
             false -> R.string.browser_menu_read

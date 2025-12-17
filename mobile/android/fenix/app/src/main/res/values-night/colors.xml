@@ -120,10 +120,6 @@
     <color name="fx_mobile_icon_color_accent_yellow">@color/photonYellow20</color>
     <!-- Action Secondary Icon -->
     <color name="fx_mobile_icon_color_action_secondary">@color/photonLightGrey05</color>
-    <!-- Reader, ETP Shield -->
-    <color name="fx_mobile_icon_color_gradient_start">@color/photonViolet20</color>
-    <!-- Reader, ETP Shield -->
-    <color name="fx_mobile_icon_color_gradient_end">@color/photonBlue20</color>
 
     <!-- Border -->
     <!-- Active tab (Nav), Selected tab, Active form -->
