@@ -14,6 +14,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.addressFormAsset
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.packageName
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.autofillScreen
@@ -90,6 +91,7 @@ class AddressAutofillTest : TestSetup() {
                     "Harrison Street",
                 ),
             )
+            waitForAppWindowToBeUpdated()
             verifyAutofilledAddress("Harrison Street")
         }
     }
@@ -130,6 +132,7 @@ class AddressAutofillTest : TestSetup() {
         }.openThreeDotMenu {
         }.openSettings {
         }.openAutofillSubMenu(composeTestRule) {
+            waitForAppWindowToBeUpdated()
             clickAddAddressButton()
             verifyAddAddressView()
         }.goBackToAutofillSettings(composeTestRule) {
