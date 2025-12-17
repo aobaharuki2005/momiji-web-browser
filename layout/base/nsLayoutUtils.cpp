@@ -5794,7 +5794,8 @@ nscoord nsLayoutUtils::CalculateContentBEnd(WritingMode aWM, nsIFrame* aFrame) {
   // calculation is intended to affect layout.
   LogicalSize overflowSize(aWM, aFrame->ScrollableOverflowRect().Size());
   if (overflowSize.BSize(aWM) > contentBEnd) {
-    FrameChildListIDs skip = {FrameChildListID::Overflow,
+    FrameChildListIDs skip = {FrameChildListID::PushedAbsolute,
+                              FrameChildListID::Overflow,
                               FrameChildListID::ExcessOverflowContainers,
                               FrameChildListID::OverflowOutOfFlow};
     nsBlockFrame* blockFrame = do_QueryFrame(aFrame);
