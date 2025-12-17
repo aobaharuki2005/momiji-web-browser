@@ -47,6 +47,7 @@ run-if = [
 ]
 
 ["test_Chrome_extensions.js"]
+skip-if = ["condprof"] # Bug 1804921
 
 ["test_Chrome_formdata.js"]
 run-sequentially = ["true"] # fails more than 50% of the time in parallel
