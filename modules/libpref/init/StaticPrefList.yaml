@@ -9521,7 +9521,7 @@
 # asm.js
 - name: javascript.options.asmjs
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether to throw a TypeError if asm.js code hits validation failure.
