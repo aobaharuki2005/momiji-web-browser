@@ -1193,17 +1193,13 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 
   Maybe<uint32_t> firstTryIndex;
   Maybe<nsPoint> firstTryNormalPosition;
-  // TODO(emilio): Right now fallback only applies to position-area, which only
-  // makes a difference with a default anchor... Generalize it?
-  if (aAnchorPosResolutionCache) {
-    const auto* lastSuccessfulPosition =
-        aKidFrame->GetProperty(nsIFrame::LastSuccessfulPositionFallback());
-    if (lastSuccessfulPosition) {
-      if (!SeekFallbackTo(lastSuccessfulPosition->mIndex)) {
-        aKidFrame->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
-      } else {
-        firstTryIndex = Some(lastSuccessfulPosition->mIndex);
-      }
+  const auto* lastSuccessfulPosition =
+      aKidFrame->GetProperty(nsIFrame::LastSuccessfulPositionFallback());
+  if (lastSuccessfulPosition) {
+    if (!SeekFallbackTo(lastSuccessfulPosition->mIndex)) {
+      aKidFrame->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
+    } else {
+      firstTryIndex = Some(lastSuccessfulPosition->mIndex);
     }
   }
 
@@ -1607,8 +1603,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
 
   if (currentFallbackIndex) {
     aKidFrame->SetOrUpdateDeletableProperty(
-        nsIFrame::LastSuccessfulPositionFallback(), *currentFallbackIndex,
-        isOverflowingCB);
+        nsIFrame::LastSuccessfulPositionFallback(),
+        LastSuccessfulPositionData{currentFallbackStyle, *currentFallbackIndex,
+                                   isOverflowingCB});
   }
 
 #ifdef DEBUG
