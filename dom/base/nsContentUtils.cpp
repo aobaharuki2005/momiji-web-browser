@@ -12472,6 +12472,10 @@ Maybe<int32_t> nsContentUtils::GetIndexInParent(const nsINode* aParent,
     return Nothing();
   }
 
+  if (aNode->IsGeneratedContentContainerForBackdrop()) {
+    return Some(-4);
+  }
+
   if (aNode->IsGeneratedContentContainerForMarker()) {
     return Some(-3);
   }

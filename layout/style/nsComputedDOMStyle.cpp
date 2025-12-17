@@ -977,18 +977,7 @@ nsIFrame* nsComputedDOMStyle::GetOuterFrame() const {
   if (mPseudo.mType == PseudoStyleType::NotPseudo) {
     return mElement->GetPrimaryFrame();
   }
-  nsAtom* property = nullptr;
-  if (mPseudo.mType == PseudoStyleType::before) {
-    property = nsGkAtoms::beforePseudoProperty;
-  } else if (mPseudo.mType == PseudoStyleType::after) {
-    property = nsGkAtoms::afterPseudoProperty;
-  } else if (mPseudo.mType == PseudoStyleType::marker) {
-    property = nsGkAtoms::markerPseudoProperty;
-  }
-  if (!property) {
-    return nullptr;
-  }
-  auto* pseudo = static_cast<Element*>(mElement->GetProperty(property));
+  auto* pseudo = mElement->GetPseudoElement(mPseudo);
   return pseudo ? pseudo->GetPrimaryFrame() : nullptr;
 }
 

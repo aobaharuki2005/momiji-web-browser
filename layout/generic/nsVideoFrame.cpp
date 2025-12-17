@@ -251,6 +251,8 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   }
 
   nsIContent* videoControlsDiv = GetVideoControls();
+  const nsSize containerSize =
+      aReflowInput.ComputedSizeAsContainerIfConstrained();
 
   // Reflow the child frames. We may have up to three: an image
   // frame (for the poster image), a container frame for the controls,
@@ -264,8 +266,6 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     ReflowInput kidReflowInput(aPresContext, aReflowInput, child,
                                availableSize);
     ReflowOutput kidDesiredSize(myWM);
-    const nsSize containerSize =
-        aReflowInput.ComputedSizeAsContainerIfConstrained();
 
     if (child->GetContent() == mPosterImage) {
       // Reflow the poster frame.
@@ -323,7 +323,8 @@ void nsVideoFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
         }
       }
     } else {
-      NS_ERROR("Unexpected extra child frame in nsVideoFrame; skipping");
+      // We expect a placeholder for ::backdrop if we're fullscreen.
+      MOZ_ASSERT(child->IsPlaceholderFrame());
     }
   }
 

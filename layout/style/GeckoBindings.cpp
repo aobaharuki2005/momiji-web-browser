@@ -138,6 +138,9 @@ void Gecko_GetAnonymousContentForElement(const Element* aElement,
                                          nsTArray<nsIContent*>* aArray) {
   MOZ_ASSERT(aElement->MayHaveAnonymousChildren());
   if (aElement->HasProperties()) {
+    if (auto* backdrop = nsLayoutUtils::GetBackdropPseudo(aElement)) {
+      aArray->AppendElement(backdrop);
+    }
     if (auto* marker = nsLayoutUtils::GetMarkerPseudo(aElement)) {
       aArray->AppendElement(marker);
     }

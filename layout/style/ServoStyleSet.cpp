@@ -770,12 +770,7 @@ bool ServoStyleSet::GeneratedContentPseudoExists(
         content.IsNormal()) {
       return false;
     }
-    // display:none is equivalent to not having a pseudo at all.
-    if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
-      return false;
-    }
   }
-
   // For ::before and ::after pseudo-elements, no 'content' items is
   // equivalent to not having the pseudo-element at all.
   if (type == PseudoStyleType::before || type == PseudoStyleType::after) {
@@ -784,12 +779,14 @@ bool ServoStyleSet::GeneratedContentPseudoExists(
     }
     MOZ_ASSERT(!aPseudoStyle.StyleContent()->NonAltContentItems().IsEmpty(),
                "IsItems() implies we have at least one item");
+  }
+  if (type == PseudoStyleType::before || type == PseudoStyleType::after ||
+      type == PseudoStyleType::marker || type == PseudoStyleType::backdrop) {
     // display:none is equivalent to not having a pseudo at all.
     if (aPseudoStyle.StyleDisplay()->mDisplay == StyleDisplay::None) {
       return false;
     }
   }
-
   return true;
 }
 
@@ -1300,21 +1297,9 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
    */
   const Element* elementForStyleResolution = &aElement;
   PseudoStyleType pseudoTypeForStyleResolution = aPseudoRequest.mType;
-  if (aPseudoRequest.mType == PseudoStyleType::before) {
-    if (Element* pseudo = nsLayoutUtils::GetBeforePseudo(&aElement)) {
-      elementForStyleResolution = pseudo;
-      pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
-    }
-  } else if (aPseudoRequest.mType == PseudoStyleType::after) {
-    if (Element* pseudo = nsLayoutUtils::GetAfterPseudo(&aElement)) {
-      elementForStyleResolution = pseudo;
-      pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
-    }
-  } else if (aPseudoRequest.mType == PseudoStyleType::marker) {
-    if (Element* pseudo = nsLayoutUtils::GetMarkerPseudo(&aElement)) {
-      elementForStyleResolution = pseudo;
-      pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
-    }
+  if (auto* pseudo = aElement.GetPseudoElement(aPseudoRequest)) {
+    elementForStyleResolution = pseudo;
+    pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
   }
 
   nsPresContext* pc = GetPresContext();
