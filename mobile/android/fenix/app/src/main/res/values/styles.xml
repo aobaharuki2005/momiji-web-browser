@@ -126,10 +126,6 @@
         <!-- Icon inverted (on color) -->
         <item name="iconOnColor">@color/fx_mobile_icon_color_oncolor</item>
 
-        <!-- Border -->
-        <!-- Default, Divider, Dotted -->
-        <item name="borderPrimary">@color/fx_mobile_border_color_primary</item>
-
         <!-- Active thumb color & Active track color (30% transparency) -->
         <item name="colorControlActivated">@color/accent_high_contrast_normal_theme</item>
         <!-- Inactive thumb color -->
@@ -163,7 +159,7 @@
         <item name="mozac_primary_text_color">@color/fx_mobile_text_color_primary</item>
         <item name="mozac_caption_text_color">@color/fx_mobile_text_color_secondary</item>
         <item name="mozac_widget_favicon_background_color">@color/fx_mobile_layer_color_2</item>
-        <item name="mozac_widget_favicon_border_color">@color/fx_mobile_border_color_primary</item>
+        <item name="mozac_widget_favicon_border_color">@color/fx_mobile_outline_variant</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
@@ -411,10 +407,6 @@
         <!-- Icon -->
         <!-- Icon inverted (on color) -->
         <item name="iconOnColor">@color/fx_mobile_private_icon_color_oncolor</item>
-
-        <!-- Border -->
-        <!-- Default, Divider, Dotted -->
-        <item name="borderPrimary">@color/fx_mobile_private_border_color_primary</item>
 
         <!-- Inactive thumb color -->
         <item name="colorSwitchThumbNormal">@color/toggle_off_knob_dark_theme</item>

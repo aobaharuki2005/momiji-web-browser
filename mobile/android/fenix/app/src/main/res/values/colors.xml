@@ -126,8 +126,6 @@
     <color name="fx_mobile_icon_color_gradient_end">@color/photonBlue60</color>
 
     <!-- Border -->
-    <!-- Default, Divider, Dotted -->
-    <color name="fx_mobile_border_color_primary">@color/photonLightGrey30</color>
     <!-- Active tab (Nav), Selected tab, Active form -->
     <color name="fx_mobile_border_color_accent">@color/photonInk20</color>
 
@@ -216,10 +214,6 @@
     <!-- Icon inverted (on color) -->
     <color name="fx_mobile_private_icon_color_oncolor">@color/photonLightGrey05</color>
     <color name="fx_mobile_private_icon_color_critical">@color/photonRed20</color>
-
-    <!-- Border -->
-    <!-- Default, Divider, Dotted -->
-    <color name="fx_mobile_private_border_color_primary">@color/photonInk05</color>
 
     <!-- Light theme color palette -->
     <color name="primary_text_light_theme">@color/photonInk80</color>

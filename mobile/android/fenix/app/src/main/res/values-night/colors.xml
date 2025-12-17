@@ -126,8 +126,6 @@
     <color name="fx_mobile_icon_color_gradient_end">@color/photonBlue20</color>
 
     <!-- Border -->
-    <!-- Default, Divider, Dotted -->
-    <color name="fx_mobile_border_color_primary">@color/photonDarkGrey05</color>
     <!-- Active tab (Nav), Selected tab, Active form -->
     <color name="fx_mobile_border_color_accent">@color/photonViolet40</color>
 

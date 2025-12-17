@@ -40,10 +40,6 @@
     <!-- Icon inverted (on color) -->
     <attr name="iconOnColor" format="reference" />
 
-    <!-- Border -->
-    <!-- Default, Divider, Dotted -->
-    <attr name="borderPrimary" format="reference" />
-
     <!-- Color palette attributes -->
     <attr name="accent" format="reference" />
     <attr name="accentBright" format="reference" />
