@@ -11,6 +11,8 @@ import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import org.mozilla.fenix.tabstray.navigation.TabManagerNavDestination
+import org.mozilla.fenix.tabstray.redux.reducer.TabSearchActionReducer
+import org.mozilla.fenix.tabstray.redux.state.TabSearchState
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 
 private const val DEFAULT_SYNCED_TABS_EXPANDED_STATE = true
@@ -29,6 +31,7 @@ private const val DEFAULT_SYNCED_TABS_EXPANDED_STATE = true
  * @property syncedTabs The list of synced tabs.
  * @property syncing Whether the Synced Tabs feature should fetch the latest tabs from paired devices.
  * @property selectedTabId The ID of the currently selected (active) tab.
+ * @property tabSearchState The state of the tab search feature.
  * @property tabSearchEnabled  Whether the tab search feature is enabled.
  * @property backStack The navigation history of the Tab Manager feature.
  * @property expandedSyncedTabs The list of expansion states for the syncedTabs.
@@ -43,6 +46,7 @@ data class TabsTrayState(
     val syncedTabs: List<SyncedTabsListItem> = emptyList(),
     val syncing: Boolean = false,
     val selectedTabId: String? = null,
+    val tabSearchState: TabSearchState = TabSearchState(),
     val tabSearchEnabled: Boolean = false,
     val backStack: List<TabManagerNavDestination> = listOf(TabManagerNavDestination.Root),
     val expandedSyncedTabs: List<Boolean> = emptyList(),
@@ -161,129 +165,159 @@ enum class Page {
 /**
  * [Action] implementation related to [TabsTrayStore].
  */
-sealed class TabsTrayAction : Action {
+sealed interface TabsTrayAction : Action {
 
     /**
      * Entered multi-select mode.
      */
-    object EnterSelectMode : TabsTrayAction()
+    object EnterSelectMode : TabsTrayAction
 
     /**
      * Exited multi-select mode.
      */
-    object ExitSelectMode : TabsTrayAction()
+    object ExitSelectMode : TabsTrayAction
 
     /**
      * Added a new [TabSessionState] to the selection set.
      */
-    data class AddSelectTab(val tab: TabSessionState) : TabsTrayAction()
+    data class AddSelectTab(val tab: TabSessionState) : TabsTrayAction
 
     /**
      * Removed a [TabSessionState] from the selection set.
      */
-    data class RemoveSelectTab(val tab: TabSessionState) : TabsTrayAction()
+    data class RemoveSelectTab(val tab: TabSessionState) : TabsTrayAction
 
     /**
      * The active page in the tray that is now in focus.
      */
-    data class PageSelected(val page: Page) : TabsTrayAction()
+    data class PageSelected(val page: Page) : TabsTrayAction
 
     /**
      * A request to perform a "sync" action.
      */
-    object SyncNow : TabsTrayAction()
+    object SyncNow : TabsTrayAction
 
     /**
      * When a "sync" action has completed; this can be triggered immediately after [SyncNow] if
      * no sync action was able to be performed.
      */
-    object SyncCompleted : TabsTrayAction()
+    object SyncCompleted : TabsTrayAction
 
     /**
      * Updates the [TabsTrayState.inactiveTabsExpanded] boolean
      *
      * @property expanded The updated boolean to [TabsTrayState.inactiveTabsExpanded]
      */
-    data class UpdateInactiveExpanded(val expanded: Boolean) : TabsTrayAction()
+    data class UpdateInactiveExpanded(val expanded: Boolean) : TabsTrayAction
 
     /**
      * Updates the list of tabs in [TabsTrayState.inactiveTabs].
      */
-    data class UpdateInactiveTabs(val tabs: List<TabSessionState>) : TabsTrayAction()
+    data class UpdateInactiveTabs(val tabs: List<TabSessionState>) : TabsTrayAction
 
     /**
      * Updates the list of tabs in [TabsTrayState.normalTabs].
      */
-    data class UpdateNormalTabs(val tabs: List<TabSessionState>) : TabsTrayAction()
+    data class UpdateNormalTabs(val tabs: List<TabSessionState>) : TabsTrayAction
 
     /**
      * Updates the list of tabs in [TabsTrayState.privateTabs].
      */
-    data class UpdatePrivateTabs(val tabs: List<TabSessionState>) : TabsTrayAction()
+    data class UpdatePrivateTabs(val tabs: List<TabSessionState>) : TabsTrayAction
 
     /**
      * Updates the list of synced tabs in [TabsTrayState.syncedTabs].
      */
-    data class UpdateSyncedTabs(val tabs: List<SyncedTabsListItem>) : TabsTrayAction()
+    data class UpdateSyncedTabs(val tabs: List<SyncedTabsListItem>) : TabsTrayAction
 
     /**
      * Updates the selected tab id.
      *
      * @property tabId The ID of the tab that is currently selected.
      */
-    data class UpdateSelectedTabId(val tabId: String?) : TabsTrayAction()
+    data class UpdateSelectedTabId(val tabId: String?) : TabsTrayAction
 
     /**
      * Expands or collapses the header on the synced tabs page.
      *
      * @property index The index of the header.
      */
-    data class SyncedTabsHeaderToggled(val index: Int) : TabsTrayAction()
+    data class SyncedTabsHeaderToggled(val index: Int) : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the tab auto close dialog is shown.
      */
-    object TabAutoCloseDialogShown : TabsTrayAction()
+    object TabAutoCloseDialogShown : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the user requests to share all of their normal tabs.
      */
-    object ShareAllNormalTabs : TabsTrayAction()
+    object ShareAllNormalTabs : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the user requests to share all of their private tabs.
      */
-    object ShareAllPrivateTabs : TabsTrayAction()
+    object ShareAllPrivateTabs : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the user requests to close all normal tabs.
      */
-    object CloseAllNormalTabs : TabsTrayAction()
+    object CloseAllNormalTabs : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the user requests to close all private tabs.
      */
-    object CloseAllPrivateTabs : TabsTrayAction()
+    object CloseAllPrivateTabs : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the three-dot menu is displayed to the user.
      */
-    object ThreeDotMenuShown : TabsTrayAction()
+    object ThreeDotMenuShown : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the user requests to bookmark selected tabs.
      */
-    data class BookmarkSelectedTabs(val tabCount: Int) : TabsTrayAction()
+    data class BookmarkSelectedTabs(val tabCount: Int) : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the user clicks on the Tab Search icon.
      */
-    object TabSearchClicked : TabsTrayAction()
+    object TabSearchClicked : TabsTrayAction
 
     /**
      * [TabsTrayAction] fired when the user clicks on the back button or swipes to navigate back.
      */
-    object NavigateBackInvoked : TabsTrayAction()
+    object NavigateBackInvoked : TabsTrayAction
+}
+
+/**
+ *[TabsTrayAction]'s that represent user interactions and [TabSearchState] updates for the
+ * Tab Search feature.
+ */
+sealed interface TabSearchAction : TabsTrayAction {
+
+    /**
+     * Updates the search query.
+     *
+     * @property query The query of tab search the user has typed in.
+     */
+    data class SearchQueryChanged(val query: String) : TabSearchAction
+
+    /**
+     * When the list of matching open tabs has been computed for the current [SearchQueryChanged] action.
+     *
+     * @property results The complete list of open tabs that match the current query.
+     */
+    data class SearchResultsUpdated(
+        val results: List<TabSessionState>,
+    ) : TabSearchAction
+
+    /**
+     * Fired when the user taps on a search result for an open tab.
+     *
+     * @property tab The tab selected by the user.
+     */
+    data class SearchResultClicked(val tab: TabSessionState) : TabSearchAction
 }
 
 /**
@@ -333,6 +367,10 @@ internal object TabsTrayReducer {
             is TabsTrayAction.BookmarkSelectedTabs -> state
             is TabsTrayAction.ThreeDotMenuShown -> state
 
+            is TabSearchAction -> TabSearchActionReducer.reduce(
+                state = state,
+                action = action,
+            )
             is TabsTrayAction.TabSearchClicked -> {
                 state.copy(backStack = state.backStack + TabManagerNavDestination.TabSearch)
             }
@@ -340,7 +378,16 @@ internal object TabsTrayReducer {
             is TabsTrayAction.NavigateBackInvoked -> {
                 when {
                     state.mode is TabsTrayState.Mode.Select -> state.copy(mode = TabsTrayState.Mode.Normal)
-                    else -> state.copy(backStack = state.backStack.dropLast(1))
+
+                    state.backStack.lastOrNull() == TabManagerNavDestination.TabSearch -> state.copy(
+                        tabSearchState = TabSearchState(
+                            query = "",
+                            searchResults = emptyList(),
+                        ),
+                        backStack = state.popBackStack(),
+                    )
+
+                    else -> state.copy(backStack = state.popBackStack())
                 }
             }
             is TabsTrayAction.SyncedTabsHeaderToggled -> handleSyncedTabHeaderToggle(state, action)
@@ -401,6 +448,12 @@ private fun handleSyncedTabHeaderToggle(
         },
     )
 }
+
+/**
+ *  Drops the last entry of the [TabsTray] backstack.
+ */
+private fun TabsTrayState.popBackStack() =
+    backStack.dropLast(1)
 
 /**
  * A [Store] that holds the [TabsTrayState] for the tabs tray and reduces [TabsTrayAction]s

@@ -27,7 +27,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import mozilla.components.compose.base.searchbar.TopSearchBar
+import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
+import org.mozilla.fenix.tabstray.TabSearchAction
 import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
@@ -44,8 +46,8 @@ import mozilla.components.ui.icons.R as iconsR
 fun TabSearchScreen(
     store: TabsTrayStore,
 ) {
+    val state by store.observeAsState(store.state) { it }
     val searchBarState = rememberSearchBarState()
-    var query by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -56,9 +58,9 @@ fun TabSearchScreen(
             TopSearchBar(
                 state = searchBarState,
                 modifier = Modifier.focusRequester(focusRequester),
-                query = query,
-                onQueryChange = { query = it },
-                onSearch = { submitted -> query = submitted },
+                query = state.tabSearchState.query,
+                onQueryChange = { store.dispatch(TabSearchAction.SearchQueryChanged(it)) },
+                onSearch = { submitted -> store.dispatch(TabSearchAction.SearchQueryChanged(submitted)) },
                 expanded = expanded,
                 onExpandedChange = { expanded = it },
                 placeholder = {

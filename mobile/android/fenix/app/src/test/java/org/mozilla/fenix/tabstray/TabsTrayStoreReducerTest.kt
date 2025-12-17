@@ -10,6 +10,8 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mozilla.fenix.tabstray.navigation.TabManagerNavDestination
+import org.mozilla.fenix.tabstray.redux.reducer.TabSearchActionReducer
+import org.mozilla.fenix.tabstray.redux.state.TabSearchState
 import org.mozilla.fenix.tabstray.syncedtabs.getFakeSyncedTabList
 
 class TabsTrayStoreReducerTest {
@@ -182,5 +184,34 @@ class TabsTrayStoreReducerTest {
         )
 
         assertTrue(resultState.expandedSyncedTabs[0])
+    }
+
+    @Test
+    fun `WHEN the user leaves search THEN tab search state is reset to defaults`() {
+        val initialTab = createTab("https://mozilla.org")
+
+        val initialState = TabsTrayState(
+            tabSearchState = TabSearchState(
+                query = "mozilla",
+                searchResults = listOf(initialTab),
+            ),
+        )
+
+        val inSearchState = TabsTrayReducer.reduce(
+            state = initialState,
+            action = TabsTrayAction.TabSearchClicked,
+        )
+
+        val resultState = TabsTrayReducer.reduce(
+            state = inSearchState,
+            action = TabsTrayAction.NavigateBackInvoked,
+        )
+
+        val expectedState = inSearchState.copy(
+            tabSearchState = TabSearchState(),
+            backStack = listOf(TabManagerNavDestination.Root),
+        )
+
+        assertEquals(expectedState, resultState)
     }
 }
