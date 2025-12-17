@@ -1864,10 +1864,12 @@ impl Device {
 
         // We have encountered several issues when only partially updating render targets on a
         // variety of Mali GPUs. As a precaution avoid doing so on all Midgard and Bifrost GPUs.
-        // Valhall (eg Mali-Gx7 onwards) appears to be unnaffected. See bug 1691955, bug 1558374,
+        // Valhall (eg Mali-Gx7 onwards) appears to be unaffected. See bug 1691955, bug 1558374,
         // and bug 1663355.
-        let supports_render_target_partial_update =
-            !is_mali_midgard(&renderer_name) && !is_mali_bifrost(&renderer_name);
+        // We have Additionally encountered issues on PowerVR D-Series. See bug 2005312.
+        let supports_render_target_partial_update = !is_mali_midgard(&renderer_name)
+            && !is_mali_bifrost(&renderer_name)
+            && !renderer_name.starts_with("PowerVR D-Series");
 
         let supports_shader_storage_object = match gl.get_type() {
             // see https://www.g-truc.net/post-0734.html
