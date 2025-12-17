@@ -598,7 +598,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   }
 
   already_AddRefed<nsDocShellLoadState> CreateLoadInfo(
-      SessionHistoryEntry* aEntry, NavigationType aNavigationType);
+      SessionHistoryEntry* aEntry);
 
   void GetContiguousEntriesForLoad(LoadingSessionHistoryInfo& aLoadingInfo,
                                    const RefPtr<SessionHistoryEntry>& aEntry);

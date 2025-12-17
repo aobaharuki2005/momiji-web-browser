@@ -782,9 +782,6 @@ void nsDocShellLoadState::SetSHEntry(nsISHEntry* aSHEntry) {
   nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(aSHEntry);
   if (she) {
     mLoadingSessionHistoryInfo = MakeUnique<LoadingSessionHistoryInfo>(she);
-    mLoadingSessionHistoryInfo->mTriggeringNavigationType =
-        NavigationUtils::NavigationTypeFromLoadType(LoadType());
-    MOZ_ASSERT(mLoadingSessionHistoryInfo->mTriggeringNavigationType);
   } else {
     mLoadingSessionHistoryInfo = nullptr;
   }
