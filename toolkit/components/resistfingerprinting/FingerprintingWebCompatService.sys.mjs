@@ -264,7 +264,7 @@ export class FingerprintingWebCompatService {
     );
 
     // Set the remote override to the RFP service.
-    Services.rfp.setFingerprintingOverrides(Array.from(overrides));
+    Services.rfp.setFingerprintingOverrides(overrides);
   }
 
   observe(subject, topic, prefName) {
