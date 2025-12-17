@@ -780,9 +780,6 @@ tags = "search-telemetry"
 ["browser_urlbar_telemetry_remotetab.js"]
 tags = "search-telemetry"
 
-["browser_urlbar_telemetry_searchContainers.js"]
-tags = "search-telemetry"
-
 ["browser_urlbar_telemetry_searchmode.js"]
 tags = "search-telemetry"
 support-files = [
