@@ -18,6 +18,7 @@ import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.toolbar.ScrollableToolbar
 import mozilla.components.support.ktx.android.view.findViewInHierarchy
 import mozilla.components.support.utils.KeyboardState
+import mozilla.components.support.utils.ext.isKeyboardVisible
 import mozilla.components.support.utils.keyboardAsState
 import mozilla.components.ui.widgets.behavior.DependencyGravity.Bottom
 import mozilla.components.ui.widgets.behavior.DependencyGravity.Top
@@ -39,7 +40,7 @@ abstract class FenixBrowserToolbarView(
 ) : ScrollableToolbar {
 
     init {
-        setupShowingToolbarsAfterKeyboardHidden()
+        setupToolbarBehaviorBasedOnKeyboardState()
     }
 
     abstract val layout: View
@@ -79,8 +80,10 @@ abstract class FenixBrowserToolbarView(
     }
 
     override fun enableScrolling() {
-        (layout.layoutParams as CoordinatorLayout.LayoutParams).apply {
-            (behavior as? EngineViewScrollingBehavior)?.enableScrolling()
+        if (!parent.isKeyboardVisible()) {
+            (layout.layoutParams as CoordinatorLayout.LayoutParams).apply {
+                (behavior as? EngineViewScrollingBehavior)?.enableScrolling()
+            }
         }
     }
 
@@ -163,14 +166,20 @@ abstract class FenixBrowserToolbarView(
 
     protected fun shouldShowTabStrip() = customTabSession == null && settings.isTabStripEnabled
 
-    private fun setupShowingToolbarsAfterKeyboardHidden() {
+    private fun setupToolbarBehaviorBasedOnKeyboardState() {
         parent.addView(
             ComposeView(parent.context).apply {
                 setContent {
                     val keyboardState by keyboardAsState()
                     LaunchedEffect(keyboardState) {
-                        if (keyboardState == KeyboardState.Closed) {
-                            expand()
+                        when (keyboardState) {
+                            KeyboardState.Closed -> {
+                                enableScrolling()
+                            }
+                            KeyboardState.Opened -> {
+                                disableScrolling()
+                                expand()
+                            }
                         }
                     }
                 }
