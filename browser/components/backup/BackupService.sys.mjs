@@ -46,6 +46,7 @@ const MAXIMUM_NUMBER_OF_UNREMOVABLE_STAGING_ITEMS_PREF_NAME =
 const CREATED_MANAGED_PROFILES_PREF_NAME = "browser.profiles.created";
 const RESTORED_BACKUP_METADATA_PREF_NAME =
   "browser.backup.restored-backup-metadata";
+const SANITIZE_ON_SHUTDOWN_PREF_NAME = "privacy.sanitize.sanitizeOnShutdown";
 
 const SCHEMAS = Object.freeze({
   BACKUP_MANIFEST: 1,
@@ -686,14 +687,6 @@ export class BackupService extends EventTarget {
       };
     }
 
-    if (Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown")) {
-      return {
-        enabled: false,
-        reason: "Backup is disabled for users with sanitizeOnShutdown enabled.",
-        internalReason: "sanitizeOnShutdown",
-      };
-    }
-
     if (lazy.SelectableProfileService.hasCreatedSelectableProfiles()) {
       return {
         enabled: false,
@@ -756,14 +749,6 @@ export class BackupService extends EventTarget {
         enabled: false,
         reason: "Restoring a profile disabled by user pref.",
         internalReason: "pref",
-      };
-    }
-
-    if (Services.prefs.getBoolPref("privacy.sanitize.sanitizeOnShutdown")) {
-      return {
-        enabled: false,
-        reason: "Backup is disabled for users with sanitizeOnShutdown enabled.",
-        internalReason: "sanitizeOnShutdown",
       };
     }
 
@@ -1129,7 +1114,7 @@ export class BackupService extends EventTarget {
     return [
       BACKUP_ARCHIVE_ENABLED_PREF_NAME,
       BACKUP_RESTORE_ENABLED_PREF_NAME,
-      "privacy.sanitize.sanitizeOnShutdown",
+      SANITIZE_ON_SHUTDOWN_PREF_NAME,
       CREATED_MANAGED_PROFILES_PREF_NAME,
     ];
   }
@@ -4105,6 +4090,7 @@ export class BackupService extends EventTarget {
     Services.obs.addObserver(this.#observer, "session-cookie-changed");
     Services.obs.addObserver(this.#observer, "newtab-linkBlocked");
     Services.obs.addObserver(this.#observer, "quit-application-granted");
+    Services.prefs.addObserver(SANITIZE_ON_SHUTDOWN_PREF_NAME, this.#observer);
   }
 
   /**
@@ -4141,6 +4127,10 @@ export class BackupService extends EventTarget {
     Services.obs.removeObserver(this.#observer, "session-cookie-changed");
     Services.obs.removeObserver(this.#observer, "newtab-linkBlocked");
     Services.obs.removeObserver(this.#observer, "quit-application-granted");
+    Services.prefs.removeObserver(
+      SANITIZE_ON_SHUTDOWN_PREF_NAME,
+      this.#observer
+    );
     this.#observer = null;
 
     this.#regenerationDebouncer.disarm();
@@ -4215,6 +4205,11 @@ export class BackupService extends EventTarget {
           this.#debounceRegeneration();
         }
         break;
+      }
+      case "nsPref:changed": {
+        if (data == SANITIZE_ON_SHUTDOWN_PREF_NAME) {
+          this.#debounceRegeneration();
+        }
       }
     }
   }
