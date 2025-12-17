@@ -191,6 +191,10 @@ class NewRenderer : public RendererEvent {
     }
 
     aRenderThread.AddRenderer(aWindowId, std::move(renderer));
+
+    // Kick off shader warmup, outside this NewRenderer task so that any
+    // threads which block on the NewRenderer work can proceed immediately.
+    aRenderThread.BeginShaderWarmupIfNeeded();
   }
 
   const char* Name() override { return "NewRenderer"; }
