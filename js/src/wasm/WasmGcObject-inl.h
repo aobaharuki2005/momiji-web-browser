@@ -210,8 +210,8 @@ MOZ_ALWAYS_INLINE WasmArrayObject* WasmArrayObject::createArrayOOL(
   }
 
   DataHeader* outlineHeader = (DataHeader*)outlineAlloc;
-  uint8_t* outlineData = (uint8_t*)(outlineHeader + 1);
   *outlineHeader = DataIsOOL;
+  uint8_t* outlineData = dataHeaderToDataPointer(outlineHeader);
 
   arrayObj->initShape(typeDefData->shape);
   arrayObj->superTypeVector_ = typeDefData->superTypeVector;

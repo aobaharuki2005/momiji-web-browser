@@ -207,9 +207,12 @@ class WasmArrayObject : public WasmGcObject,
 
   size_t sizeOfExcludingThis() const;
 
+  // These constants can be anything, so long as they are not the same.  Use
+  // small but unlikely values in the hope of getting more value from
+  // assertions involving them.
   using DataHeader = uintptr_t;
-  static const DataHeader DataIsIL = 0;
-  static const DataHeader DataIsOOL = 1;
+  static const DataHeader DataIsIL = 0x37;
+  static const DataHeader DataIsOOL = 0x71;
 
   // Creates a new array object with out-of-line storage. Reports an error on
   // OOM. The element type, shape, class pointer, alloc site and alloc kind are
@@ -260,17 +263,27 @@ class WasmArrayObject : public WasmGcObject,
   // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
-  static size_t obj_moved(JSObject* obj, JSObject* old);
+  static size_t obj_moved(JSObject* objNew, JSObject* objOld);
 
   void storeVal(const wasm::Val& val, uint32_t itemIndex);
   void fillVal(const wasm::Val& val, uint32_t itemIndex, uint32_t len);
 
-  static DataHeader* dataHeaderFromDataPointer(const uint8_t* data) {
+  static inline DataHeader* dataHeaderFromDataPointer(const uint8_t* data) {
     MOZ_ASSERT(data);
-    return (DataHeader*)data - 1;
+    DataHeader* header = (DataHeader*)data;
+    header--;
+    MOZ_ASSERT(*header == DataIsIL || *header == DataIsOOL);
+    return header;
   }
   DataHeader* dataHeader() const {
     return WasmArrayObject::dataHeaderFromDataPointer(data_);
+  }
+
+  static inline uint8_t* dataHeaderToDataPointer(const DataHeader* header) {
+    MOZ_ASSERT(header);
+    MOZ_ASSERT(*header == DataIsIL || *header == DataIsOOL);
+    header++;
+    return (uint8_t*)header;
   }
 
   static bool isDataInline(uint8_t* data) {
@@ -406,7 +419,7 @@ class WasmStructObject : public WasmGcObject,
   // Tracing and finalization
   static void obj_trace(JSTracer* trc, JSObject* object);
   static void obj_finalize(JS::GCContext* gcx, JSObject* object);
-  static size_t obj_moved(JSObject* obj, JSObject* old);
+  static size_t obj_moved(JSObject* objNew, JSObject* objOld);
 
   void storeVal(const wasm::Val& val, uint32_t fieldIndex);
 };

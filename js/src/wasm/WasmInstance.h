@@ -280,7 +280,8 @@ class alignas(16) Instance {
   uintptr_t traceFrame(JSTracer* trc, const wasm::WasmFrameIter& wfi,
                        uint8_t* nextPC,
                        uintptr_t highestByteVisitedInPrevFrame);
-  void updateFrameForMovingGC(const wasm::WasmFrameIter& wfi, uint8_t* nextPC);
+  void updateFrameForMovingGC(const wasm::WasmFrameIter& wfi, uint8_t* nextPC,
+                              Nursery& nursery);
 
   static constexpr size_t offsetOfMemory0Base() {
     return offsetof(Instance, memory0Base_);

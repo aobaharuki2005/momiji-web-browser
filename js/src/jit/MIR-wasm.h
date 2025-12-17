@@ -2585,13 +2585,6 @@ class MWasmLoadField : public MBinaryInstruction, public NoTypePolicy::Data {
       setMovable();
     }
     initWasmRefType(maybeRefType);
-    if (aliases_.flags() ==
-            AliasSet::Load(AliasSet::WasmStructOutlineDataPointer).flags() ||
-        aliases_.flags() ==
-            AliasSet::Load(AliasSet::WasmArrayDataPointer).flags()) {
-      aliases_ = AliasSet::Store(AliasSet::Any);
-      setNotMovableUnchecked();
-    }
   }
 
  public:

@@ -287,37 +287,80 @@ void WasmArrayObject::obj_trace(JSTracer* trc, JSObject* object) {
 }
 
 /* static */
-size_t WasmArrayObject::obj_moved(JSObject* obj, JSObject* old) {
-  // Moving inline arrays requires us to update the data pointer.
-  WasmArrayObject& arrayObj = obj->as<WasmArrayObject>();
-  WasmArrayObject& oldArrayObj = old->as<WasmArrayObject>();
-  if (oldArrayObj.isDataInline()) {
-    // The old array had inline storage, which has been copied.
-    // Fix up the data pointer on the new array to point to it.
-    arrayObj.data_ = WasmArrayObject::addressOfInlineData(&arrayObj);
-  }
-  MOZ_ASSERT(arrayObj.isDataInline() == oldArrayObj.isDataInline());
+size_t WasmArrayObject::obj_moved(JSObject* objNew, JSObject* objOld) {
+  // This gets called for array objects, both with and without OOL areas.
+  // Dealing with the no-OOL case is simple.  Thereafter, the logic for the OOL
+  // case is essentially the same as for WasmStructObject::obj_moved, since
+  // that routine is only used for WasmStructObjects that have OOL storage.
+  MOZ_ASSERT(objNew != objOld);
 
-  if (IsInsideNursery(old)) {
-    Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
-    // It's been tenured.
-    if (!arrayObj.isDataInline()) {
-      const TypeDef& typeDef = arrayObj.typeDef();
-      MOZ_ASSERT(typeDef.isArrayType());
-      // arrayObj.numElements_ was validated not to overflow when constructing
-      // the array
-      size_t trailerSize = calcStorageBytesUnchecked(
-          typeDef.arrayType().elementType().size(), arrayObj.numElements_);
-      // Ensured by WasmArrayObject::createArrayOOL.
-      MOZ_RELEASE_ASSERT(trailerSize <= size_t(MaxArrayPayloadBytes));
-      uint8_t* outlineAlloc =
-          (uint8_t*)dataHeaderFromDataPointer(arrayObj.data_);
-      uint8_t* prior = outlineAlloc;
-      nursery.maybeMoveBufferOnPromotion(&outlineAlloc, obj, trailerSize);
-      if (outlineAlloc != prior) {
-        arrayObj.data_ = (uint8_t*)(((DataHeader*)outlineAlloc) + 1);
-      }
-    }
+  WasmArrayObject& arrayNew = objNew->as<WasmArrayObject>();
+  WasmArrayObject& arrayOld = objOld->as<WasmArrayObject>();
+
+  const TypeDef* typeDefNew = &arrayNew.typeDef();
+  mozilla::DebugOnly<const TypeDef*> typeDefOld = &arrayOld.typeDef();
+  MOZ_ASSERT(typeDefNew->isArrayType());
+  MOZ_ASSERT(typeDefOld == typeDefNew);
+
+  // At this point, the object has been copied, but the OOL storage area, if
+  // any, has not been copied, nor has the data_ pointer been updated.  Hence:
+  MOZ_ASSERT(arrayNew.data_ == arrayOld.data_);
+
+  if (arrayOld.isDataInline()) {
+    // The old array had inline storage, which has been copied.  Fix up the
+    // data pointer in the new array to point to it, and we're done.
+    arrayNew.data_ = WasmArrayObject::addressOfInlineData(&arrayNew);
+    MOZ_ASSERT(arrayNew.isDataInline());
+    return 0;
+  }
+
+  // The array has OOL storage.  This means the logic that follows is similar
+  // to that for WasmStructObject::obj_moved, since that routine is only used
+  // for WasmStructObjects that have OOL storage.
+
+  bool newIsInNursery = IsInsideNursery(objNew);
+  bool oldIsInNursery = IsInsideNursery(objOld);
+
+  // Tenured -> Tenured
+  if (!oldIsInNursery && !newIsInNursery) {
+    // The object already was in the tenured heap and has merely been moved
+    // somewhere else in the the tenured heap.  This isn't interesting to us.
+    return 0;
+  }
+
+  // Tenured -> Nursery: this transition isn't possible.
+  MOZ_RELEASE_ASSERT(oldIsInNursery);
+
+  // Nursery -> Nursery and Nursery -> Tenured
+  // The object is being moved, either within the nursery or from the nursery
+  // to the tenured heap.  Either way, we have to ask the nursery if it wants
+  // to move the OOL block too, and if so set up a forwarding record for it.
+
+  // arrayNew.numElements_ was validated not to overflow when constructing
+  // the array.
+  size_t oolBlockSize = calcStorageBytesUnchecked(
+      typeDefNew->arrayType().elementType().size(), arrayNew.numElements_);
+  // Ensured by WasmArrayObject::createArrayOOL.
+  MOZ_RELEASE_ASSERT(oolBlockSize <= size_t(MaxArrayPayloadBytes) +
+                                         sizeof(WasmArrayObject::DataHeader));
+
+  // Ask the nursery if it wants to relocate the OOL block, and if so capture
+  // its new location in `oolHeaderNew`.  Note, at this point `arrayNew.data_`
+  // has not been updated; hence the computation for `oolHeaderOld` is correct.
+  DataHeader* oolHeaderOld = dataHeaderFromDataPointer(arrayNew.data_);
+  DataHeader* oolHeaderNew = oolHeaderOld;
+  Nursery& nursery = objNew->runtimeFromMainThread()->gc.nursery();
+  nursery.maybeMoveBufferOnPromotion(&oolHeaderNew, objNew, oolBlockSize);
+
+  if (oolHeaderNew != oolHeaderOld) {
+    // The OOL block has been moved.  Fix up the data pointer in the new
+    // object.
+    arrayNew.data_ = dataHeaderToDataPointer(oolHeaderNew);
+    // Set up forwarding for the OOL block.  Use indirect forwarding.
+    // Unfortunately, if the call to `.setForwardingPointer..` OOMs, there's no
+    // way to recover.
+    nursery.setForwardingPointerWhileTenuring(oolHeaderOld, oolHeaderNew,
+                                              /*direct=*/false);
   }
 
   return 0;
@@ -443,20 +486,60 @@ void WasmStructObject::obj_trace(JSTracer* trc, JSObject* object) {
 }
 
 /* static */
-size_t WasmStructObject::obj_moved(JSObject* obj, JSObject* old) {
-  // See also, corresponding comments in WasmArrayObject::obj_moved.
-  if (IsInsideNursery(old)) {
-    Nursery& nursery = obj->runtimeFromMainThread()->gc.nursery();
-    WasmStructObject& structObj = obj->as<WasmStructObject>();
-    const TypeDef& typeDef = structObj.typeDef();
-    MOZ_ASSERT(typeDef.isStructType());
-    uint32_t totalBytes = typeDef.structType().size_;
-    uint32_t inlineBytes, outlineBytes;
-    WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
-    MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
-    MOZ_ASSERT(outlineBytes > 0);
-    nursery.maybeMoveBufferOnPromotion(&structObj.outlineData_, obj,
-                                       outlineBytes);
+size_t WasmStructObject::obj_moved(JSObject* objNew, JSObject* objOld) {
+  // This gets called only for struct objects that have an OOL area.  Compare
+  // WasmStructObjectInlineClassExt vs WasmStructObjectOutlineClassExt below.
+  MOZ_ASSERT(objNew != objOld);
+
+  WasmStructObject& structNew = objNew->as<WasmStructObject>();
+  WasmStructObject& structOld = objOld->as<WasmStructObject>();
+  MOZ_ASSERT(structNew.outlineData_ && structOld.outlineData_);
+
+  const TypeDef* typeDefNew = &structNew.typeDef();
+  mozilla::DebugOnly<const TypeDef*> typeDefOld = &structOld.typeDef();
+  MOZ_ASSERT(typeDefNew->isStructType());
+  MOZ_ASSERT(typeDefOld == typeDefNew);
+
+  // At this point, the object has been copied, but the OOL storage area has
+  // not been copied, nor has the outlineData_ pointer been updated.  Hence:
+  MOZ_ASSERT(structNew.outlineData_ == structOld.outlineData_);
+
+  bool newIsInNursery = IsInsideNursery(objNew);
+  bool oldIsInNursery = IsInsideNursery(objOld);
+
+  // Tenured -> Tenured
+  if (!oldIsInNursery && !newIsInNursery) {
+    // The object already was in the tenured heap and has merely been moved
+    // somewhere else in the the tenured heap.  This isn't interesting to us.
+    return 0;
+  }
+
+  // Tenured -> Nursery: this transition isn't possible.
+  MOZ_RELEASE_ASSERT(oldIsInNursery);
+
+  // Nursery -> Nursery and Nursery -> Tenured
+  // The object is being moved, either within the nursery or from the nursery
+  // to the tenured heap.  Either way, we have to ask the nursery if it wants
+  // to move the OOL block too, and if so set up a forwarding record for it.
+
+  uint32_t totalBytes = typeDefNew->structType().size_;
+  uint32_t inlineBytes, outlineBytes;
+  WasmStructObject::getDataByteSizes(totalBytes, &inlineBytes, &outlineBytes);
+  MOZ_ASSERT(inlineBytes == WasmStructObject_MaxInlineBytes);
+  MOZ_ASSERT(outlineBytes > 0);
+
+  // Ask the nursery if it wants to relocate the OOL area, and if so capture
+  // its new location in `structNew.outlineData_`.
+  Nursery& nursery = structNew.runtimeFromMainThread()->gc.nursery();
+  nursery.maybeMoveBufferOnPromotion(&structNew.outlineData_, objNew,
+                                     outlineBytes);
+  // Set up forwarding for the OOL area.  Use indirect forwarding.  As in
+  // WasmArrayObject::obj_moved, if the call to `.setForwardingPointer..` OOMs,
+  // there's no way to recover.
+  if (structOld.outlineData_ != structNew.outlineData_) {
+    nursery.setForwardingPointerWhileTenuring(structOld.outlineData_,
+                                              structNew.outlineData_,
+                                              /*direct=*/false);
   }
 
   return 0;
