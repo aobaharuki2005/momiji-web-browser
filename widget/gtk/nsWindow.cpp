@@ -3362,8 +3362,22 @@ void nsWindow::RecomputeBoundsX11(bool aMayChangeCsdMargin) {
   LOGVERBOSE("  toplevelBounds %s", ToString(toplevelBounds).c_str());
 
   // Offset from system decoration to gtk decoration.
-  const auto systemDecorationOffset =
-      toplevelBounds.TopLeft() - toplevelBoundsWithTitlebar.TopLeft();
+  const auto systemDecorationOffset = [&] {
+    auto offset =
+        toplevelBounds.TopLeft() - toplevelBoundsWithTitlebar.TopLeft();
+    // If the WM sends us broken values, try to clamp to something sensible.
+    // The offset will never be more than the bounds difference, nor negative.
+    // See bug 2001722 for an example where this happened.
+    offset.x =
+        std::max(std::min(int32_t(offset.x), toplevelBoundsWithTitlebar.width -
+                                                 toplevelBounds.width),
+                 0);
+    offset.y =
+        std::max(std::min(int32_t(offset.y), toplevelBoundsWithTitlebar.height -
+                                                 toplevelBounds.height),
+                 0);
+    return offset;
+  }();
 
   // This is relative to our parent window, that is, to topLevelBounds.
   mClientArea = GetBounds(mGdkWindow);
