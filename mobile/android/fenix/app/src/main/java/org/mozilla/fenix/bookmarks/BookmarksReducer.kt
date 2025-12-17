@@ -250,6 +250,10 @@ private fun BookmarksState.handleSnackbarAction(action: SnackbarAction): Bookmar
                     )
             }
         }
+
+        SnackbarAction.SelectFolderFailed -> {
+            this.copy(bookmarksSnackbarState = BookmarksSnackbarState.SelectFolderFailed)
+        }
     }
 }
 

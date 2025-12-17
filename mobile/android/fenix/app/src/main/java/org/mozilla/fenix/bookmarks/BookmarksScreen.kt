@@ -277,6 +277,9 @@ private fun BookmarksList(
             val (id, titleOrCount) = state.undoSnackbarText()
             stringResource(id, titleOrCount)
         }
+        BookmarksSnackbarState.SelectFolderFailed -> {
+            stringResource(R.string.bookmark_error_select_folder)
+        }
         is BookmarksSnackbarState.BookmarkMoved -> {
             stringResource(
                 R.string.bookmark_moved_single_item,
@@ -285,9 +288,6 @@ private fun BookmarksList(
                     (state.bookmarksSnackbarState as BookmarksSnackbarState.BookmarkMoved).to,
                 ),
             )
-        }
-        BookmarksSnackbarState.SelectFolderFailed -> {
-            stringResource(R.string.bookmark_error_select_folder)
         }
         else -> ""
     }
@@ -320,13 +320,13 @@ private fun BookmarksList(
                     onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },
                 )
             }
-            is BookmarksSnackbarState.BookmarkMoved -> scope.launch {
+            BookmarksSnackbarState.SelectFolderFailed -> scope.launch {
                 snackbarHostState.displaySnackbar(
                     message = snackbarMessage,
                     onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },
                 )
             }
-            BookmarksSnackbarState.SelectFolderFailed -> scope.launch {
+            is BookmarksSnackbarState.BookmarkMoved -> scope.launch {
                 snackbarHostState.displaySnackbar(
                     message = snackbarMessage,
                     onDismissPerformed = { store.dispatch(SnackbarAction.Dismissed) },
