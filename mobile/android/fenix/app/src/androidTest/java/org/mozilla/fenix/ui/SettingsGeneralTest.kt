@@ -105,7 +105,9 @@ class SettingsGeneralTest : TestSetup() {
         homeScreen {
         }.openThreeDotMenu {
         }.openSettings {
+            waitForAppWindowToBeUpdated()
         }.openLanguageSubMenu {
+            waitForAppWindowToBeUpdated()
             registerAndCleanupIdlingResources(
                 RecyclerViewIdlingResource(
                     activityIntentTestRule.activity.findViewById(R.id.locale_list),
