@@ -62,6 +62,7 @@ import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.base.modifier.thenConditional
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
@@ -446,6 +447,11 @@ private fun TabStripIcon(
                 modifier = Modifier
                     .size(tabStripIconSize)
                     .clip(CircleShape),
+            )
+        } else if (url == ABOUT_HOME_URL) {
+            Favicon(
+                imageResource = R.drawable.ic_firefox,
+                size = tabStripIconSize,
             )
         } else {
             Favicon(

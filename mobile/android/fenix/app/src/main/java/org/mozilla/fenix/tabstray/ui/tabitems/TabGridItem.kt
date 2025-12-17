@@ -56,6 +56,7 @@ import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.compose.base.RadioCheckmark
 import mozilla.components.compose.base.RadioCheckmarkColors
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import mozilla.components.support.base.utils.MAX_URI_LENGTH
 import mozilla.components.support.utils.ext.isLandscape
 import mozilla.components.ui.colors.PhotonColors
@@ -79,6 +80,7 @@ private val ThumbnailShape = RoundedCornerShape(
     bottomEnd = 12.dp,
 )
 private val TabHeaderIconTouchTargetSize = 40.dp
+private val TabHeaderFaviconSize = 12.dp
 
 /**
  * Tab grid item used to display a tab that supports clicks,
@@ -212,27 +214,28 @@ private fun TabContent(
                         Image(
                             bitmap = icon.asImageBitmap(),
                             contentDescription = null,
-                            modifier = Modifier.size(12.dp),
+                            modifier = Modifier.size(TabHeaderFaviconSize),
                         )
-
-                        Spacer(modifier = Modifier.width(4.dp))
+                    } else if (tab.content.url == ABOUT_HOME_URL) {
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_firefox),
+                            contentDescription = null,
+                            modifier = Modifier.size(TabHeaderFaviconSize),
+                        )
                     } else {
-                        Box(
-                            modifier = Modifier.size(24.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Icon(
-                                painter = painterResource(id = iconsR.drawable.mozac_ic_globe_24),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = if (isSelected) {
-                                    MaterialTheme.colorScheme.onPrimary
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                },
-                            )
-                        }
+                        Icon(
+                            painter = painterResource(id = iconsR.drawable.mozac_ic_globe_24),
+                            contentDescription = null,
+                            modifier = Modifier.size(TabHeaderFaviconSize),
+                            tint = if (isSelected) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        )
                     }
+
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     Text(
                         text = tab.toDisplayTitle().take(MAX_URI_LENGTH),
