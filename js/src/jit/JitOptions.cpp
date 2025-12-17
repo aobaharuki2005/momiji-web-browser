@@ -271,7 +271,7 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(osrPcMismatchesBeforeRecompile, 6000);
 
   // The bytecode length limit for small function.
-  SET_DEFAULT(smallFunctionMaxBytecodeLength, 130);
+  SET_DEFAULT(smallFunctionMaxBytecodeLength, 140);
 
   // The minimum entry count for an IC stub before it can be trial-inlined.
   SET_DEFAULT(inliningEntryThreshold, 100);
