@@ -57,11 +57,11 @@ constexpr Uint128 operator""_u128() {
     return mozilla::IsAsciiHexDigit(c) || c == '\'';
   };
 
-  constexpr auto isBinary =
-      [isBinaryDigit](auto zero, auto prefix, auto... rest) {
-        return zero == '0' && (prefix == 'b' || prefix == 'B') &&
-               (isBinaryDigit(rest) && ...);
-      };
+  constexpr auto isBinary = [isBinaryDigit](auto zero, auto prefix,
+                                            auto... rest) {
+    return zero == '0' && (prefix == 'b' || prefix == 'B') &&
+           (isBinaryDigit(rest) && ...);
+  };
 
   constexpr auto isHex = [isHexDigit](auto zero, auto prefix, auto... rest) {
     return zero == '0' && (prefix == 'x' || prefix == 'X') &&

@@ -848,22 +848,22 @@ void CodeGenerator::visitMulI(LMulI* ins) {
 
     if (mul->canBeNegativeZero()) {
       // Jump to an OOL path if the result is 0.
-      auto* ool = new (
-          alloc()) LambdaOutOfLineCode([=, this](OutOfLineCode& ool) {
-        Register result = ToRegister(ins->output());
-        Operand lhsCopy = ToOperand(ins->lhsCopy());
-        Operand rhs = ToOperand(ins->rhs());
-        MOZ_ASSERT_IF(lhsCopy.kind() == Operand::REG,
-                      lhsCopy.reg() != result.code());
+      auto* ool =
+          new (alloc()) LambdaOutOfLineCode([=, this](OutOfLineCode& ool) {
+            Register result = ToRegister(ins->output());
+            Operand lhsCopy = ToOperand(ins->lhsCopy());
+            Operand rhs = ToOperand(ins->rhs());
+            MOZ_ASSERT_IF(lhsCopy.kind() == Operand::REG,
+                          lhsCopy.reg() != result.code());
 
-        // Result is -0 if lhs or rhs is negative.
-        masm.movl(lhsCopy, result);
-        masm.orl(rhs, result);
-        bailoutIf(Assembler::Signed, ins->snapshot());
+            // Result is -0 if lhs or rhs is negative.
+            masm.movl(lhsCopy, result);
+            masm.orl(rhs, result);
+            bailoutIf(Assembler::Signed, ins->snapshot());
 
-        masm.mov(ImmWord(0), result);
-        masm.jmp(ool.rejoin());
-      });
+            masm.mov(ImmWord(0), result);
+            masm.jmp(ool.rejoin());
+          });
       addOutOfLineCode(ool, mul);
 
       masm.test32(lhs, lhs);
