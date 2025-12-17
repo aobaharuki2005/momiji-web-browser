@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use crash_helper_common::{
-    messages::Header, AncillaryData, IPCConnector, IPCConnectorKey, IPCEvent, IPCListener, IPCQueue,
+    messages::{self, Header, Message},
+    AncillaryData, IPCConnector, IPCConnectorKey, IPCEvent, IPCListener, IPCQueue, Pid,
 };
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, process, rc::Rc};
 
-use crate::crash_generation::{CrashGenerator, MessageResult};
+use crate::crash_generation::CrashGenerator;
 
 #[derive(PartialEq)]
 pub enum IPCServerState {
@@ -112,10 +113,25 @@ impl IPCServer {
         let connector = &connection.connector;
 
         match connection.endpoint {
-            IPCEndpoint::Parent => {
-                let res =
-                    generator.parent_message(connector, header.kind, &data, ancillary_data)?;
-                if let MessageResult::Connection(connector) = res {
+            IPCEndpoint::Parent => match header.kind {
+                messages::Kind::SetCrashReportPath => {
+                    let message = messages::SetCrashReportPath::decode(&data, ancillary_data)?;
+                    generator.set_path(message.path);
+                }
+                messages::Kind::TransferMinidump => {
+                    let message = messages::TransferMinidump::decode(&data, ancillary_data)?;
+                    connector.send_message(generator.retrieve_minidump(message.pid))?;
+                }
+                messages::Kind::GenerateMinidump => {
+                    todo!("Implement all messages");
+                }
+                messages::Kind::RegisterChildProcess => {
+                    let message = messages::RegisterChildProcess::decode(&data, ancillary_data)?;
+                    let connector = IPCConnector::from_ancillary(message.ipc_endpoint)?;
+                    connector.send_message(messages::ChildProcessRegistered::new(
+                        process::id() as Pid
+                    ))?;
+
                     let connector = Rc::new(connector);
                     self.queue.add_connector(&connector)?;
                     self.connections.insert(
@@ -126,13 +142,35 @@ impl IPCServer {
                         },
                     );
                 }
-            }
+                #[cfg(any(target_os = "android", target_os = "linux"))]
+                messages::Kind::RegisterAuxvInfo => {
+                    let message = messages::RegisterAuxvInfo::decode(&data, ancillary_data)?;
+                    generator.register_auxv_info(message)?;
+                }
+                #[cfg(any(target_os = "android", target_os = "linux"))]
+                messages::Kind::UnregisterAuxvInfo => {
+                    let message = messages::UnregisterAuxvInfo::decode(&data, ancillary_data)?;
+                    generator.unregister_auxv_info(message)?;
+                }
+                kind => {
+                    bail!("Unexpected message {kind:?} from parent process");
+                }
+            },
             IPCEndpoint::Child => {
-                generator.child_message(header.kind, &data, ancillary_data)?;
+                bail!("Unexpected message {:?} from child process", header.kind);
             }
-            IPCEndpoint::External => {
-                generator.external_message(connector, header.kind, &data, ancillary_data)?;
-            }
+            IPCEndpoint::External => match header.kind {
+                #[cfg(target_os = "windows")]
+                messages::Kind::WindowsErrorReporting => {
+                    let message =
+                        messages::WindowsErrorReportingMinidump::decode(data, ancillary_data)?;
+                    generator.generate_wer_minidump(message);
+                    connector.send_message(messages::WindowsErrorReportingMinidumpReply::new())?;
+                }
+                kind => {
+                    bail!("Unexpected message {kind:?} from external process");
+                }
+            },
         };
 
         Ok(())
