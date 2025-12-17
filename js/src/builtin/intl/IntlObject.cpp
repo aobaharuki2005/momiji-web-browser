@@ -223,14 +223,10 @@ template <size_t N>
 static ArrayObject* CreateArrayFromSortedList(
     JSContext* cx, const std::array<const char*, N>& list) {
   // Ensure the list is sorted and doesn't contain duplicates.
-#ifdef DEBUG
-  // See bug 1583449 for why the lambda can't be in the MOZ_ASSERT.
-  auto isLargerThanOrEqual = [](const auto& a, const auto& b) {
-    return std::strcmp(a, b) >= 0;
-  };
-#endif
   MOZ_ASSERT(std::adjacent_find(std::begin(list), std::end(list),
-                                isLargerThanOrEqual) == std::end(list));
+                                [](const auto& a, const auto& b) {
+                                  return std::strcmp(a, b) >= 0;
+                                }) == std::end(list));
 
   size_t length = std::size(list);
 
