@@ -1333,11 +1333,6 @@ class HTMLInputElement final : public TextControlElement,
    */
   void ApplyStep(int32_t aStep, ErrorResult&);
 
-  /**
-   * Returns if the current type is an experimental mobile type.
-   */
-  static bool IsExperimentalMobileType(FormControlType);
-
   /*
    * Returns if the current type is one of the date/time input types: date,
    * time, month, week and datetime-local.
