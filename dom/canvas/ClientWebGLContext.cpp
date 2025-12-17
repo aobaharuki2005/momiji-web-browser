@@ -2406,7 +2406,8 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
 
       case LOCAL_GL_RENDERER: {
         bool allowRenderer = StaticPrefs::webgl_enable_renderer_query();
-        if (ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo)) {
+        if (ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo) ||
+            ShouldResistFingerprinting(RFPTarget::WebGLRendererConstant)) {
           allowRenderer = false;
         }
         if (allowRenderer) {
@@ -2446,7 +2447,8 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
 
         switch (pname) {
           case dom::WEBGL_debug_renderer_info_Binding::UNMASKED_RENDERER_WEBGL:
-            if (ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo)) {
+            if (ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo) ||
+                ShouldResistFingerprinting(RFPTarget::WebGLRendererConstant)) {
               ret = Some("Mozilla"_ns);
             } else {
               ret = GetUnmaskedRenderer();
