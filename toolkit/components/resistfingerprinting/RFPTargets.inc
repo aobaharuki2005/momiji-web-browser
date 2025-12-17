@@ -111,6 +111,7 @@ ITEM_VALUE(WebGLRandomization,          75)
 ITEM_VALUE(EfficientCanvasRandomization, 76)
 ITEM_VALUE(WebGLVendorSanitize,         77)
 ITEM_VALUE(WebGLVendorConstant,         78)
+ITEM_VALUE(WebGLVendorRandomize,        79)
 
 // !!! Adding a new target? Rename PointerId and repurpose it.
 

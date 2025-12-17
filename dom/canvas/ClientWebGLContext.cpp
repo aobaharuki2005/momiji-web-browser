@@ -20,7 +20,9 @@
 #include "gfxCrashReporterUtils.h"
 #include "js/PropertyAndElement.h"  // JS_DefineElement
 #include "js/ScalarType.h"          // js::Scalar::Type
+#include "mozilla/Base64.h"
 #include "mozilla/EnumeratedRange.h"
+#include "mozilla/RandomNum.h"
 #include "mozilla/ResultVariant.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_webgl.h"
@@ -2457,6 +2459,24 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
           case dom::WEBGL_debug_renderer_info_Binding::UNMASKED_VENDOR_WEBGL:
             if (ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo)) {
               ret = Some("Mozilla"_ns);
+            } else if (ShouldResistFingerprinting(
+                           RFPTarget::WebGLVendorRandomize)) {
+              // Generate "Mozilla <Base64(uint64)>"
+              auto randomValue = RandomUint64();
+              if (randomValue.isSome()) {
+                uint64_t value = randomValue.value();
+                nsCString base64;
+                nsresult rv =
+                    Base64Encode(reinterpret_cast<const char*>(&value),
+                                 sizeof(value), base64);
+                if (NS_SUCCEEDED(rv)) {
+                  ret = Some(std::string("Mozilla ") + base64.get());
+                } else {
+                  ret = Some("Mozilla"_ns);
+                }
+              } else {
+                ret = Some("Mozilla"_ns);
+              }
             } else if (ShouldResistFingerprinting(
                            RFPTarget::WebGLVendorConstant)) {
               ret = Some("Mozilla"_ns);

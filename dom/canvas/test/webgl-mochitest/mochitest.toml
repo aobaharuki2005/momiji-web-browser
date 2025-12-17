@@ -285,6 +285,12 @@ skip-if = [
   "os == 'android'", # bug 865443- seperate suite - the non_conf* tests pass except for one on armv6 tests
 ]
 
+["test_webgl_vendor_randomize_fpp.html"]
+
+["test_webgl_vendor_randomize_fpp_explicit.html"]
+
+["test_webgl_vendor_randomize_rfp.html"]
+
 ["test_webgl_vendor_sanitize_fpp.html"]
 
 ["test_webgl_vendor_sanitize_fpp_explicit.html"]
