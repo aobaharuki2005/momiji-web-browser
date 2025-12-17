@@ -670,7 +670,7 @@ class CssLogic {
         // the viewedElement (or its parents).
         if (
           // check if the property is assigned
-          (rule.getPropertyValue(property) ||
+          (rule.isPropertyAssigned(property) ||
             // or if this is a css variable, if it's being used in the rule.
             (property.startsWith("--") &&
               // we may have false positive for dashed ident or the variable being
@@ -1114,6 +1114,16 @@ class CssRule {
   }
 
   /**
+   * Returns whether or not the given property is set in the current CSSStyleRule.
+   *
+   * @param {string} property the CSS property name
+   * @return {boolean}
+   */
+  isPropertyAssigned(property) {
+    return this.getStyle().hasLonghandProperty(property);
+  }
+
+  /**
    * Retrieve the style property priority from the current CSSStyleRule.
    *
    * @param {string} property the CSS property name for which you want the
@@ -1410,9 +1420,8 @@ class CssPropertyInfo {
    */
   #processMatchedSelector(selector, status, distance) {
     const cssRule = selector.cssRule;
-    const value = cssRule.getPropertyValue(this.property);
     if (
-      value &&
+      cssRule.isPropertyAssigned(this.property) &&
       (status == STATUS.MATCHED ||
         (status == STATUS.PARENT_MATCH &&
           InspectorUtils.isInheritedProperty(
@@ -1423,7 +1432,11 @@ class CssPropertyInfo {
       const selectorInfo = new CssSelectorInfo(
         selector,
         this.property,
-        value,
+        // FIXME: If this is a property that is coming from a longhand property which is
+        // using CSS variables, we would get an empty string at this point.
+        // It would be nice to try to display a value that would make sense to the user.
+        // See Bug 2003264
+        cssRule.getPropertyValue(this.property),
         status,
         distance
       );
