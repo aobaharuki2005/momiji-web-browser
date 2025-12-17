@@ -63,7 +63,7 @@ protobuf = "4.33.0" # Keep Protobuf in sync with the version used by AppServices
 
 # Gradle plugins
 jacoco = "0.8.14"
-kotlin-dsl = "6.2.0"
+kotlin-dsl = "6.4.1"
 protobuf-plugin = "0.9.5"
 python-envs-plugin = "0.0.31"
 semanticdb-javac = "0.11.1"
