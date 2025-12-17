@@ -1467,6 +1467,8 @@
   <string name="tab_drawer_fab_content">Anonima</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">Sincronizza</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">Cerca nelle tue schede</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">Condividi tutte le schede</string>
   <!-- Text shown in the menu to view recently closed tabs -->
@@ -1515,6 +1517,8 @@
   <string name="close_tab_title">Chiudi scheda %s</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">Menu schede aperte</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">Ritorna al gestore schede</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">Salva schede in una raccolta</string>
   <!-- Text for the menu button to delete a collection -->
