@@ -1646,10 +1646,9 @@ void nsWindow::WaylandPopupHierarchyCalculatePositions() {
           NS_WARNING("Anchored popup does not match layout!");
         }
       }
-      GdkPoint parent = popup->WaylandGetParentPosition();
-
+      DesktopIntPoint parent = popup->WaylandGetParentPosition();
       LOG("  popup [%p] uses transformed coordinates\n", popup);
-      LOG("    parent position [%d, %d]\n", parent.x, parent.y);
+      LOG("    parent position [%d, %d]\n", parent.x.value, parent.y.value);
       LOG("    popup position [%d, %d]\n", popup->mPopupPosition.x,
           popup->mPopupPosition.y);
 
@@ -1702,7 +1701,7 @@ bool nsWindow::WaylandPopupIsFirst() {
   return !mWaylandPopupPrev || !mWaylandPopupPrev->mWaylandToplevel;
 }
 
-nsWindow* nsWindow::GetEffectiveParent() {
+nsWindow* nsWindow::GetEffectiveParent() const {
   GtkWindow* parentGtkWindow = gtk_window_get_transient_for(GTK_WINDOW(mShell));
   if (!parentGtkWindow || !GTK_IS_WIDGET(parentGtkWindow)) {
     return nullptr;
@@ -1710,15 +1709,19 @@ nsWindow* nsWindow::GetEffectiveParent() {
   return get_window_for_gtk_widget(GTK_WIDGET(parentGtkWindow));
 }
 
-GdkPoint nsWindow::WaylandGetParentPosition() {
-  GdkPoint topLeft = {0, 0};
+DesktopIntPoint nsWindow::WaylandGetParentPosition() const {
+  MOZ_ASSERT(IsPopup());
   nsWindow* window = GetEffectiveParent();
-  if (window->IsPopup()) {
-    auto offset = window->WidgetToScreenOffsetUnscaled();
-    topLeft = GdkPoint{offset.x, offset.y};
+  if (NS_WARN_IF(!window) || !window->IsPopup()) {
+    return {0, 0};
   }
-  LOG("nsWindow::WaylandGetParentPosition() [%d, %d]\n", topLeft.x, topLeft.y);
-  return topLeft;
+  // If our parent is a popup, offset to our toplevel bounds (note that in
+  // Wayland there's no global coordinate space, so our "screen" offset is
+  // really relative to the origin of our toplevel).
+  DesktopIntPoint offset = window->WidgetToScreenOffsetUnscaled();
+  LOG("nsWindow::WaylandGetParentPosition() [%d, %d]\n", offset.x.value,
+      offset.y.value);
+  return offset;
 }
 
 #ifdef MOZ_LOGGING
@@ -2112,7 +2115,7 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
 
   const GdkRectangle finalGdkRect = [&] {
     GdkRectangle finalRect = *aFinalSize;
-    GdkPoint parent = WaylandGetParentPosition();
+    DesktopIntPoint parent = WaylandGetParentPosition();
     finalRect.x += parent.x;
     finalRect.y += parent.y;
     return finalRect;
@@ -2695,11 +2698,10 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
   DesktopIntRect anchorRect =
       ToDesktopPixels(mPopupMoveToRectParams.mAnchorRect);
   if (!WaylandPopupIsFirst()) {
-    GdkPoint parent = WaylandGetParentPosition();
-    LOG("  subtract parent position from anchor [%d, %d]\n", parent.x,
-        parent.y);
-    anchorRect.x -= parent.x;
-    anchorRect.y -= parent.y;
+    DesktopIntPoint parent = WaylandGetParentPosition();
+    LOG("  subtract parent position from anchor [%d, %d]\n", parent.x.value,
+        parent.y.value);
+    anchorRect.MoveBy(-parent);
   }
 
   *aPopupAnchor = GdkRectangle{anchorRect.x, anchorRect.y, anchorRect.width,

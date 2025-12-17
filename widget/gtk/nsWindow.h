@@ -214,7 +214,6 @@ class nsWindow final : public nsIWidget {
   LayoutDeviceIntRect GetClientBounds() override;
   LayoutDeviceIntSize GetClientSize() override;
   LayoutDeviceIntPoint GetClientOffset() override;
-  GdkPoint GetCsdOffsetInGdkCoords();
   LayoutDeviceIntPoint GetScreenEdgeSlop() override;
   nsresult GetRestoredBounds(LayoutDeviceIntRect&) override;
   bool PersistClientBounds() const override { return true; }
@@ -352,7 +351,7 @@ class nsWindow final : public nsIWidget {
   void SetGdkWindow(GdkWindow* aGdkWindow);
   GdkWindow* GetToplevelGdkWindow() const;
   GtkWidget* GetGtkWidget() const { return mShell; }
-  nsWindow* GetEffectiveParent();
+  nsWindow* GetEffectiveParent() const;
 #ifdef MOZ_WAYLAND
   RefPtr<mozilla::widget::WaylandSurface> GetWaylandSurface() {
     return mSurface;
@@ -900,7 +899,10 @@ class nsWindow final : public nsIWidget {
   void ApplySizeConstraints();
 
   // Wayland Popup section
-  GdkPoint WaylandGetParentPosition();
+
+  // Gets the offset from this popup's coordinate to our toplevel coordinates.
+  DesktopIntPoint WaylandGetParentPosition() const;
+
   bool WaylandPopupConfigure();
   bool WaylandPopupIsAnchored();
   bool WaylandPopupIsContextMenu();
