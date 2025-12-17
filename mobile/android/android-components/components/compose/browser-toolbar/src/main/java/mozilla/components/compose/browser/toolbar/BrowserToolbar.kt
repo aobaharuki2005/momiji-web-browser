@@ -82,30 +82,7 @@ fun BrowserToolbar(
             onInteraction = { store.dispatch(it) },
         )
     } else {
-        CFRPopupLayout(
-            showCFR = cfr?.enabled == true,
-            properties = cfrProperties,
-            onCFRShown = { cfr?.onShown?.invoke() },
-            onDismiss = { explicit -> cfr?.onDismiss?.invoke(explicit) },
-            title = {
-                cfr?.title?.let {
-                    Text(
-                        text = it,
-                        color = AcornTheme.colors.textOnColorPrimary,
-                        style = AcornTheme.typography.subtitle2,
-                    )
-                }
-            },
-            text = {
-                cfr?.description?.let {
-                    Text(
-                        text = it,
-                        color = AcornTheme.colors.textOnColorPrimary,
-                        style = AcornTheme.typography.body2,
-                    )
-                }
-            },
-        ) {
+        val displayToolbar = @Composable {
             BrowserDisplayToolbar(
                 pageOrigin = uiState.displayState.pageOrigin,
                 progressBarConfig = uiState.displayState.progressBarConfig,
@@ -116,6 +93,39 @@ fun BrowserToolbar(
                 browserActionsEnd = uiState.displayState.browserActionsEnd,
                 onInteraction = { store.dispatch(it) },
             )
+        }
+
+        if (cfr?.enabled == true) {
+            // Wrapping the toolbar with the CFR code negatively impacts the transition
+            // between the full and minimal toolbar <=> Avoid this when not needed.
+            CFRPopupLayout(
+                showCFR = true,
+                properties = cfrProperties,
+                onCFRShown = { cfr.onShown.invoke() },
+                onDismiss = { explicit -> cfr.onDismiss.invoke(explicit) },
+                title = {
+                    cfr.title.let {
+                        Text(
+                            text = it,
+                            color = AcornTheme.colors.textOnColorPrimary,
+                            style = AcornTheme.typography.subtitle2,
+                        )
+                    }
+                },
+                text = {
+                    cfr.description.let {
+                        Text(
+                            text = it,
+                            color = AcornTheme.colors.textOnColorPrimary,
+                            style = AcornTheme.typography.body2,
+                        )
+                    }
+                },
+            ) {
+                displayToolbar()
+            }
+        } else {
+            displayToolbar()
         }
     }
 }
