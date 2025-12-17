@@ -127,6 +127,11 @@ tags = "os_integration"
 ["test_UrlUtils.js"]
 
 ["test_firstStartup.js"]
+
+["test_firstStartup_categoryTasks.js"]
+support-files = [
+  "FirstStartupCategoryModule.sys.mjs",
+]
 skip-if = [
   "os == 'android'",
 ]
