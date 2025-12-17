@@ -3719,6 +3719,17 @@ option(env="MOZ_PKG_SPECIAL", nargs=1, help="Name of special moz flavor")
 set_config("MOZ_PKG_SPECIAL", depends_if("MOZ_PKG_SPECIAL")(lambda x: x[0]))
 
 
+# Smart card support
+# ==============================================================
+@depends(target)
+def disable_smart_cards(target):
+    return target.os == "Android"
+
+
+set_config("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
+set_define("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
+
+
 # OSX Packaging
 # ==============================================================
 
@@ -3817,6 +3828,47 @@ with only_when(target_is_osx):
         return f"{distribution_id[0]}.{gpu_process_bundle_id}-{gpu_process_name}"
 
     set_config("MOZ_GPU_PROCESS_BUNDLEID", moz_gpu_process_bundle_id)
+
+    with only_when(milestone.is_nightly & ~disable_smart_cards):
+        # Security Module Helper
+        #
+        # Set up configuration strings for building and referencing the PKCS#11
+        # utility process executable. For a local developer build where the
+        # display name is "Nightly", the strings will be as follows.
+        #
+        # MOZ_PKCS11_PROCESS_NAME = security-module-helper
+        # MOZ_PKCS11_PROCESS_NAME_BRANDED = Nightly Security Module Helper
+        # MOZ_PKCS11_PROCESS_NAME_BUNDLENAME = security-module-helper.app
+        # MOZ_PKCS11_PROCESS_BUNDLEID = org.mozilla.nightly-security-module-helper
+        moz_pkcs11_process_name = dependable("security-module-helper")
+
+        set_config("MOZ_PKCS11_PROCESS_NAME", moz_pkcs11_process_name)
+        set_config(
+            "MOZ_PKCS11_PROCESS_NAME_BRANDED",
+            depends_if(moz_app_displayname)(
+                lambda name: f"{name} Security Module Helper"
+            ),
+        )
+        set_config(
+            "MOZ_PKCS11_PROCESS_BUNDLENAME",
+            depends(moz_pkcs11_process_name)(lambda name: f"{name}.app"),
+        )
+
+        # Generate a lower case string with no spaces to be used as the bundle ID
+        # for the PKCS11 helper .app of the form org.mozilla.<executable-name>.
+        @depends(moz_app_displayname, moz_pkcs11_process_name, "--with-distribution-id")
+        def moz_pkcs11_process_bundle_id(
+            app_displayname, pkcs11_process_name, distribution_id
+        ):
+            if not app_displayname:
+                return
+
+            pkcs11_process_bundle_id = app_displayname.replace(" ", "-").lower()
+            return (
+                f"{distribution_id[0]}.{pkcs11_process_bundle_id}-{pkcs11_process_name}"
+            )
+
+        set_config("MOZ_PKCS11_PROCESS_BUNDLEID", moz_pkcs11_process_bundle_id)
 
 
 # JS Packaging
@@ -4019,16 +4071,6 @@ with only_when(target_has_linux_kernel & compile_environment):
         ),
     )
 
-
-# Smart card support
-# ==============================================================
-@depends(build_project)
-def disable_smart_cards(build_project):
-    return build_project == "mobile/android"
-
-
-set_config("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
-set_define("MOZ_NO_SMART_CARDS", True, when=disable_smart_cards)
 
 # Enable UniFFI fixtures
 # ==============================================================

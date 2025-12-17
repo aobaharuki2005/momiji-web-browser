@@ -69,19 +69,13 @@ UtilityProcessHost::UtilityProcessHost(SandboxingKind aSandbox,
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   mDisableOSActivityMode = IsUtilitySandboxEnabled(aSandbox);
 #endif
-#if defined(MOZ_SANDBOX)
-  mSandbox = aSandbox;
-#endif
+  mUtilitySandbox = aSandbox;
 }
 
 UtilityProcessHost::~UtilityProcessHost() {
   MOZ_COUNT_DTOR(UtilityProcessHost);
-#if defined(MOZ_SANDBOX)
   LOGD("[%p] UtilityProcessHost::~UtilityProcessHost sandboxingKind=%" PRIu64,
-       this, mSandbox);
-#else
-  LOGD("[%p] UtilityProcessHost::~UtilityProcessHost", this);
-#endif
+       this, mUtilitySandbox);
 }
 
 bool UtilityProcessHost::Launch(geckoargs::ChildProcessArgs aExtraOpts) {
@@ -189,8 +183,8 @@ void UtilityProcessHost::InitAfterConnect(bool aSucceeded) {
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   UniquePtr<SandboxBroker::Policy> policy;
-  if (IsUtilitySandboxEnabled(mSandbox)) {
-    switch (mSandbox) {
+  if (IsUtilitySandboxEnabled(mUtilitySandbox)) {
+    switch (mUtilitySandbox) {
       case SandboxingKind::GENERIC_UTILITY:
         policy = SandboxBrokerPolicyFactory::GetUtilityProcessPolicy(
             GetActor()->OtherPid());
@@ -357,7 +351,7 @@ MacSandboxType UtilityProcessHost::GetMacSandboxType() {
 #ifdef MOZ_WMF_CDM_LPAC_SANDBOX
 void UtilityProcessHost::EnsureWidevineL1PathForSandbox(
     geckoargs::ChildProcessArgs& aExtraOpts) {
-  if (mSandbox != SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+  if (mUtilitySandbox != SandboxingKind::MF_MEDIA_ENGINE_CDM) {
     return;
   }
 
