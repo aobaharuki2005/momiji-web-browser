@@ -3477,6 +3477,13 @@
   value: @IS_ANDROID@
   mirror: always
 
+#ifndef ANDROID
+- name: dom.forms.html_color_picker.enabled
+  type: bool
+  value: @IS_NIGHTLY_BUILD@
+  mirror: always
+#endif
+
 - name: dom.forms.always_allow_pointer_events.enabled
   type: bool
   value: true

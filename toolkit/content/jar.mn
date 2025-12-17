@@ -50,6 +50,7 @@ toolkit.jar:
    content/global/aboutUrlClassifier.css
 *   content/global/buildconfig.html
    content/global/buildconfig.css
+   content/global/colorpicker.html
    content/global/contentAreaUtils.js
 #ifndef MOZ_FENNEC
    content/global/editMenuOverlay.js
@@ -78,6 +79,7 @@ toolkit.jar:
    content/global/widgets.css
    content/global/bindings/calendar.js         (widgets/calendar.js)
    content/global/bindings/colorpicker-common.mjs             (widgets/colorpicker-common.mjs)
+   content/global/bindings/colorpicker.mjs     (widgets/colorpicker.mjs)
    content/global/bindings/datekeeper.js       (widgets/datekeeper.js)
    content/global/bindings/datepicker.js       (widgets/datepicker.js)
    content/global/bindings/datetimebox.css     (widgets/datetimebox.css)
