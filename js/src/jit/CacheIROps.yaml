@@ -3799,7 +3799,6 @@
   args:
     iter: ObjId
     callee: ObjId
-    kind: CompletionKindImm
     targetNargs: UInt32Imm
 
 - name: CallPrintString

@@ -16867,6 +16867,10 @@ AttachDecision CloseIterIRGenerator::tryAttachNoReturnMethod() {
 }
 
 AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
+  if (kind_ == CompletionKind::Throw) {
+    return AttachDecision::NoAction;
+  }
+
   Maybe<PropertyInfo> prop;
   NativeObject* holder = nullptr;
 
@@ -16906,7 +16910,7 @@ AttachDecision CloseIterIRGenerator::tryAttachScriptedReturn() {
   ObjOperandId calleeId = writer.guardToObject(calleeValId);
   emitCalleeGuard(calleeId, callee);
 
-  writer.closeIterScriptedResult(objId, calleeId, kind_, callee->nargs());
+  writer.closeIterScriptedResult(objId, calleeId, callee->nargs());
 
   writer.returnFromIC();
   trackAttached("CloseIter.ScriptedReturn");
