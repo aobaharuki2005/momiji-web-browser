@@ -2960,6 +2960,8 @@ TEST(TestAudioTrackGraph, PlatformProcessing)
 
   // Switch driver.
   EXPECT_CALL(*listener, RequestedInputChannelCount).WillRepeatedly(Return(2));
+  // ReevaluateInputDevice() is not required for the native input, but is
+  // called anyway.
   DispatchFunction([&] {
     track->QueueControlMessageWithNoShutdown(
         [&] { graph->ReevaluateInputDevice(device); });
