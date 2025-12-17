@@ -1623,12 +1623,6 @@ interface InputEventInit extends UIEventInit {
     targetRanges?: StaticRange[];
 }
 
-interface InputPickerColor {
-    component1: number;
-    component2: number;
-    component3: number;
-}
-
 interface InspectorCSSPropertyDefinition {
     fromJS: boolean;
     inherits: boolean;
@@ -11844,7 +11838,6 @@ interface HTMLInputElement extends HTMLElement, MozEditableElement, MozImageLoad
     checkValidity(): boolean;
     closeDateTimePicker(): void;
     getAutocompleteInfo(): AutocompleteInfo | null;
-    getColor(): InputPickerColor;
     getDateTimeInputBoxValue(): DateTimeValue;
     getFilesAndDirectories(): Promise<(File | Directory)[]>;
     getMaximum(): number;
@@ -11866,7 +11859,6 @@ interface HTMLInputElement extends HTMLElement, MozEditableElement, MozImageLoad
     setRangeText(replacement: string): void;
     setRangeText(replacement: string, start: number, end: number, selectionMode?: SelectionMode): void;
     setSelectionRange(start: number, end: number, direction?: string): void;
-    setUserInputColor(aColor: InputPickerColor): void;
     showPicker(): void;
     stepDown(n?: number): void;
     stepUp(n?: number): void;
