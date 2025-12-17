@@ -605,18 +605,6 @@ include(
 )
 
 
-# Awk detection
-# ==============================================================
-awk = check_prog("AWK", ("gawk", "mawk", "nawk", "awk"), paths=prefer_mozillabuild_path)
-
-# Until the AWK variable is not necessary in old-configure
-
-
-@depends(awk)
-def awk_for_old_configure(value):
-    return value
-
-
 # GNU make detection
 # ==============================================================
 option(env="MAKE", nargs=1, help="Path to GNU make")
