@@ -10,6 +10,8 @@ namespace psm {
 [ChildProc=Utility]
 protocol PPKCS11Module
 {
+  child:
+    async LoadModule(nsString aModule) returns (nsresult rv);
 };
 
 } // namespace psm

@@ -24,6 +24,9 @@ class PKCS11ModuleChild final : public PPKCS11ModuleChild {
 
   nsresult Start(Endpoint<PPKCS11ModuleChild>&& aEndpoint);
 
+  ipc::IPCResult RecvLoadModule(nsString&& aModule,
+                                LoadModuleResolver&& aResolver);
+
  private:
   nsCOMPtr<nsISerialEventTarget> mTaskQueue;
 

@@ -1537,6 +1537,20 @@ nsresult nsNSSComponent::InitializeNSS() {
           GetCurrentSerialEventTarget(), __func__,
           [](RefPtr<PKCS11ModuleParent>&& parent) {
             MOZ_RELEASE_ASSERT(parent);
+            parent->SendLoadModule(u"MySecretModule"_ns)
+                ->Then(
+                    GetCurrentSerialEventTarget(), __func__,
+                    [](nsresult res) {
+                      // We have a result from the utility process!
+                      // Check that we successfully loaded MySecretModule.
+                      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(res));
+                    },
+                    [](ipc::ResponseRejectReason reason) {
+                      // We ran into an IPC Error.
+                      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
+                              ("Loading MySecretModule failed: %d",
+                               static_cast<int>(reason)));
+                    });
           },
           [](base::LaunchError&& aError) {
             // We ran into a launch error.

@@ -12,6 +12,9 @@
 #include "mozilla/ipc/Endpoint.h"
 #include "nsDebugImpl.h"
 
+#include <chrono>
+#include <thread>
+
 namespace mozilla::psm {
 
 nsresult PKCS11ModuleChild::Start(Endpoint<PPKCS11ModuleChild>&& aEndpoint) {
@@ -32,6 +35,20 @@ nsresult PKCS11ModuleChild::Start(Endpoint<PPKCS11ModuleChild>&& aEndpoint) {
         MOZ_ALWAYS_TRUE(endpoint.Bind(self));
       }));
   return rv;
+}
+
+ipc::IPCResult PKCS11ModuleChild::RecvLoadModule(
+    nsString&& aModule, LoadModuleResolver&& aResolver) {
+  if (aModule != u"MySecretModule"_ns) {
+    aResolver(NS_ERROR_NOT_IMPLEMENTED);
+    return IPC_OK();
+  }
+
+  // Simulate a long but successful load
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  aResolver(NS_OK);
+
+  return IPC_OK();
 }
 
 }  // namespace mozilla::psm
