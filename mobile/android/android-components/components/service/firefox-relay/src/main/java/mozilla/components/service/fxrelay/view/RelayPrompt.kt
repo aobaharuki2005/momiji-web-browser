@@ -4,7 +4,6 @@
 
 package mozilla.components.service.fxrelay.view
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -37,15 +36,16 @@ fun RelayPromptBar(
     onMaskEmailClicked: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(color = MaterialTheme.colorScheme.surface)
-            .padding(horizontal = 16.dp),
-    ) {
-        MaskEmailChip(
-           onClick = onMaskEmailClicked,
-        )
+    Surface {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+        ) {
+            MaskEmailChip(
+                onClick = onMaskEmailClicked,
+            )
+        }
     }
 }
 
@@ -69,7 +69,6 @@ private fun MaskEmailChip(
                 painter = painterResource(R.drawable.mozac_ic_mask_email_24),
                 contentDescription = null, // talkback should focus on the whole element
                 modifier = Modifier.size(16.dp),
-                tint = AcornTheme.colors.iconPrimary,
             )
 
             Spacer(modifier = Modifier.size(8.dp))
@@ -77,7 +76,6 @@ private fun MaskEmailChip(
             Text(
                 text = stringResource(mozilla.components.service.fxrelay.R.string.mozac_feature_relay_chip_text),
                 style = AcornTheme.typography.headline8,
-                color = MaterialTheme.colorScheme.onSurface,
             )
         }
     }

@@ -202,7 +202,7 @@ private fun TabStripContent(
                 IconButton(onClick = onAddTabClick) {
                     Icon(
                         painter = painterResource(iconsR.drawable.mozac_ic_plus_24),
-                        tint = FirefoxTheme.colors.iconPrimary,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         contentDescription = stringResource(R.string.add_tab),
                     )
                 }
@@ -411,9 +411,9 @@ private fun TabItem(
                     Icon(
                         painter = painterResource(iconsR.drawable.mozac_ic_cross_20),
                         tint = if (state.isSelected) {
-                            FirefoxTheme.colors.iconPrimary
+                            MaterialTheme.colorScheme.onSurface
                         } else {
-                            FirefoxTheme.colors.iconSecondary
+                            MaterialTheme.colorScheme.onSurfaceVariant
                         },
                         contentDescription = stringResource(
                             id = R.string.close_tab_title,

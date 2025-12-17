@@ -40,9 +40,7 @@ class AcornColors(
     formDefault: Color,
     textOnColorPrimary: Color,
     textActionSecondary: Color,
-    iconPrimary: Color,
     iconPrimaryInactive: Color,
-    iconSecondary: Color,
     iconActive: Color,
     iconOnColor: Color,
     iconOnColorDisabled: Color,
@@ -134,16 +132,8 @@ class AcornColors(
 
     // Icon
 
-    // Primary icon
-    var iconPrimary by mutableStateOf(iconPrimary)
-        private set
-
     // Inactive tab
     var iconPrimaryInactive by mutableStateOf(iconPrimaryInactive)
-        private set
-
-    // Secondary icon
-    var iconSecondary by mutableStateOf(iconSecondary)
         private set
 
     // Active tab
@@ -221,9 +211,7 @@ class AcornColors(
         formDefault = other.formDefault
         textOnColorPrimary = other.textOnColorPrimary
         textActionSecondary = other.textActionSecondary
-        iconPrimary = other.iconPrimary
         iconPrimaryInactive = other.iconPrimaryInactive
-        iconSecondary = other.iconSecondary
         iconActive = other.iconActive
         iconOnColor = other.iconOnColor
         iconOnColorDisabled = other.iconOnColorDisabled
@@ -259,9 +247,7 @@ class AcornColors(
         formDefault: Color = this.formDefault,
         textOnColorPrimary: Color = this.textOnColorPrimary,
         textActionSecondary: Color = this.textActionSecondary,
-        iconPrimary: Color = this.iconPrimary,
         iconPrimaryInactive: Color = this.iconPrimaryInactive,
-        iconSecondary: Color = this.iconSecondary,
         iconActive: Color = this.iconActive,
         iconOnColor: Color = this.iconOnColor,
         iconOnColorDisabled: Color = this.iconOnColorDisabled,
@@ -291,9 +277,7 @@ class AcornColors(
         formDefault = formDefault,
         textOnColorPrimary = textOnColorPrimary,
         textActionSecondary = textActionSecondary,
-        iconPrimary = iconPrimary,
         iconPrimaryInactive = iconPrimaryInactive,
-        iconSecondary = iconSecondary,
         iconActive = iconActive,
         iconOnColor = iconOnColor,
         iconOnColorDisabled = iconOnColorDisabled,
@@ -326,9 +310,7 @@ val darkColorPalette = AcornColors(
     formDefault = PhotonColors.LightGrey05,
     textOnColorPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.LightGrey05,
-    iconPrimary = PhotonColors.LightGrey05,
     iconPrimaryInactive = PhotonColors.LightGrey05A60,
-    iconSecondary = PhotonColors.LightGrey40,
     iconActive = PhotonColors.Violet40,
     iconOnColor = PhotonColors.LightGrey05,
     iconOnColorDisabled = PhotonColors.LightGrey05A40,
@@ -360,9 +342,7 @@ val lightColorPalette = AcornColors(
     formDefault = PhotonColors.DarkGrey90,
     textOnColorPrimary = PhotonColors.LightGrey05,
     textActionSecondary = PhotonColors.DarkGrey90,
-    iconPrimary = PhotonColors.DarkGrey90,
     iconPrimaryInactive = PhotonColors.DarkGrey90A60,
-    iconSecondary = PhotonColors.DarkGrey05,
     iconActive = PhotonColors.Ink20,
     iconOnColor = PhotonColors.LightGrey05,
     iconOnColorDisabled = PhotonColors.LightGrey05A40,
