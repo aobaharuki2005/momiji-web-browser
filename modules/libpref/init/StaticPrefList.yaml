@@ -3468,7 +3468,7 @@
 # This being true is necessary to type check messages.
 - name: dom.jsipc.send_typed
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Support for input type=month, type=week. By default, disabled.
