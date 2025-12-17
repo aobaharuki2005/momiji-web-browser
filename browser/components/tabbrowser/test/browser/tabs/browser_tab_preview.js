@@ -23,6 +23,10 @@ const TabHoverPanelSet = ChromeUtils.importESModule(
   "chrome://browser/content/tabbrowser/tab-hover-preview.mjs"
 ).default;
 
+const { TabNotes } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/tabnotes/TabNotes.sys.mjs"
+);
+
 const TAB_PREVIEW_PANEL_ID = "tab-preview-panel";
 const TAB_GROUP_PREVIEW_PANEL_ID = "tabgroup-preview-panel";
 
@@ -544,6 +548,52 @@ add_task(async function tabContentChangeTests() {
   );
 
   await closeTabPreviews();
+  BrowserTestUtils.removeTab(tab);
+  await resetState();
+});
+
+/**
+ * Test that if a note is set on a tab, the note appears in the preview panel
+ */
+add_task(async function tabNotesTests() {
+  const previewPanel = document.getElementById(TAB_PREVIEW_PANEL_ID);
+  const noteText = "Hello world";
+
+  const tab = await addTabTo(gBrowser, "https://example.com/");
+
+  await openTabPreview(tab);
+  Assert.equal(
+    previewPanel.querySelector(".tab-note-text-container").innerText,
+    "",
+    "Preview panel contains no tab note"
+  );
+  await closeTabPreviews();
+
+  const tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
+  TabNotes.set(tab, noteText);
+  await tabNoteCreated;
+
+  await openTabPreview(tab);
+
+  Assert.equal(
+    previewPanel.querySelector(".tab-note-text-container").innerText,
+    noteText,
+    "New tab note is visible in preview panel"
+  );
+  await closeTabPreviews();
+
+  const tabNoteRemoved = BrowserTestUtils.waitForEvent(tab, "TabNote:Removed");
+  TabNotes.delete(tab);
+  await tabNoteRemoved;
+
+  await openTabPreview(tab);
+  Assert.equal(
+    previewPanel.querySelector(".tab-note-text-container").innerText,
+    "",
+    "Preview panel contains no tab note after delete"
+  );
+  await closeTabPreviews();
+
   BrowserTestUtils.removeTab(tab);
   await resetState();
 });

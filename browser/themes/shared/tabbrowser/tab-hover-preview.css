@@ -14,6 +14,8 @@
 
 .tab-preview-title {
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   font-weight: var(--heading-font-weight);
 }
@@ -32,9 +34,12 @@
 }
 
 .tab-preview-thumbnail-container {
-  width: 280px;
-  height: 140px;
-  border-top: 1px solid var(--panel-border-color);
+  width: 264px;
+  border: 1px solid var(--border-color-deemphasized);
+  border-radius: var(--border-radius-medium);
+  margin: 0 auto var(--space-small);
+  overflow: hidden;
+
   &.hide-thumbnail {
     display: none;
   }
@@ -46,6 +51,14 @@
     width: 100%;
     animation: tab-hover-preview-fadein 0.2s ease;
   }
+}
+
+.tab-note-text-container:not(:empty) {
+  margin: 0 var(--space-large) var(--space-large);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 10;
 }
 
 @keyframes tab-hover-preview-fadein {
