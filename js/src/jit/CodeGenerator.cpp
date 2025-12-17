@@ -4166,6 +4166,8 @@ void CodeGenerator::visitMoveGroup(LMoveGroup* group) {
       case LDefinition::OBJECT:
       case LDefinition::SLOTS:
       case LDefinition::WASM_ANYREF:
+      case LDefinition::WASM_STRUCT_DATA:
+      case LDefinition::WASM_ARRAY_DATA:
 #ifdef JS_NUNBOX32
       case LDefinition::TYPE:
       case LDefinition::PAYLOAD:
@@ -11028,6 +11030,7 @@ void CodeGenerator::emitWasmValueLoad(InstructionWithMaybeTrapSite* ins,
       break;
     case MIRType::Pointer:
     case MIRType::WasmAnyRef:
+    case MIRType::WasmStructData:
     case MIRType::WasmArrayData:
       MOZ_ASSERT(wideningOp == MWideningOp::None);
       fco = masm.loadPtr(addr, dst.gpr());
@@ -16978,11 +16981,18 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   // This is the total number of bytes covered by the map.
   const size_t nTotalBytes = nNonRegisterBytes + nRegisterBytes;
 
-#ifndef DEBUG
-  bool needStackMap = !(safepoint.wasmAnyRefRegs().empty() &&
-                        safepoint.wasmAnyRefSlots().empty() &&
-                        safepoint.slotsOrElementsSlots().empty());
+  // This stackmap/safepoint is for a wasm frame, so there should be no
+  // slotsOrElements-style roots.
+  MOZ_RELEASE_ASSERT(safepoint.slotsOrElementsSlots().empty());
+  MOZ_RELEASE_ASSERT(safepoint.slotsOrElementsRegs().empty());
 
+#ifndef DEBUG
+  bool needStackMap = !safepoint.wasmAnyRefRegs().empty() ||
+                      !safepoint.wasmAnyRefSlots().empty() ||
+                      !safepoint.wasmStructDataRegs().empty() ||
+                      !safepoint.wasmStructDataSlots().empty() ||
+                      !safepoint.wasmArrayDataRegs().empty() ||
+                      !safepoint.wasmArrayDataSlots().empty();
   // There are no references, and this is a non-debug build, so don't bother
   // building the stackmap.
   if (!needStackMap) {
@@ -17001,10 +17011,26 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
   // REG DUMP AREA, if any.
   size_t regDumpWords = 0;
   const LiveGeneralRegisterSet wasmAnyRefRegs = safepoint.wasmAnyRefRegs();
-  const LiveGeneralRegisterSet slotsOrElementsRegs =
-      safepoint.slotsOrElementsRegs();
+  const LiveGeneralRegisterSet wasmStructDataRegs =
+      safepoint.wasmStructDataRegs();
+  const LiveGeneralRegisterSet wasmArrayDataRegs =
+      safepoint.wasmArrayDataRegs();
+
+  // These three sets should be disjoint.
+  MOZ_ASSERT(GeneralRegisterSet::Intersect(wasmAnyRefRegs.set(),
+                                           wasmStructDataRegs.set())
+                 .empty());
+  MOZ_ASSERT(GeneralRegisterSet::Intersect(wasmStructDataRegs.set(),
+                                           wasmArrayDataRegs.set())
+                 .empty());
+  MOZ_ASSERT(GeneralRegisterSet::Intersect(wasmArrayDataRegs.set(),
+                                           wasmAnyRefRegs.set())
+                 .empty());
   const LiveGeneralRegisterSet refRegs(GeneralRegisterSet::Union(
-      wasmAnyRefRegs.set(), slotsOrElementsRegs.set()));
+      wasmAnyRefRegs.set(),
+      GeneralRegisterSet::Union(wasmStructDataRegs.set(),
+                                wasmArrayDataRegs.set())));
+
   GeneralRegisterForwardIterator refRegsIter(refRegs);
   switch (safepoint.wasmSafepointKind()) {
     case WasmSafepointKind::LirCall:
@@ -17024,8 +17050,10 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
 
         if (wasmAnyRefRegs.has(reg)) {
           stackMap->set(index, wasm::StackMap::AnyRef);
+        } else if (wasmStructDataRegs.has(reg)) {
+          stackMap->set(index, wasm::StackMap::StructDataPointer);
         } else {
-          MOZ_ASSERT(slotsOrElementsRegs.has(reg));
+          MOZ_ASSERT(wasmArrayDataRegs.has(reg));
           stackMap->set(index, wasm::StackMap::ArrayDataPointer);
         }
       }
@@ -17053,8 +17081,10 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
 
         if (wasmAnyRefRegs.has(reg)) {
           stackMap->set(offsetFromBottom, wasm::StackMap::AnyRef);
+        } else if (wasmStructDataRegs.has(reg)) {
+          stackMap->set(offsetFromBottom, wasm::StackMap::StructDataPointer);
         } else {
-          MOZ_ASSERT(slotsOrElementsRegs.has(reg));
+          MOZ_ASSERT(wasmArrayDataRegs.has(reg));
           stackMap->set(offsetFromBottom, wasm::StackMap::ArrayDataPointer);
         }
       }
@@ -17095,11 +17125,21 @@ static bool CreateStackMapFromLSafepoint(LSafepoint& safepoint,
     }
   }
 
-  // Track array data pointers on the stack
-  const LSafepoint::SlotList& slots = safepoint.slotsOrElementsSlots();
-  for (SafepointSlotEntry slot : slots) {
+  // Track struct data pointers on the stack
+  for (SafepointSlotEntry slot : safepoint.wasmStructDataSlots()) {
     MOZ_ASSERT(slot.stack);
+    // It's a slot in the body allocation, so .slot is interpreted
+    // as an index downwards from the Frame*
+    MOZ_ASSERT(slot.slot <= nBodyBytes);
+    uint32_t offsetInBytes = nBodyBytes - slot.slot;
+    MOZ_ASSERT(offsetInBytes % sizeof(void*) == 0);
+    stackMap->set(regDumpWords + offsetInBytes / sizeof(void*),
+                  wasm::StackMap::Kind::StructDataPointer);
+  }
 
+  // Track array data pointers on the stack
+  for (SafepointSlotEntry slot : safepoint.wasmArrayDataSlots()) {
+    MOZ_ASSERT(slot.stack);
     // It's a slot in the body allocation, so .slot is interpreted
     // as an index downwards from the Frame*
     MOZ_ASSERT(slot.slot <= nBodyBytes);

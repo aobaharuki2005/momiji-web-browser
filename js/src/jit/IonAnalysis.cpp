@@ -3456,6 +3456,7 @@ static bool IsResumableMIRType(MIRType type) {
     case MIRType::Elements:
     case MIRType::Pointer:
     case MIRType::WasmAnyRef:
+    case MIRType::WasmStructData:
     case MIRType::WasmArrayData:
     case MIRType::StackResults:
       return false;

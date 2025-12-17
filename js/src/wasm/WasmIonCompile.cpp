@@ -5138,7 +5138,7 @@ class FunctionCompiler {
       auto* loadDataPointer = MWasmLoadField::New(
           alloc(), structObject, nullptr,
           WasmStructObject::offsetOfOutlineData(), mozilla::Nothing(),
-          MIRType::Pointer, MWideningOp::None,
+          MIRType::WasmStructData, MWideningOp::None,
           AliasSet::Load(AliasSet::WasmStructOutlineDataPointer),
           mozilla::Some(trapSiteDesc()));
       if (!loadDataPointer) {
@@ -5190,7 +5190,7 @@ class FunctionCompiler {
       auto* loadDataPointer = MWasmLoadField::New(
           alloc(), structObject, nullptr,
           WasmStructObject::offsetOfOutlineData(), mozilla::Nothing(),
-          MIRType::Pointer, MWideningOp::None,
+          MIRType::WasmStructData, MWideningOp::None,
           AliasSet::Load(AliasSet::WasmStructOutlineDataPointer),
           mozilla::Some(trapSiteDesc()));
       if (!loadDataPointer) {
