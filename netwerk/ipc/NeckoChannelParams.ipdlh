@@ -223,6 +223,8 @@ struct LoadInfoArgs
   InterceptionInfoArg?        interceptionInfo;
   bool                        isNewWindowTarget;
   UserNavigationInvolvement   userNavigationInvolvement;
+  // https://html.spec.whatwg.org/#dom-location-ancestororigins
+  PrincipalInfo?[]             ancestorOrigins;
 };
 
 /**

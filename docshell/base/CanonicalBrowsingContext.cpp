@@ -58,6 +58,7 @@
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
 #include "nsSHistory.h"
+#include "nsScriptSecurityManager.h"
 #include "nsSecureBrowserUI.h"
 #include "nsQueryObject.h"
 #include "nsBrowserStatusFilter.h"
@@ -3734,6 +3735,89 @@ void CanonicalBrowsingContext::MaybeReconstructActiveEntryList() {
   if (mActiveEntry && !shistory->ContainsEntry(mActiveEntry)) {
     shistory->ReconstructContiguousEntryList();
   }
+}
+
+// https://html.spec.whatwg.org/#concept-internal-location-ancestor-origin-objects-list
+void CanonicalBrowsingContext::CreateRedactedAncestorOriginsList(
+    nsIPrincipal* aThisDocumentPrincipal) {
+  MOZ_DIAGNOSTIC_ASSERT(aThisDocumentPrincipal);
+  nsTArray<nsCOMPtr<nsIPrincipal>> ancestorPrincipals;
+  // 4. if parentDoc is null, then return output
+  CanonicalBrowsingContext* parent = GetParent();
+  if (!parent) {
+    mPossiblyRedactedAncestorOriginsList = std::move(ancestorPrincipals);
+    return;
+  }
+  MOZ_DIAGNOSTIC_ASSERT(!parent->IsChrome());
+  // 7. Let ancestorOrigins be parentLocation's internal ancestor origin objects
+  // list.
+  const Span<const nsCOMPtr<nsIPrincipal>> parentAncestorOriginsList =
+      parent->GetPossiblyRedactedAncestorOriginsList();
+
+  // 8. Let container be innerDoc's node navigable's container.
+  WindowGlobalParent* ancestorWGP = GetParentWindowContext();
+
+  // 10. If container is an iframe element, then set referrerPolicy to
+  // container's referrerpolicy attribute's state's corresponding keyword.
+  // Note: becomes the empty string if there is none
+  auto referrerPolicy = GetEmbedderFrameReferrerPolicy();
+
+  // 11. Let masked be false.
+  bool masked = false;
+
+  if (referrerPolicy == ReferrerPolicy::No_referrer) {
+    // 12. If referrerPolicy is "no-referrer", then set masked to true.
+    masked = true;
+  } else if (referrerPolicy == ReferrerPolicy::Same_origin &&
+             !ancestorWGP->DocumentPrincipal()->Equals(
+                 aThisDocumentPrincipal)) {
+    // 13. Otherwise, if referrerPolicy is "same-origin" and parentDoc's
+    // origin is not same origin with innerDoc's origin, then set masked to
+    // true.
+    masked = true;
+  }
+
+  if (masked) {
+    // 14. If masked is true, then append a new opaque origin to output.
+    ancestorPrincipals.AppendElement(nullptr);
+  } else {
+    // 15. Otherwise, append parentDoc's origin to output.
+    auto* principal = ancestorWGP->DocumentPrincipal();
+    // when we serialize a "null principal", we leak information. Represent
+    // them as actual nullptr instead.
+    ancestorPrincipals.AppendElement(
+        principal->GetIsNullPrincipal() ? nullptr : principal);
+  }
+
+  // 16. For each ancestorOrigin of ancestorOrigins:
+  for (const auto& ancestorOrigin : parentAncestorOriginsList) {
+    // 16.1 if masked is true
+    if (masked && ancestorOrigin &&
+        ancestorOrigin->Equals(ancestorWGP->DocumentPrincipal())) {
+      //  16.1.1. If ancestorOrigin is same origin with parentDoc's origin, then
+      //  append a new opaque origin to output.
+      ancestorPrincipals.AppendElement(nullptr);
+    } else {
+      // 16.1.2. Otherwise, append ancestorOrigin to output and set masked to
+      // false. or 16.2. Otherwise, append ancestorOrigin to output.
+      ancestorPrincipals.AppendElement(ancestorOrigin);
+      masked = false;
+    }
+  }
+
+  // 17. Return output.
+  // Only we don't return it. We're in the parent process.
+  mPossiblyRedactedAncestorOriginsList = std::move(ancestorPrincipals);
+}
+
+Span<const nsCOMPtr<nsIPrincipal>>
+CanonicalBrowsingContext::GetPossiblyRedactedAncestorOriginsList() const {
+  return mPossiblyRedactedAncestorOriginsList;
+}
+
+void CanonicalBrowsingContext::SetPossiblyRedactedAncestorOriginsList(
+    nsTArray<nsCOMPtr<nsIPrincipal>> aAncestorOriginsList) {
+  mPossiblyRedactedAncestorOriginsList = std::move(aAncestorOriginsList);
 }
 
 EntryList* CanonicalBrowsingContext::GetActiveEntries() {
