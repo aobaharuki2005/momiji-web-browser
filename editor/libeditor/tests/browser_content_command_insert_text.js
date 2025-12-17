@@ -13,7 +13,10 @@ const gCUITestUtils = new CustomizableUITestUtils(window);
 const gDOMWindowUtils = EventUtils._getDOMWindowUtils(window);
 let searchBar;
 
-add_task(async function test_setup() {
+add_setup(async function () {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.search.widget.new", false]],
+  });
   searchBar = await gCUITestUtils.addSearchBar();
   registerCleanupFunction(() => {
     gCUITestUtils.removeSearchBar();
