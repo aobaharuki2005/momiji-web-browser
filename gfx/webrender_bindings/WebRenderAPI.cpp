@@ -1276,14 +1276,10 @@ void DisplayListBuilder::PopStackingContext(bool aIsReferenceFrame) {
 }
 
 wr::WrClipChainId DisplayListBuilder::DefineClipChain(
-    const nsTArray<wr::WrClipId>& aClips, bool aParentWithCurrentChain) {
+    Span<const wr::WrClipId> aClips, const Maybe<wr::WrClipChainId>& aParent) {
   CancelGroup();
 
-  const uint64_t* parent = nullptr;
-  if (aParentWithCurrentChain &&
-      mCurrentSpaceAndClipChain.clip_chain != wr::ROOT_CLIP_CHAIN) {
-    parent = &mCurrentSpaceAndClipChain.clip_chain;
-  }
+  const uint64_t* parent = aParent ? &aParent->id : nullptr;
   uint64_t clipchainId = wr_dp_define_clipchain(
       mWrState, parent, aClips.Elements(), aClips.Length());
   if (MOZ_LOG_TEST(sWrDLLog, LogLevel::Debug)) {
@@ -1513,7 +1509,8 @@ void DisplayListBuilder::PushBackdropFilter(
            ToString(aBounds).c_str(), ToString(clip).c_str());
 
   auto clipId = DefineRoundedRectClip(Nothing(), aRegion);
-  auto clipChainId = DefineClipChain({clipId}, true);
+  auto clipChainId =
+      DefineClipChain({&clipId, 1}, CurrentClipChainIdIfNotRoot());
   auto spaceAndClip =
       WrSpaceAndClipChain{mCurrentSpaceAndClipChain.space, clipChainId.id};
 
@@ -1790,7 +1787,8 @@ void DisplayListBuilder::SuspendClipLeafMerging() {
     mSuspendedSpaceAndClipChain = Some(mCurrentSpaceAndClipChain);
 
     auto clipId = DefineRectClip(Nothing(), *mClipChainLeaf);
-    auto clipChainId = DefineClipChain({clipId}, true);
+    auto clipChainId =
+        DefineClipChain({&clipId, 1}, CurrentClipChainIdIfNotRoot());
 
     mCurrentSpaceAndClipChain.clip_chain = clipChainId.id;
     mClipChainLeaf = Nothing();

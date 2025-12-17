@@ -603,8 +603,8 @@ class DisplayListBuilder final {
       const wr::RasterSpace& aRasterSpace);
   void PopStackingContext(bool aIsReferenceFrame);
 
-  wr::WrClipChainId DefineClipChain(const nsTArray<wr::WrClipId>& aClips,
-                                    bool aParentWithCurrentChain = false);
+  wr::WrClipChainId DefineClipChain(Span<const wr::WrClipId> aClips,
+                                    const Maybe<wr::WrClipChainId>& aParent);
 
   wr::WrClipId DefineImageMaskClip(const wr::ImageMask& aMask,
                                    const nsTArray<wr::LayoutPoint>&,
@@ -829,6 +829,12 @@ class DisplayListBuilder final {
 
   uint64_t CurrentClipChainId() const {
     return mCurrentSpaceAndClipChain.clip_chain;
+  }
+
+  Maybe<wr::WrClipChainId> CurrentClipChainIdIfNotRoot() const {
+    return mCurrentSpaceAndClipChain.clip_chain != wr::ROOT_CLIP_CHAIN
+               ? Some(mCurrentSpaceAndClipChain.clip_chain)
+               : Nothing();
   }
 
   const wr::WrSpaceAndClipChain& CurrentSpaceAndClipChain() const {
