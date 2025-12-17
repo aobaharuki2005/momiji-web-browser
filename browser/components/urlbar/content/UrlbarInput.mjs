@@ -460,6 +460,11 @@ export class UrlbarInput extends HTMLElement {
   #uninit() {
     if (this.sapName == "searchbar") {
       this.parentNode.removeAttribute("overflows");
+
+      // Exit search mode to make sure it doesn't become stale while the
+      // searchbar is invisible. Otherwise, the engine might get deleted
+      // but we don't notice because the search service observer is inactive.
+      this.searchMode = null;
     }
 
     if (this._copyCutController) {
