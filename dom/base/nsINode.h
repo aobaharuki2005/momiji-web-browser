@@ -1047,18 +1047,15 @@ class nsINode : public mozilla::dom::EventTarget {
 
   template <BatchRemovalOrder aOrder = BatchRemovalOrder::FrontToBack>
   void RemoveAllChildren(bool aNotify) {
-    if (!HasChildren()) {
-      return;
-    }
     BatchRemovalState state{};
-    do {
+    while (HasChildren()) {
       nsIContent* nodeToRemove = aOrder == BatchRemovalOrder::FrontToBack
                                      ? GetFirstChild()
                                      : GetLastChild();
       RemoveChildNode(nodeToRemove, aNotify, &state, nullptr,
                       MutationEffectOnScript::KeepTrustWorthiness);
       state.mIsFirst = false;
-    } while (HasChildren());
+    }
   }
 
   /**

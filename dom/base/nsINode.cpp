@@ -2527,7 +2527,7 @@ void nsINode::RemoveChildNode(nsIContent* aKid, bool aNotify,
 
   // Invalidate cached array of child nodes
   InvalidateChildNodes();
-  aKid->UnbindFromTree(aNewParent);
+  aKid->UnbindFromTree(aNewParent, aState);
 }
 
 // When replacing, aRefChild is the content being replaced; when

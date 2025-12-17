@@ -114,7 +114,8 @@ class nsIContent : public nsINode {
    * @note This method is safe to call on nodes that are not bound to a tree.
    */
   virtual void UnbindFromTree(UnbindContext&) = 0;
-  void UnbindFromTree(nsINode* aNewParent = nullptr);
+  void UnbindFromTree(nsINode* aNewParent = nullptr,
+                      const BatchRemovalState* aBatchState = nullptr);
 
   enum {
     /**
@@ -387,7 +388,8 @@ class nsIContent : public nsINode {
   // Handles Shadow-DOM related state tracking. Meant to be called near the
   // beginning of UnbindFromTree(), before the node has lost the reference to
   // its parent.
-  inline void HandleShadowDOMRelatedRemovalSteps(bool aNullParent);
+  inline void HandleShadowDOMRelatedRemovalSteps(bool aNullParent,
+                                                 bool aInBatch);
 
  public:
   /**
