@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import os
+import platform
 import subprocess
 import sys
 from enum import Enum, auto
@@ -174,3 +175,27 @@ def check_repo_status(repo_type):
         return git_status(".", "third_party/libwebrtc")
     else:
         return run_hg("hg status third_party/libwebrtc")
+
+
+def is_mac_os():
+    return platform.system() == "Darwin"
+
+
+def git_get_config(config_name, working_dir):
+    # using run_shell rather than run_git because a config name that is
+    # unset returns a non-zero error code.
+    stdout_lines = run_shell(f"cd {working_dir} ; git config {config_name} || true")
+    line_cnt = len(stdout_lines)
+    if line_cnt > 1:
+        print(f"Error: {config_name} returned multiple values ({line_cnt})")
+        sys.exit(1)
+    elif line_cnt == 1:
+        return stdout_lines[0]
+    return None
+
+
+def git_is_config_set(config_name, working_dir):
+    config_val = git_get_config(config_name, working_dir)
+    if config_val is not None and config_val == "true":
+        return True
+    return False

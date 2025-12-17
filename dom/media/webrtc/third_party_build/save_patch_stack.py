@@ -13,7 +13,9 @@ from run_operations import (
     RepoType,
     check_repo_status,
     detect_repo_type,
+    git_is_config_set,
     git_status,
+    is_mac_os,
     run_git,
     run_hg,
     run_shell,
@@ -264,6 +266,28 @@ def save_patch_stack(
             stdout_lines = run_shell(cmd)
 
 
+def verify_git_repo_configuration():
+    config_help = [
+        "This script fails frequently on macOS (Darwin) without running the",
+        "following configuration steps:",
+        "    git config set feature.manyFiles true",
+        "    git update-index --index-version 4",
+        "    git config set core.fsmonitor true",
+        "",
+        "Note: this configuration should be safe to remain set in the firefox",
+        "repository, and may increase everyday performance.  If you would like",
+        "to revert the effects after using this script, please use:",
+        "    git config unset core.fsmonitor",
+        "    git config unset feature.manyFiles",
+    ]
+    if is_mac_os() and not (
+        git_is_config_set("feature.manyfiles", ".")
+        and git_is_config_set("core.fsmonitor", ".")
+    ):
+        error_help.set_help("\n".join(config_help))
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     # first, check which repo we're in, git or hg
     repo_type = detect_repo_type()
@@ -326,6 +350,9 @@ if __name__ == "__main__":
         help="skip checking for clean repo and doing the initial verify vendoring",
     )
     args = parser.parse_args()
+
+    if repo_type == RepoType.GIT:
+        verify_git_repo_configuration()
 
     if not args.skip_startup_sanity:
         # make sure the mercurial repo is clean before beginning
