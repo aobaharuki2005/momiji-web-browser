@@ -9,6 +9,7 @@
 #include "ScopedNSSTypes.h"
 #include "WebTransportSessionProxy.h"
 #include "WebTransportStreamProxy.h"
+#include "WebTransportEventService.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIHttpChannel.h"
 #include "nsIHttpChannelInternal.h"
@@ -52,7 +53,7 @@ WebTransportSessionProxy::~WebTransportSessionProxy() {
 
   MOZ_ASSERT(mState != WebTransportSessionProxyState::SESSION_CLOSE_PENDING,
              "We can not be in the SESSION_CLOSE_PENDING state in destructor, "
-             "because should e an runnable  that holds reference to this"
+             "because should be a runnable that holds reference to this"
              "object.");
 
   (void)gSocketTransportService->Dispatch(NS_NewRunnableFunction(
@@ -181,6 +182,9 @@ nsresult WebTransportSessionProxy::AsyncConnectWithClient(
   if (NS_SUCCEEDED(rv)) {
     cleanup.release();
   }
+
+  mHttpChannelID = httpChannel->ChannelId();
+
   return rv;
 }
 
@@ -566,6 +570,12 @@ WebTransportSessionProxy::GetMaxDatagramSize() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+WebTransportSessionProxy::GetHttpChannelID(uint64_t* _retval) {
+  *_retval = mHttpChannelID;
+  return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // WebTransportSessionProxy::nsIStreamListener
 //-----------------------------------------------------------------------------
@@ -924,7 +934,7 @@ WebTransportSessionProxy::OnIncomingUnidirectionalStreamAvailable(
 
 NS_IMETHODIMP
 WebTransportSessionProxy::OnSessionReady(uint64_t ready) {
-  MOZ_ASSERT(false, "Should not b called");
+  MOZ_ASSERT(false, "Should not be called");
   return NS_OK;
 }
 

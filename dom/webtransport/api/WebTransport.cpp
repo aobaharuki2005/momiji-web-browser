@@ -264,6 +264,11 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
     return;
   }
 
+  // TODO: Fix the shared worker case
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  mService = workerPrivate && workerPrivate->IsSharedWorker()
+                 ? nullptr
+                 : net::WebTransportEventService::GetOrCreate();
   // XXX TODO
 
   // Step 15 Let transport be a newly constructed WebTransport object, with:
@@ -414,6 +419,20 @@ void WebTransport::ResolveWaitingConnection(
   // Step 17.3: Set transport.[[Session]] to session.
   // Step 17.4: Set transport’s [[Reliability]] to "supports-unreliable".
   mReliability = aReliability;
+  if (NS_IsMainThread()) {
+    nsPIDOMWindowInner* innerWindow = GetParentObject()->GetAsInnerWindow();
+    if (innerWindow) {
+      mInnerWindowID = innerWindow->WindowID();
+    }
+  } else {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    if (workerPrivate->IsDedicatedWorker()) {
+      nsPIDOMWindowInner* window = workerPrivate->GetAncestorWindow();
+      if (window) {
+        mInnerWindowID = window->WindowID();
+      }
+    }
+  }
 
   mChild->SendGetMaxDatagramSize()->Then(
       GetCurrentSerialEventTarget(), __func__,
@@ -432,6 +451,21 @@ void WebTransport::ResolveWaitingConnection(
 
   // We can now release any queued datagrams
   mDatagrams->SetChild(mChild);
+
+  if (mInnerWindowID != 0) {
+    // Get the http chanel created for the web transport session;
+    mChild->SendGetHttpChannelID()->Then(
+        GetCurrentSerialEventTarget(), __func__,
+        [self = RefPtr{this}](uint64_t&& aHttpChannelId) {
+          MOZ_ASSERT(self->mService);
+          self->mHttpChannelID = aHttpChannelId;
+          self->mService->WebTransportSessionCreated(self->mInnerWindowID,
+                                                     aHttpChannelId);
+        },
+        [](const mozilla::ipc::ResponseRejectReason& aReason) {
+          LOG(("WebTransport fetching the channel information failed "));
+        });
+  }
 }
 
 void WebTransport::RejectWaitingConnection(nsresult aRv) {
@@ -838,6 +872,13 @@ void WebTransport::Cleanup(WebTransportError* aError,
   // Step 9: If closeInfo is given, then set transport.[[State]] to "closed".
   // Otherwise, set transport.[[State]] to "failed".
   mState = aCloseInfo ? WebTransportState::CLOSED : WebTransportState::FAILED;
+
+  // Notify all the listeners of the closed session
+  if (mInnerWindowID != 0) {
+    mService->WebTransportSessionClosed(
+        mInnerWindowID, mHttpChannelID, aCloseInfo->mCloseCode,
+        NS_ConvertUTF8toUTF16(aCloseInfo->mReason));
+  }
 
   // Step 10: For each sendStream in sendStreams, error sendStream with error.
   AutoJSAPI jsapi;
