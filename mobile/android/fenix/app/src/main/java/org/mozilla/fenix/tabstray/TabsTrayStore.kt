@@ -29,6 +29,7 @@ private const val DEFAULT_SYNCED_TABS_EXPANDED_STATE = true
  * @property syncedTabs The list of synced tabs.
  * @property syncing Whether the Synced Tabs feature should fetch the latest tabs from paired devices.
  * @property selectedTabId The ID of the currently selected (active) tab.
+ * @property tabSearchEnabled  Whether the tab search feature is enabled.
  * @property backStack The navigation history of the Tab Manager feature.
  * @property expandedSyncedTabs The list of expansion states for the syncedTabs.
  */
@@ -42,6 +43,7 @@ data class TabsTrayState(
     val syncedTabs: List<SyncedTabsListItem> = emptyList(),
     val syncing: Boolean = false,
     val selectedTabId: String? = null,
+    val tabSearchEnabled: Boolean = false,
     val backStack: List<TabManagerNavDestination> = listOf(TabManagerNavDestination.Root),
     val expandedSyncedTabs: List<Boolean> = emptyList(),
 ) : State {
@@ -72,7 +74,7 @@ data class TabsTrayState(
      * Whether the Tab Search button is visible.
      */
     val searchIconVisible: Boolean
-        get() = selectedPage != Page.SyncedTabs
+        get() = tabSearchEnabled && selectedPage != Page.SyncedTabs
 
     /**
      * Whether the Tab Search button is enabled.
@@ -330,8 +332,11 @@ internal object TabsTrayReducer {
             is TabsTrayAction.CloseAllPrivateTabs -> state
             is TabsTrayAction.BookmarkSelectedTabs -> state
             is TabsTrayAction.ThreeDotMenuShown -> state
-            is TabsTrayAction.TabSearchClicked ->
+
+            is TabsTrayAction.TabSearchClicked -> {
                 state.copy(backStack = state.backStack + TabManagerNavDestination.TabSearch)
+            }
+
             is TabsTrayAction.NavigateBackInvoked -> {
                 when {
                     state.mode is TabsTrayState.Mode.Select -> state.copy(mode = TabsTrayState.Mode.Normal)

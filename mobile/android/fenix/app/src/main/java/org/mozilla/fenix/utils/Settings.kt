@@ -2828,6 +2828,14 @@ class Settings(
     )
 
     /**
+     * Whether the Tab Search feature is enabled.
+     */
+    var tabSearchEnabled by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_tab_search),
+        default = { DefaultTabManagementFeatureHelper.tabSearchEnabled },
+    )
+
+    /**
      * Indicates whether the app should automatically clean up downloaded files.
      */
     fun shouldCleanUpDownloadsAutomatically(): Boolean {

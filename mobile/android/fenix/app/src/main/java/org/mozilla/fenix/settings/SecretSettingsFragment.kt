@@ -473,6 +473,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             isChecked = context.settings().enablePersistentOnboarding
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
+
+        requirePreference<SwitchPreference>(R.string.pref_key_tab_search).apply {
+            isVisible = true
+            isChecked = context.settings().tabSearchEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {

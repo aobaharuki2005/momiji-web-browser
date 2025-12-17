@@ -889,6 +889,25 @@ features:
           enabled: true
           opening_animation_enabled: false
 
+  tab-search:
+    description: Control the visibility of the tab search feature.
+    variables:
+      enabled:
+        description: >
+          Whether or not to enable the tab search feature.
+        type: Boolean
+        default: false
+    defaults:
+      - channel: release
+        value:
+          enabled: false
+      - channel: beta
+        value:
+          enabled: false
+      - channel: nightly
+        value:
+          enabled: false
+
   suppress-sponsored-top-sites:
     description: Suppress sponsored top sites for new users for 14 days.
     variables:
