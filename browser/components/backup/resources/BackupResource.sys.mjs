@@ -10,7 +10,43 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Sqlite: "resource://gre/modules/Sqlite.sys.mjs",
   BackupError: "resource:///modules/backup/BackupError.mjs",
   ERRORS: "chrome://browser/content/backup/backup-constants.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isBrowsingHistoryEnabled",
+  "places.history.enabled",
+  true
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isSanitizeOnShutdownEnabled",
+  "privacy.sanitize.sanitizeOnShutdown",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isHistoryClearedOnShutdown2",
+  "privacy.clearOnShutdown_v2.browsingHistoryAndDownloads",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "useOldClearHistoryDialog",
+  "privacy.sanitize.useOldClearHistoryDialog",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "isHistoryClearedOnShutdown",
+  "privacy.clearOnShutdown.history",
+  false
+);
 
 // Convert from bytes to kilobytes (not kibibytes).
 export const BYTES_IN_KB = 1000;
@@ -240,6 +276,34 @@ export class BackupResource {
    */
   static get canBackupResource() {
     // This is meant to be overridden if a resource requires checks; default is true.
+    return true;
+  }
+
+  /**
+   * Helper function to see if we are going to be backing up and restoring places.sqlite
+   *
+   * @returns {boolean}
+   */
+  static get backingUpPlaces() {
+    if (
+      lazy.PrivateBrowsingUtils.permanentPrivateBrowsing ||
+      !lazy.isBrowsingHistoryEnabled
+    ) {
+      return false;
+    }
+
+    if (!lazy.isSanitizeOnShutdownEnabled) {
+      return true;
+    }
+
+    if (!lazy.useOldClearHistoryDialog) {
+      if (lazy.isHistoryClearedOnShutdown2) {
+        return false;
+      }
+    } else if (lazy.isHistoryClearedOnShutdown) {
+      return false;
+    }
+
     return true;
   }
 

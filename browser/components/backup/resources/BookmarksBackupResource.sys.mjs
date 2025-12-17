@@ -24,6 +24,16 @@ export class BookmarksBackupResource extends BackupResource {
     return false;
   }
 
+  static get canBackupResource() {
+    /**
+     * We don't need to backup bookmarks if places is being backed up
+     * since places.sqlite has bookmarks in it. This resource is to be used
+     * when places cannot be backed up, like in the case of sanitizeOnShutdown
+     * See Bug 1994875
+     */
+    return !BackupResource.backingUpPlaces;
+  }
+
   static get priority() {
     return 1;
   }

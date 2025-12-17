@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 import { BackupResource } from "resource:///modules/backup/BackupResource.sys.mjs";
 import { MeasurementUtils } from "resource:///modules/backup/MeasurementUtils.sys.mjs";
 
@@ -10,43 +9,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PlacesDBUtils: "resource://gre/modules/PlacesDBUtils.sys.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "isBrowsingHistoryEnabled",
-  "places.history.enabled",
-  true
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "isSanitizeOnShutdownEnabled",
-  "privacy.sanitize.sanitizeOnShutdown",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "isHistoryClearedOnShutdown2",
-  "privacy.clearOnShutdown_v2.browsingHistoryAndDownloads",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "useOldClearHistoryDialog",
-  "privacy.sanitize.useOldClearHistoryDialog",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "isHistoryClearedOnShutdown",
-  "privacy.clearOnShutdown.history",
-  false
-);
 
 /**
  * Class representing Places database related files within a user profile.
@@ -65,26 +28,7 @@ export class PlacesBackupResource extends BackupResource {
   }
 
   static get canBackupResource() {
-    if (
-      lazy.PrivateBrowsingUtils.permanentPrivateBrowsing ||
-      !lazy.isBrowsingHistoryEnabled
-    ) {
-      return false;
-    }
-
-    if (!lazy.isSanitizeOnShutdownEnabled) {
-      return true;
-    }
-
-    if (!lazy.useOldClearHistoryDialog) {
-      if (lazy.isHistoryClearedOnShutdown2) {
-        return false;
-      }
-    } else if (lazy.isHistoryClearedOnShutdown) {
-      return false;
-    }
-
-    return true;
+    return BackupResource.backingUpPlaces;
   }
 
   async backup(
