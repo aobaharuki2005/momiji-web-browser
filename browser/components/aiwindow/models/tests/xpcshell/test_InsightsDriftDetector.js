@@ -3,7 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-"use strict";
+do_get_profile();
+("use strict");
 
 const { InsightsDriftDetector } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/InsightsDriftDetector.sys.mjs"

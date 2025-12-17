@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-"use strict";
+do_get_profile();
+("use strict");
 
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
@@ -847,3 +848,193 @@ add_task(async function test_getLastHistoryInsightTimestamp_reads_meta() {
     "getLastHistoryInsightTimestamp should return last_history_insight_ts from InsightStore meta"
   );
 });
+
+/**
+ * Tests that getLastConversationInsightTimestamp reads the same value written via InsightStore.updateMeta.
+ */
+add_task(async function test_getLastConversationInsightTimestamp_reads_meta() {
+  const ts = Date.now() - 54321;
+
+  // Write meta directly
+  await InsightStore.updateMeta({
+    last_chat_insight_ts: ts,
+  });
+
+  // Read via InsightsManager helper
+  const readTs = await InsightsManager.getLastConversationInsightTimestamp();
+
+  Assert.equal(
+    readTs,
+    ts,
+    "getLastConversationInsightTimestamp should return last_chat_insight_ts from InsightStore meta"
+  );
+});
+
+/**
+ * Tests that history insight generation updates last_history_insight_ts and not last_conversation_insight_ts.
+ */
+add_task(
+  async function test_historyTimestampUpdatedAfterHistoryInsightsGenerationPass() {
+    const sb = sinon.createSandbox();
+
+    const lastHistoryInsightsUpdateTs =
+      await InsightsManager.getLastHistoryInsightTimestamp();
+    const lastConversationInsightsUpdateTs =
+      await InsightsManager.getLastConversationInsightTimestamp();
+
+    try {
+      const aggregateBrowserHistoryStub = sb
+        .stub(InsightsManager, "getAggregatedBrowserHistory")
+        .resolves([[], [], []]);
+      const fakeEngine = sb
+        .stub(InsightsManager, "ensureOpenAIEngine")
+        .resolves({
+          run() {
+            return {
+              finalOutput: `[
+  {
+    "why": "User has recently searched for Firefox history and visited mozilla.org.",
+    "category": "Internet & Telecom",
+    "intent": "Research / Learn",
+    "insight_summary": "Searches for Firefox information",
+    "score": 7,
+    "evidence": [
+      {
+        "type": "search",
+        "value": "Google Search: firefox history"
+      },
+      {
+        "type": "domain",
+        "value": "mozilla.org"
+      }
+    ]
+  },
+  {
+    "why": "User buys dog food online regularly from multiple sources.",
+    "category": "Pets & Animals",
+    "intent": "Buy / Acquire",
+    "insight_summary": "Purchases dog food online",
+    "score": -1,
+    "evidence": [
+      {
+        "type": "domain",
+        "value": "example.com"
+      }
+    ]
+  }
+]`,
+            };
+          },
+        });
+
+      await InsightsManager.generateInsightsFromBrowsingHistory();
+
+      Assert.ok(
+        aggregateBrowserHistoryStub.calledOnce,
+        "getAggregatedBrowserHistory should be called once during insight generation"
+      );
+      Assert.ok(
+        fakeEngine.calledOnce,
+        "ensureOpenAIEngine should be called once during insight generation"
+      );
+
+      Assert.greater(
+        await InsightsManager.getLastHistoryInsightTimestamp(),
+        lastHistoryInsightsUpdateTs,
+        "Last history insight timestamp should be updated after history generation pass"
+      );
+      Assert.equal(
+        await InsightsManager.getLastConversationInsightTimestamp(),
+        lastConversationInsightsUpdateTs,
+        "Last conversation insight timestamp should remain unchanged after history generation pass"
+      );
+    } finally {
+      sb.restore();
+    }
+  }
+);
+
+/**
+ * Tests that conversation insight generation updates last_conversation_insight_ts and not last_history_insight_ts.
+ */
+add_task(
+  async function test_conversationTimestampUpdatedAfterConversationInsightsGenerationPass() {
+    const sb = sinon.createSandbox();
+
+    const lastConversationInsightsUpdateTs =
+      await InsightsManager.getLastConversationInsightTimestamp();
+    const lastHistoryInsightsUpdateTs =
+      await InsightsManager.getLastHistoryInsightTimestamp();
+
+    try {
+      const getRecentChatsStub = sb
+        .stub(InsightsManager, "_getRecentChats")
+        .resolves([]);
+
+      const fakeEngine = sb
+        .stub(InsightsManager, "ensureOpenAIEngine")
+        .resolves({
+          run() {
+            return {
+              finalOutput: `[
+  {
+    "why": "User has recently searched for Firefox history and visited mozilla.org.",
+    "category": "Internet & Telecom",
+    "intent": "Research / Learn",
+    "insight_summary": "Searches for Firefox information",
+    "score": 7,
+    "evidence": [
+      {
+        "type": "search",
+        "value": "Google Search: firefox history"
+      },
+      {
+        "type": "domain",
+        "value": "mozilla.org"
+      }
+    ]
+  },
+  {
+    "why": "User buys dog food online regularly from multiple sources.",
+    "category": "Pets & Animals",
+    "intent": "Buy / Acquire",
+    "insight_summary": "Purchases dog food online",
+    "score": -1,
+    "evidence": [
+      {
+        "type": "domain",
+        "value": "example.com"
+      }
+    ]
+  }
+]`,
+            };
+          },
+        });
+
+      await InsightsManager.generateInsightsFromConversationHistory();
+
+      Assert.ok(
+        getRecentChatsStub.calledOnce,
+        "getRecentChats should be called once during insight generation"
+      );
+      Assert.ok(
+        fakeEngine.calledOnce,
+        "ensureOpenAIEngine should be called once during insight generation"
+      );
+
+      Assert.greater(
+        await InsightsManager.getLastConversationInsightTimestamp(),
+        lastConversationInsightsUpdateTs,
+        "Last conversation insight timestamp should be updated after conversation generation pass"
+      );
+      Assert.equal(
+        await InsightsManager.getLastHistoryInsightTimestamp(),
+        lastHistoryInsightsUpdateTs,
+        "Last history insight timestamp should remain unchanged after conversation generation pass"
+      );
+    } finally {
+      sb.restore();
+    }
+  }
+);

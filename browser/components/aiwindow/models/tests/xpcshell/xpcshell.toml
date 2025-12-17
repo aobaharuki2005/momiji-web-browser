@@ -14,6 +14,8 @@ support-files = []
 
 ["test_InsightsChatSource.js"]
 
+["test_InsightsConversationScheduler.js"]
+
 ["test_InsightsDriftDetector.js"]
 
 ["test_InsightsHistoryScheduler.js"]
