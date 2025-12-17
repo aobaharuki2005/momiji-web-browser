@@ -49,6 +49,7 @@ namespace mozilla {
 
 namespace webgl {
 std::string SanitizeRenderer(const std::string&);
+std::string SanitizeVendor(const std::string&);
 }  // namespace webgl
 
 // -
@@ -2454,9 +2455,15 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
             break;
 
           case dom::WEBGL_debug_renderer_info_Binding::UNMASKED_VENDOR_WEBGL:
-            ret = ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo)
-                      ? Some("Mozilla"_ns)
-                      : GetUnmaskedVendor();
+            if (ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo)) {
+              ret = Some("Mozilla"_ns);
+            } else {
+              ret = GetUnmaskedVendor();
+              if (ret &&
+                  ShouldResistFingerprinting(RFPTarget::WebGLVendorSanitize)) {
+                ret = Some(webgl::SanitizeVendor(*ret));
+              }
+            }
             break;
 
           default:
