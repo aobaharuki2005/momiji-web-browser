@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Pro správu synchronizovaných panelů ze všech vašich zařízení se přihlaste.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Přihlásit se</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Všechny příběhy</string>
   <!--
     Home - Bookmarks
 
@@ -964,9 +966,9 @@
   -->
   <string name="customize_toggle_recently_visited">Nedávno navštívené</string>
   <!-- Title for the customize home screen section with Pocket. -->
-  <string name="customize_toggle_pocket_3">Články</string>
+  <string name="customize_toggle_pocket_3">Příběhy</string>
   <!-- Title for the customize home screen section with sponsored Pocket stories. -->
-  <string name="customize_toggle_pocket_sponsored">Sponzorované články</string>
+  <string name="customize_toggle_pocket_sponsored">Sponzorované příběhy</string>
   <!-- Title for the opening wallpaper settings screen -->
   <string name="customize_wallpapers">Tapety</string>
   <!-- Title for the customize home screen section with sponsored shortcuts. -->
@@ -3132,12 +3134,12 @@
 
     Header text for a section on the home screen.
   -->
-  <string name="pocket_stories_header_2">Články</string>
+  <string name="pocket_stories_header_2">Příběhy</string>
   <!--
     Context description text for the "Discover more" button in the stories home screen section
     which navigates the user to a screen displaying more stories.
   -->
-  <string name="stories_discover_more_content_description">Objevte další články</string>
+  <string name="stories_discover_more_content_description">Objevte další příběhy</string>
   <!-- Content description for the "Navigate back" button on the top app bar of the Stories screen. -->
   <string name="stories_back_button_content_description">Návrat zpět</string>
   <!-- Text indicating that the Pocket story that also displays this text is a sponsored story by other 3rd party entity. -->

@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Jentre par gjestî lis schedis sincronizadis di ducj i tiei dispositîfs.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Jentre</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Dutis lis storiis</string>
   <!--
     Home - Bookmarks
 
@@ -254,6 +256,8 @@
   <string name="browser_menu_save_to_collection_2">Salve intune racuelte</string>
   <!-- Browser menu button that open a share menu to share the current site -->
   <string name="browser_menu_share">Condivît</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">Pagjine iniziâl</string>
   <!--
     Browser menu button shown in custom tabs that opens the current tab in Fenix
     %1$s is the name of the app (for example "Firefox").
@@ -811,6 +815,10 @@
   <!-- Preference for showing the tab strip -->
   <string name="preferences_tab_strip">Visualizazion sbare des schedis</string>
   <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_shortcut">Scurte te sbare dai struments</string>
+  <!-- Preference for gestures based actions -->
+  <string name="preferences_toolbar_select_shortcut">Selezione une scurte</string>
+  <!-- Preference for gestures based actions -->
   <string name="preferences_gestures">Mots</string>
   <!-- Preference for settings related to visual options -->
   <string name="preferences_customize">Personalize</string>
@@ -1051,14 +1059,20 @@
   <string name="alternative_app_icon_group_gradients">Gradients</string>
   <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Altri</string>
+  <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
+  <string name="alternative_app_icon_group_featured">Conseadis</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Cambiâ la icone de aplicazion?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
   <string name="restart_warning_dialog_body_2">Al è pussibil che la schede si sieri. Tocje la tô gnove e lusinte icone par tornâ a vierzi %1$s.</string>
+  <!-- Message to warn users that applying an alternative app icon may require an app restart and will remove existing shortcuts because of the OS limitations. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
+  <string name="restart_and_shortcuts_removal_warning_dialog_body">La modifiche de icone e gjavarà ducj i sîts e lis scurtis che tu âs salvât te tô schermade iniziâl. \n\nAl è pussibil che %1$s si sieri. Tocje la gnove icone par tornâ a vierzilu.</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
   <string name="restart_warning_dialog_button_positive_2">Cambie icone</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">Anule</string>
+  <!-- Error message snackbar shown after the user tried to apply the new icon but the Android OS threw an error while updating existing app shortcuts (e.g. private mode shortcut) -->
+  <string name="shortcuts_update_error">Impussibil inzornâ la icone de aplicazion. Gjave lis scurtis esistentis e torne prove.</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1230,6 +1244,18 @@
   <string name="preference_expanded_toolbar">Slargjade</string>
   <!-- Preference description indicating the toolbar location preference is disabled when the tab strip is enabled -->
   <string name="preference_toolbar_pref_disabled_explanation">Tu scugnis plaçâ la sbare de direzion adalt cuant che e ven mostrade la sbare des schedis.</string>
+  <!-- New tab shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_new_tab">Vierç une gnove schede</string>
+  <!-- Share shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_share">Condivît</string>
+  <!-- Add bookmark shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_add_bookmark">Zonte segnelibri</string>
+  <!-- Translate shortcut in toolbar customization. "Translate" is a verb -->
+  <string name="toolbar_customize_shortcut_translate">Volte</string>
+  <!-- Homepage shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_homepage">Pagjine iniziâl</string>
+  <!-- Back shortcut in toolbar customization -->
+  <string name="toolbar_customize_shortcut_back">Indaûr</string>
   <!--
     App icon Preferences
 
@@ -1453,6 +1479,14 @@
   <string name="tab_tray_menu_tab_settings">Impostazions schedis</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">Siere dutis lis schedis</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">Sierâ dutis lis schedis?</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">Cheste azion e sierarà dutis lis schedis viertis.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">Siere schedis</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Anule</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Segnelibri</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
@@ -1497,6 +1531,8 @@
   <string name="delete_from_history">Elimine de cronologjie</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (modalitât privade)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">Vierç ricercje tes schedis</string>
   <!--
     History
 
@@ -1709,6 +1745,12 @@
   <string name="webcompat_reporter_etp_checkbox_text">Fâs mandâ de protezion da lis spiis i URLs blocâts</string>
   <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
   <string name="webcompat_reporter_etp_checkbox_description">La protezion miorade da lis spiis e podarès blocâ scripts necessaris pal just funzionament di cualchi sît web.</string>
+  <!-- The button text for the preview report button to view a preview of the report. -->
+  <string name="webcompat_reporter_preview_report">Anteprime segnalazion</string>
+  <!-- The title shown at the top of the WebCompat Report preview panel. This appears after the user taps the “Preview” button before sending a report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_header">Anteprime segnalazion</string>
+  <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
+  <string name="webcompat_reporter_preview_bottom_sheet_send">Invie</string>
   <!--
     These reason strings are dropdown options on a WebCompat reporter form, indicating what is broken on the site.
 
@@ -2321,6 +2363,16 @@
   <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Permet a %1$s di aplicâ in automatic lis ecezions necessariis par evitâ i problemis plui impuartants cui sîts web.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Apliche in automatic ancje lis ecezions che a coventin nome par risolvi i problemis plui piçui e rindi disponibilis funzions utilis.</string>
+  <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline_2">Risolf problemis plui grivis cui sîts (opzion conseade)</string>
+  <!-- Preference label for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_label">Risolf problemis plui piçui cui sîts</string>
+  <!-- Preference description for the enhanced tracking protection option to fix minor site issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_convenience_description">E va doprade adun cu lis corezions pai problemis plui grivis.</string>
+  <!-- Preference sub header for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_subheader">Risolf problemis cui sîts</string>
+  <!-- Learn more text for the enhanced tracking protection options to fix issues caused by tracker blocking -->
+  <string name="preference_enhanced_tracking_protection_allow_list_learn_more">Plui informazions</string>
   <!--
     Dialog that appears after user tries to uncheck the baseline exceptions preference under Strict or Custom tracking protection
 
@@ -2643,6 +2695,10 @@
   <string name="edit_login_navigate_back_button_content_description">Torne indaûr</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">Modifiche credenziâl</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">Zonte gnove credenziâl</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">Nete il test di ricercje</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Vierç sît tal navigadôr</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2709,8 +2765,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Sincronize lis direzions tra i tiei dispositîfs</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Sincronize direzions</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Indaûr</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Zonte cjarte</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Torne indaûr</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Modifiche cjarte</string>
   <!-- The header for the card number of a credit card -->
@@ -2763,6 +2823,8 @@
   <string name="addresses_manage_addresses">Gjestìs recapits</string>
   <!-- The header for the name of an address. Name represents a person's full name, typically made up of a first, middle and last name, e.g. John Joe Doe. -->
   <string name="addresses_name">Non</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The organization's name related to the address helps in distinguishing addresses used for business or personal purposes. -->
+  <string name="addresses_organization" tools:ignore="UnusedResources">Organizazion</string>
   <!-- The header for the street address of an address -->
   <string name="addresses_street_address">Recapit</string>
   <!-- The header for the city of an address -->
@@ -2779,6 +2841,12 @@
   <string name="addresses_phone">Telefon</string>
   <!-- The header for the email of an address -->
   <string name="addresses_email">E-mail</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used for addresses in Iran, Mexico. -->
+  <string name="addresses_neighborhood" tools:ignore="UnusedResources">Vicinât</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Village or Township field, specific to Malaysia is crucial for addresses in rural areas. -->
+  <string name="addresses_village_township" tools:ignore="UnusedResources">Vilaç o municipalitât</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
+  <string name="addresses_island" tools:ignore="UnusedResources">Isule</string>
   <!-- The text for the "Save" button for saving an address -->
   <string name="addresses_save_button">Salve</string>
   <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
