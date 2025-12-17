@@ -1788,7 +1788,6 @@ projects:
     - components:lib-publicsuffixlist
     - components:lib-state
     - components:service-digitalassetlinks
-    - components:service-firefox-relay
     - components:service-glean
     - components:service-location
     - components:service-nimbus
@@ -2085,7 +2084,12 @@ projects:
     - components:compose-base
     - components:concept-base
     - components:concept-fetch
+    - components:concept-storage
+    - components:concept-sync
+    - components:lib-dataprotect
     - components:lib-publicsuffixlist
+    - components:lib-state
+    - components:service-firefox-accounts
     - components:support-base
     - components:support-ktx
     - components:support-utils

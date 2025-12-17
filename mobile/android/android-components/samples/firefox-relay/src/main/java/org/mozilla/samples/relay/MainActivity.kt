@@ -135,11 +135,17 @@ open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteList
         findViewById<View>(R.id.buttonRelayAddresses).setOnClickListener {
             lifecycleScope.launch {
                 val account = accountManager.authenticatedAccount()
-                val relay = FxRelay(
-                    serverUrl = RELAY_URL,
-                    authToken = account?.getAccessToken(SCOPE_RELAY)?.token,
-                )
-                val addressList = relay.fetchAllAddresses()
+                    ?: run {
+                        Toast.makeText(
+                            applicationContext,
+                            "Account is null.",
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        return@launch
+                    }
+
+                val addressList = FxRelay(account).fetchAllAddresses()
+
                 Toast.makeText(
                     applicationContext,
                     "Fetched ${addressList.size} addresses",
