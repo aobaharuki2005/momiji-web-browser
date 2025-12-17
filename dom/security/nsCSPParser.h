@@ -41,7 +41,7 @@ const char16_t ATSYMBOL     = '@';
 class nsCSPParser {
  public:
   /**
-   * The CSP parser only has one publicly accessible function, which is
+   * The CSP parser only has one main publicly accessible function, which is
    * parseContentSecurityPolicy. Internally the input string is separated into
    * string tokens and policy() is called, which starts parsing the policy. The
    * parser calls one function after the other according the the source-list
@@ -55,6 +55,12 @@ class nsCSPParser {
                                                  nsCSPContext* aCSPContext,
                                                  bool aDeliveredViaMetaTag,
                                                  bool aSuppressLogMessages);
+
+  /**
+   * Check if given string is valid base64 as per CSP spec.
+   * https://w3c.github.io/webappsec-csp/#grammardef-base64-value
+   */
+  static bool isValidBase64Value(const nsAString& aValue);
 
  private:
   nsCSPParser(policyTokens& aTokens, nsIURI* aSelfURI,
