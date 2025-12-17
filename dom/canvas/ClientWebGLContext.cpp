@@ -2457,6 +2457,9 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
           case dom::WEBGL_debug_renderer_info_Binding::UNMASKED_VENDOR_WEBGL:
             if (ShouldResistFingerprinting(RFPTarget::WebGLRenderInfo)) {
               ret = Some("Mozilla"_ns);
+            } else if (ShouldResistFingerprinting(
+                           RFPTarget::WebGLVendorConstant)) {
+              ret = Some("Mozilla"_ns);
             } else {
               ret = GetUnmaskedVendor();
               if (ret &&

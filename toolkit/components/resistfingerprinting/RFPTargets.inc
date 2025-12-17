@@ -110,6 +110,7 @@ ITEM_VALUE(NavigatorHWConcurrencyTiered,74)
 ITEM_VALUE(WebGLRandomization,          75)
 ITEM_VALUE(EfficientCanvasRandomization, 76)
 ITEM_VALUE(WebGLVendorSanitize,         77)
+ITEM_VALUE(WebGLVendorConstant,         78)
 
 // !!! Adding a new target? Rename PointerId and repurpose it.
 
