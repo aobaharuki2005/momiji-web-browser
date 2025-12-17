@@ -5,11 +5,15 @@ import argparse
 import atexit
 import os
 import re
+import sys
 
 from filter_git_changes import filter_git_changes
 from run_operations import (
     ErrorHelp,
+    RepoType,
+    detect_repo_type,
     get_last_line,
+    run_git,
     run_hg,
     run_shell,
     update_resume_state,
@@ -24,6 +28,7 @@ error_help.set_prefix(f"*** ERROR *** {script_name} did not complete successfull
 error_help.set_postfix(
     f"Please resolve the error and then continue running {script_name}"
 )
+repo_type = None
 
 
 def early_exit_handler():
@@ -62,8 +67,12 @@ def restore_mozbuild_files(target_dir, log_dir):
     print("-------")
     print("------- Restore moz.build files from repo")
     print("-------")
-    cmd = f'hg revert --include "{target_dir}/**moz.build" {target_dir}'
-    stdout_lines = run_shell(cmd)  # run_shell to allow file wildcard
+    if repo_type == RepoType.GIT:
+        cmd = f"git restore '{target_dir}/**moz.build'"
+        stdout_lines = run_shell(cmd)
+    else:
+        cmd = f'hg revert --include "{target_dir}/**moz.build" {target_dir}'
+        stdout_lines = run_shell(cmd)  # run_shell to allow file wildcard
     log_output_lines(stdout_lines, log_dir, "log-regen-mozbuild-files.txt")
 
 
@@ -79,8 +88,12 @@ def remove_deleted_upstream_files(
         print("-------")
         print("------- Remove deleted upstream files")
         print("-------")
-        cmd = f"hg rm {' '.join(deleted_paths)}"
-        stdout_lines = run_hg(cmd)
+        if repo_type == RepoType.GIT:
+            cmd = f"git rm {' '.join(deleted_paths)}"
+            stdout_lines = run_git(cmd, ".")
+        else:
+            cmd = f"hg rm {' '.join(deleted_paths)}"
+            stdout_lines = run_hg(cmd)
         log_output_lines(stdout_lines, log_dir, "log-deleted-upstream-files.txt")
 
 
@@ -96,8 +109,12 @@ def add_new_upstream_files(
         print("-------")
         print("------- Add new upstream files")
         print("-------")
-        cmd = f"hg add {' '.join(added_paths)}"
-        stdout_lines = run_hg(cmd)
+        if repo_type == RepoType.GIT:
+            cmd = f"git add {' '.join(added_paths)}"
+            stdout_lines = run_git(cmd, ".")
+        else:
+            cmd = f"hg add {' '.join(added_paths)}"
+            stdout_lines = run_hg(cmd)
         log_output_lines(stdout_lines, log_dir, "log-new-upstream-files.txt")
 
 
@@ -118,8 +135,16 @@ def handle_renamed_upstream_files(
         print("------- Handle renamed upstream files")
         print("-------")
         for x in renamed_paths:
-            cmd = f"hg rename --after {x}"
-            stdout_lines = run_hg(cmd)
+            if repo_type == RepoType.GIT:
+                # git doesn't have an equivalent command to mercurial
+                # where a rename/mv can be indicated retroactively, so
+                # remove the old file and add the new file.
+                source, destination = x.split(" ")
+                cmd = f"git rm {source} ; git add {destination}"
+                stdout_lines = run_shell(cmd)
+            else:
+                cmd = f"hg rename --after {x}"
+                stdout_lines = run_hg(cmd)
             log_output_lines(stdout_lines, log_dir, "log-renamed-upstream-files.txt")
 
 
@@ -127,8 +152,12 @@ def commit_all_changes(github_sha, commit_msg_filename, target_dir):
     print("-------")
     print(f"------- Commit vendored changes from {github_sha}")
     print("-------")
-    cmd = f"hg commit -l {commit_msg_filename} {target_dir}"
-    run_hg(cmd)
+    if repo_type == RepoType.GIT:
+        cmd = f"git commit --file={commit_msg_filename} {target_dir}"
+        run_git(cmd, ".")
+    else:
+        cmd = f"hg commit -l {commit_msg_filename} {target_dir}"
+        run_hg(cmd)
 
 
 def vendor_and_commit(
@@ -254,6 +283,12 @@ def vendor_and_commit(
 
 
 if __name__ == "__main__":
+    # first, check which repo we're in, git or hg
+    repo_type = detect_repo_type()
+    if repo_type is None:
+        error_help.set_help("Unable to detect repo (git or hg)")
+        sys.exit(1)
+
     default_target_dir = "third_party/libwebrtc"
     default_state_dir = ".moz-fast-forward"
     default_log_dir = ".moz-fast-forward/logs"
