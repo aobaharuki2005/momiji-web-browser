@@ -19,8 +19,6 @@
 #ifndef wasm_pi_h
 #define wasm_pi_h
 
-#include "mozilla/DoublyLinkedList.h"  // for DoublyLinkedListElement
-
 #include "js/TypeDecls.h"
 #include "vm/NativeObject.h"
 #include "vm/PromiseObject.h"
@@ -123,8 +121,7 @@ enum SuspenderState {
   Suspended,
 };
 
-class SuspenderObjectData
-    : public mozilla::DoublyLinkedListElement<SuspenderObjectData> {
+class SuspenderObjectData {
   void* stackMemory_;
 
   // Stored main stack FP register.
@@ -287,9 +284,11 @@ class SuspenderObject : public NativeObject {
 
  private:
   static const JSClassOps classOps_;
+  static const ClassExtension classExt_;
 
   static void finalize(JS::GCContext* gcx, JSObject* obj);
   static void trace(JSTracer* trc, JSObject* obj);
+  static size_t moved(JSObject* obj, JSObject* old);
 };
 
 using CallOnMainStackFn = bool (*)(void* data);

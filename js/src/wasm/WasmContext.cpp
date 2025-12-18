@@ -42,9 +42,7 @@ Context::Context()
       mainStackLimit(JS::NativeStackLimitMin)
 #ifdef ENABLE_WASM_JSPI
       ,
-      activeSuspender_(nullptr),
-      suspendableStacksCount(0),
-      suspendedStacks_()
+      activeSuspender_(nullptr)
 #endif
 {
 }
@@ -52,7 +50,7 @@ Context::Context()
 Context::~Context() {
 #ifdef ENABLE_WASM_JSPI
   MOZ_ASSERT(activeSuspender_ == nullptr);
-  MOZ_ASSERT(suspendedStacks_.isEmpty());
+  MOZ_ASSERT(suspenders_.empty());
 #endif
 }
 
@@ -88,8 +86,11 @@ void Context::traceRoots(JSTracer* trc) {
     return;
   }
   gc::AssertRootMarkingPhase(trc);
-  for (const SuspenderObjectData& data : suspendedStacks_) {
-    TraceSuspendableStack(trc, data);
+  for (auto iter = suspenders_.iter(); !iter.done(); iter.next()) {
+    SuspenderObject* object = iter.get();
+    if (object->state() == SuspenderState::Suspended) {
+      TraceSuspendableStack(trc, *object->data());
+    }
   }
 }
 

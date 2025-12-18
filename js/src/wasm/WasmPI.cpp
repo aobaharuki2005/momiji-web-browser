@@ -195,51 +195,35 @@ void TraceSuspendableStack(JSTracer* trc, const SuspenderObjectData& data) {
 static_assert(JS_STACK_GROWTH_DIRECTION < 0,
               "JS-PI implemented only for native stacks that grows towards 0");
 
-static void DecrementSuspendableStacksCount(JSContext* cx) {
-  for (;;) {
-    uint32_t currentCount = cx->wasm().suspendableStacksCount;
-    MOZ_ASSERT(currentCount > 0);
-    if (cx->wasm().suspendableStacksCount.compareExchange(currentCount,
-                                                          currentCount - 1)) {
-      break;
-    }
-    // Failed to decrement suspendableStacksCount, repeat.
-  }
-}
-
 SuspenderObject* SuspenderObject::create(JSContext* cx) {
-  for (;;) {
-    uint32_t currentCount = cx->wasm().suspendableStacksCount;
-    if (currentCount >= SuspendableStacksMaxCount) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_JSPI_SUSPENDER_LIMIT);
-      return nullptr;
-    }
-    if (cx->wasm().suspendableStacksCount.compareExchange(currentCount,
-                                                          currentCount + 1)) {
-      break;
-    }
-    // Failed to increment suspendableStacksCount, repeat.
+  if (cx->wasm().suspenders_.count() >= SuspendableStacksMaxCount) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_JSPI_SUSPENDER_LIMIT);
+    return nullptr;
   }
 
   Rooted<SuspenderObject*> suspender(
       cx, NewBuiltinClassInstance<SuspenderObject>(cx));
   if (!suspender) {
-    DecrementSuspendableStacksCount(cx);
     return nullptr;
   }
 
   void* stackMemory = js_malloc(SuspendableStackPlusRedZoneSize);
   if (!stackMemory) {
-    DecrementSuspendableStacksCount(cx);
+    ReportOutOfMemory(cx);
+    return nullptr;
+  }
+
+  if (!cx->wasm().suspenders_.putNew(suspender)) {
+    js_free(stackMemory);
     ReportOutOfMemory(cx);
     return nullptr;
   }
 
   SuspenderObjectData* data = js_new<SuspenderObjectData>(stackMemory);
   if (!data) {
+    cx->wasm().suspenders_.remove(suspender);
     js_free(stackMemory);
-    DecrementSuspendableStacksCount(cx);
     ReportOutOfMemory(cx);
     return nullptr;
   }
@@ -270,6 +254,8 @@ const JSClass SuspenderObject::class_ = {
     "SuspenderObject",
     JSCLASS_HAS_RESERVED_SLOTS(SlotCount) | JSCLASS_FOREGROUND_FINALIZE,
     &SuspenderObject::classOps_,
+    nullptr,
+    &SuspenderObject::classExt_,
 };
 
 const JSClassOps SuspenderObject::classOps_ = {
@@ -285,6 +271,10 @@ const JSClassOps SuspenderObject::classOps_ = {
     trace,     // trace
 };
 
+const ClassExtension SuspenderObject::classExt_ = {
+    .objectMovedOp = SuspenderObject::moved,
+};
+
 /* static */
 void SuspenderObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   SuspenderObject& suspender = obj->as<SuspenderObject>();
@@ -295,11 +285,10 @@ void SuspenderObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   if (data->state() == SuspenderState::Moribund) {
     MOZ_RELEASE_ASSERT(!data->stackMemory());
   } else {
-    // Cleaning stack memory and removing from suspendableStacks_.
+    // Cleaning stack memory and removing from suspenders_.
     data->releaseStackMemory();
-    if (Context* scx = data->suspendedBy()) {
-      scx->suspendedStacks_.remove(data);
-    }
+    gcx->runtime()->mainContextFromOwnThread()->wasm().suspenders_.remove(
+        &suspender);
   }
   js_free(data);
 }
@@ -320,14 +309,22 @@ void SuspenderObject::trace(JSTracer* trc, JSObject* obj) {
   TraceSuspendableStack(trc, data);
 }
 
+/* static */
+size_t SuspenderObject::moved(JSObject* obj, JSObject* old) {
+  wasm::Context& context =
+      obj->runtimeFromMainThread()->mainContextFromOwnThread()->wasm();
+  context.suspenders_.rekeyIfMoved(&old->as<SuspenderObject>(),
+                                   &obj->as<SuspenderObject>());
+  return 0;
+}
+
 void SuspenderObject::setMoribund(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
   cx->wasm().leaveSuspendableStack(cx);
   SuspenderObjectData* data = this->data();
   data->setState(SuspenderState::Moribund);
   data->releaseStackMemory();
-  DecrementSuspendableStacksCount(cx);
-  MOZ_ASSERT(!cx->wasm().suspendedStacks_.ElementProbablyInList(data));
+  cx->wasm().suspenders_.remove(this);
 }
 
 void SuspenderObject::setActive(JSContext* cx) {
@@ -348,7 +345,6 @@ void SuspenderObject::enter(JSContext* cx) {
 void SuspenderObject::suspend(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
   setSuspended(cx);
-  cx->wasm().suspendedStacks_.pushFront(data());
   data()->setSuspendedBy(&cx->wasm());
 
   if (cx->realm()->isDebuggee()) {
@@ -373,7 +369,6 @@ void SuspenderObject::resume(JSContext* cx) {
   // Use barrier because object is being removed from the suspendable stack
   // from roots.
   gc::PreWriteBarrier(this);
-  cx->wasm().suspendedStacks_.remove(data());
 
   if (cx->realm()->isDebuggee()) {
     for (FrameIter iter(cx);; ++iter) {
@@ -510,7 +505,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "x0", "x3", "x27", CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(24, 32, 40, 48);
+  INLINED_ASM(8, 16, 24, 32);
 
 #  elif defined(_WIN64) && defined(_M_X64)
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
@@ -541,7 +536,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "rcx", "rax", "cc", "memory")
-  INLINED_ASM(24, 32, 40, 48);
+  INLINED_ASM(8, 16, 24, 32);
 
 #  elif defined(__x86_64__)
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
@@ -572,7 +567,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "rdi", "rax", "cc", "memory")
-  INLINED_ASM(24, 32, 40, 48);
+  INLINED_ASM(8, 16, 24, 32);
 #  elif defined(__i386__) || defined(_M_IX86)
 #    define CALLER_SAVED_REGS "eax", "ecx", "edx"
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
@@ -601,7 +596,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(12, 16, 20, 24);
+  INLINED_ASM(4, 8, 12, 16);
 
 #  elif defined(__arm__)
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
@@ -633,7 +628,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "r0", "r1", "r2", "r3", "cc", "memory")
-  INLINED_ASM(12, 16, 20, 24);
+  INLINED_ASM(4, 8, 12, 16);
 
 #elif defined(__loongarch_lp64)
 #    define CALLER_SAVED_REGS \
@@ -670,7 +665,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "$a0", "$a3", CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(24, 32, 40, 48);
+INLINED_ASM(8, 16, 24, 32);
 
 #  elif defined(__riscv) && defined(__riscv_xlen) && (__riscv_xlen == 64)
 #    define CALLER_SAVED_REGS                                             \
@@ -710,7 +705,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "ra", "a0", "a3", CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(24, 32, 40, 48);
+INLINED_ASM(8, 16, 24, 32);
 
 #  elif defined(__mips64)
 #    define CALLER_SAVED_REGS                                             \

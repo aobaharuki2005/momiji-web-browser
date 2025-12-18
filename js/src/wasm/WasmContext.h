@@ -20,8 +20,6 @@
 #define wasm_context_h
 
 #ifdef ENABLE_WASM_JSPI
-#  include "mozilla/DoublyLinkedList.h"
-
 #  include "gc/Barrier.h"
 #endif  // ENABLE_WASM_JSPI
 
@@ -32,6 +30,9 @@ namespace js::wasm {
 #ifdef ENABLE_WASM_JSPI
 class SuspenderObject;
 class SuspenderObjectData;
+using SuspenderObjectSet =
+    HashSet<SuspenderObject*, PointerHasher<SuspenderObject*>,
+            SystemAllocPolicy>;
 #endif  // ENABLE_WASM_JSPI
 
 // wasm::Context lives in JSContext and contains the wasm-related per-context
@@ -88,9 +89,9 @@ class Context {
   // The currently active suspender object. Null if we're executing on the
   // system stack, otherwise we're on a wasm suspendable stack.
   HeapPtr<SuspenderObject*> activeSuspender_;
-  mozilla::Atomic<uint32_t> suspendableStacksCount;
-  // Using double-linked list to avoid allocation in the JIT code.
-  mozilla::DoublyLinkedList<SuspenderObjectData> suspendedStacks_;
+
+  // All of the allocated suspender objects.
+  SuspenderObjectSet suspenders_;
 #endif
 };
 
