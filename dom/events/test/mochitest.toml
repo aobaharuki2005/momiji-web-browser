@@ -494,6 +494,11 @@ tags = "os_integration"
 
 ["test_drag_image_file.html"]
 support-files = ["green.png"]
+skip-if = [
+  "os == 'linux' && os_version == '24.04'", # Bug 1802904
+  "os == 'win' && os_version == '11.26100' && opt", # Bug 1802904
+  "os == 'android' && os_version == '14' && opt", # Bug 1802904
+]
 
 ["test_draggableprop.html"]
 
