@@ -77,7 +77,7 @@ def resolve_keys(config, jobs):
             job,
             "bucket-scope",
             item_name=job["label"],
-            **{"release-level": release_level(config.params["project"])},
+            **{"release-level": release_level(config.params)},
         )
         yield job
 

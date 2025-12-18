@@ -194,7 +194,7 @@ def resolve_keys(config, jobs):
             job,
             "use-sccache",
             item_name=job["name"],
-            **{"release-level": release_level(config.params["project"])},
+            **{"release-level": release_level(config.params)},
         )
         yield job
 
@@ -241,7 +241,7 @@ def add_signing_artifacts(config, jobs):
     """
     Add signing artifacts to macOS build jobs.
     """
-    is_prod_project = release_level(config.params["project"]) == "production"
+    is_prod_project = release_level(config.params) == "production"
     for job in jobs:
         if "macosx" not in job["name"] or "searchfox" in job["name"]:
             # Not macosx build or no artifacts defined, so skip

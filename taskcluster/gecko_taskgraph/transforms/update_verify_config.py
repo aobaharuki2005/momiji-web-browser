@@ -129,7 +129,7 @@ def add_command(config, tasks):
                 platform=task["attributes"]["build_platform"],
                 **{
                     "release-type": config.params["release_type"],
-                    "release-level": release_level(config.params["project"]),
+                    "release-level": release_level(config.params),
                 },
             )
             # ignore things that resolved to null

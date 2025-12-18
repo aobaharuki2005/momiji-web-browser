@@ -1139,7 +1139,7 @@ def build_balrog_payload(config, task, task_def):
                     task["description"],
                     **{
                         "release-type": config.params["release_type"],
-                        "release-level": release_level(config.params["project"]),
+                        "release-level": release_level(config.params),
                         "beta-number": beta_number,
                     },
                 )

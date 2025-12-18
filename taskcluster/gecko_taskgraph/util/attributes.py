@@ -62,19 +62,22 @@ ALL_PROJECTS = RELEASE_PROMOTION_PROJECTS | TRUNK_PROJECTS | TEMPORARY_PROJECTS
 
 RUN_ON_PROJECT_ALIASES = {
     # key is alias, value is lambda to test it against
-    "all": lambda project: True,
-    "integration": lambda project: (
-        project in INTEGRATION_PROJECTS or project == "toolchains"
+    "all": lambda params: True,
+    "integration": lambda params: (
+        params["project"] in INTEGRATION_PROJECTS or params["project"] == "toolchains"
     ),
-    "release": lambda project: (
-        release_level(project) == "production" or project == "toolchains"
+    "release": lambda params: (
+        release_level(params) == "production" or params["project"] == "toolchains"
     ),
-    "trunk": lambda project: (project in TRUNK_PROJECTS or project == "toolchains"),
-    "trunk-only": lambda project: project in TRUNK_PROJECTS,
-    "autoland": lambda project: project in ("autoland", "toolchains"),
-    "autoland-only": lambda project: project == "autoland",
-    "mozilla-central": lambda project: project in ("mozilla-central", "toolchains"),
-    "mozilla-central-only": lambda project: project == "mozilla-central",
+    "trunk": lambda params: (
+        params["project"] in TRUNK_PROJECTS or params["project"] == "toolchains"
+    ),
+    "trunk-only": lambda params: params["project"] in TRUNK_PROJECTS,
+    "autoland": lambda params: params["project"] in ("autoland", "toolchains"),
+    "autoland-only": lambda params: params["project"] == "autoland",
+    "mozilla-central": lambda params: params["project"]
+    in ("mozilla-central", "toolchains"),
+    "mozilla-central-only": lambda params: params["project"] == "mozilla-central",
 }
 
 _COPYABLE_ATTRIBUTES = (
@@ -98,17 +101,17 @@ _COPYABLE_ATTRIBUTES = (
 )
 
 
-def match_run_on_projects(project, run_on_projects):
+def match_run_on_projects(params, run_on_projects):
     """Determine whether the given project is included in the `run-on-projects`
     parameter, applying expansions for things like "integration" mentioned in
     the attribute documentation."""
     aliases = RUN_ON_PROJECT_ALIASES.keys()
     run_aliases = set(aliases) & set(run_on_projects)
     if run_aliases:
-        if any(RUN_ON_PROJECT_ALIASES[alias](project) for alias in run_aliases):
+        if any(RUN_ON_PROJECT_ALIASES[alias](params) for alias in run_aliases):
             return True
 
-    return project in run_on_projects
+    return params["project"] in run_on_projects
 
 
 def match_run_on_hg_branches(hg_branch, run_on_hg_branches):
@@ -141,13 +144,13 @@ def sorted_unique_list(*args):
     return sorted(combined)
 
 
-def release_level(project):
+def release_level(params):
     """
     Whether this is a staging release or not.
 
     :return str: One of "production" or "staging".
     """
-    return "production" if project in RELEASE_PROJECTS else "staging"
+    return "production" if params.get("project") in RELEASE_PROJECTS else "staging"
 
 
 def is_try(params):

@@ -76,7 +76,7 @@ def resolve_keys(config, jobs):
                 field,
                 item_name=job["label"],
                 **{
-                    "release-level": release_level(config.params["project"]),
+                    "release-level": release_level(config.params),
                     "release-type": config.params["release_type"],
                     "project": config.params["project"],
                 },

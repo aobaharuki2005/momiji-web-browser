@@ -150,7 +150,7 @@ def make_task_description(config, jobs):
                 "MAR_CHANNEL_ID": attributes["mar-channel-id"],
             },
         }
-        if release_level(config.params["project"]) == "staging":
+        if release_level(config.params) == "staging":
             worker["env"]["FUNSIZE_ALLOW_STAGING_PREFIXES"] = "true"
 
         task = {
