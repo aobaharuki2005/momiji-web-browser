@@ -12958,7 +12958,7 @@ bool InitOptionParser(OptionParser& op) {
                        -1) ||
       !op.addBoolOption('\0', "only-inline-selfhosted",
                         "Only inline selfhosted functions") ||
-      !op.addBoolOption('\0', "asmjs", "Enable asm.js compilation") ||
+      !op.addBoolOption('\0', "no-asmjs", "Disable asm.js compilation") ||
       !op.addStringOption(
           '\0', "wasm-compiler", "[option]",
           "Choose to enable a subset of the wasm compilers, valid options are "
@@ -13756,7 +13756,7 @@ bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 }
 
 bool SetContextWasmOptions(JSContext* cx, const OptionParser& op) {
-  enableAsmJS = op.getBoolOption("asmjs");
+  enableAsmJS = !op.getBoolOption("no-asmjs");
 
   enableWasm = true;
   enableWasmBaseline = true;
