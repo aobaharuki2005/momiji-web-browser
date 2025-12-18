@@ -3598,41 +3598,6 @@ GeckoDriver.prototype.teardownReftest = function () {
 };
 
 /**
- * Implements the GenerateTestReport functionality of the Reporting API.
- *
- * @see https://w3c.github.io/reporting/#generate-test-report-command *
- *
- * @param {object} cmd
- * @param {string} cmd.parameters.message
- *     The message contents of the report being generated.
- * @param {string=} cmd.parameters.group
- *     The name of the reporting endpoint that the report should be sent to.
- *     @see https://www.w3.org/TR/reporting-1/#endpoint
- *
- * @throws {InvalidArgumentError}
- *     If a message argument wasn't passed in the parameters.
- */
-
-GeckoDriver.prototype.generateTestReport = async function (cmd) {
-  const { message, group = "default" } = cmd.parameters;
-
-  lazy.assert.open(this.getBrowsingContext());
-  await this._handleUserPrompts();
-
-  lazy.assert.string(
-    message,
-    lazy.pprint(`Expected "message" to be a string, got ${message}`)
-  );
-
-  lazy.assert.string(
-    group,
-    lazy.pprint(`Expected "group" to be a string, got ${group}`)
-  );
-
-  await this.getActor().generateTestReport(message, group);
-};
-
-/**
  * Print page as PDF.
  *
  * @param {object} cmd
@@ -4094,9 +4059,6 @@ GeckoDriver.prototype.commands = {
   // Global Privacy Control
   "GPC:GetGlobalPrivacyControl": GeckoDriver.prototype.getGlobalPrivacyControl,
   "GPC:SetGlobalPrivacyControl": GeckoDriver.prototype.setGlobalPrivacyControl,
-
-  // Reporting API test generation of reports
-  "Reporting:GenerateTestReport": GeckoDriver.prototype.generateTestReport,
 
   // WebAuthn
   "WebAuthn:AddVirtualAuthenticator":

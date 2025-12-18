@@ -2010,18 +2010,6 @@ class Marionette:
 
         return self._send_message("WebDriver:FindElements", body)
 
-    def generate_test_report(self, message, group=None):
-        """Generates a test report to be observed by registered reporting observers
-
-        :param message: The message string to be used as the body of the generated report
-        :param group: The name of the endpoint that will receive the report
-        """
-        body = {"message": message}
-        if group is not None:
-            body["group"] = group
-
-        self._send_message("Reporting:GenerateTestReport", body)
-
     def get_active_element(self):
         el_or_ref = self._send_message("WebDriver:GetActiveElement", key="value")
         return el_or_ref

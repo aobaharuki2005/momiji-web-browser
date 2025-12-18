@@ -188,13 +188,6 @@ export class MarionetteCommandsParent extends JSWindowActorParent {
     });
   }
 
-  generateTestReport(messageBody, messageGroup) {
-    return this.sendQuery("MarionetteCommandsParent:generateTestReport", {
-      message: messageBody,
-      group: messageGroup,
-    });
-  }
-
   async getShadowRoot(webEl) {
     return this.sendQuery("MarionetteCommandsParent:getShadowRoot", {
       elem: webEl,
