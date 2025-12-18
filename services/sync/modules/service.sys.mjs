@@ -967,22 +967,6 @@ Sync11Service.prototype = {
     }
   },
 
-  // Checks if sync can be configured for the current FxA user.
-  // Returns true if there is a signed-in user with sync keys available.
-  async canConfigure() {
-    let user = await fxAccounts.getSignedInUser();
-    if (!user) {
-      return false;
-    }
-    try {
-      let hasKeys = await fxAccounts.keys.hasKeysForScope(SCOPE_APP_SYNC);
-      return hasKeys;
-    } catch (err) {
-      this._log.error("Failed to check for sync keys", err);
-      return false;
-    }
-  },
-
   // configures/enabled/turns-on sync. There must be an FxA user signed in.
   async configure() {
     // We don't, and must not, throw if sync is already configured, because we
