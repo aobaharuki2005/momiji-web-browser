@@ -67,6 +67,7 @@ vendoring:
     - examples/
     - test/
     - typedoc.json
+    - website/
 
   keep:
     - make_bundle.sh
