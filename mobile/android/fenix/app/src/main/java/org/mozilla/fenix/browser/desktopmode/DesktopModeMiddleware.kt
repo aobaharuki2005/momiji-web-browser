@@ -48,7 +48,7 @@ class DesktopModeMiddleware(
 
             DefaultDesktopModeAction.ToggleDesktopMode -> {
                 scope.launch {
-                    val updatedDesktopMode = context.state.desktopMode
+                    val updatedDesktopMode = context.store.state.desktopMode
                     val preferenceWriteSucceeded = repository.setDesktopBrowsingEnabled(updatedDesktopMode)
 
                     if (!preferenceWriteSucceeded) {

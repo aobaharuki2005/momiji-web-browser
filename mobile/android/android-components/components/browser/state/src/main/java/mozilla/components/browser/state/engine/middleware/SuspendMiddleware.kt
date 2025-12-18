@@ -46,7 +46,7 @@ internal class SuspendMiddleware(
         context: MiddlewareContext<BrowserState, BrowserAction>,
         sessionId: String,
     ) {
-        val tab = context.state.findTabOrCustomTab(sessionId) ?: return
+        val tab = context.store.state.findTabOrCustomTab(sessionId) ?: return
 
         // First we unlink (which clearsEngineSession and state)
         context.store.dispatch(

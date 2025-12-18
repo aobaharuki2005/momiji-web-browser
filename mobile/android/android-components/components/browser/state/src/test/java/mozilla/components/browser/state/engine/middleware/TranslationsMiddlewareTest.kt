@@ -94,7 +94,7 @@ class TranslationsMiddlewareTest {
         context = mock<MiddlewareContext<BrowserState, BrowserAction>>()
 
         whenever(context.store).thenReturn(store)
-        whenever(context.state).thenReturn(state)
+        whenever(context.store.state).thenReturn(state)
 
         mockLanguageModels = mutableListOf(mockLanguageModel)
     }

@@ -34,7 +34,7 @@ class MenuTelemetryMiddleware(
         next: (MenuAction) -> Unit,
         action: MenuAction,
     ) {
-        val currentState = context.state
+        val currentState = context.store.state
 
         next(action)
 

@@ -74,8 +74,8 @@ class TranslationsDialogMiddleware(
             }
 
             is TranslationsDialogAction.TranslateAction -> {
-                context.state.initialFrom?.code?.let { fromLanguage ->
-                    context.state.initialTo?.code?.let { toLanguage ->
+                context.store.state.initialFrom?.code?.let { fromLanguage ->
+                    context.store.state.initialTo?.code?.let { toLanguage ->
                         TranslationsAction.TranslateAction(
                             tabId = sessionId,
                             fromLanguage = fromLanguage,

@@ -38,7 +38,6 @@ class LastAccessMiddlewareTest {
         context = mock()
 
         whenever(context.store).thenReturn(store)
-        whenever(context.state).thenReturn(store.state)
     }
 
     @Test

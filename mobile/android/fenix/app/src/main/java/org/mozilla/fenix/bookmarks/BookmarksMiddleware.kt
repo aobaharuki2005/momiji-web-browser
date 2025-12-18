@@ -84,10 +84,10 @@ internal class BookmarksMiddleware(
         next: (BookmarksAction) -> Unit,
         action: BookmarksAction,
     ) {
-        val preReductionState = context.state
+        val preReductionState = context.store.state
         next(action)
 
-        val dialogState = context.state.bookmarksDeletionDialogState
+        val dialogState = context.store.state.bookmarksDeletionDialogState
         if (dialogState is DeletionDialogState.LoadingCount) {
             scope.launch {
                 val count = bookmarksStorage.countBookmarksInTrees(dialogState.guidsToDelete)
@@ -160,7 +160,7 @@ internal class BookmarksMiddleware(
                     // non-list screen cases need to come first, since we presume if all subscreen
                     // state is null then we are on the list screen
                     preReductionState.bookmarksAddFolderState != null &&
-                        context.state.bookmarksAddFolderState == null -> {
+                        context.store.state.bookmarksAddFolderState == null -> {
                         scope.launch(ioDispatcher) {
                             val newFolderTitle =
                                 preReductionState.bookmarksAddFolderState.folderBeingAddedTitle

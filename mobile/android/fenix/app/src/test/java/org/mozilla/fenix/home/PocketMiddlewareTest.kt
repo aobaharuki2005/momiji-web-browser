@@ -364,7 +364,7 @@ class PocketMiddlewareTest {
             this,
         )
 
-        pocketMiddleware.invoke(mockk(), {}, AppAction.AppLifecycleAction.StartAction)
+        pocketMiddleware.invoke(mockk(relaxed = true), {}, AppAction.AppLifecycleAction.StartAction)
 
         verify {
             pocketService.startPeriodicContentRecommendationsRefresh()

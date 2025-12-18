@@ -46,7 +46,7 @@ class CfrMiddleware(
 
         if (onboardingProvider().value().isCfrEnabled) {
             showCookieBannerCfr(action)
-            showTrackingProtectionCfr(action, context.state)
+            showTrackingProtectionCfr(action, context.store.state)
         }
     }
 

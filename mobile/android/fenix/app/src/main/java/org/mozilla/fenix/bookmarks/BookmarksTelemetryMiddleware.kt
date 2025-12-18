@@ -21,7 +21,7 @@ internal class BookmarksTelemetryMiddleware : Middleware<BookmarksState, Bookmar
         next: (BookmarksAction) -> Unit,
         action: BookmarksAction,
     ) {
-        val preReductionState = context.state
+        val preReductionState = context.store.state
         next(action)
         when (action) {
             BackClicked -> preReductionState.handleBackClick()

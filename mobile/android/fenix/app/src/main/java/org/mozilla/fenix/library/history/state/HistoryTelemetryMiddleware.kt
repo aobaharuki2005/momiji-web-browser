@@ -27,7 +27,7 @@ class HistoryTelemetryMiddleware(
         next: (HistoryFragmentAction) -> Unit,
         action: HistoryFragmentAction,
     ) {
-        val currentState = context.state
+        val currentState = context.store.state
         next(action)
         when (action) {
             is HistoryFragmentAction.HistoryItemClicked -> {

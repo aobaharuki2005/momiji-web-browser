@@ -45,7 +45,7 @@ class UndoMiddleware(
         next: (BrowserAction) -> Unit,
         action: BrowserAction,
     ) {
-        val state = context.state
+        val state = context.store.state
 
         when (action) {
             // Remember removed tabs
@@ -74,7 +74,7 @@ class UndoMiddleware(
             }
 
             // Restore
-            is UndoAction.RestoreRecoverableTabs -> restore(context.store, context.state)
+            is UndoAction.RestoreRecoverableTabs -> restore(context.store, context.store.state)
 
             // Do nothing when an action different from above is passed in.
             else -> { }
@@ -93,7 +93,7 @@ class UndoMiddleware(
         val recoverableTabs = mutableListOf<RecoverableTab>()
         tabs.forEach { tab ->
             if (tab is TabSessionState) {
-                val index = context.state.tabs.indexOfFirst { it.id == tab.id }
+                val index = context.store.state.tabs.indexOfFirst { it.id == tab.id }
                 recoverableTabs.add(tab.toRecoverableTab(index))
             }
         }

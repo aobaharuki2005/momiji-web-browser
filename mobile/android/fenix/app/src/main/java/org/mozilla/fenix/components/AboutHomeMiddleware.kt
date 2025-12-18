@@ -27,7 +27,7 @@ class AboutHomeMiddleware(
         action: BrowserAction,
     ) {
         if (action is ContentAction.UpdateTitleAction &&
-            context.state.findTab(tabId = action.sessionId)?.content?.url == ABOUT_HOME_URL
+            context.store.state.findTab(tabId = action.sessionId)?.content?.url == ABOUT_HOME_URL
         ) {
              // Override the title of the homepage tab with the provided [homepageTitle] that will
              // appear in the [ContentState].

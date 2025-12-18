@@ -128,7 +128,10 @@ class PocketMiddleware(
             -> {
                 persistSelectedCategories(
                     coroutineScope = coroutineScope,
-                    currentCategoriesSelections = context.state.recommendationState.pocketStoriesCategoriesSelections,
+                    currentCategoriesSelections = context.store
+                        .state
+                        .recommendationState
+                        .pocketStoriesCategoriesSelections,
                     selectedPocketCategoriesDataStore = selectedPocketCategoriesDataStore,
                 )
             }

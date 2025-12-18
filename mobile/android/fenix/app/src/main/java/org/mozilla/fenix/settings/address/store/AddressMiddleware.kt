@@ -36,16 +36,16 @@ class AddressMiddleware(
         next(action)
         when (action) {
             is SaveTapped -> runAndNavigateBack {
-                context.state.guidToUpdate?.let {
-                    environment.updateAddress(it, context.state.address)
+                context.store.state.guidToUpdate?.let {
+                    environment.updateAddress(it, context.store.state.address)
                     Addresses.updated.add()
                 } ?: run {
-                    environment.createAddress(context.state.address)
+                    environment.createAddress(context.store.state.address)
                     Addresses.saved.add()
                 }
             }
             is DeleteDialogAction.DeleteTapped -> runAndNavigateBack {
-                context.state.guidToUpdate?.also {
+                context.store.state.guidToUpdate?.also {
                     environment.deleteAddress(it)
                     Addresses.deleted.add()
                 }

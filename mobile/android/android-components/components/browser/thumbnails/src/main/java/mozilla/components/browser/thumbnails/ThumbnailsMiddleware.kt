@@ -27,12 +27,12 @@ class ThumbnailsMiddleware(
     ) {
         when (action) {
             is TabListAction.RemoveAllNormalTabsAction -> {
-                context.state.tabs.filterNot { it.content.private }.forEach { tab ->
+                context.store.state.tabs.filterNot { it.content.private }.forEach { tab ->
                     thumbnailStorage.deleteThumbnail(tab.id, isPrivate = false)
                 }
             }
             is TabListAction.RemoveAllPrivateTabsAction -> {
-                context.state.tabs.filter { it.content.private }.forEach { tab ->
+                context.store.state.tabs.filter { it.content.private }.forEach { tab ->
                     thumbnailStorage.deleteThumbnail(tab.id, isPrivate = true)
                 }
             }
@@ -41,12 +41,12 @@ class ThumbnailsMiddleware(
             }
             is TabListAction.RemoveTabAction -> {
                 // Delete the tab screenshot from the storage when the tab is removed.
-                val isPrivate = context.state.isTabIdPrivate(action.tabId)
+                val isPrivate = context.store.state.isTabIdPrivate(action.tabId)
                 thumbnailStorage.deleteThumbnail(action.tabId, isPrivate)
             }
             is TabListAction.RemoveTabsAction -> {
                 action.tabIds.forEach { id ->
-                    val isPrivate = context.state.isTabIdPrivate(id)
+                    val isPrivate = context.store.state.isTabIdPrivate(id)
                     thumbnailStorage.deleteThumbnail(id, isPrivate)
                 }
             }

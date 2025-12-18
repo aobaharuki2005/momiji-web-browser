@@ -32,7 +32,7 @@ internal class BrowserToolbarSyncToBookmarksMiddleware(
             toolbarStore.flow()
                 .map { it.isEditMode() }
                 .onEach { isInEditMode ->
-                    if (context.state.isSearching && !isInEditMode) {
+                    if (context.store.state.isSearching && !isInEditMode) {
                         context.store.dispatch(SearchDismissed)
                     }
                 }

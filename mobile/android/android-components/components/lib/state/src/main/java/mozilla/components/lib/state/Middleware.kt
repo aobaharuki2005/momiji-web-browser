@@ -26,10 +26,6 @@ typealias Middleware<S, A> = (context: MiddlewareContext<S, A>, next: (A) -> Uni
  * access to the underlying store, can safely be used outside of the middleware.
  */
 interface MiddlewareContext<S : State, A : Action> {
-    /**
-     * Returns the current state of the [Store].
-     */
-    val state: S
 
     /**
      * Returns a reference to the [Store] the [Middleware] is running in.

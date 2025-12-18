@@ -143,14 +143,14 @@ class FenixSearchMiddleware(
                 next(action)
 
                 updateSearchProviders(context)
-                maybeShowSearchSuggestions(context, context.state.query)
+                maybeShowSearchSuggestions(context, context.store.state.query)
             }
 
             is SearchProvidersUpdated -> {
                 next(action)
 
                 if (action.providers.isNotEmpty()) {
-                    maybeShowSearchSuggestions(context, context.state.query)
+                    maybeShowSearchSuggestions(context, context.store.state.query)
                 }
             }
 
@@ -220,7 +220,7 @@ class FenixSearchMiddleware(
                 true -> handleSearchShortcutEngineSelectedByUser(context, it)
                 false -> handleSearchShortcutEngineSelected(context, it)
             }
-        } ?: context.state.defaultEngine?.let { handleSearchShortcutEngineSelected(context, it) }
+        } ?: context.store.state.defaultEngine?.let { handleSearchShortcutEngineSelected(context, it) }
     }
 
     /**
@@ -230,18 +230,18 @@ class FenixSearchMiddleware(
         context: MiddlewareContext<SearchFragmentState, SearchFragmentAction>,
         query: String,
     ) {
-        val shouldShowTrendingSearches = context.state.run {
+        val shouldShowTrendingSearches = context.store.state.run {
             (showTrendingSearches || showRecentSearches) &&
                 (searchStartedForCurrentUrl || FxNimbus.features.searchSuggestionsOnHomepage.value().enabled)
         }
-        val shouldShowSearchSuggestions = with(context.state) {
+        val shouldShowSearchSuggestions = with(context.store.state) {
             ((url != query && query.isNotBlank()) || showSearchShortcuts)
         }
         val shouldShowSuggestions = shouldShowTrendingSearches || shouldShowSearchSuggestions
 
         context.store.dispatch(SearchSuggestionsVisibilityUpdated(shouldShowSuggestions))
 
-        val showPrivatePrompt = with(context.state) {
+        val showPrivatePrompt = with(context.store.state) {
             !settings.showSearchSuggestionsInPrivateOnboardingFinished &&
                     browsingModeManager.mode.isPrivate &&
                     !isSearchSuggestionsFeatureEnabled() && !showSearchShortcuts && url != query
@@ -262,10 +262,10 @@ class FenixSearchMiddleware(
         context.store.dispatch(
             SearchProvidersUpdated(
                 buildList {
-                    if (context.state.showSearchShortcuts) {
+                    if (context.store.state.showSearchShortcuts) {
                         add(suggestionsProvidersBuilder.shortcutsEnginePickerProvider)
                     }
-                    addAll((suggestionsProvidersBuilder.getProvidersToAdd(context.state.toSearchProviderState())))
+                    addAll((suggestionsProvidersBuilder.getProvidersToAdd(context.store.state.toSearchProviderState())))
                 },
             ),
         )
@@ -280,7 +280,7 @@ class FenixSearchMiddleware(
         return SearchSuggestionsProvidersBuilder(
             components = uiContext.components,
             browsingModeManager = browsingModeManager,
-            includeSelectedTab = context.state.tabId == null,
+            includeSelectedTab = context.store.state.tabId == null,
             loadUrlUseCase = loadUrlUseCase(context),
             searchUseCase = searchUseCase(context),
             selectTabUseCase = selectTabUseCase(),
@@ -310,7 +310,7 @@ class FenixSearchMiddleware(
                 createNewTab = if (settings.enableHomepageAsNewTab) {
                     false
                 } else {
-                    context.state.tabId == null
+                    context.store.state.tabId == null
                 },
                 usePrivateMode = browsingModeManager.mode.isPrivate,
                 flags = flags,
@@ -331,29 +331,29 @@ class FenixSearchMiddleware(
             searchEngine: SearchEngine?,
             parentSessionId: String?,
         ) {
-            val searchEngine = context.state.searchEngineSource.searchEngine
+            val searchEngine = context.store.state.searchEngineSource.searchEngine
 
             openToBrowserAndLoad(
                 url = searchTerms,
                 createNewTab = if (settings.enableHomepageAsNewTab) {
                     false
                 } else {
-                    context.state.tabId == null
+                    context.store.state.tabId == null
                 },
                 usePrivateMode = browsingModeManager.mode.isPrivate,
                 forceSearch = true,
                 searchEngine = searchEngine,
             )
 
-            val searchAccessPoint = when (context.state.searchAccessPoint) {
+            val searchAccessPoint = when (context.store.state.searchAccessPoint) {
                 MetricsUtils.Source.NONE -> MetricsUtils.Source.SUGGESTION
-                else -> context.state.searchAccessPoint
+                else -> context.store.state.searchAccessPoint
             }
 
             if (searchEngine != null) {
                 MetricsUtils.recordSearchMetrics(
                     searchEngine,
-                    searchEngine == context.state.defaultEngine,
+                    searchEngine == context.store.state.defaultEngine,
                     searchAccessPoint,
                     nimbusComponents.events,
                 )
@@ -439,7 +439,7 @@ class FenixSearchMiddleware(
             searchEngine.type == SearchEngine.Type.APPLICATION && searchEngine.id == TABS_SEARCH_ENGINE_ID -> {
                 context.store.dispatch(SearchFragmentAction.SearchTabsEngineSelected(searchEngine))
             }
-            searchEngine == context.state.defaultEngine -> {
+            searchEngine == context.store.state.defaultEngine -> {
                 context.store.dispatch(
                     SearchFragmentAction.SearchDefaultEngineSelected(
                         engine = searchEngine,

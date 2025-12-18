@@ -34,7 +34,7 @@ class AdsTelemetryMiddleware(
     ) {
         when (action) {
             is ContentAction.UpdateLoadRequestAction -> {
-                context.state.findTab(action.sessionId)?.let { tab ->
+                context.store.state.findTab(action.sessionId)?.let { tab ->
                     // Collect all load requests in between location changes
                     if (!redirectChain.containsKey(action.sessionId) && action.loadRequest.url != tab.content.url) {
                         redirectChain[action.sessionId] = RedirectChain(tab.content.url)

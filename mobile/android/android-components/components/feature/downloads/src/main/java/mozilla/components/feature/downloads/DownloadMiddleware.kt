@@ -144,7 +144,7 @@ class DownloadMiddleware(
 
     private fun updateDownload(updated: DownloadState, context: MiddlewareContext<BrowserState, BrowserAction>) {
         if (updated.private) return
-        context.state.downloads[updated.id]?.let { old ->
+        context.store.state.downloads[updated.id]?.let { old ->
             // To not overwhelm the storage, we only send updates that are relevant,
             // we only care about properties, that we are stored on the storage.
             if (!DownloadStorage.isSameDownload(old, updated)) {

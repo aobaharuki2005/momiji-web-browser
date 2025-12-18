@@ -52,7 +52,7 @@ class AddressStructureMiddleware(
         next: (AddressAction) -> Unit,
         action: AddressAction,
     ) {
-        val preReductionCountry = context.state.address.country
+        val preReductionCountry = context.store.state.address.country
         next(action)
 
         when (action) {

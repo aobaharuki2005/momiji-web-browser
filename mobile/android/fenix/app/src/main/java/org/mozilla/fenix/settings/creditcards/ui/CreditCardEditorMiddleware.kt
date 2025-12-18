@@ -66,7 +66,7 @@ internal class CreditCardEditorMiddleware(
         when (this) {
             DeleteDialogAction.Confirm -> {
                 coroutineScope.launch(ioDispatcher) {
-                    storage.deleteCreditCard(context.state.guid)
+                    storage.deleteCreditCard(context.store.state.guid)
 
                     withContext(mainDispatcher) {
                         navigateBack()
@@ -86,7 +86,7 @@ internal class CreditCardEditorMiddleware(
     private fun handleSaveAction(
         context: MiddlewareContext<CreditCardEditorState, CreditCardEditorAction>,
     ) {
-        val state = context.state
+        val state = context.store.state
 
         if (!state.showCardNumberError && !state.showNameOnCardError) {
             addOrUpdateCard(state)
@@ -160,7 +160,7 @@ internal class CreditCardEditorMiddleware(
     private fun initializeFromScratch(
         context: MiddlewareContext<CreditCardEditorState, CreditCardEditorAction>,
     ) {
-        val state = context.state
+        val state = context.store.state
         context.store.dispatch(
             CreditCardEditorAction.Initialization.InitCompleted(
                 state = state.copy(
@@ -180,7 +180,7 @@ internal class CreditCardEditorMiddleware(
         creditCard: CreditCard,
     ) {
         coroutineScope.launch(ioDispatcher) {
-            val state = context.state
+            val state = context.store.state
             val crypto = storage.getCreditCardCrypto()
 
             val plainTextCardNumber = crypto.decrypt(

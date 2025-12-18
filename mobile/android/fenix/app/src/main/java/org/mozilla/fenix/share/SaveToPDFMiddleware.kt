@@ -50,13 +50,13 @@ class SaveToPDFMiddleware(
     ) {
         when (action) {
             is EngineAction.SaveToPdfAction -> {
-                postTelemetryTapped(ctx.state.findTab(action.tabId), isPrint = false)
+                postTelemetryTapped(ctx.store.state.findTab(action.tabId), isPrint = false)
                 // Continue to generate the PDF, passing through here to add telemetry
                 next(action)
             }
 
             is EngineAction.SaveToPdfCompleteAction -> {
-                postTelemetryCompleted(ctx.state.findTab(action.tabId), isPrint = false)
+                postTelemetryCompleted(ctx.store.state.findTab(action.tabId), isPrint = false)
             }
 
             is EngineAction.SaveToPdfExceptionAction -> {
@@ -67,16 +67,16 @@ class SaveToPDFMiddleware(
                         ),
                     ),
                 )
-                postTelemetryFailed(ctx.state.findTab(action.tabId), action.throwable, isPrint = false)
+                postTelemetryFailed(ctx.store.state.findTab(action.tabId), action.throwable, isPrint = false)
             }
 
             is EngineAction.PrintContentAction -> {
-                postTelemetryTapped(ctx.state.findTab(action.tabId), isPrint = true)
+                postTelemetryTapped(ctx.store.state.findTab(action.tabId), isPrint = true)
                 // Continue to print, passing through here to add telemetry
                 next(action)
             }
             is EngineAction.PrintContentCompletedAction -> {
-                postTelemetryCompleted(ctx.state.findTab(action.tabId), isPrint = true)
+                postTelemetryCompleted(ctx.store.state.findTab(action.tabId), isPrint = true)
             }
             is EngineAction.PrintContentExceptionAction -> {
                 context.components.appStore.dispatch(
@@ -86,7 +86,7 @@ class SaveToPDFMiddleware(
                         ),
                     ),
                 )
-                postTelemetryFailed(ctx.state.findTab(action.tabId), action.throwable, isPrint = true)
+                postTelemetryFailed(ctx.store.state.findTab(action.tabId), action.throwable, isPrint = true)
             }
             else -> {
                 next(action)

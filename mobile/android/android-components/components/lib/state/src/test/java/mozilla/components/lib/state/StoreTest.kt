@@ -242,10 +242,10 @@ class StoreTest {
         var countBefore = -1
         var countAfter = -1
 
-        val observingMiddleware: Middleware<TestState, TestAction> = { store, next, action ->
-            countBefore = store.state.counter
+        val observingMiddleware: Middleware<TestState, TestAction> = { context, next, action ->
+            countBefore = context.store.state.counter
             next(action)
-            countAfter = store.state.counter
+            countAfter = context.store.state.counter
         }
 
         val store = Store(

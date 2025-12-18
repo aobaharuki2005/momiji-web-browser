@@ -44,7 +44,7 @@ class CfrToolsPreferencesMiddleware(
                 cfrPreferencesRepository.updateCfrPreference(
                     CfrPreferencesRepository.CfrPreferenceUpdate(
                         preferenceType = CfrPreferencesRepository.CfrPreference.HomepageSearchBar,
-                        value = context.state.homepageSearchBarShown,
+                        value = context.store.state.homepageSearchBarShown,
                     ),
                 )
             }
@@ -52,7 +52,7 @@ class CfrToolsPreferencesMiddleware(
                 cfrPreferencesRepository.updateCfrPreference(
                     CfrPreferencesRepository.CfrPreferenceUpdate(
                         preferenceType = CfrPreferencesRepository.CfrPreference.TabAutoCloseBanner,
-                        value = context.state.tabAutoCloseBannerShown,
+                        value = context.store.state.tabAutoCloseBannerShown,
                     ),
                 )
             }
@@ -60,7 +60,7 @@ class CfrToolsPreferencesMiddleware(
                 cfrPreferencesRepository.updateCfrPreference(
                     CfrPreferencesRepository.CfrPreferenceUpdate(
                         preferenceType = CfrPreferencesRepository.CfrPreference.InactiveTabs,
-                        value = context.state.inactiveTabsShown,
+                        value = context.store.state.inactiveTabsShown,
                     ),
                 )
             }
@@ -68,7 +68,7 @@ class CfrToolsPreferencesMiddleware(
                 cfrPreferencesRepository.updateCfrPreference(
                     CfrPreferencesRepository.CfrPreferenceUpdate(
                         preferenceType = CfrPreferencesRepository.CfrPreference.OpenInApp,
-                        value = context.state.openInAppShown,
+                        value = context.store.state.openInAppShown,
                     ),
                 )
             }

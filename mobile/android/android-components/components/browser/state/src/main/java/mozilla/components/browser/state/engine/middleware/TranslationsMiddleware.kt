@@ -93,7 +93,7 @@ class TranslationsMiddleware(
                         }
                     }
                     TranslationOperation.FETCH_PAGE_SETTINGS -> {
-                        val tabId = action.tabId ?: context.state.selectedTab?.id
+                        val tabId = action.tabId ?: context.store.state.selectedTab?.id
                         if (action.tabId == null) {
                             logger.warn(
                                 "Passed null tabId to FETCH_PAGE_SETTINGS, " +
@@ -102,7 +102,7 @@ class TranslationsMiddleware(
                         }
                         if (tabId != null) {
                             scope.launch {
-                                context.state.selectedTab?.let {
+                                context.store.state.selectedTab?.let {
                                     requestPageSettings(context, it.id)
                                 }
                             }

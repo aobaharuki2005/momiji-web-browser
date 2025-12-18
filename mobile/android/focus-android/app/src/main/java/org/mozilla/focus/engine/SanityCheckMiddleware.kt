@@ -24,7 +24,7 @@ class SanityCheckMiddleware : Middleware<BrowserState, BrowserAction> {
         next(action)
 
         if (action is TabListAction || action is InitAction) {
-            verifyNoNonPrivateTabs(context.state)
+            verifyNoNonPrivateTabs(context.store.state)
         }
     }
 

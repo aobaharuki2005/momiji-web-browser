@@ -47,7 +47,7 @@ class MessagingMiddleware(
             is Evaluate -> {
                 val message = controller.getNextMessage(
                     action.surface,
-                    context.state.messaging.messages,
+                    context.store.state.messaging.messages,
                 )
                 if (message != null) {
                     context.store.dispatch(UpdateMessageToShow(message))
@@ -187,7 +187,7 @@ class MessagingMiddleware(
         context: AppStoreMiddlewareContext,
         message: Message,
     ) {
-        val current = context.state.messaging.messageToShow[message.surface]
+        val current = context.store.state.messaging.messageToShow[message.surface]
         if (current?.id == message.id) {
             context.store.dispatch(ConsumeMessageToShow(message.surface))
         }
@@ -197,7 +197,7 @@ class MessagingMiddleware(
         context: AppStoreMiddlewareContext,
         message: Message,
     ): List<Message> {
-        return context.state.messaging.messages.filter { it.id != message.id }
+        return context.store.state.messaging.messages.filter { it.id != message.id }
     }
 
     private fun updateMessage(
@@ -205,21 +205,21 @@ class MessagingMiddleware(
         oldMessage: Message,
         updatedMessage: Message,
     ): List<Message> {
-        val actualMessageToShow = context.state.messaging.messageToShow[updatedMessage.surface]
+        val actualMessageToShow = context.store.state.messaging.messageToShow[updatedMessage.surface]
 
         if (actualMessageToShow?.id == oldMessage.id) {
             context.store.dispatch(UpdateMessageToShow(updatedMessage))
         }
-        val oldMessageIndex = context.state.messaging.messages.indexOfFirst { it.id == updatedMessage.id }
+        val oldMessageIndex = context.store.state.messaging.messages.indexOfFirst { it.id == updatedMessage.id }
 
         return if (oldMessageIndex != -1) {
-            val newList = context.state.messaging.messages.toMutableList()
+            val newList = context.store.state.messaging.messages.toMutableList()
             newList[oldMessageIndex] = updatedMessage
             newList
         } else {
             // No need to update the message, it was removed. This is due to a race condition, see:
             // https://bugzilla.mozilla.org/show_bug.cgi?id=1897485
-            context.state.messaging.messages
+            context.store.state.messaging.messages
         }
     }
 }

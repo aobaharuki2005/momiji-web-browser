@@ -140,7 +140,7 @@ class BrowserToolbarMiddleware(
             is Init -> {
                 next(action)
 
-                if (context.state.mode == Mode.DISPLAY) {
+                if (context.store.state.mode == Mode.DISPLAY) {
                     observeSearchStateUpdates(context)
                 }
 

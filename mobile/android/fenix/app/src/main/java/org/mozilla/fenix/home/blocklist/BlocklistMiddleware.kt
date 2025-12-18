@@ -30,7 +30,7 @@ class BlocklistMiddleware(
         next: (AppAction) -> Unit,
         action: AppAction,
     ) {
-        next(getUpdatedAction(context.state, action))
+        next(getUpdatedAction(context.store.state, action))
     }
 
     private fun getUpdatedAction(

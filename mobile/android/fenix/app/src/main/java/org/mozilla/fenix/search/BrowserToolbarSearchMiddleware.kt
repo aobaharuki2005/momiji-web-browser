@@ -175,7 +175,7 @@ class BrowserToolbarSearchMiddleware(
 
         when (action) {
             is Init -> {
-                if (context.state.isEditMode()) {
+                if (context.store.state.isEditMode()) {
                     syncCurrentSearchEngine(context)
                 }
             }
@@ -346,7 +346,7 @@ class BrowserToolbarSearchMiddleware(
         searchEngine: SearchEngine?,
     ) {
         updateSearchSelectorMenu(context, searchEngine, browserStore.state.search.searchEngineShortcuts)
-        updateAutocompletions(context, context.state.editState.query)
+        updateAutocompletions(context, context.store.state.editState.query)
         updateToolbarHint(context, searchEngine)
     }
 
@@ -428,7 +428,7 @@ class BrowserToolbarSearchMiddleware(
                         withContext(autocompleteDispatcher) {
                             fetchAutocomplete(
                                 buildAutocompleteProvidersList(reconcileSelectedEngine()),
-                                context.state.editState.query.current,
+                                context.store.state.editState.query.current,
                             )?.also {
                                 components.core.engine.speculativeConnect(it.url)
                             }
@@ -486,7 +486,7 @@ class BrowserToolbarSearchMiddleware(
     ) = context.store.dispatch(
         SearchActionsEndUpdated(
             buildSearchEndPageActions(
-                context.state.editState.query.current,
+                context.store.state.editState.query.current,
                 selectedSearchEngine,
             ),
         ),

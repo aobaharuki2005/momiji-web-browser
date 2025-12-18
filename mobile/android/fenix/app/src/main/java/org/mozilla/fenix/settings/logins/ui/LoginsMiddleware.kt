@@ -52,7 +52,7 @@ internal class LoginsMiddleware(
         next: (LoginsAction) -> Unit,
         action: LoginsAction,
     ) {
-        val preReductionState = context.state
+        val preReductionState = context.store.state
         next(action)
 
         when (action) {

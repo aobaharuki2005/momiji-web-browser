@@ -44,8 +44,8 @@ class FxSuggestFactsMiddleware : Middleware<BrowserState, BrowserAction> {
         action: BrowserAction,
     ) = when (action) {
         is AwesomeBarAction.EngagementFinished -> emitSuggestionFacts(
-            awesomeBarState = context.state.awesomeBarState,
-            clientCountry = context.state.search.region?.home ?: RegionState.Default.home,
+            awesomeBarState = context.store.state.awesomeBarState,
+            clientCountry = context.store.state.search.region?.home ?: RegionState.Default.home,
             engagementAbandoned = action.abandoned,
         )
         else -> Unit

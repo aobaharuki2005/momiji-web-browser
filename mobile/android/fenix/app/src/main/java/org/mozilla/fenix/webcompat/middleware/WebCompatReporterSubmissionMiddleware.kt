@@ -80,11 +80,11 @@ class WebCompatReporterSubmissionMiddleware(
         val webCompatInfo = webCompatReporterRetrievalService.retrieveInfo()
 
         webCompatInfo?.let {
-            val enteredUrlMatchesTabUrl = context.state.enteredUrl == webCompatInfo.url
+            val enteredUrlMatchesTabUrl = context.store.state.enteredUrl == webCompatInfo.url
             if (enteredUrlMatchesTabUrl) {
                 setTabAntiTrackingMetrics(
                     antiTracking = webCompatInfo.antitracking,
-                    sendBlockedUrls = context.state.includeEtpBlockedUrls,
+                    sendBlockedUrls = context.store.state.includeEtpBlockedUrls,
                 )
                 setTabFrameworksMetrics(frameworks = webCompatInfo.frameworks)
                 setTabLanguageMetrics(languages = webCompatInfo.languages)
@@ -94,9 +94,9 @@ class WebCompatReporterSubmissionMiddleware(
             setBrowserInfoMetrics(browserInfo = webCompatInfo.browser)
             setDevicePixelRatioMetrics(devicePixelRatio = webCompatInfo.devicePixelRatio)
         }
-        setUrlMetrics(url = context.state.enteredUrl)
-        setReasonMetrics(reason = context.state.reason)
-        setDescriptionMetrics(description = context.state.problemDescription)
+        setUrlMetrics(url = context.store.state.enteredUrl)
+        setReasonMetrics(reason = context.store.state.reason)
+        setDescriptionMetrics(description = context.store.state.problemDescription)
         setExperimentMetrics()
 
         Pings.brokenSiteReport.submit()
@@ -109,7 +109,7 @@ class WebCompatReporterSubmissionMiddleware(
     ) {
         val webCompatInfo = webCompatReporterRetrievalService.retrieveInfo()
 
-        val webCompatJSON = generatePreviewJSON(context.state, webCompatInfo)
+        val webCompatJSON = generatePreviewJSON(context.store.state, webCompatInfo)
 
         context.store.dispatch(WebCompatReporterAction.PreviewJSONUpdated(webCompatJSON.toString()))
     }
@@ -155,10 +155,10 @@ class WebCompatReporterSubmissionMiddleware(
         context: MiddlewareContext<WebCompatReporterState, WebCompatReporterAction>,
     ) {
         webCompatReporterMoreInfoSender.sendMoreWebCompatInfo(
-            reason = context.state.reason,
-            problemDescription = context.state.problemDescription,
-            enteredUrl = context.state.enteredUrl,
-            tabUrl = context.state.tabUrl,
+            reason = context.store.state.reason,
+            problemDescription = context.store.state.problemDescription,
+            enteredUrl = context.store.state.enteredUrl,
+            tabUrl = context.store.state.tabUrl,
             engineSession = browserStore.state.selectedTab?.engineState?.engineSession,
         )
 

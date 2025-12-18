@@ -47,7 +47,7 @@ class HistoryMetadataMiddleware(
                 if (action.select) {
                     // Before we add and select a new tab we update the metadata
                     // of the currently selected tab, if not private.
-                    context.state.selectedNormalTab?.let {
+                    context.store.state.selectedNormalTab?.let {
                         updateHistoryMetadata(it)
                     }
                 }
@@ -55,27 +55,27 @@ class HistoryMetadataMiddleware(
             is TabListAction.SelectTabAction -> {
                 // Before we select a new tab we update the metadata
                 // of the currently selected tab, if not private.
-                context.state.selectedNormalTab?.let {
+                context.store.state.selectedNormalTab?.let {
                     updateHistoryMetadata(it)
                 }
             }
             is TabListAction.RemoveTabAction -> {
-                if (action.tabId == context.state.selectedTabId) {
-                    context.state.findNormalTab(action.tabId)?.let {
+                if (action.tabId == context.store.state.selectedTabId) {
+                    context.store.state.findNormalTab(action.tabId)?.let {
                         updateHistoryMetadata(it)
                     }
                 }
             }
             is TabListAction.RemoveTabsAction -> {
-                action.tabIds.find { it == context.state.selectedTabId }?.let {
-                    context.state.findNormalTab(it)?.let { tab ->
+                action.tabIds.find { it == context.store.state.selectedTabId }?.let {
+                    context.store.state.findNormalTab(it)?.let { tab ->
                         updateHistoryMetadata(tab)
                     }
                 }
             }
             is ContentAction.UpdateUrlAction -> {
-                context.state.findNormalTab(action.sessionId)?.let { tab ->
-                    val selectedTab = tab.id == context.state.selectedTabId
+                context.store.state.findNormalTab(action.sessionId)?.let { tab ->
+                    val selectedTab = tab.id == context.store.state.selectedTabId
                     // When page url changes (e.g. user navigated away by clicking on a link)
                     // we update metadata for the selected (i.e. previous) url of this tab.
                     // We don't update metadata for cases or reload or restore.
@@ -116,7 +116,7 @@ class HistoryMetadataMiddleware(
             }
             // NB: sometimes this fires multiple times after the page finished loading.
             is ContentAction.UpdateHistoryStateAction -> {
-                context.state.findNormalTab(action.sessionId)?.let { tab ->
+                context.store.state.findNormalTab(action.sessionId)?.let { tab ->
                     createHistoryMetadataIfNeeded(context, tab)
                 }
 
@@ -125,7 +125,7 @@ class HistoryMetadataMiddleware(
             }
             // NB: this could be called bunch of times in quick succession.
             is MediaSessionAction.UpdateMediaMetadataAction -> {
-                context.state.findNormalTab(action.tabId)?.let { tab ->
+                context.store.state.findNormalTab(action.tabId)?.let { tab ->
                     createHistoryMetadata(context, tab)
                 }
             }
@@ -176,7 +176,7 @@ class HistoryMetadataMiddleware(
         val (searchTerm, referrerUrl) = when {
             // Page was opened in a new tab. Look for search terms in the parent tab.
             tabParent != null && !tabMetadataHasSearchTerms -> {
-                val searchTerms = findSearchTerms(tabParent, context.state.search)
+                val searchTerms = findSearchTerms(tabParent, context.store.state.search)
                 searchTerms to tabParent.content.url
             }
             // Page was navigated to via content i.e., the user followed a link. Look for search terms in tab history.
@@ -187,11 +187,11 @@ class HistoryMetadataMiddleware(
                     tab.historyMetadata?.searchTerm to previousUrl
                 } else {
                     // Find search terms by checking if page is a SERP or a result opened from a SERP
-                    val searchTerms = findSearchTerms(tab, context.state.search)
+                    val searchTerms = findSearchTerms(tab, context.store.state.search)
                     if (searchTerms != null) {
                         searchTerms to null
                     } else {
-                        context.state.search.parseSearchTerms(previousUrl) to previousUrl
+                        context.store.state.search.parseSearchTerms(previousUrl) to previousUrl
                     }
                 }
 
@@ -210,7 +210,7 @@ class HistoryMetadataMiddleware(
             }
             // In all other cases (e.g. direct load) find search terms by checking if page is a SERP
             else -> {
-                findSearchTerms(tab, context.state.search) to null
+                findSearchTerms(tab, context.store.state.search) to null
             }
         }
 

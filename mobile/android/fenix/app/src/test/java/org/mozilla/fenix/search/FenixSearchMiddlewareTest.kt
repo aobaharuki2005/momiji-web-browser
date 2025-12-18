@@ -560,8 +560,6 @@ class FenixSearchMiddlewareTest {
     private fun buildContext(
         store: SearchFragmentStore,
     ) = object : MiddlewareContext<SearchFragmentState, SearchFragmentAction> {
-        override val state: SearchFragmentState
-            get() = store.state
 
         override val store: Store<SearchFragmentState, SearchFragmentAction> = store
     }

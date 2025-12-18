@@ -52,7 +52,7 @@ class SessionPrioritizationMiddleware(
     ) {
         when (action) {
             is EngineAction.UnlinkEngineSessionAction -> {
-                val activeTab = context.state.findTab(action.tabId)
+                val activeTab = context.store.state.findTab(action.tabId)
                 activeTab?.engineState?.engineSession?.updateSessionPriority(DEFAULT)
                 if (previousHighestPriorityTabId == action.tabId) {
                     previousHighestPriorityTabId = ""
@@ -61,7 +61,7 @@ class SessionPrioritizationMiddleware(
             }
             is ContentAction.UpdateHasFormDataAction -> {
                 if (action.adjustPriority) {
-                    val tab = context.state.findTab(action.tabId)
+                    val tab = context.store.state.findTab(action.tabId)
                     if (action.containsFormData) {
                         tab?.engineState?.engineSession?.updateSessionPriority(HIGH)
                         logger.info("Update the tab ${tab?.id} priority to ${HIGH.name}")
@@ -76,7 +76,7 @@ class SessionPrioritizationMiddleware(
             }
             is ContentAction.UpdatePriorityToDefaultAfterTimeoutAction -> {
                 // remove finished job from map
-                val tab = context.state.findTab(action.tabId)
+                val tab = context.store.state.findTab(action.tabId)
                 tab?.engineState?.engineSession?.updateSessionPriority(DEFAULT)
                 logger.info("Update the tab ${tab?.id} priority back to ${DEFAULT.name}")
                 updatePriorityToDefaultJobs.remove(action.tabId)
@@ -85,7 +85,9 @@ class SessionPrioritizationMiddleware(
             is AppLifecycleAction.PauseAction -> {
                 // Check for form data for the selected tab when the app is backgrounded.
                 mainScope.launch {
-                    context.state.selectedTab?.engineState?.engineSession?.checkForFormData(adjustPriority = false)
+                    context.store.state.selectedTab?.engineState?.engineSession?.checkForFormData(
+                        adjustPriority = false,
+                    )
                 }
             }
             else -> {
@@ -100,7 +102,7 @@ class SessionPrioritizationMiddleware(
             is EngineAction.LinkEngineSessionAction,
             -> {
                 // if it exists in the map of high priority tabs to be cleared, cancel the job and remove it
-                val state = context.state
+                val state = context.store.state
                 updatePriorityToDefaultJobs[state.selectedTabId]?.cancel()
                 updatePriorityToDefaultJobs.remove(state.selectedTabId)
 

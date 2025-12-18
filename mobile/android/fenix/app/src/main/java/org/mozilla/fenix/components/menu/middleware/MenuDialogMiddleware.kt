@@ -104,7 +104,7 @@ class MenuDialogMiddleware(
         next: (MenuAction) -> Unit,
         action: MenuAction,
     ) {
-        val currentState = context.state
+        val currentState = context.store.state
 
         when (action) {
             is MenuAction.InitAction -> initialize(context.store)

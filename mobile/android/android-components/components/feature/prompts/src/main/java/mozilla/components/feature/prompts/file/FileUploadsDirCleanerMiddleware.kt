@@ -27,7 +27,7 @@ class FileUploadsDirCleanerMiddleware(
     ) {
         when (action) {
             is ContentAction.UpdateUrlAction -> {
-                context.state.findTab(action.sessionId)?.let { actualSession ->
+                context.store.state.findTab(action.sessionId)?.let { actualSession ->
                     val actualHost = actualSession.content.url.toUri().host
                     val newHost = action.url.toUri().host
                     if (actualHost != newHost) {

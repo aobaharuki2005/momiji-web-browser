@@ -45,9 +45,9 @@ internal class TrimMemoryMiddleware : Middleware<BrowserState, BrowserAction> {
             return
         }
 
-        val suspendTabs = determineTabsToSuspend(context.state)
+        val suspendTabs = determineTabsToSuspend(context.store.state)
 
-        logger.info("Trim memory (tabs=${context.state.allTabs.size}, suspending=${suspendTabs.size})")
+        logger.info("Trim memory (tabs=${context.store.state.allTabs.size}, suspending=${suspendTabs.size})")
 
         // This is not the most efficient way of doing this. We are looping over all tabs and then
         // dispatching a SuspendEngineSessionAction for each tab that is no longer needed.

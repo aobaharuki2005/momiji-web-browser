@@ -64,7 +64,7 @@ class TrustPanelMiddleware(
         next: (TrustPanelAction) -> Unit,
         action: TrustPanelAction,
     ) {
-        val currentState = context.state
+        val currentState = context.store.state
         val store = context.store
 
         when (action) {

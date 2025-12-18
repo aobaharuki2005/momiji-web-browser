@@ -70,7 +70,7 @@ class RecordingDevicesMiddleware(
         middlewareContext: MiddlewareContext<BrowserState, BrowserAction>,
         isReminder: Boolean,
     ) {
-        val devices = middlewareContext.state.tabs
+        val devices = middlewareContext.store.state.tabs
             .map { tab -> tab.content.recordingDevices }
             .flatten()
             .filter { device -> device.status == RecordingDevice.Status.RECORDING }

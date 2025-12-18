@@ -34,8 +34,8 @@ internal class PdfStateMiddleware(
 
         if (action is ContentAction.UpdateProgressAction && action.progress == PAGE_FULLY_LOADED_PROGRESS) {
             scope.launch {
-                val newPdfRenderingStatus = isRenderingPdf(action.sessionId, context.state)
-                val previousRenderingStatus = previousPdfRenderingStatus(action.sessionId, context.state)
+                val newPdfRenderingStatus = isRenderingPdf(action.sessionId, context.store.state)
+                val previousRenderingStatus = previousPdfRenderingStatus(action.sessionId, context.store.state)
 
                 if (newPdfRenderingStatus != previousRenderingStatus) {
                     dispatchPdfStatusUpdate(action.sessionId, newPdfRenderingStatus, context)

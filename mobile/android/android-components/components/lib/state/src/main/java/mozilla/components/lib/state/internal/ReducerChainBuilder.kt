@@ -35,8 +35,6 @@ internal class ReducerChainBuilder<S : State, A : Action>(
 
     private fun build(store: Store<S, A>): (A) -> Unit {
         val context = object : MiddlewareContext<S, A> {
-            override val state: S
-                get() = store.state
 
             override val store: Store<S, A>
                 get() = store

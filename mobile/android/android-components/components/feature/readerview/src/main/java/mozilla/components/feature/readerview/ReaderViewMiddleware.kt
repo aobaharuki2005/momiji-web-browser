@@ -62,7 +62,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
             // (e.g. via a tabs tray fragment). In order to disconnect the port as
             // early as possible it's best to do it here directly.
             is EngineAction.UnlinkEngineSessionAction -> {
-                context.state.findTab(action.tabId)?.engineState?.engineSession?.let {
+                context.store.state.findTab(action.tabId)?.engineState?.engineSession?.let {
                     extensionController.disconnectPort(it, READER_VIEW_EXTENSION_ID)
                 }
                 true
@@ -80,7 +80,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
                 // Change made to UpdateUrlAction so when the source page (not viewed in reader
                 // mode) has the same url, we clear the reader mode status on url update.
                 // https://bugzilla.mozilla.org/show_bug.cgi?id=1970308
-                val tab = context.state.findTab(action.sessionId)
+                val tab = context.store.state.findTab(action.sessionId)
                 if (isReaderUrl(tab, action.url)) {
                     val urlReplaced = tab?.readerState?.activeUrl?.let { activeUrl ->
                         context.store.dispatch(ContentAction.UpdateUrlAction(action.sessionId, activeUrl))
@@ -117,7 +117,7 @@ class ReaderViewMiddleware : Middleware<BrowserState, BrowserAction> {
                 // When a tab is restored, the reader page will connect, but we won't get a
                 // UpdateUrlAction. We still want to mask the moz-extension:// URL though
                 // so we update the URL here. See comment on handling UpdateUrlAction.
-                val tab = context.state.findTab(action.tabId)
+                val tab = context.store.state.findTab(action.tabId)
                 val url = tab?.content?.url
                 if (url != null && isReaderUrl(tab, url)) {
                     context.store.dispatch(ContentAction.UpdateUrlAction(tab.id, url))

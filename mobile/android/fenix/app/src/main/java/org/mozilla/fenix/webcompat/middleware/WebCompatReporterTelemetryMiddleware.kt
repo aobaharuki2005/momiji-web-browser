@@ -37,7 +37,7 @@ class WebCompatReporterTelemetryMiddleware :
 
             WebCompatReporterAction.SendReportClicked -> {
                 Webcompatreporting.send.record(
-                    Webcompatreporting.SendExtra(sentWithBlockedTrackers = context.state.includeEtpBlockedUrls),
+                    Webcompatreporting.SendExtra(sentWithBlockedTrackers = context.store.state.includeEtpBlockedUrls),
                 )
             }
 

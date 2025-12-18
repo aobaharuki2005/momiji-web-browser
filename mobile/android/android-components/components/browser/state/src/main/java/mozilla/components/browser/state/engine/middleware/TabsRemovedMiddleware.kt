@@ -33,17 +33,17 @@ internal class TabsRemovedMiddleware(
         action: BrowserAction,
     ) {
         when (action) {
-            is TabListAction.RemoveAllNormalTabsAction -> onTabsRemoved(context, context.state.normalTabs)
-            is TabListAction.RemoveAllPrivateTabsAction -> onTabsRemoved(context, context.state.privateTabs)
-            is TabListAction.RemoveAllTabsAction -> onTabsRemoved(context, context.state.tabs)
-            is TabListAction.RemoveTabAction -> context.state.findTab(action.tabId)?.let {
+            is TabListAction.RemoveAllNormalTabsAction -> onTabsRemoved(context, context.store.state.normalTabs)
+            is TabListAction.RemoveAllPrivateTabsAction -> onTabsRemoved(context, context.store.state.privateTabs)
+            is TabListAction.RemoveAllTabsAction -> onTabsRemoved(context, context.store.state.tabs)
+            is TabListAction.RemoveTabAction -> context.store.state.findTab(action.tabId)?.let {
                 onTabsRemoved(context, listOf(it))
             }
-            is TabListAction.RemoveTabsAction -> action.tabIds.mapNotNull { context.state.findTab(it) }.let {
+            is TabListAction.RemoveTabsAction -> action.tabIds.mapNotNull { context.store.state.findTab(it) }.let {
                 onTabsRemoved(context, it)
             }
-            is CustomTabListAction.RemoveAllCustomTabsAction -> onTabsRemoved(context, context.state.customTabs)
-            is CustomTabListAction.RemoveCustomTabAction -> context.state.findCustomTab(action.tabId)?.let {
+            is CustomTabListAction.RemoveAllCustomTabsAction -> onTabsRemoved(context, context.store.state.customTabs)
+            is CustomTabListAction.RemoveCustomTabAction -> context.store.state.findCustomTab(action.tabId)?.let {
                 onTabsRemoved(context, listOf(it))
             }
             else -> {

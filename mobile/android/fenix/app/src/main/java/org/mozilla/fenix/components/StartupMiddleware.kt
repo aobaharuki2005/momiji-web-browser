@@ -31,7 +31,7 @@ class StartupMiddleware(
         action: BrowserAction,
     ) {
         if (action is RestoreCompleteAction &&
-            context.state.tabs.isEmpty() &&
+            context.store.state.tabs.isEmpty() &&
             repository.getHomepageAsANewTabEnabled()
         ) {
             // After previous sessions are restored, add a new homepage tab if

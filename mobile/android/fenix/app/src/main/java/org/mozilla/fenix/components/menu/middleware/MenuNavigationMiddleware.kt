@@ -86,7 +86,7 @@ class MenuNavigationMiddleware(
         // This is to ensure that any navigation action will be using correct
         // state properties before they are modified due to other actions being
         // dispatched and processes.
-        val currentState = context.state
+        val currentState = context.store.state
 
         next(action)
 

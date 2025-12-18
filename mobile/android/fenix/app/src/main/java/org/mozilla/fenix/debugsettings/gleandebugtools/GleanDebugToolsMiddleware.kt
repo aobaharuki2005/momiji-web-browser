@@ -33,18 +33,18 @@ class GleanDebugToolsMiddleware(
         next(action)
         when (action) {
             is GleanDebugToolsAction.LogPingsToConsoleToggled -> {
-                gleanDebugToolsStorage.setLogPings(context.state.logPingsToConsoleEnabled)
+                gleanDebugToolsStorage.setLogPings(context.store.state.logPingsToConsoleEnabled)
             }
             is GleanDebugToolsAction.OpenDebugView -> {
                 val debugViewLink = getDebugViewLink(
-                    debugViewTag = context.state.debugViewTag,
+                    debugViewTag = context.store.state.debugViewTag,
                     useDebugViewTag = action.useDebugViewTag,
                 )
                 openDebugView(debugViewLink)
             }
             is GleanDebugToolsAction.CopyDebugViewLink -> {
                 val debugViewLink = getDebugViewLink(
-                    debugViewTag = context.state.debugViewTag,
+                    debugViewTag = context.store.state.debugViewTag,
                     useDebugViewTag = action.useDebugViewTag,
                 )
                 clipboardHandler.text = debugViewLink
@@ -52,10 +52,10 @@ class GleanDebugToolsMiddleware(
             is GleanDebugToolsAction.DebugViewTagChanged -> {} // No-op
             is GleanDebugToolsAction.SendPing -> {
                 gleanDebugToolsStorage.sendPing(
-                    pingType = context.state.pingType,
-                    debugViewTag = context.state.debugViewTag,
+                    pingType = context.store.state.pingType,
+                    debugViewTag = context.store.state.debugViewTag,
                 )
-                showToast(context.state.pingType)
+                showToast(context.store.state.pingType)
             }
             is GleanDebugToolsAction.ChangePingType -> {} // No-op
         }

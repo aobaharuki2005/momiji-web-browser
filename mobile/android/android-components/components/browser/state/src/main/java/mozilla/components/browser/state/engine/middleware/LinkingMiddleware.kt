@@ -61,7 +61,7 @@ internal class LinkingMiddleware(
 
         when (action) {
             is EngineAction.LinkEngineSessionAction -> {
-                context.state.findTabOrCustomTab(action.tabId)?.let { tab ->
+                context.store.state.findTabOrCustomTab(action.tabId)?.let { tab ->
                     engineObserver = link(context, action.engineSession, tab, action.skipLoading, action.includeParent)
                 }
             }
@@ -97,7 +97,7 @@ internal class LinkingMiddleware(
             performLoadOnMainThread(engineSession, tab.content.url, loadFlags = tab.engineState.initialLoadFlags)
         } else {
             val parentEngineSession = if (includeParent && tab is TabSessionState) {
-                tab.parentId?.let { context.state.findTabOrCustomTab(it)?.engineState?.engineSession }
+                tab.parentId?.let { context.store.state.findTabOrCustomTab(it)?.engineState?.engineSession }
             } else {
                 null
             }
@@ -136,10 +136,10 @@ internal class LinkingMiddleware(
     }
 
     private fun unlink(
-        store: MiddlewareContext<BrowserState, BrowserAction>,
+        context: MiddlewareContext<BrowserState, BrowserAction>,
         action: EngineAction.UnlinkEngineSessionAction,
     ) {
-        val tab = store.state.findTabOrCustomTab(action.tabId) ?: return
+        val tab = context.store.state.findTabOrCustomTab(action.tabId) ?: return
 
         tab.engineState.engineObserver?.let {
             tab.engineState.engineSession?.unregister(it)

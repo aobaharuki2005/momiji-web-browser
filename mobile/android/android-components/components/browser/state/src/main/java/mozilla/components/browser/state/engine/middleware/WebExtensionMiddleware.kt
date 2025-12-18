@@ -29,8 +29,8 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
     ) {
         when (action) {
             is EngineAction.UnlinkEngineSessionAction -> {
-                if (context.state.activeWebExtensionTabId == action.tabId) {
-                    val activeTab = context.state.findTab(action.tabId)
+                if (context.store.state.activeWebExtensionTabId == action.tabId) {
+                    val activeTab = context.store.state.findTab(action.tabId)
                     activeTab?.engineState?.engineSession?.markActiveForWebExtensions(false)
                 }
             }
@@ -54,7 +54,7 @@ internal class WebExtensionMiddleware : Middleware<BrowserState, BrowserAction> 
     }
 
     private fun switchActiveStateIfNeeded(context: MiddlewareContext<BrowserState, BrowserAction>) {
-        val state = context.state
+        val state = context.store.state
         if (state.activeWebExtensionTabId == state.selectedTabId) {
             return
         }
