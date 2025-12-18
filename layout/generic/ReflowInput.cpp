@@ -305,7 +305,6 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   mFlags.mDummyParentReflowInput = false;
   mFlags.mStaticPosIsCBOrigin = aFlags.contains(InitFlag::StaticPosIsCBOrigin);
   mFlags.mIOffsetsNeedCSSAlign = mFlags.mBOffsetsNeedCSSAlign = false;
-  mFlags.mIAnchorCenter = mFlags.mBAnchorCenter = false;
 
   // We don't want the mOrthogonalCellFinalReflow flag to be inherited; it's up
   // to the table row frame to set it for its direct children as needed.
@@ -1145,18 +1144,7 @@ void ReflowInput::ComputeAbsPosInlineAutoMargin(nscoord aAvailMarginSpace,
                                                 WritingMode aContainingBlockWM,
                                                 bool aIsMarginIStartAuto,
                                                 bool aIsMarginIEndAuto,
-                                                bool aIsIAnchorCenter,
                                                 LogicalMargin& aMargin) {
-  if (aIsIAnchorCenter) {
-    // `anchor-center` sets any use of `auto` margin to 0.
-    if (aIsMarginIStartAuto) {
-      aMargin.IStart(aContainingBlockWM) = 0;
-    }
-    if (aIsMarginIEndAuto) {
-      aMargin.IEnd(aContainingBlockWM) = 0;
-    }
-    return;
-  }
   if (aIsMarginIStartAuto) {
     if (aIsMarginIEndAuto) {
       if (aAvailMarginSpace < 0) {
@@ -1190,18 +1178,7 @@ void ReflowInput::ComputeAbsPosBlockAutoMargin(nscoord aAvailMarginSpace,
                                                WritingMode aContainingBlockWM,
                                                bool aIsMarginBStartAuto,
                                                bool aIsMarginBEndAuto,
-                                               bool aIsBAnchorCenter,
                                                LogicalMargin& aMargin) {
-  if (aIsBAnchorCenter) {
-    // `anchor-center` sets any use of `auto` margin to 0.
-    if (aIsMarginBStartAuto) {
-      aMargin.BStart(aContainingBlockWM) = 0;
-    }
-    if (aIsMarginBEndAuto) {
-      aMargin.BEnd(aContainingBlockWM) = 0;
-    }
-    return;
-  }
   if (aIsMarginBStartAuto) {
     if (aIsMarginBEndAuto) {
       // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
@@ -1719,19 +1696,6 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
   bool bStartIsAuto = bStartOffset->IsAuto();
   bool bEndIsAuto = bEndOffset->IsAuto();
 
-  // TODO(dshin): Needed anymore?
-  mFlags.mIAnchorCenter = anchorResolutionParams.mBaseParams
-                              .mAutoResolutionOverrideParams.mIAnchorCenter;
-  mFlags.mBAnchorCenter = anchorResolutionParams.mBaseParams
-                              .mAutoResolutionOverrideParams.mBAnchorCenter;
-
-  // For anchor-center with both insets auto, insets need to be kept as 0
-  // so hypothetical position should be skipped.
-  const bool inlineBothInsetsAuto =
-      mFlags.mIAnchorCenter && iStartIsAuto && iEndIsAuto;
-  const bool blockBothInsetsAuto =
-      mFlags.mBAnchorCenter && bStartIsAuto && bEndIsAuto;
-
   // If both 'inline-start' and 'inline-end' are 'auto' or both 'block-start'
   // and 'block-end' are 'auto', then compute the hypothetical box position
   // where the element would have if it were in the flow.
@@ -1817,7 +1781,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
         nsLayoutUtils::ComputeCBDependentValue(aCBSize.ISize(cbwm), iEndOffset);
   }
 
-  if (iStartIsAuto && iEndIsAuto && !inlineBothInsetsAuto) {
+  if (iStartIsAuto && iEndIsAuto) {
     if (cbwm.IsInlineReversed() !=
         hypotheticalPos.mWritingMode.IsInlineReversed()) {
       offsets.IEnd(cbwm) = hypotheticalPos.mIStart;
@@ -1841,7 +1805,7 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
         nsLayoutUtils::ComputeCBDependentValue(aCBSize.BSize(cbwm), bEndOffset);
   }
 
-  if (bStartIsAuto && bEndIsAuto && !blockBothInsetsAuto) {
+  if (bStartIsAuto && bEndIsAuto) {
     // Treat 'top' like 'static-position'
     offsets.BStart(cbwm) = hypotheticalPos.mBStart;
     bStartIsAuto = false;
