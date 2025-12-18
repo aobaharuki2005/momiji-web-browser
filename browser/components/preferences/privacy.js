@@ -2872,6 +2872,9 @@ Preferences.addSetting({
   visible({ contentBlockingCategory }) {
     return contentBlockingCategory.value == "strict";
   },
+  onUserChange(value, _deps, setting) {
+    gPrivacyPane.onBaselineAllowListSettingChange(value, setting);
+  },
 });
 
 Preferences.addSetting({
@@ -2965,6 +2968,9 @@ Preferences.addSetting({
 Preferences.addSetting({
   id: "etpAllowListBaselineEnabledCustom",
   pref: "privacy.trackingprotection.allow_list.baseline.enabled",
+  onUserChange(value, _deps, setting) {
+    gPrivacyPane.onBaselineAllowListSettingChange(value, setting);
+  },
 });
 
 Preferences.addSetting({
@@ -5553,6 +5559,38 @@ var gPrivacyPane = {
       return;
     }
 
+    const confirmed = await this._confirmBaselineAllowListDisable();
+
+    if (confirmed) {
+      // User confirmed, set the checkbox to false.
+      event.target.checked = false;
+      this.maybeNotifyUserToReload();
+    } else {
+      // User cancelled, set the checkbox and the baseline pref to true.
+      event.target.checked = true;
+      Services.prefs.setBoolPref(
+        "privacy.trackingprotection.allow_list.baseline.enabled",
+        true
+      );
+    }
+  },
+
+  async onBaselineAllowListSettingChange(value, setting) {
+    if (value) {
+      this.maybeNotifyUserToReload();
+      return;
+    }
+
+    const confirmed = await this._confirmBaselineAllowListDisable();
+    if (confirmed) {
+      this.maybeNotifyUserToReload();
+      return;
+    }
+
+    setting.value = true;
+  },
+
+  async _confirmBaselineAllowListDisable() {
     let [title, body, okButtonText, cancelButtonText] =
       await document.l10n.formatValues([
         { id: "content-blocking-baseline-uncheck-warning-dialog-title" },
@@ -5585,18 +5623,6 @@ var gPrivacyPane = {
     );
 
     const propertyBag = result.QueryInterface(Ci.nsIPropertyBag2);
-
-    if (propertyBag.get("buttonNumClicked") == 1) {
-      // User confirmed, set the checkbox to false.
-      event.target.checked = false;
-      this.maybeNotifyUserToReload();
-    } else {
-      // User cancelled, set the checkbox and the baseline pref to true.
-      event.target.checked = true;
-      Services.prefs.setBoolPref(
-        "privacy.trackingprotection.allow_list.baseline.enabled",
-        true
-      );
-    }
+    return propertyBag.get("buttonNumClicked") == 1;
   },
 };
