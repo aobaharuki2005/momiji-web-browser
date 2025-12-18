@@ -159,9 +159,9 @@
     }
 
     input[type='checkbox'] {
-      height: var(--space-large);
-      width: var(--space-large);
-      accent-color: var(--button-background-color-primary);
+      height: var(--size-item-small);
+      width: var(--size-item-small);
+      accent-color: var(--color-accent-primary);
       margin-inline-start: var(--space-small);
       padding: 0;
     }
@@ -256,8 +256,8 @@
         -moz-context-properties: fill;
         fill: var(--button-icon-fill);
         background-image: url('chrome://global/skin/icons/arrow-right.svg');
-        height: var(--space-large);
-        width: var(--space-large);
+        height: var(--icon-size-small);
+        width: var(--icon-size-small);
         position: absolute;
         inset-inline-end: calc(-1 * var(--space-xlarge));
         inset-block-start: 50%;

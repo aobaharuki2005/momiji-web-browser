@@ -34,6 +34,9 @@ input {
   --newtab-card-grid-layout-width: 296px;
 }
 
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
 :root {
   color-scheme: light;
   --newtab-background-color: #F9F9FB;
@@ -1474,6 +1477,8 @@ main section {
     grid-template-columns: repeat(auto-fit, 309px);
   }
 }
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
 .search-wrapper {
   padding: 0;
   margin-block: var(--space-xxlarge);
@@ -2283,7 +2288,7 @@ main section {
   padding-inline-start: var(--space-xlarge);
   -moz-context-properties: fill;
   fill: currentColor;
-  min-height: var(--space-large);
+  min-height: var(--size-item-small);
   margin-inline-start: var(--space-xsmall);
   margin-block-start: var(--space-xsmall);
 }
@@ -3661,8 +3666,8 @@ dialog:dir(rtl)::after {
 }
 .compact-cards .card-outer .card-text .card-title, .compact-cards .card-outer .card-text:not(.no-description) .card-title {
   font-size: var(--font-size-small);
-  line-height: var(--font-size-small)1;
-  max-height: var(--font-size-small)5;
+  line-height: calc(var(--font-size-small) + 1px);
+  max-height: calc(var(--font-size-small) + 5px);
   overflow: hidden;
   padding: 0 0 var(--space-xsmall);
   text-overflow: ellipsis;
@@ -4503,9 +4508,9 @@ dialog:dir(rtl)::after {
   max-width: 180px;
 }
 .lists .task-item input[type=checkbox] {
-  height: var(--space-large);
-  width: var(--space-large);
-  accent-color: var(--button-background-color-primary);
+  height: var(--size-item-small);
+  width: var(--size-item-small);
+  accent-color: var(--color-accent-primary);
   margin-inline-start: var(--space-small);
   padding: 0;
 }
@@ -4585,8 +4590,8 @@ dialog:dir(rtl)::after {
   -moz-context-properties: fill;
   fill: var(--button-icon-fill);
   background-image: url("chrome://global/skin/icons/arrow-right.svg");
-  height: var(--space-large);
-  width: var(--space-large);
+  height: var(--icon-size-small);
+  width: var(--icon-size-small);
   position: absolute;
   inset-inline-end: calc(-1 * var(--space-xlarge));
   inset-block-start: 50%;
@@ -7051,6 +7056,8 @@ dialog:dir(rtl)::after {
   transition-delay: 333ms;
 }
 
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
+/* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
 .ds-card {
   display: flex;
   flex-direction: column;
@@ -8321,7 +8328,7 @@ dialog:dir(rtl)::after {
 .topic-selection-container {
   --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
   position: relative;
-  border-radius: var(--space-small);
+  border-radius: var(--border-radius-medium);
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   padding: var(--space-xxlarge);
   max-width: 745px;
@@ -8391,8 +8398,8 @@ dialog:dir(rtl)::after {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-item-small);
-  margin: var(--size-item-large) auto;
+  gap: var(--space-large);
+  margin: var(--space-xxlarge) auto;
   justify-content: center;
   width: fit-content;
 }

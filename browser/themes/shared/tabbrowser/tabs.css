@@ -1815,6 +1815,7 @@ tab-group {
     font-size: 0;
     width: 16px;
     height: 16px;
+    /* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
     padding: var(--focus-outline-offset);
     border: var(--focus-outline-width) solid transparent;
     border-radius: var(--border-radius-medium);
