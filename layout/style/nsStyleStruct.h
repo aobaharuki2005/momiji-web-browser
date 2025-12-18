@@ -42,6 +42,7 @@ class nsComputedDOMStyle;
 namespace mozilla {
 class ComputedStyle;
 struct AnchorPosResolutionCache;
+class AnchorPosReferenceData;
 struct IntrinsicSize;
 struct SizeComputationInput;
 
@@ -390,6 +391,7 @@ struct AnchorPosResolutionParams {
     AutoResolutionOverrideParams(
         const nsIFrame* aFrame,
         const mozilla::AnchorPosResolutionCache* aCache);
+    explicit AutoResolutionOverrideParams(const nsIFrame* aFrame);
 
     bool OverriddenToZero(mozilla::StylePhysicalAxis aAxis) const;
   };
