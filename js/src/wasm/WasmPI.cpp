@@ -40,18 +40,6 @@
 #include "wasm/WasmGcObject-inl.h"
 #include "wasm/WasmInstance-inl.h"
 
-#if defined(JS_CODEGEN_ARM)
-#  include "jit/arm/Simulator-arm.h"
-#elif defined(JS_CODEGEN_ARM64)
-#  include "jit/arm64/vixl/Simulator-vixl.h"
-#elif defined(JS_CODEGEN_RISCV64)
-#  include "jit/riscv64/Simulator-riscv64.h"
-#elif defined(JS_CODEGEN_LOONG64)
-#  include "jit/loong64/Simulator-loong64.h"
-#elif defined(JS_CODEGEN_MIPS64)
-#  include "jit/mips64/Simulator-mips64.h"
-#endif
-
 using namespace js;
 using namespace js::jit;
 
@@ -67,65 +55,6 @@ void SuspenderObject::releaseStackMemory() {
     setState(SuspenderState::Moribund);
   }
 }
-
-#  if defined(JS_SIMULATOR_ARM64)
-void SuspenderObject::switchSimulatorToMain() {
-  auto* sim = Simulator::Current();
-  suspendableSP_ = (void*)sim->xreg(Registers::sp, vixl::Reg31IsStackPointer);
-  suspendableFP_ = (void*)sim->xreg(Registers::fp);
-  sim->set_xreg(Registers::sp, (int64_t)mainSP_, vixl::Debugger::LogRegWrites,
-                vixl::Reg31IsStackPointer);
-  sim->set_xreg(Registers::fp, (int64_t)mainFP_);
-}
-
-void SuspenderObject::switchSimulatorToSuspendable() {
-  auto* sim = Simulator::Current();
-  mainSP_ = (void*)sim->xreg(Registers::sp, vixl::Reg31IsStackPointer);
-  mainFP_ = (void*)sim->xreg(Registers::fp);
-  sim->set_xreg(Registers::sp, (int64_t)suspendableSP_,
-                vixl::Debugger::LogRegWrites, vixl::Reg31IsStackPointer);
-  sim->set_xreg(Registers::fp, (int64_t)suspendableFP_);
-}
-
-#  elif defined(JS_SIMULATOR_ARM)
-void SuspenderObject::switchSimulatorToMain() {
-  suspendableSP_ = (void*)Simulator::Current()->get_register(Simulator::sp);
-  suspendableFP_ = (void*)Simulator::Current()->get_register(Simulator::fp);
-  Simulator::Current()->set_register(Simulator::sp, (int)mainSP_);
-  Simulator::Current()->set_register(Simulator::fp, (int)mainFP_);
-}
-
-void SuspenderObject::switchSimulatorToSuspendable() {
-  mainSP_ = (void*)Simulator::Current()->get_register(Simulator::sp);
-  mainFP_ = (void*)Simulator::Current()->get_register(Simulator::fp);
-  Simulator::Current()->set_register(Simulator::sp, (int)suspendableSP_);
-  Simulator::Current()->set_register(Simulator::fp, (int)suspendableFP_);
-}
-
-#  elif defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
-      defined(JS_SIMULATOR_MIPS64)
-void SuspenderObject::switchSimulatorToMain() {
-  suspendableSP_ = (void*)Simulator::Current()->getRegister(Simulator::sp);
-  suspendableFP_ = (void*)Simulator::Current()->getRegister(Simulator::fp);
-  Simulator::Current()->setRegister(
-      Simulator::sp,
-      static_cast<int64_t>(reinterpret_cast<uintptr_t>(mainSP_)));
-  Simulator::Current()->setRegister(
-      Simulator::fp,
-      static_cast<int64_t>(reinterpret_cast<uintptr_t>(mainFP_)));
-}
-
-void SuspenderObject::switchSimulatorToSuspendable() {
-  mainSP_ = (void*)Simulator::Current()->getRegister(Simulator::sp);
-  mainFP_ = (void*)Simulator::Current()->getRegister(Simulator::fp);
-  Simulator::Current()->setRegister(
-      Simulator::sp,
-      static_cast<int64_t>(reinterpret_cast<uintptr_t>(suspendableSP_)));
-  Simulator::Current()->setRegister(
-      Simulator::fp,
-      static_cast<int64_t>(reinterpret_cast<uintptr_t>(suspendableFP_)));
-}
-#  endif
 
 // Slots that used in various JSFunctionExtended below.
 const size_t SUSPENDER_SLOT = 0;
@@ -146,7 +75,7 @@ static JitActivation* FindSuspendableStackActivation(
       // Scan all JitActivations to find one that starts with suspended stack
       // frame pointer.
       WasmFrameIter iter(activation);
-      if (!iter.done() && suspender->hasFramePointer(iter.frame())) {
+      if (!iter.done() && suspender->hasStackAddress(iter.frame())) {
         return activation;
       }
     }
@@ -319,13 +248,12 @@ void SuspenderObject::setSuspended(JSContext* cx) {
   cx->wasm().leaveSuspendableStack(cx);
 }
 
-void SuspenderObject::setCalledOnMain(JSContext* cx) {
-  this->setState(SuspenderState::CalledOnMain);
-  cx->wasm().leaveSuspendableStack(cx);
-}
-
 void SuspenderObject::enter(JSContext* cx) {
-  MOZ_ASSERT(state() == SuspenderState::Initial);
+  // We can enter a suspender normally from Initial, or through unwinding when
+  // are in the 'CalledOnMain' or 'Suspended' states.
+  MOZ_ASSERT(state() == SuspenderState::Initial ||
+             state() == SuspenderState::CalledOnMain ||
+             state() == SuspenderState::Suspended);
   setActive(cx);
 }
 
@@ -390,6 +318,22 @@ void SuspenderObject::leave(JSContext* cx) {
   }
 }
 
+void SuspenderObject::unwind(JSContext* cx) {
+  switch (state()) {
+    case SuspenderState::Suspended:
+    case SuspenderState::CalledOnMain: {
+      cx->wasm().suspenders_.remove(this);
+      this->releaseStackMemory();
+      MOZ_ASSERT(this->isMoribund());
+      break;
+    }
+    case SuspenderState::Active:
+    case SuspenderState::Initial:
+    case SuspenderState::Moribund:
+      MOZ_CRASH();
+  }
+}
+
 void SuspenderObject::forwardToSuspendable() {
   // Injecting suspendable stack back into main one at the exit frame.
   uint8_t* mainExitFP = (uint8_t*)this->mainExitFP();
@@ -397,357 +341,6 @@ void SuspenderObject::forwardToSuspendable() {
       this->suspendableFP();
   *reinterpret_cast<void**>(mainExitFP + Frame::returnAddressOffset()) =
       this->suspendedReturnAddress();
-}
-
-bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
-  Rooted<SuspenderObject*> suspender(cx, cx->wasm().activeSuspender());
-
-  MOZ_ASSERT(suspender->state() == SuspenderState::Active);
-  suspender->setCalledOnMain(cx);
-
-#  ifdef JS_SIMULATOR
-#    if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) ||       \
-        defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
-        defined(JS_SIMULATOR_MIPS64)
-  // The simulator is using its own stack, however switching is needed for
-  // virtual registers.
-  suspender->switchSimulatorToMain();
-  bool res = fn(data);
-  suspender->switchSimulatorToSuspendable();
-#    else
-#      error "not supported"
-#    endif
-#  else
-  // The platform specific code below inserts offsets as strings into inline
-  // assembly. CHECK_OFFSETS verifies the specified literals in macros below.
-#    define CHECK_OFFSETS(MAIN_FP_OFFSET, MAIN_SP_OFFSET,                    \
-                          SUSPENDABLE_FP_OFFSET, SUSPENDABLE_SP_OFFSET)      \
-      static_assert((MAIN_FP_OFFSET) == SuspenderObject::offsetOfMainFP() && \
-                    (MAIN_SP_OFFSET) == SuspenderObject::offsetOfMainSP() && \
-                    (SUSPENDABLE_FP_OFFSET) ==                               \
-                        SuspenderObject::offsetOfSuspendableFP() &&          \
-                    (SUSPENDABLE_SP_OFFSET) ==                               \
-                        SuspenderObject::offsetOfSuspendableSP());
-
-  // The following assembly code temporarily switches FP/SP pointers to be on
-  // main stack, while maintaining frames linking.  After
-  // `CallImportData::Call` execution suspendable stack FP/SP will be restored.
-  //
-  // Because the assembly sequences contain a call, the trashed-register list
-  // must contain all the caller saved registers.  They must also contain "cc"
-  // and "memory" since both of those state elements could be modified by the
-  // call.  They also need a "volatile" qualifier to ensure that the they don't
-  // get optimised out or otherwise messed with by clang/gcc.
-  //
-  // `Registers::VolatileMask` (in the assembler complex) is useful in that it
-  // lists the caller-saved registers.
-
-  SuspenderObject* stacks = suspender.get();
-  uintptr_t res;
-
-  // clang-format off
-#if defined(_M_ARM64) || defined(__aarch64__)
-#    define CALLER_SAVED_REGS \
-      "x0", "x1", "x2", "x3","x4", "x5", "x6", "x7", "x8", "x9", "x10",   \
-      "x11", "x12", "x13", "x14", "x15", "x16", "x17", /* "x18", */       \
-      "x19", "x20", /* it's unclear who saves these two, so be safe */    \
-      /* claim that all the vector regs are caller-saved, for safety */   \
-      "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10",  \
-      "v11", "v12", "v13", "v14", "v15", "v16", "v17", "v18", "v19",      \
-      "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28",      \
-      "v29", "v30", "v31"
-#    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm volatile(                                                       \
-          "\n   mov     x0, %1"                                           \
-          "\n   mov     x27, sp "                                         \
-          "\n   str     x29, [x0, #" #SUSPENDABLE_FP "] "                 \
-          "\n   str     x27, [x0, #" #SUSPENDABLE_SP "] "                 \
-                                                                          \
-          "\n   ldr     x29, [x0, #" #MAIN_FP "] "                        \
-          "\n   ldr     x27, [x0, #" #MAIN_SP "] "                        \
-          "\n   mov     sp, x27 "                                         \
-                                                                          \
-          "\n   stp     x0, x27, [sp, #-16]! "                            \
-                                                                          \
-          "\n   mov     x0, %3"                                           \
-          "\n   blr     %2 "                                              \
-                                                                          \
-          "\n   ldp     x3, x27, [sp], #16 "                              \
-                                                                          \
-          "\n   mov     x27, sp "                                         \
-          "\n   str     x29, [x3, #" #MAIN_FP "] "                        \
-          "\n   str     x27, [x3, #" #MAIN_SP "] "                        \
-                                                                          \
-          "\n   ldr     x29, [x3, #" #SUSPENDABLE_FP "] "                 \
-          "\n   ldr     x27, [x3, #" #SUSPENDABLE_SP "] "                 \
-          "\n   mov     sp, x27 "                                         \
-          "\n   mov     %0, x0"                                           \
-          : "=r"(res)                                                     \
-          : "r"(stacks), "r"(fn), "r"(data)                               \
-          : "x0", "x3", "x27", CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(56, 64, 72, 80);
-
-#  elif defined(_WIN64) && defined(_M_X64)
-#    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm("\n   mov     %1, %%rcx"                                        \
-          "\n   mov     %%rbp, " #SUSPENDABLE_FP "(%%rcx)"                \
-          "\n   mov     %%rsp, " #SUSPENDABLE_SP "(%%rcx)"                \
-                                                                          \
-          "\n   mov     " #MAIN_FP "(%%rcx), %%rbp"                       \
-          "\n   mov     " #MAIN_SP "(%%rcx), %%rsp"                       \
-                                                                          \
-          "\n   push    %%rcx"                                            \
-          "\n   push    %%rdx"                                            \
-                                                                          \
-          "\n   mov     %3, %%rcx"                                        \
-          "\n   call    *%2"                                              \
-                                                                          \
-          "\n   pop    %%rdx"                                             \
-          "\n   pop    %%rcx"                                             \
-                                                                          \
-          "\n   mov     %%rbp, " #MAIN_FP "(%%rcx)"                       \
-          "\n   mov     %%rsp, " #MAIN_SP "(%%rcx)"                       \
-                                                                          \
-          "\n   mov     " #SUSPENDABLE_FP "(%%rcx), %%rbp"                \
-          "\n   mov     " #SUSPENDABLE_SP "(%%rcx), %%rsp"                \
-                                                                          \
-          "\n   movq     %%rax, %0"                                       \
-          : "=r"(res)                                                     \
-          : "r"(stacks), "r"(fn), "r"(data)                               \
-          : "rcx", "rax", "cc", "memory")
-  INLINED_ASM(56, 64, 72, 80);
-
-#  elif defined(__x86_64__)
-#    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm("\n   mov     %1, %%rdi"                                        \
-          "\n   mov     %%rbp, " #SUSPENDABLE_FP "(%%rdi)"                \
-          "\n   mov     %%rsp, " #SUSPENDABLE_SP "(%%rdi)"                \
-                                                                          \
-          "\n   mov     " #MAIN_FP "(%%rdi), %%rbp"                       \
-          "\n   mov     " #MAIN_SP "(%%rdi), %%rsp"                       \
-                                                                          \
-          "\n   push    %%rdi"                                            \
-          "\n   push    %%rdx"                                            \
-                                                                          \
-          "\n   mov     %3, %%rdi"                                        \
-          "\n   call    *%2"                                              \
-                                                                          \
-          "\n   pop    %%rdx"                                             \
-          "\n   pop    %%rdi"                                             \
-                                                                          \
-          "\n   mov     %%rbp, " #MAIN_FP "(%%rdi)"                       \
-          "\n   mov     %%rsp, " #MAIN_SP "(%%rdi)"                       \
-                                                                          \
-          "\n   mov     " #SUSPENDABLE_FP "(%%rdi), %%rbp"                \
-          "\n   mov     " #SUSPENDABLE_SP "(%%rdi), %%rsp"                \
-                                                                          \
-          "\n   movq     %%rax, %0"                                       \
-          : "=r"(res)                                                     \
-          : "r"(stacks), "r"(fn), "r"(data)                               \
-          : "rdi", "rax", "cc", "memory")
-  INLINED_ASM(56, 64, 72, 80);
-#  elif defined(__i386__) || defined(_M_IX86)
-#    define CALLER_SAVED_REGS "eax", "ecx", "edx"
-#    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm("\n   mov     %1, %%edx"                                        \
-          "\n   mov     %%ebp, " #SUSPENDABLE_FP "(%%edx)"                \
-          "\n   mov     %%esp, " #SUSPENDABLE_SP "(%%edx)"                \
-                                                                          \
-          "\n   mov     " #MAIN_FP "(%%edx), %%ebp"                       \
-          "\n   mov     " #MAIN_SP "(%%edx), %%esp"                       \
-                                                                          \
-          "\n   push    %%edx"                                            \
-          "\n   sub     $8, %%esp"                                        \
-          "\n   push    %3"                                               \
-          "\n   call    *%2"                                              \
-          "\n   add     $12, %%esp"                                       \
-          "\n   pop     %%edx"                                            \
-                                                                          \
-          "\n   mov     %%ebp, " #MAIN_FP "(%%edx)"                       \
-          "\n   mov     %%esp, " #MAIN_SP "(%%edx)"                       \
-                                                                          \
-          "\n   mov     " #SUSPENDABLE_FP "(%%edx), %%ebp"                \
-          "\n   mov     " #SUSPENDABLE_SP "(%%edx), %%esp"                \
-                                                                          \
-          "\n   mov     %%eax, %0"                                        \
-          : "=r"(res)                                                     \
-          : "r"(stacks), "r"(fn), "r"(data)                               \
-          : CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(48, 56, 64, 72);
-
-#  elif defined(__arm__)
-#    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm("\n   mov     r0, %1"                                           \
-          "\n   mov     r1, sp"                                           \
-          "\n   str     r11, [r0, #" #SUSPENDABLE_FP "]"                  \
-          "\n   str     r1, [r0, #" #SUSPENDABLE_SP "]"                   \
-                                                                          \
-          "\n   ldr     r11, [r0, #" #MAIN_FP "]"                         \
-          "\n   ldr     r1, [r0, #" #MAIN_SP "]"                          \
-          "\n   mov     sp, r1"                                           \
-                                                                          \
-          "\n   str     r0, [sp, #-8]! "                                  \
-                                                                          \
-          "\n   mov     r0, %3"                                           \
-          "\n   blx     %2"                                               \
-                                                                          \
-          "\n   ldr     r2, [sp], #8 "                                    \
-                                                                          \
-          "\n   mov     r1, sp"                                           \
-          "\n   str     r11, [r2, #" #MAIN_FP "]"                         \
-          "\n   str     r1, [r2, #" #MAIN_SP "]"                          \
-                                                                          \
-          "\n   ldr     r11, [r2, #" #SUSPENDABLE_FP "]"                  \
-          "\n   ldr     r1, [r2, #" #SUSPENDABLE_SP "]"                   \
-          "\n   mov     sp, r1"                                           \
-          "\n   mov     %0, r0"                                           \
-          : "=r"(res)                                                     \
-          : "r"(stacks), "r"(fn), "r"(data)                               \
-          : "r0", "r1", "r2", "r3", "cc", "memory")
-  INLINED_ASM(48, 56, 64, 72);
-
-#elif defined(__loongarch_lp64)
-#    define CALLER_SAVED_REGS \
-      "$ra", "$a0", "$a1", "$a2", "$a3", "$a4", "$a5", "$a6", "$a7",      \
-      "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7", "$t8",      \
-      "$f0", "$f1", "$f2", "$f3", "$f4", "$f5", "$f6", "$f7", "$f8",      \
-      "$f9", "$f10", "$f11", "$f12", "$f13", "$f14", "$f15", "$f16",      \
-      "$f17", "$f18", "$f19", "$f20", "$f21", "$f22", "$f23"
-#    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm volatile(                                                       \
-          "\n   move    $a0, %1"                                          \
-          "\n   st.d    $fp, $a0, " #SUSPENDABLE_FP                       \
-          "\n   st.d    $sp, $a0, " #SUSPENDABLE_SP                       \
-                                                                          \
-          "\n   ld.d    $fp, $a0, " #MAIN_FP                              \
-          "\n   ld.d    $sp, $a0, " #MAIN_SP                              \
-                                                                          \
-          "\n   addi.d  $sp, $sp, -16"                                    \
-          "\n   st.d    $a0, $sp, 8"                                      \
-                                                                          \
-          "\n   move    $a0, %3"                                          \
-          "\n   jirl    $ra, %2, 0"                                       \
-                                                                          \
-          "\n   ld.d    $a3, $sp, 8"                                      \
-          "\n   addi.d  $sp, $sp, 16"                                     \
-                                                                          \
-          "\n   st.d    $fp, $a3, " #MAIN_FP                              \
-          "\n   st.d    $sp, $a3, " #MAIN_SP                              \
-                                                                          \
-          "\n   ld.d    $fp, $a3, " #SUSPENDABLE_FP                       \
-          "\n   ld.d    $sp, $a3, " #SUSPENDABLE_SP                       \
-          "\n   move    %0, $a0"                                          \
-          : "=r"(res)                                                     \
-          : "r"(stacks), "r"(fn), "r"(data)                               \
-          : "$a0", "$a3", CALLER_SAVED_REGS, "cc", "memory")
-INLINED_ASM(56, 64, 72, 80);
-
-#  elif defined(__riscv) && defined(__riscv_xlen) && (__riscv_xlen == 64)
-#    define CALLER_SAVED_REGS                                             \
-        "ra",                                                             \
-        "t0", "t1", "t2", "t3", "t4", "t5", "t6",                         \
-        "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",                   \
-        "ft0", "ft1", "ft2", "ft3", "ft4", "ft5", "ft6", "ft7",           \
-        "ft8", "ft9", "ft10", "ft11",                                     \
-        "fa0", "fa1", "fa2", "fa3", "fa4", "fa5", "fa6", "fa7",           \
-        "fs0", "fs1", "fs2", "fs3", "fs4", "fs5", "fs6", "fs7",           \
-        "fs8", "fs9", "fs10", "fs11"
-#    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm volatile(                                                       \
-          "\n   mv      a0, %1"                                           \
-          "\n   sd      fp, " #SUSPENDABLE_FP "(a0)"                      \
-          "\n   sd      sp, " #SUSPENDABLE_SP "(a0)"                      \
-                                                                          \
-          "\n   ld      fp, " #MAIN_FP "(a0)"                             \
-          "\n   ld      sp, " #MAIN_SP "(a0)"                             \
-                                                                          \
-          "\n   addi    sp, sp, -16"                                      \
-          "\n   sd      a0, 8(sp)"                                        \
-                                                                          \
-          "\n   mv      a0, %3"                                           \
-          "\n   jalr    ra, 0(%2)"                                        \
-                                                                          \
-          "\n   ld      a3, 8(sp)"                                        \
-          "\n   addi    sp, sp, 16"                                       \
-                                                                          \
-          "\n   sd      fp, " #MAIN_FP "(a3)"                             \
-          "\n   sd      sp, " #MAIN_SP "(a3)"                             \
-                                                                          \
-          "\n   ld      fp, " #SUSPENDABLE_FP "(a3)"                      \
-          "\n   ld      sp, " #SUSPENDABLE_SP "(a3)"                      \
-          "\n   mv      %0, a0"                                           \
-          : "=r"(res)                                                     \
-          : "r"(stacks), "r"(fn), "r"(data)                               \
-          : "ra", "a0", "a3", CALLER_SAVED_REGS, "cc", "memory")
-INLINED_ASM(56, 64, 72, 80);
-
-#  elif defined(__mips64)
-#    define CALLER_SAVED_REGS                                             \
-        "at", "v0", "v1",                                                 \
-        "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7",                   \
-        "t0", "t1", "t2", "t3", /* Assemblers don't recognize t4-t7 */    \
-        "t8", "t9", "ra", "$f0", "$f1", "$f2", "$f3", "$f4", "$f5",       \
-        "$f6", "$f7", "$f8", "$f9", "$f10", "$f11", "$f12", "$f13",       \
-        "$f14", "$f15", "$f16", "$f17", "$f18", "$f19", "$f20", "$f21",   \
-        "$f22", "$f23"
-#    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
-      CHECK_OFFSETS(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP);    \
-      asm volatile(                                                       \
-          "\n   move    $a0, %1"                                          \
-          "\n   move    $t9, %2" /* PIC function entry */                 \
-          "\n   sd      $fp, " #SUSPENDABLE_FP "($a0)"                    \
-          "\n   sd      $sp, " #SUSPENDABLE_SP "($a0)"                    \
-                                                                          \
-          "\n   ld      $fp, " #MAIN_FP "($a0)"                           \
-          "\n   ld      $sp, " #MAIN_SP "($a0)"                           \
-                                                                          \
-          "\n   daddiu  $sp, $sp, -16"                                    \
-          "\n   sd      $a0, 8($sp)"                                      \
-                                                                          \
-          "\n   move    $a0, %3"                                          \
-          "\n   jalr    $t9"                                              \
-                                                                          \
-          "\n   ld      $a3, 8($sp)"                                      \
-          "\n   daddiu  $sp, $sp, 16"                                     \
-                                                                          \
-          "\n   sd      $fp, " #MAIN_FP "($a3)"                           \
-          "\n   sd      $sp, " #MAIN_SP "($a3)"                           \
-                                                                          \
-          "\n   ld      $fp, " #SUSPENDABLE_FP "($a3)"                    \
-          "\n   ld      $sp, " #SUSPENDABLE_SP "($a3)"                    \
-          "\n   move    %0, $v0"                                          \
-          : "=r"(res)                                                     \
-          : "r"(stacks), "r"(fn), "r"(data)                               \
-          : CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(24, 32, 40, 48);
-
-#  else
-  MOZ_CRASH("Not supported for this platform");
-#  endif
-  // clang-format on
-#  endif  // JS_SIMULATOR
-
-  bool ok = (res & 255) != 0;  // need only low byte
-  suspender->setActive(cx);
-
-#  undef INLINED_ASM
-#  undef CHECK_OFFSETS
-#  undef CALLER_SAVED_REGS
-
-  return ok;
-}
-
-static void CleanupActiveSuspender(JSContext* cx) {
-  SuspenderObject* suspender = cx->wasm().activeSuspender();
-  MOZ_ASSERT(suspender);
-  suspender->setMoribund(cx);
 }
 
 // Suspending
@@ -1203,8 +796,10 @@ static bool WasmPISuspendTaskContinue(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  // The stack was unwound during exception -- time to release resources.
-  CleanupActiveSuspender(cx);
+  // The stack was unwound during exception.
+  MOZ_RELEASE_ASSERT(!cx->wasm().activeSuspender());
+  MOZ_RELEASE_ASSERT(
+      suspender.toObject().as<wasm::SuspenderObject>().isMoribund());
 
   if (cx->isThrowingOutOfMemory()) {
     return false;
@@ -1590,12 +1185,9 @@ static bool WasmPIPromisingFunction(JSContext* cx, unsigned argc, Value* vp) {
     return true;
   }
 
-  // During an exception the stack was unwound -- time to release resources.
-  // At this point, the suspender might be null, if that's the case
-  // don't try to clean up.
-  if (cx->wasm().activeSuspender() != nullptr) {
-    CleanupActiveSuspender(cx);
-  }
+  // The stack was unwound during exception. There should be no active
+  // suspender.
+  MOZ_RELEASE_ASSERT(!cx->wasm().activeSuspender());
 
   if (cx->isThrowingOutOfMemory()) {
     return false;

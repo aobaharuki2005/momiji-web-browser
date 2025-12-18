@@ -223,11 +223,12 @@ class SuspenderObject : public NativeObject {
     return stackMemoryLimitForSystem() + SuspendableRedZoneSize;
   }
 
-  bool hasFramePointer(void* fp) const {
+  bool hasStackAddress(const void* stackAddress) const {
     MOZ_ASSERT(!isMoribund());
     void* base = stackMemory();
-    return (uintptr_t)base <= (uintptr_t)fp &&
-           (uintptr_t)fp < (uintptr_t)base + SuspendableStackPlusRedZoneSize;
+    return (uintptr_t)base <= (uintptr_t)stackAddress &&
+           (uintptr_t)stackAddress <
+               (uintptr_t)base + SuspendableStackPlusRedZoneSize;
   }
 
   // Stored main stack FP register.
@@ -299,21 +300,14 @@ class SuspenderObject : public NativeObject {
   void setMoribund(JSContext* cx);
   void setActive(JSContext* cx);
   void setSuspended(JSContext* cx);
-  void setCalledOnMain(JSContext* cx);
 
   void enter(JSContext* cx);
   void suspend(JSContext* cx);
   void resume(JSContext* cx);
   void leave(JSContext* cx);
+  void unwind(JSContext* cx);
 
   void releaseStackMemory();
-
-#  if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) ||       \
-      defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
-      defined(JS_SIMULATOR_MIPS64)
-  void switchSimulatorToMain();
-  void switchSimulatorToSuspendable();
-#  endif
 
   // Modifies frames to inject the suspendable stack back into the main one.
   void forwardToSuspendable();
@@ -326,9 +320,6 @@ class SuspenderObject : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
   static size_t moved(JSObject* obj, JSObject* old);
 };
-
-using CallOnMainStackFn = bool (*)(void* data);
-bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data);
 
 JSFunction* WasmSuspendingFunctionCreate(JSContext* cx, HandleObject func,
                                          wasm::ValTypeVector&& params,
@@ -365,6 +356,12 @@ void UpdateSuspenderState(Instance* instance, SuspenderObject* suspender,
                           UpdateSuspenderStateAction action);
 
 void TraceSuspendableStack(JSTracer* trc, SuspenderObject* suspender);
+
+#else
+
+// Provide an empty forward declaration to simplify some conditional
+// compilation code.
+class SuspenderObject;
 
 #endif  // ENABLE_WASM_JSPI
 

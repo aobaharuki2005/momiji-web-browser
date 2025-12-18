@@ -2717,26 +2717,72 @@ static bool GenerateTrapExit(MacroAssembler& masm, Label* throwLabel,
   masm.PushRegsInMask(RegsToPreserve);
   unsigned offsetOfReturnWord = masm.framePushed() - framePushedBeforePreserve;
 
+  // Load the instance register from the wasm::FrameWithInstances. Normally we
+  // are only guaranteed to have a valid instance there if the frame was a
+  // cross-instance call, however wasm::HandleTrap in the signal handler is
+  // kind enough to store the active instance into that slot for us.
+  masm.loadPtr(
+      Address(FramePointer, wasm::FrameWithInstances::calleeInstanceOffset()),
+      InstanceReg);
+
+  // Grab the stack pointer before we do any stack switches or dynamic
+  // alignment. Store it in a register that won't be used in the stack switch
+  // operation.
+  Register originalStackPointer = ABINonArgReg3;
+  masm.moveStackPtrTo(originalStackPointer);
+
+#ifdef ENABLE_WASM_JSPI
+  GenerateExitPrologueMainStackSwitch(masm, InstanceReg, ABINonArgReg0,
+                                      ABINonArgReg1, ABINonArgReg2);
+#endif
+
   // We know that StackPointer is word-aligned, but not necessarily
-  // stack-aligned, so we need to align it dynamically.
-  Register preAlignStackPointer = ABINonVolatileReg;
-  masm.moveStackPtrTo(preAlignStackPointer);
+  // stack-aligned, so we need to align it dynamically. After we've aligned the
+  // stack, we store the original stack pointer in a slot on the stack.
+  // We're careful to not break stack alignment with that slot.
   masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
+  masm.reserveStack(ABIStackAlignment);
+  masm.storePtr(originalStackPointer, Address(masm.getStackPointer(), 0));
+
+  // Push the shadow stack space for the call if we need to. This won't break
+  // stack alignment.
   if (ShadowStackSpace) {
     masm.subFromStackPtr(Imm32(ShadowStackSpace));
   }
 
+  // Call the WasmHandleTrap function.
   masm.assertStackAlignment(ABIStackAlignment);
   masm.call(SymbolicAddress::HandleTrap);
 
   // WasmHandleTrap returns null if control should transfer to the throw stub.
+  // That will unwind the stack, and so we don't need to pop anything from the
+  // stack ourselves.
   masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
+
+  // Remove the shadow stack space that we added.
+  if (ShadowStackSpace) {
+    masm.addToStackPtr(Imm32(ShadowStackSpace));
+  }
+
+#ifdef ENABLE_WASM_JSPI
+  // We don't need to reload the InstanceReg because it is non-volatile in the
+  // system ABI.
+  MOZ_ASSERT(NonVolatileRegs.has(InstanceReg));
+  LoadActivation(masm, InstanceReg, ABINonArgReturnReg0);
+  GenerateExitEpilogueMainStackReturn(masm, InstanceReg, ABINonArgReturnReg0,
+                                      ABINonArgReturnReg1);
+#endif
+
+  // Get the original stack pointer back for before we dynamically aligned it.
+  // This will switch the SP back to the original stack we were on. Be careful
+  // not to use the return register for this, which is live.
+  masm.loadPtr(Address(masm.getStackPointer(), 0), ABINonArgReturnReg0);
+  masm.moveToStackPtr(ABINonArgReturnReg0);
 
   // Otherwise, the return value is the TrapData::resumePC we must jump to.
   // We must restore register state before jumping, which will clobber
   // ReturnReg, so store ReturnReg in the above-reserved stack slot which we
   // use to jump to via ret.
-  masm.moveToStackPtr(preAlignStackPointer);
   masm.storePtr(ReturnReg, Address(masm.getStackPointer(), offsetOfReturnWord));
   masm.PopRegsInMask(RegsToPreserve);
 #ifdef JS_CODEGEN_ARM64

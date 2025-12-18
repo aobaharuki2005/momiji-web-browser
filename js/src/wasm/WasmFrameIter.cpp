@@ -132,7 +132,7 @@ WasmFrameIter::WasmFrameIter(JitActivation* activation, wasm::Frame* fp)
   // indicated by the returnAddress of the exit stub's frame. If the caller
   // was Ion, we can just skip the wasm frames.
 
-  popFrame();
+  popFrame(/*isLeavingFrame=*/false);
   MOZ_ASSERT(!done() || unwoundCallerFP_);
 }
 
@@ -172,25 +172,7 @@ bool WasmFrameIter::done() const {
 
 void WasmFrameIter::operator++() {
   MOZ_ASSERT(!done());
-
-  // When the iterator is set to unwind, each time the iterator pops a frame,
-  // the JitActivation is updated so that the just-popped frame is no longer
-  // visible. This is necessary since Debugger::onLeaveFrame is called before
-  // popping each frame and, once onLeaveFrame is called for a given frame,
-  // that frame must not be visible to subsequent stack iteration (or it
-  // could be added as a "new" frame just as it becomes garbage).  When the
-  // frame is trapping, then exitFP is included in the callstack (otherwise,
-  // it is skipped, as explained above). So to unwind the innermost frame, we
-  // just clear the trapping state.
-
-  if (isLeavingFrames_) {
-    if (activation_->isWasmTrapping()) {
-      activation_->finishWasmTrap();
-    }
-    activation_->setWasmExitFP(fp_);
-  }
-
-  popFrame();
+  popFrame(/*isLeavingFrame=*/isLeavingFrames_);
 }
 
 static inline void AssertJitExitFrame(const void* fp,
@@ -208,10 +190,12 @@ static inline void AssertDirectJitCall(const void* fp) {
   AssertJitExitFrame(fp, jit::ExitFrameType::DirectWasmJitCall);
 }
 
-void WasmFrameIter::popFrame() {
+void WasmFrameIter::popFrame(bool isLeavingFrame) {
   // If we're visiting inlined frames, see if this frame was inlined.
   if (enableInlinedFrames_ && inlinedCallerOffsets_.size() > 0) {
-    // We do not support inlining and debugging
+    // We do not support inlining and debugging. If we did we'd need to support
+    // `isLeavingFrame` here somehow to remove inlined frames from the
+    // JitActivation.
     MOZ_ASSERT(!code_->debugEnabled());
 
     // The inlined callee offsets are ordered so that our immediate caller is
@@ -244,6 +228,22 @@ void WasmFrameIter::popFrame() {
   currentFrameStackSwitched_ = false;
 #endif
 
+  // Track the current suspender if we are leaving frames.
+#ifdef ENABLE_WASM_JSPI
+  wasm::SuspenderObject* currentSuspender = nullptr;
+#endif
+  if (isLeavingFrame) {
+    MOZ_ASSERT(activation_->hasWasmExitFP());
+#ifdef ENABLE_WASM_JSPI
+    currentSuspender = activation_->wasmExitSuspender();
+#endif
+
+    // If we are trapping and leaving frames, then remove the trapping state.
+    if (activation_->isWasmTrapping()) {
+      activation_->finishWasmTrap(/*isResuming=*/false);
+    }
+  }
+
   if (!code_) {
     // This is a direct call from the jit into the wasm function's body. The
     // call stack resembles this at this point:
@@ -264,7 +264,7 @@ void WasmFrameIter::popFrame() {
     unwoundCallerFPIsJSJit_ = true;
     unwoundAddressOfReturnAddress_ = fp_->addressOfReturnAddress();
 
-    if (isLeavingFrames_) {
+    if (isLeavingFrame) {
       activation_->setJSExitFP(unwoundCallerFP_);
     }
 
@@ -297,10 +297,10 @@ void WasmFrameIter::popFrame() {
     lineOrBytecode_ = UINT32_MAX;
     inlinedCallerOffsets_ = BytecodeOffsetSpan();
 
-    if (isLeavingFrames_) {
+    if (isLeavingFrame) {
       // We're exiting via the interpreter entry; we can safely reset
       // exitFP.
-      activation_->setWasmExitFP(nullptr);
+      activation_->setWasmExitFP(nullptr, nullptr);
     }
 
     MOZ_ASSERT(done());
@@ -332,7 +332,7 @@ void WasmFrameIter::popFrame() {
     lineOrBytecode_ = UINT32_MAX;
     inlinedCallerOffsets_ = BytecodeOffsetSpan();
 
-    if (isLeavingFrames_) {
+    if (isLeavingFrame) {
       activation_->setJSExitFP(unwoundCallerFP());
     }
 
@@ -360,6 +360,28 @@ void WasmFrameIter::popFrame() {
       FuncIndexForLineOrBytecode(*code_, site.lineOrBytecode(), *codeRange);
   inlinedCallerOffsets_ = site.inlinedCallerOffsetsSpan();
   failedUnwindSignatureMismatch_ = false;
+
+  if (isLeavingFrame) {
+#ifdef ENABLE_WASM_JSPI
+    wasm::SuspenderObject* newSuspender = currentSuspender;
+    // If we switched stacks, look up the new suspender using the new FP.
+    if (currentFrameStackSwitched_) {
+      newSuspender =
+          activation_->cx()->wasm().findSuspenderForStackAddress(fp_);
+    }
+
+    // If we are unwinding past a suspender, unwind it to release its
+    // resources.
+    if (newSuspender != currentSuspender) {
+      currentSuspender->unwind(activation_->cx());
+    }
+#else
+    wasm::SuspenderObject* newSuspender = nullptr;
+#endif
+    // Any future frame iteration will start by popping the exitFP, so setting
+    // it to `prevFP` ensures that frame iteration starts at our new `fp_`.
+    activation_->setWasmExitFP(prevFP, newSuspender);
+  }
 
   MOZ_ASSERT(!done());
 }

@@ -100,7 +100,11 @@ class WasmFrameIter {
   // Whether unwoundCallerFP_ is a JS JIT exit frame.
   bool unwoundCallerFPIsJSJit_ = false;
 
-  void popFrame();
+  // Pop the frame. `isLeavingFrame` indicates if we should update the
+  // JitActivation so that any other frame iteration doesn't see the frame we
+  // just popped. This is normally equal to `isLeavingFrames_`, but is
+  // different for the very first `popFrame` of a wasm exit frame.
+  void popFrame(bool isLeavingFrame);
 
  public:
   // See comment above this class definition.

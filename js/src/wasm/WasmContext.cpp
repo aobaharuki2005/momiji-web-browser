@@ -71,6 +71,19 @@ void Context::initStackLimit(JSContext* cx) {
 }
 
 #ifdef ENABLE_WASM_JSPI
+SuspenderObject* Context::findSuspenderForStackAddress(
+    const void* stackAddress) {
+  // TODO: add a fast path for the main stack that avoids linear search. We
+  // need an accurate main stack base/limit for that.
+  for (auto iter = suspenders_.iter(); !iter.done(); iter.next()) {
+    SuspenderObject* object = iter.get();
+    if (object->isActive() && object->hasStackAddress(stackAddress)) {
+      return object;
+    }
+  }
+  return nullptr;
+}
+
 void Context::trace(JSTracer* trc) {
   if (activeSuspender_) {
     TraceEdge(trc, &activeSuspender_, "suspender");
@@ -127,14 +140,5 @@ void Context::leaveSuspendableStack(JSContext* cx) {
 #  ifdef DEBUG
   cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
 #  endif
-}
-
-bool js::IsSuspendableStackActive(JSContext* cx) {
-  return cx->wasm().onSuspendableStack();
-}
-
-JS::NativeStackLimit js::GetSuspendableStackLimit(JSContext* cx) {
-  MOZ_ASSERT(IsSuspendableStackActive(cx));
-  return cx->wasm().stackLimit;
 }
 #endif

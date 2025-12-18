@@ -144,10 +144,14 @@ class JitActivation : public Activation {
     MOZ_ASSERT(hasJSExitFP());
     return packedExitFP_;
   }
-  void setJSExitFP(uint8_t* fp) { packedExitFP_ = fp; }
+  void setJSExitFP(uint8_t* fp) {
+    packedExitFP_ = fp;
+#ifdef ENABLE_WASM_JSPI
+    wasmExitSuspender_ = nullptr;
+#endif
+  }
 
   uint8_t* packedExitFP() const { return packedExitFP_; }
-  void setPackedExitFP(uint8_t* fp) { packedExitFP_ = fp; }
 
 #ifdef CHECK_OSIPOINT_REGISTERS
   void setCheckRegs(bool check) { checkRegs_ = check; }
@@ -224,13 +228,20 @@ class JitActivation : public Activation {
   wasm::Instance* wasmExitInstance() const {
     return wasm::GetNearestEffectiveInstance(wasmExitFP());
   }
-  void setWasmExitFP(const wasm::Frame* fp) {
+  void setWasmExitFP(const wasm::Frame* fp, wasm::SuspenderObject* suspender) {
     if (fp) {
       MOZ_ASSERT(!wasm::Frame::isExitFP(fp));
       packedExitFP_ = wasm::Frame::addExitFPTag(fp);
+#ifdef ENABLE_WASM_JSPI
+      wasmExitSuspender_ = suspender;
+#endif
       MOZ_ASSERT(hasWasmExitFP());
     } else {
+      MOZ_ASSERT(!suspender);
       packedExitFP_ = nullptr;
+#ifdef ENABLE_WASM_JSPI
+      wasmExitSuspender_ = nullptr;
+#endif
     }
   }
   wasm::ExitReason wasmExitReason() const {
@@ -253,7 +264,7 @@ class JitActivation : public Activation {
 
   void startWasmTrap(wasm::Trap trap, const wasm::TrapSite& trapSite,
                      const wasm::RegisterState& state);
-  void finishWasmTrap();
+  void finishWasmTrap(bool isResuming);
   bool isWasmTrapping() const { return !!wasmTrapData_; }
   const wasm::TrapData& wasmTrapData() { return *wasmTrapData_; }
 };

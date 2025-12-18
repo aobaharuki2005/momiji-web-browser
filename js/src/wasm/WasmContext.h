@@ -75,6 +75,8 @@ class Context {
   void enterSuspendableStack(JSContext* cx, SuspenderObject* suspender);
   void leaveSuspendableStack(JSContext* cx);
 
+  SuspenderObject* findSuspenderForStackAddress(const void* stackAddress);
+
   void trace(JSTracer* trc);
   void traceRoots(JSTracer* trc);
 #endif

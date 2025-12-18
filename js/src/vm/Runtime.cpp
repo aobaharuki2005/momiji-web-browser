@@ -415,19 +415,7 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
     return true;
   }
 
-  bool stop;
-#ifdef ENABLE_WASM_JSPI
-  if (IsSuspendableStackActive(cx)) {
-    stop = wasm::CallOnMainStack(
-        cx, reinterpret_cast<wasm::CallOnMainStackFn>(InvokeInterruptCallbacks),
-        (void*)cx);
-  } else
-#endif
-  {
-    stop = InvokeInterruptCallbacks(cx);
-  }
-
-  if (!stop) {
+  if (!InvokeInterruptCallbacks(cx)) {
     // Debugger treats invoking the interrupt callback as a "step", so
     // invoke the onStep handler.
     if (cx->realm()->isDebuggee()) {
