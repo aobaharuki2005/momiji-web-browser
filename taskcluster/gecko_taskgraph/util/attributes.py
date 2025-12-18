@@ -66,7 +66,9 @@ RUN_ON_PROJECT_ALIASES = {
     "integration": lambda project: (
         project in INTEGRATION_PROJECTS or project == "toolchains"
     ),
-    "release": lambda project: (project in RELEASE_PROJECTS or project == "toolchains"),
+    "release": lambda project: (
+        release_level(project) == "production" or project == "toolchains"
+    ),
     "trunk": lambda project: (project in TRUNK_PROJECTS or project == "toolchains"),
     "trunk-only": lambda project: project in TRUNK_PROJECTS,
     "autoland": lambda project: project in ("autoland", "toolchains"),
