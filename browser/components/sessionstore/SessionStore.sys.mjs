@@ -173,6 +173,8 @@ XPCOMUtils.defineLazyServiceGetters(lazy, {
 });
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AIWindow:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
   AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   DevToolsShim: "chrome://devtools-startup/content/DevToolsShim.sys.mjs",
@@ -2042,6 +2044,10 @@ var SessionStoreInternal = {
 
     if (aWindow.document.documentElement.hasAttribute("taskbartab")) {
       this._windows[aWindow.__SSi].isTaskbarTab = true;
+    }
+
+    if (lazy.AIWindow.isAIWindowActiveAndEnabled(aWindow)) {
+      this._windows[aWindow.__SSi].isAIWindow = true;
     }
 
     let tabbrowser = aWindow.gBrowser;
@@ -6977,11 +6983,8 @@ var SessionStoreInternal = {
    *        Object containing session data
    */
   _openWindowWithState: function ssi_openWindowWithState(aState) {
-    var argString = Cc["@mozilla.org/supports-string;1"].createInstance(
-      Ci.nsISupportsString
-    );
-    argString.data = "";
-
+    // Build arguments string
+    let argString;
     // Build feature string
     let features;
     let winState = aState.windows[0];
@@ -7024,8 +7027,23 @@ var SessionStoreInternal = {
       }
     });
 
+    // A window CANNOT be both a Private Window and an AI Window
     if (winState.isPrivate) {
       features.push("private");
+    } else if (winState.isAIWindow) {
+      argString = lazy.AIWindow.handleAIWindowOptions({
+        openerWindow: null,
+        args: argString,
+        aiWindow: winState.isAIWindow,
+        restoreSession: true,
+      });
+    }
+
+    if (!argString) {
+      argString = Cc["@mozilla.org/supports-string;1"].createInstance(
+        Ci.nsISupportsString
+      );
+      argString.data = "";
     }
 
     this._log.debug(
