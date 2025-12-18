@@ -31,13 +31,13 @@ def make_task_worker(config, jobs):
             job,
             "worker-type",
             item_name=job["name"],
-            **{"release-level": release_level(config.params)},
+            **{"release-level": release_level(config.params["project"])},
         )
         resolve_keyed_by(
             job,
             "scopes",
             item_name=job["name"],
-            **{"release-level": release_level(config.params)},
+            **{"release-level": release_level(config.params["project"])},
         )
         resolve_keyed_by(
             job,

@@ -115,7 +115,7 @@ def filter_for_repo_type(task, parameters):
 def filter_for_project(task, parameters):
     """Filter tasks by project.  Optionally enable nightlies."""
     run_on_projects = set(task.attributes.get("run_on_projects", []))
-    return match_run_on_projects(parameters, run_on_projects)
+    return match_run_on_projects(parameters["project"], run_on_projects)
 
 
 def filter_for_hg_branch(task, parameters):

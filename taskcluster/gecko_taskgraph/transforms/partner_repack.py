@@ -72,7 +72,7 @@ def populate_repack_manifests_url(config, tasks):
                 task,
                 property,
                 property,
-                **{"release-level": release_level(config.params)},
+                **{"release-level": release_level(config.params["project"])},
             )
 
         if task["worker"]["env"]["REPACK_MANIFESTS_URL"].startswith("git@"):
