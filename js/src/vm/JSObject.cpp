@@ -2229,6 +2229,11 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
         (id == NameToId(cx->names().range))) {
       return true;
     }
+    if (!JS::Prefs::experimental_promise_allkeyed() &&
+        (id == NameToId(cx->names().allKeyed) ||
+         id == NameToId(cx->names().allSettledKeyed))) {
+      return true;
+    }
   }
   if (key == JSProto_Map || key == JSProto_WeakMap) {
     if (!JS::Prefs::experimental_upsert() &&
@@ -2253,12 +2258,6 @@ JS_PUBLIC_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
   }
   if (key == JSProto_Iterator && !JS::Prefs::experimental_iterator_join()) {
     if (id == NameToId(cx->names().join)) {
-      return true;
-    }
-  }
-  if (key == JSProto_Promise && !JS::Prefs::experimental_promise_allkeyed()) {
-    if (id == NameToId(cx->names().allKeyed) ||
-        id == NameToId(cx->names().allSettledKeyed)) {
       return true;
     }
   }
