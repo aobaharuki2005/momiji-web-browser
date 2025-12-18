@@ -749,6 +749,10 @@ Preferences.addSetting({
 });
 
 Preferences.addSetting({
+  id: "translationsAlwaysTranslateLanguagesButton",
+});
+
+Preferences.addSetting({
   id: "translationsNeverTranslateLanguagesNoneRow",
 });
 
@@ -3876,6 +3880,16 @@ SettingGroupManager.registerGroups({
                           "settings-translations-subpage-language-select-option",
                       },
                     ],
+                  },
+                  {
+                    id: "translationsAlwaysTranslateLanguagesButton",
+                    l10nId: "settings-translations-subpage-language-add-button",
+                    control: "moz-button",
+                    controlAttrs: {
+                      slot: "actions",
+                      type: "icon",
+                      iconsrc: "chrome://global/skin/icons/plus.svg",
+                    },
                   },
                 ],
               },

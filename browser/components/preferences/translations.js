@@ -28,9 +28,11 @@ const TOPIC_TRANSLATIONS_PREF_CHANGED = "translations:pref-changed";
 const TRANSLATIONS_PERMISSION = "translations";
 
 /** @type {string} */
-const ALWAYS_LANGUAGE_ITEM_CLASS = "translations-always-language-item";
+const ALWAYS_TRANSLATE_LANGUAGE_ITEM_CLASS =
+  "translations-always-translate-language-item";
 /** @type {string} */
-const ALWAYS_LANGUAGE_REMOVE_BUTTON_CLASS = "translations-always-remove-button";
+const ALWAYS_TRANSLATE_LANGUAGE_REMOVE_BUTTON_CLASS =
+  "translations-always-translate-remove-button";
 
 /** @type {string} */
 const NEVER_LANGUAGE_ITEM_CLASS = "translations-never-language-item";
@@ -142,7 +144,7 @@ const TranslationsSettings = {
    *
    * @type {Set<string>}
    */
-  alwaysLanguageTags: new Set(),
+  alwaysTranslateLanguageTags: new Set(),
 
   /**
    * Current never-translate language tags.
@@ -214,9 +216,7 @@ const TranslationsSettings = {
         break;
       case "change":
         if (event.target === this.elements?.alwaysTranslateLanguagesSelect) {
-          await this.onAlwaysLanguageChosen(
-            /** @type {HTMLSelectElement} */ (event.target).value
-          );
+          this.onAlwaysTranslateLanguageSelectionChanged();
         } else if (
           event.target === this.elements?.neverTranslateLanguagesSelect
         ) {
@@ -229,6 +229,16 @@ const TranslationsSettings = {
         break;
       case "click": {
         const target = /** @type {HTMLElement} */ (event.target);
+        if (
+          target === this.elements?.alwaysTranslateLanguagesButton ||
+          target.closest?.("#translationsAlwaysTranslateLanguagesButton")
+        ) {
+          await this.onAlwaysTranslateLanguageChosen(
+            this.elements?.alwaysTranslateLanguagesSelect?.value ?? ""
+          );
+          break;
+        }
+
         if (
           target === this.elements?.downloadLanguagesButton ||
           target.closest?.("#translationsDownloadLanguagesButton")
@@ -272,10 +282,12 @@ const TranslationsSettings = {
         }
 
         const alwaysRemoveButton = /** @type {HTMLElement|null} */ (
-          target.closest?.(`.${ALWAYS_LANGUAGE_REMOVE_BUTTON_CLASS}`)
+          target.closest?.(`.${ALWAYS_TRANSLATE_LANGUAGE_REMOVE_BUTTON_CLASS}`)
         );
         if (alwaysRemoveButton?.dataset.langTag) {
-          this.removeAlwaysLanguage(alwaysRemoveButton.dataset.langTag);
+          this.removeAlwaysTranslateLanguage(
+            alwaysRemoveButton.dataset.langTag
+          );
           break;
         }
 
@@ -311,7 +323,7 @@ const TranslationsSettings = {
   observe(subject, topic, data) {
     if (topic === TOPIC_TRANSLATIONS_PREF_CHANGED) {
       if (data === ALWAYS_TRANSLATE_LANGS_PREF) {
-        this.refreshAlwaysLanguages().catch(console.error);
+        this.refreshAlwaysTranslateLanguages().catch(console.error);
       } else if (data === NEVER_TRANSLATE_LANGS_PREF) {
         this.refreshNeverLanguages().catch(console.error);
       }
@@ -333,7 +345,7 @@ const TranslationsSettings = {
 
     if (this.initPromise) {
       await this.initPromise;
-      await this.refreshAlwaysLanguages();
+      await this.refreshAlwaysTranslateLanguages();
       await this.refreshNeverLanguages();
       this.refreshNeverSites();
       await this.refreshDownloadedLanguages();
@@ -342,7 +354,7 @@ const TranslationsSettings = {
     }
 
     if (this.initialized) {
-      await this.refreshAlwaysLanguages();
+      await this.refreshAlwaysTranslateLanguages();
       await this.refreshNeverLanguages();
       this.refreshNeverSites();
       await this.refreshDownloadedLanguages();
@@ -407,6 +419,7 @@ const TranslationsSettings = {
     if (
       !this.elements?.alwaysTranslateLanguagesGroup ||
       !this.elements?.alwaysTranslateLanguagesSelect ||
+      !this.elements?.alwaysTranslateLanguagesButton ||
       !this.elements?.alwaysTranslateLanguagesNoneRow ||
       !this.elements?.neverTranslateLanguagesGroup ||
       !this.elements?.neverTranslateLanguagesSelect ||
@@ -435,6 +448,7 @@ const TranslationsSettings = {
     } catch (error) {
       console.error("Failed to initialize translations settings UI", error);
       this.elements.alwaysTranslateLanguagesSelect.disabled = true;
+      this.elements.alwaysTranslateLanguagesButton.disabled = true;
       this.elements.neverTranslateLanguagesSelect.disabled = true;
       this.elements.downloadLanguagesSelect.disabled = true;
       this.setDownloadButtonDisabledState(true);
@@ -443,17 +457,22 @@ const TranslationsSettings = {
     }
 
     this.elements.alwaysTranslateLanguagesSelect.disabled = false;
+    this.elements.alwaysTranslateLanguagesButton.disabled = true;
     this.elements.neverTranslateLanguagesSelect.disabled = false;
     this.elements.downloadLanguagesSelect.disabled = false;
     this.resetDownloadSelect();
     this.setDownloadButtonDisabledState(true);
-    await this.buildAlwaysSelectOptions();
+    await this.buildAlwaysTranslateSelectOptions();
     await this.buildNeverSelectOptions();
     await this.buildDownloadSelectOptions();
     await this.renderDownloadLanguages();
 
     this.elements.alwaysTranslateLanguagesSelect.addEventListener(
       "change",
+      this
+    );
+    this.elements.alwaysTranslateLanguagesButton.addEventListener(
+      "click",
       this
     );
     this.elements.alwaysTranslateLanguagesGroup.addEventListener("click", this);
@@ -470,7 +489,7 @@ const TranslationsSettings = {
     Services.obs.addObserver(this, "perm-changed");
     window.addEventListener("unload", this);
 
-    await this.refreshAlwaysLanguages();
+    await this.refreshAlwaysTranslateLanguages();
     await this.refreshNeverLanguages();
     this.refreshNeverSites();
     this.initialized = true;
@@ -499,6 +518,9 @@ const TranslationsSettings = {
       ),
       alwaysTranslateLanguagesSelect: /** @type {HTMLSelectElement} */ (
         document.getElementById("translationsAlwaysTranslateLanguagesSelect")
+      ),
+      alwaysTranslateLanguagesButton: /** @type {HTMLButtonElement} */ (
+        document.getElementById("translationsAlwaysTranslateLanguagesButton")
       ),
       alwaysTranslateLanguagesNoneRow: /** @type {HTMLElement} */ (
         document.getElementById("translationsAlwaysTranslateLanguagesNoneRow")
@@ -725,8 +747,14 @@ const TranslationsSettings = {
    *
    * @param {string} langTag
    */
-  async onAlwaysLanguageChosen(langTag) {
+  async onAlwaysTranslateLanguageChosen(langTag) {
     if (!langTag) {
+      this.updateAlwaysTranslateAddButtonDisabledState();
+      return;
+    }
+
+    if (this.shouldDisableAlwaysTranslateAddButton()) {
+      this.updateAlwaysTranslateAddButtonDisabledState();
       return;
     }
 
@@ -735,7 +763,66 @@ const TranslationsSettings = {
       langTag,
       NEVER_TRANSLATE_LANGS_PREF
     );
-    await this.resetAlwaysSelect();
+    await this.resetAlwaysTranslateSelect();
+  },
+
+  /**
+   * Handle a selection change in the always-translate dropdown.
+   */
+  onAlwaysTranslateLanguageSelectionChanged() {
+    this.updateAlwaysTranslateAddButtonDisabledState();
+  },
+
+  /**
+   * Whether the add button for always-translate languages should be disabled.
+   *
+   * @returns {boolean}
+   */
+  shouldDisableAlwaysTranslateAddButton() {
+    const select = this.elements?.alwaysTranslateLanguagesSelect;
+    if (!select || select.disabled) {
+      return true;
+    }
+
+    const langTag = select.value;
+    if (!langTag) {
+      return true;
+    }
+
+    const option = /** @type {HTMLElement|null} */ (
+      select.querySelector(`moz-option[value="${langTag}"]`)
+    );
+    return option?.hasAttribute("disabled") ?? false;
+  },
+
+  /**
+   * Set the add button enabled state for always-translate languages.
+   *
+   * @param {boolean} isDisabled
+   */
+  setAlwaysTranslateAddButtonDisabledState(isDisabled) {
+    if (!this.elements?.alwaysTranslateLanguagesButton) {
+      return;
+    }
+
+    const wasDisabled = this.elements.alwaysTranslateLanguagesButton.disabled;
+    this.elements.alwaysTranslateLanguagesButton.disabled = isDisabled;
+    if (wasDisabled !== isDisabled) {
+      dispatchTestEvent(
+        isDisabled
+          ? "AlwaysTranslateLanguagesAddButtonDisabled"
+          : "AlwaysTranslateLanguagesAddButtonEnabled"
+      );
+    }
+  },
+
+  /**
+   * Update the add button enabled state for always-translate languages.
+   */
+  updateAlwaysTranslateAddButtonDisabledState() {
+    this.setAlwaysTranslateAddButtonDisabledState(
+      this.shouldDisableAlwaysTranslateAddButton()
+    );
   },
 
   /**
@@ -743,7 +830,7 @@ const TranslationsSettings = {
    *
    * @param {string} langTag
    */
-  removeAlwaysLanguage(langTag) {
+  removeAlwaysTranslateLanguage(langTag) {
     TranslationsParent.removeLangTagFromPref(
       langTag,
       ALWAYS_TRANSLATE_LANGS_PREF
@@ -777,17 +864,18 @@ const TranslationsSettings = {
   /**
    * Reset the dropdown back to the placeholder value and underlying setting state.
    */
-  async resetAlwaysSelect() {
+  async resetAlwaysTranslateSelect() {
     await this.resetSelect(
       this.elements?.alwaysTranslateLanguagesSelect,
       "translationsAlwaysTranslateLanguagesSelect"
     );
+    this.updateAlwaysTranslateAddButtonDisabledState();
   },
 
   /**
    * Refresh the rendered list of always-translate languages to match prefs.
    */
-  async refreshAlwaysLanguages() {
+  async refreshAlwaysTranslateLanguages() {
     if (!this.elements?.alwaysTranslateLanguagesGroup) {
       return;
     }
@@ -796,9 +884,9 @@ const TranslationsSettings = {
       TranslationsParent.getAlwaysTranslateLanguages?.() ?? []
     );
 
-    if (this.alwaysLanguageTags) {
+    if (this.alwaysTranslateLanguageTags) {
       for (const langTag of langTags) {
-        if (this.alwaysLanguageTags.has(langTag)) {
+        if (this.alwaysTranslateLanguageTags.has(langTag)) {
           continue;
         }
         TranslationsParent.removeLangTagFromPref(
@@ -808,10 +896,10 @@ const TranslationsSettings = {
       }
     }
 
-    this.alwaysLanguageTags = new Set(langTags);
+    this.alwaysTranslateLanguageTags = new Set(langTags);
 
-    this.renderAlwaysLanguages(langTags);
-    await this.updateAlwaysSelectOptionState();
+    this.renderAlwaysTranslateLanguages(langTags);
+    await this.updateAlwaysTranslateSelectOptionState();
   },
 
   /**
@@ -819,12 +907,12 @@ const TranslationsSettings = {
    *
    * @param {string[]} langTags
    */
-  renderAlwaysLanguages(langTags) {
+  renderAlwaysTranslateLanguages(langTags) {
     const { alwaysTranslateLanguagesGroup, alwaysTranslateLanguagesNoneRow } =
       this.elements;
 
     for (const item of alwaysTranslateLanguagesGroup.querySelectorAll(
-      `.${ALWAYS_LANGUAGE_ITEM_CLASS}`
+      `.${ALWAYS_TRANSLATE_LANGUAGE_ITEM_CLASS}`
     )) {
       item.remove();
     }
@@ -868,12 +956,12 @@ const TranslationsSettings = {
         "iconsrc",
         "chrome://global/skin/icons/delete.svg"
       );
-      removeButton.classList.add(ALWAYS_LANGUAGE_REMOVE_BUTTON_CLASS);
+      removeButton.classList.add(ALWAYS_TRANSLATE_LANGUAGE_REMOVE_BUTTON_CLASS);
       removeButton.dataset.langTag = langTag;
       removeButton.setAttribute("aria-label", label);
 
       const item = document.createElement("moz-box-item");
-      item.classList.add(ALWAYS_LANGUAGE_ITEM_CLASS);
+      item.classList.add(ALWAYS_TRANSLATE_LANGUAGE_ITEM_CLASS);
       item.setAttribute("label", label);
       item.dataset.langTag = langTag;
       item.appendChild(removeButton);
@@ -891,7 +979,7 @@ const TranslationsSettings = {
       }
     }
 
-    dispatchTestEvent("AlwaysLanguagesRendered", {
+    dispatchTestEvent("AlwaysTranslateLanguagesRendered", {
       languages: langTags,
       count: langTags.length,
     });
@@ -924,7 +1012,7 @@ const TranslationsSettings = {
   /**
    * Populate the select options for the supported source languages.
    */
-  async buildAlwaysSelectOptions() {
+  async buildAlwaysTranslateSelectOptions() {
     const select = this.elements?.alwaysTranslateLanguagesSelect;
     if (!select || !this.supportedLanguages?.sourceLanguages?.length) {
       return;
@@ -955,13 +1043,13 @@ const TranslationsSettings = {
       select.appendChild(option);
     }
 
-    await this.resetAlwaysSelect();
+    await this.resetAlwaysTranslateSelect();
   },
 
   /**
    * Disable already-added languages in the select so they cannot be re-added.
    */
-  async updateAlwaysSelectOptionState() {
+  async updateAlwaysTranslateSelectOptionState() {
     const select = this.elements?.alwaysTranslateLanguagesSelect;
     if (!select) {
       return;
@@ -972,10 +1060,10 @@ const TranslationsSettings = {
       if (!value) {
         continue;
       }
-      option.disabled = this.alwaysLanguageTags.has(value);
+      option.disabled = this.alwaysTranslateLanguageTags.has(value);
     }
 
-    await this.resetAlwaysSelect();
+    await this.resetAlwaysTranslateSelect();
 
     dispatchTestEvent("AlwaysTranslateLanguagesSelectOptionsUpdated");
   },
@@ -1876,6 +1964,10 @@ const TranslationsSettings = {
       this
     );
     this.elements?.alwaysTranslateLanguagesGroup?.removeEventListener(
+      "click",
+      this
+    );
+    this.elements?.alwaysTranslateLanguagesButton?.removeEventListener(
       "click",
       this
     );

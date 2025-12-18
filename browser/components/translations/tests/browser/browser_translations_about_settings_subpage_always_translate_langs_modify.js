@@ -49,7 +49,7 @@ add_task(async function test_always_translate_languages_add_and_remove() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .AlwaysTranslateLanguagesEmptyStateHidden,
@@ -78,7 +78,7 @@ add_task(async function test_always_translate_languages_add_and_remove() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
       ],
     },
     async () => {
@@ -100,7 +100,7 @@ add_task(async function test_always_translate_languages_add_and_remove() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
       ],
     },
     async () => {
@@ -122,7 +122,7 @@ add_task(async function test_always_translate_languages_add_and_remove() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
       ],
     },
     async () => {
@@ -147,7 +147,7 @@ add_task(async function test_always_translate_languages_add_and_remove() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
       ],
     },
     async () => {
@@ -172,7 +172,7 @@ add_task(async function test_always_translate_languages_add_and_remove() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .AlwaysTranslateLanguagesEmptyStateShown,
@@ -248,7 +248,7 @@ add_task(async function test_always_translate_languages_invalid_tags() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
       ],
     },
     async () => {
@@ -333,7 +333,7 @@ add_task(async function test_always_translate_languages_stealing() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .AlwaysTranslateLanguagesEmptyStateHidden,
@@ -368,7 +368,7 @@ add_task(async function test_always_translate_languages_stealing() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
       ],
     },
     async () => {
@@ -398,7 +398,7 @@ add_task(async function test_always_translate_languages_stealing() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
       ],
     },
     async () => {

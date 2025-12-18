@@ -19,6 +19,7 @@ export interface SupportedLanguages {
 export interface TranslationsSettingsElements {
   alwaysTranslateLanguagesGroup: HTMLElement;
   alwaysTranslateLanguagesSelect: HTMLSelectElement;
+  alwaysTranslateLanguagesButton: HTMLButtonElement;
   alwaysTranslateLanguagesNoneRow: HTMLElement;
   neverTranslateLanguagesGroup: HTMLElement;
   neverTranslateLanguagesSelect: HTMLSelectElement;

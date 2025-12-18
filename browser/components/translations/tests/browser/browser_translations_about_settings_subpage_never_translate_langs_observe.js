@@ -181,7 +181,7 @@ add_task(async function test_never_translate_languages_simulated_stealing() {
           TranslationsSettingsTestUtils.Events
             .NeverTranslateLanguagesEmptyStateHidden,
         ],
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
       ],
     },
     async () => {
@@ -209,7 +209,7 @@ add_task(async function test_never_translate_languages_simulated_stealing() {
     {
       expected: [
         [TranslationsSettingsTestUtils.Events.NeverLanguagesRendered],
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .AlwaysTranslateLanguagesEmptyStateShown,
