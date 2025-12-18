@@ -10,7 +10,6 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {string} [parent] The pane that links to this one.
  * @property {string} l10nId Fluent id for the heading/description.
  * @property {string[]} groupIds What setting groups should be rendered.
- * @property {string} [iconSrc] Optional icon shown in the page header.
  */
 
 export class SettingPane extends MozLitElement {
@@ -114,7 +113,6 @@ export class SettingPane extends MozLitElement {
     return html`
       <moz-page-header
         data-l10n-id=${this.config.l10nId}
-        .iconSrc=${this.config.iconSrc}
         .backButton=${this.isSubPane}
         @navigate-back=${this.goBack}
       ></moz-page-header>

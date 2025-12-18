@@ -2375,6 +2375,9 @@ pref("browser.translation.neverForLanguages", "");
 // engine https://browser.mt/.
 pref("browser.translations.enable", true);
 
+// Enable the new Firefox Translations Settings UI Design
+pref("browser.translations.newSettingsUI.enable", false);
+
 // Enable Firefox Select translations powered by Bergamot translations
 // engine https://browser.mt/.
 pref("browser.translations.select.enable", true);

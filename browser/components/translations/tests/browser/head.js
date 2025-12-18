@@ -4205,3 +4205,68 @@ class SelectTranslationsTestUtils {
     );
   }
 }
+
+class TranslationsSettingsTestUtils {
+  /**
+   * Opens the Translation Settings page by clicking the settings button sent in the argument.
+   *
+   * @param  {HTMLElement} settingsButton
+   * @returns {Element}
+   */
+  static async openAboutPreferencesTranslationsSettingsPane(settingsButton) {
+    const document = gBrowser.selectedBrowser.contentDocument;
+
+    const translationsPane =
+      content.window.gCategoryModules.get("paneTranslations");
+    const promise = BrowserTestUtils.waitForEvent(
+      document,
+      "paneshown",
+      false,
+      event => event.detail.category === "paneTranslations"
+    );
+
+    click(settingsButton, "Click settings button");
+    await promise;
+
+    return translationsPane.elements;
+  }
+
+  /**
+   * Utility function to handle the click event for a `moz-button` element that controls
+   * the Download/Remove Language functionality.
+   *
+   * The button's icon reflects the current state of the language (downloaded, loading, or removed),
+   * which is represented by a corresponding CSS class.
+   *
+   * When this button is clicked for any language, the function waits for the button's state and icon
+   * to update. It then checks whether the button's state and icon match the expected state as defined
+   * by the test case, and logs the respective message provided by the test case.
+   *
+   * @param {Element} langButton - The `moz-button` element representing the download/remove button.
+   * @param {string} buttonIcon - The expected CSS class representing the button's state/icon (e.g., download, loading, or remove icon).
+   * @param {string} logMsg - A custom log message provided by the test case indicating the expected result.
+   */
+
+  static async downaloadButtonClick(langButton, buttonIcon, logMsg) {
+    if (
+      !langButton.parentNode
+        .querySelector("moz-button")
+        .classList.contains(buttonIcon)
+    ) {
+      await BrowserTestUtils.waitForMutationCondition(
+        langButton.parentNode.querySelector("moz-button"),
+        { attributes: true, attributeFilter: ["class"] },
+        () =>
+          langButton.parentNode
+            .querySelector("moz-button")
+            .classList.contains(buttonIcon)
+      );
+    }
+    ok(
+      langButton.parentNode
+        .querySelector("moz-button")
+        .classList.contains(buttonIcon),
+      logMsg
+    );
+  }
+}

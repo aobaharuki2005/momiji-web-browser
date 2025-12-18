@@ -168,6 +168,7 @@ module.exports = [
       "browser/themes/shared/preferences/privacy.css",
       "browser/themes/shared/preferences/search.css",
       "browser/themes/shared/preferences/siteDataSettings.css",
+      "browser/themes/shared/preferences/translations.css",
       "browser/themes/shared/privatebrowsing/aboutPrivateBrowsing.css",
       "browser/themes/shared/search/searchbar.css",
       "browser/themes/shared/sidebar.css",

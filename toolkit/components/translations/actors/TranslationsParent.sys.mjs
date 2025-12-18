@@ -2813,7 +2813,6 @@ export class TranslationsParent extends JSWindowActorParent {
       language,
       /* includePivotRecords */ true
     )) {
-      await chaosMode(1 / 6);
       const download = () => {
         lazy.console.log("Downloading record", record.name, record.id);
         return client.attachments.download(record);
@@ -4627,9 +4626,7 @@ async function downloadManager(queue) {
 
         const newRetriesLeft = retriesLeft - 1;
 
-        // Skip retries in automation to avoid slow test timeouts,
-        // especially when running in chaos mode when things take longer.
-        if (retriesLeft > 0 && !Cu.isInAutomation) {
+        if (retriesLeft > 0) {
           lazy.console.log(
             `Queueing another attempt. ${newRetriesLeft} attempts left.`
           );
@@ -4661,9 +4658,6 @@ async function downloadManager(queue) {
     }
 
     // Wait for any active downloads to complete.
-    if (!pendingDownloadAttempts.size) {
-      break;
-    }
     await Promise.race(pendingDownloadAttempts);
   }
 

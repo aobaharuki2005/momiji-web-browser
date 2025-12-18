@@ -7,6 +7,7 @@
 /* import-globals-from home.js */
 /* import-globals-from search.js */
 /* import-globals-from containers.js */
+/* import-globals-from translations.js */
 /* import-globals-from privacy.js */
 /* import-globals-from sync.js */
 /* import-globals-from experimental.js */
@@ -295,15 +296,6 @@ const CONFIG_PANES = Object.freeze({
     l10nId: "autofill-addresses-manage-addresses-title",
     groupIds: ["manageAddresses"],
   },
-  translations: {
-    parent: "general",
-    l10nId: "settings-translations-subpage-header",
-    groupIds: [
-      "translationsAutomaticTranslation",
-      "translationsDownloadLanguages",
-    ],
-    iconSrc: "chrome://browser/skin/translations.svg",
-  },
 });
 
 var gLastCategory = { category: undefined, subcategory: undefined };
@@ -362,6 +354,9 @@ function init_all() {
     SettingPaneManager.registerPane(id, config);
   }
 
+  if (Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")) {
+    register_module("paneTranslations", gTranslationsPane);
+  }
   if (ExperimentAPI.labsEnabled) {
     // Set hidden based on previous load's hidden value or if Nimbus is
     // disabled.

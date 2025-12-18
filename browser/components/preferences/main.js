@@ -204,9 +204,6 @@ Preferences.addAll([
 
   // Appearance
   { id: "layout.css.prefers-color-scheme.content-override", type: "int" },
-
-  // Translations
-  { id: "browser.translations.automaticallyPopup", type: "bool" },
 ]);
 
 if (AppConstants.HAVE_SHELL_SERVICE) {
@@ -647,116 +644,6 @@ Preferences.addSetting({
   },
 });
 Preferences.addSetting({ id: "containersPlaceholder" });
-
-Preferences.addSetting({
-  id: "offerTranslations",
-  pref: "browser.translations.automaticallyPopup",
-});
-
-function createNeverTranslateSitesDescription() {
-  const description = document.createElement("span");
-  description.dataset.l10nId =
-    "settings-translations-subpage-never-translate-sites-description";
-
-  for (const [name, src] of [
-    ["translations-icon", "chrome://browser/skin/translations.svg"],
-    ["settings-icon", "chrome://global/skin/icons/settings.svg"],
-  ]) {
-    const icon = document.createElement("img");
-    icon.src = src;
-
-    icon.dataset.l10nName = name;
-    icon.style.verticalAlign = "middle";
-
-    icon.setAttribute("role", "presentation");
-    icon.setAttribute("width", "16");
-    icon.setAttribute("height", "16");
-
-    description.appendChild(icon);
-  }
-
-  return description;
-}
-
-Preferences.addSetting({
-  id: "translationsDownloadLanguagesGroup",
-});
-
-Preferences.addSetting({
-  id: "translationsDownloadLanguagesRow",
-});
-
-Preferences.addSetting({
-  id: "translationsDownloadLanguagesSelect",
-});
-
-Preferences.addSetting({
-  id: "translationsDownloadLanguagesButton",
-});
-
-Preferences.addSetting({
-  id: "translationsDownloadLanguagesNoneRow",
-});
-
-Preferences.addSetting({
-  id: "translationsAlwaysTranslateLanguagesGroup",
-});
-
-Preferences.addSetting({
-  id: "translationsAlwaysTranslateLanguagesRow",
-});
-
-Preferences.addSetting({
-  id: "translationsAlwaysTranslateLanguagesSelect",
-});
-
-Preferences.addSetting({
-  id: "translationsAlwaysTranslateLanguagesNoneRow",
-});
-
-Preferences.addSetting({
-  id: "translationsAlwaysTranslateLanguagesButton",
-});
-
-Preferences.addSetting({
-  id: "translationsNeverTranslateLanguagesNoneRow",
-});
-
-Preferences.addSetting({
-  id: "translationsNeverTranslateLanguagesButton",
-});
-
-Preferences.addSetting({
-  id: "translationsNeverTranslateLanguagesGroup",
-});
-
-Preferences.addSetting({
-  id: "translationsNeverTranslateLanguagesRow",
-});
-
-Preferences.addSetting({
-  id: "translationsNeverTranslateLanguagesSelect",
-});
-
-Preferences.addSetting({
-  id: "translationsNeverTranslateSitesGroup",
-});
-
-Preferences.addSetting({
-  id: "translationsNeverTranslateSitesRow",
-});
-
-Preferences.addSetting({
-  id: "translationsNeverTranslateSitesNoneRow",
-});
-
-Preferences.addSetting({
-  id: "translationsManageButton",
-  onUserClick(e) {
-    e.preventDefault();
-    gotoPref("paneTranslations");
-  },
-});
 
 Preferences.addSetting({
   id: "data-migration",
@@ -2360,24 +2247,6 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
-  translations: {
-    inProgress: true,
-    l10nId: "settings-translations-header",
-    iconSrc: "chrome://browser/skin/translations.svg",
-    supportPage: "website-translation",
-    headingLevel: 2,
-    items: [
-      {
-        id: "offerTranslations",
-        l10nId: "settings-translations-offer-to-translate-label",
-      },
-      {
-        id: "translationsManageButton",
-        l10nId: "settings-translations-more-settings-button",
-        control: "moz-box-button",
-      },
-    ],
-  },
   appearance: {
     l10nId: "web-appearance-group",
     items: [
@@ -3797,198 +3666,6 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
-  translationsAutomaticTranslation: {
-    inProgress: true,
-    headingLevel: 2,
-    l10nId: "settings-translations-subpage-automatic-translation-header",
-    items: [
-      {
-        id: "translationsAlwaysTranslateLanguagesGroup",
-        control: "moz-box-group",
-        controlAttrs: {
-          type: "list",
-        },
-        items: [
-          {
-            id: "translationsAlwaysTranslateLanguagesRow",
-            l10nId: "settings-translations-subpage-always-translate-header",
-            control: "moz-box-item",
-            slot: "header",
-            controlAttrs: {
-              class: "box-header-bold",
-            },
-            items: [
-              {
-                id: "translationsAlwaysTranslateLanguagesSelect",
-                slot: "actions",
-                control: "moz-select",
-                options: [
-                  {
-                    value: "",
-                    l10nId:
-                      "settings-translations-subpage-language-select-option",
-                  },
-                ],
-              },
-              {
-                id: "translationsAlwaysTranslateLanguagesButton",
-                l10nId: "settings-translations-subpage-language-add-button",
-                control: "moz-button",
-                slot: "actions",
-                controlAttrs: {
-                  type: "icon",
-                  iconsrc: "chrome://global/skin/icons/plus.svg",
-                },
-              },
-            ],
-          },
-          {
-            id: "translationsAlwaysTranslateLanguagesNoneRow",
-            l10nId: "settings-translations-subpage-no-languages-added",
-            control: "moz-box-item",
-            controlAttrs: {
-              class: "description-deemphasized",
-            },
-          },
-        ],
-      },
-      {
-        id: "translationsNeverTranslateLanguagesGroup",
-        control: "moz-box-group",
-        controlAttrs: {
-          type: "list",
-        },
-        items: [
-          {
-            id: "translationsNeverTranslateLanguagesRow",
-            l10nId: "settings-translations-subpage-never-translate-header",
-            control: "moz-box-item",
-            slot: "header",
-            controlAttrs: {
-              class: "box-header-bold",
-            },
-            items: [
-              {
-                id: "translationsNeverTranslateLanguagesSelect",
-                slot: "actions",
-                control: "moz-select",
-                options: [
-                  {
-                    value: "",
-                    l10nId:
-                      "settings-translations-subpage-language-select-option",
-                  },
-                ],
-              },
-              {
-                id: "translationsNeverTranslateLanguagesButton",
-                l10nId: "settings-translations-subpage-language-add-button",
-                control: "moz-button",
-                slot: "actions",
-                controlAttrs: {
-                  type: "icon",
-                  iconsrc: "chrome://global/skin/icons/plus.svg",
-                },
-              },
-            ],
-          },
-          {
-            id: "translationsNeverTranslateLanguagesNoneRow",
-            l10nId: "settings-translations-subpage-no-languages-added",
-            control: "moz-box-item",
-            controlAttrs: {
-              class: "description-deemphasized",
-            },
-          },
-        ],
-      },
-      {
-        id: "translationsNeverTranslateSitesGroup",
-        control: "moz-box-group",
-        controlAttrs: {
-          type: "list",
-        },
-        items: [
-          {
-            id: "translationsNeverTranslateSitesRow",
-            l10nId:
-              "settings-translations-subpage-never-translate-sites-header",
-            control: "moz-box-item",
-            controlAttrs: {
-              class: "box-header-bold",
-              ".description": createNeverTranslateSitesDescription(),
-            },
-          },
-          {
-            id: "translationsNeverTranslateSitesNoneRow",
-            l10nId: "settings-translations-subpage-no-sites-added",
-            control: "moz-box-item",
-            controlAttrs: {
-              class: "description-deemphasized",
-            },
-          },
-        ],
-      },
-    ],
-  },
-  translationsDownloadLanguages: {
-    inProgress: true,
-    headingLevel: 2,
-    l10nId: "settings-translations-subpage-speed-up-translation-header",
-    items: [
-      {
-        id: "translationsDownloadLanguagesGroup",
-        control: "moz-box-group",
-        controlAttrs: {
-          type: "list",
-        },
-        items: [
-          {
-            id: "translationsDownloadLanguagesRow",
-            l10nId: "settings-translations-subpage-download-languages-header",
-            control: "moz-box-item",
-            slot: "header",
-            controlAttrs: {
-              class: "box-header-bold",
-            },
-            items: [
-              {
-                id: "translationsDownloadLanguagesSelect",
-                slot: "actions",
-                control: "moz-select",
-                options: [
-                  {
-                    value: "",
-                    l10nId:
-                      "settings-translations-subpage-download-languages-select-option",
-                  },
-                ],
-              },
-              {
-                id: "translationsDownloadLanguagesButton",
-                l10nId:
-                  "settings-translations-subpage-download-languages-button",
-                control: "moz-button",
-                slot: "actions",
-                controlAttrs: {
-                  type: "icon",
-                  iconsrc: "chrome://browser/skin/downloads/downloads.svg",
-                },
-              },
-            ],
-          },
-          {
-            id: "translationsDownloadLanguagesNoneRow",
-            l10nId: "settings-translations-subpage-no-languages-downloaded",
-            control: "moz-box-item",
-            controlAttrs: {
-              class: "description-deemphasized",
-            },
-          },
-        ],
-      },
-    ],
-  },
 });
 
 /**
@@ -4106,7 +3783,6 @@ var gMainPane = {
     initSettingGroup("browsing");
     initSettingGroup("zoom");
     initSettingGroup("support");
-    initSettingGroup("translations");
     initSettingGroup("performance");
     initSettingGroup("startup");
     initSettingGroup("importBrowserData");
@@ -5249,9 +4925,20 @@ var gMainPane = {
   },
 
   showTranslationsSettings() {
-    gSubDialog.open(
-      "chrome://browser/content/preferences/dialogs/translations.xhtml"
-    );
+    if (
+      Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")
+    ) {
+      const translationsSettings = document.getElementById(
+        "translations-settings-page"
+      );
+      translationsSettings.setAttribute("data-hidden-from-search", "false");
+      translationsSettings.hidden = false;
+      gotoPref("translations");
+    } else {
+      gSubDialog.open(
+        "chrome://browser/content/preferences/dialogs/translations.xhtml"
+      );
+    }
   },
 
   /**
