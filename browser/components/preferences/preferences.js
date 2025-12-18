@@ -295,6 +295,12 @@ const CONFIG_PANES = Object.freeze({
     l10nId: "autofill-addresses-manage-addresses-title",
     groupIds: ["manageAddresses"],
   },
+  translations: {
+    parent: "general",
+    l10nId: "settings-translations-subpage-header",
+    groupIds: ["moreTranslationSettings"],
+    iconSrc: "chrome://browser/skin/translations.svg",
+  },
 });
 
 var gLastCategory = { category: undefined, subcategory: undefined };

@@ -657,7 +657,7 @@ Preferences.addSetting({
   id: "translationsManageButton",
   onUserClick(e) {
     e.preventDefault();
-    gMainPane.showTranslationsSettings();
+    gotoPref("paneTranslations");
   },
 });
 
@@ -3698,6 +3698,12 @@ SettingGroupManager.registerGroups({
           },
         ],
       },
+    ],
+  },
+  moreTranslationSettings: {
+    inProgress: true,
+    items: [
+      // Will be populated in the following commits.
     ],
   },
 });
