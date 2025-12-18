@@ -89,7 +89,7 @@ async function test_formAutofillTrigger(settingsRedesignEnabled) {
             await ContentTaskUtils.waitForCondition(
               () =>
                 content.document.querySelector(
-                  "#formAutofillGroupBox setting-group[groupid=payments] #savedPaymentsButton"
+                  "setting-group[groupid=payments] #savedPaymentsButton"
                 ),
               "Waiting for credit card manager button"
             )

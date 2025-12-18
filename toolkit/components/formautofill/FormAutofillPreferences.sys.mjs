@@ -91,14 +91,6 @@ export class FormAutofillPreferences {
    */
   init(document) {
     this.createPreferenceGroup(document);
-    return this.refs.formAutofillFragment;
-  }
-
-  /**
-   * Remove event listeners and the preference group.
-   */
-  uninit() {
-    this.refs.formAutofillGroup.remove();
   }
 
   /**
@@ -108,18 +100,6 @@ export class FormAutofillPreferences {
    */
   createPreferenceGroup(document) {
     const win = document.ownerGlobal;
-    this.refs = {};
-    this.refs.formAutofillGroup = document.querySelector(
-      "#formAutofillGroupBox"
-    );
-
-    let showAddressUI = FormAutofill.isAutofillAddressesAvailable;
-    let showCreditCardUI = FormAutofill.isAutofillCreditCardsAvailable;
-
-    if (!showAddressUI && !showCreditCardUI) {
-      return;
-    }
-
     win.Preferences.addAll([
       // Credit cards and addresses
       { id: ENABLED_AUTOFILL_ADDRESSES_PREF, type: "bool" },
