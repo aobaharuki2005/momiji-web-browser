@@ -469,11 +469,38 @@ settings-translations-subpage-download-languages-button =
     .aria-label = Download language
     .title = Download language
 
+# Variables:
+#   $language (string) - Localized name of the language to download.
+#   $size (string) - Download size in megabytes, formatted for the locale.
+settings-translations-subpage-download-language-option = { $language } ({ $size }MB)
+    .label = { $language } ({ $size }MB)
+
 settings-translations-subpage-no-languages-downloaded =
     .label = No languages downloaded
 
 settings-translations-subpage-no-languages-added =
     .label = No languages added
+
+settings-translations-subpage-download-progress = Download in progress…
+
+# Variables:
+#   $language (string) - The localized display name of the language.
+#   $size (string) - The download size of the language in megabytes.
+settings-translations-subpage-download-error = Couldn’t download { $language } ({ $size }MB)
+
+settings-translations-subpage-download-retry-button =
+    .label = Try again
+
+# Variables:
+#   $language (string) - The localized display name of the language.
+#   $size (string) - The download size of the language in megabytes.
+settings-translations-subpage-download-delete-confirm = Delete { $language } ({ $size }MB)?
+
+settings-translations-subpage-download-delete-button =
+    .label = Delete
+
+settings-translations-subpage-download-cancel-button =
+    .label = Cancel
 
 settings-translations-subpage-no-sites-added =
     .label = No sites added
