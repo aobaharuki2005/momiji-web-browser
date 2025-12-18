@@ -6,6 +6,7 @@ use std::path::Path;
 
 fn main() {
     set_generated_files();
+    set_coverage_cfg();
 }
 
 /// Set the GLEAN_METRICS_FILE and CONVERSIONS_FILE environment variables to the locations of the
@@ -30,5 +31,12 @@ fn set_generated_files() {
         // will inevitably mean the entire crate has moved or the srcdir has moved, which would result
         // in a rebuild anyway.
         println!("cargo:rustc-env={env}={}", objpath.display());
+    }
+}
+
+fn set_coverage_cfg() {
+    println!("cargo:rustc-check-cfg=cfg(ccov)");
+    if mozbuild::config::MOZ_CODE_COVERAGE {
+        println!("cargo:rustc-cfg=ccov");
     }
 }

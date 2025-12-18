@@ -108,6 +108,7 @@ impl Drop for GleanInitChild {
 }
 
 #[test]
+#[cfg_attr(ccov, ignore)]
 fn exclusive_access() {
     let has_handle_changed = Arc::new(Signal::default());
 
