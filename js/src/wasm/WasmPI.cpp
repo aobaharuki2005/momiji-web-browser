@@ -63,12 +63,15 @@ SuspenderObjectData::SuspenderObjectData(void* stackMemory)
       suspendableFP_(nullptr),
       suspendableSP_(static_cast<uint8_t*>(stackMemory) +
                      SuspendableStackPlusRedZoneSize),
-      state_(SuspenderState::Initial),
-      suspendedBy_(nullptr) {}
+      state_(SuspenderState::Initial) {}
 
 void SuspenderObjectData::releaseStackMemory() {
-  js_free(stackMemory_);
-  stackMemory_ = nullptr;
+  MOZ_ASSERT(isMoribund() == !stackMemory_);
+  if (stackMemory_) {
+    js_free(stackMemory_);
+    stackMemory_ = nullptr;
+    setState(SuspenderState::Moribund);
+  }
 }
 
 #  if defined(JS_SIMULATOR_ARM64)
@@ -159,8 +162,8 @@ static JitActivation* FindSuspendableStackActivation(
 }
 
 void TraceSuspendableStack(JSTracer* trc, const SuspenderObjectData& data) {
+  MOZ_ASSERT(data.isTraceable());
   void* exitFP = data.suspendableExitFP();
-  MOZ_ASSERT(data.traceable());
 
   // Create and iterator for wasm frames:
   //  - If a stack entry for suspended stack exists, the data.suspendableFP()
@@ -168,12 +171,12 @@ void TraceSuspendableStack(JSTracer* trc, const SuspenderObjectData& data) {
   //  - Otherwise, the stack is the part of the main stack, the context
   //    JitActivation frames will be used to trace.
   WasmFrameIter iter =
-      data.hasStackEntry()
+      data.isSuspended()
           ? WasmFrameIter(
                 static_cast<FrameWithInstances*>(data.suspendableFP()),
                 data.suspendedReturnAddress())
           : WasmFrameIter(FindSuspendableStackActivation(trc, data));
-  MOZ_ASSERT_IF(data.hasStackEntry(), iter.currentFrameStackSwitched());
+  MOZ_ASSERT_IF(data.isSuspended(), iter.currentFrameStackSwitched());
   uintptr_t highestByteVisitedInPrevWasmFrame = 0;
   while (true) {
     MOZ_ASSERT(!iter.done());
@@ -282,14 +285,12 @@ void SuspenderObject::finalize(JS::GCContext* gcx, JSObject* obj) {
     return;
   }
   SuspenderObjectData* data = suspender.data();
-  if (data->state() == SuspenderState::Moribund) {
-    MOZ_RELEASE_ASSERT(!data->stackMemory());
-  } else {
-    // Cleaning stack memory and removing from suspenders_.
-    data->releaseStackMemory();
+  if (!data->isMoribund()) {
     gcx->runtime()->mainContextFromOwnThread()->wasm().suspenders_.remove(
         &suspender);
   }
+  data->releaseStackMemory();
+  MOZ_ASSERT(data->isMoribund());
   js_free(data);
 }
 
@@ -303,7 +304,7 @@ void SuspenderObject::trace(JSTracer* trc, JSObject* obj) {
   // The SuspenderObjectData refers stacks frames that need to be traced
   // only during major GC to determine if SuspenderObject content is
   // reachable from JS.
-  if (!data.traceable() || trc->isTenuringTracer()) {
+  if (!data.isTraceable() || trc->isTenuringTracer()) {
     return;
   }
   TraceSuspendableStack(trc, data);
@@ -322,9 +323,11 @@ void SuspenderObject::setMoribund(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
   cx->wasm().leaveSuspendableStack(cx);
   SuspenderObjectData* data = this->data();
-  data->setState(SuspenderState::Moribund);
+  if (!data->isMoribund()) {
+    cx->wasm().suspenders_.remove(this);
+  }
   data->releaseStackMemory();
-  cx->wasm().suspenders_.remove(this);
+  MOZ_ASSERT(data->isMoribund());
 }
 
 void SuspenderObject::setActive(JSContext* cx) {
@@ -337,6 +340,11 @@ void SuspenderObject::setSuspended(JSContext* cx) {
   cx->wasm().leaveSuspendableStack(cx);
 }
 
+void SuspenderObject::setCalledOnMain(JSContext* cx) {
+  data()->setState(SuspenderState::CalledOnMain);
+  cx->wasm().leaveSuspendableStack(cx);
+}
+
 void SuspenderObject::enter(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Initial);
   setActive(cx);
@@ -345,7 +353,6 @@ void SuspenderObject::enter(JSContext* cx) {
 void SuspenderObject::suspend(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
   setSuspended(cx);
-  data()->setSuspendedBy(&cx->wasm());
 
   if (cx->realm()->isDebuggee()) {
     WasmFrameIter iter(cx->activation()->asJit());
@@ -365,7 +372,6 @@ void SuspenderObject::suspend(JSContext* cx) {
 void SuspenderObject::resume(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Suspended);
   setActive(cx);
-  data()->setSuspendedBy(nullptr);
   // Use barrier because object is being removed from the suspendable stack
   // from roots.
   gc::PreWriteBarrier(this);
@@ -387,7 +393,7 @@ void SuspenderObject::resume(JSContext* cx) {
 }
 
 void SuspenderObject::leave(JSContext* cx) {
-  // We are exiting alternative stack if state is active,
+  // We are exiting suspended stack if state is active,
   // otherwise the stack was just suspended.
   switch (state()) {
     case SuspenderState::Active: {
@@ -400,6 +406,7 @@ void SuspenderObject::leave(JSContext* cx) {
     }
     case SuspenderState::Initial:
     case SuspenderState::Moribund:
+    case SuspenderState::CalledOnMain:
       MOZ_CRASH();
   }
 }
@@ -419,10 +426,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
   SuspenderObjectData* stacks = suspender->data();
 
   MOZ_ASSERT(suspender->state() == SuspenderState::Active);
-  suspender->setSuspended(cx);
-  // Keep suspendedBy not set -- the stack has no defined entry.
-  // See TraceSuspendableStack for details.
-  MOZ_RELEASE_ASSERT(suspender->data()->suspendedBy() == nullptr);
+  suspender->setCalledOnMain(cx);
 
 #  ifdef JS_SIMULATOR
 #    if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) ||       \

@@ -115,10 +115,19 @@ class Context;
 static const uint32_t SuspenderObjectDataSlot = 0;
 
 enum SuspenderState {
+  // The suspender's stack hasn't been entered yet.
   Initial,
+  // The suspender's stack has returned from the root frame and has been
+  // destroyed.
   Moribund,
+  // The suspender's stack is active and is the currently active stack.
   Active,
+  // The suspender's stack has been suspended and is no longer the active stack
+  // and isn't linked to the active stack.
   Suspended,
+  // The suspender's stack has switched back to the main stack for a call. It
+  // is not the active call stack, but is linked to by the active stack.
+  CalledOnMain,
 };
 
 class SuspenderObjectData {
@@ -147,38 +156,64 @@ class SuspenderObjectData {
 
   SuspenderState state_;
 
-  // Identify context that is holding suspended stack, otherwise nullptr.
-  Context* suspendedBy_;
-
  public:
   explicit SuspenderObjectData(void* stackMemory);
 
   inline SuspenderState state() const { return state_; }
   void setState(SuspenderState state) { state_ = state; }
 
-  inline bool traceable() const {
+  // This suspender can be traced if it's not 'Initial' or 'Moribund'.
+  bool isTraceable() const {
     return state_ == SuspenderState::Active ||
-           state_ == SuspenderState::Suspended;
+           state_ == SuspenderState::Suspended ||
+           state_ == SuspenderState::CalledOnMain;
   }
-  inline bool hasStackEntry() const { return suspendedBy_ != nullptr; }
-  inline Context* suspendedBy() const { return suspendedBy_; }
-  void setSuspendedBy(Context* suspendedBy) { suspendedBy_ = suspendedBy; }
+  bool isMoribund() const { return state_ == SuspenderState::Moribund; }
+  bool isActive() const { return state_ == SuspenderState::Active; }
+  bool isSuspended() const { return state_ == SuspenderState::Suspended; }
+  bool isCalledOnMain() const { return state_ == SuspenderState::CalledOnMain; }
 
   bool hasFramePointer(void* fp) const {
+    MOZ_ASSERT(!isMoribund());
     return (uintptr_t)stackMemory_ <= (uintptr_t)fp &&
            (uintptr_t)fp <
                (uintptr_t)stackMemory_ + SuspendableStackPlusRedZoneSize;
   }
 
-  inline void* stackMemory() const { return stackMemory_; }
-  inline void* mainFP() const { return mainFP_; }
-  inline void* mainSP() const { return mainSP_; }
-  inline void* mainExitFP() const { return mainExitFP_; }
-  inline void* suspendableFP() const { return suspendableFP_; }
-  inline void* suspendableSP() const { return suspendableSP_; }
-  inline void* suspendableExitFP() const { return suspendableExitFP_; }
-  inline void* suspendedReturnAddress() const {
+  void* stackMemory() const {
+    MOZ_ASSERT(!isMoribund());
+    return stackMemory_;
+  }
+
+  void* mainFP() const {
+    MOZ_ASSERT(isActive());
+    return mainFP_;
+  }
+  void* mainSP() const {
+    MOZ_ASSERT(isActive());
+    return mainSP_;
+  }
+  void* mainExitFP() const {
+    MOZ_ASSERT(isSuspended());
+    return mainExitFP_;
+  }
+  void* suspendableFP() const {
+    MOZ_ASSERT(isSuspended());
+    return suspendableFP_;
+  }
+  void* suspendableSP() const {
+    MOZ_ASSERT(isSuspended());
+    return suspendableSP_;
+  }
+  void* suspendedReturnAddress() const {
+    MOZ_ASSERT(isSuspended());
     return suspendedReturnAddress_;
+  }
+  void* suspendableExitFP() const {
+    // We always have the root frame when we've been entered into, which is
+    // when we're traceable.
+    MOZ_ASSERT(isTraceable());
+    return suspendableExitFP_;
   }
 
   void releaseStackMemory();
@@ -273,6 +308,7 @@ class SuspenderObject : public NativeObject {
   void setMoribund(JSContext* cx);
   void setActive(JSContext* cx);
   void setSuspended(JSContext* cx);
+  void setCalledOnMain(JSContext* cx);
 
   void enter(JSContext* cx);
   void suspend(JSContext* cx);
