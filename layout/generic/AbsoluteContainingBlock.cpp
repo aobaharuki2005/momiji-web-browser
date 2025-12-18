@@ -1166,15 +1166,15 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       nextFallbackStyle = aPresContext->StyleSet()->ResolvePositionTry(
           *aKidFrame->GetContent()->AsElement(), *aKidFrame->Style(),
           *nextFallback);
-      if (!nextFallbackStyle) {
-        // No @position-try rule for this name was found, per spec we should
-        // skip it.
-        aIndex++;
-        if (aIndex >= fallbacks.Length()) {
-          return false;
-        }
+      if (nextFallbackStyle) {
+        break;
       }
-      break;
+      // No @position-try rule for this name was found, per spec we should
+      // skip it.
+      aIndex++;
+      if (aIndex >= fallbacks.Length()) {
+        return false;
+      }
     }
     currentFallbackIndex = Some(aIndex);
     currentFallback = nextFallback;
