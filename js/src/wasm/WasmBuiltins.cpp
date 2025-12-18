@@ -2143,9 +2143,11 @@ bool wasm::EnsureBuiltinThunksInitialized(
 
     ExitReason exitReason(sym);
 
+    // All thunked builtins must use the wasm ABI.
+    MOZ_ASSERT(ABIForBuiltin(sym) == ABIKind::Wasm);
+
     CallableOffsets offsets;
-    if (!GenerateBuiltinThunk(masm, ABIKind::System, abiType, exitReason,
-                              funcPtr, &offsets)) {
+    if (!GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr, &offsets)) {
       return false;
     }
     if (!thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offsets)) {
@@ -2173,8 +2175,7 @@ bool wasm::EnsureBuiltinThunksInitialized(
     ExitReason exitReason = ExitReason::Fixed::BuiltinNative;
 
     CallableOffsets offsets;
-    if (!GenerateBuiltinThunk(masm, ABIKind::Wasm, abiType, exitReason, funcPtr,
-                              &offsets)) {
+    if (!GenerateBuiltinThunk(masm, abiType, exitReason, funcPtr, &offsets)) {
       return false;
     }
     if (!thunks->codeRanges.emplaceBack(CodeRange::BuiltinThunk, offsets)) {

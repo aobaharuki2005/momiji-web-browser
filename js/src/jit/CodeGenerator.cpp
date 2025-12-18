@@ -10247,8 +10247,8 @@ void CodeGenerator::visitWasmRegisterResult(LWasmRegisterResult* lir) {
 #endif
 }
 
-void CodeGenerator::visitWasmBuiltinFloatRegisterResult(
-    LWasmBuiltinFloatRegisterResult* lir) {
+void CodeGenerator::visitWasmSystemFloatRegisterResult(
+    LWasmSystemFloatRegisterResult* lir) {
   MOZ_ASSERT(lir->mir()->type() == MIRType::Float32 ||
              lir->mir()->type() == MIRType::Double);
   MOZ_ASSERT_IF(lir->mir()->type() == MIRType::Float32,
@@ -10257,7 +10257,7 @@ void CodeGenerator::visitWasmBuiltinFloatRegisterResult(
                 ToFloatRegister(lir->output()) == ReturnDoubleReg);
 
 #ifdef JS_CODEGEN_ARM
-  MWasmBuiltinFloatRegisterResult* mir = lir->mir();
+  MWasmSystemFloatRegisterResult* mir = lir->mir();
   if (!mir->hardFP()) {
     if (mir->type() == MIRType::Float32) {
       // Move float32 from r0 to ReturnFloatReg.
@@ -10270,7 +10270,7 @@ void CodeGenerator::visitWasmBuiltinFloatRegisterResult(
     }
   }
 #elif JS_CODEGEN_X86
-  MWasmBuiltinFloatRegisterResult* mir = lir->mir();
+  MWasmSystemFloatRegisterResult* mir = lir->mir();
   if (mir->type() == MIRType::Double) {
     masm.reserveStack(sizeof(double));
     masm.fstp(Operand(esp, 0));
@@ -10512,7 +10512,7 @@ void CodeGenerator::callWasmUpdateSuspenderState(
 
   masm.move32(Imm32(uint32_t(kind)), temp);
 
-  masm.setupWasmABICall();
+  masm.setupWasmABICall(wasm::SymbolicAddress::UpdateSuspenderState);
   masm.passABIArg(InstanceReg);
   masm.passABIArg(suspender);
   masm.passABIArg(temp);
@@ -11368,12 +11368,12 @@ void CodeGenerator::visitWasmPostWriteBarrierWholeCell(
     wasm::CheckWholeCellLastElementCache(masm, InstanceReg, object, temp,
                                          ool.rejoin());
 
-    saveLiveVolatile(lir);
+    saveLive(lir);
     masm.Push(InstanceReg);
     int32_t framePushedAfterInstance = masm.framePushed();
 
     // Call Instance::postBarrierWholeCell
-    masm.setupWasmABICall();
+    masm.setupWasmABICall(wasm::SymbolicAddress::PostBarrierWholeCell);
     masm.passABIArg(InstanceReg);
     masm.passABIArg(object);
     int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
@@ -11382,7 +11382,7 @@ void CodeGenerator::visitWasmPostWriteBarrierWholeCell(
                      mozilla::Some(instanceOffset), ABIType::General);
 
     masm.Pop(InstanceReg);
-    restoreLiveVolatile(lir);
+    restoreLive(lir);
 
     masm.jump(ool.rejoin());
   });
@@ -11403,7 +11403,7 @@ void CodeGenerator::visitWasmPostWriteBarrierEdgeAtIndex(
   Register temp = ToRegister(lir->temp0());
   MOZ_ASSERT(ToRegister(lir->instance()) == InstanceReg);
   auto* ool = new (alloc()) LambdaOutOfLineCode([=, this](OutOfLineCode& ool) {
-    saveLiveVolatile(lir);
+    saveLive(lir);
     masm.Push(InstanceReg);
     int32_t framePushedAfterInstance = masm.framePushed();
 
@@ -11418,7 +11418,7 @@ void CodeGenerator::visitWasmPostWriteBarrierEdgeAtIndex(
     }
 
     // Call Instance::postBarrier
-    masm.setupWasmABICall();
+    masm.setupWasmABICall(wasm::SymbolicAddress::PostBarrierEdge);
     masm.passABIArg(InstanceReg);
     masm.passABIArg(temp);
     int32_t instanceOffset = masm.framePushed() - framePushedAfterInstance;
@@ -11427,7 +11427,7 @@ void CodeGenerator::visitWasmPostWriteBarrierEdgeAtIndex(
                      mozilla::Some(instanceOffset), ABIType::General);
 
     masm.Pop(InstanceReg);
-    restoreLiveVolatile(lir);
+    restoreLive(lir);
 
     masm.jump(ool.rejoin());
   });
@@ -12171,7 +12171,7 @@ void CodeGenerator::visitWasmBuiltinModD(LWasmBuiltinModD* ins) {
 
   MOZ_ASSERT(ToFloatRegister(ins->output()) == ReturnDoubleReg);
 
-  masm.setupWasmABICall();
+  masm.setupWasmABICall(wasm::SymbolicAddress::ModD);
   masm.passABIArg(lhs, ABIType::Float64);
   masm.passABIArg(rhs, ABIType::Float64);
 
@@ -21276,7 +21276,7 @@ void CodeGenerator::callWasmStructAllocFun(
   int32_t framePushedAfterInstance = masm.framePushed();
   saveLive(lir);
 
-  masm.setupWasmABICall();
+  masm.setupWasmABICall(fun);
   masm.passABIArg(InstanceReg);
   masm.passABIArg(typeDefIndex);
   masm.passABIArg(allocSite);
@@ -21360,7 +21360,7 @@ void CodeGenerator::callWasmArrayAllocFun(
   int32_t framePushedAfterInstance = masm.framePushed();
   saveLive(lir);
 
-  masm.setupWasmABICall();
+  masm.setupWasmABICall(fun);
   masm.passABIArg(InstanceReg);
   masm.passABIArg(numElements);
   masm.passABIArg(typeDefIndex);

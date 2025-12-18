@@ -793,6 +793,7 @@ class ABIArgGeneratorShared {
   explicit ABIArgGeneratorShared(ABIKind kind);
 
  public:
+  ABIKind abi() const { return kind_; }
   uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
 };
 

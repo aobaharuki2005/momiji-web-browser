@@ -4350,7 +4350,7 @@
 - name: WasmFloatRegisterResult
   gen_boilerplate: false
 
-- name: WasmBuiltinFloatRegisterResult
+- name: WasmSystemFloatRegisterResult
   gen_boilerplate: false
 
 - name: WasmRegister64Result

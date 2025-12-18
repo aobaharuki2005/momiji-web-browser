@@ -1730,14 +1730,14 @@ class MWasmFloatRegisterResult : public MWasmResultBase<FloatRegister> {
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
-class MWasmBuiltinFloatRegisterResult : public MWasmResultBase<FloatRegister> {
-  MWasmBuiltinFloatRegisterResult(MIRType type, FloatRegister reg, bool hardFP)
+class MWasmSystemFloatRegisterResult : public MWasmResultBase<FloatRegister> {
+  MWasmSystemFloatRegisterResult(MIRType type, FloatRegister reg, bool hardFP)
       : MWasmResultBase(classOpcode, type, reg), hardFP_(hardFP) {}
 
   bool hardFP_;
 
  public:
-  INSTRUCTION_HEADER(WasmBuiltinFloatRegisterResult)
+  INSTRUCTION_HEADER(WasmSystemFloatRegisterResult)
   TRIVIAL_NEW_WRAPPERS
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
