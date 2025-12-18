@@ -2918,12 +2918,6 @@ networking:
       setPref:
         branch: default
         pref: "network.preconnect"
-    networkPredictor:
-      description: Whether the Necko predictor is enabled
-      type: boolean
-      setPref:
-        branch: default
-        pref: "network.predictor.enabled"
     http3CCalgorithm:
       description: The congestion control algorithm with which to configure neqo. 0 for NewReno, 1 for Cubic
       type: int

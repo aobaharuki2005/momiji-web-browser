@@ -73,12 +73,6 @@ class NeckoChild : public PNeckoChild {
       const uint64_t& aInnerWindowID);
   bool DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild*);
 
-  /* Predictor Messsages */
-  mozilla::ipc::IPCResult RecvPredOnPredictPrefetch(
-      nsIURI* aURI, const uint32_t& aHttpStatus);
-  mozilla::ipc::IPCResult RecvPredOnPredictPreconnect(nsIURI* aURI);
-  mozilla::ipc::IPCResult RecvPredOnPredictDNS(nsIURI* aURI);
-
   mozilla::ipc::IPCResult RecvSpeculativeConnectRequest();
   mozilla::ipc::IPCResult RecvNetworkChangeNotification(nsCString const& type);
 

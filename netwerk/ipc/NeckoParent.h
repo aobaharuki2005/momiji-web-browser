@@ -9,7 +9,6 @@
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/NeckoCommon.h"
 #include "nsIAuthPrompt2.h"
-#include "nsINetworkPredictor.h"
 #include "nsNetUtil.h"
 
 #ifndef mozilla_net_NeckoParent_h
@@ -174,18 +173,6 @@ class NeckoParent : public PNeckoParent {
 
   PTransportProviderParent* AllocPTransportProviderParent();
   bool DeallocPTransportProviderParent(PTransportProviderParent* aActor);
-
-  /* Predictor Messages */
-  mozilla::ipc::IPCResult RecvPredPredict(
-      nsIURI* aTargetURI, nsIURI* aSourceURI,
-      const PredictorPredictReason& aReason,
-      const OriginAttributes& aOriginAttributes, const bool& hasVerifier);
-
-  mozilla::ipc::IPCResult RecvPredLearn(
-      nsIURI* aTargetURI, nsIURI* aSourceURI,
-      const PredictorPredictReason& aReason,
-      const OriginAttributes& aOriginAttributes);
-  mozilla::ipc::IPCResult RecvPredReset();
 
   mozilla::ipc::IPCResult RecvRequestContextLoadBegin(const uint64_t& rcid);
   mozilla::ipc::IPCResult RecvRequestContextAfterDOMContentLoaded(

@@ -1216,8 +1216,6 @@ skip-if = [
 
 ["test_post.js"]
 
-["test_predictor.js"]
-
 ["test_prio_header_override_forbid.js"]
 
 ["test_private_cookie_changed.js"]
