@@ -265,6 +265,8 @@ function loggerEventHandler(event) {
     let log_level;
     if (event.level == TracingLevel.DEBUG) {
       log_level = lazy.Log.Level.Debug;
+    } else if (event.level == TracingLevel.TRACE) {
+      log_level = lazy.Log.Level.Trace;
     } else if (event.level == TracingLevel.INFO) {
       log_level = lazy.Log.Level.Info;
     } else if (event.level == TracingLevel.WARN) {
