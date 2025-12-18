@@ -570,6 +570,10 @@ const MDefinition* MDefinition::skipObjectGuards() const {
       result = result->toGuardMultipleShapes()->object();
       continue;
     }
+    if (result->isGuardMultipleShapesToOffset()) {
+      result = result->toGuardMultipleShapesToOffset()->object();
+      continue;
+    }
     if (result->isGuardNullProto()) {
       result = result->toGuardNullProto()->object();
       continue;
@@ -7304,6 +7308,10 @@ AliasSet MGuardMultipleShapes::getAliasSet() const {
   // Note: This instruction loads the elements of the ListObject used to
   // store the list of shapes, but that object is internal and not exposed
   // to script, so it doesn't have to be in the alias set.
+  return AliasSet::Load(AliasSet::ObjectFields);
+}
+
+AliasSet MGuardMultipleShapesToOffset::getAliasSet() const {
   return AliasSet::Load(AliasSet::ObjectFields);
 }
 

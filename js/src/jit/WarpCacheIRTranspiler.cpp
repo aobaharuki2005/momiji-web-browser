@@ -529,6 +529,21 @@ bool WarpCacheIRTranspiler::emitGuardMultipleShapes(ObjOperandId objId,
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitGuardMultipleShapesToOffset(
+    ObjOperandId objId, uint32_t shapesOffset, Int32OperandId offsetId) {
+  MDefinition* obj = getOperand(objId);
+
+  // Use MGuardShapeListToOffset if we snapshotted the list of shapes on the
+  // main thread.
+  MInstruction* ins;
+  MInstruction* shapeList = objectStubField(shapesOffset);
+  ins = MGuardMultipleShapesToOffset::New(alloc(), obj, shapeList);
+  ins->setBailoutKind(BailoutKind::StubFoldingGuardMultipleShapes);
+  add(ins);
+
+  return defineOperand(offsetId, ins);
+}
+
 bool WarpCacheIRTranspiler::emitGuardNullProto(ObjOperandId objId) {
   MDefinition* def = getOperand(objId);
 

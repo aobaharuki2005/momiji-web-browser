@@ -248,6 +248,16 @@
     obj: ObjId
     shapes: ObjectField
 
+- name: GuardMultipleShapesToOffset
+  shared: true
+  transpile: true
+  cost_estimate: 2
+  custom_writer: true
+  args:
+    obj: ObjId
+    shapes: ObjectField
+    result: Int32Id
+
 - name: GuardProto
   shared: false
   transpile: true
