@@ -75,6 +75,7 @@ namespace jit {
 
 class CallInfo;
 class ShapeListSnapshot;
+class ShapeListWithOffsetsSnapshot;
 
 #ifdef JS_JITSPEW
 // Helper for debug printing.  Avoids creating a MIR.h <--> MIRGraph.h cycle.

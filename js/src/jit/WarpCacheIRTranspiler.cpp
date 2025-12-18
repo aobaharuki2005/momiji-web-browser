@@ -536,9 +536,16 @@ bool WarpCacheIRTranspiler::emitGuardMultipleShapesToOffset(
   // Use MGuardShapeListToOffset if we snapshotted the list of shapes on the
   // main thread.
   MInstruction* ins;
-  MInstruction* shapeList = objectStubField(shapesOffset);
-  ins = MGuardMultipleShapesToOffset::New(alloc(), obj, shapeList);
-  ins->setBailoutKind(BailoutKind::StubFoldingGuardMultipleShapes);
+  if (cacheIRSnapshot_->is<WarpCacheIRWithShapeListAndOffsets>()) {
+    auto* shapes = (ShapeListWithOffsetsSnapshot*)cacheIRSnapshot_
+                       ->as<WarpCacheIRWithShapeListAndOffsets>()
+                       ->shapes();
+    ins = MGuardShapeListToOffset::New(alloc(), obj, shapes);
+  } else {
+    MInstruction* shapeList = objectStubField(shapesOffset);
+    ins = MGuardMultipleShapesToOffset::New(alloc(), obj, shapeList);
+    ins->setBailoutKind(BailoutKind::StubFoldingGuardMultipleShapes);
+  }
   add(ins);
 
   return defineOperand(offsetId, ins);

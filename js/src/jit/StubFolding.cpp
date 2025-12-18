@@ -337,8 +337,7 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
     // together.
     JitSpew(JitSpew_StubFolding,
             "Failed to fold GuardShape into GuardMultipleShapesToOffset at "
-            "offset %u "
-            "(icScript: %p) with %zu shapes (%s:%u:%u)",
+            "offset %u (icScript: %p) with %zu shapes (%s:%u:%u)",
             fallback->pcOffset(), icScript, shapeList.length(),
             script->filename(), script->lineno(),
             script->column().oneOriginValue());
