@@ -653,6 +653,31 @@ Preferences.addSetting({
   pref: "browser.translations.automaticallyPopup",
 });
 
+function createNeverTranslateSitesDescription() {
+  const description = document.createElement("span");
+  description.dataset.l10nId =
+    "settings-translations-subpage-never-translate-sites-description";
+
+  for (const [name, src] of [
+    ["translations-icon", "chrome://browser/skin/translations.svg"],
+    ["settings-icon", "chrome://global/skin/icons/settings.svg"],
+  ]) {
+    const icon = document.createElement("img");
+    icon.src = src;
+
+    icon.dataset.l10nName = name;
+    icon.style.verticalAlign = "middle";
+
+    icon.setAttribute("role", "presentation");
+    icon.setAttribute("width", "16");
+    icon.setAttribute("height", "16");
+
+    description.appendChild(icon);
+  }
+
+  return description;
+}
+
 Preferences.addSetting({
   id: "translationsDownloadLanguagesGroup",
 });
@@ -750,6 +775,18 @@ Preferences.addSetting({
     setting?.emit("change");
     return this._value;
   },
+});
+
+Preferences.addSetting({
+  id: "translationsNeverTranslateSitesGroup",
+});
+
+Preferences.addSetting({
+  id: "translationsNeverTranslateSitesRow",
+});
+
+Preferences.addSetting({
+  id: "translationsNeverTranslateSitesNoneRow",
 });
 
 Preferences.addSetting({
@@ -3887,6 +3924,34 @@ SettingGroupManager.registerGroups({
               {
                 id: "translationsNeverTranslateLanguagesNoneRow",
                 l10nId: "settings-translations-subpage-no-languages-added",
+                control: "moz-box-item",
+                controlAttrs: {
+                  class: "text-deemphasized",
+                },
+              },
+            ],
+          },
+          {
+            id: "translationsNeverTranslateSitesGroup",
+            control: "moz-box-group",
+            controlAttrs: {
+              type: "list",
+            },
+            items: [
+              {
+                id: "translationsNeverTranslateSitesRow",
+                l10nId:
+                  "settings-translations-subpage-never-translate-sites-header",
+                control: "moz-box-item",
+                controlAttrs: {
+                  style:
+                    "--box-label-font-weight: var(--font-weight-semibold);",
+                  ".description": createNeverTranslateSitesDescription(),
+                },
+              },
+              {
+                id: "translationsNeverTranslateSitesNoneRow",
+                l10nId: "settings-translations-subpage-no-sites-added",
                 control: "moz-box-item",
                 controlAttrs: {
                   class: "text-deemphasized",
