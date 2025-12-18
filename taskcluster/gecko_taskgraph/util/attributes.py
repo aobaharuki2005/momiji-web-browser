@@ -4,6 +4,7 @@
 
 
 import re
+from typing import Literal, Union
 
 from taskgraph.util.attributes import _match_run_on
 
@@ -13,31 +14,42 @@ INTEGRATION_PROJECTS = {
 
 TRUNK_PROJECTS = INTEGRATION_PROJECTS | {"mozilla-central", "comm-central"}
 
-RELEASE_PROJECTS = {
-    "firefox",  # https://github.com/mozilla-firefox/firefox
-    "mozilla-central",
-    "mozilla-beta",
-    "mozilla-release",
-    "mozilla-esr115",
-    "mozilla-esr128",
-    "mozilla-esr140",
-    "comm-central",
-    "comm-beta",
-    "comm-release",
-    "comm-esr115",
-    "comm-esr128",
-    "comm-esr140",
+# Mapping of project to list of branches that should be considered "release"
+# level. A value of `True` means all branches are considered release
+# (used by hg.mozilla.org based projects).
+PROJECT_RELEASE_BRANCHES: dict[str, Union[list[str], Literal[True]]] = {
+    # https://github.com/mozilla-firefox/firefox
+    "firefox": [
+        "main",
+        "beta",
+        "release",
+        "esr115",
+        "esr128",
+        "esr140",
+    ],
+    "mozilla-central": True,
+    "mozilla-beta": True,
+    "mozilla-release": True,
+    "mozilla-esr115": True,
+    "mozilla-esr128": True,
+    "mozilla-esr140": True,
+    "comm-central": True,
+    "comm-beta": True,
+    "comm-release": True,
+    "comm-esr115": True,
+    "comm-esr128": True,
+    "comm-esr140": True,
     # bug 1845368: pine is a permanent project branch used for testing
     # nightly updates
-    "pine",
+    "pine": True,
     # bug 1877483: larch has similar needs for nightlies
-    "larch",
+    "larch": True,
     # maple is also an L3 branch: https://phabricator.services.mozilla.com/D184833
-    "maple",
+    "maple": True,
     # bug 1988213: cypress project branch
-    "cypress",
+    "cypress": True,
 }
-
+RELEASE_PROJECTS = set(PROJECT_RELEASE_BRANCHES)
 RELEASE_PROMOTION_PROJECTS = {
     "jamun",
     "maple",
@@ -150,7 +162,15 @@ def release_level(params):
 
     :return str: One of "production" or "staging".
     """
-    return "production" if params.get("project") in RELEASE_PROJECTS else "staging"
+    if branches := PROJECT_RELEASE_BRANCHES.get(params.get("project")):
+        if branches is True:
+            return "production"
+
+        m = re.match(r"refs/heads/(\S+)$", params["head_ref"])
+        if m.group(1) in branches:
+            return "production"
+
+    return "staging"
 
 
 def is_try(params):

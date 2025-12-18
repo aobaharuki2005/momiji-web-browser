@@ -11,6 +11,7 @@ from mozunit import main
 from gecko_taskgraph.util.attributes import (
     match_run_on_projects,
     match_run_on_repo_type,
+    release_level,
 )
 
 
@@ -97,6 +98,20 @@ class MatchRunOnProjects(unittest.TestCase):
 )
 def test_match_run_on_repo_type(repo_type, run_on_repo_types, expected):
     assert match_run_on_repo_type(repo_type, run_on_repo_types) == expected
+
+
+@pytest.mark.parametrize(
+    "params,expected",
+    (
+        ({"project": "autoland"}, "staging"),
+        ({"project": "mozilla-central"}, "production"),
+        ({"project": "firefox", "head_ref": "refs/heads/test"}, "staging"),
+        ({"project": "firefox", "head_ref": "refs/tags/beta"}, "staging"),
+        ({"project": "firefox", "head_ref": "refs/heads/beta"}, "production"),
+    ),
+)
+def test_release_level(params, expected):
+    assert release_level(params) == expected
 
 
 if __name__ == "__main__":
