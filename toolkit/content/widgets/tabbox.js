@@ -272,7 +272,6 @@
 
     static #SPLIT_VIEW_PANEL_EVENTS = Object.freeze([
       "click",
-      "focus",
       "mouseover",
       "mouseout",
     ]);
@@ -283,7 +282,10 @@
     }
 
     handleEvent(e) {
-      const browser = e.currentTarget;
+      const browser =
+        e.currentTarget.tagName === "browser"
+          ? e.currentTarget
+          : e.currentTarget.querySelector("browser");
       switch (e.type) {
         case "click":
         case "focus": {
@@ -372,9 +374,11 @@
         panelEl?.classList.add("split-view-panel");
         panelEl?.setAttribute("column", i);
         const browser = panelEl?.querySelector("browser");
+        const browserContainer = panelEl?.querySelector(".browserContainer");
         for (const eventType of MozTabpanels.#SPLIT_VIEW_PANEL_EVENTS) {
-          browser?.addEventListener(eventType, this);
+          browserContainer?.addEventListener(eventType, this);
         }
+        browser?.addEventListener("focus", this);
       }
       this.#splitViewPanels = newPanels;
       this.isSplitViewActive = !!newPanels.length;
@@ -396,9 +400,11 @@
       panelEl?.classList.remove("split-view-panel");
       panelEl?.removeAttribute("column");
       const browser = panelEl?.querySelector("browser");
+      const browserContainer = panelEl?.querySelector(".browserContainer");
       for (const eventType of MozTabpanels.#SPLIT_VIEW_PANEL_EVENTS) {
-        browser?.removeEventListener(eventType, this);
+        browserContainer?.removeEventListener(eventType, this);
       }
+      browser?.removeEventListener("focus", this);
       if (updateArray) {
         const index = this.#splitViewPanels.indexOf(panel);
         if (index !== -1) {

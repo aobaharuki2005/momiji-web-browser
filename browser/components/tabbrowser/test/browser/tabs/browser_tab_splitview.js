@@ -47,8 +47,8 @@ add_task(async function test_splitViewCreateAndAddTabs() {
   let tab4 = BrowserTestUtils.addTab(gBrowser, "about:blank");
 
   // Add tabs to split view
-  let splitview = gBrowser.addTabSplitView([tab1, tab2]);
-  let splitview2 = gBrowser.addTabSplitView([tab3, tab4]);
+  let splitview = gBrowser.addTabSplitView([tab1, tab2], { id: "1" });
+  let splitview2 = gBrowser.addTabSplitView([tab3, tab4], { id: "2" });
   let tabbrowserTabs = document.getElementById("tabbrowser-tabs");
   await BrowserTestUtils.waitForMutationCondition(
     tabbrowserTabs,
@@ -61,8 +61,14 @@ add_task(async function test_splitViewCreateAndAddTabs() {
   Assert.ok(splitview.tabs.includes(tab1), "tab1 is in split view wrapper");
   Assert.ok(splitview.tabs.includes(tab2), "tab2 is in split view wrapper");
 
-  Assert.ok(
-    splitview2.splitViewId && splitview.splitViewId !== splitview2.splitViewId,
+  await BrowserTestUtils.waitForMutationCondition(
+    splitview2,
+    { attributeFilter: ["splitViewId"] },
+    () => splitview2.hasAttribute("splitViewId")
+  );
+  Assert.notEqual(
+    splitview.splitViewId,
+    splitview2.splitViewId,
     "Split view has different id than split view 2"
   );
   Assert.equal(splitview2.tabs.length, 2, "Split view 2 has 2 tabs");
@@ -289,4 +295,39 @@ add_task(async function test_resize_split_view_panels() {
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
+});
+
+add_task(async function test_click_findbar_to_select_panel() {
+  const tab1 = await addTabAndLoadBrowser();
+  const tab2 = await addTabAndLoadBrowser();
+  const panel1 = document.getElementById(tab1.linkedPanel);
+  const panel2 = document.getElementById(tab2.linkedPanel);
+  await BrowserTestUtils.switchTab(gBrowser, tab1);
+
+  info("Activate split view with the first panel selected.");
+  const splitView = gBrowser.addTabSplitView([tab1, tab2]);
+  await SimpleTest.promiseFocus(tab1.linkedBrowser);
+  Assert.ok(
+    panel1.classList.contains("deck-selected"),
+    "First panel is selected."
+  );
+
+  info("Activate Find in Page within the second panel.");
+  const findbar = await gBrowser.getFindBar(tab2);
+  const promiseFindbarOpen = BrowserTestUtils.waitForEvent(
+    findbar,
+    "findbaropen"
+  );
+  findbar.open();
+  await promiseFindbarOpen;
+
+  info("Select the second panel by clicking the find bar.");
+  EventUtils.synthesizeMouseAtCenter(findbar, {});
+  await BrowserTestUtils.waitForMutationCondition(
+    panel2,
+    { attributeFilter: ["class"] },
+    () => panel2.classList.contains("deck-selected")
+  );
+
+  splitView.close();
 });
