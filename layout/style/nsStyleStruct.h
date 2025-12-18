@@ -379,11 +379,10 @@ using AnchorResolvedMargin =
 // Base set of parameters required to resolve a reference to an anchor.
 struct AnchorPosResolutionParams {
   struct AutoResolutionOverrideParams {
-    // TODO(dshin): Probably just make it physical
-    // Whether anchor-center is being used on the inline axis.
-    bool mIAnchorCenter = false;
-    // Whether anchor-center is being used on the block axis.
-    bool mBAnchorCenter = false;
+    // Whether anchor-center is being used on the horizontal axis.
+    bool mHAnchorCenter = false;
+    // Whether anchor-center is being used on the vertical axis.
+    bool mVAnchorCenter = false;
     // Whether position-area is being used.
     bool mPositionAreaInUse = false;
 
@@ -392,10 +391,7 @@ struct AnchorPosResolutionParams {
         const nsIFrame* aFrame,
         const mozilla::AnchorPosResolutionCache* aCache);
 
-    bool OverriddenToZero(mozilla::StylePhysicalAxis aAxis,
-                          const nsIFrame* aFrame) const;
-    bool OverriddenToZero(mozilla::Side aSide, const nsIFrame* aFrame) const;
-    bool OverriddenToZero(mozilla::LogicalAxis aAxis) const;
+    bool OverriddenToZero(mozilla::StylePhysicalAxis aAxis) const;
   };
   // Frame of the anchor positioned element.
   // If nullptr, skips anchor lookup and returns invalid, resolving fallbacks.
@@ -437,8 +433,7 @@ struct AnchorResolvedMarginHelper {
       return AnchorResolvedMargin::NonOwning(&aValue);
     }();
     if (resolved->IsAuto() &&
-        aParams.mAutoResolutionOverrideParams.OverriddenToZero(
-            aAxis, aParams.mFrame)) {
+        aParams.mAutoResolutionOverrideParams.OverriddenToZero(aAxis)) {
       return Zero();
     }
     return resolved;
@@ -814,7 +809,7 @@ struct AnchorResolvedInsetHelper {
     }();
     if (resolved->IsAuto() &&
         aParams.mBaseParams.mAutoResolutionOverrideParams.OverriddenToZero(
-            aSide, aParams.mBaseParams.mFrame)) {
+            mozilla::ToStylePhysicalAxis(aSide))) {
       return AnchorResolvedInset::NonOwning(&ZeroValue());
     }
     return resolved;

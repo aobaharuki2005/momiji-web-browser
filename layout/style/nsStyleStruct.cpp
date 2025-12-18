@@ -288,33 +288,7 @@ static StyleRect<T> StyleRectWithAllSides(const T& aSide) {
 }
 
 bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
-    StylePhysicalAxis aAxis, const nsIFrame* aFrame) const {
-  if (!aFrame || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
-    return false;
-  }
-  const auto* cb = aFrame->GetParent();
-  const auto cbwm = cb->GetWritingMode();
-  const auto logicalAxis = [&]() {
-    if (cbwm.IsVertical()) {
-      return aAxis == StylePhysicalAxis::Vertical ? LogicalAxis::Inline
-                                                  : LogicalAxis::Block;
-    }
-    return aAxis == StylePhysicalAxis::Horizontal ? LogicalAxis::Inline
-                                                  : LogicalAxis::Block;
-  }();
-  return OverriddenToZero(logicalAxis);
-}
-
-bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
-    Side aSide, const nsIFrame* aFrame) const {
-  return OverriddenToZero(aSide == Side::eSideBottom || aSide == Side::eSideTop
-                              ? StylePhysicalAxis::Vertical
-                              : StylePhysicalAxis::Horizontal,
-                          aFrame);
-}
-
-bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
-    LogicalAxis aAxis) const {
+    StylePhysicalAxis aAxis) const {
   if (mPositionAreaInUse) {
     // If `position-area` is used "Any auto inset properties resolve to 0":
     // https://drafts.csswg.org/css-anchor-position-1/#valdef-position-area-position-area
@@ -324,12 +298,11 @@ bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
   // If `anchor-center` is used with a valid anchor, "auto inset
   // properties resolve to 0" on that axis:
   // https://drafts.csswg.org/css-anchor-position-1/#anchor-center
-  switch (aAxis) {
-    case LogicalAxis::Block:
-      return mBAnchorCenter;
-    case LogicalAxis::Inline:
-      return mIAnchorCenter;
+  if (aAxis == StylePhysicalAxis::Vertical) {
+    return mVAnchorCenter;
   }
+  MOZ_ASSERT(aAxis == StylePhysicalAxis::Horizontal);
+  return mHAnchorCenter;
 }
 
 AnchorPosResolutionParams::AutoResolutionOverrideParams::
@@ -343,6 +316,7 @@ AnchorPosResolutionParams::AutoResolutionOverrideParams::
   }
 
   const auto* stylePos = aFrame->StylePosition();
+  const auto cbwm = parent->GetWritingMode();
 
   auto checkAxis = [&](LogicalAxis aAxis) {
     StyleAlignFlags alignment =
@@ -351,8 +325,10 @@ AnchorPosResolutionParams::AutoResolutionOverrideParams::
            StyleAlignFlags::ANCHOR_CENTER;
   };
 
-  mIAnchorCenter = checkAxis(LogicalAxis::Inline);
-  mBAnchorCenter = checkAxis(LogicalAxis::Block);
+  const auto horizontalLogicalAxis =
+      cbwm.IsVertical() ? LogicalAxis::Block : LogicalAxis::Inline;
+  mHAnchorCenter = checkAxis(horizontalLogicalAxis);
+  mVAnchorCenter = checkAxis(GetOrthogonalAxis(horizontalLogicalAxis));
   mPositionAreaInUse = !stylePos->mPositionArea.IsNone();
 }
 
