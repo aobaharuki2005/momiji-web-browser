@@ -2878,7 +2878,7 @@ static bool GenerateDebugStub(MacroAssembler& masm, Label* throwLabel,
   masm.setFramePushed(0);
 
   GenerateExitPrologue(masm, ExitReason::Fixed::DebugStub,
-                       /*switchToMainStack*/ false, 0, 0, offsets);
+                       /*switchToMainStack*/ true, 0, 0, offsets);
 
   uint32_t framePushed = masm.framePushed();
 
@@ -2914,7 +2914,7 @@ static bool GenerateDebugStub(MacroAssembler& masm, Label* throwLabel,
   masm.setFramePushed(framePushed);
 
   GenerateExitEpilogue(masm, ExitReason::Fixed::DebugStub,
-                       /*switchToMainStack*/ false, offsets);
+                       /*switchToMainStack*/ true, offsets);
 
   return FinishOffsets(masm, offsets);
 }

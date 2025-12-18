@@ -553,6 +553,9 @@ static bool WasmHandleDebugTrap() {
   Instance* instance = GetNearestEffectiveInstance(fp);
   const Code& code = instance->code();
   MOZ_ASSERT(code.debugEnabled());
+#ifdef ENABLE_WASM_JSPI
+  MOZ_ASSERT(!cx->wasm().onSuspendableStack());
+#endif
 
   // The debug trap stub is the innermost frame. It's return address is the
   // actual trap site.
@@ -569,8 +572,7 @@ static bool WasmHandleDebugTrap() {
     }
     debugFrame->setIsDebuggee();
     debugFrame->observe(cx);
-    if (!ForwardToMainStack(DebugAPI::onEnterFrame, cx,
-                            js::AbstractFramePtr(debugFrame))) {
+    if (!DebugAPI::onEnterFrame(cx, js::AbstractFramePtr(debugFrame))) {
       if (cx->isPropagatingForcedReturn()) {
         cx->clearPropagatingForcedReturn();
         // Ignoring forced return because changing code execution order is
@@ -592,9 +594,8 @@ static bool WasmHandleDebugTrap() {
     if (site.kind() == CallSiteKind::CollapseFrame) {
       debugFrame->discardReturnJSValue();
     }
-    bool ok = ForwardToMainStack(DebugAPI::onLeaveFrame, cx,
-                                 js::AbstractFramePtr(debugFrame),
-                                 (const jsbytecode*)nullptr, true);
+    bool ok = DebugAPI::onLeaveFrame(cx, js::AbstractFramePtr(debugFrame),
+                                     (const jsbytecode*)nullptr, true);
     debugFrame->leave(cx);
     return ok;
   }
@@ -602,7 +603,7 @@ static bool WasmHandleDebugTrap() {
   DebugState& debug = instance->debug();
   MOZ_ASSERT(debug.hasBreakpointTrapAtOffset(site.lineOrBytecode()));
   if (debug.stepModeEnabled(debugFrame->funcIndex())) {
-    if (!ForwardToMainStack(DebugAPI::onSingleStep, cx)) {
+    if (!DebugAPI::onSingleStep(cx)) {
       if (cx->isPropagatingForcedReturn()) {
         cx->clearPropagatingForcedReturn();
         // TODO properly handle forced return.
@@ -613,7 +614,7 @@ static bool WasmHandleDebugTrap() {
     }
   }
   if (debug.hasBreakpointSite(site.lineOrBytecode())) {
-    if (!ForwardToMainStack(DebugAPI::onTrap, cx)) {
+    if (!DebugAPI::onTrap(cx)) {
       if (cx->isPropagatingForcedReturn()) {
         cx->clearPropagatingForcedReturn();
         // TODO properly handle forced return.
