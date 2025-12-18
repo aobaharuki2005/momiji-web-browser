@@ -440,6 +440,18 @@ settings-translations-subpage-speed-up-translation-header =
     .label = Speed up translation
     .description = Download complete languages for faster translations and to translate offline.
 
+settings-translations-subpage-automatic-translation-header =
+    .label = Automatic translation
+
+settings-translations-subpage-always-translate-header =
+    .label = Always translate these languages
+
+settings-translations-subpage-never-translate-header =
+    .label = Never translate these languages
+
+settings-translations-subpage-language-select-option =
+    .label = Add language
+
 settings-translations-subpage-download-languages-header =
     .label = Download languages
 
@@ -452,6 +464,9 @@ settings-translations-subpage-download-languages-button =
 
 settings-translations-subpage-no-languages-downloaded =
     .label = No languages downloaded
+
+settings-translations-subpage-no-languages-added =
+    .label = No languages added
 
 # Variables:
 #    $localeName (string) - Localized name of the locale to be used.
