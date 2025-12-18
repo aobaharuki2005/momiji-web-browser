@@ -122,14 +122,14 @@ button:disabled {
   background-color: var(--background-color-box-info) !important;
   border-top: 1px solid var(--border-color);
   width: 100%;
-  padding: 1em 3%;
+  padding: var(--space-large);
   box-sizing: border-box;
 }
 
 #certificateErrorText {
   font-family: monospace;
   white-space: pre-wrap;
-  padding: 1em 0;
+  padding: var(--space-small) 0;
   display: flex;
   flex-wrap: wrap;
 }
