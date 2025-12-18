@@ -119,7 +119,7 @@ android {
 	// If building locally, just use debug signing. In official automation builds, the
 	// files are signed using a separate service and not within gradle.
         if (!gradle.mozconfig.substs.MOZ_AUTOMATION) {
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
         }
 
         if (gradle.hasProperty("localProperties.debuggable") ||
