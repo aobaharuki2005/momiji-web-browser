@@ -4925,20 +4925,9 @@ var gMainPane = {
   },
 
   showTranslationsSettings() {
-    if (
-      Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")
-    ) {
-      const translationsSettings = document.getElementById(
-        "translations-settings-page"
-      );
-      translationsSettings.setAttribute("data-hidden-from-search", "false");
-      translationsSettings.hidden = false;
-      gotoPref("translations");
-    } else {
-      gSubDialog.open(
-        "chrome://browser/content/preferences/dialogs/translations.xhtml"
-      );
-    }
+    gSubDialog.open(
+      "chrome://browser/content/preferences/dialogs/translations.xhtml"
+    );
   },
 
   /**

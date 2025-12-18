@@ -7,7 +7,6 @@
 /* import-globals-from home.js */
 /* import-globals-from search.js */
 /* import-globals-from containers.js */
-/* import-globals-from translations.js */
 /* import-globals-from privacy.js */
 /* import-globals-from sync.js */
 /* import-globals-from experimental.js */
@@ -354,9 +353,6 @@ function init_all() {
     SettingPaneManager.registerPane(id, config);
   }
 
-  if (Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")) {
-    register_module("paneTranslations", gTranslationsPane);
-  }
   if (ExperimentAPI.labsEnabled) {
     // Set hidden based on previous load's hidden value or if Nimbus is
     // disabled.

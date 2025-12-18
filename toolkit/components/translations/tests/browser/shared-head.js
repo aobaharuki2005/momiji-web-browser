@@ -2273,14 +2273,6 @@ async function setupAboutPreferences(
     true // waitForLoad
   );
 
-  let initTranslationsEvent;
-  if (Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")) {
-    initTranslationsEvent = BrowserTestUtils.waitForEvent(
-      document,
-      "translationsSettingsInit"
-    );
-  }
-
   const { remoteClients, removeMocks } = await createAndMockRemoteSettings({
     languagePairs,
   });
@@ -2288,10 +2280,6 @@ async function setupAboutPreferences(
   await loadNewPage(tab.linkedBrowser, "about:preferences");
 
   const elements = await selectAboutPreferencesElements();
-
-  if (Services.prefs.getBoolPref("browser.translations.newSettingsUI.enable")) {
-    await initTranslationsEvent;
-  }
 
   async function cleanup() {
     Services.prefs.setCharPref(NEVER_TRANSLATE_LANGS_PREF, "");
