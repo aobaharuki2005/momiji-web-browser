@@ -80,6 +80,10 @@ void SourceSurfaceSharedDataWrapper::Init(SourceSurfaceSharedData* aSurface) {
 bool SourceSurfaceSharedDataWrapper::EnsureMapped(size_t aLength) {
   MOZ_ASSERT(!GetData());
 
+  if (mBufHandle.Size() < aLength) {
+    return false;
+  }
+
   auto mapping = mBufHandle.Map();
   while (!mapping) {
     nsTArray<RefPtr<SourceSurfaceSharedDataWrapper>> expired;
