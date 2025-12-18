@@ -1243,30 +1243,6 @@ newtab.search:
     send_in_pings:
       - newtab
 
-newtab.handoff_preference:
-  enabled:
-    lifetime: application
-    type: boolean
-    description: >
-      Records whether the
-      browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar preference is
-      enabled or disabled
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1864496
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892148
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1940643
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1978995
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1864496
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1892148
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1940643
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1978995
-    data_sensitivity:
-      - interaction
-    expires: 151
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
-
 topsites:
   enabled:
     lifetime: application

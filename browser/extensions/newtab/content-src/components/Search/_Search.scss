@@ -54,15 +54,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     @media (min-width: $break-point-widest) {
       width: 720px;
     }
-
-    // Bug 1966715: Offset padding of the submit button so the reset button is visible
-    &.no-handoff {
-      input {
-        // Bug 1967304 - calc ($var)
-        padding-inline-end: calc($search-button-width + var(--space-medium)); // stylelint-disable-line declaration-property-value-disallowed-list
-      }
-    }
-
   }
 
   .search-inner-wrapper:has(.trending-searches-pill-wrapper) {
@@ -72,17 +63,9 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     .search-handoff-button {
       height: 52px;
     }
-
-    &.no-handoff {
-      #newtab-search-text,
-      .search-button {
-        height: 52px;
-      }
-    }
   }
 
-  .search-handoff-button,
-  input {
+  .search-handoff-button {
     background: var(--newtab-background-color-secondary) var(--newtab-search-icon) $search-icon-padding center no-repeat;
     background-size: $search-icon-size;
     // Bug 1967304 - $variable
@@ -99,47 +82,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
 
     &:dir(rtl) {
       background-position-x: right $search-icon-padding;
-    }
-  }
-
-  .search-inner-wrapper:active input,
-  input:focus {
-    border: 1px solid var(--newtab-primary-action-background);
-    outline: 0;
-    box-shadow: $shadow-focus;
-  }
-
-  .search-button {
-    background: $glyph-forward no-repeat center center;
-    background-size: 16px 16px;
-    border: 0;
-    border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
-    -moz-context-properties: fill;
-    fill: var(--newtab-text-secondary-color);
-    height: 100%;
-    inset-inline-end: 0;
-    position: absolute;
-    width: $search-button-width;
-
-    &:focus,
-    &:hover {
-      background-color: var(--newtab-element-hover-color);
-      cursor: pointer;
-    }
-
-    &:focus {
-      outline: 0;
-      box-shadow: $shadow-focus;
-      border: 1px solid var(--newtab-primary-action-background);
-      border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
-    }
-
-    &:active {
-      background-color: var(--newtab-element-hover-color);
-    }
-
-    &:dir(rtl) {
-      transform: scaleX(-1);
     }
   }
 
@@ -394,15 +336,6 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
         min-height: $search-height;
       }
 
-      input {
-        background-position-x: $search-icon-padding;
-        background-size: $search-icon-size;
-
-        &:dir(rtl) {
-          background-position-x: right $search-icon-padding;
-        }
-      }
-
       .search-handoff-button .fake-caret {
         inset-block-start: var(--space-large);
       }
@@ -424,86 +357,5 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
         inset-block-start: var(--space-small);
       }
     }
-  }
-}
-
-@at-root {
-
-  // Adjust the style of the contentSearchUI-generated table
-  .contentSearchSuggestionTable {
-    border: 0;
-    box-shadow: $context-menu-shadow;
-    transform: translateY($textbox-shadow-size);
-    background-color: var(--newtab-background-color);
-
-    .contentSearchHeader {
-      color: var(--newtab-text-secondary-color);
-      background-color: var(--newtab-background-color-secondary);
-    }
-
-    .contentSearchHeader,
-    .contentSearchSettingsButton {
-      border-color: var(--border-color);
-    }
-
-    .contentSearchSuggestionsList {
-      color: var(--newtab-text-primary-color);
-      border: 0;
-    }
-
-    .contentSearchOneOffsTable {
-      border-block-start: solid 1px var(--border-color);
-      background-color: var(--newtab-background-color);
-    }
-
-    .contentSearchSearchWithHeaderSearchText {
-      color: var(--newtab-text-primary-color);
-    }
-
-    .contentSearchSuggestionRow {
-      &.selected {
-        background: var(--newtab-element-hover-color);
-        color: var(--newtab-text-primary-color);
-
-        &:active {
-          background: var(--newtab-element-active-color);
-        }
-
-        .historyIcon {
-          fill: var(--newtab-text-secondary-color);
-        }
-      }
-    }
-
-    .contentSearchOneOffItem {
-      // Make the border slightly shorter by offsetting from the top and bottom
-      $border-offset: 18%;
-
-      background-image: none;
-      border-image: linear-gradient(transparent $border-offset, var(--border-color) $border-offset, var(--border-color) 100% - $border-offset, transparent 100% - $border-offset) 1;
-      border-inline-end: 1px solid;
-      position: relative;
-
-      &.selected {
-        background: var(--newtab-element-hover-color);
-      }
-
-      &:active {
-        background: var(--newtab-element-active-color);
-      }
-    }
-
-    .contentSearchSettingsButton {
-      &:hover {
-        background: var(--newtab-element-hover-color);
-        color: var(--newtab-text-primary-color);
-      }
-    }
-  }
-
-  .contentSearchHeaderRow > td > img,
-  .contentSearchSuggestionRow > td > .historyIcon {
-    margin-inline-start: var(--space-small);
-    margin-inline-end: var(--space-large);
   }
 }

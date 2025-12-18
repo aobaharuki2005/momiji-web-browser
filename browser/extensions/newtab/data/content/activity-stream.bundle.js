@@ -14810,46 +14810,6 @@ class _CustomizeMenu extends (external_React_default()).PureComponent {
 const CustomizeMenu = (0,external_ReactRedux_namespaceObject.connect)(state => ({
   DiscoveryStream: state.DiscoveryStream
 }))(_CustomizeMenu);
-;// CONCATENATED MODULE: ./content-src/lib/constants.mjs
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-const IS_NEWTAB =
-  globalThis.document && globalThis.document.documentURI === "about:newtab";
-const NEWTAB_DARK_THEME = {
-  ntp_background: {
-    r: 42,
-    g: 42,
-    b: 46,
-    a: 1,
-  },
-  ntp_card_background: {
-    r: 66,
-    g: 65,
-    b: 77,
-    a: 1,
-  },
-  ntp_text: {
-    r: 249,
-    g: 249,
-    b: 250,
-    a: 1,
-  },
-  sidebar: {
-    r: 56,
-    g: 56,
-    b: 61,
-    a: 1,
-  },
-  sidebar_text: {
-    r: 249,
-    g: 249,
-    b: 250,
-    a: 1,
-  },
-};
-
 ;// CONCATENATED MODULE: ./content-src/components/Logo/Logo.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -14875,8 +14835,7 @@ function Logo() {
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals ContentSearchUIController, ContentSearchHandoffUIController */
-
+/* globals ContentSearchHandoffUIController */
 
 
 
@@ -14885,11 +14844,9 @@ function Logo() {
 class _Search extends (external_React_default()).PureComponent {
   constructor(props) {
     super(props);
-    this.onSearchClick = this.onSearchClick.bind(this);
     this.onSearchHandoffClick = this.onSearchHandoffClick.bind(this);
     this.onSearchHandoffPaste = this.onSearchHandoffPaste.bind(this);
     this.onSearchHandoffDrop = this.onSearchHandoffDrop.bind(this);
-    this.onInputMount = this.onInputMount.bind(this);
     this.onInputMountHandoff = this.onInputMountHandoff.bind(this);
     this.onSearchHandoffButtonMount = this.onSearchHandoffButtonMount.bind(this);
   }
@@ -14900,9 +14857,6 @@ class _Search extends (external_React_default()).PureComponent {
         event: "SEARCH"
       }));
     }
-  }
-  onSearchClick(event) {
-    window.gContentSearchController.search(event);
   }
   doSearchHandoff(text) {
     this.props.dispatch(actionCreators.OnlyToMain({
@@ -14956,28 +14910,6 @@ class _Search extends (external_React_default()).PureComponent {
       caret.style.setProperty("--caret-blink-time", caretBlinkTime > 0 ? `${caretBlinkTime * 2}ms` : `${1134}ms`);
     }
   }
-  componentWillUnmount() {
-    delete window.gContentSearchController;
-  }
-  onInputMount(input) {
-    if (input) {
-      // The "healthReportKey" and needs to be "newtab" or "abouthome" so that
-      // BrowserUsageTelemetry.sys.mjs knows to handle events with this name, and
-      // can add the appropriate telemetry probes for search. Without the correct
-      // name, certain tests like browser_UsageTelemetry_content.js will fail
-      // (See github ticket #2348 for more details)
-      const healthReportKey = IS_NEWTAB ? "newtab" : "abouthome";
-
-      // gContentSearchController needs to exist as a global so that tests for
-      // the existing about:home can find it; and so it allows these tests to pass.
-      // In the future, when activity stream is default about:home, this can be renamed
-      window.gContentSearchController = new ContentSearchUIController(input, input.parentNode, healthReportKey);
-      addEventListener("ContentSearchClient", this);
-    } else {
-      window.gContentSearchController = null;
-      removeEventListener("ContentSearchClient", this);
-    }
-  }
   onInputMountHandoff(input) {
     if (input) {
       // The handoff UI controller helps us set the search icon and reacts to
@@ -14997,22 +14929,9 @@ class _Search extends (external_React_default()).PureComponent {
    */
   render() {
     const wrapperClassName = ["search-wrapper", this.props.disable && "search-disabled", this.props.fakeFocus && "fake-focus"].filter(v => v).join(" ");
-    return /*#__PURE__*/external_React_default().createElement((external_React_default()).Fragment, null, /*#__PURE__*/external_React_default().createElement("div", {
+    return /*#__PURE__*/external_React_default().createElement("div", {
       className: wrapperClassName
-    }, this.props.showLogo && /*#__PURE__*/external_React_default().createElement(Logo, null), !this.props.handoffEnabled && /*#__PURE__*/external_React_default().createElement("div", {
-      className: "search-inner-wrapper no-handoff"
-    }, /*#__PURE__*/external_React_default().createElement("input", {
-      id: "newtab-search-text",
-      "data-l10n-id": "newtab-search-box-input",
-      maxLength: "256",
-      ref: this.onInputMount,
-      type: "search"
-    }), /*#__PURE__*/external_React_default().createElement("button", {
-      id: "searchSubmit",
-      className: "search-button",
-      "data-l10n-id": "newtab-search-box-search-button",
-      onClick: this.onSearchClick
-    })), this.props.handoffEnabled && /*#__PURE__*/external_React_default().createElement("div", {
+    }, this.props.showLogo && /*#__PURE__*/external_React_default().createElement(Logo, null), /*#__PURE__*/external_React_default().createElement("div", {
       className: "search-inner-wrapper"
     }, /*#__PURE__*/external_React_default().createElement("button", {
       className: "search-handoff-button",
@@ -15034,7 +14953,7 @@ class _Search extends (external_React_default()).PureComponent {
       ref: el => {
         this.fakeCaret = el;
       }
-    })))));
+    }))));
   }
 }
 const Search_Search = (0,external_ReactRedux_namespaceObject.connect)(state => ({
@@ -16168,7 +16087,6 @@ class BaseContent extends (external_React_default()).PureComponent {
     let filteredSections = props.Sections.filter(section => section.id !== "topstories");
     const pocketEnabled = prefs["feeds.section.topstories"] && prefs["feeds.system.topstories"];
     const noSectionsEnabled = !prefs["feeds.topsites"] && !pocketEnabled && filteredSections.filter(section => section.enabled).length === 0;
-    const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
     const enabledSections = {
       topSitesEnabled: prefs["feeds.topsites"],
       pocketEnabled: prefs["feeds.section.topstories"],
@@ -16254,8 +16172,7 @@ class BaseContent extends (external_React_default()).PureComponent {
     }, prefs.showSearch && /*#__PURE__*/external_React_default().createElement("div", {
       className: "non-collapsible-section"
     }, /*#__PURE__*/external_React_default().createElement(ErrorBoundary, null, /*#__PURE__*/external_React_default().createElement(Search_Search, Base_extends({
-      showLogo: noSectionsEnabled || prefs["logowordmark.alwaysVisible"],
-      handoffEnabled: searchHandoffEnabled
+      showLogo: noSectionsEnabled || prefs["logowordmark.alwaysVisible"]
     }, props.Search)))), !prefs.showSearch && !noSectionsEnabled && /*#__PURE__*/external_React_default().createElement(Logo, null), /*#__PURE__*/external_React_default().createElement("div", {
       className: `body-wrapper${initialized ? " on" : ""}`
     }, isDiscoveryStream ? /*#__PURE__*/external_React_default().createElement(ErrorBoundary, {

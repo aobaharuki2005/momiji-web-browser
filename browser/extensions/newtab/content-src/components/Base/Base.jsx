@@ -678,7 +678,6 @@ export class BaseContent extends React.PureComponent {
       !prefs["feeds.topsites"] &&
       !pocketEnabled &&
       filteredSections.filter(section => section.enabled).length === 0;
-    const searchHandoffEnabled = prefs["improvesearch.handoffToAwesomebar"];
     const enabledSections = {
       topSitesEnabled: prefs["feeds.topsites"],
       pocketEnabled: prefs["feeds.section.topstories"],
@@ -846,7 +845,6 @@ export class BaseContent extends React.PureComponent {
                     showLogo={
                       noSectionsEnabled || prefs["logowordmark.alwaysVisible"]
                     }
-                    handoffEnabled={searchHandoffEnabled}
                     {...props.Search}
                   />
                 </ErrorBoundary>

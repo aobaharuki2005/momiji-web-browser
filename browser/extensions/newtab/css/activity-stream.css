@@ -1522,9 +1522,6 @@ main section {
     width: 720px;
   }
 }
-.search-wrapper .search-inner-wrapper.no-handoff input {
-  padding-inline-end: calc(var(--size-item-xlarge) + var(--space-medium));
-}
 .search-wrapper .search-inner-wrapper:has(.trending-searches-pill-wrapper) {
   display: flex;
   flex-direction: column;
@@ -1532,12 +1529,7 @@ main section {
 .search-wrapper .search-inner-wrapper:has(.trending-searches-pill-wrapper) .search-handoff-button {
   height: 52px;
 }
-.search-wrapper .search-inner-wrapper:has(.trending-searches-pill-wrapper).no-handoff #newtab-search-text,
-.search-wrapper .search-inner-wrapper:has(.trending-searches-pill-wrapper).no-handoff .search-button {
-  height: 52px;
-}
-.search-wrapper .search-handoff-button,
-.search-wrapper input {
+.search-wrapper .search-handoff-button {
   background: var(--newtab-background-color-secondary) var(--newtab-search-icon) 16px center no-repeat;
   background-size: 24px;
   padding-inline-start: 52px;
@@ -1551,43 +1543,8 @@ main section {
   -moz-context-properties: fill;
   fill: var(--newtab-text-secondary-color);
 }
-.search-wrapper .search-handoff-button:dir(rtl),
-.search-wrapper input:dir(rtl) {
+.search-wrapper .search-handoff-button:dir(rtl) {
   background-position-x: right 16px;
-}
-.search-wrapper .search-inner-wrapper:active input,
-.search-wrapper input:focus {
-  border: 1px solid var(--newtab-primary-action-background);
-  outline: 0;
-  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
-}
-.search-wrapper .search-button {
-  background: url("chrome://browser/skin/forward.svg") no-repeat center center;
-  background-size: 16px 16px;
-  border: 0;
-  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
-  -moz-context-properties: fill;
-  fill: var(--newtab-text-secondary-color);
-  height: 100%;
-  inset-inline-end: 0;
-  position: absolute;
-  width: var(--size-item-xlarge);
-}
-.search-wrapper .search-button:focus, .search-wrapper .search-button:hover {
-  background-color: var(--newtab-element-hover-color);
-  cursor: pointer;
-}
-.search-wrapper .search-button:focus {
-  outline: 0;
-  box-shadow: 0 0 0 2px var(--newtab-primary-action-background-dimmed);
-  border: 1px solid var(--newtab-primary-action-background);
-  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
-}
-.search-wrapper .search-button:active {
-  background-color: var(--newtab-element-hover-color);
-}
-.search-wrapper .search-button:dir(rtl) {
-  transform: scaleX(-1);
 }
 .search-wrapper.fake-focus:not(.search.disabled) .search-handoff-button {
   border: 1px solid var(--newtab-primary-action-background);
@@ -1798,13 +1755,6 @@ main section {
   .activity-stream .fixed-search .search-wrapper .search-inner-wrapper {
     min-height: 52px;
   }
-  .activity-stream .fixed-search .search-wrapper input {
-    background-position-x: 16px;
-    background-size: 24px;
-  }
-  .activity-stream .fixed-search .search-wrapper input:dir(rtl) {
-    background-position-x: right 16px;
-  }
   .activity-stream .fixed-search .search-wrapper .search-handoff-button .fake-caret {
     inset-block-start: var(--space-large);
   }
@@ -1822,64 +1772,6 @@ main section {
     inset-block-start: var(--space-small);
   }
 }
-.contentSearchSuggestionTable {
-  border: 0;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(0, 0, 0, 0.2);
-  transform: translateY(4px);
-  background-color: var(--newtab-background-color);
-}
-.contentSearchSuggestionTable .contentSearchHeader {
-  color: var(--newtab-text-secondary-color);
-  background-color: var(--newtab-background-color-secondary);
-}
-.contentSearchSuggestionTable .contentSearchHeader,
-.contentSearchSuggestionTable .contentSearchSettingsButton {
-  border-color: var(--border-color);
-}
-.contentSearchSuggestionTable .contentSearchSuggestionsList {
-  color: var(--newtab-text-primary-color);
-  border: 0;
-}
-.contentSearchSuggestionTable .contentSearchOneOffsTable {
-  border-block-start: solid 1px var(--border-color);
-  background-color: var(--newtab-background-color);
-}
-.contentSearchSuggestionTable .contentSearchSearchWithHeaderSearchText {
-  color: var(--newtab-text-primary-color);
-}
-.contentSearchSuggestionTable .contentSearchSuggestionRow.selected {
-  background: var(--newtab-element-hover-color);
-  color: var(--newtab-text-primary-color);
-}
-.contentSearchSuggestionTable .contentSearchSuggestionRow.selected:active {
-  background: var(--newtab-element-active-color);
-}
-.contentSearchSuggestionTable .contentSearchSuggestionRow.selected .historyIcon {
-  fill: var(--newtab-text-secondary-color);
-}
-.contentSearchSuggestionTable .contentSearchOneOffItem {
-  background-image: none;
-  border-image: linear-gradient(transparent 18%, var(--border-color) 18%, var(--border-color) 82%, transparent 82%) 1;
-  border-inline-end: 1px solid;
-  position: relative;
-}
-.contentSearchSuggestionTable .contentSearchOneOffItem.selected {
-  background: var(--newtab-element-hover-color);
-}
-.contentSearchSuggestionTable .contentSearchOneOffItem:active {
-  background: var(--newtab-element-active-color);
-}
-.contentSearchSuggestionTable .contentSearchSettingsButton:hover {
-  background: var(--newtab-element-hover-color);
-  color: var(--newtab-text-primary-color);
-}
-
-.contentSearchHeaderRow > td > img,
-.contentSearchSuggestionRow > td > .historyIcon {
-  margin-inline-start: var(--space-small);
-  margin-inline-end: var(--space-large);
-}
-
 /* stylelint-disable max-nesting-depth */
 .context-menu {
   background: var(--newtab-background-color-secondary);

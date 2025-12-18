@@ -48,15 +48,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "handoffToAwesomebarPrefValue",
-  "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar",
-  false,
-  (preference, previousValue, new_value) =>
-    Glean.newtabHandoffPreference.enabled.set(new_value)
-);
-
 export const PREF_IMPRESSION_ID = "impressionId";
 export const TELEMETRY_PREF = "telemetry";
 export const EVENTS_TELEMETRY_PREF = "telemetry.ut.events";
@@ -275,9 +266,6 @@ export class TelemetryFeed {
       );
     }
     Glean.newtab.locale.set(Services.locale.appLocaleAsBCP47);
-    Glean.newtabHandoffPreference.enabled.set(
-      lazy.handoffToAwesomebarPrefValue
-    );
   }
 
   getOrCreateImpressionId() {
