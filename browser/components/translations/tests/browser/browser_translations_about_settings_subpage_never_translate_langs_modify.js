@@ -49,7 +49,7 @@ add_task(async function test_never_translate_languages_add_and_remove() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.NeverLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .NeverTranslateLanguagesEmptyStateHidden,
@@ -77,7 +77,9 @@ add_task(async function test_never_translate_languages_add_and_remove() {
   info("Adding French (fr) via dropdown");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       const prefChanged = TestUtils.waitForPrefChange(
@@ -97,7 +99,9 @@ add_task(async function test_never_translate_languages_add_and_remove() {
   info("Adding Ukrainian (uk) via dropdown");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       const prefChanged = TestUtils.waitForPrefChange(
@@ -117,7 +121,9 @@ add_task(async function test_never_translate_languages_add_and_remove() {
   info("Removing middle item (French)");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       const prefChanged = TestUtils.waitForPrefChange(
@@ -140,7 +146,9 @@ add_task(async function test_never_translate_languages_add_and_remove() {
   info("Removing Ukrainian");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       const prefChanged = TestUtils.waitForPrefChange(
@@ -164,7 +172,7 @@ add_task(async function test_never_translate_languages_add_and_remove() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.NeverLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .NeverTranslateLanguagesEmptyStateShown,
@@ -239,7 +247,9 @@ add_task(async function test_never_translate_languages_invalid_tags() {
   info("Adding invalid tags via pref change");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       Services.prefs.setCharPref(
@@ -323,7 +333,7 @@ add_task(async function test_never_translate_languages_stealing() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.NeverLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .NeverTranslateLanguagesEmptyStateHidden,
@@ -360,7 +370,9 @@ add_task(async function test_never_translate_languages_stealing() {
   info("Adding French to never-translate via UI");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       const neverPrefChanged = TestUtils.waitForPrefChange(
@@ -388,7 +400,9 @@ add_task(async function test_never_translate_languages_stealing() {
   info("Verifying stealing also works via UI for Ukrainian");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       const neverPrefChanged = TestUtils.waitForPrefChange(

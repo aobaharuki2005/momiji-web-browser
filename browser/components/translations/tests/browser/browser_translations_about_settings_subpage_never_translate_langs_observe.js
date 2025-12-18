@@ -49,7 +49,7 @@ add_task(async function test_never_translate_languages_observe_pref_changes() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.NeverLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .NeverTranslateLanguagesEmptyStateHidden,
@@ -70,7 +70,9 @@ add_task(async function test_never_translate_languages_observe_pref_changes() {
   info("Adding more languages via pref (es,fr,uk)");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       Services.prefs.setCharPref(NEVER_TRANSLATE_LANGS_PREF, "es,fr,uk");
@@ -86,7 +88,9 @@ add_task(async function test_never_translate_languages_observe_pref_changes() {
   info("Removing French via pref (es,uk)");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       Services.prefs.setCharPref(NEVER_TRANSLATE_LANGS_PREF, "es,uk");
@@ -103,7 +107,7 @@ add_task(async function test_never_translate_languages_observe_pref_changes() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.NeverLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .NeverTranslateLanguagesEmptyStateShown,
@@ -176,7 +180,7 @@ add_task(async function test_never_translate_languages_simulated_stealing() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.NeverLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .NeverTranslateLanguagesEmptyStateHidden,
@@ -208,7 +212,7 @@ add_task(async function test_never_translate_languages_simulated_stealing() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.NeverLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
         [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
