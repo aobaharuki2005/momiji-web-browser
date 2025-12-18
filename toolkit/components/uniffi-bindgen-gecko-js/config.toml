@@ -51,6 +51,7 @@ RelevancyStore = "Sync"
 [remote_settings.async_wrappers]
 RemoteSettings = "AsyncWrapped"
 "RemoteSettings.new" = "Sync"
+"RemoteSettingsService.client_url" = "Sync"
 "RemoteSettingsService.new" = "Sync"
 "RemoteSettingsService.update_config" = "Sync"
 "RemoteSettingsService.make_client" = "AsyncWrapped"
