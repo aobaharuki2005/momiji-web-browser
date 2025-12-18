@@ -406,7 +406,7 @@
   -->
   <string name="search_scan_button_2">סריקת קוד QR</string>
   <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-  <string name="search_shortcuts_engine_settings">הגדרות מנוע חיפוש</string>
+  <string name="search_shortcuts_engine_settings">הגדרות מנועי חיפוש</string>
   <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
   <string name="awesomebar_clipboard_title">מילוי קישור מהלוח</string>
   <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -3229,7 +3229,7 @@
   <!-- The title of the warning card informs the user that a translation could not be completed. -->
   <string name="translation_error_could_not_translate_warning_text">אירעה שגיאה בתרגום. נא לנסות שוב.</string>
   <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
-  <string name="translation_error_could_not_load_languages_warning_text">לא ניתן היה לטעון שפות. נא לבדוק את חיבור האינטרנט שלך ולנסות שוב.</string>
+  <string name="translation_error_could_not_load_languages_warning_text">לא ניתן היה לטעון שפות. נא לבדוק את החיבור שלך לאינטרנט ולנסות שוב.</string>
   <!-- The title of the warning card informs the user that a language is not supported. %1$s is the name of the language that is not supported. -->
   <string name="translation_error_language_not_supported_warning_text">איננו תומכים ב%1$s עדיין, עמך הסליחה.</string>
   <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->

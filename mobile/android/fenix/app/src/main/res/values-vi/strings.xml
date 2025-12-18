@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Đăng nhập để quản lý các thẻ đã đồng bộ từ mọi thiết bị của bạn.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Đăng nhập</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Tất cả câu chuyện</string>
   <!--
     Home - Bookmarks
 
@@ -1465,6 +1467,8 @@
   <string name="tab_drawer_fab_content">Riêng tư</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">Đồng bộ hóa</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">Tìm kiếm thẻ của bạn</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">Chia sẻ tất cả các thẻ</string>
   <!-- Text shown in the menu to view recently closed tabs -->
@@ -1513,6 +1517,8 @@
   <string name="close_tab_title">Đóng thẻ %s</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">Menu các thẻ đang mở</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">Quay lại trình quản lý thẻ</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">Lưu các thẻ vào bộ sưu tập</string>
   <!-- Text for the menu button to delete a collection -->
@@ -1529,6 +1535,8 @@
   <string name="delete_from_history">Xóa khỏi lịch sử</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (Chế độ riêng tư)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">Mở tìm kiếm thẻ</string>
   <!--
     History
 
@@ -2691,6 +2699,10 @@
   <string name="edit_login_navigate_back_button_content_description">Điều hướng quay lại</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">Chỉnh sửa thông tin đăng nhập</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">Thêm thông tin đăng nhập mới</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">Xoá văn bản tìm kiếm</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Mở trang web trong trình duyệt</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -3930,4 +3942,16 @@
   <string name="terms_of_use_prompt_accept">Chấp nhận</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Nhắc tôi sau</string>
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">Chúng tôi đã cập nhật %1$s của mình để phù hợp với các tính năng mới nhất trong Firefox. %2$s</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Thông báo về quyền riêng tư</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Tìm hiểu thêm</string>
 </resources>
