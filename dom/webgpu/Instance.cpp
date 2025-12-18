@@ -125,6 +125,14 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
     }
   };
 
+#ifndef EARLY_BETA_OR_EARLIER
+  if (dom::WorkerPrivate* wp = dom::GetCurrentThreadWorkerPrivate()) {
+    rejectIf(wp->IsServiceWorker(),
+             "WebGPU in service workers is not yet available in Release or "
+             "late Beta builds; see "
+             "<https://bugzilla.mozilla.org/show_bug.cgi?id=1942431>.");
+  }
+#endif
   rejectIf(!gfx::gfxVars::AllowWebGPU(), "WebGPU is disabled by blocklist.");
   rejectIf(!StaticPrefs::dom_webgpu_enabled(),
            "WebGPU is disabled because the `dom.webgpu.enabled` pref. is set "
