@@ -513,7 +513,9 @@ export class FxviewTabRowBase extends MozLitElement {
 
   formatURIForDisplay(uriString) {
     return !window.IS_STORYBOOK
-      ? lazy.BrowserUtils.formatURIStringForDisplay(uriString)
+      ? lazy.BrowserUtils.formatURIStringForDisplay(uriString, {
+          showFilenameForLocalURIs: true,
+        })
       : uriString;
   }
 
