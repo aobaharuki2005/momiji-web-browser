@@ -257,7 +257,7 @@ export class FormAutofillPreferences {
           l10nId: "payment-moz-box-item",
           iconSrc: "chrome://formautofill/content/icon-credit-card-generic.svg",
           l10nArgs: {
-            cardNumber: record["cc-number"].replace(/^(\*+)(\d+)$/, "$2$1"),
+            cardNumber: record["cc-number"].replace(/^(\*+)(\d+)$/, "$1 $2"),
             expDate: record["cc-exp"].replace(/^(\d{4})-\d{2}$/, "XX/$1"),
           },
           options: [

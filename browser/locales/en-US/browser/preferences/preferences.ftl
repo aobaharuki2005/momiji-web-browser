@@ -1478,7 +1478,7 @@ payments-delete-payment-prompt-cancel-button = Cancel
 # These values are displayed for each credit card record listed on the Manage Payment methods
 # settings page.
 # Variables:
-#   $cardNumber (string) - The obscured credit card number (for example: 2423 *********)
+#   $cardNumber (string) - The obscured credit card number (for example: ********* 2423)
 #   $expDate (string) - The obscured expiry date of the credit card (for example: XX/2027)
 payment-moz-box-item =
   .label = { $cardNumber }
