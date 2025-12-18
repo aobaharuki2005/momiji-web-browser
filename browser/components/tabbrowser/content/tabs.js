@@ -1066,6 +1066,15 @@
       return this.hasAttribute("movingtab");
     }
 
+    isContainerVerticalPinnedGrid(tab) {
+      return (
+        tab.pinned &&
+        this.verticalMode &&
+        this.hasAttribute("expanded") &&
+        !this.expandOnHover
+      );
+    }
+
     /**
      * Changes the selected tab or tab group label on the tab strip
      * relative to the ARIA-focused tab strip element or the active tab. This

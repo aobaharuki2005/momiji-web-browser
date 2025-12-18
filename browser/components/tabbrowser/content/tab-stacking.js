@@ -117,7 +117,7 @@
           isPinned ? numPinned : undefined
         );
 
-        if (this._isContainerVerticalPinnedGrid(draggedTab)) {
+        if (this._tabbrowserTabs.isContainerVerticalPinnedGrid(draggedTab)) {
           // Update both translate axis for pinned vertical expanded tabs
           if (oldTranslateX > 0 && translateOffsetX > tabWidth / 2) {
             newTranslateX += tabWidth;
@@ -205,7 +205,7 @@
           !isSplitViewWrapper(draggedTab) &&
           !shouldPin &&
           !shouldUnpin;
-        if (this._isContainerVerticalPinnedGrid(draggedTab)) {
+        if (this._tabbrowserTabs.isContainerVerticalPinnedGrid(draggedTab)) {
           shouldTranslate &&=
             (oldTranslateX && oldTranslateX != newTranslateX) ||
             (oldTranslateY && oldTranslateY != newTranslateY);
@@ -446,7 +446,7 @@
           "Cannot move together a mix of pinned and unpinned tabs."
         );
       }
-      let isGrid = this._isContainerVerticalPinnedGrid(tab);
+      let isGrid = this._tabbrowserTabs.isContainerVerticalPinnedGrid(tab);
       let animate = !gReduceMotion;
 
       tab._moveTogetherSelectedTabsData = {
@@ -655,7 +655,7 @@
       }
       let isPinned = tab.pinned;
       let dragAndDropElements = this._tabbrowserTabs.dragAndDropElements;
-      let isGrid = this._isContainerVerticalPinnedGrid(tab);
+      let isGrid = this._tabbrowserTabs.isContainerVerticalPinnedGrid(tab);
       let periphery = document.getElementById(
         "tabbrowser-arrowscrollbox-periphery"
       );

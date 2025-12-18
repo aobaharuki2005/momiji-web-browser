@@ -129,6 +129,10 @@ add_task(async function test_resize_container_on_unpin_horizontal() {
 });
 
 add_task(async function test_pin_to_promo_card_vertical() {
+  // Ensure the mouse is not hovering over the tab strip.
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mouseover",
+  });
   await SpecialPowers.pushPrefEnv({
     set: [
       ["sidebar.verticalTabs", true],

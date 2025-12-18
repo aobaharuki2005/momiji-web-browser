@@ -136,7 +136,7 @@
 
           // Pinned tabs in expanded vertical mode are on a grid format and require
           // different logic to drag and drop.
-          if (this._isContainerVerticalPinnedGrid(draggedTab)) {
+          if (this._tabbrowserTabs.isContainerVerticalPinnedGrid(draggedTab)) {
             this._animateExpandedPinnedTabMove(event);
             return;
           }
@@ -300,7 +300,7 @@
         let isPinned = draggedTab.pinned;
         let numPinned = gBrowser.pinnedTabCount;
 
-        if (this._isContainerVerticalPinnedGrid(draggedTab)) {
+        if (this._tabbrowserTabs.isContainerVerticalPinnedGrid(draggedTab)) {
           // Update both translate axis for pinned vertical expanded tabs
           if (oldTranslateX > 0 && translateOffsetX > tabWidth / 2) {
             newTranslateX += tabWidth;
@@ -385,7 +385,7 @@
           !isSplitViewWrapper(draggedTab) &&
           !shouldPin &&
           !shouldUnpin;
-        if (this._isContainerVerticalPinnedGrid(draggedTab)) {
+        if (this._tabbrowserTabs.isContainerVerticalPinnedGrid(draggedTab)) {
           shouldTranslate &&=
             (oldTranslateX && oldTranslateX != newTranslateX) ||
             (oldTranslateY && oldTranslateY != newTranslateY);
@@ -857,15 +857,6 @@
       return target;
     }
 
-    _isContainerVerticalPinnedGrid(tab) {
-      return (
-        this._tabbrowserTabs.verticalMode &&
-        tab.pinned &&
-        this._tabbrowserTabs.hasAttribute("expanded") &&
-        !this._tabbrowserTabs.expandOnHover
-      );
-    }
-
     #isMovingTab() {
       return this._tabbrowserTabs.hasAttribute("movingtab");
     }
@@ -954,7 +945,7 @@
         // Temporarily disable MousePosTracker while dragging
         MousePosTracker.removeListener(document.defaultView.SidebarController);
       }
-      if (this._isContainerVerticalPinnedGrid(tab)) {
+      if (this._tabbrowserTabs.isContainerVerticalPinnedGrid(tab)) {
         // In expanded vertical mode, the max number of pinned tabs per row is dynamic
         // Set this before adjusting dragged tab's position
         let pinnedTabs = this._tabbrowserTabs.visibleTabs.slice(
@@ -1191,7 +1182,7 @@
       let isPinned = tab.pinned;
       let numPinned = gBrowser.pinnedTabCount;
       let dragAndDropElements = this._tabbrowserTabs.dragAndDropElements;
-      let isGrid = this._isContainerVerticalPinnedGrid(tab);
+      let isGrid = this._tabbrowserTabs.isContainerVerticalPinnedGrid(tab);
       let periphery = document.getElementById(
         "tabbrowser-arrowscrollbox-periphery"
       );

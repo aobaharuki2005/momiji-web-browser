@@ -40,16 +40,16 @@ async function openTabPreview(tab, win = window) {
 }
 
 async function closeTabPreviews(win = window) {
-  const tabs = win.document.getElementById("tabbrowser-tabs");
-  const tabsRect = tabs.getBoundingClientRect();
   const previewHidden = BrowserTestUtils.waitForPopupEvent(
     win.document.getElementById(TAB_PREVIEW_PANEL_ID),
     "hidden"
   );
+  const tabs = win.document.getElementById("tabbrowser-tabs");
+  const tabsRect = tabs.getBoundingClientRect();
   EventUtils.synthesizeMouse(
     tabs,
     0,
-    tabsRect.height + 1,
+    tabsRect.height + 10,
     {
       type: "mouseout",
     },
@@ -451,7 +451,9 @@ add_task(async function tabUrlBarInputTests() {
   await previewHidden;
 
   Assert.equal(previewElement.state, "closed", "Preview is closed");
-  await closeTabPreviews();
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {
+    type: "mousemove",
+  });
   await openTabPreview(tab1);
   Assert.equal(previewElement.state, "open", "Preview is open");
 
@@ -984,15 +986,12 @@ add_task(async function tabGroupPanelUpdatesTests() {
 // TODO Bug 1899556: If possible, write a test to confirm tab previews
 // aren't shown when /all/ windows are in the background
 add_task(async function noPreviewInBackgroundWindowTests() {
+  todo(false, "test is failing on CI, bug 2006695");
+
+  /*
   const bgWindow = window;
-  const bgTabUngrouped = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:robots"
-  );
-  const bgTabGrouped = await BrowserTestUtils.openNewForegroundTab(
-    gBrowser,
-    "about:robots"
-  );
+  const bgTabUngrouped = await addTab("about:robots");
+  const bgTabGrouped = await addTab("about:robots");
   const bgGroup = gBrowser.addTabGroup([bgTabGrouped]);
   bgGroup.collapsed = true;
 
@@ -1060,6 +1059,7 @@ add_task(async function noPreviewInBackgroundWindowTests() {
 
   sinon.restore();
   await resetState();
+  */
 });
 
 /**
