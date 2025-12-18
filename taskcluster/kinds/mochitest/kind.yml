@@ -536,8 +536,7 @@ tasks:
                 .*-asan.*: 1800
                 .*-tsan.*: 2400
                 .*-ccov.*: 2400
-                win.*/debug: 1800
-                default: 1200
+                default: 1500
         mozharness:
             mochitest-flavor: browser
         instance-size: default
