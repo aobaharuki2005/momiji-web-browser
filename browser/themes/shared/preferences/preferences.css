@@ -1551,6 +1551,11 @@ setting-group[groupid="home"] {
   --promo-image-position: top;
 }
 
+#etpResetButtonGroup {
+  display: flex;
+  gap: var(--space-small);
+}
+
 #addresses-list-header,
 #payments-list-header {
   --box-label-font-weight: var(--heading-font-weight);

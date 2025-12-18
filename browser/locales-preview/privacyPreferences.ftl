@@ -255,3 +255,51 @@ preferences-etp-level-warning-message =
 preferences-etp-manage-exceptions-button =
     .label = Manage exceptions
     .description = Manage websites where Enhanced Tracking Protection is disabled.
+
+preferences-etp-customize-header =
+    .heading = Customize privacy protection
+    .description = Aut voluptates deleniti ut. Aut et praesentium voluptas dolore nostrum occaecati.
+
+preferences-etp-reset =
+    .label = Reset
+    .description = Aut voluptates deleniti ut. Aut et praesentium voluptas dolore nostrum occaecati. Fugit soluta dolor aut soluta sapiente ut vel.
+
+
+preferences-etp-reset-standard-button =
+    .label = Reset to standard
+
+preferences-etp-reset-strict-button =
+    .label = Reset to strict
+
+preferences-etp-custom-control-group =
+    .label = Tracking protection
+
+preferences-etp-custom-cookies-enabled =
+    .label = Cookies
+    .description = Description
+
+preferences-etp-custom-cookie-behavior =
+    .aria-label = { preferences-etp-custom-cookies-enabled.label }
+
+preferences-etpc-custom-cookie-behavior-accept-all =
+    .label = Allow all cookies
+
+preferences-etp-custom-tracking-protection-enabled =
+    .label = Tracking content
+    .description = Description
+
+preferences-etp-custom-tracking-protection-enabled-context =
+    .aria-label = { preferences-etp-custom-tracking-protection-enabled.label }
+
+preferences-etp-custom-crypto-mining-protection-enabled =
+    .label = Cryptominers
+
+preferences-etp-custom-known-fingerprinting-protection-enabled =
+    .label = Known fingerprinters
+
+preferences-etp-custom-suspect-fingerprinting-protection-enabled =
+    .label = Suspected fingerprinters
+    .description = Description
+
+preferences-etp-custom-suspect-fingerprinting-protection-enabled-context =
+    .aria-label = { preferences-etp-custom-suspect-fingerprinting-protection-enabled.label }
