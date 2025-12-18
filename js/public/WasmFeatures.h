@@ -119,7 +119,7 @@
     /* capitalized name   */ BranchHinting,                             \
     /* lower case name    */ branchHinting,                             \
     /* compile predicate  */ WASM_BRANCH_HINTING_ENABLED,               \
-    /* compiler predicate */ IonAvailable(cx),                          \
+    /* compiler predicate */ true,                                      \
     /* flag predicate     */ true,                                      \
     /* flag force enable  */ false,                                     \
     /* flag fuzz enable   */ true,                                      \
