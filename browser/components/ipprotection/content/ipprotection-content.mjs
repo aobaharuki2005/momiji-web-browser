@@ -188,6 +188,7 @@ export default class IPProtectionContentElement extends MozLitElement {
       this._showMessageBar = false;
       this._messageDismissed = true;
       this.state.error = "";
+      this.state.bandwidthWarning = false;
     }
   }
 
@@ -204,11 +205,17 @@ export default class IPProtectionContentElement extends MozLitElement {
     let messageId;
     let messageLink;
     let messageLinkl10nId;
+    let messageType = "info";
     // If there are errors, the error message should take precedence
     if (this.#hasErrors) {
       messageId = "ipprotection-message-generic-error";
+      messageType = ERRORS.GENERIC;
+    } else if (this.state.bandwidthWarning) {
+      messageId = "ipprotection-message-bandwidth-warning";
+      messageType = "warning";
     } else if (this.state.onboardingMessage) {
       messageId = this.state.onboardingMessage;
+      messageType = "info";
 
       switch (this.state.onboardingMessage) {
         case "ipprotection-message-continuous-onboarding-intro":
@@ -227,7 +234,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     return html`
       <ipprotection-message-bar
         class="vpn-top-content"
-        type=${this.#hasErrors ? ERRORS.GENERIC : "info"}
+        type=${messageType}
         .messageId=${ifDefined(messageId)}
         .messageLink=${ifDefined(messageLink)}
         .messageLinkl10nId=${ifDefined(messageLinkl10nId)}
@@ -292,7 +299,9 @@ export default class IPProtectionContentElement extends MozLitElement {
 
   render() {
     if (
-      (this.#hasErrors || this.state.onboardingMessage) &&
+      (this.#hasErrors ||
+        this.state.onboardingMessage ||
+        this.state.bandwidthWarning) &&
       !this._messageDismissed
     ) {
       this._showMessageBar = true;

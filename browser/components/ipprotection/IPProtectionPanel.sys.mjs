@@ -129,6 +129,7 @@ export class IPProtectionPanel {
       isAlpha: lazy.IPPEnrollAndEntitleManager.isAlpha,
       hasUpgraded: lazy.IPPEnrollAndEntitleManager.hasUpgraded,
       onboardingMessage: "",
+      bandwidthWarning: "",
     };
 
     if (window) {
