@@ -531,7 +531,7 @@ taskgraph:
 
 workers:
     aliases:
-        b-linux.*:
+        b-linux(|-docker(|-x?large)-amd|-medium|-aarch64|-xlarge|-kvm):
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux

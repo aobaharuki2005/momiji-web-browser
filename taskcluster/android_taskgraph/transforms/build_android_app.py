@@ -39,7 +39,7 @@ def add_common_config(config, tasks):
         treeherder["kind"] = "build"
         treeherder["tier"] = 1
 
-        task["worker-type"] = "b-linux-amd"
+        task["worker-type"] = "b-linux-docker-amd"
 
         worker = task.setdefault("worker", {})
         worker["docker-image"] = {}

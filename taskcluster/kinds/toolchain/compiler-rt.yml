@@ -448,7 +448,7 @@ wasm32-wasi-compiler-rt-21:
     description: "wasm32-wasi Compiler-rt for Clang 21 toolchain build"
     treeherder:
         symbol: TL(wasi-crt-21)
-    worker-type: b-linux-xlarge-amd
+    worker-type: b-linux-docker-xlarge-amd
     run:
         script: build-compiler-rt-wasi.sh
         arguments:
