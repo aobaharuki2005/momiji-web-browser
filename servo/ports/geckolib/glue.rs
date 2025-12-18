@@ -10799,8 +10799,10 @@ fn offset_params_from_base_params(
         mBaseParams: AnchorPosResolutionParams {
             mFrame: params.mFrame,
             mPosition: params.mPosition,
+            mPositionArea: params.mPositionArea,
             mCache: params.mCache,
-            mAutoResolutionOverrideParams: params.mAutoResolutionOverrideParams,
+            mIAnchorCenter: params.mIAnchorCenter,
+            mBAnchorCenter: params.mBAnchorCenter,
         },
     }
 }

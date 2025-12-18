@@ -512,6 +512,11 @@ struct ReflowInput : public SizeComputationInput {
     bool mIOffsetsNeedCSSAlign : 1;
     bool mBOffsetsNeedCSSAlign : 1;
 
+    // True when anchor-center is being used with a valid anchor and at least
+    // one inset is auto on this axis. Used to zero out margins.
+    bool mIAnchorCenter : 1;
+    bool mBAnchorCenter : 1;
+
     // Is this frame or one of its ancestors being reflowed in a different
     // continuation than the one in which it was previously reflowed?  In
     // other words, has it moved to a different column or page than it was in
@@ -825,6 +830,7 @@ struct ReflowInput : public SizeComputationInput {
                                            WritingMode aContainingBlockWM,
                                            bool aIsMarginBStartAuto,
                                            bool aIsMarginBEndAuto,
+                                           bool aIsIAnchorCenter,
                                            LogicalMargin& aMargin);
 
   // Resolve any inline-axis 'auto' margins (if any) for an absolutely
@@ -834,6 +840,7 @@ struct ReflowInput : public SizeComputationInput {
                                             WritingMode aContainingBlockWM,
                                             bool aIsMarginIStartAuto,
                                             bool aIsMarginIEndAuto,
+                                            bool aIsBAnchorCenter,
                                             LogicalMargin& aMargin);
 
  protected:
@@ -974,5 +981,10 @@ struct ReflowInput : public SizeComputationInput {
 };
 
 }  // namespace mozilla
+
+void ComputeAnchorCenterUsage(
+    const nsIFrame* aFrame,
+    mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache,
+    bool& aInlineUsesAnchorCenter, bool& aBlockUsesAnchorCenter);
 
 #endif  // mozilla_ReflowInput_h
