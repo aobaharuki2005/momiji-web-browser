@@ -682,7 +682,11 @@ CanonicalBrowsingContext::CreateLoadingSessionHistoryEntryForLoad(
                              .map([](auto& entry) { return &entry; })
                              .valueOr(nullptr)));
 
-    loadingInfo->mTriggeringNavigationType = navigationType;
+    if (!existingLoadingInfo ||
+        !existingLoadingInfo->mTriggeringNavigationType) {
+      loadingInfo->mTriggeringNavigationType = navigationType;
+    }
+
     MOZ_LOG_FMT(gNavigationAPILog, LogLevel::Verbose,
                 "Triggering navigation type was {}.", *navigationType);
 
@@ -790,11 +794,13 @@ void CanonicalBrowsingContext::GetContiguousEntriesForLoad(
           targetURI, uri, false, false));
   if (aEntry->isInList() ||
       (mActiveEntry && mActiveEntry->isInList() && sameOrigin)) {
+    MOZ_DIAGNOSTIC_ASSERT(aLoadingInfo.mTriggeringNavigationType);
+    NavigationType navigationType =
+        aLoadingInfo.mTriggeringNavigationType.valueOr(NavigationType::Push);
     nsSHistory::WalkContiguousEntriesInOrder(
         aEntry->isInList() ? aEntry : mActiveEntry,
         [activeEntry = mActiveEntry, entries = &aLoadingInfo.mContiguousEntries,
-         navigationType =
-             *aLoadingInfo.mTriggeringNavigationType](auto* aEntry) {
+         navigationType](auto* aEntry) {
           nsCOMPtr<SessionHistoryEntry> entry = do_QueryObject(aEntry);
           MOZ_ASSERT(entry);
           if (navigationType == NavigationType::Replace &&
@@ -1395,12 +1401,13 @@ void CanonicalBrowsingContext::SessionHistoryCommit(
 }
 
 already_AddRefed<nsDocShellLoadState> CanonicalBrowsingContext::CreateLoadInfo(
-    SessionHistoryEntry* aEntry) {
+    SessionHistoryEntry* aEntry, NavigationType aNavigationType) {
   const SessionHistoryInfo& info = aEntry->Info();
   RefPtr<nsDocShellLoadState> loadState(new nsDocShellLoadState(info.GetURI()));
   info.FillLoadInfo(*loadState);
   UniquePtr<LoadingSessionHistoryInfo> loadingInfo;
   loadingInfo = MakeUnique<LoadingSessionHistoryInfo>(aEntry);
+  loadingInfo->mTriggeringNavigationType = Some(aNavigationType);
   mLoadingEntries.AppendElement(
       LoadingSessionHistoryEntry{loadingInfo->mLoadId, aEntry});
   loadState->SetLoadingSessionHistoryInfo(std::move(loadingInfo));
@@ -1424,7 +1431,8 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
   }
 
   if (mActiveEntry) {
-    aLoadState.emplace(WrapMovingNotNull(RefPtr{CreateLoadInfo(mActiveEntry)}));
+    aLoadState.emplace(WrapMovingNotNull(
+        RefPtr{CreateLoadInfo(mActiveEntry, NavigationType::Reload)}));
     aReloadActiveEntry.emplace(true);
     if (aForceReload) {
       shistory->RemoveFrameEntries(mActiveEntry);
@@ -1433,8 +1441,8 @@ void CanonicalBrowsingContext::NotifyOnHistoryReload(
     const LoadingSessionHistoryEntry& loadingEntry =
         mLoadingEntries.LastElement();
     uint64_t loadId = loadingEntry.mLoadId;
-    aLoadState.emplace(
-        WrapMovingNotNull(RefPtr{CreateLoadInfo(loadingEntry.mEntry)}));
+    aLoadState.emplace(WrapMovingNotNull(
+        RefPtr{CreateLoadInfo(loadingEntry.mEntry, NavigationType::Reload)}));
     aReloadActiveEntry.emplace(false);
     if (aForceReload) {
       SessionHistoryEntry::LoadingEntry* entry =
