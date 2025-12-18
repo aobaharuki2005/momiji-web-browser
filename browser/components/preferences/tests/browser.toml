@@ -107,6 +107,10 @@ skip-if = [
 
 ["browser_ensure_prefs_bindings_initted.js"]
 
+["browser_etp_advanced.js"]
+
+["browser_etp_customize.js"]
+
 ["browser_etp_exceptions_dialog.js"]
 
 ["browser_etp_status.js"]
@@ -243,12 +247,12 @@ skip-if = [
 
 ["browser_privacypane_2.js"]
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt && a11y_checks",
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && a11y_checks && opt",
 ]
 
 ["browser_privacypane_3.js"]
 skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && opt && a11y_checks",
+  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && a11y_checks && opt",
 ]
 
 ["browser_proxy_backup.js"]
@@ -310,7 +314,7 @@ skip-if = [
 
 ["browser_search_within_preferences_1.js"]
 skip-if = [
-  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && ccov"
+  "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && ccov",
 ]
 
 ["browser_search_within_preferences_2.js"]

@@ -214,7 +214,7 @@ export class SettingControl extends SettingElement {
       control.value = this.value;
     }
 
-    control.requestUpdate();
+    control.requestUpdate?.();
   }
 
   /**
