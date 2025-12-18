@@ -1,7 +1,13 @@
 [DEFAULT]
 
+["browser_actor_user_prompt.js"]
+
 ["browser_aichat_content_actors.js"]
 
+["browser_aichat_message.js"]
+
 ["browser_aiwindow_firstrun.js"]
+
+["browser_aiwindow_integration.js"]
 
 ["browser_open_aiwindow.js"]

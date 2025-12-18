@@ -2,16 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-:host {
+.chat-content-wrapper {
   display: flex;
   flex-direction: column;
-}
-
-/* TODO update height styles - this is a place holder size. */
-#browser-container,
-#aichat-browser {
-  display: flex;
-  flex: 1;
-  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-size-tokens */
-  min-height: 400px;
 }

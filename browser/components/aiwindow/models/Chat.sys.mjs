@@ -46,7 +46,7 @@ export const Chat = {
     const engineInstance = await openAIEngine.build();
     // Note FXA token fetching disabled for now - this is still in progress
     // We can flip this switch on when more realiable
-    // const fxAccountToken = await this._getFxAccountToken();
+    const fxAccountToken = await this._getFxAccountToken();
 
     // We'll mutate a local copy of the thread as we loop
     let convo = Array.isArray(messages) ? [...messages] : [];
@@ -55,7 +55,7 @@ export const Chat = {
     const streamModelResponse = () =>
       engineInstance.runWithGenerator({
         streamOptions: { enabled: true },
-        // fxAccountToken,
+        fxAccountToken,
         tool_choice: "auto",
         // tools: Add your tools configuration here,
         args: convo,

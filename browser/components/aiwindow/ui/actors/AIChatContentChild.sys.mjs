@@ -9,25 +9,46 @@ ChromeUtils.defineESModuleGetters(lazy, {});
  * Represents a child actor for getting page data from the browser.
  */
 export class AIChatContentChild extends JSWindowActorChild {
+  static #EVENT_MAPPINGS = {
+    "AIChatContent:DispatchMessage": {
+      event: "aiChatContentActor:message",
+    },
+  };
+
   async receiveMessage(message) {
-    switch (message.name) {
-      case "AIChatContent:DispatchAIResponse":
-        return this.dispatchAIResponseToChatContent(message.data.response);
+    const mapping = AIChatContentChild.#EVENT_MAPPINGS[message.name];
+
+    if (!mapping) {
+      console.warn(
+        `AIChatContentChild received unknown message: ${message.name}`
+      );
+      return undefined;
     }
-    return undefined;
+
+    const payload = message.data;
+    return this.#dispatchToChatContent(mapping.event, payload);
   }
 
-  async dispatchAIResponseToChatContent(response) {
+  #dispatchToChatContent(eventName, payload) {
     try {
       const chatContent = this.document.querySelector("ai-chat-content");
-      const event = new this.contentWindow.CustomEvent("ai-response", {
-        detail: response,
+
+      if (!chatContent) {
+        console.error(`No ai-chat-content element found for ${eventName}`);
+        return false;
+      }
+
+      const clonedPayload = Cu.cloneInto(payload, this.contentWindow);
+
+      const event = new this.contentWindow.CustomEvent(eventName, {
+        detail: clonedPayload,
         bubbles: true,
       });
+
       chatContent.dispatchEvent(event);
-      return false;
+      return true;
     } catch (error) {
-      console.error("Error dispatching AI response to chat content:", error);
+      console.error(`Error dispatching ${eventName} to chat content:`, error);
       return false;
     }
   }

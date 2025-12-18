@@ -5,15 +5,34 @@
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
+const lazy = {};
+ChromeUtils.defineESModuleGetters(lazy, {
+  Chat: "moz-src:///browser/components/aiwindow/models/Chat.sys.mjs",
+});
+
+/**
+ * State Management Strategy:
+ *
+ * - On initialization, this component will call `.renderState()` from ChatStore to hydrate the UI
+ * - Currently using temporary local state (`this.conversationState`) that only tracks the current conversation turn
+ * - When ChatStore is integrated, rely on it as the source of truth for full conversation history
+ * - When calling Chat.sys.mjs to fetch responses, supplement the request with complete history from ChatStore
+ */
+
 /**
  * A custom element for managing AI Window
  */
 export class AIWindow extends MozLitElement {
-  static properties = {};
+  static properties = {
+    userPrompt: { type: String },
+    conversationState: { type: Array },
+  };
 
   constructor() {
     super();
     this._browser = null;
+    this.userPrompt = "";
+    this.conversationState = [];
   }
 
   connectedCallback() {
@@ -37,25 +56,85 @@ export class AIWindow extends MozLitElement {
     this._browser = browser;
   }
 
-  async _submitUserPrompt() {
-    const mockPrompt = "This is a test prompt, how are you?";
+  /**
+   * Adds a new message to the conversation history.
+   *
+   * @param {object} chatEntry - A message object to add to the conversation
+   * @param {("system"|"user"|"assistant")} chatEntry.role - The role of the message sender
+   * @param {string} chatEntry.content - The text content of the message
+   */
 
-    // Call AI service directly from this instance
-    const response = this._fetchAIResponse(mockPrompt);
+  // TODO - can remove this method after ChatStore is integrated
+  #updateConversationState = chatEntry => {
+    this.conversationState = [...this.conversationState, chatEntry];
+  };
 
-    // Dispatch directly to our browser's actor
-    await this._dispatchAIResponseToBrowser(response);
-  }
+  /**
+   * Fetches an AI response based on the current user prompt.
+   * Validates the prompt, updates conversation state, streams the response,
+   * and dispatches updates to the browser actor.
+   *
+   * @private
+   */
 
-  _fetchAIResponse(userPrompt) {
-    // TODO - Add actual call to LLM service here
-    const mockResponse = `this is a response to ${userPrompt}`;
-    return mockResponse;
-  }
+  #fetchAIResponse = async () => {
+    const formattedPrompt = (this.userPrompt || "").trim();
+    if (!formattedPrompt) {
+      return;
+    }
 
-  async _dispatchAIResponseToBrowser(response) {
+    // Handle User Prompt
+    await this.#dispatchMessageToChatContent({
+      role: "user",
+      content: this.userPrompt,
+    });
+
+    // TODO - can remove this call after ChatStore is integrated
+    this.#updateConversationState({ role: "user", content: formattedPrompt });
+    this.userPrompt = "";
+
+    // Create an empty assistant placeholder.
+    // TODO - can remove this call after ChatStore is integrated
+    this.#updateConversationState({ role: "assistant", content: "" });
+    const latestAssistantMessageIndex = this.conversationState.length - 1;
+
+    let acc = "";
+    try {
+      // TODO - replace with ChatStore integration IE pass chatstore.getConversationState(this.userPrompt)
+      const stream = lazy.Chat.fetchWithHistory(this.conversationState);
+      for await (const chunk of stream) {
+        acc += chunk;
+
+        // TODO - can remove this after ChatStore is integrated
+        this.conversationState[latestAssistantMessageIndex] = {
+          ...this.conversationState[latestAssistantMessageIndex],
+          content: acc,
+        };
+
+        // TODO - can pass chatstore.getLastturnIndex() instead of latestAssistantMessageIndex after ChatStore is integrated
+        await this.#dispatchMessageToChatContent({
+          role: "assistant",
+          content: acc,
+          latestAssistantMessageIndex,
+        });
+        this.requestUpdate?.();
+      }
+    } catch (e) {
+      // TODO - handle error properly
+      this.requestUpdate?.();
+    }
+  };
+
+  /**
+   * Retrieves the AIChatContent actor from the browser's window global.
+   *
+   * @returns {Promise<object|null>} The AIChatContent actor, or null if unavailable.
+   * @private
+   */
+
+  async #getAIChatContentActor() {
     if (!this._browser) {
-      console.warn("AI browser not set, cannot dispatch response");
+      console.warn("AI browser not set, cannot get AIChatContent actor");
       return null;
     }
 
@@ -67,16 +146,45 @@ export class AIWindow extends MozLitElement {
     }
 
     try {
-      const actor = windowGlobal.getActor("AIChatContent");
-      return await actor.dispatchAIResponse(response);
+      return windowGlobal.getActor("AIChatContent");
     } catch (error) {
-      console.error("Failed to dispatch AI response:", error);
+      console.error("Failed to get AIChatContent actor:", error);
       return null;
     }
   }
 
-  _handleSubmit() {
-    this._submitUserPrompt();
+  /**
+   * Dispatches a message to the AIChatContent actor.
+   *
+   * @param {object} message - message to dispatch to chat content actor
+   * @returns
+   */
+
+  async #dispatchMessageToChatContent(message) {
+    const actor = await this.#getAIChatContentActor();
+    return await actor.dispatchMessageToChatContent(message);
+  }
+
+  /**
+   * Handles input events from the prompt textarea.
+   * Updates the userPrompt property with the current input value.
+   *
+   * @param {Event} e - The input event.
+   * @private
+   */
+
+  #handlePromptInput = async e => {
+    const value = e.target.value;
+    this.userPrompt = value;
+  };
+
+  /**
+   * Handles the submit action for the user prompt.
+   * Triggers the AI response fetch process.
+   */
+
+  #handleSubmit() {
+    this.#fetchAIResponse();
   }
 
   render() {
@@ -88,7 +196,11 @@ export class AIWindow extends MozLitElement {
       <div>
         <div id="browser-container"></div>
         <!-- TODO : Remove place holder submit button, prompt will come from ai-input -->
-        <moz-button type="primary" size="small" @click=${this._handleSubmit}>
+        <textarea
+          .value=${this.userPrompt}
+          @input=${e => this.#handlePromptInput(e)}
+        ></textarea>
+        <moz-button type="primary" size="small" @click=${this.#handleSubmit}>
           Submit mock prompt
         </moz-button>
       </div>
