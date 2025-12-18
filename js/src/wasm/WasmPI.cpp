@@ -53,15 +53,6 @@
 #  include "jit/mips64/Simulator-mips64.h"
 #endif
 
-#ifdef XP_WIN
-// We only need the `windows.h` header, but this file can get unified built
-// with WasmSignalHandlers.cpp, which requires `winternal.h` to be included
-// before the `windows.h` header, and so we must include it here for that case.
-#  include <winternl.h>  // must include before util/WindowsWrapper.h's `#undef`s
-
-#  include "util/WindowsWrapper.h"
-#endif
-
 using namespace js;
 using namespace js::jit;
 
@@ -80,26 +71,6 @@ void SuspenderObjectData::releaseStackMemory() {
   js_free(stackMemory_);
   stackMemory_ = nullptr;
 }
-
-#  if defined(_WIN32)
-// On WIN64, the Thread Information Block stack limits has to be modified to
-// avoid failures on SP checks.
-void SuspenderObjectData::updateTIBStackFields() {
-  _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
-  savedStackBase_ = tib->StackBase;
-  savedStackLimit_ = tib->StackLimit;
-  uintptr_t stack_limit = (uintptr_t)stackMemory_;
-  uintptr_t stack_base = stack_limit + SuspendableStackPlusRedZoneSize;
-  tib->StackBase = (void*)stack_base;
-  tib->StackLimit = (void*)stack_limit;
-}
-
-void SuspenderObjectData::restoreTIBStackFields() {
-  _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
-  tib->StackBase = savedStackBase_;
-  tib->StackLimit = savedStackLimit_;
-}
-#  endif
 
 #  if defined(JS_SIMULATOR_ARM64)
 void SuspenderObjectData::switchSimulatorToMain() {
@@ -282,8 +253,16 @@ SuspenderObject* SuspenderObject::create(JSContext* cx) {
   return suspender;
 }
 
-JS::NativeStackLimit SuspenderObject::getStackMemoryLimit() {
-  return JS::NativeStackLimit(data()->stackMemory()) + SuspendableRedZoneSize;
+JS::NativeStackLimit SuspenderObject::stackMemoryBase() const {
+  return ((uintptr_t)data()->stackMemory()) + SuspendableStackPlusRedZoneSize;
+}
+
+JS::NativeStackLimit SuspenderObject::stackMemoryLimitForSystem() const {
+  return JS::NativeStackLimit(data()->stackMemory());
+}
+
+JS::NativeStackLimit SuspenderObject::stackMemoryLimitForJit() const {
+  return stackMemoryLimitForSystem() + SuspendableRedZoneSize;
 }
 
 static_assert(SuspenderObjectDataSlot == SuspenderObject::DataSlot);
@@ -344,10 +323,7 @@ void SuspenderObject::trace(JSTracer* trc, JSObject* obj) {
 
 void SuspenderObject::setMoribund(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
-  cx->wasm().leaveSuspendableStack(cx);
-#  if defined(_WIN32)
-  data()->restoreTIBStackFields();
-#  endif
+  cx->wasm().leaveSuspendableStack();
   SuspenderObjectData* data = this->data();
   data->setState(SuspenderState::Moribund);
   data->releaseStackMemory();
@@ -357,18 +333,12 @@ void SuspenderObject::setMoribund(JSContext* cx) {
 
 void SuspenderObject::setActive(JSContext* cx) {
   data()->setState(SuspenderState::Active);
-  cx->wasm().enterSuspendableStack(this, getStackMemoryLimit());
-#  if defined(_WIN32)
-  data()->updateTIBStackFields();
-#  endif
+  cx->wasm().enterSuspendableStack(this);
 }
 
 void SuspenderObject::setSuspended(JSContext* cx) {
   data()->setState(SuspenderState::Suspended);
-  cx->wasm().leaveSuspendableStack(cx);
-#  if defined(_WIN32)
-  data()->restoreTIBStackFields();
-#  endif
+  cx->wasm().leaveSuspendableStack();
 }
 
 void SuspenderObject::enter(JSContext* cx) {

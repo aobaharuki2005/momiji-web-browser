@@ -153,13 +153,6 @@ class SuspenderObjectData
   // Identify context that is holding suspended stack, otherwise nullptr.
   Context* suspendedBy_;
 
-#  if defined(_WIN32)
-  // The storage of main stack limits during stack switching.
-  // See updateTibFields and restoreTibFields below.
-  void* savedStackBase_;
-  void* savedStackLimit_;
-#  endif
-
  public:
   explicit SuspenderObjectData(void* stackMemory);
 
@@ -192,11 +185,6 @@ class SuspenderObjectData
   }
 
   void releaseStackMemory();
-
-#  if defined(_WIN32)
-  void updateTIBStackFields();
-  void restoreTIBStackFields();
-#  endif
 
 #  if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) ||       \
       defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
@@ -268,7 +256,9 @@ class SuspenderObject : public NativeObject {
     setReservedSlot(SuspendingReturnTypeSlot, Int32Value(int32_t(type)));
   }
 
-  JS::NativeStackLimit getStackMemoryLimit();
+  JS::NativeStackLimit stackMemoryBase() const;
+  JS::NativeStackLimit stackMemoryLimitForSystem() const;
+  JS::NativeStackLimit stackMemoryLimitForJit() const;
 
   SuspenderState state() { return data()->state(); }
 
@@ -276,6 +266,10 @@ class SuspenderObject : public NativeObject {
 
   inline SuspenderObjectData* data() {
     return static_cast<SuspenderObjectData*>(
+        getReservedSlot(DataSlot).toPrivate());
+  }
+  inline const SuspenderObjectData* data() const {
+    return static_cast<const SuspenderObjectData*>(
         getReservedSlot(DataSlot).toPrivate());
   }
 

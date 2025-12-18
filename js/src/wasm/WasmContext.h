@@ -56,9 +56,8 @@ class Context {
   SuspenderObject* activeSuspender() { return activeSuspender_; }
   bool onSuspendableStack() const { return activeSuspender_ != nullptr; }
 
-  void enterSuspendableStack(SuspenderObject* suspender,
-                             JS::NativeStackLimit newStackLimit);
-  void leaveSuspendableStack(JSContext* cx);
+  void enterSuspendableStack(SuspenderObject* suspender);
+  void leaveSuspendableStack();
 
   void trace(JSTracer* trc);
   void traceRoots(JSTracer* trc);
@@ -73,8 +72,19 @@ class Context {
   // use the stack limit for interrupts, but it does update it for stack
   // switching.
   JS::NativeStackLimit stackLimit;
+  // The original stack limit before any stack switches. Cached for easy
+  // restoration.
+  JS::NativeStackLimit mainStackLimit;
 
 #ifdef ENABLE_WASM_JSPI
+#  if defined(_WIN32)
+  // On WIN64, the Thread Information Block stack limits must be updated on
+  // stack switches to avoid failures on SP checks during vectored exeption
+  // handling for traps. We store the original ones here for easy restoration.
+  void* tibStackBase_ = nullptr;
+  void* tibStackLimit_ = nullptr;
+#  endif
+
   // The currently active suspender object. Null if we're executing on the
   // system stack, otherwise we're on a wasm suspendable stack.
   HeapPtr<SuspenderObject*> activeSuspender_;

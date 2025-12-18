@@ -24,12 +24,22 @@
 
 #include "wasm/WasmPI.h"
 
+#ifdef XP_WIN
+// We only need the `windows.h` header, but this file can get unified built
+// with WasmSignalHandlers.cpp, which requires `winternal.h` to be included
+// before the `windows.h` header, and so we must include it here for that case.
+#  include <winternl.h>  // must include before util/WindowsWrapper.h's `#undef`s
+
+#  include "util/WindowsWrapper.h"
+#endif
+
 using namespace js::wasm;
 
 Context::Context()
     : triedToInstallSignalHandlers(false),
       haveSignalHandlers(false),
-      stackLimit(JS::NativeStackLimitMin)
+      stackLimit(JS::NativeStackLimitMin),
+      mainStackLimit(JS::NativeStackLimitMin)
 #ifdef ENABLE_WASM_JSPI
       ,
       activeSuspender_(nullptr),
@@ -50,6 +60,16 @@ void Context::initStackLimit(JSContext* cx) {
   // The wasm stack limit is the same as the jit stack limit. We also don't
   // use the stack limit for triggering interrupts.
   stackLimit = cx->jitStackLimitNoInterrupt;
+  mainStackLimit = stackLimit;
+
+  // See the comment on wasm::Context for why we do this.
+#ifdef ENABLE_WASM_JSPI
+#  if defined(_WIN32)
+  _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
+  tibStackBase_ = tib->StackBase;
+  tibStackLimit_ = tib->StackLimit;
+#  endif
+#endif
 }
 
 #ifdef ENABLE_WASM_JSPI
@@ -73,17 +93,33 @@ void Context::traceRoots(JSTracer* trc) {
   }
 }
 
-void Context::enterSuspendableStack(SuspenderObject* suspender,
-                                    JS::NativeStackLimit newStackLimit) {
+void Context::enterSuspendableStack(SuspenderObject* suspender) {
   MOZ_ASSERT(!activeSuspender_);
   activeSuspender_ = suspender;
-  stackLimit = newStackLimit;
+  stackLimit = suspender->stackMemoryLimitForJit();
+
+  // See the comment on wasm::Context for why we do this.
+#  if defined(_WIN32)
+  _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
+  tibStackBase_ = tib->StackBase;
+  tibStackLimit = tib->StackLimit;
+  tib->StackBase = reinterpret_cast<void*>(suspender->stackMemoryBase());
+  tib->StackLimit =
+      reinterpret_cast<void*>(suspender->stackMemoryLimitForSystem());
+#  endif
 }
 
-void Context::leaveSuspendableStack(JSContext* cx) {
+void Context::leaveSuspendableStack() {
   MOZ_ASSERT(activeSuspender_);
   activeSuspender_ = nullptr;
-  initStackLimit(cx);
+  stackLimit = mainStackLimit;
+
+  // See the comment on wasm::Context for why we do this.
+#  if defined(_WIN32)
+  _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
+  tib->StackBase = tibStackBase_;
+  tib->StackLimit = tibStackLimit_;
+#  endif
 }
 
 bool js::IsSuspendableStackActive(JSContext* cx) {
