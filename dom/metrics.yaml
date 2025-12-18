@@ -238,22 +238,6 @@ perf:
     send_in_pings:
       - pageload-base-domain
 
-  js_exec_asm_js:
-    type: timing_distribution
-    description: >
-      Time in milliseconds spent executing Javascript for top level
-      documents that contain the asm.js use counter.  Measures 5min
-      of activity after the use counter is set then records
-      the value in this histogram.
-    time_unit: millisecond
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1980396
-    data_reviews:
-      - https://phabricator.services.mozilla.com/D259436
-    notification_emails:
-      - perf-telemetry-alerts@mozilla.com
-    expires: never
-
   h3p_page_load_time:
     type: labeled_timing_distribution
     description: >
