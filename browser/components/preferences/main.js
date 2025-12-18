@@ -3866,6 +3866,7 @@ SettingGroupManager.registerGroups({
                 id: "translationsAlwaysTranslateLanguagesRow",
                 l10nId: "settings-translations-subpage-always-translate-header",
                 control: "moz-box-item",
+                slot: "header",
                 controlAttrs: {
                   style:
                     "--box-label-font-weight: var(--font-weight-semibold);",
@@ -3874,9 +3875,6 @@ SettingGroupManager.registerGroups({
                   {
                     id: "translationsAlwaysTranslateLanguagesSelect",
                     control: "moz-select",
-                    controlAttrs: {
-                      slot: "actions",
-                    },
                     options: [
                       {
                         value: "",
@@ -3918,6 +3916,7 @@ SettingGroupManager.registerGroups({
                 id: "translationsNeverTranslateLanguagesRow",
                 l10nId: "settings-translations-subpage-never-translate-header",
                 control: "moz-box-item",
+                slot: "header",
                 controlAttrs: {
                   style:
                     "--box-label-font-weight: var(--font-weight-semibold);",
@@ -3926,9 +3925,6 @@ SettingGroupManager.registerGroups({
                   {
                     id: "translationsNeverTranslateLanguagesSelect",
                     control: "moz-select",
-                    controlAttrs: {
-                      slot: "actions",
-                    },
                     options: [
                       {
                         value: "",
@@ -4009,6 +4005,7 @@ SettingGroupManager.registerGroups({
                 l10nId:
                   "settings-translations-subpage-download-languages-header",
                 control: "moz-box-item",
+                slot: "header",
                 controlAttrs: {
                   style:
                     "--box-label-font-weight: var(--font-weight-semibold);",
@@ -4017,9 +4014,6 @@ SettingGroupManager.registerGroups({
                   {
                     id: "translationsDownloadLanguagesSelect",
                     control: "moz-select",
-                    controlAttrs: {
-                      slot: "actions",
-                    },
                     options: [
                       {
                         value: "",
