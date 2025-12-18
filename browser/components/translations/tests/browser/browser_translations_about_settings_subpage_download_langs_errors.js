@@ -28,6 +28,11 @@ add_task(
       translationsSettingsTestUtils.getDownloadRetryButton("fr");
     ok(errorButton, "Error icon should be visible");
     ok(retryButton, "Retry button should be visible");
+    is(
+      errorButton.getAttribute("type"),
+      "icon ghost",
+      "Error icon should use ghost styling"
+    );
     const errorMessage = getByL10nId(
       "settings-translations-subpage-download-error",
       document
@@ -101,6 +106,11 @@ add_task(async function test_download_error_retry_via_retry_button() {
     translationsSettingsTestUtils.getDownloadRetryButton("es");
   ok(errorButton, "Error icon should be visible");
   ok(retryButton, "Retry button should be visible");
+  is(
+    errorButton.getAttribute("type"),
+    "icon ghost",
+    "Error icon should use ghost styling"
+  );
   const errorMessage = getByL10nId(
     "settings-translations-subpage-download-error",
     document
