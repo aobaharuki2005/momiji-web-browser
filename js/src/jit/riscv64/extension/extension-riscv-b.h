@@ -20,12 +20,12 @@ class AssemblerRISCVB : public AssemblerRiscvBase {
   void sh2add(Register rd, Register rs1, Register rs2);
   void sh3add(Register rd, Register rs1, Register rs2);
 #ifdef JS_CODEGEN_RISCV64
-  void adduw(Register rd, Register rs1, Register rs2);
-  void zextw(Register rd, Register rs1) { adduw(rd, rs1, zero_reg); }
-  void sh1adduw(Register rd, Register rs1, Register rs2);
-  void sh2adduw(Register rd, Register rs1, Register rs2);
-  void sh3adduw(Register rd, Register rs1, Register rs2);
-  void slliuw(Register rd, Register rs1, uint8_t shamt);
+  void add_uw(Register rd, Register rs1, Register rs2);
+  void zext_w(Register rd, Register rs1) { add_uw(rd, rs1, zero_reg); }
+  void sh1add_uw(Register rd, Register rs1, Register rs2);
+  void sh2add_uw(Register rd, Register rs1, Register rs2);
+  void sh3add_uw(Register rd, Register rs1, Register rs2);
+  void slli_uw(Register rd, Register rs1, uint8_t shamt);
 #endif
 
   // Zbb Extension
@@ -47,15 +47,15 @@ class AssemblerRISCVB : public AssemblerRiscvBase {
   void min(Register rd, Register rs1, Register rs2);
   void minu(Register rd, Register rs1, Register rs2);
 
-  void sextb(Register rd, Register rs);
-  void sexth(Register rd, Register rs);
-  void zexth(Register rd, Register rs);
+  void sext_b(Register rd, Register rs);
+  void sext_h(Register rd, Register rs);
+  void zext_h(Register rd, Register rs);
 
   // Zbb: bitwise rotation
   void rol(Register rd, Register rs1, Register rs2);
   void ror(Register rd, Register rs1, Register rs2);
   void rori(Register rd, Register rs1, uint8_t shamt);
-  void orcb(Register rd, Register rs);
+  void orc_b(Register rd, Register rs);
   void rev8(Register rd, Register rs);
 #ifdef JS_CODEGEN_RISCV64
   void rolw(Register rd, Register rs1, Register rs2);
