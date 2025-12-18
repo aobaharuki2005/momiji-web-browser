@@ -63,9 +63,9 @@ void Context::initStackLimit(JSContext* cx) {
   // See the comment on wasm::Context for why we do this.
 #ifdef ENABLE_WASM_JSPI
 #  if defined(_WIN32)
-  _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
-  tibStackBase_ = tib->StackBase;
-  tibStackLimit_ = tib->StackLimit;
+  tib_ = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
+  tibStackBase_ = tib_->StackBase;
+  tibStackLimit_ = tib_->StackLimit;
 #  endif
 #endif
 }
@@ -101,11 +101,10 @@ void Context::enterSuspendableStack(JSContext* cx, SuspenderObject* suspender) {
 
   // See the comment on wasm::Context for why we do this.
 #  if defined(_WIN32)
-  _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
-  tibStackBase_ = tib->StackBase;
-  tibStackLimit = tib->StackLimit;
-  tib->StackBase = reinterpret_cast<void*>(suspender->stackMemoryBase());
-  tib->StackLimit =
+  tibStackBase_ = tib_->StackBase;
+  tibStackLimit_ = tib_->StackLimit;
+  tib_->StackBase = reinterpret_cast<void*>(suspender->stackMemoryBase());
+  tib_->StackLimit =
       reinterpret_cast<void*>(suspender->stackMemoryLimitForSystem());
 #  endif
 
@@ -121,9 +120,8 @@ void Context::leaveSuspendableStack(JSContext* cx) {
 
   // See the comment on wasm::Context for why we do this.
 #  if defined(_WIN32)
-  _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
-  tib->StackBase = tibStackBase_;
-  tib->StackLimit = tibStackLimit_;
+  tib_->StackBase = static_cast<void*>(tibStackBase_);
+  tib_->StackLimit = static_cast<void*>(tibStackLimit_);
 #  endif
 
 #  ifdef DEBUG

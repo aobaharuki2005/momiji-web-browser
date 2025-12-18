@@ -25,6 +25,10 @@
 
 #include "js/NativeStackLimits.h"
 
+#ifdef _WIN32
+struct _NT_TIB;
+#endif
+
 namespace js::wasm {
 
 #ifdef ENABLE_WASM_JSPI
@@ -45,6 +49,9 @@ class Context {
   static constexpr size_t offsetOfStackLimit() {
     return offsetof(Context, stackLimit);
   }
+  static constexpr size_t offsetOfMainStackLimit() {
+    return offsetof(Context, mainStackLimit);
+  }
 
   void initStackLimit(JSContext* cx);
 
@@ -52,6 +59,15 @@ class Context {
   static constexpr size_t offsetOfActiveSuspender() {
     return offsetof(Context, activeSuspender_);
   }
+#  ifdef _WIN32
+  static constexpr size_t offsetOfTib() { return offsetof(Context, tib_); }
+  static constexpr size_t offsetOfTibStackBase() {
+    return offsetof(Context, tibStackBase_);
+  }
+  static constexpr size_t offsetOfTibStackLimit() {
+    return offsetof(Context, tibStackLimit_);
+  }
+#  endif
 
   SuspenderObject* activeSuspender() { return activeSuspender_; }
   bool onSuspendableStack() const { return activeSuspender_ != nullptr; }
@@ -80,7 +96,9 @@ class Context {
 #  if defined(_WIN32)
   // On WIN64, the Thread Information Block stack limits must be updated on
   // stack switches to avoid failures on SP checks during vectored exeption
-  // handling for traps. We store the original ones here for easy restoration.
+  // handling for traps. We store the original limits and the TIB here for
+  // easy restoration.
+  _NT_TIB* tib_ = nullptr;
   void* tibStackBase_ = nullptr;
   void* tibStackLimit_ = nullptr;
 #  endif

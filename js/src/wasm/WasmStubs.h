@@ -244,8 +244,8 @@ class ABIResultIter {
 
 extern bool GenerateBuiltinThunk(jit::MacroAssembler& masm,
                                  jit::ABIFunctionType abiType,
-                                 ExitReason exitReason, void* funcPtr,
-                                 CallableOffsets* offsets);
+                                 bool switchToMainStack, ExitReason exitReason,
+                                 void* funcPtr, CallableOffsets* offsets);
 
 extern bool GenerateStubs(const CodeMetadata& codeMeta,
                           const FuncImportVector& imports,

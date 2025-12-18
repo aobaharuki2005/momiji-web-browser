@@ -23,12 +23,14 @@
 
 #include "jit/ABIArgGenerator.h"
 #include "jit/JitFrames.h"
+#include "jit/JitRuntime.h"
 #include "jit/RegisterAllocator.h"
 #include "js/Printf.h"
 #include "util/Memory.h"
 #include "wasm/WasmCode.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"
+#include "wasm/WasmPI.h"
 
 #include "jit/MacroAssembler-inl.h"
 #include "wasm/WasmInstance-inl.h"
@@ -1997,13 +1999,13 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   // The abiArgCount includes a stack result pointer argument if needed.
   unsigned abiArgCount = ArgTypeVector(funcType).lengthWithStackResults();
   unsigned argBytes = std::max<size_t>(1, abiArgCount) * sizeof(Value);
-  unsigned framePushed =
-      StackDecrementForCall(ABIStackAlignment,
-                            sizeof(Frame),  // pushed by prologue
-                            argOffset + argBytes);
-
-  GenerateExitPrologue(masm, framePushed, ExitReason::Fixed::ImportInterp,
-                       offsets);
+  unsigned frameAlignment =
+      ComputeByteAlignment(sizeof(Frame), ABIStackAlignment);
+  unsigned framePushed = AlignBytes(argOffset + argBytes, ABIStackAlignment);
+  GenerateExitPrologue(masm, ExitReason::Fixed::ImportInterp,
+                       /*switchToMainStack*/ false,
+                       /*framePushedPreSwitch*/ frameAlignment,
+                       /*framePushedPostSwitch*/ framePushed, offsets);
 
   // Fill the argument array.
   Register scratch = ABINonArgReturnReg0;
@@ -2122,8 +2124,8 @@ static bool GenerateImportInterpExit(MacroAssembler& masm, const FuncImport& fi,
   MOZ_ASSERT(NonVolatileRegs.has(HeapReg));
 #endif
 
-  GenerateExitEpilogue(masm, framePushed, ExitReason::Fixed::ImportInterp,
-                       offsets);
+  GenerateExitEpilogue(masm, ExitReason::Fixed::ImportInterp,
+                       /*switchToMainStack*/ false, offsets);
 
   return FinishOffsets(masm, offsets);
 }
@@ -2412,7 +2414,8 @@ static bool GenerateImportJitExit(MacroAssembler& masm,
     // The JIT might have clobbered exitFP at this point. Since there's
     // going to be a CoerceInPlace call, pretend we're still doing the JIT
     // call by restoring our tagged exitFP.
-    SetExitFP(masm, ExitReason::Fixed::ImportJit, scratch);
+    LoadActivation(masm, InstanceReg, scratch);
+    SetExitFP(masm, ExitReason::Fixed::ImportJit, scratch, scratch2);
 
     // argument 0: argv
     ABIArgMIRTypeIter i(coerceArgTypes, ABIKind::System);
@@ -2476,6 +2479,7 @@ static bool GenerateImportJitExit(MacroAssembler& masm,
 
     // Maintain the invariant that exitFP is either unset or not set to a
     // wasm tagged exitFP, per the jit exit contract.
+    LoadActivation(masm, InstanceReg, scratch);
     ClearExitFP(masm, scratch);
 
     masm.jump(&done);
@@ -2513,18 +2517,19 @@ struct ABIFunctionArgs {
 };
 
 bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
-                                ExitReason exitReason, void* funcPtr,
-                                CallableOffsets* offsets) {
+                                bool switchToMainStack, ExitReason exitReason,
+                                void* funcPtr, CallableOffsets* offsets) {
   AssertExpectedSP(masm);
   masm.setFramePushed(0);
 
   ABIFunctionArgs args(abiType);
-  uint32_t framePushed =
-      StackDecrementForCall(ABIStackAlignment,
-                            sizeof(Frame),  // pushed by prologue
-                            StackArgBytesForNativeABI(args));
-
-  GenerateExitPrologue(masm, framePushed, exitReason, offsets);
+  unsigned frameAlignment =
+      ComputeByteAlignment(sizeof(Frame), ABIStackAlignment);
+  unsigned framePushed =
+      AlignBytes(StackArgBytesForNativeABI(args), ABIStackAlignment);
+  GenerateExitPrologue(masm, exitReason, switchToMainStack,
+                       /*framePushedPreSwitch*/ frameAlignment,
+                       /*framePushedPostSwitch*/ framePushed, offsets);
 
   // Copy out and convert caller arguments, if needed. We are translating from
   // the wasm ABI to the system ABI.
@@ -2575,7 +2580,7 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
   MOZ_ASSERT(callArgs.done());
 
   // Call into the native builtin function
-  AssertStackAlignment(masm, ABIStackAlignment);
+  masm.assertStackAlignment(ABIStackAlignment);
   MoveSPForJitABI(masm);
   masm.call(ImmPtr(funcPtr, ImmPtr::NoCheckToken()));
 
@@ -2603,7 +2608,7 @@ bool wasm::GenerateBuiltinThunk(MacroAssembler& masm, ABIFunctionType abiType,
   }
 #endif
 
-  GenerateExitEpilogue(masm, framePushed, exitReason, offsets);
+  GenerateExitEpilogue(masm, exitReason, switchToMainStack, offsets);
   return FinishOffsets(masm, offsets);
 }
 
@@ -2883,7 +2888,8 @@ static bool GenerateDebugStub(MacroAssembler& masm, Label* throwLabel,
   masm.haltingAlign(CodeAlignment);
   masm.setFramePushed(0);
 
-  GenerateExitPrologue(masm, 0, ExitReason::Fixed::DebugStub, offsets);
+  GenerateExitPrologue(masm, ExitReason::Fixed::DebugStub,
+                       /*switchToMainStack*/ false, 0, 0, offsets);
 
   // Save all registers used between baseline compiler operations.
   masm.PushRegsInMask(AllAllocatableRegs);
@@ -2922,7 +2928,8 @@ static bool GenerateDebugStub(MacroAssembler& masm, Label* throwLabel,
   masm.setFramePushed(framePushed);
   masm.PopRegsInMask(AllAllocatableRegs);
 
-  GenerateExitEpilogue(masm, 0, ExitReason::Fixed::DebugStub, offsets);
+  GenerateExitEpilogue(masm, ExitReason::Fixed::DebugStub,
+                       /*switchToMainStack*/ false, offsets);
 
   return FinishOffsets(masm, offsets);
 }
@@ -2941,7 +2948,8 @@ static bool GenerateRequestTierUpStub(MacroAssembler& masm,
   masm.haltingAlign(CodeAlignment);
   masm.setFramePushed(0);
 
-  GenerateExitPrologue(masm, 0, ExitReason::Fixed::RequestTierUp, offsets);
+  GenerateExitPrologue(masm, ExitReason::Fixed::RequestTierUp,
+                       /*switchToMainStack*/ false, 0, 0, offsets);
 
   // Save all registers used between baseline compiler operations.
   masm.PushRegsInMask(AllAllocatableRegs);
@@ -3006,7 +3014,8 @@ static bool GenerateRequestTierUpStub(MacroAssembler& masm,
   masm.setFramePushed(framePushed);
   masm.PopRegsInMask(AllAllocatableRegs);
 
-  GenerateExitEpilogue(masm, 0, ExitReason::Fixed::RequestTierUp, offsets);
+  GenerateExitEpilogue(masm, ExitReason::Fixed::RequestTierUp,
+                       /*switchToMainStack*/ false, offsets);
 
   return FinishOffsets(masm, offsets);
 }

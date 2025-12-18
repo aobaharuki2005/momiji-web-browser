@@ -34,6 +34,9 @@ js::jit::JitActivation::JitActivation(JSContext* cx)
     : Activation(cx, Jit),
       packedExitFP_(nullptr),
       encodedWasmExitReason_(0),
+#ifdef ENABLE_WASM_JSPI
+      wasmExitSuspender_(cx, nullptr),
+#endif
       prevJitActivation_(cx->jitActivation),
       ionRecovery_(cx),
       bailoutData_(nullptr),
@@ -62,6 +65,20 @@ js::jit::JitActivation::~JitActivation() {
   // Rematerialized frames must have been removed by either the bailout code or
   // the exception handler.
   MOZ_ASSERT_IF(rematerializedFrames_, rematerializedFrames_->empty());
+}
+
+void js::jit::JitActivation::trace(JSTracer* trc) {
+  if (rematerializedFrames_) {
+    for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty();
+         e.popFront()) {
+      e.front().value().trace(trc);
+    }
+  }
+
+  for (RInstructionResults* it = ionRecovery_.begin(); it != ionRecovery_.end();
+       it++) {
+    it->trace(trc);
+  }
 }
 
 void js::jit::JitActivation::setBailoutData(
@@ -178,16 +195,6 @@ void js::jit::JitActivation::removeRematerializedFramesFromDebugger(
   }
 }
 
-void js::jit::JitActivation::traceRematerializedFrames(JSTracer* trc) {
-  if (!rematerializedFrames_) {
-    return;
-  }
-  for (RematerializedFrameTable::Enum e(*rematerializedFrames_); !e.empty();
-       e.popFront()) {
-    e.front().value().trace(trc);
-  }
-}
-
 bool js::jit::JitActivation::registerIonFrameRecovery(
     RInstructionResults&& results) {
   // Check that there is no entry in the vector yet.
@@ -218,13 +225,6 @@ void js::jit::JitActivation::removeIonFrameRecovery(JitFrameLayout* fp) {
   }
 
   ionRecovery_.erase(elem);
-}
-
-void js::jit::JitActivation::traceIonRecovery(JSTracer* trc) {
-  for (RInstructionResults* it = ionRecovery_.begin(); it != ionRecovery_.end();
-       it++) {
-    it->trace(trc);
-  }
 }
 
 void js::jit::JitActivation::startWasmTrap(wasm::Trap trap,

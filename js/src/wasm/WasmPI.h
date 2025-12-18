@@ -268,6 +268,12 @@ class SuspenderObject : public NativeObject {
     return getFixedSlot(SuspendableExitFPSlot).toPrivate();
   }
 
+  static constexpr size_t offsetOfState() {
+    return getFixedSlotOffset(StateSlot);
+  }
+  static constexpr size_t offsetOfStackMemory() {
+    return getFixedSlotOffset(StackMemorySlot);
+  }
   static constexpr size_t offsetOfMainFP() {
     return getFixedSlotOffset(MainFPSlot);
   }
