@@ -26,4 +26,8 @@ export interface TranslationsSettingsElements {
   neverTranslateSitesGroup: HTMLElement;
   neverTranslateSitesRow: HTMLElement;
   neverTranslateSitesNoneRow: HTMLElement;
+  downloadLanguagesGroup: HTMLElement;
+  downloadLanguagesSelect: HTMLSelectElement;
+  downloadLanguagesButton: HTMLButtonElement;
+  downloadLanguagesNoneRow: HTMLElement;
 }
