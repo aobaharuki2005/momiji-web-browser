@@ -34,7 +34,6 @@ function templateHTML(options) {
   const debugString = options.debug ? "-dev" : "";
   // This list must match any similar ones in AboutNewTabChild.sys.mjs
   const scripts = [
-    "chrome://browser/content/contentSearchUI.js",
     "chrome://browser/content/contentSearchHandoffUI.js",
     "chrome://browser/content/contentTheme.js",
     `${options.baseVendorUrl}vendor/react${debugString}.js`,
@@ -84,10 +83,6 @@ function templateHTML(options) {
     <link
       rel="stylesheet"
       href="chrome://global/skin/design-system/tokens-brand.css"
-    />
-    <link
-      rel="stylesheet"
-      href="chrome://browser/content/contentSearchUI.css"
     />
     <link
       rel="stylesheet"
