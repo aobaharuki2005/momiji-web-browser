@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,6 +42,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.R
+import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
 import mozilla.components.compose.base.theme.AcornTheme
 import androidx.compose.material3.SearchBar as M3SearchBar
 import androidx.compose.material3.TopSearchBar as M3TopSearchBar
@@ -222,6 +224,7 @@ private fun SearchBarInputField(
         LocalTextStyle provides AcornTheme.typography.body1,
     ) {
         SearchBarDefaults.InputField(
+            modifier = Modifier.fillMaxWidth(),
             query = query,
             onQueryChange = onQueryChange,
             onSearch = onSearch,
@@ -378,7 +381,7 @@ private fun SearchBarPreview(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@PreviewLightDark
+@FlexibleWindowLightDarkPreview
 @Composable
 private fun TopSearchBarPreview() {
     val state = rememberSearchBarState()

@@ -15,4 +15,10 @@ import mozilla.components.browser.state.state.TabSessionState
 data class TabSearchState(
     val query: String = "",
     val searchResults: List<TabSessionState> = emptyList(),
-)
+) {
+    /**
+     * Gets whether or not to show there are no search results.
+     */
+    val showNoResults: Boolean
+        get() = query.isNotEmpty() && searchResults.isEmpty()
+}
