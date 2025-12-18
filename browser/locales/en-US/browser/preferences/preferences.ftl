@@ -433,6 +433,9 @@ settings-translations-more-settings-button =
     .label = More translation settings
     .description = Set preferences for languages, websites, and offline translation.
 
+settings-translations-subpage-header =
+    .heading = More translation settings
+
 # Variables:
 #    $localeName (string) - Localized name of the locale to be used.
 use-system-locale =
