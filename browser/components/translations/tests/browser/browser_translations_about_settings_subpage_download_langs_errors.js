@@ -11,7 +11,8 @@ add_task(
       await TranslationsSettingsTestUtils.openTranslationsSettingsSubpage();
 
     const document = gBrowser.selectedBrowser.contentDocument;
-    const downloadButton = translationsSettingsTestUtils.getDownloadButton();
+    const downloadButton =
+      translationsSettingsTestUtils.getDownloadLanguageButton();
 
     await translationsSettingsTestUtils.assertDownloadedLanguagesEmptyState({
       visible: true,
@@ -89,7 +90,8 @@ add_task(async function test_download_error_retry_via_retry_button() {
     await TranslationsSettingsTestUtils.openTranslationsSettingsSubpage();
 
   const document = gBrowser.selectedBrowser.contentDocument;
-  const downloadButton = translationsSettingsTestUtils.getDownloadButton();
+  const downloadButton =
+    translationsSettingsTestUtils.getDownloadLanguageButton();
 
   await translationsSettingsTestUtils.assertDownloadedLanguagesEmptyState({
     visible: true,
@@ -116,6 +118,12 @@ add_task(async function test_download_error_retry_via_retry_button() {
     document
   );
   ok(errorMessage, "Error message should be shown");
+  const errorRow =
+    await translationsSettingsTestUtils.waitForDownloadedLanguageItem("es");
+  ok(
+    errorRow.classList.contains("translations-download-language-error"),
+    "Error row should have the error class"
+  );
   is(
     translationsSettingsTestUtils.getSelectedDownloadLanguage(),
     "es",
@@ -163,7 +171,8 @@ add_task(async function test_download_delete_cancel_restores_state() {
   const { cleanup, remoteClients, translationsSettingsTestUtils } =
     await TranslationsSettingsTestUtils.openTranslationsSettingsSubpage();
 
-  const downloadButton = translationsSettingsTestUtils.getDownloadButton();
+  const downloadButton =
+    translationsSettingsTestUtils.getDownloadLanguageButton();
 
   await translationsSettingsTestUtils.selectDownloadLanguage("uk");
   info("Download Ukrainian");

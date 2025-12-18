@@ -24,7 +24,11 @@ support-files = [
 
 ["browser_translations_about_settings_subpage_download_langs_basic.js"]
 
+["browser_translations_about_settings_subpage_download_langs_delete_confirmation.js"]
+
 ["browser_translations_about_settings_subpage_download_langs_errors.js"]
+
+["browser_translations_about_settings_subpage_download_langs_reset_states.js"]
 
 ["browser_translations_about_settings_subpage_download_langs_sorting.js"]
 
