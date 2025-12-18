@@ -5,10 +5,11 @@
  */
 
 /**
- * This file contains LLM tool abscrations and tool definitions.
+ * This file contains LLM tool abstractions and tool definitions.
  */
 
 import { searchBrowsingHistory as implSearchBrowsingHistory } from "moz-src:///browser/components/aiwindow/models/SearchBrowsingHistory.sys.mjs";
+import { PageExtractorParent } from "resource://gre/actors/PageExtractorParent.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -19,18 +20,19 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 const GET_OPEN_TABS = "get_open_tabs";
 const SEARCH_BROWSING_HISTORY = "search_browsing_history";
+const GET_PAGE_CONTENT = "get_page_content";
 
-// eslint-disable-next-line no-unused-vars
-const TOOLS = [GET_OPEN_TABS, SEARCH_BROWSING_HISTORY];
+export const TOOLS = [GET_OPEN_TABS, SEARCH_BROWSING_HISTORY, GET_PAGE_CONTENT];
 
-// eslint-disable-next-line no-unused-vars
-const toolsConfig = [
+export const toolsConfig = [
   {
     type: "function",
     function: {
       name: GET_OPEN_TABS,
       description:
-        "Access the user's browser and return a list of most recently browsed tabs. Each tab is represented by a JSON with the page's url, title and description if available. Default to return maximum 15 tabs.",
+        "Access the user's browser and return a list of most recently browsed tabs. " +
+        "Each tab is represented by a JSON with the page's url, title and description " +
+        "if available. Default to return maximum 15 tabs.",
       parameters: {
         type: "object",
         properties: {},
@@ -42,29 +44,63 @@ const toolsConfig = [
     function: {
       name: SEARCH_BROWSING_HISTORY,
       description:
-        'Refind pages from the user\'s PAST BROWSING HISTORY. Use this whenever the user wants to recall, review, list, or see pages they visited earlier (for a topic, site, or time period). Also use this when the user requests all pages from a past time period (e.g., "yesterday", "last week"), even if no topic is specified. Do NOT use for open tabs, completely general web questions, or abstract questions about "history" or habits.',
+        "Refind pages from the user's PAST BROWSING HISTORY. Use this whenever the " +
+        "user wants to recall, review, list, or see pages they visited earlier (for a " +
+        "topic, site, or time period). Also use this when the user requests all pages " +
+        'from a past time period (e.g., "yesterday", "last week"), even if no topic is ' +
+        "specified. Do NOT use for open tabs, completely general web questions, or " +
+        'abstract questions about "history" or habits.',
       parameters: {
         type: "object",
         properties: {
           searchTerm: {
             type: "string",
             description:
-              "A detailed, noun-heavy phrase (~2-12 meaningful tokens) summarizing the user's intent for semantic retrieval. Include the main entity/topic plus 1-3 contextual qualifiers (e.g., library name, purpose, site, or timeframe). Avoid vague or single-word queries.",
+              "A detailed, noun-heavy phrase (~2-12 meaningful tokens) summarizing " +
+              "the user's intent for semantic retrieval. Include the main entity/topic " +
+              "plus 1-3 contextual qualifiers (e.g., library name, purpose, site, or " +
+              "timeframe). Avoid vague or single-word queries.",
           },
           startTs: {
             type: "string",
             description:
-              "Inclusive lower bound of the time window as an ISO 8601 datetime string (e.g., '2025-11-07T09:00:00-05:00'). Use when the user asks for results within a time or range start, such as 'last week', 'since yesterday', or 'last night'. This must be before the user's current datetime.",
+              "Inclusive lower bound of the time window as an ISO 8601 datetime string " +
+              "(e.g., '2025-11-07T09:00:00-05:00'). Use when the user asks for results " +
+              "within a time or range start, such as 'last week', 'since yesterday', or" +
+              "'last night'. This must be before the user's current datetime.",
             default: null,
           },
           endTs: {
             type: "string",
             description:
-              "Inclusive upper bound of the time window as an ISO 8601 datetime string (e.g., '2025-11-07T21:00:00-05:00'). Use when the user asks for results within a time or range end, such as 'last week', 'between 2025-10-01 and 2025-10-31', or 'before Monday'. This must be before the user's current datetime.",
+              "Inclusive upper bound of the time window as an ISO 8601 datetime string " +
+              "(e.g., '2025-11-07T21:00:00-05:00'). Use when the user asks for results " +
+              "within a time or range end, such as 'last week', 'between 2025-10-01 and " +
+              "2025-10-31', or 'before Monday'. This must be before the user's current datetime.",
             default: null,
           },
         },
         required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: GET_PAGE_CONTENT,
+      description:
+        "Retrieve cleaned text content of the provided browser page URL.",
+      parameters: {
+        properties: {
+          url: {
+            type: "string",
+            description:
+              "The complete URL of the page to fetch content from. This must exactly match " +
+              "a URL from the current conversation context. Use the full URL including " +
+              "protocol (http/https). Example: 'https://www.example.com/article'.",
+          },
+        },
+        required: ["url"],
       },
     },
   },
@@ -126,7 +162,7 @@ export async function getOpenTabs(n = 15) {
 }
 
 /**
- * Tool entrypoint for browsing history search.
+ * Tool entrypoint for search_browsing_history.
  *
  * Parameters (defaults shown):
  * - searchTerm: ""        - string used for search
@@ -136,16 +172,16 @@ export async function getOpenTabs(n = 15) {
  *
  * Detailed behavior and implementation are in SearchBrowsingHistory.sys.mjs.
  *
- * @param {object} params
+ * @param {object} toolParams
  *  The search parameters.
- * @param {string} params.searchTerm
+ * @param {string} toolParams.searchTerm
  *  The search string. If null or empty, semantic search is skipped and
  *  results are filtered by time range and sorted by last_visit_date and frecency.
- * @param {string|null} params.startTs
+ * @param {string|null} toolParams.startTs
  *  Optional ISO-8601 start timestamp (e.g. "2025-11-07T09:00:00-05:00").
- * @param {string|null} params.endTs
+ * @param {string|null} toolParams.endTs
  *  Optional ISO-8601 end timestamp (e.g. "2025-11-07T09:00:00-05:00").
- * @param {number} params.historyLimit
+ * @param {number} toolParams.historyLimit
  *  Maximum number of history results to return.
  * @returns {Promise<object>}
  *  A promise resolving to an object with the search term and history results.
@@ -198,5 +234,221 @@ export function stripSearchBrowsingHistoryFields(result) {
     return JSON.stringify(data);
   } catch {
     return result;
+  }
+}
+
+/**
+ * Class for handling page content extraction with configurable modes and limits.
+ */
+export class GetPageContent {
+  static DEFAULT_MODE = "reader";
+  static FALLBACK_MODE = "full";
+  static MAX_CHARACTERS = 10000;
+
+  static MODE_HANDLERS = {
+    viewport: async pageExtractor => {
+      const result = await pageExtractor.getText({ justViewport: true });
+      return { text: result.text };
+    },
+    reader: async pageExtractor => {
+      const text = await pageExtractor.getReaderModeContent();
+      return { text: typeof text === "string" ? text : "" };
+    },
+    full: async pageExtractor => {
+      const result = await pageExtractor.getText();
+      return { text: result };
+    },
+  };
+
+  /**
+   * Tool entrypoint for get_page_content.
+   *
+   * @param {object} toolParams
+   * @param {string} toolParams.url
+   * @param {Set<string>} allowedUrls
+   * @returns {Promise<string>}
+   *  A promise resolving to a string containing the extracted page content
+   *  with a descriptive header, or an error message if extraction fails.
+   */
+  static async getPageContent({ url }, allowedUrls) {
+    try {
+      // Search through the allowed URLs and extract directly if exists
+      if (!allowedUrls.has(url)) {
+        //  Bug 2006418  - This will load the page headlessly, and then extract the content.
+        // It might be a better idea to have the lifetime of the page be tied to the chat
+        // while it's open, and with a "keep alive" timeout. For now it's simpler to just
+        // load the page fresh every time.
+        return PageExtractorParent.getHeadlessExtractor(url, pageExtractor =>
+          this.#runExtraction(pageExtractor, this.DEFAULT_MODE, url)
+        );
+      }
+
+      // TODO: figure out what windows we can access to give permission here, and update this API
+      let win = lazy.BrowserWindowTracker.getTopWindow();
+      let gBrowser = win.gBrowser;
+      let tabs = gBrowser.tabs;
+
+      // Find the tab with the matching URL in browser
+      let targetTab = null;
+      for (let i = 0; i < tabs.length; i++) {
+        const tab = tabs[i];
+        const currentURI = tab?.linkedBrowser?.currentURI;
+        if (currentURI?.spec === url) {
+          targetTab = tab;
+          break;
+        }
+      }
+
+      // If no match, try hostname matching for cases where protocols differ
+      if (!targetTab) {
+        try {
+          const inputHostPort = new URL(url).host;
+          targetTab = tabs.find(tab => {
+            try {
+              const tabHostPort = tab.linkedBrowser.currentURI.hostPort;
+              return tabHostPort === inputHostPort;
+            } catch {
+              return false;
+            }
+          });
+        } catch {
+          // Invalid URL, continue with original logic
+        }
+      }
+
+      // If still no match, abort
+      if (!targetTab) {
+        return `Cannot find URL: ${url}, page content extraction failed.`;
+      }
+
+      // Attempt extraction
+      const currentWindowContext =
+        targetTab.linkedBrowser.browsingContext?.currentWindowContext;
+
+      if (!currentWindowContext) {
+        return `Cannot access content from "${targetTab.label}" at ${url}.`;
+        // Stripped message "The tab may still be loading or is not accessible." to not confuse the LLM
+      }
+
+      // Extract page content using PageExtractor
+      const pageExtractor =
+        await currentWindowContext.getActor("PageExtractor");
+
+      return this.#runExtraction(
+        pageExtractor,
+        this.DEFAULT_MODE,
+        `"${targetTab.label}" (${url})`
+      );
+    } catch (error) {
+      // Bug 2006425 - Decide on the strategy for error handling in tool calls
+      // i.e., will the LLM keep retrying get_page_content due to error?
+      console.error(error);
+      return `Error retrieving content from ${url}.`;
+      // Stripped ${error.message} content to not confruse the LLM
+    }
+  }
+
+  /**
+   * Main extraction function.
+   * label is of form `{tab.title} ({tab.url})`.
+   *
+   * @param {PageExtractor} pageExtractor
+   * @param {string} mode
+   * @param {string} label
+   * @returns {Promise<string>}
+   *  A promise resolving to a formatted string containing the page content
+   *  with mode and label information, or an error message if no content is available.
+   */
+  static async #runExtraction(pageExtractor, mode, label) {
+    const selectedMode =
+      typeof mode === "string" && this.MODE_HANDLERS[mode]
+        ? mode
+        : this.DEFAULT_MODE;
+    const handler = this.MODE_HANDLERS[selectedMode];
+    let extraction = null;
+
+    try {
+      extraction = await handler(pageExtractor);
+    } catch (err) {
+      console.error(
+        "[SmartWindow] get_page_content mode failed",
+        selectedMode,
+        err
+      );
+    }
+
+    let pageContent = "";
+    if (typeof extraction === "string") {
+      pageContent = extraction;
+    } else if (typeof extraction?.text === "string") {
+      pageContent = extraction.text;
+    }
+
+    // Track which mode was actually used (in case we fall back)
+    let actualMode = selectedMode;
+
+    // If reader mode returns no content, fall back to full mode
+    if (!pageContent && selectedMode === "reader") {
+      try {
+        const fallbackHandler = this.MODE_HANDLERS[this.FALLBACK_MODE];
+        extraction = await fallbackHandler(pageExtractor);
+        if (typeof extraction === "string") {
+          pageContent = extraction;
+        } else if (typeof extraction?.text === "string") {
+          pageContent = extraction.text;
+        }
+        if (pageContent) {
+          actualMode = this.FALLBACK_MODE;
+        }
+      } catch (err) {
+        console.error(
+          "[SmartWindow] get_page_content fallback mode failed",
+          this.FALLBACK_MODE,
+          err
+        );
+      }
+    }
+
+    if (!pageContent) {
+      return `get_page_content(${selectedMode}) returned no content for ${label}.`;
+      // Stripped message "Try another mode if you still need information." to not confruse the LLM
+    }
+
+    // Clean and truncate content for better LLM consumption
+    //  Bug 2006436 - Consider doing this directly in pageExtractor if absolutely needed.
+    let cleanContent = pageContent
+      .replace(/\s+/g, " ") // Normalize whitespace
+      .replace(/\n\s*\n/g, "\n") // Clean up line breaks
+      .trim();
+
+    // Limit content length but be more generous for LLM processing
+    // Bug 1995043 - once reader mode has length truncation,
+    // we can remove this and directly do this in pageExtractor.
+    if (cleanContent.length > this.MAX_CHARACTERS) {
+      // Try to cut at a sentence boundary
+      const truncatePoint = cleanContent.lastIndexOf(".", this.MAX_CHARACTERS);
+      if (truncatePoint > this.MAX_CHARACTERS - 100) {
+        cleanContent = cleanContent.substring(0, truncatePoint + 1);
+      } else {
+        cleanContent = cleanContent.substring(0, this.MAX_CHARACTERS) + "...";
+      }
+    }
+
+    let modeLabel;
+    switch (actualMode) {
+      case "viewport":
+        modeLabel = "current viewport";
+        break;
+      case "reader":
+        modeLabel = "reader mode";
+        break;
+      case "full":
+        modeLabel = "full page";
+        break;
+    }
+
+    return `Content (${modeLabel}) from ${label}:
+
+${cleanContent}`;
   }
 }

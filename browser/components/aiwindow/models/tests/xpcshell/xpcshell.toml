@@ -30,6 +30,8 @@ support-files = []
 
 ["test_Tools_GetOpenTabs.js"]
 
+["test_Tools_GetPageContent.js"]
+
 ["test_Tools_SearchBrowsingHistory.js"]
 
 ["test_Utils.js"]
