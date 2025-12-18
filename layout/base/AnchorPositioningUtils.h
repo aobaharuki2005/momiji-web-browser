@@ -163,6 +163,7 @@ class AnchorPosReferenceData {
 };
 
 struct LastSuccessfulPositionData {
+  RefPtr<const ComputedStyle> mStyle;
   uint32_t mIndex = 0;
   bool mTriedAllFallbacks = false;
 };
