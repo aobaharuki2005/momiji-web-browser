@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 
-static const PRTime kCTExpirationTime = INT64_C(1771844018000000);
+static const PRTime kCTExpirationTime = INT64_C(1772103164000000);
 
 namespace mozilla::ct {
 
@@ -698,7 +698,7 @@ const CTLogInfo kCTLogList[] = {
      "\xaa",
      91},
     {"IPng Networks 'Halloumi2025h2'", CTLogState::Admissible, CTLogFormat::Tiled,
-     1759861800000,  // 2025-10-07T18:30:00Z
+     1765996200000,  // 2025-12-17T18:30:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xa8\x9c\x52\x9c\x27\x0c\x85\x68\xa4"
@@ -708,7 +708,7 @@ const CTLogInfo kCTLogList[] = {
      "\x01",
      91},
     {"IPng Networks 'Halloumi2026h1'", CTLogState::Admissible, CTLogFormat::Tiled,
-     1759861800000,  // 2025-10-07T18:30:00Z
+     1765996200000,  // 2025-12-17T18:30:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xcd\xd7\x27\x1b\x04\x63\x9b\x66\x68"
@@ -728,7 +728,7 @@ const CTLogInfo kCTLogList[] = {
      "\xad",
      91},
     {"IPng Networks 'Halloumi2027h1'", CTLogState::Admissible, CTLogFormat::Tiled,
-     1759861800000,  // 2025-10-07T18:30:00Z
+     1765996200000,  // 2025-12-17T18:30:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xc3\x94\x94\x97\x6c\x9f\x77\x94\xc5"
@@ -738,7 +738,7 @@ const CTLogInfo kCTLogList[] = {
      "\x67",
      91},
     {"IPng Networks 'Halloumi2027h2'", CTLogState::Admissible, CTLogFormat::Tiled,
-     1759861800000,  // 2025-10-07T18:30:00Z
+     1765996200000,  // 2025-12-17T18:30:00Z
      7,              // operated by IPng Networks
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xae\x62\x9b\x16\x43\xc6\xed\x07\xd0"
