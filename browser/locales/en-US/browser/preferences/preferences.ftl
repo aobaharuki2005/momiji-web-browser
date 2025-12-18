@@ -449,6 +449,13 @@ settings-translations-subpage-always-translate-header =
 settings-translations-subpage-never-translate-header =
     .label = Never translate these languages
 
+settings-translations-subpage-never-translate-sites-header =
+    .label = Never translate these sites
+
+# The icon placeholders show the translations button and the settings gear in the urlbar panel.
+settings-translations-subpage-never-translate-sites-description =
+    To add a site, open the <img data-l10n-name="translations-icon"/> translation panel, select <img data-l10n-name="settings-icon"/> translation settings, then choose “Never translate this site”
+
 settings-translations-subpage-language-select-option =
     .label = Add language
 
@@ -467,6 +474,9 @@ settings-translations-subpage-no-languages-downloaded =
 
 settings-translations-subpage-no-languages-added =
     .label = No languages added
+
+settings-translations-subpage-no-sites-added =
+    .label = No sites added
 
 # Variables:
 #    $localeName (string) - Localized name of the locale to be used.
