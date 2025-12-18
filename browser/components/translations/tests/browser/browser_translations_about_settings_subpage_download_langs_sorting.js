@@ -36,7 +36,8 @@ add_task(async function test_download_languages_sorting_and_batch_resolution() {
   );
   await initialDownloadsRendered;
 
-  const downloadButton = translationsSettingsTestUtils.getDownloadButton();
+  const downloadButton =
+    translationsSettingsTestUtils.getDownloadLanguageButton();
 
   info("Verify empty state before downloads");
   await translationsSettingsTestUtils.assertDownloadedLanguagesEmptyState({

@@ -492,10 +492,10 @@ class TranslationsSettingsTestUtils {
     static InitializationFailed =
       "TranslationsSettingsTest:InitializationFailed";
 
-    static DownloadButtonEnabled =
-      "TranslationsSettingsTest:DownloadButtonEnabled";
-    static DownloadButtonDisabled =
-      "TranslationsSettingsTest:DownloadButtonDisabled";
+    static DownloadLanguageButtonEnabled =
+      "TranslationsSettingsTest:DownloadLanguageButtonEnabled";
+    static DownloadLanguageButtonDisabled =
+      "TranslationsSettingsTest:DownloadLanguageButtonDisabled";
   };
 
   /**
@@ -779,7 +779,7 @@ class TranslationsSettingsTestUtils {
    *
    * @returns {HTMLButtonElement|null}
    */
-  getDownloadButton() {
+  getDownloadLanguageButton() {
     return this.document.getElementById("translationsDownloadLanguagesButton");
   }
 
@@ -830,7 +830,7 @@ class TranslationsSettingsTestUtils {
         .DownloadedLanguagesSelectOptionsUpdated
     );
 
-    await click(this.getDownloadButton(), `Start ${langTag} download`);
+    await click(this.getDownloadLanguageButton(), `Start ${langTag} download`);
     await Promise.all([started, renderInProgress, optionsUpdated]);
 
     const completed = this.waitForEvent(
@@ -895,7 +895,7 @@ class TranslationsSettingsTestUtils {
     );
 
     await click(
-      this.getDownloadButton(),
+      this.getDownloadLanguageButton(),
       `Start ${langTag} download (expect failure)`
     );
     await Promise.all([started, renderInProgress, optionsUpdated]);

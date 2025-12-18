@@ -33,7 +33,8 @@ add_task(async function test_download_languages_basic_flow() {
 
   const downloadSelect =
     translationsSettingsTestUtils.getDownloadedLanguagesSelect();
-  const downloadButton = translationsSettingsTestUtils.getDownloadButton();
+  const downloadButton =
+    translationsSettingsTestUtils.getDownloadLanguageButton();
 
   ok(downloadSelect, "Download languages select should exist");
   ok(downloadButton, "Download languages button should exist");
@@ -53,7 +54,9 @@ add_task(async function test_download_languages_basic_flow() {
   info("Select French to enable download button");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.DownloadButtonEnabled]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.DownloadLanguageButtonEnabled],
+      ],
     },
     async () => {
       await translationsSettingsTestUtils.selectDownloadLanguage("fr");
@@ -68,7 +71,7 @@ add_task(async function test_download_languages_basic_flow() {
 
   info("Download French language models");
   const downloadButtonDisabled = translationsSettingsTestUtils.waitForEvent(
-    TranslationsSettingsTestUtils.Events.DownloadButtonDisabled
+    TranslationsSettingsTestUtils.Events.DownloadLanguageButtonDisabled
   );
   const downloadStarted = translationsSettingsTestUtils.waitForEvent(
     TranslationsSettingsTestUtils.Events.DownloadStarted,

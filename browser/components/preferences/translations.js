@@ -56,6 +56,8 @@ const DOWNLOAD_LANGUAGE_REMOVE_BUTTON_CLASS =
 const DOWNLOAD_LANGUAGE_RETRY_BUTTON_CLASS =
   "translations-download-retry-button";
 /** @type {string} */
+const DOWNLOAD_LANGUAGE_FAILED_CLASS = "translations-download-language-error";
+/** @type {string} */
 const DOWNLOAD_LANGUAGE_DELETE_CONFIRM_BUTTON_CLASS =
   "translations-download-delete-confirm-button";
 /** @type {string} */
@@ -254,7 +256,7 @@ const TranslationsSettings = {
           target === this.elements?.downloadLanguagesButton ||
           target.closest?.("#translationsDownloadLanguagesButton")
         ) {
-          this.onDownloadButtonClicked();
+          this.onDownloadLanguageButtonClicked();
           break;
         }
 
@@ -464,7 +466,7 @@ const TranslationsSettings = {
       this.elements.neverTranslateLanguagesSelect.disabled = true;
       this.elements.neverTranslateLanguagesButton.disabled = true;
       this.elements.downloadLanguagesSelect.disabled = true;
-      this.setDownloadButtonDisabledState(true);
+      this.setDownloadLanguageButtonDisabledState(true);
       this.dispatchInitializedTestEvent();
       return;
     }
@@ -475,7 +477,7 @@ const TranslationsSettings = {
     this.elements.neverTranslateLanguagesButton.disabled = true;
     this.elements.downloadLanguagesSelect.disabled = false;
     this.resetDownloadSelect();
-    this.setDownloadButtonDisabledState(true);
+    this.setDownloadLanguageButtonDisabledState(true);
     await this.buildAlwaysTranslateSelectOptions();
     await this.buildNeverTranslateSelectOptions();
     await this.buildDownloadSelectOptions();
@@ -753,7 +755,7 @@ const TranslationsSettings = {
     }
 
     if (preserveSelection) {
-      this.updateDownloadButtonDisabled();
+      this.updateDownloadLanguageButtonDisabled();
     } else {
       this.resetDownloadSelect();
     }
@@ -1492,7 +1494,7 @@ const TranslationsSettings = {
    * Handle a selection change in the download dropdown.
    */
   onDownloadSelectionChanged() {
-    this.updateDownloadButtonDisabled();
+    this.updateDownloadLanguageButtonDisabled();
   },
 
   /**
@@ -1500,7 +1502,7 @@ const TranslationsSettings = {
    *
    * @returns {boolean}
    */
-  isDownloadButtonDisabled() {
+  shouldDisableDownloadLanguageButton() {
     const select = this.elements?.downloadLanguagesSelect;
     if (!select || this.currentDownloadLangTag) {
       return true;
@@ -1522,7 +1524,7 @@ const TranslationsSettings = {
    *
    * @param {boolean} isDisabled
    */
-  setDownloadButtonDisabledState(isDisabled) {
+  setDownloadLanguageButtonDisabledState(isDisabled) {
     const button = this.elements?.downloadLanguagesButton;
     if (!button) {
       return;
@@ -1533,7 +1535,9 @@ const TranslationsSettings = {
 
     if (wasDisabled !== isDisabled) {
       dispatchTestEvent(
-        isDisabled ? "DownloadButtonDisabled" : "DownloadButtonEnabled"
+        isDisabled
+          ? "DownloadLanguageButtonDisabled"
+          : "DownloadLanguageButtonEnabled"
       );
     }
   },
@@ -1541,8 +1545,10 @@ const TranslationsSettings = {
   /**
    * Update the enabled state of the download button.
    */
-  updateDownloadButtonDisabled() {
-    this.setDownloadButtonDisabledState(this.isDownloadButtonDisabled());
+  updateDownloadLanguageButtonDisabled() {
+    this.setDownloadLanguageButtonDisabledState(
+      this.shouldDisableDownloadLanguageButton()
+    );
   },
 
   /**
@@ -1550,12 +1556,13 @@ const TranslationsSettings = {
    *
    * @returns {Promise<void>}
    */
-  async onDownloadButtonClicked() {
+  async onDownloadLanguageButtonClicked() {
     const langTag = this.elements?.downloadLanguagesSelect?.value;
     if (!langTag || this.currentDownloadLangTag) {
       return;
     }
 
+    this.downloadPendingDeleteLanguageTags.clear();
     this.downloadFailedLanguageTags.clear();
     this.currentDownloadLangTag = langTag;
     this.downloadingLanguageTags.add(langTag);
@@ -1582,7 +1589,7 @@ const TranslationsSettings = {
       this.updateDownloadSelectOptionState({
         preserveSelection: !downloadSucceeded,
       });
-      this.updateDownloadButtonDisabled();
+      this.updateDownloadLanguageButtonDisabled();
     }
   },
 
@@ -1595,8 +1602,8 @@ const TranslationsSettings = {
     if (this.elements?.downloadLanguagesSelect) {
       this.elements.downloadLanguagesSelect.disabled = isDisabled;
     }
-    this.setDownloadButtonDisabledState(
-      isDisabled || this.isDownloadButtonDisabled()
+    this.setDownloadLanguageButtonDisabledState(
+      isDisabled || this.shouldDisableDownloadLanguageButton()
     );
   },
 
@@ -1629,7 +1636,7 @@ const TranslationsSettings = {
     if (setting) {
       setting.value = "";
     }
-    this.updateDownloadButtonDisabled();
+    this.updateDownloadLanguageButtonDisabled();
   },
 
   /**
@@ -1642,6 +1649,7 @@ const TranslationsSettings = {
       return;
     }
 
+    this.downloadPendingDeleteLanguageTags.clear();
     const downloaded = await Promise.all(
       this.languageList.map(async (/** @type {LanguageInfo} */ { langTag }) => {
         try {
@@ -1673,7 +1681,7 @@ const TranslationsSettings = {
 
     await this.renderDownloadLanguages();
     this.updateDownloadSelectOptionState();
-    this.updateDownloadButtonDisabled();
+    this.updateDownloadLanguageButtonDisabled();
   },
 
   /**
@@ -1683,7 +1691,7 @@ const TranslationsSettings = {
    * @param {HTMLElement} item - The moz-box-item element to populate.
    * @returns {Promise<void>}
    */
-  async createDeleteConfirmationItem(langTag, item) {
+  async createDeleteConfirmationItem(langTag, item, disableActions = false) {
     const warningButton = document.createElement("moz-button");
     warningButton.setAttribute("slot", "actions-start");
     warningButton.setAttribute("type", "icon");
@@ -1707,8 +1715,12 @@ const TranslationsSettings = {
       { language: languageLabel, size: sizeLabel }
     );
 
+    const buttonGroup = document.createElement("moz-button-group");
+
     const deleteButton = document.createElement("moz-button");
-    deleteButton.setAttribute("type", "default");
+    deleteButton.setAttribute("type", "destructive");
+    deleteButton.setAttribute("size", "small");
+    deleteButton.disabled = disableActions;
     document.l10n.setAttributes(
       deleteButton,
       "settings-translations-subpage-download-delete-button"
@@ -1718,6 +1730,8 @@ const TranslationsSettings = {
 
     const cancelButton = document.createElement("moz-button");
     cancelButton.setAttribute("type", "default");
+    cancelButton.setAttribute("size", "small");
+    cancelButton.disabled = disableActions;
     document.l10n.setAttributes(
       cancelButton,
       "settings-translations-subpage-download-cancel-button"
@@ -1726,8 +1740,18 @@ const TranslationsSettings = {
     cancelButton.dataset.langTag = langTag;
 
     confirmContent.appendChild(confirmText);
-    confirmContent.appendChild(deleteButton);
-    confirmContent.appendChild(cancelButton);
+    buttonGroup.append(deleteButton, cancelButton);
+    confirmContent.appendChild(buttonGroup);
+
+    if (!deleteButton.disabled) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (deleteButton.isConnected) {
+            deleteButton.focus({ focusVisible: true });
+          }
+        });
+      });
+    }
 
     item.appendChild(warningButton);
     item.appendChild(confirmContent);
@@ -1740,7 +1764,7 @@ const TranslationsSettings = {
    * @param {HTMLElement} item - The moz-box-item element to populate.
    * @returns {Promise<void>}
    */
-  async createFailedDownloadItem(langTag, item) {
+  async createFailedDownloadItem(langTag, item, disableActions = false) {
     const errorButton = document.createElement("moz-button");
     errorButton.setAttribute("slot", "actions-start");
     errorButton.setAttribute("type", "icon");
@@ -1767,6 +1791,8 @@ const TranslationsSettings = {
 
     const retryButton = document.createElement("moz-button");
     retryButton.setAttribute("type", "text");
+    retryButton.setAttribute("size", "small");
+    retryButton.disabled = disableActions;
     document.l10n.setAttributes(
       retryButton,
       "settings-translations-subpage-download-retry-button"
@@ -1776,6 +1802,16 @@ const TranslationsSettings = {
 
     errorContent.appendChild(errorText);
     errorContent.appendChild(retryButton);
+
+    if (!retryButton.disabled) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (retryButton.isConnected) {
+            retryButton.focus({ focusVisible: true });
+          }
+        });
+      });
+    }
 
     item.appendChild(errorButton);
     item.appendChild(errorContent);
@@ -1794,7 +1830,8 @@ const TranslationsSettings = {
     langTag,
     isDownloading,
     item,
-    progressLabel
+    progressLabel,
+    disableActions = false
   ) {
     const label = await this.formatDownloadLabel(langTag);
     if (!label) {
@@ -1813,6 +1850,9 @@ const TranslationsSettings = {
     removeButton.setAttribute("aria-label", label);
     if (isDownloading) {
       removeButton.style.pointerEvents = "none";
+      removeButton.disabled = false;
+    } else {
+      removeButton.disabled = disableActions;
     }
     this.setIconButtonGhostState(
       removeButton,
@@ -1841,6 +1881,7 @@ const TranslationsSettings = {
       return;
     }
 
+    const isDownloadInProgress = Boolean(this.currentDownloadLangTag);
     const previousEmptyStateVisible =
       downloadLanguagesNoneRow && !downloadLanguagesNoneRow.hidden;
 
@@ -1900,15 +1941,25 @@ const TranslationsSettings = {
       item.dataset.langTag = langTag;
 
       if (isPendingDelete) {
-        await this.createDeleteConfirmationItem(langTag, item);
+        await this.createDeleteConfirmationItem(
+          langTag,
+          item,
+          isDownloadInProgress
+        );
       } else if (isFailed) {
-        await this.createFailedDownloadItem(langTag, item);
+        item.classList.add(DOWNLOAD_LANGUAGE_FAILED_CLASS);
+        await this.createFailedDownloadItem(
+          langTag,
+          item,
+          isDownloadInProgress
+        );
       } else {
         const shouldAdd = await this.createDownloadLanguageItem(
           langTag,
           isDownloading,
           item,
-          progressLabel
+          progressLabel,
+          isDownloadInProgress
         );
         if (!shouldAdd) {
           continue;
@@ -1945,6 +1996,8 @@ const TranslationsSettings = {
       return;
     }
 
+    this.downloadFailedLanguageTags.clear();
+    this.downloadPendingDeleteLanguageTags.clear();
     this.downloadPendingDeleteLanguageTags.add(langTag);
     await this.renderDownloadLanguages();
   },
@@ -1974,7 +2027,7 @@ const TranslationsSettings = {
 
     await this.renderDownloadLanguages();
     this.updateDownloadSelectOptionState();
-    this.updateDownloadButtonDisabled();
+    this.updateDownloadLanguageButtonDisabled();
   },
 
   /**
@@ -2029,7 +2082,7 @@ const TranslationsSettings = {
       this.updateDownloadSelectOptionState({
         preserveSelection: !downloadSucceeded,
       });
-      this.updateDownloadButtonDisabled();
+      this.updateDownloadLanguageButtonDisabled();
     }
   },
 
