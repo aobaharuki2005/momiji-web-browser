@@ -123,7 +123,7 @@ add_task(async function test_always_translate_languages_dropdown_state() {
   await translationsSettingsTestUtils.assertEvents(
     {
       expected: [
-        [TranslationsSettingsTestUtils.Events.AlwaysLanguagesRendered],
+        [TranslationsSettingsTestUtils.Events.AlwaysTranslateLanguagesRendered],
         [
           TranslationsSettingsTestUtils.Events
             .AlwaysTranslateLanguagesSelectOptionsUpdated,

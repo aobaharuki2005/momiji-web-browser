@@ -441,8 +441,8 @@ class TranslationsSettingsTestUtils {
    * Static Events class for event name constants.
    */
   static Events = class Events {
-    static AlwaysLanguagesRendered =
-      "TranslationsSettingsTest:AlwaysLanguagesRendered";
+    static AlwaysTranslateLanguagesRendered =
+      "TranslationsSettingsTest:AlwaysTranslateLanguagesRendered";
     static NeverLanguagesRendered =
       "TranslationsSettingsTest:NeverLanguagesRendered";
     static NeverSitesRendered = "TranslationsSettingsTest:NeverSitesRendered";
@@ -465,6 +465,10 @@ class TranslationsSettingsTestUtils {
       "TranslationsSettingsTest:DownloadedLanguagesEmptyStateShown";
     static DownloadedLanguagesEmptyStateHidden =
       "TranslationsSettingsTest:DownloadedLanguagesEmptyStateHidden";
+    static AlwaysTranslateLanguagesAddButtonEnabled =
+      "TranslationsSettingsTest:AlwaysTranslateLanguagesAddButtonEnabled";
+    static AlwaysTranslateLanguagesAddButtonDisabled =
+      "TranslationsSettingsTest:AlwaysTranslateLanguagesAddButtonDisabled";
 
     static AlwaysTranslateLanguagesSelectOptionsUpdated =
       "TranslationsSettingsTest:AlwaysTranslateLanguagesSelectOptionsUpdated";
@@ -716,6 +720,17 @@ class TranslationsSettingsTestUtils {
   getAlwaysTranslateLanguagesSelect() {
     return this.document.getElementById(
       "translationsAlwaysTranslateLanguagesSelect"
+    );
+  }
+
+  /**
+   * Gets the always-translate languages add button.
+   *
+   * @returns {HTMLButtonElement|null}
+   */
+  getAlwaysTranslateLanguagesAddButton() {
+    return this.document.getElementById(
+      "translationsAlwaysTranslateLanguagesButton"
     );
   }
 
@@ -1122,6 +1137,28 @@ class TranslationsSettingsTestUtils {
     const dropdown = this.getAlwaysTranslateLanguagesSelect();
     dropdown.value = langTag;
     dropdown.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const addButton = await waitForCondition(
+      () => this.getAlwaysTranslateLanguagesAddButton(),
+      "Waiting for always-translate add button"
+    );
+    if (addButton.disabled) {
+      const addButtonEnabled = this.waitForEvent(
+        TranslationsSettingsTestUtils.Events
+          .AlwaysTranslateLanguagesAddButtonEnabled
+      );
+      await addButtonEnabled;
+    }
+    addButton.click();
+
+    const addedLanguage = this.waitForAlwaysTranslateLanguageItem(langTag);
+    const addButtonDisabledPromise = addButton.disabled
+      ? Promise.resolve()
+      : this.waitForEvent(
+          TranslationsSettingsTestUtils.Events
+            .AlwaysTranslateLanguagesAddButtonDisabled
+        );
+    await Promise.all([addedLanguage, addButtonDisabledPromise]);
   }
 
   /**
@@ -1132,7 +1169,7 @@ class TranslationsSettingsTestUtils {
    */
   async removeAlwaysTranslateLanguage(langTag) {
     const removeButton = this.document.querySelector(
-      `[data-lang-tag="${langTag}"].translations-always-remove-button`
+      `[data-lang-tag="${langTag}"].translations-always-translate-remove-button`
     );
     if (!removeButton) {
       throw new Error(`Remove button not found for language: ${langTag}`);
@@ -1154,7 +1191,7 @@ class TranslationsSettingsTestUtils {
     return TestUtils.waitForCondition(
       () =>
         this.document.querySelector(
-          `[data-lang-tag="${langTag}"].translations-always-language-item`
+          `[data-lang-tag="${langTag}"].translations-always-translate-language-item`
         ),
       `Waiting for always-translate language item: ${langTag}`
     );
@@ -1170,7 +1207,7 @@ class TranslationsSettingsTestUtils {
    */
   async assertAlwaysTranslateLanguages({ languages, count }) {
     const items = this.document.querySelectorAll(
-      ".translations-always-language-item"
+      ".translations-always-translate-language-item"
     );
 
     if (count !== undefined) {
@@ -1202,7 +1239,7 @@ class TranslationsSettingsTestUtils {
    */
   async assertAlwaysTranslateLanguagesOrder({ languages }) {
     const items = this.document.querySelectorAll(
-      ".translations-always-language-item"
+      ".translations-always-translate-language-item"
     );
     const actualLanguages = Array.from(items).map(item => item.dataset.langTag);
     Assert.deepEqual(

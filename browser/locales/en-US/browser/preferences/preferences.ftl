@@ -459,6 +459,10 @@ settings-translations-subpage-never-translate-sites-description =
 settings-translations-subpage-language-select-option =
     .label = Add language
 
+settings-translations-subpage-language-add-button =
+    .aria-label = Add language
+    .title = Add language
+
 settings-translations-subpage-download-languages-header =
     .label = Download languages
 
