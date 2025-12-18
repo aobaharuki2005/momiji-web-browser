@@ -20,4 +20,7 @@ export interface TranslationsSettingsElements {
   alwaysTranslateLanguagesGroup: HTMLElement;
   alwaysTranslateLanguagesSelect: HTMLSelectElement;
   alwaysTranslateLanguagesNoneRow: HTMLElement;
+  neverTranslateLanguagesGroup: HTMLElement;
+  neverTranslateLanguagesSelect: HTMLSelectElement;
+  neverTranslateLanguagesNoneRow: HTMLElement;
 }
