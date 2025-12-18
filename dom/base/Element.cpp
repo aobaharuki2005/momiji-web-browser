@@ -2500,7 +2500,8 @@ static bool WillDetachFromShadowOnUnbind(const Element& aElement,
 void Element::UnbindFromTree(UnbindContext& aContext) {
   const bool nullParent = aContext.IsUnbindRoot(this);
 
-  HandleShadowDOMRelatedRemovalSteps(nullParent);
+  HandleShadowDOMRelatedRemovalSteps(nullParent,
+                                     !!aContext.GetBatchRemovalState());
 
   if (HasFlag(ELEMENT_IN_CONTENT_IDENTIFIER_FOR_LCP)) {
     OwnerDoc()->ContentIdentifiersForLCP().Remove(this);

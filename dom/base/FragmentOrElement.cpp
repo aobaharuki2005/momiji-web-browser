@@ -148,8 +148,9 @@ nsIContent* nsIContent::FindFirstNonChromeOnlyAccessContent() const {
   return nullptr;
 }
 
-void nsIContent::UnbindFromTree(nsINode* aNewParent) {
-  UnbindContext context(*this);
+void nsIContent::UnbindFromTree(nsINode* aNewParent,
+                                const BatchRemovalState* aBatchState) {
+  UnbindContext context(*this, aBatchState);
   context.SetIsMove(aNewParent != nullptr);
   UnbindFromTree(context);
 }

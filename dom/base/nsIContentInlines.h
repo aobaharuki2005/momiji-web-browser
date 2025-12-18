@@ -251,17 +251,18 @@ inline void nsIContent::HandleShadowDOMRelatedInsertionSteps(bool aHadParent) {
   }
 }
 
-inline void nsIContent::HandleShadowDOMRelatedRemovalSteps(bool aNullParent) {
+inline void nsIContent::HandleShadowDOMRelatedRemovalSteps(bool aNullParent,
+                                                           bool aInBatch) {
   using mozilla::dom::Element;
   using mozilla::dom::ShadowRoot;
 
   if (aNullParent) {
     // FIXME(emilio, bug 1577141): FromNodeOrNull rather than just FromNode
-    // because XBL likes to call UnbindFromTree at very odd times (with already
-    // disconnected anonymous content subtrees).
+    // because frame destruction likes to call UnbindFromTree at very odd times
+    // (with already disconnected anonymous content subtrees).
     if (Element* parentElement = Element::FromNodeOrNull(mParent)) {
       if (ShadowRoot* shadow = parentElement->GetShadowRoot()) {
-        shadow->MaybeUnslotHostChild(*this);
+        shadow->MaybeUnslotHostChild(*this, aInBatch);
       }
       HandleInsertionToOrRemovalFromSlot();
     }
