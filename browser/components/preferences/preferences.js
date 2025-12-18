@@ -298,7 +298,10 @@ const CONFIG_PANES = Object.freeze({
   translations: {
     parent: "general",
     l10nId: "settings-translations-subpage-header",
-    groupIds: ["moreTranslationSettings"],
+    groupIds: [
+      "translationsAutomaticTranslation",
+      "translationsDownloadLanguages",
+    ],
     iconSrc: "chrome://browser/skin/translations.svg",
   },
 });
