@@ -23,6 +23,7 @@ export interface TranslationsSettingsElements {
   alwaysTranslateLanguagesNoneRow: HTMLElement;
   neverTranslateLanguagesGroup: HTMLElement;
   neverTranslateLanguagesSelect: HTMLSelectElement;
+  neverTranslateLanguagesButton: HTMLButtonElement;
   neverTranslateLanguagesNoneRow: HTMLElement;
   neverTranslateSitesGroup: HTMLElement;
   neverTranslateSitesRow: HTMLElement;

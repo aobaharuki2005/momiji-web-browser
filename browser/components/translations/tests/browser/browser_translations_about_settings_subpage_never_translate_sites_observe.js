@@ -33,7 +33,7 @@ add_task(
       {
         expected: [
           [
-            TranslationsSettingsTestUtils.Events.NeverSitesRendered,
+            TranslationsSettingsTestUtils.Events.NeverTranslateSitesRendered,
             { sites: [], count: 0 },
           ],
           [TranslationsSettingsTestUtils.Events.Initialized],
@@ -54,7 +54,7 @@ add_task(
       {
         expected: [
           [
-            TranslationsSettingsTestUtils.Events.NeverSitesRendered,
+            TranslationsSettingsTestUtils.Events.NeverTranslateSitesRendered,
             { sites: [exampleComOrigin], count: 1 },
           ],
           [
@@ -89,7 +89,7 @@ add_task(
       {
         expected: [
           [
-            TranslationsSettingsTestUtils.Events.NeverSitesRendered,
+            TranslationsSettingsTestUtils.Events.NeverTranslateSitesRendered,
             { sites: expectedSites, count: expectedSites.length },
           ],
         ],

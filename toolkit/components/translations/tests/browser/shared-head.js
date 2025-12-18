@@ -443,9 +443,10 @@ class TranslationsSettingsTestUtils {
   static Events = class Events {
     static AlwaysTranslateLanguagesRendered =
       "TranslationsSettingsTest:AlwaysTranslateLanguagesRendered";
-    static NeverLanguagesRendered =
-      "TranslationsSettingsTest:NeverLanguagesRendered";
-    static NeverSitesRendered = "TranslationsSettingsTest:NeverSitesRendered";
+    static NeverTranslateLanguagesRendered =
+      "TranslationsSettingsTest:NeverTranslateLanguagesRendered";
+    static NeverTranslateSitesRendered =
+      "TranslationsSettingsTest:NeverTranslateSitesRendered";
     static DownloadedLanguagesRendered =
       "TranslationsSettingsTest:DownloadedLanguagesRendered";
 
@@ -476,6 +477,10 @@ class TranslationsSettingsTestUtils {
       "TranslationsSettingsTest:NeverTranslateLanguagesSelectOptionsUpdated";
     static DownloadedLanguagesSelectOptionsUpdated =
       "TranslationsSettingsTest:DownloadedLanguagesSelectOptionsUpdated";
+    static NeverTranslateLanguagesAddButtonEnabled =
+      "TranslationsSettingsTest:NeverTranslateLanguagesAddButtonEnabled";
+    static NeverTranslateLanguagesAddButtonDisabled =
+      "TranslationsSettingsTest:NeverTranslateLanguagesAddButtonDisabled";
 
     static DownloadStarted = "TranslationsSettingsTest:DownloadStarted";
     static DownloadProgress = "TranslationsSettingsTest:DownloadProgress";
@@ -742,6 +747,17 @@ class TranslationsSettingsTestUtils {
   getNeverTranslateLanguagesSelect() {
     return this.document.getElementById(
       "translationsNeverTranslateLanguagesSelect"
+    );
+  }
+
+  /**
+   * Gets the never-translate languages add button.
+   *
+   * @returns {HTMLButtonElement|null}
+   */
+  getNeverTranslateLanguagesAddButton() {
+    return this.document.getElementById(
+      "translationsNeverTranslateLanguagesButton"
     );
   }
 
@@ -1283,6 +1299,28 @@ class TranslationsSettingsTestUtils {
     const dropdown = this.getNeverTranslateLanguagesSelect();
     dropdown.value = langTag;
     dropdown.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const addButton = await waitForCondition(
+      () => this.getNeverTranslateLanguagesAddButton(),
+      "Waiting for never-translate add button"
+    );
+    if (addButton.disabled) {
+      const addButtonEnabled = this.waitForEvent(
+        TranslationsSettingsTestUtils.Events
+          .NeverTranslateLanguagesAddButtonEnabled
+      );
+      await addButtonEnabled;
+    }
+    addButton.click();
+
+    const addedLanguage = this.waitForNeverTranslateLanguageItem(langTag);
+    const addButtonDisabledPromise = addButton.disabled
+      ? Promise.resolve()
+      : this.waitForEvent(
+          TranslationsSettingsTestUtils.Events
+            .NeverTranslateLanguagesAddButtonDisabled
+        );
+    await Promise.all([addedLanguage, addButtonDisabledPromise]);
   }
 
   /**
@@ -1293,7 +1331,7 @@ class TranslationsSettingsTestUtils {
    */
   async removeNeverTranslateLanguage(langTag) {
     const removeButton = this.document.querySelector(
-      `[data-lang-tag="${langTag}"].translations-never-remove-button`
+      `[data-lang-tag="${langTag}"].translations-never-translate-remove-button`
     );
     if (!removeButton) {
       throw new Error(`Remove button not found for language: ${langTag}`);
@@ -1315,7 +1353,7 @@ class TranslationsSettingsTestUtils {
     return TestUtils.waitForCondition(
       () =>
         this.document.querySelector(
-          `[data-lang-tag="${langTag}"].translations-never-language-item`
+          `[data-lang-tag="${langTag}"].translations-never-translate-language-item`
         ),
       `Waiting for never-translate language item: ${langTag}`
     );
@@ -1331,7 +1369,7 @@ class TranslationsSettingsTestUtils {
    */
   async assertNeverTranslateLanguages({ languages, count }) {
     const items = this.document.querySelectorAll(
-      ".translations-never-language-item"
+      ".translations-never-translate-language-item"
     );
 
     if (count !== undefined) {
@@ -1363,7 +1401,7 @@ class TranslationsSettingsTestUtils {
    */
   async assertNeverTranslateLanguagesOrder({ languages }) {
     const items = this.document.querySelectorAll(
-      ".translations-never-language-item"
+      ".translations-never-translate-language-item"
     );
     const actualLanguages = Array.from(items).map(item => item.dataset.langTag);
     Assert.deepEqual(
@@ -1416,7 +1454,7 @@ class TranslationsSettingsTestUtils {
     return waitForCondition(
       () =>
         this.document.querySelector(
-          `[data-origin="${origin}"].translations-never-site-item`
+          `[data-origin="${origin}"].translations-never-translate-site-item`
         ),
       `Waiting for never-translate site item: ${origin}`
     );
@@ -1432,7 +1470,7 @@ class TranslationsSettingsTestUtils {
     const removeButton = await waitForCondition(
       () =>
         this.document.querySelector(
-          `[data-origin="${origin}"].translations-never-site-remove-button`
+          `[data-origin="${origin}"].translations-never-translate-site-remove-button`
         ),
       `Waiting for remove button for ${origin}`
     );
@@ -1453,7 +1491,7 @@ class TranslationsSettingsTestUtils {
    */
   async assertNeverTranslateSites({ sites, count }) {
     const items = this.document.querySelectorAll(
-      ".translations-never-site-item"
+      ".translations-never-translate-site-item"
     );
 
     if (count !== undefined) {
@@ -1479,7 +1517,7 @@ class TranslationsSettingsTestUtils {
    */
   async assertNeverTranslateSitesOrder({ sites }) {
     const items = this.document.querySelectorAll(
-      ".translations-never-site-item"
+      ".translations-never-translate-site-item"
     );
     const actualSites = Array.from(items).map(item => item.dataset.origin);
     Assert.deepEqual(actualSites, sites, "Never-translate sites order matches");

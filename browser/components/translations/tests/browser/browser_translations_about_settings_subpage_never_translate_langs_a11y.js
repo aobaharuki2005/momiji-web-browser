@@ -47,7 +47,7 @@ add_task(async function test_never_translate_languages_keyboard_activation() {
 
   info("Getting first remove button");
   const firstRemoveButton = document.querySelector(
-    ".translations-never-remove-button"
+    ".translations-never-translate-remove-button"
   );
   ok(firstRemoveButton, "First remove button should exist");
 
@@ -62,7 +62,9 @@ add_task(async function test_never_translate_languages_keyboard_activation() {
   info("Pressing Enter to remove first language");
   await translationsSettingsTestUtils.assertEvents(
     {
-      expected: [[TranslationsSettingsTestUtils.Events.NeverLanguagesRendered]],
+      expected: [
+        [TranslationsSettingsTestUtils.Events.NeverTranslateLanguagesRendered],
+      ],
     },
     async () => {
       const prefChanged = TestUtils.waitForPrefChange(
@@ -133,12 +135,14 @@ add_task(async function test_never_translate_languages_accessibility() {
   });
 
   info("Getting language items and remove buttons");
-  const items = document.querySelectorAll(".translations-never-language-item");
+  const items = document.querySelectorAll(
+    ".translations-never-translate-language-item"
+  );
   is(items.length, 2, "Should have 2 language items");
 
   info("Verifying remove buttons have accessible labels");
   const removeButtons = document.querySelectorAll(
-    ".translations-never-remove-button"
+    ".translations-never-translate-remove-button"
   );
   is(removeButtons.length, 2, "Should have 2 remove buttons");
 

@@ -41,7 +41,7 @@ add_task(async function test_never_translate_sites_prepopulated() {
     {
       expected: [
         [
-          TranslationsSettingsTestUtils.Events.NeverSitesRendered,
+          TranslationsSettingsTestUtils.Events.NeverTranslateSitesRendered,
           { sites: expectedSites, count: expectedSites.length },
         ],
         [
@@ -110,7 +110,7 @@ add_task(async function test_never_translate_sites_delete_and_empty_state() {
     {
       expected: [
         [
-          TranslationsSettingsTestUtils.Events.NeverSitesRendered,
+          TranslationsSettingsTestUtils.Events.NeverTranslateSitesRendered,
           {
             sites: expectedInitialSites,
             count: expectedInitialSites.length,
@@ -142,7 +142,7 @@ add_task(async function test_never_translate_sites_delete_and_empty_state() {
     {
       expected: [
         [
-          TranslationsSettingsTestUtils.Events.NeverSitesRendered,
+          TranslationsSettingsTestUtils.Events.NeverTranslateSitesRendered,
           { sites: [remainingOrigin], count: 1 },
         ],
       ],
@@ -168,7 +168,7 @@ add_task(async function test_never_translate_sites_delete_and_empty_state() {
     {
       expected: [
         [
-          TranslationsSettingsTestUtils.Events.NeverSitesRendered,
+          TranslationsSettingsTestUtils.Events.NeverTranslateSitesRendered,
           { sites: [], count: 0 },
         ],
         [
@@ -234,7 +234,7 @@ add_task(async function test_never_translate_sites_sorted_ignoring_scheme() {
     {
       expected: [
         [
-          TranslationsSettingsTestUtils.Events.NeverSitesRendered,
+          TranslationsSettingsTestUtils.Events.NeverTranslateSitesRendered,
           { sites: expectedSites, count: expectedSites.length },
         ],
         [

@@ -35,13 +35,17 @@ const ALWAYS_TRANSLATE_LANGUAGE_REMOVE_BUTTON_CLASS =
   "translations-always-translate-remove-button";
 
 /** @type {string} */
-const NEVER_LANGUAGE_ITEM_CLASS = "translations-never-language-item";
+const NEVER_TRANSLATE_LANGUAGE_ITEM_CLASS =
+  "translations-never-translate-language-item";
 /** @type {string} */
-const NEVER_LANGUAGE_REMOVE_BUTTON_CLASS = "translations-never-remove-button";
+const NEVER_TRANSLATE_LANGUAGE_REMOVE_BUTTON_CLASS =
+  "translations-never-translate-remove-button";
 /** @type {string} */
-const NEVER_SITE_ITEM_CLASS = "translations-never-site-item";
+const NEVER_TRANSLATE_SITE_ITEM_CLASS =
+  "translations-never-translate-site-item";
 /** @type {string} */
-const NEVER_SITE_REMOVE_BUTTON_CLASS = "translations-never-site-remove-button";
+const NEVER_TRANSLATE_SITE_REMOVE_BUTTON_CLASS =
+  "translations-never-translate-site-remove-button";
 
 /** @type {string} */
 const DOWNLOAD_LANGUAGE_ITEM_CLASS = "translations-download-language-item";
@@ -151,14 +155,14 @@ const TranslationsSettings = {
    *
    * @type {Set<string>}
    */
-  neverLanguageTags: new Set(),
+  neverTranslateLanguageTags: new Set(),
 
   /**
    * Current never-translate site origins.
    *
    * @type {Set<string>}
    */
-  neverSiteOrigins: new Set(),
+  neverTranslateSiteOrigins: new Set(),
 
   /**
    * Language tags with downloaded translation models.
@@ -220,9 +224,7 @@ const TranslationsSettings = {
         } else if (
           event.target === this.elements?.neverTranslateLanguagesSelect
         ) {
-          await this.onNeverLanguageChosen(
-            /** @type {HTMLSelectElement} */ (event.target).value
-          );
+          this.onNeverTranslateLanguageSelectionChanged();
         } else if (event.target === this.elements?.downloadLanguagesSelect) {
           this.onDownloadSelectionChanged();
         }
@@ -235,6 +237,15 @@ const TranslationsSettings = {
         ) {
           await this.onAlwaysTranslateLanguageChosen(
             this.elements?.alwaysTranslateLanguagesSelect?.value ?? ""
+          );
+          break;
+        }
+        if (
+          target === this.elements?.neverTranslateLanguagesButton ||
+          target.closest?.("#translationsNeverTranslateLanguagesButton")
+        ) {
+          await this.onNeverTranslateLanguageChosen(
+            this.elements?.neverTranslateLanguagesSelect?.value ?? ""
           );
           break;
         }
@@ -292,18 +303,18 @@ const TranslationsSettings = {
         }
 
         const neverRemoveButton = /** @type {HTMLElement|null} */ (
-          target.closest?.(`.${NEVER_LANGUAGE_REMOVE_BUTTON_CLASS}`)
+          target.closest?.(`.${NEVER_TRANSLATE_LANGUAGE_REMOVE_BUTTON_CLASS}`)
         );
         if (neverRemoveButton?.dataset.langTag) {
-          this.removeNeverLanguage(neverRemoveButton.dataset.langTag);
+          this.removeNeverTranslateLanguage(neverRemoveButton.dataset.langTag);
           break;
         }
 
         const neverSiteRemoveButton = /** @type {HTMLElement|null} */ (
-          target.closest?.(`.${NEVER_SITE_REMOVE_BUTTON_CLASS}`)
+          target.closest?.(`.${NEVER_TRANSLATE_SITE_REMOVE_BUTTON_CLASS}`)
         );
         if (neverSiteRemoveButton?.dataset.origin) {
-          this.removeNeverSite(neverSiteRemoveButton.dataset.origin);
+          this.removeNeverTranslateSite(neverSiteRemoveButton.dataset.origin);
         }
         break;
       }
@@ -325,7 +336,7 @@ const TranslationsSettings = {
       if (data === ALWAYS_TRANSLATE_LANGS_PREF) {
         this.refreshAlwaysTranslateLanguages().catch(console.error);
       } else if (data === NEVER_TRANSLATE_LANGS_PREF) {
-        this.refreshNeverLanguages().catch(console.error);
+        this.refreshNeverTranslateLanguages().catch(console.error);
       }
     } else if (topic === "perm-changed") {
       this.handlePermissionChange(subject, data);
@@ -346,8 +357,8 @@ const TranslationsSettings = {
     if (this.initPromise) {
       await this.initPromise;
       await this.refreshAlwaysTranslateLanguages();
-      await this.refreshNeverLanguages();
-      this.refreshNeverSites();
+      await this.refreshNeverTranslateLanguages();
+      this.refreshNeverTranslateSites();
       await this.refreshDownloadedLanguages();
       this.dispatchInitializedTestEvent();
       return;
@@ -355,8 +366,8 @@ const TranslationsSettings = {
 
     if (this.initialized) {
       await this.refreshAlwaysTranslateLanguages();
-      await this.refreshNeverLanguages();
-      this.refreshNeverSites();
+      await this.refreshNeverTranslateLanguages();
+      this.refreshNeverTranslateSites();
       await this.refreshDownloadedLanguages();
       this.dispatchInitializedTestEvent();
       return;
@@ -423,6 +434,7 @@ const TranslationsSettings = {
       !this.elements?.alwaysTranslateLanguagesNoneRow ||
       !this.elements?.neverTranslateLanguagesGroup ||
       !this.elements?.neverTranslateLanguagesSelect ||
+      !this.elements?.neverTranslateLanguagesButton ||
       !this.elements?.neverTranslateLanguagesNoneRow ||
       !this.elements?.neverTranslateSitesGroup ||
       !this.elements?.downloadLanguagesGroup ||
@@ -450,6 +462,7 @@ const TranslationsSettings = {
       this.elements.alwaysTranslateLanguagesSelect.disabled = true;
       this.elements.alwaysTranslateLanguagesButton.disabled = true;
       this.elements.neverTranslateLanguagesSelect.disabled = true;
+      this.elements.neverTranslateLanguagesButton.disabled = true;
       this.elements.downloadLanguagesSelect.disabled = true;
       this.setDownloadButtonDisabledState(true);
       this.dispatchInitializedTestEvent();
@@ -459,11 +472,12 @@ const TranslationsSettings = {
     this.elements.alwaysTranslateLanguagesSelect.disabled = false;
     this.elements.alwaysTranslateLanguagesButton.disabled = true;
     this.elements.neverTranslateLanguagesSelect.disabled = false;
+    this.elements.neverTranslateLanguagesButton.disabled = true;
     this.elements.downloadLanguagesSelect.disabled = false;
     this.resetDownloadSelect();
     this.setDownloadButtonDisabledState(true);
     await this.buildAlwaysTranslateSelectOptions();
-    await this.buildNeverSelectOptions();
+    await this.buildNeverTranslateSelectOptions();
     await this.buildDownloadSelectOptions();
     await this.renderDownloadLanguages();
 
@@ -480,6 +494,7 @@ const TranslationsSettings = {
       "change",
       this
     );
+    this.elements.neverTranslateLanguagesButton.addEventListener("click", this);
     this.elements.neverTranslateLanguagesGroup.addEventListener("click", this);
     this.elements.neverTranslateSitesGroup.addEventListener("click", this);
     this.elements.downloadLanguagesSelect.addEventListener("change", this);
@@ -490,8 +505,8 @@ const TranslationsSettings = {
     window.addEventListener("unload", this);
 
     await this.refreshAlwaysTranslateLanguages();
-    await this.refreshNeverLanguages();
-    this.refreshNeverSites();
+    await this.refreshNeverTranslateLanguages();
+    this.refreshNeverTranslateSites();
     this.initialized = true;
 
     this.dispatchInitializedTestEvent();
@@ -530,6 +545,9 @@ const TranslationsSettings = {
       ),
       neverTranslateLanguagesSelect: /** @type {HTMLSelectElement} */ (
         document.getElementById("translationsNeverTranslateLanguagesSelect")
+      ),
+      neverTranslateLanguagesButton: /** @type {HTMLButtonElement} */ (
+        document.getElementById("translationsNeverTranslateLanguagesButton")
       ),
       neverTranslateLanguagesNoneRow: /** @type {HTMLElement} */ (
         document.getElementById("translationsNeverTranslateLanguagesNoneRow")
@@ -1073,8 +1091,14 @@ const TranslationsSettings = {
    *
    * @param {string} langTag
    */
-  async onNeverLanguageChosen(langTag) {
+  async onNeverTranslateLanguageChosen(langTag) {
     if (!langTag) {
+      this.updateNeverTranslateAddButtonDisabledState();
+      return;
+    }
+
+    if (this.shouldDisableNeverTranslateAddButton()) {
+      this.updateNeverTranslateAddButtonDisabledState();
       return;
     }
 
@@ -1083,7 +1107,66 @@ const TranslationsSettings = {
       langTag,
       ALWAYS_TRANSLATE_LANGS_PREF
     );
-    await this.resetNeverSelect();
+    await this.resetNeverTranslateSelect();
+  },
+
+  /**
+   * Handle a selection change in the never-translate dropdown.
+   */
+  onNeverTranslateLanguageSelectionChanged() {
+    this.updateNeverTranslateAddButtonDisabledState();
+  },
+
+  /**
+   * Whether the add button for never-translate languages should be disabled.
+   *
+   * @returns {boolean}
+   */
+  shouldDisableNeverTranslateAddButton() {
+    const select = this.elements?.neverTranslateLanguagesSelect;
+    if (!select || select.disabled) {
+      return true;
+    }
+
+    const langTag = select.value;
+    if (!langTag) {
+      return true;
+    }
+
+    const option = /** @type {HTMLElement|null} */ (
+      select.querySelector(`moz-option[value="${langTag}"]`)
+    );
+    return option?.hasAttribute("disabled") ?? false;
+  },
+
+  /**
+   * Set the add button enabled state for never-translate languages.
+   *
+   * @param {boolean} isDisabled
+   */
+  setNeverTranslateAddButtonDisabledState(isDisabled) {
+    if (!this.elements?.neverTranslateLanguagesButton) {
+      return;
+    }
+
+    const wasDisabled = this.elements.neverTranslateLanguagesButton.disabled;
+    this.elements.neverTranslateLanguagesButton.disabled = isDisabled;
+    if (wasDisabled !== isDisabled) {
+      dispatchTestEvent(
+        isDisabled
+          ? "NeverTranslateLanguagesAddButtonDisabled"
+          : "NeverTranslateLanguagesAddButtonEnabled"
+      );
+    }
+  },
+
+  /**
+   * Update the add button enabled state for never-translate languages.
+   */
+  updateNeverTranslateAddButtonDisabledState() {
+    this.setNeverTranslateAddButtonDisabledState(
+      this.shouldDisableNeverTranslateAddButton()
+    );
   },
 
   /**
@@ -1091,7 +1174,7 @@ const TranslationsSettings = {
    *
    * @param {string} langTag
    */
-  removeNeverLanguage(langTag) {
+  removeNeverTranslateLanguage(langTag) {
     TranslationsParent.removeLangTagFromPref(
       langTag,
       NEVER_TRANSLATE_LANGS_PREF
@@ -1101,17 +1184,18 @@ const TranslationsSettings = {
   /**
    * Reset the dropdown back to the placeholder value and underlying setting state.
    */
-  async resetNeverSelect() {
+  async resetNeverTranslateSelect() {
     await this.resetSelect(
       this.elements?.neverTranslateLanguagesSelect,
       "translationsNeverTranslateLanguagesSelect"
     );
+    this.updateNeverTranslateAddButtonDisabledState();
   },
 
   /**
    * Refresh the rendered list of never-translate languages to match prefs.
    */
-  async refreshNeverLanguages() {
+  async refreshNeverTranslateLanguages() {
     if (!this.elements?.neverTranslateLanguagesGroup) {
       return;
     }
@@ -1119,10 +1203,10 @@ const TranslationsSettings = {
     const langTags = Array.from(
       TranslationsParent.getNeverTranslateLanguages?.() ?? []
     );
-    this.neverLanguageTags = new Set(langTags);
+    this.neverTranslateLanguageTags = new Set(langTags);
 
-    this.renderNeverLanguages(langTags);
-    await this.updateNeverSelectOptionState();
+    this.renderNeverTranslateLanguages(langTags);
+    await this.updateNeverTranslateSelectOptionState();
   },
 
   /**
@@ -1130,12 +1214,12 @@ const TranslationsSettings = {
    *
    * @param {string[]} langTags
    */
-  renderNeverLanguages(langTags) {
+  renderNeverTranslateLanguages(langTags) {
     const { neverTranslateLanguagesGroup, neverTranslateLanguagesNoneRow } =
       this.elements;
 
     for (const item of neverTranslateLanguagesGroup.querySelectorAll(
-      `.${NEVER_LANGUAGE_ITEM_CLASS}`
+      `.${NEVER_TRANSLATE_LANGUAGE_ITEM_CLASS}`
     )) {
       item.remove();
     }
@@ -1175,12 +1259,12 @@ const TranslationsSettings = {
         "iconsrc",
         "chrome://global/skin/icons/delete.svg"
       );
-      removeButton.classList.add(NEVER_LANGUAGE_REMOVE_BUTTON_CLASS);
+      removeButton.classList.add(NEVER_TRANSLATE_LANGUAGE_REMOVE_BUTTON_CLASS);
       removeButton.dataset.langTag = langTag;
       removeButton.setAttribute("aria-label", label);
 
       const item = document.createElement("moz-box-item");
-      item.classList.add(NEVER_LANGUAGE_ITEM_CLASS);
+      item.classList.add(NEVER_TRANSLATE_LANGUAGE_ITEM_CLASS);
       item.setAttribute("label", label);
       item.dataset.langTag = langTag;
       item.appendChild(removeButton);
@@ -1198,7 +1282,7 @@ const TranslationsSettings = {
       }
     }
 
-    dispatchTestEvent("NeverLanguagesRendered", {
+    dispatchTestEvent("NeverTranslateLanguagesRendered", {
       languages: langTags,
       count: langTags.length,
     });
@@ -1215,7 +1299,7 @@ const TranslationsSettings = {
   /**
    * Populate the select options for the supported source languages.
    */
-  async buildNeverSelectOptions() {
+  async buildNeverTranslateSelectOptions() {
     const select = this.elements?.neverTranslateLanguagesSelect;
     if (!select || !this.supportedLanguages?.sourceLanguages?.length) {
       return;
@@ -1246,13 +1330,13 @@ const TranslationsSettings = {
       select.appendChild(option);
     }
 
-    await this.resetNeverSelect();
+    await this.resetNeverTranslateSelect();
   },
 
   /**
    * Disable already-added languages in the select so they cannot be re-added.
    */
-  async updateNeverSelectOptionState() {
+  async updateNeverTranslateSelectOptionState() {
     const select = this.elements?.neverTranslateLanguagesSelect;
     if (!select) {
       return;
@@ -1263,10 +1347,10 @@ const TranslationsSettings = {
       if (!value) {
         continue;
       }
-      option.disabled = this.neverLanguageTags.has(value);
+      option.disabled = this.neverTranslateLanguageTags.has(value);
     }
 
-    await this.resetNeverSelect();
+    await this.resetNeverTranslateSelect();
 
     dispatchTestEvent("NeverTranslateLanguagesSelectOptionsUpdated");
   },
@@ -1274,7 +1358,7 @@ const TranslationsSettings = {
   /**
    * Refresh the rendered list of never-translate sites.
    */
-  refreshNeverSites() {
+  refreshNeverTranslateSites() {
     if (!this.elements?.neverTranslateSitesGroup) {
       return;
     }
@@ -1287,8 +1371,8 @@ const TranslationsSettings = {
       console.error("Failed to list never translate sites", error);
     }
 
-    this.neverSiteOrigins = new Set(siteOrigins);
-    this.renderNeverSites(siteOrigins);
+    this.neverTranslateSiteOrigins = new Set(siteOrigins);
+    this.renderNeverTranslateSites(siteOrigins);
   },
 
   /**
@@ -1296,7 +1380,7 @@ const TranslationsSettings = {
    *
    * @param {string[]} siteOrigins
    */
-  renderNeverSites(siteOrigins) {
+  renderNeverTranslateSites(siteOrigins) {
     const { neverTranslateSitesGroup, neverTranslateSitesNoneRow } =
       this.elements ?? {};
     if (!neverTranslateSitesGroup) {
@@ -1304,7 +1388,7 @@ const TranslationsSettings = {
     }
 
     for (const item of neverTranslateSitesGroup.querySelectorAll(
-      `.${NEVER_SITE_ITEM_CLASS}`
+      `.${NEVER_TRANSLATE_SITE_ITEM_CLASS}`
     )) {
       item.remove();
     }
@@ -1337,12 +1421,12 @@ const TranslationsSettings = {
         "iconsrc",
         "chrome://global/skin/icons/delete.svg"
       );
-      removeButton.classList.add(NEVER_SITE_REMOVE_BUTTON_CLASS);
+      removeButton.classList.add(NEVER_TRANSLATE_SITE_REMOVE_BUTTON_CLASS);
       removeButton.dataset.origin = origin;
       removeButton.setAttribute("aria-label", origin);
 
       const item = document.createElement("moz-box-item");
-      item.classList.add(NEVER_SITE_ITEM_CLASS);
+      item.classList.add(NEVER_TRANSLATE_SITE_ITEM_CLASS);
       item.setAttribute("label", origin);
       item.dataset.origin = origin;
       item.appendChild(removeButton);
@@ -1356,7 +1440,7 @@ const TranslationsSettings = {
       }
     }
 
-    dispatchTestEvent("NeverSitesRendered", {
+    dispatchTestEvent("NeverTranslateSitesRendered", {
       sites: siteOrigins,
       count: siteOrigins.length,
     });
@@ -1375,8 +1459,8 @@ const TranslationsSettings = {
    *
    * @param {string} origin
    */
-  removeNeverSite(origin) {
-    if (!origin || !this.neverSiteOrigins.has(origin)) {
+  removeNeverTranslateSite(origin) {
+    if (!origin || !this.neverTranslateSiteOrigins.has(origin)) {
       return;
     }
 
@@ -1387,7 +1471,7 @@ const TranslationsSettings = {
       return;
     }
 
-    this.refreshNeverSites();
+    this.refreshNeverTranslateSites();
   },
 
   /**
@@ -1934,8 +2018,8 @@ const TranslationsSettings = {
    */
   handlePermissionChange(subject, data) {
     if (data === "cleared") {
-      this.neverSiteOrigins = new Set();
-      this.renderNeverSites([]);
+      this.neverTranslateSiteOrigins = new Set();
+      this.renderNeverTranslateSites([]);
       return;
     }
 
@@ -1944,7 +2028,7 @@ const TranslationsSettings = {
       return;
     }
 
-    this.refreshNeverSites();
+    this.refreshNeverTranslateSites();
   },
 
   /**
@@ -1973,6 +2057,10 @@ const TranslationsSettings = {
     );
     this.elements?.neverTranslateLanguagesSelect?.removeEventListener(
       "change",
+      this
+    );
+    this.elements?.neverTranslateLanguagesButton?.removeEventListener(
+      "click",
       this
     );
     this.elements?.neverTranslateLanguagesGroup?.removeEventListener(
