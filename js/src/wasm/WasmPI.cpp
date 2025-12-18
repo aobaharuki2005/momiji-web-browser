@@ -21,7 +21,6 @@
 #include "builtin/Promise.h"
 #include "debugger/DebugAPI.h"
 #include "debugger/Debugger.h"
-#include "jit/JitRuntime.h"
 #include "jit/MIRGenerator.h"
 #include "js/CallAndConstruct.h"
 #include "js/Printf.h"
@@ -323,7 +322,7 @@ void SuspenderObject::trace(JSTracer* trc, JSObject* obj) {
 
 void SuspenderObject::setMoribund(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
-  cx->wasm().leaveSuspendableStack();
+  cx->wasm().leaveSuspendableStack(cx);
   SuspenderObjectData* data = this->data();
   data->setState(SuspenderState::Moribund);
   data->releaseStackMemory();
@@ -333,20 +332,17 @@ void SuspenderObject::setMoribund(JSContext* cx) {
 
 void SuspenderObject::setActive(JSContext* cx) {
   data()->setState(SuspenderState::Active);
-  cx->wasm().enterSuspendableStack(this);
+  cx->wasm().enterSuspendableStack(cx, this);
 }
 
 void SuspenderObject::setSuspended(JSContext* cx) {
   data()->setState(SuspenderState::Suspended);
-  cx->wasm().leaveSuspendableStack();
+  cx->wasm().leaveSuspendableStack(cx);
 }
 
 void SuspenderObject::enter(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Initial);
   setActive(cx);
-#  ifdef DEBUG
-  cx->runtime()->jitRuntime()->disallowArbitraryCode();
-#  endif
 }
 
 void SuspenderObject::suspend(JSContext* cx) {
@@ -354,9 +350,6 @@ void SuspenderObject::suspend(JSContext* cx) {
   setSuspended(cx);
   cx->wasm().suspendedStacks_.pushFront(data());
   data()->setSuspendedBy(&cx->wasm());
-#  ifdef DEBUG
-  cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
-#  endif
 
   if (cx->realm()->isDebuggee()) {
     WasmFrameIter iter(cx->activation()->asJit());
@@ -381,9 +374,6 @@ void SuspenderObject::resume(JSContext* cx) {
   // from roots.
   gc::PreWriteBarrier(this);
   cx->wasm().suspendedStacks_.remove(data());
-#  ifdef DEBUG
-  cx->runtime()->jitRuntime()->disallowArbitraryCode();
-#  endif
 
   if (cx->realm()->isDebuggee()) {
     for (FrameIter iter(cx);; ++iter) {
@@ -402,9 +392,6 @@ void SuspenderObject::resume(JSContext* cx) {
 }
 
 void SuspenderObject::leave(JSContext* cx) {
-#  ifdef DEBUG
-  cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
-#  endif
   // We are exiting alternative stack if state is active,
   // otherwise the stack was just suspended.
   switch (state()) {

@@ -18,10 +18,10 @@
 
 #include "wasm/WasmContext.h"
 
+#include "jit/JitRuntime.h"
 #include "js/friend/StackLimits.h"
 #include "js/TracingAPI.h"
 #include "vm/JSContext.h"
-
 #include "wasm/WasmPI.h"
 
 #ifdef XP_WIN
@@ -93,7 +93,7 @@ void Context::traceRoots(JSTracer* trc) {
   }
 }
 
-void Context::enterSuspendableStack(SuspenderObject* suspender) {
+void Context::enterSuspendableStack(JSContext* cx, SuspenderObject* suspender) {
   MOZ_ASSERT(!activeSuspender_);
   activeSuspender_ = suspender;
   stackLimit = suspender->stackMemoryLimitForJit();
@@ -107,9 +107,13 @@ void Context::enterSuspendableStack(SuspenderObject* suspender) {
   tib->StackLimit =
       reinterpret_cast<void*>(suspender->stackMemoryLimitForSystem());
 #  endif
+
+#  ifdef DEBUG
+  cx->runtime()->jitRuntime()->disallowArbitraryCode();
+#  endif
 }
 
-void Context::leaveSuspendableStack() {
+void Context::leaveSuspendableStack(JSContext* cx) {
   MOZ_ASSERT(activeSuspender_);
   activeSuspender_ = nullptr;
   stackLimit = mainStackLimit;
@@ -119,6 +123,10 @@ void Context::leaveSuspendableStack() {
   _NT_TIB* tib = reinterpret_cast<_NT_TIB*>(::NtCurrentTeb());
   tib->StackBase = tibStackBase_;
   tib->StackLimit = tibStackLimit_;
+#  endif
+
+#  ifdef DEBUG
+  cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
 #  endif
 }
 

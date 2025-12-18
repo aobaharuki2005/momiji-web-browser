@@ -56,8 +56,8 @@ class Context {
   SuspenderObject* activeSuspender() { return activeSuspender_; }
   bool onSuspendableStack() const { return activeSuspender_ != nullptr; }
 
-  void enterSuspendableStack(SuspenderObject* suspender);
-  void leaveSuspendableStack();
+  void enterSuspendableStack(JSContext* cx, SuspenderObject* suspender);
+  void leaveSuspendableStack(JSContext* cx);
 
   void trace(JSTracer* trc);
   void traceRoots(JSTracer* trc);
