@@ -646,6 +646,9 @@ struct BaseCompiler final {
   // Count the number of memory references on the value stack.
   inline size_t countMemRefsOnStk();
 
+  // Check if there are any live registers on the value stack.
+  inline bool hasLiveRegsOnStk();
+
   // Print the stack to stderr.
   void showStack(const char* who) const;
 #endif

@@ -833,6 +833,11 @@ bool BaseCompiler::endFunction() {
 
 void BaseCompiler::insertBreakablePoint(CallSiteKind kind) {
   MOZ_ASSERT(!deadCode_);
+
+  // A sync() must happen before this. The debug stub does not save all live
+  // registers.
+  MOZ_ASSERT(!hasLiveRegsOnStk());
+
 #ifndef RABALDR_PIN_INSTANCE
   fr.loadInstancePtr(InstanceReg);
 #endif
@@ -1199,6 +1204,10 @@ Maybe<CodeOffset> BaseCompiler::addHotnessCheck() {
   // hotness-counting purposes.
 
   AutoCreatedBy acb(masm, "BC::addHotnessCheck");
+
+  // A sync() must happen before this. The request tier-up stub does not save
+  // all live registers.
+  MOZ_ASSERT(!hasLiveRegsOnStk());
 
 #ifdef RABALDR_PIN_INSTANCE
   Register instance(InstanceReg);
@@ -4048,8 +4057,12 @@ bool BaseCompiler::emitLoop() {
     }
     masm.nopAlign(CodeAlignment);
     masm.bind(&controlItem(0).label);
-    // The interrupt check barfs if there are live registers.
+
+    // The interrupt check barfs if there are live registers. The hotness check
+    // also can call the request tier-up stub, which assumes that no registers
+    // are live.
     sync();
+
     if (!addInterruptCheck()) {
       return false;
     }
@@ -10505,6 +10518,9 @@ bool BaseCompiler::emitBody() {
           // TODO sync only registers that can be clobbered by the exit
           // prologue/epilogue or disable these registers for use in
           // baseline compiler when compilerEnv_.debugEnabled() is set.
+          //
+          // This will require the debug stub to save/restore allocatable
+          // registers.
           sync();
 
           insertBreakablePoint(CallSiteKind::Breakpoint);
