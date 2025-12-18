@@ -79,9 +79,12 @@ class RVFlags final {
 
   static bool FlagsHaveBeenComputed() { return sComputed; }
 
+  static bool HasZbaExtension() { return sZbaExtension; }
+
   static bool HasZbbExtension() { return sZbbExtension; }
 
  private:
+  static inline bool sZbaExtension = false;
   static inline bool sZbbExtension = false;
   static inline bool sComputed = false;
 };
@@ -504,6 +507,8 @@ class Assembler : public AssemblerShared,
     }
     MOZ_CRASH("unexpected mode");
   }
+
+  static bool HasZbaExtension() { return RVFlags::HasZbaExtension(); }
 
   static bool HasZbbExtension() { return RVFlags::HasZbbExtension(); }
 

@@ -1090,6 +1090,10 @@ class MacroAssemblerRiscv64Compat : public MacroAssemblerRiscv64 {
 
   void SignExtendWord(Register rd, Register rs) { sext_w(rd, rs); }
   void ZeroExtendWord(Register rd, Register rs) {
+    if (HasZbaExtension()) {
+      zextw(rd, rs);
+      return;
+    }
     slli(rd, rs, 32);
     srli(rd, rd, 32);
   }
