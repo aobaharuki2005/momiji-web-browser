@@ -6,7 +6,7 @@ package org.mozilla.fenix.bookmarks
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -261,7 +261,7 @@ private class TestMiddleware(
     private val onExpectedActionProcessed: () -> Unit,
 ) : Middleware<BookmarksState, BookmarksAction> {
     override fun invoke(
-        context: MiddlewareContext<BookmarksState, BookmarksAction>,
+        store: Store<BookmarksState, BookmarksAction>,
         next: (BookmarksAction) -> Unit,
         action: BookmarksAction,
     ) {

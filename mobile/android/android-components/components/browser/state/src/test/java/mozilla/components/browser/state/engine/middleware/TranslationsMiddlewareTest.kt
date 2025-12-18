@@ -7,7 +7,6 @@ package mozilla.components.browser.state.engine.middleware
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
-import mozilla.components.browser.state.action.BrowserAction
 import mozilla.components.browser.state.action.InitAction
 import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.action.TranslationsAction
@@ -34,7 +33,6 @@ import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettingOperation
 import mozilla.components.concept.engine.translate.TranslationPageSettings
 import mozilla.components.concept.engine.translate.TranslationSupport
-import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
@@ -60,7 +58,6 @@ class TranslationsMiddlewareTest {
     private lateinit var tabs: List<TabSessionState>
     private lateinit var state: BrowserState
     private lateinit var store: BrowserStore
-    private lateinit var context: MiddlewareContext<BrowserState, BrowserAction>
 
     // Mock Variables
     private val mockFrom = Language(code = "es", localizedDisplayName = "Spanish")
@@ -91,10 +88,8 @@ class TranslationsMiddlewareTest {
         state = spy(BrowserState(tabs = tabs, selectedTabId = tab.id))
         translationsMiddleware = TranslationsMiddleware(engine = engine, scope = scope)
         store = spy(BrowserStore(middleware = listOf(translationsMiddleware), initialState = state))
-        context = mock<MiddlewareContext<BrowserState, BrowserAction>>()
 
-        whenever(context.store).thenReturn(store)
-        whenever(context.store.state).thenReturn(state)
+        whenever(store.state).thenReturn(state)
 
         mockLanguageModels = mutableListOf(mockLanguageModel)
     }
@@ -128,7 +123,7 @@ class TranslationsMiddlewareTest {
                 operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
             )
 
-        translationsMiddleware.invoke(context = context, next = {}, action = action)
+        translationsMiddleware.invoke(store = store, next = {}, action = action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify results
@@ -143,13 +138,13 @@ class TranslationsMiddlewareTest {
 
         scope.testScheduler.advanceUntilIdle()
 
-        verify(context.store, atLeastOnce()).dispatch(
+        verify(store, atLeastOnce()).dispatch(
             TranslationsAction.SetSupportedLanguagesAction(
                 supportedLanguages = supportedLanguages,
             ),
         )
 
-        verify(context.store, atLeastOnce()).dispatch(
+        verify(store, atLeastOnce()).dispatch(
             TranslationsAction.TranslateSuccessAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
@@ -166,7 +161,7 @@ class TranslationsMiddlewareTest {
                 operation = TranslationOperation.FETCH_SUPPORTED_LANGUAGES,
             )
 
-        translationsMiddleware.invoke(context = context, next = {}, action = action)
+        translationsMiddleware.invoke(store = store, next = {}, action = action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify results
@@ -196,7 +191,7 @@ class TranslationsMiddlewareTest {
     fun `WHEN InitAction is dispatched THEN InitTranslationsBrowserState is also dispatched`() = runTest {
         // Send Action
         // Note: Will cause a double InitAction
-        translationsMiddleware.invoke(context = context, next = {}, action = InitAction)
+        translationsMiddleware.invoke(store = store, next = {}, action = InitAction)
         scope.testScheduler.advanceUntilIdle()
 
         verify(store, atLeastOnce()).dispatch(
@@ -211,7 +206,7 @@ class TranslationsMiddlewareTest {
             automaticallyInitialize = false,
             scope = scope,
         )
-        middleware.invoke(context = context, next = {}, action = InitAction)
+        middleware.invoke(store = store, next = {}, action = InitAction)
         scope.testScheduler.advanceUntilIdle()
 
         verify(store, never()).dispatch(
@@ -222,7 +217,7 @@ class TranslationsMiddlewareTest {
     @Test
     fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is supported THEN SetSupportedLanguagesAction is also dispatched`() = runTest {
         // Send Action
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
         scope.testScheduler.advanceUntilIdle()
 
         // Set the engine to support
@@ -257,7 +252,7 @@ class TranslationsMiddlewareTest {
     @Test
     fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is supported THEN SetLanguageSettingsAction is also dispatched`() = runTest {
         // Send Action
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
         scope.testScheduler.advanceUntilIdle()
 
         // Set the engine to support
@@ -290,7 +285,7 @@ class TranslationsMiddlewareTest {
     @Test
     fun `WHEN InitTranslationsBrowserState is dispatched AND an error occurs THEN TranslateExceptionAction is dispatched for language settings`() = runTest {
         // Send Action
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
         scope.testScheduler.advanceUntilIdle()
 
         // Set the engine to support
@@ -322,7 +317,7 @@ class TranslationsMiddlewareTest {
     @Test
     fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is supported THEN SetLanguageModelsAction is also dispatched`() = runTest {
         // Send Action
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
         scope.testScheduler.advanceUntilIdle()
         // Set the engine to support
         val engineSupportedCallback = argumentCaptor<((Boolean) -> Unit)>()
@@ -349,7 +344,7 @@ class TranslationsMiddlewareTest {
     @Test
     fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is supported THEN SetNeverTranslateSitesAction is also dispatched`() = runTest {
         // Send Action
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
         scope.testScheduler.advanceUntilIdle()
 
         // Set the engine to support
@@ -379,7 +374,7 @@ class TranslationsMiddlewareTest {
     fun `WHEN InitTranslationsBrowserState is dispatched AND has an issue with the engine THEN EngineExceptionAction is dispatched`() = runTest {
         // Send Action
         // Note: Implicitly called once due to connection with InitAction
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
         scope.testScheduler.advanceUntilIdle()
 
         // Check expectations
@@ -402,7 +397,7 @@ class TranslationsMiddlewareTest {
     fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is not supported THEN SetSupportedLanguagesAction and SetLanguageModelsAction are NOT dispatched`() = runTest {
         // Send Action
         // Will invoke a double InitAction
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
         scope.testScheduler.advanceUntilIdle()
 
         // Set the engine to not support
@@ -423,7 +418,7 @@ class TranslationsMiddlewareTest {
         setupMockState()
 
         // Action
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.TranslateExpectedAction(tab.id))
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.TranslateExpectedAction(tab.id))
 
         scope.testScheduler.advanceUntilIdle()
 
@@ -441,7 +436,7 @@ class TranslationsMiddlewareTest {
     fun `WHEN TranslateExpectedAction is dispatched AND the defaults are NOT available THEN FetchTranslationDownloadSizeAction is NOT dispatched`() = runTest {
         // Note, no state is set on the engine, so no default values are available.
         // Action
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.TranslateExpectedAction(tab.id))
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.TranslateExpectedAction(tab.id))
 
         scope.testScheduler.advanceUntilIdle()
 
@@ -480,7 +475,7 @@ class TranslationsMiddlewareTest {
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_PAGE_SETTINGS,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Check Behavior
@@ -527,7 +522,7 @@ class TranslationsMiddlewareTest {
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_PAGE_SETTINGS,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Check Behavior
@@ -580,7 +575,7 @@ class TranslationsMiddlewareTest {
                 operation = TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE,
                 setting = true,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify Dispatch
@@ -600,7 +595,7 @@ class TranslationsMiddlewareTest {
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
             )
-        translationsMiddleware.invoke(context = context, next = {}, action = action)
+        translationsMiddleware.invoke(store = store, next = {}, action = action)
         scope.testScheduler.advanceUntilIdle()
 
         // Check expectations
@@ -644,7 +639,7 @@ class TranslationsMiddlewareTest {
                 operation = TranslationPageSettingOperation.UPDATE_ALWAYS_TRANSLATE_LANGUAGE,
                 setting = true,
             )
-        translationsMiddleware.invoke(context = context, next = {}, action = action)
+        translationsMiddleware.invoke(store = store, next = {}, action = action)
         scope.testScheduler.advanceUntilIdle()
 
         // Check expectations
@@ -657,7 +652,7 @@ class TranslationsMiddlewareTest {
         )
 
         // the success callback is going to be executed, which will trigger a FETCH_AUTOMATIC_LANGUAGE_SETTINGS action
-        verify(context.store).dispatch(
+        verify(store).dispatch(
             TranslationsAction.OperationRequestedAction(
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
@@ -680,7 +675,7 @@ class TranslationsMiddlewareTest {
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_AUTOMATIC_LANGUAGE_SETTINGS,
             )
-        translationsMiddleware.invoke(context = context, next = {}, action = action)
+        translationsMiddleware.invoke(store = store, next = {}, action = action)
         scope.testScheduler.advanceUntilIdle()
 
         // Check expectations
@@ -729,7 +724,7 @@ class TranslationsMiddlewareTest {
                 operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_LANGUAGE,
                 setting = true,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify Dispatch
@@ -762,7 +757,7 @@ class TranslationsMiddlewareTest {
                 operation = TranslationPageSettingOperation.UPDATE_NEVER_TRANSLATE_SITE,
                 setting = true,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify Dispatch
@@ -783,13 +778,13 @@ class TranslationsMiddlewareTest {
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_NEVER_TRANSLATE_SITES,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         verify(engine).getNeverTranslateSiteList(onSuccess = sitesCallback.capture(), onError = any())
         sitesCallback.value.invoke(neverTranslateSites)
 
-        verify(context.store).dispatch(
+        verify(store).dispatch(
             TranslationsAction.SetNeverTranslateSitesAction(
                 neverTranslateSites = neverTranslateSites,
             ),
@@ -830,7 +825,7 @@ class TranslationsMiddlewareTest {
                 fromLanguage = translationSize.fromLanguage,
                 toLanguage = translationSize.toLanguage,
             )
-        translationsMiddleware.invoke(context = context, next = {}, action = action)
+        translationsMiddleware.invoke(store = store, next = {}, action = action)
         scope.testScheduler.advanceUntilIdle()
 
         val sizeCaptor = argumentCaptor<((Long) -> Unit)>()
@@ -842,7 +837,7 @@ class TranslationsMiddlewareTest {
         )
         sizeCaptor.value.invoke(translationSize.size!!)
 
-        verify(context.store).dispatch(
+        verify(store).dispatch(
             TranslationsAction.SetTranslationDownloadSizeAction(
                 tabId = tab.id,
                 translationSize = translationSize,
@@ -858,7 +853,7 @@ class TranslationsMiddlewareTest {
                 fromLanguage = Language("en", "English"),
                 toLanguage = Language("fr", "French"),
             )
-        translationsMiddleware.invoke(context = context, next = {}, action = action)
+        translationsMiddleware.invoke(store = store, next = {}, action = action)
         scope.testScheduler.advanceUntilIdle()
 
         val errorCaptor = argumentCaptor<((Throwable) -> Unit)>()
@@ -871,7 +866,7 @@ class TranslationsMiddlewareTest {
         errorCaptor.value.invoke(TranslationError.CouldNotDetermineDownloadSizeError(cause = null))
         scope.testScheduler.advanceUntilIdle()
 
-        verify(context.store).dispatch(
+        verify(store).dispatch(
             TranslationsAction.SetTranslationDownloadSizeAction(
                 tabId = tab.id,
                 translationSize = TranslationDownloadSize(
@@ -900,7 +895,7 @@ class TranslationsMiddlewareTest {
             TranslationsAction.RemoveNeverTranslateSiteAction(
                 origin = "google.com",
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         val neverTranslateSitesCallBack = argumentCaptor<((List<String>) -> Unit)>()
@@ -926,14 +921,14 @@ class TranslationsMiddlewareTest {
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_LANGUAGE_MODELS,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify results
         verify(engine, atLeastOnce()).getTranslationsModelDownloadStates(onSuccess = languageCallback.capture(), onError = any())
         languageCallback.value.invoke(mockLanguageModels)
 
-        verify(context.store, atLeastOnce()).dispatch(
+        verify(store, atLeastOnce()).dispatch(
             TranslationsAction.SetLanguageModelsAction(
                 languageModels = mockLanguageModels,
             ),
@@ -955,7 +950,7 @@ class TranslationsMiddlewareTest {
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_LANGUAGE_MODELS,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify Dispatch
@@ -977,7 +972,7 @@ class TranslationsMiddlewareTest {
     @Test
     fun `WHEN InitTranslationsBrowserState is dispatched AND the engine is supported THEN SetOfferTranslateSettingAction is also dispatched`() = runTest {
         // Send Action
-        translationsMiddleware.invoke(context = context, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
+        translationsMiddleware.invoke(store = store, next = {}, action = TranslationsAction.InitTranslationsBrowserState)
         scope.testScheduler.advanceUntilIdle()
 
         // Set the engine to support
@@ -1015,7 +1010,7 @@ class TranslationsMiddlewareTest {
                 tabId = tab.id,
                 operation = TranslationOperation.FETCH_OFFER_SETTING,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify Dispatch
@@ -1041,7 +1036,7 @@ class TranslationsMiddlewareTest {
             TranslationsAction.UpdateGlobalOfferTranslateSettingAction(
                 offerTranslation = true,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
         scope.testScheduler.advanceUntilIdle()
 
         // Verify offer was set
@@ -1056,7 +1051,7 @@ class TranslationsMiddlewareTest {
                 languageCode = "es",
                 setting = LanguageSetting.ALWAYS,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
 
         scope.testScheduler.advanceUntilIdle()
 
@@ -1091,7 +1086,7 @@ class TranslationsMiddlewareTest {
             TranslationsAction.ManageLanguageModelsAction(
                 options,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
 
         scope.testScheduler.advanceUntilIdle()
 
@@ -1127,7 +1122,7 @@ class TranslationsMiddlewareTest {
             TranslationsAction.ManageLanguageModelsAction(
                 options,
             )
-        translationsMiddleware.invoke(context, {}, action)
+        translationsMiddleware.invoke(store = store, {}, action)
 
         scope.testScheduler.advanceUntilIdle()
 
@@ -1161,7 +1156,7 @@ class TranslationsMiddlewareTest {
     @Test
     fun `WHEN UpdateLocaleAction is dispatched THEN SetLanguageSettingsAction AND SetLanguageModelsAction are also dispatched`() = runTest {
         // Send Action
-        translationsMiddleware.invoke(context = context, next = {}, action = LocaleAction.UpdateLocaleAction(locale = Locale.forLanguageTag("es")))
+        translationsMiddleware.invoke(store = store, next = {}, action = LocaleAction.UpdateLocaleAction(locale = Locale.forLanguageTag("es")))
         scope.testScheduler.advanceUntilIdle()
 
         // Mock responses

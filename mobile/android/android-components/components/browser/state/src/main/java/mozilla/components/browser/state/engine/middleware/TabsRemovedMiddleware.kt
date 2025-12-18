@@ -18,7 +18,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 
 /**
  * [Middleware] responsible for closing and unlinking [EngineSession] instances whenever tabs get
@@ -28,23 +28,23 @@ internal class TabsRemovedMiddleware(
     private val scope: CoroutineScope,
 ) : Middleware<BrowserState, BrowserAction> {
     override fun invoke(
-        context: MiddlewareContext<BrowserState, BrowserAction>,
+        store: Store<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction,
     ) {
         when (action) {
-            is TabListAction.RemoveAllNormalTabsAction -> onTabsRemoved(context, context.store.state.normalTabs)
-            is TabListAction.RemoveAllPrivateTabsAction -> onTabsRemoved(context, context.store.state.privateTabs)
-            is TabListAction.RemoveAllTabsAction -> onTabsRemoved(context, context.store.state.tabs)
-            is TabListAction.RemoveTabAction -> context.store.state.findTab(action.tabId)?.let {
-                onTabsRemoved(context, listOf(it))
+            is TabListAction.RemoveAllNormalTabsAction -> onTabsRemoved(store, store.state.normalTabs)
+            is TabListAction.RemoveAllPrivateTabsAction -> onTabsRemoved(store, store.state.privateTabs)
+            is TabListAction.RemoveAllTabsAction -> onTabsRemoved(store, store.state.tabs)
+            is TabListAction.RemoveTabAction -> store.state.findTab(action.tabId)?.let {
+                onTabsRemoved(store, listOf(it))
             }
-            is TabListAction.RemoveTabsAction -> action.tabIds.mapNotNull { context.store.state.findTab(it) }.let {
-                onTabsRemoved(context, it)
+            is TabListAction.RemoveTabsAction -> action.tabIds.mapNotNull { store.state.findTab(it) }.let {
+                onTabsRemoved(store, it)
             }
-            is CustomTabListAction.RemoveAllCustomTabsAction -> onTabsRemoved(context, context.store.state.customTabs)
-            is CustomTabListAction.RemoveCustomTabAction -> context.store.state.findCustomTab(action.tabId)?.let {
-                onTabsRemoved(context, listOf(it))
+            is CustomTabListAction.RemoveAllCustomTabsAction -> onTabsRemoved(store, store.state.customTabs)
+            is CustomTabListAction.RemoveCustomTabAction -> store.state.findCustomTab(action.tabId)?.let {
+                onTabsRemoved(store, listOf(it))
             }
             else -> {
                 // no-op
@@ -55,12 +55,12 @@ internal class TabsRemovedMiddleware(
     }
 
     private fun onTabsRemoved(
-        context: MiddlewareContext<BrowserState, BrowserAction>,
+        store: Store<BrowserState, BrowserAction>,
         tabs: List<SessionState>,
     ) {
         tabs.forEach { tab ->
             if (tab.engineState.engineSession != null) {
-                context.store.dispatch(
+                store.dispatch(
                     EngineAction.UnlinkEngineSessionAction(
                         tab.id,
                     ),

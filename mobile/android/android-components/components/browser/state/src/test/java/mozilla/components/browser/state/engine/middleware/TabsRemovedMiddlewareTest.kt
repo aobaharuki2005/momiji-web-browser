@@ -17,7 +17,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.rule.MainCoroutineRule
 import mozilla.components.support.test.rule.runTestOnMain
@@ -218,7 +218,7 @@ class TabsRemovedMiddlewareTest {
     // TabsRemovedMiddleware processed the action.
     private class ConsumeRemoveTabActionsMiddleware : Middleware<BrowserState, BrowserAction> {
         override fun invoke(
-            context: MiddlewareContext<BrowserState, BrowserAction>,
+            store: Store<BrowserState, BrowserAction>,
             next: (BrowserAction) -> Unit,
             action: BrowserAction,
         ) {

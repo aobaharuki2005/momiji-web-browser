@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import org.mozilla.fenix.GleanMetrics.Addresses
 
 /**
@@ -29,23 +29,23 @@ class AddressMiddleware(
     private val ioDispatcher: CoroutineDispatcher = IO,
 ) : Middleware<AddressState, AddressAction> {
     override fun invoke(
-        context: MiddlewareContext<AddressState, AddressAction>,
+        store: Store<AddressState, AddressAction>,
         next: (AddressAction) -> Unit,
         action: AddressAction,
     ) {
         next(action)
         when (action) {
             is SaveTapped -> runAndNavigateBack {
-                context.store.state.guidToUpdate?.let {
-                    environment.updateAddress(it, context.store.state.address)
+                store.state.guidToUpdate?.let {
+                    environment.updateAddress(it, store.state.address)
                     Addresses.updated.add()
                 } ?: run {
-                    environment.createAddress(context.store.state.address)
+                    environment.createAddress(store.state.address)
                     Addresses.saved.add()
                 }
             }
             is DeleteDialogAction.DeleteTapped -> runAndNavigateBack {
-                context.store.state.guidToUpdate?.also {
+                store.state.guidToUpdate?.also {
                     environment.deleteAddress(it)
                     Addresses.deleted.add()
                 }

@@ -25,7 +25,6 @@ import mozilla.components.feature.search.storage.SearchEngineSelectorConfig
 import mozilla.components.feature.search.storage.SearchEngineSelectorRepository
 import mozilla.components.feature.search.storage.SearchMetadataStorage
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 import mozilla.components.support.base.log.logger.Logger
 import java.util.Locale
@@ -86,12 +85,12 @@ class SearchMiddleware(
         }
 
     override fun invoke(
-        context: MiddlewareContext<BrowserState, BrowserAction>,
+        store: Store<BrowserState, BrowserAction>,
         next: (BrowserAction) -> Unit,
         action: BrowserAction,
     ) {
         when (action) {
-            is SearchAction.SetRegionAction -> loadSearchEngines(context.store, action.regionState, action.distribution)
+            is SearchAction.SetRegionAction -> loadSearchEngines(store, action.regionState, action.distribution)
             is SearchAction.UpdateCustomSearchEngineAction -> saveCustomSearchEngine(action)
             is SearchAction.RemoveCustomSearchEngineAction -> removeCustomSearchEngine(action)
             is SearchAction.SelectSearchEngineAction -> updateSearchEngineSelection(action)
@@ -105,11 +104,11 @@ class SearchMiddleware(
         when (action) {
             is SearchAction.ShowSearchEngineAction, is SearchAction.HideSearchEngineAction,
             is SearchAction.RestoreHiddenSearchEnginesAction,
-            -> updateHiddenSearchEngines(context.store.state.search.hiddenSearchEngines)
+            -> updateHiddenSearchEngines(store.state.search.hiddenSearchEngines)
             is SearchAction.AddAdditionalSearchEngineAction, is SearchAction.RemoveAdditionalSearchEngineAction ->
-                updateAdditionalSearchEngines(context.store.state.search.additionalSearchEngines)
+                updateAdditionalSearchEngines(store.state.search.additionalSearchEngines)
             is SearchAction.UpdateDisabledSearchEngineIdsAction -> updateDisabledSearchEngineIds(
-                context.store,
+                store,
                 action,
             )
             else -> {

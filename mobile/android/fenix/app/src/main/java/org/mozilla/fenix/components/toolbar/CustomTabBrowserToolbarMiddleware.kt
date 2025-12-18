@@ -48,7 +48,6 @@ import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.ext.flow
@@ -135,7 +134,7 @@ class CustomTabBrowserToolbarMiddleware(
 
     @Suppress("LongMethod")
     override fun invoke(
-        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
         next: (BrowserToolbarAction) -> Unit,
         action: BrowserToolbarAction,
     ) {
@@ -144,16 +143,16 @@ class CustomTabBrowserToolbarMiddleware(
                 next(action)
 
                 val customTab = customTab
-                updateStartPageActions(context, customTab)
-                updateStartBrowserActions(context, customTab)
-                updateCurrentPageOrigin(context, customTab)
-                updateEndPageActions(context, customTab)
-                updateEndBrowserActions(context)
+                updateStartPageActions(store, customTab)
+                updateStartBrowserActions(store, customTab)
+                updateCurrentPageOrigin(store, customTab)
+                updateEndPageActions(store, customTab)
+                updateEndBrowserActions(store)
 
-                observePageLoadUpdates(context)
-                observePageOriginUpdates(context)
-                observePageSecurityUpdates(context)
-                observePageTrackingProtectionUpdates(context)
+                observePageLoadUpdates(store)
+                observePageOriginUpdates(store)
+                observePageSecurityUpdates(store)
+                observePageTrackingProtectionUpdates(store)
             }
 
             is CloseClicked -> {
@@ -288,22 +287,22 @@ class CustomTabBrowserToolbarMiddleware(
         }
     }
 
-    private fun observePageOriginUpdates(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun observePageOriginUpdates(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
         browserStore.observeWhileActive {
             mapNotNull { state -> state.findCustomTab(customTabId) }
                 .ifAnyChanged { tab -> arrayOf(tab.content.title, tab.content.url) }
                 .collect {
-                    updateCurrentPageOrigin(context, it)
+                    updateCurrentPageOrigin(store, it)
                 }
         }
     }
 
-    private fun observePageLoadUpdates(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun observePageLoadUpdates(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
         browserStore.observeWhileActive {
             mapNotNull { state -> state.findCustomTab(customTabId) }
                 .distinctUntilChangedBy { it.content.progress }
                 .collect {
-                    context.store.dispatch(
+                    store.dispatch(
                         UpdateProgressBarConfig(
                             buildProgressBar(it.content.progress),
                         ),
@@ -312,50 +311,50 @@ class CustomTabBrowserToolbarMiddleware(
         }
     }
 
-    private fun observePageSecurityUpdates(context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>) {
+    private fun observePageSecurityUpdates(store: Store<BrowserToolbarState, BrowserToolbarAction>) {
         browserStore.observeWhileActive {
             mapNotNull { state -> state.findCustomTab(customTabId) }
                 .distinctUntilChangedBy { tab -> tab.content.securityInfo }
                 .collect {
-                    updateStartPageActions(context, it)
+                    updateStartPageActions(store, it)
                 }
         }
     }
 
     private fun observePageTrackingProtectionUpdates(
-        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
     ) {
         browserStore.observeWhileActive {
             mapNotNull { state -> state.findCustomTab(customTabId) }
                 .distinctUntilChangedBy { tab -> tab.trackingProtection }
-                .collect { updateStartPageActions(context, it) }
+                .collect { updateStartPageActions(store, it) }
         }
     }
 
     private fun updateStartBrowserActions(
-        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
-    ) = context.store.dispatch(
+    ) = store.dispatch(
         BrowserActionsStartUpdated(
             buildStartBrowserActions(customTab),
         ),
     )
 
     private fun updateStartPageActions(
-        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
-    ) = context.store.dispatch(
+    ) = store.dispatch(
         PageActionsStartUpdated(
             buildStartPageActions(customTab),
         ),
     )
 
     private fun updateCurrentPageOrigin(
-        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
     ) {
         scope.launch {
-            context.store.dispatch(
+            store.dispatch(
                 BrowserDisplayToolbarAction.PageOriginUpdated(
                     PageOrigin(
                         hint = R.string.search_hint,
@@ -370,17 +369,17 @@ class CustomTabBrowserToolbarMiddleware(
     }
 
     private fun updateEndPageActions(
-        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
         customTab: CustomTabSessionState?,
-    ) = context.store.dispatch(
+    ) = store.dispatch(
         BrowserDisplayToolbarAction.PageActionsEndUpdated(
             buildEndPageActions(customTab),
         ),
     )
 
     private fun updateEndBrowserActions(
-        context: MiddlewareContext<BrowserToolbarState, BrowserToolbarAction>,
-    ) = context.store.dispatch(
+        store: Store<BrowserToolbarState, BrowserToolbarAction>,
+    ) = store.dispatch(
         BrowserActionsEndUpdated(
             buildEndBrowserActions(),
         ),

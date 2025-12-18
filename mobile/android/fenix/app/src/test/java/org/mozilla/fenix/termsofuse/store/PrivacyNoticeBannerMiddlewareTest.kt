@@ -7,7 +7,7 @@ package org.mozilla.fenix.termsofuse.store
 import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import org.junit.Before
 import org.junit.Test
 
@@ -15,8 +15,8 @@ class PrivacyNoticeBannerMiddlewareTest {
 
     private lateinit var repository: FakePrivacyNoticeBannerRepository
 
-    private val context =
-        mockk<MiddlewareContext<PrivacyNoticeBannerState, PrivacyNoticeBannerAction>>(
+    private val store =
+        mockk<Store<PrivacyNoticeBannerState, PrivacyNoticeBannerAction>>(
             relaxed = true,
         )
 
@@ -31,7 +31,7 @@ class PrivacyNoticeBannerMiddlewareTest {
     @Test
     fun `WHEN the action OnBannerDisplayed is received THEN we update the privacy notice banner preference`() {
         middleware.invoke(
-            context = context,
+            store = store,
             next = {},
             action = PrivacyNoticeBannerAction.OnBannerDisplayed,
         )
@@ -42,25 +42,25 @@ class PrivacyNoticeBannerMiddlewareTest {
     @Test
     fun `WHEN a no-op action is received THEN we do not update the privacy notice banner preference`() {
         middleware.invoke(
-            context = context,
+            store = store,
             next = {},
             action = PrivacyNoticeBannerAction.OnPrivacyNoticeClicked,
         )
 
         middleware.invoke(
-            context = context,
+            store = store,
             next = {},
             action = PrivacyNoticeBannerAction.OnLearnMoreClicked,
         )
 
         middleware.invoke(
-            context = context,
+            store = store,
             next = {},
             action = PrivacyNoticeBannerAction.OnCloseClicked,
         )
 
         middleware.invoke(
-            context = context,
+            store = store,
             next = {},
             action = PrivacyNoticeBannerAction.OnFragmentStopped,
         )

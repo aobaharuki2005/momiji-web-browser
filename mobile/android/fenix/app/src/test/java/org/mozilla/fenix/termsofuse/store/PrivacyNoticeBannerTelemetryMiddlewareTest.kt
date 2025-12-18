@@ -7,7 +7,7 @@ package org.mozilla.fenix.termsofuse.store
 import io.mockk.mockk
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Rule
 import org.junit.Test
@@ -22,8 +22,8 @@ class PrivacyNoticeBannerTelemetryMiddlewareTest {
     @get:Rule
     val gleanTestRule = FenixGleanTestRule(testContext)
 
-    private val context =
-        mockk<MiddlewareContext<PrivacyNoticeBannerState, PrivacyNoticeBannerAction>>(
+    private val store =
+        mockk<Store<PrivacyNoticeBannerState, PrivacyNoticeBannerAction>>(
             relaxed = true,
         )
 
@@ -67,7 +67,7 @@ class PrivacyNoticeBannerTelemetryMiddlewareTest {
 
     private fun invokeMiddlewareWith(action: PrivacyNoticeBannerAction) {
         PrivacyNoticeBannerTelemetryMiddleware()(
-            context = context,
+            store = store,
             next = {},
             action = action,
         )

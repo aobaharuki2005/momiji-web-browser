@@ -5,7 +5,7 @@
 package org.mozilla.fenix.bookmarks
 
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import mozilla.telemetry.glean.private.NoExtras
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.components.metrics.MetricsUtils
@@ -17,11 +17,11 @@ internal class BookmarksTelemetryMiddleware : Middleware<BookmarksState, Bookmar
 
     @Suppress("CyclomaticComplexMethod")
     override fun invoke(
-        context: MiddlewareContext<BookmarksState, BookmarksAction>,
+        store: Store<BookmarksState, BookmarksAction>,
         next: (BookmarksAction) -> Unit,
         action: BookmarksAction,
     ) {
-        val preReductionState = context.store.state
+        val preReductionState = store.state
         next(action)
         when (action) {
             BackClicked -> preReductionState.handleBackClick()

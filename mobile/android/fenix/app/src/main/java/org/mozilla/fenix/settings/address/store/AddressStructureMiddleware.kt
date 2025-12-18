@@ -10,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.autofill.AddressStructure
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
 
 /**
@@ -48,17 +47,17 @@ class AddressStructureMiddleware(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : Middleware<AddressState, AddressAction> {
     override fun invoke(
-        context: MiddlewareContext<AddressState, AddressAction>,
+        store: Store<AddressState, AddressAction>,
         next: (AddressAction) -> Unit,
         action: AddressAction,
     ) {
-        val preReductionCountry = context.store.state.address.country
+        val preReductionCountry = store.state.address.country
         next(action)
 
         when (action) {
-            is ViewAppeared -> loadAddressStructure(context.store, true)
-            is FormChange.Country -> if (preReductionCountry != context.store.state.address.country) {
-                loadAddressStructure(context.store, false)
+            is ViewAppeared -> loadAddressStructure(store, true)
+            is FormChange.Country -> if (preReductionCountry != store.state.address.country) {
+                loadAddressStructure(store, false)
             }
             else -> { /* noop */ }
         }

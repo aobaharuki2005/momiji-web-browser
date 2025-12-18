@@ -5,7 +5,7 @@
 package org.mozilla.fenix.termsofuse.store
 
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import org.mozilla.fenix.GleanMetrics.PrivacyNoticeBanner
 
 /**
@@ -15,7 +15,7 @@ class PrivacyNoticeBannerTelemetryMiddleware :
     Middleware<PrivacyNoticeBannerState, PrivacyNoticeBannerAction> {
 
     override fun invoke(
-        context: MiddlewareContext<PrivacyNoticeBannerState, PrivacyNoticeBannerAction>,
+        store: Store<PrivacyNoticeBannerState, PrivacyNoticeBannerAction>,
         next: (PrivacyNoticeBannerAction) -> Unit,
         action: PrivacyNoticeBannerAction,
     ) {
