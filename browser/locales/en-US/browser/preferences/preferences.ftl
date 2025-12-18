@@ -1113,7 +1113,7 @@ prefs-syncing-off = Syncing: OFF
 
 prefs-syncing-off-2 =
     .label = Syncing is OFF
-    .description = Turn on sync to get your your bookmarks, passwords, history, and more on any device.
+    .description = Turn on sync to get your bookmarks, passwords, history, and more on any device.
 
 prefs-sync-turn-on-syncing =
     .label = Turn on syncing…
