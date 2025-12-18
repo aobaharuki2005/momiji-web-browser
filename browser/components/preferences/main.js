@@ -204,6 +204,9 @@ Preferences.addAll([
 
   // Appearance
   { id: "layout.css.prefers-color-scheme.content-override", type: "int" },
+
+  // Translations
+  { id: "browser.translations.automaticallyPopup", type: "bool" },
 ]);
 
 if (AppConstants.HAVE_SHELL_SERVICE) {
@@ -644,6 +647,19 @@ Preferences.addSetting({
   },
 });
 Preferences.addSetting({ id: "containersPlaceholder" });
+
+Preferences.addSetting({
+  id: "offerTranslations",
+  pref: "browser.translations.automaticallyPopup",
+});
+
+Preferences.addSetting({
+  id: "translationsManageButton",
+  onUserClick(e) {
+    e.preventDefault();
+    gMainPane.showTranslationsSettings();
+  },
+});
 
 Preferences.addSetting({
   id: "data-migration",
@@ -2247,6 +2263,24 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  translations: {
+    inProgress: true,
+    l10nId: "settings-translations-header",
+    iconSrc: "chrome://browser/skin/translations.svg",
+    supportPage: "website-translation",
+    headingLevel: 2,
+    items: [
+      {
+        id: "offerTranslations",
+        l10nId: "settings-translations-offer-to-translate-label",
+      },
+      {
+        id: "translationsManageButton",
+        l10nId: "settings-translations-more-settings-button",
+        control: "moz-box-button",
+      },
+    ],
+  },
   appearance: {
     l10nId: "web-appearance-group",
     items: [
@@ -3783,6 +3817,7 @@ var gMainPane = {
     initSettingGroup("browsing");
     initSettingGroup("zoom");
     initSettingGroup("support");
+    initSettingGroup("translations");
     initSettingGroup("performance");
     initSettingGroup("startup");
     initSettingGroup("importBrowserData");

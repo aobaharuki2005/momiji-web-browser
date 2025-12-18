@@ -421,6 +421,18 @@ translate-exceptions =
     .label = Exceptions…
     .accesskey = x
 
+settings-translations-header =
+    .label = Translations
+    .aria-label = Translations
+    .description = Translate pages or selected text. To protect your privacy, translations stay on your device.
+
+settings-translations-offer-to-translate-label =
+    .label = Offer full page translation
+
+settings-translations-more-settings-button =
+    .label = More translation settings
+    .description = Set preferences for languages, websites, and offline translation.
+
 # Variables:
 #    $localeName (string) - Localized name of the locale to be used.
 use-system-locale =
