@@ -52,7 +52,7 @@ TEST_HARNESS_BINS = [
     "plugin-container",
 ]
 
-TEST_HARNESS_DLLS = ["crashinjectdll", "mozglue"]
+TEST_HARNESS_DLLS = ["crashinjectdll", "mozglue", "msvcp*", "vcruntime*"]
 
 TRAIN_HOP_DLLS = ["xul", "nss3", "nssutil3", "gkcodecs", "lgpllibs", "mozinference"]
 
