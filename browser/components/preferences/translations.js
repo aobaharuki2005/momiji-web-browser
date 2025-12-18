@@ -24,6 +24,8 @@ const NEVER_TRANSLATE_LANGS_PREF =
   "browser.translations.neverTranslateLanguages";
 /** @type {string} */
 const TOPIC_TRANSLATIONS_PREF_CHANGED = "translations:pref-changed";
+/** @type {string} */
+const TRANSLATIONS_PERMISSION = "translations";
 
 /** @type {string} */
 const ALWAYS_LANGUAGE_ITEM_CLASS = "translations-always-language-item";
@@ -34,6 +36,10 @@ const ALWAYS_LANGUAGE_REMOVE_BUTTON_CLASS = "translations-always-remove-button";
 const NEVER_LANGUAGE_ITEM_CLASS = "translations-never-language-item";
 /** @type {string} */
 const NEVER_LANGUAGE_REMOVE_BUTTON_CLASS = "translations-never-remove-button";
+/** @type {string} */
+const NEVER_SITE_ITEM_CLASS = "translations-never-site-item";
+/** @type {string} */
+const NEVER_SITE_REMOVE_BUTTON_CLASS = "translations-never-site-remove-button";
 
 const TranslationsSettings = {
   /**
@@ -86,6 +92,13 @@ const TranslationsSettings = {
   neverLanguageTags: new Set(),
 
   /**
+   * Current never-translate site origins.
+   *
+   * @type {Set<string>}
+   */
+  neverSiteOrigins: new Set(),
+
+  /**
    * Cached DOM elements used by the module.
    *
    * @type {TranslationsSettingsElements|null}
@@ -132,6 +145,14 @@ const TranslationsSettings = {
         );
         if (neverRemoveButton?.dataset.langTag) {
           this.removeNeverLanguage(neverRemoveButton.dataset.langTag);
+          break;
+        }
+
+        const neverSiteRemoveButton = /** @type {HTMLElement|null} */ (
+          target.closest?.(`.${NEVER_SITE_REMOVE_BUTTON_CLASS}`)
+        );
+        if (neverSiteRemoveButton?.dataset.origin) {
+          this.removeNeverSite(neverSiteRemoveButton.dataset.origin);
         }
         break;
       }
@@ -155,6 +176,8 @@ const TranslationsSettings = {
       } else if (data === NEVER_TRANSLATE_LANGS_PREF) {
         this.refreshNeverLanguages().catch(console.error);
       }
+    } else if (topic === "perm-changed") {
+      this.handlePermissionChange(subject, data);
     }
   },
 
@@ -173,12 +196,14 @@ const TranslationsSettings = {
       await this.initPromise;
       await this.refreshAlwaysLanguages();
       await this.refreshNeverLanguages();
+      this.refreshNeverSites();
       return;
     }
 
     if (this.initialized) {
       await this.refreshAlwaysLanguages();
       await this.refreshNeverLanguages();
+      this.refreshNeverSites();
       return;
     }
 
@@ -242,7 +267,8 @@ const TranslationsSettings = {
       !this.elements?.alwaysTranslateLanguagesNoneRow ||
       !this.elements?.neverTranslateLanguagesGroup ||
       !this.elements?.neverTranslateLanguagesSelect ||
-      !this.elements?.neverTranslateLanguagesNoneRow
+      !this.elements?.neverTranslateLanguagesNoneRow ||
+      !this.elements?.neverTranslateSitesGroup
     ) {
       return;
     }
@@ -274,11 +300,14 @@ const TranslationsSettings = {
       this
     );
     this.elements.neverTranslateLanguagesGroup.addEventListener("click", this);
+    this.elements.neverTranslateSitesGroup.addEventListener("click", this);
     Services.obs.addObserver(this, TOPIC_TRANSLATIONS_PREF_CHANGED);
+    Services.obs.addObserver(this, "perm-changed");
     window.addEventListener("unload", this);
 
     await this.refreshAlwaysLanguages();
     await this.refreshNeverLanguages();
+    this.refreshNeverSites();
     this.initialized = true;
   },
 
@@ -308,6 +337,15 @@ const TranslationsSettings = {
       ),
       neverTranslateLanguagesNoneRow: /** @type {HTMLElement} */ (
         document.getElementById("translationsNeverTranslateLanguagesNoneRow")
+      ),
+      neverTranslateSitesGroup: /** @type {HTMLElement} */ (
+        document.getElementById("translationsNeverTranslateSitesGroup")
+      ),
+      neverTranslateSitesRow: /** @type {HTMLElement} */ (
+        document.getElementById("translationsNeverTranslateSitesRow")
+      ),
+      neverTranslateSitesNoneRow: /** @type {HTMLElement} */ (
+        document.getElementById("translationsNeverTranslateSitesNoneRow")
       ),
     };
 
@@ -735,11 +773,150 @@ const TranslationsSettings = {
   },
 
   /**
+   * Refresh the rendered list of never-translate sites.
+   */
+  refreshNeverSites() {
+    if (!this.elements?.neverTranslateSitesGroup) {
+      return;
+    }
+
+    /** @type {string[]} */
+    let siteOrigins = [];
+    try {
+      siteOrigins = TranslationsParent.listNeverTranslateSites() ?? [];
+    } catch (error) {
+      console.error("Failed to list never translate sites", error);
+    }
+
+    this.neverSiteOrigins = new Set(siteOrigins);
+    this.renderNeverSites(siteOrigins);
+  },
+
+  /**
+   * Render the never-translate sites list.
+   *
+   * @param {string[]} siteOrigins
+   */
+  renderNeverSites(siteOrigins) {
+    const { neverTranslateSitesGroup, neverTranslateSitesNoneRow } =
+      this.elements ?? {};
+    if (!neverTranslateSitesGroup) {
+      return;
+    }
+
+    for (const item of neverTranslateSitesGroup.querySelectorAll(
+      `.${NEVER_SITE_ITEM_CLASS}`
+    )) {
+      item.remove();
+    }
+
+    if (neverTranslateSitesNoneRow) {
+      const hasSites = Boolean(siteOrigins.length);
+      neverTranslateSitesNoneRow.hidden = hasSites;
+
+      if (hasSites && neverTranslateSitesNoneRow.isConnected) {
+        neverTranslateSitesNoneRow.remove();
+      } else if (!hasSites && !neverTranslateSitesNoneRow.isConnected) {
+        neverTranslateSitesGroup.appendChild(neverTranslateSitesNoneRow);
+      }
+    }
+
+    const sortedOrigins = [...siteOrigins].sort((originA, originB) => {
+      return this.getSiteSortKey(originA).localeCompare(
+        this.getSiteSortKey(originB)
+      );
+    });
+
+    for (const origin of sortedOrigins) {
+      const removeButton = document.createElement("moz-button");
+      removeButton.setAttribute("slot", "actions-start");
+      removeButton.setAttribute("type", "icon ghost");
+      removeButton.setAttribute(
+        "iconsrc",
+        "chrome://global/skin/icons/delete.svg"
+      );
+      removeButton.classList.add(NEVER_SITE_REMOVE_BUTTON_CLASS);
+      removeButton.dataset.origin = origin;
+      removeButton.setAttribute("aria-label", origin);
+
+      const item = document.createElement("moz-box-item");
+      item.classList.add(NEVER_SITE_ITEM_CLASS);
+      item.setAttribute("label", origin);
+      item.dataset.origin = origin;
+      item.appendChild(removeButton);
+      if (
+        neverTranslateSitesNoneRow &&
+        neverTranslateSitesNoneRow.parentElement === neverTranslateSitesGroup
+      ) {
+        neverTranslateSitesGroup.insertBefore(item, neverTranslateSitesNoneRow);
+      } else {
+        neverTranslateSitesGroup.appendChild(item);
+      }
+    }
+  },
+
+  /**
+   * Remove a site from the never-translate list.
+   *
+   * @param {string} origin
+   */
+  removeNeverSite(origin) {
+    if (!origin || !this.neverSiteOrigins.has(origin)) {
+      return;
+    }
+
+    try {
+      TranslationsParent.setNeverTranslateSiteByOrigin(false, origin);
+    } catch (error) {
+      console.error("Failed to remove never translate site", error);
+      return;
+    }
+
+    this.refreshNeverSites();
+  },
+
+  /**
+   * Create a sort key that ignores protocol differences.
+   *
+   * @param {string} origin
+   * @returns {string}
+   */
+  getSiteSortKey(origin) {
+    try {
+      return Services.io.newURI(origin).asciiHostPort;
+    } catch {
+      return origin;
+    }
+  },
+
+  /**
+   * Handle updates to translations permissions.
+   *
+   * @param {nsISupports} subject
+   * @param {string} data
+   */
+  handlePermissionChange(subject, data) {
+    if (data === "cleared") {
+      this.neverSiteOrigins = new Set();
+      this.renderNeverSites([]);
+      return;
+    }
+
+    const perm = subject?.QueryInterface?.(Ci.nsIPermission);
+    if (perm?.type !== TRANSLATIONS_PERMISSION) {
+      return;
+    }
+
+    this.refreshNeverSites();
+  },
+
+  /**
    * Remove observers and listeners added during init.
    */
   teardown() {
     try {
       Services.obs.removeObserver(this, TOPIC_TRANSLATIONS_PREF_CHANGED);
+      Services.obs.removeObserver(this, "perm-changed");
     } catch (e) {
       // Ignore if we were never added.
     }
@@ -761,6 +938,7 @@ const TranslationsSettings = {
       "click",
       this
     );
+    this.elements?.neverTranslateSitesGroup?.removeEventListener("click", this);
   },
 };
 
