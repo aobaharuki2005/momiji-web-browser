@@ -436,6 +436,23 @@ settings-translations-more-settings-button =
 settings-translations-subpage-header =
     .heading = More translation settings
 
+settings-translations-subpage-speed-up-translation-header =
+    .label = Speed up translation
+    .description = Download complete languages for faster translations and to translate offline.
+
+settings-translations-subpage-download-languages-header =
+    .label = Download languages
+
+settings-translations-subpage-download-languages-select-option =
+    .label = Select language
+
+settings-translations-subpage-download-languages-button =
+    .aria-label = Download language
+    .title = Download language
+
+settings-translations-subpage-no-languages-downloaded =
+    .label = No languages downloaded
+
 # Variables:
 #    $localeName (string) - Localized name of the locale to be used.
 use-system-locale =

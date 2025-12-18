@@ -654,6 +654,39 @@ Preferences.addSetting({
 });
 
 Preferences.addSetting({
+  id: "translationsDownloadLanguagesGroup",
+});
+
+Preferences.addSetting({
+  id: "translationsDownloadLanguagesRow",
+});
+
+Preferences.addSetting({
+  id: "translationsDownloadLanguagesSelect",
+  _value: "",
+  get() {
+    return this._value;
+  },
+  set(val, _deps, setting) {
+    const newValue = val ?? "";
+    if (this._value === newValue) {
+      return this._value;
+    }
+    this._value = newValue;
+    setting?.emit("change");
+    return this._value;
+  },
+});
+
+Preferences.addSetting({
+  id: "translationsDownloadLanguagesButton",
+});
+
+Preferences.addSetting({
+  id: "translationsDownloadLanguagesNoneRow",
+});
+
+Preferences.addSetting({
   id: "translationsManageButton",
   onUserClick(e) {
     e.preventDefault();
@@ -3702,8 +3735,61 @@ SettingGroupManager.registerGroups({
   },
   moreTranslationSettings: {
     inProgress: true,
+    l10nId: "settings-translations-subpage-speed-up-translation-header",
+    headingLevel: 2,
     items: [
-      // Will be populated in the following commits.
+      {
+        id: "translationsDownloadLanguagesGroup",
+        control: "moz-box-group",
+        controlAttrs: {
+          type: "list",
+        },
+        items: [
+          {
+            id: "translationsDownloadLanguagesRow",
+            l10nId: "settings-translations-subpage-download-languages-header",
+            control: "moz-box-item",
+            controlAttrs: {
+              style: "--box-label-font-weight: var(--font-weight-semibold);",
+            },
+            items: [
+              {
+                id: "translationsDownloadLanguagesSelect",
+                control: "moz-select",
+                controlAttrs: {
+                  slot: "actions",
+                },
+                options: [
+                  {
+                    value: "",
+                    l10nId:
+                      "settings-translations-subpage-download-languages-select-option",
+                  },
+                ],
+              },
+              {
+                id: "translationsDownloadLanguagesButton",
+                l10nId:
+                  "settings-translations-subpage-download-languages-button",
+                control: "moz-button",
+                controlAttrs: {
+                  slot: "actions",
+                  type: "ghost",
+                  iconsrc: "chrome://browser/skin/downloads/downloads.svg",
+                },
+              },
+            ],
+          },
+          {
+            id: "translationsDownloadLanguagesNoneRow",
+            l10nId: "settings-translations-subpage-no-languages-downloaded",
+            control: "moz-box-item",
+            controlAttrs: {
+              class: "text-deemphasized",
+            },
+          },
+        ],
+      },
     ],
   },
 });
