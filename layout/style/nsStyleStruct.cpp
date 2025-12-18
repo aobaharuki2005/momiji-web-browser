@@ -13,6 +13,7 @@
 
 #include <algorithm>
 
+#include "AnchorPositioningUtils.h"
 #include "CounterStyleManager.h"
 #include "ImageLoader.h"
 #include "imgIContainer.h"
@@ -284,6 +285,75 @@ Length nsStyleFont::ZoomText(const Document& aDocument, Length aSize) {
 template <typename T>
 static StyleRect<T> StyleRectWithAllSides(const T& aSide) {
   return {aSide, aSide, aSide, aSide};
+}
+
+bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
+    StylePhysicalAxis aAxis, const nsIFrame* aFrame) const {
+  if (!aFrame || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    return false;
+  }
+  const auto* cb = aFrame->GetParent();
+  const auto cbwm = cb->GetWritingMode();
+  const auto logicalAxis = [&]() {
+    if (cbwm.IsVertical()) {
+      return aAxis == StylePhysicalAxis::Vertical ? LogicalAxis::Inline
+                                                  : LogicalAxis::Block;
+    }
+    return aAxis == StylePhysicalAxis::Horizontal ? LogicalAxis::Inline
+                                                  : LogicalAxis::Block;
+  }();
+  return OverriddenToZero(logicalAxis);
+}
+
+bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
+    Side aSide, const nsIFrame* aFrame) const {
+  return OverriddenToZero(aSide == Side::eSideBottom || aSide == Side::eSideTop
+                              ? StylePhysicalAxis::Vertical
+                              : StylePhysicalAxis::Horizontal,
+                          aFrame);
+}
+
+bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
+    LogicalAxis aAxis) const {
+  if (mPositionAreaInUse) {
+    // If `position-area` is used "Any auto inset properties resolve to 0":
+    // https://drafts.csswg.org/css-anchor-position-1/#valdef-position-area-position-area
+    return true;
+  }
+
+  // If `anchor-center` is used with a valid anchor, "auto inset
+  // properties resolve to 0" on that axis:
+  // https://drafts.csswg.org/css-anchor-position-1/#anchor-center
+  switch (aAxis) {
+    case LogicalAxis::Block:
+      return mBAnchorCenter;
+    case LogicalAxis::Inline:
+      return mIAnchorCenter;
+  }
+}
+
+AnchorPosResolutionParams::AutoResolutionOverrideParams::
+    AutoResolutionOverrideParams(
+        const nsIFrame* aFrame,
+        const mozilla::AnchorPosResolutionCache* aCache) {
+  nsIFrame* parent = aFrame->GetParent();
+  if (!parent || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) || !aCache ||
+      !aCache->mDefaultAnchorCache.mAnchor) {
+    return;
+  }
+
+  const auto* stylePos = aFrame->StylePosition();
+
+  auto checkAxis = [&](LogicalAxis aAxis) {
+    StyleAlignFlags alignment =
+        stylePos->UsedSelfAlignment(aAxis, parent->Style());
+    return (alignment & ~StyleAlignFlags::FLAG_BITS) ==
+           StyleAlignFlags::ANCHOR_CENTER;
+  };
+
+  mIAnchorCenter = checkAxis(LogicalAxis::Inline);
+  mBAnchorCenter = checkAxis(LogicalAxis::Block);
+  mPositionAreaInUse = !stylePos->mPositionArea.IsNone();
 }
 
 AnchorResolvedMargin AnchorResolvedMarginHelper::ResolveAnchor(
@@ -1326,25 +1396,6 @@ StyleSelfAlignment nsStylePosition::UsedJustifySelf(
     return {inheritedJustifyItems._0 & ~StyleAlignFlags::LEGACY};
   }
   return {StyleAlignFlags::NORMAL};
-}
-
-bool AnchorResolvedInsetHelper::SideUsesAnchorCenter(
-    mozilla::Side aSide, const AnchorPosOffsetResolutionParams& aParams) {
-  const nsIFrame* frame = aParams.mBaseParams.mFrame;
-  if (!frame) {
-    return false;
-  }
-  const nsIFrame* parent = frame->GetParent();
-  if (!parent) {
-    return false;
-  }
-
-  WritingMode wm = parent->GetWritingMode();
-  LogicalSide logicalSide = wm.LogicalSideForPhysicalSide(aSide);
-  LogicalAxis axis = GetAxis(logicalSide);
-
-  return axis == LogicalAxis::Inline ? aParams.mBaseParams.mIAnchorCenter
-                                     : aParams.mBaseParams.mBAnchorCenter;
 }
 
 AnchorResolvedInset AnchorResolvedInsetHelper::ResolveAnchor(

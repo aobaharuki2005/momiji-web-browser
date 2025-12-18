@@ -43,55 +43,19 @@ using namespace mozilla::layout;
 AnchorPosResolutionParams AnchorPosResolutionParams::From(
     const mozilla::SizeComputationInput* aSizingInput,
     bool aIgnorePositionArea) {
-  const mozilla::StylePositionArea posArea =
-      aIgnorePositionArea
-          ? mozilla::StylePositionArea{}
-          : aSizingInput->mFrame->StylePosition()->mPositionArea;
-  bool inlineUsesAnchorCenter = false;
-  bool blockUsesAnchorCenter = false;
-
-  ComputeAnchorCenterUsage(aSizingInput->mFrame,
-                           aSizingInput->mAnchorPosResolutionCache,
-                           inlineUsesAnchorCenter, blockUsesAnchorCenter);
-
-  return {aSizingInput->mFrame,
-          aSizingInput->mFrame->StyleDisplay()->mPosition,
-          posArea,
-          aSizingInput->mAnchorPosResolutionCache,
-          inlineUsesAnchorCenter,
-          blockUsesAnchorCenter};
+  auto override = AutoResolutionOverrideParams{
+      aSizingInput->mFrame, aSizingInput->mAnchorPosResolutionCache};
+  if (aIgnorePositionArea) {
+    override.mPositionAreaInUse = false;
+  }
+  return {aSizingInput->mFrame, aSizingInput->mFrame->StyleDisplay()->mPosition,
+          aSizingInput->mAnchorPosResolutionCache, override};
 }
 
 static bool CheckNextInFlowParenthood(nsIFrame* aFrame, nsIFrame* aParent) {
   nsIFrame* frameNext = aFrame->GetNextInFlow();
   nsIFrame* parentNext = aParent->GetNextInFlow();
   return frameNext && parentNext && frameNext->GetParent() == parentNext;
-}
-
-void ComputeAnchorCenterUsage(
-    const nsIFrame* aFrame,
-    mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache,
-    bool& aInlineUsesAnchorCenter, bool& aBlockUsesAnchorCenter) {
-  aInlineUsesAnchorCenter = false;
-  aBlockUsesAnchorCenter = false;
-  nsIFrame* parent = aFrame->GetParent();
-  if (!parent || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
-      !aAnchorPosResolutionCache ||
-      !aAnchorPosResolutionCache->mDefaultAnchorCache.mAnchor) {
-    return;
-  }
-
-  const auto* stylePos = aFrame->StylePosition();
-
-  auto checkAxis = [&](LogicalAxis aAxis) {
-    StyleAlignFlags alignment =
-        stylePos->UsedSelfAlignment(aAxis, parent->Style());
-    return (alignment & ~StyleAlignFlags::FLAG_BITS) ==
-           StyleAlignFlags::ANCHOR_CENTER;
-  };
-
-  aInlineUsesAnchorCenter = checkAxis(LogicalAxis::Inline);
-  aBlockUsesAnchorCenter = checkAxis(LogicalAxis::Block);
 }
 
 /**
@@ -1755,8 +1719,11 @@ void ReflowInput::InitAbsoluteConstraints(const ReflowInput* aCBReflowInput,
   bool bStartIsAuto = bStartOffset->IsAuto();
   bool bEndIsAuto = bEndOffset->IsAuto();
 
-  mFlags.mIAnchorCenter = anchorResolutionParams.mBaseParams.mIAnchorCenter;
-  mFlags.mBAnchorCenter = anchorResolutionParams.mBaseParams.mBAnchorCenter;
+  // TODO(dshin): Needed anymore?
+  mFlags.mIAnchorCenter = anchorResolutionParams.mBaseParams
+                              .mAutoResolutionOverrideParams.mIAnchorCenter;
+  mFlags.mBAnchorCenter = anchorResolutionParams.mBaseParams
+                              .mAutoResolutionOverrideParams.mBAnchorCenter;
 
   // For anchor-center with both insets auto, insets need to be kept as 0
   // so hypothetical position should be skipped.
