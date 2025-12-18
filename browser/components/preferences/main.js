@@ -687,6 +687,72 @@ Preferences.addSetting({
 });
 
 Preferences.addSetting({
+  id: "translationsDownloadLanguagesFieldset",
+});
+
+Preferences.addSetting({
+  id: "translationsAutomaticTranslationFieldset",
+});
+
+Preferences.addSetting({
+  id: "translationsAlwaysTranslateLanguagesGroup",
+});
+
+Preferences.addSetting({
+  id: "translationsAlwaysTranslateLanguagesRow",
+});
+
+Preferences.addSetting({
+  id: "translationsAlwaysTranslateLanguagesSelect",
+  _value: "",
+  get() {
+    return this._value;
+  },
+  set(val, _deps, setting) {
+    const newValue = val ?? "";
+    if (this._value === newValue) {
+      return this._value;
+    }
+    this._value = newValue;
+    setting?.emit("change");
+    return this._value;
+  },
+});
+
+Preferences.addSetting({
+  id: "translationsAlwaysTranslateLanguagesNoneRow",
+});
+
+Preferences.addSetting({
+  id: "translationsNeverTranslateLanguagesNoneRow",
+});
+
+Preferences.addSetting({
+  id: "translationsNeverTranslateLanguagesGroup",
+});
+
+Preferences.addSetting({
+  id: "translationsNeverTranslateLanguagesRow",
+});
+
+Preferences.addSetting({
+  id: "translationsNeverTranslateLanguagesSelect",
+  _value: "",
+  get() {
+    return this._value;
+  },
+  set(val, _deps, setting) {
+    const newValue = val ?? "";
+    if (this._value === newValue) {
+      return this._value;
+    }
+    this._value = newValue;
+    setting?.emit("change");
+    return this._value;
+  },
+});
+
+Preferences.addSetting({
   id: "translationsManageButton",
   onUserClick(e) {
     e.preventDefault();
@@ -3735,58 +3801,162 @@ SettingGroupManager.registerGroups({
   },
   moreTranslationSettings: {
     inProgress: true,
-    l10nId: "settings-translations-subpage-speed-up-translation-header",
-    headingLevel: 2,
     items: [
       {
-        id: "translationsDownloadLanguagesGroup",
-        control: "moz-box-group",
+        id: "translationsAutomaticTranslationFieldset",
+        l10nId: "settings-translations-subpage-automatic-translation-header",
+        control: "moz-fieldset",
         controlAttrs: {
-          type: "list",
+          headingLevel: 2,
         },
         items: [
           {
-            id: "translationsDownloadLanguagesRow",
-            l10nId: "settings-translations-subpage-download-languages-header",
-            control: "moz-box-item",
+            id: "translationsAlwaysTranslateLanguagesGroup",
+            control: "moz-box-group",
             controlAttrs: {
-              style: "--box-label-font-weight: var(--font-weight-semibold);",
+              type: "list",
             },
             items: [
               {
-                id: "translationsDownloadLanguagesSelect",
-                control: "moz-select",
+                id: "translationsAlwaysTranslateLanguagesRow",
+                l10nId: "settings-translations-subpage-always-translate-header",
+                control: "moz-box-item",
                 controlAttrs: {
-                  slot: "actions",
+                  style:
+                    "--box-label-font-weight: var(--font-weight-semibold);",
                 },
-                options: [
+                items: [
                   {
-                    value: "",
-                    l10nId:
-                      "settings-translations-subpage-download-languages-select-option",
+                    id: "translationsAlwaysTranslateLanguagesSelect",
+                    control: "moz-select",
+                    controlAttrs: {
+                      slot: "actions",
+                    },
+                    options: [
+                      {
+                        value: "",
+                        l10nId:
+                          "settings-translations-subpage-language-select-option",
+                      },
+                    ],
                   },
                 ],
               },
               {
-                id: "translationsDownloadLanguagesButton",
-                l10nId:
-                  "settings-translations-subpage-download-languages-button",
-                control: "moz-button",
+                id: "translationsAlwaysTranslateLanguagesNoneRow",
+                l10nId: "settings-translations-subpage-no-languages-added",
+                control: "moz-box-item",
                 controlAttrs: {
-                  slot: "actions",
-                  type: "ghost",
-                  iconsrc: "chrome://browser/skin/downloads/downloads.svg",
+                  class: "text-deemphasized",
                 },
               },
             ],
           },
           {
-            id: "translationsDownloadLanguagesNoneRow",
-            l10nId: "settings-translations-subpage-no-languages-downloaded",
-            control: "moz-box-item",
+            id: "translationsNeverTranslateLanguagesGroup",
+            control: "moz-box-group",
             controlAttrs: {
-              class: "text-deemphasized",
+              type: "list",
             },
+            items: [
+              {
+                id: "translationsNeverTranslateLanguagesRow",
+                l10nId: "settings-translations-subpage-never-translate-header",
+                control: "moz-box-item",
+                controlAttrs: {
+                  style:
+                    "--box-label-font-weight: var(--font-weight-semibold);",
+                },
+                items: [
+                  {
+                    id: "translationsNeverTranslateLanguagesSelect",
+                    control: "moz-select",
+                    controlAttrs: {
+                      slot: "actions",
+                    },
+                    options: [
+                      {
+                        value: "",
+                        l10nId:
+                          "settings-translations-subpage-language-select-option",
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                id: "translationsNeverTranslateLanguagesNoneRow",
+                l10nId: "settings-translations-subpage-no-languages-added",
+                control: "moz-box-item",
+                controlAttrs: {
+                  class: "text-deemphasized",
+                },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "translationsDownloadLanguagesFieldset",
+        l10nId: "settings-translations-subpage-speed-up-translation-header",
+        control: "moz-fieldset",
+        controlAttrs: {
+          headingLevel: 2,
+        },
+        items: [
+          {
+            id: "translationsDownloadLanguagesGroup",
+            control: "moz-box-group",
+            controlAttrs: {
+              type: "list",
+            },
+            items: [
+              {
+                id: "translationsDownloadLanguagesRow",
+                l10nId:
+                  "settings-translations-subpage-download-languages-header",
+                control: "moz-box-item",
+                controlAttrs: {
+                  style:
+                    "--box-label-font-weight: var(--font-weight-semibold);",
+                },
+                items: [
+                  {
+                    id: "translationsDownloadLanguagesSelect",
+                    control: "moz-select",
+                    controlAttrs: {
+                      slot: "actions",
+                    },
+                    options: [
+                      {
+                        value: "",
+                        l10nId:
+                          "settings-translations-subpage-download-languages-select-option",
+                      },
+                    ],
+                  },
+                  {
+                    id: "translationsDownloadLanguagesButton",
+                    l10nId:
+                      "settings-translations-subpage-download-languages-button",
+                    control: "moz-button",
+                    controlAttrs: {
+                      slot: "actions",
+                      type: "ghost",
+                      iconsrc: "chrome://browser/skin/downloads/downloads.svg",
+                    },
+                  },
+                ],
+              },
+              {
+                id: "translationsDownloadLanguagesNoneRow",
+                l10nId: "settings-translations-subpage-no-languages-downloaded",
+                control: "moz-box-item",
+                controlAttrs: {
+                  class: "text-deemphasized",
+                },
+              },
+            ],
           },
         ],
       },
