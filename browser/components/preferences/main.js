@@ -4035,7 +4035,7 @@ SettingGroupManager.registerGroups({
                     control: "moz-button",
                     controlAttrs: {
                       slot: "actions",
-                      type: "ghost",
+                      type: "icon",
                       iconsrc: "chrome://browser/skin/downloads/downloads.svg",
                     },
                   },

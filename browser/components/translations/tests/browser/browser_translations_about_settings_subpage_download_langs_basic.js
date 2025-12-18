@@ -67,37 +67,49 @@ add_task(async function test_download_languages_basic_flow() {
   ]);
 
   info("Download French language models");
-  const downloadEvents = [
-    translationsSettingsTestUtils.waitForEvent(
-      TranslationsSettingsTestUtils.Events.DownloadButtonDisabled
-    ),
-    translationsSettingsTestUtils.waitForEvent(
-      TranslationsSettingsTestUtils.Events.DownloadStarted,
-      { expectedDetail: { langTag: "fr" } }
-    ),
-    translationsSettingsTestUtils.waitForEvent(
-      TranslationsSettingsTestUtils.Events.DownloadedLanguagesRendered,
-      { expectedDetail: { languages: ["fr"], count: 1, downloading: ["fr"] } }
-    ),
-    translationsSettingsTestUtils.waitForEvent(
-      TranslationsSettingsTestUtils.Events
-        .DownloadedLanguagesSelectOptionsUpdated
-    ),
-    translationsSettingsTestUtils.waitForEvent(
-      TranslationsSettingsTestUtils.Events.DownloadCompleted,
-      { expectedDetail: { langTag: "fr" } }
-    ),
-    translationsSettingsTestUtils.waitForEvent(
-      TranslationsSettingsTestUtils.Events.DownloadedLanguagesRendered,
-      { expectedDetail: { languages: ["fr"], count: 1, downloading: [] } }
-    ),
-    translationsSettingsTestUtils.waitForEvent(
-      TranslationsSettingsTestUtils.Events
-        .DownloadedLanguagesSelectOptionsUpdated
-    ),
-  ];
+  const downloadButtonDisabled = translationsSettingsTestUtils.waitForEvent(
+    TranslationsSettingsTestUtils.Events.DownloadButtonDisabled
+  );
+  const downloadStarted = translationsSettingsTestUtils.waitForEvent(
+    TranslationsSettingsTestUtils.Events.DownloadStarted,
+    { expectedDetail: { langTag: "fr" } }
+  );
+  const renderDownloading = translationsSettingsTestUtils.waitForEvent(
+    TranslationsSettingsTestUtils.Events.DownloadedLanguagesRendered,
+    { expectedDetail: { languages: ["fr"], count: 1, downloading: ["fr"] } }
+  );
+  const optionsDuringDownload = translationsSettingsTestUtils.waitForEvent(
+    TranslationsSettingsTestUtils.Events.DownloadedLanguagesSelectOptionsUpdated
+  );
 
   await click(downloadButton, "Start French download");
+  await Promise.all([
+    downloadButtonDisabled,
+    downloadStarted,
+    renderDownloading,
+    optionsDuringDownload,
+  ]);
+
+  const spinnerButton =
+    translationsSettingsTestUtils.getDownloadRemoveButton("fr");
+  ok(spinnerButton, "Spinner button should be present while downloading");
+  is(
+    spinnerButton.getAttribute("type"),
+    "icon ghost",
+    "Spinner button should use ghost styling while downloading"
+  );
+
+  const downloadCompleted = translationsSettingsTestUtils.waitForEvent(
+    TranslationsSettingsTestUtils.Events.DownloadCompleted,
+    { expectedDetail: { langTag: "fr" } }
+  );
+  const renderDownloaded = translationsSettingsTestUtils.waitForEvent(
+    TranslationsSettingsTestUtils.Events.DownloadedLanguagesRendered,
+    { expectedDetail: { languages: ["fr"], count: 1, downloading: [] } }
+  );
+  const optionsAfterDownload = translationsSettingsTestUtils.waitForEvent(
+    TranslationsSettingsTestUtils.Events.DownloadedLanguagesSelectOptionsUpdated
+  );
   Assert.deepEqual(
     await remoteClients.translationModels.resolvePendingDownloads(
       expectedModelDownloads.length
@@ -105,13 +117,25 @@ add_task(async function test_download_languages_basic_flow() {
     expectedModelDownloads,
     "French models were downloaded."
   );
-  await Promise.all(downloadEvents);
+  await Promise.all([
+    downloadCompleted,
+    renderDownloaded,
+    optionsAfterDownload,
+  ]);
 
   await translationsSettingsTestUtils.assertDownloadedLanguages({
     languages: ["fr"],
     downloading: [],
     count: 1,
   });
+  const removeButton =
+    translationsSettingsTestUtils.getDownloadRemoveButton("fr");
+  ok(removeButton, "Delete icon should be present after download completes");
+  is(
+    removeButton.getAttribute("type"),
+    "icon",
+    "Delete icon should not use ghost styling after download completes"
+  );
   ok(frenchOption.disabled, "French option disabled after download");
 
   info("Open delete confirmation then cancel");
@@ -122,6 +146,11 @@ add_task(async function test_download_languages_basic_flow() {
   ok(
     warningButton.getAttribute("iconsrc")?.includes("warning"),
     "Warning icon should use warning asset"
+  );
+  is(
+    warningButton.getAttribute("type"),
+    "icon ghost",
+    "Warning icon should use ghost styling during delete confirmation"
   );
   const cancelRender = translationsSettingsTestUtils.waitForEvent(
     TranslationsSettingsTestUtils.Events.DownloadedLanguagesRendered,
@@ -141,6 +170,11 @@ add_task(async function test_download_languages_basic_flow() {
   ok(
     deleteIcon.getAttribute("iconsrc")?.includes("delete"),
     "Delete icon should use delete asset"
+  );
+  is(
+    deleteIcon.getAttribute("type"),
+    "icon",
+    "Delete icon should not use ghost styling after canceling delete"
   );
 
   info("Confirm deletion after second attempt");

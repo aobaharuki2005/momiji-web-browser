@@ -900,6 +900,14 @@ class TranslationsSettingsTestUtils {
     );
     await Promise.all([started, renderInProgress, optionsUpdated]);
 
+    const spinnerButton = this.getDownloadRemoveButton(langTag);
+    ok(spinnerButton, "Spinner button should be visible while downloading");
+    is(
+      spinnerButton.getAttribute("type"),
+      "icon ghost",
+      "Spinner button should use ghost styling while downloading"
+    );
+
     const failed = this.waitForEvent(
       TranslationsSettingsTestUtils.Events.DownloadFailed,
       { expectedDetail: { langTag } }
