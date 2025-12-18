@@ -44,6 +44,8 @@
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/SyncRunnable.h"
+// Put DNSLogging.h at the end to avoid LOG being overwritten by other headers.
+#include "DNSLogging.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -532,6 +534,7 @@ void nsDNSAsyncRequest::OnResolveHostComplete(nsHostResolver* resolver,
     }
   }
 
+  LOG(("OnResolveHostComplete: %s", mHost.get()));
   mListener->OnLookupComplete(this, rec, status);
   mListener = nullptr;
 }
@@ -719,7 +722,14 @@ already_AddRefed<nsIDNSService> GetOrInitDNSService() {
   }
 
   nsCOMPtr<nsIDNSService> dns = nullptr;
-  auto initTask = [&dns]() { dns = do_GetService(NS_DNSSERVICE_CID); };
+  auto initTask = [&dns]() {
+    // In case someone inited it while we were waiting
+    if (gInited) {
+      dns = nsDNSService::GetXPCOMSingleton();
+      return;
+    }
+    dns = do_GetService(NS_DNSSERVICE_CID);
+  };
   if (!NS_IsMainThread()) {
     // Forward to the main thread synchronously.
     RefPtr<nsIThread> mainThread = do_GetMainThread();
@@ -1123,6 +1133,7 @@ nsDNSService::AsyncResolve(const nsACString& aHostname,
                            nsICancelable** result) {
   OriginAttributes attrs;
 
+  LOG(("DNSService::AsyncResolve %s", PromiseFlatCString(aHostname).get()));
   if (aArgc == 1) {
     if (!aOriginAttributes.isObject() || !attrs.Init(aCx, aOriginAttributes)) {
       return NS_ERROR_INVALID_ARG;
