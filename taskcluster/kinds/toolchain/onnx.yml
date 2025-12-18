@@ -48,7 +48,7 @@ onnxruntime-x86_64-windows-msvc:
         toolchain:
             - win64-cmake
             - win64-clang
-            - vs-toolchain
+            - win64-vs2022
         fetch:
             - win64-ninja
 
@@ -69,7 +69,7 @@ onnxruntime-i686-windows-msvc:
         toolchain:
             - win64-cmake
             - win64-clang
-            - vs-toolchain
+            - win64-vs2022
         fetch:
             - win64-ninja
 

@@ -774,9 +774,6 @@ win64-vs2022:
         resources:
             - build/vs/vs2022.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
-        toolchain-alias:
-            - vs
-            - vs-toolchain
 
 win64-vs2026:
     description: "VS 2026"
@@ -794,6 +791,9 @@ win64-vs2026:
         resources:
             - build/vs/vs2026.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
+        toolchain-alias:
+            - vs
+            - vs-toolchain
 
 win64-WindowsAppSDK:
     description: "WindowsAppSDK headers and libraries (x86_64)"
@@ -858,7 +858,6 @@ win64-aarch64-vs2022:
         resources:
             - build/vs/vs2022-aarch64.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
-        toolchain-alias: win64-aarch64-vs
 
 win64-aarch64-vs2026:
     description: "VS 2026 (AArch64)"
@@ -876,6 +875,7 @@ win64-aarch64-vs2026:
         resources:
             - build/vs/vs2026-aarch64.yaml
         toolchain-artifact: project/gecko/vs/vs.tar.zst
+        toolchain-alias: win64-aarch64-vs
 
 linux64-afl-instrumentation-4.0:
     description: "AFL++ instrumentation toolchain build"
