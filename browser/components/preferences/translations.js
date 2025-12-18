@@ -64,6 +64,22 @@ const DOWNLOAD_ERROR_ICON = "chrome://global/skin/icons/error.svg";
 /** @type {string} */
 const DOWNLOAD_WARNING_ICON = "chrome://global/skin/icons/warning.svg";
 
+/**
+ * Dispatches a test-only event when running under automation.
+ *
+ * @param {string} name - Event name without the "TranslationsSettingsTest:" prefix.
+ * @param {object} [detail] - Optional event detail.
+ */
+function dispatchTestEvent(name, detail) {
+  if (!globalThis.Cu?.isInAutomation) {
+    return;
+  }
+  const options = detail ? { detail } : undefined;
+  document.dispatchEvent(
+    new CustomEvent(`TranslationsSettingsTest:${name}`, options)
+  );
+}
+
 const TranslationsSettings = {
   /**
    * True once initialization has completed.
@@ -321,6 +337,7 @@ const TranslationsSettings = {
       await this.refreshNeverLanguages();
       this.refreshNeverSites();
       await this.refreshDownloadedLanguages();
+      this.dispatchInitializedTestEvent();
       return;
     }
 
@@ -329,6 +346,7 @@ const TranslationsSettings = {
       await this.refreshNeverLanguages();
       this.refreshNeverSites();
       await this.refreshDownloadedLanguages();
+      this.dispatchInitializedTestEvent();
       return;
     }
 
@@ -399,6 +417,7 @@ const TranslationsSettings = {
       !this.elements?.downloadLanguagesButton ||
       !this.elements?.downloadLanguagesNoneRow
     ) {
+      this.dispatchInitializedTestEvent();
       return;
     }
 
@@ -419,6 +438,7 @@ const TranslationsSettings = {
       this.elements.neverTranslateLanguagesSelect.disabled = true;
       this.elements.downloadLanguagesSelect.disabled = true;
       this.setDownloadButtonDisabledState(true);
+      this.dispatchInitializedTestEvent();
       return;
     }
 
@@ -454,6 +474,15 @@ const TranslationsSettings = {
     await this.refreshNeverLanguages();
     this.refreshNeverSites();
     this.initialized = true;
+
+    this.dispatchInitializedTestEvent();
+  },
+
+  /**
+   * Dispatch the test-only Initialized event and mark the document as ready.
+   */
+  dispatchInitializedTestEvent() {
+    dispatchTestEvent("Initialized");
   },
 
   /**
@@ -688,6 +717,7 @@ const TranslationsSettings = {
     } else {
       this.resetDownloadSelect();
     }
+    dispatchTestEvent("DownloadedLanguagesSelectOptionsUpdated");
   },
 
   /**
@@ -799,6 +829,10 @@ const TranslationsSettings = {
       item.remove();
     }
 
+    const previousEmptyStateVisible =
+      alwaysTranslateLanguagesNoneRow &&
+      !alwaysTranslateLanguagesNoneRow.hidden;
+
     if (alwaysTranslateLanguagesNoneRow) {
       const hasLanguages = !!langTags.length;
       alwaysTranslateLanguagesNoneRow.hidden = hasLanguages;
@@ -855,6 +889,20 @@ const TranslationsSettings = {
       } else {
         alwaysTranslateLanguagesGroup.appendChild(item);
       }
+    }
+
+    dispatchTestEvent("AlwaysLanguagesRendered", {
+      languages: langTags,
+      count: langTags.length,
+    });
+
+    const currentEmptyStateVisible =
+      alwaysTranslateLanguagesNoneRow &&
+      !alwaysTranslateLanguagesNoneRow.hidden;
+    if (previousEmptyStateVisible && !currentEmptyStateVisible) {
+      dispatchTestEvent("AlwaysTranslateLanguagesEmptyStateHidden");
+    } else if (!previousEmptyStateVisible && currentEmptyStateVisible) {
+      dispatchTestEvent("AlwaysTranslateLanguagesEmptyStateShown");
     }
   },
 
@@ -928,6 +976,8 @@ const TranslationsSettings = {
     }
 
     await this.resetAlwaysSelect();
+
+    dispatchTestEvent("AlwaysTranslateLanguagesSelectOptionsUpdated");
   },
 
   /**
@@ -1002,6 +1052,9 @@ const TranslationsSettings = {
       item.remove();
     }
 
+    const previousEmptyStateVisible =
+      neverTranslateLanguagesNoneRow && !neverTranslateLanguagesNoneRow.hidden;
+
     if (neverTranslateLanguagesNoneRow) {
       const hasLanguages = Boolean(langTags.length);
       neverTranslateLanguagesNoneRow.hidden = hasLanguages;
@@ -1055,6 +1108,19 @@ const TranslationsSettings = {
       } else {
         neverTranslateLanguagesGroup.appendChild(item);
       }
+    }
+
+    dispatchTestEvent("NeverLanguagesRendered", {
+      languages: langTags,
+      count: langTags.length,
+    });
+
+    const currentEmptyStateVisible =
+      neverTranslateLanguagesNoneRow && !neverTranslateLanguagesNoneRow.hidden;
+    if (previousEmptyStateVisible && !currentEmptyStateVisible) {
+      dispatchTestEvent("NeverTranslateLanguagesEmptyStateHidden");
+    } else if (!previousEmptyStateVisible && currentEmptyStateVisible) {
+      dispatchTestEvent("NeverTranslateLanguagesEmptyStateShown");
     }
   },
 
@@ -1113,6 +1179,8 @@ const TranslationsSettings = {
     }
 
     await this.resetNeverSelect();
+
+    dispatchTestEvent("NeverTranslateLanguagesSelectOptionsUpdated");
   },
 
   /**
@@ -1152,6 +1220,9 @@ const TranslationsSettings = {
     )) {
       item.remove();
     }
+
+    const previousEmptyStateVisible =
+      neverTranslateSitesNoneRow && !neverTranslateSitesNoneRow.hidden;
 
     if (neverTranslateSitesNoneRow) {
       const hasSites = Boolean(siteOrigins.length);
@@ -1195,6 +1266,19 @@ const TranslationsSettings = {
       } else {
         neverTranslateSitesGroup.appendChild(item);
       }
+    }
+
+    dispatchTestEvent("NeverSitesRendered", {
+      sites: siteOrigins,
+      count: siteOrigins.length,
+    });
+
+    const currentEmptyStateVisible =
+      neverTranslateSitesNoneRow && !neverTranslateSitesNoneRow.hidden;
+    if (previousEmptyStateVisible && !currentEmptyStateVisible) {
+      dispatchTestEvent("NeverTranslateSitesEmptyStateHidden");
+    } else if (!previousEmptyStateVisible && currentEmptyStateVisible) {
+      dispatchTestEvent("NeverTranslateSitesEmptyStateShown");
     }
   },
 
@@ -1262,7 +1346,7 @@ const TranslationsSettings = {
   },
 
   /**
-   * Set the download button state.
+   * Set the download button state and dispatch test events when it changes.
    *
    * @param {boolean} isDisabled
    */
@@ -1272,7 +1356,14 @@ const TranslationsSettings = {
       return;
     }
 
+    const wasDisabled = button.disabled;
     button.disabled = isDisabled;
+
+    if (wasDisabled !== isDisabled) {
+      dispatchTestEvent(
+        isDisabled ? "DownloadButtonDisabled" : "DownloadButtonEnabled"
+      );
+    }
   },
 
   /**
@@ -1297,6 +1388,7 @@ const TranslationsSettings = {
     this.currentDownloadLangTag = langTag;
     this.downloadingLanguageTags.add(langTag);
     this.setDownloadControlsDisabled(true);
+    dispatchTestEvent("DownloadStarted", { langTag });
     await this.renderDownloadLanguages();
     this.updateDownloadSelectOptionState({ preserveSelection: true });
 
@@ -1305,7 +1397,9 @@ const TranslationsSettings = {
       await TranslationsParent.downloadLanguageFiles(langTag);
       this.downloadedLanguageTags.add(langTag);
       downloadSucceeded = true;
+      dispatchTestEvent("DownloadCompleted", { langTag });
     } catch (error) {
+      dispatchTestEvent("DownloadFailed", { langTag });
       console.error("Failed to download language files", error);
       this.downloadFailedLanguageTags.add(langTag);
     } finally {
@@ -1552,6 +1646,9 @@ const TranslationsSettings = {
       return;
     }
 
+    const previousEmptyStateVisible =
+      downloadLanguagesNoneRow && !downloadLanguagesNoneRow.hidden;
+
     for (const item of downloadLanguagesGroup.querySelectorAll(
       `.${DOWNLOAD_LANGUAGE_ITEM_CLASS}`
     )) {
@@ -1577,6 +1674,14 @@ const TranslationsSettings = {
       } else if (!hasLanguages && !downloadLanguagesNoneRow.isConnected) {
         downloadLanguagesGroup.appendChild(downloadLanguagesNoneRow);
       }
+    }
+
+    const currentEmptyStateVisible =
+      downloadLanguagesNoneRow && !downloadLanguagesNoneRow.hidden;
+    if (previousEmptyStateVisible && !currentEmptyStateVisible) {
+      dispatchTestEvent("DownloadedLanguagesEmptyStateHidden");
+    } else if (!previousEmptyStateVisible && currentEmptyStateVisible) {
+      dispatchTestEvent("DownloadedLanguagesEmptyStateShown");
     }
 
     const sortedLangTags = [...langTags].sort((lhs, rhs) => {
@@ -1624,6 +1729,14 @@ const TranslationsSettings = {
         downloadLanguagesGroup.appendChild(item);
       }
     }
+
+    dispatchTestEvent("DownloadedLanguagesRendered", {
+      languages: sortedLangTags,
+      count: sortedLangTags.length,
+      downloading: sortedLangTags.filter(langTag =>
+        this.downloadingLanguageTags.has(langTag)
+      ),
+    });
   },
 
   /**
@@ -1657,6 +1770,7 @@ const TranslationsSettings = {
     try {
       await TranslationsParent.deleteLanguageFiles(langTag);
       this.downloadedLanguageTags.delete(langTag);
+      dispatchTestEvent("DownloadDeleted", { langTag });
     } catch (error) {
       console.error("Failed to remove downloaded language files", error);
       await this.renderDownloadLanguages();
@@ -1698,6 +1812,7 @@ const TranslationsSettings = {
     this.currentDownloadLangTag = langTag;
     this.downloadingLanguageTags.add(langTag);
     this.setDownloadControlsDisabled(true);
+    dispatchTestEvent("DownloadStarted", { langTag });
     await this.renderDownloadLanguages();
     this.updateDownloadSelectOptionState({ preserveSelection: true });
 
@@ -1706,9 +1821,11 @@ const TranslationsSettings = {
       await TranslationsParent.downloadLanguageFiles(langTag);
       this.downloadedLanguageTags.add(langTag);
       downloadSucceeded = true;
+      dispatchTestEvent("DownloadCompleted", { langTag });
     } catch (error) {
       console.error("Failed to download language files", error);
       this.downloadFailedLanguageTags.add(langTag);
+      dispatchTestEvent("DownloadFailed", { langTag });
     } finally {
       this.downloadingLanguageTags.delete(langTag);
       this.currentDownloadLangTag = null;
