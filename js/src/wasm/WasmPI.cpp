@@ -58,24 +58,18 @@ using namespace js::jit;
 #ifdef ENABLE_WASM_JSPI
 namespace js::wasm {
 
-SuspenderObjectData::SuspenderObjectData(void* stackMemory)
-    : stackMemory_(stackMemory),
-      suspendableFP_(nullptr),
-      suspendableSP_(static_cast<uint8_t*>(stackMemory) +
-                     SuspendableStackPlusRedZoneSize),
-      state_(SuspenderState::Initial) {}
-
-void SuspenderObjectData::releaseStackMemory() {
-  MOZ_ASSERT(isMoribund() == !stackMemory_);
-  if (stackMemory_) {
-    js_free(stackMemory_);
-    stackMemory_ = nullptr;
+void SuspenderObject::releaseStackMemory() {
+  void* memory = stackMemory();
+  MOZ_ASSERT(isMoribund() == !memory);
+  if (memory) {
+    js_free(memory);
+    setStackMemory(nullptr);
     setState(SuspenderState::Moribund);
   }
 }
 
 #  if defined(JS_SIMULATOR_ARM64)
-void SuspenderObjectData::switchSimulatorToMain() {
+void SuspenderObject::switchSimulatorToMain() {
   auto* sim = Simulator::Current();
   suspendableSP_ = (void*)sim->xreg(Registers::sp, vixl::Reg31IsStackPointer);
   suspendableFP_ = (void*)sim->xreg(Registers::fp);
@@ -84,7 +78,7 @@ void SuspenderObjectData::switchSimulatorToMain() {
   sim->set_xreg(Registers::fp, (int64_t)mainFP_);
 }
 
-void SuspenderObjectData::switchSimulatorToSuspendable() {
+void SuspenderObject::switchSimulatorToSuspendable() {
   auto* sim = Simulator::Current();
   mainSP_ = (void*)sim->xreg(Registers::sp, vixl::Reg31IsStackPointer);
   mainFP_ = (void*)sim->xreg(Registers::fp);
@@ -94,14 +88,14 @@ void SuspenderObjectData::switchSimulatorToSuspendable() {
 }
 
 #  elif defined(JS_SIMULATOR_ARM)
-void SuspenderObjectData::switchSimulatorToMain() {
+void SuspenderObject::switchSimulatorToMain() {
   suspendableSP_ = (void*)Simulator::Current()->get_register(Simulator::sp);
   suspendableFP_ = (void*)Simulator::Current()->get_register(Simulator::fp);
   Simulator::Current()->set_register(Simulator::sp, (int)mainSP_);
   Simulator::Current()->set_register(Simulator::fp, (int)mainFP_);
 }
 
-void SuspenderObjectData::switchSimulatorToSuspendable() {
+void SuspenderObject::switchSimulatorToSuspendable() {
   mainSP_ = (void*)Simulator::Current()->get_register(Simulator::sp);
   mainFP_ = (void*)Simulator::Current()->get_register(Simulator::fp);
   Simulator::Current()->set_register(Simulator::sp, (int)suspendableSP_);
@@ -110,7 +104,7 @@ void SuspenderObjectData::switchSimulatorToSuspendable() {
 
 #  elif defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
       defined(JS_SIMULATOR_MIPS64)
-void SuspenderObjectData::switchSimulatorToMain() {
+void SuspenderObject::switchSimulatorToMain() {
   suspendableSP_ = (void*)Simulator::Current()->getRegister(Simulator::sp);
   suspendableFP_ = (void*)Simulator::Current()->getRegister(Simulator::fp);
   Simulator::Current()->setRegister(
@@ -121,7 +115,7 @@ void SuspenderObjectData::switchSimulatorToMain() {
       static_cast<int64_t>(reinterpret_cast<uintptr_t>(mainFP_)));
 }
 
-void SuspenderObjectData::switchSimulatorToSuspendable() {
+void SuspenderObject::switchSimulatorToSuspendable() {
   mainSP_ = (void*)Simulator::Current()->getRegister(Simulator::sp);
   mainFP_ = (void*)Simulator::Current()->getRegister(Simulator::fp);
   Simulator::Current()->setRegister(
@@ -140,7 +134,7 @@ const size_t CONTINUE_ON_SUSPENDABLE_SLOT = 1;
 const size_t PROMISE_SLOT = 2;
 
 static JitActivation* FindSuspendableStackActivation(
-    JSTracer* trc, const SuspenderObjectData& data) {
+    JSTracer* trc, SuspenderObject* suspender) {
   // The jitActivation.refNoCheck() can be used since during trace/marking
   // the main thread will be paused.
   JitActivation* activation =
@@ -152,7 +146,7 @@ static JitActivation* FindSuspendableStackActivation(
       // Scan all JitActivations to find one that starts with suspended stack
       // frame pointer.
       WasmFrameIter iter(activation);
-      if (!iter.done() && data.hasFramePointer(iter.frame())) {
+      if (!iter.done() && suspender->hasFramePointer(iter.frame())) {
         return activation;
       }
     }
@@ -161,22 +155,23 @@ static JitActivation* FindSuspendableStackActivation(
   MOZ_CRASH("Suspendable stack activation not found");
 }
 
-void TraceSuspendableStack(JSTracer* trc, const SuspenderObjectData& data) {
-  MOZ_ASSERT(data.isTraceable());
-  void* exitFP = data.suspendableExitFP();
+void TraceSuspendableStack(JSTracer* trc, SuspenderObject* suspender) {
+  MOZ_ASSERT(suspender->isTraceable());
+  void* exitFP = suspender->suspendableExitFP();
 
   // Create and iterator for wasm frames:
-  //  - If a stack entry for suspended stack exists, the data.suspendableFP()
-  //    and data.suspendedReturnAddress() provide start of the frames.
+  //  - If a stack entry for suspended stack exists, the
+  //  suspender->suspendableFP()
+  //    and suspender->suspendedReturnAddress() provide start of the frames.
   //  - Otherwise, the stack is the part of the main stack, the context
   //    JitActivation frames will be used to trace.
   WasmFrameIter iter =
-      data.isSuspended()
+      suspender->isSuspended()
           ? WasmFrameIter(
-                static_cast<FrameWithInstances*>(data.suspendableFP()),
-                data.suspendedReturnAddress())
-          : WasmFrameIter(FindSuspendableStackActivation(trc, data));
-  MOZ_ASSERT_IF(data.isSuspended(), iter.currentFrameStackSwitched());
+                static_cast<FrameWithInstances*>(suspender->suspendableFP()),
+                suspender->suspendedReturnAddress())
+          : WasmFrameIter(FindSuspendableStackActivation(trc, suspender));
+  MOZ_ASSERT_IF(suspender->isSuspended(), iter.currentFrameStackSwitched());
   uintptr_t highestByteVisitedInPrevWasmFrame = 0;
   while (true) {
     MOZ_ASSERT(!iter.done());
@@ -211,6 +206,20 @@ SuspenderObject* SuspenderObject::create(JSContext* cx) {
     return nullptr;
   }
 
+  // Initialize all of the slots
+  suspender->initFixedSlot(StateSlot, Int32Value(SuspenderState::Moribund));
+  suspender->initFixedSlot(PromisingPromiseSlot, NullValue());
+  suspender->initFixedSlot(SuspendingReturnTypeSlot,
+                           Int32Value(int32_t(ReturnType::Unknown)));
+  suspender->initFixedSlot(StackMemorySlot, PrivateValue(nullptr));
+  suspender->initFixedSlot(MainFPSlot, PrivateValue(nullptr));
+  suspender->initFixedSlot(MainSPSlot, PrivateValue(nullptr));
+  suspender->initFixedSlot(SuspendableFPSlot, PrivateValue(nullptr));
+  suspender->initFixedSlot(SuspendableSPSlot, PrivateValue(nullptr));
+  suspender->initFixedSlot(SuspendableExitFPSlot, PrivateValue(nullptr));
+  suspender->initFixedSlot(SuspendedRASlot, PrivateValue(nullptr));
+  suspender->initFixedSlot(MainExitFPSlot, PrivateValue(nullptr));
+
   void* stackMemory = js_malloc(SuspendableStackPlusRedZoneSize);
   if (!stackMemory) {
     ReportOutOfMemory(cx);
@@ -223,35 +232,15 @@ SuspenderObject* SuspenderObject::create(JSContext* cx) {
     return nullptr;
   }
 
-  SuspenderObjectData* data = js_new<SuspenderObjectData>(stackMemory);
-  if (!data) {
-    cx->wasm().suspenders_.remove(suspender);
-    js_free(stackMemory);
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-  MOZ_RELEASE_ASSERT(data->state() != SuspenderState::Moribund);
+  // We are now fully constructed and can transition states
+  suspender->setStackMemory(stackMemory);
+  suspender->setFixedSlot(SuspendableSPSlot,
+                          PrivateValue(static_cast<uint8_t*>(stackMemory) +
+                                       SuspendableStackPlusRedZoneSize));
+  suspender->setState(SuspenderState::Initial);
 
-  suspender->initReservedSlot(DataSlot, PrivateValue(data));
-  suspender->initReservedSlot(PromisingPromiseSlot, NullValue());
-  suspender->initReservedSlot(SuspendingReturnTypeSlot,
-                              Int32Value(int32_t(ReturnType::Unknown)));
   return suspender;
 }
-
-JS::NativeStackLimit SuspenderObject::stackMemoryBase() const {
-  return ((uintptr_t)data()->stackMemory()) + SuspendableStackPlusRedZoneSize;
-}
-
-JS::NativeStackLimit SuspenderObject::stackMemoryLimitForSystem() const {
-  return JS::NativeStackLimit(data()->stackMemory());
-}
-
-JS::NativeStackLimit SuspenderObject::stackMemoryLimitForJit() const {
-  return stackMemoryLimitForSystem() + SuspendableRedZoneSize;
-}
-
-static_assert(SuspenderObjectDataSlot == SuspenderObject::DataSlot);
 
 const JSClass SuspenderObject::class_ = {
     "SuspenderObject",
@@ -281,33 +270,24 @@ const ClassExtension SuspenderObject::classExt_ = {
 /* static */
 void SuspenderObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   SuspenderObject& suspender = obj->as<SuspenderObject>();
-  if (!suspender.hasData()) {
-    return;
-  }
-  SuspenderObjectData* data = suspender.data();
-  if (!data->isMoribund()) {
+  if (!suspender.isMoribund()) {
     gcx->runtime()->mainContextFromOwnThread()->wasm().suspenders_.remove(
         &suspender);
   }
-  data->releaseStackMemory();
-  MOZ_ASSERT(data->isMoribund());
-  js_free(data);
+  suspender.releaseStackMemory();
+  MOZ_ASSERT(suspender.isMoribund());
 }
 
 /* static */
 void SuspenderObject::trace(JSTracer* trc, JSObject* obj) {
   SuspenderObject& suspender = obj->as<SuspenderObject>();
-  if (!suspender.hasData()) {
-    return;
-  }
-  SuspenderObjectData& data = *suspender.data();
-  // The SuspenderObjectData refers stacks frames that need to be traced
+  // The SuspenderObject refers stacks frames that need to be traced
   // only during major GC to determine if SuspenderObject content is
   // reachable from JS.
-  if (!data.isTraceable() || trc->isTenuringTracer()) {
+  if (!suspender.isTraceable() || trc->isTenuringTracer()) {
     return;
   }
-  TraceSuspendableStack(trc, data);
+  TraceSuspendableStack(trc, &suspender);
 }
 
 /* static */
@@ -322,26 +302,25 @@ size_t SuspenderObject::moved(JSObject* obj, JSObject* old) {
 void SuspenderObject::setMoribund(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
   cx->wasm().leaveSuspendableStack(cx);
-  SuspenderObjectData* data = this->data();
-  if (!data->isMoribund()) {
+  if (!this->isMoribund()) {
     cx->wasm().suspenders_.remove(this);
   }
-  data->releaseStackMemory();
-  MOZ_ASSERT(data->isMoribund());
+  this->releaseStackMemory();
+  MOZ_ASSERT(this->isMoribund());
 }
 
 void SuspenderObject::setActive(JSContext* cx) {
-  data()->setState(SuspenderState::Active);
+  this->setState(SuspenderState::Active);
   cx->wasm().enterSuspendableStack(cx, this);
 }
 
 void SuspenderObject::setSuspended(JSContext* cx) {
-  data()->setState(SuspenderState::Suspended);
+  this->setState(SuspenderState::Suspended);
   cx->wasm().leaveSuspendableStack(cx);
 }
 
 void SuspenderObject::setCalledOnMain(JSContext* cx) {
-  data()->setState(SuspenderState::CalledOnMain);
+  this->setState(SuspenderState::CalledOnMain);
   cx->wasm().leaveSuspendableStack(cx);
 }
 
@@ -413,17 +392,15 @@ void SuspenderObject::leave(JSContext* cx) {
 
 void SuspenderObject::forwardToSuspendable() {
   // Injecting suspendable stack back into main one at the exit frame.
-  SuspenderObjectData* data = this->data();
-  uint8_t* mainExitFP = (uint8_t*)data->mainExitFP();
+  uint8_t* mainExitFP = (uint8_t*)this->mainExitFP();
   *reinterpret_cast<void**>(mainExitFP + Frame::callerFPOffset()) =
-      data->suspendableFP();
+      this->suspendableFP();
   *reinterpret_cast<void**>(mainExitFP + Frame::returnAddressOffset()) =
-      data->suspendedReturnAddress();
+      this->suspendedReturnAddress();
 }
 
 bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
   Rooted<SuspenderObject*> suspender(cx, cx->wasm().activeSuspender());
-  SuspenderObjectData* stacks = suspender->data();
 
   MOZ_ASSERT(suspender->state() == SuspenderState::Active);
   suspender->setCalledOnMain(cx);
@@ -434,24 +411,23 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
         defined(JS_SIMULATOR_MIPS64)
   // The simulator is using its own stack, however switching is needed for
   // virtual registers.
-  stacks->switchSimulatorToMain();
+  suspender->switchSimulatorToMain();
   bool res = fn(data);
-  stacks->switchSimulatorToSuspendable();
+  suspender->switchSimulatorToSuspendable();
 #    else
 #      error "not supported"
 #    endif
 #  else
   // The platform specific code below inserts offsets as strings into inline
   // assembly. CHECK_OFFSETS verifies the specified literals in macros below.
-#    define CHECK_OFFSETS(MAIN_FP_OFFSET, MAIN_SP_OFFSET,               \
-                          SUSPENDABLE_FP_OFFSET, SUSPENDABLE_SP_OFFSET) \
-      static_assert(                                                    \
-          (MAIN_FP_OFFSET) == SuspenderObjectData::offsetOfMainFP() &&  \
-          (MAIN_SP_OFFSET) == SuspenderObjectData::offsetOfMainSP() &&  \
-          (SUSPENDABLE_FP_OFFSET) ==                                    \
-              SuspenderObjectData::offsetOfSuspendableFP() &&           \
-          (SUSPENDABLE_SP_OFFSET) ==                                    \
-              SuspenderObjectData::offsetOfSuspendableSP());
+#    define CHECK_OFFSETS(MAIN_FP_OFFSET, MAIN_SP_OFFSET,                    \
+                          SUSPENDABLE_FP_OFFSET, SUSPENDABLE_SP_OFFSET)      \
+      static_assert((MAIN_FP_OFFSET) == SuspenderObject::offsetOfMainFP() && \
+                    (MAIN_SP_OFFSET) == SuspenderObject::offsetOfMainSP() && \
+                    (SUSPENDABLE_FP_OFFSET) ==                               \
+                        SuspenderObject::offsetOfSuspendableFP() &&          \
+                    (SUSPENDABLE_SP_OFFSET) ==                               \
+                        SuspenderObject::offsetOfSuspendableSP());
 
   // The following assembly code temporarily switches FP/SP pointers to be on
   // main stack, while maintaining frames linking.  After
@@ -466,6 +442,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
   // `Registers::VolatileMask` (in the assembler complex) is useful in that it
   // lists the caller-saved registers.
 
+  SuspenderObject* stacks = suspender.get();
   uintptr_t res;
 
   // clang-format off
@@ -509,7 +486,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "x0", "x3", "x27", CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(8, 16, 24, 32);
+  INLINED_ASM(56, 64, 72, 80);
 
 #  elif defined(_WIN64) && defined(_M_X64)
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
@@ -540,7 +517,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "rcx", "rax", "cc", "memory")
-  INLINED_ASM(8, 16, 24, 32);
+  INLINED_ASM(56, 64, 72, 80);
 
 #  elif defined(__x86_64__)
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
@@ -571,7 +548,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "rdi", "rax", "cc", "memory")
-  INLINED_ASM(8, 16, 24, 32);
+  INLINED_ASM(56, 64, 72, 80);
 #  elif defined(__i386__) || defined(_M_IX86)
 #    define CALLER_SAVED_REGS "eax", "ecx", "edx"
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
@@ -600,7 +577,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : CALLER_SAVED_REGS, "cc", "memory")
-  INLINED_ASM(4, 8, 12, 16);
+  INLINED_ASM(48, 56, 64, 72);
 
 #  elif defined(__arm__)
 #    define INLINED_ASM(MAIN_FP, MAIN_SP, SUSPENDABLE_FP, SUSPENDABLE_SP) \
@@ -632,7 +609,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "r0", "r1", "r2", "r3", "cc", "memory")
-  INLINED_ASM(4, 8, 12, 16);
+  INLINED_ASM(48, 56, 64, 72);
 
 #elif defined(__loongarch_lp64)
 #    define CALLER_SAVED_REGS \
@@ -669,7 +646,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "$a0", "$a3", CALLER_SAVED_REGS, "cc", "memory")
-INLINED_ASM(8, 16, 24, 32);
+INLINED_ASM(56, 64, 72, 80);
 
 #  elif defined(__riscv) && defined(__riscv_xlen) && (__riscv_xlen == 64)
 #    define CALLER_SAVED_REGS                                             \
@@ -709,7 +686,7 @@ INLINED_ASM(8, 16, 24, 32);
           : "=r"(res)                                                     \
           : "r"(stacks), "r"(fn), "r"(data)                               \
           : "ra", "a0", "a3", CALLER_SAVED_REGS, "cc", "memory")
-INLINED_ASM(8, 16, 24, 32);
+INLINED_ASM(56, 64, 72, 80);
 
 #  elif defined(__mips64)
 #    define CALLER_SAVED_REGS                                             \

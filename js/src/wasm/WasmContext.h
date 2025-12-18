@@ -29,7 +29,6 @@ namespace js::wasm {
 
 #ifdef ENABLE_WASM_JSPI
 class SuspenderObject;
-class SuspenderObjectData;
 using SuspenderObjectSet =
     HashSet<SuspenderObject*, PointerHasher<SuspenderObject*>,
             SystemAllocPolicy>;

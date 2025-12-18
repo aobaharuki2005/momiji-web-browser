@@ -89,7 +89,7 @@ void Context::traceRoots(JSTracer* trc) {
   for (auto iter = suspenders_.iter(); !iter.done(); iter.next()) {
     SuspenderObject* object = iter.get();
     if (object->state() == SuspenderState::Suspended) {
-      TraceSuspendableStack(trc, *object->data());
+      TraceSuspendableStack(trc, object);
     }
   }
 }

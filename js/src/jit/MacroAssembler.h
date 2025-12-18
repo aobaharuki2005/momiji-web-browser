@@ -5924,6 +5924,15 @@ class MacroAssembler : public MacroAssemblerSpecific {
     storePtr(getStackPointer(), t);
   }
 
+  template <typename T>
+  void loadStackPtrFromPrivateValue(T t) {
+    loadStackPtr(t);
+  }
+  template <typename T>
+  void storeStackPtrToPrivateValue(T t) {
+    storeStackPtr(t);
+  }
+
   // StackPointer testing functions.
   // On ARM64, sp can function as the zero register depending on context.
   // Code shared across platforms must use these functions to be valid.

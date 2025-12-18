@@ -112,14 +112,12 @@ class Context;
 
 #ifdef ENABLE_WASM_JSPI
 
-static const uint32_t SuspenderObjectDataSlot = 0;
-
-enum SuspenderState {
-  // The suspender's stack hasn't been entered yet.
-  Initial,
-  // The suspender's stack has returned from the root frame and has been
+enum SuspenderState : int32_t {
+  // The suspender's has no stack or the stack has finished and has been
   // destroyed.
   Moribund,
+  // The suspender's stack hasn't been entered yet.
+  Initial,
   // The suspender's stack is active and is the currently active stack.
   Active,
   // The suspender's stack has been suspended and is no longer the active stack
@@ -130,154 +128,63 @@ enum SuspenderState {
   CalledOnMain,
 };
 
-class SuspenderObjectData {
-  void* stackMemory_;
-
-  // Stored main stack FP register.
-  void* mainFP_;
-
-  // Stored main stack SP register.
-  void* mainSP_;
-
-  // Stored suspendable stack FP register.
-  void* suspendableFP_;
-
-  // Stored suspendable stack SP register.
-  void* suspendableSP_;
-
-  // Stored suspendable stack exit/bottom frame pointer.
-  void* suspendableExitFP_;
-
-  // Stored return address for return to suspendable stack.
-  void* suspendedReturnAddress_;
-
-  // Stored main stack exit/top frame pointer.
-  void* mainExitFP_;
-
-  SuspenderState state_;
-
- public:
-  explicit SuspenderObjectData(void* stackMemory);
-
-  inline SuspenderState state() const { return state_; }
-  void setState(SuspenderState state) { state_ = state; }
-
-  // This suspender can be traced if it's not 'Initial' or 'Moribund'.
-  bool isTraceable() const {
-    return state_ == SuspenderState::Active ||
-           state_ == SuspenderState::Suspended ||
-           state_ == SuspenderState::CalledOnMain;
-  }
-  bool isMoribund() const { return state_ == SuspenderState::Moribund; }
-  bool isActive() const { return state_ == SuspenderState::Active; }
-  bool isSuspended() const { return state_ == SuspenderState::Suspended; }
-  bool isCalledOnMain() const { return state_ == SuspenderState::CalledOnMain; }
-
-  bool hasFramePointer(void* fp) const {
-    MOZ_ASSERT(!isMoribund());
-    return (uintptr_t)stackMemory_ <= (uintptr_t)fp &&
-           (uintptr_t)fp <
-               (uintptr_t)stackMemory_ + SuspendableStackPlusRedZoneSize;
-  }
-
-  void* stackMemory() const {
-    MOZ_ASSERT(!isMoribund());
-    return stackMemory_;
-  }
-
-  void* mainFP() const {
-    MOZ_ASSERT(isActive());
-    return mainFP_;
-  }
-  void* mainSP() const {
-    MOZ_ASSERT(isActive());
-    return mainSP_;
-  }
-  void* mainExitFP() const {
-    MOZ_ASSERT(isSuspended());
-    return mainExitFP_;
-  }
-  void* suspendableFP() const {
-    MOZ_ASSERT(isSuspended());
-    return suspendableFP_;
-  }
-  void* suspendableSP() const {
-    MOZ_ASSERT(isSuspended());
-    return suspendableSP_;
-  }
-  void* suspendedReturnAddress() const {
-    MOZ_ASSERT(isSuspended());
-    return suspendedReturnAddress_;
-  }
-  void* suspendableExitFP() const {
-    // We always have the root frame when we've been entered into, which is
-    // when we're traceable.
-    MOZ_ASSERT(isTraceable());
-    return suspendableExitFP_;
-  }
-
-  void releaseStackMemory();
-
-#  if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) ||       \
-      defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
-      defined(JS_SIMULATOR_MIPS64)
-  void switchSimulatorToMain();
-  void switchSimulatorToSuspendable();
-#  endif
-
-  static constexpr size_t offsetOfMainFP() {
-    return offsetof(SuspenderObjectData, mainFP_);
-  }
-
-  static constexpr size_t offsetOfMainSP() {
-    return offsetof(SuspenderObjectData, mainSP_);
-  }
-
-  static constexpr size_t offsetOfSuspendableFP() {
-    return offsetof(SuspenderObjectData, suspendableFP_);
-  }
-
-  static constexpr size_t offsetOfSuspendableSP() {
-    return offsetof(SuspenderObjectData, suspendableSP_);
-  }
-
-  static constexpr size_t offsetOfSuspendableExitFP() {
-    return offsetof(SuspenderObjectData, suspendableExitFP_);
-  }
-
-  static constexpr size_t offsetOfMainExitFP() {
-    return offsetof(SuspenderObjectData, mainExitFP_);
-  }
-
-  static constexpr size_t offsetOfSuspendedReturnAddress() {
-    return offsetof(SuspenderObjectData, suspendedReturnAddress_);
-  }
-};
-
 class SuspenderObject : public NativeObject {
  public:
   static const JSClass class_;
 
-  enum { DataSlot, PromisingPromiseSlot, SuspendingReturnTypeSlot, SlotCount };
+  enum {
+    StateSlot,
+
+    PromisingPromiseSlot,
+    SuspendingReturnTypeSlot,
+
+    StackMemorySlot,
+    MainFPSlot,
+    MainSPSlot,
+    SuspendableFPSlot,
+    SuspendableSPSlot,
+    SuspendableExitFPSlot,
+    SuspendedRASlot,
+    MainExitFPSlot,
+
+    SlotCount,
+  };
 
   enum class ReturnType : int32_t { Unknown, Promise, Exception };
 
   static SuspenderObject* create(JSContext* cx);
 
-  PromiseObject* promisingPromise() const {
-    return &getReservedSlot(PromisingPromiseSlot)
-                .toObject()
-                .as<PromiseObject>();
+  SuspenderState state() const {
+    return (SuspenderState)getFixedSlot(StateSlot).toInt32();
+  }
+  void setState(SuspenderState state) {
+    setFixedSlot(StateSlot, JS::Int32Value((int32_t)state));
   }
 
+  // This suspender can be traced if it's not 'Initial' or 'Moribund'.
+  bool isTraceable() const {
+    SuspenderState current = state();
+    return current == SuspenderState::Active ||
+           current == SuspenderState::Suspended ||
+           current == SuspenderState::CalledOnMain;
+  }
+  bool isMoribund() const { return state() == SuspenderState::Moribund; }
+  bool isActive() const { return state() == SuspenderState::Active; }
+  bool isSuspended() const { return state() == SuspenderState::Suspended; }
+  bool isCalledOnMain() const {
+    return state() == SuspenderState::CalledOnMain;
+  }
+
+  PromiseObject* promisingPromise() const {
+    return &getFixedSlot(PromisingPromiseSlot).toObject().as<PromiseObject>();
+  }
   void setPromisingPromise(Handle<PromiseObject*> promise) {
-    setReservedSlot(PromisingPromiseSlot, ObjectOrNullValue(promise));
+    setFixedSlot(PromisingPromiseSlot, ObjectOrNullValue(promise));
   }
 
   ReturnType suspendingReturnType() const {
-    return ReturnType(getReservedSlot(SuspendingReturnTypeSlot).toInt32());
+    return ReturnType(getFixedSlot(SuspendingReturnTypeSlot).toInt32());
   }
-
   void setSuspendingReturnType(ReturnType type) {
     // The SuspendingReturnTypeSlot will change after result is defined,
     // and becomes invalid after GetSuspendingPromiseResult. The assert is
@@ -285,24 +192,102 @@ class SuspenderObject : public NativeObject {
     MOZ_ASSERT((type == ReturnType::Unknown) !=
                (suspendingReturnType() == ReturnType::Unknown));
 
-    setReservedSlot(SuspendingReturnTypeSlot, Int32Value(int32_t(type)));
+    setFixedSlot(SuspendingReturnTypeSlot, Int32Value(int32_t(type)));
   }
 
-  JS::NativeStackLimit stackMemoryBase() const;
-  JS::NativeStackLimit stackMemoryLimitForSystem() const;
-  JS::NativeStackLimit stackMemoryLimitForJit() const;
-
-  SuspenderState state() { return data()->state(); }
-
-  inline bool hasData() { return !getReservedSlot(DataSlot).isUndefined(); }
-
-  inline SuspenderObjectData* data() {
-    return static_cast<SuspenderObjectData*>(
-        getReservedSlot(DataSlot).toPrivate());
+  // Pointer to the beginning of the stack memory allocation.
+  void* stackMemory() const {
+    return getFixedSlot(StackMemorySlot).toPrivate();
   }
-  inline const SuspenderObjectData* data() const {
-    return static_cast<const SuspenderObjectData*>(
-        getReservedSlot(DataSlot).toPrivate());
+  void setStackMemory(void* stackMemory) {
+    setFixedSlot(StackMemorySlot, PrivateValue(stackMemory));
+  }
+
+  // The logical beginning or bottom of the stack, which is the physically
+  // highest memory address in the stack allocation.
+  JS::NativeStackLimit stackMemoryBase() const {
+    return ((uintptr_t)stackMemory()) + SuspendableStackPlusRedZoneSize;
+  }
+  // The logical end or top of the stack for system code, which is the
+  // physically lowest memory address in the stack allocation. This does not
+  // include any 'red zone' space, and so it is not safe to use if a stub
+  // or OS interrupt handler could run on the stack. Use
+  // `stackMemoryLimitForJit` instead.
+  JS::NativeStackLimit stackMemoryLimitForSystem() const {
+    return JS::NativeStackLimit(stackMemory());
+  }
+  // The logical end or top of the stack for JIT code, which is the
+  // physically lowest memory address in the stack allocation. This does
+  // include 'red zone' space for running stubs or OS interrupt handlers.
+  JS::NativeStackLimit stackMemoryLimitForJit() const {
+    return stackMemoryLimitForSystem() + SuspendableRedZoneSize;
+  }
+
+  bool hasFramePointer(void* fp) const {
+    MOZ_ASSERT(!isMoribund());
+    void* base = stackMemory();
+    return (uintptr_t)base <= (uintptr_t)fp &&
+           (uintptr_t)fp < (uintptr_t)base + SuspendableStackPlusRedZoneSize;
+  }
+
+  // Stored main stack FP register.
+  void* mainFP() const {
+    MOZ_ASSERT(isActive());
+    return getFixedSlot(MainFPSlot).toPrivate();
+  }
+  // Stored main stack SP register.
+  void* mainSP() const {
+    MOZ_ASSERT(isActive());
+    return getFixedSlot(MainSPSlot).toPrivate();
+  }
+  // Stored main stack exit/top frame pointer.
+  void* mainExitFP() const {
+    MOZ_ASSERT(isSuspended());
+    return getFixedSlot(MainExitFPSlot).toPrivate();
+  }
+  // Stored suspendable stack FP register.
+  void* suspendableFP() const {
+    MOZ_ASSERT(isSuspended());
+    return getFixedSlot(SuspendableFPSlot).toPrivate();
+  }
+  // Stored suspendable stack SP register.
+  void* suspendableSP() const {
+    MOZ_ASSERT(isSuspended());
+    return getFixedSlot(SuspendableSPSlot).toPrivate();
+  }
+  // Stored return address for return to suspendable stack.
+  void* suspendedReturnAddress() const {
+    MOZ_ASSERT(isSuspended());
+    return getFixedSlot(SuspendedRASlot).toPrivate();
+  }
+  // Stored suspendable stack exit/bottom frame pointer.
+  void* suspendableExitFP() const {
+    // We always have the root frame when we've been entered into, which is
+    // when we're traceable.
+    MOZ_ASSERT(isTraceable());
+    return getFixedSlot(SuspendableExitFPSlot).toPrivate();
+  }
+
+  static constexpr size_t offsetOfMainFP() {
+    return getFixedSlotOffset(MainFPSlot);
+  }
+  static constexpr size_t offsetOfMainSP() {
+    return getFixedSlotOffset(MainSPSlot);
+  }
+  static constexpr size_t offsetOfSuspendableFP() {
+    return getFixedSlotOffset(SuspendableFPSlot);
+  }
+  static constexpr size_t offsetOfSuspendableSP() {
+    return getFixedSlotOffset(SuspendableSPSlot);
+  }
+  static constexpr size_t offsetOfSuspendableExitFP() {
+    return getFixedSlotOffset(SuspendableExitFPSlot);
+  }
+  static constexpr size_t offsetOfMainExitFP() {
+    return getFixedSlotOffset(MainExitFPSlot);
+  }
+  static constexpr size_t offsetOfSuspendedReturnAddress() {
+    return getFixedSlotOffset(SuspendedRASlot);
   }
 
   void setMoribund(JSContext* cx);
@@ -314,6 +299,15 @@ class SuspenderObject : public NativeObject {
   void suspend(JSContext* cx);
   void resume(JSContext* cx);
   void leave(JSContext* cx);
+
+  void releaseStackMemory();
+
+#  if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) ||       \
+      defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
+      defined(JS_SIMULATOR_MIPS64)
+  void switchSimulatorToMain();
+  void switchSimulatorToSuspendable();
+#  endif
 
   // Modifies frames to inject the suspendable stack back into the main one.
   void forwardToSuspendable();
@@ -364,7 +358,7 @@ int32_t SetPromisingPromiseResults(Instance* instance,
 void UpdateSuspenderState(Instance* instance, SuspenderObject* suspender,
                           UpdateSuspenderStateAction action);
 
-void TraceSuspendableStack(JSTracer* trc, const SuspenderObjectData& data);
+void TraceSuspendableStack(JSTracer* trc, SuspenderObject* suspender);
 
 #endif  // ENABLE_WASM_JSPI
 
