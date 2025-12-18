@@ -55,9 +55,9 @@ class Context {
 
 #ifdef ENABLE_WASM_JSPI
   SuspenderObject* activeSuspender();
-  void setActiveSuspender(SuspenderObject* obj);
 
-  void enterSuspendableStack(JS::NativeStackLimit newStackLimit);
+  void enterSuspendableStack(SuspenderObject* suspender,
+                             JS::NativeStackLimit newStackLimit);
   void leaveSuspendableStack(JSContext* cx);
 
   void trace(JSTracer* trc);

@@ -56,10 +56,6 @@ void Context::initStackLimit(JSContext* cx) {
 #ifdef ENABLE_WASM_JSPI
 SuspenderObject* Context::activeSuspender() { return activeSuspender_; }
 
-void Context::setActiveSuspender(SuspenderObject* obj) {
-  activeSuspender_.set(obj);
-}
-
 void Context::trace(JSTracer* trc) {
   if (activeSuspender_) {
     TraceEdge(trc, &activeSuspender_, "suspender");
@@ -80,14 +76,19 @@ void Context::traceRoots(JSTracer* trc) {
   }
 }
 
-void Context::enterSuspendableStack(JS::NativeStackLimit newStackLimit) {
+void Context::enterSuspendableStack(SuspenderObject* suspender,
+                                    JS::NativeStackLimit newStackLimit) {
   MOZ_ASSERT(onSuspendableStack == 0);
+  MOZ_ASSERT(!activeSuspender_);
+  activeSuspender_ = suspender;
   onSuspendableStack = 1;
   stackLimit = newStackLimit;
 }
 
 void Context::leaveSuspendableStack(JSContext* cx) {
   MOZ_ASSERT(onSuspendableStack != 0);
+  MOZ_ASSERT(activeSuspender_);
+  activeSuspender_ = nullptr;
   onSuspendableStack = 0;
   initStackLimit(cx);
 }

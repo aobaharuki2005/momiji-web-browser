@@ -357,7 +357,7 @@ void SuspenderObject::setMoribund(JSContext* cx) {
 
 void SuspenderObject::setActive(JSContext* cx) {
   data()->setState(SuspenderState::Active);
-  cx->wasm().enterSuspendableStack(getStackMemoryLimit());
+  cx->wasm().enterSuspendableStack(this, getStackMemoryLimit());
 #  if defined(_WIN32)
   data()->updateTIBStackFields();
 #  endif
@@ -373,7 +373,6 @@ void SuspenderObject::setSuspended(JSContext* cx) {
 
 void SuspenderObject::enter(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Initial);
-  cx->wasm().setActiveSuspender(this);
   setActive(cx);
 #  ifdef DEBUG
   cx->runtime()->jitRuntime()->disallowArbitraryCode();
@@ -385,7 +384,6 @@ void SuspenderObject::suspend(JSContext* cx) {
   setSuspended(cx);
   cx->wasm().suspendedStacks_.pushFront(data());
   data()->setSuspendedBy(&cx->wasm());
-  cx->wasm().setActiveSuspender(nullptr);
 #  ifdef DEBUG
   cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
 #  endif
@@ -407,7 +405,6 @@ void SuspenderObject::suspend(JSContext* cx) {
 
 void SuspenderObject::resume(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Suspended);
-  cx->wasm().setActiveSuspender(this);
   setActive(cx);
   data()->setSuspendedBy(nullptr);
   // Use barrier because object is being removed from the suspendable stack
@@ -435,18 +432,20 @@ void SuspenderObject::resume(JSContext* cx) {
 }
 
 void SuspenderObject::leave(JSContext* cx) {
-  cx->wasm().setActiveSuspender(nullptr);
 #  ifdef DEBUG
   cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
 #  endif
   // We are exiting alternative stack if state is active,
   // otherwise the stack was just suspended.
   switch (state()) {
-    case SuspenderState::Active:
+    case SuspenderState::Active: {
       setMoribund(cx);
       break;
-    case SuspenderState::Suspended:
+    }
+    case SuspenderState::Suspended: {
+      MOZ_ASSERT(cx->wasm().onSuspendableStack == 0);
       break;
+    }
     case SuspenderState::Initial:
     case SuspenderState::Moribund:
       MOZ_CRASH();
@@ -466,8 +465,6 @@ void SuspenderObject::forwardToSuspendable() {
 bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
   Rooted<SuspenderObject*> suspender(cx, cx->wasm().activeSuspender());
   SuspenderObjectData* stacks = suspender->data();
-
-  cx->wasm().setActiveSuspender(nullptr);
 
   MOZ_ASSERT(suspender->state() == SuspenderState::Active);
   suspender->setSuspended(cx);
@@ -806,7 +803,6 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
 
   bool ok = (res & 255) != 0;  // need only low byte
   suspender->setActive(cx);
-  cx->wasm().setActiveSuspender(suspender);
 
 #  undef INLINED_ASM
 #  undef CHECK_OFFSETS
@@ -818,7 +814,6 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
 static void CleanupActiveSuspender(JSContext* cx) {
   SuspenderObject* suspender = cx->wasm().activeSuspender();
   MOZ_ASSERT(suspender);
-  cx->wasm().setActiveSuspender(nullptr);
   suspender->setMoribund(cx);
 }
 
