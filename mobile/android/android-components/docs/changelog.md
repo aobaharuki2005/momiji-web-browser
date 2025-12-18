@@ -11,6 +11,8 @@ permalink: /changelog/
   * Add optional link text support to HitResult.UNKNOWN to allow getting the text associated with a link in response to a long click
 * **feature-contextmenu**
   * 🆕 New: "Copy link text" context menu candidate to allow for the ability to copy link text [Bug 1809303](https://bugzilla.mozilla.org/show_bug.cgi?id=1809303)
+* **lib-state**
+  * ⚠️ **Breaking change**: Removed `MiddlewareContext`. You can now pass in a `Store` directly when invoking a `Middleware`. [Bug 2005443](https://bugzilla.mozilla.org/show_bug.cgi?id=2005443).
 
 # 147.0
 * **browser-state**:
