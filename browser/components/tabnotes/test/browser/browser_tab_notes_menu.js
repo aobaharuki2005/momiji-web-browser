@@ -35,6 +35,58 @@ async function getContextMenu(triggerNode, contextMenuId) {
   return contextMenu;
 }
 
+let activateTabContextMenuItem = async (
+  selectedTab,
+  menuItemSelector,
+  submenuItemSelector
+) => {
+  let submenuItem;
+  let submenuItemHiddenPromise;
+
+  const win = selectedTab.ownerGlobal;
+  const tabContextMenu = win.document.getElementById("tabContextMenu");
+  const contextMenuShown = BrowserTestUtils.waitForEvent(
+    tabContextMenu,
+    "popupshown",
+    false,
+    ev => ev.target == tabContextMenu
+  );
+  EventUtils.synthesizeMouseAtCenter(
+    selectedTab,
+    { type: "contextmenu", button: 2 },
+    win
+  );
+  await contextMenuShown;
+
+  if (submenuItemSelector) {
+    submenuItem = tabContextMenu.querySelector(submenuItemSelector);
+
+    const submenuPopupPromise = BrowserTestUtils.waitForEvent(
+      submenuItem.menupopup,
+      "popupshown"
+    );
+    submenuItem.openMenu(true);
+    await submenuPopupPromise;
+
+    submenuItemHiddenPromise = BrowserTestUtils.waitForEvent(
+      submenuItem.menupopup,
+      "popuphidden"
+    );
+  }
+
+  const contextMenuHidden = BrowserTestUtils.waitForEvent(
+    tabContextMenu,
+    "popuphidden",
+    false,
+    ev => ev.target == tabContextMenu
+  );
+  tabContextMenu.activateItem(tabContextMenu.querySelector(menuItemSelector));
+  await contextMenuHidden;
+  if (submenuItemSelector) {
+    await submenuItemHiddenPromise;
+  }
+};
+
 /**
  * @param {XULMenuElement|XULPopupElement} contextMenu
  * @returns {Promise<void>}
@@ -45,11 +97,18 @@ async function closeContextMenu(contextMenu) {
   await menuHidden;
 }
 
-async function openTabNoteMenu(tab) {
-  let tabContextMenu = await getContextMenu(tab, "tabContextMenu");
+async function openTabNoteMenuByAddNote(tab) {
   let tabNotePanel = document.getElementById("tabNotePanel");
   let panelShown = BrowserTestUtils.waitForPopupEvent(tabNotePanel, "shown");
-  tabContextMenu.activateItem(document.getElementById("context_addNote"));
+  activateTabContextMenuItem(tab, "#context_addNote");
+  await panelShown;
+  return tabNotePanel;
+}
+
+async function openTabNoteMenuByEditNote(tab) {
+  let tabNotePanel = document.getElementById("tabNotePanel");
+  let panelShown = BrowserTestUtils.waitForPopupEvent(tabNotePanel, "shown");
+  activateTabContextMenuItem(tab, "#context_editNote", "#context_updateNote");
   await panelShown;
   return tabNotePanel;
 }
@@ -116,7 +175,7 @@ add_task(async function test_dismissTabNotePanel() {
   // Dismiss panel by pressing Esc
   let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  let tabNoteMenu = await openTabNoteMenu(tab);
+  let tabNoteMenu = await openTabNoteMenuByAddNote(tab);
   Assert.equal(tabNoteMenu.state, "open", "Tab note menu is open");
   EventUtils.synthesizeKey("KEY_Escape");
   await BrowserTestUtils.waitForPopupEvent(tabNoteMenu, "hidden");
@@ -127,7 +186,7 @@ add_task(async function test_dismissTabNotePanel() {
   );
 
   // Dismiss panel by clicking Cancel
-  tabNoteMenu = await openTabNoteMenu(tab);
+  tabNoteMenu = await openTabNoteMenuByAddNote(tab);
   Assert.equal(tabNoteMenu.state, "open", "Tab note menu is open");
   let menuHidden = BrowserTestUtils.waitForPopupEvent(tabNoteMenu, "hidden");
   let cancelButton = document.getElementById("tab-note-editor-button-cancel");
@@ -148,7 +207,7 @@ add_task(async function test_saveTabNote() {
   });
   let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  let tabNoteMenu = await openTabNoteMenu(tab);
+  let tabNoteMenu = await openTabNoteMenuByAddNote(tab);
   tabNoteMenu.querySelector("textarea").value = "Lorem ipsum dolor";
   let menuHidden = BrowserTestUtils.waitForPopupEvent(tabNoteMenu, "hidden");
   let tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
@@ -165,5 +224,70 @@ add_task(async function test_saveTabNote() {
   await TabNotes.delete(tab);
   BrowserTestUtils.removeTab(tab);
 
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_editTabNote() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.notes.enabled", true]],
+  });
+
+  let initialNoteValue = "Lorem ipsum dolor";
+
+  let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  let tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
+  await TabNotes.set(tab, initialNoteValue);
+  await tabNoteCreated;
+
+  let tabNoteMenu = await openTabNoteMenuByEditNote(tab);
+  Assert.equal(
+    tabNoteMenu.querySelector("textarea").value,
+    initialNoteValue,
+    "Tab note panel has initial note value in textarea"
+  );
+
+  let updatedNoteValue = initialNoteValue + " sit amet";
+
+  tabNoteMenu.querySelector("textarea").value = updatedNoteValue;
+  let menuHidden = BrowserTestUtils.waitForPopupEvent(tabNoteMenu, "hidden");
+  let tabNoteEdited = BrowserTestUtils.waitForEvent(tab, "TabNote:Edited");
+  tabNoteMenu.querySelector("#tab-note-editor-button-save").click();
+  await Promise.all([menuHidden, tabNoteEdited]);
+
+  const tabNote = await TabNotes.get(tab);
+  Assert.equal(
+    tabNote.text,
+    updatedNoteValue,
+    "The updated text entered into the textarea was saved as a note"
+  );
+
+  await TabNotes.delete(tab);
+  BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_deleteTabNote() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.notes.enabled", true]],
+  });
+
+  let initialNoteValue = "Lorem ipsum dolor";
+
+  let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  let tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
+  await TabNotes.set(tab, initialNoteValue);
+  await tabNoteCreated;
+
+  let tabNoteRemoved = BrowserTestUtils.waitForEvent(tab, "TabNote:Removed");
+  activateTabContextMenuItem(tab, "#context_deleteNote", "#context_updateNote");
+  await tabNoteRemoved;
+
+  let result = await TabNotes.has(tab);
+
+  Assert.ok(!result, "Tab note was deleted");
+
+  BrowserTestUtils.removeTab(tab);
   await SpecialPowers.popPrefEnv();
 });

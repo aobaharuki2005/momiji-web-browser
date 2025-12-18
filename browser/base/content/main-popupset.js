@@ -88,6 +88,9 @@ document.addEventListener(
         case "context_editNote":
           gBrowser.tabNoteMenu.openPanel(TabContextMenu.contextTab);
           break;
+        case "context_deleteNote":
+          TabContextMenu.deleteTabNotes();
+          break;
         case "context_moveToStart":
           gBrowser.moveTabsToStart(TabContextMenu.contextTab);
           break;
