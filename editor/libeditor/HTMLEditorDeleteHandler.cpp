@@ -7191,7 +7191,8 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::
 Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     AutoEmptyBlockAncestorDeleter::GetNewCaretPosition(
         const HTMLEditor& aHTMLEditor,
-        nsIEditor::EDirection aDirectionAndAmount) const {
+        nsIEditor::EDirection aDirectionAndAmount,
+        const Element& aEditingHost) const {
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement);
   MOZ_ASSERT(mEmptyInclusiveAncestorBlockElement->GetParentElement());
   MOZ_ASSERT(aHTMLEditor.IsEditActionDataAvailable());
@@ -7206,8 +7207,7 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
           EditorDOMPoint::After(mEmptyInclusiveAncestorBlockElement));
       MOZ_ASSERT(afterEmptyBlock.IsSet());
       if (nsIContent* nextContentOfEmptyBlock = HTMLEditUtils::GetNextContent(
-              afterEmptyBlock, {}, BlockInlineCheck::Unused,
-              aHTMLEditor.ComputeEditingHost())) {
+              afterEmptyBlock, {}, BlockInlineCheck::Unused, &aEditingHost)) {
         EditorDOMPoint pt = HTMLEditUtils::GetGoodCaretPointFor<EditorDOMPoint>(
             *nextContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
@@ -7225,20 +7225,30 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     case nsIEditor::ePreviousWord:
     case nsIEditor::eToBeginningOfLine: {
       // Collapse Selection to previous editable node of the empty block
-      // if there is.  Otherwise, to after the empty block.
+      // if there is.
       EditorRawDOMPoint atEmptyBlock(mEmptyInclusiveAncestorBlockElement);
-      if (nsIContent* previousContentOfEmptyBlock =
+      if (nsIContent* const previousContentOfEmptyBlock =
               HTMLEditUtils::GetPreviousContent(
                   atEmptyBlock, {WalkTreeOption::IgnoreNonEditableNode},
-                  BlockInlineCheck::Unused, aHTMLEditor.ComputeEditingHost())) {
-        EditorDOMPoint pt = HTMLEditUtils::GetGoodCaretPointFor<EditorDOMPoint>(
-            *previousContentOfEmptyBlock, aDirectionAndAmount);
-        if (!pt.IsSet()) {
+                  BlockInlineCheck::Unused, &aEditingHost)) {
+        const EditorRawDOMPoint atEndOfPreviousContent =
+            HTMLEditUtils::GetGoodCaretPointFor<EditorRawDOMPoint>(
+                *previousContentOfEmptyBlock, aDirectionAndAmount);
+        if (!atEndOfPreviousContent.IsSet()) {
           NS_WARNING("HTMLEditUtils::GetGoodCaretPointFor() failed");
           return Err(NS_ERROR_FAILURE);
         }
-        return CaretPoint(std::move(pt));
+        // If the previous content is between a preceding line break and the
+        // block boundary of current empty block, let's move caret to the line
+        // break if there is no visible things between them.
+        const Maybe<EditorRawLineBreak> precedingLineBreak =
+            HTMLEditUtils::GetLineBreakBeforeBlockBoundaryIfPointIsBetweenThem<
+                EditorRawLineBreak>(atEndOfPreviousContent, aEditingHost);
+        return precedingLineBreak.isSome()
+                   ? CaretPoint(precedingLineBreak->To<EditorDOMPoint>())
+                   : CaretPoint(atEndOfPreviousContent.To<EditorDOMPoint>());
       }
+      // Otherwise, let's put caret next to the deleting block.
       auto afterEmptyBlock =
           EditorDOMPoint::After(*mEmptyInclusiveAncestorBlockElement);
       if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
@@ -7309,7 +7319,7 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
               : EditorDOMPoint());
     }
     Result<CaretPoint, nsresult> caretPointOrError =
-        GetNewCaretPosition(aHTMLEditor, aDirectionAndAmount);
+        GetNewCaretPosition(aHTMLEditor, aDirectionAndAmount, aEditingHost);
     NS_WARNING_ASSERTION(
         caretPointOrError.isOk(),
         "AutoEmptyBlockAncestorDeleter::GetNewCaretPosition() failed");
@@ -7343,10 +7353,10 @@ HTMLEditor::AutoDeleteRangesHandler::AutoEmptyBlockAncestorDeleter::Run(
           "DeleteContentNodeAndJoinTextNodesAroundIt() failed");
       return caretPointOrError.propagateErr();
     }
+    trackPointToPutCaret.Flush(StopTracking::Yes);
     caretPointOrError.unwrap().MoveCaretPointTo(
         pointToPutCaret, {SuggestCaret::OnlyIfHasSuggestion});
-    trackEmptyBlockPoint.FlushAndStopTracking();
-    trackPointToPutCaret.FlushAndStopTracking();
+    trackEmptyBlockPoint.Flush(StopTracking::Yes);
     if (NS_WARN_IF(!atEmptyInclusiveAncestorBlockElement
                         .IsInContentNodeAndValidInComposedDoc()) ||
         NS_WARN_IF(pointToPutCaret.IsSet() &&

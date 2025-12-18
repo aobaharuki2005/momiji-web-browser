@@ -2844,6 +2844,15 @@ class HTMLEditUtils final {
       const Element& aElement, const EditorDOMPointTypeInput& aCurrentPoint);
 
   /**
+   * Return a line break if aPoint is after a line break which is immediately
+   * before a block boundary.
+   */
+  template <typename EditorLineBreakType, typename EditorDOMPointType>
+  static Maybe<EditorLineBreakType>
+  GetLineBreakBeforeBlockBoundaryIfPointIsBetweenThem(
+      const EditorDOMPointType& aPoint, const Element& aEditingHost);
+
+  /**
    * Content-based query returns true if
    * <mHTMLProperty mAttribute=mAttributeValue> effects aContent.  If there is
    * such a element, but another element whose attribute value does not match
