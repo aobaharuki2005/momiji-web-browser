@@ -210,6 +210,7 @@ class IPPProxyManagerSingleton extends EventTarget {
         started = await this.#startInternal();
       } catch (error) {
         this.#setErrorState(ERRORS.GENERIC, error);
+        this.cancelChannelFilter();
         return;
       }
 
