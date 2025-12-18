@@ -1485,7 +1485,7 @@ void TraceJitActivations(JSContext* cx, JSTracer* trc) {
     TraceJitActivation(trc, activations->asJit());
   }
 #ifdef ENABLE_WASM_JSPI
-  cx->wasm().promiseIntegration.traceRoots(trc);
+  cx->wasm().traceRoots(trc);
 #endif
 }
 

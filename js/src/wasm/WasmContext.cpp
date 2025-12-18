@@ -19,7 +19,10 @@
 #include "wasm/WasmContext.h"
 
 #include "js/friend/StackLimits.h"
+#include "js/TracingAPI.h"
 #include "vm/JSContext.h"
+
+#include "wasm/WasmPI.h"
 
 using namespace js::wasm;
 
@@ -29,10 +32,19 @@ Context::Context()
       stackLimit(JS::NativeStackLimitMin)
 #ifdef ENABLE_WASM_JSPI
       ,
+      activeSuspender_(nullptr),
       onSuspendableStack(0),
-      suspendableStacksCount(0)
+      suspendableStacksCount(0),
+      suspendedStacks_()
 #endif
 {
+}
+
+Context::~Context() {
+#ifdef ENABLE_WASM_JSPI
+  MOZ_ASSERT(activeSuspender_ == nullptr);
+  MOZ_ASSERT(suspendedStacks_.isEmpty());
+#endif
 }
 
 void Context::initStackLimit(JSContext* cx) {
@@ -42,6 +54,32 @@ void Context::initStackLimit(JSContext* cx) {
 }
 
 #ifdef ENABLE_WASM_JSPI
+SuspenderObject* Context::activeSuspender() { return activeSuspender_; }
+
+void Context::setActiveSuspender(SuspenderObject* obj) {
+  activeSuspender_.set(obj);
+}
+
+void Context::trace(JSTracer* trc) {
+  if (activeSuspender_) {
+    TraceEdge(trc, &activeSuspender_, "suspender");
+  }
+}
+
+void Context::traceRoots(JSTracer* trc) {
+  // The suspendedStacks_ contains suspended stacks frames that need to be
+  // traced only during minor GC. The major GC tracing is happening via
+  // SuspenderObject::trace.
+  // Non-suspended stack frames are traced as part of TraceJitActivations.
+  if (!trc->isTenuringTracer()) {
+    return;
+  }
+  gc::AssertRootMarkingPhase(trc);
+  for (const SuspenderObjectData& data : suspendedStacks_) {
+    TraceSuspendableStack(trc, data);
+  }
+}
+
 void Context::enterSuspendableStack(JS::NativeStackLimit newStackLimit) {
   MOZ_ASSERT(onSuspendableStack == 0);
   onSuspendableStack = 1;
@@ -53,9 +91,7 @@ void Context::leaveSuspendableStack(JSContext* cx) {
   onSuspendableStack = 0;
   initStackLimit(cx);
 }
-#endif
 
-#ifdef ENABLE_WASM_JSPI
 bool js::IsSuspendableStackActive(JSContext* cx) {
   return cx->wasm().onSuspendableStack != 0;
 }

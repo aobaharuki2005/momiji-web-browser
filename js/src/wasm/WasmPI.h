@@ -22,6 +22,8 @@
 #include "mozilla/DoublyLinkedList.h"  // for DoublyLinkedListElement
 
 #include "js/TypeDecls.h"
+#include "vm/NativeObject.h"
+#include "vm/PromiseObject.h"
 #include "wasm/WasmAnyRef.h"
 #include "wasm/WasmTypeDef.h"
 
@@ -104,13 +106,13 @@
 
 namespace js {
 
-class PromiseObject;
 class WasmStructObject;
 
 namespace wasm {
 
-class SuspenderContext;
-class SuspenderObject;
+class Context;
+
+#ifdef ENABLE_WASM_JSPI
 
 static const uint32_t SuspenderObjectDataSlot = 0;
 
@@ -149,14 +151,14 @@ class SuspenderObjectData
   SuspenderState state_;
 
   // Identify context that is holding suspended stack, otherwise nullptr.
-  SuspenderContext* suspendedBy_;
+  Context* suspendedBy_;
 
-#if defined(_WIN32)
+#  if defined(_WIN32)
   // The storage of main stack limits during stack switching.
   // See updateTibFields and restoreTibFields below.
   void* savedStackBase_;
   void* savedStackLimit_;
-#endif
+#  endif
 
  public:
   explicit SuspenderObjectData(void* stackMemory);
@@ -169,10 +171,8 @@ class SuspenderObjectData
            state_ == SuspenderState::Suspended;
   }
   inline bool hasStackEntry() const { return suspendedBy_ != nullptr; }
-  inline SuspenderContext* suspendedBy() const { return suspendedBy_; }
-  void setSuspendedBy(SuspenderContext* suspendedBy) {
-    suspendedBy_ = suspendedBy;
-  }
+  inline Context* suspendedBy() const { return suspendedBy_; }
+  void setSuspendedBy(Context* suspendedBy) { suspendedBy_ = suspendedBy; }
 
   bool hasFramePointer(void* fp) const {
     return (uintptr_t)stackMemory_ <= (uintptr_t)fp &&
@@ -193,17 +193,17 @@ class SuspenderObjectData
 
   void releaseStackMemory();
 
-#if defined(_WIN32)
+#  if defined(_WIN32)
   void updateTIBStackFields();
   void restoreTIBStackFields();
-#endif
+#  endif
 
-#if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) ||       \
-    defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
-    defined(JS_SIMULATOR_MIPS64)
+#  if defined(JS_SIMULATOR_ARM64) || defined(JS_SIMULATOR_ARM) ||       \
+      defined(JS_SIMULATOR_RISCV64) || defined(JS_SIMULATOR_LOONG64) || \
+      defined(JS_SIMULATOR_MIPS64)
   void switchSimulatorToMain();
   void switchSimulatorToSuspendable();
-#endif
+#  endif
 
   static constexpr size_t offsetOfMainFP() {
     return offsetof(SuspenderObjectData, mainFP_);
@@ -234,7 +234,69 @@ class SuspenderObjectData
   }
 };
 
-#ifdef ENABLE_WASM_JSPI
+class SuspenderObject : public NativeObject {
+ public:
+  static const JSClass class_;
+
+  enum { DataSlot, PromisingPromiseSlot, SuspendingReturnTypeSlot, SlotCount };
+
+  enum class ReturnType : int32_t { Unknown, Promise, Exception };
+
+  static SuspenderObject* create(JSContext* cx);
+
+  PromiseObject* promisingPromise() const {
+    return &getReservedSlot(PromisingPromiseSlot)
+                .toObject()
+                .as<PromiseObject>();
+  }
+
+  void setPromisingPromise(Handle<PromiseObject*> promise) {
+    setReservedSlot(PromisingPromiseSlot, ObjectOrNullValue(promise));
+  }
+
+  ReturnType suspendingReturnType() const {
+    return ReturnType(getReservedSlot(SuspendingReturnTypeSlot).toInt32());
+  }
+
+  void setSuspendingReturnType(ReturnType type) {
+    // The SuspendingReturnTypeSlot will change after result is defined,
+    // and becomes invalid after GetSuspendingPromiseResult. The assert is
+    // checking if the result was processed by GetSuspendingPromiseResult.
+    MOZ_ASSERT((type == ReturnType::Unknown) !=
+               (suspendingReturnType() == ReturnType::Unknown));
+
+    setReservedSlot(SuspendingReturnTypeSlot, Int32Value(int32_t(type)));
+  }
+
+  JS::NativeStackLimit getStackMemoryLimit();
+
+  SuspenderState state() { return data()->state(); }
+
+  inline bool hasData() { return !getReservedSlot(DataSlot).isUndefined(); }
+
+  inline SuspenderObjectData* data() {
+    return static_cast<SuspenderObjectData*>(
+        getReservedSlot(DataSlot).toPrivate());
+  }
+
+  void setMoribund(JSContext* cx);
+  void setActive(JSContext* cx);
+  void setSuspended(JSContext* cx);
+
+  void enter(JSContext* cx);
+  void suspend(JSContext* cx);
+  void resume(JSContext* cx);
+  void leave(JSContext* cx);
+
+  // Modifies frames to inject the suspendable stack back into the main one.
+  void forwardToSuspendable();
+
+ private:
+  static const JSClassOps classOps_;
+
+  static void finalize(JS::GCContext* gcx, JSObject* obj);
+  static void trace(JSTracer* trc, JSObject* obj);
+};
 
 using CallOnMainStackFn = bool (*)(void* data);
 bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data);
@@ -272,6 +334,8 @@ int32_t SetPromisingPromiseResults(Instance* instance,
 
 void UpdateSuspenderState(Instance* instance, SuspenderObject* suspender,
                           UpdateSuspenderStateAction action);
+
+void TraceSuspendableStack(JSTracer* trc, const SuspenderObjectData& data);
 
 #endif  // ENABLE_WASM_JSPI
 

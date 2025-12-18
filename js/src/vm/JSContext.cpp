@@ -1536,7 +1536,7 @@ void JSContext::trace(JSTracer* trc) {
     irregexp::TraceIsolate(trc, isolate.ref());
   }
 #ifdef ENABLE_WASM_JSPI
-  wasm().promiseIntegration.trace(trc);
+  wasm().trace(trc);
 #endif
 }
 

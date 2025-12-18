@@ -166,28 +166,6 @@ const size_t WRAPPED_FN_SLOT = 1;
 const size_t CONTINUE_ON_SUSPENDABLE_SLOT = 1;
 const size_t PROMISE_SLOT = 2;
 
-SuspenderContext::SuspenderContext()
-    : activeSuspender_(nullptr), suspendedStacks_() {}
-
-SuspenderContext::~SuspenderContext() {
-  MOZ_ASSERT(activeSuspender_ == nullptr);
-  MOZ_ASSERT(suspendedStacks_.isEmpty());
-}
-
-SuspenderObject* SuspenderContext::activeSuspender() {
-  return activeSuspender_;
-}
-
-void SuspenderContext::setActiveSuspender(SuspenderObject* obj) {
-  activeSuspender_.set(obj);
-}
-
-void SuspenderContext::trace(JSTracer* trc) {
-  if (activeSuspender_) {
-    TraceEdge(trc, &activeSuspender_, "suspender");
-  }
-}
-
 static JitActivation* FindSuspendableStackActivation(
     JSTracer* trc, const SuspenderObjectData& data) {
   // The jitActivation.refNoCheck() can be used since during trace/marking
@@ -210,8 +188,7 @@ static JitActivation* FindSuspendableStackActivation(
   MOZ_CRASH("Suspendable stack activation not found");
 }
 
-static void TraceSuspendableStack(JSTracer* trc,
-                                  const SuspenderObjectData& data) {
+void TraceSuspendableStack(JSTracer* trc, const SuspenderObjectData& data) {
   void* exitFP = data.suspendableExitFP();
   MOZ_ASSERT(data.traceable());
 
@@ -245,20 +222,6 @@ static void TraceSuspendableStack(JSTracer* trc,
   }
 }
 
-void SuspenderContext::traceRoots(JSTracer* trc) {
-  // The suspendedStacks_ contains suspended stacks frames that need to be
-  // traced only during minor GC. The major GC tracing is happening via
-  // SuspenderObject::trace.
-  // Non-suspended stack frames are traced as part of TraceJitActivations.
-  if (!trc->isTenuringTracer()) {
-    return;
-  }
-  gc::AssertRootMarkingPhase(trc);
-  for (const SuspenderObjectData& data : suspendedStacks_) {
-    TraceSuspendableStack(trc, data);
-  }
-}
-
 static_assert(JS_STACK_GROWTH_DIRECTION < 0,
               "JS-PI implemented only for native stacks that grows towards 0");
 
@@ -274,114 +237,54 @@ static void DecrementSuspendableStacksCount(JSContext* cx) {
   }
 }
 
-class SuspenderObject : public NativeObject {
- public:
-  static const JSClass class_;
-
-  enum { DataSlot, PromisingPromiseSlot, SuspendingReturnTypeSlot, SlotCount };
-
-  enum class ReturnType : int32_t { Unknown, Promise, Exception };
-
-  static SuspenderObject* create(JSContext* cx) {
-    for (;;) {
-      uint32_t currentCount = cx->wasm().suspendableStacksCount;
-      if (currentCount >= SuspendableStacksMaxCount) {
-        JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                  JSMSG_JSPI_SUSPENDER_LIMIT);
-        return nullptr;
-      }
-      if (cx->wasm().suspendableStacksCount.compareExchange(currentCount,
-                                                            currentCount + 1)) {
-        break;
-      }
-      // Failed to increment suspendableStacksCount, repeat.
-    }
-
-    Rooted<SuspenderObject*> suspender(
-        cx, NewBuiltinClassInstance<SuspenderObject>(cx));
-    if (!suspender) {
-      DecrementSuspendableStacksCount(cx);
+SuspenderObject* SuspenderObject::create(JSContext* cx) {
+  for (;;) {
+    uint32_t currentCount = cx->wasm().suspendableStacksCount;
+    if (currentCount >= SuspendableStacksMaxCount) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_JSPI_SUSPENDER_LIMIT);
       return nullptr;
     }
-
-    void* stackMemory = js_malloc(SuspendableStackPlusRedZoneSize);
-    if (!stackMemory) {
-      DecrementSuspendableStacksCount(cx);
-      ReportOutOfMemory(cx);
-      return nullptr;
+    if (cx->wasm().suspendableStacksCount.compareExchange(currentCount,
+                                                          currentCount + 1)) {
+      break;
     }
-
-    SuspenderObjectData* data = js_new<SuspenderObjectData>(stackMemory);
-    if (!data) {
-      js_free(stackMemory);
-      DecrementSuspendableStacksCount(cx);
-      ReportOutOfMemory(cx);
-      return nullptr;
-    }
-    MOZ_RELEASE_ASSERT(data->state() != SuspenderState::Moribund);
-
-    suspender->initReservedSlot(DataSlot, PrivateValue(data));
-    suspender->initReservedSlot(PromisingPromiseSlot, NullValue());
-    suspender->initReservedSlot(SuspendingReturnTypeSlot,
-                                Int32Value(int32_t(ReturnType::Unknown)));
-    return suspender;
+    // Failed to increment suspendableStacksCount, repeat.
   }
 
-  PromiseObject* promisingPromise() const {
-    return &getReservedSlot(PromisingPromiseSlot)
-                .toObject()
-                .as<PromiseObject>();
+  Rooted<SuspenderObject*> suspender(
+      cx, NewBuiltinClassInstance<SuspenderObject>(cx));
+  if (!suspender) {
+    DecrementSuspendableStacksCount(cx);
+    return nullptr;
   }
 
-  void setPromisingPromise(Handle<PromiseObject*> promise) {
-    setReservedSlot(PromisingPromiseSlot, ObjectOrNullValue(promise));
+  void* stackMemory = js_malloc(SuspendableStackPlusRedZoneSize);
+  if (!stackMemory) {
+    DecrementSuspendableStacksCount(cx);
+    ReportOutOfMemory(cx);
+    return nullptr;
   }
 
-  ReturnType suspendingReturnType() const {
-    return ReturnType(getReservedSlot(SuspendingReturnTypeSlot).toInt32());
+  SuspenderObjectData* data = js_new<SuspenderObjectData>(stackMemory);
+  if (!data) {
+    js_free(stackMemory);
+    DecrementSuspendableStacksCount(cx);
+    ReportOutOfMemory(cx);
+    return nullptr;
   }
+  MOZ_RELEASE_ASSERT(data->state() != SuspenderState::Moribund);
 
-  void setSuspendingReturnType(ReturnType type) {
-    // The SuspendingReturnTypeSlot will change after result is defined,
-    // and becomes invalid after GetSuspendingPromiseResult. The assert is
-    // checking if the result was processed by GetSuspendingPromiseResult.
-    MOZ_ASSERT((type == ReturnType::Unknown) !=
-               (suspendingReturnType() == ReturnType::Unknown));
+  suspender->initReservedSlot(DataSlot, PrivateValue(data));
+  suspender->initReservedSlot(PromisingPromiseSlot, NullValue());
+  suspender->initReservedSlot(SuspendingReturnTypeSlot,
+                              Int32Value(int32_t(ReturnType::Unknown)));
+  return suspender;
+}
 
-    setReservedSlot(SuspendingReturnTypeSlot, Int32Value(int32_t(type)));
-  }
-
-  JS::NativeStackLimit getStackMemoryLimit() {
-    return JS::NativeStackLimit(data()->stackMemory()) + SuspendableRedZoneSize;
-  }
-
-  SuspenderState state() { return data()->state(); }
-
-  inline bool hasData() { return !getReservedSlot(DataSlot).isUndefined(); }
-
-  inline SuspenderObjectData* data() {
-    return static_cast<SuspenderObjectData*>(
-        getReservedSlot(DataSlot).toPrivate());
-  }
-
-  void setMoribund(JSContext* cx);
-  void setActive(JSContext* cx);
-  void setSuspended(JSContext* cx);
-
-  void enter(JSContext* cx);
-  void suspend(JSContext* cx);
-  void resume(JSContext* cx);
-  void leave(JSContext* cx);
-
-  // Modifies frames to inject the suspendable stack back into the main one.
-  void forwardToSuspendable();
-
- private:
-  static const JSClassOps classOps_;
-
-  static void finalize(JS::GCContext* gcx, JSObject* obj);
-  static void trace(JSTracer* trc, JSObject* obj);
-};
+JS::NativeStackLimit SuspenderObject::getStackMemoryLimit() {
+  return JS::NativeStackLimit(data()->stackMemory()) + SuspendableRedZoneSize;
+}
 
 static_assert(SuspenderObjectDataSlot == SuspenderObject::DataSlot);
 
@@ -416,7 +319,7 @@ void SuspenderObject::finalize(JS::GCContext* gcx, JSObject* obj) {
   } else {
     // Cleaning stack memory and removing from suspendableStacks_.
     data->releaseStackMemory();
-    if (SuspenderContext* scx = data->suspendedBy()) {
+    if (Context* scx = data->suspendedBy()) {
       scx->suspendedStacks_.remove(data);
     }
   }
@@ -449,9 +352,7 @@ void SuspenderObject::setMoribund(JSContext* cx) {
   data->setState(SuspenderState::Moribund);
   data->releaseStackMemory();
   DecrementSuspendableStacksCount(cx);
-  MOZ_ASSERT(
-      !cx->wasm().promiseIntegration.suspendedStacks_.ElementProbablyInList(
-          data));
+  MOZ_ASSERT(!cx->wasm().suspendedStacks_.ElementProbablyInList(data));
 }
 
 void SuspenderObject::setActive(JSContext* cx) {
@@ -472,7 +373,7 @@ void SuspenderObject::setSuspended(JSContext* cx) {
 
 void SuspenderObject::enter(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Initial);
-  cx->wasm().promiseIntegration.setActiveSuspender(this);
+  cx->wasm().setActiveSuspender(this);
   setActive(cx);
 #  ifdef DEBUG
   cx->runtime()->jitRuntime()->disallowArbitraryCode();
@@ -482,9 +383,9 @@ void SuspenderObject::enter(JSContext* cx) {
 void SuspenderObject::suspend(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Active);
   setSuspended(cx);
-  cx->wasm().promiseIntegration.suspendedStacks_.pushFront(data());
-  data()->setSuspendedBy(&cx->wasm().promiseIntegration);
-  cx->wasm().promiseIntegration.setActiveSuspender(nullptr);
+  cx->wasm().suspendedStacks_.pushFront(data());
+  data()->setSuspendedBy(&cx->wasm());
+  cx->wasm().setActiveSuspender(nullptr);
 #  ifdef DEBUG
   cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
 #  endif
@@ -506,13 +407,13 @@ void SuspenderObject::suspend(JSContext* cx) {
 
 void SuspenderObject::resume(JSContext* cx) {
   MOZ_ASSERT(state() == SuspenderState::Suspended);
-  cx->wasm().promiseIntegration.setActiveSuspender(this);
+  cx->wasm().setActiveSuspender(this);
   setActive(cx);
   data()->setSuspendedBy(nullptr);
   // Use barrier because object is being removed from the suspendable stack
   // from roots.
   gc::PreWriteBarrier(this);
-  cx->wasm().promiseIntegration.suspendedStacks_.remove(data());
+  cx->wasm().suspendedStacks_.remove(data());
 #  ifdef DEBUG
   cx->runtime()->jitRuntime()->disallowArbitraryCode();
 #  endif
@@ -534,7 +435,7 @@ void SuspenderObject::resume(JSContext* cx) {
 }
 
 void SuspenderObject::leave(JSContext* cx) {
-  cx->wasm().promiseIntegration.setActiveSuspender(nullptr);
+  cx->wasm().setActiveSuspender(nullptr);
 #  ifdef DEBUG
   cx->runtime()->jitRuntime()->clearDisallowArbitraryCode();
 #  endif
@@ -563,11 +464,10 @@ void SuspenderObject::forwardToSuspendable() {
 }
 
 bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
-  Rooted<SuspenderObject*> suspender(
-      cx, cx->wasm().promiseIntegration.activeSuspender());
+  Rooted<SuspenderObject*> suspender(cx, cx->wasm().activeSuspender());
   SuspenderObjectData* stacks = suspender->data();
 
-  cx->wasm().promiseIntegration.setActiveSuspender(nullptr);
+  cx->wasm().setActiveSuspender(nullptr);
 
   MOZ_ASSERT(suspender->state() == SuspenderState::Active);
   suspender->setSuspended(cx);
@@ -906,7 +806,7 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
 
   bool ok = (res & 255) != 0;  // need only low byte
   suspender->setActive(cx);
-  cx->wasm().promiseIntegration.setActiveSuspender(suspender);
+  cx->wasm().setActiveSuspender(suspender);
 
 #  undef INLINED_ASM
 #  undef CHECK_OFFSETS
@@ -916,9 +816,9 @@ bool CallOnMainStack(JSContext* cx, CallOnMainStackFn fn, void* data) {
 }
 
 static void CleanupActiveSuspender(JSContext* cx) {
-  SuspenderObject* suspender = cx->wasm().promiseIntegration.activeSuspender();
+  SuspenderObject* suspender = cx->wasm().activeSuspender();
   MOZ_ASSERT(suspender);
-  cx->wasm().promiseIntegration.setActiveSuspender(nullptr);
+  cx->wasm().setActiveSuspender(nullptr);
   suspender->setMoribund(cx);
 }
 
@@ -1765,7 +1665,7 @@ static bool WasmPIPromisingFunction(JSContext* cx, unsigned argc, Value* vp) {
   // During an exception the stack was unwound -- time to release resources.
   // At this point, the suspender might be null, if that's the case
   // don't try to clean up.
-  if (cx->wasm().promiseIntegration.activeSuspender() != nullptr) {
+  if (cx->wasm().activeSuspender() != nullptr) {
     CleanupActiveSuspender(cx);
   }
 
@@ -1845,7 +1745,7 @@ JSFunction* WasmPromisingFunctionCreate(JSContext* cx, HandleObject func,
 SuspenderObject* CurrentSuspender(Instance* instance, int32_t reserved) {
   MOZ_ASSERT(SASigCurrentSuspender.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = instance->cx();
-  SuspenderObject* suspender = cx->wasm().promiseIntegration.activeSuspender();
+  SuspenderObject* suspender = cx->wasm().activeSuspender();
   if (!suspender) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_JSPI_INVALID_STATE);
