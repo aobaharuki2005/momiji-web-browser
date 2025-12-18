@@ -28,6 +28,11 @@ add_setup(async function () {
       // The http server is using IPv4, so it's better to disable IPv6 to avoid
       // weird networking problem.
       ["network.dns.disableIPv6", true],
+      // disable image proxy for newtab until Bug #2005048 is fixed
+      [
+        "browser.newtabpage.activity-stream.discoverystream.imageProxy.enabled",
+        false,
+      ],
     ],
   });
 

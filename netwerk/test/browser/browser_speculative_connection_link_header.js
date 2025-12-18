@@ -3,9 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 Services.prefs.setBoolPref("network.http.debug-observations", true);
+// disable image proxy for newtab until Bug #2005048 is fixed
+Services.prefs.setBoolPref(
+  "browser.newtabpage.activity-stream.discoverystream.imageProxy.enabled",
+  false
+);
 
 registerCleanupFunction(function () {
   Services.prefs.clearUserPref("network.http.debug-observations");
+  Services.prefs.clearUserPref(
+    "browser.newtabpage.activity-stream.discoverystream.imageProxy.enabled"
+  );
 });
 
 // Test steps:
