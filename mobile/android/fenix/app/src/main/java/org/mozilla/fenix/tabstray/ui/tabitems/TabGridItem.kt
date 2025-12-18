@@ -11,7 +11,6 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -40,7 +39,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -68,11 +66,14 @@ import org.mozilla.fenix.tabstray.TabsTrayTestTag
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
 import org.mozilla.fenix.tabstray.ui.sharedTabTransition
 import org.mozilla.fenix.theme.FirefoxTheme
-import kotlin.math.max
 import mozilla.components.ui.icons.R as iconsR
 
+/**
+ * The padding around the thumbnail inside a tab grid item.
+ */
+val GridItemThumbnailPadding = 4.dp
+
 private val TabContentCardShape = RoundedCornerShape(16.dp)
-private val ThumbnailPadding = 4.dp
 private val ThumbnailShape = RoundedCornerShape(
     topStart = 4.dp,
     topEnd = 4.dp,
@@ -87,6 +88,7 @@ private val TabHeaderFaviconSize = 12.dp
  * long clicks, multiple selection, and media controls.
  *
  * @param tab The given tab to be render as view a grid item.
+ * @param thumbnailSizePx The size of the tab's thumbnail in pixels.
  * @param isSelected Indicates if the item should be render as selected.
  * @param multiSelectionEnabled Indicates if the item should be render with multi selection options,
  * enabled.
@@ -101,6 +103,7 @@ private val TabHeaderFaviconSize = 12.dp
 @Composable
 fun TabGridItem(
     tab: TabSessionState,
+    thumbnailSizePx: Int = 50,
     isSelected: Boolean = false,
     multiSelectionEnabled: Boolean = false,
     multiSelectionSelected: Boolean = false,
@@ -110,31 +113,24 @@ fun TabGridItem(
     onClick: (tab: TabSessionState) -> Unit,
     onLongClick: ((tab: TabSessionState) -> Unit)? = null,
 ) {
-    BoxWithConstraints {
-        val density = LocalDensity.current
-        val thumbnailWidth = this.constraints.minWidth - with(density) { 2 * ThumbnailPadding.roundToPx() }
-        val thumbnailHeight = (thumbnailWidth / gridItemAspectRatio).toInt()
-        val thumbnailSize = max(thumbnailWidth, thumbnailHeight)
-
-        SwipeToDismissBox2(
-            state = swipeState,
-            backgroundContent = {},
-            onItemDismiss = {
-                onCloseClick(tab)
-            },
-        ) {
-            TabContent(
-                tab = tab,
-                thumbnailSize = thumbnailSize,
-                isSelected = isSelected,
-                multiSelectionEnabled = multiSelectionEnabled,
-                multiSelectionSelected = multiSelectionSelected,
-                shouldClickListen = shouldClickListen,
-                onCloseClick = onCloseClick,
-                onClick = onClick,
-                onLongClick = onLongClick,
-            )
-        }
+    SwipeToDismissBox2(
+        state = swipeState,
+        backgroundContent = {},
+        onItemDismiss = {
+            onCloseClick(tab)
+        },
+    ) {
+        TabContent(
+            tab = tab,
+            thumbnailSize = thumbnailSizePx,
+            isSelected = isSelected,
+            multiSelectionEnabled = multiSelectionEnabled,
+            multiSelectionSelected = multiSelectionSelected,
+            shouldClickListen = shouldClickListen,
+            onCloseClick = onCloseClick,
+            onClick = onClick,
+            onLongClick = onLongClick,
+        )
     }
 }
 
@@ -206,7 +202,7 @@ private fun TabContent(
                         .wrapContentHeight(),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Spacer(modifier = Modifier.width(FirefoxTheme.layout.space.static50 + ThumbnailPadding))
+                    Spacer(modifier = Modifier.width(FirefoxTheme.layout.space.static50 + GridItemThumbnailPadding))
 
                     val icon = tab.content.icon
                     if (icon != null) {
@@ -298,7 +294,7 @@ private fun TabContent(
                 Card(
                     modifier = Modifier
                         .aspectRatio(gridItemAspectRatio)
-                        .padding(horizontal = ThumbnailPadding),
+                        .padding(horizontal = GridItemThumbnailPadding),
                     shape = ThumbnailShape,
                 ) {
                     Thumbnail(
@@ -307,7 +303,7 @@ private fun TabContent(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(ThumbnailPadding))
+                Spacer(modifier = Modifier.height(GridItemThumbnailPadding))
             }
         }
     }
@@ -317,7 +313,7 @@ private fun TabContent(
  * The width to height ratio of the tab grid item. In landscape mode, the width to height ratio is
  * 2:1 and in portrait mode, the width to height ratio is 4:5.
  */
-private val gridItemAspectRatio: Float
+val gridItemAspectRatio: Float
     @Composable
     @ReadOnlyComposable
     get() = if (LocalContext.current.isLandscape()) {
