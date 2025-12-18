@@ -314,9 +314,21 @@ export class NetworkObserver {
     return this.#throttleData;
   }
 
+  /**
+   * Update the network throttling configuration.
+   *
+   * @param {object|null} value
+   *        The network throttling configuration object, or null if throttling
+   *        should be disabled.
+   */
   setThrottleData(value) {
     this.#throttleData = value;
-    // Clear out any existing throttlers
+
+    // If value is null, the user is disabling throttling, destroy the previous
+    // throttler.
+    if (this.#throttler && value === null) {
+      this.#throttler.destroy();
+    }
     this.#throttler = null;
   }
 
