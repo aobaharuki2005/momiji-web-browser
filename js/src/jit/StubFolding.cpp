@@ -76,6 +76,25 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
     return true;
   };
 
+#ifdef JS_JITSPEW
+  JitSpew(JitSpew_StubFolding, "Trying to fold stubs at offset %u @ %s:%u:%u",
+          fallback->pcOffset(), script->filename(), script->lineno(),
+          script->column().oneOriginValue());
+
+  if (JitSpewEnabled(JitSpew_StubFoldingDetails)) {
+    Fprinter& printer(JitSpewPrinter());
+    uint32_t i = 0;
+    for (ICCacheIRStub* stub = firstStub; stub; stub = stub->nextCacheIR()) {
+      printer.printf("- stub %d (enteredCount: %d)\n", i, stub->enteredCount());
+      ICCacheIRStub* cache_stub = stub->toCacheIRStub();
+
+      CacheIRReader reader(cache_stub->stubInfo());
+      SpewCacheIROps(printer, "  ", cache_stub->stubInfo());
+      i++;
+    }
+  }
+#endif
+
   // Find the offset of the first Shape that differs.
   for (ICCacheIRStub* other = firstStub->nextCacheIR(); other;
        other = other->nextCacheIR()) {
@@ -236,6 +255,12 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
   if (!shapeSuccess) {
     // If the shape field that differed was not part of a GuardShape,
     // we can't fold these stubs together.
+    JitSpew(JitSpew_StubFolding,
+            "Foldable shape field at offset %u was not a GuardShape "
+            "(icScript: %p) with %zu shapes (%s:%u:%u)",
+            fallback->pcOffset(), icScript, shapeList.length(),
+            script->filename(), script->lineno(),
+            script->column().oneOriginValue());
     return true;
   }
 
@@ -255,6 +280,18 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
           fallback->pcOffset(), icScript, shapeList.length(),
           script->filename(), script->lineno(),
           script->column().oneOriginValue());
+
+#ifdef JS_JITSPEW
+  if (JitSpewEnabled(JitSpew_StubFoldingDetails)) {
+    ICStub* newEntryStub = icEntry->firstStub();
+    ICCacheIRStub* newStub = newEntryStub->toCacheIRStub();
+
+    Fprinter& printer(JitSpewPrinter());
+    printer.printf("- stub 0 (enteredCount: %d)\n", newStub->enteredCount());
+    CacheIRReader reader(newStub->stubInfo());
+    SpewCacheIROps(printer, "  ", newStub->stubInfo());
+  }
+#endif
 
   fallback->setMayHaveFoldedStub();
 
