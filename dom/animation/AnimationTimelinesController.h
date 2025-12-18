@@ -34,6 +34,7 @@ class AnimationTimelinesController final {
   void UpdateLastRefreshDriverTime();
   void TriggerAllPendingAnimationsNow();
   void UpdateHiddenByContentVisibility();
+  void TrySampleScrollTimelines();
 
  private:
   LinkedList<DocumentTimeline> mDocumentTimelines;

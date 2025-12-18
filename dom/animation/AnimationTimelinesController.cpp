@@ -27,8 +27,6 @@ void AnimationTimelinesController::WillRefresh() {
     tl->WillRefresh();
   }
 
-  // TODO: Switch to sample scroll timelines in HTML event loop in the following
-  // patches.
   for (ScrollTimeline* tl :
        ToTArray<AutoTArray<RefPtr<ScrollTimeline>, 32>>(mScrollTimelines)) {
     tl->WillRefresh();
@@ -58,6 +56,12 @@ void AnimationTimelinesController::UpdateHiddenByContentVisibility() {
 
   for (AnimationTimeline* timeline : mScrollTimelines) {
     timeline->UpdateHiddenByContentVisibility();
+  }
+}
+
+void AnimationTimelinesController::TrySampleScrollTimelines() {
+  for (ScrollTimeline* timeline : mScrollTimelines) {
+    timeline->UpdateCachedCurrentTime();
   }
 }
 
