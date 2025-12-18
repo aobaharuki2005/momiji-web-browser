@@ -400,10 +400,7 @@ already_AddRefed<nsComputedDOMStyle> NS_NewComputedDOMStyle(
 
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
     const nsComputedDOMStyle* aComputedDOMStyle) {
-  // TODO(dshin): Fix this up.
-  AutoResolutionOverrideParams overrides;
-  overrides.mPositionAreaInUse =
-      !aComputedDOMStyle->StylePosition()->mPositionArea.IsNone();
+  AutoResolutionOverrideParams overrides{aComputedDOMStyle->mOuterFrame};
   return {aComputedDOMStyle->mOuterFrame,
           aComputedDOMStyle->StyleDisplay()->mPosition, nullptr, overrides};
 }

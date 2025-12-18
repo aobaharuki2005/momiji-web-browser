@@ -306,14 +306,16 @@ bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
   }
 }
 
-AnchorPosResolutionParams::AutoResolutionOverrideParams::
-    AutoResolutionOverrideParams(
-        const nsIFrame* aFrame,
-        const mozilla::AnchorPosResolutionCache* aCache) {
+static AnchorPosResolutionParams::AutoResolutionOverrideParams
+GetAutoResolutionOverrideParams(const nsIFrame* aFrame,
+                                bool aDefaultAnchorValid) {
+  if (!aFrame) {
+    return {};
+  }
   nsIFrame* parent = aFrame->GetParent();
-  if (!parent || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) || !aCache ||
-      !aCache->mDefaultAnchorCache.mAnchor) {
-    return;
+  if (!parent || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
+      !aDefaultAnchorValid) {
+    return {};
   }
 
   const auto* stylePos = aFrame->StylePosition();
@@ -328,10 +330,34 @@ AnchorPosResolutionParams::AutoResolutionOverrideParams::
 
   const auto horizontalLogicalAxis =
       cbwm.IsVertical() ? LogicalAxis::Block : LogicalAxis::Inline;
-  mHAnchorCenter = checkAxis(horizontalLogicalAxis);
-  mVAnchorCenter = checkAxis(GetOrthogonalAxis(horizontalLogicalAxis));
-  mPositionAreaInUse = !stylePos->mPositionArea.IsNone();
+  AnchorPosResolutionParams::AutoResolutionOverrideParams result;
+  result.mHAnchorCenter = checkAxis(horizontalLogicalAxis);
+  result.mVAnchorCenter = checkAxis(GetOrthogonalAxis(horizontalLogicalAxis));
+  result.mPositionAreaInUse = !stylePos->mPositionArea.IsNone();
+  return result;
 }
+
+AnchorPosResolutionParams::AutoResolutionOverrideParams::
+    AutoResolutionOverrideParams(
+        const nsIFrame* aFrame, const mozilla::AnchorPosResolutionCache* aCache)
+    : AutoResolutionOverrideParams{GetAutoResolutionOverrideParams(
+          aFrame, aCache && aCache->mDefaultAnchorCache.mAnchor)} {}
+
+AnchorPosResolutionParams::AutoResolutionOverrideParams::
+    AutoResolutionOverrideParams(const nsIFrame* aFrame)
+    : AutoResolutionOverrideParams{
+          GetAutoResolutionOverrideParams(aFrame, [&]() {
+            if (!aFrame) {
+              return false;
+            }
+            const auto* references =
+                aFrame->GetProperty(nsIFrame::AnchorPosReferences());
+            if (!references || !references->mDefaultAnchorName) {
+              // It is presumed that this is called on a reflowed frame.
+              return false;
+            }
+            return references->Lookup(references->mDefaultAnchorName)->isSome();
+          }())} {}
 
 AnchorResolvedMargin AnchorResolvedMarginHelper::ResolveAnchor(
     const StyleMargin& aValue, StylePhysicalAxis aAxis,
