@@ -255,8 +255,8 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
             composeTestRule.onNodeWithText(bookmarkTitle).performClick()
             Log.i(TAG, "openBookmarkWithTitle: Clicked bookmark with title: $bookmarkTitle")
 
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+            BrowserRobot(composeTestRule).interact()
+            return BrowserRobot.Transition(composeTestRule)
         }
 
         @OptIn(ExperimentalTestApi::class)
@@ -268,8 +268,8 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
             composeTestRule.onNodeWithContentDescription(getStringResource(R.string.bookmark_search_button_content_description)).performClick()
             Log.i(TAG, "clickSearchButton: Clicked search bookmarks button")
 
-            SearchRobot().interact()
-            return SearchRobot.Transition()
+            SearchRobot(composeTestRule).interact()
+            return SearchRobot.Transition(composeTestRule)
         }
 
         fun goBackToBrowserScreen(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
@@ -277,8 +277,8 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
             composeTestRule.onNodeWithContentDescription(getStringResource(R.string.bookmark_navigate_back_button_content_description)).performClick()
             Log.i(TAG, "goBackToBrowserScreen: Clicked go back button")
 
-            BrowserRobot().interact()
-            return BrowserRobot.Transition()
+            BrowserRobot(composeTestRule).interact()
+            return BrowserRobot.Transition(composeTestRule)
         }
 
         fun goBackToHomeScreen(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
@@ -286,8 +286,8 @@ class BookmarksRobot(private val composeTestRule: ComposeTestRule) {
             composeTestRule.onNodeWithContentDescription(getStringResource(R.string.bookmark_navigate_back_button_content_description)).performClick()
             Log.i(TAG, "goBackToHomeScreen: Clicked go back button")
 
-            HomeScreenRobot().interact()
-            return HomeScreenRobot.Transition()
+            HomeScreenRobot(composeTestRule).interact()
+            return HomeScreenRobot.Transition(composeTestRule)
         }
     }
 }

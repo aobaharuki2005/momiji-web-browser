@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -34,6 +35,7 @@ import mozilla.components.compose.base.theme.privateColorPalette
 import mozilla.components.compose.browser.toolbar.ActionContainer
 import mozilla.components.compose.browser.toolbar.R
 import mozilla.components.compose.browser.toolbar.concept.Action
+import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_PROGRESSBAR
 import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_URL_BOX
 import mozilla.components.compose.browser.toolbar.concept.PageOrigin
 import mozilla.components.compose.browser.toolbar.store.BrowserToolbarInteraction.BrowserToolbarEvent
@@ -186,7 +188,11 @@ internal fun FullDisplayToolbar(
                     progress = progressBarConfig.progress,
                     color = progressBarConfig.color,
                     trackColor = Color.Transparent,
-                    modifier = Modifier.align(
+                    modifier = Modifier
+                        .semantics {
+                            testTag = ADDRESSBAR_PROGRESSBAR
+                        }
+                        .align(
                         when (gravity) {
                             Top -> Alignment.BottomCenter
                             Bottom -> Alignment.TopCenter

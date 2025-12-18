@@ -21,6 +21,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -63,6 +66,10 @@ internal fun ProtectionPanelHeader(
                 maxLines = 1,
                 style = FirefoxTheme.typography.headline7,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.semantics {
+                    testTagsAsResourceId = true
+                    testTag = "unified.trust.panel.website"
+                },
             )
 
             if (websiteInfoState.websiteTitle.isNotEmpty()) {
@@ -70,6 +77,10 @@ internal fun ProtectionPanelHeader(
                     text = websiteInfoState.websiteUrl.tryGetHostFromUrl(),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = FirefoxTheme.typography.body2,
+                    modifier = Modifier.semantics {
+                        testTagsAsResourceId = true
+                        testTag = "unified.trust.panel.website.url"
+                    },
                 )
             }
         }

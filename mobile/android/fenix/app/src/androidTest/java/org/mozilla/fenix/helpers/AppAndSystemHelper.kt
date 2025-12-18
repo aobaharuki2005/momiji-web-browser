@@ -20,6 +20,7 @@ import android.provider.Settings
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.core.net.toUri
 import androidx.core.os.LocaleListCompat
 import androidx.test.espresso.Espresso
@@ -381,7 +382,7 @@ object AppAndSystemHelper {
         }
     }
 
-    fun assertNativeAppOpens(appPackageName: String, url: String = "") {
+    fun assertNativeAppOpens(composeTestRule: ComposeTestRule, appPackageName: String, url: String = "") {
         if (isPackageInstalled(appPackageName)) {
             Log.i(TAG, "assertNativeAppOpens: Waiting for the device to be idle $waitingTimeShort ms.")
             mDevice.waitForIdle(waitingTimeShort)
@@ -398,7 +399,7 @@ object AppAndSystemHelper {
             forceCloseApp(appPackageName)
         } else {
             Log.i(TAG, "assertNativeAppOpens: Trying to verify the page redirect URL.")
-            BrowserRobot().verifyUrl(url)
+            BrowserRobot(composeTestRule).verifyUrl(url)
             Log.i(TAG, "assertNativeAppOpens: Verified the page redirect URL.")
         }
     }

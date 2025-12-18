@@ -29,6 +29,11 @@ object BrowserToolbarTestTags {
     const val ADDRESSBAR_URL = "ADDRESSBAR_URL"
 
     /**
+     * Test tag for the page load progress bar.
+     */
+    const val ADDRESSBAR_PROGRESSBAR = "ADDRESSBAR_PROGRESSBAR"
+
+    /**
      * Test tag for the unified search selector.
      */
     const val SEARCH_SELECTOR = "SEARCH_SELECTOR"
