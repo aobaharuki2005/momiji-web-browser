@@ -5,11 +5,11 @@
 
 export const BACKGROUND_COLOR = {
   CATEGORIES: ["background-color"],
-  PROPERTIES: ["background", "background-color", "stroke", "fill"],
+  PROPERTIES: ["background", "background-color"],
 };
 
 export const BORDER_COLOR = {
-  CATEGORIES: ["border-color", "border"],
+  CATEGORIES: ["border-color", "border", "outline"],
   PROPERTIES: [
     "border",
     "border-color",
@@ -116,10 +116,6 @@ export const SIZE = {
     "inset-inline",
     "inset-inline-end",
     "inset-inline-start",
-    "top",
-    "bottom",
-    "left",
-    "right",
     "flex",
     "flex-basis",
     "grid",
@@ -128,9 +124,6 @@ export const SIZE = {
     "grid-auto-rows",
     "grid-auto-columns",
     "background-size",
-    "background-position",
-    "background-position-x",
-    "background-position-y",
     "transform",
   ],
 };
@@ -172,13 +165,6 @@ export const SPACE = {
     "inset-inline",
     "inset-inline-end",
     "inset-inline-start",
-    "top",
-    "bottom",
-    "left",
-    "right",
-    "grid-gap",
-    "grid-row-gap",
-    "grid-column-gap",
     "gap",
     "row-gap",
     "column-gap",
@@ -205,10 +191,6 @@ export const SPACE = {
     "scroll-padding-inline-start",
     "scroll-padding-inline-end",
     "border-spacing",
-    "background-position",
-    "background-position-x",
-    "background-position-y",
-    "word-spacing",
   ],
 };
 
@@ -220,47 +202,4 @@ export const TEXT_COLOR = {
 export const BOX_SHADOW = {
   CATEGORIES: ["box-shadow"],
   PROPERTIES: ["box-shadow", "filter", "backdrop-filter"],
-};
-
-export const OUTLINE = {
-  CATEGORIES: ["outline"],
-  PROPERTIES: [
-    "outline",
-    "outline-width",
-    "outline-color",
-    "outline-offset",
-    "border",
-    "border-width",
-    "border-color",
-    "border-block",
-    "border-block-width",
-    "border-block-color",
-    "border-block-end",
-    "border-block-end-width",
-    "border-block-end-color",
-    "border-block-start",
-    "border-block-start-width",
-    "border-block-start-color",
-    "border-inline",
-    "border-inline-width",
-    "border-inline-color",
-    "border-inline-end",
-    "border-inline-end-width",
-    "border-inline-end-color",
-    "border-inline-start",
-    "border-inline-start-width",
-    "border-inline-start-color",
-    "border-top",
-    "border-top-width",
-    "border-top-color",
-    "border-bottom",
-    "border-bottom-width",
-    "border-bottom-color",
-    "border-left",
-    "border-left-width",
-    "border-left-color",
-    "border-right",
-    "border-right-width",
-    "border-right-color",
-  ],
 };

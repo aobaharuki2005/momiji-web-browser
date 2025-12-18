@@ -154,13 +154,13 @@ ul {
 }
 
 a {
-  color: var(--link-color);
+  color: var(--button-background-color-primary);
 }
 a:hover {
-  color: var(--link-color-hover);
+  color: var(--button-background-color-primary-hover);
 }
 a:active {
-  color: var(--link-color-active);
+  color: var(--button-background-color-primary-active);
 }
 
 p,
