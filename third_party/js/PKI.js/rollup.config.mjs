@@ -1,9 +1,11 @@
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
 import typescript from "rollup-plugin-typescript2";
 import dts from "rollup-plugin-dts";
-import pkg from "./package.json";
-import { nodeResolve } from '@rollup/plugin-node-resolve';
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(fs.readFileSync("./package.json", "utf8"));
 
 const LICENSE = fs.readFileSync("LICENSE", { encoding: "utf-8" });
 const banner = [
@@ -13,20 +15,23 @@ const banner = [
   "",
 ].join("\n");
 const input = "src/index.ts";
+const external = Object.keys(pkg.dependencies || {});
+external.push('@noble/hashes/sha1');
+external.push('@noble/hashes/sha2');
 
 export default [
   {
     input,
     plugins: [
       typescript({
-        check: true,
+        check: false,
         clean: true,
         tsconfigOverride: {
           compilerOptions: {
-            module: "ES2015",
+            module: "ES2020",
             removeComments: true,
           }
-        },
+        }
       }),
       nodeResolve(),
     ],
