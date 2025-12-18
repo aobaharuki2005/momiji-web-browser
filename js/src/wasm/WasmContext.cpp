@@ -33,7 +33,6 @@ Context::Context()
 #ifdef ENABLE_WASM_JSPI
       ,
       activeSuspender_(nullptr),
-      onSuspendableStack(0),
       suspendableStacksCount(0),
       suspendedStacks_()
 #endif
@@ -54,8 +53,6 @@ void Context::initStackLimit(JSContext* cx) {
 }
 
 #ifdef ENABLE_WASM_JSPI
-SuspenderObject* Context::activeSuspender() { return activeSuspender_; }
-
 void Context::trace(JSTracer* trc) {
   if (activeSuspender_) {
     TraceEdge(trc, &activeSuspender_, "suspender");
@@ -78,23 +75,19 @@ void Context::traceRoots(JSTracer* trc) {
 
 void Context::enterSuspendableStack(SuspenderObject* suspender,
                                     JS::NativeStackLimit newStackLimit) {
-  MOZ_ASSERT(onSuspendableStack == 0);
   MOZ_ASSERT(!activeSuspender_);
   activeSuspender_ = suspender;
-  onSuspendableStack = 1;
   stackLimit = newStackLimit;
 }
 
 void Context::leaveSuspendableStack(JSContext* cx) {
-  MOZ_ASSERT(onSuspendableStack != 0);
   MOZ_ASSERT(activeSuspender_);
   activeSuspender_ = nullptr;
-  onSuspendableStack = 0;
   initStackLimit(cx);
 }
 
 bool js::IsSuspendableStackActive(JSContext* cx) {
-  return cx->wasm().onSuspendableStack != 0;
+  return cx->wasm().onSuspendableStack();
 }
 
 JS::NativeStackLimit js::GetSuspendableStackLimit(JSContext* cx) {

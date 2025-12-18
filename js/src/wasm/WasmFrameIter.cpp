@@ -1008,11 +1008,10 @@ void wasm::GenerateJitExitPrologue(MacroAssembler& masm,
 
     const Register scratch = ABINonArgReg0;
     masm.loadPtr(Address(InstanceReg, Instance::offsetOfCx()), scratch);
-    masm.load32(
-        Address(scratch, JSContext::offsetOfWasm() +
-                             wasm::Context::offsetOfOnSuspendableStack()),
-        scratch);
-    masm.branchTest32(Assembler::NonZero, scratch, scratch, &fallback);
+    masm.loadPtr(Address(scratch, JSContext::offsetOfWasm() +
+                                      wasm::Context::offsetOfActiveSuspender()),
+                 scratch);
+    masm.branchTestPtr(Assembler::NonZero, scratch, scratch, &fallback);
   }
 
   uint32_t entryOffset;

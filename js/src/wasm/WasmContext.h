@@ -45,16 +45,16 @@ class Context {
   static constexpr size_t offsetOfStackLimit() {
     return offsetof(Context, stackLimit);
   }
-#ifdef ENABLE_WASM_JSPI
-  static constexpr size_t offsetOfOnSuspendableStack() {
-    return offsetof(Context, onSuspendableStack);
-  }
-#endif
 
   void initStackLimit(JSContext* cx);
 
 #ifdef ENABLE_WASM_JSPI
-  SuspenderObject* activeSuspender();
+  static constexpr size_t offsetOfActiveSuspender() {
+    return offsetof(Context, activeSuspender_);
+  }
+
+  SuspenderObject* activeSuspender() { return activeSuspender_; }
+  bool onSuspendableStack() const { return activeSuspender_ != nullptr; }
 
   void enterSuspendableStack(SuspenderObject* suspender,
                              JS::NativeStackLimit newStackLimit);
@@ -75,10 +75,9 @@ class Context {
   JS::NativeStackLimit stackLimit;
 
 #ifdef ENABLE_WASM_JSPI
+  // The currently active suspender object. Null if we're executing on the
+  // system stack, otherwise we're on a wasm suspendable stack.
   HeapPtr<SuspenderObject*> activeSuspender_;
-  // Boolean value set to true when the top wasm frame is currently executed on
-  // a suspendable stack. Aligned to int32_t to be used on JIT code.
-  int32_t onSuspendableStack;
   mozilla::Atomic<uint32_t> suspendableStacksCount;
   // Using double-linked list to avoid allocation in the JIT code.
   mozilla::DoublyLinkedList<SuspenderObjectData> suspendedStacks_;

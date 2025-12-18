@@ -443,7 +443,7 @@ void SuspenderObject::leave(JSContext* cx) {
       break;
     }
     case SuspenderState::Suspended: {
-      MOZ_ASSERT(cx->wasm().onSuspendableStack == 0);
+      MOZ_ASSERT(!cx->wasm().onSuspendableStack());
       break;
     }
     case SuspenderState::Initial:
