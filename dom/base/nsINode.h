@@ -251,9 +251,6 @@ enum class BatchRemovalOrder {
 };
 
 struct BatchRemovalState {
-  // Whether we're the fist kid getting removed in the batch. Note that that's
-  // different to whether we're the first _child_, if we're removing
-  // back-to-front.
   bool mIsFirst = true;
 };
 
@@ -1050,15 +1047,18 @@ class nsINode : public mozilla::dom::EventTarget {
 
   template <BatchRemovalOrder aOrder = BatchRemovalOrder::FrontToBack>
   void RemoveAllChildren(bool aNotify) {
+    if (!HasChildren()) {
+      return;
+    }
     BatchRemovalState state{};
-    while (HasChildren()) {
+    do {
       nsIContent* nodeToRemove = aOrder == BatchRemovalOrder::FrontToBack
                                      ? GetFirstChild()
                                      : GetLastChild();
       RemoveChildNode(nodeToRemove, aNotify, &state, nullptr,
                       MutationEffectOnScript::KeepTrustWorthiness);
       state.mIsFirst = false;
-    }
+    } while (HasChildren());
   }
 
   /**

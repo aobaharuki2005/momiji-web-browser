@@ -2854,15 +2854,14 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
 
   nsINode::Unlink(tmp);
 
-  BatchRemovalState state{};
-  while (nsCOMPtr<nsIContent> child = tmp->GetLastChild()) {
+  while (tmp->HasChildren()) {
     // Hold a strong ref to the node when we remove it, because we may be
     // the last reference to it.
     // If this code changes, change the corresponding code in Document's
     // unlink impl and ContentUnbinder::UnbindSubtree.
+    nsCOMPtr<nsIContent> child = tmp->GetLastChild();
     tmp->DisconnectChild(child);
-    child->UnbindFromTree(/* aNewParent=*/nullptr, &state);
-    state.mIsFirst = false;
+    child->UnbindFromTree();
   }
 
   tmp->UnlinkOriginalDocumentIfStatic();

@@ -457,8 +457,7 @@ void CharacterData::UnbindFromTree(UnbindContext& aContext) {
   UnsetFlags(NS_CREATE_FRAME_IF_NON_WHITESPACE | NS_REFRAME_IF_WHITESPACE);
 
   const bool nullParent = aContext.IsUnbindRoot(this);
-  HandleShadowDOMRelatedRemovalSteps(nullParent,
-                                     !!aContext.GetBatchRemovalState());
+  HandleShadowDOMRelatedRemovalSteps(nullParent);
 
   if (nullParent) {
     if (GetParent()) {
