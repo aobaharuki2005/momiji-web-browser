@@ -397,16 +397,20 @@ const TranslationsSettings = {
     const pane = /** @type {ElementWithUpdateComplete|null} */ (
       document.querySelector('setting-pane[data-category="paneTranslations"]')
     );
-    const group = /** @type {ElementWithUpdateComplete|null} */ (
-      document.querySelector('setting-group[groupid="moreTranslationSettings"]')
+    const groups = Array.from(
+      document.querySelectorAll(
+        'setting-group[groupid="translationsAutomaticTranslation"], setting-group[groupid="translationsDownloadLanguages"]'
+      )
     );
 
     const promises = [];
     if (pane?.getUpdateComplete) {
       promises.push(pane.getUpdateComplete());
     }
-    if (group?.getUpdateComplete) {
-      promises.push(group.getUpdateComplete());
+    for (const group of groups) {
+      if (group?.getUpdateComplete) {
+        promises.push(group.getUpdateComplete());
+      }
     }
 
     if (promises.length) {
