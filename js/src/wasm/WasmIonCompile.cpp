@@ -3291,13 +3291,16 @@ class FunctionCompiler {
     MInstruction* ins;
     switch (kind) {
       case StackSwitchKind::SwitchToMain:
-        ins = MWasmStackSwitchToMain::New(alloc(), suspender, fn, data);
+        ins = MWasmStackSwitchToMain::New(alloc(), instancePointer_, suspender,
+                                          fn, data);
         break;
       case StackSwitchKind::SwitchToSuspendable:
-        ins = MWasmStackSwitchToSuspendable::New(alloc(), suspender, fn, data);
+        ins = MWasmStackSwitchToSuspendable::New(alloc(), instancePointer_,
+                                                 suspender, fn, data);
         break;
       case StackSwitchKind::ContinueOnSuspendable:
-        ins = MWasmStackContinueOnSuspendable::New(alloc(), suspender, data);
+        ins = MWasmStackContinueOnSuspendable::New(alloc(), instancePointer_,
+                                                   suspender, data);
         break;
     }
     if (!ins) {

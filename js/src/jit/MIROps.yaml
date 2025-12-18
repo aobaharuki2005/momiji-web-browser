@@ -4386,8 +4386,9 @@
 
 - name: WasmStackSwitchToMain
   operands:
-    suspender: Object
-    fn: Object
+    instance: WasmAnyRef
+    suspender: WasmAnyRef
+    fn: WasmAnyRef
     data: WasmAnyRef
   result_type: WasmAnyRef
   type_policy: none
@@ -4396,8 +4397,9 @@
 
 - name: WasmStackSwitchToSuspendable
   operands:
-    suspender: Object
-    fn: Object
+    instance: WasmAnyRef
+    suspender: WasmAnyRef
+    fn: WasmAnyRef
     data: WasmAnyRef
   type_policy: none
   possibly_calls: true
@@ -4405,11 +4407,13 @@
 
 - name: WasmStackContinueOnSuspendable
   operands:
-    suspender: Object
+    instance: WasmAnyRef
+    suspender: WasmAnyRef
     result: WasmAnyRef
   type_policy: none
   possibly_calls: true
   generate_lir: true
+  lir_temps: 2
 
 - name: WasmBinarySimd128
   gen_boilerplate: false
