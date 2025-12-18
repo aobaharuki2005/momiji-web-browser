@@ -3693,7 +3693,23 @@
     <!-- Label for a button to postpone accepting the terms of use -->
     <string name="terms_of_use_prompt_postpone">Remind me later</string>
 
-    <!-- ==== End of Terms of use pop up prompt ==== -->
+    <!-- ==== Experiment strings. ==== -->
+
+    <!-- A title for the popup prompt. -->
+    <string name="terms_of_use_prompt_title_option_a" tools:ignore="UnusedResources">Terms of Use</string>
+
+    <!-- A title for the popup prompt.
+        %1$s is the product name "Firefox" -->
+    <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">A note from %1$s</string>
+
+    <!-- Copy for the Terms of Use popup prompt body line two.
+        %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use -->
+    <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">You can learn more %1$s.</string>
+
+    <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
+    <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">here</string>
+
+    <!-- ==== End of Terms of use popup prompt. ==== -->
 
     <!-- Privacy notice homepage banner -->
     <!-- A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
