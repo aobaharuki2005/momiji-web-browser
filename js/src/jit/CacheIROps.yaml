@@ -814,6 +814,24 @@
     obj: ObjId
     offset: Int32Id
 
+- name: StoreFixedSlotFromOffset
+  shared: true
+  transpile: true
+  cost_estimate: 6
+  args:
+    obj: ObjId
+    offset: Int32Id
+    rhs: ValId
+
+- name: StoreDynamicSlotFromOffset
+  shared: true
+  transpile: true
+  cost_estimate: 6
+  args:
+    obj: ObjId
+    offset: Int32Id
+    rhs: ValId
+
 - name: LoadDynamicSlot
   shared: true
   transpile: true

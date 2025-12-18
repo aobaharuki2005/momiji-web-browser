@@ -1961,6 +1961,40 @@ bool WarpCacheIRTranspiler::emitLoadFixedSlotFromOffsetResult(
   return true;
 }
 
+bool WarpCacheIRTranspiler::emitStoreFixedSlotFromOffset(
+    ObjOperandId objId, Int32OperandId offsetId, ValOperandId rhsId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* offset = getOperand(offsetId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
+  add(barrier);
+
+  auto* store =
+      MStoreFixedSlotFromOffset::NewBarriered(alloc(), obj, offset, rhs);
+  addEffectful(store);
+
+  return resumeAfter(store);
+}
+
+bool WarpCacheIRTranspiler::emitStoreDynamicSlotFromOffset(
+    ObjOperandId objId, Int32OperandId offsetId, ValOperandId rhsId) {
+  MDefinition* obj = getOperand(objId);
+  MDefinition* offset = getOperand(offsetId);
+  MDefinition* rhs = getOperand(rhsId);
+
+  auto* barrier = MPostWriteBarrier::New(alloc(), obj, rhs);
+  add(barrier);
+
+  auto* slots = MSlots::New(alloc(), obj);
+  add(slots);
+
+  auto* store = MStoreDynamicSlotFromOffset::New(alloc(), slots, offset, rhs);
+  addEffectful(store);
+
+  return resumeAfter(store);
+}
+
 bool WarpCacheIRTranspiler::emitLoadFixedSlotResult(ObjOperandId objId,
                                                     uint32_t offsetOffset) {
   int32_t offset = int32StubField(offsetOffset);
