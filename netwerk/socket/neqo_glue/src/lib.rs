@@ -560,7 +560,7 @@ impl NeqoHttp3Conn {
     fn record_stats_in_glean(&self) {
         use firefox_on_glean::metrics::networking as glean;
         use neqo_common::Ecn;
-        use neqo_transport::ecn;
+        use neqo_transport::{ecn, CongestionEvent};
 
         // Metric values must be recorded as integers. Glean does not support
         // floating point distributions. In order to represent values <1, they
@@ -694,10 +694,10 @@ impl NeqoHttp3Conn {
         }
 
         // Ignore connections that never had loss induced congestion events (and prevent dividing by zero).
-        if stats.cc.congestion_events_loss != 0 {
+        if stats.cc.congestion_events[CongestionEvent::Loss] != 0 {
             if let Ok(spurious) = i64::try_from(
-                (stats.cc.congestion_events_spurious * PRECISION_FACTOR_USIZE)
-                    / stats.cc.congestion_events_loss,
+                (stats.cc.congestion_events[CongestionEvent::Spurious] * PRECISION_FACTOR_USIZE)
+                    / stats.cc.congestion_events[CongestionEvent::Loss],
             ) {
                 glean::http_3_spurious_congestion_event_ratio
                     .accumulate_single_sample_signed(spurious);
