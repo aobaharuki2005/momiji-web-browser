@@ -246,6 +246,8 @@ partial interface HTMLInputElement {
           attribute boolean webkitdirectory;
 };
 
+// Chrome-only functions for datetime picker
+
 dictionary DateTimeValue {
   long hour;
   long minute;
@@ -287,4 +289,24 @@ partial interface HTMLInputElement {
 
   [Func="IsChromeOrUAWidget", BinaryName="getStepBaseAsDouble"]
   double getStepBase();
+};
+
+// Chrome-only functions for color picker
+
+dictionary InputPickerColor {
+  required float component1;
+  required float component2;
+  required float component3;
+
+  // bug 1919718
+  // required float alpha;
+  // required InputColorSpace colorSpace;
+};
+
+partial interface HTMLInputElement {
+  [Func="IsChromeOrUAWidget"]
+  InputPickerColor getColor();
+
+  [Func="IsChromeOrUAWidget"]
+  undefined setUserInputColor(InputPickerColor aColor);
 };

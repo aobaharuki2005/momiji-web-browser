@@ -422,6 +422,7 @@ module.exports = {
         "testing/**",
         // UA Widgets should not use design tokens
         "toolkit/themes/shared/colorpicker-common.css",
+        "toolkit/themes/shared/colorpicker.css",
         "toolkit/themes/shared/media/pipToggle.css",
         "toolkit/themes/shared/media/videocontrols.css",
         "toolkit/content/widgets/datetimebox.css",
