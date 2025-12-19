@@ -286,6 +286,8 @@ export class TaskbarTabsRegistry {
    * Removes a Taskbar Tab.
    *
    * @param {string} aId - The ID of the TaskbarTab to remove.
+   * @returns {TaskbarTab?} The removed taskbar tab, or null if it wasn't
+   * found.
    */
   removeTaskbarTab(aId) {
     let tts = this.#taskbarTabs;
@@ -299,9 +301,11 @@ export class TaskbarTabsRegistry {
 
       Glean.webApp.uninstall.record({});
       this.#emitter.emit(kTaskbarTabsRegistryEvents.removed, removed[0]);
-    } else {
-      lazy.logConsole.error(`Taskbar Tab ID ${aId} not found.`);
+      return removed[0];
     }
+
+    lazy.logConsole.error(`Taskbar Tab ID ${aId} not found.`);
+    return null;
   }
 
   /**
