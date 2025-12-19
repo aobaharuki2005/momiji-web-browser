@@ -28,7 +28,7 @@ error_help.set_prefix(f"*** ERROR *** {script_name} did not complete successfull
 error_help.set_postfix(
     f"Please resolve the error and then continue running {script_name}"
 )
-repo_type = None
+repo_type = detect_repo_type()
 
 
 def early_exit_handler():
@@ -284,8 +284,7 @@ def vendor_and_commit(
 
 if __name__ == "__main__":
     # first, check which repo we're in, git or hg
-    repo_type = detect_repo_type()
-    if repo_type is None:
+    if repo_type is None or not isinstance(repo_type, RepoType):
         error_help.set_help("Unable to detect repo (git or hg)")
         sys.exit(1)
 

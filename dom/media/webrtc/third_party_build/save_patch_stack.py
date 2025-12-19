@@ -29,7 +29,7 @@ script_name = os.path.basename(__file__)
 error_help = ErrorHelp()
 error_help.set_prefix(f"*** ERROR *** {script_name} did not complete successfully")
 
-repo_type = None
+repo_type = detect_repo_type()
 
 
 @atexit.register
@@ -290,8 +290,7 @@ def verify_git_repo_configuration():
 
 if __name__ == "__main__":
     # first, check which repo we're in, git or hg
-    repo_type = detect_repo_type()
-    if repo_type is None:
+    if repo_type is None or not isinstance(repo_type, RepoType):
         error_help.set_help("Unable to detect repo (git or hg)")
         sys.exit(1)
 
