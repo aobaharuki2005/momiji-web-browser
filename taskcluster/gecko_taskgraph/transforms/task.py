@@ -180,6 +180,8 @@ task_description_schema = Schema(
         Optional("run-on-projects"): optionally_keyed_by("build-platform", [str]),
         # Like `run_on_projects`, `run-on-hg-branches` defaults to "all".
         Optional("run-on-hg-branches"): optionally_keyed_by("project", [str]),
+        # Specifies git branches for which this task should run.
+        Optional("run-on-git-branches"): [str],
         # The `shipping_phase` attribute, defaulting to None. This specifies the
         # release promotion phase that this task belongs to.
         Required("shipping-phase"): Any(
@@ -2357,6 +2359,12 @@ def build_task(config, tasks):
         )
         attributes["run_on_repo_type"] = task.get("run-on-repo-type", ["git", "hg"])
         attributes["run_on_projects"] = task.get("run-on-projects", ["all"])
+
+        # We don't want to pollute non git repos with this attribute. Moreover, target_tasks
+        # already assumes the default value is ['all']
+        if task.get("run-on-git-branches"):
+            attributes["run_on_git_branches"] = task["run-on-git-branches"]
+
         attributes["always_target"] = task["always-target"]
         # This logic is here since downstream tasks don't always match their
         # upstream dependency's shipping_phase.

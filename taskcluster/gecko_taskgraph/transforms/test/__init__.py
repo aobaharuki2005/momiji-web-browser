@@ -93,6 +93,8 @@ test_description_schema = Schema(
         ),
         # Whether tasks should run on only a specific type of repository.
         Optional("run-on-repo-type"): job_description_schema["run-on-repo-type"],
+        # Whether tasks should run on specified Git branches.
+        Optional("run-on-git-branches"): job_description_schema["run-on-git-branches"],
         # When set only run on projects where the build would already be running.
         # This ensures tasks where this is True won't be the cause of the build
         # running on a project it otherwise wouldn't have.
