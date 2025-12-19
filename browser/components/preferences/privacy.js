@@ -200,7 +200,7 @@ Preferences.addAll([
   { id: "privacy.globalprivacycontrol.enabled", type: "bool" },
 
   // Firefox VPN
-  { id: "browser.ipProtection.variant", type: "string" },
+  { id: "browser.ipProtection.enabled", type: "bool" },
   { id: "browser.ipProtection.features.siteExceptions", type: "bool" },
   { id: "browser.ipProtection.features.autoStart", type: "bool" },
   { id: "browser.ipProtection.autoStartEnabled", type: "bool" },
@@ -1417,8 +1417,7 @@ Preferences.addSetting({
 
 Preferences.addSetting({
   id: "ipProtectionVisible",
-  pref: "browser.ipProtection.variant",
-  get: prefVal => prefVal == "beta",
+  pref: "browser.ipProtection.enabled",
 });
 Preferences.addSetting({
   id: "ipProtectionSiteExceptionsFeatureEnabled",

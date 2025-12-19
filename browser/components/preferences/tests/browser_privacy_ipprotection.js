@@ -5,7 +5,7 @@
 
 "use strict";
 
-const FEATURE_PREF = "browser.ipProtection.variant";
+const FEATURE_PREF = "browser.ipProtection.enabled";
 const SITE_EXCEPTIONS_FEATURE_PREF =
   "browser.ipProtection.features.siteExceptions";
 const AUTOSTART_FEATURE_ENABLED_PREF =
@@ -18,7 +18,7 @@ const ONBOARDING_MESSAGE_MASK_PREF =
 const SECTION_ID = "dataIPProtectionGroup";
 
 async function setupVpnPrefs({
-  feature,
+  feature = false,
   siteExceptions = false,
   autostartFeatureEnabled = false,
   autostart = false,
@@ -46,10 +46,10 @@ function testSettingsGroupVisible(browser, sectionId) {
   return settingGroup;
 }
 
-// Test the section is hidden on page load if the variant pref is set to an ineligible experiment.
+// Test the section is hidden on page load if the feature pref is disabled.
 add_task(
   async function test_section_removed_when_set_to_ineligible_experiment_pref() {
-    await setupVpnPrefs({ feature: "alpha" });
+    await setupVpnPrefs({ feature: false });
 
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: "about:preferences#privacy" },
@@ -63,10 +63,10 @@ add_task(
   }
 );
 
-// Test the section is shown on page load if the variant pref is set to an eligible experiment
+// Test the section is shown on page load if the feature pref is enabled
 add_task(
   async function test_section_shown_when_set_to_eligible_experiment_pref() {
-    await setupVpnPrefs({ feature: "beta" });
+    await setupVpnPrefs({ feature: true });
 
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: "about:preferences#privacy" },
@@ -79,7 +79,7 @@ add_task(
 
 // Test the site exceptions controls load correctly.
 add_task(async function test_exceptions_settings() {
-  await setupVpnPrefs({ feature: "beta", siteExceptions: true });
+  await setupVpnPrefs({ feature: true, siteExceptions: true });
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
@@ -204,7 +204,7 @@ add_task(async function test_exclusions_add_button() {
 // Test that autostart checkboxes exist and map to the correct preferences
 add_task(async function test_autostart_checkboxes() {
   await setupVpnPrefs({
-    feature: "beta",
+    feature: true,
     autostartFeatureEnabled: true,
     autostart: true,
     autostartprivate: true,
@@ -244,7 +244,7 @@ add_task(async function test_autostart_checkboxes() {
 // Test that additional links exist
 add_task(async function test_additional_links() {
   await setupVpnPrefs({
-    feature: "beta",
+    feature: true,
   });
 
   await BrowserTestUtils.withNewTab(
