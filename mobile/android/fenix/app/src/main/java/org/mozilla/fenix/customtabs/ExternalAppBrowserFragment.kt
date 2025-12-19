@@ -208,7 +208,7 @@ class ExternalAppBrowserFragment : BaseBrowserFragment() {
                                 isLocalPdf = tab.content.url.isContentUrl(),
                                 isSecured = tab.content.securityInfo.isSecure,
                                 sitePermissions = sitePermissions,
-                                certificateName = tab.content.securityInfo.issuer,
+                                certificate = tab.content.securityInfo.certificate,
                                 permissionHighlights = tab.content.permissionHighlights,
                                 isTrackingProtectionEnabled = tab.trackingProtection.enabled && !contains,
                                 cookieBannerUIMode = cookieBannerUIMode,

@@ -630,7 +630,7 @@ class BrowserToolbarMiddleware(
                                 isLocalPdf = tab.content.url.isContentUrl(),
                                 isSecured = tab.content.securityInfo.isSecure,
                                 sitePermissions = sitePermissions,
-                                certificateName = tab.content.securityInfo.issuer,
+                                certificate = tab.content.securityInfo.certificate,
                                 permissionHighlights = tab.content.permissionHighlights,
                                 isTrackingProtectionEnabled = isTrackingProtectionEnabled,
                                 cookieBannerUIMode = cookieBannerUIMode,

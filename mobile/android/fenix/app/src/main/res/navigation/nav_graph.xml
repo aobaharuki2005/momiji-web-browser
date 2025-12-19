@@ -1838,9 +1838,9 @@
             app:argType="mozilla.components.concept.engine.permission.SitePermissions"
             app:nullable="true" />
         <argument
-            android:name="certificateName"
-            android:defaultValue=" "
-            app:argType="string" />
+            android:name="certificate"
+            app:argType="java.security.cert.X509Certificate"
+            app:nullable="true" />
         <argument
             android:name="permissionHighlights"
             app:argType="mozilla.components.browser.state.state.content.PermissionHighlightsState" />
@@ -1873,9 +1873,9 @@
                 app:argType="mozilla.components.concept.engine.permission.SitePermissions"
                 app:nullable="true" />
             <argument
-                android:name="certificateName"
-                android:defaultValue=" "
-                app:argType="string" />
+                android:name="certificate"
+                app:argType="java.security.cert.X509Certificate"
+                app:nullable="true" />
             <argument
                 android:name="permissionHighlights"
                 app:argType="mozilla.components.browser.state.state.content.PermissionHighlightsState" />

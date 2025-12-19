@@ -192,7 +192,7 @@ class CustomTabBrowserToolbarMiddleware(
                                         isLocalPdf = customTab.content.url.isContentUrl(),
                                         isSecured = customTab.content.securityInfo.isSecure,
                                         sitePermissions = sitePermissions,
-                                        certificateName = customTab.content.securityInfo.issuer,
+                                        certificate = customTab.content.securityInfo.certificate,
                                         permissionHighlights = customTab.content.permissionHighlights,
                                         isTrackingProtectionEnabled =
                                             customTab.trackingProtection.enabled && !isExcepted,
