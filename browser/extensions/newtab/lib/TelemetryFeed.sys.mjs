@@ -7,16 +7,12 @@
 
 // We use importESModule here instead of static import so that the Karma test
 // environment won't choke on these module. This is because the Karma test
-// environment already stubs out XPCOMUtils, AppConstants and RemoteSettings,
-// and overrides importESModule to be a no-op (which can't be done for a static
-// import statement).
+// environment already stubs out XPCOMUtils and RemoteSettings, and overrides
+// importESModule to be a no-op (which can't be done for a static import
+// statement).
 // eslint-disable-next-line mozilla/use-static-import
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
-// eslint-disable-next-line mozilla/use-static-import
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
 );
 
 import {
@@ -43,7 +39,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   UTEventReporting: "resource://newtab/lib/UTEventReporting.sys.mjs",
   NewTabContentPing: "resource://newtab/lib/NewTabContentPing.sys.mjs",
-  NewTabGleanUtils: "resource://newtab/lib/NewTabGleanUtils.sys.mjs",
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
@@ -727,13 +722,8 @@ export class TelemetryFeed {
           position: action.data.position,
           is_pinned: !!action.data.isPinned,
           visible_topsites,
-          // @backward-compat { version 146 } This newtab train-hop compatibility
-          // shim can be removed once Firefox 146 makes it to the release channel.
-          ...(Services.vc.compare(AppConstants.MOZ_APP_VERSION, "146.0a1") >=
-            0 && {
-            smart_scores: JSON.stringify(action.data.smartScores),
-            smart_weights: JSON.stringify(action.data.smartWeights),
-          }),
+          smart_scores: JSON.stringify(action.data.smartScores),
+          smart_weights: JSON.stringify(action.data.smartWeights),
         });
         break;
 
@@ -744,13 +734,8 @@ export class TelemetryFeed {
           position: action.data.position,
           is_pinned: !!action.data.isPinned,
           visible_topsites,
-          // @backward-compat { version 146 } This newtab train-hop compatibility
-          // shim can be removed once Firefox 146 makes it to the release channel.
-          ...(Services.vc.compare(AppConstants.MOZ_APP_VERSION, "146.0a1") >=
-            0 && {
-            smart_scores: JSON.stringify(action.data.smartScores),
-            smart_weights: JSON.stringify(action.data.smartWeights),
-          }),
+          smart_scores: JSON.stringify(action.data.smartScores),
+          smart_weights: JSON.stringify(action.data.smartWeights),
         });
         break;
 
@@ -2071,16 +2056,6 @@ export class TelemetryFeed {
   }
 
   async _setNewtabPrefMetrics(fullPrefName, isChanged) {
-    // @backward-compat { version 146 } This newtab train-hop compatibility
-    // shim can be removed once Firefox 146 makes it to the release channel.
-    const is146AndUp =
-      Services.vc.compare(AppConstants.MOZ_APP_VERSION, "146.0a1") >= 0;
-    if (!is146AndUp) {
-      await lazy.NewTabGleanUtils.registrationDone;
-      NEWTAB_PING_PREFS["feeds.section.highlights"] =
-        Glean.newtab.highlightsEnabled;
-    }
-
     const pref = fullPrefName.slice(ACTIVITY_STREAM_PREF_BRANCH.length);
     if (!Object.hasOwn(NEWTAB_PING_PREFS, pref)) {
       return;
