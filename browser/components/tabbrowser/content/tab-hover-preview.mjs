@@ -558,8 +558,8 @@ class TabPanel extends HoverPanel {
     // Popup anchors to the corner of tabs in the vertical pinned grid
     if (tabContainer.isContainerVerticalPinnedGrid(this.#tab)) {
       positionFromAnchor = sidebarAtStart ? "bottomright" : "bottomleft";
-      positionX = sidebarAtStart ? -20 : 20;
-      positionY = -15;
+      positionX = sidebarAtStart ? -6 : 6;
+      positionY = -10;
     }
 
     return {
