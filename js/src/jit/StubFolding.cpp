@@ -250,6 +250,10 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
   CacheIRCloner cloner(firstStub);
   bool hasSlotOffsets = offsetList.length() > 1;
 
+  if (JitOptions.disableStubFoldingLoadsAndStores && hasSlotOffsets) {
+    return true;
+  }
+
   // Initialize the operands.
   CacheKind cacheKind = stubInfo->kind();
   for (uint32_t i = 0; i < NumInputsForCacheKind(cacheKind); i++) {
@@ -443,6 +447,10 @@ bool js::jit::TryFoldingStubs(JSContext* cx, ICFallbackStub* fallback,
                               JSScript* script, ICScript* icScript) {
   ICEntry* icEntry = icScript->icEntryForStub(fallback);
   ICStub* entryStub = icEntry->firstStub();
+
+  if (JitOptions.disableStubFolding) {
+    return true;
+  }
 
   // Don't fold unless there are at least two stubs.
   if (entryStub == fallback) {
