@@ -1000,7 +1000,7 @@ add_task(async function check_current_tab_installed_as_web_app() {
       "no taskbar tab exists yet"
     );
 
-    const tt = await TaskbarTabs.findOrCreateTaskbarTab(
+    const { taskbarTab } = await TaskbarTabs.findOrCreateTaskbarTab(
       Services.io.newURI(kUri),
       0
     );
@@ -1018,7 +1018,7 @@ add_task(async function check_current_tab_installed_as_web_app() {
       );
     });
 
-    await TaskbarTabs.removeTaskbarTab(tt.id);
+    await TaskbarTabs.removeTaskbarTab(taskbarTab.id);
     is(
       await ASRouterTargeting.Environment.currentTabInstalledAsWebApp,
       false,
