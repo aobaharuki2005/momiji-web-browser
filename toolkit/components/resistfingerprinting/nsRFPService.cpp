@@ -2211,6 +2211,20 @@ CanvasUsageSource CanvasUsage::GetCanvasUsageSource(
             logImpossible("Unknown API for Canvas2D");
             return CanvasUsageSource::Impossible;
         }
+      case dom::CanvasContextType::OffscreenCanvas2D:
+        // Very confused about how we get an OffscreenCanvas2D context without
+        // an OffscreenCanvas but it does happen in the wild...
+        switch (api) {
+          case CanvasExtractionAPI::GetImageData:
+            return CanvasUsageSource::
+                MainThread_Canvas_OffscreenCanvas2D_getImageData;
+          case CanvasExtractionAPI::ToBlob:
+            return CanvasUsageSource::
+                MainThread_Canvas_OffscreenCanvas2D_toBlob;
+          default:
+            logImpossible("Unsupported API for OffscreenCanvas2D");
+            return CanvasUsageSource::Impossible;
+        }
       case dom::CanvasContextType::WebGL1:
       case dom::CanvasContextType::WebGL2:
         switch (api) {
@@ -2286,10 +2300,6 @@ CanvasUsageSource CanvasUsage::GetCanvasUsageSource(
           return CanvasUsageSource::Impossible;
       }
     case dom::CanvasContextType::OffscreenCanvas2D:
-      if (isMainThread) {
-        logImpossible("OffscreenCanvas2D on main thread");
-        return CanvasUsageSource::Impossible;
-      }
       switch (api) {
         case CanvasExtractionAPI::GetImageData:
           return Worker_OffscreenCanvasCanvas2D_Canvas2D_getImageData;
