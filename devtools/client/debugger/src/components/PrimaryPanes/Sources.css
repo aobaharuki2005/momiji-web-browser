@@ -175,6 +175,14 @@ html[dir="rtl"] .sources-list .tree .node > div {
   color: var(--theme-comment);
 }
 
+.sources-list .tree .tree-node.focused {
+  /* Make folder/file icons white on dark focused background */
+  .dbg-img {
+    background-color: var(--theme-selection-color);
+    fill: var(--theme-selection-color);
+  }
+}
+
 .sources-list .tree .focused .label .suffix {
   color: inherit;
 }
