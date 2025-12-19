@@ -13375,7 +13375,9 @@ bool InitOptionParser(OptionParser& op) {
                         "Enable immutable ArrayBuffers") ||
       !op.addBoolOption('\0', "enable-iterator-chunking",
                         "Enable Iterator Chunking") ||
-      !op.addBoolOption('\0', "enable-iterator-join", "Enable Iterator.join")) {
+      !op.addBoolOption('\0', "enable-iterator-join", "Enable Iterator.join") ||
+      !op.addBoolOption('\0', "enable-legacy-regexp",
+                        "Enable Legacy RegExp features")) {
     return false;
   }
 
@@ -13435,6 +13437,9 @@ bool SetGlobalOptionsPreJSInit(const OptionParser& op) {
     JS::Prefs::setAtStartup_experimental_joint_iteration(true);
   }
 
+  if (op.getBoolOption("enable-legacy-regexp")) {
+    JS::Prefs::set_experimental_legacy_regexp(true);
+  }
 #ifdef NIGHTLY_BUILD
   if (op.getBoolOption("enable-async-iterator-helpers")) {
     JS::Prefs::setAtStartup_experimental_async_iterator_helpers(true);

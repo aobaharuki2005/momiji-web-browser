@@ -2227,6 +2227,21 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
                               RegExpStatics::offsetOfMatchesInput());
   Address lazySourceAddress(staticsReg, RegExpStatics::offsetOfLazySource());
   Address lazyIndexAddress(staticsReg, RegExpStatics::offsetOfLazyIndex());
+  Label legacyFeaturesEnabled, done;
+  if (JS::Prefs::experimental_legacy_regexp()) {
+    Address invalidatedAddress(staticsReg,
+                               RegExpStatics::offsetOfInvalidated());
+
+    masm.unboxNonDouble(Address(regexp, NativeObject::getFixedSlotOffset(
+                                            RegExpObject::flagsSlot())),
+                        temp1, JSVAL_TYPE_INT32);
+    masm.branchTest32(Assembler::NonZero, temp1,
+                      Imm32(RegExpObject::LegacyFeaturesEnabledBit),
+                      &legacyFeaturesEnabled);
+    masm.store8(Imm32(1), invalidatedAddress);
+    masm.jump(&done);
+    masm.bind(&legacyFeaturesEnabled);
+  }
 
   masm.guardedCallPreBarrier(pendingInputAddress, MIRType::String);
   masm.guardedCallPreBarrier(matchesInputAddress, MIRType::String);
@@ -2271,6 +2286,7 @@ static void UpdateRegExpStatics(MacroAssembler& masm, Register regexp,
   static_assert(sizeof(JS::RegExpFlags) == 1, "load size must match flag size");
   masm.load8ZeroExtend(Address(temp1, RegExpShared::offsetOfFlags()), temp2);
   masm.store8(temp2, Address(staticsReg, RegExpStatics::offsetOfLazyFlags()));
+  masm.bind(&done);
 }
 
 // Prepare an InputOutputData and optional MatchPairs which space has been
