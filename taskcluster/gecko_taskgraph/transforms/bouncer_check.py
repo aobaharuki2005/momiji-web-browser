@@ -71,7 +71,7 @@ def handle_keyed_by(config, jobs):
                 item_name=job["name"],
                 **{
                     "project": config.params["project"],
-                    "release-level": release_level(config.params["project"]),
+                    "release-level": release_level(config.params),
                     "release-type": config.params["release_type"],
                 },
             )

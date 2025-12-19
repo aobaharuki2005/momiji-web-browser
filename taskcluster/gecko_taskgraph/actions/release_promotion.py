@@ -282,7 +282,7 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
 
     if promotion_config.get("partial-updates", False):
         partial_updates = input.get("partial_updates", {})
-        if not partial_updates and release_level(parameters["project"]) == "production":
+        if not partial_updates and release_level(parameters) == "production":
             raise Exception(
                 f"`partial_updates` property needs to be provided for `{release_promotion_flavor}`"
                 "target."

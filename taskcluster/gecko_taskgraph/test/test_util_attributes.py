@@ -16,49 +16,73 @@ from gecko_taskgraph.util.attributes import (
 
 class MatchRunOnProjects(unittest.TestCase):
     def test_empty(self):
-        self.assertFalse(match_run_on_projects("birch", []))
+        self.assertFalse(match_run_on_projects({"project": "birch"}, []))
 
     def test_all(self):
-        self.assertTrue(match_run_on_projects("birch", ["all"]))
-        self.assertTrue(match_run_on_projects("larch", ["all"]))
-        self.assertTrue(match_run_on_projects("autoland", ["all"]))
-        self.assertTrue(match_run_on_projects("mozilla-central", ["all"]))
-        self.assertTrue(match_run_on_projects("mozilla-beta", ["all"]))
-        self.assertTrue(match_run_on_projects("mozilla-release", ["all"]))
+        self.assertTrue(match_run_on_projects({"project": "birch"}, ["all"]))
+        self.assertTrue(match_run_on_projects({"project": "larch"}, ["all"]))
+        self.assertTrue(match_run_on_projects({"project": "autoland"}, ["all"]))
+        self.assertTrue(match_run_on_projects({"project": "mozilla-central"}, ["all"]))
+        self.assertTrue(match_run_on_projects({"project": "mozilla-beta"}, ["all"]))
+        self.assertTrue(match_run_on_projects({"project": "mozilla-release"}, ["all"]))
 
     def test_release(self):
-        self.assertFalse(match_run_on_projects("birch", ["release"]))
-        self.assertTrue(match_run_on_projects("larch", ["release"]))
-        self.assertFalse(match_run_on_projects("autoland", ["release"]))
-        self.assertTrue(match_run_on_projects("mozilla-central", ["release"]))
-        self.assertTrue(match_run_on_projects("mozilla-beta", ["release"]))
-        self.assertTrue(match_run_on_projects("mozilla-release", ["release"]))
+        self.assertFalse(match_run_on_projects({"project": "birch"}, ["release"]))
+        self.assertTrue(match_run_on_projects({"project": "larch"}, ["release"]))
+        self.assertFalse(match_run_on_projects({"project": "autoland"}, ["release"]))
+        self.assertTrue(
+            match_run_on_projects({"project": "mozilla-central"}, ["release"])
+        )
+        self.assertTrue(match_run_on_projects({"project": "mozilla-beta"}, ["release"]))
+        self.assertTrue(
+            match_run_on_projects({"project": "mozilla-release"}, ["release"])
+        )
 
     def test_integration(self):
-        self.assertFalse(match_run_on_projects("birch", ["integration"]))
-        self.assertFalse(match_run_on_projects("larch", ["integration"]))
-        self.assertTrue(match_run_on_projects("autoland", ["integration"]))
-        self.assertFalse(match_run_on_projects("mozilla-central", ["integration"]))
-        self.assertFalse(match_run_on_projects("mozilla-beta", ["integration"]))
-        self.assertFalse(match_run_on_projects("mozilla-integration", ["integration"]))
+        self.assertFalse(match_run_on_projects({"project": "birch"}, ["integration"]))
+        self.assertFalse(match_run_on_projects({"project": "larch"}, ["integration"]))
+        self.assertTrue(match_run_on_projects({"project": "autoland"}, ["integration"]))
+        self.assertFalse(
+            match_run_on_projects({"project": "mozilla-central"}, ["integration"])
+        )
+        self.assertFalse(
+            match_run_on_projects({"project": "mozilla-beta"}, ["integration"])
+        )
+        self.assertFalse(
+            match_run_on_projects({"project": "mozilla-integration"}, ["integration"])
+        )
 
     def test_combo(self):
-        self.assertTrue(match_run_on_projects("birch", ["release", "birch", "maple"]))
-        self.assertTrue(match_run_on_projects("larch", ["release", "birch", "maple"]))
-        self.assertTrue(match_run_on_projects("maple", ["release", "birch", "maple"]))
+        self.assertTrue(
+            match_run_on_projects({"project": "birch"}, ["release", "birch", "maple"])
+        )
+        self.assertTrue(
+            match_run_on_projects({"project": "larch"}, ["release", "birch", "maple"])
+        )
+        self.assertTrue(
+            match_run_on_projects({"project": "maple"}, ["release", "birch", "maple"])
+        )
         self.assertFalse(
-            match_run_on_projects("autoland", ["release", "birch", "maple"])
+            match_run_on_projects(
+                {"project": "autoland"}, ["release", "birch", "maple"]
+            )
         )
         self.assertTrue(
-            match_run_on_projects("mozilla-central", ["release", "birch", "maple"])
+            match_run_on_projects(
+                {"project": "mozilla-central"}, ["release", "birch", "maple"]
+            )
         )
         self.assertTrue(
-            match_run_on_projects("mozilla-beta", ["release", "birch", "maple"])
+            match_run_on_projects(
+                {"project": "mozilla-beta"}, ["release", "birch", "maple"]
+            )
         )
         self.assertTrue(
-            match_run_on_projects("mozilla-release", ["release", "birch", "maple"])
+            match_run_on_projects(
+                {"project": "mozilla-release"}, ["release", "birch", "maple"]
+            )
         )
-        self.assertTrue(match_run_on_projects("birch", ["birch", "trunk"]))
+        self.assertTrue(match_run_on_projects({"project": "birch"}, ["birch", "trunk"]))
 
 
 @pytest.mark.parametrize(

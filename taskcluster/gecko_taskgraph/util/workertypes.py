@@ -97,7 +97,7 @@ def get_worker_type(graph_config, parameters, worker_type):
         graph_config,
         worker_type,
         parameters["level"],
-        _release_level(parameters.get("project")),
+        _release_level(parameters),
         parameters.get("project"),
     )
     return worker_config["provisioner"], worker_config["worker-type"]

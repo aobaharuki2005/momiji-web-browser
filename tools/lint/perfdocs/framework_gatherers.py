@@ -412,7 +412,9 @@ class RaptorGatherer(FrameworkGatherer):
                         values += [
                             (
                                 "\u2705"
-                                if match_run_on_projects(x, task["run_on_projects"])
+                                if match_run_on_projects(
+                                    {"project": x}, task["run_on_projects"]
+                                )
                                 else "\u274C"
                             )
                             for x in BRANCHES
@@ -630,7 +632,9 @@ class TalosGatherer(FrameworkGatherer):
                     values += [
                         (
                             "\u2705"
-                            if match_run_on_projects(x, task["run_on_projects"])
+                            if match_run_on_projects(
+                                {"project": x}, task["run_on_projects"]
+                            )
                             else "\u274C"
                         )
                         for x in BRANCHES

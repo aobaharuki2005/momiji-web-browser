@@ -59,9 +59,9 @@ def make_task_description(config, jobs):
             job,
             "worker-type",
             item_name=job["name"],
-            **{"release-level": release_level(config.params["project"])},
+            **{"release-level": release_level(config.params)},
         )
-        if release_level(config.params["project"]) == "production":
+        if release_level(config.params) == "production":
             job.setdefault("scopes", []).append(
                 add_scope_prefix(
                     config,
