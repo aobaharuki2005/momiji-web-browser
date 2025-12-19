@@ -17,6 +17,9 @@
       "chrome://browser/content/aboutlogins/components/login-message-popup.mjs": [
         "browser/components/aboutlogins/content/components/login-message-popup.mjs"
       ],
+      "chrome://browser/content/aiwindow/components/input-cta.mjs": [
+        "browser/components/aiwindow/ui/components/input-cta/input-cta.mjs"
+      ],
       "chrome://browser/content/asrouter/components/menu-message.mjs": [
         "browser/components/asrouter/content/components/menu-message/menu-message.mjs"
       ],
@@ -104,6 +107,9 @@
       "chrome://browser/content/nsContextMenu.sys.mjs": [
         "browser/base/content/nsContextMenu.sys.mjs"
       ],
+      "chrome://browser/content/preferences/config/SettingGroupManager.mjs": [
+        "browser/components/preferences/config/SettingGroupManager.mjs"
+      ],
       "chrome://browser/content/preferences/widgets/dialog-button.mjs": [
         "browser/components/preferences/widgets/dialog-button/dialog-button.mjs"
       ],
@@ -127,6 +133,9 @@
       ],
       "chrome://browser/content/preferences/widgets/sync-device-name.mjs": [
         "browser/components/preferences/widgets/sync-device-name/sync-device-name.mjs"
+      ],
+      "chrome://browser/content/preferences/widgets/sync-engines-list.mjs": [
+        "browser/components/preferences/widgets/sync-engine-list/sync-engines-list.mjs"
       ],
       "chrome://browser/content/profiles/avatar.mjs": [
         "browser/components/profiles/content/avatar.mjs"
@@ -1139,6 +1148,9 @@
       "resource:///modules/aboutwelcome/AboutWelcomeTelemetry.sys.mjs": [
         "browser/components/aboutwelcome/modules/AboutWelcomeTelemetry.sys.mjs"
       ],
+      "resource:///modules/aiwindow/ui/modules/ChatStore.sys.mjs": [
+        "browser/components/aiwindow/ui/modules/ChatStore.sys.mjs"
+      ],
       "resource:///modules/asrouter/ASRouter.sys.mjs": [
         "browser/components/asrouter/modules/ASRouter.sys.mjs"
       ],
@@ -1297,6 +1309,9 @@
       ],
       "resource:///modules/ipprotection/IPPNimbusHelper.sys.mjs": [
         "browser/components/ipprotection/IPPNimbusHelper.sys.mjs"
+      ],
+      "resource:///modules/ipprotection/IPPOnboardingMessageHelper.sys.mjs": [
+        "browser/components/ipprotection/IPPOnboardingMessageHelper.sys.mjs"
       ],
       "resource:///modules/ipprotection/IPPOptOutHelper.sys.mjs": [
         "browser/components/ipprotection/IPPOptOutHelper.sys.mjs"
@@ -4850,6 +4865,9 @@
       "resource://devtools/shared/loader/worker-loader.sys.mjs": [
         "devtools/shared/loader/worker-loader.sys.mjs"
       ],
+      "resource://devtools/shared/mdn.mjs": [
+        "devtools/shared/mdn.mjs"
+      ],
       "resource://devtools/shared/natural-sort.js": [
         "devtools/shared/natural-sort.js"
       ],
@@ -5215,6 +5233,9 @@
       ],
       "resource://gre/actors/NetErrorParent.sys.mjs": [
         "toolkit/actors/NetErrorParent.sys.mjs"
+      ],
+      "resource://gre/actors/PageExtractorParent.sys.mjs": [
+        "toolkit/components/pageextractor/PageExtractorParent.sys.mjs"
       ],
       "resource://gre/actors/PictureInPictureChild.sys.mjs": [
         "toolkit/actors/PictureInPictureChild.sys.mjs"

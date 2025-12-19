@@ -23,6 +23,8 @@ run-if = [
   "updater",
 ]
 
+["browser_aiFeatures.js"]
+
 ["browser_application_xml_handle_internally.js"]
 
 ["browser_applications_selection.js"]

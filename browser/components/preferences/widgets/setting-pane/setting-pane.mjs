@@ -11,6 +11,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {string} l10nId Fluent id for the heading/description.
  * @property {string[]} groupIds What setting groups should be rendered.
  * @property {string} [iconSrc] Optional icon shown in the page header.
+ * @property {string} [module] Import path for module housing the config.
  */
 
 export class SettingPane extends MozLitElement {
@@ -82,13 +83,16 @@ export class SettingPane extends MozLitElement {
     if (this.isSubPane) {
       this.setAttribute("data-hidden-from-search", "true");
       this.setAttribute("data-subpanel", "true");
+      this._createCategoryButton();
     }
-    this._createCategoryButton();
   }
 
   init() {
     if (!this.hasUpdated) {
       this.performUpdate();
+    }
+    if (this.config.module) {
+      ChromeUtils.importESModule(this.config.module, { global: "current" });
     }
     for (let groupId of this.config.groupIds) {
       window.initSettingGroup(groupId);

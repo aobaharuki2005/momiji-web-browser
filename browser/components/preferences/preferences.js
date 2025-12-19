@@ -281,6 +281,11 @@ const CONFIG_PANES = Object.freeze({
     ],
     iconSrc: "chrome://browser/skin/translations.svg",
   },
+  aiFeatures: {
+    l10nId: "preferences-ai-features-header",
+    groupIds: ["aiFeatures"],
+    module: "chrome://browser/content/preferences/config/aiFeatures.mjs",
+  },
 });
 
 var gLastCategory = { category: undefined, subcategory: undefined };

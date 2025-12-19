@@ -235,6 +235,10 @@ radio {
   list-style-image: url("chrome://browser/skin/preferences/category-sync.svg");
 }
 
+#category-ai-features > .category-icon {
+  list-style-image: url("chrome://global/skin/icons/highlights.svg");
+}
+
 #category-experimental > .category-icon {
   list-style-image: url("chrome://global/skin/icons/experiments.svg");
 }
@@ -1418,6 +1422,10 @@ setting-group[groupid="home"] {
   --select-max-width: 17rem;
 }
 /** SRD rows control for New Tab END **/
+
+setting-group[groupid="aiFeatures"] {
+  --select-max-width: fit-content;
+}
 
 #translations-manage-install-list {
   height: 220px;

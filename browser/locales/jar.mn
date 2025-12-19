@@ -15,6 +15,7 @@
   preview/genai.ftl                                (../components/genai/content/genai.ftl)
   preview/credentialChooser.ftl                    (../../toolkit/components/credentialmanagement/credentialChooser.ftl)
   browser                                          (%browser/**/*.ftl)
+  preview/aiFeatures.ftl                           (../locales-preview/aiFeatures.ftl)
   preview/aiWindow.ftl                             (../locales-preview/aiWindow.ftl)
   preview/smartTabGroups.ftl                       (../locales-preview/smartTabGroups.ftl)
   preview/ipProtection.ftl                         (../locales-preview/ipProtection.ftl)
