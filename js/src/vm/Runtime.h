@@ -585,6 +585,21 @@ struct JSRuntime {
   js::MainThreadData<JS::CTypesActivityCallback> ctypesActivityCallback;
 
  private:
+  // Script sources to compress off-thread. Only accessed by the main thread or
+  // off-thread GC sweeping (GCRuntime::sweepCompressionTasks).
+  using PendingCompressions =
+      js::Vector<js::PendingSourceCompressionEntry, 4, js::SystemAllocPolicy>;
+  js::MainThreadOrGCTaskData<PendingCompressions> pendingCompressions_;
+
+ public:
+  [[nodiscard]] bool addPendingCompressionEntry(js::ScriptSource* source) {
+    return pendingCompressions().emplaceBack(this, source);
+  }
+  PendingCompressions& pendingCompressions() {
+    return pendingCompressions_.ref();
+  }
+
+ private:
   js::WriteOnceData<const JSClass*> windowProxyClass_;
 
  public:

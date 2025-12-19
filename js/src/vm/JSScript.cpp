@@ -1594,14 +1594,11 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
     return true;
   }
 
-  // Heap allocate the task. It will be freed upon compression
-  // completing in AttachFinishedCompressedSources.
-  auto task = MakeUnique<SourceCompressionTask>(cx->runtime(), this);
-  if (!task) {
+  if (!cx->runtime()->addPendingCompressionEntry(this)) {
     ReportOutOfMemory(cx);
     return false;
   }
-  return EnqueueOffThreadCompression(cx, std::move(task));
+  return true;
 }
 
 template <typename Unit>
@@ -1795,6 +1792,12 @@ void SourceCompressionTask::workEncodingSpecific() {
 
   auto& strings = SharedImmutableStringsCache::getSingleton();
   resultString_ = strings.getOrCreate(std::move(compressed), totalBytes);
+}
+
+PendingSourceCompressionEntry::PendingSourceCompressionEntry(
+    JSRuntime* rt, ScriptSource* source)
+    : majorGCNumber_(rt->gc.majorGCCount()), source_(source) {
+  source->noteSourceCompressionTask();
 }
 
 struct SourceCompressionTask::PerformTaskWork {

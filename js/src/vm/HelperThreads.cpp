@@ -407,7 +407,6 @@ void GlobalHelperThreadState::addSizeOfIncludingThis(
       wasmCompleteTier2GeneratorWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       wasmPartialTier2CompileWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       promiseHelperTasks_.sizeOfExcludingThis(mallocSizeOf) +
-      compressionPendingList_.sizeOfExcludingThis(mallocSizeOf) +
       compressionWorklist_.sizeOfExcludingThis(mallocSizeOf) +
       compressionFinishedList_.sizeOfExcludingThis(mallocSizeOf) +
       gcParallelWorklist_.sizeOfExcludingThis(mallocSizeOf, lock) +
@@ -1610,23 +1609,49 @@ bool GlobalHelperThreadState::submitTask(
   return true;
 }
 
-void GlobalHelperThreadState::startHandlingCompressionTasks(
-    ScheduleCompressionTask schedule, JSRuntime* maybeRuntime,
-    const AutoLockHelperThreadState& lock) {
-  MOZ_ASSERT((schedule == ScheduleCompressionTask::GC) ==
-             (maybeRuntime != nullptr));
+void GlobalHelperThreadState::createAndSubmitCompressionTasks(
+    ScheduleCompressionTask schedule, JSRuntime* rt) {
+  // First create the SourceCompressionTasks and add them to a Vector.
+  Vector<UniquePtr<SourceCompressionTask>, 8, SystemAllocPolicy> tasksToSubmit;
 
-  auto& pending = compressionPendingList(lock);
+  rt->pendingCompressions().eraseIf([&](const auto& entry) {
+    MOZ_ASSERT(entry.source()->hasUncompressedSource());
 
-  for (size_t i = 0; i < pending.length(); i++) {
-    UniquePtr<SourceCompressionTask>& task = pending[i];
-    if (schedule == ScheduleCompressionTask::API ||
-        (task->runtimeMatches(maybeRuntime) && task->shouldStart())) {
-      // OOMing during appending results in the task not being scheduled
-      // and deleted.
-      (void)submitTask(std::move(task), lock);
-      remove(pending, &i);
+    // If the script source has no other references then remove it from the
+    // vector and don't compress it.
+    if (entry.shouldCancel()) {
+      return true;
     }
+
+    // If we're starting tasks on GC, we wait 2 major GCs to start compressing
+    // in order to avoid immediate compression.
+    if (schedule == ScheduleCompressionTask::GC &&
+        rt->gc.majorGCCount() <= entry.majorGCNumber() + 1) {
+      return false;
+    }
+
+    // Heap allocate the task. It will be freed upon compression completing in
+    // AttachFinishedCompressedSources. On OOM we leave the pending compression
+    // in the vector.
+    auto ownedTask = MakeUnique<SourceCompressionTask>(rt, entry.source());
+    if (!ownedTask || !tasksToSubmit.append(std::move(ownedTask))) {
+      return false;
+    }
+    return true;
+  });
+  if (rt->pendingCompressions().empty()) {
+    rt->pendingCompressions().clearAndFree();
+  }
+
+  if (tasksToSubmit.empty()) {
+    return;
+  }
+
+  AutoLockHelperThreadState lock;
+  for (auto& task : tasksToSubmit) {
+    // OOMing during appending results in the task not being scheduled and
+    // deleted.
+    (void)submitTask(std::move(task), lock);
   }
 }
 
@@ -1642,34 +1667,20 @@ void js::AttachFinishedCompressions(JSRuntime* runtime,
   }
 }
 
-void js::SweepPendingCompressions(AutoLockHelperThreadState& lock) {
-  auto& pending = HelperThreadState().compressionPendingList(lock);
-  for (size_t i = 0; i < pending.length(); i++) {
-    if (pending[i]->shouldCancel()) {
-      HelperThreadState().remove(pending, &i);
-    }
-  }
-}
-
 void js::RunPendingSourceCompressions(JSRuntime* runtime) {
   if (!CanUseExtraThreads()) {
     return;
   }
 
-  AutoLockHelperThreadState lock;
-  HelperThreadState().runPendingSourceCompressions(runtime, lock);
+  HelperThreadState().runPendingSourceCompressions(runtime);
 }
 
-void GlobalHelperThreadState::runPendingSourceCompressions(
-    JSRuntime* runtime, AutoLockHelperThreadState& lock) {
-  startHandlingCompressionTasks(
-      GlobalHelperThreadState::ScheduleCompressionTask::API, nullptr, lock);
-  {
-    // Dispatch tasks.
-    AutoUnlockHelperThreadState unlock(lock);
-  }
+void GlobalHelperThreadState::runPendingSourceCompressions(JSRuntime* runtime) {
+  createAndSubmitCompressionTasks(
+      GlobalHelperThreadState::ScheduleCompressionTask::API, runtime);
 
   // Wait until all tasks have started compression.
+  AutoLockHelperThreadState lock;
   while (!compressionWorklist(lock).empty()) {
     wait(lock);
   }
@@ -1680,23 +1691,9 @@ void GlobalHelperThreadState::runPendingSourceCompressions(
   AttachFinishedCompressions(runtime, lock);
 }
 
-bool js::EnqueueOffThreadCompression(JSContext* cx,
-                                     UniquePtr<SourceCompressionTask> task) {
-  AutoLockHelperThreadState lock;
-
-  auto& pending = HelperThreadState().compressionPendingList(lock);
-  if (!pending.append(std::move(task))) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  return true;
-}
-
-void js::StartHandlingCompressionsOnGC(JSRuntime* runtime) {
-  AutoLockHelperThreadState lock;
-  HelperThreadState().startHandlingCompressionTasks(
-      GlobalHelperThreadState::ScheduleCompressionTask::GC, runtime, lock);
+void js::StartOffThreadCompressionsOnGC(JSRuntime* runtime) {
+  HelperThreadState().createAndSubmitCompressionTasks(
+      GlobalHelperThreadState::ScheduleCompressionTask::GC, runtime);
 }
 
 template <typename T>
@@ -1711,7 +1708,7 @@ static void ClearCompressionTaskList(T& list, JSRuntime* runtime) {
 void GlobalHelperThreadState::cancelOffThreadCompressions(
     JSRuntime* runtime, AutoLockHelperThreadState& lock) {
   // Cancel all pending compression tasks.
-  ClearCompressionTaskList(compressionPendingList(lock), runtime);
+  runtime->pendingCompressions().clearAndFree();
   ClearCompressionTaskList(compressionWorklist(lock), runtime);
 
   // Cancel all in-process compression tasks and wait for them to join so we

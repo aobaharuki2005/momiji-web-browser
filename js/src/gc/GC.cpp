@@ -2895,7 +2895,7 @@ bool GCRuntime::beginPreparePhase(JS::GCReason reason, AutoGCSession& session) {
    * GCReason::XPCONNECT_SHUTDOWN GCs we can remove the extra check.
    */
   if (!isShutdownGC() && reason != JS::GCReason::XPCONNECT_SHUTDOWN) {
-    StartHandlingCompressionsOnGC(rt);
+    StartOffThreadCompressionsOnGC(rt);
   }
 
   return true;

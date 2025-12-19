@@ -179,9 +179,6 @@ class GlobalHelperThreadState {
   // risk.
   FreeDelazifyTaskVector freeDelazifyTaskVector_;
 
-  // Source compression worklist of tasks that we do not yet know can start.
-  SourceCompressionTaskVector compressionPendingList_;
-
   // Source compression worklist of tasks that can start.
   SourceCompressionTaskVector compressionWorklist_;
 
@@ -352,11 +349,6 @@ class GlobalHelperThreadState {
     return freeDelazifyTaskVector_;
   }
 
-  SourceCompressionTaskVector& compressionPendingList(
-      const AutoLockHelperThreadState&) {
-    return compressionPendingList_;
-  }
-
   SourceCompressionTaskVector& compressionWorklist(
       const AutoLockHelperThreadState&) {
     return compressionWorklist_;
@@ -436,14 +428,12 @@ class GlobalHelperThreadState {
   bool canStartTasks(const AutoLockHelperThreadState& locked);
 
  public:
-  // Used by a major GC to signal processing enqueued compression tasks.
+  // Used by a major GC to create and enqueue compression tasks.
   enum class ScheduleCompressionTask { GC, API };
-  void startHandlingCompressionTasks(ScheduleCompressionTask schedule,
-                                     JSRuntime* maybeRuntime,
-                                     const AutoLockHelperThreadState& lock);
+  void createAndSubmitCompressionTasks(ScheduleCompressionTask schedule,
+                                       JSRuntime* rt);
 
-  void runPendingSourceCompressions(JSRuntime* runtime,
-                                    AutoLockHelperThreadState& lock);
+  void runPendingSourceCompressions(JSRuntime* runtime);
 
   void trace(JSTracer* trc);
 
@@ -586,17 +576,11 @@ struct FreeDelazifyTask : public HelperThreadTask {
   const char* getName() override { return "FreeDelazifyTask"; }
 };
 
-// It is not desirable to eagerly compress: if lazy functions that are tied to
-// the ScriptSource were to be executed relatively soon after parsing, they
-// would need to block on decompression, which hurts responsiveness.
+// Off-thread task for compressing one or more script sources.
 //
-// To this end, compression tasks are heap allocated and enqueued in a pending
-// list by ScriptSource::setSourceCopy. When a major GC occurs, we schedule
-// pending compression tasks and move the ones that are ready to be compressed
-// to the worklist. Currently, a compression task is considered ready 2 major
-// GCs after being enqueued. Completed tasks are handled during the sweeping
-// phase by AttachCompressedSourcesTask, which runs in parallel with other GC
-// sweeping tasks.
+// Completed tasks are handled during the sweeping phase by
+// AttachFinishedCompressions, which runs in parallel with other GC sweeping
+// tasks.
 class SourceCompressionTask : public HelperThreadTask {
   friend class HelperThread;
   friend class ScriptSource;
@@ -604,9 +588,6 @@ class SourceCompressionTask : public HelperThreadTask {
   // The runtime that the ScriptSource is associated with, in the sense that
   // it uses the runtime's immutable string cache.
   JSRuntime* runtime_;
-
-  // The major GC number of the runtime when the task was enqueued.
-  uint64_t majorGCNumber_;
 
   // The source to be compressed.
   RefPtr<ScriptSource> source_;
@@ -618,20 +599,13 @@ class SourceCompressionTask : public HelperThreadTask {
   SharedImmutableString resultString_;
 
  public:
-  // The majorGCNumber is used for scheduling tasks.
   SourceCompressionTask(JSRuntime* rt, ScriptSource* source)
-      : runtime_(rt), majorGCNumber_(rt->gc.majorGCCount()), source_(source) {
+      : runtime_(rt), source_(source) {
     source->noteSourceCompressionTask();
   }
   virtual ~SourceCompressionTask() = default;
 
   bool runtimeMatches(JSRuntime* runtime) const { return runtime == runtime_; }
-  bool shouldStart() const {
-    // We wait 2 major GCs to start compressing, in order to avoid immediate
-    // compression. If the script source has no other references then don't
-    // compress it and let SweepPendingCompressions remove this task.
-    return !shouldCancel() && runtime_->gc.majorGCCount() > majorGCNumber_ + 1;
-  }
 
   bool shouldCancel() const {
     // If the refcount is exactly 1, then nothing else is holding on to the
