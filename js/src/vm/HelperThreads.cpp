@@ -1614,6 +1614,20 @@ void GlobalHelperThreadState::createAndSubmitCompressionTasks(
   // First create the SourceCompressionTasks and add them to a Vector.
   Vector<UniquePtr<SourceCompressionTask>, 8, SystemAllocPolicy> tasksToSubmit;
 
+  // We use some simple heuristics to batch multiple script sources in a single
+  // SourceCompressionTask, to reduce overhead for small script sources.
+  //
+  // MaxBatchLength is the maximum length (in characters) for a single batch.
+  // If a single script source exceeds this length, it will get its own
+  // SourceCompressionTask.
+  //
+  // The main downside of increasing the MaxBatchLength threshold is that a
+  // large compression task could block a helper thread from taking on higher
+  // priority work.
+  static constexpr size_t MaxBatchLength = 300'000;
+  SourceCompressionTask* currentBatch = nullptr;
+  size_t currentBatchLength = 0;
+
   rt->pendingCompressions().eraseIf([&](const auto& entry) {
     MOZ_ASSERT(entry.source()->hasUncompressedSource());
 
@@ -1630,12 +1644,29 @@ void GlobalHelperThreadState::createAndSubmitCompressionTasks(
       return false;
     }
 
+    // Add this entry to the current batch if the total length doesn't exceed
+    // MaxBatchLength.
+    size_t length = entry.source()->length();
+    if (currentBatch && currentBatchLength + length <= MaxBatchLength) {
+      if (!currentBatch->addEntry(entry.source())) {
+        return false;
+      }
+      currentBatchLength += length;
+      return true;
+    }
+
     // Heap allocate the task. It will be freed upon compression completing in
     // AttachFinishedCompressedSources. On OOM we leave the pending compression
     // in the vector.
     auto ownedTask = MakeUnique<SourceCompressionTask>(rt, entry.source());
+    SourceCompressionTask* task = ownedTask.get();
     if (!ownedTask || !tasksToSubmit.append(std::move(ownedTask))) {
       return false;
+    }
+    // Heuristic: prefer the task with the smallest source length for batching.
+    if (!currentBatch || length < currentBatchLength) {
+      currentBatch = task;
+      currentBatchLength = length;
     }
     return true;
   });

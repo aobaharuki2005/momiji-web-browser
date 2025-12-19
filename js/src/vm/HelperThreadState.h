@@ -635,6 +635,10 @@ class SourceCompressionTask final : public HelperThreadTask {
 
   bool runtimeMatches(JSRuntime* runtime) const { return runtime == runtime_; }
 
+  [[nodiscard]] bool addEntry(ScriptSource* source) {
+    return entries_.emplaceBack(source);
+  }
+
   void runTask();
   void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
   void complete();
