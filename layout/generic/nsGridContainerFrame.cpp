@@ -9302,11 +9302,10 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aGridRI,
   return bSize;
 }
 
-void nsGridContainerFrame::ReflowAbsoluteChildren(GridReflowInput& aGridRI,
-                                                  const LogicalRect& aContentArea,
-                                                  nscoord aContentBSize,
-                                                  ReflowOutput& aDesiredSize,
-                                                  nsReflowStatus& aStatus) {
+void nsGridContainerFrame::ReflowAbsoluteChildren(
+    GridReflowInput& aGridRI, const LogicalRect& aContentArea,
+    nscoord aContentBSize, ReflowOutput& aDesiredSize,
+    nsReflowStatus& aStatus) {
   WritingMode wm = aGridRI.mReflowInput->GetWritingMode();
   auto* absoluteContainer = GetAbsoluteContainingBlock();
   // We have prepared the absolute frames when initializing GridReflowInput.
@@ -9317,9 +9316,8 @@ void nsGridContainerFrame::ReflowAbsoluteChildren(GridReflowInput& aGridRI,
   // with respect to the grid container's padding-box (CB).
   LogicalMargin pad(aGridRI.mReflowInput->ComputedLogicalPadding(wm));
   const LogicalPoint gridOrigin(wm, pad.IStart(wm), pad.BStart(wm));
-  const LogicalRect gridCB(wm, 0, 0,
-                            aContentArea.ISize(wm) + pad.IStartEnd(wm),
-                            aContentBSize + pad.BStartEnd(wm));
+  const LogicalRect gridCB(wm, 0, 0, aContentArea.ISize(wm) + pad.IStartEnd(wm),
+                           aContentBSize + pad.BStartEnd(wm));
   const nsSize gridCBPhysicalSize = gridCB.Size(wm).GetPhysicalSize(wm);
   size_t i = 0;
   for (nsIFrame* child : absoluteContainer->GetChildList()) {
@@ -9345,9 +9343,8 @@ void nsGridContainerFrame::ReflowAbsoluteChildren(GridReflowInput& aGridRI,
   AbsPosReflowFlags flags{
       AbsPosReflowFlag::AllowFragmentation, AbsPosReflowFlag::CBWidthChanged,
       AbsPosReflowFlag::CBHeightChanged, AbsPosReflowFlag::IsGridContainerCB};
-  absoluteContainer->Reflow(this, PresContext(), *aGridRI.mReflowInput,
-                            aStatus, paddingRect, flags,
-                            &aDesiredSize.mOverflowAreas);
+  absoluteContainer->Reflow(this, PresContext(), *aGridRI.mReflowInput, aStatus,
+                            paddingRect, flags, &aDesiredSize.mOverflowAreas);
 }
 
 nscoord nsGridContainerFrame::ComputeBSizeForResolvingRowSizes(
@@ -9658,7 +9655,8 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
     }
     aDesiredSize.mOverflowAreas.UnionAllWith(gridItemMarginBoxBounds);
   }
-  ReflowAbsoluteChildren(gridRI, contentArea, contentBSize, aDesiredSize, aStatus);
+  ReflowAbsoluteChildren(gridRI, contentArea, contentBSize, aDesiredSize,
+                         aStatus);
   contentBSize = std::max(contentBSize - consumedBSize, 0);
 
   // Skip our block-end border if we're INCOMPLETE.

@@ -400,8 +400,7 @@ class nsGridContainerFrame final : public nsContainerFrame,
                          ReflowOutput& aDesiredSize, nsReflowStatus& aStatus);
   void ReflowAbsoluteChildren(GridReflowInput& aGridRI,
                               const LogicalRect& aContentArea,
-                              nscoord aContentBSize,
-                              ReflowOutput& aDesiredSize,
+                              nscoord aContentBSize, ReflowOutput& aDesiredSize,
                               nsReflowStatus& aStatus);
 
   /**
