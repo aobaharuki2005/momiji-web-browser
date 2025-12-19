@@ -1473,11 +1473,7 @@ export class TopSitesFeed {
         .filter(site => site.type !== "frecency-boost")
         .map(site => {
           try {
-            return (
-              site.label?.toLowerCase() ||
-              site.hostname ||
-              lazy.NewTabUtils.shortURL(site)
-            );
+            return site.hostname || lazy.NewTabUtils.shortURL(site);
           } catch (e) {
             return null;
           }
@@ -1979,13 +1975,27 @@ export class TopSitesFeed {
       let link = null;
       const { assignedPartner } = allocation;
       if (assignedPartner) {
-        // Unknown partners are allowed so that new parters can be added to Shepherd
-        // sooner without waiting for client changes.
-        link = sponsoredLinks[assignedPartner]?.shift();
+        while (sponsoredLinks[assignedPartner].length) {
+          // Unknown partners are allowed so that new partners can be added to Shepherd
+          // sooner without waiting for client changes.
+          const candidate = sponsoredLinks[assignedPartner]?.shift();
+
+          // Deduplicate against sponsored links that have already been added.
+          const duplicateSponsor = sponsored.find(
+            s =>
+              s.label?.toLowerCase() === candidate.label?.toLowerCase() ||
+              s.hostname === candidate.hostname
+          );
+
+          if (!duplicateSponsor) {
+            link = candidate;
+            break;
+          }
+        }
       }
 
       if (!link) {
-        // If the chosen partner doesn't have a tile for this postion, choose any
+        // If the chosen partner doesn't have a tile for this position, choose any
         // one from another group. For simplicity, we do _not_ do resampling here
         // against the remaining partners.
         for (const partner of SPONSORED_TILE_PARTNERS) {
