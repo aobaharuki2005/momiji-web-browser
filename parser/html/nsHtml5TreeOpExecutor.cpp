@@ -13,6 +13,7 @@
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/PolicyContainer.h"
 
+#include "imgLoader.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/IdleTaskRunner.h"
 #include "mozilla/Preferences.h"
@@ -1167,6 +1168,14 @@ bool nsHtml5TreeOpExecutor::ShouldPreloadURI(nsIURI* aURI) {
   return mPreloadedURLs.EnsureInserted(spec);
 }
 
+bool nsHtml5TreeOpExecutor::ImageTypeSupports(const nsAString& aType) {
+  if (aType.IsEmpty()) {
+    return true;
+  }
+  return imgLoader::SupportImageWithMimeType(
+      NS_ConvertUTF16toUTF8(aType), AcceptedMimeTypes::IMAGES_AND_DOCUMENTS);
+}
+
 dom::ReferrerPolicy nsHtml5TreeOpExecutor::GetPreloadReferrerPolicy(
     const nsAString& aReferrerPolicy) {
   dom::ReferrerPolicy referrerPolicy =
@@ -1239,12 +1248,13 @@ void nsHtml5TreeOpExecutor::PreloadImage(
     const nsAString& aURL, const nsAString& aCrossOrigin,
     const nsAString& aMedia, const nsAString& aSrcset, const nsAString& aSizes,
     const nsAString& aImageReferrerPolicy, bool aLinkPreload,
-    const nsAString& aFetchPriority) {
+    const nsAString& aFetchPriority, const nsAString& aType) {
   nsCOMPtr<nsIURI> baseURI = BaseURIForPreload();
   bool isImgSet = false;
   nsCOMPtr<nsIURI> uri =
       mDocument->ResolvePreloadImage(baseURI, aURL, aSrcset, aSizes, &isImgSet);
-  if (uri && ShouldPreloadURI(uri) && MediaApplies(aMedia)) {
+  if (uri && ShouldPreloadURI(uri) && MediaApplies(aMedia) &&
+      ImageTypeSupports(aType)) {
     // use document wide referrer policy
     mDocument->MaybePreLoadImage(uri, aCrossOrigin,
                                  GetPreloadReferrerPolicy(aImageReferrerPolicy),
