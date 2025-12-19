@@ -29,7 +29,6 @@ function waitForNewTabAndErrorPage() {
 }
 
 add_task(async function test_coopError() {
-  await setSecurityCertErrorsFeltPrivacyToFalse();
   let iframeTab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     `${AUTH_ROUTE}?error=coop`
