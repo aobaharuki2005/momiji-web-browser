@@ -1115,6 +1115,8 @@ skip-if = [
 
 ["test_local_network_access.js"]
 
+["test_lna_captive_portal.js"]
+
 ["test_localhost_offline.js"]
 
 ["test_localstreams.js"]
