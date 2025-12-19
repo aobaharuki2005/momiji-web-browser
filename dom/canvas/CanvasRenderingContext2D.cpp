@@ -4583,16 +4583,14 @@ void CanvasRenderingContext2D::FillText(const nsAString& aText, double aX,
   if (mFillTextCalls <= 5) {
     if (aText == u"Cwm fjordbank glyphs vext quiz, 😃"_ns) {
       mFeatureUsage |= CanvasFeatureUsage::KnownText_1;
-    } else if (aText == u"Cwm fjordbank gly 😃"_ns) {
-      mFeatureUsage |= CanvasFeatureUsage::KnownText_1;
     } else if (StringBeginsWith(aText, u"Hel$&?6%"_ns)) {
-      mFeatureUsage |= CanvasFeatureUsage::KnownText_2;
+      mFeatureUsage |= CanvasFeatureUsage::KnownText_2;  // Imperva
     } else if (StringBeginsWith(aText, u"<@nv45. "_ns)) {
       mFeatureUsage |= CanvasFeatureUsage::KnownText_3;
     } else if (aText == u"Cañvas FP 😎 12345"_ns) {
       mFeatureUsage |= CanvasFeatureUsage::KnownText_4;
     } else if (StringBeginsWith(aText, u"❤️🤪🎉👋"_ns)) {
-      mFeatureUsage |= CanvasFeatureUsage::KnownText_5;
+      mFeatureUsage |= CanvasFeatureUsage::KnownText_5;  // hCaptcha
     } else if (aText == u"SomeCanvasFingerPrint.65@345876"_ns) {
       mFeatureUsage |= CanvasFeatureUsage::KnownText_6;
     } else if (aText == u"Browser,Signal <canvas> 2.0"_ns) {
@@ -4606,9 +4604,9 @@ void CanvasRenderingContext2D::FillText(const nsAString& aText, double aX,
     } else if (aText == u"g"_ns) {
       mFeatureUsage |= CanvasFeatureUsage::KnownText_11;
     } else if (aText == u"Soft Ruddy Foothold 2"_ns) {
-      mFeatureUsage |= CanvasFeatureUsage::KnownText_12;
+      mFeatureUsage |= CanvasFeatureUsage::KnownText_12;  // Akamai
     } else if (aText == u"!H71JCaj)]# 1@#"_ns) {
-      mFeatureUsage |= CanvasFeatureUsage::KnownText_13;
+      mFeatureUsage |= CanvasFeatureUsage::KnownText_13;  // Akamai
     } else if (aText == u"oubrg5h56e@!$3t4"_ns) {
       mFeatureUsage |= CanvasFeatureUsage::KnownText_14;
     } else if (aText == u"Cwm fjordbank glyphs vext quiz,"_ns) {
@@ -4631,6 +4629,14 @@ void CanvasRenderingContext2D::FillText(const nsAString& aText, double aX,
       mFeatureUsage |= CanvasFeatureUsage::KnownText_23;
     } else if (aText == u"<@nv45. F1n63r,Pr1n71n6!"_ns) {
       mFeatureUsage |= CanvasFeatureUsage::KnownText_24;
+    } else if (aText == u"Cwm fjordbank gly 😃"_ns) {
+      mFeatureUsage |= CanvasFeatureUsage::KnownText_25;
+    } else if (aText == u"clientgear.com <canvas> 1.0") {
+      mFeatureUsage |= CanvasFeatureUsage::KnownText_26;
+    } else if (aText == u"iO0A🤣💩") {
+      mFeatureUsage |= CanvasFeatureUsage::KnownText_27;
+    } else if (aText == u"Ry"_ns) {
+      mFeatureUsage |= CanvasFeatureUsage::KnownText_28;
     }
   }
   mFillTextCalls++;

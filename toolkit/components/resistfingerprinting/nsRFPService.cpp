@@ -2006,10 +2006,14 @@ static const char* CanvasFingerprinterToString(
       return "Ozoki";
     case CanvasFingerprinterAlias::ePerimeterX:
       return "PerimeterX";
+    case CanvasFingerprinterAlias::eClientGear:
+      return "ClientGear";
     case CanvasFingerprinterAlias::eSignifyd:
       return "Signifyd";
     case CanvasFingerprinterAlias::eClaydar:
       return "Claydar";
+    case CanvasFingerprinterAlias::eImperva:
+      return "Imperva";
     case CanvasFingerprinterAlias::eForter:
       return "Forter";
     case CanvasFingerprinterAlias::eVariant1:
@@ -2482,6 +2486,10 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     fingerprinter = CanvasFingerprinterAlias::eClaydar;
   } else if (accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_23) {
     fingerprinter = CanvasFingerprinterAlias::eForter;
+  } else if (accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_2) {
+    fingerprinter = CanvasFingerprinterAlias::eImperva;
+  } else if (accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_26) {
+    fingerprinter = CanvasFingerprinterAlias::eClientGear;
   } else if (seenExtracted2D_250x80 &&
              accumulatedFeatureUsage & CanvasFeatureUsage::KnownText_6) {
     fingerprinter = CanvasFingerprinterAlias::eVariant5;
@@ -2494,12 +2502,6 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     fingerprinter = CanvasFingerprinterAlias::eVariant1;
   } else if (extractedWebGL > 0 && extracted2D > 1 && seenExtracted2D_860x6) {
     fingerprinter = CanvasFingerprinterAlias::eVariant2;
-  } else if (extracted2D > 0 &&
-             (accumulatedFeatureUsage & CanvasFeatureUsage::SetFont) &&
-             (accumulatedFeatureUsage &
-              (CanvasFeatureUsage::FillRect | CanvasFeatureUsage::LineTo |
-               CanvasFeatureUsage::Stroke))) {
-    fingerprinter = CanvasFingerprinterAlias::eVariant4;
   }
 
   nsAutoCString uri(aURI);
