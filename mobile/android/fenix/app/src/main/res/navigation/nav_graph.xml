@@ -756,13 +756,6 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
         <action
-            android:id="@+id/action_settingsFragment_to_firefoxLabsFragment"
-            app:destination="@id/firefoxLabsFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
-        <action
             android:id="@+id/action_settingsFragment_to_linkSharingFragment"
             app:destination="@id/linkSharingFragment"
             app:enterAnim="@anim/slide_in_right"
@@ -1068,9 +1061,6 @@
             app:argType="string"
             app:nullable="true" />
     </fragment>
-    <fragment
-        android:id="@+id/firefoxLabsFragment"
-        android:name="org.mozilla.fenix.settings.labs.FirefoxLabsFragment" />
     <fragment
         android:id="@+id/linkSharingFragment"
         android:name="org.mozilla.fenix.settings.LinkSharingFragment" />
