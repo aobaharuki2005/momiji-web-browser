@@ -13182,13 +13182,6 @@
   value: 500
   mirror: always
 
-# This timeout (ms) needs to be long enough to allow for the
-# possibility of DMD reports and/or running on a low-end phone.
-- name: memory.reporter.timeout
-  type: uint32_t
-  value: 180000
-  mirror: never
-
 #---------------------------------------------------------------------------
 # Prefs starting with "middlemouse."
 #---------------------------------------------------------------------------
