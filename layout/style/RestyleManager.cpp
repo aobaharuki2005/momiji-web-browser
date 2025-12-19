@@ -2770,6 +2770,9 @@ static ServoPostTraversalFlags SendA11yNotifications(
 static bool NeedsToReframeForConditionallyCreatedPseudoElement(
     Element* aElement, ComputedStyle* aNewStyle, nsIFrame* aStyleFrame,
     ServoRestyleState& aRestyleState) {
+  if (MOZ_UNLIKELY(aStyleFrame->IsLeaf())) {
+    return false;
+  }
   const auto& disp = *aStyleFrame->StyleDisplay();
   if (disp.IsListItem() && aStyleFrame->IsBlockFrameOrSubclass() &&
       !nsLayoutUtils::GetMarkerPseudo(aElement)) {

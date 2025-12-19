@@ -9655,25 +9655,24 @@ void nsCSSFrameConstructor::ProcessChildren(
   AddFCItemsForAnonymousContent(aState, aFrame, anonymousItems,
                                 itemsToConstruct, pageNameTracker);
 
-  // Generated content content should have the same style parent as normal kids.
-  //
-  // Note that we don't use this style for looking up things like special
-  // block styles because in some cases involving table pseudo-frames it has
-  // nothing to do with the parent frame's desired behavior.
-  auto* styleParentFrame =
-      nsIFrame::CorrectStyleParentFrame(aFrame, PseudoStyleType::NotPseudo);
-  ComputedStyle* parentStyle = styleParentFrame->Style();
-  if (parentStyle->StyleDisplay()->mTopLayer == StyleTopLayer::Auto &&
-      !aContent->IsInNativeAnonymousSubtree()) {
-    CreateGeneratedContentItem(aState, aFrame, *aContent->AsElement(),
-                               *parentStyle, PseudoStyleType::backdrop,
-                               itemsToConstruct);
-  }
-
   nsBlockFrame* listItem = nullptr;
   bool isOutsideMarker = false;
   if (!aPossiblyLeafFrame->IsLeaf()) {
+    // Generated content should have the same style parent as normal kids.
+    //
+    // Note that we don't use this style for looking up things like special
+    // block styles because in some cases involving table pseudo-frames it has
+    // nothing to do with the parent frame's desired behavior.
+    auto* styleParentFrame =
+        nsIFrame::CorrectStyleParentFrame(aFrame, PseudoStyleType::NotPseudo);
+    ComputedStyle* parentStyle = styleParentFrame->Style();
     if (aCanHaveGeneratedContent) {
+      if (parentStyle->StyleDisplay()->mTopLayer == StyleTopLayer::Auto &&
+          !aContent->IsInNativeAnonymousSubtree()) {
+        CreateGeneratedContentItem(aState, aFrame, *aContent->AsElement(),
+                                   *parentStyle, PseudoStyleType::backdrop,
+                                   itemsToConstruct);
+      }
       if (parentStyle->StyleDisplay()->IsListItem() &&
           (listItem = do_QueryFrame(aFrame)) &&
           !styleParentFrame->IsFieldSetFrame()) {
