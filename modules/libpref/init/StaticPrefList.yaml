@@ -5241,6 +5241,12 @@
   mirror: always
   rust: true
 
+- name: dom.viewTransitions.cross-document.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Timeout for view transitions.
 # TODO(emilio): Figure out the right time-out, Blink uses between 4 and 15
 # seconds.

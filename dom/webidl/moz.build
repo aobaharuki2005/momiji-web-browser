@@ -1241,6 +1241,8 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     "NavigationCurrentEntryChangeEvent.webidl",
     "NotificationEvent.webidl",
     "OfflineAudioCompletionEvent.webidl",
+    "PageRevealEvent.webidl",
+    "PageSwapEvent.webidl",
     "PageTransitionEvent.webidl",
     "PerformanceEntryEvent.webidl",
     "PopStateEvent.webidl",
