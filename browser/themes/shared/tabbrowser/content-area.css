@@ -180,6 +180,11 @@
     :root[inDOMFullscreen] & > .split-view-panel-active:not(.deck-selected) {
       -moz-subtree-hidden-only-visually: 1;
     }
+
+    :root[inDOMFullscreen] & > .split-view-splitter {
+      display: none;
+    }
+
     :root[inDOMFullscreen] & > .split-view-panel-active.deck-selected {
       margin: 0;
       position: absolute;
