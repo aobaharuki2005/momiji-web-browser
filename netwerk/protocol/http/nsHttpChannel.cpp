@@ -2086,6 +2086,17 @@ LNAPermission nsHttpChannel::UpdateLocalNetworkAccessPermissions(
 
   MOZ_ASSERT(mLoadInfo->TriggeringPrincipal(), "need triggering principal");
 
+  // Skip LNA checks if the triggering principal and target are same origin
+  // Note: This could be a case where there is a network change or device
+  // migration to a private or corporate network
+  bool isSameOrigin = false;
+  nsresult rv =
+      mLoadInfo->TriggeringPrincipal()->IsSameOrigin(mURI, &isSameOrigin);
+  if (NS_SUCCEEDED(rv) && isSameOrigin) {
+    userPerms = LNAPermission::Granted;
+    return userPerms;
+  }
+
   // Step 1. Check for  Existing Allow or Deny permission
   if (nsContentUtils::IsExactSitePermAllow(mLoadInfo->TriggeringPrincipal(),
                                            aPermissionType)) {
