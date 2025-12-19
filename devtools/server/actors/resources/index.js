@@ -25,7 +25,6 @@ const TYPES = {
   JSTRACER_TRACE: "jstracer-trace",
   JSTRACER_STATE: "jstracer-state",
   WEBSOCKET: "websocket",
-  WEBTRANSPORT: "webtransport",
 
   // storage types
   CACHE_STORAGE: "Cache",
@@ -116,9 +115,6 @@ const FrameTargetResources = augmentResourceDictionary({
   },
   [TYPES.WEBSOCKET]: {
     path: "devtools/server/actors/resources/websockets",
-  },
-  [TYPES.WEBTRANSPORT]: {
-    path: "devtools/server/actors/resources/webtransport",
   },
 });
 

@@ -179,7 +179,6 @@ parent:
   async CreateWebTransportParent(
       nsString aURL,
       nullable nsIPrincipal aPrincipal,
-      uint64_t aBrowsingContextID,
       IPCClientInfo?  aClientInfo,
       bool aDedicated,
       bool aRequireUnreliable,

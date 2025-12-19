@@ -38,7 +38,6 @@ DevToolsModules(
     "stylesheets.js",
     "thread-states.js",
     "websockets.js",
-    "webtransport.js",
 )
 
 with Files("*-messages.js"):

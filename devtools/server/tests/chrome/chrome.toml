@@ -147,5 +147,3 @@ support-files = [
 ["test_unsafeDereference.html"]
 
 ["test_webconsole-node-grip.html"]
-
-["test_webtransport-listeners.html"]

@@ -66,16 +66,6 @@ class Connector {
     TYPES.SERVER_SENT_EVENT,
   ];
 
-  get networkResources() {
-    const networkResources = Array.from(Connector.NETWORK_RESOURCES);
-    if (
-      Services.prefs.getBoolPref("devtools.netmonitor.features.webtransport")
-    ) {
-      networkResources.push(TYPES.WEBTRANSPORT);
-    }
-    return networkResources;
-  }
-
   get currentTarget() {
     return this.commands.targetCommand.targetFront;
   }
@@ -171,7 +161,7 @@ class Connector {
     if (isExplicitClear) {
       // Only clear the resources if the clear was initiated explicitly by the
       // UI, in other cases (eg navigation) the server handles the cleanup.
-      this.commands.resourceCommand.clearResources(this.networkResources);
+      this.commands.resourceCommand.clearResources(Connector.NETWORK_RESOURCES);
       this.emitForTests("clear-network-resources");
     }
 
@@ -181,7 +171,7 @@ class Connector {
 
   pause() {
     return this.commands.resourceCommand.unwatchResources(
-      this.networkResources,
+      Connector.NETWORK_RESOURCES,
       {
         onAvailable: this.onResourceAvailable,
         onUpdated: this.onResourceUpdated,
@@ -190,11 +180,14 @@ class Connector {
   }
 
   resume(ignoreExistingResources = true) {
-    return this.commands.resourceCommand.watchResources(this.networkResources, {
-      onAvailable: this.onResourceAvailable,
-      onUpdated: this.onResourceUpdated,
-      ignoreExistingResources,
-    });
+    return this.commands.resourceCommand.watchResources(
+      Connector.NETWORK_RESOURCES,
+      {
+        onAvailable: this.onResourceAvailable,
+        onUpdated: this.onResourceUpdated,
+        ignoreExistingResources,
+      }
+    );
   }
 
   async onResourceAvailable(resources, { areExistingResources }) {
