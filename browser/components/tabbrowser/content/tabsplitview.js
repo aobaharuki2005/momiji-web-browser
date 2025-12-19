@@ -296,7 +296,7 @@
       this.hasActiveTab = event.target.splitview === this;
       gBrowser.setIsSplitViewActive(this.hasActiveTab, this.#tabs);
       if (this.hasActiveTab) {
-        this.#activate(true);
+        this.#activate();
       } else {
         this.#deactivate(true);
       }

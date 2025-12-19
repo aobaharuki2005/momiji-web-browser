@@ -160,13 +160,13 @@
     --panel-min-width: 140px;
     min-width: var(--panel-min-width);
     max-width: calc(100% - var(--panel-min-width));
+    flex: 1;
     width: 49.4%;
   }
 
   &[splitview] {
     .split-view-panel.split-view-panel-active {
       margin: var(--space-xsmall);
-      flex: 1;
       position: relative;
       width: unset;
     }

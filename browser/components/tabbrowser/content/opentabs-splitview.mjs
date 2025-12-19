@@ -79,6 +79,7 @@ class OpenTabsInSplitView extends MozLitElement {
       case "TabSelect":
         if (this.currentSplitView) {
           this.addListeners();
+          this.requestUpdate();
         } else {
           this.removeListeners();
         }
