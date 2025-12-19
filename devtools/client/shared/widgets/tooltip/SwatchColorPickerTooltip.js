@@ -189,6 +189,9 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       learnMoreButton.addEventListener("keydown", e => e.stopPropagation());
     }
 
+    // Add focus to the first focusable element in the tooltip and attach keydown
+    // event listener to tooltip
+    this.focusableElements[0].focus();
     this.tooltip.container.addEventListener(
       "keydown",
       this._onTooltipKeydown,
