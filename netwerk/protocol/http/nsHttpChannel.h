@@ -546,14 +546,25 @@ class nsHttpChannel final : public HttpBaseChannel,
   // resolve in firing a ServiceWorker FetchEvent.
   [[nodiscard]] nsresult RedirectToInterceptedChannel();
 
+  // the internals to set up for AuthRetry
+  [[nodiscard]] nsresult SetupChannelForAuthRetry();
+
   // Start an internal redirect to a new channel for auth retry
   [[nodiscard]] nsresult RedirectToNewChannelForAuthRetry();
+
+  // Start an internal redirect to retry without dictionary after hash mismatch
+  [[nodiscard]] nsresult RedirectToNewChannelForDictionaryRetry();
 
   // Determines and sets content type in the cache entry. It's called when
   // writing a new entry. The content type is used in cache internally only.
   void SetCachedContentType();
 
  private:
+  // Helper function for RedirectToNewChannelForAuthRetry and
+  // RedirectToNewChannelForDictionaryRetry
+  [[nodiscard]] nsresult RedirectToNewChannelInternal(
+      uint32_t redirectFlags,
+      std::function<nsresult(nsHttpChannel*)> setupCallback);
   // this section is for main-thread-only object
   // all the references need to be proxy released on main thread.
   // auth specific data
@@ -922,6 +933,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   bool mUsingDictionary{false};  // we added Available-Dictionary
   bool mShouldSuspendForDictionary{false};
   bool mSuspendedForDictionary{false};
+  // Set on retry channel to prevent offering dictionary again
+  bool mDictionaryDisabledForRetry{false};
+  // Set when redirect channel is ready, waiting for OnStopRequest to open it
+  bool mDictionaryRetryPending{false};
 
  protected:
   virtual void DoNotifyListenerCleanup() override;

@@ -656,6 +656,148 @@ add_task(async function test_dictionary_hash_mismatch() {
   dump("**** Test passed: Hash mismatch properly handled\n");
 });
 
+/**
+ * Test that hash mismatch triggers an automatic retry WITHOUT the
+ * Available-Dictionary header, and the retry succeeds.
+ *
+ * Steps:
+ * 1. Load a resource with Use-As-Dictionary header (creates dictionary entry)
+ * 2. Verify Available-Dictionary is sent for matching resources
+ * 3. Corrupt the hash and clear dictionary data
+ * 4. Request matching resource - should trigger hash mismatch
+ * 5. Verify retry occurs WITHOUT Available-Dictionary header
+ * 6. Verify the request succeeds
+ */
+add_task(async function test_dictionary_hash_mismatch_retry() {
+  dump("**** Clear cache and start fresh\n");
+  let lci = Services.loadContextInfo.custom(false, {
+    partitionKey: `(https,localhost)`,
+  });
+  evict_cache_entries("all", lci);
+
+  let testingInterface = Services.cache2.QueryInterface(Ci.nsICacheTesting);
+  testingInterface.clearDictionaryCacheMemory();
+
+  await syncCache();
+
+  // Register dictionary endpoint
+  await server.registerPathHandler(
+    "/dict/retry-test",
+    function (request, response) {
+      response.writeHead(200, {
+        "Content-Type": "application/octet-stream",
+        "Use-As-Dictionary":
+          'match="/retry-match/*", id="retry-test-dict", type=raw',
+        "Cache-Control": "max-age=3600",
+      });
+      response.end("DICTIONARY_FOR_RETRY_TEST", "binary");
+    }
+  );
+
+  // Register matching resource endpoint that tracks ALL requests
+  await server.registerPathHandler(
+    "/retry-match/test",
+    function (request, response) {
+      // Initialize array if needed
+      if (!global.retryTestRequests) {
+        global.retryTestRequests = [];
+      }
+      // Record each request's Available-Dictionary header
+      global.retryTestRequests.push(
+        request.headers["available-dictionary"] || null
+      );
+      response.writeHead(200, {
+        "Content-Type": "text/plain",
+        "Cache-Control": "no-cache",
+      });
+      response.end("RETRY_TEST_CONTENT", "binary");
+    }
+  );
+
+  // Reset request tracking
+  await server.execute("global.retryTestRequests = []");
+
+  dump("**** Step 1: Load dictionary resource with Use-As-Dictionary\n");
+
+  let dictUrl = `https://localhost:${server.port()}/dict/retry-test`;
+  let chan = makeChan(dictUrl);
+  let [, data] = await channelOpenPromise(chan);
+
+  Assert.equal(
+    data,
+    "DICTIONARY_FOR_RETRY_TEST",
+    "Dictionary content should match"
+  );
+  await verifyDictionaryStored(dictUrl, true);
+  await syncCache();
+
+  dump("**** Step 2: Verify Available-Dictionary is sent initially\n");
+
+  let matchingUrl = `https://localhost:${server.port()}/retry-match/test`;
+  chan = makeChan(matchingUrl);
+  await channelOpenPromise(chan);
+
+  let requests = await server.execute("global.retryTestRequests");
+  Assert.equal(requests.length, 1, "Should have one request");
+  Assert.notStrictEqual(
+    requests[0],
+    null,
+    "First request should have Available-Dictionary"
+  );
+
+  dump("**** Step 3: Corrupt hash and clear dictionary data\n");
+
+  // Reset request tracking for the retry test
+  await server.execute("global.retryTestRequests = []");
+
+  testingInterface.corruptDictionaryHash(dictUrl);
+  testingInterface.clearDictionaryDataForTesting(dictUrl);
+
+  dump(
+    "**** Step 4: Request matching resource - triggers hash mismatch and retry\n"
+  );
+
+  chan = makeChan(matchingUrl);
+  [, data] = await channelOpenPromise(chan);
+
+  dump("**** Step 5: Verify retry occurred without Available-Dictionary\n");
+
+  requests = await server.execute("global.retryTestRequests");
+  dump(`**** Received ${requests.length} request(s)\n`);
+  for (let i = 0; i < requests.length; i++) {
+    dump(`****   Request ${i}: Available-Dictionary = ${requests[i]}\n`);
+  }
+
+  // We expect 2 requests:
+  // 1. First request WITH Available-Dictionary (triggers hash mismatch)
+  // 2. Retry request WITHOUT Available-Dictionary
+  Assert.equal(
+    requests.length,
+    2,
+    "Should have two requests (original + retry)"
+  );
+  Assert.notStrictEqual(
+    requests[0],
+    null,
+    "First request should have Available-Dictionary"
+  );
+  Assert.equal(
+    requests[1],
+    null,
+    "Retry request should NOT have Available-Dictionary"
+  );
+
+  dump("**** Step 6: Verify the request succeeded\n");
+
+  Assert.equal(
+    data,
+    "RETRY_TEST_CONTENT",
+    "Request should succeed with correct content"
+  );
+
+  dump("**** Test passed: Hash mismatch retry works correctly\n");
+});
+
 // Cleanup
 add_task(async function cleanup() {
   let lci = Services.loadContextInfo.custom(false, {
