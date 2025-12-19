@@ -1467,7 +1467,7 @@ export var BrowserTestUtils = {
     let getPanel = () => win.document.getElementById("DateTimePickerPanel");
     let panel = getPanel();
     let ensureReady = async () => {
-      let frame = panel.querySelector("#dateTimePopupFrame");
+      let frame = panel.querySelector("#inputPickerPopupFrame");
       let isValidUrl = () => {
         return (
           frame.browsingContext?.currentURI?.spec ==
