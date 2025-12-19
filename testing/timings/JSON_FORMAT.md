@@ -101,18 +101,24 @@ String tables for efficient storage. All strings are deduplicated and stored onc
     "Testing :: XPCShell Harness",
     "Firefox :: General",
     ...
+  ],
+  "commitIds": [                     // Commit IDs from repository (extracted from profile.meta.sourceURL)
+    "f37a6863f87aeeb870b16223045ea7614b1ba0a7",
+    "abc123def456789012345678901234567890abcd",
+    ...
   ]
 }
 ```
 
 ### taskInfo
 
-Maps task IDs to their associated job names and repositories. These are parallel arrays indexed by `taskIdId`:
+Maps task IDs to their associated job names, repositories, and commit IDs. These are parallel arrays indexed by `taskIdId`:
 
 ```json
 {
   "repositoryIds": [0, 1, 0, 2, ...],  // Index into tables.repositories
-  "jobNameIds": [0, 0, 1, 1, ...]      // Index into tables.jobNames
+  "jobNameIds": [0, 0, 1, 1, ...],     // Index into tables.jobNames
+  "commitIds": [0, 1, 0, null, ...]    // Index into tables.commitIds (null if not available)
 }
 ```
 
@@ -122,6 +128,8 @@ const taskIdId = 5;
 const taskId = tables.taskIds[taskIdId];           // "YJJe4a0CRIqbAmcCo8n63w.0"
 const repository = tables.repositories[taskInfo.repositoryIds[taskIdId]];  // "mozilla-central"
 const jobName = tables.jobNames[taskInfo.jobNameIds[taskIdId]];           // "test-linux1804-64/opt-xpcshell"
+const commitIdIdx = taskInfo.commitIds[taskIdId];
+const commitId = commitIdIdx !== null ? tables.commitIds[commitIdIdx] : null;  // "f37a6863f87a..." or null
 ```
 
 ### testInfo

@@ -345,6 +345,7 @@ function createDataTables(jobResults) {
     messages: [],
     crashSignatures: [],
     components: [],
+    commitIds: [],
   };
 
   // Maps for O(1) string lookups
@@ -358,12 +359,14 @@ function createDataTables(jobResults) {
     messages: new Map(),
     crashSignatures: new Map(),
     components: new Map(),
+    commitIds: new Map(),
   };
 
   // Task info maps task ID index to repository and job name indexes
   const taskInfo = {
     repositoryIds: [],
     jobNameIds: [],
+    commitIds: [],
   };
 
   // Test info maps test ID index to test path and name indexes
@@ -400,6 +403,9 @@ function createDataTables(jobResults) {
 
     const jobNameId = findStringIndex("jobNames", result.jobName);
     const repositoryId = findStringIndex("repositories", result.repository);
+    const commitId = result.commitId
+      ? findStringIndex("commitIds", result.commitId)
+      : null;
 
     for (const timing of result.timings) {
       const fullPath = timing.path;
@@ -445,6 +451,7 @@ function createDataTables(jobResults) {
       if (taskInfo.repositoryIds[taskIdId] === undefined) {
         taskInfo.repositoryIds[taskIdId] = repositoryId;
         taskInfo.jobNameIds[taskIdId] = jobNameId;
+        taskInfo.commitIds[taskIdId] = commitId;
       }
 
       // Initialize test group if it doesn't exist
@@ -519,6 +526,7 @@ function sortStringTablesByFrequency(dataStructure) {
     messages: new Array(tables.messages.length).fill(0),
     crashSignatures: new Array(tables.crashSignatures.length).fill(0),
     components: new Array(tables.components.length).fill(0),
+    commitIds: new Array(tables.commitIds.length).fill(0),
   };
 
   // Count taskInfo references
@@ -530,6 +538,11 @@ function sortStringTablesByFrequency(dataStructure) {
   for (const repositoryId of taskInfo.repositoryIds) {
     if (repositoryId !== undefined) {
       frequencyCounts.repositories[repositoryId]++;
+    }
+  }
+  for (const commitId of taskInfo.commitIds) {
+    if (commitId !== null) {
+      frequencyCounts.commitIds[commitId]++;
     }
   }
 
@@ -644,6 +657,7 @@ function sortStringTablesByFrequency(dataStructure) {
   const sortedTaskInfo = {
     repositoryIds: [],
     jobNameIds: [],
+    commitIds: [],
   };
 
   for (
@@ -658,6 +672,10 @@ function sortStringTablesByFrequency(dataStructure) {
     sortedTaskInfo.jobNameIds[newTaskIdId] = indexMaps.jobNames.get(
       taskInfo.jobNameIds[oldTaskIdId]
     );
+    sortedTaskInfo.commitIds[newTaskIdId] =
+      taskInfo.commitIds[oldTaskIdId] === null
+        ? null
+        : indexMaps.commitIds.get(taskInfo.commitIds[oldTaskIdId]);
   }
 
   // Remap testInfo indices
@@ -1286,6 +1304,7 @@ async function createAggregatedFailuresFile(dates) {
     messages: [],
     crashSignatures: [],
     components: [],
+    commitIds: [],
   };
 
   const stringMaps = {
@@ -1298,6 +1317,7 @@ async function createAggregatedFailuresFile(dates) {
     messages: new Map(),
     crashSignatures: new Map(),
     components: new Map(),
+    commitIds: new Map(),
   };
 
   function addToMergedTable(tableName, value) {
@@ -1317,6 +1337,7 @@ async function createAggregatedFailuresFile(dates) {
   const mergedTaskInfo = {
     repositoryIds: [],
     jobNameIds: [],
+    commitIds: [],
   };
 
   const mergedTestInfo = {
@@ -1403,15 +1424,19 @@ async function createAggregatedFailuresFile(dates) {
           const taskIdString = data.tables.taskIds[taskIdId];
           const repositoryId = data.taskInfo.repositoryIds[taskIdId];
           const jobNameId = data.taskInfo.jobNameIds[taskIdId];
+          const commitId = data.taskInfo.commitIds[taskIdId];
 
           const repository = data.tables.repositories[repositoryId];
           const jobName = data.tables.jobNames[jobNameId];
+          const commitIdString =
+            commitId !== null ? data.tables.commitIds[commitId] : null;
 
           const mergedRepositoryId = addToMergedTable(
             "repositories",
             repository
           );
           const mergedJobNameId = addToMergedTable("jobNames", jobName);
+          const mergedCommitId = addToMergedTable("commitIds", commitIdString);
 
           const run = {
             repositoryId: mergedRepositoryId,
@@ -1431,6 +1456,7 @@ async function createAggregatedFailuresFile(dates) {
           if (mergedTaskInfo.repositoryIds[mergedTaskIdId] === undefined) {
             mergedTaskInfo.repositoryIds[mergedTaskIdId] = mergedRepositoryId;
             mergedTaskInfo.jobNameIds[mergedTaskIdId] = mergedJobNameId;
+            mergedTaskInfo.commitIds[mergedTaskIdId] = mergedCommitId;
           }
 
           run.taskIdId = mergedTaskIdId;
