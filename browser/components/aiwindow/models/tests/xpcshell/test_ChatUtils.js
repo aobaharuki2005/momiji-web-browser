@@ -11,6 +11,8 @@ const {
   getLocalIsoTime,
   getCurrentTabMetadata,
   constructRelevantInsightsContextMessage,
+  parseContentWithTokens,
+  detectTokens,
 } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs"
 );
@@ -342,3 +344,175 @@ add_task(
     }
   }
 );
+
+add_task(async function test_parseContentWithTokens_no_tokens() {
+  const content = "This is a regular message with no special tokens.";
+  const result = await parseContentWithTokens(content);
+
+  Assert.equal(
+    result.cleanContent,
+    content,
+    "Clean content should match original when no tokens present"
+  );
+  Assert.equal(result.searchQueries.length, 0, "Should have no search queries");
+  Assert.equal(result.usedInsights.length, 0, "Should have no used insights");
+});
+
+add_task(async function test_parseContentWithTokens_single_search_token() {
+  const content =
+    "You can find great coffee in the downtown area.§search: best coffee shops near me§";
+  const result = await parseContentWithTokens(content);
+
+  Assert.equal(
+    result.cleanContent,
+    "You can find great coffee in the downtown area.",
+    "Should remove search token from content"
+  );
+  Assert.equal(result.searchQueries.length, 1, "Should have one search query");
+  Assert.equal(
+    result.searchQueries[0],
+    "best coffee shops near me",
+    "Should extract correct search query"
+  );
+  Assert.equal(result.usedInsights.length, 0, "Should have no used insights");
+});
+
+add_task(async function test_parseContentWithTokens_single_insight_token() {
+  const content =
+    "I recommend trying herbal tea blends.§existing_insight: likes tea§";
+  const result = await parseContentWithTokens(content);
+
+  Assert.equal(
+    result.cleanContent,
+    "I recommend trying herbal tea blends.",
+    "Should remove insight token from content"
+  );
+  Assert.equal(result.searchQueries.length, 0, "Should have no search queries");
+  Assert.equal(result.usedInsights.length, 1, "Should have one used insight");
+  Assert.equal(
+    result.usedInsights[0],
+    "likes tea",
+    "Should extract correct insight"
+  );
+});
+
+add_task(async function test_parseContentWithTokens_multiple_mixed_tokens() {
+  const content =
+    "I recommend checking out organic coffee options.§existing_insight: prefers organic§ They have great flavor profiles.§search: organic coffee beans reviews§§search: best organic cafes nearby§";
+  const result = await parseContentWithTokens(content);
+
+  Assert.equal(
+    result.cleanContent,
+    "I recommend checking out organic coffee options. They have great flavor profiles.",
+    "Should remove all tokens from content"
+  );
+  Assert.equal(
+    result.searchQueries.length,
+    2,
+    "Should have two search queries"
+  );
+  Assert.deepEqual(
+    result.searchQueries,
+    ["organic coffee beans reviews", "best organic cafes nearby"],
+    "Should extract search queries in correct order"
+  );
+  Assert.equal(result.usedInsights.length, 1, "Should have one used insight");
+  Assert.equal(
+    result.usedInsights[0],
+    "prefers organic",
+    "Should extract correct insight"
+  );
+});
+
+add_task(async function test_parseContentWithTokens_tokens_with_whitespace() {
+  const content =
+    "You can find more details online.§search:   coffee brewing methods   §";
+  const result = await parseContentWithTokens(content);
+
+  Assert.equal(
+    result.cleanContent,
+    "You can find more details online.",
+    "Should remove token with whitespace"
+  );
+  Assert.equal(result.searchQueries.length, 1, "Should have one search query");
+  Assert.equal(
+    result.searchQueries[0],
+    "coffee brewing methods",
+    "Should trim whitespace from extracted query"
+  );
+});
+
+add_task(async function test_parseContentWithTokens_adjacent_tokens() {
+  const content =
+    "Here are some great Italian dining options.§existing_insight: prefers italian food§§search: local italian restaurants§";
+  const result = await parseContentWithTokens(content);
+
+  Assert.equal(
+    result.cleanContent,
+    "Here are some great Italian dining options.",
+    "Should remove adjacent tokens"
+  );
+  Assert.equal(result.searchQueries.length, 1, "Should have one search query");
+  Assert.equal(
+    result.searchQueries[0],
+    "local italian restaurants",
+    "Should extract search query"
+  );
+  Assert.equal(result.usedInsights.length, 1, "Should have one insight");
+  Assert.equal(
+    result.usedInsights[0],
+    "prefers italian food",
+    "Should extract insight"
+  );
+});
+
+add_task(function test_detectTokens_basic_pattern() {
+  const content =
+    "There are many great options available.§search: coffee shops near downtown§§search: best rated restaurants§";
+  const searchRegex = /§search:\s*([^§]+)§/gi;
+  const result = detectTokens(content, searchRegex, "query");
+
+  Assert.equal(result.length, 2, "Should find two matches");
+  Assert.equal(
+    result[0].query,
+    "coffee shops near downtown",
+    "First match should extract correct query"
+  );
+  Assert.equal(
+    result[0].fullMatch,
+    "§search: coffee shops near downtown§",
+    "First match should include full match"
+  );
+  Assert.equal(
+    result[0].startIndex,
+    39,
+    "First match should have correct start index"
+  );
+  Assert.equal(
+    result[1].query,
+    "best rated restaurants",
+    "Second match should extract correct query"
+  );
+});
+
+add_task(function test_detectTokens_custom_key() {
+  const content =
+    "I recommend trying the Thai curry.§insight: prefers spicy food§";
+  const insightRegex = /§insight:\s*([^§]+)§/gi;
+  const result = detectTokens(content, insightRegex, "customKey");
+
+  Assert.equal(result.length, 1, "Should find one match");
+  Assert.equal(
+    result[0].customKey,
+    "prefers spicy food",
+    "Should use custom key for extracted value"
+  );
+  Assert.ok(
+    result[0].hasOwnProperty("customKey"),
+    "Result should have the custom key property"
+  );
+  Assert.ok(
+    !result[0].hasOwnProperty("query"),
+    "Result should not have default 'query' property"
+  );
+});
