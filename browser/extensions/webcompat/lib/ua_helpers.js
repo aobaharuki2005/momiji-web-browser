@@ -15,7 +15,7 @@ var UAHelpers = {
     return `FxQuantum/${UAHelpers.getRunningFirefoxVersion()} `;
   },
   getDeviceAppropriateChromeUA(config = {}) {
-    let { androidVersion, version = "130.0.0.0", phone, tablet, OS } = config;
+    let { androidVersion, version = "143.0.0.0", phone, tablet, OS } = config;
     const key = JSON.stringify(config);
     if (config.noCache || !UAHelpers._deviceAppropriateChromeUAs[key]) {
       const userAgent =
@@ -76,7 +76,7 @@ var UAHelpers = {
   ) {
     return `${ua} Gecko/${version}`;
   },
-  addChrome(ua = navigator.userAgent, version = "130.0.0.0") {
+  addChrome(ua = navigator.userAgent, version = "143.0.0.0") {
     const isMobile =
       navigator.userAgent.includes("Mobile") ||
       navigator.userAgent.includes("Tablet");
