@@ -13,7 +13,10 @@ from filter_git_changes import filter_git_changes
 from restore_patch_stack import restore_patch_stack
 from run_operations import (
     ErrorHelp,
+    RepoType,
+    detect_repo_type,
     get_last_line,
+    git_status,
     run_git,
     run_hg,
     run_shell,
@@ -28,6 +31,8 @@ from vendor_and_commit import vendor_and_commit
 script_name = os.path.basename(__file__)
 error_help = ErrorHelp()
 error_help.set_prefix(f"*** ERROR *** {script_name} did not complete successfully")
+
+repo_type = detect_repo_type()
 
 
 def early_exit_handler():
@@ -96,13 +101,24 @@ def write_noop_tracking_file(
         ofile.write(f"We cherry-picked this in bug {bug_number}")
         ofile.write("\n")
     shutil.copy(noop_filename, args.patch_path)
-    cmd = f"hg add {os.path.join(args.patch_path, noop_basename)}"
-    run_hg(cmd)
-    cmd = f"hg amend {os.path.join(args.patch_path, noop_basename)}"
-    run_hg(cmd)
+    if repo_type == RepoType.GIT:
+        cmd = f"git add {os.path.join(args.patch_path, noop_basename)}"
+        run_git(cmd, ".")
+        cmd = "git commit --amend --no-edit"
+        run_git(cmd, ".")
+    else:
+        cmd = f"hg add {os.path.join(args.patch_path, noop_basename)}"
+        run_hg(cmd)
+        cmd = f"hg amend {os.path.join(args.patch_path, noop_basename)}"
+        run_hg(cmd)
 
 
 if __name__ == "__main__":
+    # first, check which repo we're in, git or hg
+    if repo_type is None or not isinstance(repo_type, RepoType):
+        print("Unable to detect repo (git or hg)")
+        sys.exit(1)
+
     default_target_dir = "third_party/libwebrtc"
     default_state_dir = ".moz-fast-forward"
     default_log_dir = ".moz-fast-forward/logs"
@@ -225,15 +241,23 @@ if __name__ == "__main__":
 
     # handle aborting cherry-pick
     if args.abort:
-        run_hg("hg revert --all")
-        run_hg(f"hg purge {args.target_path}")
+        if repo_type == RepoType.GIT:
+            run_git(f"git restore --staged {args.target_path}", ".")
+            run_git(f"git restore {args.target_path}", ".")
+            run_git(f"git clean -f {args.target_path}", ".")
+        else:
+            run_hg("hg revert --all")
+            run_hg(f"hg purge {args.target_path}")
         # If the resume_state is not resume2 or resume3 that means we may
         # have committed something to mercurial.  First we need to check
         # for our cherry-pick commit message, and if found, remove
         # that commit.
         if resume_state not in ("resume2", "resume3"):
             # check for committed mercurial patch and backout
-            stdout_lines = run_hg("hg log --template {desc|firstline}\n -r .")
+            if repo_type == RepoType.GIT:
+                stdout_lines = run_git("git show --oneline --no-patch", ".")
+            else:
+                stdout_lines = run_hg("hg log --template {desc|firstline}\n -r .")
             # check for "Cherry-pick upstream libwebrtc commit"
             print(f"stdout_lines before filter: {stdout_lines}")
             stdout_lines = [
@@ -243,9 +267,14 @@ if __name__ == "__main__":
             ]
             print(f"looking for commit: {stdout_lines}")
             if len(stdout_lines) > 0:
-                cmd = "hg prune ."
-                print(f"calling '{cmd}'")
-                run_hg(cmd)
+                if repo_type == RepoType.GIT:
+                    cmd = "git reset --hard HEAD^"
+                    print(f"calling '{cmd}'")
+                    run_git(cmd, ".")
+                else:
+                    cmd = "hg prune ."
+                    print(f"calling '{cmd}'")
+                    run_hg(cmd)
         print("restoring patch stack")
         restore_patch_stack(
             args.repo_path,
@@ -266,7 +295,10 @@ if __name__ == "__main__":
         f"There are modified or untracked files under {args.target_path}.\n"
         f"Please cleanup the repo under {args.target_path} before running {script_name}"
     )
-    stdout_lines = run_hg(f"hg status {args.target_path}")
+    if repo_type == RepoType.GIT:
+        stdout_lines = git_status(".", args.target_path)
+    else:
+        stdout_lines = run_hg(f"hg status {args.target_path}")
     if len(stdout_lines) != 0:
         sys.exit(1)
     error_help.set_help(None)
@@ -401,10 +433,18 @@ if __name__ == "__main__":
         # on what commit was vendored and the command line used to do
         # the vendoring.  Since we're only reusing the vendoring script
         # here, we don't want to update the README.mozilla file.
-        cmd = "hg revert -r tip^ third_party/libwebrtc/README.mozilla.last-vendor"
-        run_hg(cmd)
-        cmd = "hg amend"
-        run_hg(cmd)
+        if repo_type == RepoType.GIT:
+            cmd = (
+                "git checkout HEAD^ -- third_party/libwebrtc/README.mozilla.last-vendor"
+            )
+            run_git(cmd, ".")
+            cmd = "git commit --amend --no-edit"
+            run_git(cmd, ".")
+        else:
+            cmd = "hg revert -r tip^ third_party/libwebrtc/README.mozilla.last-vendor"
+            run_hg(cmd)
+            cmd = "hg amend"
+            run_hg(cmd)
         error_help.set_help(None)
 
     if len(resume_state) == 0 or resume_state == "resume7":
@@ -412,7 +452,10 @@ if __name__ == "__main__":
         update_resume_state("resume8", resume_state_filename)
         # get the files changed from the newly vendored cherry-pick
         # commit in mercurial
-        cmd = "hg status --change tip --exclude '**/README.*'"
+        if repo_type == RepoType.GIT:
+            cmd = "git show --format='' --name-status | grep -v 'README.'"
+        else:
+            cmd = "hg status --change tip --exclude '**/README.*'"
         stdout_lines = run_shell(cmd)  # run_shell to allow file wildcard
         print(f"Mercurial changes:\n{stdout_lines}")
         hg_file_change_cnt = len(stdout_lines)
