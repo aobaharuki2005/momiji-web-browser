@@ -2494,8 +2494,6 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     fingerprinter = CanvasFingerprinterAlias::eVariant1;
   } else if (extractedWebGL > 0 && extracted2D > 1 && seenExtracted2D_860x6) {
     fingerprinter = CanvasFingerprinterAlias::eVariant2;
-  } else if (extractedWebGL > 0 || extracted2D > 0) {
-    fingerprinter = CanvasFingerprinterAlias::eVariant3;
   } else if (extracted2D > 0 &&
              (accumulatedFeatureUsage & CanvasFeatureUsage::SetFont) &&
              (accumulatedFeatureUsage &
@@ -2531,10 +2529,15 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
            CanvasFingerprinterToString(fingerprinter),
            CanvasUsageSourceToString(accumulatedUsageSource).get()));
 
-  ContentBlockingNotifier::OnEvent(
-      aChannel, false,
-      nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING, origin,
-      Nothing(), Some(event));
+  NS_DispatchToMainThread(NS_NewRunnableFunction(
+      "nsRFPService::MaybeReportCanvasFingerprinter::NotifyEvent",
+      [channel = nsCOMPtr{aChannel}, origin = nsCString(aOriginNoSuffix),
+       event = event]() {
+        ContentBlockingNotifier::OnEvent(
+            channel, false,
+            nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING, origin,
+            Nothing(), Some(event));
+      }));
 }
 
 /* static */ void nsRFPService::MaybeReportFontFingerprinter(
