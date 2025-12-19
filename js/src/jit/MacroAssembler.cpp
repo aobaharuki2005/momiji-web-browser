@@ -7627,12 +7627,11 @@ void MacroAssembler::wasmNewStructObject(Register instance, Register result,
                       wasm::TypeDefInstanceData::offsetOfSuperTypeVector()),
           temp);
   storePtr(temp, Address(result, WasmArrayObject::offsetOfSuperTypeVector()));
-  storePtr(ImmWord(0),
-           Address(result, WasmStructObject::offsetOfOutlineData()));
 
   if (zeroFields) {
+    static_assert(wasm::WasmStructObject_Size_ASSUMED % sizeof(void*) == 0);
     MOZ_ASSERT(sizeBytes % sizeof(void*) == 0);
-    for (size_t i = WasmStructObject::offsetOfInlineData(); i < sizeBytes;
+    for (size_t i = wasm::WasmStructObject_Size_ASSUMED; i < sizeBytes;
          i += sizeof(void*)) {
       storePtr(ImmWord(0), Address(result, i));
     }

@@ -49,6 +49,7 @@ UNIFIED_SOURCES += [
     "WasmSerialize.cpp",
     "WasmSignalHandlers.cpp",
     "WasmStaticTypeDefs.cpp",
+    "WasmStructLayout.cpp",
     "WasmStubs.cpp",
     "WasmSummarizeInsn.cpp",
     "WasmTable.cpp",

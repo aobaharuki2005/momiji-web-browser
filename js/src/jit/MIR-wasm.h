@@ -3232,14 +3232,10 @@ class MWasmNewStructObject : public MBinaryInstruction,
   }
   const wasm::TypeDef& typeDef() { return *typeDef_; }
   const wasm::StructType& structType() const { return typeDef_->structType(); }
-  bool isOutline() const {
-    return WasmStructObject::requiresOutlineBytes(typeDef_->structType().size_);
-  }
+  bool isOutline() const { return typeDef_->structType().hasOOL(); }
   bool zeroFields() const { return zeroFields_; }
   const wasm::TrapSiteDesc& trapSiteDesc() const { return trapSiteDesc_; }
-  gc::AllocKind allocKind() const {
-    return WasmStructObject::allocKindForTypeDef(typeDef_);
-  }
+  gc::AllocKind allocKind() const { return typeDef_->structType().allocKind_; }
 };
 
 class MWasmNewArrayObject : public MTernaryInstruction,

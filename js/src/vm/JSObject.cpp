@@ -3200,7 +3200,7 @@ js::gc::AllocKind JSObject::allocKindForTenure(
   if (is<WasmStructObject>()) {
     // Figure out the size of this object, from the object's TypeDef.
     const wasm::TypeDef* typeDef = &as<WasmStructObject>().typeDef();
-    AllocKind kind = WasmStructObject::allocKindForTypeDef(typeDef);
+    AllocKind kind = typeDef->structType().allocKind_;
     return GetFinalizedAllocKindForClass(kind, getClass());
   }
 
