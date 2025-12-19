@@ -137,6 +137,34 @@ function getChildDocShells(parentDocShell) {
 exports.getChildDocShells = getChildDocShells;
 
 /**
+ * Helper to retrieve all the windows (parent, children, or browsing context own window)
+ * that exists in the same process than the given browsing context.
+ *
+ * @param {BrowsingContext} browsingContext
+ * @returns {Array<Window>}
+ */
+function getAllSameProcessGlobalsFromBrowsingContext(browsingContext) {
+  const windows = [];
+  const topBrowsingContext = browsingContext.top;
+  for (const bc of topBrowsingContext.getAllBrowsingContextsInSubtree()) {
+    // Filter out browsingContext which don't expose any docshell (e.g. remote frame)
+    if (!bc.docShell) {
+      continue;
+    }
+    try {
+      windows.push(bc.docShell.domWindow);
+    } catch (e) {
+      // docShell.domWindow may throw when the docshell is being destroyed.
+      // Ignore them. We can't use docShell.isBeingDestroyed as it
+      // is flagging too early. e.g it's already true when hitting a breakpoint
+      // in the unload event.
+    }
+  }
+
+  return windows;
+}
+
+/**
  * Browser-specific actors.
  */
 
@@ -300,13 +328,16 @@ class WindowGlobalTargetActor extends BaseTargetActor {
       this._shouldAddNewGlobalAsDebuggee.bind(this);
 
     this.makeDebugger = makeDebugger.bind(null, {
-      findDebuggees: () => {
+      findDebuggees: (dbg, includeAllSameProcessGlobals) => {
         const result = [];
         const inspectUAWidgets = Services.prefs.getBoolPref(
           "devtools.inspector.showAllAnonymousContent",
           false
         );
-        for (const win of this.windows) {
+        const windows = includeAllSameProcessGlobals
+          ? getAllSameProcessGlobalsFromBrowsingContext(this.browsingContext)
+          : this.windows;
+        for (const win of windows) {
           result.push(win);
           // Only expose User Agent internal (like <video controls>) when the
           // related pref is set.
