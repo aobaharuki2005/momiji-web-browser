@@ -294,6 +294,11 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   if (mGlobal->GetClientInfo().isSome()) {
     ipcClientInfo = mozilla::Some(mGlobal->GetClientInfo().ref().ToIPC());
   }
+
+  nsPIDOMWindowInner* window = mGlobal->GetAsInnerWindow();
+  if (window) {
+    mBrowsingContextID = window->GetBrowsingContext()->Id();
+  }
   // Create a new IPC connection
   Endpoint<PWebTransportParent> parentEndpoint;
   Endpoint<PWebTransportChild> childEndpoint;
@@ -372,9 +377,9 @@ void WebTransport::Init(const GlobalObject& aGlobal, const nsAString& aURL,
   mChild = child;
   backgroundChild
       ->SendCreateWebTransportParent(
-          aURL, principal, ipcClientInfo, dedicated, requireUnreliable,
-          (uint32_t)congestionControl, std::move(aServerCertHashes),
-          std::move(parentEndpoint))
+          aURL, principal, mBrowsingContextID, ipcClientInfo, dedicated,
+          requireUnreliable, (uint32_t)congestionControl,
+          std::move(aServerCertHashes), std::move(parentEndpoint))
       ->Then(GetCurrentSerialEventTarget(), __func__,
              [self = RefPtr{this}](
                  PBackgroundChild::CreateWebTransportParentPromise::
