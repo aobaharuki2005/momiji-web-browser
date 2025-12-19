@@ -1,17 +1,61 @@
 name: Close Pull Request
 on:
+  # WARNING: pull_request_target MUST NOT be used if running code under control
+  # of the source PR [0], as it could risk leaking the GH_TOKENs.
+  #
+  # In this case, we do it as the job needs to run within the context of the
+  # target repo, so it can get a GH_TOKEN which it can use to comment on and
+  # update the PR.
+  #
+  # Crucially, no external code is loaded or run as part of this workflow.
+  #
+  # [0] https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target:~:text=Warning-,Running,websitehttps://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request_target:~:text=Warning-,Running,website
+  #
   pull_request_target:
     types: [opened, reopened]
+
+
+env:
+  ALLOWED_TEAM: lando-github-pilot
+  ALLOWED_PATHS: |
+    mobile/android/android-components
+    mobile/android/fenix
+    mobile/android/focus-android
+
+  GH_REPO: ${{ github.repository }}
+  PR: ${{ github.event.pull_request.number }}
+
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   close-pr:
     runs-on: ubuntu-latest
     steps:
-      - name: Close PR
+      - name: Check team membership
+        id: team
         env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          PR: ${{ github.event.pull_request.number }}
+          AUTHOR: ${{ github.actor }}
+          GH_ORG: ${{ github.repository_owner }}
+        run: |
+          if gh api "/orgs/${GH_ORG}/teams/${ALLOWED_TEAM}/memberships/${AUTHOR}" --silent 2>/dev/null; then
+            echo "is_member=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_member=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check allowed paths
+        id: paths
+        if: steps.team.outputs.is_member == 'true'
+        run: |
+          PATTERN=$(echo "${ALLOWED_PATHS}" | xargs | tr ' ' '|')
+          if gh pr view "${PR}" --json files --jq '.files[].path' | grep -vE "^(${PATTERN})"; then
+            echo "only_allowed=false" >> $GITHUB_OUTPUT
+          else
+            echo "only_allowed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Close PR
+        if: steps.team.outputs.is_member != 'true' || steps.paths.outputs.only_allowed != 'true'
         run: |
           gh pr close "${PR}" --comment "(Automated Close) Please do not file pull requests here, see https://firefox-source-docs.mozilla.org/contributing/how_to_submit_a_patch.html"
           gh pr lock "${PR}"
