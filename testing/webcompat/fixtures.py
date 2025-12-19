@@ -450,6 +450,9 @@ def only_firefox_versions(bug_number, firefox_version, request):
 @pytest.fixture(autouse=True)
 def only_platforms(bug_number, platform, request, session):
     is_fenix = "org.mozilla.fenix" in session.capabilities.get("moz:profile", "")
+    is_gve = "org.mozilla.geckoview_example" in session.capabilities.get(
+        "moz:profile", ""
+    )
     actualPlatform = session.capabilities["platformName"]
     actualPlatformRequired = request.node.get_closest_marker("actual_platform_required")
     if actualPlatformRequired and request.config.getoption("platform_override"):
@@ -459,7 +462,11 @@ def only_platforms(bug_number, platform, request, session):
     if request.node.get_closest_marker("only_platforms"):
         plats = request.node.get_closest_marker("only_platforms").args
         for only in plats:
-            if only == platform or (only == "fenix" and is_fenix):
+            if (
+                only == platform
+                or (only == "fenix" and is_fenix)
+                or (only == "gve" and is_gve)
+            ):
                 if actualPlatform == platform or not actualPlatformRequired:
                     return
         pytest.skip(
@@ -470,10 +477,17 @@ def only_platforms(bug_number, platform, request, session):
 @pytest.fixture(autouse=True)
 def skip_platforms(bug_number, platform, request, session):
     is_fenix = "org.mozilla.fenix" in session.capabilities.get("moz:profile", "")
+    is_gve = "org.mozilla.geckoview_example" in session.capabilities.get(
+        "moz:profile", ""
+    )
     if request.node.get_closest_marker("skip_platforms"):
         plats = request.node.get_closest_marker("skip_platforms").args
         for skipped in plats:
-            if skipped == platform or (skipped == "fenix" and is_fenix):
+            if (
+                skipped == platform
+                or (skipped == "fenix" and is_fenix)
+                or (skipped == "gve" and is_gve)
+            ):
                 pytest.skip(
                     f"Bug #{bug_number} skipped on platform ({platform}, test skipped for {' and '.join(plats)})"
                 )
