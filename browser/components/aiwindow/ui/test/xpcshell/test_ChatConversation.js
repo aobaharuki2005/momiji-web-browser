@@ -410,3 +410,44 @@ add_task(function test_noBrowsing_ChatConversation_getMostRecentPageVisited() {
 
   Assert.equal(mostRecentPageVisited, null);
 });
+
+add_task(function test_ChatConversation_renderState() {
+  const conversation = new ChatConversation({});
+
+  const content = "user to assistant msg";
+
+  conversation.addUserMessage(content, "about:aiwindow", 0);
+  conversation.addToolCallMessage("some content", 0);
+  conversation.addAssistantMessage("text", "a response", 0);
+  conversation.addUserMessage(content, "about:aiwindow", 1);
+  conversation.addSystemMessage("text", "some system message", 1);
+  conversation.addAssistantMessage("text", "a response", 1);
+
+  const renderState = conversation.renderState();
+
+  Assert.deepEqual(renderState, [
+    conversation.messages[0],
+    conversation.messages[2],
+    conversation.messages[3],
+    conversation.messages[5],
+  ]);
+});
+
+add_task(function test_ChatConversation_currentTurnIndex() {
+  const conversation = new ChatConversation({});
+
+  const content = "user to assistant msg";
+
+  conversation.addUserMessage(content, "about:aiwindow", 0);
+  conversation.addAssistantMessage("text", "a response", 0);
+  conversation.addUserMessage(content, "about:aiwindow", 2);
+  conversation.addAssistantMessage("text", "a response", 2);
+  conversation.addUserMessage(content, "about:aiwindow", 1);
+  conversation.addAssistantMessage("text", "a response", 1);
+  conversation.addUserMessage(content, "about:aiwindow", 4);
+  conversation.addAssistantMessage("text", "a response", 4);
+  conversation.addUserMessage(content, "about:aiwindow", 3);
+  conversation.addAssistantMessage("text", "a response", 3);
+
+  Assert.deepEqual(conversation.currentTurnIndex(), 4);
+});

@@ -12,6 +12,8 @@ import {
   UserRoleOpts,
 } from "./ChatMessage.sys.mjs";
 
+const CHAT_ROLES = [MESSAGE_ROLE.USER, MESSAGE_ROLE.ASSISTANT];
+
 /**
  * A conversation containing messages.
  */
@@ -62,6 +64,31 @@ export class ChatConversation {
 
     // NOTE: Destructuring params.status causes a linter error
     this.status = params.status || CONVERSATION_STATUS.ACTIVE;
+  }
+
+  /**
+   * Returns a filtered messages array consisting only of the messages
+   * that are meant to be rendered as the chat conversation.
+   *
+   * @returns {Array<ChatMessage>}
+   */
+  renderState() {
+    const messages = this.#messages.filter(message => {
+      return CHAT_ROLES.includes(message.role);
+    });
+
+    return messages;
+  }
+
+  /**
+   * Returns the current turn index for the conversation
+   *
+   * @returns {number}
+   */
+  currentTurnIndex() {
+    return this.#messages.reduce((turnIndex, message) => {
+      return Math.max(turnIndex, message.turnIndex);
+    }, 0);
   }
 
   /**
