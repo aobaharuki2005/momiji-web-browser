@@ -173,8 +173,7 @@ nsresult nsHostResolver::Init() MOZ_NO_THREAD_SAFETY_ANALYSIS {
   // For some reason, the DNSQuery_A API doesn't work on Windows 10.
   // It returns a success code, but no records. We only allow
   // native HTTPS records on Win 11 for now.
-  sNativeHTTPSSupported = StaticPrefs::network_dns_native_https_query_win10() ||
-                          mozilla::IsWin11OrLater();
+  sNativeHTTPSSupported = mozilla::IsWin11OrLater();
 #elif defined(MOZ_WIDGET_ANDROID)
   // android_res_nquery only got added in API level 29
   sNativeHTTPSSupported = jni::GetAPIVersion() >= 29;
@@ -430,6 +429,13 @@ bool nsHostResolver::IsNativeHTTPSEnabled() {
   if (!StaticPrefs::network_dns_native_https_query()) {
     return false;
   }
+#ifdef XP_WIN
+  if (StaticPrefs::network_dns_native_https_query_win10()) {
+    // If this pref is true, we allow resolving HTTPS records.
+    // It might not work, or we might use the HTTPS override records.
+    return true;
+  }
+#endif
   return sNativeHTTPSSupported;
 }
 
