@@ -49,6 +49,7 @@
 .site-information-popup[connection=not-secure] [when-connection~=not-secure],
 .site-information-popup[connection=secure-cert-user-overridden] [when-connection~=secure-cert-user-overridden],
 .site-information-popup[connection=secure-ev] [when-connection~=secure-ev],
+.site-information-popup[connection=secure-etsi] [when-connection~=secure-etsi],
 .site-information-popup[connection=secure] [when-connection~=secure],
 .site-information-popup[connection=chrome] [when-connection~=chrome],
 .site-information-popup[connection=file] [when-connection~=file],

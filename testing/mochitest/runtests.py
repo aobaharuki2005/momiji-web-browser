@@ -716,7 +716,7 @@ class SSLTunnel:
         self.webServer = options.webServer
         self.webSocketPort = options.webSocketPort
 
-        self.customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ ]+)")
+        self.customCertRE = re.compile("^cert=(?P<nickname>[0-9a-zA-Z_ -]+)")
         self.clientAuthRE = re.compile("^clientauth=(?P<clientauth>[a-z]+)")
         self.redirRE = re.compile("^redir=(?P<redirhost>[0-9a-zA-Z_ .]+)")
 

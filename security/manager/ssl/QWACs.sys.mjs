@@ -290,6 +290,7 @@ export var QWACs = {
   // given hostname that chains to a QWAC trust anchor, verifies the signature
   // on the binding, and finally verifies that the binding covers the server
   // certificate.
+  // Returns the QWAC upon success, and null otherwise.
   async verifyTLSCertificateBinding(
     tlsCertificateBinding,
     serverCertificate,
@@ -305,22 +306,22 @@ export var QWACs = {
     let parts = tlsCertificateBinding.split(".");
     if (parts.length != 3) {
       console.error("invalid TLS certificate binding");
-      return false;
+      return null;
     }
     if (parts[1] != "") {
       console.error("TLS certificate binding must have empty payload");
-      return false;
+      return null;
     }
     let header;
     try {
       header = JSON.parse(QWACs.fromBase64URLEncoding(parts[0]));
     } catch (e) {
       console.error("header is not base64(JSON)");
-      return false;
+      return null;
     }
     let params = QWACs.validateTLSCertificateBindingHeader(header);
     if (!params) {
-      return false;
+      return null;
     }
 
     // The 0th certificate signed the binding. It must be a 2-QWAC that is
@@ -337,7 +338,7 @@ export var QWACs = {
       ))
     ) {
       console.error("signing certificate not 2-QWAC");
-      return false;
+      return null;
     }
 
     let spki = signingCertificate.subjectPublicKeyInfo;
@@ -352,7 +353,7 @@ export var QWACs = {
       );
     } catch (e) {
       console.error("invalid signing key (algorithm mismatch?)");
-      return false;
+      return null;
     }
 
     let signature;
@@ -360,7 +361,7 @@ export var QWACs = {
       signature = QWACs.fromBase64URLEncoding(parts[2]);
     } catch (e) {
       console.error("signature is not base64");
-      return false;
+      return null;
     }
 
     // Validate the signature (Step 5).
@@ -374,11 +375,11 @@ export var QWACs = {
       );
     } catch (e) {
       console.error("failed to verify signature");
-      return false;
+      return null;
     }
     if (!signatureValid) {
       console.error("invalid signature");
-      return false;
+      return null;
     }
 
     // The binding must list the server certificate's hash (Step 6).
@@ -396,8 +397,73 @@ export var QWACs = {
       )
     ) {
       console.error("TLS binding does not cover server certificate");
-      return false;
+      return null;
     }
-    return true;
+    return signingCertificate;
+  },
+
+  /**
+   * Asynchronously determines the QWAC status of a document.
+   *
+   * @param secInfo {nsITransportSecurityInfo}
+   *   The security information for the connection of the document.
+   * @param uri {nsIURI}
+   *   The URI of the document.
+   * @param browsingContext {BrowsingContext}
+   *   The browsing context of the load of the document.
+   * @returns {Promise}
+   *   A promise that will resolve to an nsIX509Cert representing the QWAC in
+   *   use, if any, and null otherwise.
+   */
+  async determineQWACStatus(secInfo, uri, browsingContext) {
+    if (!secInfo || !secInfo.serverCert) {
+      return null;
+    }
+
+    // For some URIs, getting `host` will throw. ETSI TS 119 411-5 V2.1.1 only
+    // mentions domain names, so the assumed intention in such cases is to
+    // determine that the document is not using a QWAC.
+    let hostname;
+    try {
+      hostname = uri.host;
+    } catch {
+      return null;
+    }
+
+    let windowGlobal = browsingContext.currentWindowGlobal;
+    let actor = windowGlobal.getActor("TLSCertificateBinding");
+    let tlsCertificateBinding = null;
+    try {
+      tlsCertificateBinding = await actor.sendQuery(
+        "TLSCertificateBinding::Get"
+      );
+    } catch {
+      // If the page is closed before the query resolves, the actor will be
+      // destroyed, which causes a JS exception. We can safely ignore it,
+      // because the page is going away.
+      return null;
+    }
+    if (tlsCertificateBinding) {
+      let twoQwac = await QWACs.verifyTLSCertificateBinding(
+        tlsCertificateBinding,
+        secInfo.serverCert,
+        hostname
+      );
+      if (twoQwac) {
+        return twoQwac;
+      }
+    }
+
+    let is1qwac = await lazy.CertDB.asyncVerifyQWAC(
+      Ci.nsIX509CertDB.OneQWAC,
+      secInfo.serverCert,
+      hostname,
+      secInfo.handshakeCertificates.concat(secInfo.succeededCertChain)
+    );
+    if (is1qwac) {
+      return secInfo.serverCert;
+    }
+
+    return null;
   },
 };

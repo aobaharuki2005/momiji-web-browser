@@ -1610,6 +1610,7 @@ class Document : public nsINode,
   nsresult InitIntegrityPolicy(nsIChannel* aChannel);
   nsresult InitCOEP(nsIChannel* aChannel);
   nsresult InitDocPolicy(nsIChannel* aChannel);
+  nsresult InitTLSCertificateBinding(nsIChannel* aChannel);
 
   nsresult InitReferrerInfo(nsIChannel* aChannel);
 
@@ -5769,6 +5770,8 @@ class Document : public nsINode,
   RefPtr<class FragmentDirective> mFragmentDirective;
   UniquePtr<RadioGroupContainer> mRadioGroupContainer;
 
+  nsCOMPtr<nsIURI> mTLSCertificateBindingURI;
+
  public:
   // Needs to be public because the bindings code pokes at it.
   JS::ExpandoAndGeneration mExpandoAndGeneration;
@@ -5791,6 +5794,10 @@ class Document : public nsINode,
                                               const nsAString& aHTML,
                                               const SetHTMLOptions& aOptions,
                                               ErrorResult& aError);
+
+  nsIURI* GetTlsCertificateBindingURI() const {
+    return mTLSCertificateBindingURI;
+  }
 };
 
 enum class SyncOperationBehavior { eSuspendInput, eAllowInput };
