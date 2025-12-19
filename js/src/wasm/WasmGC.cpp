@@ -260,15 +260,15 @@ void wasm::EmitWasmPostBarrierGuard(MacroAssembler& masm,
                                     const mozilla::Maybe<Register>& object,
                                     Register otherScratch, Register setValue,
                                     Label* skipBarrier) {
+  // If the pointer being stored is to a tenured object, no barrier.
+  masm.branchWasmAnyRefIsNurseryCell(false, setValue, otherScratch,
+                                     skipBarrier);
+
   // If there is a containing object and it is in the nursery, no barrier.
   if (object) {
     masm.branchPtrInNurseryChunk(Assembler::Equal, *object, otherScratch,
                                  skipBarrier);
   }
-
-  // If the pointer being stored is to a tenured object, no barrier.
-  masm.branchWasmAnyRefIsNurseryCell(false, setValue, otherScratch,
-                                     skipBarrier);
 }
 
 void wasm::CheckWholeCellLastElementCache(MacroAssembler& masm,
