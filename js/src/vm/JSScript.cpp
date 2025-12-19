@@ -1723,7 +1723,7 @@ template bool ScriptSource::assignSource(FrontendContext* fc,
 }
 
 template <typename Unit>
-void SourceCompressionTask::workEncodingSpecific() {
+void SourceCompressionTaskEntry::workEncodingSpecific() {
   MOZ_ASSERT(source_->isUncompressed<Unit>());
 
   // Try to keep the maximum memory usage down by only allocating half the
@@ -1800,10 +1800,10 @@ PendingSourceCompressionEntry::PendingSourceCompressionEntry(
   source->noteSourceCompressionTask();
 }
 
-struct SourceCompressionTask::PerformTaskWork {
-  SourceCompressionTask* const task_;
+struct SourceCompressionTaskEntry::PerformTaskWork {
+  SourceCompressionTaskEntry* const task_;
 
-  explicit PerformTaskWork(SourceCompressionTask* task) : task_(task) {}
+  explicit PerformTaskWork(SourceCompressionTaskEntry* task) : task_(task) {}
 
   template <typename Unit, SourceRetrievable CanRetrieve>
   void operator()(const ScriptSource::Uncompressed<Unit, CanRetrieve>&) {
@@ -1818,12 +1818,12 @@ struct SourceCompressionTask::PerformTaskWork {
   }
 };
 
-void ScriptSource::performTaskWork(SourceCompressionTask* task) {
+void ScriptSource::performTaskWork(SourceCompressionTaskEntry* task) {
   MOZ_ASSERT(hasUncompressedSource());
-  data.match(SourceCompressionTask::PerformTaskWork(task));
+  data.match(SourceCompressionTaskEntry::PerformTaskWork(task));
 }
 
-void SourceCompressionTask::runTask() {
+void SourceCompressionTaskEntry::runTask() {
   if (shouldCancel()) {
     return;
   }
@@ -1831,6 +1831,13 @@ void SourceCompressionTask::runTask() {
   MOZ_ASSERT(source_->hasUncompressedSource());
 
   source_->performTaskWork(this);
+}
+
+void SourceCompressionTask::runTask() {
+  MOZ_ASSERT(!entries_.empty());
+  for (auto& entry : entries_) {
+    entry.runTask();
+  }
 }
 
 void SourceCompressionTask::runHelperThreadTask(
@@ -1853,9 +1860,16 @@ void ScriptSource::triggerConvertToCompressedSourceFromTask(
   data.match(TriggerConvertToCompressedSourceFromTask(this, compressed));
 }
 
-void SourceCompressionTask::complete() {
+void SourceCompressionTaskEntry::complete() {
   if (!shouldCancel() && resultString_) {
     source_->triggerConvertToCompressedSourceFromTask(std::move(resultString_));
+  }
+}
+
+void SourceCompressionTask::complete() {
+  MOZ_ASSERT(!entries_.empty());
+  for (auto& entry : entries_) {
+    entry.complete();
   }
 }
 
@@ -1898,10 +1912,11 @@ bool js::SynchronouslyCompressSource(JSContext* cx,
 #endif
     MOZ_ASSERT(sourceRefs > 0, "at least |script| here should have a ref");
 
-    // |SourceCompressionTask::shouldCancel| can periodically result in source
-    // compression being canceled if we're not careful.  Guarantee that two refs
-    // to |ss| are always live in this function (at least one preexisting and
-    // one held by the task) so that compression is never canceled.
+    // |SourceCompressionTaskEntry::shouldCancel| can periodically result in
+    // source compression being canceled if we're not careful. Guarantee that
+    // two refs to |ss| are always live in this function (at least one
+    // preexisting and one held by the task) so that compression is never
+    // canceled.
     auto task = MakeUnique<SourceCompressionTask>(cx->runtime(), ss);
     if (!task) {
       ReportOutOfMemory(cx);
@@ -1913,7 +1928,7 @@ bool js::SynchronouslyCompressSource(JSContext* cx,
     // Attempt to compress.  This may not succeed if OOM happens, but (because
     // it ordinarily happens on a helper thread) no error will ever be set here.
     MOZ_ASSERT(!cx->isExceptionPending());
-    ss->performTaskWork(task.get());
+    task->runTask();
     MOZ_ASSERT(!cx->isExceptionPending());
 
     // Convert |ss| from uncompressed to compressed data.

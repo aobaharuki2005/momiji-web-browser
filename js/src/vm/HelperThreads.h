@@ -39,7 +39,6 @@ namespace js {
 
 class AutoLockHelperThreadState;
 struct PromiseHelperTask;
-class SourceCompressionTask;
 
 namespace frontend {
 struct InitialStencilAndDelazifications;

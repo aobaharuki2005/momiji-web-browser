@@ -77,7 +77,7 @@ class JitScript;
 
 class ModuleObject;
 class RegExpObject;
-class SourceCompressionTask;
+class SourceCompressionTaskEntry;
 class Shape;
 class SrcNote;
 class DebugScript;
@@ -393,7 +393,7 @@ class ScriptSource {
   // on the main thread.
 
   friend class PendingSourceCompressionEntry;
-  friend class SourceCompressionTask;
+  friend class SourceCompressionTaskEntry;
   friend bool SynchronouslyCompressSource(JSContext* cx,
                                           JS::Handle<BaseScript*> script);
 
@@ -1007,7 +1007,7 @@ class ScriptSource {
       size_t sourceLength);
 
  private:
-  void performTaskWork(SourceCompressionTask* task);
+  void performTaskWork(SourceCompressionTaskEntry* task);
 
   struct TriggerConvertToCompressedSourceFromTask {
     ScriptSource* const source_;

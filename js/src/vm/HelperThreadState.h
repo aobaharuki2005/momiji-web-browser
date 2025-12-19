@@ -576,19 +576,8 @@ struct FreeDelazifyTask : public HelperThreadTask {
   const char* getName() override { return "FreeDelazifyTask"; }
 };
 
-// Off-thread task for compressing one or more script sources.
-//
-// Completed tasks are handled during the sweeping phase by
-// AttachFinishedCompressions, which runs in parallel with other GC sweeping
-// tasks.
-class SourceCompressionTask : public HelperThreadTask {
-  friend class HelperThread;
-  friend class ScriptSource;
-
-  // The runtime that the ScriptSource is associated with, in the sense that
-  // it uses the runtime's immutable string cache.
-  JSRuntime* runtime_;
-
+// Entry for a single ScriptSource in a SourceCompressionTask.
+class SourceCompressionTaskEntry {
   // The source to be compressed.
   RefPtr<ScriptSource> source_;
 
@@ -599,19 +588,52 @@ class SourceCompressionTask : public HelperThreadTask {
   SharedImmutableString resultString_;
 
  public:
-  SourceCompressionTask(JSRuntime* rt, ScriptSource* source)
-      : runtime_(rt), source_(source) {
-    source->noteSourceCompressionTask();
-  }
-  virtual ~SourceCompressionTask() = default;
-
-  bool runtimeMatches(JSRuntime* runtime) const { return runtime == runtime_; }
+  explicit SourceCompressionTaskEntry(ScriptSource* source) : source_(source) {}
 
   bool shouldCancel() const {
     // If the refcount is exactly 1, then nothing else is holding on to the
     // ScriptSource, so no reason to compress it and we should cancel the task.
     return source_->refs == 1;
   }
+
+  // The work algorithm, aware whether it's compressing one-byte UTF-8 source
+  // text or UTF-16, for CharT either Utf8Unit or char16_t.  Invoked by
+  // work() after doing a type-test of the ScriptSource*.
+  template <typename CharT>
+  void workEncodingSpecific();
+
+  void runTask();
+  void complete();
+
+  struct PerformTaskWork;
+  friend struct PerformTaskWork;
+};
+
+// Off-thread task for compressing one or more script sources.
+//
+// Completed tasks are handled during the sweeping phase by
+// AttachFinishedCompressions, which runs in parallel with other GC sweeping
+// tasks.
+class SourceCompressionTask final : public HelperThreadTask {
+  friend class HelperThread;
+  friend class ScriptSource;
+
+  // The runtime that the task is associated with, in the sense that it uses the
+  // runtime's immutable string cache.
+  JSRuntime* runtime_;
+
+  // The script sources to compress.
+  Vector<SourceCompressionTaskEntry, 4, SystemAllocPolicy> entries_;
+
+ public:
+  SourceCompressionTask(JSRuntime* rt, ScriptSource* source) : runtime_(rt) {
+    static_assert(decltype(entries_)::InlineLength >= 1,
+                  "Appending one entry should be infallible");
+    MOZ_ALWAYS_TRUE(entries_.emplaceBack(source));
+  }
+  virtual ~SourceCompressionTask() = default;
+
+  bool runtimeMatches(JSRuntime* runtime) const { return runtime == runtime_; }
 
   void runTask();
   void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
@@ -620,16 +642,6 @@ class SourceCompressionTask : public HelperThreadTask {
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_COMPRESS; }
 
   const char* getName() override { return "SourceCompressionTask"; }
-
- private:
-  struct PerformTaskWork;
-  friend struct PerformTaskWork;
-
-  // The work algorithm, aware whether it's compressing one-byte UTF-8 source
-  // text or UTF-16, for CharT either Utf8Unit or char16_t.  Invoked by
-  // work() after doing a type-test of the ScriptSource*.
-  template <typename CharT>
-  void workEncodingSpecific();
 };
 
 // A PromiseHelperTask is an OffThreadPromiseTask that executes a single job on
