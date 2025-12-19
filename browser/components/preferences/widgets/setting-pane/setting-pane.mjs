@@ -12,6 +12,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {string[]} groupIds What setting groups should be rendered.
  * @property {string} [iconSrc] Optional icon shown in the page header.
  * @property {string} [module] Import path for module housing the config.
+ * @property {() => boolean} [visible] If this pane is visible.
  */
 
 export class SettingPane extends MozLitElement {
@@ -50,8 +51,25 @@ export class SettingPane extends MozLitElement {
     window.gotoPref(this.config.parent);
   }
 
+  handleVisibility() {
+    if (this.config.visible) {
+      let visible = this.config.visible();
+      if (!visible && !this.isSubPane) {
+        let categoryButton = /** @type {XULElement} */ (
+          document.querySelector(`#categories [value="${this.name}"]`)
+        );
+        if (categoryButton) {
+          categoryButton.remove();
+        }
+        this.remove();
+      }
+    }
+  }
+
   connectedCallback() {
     super.connectedCallback();
+
+    this.handleVisibility();
 
     document.addEventListener(
       "paneshown",
