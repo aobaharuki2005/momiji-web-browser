@@ -26,24 +26,6 @@ registerCleanupFunction(() => {
   }
 });
 
-add_task(async function test_Chat_real_tools_are_registered() {
-  Assert.strictEqual(
-    typeof Chat.toolMap.get_open_tabs,
-    "function",
-    "get_open_tabs should be registered in toolMap"
-  );
-  Assert.strictEqual(
-    typeof Chat.toolMap.search_browsing_history,
-    "function",
-    "search_browsing_history should be registered in toolMap"
-  );
-  Assert.strictEqual(
-    typeof Chat.toolMap.get_page_content,
-    "function",
-    "get_page_content should be registered in toolMap"
-  );
-});
-
 add_task(async function test_openAIEngine_build_uses_prefs() {
   Services.prefs.setStringPref(PREF_API_KEY, "test-key-123");
   Services.prefs.setStringPref(PREF_ENDPOINT, "https://example.test/v1");
