@@ -103,7 +103,7 @@ export const TaskbarTabs = new (class {
       }),
     ]);
 
-    let taskbarTab = await this.findOrCreateTaskbarTab(
+    let { taskbarTab } = await this.findOrCreateTaskbarTab(
       url,
       userContextId,
       // 'manifest' can be null if the site doesn't have a manifest.

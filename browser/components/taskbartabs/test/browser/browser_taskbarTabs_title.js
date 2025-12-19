@@ -48,7 +48,8 @@ async function phaseBeforeContentTitle(aContainer, aProfileName) {
     return TaskbarTabs.getTaskbarTab(...args);
   });
 
-  const tt = await TaskbarTabs.findOrCreateTaskbarTab(
+  const tt = await createTaskbarTab(
+    TaskbarTabs,
     Services.io.newURI("https://example.com/"),
     aContainer,
     {
