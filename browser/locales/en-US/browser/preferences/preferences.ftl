@@ -1475,6 +1475,10 @@ payments-delete-payment-prompt-title = Delete this payment method?
 payments-delete-payment-prompt-confirm-button = Delete
 payments-delete-payment-prompt-cancel-button = Cancel
 
+# This message is displayed when no payment methods such as credit card are stored in Firefox
+payments-no-payments-stored-message =
+    .label = No payment methods added
+
 # These values are displayed for each credit card record listed on the Manage Payment methods
 # settings page.
 # Variables:
@@ -1505,6 +1509,10 @@ addresses-delete-address-prompt-cancel-button = Cancel
 autofill-addresses-add-button = Add new address
 autofill-addresses-manage-addresses-title =
     .heading = Manage addresses and more
+
+# This message is displayed when no addresses are stored in Firefox
+addresses-no-addresses-stored-message =
+    .label = No addresses added
 
 # These values are displayed for each address record listed on the "Manage addresses and more" subpage.
 # Variables:

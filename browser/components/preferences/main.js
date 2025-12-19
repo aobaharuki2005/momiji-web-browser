@@ -1455,6 +1455,10 @@ Preferences.addSetting({
   id: "payments-list-header",
 });
 
+Preferences.addSetting({
+  id: "no-payments-stored",
+});
+
 Preferences.addSetting(
   class extends Preferences.AsyncSetting {
     static id = "payments-list";
@@ -1946,6 +1950,10 @@ Preferences.addSetting({
 
 Preferences.addSetting({
   id: "addresses-list-header",
+});
+
+Preferences.addSetting({
+  id: "no-addresses-stored",
 });
 
 Preferences.addSetting(

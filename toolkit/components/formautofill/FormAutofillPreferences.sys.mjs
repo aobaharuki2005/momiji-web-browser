@@ -241,48 +241,59 @@ export class FormAutofillPreferences {
 
   async makePaymentsListItems() {
     const records = await lazy.formAutofillStorage.creditCards.getAll();
+
+    let items = [];
+
     if (!records.length) {
-      return [];
-    }
-
-    const items = records
-      .sort(record => record.timeCreated)
-      .map(record => {
-        const config = {
-          id: "payment-item",
+      items = [
+        {
+          id: "no-payments-stored",
+          l10nId: "payments-no-payments-stored-message",
           control: "moz-box-item",
-          l10nId: "payment-moz-box-item",
-          iconSrc: "chrome://formautofill/content/icon-credit-card-generic.svg",
-          l10nArgs: {
-            cardNumber: record["cc-number"].replace(/^(\*+)(\d+)$/, "$1 $2"),
-            expDate: record["cc-exp"].replace(/^(\d{4})-\d{2}$/, "XX/$1"),
-          },
-          options: [
-            {
-              control: "moz-button",
-              iconSrc: "chrome://global/skin/icons/delete.svg",
-              type: "icon",
-              controlAttrs: {
-                slot: "actions",
-                action: "remove",
-                guid: record.guid,
-              },
+          l10nArgs: {},
+        },
+      ];
+    } else {
+      items = records
+        .sort(record => record.timeCreated)
+        .map(record => {
+          const config = {
+            id: "payment-item",
+            control: "moz-box-item",
+            l10nId: "payment-moz-box-item",
+            iconSrc:
+              "chrome://formautofill/content/icon-credit-card-generic.svg",
+            l10nArgs: {
+              cardNumber: record["cc-number"].replace(/^(\*+)(\d+)$/, "$1 $2"),
+              expDate: record["cc-exp"].replace(/^(\d{4})-\d{2}$/, "XX/$1"),
             },
-            {
-              control: "moz-button",
-              iconSrc: "chrome://global/skin/icons/edit.svg",
-              type: "icon",
-              controlAttrs: {
-                slot: "actions",
-                action: "edit",
-                guid: record.guid,
+            options: [
+              {
+                control: "moz-button",
+                iconSrc: "chrome://global/skin/icons/delete.svg",
+                type: "icon",
+                controlAttrs: {
+                  slot: "actions",
+                  action: "remove",
+                  guid: record.guid,
+                },
               },
-            },
-          ],
-        };
+              {
+                control: "moz-button",
+                iconSrc: "chrome://global/skin/icons/edit.svg",
+                type: "icon",
+                controlAttrs: {
+                  slot: "actions",
+                  action: "edit",
+                  guid: record.guid,
+                },
+              },
+            ],
+          };
 
-        return config;
-      });
+          return config;
+        });
+    }
 
     return [
       {
@@ -299,58 +310,67 @@ export class FormAutofillPreferences {
     const addresses = await lazy.formAutofillStorage.addresses.getAll();
     const records = addresses.slice().reverse();
 
+    let items = [];
+
     if (!records.length) {
-      return [];
-    }
-
-    const items = records.map(record => {
-      const addressFormatted = [
-        record["street-address"],
-        record["address-level2"],
-        record["address-level1"],
-        record.country,
-        record["postal-code"],
-      ]
-        .filter(Boolean)
-        .join(", ");
-
-      const config = {
-        id: "address-item",
-        control: "moz-box-item",
-        l10nId: "address-moz-box-item",
-        iconSrc: "chrome://browser/skin/notification-icons/geo.svg",
-        l10nArgs: {
-          name: `${record.name}`,
-          address: addressFormatted,
+      items = [
+        {
+          id: "no-addresses-stored",
+          l10nId: "addresses-no-addresses-stored-message",
+          l10nArgs: {},
+          control: "moz-box-item",
         },
-        options: [
-          {
-            control: "moz-button",
-            iconSrc: "chrome://global/skin/icons/delete.svg",
-            type: "icon",
-            l10nId: "addreses-delete-address-button-label",
-            controlAttrs: {
-              slot: "actions",
-              action: "remove",
-              guid: record.guid,
-            },
-          },
-          {
-            control: "moz-button",
-            iconSrc: "chrome://global/skin/icons/edit.svg",
-            type: "icon",
-            l10nId: "addreses-edit-address-button-label",
-            controlAttrs: {
-              slot: "actions",
-              action: "edit",
-              guid: record.guid,
-            },
-          },
-        ],
-      };
+      ];
+    } else {
+      items = records.map(record => {
+        const addressFormatted = [
+          record["street-address"],
+          record["address-level2"],
+          record["address-level1"],
+          record.country,
+          record["postal-code"],
+        ]
+          .filter(Boolean)
+          .join(", ");
 
-      return config;
-    });
+        const config = {
+          id: "address-item",
+          control: "moz-box-item",
+          l10nId: "address-moz-box-item",
+          iconSrc: "chrome://browser/skin/notification-icons/geo.svg",
+          l10nArgs: {
+            name: `${record.name}`,
+            address: addressFormatted,
+          },
+          options: [
+            {
+              control: "moz-button",
+              iconSrc: "chrome://global/skin/icons/delete.svg",
+              type: "icon",
+              l10nId: "addreses-delete-address-button-label",
+              controlAttrs: {
+                slot: "actions",
+                action: "remove",
+                guid: record.guid,
+              },
+            },
+            {
+              control: "moz-button",
+              iconSrc: "chrome://global/skin/icons/edit.svg",
+              type: "icon",
+              l10nId: "addreses-edit-address-button-label",
+              controlAttrs: {
+                slot: "actions",
+                action: "edit",
+                guid: record.guid,
+              },
+            },
+          ],
+        };
+
+        return config;
+      });
+    }
 
     return [
       {
