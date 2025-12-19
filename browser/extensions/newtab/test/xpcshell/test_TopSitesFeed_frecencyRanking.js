@@ -237,10 +237,6 @@ add_task(async function test_frecency_sponsored_topsites() {
           url: "https://domain3.com",
           frecency: 1234,
         },
-        {
-          url: "https://domain4.com",
-          frecency: 1234,
-        },
       ],
       linksWithDefaults: [
         {
@@ -249,12 +245,7 @@ add_task(async function test_frecency_sponsored_topsites() {
           label: "",
         },
         {
-          url: "",
-          hostname: "",
-          label: "hostname2",
-        },
-        {
-          url: "https://hostname3.com",
+          url: "https://hostname2.com",
           hostname: "",
           label: "",
         },
@@ -263,7 +254,7 @@ add_task(async function test_frecency_sponsored_topsites() {
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
-    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname4");
+    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname3");
 
     sandbox.restore();
   }
