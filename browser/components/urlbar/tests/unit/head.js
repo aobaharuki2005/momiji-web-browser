@@ -980,10 +980,6 @@ function makeCalculatorResult(queryContext, { value }) {
  *  Original input length.
  * @param {boolean} [options.showOnboardingLabel]
  *   Whether the “press Tab” hint should appear.
- * @param {boolean} [options.providesSearchMode]
- *   Whether selecting an action enters a search mode.
- * @param {string | null} [options.engine]
- *   The engine name, if providesSearchMode is true.
  * @returns {UrlbarResult}
  */
 function makeGlobalActionsResult({
@@ -991,8 +987,6 @@ function makeGlobalActionsResult({
   query,
   inputLength,
   showOnboardingLabel = false,
-  providesSearchMode = false,
-  engine,
 }) {
   const payload = {
     actionsResults,
@@ -1001,8 +995,6 @@ function makeGlobalActionsResult({
     input: query,
     inputLength,
     showOnboardingLabel,
-    providesSearchMode,
-    engine,
   };
 
   return new UrlbarResult({

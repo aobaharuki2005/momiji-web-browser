@@ -1509,7 +1509,6 @@ add_task(async function globalAction() {
     },
     { skipUnload: true }
   );
-  let engine = Services.search.getEngineByName("Amp");
 
   await PlacesTestUtils.addVisits(engineURL);
 
@@ -1534,8 +1533,6 @@ add_task(async function globalAction() {
             providerName: "ActionsProviderContextualSearch",
           },
         ],
-        providesSearchMode: true,
-        engine: engine.name,
         query: "",
         input: "",
         inputLength: context.searchString.length,

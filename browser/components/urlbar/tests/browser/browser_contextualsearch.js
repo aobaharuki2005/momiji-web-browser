@@ -149,6 +149,14 @@ add_task(async function test_actions() {
 
   Assert.equal(testActionCalled, 1, "Test action was called");
 
+  info("Check whether the URI on the original tab is not changed");
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(r => setTimeout(r, 100));
+  Assert.equal(
+    gBrowser.selectedBrowser.currentURI.spec,
+    "https://example.net/"
+  );
+
   ActionsProviderQuickActions.removeAction("testaction");
 });
 
