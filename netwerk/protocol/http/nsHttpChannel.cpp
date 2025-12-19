@@ -17,6 +17,7 @@
 #include "mozilla/glean/AntitrackingMetrics.h"
 #include "mozilla/glean/NetwerkMetrics.h"
 #include "mozilla/glean/NetwerkProtocolHttpMetrics.h"
+#include "mozilla/net/CaptivePortalService.h"
 #include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/StoragePrincipalHelper.h"
 
@@ -2095,6 +2096,17 @@ LNAPermission nsHttpChannel::UpdateLocalNetworkAccessPermissions(
   if (NS_SUCCEEDED(rv) && isSameOrigin) {
     userPerms = LNAPermission::Granted;
     return userPerms;
+  }
+
+  // Skip LNA checks if captive portal is active
+  nsCOMPtr<nsICaptivePortalService> cps = CaptivePortalService::GetSingleton();
+  if (cps) {
+    int32_t state = cps->State();
+    if (state == nsICaptivePortalService::LOCKED_PORTAL &&
+        aPermissionType == LOCAL_NETWORK_PERMISSION_KEY) {
+      userPerms = LNAPermission::Granted;
+      return userPerms;
+    }
   }
 
   // Step 1. Check for  Existing Allow or Deny permission
