@@ -8,9 +8,11 @@
 #define wasm_WasmStructLayout_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Vector.h"
 
 #include <stdint.h>
 
+#include "vm/MallocProvider.h"
 #include "wasm/WasmConstants.h"  // MaxStructFields
 
 // [SMDOC] Wasm Struct Layout Overview
@@ -64,6 +66,23 @@
 //     allocator only provides 8 byte alignment, so even if 16 byte fields were
 //     16-aligned relative to the start of a WasmStructObject, there's no
 //     guarantee they would be 16-aligned when actually written to the heap.
+//
+// (10) The struct layout mechanism itself, as used in (3), and implemented by
+//      StructLayout::addField, works as follows:
+//
+//      - it contains a fixed-sized bit vector that tracks commitments to the
+//        WasmStructObject
+//
+//      - it contains a variable-sized bit vector that tracks commitments to
+//        the OOL storage block
+//
+//      - the bit vectors make it possible to find and opportunistically fill
+//        alignment holes that would otherwise go unused.  They also
+//        (critically) make it possible to back out tentative allocations,
+//        which is needed to ensure we can always fit an OOL pointer field in
+//        the IL storage area if we later need to.
+//
+//      See StructLayout::addField comments for the exact algorithm.
 
 namespace js::wasm {
 
@@ -138,6 +157,122 @@ class FieldAccessPath {
 static_assert(sizeof(FieldAccessPath) == sizeof(uint32_t));
 
 //=========================================================================
+// BitVector -- helper class for StructLayout
+
+// BitVector is a base class that does the heavy lifting for WasmStructObject
+// and OOL-storage layout.  It provides a bit-vector which keeps track of
+// committed space inside the object being laid out.
+
+// In what follows, "byte" and "offset" refer to those entities in the
+// WasmStructObject and/or its OOL area, that we are laying out.  Whereas
+// "chunk" refers to refers to a single byte in `BitVector::chunks_`; this in
+// turn covers 8 bytes of object allocation.  Confusingly, chunks are actually
+// stored as uint8_t's; hence it is important to be clear about the naming.
+//
+// Within a chunk (a uint8_t), the least significant bit (bit 0) tracks the
+// lowest address in the resulting layout, and bit 7 tracks the address 7 bytes
+// higher.
+
+class BitVector {
+ public:
+  enum class Result { OOM, OK, Fail };
+
+ private:
+  // This controls how many chunks we are prepared to look back in order to
+  // find an allocation.  See comments at its use points below.
+  static const uint32_t LookbackLimit = 24;
+  // See comment on ::addMoreChunks.
+  static_assert(LookbackLimit > (2 * 3));
+  // For the same reason, the LookbackLimit needs to cover an area at least as
+  // large as the worst-case inline capacity.
+  static_assert(LookbackLimit > WasmStructObject_MaxInlineBytes_ASSUMED / 8);
+
+ public:
+  // The chunks.  Using 64 as the in-line vector size implies that the
+  // BitVector covers 512 bytes of object allocation, so it will never allocate
+  // (C++) heap when laying out WasmStructObject itself (as that's smaller than
+  // 512 bytes) and only rarely when laying out an OOL block.
+  mozilla::Vector<uint8_t, 64, SystemAllocPolicy> chunks_;
+
+  // Hash the non-zero chunks in the vector.  The non-zero part means the
+  // result is invariant to the number of trailing zero chunks it has.
+  uint32_t hashNonZero() const;
+
+  // Returns the the highest index (plus one) tracked in the object being laid
+  // out.  For this to be efficient requires that `chunks_` does not have a
+  // very long tail of uncommitted chunks, which is (another reason) why
+  // `addMoreChunks` is relatively conservative.
+  uint32_t totalOffset() const;
+
+  // Add some, but not many, extra chunks to `chunks_`; but at a minimum 3, so
+  // as to be able to cover a worst-case maximum-size (16 byte) allocation plus
+  // 8 byte alignment hole, that would otherwise fail.  Note it is crucial that
+  // we don't add more than the LookbackLimit, since that could cause the logic
+  // that uses it in ::findAlignedWRK to not allocate at the start of the OOL
+  // area; hence addMoreChunks (somewhat arbitrarily) divides it by two.
+  Result addMoreChunks();
+
+  // Initialize `chunks_` so as to hold `chunksTotal` chunks, of which the
+  // first `chunksReserved` are unavailable for allocation.
+  Result init(uint32_t chunksReserved, uint32_t chunksTotal);
+
+  // Search through the area `chunks_[firstChunk, lastChunkPlus1)` to find a
+  // naturally-aligned hole of size `size` (for sizes 1, 2, 4 and 8; and
+  // 8-aligned for size 16).  If successful, mark the hole as occupied and
+  // return the offset of the lowest byte of the hole.
+  Result allocate(uint32_t size, uint32_t firstChunk, uint32_t lastChunkPlus1,
+                  uint32_t* offset);
+
+  // Given that `offset` was allocated by a call to `allocate`
+  // (requesting size `size`), free up that area.
+  void deallocate(uint32_t offset, uint32_t size);
+};
+
+//=========================================================================
+// FixedSizeBitVector -- helper class for StructLayout
+
+// FixedSizeBitVector is a specialization of BitVector that is used to track
+// layout commitments in WasmStructObject itself.
+
+class FixedSizeBitVector : public BitVector {
+  uint32_t chunksTotal_ = 0;
+  uint32_t chunksReserved_ = 0;
+
+ public:
+  // Initialize.  `layoutBytesReserved` is the number of bytes unavailable at
+  // the start of the layout.  `layoutBytesTotal` is the maximum total number
+  // of bytes in the layout, including the reserved area.
+  Result init(uint32_t layoutBytesReserved, uint32_t layoutBytesTotal);
+
+  // Ask for an allocation.  This can fail if a suitable hole can't be found.
+  Result allocate(uint32_t size, uint32_t* offset);
+};
+
+//=========================================================================
+// VariableSizedBitVector -- helper class for StructLayout
+
+// VariableSizeBitVector is a specialization of BitVector that is used to
+// track layout commitments in the OOL block.
+
+class VariableSizeBitVector : public BitVector {
+  bool used_ = false;
+
+ public:
+  // Initialize.
+  Result init();
+
+  // Ask for an allocation.  This can never fail because the OOL block can be
+  // made arbitrarily large.
+  Result allocate(uint32_t size, uint32_t* offset);
+
+  // Ask whether any allocations at all have been made so far.
+  bool unused() const;
+
+  // This has the same behaviour as the BitVector version.
+  uint32_t totalOffset() const;
+};
+
+//=========================================================================
 // StructLayout, the top level interface for structure layout machinery.
 
 class StructLayout {
@@ -170,18 +305,17 @@ class StructLayout {
 
   //---------------- Implementation ----------------
  private:
-  // Set at the start and then unchanged:
-  // [start, end) for allowable inline offsets
-  uint32_t startILO_ = 0;
-  uint32_t endPlusILO_ = 0;
-  // The offset of the OOL pointer
-  uint32_t oolptrILO_ = 0;
+  static const uint32_t InvalidOffset = 0xFFFFFFFF;
+
   // These change as fields are added:
-  // The next available inline and out-of-line offset
-  uint32_t nextILO_ = 0;
-  uint32_t nextOOLO_ = 0;
+  // BitVectors for the IL and OOL areas.
+  FixedSizeBitVector ilBitVector_;
+  VariableSizeBitVector oolBitVector_;
+  uint32_t oolptrILO_ = InvalidOffset;
   // The total number of fields processed so far
   uint32_t numFieldsProcessed_ = 0;
+
+  uint32_t hash() const;
 };
 
 }  // namespace js::wasm
