@@ -30,6 +30,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,6 +57,7 @@ import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayState
 import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.ext.toDisplayTitle
+import org.mozilla.fenix.tabstray.redux.middleware.TabSearchMiddleware
 import org.mozilla.fenix.tabstray.redux.state.TabSearchState
 import org.mozilla.fenix.tabstray.ui.tabitems.BasicTabListItem
 import org.mozilla.fenix.tabstray.ui.tabpage.EmptyTabPage
@@ -297,9 +299,14 @@ private class TabSearchParameterProvider : PreviewParameterProvider<TabsTrayStat
 private fun TabSearchScreenPreview(
     @PreviewParameter(TabSearchParameterProvider::class) state: TabsTrayState,
 ) {
+    val scope = rememberCoroutineScope()
     val store = remember {
-        TabsTrayStore(initialState = state)
+        TabsTrayStore(
+            initialState = state,
+            middlewares = listOf(TabSearchMiddleware(scope = scope)),
+        )
     }
+
     FirefoxTheme {
         TabSearchScreen(store = store)
     }
