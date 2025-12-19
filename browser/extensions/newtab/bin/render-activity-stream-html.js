@@ -141,6 +141,11 @@ function templateHTML(options) {
       type="module"
       src="chrome://global/content/elements/panel-list.js"
     ></script>
+    <script
+      async
+      type="module"
+      src="chrome://global/content/elements/moz-support-link.mjs"
+    ></script>
   </body>
 </html>
 `.trimLeft();

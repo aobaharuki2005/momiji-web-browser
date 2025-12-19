@@ -62,6 +62,7 @@ export let RemotePageAccessManager = {
     "about:home": {
       RPMSendAsyncMessage: ["ActivityStream:ContentToMain"],
       RPMAddMessageListener: ["ActivityStream:MainToContent"],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
     },
     "about:httpsonlyerror": {
       RPMGetFormatURLPref: ["app.support.baseURL"],
@@ -126,6 +127,7 @@ export let RemotePageAccessManager = {
     "about:newtab": {
       RPMSendAsyncMessage: ["ActivityStream:ContentToMain"],
       RPMAddMessageListener: ["ActivityStream:MainToContent"],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
     },
     "about:privatebrowsing": {
       RPMSendAsyncMessage: [

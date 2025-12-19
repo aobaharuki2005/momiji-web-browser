@@ -5438,7 +5438,17 @@ const ReportContent = spocs => {
   }), /*#__PURE__*/external_React_default().createElement("moz-radio", {
     "data-l10n-id": "newtab-report-content-spam-misleading",
     value: "spam_or_misleading"
-  }))), /*#__PURE__*/external_React_default().createElement("moz-button-group", null, /*#__PURE__*/external_React_default().createElement("moz-button", {
+  }), /*#__PURE__*/external_React_default().createElement("moz-radio", {
+    "data-l10n-id": "newtab-report-content-requires-payment-subscription",
+    value: "requires_payment_or_subscription"
+  }, /*#__PURE__*/external_React_default().createElement("a", {
+    slot: "support-link",
+    is: "moz-support-link",
+    "support-page": "recommendations-firefox-new-tab#w_what-is-a-paywall",
+    "data-l10n-id": "newtab-report-content-requires-payment-subscription-learn-more",
+    rel: "noreferrer",
+    target: "_blank"
+  })))), /*#__PURE__*/external_React_default().createElement("moz-button-group", null, /*#__PURE__*/external_React_default().createElement("moz-button", {
     "data-l10n-id": "newtab-report-cancel",
     onClick: handleCancel,
     className: "cancel-report-btn"
