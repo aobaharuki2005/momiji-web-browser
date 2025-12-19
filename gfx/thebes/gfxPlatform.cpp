@@ -2614,6 +2614,23 @@ void gfxPlatform::InitWebRenderConfig() {
 
   if (gfxConfig::IsEnabled(Feature::WEBRENDER_SHADER_CACHE)) {
     gfxVars::SetUseWebRenderProgramBinaryDisk(true);
+    bool warmUp = true;
+#ifdef MOZ_WIDGET_ANDROID
+    // Loading cached program binaries on the Samsung Xclipse driver on Android
+    // 14 is slightly faster than compiling shaders from source, so we still
+    // want to keep the disk cache enabled. However, it is slow enough that
+    // eagerly warming up the cache with shaders which may not be required can
+    // negatively impact performance. See bug 2007127.
+    if (jni::GetAPIVersion() == 34) {
+      const nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+      nsAutoString renderer;
+      gfxInfo->GetAdapterDeviceID(renderer);
+      if (renderer.Find(u"Samsung Xclipse") != -1) {
+        warmUp = false;
+      }
+    }
+#endif
+    gfxVars::SetShouldWarmUpWebRenderProgramBinaries(warmUp);
   }
 
   gfxVars::SetUseWebRenderOptimizedShaders(

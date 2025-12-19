@@ -1289,7 +1289,7 @@ void RenderThread::InitDeviceTask() {
 }
 
 void RenderThread::BeginShaderWarmupIfNeeded() {
-  if (mShaders) {
+  if (mShaders && gfx::gfxVars::ShouldWarmUpWebRenderProgramBinaries()) {
     PostResumeShaderWarmupRunnable();
   }
 }
