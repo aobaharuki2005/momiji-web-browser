@@ -1603,21 +1603,6 @@
       }
     ]
   },
-  "1864999": {
-    "label": "autotrader.ca",
-    "bugs": {
-      "1864999": {
-        "issue": "broken-interactive-elements",
-        "matches": ["*://*.autotrader.ca/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["android"],
-        "ua_string": ["Chrome"]
-      }
-    ]
-  },
   "1865000": {
     "label": "bmo.com",
     "bugs": {
