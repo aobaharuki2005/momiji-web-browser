@@ -83,6 +83,8 @@ FINAL_TARGET_FILES.actors += [
 ]
 
 MOZ_SRC_FILES += [
+    "ColorPickerChild.sys.mjs",
+    "ColorPickerParent.sys.mjs",
     "DateTimePickerChild.sys.mjs",
     "DateTimePickerParent.sys.mjs",
     "InputPickerChildCommon.sys.mjs",

@@ -49,14 +49,19 @@ support-files = ["file_double_submit.html"]
 skip-if = [
   "os == 'mac' && os_version == '14.70' && arch == 'x86_64'", # Bug 1929441
 ]
+prefs = ["dom.forms.html_color_picker.enabled=false"]
 
 ["test_input_color_picker_datalist.html"]
+prefs = ["dom.forms.html_color_picker.enabled=false"]
 
 ["test_input_color_picker_initial.html"]
+prefs = ["dom.forms.html_color_picker.enabled=false"]
 
 ["test_input_color_picker_popup.html"]
+prefs = ["dom.forms.html_color_picker.enabled=false"]
 
 ["test_input_color_picker_update.html"]
+prefs = ["dom.forms.html_color_picker.enabled=false"]
 
 ["test_input_date_bad_input.html"]
 
