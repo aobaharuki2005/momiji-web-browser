@@ -20,17 +20,15 @@ def order_tasks(config, tasks):
     pending = deque(tasks)
     task_labels = {task["label"] for task in pending}
     emitted = set()
-    while True:
-        try:
-            task = pending.popleft()
-        except IndexError:
-            break
+    while pending:
+        task = pending.popleft()
         parents = {
             task
             for task in task.get("dependencies", {}).values()
+            if task in task_labels
             if task.startswith(kind_prefix)
         }
-        if parents and not emitted.issuperset(parents & task_labels):
+        if parents and not emitted.issuperset(parents):
             pending.append(task)
             continue
         emitted.add(task["label"])
