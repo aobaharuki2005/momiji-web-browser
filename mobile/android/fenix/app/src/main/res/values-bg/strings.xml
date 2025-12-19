@@ -1910,6 +1910,8 @@
   <string name="bookmark_delete_folder_content_description">Изтриване на папката</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Търсене в отметките</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">Търсене в папки</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Меню с елементи на %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1928,6 +1930,8 @@
   <string name="bookmark_empty_list_folder_description">Добавете отметки, докато разглеждате, за да можете по-късно да намирате любимите си страници.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Нова папка</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">Преместено %1$s в %2$s</string>
   <!--
     Site Permissions
 

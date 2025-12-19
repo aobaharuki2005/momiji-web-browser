@@ -1910,6 +1910,8 @@
   <string name="bookmark_delete_folder_content_description">刪除資料夾</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">搜尋書籤</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">搜尋資料夾</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">%s 的項目選單</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1928,6 +1930,8 @@
   <string name="bookmark_empty_list_folder_description">一邊上網，一邊加入書籤，這樣之後就可以再找回您最愛的網站。</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">新增資料夾</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">已將 %1$s 移動至 %2$s</string>
   <!--
     Site Permissions
 
