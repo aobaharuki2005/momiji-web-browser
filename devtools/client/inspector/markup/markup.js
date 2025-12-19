@@ -1311,7 +1311,7 @@ class MarkupView extends EventEmitter {
 
   _onCopy(evt) {
     // Ignore copy events from editors
-    if (this._isInputOrTextareaOrInCodeMirrorEditor(evt.target)) {
+    if (this._isInputOrTextarea(evt.target)) {
       return;
     }
 
@@ -1453,7 +1453,7 @@ class MarkupView extends EventEmitter {
    * Key shortcut listener.
    */
   _onShortcut(name, event) {
-    if (this._isInputOrTextareaOrInCodeMirrorEditor(event.target)) {
+    if (this._isInputOrTextarea(event.target)) {
       return;
     }
 
@@ -1477,19 +1477,11 @@ class MarkupView extends EventEmitter {
   }
 
   /**
-   * Check if a node is used to type text (i.e. an input or textarea, or in a CodeMirror editor)
+   * Check if a node is an input or textarea
    */
-  _isInputOrTextareaOrInCodeMirrorEditor(element) {
+  _isInputOrTextarea(element) {
     const name = element.tagName.toLowerCase();
-    if (name === "input" || name === "textarea") {
-      return true;
-    }
-
-    if (element.closest(".cm-editor")) {
-      return true;
-    }
-
-    return false;
+    return name === "input" || name === "textarea";
   }
 
   /**
