@@ -6,14 +6,6 @@
  * Injects the form autofill section into about:preferences.
  */
 
-const MANAGE_ADDRESSES_URL =
-  "chrome://formautofill/content/manageAddresses.xhtml";
-const EDIT_ADDRESS_URL = "chrome://formautofill/content/editAddress.xhtml";
-const MANAGE_CREDITCARDS_URL =
-  "chrome://formautofill/content/manageCreditCards.xhtml";
-const EDIT_CREDIT_CARD_URL =
-  "chrome://formautofill/content/editCreditCard.xhtml";
-
 import { FormAutofill } from "resource://autofill/FormAutofill.sys.mjs";
 import { FormAutofillUtils } from "resource://gre/modules/shared/FormAutofillUtils.sys.mjs";
 
@@ -37,6 +29,21 @@ ChromeUtils.defineLazyGetter(
       true
     )
 );
+
+const MANAGE_ADDRESSES_URL =
+  "chrome://formautofill/content/manageAddresses.xhtml";
+const EDIT_ADDRESS_URL = "chrome://formautofill/content/editAddress.xhtml";
+const MANAGE_CREDITCARDS_URL =
+  "chrome://formautofill/content/manageCreditCards.xhtml";
+const EDIT_CREDIT_CARD_URL =
+  "chrome://formautofill/content/editCreditCard.xhtml";
+
+const {
+  MANAGE_ADDRESSES_L10N_IDS,
+  EDIT_ADDRESS_L10N_IDS,
+  MANAGE_CREDITCARDS_L10N_IDS,
+  EDIT_CREDITCARD_L10N_IDS,
+} = FormAutofillUtils;
 
 const { ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF } =
   FormAutofill;
@@ -62,6 +69,11 @@ const FORM_AUTOFILL_CONFIG = {
         id: "savedPaymentsButton",
         l10nId: "autofill-payment-methods-manage-payments-button",
         control: "moz-box-button",
+        controlAttrs: {
+          "search-l10n-ids": MANAGE_CREDITCARDS_L10N_IDS.concat(
+            EDIT_CREDITCARD_L10N_IDS
+          ).join(","),
+        },
       },
     ],
   },
@@ -77,6 +89,11 @@ const FORM_AUTOFILL_CONFIG = {
         id: "savedAddressesButton",
         l10nId: "autofill-addresses-manage-addresses-button",
         control: "moz-box-button",
+        controlAttrs: {
+          "search-l10n-ids": MANAGE_ADDRESSES_L10N_IDS.concat(
+            EDIT_ADDRESS_L10N_IDS
+          ).join(","),
+        },
       },
     ],
   },
