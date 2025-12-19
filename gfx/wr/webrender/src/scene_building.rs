@@ -1200,6 +1200,17 @@ impl<'a> SceneBuilder<'a> {
             },
         };
 
+        let snap_origin = match info.reference_frame.kind {
+            ReferenceFrameKind::Transform { should_snap, .. } => should_snap,
+            ReferenceFrameKind::Perspective { .. } => false,
+        };
+
+        let origin = if snap_origin {
+            info.origin.round()
+        } else {
+            info.origin
+        };
+
         let external_scroll_offset = self.current_external_scroll_offset(parent_space);
 
         self.push_reference_frame(
@@ -1209,7 +1220,7 @@ impl<'a> SceneBuilder<'a> {
             info.reference_frame.transform_style,
             transform,
             info.reference_frame.kind,
-            (info.origin + external_scroll_offset).to_vector(),
+            (origin + external_scroll_offset).to_vector(),
             SpatialNodeUid::external(info.reference_frame.key, pipeline_id, instance_id),
         );
     }

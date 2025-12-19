@@ -333,6 +333,9 @@ impl YamlHelper for Yaml {
                     let (function, ref args, reminder) = parse_function(slice);
                     slice = reminder;
                     let mx = match function {
+                        "identity" => {
+                            LayoutTransform::identity()
+                        }
                         "translate" if args.len() >= 2 => {
                             let z = args.get(2).and_then(|a| a.parse().ok()).unwrap_or(0.);
                             LayoutTransform::translation(
