@@ -9483,8 +9483,6 @@ nsWindow::GtkWindowDecoration nsWindow::GetSystemGtkWindowDecoration() {
   return sGtkWindowDecoration;
 }
 
-int32_t nsWindow::RoundsWidgetCoordinatesTo() { return GdkCeiledScaleFactor(); }
-
 void nsWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
   nsCString displayName;

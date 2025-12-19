@@ -875,8 +875,6 @@ class nsWindow final : public nsIWidget {
 
   void SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) override;
 
-  int32_t RoundsWidgetCoordinatesTo() override;
-
   void UpdateMozWindowActive();
 
   void ForceTitlebarRedraw();
