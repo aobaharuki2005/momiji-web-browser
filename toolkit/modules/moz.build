@@ -162,6 +162,7 @@ EXTRA_JS_MODULES += [
     "Console.sys.mjs",
     "ContentDOMReference.sys.mjs",
     "CreditCard.sys.mjs",
+    "DateTimePickerPanel.sys.mjs",
     "DeferredTask.sys.mjs",
     "E10SUtils.sys.mjs",
     "EventEmitter.sys.mjs",
@@ -212,12 +213,6 @@ EXTRA_JS_MODULES += [
     "UpdateUtils.sys.mjs",
     "UrlUtils.sys.mjs",
     "WebChannel.sys.mjs",
-]
-
-MOZ_SRC_FILES += [
-    "ColorPickerPanel.sys.mjs",
-    "DateTimePickerPanel.sys.mjs",
-    "InputPickerPanelCommon.sys.mjs",
 ]
 
 if CONFIG["MOZ_ASAN_REPORTER"]:
