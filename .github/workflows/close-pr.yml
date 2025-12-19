@@ -13,5 +13,5 @@ jobs:
           GH_REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          gh pr close ${{ env.PR }} --comment "(Automated Close) Please do not file pull requests here, see https://firefox-source-docs.mozilla.org/contributing/how_to_submit_a_patch.html"
-          gh pr lock ${{ env.PR }}
+          gh pr close "${PR}" --comment "(Automated Close) Please do not file pull requests here, see https://firefox-source-docs.mozilla.org/contributing/how_to_submit_a_patch.html"
+          gh pr lock "${PR}"
