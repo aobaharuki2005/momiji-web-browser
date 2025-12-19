@@ -2769,23 +2769,6 @@
       }
     ]
   },
-  "1902383": {
-    "label": "wpartner.wemakeprice.com",
-    "bugs": {
-      "1902383": {
-        "issue": "unsupported-warning",
-        "matches": ["*://wpartner.wemakeprice.com/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "content_scripts": {
-          "css": ["bug1902383-wpartner.wemakeprice.com-hide-recommendation.css"]
-        }
-      }
-    ]
-  },
   "1902385": {
     "label": "bithumb.com",
     "bugs": {
