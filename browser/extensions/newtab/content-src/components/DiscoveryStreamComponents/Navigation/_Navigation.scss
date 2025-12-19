@@ -3,13 +3,7 @@
 .ds-navigation {
   color: var(--newtab-contextual-text-primary-color);
   font-size: var(--font-size-small);
-
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
   padding: var(--space-xsmall) 0;
 
   @media (min-width: $break-point-widest) {
@@ -130,13 +124,7 @@
         border-block-start: 1px solid var(--border-color);
         line-height: 24px;
         font-size: var(--font-size-small);
-
-        /**
-         * @backward-compat { version 146 }
-         *
-         * Replace this with `--font-weight-semibold` once 146 hits release.
-         */
-        font-weight: var(--heading-font-weight);
+        font-weight: var(--font-weight-semibold);
 
         &::after {
           content: '';

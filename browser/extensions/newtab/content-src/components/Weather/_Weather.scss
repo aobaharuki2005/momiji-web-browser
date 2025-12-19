@@ -526,13 +526,7 @@ dialog {
 
 .weatherForecastRow {
   text-transform: uppercase;
-
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
 }
 
 .weatherCityRow {

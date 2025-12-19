@@ -1444,12 +1444,7 @@ main section {
 }
 .top-stories-bottom-container a {
   color: var(--newtab-primary-action-background);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
 }
 .top-stories-bottom-container a.more-recommendations {
   font-weight: var(--font-weight);
@@ -3084,12 +3079,7 @@ dialog:dir(rtl)::after {
 
 .weatherForecastRow {
   text-transform: uppercase;
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
 }
 
 .weatherCityRow {
@@ -4139,12 +4129,7 @@ dialog:dir(rtl)::after {
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a {
   color: var(--newtab-primary-action-background);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
 }
 .collapsible-section.ds-layout .section-top-bar .learn-more-link a:is(:focus, :hover) {
   text-decoration: none;
@@ -4750,12 +4735,7 @@ dialog:dir(rtl)::after {
   color: var(--text-color);
   display: flex;
   font-size: calc(var(--font-size-large) * 2);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
   font-variant-numeric: tabular-nums;
   height: 100%;
   inset-block-start: 0;
@@ -6739,12 +6719,7 @@ dialog:dir(rtl)::after {
 .ds-navigation {
   color: var(--newtab-contextual-text-primary-color);
   font-size: var(--font-size-small);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
   padding: var(--space-xsmall) 0;
 }
 @media (min-width: 1122px) {
@@ -6849,12 +6824,7 @@ dialog:dir(rtl)::after {
   border-block-start: 1px solid var(--border-color);
   line-height: 24px;
   font-size: var(--font-size-small);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
 }
 .ds-navigation.ds-navigation-new-topics ul li::after {
   content: "";
@@ -7335,12 +7305,7 @@ dialog:dir(rtl)::after {
   border: none;
   padding: var(--space-xsmall) var(--space-large);
   font-size: var(--font-size-small);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
   min-height: var(--size-item-large);
   min-width: 97px;
   color: var(--newtab-text-primary-color);
@@ -7872,12 +7837,7 @@ dialog:dir(rtl)::after {
 .ds-privacy-link {
   text-align: center;
   font-size: var(--font-size-small);
-  /**
-   * @backward-compat { version 146 }
-   *
-   * Replace this with `--font-weight-semibold` once 146 hits release.
-   */
-  font-weight: var(--heading-font-weight);
+  font-weight: var(--font-weight-semibold);
 }
 .ds-privacy-link a:hover {
   text-decoration: none;
