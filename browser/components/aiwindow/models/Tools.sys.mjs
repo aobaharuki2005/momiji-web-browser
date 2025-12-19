@@ -44,43 +44,30 @@ export const toolsConfig = [
     function: {
       name: SEARCH_BROWSING_HISTORY,
       description:
-        "Refind pages from the user's PAST BROWSING HISTORY. Use this whenever the " +
-        "user wants to recall, review, list, or see pages they visited earlier (for a " +
-        "topic, site, or time period). Also use this when the user requests all pages " +
-        'from a past time period (e.g., "yesterday", "last week"), even if no topic is ' +
-        "specified. Do NOT use for open tabs, completely general web questions, or " +
-        'abstract questions about "history" or habits.',
+        "Retrieve pages from the user's past browsing history, optionally filtered by " +
+        "topic and/or time range.",
       parameters: {
         type: "object",
         properties: {
           searchTerm: {
             type: "string",
             description:
-              "A detailed, noun-heavy phrase (~2-12 meaningful tokens) summarizing " +
-              "the user's intent for semantic retrieval. Include the main entity/topic " +
-              "plus 1-3 contextual qualifiers (e.g., library name, purpose, site, or " +
-              "timeframe). Avoid vague or single-word queries.",
+              "A concise phrase describing what the user is trying to find in their " +
+              "browsing history (topic, site, or purpose).",
           },
           startTs: {
             type: "string",
             description:
-              "Inclusive lower bound of the time window as an ISO 8601 datetime string " +
-              "(e.g., '2025-11-07T09:00:00-05:00'). Use when the user asks for results " +
-              "within a time or range start, such as 'last week', 'since yesterday', or" +
-              "'last night'. This must be before the user's current datetime.",
-            default: null,
+              "Inclusive start of the time range as a local ISO 8601 datetime " +
+              "('YYYY-MM-DDTHH:mm:ss', no timezone).",
           },
           endTs: {
             type: "string",
             description:
-              "Inclusive upper bound of the time window as an ISO 8601 datetime string " +
-              "(e.g., '2025-11-07T21:00:00-05:00'). Use when the user asks for results " +
-              "within a time or range end, such as 'last week', 'between 2025-10-01 and " +
-              "2025-10-31', or 'before Monday'. This must be before the user's current datetime.",
-            default: null,
+              "Inclusive end of the time range as a local ISO 8601 datetime " +
+              "('YYYY-MM-DDTHH:mm:ss', no timezone).",
           },
         },
-        required: [],
       },
     },
   },
@@ -166,8 +153,8 @@ export async function getOpenTabs(n = 15) {
  *
  * Parameters (defaults shown):
  * - searchTerm: ""        - string used for search
- * - startTs: null         - ISO timestamp lower bound, or null
- * - endTs: null           - ISO timestamp upper bound, or null
+ * - startTs: null         - local ISO timestamp lower bound, or null
+ * - endTs: null           - local ISO timestamp upper bound, or null
  * - historyLimit: 15      - max number of results
  *
  * Detailed behavior and implementation are in SearchBrowsingHistory.sys.mjs.
@@ -178,9 +165,9 @@ export async function getOpenTabs(n = 15) {
  *  The search string. If null or empty, semantic search is skipped and
  *  results are filtered by time range and sorted by last_visit_date and frecency.
  * @param {string|null} toolParams.startTs
- *  Optional ISO-8601 start timestamp (e.g. "2025-11-07T09:00:00-05:00").
+ *  Optional local ISO-8601 start timestamp (e.g. "2025-11-07T09:00:00").
  * @param {string|null} toolParams.endTs
- *  Optional ISO-8601 end timestamp (e.g. "2025-11-07T09:00:00-05:00").
+ *  Optional local ISO-8601 end timestamp (e.g. "2025-11-07T09:00:00").
  * @param {number} toolParams.historyLimit
  *  Maximum number of history results to return.
  * @returns {Promise<object>}

@@ -94,8 +94,8 @@ add_task(function test_getLocalIsoTime_returns_offset_timestamp() {
       "Should return a non-empty string"
     );
     Assert.ok(
-      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(iso),
-      "Should include date, time (up to seconds), and timezone offset"
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(iso),
+      "Should include date, time (up to seconds), without timezone offset"
     );
   } finally {
     clock.restore();

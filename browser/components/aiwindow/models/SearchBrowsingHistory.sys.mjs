@@ -350,9 +350,9 @@ async function searchBrowsingHistoryBasic({ searchTerm, historyLimit }) {
  *  The search string. If null or empty, semantic search is skipped and
  *  results are filtered by time range and sorted by last_visit_date and frecency.
  * @param {string|null} params.startTs
- *  Optional ISO-8601 start timestamp (e.g. "2025-11-07T09:00:00-05:00").
+ *  Optional local ISO-8601 start timestamp (e.g. "2025-11-07T09:00:00").
  * @param {string|null} params.endTs
- *  Optional ISO-8601 end timestamp (e.g. "2025-11-07T09:00:00-05:00").
+ *  Optional local ISO-8601 end timestamp (e.g. "2025-11-07T09:00:00").
  * @param {number} params.historyLimit
  *  Maximum number of history results to return.
  * @returns {Promise<object>}
