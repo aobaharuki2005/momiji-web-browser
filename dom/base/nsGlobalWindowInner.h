@@ -683,8 +683,6 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   mozilla::dom::Worklet* GetPaintWorklet(mozilla::ErrorResult& aRv);
 
-  void GetRegionalPrefsLocales(nsTArray<nsString>& aLocales);
-
   void GetWebExposedLocales(nsTArray<nsString>& aLocales);
 
   mozilla::dom::IntlUtils* GetIntlUtils(mozilla::ErrorResult& aRv);
