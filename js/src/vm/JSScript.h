@@ -51,6 +51,7 @@ class SourceText;
 
 namespace js {
 
+class Compressor;
 class FrontendContext;
 class ScriptSource;
 
@@ -1007,7 +1008,7 @@ class ScriptSource {
       size_t sourceLength);
 
  private:
-  void performTaskWork(SourceCompressionTaskEntry* task);
+  void performTaskWork(SourceCompressionTaskEntry* task, Compressor& comp);
 
   struct TriggerConvertToCompressedSourceFromTask {
     ScriptSource* const source_;

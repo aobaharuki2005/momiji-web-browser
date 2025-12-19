@@ -1723,7 +1723,7 @@ template bool ScriptSource::assignSource(FrontendContext* fc,
 }
 
 template <typename Unit>
-void SourceCompressionTaskEntry::workEncodingSpecific() {
+void SourceCompressionTaskEntry::workEncodingSpecific(Compressor& comp) {
   MOZ_ASSERT(source_->isUncompressed<Unit>());
 
   // Try to keep the maximum memory usage down by only allocating half the
@@ -1736,8 +1736,8 @@ void SourceCompressionTaskEntry::workEncodingSpecific() {
   }
 
   const Unit* chars = source_->uncompressedData<Unit>()->units();
-  Compressor comp(reinterpret_cast<const unsigned char*>(chars), inputBytes);
-  if (!comp.init()) {
+  if (!comp.setInput(reinterpret_cast<const unsigned char*>(chars),
+                     inputBytes)) {
     return;
   }
 
@@ -1802,12 +1802,14 @@ PendingSourceCompressionEntry::PendingSourceCompressionEntry(
 
 struct SourceCompressionTaskEntry::PerformTaskWork {
   SourceCompressionTaskEntry* const task_;
+  Compressor& comp_;
 
-  explicit PerformTaskWork(SourceCompressionTaskEntry* task) : task_(task) {}
+  PerformTaskWork(SourceCompressionTaskEntry* task, Compressor& comp)
+      : task_(task), comp_(comp) {}
 
   template <typename Unit, SourceRetrievable CanRetrieve>
   void operator()(const ScriptSource::Uncompressed<Unit, CanRetrieve>&) {
-    task_->workEncodingSpecific<Unit>();
+    task_->workEncodingSpecific<Unit>(comp_);
   }
 
   template <typename T>
@@ -1818,25 +1820,32 @@ struct SourceCompressionTaskEntry::PerformTaskWork {
   }
 };
 
-void ScriptSource::performTaskWork(SourceCompressionTaskEntry* task) {
+void ScriptSource::performTaskWork(SourceCompressionTaskEntry* task,
+                                   Compressor& comp) {
   MOZ_ASSERT(hasUncompressedSource());
-  data.match(SourceCompressionTaskEntry::PerformTaskWork(task));
+  data.match(SourceCompressionTaskEntry::PerformTaskWork(task, comp));
 }
 
-void SourceCompressionTaskEntry::runTask() {
+void SourceCompressionTaskEntry::runTask(Compressor& comp) {
   if (shouldCancel()) {
     return;
   }
 
   MOZ_ASSERT(source_->hasUncompressedSource());
 
-  source_->performTaskWork(this);
+  source_->performTaskWork(this, comp);
 }
 
 void SourceCompressionTask::runTask() {
   MOZ_ASSERT(!entries_.empty());
+  // Note: here and in workEncodingSpecific we abort compression work on OOM
+  // since source compression is optional.
+  Compressor comp;
+  if (!comp.init()) {
+    return;
+  }
   for (auto& entry : entries_) {
-    entry.runTask();
+    entry.runTask(comp);
   }
 }
 

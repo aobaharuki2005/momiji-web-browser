@@ -52,6 +52,7 @@ class JSTracer;
 
 namespace js {
 
+class Compressor;
 struct DelazifyTask;
 struct FreeDelazifyTask;
 struct PromiseHelperTask;
@@ -600,9 +601,9 @@ class SourceCompressionTaskEntry {
   // text or UTF-16, for CharT either Utf8Unit or char16_t.  Invoked by
   // work() after doing a type-test of the ScriptSource*.
   template <typename CharT>
-  void workEncodingSpecific();
+  void workEncodingSpecific(Compressor& comp);
 
-  void runTask();
+  void runTask(Compressor& comp);
   void complete();
 
   struct PerformTaskWork;
