@@ -267,6 +267,9 @@ var InterventionHelpers = {
     mimic_Android_Hotspot2_device: ua => {
       return UAHelpers.androidHotspot2Device(ua);
     },
+    replace_colon_in_rv_with_space: ua => {
+      return ua.replace("rv:", "rv ");
+    },
     reduce_firefox_version_by_one: ua => {
       const [head, fx, tail] = ua.split(/(firefox\/)/i);
       if (!fx || !tail) {
