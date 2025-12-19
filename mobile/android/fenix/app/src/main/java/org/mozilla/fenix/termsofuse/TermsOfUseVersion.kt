@@ -12,4 +12,4 @@ const val TOU_VERSION = 5
 /**
  * The timestamp of the latest Terms of Use published date.
  */
-const val TOU_TIME_IN_MILLIS = 1765800000000 // December 15th, 2025
+const val TOU_TIME_IN_MILLIS = 1765929600000 // December 17th, 2025 00:00 UTC
