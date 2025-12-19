@@ -64,8 +64,6 @@ export class IPProtectionPanel {
   /**
    * @typedef {object} State
    * @property {boolean} isProtectionEnabled
-   *  True if IP Protection via the proxy is enabled
-   * @property {Date} protectionEnabledSince
    *  The timestamp in milliseconds since IP Protection was enabled
    * @property {boolean} isSignedOut
    *  True if not signed in to account
@@ -115,12 +113,10 @@ export class IPProtectionPanel {
   constructor(window) {
     this.handleEvent = this.#handleEvent.bind(this);
 
-    let { activatedAt: protectionEnabledSince } = lazy.IPPProxyManager;
-
     this.state = {
       isSignedOut: !lazy.IPPSignInWatcher.isSignedIn,
-      isProtectionEnabled: !!protectionEnabledSince,
-      protectionEnabledSince,
+      isProtectionEnabled:
+        lazy.IPPProxyManager.state === lazy.IPPProxyStates.ACTIVE,
       location: {
         name: "United States",
         code: "us",
@@ -434,15 +430,14 @@ export class IPProtectionPanel {
       event.type == "IPProtectionService:StateChanged" ||
       event.type === "IPPEnrollAndEntitleManager:StateChanged"
     ) {
-      let { activatedAt: protectionEnabledSince } = lazy.IPPProxyManager;
       let hasError =
         lazy.IPPProxyManager.state === lazy.IPPProxyStates.ERROR &&
         lazy.IPPProxyManager.errors.includes(ERRORS.GENERIC);
 
       this.setState({
         isSignedOut: !lazy.IPPSignInWatcher.isSignedIn,
-        isProtectionEnabled: !!protectionEnabledSince,
-        protectionEnabledSince,
+        isProtectionEnabled:
+          lazy.IPPProxyManager.state === lazy.IPPProxyStates.ACTIVE,
         hasUpgraded: lazy.IPPEnrollAndEntitleManager.hasUpgraded,
         error: hasError ? ERRORS.GENERIC : "",
       });

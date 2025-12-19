@@ -21,8 +21,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
 add_task(async function test_status_card_in_panel() {
   const l10nIdOn = "ipprotection-connection-status-on";
   const l10nIdOff = "ipprotection-connection-status-off";
-  const fiveDaysInMS = 5 * 24 * 60 * 60 * 1000;
-  const enabledSince = Date.now() - fiveDaysInMS;
   const mockLocation = {
     name: "United States",
     code: "us",
@@ -30,7 +28,6 @@ add_task(async function test_status_card_in_panel() {
 
   let content = await openPanel({
     isSignedOut: false,
-    protectionEnabledSince: enabledSince,
     location: mockLocation,
   });
 
@@ -60,20 +57,9 @@ add_task(async function test_status_card_in_panel() {
   );
   Assert.ok(locationNameFilter.length, "Found location in status card");
 
-  // We can't check the time value directly, so instead see if the lit timerDirective is loaded in the component.
-  // Assert that there's no timerDirective, so that we know the timer is not running.
-  let timerDirectiveFilter = descriptionMetadata.values.filter(
-    value => value._$litDirective$?.name == "TimerDirective"
-  );
-  Assert.ok(
-    !timerDirectiveFilter.length,
-    "Timer should not be loaded in description meta data"
-  );
-
   // Set state as if protection is enabled
   await setPanelState({
     isSignedOut: false,
-    protectionEnabledSince: enabledSince,
     location: mockLocation,
     isProtectionEnabled: true,
   });
@@ -86,16 +72,6 @@ add_task(async function test_status_card_in_panel() {
     statusCard?.statusGroupEl.getAttribute("data-l10n-id"),
     l10nIdOn,
     "Status card connection toggle data-l10n-id should be correct when protection is enabled"
-  );
-
-  // Now check the timerDirective again and see if it's loaded. If found, then the timer is running.
-  descriptionMetadata = statusCard?.statusGroupEl.description;
-  timerDirectiveFilter = descriptionMetadata.values.filter(
-    value => value._$litDirective$?.name == "TimerDirective"
-  );
-  Assert.ok(
-    timerDirectiveFilter.length,
-    "Timer should be loaded now in description meta data"
   );
 
   await closePanel();

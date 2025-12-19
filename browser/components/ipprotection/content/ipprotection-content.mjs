@@ -93,15 +93,6 @@ export default class IPProtectionContentElement extends MozLitElement {
     );
   }
 
-  get canShowConnectionTime() {
-    return (
-      this.state &&
-      this.state.isProtectionEnabled &&
-      this.state.protectionEnabledSince &&
-      !this.state.isSignedOut
-    );
-  }
-
   get canEnableConnection() {
     return this.state && this.state.isProtectionEnabled && !this.state.error;
   }
@@ -248,8 +239,6 @@ export default class IPProtectionContentElement extends MozLitElement {
     return html`
       <ipprotection-status-card
         .protectionEnabled=${this.canEnableConnection}
-        .canShowTime=${this.canShowConnectionTime}
-        .enabledSince=${this.state.protectionEnabledSince}
         .location=${this.state.location}
         .siteData=${ifDefined(this.state.siteData)}
       ></ipprotection-status-card>

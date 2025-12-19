@@ -8,10 +8,6 @@ import {
   classMap,
   styleMap,
 } from "chrome://global/content/vendor/lit.all.mjs";
-import {
-  connectionTimer,
-  defaultTimeValue,
-} from "chrome://browser/content/ipprotection/ipprotection-timer.mjs";
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://global/content/elements/moz-toggle.mjs";
@@ -192,11 +188,6 @@ export default class IPProtectionStatusCard extends MozLitElement {
   }
 
   cardDescriptionTemplate() {
-    // The template consists of location name and connection time.
-    let time = this.canShowTime
-      ? connectionTimer(this.enabledSince)
-      : defaultTimeValue;
-
     // To work around mox-box-item description elements being hard to reach because of the shadowDOM,
     // let's use a lit stylemap to apply style changes directly.
     let labelStyles = styleMap({
@@ -219,11 +210,6 @@ export default class IPProtectionStatusCard extends MozLitElement {
                 style=${imgStyles}
               />
             </div>
-            <span
-              id="time"
-              data-l10n-id="ipprotection-connection-time"
-              data-l10n-args=${time}
-            ></span>
           </div>
         `
       : null;

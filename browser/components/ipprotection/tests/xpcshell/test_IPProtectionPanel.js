@@ -18,7 +18,6 @@ class FakeIPProtectionPanelElement {
     this.state = {
       isSignedOut: true,
       isProtectionEnabled: false,
-      protectionEnabledSince: null,
     };
     this.isConnected = false;
   }
