@@ -18,7 +18,7 @@
 /** @import MozButton from "chrome://global/content/elements/moz-button.mjs" */
 /** @import {SettingConfig, SettingEmitChange} from "chrome://global/content/preferences/Setting.mjs" */
 /** @import {SettingControlConfig} from "chrome://browser/content/preferences/widgets/setting-control.mjs" */
-/** @import {SettingGroup, SettingGroupConfig} from "chrome://browser/content/preferences/widgets/setting-group.mjs" */
+/** @import {SettingGroup} from "chrome://browser/content/preferences/widgets/setting-group.mjs" */
 /** @import {SettingPane, SettingPaneConfig} from "chrome://browser/content/preferences/widgets/setting-pane.mjs" */
 
 "use strict";
@@ -223,40 +223,12 @@ var SettingPaneManager = {
   },
 };
 
-var SettingGroupManager = {
-  /** @type {Map<string, SettingGroupConfig>} */
-  _data: new Map(),
-
-  /**
-   * @param {string} id
-   */
-  get(id) {
-    if (!this._data.has(id)) {
-      throw new Error(`Setting group "${id}" not found`);
-    }
-    return this._data.get(id);
-  },
-
-  /**
-   * @param {string} id
-   * @param {SettingGroupConfig} config
-   */
-  registerGroup(id, config) {
-    if (this._data.has(id)) {
-      throw new Error(`Setting group "${id}" already registered`);
-    }
-    this._data.set(id, config);
-  },
-
-  /**
-   * @param {Record<string, SettingGroupConfig>} groupConfigs
-   */
-  registerGroups(groupConfigs) {
-    for (let id in groupConfigs) {
-      this.registerGroup(id, groupConfigs[id]);
-    }
-  },
-};
+var SettingGroupManager = ChromeUtils.importESModule(
+  "chrome://browser/content/preferences/config/SettingGroupManager.mjs",
+  {
+    global: "current",
+  }
+).SettingGroupManager;
 
 /**
  * Register initial config-based setting panes here. If you need to register a
