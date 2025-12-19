@@ -202,10 +202,11 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
     }
   }
 
-  int32_t GetIndexForReplace() {
-    // Replace current entry in session history; If the requested index is
-    // valid, it indicates the loading was triggered by a history load, and
-    // we should replace the entry at requested index instead.
+  int32_t GetTargetIndexForHistoryOperation() {
+    // When performing a session history operation, such as replace or
+    // navigation by key that can happen during ongoing history traversals; If
+    // the requested index is valid, it indicates the loading was triggered by a
+    // history load, and we should target the entry at requested index instead.
     return mRequestedIndex == -1 ? mIndex : mRequestedIndex;
   }
 

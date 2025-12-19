@@ -93,26 +93,35 @@ class CustomizationFragment : PreferenceFragmentCompat() {
     }
 
     private fun updateToolbarShortcut() {
-        val simpleCategory = requirePreference<PreferenceCategory>(
-            R.string.pref_key_customization_category_toolbar_simple_shortcut,
-        )
-        val expandedCategory = requirePreference<PreferenceCategory>(
-            R.string.pref_key_customization_category_toolbar_expanded_shortcut,
+        val category = requirePreference<PreferenceCategory>(
+            R.string.pref_key_customization_category_toolbar_shortcut,
         )
         val settings = requireContext().settings()
         val isExpandedToolbarEnabled = settings.shouldUseExpandedToolbar && isTallWindow() && !isWideWindow()
+        val shouldShowShortcutCategory = settings.shouldShowToolbarCustomization &&
+                settings.shouldUseComposableToolbar &&
+                settings.toolbarRedesignEnabled
 
-        simpleCategory.isVisible =
-            settings.shouldShowToolbarCustomization &&
-                    settings.shouldUseComposableToolbar &&
-                    settings.toolbarRedesignEnabled &&
-                    !isExpandedToolbarEnabled
-
-        expandedCategory.isVisible =
-            settings.shouldShowToolbarCustomization &&
-                    settings.shouldUseComposableToolbar &&
-                    settings.toolbarRedesignEnabled &&
-                    isExpandedToolbarEnabled
+        category.isVisible = shouldShowShortcutCategory
+        if (shouldShowShortcutCategory) {
+            val shortcutPreference = if (isExpandedToolbarEnabled) {
+                ToolbarExpandedShortcutPreference(requireContext()).apply {
+                    key = getString(R.string.pref_key_toolbar_expanded_shortcut)
+                    layoutResource = R.layout.preference_toolbar_shortcut
+                }
+            } else {
+                ToolbarSimpleShortcutPreference(requireContext()).apply {
+                    key = getString(R.string.pref_key_toolbar_simple_shortcut)
+                    layoutResource = R.layout.preference_toolbar_shortcut
+                }
+            }
+            category.apply {
+                removeAll()
+                addPreference(shortcutPreference)
+                val shortcutOptions = shortcutPreference.getShortcutOptions()
+                shortcutOptions.forEach(::addPreference)
+            }
+        }
     }
 
     private fun setupRadioGroups() {

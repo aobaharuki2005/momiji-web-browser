@@ -29,25 +29,4 @@
         android:id="@+id/toolbar_expanded_shortcut_preview"
         layout="@layout/toolbar_expanded_shortcut_preview"
         android:visibility="gone" />
-
-    <LinearLayout
-        android:id="@+id/selected_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingTop="8dp" />
-
-    <View
-        android:id="@+id/separator"
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:alpha="0.12"
-        android:background="?attr/colorOnSurface"
-        android:visibility="gone" />
-
-    <LinearLayout
-        android:id="@+id/options_container"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical" />
 </LinearLayout>

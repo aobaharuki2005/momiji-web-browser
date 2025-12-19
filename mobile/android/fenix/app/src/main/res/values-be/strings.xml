@@ -1414,8 +1414,14 @@
   <string name="download_time_period_last_30_days">Апошнія 30 дзён</string>
   <!-- Text for the header that groups the downloads older than other groups -->
   <string name="download_time_period_older">Даўней</string>
+  <!-- Text to indicate that a download has failed to download. -->
+  <string name="download_item_status_failed">Няўдача сцягвання</string>
   <!-- Text for the snackbar action button to view failed download details. -->
   <string name="download_failed_snackbar_action_details">Падрабязнасці</string>
+  <!-- Placeholder text to indicate that users can use the search bar to search for a download. -->
+  <string name="download_search_placeholder">Пошук сцягванняў</string>
+  <!-- Text to indicate that no downloads match the search query. -->
+  <string name="download_search_no_results_found">Нічога не знойдзена</string>
   <!-- Text for the "Select all" button, which selects all downloaded items in the downloads list. -->
   <string name="download_select_all_items">Вылучыць усё</string>
   <!--
@@ -1452,6 +1458,8 @@
   <string name="webcompat_reporter_cancel">Скасаваць</string>
   <!-- The button text for the send button to submit the provided form data. -->
   <string name="webcompat_reporter_send">Даслаць</string>
+  <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
+  <string name="webcompat_reporter_success_snackbar_text_2">Справаздача адпраўлена</string>
   <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
   <string name="webcompat_reporter_preview_bottom_sheet_send">Даслаць</string>
   <!-- Broken site reason text for site is slow -->
@@ -2288,8 +2296,12 @@
   <string name="preferences_addresses_save_and_autofill_addresses_2">Захоўваць і запаўняць адрасы</string>
   <!-- Preference summary for saving and filling address data -->
   <string name="preferences_addresses_save_and_autofill_addresses_summary_2">Уключае нумары тэлефонаў і адрасы электроннай пошты</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Назад</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Дадаць карту</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Перайсці назад</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Змяніць карту</string>
   <!-- The header for the card number of a credit card -->
@@ -2388,6 +2400,8 @@
   <string name="addresses_emirate" tools:ignore="UnusedResources">Эмірат</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Relevant for addresses in countries like Russia and Ukraine. -->
   <string name="addresses_oblast" tools:ignore="UnusedResources">Вобласць</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The PIN (Postal Index Number) field, used in India is a code representing a specific area. -->
+  <string name="addresses_pin" tools:ignore="UnusedResources">Замацаваць</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The postal code field is universally used in address forms to specify the area code for mail sorting. -->
   <string name="addresses_postal_code" tools:ignore="UnusedResources">Паштовы індэкс</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. the Eircode field, specific to Ireland is a unique postal code system that helps in precise location identification. -->
@@ -2882,6 +2896,10 @@
   <string name="clear_site_data_dialog_positive_button_text">Ачысціць</string>
   <!-- Button text on the clear site data dialog to allow users to cancel the action and not clear the site data. -->
   <string name="clear_site_data_dialog_negative_button_text">Скасаваць</string>
+  <!-- Text for the connection security panel when the site is secure. -->
+  <string name="connection_security_panel_secure">Бяспечнае злучэнне</string>
+  <!-- Text for the connection security panel when the site is not secure. -->
+  <string name="connection_security_panel_not_secure">Злучэнне не бяспечнае</string>
   <!--
     Debug drawer
 

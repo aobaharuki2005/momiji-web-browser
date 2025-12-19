@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Eike eñangareko tendaykeita mbojuehepyre ne mba’e’okaguáre.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Eñemboheraguapy</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Opaite tembiasakue</string>
   <!--
     Home - Bookmarks
 
@@ -980,7 +982,7 @@
   <!-- Snackbar message for when wallpaper couldn't be downloaded -->
   <string name="wallpaper_download_error_snackbar_message">Noñemboguejykuaái mba’erechaha rugua</string>
   <!-- Snackbar label for action to retry downloading the wallpaper -->
-  <string name="wallpaper_download_error_snackbar_action">Eha’ãjey</string>
+  <string name="wallpaper_download_error_snackbar_action">Eha’ã jey</string>
   <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
   <string name="wallpaper_select_error_snackbar_message">Noñemoambuekuaái mba’erechaha rugua</string>
   <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
@@ -1465,6 +1467,8 @@
   <string name="tab_drawer_fab_content">Ñemigua</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">Mbojuehe</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">Eheka ne rendaykeita</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">Emoherakuã opaite tendayke</string>
   <!-- Text shown in the menu to view recently closed tabs -->
@@ -1513,6 +1517,8 @@
   <string name="close_tab_title">Emboty tendayke %s</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">Embojuruja poravorã rendayke</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">Eguevi tendayke ñangarekohápe</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">Eñongatu tendayke atyhápe</string>
   <!-- Text for the menu button to delete a collection -->
@@ -1529,6 +1535,8 @@
   <string name="delete_from_history">Emboguete tembiasakuégui</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (Ayvu Ñemigua)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">Embojuruja jehekaha tendayképe</string>
   <!--
     History
 
@@ -2691,6 +2699,10 @@
   <string name="edit_login_navigate_back_button_content_description">Eikundaha tapykuévo</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">Jeikeha mbosako\'i</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">Embojuaju mba’ete pyahu</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">Embogue moñe’ẽrã jehekakue</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Embojuruja tenda kundahárape</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -3201,7 +3213,7 @@
   <!-- Label for the dropdown to select which language to translate to on the translations dialog. Usually the translate to language selected will be the user's preferred language. -->
   <string name="translations_bottom_sheet_translate_to">Emoñe’ẽasa pe</string>
   <!-- Label for the dropdown to select which language to translate from on the translations dialog when the page language is not supported. This selection is to allow the user to select another language, in case we automatically detected the page language incorrectly. -->
-  <string name="translations_bottom_sheet_translate_from_unsupported_language">Eha’ãjey ambue ñe’ẽ ypygua ndive</string>
+  <string name="translations_bottom_sheet_translate_from_unsupported_language">Eha’ã jey ambue ñe’ẽ ypygua ndive</string>
   <!-- Button text on the translations dialog to dismiss the dialog and return to the browser. -->
   <string name="translations_bottom_sheet_negative_button">Ani ko’ág̃a</string>
   <!-- Button text on the translations dialog to restore the translated website back to the original untranslated version. -->
@@ -3213,7 +3225,7 @@
   <!-- Button text on the translations dialog to begin a translation of the website. -->
   <string name="translations_bottom_sheet_positive_button">Moñe’ẽasa</string>
   <!-- Button text on the translations dialog when a translation error appears. -->
-  <string name="translations_bottom_sheet_positive_button_error">Eha’ãjey</string>
+  <string name="translations_bottom_sheet_positive_button_error">Eha’ã jey</string>
   <!-- Inactive button text on the translations dialog that indicates a translation is currently in progress. This button will be accompanied by a loading icon. -->
   <string name="translations_bottom_sheet_translating_in_progress">Amoñe’ẽasahína</string>
   <!-- Button content description (not visible, for screen readers etc.) for the translations dialog translate button that indicates a translation is currently in progress. -->
@@ -3221,9 +3233,9 @@
   <!-- Default dropdown option when initially selecting a language from the translations dialog language selection dropdown. -->
   <string name="translations_bottom_sheet_default_dropdown_selection">Eiporavo peteĩ ñe’ẽ</string>
   <!-- The title of the warning card informs the user that a translation could not be completed. -->
-  <string name="translation_error_could_not_translate_warning_text">Iñapañuái emoñe’ẽasakuévo. Eha’ãjey ag̃amieve.</string>
+  <string name="translation_error_could_not_translate_warning_text">Iñapañuái emoñe’ẽasakuévo. Eha’ã jey ag̃amieve.</string>
   <!-- The title of the warning card informs the user that the list of languages cannot be loaded. -->
-  <string name="translation_error_could_not_load_languages_warning_text">Nahenyhẽkuaái ñe’ẽnguéra. Ehechajey oikópa ne ñanduti ha eha’ãjey ag̃ave.</string>
+  <string name="translation_error_could_not_load_languages_warning_text">Nahenyhẽkuaái ñe’ẽnguéra. Ehechajey oikópa ne ñanduti ha eha’ã jey ag̃ave.</string>
   <!-- The title of the warning card informs the user that a language is not supported. %1$s is the name of the language that is not supported. -->
   <string name="translation_error_language_not_supported_warning_text">Rombyasy, noroykekói gueteri %1$s.</string>
   <!-- Snackbar title shown if the user closes the Translation Request dialogue and a translation is in progress. -->
@@ -3288,7 +3300,7 @@
   <!-- Screen header presenting the automatic translation preference feature. It will appear under the toolbar. -->
   <string name="automatic_translation_header_preference">Eiporavo ñe’ẽ eñangareko hag̃ua umi erohoryvéva “emoñe’ẽasameme” y “ani emoñe’ẽasa”.</string>
   <!-- The title of the warning card informs the user that the system could not load languages for translation settings. -->
-  <string name="automatic_translation_error_warning_text">Noñemyanyhẽkuaái ñe’ẽnguéra. Eha’ãjey ag̃amieve.</string>
+  <string name="automatic_translation_error_warning_text">Noñemyanyhẽkuaái ñe’ẽnguéra. Eha’ã jey ag̃amieve.</string>
   <!--
     Automatic translation options preference screen
 
@@ -3319,7 +3331,7 @@
   -->
   <string name="never_translate_site_item_list_content_description_preference">Emboguete %1$s</string>
   <!-- The title of the warning card informs the user that an error has occurred at the never translate sites list. -->
-  <string name="never_translate_site_error_warning_text">Noñemyanyhẽkuaái tendakuéra. Eha’ãjey ag̃ave.</string>
+  <string name="never_translate_site_error_warning_text">Noñemyanyhẽkuaái tendakuéra. Eha’ã jey ag̃ave.</string>
   <!--
     The Delete site dialogue title will appear when the user clicks on a list item.
     %1$s is web site url (for example:"wikipedia.com")
@@ -3368,7 +3380,7 @@
   <!-- Content description (not visible, for screen readers etc.): For a language list item that was not downloaded. -->
   <string name="download_languages_item_content_description_not_downloaded_state">Mboguejy</string>
   <!-- The title of the warning card informs the user that an error has occurred when fetching the list of languages. -->
-  <string name="download_languages_fetch_error_warning_text">Noñemyanyhẽkuaái ñe’ẽnguéra. Eha’ãjey ag̃amieve.</string>
+  <string name="download_languages_fetch_error_warning_text">Noñemyanyhẽkuaái ñe’ẽnguéra. Eha’ã jey ag̃amieve.</string>
   <!--
     The title of the warning card informs the user that an error has occurred at downloading a language.
     %1$s is the language name, for example, "Spanish".
@@ -3930,4 +3942,16 @@
   <string name="terms_of_use_prompt_accept">Moneĩ</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Chemomandu’a ag̃ave</string>
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">Rombohekopyahu ore %1$s rohechauka hag̃ua Firefox rembiapoite ipyahuvéva. %2$s</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Marandu’i ñemiguáva</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Eikuaave</string>
 </resources>

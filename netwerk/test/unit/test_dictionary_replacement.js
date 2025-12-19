@@ -58,12 +58,18 @@ function makeChan(url, bypassCache = false) {
   return chan;
 }
 
-function channelOpenPromise(chan) {
+function channelOpenPromise(chan, intermittentFail = false) {
   return new Promise(resolve => {
     function finish(req, buffer) {
       resolve([req, buffer]);
     }
-    chan.asyncOpen(new ChannelListener(finish, null, CL_ALLOW_UNKNOWN_CL));
+    if (intermittentFail) {
+      chan.asyncOpen(
+        new SimpleChannelListener(finish, null, CL_ALLOW_UNKNOWN_CL)
+      );
+    } else {
+      chan.asyncOpen(new ChannelListener(finish, null, CL_ALLOW_UNKNOWN_CL));
+    }
   });
 }
 
@@ -621,7 +627,7 @@ add_task(async function test_dictionary_hash_mismatch() {
   // which will fail due to hash mismatch. The channel should be cancelled.
   chan = makeChan(matchingUrl);
   try {
-    await channelOpenPromise(chan);
+    await channelOpenPromise(chan, true); // intermittent failure
   } catch (e) {
     dump(`**** Request failed with: ${e}\n`);
   }

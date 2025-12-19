@@ -3441,7 +3441,7 @@
   -->
   <string name="protection_panel_banner_protected_title">%s 正在防护</string>
   <!-- Description text for the protection panel banner when tracking protection is enabled. -->
-  <string name="protection_panel_banner_protected_description">您已受保护，我们会在发现异常情况时告知您。</string>
+  <string name="protection_panel_banner_protected_description">您已受保护。若发现异常，我们将提醒您。</string>
   <!-- Label text for the Enhanced Tracking Protection toggle. -->
   <string name="protection_panel_etp_toggle_label">增强型跟踪保护</string>
   <!-- Toggle if Enhanced Tracking Protection is turned on -->
