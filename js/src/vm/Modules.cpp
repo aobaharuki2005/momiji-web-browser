@@ -464,20 +464,6 @@ JS_PUBLIC_API JSObject* JS::GetModuleEnvironment(JSContext* cx,
   return moduleObj->as<ModuleObject>().environment();
 }
 
-JS_PUBLIC_API JSObject* JS::CreateModuleRequest(JSContext* cx,
-                                                Handle<JSString*> specifierArg,
-                                                JS::ModuleType moduleType) {
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-
-  Rooted<JSAtom*> specifierAtom(cx, AtomizeString(cx, specifierArg));
-  if (!specifierAtom) {
-    return nullptr;
-  }
-
-  return ModuleRequestObject::create(cx, specifierAtom, moduleType);
-}
-
 JS_PUBLIC_API JSString* JS::GetModuleRequestSpecifier(
     JSContext* cx, Handle<JSObject*> moduleRequestArg) {
   AssertHeapIsIdle();
