@@ -460,8 +460,10 @@ export class FormAutofillHandler {
    *        An array of IDs for the elements that should be autofilled.
    * @param {object} profile
    *        The data profile containing the values to be autofilled into the form fields.
+   * @param {boolean} isFormChange
+   *        True if this a fill caused by a form change.
    */
-  fillFields(focusedId, elementIds, profile) {
+  fillFields(focusedId, elementIds, profile, isFormChange) {
     this.cancelRefillOnSiteClearingFieldsAction();
 
     this.#isAutofillInProgress = true;
@@ -480,6 +482,7 @@ export class FormAutofillHandler {
 
       element.previewValue = "";
 
+      let filledValue;
       if (FormAutofillUtils.isTextControl(element)) {
         // Bug 1687679: Since profile appears to be presentation ready data, we need to utilize the "x-formatted" field
         // that is generated when presentation ready data doesn't fit into the autofilling element.
@@ -503,8 +506,11 @@ export class FormAutofillHandler {
           element.autofillState == FIELD_STATES.AUTO_FILLED
         ) {
           FormAutofillHandler.fillFieldValue(element, value);
-          this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
-          filledValuesByElement.set(element, value);
+          filledValue = value;
+        } else if (isFormChange && element.value == value) {
+          // If this was a fill caused by a form change, and the value is
+          // identical to the expected filled value, highlight it anyway.
+          filledValue = value;
         }
       } else if (HTMLSelectElement.isInstance(element)) {
         const option = this.matchSelectOptions(fieldDetail, profile);
@@ -527,10 +533,12 @@ export class FormAutofillHandler {
           FormAutofillHandler.fillFieldValue(element, option.value);
         }
         // Autofill highlight appears regardless if value is changed or not
+        filledValue = option.value;
+      }
+
+      if (filledValue) {
         this.changeFieldState(fieldDetail, FIELD_STATES.AUTO_FILLED);
-        filledValuesByElement.set(element, option.value);
-      } else {
-        continue;
+        filledValuesByElement.set(element, filledValue);
       }
     }
 
