@@ -394,7 +394,7 @@ static bool InvokeInterruptCallbacks(JSContext* cx) {
   return stop;
 }
 
-static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
+static bool HandleInterrupt(JSContext* cx, bool invokeCallback, bool oomStackTrace) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
 
   cx->runtime()->gc.gcIfRequested();
@@ -403,7 +403,13 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
   // offthread compilation.
   jit::AttachFinishedCompilations(cx);
 
-  // Don't call the interrupt callback if we only interrupted for GC or Ion.
+  if (oomStackTrace) {
+    // Capture OOM stack trace this way because we don't have memory to handle
+    // it the way ComputeStackString does.
+    cx->captureOOMStackTrace();
+  }
+
+  // Don't call the interrupt callback if we only interrupted for GC, Ion, or OOM.
   if (!invokeCallback) {
     return true;
   }
@@ -482,9 +488,23 @@ bool JSContext::handleInterrupt() {
     bool invokeCallback =
         hasPendingInterrupt(InterruptReason::CallbackUrgent) ||
         hasPendingInterrupt(InterruptReason::CallbackCanWait);
+    bool oomStackTrace = hasPendingInterrupt(InterruptReason::OOMStackTrace);
     interruptBits_ = 0;
     resetJitStackLimit();
-    return HandleInterrupt(this, invokeCallback);
+    return HandleInterrupt(this, invokeCallback, oomStackTrace);
+  }
+  return true;
+}
+
+bool JSContext::handleInterruptNoCallbacks() {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(runtime()));
+  if (hasAnyPendingInterrupt() || jitStackLimit == JS::NativeStackLimitMin) {
+    bool oomStackTrace = hasPendingInterrupt(InterruptReason::OOMStackTrace);
+    clearPendingInterrupt(js::InterruptReason::OOMStackTrace);
+    if (!hasAnyPendingInterrupt()) {
+      resetJitStackLimit();
+    }
+    return HandleInterrupt(this, false, oomStackTrace);
   }
   return true;
 }
