@@ -1,4 +1,4 @@
-name: Close Pull Request
+name: Handle Pull Request
 on:
   # WARNING: pull_request_target MUST NOT be used if running code under control
   # of the source PR [0], as it could risk leaking the GH_TOKENs.
@@ -28,7 +28,7 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 jobs:
-  close-pr:
+  handle-pr:
     runs-on: ubuntu-latest
     steps:
       - name: Check team membership
@@ -59,3 +59,24 @@ jobs:
         run: |
           gh pr close "${PR}" --comment "(Automated Close) Please do not file pull requests here, see https://firefox-source-docs.mozilla.org/contributing/how_to_submit_a_patch.html"
           gh pr lock "${PR}"
+
+      - name: Add Lando link
+        if: (steps.team.outputs.is_member == 'true' && steps.paths.outputs.only_allowed == 'true') && github.event.action == 'opened'
+        env:
+          #
+          # Set the following variables at the repository level [0].
+          # [0] https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-variables#defining-configuration-variables-for-multiple-workflows
+          #
+          LANDO_BASE_URL: ${{ vars.LANDO_BASE_URL }}
+          LANDO_REPO: ${{ vars.LANDO_REPO }}
+          #
+          # If they are empty, the following will be used to determine sane defaults.
+          #
+          DEFAULT_LANDO_BASE_URL: https://lando.moz.tools
+          TARGET_BRANCH: ${{ github.base_ref }}
+        run: |
+          LANDO_BASE_URL="${LANDO_BASE_URL:-${DEFAULT_LANDO_BASE_URL}}"
+          # We extract the GitHub repo name and target branch to use as
+          # default LANDO_REPO if unspecified.
+          LANDO_REPO="${LANDO_REPO:-${GH_REPO/*\//}-${TARGET_BRANCH}}"
+          gh pr comment "${PR}" --body "[View this pull request in Lando](${LANDO_BASE_URL}/pulls/${LANDO_REPO}/${PR}) to land it once approved."
