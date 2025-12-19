@@ -694,11 +694,11 @@ if (AppConstants.platform != "android") {
   // Note that GeckoView handles MozOpenDateTimePicker in GeckoViewPrompt.
   JSWINDOWACTORS.DateTimePicker = {
     parent: {
-      esModuleURI: "moz-src:///toolkit/actors/DateTimePickerParent.sys.mjs",
+      esModuleURI: "resource://gre/actors/DateTimePickerParent.sys.mjs",
     },
 
     child: {
-      esModuleURI: "moz-src:///toolkit/actors/DateTimePickerChild.sys.mjs",
+      esModuleURI: "resource://gre/actors/DateTimePickerChild.sys.mjs",
       events: {
         MozOpenDateTimePicker: {},
         MozCloseDateTimePicker: {},
