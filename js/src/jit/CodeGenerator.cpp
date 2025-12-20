@@ -5041,8 +5041,8 @@ void CodeGenerator::visitMegamorphicStoreSlot(LMegamorphicStoreSlot* lir) {
   masm.jump(&done);
   masm.bind(&cacheHit);
 
-  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp0, &done);
   masm.branchPtrInNurseryChunk(Assembler::Equal, obj, temp0, &done);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp0, &done);
 
   // Note: because this is a call-instruction, no registers need to be saved.
   MOZ_ASSERT(lir->isCall());
@@ -5855,14 +5855,15 @@ void CodeGenerator::emitElementPostWriteBarrier(
   });
   addOutOfLineCode(ool, mir);
 
+  masm.branchPtrInNurseryChunk(Assembler::Equal, obj, scratch, ool->rejoin());
+
   if (reg.hasValue()) {
-    masm.branchValueIsNurseryCell(Assembler::NotEqual, reg.valueReg(), scratch,
-                                  ool->rejoin());
+    masm.branchValueIsNurseryCell(Assembler::Equal, reg.valueReg(), scratch,
+                                  ool->entry());
   } else {
-    masm.branchPtrInNurseryChunk(Assembler::NotEqual, reg.typedReg().gpr(),
-                                 scratch, ool->rejoin());
+    masm.branchPtrInNurseryChunk(Assembler::Equal, reg.typedReg().gpr(),
+                                 scratch, ool->entry());
   }
-  masm.branchPtrInNurseryChunk(Assembler::NotEqual, obj, scratch, ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -5948,21 +5949,19 @@ void CodeGenerator::visitPostWriteBarrierCommonV(LPostBarrierType* lir,
 
   Register temp = ToTempRegisterOrInvalid(lir->temp0());
 
-  ValueOperand value = ToValue(lir->value());
-
   if (lir->object()->isConstant()) {
     // The object must be tenured because MIR and LIR can't contain nursery
     // pointers.
     MOZ_ASSERT(!IsInsideNursery(&lir->object()->toConstant()->toObject()));
-    masm.branchValueIsNurseryCell(Assembler::Equal, value, temp, ool->entry());
   } else {
-    masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp,
-                                  ool->rejoin());
-    masm.branchPtrInNurseryChunk(Assembler::NotEqual, ToRegister(lir->object()),
-                                 temp, ool->entry());
+    masm.branchPtrInNurseryChunk(Assembler::Equal, ToRegister(lir->object()),
+                                 temp, ool->rejoin());
   }
 
   maybeEmitGlobalBarrierCheck(lir->object(), ool);
+
+  ValueOperand value = ToValue(lir->value());
+  masm.branchValueIsNurseryCell(Assembler::Equal, value, temp, ool->entry());
 
   masm.bind(ool->rejoin());
 }
@@ -6083,8 +6082,8 @@ void CodeGenerator::visitAssertCanElidePostWriteBarrier(
   Register temp = ToRegister(lir->temp0());
 
   Label ok;
-  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp, &ok);
   masm.branchPtrInNurseryChunk(Assembler::Equal, object, temp, &ok);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp, &ok);
 
   masm.assumeUnreachable("Unexpected missing post write barrier");
 
@@ -17962,8 +17961,8 @@ void CodeGenerator::visitMegamorphicSetElement(LMegamorphicSetElement* lir) {
   masm.jump(&done);
   masm.bind(&cacheHit);
 
-  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp0, &done);
   masm.branchPtrInNurseryChunk(Assembler::Equal, obj, temp0, &done);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, temp0, &done);
 
   // Note: because this is a call-instruction, no registers need to be saved.
   MOZ_ASSERT(lir->isCall());
@@ -18947,8 +18946,8 @@ void CodeGenerator::visitStoreSlotByIteratorIndexCommon(Register object,
   emitPreBarrier(storeAddress);
   masm.storeValue(value, storeAddress);
 
-  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, kindScratch, &done);
   masm.branchPtrInNurseryChunk(Assembler::Equal, object, kindScratch, &done);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, value, kindScratch, &done);
 
   saveVolatile(kindScratch);
   emitPostWriteBarrier(object);
