@@ -15,7 +15,10 @@ import org.mozilla.fenix.tabstray.redux.reducer.TabSearchActionReducer
 import org.mozilla.fenix.tabstray.redux.state.TabSearchState
 import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
 
-private const val DEFAULT_SYNCED_TABS_EXPANDED_STATE = true
+/**
+ * The default state of the synced tabs expanded state, which is true.
+ */
+internal const val DEFAULT_SYNCED_TABS_EXPANDED_STATE = true
 
 /**
  * Value type that represents the state of the tabs tray.
@@ -405,11 +408,11 @@ internal object TabsTrayReducer {
  * @param action the action containing updated tabs.
  */
 private fun handleSyncedTabUpdate(state: TabsTrayState, action: TabsTrayAction.UpdateSyncedTabs): TabsTrayState {
-    return if (state.syncedTabs.isNotEmpty() && action.tabs.isNotEmpty()) {
+    return if (syncStateExists(state, action) && syncedDevicesUnchanged(state, action)) {
         state.copy(
             syncedTabs = action.tabs,
             expandedSyncedTabs = action.tabs.mapIndexed { index, item ->
-                if (state.syncedTabs[index] == item) {
+                if (state.syncedTabs[index] == item && index < state.expandedSyncedTabs.size) {
                     state.expandedSyncedTabs[index]
                 } else {
                     DEFAULT_SYNCED_TABS_EXPANDED_STATE
@@ -425,6 +428,16 @@ private fun handleSyncedTabUpdate(state: TabsTrayState, action: TabsTrayAction.U
     } else {
         state.copy(syncedTabs = action.tabs, expandedSyncedTabs = emptyList())
     }
+}
+
+// Does previous state exist for the SyncedTabs we might want to preserve?
+private fun syncStateExists(state: TabsTrayState, action: TabsTrayAction.UpdateSyncedTabs): Boolean {
+    return state.syncedTabs.isNotEmpty() && action.tabs.isNotEmpty()
+}
+
+// Has the list of devices synced in SyncedTabs list changed?
+private fun syncedDevicesUnchanged(state: TabsTrayState, action: TabsTrayAction.UpdateSyncedTabs): Boolean {
+    return state.syncedTabs.size == action.tabs.size
 }
 
 /**

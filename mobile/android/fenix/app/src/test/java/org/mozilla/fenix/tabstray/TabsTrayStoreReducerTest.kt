@@ -12,6 +12,8 @@ import org.junit.Test
 import org.mozilla.fenix.tabstray.navigation.TabManagerNavDestination
 import org.mozilla.fenix.tabstray.redux.reducer.TabSearchActionReducer
 import org.mozilla.fenix.tabstray.redux.state.TabSearchState
+import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsListItem
+import org.mozilla.fenix.tabstray.syncedtabs.generateFakeTab
 import org.mozilla.fenix.tabstray.syncedtabs.getFakeSyncedTabList
 
 class TabsTrayStoreReducerTest {
@@ -104,7 +106,7 @@ class TabsTrayStoreReducerTest {
             TabsTrayAction.UpdateSyncedTabs(syncedTabs),
         )
 
-        assertTrue(resultState.expandedSyncedTabs.all { true })
+        assertTrue(resultState.expandedSyncedTabs.all { DEFAULT_SYNCED_TABS_EXPANDED_STATE })
     }
 
     @Test
@@ -145,7 +147,83 @@ class TabsTrayStoreReducerTest {
             TabsTrayAction.UpdateSyncedTabs(newSyncedTabs),
         )
 
-        assertTrue(resultState.expandedSyncedTabs.all { true })
+        assertTrue(resultState.expandedSyncedTabs.all { DEFAULT_SYNCED_TABS_EXPANDED_STATE })
+    }
+
+    @Test
+    fun `GIVEN synced tabs WHEN UpdateSyncedTabs is called with smaller device list THEN the expanded states are reset`() {
+        val expectedExpansionList = listOf(true, true, false, false)
+        val syncedTabs = getFakeSyncedTabList()
+        val newSyncedTabs = listOf(
+            SyncedTabsListItem.DeviceSection(
+            displayName = "Device 1",
+            tabs = listOf(
+                generateFakeTab("Mozilla", "www.mozilla.org"),
+                generateFakeTab("Google", "www.google.com"),
+                generateFakeTab("", "www.google.com"),
+            ),
+        ),
+        )
+        val initialState = TabsTrayState(syncedTabs = syncedTabs, expandedSyncedTabs = expectedExpansionList)
+
+        val resultState = TabsTrayReducer.reduce(
+            initialState,
+            TabsTrayAction.UpdateSyncedTabs(newSyncedTabs),
+        )
+
+        assertTrue(resultState.expandedSyncedTabs.all { DEFAULT_SYNCED_TABS_EXPANDED_STATE })
+    }
+
+    @Test
+    fun `GIVEN synced tabs WHEN UpdateSyncedTabs is called with a larger device list THEN the expanded states are reset`() {
+        val expectedExpansionList = listOf(true, true, false, false)
+        val syncedTabs = listOf(
+            SyncedTabsListItem.DeviceSection(
+            displayName = "Device 1",
+            tabs = listOf(
+                generateFakeTab("Mozilla", "www.mozilla.org"),
+                generateFakeTab("Google", "www.google.com"),
+                generateFakeTab("", "www.google.com"),
+            ),
+        ),
+        )
+        val newSyncedTabs = getFakeSyncedTabList()
+        val initialState = TabsTrayState(syncedTabs = syncedTabs, expandedSyncedTabs = expectedExpansionList)
+
+        val resultState = TabsTrayReducer.reduce(
+            initialState,
+            TabsTrayAction.UpdateSyncedTabs(newSyncedTabs),
+        )
+
+        assertTrue(resultState.expandedSyncedTabs.all { DEFAULT_SYNCED_TABS_EXPANDED_STATE })
+    }
+
+    @Test
+    fun `GIVEN synced tabs state larger than expanded synced tabs WHEN UpdateSyncedTabs is called THEN it is handled gracefully`() {
+        val syncedTabs = getFakeSyncedTabList()
+        val newSyncedTabs = getFakeSyncedTabList().reversed()
+        val initialState = TabsTrayState(syncedTabs = syncedTabs, expandedSyncedTabs = emptyList())
+
+        val resultState = TabsTrayReducer.reduce(
+            initialState,
+            TabsTrayAction.UpdateSyncedTabs(newSyncedTabs),
+        )
+
+        assertTrue(resultState.expandedSyncedTabs.all { DEFAULT_SYNCED_TABS_EXPANDED_STATE })
+    }
+
+    @Test
+    fun `GIVEN synced tabs state smaller than expanded synced tabs WHEN UpdateSyncedTabs is called THEN it is handled gracefully`() {
+        val syncedTabs = getFakeSyncedTabList()
+        val newSyncedTabs = getFakeSyncedTabList().reversed()
+        val initialState = TabsTrayState(syncedTabs = syncedTabs, expandedSyncedTabs = listOf(true, true, false, false, false, false, false, false, false, false))
+
+        val resultState = TabsTrayReducer.reduce(
+            initialState,
+            TabsTrayAction.UpdateSyncedTabs(newSyncedTabs),
+        )
+
+        assertTrue(resultState.expandedSyncedTabs.all { DEFAULT_SYNCED_TABS_EXPANDED_STATE })
     }
 
     @Test

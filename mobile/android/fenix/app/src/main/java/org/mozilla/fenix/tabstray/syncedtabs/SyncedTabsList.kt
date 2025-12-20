@@ -338,7 +338,8 @@ internal fun getFakeSyncedTabList(): List<SyncedTabsListItem> = listOf(
 /**
  * Helper function to create a [SyncedTabsListItem.Tab] for previewing.
  */
-private fun generateFakeTab(
+@VisibleForTesting
+internal fun generateFakeTab(
     tabName: String,
     tabUrl: String,
     action: SyncedTabsListItem.Tab.Action = SyncedTabsListItem.Tab.Action.None,
