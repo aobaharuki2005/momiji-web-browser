@@ -2341,7 +2341,7 @@ var gSync = {
         if (!(await FxAccounts.canConnectAccount())) {
           return;
         }
-        const url = await FxAccounts.config.promiseConnectAccountURI(
+        const url = await FxAccounts.config.promiseSetPasswordURI(
           entryPoint,
           extraParams
         );
