@@ -183,6 +183,12 @@
             app:iconSpaceReserved="false"
             android:title="@string/preferences_downloads" />
 
+        <androidx.preference.Preference
+            android:key="@string/pref_key_firefox_labs"
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="false"
+            android:title="@string/firefox_labs_title" />
+
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_leakcanary"
             android:title="@string/preference_leakcanary"

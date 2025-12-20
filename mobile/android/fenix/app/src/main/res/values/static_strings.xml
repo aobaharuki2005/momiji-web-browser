@@ -269,4 +269,35 @@
 
     <!-- Label for enabling Relay email masks -->
     <string name="preferences_enable_relay_email_masks">Enable Relay email masks</string>
+
+    <!-- Firefox Labs -->
+    <!-- Firefox Labs is the name of a screen in Settings to allow users to learn about
+        experimental and in-development features, and turn those features on and off.
+        The "Labs" portion can be localized, "Firefox" must be treated as a brand and kept
+        in English. -->
+    <string name="firefox_labs_title" tools:ignore="BrandUsage">Firefox Labs</string>
+    <!-- Description text displayed in the Firefox Labs screen. %s is the name of the app (for example "Firefox"). -->
+    <string name="firefox_labs_experimental_description">Give our experimental features a try! They’re in development and evolving, which could impact how %s works.</string>
+    <!-- Button text for restoring the default settings by turning off any experimental features in the Firefox Labs screen. -->
+    <string name="firefox_labs_restore_default_button_text">Restore Defaults</string>
+    <!-- Text displayed when no experimental features are available in the Firefox Labs screen. -->
+    <string name="firefox_labs_no_labs_available_description">No experimental features available</string>
+    <!-- The name of an experimental feature displayed in theFirefox Labs screen. This features allows the user to open the homepage as a new tab. -->
+    <string name="firefox_labs_homepage_as_a_new_tab">Homepage as a New Tab</string>
+    <!-- The description of the "Homepage as a New Tab" feature in the Firefox Labs screen. -->
+    <string name="firefox_labs_homepage_as_a_new_tab_description">With this feature enabled, Homepage will behave as a tab.</string>
+    <!-- The title used in a confirmation dialog when toggling on an experimental feature. -->
+    <string name="firefox_labs_enable_feature_dialog_title">Enable experimental feature?</string>
+    <!-- The title used in a confirmation dialog when toggling off an experimental feature. -->
+    <string name="firefox_labs_disable_feature_dialog_title">Disable experimental feature?</string>
+    <!-- The description that is displayed in the confirmation dialog for toggling on and off experimental features. -->
+    <string name="firefox_labs_enable_feature_dialog_message">Toggling this feature will restart %s.</string>
+    <!-- The text for the positive button in the dialog for toggling on and off experimental features. This prompts the user to confirm that they want to restart the app. -->
+    <string name="firefox_labs_dialog_restart_button">Restart</string>
+    <!-- The text for the negative button in the dialog for toggling on and off experimental features. -->
+    <string name="firefox_labs_dialog_cancel_button">Cancel</string>
+    <!-- The title used in a confirmation dialog when restoring the application to its defaults by turning off any experimental features. -->
+    <string name="firefox_labs_restore_defaults_dialog_title">Restore defaults?</string>
+    <!-- The description used in a confirmation dialog when restoring the application to its defaults by turning off any experimental features. -->
+    <string name="firefox_labs_restore_defaults_dialog_message">Resetting experimental features will restart %s.</string>
 </resources>
