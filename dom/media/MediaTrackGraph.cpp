@@ -3267,7 +3267,6 @@ MediaTrackGraphImpl* MediaInputPort::GraphImpl() const {
 }
 
 MediaTrackGraph* MediaInputPort::Graph() const {
-  mGraph->AssertOnGraphThreadOrNotRunning();
   return mGraph;
 }
 

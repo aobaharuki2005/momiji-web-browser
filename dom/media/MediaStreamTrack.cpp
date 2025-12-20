@@ -18,7 +18,7 @@
 #include "nsServiceManagerUtils.h"
 #include "systemservices/MediaUtils.h"
 
-static mozilla::LazyLogModule gMediaStreamTrackLog("MediaStreamTrack");
+mozilla::LazyLogModule gMediaStreamTrackLog("MediaStreamTrack");
 #define LOG(type, msg) MOZ_LOG(gMediaStreamTrackLog, type, msg)
 
 using namespace mozilla::media;
