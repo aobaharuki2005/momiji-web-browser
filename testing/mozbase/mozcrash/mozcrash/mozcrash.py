@@ -465,9 +465,6 @@ class CrashInfo:
         if os.path.exists(extra) and not self.keep:
             mozfile.remove(extra)
 
-        if signature is None:
-            signature = "[Unknown]"
-
         return StackInfo(
             path,
             signature,

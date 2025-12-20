@@ -40,6 +40,11 @@ export class StructuredLogger {
     stack = null,
     extra = null
   ) {
+    if (subtest === null || subtest === undefined) {
+      // Fix for assertions that don't pass in a name
+      subtest = "undefined assertion name";
+    }
+
     var data = {
       test: this.#testId(test),
       subtest,

@@ -184,8 +184,7 @@ class MachFormatter(base.BaseFormatter):
         return color(status)
 
     def _format_status(self, test, data):
-        subtest = data.get("subtest")
-        name = subtest if subtest is not None else test
+        name = data.get("subtest", test)
         rv = "%s %s" % (
             self._format_expected(
                 data["status"],
