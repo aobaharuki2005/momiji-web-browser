@@ -2,19 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const SMART_ASSIST_URL = "chrome://browser/content/genai/smartAssist.html";
+const lazy = {};
+const { topChromeWindow } = window.browsingContext;
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutWelcomeParent: "resource:///actors/AboutWelcomeParent.sys.mjs",
+  AIWindow:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
+});
+const MODEL_PREF = "browser.aiwindow.firstrun.modelChoice";
+const BRAND_DARK_PURPLE = "#210340";
 
 const AI_WINDOW_CONFIG = {
   id: "AI_WINDOW_WELCOME",
   template: "spotlight",
   transitions: true,
   modal: "tab",
-  backdrop:
-    "radial-gradient(circle at 50% 90%, rgba(253, 244, 243, 1) 0%, rgba(253, 244, 243, 1) 30%, rgba(216, 202, 247, 1) 100%)",
+  backdrop: "transparent",
   screens: [
     {
-      id: "AW_AI_WINDOW_WELCOME",
+      id: "AI_WINDOW_INTRO",
       auto_advance: "primary_button",
+      force_hide_steps_indicator: true,
       content: {
         fullscreen: true,
         hide_secondary_section: "responsive",
@@ -25,16 +34,141 @@ const AI_WINDOW_CONFIG = {
           overflow: "hidden",
         },
         title: {
-          fontWeight: 400,
+          fontWeight: 350,
           fontSize: "39px",
+          letterSpacing: 0,
           lineHeight: "56px",
           textAlign: "center",
           string_id: "aiwindow-firstrun-title",
-          color: "transparent",
-          letterSpacing: "0px",
         },
         primary_button: {
           label: "",
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AI_WINDOW_CHOOSE_MODEL",
+      force_hide_steps_indicator: true,
+      content: {
+        position: "center",
+        background: "transparent",
+        screen_style: {
+          width: "750px",
+        },
+        title: {
+          string_id: "aiwindow-firstrun-model-title",
+          fontSize: "40px",
+          fontWeight: "350",
+          letterSpacing: 0,
+          lineHeight: "normal",
+        },
+        subtitle: {
+          string_id: "aiwindow-firstrun-model-subtitle",
+          fontSize: "17px",
+          fontWeight: 320,
+          color: BRAND_DARK_PURPLE,
+        },
+        tiles: {
+          type: "single-select",
+          selected: "none",
+          autoTrigger: false,
+          action: {
+            picker: "<event>",
+          },
+          data: [
+            {
+              id: "model_1",
+              label: {
+                string_id: "aiwindow-firstrun-model-fast-label",
+                fontSize: "20px",
+                fontWeight: 613,
+                color: BRAND_DARK_PURPLE,
+              },
+              icon: {
+                background:
+                  'center / contain no-repeat url("chrome://browser/content/aiwindow/assets/model-choice-1.svg")',
+              },
+              body: {
+                string_id: "aiwindow-firstrun-model-fast-body",
+                color: BRAND_DARK_PURPLE,
+                fontSize: "15px",
+                fontWeight: 320,
+              },
+              action: {
+                type: "SET_PREF",
+                data: {
+                  pref: {
+                    name: MODEL_PREF,
+                    value: "1",
+                  },
+                },
+              },
+            },
+            {
+              id: "model_2",
+              label: {
+                string_id: "aiwindow-firstrun-model-allpurpose-label",
+                fontSize: "20px",
+                fontWeight: 613,
+                color: BRAND_DARK_PURPLE,
+              },
+              icon: {
+                background:
+                  'center / contain no-repeat url("chrome://browser/content/aiwindow/assets/model-choice-2.svg")',
+              },
+              body: {
+                string_id: "aiwindow-firstrun-model-allpurpose-body",
+                color: BRAND_DARK_PURPLE,
+                fontSize: "15px",
+                fontWeight: 320,
+              },
+              action: {
+                type: "SET_PREF",
+                data: {
+                  pref: {
+                    name: MODEL_PREF,
+                    value: "2",
+                  },
+                },
+              },
+            },
+            {
+              id: "model_3",
+              label: {
+                string_id: "aiwindow-firstrun-model-personal-label",
+                fontSize: "20px",
+                fontWeight: 613,
+                color: BRAND_DARK_PURPLE,
+              },
+              icon: {
+                background:
+                  'center / contain no-repeat url("chrome://browser/content/aiwindow/assets/model-choice-3.svg")',
+              },
+              body: {
+                string_id: "aiwindow-firstrun-model-personal-body",
+                color: BRAND_DARK_PURPLE,
+                fontSize: "15px",
+                fontWeight: 320,
+              },
+              action: {
+                type: "SET_PREF",
+                data: {
+                  pref: {
+                    name: MODEL_PREF,
+                    value: "3",
+                  },
+                },
+              },
+            },
+          ],
+        },
+        primary_button: {
+          label: {
+            string_id: "aiwindow-firstrun-button",
+          },
           action: {
             navigate: true,
           },
@@ -45,12 +179,21 @@ const AI_WINDOW_CONFIG = {
 };
 
 function renderFirstRun() {
+  const AWParent = new lazy.AboutWelcomeParent();
+  const receive = name => data =>
+    AWParent.onContentMessage(
+      `AWPage:${name}`,
+      data,
+      topChromeWindow.gBrowser.selectedBrowser
+    );
+
   window.AWGetFeatureConfig = () => AI_WINDOW_CONFIG;
   window.AWEvaluateScreenTargeting = screens => screens;
   window.AWGetSelectedTheme = () => ({});
   window.AWGetInstalledAddons = () => [];
+  window.AWSendToParent = (name, data) => receive(name)(data);
   window.AWFinish = () => {
-    window.location.href = SMART_ASSIST_URL;
+    window.location.href = lazy.AIWindow.newTabURL;
   };
 
   const script = document.createElement("script");

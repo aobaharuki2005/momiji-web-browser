@@ -18,16 +18,22 @@ add_task(async function test_firstrun_welcome_screen_renders() {
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     await ContentTaskUtils.waitForCondition(
-      () => content.document.querySelector(".screen.AW_AI_WINDOW_WELCOME"),
-      "Wait for the AI Window welcome screen to be rendered"
+      () => content.document.querySelector(".screen.AI_WINDOW_INTRO"),
+      "Wait for the AI Window intro screen to be rendered"
     );
 
-    const welcomeScreen = content.document.querySelector(
-      ".screen.AW_AI_WINDOW_WELCOME"
+    const introScreen = content.document.querySelector(
+      ".screen.AI_WINDOW_INTRO"
     );
     Assert.ok(
-      welcomeScreen,
-      "The welcome screen with class 'screen AW_AI_WINDOW_WELCOME' should be present"
+      introScreen,
+      "The intro screen with class 'screen AI_WINDOW_INTRO' should be present"
+    );
+
+    await ContentTaskUtils.waitForCondition(
+      () => content.document.querySelector(".screen.AI_WINDOW_CHOOSE_MODEL"),
+      "Wait for the AI Window choose model screen to be rendered",
+      25000
     );
   });
 
