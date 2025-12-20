@@ -188,10 +188,6 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
       EndRecordingResolver&& aResolve) = 0;
   virtual mozilla::ipc::IPCResult RecvInitialize(
       const LayersId& rootLayerTreeId) = 0;
-  virtual mozilla::ipc::IPCResult RecvInitAPZInputBridge(
-      Endpoint<PAPZInputBridgeParent>&& aEndpoint) = 0;
-  virtual mozilla::ipc::IPCResult RecvInitUiCompositorController(
-      Endpoint<PUiCompositorControllerParent>&& aEndpoint) = 0;
   virtual mozilla::ipc::IPCResult RecvWillClose() = 0;
   virtual mozilla::ipc::IPCResult RecvPause() = 0;
   virtual mozilla::ipc::IPCResult RecvRequestFxrOutput() = 0;
@@ -263,10 +259,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 #endif
   mozilla::ipc::IPCResult RecvInitialize(
       const LayersId& aRootLayerTreeId) override;
-  mozilla::ipc::IPCResult RecvInitAPZInputBridge(
-      Endpoint<PAPZInputBridgeParent>&& aEndpoint) override;
-  mozilla::ipc::IPCResult RecvInitUiCompositorController(
-      Endpoint<PUiCompositorControllerParent>&& aEndpoint) override;
   mozilla::ipc::IPCResult RecvWillClose() override;
   mozilla::ipc::IPCResult RecvPause() override;
   mozilla::ipc::IPCResult RecvRequestFxrOutput() override;
