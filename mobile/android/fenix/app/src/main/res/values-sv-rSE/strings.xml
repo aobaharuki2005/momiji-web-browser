@@ -1910,6 +1910,8 @@
   <string name="bookmark_delete_folder_content_description">Ta bort mapp</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Sök bokmärken</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">Sök mappar</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Objektmeny för %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1928,6 +1930,8 @@
   <string name="bookmark_empty_list_folder_description">Lägg till bokmärken när du surfar så att du kan hitta dina favoritplatser senare.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Ny mapp</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">Flyttade %1$s till %2$s</string>
   <!--
     Site Permissions
 

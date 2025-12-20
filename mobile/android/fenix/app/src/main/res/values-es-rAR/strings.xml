@@ -1910,6 +1910,8 @@
   <string name="bookmark_delete_folder_content_description">Borrar carpeta</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Buscar en marcadores</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">Buscar carpetas</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Menú ítem para %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1928,6 +1930,8 @@
   <string name="bookmark_empty_list_folder_description">Agregá marcadores al navegar para poder encontrar tus sitios favoritos más tarde.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Nueva carpeta</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">Movido %1$s a %2$s</string>
   <!--
     Site Permissions
 

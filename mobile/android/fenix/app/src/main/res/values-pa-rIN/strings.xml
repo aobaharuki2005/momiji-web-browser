@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">ਆਪਣੇ ਸਾਰੇ ਡਿਵਾਈਸਾਂ ਤੋਂ ਸਿੰਕ ਕੀਤੀਆਂ ਟੈਬਾਂ ਦਾ ਇੰਤਜ਼ਾਮ ਕਰਨ ਲਈ ਸਾਈਨ ਇਨ ਕਰੋ।</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">ਸਾਈਨ ਇਨ</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">ਸਾਰੇ ਕਿੱਸੇ</string>
   <!--
     Home - Bookmarks
 
@@ -1465,6 +1467,8 @@
   <string name="tab_drawer_fab_content">ਪ੍ਰਾਈਵੇਟ</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">ਸਿੰਕ</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">ਆਪਣੀਆਂ ਟੈਬਾਂ ਨੂੰ ਲੱਭੋ</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">ਸਾਰੀਆਂ ਟੈਬਾਂ ਸਾਂਝੀਆਂ ਕਰੋ</string>
   <!-- Text shown in the menu to view recently closed tabs -->
@@ -1477,6 +1481,14 @@
   <string name="tab_tray_menu_tab_settings">ਟੈਬ ਸੈਟਿੰਗਾਂ</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">ਸਾਰੀਆਂ ਟੈਬਾਂ ਬੰਦ ਕਰੋ</string>
+  <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_title">ਸਾਰੀਆਂ ਟੈਬਾਂ ਬੰਦ ਕਰਨੀਆਂ ਹਨ?</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">ਇਸ ਨਾਲ ਸਾਰੀਆਂ ਖੁੱਲ੍ਹੀਆਂ ਟੈਬਾਂ ਬੰਦ ਹੋਣਗੀਆਂ।</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">ਟੈਬਾਂ ਨੂੰ ਬੰਦ ਕਰੋ</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">ਰੱਦ ਕਰੋ</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">ਬੁੱਕਮਾਰਕ</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
@@ -1505,6 +1517,8 @@
   <string name="close_tab_title">%s ਟੈਬ ਬੰਦ ਕਰੋ</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">ਟੈਬ ਮੇਨੂ ਖੋਲ੍ਹੋ</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">ਟੈਬ ਮੈਨੇਜਰ ਉੱਤੇ ਵਾਪਸ ਜਾਓ</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">ਟੈਬਾਂ ਨੂੰ ਭੰਡਾਰ ਵਿੱਚ ਸੰਭਾਲੋ</string>
   <!-- Text for the menu button to delete a collection -->
@@ -1521,6 +1535,8 @@
   <string name="delete_from_history">ਅਤੀਤ ਵਿੱਚੋਂ ਹਟਾਓ</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (ਪ੍ਰਾਈਵੇਟ ਮੋਡ)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">ਟੈਬ ਖੋਜ ਨੂੰ ਖੋਲ੍ਹੋ</string>
   <!--
     History
 
@@ -1894,6 +1910,8 @@
   <string name="bookmark_delete_folder_content_description">ਫੋਲਡਰ ਨੂੰ ਹਟਾਓ</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">ਬੁੱਕਮਾਰਕ ਖੋਜੋ</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">ਫੋਲਡਰਾਂ ਨੂੰ ਲੱਭੋ</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">%s ਲਈ ਆਈਟਮ ਮੇਨੂ</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1912,6 +1930,8 @@
   <string name="bookmark_empty_list_folder_description">ਜਦ ਤੁਸੀਂ ਬਰਾਊਜ਼ ਕਰੋਂ ਤਾਂ ਬੁੱਕਮਾਰਕਾਂ ਨੂੰ ਜੋੜੋ ਤਾਂ ਕਿ ਆਪਣੀਆਂ ਮਨਪਸੰਦ ਸਾਈਟਾਂ ਨੂੰ ਬਾਅਦ ਵਿੱਚ ਲੱਭ ਸਕੋ।</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">ਨਵਾਂ ਫੋਲਡਰ</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">%1$s ਨੂੰ %2$s ਉੱਤੇ ਭੇਜਿਆ ਗਿਆ</string>
   <!--
     Site Permissions
 
@@ -2683,6 +2703,10 @@
   <string name="edit_login_navigate_back_button_content_description">ਪਿੱਛੇ ਵੱਲ ਨੈਵੀਗੇਟ ਕਰੋ</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">ਲਾਗਇਨ ਨੂੰ ਸੋਧੋ</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">ਨਵਾਂ ਲਾਗਇਨ ਜੋੜੋ</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">ਖੋਜ ਲਿਖਤ ਨੂੰ ਮਿਟਾਓ</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">ਸਾਈਟ ਨੂੰ ਬਰਾਊਜ਼ਰ ਚ ਖੋਲ੍ਹੋ</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -3922,4 +3946,8 @@
   <string name="terms_of_use_prompt_accept">ਮਨਜ਼ੂਰ</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">ਮੈਨੂੰ ਬਾਅਦ ਵਿੱਚ ਚੇਤੇ ਕਰਵਾਓ</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">ਹੋਰ ਜਾਣੋ</string>
 </resources>

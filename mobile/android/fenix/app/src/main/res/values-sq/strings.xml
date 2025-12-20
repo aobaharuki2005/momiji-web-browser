@@ -61,6 +61,8 @@
   <string name="tab_manager_empty_synced_tabs_page_description">Bëni hyrjen në llogari, që të administroni skeda të njëkohësuara nga krejt pajisjet tuaja.</string>
   <!-- The action text displayed on the synced tabs page when the user is not logged into an account, prompting the user to sign into their account. When clicked, it takes the user to the account sign-in flow. -->
   <string name="tab_manager_empty_synced_tabs_page_sign_in_cta">Hyni</string>
+  <!-- Text for the button used to show all stories -->
+  <string name="homepage_all_stories">Krejt historitë</string>
   <!--
     Home - Bookmarks
 
@@ -1471,6 +1473,12 @@
   <string name="tab_tray_menu_tab_settings">Rregullime skedash</string>
   <!-- Text shown in the menu for closing all tabs -->
   <string name="tab_tray_menu_item_close">Mbylli krejt skedat</string>
+  <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
+  <string name="tab_manager_close_all_tabs_dialog_body">Kjo do të mbyllë krejt skedat e hapura.</string>
+  <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_confirm">Mbylli skedat</string>
+  <!-- Text shown on the cancel button in the Close all tabs confirmation dialog -->
+  <string name="tab_manager_close_all_tabs_dialog_cancel">Anuloje</string>
   <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
   <string name="tab_tray_multiselect_menu_item_bookmark">Faqeruaji</string>
   <!-- Content description (not visible, for screen readers etc.): Bookmarks selected tabs. -->
@@ -1499,6 +1507,8 @@
   <string name="close_tab_title">Mbylle skedën %s</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">Menu skedash të hapura</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">Kthehuni te përgjegjës skedash</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">Ruaj skeda në koleksion</string>
   <!-- Text for the menu button to delete a collection -->
@@ -1888,6 +1898,8 @@
   <string name="bookmark_delete_folder_content_description">Fshije dosjen</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Kërkoni te faqerojtësit</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">Kërko në dosje</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Menu Elementësh për %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1906,6 +1918,8 @@
   <string name="bookmark_empty_list_folder_description">Shtoni faqerojtës teksa shfletoni, që të mund të gjeni më vonë sajtet tuaj të parapëlqyer.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Dosje e re</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">U kalua %1$s te %2$s</string>
   <!--
     Site Permissions
 
@@ -2677,6 +2691,10 @@
   <string name="edit_login_navigate_back_button_content_description">Shko mbrapsht</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">Përpunoni kredenciale hyrjesh</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">Shtoni kredenciale hyrjeje të re</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">Spastro tekst kërkimi</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Hape sajtin në shfletues</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -2743,8 +2761,12 @@
   <string name="preferences_addresses_sync_addresses_across_devices">Njëkohëso adresa mes pajisjesh</string>
   <!-- Preference option for syncing addresses across devices. This is displayed when the user is signed into sync -->
   <string name="preferences_addresses_sync_addresses">Njëkohëso adresa</string>
+  <!-- Content description navigating back from autofill settings screen. -->
+  <string name="autofill_settings_navigate_back_button_content_description">Mbrapsht</string>
   <!-- Title of the "Add card" screen -->
   <string name="credit_cards_add_card">Shtoni kartë</string>
+  <!-- Content description for the "credit card feature" top bar back button -->
+  <string name="credit_cards_navigate_back_button_content_description">Shko mbrapsht</string>
   <!-- Title of the "Edit card" screen -->
   <string name="credit_cards_edit_card">Përpunoni kartën</string>
   <!-- The header for the card number of a credit card -->
@@ -2821,6 +2843,8 @@
   <string name="addresses_village_township" tools:ignore="UnusedResources">Fshat ose Lokalitet</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Island field, used in places like the Cayman Islands and the Bahamas if an address is located on a specific island. -->
   <string name="addresses_island" tools:ignore="UnusedResources">Ishull</string>
+  <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The Townland field, specific to Ireland is a specific type of land division used in rural areas. -->
+  <string name="addresses_townland" tools:ignore="UnusedResources">Komunë</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as secondary address information (below the country level, e.g. county) in Honk Kong, Sudan, Syria, Türkiye, and as sublocality (civil entity below a locality, e.g. district) in Korea. -->
   <string name="addresses_district" tools:ignore="UnusedResources">Distrikt</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. This specific field is used as a tertiary address information (below the state level, e.g. Tasmania in Australia -->
@@ -3906,4 +3930,16 @@
   <string name="terms_of_use_prompt_accept">Pranoje</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Kujtoma më vonë</string>
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">I përditësuam %1$s tona për të pasqyruar veçoritë më të reja në Firefox. %2$s</string>
+  <!-- The first active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Shënim Mbi Privatësinë</string>
+  <!-- The second active link used in privacy_notice_updated_homepage_message -->
+  <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Mësoni më tepër</string>
 </resources>
