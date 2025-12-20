@@ -207,10 +207,8 @@ class MessageLogger:
             raise ValueError
 
     def _fix_subtest_name(self, message):
-        """Ensure test_status messages have a subtest field and convert it to a string"""
-        if message.get("action") == "test_status" and "subtest" not in message:
-            message["subtest"] = None
-        elif message.get("subtest") is not None:
+        """Make sure subtest name is a string"""
+        if message.get("subtest") is not None:
             message["subtest"] = str(message["subtest"])
 
     def _fix_test_name(self, message):
