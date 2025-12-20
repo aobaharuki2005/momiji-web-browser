@@ -790,8 +790,6 @@ class HTMLInputElement final : public TextControlElement,
    */
   void SetOpenState(bool aIsOpen);
 
-  void OpenColorPicker();
-
   /*
    * Called from datetime input box binding when inner text fields are focused
    * or blurred.
@@ -812,16 +810,6 @@ class HTMLInputElement final : public TextControlElement,
   double GetStepBaseAsDouble() { return GetStepBase().toDouble(); }
   double GetMinimumAsDouble() { return GetMinimum().toDouble(); }
   double GetMaximumAsDouble() { return GetMaximum().toDouble(); }
-
-  /**
-   * Return the current value as InputPickerColor.
-   */
-  void GetColor(InputPickerColor& aValue);
-
-  /**
-   * Converts the InputPickerColor into a string and set it as user input.
-   */
-  void SetUserInputColor(const InputPickerColor& aValue);
 
   void StartNumberControlSpinnerSpin();
   enum SpinnerStopState { eAllowDispatchingEvents, eDisallowDispatchingEvents };
