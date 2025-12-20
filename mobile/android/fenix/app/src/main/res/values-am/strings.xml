@@ -510,6 +510,10 @@
   <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Firfoxን እንዴት እንዳገኙት እና እንደሚጠቀሙበት ከMozilla የግብይት አጋሮች ጋር ያጋሩ። ይህ ውሂብ በጭራሽ አይሸጥም።</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">ይስማሙ እና ማሰስ ይጀምሩ</string>
+  <!-- ==== Project "Nova" onboarding strings ==== -->
+
+  <!-- ==== End of Project "Nova" onboarding strings ==== -->
+
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
   <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">የመሳሪያ አሞሌ አቀማመጥ ይምረጡ</string>
   <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -3401,4 +3405,9 @@
   <string name="review_prompt_positive_button">በጣም ጥሩ ነው!</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">አስተያየት ይተው</string>
+  <!-- ==== Terms of use pop up prompt ==== -->
+
+  <!-- ==== Experiment strings. ==== -->
+
+  <!-- ==== End of Terms of use popup prompt. ==== -->
 </resources>
