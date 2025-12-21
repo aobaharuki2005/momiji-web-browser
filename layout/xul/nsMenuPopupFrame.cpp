@@ -332,6 +332,7 @@ void nsMenuPopupFrame::CreateWidget() {
     return;
   }
   mWidget->SetWidgetListener(this);
+  mWidget->EnableDragDrop(true);
   // TODO(emilio): Make all widgets look at widgetData.mTransparencyMode
   // (maybe in BaseCreate?) then remove this call.
   mWidget->SetTransparencyMode(mode);
