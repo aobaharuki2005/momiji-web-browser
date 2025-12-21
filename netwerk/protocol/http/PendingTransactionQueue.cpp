@@ -267,7 +267,7 @@ void PendingTransactionQueue::Compact() {
 }
 
 void PendingTransactionQueue::CancelAllTransactions(nsresult reason) {
-  AutoTArray<nsHttpTransaction*, 64> toClose;
+  AutoTArray<RefPtr<nsHttpTransaction>, 64> toClose;
   for (const auto& info : mUrgentStartQ) {
     toClose.AppendElement(info->Transaction());
   }
@@ -283,7 +283,7 @@ void PendingTransactionQueue::CancelAllTransactions(nsresult reason) {
   mPendingTransactionTable.Clear();
 
   for (auto trans : toClose) {
-    LOG(("PendingTransactionQueue::CancelAllTransactions %p\n", trans));
+    LOG(("PendingTransactionQueue::CancelAllTransactions %p\n", trans.get()));
     trans->Close(reason);
   }
 }
