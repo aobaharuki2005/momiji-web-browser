@@ -388,8 +388,7 @@ class nsIContent : public nsINode {
   // Handles Shadow-DOM related state tracking. Meant to be called near the
   // beginning of UnbindFromTree(), before the node has lost the reference to
   // its parent.
-  inline void HandleShadowDOMRelatedRemovalSteps(bool aNullParent,
-                                                 bool aInBatch);
+  inline void HandleShadowDOMRelatedRemovalSteps(bool aNullParent);
 
  public:
   /**

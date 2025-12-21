@@ -824,7 +824,7 @@ nsINode* ShadowRoot::CreateElementAndAppendChildAt(nsINode& aParentNode,
   return aParentNode.AppendChild(*node, rv);
 }
 
-void ShadowRoot::MaybeUnslotHostChild(nsIContent& aChild, bool aInBatch) {
+void ShadowRoot::MaybeUnslotHostChild(nsIContent& aChild) {
   // Need to null-check the host because we may be unlinked already.
   MOZ_ASSERT(!GetHost() || aChild.GetParent() == GetHost());
 
@@ -837,19 +837,14 @@ void ShadowRoot::MaybeUnslotHostChild(nsIContent& aChild, bool aInBatch) {
                         "How did aChild end up assigned to a slot?");
   // If the slot is going to start showing fallback content, we need to tell
   // layout about it.
-  if ((aInBatch || slot->AssignedNodes().Length() == 1) &&
-      slot->HasChildren()) {
+  if (slot->AssignedNodes().Length() == 1 && slot->HasChildren()) {
     InvalidateStyleAndLayoutOnSubtree(slot);
   }
 
   slot->EnqueueSlotChangeEvent();
-  if (aInBatch) {
-    slot->ClearAssignedNodes();
-  } else {
-    slot->RemoveAssignedNode(aChild);
-    if (mIsDetailsShadowTree && aChild.IsHTMLElement(nsGkAtoms::summary)) {
-      MaybeReassignMainSummary(SummaryChangeReason::Deletion);
-    }
+  slot->RemoveAssignedNode(aChild);
+  if (mIsDetailsShadowTree && aChild.IsHTMLElement(nsGkAtoms::summary)) {
+    MaybeReassignMainSummary(SummaryChangeReason::Deletion);
   }
 }
 
