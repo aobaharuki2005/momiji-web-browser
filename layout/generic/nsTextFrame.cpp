@@ -3333,6 +3333,10 @@ static bool IsJustifiableCharacter(const nsStyleText* aTextStyle,
   }
 
   if (justifyStyle == StyleTextJustify::InterCharacter) {
+    char32_t u = aBuffer.ScalarValueAt(AssertedCast<uint32_t>(aPos));
+    if (intl::UnicodeProperties::IsCursiveScript(u)) {
+      return false;
+    }
     return true;
   } else if (justifyStyle == StyleTextJustify::InterWord) {
     return false;

@@ -335,6 +335,15 @@ class UnicodeProperties final {
            sc == Script::SUNDANESE || sc == Script::LAO;
   }
 
+  // Return true if aChar belongs to a cursive script for which inter-character
+  // justification should be disabled.
+  static bool IsCursiveScript(char32_t aChar) {
+    Script sc = GetScriptCode(aChar);
+    return sc == Script::ARABIC || sc == Script::SYRIAC || sc == Script::NKO ||
+           sc == Script::MANDAIC || sc == Script::MONGOLIAN ||
+           sc == Script::PHAGS_PA || sc == Script::HANIFI_ROHINGYA;
+  }
+
   // The code point which has the most script extensions is 0x0965, which has 21
   // script extensions, so choose the vector size as 32 to prevent heap
   // allocation.
