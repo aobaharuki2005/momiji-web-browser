@@ -1450,7 +1450,8 @@ class UrlbarInputTestUtils {
       "shown"
     );
     let rebuildPromise = lazy.BrowserTestUtils.waitForEvent(popup, "rebuild");
-    this.EventUtils.synthesizeMouseAtCenter(button, {}, win);
+    // Ensure the pop-up opens.
+    button.open = true;
     await Promise.all([promiseMenuOpen, rebuildPromise]);
 
     return popup;
