@@ -495,6 +495,10 @@
   <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Partejatz cossí avètz descobèrt Firefox e que l’utilizatz, amb los partenaris marketing de Mozilla. Aquestas donadas son pas jamai vendudas.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Acceptar e començar de navegar</string>
+  <!-- ==== Project "Nova" onboarding strings ==== -->
+
+  <!-- ==== End of Project "Nova" onboarding strings ==== -->
+
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
   <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">Causissètz ont conhar la barra d’aisinas</string>
   <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -3553,11 +3557,9 @@
   <string name="settings_search_clear_recent_searches_message">Tot escafar</string>
   <!-- Section header for recent search results -->
   <string name="settings_search_recent_searches_section_header">Resultats de recèrca recents</string>
-  <!--
-    Terms of use pop up prompt
+  <!-- ==== Terms of use pop up prompt ==== -->
 
-    Title for the pop up prompt
-  -->
+  <!-- Title for the pop up prompt -->
   <string name="terms_of_use_prompt_title">I a de nòu</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Condicions d’utilizacion</string>
@@ -3569,4 +3571,7 @@
   <string name="terms_of_use_prompt_accept">Acceptar</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Lo me remembrar mai tard</string>
+  <!-- ==== Experiment strings. ==== -->
+
+  <!-- ==== End of Terms of use popup prompt. ==== -->
 </resources>

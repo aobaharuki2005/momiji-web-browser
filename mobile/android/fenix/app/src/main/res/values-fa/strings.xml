@@ -586,6 +586,10 @@
   <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">نحوه آشنایی خود با Firefox و اینکه از آن استفاده می‌کنید را با همکاران بازاریابی Mozilla هم‌رسانی کنید. این داده‌ها هرگز فروخته نمی‌شوند.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">اعلام موافقت و آغاز مرور</string>
+  <!-- ==== Project "Nova" onboarding strings ==== -->
+
+  <!-- ==== End of Project "Nova" onboarding strings ==== -->
+
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
   <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">انتخاب محل قرارگیری نوار ابزار</string>
   <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -3470,6 +3474,11 @@
   <string name="private_tab_cfr_negative">خیر، متشکرم</string>
   <!-- Positive button text for the contextual feature recommendation (CFR) enabling screen lock for private tabs -->
   <string name="private_tab_cfr_positive">قفل کردن زبانه‌ها</string>
+  <!-- ==== Terms of use pop up prompt ==== -->
+
   <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
   <string name="terms_of_use_prompt_link_learn_more">بیشتر بدانید</string>
+  <!-- ==== Experiment strings. ==== -->
+
+  <!-- ==== End of Terms of use popup prompt. ==== -->
 </resources>

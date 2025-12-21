@@ -594,6 +594,10 @@
   <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Bḍu amek i d-tufiḍ Firefox, daɣen i t-tesseqdaceḍ, akked yicriken n ulzuz n Mozilla. Isefka-a werǧin ttnuzun.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Qbel, syen bdu tunigin</string>
+  <!-- ==== Project "Nova" onboarding strings ==== -->
+
+  <!-- ==== End of Project "Nova" onboarding strings ==== -->
+
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
   <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">Fren adeg deg ufeggag n yifecka</string>
   <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -3653,6 +3657,8 @@
   <string name="review_prompt_positive_button">Igerrez!</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Efk-d tikti-k</string>
+  <!-- ==== Terms of use pop up prompt ==== -->
+
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Tiwtilin n useqdec</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
@@ -3663,4 +3669,7 @@
   <string name="terms_of_use_prompt_accept">Qbel</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Smekti-y-id ticki</string>
+  <!-- ==== Experiment strings. ==== -->
+
+  <!-- ==== End of Terms of use popup prompt. ==== -->
 </resources>
