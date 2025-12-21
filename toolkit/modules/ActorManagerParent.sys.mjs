@@ -768,6 +768,23 @@ if (AppConstants.platform != "android") {
     remoteTypes: ["privilegedabout"],
     enablePreference: "browser.translations.enable",
   };
+
+  JSWINDOWACTORS.ColorPicker = {
+    parent: {
+      esModuleURI: "moz-src:///toolkit/actors/ColorPickerParent.sys.mjs",
+    },
+
+    child: {
+      esModuleURI: "moz-src:///toolkit/actors/ColorPickerChild.sys.mjs",
+      events: {
+        MozOpenColorPicker: {},
+        MozCloseColorPicker: {},
+      },
+    },
+
+    includeChrome: true,
+    allFrames: true,
+  };
 }
 
 export var ActorManagerParent = {
