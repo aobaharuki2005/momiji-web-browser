@@ -692,10 +692,14 @@
   <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">Чӣ тавр мо маълумотро истифода мебарем</string>
   <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Огоҳиҳо барои кори бехатартар бо «Firefox» ба шумо кумак мекунанд</string>
+  <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">Навтарин хусусиятҳои махфиятро дар «Firefox» пай баред, то тавонед ҳамеша оид ба навтарин хусусиятҳои муҳофизат бохабар бошед.</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Фаъол кардани огоҳномаҳо</string>
   <!-- "Add search widget" onboarding title. -->
   <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Ҳар як ҷустуҷӯро боз ҳам махфитар гардонед</string>
+  <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">Ҳар як ҷустуҷӯи навро аз экрани асосии телефони худ оғоз кунед ва донед, ки муҳофизати худкор аз ҷониби «Firefox» шуморо пуштибонӣ мекунад.</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Илова кардани виҷети «Firefox»</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
