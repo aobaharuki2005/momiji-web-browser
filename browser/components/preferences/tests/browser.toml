@@ -111,7 +111,9 @@ skip-if = [
 
 ["browser_etp_advanced.js"]
 
-["browser_etp_customize.js"]
+["browser_etp_customize_1.js"]
+
+["browser_etp_customize_2.js"]
 
 ["browser_etp_exceptions_dialog.js"]
 

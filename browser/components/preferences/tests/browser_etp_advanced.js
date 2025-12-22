@@ -12,82 +12,11 @@ const CONVENIENCE_PREF =
 const PERMISSIONS_DIALOG_URL =
   "chrome://browser/content/preferences/dialogs/permissions.xhtml";
 
-function getControl(doc, id) {
-  let control = doc.getElementById(id);
-  ok(control, `Control ${id} exists`);
-  return control;
-}
-
-function synthesizeClick(el) {
-  let target = el.buttonEl ?? el.inputEl ?? el;
-  target.scrollIntoView({ block: "center" });
-  EventUtils.synthesizeMouseAtCenter(target, {}, target.ownerGlobal);
-}
-
-function getControlWrapper(doc, id) {
-  return getControl(doc, id).closest("setting-control");
-}
-
-async function clickBaselineCheckboxWithConfirm(
-  doc,
-  controlId,
-  prefName,
-  expectedValue,
-  buttonNumClick
-) {
-  let checkbox = getControl(doc, controlId);
-
-  let promptPromise = PromptTestUtils.handleNextPrompt(
-    gBrowser.selectedBrowser,
-    { modalType: Services.prompt.MODAL_TYPE_CONTENT },
-    { buttonNumClick }
-  );
-
-  let prefChangePromise = null;
-  if (buttonNumClick === 1) {
-    prefChangePromise = waitForAndAssertPrefState(
-      prefName,
-      expectedValue,
-      `${prefName} updated`
-    );
-  }
-
-  synthesizeClick(checkbox);
-
-  await promptPromise;
-
-  if (prefChangePromise) {
-    await prefChangePromise;
-  }
-
-  is(
-    checkbox.checked,
-    expectedValue,
-    `Checkbox ${controlId} should be ${expectedValue}`
-  );
-
-  return checkbox;
-}
-
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.settings-redesign.enabled", true]],
   });
 });
-
-async function openEtpPage() {
-  await openPreferencesViaOpenPreferencesAPI("etp", { leaveOpen: true });
-  let doc = gBrowser.contentDocument;
-  await BrowserTestUtils.waitForCondition(
-    () => doc.getElementById("contentBlockingCategoryRadioGroup"),
-    "Wait for the ETP advanced radio group to render"
-  );
-  return {
-    win: gBrowser.contentWindow,
-    doc,
-    tab: gBrowser.selectedTab,
-  };
-}
 
 // Verifies category radios reflect pref changes and the customize entry point navigates correctly.
 add_task(async function test_etp_category_radios_and_customize_navigation() {
@@ -198,7 +127,7 @@ add_task(async function test_strict_baseline_checkbox_requires_confirmation() {
   ok(baselineCheckbox.checked, "Baseline checkbox starts checked");
 
   info("Cancel the confirmation dialog and ensure checkbox stays checked");
-  await clickBaselineCheckboxWithConfirm(
+  await clickEtpBaselineCheckboxWithConfirm(
     doc,
     "etpAllowListBaselineEnabled",
     BASELINE_PREF,
@@ -211,7 +140,7 @@ add_task(async function test_strict_baseline_checkbox_requires_confirmation() {
   );
 
   info("Confirm the dialog to disable the baseline allow list");
-  await clickBaselineCheckboxWithConfirm(
+  await clickEtpBaselineCheckboxWithConfirm(
     doc,
     "etpAllowListBaselineEnabled",
     BASELINE_PREF,
