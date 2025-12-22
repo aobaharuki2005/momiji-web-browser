@@ -4327,7 +4327,7 @@ const TopicsWidget = (0,external_ReactRedux_namespaceObject.connect)(state => ({
  * @param type
  * @param showAdReporting
  * @returns {Element}
- * @constructor
+ * @class
  */
 function AdBannerContextMenu({
   dispatch,
@@ -4533,7 +4533,7 @@ const PREF_PROMOCARD_VISIBLE = "discoverystream.promoCard.visible";
  * @param type
  * @param prefs
  * @returns {Element}
- * @constructor
+ * @class
  */
 const AdBanner = ({
   spoc,
