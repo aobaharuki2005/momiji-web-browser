@@ -296,6 +296,12 @@ def get_branch_repo(config):
     ]
 
 
+def get_project_alias(config):
+    if config.params["tasks_for"].startswith("github-pull-request"):
+        return f"{config.params['project']}-pr"
+    return config.params["project"]
+
+
 @memoize
 def get_default_priority(graph_config, project):
     return evaluate_keyed_by(
@@ -1885,6 +1891,8 @@ def add_generic_index_routes(config, task):
     except KeyError:
         pass
 
+    subs["project"] = get_project_alias(config)
+
     project = config.params.get("project")
 
     for tpl in V2_ROUTE_TEMPLATES:
@@ -1925,6 +1933,7 @@ def add_shippable_index_routes(config, task):
         subs["branch_git_rev"] = get_branch_git_rev(config)
     except KeyError:
         pass
+    subs["project"] = get_project_alias(config)
 
     for tpl in V2_SHIPPABLE_TEMPLATES:
         try:
@@ -2003,6 +2012,7 @@ def add_shippable_l10n_index_routes(config, task, force_locale=None):
     subs["product"] = index["product"]
     subs["trust-domain"] = config.graph_config["trust-domain"]
     subs["branch_rev"] = get_branch_rev(config)
+    subs["project"] = get_project_alias(config)
 
     locales = task["attributes"].get(
         "chunk_locales", task["attributes"].get("all_locales")
@@ -2279,11 +2289,7 @@ def build_task(config, tasks):
             branch_rev = get_branch_rev(config)
 
             routes.append(
-                "{}.v2.{}.{}".format(
-                    TREEHERDER_ROUTE_ROOT,
-                    config.params["project"],
-                    branch_rev,
-                )
+                f"{TREEHERDER_ROUTE_ROOT}.v2.{get_project_alias(config)}.{branch_rev}"
             )
 
         if "deadline-after" not in task:
