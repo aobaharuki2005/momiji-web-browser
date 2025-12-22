@@ -758,13 +758,13 @@
           }
         } else if (isGrid) {
           movingTab.style.top = rect.top - pinnedRect.top + "px";
-          movingTab.style.left = rect.left + "px";
+          movingTab.style.left = rect.left - movingTabsOffsetX + "px";
         } else if (this._tabbrowserTabs.verticalMode) {
           movingTab.style.top = rect.top - tabContainerRect.top + "px";
         } else if (this._rtlMode) {
-          movingTab.style.left = rect.left + "px";
+          movingTab.style.left = rect.left - movingTabsOffsetX + "px";
         } else {
-          movingTab.style.left = rect.left + "px";
+          movingTab.style.left = rect.left - movingTabsOffsetX + "px";
         }
       }
 
