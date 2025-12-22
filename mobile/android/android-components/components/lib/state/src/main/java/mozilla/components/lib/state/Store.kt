@@ -6,7 +6,6 @@ package mozilla.components.lib.state
 
 import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
-import mozilla.components.lib.state.internal.ReducerChainBuilder
 import java.lang.ref.WeakReference
 import java.util.Collections
 import java.util.concurrent.ConcurrentHashMap
@@ -23,10 +22,10 @@ import java.util.concurrent.ConcurrentHashMap
  */
 open class Store<S : State, A : Action>(
     initialState: S,
-    reducer: Reducer<S, A>,
-    middleware: List<Middleware<S, A>> = emptyList(),
+    private val reducer: Reducer<S, A>,
+    private val middleware: List<Middleware<S, A>> = emptyList(),
 ) {
-    private val reducerChainBuilder = ReducerChainBuilder(reducer, middleware)
+    private var reducerChain: ((A) -> Unit)? = null
 
     @VisibleForTesting
     internal val subscriptions = Collections.newSetFromMap(ConcurrentHashMap<Subscription<S, A>, Boolean>())
@@ -70,26 +69,24 @@ open class Store<S : State, A : Action>(
      *
      * @return Unit. Previously this returned a new Job that was launched here, but this no longer happens.
      */
-    fun dispatch(action: A) =
-        synchronized(this@Store) {
-            reducerChainBuilder.get(this@Store).invoke(action)
+    fun dispatch(action: A) {
+        synchronized(this) {
+            if (reducerChain == null) {
+                var chain: (A) -> Unit = { action ->
+                    val newState = reducer(state, action)
+                    if (newState != currentState) {
+                        currentState = newState
+                        subscriptions.forEach { subscription -> subscription.dispatch(newState) }
+                    }
+                }
+                middleware.reversed().forEach { middleware ->
+                    val next = chain
+                    chain = { action -> middleware(this, next, action) }
+                }
+                reducerChain = chain
+            }
+            reducerChain?.invoke(action)
         }
-
-    /**
-     * Transitions from the current [State] to the passed in [state] and notifies all observers.
-     */
-    internal fun transitionTo(state: S) {
-        if (state == currentState) {
-            // Nothing has changed.
-            return
-        }
-
-        currentState = state
-        subscriptions.forEach { subscription -> subscription.dispatch(state) }
-    }
-
-    private fun removeSubscription(subscription: Subscription<S, A>) {
-        subscriptions.remove(subscription)
     }
 
     /**
@@ -146,7 +143,7 @@ open class Store<S : State, A : Action>(
         fun unsubscribe() {
             active = false
 
-            storeReference.get()?.removeSubscription(this)
+            storeReference.get()?.subscriptions?.remove(this)
             storeReference.clear()
 
             binding?.unbind()
