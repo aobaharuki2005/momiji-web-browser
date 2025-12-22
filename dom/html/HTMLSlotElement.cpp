@@ -113,7 +113,7 @@ static void FlattenAssignedNodes(HTMLSlotElement* aSlot,
     return;
   }
 
-  const Span<const RefPtr<nsINode>> assignedNodes = aSlot->AssignedNodes();
+  const nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
 
   // If assignedNodes is empty, use children of slot as fallback content.
   if (assignedNodes.IsEmpty()) {
@@ -148,7 +148,7 @@ void HTMLSlotElement::AssignedNodes(const AssignedNodesOptions& aOptions,
     return FlattenAssignedNodes(this, aNodes);
   }
 
-  aNodes.AppendElements(mAssignedNodes.AsSpan());
+  aNodes = mAssignedNodes.Clone();
 }
 
 void HTMLSlotElement::AssignedElements(const AssignedNodesOptions& aOptions,
@@ -160,6 +160,10 @@ void HTMLSlotElement::AssignedElements(const AssignedNodesOptions& aOptions,
       aElements.AppendElement(assignedNode->AsElement());
     }
   }
+}
+
+const nsTArray<RefPtr<nsINode>>& HTMLSlotElement::AssignedNodes() const {
+  return mAssignedNodes;
 }
 
 const nsTArray<nsINode*>& HTMLSlotElement::ManuallyAssignedNodes() const {
@@ -315,7 +319,7 @@ void HTMLSlotElement::AppendAssignedNode(nsIContent& aNode) {
 void HTMLSlotElement::RecalculateHasSlottedState() {
   bool hasSlotted = false;
   // Find the first node that makes this a slotted element.
-  for (const RefPtr<nsINode>& assignedNode : mAssignedNodes.AsSpan()) {
+  for (const RefPtr<nsINode>& assignedNode : mAssignedNodes) {
     if (auto* slot = HTMLSlotElement::FromNode(assignedNode)) {
       if (slot->IsInShadowTree() &&
           !slot->State().HasState(ElementState::HAS_SLOTTED)) {
@@ -348,7 +352,7 @@ void HTMLSlotElement::RemoveAssignedNode(nsIContent& aNode) {
 }
 
 void HTMLSlotElement::ClearAssignedNodes() {
-  for (RefPtr<nsINode>& node : mAssignedNodes.AsSpan()) {
+  for (RefPtr<nsINode>& node : mAssignedNodes) {
     MOZ_ASSERT(!node->AsContent()->GetAssignedSlot() ||
                    node->AsContent()->GetAssignedSlot() == this,
                "How exactly?");

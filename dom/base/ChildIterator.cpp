@@ -60,13 +60,10 @@ Maybe<uint32_t> FlattenedChildIterator::GetIndexOf(
     const nsINode* aParent, const nsINode* aPossibleChild) {
   if (const auto* element = Element::FromNode(aParent)) {
     if (const auto* slot = HTMLSlotElement::FromNode(element)) {
-      const Span assigned = slot->AssignedNodes();
-      if (!assigned.IsEmpty()) {
-        auto index = assigned.IndexOf(aPossibleChild);
-        if (index == assigned.npos) {
-          return Nothing();
-        }
-        return Some(index);
+      const auto& assignedNodes = slot->AssignedNodes();
+      if (!assignedNodes.IsEmpty()) {
+        auto index = assignedNodes.IndexOf(aPossibleChild);
+        return index == assignedNodes.NoIndex ? Nothing() : Some(index);
       }
     } else if (auto* shadowRoot = element->GetShadowRoot()) {
       return shadowRoot->ComputeIndexOf(aPossibleChild);
@@ -78,7 +75,8 @@ Maybe<uint32_t> FlattenedChildIterator::GetIndexOf(
 nsIContent* FlattenedChildIterator::GetNextChild() {
   // If we're already in the inserted-children array, look there first
   if (mParentAsSlot) {
-    const Span assignedNodes = mParentAsSlot->AssignedNodes();
+    const nsTArray<RefPtr<nsINode>>& assignedNodes =
+        mParentAsSlot->AssignedNodes();
     if (mIsFirst) {
       mIsFirst = false;
       MOZ_ASSERT(mIndexInInserted == 0);
@@ -137,7 +135,8 @@ nsIContent* FlattenedChildIterator::GetPreviousChild() {
     return nullptr;
   }
   if (mParentAsSlot) {
-    const Span assignedNodes = mParentAsSlot->AssignedNodes();
+    const nsTArray<RefPtr<nsINode>>& assignedNodes =
+        mParentAsSlot->AssignedNodes();
     MOZ_ASSERT(mIndexInInserted <= assignedNodes.Length());
     if (mIndexInInserted == 0) {
       mIsFirst = true;

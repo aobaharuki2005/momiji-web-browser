@@ -160,12 +160,10 @@ void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent) {
   delete aAnonContent;
 }
 
-RustSpan<const nsINode* const> Gecko_GetAssignedNodes(const Element* aElement) {
+const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(
+    const Element* aElement) {
   MOZ_ASSERT(HTMLSlotElement::FromNode(aElement));
-  Span<const RefPtr<nsINode>> span =
-      static_cast<const HTMLSlotElement*>(aElement)->AssignedNodes();
-  return {reinterpret_cast<const nsINode* const*>(span.Elements()),
-          span.Length()};
+  return &static_cast<const HTMLSlotElement*>(aElement)->AssignedNodes();
 }
 
 void Gecko_GetQueryContainerSize(const Element* aElement, nscoord* aOutWidth,
@@ -1607,20 +1605,18 @@ void Gecko_ContentList_AppendAll(nsSimpleContentList* aList,
   }
 }
 
-RustSpan<const Element* const> Gecko_Document_GetElementsWithId(
-    const Document* aDoc, nsAtom* aId) {
+const nsTArray<Element*>* Gecko_Document_GetElementsWithId(const Document* aDoc,
+                                                           nsAtom* aId) {
   MOZ_ASSERT(aDoc);
   MOZ_ASSERT(aId);
-  auto span = aDoc->GetAllElementsForId(aId);
-  return {span.Elements(), span.Length()};
+  return aDoc->GetAllElementsForId(aId);
 }
 
-RustSpan<const Element* const> Gecko_ShadowRoot_GetElementsWithId(
+const nsTArray<Element*>* Gecko_ShadowRoot_GetElementsWithId(
     const ShadowRoot* aShadowRoot, nsAtom* aId) {
   MOZ_ASSERT(aShadowRoot);
   MOZ_ASSERT(aId);
-  auto span = aShadowRoot->GetAllElementsForId(aId);
-  return {span.Elements(), span.Length()};
+  return aShadowRoot->GetAllElementsForId(aId);
 }
 
 static StyleComputedMozPrefFeatureValue GetPrefValue(const nsCString& aPref) {

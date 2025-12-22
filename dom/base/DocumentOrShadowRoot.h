@@ -102,12 +102,10 @@ class DocumentOrShadowRoot {
    *
    * This is useful for stuff like QuerySelector optimization and such.
    */
-  Span<Element* const> GetAllElementsForId(
+  const nsTArray<Element*>* GetAllElementsForId(
       const IdentifierMapEntry::DependentAtomOrString& aElementId) const {
-    if (IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aElementId)) {
-      return entry->GetIdElements();
-    }
-    return {};
+    IdentifierMapEntry* entry = mIdentifierMap.GetEntry(aElementId);
+    return entry ? &entry->GetIdElements() : nullptr;
   }
 
   already_AddRefed<nsContentList> GetElementsByTagName(

@@ -617,11 +617,13 @@ nsIContent* ContentIteratorBase<NodeType>::GetDeepLastChild(
   nsIContent* node = aRoot;
 
   while (HTMLSlotElement* slot = HTMLSlotElement::FromNode(node)) {
-    auto assigned = slot->AssignedNodes();
     // The deep last child of a slot should be the last slotted element of it
-    if (!assigned.IsEmpty()) {
-      node = assigned[assigned.Length() - 1]->AsContent();
-      continue;
+    if (!slot->AssignedNodes().IsEmpty()) {
+      if (nsIContent* content =
+              nsIContent::FromNode(slot->AssignedNodes().LastElement())) {
+        node = content;
+        continue;
+      }
     }
     break;
   }
@@ -669,10 +671,13 @@ nsIContent* ContentIteratorBase<NodeType>::GetNextSibling(
       }
 
       // Next sibling of a slotted node should be the next slotted node
-      auto assigned = slot->AssignedNodes();
-      auto cur = assigned.IndexOf(aNode);
-      if (cur != assigned.npos && cur + 1 < assigned.Length()) {
-        return assigned[cur + 1]->AsContent();
+      auto currentIndex = slot->AssignedNodes().IndexOf(aNode);
+      if (currentIndex < slot->AssignedNodes().Length() - 1) {
+        nsINode* nextSlottedNode =
+            slot->AssignedNodes().ElementAt(currentIndex + 1);
+        if (nextSlottedNode->IsContent()) {
+          return nextSlottedNode->AsContent();
+        }
       }
       // Move on to assigned slot's next sibling
       aNode = slot;
@@ -734,10 +739,13 @@ nsIContent* ContentIteratorBase<NodeType>::GetPrevSibling(
         break;
       }
       // prev sibling of a slotted node should be the prev slotted node
-      auto assigned = slot->AssignedNodes();
-      auto cur = assigned.IndexOf(aNode);
-      if (cur != assigned.npos && cur != 0) {
-        return assigned[cur - 1]->AsContent();
+      auto currentIndex = slot->AssignedNodes().IndexOf(aNode);
+      if (currentIndex > 0) {
+        nsINode* prevSlottedNode =
+            slot->AssignedNodes().ElementAt(currentIndex - 1);
+        if (prevSlottedNode->IsContent()) {
+          return prevSlottedNode->AsContent();
+        }
       }
       aNode = slot;
     }

@@ -574,7 +574,7 @@ void IdentifierMapEntry::Traverse(
 }
 
 bool IdentifierMapEntry::IsEmpty() {
-  return mIdContentList.IsEmpty() && !mNameContentList &&
+  return mIdContentList->IsEmpty() && !mNameContentList &&
          !mDocumentNameContentList && !mChangeCallbacks && !mImageElement;
 }
 
@@ -623,11 +623,11 @@ void IdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
 
 void IdentifierMapEntry::AddIdElement(Element* aElement) {
   MOZ_ASSERT(aElement, "Must have element");
-  MOZ_ASSERT(!mIdContentList.Contains(nullptr), "Why is null in our list?");
+  MOZ_ASSERT(!mIdContentList->Contains(nullptr), "Why is null in our list?");
 
   size_t index = mIdContentList.Insert(*aElement);
   if (index == 0) {
-    Element* oldElement = mIdContentList.SafeElementAt(1, nullptr);
+    Element* oldElement = mIdContentList->SafeElementAt(1);
     FireChangeCallbacks(oldElement, aElement);
   }
 }
@@ -642,16 +642,15 @@ void IdentifierMapEntry::RemoveIdElement(Element* aElement) {
   // Only assert this in HTML documents for now as XUL does all sorts of weird
   // crap.
   NS_ASSERTION(!aElement->OwnerDoc()->IsHTMLDocument() ||
-                   mIdContentList.Contains(aElement),
+                   mIdContentList->Contains(aElement),
                "Removing id entry that doesn't exist");
 
   // XXXbz should this ever Compact() I guess when all the content is gone
   // we'll just get cleaned up in the natural order of things...
-  Element* currentElement = mIdContentList.SafeElementAt(0, nullptr);
+  Element* currentElement = mIdContentList->SafeElementAt(0);
   mIdContentList.RemoveElement(*aElement);
   if (currentElement == aElement) {
-    FireChangeCallbacks(currentElement,
-                        mIdContentList.SafeElementAt(0, nullptr));
+    FireChangeCallbacks(currentElement, mIdContentList->SafeElementAt(0));
   }
 }
 
@@ -665,7 +664,7 @@ void IdentifierMapEntry::SetImageElement(Element* aElement) {
 }
 
 void IdentifierMapEntry::ClearAndNotify() {
-  Element* currentElement = mIdContentList.SafeElementAt(0, nullptr);
+  Element* currentElement = mIdContentList->SafeElementAt(0);
   mIdContentList.Clear();
   if (currentElement) {
     FireChangeCallbacks(currentElement, nullptr);
@@ -11709,7 +11708,8 @@ void Document::RemoveColorSchemeMeta(HTMLMetaElement& aMeta) {
 void Document::RecomputeColorScheme() {
   auto oldColorScheme = mColorSchemeBits;
   mColorSchemeBits = 0;
-  for (const HTMLMetaElement* el : mColorSchemeMetaTags.AsSpan()) {
+  const nsTArray<HTMLMetaElement*>& elements = mColorSchemeMetaTags;
+  for (const HTMLMetaElement* el : elements) {
     nsAutoString content;
     if (!el->GetAttr(nsGkAtoms::content, content)) {
       continue;

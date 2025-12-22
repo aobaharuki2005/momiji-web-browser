@@ -259,17 +259,18 @@ void ShadowRoot::AddSlot(HTMLSlotElement* aSlot) {
 
   InvalidateStyleAndLayoutOnSubtree(aSlot);
 
-  HTMLSlotElement* oldSlot = currentSlots.SafeElementAt(1, nullptr);
+  HTMLSlotElement* oldSlot = currentSlots->SafeElementAt(1);
   if (SlotAssignment() == SlotAssignmentMode::Named) {
     if (oldSlot) {
       MOZ_DIAGNOSTIC_ASSERT(oldSlot != aSlot);
 
       // Move assigned nodes from old slot to new slot.
       InvalidateStyleAndLayoutOnSubtree(oldSlot);
+      const nsTArray<RefPtr<nsINode>>& assignedNodes = oldSlot->AssignedNodes();
       bool doEnqueueSlotChange = false;
-      auto assignedNodes =
-          ToTArray<AutoTArray<nsINode*, 8>>(oldSlot->AssignedNodes());
-      for (nsINode* assignedNode : assignedNodes) {
+      while (assignedNodes.Length() > 0) {
+        nsINode* assignedNode = assignedNodes[0];
+
         oldSlot->RemoveAssignedNode(*assignedNode->AsContent());
         aSlot->AppendAssignedNode(*assignedNode->AsContent());
         doEnqueueSlotChange = true;
@@ -326,11 +327,11 @@ void ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot) {
   MOZ_ASSERT(mSlotMap.Get(name));
 
   SlotArray& currentSlots = *mSlotMap.Get(name);
-  MOZ_DIAGNOSTIC_ASSERT(currentSlots.Contains(aSlot),
+  MOZ_DIAGNOSTIC_ASSERT(currentSlots->Contains(aSlot),
                         "Slot to de-register wasn't found?");
-  if (currentSlots.Length() == 1) {
+  if (currentSlots->Length() == 1) {
     MOZ_ASSERT_IF(SlotAssignment() == SlotAssignmentMode::Named,
-                  currentSlots.ElementAt(0) == aSlot);
+                  currentSlots->ElementAt(0) == aSlot);
 
     InvalidateStyleAndLayoutOnSubtree(aSlot);
 
@@ -350,7 +351,7 @@ void ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot) {
     }
   }
 
-  const bool wasFirstSlot = currentSlots.ElementAt(0) == aSlot;
+  const bool wasFirstSlot = currentSlots->ElementAt(0) == aSlot;
   currentSlots.RemoveElement(*aSlot);
   if (!wasFirstSlot || SlotAssignment() == SlotAssignmentMode::Manual) {
     return;
@@ -359,15 +360,16 @@ void ShadowRoot::RemoveSlot(HTMLSlotElement* aSlot) {
   // Move assigned nodes from removed slot to the next slot in
   // tree order with the same name.
   InvalidateStyleAndLayoutOnSubtree(aSlot);
-  HTMLSlotElement* replacementSlot = currentSlots.ElementAt(0);
-  auto assignedNodes =
-      ToTArray<AutoTArray<nsINode*, 8>>(aSlot->AssignedNodes());
+  HTMLSlotElement* replacementSlot = currentSlots->ElementAt(0);
+  const nsTArray<RefPtr<nsINode>>& assignedNodes = aSlot->AssignedNodes();
   if (assignedNodes.IsEmpty()) {
     return;
   }
 
   InvalidateStyleAndLayoutOnSubtree(replacementSlot);
-  for (auto* assignedNode : assignedNodes) {
+  while (!assignedNodes.IsEmpty()) {
+    nsINode* assignedNode = assignedNodes[0];
+
     aSlot->RemoveAssignedNode(*assignedNode->AsContent());
     replacementSlot->AppendAssignedNode(*assignedNode->AsContent());
   }
@@ -657,7 +659,7 @@ ShadowRoot::SlotInsertionPoint ShadowRoot::SlotInsertionPointFor(
     if (!slots) {
       return {};
     }
-    slot = (*slots).ElementAt(0);
+    slot = (*slots)->ElementAt(0);
   }
 
   MOZ_ASSERT(slot);
@@ -689,7 +691,7 @@ ShadowRoot::SlotInsertionPoint ShadowRoot::SlotInsertionPointFor(
       return {slot, Some(index)};
     }
   } else {
-    const Span assignedNodes = slot->AssignedNodes();
+    const nsTArray<RefPtr<nsINode>>& assignedNodes = slot->AssignedNodes();
     nsIContent* currentContent = GetHost()->GetFirstChild();
     for (uint32_t i = 0; i < assignedNodes.Length(); i++) {
       // Seek through the host's explicit children until the
@@ -761,13 +763,11 @@ void ShadowRoot::MaybeReassignMainSummary(SummaryChangeReason aReason) {
   if (aReason == SummaryChangeReason::Insertion) {
     // We've inserted a summary element, may need to remove the existing one.
     SlotArray* array = mSlotMap.Get(u"internal-main-summary"_ns);
-    MOZ_RELEASE_ASSERT(array && (*array).Length() == 1);
-    HTMLSlotElement* slot = (*array).ElementAt(0);
-    auto assigned = slot->AssignedNodes();
-    if (assigned.IsEmpty()) {
-      return;
-    }
-    if (auto* summary = HTMLSummaryElement::FromNode(assigned[0])) {
+    MOZ_RELEASE_ASSERT(array && (*array)->Length() == 1);
+    HTMLSlotElement* slot = (*array)->ElementAt(0);
+    auto* summary = HTMLSummaryElement::FromNodeOrNull(
+        slot->AssignedNodes().SafeElementAt(0));
+    if (summary) {
       MaybeReassignContent(*summary);
     }
   } else if (MOZ_LIKELY(GetHost())) {

@@ -335,6 +335,14 @@ class HTMLFormElement final : public nsGenericHTMLElement {
 
   void GetSupportedNames(nsTArray<nsString>& aRetval);
 
+#ifdef DEBUG
+  static void AssertDocumentOrder(
+      const nsTArray<nsGenericHTMLFormElement*>& aControls, nsIContent* aForm);
+  static void AssertDocumentOrder(
+      const nsTArray<RefPtr<nsGenericHTMLFormElement>>& aControls,
+      nsIContent* aForm);
+#endif
+
   JS::ExpandoAndGeneration mExpandoAndGeneration;
 
  protected:
