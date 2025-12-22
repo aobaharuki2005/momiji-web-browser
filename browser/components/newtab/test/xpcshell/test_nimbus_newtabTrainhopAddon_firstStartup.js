@@ -127,10 +127,22 @@ add_task(
 
     sandbox.restore();
 
-    // Uninstall the force-installed train-hop add-on before cleanup
-    await addon.uninstall();
-
     await nimbusFeatureCleanup();
+    info(
+      "Simulated browser restart while newtabTrainhopAddon nimbus feature is unenrolled"
+    );
+    mockAboutNewTabUninit();
+    await AddonTestUtils.promiseRestartManager();
+    AboutNewTab.init();
+
+    // Expected bundled newtab resources mapping for this session.
+    assertNewTabResourceMapping();
+    await AboutNewTabResourceMapping.updateTrainhopAddonState();
+    await asyncAssertNewTabAddon({
+      locationName: BUILTIN_LOCATION_NAME,
+      version: BUILTIN_ADDON_VERSION,
+    });
+
     assertTrainhopAddonVersionPref("");
     Services.prefs.clearUserPref(PREF_CATEGORY_TASKS);
   }

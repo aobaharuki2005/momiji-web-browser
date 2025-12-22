@@ -499,6 +499,10 @@
   <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Rannit penaos ho peus graet anaoudegezh gant Firefox ha penaos ec\'h implijit anezhañ gant kevelerien marketing Mozilla. Ne vo morse gwerzhet ar roadennoù-mañ.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Asantiñ ha kregiñ da verdeiñ</string>
+  <!-- ==== Project "Nova" onboarding strings ==== -->
+
+  <!-- ==== End of Project "Nova" onboarding strings ==== -->
+
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
   <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">Dibab ul lec’h barrenn-ostilhoù</string>
   <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -3109,11 +3113,9 @@
   <string name="review_prompt_positive_button">Dispar eo!</string>
   <!-- Label for a button opening a feedback forum -->
   <string name="review_prompt_feedback_button">Reiñ hoc’h ali</string>
-  <!--
-    Terms of use pop up prompt
+  <!-- ==== Terms of use pop up prompt ==== -->
 
-    Title for the pop up prompt
-  -->
+  <!-- Title for the pop up prompt -->
   <string name="terms_of_use_prompt_title">Un hizivadur zo da gaout</string>
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Termenoù implij</string>
@@ -3125,4 +3127,7 @@
   <string name="terms_of_use_prompt_accept">Asantiñ</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Degas soñj din diwezhatoc’h</string>
+  <!-- ==== Experiment strings. ==== -->
+
+  <!-- ==== End of Terms of use popup prompt. ==== -->
 </resources>

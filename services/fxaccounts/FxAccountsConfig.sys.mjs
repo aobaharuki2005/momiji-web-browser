@@ -106,6 +106,18 @@ export var FxAccountsConfig = {
     });
   },
 
+  async promiseSetPasswordURI(entrypoint, extraParams = {}) {
+    const authParams = await this._getAuthParams();
+    return this._buildURL("post_verify/third_party_auth/set_password", {
+      extraParams: {
+        entrypoint,
+        ...authParams,
+        ...extraParams,
+      },
+      addAccountIdentifiers: true,
+    });
+  },
+
   async promisePairingURI(extraParams = {}) {
     return this._buildURL("pair", {
       extraParams,

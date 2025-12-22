@@ -300,6 +300,10 @@
   <string name="onboarding_marketing_redesign_positive_button">Gī\'hiaj hīa</string>
   <!-- Sync onboarding redesign negative button text. -->
   <string name="onboarding_redesign_sync_negative_button">Sī ga\'hue akuan\' nïn</string>
+  <!-- ==== Project "Nova" onboarding strings ==== -->
+
+  <!-- ==== End of Project "Nova" onboarding strings ==== -->
+
   <!-- Action label for toolbar options that can be selected. Talkback will append this to say "Double tap to select". -->
   <string name="onboarding_customize_toolbar_a11y_action_label_select">naguī</string>
   <!-- Onboarding theme selection card label for 'dark' option, used by Nimbus experiments. -->
@@ -1859,4 +1863,10 @@
   <!-- The Delete site dialogue negative button will appear when the user clicks on a list item. The dialog will be dismissed. -->
   <string name="never_translate_site_dialog_cancel_preference">Dūyichin\'</string>
   <!-- TextField Design System Component -->
+
+  <!-- ==== Terms of use pop up prompt ==== -->
+
+  <!-- ==== Experiment strings. ==== -->
+
+  <!-- ==== End of Terms of use popup prompt. ==== -->
 </resources>

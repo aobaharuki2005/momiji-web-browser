@@ -1316,11 +1316,13 @@ Preferences.addSetting({
 
 Preferences.addSetting({
   id: "add-payment-button",
+  deps: ["saveAndFillPayments"],
   onUserClick: ({ target }) => {
     target.ownerGlobal.gSubDialog.open(
       "chrome://formautofill/content/editCreditCard.xhtml"
     );
   },
+  disabled: ({ saveAndFillPayments }) => !saveAndFillPayments.value,
 });
 
 Preferences.addSetting({

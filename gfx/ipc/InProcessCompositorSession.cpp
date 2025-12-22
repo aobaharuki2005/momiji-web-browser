@@ -12,7 +12,6 @@
 #include "mozilla/layers/CompositorManagerChild.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/IAPZCTreeManager.h"
-#include "mozilla/layers/UiCompositorControllerChild.h"
 #include "mozilla/widget/CompositorWidget.h"
 #include "mozilla/widget/PlatformWidgetTypes.h"
 #include "nsIWidget.h"
@@ -22,10 +21,9 @@ namespace layers {
 
 InProcessCompositorSession::InProcessCompositorSession(
     nsIWidget* aWidget, widget::CompositorWidget* aCompositorWidget,
-    CompositorBridgeChild* aChild, CompositorBridgeParent* aParent,
-    UiCompositorControllerChild* aUiController)
+    CompositorBridgeChild* aChild, CompositorBridgeParent* aParent)
     : CompositorSession(aWidget, aCompositorWidget->AsDelegate(), aChild,
-                        aUiController, aParent->RootLayerTreeId()),
+                        aParent->RootLayerTreeId()),
       mCompositorBridgeParent(aParent),
       mCompositorWidget(aCompositorWidget) {
   gfx::GPUProcessManager::Get()->RegisterInProcessSession(this);
@@ -59,18 +57,7 @@ RefPtr<InProcessCompositorSession> InProcessCompositorSession::Create(
     return nullptr;
   }
 
-  RefPtr<UiCompositorControllerChild> uiController = nullptr;
-#if defined(MOZ_WIDGET_ANDROID)
-  uiController = UiCompositorControllerChild::CreateForSameProcess(
-      aRootLayerTreeId, aWidget);
-  MOZ_ASSERT(uiController);
-  if (!uiController) {
-    return nullptr;
-  }
-#endif
-
-  return new InProcessCompositorSession(aWidget, widget, child, parent,
-                                        uiController);
+  return new InProcessCompositorSession(aWidget, widget, child, parent);
 }
 
 void InProcessCompositorSession::NotifySessionLost() {

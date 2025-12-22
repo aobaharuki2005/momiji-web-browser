@@ -624,6 +624,10 @@
   <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Поділіться з маркетинговими партнерами Mozilla, як ви дізналися про Firefox і що ви ним користуєтеся. Ці дані ніколи не продаються.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Погодитися і почати перегляд</string>
+  <!-- ==== Project "Nova" onboarding strings ==== -->
+
+  <!-- ==== End of Project "Nova" onboarding strings ==== -->
+
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
   <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">Виберіть розташування панелі інструментів</string>
   <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -1467,6 +1471,8 @@
   <string name="tab_drawer_fab_content">Приватно</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">Синхронізація</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">Шукати у вкладках</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">Поділитися всіма вкладками</string>
   <!-- Text shown in the menu to view recently closed tabs -->
@@ -1515,6 +1521,8 @@
   <string name="close_tab_title">Закрити вкладку %s</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">Відкрити меню вкладок</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">Повернутися до менеджера вкладок</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">Зберегти до збірки</string>
   <!-- Text for the menu button to delete a collection -->
@@ -3910,11 +3918,9 @@
   <string name="settings_search_no_results_title">Нічого не знайдено</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">Можливо, спробувати інший пошук?</string>
-  <!--
-    Terms of use pop up prompt
+  <!-- ==== Terms of use pop up prompt ==== -->
 
-    Title for the pop up prompt
-  -->
+  <!-- Title for the pop up prompt -->
   <string name="terms_of_use_prompt_title">Доступне оновлення</string>
   <!--
     Message for the terms of use pop up prompt
@@ -3938,6 +3944,10 @@
   <string name="terms_of_use_prompt_accept">Прийняти</string>
   <!-- Label for a button to postpone accepting the terms of use -->
   <string name="terms_of_use_prompt_postpone">Нагадати пізніше</string>
+  <!-- ==== Experiment strings. ==== -->
+
+  <!-- ==== End of Terms of use popup prompt. ==== -->
+
   <!--
     Privacy notice homepage banner
 

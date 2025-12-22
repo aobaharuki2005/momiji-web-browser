@@ -620,6 +620,10 @@
   <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">ແບ່ງປັນວິທີທີ່ທ່ານຄົ້ນພົບ Firefox, ແລະ ທີ່ທ່ານໃຊ້ມັນ, ກັບຄູ່ຮ່ວມການຕະຫຼາດຂອງ Mozilla. ຂໍ້ມູນນີ້ບໍ່ເຄີຍຖືກຂາຍ.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">ຕົກລົງເຫັນດີ ແລະ ເລີ່ມຊອກຫາ</string>
+  <!-- ==== Project "Nova" onboarding strings ==== -->
+
+  <!-- ==== End of Project "Nova" onboarding strings ==== -->
+
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
   <string name="onboarding_customize_toolbar_title" tools:ignore="UnusedResources">ເລືອກການຈັດວາງແຖບເຄື່ອງມື</string>
   <!-- Onboarding sub header for toolbar selection card, used by Nimbus experiments. -->
@@ -3023,4 +3027,9 @@
 
   <!-- The title of the search widget task for the setup checklist -->
   <string name="setup_checklist_task_search_widget_2">ສຳຫຼວດ widget ຄົ້ນຫາ</string>
+  <!-- ==== Terms of use pop up prompt ==== -->
+
+  <!-- ==== Experiment strings. ==== -->
+
+  <!-- ==== End of Terms of use popup prompt. ==== -->
 </resources>
