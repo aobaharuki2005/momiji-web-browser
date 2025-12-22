@@ -3914,8 +3914,7 @@ export class BackupService extends EventTarget {
 
   /**
    * Enables encryption for backups, allowing sensitive data to be backed up.
-   * Throws if encryption is already enabled. After enabling encryption, that
-   * state is written to disk.
+   * After enabling encryption, the state is written to disk.
    *
    * @throws Exception
    * @param {string} password
@@ -3927,14 +3926,6 @@ export class BackupService extends EventTarget {
    */
   async enableEncryption(password, profilePath = PathUtils.profileDir) {
     lazy.logConsole.debug("Enabling encryption.");
-    let encState = await this.loadEncryptionState(profilePath);
-    if (encState) {
-      throw new BackupError(
-        "Encryption is already enabled.",
-        ERRORS.ENCRYPTION_ALREADY_ENABLED
-      );
-    }
-
     if (!password) {
       throw new BackupError(
         "Cannot supply a blank password.",
@@ -3949,8 +3940,8 @@ export class BackupService extends EventTarget {
       );
     }
 
-    ({ instance: encState } =
-      await lazy.ArchiveEncryptionState.initialize(password));
+    let { instance: encState } =
+      await lazy.ArchiveEncryptionState.initialize(password);
     if (!encState) {
       throw new BackupError(
         "Failed to construct ArchiveEncryptionState",
@@ -3974,7 +3965,7 @@ export class BackupService extends EventTarget {
   }
 
   /**
-   * Disables encryption of backups. Throws is encryption is already disabled.
+   * Disables encryption of backups.
    *
    * @throws Exception
    * @param {string} [profilePath=PathUtils.profileDir]
@@ -3984,22 +3975,11 @@ export class BackupService extends EventTarget {
    */
   async disableEncryption(profilePath = PathUtils.profileDir) {
     lazy.logConsole.debug("Disabling encryption.");
-    let encState = await this.loadEncryptionState(profilePath);
-    if (!encState) {
-      throw new BackupError(
-        "Encryption is already disabled.",
-        ERRORS.ENCRYPTION_ALREADY_DISABLED
-      );
-    }
-
     let encStateFile = PathUtils.join(
       profilePath,
       BackupService.PROFILE_FOLDER_NAME,
       BackupService.ARCHIVE_ENCRYPTION_STATE_FILE
     );
-    // It'd be pretty strange, but not impossible, for something else to have
-    // gotten rid of the encryption state file at this point. We'll ignore it
-    // if that's the case.
     await IOUtils.remove(encStateFile, {
       ignoreAbsent: true,
       retryReadonly: true,
