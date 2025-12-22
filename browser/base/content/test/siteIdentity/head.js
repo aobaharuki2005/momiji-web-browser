@@ -59,9 +59,9 @@ function isSecurityState(browser, expectedState) {
  * Test the state of the identity box and control center to make
  * sure they are correctly showing the expected mixed content states.
  *
- * @note The checks are done synchronously, but new code should wait on the
- *       returned Promise object to ensure the identity panel has closed.
- *       Bug 1221114 is filed to fix the existing code.
+ * Note: The checks are done synchronously, but new code should wait on the
+ * returned Promise object to ensure the identity panel has closed.
+ * Bug 1221114 is filed to fix the existing code.
  *
  * @param tabbrowser
  * @param Object states
@@ -72,8 +72,8 @@ function isSecurityState(browser, expectedState) {
  *           passiveLoaded: true|false,
  *        }
  *
- * @return {Promise}
- * @resolves When the operation has finished and the identity panel has closed.
+ * @returns {Promise<void>}
+ *   Resolves when the operation has finished and the identity panel has closed.
  */
 async function assertMixedContentBlockingState(tabbrowser, states = {}) {
   if (

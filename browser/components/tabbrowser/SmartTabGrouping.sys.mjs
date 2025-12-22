@@ -1573,7 +1573,7 @@ export class SmartTabGroupingResult {
    * Returns the keywords and documents for the cluster, computing if needed
    * Does not return keywods if only one document is passed to the function.
    *
-   * @param{string[]} otherDocuments other clusters that we'll compare against
+   * @param {string[]} otherDocuments other clusters that we'll compare against
    * @return keywords and documents that represent the cluster
    */
   getRepresentativeDocsAndKeywords(otherDocuments = []) {

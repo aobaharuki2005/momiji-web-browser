@@ -130,10 +130,8 @@ export class PromptParent extends JSWindowActorParent {
    * @param {object} args
    *        The arguments passed up from the BrowsingContext to be passed
    *        directly to the modal prompt.
-   * @return {Promise}
-   *         Resolves when the modal prompt is dismissed.
-   * @resolves {object}
-   *           The arguments returned from the modal prompt.
+   * @return {Promise<object>}
+   *         Resolves with the arguments returned from the modal prompt.
    */
   async openPromptWithTabDialogBox(args) {
     const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";

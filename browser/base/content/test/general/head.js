@@ -137,9 +137,8 @@ function promiseWaitForEvent(
  * @param aWindow
  *        The window to focus and wait for.
  *
- * @return {Promise}
- * @resolves When the window is focused.
- * @rejects Never.
+ * @returns {Promise<void>}
+ *   Resolved when the window is focused.
  */
 function promiseWaitForFocus(aWindow) {
   return new Promise(resolve => {

@@ -2325,7 +2325,7 @@ export class _ASRouter {
    *   recursion. we call this from loadMessagesFromAllProviders in order to
    *   fire the messagesLoaded trigger.
    * @returns {Promise<object>}
-   * @resolves {message} an object with the routed message
+   *   Resolves to an object with the routed message.
    */
   async sendTriggerMessage(
     { browser, ...trigger },

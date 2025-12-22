@@ -231,7 +231,7 @@ var DownloadsPanel = {
   /**
    * Indicates whether the panel is showing.
    *
-   * @note this includes the hiding state.
+   * Note: this includes the hiding state.
    */
   get isPanelShowing() {
     return this._waitingDataForOpen || this.panel.state != "closed";

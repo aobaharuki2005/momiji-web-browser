@@ -3353,12 +3353,12 @@ const DynamicShortcutTooltip = {
 /**
  * Extracts linkNode and href for the current click target.
  *
+ * Note: linkNode will be null if the click wasn't on an anchor
+ * element (or XLink).
+ *
  * @param event
  *        The click event.
  * @return [href, linkNode].
- *
- * @note linkNode will be null if the click wasn't on an anchor
- *       element (or XLink).
  */
 function hrefAndLinkNodeForClickEvent(event) {
   function isHTMLLink(aNode) {
@@ -3408,11 +3408,12 @@ function hrefAndLinkNodeForClickEvent(event) {
 /**
  * Called whenever the user clicks in the content area.
  *
+ * Note: the default event is prevented if the click is handled.
+ *
  * @param event
  *        The click event.
  * @param isPanelClick
  *        Whether the event comes from an extension panel.
- * @note default event is prevented if the click is handled.
  */
 function contentAreaClick(event, isPanelClick) {
   if (!event.isTrusted || event.defaultPrevented || event.button != 0) {
