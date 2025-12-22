@@ -9,18 +9,14 @@ function checkForPrompt(prefVal) {
       set: [
         ["privacy.history.custom", true],
         ["browser.privatebrowsing.autostart", !prefVal],
+        ["browser.settings-redesign.history2.enabled", true],
       ],
     });
 
-    await openPreferencesViaOpenPreferencesAPI("panePrivacy", {
+    await openPreferencesViaOpenPreferencesAPI("paneHistory", {
       leaveOpen: true,
     });
     let doc = gBrowser.contentDocument;
-    is(
-      doc.getElementById("historyMode").value,
-      "custom",
-      "Expect custom history mode"
-    );
 
     // Stub out the prompt method as an easy way to check it was shown. We throw away
     // the tab straight after so don't need to bother restoring it.
@@ -29,10 +25,9 @@ function checkForPrompt(prefVal) {
       promptFired = true;
       return doc.defaultView.CONFIRM_RESTART_PROMPT_RESTART_NOW;
     };
-
     // Tick the checkbox and pretend the user did it:
     let checkbox = gBrowser.contentWindow.document.querySelector(
-      "setting-group[groupid='history'] #privateBrowsingAutoStart"
+      "setting-group[groupid='historyAdvanced'] #privateBrowsingAutoStart"
     );
 
     ok(checkbox, "the privateBrowsingAutoStart checkbox should exist");
@@ -64,6 +59,7 @@ function checkForPrompt(prefVal) {
       }!`
     );
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
+    await SpecialPowers.popPrefEnv();
   };
 }
 
