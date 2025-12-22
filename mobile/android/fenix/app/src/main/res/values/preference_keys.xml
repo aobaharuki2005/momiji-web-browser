@@ -91,6 +91,7 @@
     <string name="pref_key_terms_prompt_displayed_count" translatable="false">pref_key_terms_prompt_displayed_count</string>
     <string name="pref_key_terms_last_prompt_time" translatable="false">pref_key_terms_last_prompt_time</string>
     <string name="pref_key_terms_postponed" translatable="false">pref_key_terms_postponed</string>
+    <string name="pref_key_terms_latest_date" translatable="false">pref_key_terms_latest_date</string>
     <string name="pref_key_debug_terms_trigger_time" translatable="false">pref_key_debug_terms_trigger_time</string>
     <string name="pref_key_should_show_marketing_onboarding" translatable="false">pref_key_should_show_marketing_onboarding</string>
     <string name="pref_key_use_onboarding_redesign" translatable="false">pref_key_use_onboarding_redesign</string>

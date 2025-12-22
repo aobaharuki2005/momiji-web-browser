@@ -600,6 +600,12 @@ class Settings(
         },
     )
 
+    var isTermsOfUsePublishedDebugDateEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_terms_latest_date),
+        default = false,
+        persistDefaultIfNotExists = true,
+    )
+
     var privacyNoticeBannerLastDisplayedTimeInMillis by longPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_privacy_notice_banner_last_displayed_time),
         default = 0,

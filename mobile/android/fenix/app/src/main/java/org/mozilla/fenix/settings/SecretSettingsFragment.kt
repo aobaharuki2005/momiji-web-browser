@@ -445,6 +445,12 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
+        requirePreference<SwitchPreference>(R.string.pref_key_terms_latest_date).apply {
+            isVisible = Config.channel.isNightlyOrDebug || Config.channel.isBeta
+            isChecked = context.settings().isTermsOfUsePublishedDebugDateEnabled
+            onPreferenceChangeListener = SharedPreferenceUpdater()
+        }
+
         requirePreference<SwitchPreference>(R.string.pref_key_debug_terms_trigger_time).apply {
             isVisible = Config.channel.isNightlyOrDebug || Config.channel.isBeta
             isChecked = context.settings().isDebugTermsOfServiceTriggerTimeEnabled

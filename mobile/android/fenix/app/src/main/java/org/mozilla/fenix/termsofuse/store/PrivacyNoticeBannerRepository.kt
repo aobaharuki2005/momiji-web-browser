@@ -33,8 +33,13 @@ class DefaultPrivacyNoticeBannerRepository(
     }
 
     override fun shouldShowPrivacyNoticeBanner(): Boolean {
+        val termsOfUseTime = if (settings.isTermsOfUsePublishedDebugDateEnabled) {
+            System.currentTimeMillis()
+        } else {
+            TOU_TIME_IN_MILLIS
+        }
         return settings.hasAcceptedTermsOfService &&
-                settings.termsOfUseAcceptedTimeInMillis < TOU_TIME_IN_MILLIS &&
-                settings.privacyNoticeBannerLastDisplayedTimeInMillis < TOU_TIME_IN_MILLIS
+                settings.termsOfUseAcceptedTimeInMillis < termsOfUseTime &&
+                settings.privacyNoticeBannerLastDisplayedTimeInMillis < termsOfUseTime
     }
 }
