@@ -306,9 +306,6 @@ UNIFIED_SOURCES += [
     "jsexn.cpp",
     "jsfriendapi.cpp",
     "jsnum.cpp",
-    "threading/Mutex.cpp",
-    "threading/ProtectedData.cpp",
-    "threading/Thread.cpp",
     "vm/Activation.cpp",
     "vm/ArgumentsObject.cpp",
     "vm/ArrayBufferObject.cpp",
@@ -440,26 +437,6 @@ if CONFIG["MOZ_INSTRUMENTS"]:
         "devtools/Instruments.cpp",
     ]
 
-if CONFIG["OS_ARCH"] == "WINNT":
-    OS_LIBS += [
-        "advapi32",
-    ]
-    UNIFIED_SOURCES += [
-        "threading/windows/CpuCount.cpp",
-        "threading/windows/WindowsThread.cpp",
-    ]
-# WASI hasn't supported thread yet so noop implementation is used.
-elif CONFIG["OS_ARCH"] == "WASI":
-    UNIFIED_SOURCES += [
-        "threading/noop/CpuCount.cpp",
-        "threading/noop/NoopThread.cpp",
-    ]
-else:
-    UNIFIED_SOURCES += [
-        "threading/posix/CpuCount.cpp",
-        "threading/posix/PosixThread.cpp",
-    ]
-
 if CONFIG["JS_HAS_CTYPES"]:
     SOURCES += [
         "ctypes/CTypes.cpp",
@@ -497,6 +474,7 @@ DIRS += [
     "irregexp",
     "jit",
     "proxy",
+    "threading",
     "util",
     "wasm",
     "xsum",
