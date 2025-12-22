@@ -49,6 +49,8 @@
 ---
 version: 1
 reporting: checks-v1
+policy:
+    pullRequests: collaborators
 tasks:
     # NOTE: support for actions in ci-admin requires that the `tasks` property be an array *before* JSON-e rendering
     # takes place.
@@ -338,12 +340,13 @@ tasks:
                                       then:
                                           matrixBody: "${repository.project} push notification: https://treeherder.mozilla.org/#/jobs?repo=${repository.project}&revision=${push.revision}"
     # Decision task for events originating from Github
-    - $if: 'tasks_for in ["github-push"]'
+    - $if: 'tasks_for[:6] == "github"'
       then:
           $let:
               $merge:
                   - trustDomain: gecko
                     ownTaskId: {$eval: as_slugid("decision_task")}
+                    isPullRequest: false
                     eventType: '${tasks_for[7:]}'  # strip out 'github-'
                     eventAction: '${event["action"]}'  # empty string if 'action' doesn't exist
                   - $switch:
@@ -355,6 +358,18 @@ tasks:
                             ref: '${event.ref}'
                             baseRev: '${event.before}'
                             headRev: '${event.after}'
+                        'tasks_for[:19] == "github-pull-request"':
+                            ownerEmail: '${event.pull_request.user.login}@users.noreply.github.com'
+                            baseRepoUrl: '${event.pull_request.base.repo.html_url}'
+                            repoUrl: '${event.pull_request.head.repo.html_url}'
+                            project: '${event.pull_request.base.repo.name}'
+                            # Normalize 'ref' to include 'refs/heads' as pull-requests must be associated
+                            # with a head ref. The benefit of doing this is that `run-task` won't attempt
+                            # to fetch all tags from the repo just on the off-chance it is a tag.
+                            ref: 'refs/heads/${event.pull_request.head.ref}'
+                            baseRev: '${event.pull_request.base.sha}'
+                            headRev: '${event.pull_request.head.sha}'
+                            isPullRequest: true
           in:
               $let:
                   shortRef:
@@ -364,6 +379,7 @@ tasks:
               in:
                   $if: >
                     (eventType == "push" && shortRef == "main")
+                    || (isPullRequest && eventAction in ["opened", "reopened", "synchronize"])
                   then:
                       $let:
                           level:
@@ -401,6 +417,8 @@ tasks:
                                         - "index.${trustDomain}.v2.${project}.revision.${headRev}.taskgraph.decision"
                           scopes:
                               $switch:
+                                  isPullRequest:
+                                      - 'assume:repo:${repoUrl[8:]}:${eventType}'
                                   'eventType == "push"':
                                       - 'assume:repo:${repoUrl[8:]}:branch:${shortRef}'
                           dependencies: []
