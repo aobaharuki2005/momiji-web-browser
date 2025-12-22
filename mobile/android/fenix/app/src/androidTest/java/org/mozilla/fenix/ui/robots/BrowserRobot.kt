@@ -48,9 +48,9 @@ import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_URL
 import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.ADDRESSBAR_URL_BOX
+import mozilla.components.compose.browser.toolbar.concept.BrowserToolbarTestTags.TABS_COUNTER
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.utils.EngineReleaseChannel
-import mozilla.components.ui.tabcounter.TabCounterTestTags.NORMAL_TABS_COUNTER
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -1492,7 +1492,7 @@ class BrowserRobot {
 
         fun openTabDrawerWithComposableToolbar(composeTestRule: HomeActivityComposeTestRule, interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
             Log.i(TAG, "openTabDrawerWithComposableToolbar: Trying to click the tab counter button")
-            composeTestRule.onNodeWithTag(NORMAL_TABS_COUNTER).performClick()
+            composeTestRule.onNodeWithTag(TABS_COUNTER).performClick()
             Log.i(TAG, "openTabDrawerWithComposableToolbar: Clicked the tab counter button")
             Log.i(TAG, "openTabDrawerWithComposableToolbar: Trying to verify the tabs tray exists")
             composeTestRule.onNodeWithTag(TabsTrayTestTag.TABS_TRAY).assertExists()
