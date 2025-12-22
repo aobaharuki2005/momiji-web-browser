@@ -558,13 +558,16 @@
 
 <html:setting-group groupid="passwords" hidden="true" data-category="panePrivacy" />
 
-<!-- The form autofill section is inserted in to this box
-     after the form autofill extension has initialized. -->
-<groupbox id="formAutofillGroupBox"
+<groupbox id="paymentsGroupBox"
           data-category="panePrivacy"
           data-subcategory="form-autofill" hidden="true">
   <label><html:h2 data-l10n-id="autofill-payment-methods-title" class="subsection-heading"/></label>
   <html:setting-group data-subcategory="credit-card-autofill" groupid="payments"/>
+</groupbox>
+
+<groupbox id="addressesGroupBox"
+          data-category="panePrivacy"
+          data-subcategory="form-autofill" hidden="true">
   <label><html:h2 data-l10n-id="autofill-addresses-title" class="subsection-heading"/></label>
   <html:setting-group data-subcategory="address-autofill" groupid="addresses"/>
 </groupbox>
