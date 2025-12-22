@@ -31,11 +31,25 @@ jobs:
   handle-pr:
     runs-on: ubuntu-latest
     steps:
+
+      # Workflows don't get access to organisation metadata via the GITHUB_TOKEN.
+      # We use the Lando Web App to obtain a token with sufficient permissions.
+      - name: Generate a Lando Web token
+        id: generate-lando-web-token
+        uses: actions/create-github-app-token@v2
+        continue-on-error: true
+        with:
+          app-id: ${{ vars.LANDO_WEB_APP_ID }}
+          private-key: ${{ secrets.LANDO_WEB_APP_PRIVATE_KEY }}
+          permission-members: read
+
       - name: Check team membership
         id: team
+        continue-on-error: true
         env:
           AUTHOR: ${{ github.actor }}
           GH_ORG: ${{ github.repository_owner }}
+          GH_TOKEN: ${{ steps.generate-lando-web-token.outputs.token }}
         run: |
           if gh api "/orgs/${GH_ORG}/teams/${ALLOWED_TEAM}/memberships/${AUTHOR}" --silent 2>/dev/null; then
             echo "is_member=true" >> $GITHUB_OUTPUT
@@ -45,6 +59,7 @@ jobs:
 
       - name: Check allowed paths
         id: paths
+        continue-on-error: true
         if: steps.team.outputs.is_member == 'true'
         run: |
           PATTERN=$(echo "${ALLOWED_PATHS}" | xargs | tr ' ' '|')
