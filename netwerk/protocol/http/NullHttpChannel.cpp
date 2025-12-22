@@ -671,13 +671,6 @@ NullHttpChannel::GetResponseStart(mozilla::TimeStamp* aResponseStart) {
 }
 
 NS_IMETHODIMP
-NullHttpChannel::GetFinalResponseHeadersStart(
-    mozilla::TimeStamp* aFinalResponseHeadersStart) {
-  *aFinalResponseHeadersStart = mAsyncOpenTime;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 NullHttpChannel::GetResponseEnd(mozilla::TimeStamp* aResponseEnd) {
   *aResponseEnd = mAsyncOpenTime;
   return NS_OK;
@@ -892,7 +885,6 @@ IMPL_TIMING_ATTR(SecureConnectionStart)
 IMPL_TIMING_ATTR(ConnectEnd)
 IMPL_TIMING_ATTR(RequestStart)
 IMPL_TIMING_ATTR(ResponseStart)
-IMPL_TIMING_ATTR(FinalResponseHeadersStart)
 IMPL_TIMING_ATTR(ResponseEnd)
 IMPL_TIMING_ATTR(CacheReadStart)
 IMPL_TIMING_ATTR(CacheReadEnd)

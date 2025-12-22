@@ -814,6 +814,9 @@ nsresult nsHttpTransaction::WritePipeSegment(nsIOutputStream* stream,
 
   if (trans->mTransactionDone) return NS_BASE_STREAM_CLOSED;  // stop iterating
 
+  // Set the timestamp to Now(), only if it null
+  trans->SetResponseStart(TimeStamp::Now(), true);
+
   // Bug 1153929 - add checks to fix windows crash
   MOZ_ASSERT(trans->mWriter);
   if (!trans->mWriter) {
@@ -2071,14 +2074,6 @@ nsresult nsHttpTransaction::ParseLineSegment(char* segment, uint32_t len) {
     mLineBuf.Truncate();
     // discard this response if it is a 100 continue or other 1xx status.
     uint16_t status = mResponseHead->Status();
-
-    // Capture timing for interim (1xx) vs final responses
-    auto now = TimeStamp::Now();
-    SetResponseStart(now, true);  // Won't overwrite if already set from 1xx
-    if (status / 100 != 1) {
-      SetFinalResponseHeadersStart(now, true);
-    }
-
     if (status == 103 &&
         (StaticPrefs::network_early_hints_over_http_v1_1_enabled() ||
          mResponseHead->Version() != HttpVersion::v1_1)) {
@@ -2908,15 +2903,6 @@ void nsHttpTransaction::SetResponseEnd(mozilla::TimeStamp timeStamp,
   mTimings.responseEnd = timeStamp;
 }
 
-void nsHttpTransaction::SetFinalResponseHeadersStart(
-    mozilla::TimeStamp timeStamp, bool onlyIfNull) {
-  mozilla::MutexAutoLock lock(mLock);
-  if (onlyIfNull && !mTimings.finalResponseHeadersStart.IsNull()) {
-    return;
-  }
-  mTimings.finalResponseHeadersStart = timeStamp;
-}
-
 mozilla::TimeStamp nsHttpTransaction::GetDomainLookupStart() {
   mozilla::MutexAutoLock lock(mLock);
   return mTimings.domainLookupStart;
@@ -2960,11 +2946,6 @@ mozilla::TimeStamp nsHttpTransaction::GetResponseStart() {
 mozilla::TimeStamp nsHttpTransaction::GetResponseEnd() {
   mozilla::MutexAutoLock lock(mLock);
   return mTimings.responseEnd;
-}
-
-mozilla::TimeStamp nsHttpTransaction::GetFinalResponseHeadersStart() {
-  mozilla::MutexAutoLock lock(mLock);
-  return mTimings.finalResponseHeadersStart;
 }
 
 //-----------------------------------------------------------------------------

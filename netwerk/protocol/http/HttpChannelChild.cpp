@@ -367,7 +367,6 @@ static void ResourceTimingStructArgsToTimingsStruct(
   aTimings.connectEnd = aArgs.connectEnd();
   aTimings.requestStart = aArgs.requestStart();
   aTimings.responseStart = aArgs.responseStart();
-  aTimings.finalResponseHeadersStart = aArgs.finalResponseHeadersStart();
   aTimings.responseEnd = aArgs.responseEnd();
   aTimings.transactionPending = aArgs.transactionPending();
 }
