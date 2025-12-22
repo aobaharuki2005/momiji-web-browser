@@ -367,6 +367,10 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/InsightsConversationScheduler.sys.mjs",
   },
+  // Bug 2006433 - Implement conversation starter/followup inference
+  {
+    file: "moz-src:///browser/components/aiwindow/models/ConversationSuggestions.sys.mjs",
+  },
 ];
 
 if (AppConstants.NIGHTLY_BUILD) {

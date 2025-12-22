@@ -10,6 +10,8 @@ support-files = []
 
 ["test_ChatUtils.js"]
 
+["test_ConversationSuggestions.js"]
+
 ["test_Insights.js"]
 
 ["test_InsightsChatSource.js"]
