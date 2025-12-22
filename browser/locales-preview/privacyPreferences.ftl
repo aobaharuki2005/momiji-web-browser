@@ -309,3 +309,17 @@ preferences-etp-custom-suspect-fingerprinting-protection-enabled =
 
 preferences-etp-custom-suspect-fingerprinting-protection-enabled-context =
     .aria-label = { preferences-etp-custom-suspect-fingerprinting-protection-enabled.label }
+
+## Relay integration
+
+preferences-privacy-relay-available =
+    .label = Suggest { -relay-brand-name } email masks
+    .description = Hides your real email address to protect your inbox from spam.
+
+## Additional protections
+
+do-not-track-removal3 =
+    .message = We no longer support the “Do Not Track” feature
+
+non-technical-privacy-heading =
+  .label = Website Privacy Preferences
