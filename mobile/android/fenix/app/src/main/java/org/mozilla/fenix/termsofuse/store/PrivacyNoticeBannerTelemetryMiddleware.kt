@@ -38,7 +38,7 @@ class PrivacyNoticeBannerTelemetryMiddleware :
             }
 
             // no-ops
-            is PrivacyNoticeBannerAction.OnFragmentStopped,
+            is PrivacyNoticeBannerAction.OnNavigatedAwayFromHome,
                 -> {
             }
         }

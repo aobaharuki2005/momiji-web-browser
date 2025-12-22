@@ -29,7 +29,7 @@ class PrivacyNoticeBannerMiddleware(
             is PrivacyNoticeBannerAction.OnPrivacyNoticeClicked,
             is PrivacyNoticeBannerAction.OnLearnMoreClicked,
             is PrivacyNoticeBannerAction.OnCloseClicked,
-            is PrivacyNoticeBannerAction.OnFragmentStopped,
+            is PrivacyNoticeBannerAction.OnNavigatedAwayFromHome,
                 -> {
             }
         }

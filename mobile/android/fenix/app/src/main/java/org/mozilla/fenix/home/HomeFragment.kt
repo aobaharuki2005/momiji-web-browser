@@ -40,6 +40,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.appbar.AppBarLayout
@@ -283,6 +284,13 @@ class HomeFragment : Fragment() {
             voiceSearchFeature?.get()?.handleVoiceSearchResult(result.resultCode, result.data)
         }
     private val showReviewPromptBinding = ViewBoundFeatureWrapper<ShowReviewPromptBinding>()
+
+    private val destinationChangedListener =
+        NavController.OnDestinationChangedListener { _, destination, _ ->
+            if (destination.id != R.id.homeFragment) {
+                privacyNoticeBannerStore.dispatch(PrivacyNoticeBannerAction.OnNavigatedAwayFromHome)
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // DO NOT ADD ANYTHING ABOVE THIS getProfilerTime CALL!
@@ -1210,6 +1218,8 @@ class HomeFragment : Fragment() {
     override fun onStart() {
         super.onStart()
 
+        findNavController().addOnDestinationChangedListener(destinationChangedListener)
+
         subscribeToTabCollections()
 
         requireComponents.backgroundServices.accountManagerAvailableQueue.runIfReadyOrQueue {
@@ -1317,7 +1327,7 @@ class HomeFragment : Fragment() {
     override fun onStop() {
         super.onStop()
 
-        privacyNoticeBannerStore.dispatch(PrivacyNoticeBannerAction.OnFragmentStopped)
+        findNavController().removeOnDestinationChangedListener(destinationChangedListener)
     }
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {

@@ -62,7 +62,7 @@ class PrivacyNoticeBannerMiddlewareTest {
         middleware.invoke(
             store = store,
             next = {},
-            action = PrivacyNoticeBannerAction.OnFragmentStopped,
+            action = PrivacyNoticeBannerAction.OnNavigatedAwayFromHome,
         )
 
         assertFalse(repository.updatePrivacyNoticeBannerDisplayedPreferenceCalled)

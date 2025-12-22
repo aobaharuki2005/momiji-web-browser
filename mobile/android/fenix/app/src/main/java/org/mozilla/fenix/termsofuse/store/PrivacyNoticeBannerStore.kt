@@ -36,9 +36,9 @@ sealed interface PrivacyNoticeBannerAction : Action {
     data object OnLearnMoreClicked : PrivacyNoticeBannerAction
 
     /**
-     * Triggered when the fragment's onStop function is called.
+     * Triggered when navigating away from the home fragment.
      */
-    data object OnFragmentStopped : PrivacyNoticeBannerAction
+    data object OnNavigatedAwayFromHome : PrivacyNoticeBannerAction
 
     /**
      * Triggered when the banner is displayed.
@@ -64,7 +64,7 @@ private fun reduce(
 ): PrivacyNoticeBannerState {
     return when (action) {
         is PrivacyNoticeBannerAction.OnCloseClicked,
-        is PrivacyNoticeBannerAction.OnFragmentStopped,
+        is PrivacyNoticeBannerAction.OnNavigatedAwayFromHome,
             -> state.copy(visible = false)
 
         is PrivacyNoticeBannerAction.OnLearnMoreClicked,

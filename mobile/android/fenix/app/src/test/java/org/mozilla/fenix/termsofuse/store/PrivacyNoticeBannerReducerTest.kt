@@ -26,7 +26,7 @@ class PrivacyNoticeBannerReducerTest {
     }
 
     @Test
-    fun `WHEN the OnFragmentStopped action is received THEN the visibility of the banner is set to false`() {
+    fun `WHEN the OnNavigatedAwayFromHome action is received THEN the visibility of the banner is set to false`() {
         store = PrivacyNoticeBannerStore(
             initialState = PrivacyNoticeBannerState(
                 visible = true,
@@ -34,7 +34,7 @@ class PrivacyNoticeBannerReducerTest {
             middleware = emptyList(),
         )
 
-        store.dispatch(PrivacyNoticeBannerAction.OnFragmentStopped)
+        store.dispatch(PrivacyNoticeBannerAction.OnNavigatedAwayFromHome)
 
         assertFalse(store.state.visible)
     }
