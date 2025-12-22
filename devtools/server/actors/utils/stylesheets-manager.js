@@ -316,7 +316,7 @@ class StyleSheetsManager extends EventEmitter {
    * Return resourceId of the given style sheet or create one if the stylesheet wasn't
    * registered yet.
    *
-   * @params {StyleSheet} styleSheet
+   * @param {StyleSheet} styleSheet
    * @returns {string} resourceId
    */
   getStyleSheetResourceId(styleSheet) {
@@ -335,7 +335,7 @@ class StyleSheetsManager extends EventEmitter {
    * Return the associated resourceId of the given registered style sheet, or null if the
    * stylesheet wasn't registered yet.
    *
-   * @params {StyleSheet} styleSheet
+   * @param {StyleSheet} styleSheet
    * @returns {string} resourceId
    */
   #findStyleSheetResourceId(styleSheet) {
@@ -354,7 +354,7 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Return owner node of the style sheet of the given resource id.
    *
-   * @params {string} resourceId
+   * @param {string} resourceId
    *                  The id associated with the stylesheet
    * @returns {Element|null}
    */
@@ -366,7 +366,7 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Return the index of given stylesheet of the given resource id.
    *
-   * @params {string} resourceId
+   * @param {string} resourceId
    *                  The id associated with the stylesheet
    * @returns {number}
    */
@@ -393,7 +393,7 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Get the text of a stylesheet given its resourceId.
    *
-   * @params {string} resourceId
+   * @param {string} resourceId
    *                  The id associated with the stylesheet
    * @returns {string}
    */
@@ -414,7 +414,7 @@ class StyleSheetsManager extends EventEmitter {
   /**
    * Toggle the disabled property of the stylesheet
    *
-   * @params {string} resourceId
+   * @param {string} resourceId
    *                  The id associated with the stylesheet
    * @return {boolean} the disabled state after toggling.
    */

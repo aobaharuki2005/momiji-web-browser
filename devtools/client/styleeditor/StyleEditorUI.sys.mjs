@@ -175,11 +175,11 @@ export class StyleEditorUI extends EventEmitter {
   /**
    * Initiates the style editor ui creation, and start to track TargetCommand updates.
    *
-   * @params {object} options
-   * @params {object} options.stylesheetToSelect
-   * @params {StyleSheetResource} options.stylesheetToSelect.stylesheet
-   * @params {Integer} options.stylesheetToSelect.line
-   * @params {Integer} options.stylesheetToSelect.column
+   * @param {object} options
+   * @param {object} options.stylesheetToSelect
+   * @param {StyleSheetResource} options.stylesheetToSelect.stylesheet
+   * @param {Integer} options.stylesheetToSelect.line
+   * @param {Integer} options.stylesheetToSelect.column
    */
   async initialize(options = {}) {
     this.createUI();
@@ -472,8 +472,8 @@ export class StyleEditorUI extends EventEmitter {
   /**
    * Opens the Options Popup Menu
    *
-   * @params {number} screenX
-   * @params {number} screenY
+   * @param {number} screenX
+   * @param {number} screenY
    *   Both obtained from the event object, used to position the popup
    */
   #onOptionsButtonClick = ({ screenX, screenY }) => {
