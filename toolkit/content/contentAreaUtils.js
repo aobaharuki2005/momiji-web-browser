@@ -675,9 +675,9 @@ function initFileInfo(
  *        An nsIURI associated with the download. The last used
  *        directory of the picker is retrieved from/stored in the
  *        Content Pref Service using this URI.
- * @return Promise
- * @resolve a boolean. When true, it indicates that the file picker dialog
- *          is accepted.
+ * @returns {Promise<boolean>}
+ *   Resolves to a boolean. When true, it indicates that the file picker dialog is
+ *   accepted.
  */
 function promiseTargetFile(
   aFpP,

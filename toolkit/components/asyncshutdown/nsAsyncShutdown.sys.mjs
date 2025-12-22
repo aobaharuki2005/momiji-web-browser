@@ -67,7 +67,7 @@ class PropertyBagConverter {
    *
    * @param {jsval} val JS value to convert.
    * @returns {nsIPropertyBag} A PropertyBag.
-   * @note function is converted to "(function)" and undefined to null.
+   * Note: function is converted to "(function)" and undefined to null.
    */
   jsValueToPropertyBag(val) {
     let bag = Cc["@mozilla.org/hash-property-bag;1"].createInstance(

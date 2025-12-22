@@ -3014,9 +3014,9 @@ var AddonManagerInternal = {
    *
    * @param  aIDs
    *         The array of IDs to retrieve
-   * @return {Promise}
-   * @resolves The array of found add-ons.
-   * @rejects  Never
+   * @returns {Promise}
+   *   Resolves to the array of found add-ons.
+   * @rejects Never
    * @throws if the aIDs argument is not specified
    */
   getAddonsByIDs(aIDs) {
@@ -3089,9 +3089,9 @@ var AddonManagerInternal = {
    * @param  aTypes
    *         An optional array of types to retrieve. Each type is a string name
    *
-   * @resolve {addons: Array, fullData: bool}
-   *          fullData is true if addons contains all the data we have on those
-   *          addons. It is false if addons only contains partial data.
+   * @returns {Promise<{addons: Array, fullData: boolean}>}
+   *   fullData is true if addons contains all the data we have on those addons.
+   *   It is false if addons only contains partial data.
    */
   async getActiveAddons(aTypes) {
     if (!gStarted) {
@@ -5974,8 +5974,8 @@ AMTelemetry = {
   },
 
   /**
-   * @params {object} opts
-   * @params {nsIURI} opts.displayURI
+   * @param {object} opts
+   * @param {nsIURI} opts.displayURI
    */
   recordSuspiciousSiteEvent({ displayURI }) {
     let site = displayURI?.displayHost ?? "(unknown)";
