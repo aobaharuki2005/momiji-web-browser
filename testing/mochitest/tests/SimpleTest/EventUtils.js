@@ -4164,14 +4164,10 @@ function _checkDataTransferItems(aDataTransfer, aExpectedDragData) {
 }
 
 /**
- * This callback type is used with ``synthesizePlainDragAndCancel()``.
- * It should compare ``actualData`` and ``expectedData`` and return
- * true if the two should be considered equal, false otherwise.
- *
- * @callback eqTest
- * @param {*} actualData
- * @param {*} expectedData
- * @return {boolean}
+ * @typedef {(actualData: any, expectedData: any) -> boolean} eqTest
+ *   This callback type is used with ``synthesizePlainDragAndCancel()``.
+ *   It should compare ``actualData`` and ``expectedData`` and return
+ *   true if the two should be considered equal, false otherwise.
  */
 
 /**
@@ -4188,14 +4184,14 @@ function _checkDataTransferItems(aDataTransfer, aExpectedDragData) {
  *
  *        [
  *          [
- *            {"type": value, "data": value, eqTest: function}
+ *            {"type": value, "data": value, "eqTest": eqTest}
  *            ...,
  *          ],
  *          ...
  *        ]
  *
  *        This can also be null.
- *        You can optionally provide ``eqTest`` {@type eqTest} if the
+ *        You can optionally provide ``eqTest`` if the
  *        comparison to the expected data transfer items can't be done
  *        with x == y;
  * @return {boolean}
