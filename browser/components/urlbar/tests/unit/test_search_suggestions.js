@@ -102,29 +102,27 @@ function makeRemoteSuggestionResults(
 
 function setResultGroups(groups) {
   sandbox.restore();
-  sandbox.stub(UrlbarPrefs, "resultGroups").get(() => {
-    return {
-      children: [
-        // heuristic
-        {
-          maxResultCount: 1,
-          children: [
-            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST },
-            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_EXTENSION },
-            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_SEARCH_TIP },
-            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_OMNIBOX },
-            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL },
-            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE },
-            { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK },
-          ],
-        },
-        // extensions using the omnibox API
-        {
-          group: UrlbarUtils.RESULT_GROUP.OMNIBOX,
-        },
-        ...groups,
-      ],
-    };
+  sandbox.stub(UrlbarPrefs, "getResultGroups").returns({
+    children: [
+      // heuristic
+      {
+        maxResultCount: 1,
+        children: [
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TEST },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_EXTENSION },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_SEARCH_TIP },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_OMNIBOX },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_AUTOFILL },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_TOKEN_ALIAS_ENGINE },
+          { group: UrlbarUtils.RESULT_GROUP.HEURISTIC_FALLBACK },
+        ],
+      },
+      // extensions using the omnibox API
+      {
+        group: UrlbarUtils.RESULT_GROUP.OMNIBOX,
+      },
+      ...groups,
+    ],
   });
 }
 

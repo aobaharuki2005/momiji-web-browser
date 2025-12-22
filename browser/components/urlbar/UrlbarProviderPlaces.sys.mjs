@@ -573,6 +573,7 @@ class Search {
 
     this.#listener = listener;
     this.#provider = provider;
+    this.#queryContext = queryContext;
   }
 
   /**
@@ -797,6 +798,7 @@ class Search {
   #searchModeEngine;
   #searchTokens;
   #userContextId;
+  #queryContext;
 
   /**
    * Used to avoid adding duplicate entries to the results.
@@ -1084,7 +1086,10 @@ class Search {
     let index = 0;
     if (!this.#groups) {
       this.#groups = [];
-      this.#makeGroups(lazy.UrlbarPrefs.resultGroups, this.#maxResults);
+      this.#makeGroups(
+        lazy.UrlbarPrefs.getResultGroups({ context: this.#queryContext }),
+        this.#maxResults
+      );
     }
 
     let replace = false;
