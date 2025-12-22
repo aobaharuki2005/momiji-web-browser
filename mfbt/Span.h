@@ -382,6 +382,7 @@ class MOZ_GSL_POINTER Span {
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
   constexpr static const index_type extent = Extent;
+  constexpr static const index_type npos = index_type(-1);
 
   // [Span.cons], Span constructors, copy, assignment, and destructor
   // "Dependent" is needed to make "std::enable_if_t<(Dependent ||
@@ -829,6 +830,18 @@ class MOZ_GSL_POINTER Span {
 
   constexpr Span<std::add_const_t<ElementType>, Extent> AsConst() const {
     return {Elements(), Length()};
+  }
+
+  // Returns the index of the given element in the span, or `npos` otherwise.
+  template <typename Item>
+  index_type IndexOf(const Item& aItem) const {
+    auto begin = this->begin();
+    auto end = this->end();
+    auto it = std::find(begin, end, aItem);
+    if (it == end) {
+      return npos;
+    }
+    return index_type(it - begin);
   }
 
  private:

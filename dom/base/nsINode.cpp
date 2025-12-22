@@ -3385,16 +3385,11 @@ inline static Element* FindMatchingElementWithId(
       aRoot.IsInUncomposedDoc() || aRoot.IsInShadowTree(),
       "Don't call me if the root is not in the document or in a shadow tree");
 
-  const nsTArray<Element*>* elements =
-      aContainingDocOrShadowRoot.GetAllElementsForId(aId);
-  if (!elements) {
-    // Nothing to do; we're done
-    return nullptr;
-  }
+  Span elements = aContainingDocOrShadowRoot.GetAllElementsForId(aId);
 
   // XXXbz: Should we fall back to the tree walk if |elements| is long,
   // for some value of "long"?
-  for (Element* element : *elements) {
+  for (Element* element : elements) {
     if (MOZ_UNLIKELY(element == &aRoot)) {
       continue;
     }
