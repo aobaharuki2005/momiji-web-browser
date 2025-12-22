@@ -69,6 +69,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithTextAndIndex
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
@@ -1359,7 +1360,8 @@ class BrowserRobot(private val composeTestRule: ComposeTestRule) {
     }
 
     fun clickWebCompatPageItem(itemText: String) {
-        clickPageObject(this@BrowserRobot.composeTestRule, itemContainingText(itemText))
+        clickPageObject(composeTestRule, itemWithTextAndIndex(itemText, 0))
+        waitForAppWindowToBeUpdated()
     }
 
     class Transition(private val composeTestRule: ComposeTestRule) {
