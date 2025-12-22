@@ -3306,4 +3306,10 @@ var browserTests = [
     "<div style=\"display:grid\"><span style=\"display:contents\"><span>abcdef</span></span></div>",
     [true],
     {}],
+
+["<p>abc{}<br> </p><p><br></p>",
+    [["forwarddelete",""]],
+    "<p>abc</p>",
+    [true],
+    {}],
 ]
