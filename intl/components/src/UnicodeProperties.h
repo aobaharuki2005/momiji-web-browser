@@ -56,6 +56,7 @@ class UnicodeProperties final {
     BidiPairedBracketType,
     EastAsianWidth,
     HangulSyllableType,
+    IdentifierStatus,
     LineBreak,
     NumericType,
     VerticalOrientation,
@@ -85,6 +86,9 @@ class UnicodeProperties final {
         break;
       case IntProperty::VerticalOrientation:
         prop = UCHAR_VERTICAL_ORIENTATION;
+        break;
+      case IntProperty::IdentifierStatus:
+        prop = UCHAR_IDENTIFIER_STATUS;
         break;
     }
     return u_getIntPropertyValue(aCh, prop);
