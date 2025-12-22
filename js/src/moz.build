@@ -301,32 +301,6 @@ EXPORTS.js.shadow += [
 ]
 
 UNIFIED_SOURCES += [
-    "builtin/Array.cpp",
-    "builtin/AtomicsObject.cpp",
-    "builtin/BigInt.cpp",
-    "builtin/Boolean.cpp",
-    "builtin/DataViewObject.cpp",
-    "builtin/Eval.cpp",
-    "builtin/FinalizationRegistryObject.cpp",
-    "builtin/JSON.cpp",
-    "builtin/MapObject.cpp",
-    "builtin/ModuleObject.cpp",
-    "builtin/Object.cpp",
-    "builtin/ParseRecordObject.cpp",
-    "builtin/Profilers.cpp",
-    "builtin/Promise.cpp",
-    "builtin/RawJSONObject.cpp",
-    "builtin/Reflect.cpp",
-    "builtin/ReflectParse.cpp",
-    "builtin/ShadowRealm.cpp",
-    "builtin/String.cpp",
-    "builtin/Symbol.cpp",
-    "builtin/TestingFunctions.cpp",
-    "builtin/TestingUtility.cpp",
-    "builtin/WeakMapObject.cpp",
-    "builtin/WeakRefObject.cpp",
-    "builtin/WeakSetObject.cpp",
-    "builtin/WrappedFunctionObject.cpp",
     "ds/Bitmap.cpp",
     "ds/LifoAlloc.cpp",
     "jsapi.cpp",
@@ -451,14 +425,11 @@ UNIFIED_SOURCES += [
     "vm/Xdr.cpp",
 ]
 
-# builtin/RegExp.cpp cannot be built in unified mode because it causes huge
-#   win32 test slowdowns
 # jsmath.cpp cannot be built in unified mode because it needs to re-#define the
 #   RtlGenRandom declaration's calling convention in <ntsecapi.h> on Windows.
 # vm/Interpreter.cpp is gigantic and destroys incremental build times for any
 #   files unlucky enough to be unified with it.
 SOURCES += [
-    "builtin/RegExp.cpp",
     "jsmath.cpp",
     "vm/Interpreter.cpp",
     "vm/ProfilingStack.cpp",
@@ -471,9 +442,6 @@ if CONFIG["ENABLE_PORTABLE_BASELINE_INTERP"]:
 
 if CONFIG["ENABLE_EXPLICIT_RESOURCE_MANAGEMENT"]:
     UNIFIED_SOURCES += [
-        "builtin/AsyncDisposableStackObject.cpp",
-        "builtin/DisposableStackObject.cpp",
-        "builtin/DisposableStackObjectBase.cpp",
         "vm/DisposableRecord.cpp",
     ]
 
@@ -557,6 +525,7 @@ if CONFIG["MOZ_VTUNE"]:
 
 DIRS += [
     "build",
+    "builtin",
     "debugger",
     "frontend",
     "gc",
@@ -588,70 +557,6 @@ if CONFIG["JS_JITSPEW"]:
     DIRS += ["zydis"]
 
 FINAL_LIBRARY = "js"
-
-selfhosted_inputs = [
-    "../public/friend/ErrorNumbers.msg",
-    # ProfilingCategoryList.h is being indirectly included, and it must be passed
-    # here as an input, so it's generated before this self-hosted JS code
-    # generation. Otherwise, it will intermittently fail to build.
-    "!/mozglue/baseprofiler/public/ProfilingCategoryList.h",
-    "builtin/TypedArrayConstants.h",
-    "builtin/SelfHostingDefines.h",
-    "builtin/Utilities.js",
-    "builtin/Array.js",
-    "builtin/AsyncFunction.js",
-    "builtin/AsyncIteration.js",
-    "builtin/Error.js",
-    "builtin/Generator.js",
-    "builtin/Iterator.js",
-    "builtin/Map.js",
-    "builtin/Number.js",
-    "builtin/Object.js",
-    "builtin/Promise.js",
-    "builtin/Reflect.js",
-    "builtin/RegExp.js",
-    "builtin/RegExpGlobalReplaceOpt.h.js",
-    "builtin/RegExpLocalReplaceOpt.h.js",
-    "builtin/String.js",
-    "builtin/Set.js",
-    "builtin/TypedArray.js",
-    "builtin/WeakMap.js",
-    "builtin/WeakSet.js",
-] + (
-    [
-        "builtin/intl/NumberingSystemsGenerated.h",
-        "builtin/intl/Collator.js",
-        "builtin/intl/CommonFunctions.js",
-        "builtin/intl/CurrencyDataGenerated.js",
-        "builtin/intl/DateTimeFormat.js",
-        "builtin/intl/DisplayNames.js",
-        "builtin/intl/DurationFormat.js",
-        "builtin/intl/IntlObject.js",
-        "builtin/intl/ListFormat.js",
-        "builtin/intl/NumberFormat.js",
-        "builtin/intl/PluralRules.js",
-        "builtin/intl/RelativeTimeFormat.js",
-        "builtin/intl/SanctionedSimpleUnitIdentifiersGenerated.js",
-        "builtin/intl/Segmenter.js",
-    ]
-    if CONFIG["JS_HAS_INTL_API"]
-    else []
-)
-
-if CONFIG["ENABLE_EXPLICIT_RESOURCE_MANAGEMENT"]:
-    selfhosted_inputs += [
-        "builtin/AsyncDisposableStack.js",
-        "builtin/DisposableStack.js",
-    ]
-
-# Prepare self-hosted JS code for embedding
-GeneratedFile(
-    "selfhosted.out.h",
-    "selfhosted.js",
-    script="builtin/embedjs.py",
-    entry_point="generate_selfhosted",
-    inputs=selfhosted_inputs,
-)
 
 GeneratedFile(
     "../public/PrefsGenerated.h",
