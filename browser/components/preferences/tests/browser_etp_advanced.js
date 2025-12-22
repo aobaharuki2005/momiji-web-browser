@@ -109,6 +109,74 @@ add_task(async function test_etp_category_radios_and_customize_navigation() {
   BrowserTestUtils.removeTab(tab);
 });
 
+// Ensures the reload tabs message bar appears when ETP settings change.
+add_task(async function test_reload_tabs_message_bar() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [CAT_PREF, "strict"],
+      [BASELINE_PREF, true],
+      [CONVENIENCE_PREF, true],
+    ],
+  });
+
+  info("Open an additional tab so the reload notification will show");
+  let extraTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
+
+  let { doc, tab } = await openEtpPage();
+
+  let reloadTabsHint = getControl(doc, "reloadTabsHint");
+  ok(reloadTabsHint, "reloadTabsHint element exists");
+  ok(
+    BrowserTestUtils.isHidden(reloadTabsHint),
+    "Reload tabs message bar is initially hidden"
+  );
+
+  info("Toggle convenience checkbox to trigger reload notification");
+  let convenienceCheckbox = getControl(doc, "etpAllowListConvenienceEnabled");
+  ok(convenienceCheckbox.checked, "Convenience checkbox starts checked");
+
+  let prefChange = waitForAndAssertPrefState(
+    CONVENIENCE_PREF,
+    false,
+    "Convenience pref disabled"
+  );
+  synthesizeClick(convenienceCheckbox);
+  await prefChange;
+
+  info("Wait for message bar to become visible");
+  await BrowserTestUtils.waitForCondition(
+    () => BrowserTestUtils.isVisible(reloadTabsHint),
+    "Waiting for reload tabs message bar to become visible"
+  );
+
+  ok(
+    BrowserTestUtils.isVisible(reloadTabsHint),
+    "Reload tabs message bar is visible after changing ETP setting"
+  );
+
+  let reloadButton = reloadTabsHint.querySelector("moz-button");
+  ok(reloadButton, "Reload button exists in the message bar");
+
+  info("Click reload button to hide the message bar");
+  synthesizeClick(reloadButton);
+
+  await BrowserTestUtils.waitForCondition(
+    () => BrowserTestUtils.isHidden(reloadTabsHint),
+    "Waiting for reload tabs message bar to become hidden"
+  );
+
+  ok(
+    BrowserTestUtils.isHidden(reloadTabsHint),
+    "Reload tabs message bar is hidden after reload button clicked"
+  );
+
+  BrowserTestUtils.removeTab(extraTab);
+  BrowserTestUtils.removeTab(tab);
+});
+
 // Ensures strict baseline checkbox flows prompt for confirmation and gate the convenience checkbox.
 add_task(async function test_strict_baseline_checkbox_requires_confirmation() {
   await SpecialPowers.pushPrefEnv({

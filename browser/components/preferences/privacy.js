@@ -2879,6 +2879,9 @@ Preferences.addSetting({
 Preferences.addSetting({
   id: "etpAllowListConvenienceEnabled",
   pref: "privacy.trackingprotection.allow_list.convenience.enabled",
+  onUserChange() {
+    gPrivacyPane.maybeNotifyUserToReload();
+  },
 });
 
 Preferences.addSetting({
@@ -2886,6 +2889,24 @@ Preferences.addSetting({
   onUserClick(e) {
     e.preventDefault();
     gotoPref("etpCustomize");
+  },
+});
+
+Preferences.addSetting({
+  id: "reloadTabsHint",
+  _showHint: false,
+  set(value, _, setting) {
+    this._showHint = value;
+    setting.emit("change");
+  },
+  get() {
+    return this._showHint;
+  },
+  visible(_, setting) {
+    return setting.value;
+  },
+  onUserClick() {
+    gPrivacyPane.reloadAllOtherTabs();
   },
 });
 
@@ -2975,6 +2996,9 @@ Preferences.addSetting({
 Preferences.addSetting({
   id: "etpAllowListConvenienceEnabledCustom",
   pref: "privacy.trackingprotection.allow_list.convenience.enabled",
+  onUserChange() {
+    gPrivacyPane.maybeNotifyUserToReload();
+  },
 });
 
 Preferences.addSetting({
@@ -4707,6 +4731,8 @@ var gPrivacyPane = {
     for (let notification of document.querySelectorAll(".reload-tabs")) {
       notification.hidden = true;
     }
+
+    Preferences.getSetting("reloadTabsHint").value = false;
   },
 
   /**
@@ -4728,6 +4754,8 @@ var gPrivacyPane = {
         notification.hidden = false;
       }
     }
+
+    Preferences.getSetting("reloadTabsHint").value = true;
   },
 
   /**

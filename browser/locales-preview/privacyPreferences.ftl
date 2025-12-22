@@ -245,6 +245,12 @@ preferences-etp-advanced-settings-group =
 preferences-etp-customize-button =
     .label = Customize
 
+
+preferences-etp-reload-tabs-hint =
+    .message = Reload your tabs to apply these changes.
+preferences-etp-reload-tabs-hint-button =
+  .label = Reload all tabs
+
 preferences-etp-rfp-warning-message =
     .message = You’re using Resist Fingerprinting (RFP), which replaces some of { -brand-short-name }’s fingerprinting protection settings. This might cause some sites to break.
 
