@@ -3743,11 +3743,11 @@
   <!-- Homepage card title about old Firefox version -->
   <string name="certificate_warning_homepage_card_hcw2_title" tools:ignore="UnusedResources">Za aktualiziranje je preostalo manje od 7 dana</string>
   <!-- Homepage card message about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
-  <string name="certificate_warning_homepage_card_hcw2_message" tools:ignore="BrandUsage,UnusedResources">14. ožujka će dodaci i druge Firefox funkcije prestati raditi jer isteče korijenski certifikat.</string>
+  <string name="certificate_warning_homepage_card_hcw2_message" tools:ignore="BrandUsage,UnusedResources">14. ožujka će dodaci i druge Firefox funkcije prestati raditi jer ističe korijenski certifikat.</string>
   <!-- Homepage card title about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
   <string name="certificate_warning_homepage_card_hcw3_title" tools:ignore="BrandUsage,UnusedResources">Zadnja prilika da zadržiš svoj Firefox</string>
   <!-- Homepage card message about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
-  <string name="certificate_warning_homepage_card_hcw3_message" tools:ignore="BrandUsage,UnusedResources">Tvoja će Firefox verzija prestati ispravno raditi 14. ožujka jer jedan korijenski certifikat isteče.</string>
+  <string name="certificate_warning_homepage_card_hcw3_message" tools:ignore="BrandUsage,UnusedResources">Tvoja će Firefox verzija prestati ispravno raditi 14. ožujka jer jedan korijenski certifikat ističe.</string>
   <!-- Push notification title about old Firefox version. "Update" is a noun. -->
   <string name="certificate_warning_push_notification_update_recommended_title" tools:ignore="UnusedResources">Preporučuje se aktualiziranje</string>
   <!-- Push notification message about old Firefox version -->

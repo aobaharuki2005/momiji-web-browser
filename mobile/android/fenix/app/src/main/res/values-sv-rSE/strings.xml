@@ -630,6 +630,10 @@
   <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">Fortsätt</string>
   <!-- "Not now" onboarding button. -->
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Inte nu</string>
+  <!-- Terms of use (ToU) onboarding title. -->
+  <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Gör dig redo för friheten</string>
+  <!-- Terms of use (ToU) onboarding subtitle. -->
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Snabbt, säkert och kommer inte att avslöja dig.\nSurfandet har precis blivit bättre.</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
@@ -1990,6 +1994,8 @@
   <string name="bookmark_delete_folder_content_description">Ta bort mapp</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Sök bokmärken</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">Sök i mappar</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Objektmeny för %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
