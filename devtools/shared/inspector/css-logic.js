@@ -571,7 +571,8 @@ function getBindingElementAndPseudo(node) {
     if (
       implementedPseudoElement === "::marker" ||
       implementedPseudoElement === "::before" ||
-      implementedPseudoElement === "::after"
+      implementedPseudoElement === "::after" ||
+      implementedPseudoElement === "::backdrop"
     ) {
       pseudo = getNodeDisplayName(node);
       bindingElement = node.parentNode;
