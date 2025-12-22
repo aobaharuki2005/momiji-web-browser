@@ -1123,6 +1123,36 @@ struct ContainingBlockRect {
   }
 };
 
+static SideBits GetScrollCompensatedSidesFor(
+    const StylePositionArea& aPositionArea) {
+  SideBits sides{SideBits::eNone};
+  // The opposite side of the direction keyword is attached to the
+  // position-anchor grid, which is then attached to the anchor, and so is
+  // scroll compensated. `center` is constrained by the position-area grid
+  // on both sides. `span-all` is unconstrained in that axis.
+  if (aPositionArea.first == StylePositionAreaKeyword::Left ||
+      aPositionArea.first == StylePositionAreaKeyword::SpanLeft) {
+    sides |= SideBits::eRight;
+  } else if (aPositionArea.first == StylePositionAreaKeyword::Right ||
+             aPositionArea.first == StylePositionAreaKeyword::SpanRight) {
+    sides |= SideBits::eLeft;
+  } else if (aPositionArea.first == StylePositionAreaKeyword::Center) {
+    sides |= SideBits::eLeftRight;
+  }
+
+  if (aPositionArea.second == StylePositionAreaKeyword::Top ||
+      aPositionArea.second == StylePositionAreaKeyword::SpanTop) {
+    sides |= SideBits::eBottom;
+  } else if (aPositionArea.second == StylePositionAreaKeyword::Bottom ||
+             aPositionArea.second == StylePositionAreaKeyword::SpanBottom) {
+    sides |= SideBits::eTop;
+  } else if (aPositionArea.first == StylePositionAreaKeyword::Center) {
+    sides |= SideBits::eTopBottom;
+  }
+
+  return sides;
+}
+
 // XXX Optimize the case where it's a resize reflow and the absolutely
 // positioned child has the exact same size and position and skip the
 // reflow...
@@ -1265,6 +1295,10 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
                   containingBlock, aKidFrame->GetWritingMode(),
                   aDelegatingFrame->GetWritingMode(), positionArea,
                   &resolvedPositionArea);
+          // By definition, we're using the default anchor, and are scroll
+          // compensated.
+          aAnchorPosResolutionCache->mReferenceData->mScrollCompensatedSides =
+              GetScrollCompensatedSidesFor(resolvedPositionArea);
           return ContainingBlockRect{
               offset, resolvedPositionArea,
               aOriginalScrollableContainingBlockRect,
@@ -1400,6 +1434,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     ReflowOutput kidDesiredSize(kidReflowInput);
     aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowInput, aStatus);
 
+    nsMargin insets;
     if (aKidFrame->IsMenuPopupFrame()) {
       // Do nothing. Popup frame will handle its own positioning.
     } else if (kidPrevInFlow) {
@@ -1477,6 +1512,26 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       const auto* placeholderContainer =
           GetPlaceholderContainer(kidReflowInput.mFrame);
 
+      insets = [&]() {
+        auto result = offsets;
+        // Zero out weaker insets, if one exists - This offset gets forced to
+        // the margin edge of the child on that side, and for the purposes of
+        // overflow checks, we consider them to be zero.
+        if (iStartInsetAuto && !iEndInsetAuto) {
+          result.IStart(outerWM) = 0;
+        } else if (iInsetAuto) {
+          result.IEnd(outerWM) = 0;
+        }
+        if (bStartInsetAuto && !bEndInsetAuto) {
+          result.BStart(outerWM) = 0;
+        } else if (bInsetAuto) {
+          result.BEnd(outerWM) = 0;
+        }
+        return result.GetPhysicalMargin(outerWM);
+      }();
+      if (aAnchorPosResolutionCache) {
+        aAnchorPosResolutionCache->mReferenceData->mInsets = insets;
+      }
       if (!iInsetAuto) {
         MOZ_ASSERT(
             !kidReflowInput.mFlags.mIOffsetsNeedCSSAlign,
@@ -1565,11 +1620,20 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       aAnchorPosResolutionCache->mReferenceData->mDefaultScrollShift = offset;
     }();
 
+    const auto FitsInContainingBlock = [&]() {
+      if (aAnchorPosResolutionCache) {
+        return AnchorPositioningUtils::FitsInContainingBlock(
+            aKidFrame, *aAnchorPosResolutionCache->mReferenceData);
+      }
+      auto imcbSize = cb.mFinalRect.Size();
+      imcbSize -= nsSize{insets.LeftRight(), insets.TopBottom()};
+      return aKidFrame->GetMarginRectRelativeToSelf().Size() <= imcbSize;
+    };
+
     // FIXME(bug 2004495): Per spec this should be the inset-modified
     // containing-block, see:
     // https://drafts.csswg.org/css-anchor-position-1/#fallback-apply
-    const auto fits = aStatus.IsComplete() && cb.mMaybeScrollableRect.Contains(
-                                                  aKidFrame->GetMarginRect());
+    const auto fits = aStatus.IsComplete() && FitsInContainingBlock();
     if (fallbacks.IsEmpty() || fits) {
       // We completed the reflow - Either we had a fallback that fit, or we
       // didn't have any to try in the first place.
