@@ -14,7 +14,7 @@
 
 #include <stddef.h>
 
-static const PRTime kCTExpirationTime = INT64_C(1772103418000000);
+static const PRTime kCTExpirationTime = INT64_C(1772448758000000);
 
 namespace mozilla::ct {
 
@@ -208,7 +208,7 @@ const CTLogInfo kCTLogList[] = {
      "\x99",
      91},
     {"DigiCert 'Wyvern2027h1'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1760119200000,  // 2025-10-10T18:00:00Z
+     1766253600000,  // 2025-12-20T18:00:00Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x6a\xcb\x71\x62\x3d\x66\x9e\xd1\xae"
@@ -218,7 +218,7 @@ const CTLogInfo kCTLogList[] = {
      "\xee",
      91},
     {"DigiCert 'Wyvern2027h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1760119200000,  // 2025-10-10T18:00:00Z
+     1766253600000,  // 2025-12-20T18:00:00Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xb8\xe8\x3c\x85\xc8\x1a\x61\x3f\xcc"
@@ -258,7 +258,7 @@ const CTLogInfo kCTLogList[] = {
      "\xcd",
      91},
     {"DigiCert 'sphinx2027h1'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1760119200000,  // 2025-10-10T18:00:00Z
+     1766253600000,  // 2025-12-20T18:00:00Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\xbe\x2a\xc8\xab\x55\xcf\xc2\x0c\x06"
@@ -268,7 +268,7 @@ const CTLogInfo kCTLogList[] = {
      "\x21",
      91},
     {"DigiCert 'sphinx2027h2'", CTLogState::Admissible, CTLogFormat::RFC6962,
-     1760119200000,  // 2025-10-10T18:00:00Z
+     1766253600000,  // 2025-12-20T18:00:00Z
      2,              // operated by DigiCert
      "\x30\x59\x30\x13\x06\x07\x2a\x86\x48\xce\x3d\x02\x01\x06\x08\x2a\x86\x48"
      "\xce\x3d\x03\x01\x07\x03\x42\x00\x04\x50\x27\xb6\xdc\xcf\x3c\xf6\x60\x2c"
