@@ -245,6 +245,9 @@ void InspectorUtils::GetChildrenForNode(nsINode& aNode,
     }
   }
   nsIContent* parent = aNode.AsContent();
+  if (auto* node = nsLayoutUtils::GetBackdropPseudo(parent)) {
+    aResult.AppendElement(node);
+  }
   if (auto* node = nsLayoutUtils::GetMarkerPseudo(parent)) {
     aResult.AppendElement(node);
   }
