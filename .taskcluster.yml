@@ -418,7 +418,7 @@ tasks:
                           scopes:
                               $switch:
                                   isPullRequest:
-                                      - 'assume:repo:${repoUrl[8:]}:${eventType}'
+                                      - 'assume:repo:${baseRepoUrl[8:]}:${eventType}'
                                   'eventType == "push"':
                                       - 'assume:repo:${repoUrl[8:]}:branch:${shortRef}'
                           dependencies: []
