@@ -300,17 +300,6 @@ if CONFIG["MOZ_INSTRUMENTS"]:
         "devtools/Instruments.cpp",
     ]
 
-if CONFIG["JS_HAS_CTYPES"]:
-    SOURCES += [
-        "ctypes/CTypes.cpp",
-        "ctypes/Library.cpp",
-    ]
-    if not CONFIG["MOZ_SYSTEM_FFI"]:
-        LOCAL_INCLUDES += [
-            "!ctypes/libffi/include",
-            "ctypes/libffi/src/%s" % CONFIG["FFI_TARGET_DIR"],
-        ]
-
 if CONFIG["MOZ_VTUNE"]:
     SOURCES += [
         "vtune/ittnotify_static.c",
@@ -344,6 +333,9 @@ DIRS += [
     "xsum",
 ]
 
+if CONFIG["JS_HAS_CTYPES"]:
+    DIRS += ["ctypes"]
+
 if CONFIG["JS_HAS_INTL_API"]:
     DIRS += ["builtin/intl", "builtin/temporal"]
 
@@ -372,10 +364,6 @@ GeneratedFile(
     entry_point="generate_prefs_header",
     inputs=["../../modules/libpref/init/StaticPrefList.yaml"],
 )
-
-if CONFIG["JS_HAS_CTYPES"]:
-    if CONFIG["MOZ_SYSTEM_FFI"]:
-        CXXFLAGS += CONFIG["MOZ_FFI_CFLAGS"]
 
 if CONFIG["JS_HAS_INTL_API"]:
     if CONFIG["JS_STANDALONE"]:
