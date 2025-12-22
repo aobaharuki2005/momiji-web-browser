@@ -50,6 +50,7 @@ def params():
         "project": "autoland",
         "pushdate": LAST_BACKSTOP_PUSHDATE + 1,
         "pushlog_id": f"{LAST_BACKSTOP_PUSHID + 1}",
+        "repository_type": "hg",
         "target_tasks_method": "default",
     }
 
@@ -144,6 +145,14 @@ def params():
             {},
             True,
             id="last backstop failed",
+        ),
+        pytest.param(
+            {},
+            {
+                "repository_type": "git",
+            },
+            True,
+            id="git",
         ),
     ),
 )
