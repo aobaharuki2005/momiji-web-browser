@@ -400,7 +400,11 @@ class InactivePropertyHelper {
       // clear property used on non-floating elements.
       {
         invalidProperties: ["clear"],
-        when: () => !this.isBlockLevel(),
+        when: () =>
+          !this.isBlockLevel() &&
+          // The br element is a special case and allows clear for backwards compatibility to make its clear attribute work.
+          // https://html.spec.whatwg.org/multipage/rendering.html#phrasing-content-3
+          this.localName != "br",
         fixId: "inactive-css-not-block-fix",
         msgId: "inactive-css-not-block",
       },
