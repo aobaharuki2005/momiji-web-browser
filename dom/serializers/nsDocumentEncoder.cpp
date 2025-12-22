@@ -987,8 +987,11 @@ nsresult nsDocumentEncoder::NodeSerializer::SerializeToStringRecursive(
     ++counter;
     if (allowCrossShadowBoundary) {
       if (const auto* slot = HTMLSlotElement::FromNode(node)) {
-        auto* next = slot->AssignedNodes().SafeElementAt(counter);
-        return next;
+        auto assigned = slot->AssignedNodes();
+        if (size_t(counter) < assigned.Length()) {
+          return assigned[counter];
+        }
+        return nullptr;
       }
     }
 
@@ -1260,8 +1263,11 @@ nsresult nsDocumentEncoder::RangeSerializer::SerializeChildrenOfContent(
                             uint32_t aCurrentIndex) -> nsIContent* {
     if (mAllowCrossShadowBoundary == AllowRangeCrossShadowBoundary::Yes) {
       if (const auto* slot = HTMLSlotElement::FromNode(&aContent)) {
-        auto* next = slot->AssignedNodes().SafeElementAt(++aCurrentIndex);
-        return nsIContent::FromNodeOrNull(next);
+        auto assigned = slot->AssignedNodes();
+        if (++aCurrentIndex < assigned.Length()) {
+          return nsIContent::FromNode(assigned[aCurrentIndex]);
+        }
+        return nullptr;
       }
     }
 
