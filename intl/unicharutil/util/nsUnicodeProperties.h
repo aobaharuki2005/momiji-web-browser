@@ -14,15 +14,6 @@
 #include "nsUGenCategory.h"
 #include "harfbuzz/hb.h"
 
-struct nsCharProps2 {
-  // Currently only 2 bits are defined here, so 6 more could be added without
-  // affecting the storage requirements for this struct. Or we could pack two
-  // records per byte, at the cost of a slightly more complex accessor.
-  unsigned char mIdType : 2;
-};
-
-const nsCharProps2& GetCharProps2(uint32_t aCh);
-
 namespace mozilla {
 
 namespace unicode {
