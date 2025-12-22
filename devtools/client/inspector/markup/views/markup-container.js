@@ -482,7 +482,7 @@ MarkupContainer.prototype = {
 
   _onKeyDown(event) {
     const { target, keyCode, shiftKey } = event;
-    const isInput = this.markup._isInputOrTextarea(target);
+    const isInput = this.markup.isInputOrTextareaOrInCodeMirrorEditor(target);
 
     // Ignore all keystrokes that originated in editors except for when 'Tab' is
     // pressed.
