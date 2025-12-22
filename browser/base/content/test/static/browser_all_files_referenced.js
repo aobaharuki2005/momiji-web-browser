@@ -347,10 +347,6 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/prompts/AssistantPrompts.sys.mjs",
   },
-  // Bug 2002638 - Move search browsing history to AI-window r?mardak (backed out due to unused file)
-  {
-    file: "moz-src:///browser/components/aiwindow/models/Tools.sys.mjs",
-  },
   // Bug 2004888 - [FirstRun] Create Firstrun.html opening firstrun welcome screen
   {
     file: "chrome://browser/content/aiwindow/firstrun.html",

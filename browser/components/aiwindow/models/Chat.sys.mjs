@@ -11,12 +11,22 @@ import {
   OAUTH_CLIENT_ID,
   SCOPE_PROFILE,
 } from "resource://gre/modules/FxAccountsCommon.sys.mjs";
+import {
+  toolsConfig,
+  getOpenTabs,
+  searchBrowsingHistory,
+  GetPageContent,
+} from "moz-src:///browser/components/aiwindow/models/Tools.sys.mjs";
 
 /**
  * Chat
  */
 export const Chat = {
-  toolMap: {}, // TODO can import toolMap
+  toolMap: {
+    get_open_tabs: getOpenTabs,
+    search_browsing_history: searchBrowsingHistory,
+    get_page_content: GetPageContent.getPageContent.bind(GetPageContent),
+  },
 
   async _getFxAccountToken() {
     try {
@@ -57,7 +67,7 @@ export const Chat = {
         streamOptions: { enabled: true },
         fxAccountToken,
         tool_choice: "auto",
-        // tools: Add your tools configuration here,
+        tools: toolsConfig,
         args: convo,
       });
 
@@ -84,9 +94,13 @@ export const Chat = {
       }
 
       // 3) Build the assistant tool_calls message exactly as expected by the API
+      // Bug 2006159 - Implement parallel tool calling
+      // TODO: Temporarily only include the first tool call due to quality issue
+      // with subsequent tool call responses, will include all later once above
+      // ticket is resolved.
       const assistantToolMsg = {
         role: "assistant",
-        tool_calls: pendingToolCalls.map(toolCall => ({
+        tool_calls: pendingToolCalls.slice(0, 1).map(toolCall => ({
           id: toolCall.id,
           type: "function",
           function: {
@@ -97,6 +111,7 @@ export const Chat = {
       };
 
       // 4) Execute each tool locally and create a tool message with the result
+      // TODO: Temporarily only execute the first tool call, will run all later
       const toolResultMessages = [];
       for (const toolCall of pendingToolCalls) {
         const { id, function: functionSpec } = toolCall;
@@ -146,6 +161,9 @@ export const Chat = {
           tool_call_id: id,
           content: typeof result === "string" ? result : JSON.stringify(result),
         });
+
+        // Bug 	2006159 - Implement parallel tool calling, remove after implemented
+        break;
       }
 
       convo = [...convo, assistantToolMsg, ...toolResultMessages];
