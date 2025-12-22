@@ -14,7 +14,7 @@ const MAX_DATA_URL_LENGTH = 40;
  * - why their expectations may not have been fulfilled
  * - how browsers process CSS
  *
- * @constructor
+ * @class
  */
 
 loader.lazyRequireGetter(

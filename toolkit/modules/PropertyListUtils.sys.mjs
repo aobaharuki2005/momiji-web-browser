@@ -828,7 +828,7 @@ XMLPropertyListReader.prototype = {
  *
  * @member _lazyGetters
  *         Set() object to hold keys invoking LazyGetter.
- * @method get
+ * @function get
  *         Trap for getting property values. Ensures that if a lazyGetter is present
  *         as value for key, then the function is evaluated, the value is cached,
  *         and its value will be returned.

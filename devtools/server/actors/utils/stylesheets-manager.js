@@ -60,7 +60,7 @@ const modifiedStyleSheets = new WeakMap();
 /**
  * Manage stylesheets related to a given Target Actor.
  *
- * @emits stylesheet-updated: emitted when there was changes in a stylesheet
+ * @fires stylesheet-updated: emitted when there was changes in a stylesheet
  *        First arg is an object with the following properties:
  *        - resourceId {String}: The id that was assigned to the stylesheet
  *        - updateKind {String}: Which kind of update it is ("style-applied",

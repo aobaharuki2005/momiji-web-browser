@@ -56,7 +56,7 @@ function ok(bool, msg) {
  * @note If resetAfter and resetTo are omitted, only the initial timeout setting
  * applies.
  *
- * @constructor
+ * @class
  * @implements DOMEventListener
  */
 function RequestTracker(async, id, timeLimit /*[, resetAfter, resetTo]*/) {

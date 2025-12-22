@@ -67,7 +67,7 @@ const BLANK_LINE_RX = /^[ \t]*(?:\r\n|\n|\r|\f|$)/;
  */
 class RuleRewriter {
   /**
-   * @constructor
+   * @class
    * @param {Window} win
    * @param {Function} isCssPropertyKnown
    *        A function to check if the CSS property is known. This is either an

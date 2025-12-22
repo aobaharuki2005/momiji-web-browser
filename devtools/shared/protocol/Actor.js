@@ -30,7 +30,7 @@ exports.actorSpecs = actorSpecs;
  *   Either a DevToolsServerConnection or a DevToolsClient.  Must have
  *   addActorPool, removeActorPool, and poolFor.
  *   conn can be null if the subclass provides a conn property.
- * @constructor
+ * @class
  */
 
 class Actor extends Pool {

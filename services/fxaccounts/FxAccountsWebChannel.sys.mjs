@@ -153,7 +153,7 @@ function getErrorDetails(error) {
  *     The ID of the WebChannel
  *     @param {string} options.helpers
  *     Helpers functions. Should only be passed in for testing.
- * @constructor
+ * @class
  */
 export function FxAccountsWebChannel(options) {
   if (!options) {

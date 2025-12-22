@@ -4334,7 +4334,7 @@ export var AddonManager = {
     return gStartedPromise.promise;
   },
 
-  /** @constructor */
+  /** @class */
   init() {
     this._stateToString = new Map();
     for (let [name, value] of this._states) {

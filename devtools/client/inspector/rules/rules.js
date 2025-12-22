@@ -878,7 +878,7 @@ class CssRuleView extends EventEmitter {
   /**
    * Actually update search data and update the UI to reflect the current search.
    *
-   * @emits ruleview-filtered
+   * @fires ruleview-filtered
    */
   _doFilterStyles() {
     this.searchData = {

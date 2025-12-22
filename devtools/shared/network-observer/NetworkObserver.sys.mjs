@@ -98,7 +98,7 @@ const HTTP_DOWNLOAD_ACTIVITIES = [
  * http-on-examine-response notifications. All network request information is
  * routed to the remote Web Console.
  *
- * @constructor
+ * @class
  * @param {object} options
  * @param {Function(nsIChannel): boolean} options.ignoreChannelFunction
  *        This function will be called for every detected channel to decide if it
