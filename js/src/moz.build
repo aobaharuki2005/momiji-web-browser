@@ -326,12 +326,6 @@ if CONFIG["MOZ_VTUNE"]:
 if CONFIG["JS_HAS_INTL_API"]:
     DIRS += ["builtin/intl", "builtin/temporal"]
 
-# Bug 1739321 - clang 13+ only emits debuginfo for classes that are actually
-# constructed, and we cheat in a number of cases. The flag exists at least
-# back to clang 4.
-if CONFIG["CC_TYPE"] == "clang":
-    CXXFLAGS += ["-fstandalone-debug"]
-
 CXXFLAGS += CONFIG["MOZ_ZLIB_CFLAGS"]
 
 # Bug 1722102 - This should never be enabled in Release without explicit
