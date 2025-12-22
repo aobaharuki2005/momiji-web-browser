@@ -76,6 +76,7 @@ const LOAD_CAUSE_STRINGS = {
   [Ci.nsIContentPolicy.TYPE_FONT]: "font",
   [Ci.nsIContentPolicy.TYPE_MEDIA]: "media",
   [Ci.nsIContentPolicy.TYPE_WEBSOCKET]: "websocket",
+  [Ci.nsIContentPolicy.TYPE_WEB_TRANSPORT]: "webtransport",
   [Ci.nsIContentPolicy.TYPE_CSP_REPORT]: "csp",
   [Ci.nsIContentPolicy.TYPE_XSLT]: "xslt",
   [Ci.nsIContentPolicy.TYPE_BEACON]: "beacon",
