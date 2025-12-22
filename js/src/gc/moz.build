@@ -61,3 +61,6 @@ SOURCES += [
     #   bundled with.
     "StoreBuffer.cpp",
 ]
+
+if CONFIG["FUZZING_JS_FUZZILLI"]:
+    include("/tools/fuzzing/libfuzzer-config.mozbuild")

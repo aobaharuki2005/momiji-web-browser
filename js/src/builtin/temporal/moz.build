@@ -34,3 +34,6 @@ UNIFIED_SOURCES += [
     "ToString.cpp",
     "ZonedDateTime.cpp",
 ]
+
+if CONFIG["FUZZING_JS_FUZZILLI"]:
+    include("/tools/fuzzing/libfuzzer-config.mozbuild")

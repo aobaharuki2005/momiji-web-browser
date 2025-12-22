@@ -37,3 +37,6 @@ SOURCES += [
 
 # Suppress warnings in third-party code.
 SOURCES["DoubleToString.cpp"].flags += ["-Wno-implicit-fallthrough"]
+
+if CONFIG["FUZZING_JS_FUZZILLI"]:
+    include("/tools/fuzzing/libfuzzer-config.mozbuild")
