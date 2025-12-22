@@ -25,8 +25,3 @@ skip-if = [
 skip-if = [
   "tsan", # Bug 1683730
 ]
-
-["browser_siteData_srd.js"]
-prefs = [
-  "browser.settings-redesign.cookiesAndSiteData2.enabled=true"
-]

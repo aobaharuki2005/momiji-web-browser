@@ -2703,35 +2703,6 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
-  nonTechnicalPrivacy2: {
-    inProgress: true,
-    l10nId: "non-technical-privacy-heading",
-    headingLevel: 2,
-    items: [
-      {
-        id: "gpcEnabled",
-        l10nId: "global-privacy-control-description",
-        supportPage: "global-privacy-control",
-        controlAttrs: {
-          "search-l10n-ids": "global-privacy-control-search",
-        },
-      },
-      {
-        id: "relayIntegration",
-        l10nId: "preferences-privacy-relay-available",
-        supportPage: "firefox-relay-integration",
-      },
-      {
-        id: "dntRemoval",
-        l10nId: "do-not-track-removal3",
-        control: "moz-message-bar",
-        supportPage: "how-do-i-turn-do-not-track-feature",
-        controlAttrs: {
-          dismissable: true,
-        },
-      },
-    ],
-  },
   securityPrivacyStatus: {
     items: [
       {
@@ -2900,74 +2871,6 @@ SettingGroupManager.registerGroups({
           {
             id: "cookieExceptions",
             l10nId: "sitedata-cookies-exceptions2",
-            control: "moz-box-button",
-            controlAttrs: {
-              "search-l10n-ids": `
-                permissions-address,
-                permissions-block.label,
-                permissions-allow.label,
-                permissions-remove.label,
-                permissions-remove-all.label,
-                permissions-exceptions-cookie-desc
-              `,
-            },
-          },
-        ],
-      },
-      {
-        id: "deleteOnClose",
-        l10nId: "sitedata-delete-on-close",
-      },
-    ],
-  },
-  cookiesAndSiteData2: {
-    inProgress: true,
-    l10nId: "sitedata-heading",
-    headingLevel: 2,
-    items: [
-      {
-        id: "siteDataSize",
-        l10nId: "sitedata-total-size-calculating",
-        control: "moz-box-item",
-        supportPage: "sitedata-learn-more",
-      },
-      {
-        id: "manageDataSettingsGroup",
-        control: "moz-box-group",
-        controlAttrs: {
-          type: "default",
-        },
-        items: [
-          {
-            id: "clearSiteDataButton",
-            l10nId: "sitedata-clear2",
-            control: "moz-box-button",
-            iconSrc: "chrome://browser/skin/flame.svg",
-            controlAttrs: {
-              "search-l10n-ids": `
-                clear-site-data-cookies-empty.label,
-                clear-site-data-cache-empty.label
-              `,
-            },
-          },
-          {
-            id: "siteDataSettings",
-            l10nId: "sitedata-settings3",
-            control: "moz-box-button",
-            controlAttrs: {
-              "search-l10n-ids": `
-                site-data-settings-window.title,
-                site-data-column-host.label,
-                site-data-column-cookies.label,
-                site-data-column-storage.label,
-                site-data-settings-description,
-                site-data-remove-all.label,
-              `,
-            },
-          },
-          {
-            id: "cookieExceptions",
-            l10nId: "sitedata-cookies-exceptions3",
             control: "moz-box-button",
             controlAttrs: {
               "search-l10n-ids": `
@@ -3177,93 +3080,6 @@ SettingGroupManager.registerGroups({
         id: "clearHistoryButton",
         l10nId: "history-clear-button",
         control: "moz-box-button",
-      },
-    ],
-  },
-  history2: {
-    inProgress: true,
-    l10nId: "history-section-header",
-    items: [
-      {
-        id: "deleteOnCloseInfo",
-        l10nId: "sitedata-delete-on-close-private-browsing3",
-        control: "moz-message-bar",
-      },
-      {
-        id: "historyMode",
-        control: "moz-radio-group",
-        options: [
-          {
-            value: "remember",
-            l10nId: "history-remember-option-all",
-          },
-          { value: "dontremember", l10nId: "history-remember-option-never" },
-          {
-            value: "custom",
-            l10nId: "history-remember-option-custom",
-            items: [
-              {
-                id: "customHistoryButton",
-                control: "moz-box-button",
-                l10nId: "history-custom-button",
-              },
-            ],
-          },
-        ],
-        controlAttrs: {
-          "search-l10n-ids": `
-            history-remember-description3,
-            history-dontremember-description3,
-            history-private-browsing-permanent.label,
-            history-remember-browser-option.label,
-            history-remember-search-option.label,
-            history-clear-on-close-option.label,
-            history-clear-on-close-settings.label
-          `,
-        },
-      },
-    ],
-  },
-  historyAdvanced: {
-    l10nId: "history-custom-section-header",
-    headingLevel: 2,
-    items: [
-      {
-        id: "privateBrowsingAutoStart",
-        l10nId: "history-private-browsing-permanent",
-      },
-      {
-        id: "rememberHistory",
-        l10nId: "history-remember-browser-option",
-      },
-      {
-        id: "rememberForms",
-        l10nId: "history-remember-search-option",
-      },
-      {
-        id: "alwaysClear",
-        l10nId: "history-clear-on-close-option",
-        items: [
-          {
-            id: "clearDataSettings",
-            l10nId: "history-clear-on-close-settings",
-            control: "moz-box-button",
-            controlAttrs: {
-              "search-l10n-ids": `
-                    clear-data-settings-label,
-                    history-section-label,
-                    item-history-and-downloads.label,
-                    item-cookies.label,
-                    item-active-logins.label,
-                    item-cache.label,
-                    item-form-search-history.label,
-                    data-section-label,
-                    item-site-settings.label,
-                    item-offline-apps.label
-                  `,
-            },
-          },
-        ],
       },
     ],
   },
