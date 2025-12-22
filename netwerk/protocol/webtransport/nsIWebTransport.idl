@@ -55,6 +55,7 @@ interface nsIWebTransport : nsISupports {
                     in boolean aDedicated,
                     in Array<nsIWebTransportHash> aServerCertHashes,
                     in nsIPrincipal aLoadingPrincipal,
+                    in uint64_t aBrowsingContextID,
                     in unsigned long aSecurityFlags,
                     in WebTransportSessionEventListener aListener,
                     in const_MaybeClientInfoRef aClientInfo,
