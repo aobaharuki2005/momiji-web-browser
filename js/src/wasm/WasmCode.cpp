@@ -528,9 +528,9 @@ bool Code::createManyLazyEntryStubs(const WriteGuard& guard,
     }
   }
 
-  stubCodeBlock->sendToProfiler(*codeMeta_, *codeTailMeta_, codeMetaForAsmJS_,
-                                FuncIonPerfSpewerSpan(),
-                                FuncBaselinePerfSpewerSpan());
+  guard->blocks[*stubBlockIndex]->sendToProfiler(
+      *codeMeta_, *codeTailMeta_, codeMetaForAsmJS_, FuncIonPerfSpewerSpan(),
+      FuncBaselinePerfSpewerSpan());
   return true;
 }
 
