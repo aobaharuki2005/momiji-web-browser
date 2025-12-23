@@ -690,6 +690,54 @@ async function selectHistoryMode(win, value) {
   await popupHiddenPromise;
 }
 
+/**
+ * Select the given history mode in the redesigned privacy pane.
+ *
+ * @param {Window} win - The preferences window which contains the
+ * dropdown.
+ * @param {string} value - The history mode to select.
+ */
+async function selectRedesignedHistoryMode(win, value) {
+  let historyMode = win.document.querySelector(
+    "setting-group[groupid='history2'] #historyMode"
+  );
+  let updated = waitForSettingControlChange(historyMode);
+
+  let optionItems = Array.from(historyMode.children);
+  let targetItem = optionItems.find(option => option.value == value);
+  if (!targetItem) {
+    throw new Error(
+      "Could not find history mode popup item for value: " + value
+    );
+  }
+
+  if (historyMode.value == value) {
+    return;
+  }
+
+  targetItem.click();
+  await updated;
+}
+
+async function updateCheckBoxElement(checkbox, value) {
+  ok(checkbox, "the " + checkbox.id + " checkbox should exist");
+  is_element_visible(
+    checkbox,
+    "the " + checkbox.id + " checkbox should be visible"
+  );
+
+  // No need to click if we're already in the desired state.
+  if (checkbox.checked === value) {
+    return;
+  }
+
+  // Scroll into view for click to succeed.
+  checkbox.scrollIntoView();
+
+  // Toggle the state.
+  await EventUtils.synthesizeMouseAtCenter(checkbox, {}, checkbox.ownerGlobal);
+}
+
 async function updateCheckBox(win, id, value) {
   let checkbox = win.document.getElementById(id);
   ok(checkbox, "the " + id + " checkbox should exist");
