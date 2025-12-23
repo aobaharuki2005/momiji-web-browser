@@ -29,7 +29,7 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
 import org.mozilla.fenix.compose.MessageCardState
-import org.mozilla.fenix.ext.CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT
+import org.mozilla.fenix.ext.TOTAL_CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT
 import org.mozilla.fenix.home.bookmarks.Bookmark
 import org.mozilla.fenix.home.bookmarks.interactor.BookmarksInteractor
 import org.mozilla.fenix.home.collections.CollectionColors
@@ -408,7 +408,7 @@ internal object FakeHomepagePreview {
     }
 
     @Composable
-    internal fun pocketState(limit: Int = CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT) = PocketState(
+    internal fun pocketState(limit: Int = TOTAL_CONTENT_RECOMMENDATIONS_TO_SHOW_COUNT) = PocketState(
         stories = stories(limit = limit),
         categories = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor"
             .split(" ")
