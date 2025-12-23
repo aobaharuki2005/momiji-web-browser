@@ -34,6 +34,10 @@ AVCodecID GetFFmpegEncoderCodecId<LIBAV_VER>(CodecType aCodec) {
       return AV_CODEC_ID_H264;
     }
 
+    if (aCodec == CodecType::H265) {
+      return AV_CODEC_ID_HEVC;
+    }
+
     if (aCodec == CodecType::AV1) {
       return AV_CODEC_ID_AV1;
     }
