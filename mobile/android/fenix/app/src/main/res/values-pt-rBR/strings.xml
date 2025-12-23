@@ -1535,7 +1535,7 @@
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">Compartilhar todas as abas</string>
   <!-- Text shown in the menu to view recently closed tabs -->
-  <string name="tab_tray_menu_recently_closed">Abas fechadas recentemente</string>
+  <string name="tab_tray_menu_recently_closed">Fechadas recentemente</string>
   <!-- Text shown in the tabs tray inactive tabs section -->
   <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">Fechado recentemente</string>
   <!-- Text shown in the menu to view account settings -->
