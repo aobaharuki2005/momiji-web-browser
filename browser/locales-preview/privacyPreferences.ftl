@@ -322,19 +322,4 @@ do-not-track-removal3 =
     .message = We no longer support the “Do Not Track” feature
 
 non-technical-privacy-heading =
-    .label = Website Privacy Preferences
-
-## Site Data
-
-sitedata-heading =
-    .label = Browsing data
-    .description = Manage your cookies, history, cache, website data, and more.
-
-sitedata-settings3 =
-    .label = Clear data for specific sites
-    .accesskey = s
-
-sitedata-cookies-exceptions3 =
-    .label = Manage exceptions
-    .accesskey = x
-    .description = Choose how specific sites handle cookies and site data.
+  .label = Website Privacy Preferences
