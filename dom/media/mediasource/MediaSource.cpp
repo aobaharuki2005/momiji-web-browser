@@ -62,20 +62,16 @@ namespace mozilla {
 
 // Returns true if we should enable MSE webm regardless of preferences.
 // 1. If MP4/H264 isn't supported:
-//   * Windows XP
-//   * Windows Vista and Server 2008 without the optional "Platform Update
-//   Supplement"
-//   * N/KN editions (Europe and Korea) of Windows 7/8/8.1/10 without the
-//     optional "Windows Media Feature Pack"
+//   * N/KN editions (Europe and Korea) of Windows 10/11 without the optional
+//     "Windows Media Feature Pack"
+//   * Some Linux Desktop.
 // 2. If H264 hardware acceleration is not available.
-// 3. The CPU is considered to be fast enough
 static bool IsVP9Forced(DecoderDoctorDiagnostics* aDiagnostics) {
   bool mp4supported = MP4Decoder::IsSupportedType(
       MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)), aDiagnostics);
   bool hwsupported = gfx::gfxVars::CanUseHardwareVideoDecoding();
 #ifdef MOZ_WIDGET_ANDROID
-  return !mp4supported || !hwsupported ||
-         gfx::gfxVars::VP9HwDecodeIsAccelerated();
+  return !mp4supported || !hwsupported || gfx::gfxVars::UseVP9HwDecode();
 #else
   return !mp4supported || !hwsupported;
 #endif
