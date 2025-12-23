@@ -525,6 +525,8 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
                                                   const int32_t& aRounding,
                                                   const double& aScale);
 
+  mozilla::ipc::IPCResult RecvTransparencyChanged(const bool& aIsTransparent);
+
   mozilla::ipc::IPCResult RecvHandleAccessKey(const WidgetKeyboardEvent& aEvent,
                                               nsTArray<uint32_t>&& aCharCodes);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY

@@ -939,6 +939,12 @@ child:
     async UIResolutionChanged(float dpi, int32_t rounding, double scale);
 
     /**
+     * Tell the child that whether it's allowed to render transparent has
+     * changed. See also ParentShowInfo::isTransparent.
+     */
+    async TransparencyChanged(bool transparent);
+
+    /**
      * Tell the child that the safe area of widget has changed.
      *
      */

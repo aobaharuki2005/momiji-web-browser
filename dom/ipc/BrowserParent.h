@@ -204,6 +204,9 @@ class BrowserParent final : public PBrowserParent,
    */
   bool CreatingWindow() const { return mCreatingWindow; }
 
+  // Whether our embedder can render transparent.
+  bool IsTransparent() const;
+
   /*
    * Visit each BrowserParent in the tree formed by PBrowser and
    * PBrowserBridge, including `this`.
@@ -707,6 +710,7 @@ class BrowserParent final : public PBrowserParent,
   void SetPriorityHint(bool aPriorityHint);
   void PreserveLayers(bool aPreserveLayers);
   void NotifyResolutionChanged();
+  void NotifyTransparencyChanged();
 
   bool CanCancelContentJS(nsIRemoteTab::NavigationType aNavigationType,
                           int32_t aNavigationIndex,
