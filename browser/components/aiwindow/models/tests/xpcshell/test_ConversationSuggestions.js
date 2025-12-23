@@ -5,6 +5,7 @@
 do_get_profile();
 
 const {
+  NewTabStarterGenerator,
   trimConversation,
   addInsightsToPrompt,
   cleanInferenceOutput,
@@ -246,6 +247,82 @@ add_task(function test_cleanInferenceOutput() {
         result,
         expected,
         "cleanInferenceOutput should return expected output"
+      );
+    }
+  } finally {
+    sb.restore();
+  }
+});
+
+/**
+ * Tests for createNewTabPromptGenerator generating prompts based on tab count
+ */
+add_task(async function test_createNewTabPromptGenerator() {
+  const sb = sinon.createSandbox();
+  const writingPrompts = [
+    "Write a first draft",
+    "Improve writing",
+    "Proofread a message",
+  ];
+
+  const planningPrompts = [
+    "Simplify a topic",
+    "Brainstorm ideas",
+    "Help make a plan",
+  ];
+  try {
+    const cases = [
+      {
+        input: { tabCount: -1 },
+        expectedBrowsing: ["Find tabs in history"],
+      },
+      {
+        input: { tabCount: 0 },
+        expectedBrowsing: ["Find tabs in history"],
+      },
+      {
+        input: { tabCount: 1 },
+        expectedBrowsing: ["Find tabs in history", "Summarize tabs"],
+      },
+      {
+        input: { tabCount: 2 },
+        expectedBrowsing: [
+          "Find tabs in history",
+          "Summarize tabs",
+          "Compare tabs",
+        ],
+      },
+      {
+        input: { tabCount: 3 },
+        expectedBrowsing: [
+          "Find tabs in history",
+          "Summarize tabs",
+          "Compare tabs",
+        ],
+      },
+    ];
+    const promptGenerator = NewTabStarterGenerator;
+    for (const { input, expectedBrowsing } of cases) {
+      const results = await promptGenerator.getPrompts(input.tabCount);
+      Assert.equal(results.length, 3, "Should return 3 suggestions");
+      for (const result of results) {
+        Assert.equal(
+          result.type,
+          "chat",
+          "Each result should have type 'chat'"
+        );
+      }
+      Assert.ok(
+        writingPrompts.includes(results[0].text),
+        "Results should include a valid writing prompt"
+      );
+      Assert.ok(
+        planningPrompts.includes(results[1].text),
+        "Results should include a valid planning prompt"
+      );
+      Assert.ok(
+        expectedBrowsing.includes(results[2].text),
+        "Results should include a valid browsing prompt"
       );
     }
   } finally {

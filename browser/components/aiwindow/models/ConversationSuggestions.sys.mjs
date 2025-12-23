@@ -103,6 +103,51 @@ const formatJson = obj => {
   }
 };
 
+export const NewTabStarterGenerator = {
+  writingPrompts: [
+    "Write a first draft",
+    "Improve writing",
+    "Proofread a message",
+  ],
+
+  planningPrompts: ["Simplify a topic", "Brainstorm ideas", "Help make a plan"],
+
+  // TODO: discuss with design about updating phrasing to "pages" instead of "tabs"
+  browsingPrompts: [
+    { text: "Find tabs in history", minTabs: 0 },
+    { text: "Summarize tabs", minTabs: 1 },
+    { text: "Compare tabs", minTabs: 2 },
+  ],
+
+  getRandom(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  },
+
+  /**
+   * Generate conversation starter prompts based on number of open tabs
+   *
+   * @param {number} tabCount - number of open tabs
+   * @returns {Promise<Array>} Array of {text, type} suggestion objects
+   */
+  async getPrompts(tabCount) {
+    const validBrowsingPrompts = this.browsingPrompts.filter(
+      p => tabCount >= p.minTabs
+    );
+
+    const writingPrompt = this.getRandom(this.writingPrompts);
+    const planningPrompt = this.getRandom(this.planningPrompts);
+    const browsingPrompt = validBrowsingPrompts.length
+      ? this.getRandom(validBrowsingPrompts)
+      : this.browsingPrompts[0];
+
+    return [
+      { text: writingPrompt, type: "chat" },
+      { text: planningPrompt, type: "chat" },
+      { text: browsingPrompt.text, type: "chat" },
+    ];
+  },
+};
+
 /**
  * Generates conversation starter prompts based on tab context + (optional) user insights
  *
