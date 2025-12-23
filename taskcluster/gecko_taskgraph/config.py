@@ -100,7 +100,6 @@ graph_config_schema = Schema(
                             "build-platform", "project", str
                         ),
                         Required("globs"): [str],
-                        Optional("skip"): optionally_keyed_by("release-type", bool),
                     }
                 ],
             ),

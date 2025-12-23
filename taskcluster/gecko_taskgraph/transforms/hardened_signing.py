@@ -62,20 +62,6 @@ def add_hardened_sign_config(config, jobs):
                         "project": config.params["project"],
                     },
                 )
-            if "skip" in sign_cfg and isinstance(sign_cfg.get("skip"), dict):
-                sign_cfg["skip"] = evaluate_keyed_by(
-                    sign_cfg["skip"],
-                    "skip",
-                    {
-                        "release-type": config.params["release_type"],
-                    },
-                )
-
-        hardened_sign_config = [
-            sign_cfg
-            for sign_cfg in hardened_sign_config
-            if not sign_cfg.pop("skip", False)
-        ]
 
         job["worker"]["hardened-sign-config"] = hardened_sign_config
         job["worker"]["mac-behavior"] = "mac_sign_and_pkg_hardened"
