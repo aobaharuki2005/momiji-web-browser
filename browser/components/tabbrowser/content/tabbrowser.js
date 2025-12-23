@@ -6026,6 +6026,10 @@
         aOtherTab.dispatchEvent(event);
       }
 
+      // Copy tab note-related properties of the tab.
+      aOurTab.hasTabNote = aOtherTab.hasTabNote;
+      aOurTab.canonicalUrl = aOtherTab.canonicalUrl;
+
       if (otherBrowser.isDistinctProductPageVisit) {
         ourBrowser.isDistinctProductPageVisit = true;
       }

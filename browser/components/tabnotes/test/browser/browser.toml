@@ -6,4 +6,6 @@ support-files = [
   "head.js",
 ]
 
+["browser_tab_notes_adopt.js"]
+
 ["browser_tab_notes_menu.js"]
