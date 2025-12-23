@@ -151,19 +151,48 @@ async function loadNewPage(browser, url) {
  * The mochitest runs in the parent process. This function opens up a new tab,
  * opens up about:translations, and passes the test requirements into the content process.
  *
+ * @param {object} [options={}]
+ * @param {boolean} [options.disabled]
+ *        When true, ensures that Translations is disabled via pref before opening the page.
+ * @param {Array<{fromLang: string, toLang: string}>} [options.languagePairs=LANGUAGE_PAIRS]
+ *        Language pairs that should be available in Remote Settings mocks.
+ * @param {Array<[string, any]>} [options.prefs]
+ *        Preference tuples to push before the page loads.
+ * @param {boolean} [options.autoDownloadFromRemoteSettings=false]
+ *        When true, Remote Settings downloads resolve automatically.
+ *        When false, resolveDownloads or rejectDownloads must be manually called.
+ * @param {number} [options.copyButtonResetDelay]
+ *        Overrides the copy button reset timeout ms to be shorter for testing.
+ * @param {boolean} [options.requireManualCopyButtonReset]
+ *        When true, copy button resets must be triggered manually by tests.
+ * @returns {Promise<{
+ *   aboutTranslationsTestUtils: AboutTranslationsTestUtils,
+ *   cleanup: () => Promise<void>
+ * }>}
  */
 async function openAboutTranslations({
   disabled,
   languagePairs = LANGUAGE_PAIRS,
   prefs,
   autoDownloadFromRemoteSettings = false,
+  copyButtonResetDelay,
+  requireManualCopyButtonReset,
 } = {}) {
+  if (
+    copyButtonResetDelay !== undefined &&
+    requireManualCopyButtonReset !== undefined
+  ) {
+    throw new Error(
+      "copyButtonResetDelay and requireManualCopyButtonReset cannot both be defined."
+    );
+  }
   await SpecialPowers.pushPrefEnv({
     set: [
       // Enabled by default.
       ["browser.translations.enable", !disabled],
       ["browser.translations.logLevel", "All"],
       ["browser.translations.mostRecentTargetLanguages", ""],
+      ["dom.events.testing.asyncClipboard", true],
       [USE_LEXICAL_SHORTLIST_PREF, false],
       ...(prefs ?? []),
     ],
@@ -247,13 +276,33 @@ async function openAboutTranslations({
     autoDownloadFromRemoteSettings
   );
 
+  let originalCopyButtonResetDelay;
+
   if (!disabled) {
     await aboutTranslationsTestUtils.waitForReady();
+
+    if (requireManualCopyButtonReset !== undefined) {
+      await aboutTranslationsTestUtils.setManualCopyButtonResetEnabled(
+        requireManualCopyButtonReset
+      );
+    } else if (copyButtonResetDelay !== undefined) {
+      originalCopyButtonResetDelay =
+        await aboutTranslationsTestUtils.getCopyButtonResetDelay();
+      await aboutTranslationsTestUtils.setCopyButtonResetDelay(
+        copyButtonResetDelay
+      );
+    }
   }
 
   return {
     aboutTranslationsTestUtils,
     async cleanup() {
+      await aboutTranslationsTestUtils.setManualCopyButtonResetEnabled(false);
+      if (originalCopyButtonResetDelay) {
+        await aboutTranslationsTestUtils.setCopyButtonResetDelay(
+          originalCopyButtonResetDelay
+        );
+      }
       await loadBlankPage();
       BrowserTestUtils.removeTab(tab);
 
@@ -4050,6 +4099,8 @@ async function destroyTranslationsEngine() {
 }
 
 class AboutTranslationsTestUtils {
+  static AnyEventDetail = Symbol("AboutTranslationsTestUtils.AnyEventDetail");
+
   /**
    * A collection of custom events that the about:translations document may dispatch.
    */
@@ -4120,6 +4171,20 @@ class AboutTranslationsTestUtils {
      * @type {string}
      */
     static CopyButtonDisabled = "AboutTranslationsTest:CopyButtonDisabled";
+
+    /**
+     * Event fired when the copy button shows the "copied" feedback state.
+     *
+     * @type {string}
+     */
+    static CopyButtonShowCopied = "AboutTranslationsTest:CopyButtonShowCopied";
+
+    /**
+     * Event fired when the copy button exits the "copied" feedback state.
+     *
+     * @type {string}
+     */
+    static CopyButtonReset = "AboutTranslationsTest:CopyButtonReset";
 
     /**
      * Event fired when the page layout changes.
@@ -4402,6 +4467,85 @@ class AboutTranslationsTestUtils {
   }
 
   /**
+   * Overrides the duration that the copy button remains in its copied state.
+   *
+   * @param {number} ms
+   */
+  async setCopyButtonResetDelay(ms) {
+    try {
+      await this.#runInPage(
+        (_, { delayMs }) => {
+          const { window } = content;
+          Cu.waiveXrays(window).COPY_BUTTON_RESET_DELAY = delayMs;
+        },
+        { delayMs: ms }
+      );
+    } catch (error) {
+      AboutTranslationsTestUtils.#reportTestFailure(error);
+    }
+  }
+
+  /**
+   * Returns the current copy button reset delay applied within the page.
+   *
+   * @returns {Promise<number>}
+   */
+  async getCopyButtonResetDelay() {
+    try {
+      return await this.#runInPage(() => {
+        const { window } = content;
+        return Cu.waiveXrays(window).COPY_BUTTON_RESET_DELAY;
+      });
+    } catch (error) {
+      AboutTranslationsTestUtils.#reportTestFailure(error);
+    }
+
+    return NaN;
+  }
+
+  /**
+   * Enables or disables manual copy button resets for testing.
+   *
+   * When enabled, tests are expected to reset the copy button manually.
+   * When disabled (default), the copy button resets based on its reset timeout.
+   *
+   * @param {boolean} enabled
+   */
+  async setManualCopyButtonResetEnabled(enabled) {
+    logAction(enabled);
+    try {
+      await this.#runInPage(
+        (_, { enabled }) => {
+          const { window } = content;
+          Cu.waiveXrays(window).testManualCopyButtonReset = enabled;
+        },
+        { enabled }
+      );
+    } catch (error) {
+      AboutTranslationsTestUtils.#reportTestFailure(error);
+    }
+  }
+
+  /**
+   * Manually resets the copy button.
+   */
+  async resetCopyButton() {
+    logAction();
+    try {
+      await this.#runInPage(() => {
+        const { window } = content;
+        const aboutTranslations = Cu.waiveXrays(window).aboutTranslations;
+        if (!aboutTranslations) {
+          throw new Error("aboutTranslations instance is unavailable.");
+        }
+        aboutTranslations.testResetCopyButton();
+      });
+    } catch (error) {
+      AboutTranslationsTestUtils.#reportTestFailure(error);
+    }
+  }
+
+  /**
    * Clicks the swap-languages button in the about:translations UI.
    */
   async clickSwapLanguagesButton() {
@@ -4411,6 +4555,21 @@ class AboutTranslationsTestUtils {
         const button = content.document.querySelector(
           selectors.swapLanguagesButton
         );
+        button.click();
+      });
+    } catch (error) {
+      AboutTranslationsTestUtils.#reportTestFailure(error);
+    }
+  }
+
+  /**
+   * Clicks the copy button in the about:translations UI.
+   */
+  async clickCopyButton() {
+    logAction();
+    try {
+      await this.#runInPage(selectors => {
+        const button = content.document.querySelector(selectors.copyButton);
         button.click();
       });
     } catch (error) {
@@ -4498,6 +4657,9 @@ class AboutTranslationsTestUtils {
 
       for (const [eventName, expectedDetail] of expected) {
         const actualDetail = await expectedEventWaiters[eventName];
+        if (expectedDetail === AboutTranslationsTestUtils.AnyEventDetail) {
+          continue;
+        }
         is(
           JSON.stringify(actualDetail ?? {}),
           JSON.stringify(expectedDetail ?? {}),
@@ -4925,31 +5087,58 @@ class AboutTranslationsTestUtils {
   }
 
   /**
-   * Asserts properties of the copy button.
+   * Retrieves the current state of the copy button.
    *
-   * @param {object} options
-   * @param {boolean} [options.visible=true]
-   * @param {boolean} [options.enabled=false]
-   * @returns {Promise<void>}
+   * @returns {Promise<{exists: boolean, isDisabled: boolean, isCopied: boolean, l10nId: string}>}
    */
-  async assertCopyButton({ visible = true, enabled = false } = {}) {
+  async getCopyButtonState() {
     await doubleRaf(document);
 
-    let pageResult = {};
     try {
-      pageResult = await this.#runInPage(selectors => {
+      return await this.#runInPage(selectors => {
         const { document } = content;
         const button = document.querySelector(selectors.copyButton);
         return {
           exists: !!button,
           isDisabled: button?.hasAttribute("disabled") ?? true,
+          isCopied: button?.classList.contains("copied") ?? false,
+          l10nId: button?.getAttribute("data-l10n-id") ?? "",
         };
       });
     } catch (error) {
       AboutTranslationsTestUtils.#reportTestFailure(error);
     }
 
-    const { exists, isDisabled } = pageResult;
+    return {
+      exists: false,
+      isDisabled: true,
+      isCopied: false,
+      l10nId: "",
+    };
+  }
+
+  /**
+   * Asserts properties of the copy button.
+   *
+   * @param {object} options
+   * @param {boolean} [options.visible=true]
+   * @param {boolean} [options.enabled=false]
+   * @param {boolean} [options.copied]
+   * @param {string} [options.l10nId]
+   * @returns {Promise<void>}
+   */
+  async assertCopyButton({
+    visible = true,
+    enabled = false,
+    copied,
+    l10nId,
+  } = {}) {
+    const {
+      exists,
+      isDisabled,
+      isCopied,
+      l10nId: actualL10nId,
+    } = await this.getCopyButtonState();
 
     ok(exists, "Expected copy button to be present.");
 
@@ -4971,6 +5160,42 @@ class AboutTranslationsTestUtils {
         ok(isDisabled, "Expected copy button to be disabled.");
       }
     }
+
+    if (copied !== undefined) {
+      if (copied) {
+        ok(isCopied, "Expected copy button to show the copied state.");
+      } else {
+        ok(!isCopied, "Expected copy button to show the default state.");
+      }
+    }
+
+    if (l10nId !== undefined) {
+      is(
+        actualL10nId,
+        l10nId,
+        `Expected copy button to use the "${l10nId}" localization id.`
+      );
+    }
+  }
+
+  /**
+   * Retrieves the current value of the target textarea.
+   *
+   * @returns {Promise<string>}
+   */
+  async getTargetTextAreaValue() {
+    await doubleRaf(document);
+    try {
+      return await this.#runInPage(selectors => {
+        const textarea = content.document.querySelector(
+          selectors.targetSectionTextArea
+        );
+        return textarea?.value ?? "";
+      });
+    } catch (error) {
+      AboutTranslationsTestUtils.#reportTestFailure(error);
+    }
+    return "";
   }
 
   /**

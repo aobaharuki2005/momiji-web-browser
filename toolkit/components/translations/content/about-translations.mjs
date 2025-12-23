@@ -8,7 +8,8 @@
 
 /* global AT_getAppLocale, AT_getSupportedLanguages, AT_log, AT_getScriptDirection,
    AT_getDisplayName, AT_logError, AT_createTranslationsPort, AT_isHtmlTranslation,
-   AT_isTranslationEngineSupported, AT_identifyLanguage, AT_openSupportPage, AT_telemetry */
+   AT_isTranslationEngineSupported, AT_isInAutomation, AT_identifyLanguage,
+   AT_openSupportPage, AT_telemetry */
 
 import { Translator } from "chrome://global/content/translations/Translator.mjs";
 
@@ -16,6 +17,22 @@ import { Translator } from "chrome://global/content/translations/Translator.mjs"
  * Allows tests to override the delay milliseconds so that they can run faster.
  */
 window.DEBOUNCE_DELAY = 200;
+
+/**
+ * The default duration, in milliseconds, that the copy button remains in the "copied" state
+ * before reverting back to its default state.
+ */
+window.COPY_BUTTON_RESET_DELAY = 1500;
+
+/**
+ * Tests can set this to true to manually trigger copy button resets.
+ *
+ * When enabled, the copy button will remain in its copied state until tests
+ * call {@link AboutTranslations.testResetCopyButton}.
+ *
+ * @type {boolean}
+ */
+window.testManualCopyButtonReset = false;
 
 /**
  * Limits how long the "text" parameter can be in the URL.
@@ -93,6 +110,13 @@ class AboutTranslations {
    * @type {PromiseWithResolvers}
    */
   #readyPromiseWithResolvers = Promise.withResolvers();
+
+  /**
+   * A timeout id for resetting the copy button's "copied" state.
+   *
+   * @type {number | null}
+   */
+  #copyButtonResetTimeoutId = null;
 
   /**
    * The orientation of the page's content.
@@ -335,6 +359,7 @@ class AboutTranslations {
    */
   #initializeEventListeners() {
     const {
+      copyButton,
       learnMoreLink,
       sourceLanguageSelector,
       sourceSectionTextArea,
@@ -344,6 +369,7 @@ class AboutTranslations {
       targetSectionTextArea,
     } = this.elements;
 
+    copyButton.addEventListener("click", this.#onCopyButton);
     learnMoreLink.addEventListener("click", this.#onLearnMoreLink);
     sourceLanguageSelector.addEventListener(
       "input",
@@ -447,6 +473,33 @@ class AboutTranslations {
    */
   #onTargetTextAreaBlur = () => {
     this.elements.targetSection.classList.remove("focus-section");
+  };
+
+  /**
+   * Handles copying the translated text to the clipboard when the copy button is invoked.
+   */
+  #onCopyButton = async () => {
+    const { copyButton, targetSectionTextArea } = this.elements;
+    if (copyButton.disabled) {
+      return;
+    }
+
+    const targetText = targetSectionTextArea.value;
+    if (!targetText) {
+      return;
+    }
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard API is unavailable.");
+      }
+      await navigator.clipboard.writeText(targetText);
+    } catch (error) {
+      AT_logError(error);
+      return;
+    }
+
+    this.#showCopyButtonCopiedState();
   };
 
   /**
@@ -746,13 +799,99 @@ class AboutTranslations {
   #setCopyButtonEnabled(shouldEnable) {
     const { copyButton } = this.elements;
 
+    if (copyButton.disabled !== shouldEnable) {
+      // The state isn't going to change: nothing to do.
+      return;
+    }
+
+    if (
+      this.#copyButtonResetTimeoutId !== null ||
+      copyButton.classList.contains("copied")
+    ) {
+      // When the copy button's enabled state changes while it is in the "copied" state,
+      // then we want to reset it immediately, instead of waiting for the timeout.
+      this.#resetCopyButton();
+    }
+
     copyButton.disabled = !shouldEnable;
 
     const eventName = shouldEnable
       ? "AboutTranslationsTest:CopyButtonEnabled"
       : "AboutTranslationsTest:CopyButtonDisabled";
-
     document.dispatchEvent(new CustomEvent(eventName));
+  }
+
+  /**
+   * Applies the "copied" state visuals to the copy button.
+   */
+  #showCopyButtonCopiedState() {
+    const { copyButton } = this.elements;
+
+    if (this.#copyButtonResetTimeoutId !== null) {
+      // If there was a previously set timeout id, then we need to clear it to restart the timer.
+      // This occurs when the button is clicked a subsequent time when it is already in the "copied" state.
+      window.clearTimeout(this.#copyButtonResetTimeoutId);
+      this.#copyButtonResetTimeoutId = null;
+    }
+
+    copyButton.classList.add("copied");
+    copyButton.iconSrc = "chrome://global/skin/icons/check.svg";
+
+    document.l10n.setAttributes(
+      copyButton,
+      "about-translations-copy-button-copied"
+    );
+    document.dispatchEvent(
+      new CustomEvent("AboutTranslationsTest:CopyButtonShowCopied")
+    );
+
+    if (!window.testManualCopyButtonReset) {
+      this.#copyButtonResetTimeoutId = window.setTimeout(() => {
+        this.#resetCopyButton();
+      }, window.COPY_BUTTON_RESET_DELAY);
+    }
+  }
+
+  /**
+   * Restores the copy button to its default visual state.
+   */
+  #resetCopyButton() {
+    if (this.#copyButtonResetTimeoutId !== null) {
+      window.clearTimeout(this.#copyButtonResetTimeoutId);
+      this.#copyButtonResetTimeoutId = null;
+    }
+
+    const { copyButton } = this.elements;
+    if (!copyButton.classList.contains("copied")) {
+      return;
+    }
+
+    copyButton.classList.remove("copied");
+    copyButton.iconSrc = "chrome://global/skin/icons/edit-copy.svg";
+
+    document.l10n.setAttributes(
+      copyButton,
+      "about-translations-copy-button-default"
+    );
+    document.dispatchEvent(
+      new CustomEvent("AboutTranslationsTest:CopyButtonReset")
+    );
+  }
+
+  /**
+   * Manually resets the state of the copy button.
+   * This function is only expected to be called by automated tests.
+   */
+  testResetCopyButton() {
+    if (!AT_isInAutomation()) {
+      throw new Error("Test-only function called outside of automation.");
+    }
+
+    if (!window.testManualCopyButtonReset) {
+      throw new Error("Unexpected call to testResetCopyButton.");
+    }
+
+    this.#resetCopyButton();
   }
 
   /**

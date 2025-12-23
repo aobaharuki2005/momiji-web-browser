@@ -137,6 +137,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       "AT_getSupportedLanguages",
       "AT_isTranslationEngineSupported",
       "AT_isHtmlTranslation",
+      "AT_isInAutomation",
       "AT_createTranslationsPort",
       "AT_identifyLanguage",
       "AT_getDisplayName",
@@ -227,6 +228,15 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    */
   AT_isHtmlTranslation() {
     return this.#isHtmlTranslation;
+  }
+
+  /**
+   * Returns true if we are running tests in automation, otherwise false.
+   *
+   * @returns {boolean}
+   */
+  AT_isInAutomation() {
+    return Cu.isInAutomation;
   }
 
   /**

@@ -26,6 +26,8 @@ support-files = [
 
 ["browser_about_translations_copy_button_enabled_states.js"]
 
+["browser_about_translations_copy_button_functionality.js"]
+
 ["browser_about_translations_debounce.js"]
 skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11'", # Bug 1821461
