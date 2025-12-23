@@ -87,6 +87,15 @@ registerActors();
  * @class
  */
 export var BrowserTestUtils = {
+  // We define the function separately, rather than using an arrow function
+  // inline due to https://github.com/jsdoc/jsdoc/issues/2143.
+  /**
+   * @template T
+   * @typedef {Function} withNewTabTaskFn
+   * @param {MozBrowser} browser
+   * @returns {Promise<T> | T}
+   */
+
   /**
    * Loads a page in a new tab, executes a Task and closes the tab.
    *
@@ -99,7 +108,7 @@ export var BrowserTestUtils = {
    *        be opened,
    * @param {string} options.url
    *        The URL of the page to load.
-   * @param {(browser: MozBrowser) => T} taskFn
+   * @param {withNewTabTaskFn<T>} taskFn
    *        Async function representing that will be executed while
    *        the tab is loaded. The first argument passed to the function is a
    *        reference to the browser object for the new tab.
