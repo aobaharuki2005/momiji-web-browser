@@ -188,14 +188,19 @@ export function isBrowsingContextCompatible(browsingContext, options = {}) {
  *     The browsing context to wait for.
  *
  * @returns {Promise}
- *     Promise which resolves when `currentWindowGlobal` is set on the browsing
- *     context or throws a `DiscardedBrowsingContextError` error if it is still
- *     not available after 100ms.
+ *     Promise which resolves when `currentWindowGlobal` is available.
+ *
+ * @throws DiscardedBrowsingContextError
+ *     Browsing context is discarded or still no
+ *     `currentWindowGlobal` set after 100ms.
  */
 export async function waitForCurrentWindowGlobal(browsingContext) {
   await lazy.PollPromise(
     (resolve, reject) => {
-      if (browsingContext.currentWindowGlobal) {
+      if (browsingContext.currentWindowGlobal || browsingContext.isDiscarded) {
+        // If the browsing context is discarded while checking for
+        // the current window global, return early to avoid waiting
+        // unnecessarily until the timeout expires.
         resolve();
       } else {
         reject();
