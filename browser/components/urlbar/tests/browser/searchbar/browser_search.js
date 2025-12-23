@@ -15,6 +15,11 @@ add_setup(async function () {
 });
 
 add_task(async function test_simple() {
+  // This pref should not affect the searchbar.
+  SpecialPowers.pushPrefEnv({
+    set: [["browser.urlbar.openintab", true]],
+  });
+
   let searchTerm = "test";
   searchbar.focus();
   EventUtils.sendString(searchTerm);
@@ -24,7 +29,9 @@ add_task(async function test_simple() {
   let expectedUrl = defaultEngine.getSubmission(searchTerm).uri.spec;
   Assert.equal(gBrowser.currentURI.spec, expectedUrl, "Search successful");
   Assert.equal(searchbar.value, searchTerm, "Search term was persisted");
+
   searchbar.value = "";
+  SpecialPowers.popPrefEnv();
 });
 
 add_task(async function test_no_canonization() {
@@ -40,7 +47,7 @@ add_task(async function test_no_canonization() {
   searchbar.value = "";
 });
 
-add_task(async function test_newtab() {
+add_task(async function test_newtab_alt() {
   let searchTerm = "test3";
   let expectedUrl = defaultEngine.getSubmission(searchTerm).uri.spec;
 
@@ -55,6 +62,31 @@ add_task(async function test_newtab() {
   Assert.equal(gBrowser.selectedBrowser, newBrowser, "Opened in foreground");
   Assert.equal(newBrowser.currentURI.spec, expectedUrl, "Search successful");
   Assert.equal(searchbar.value, searchTerm, "Search term was persisted");
+
   searchbar.value = "";
   BrowserTestUtils.removeTab(newTab);
+});
+
+add_task(async function test_newtab_pref() {
+  SpecialPowers.pushPrefEnv({
+    set: [["browser.search.openintab", true]],
+  });
+  let searchTerm = "test4";
+  let expectedUrl = defaultEngine.getSubmission(searchTerm).uri.spec;
+
+  searchbar.focus();
+  EventUtils.sendString(searchTerm);
+
+  let newTabPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+  EventUtils.synthesizeKey("KEY_Enter");
+  let newTab = await newTabPromise;
+  let newBrowser = gBrowser.getBrowserForTab(newTab);
+
+  Assert.equal(gBrowser.selectedBrowser, newBrowser, "Opened in foreground");
+  Assert.equal(newBrowser.currentURI.spec, expectedUrl, "Search successful");
+  Assert.equal(searchbar.value, searchTerm, "Search term was persisted");
+
+  searchbar.value = "";
+  BrowserTestUtils.removeTab(newTab);
+  SpecialPowers.popPrefEnv();
 });

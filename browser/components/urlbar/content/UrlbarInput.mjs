@@ -3910,7 +3910,11 @@ export class UrlbarInput extends HTMLElement {
     } else {
       where = lazy.BrowserUtils.whereToOpenLink(event, false, false);
     }
-    if (lazy.UrlbarPrefs.get("openintab")) {
+    let openInTabPref =
+      this.#sapName == "searchbar"
+        ? lazy.UrlbarPrefs.get("browser.search.openintab")
+        : lazy.UrlbarPrefs.get("openintab");
+    if (openInTabPref) {
       if (where == "current") {
         where = "tab";
       } else if (where == "tab") {
