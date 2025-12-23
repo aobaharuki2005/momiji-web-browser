@@ -42,12 +42,20 @@ export var Normandy = {
 
   /** Initialization that needs to happen before the first paint on startup. */
   async init({ runAsync = true } = {}) {
-    // NOTE: It looks like we can see us being called twice between init(true)
-    // coming from "browser-before-ui-startup" (see BrowserComponents.manifest)
-    // and init(false) coming from FirstStartup.sys.mjs.
-    // We need the UI_AVAILABLE_NOTIFICATION observer only if runAsync == true
-    // and we assume that the rest of the initialization can just happen twice.
-    // TODO: Check which pieces really need to run twice, if any.
+    if (this.initFinished === undefined) {
+      this.initFinished = Promise.withResolvers();
+    } else {
+      // We race with ourselves, this can happen only in tests.
+      if (!runAsync) {
+        // We are called sync only from tests, where we want to unblock the
+        // init immediately if it already started asynchronously.
+        this.observe(null, UI_AVAILABLE_NOTIFICATION);
+      }
+      await this.initFinished.promise;
+      return;
+    }
+
+    // We need the UI_AVAILABLE_NOTIFICATION observer only if runAsync == true.
     if (runAsync) {
       // It is important to register the listener for the UI before the first
       // await, to avoid missing it.
@@ -78,6 +86,7 @@ export var Normandy = {
     }
 
     await this.finishInit();
+    this.initFinished.resolve();
   },
 
   async observe(subject, topic) {
@@ -143,6 +152,11 @@ export var Normandy = {
   },
 
   async uninit() {
+    if (!this.initFinished) {
+      return;
+    }
+    await this.initFinished.promise;
+
     await lazy.CleanupManager.cleanup();
     // Note that Service.pref.removeObserver and Service.obs.removeObserver have
     // oppositely ordered parameters.
@@ -151,11 +165,7 @@ export var Normandy = {
       lazy.LogManager.configure
     );
 
-    try {
-      Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
-    } catch (e) {
-      // topic must have already been removed or never added
-    }
+    delete this.initFinished;
   },
 
   /**
