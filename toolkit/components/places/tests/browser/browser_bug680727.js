@@ -83,13 +83,17 @@ function errorAsyncListener(aURI, aIsVisited) {
   );
 
   SpecialPowers.spawn(ourTab.linkedBrowser, [], function () {
+    const netErrorCard =
+      content.document.querySelector("net-error-card").wrappedJSObject;
     Assert.ok(
-      content.document.querySelector("#netErrorButtonContainer > .try-again"),
+      netErrorCard.tryAgainButton,
       "The error page has got a .try-again element"
     );
-    content.document
-      .querySelector("#netErrorButtonContainer > .try-again")
-      .click();
+    EventUtils.synthesizeMouseAtCenter(
+      netErrorCard.tryAgainButton,
+      {},
+      content
+    );
   });
 }
 
