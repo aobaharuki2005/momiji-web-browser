@@ -68,6 +68,6 @@
 #  endif
 #endif  // else MOZ_FFVPX_AUDIOONLY
         //
-#include "config_override.h"
+#include "config_components.h"
 
 #endif  // MOZ_FFVPX_CONFIG_H
