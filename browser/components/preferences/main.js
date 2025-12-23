@@ -2920,6 +2920,74 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  cookiesAndSiteData2: {
+    inProgress: true,
+    l10nId: "sitedata-heading",
+    headingLevel: 2,
+    items: [
+      {
+        id: "siteDataSize",
+        l10nId: "sitedata-total-size-calculating",
+        control: "moz-box-item",
+        supportPage: "sitedata-learn-more",
+      },
+      {
+        id: "manageDataSettingsGroup",
+        control: "moz-box-group",
+        controlAttrs: {
+          type: "default",
+        },
+        items: [
+          {
+            id: "clearSiteDataButton",
+            l10nId: "sitedata-clear2",
+            control: "moz-box-button",
+            iconSrc: "chrome://browser/skin/flame.svg",
+            controlAttrs: {
+              "search-l10n-ids": `
+                clear-site-data-cookies-empty.label,
+                clear-site-data-cache-empty.label
+              `,
+            },
+          },
+          {
+            id: "siteDataSettings",
+            l10nId: "sitedata-settings3",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids": `
+                site-data-settings-window.title,
+                site-data-column-host.label,
+                site-data-column-cookies.label,
+                site-data-column-storage.label,
+                site-data-settings-description,
+                site-data-remove-all.label,
+              `,
+            },
+          },
+          {
+            id: "cookieExceptions",
+            l10nId: "sitedata-cookies-exceptions3",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids": `
+                permissions-address,
+                permissions-block.label,
+                permissions-allow.label,
+                permissions-remove.label,
+                permissions-remove-all.label,
+                permissions-exceptions-cookie-desc
+              `,
+            },
+          },
+        ],
+      },
+      {
+        id: "deleteOnClose",
+        l10nId: "sitedata-delete-on-close",
+      },
+    ],
+  },
   networkProxy: {
     items: [
       {
