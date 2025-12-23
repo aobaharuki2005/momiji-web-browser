@@ -78,7 +78,7 @@ function createSearchEngineConfig({ settingId, getEngine, setEngine }) {
     }
 
     async getControlConfig() {
-      let engines = await Services.search.getEngines();
+      let engines = await Services.search.getVisibleEngines();
       await Promise.allSettled(engines.map(e => this.loadEngineIcon(e)));
       return {
         options: engines.map(engine => ({
