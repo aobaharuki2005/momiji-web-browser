@@ -165,16 +165,16 @@ class AboutTranslations {
    * Instantiates and returns the elements that comprise the UI.
    *
    * @returns {{
-   *   mainUserInterface: HTMLElement,
-   *   unsupportedInfoMessage: HTMLElement,
+   *   detectLanguageOption: HTMLOptionElement,
    *   languageLoadErrorMessage: HTMLElement,
    *   learnMoreLink: HTMLAnchorElement,
-   *   detectLanguageOption: HTMLOptionElement,
+   *   mainUserInterface: HTMLElement,
    *   sourceLanguageSelector: HTMLSelectElement,
-   *   targetLanguageSelector: HTMLSelectElement,
-   *   swapLanguagesButton: HTMLElement,
    *   sourceTextArea: HTMLTextAreaElement,
+   *   swapLanguagesButton: HTMLElement,
+   *   targetLanguageSelector: HTMLSelectElement,
    *   targetTextArea: HTMLTextAreaElement,
+   *   unsupportedInfoMessage: HTMLElement,
    * }}
    */
   get elements() {
@@ -183,11 +183,8 @@ class AboutTranslations {
     }
 
     this.#lazyElements = {
-      mainUserInterface: /** @type {HTMLElement} */ (
-        document.getElementById("about-translations-main-user-interface")
-      ),
-      unsupportedInfoMessage: /** @type {HTMLElement} */ (
-        document.getElementById("about-translations-unsupported-info-message")
+      detectLanguageOption: /** @type {HTMLOptionElement} */ (
+        document.getElementById("about-translations-detect-language-option")
       ),
       languageLoadErrorMessage: /** @type {HTMLElement} */ (
         document.getElementById(
@@ -197,23 +194,26 @@ class AboutTranslations {
       learnMoreLink: /** @type {HTMLAnchorElement} */ (
         document.getElementById("about-translations-learn-more-link")
       ),
-      detectLanguageOption: /** @type {HTMLOptionElement} */ (
-        document.getElementById("about-translations-detect-language-option")
+      mainUserInterface: /** @type {HTMLElement} */ (
+        document.getElementById("about-translations-main-user-interface")
       ),
       sourceLanguageSelector: /** @type {HTMLSelectElement} */ (
         document.getElementById("about-translations-source-select")
       ),
-      targetLanguageSelector: /** @type {HTMLSelectElement} */ (
-        document.getElementById("about-translations-target-select")
+      sourceTextArea: /** @type {HTMLTextAreaElement} */ (
+        document.getElementById("about-translations-source-textarea")
       ),
       swapLanguagesButton: /** @type {HTMLElement} */ (
         document.getElementById("about-translations-swap-languages-button")
       ),
-      sourceTextArea: /** @type {HTMLTextAreaElement} */ (
-        document.getElementById("about-translations-source-textarea")
+      targetLanguageSelector: /** @type {HTMLSelectElement} */ (
+        document.getElementById("about-translations-target-select")
       ),
       targetTextArea: /** @type {HTMLTextAreaElement} */ (
         document.getElementById("about-translations-target-textarea")
+      ),
+      unsupportedInfoMessage: /** @type {HTMLElement} */ (
+        document.getElementById("about-translations-unsupported-info-message")
       ),
     };
 
@@ -319,23 +319,23 @@ class AboutTranslations {
   #initializeEventListeners() {
     const {
       learnMoreLink,
-      swapLanguagesButton,
       sourceLanguageSelector,
-      targetLanguageSelector,
       sourceTextArea,
+      swapLanguagesButton,
+      targetLanguageSelector,
     } = this.elements;
 
     learnMoreLink.addEventListener("click", this.#onLearnMoreLink);
-    swapLanguagesButton.addEventListener("click", this.#onSwapLanguagesButton);
     sourceLanguageSelector.addEventListener(
       "input",
       this.#onSourceLanguageInput
     );
+    sourceTextArea.addEventListener("input", this.#onSourceTextInput);
+    swapLanguagesButton.addEventListener("click", this.#onSwapLanguagesButton);
     targetLanguageSelector.addEventListener(
       "input",
       this.#onTargetLanguageInput
     );
-    sourceTextArea.addEventListener("input", this.#onSourceTextInput);
     window.addEventListener("resize", this.#onResize);
     window.visualViewport.addEventListener("resize", this.#onResize);
   }
