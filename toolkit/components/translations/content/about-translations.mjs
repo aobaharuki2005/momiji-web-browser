@@ -372,6 +372,7 @@ class AboutTranslations {
       learnMoreLink,
       sourceLanguageSelector,
       sourceSectionActionsColumn,
+      sourceSectionClearButton,
       sourceSectionTextArea,
       swapLanguagesButton,
       targetLanguageSelector,
@@ -388,6 +389,14 @@ class AboutTranslations {
     sourceSectionActionsColumn.addEventListener(
       "pointerdown",
       this.#onSourceSectionActionsPointerDown
+    );
+    sourceSectionClearButton.addEventListener(
+      "click",
+      this.#onSourceSectionClearButton
+    );
+    sourceSectionClearButton.addEventListener(
+      "mousedown",
+      this.#onSourceSectionClearButtonMouseDown
     );
     sourceSectionTextArea.addEventListener("input", this.#onSourceTextInput);
     sourceSectionTextArea.addEventListener(
@@ -418,6 +427,32 @@ class AboutTranslations {
    */
   #onLearnMoreLink = () => {
     AT_openSupportPage();
+  };
+
+  /**
+   * Handles mousedown on the source section clear button.
+   */
+  #onSourceSectionClearButtonMouseDown = event => {
+    if (this.elements.sourceSection.classList.contains("focus-section")) {
+      // When the source section has a focus outline, clicking the clear button will cause the outline
+      // to disappear and then reappear since clicking the clear button re-focuses the source section.
+      // We should just avoid the outline flash all together when the source section is focused.
+      event.preventDefault();
+    }
+  };
+
+  /**
+   * Handles clicks on the source section clear button.
+   */
+  #onSourceSectionClearButton = event => {
+    if (!this.#sourceTextAreaHasValue()) {
+      return;
+    }
+
+    event.preventDefault();
+    this.#setSourceText("");
+    this.#maybeUpdateDetectedSourceLanguage();
+    this.elements.sourceSectionTextArea.focus();
   };
 
   /**
@@ -1059,12 +1094,20 @@ class AboutTranslations {
    */
   #setSourceText(value) {
     const { sourceSectionTextArea } = this.elements;
+    const hadValueBefore = Boolean(sourceSectionTextArea.value);
 
     sourceSectionTextArea.value = value;
     sourceSectionTextArea.dispatchEvent(new Event("input"));
 
+    this.#maybeUpdateDetectedSourceLanguage();
     this.#updateSourceScriptDirection();
     this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+
+    if (!value && hadValueBefore) {
+      document.dispatchEvent(
+        new CustomEvent("AboutTranslationsTest:ClearSourceText")
+      );
+    }
   }
 
   /**

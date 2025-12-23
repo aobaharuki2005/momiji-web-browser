@@ -41,6 +41,8 @@ skip-if = [
 
 ["browser_about_translations_flip_lexical_shortlist.js"]
 
+["browser_about_translations_source_clear_button_functionality.js"]
+
 ["browser_about_translations_source_clear_button_visibility.js"]
 
 ["browser_about_translations_swap_languages_button_detected.js"]
