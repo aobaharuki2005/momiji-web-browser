@@ -196,6 +196,8 @@ class AboutTranslations {
    *   mainUserInterface: HTMLElement,
    *   sourceLanguageSelector: HTMLSelectElement,
    *   sourceSection: HTMLElement,
+   *   sourceSectionActionsColumn: HTMLElement,
+   *   sourceSectionClearButton: HTMLElement,
    *   sourceSectionTextArea: HTMLTextAreaElement,
    *   swapLanguagesButton: HTMLElement,
    *   targetLanguageSelector: HTMLSelectElement,
@@ -233,6 +235,12 @@ class AboutTranslations {
       ),
       sourceSection: /** @type {HTMLElement} */ (
         document.getElementById("about-translations-source-section")
+      ),
+      sourceSectionActionsColumn: /** @type {HTMLElement} */ (
+        document.getElementById("about-translations-source-actions")
+      ),
+      sourceSectionClearButton: /** @type {HTMLElement} */ (
+        document.getElementById("about-translations-clear-button")
       ),
       sourceSectionTextArea: /** @type {HTMLTextAreaElement} */ (
         document.getElementById("about-translations-source-textarea")
@@ -362,6 +370,7 @@ class AboutTranslations {
       copyButton,
       learnMoreLink,
       sourceLanguageSelector,
+      sourceSectionActionsColumn,
       sourceSectionTextArea,
       swapLanguagesButton,
       targetLanguageSelector,
@@ -375,7 +384,16 @@ class AboutTranslations {
       "input",
       this.#onSourceLanguageInput
     );
+    sourceSectionActionsColumn.addEventListener(
+      "pointerdown",
+      this.#onSourceSectionActionsPointerDown
+    );
     sourceSectionTextArea.addEventListener("input", this.#onSourceTextInput);
+    sourceSectionTextArea.addEventListener(
+      "focus",
+      this.#onSourceTextAreaFocus
+    );
+    sourceSectionTextArea.addEventListener("blur", this.#onSourceTextAreaBlur);
     swapLanguagesButton.addEventListener("click", this.#onSwapLanguagesButton);
     targetLanguageSelector.addEventListener(
       "input",
@@ -440,6 +458,36 @@ class AboutTranslations {
    */
   #onSourceTextInput = () => {
     this.#maybeRequestTranslation();
+  };
+
+  /**
+   * Handles pointerdown events within the source section's actions column.
+   *
+   * Clicking empty space within the column should behave as though the
+   * textarea was clicked, but clicking the clear button should preserve
+   * the default behavior.
+   */
+  #onSourceSectionActionsPointerDown = event => {
+    if (event.target?.closest?.("#about-translations-clear-button")) {
+      return;
+    }
+
+    event.preventDefault();
+    this.elements.sourceSectionTextArea.focus();
+  };
+
+  /**
+   * Handles focusing the source section by outlining the entire section.
+   */
+  #onSourceTextAreaFocus = () => {
+    this.elements.sourceSection.classList.add("focus-section");
+  };
+
+  /**
+   * Handles blur events on the source section's text area.
+   */
+  #onSourceTextAreaBlur = () => {
+    this.elements.sourceSection.classList.remove("focus-section");
   };
 
   /**

@@ -27,6 +27,9 @@
 
   --AT-content-width: calc(var(--AT-section-height) * 4.5);
   --AT-content-max: calc(100vw - var(--AT-viewport-padding) * 2);
+
+  --AT-square-button-large: calc(var(--size-item-large) + var(--space-small));
+  --AT-square-button-small: var(--size-item-large);
 }
 
 body {
@@ -36,7 +39,7 @@ body {
   align-items: flex-start;
   visibility: hidden;
   margin: 0;
-  row-gap: var(--space-xlarge);
+  row-gap: var(--space-xxlarge);
   padding: var(--AT-page-padding-block-start) var(--AT-viewport-padding) var(--AT-page-padding-block-end);
 }
 
@@ -84,18 +87,43 @@ body {
   margin: 0;
 }
 
-#about-translations-swap-languages-button[type~="icon"]::part(button) {
-  width: var(--size-item-xlarge);
-  height: var(--size-item-xlarge);
-  transform: rotate(90deg) scaleX(-1);
-  background-image: url("chrome://global/skin/icons/arrows-updown.svg");
-  background-size: var(--size-item-medium);
+#about-translations-swap-languages-button {
+  align-self: center;
+
+  &[type~="icon"]::part(button) {
+    width: var(--AT-square-button-large);
+    height: var(--AT-square-button-large);
+    transform: rotate(90deg) scaleX(-1);
+    background-image: url("chrome://global/skin/icons/arrows-updown.svg");
+    background-size: var(--size-item-medium);
+  }
+}
+
+#about-translations-clear-button[type~="icon"]::part(button) {
+  width: var(--AT-square-button-small);
+  height: var(--AT-square-button-small);
+  background-image: url("chrome://global/skin/icons/close.svg");
+  background-size: var(--size-item-small);
 }
 
 #about-translations-source-section,
 #about-translations-target-section {
   width: 100%;
   min-height: var(--AT-section-height);
+}
+
+#about-translations-source-section {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  background-color: var(--background-color-box);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-medium);
+  overflow: hidden;
+
+  &.focus-section {
+    outline: var(--focus-outline);
+    outline-offset: -1px;
+  }
 }
 
 #about-translations-target-section {
@@ -116,6 +144,23 @@ body {
   padding: var(--AT-input-padding);
   overflow: hidden;
   resize: none;
+}
+
+#about-translations-source-textarea {
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  padding-inline-end: var(--space-xsmall);
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+#about-translations-source-actions {
+  padding: var(--space-xsmall);
+  min-width: var(--AT-square-button-small);
+  background-color: transparent;
 }
 
 #about-translations-target-textarea {

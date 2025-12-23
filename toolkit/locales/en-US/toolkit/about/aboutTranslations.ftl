@@ -59,3 +59,7 @@ about-translations-translating-message = Translating…
 # source and target languages, reversing the direction of translation.
 about-translations-swap-languages =
   .title = Swap languages
+
+# The title attribute for the button that clears the source text area.
+about-translations-clear-button =
+  .title = Clear source text
