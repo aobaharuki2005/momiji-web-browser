@@ -7,6 +7,7 @@ import { EventEmitter } from "resource://gre/modules/EventEmitter.sys.mjs";
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
+  AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.sys.mjs",
   DownloadListener:
@@ -828,15 +829,18 @@ class NavigationRegistry extends EventEmitter {
 
   #onPromptClosed = (eventName, data) => {
     const { contentBrowser, detail } = data;
-    const { accepted, promptType } = detail;
+    const { accepted, browsingContext, promptType } = detail;
 
     // Send navigation failed event if beforeunload prompt was rejected.
     if (promptType === "beforeunload" && accepted === false) {
-      const browsingContext = contentBrowser.browsingContext;
-
+      // TODO: Bug 2007385. We can remove this fallback
+      // when we have support for browsing context property in event details on Android.
+      const context = lazy.AppInfo.isAndroid
+        ? contentBrowser.browsingContext
+        : browsingContext;
       notifyNavigationFailed({
         contextDetails: {
-          context: browsingContext,
+          context,
         },
         errorName: "Beforeunload prompt was rejected",
         // Bug 1908952. Add support for the "url" field.
@@ -845,16 +849,19 @@ class NavigationRegistry extends EventEmitter {
   };
 
   #onPromptOpened = (eventName, data) => {
-    const { contentBrowser, prompt } = data;
+    const { browsingContext, contentBrowser, prompt } = data;
     const { promptType } = prompt;
 
     // We should start the navigation when beforeunload prompt is open.
     if (promptType === "beforeunload") {
-      const browsingContext = contentBrowser.browsingContext;
-
+      // TODO: Bug 2007385. We can remove this fallback
+      // when we have support for browsing context property in event details on Android.
+      const context = lazy.AppInfo.isAndroid
+        ? contentBrowser.browsingContext
+        : browsingContext;
       notifyNavigationStarted({
         contextDetails: {
-          context: browsingContext,
+          context,
         },
         // Bug 1908952. Add support for the "url" field.
       });

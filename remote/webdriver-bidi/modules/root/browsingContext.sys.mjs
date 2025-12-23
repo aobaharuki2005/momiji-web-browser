@@ -2205,14 +2205,20 @@ class BrowsingContextModule extends RootBiDiModule {
   #onPromptClosed = (eventName, data) => {
     if (this.#subscribedEvents.has("browsingContext.userPromptClosed")) {
       const { contentBrowser, detail } = data;
-      const navigableId = lazy.NavigableManager.getIdForBrowser(contentBrowser);
+      // TODO: Bug 2007385. Use only browsingContext from event details when the support for Android is added.
+      const browsingContext = lazy.AppInfo.isAndroid
+        ? contentBrowser.browsingContext
+        : detail.browsingContext;
+
+      const navigableId =
+        lazy.NavigableManager.getIdForBrowsingContext(browsingContext);
 
       if (navigableId === null) {
         return;
       }
 
       lazy.logger.trace(
-        `[${contentBrowser.browsingContext.id}] Prompt closed (type: "${
+        `[${browsingContext.id}] Prompt closed (type: "${
           detail.promptType
         }", accepted: "${detail.accepted}")`
       );
@@ -2225,7 +2231,7 @@ class BrowsingContextModule extends RootBiDiModule {
       };
 
       this.#emitContextEventForBrowsingContext(
-        contentBrowser.browsingContext.id,
+        browsingContext.id,
         "browsingContext.userPromptClosed",
         params
       );
@@ -2237,12 +2243,18 @@ class BrowsingContextModule extends RootBiDiModule {
       const { contentBrowser, prompt } = data;
       const type = prompt.promptType;
 
+      // TODO: Bug 2007385. We can remove this fallback
+      // when we have support for browsing context property on Android.
+      const browsingContext = lazy.AppInfo.isAndroid
+        ? contentBrowser.browsingContext
+        : data.browsingContext;
+
       prompt.getText().then(text => {
         // We need the text to identify a user prompt when it gets
         // randomly opened. Because on Android the text is asynchronously
         // retrieved lets delay the logging without making the handler async.
         lazy.logger.trace(
-          `[${contentBrowser.browsingContext.id}] Prompt opened (type: "${
+          `[${browsingContext.id}] Prompt opened (type: "${
             prompt.promptType
           }", text: "${text}")`
         );
@@ -2254,7 +2266,8 @@ class BrowsingContextModule extends RootBiDiModule {
         return;
       }
 
-      const navigableId = lazy.NavigableManager.getIdForBrowser(contentBrowser);
+      const navigableId =
+        lazy.NavigableManager.getIdForBrowsingContext(browsingContext);
 
       const session = lazy.getWebDriverSessionById(
         this.messageHandler.sessionId
@@ -2273,7 +2286,7 @@ class BrowsingContextModule extends RootBiDiModule {
       }
 
       this.#emitContextEventForBrowsingContext(
-        contentBrowser.browsingContext.id,
+        browsingContext.id,
         "browsingContext.userPromptOpened",
         eventPayload
       );
