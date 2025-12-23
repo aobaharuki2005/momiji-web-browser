@@ -7,7 +7,7 @@ const { ChatMessage } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs"
 );
 
-add_task(function test_ChatConversation_constructor_defaults() {
+add_task(function test_ChatMessage_constructor_defaults() {
   const message = new ChatMessage({
     ordinal: 0,
     role: 0,
