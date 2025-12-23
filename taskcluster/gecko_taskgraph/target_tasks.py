@@ -1222,12 +1222,9 @@ def _filter_by_release_project(parameters):
     if target_project is None:
         raise Exception("Unknown or unspecified release type in simulation run.")
 
-    def filter_for_target_project(task):
-        """Filter tasks by project.  Optionally enable nightlies."""
-        run_on_projects = set(task.attributes.get("run_on_projects", []))
-        return match_run_on_projects(target_project, run_on_projects)
-
-    return filter_for_target_project
+    params = parameters.copy()
+    params["project"] = target_project
+    return lambda task: filter_for_project(task, params)
 
 
 def filter_out_android_on_esr(parameters, task):
