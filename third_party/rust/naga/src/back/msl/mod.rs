@@ -155,7 +155,7 @@ pub struct EntryPointResources {
     )]
     pub resources: BindingMap,
 
-    pub immediates_buffer: Option<Slot>,
+    pub push_constant_buffer: Option<Slot>,
 
     /// The slot of a buffer that contains an array of `u32`,
     /// one for the size of each bound buffer that contains a runtime array,
@@ -247,8 +247,8 @@ pub enum EntryPointError {
     MissingBinding(String),
     #[error("mapping of {0:?} is missing")]
     MissingBindTarget(crate::ResourceBinding),
-    #[error("mapping for immediates is missing")]
-    MissingImmediateData,
+    #[error("mapping for push constants is missing")]
+    MissingPushConstants,
     #[error("mapping for sizes buffer is missing")]
     MissingSizesBuffer,
 }
@@ -618,13 +618,13 @@ impl Options {
         }
     }
 
-    fn resolve_immediates(
+    fn resolve_push_constants(
         &self,
         ep: &crate::EntryPoint,
     ) -> Result<ResolvedBinding, EntryPointError> {
         let slot = self
             .get_entry_point_resources(ep)
-            .and_then(|res| res.immediates_buffer);
+            .and_then(|res| res.push_constant_buffer);
         match slot {
             Some(slot) => Ok(ResolvedBinding::Resource(BindTarget {
                 buffer: Some(slot),
@@ -635,7 +635,7 @@ impl Options {
                 index: 0,
                 interpolation: None,
             }),
-            None => Err(EntryPointError::MissingImmediateData),
+            None => Err(EntryPointError::MissingPushConstants),
         }
     }
 

@@ -498,7 +498,8 @@ impl Swapchain for NativeSwapchain {
             texture: crate::vulkan::Texture {
                 raw: self.images[index as usize],
                 drop_guard: None,
-                memory: crate::vulkan::TextureMemory::External,
+                block: None,
+                external_memory: None,
                 format: self.config.format,
                 copy_size: crate::CopyExtent {
                     width: self.config.extent.width,
@@ -594,7 +595,7 @@ impl Swapchain for NativeSwapchain {
             // (i.e `VkSwapchainCreateInfoKHR::preTransform` not being equal to the current device orientation).
             // This is always the case when the device orientation is anything other than the identity one, as we unconditionally use `VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR`.
             #[cfg(not(target_os = "android"))]
-            log::debug!("Suboptimal present of frame {}", texture.index);
+            log::warn!("Suboptimal present of frame {}", texture.index);
         }
         Ok(())
     }

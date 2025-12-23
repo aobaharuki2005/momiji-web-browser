@@ -161,11 +161,10 @@ impl Layouter {
         self.layouts.clear();
     }
 
-    #[expect(rustdoc::private_intra_doc_links)]
     /// Extend this `Layouter` with layouts for any new entries in `gctx.types`.
     ///
     /// Ensure that every type in `gctx.types` has a corresponding [TypeLayout]
-    /// in [`Self::layouts`].
+    /// in [`self.layouts`].
     ///
     /// Some front ends need to be able to compute layouts for existing types
     /// while module construction is still in progress and new types are still

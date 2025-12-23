@@ -6,8 +6,8 @@ use arrayvec::ArrayVec;
 use thiserror::Error;
 use wgt::{
     error::{ErrorType, WebGpuError},
-    BufferAddress, BufferSize, BufferUsages, Color, DynamicOffset, IndexFormat, TextureSelector,
-    TextureUsages, TextureViewDimension, VertexStepMode,
+    BufferAddress, BufferSize, BufferUsages, Color, DynamicOffset, IndexFormat, ShaderStages,
+    TextureSelector, TextureUsages, TextureViewDimension, VertexStepMode,
 };
 
 use crate::command::{
@@ -44,7 +44,7 @@ use crate::{
         ParentDevice, QuerySet, Texture, TextureView, TextureViewNotRenderableReason,
     },
     track::{ResourceUsageCompatibilityError, Tracker, UsageScope},
-    validation, Label,
+    Label,
 };
 
 #[cfg(feature = "serde")]
@@ -59,21 +59,20 @@ use super::{
 };
 use super::{DrawCommandFamily, DrawKind, Rect};
 
-use crate::binding_model::{BindError, ImmediateUploadError};
+use crate::binding_model::{BindError, PushConstantUploadError};
 pub use wgt::{LoadOp, StoreOp};
 
 fn load_hal_ops<V>(load: LoadOp<V>) -> hal::AttachmentOps {
     match load {
         LoadOp::Load => hal::AttachmentOps::LOAD,
-        LoadOp::Clear(_) => hal::AttachmentOps::LOAD_CLEAR,
-        LoadOp::DontCare(_) => hal::AttachmentOps::LOAD_DONT_CARE,
+        LoadOp::Clear(_) => hal::AttachmentOps::empty(),
     }
 }
 
 fn store_hal_ops(store: StoreOp) -> hal::AttachmentOps {
     match store {
         StoreOp::Store => hal::AttachmentOps::STORE,
-        StoreOp::Discard => hal::AttachmentOps::STORE_DISCARD,
+        StoreOp::Discard => hal::AttachmentOps::empty(),
     }
 }
 
@@ -116,7 +115,6 @@ impl<V: Copy + Default> PassChannel<Option<V>> {
             Ok(ResolvedPassChannel::Operational(wgt::Operations {
                 load: match self.load_op.ok_or(AttachmentError::NoLoad)? {
                     LoadOp::Clear(clear_value) => LoadOp::Clear(handle_clear(clear_value)?),
-                    LoadOp::DontCare(token) => LoadOp::DontCare(token),
                     LoadOp::Load => LoadOp::Load,
                 },
                 store: self.store_op.ok_or(AttachmentError::NoStore)?,
@@ -206,7 +204,7 @@ impl ArcRenderPassColorAttachment {
     fn clear_value(&self) -> Color {
         match self.load_op {
             LoadOp::Clear(clear_value) => clear_value,
-            LoadOp::DontCare(_) | LoadOp::Load => Color::default(),
+            LoadOp::Load => Color::default(),
         }
     }
 }
@@ -359,7 +357,10 @@ impl fmt::Debug for RenderPass {
             .field("depth_stencil_target", &self.depth_stencil_attachment)
             .field("command count", &self.base.commands.len())
             .field("dynamic offset count", &self.base.dynamic_offsets.len())
-            .field("immediate data u32 count", &self.base.immediates_data.len())
+            .field(
+                "push constant u32 count",
+                &self.base.push_constant_data.len(),
+            )
             .field("multiview mask", &self.multiview_mask)
             .finish()
     }
@@ -800,12 +801,12 @@ pub enum RenderPassErrorInner {
     Draw(#[from] DrawError),
     #[error(transparent)]
     Bind(#[from] BindError),
-    #[error("Immediate data offset must be aligned to 4 bytes")]
-    ImmediateOffsetAlignment,
-    #[error("Immediate data size must be aligned to 4 bytes")]
-    ImmediateDataizeAlignment,
-    #[error("Ran out of immediate data space. Don't set 4gb of immediates per ComputePass.")]
-    ImmediateOutOfMemory,
+    #[error("Push constant offset must be aligned to 4 bytes")]
+    PushConstantOffsetAlignment,
+    #[error("Push constant size must be aligned to 4 bytes")]
+    PushConstantSizeAlignment,
+    #[error("Ran out of push constant space. Don't set 4gb of push constants per ComputePass.")]
+    PushConstantOutOfMemory,
     #[error(transparent)]
     QueryUse(#[from] QueryUseError),
     #[error("Multiview layer count must match")]
@@ -852,8 +853,8 @@ impl From<pass::MissingPipeline> for RenderPassErrorInner {
     }
 }
 
-impl From<ImmediateUploadError> for RenderPassErrorInner {
-    fn from(error: ImmediateUploadError) -> Self {
+impl From<PushConstantUploadError> for RenderPassErrorInner {
+    fn from(error: PushConstantUploadError) -> Self {
         Self::RenderCommand(error.into())
     }
 }
@@ -912,9 +913,9 @@ impl WebGpuError for RenderPassError {
             | RenderPassErrorInner::IndirectCountBufferOverrun { .. }
             | RenderPassErrorInner::ResourceUsageCompatibility(..)
             | RenderPassErrorInner::IncompatibleBundleReadOnlyDepthStencil { .. }
-            | RenderPassErrorInner::ImmediateOffsetAlignment
-            | RenderPassErrorInner::ImmediateDataizeAlignment
-            | RenderPassErrorInner::ImmediateOutOfMemory
+            | RenderPassErrorInner::PushConstantOffsetAlignment
+            | RenderPassErrorInner::PushConstantSizeAlignment
+            | RenderPassErrorInner::PushConstantOutOfMemory
             | RenderPassErrorInner::MultiViewMismatch
             | RenderPassErrorInner::MultiViewDimensionMismatch
             | RenderPassErrorInner::TooManyMultiviewViews
@@ -1277,15 +1278,6 @@ impl RenderPassInfo {
                 ));
             }
 
-            validation::validate_color_attachment_bytes_per_sample(
-                color_attachments
-                    .iter()
-                    .flatten()
-                    .map(|at| at.view.desc.format),
-                device.limits.max_color_attachment_bytes_per_sample,
-            )
-            .map_err(RenderPassErrorInner::ColorAttachment)?;
-
             fn check_attachment_overlap(
                 attachment_set: &mut crate::FastHashSet<(crate::track::TrackerIndex, u32, u32)>,
                 view: &TextureView,
@@ -1563,13 +1555,13 @@ impl RenderPassInfo {
         if let Some((aspect, view)) = self.divergent_discarded_depth_stencil_aspect {
             let (depth_ops, stencil_ops) = if aspect == wgt::TextureAspect::DepthOnly {
                 (
-                    hal::AttachmentOps::LOAD_CLEAR | hal::AttachmentOps::STORE, // clear depth
-                    hal::AttachmentOps::LOAD | hal::AttachmentOps::STORE,       // unchanged stencil
+                    hal::AttachmentOps::STORE,                            // clear depth
+                    hal::AttachmentOps::LOAD | hal::AttachmentOps::STORE, // unchanged stencil
                 )
             } else {
                 (
                     hal::AttachmentOps::LOAD | hal::AttachmentOps::STORE, // unchanged stencil
-                    hal::AttachmentOps::LOAD_CLEAR | hal::AttachmentOps::STORE, // clear depth
+                    hal::AttachmentOps::STORE,                            // clear depth
                 )
             };
             let desc = hal::RenderPassDescriptor::<'_, _, dyn hal::DynTextureView> {
@@ -1831,21 +1823,22 @@ impl Global {
 
         let base = pass.base.take();
 
-        if let Err(RenderPassError {
-            inner:
-                RenderPassErrorInner::EncoderState(
-                    err @ (EncoderStateError::Locked | EncoderStateError::Ended),
-                ),
-            scope: _,
-        }) = base
-        {
-            // Most encoding errors are detected and raised within `finish()`.
+        if matches!(
+            base,
+            Err(RenderPassError {
+                inner: RenderPassErrorInner::EncoderState(EncoderStateError::Ended),
+                scope: _,
+            })
+        ) {
+            // If the encoder was already finished at time of pass creation,
+            // then it was not put in the locked state, so we need to
+            // generate a validation error here and now due to the encoder not
+            // being locked. The encoder already holds an error from when the
+            // pass was opened, or earlier.
             //
-            // However, we raise a validation error here if the pass was opened
-            // within another pass, or on a finished encoder. The latter is
-            // particularly important, because in that case reporting errors via
-            // `CommandEncoder::finish` is not possible.
-            return Err(err.clone());
+            // All other errors are propagated to the encoder within `push_with`,
+            // and will be reported later.
+            return Err(EncoderStateError::Ended);
         }
 
         cmd_buf_data.push_with(|| -> Result<_, RenderPassError> {
@@ -2020,15 +2013,17 @@ pub(super) fn encode_render_pass(
                     let scope = PassErrorScope::SetViewport;
                     set_viewport(&mut state, rect, depth_min, depth_max).map_pass_err(scope)?;
                 }
-                ArcRenderCommand::SetImmediate {
+                ArcRenderCommand::SetPushConstant {
+                    stages,
                     offset,
                     size_bytes,
                     values_offset,
                 } => {
-                    let scope = PassErrorScope::SetImmediate;
-                    pass::set_immediates::<RenderPassErrorInner, _>(
+                    let scope = PassErrorScope::SetPushConstant;
+                    pass::set_push_constant::<RenderPassErrorInner, _>(
                         &mut state.pass,
-                        &base.immediates_data,
+                        &base.push_constant_data,
+                        stages,
                         offset,
                         size_bytes,
                         values_offset,
@@ -2247,18 +2242,6 @@ pub(super) fn encode_render_pass(
                 RenderPassErrorInner::DebugGroupError(DebugGroupError::MissingPop)
                     .map_pass_err(pass_scope),
             )?;
-        }
-        if state.active_occlusion_query.is_some() {
-            Err(RenderPassErrorInner::QueryUse(QueryUseError::MissingEnd {
-                query_type: super::SimplifiedQueryType::Occlusion,
-            })
-            .map_pass_err(pass_scope))?;
-        }
-        if state.active_pipeline_statistics_query.is_some() {
-            Err(RenderPassErrorInner::QueryUse(QueryUseError::MissingEnd {
-                query_type: super::SimplifiedQueryType::PipelineStatistics,
-            })
-            .map_pass_err(pass_scope))?;
         }
 
         state
@@ -2726,13 +2709,8 @@ fn draw_mesh_tasks(
         .base
         .device
         .limits
-        .max_task_mesh_workgroups_per_dimension;
-    let max_groups = state
-        .pass
-        .base
-        .device
-        .limits
-        .max_task_mesh_workgroup_total_count;
+        .max_task_workgroups_per_dimension;
+    let max_groups = state.pass.base.device.limits.max_task_workgroup_total_count;
     if group_count_x > groups_size_limit
         || group_count_y > groups_size_limit
         || group_count_z > groups_size_limit
@@ -3184,7 +3162,9 @@ impl Global {
         }
 
         let mut bind_group = None;
-        if let Some(bind_group_id) = bind_group_id {
+        if bind_group_id.is_some() {
+            let bind_group_id = bind_group_id.unwrap();
+
             let hub = &self.hub;
             bind_group = Some(pass_try!(
                 base,
@@ -3336,45 +3316,47 @@ impl Global {
         Ok(())
     }
 
-    pub fn render_pass_set_immediates(
+    pub fn render_pass_set_push_constants(
         &self,
         pass: &mut RenderPass,
+        stages: ShaderStages,
         offset: u32,
         data: &[u8],
     ) -> Result<(), PassStateError> {
-        let scope = PassErrorScope::SetImmediate;
+        let scope = PassErrorScope::SetPushConstant;
         let base = pass_base!(pass, scope);
 
-        if offset & (wgt::IMMEDIATE_DATA_ALIGNMENT - 1) != 0 {
+        if offset & (wgt::PUSH_CONSTANT_ALIGNMENT - 1) != 0 {
             pass_try!(
                 base,
                 scope,
-                Err(RenderPassErrorInner::ImmediateOffsetAlignment)
+                Err(RenderPassErrorInner::PushConstantOffsetAlignment)
             );
         }
-        if data.len() as u32 & (wgt::IMMEDIATE_DATA_ALIGNMENT - 1) != 0 {
+        if data.len() as u32 & (wgt::PUSH_CONSTANT_ALIGNMENT - 1) != 0 {
             pass_try!(
                 base,
                 scope,
-                Err(RenderPassErrorInner::ImmediateDataizeAlignment)
+                Err(RenderPassErrorInner::PushConstantSizeAlignment)
             );
         }
 
         let value_offset = pass_try!(
             base,
             scope,
-            base.immediates_data
+            base.push_constant_data
                 .len()
                 .try_into()
-                .map_err(|_| RenderPassErrorInner::ImmediateOutOfMemory),
+                .map_err(|_| RenderPassErrorInner::PushConstantOutOfMemory),
         );
 
-        base.immediates_data.extend(
-            data.chunks_exact(wgt::IMMEDIATE_DATA_ALIGNMENT as usize)
+        base.push_constant_data.extend(
+            data.chunks_exact(wgt::PUSH_CONSTANT_ALIGNMENT as usize)
                 .map(|arr| u32::from_ne_bytes([arr[0], arr[1], arr[2], arr[3]])),
         );
 
-        base.commands.push(ArcRenderCommand::SetImmediate {
+        base.commands.push(ArcRenderCommand::SetPushConstant {
+            stages,
             offset,
             size_bytes: data.len() as u32,
             values_offset: Some(value_offset),

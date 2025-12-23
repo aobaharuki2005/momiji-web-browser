@@ -356,21 +356,21 @@ pub enum AddressSpace {
     /// Opaque handles, such as samplers and images.
     Handle,
 
-    /// Immediate data.
+    /// Push constants.
     ///
     /// A [`Module`] may contain at most one [`GlobalVariable`] in
     /// this address space. Its contents are provided not by a buffer
-    /// but by `SetImmediates` pass commands, allowing the CPU to
+    /// but by `SetPushConstant` pass commands, allowing the CPU to
     /// establish different values for each draw/dispatch.
     ///
-    /// `Immediate` variables may not contain `f16` values, even if
+    /// `PushConstant` variables may not contain `f16` values, even if
     /// the [`SHADER_FLOAT16`] capability is enabled.
     ///
     /// Backends generally place tight limits on the size of
-    /// `Immediate` variables.
+    /// `PushConstant` variables.
     ///
     /// [`SHADER_FLOAT16`]: crate::valid::Capabilities::SHADER_FLOAT16
-    Immediate,
+    PushConstant,
     /// Task shader to mesh shader payload
     TaskPayload,
 }

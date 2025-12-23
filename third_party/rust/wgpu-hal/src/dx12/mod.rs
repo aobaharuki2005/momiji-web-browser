@@ -54,7 +54,7 @@ the limit is merely 2048 unique samplers in existence, which is much more reason
 
 ## Resource binding
 
-See [`crate::Device::create_pipeline_layout`] documentation for the structure
+See ['Device::create_pipeline_layout`] documentation for the structure
 of the root signature corresponding to WebGPU pipeline layout.
 
 Binding groups is mostly straightforward, with one big caveat:
@@ -149,13 +149,6 @@ struct D3D12Lib {
     lib: DynLib,
 }
 
-#[derive(Clone, Copy)]
-pub enum CreateDeviceError {
-    GetProcAddress,
-    D3D12CreateDevice(windows_core::HRESULT),
-    RetDeviceIsNull,
-}
-
 impl D3D12Lib {
     fn new() -> Result<Self, libloading::Error> {
         unsafe { DynLib::new("d3d12.dll").map(|lib| Self { lib }) }
@@ -165,7 +158,7 @@ impl D3D12Lib {
         &self,
         adapter: &DxgiAdapter,
         feature_level: Direct3D::D3D_FEATURE_LEVEL,
-    ) -> Result<Direct3D12::ID3D12Device, CreateDeviceError> {
+    ) -> Result<Option<Direct3D12::ID3D12Device>, crate::DeviceError> {
         // Calls windows::Win32::Graphics::Direct3D12::D3D12CreateDevice on d3d12.dll
         type Fun = extern "system" fn(
             padapter: *mut ffi::c_void,
@@ -174,8 +167,7 @@ impl D3D12Lib {
             ppdevice: *mut *mut ffi::c_void,
         ) -> windows_core::HRESULT;
         let func: libloading::Symbol<Fun> =
-            unsafe { self.lib.get(c"D3D12CreateDevice".to_bytes()) }
-                .map_err(|_| CreateDeviceError::GetProcAddress)?;
+            unsafe { self.lib.get(c"D3D12CreateDevice".to_bytes()) }?;
 
         let mut result__: Option<Direct3D12::ID3D12Device> = None;
 
@@ -185,13 +177,20 @@ impl D3D12Lib {
             // TODO: Generic?
             &Direct3D12::ID3D12Device::IID,
             <*mut _>::cast(&mut result__),
-        );
+        )
+        .ok();
 
-        if res.is_err() {
-            return Err(CreateDeviceError::D3D12CreateDevice(res));
+        if let Err(ref err) = res {
+            match err.code() {
+                Dxgi::DXGI_ERROR_UNSUPPORTED => return Ok(None),
+                Dxgi::DXGI_ERROR_DRIVER_INTERNAL_ERROR => return Err(crate::DeviceError::Lost),
+                _ => {}
+            }
         }
 
-        result__.ok_or(CreateDeviceError::RetDeviceIsNull)
+        res.into_device_result("Device creation")?;
+
+        result__.ok_or(crate::DeviceError::Unexpected).map(Some)
     }
 
     fn serialize_root_signature(
@@ -475,7 +474,6 @@ pub struct Instance {
     memory_budget_thresholds: wgt::MemoryBudgetThresholds,
     compiler_container: Arc<shader_compilation::CompilerContainer>,
     options: wgt::Dx12BackendOptions,
-    telemetry: Option<crate::Telemetry>,
 }
 
 impl Instance {
@@ -1617,28 +1615,4 @@ pub enum ShaderModuleSource {
     Naga(crate::NagaShader),
     DxilPassthrough(DxilPassthroughShader),
     HlslPassthrough(HlslPassthroughShader),
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum FeatureLevel {
-    _11_0,
-    _11_1,
-    _12_0,
-    _12_1,
-    _12_2,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub enum ShaderModel {
-    _5_1,
-    _6_0,
-    _6_1,
-    _6_2,
-    _6_3,
-    _6_4,
-    _6_5,
-    _6_6,
-    _6_7,
-    _6_8,
-    _6_9,
 }

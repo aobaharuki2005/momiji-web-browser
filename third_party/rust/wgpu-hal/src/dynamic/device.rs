@@ -295,7 +295,7 @@ impl<D: Device + DynResource> DynDevice for D {
         let desc = PipelineLayoutDescriptor {
             label: desc.label,
             bind_group_layouts: &bind_group_layouts,
-            immediate_size: desc.immediate_size,
+            push_constant_ranges: desc.push_constant_ranges,
             flags: desc.flags,
         };
 

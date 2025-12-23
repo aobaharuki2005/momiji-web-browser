@@ -32,6 +32,7 @@ use core::num::NonZeroU64;
 use alloc::{boxed::Box, string::String, string::ToString, sync::Arc};
 
 use hashbrown::HashMap;
+use wgt::PushConstantRange;
 
 use crate::{
     device::{Device, DeviceError},
@@ -151,7 +152,7 @@ impl TimestampNormalizer {
                 panic!("Timestamp normalization requires the wgsl feature flag to be enabled!");
 
             let info = crate::device::create_validator(
-                wgt::Features::IMMEDIATES,
+                wgt::Features::PUSH_CONSTANTS,
                 wgt::DownlevelFlags::empty(),
                 naga::valid::ValidationFlags::all(),
             )
@@ -190,7 +191,10 @@ impl TimestampNormalizer {
                 .create_pipeline_layout(&hal::PipelineLayoutDescriptor {
                     label: None,
                     bind_group_layouts: &[temporary_bind_group_layout.as_ref()],
-                    immediate_size: 8,
+                    push_constant_ranges: &[PushConstantRange {
+                        stages: wgt::ShaderStages::COMPUTE,
+                        range: 0..8,
+                    }],
                     flags: hal::PipelineLayoutFlags::empty(),
                 })
                 .map_err(|e| {
@@ -339,8 +343,9 @@ impl TimestampNormalizer {
             });
             encoder.set_compute_pipeline(&*state.pipeline);
             encoder.set_bind_group(&*state.pipeline_layout, 0, Some(bind_group), &[]);
-            encoder.set_immediates(
+            encoder.set_push_constants(
                 &*state.pipeline_layout,
+                wgt::ShaderStages::COMPUTE,
                 0,
                 &[buffer_offset_timestamps, total_timestamps],
             );

@@ -246,7 +246,6 @@ impl<A: hal::Api> Example<A> {
                 },
                 ..Default::default()
             },
-            telemetry: None,
         };
         let instance = unsafe { A::Instance::init(&instance_desc)? };
         let surface = {
@@ -388,7 +387,7 @@ impl<A: hal::Api> Example<A> {
             label: None,
             flags: hal::PipelineLayoutFlags::empty(),
             bind_group_layouts: &[&bgl],
-            immediate_size: 0,
+            push_constant_ranges: &[],
         };
         let pipeline_layout = unsafe {
             device

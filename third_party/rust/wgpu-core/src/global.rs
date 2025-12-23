@@ -31,14 +31,10 @@ pub struct Global {
 }
 
 impl Global {
-    pub fn new(
-        name: &str,
-        instance_desc: &wgt::InstanceDescriptor,
-        telemetry: Option<hal::Telemetry>,
-    ) -> Self {
+    pub fn new(name: &str, instance_desc: &wgt::InstanceDescriptor) -> Self {
         profiling::scope!("Global::new");
         Self {
-            instance: Instance::new(name, instance_desc, telemetry),
+            instance: Instance::new(name, instance_desc),
             surfaces: Registry::new(),
             hub: Hub::new(),
         }

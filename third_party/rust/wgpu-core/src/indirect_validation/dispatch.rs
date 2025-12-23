@@ -12,7 +12,7 @@ use core::num::NonZeroU64;
 /// - max_dynamic_storage_buffers_per_pipeline_layout: 1,
 /// - max_storage_buffers_per_shader_stage: 2,
 /// - max_storage_buffer_binding_size: 3 * min_storage_buffer_offset_alignment,
-/// - max_immediate_size: 4,
+/// - max_push_constant_size: 4,
 /// - max_compute_invocations_per_workgroup 1
 ///
 /// These are all indirectly satisfied by `DownlevelFlags::INDIRECT_EXECUTION`, which is also
@@ -53,7 +53,7 @@ impl Dispatch {
             struct OffsetPc {{
                 inner: u32,
             }}
-            var<immediate> offset: OffsetPc;
+            var<push_constant> offset: OffsetPc;
 
             @compute @workgroup_size(1)
             fn main() {{
@@ -96,7 +96,7 @@ impl Dispatch {
         let module = panic!("Indirect validation requires the wgsl feature flag to be enabled!");
 
         let info = crate::device::create_validator(
-            wgt::Features::IMMEDIATES,
+            wgt::Features::PUSH_CONSTANTS,
             wgt::DownlevelFlags::empty(),
             naga::valid::ValidationFlags::all(),
         )
@@ -177,7 +177,10 @@ impl Dispatch {
                 dst_bind_group_layout.as_ref(),
                 src_bind_group_layout.as_ref(),
             ],
-            immediate_size: 4,
+            push_constant_ranges: &[wgt::PushConstantRange {
+                stages: wgt::ShaderStages::COMPUTE,
+                range: 0..4,
+            }],
         };
         let pipeline_layout = unsafe {
             device
@@ -299,10 +302,10 @@ impl Dispatch {
         // min_storage_buffer_offset_alignment (256 bytes by default).
         //
         // So, we work around this limitation by calculating an aligned offset
-        // and pass the remainder through a immediate data.
+        // and pass the remainder through a push constant.
         //
         // We could bind the whole buffer and only have to pass the offset
-        // through a immediate data but we might run into the
+        // through a push constant but we might run into the
         // max_storage_buffer_binding_size limit.
         //
         // See the inner docs of `calculate_src_buffer_binding_size` to

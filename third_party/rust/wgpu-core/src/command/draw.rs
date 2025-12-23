@@ -7,7 +7,7 @@ use wgt::error::{ErrorType, WebGpuError};
 use super::bind::BinderError;
 use crate::command::pass;
 use crate::{
-    binding_model::{BindingError, ImmediateUploadError, LateMinBufferBindingSizeMismatch},
+    binding_model::{BindingError, LateMinBufferBindingSizeMismatch, PushConstantUploadError},
     resource::{
         DestroyedResourceError, MissingBufferUsageError, MissingTextureUsageError,
         ResourceErrorIdent,
@@ -116,7 +116,7 @@ pub enum RenderCommandError {
     #[error(transparent)]
     MissingTextureUsage(#[from] MissingTextureUsageError),
     #[error(transparent)]
-    ImmediateData(#[from] ImmediateUploadError),
+    PushConstants(#[from] PushConstantUploadError),
     #[error(transparent)]
     BindingError(#[from] BindingError),
     #[error("Viewport size {{ w: {w}, h: {h} }} greater than device's requested `max_texture_dimension_2d` limit {max}, or less than zero")]
@@ -139,7 +139,7 @@ impl WebGpuError for RenderCommandError {
             Self::DestroyedResource(e) => e,
             Self::MissingBufferUsage(e) => e,
             Self::MissingTextureUsage(e) => e,
-            Self::ImmediateData(e) => e,
+            Self::PushConstants(e) => e,
             Self::BindingError(e) => e,
 
             Self::BindGroupIndexOutOfRange { .. }

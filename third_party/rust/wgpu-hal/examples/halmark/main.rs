@@ -99,7 +99,6 @@ impl<A: hal::Api> Example<A> {
             memory_budget_thresholds: wgpu_types::MemoryBudgetThresholds::default(),
             // Can't rely on having DXC available, so use FXC instead
             backend_options: wgpu_types::BackendOptions::default(),
-            telemetry: None,
         };
         let instance = unsafe { A::Instance::init(&instance_desc)? };
         let surface = {
@@ -243,7 +242,7 @@ impl<A: hal::Api> Example<A> {
             label: None,
             flags: hal::PipelineLayoutFlags::empty(),
             bind_group_layouts: &[&global_group_layout, &local_group_layout],
-            immediate_size: 0,
+            push_constant_ranges: &[],
         };
         let pipeline_layout = unsafe {
             device
@@ -719,7 +718,7 @@ impl<A: hal::Api> Example<A> {
                 },
                 depth_slice: None,
                 resolve_target: None,
-                ops: hal::AttachmentOps::STORE | hal::AttachmentOps::LOAD_CLEAR,
+                ops: hal::AttachmentOps::STORE,
                 clear_value: wgpu_types::Color {
                     r: 0.1,
                     g: 0.2,

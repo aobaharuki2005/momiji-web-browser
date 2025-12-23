@@ -4,14 +4,13 @@ use core::fmt;
 use super::{builtins::MacroCall, Span};
 use crate::{
     AddressSpace, BinaryOperator, Binding, Constant, Expression, Function, GlobalVariable, Handle,
-    Interpolation, Literal, Override, Sampling, StorageAccess, Type, UnaryOperator,
+    Interpolation, Literal, Sampling, StorageAccess, Type, UnaryOperator,
 };
 
 #[derive(Debug, Clone, Copy)]
 pub enum GlobalLookupKind {
     Variable(Handle<GlobalVariable>),
     Constant(Handle<Constant>, Handle<Type>),
-    Override(Handle<Override>, Handle<Type>),
     BlockSelect(Handle<GlobalVariable>, u32),
 }
 

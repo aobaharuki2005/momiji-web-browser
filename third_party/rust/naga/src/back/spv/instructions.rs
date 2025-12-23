@@ -842,12 +842,6 @@ impl super::Instruction {
         instruction
     }
 
-    pub(super) fn ray_query_terminate(query: Word) -> Self {
-        let mut instruction = Self::new(Op::RayQueryTerminateKHR);
-        instruction.add_operand(query);
-        instruction
-    }
-
     //
     //  Conversion Instructions
     //

@@ -183,23 +183,22 @@ impl TryToWgsl for crate::BuiltIn {
             Bi::SubgroupInvocationId => "subgroup_invocation_id",
 
             // Non-standard built-ins.
-            Bi::MeshTaskSize => "mesh_task_size",
-            Bi::TriangleIndices => "triangle_indices",
-            Bi::LineIndices => "line_indices",
-            Bi::PointIndex => "point_index",
-            Bi::Vertices => "vertices",
-            Bi::Primitives => "primitives",
-            Bi::VertexCount => "vertex_count",
-            Bi::PrimitiveCount => "primitive_count",
-            Bi::CullPrimitive => "cull_primitive",
-
             Bi::BaseInstance
             | Bi::BaseVertex
             | Bi::CullDistance
             | Bi::PointSize
             | Bi::DrawID
             | Bi::PointCoord
-            | Bi::WorkGroupSize => return None,
+            | Bi::WorkGroupSize
+            | Bi::CullPrimitive
+            | Bi::TriangleIndices
+            | Bi::LineIndices
+            | Bi::MeshTaskSize
+            | Bi::PointIndex
+            | Bi::VertexCount
+            | Bi::PrimitiveCount
+            | Bi::Vertices
+            | Bi::Primitives => return None,
         })
     }
 }
@@ -359,11 +358,11 @@ pub const fn address_space_str(
                     "storage"
                 }
             }
-            As::Immediate => "immediate",
+            As::PushConstant => "push_constant",
             As::WorkGroup => "workgroup",
             As::Handle => return (None, None),
             As::Function => "function",
-            As::TaskPayload => "task_payload",
+            As::TaskPayload => return (None, None),
         }),
         None,
     )

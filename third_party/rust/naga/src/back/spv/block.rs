@@ -221,13 +221,8 @@ impl Writer {
         ir_result: &crate::FunctionResult,
         result_members: &[ResultMember],
         body: &mut Vec<Instruction>,
-        task_payload: Option<Word>,
-    ) -> Result<Instruction, Error> {
+    ) -> Result<(), Error> {
         for (index, res_member) in result_members.iter().enumerate() {
-            // This isn't a real builtin, and is handled elsewhere
-            if res_member.built_in == Some(crate::BuiltIn::MeshTaskSize) {
-                continue;
-            }
             let member_value_id = match ir_result.binding {
                 Some(_) => value_id,
                 None => {
@@ -258,13 +253,7 @@ impl Writer {
                 _ => {}
             }
         }
-        self.try_write_entry_point_task_return(
-            value_id,
-            ir_result,
-            result_members,
-            body,
-            task_payload,
-        )
+        Ok(())
     }
 }
 
@@ -3262,31 +3251,22 @@ impl BlockContext<'_> {
                     let instruction = match self.function.entry_point_context {
                         // If this is an entry point, and we need to return anything,
                         // let's instead store the output variables and return `void`.
-                        Some(ref context) => self.writer.write_entry_point_return(
-                            value_id,
-                            self.ir_function.result.as_ref().unwrap(),
-                            &context.results,
-                            &mut block.body,
-                            context.task_payload_variable_id,
-                        )?,
+                        Some(ref context) => {
+                            self.writer.write_entry_point_return(
+                                value_id,
+                                self.ir_function.result.as_ref().unwrap(),
+                                &context.results,
+                                &mut block.body,
+                            )?;
+                            Instruction::return_void()
+                        }
                         None => Instruction::return_value(value_id),
                     };
                     self.function.consume(block, instruction);
                     return Ok(BlockExitDisposition::Discarded);
                 }
                 Statement::Return { value: None } => {
-                    if let Some(super::EntryPointContext {
-                        mesh_state: Some(ref mesh_state),
-                        ..
-                    }) = self.function.entry_point_context
-                    {
-                        self.function.consume(
-                            block,
-                            Instruction::branch(mesh_state.entry_point_epilogue_id),
-                        );
-                    } else {
-                        self.function.consume(block, Instruction::return_void());
-                    }
+                    self.function.consume(block, Instruction::return_void());
                     return Ok(BlockExitDisposition::Discarded);
                 }
                 Statement::Kill => {
@@ -3294,7 +3274,7 @@ impl BlockContext<'_> {
                     return Ok(BlockExitDisposition::Discarded);
                 }
                 Statement::ControlBarrier(flags) => {
-                    self.writer.write_control_barrier(flags, &mut block.body);
+                    self.writer.write_control_barrier(flags, &mut block);
                 }
                 Statement::MemoryBarrier(flags) => {
                     self.writer.write_memory_barrier(flags, &mut block);
@@ -3633,7 +3613,7 @@ impl BlockContext<'_> {
                 }
                 Statement::WorkGroupUniformLoad { pointer, result } => {
                     self.writer
-                        .write_control_barrier(crate::Barrier::WORK_GROUP, &mut block.body);
+                        .write_control_barrier(crate::Barrier::WORK_GROUP, &mut block);
                     let result_type_id = self.get_expression_type_id(&self.fun_info[result].ty);
                     // Embed the body of
                     match self.write_access_chain(
@@ -3673,7 +3653,7 @@ impl BlockContext<'_> {
                         }
                     }
                     self.writer
-                        .write_control_barrier(crate::Barrier::WORK_GROUP, &mut block.body);
+                        .write_control_barrier(crate::Barrier::WORK_GROUP, &mut block);
                 }
                 Statement::RayQuery { query, ref fun } => {
                     self.write_ray_query_function(query, fun, &mut block);
@@ -3746,16 +3726,6 @@ impl BlockContext<'_> {
             LoopContext::default(),
             debug_info,
         )?;
-        if let Some(super::EntryPointContext {
-            mesh_state: Some(ref mesh_state),
-            ..
-        }) = self.function.entry_point_context
-        {
-            let mut block = Block::new(mesh_state.entry_point_epilogue_id);
-            self.writer
-                .write_mesh_shader_return(mesh_state, &mut block)?;
-            self.function.consume(block, Instruction::return_void());
-        }
 
         Ok(())
     }

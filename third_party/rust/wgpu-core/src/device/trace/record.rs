@@ -53,7 +53,7 @@ pub struct Trace {
 
 impl Trace {
     pub fn new(path: std::path::PathBuf) -> Result<Self, std::io::Error> {
-        log::debug!("Tracing into '{path:?}'");
+        log::info!("Tracing into '{path:?}'");
         let mut file = std::fs::File::create(path.join(FILE_NAME))?;
         file.write_all(b"[\n")?;
         Ok(Self {
@@ -363,7 +363,7 @@ impl<C: IntoTrace> IntoTrace for BasePass<C, Infallible> {
                 .collect(),
             dynamic_offsets: self.dynamic_offsets,
             string_data: self.string_data,
-            immediates_data: self.immediates_data,
+            push_constant_data: self.push_constant_data,
         }
     }
 }
@@ -383,11 +383,11 @@ impl IntoTrace for ArcComputeCommand {
                 bind_group: bind_group.map(|bg| bg.into_trace()),
             },
             C::SetPipeline(id) => C::SetPipeline(id.into_trace()),
-            C::SetImmediate {
+            C::SetPushConstant {
                 offset,
                 size_bytes,
                 values_offset,
-            } => C::SetImmediate {
+            } => C::SetPushConstant {
                 offset,
                 size_bytes,
                 values_offset,
@@ -468,11 +468,13 @@ impl IntoTrace for ArcRenderCommand {
                 depth_max,
             },
             C::SetScissor(rect) => C::SetScissor(rect),
-            C::SetImmediate {
+            C::SetPushConstant {
+                stages,
                 offset,
                 size_bytes,
                 values_offset,
-            } => C::SetImmediate {
+            } => C::SetPushConstant {
+                stages,
                 offset,
                 size_bytes,
                 values_offset,
@@ -576,7 +578,7 @@ impl<'a> IntoTrace for crate::binding_model::ResolvedPipelineLayoutDescriptor<'a
                 .iter()
                 .map(|bgl| bgl.to_trace())
                 .collect(),
-            immediate_size: self.immediate_size,
+            push_constant_ranges: self.push_constant_ranges.clone(),
         }
     }
 }

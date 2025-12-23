@@ -1189,13 +1189,8 @@ impl<'a> ConstantEvaluator<'a> {
                 Behavior::Wgsl(WgslRestrictions::Const(_)) => {
                     Err(ConstantEvaluatorError::OverrideExpr)
                 }
-
-                // GLSL specialization constants (constant_id) become Override expressions
-                Behavior::Glsl(GlslRestrictions::Runtime(_)) => {
-                    Ok(self.append_expr(expr, span, ExpressionKind::Override))
-                }
-                Behavior::Glsl(GlslRestrictions::Const) => {
-                    Err(ConstantEvaluatorError::OverrideExpr)
+                Behavior::Glsl(_) => {
+                    unreachable!()
                 }
             },
             ExpressionKind::Runtime => {

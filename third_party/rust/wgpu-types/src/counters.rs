@@ -96,8 +96,8 @@ impl Default for InternalCounter {
     }
 }
 
-impl fmt::Debug for InternalCounter {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+impl core::fmt::Debug for InternalCounter {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         self.read().fmt(f)
     }
 }
