@@ -239,9 +239,14 @@ export class SecurityOrchestrator {
 
       if (!isSecurityEnabled()) {
         lazy.logSecurityEvent({
+          requestId: context.requestId,
+          sessionId: this.#sessionId,
           phase,
           action,
-          context,
+          context: {
+            tainted: context.tainted ?? false,
+            trustedCount: 0,
+          },
           decision: {
             effect: lazy.EFFECT_ALLOW,
             reason: "Security disabled via preference flag",
@@ -254,10 +259,22 @@ export class SecurityOrchestrator {
 
       const policies = this.#policies.get(phase);
       if (!policies || policies.length === 0) {
-        lazy.console.warn(
-          `[Security] No policies registered for phase: ${phase}`
-        );
-        return lazy.createAllowDecision({ note: "No policies for phase" });
+        const decision = lazy.createAllowDecision({
+          reason: "No policies for phase",
+        });
+        lazy.logSecurityEvent({
+          requestId: context.requestId,
+          sessionId: this.#sessionId,
+          phase,
+          action,
+          context: {
+            tainted: context.tainted ?? false,
+            trustedCount: 0,
+          },
+          decision,
+          durationMs: ChromeUtils.now() - startTime,
+        });
+        return decision;
       }
 
       const fullContext = {
@@ -279,9 +296,14 @@ export class SecurityOrchestrator {
       );
 
       lazy.logSecurityEvent({
+        requestId: context.requestId,
+        sessionId: this.#sessionId,
         phase,
         action,
-        context: fullContext,
+        context: {
+          tainted: context.tainted ?? false,
+          trustedCount: linkLedger?.size() ?? 0,
+        },
         decision,
         durationMs: ChromeUtils.now() - startTime,
       });
@@ -295,9 +317,14 @@ export class SecurityOrchestrator {
       );
 
       lazy.logSecurityEvent({
-        phase: envelope.phase || "unknown",
-        action: envelope.action || {},
-        context: envelope.context || {},
+        requestId: envelope?.context?.requestId,
+        sessionId: this.#sessionId,
+        phase: envelope?.phase || "unknown",
+        action: envelope?.action || {},
+        context: {
+          tainted: envelope?.context?.tainted ?? false,
+          trustedCount: 0,
+        },
         decision: errorDecision,
         durationMs: ChromeUtils.now() - startTime,
         error,
