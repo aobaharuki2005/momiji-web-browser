@@ -113,8 +113,8 @@ internal fun ProtectionPanel(
             if (!isLocalPdf) {
                 MenuBadgeItem(
                     label = stringResource(id = R.string.protection_panel_etp_toggle_label),
-                    checked = isTrackingProtectionEnabled && isGlobalTrackingProtectionEnabled,
-                    description = if (isTrackingProtectionEnabled && isGlobalTrackingProtectionEnabled) {
+                    checked = isSiteProtectionEnabled,
+                    description = if (isSiteProtectionEnabled) {
                         stringResource(id = R.string.protection_panel_etp_toggle_enabled_description_2)
                     } else {
                         stringResource(id = R.string.protection_panel_etp_toggle_disabled_description_2)
@@ -124,7 +124,7 @@ internal fun ProtectionPanel(
                     } else {
                         stringResource(id = R.string.protection_panel_etp_toggle_off)
                     },
-                    enabled = (isSiteProtectionEnabled),
+                    enabled = isGlobalTrackingProtectionEnabled,
                     onClick = onTrackingProtectionToggleClick,
                 )
 
