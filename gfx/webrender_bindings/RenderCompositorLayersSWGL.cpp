@@ -28,6 +28,15 @@ using namespace gfx;
 
 namespace wr {
 
+bool RenderCompositorLayersSWGL::MayCreate(
+    const RefPtr<widget::CompositorWidget>& aWidget) {
+#ifdef XP_WIN
+  return aWidget->GetCompositorOptions().AllowSoftwareWebRenderD3D11();
+#else
+  return aWidget->GetCompositorOptions().AllowSoftwareWebRenderOGL();
+#endif
+}
+
 UniquePtr<RenderCompositor> RenderCompositorLayersSWGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
 #ifdef XP_WIN

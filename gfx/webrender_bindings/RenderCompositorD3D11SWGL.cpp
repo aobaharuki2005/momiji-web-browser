@@ -46,12 +46,14 @@ UniquePtr<RenderCompositor> RenderCompositorD3D11SWGL::Create(
     const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError) {
   if (!aWidget->GetCompositorOptions().AllowSoftwareWebRenderD3D11() ||
       !gfx::gfxConfig::IsEnabled(gfx::Feature::D3D11_COMPOSITING)) {
+    aError.Assign("RcD3D11SWGL(not allowed)"_ns);
     return nullptr;
   }
 
   void* ctx = wr_swgl_create_context();
   if (!ctx) {
     gfxCriticalNote << "Failed SWGL context creation for WebRender";
+    aError.Assign("RcD3D11SWGL(create swgl ctx failed)"_ns);
     return nullptr;
   }
 
@@ -60,6 +62,7 @@ UniquePtr<RenderCompositor> RenderCompositorD3D11SWGL::Create(
   if (!compositor->Initialize(&log)) {
     gfxCriticalNote << "Failed to initialize CompositorD3D11 for SWGL: "
                     << log.get();
+    aError.Assign("RcD3D11SWGL(create CompositorD3D11 failed)"_ns);
     return nullptr;
   }
   return MakeUnique<RenderCompositorD3D11SWGL>(compositor, aWidget, ctx);
