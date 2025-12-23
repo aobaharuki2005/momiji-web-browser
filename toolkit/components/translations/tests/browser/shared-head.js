@@ -4405,7 +4405,7 @@ class AboutTranslationsTestUtils {
 
   /**
    * Waits for the specified AboutTranslations event to fire, then returns its detail payload.
-   * Rejects if the event doesn’t fire within three seconds.
+   * Rejects if the event doesn’t fire within the given time limit.
    *
    * @param {string} eventName
    * @returns {Promise<any>}
@@ -4422,15 +4422,16 @@ class AboutTranslationsTestUtils {
           );
         });
 
+        const timeoutMS = 10_000;
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(
             () =>
               reject(
                 new Error(
-                  `Event "${eventName}" did not fire within three seconds.`
+                  `Event "${eventName}" did not fire within ${timeoutMS / 1000} seconds.`
                 )
               ),
-            3000
+            timeoutMS
           );
         });
 

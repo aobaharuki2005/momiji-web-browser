@@ -325,86 +325,79 @@ class AboutTranslations {
       sourceTextArea,
     } = this.elements;
 
-    learnMoreLink.addEventListener("click", this);
-    swapLanguagesButton.addEventListener("click", this);
-    sourceLanguageSelector.addEventListener("input", this);
-    targetLanguageSelector.addEventListener("input", this);
-    sourceTextArea.addEventListener("input", this);
-    window.addEventListener("resize", this);
-    window.visualViewport.addEventListener("resize", this);
+    learnMoreLink.addEventListener("click", this.#onLearnMoreLink);
+    swapLanguagesButton.addEventListener("click", this.#onSwapLanguagesButton);
+    sourceLanguageSelector.addEventListener(
+      "input",
+      this.#onSourceLanguageInput
+    );
+    targetLanguageSelector.addEventListener(
+      "input",
+      this.#onTargetLanguageInput
+    );
+    sourceTextArea.addEventListener("input", this.#onSourceTextInput);
+    window.addEventListener("resize", this.#onResize);
+    window.visualViewport.addEventListener("resize", this.#onResize);
   }
 
   /**
-   * The event handler for all UI interactions.
-   *
-   * @param {Event} event
+   * Handles clicks on the learn-more link.
    */
-  handleEvent = ({ type, target }) => {
-    const {
-      learnMoreLink,
-      swapLanguagesButton,
-      sourceLanguageSelector,
-      targetLanguageSelector,
-      sourceTextArea,
-    } = this.elements;
+  #onLearnMoreLink = () => {
+    AT_openSupportPage();
+  };
 
-    switch (type) {
-      case "click": {
-        if (target.id === swapLanguagesButton.id) {
-          this.#disableSwapLanguagesButton();
+  /**
+   * Handles clicks on the swap-languages button.
+   */
+  #onSwapLanguagesButton = () => {
+    this.#disableSwapLanguagesButton();
+    this.#maybeSwapLanguages();
+    this.#maybeRequestTranslation();
+  };
 
-          this.#maybeSwapLanguages();
-          this.#maybeRequestTranslation();
-        } else if (target.id === learnMoreLink.id) {
-          AT_openSupportPage();
-        }
+  /**
+   * Handles input events on the source-language selector.
+   */
+  #onSourceLanguageInput = () => {
+    const { sourceLanguageSelector } = this.elements;
 
-        break;
-      }
-      case "input": {
-        const { id } = target;
+    if (sourceLanguageSelector.value !== this.#detectedLanguage) {
+      this.#resetDetectLanguageOptionText();
+      this.#disableSwapLanguagesButton();
+    } else {
+      this.#resetDetectLanguageOptionText();
+      return;
+    }
 
-        if (id === sourceLanguageSelector.id) {
-          if (sourceLanguageSelector.value !== this.#detectedLanguage) {
-            this.#resetDetectLanguageOptionText();
-            this.#disableSwapLanguagesButton();
-          } else {
-            // The source-language selector was previously set to "detect", but was
-            // explicitly changed to the detected language, so there is no action to take.
-            this.#resetDetectLanguageOptionText();
-            return;
-          }
-        }
+    this.#maybeRequestTranslation();
+  };
 
-        if (id === targetLanguageSelector.id) {
-          this.#disableSwapLanguagesButton();
-        }
+  /**
+   * Handles input events on the target-language selector.
+   */
+  #onTargetLanguageInput = () => {
+    this.#disableSwapLanguagesButton();
+    this.#maybeRequestTranslation();
+  };
 
-        if (
-          id === sourceLanguageSelector.id ||
-          id === targetLanguageSelector.id ||
-          id === sourceTextArea.id
-        ) {
-          this.#maybeRequestTranslation();
-        }
+  /**
+   * Handles input events on the source textarea.
+   */
+  #onSourceTextInput = () => {
+    this.#maybeRequestTranslation();
+  };
 
-        break;
-      }
-      case "resize": {
-        if (target === window || target === window.visualViewport) {
-          const orientationChanged = this.#updatePageOrientation();
+  /**
+   * Handles resize events, including resizing the window and zooming.
+   */
+  #onResize = () => {
+    const orientationChanged = this.#updatePageOrientation();
 
-          if (orientationChanged) {
-            // The page orientation changed, so we need to update the text-area heights immediately.
-            this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
-          } else if (this.#pageOrientation === "vertical") {
-            // Otherwise we only need to eventually update the text-area heights in vertical orientation.
-            this.#ensureTextAreaHeightsMatch({ scheduleCallback: true });
-          }
-        }
-
-        break;
-      }
+    if (orientationChanged) {
+      this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
+    } else if (this.#pageOrientation === "vertical") {
+      this.#ensureTextAreaHeightsMatch({ scheduleCallback: true });
     }
   };
 
