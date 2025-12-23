@@ -156,6 +156,14 @@ export class PromptParent extends JSWindowActorParent {
       throw new Error(`Cannot ${modal_type}-prompt without a browser!`);
     }
 
+    const closingEventDetails =
+      args.modalType === Services.prompt.MODAL_TYPE_CONTENT
+        ? {
+            owningBrowsingContext: this.browsingContext,
+            promptType: args.inPermitUnload ? "beforeunload" : args.promptType,
+          }
+        : null;
+
     let win;
 
     // If we are a chrome actor we can use the associated chrome win.
@@ -287,25 +295,18 @@ export class PromptParent extends JSWindowActorParent {
           win,
           "DOMModalDialogClosed",
           browsingContext.embedderElement,
-          this.getClosingEventDetail(args)
+          closingEventDetails
+            ? {
+                ...closingEventDetails,
+                areLeaving: args.ok,
+                // If a prompt was not accepted, do not return the prompt value.
+                value: args.ok ? args.value : null,
+              }
+            : null
         );
       }
     }
     return args;
-  }
-
-  getClosingEventDetail(args) {
-    let details =
-      args.modalType === Services.prompt.MODAL_TYPE_CONTENT
-        ? {
-            areLeaving: args.ok,
-            promptType: args.inPermitUnload ? "beforeunload" : args.promptType,
-            // If a prompt was not accepted, do not return the prompt value.
-            value: args.ok ? args.value : null,
-          }
-        : null;
-
-    return details;
   }
 
   getOpenEventDetail(args) {
