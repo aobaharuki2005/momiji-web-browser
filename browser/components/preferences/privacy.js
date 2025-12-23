@@ -2172,15 +2172,13 @@ Preferences.addSetting({
     return privateBrowsingAutoStart.locked && privateBrowsingAutoStart.value;
   },
   getControlConfig(config, { privateBrowsingAutoStart }, setting) {
-    let l10nId = undefined;
-    if (!srdSectionEnabled("history2")) {
-      if (setting.value == "remember") {
-        l10nId = "history-remember-description3";
-      } else if (setting.value == "dontremember") {
-        l10nId = "history-dontremember-description3";
-      } else if (setting.value == "custom") {
-        l10nId = "history-custom-description3";
-      }
+    let l10nId = null;
+    if (setting.value == "remember") {
+      l10nId = "history-remember-description3";
+    } else if (setting.value == "dontremember") {
+      l10nId = "history-dontremember-description3";
+    } else if (setting.value == "custom") {
+      l10nId = "history-custom-description3";
     }
 
     let dontRememberOption = config.options.find(
@@ -2199,14 +2197,6 @@ Preferences.addSetting({
       ...config,
       l10nId,
     };
-  },
-});
-
-Preferences.addSetting({
-  id: "customHistoryButton",
-  onUserClick(e) {
-    e.preventDefault();
-    gotoPref("paneHistory");
   },
 });
 
@@ -3788,7 +3778,6 @@ var gPrivacyPane = {
     initSettingGroup("certificates");
     initSettingGroup("ipprotection");
     initSettingGroup("history");
-    initSettingGroup("history2");
     initSettingGroup("permissions");
     initSettingGroup("dnsOverHttps");
     initSettingGroup("dnsOverHttpsAdvanced");
