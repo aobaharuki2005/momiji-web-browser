@@ -9,14 +9,15 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
   AnimationFramePromise: "chrome://remote/content/shared/Sync.sys.mjs",
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
+  BiMap: "chrome://remote/content/shared/BiMap.sys.mjs",
   BrowsingContextListener:
     "chrome://remote/content/shared/listeners/BrowsingContextListener.sys.mjs",
+  ChromeWindowListener:
+    "chrome://remote/content/shared/listeners/ChromeWindowListener.sys.mjs",
   DebounceCallback: "chrome://remote/content/marionette/sync.sys.mjs",
   error: "chrome://remote/content/shared/webdriver/Errors.sys.mjs",
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
-  NavigableManager: "chrome://remote/content/shared/NavigableManager.sys.mjs",
-  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
   TimedPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   UserContextManager:
     "chrome://remote/content/shared/UserContextManager.sys.mjs",
@@ -35,8 +36,11 @@ const TIMEOUT_NO_WINDOW_MANAGER = 5000;
  * @class WindowManager
  */
 class WindowManager {
+  #chromeWindowListener;
   #clientWindowIds;
   #contextListener;
+  #contextToWindowMap;
+  #tracking;
 
   constructor() {
     /**
@@ -44,11 +48,58 @@ class WindowManager {
      * contextDestroyed event is fired, the context is already destroyed so
      * we cannot query for the client window at that time.
      */
-    this.#clientWindowIds = new WeakMap();
+    this.#clientWindowIds = new lazy.BiMap();
 
+    // For content browsing contexts, the embedder element may already be
+    // gone by the time when it is getting discarded. To ensure we can still
+    // retrieve the corresponding chrome window, we maintain a mapping from
+    // each top-level content browsing context to its chrome window.
+    this.#contextToWindowMap = new WeakMap();
     this.#contextListener = new lazy.BrowsingContextListener();
+
+    this.#tracking = false;
+
+    this.#chromeWindowListener = new lazy.ChromeWindowListener();
+  }
+
+  destroy() {
+    this.stopTracking();
+  }
+
+  startTracking() {
+    if (this.#tracking) {
+      return;
+    }
+
+    this.#chromeWindowListener.on("closed", this.#onChromeWindowClosed);
+    this.#chromeWindowListener.on("opened", this.#onChromeWindowOpened);
+    this.#chromeWindowListener.startListening();
+
     this.#contextListener.on("attached", this.#onContextAttached);
     this.#contextListener.startListening();
+
+    // Pre-fill the internal window id mapping.
+    this.windows.forEach(window => this.getIdForWindow(window));
+
+    this.#tracking = true;
+  }
+
+  stopTracking() {
+    if (!this.#tracking) {
+      return;
+    }
+
+    this.#chromeWindowListener.stopListening();
+    this.#chromeWindowListener.off("closed", this.#onChromeWindowClosed);
+    this.#chromeWindowListener.off("opened", this.#onChromeWindowOpened);
+
+    this.#contextListener.stopListening();
+    this.#contextListener.off("attached", this.#onContextAttached);
+
+    this.#clientWindowIds = new lazy.BiMap();
+    this.#contextToWindowMap = new WeakMap();
+
+    this.#tracking = false;
   }
 
   /**
@@ -71,71 +122,36 @@ class WindowManager {
   }
 
   /**
-   * A set of properties describing a window and that should allow to uniquely
-   * identify it. The described window can either be a Chrome Window or a
-   * Content Window.
-   *
-   * @typedef {object} WindowProperties
-   * @property {Window} win - The Chrome Window containing the window.
-   *     When describing a Chrome Window, this is the window itself.
-   * @property {string} id - The unique id of the containing Chrome Window.
-   * @property {boolean} hasTabBrowser - `true` if the Chrome Window has a
-   *     tabBrowser.
-   * @property {number} tabIndex - Optional, the index of the specific tab
-   *     within the window.
-   */
-
-  /**
-   * Returns a WindowProperties object, that can be used with :js:func:`GeckoDriver#setWindowHandle`.
-   *
-   * @param {Window} win
-   *     The Chrome Window for which we want to create a properties object.
-   * @param {object} options
-   * @param {number} options.tabIndex
-   *     Tab index of a specific Content Window in the specified Chrome Window.
-   * @returns {WindowProperties} A window properties object.
-   */
-  getWindowProperties(win, options = {}) {
-    if (!Window.isInstance(win)) {
-      throw new TypeError("Invalid argument, expected a Window object");
-    }
-
-    return {
-      win,
-      id: this.getIdForWindow(win),
-      hasTabBrowser: !!lazy.TabManager.getTabBrowser(win),
-      tabIndex: options.tabIndex,
-    };
-  }
-
-  /**
-   * Returns the window ID for a specific browsing context.
-   *
-   * @param {BrowsingContext} context
-   *     The browsing context for which we want to retrieve the window ID.
-   *
-   * @returns {(string|undefined)}
-   *    The ID of the window associated with the browsing context.
-   */
-  getIdForBrowsingContext(context) {
-    const window = this.getWindowForBrowsingContext(context);
-
-    return window
-      ? this.getIdForWindow(window)
-      : this.#clientWindowIds.get(context);
-  }
-
-  /**
    * Retrieves an id for the given chrome window. The id is a dynamically
-   * generated uuid by the NavigableManager and associated with the
+   * generated uuid by the WindowManager and associated with the
    * top-level browsing context of that chrome window.
    *
-   * @param {window} win
+   * @param {ChromeWindow} win
    *     The chrome window for which we want to retrieve the id.
-   * @returns {string} The unique id for this chrome window.
+   *
+   * @returns {string|null}
+   *     The unique id for this chrome window or `null` if not a valid window.
    */
   getIdForWindow(win) {
-    return lazy.NavigableManager.getIdForBrowsingContext(win.browsingContext);
+    if (win) {
+      return this.#clientWindowIds.getOrInsert(win);
+    }
+
+    return null;
+  }
+
+  /**
+   * Retrieve the Chrome Window corresponding to the provided window id.
+   *
+   * @param {string} id
+   *     A unique id for the chrome window.
+   *
+   * @returns {ChromeWindow|undefined}
+   *     The chrome window found for this id, `null` if none
+   *     was found.
+   */
+  getWindowById(id) {
+    return this.#clientWindowIds.getObject(id);
   }
 
   /**
@@ -285,18 +301,26 @@ class WindowManager {
   }
 
   /**
-   * Returns the window for a specific browsing context.
+   * Returns the chrome window for a specific browsing context.
    *
    * @param {BrowsingContext} context
    *    The browsing context for which we want to retrieve the window.
    *
-   * @returns {ChromeWindow}
+   * @returns {ChromeWindow|null}
    *    The chrome window associated with the browsing context.
+   *    Otherwise `null` is returned.
    */
-  getWindowForBrowsingContext(context) {
-    return lazy.AppInfo.isAndroid
-      ? context.top.embedderElement?.ownerGlobal
-      : context.topChromeWindow;
+  getChromeWindowForBrowsingContext(context) {
+    if (!context.isContent) {
+      // Chrome browsing contexts always have a chrome window set.
+      return context.topChromeWindow;
+    }
+
+    if (this.#contextToWindowMap.has(context.top)) {
+      return this.#contextToWindowMap.get(context.top);
+    }
+
+    return this.#setChromeWindowForBrowsingContext(context);
   }
 
   /**
@@ -480,16 +504,37 @@ class WindowManager {
     );
   }
 
+  #setChromeWindowForBrowsingContext(context) {
+    const chromeWindow = context.top.embedderElement?.ownerGlobal;
+    if (chromeWindow) {
+      return this.#contextToWindowMap.getOrInsert(context.top, chromeWindow);
+    }
+
+    return null;
+  }
+
+  /* Event handlers */
+
   #onContextAttached = (_, data = {}) => {
     const { browsingContext } = data;
 
-    const window = this.getWindowForBrowsingContext(browsingContext);
-    if (!window) {
-      // Short-lived iframes might already be disconnected from their parent
-      // window.
+    if (!browsingContext.isContent) {
       return;
     }
-    this.#clientWindowIds.set(browsingContext, this.getIdForWindow(window));
+
+    this.#setChromeWindowForBrowsingContext(browsingContext);
+  };
+
+  #onChromeWindowClosed = (_, data = {}) => {
+    const { window } = data;
+
+    this.#clientWindowIds.deleteByObject(window);
+  };
+
+  #onChromeWindowOpened = (_, data = {}) => {
+    const { window } = data;
+
+    this.getIdForWindow(window);
   };
 }
 

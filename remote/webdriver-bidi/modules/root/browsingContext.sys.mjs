@@ -2615,11 +2615,14 @@ export const getBrowsingContextInfo = (context, options = {}) => {
     );
   }
 
-  const userContext = lazy.UserContextManager.getIdByBrowsingContext(context);
+  const chromeWindow =
+    lazy.windowManager.getChromeWindowForBrowsingContext(context);
   const originalOpener =
     context.crossGroupOpener !== null
       ? lazy.NavigableManager.getIdForBrowsingContext(context.crossGroupOpener)
       : null;
+  const userContext = lazy.UserContextManager.getIdByBrowsingContext(context);
+
   const contextInfo = {
     children,
     context: lazy.NavigableManager.getIdForBrowsingContext(context),
@@ -2630,7 +2633,7 @@ export const getBrowsingContextInfo = (context, options = {}) => {
     originalOpener: originalOpener === undefined ? null : originalOpener,
     url: context.currentURI.spec,
     userContext,
-    clientWindow: lazy.windowManager.getIdForBrowsingContext(context),
+    clientWindow: lazy.windowManager.getIdForWindow(chromeWindow),
   };
 
   if (includeParentId) {
