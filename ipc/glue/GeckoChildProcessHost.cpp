@@ -157,15 +157,16 @@ class BaseProcessLauncher {
                       geckoargs::ChildProcessArgs&& aExtraOpts)
       : mProcessType(aHost->mProcessType),
         mLaunchOptions(std::move(aHost->mLaunchOptions)),
-        mChildArgs(std::move(aExtraOpts)),
+        mChildArgs(std::move(aExtraOpts))
 #ifdef XP_WIN
-        mGroupId(aHost->mGroupId),
+        ,
+        mGroupId(aHost->mGroupId)
 #endif
-        mUtilitySandbox(aHost->mUtilitySandbox)
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
         ,
         mAllowedFilesRead(aHost->mAllowedFilesRead),
         mSandboxLevel(aHost->mSandboxLevel),
+        mSandbox(aHost->mSandbox),
         mIsFileContent(aHost->mIsFileContent),
         mEnableSandboxLogging(aHost->mEnableSandboxLogging)
 #endif
@@ -212,8 +213,7 @@ class BaseProcessLauncher {
 
   void MapChildLogging();
 
-  static BinPathType GetPathToBinary(FilePath&, GeckoProcessType,
-                                     SandboxingKind sandboxKind);
+  static BinPathType GetPathToBinary(FilePath&, GeckoProcessType);
 
   void GetChildLogName(const char* origLogName, nsACString& buffer);
 
@@ -231,10 +231,10 @@ class BaseProcessLauncher {
 #ifdef XP_WIN
   nsString mGroupId;
 #endif
-  SandboxingKind mUtilitySandbox;
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   std::vector<std::wstring> mAllowedFilesRead;
   int32_t mSandboxLevel;
+  SandboxingKind mSandbox;
   bool mIsFileContent;
   bool mEnableSandboxLogging;
 #endif
@@ -511,8 +511,7 @@ void GeckoChildProcessHost::Destroy() {
 
 // static
 mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
-    FilePath& exePath, GeckoProcessType processType,
-    SandboxingKind utilitySandbox) {
+    FilePath& exePath, GeckoProcessType processType) {
   exePath = {};
   BinPathType pathType = XRE_GetChildProcBinPathType(processType);
 
@@ -545,12 +544,6 @@ mozilla::BinPathType BaseProcessLauncher::GetPathToBinary(
     // Use the GPU helper executable
     bundleName = MOZ_GPU_PROCESS_BUNDLENAME;
     executableLeafName = MOZ_GPU_PROCESS_NAME_BRANDED;
-#  if defined(NIGHTLY_BUILD) && !defined(MOZ_NO_SMART_CARDS)
-  } else if (processType == GeckoProcessType_Utility &&
-             utilitySandbox == PKCS11_MODULE) {
-    bundleName = MOZ_PKCS11_PROCESS_BUNDLENAME;
-    executableLeafName = MOZ_PKCS11_PROCESS_NAME_BRANDED;
-#  endif  // NIGHTLY_BUILD && !MOZ_NO_SMART_CARDS
   } else {
     // the default child process executable
     bundleName = MOZ_CHILD_PROCESS_BUNDLENAME;
@@ -633,7 +626,7 @@ void GeckoChildProcessHost::SetEnv(const char* aKey, const char* aValue) {
 bool GeckoChildProcessHost::PrepareLaunch(
     geckoargs::ChildProcessArgs& aExtraOpts) {
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
-  if (!SandboxLaunch::Configure(mProcessType, mUtilitySandbox, aExtraOpts,
+  if (!SandboxLaunch::Configure(mProcessType, mSandbox, aExtraOpts,
                                 mLaunchOptions.get())) {
     return false;
   }
@@ -1253,8 +1246,7 @@ Result<Ok, LaunchError> PosixProcessLauncher::DoSetup() {
   }
 
   FilePath exePath;
-  BinPathType pathType =
-      GetPathToBinary(exePath, mProcessType, mUtilitySandbox);
+  BinPathType pathType = GetPathToBinary(exePath, mProcessType);
 
   // Make sure the executable path is present at the start of our argument list.
   // If we're using BinPathType::Self, also add the `-contentproc` argument.
@@ -1578,8 +1570,7 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
   }
 
   FilePath exePath;
-  BinPathType pathType =
-      GetPathToBinary(exePath, mProcessType, mUtilitySandbox);
+  BinPathType pathType = GetPathToBinary(exePath, mProcessType);
 
   mCmdLine.emplace(exePath.ToWStringHack());
 
@@ -1673,9 +1664,9 @@ Result<Ok, LaunchError> WindowsProcessLauncher::DoSetup() {
       }
       break;
     case GeckoProcessType_Utility:
-      if (IsUtilitySandboxEnabled(mUtilitySandbox)) {
+      if (IsUtilitySandboxEnabled(mSandbox)) {
         if (!mResults.mSandboxBroker->SetSecurityLevelForUtilityProcess(
-                mUtilitySandbox)) {
+                mSandbox)) {
           return Err(LaunchError("SetSecurityLevelForUtilityProcess"));
         }
         mUseSandbox = true;

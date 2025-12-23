@@ -917,10 +917,6 @@ var View = {
         fluentName = "about-processes-utility-actor-windows-file-dialog";
         break;
 
-      case "pkcs11Module":
-        fluentName = "about-processes-utility-actor-pkcs11-module";
-        break;
-
       default:
         fluentName = "about-processes-utility-actor-unknown";
         break;

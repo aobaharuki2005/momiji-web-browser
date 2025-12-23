@@ -79,10 +79,6 @@
 #  include <sys/vfs.h>
 #endif
 
-#ifndef MOZ_NO_SMART_CARDS
-#  include "mozilla/ipc/UtilityProcessManager.h"
-#endif  // !MOZ_NO_SMART_CARDS
-
 using namespace mozilla;
 using namespace mozilla::psm;
 
@@ -1523,44 +1519,6 @@ nsresult nsNSSComponent::InitializeNSS() {
     }
   }
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("inSafeMode: %u\n", inSafeMode));
-
-#if defined(NIGHTLY_BUILD) && !defined(MOZ_NO_SMART_CARDS)
-  if (!inSafeMode &&
-      StaticPrefs::security_utility_pkcs11_module_process_enabled_AtStartup()) {
-    auto manager = ipc::UtilityProcessManager::GetSingleton();
-    MOZ_ASSERT(manager);
-    if (manager) {
-      // You may need to store the launchPromise in the nsNSSComponent,
-      // depending on how you design its API.
-      auto launchPromise = manager->StartPKCS11Module();
-      launchPromise->Then(
-          GetCurrentSerialEventTarget(), __func__,
-          [](RefPtr<PKCS11ModuleParent>&& parent) {
-            MOZ_RELEASE_ASSERT(parent);
-            parent->SendLoadModule(u"MySecretModule"_ns)
-                ->Then(
-                    GetCurrentSerialEventTarget(), __func__,
-                    [](nsresult res) {
-                      // We have a result from the utility process!
-                      // Check that we successfully loaded MySecretModule.
-                      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(res));
-                    },
-                    [](ipc::ResponseRejectReason reason) {
-                      // We ran into an IPC Error.
-                      MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                              ("Loading MySecretModule failed: %d",
-                               static_cast<int>(reason)));
-                    });
-          },
-          [](base::LaunchError&& aError) {
-            // We ran into a launch error.
-            MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
-                    ("Failed to start the PKCS#11 process: %s, %ld",
-                     aError.FunctionName().get(), aError.ErrorCode()));
-          });
-    }
-  }
-#endif  // NIGHTLY_BUILD && !MOZ_NO_SMART_CARDS
 
   rv = InitializeNSSWithFallbacks(profileStr, nocertdb, inSafeMode);
   MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));

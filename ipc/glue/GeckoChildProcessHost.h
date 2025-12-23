@@ -19,7 +19,6 @@
 #include "mozilla/ipc/NodeChannel.h"
 #include "mozilla/ipc/LaunchError.h"
 #include "mozilla/ipc/ScopedPort.h"
-#include "mozilla/ipc/UtilityProcessSandboxing.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
@@ -44,6 +43,10 @@
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 #  include "mozilla/Sandbox.h"
+#endif
+
+#if defined(MOZ_SANDBOX)
+#  include "mozilla/ipc/UtilityProcessSandboxing.h"
 #endif
 
 #if (defined(XP_WIN) && defined(_ARM64_)) || \
@@ -257,12 +260,9 @@ class GeckoChildProcessHost : public SupportsWeakPtr,
 #  endif
 #endif  // XP_WIN
 
-  // Only set by UtilityProcessHost. The sandbox policy associated with
-  // mUtilitySandbox will only be honored under MOZ_SANDBOX. However, on macOS,
-  // we will choose the proper firefox binary to run independently of
-  // MOZ_SANDBOX. This ensures that the utility process always runs with the
-  // expected set of entitlements.
-  SandboxingKind mUtilitySandbox;
+#if defined(MOZ_SANDBOX)
+  SandboxingKind mSandbox;
+#endif
 
   mozilla::RWLock mHandleLock;
   ProcessHandle mChildProcessHandle MOZ_GUARDED_BY(mHandleLock);

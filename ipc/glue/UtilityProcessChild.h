@@ -10,10 +10,6 @@
 #include "mozilla/ipc/UtilityMediaServiceParent.h"
 #include "ChildProfilerController.h"
 
-#ifndef MOZ_NO_SMART_CARDS
-#  include "mozilla/psm/PKCS11ModuleChild.h"
-#endif  // !MOZ_NO_SMART_CARDS
-
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
 #  include "mozilla/PSandboxTestingChild.h"
 #endif
@@ -86,11 +82,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
 
   AsyncBlockers& AsyncShutdownService() { return mShutdownBlockers; }
 
-#ifndef MOZ_NO_SMART_CARDS
-  IPCResult RecvStartPKCS11ModuleService(
-      Endpoint<PPKCS11ModuleChild>&& aEndpoint);
-#endif  // !MOZ_NO_SMART_CARDS
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
 #if defined(MOZ_SANDBOX) && defined(MOZ_DEBUG) && defined(ENABLE_TESTS)
@@ -114,9 +105,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
 #ifdef XP_WIN
   RefPtr<PWindowsUtilsChild> mWindowsUtilsInstance;
 #endif
-#ifndef MOZ_NO_SMART_CARDS
-  RefPtr<psm::PKCS11ModuleChild> mPKCS11ModuleInstance;
-#endif  // !MOZ_NO_SMART_CARDS
 
   AsyncBlockers mShutdownBlockers;
 };

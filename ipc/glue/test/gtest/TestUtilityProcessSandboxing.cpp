@@ -8,8 +8,6 @@
 #include "mozilla/gtest/MozHelpers.h"
 #include "mozilla/ipc/UtilityProcessSandboxing.h"
 
-#include <sstream>
-
 using namespace mozilla;
 using namespace mozilla::ipc;
 
@@ -57,7 +55,7 @@ TEST(UtilityProcessSandboxing, ParseEnvVar_DisableWMFOnly)
 }
 #endif  // defined(XP_WIN)
 
-TEST(UtilityProcessSandboxing, ParseEnvVar_DisableMultiple)
+TEST(UtilityProcessSandboxing, ParseEnvVar_DisableGenericOnly_Multiples)
 {
   EXPECT_FALSE(IsUtilitySandboxEnabled("utility:1,utility:0,utility:2",
                                        SandboxingKind::GENERIC_UTILITY));
@@ -71,9 +69,6 @@ TEST(UtilityProcessSandboxing, ParseEnvVar_DisableMultiple)
       IsUtilitySandboxEnabled("utility:1,utility:0,utility:2",
                               SandboxingKind::UTILITY_AUDIO_DECODING_WMF));
 #endif  // XP_WIN
-  std::ostringstream envVar;
-  envVar << "utility:" << (SandboxingKind::COUNT + 1)
-         << ",utility:0,utility:" << (SandboxingKind::COUNT + 3);
-  EXPECT_TRUE(
-      IsUtilitySandboxEnabled(envVar.str().c_str(), SandboxingKind::COUNT));
+  EXPECT_TRUE(IsUtilitySandboxEnabled("utility:8,utility:0,utility:6",
+                                      SandboxingKind::COUNT));
 }

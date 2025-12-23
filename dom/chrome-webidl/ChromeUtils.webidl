@@ -941,7 +941,6 @@ enum WebIDLUtilityActorName {
   "jSOracle",
   "windowsUtils",
   "windowsFileDialog",
-  "pkcs11Module",
 };
 
 dictionary UtilityActorsDictionary {
