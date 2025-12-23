@@ -3976,6 +3976,11 @@ who = "Erich Gubler <erichdongubler@gmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.31.0 -> 0.32.0"
 
+[[audits.metal]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "0.32.0 -> 0.33.0"
+
 [[audits.midir]]
 who = "Bobby Holley <bobbyholley@gmail.com>"
 criteria = "safe-to-deploy"
@@ -4373,7 +4378,12 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "27.0.0 -> 27.0.0@git:9a975b24deb379b31a8a7cb999d2da5f3227a91a"
+delta = "27.0.0 -> 28.0.0"
+
+[[audits.naga]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "28.0.0 -> 28.0.0@git:3f02781bb5a0a1fe1922ea36c9bdacf9792abcbc"
 importable = false
 
 [[audits.net2]]
@@ -6965,7 +6975,12 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "27.0.0 -> 27.0.0@git:9a975b24deb379b31a8a7cb999d2da5f3227a91a"
+delta = "27.0.0 -> 28.0.0"
+
+[[audits.wgpu-core]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "28.0.0 -> 28.0.0@git:3f02781bb5a0a1fe1922ea36c9bdacf9792abcbc"
 importable = false
 
 [[audits.wgpu-core-deps-apple]]
@@ -6996,7 +7011,12 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "27.0.0 -> 27.0.0@git:9a975b24deb379b31a8a7cb999d2da5f3227a91a"
+delta = "27.0.0 -> 28.0.0"
+
+[[audits.wgpu-core-deps-apple]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "28.0.0 -> 28.0.0@git:3f02781bb5a0a1fe1922ea36c9bdacf9792abcbc"
 importable = false
 
 [[audits.wgpu-core-deps-windows-linux-android]]
@@ -7027,7 +7047,12 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "27.0.0 -> 27.0.0@git:9a975b24deb379b31a8a7cb999d2da5f3227a91a"
+delta = "27.0.0 -> 28.0.0"
+
+[[audits.wgpu-core-deps-windows-linux-android]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "28.0.0 -> 28.0.0@git:3f02781bb5a0a1fe1922ea36c9bdacf9792abcbc"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -7136,7 +7161,12 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "27.0.0 -> 27.0.0@git:9a975b24deb379b31a8a7cb999d2da5f3227a91a"
+delta = "27.0.0 -> 28.0.0"
+
+[[audits.wgpu-hal]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "28.0.0 -> 28.0.0@git:3f02781bb5a0a1fe1922ea36c9bdacf9792abcbc"
 importable = false
 
 [[audits.wgpu-types]]
@@ -7240,7 +7270,12 @@ who = [
     "Jim Blandy <jimb@red-bean.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "27.0.0 -> 27.0.0@git:9a975b24deb379b31a8a7cb999d2da5f3227a91a"
+delta = "27.0.0 -> 28.0.0"
+
+[[audits.wgpu-types]]
+who = "Jim Blandy <jimb@red-bean.com>"
+criteria = "safe-to-deploy"
+delta = "28.0.0 -> 28.0.0@git:3f02781bb5a0a1fe1922ea36c9bdacf9792abcbc"
 importable = false
 
 [[audits.whatsys]]
