@@ -29,7 +29,6 @@ const CLICK_HANDLERS = new Set([
   "moz-box-link",
   "moz-button",
   "moz-box-group",
-  "moz-message-bar",
 ]);
 
 /**

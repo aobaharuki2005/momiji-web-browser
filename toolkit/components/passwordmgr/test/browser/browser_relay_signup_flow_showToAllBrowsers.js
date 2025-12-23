@@ -17,10 +17,7 @@ registerCleanupFunction(() => {
 
 add_setup(async () => {
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["signon.firefoxRelay.showToAllBrowsers", true],
-      ["browser.settings-redesign.nonTechnicalPrivacy2.enabled", true],
-    ],
+    set: [["signon.firefoxRelay.showToAllBrowsers", true]],
   });
 });
 
@@ -344,7 +341,7 @@ add_task(
       },
       async _browser => {
         const relayIntegrationCheckbox = content.document.querySelector(
-          "moz-checkbox#relayIntegration"
+          "checkbox#relayIntegration"
         );
         relayIntegrationCheckbox.click();
       }
