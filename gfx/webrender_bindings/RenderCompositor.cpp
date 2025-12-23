@@ -220,9 +220,18 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
       return RenderCompositorNativeSWGL::Create(aWidget, aError);
     }
 #endif
-    if (RenderCompositorLayersSWGL::MayCreate(aWidget)) {
-      return RenderCompositorLayersSWGL::Create(aWidget, aError);
+    UniquePtr<RenderCompositor> comp =
+        RenderCompositorLayersSWGL::Create(aWidget, aError);
+    if (comp) {
+      return comp;
     }
+#if defined(MOZ_WIDGET_ANDROID)
+    // On Android, we do not want to fallback from RenderCompositorOGLSWGL to
+    // RenderCompositorSWGL.
+    if (aWidget->GetCompositorOptions().AllowSoftwareWebRenderOGL()) {
+      return nullptr;
+    }
+#endif
     return RenderCompositorSWGL::Create(aWidget, aError);
   }
 

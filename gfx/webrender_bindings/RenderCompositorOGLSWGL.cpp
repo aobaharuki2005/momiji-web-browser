@@ -55,13 +55,11 @@ UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
       RenderThread::Get()->SingletonGLForCompositorOGL();
   if (!context) {
     gfxCriticalNote << "SingletonGL does not exist for SWGL";
-    aError.Assign("RcOGLSWGL(no singleton gl)"_ns);
     return nullptr;
   }
   auto programs = RenderThread::Get()->GetProgramsForCompositorOGL();
   if (!programs) {
     gfxCriticalNote << "Failed to get Programs for CompositorOGL for SWGL";
-    aError.Assign("RcOGLSWGL(no programs)"_ns);
     return nullptr;
   }
 
@@ -73,7 +71,6 @@ UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
   if (!compositorOGL->Initialize(context, programs, &log)) {
     gfxCriticalNote << "Failed to initialize CompositorOGL for SWGL: "
                     << log.get();
-    aError.Assign("RcOGLSWGL(create CompositorOGL failed)"_ns);
     return nullptr;
   }
   compositor = compositorOGL;
@@ -84,21 +81,18 @@ UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
   if (!compositorOGL->Initialize(&log)) {
     gfxCriticalNote << "Failed to initialize CompositorOGL for SWGL: "
                     << log.get();
-    aError.Assign("RcOGLSWGL(create CompositorOGL failed)"_ns);
     return nullptr;
   }
   compositor = compositorOGL;
 #endif
 
   if (!compositor) {
-    aError.Assign("RcOGLSWGL(no CompositorOGL)"_ns);
     return nullptr;
   }
 
   void* ctx = wr_swgl_create_context();
   if (!ctx) {
     gfxCriticalNote << "Failed SWGL context creation for WebRender";
-    aError.Assign("RcOGLSWGL(create swgl ctx failed)"_ns);
     return nullptr;
   }
 

@@ -23,7 +23,6 @@ class SurfaceD3D11SWGL;
 
 class RenderCompositorLayersSWGL : public RenderCompositor {
  public:
-  static bool MayCreate(const RefPtr<widget::CompositorWidget>& aWidget);
   static UniquePtr<RenderCompositor> Create(
       const RefPtr<widget::CompositorWidget>& aWidget, nsACString& aError);
 
