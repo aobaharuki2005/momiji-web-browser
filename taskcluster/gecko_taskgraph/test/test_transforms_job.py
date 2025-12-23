@@ -85,14 +85,14 @@ def transform(monkeypatch, config):
     [
         pytest.param("M", "Mochitests", id="no_variants"),
         pytest.param(
-            "M-spi-nw",
-            "Mochitests with networking on socket process enabled",
-            id="spi-nw variant",
+            "M-spi",
+            "Mochitests with socket process enabled",
+            id="spi variant",
         ),
         pytest.param(
-            "M-spi-nw-http3",
-            "Mochitests with networking on socket process enabled with http3 server",
-            id="spi-nw and http3 variants",
+            "M-spi-nofis",
+            "Mochitests without fission enabled with socket process enabled",
+            id="spi and nofis variants",
         ),
         pytest.param("M-fake", "", id="invalid group name"),
     ],
