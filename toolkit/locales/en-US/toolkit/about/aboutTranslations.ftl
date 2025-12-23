@@ -27,13 +27,15 @@ about-translations-input-placeholder =
 
 # Text displayed on the source-language selector when no explicit option is selected
 # and no language has been identified from the content of the source-language text area.
-about-translations-detect-default = Detect language
+about-translations-detect-default-label =
+  .label = Detect language
 
 # Text displayed on the source-language selector when no explicit option is selected
 # and a valid language has been identified from the content of the source-language text area.
 # Variables:
 #   $language (string) - The localized display name of the detected language
-about-translations-detect-language = { $language } (detected)
+about-translations-detect-language-label =
+  .label = { $language } (detected)
 
 # Placeholder text shown in the target-language output area when no translation has occurred.
 about-translations-output-placeholder =
@@ -50,7 +52,8 @@ about-translations-copy-button-copied =
   .title = Copy translation
 
 # Text displayed on target-language selector when no language option is selected.
-about-translations-select = Select language
+about-translations-select-label =
+  .label = Select language
 
 # A message displayed in the target-language output area while waiting for the translation to complete.
 about-translations-translating-message = Translating…

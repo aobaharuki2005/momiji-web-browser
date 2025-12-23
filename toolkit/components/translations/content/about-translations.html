@@ -30,6 +30,10 @@
       type="module"
       src="chrome://global/content/elements/moz-message-bar.mjs"
     ></script>
+    <script
+      type="module"
+      src="chrome://global/content/elements/moz-select.mjs"
+    ></script>
   </head>
 
   <body>
@@ -84,17 +88,17 @@
     </header>
 
     <section id="about-translations-main-user-interface">
-      <select
+      <moz-select
         id="about-translations-source-select"
         class="about-translations-select"
         disabled
       >
-        <option
-          id="about-translations-detect-language-option"
-          data-l10n-id="about-translations-detect-default"
+        <moz-option
+          id="about-translations-detect-language-label-option"
+          data-l10n-id="about-translations-detect-default-label"
           value="detect"
-        ></option>
-      </select>
+        ></moz-option>
+      </moz-select>
 
       <moz-button
         id="about-translations-swap-languages-button"
@@ -105,13 +109,16 @@
         <div id="about-translations-swap-langauges-icon"></div>
       </moz-button>
 
-      <select
+      <moz-select
         id="about-translations-target-select"
         class="about-translations-select"
         disabled
       >
-        <option data-l10n-id="about-translations-select" value=""></option>
-      </select>
+        <moz-option
+          data-l10n-id="about-translations-select-label"
+          value=""
+        ></moz-option>
+      </moz-select>
 
       <div id="about-translations-source-section">
         <textarea

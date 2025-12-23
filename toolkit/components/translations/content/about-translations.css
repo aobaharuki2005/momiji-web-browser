@@ -82,9 +82,7 @@ body {
 }
 
 .about-translations-select {
-  font-size: var(--font-size-large);
-  width: 100%;
-  margin: 0;
+  --select-min-height: var(--AT-square-button-large);
 }
 
 #about-translations-swap-languages-button {

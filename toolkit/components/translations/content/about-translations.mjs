@@ -190,17 +190,17 @@ class AboutTranslations {
    *
    * @returns {{
    *   copyButton: HTMLElement,
-   *   detectLanguageOption: HTMLOptionElement,
+   *   detectLanguageOption: HTMLElement,
    *   languageLoadErrorMessage: HTMLElement,
    *   learnMoreLink: HTMLAnchorElement,
    *   mainUserInterface: HTMLElement,
-   *   sourceLanguageSelector: HTMLSelectElement,
+   *   sourceLanguageSelector: HTMLElement,
    *   sourceSection: HTMLElement,
    *   sourceSectionActionsColumn: HTMLElement,
    *   sourceSectionClearButton: HTMLElement,
    *   sourceSectionTextArea: HTMLTextAreaElement,
    *   swapLanguagesButton: HTMLElement,
-   *   targetLanguageSelector: HTMLSelectElement,
+   *   targetLanguageSelector: HTMLElement,
    *   targetSection: HTMLElement,
    *   targetSectionActionsRow: HTMLElement,
    *   targetSectionTextArea: HTMLTextAreaElement,
@@ -216,8 +216,10 @@ class AboutTranslations {
       copyButton: /** @type {HTMLElement} */ (
         document.getElementById("about-translations-copy-button")
       ),
-      detectLanguageOption: /** @type {HTMLOptionElement} */ (
-        document.getElementById("about-translations-detect-language-option")
+      detectLanguageOption: /** @type {HTMLElement} */ (
+        document.getElementById(
+          "about-translations-detect-language-label-option"
+        )
       ),
       languageLoadErrorMessage: /** @type {HTMLElement} */ (
         document.getElementById(
@@ -230,7 +232,7 @@ class AboutTranslations {
       mainUserInterface: /** @type {HTMLElement} */ (
         document.getElementById("about-translations-main-user-interface")
       ),
-      sourceLanguageSelector: /** @type {HTMLSelectElement} */ (
+      sourceLanguageSelector: /** @type {HTMLElement} */ (
         document.getElementById("about-translations-source-select")
       ),
       sourceSection: /** @type {HTMLElement} */ (
@@ -248,7 +250,7 @@ class AboutTranslations {
       swapLanguagesButton: /** @type {HTMLElement} */ (
         document.getElementById("about-translations-swap-languages-button")
       ),
-      targetLanguageSelector: /** @type {HTMLSelectElement} */ (
+      targetLanguageSelector: /** @type {HTMLElement} */ (
         document.getElementById("about-translations-target-select")
       ),
       targetSection: /** @type {HTMLElement} */ (
@@ -337,18 +339,18 @@ class AboutTranslations {
 
     for (const { langTagKey, displayName } of this.#supportedLanguages
       .sourceLanguages) {
-      const option = document.createElement("option");
+      const option = document.createElement("moz-option");
       option.value = langTagKey;
-      option.text = displayName;
-      sourceLanguageSelector.add(option);
+      option.setAttribute("label", displayName);
+      sourceLanguageSelector.append(option);
     }
 
     for (const { langTagKey, displayName } of this.#supportedLanguages
       .targetLanguages) {
-      const option = document.createElement("option");
+      const option = document.createElement("moz-option");
       option.value = langTagKey;
-      option.text = displayName;
-      targetLanguageSelector.add(option);
+      option.setAttribute("label", displayName);
+      targetLanguageSelector.append(option);
     }
   }
 
@@ -359,6 +361,9 @@ class AboutTranslations {
     await this.#populateLanguageSelectors();
 
     const { sourceLanguageSelector, targetLanguageSelector } = this.elements;
+    this.#resetDetectLanguageOptionText();
+    sourceLanguageSelector.value = "detect";
+    targetLanguageSelector.value = "";
     sourceLanguageSelector.disabled = false;
     targetLanguageSelector.disabled = false;
   }
@@ -383,7 +388,7 @@ class AboutTranslations {
     copyButton.addEventListener("click", this.#onCopyButton);
     learnMoreLink.addEventListener("click", this.#onLearnMoreLink);
     sourceLanguageSelector.addEventListener(
-      "input",
+      "change",
       this.#onSourceLanguageInput
     );
     sourceSectionActionsColumn.addEventListener(
@@ -406,7 +411,7 @@ class AboutTranslations {
     sourceSectionTextArea.addEventListener("blur", this.#onSourceTextAreaBlur);
     swapLanguagesButton.addEventListener("click", this.#onSwapLanguagesButton);
     targetLanguageSelector.addEventListener(
-      "input",
+      "change",
       this.#onTargetLanguageInput
     );
     targetSectionTextArea.addEventListener(
@@ -465,7 +470,7 @@ class AboutTranslations {
   };
 
   /**
-   * Handles input events on the source-language selector.
+   * Handles change events on the source-language selector.
    */
   #onSourceLanguageInput = () => {
     const { sourceLanguageSelector } = this.elements;
@@ -482,7 +487,7 @@ class AboutTranslations {
   };
 
   /**
-   * Handles input events on the target-language selector.
+   * Handles change events on the target-language selector.
    */
   #onTargetLanguageInput = () => {
     this.#disableSwapLanguagesButton();
@@ -755,7 +760,7 @@ class AboutTranslations {
   }
 
   /**
-   * Sets the textContent of the about-translations-detect option in the
+   * Sets the label of the about-translations-detect option in the
    * about-translations-source-select dropdown.
    *
    * Passing an empty display name will reset to the default string.
@@ -770,7 +775,7 @@ class AboutTranslations {
     detectLanguageOption.setAttribute("language", detectedLanguage);
     document.l10n.setAttributes(
       detectLanguageOption,
-      "about-translations-detect-language",
+      "about-translations-detect-language-label",
       { language: displayName }
     );
   }
@@ -784,7 +789,7 @@ class AboutTranslations {
     detectLanguageOption.removeAttribute("language");
     document.l10n.setAttributes(
       detectLanguageOption,
-      "about-translations-detect-default"
+      "about-translations-detect-default-label"
     );
   }
 

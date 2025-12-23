@@ -204,9 +204,10 @@ async function openAboutTranslations({
   const selectors = {
     pageHeader: "header#about-translations-header",
     mainUserInterface: "section#about-translations-main-user-interface",
-    sourceLanguageSelector: "select#about-translations-source-select",
-    targetLanguageSelector: "select#about-translations-target-select",
-    detectLanguageOption: "option#about-translations-detect-language-option",
+    sourceLanguageSelector: "moz-select#about-translations-source-select",
+    targetLanguageSelector: "moz-select#about-translations-target-select",
+    detectLanguageOption:
+      "moz-option#about-translations-detect-language-label-option",
     swapLanguagesButton: "moz-button#about-translations-swap-languages-button",
     sourceSectionTextArea: "textarea#about-translations-source-textarea",
     targetSectionTextArea: "textarea#about-translations-target-textarea",
@@ -4431,11 +4432,13 @@ class AboutTranslationsTestUtils {
     try {
       await this.#runInPage(
         (selectors, { language }) => {
-          const selector = content.document.querySelector(
-            selectors.sourceLanguageSelector
+          const selector = Cu.waiveXrays(
+            content.document.querySelector(selectors.sourceLanguageSelector)
           );
           selector.value = language;
-          selector.dispatchEvent(new content.Event("input"));
+          selector.dispatchEvent(
+            new content.Event("change", { bubbles: true })
+          );
         },
         { language }
       );
@@ -4454,11 +4457,13 @@ class AboutTranslationsTestUtils {
     try {
       await this.#runInPage(
         (selectors, { language }) => {
-          const selector = content.document.querySelector(
-            selectors.targetLanguageSelector
+          const selector = Cu.waiveXrays(
+            content.document.querySelector(selectors.targetLanguageSelector)
           );
           selector.value = language;
-          selector.dispatchEvent(new content.Event("input"));
+          selector.dispatchEvent(
+            new content.Event("change", { bubbles: true })
+          );
         },
         { language }
       );
@@ -4865,16 +4870,16 @@ class AboutTranslationsTestUtils {
     let pageResult = {};
     try {
       pageResult = await this.#runInPage(selectors => {
-        const selector = content.document.querySelector(
-          selectors.sourceLanguageSelector
+        const selector = Cu.waiveXrays(
+          content.document.querySelector(selectors.sourceLanguageSelector)
         );
         const detectOptionElement = content.document.querySelector(
           selectors.detectLanguageOption
         );
         return {
           actualValue: selector.value,
-          optionValues: Array.from(selector.options).map(
-            option => option.value
+          optionValues: Array.from(selector.querySelectorAll("moz-option")).map(
+            option => option.getAttribute("value")
           ),
           detectLanguageAttribute:
             detectOptionElement?.getAttribute("language") ?? null,
@@ -4939,12 +4944,12 @@ class AboutTranslationsTestUtils {
     try {
       pageResult = await this.#runInPage(
         selectors => {
-          const selector = content.document.querySelector(
-            selectors.targetLanguageSelector
+          const selector = Cu.waiveXrays(
+            content.document.querySelector(selectors.targetLanguageSelector)
           );
-          const optionValues = Array.from(selector.options).map(
-            option => option.value
-          );
+          const optionValues = Array.from(
+            selector.querySelectorAll("moz-option")
+          ).map(option => option.getAttribute("value"));
           return {
             actualValue: selector.value,
             optionValues,
@@ -5012,8 +5017,8 @@ class AboutTranslationsTestUtils {
         let pageResult = {};
         try {
           pageResult = await this.#runInPage(selectors => {
-            const selector = content.document.querySelector(
-              selectors.sourceLanguageSelector
+            const selector = Cu.waiveXrays(
+              content.document.querySelector(selectors.sourceLanguageSelector)
             );
             return { actualValue: selector.value };
           });
@@ -5053,8 +5058,8 @@ class AboutTranslationsTestUtils {
 
     if (defaultValue !== undefined) {
       const expectedIdentifier = defaultValue
-        ? "about-translations-detect-default"
-        : "about-translations-detect-language";
+        ? "about-translations-detect-default-label"
+        : "about-translations-detect-language-label";
       is(
         localizationId,
         expectedIdentifier,
