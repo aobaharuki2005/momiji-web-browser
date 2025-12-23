@@ -762,6 +762,13 @@ user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
 
+[[publisher.typeid]]
+version = "1.0.3"
+when = "2025-03-04"
+user-id = 3618
+user-login = "dtolnay"
+user-name = "David Tolnay"
+
 [[publisher.unicode-ident]]
 version = "1.0.6"
 when = "2022-12-17"
