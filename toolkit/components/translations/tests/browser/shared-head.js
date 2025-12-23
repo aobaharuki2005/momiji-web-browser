@@ -4108,6 +4108,20 @@ class AboutTranslationsTestUtils {
     static TranslationComplete = "AboutTranslationsTest:TranslationComplete";
 
     /**
+     * Event fired when the copy button becomes enabled.
+     *
+     * @type {string}
+     */
+    static CopyButtonEnabled = "AboutTranslationsTest:CopyButtonEnabled";
+
+    /**
+     * Event fired when the copy button becomes disabled.
+     *
+     * @type {string}
+     */
+    static CopyButtonDisabled = "AboutTranslationsTest:CopyButtonDisabled";
+
+    /**
      * Event fired when the page layout changes.
      *
      * @type {string}

@@ -739,6 +739,23 @@ class AboutTranslations {
   }
 
   /**
+   * Updates the enabled state of the copy button.
+   *
+   * @param {boolean} shouldEnable
+   */
+  #setCopyButtonEnabled(shouldEnable) {
+    const { copyButton } = this.elements;
+
+    copyButton.disabled = !shouldEnable;
+
+    const eventName = shouldEnable
+      ? "AboutTranslationsTest:CopyButtonEnabled"
+      : "AboutTranslationsTest:CopyButtonDisabled";
+
+    document.dispatchEvent(new CustomEvent(eventName));
+  }
+
+  /**
    * If the currently selected language pair is determined to be swappable,
    * swaps the active source language with the active target language,
    * and moves the translated output to be the new source text.
@@ -830,8 +847,11 @@ class AboutTranslations {
    * Sets the value of the target <textarea>.
    *
    * @param {string} value
+   * @param {object} [options]
+   * @param {boolean} [options.isTranslationResult=false]
+   * True if the value is the result of a translation request, otherwise false.
    */
-  #setTargetText(value) {
+  #setTargetText(value, { isTranslationResult = false } = {}) {
     this.elements.targetSectionTextArea.value = value;
 
     if (!value) {
@@ -842,6 +862,7 @@ class AboutTranslations {
 
     this.#updateTargetScriptDirection();
     this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+    this.#setCopyButtonEnabled(Boolean(value) && isTranslationResult);
   }
 
   /**
@@ -1151,7 +1172,7 @@ class AboutTranslations {
           }
         );
 
-        this.#setTargetText(translatedText);
+        this.#setTargetText(translatedText, { isTranslationResult: true });
         this.#updateSwapLanguagesButtonEnabledState();
         document.dispatchEvent(
           new CustomEvent("AboutTranslationsTest:TranslationComplete", {
