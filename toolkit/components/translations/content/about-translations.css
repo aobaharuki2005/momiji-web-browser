@@ -23,9 +23,9 @@
      header height changes, this will need to be adjusted. */
   --AT-header-height: 156px;
 
-  --AT-input-height: calc(clamp(300px, 100vh - var(--AT-header-height), 300px) - var(--AT-viewport-padding) * 2);
+  --AT-section-height: calc(clamp(300px, 100vh - var(--AT-header-height), 300px) - var(--AT-viewport-padding) * 2);
 
-  --AT-content-width: calc(var(--AT-input-height) * 4.5);
+  --AT-content-width: calc(var(--AT-section-height) * 4.5);
   --AT-content-max: calc(100vw - var(--AT-viewport-padding) * 2);
 }
 
@@ -92,21 +92,40 @@ body {
   background-size: var(--size-item-medium);
 }
 
-#about-translations-input-section {
+#about-translations-source-section,
+#about-translations-target-section {
   width: 100%;
-  height: var(--AT-input-height);
-  max-height: var(--AT-input-height);
-  min-height: calc(var(--AT-input-height) * 0.5);
+  min-height: var(--AT-section-height);
+}
+
+#about-translations-target-section {
+  background-color: var(--background-color-box);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-medium);
+  overflow: hidden;
+
+  &.focus-section {
+    outline: var(--focus-outline);
+    outline-offset: -1px;
+  }
 }
 
 .about-translations-textarea {
   width: 100%;
-  height: var(--AT-input-height);
-  min-height: var(--AT-input-height);
   margin: 0;
   padding: var(--AT-input-padding);
   overflow: hidden;
   resize: none;
+}
+
+#about-translations-target-textarea {
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+
+  &:focus-visible {
+    outline: none;
+  }
 }
 
 #about-translations-empty-section {
@@ -152,12 +171,12 @@ body {
     display: none;
   }
 
-  #about-translations-input-section {
+  #about-translations-source-section {
     grid-column: 1 / -1;
     grid-row: 2;
   }
 
-  #about-translations-target-textarea {
+  #about-translations-target-section {
     grid-column: 1 / -1;
     grid-row: 3;
   }

@@ -124,7 +124,7 @@ add_task(
     );
 
     info(
-      "The text-area heights should not change when transitioning to a vertical orientation with no content."
+      "The page orientation should change to vertical when zooming in significantly."
     );
     await aboutTranslationsTestUtils.assertEvents(
       {
@@ -134,7 +134,6 @@ add_task(
             { orientation: "vertical" },
           ],
         ],
-        unexpected: [AboutTranslationsTestUtils.Events.TextAreaHeightsChanged],
       },
       () => {
         FullZoom.setZoom(1.5 * Math.SQRT1_2);

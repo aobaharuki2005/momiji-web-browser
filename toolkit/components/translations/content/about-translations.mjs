@@ -97,17 +97,17 @@ class AboutTranslations {
   /**
    * The orientation of the page's content.
    *
-   * When the page orientation is horizontal the source and target text areas
-   * are displayed side by side with the source text area at the inline start
-   * and the target text area at the inline end.
+   * When the page orientation is horizontal the source and target sections
+   * are displayed side by side with the source section at the inline start
+   * and the target section at the inline end.
    *
-   * When the page orientation is vertical the source text area is displayed
-   * above the target text area, independent of locale bidirectionality.
+   * When the page orientation is vertical the source section is displayed
+   * above the target section, independent of locale bidirectionality.
    *
-   * When the page orientation is vertical, each text area spans the full width
+   * When the page orientation is vertical, each section spans the full width
    * of the content, and resizing the window width or changing the zoom level
-   * must trigger text-area resizing, where as resizing the text areas is not
-   * necessary for these scenarios when the page orientation is horizontal.
+   * must trigger section resizing, whereas that synchronization is not
+   * necessary when the page orientation is horizontal.
    *
    * @type {("vertical"|"horizontal")}
    */
@@ -115,14 +115,14 @@ class AboutTranslations {
 
   /**
    * A timeout id that gets set when a pending callback is scheduled
-   * to synchronize the heights of the source and target text areas.
+   * to synchronize the heights of the source and target sections.
    *
    * This helps ensure that we do not make repeated calls to this function
    * that would cause unnecessary and excessive reflow.
    *
    * @type {number | null}
    */
-  #synchronizeTextAreaHeightsTimeoutId = null;
+  #synchronizeSectionHeightsTimeoutId = null;
 
   /**
    * Constructs a new {@link AboutTranslations} instance.
@@ -170,10 +170,12 @@ class AboutTranslations {
    *   learnMoreLink: HTMLAnchorElement,
    *   mainUserInterface: HTMLElement,
    *   sourceLanguageSelector: HTMLSelectElement,
-   *   sourceTextArea: HTMLTextAreaElement,
+   *   sourceSection: HTMLElement,
+   *   sourceSectionTextArea: HTMLTextAreaElement,
    *   swapLanguagesButton: HTMLElement,
    *   targetLanguageSelector: HTMLSelectElement,
-   *   targetTextArea: HTMLTextAreaElement,
+   *   targetSection: HTMLElement,
+   *   targetSectionTextArea: HTMLTextAreaElement,
    *   unsupportedInfoMessage: HTMLElement,
    * }}
    */
@@ -200,7 +202,10 @@ class AboutTranslations {
       sourceLanguageSelector: /** @type {HTMLSelectElement} */ (
         document.getElementById("about-translations-source-select")
       ),
-      sourceTextArea: /** @type {HTMLTextAreaElement} */ (
+      sourceSection: /** @type {HTMLElement} */ (
+        document.getElementById("about-translations-source-section")
+      ),
+      sourceSectionTextArea: /** @type {HTMLTextAreaElement} */ (
         document.getElementById("about-translations-source-textarea")
       ),
       swapLanguagesButton: /** @type {HTMLElement} */ (
@@ -209,7 +214,10 @@ class AboutTranslations {
       targetLanguageSelector: /** @type {HTMLSelectElement} */ (
         document.getElementById("about-translations-target-select")
       ),
-      targetTextArea: /** @type {HTMLTextAreaElement} */ (
+      targetSection: /** @type {HTMLElement} */ (
+        document.getElementById("about-translations-target-section")
+      ),
+      targetSectionTextArea: /** @type {HTMLTextAreaElement} */ (
         document.getElementById("about-translations-target-textarea")
       ),
       unsupportedInfoMessage: /** @type {HTMLElement} */ (
@@ -272,6 +280,7 @@ class AboutTranslations {
     this.#updateTargetScriptDirection();
 
     this.#showMainUserInterface();
+    this.#ensureSectionHeightsMatch({ scheduleCallback: false });
     this.#setInitialFocus();
   }
 
@@ -320,9 +329,10 @@ class AboutTranslations {
     const {
       learnMoreLink,
       sourceLanguageSelector,
-      sourceTextArea,
+      sourceSectionTextArea,
       swapLanguagesButton,
       targetLanguageSelector,
+      targetSectionTextArea,
     } = this.elements;
 
     learnMoreLink.addEventListener("click", this.#onLearnMoreLink);
@@ -330,12 +340,17 @@ class AboutTranslations {
       "input",
       this.#onSourceLanguageInput
     );
-    sourceTextArea.addEventListener("input", this.#onSourceTextInput);
+    sourceSectionTextArea.addEventListener("input", this.#onSourceTextInput);
     swapLanguagesButton.addEventListener("click", this.#onSwapLanguagesButton);
     targetLanguageSelector.addEventListener(
       "input",
       this.#onTargetLanguageInput
     );
+    targetSectionTextArea.addEventListener(
+      "focus",
+      this.#onTargetTextAreaFocus
+    );
+    targetSectionTextArea.addEventListener("blur", this.#onTargetTextAreaBlur);
     window.addEventListener("resize", this.#onResize);
     window.visualViewport.addEventListener("resize", this.#onResize);
   }
@@ -389,15 +404,30 @@ class AboutTranslations {
   };
 
   /**
+   * Handles the custom effects for focusing the target section's text area,
+   * which should outline the entire section, instead of only the text area.
+   */
+  #onTargetTextAreaFocus = () => {
+    this.elements.targetSection.classList.add("focus-section");
+  };
+
+  /**
+   * Handles the custom effects for blur events on the target section's text area.
+   */
+  #onTargetTextAreaBlur = () => {
+    this.elements.targetSection.classList.remove("focus-section");
+  };
+
+  /**
    * Handles resize events, including resizing the window and zooming.
    */
   #onResize = () => {
     const orientationChanged = this.#updatePageOrientation();
 
     if (orientationChanged) {
-      this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
+      this.#ensureSectionHeightsMatch({ scheduleCallback: false });
     } else if (this.#pageOrientation === "vertical") {
-      this.#ensureTextAreaHeightsMatch({ scheduleCallback: true });
+      this.#ensureSectionHeightsMatch({ scheduleCallback: true });
     }
   };
 
@@ -529,18 +559,18 @@ class AboutTranslations {
     const previousDetectedLanguage = this.#detectedLanguage;
     this.#detectedLanguage = detectedLanguage;
 
-    const { sourceTextArea } = this.elements;
+    const { sourceSectionTextArea } = this.elements;
 
     if (detectedLanguage) {
       const displayName = await AT_getDisplayName(detectedLanguage);
       this.#populateDetectLanguageOption({ detectedLanguage, displayName });
-      sourceTextArea.setAttribute(
+      sourceSectionTextArea.setAttribute(
         "dir",
         AT_getScriptDirection(detectedLanguage)
       );
     } else {
       this.#resetDetectLanguageOptionText();
-      sourceTextArea.setAttribute(
+      sourceSectionTextArea.setAttribute(
         "dir",
         AT_getScriptDirection(AT_getAppLocale())
       );
@@ -690,21 +720,21 @@ class AboutTranslations {
     const {
       sourceLanguageSelector,
       targetLanguageSelector,
-      sourceTextArea,
-      targetTextArea,
+      sourceSectionTextArea,
+      targetSectionTextArea,
     } = this.elements;
 
     const selectedLanguagePair = this.#getSelectedLanguagePair();
 
     sourceLanguageSelector.value = selectedLanguagePair.targetLanguage;
     targetLanguageSelector.value = selectedLanguagePair.sourceLanguage;
-    sourceTextArea.value = targetTextArea.value;
+    sourceSectionTextArea.value = targetSectionTextArea.value;
 
     this.#updateSourceScriptDirection();
     this.#updateTargetScriptDirection();
-    this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
+    this.#ensureSectionHeightsMatch({ scheduleCallback: false });
 
-    if (sourceTextArea.value) {
+    if (sourceSectionTextArea.value) {
       this.#displayTranslatingPlaceholder();
     }
 
@@ -747,7 +777,7 @@ class AboutTranslations {
    * @returns {string}
    */
   #getSourceText() {
-    return this.elements.sourceTextArea.value.trim();
+    return this.elements.sourceSectionTextArea.value.trim();
   }
 
   /**
@@ -756,13 +786,13 @@ class AboutTranslations {
    * @param {string} value
    */
   #setSourceText(value) {
-    const { sourceTextArea } = this.elements;
+    const { sourceSectionTextArea } = this.elements;
 
-    sourceTextArea.value = value;
-    sourceTextArea.dispatchEvent(new Event("input"));
+    sourceSectionTextArea.value = value;
+    sourceSectionTextArea.dispatchEvent(new Event("input"));
 
     this.#updateSourceScriptDirection();
-    this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
+    this.#ensureSectionHeightsMatch({ scheduleCallback: false });
   }
 
   /**
@@ -771,7 +801,7 @@ class AboutTranslations {
    * @param {string} value
    */
   #setTargetText(value) {
-    this.elements.targetTextArea.value = value;
+    this.elements.targetSectionTextArea.value = value;
 
     if (!value) {
       document.dispatchEvent(
@@ -780,7 +810,7 @@ class AboutTranslations {
     }
 
     this.#updateTargetScriptDirection();
-    this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
+    this.#ensureSectionHeightsMatch({ scheduleCallback: false });
   }
 
   /**
@@ -812,12 +842,12 @@ class AboutTranslations {
    * the swap-languages button while translation is in progress.
    */
   #displayTranslatingPlaceholder() {
-    const { targetTextArea } = this.elements;
+    const { targetSectionTextArea } = this.elements;
 
     this.#setTargetText(this.#translatingPlaceholderText);
     this.#disableSwapLanguagesButton();
 
-    targetTextArea.setAttribute(
+    targetSectionTextArea.setAttribute(
       "dir",
       AT_getScriptDirection(AT_getAppLocale())
     );
@@ -852,12 +882,12 @@ class AboutTranslations {
    * Sets the initial focus on the most appropriate UI element based on the context.
    */
   #setInitialFocus() {
-    const { targetLanguageSelector, sourceTextArea } = this.elements;
+    const { targetLanguageSelector, sourceSectionTextArea } = this.elements;
 
     if (targetLanguageSelector.value === "") {
       targetLanguageSelector.focus();
     } else {
-      sourceTextArea.focus();
+      sourceSectionTextArea.focus();
     }
   }
 
@@ -934,15 +964,18 @@ class AboutTranslations {
     const appLocale = AT_getAppLocale();
     const selectedLanguagePair = this.#getSelectedLanguagePair();
     const selectedSourceLanguage = selectedLanguagePair?.sourceLanguage;
-    const { sourceTextArea } = this.elements;
+    const { sourceSectionTextArea } = this.elements;
 
-    if (selectedSourceLanguage && sourceTextArea.value) {
-      sourceTextArea.setAttribute(
+    if (selectedSourceLanguage && sourceSectionTextArea.value) {
+      sourceSectionTextArea.setAttribute(
         "dir",
         AT_getScriptDirection(selectedSourceLanguage)
       );
     } else {
-      sourceTextArea.setAttribute("dir", AT_getScriptDirection(appLocale));
+      sourceSectionTextArea.setAttribute(
+        "dir",
+        AT_getScriptDirection(appLocale)
+      );
     }
   }
 
@@ -954,15 +987,18 @@ class AboutTranslations {
     const appLocale = AT_getAppLocale();
     const selectedLanguagePair = this.#getSelectedLanguagePair();
     const selectedTargetLanguage = selectedLanguagePair?.targetLanguage;
-    const { targetTextArea } = this.elements;
+    const { targetSectionTextArea } = this.elements;
 
-    if (selectedTargetLanguage && targetTextArea.value) {
-      targetTextArea.setAttribute(
+    if (selectedTargetLanguage && targetSectionTextArea.value) {
+      targetSectionTextArea.setAttribute(
         "dir",
         AT_getScriptDirection(selectedTargetLanguage)
       );
     } else {
-      targetTextArea.setAttribute("dir", AT_getScriptDirection(appLocale));
+      targetSectionTextArea.setAttribute(
+        "dir",
+        AT_getScriptDirection(appLocale)
+      );
     }
   }
 
@@ -1024,7 +1060,7 @@ class AboutTranslations {
     onDebounce: async () => {
       try {
         this.#updateURLFromUI();
-        this.#ensureTextAreaHeightsMatch({ scheduleCallback: false });
+        this.#ensureSectionHeightsMatch({ scheduleCallback: false });
 
         await this.#maybeUpdateDetectedSourceLanguage();
 
@@ -1036,7 +1072,7 @@ class AboutTranslations {
           this.#setTargetText("");
           this.#destroyTranslator();
           this.#updateSwapLanguagesButtonEnabledState();
-          this.elements.targetTextArea.setAttribute(
+          this.elements.targetSectionTextArea.setAttribute(
             "dir",
             AT_getScriptDirection(AT_getAppLocale())
           );
@@ -1116,7 +1152,7 @@ class AboutTranslations {
   });
 
   /**
-   * Ensures that the heights of the source and target text areas match by syncing
+   * Ensures that the heights of the source and target sections match by syncing
    * them to the maximum height of either of their content.
    *
    * There are many situations in which this function needs to be called:
@@ -1128,71 +1164,149 @@ class AboutTranslations {
    *
    * Some of these events happen infrequently, or are already debounced, such as
    * each time a translation occurs. In these situations it is okay to synchronize
-   * the text-area heights immediately.
+   * the section heights immediately.
    *
    * Some of these events can trigger quite rapidly, such as resizing the window
    * via click-and-drag semantics. In this case, a single callback should be scheduled
-   * to synchronize the text-area heights to prevent unnecessary and excessive reflow.
+   * to synchronize the section heights to prevent unnecessary and excessive reflow.
    *
    * @param {object} params
    * @param {boolean} params.scheduleCallback
    */
-  #ensureTextAreaHeightsMatch({ scheduleCallback }) {
+  #ensureSectionHeightsMatch({ scheduleCallback }) {
     if (scheduleCallback) {
-      if (this.#synchronizeTextAreaHeightsTimeoutId) {
+      if (this.#synchronizeSectionHeightsTimeoutId) {
         // There is already a pending callback: no need to schedule another.
         return;
       }
 
-      this.#synchronizeTextAreaHeightsTimeoutId = setTimeout(
-        this.#synchronizeTextAreasToMaxContentHeight,
+      this.#synchronizeSectionHeightsTimeoutId = setTimeout(
+        this.#synchronizeSectionsToMaxContentHeight,
         100
       );
 
       return;
     }
 
-    this.#synchronizeTextAreasToMaxContentHeight();
+    this.#synchronizeSectionsToMaxContentHeight();
   }
 
   /**
-   * Calculates the heights of the content in both the source and target text areas,
-   * then syncs them both to the maximum calculated content height among the two.
+   * Retrieves the combined border and padding height of an element.
+   *
+   * Returns 0 when the element is missing or does not use border-box sizing.
+   *
+   * @param {HTMLElement | undefined} element
+   *
+   * @returns {number}
+   */
+  #getBorderAndPaddingHeight(element) {
+    if (!element) {
+      return 0;
+    }
+
+    const style = window.getComputedStyle(element);
+    if (style.boxSizing !== "border-box") {
+      return 0;
+    }
+
+    const borderTop = Number.parseFloat(style.borderTopWidth) || 0;
+    const borderBottom = Number.parseFloat(style.borderBottomWidth) || 0;
+    const paddingTop = Number.parseFloat(style.paddingTop) || 0;
+    const paddingBottom = Number.parseFloat(style.paddingBottom) || 0;
+
+    return borderTop + borderBottom + paddingTop + paddingBottom;
+  }
+
+  /**
+   * Retrieves the minimum height of an element.
+   *
+   * @param {HTMLElement | undefined} element
+   *
+   * @returns {number}
+   */
+  #getMinHeight(element) {
+    if (!element) {
+      return 0;
+    }
+
+    const style = window.getComputedStyle(element);
+    const minHeight = Number.parseFloat(style.minHeight);
+
+    if (Number.isNaN(minHeight)) {
+      return 0;
+    }
+
+    return Math.max(minHeight - this.#getBorderAndPaddingHeight(element), 0);
+  }
+
+  /**
+   * Calculates the content heights in both the source and target sections,
+   * then syncs them to the maximum calculated content height among the two.
    *
    * This function is intentionally written as a lambda so that it can be passed
    * as a callback without the need to explicitly bind `this` to the function object.
    *
-   * Prefer calling #ensureTextAreaHeightsMatch to make it clear whether this function
+   * Prefer calling #ensureSectionHeightsMatch to make it clear whether this function
    * needs to run immediately, or is okay to be scheduled as a callback.
    *
-   * @see {AboutTranslations#ensureTextAreaHeightsMatch}
+   * @see {AboutTranslations#ensureSectionHeightsMatch}
    */
-  #synchronizeTextAreasToMaxContentHeight = () => {
-    const { sourceTextArea, targetTextArea } = this.elements;
+  #synchronizeSectionsToMaxContentHeight = () => {
+    const {
+      sourceSection,
+      sourceSectionTextArea,
+      targetSection,
+      targetSectionTextArea,
+    } = this.elements;
 
-    // This will be the same for both the source and target text areas.
-    const textAreaRatioBefore =
-      parseFloat(sourceTextArea.style.height) / sourceTextArea.scrollWidth;
+    const currentHeight = Number.parseFloat(sourceSection?.style.height);
+    const sectionWidth = Math.max(
+      sourceSection?.scrollWidth ?? sourceSectionTextArea.scrollWidth,
+      1
+    );
+    const textAreaRatioBefore = Number.isNaN(currentHeight)
+      ? 0
+      : currentHeight / sectionWidth;
 
-    sourceTextArea.style.height = "auto";
-    targetTextArea.style.height = "auto";
+    sourceSection.style.height = "auto";
+    targetSection.style.height = "auto";
+    sourceSectionTextArea.style.height = "auto";
+    targetSectionTextArea.style.height = "auto";
+
+    const minSectionHeight = Math.max(
+      this.#getMinHeight(sourceSection),
+      this.#getMinHeight(targetSection)
+    );
 
     const maxContentHeight = Math.ceil(
-      Math.max(sourceTextArea.scrollHeight, targetTextArea.scrollHeight)
+      Math.max(
+        sourceSectionTextArea.scrollHeight,
+        targetSectionTextArea.scrollHeight,
+        minSectionHeight
+      )
     );
-    const maxContentHeightPixels = `${maxContentHeight}px`;
+    const sectionBorderHeight = Math.max(
+      this.#getBorderAndPaddingHeight(sourceSection),
+      this.#getBorderAndPaddingHeight(targetSection)
+    );
+    const maxSectionHeight = maxContentHeight + sectionBorderHeight;
+    const maxSectionHeightPixels = `${maxSectionHeight}px`;
 
-    sourceTextArea.style.height = maxContentHeightPixels;
-    targetTextArea.style.height = maxContentHeightPixels;
+    sourceSection.style.height = maxSectionHeightPixels;
+    targetSection.style.height = maxSectionHeightPixels;
 
-    const textAreaRatioAfter = maxContentHeight / sourceTextArea.scrollWidth;
+    targetSectionTextArea.style.height = "100%";
+    sourceSectionTextArea.style.height = "100%";
+
+    const textAreaRatioAfter = maxSectionHeight / sectionWidth;
     const ratioDelta = textAreaRatioAfter - textAreaRatioBefore;
     const changeThreshold = 0.001;
 
     if (
-      // The text-area heights were not 0px prior to growing.
+      // The section heights were not 0px prior to growing.
       textAreaRatioBefore > changeThreshold &&
-      // The text-area aspect ratio changed beyond typical floating-point error.
+      // The section aspect ratio changed beyond typical floating-point error.
       Math.abs(ratioDelta) > changeThreshold
     ) {
       document.dispatchEvent(
@@ -1204,7 +1318,7 @@ class AboutTranslations {
       );
     }
 
-    this.#synchronizeTextAreaHeightsTimeoutId = null;
+    this.#synchronizeSectionHeightsTimeoutId = null;
   };
 }
 

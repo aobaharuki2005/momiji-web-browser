@@ -18,8 +18,8 @@ add_task(async function test_about_translations_disabled() {
     sourceLanguageSelector: false,
     targetLanguageSelector: false,
     swapLanguagesButton: false,
-    sourceTextArea: false,
-    targetTextArea: false,
+    sourceSectionTextArea: false,
+    targetSectionTextArea: false,
     unsupportedInfoMessage: false,
     languageLoadErrorMessage: false,
   });
@@ -42,8 +42,8 @@ add_task(async function test_about_translations_enabled() {
     sourceLanguageSelector: true,
     targetLanguageSelector: true,
     swapLanguagesButton: true,
-    sourceTextArea: true,
-    targetTextArea: true,
+    sourceSectionTextArea: true,
+    targetSectionTextArea: true,
     unsupportedInfoMessage: false,
     languageLoadErrorMessage: false,
   });
@@ -67,8 +67,8 @@ add_task(async function test_about_translations_engine_unsupported() {
     sourceLanguageSelector: false,
     targetLanguageSelector: false,
     swapLanguagesButton: false,
-    sourceTextArea: false,
-    targetTextArea: false,
+    sourceSectionTextArea: false,
+    targetSectionTextArea: false,
     languageLoadErrorMessage: false,
   });
 

@@ -100,7 +100,7 @@
         id="about-translations-swap-languages-button"
         type="ghost icon"
         data-l10n-id="about-translations-swap-languages"
-        disabled=""
+        disabled
       >
         <div id="about-translations-swap-langauges-icon"></div>
       </moz-button>
@@ -113,7 +113,7 @@
         <option data-l10n-id="about-translations-select" value=""></option>
       </select>
 
-      <div id="about-translations-input-section">
+      <div id="about-translations-source-section">
         <textarea
           id="about-translations-source-textarea"
           class="about-translations-textarea"
@@ -122,12 +122,14 @@
         ></textarea>
       </div>
       <div id="about-translations-empty-section"></div>
-      <textarea
-        id="about-translations-target-textarea"
-        class="about-translations-textarea"
-        data-l10n-id="about-translations-output-placeholder"
-        readonly
-      ></textarea>
+      <div id="about-translations-target-section">
+        <textarea
+          id="about-translations-target-textarea"
+          class="about-translations-textarea"
+          data-l10n-id="about-translations-output-placeholder"
+          readonly
+        ></textarea>
+      </div>
     </section>
   </body>
 </html>

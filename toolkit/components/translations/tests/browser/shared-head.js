@@ -179,8 +179,8 @@ async function openAboutTranslations({
     targetLanguageSelector: "select#about-translations-target-select",
     detectLanguageOption: "option#about-translations-detect-language-option",
     swapLanguagesButton: "moz-button#about-translations-swap-languages-button",
-    sourceTextArea: "textarea#about-translations-source-textarea",
-    targetTextArea: "textarea#about-translations-target-textarea",
+    sourceSectionTextArea: "textarea#about-translations-source-textarea",
+    targetSectionTextArea: "textarea#about-translations-target-textarea",
     unsupportedInfoMessage:
       "moz-message-bar#about-translations-unsupported-info-message",
     languageLoadErrorMessage:
@@ -4374,7 +4374,7 @@ class AboutTranslationsTestUtils {
       await this.#runInPage(
         (selectors, { value }) => {
           const textArea = content.document.querySelector(
-            selectors.sourceTextArea
+            selectors.sourceSectionTextArea
           );
           textArea.value = value;
           textArea.dispatchEvent(new content.Event("input"));
@@ -4530,7 +4530,7 @@ class AboutTranslationsTestUtils {
       pageResult = await this.#runInPage(
         selectors => {
           const textArea = content.document.querySelector(
-            selectors.sourceTextArea
+            selectors.sourceSectionTextArea
           );
           return {
             hasPlaceholder: textArea.hasAttribute("placeholder"),
@@ -4598,7 +4598,7 @@ class AboutTranslationsTestUtils {
       pageResult = await this.#runInPage(
         selectors => {
           const textArea = content.document.querySelector(
-            selectors.targetTextArea
+            selectors.targetSectionTextArea
           );
           return {
             hasPlaceholder: textArea.hasAttribute("placeholder"),
@@ -4922,7 +4922,7 @@ class AboutTranslationsTestUtils {
     try {
       actualValue = await this.#runInPage(selectors => {
         const textarea = content.document.querySelector(
-          selectors.targetTextArea
+          selectors.targetSectionTextArea
         );
         return textarea.value;
       });
@@ -4983,7 +4983,7 @@ class AboutTranslationsTestUtils {
     try {
       actualValue = await this.#runInPage(selectors => {
         const textarea = content.document.querySelector(
-          selectors.targetTextArea
+          selectors.targetSectionTextArea
         );
         return textarea.value;
       });
@@ -5092,8 +5092,8 @@ class AboutTranslationsTestUtils {
    * @param {boolean} [options.sourceLanguageSelector=false]
    * @param {boolean} [options.targetLanguageSelector=false]
    * @param {boolean} [options.swapLanguagesButton=false]
-   * @param {boolean} [options.sourceTextArea=false]
-   * @param {boolean} [options.targetTextArea=false]
+   * @param {boolean} [options.sourceSectionTextArea=false]
+   * @param {boolean} [options.targetSectionTextArea=false]
    * @param {boolean} [options.unsupportedInfoMessage=false]
    * @param {boolean} [options.languageLoadErrorMessage=false]
    * @returns {Promise<void>}
@@ -5104,8 +5104,8 @@ class AboutTranslationsTestUtils {
     sourceLanguageSelector = false,
     targetLanguageSelector = false,
     swapLanguagesButton = false,
-    sourceTextArea = false,
-    targetTextArea = false,
+    sourceSectionTextArea = false,
+    targetSectionTextArea = false,
     unsupportedInfoMessage = false,
     languageLoadErrorMessage = false,
   } = {}) {
@@ -5139,8 +5139,12 @@ class AboutTranslationsTestUtils {
             selectors.targetLanguageSelector
           ),
           swapLanguagesButton: isElementVisible(selectors.swapLanguagesButton),
-          sourceTextArea: isElementVisible(selectors.sourceTextArea),
-          targetTextArea: isElementVisible(selectors.targetTextArea),
+          sourceSectionTextArea: isElementVisible(
+            selectors.sourceSectionTextArea
+          ),
+          targetSectionTextArea: isElementVisible(
+            selectors.targetSectionTextArea
+          ),
           unsupportedInfoMessage: isElementVisible(
             selectors.unsupportedInfoMessage
           ),
@@ -5177,13 +5181,13 @@ class AboutTranslationsTestUtils {
         "swap-languages button"
       );
       assertVisibility(
-        sourceTextArea,
-        visibilityMap.sourceTextArea,
+        sourceSectionTextArea,
+        visibilityMap.sourceSectionTextArea,
         "source textarea"
       );
       assertVisibility(
-        targetTextArea,
-        visibilityMap.targetTextArea,
+        targetSectionTextArea,
+        visibilityMap.targetSectionTextArea,
         "target textarea"
       );
       assertVisibility(
