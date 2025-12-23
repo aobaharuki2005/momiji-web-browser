@@ -875,14 +875,16 @@ mac-signing:
                   globs:
                       - "/Contents/MacOS/media-plugin-helper.app"
 
-                # Only built in Nightly builds for now. For other builds, the
-                # globs will match nothing, and so nothing will happen.
                 - deep: false
                   runtime: true
                   force: true
                   entitlements: public/build/security/security-module-helper.xml
                   globs:
                       - "/Contents/MacOS/security-module-helper.app"
+                  skip:
+                      by-release-type:
+                          nightly.*: false
+                          default: true
 
                 - deep: false
                   runtime: true
@@ -933,14 +935,16 @@ mac-signing:
                   globs:
                       - "/Contents/MacOS/media-plugin-helper.app"
 
-                # Only built in Nightly builds for now. For other builds, the
-                # globs will match nothing, and so nothing will happen.
                 - deep: false
                   runtime: true
                   force: true
                   entitlements: public/build/security/security-module-helper.xml
                   globs:
                       - "/Contents/MacOS/security-module-helper.app"
+                  skip:
+                      by-release-type:
+                          nightly.*: false
+                          default: true
 
                 - deep: false
                   runtime: true

@@ -461,6 +461,31 @@ def auto_detect_channel(ctx, app):
         sys.exit(1)
 
 
+# Simulate the resolution of the 'skip' attribute in 'hardened-sign-config' by
+# taskgraph. This only accounts for the current variations for 'skip' found in
+# config.yml. This code must be adapted each time a new variation is added.
+def should_skip_on_channel(signing_group, channel):
+    if "skip" not in signing_group:
+        return False
+    if isinstance(signing_group["skip"], bool):
+        return signing_group["skip"]
+    if (
+        not isinstance(signing_group["skip"], dict)
+        or set(signing_group["skip"].keys()) != {"by-release-type"}
+        or not isinstance(signing_group["skip"]["by-release-type"], dict)
+        or set(signing_group["skip"]["by-release-type"].keys())
+        != {"nightly.*", "default"}
+        or not isinstance(signing_group["skip"]["by-release-type"]["nightly.*"], bool)
+        or not isinstance(signing_group["skip"]["by-release-type"]["default"], bool)
+    ):
+        raise (
+            "Detected a new unhandled variation for the 'skip' attribute, please update should_skip_on_channel"
+        )
+    return signing_group["skip"]["by-release-type"][
+        "nightly.*" if channel == "nightly" else "default"
+    ]
+
+
 def sign_with_codesign(
     ctx,
     verbose_arg,
@@ -478,6 +503,9 @@ def sign_with_codesign(
     ctx.log(logging.INFO, "macos-sign", {}, "Signing with codesign")
 
     for signing_group in signing_groups:
+        if should_skip_on_channel(signing_group, channel):
+            continue
+
         cs_cmd = ["codesign"]
         cs_cmd.append("--sign")
         cs_cmd.append(signing_identity)
@@ -627,6 +655,9 @@ def sign_with_rcodesign(
     temp_files_to_cleanup = []
 
     for signing_group in signing_groups:
+        if should_skip_on_channel(signing_group, channel):
+            continue
+
         # Ignore the 'deep' and 'force' setting for rcodesign
         group_runtime = "runtime" in signing_group and signing_group["runtime"]
 
