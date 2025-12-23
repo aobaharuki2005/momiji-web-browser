@@ -320,6 +320,7 @@ class AboutTranslations {
     this.#updateTargetScriptDirection();
 
     this.#showMainUserInterface();
+    this.#updateSourceSectionClearButtonVisibility();
     this.#ensureSectionHeightsMatch({ scheduleCallback: false });
     this.#setInitialFocus();
   }
@@ -457,6 +458,7 @@ class AboutTranslations {
    * Handles input events on the source textarea.
    */
   #onSourceTextInput = () => {
+    this.#updateSourceSectionClearButtonVisibility();
     this.#maybeRequestTranslation();
   };
 
@@ -968,6 +970,7 @@ class AboutTranslations {
     this.#updateSourceScriptDirection();
     this.#updateTargetScriptDirection();
     this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+    this.#updateSourceSectionClearButtonVisibility();
 
     if (sourceSectionTextArea.value) {
       this.#displayTranslatingPlaceholder();
@@ -1013,6 +1016,40 @@ class AboutTranslations {
    */
   #getSourceText() {
     return this.elements.sourceSectionTextArea.value.trim();
+  }
+
+  /**
+   * Returns true if the source textarea contains any text, otherwise false.
+   *
+   * @returns {boolean}
+   */
+  #sourceTextAreaHasValue() {
+    return Boolean(this.elements.sourceSectionTextArea.value);
+  }
+
+  /**
+   * Shows or hides the source clear button based on whether the textarea has text.
+   */
+  #updateSourceSectionClearButtonVisibility() {
+    const { sourceSectionClearButton } = this.elements;
+
+    const shouldShow = this.#sourceTextAreaHasValue();
+    const isHidden = sourceSectionClearButton.hidden;
+
+    const shouldHide = !shouldShow;
+    const isShown = !isHidden;
+
+    if (shouldShow && isHidden) {
+      sourceSectionClearButton.hidden = false;
+      document.dispatchEvent(
+        new CustomEvent("AboutTranslationsTest:SourceTextClearButtonShown")
+      );
+    } else if (shouldHide && isShown) {
+      sourceSectionClearButton.hidden = true;
+      document.dispatchEvent(
+        new CustomEvent("AboutTranslationsTest:SourceTextClearButtonHidden")
+      );
+    }
   }
 
   /**

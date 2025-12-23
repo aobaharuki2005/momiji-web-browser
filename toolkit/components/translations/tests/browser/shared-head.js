@@ -210,6 +210,7 @@ async function openAboutTranslations({
     swapLanguagesButton: "moz-button#about-translations-swap-languages-button",
     sourceSectionTextArea: "textarea#about-translations-source-textarea",
     targetSectionTextArea: "textarea#about-translations-target-textarea",
+    clearButton: "moz-button#about-translations-clear-button",
     copyButton: "moz-button#about-translations-copy-button",
     unsupportedInfoMessage:
       "moz-message-bar#about-translations-unsupported-info-message",
@@ -4187,6 +4188,22 @@ class AboutTranslationsTestUtils {
     static CopyButtonReset = "AboutTranslationsTest:CopyButtonReset";
 
     /**
+     * Event fired when the source clear button becomes visible.
+     *
+     * @type {string}
+     */
+    static SourceTextClearButtonShown =
+      "AboutTranslationsTest:SourceTextClearButtonShown";
+
+    /**
+     * Event fired when the source clear button becomes hidden.
+     *
+     * @type {string}
+     */
+    static SourceTextClearButtonHidden =
+      "AboutTranslationsTest:SourceTextClearButtonHidden";
+
+    /**
      * Event fired when the page layout changes.
      *
      * @type {string}
@@ -5179,6 +5196,66 @@ class AboutTranslationsTestUtils {
   }
 
   /**
+   * Retrieves the state of the source clear button.
+   *
+   * @returns {Promise<{exists: boolean, hidden: boolean, tabIndex: string | null}>}
+   */
+  async getSourceClearButtonState() {
+    await doubleRaf(document);
+
+    try {
+      return await this.#runInPage(selectors => {
+        const button = content.document.querySelector(selectors.clearButton);
+        return {
+          exists: !!button,
+          hidden: button?.hasAttribute("hidden") ?? true,
+          tabIndex: button?.getAttribute("tabindex") ?? null,
+        };
+      });
+    } catch (error) {
+      AboutTranslationsTestUtils.#reportTestFailure(error);
+    }
+
+    return {
+      exists: false,
+      hidden: true,
+      tabIndex: null,
+    };
+  }
+
+  /**
+   * Asserts properties of the source clear button.
+   *
+   * @param {object} options
+   * @param {boolean} [options.visible=false]
+   * @param {string}  [options.tabIndex="-1"]
+   * @returns {Promise<void>}
+   */
+  async assertSourceClearButton({ visible = false, tabIndex = "-1" } = {}) {
+    const {
+      exists,
+      hidden,
+      tabIndex: actualTabIndex,
+    } = await this.getSourceClearButtonState();
+
+    ok(exists, "Expected source clear button to be present.");
+
+    if (visible) {
+      ok(!hidden, "Expected source clear button to be visible.");
+    } else {
+      ok(hidden, "Expected source clear button to be hidden.");
+    }
+
+    if (tabIndex !== undefined) {
+      is(
+        actualTabIndex,
+        tabIndex,
+        `Expected source clear button tabindex to be "${tabIndex}".`
+      );
+    }
+  }
+
+  /**
    * Retrieves the current value of the target textarea.
    *
    * @returns {Promise<string>}
@@ -5380,6 +5457,8 @@ class AboutTranslationsTestUtils {
    * @param {boolean} [options.mainUserInterface=false]
    * @param {boolean} [options.sourceLanguageSelector=false]
    * @param {boolean} [options.targetLanguageSelector=false]
+   * @param {boolean} [options.clearButton=undefined]
+   * The clear button visibility is automatically determined from source text if undefined.
    * @param {boolean} [options.copyButton=false]
    * @param {boolean} [options.swapLanguagesButton=false]
    * @param {boolean} [options.sourceSectionTextArea=false]
@@ -5393,6 +5472,7 @@ class AboutTranslationsTestUtils {
     mainUserInterface = false,
     sourceLanguageSelector = false,
     targetLanguageSelector = false,
+    clearButton = undefined,
     copyButton = false,
     swapLanguagesButton = false,
     sourceSectionTextArea = false,
@@ -5404,6 +5484,16 @@ class AboutTranslationsTestUtils {
     await doubleRaf(document);
 
     try {
+      if (clearButton === undefined) {
+        const sourceTextAreaValue = await this.#runInPage(selectors => {
+          const sourceTextArea = content.document.querySelector(
+            selectors.sourceSectionTextArea
+          );
+          return sourceTextArea?.value ?? "";
+        });
+        clearButton = Boolean(sourceTextAreaValue.trim());
+      }
+
       const visibilityMap = await this.#runInPage(selectors => {
         const { document, window } = content;
         const isElementVisible = selector => {
@@ -5420,6 +5510,7 @@ class AboutTranslationsTestUtils {
           const { display, visibility } = computedStyle;
           return !(display === "none" || visibility === "hidden");
         };
+
         return {
           pageHeader: isElementVisible(selectors.pageHeader),
           mainUserInterface: isElementVisible(selectors.mainUserInterface),
@@ -5429,6 +5520,7 @@ class AboutTranslationsTestUtils {
           targetLanguageSelector: isElementVisible(
             selectors.targetLanguageSelector
           ),
+          clearButton: isElementVisible(selectors.clearButton),
           copyButton: isElementVisible(selectors.copyButton),
           swapLanguagesButton: isElementVisible(selectors.swapLanguagesButton),
           sourceSectionTextArea: isElementVisible(
@@ -5482,6 +5574,11 @@ class AboutTranslationsTestUtils {
         sourceSectionTextArea,
         visibilityMap.sourceSectionTextArea,
         "source textarea"
+      );
+      assertVisibility(
+        clearButton,
+        visibilityMap.clearButton,
+        "source clear button"
       );
       assertVisibility(
         targetSectionTextArea,
