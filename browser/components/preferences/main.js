@@ -4151,6 +4151,88 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  firefoxSuggest: {
+    id: "locationBarGroup",
+    items: [
+      {
+        id: "locationBarGroupHeader",
+        l10nId: "addressbar-header-1",
+        supportPage: "firefox-suggest",
+        control: "moz-fieldset",
+        controlAttrs: {
+          headinglevel: 2,
+        },
+        items: [
+          {
+            id: "historySuggestion",
+            l10nId: "addressbar-locbar-history-option",
+          },
+          {
+            id: "bookmarkSuggestion",
+            l10nId: "addressbar-locbar-bookmarks-option",
+          },
+          {
+            id: "clipboardSuggestion",
+            l10nId: "addressbar-locbar-clipboard-option",
+          },
+          {
+            id: "openpageSuggestion",
+            l10nId: "addressbar-locbar-openpage-option",
+          },
+          {
+            id: "topSitesSuggestion",
+            l10nId: "addressbar-locbar-shortcuts-option",
+          },
+          {
+            id: "enableRecentSearches",
+            l10nId: "addressbar-locbar-showrecentsearches-option-2",
+          },
+          {
+            id: "enginesSuggestion",
+            l10nId: "addressbar-locbar-engines-option-1",
+          },
+          {
+            id: "enableQuickActions",
+            l10nId: "addressbar-locbar-quickactions-option",
+            supportPage: "quick-actions-firefox-search-bar",
+          },
+          {
+            id: "firefoxSuggestAll",
+            l10nId: "addressbar-locbar-suggest-all-option-2",
+            items: [
+              {
+                id: "firefoxSuggestSponsored",
+                l10nId: "addressbar-locbar-suggest-sponsored-option-2",
+              },
+              {
+                id: "firefoxSuggestOnlineEnabledToggle",
+                l10nId: "addressbar-firefox-suggest-online",
+                supportPage: "firefox-suggest",
+                subcategory: "w_what-is-firefox-suggest",
+              },
+            ],
+          },
+          {
+            id: "dismissedSuggestionsDescription",
+            l10nId: "addressbar-dismissed-suggestions-label-2",
+            control: "moz-fieldset",
+            controlAttrs: {
+              headinglevel: 3,
+            },
+            items: [
+              {
+                id: "restoreDismissedSuggestions",
+                l10nId: "addressbar-restore-dismissed-suggestions-button-2",
+                control: "moz-button",
+                iconSrc:
+                  "chrome://global/skin/icons/arrow-counterclockwise-16.svg",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 });
 
 /**

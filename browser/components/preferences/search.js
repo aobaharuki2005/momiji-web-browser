@@ -12,8 +12,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///toolkit/components/search/AddonSearchEngine.sys.mjs",
   CustomizableUI:
     "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs",
+  QuickSuggest: "moz-src:///browser/components/urlbar/QuickSuggest.sys.mjs",
   SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
+  UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UserSearchEngine:
     "moz-src:///toolkit/components/search/UserSearchEngine.sys.mjs",
 });
@@ -36,10 +38,15 @@ Preferences.addAll([
   // Suggest Section.
   { id: "browser.urlbar.suggest.bookmark", type: "bool" },
   { id: "browser.urlbar.suggest.clipboard", type: "bool" },
+  { id: "browser.urlbar.clipboard.featureGate", type: "bool" },
   { id: "browser.urlbar.suggest.history", type: "bool" },
   { id: "browser.urlbar.suggest.openpage", type: "bool" },
   { id: "browser.urlbar.suggest.topsites", type: "bool" },
   { id: "browser.urlbar.suggest.engines", type: "bool" },
+  { id: "browser.urlbar.quickactions.showPrefs", type: "bool" },
+  { id: "browser.urlbar.suggest.quickactions", type: "bool" },
+  { id: "browser.urlbar.quicksuggest.settingsUi", type: "int" },
+  { id: "browser.urlbar.quicksuggest.enabled", type: "bool" },
   { id: "browser.urlbar.suggest.quicksuggest.all", type: "bool" },
   { id: "browser.urlbar.suggest.quicksuggest.sponsored", type: "bool" },
   { id: "browser.urlbar.quicksuggest.online.enabled", type: "bool" },
@@ -390,6 +397,172 @@ Preferences.addSetting({
   },
 });
 
+Preferences.addSetting({
+  id: "quickSuggestEnabledPref",
+  pref: "browser.urlbar.quicksuggest.enabled",
+});
+
+Preferences.addSetting({
+  id: "quickSuggestSettingsUiPref",
+  pref: "browser.urlbar.quicksuggest.settingsUi",
+});
+
+Preferences.addSetting({
+  id: "nimbusListener",
+  setup(onChange) {
+    NimbusFeatures.urlbar.onUpdate(onChange);
+    return () => NimbusFeatures.urlbar.offUpdate(onChange);
+  },
+});
+
+Preferences.addSetting({
+  id: "locationBarGroupHeader",
+  deps: [
+    "quickSuggestEnabledPref",
+    "quickSuggestSettingsUiPref",
+    "nimbusListener",
+  ],
+  getControlConfig(config) {
+    let l10nId =
+      lazy.UrlbarPrefs.get("quickSuggestEnabled") &&
+      lazy.UrlbarPrefs.get("quickSuggestSettingsUi") !=
+        lazy.QuickSuggest.SETTINGS_UI.NONE
+        ? "addressbar-header-firefox-suggest-2"
+        : "addressbar-header-1";
+
+    return { ...config, l10nId };
+  },
+});
+
+Preferences.addSetting({
+  id: "historySuggestion",
+  pref: "browser.urlbar.suggest.history",
+});
+
+Preferences.addSetting({
+  id: "bookmarkSuggestion",
+  pref: "browser.urlbar.suggest.bookmark",
+});
+
+Preferences.addSetting({
+  id: "clipboardFeaturegate",
+  pref: "browser.urlbar.clipboard.featureGate",
+});
+
+Preferences.addSetting({
+  id: "clipboardSuggestion",
+  pref: "browser.urlbar.suggest.clipboard",
+  deps: ["clipboardFeaturegate"],
+  visible: deps => {
+    return deps.clipboardFeaturegate.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "openpageSuggestion",
+  pref: "browser.urlbar.suggest.openpage",
+});
+
+Preferences.addSetting({
+  id: "topSitesSuggestion",
+  pref: "browser.urlbar.suggest.topsites",
+});
+
+Preferences.addSetting({
+  id: "enableRecentSearchesFeatureGate",
+  pref: "browser.urlbar.recentsearches.featureGate",
+});
+
+Preferences.addSetting({
+  id: "enableRecentSearches",
+  pref: "browser.urlbar.suggest.recentsearches",
+  deps: ["enableRecentSearchesFeatureGate"],
+  visible: deps => {
+    return deps.enableRecentSearchesFeatureGate.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "enginesSuggestion",
+  pref: "browser.urlbar.suggest.engines",
+});
+
+Preferences.addSetting({
+  id: "quickActionsShowPrefs",
+  pref: "browser.urlbar.quickactions.showPrefs",
+});
+
+Preferences.addSetting({
+  id: "enableQuickActions",
+  pref: "browser.urlbar.suggest.quickactions",
+  deps: ["quickActionsShowPrefs", "scotchBonnetEnabled"],
+  visible: deps => {
+    return deps.quickActionsShowPrefs.value || deps.scotchBonnetEnabled.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "firefoxSuggestAll",
+  pref: "browser.urlbar.suggest.quicksuggest.all",
+});
+
+Preferences.addSetting({
+  id: "firefoxSuggestSponsored",
+  pref: "browser.urlbar.suggest.quicksuggest.sponsored",
+  deps: ["firefoxSuggestAll"],
+  disabled: deps => {
+    return !deps.firefoxSuggestAll.value;
+  },
+});
+
+Preferences.addSetting({
+  id: "firefoxSuggestOnlineEnabledToggle",
+  pref: "browser.urlbar.quicksuggest.online.enabled",
+  deps: [
+    "firefoxSuggestAll",
+    "quickSuggestEnabledPref",
+    "quickSuggestSettingsUiPref",
+    "nimbusListener",
+  ],
+  visible: () => {
+    return (
+      lazy.UrlbarPrefs.get("quickSuggestSettingsUi") ==
+      lazy.QuickSuggest.SETTINGS_UI.FULL
+    );
+  },
+  disabled: deps => {
+    return !deps.firefoxSuggestAll.value;
+  },
+});
+
+Preferences.addSetting(
+  class extends Preferences.AsyncSetting {
+    static id = "restoreDismissedSuggestions";
+    setup() {
+      Services.obs.addObserver(
+        this.emitChange,
+        "quicksuggest-dismissals-changed"
+      );
+      return () => {
+        Services.obs.removeObserver(
+          this.emitChange,
+          "quicksuggest-dismissals-changed"
+        );
+      };
+    }
+    async disabled() {
+      return !(await lazy.QuickSuggest.canClearDismissedSuggestions());
+    }
+    onUserClick() {
+      lazy.QuickSuggest.clearDismissedSuggestions();
+    }
+  }
+);
+
+Preferences.addSetting({
+  id: "dismissedSuggestionsDescription",
+});
+
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 const SEARCH_TYPE = "default_search";
 const SEARCH_KEY = "defaultSearch";
@@ -402,6 +575,7 @@ var gSearchPane = {
   init() {
     initSettingGroup("defaultEngine");
     initSettingGroup("searchSuggestions");
+    initSettingGroup("firefoxSuggest");
     this._engineStore = new EngineStore();
     gEngineView = new EngineView(this._engineStore);
 
@@ -421,153 +595,13 @@ var gSearchPane = {
 
     Services.obs.addObserver(this, "browser-search-engine-modified");
     Services.obs.addObserver(this, "intl:app-locales-changed");
-    Services.obs.addObserver(this, "quicksuggest-dismissals-changed");
     window.addEventListener("unload", () => {
       Services.obs.removeObserver(this, "browser-search-engine-modified");
       Services.obs.removeObserver(this, "intl:app-locales-changed");
-      Services.obs.removeObserver(this, "quicksuggest-dismissals-changed");
     });
-
-    Preferences.addSyncFromPrefListener(
-      document.getElementById("firefoxSuggestAll"),
-      this._onFirefoxSuggestAllChange.bind(this)
-    );
-
-    this._initRecentSeachesCheckbox();
-    this._initAddressBar();
-  },
-
-  _onFirefoxSuggestAllChange() {
-    var prefValue = Preferences.get(
-      "browser.urlbar.suggest.quicksuggest.all"
-    ).value;
-    document.getElementById("firefoxSuggestSponsored").disabled = !prefValue;
-    document.getElementById("firefoxSuggestOnlineEnabledToggle").disabled =
-      !prefValue;
-    // Don't override pref value in the UI.
-    return undefined;
-  },
-
-  _initRecentSeachesCheckbox() {
-    this._recentSearchesEnabledPref = Preferences.get(
-      "browser.urlbar.recentsearches.featureGate"
-    );
-    let recentSearchesCheckBox = document.getElementById(
-      "enableRecentSearches"
-    );
-    const listener = () => {
-      recentSearchesCheckBox.hidden = !this._recentSearchesEnabledPref.value;
-    };
-
-    this._recentSearchesEnabledPref.on("change", listener);
-    listener();
   },
 
   // ADDRESS BAR
-
-  /**
-   * Initializes the address bar section.
-   */
-  _initAddressBar() {
-    // Update the Firefox Suggest section when its Nimbus config changes.
-    let onNimbus = () => this._updateFirefoxSuggestSection();
-    NimbusFeatures.urlbar.onUpdate(onNimbus);
-    window.addEventListener("unload", () => {
-      NimbusFeatures.urlbar.offUpdate(onNimbus);
-    });
-
-    document.getElementById("clipboardSuggestion").hidden = !UrlbarPrefs.get(
-      "clipboard.featureGate"
-    );
-
-    this._updateFirefoxSuggestSection(true);
-    this._initQuickActionsSection();
-  },
-
-  /**
-   * Updates the Firefox Suggest section (in the address bar section) depending
-   * on whether the user is enrolled in a Firefox Suggest rollout.
-   *
-   * @param {boolean} [onInit]
-   *   Pass true when calling this when initializing the pane.
-   */
-  _updateFirefoxSuggestSection(onInit = false) {
-    let container = document.getElementById("firefoxSuggestContainer");
-
-    if (
-      UrlbarPrefs.get("quickSuggestEnabled") &&
-      UrlbarPrefs.get("quickSuggestSettingsUi") != QuickSuggest.SETTINGS_UI.NONE
-    ) {
-      // Update the l10n IDs of text elements.
-      let l10nIdByElementId = {
-        locationBarGroupHeader: "addressbar-header-firefox-suggest-1",
-        locationBarSuggestionLabel: "addressbar-suggest-firefox-suggest-1",
-      };
-      for (let [elementId, l10nId] of Object.entries(l10nIdByElementId)) {
-        let element = document.getElementById(elementId);
-        element.dataset.l10nIdOriginal ??= element.dataset.l10nId;
-        element.dataset.l10nId = l10nId;
-      }
-
-      // Update the learn more link in the section's description.
-      document
-        .getElementById("locationBarSuggestionLabel")
-        .classList.add("tail-with-learn-more");
-      document.getElementById("firefoxSuggestLearnMore").hidden = false;
-
-      document.getElementById("firefoxSuggestOnlineBox").hidden =
-        UrlbarPrefs.get("quickSuggestSettingsUi") !=
-        QuickSuggest.SETTINGS_UI.FULL;
-
-      this._updateDismissedSuggestionsStatus();
-      setEventListener("restoreDismissedSuggestions", "command", () =>
-        QuickSuggest.clearDismissedSuggestions()
-      );
-
-      container.hidden = false;
-    } else if (!onInit) {
-      // Firefox Suggest is not enabled. This is the default, so to avoid
-      // accidentally messing anything up, only modify the doc if we're being
-      // called due to a change in the rollout-enabled status (!onInit).
-      document
-        .getElementById("locationBarSuggestionLabel")
-        .classList.remove("tail-with-learn-more");
-      document.getElementById("firefoxSuggestLearnMore").hidden = true;
-      container.hidden = true;
-      let elementIds = ["locationBarGroupHeader", "locationBarSuggestionLabel"];
-      for (let id of elementIds) {
-        let element = document.getElementById(id);
-        if (element.dataset.l10nIdOriginal) {
-          document.l10n.setAttributes(element, element.dataset.l10nIdOriginal);
-          delete element.dataset.l10nIdOriginal;
-        }
-      }
-    }
-  },
-
-  _initQuickActionsSection() {
-    let showPref = Preferences.get("browser.urlbar.quickactions.showPrefs");
-    let scotchBonnet = Preferences.get(
-      "browser.urlbar.scotchBonnet.enableOverride"
-    );
-    let showQuickActionsGroup = () => {
-      document.getElementById("quickActionsBox").hidden = !(
-        showPref.value || scotchBonnet.value
-      );
-    };
-    showPref.on("change", showQuickActionsGroup);
-    showQuickActionsGroup();
-  },
-
-  /**
-   * Enables/disables the "Restore" button for dismissed Firefox Suggest
-   * suggestions.
-   */
-  async _updateDismissedSuggestionsStatus() {
-    document.getElementById("restoreDismissedSuggestions").disabled =
-      !(await QuickSuggest.canClearDismissedSuggestions());
-  },
-
   handleEvent(aEvent) {
     if (aEvent.type != "command") {
       return;
@@ -619,9 +653,6 @@ var gSearchPane = {
         }
         break;
       }
-      case "quicksuggest-dismissals-changed":
-        this._updateDismissedSuggestionsStatus();
-        break;
     }
   },
 
@@ -968,7 +999,7 @@ class EngineView {
     this._engineList = document.getElementById("engineList");
     this._engineList.view = this;
 
-    UrlbarPrefs.addObserver(this);
+    lazy.UrlbarPrefs.addObserver(this);
     aEngineStore.addListener(this);
 
     this.loadL10nNames();
@@ -1380,7 +1411,7 @@ class EngineView {
   // nsITreeView
   get rowCount() {
     let localModes = UrlbarUtils.LOCAL_SEARCH_MODES;
-    if (!UrlbarPrefs.get("scotchBonnet.enableOverride")) {
+    if (!lazy.UrlbarPrefs.get("scotchBonnet.enableOverride")) {
       localModes = localModes.filter(
         mode => mode.source != UrlbarUtils.RESULT_SOURCE.ACTIONS
       );
@@ -1412,7 +1443,9 @@ class EngineView {
       let shortcut = this._getLocalShortcut(index);
       if (shortcut) {
         if (
-          UrlbarPrefs.getScotchBonnetPref("searchRestrictKeywords.featureGate")
+          lazy.UrlbarPrefs.getScotchBonnetPref(
+            "searchRestrictKeywords.featureGate"
+          )
         ) {
           let keywords = this._localShortcutL10nNames
             .get(shortcut.source)
@@ -1517,7 +1550,7 @@ class EngineView {
     if (column.id == "engineShown") {
       let shortcut = this._getLocalShortcut(index);
       if (shortcut) {
-        return UrlbarPrefs.get(shortcut.pref);
+        return lazy.UrlbarPrefs.get(shortcut.pref);
       }
       return !this._engineStore.engines[index].originalEngine.hideOneOffButton;
     }
@@ -1539,7 +1572,7 @@ class EngineView {
     if (column.id == "engineShown") {
       let shortcut = this._getLocalShortcut(index);
       if (shortcut) {
-        UrlbarPrefs.set(shortcut.pref, value == "true");
+        lazy.UrlbarPrefs.set(shortcut.pref, value == "true");
         this.invalidate();
         return;
       }

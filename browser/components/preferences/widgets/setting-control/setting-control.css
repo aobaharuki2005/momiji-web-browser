@@ -7,7 +7,7 @@
   margin-block: var(--space-large);
 }
 
-setting-control[hidden]:has(> moz-message-bar) {
+setting-control[hidden]:has(> moz-message-bar):not([slot="nested"]) {
   display: block;
   margin-block-start: calc(-1 * var(--space-large));
 }

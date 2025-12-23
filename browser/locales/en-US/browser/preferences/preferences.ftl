@@ -1024,6 +1024,72 @@ search-show-suggestions-private-windows-2 =
 search-suggestions-cant-show-2 =
     .message = Search suggestions will not be shown in location bar results because you have configured { -brand-short-name } to never remember history.
 
+
+addressbar-header-1 =
+    .label = Address Bar
+    .description = Choose which suggestions display in your address bar
+
+# When Firefox Suggest is enabled, this replaces `addressbar-header-1`.
+addressbar-header-firefox-suggest-2 =
+    .label = { -firefox-suggest-brand-name }
+    .description = Suggestions from { -brand-short-name } and our partners in your address bar.
+
+addressbar-locbar-history-option =
+    .label = Browsing history
+    .accesskey = h
+addressbar-locbar-bookmarks-option =
+    .label = Bookmarks
+    .accesskey = k
+addressbar-locbar-clipboard-option =
+    .label = Clipboard
+    .accesskey = C
+addressbar-locbar-openpage-option =
+    .label = Open tabs
+    .accesskey = O
+# Shortcuts refers to the shortcut tiles on the new tab page, previously known as top sites. Translation should be consistent.
+addressbar-locbar-shortcuts-option =
+    .label = Shortcuts
+    .accesskey = S
+addressbar-locbar-topsites-option =
+    .label = Top sites
+    .accesskey = T
+addressbar-locbar-showrecentsearches-option-2 =
+    .label = Recent searches
+    .accesskey = r
+addressbar-locbar-engines-option-1 =
+    .label = Suggest search engines to use
+    .accesskey = a
+addressbar-locbar-quickactions-option =
+    .label = Quick actions
+    .accesskey = Q
+addressbar-locbar-showtrendingsuggestions-option-2 =
+    .label = Trending search suggestions
+    .accesskey = t
+
+# Toggles whether suggestions are obtained from Firefox Suggest or not (local or online).
+addressbar-locbar-suggest-all-option-2 =
+    .label = Suggestions from { -brand-short-name }
+    .description = Get suggestions from the web related to your search.
+
+addressbar-locbar-suggest-sponsored-option-2 =
+    .label = Suggestions from sponsors
+    .description = Support { -brand-short-name } with occasional sponsored suggestions.
+
+# This string is used for a checkbox in the settings UI that opts the
+# user into "online" Firefox Suggest, allowing them to receive suggestions from
+# Mozilla's Merino server.
+# "Mozilla" is intentionally hardcoded to prevent forks from replacing it
+# with their own vendor name, since the online suggest is created and maintained
+# by Mozilla.
+addressbar-firefox-suggest-online =
+    .label = Retrieve suggestions from Mozilla as you type
+
+addressbar-dismissed-suggestions-label-2 =
+    .label = Dismissed suggestions
+    .description = Restore dismissed suggestions from sponsors and { -brand-short-name }.
+addressbar-restore-dismissed-suggestions-button-2 =
+    .label = Restore suggestions
+
 search-one-click-header2 = Search Shortcuts
 
 search-one-click-desc = Choose the alternative search engines that appear below the address bar and search bar when you start to enter a keyword.
@@ -1640,79 +1706,6 @@ cookie-banner-blocker-description = When a site asks if they can use cookies in 
 cookie-banner-learn-more = Learn more
 cookie-banner-blocker-checkbox-label =
     .label = Automatically refuse cookie banners
-
-## Privacy Section - Address Bar
-
-addressbar-header = Address Bar
-
-addressbar-suggest-1 = Choose which suggestions display in your address bar
-
-# When Firefox Suggest is enabled, this replaces `addressbar-header`.
-addressbar-header-firefox-suggest-1 = { -firefox-suggest-brand-name }
-
-# When Firefox Suggest is enabled, this replaces `addressbar-suggest`.
-addressbar-suggest-firefox-suggest-1 = Suggestions from { -brand-short-name } and our partners in your address bar.
-
-# When Firefox Suggest is enabled, a "Learn more" link appears at the end of
-# `addressbar-suggest-firefox-suggest`.
-addressbar-locbar-firefox-suggest-learn-more = Learn more
-
-addressbar-locbar-history-option =
-    .label = Browsing history
-    .accesskey = h
-addressbar-locbar-bookmarks-option =
-    .label = Bookmarks
-    .accesskey = k
-addressbar-locbar-clipboard-option =
-    .label = Clipboard
-    .accesskey = C
-addressbar-locbar-openpage-option =
-    .label = Open tabs
-    .accesskey = O
-# Shortcuts refers to the shortcut tiles on the new tab page, previously known as top sites. Translation should be consistent.
-addressbar-locbar-shortcuts-option =
-    .label = Shortcuts
-    .accesskey = S
-addressbar-locbar-topsites-option =
-    .label = Top sites
-    .accesskey = T
-addressbar-locbar-engines-option-1 =
-    .label = Suggest search engines to use
-    .accesskey = a
-addressbar-locbar-quickactions-option =
-    .label = Quick actions
-    .accesskey = Q
-addressbar-locbar-showrecentsearches-option-2 =
-    .label = Recent searches
-    .accesskey = r
-addressbar-locbar-showtrendingsuggestions-option-2 =
-    .label = Trending search suggestions
-    .accesskey = t
-
-# Toggles whether suggestions are obtained from Firefox Suggest or not (local or online).
-addressbar-locbar-suggest-all-option =
-  .label = Suggestions from { -brand-short-name }
-addressbar-locbar-suggest-all-option-desc = Get suggestions from the web related to your search.
-
-addressbar-locbar-suggest-sponsored-option =
-  .label = Suggestions from sponsors
-addressbar-locbar-suggest-sponsored-desc = Support { -brand-short-name } with occasional sponsored suggestions.
-
-# This string is used for a checkbox in the settings UI that opts the
-# user into "online" Firefox Suggest, allowing them to receive suggestions from
-# Mozilla's Merino server.
-# "Mozilla" is intentionally hardcoded to prevent forks from replacing it
-# with their own vendor name, since the online suggest is created and maintained
-# by Mozilla.
-addressbar-firefox-suggest-online =
-  .label = Retrieve suggestions from Mozilla as you type
-
-addressbar-quickactions-learn-more = Learn more
-
-addressbar-dismissed-suggestions-label = Dismissed suggestions
-addressbar-restore-dismissed-suggestions-description = Restore dismissed suggestions from sponsors and { -brand-short-name }.
-addressbar-restore-dismissed-suggestions-button =
-  .label = Restore
 
 ## Privacy Section - Content Blocking
 
