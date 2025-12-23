@@ -12,6 +12,7 @@ MOZ_SRC_FILES += [
     "actors/AIChatContentChild.sys.mjs",
     "actors/AIChatContentParent.sys.mjs",
     "modules/AIWindow.sys.mjs",
+    "modules/AIWindowAccountAuth.sys.mjs",
     "modules/ChatConstants.sys.mjs",
     "modules/ChatConversation.sys.mjs",
     "modules/ChatMessage.sys.mjs",
