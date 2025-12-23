@@ -18,7 +18,7 @@
   color: var(--text-color, #15141a);
 
   /* Variables used in the page layout */
-  --AT-input-padding: 20px;
+  --AT-input-padding: 16px;
   /* This is somewhat arbitrary, but works well for the current design. If the computed
      header height changes, this will need to be adjusted. */
   --AT-header-height: 156px;
@@ -122,10 +122,24 @@ body {
   border: none;
   border-radius: 0;
   background-color: transparent;
+  padding-block-end: var(--space-xsmall);
 
   &:focus-visible {
     outline: none;
   }
+}
+
+#about-translations-target-actions {
+  padding: var(--space-xsmall);
+  background-color: transparent;
+
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+#about-translations-copy-button::part(button) {
+  padding-inline: calc(var(--space-small) + var(--space-xxsmall));
 }
 
 #about-translations-empty-section {

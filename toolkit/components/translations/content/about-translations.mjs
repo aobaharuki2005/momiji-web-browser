@@ -165,6 +165,7 @@ class AboutTranslations {
    * Instantiates and returns the elements that comprise the UI.
    *
    * @returns {{
+   *   copyButton: HTMLElement,
    *   detectLanguageOption: HTMLOptionElement,
    *   languageLoadErrorMessage: HTMLElement,
    *   learnMoreLink: HTMLAnchorElement,
@@ -175,6 +176,7 @@ class AboutTranslations {
    *   swapLanguagesButton: HTMLElement,
    *   targetLanguageSelector: HTMLSelectElement,
    *   targetSection: HTMLElement,
+   *   targetSectionActionsRow: HTMLElement,
    *   targetSectionTextArea: HTMLTextAreaElement,
    *   unsupportedInfoMessage: HTMLElement,
    * }}
@@ -185,6 +187,9 @@ class AboutTranslations {
     }
 
     this.#lazyElements = {
+      copyButton: /** @type {HTMLElement} */ (
+        document.getElementById("about-translations-copy-button")
+      ),
       detectLanguageOption: /** @type {HTMLOptionElement} */ (
         document.getElementById("about-translations-detect-language-option")
       ),
@@ -216,6 +221,9 @@ class AboutTranslations {
       ),
       targetSection: /** @type {HTMLElement} */ (
         document.getElementById("about-translations-target-section")
+      ),
+      targetSectionActionsRow: /** @type {HTMLElement} */ (
+        document.getElementById("about-translations-target-actions")
       ),
       targetSectionTextArea: /** @type {HTMLTextAreaElement} */ (
         document.getElementById("about-translations-target-textarea")
@@ -332,6 +340,7 @@ class AboutTranslations {
       sourceSectionTextArea,
       swapLanguagesButton,
       targetLanguageSelector,
+      targetSectionActionsRow,
       targetSectionTextArea,
     } = this.elements;
 
@@ -351,6 +360,10 @@ class AboutTranslations {
       this.#onTargetTextAreaFocus
     );
     targetSectionTextArea.addEventListener("blur", this.#onTargetTextAreaBlur);
+    targetSectionActionsRow.addEventListener(
+      "pointerdown",
+      this.#onTargetSectionActionsPointerDown
+    );
     window.addEventListener("resize", this.#onResize);
     window.visualViewport.addEventListener("resize", this.#onResize);
   }
@@ -401,6 +414,24 @@ class AboutTranslations {
    */
   #onSourceTextInput = () => {
     this.#maybeRequestTranslation();
+  };
+
+  /**
+   * Handles pointerdown events within the target section's actions row.
+   *
+   * Clicking empty space within the actions row should behave as though
+   * the textarea was clicked, but clicking a specific action, such as the
+   * copy button, should have the default behavior for that element.
+   */
+  #onTargetSectionActionsPointerDown = event => {
+    if (event.target?.closest?.("#about-translations-copy-button")) {
+      // The copy button was clicked: preserve the default behavior.
+      return;
+    }
+
+    // Empty space within the actions row was clicked: focus the text area.
+    event.preventDefault();
+    this.elements.targetSectionTextArea.focus();
   };
 
   /**
@@ -1257,6 +1288,7 @@ class AboutTranslations {
       sourceSection,
       sourceSectionTextArea,
       targetSection,
+      targetSectionActionsRow,
       targetSectionTextArea,
     } = this.elements;
 
@@ -1274,15 +1306,18 @@ class AboutTranslations {
     sourceSectionTextArea.style.height = "auto";
     targetSectionTextArea.style.height = "auto";
 
+    const targetActionsHeight =
+      targetSectionActionsRow.getBoundingClientRect().height;
     const minSectionHeight = Math.max(
       this.#getMinHeight(sourceSection),
       this.#getMinHeight(targetSection)
     );
-
+    const targetSectionContentHeight =
+      targetSectionTextArea.scrollHeight + targetActionsHeight;
     const maxContentHeight = Math.ceil(
       Math.max(
         sourceSectionTextArea.scrollHeight,
-        targetSectionTextArea.scrollHeight,
+        targetSectionContentHeight,
         minSectionHeight
       )
     );
@@ -1292,12 +1327,16 @@ class AboutTranslations {
     );
     const maxSectionHeight = maxContentHeight + sectionBorderHeight;
     const maxSectionHeightPixels = `${maxSectionHeight}px`;
+    const targetSectionTextAreaHeightPixels = `${Math.max(
+      maxContentHeight - targetActionsHeight,
+      0
+    )}px`;
 
     sourceSection.style.height = maxSectionHeightPixels;
     targetSection.style.height = maxSectionHeightPixels;
 
-    targetSectionTextArea.style.height = "100%";
     sourceSectionTextArea.style.height = "100%";
+    targetSectionTextArea.style.height = targetSectionTextAreaHeightPixels;
 
     const textAreaRatioAfter = maxSectionHeight / sectionWidth;
     const ratioDelta = textAreaRatioAfter - textAreaRatioBefore;

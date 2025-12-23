@@ -84,6 +84,7 @@ add_task(
       mainUserInterface: false,
       sourceLanguageSelector: false,
       targetLanguageSelector: false,
+      copyButton: false,
       swapLanguagesButton: false,
       sourceSectionTextArea: false,
       targetSectionTextArea: false,

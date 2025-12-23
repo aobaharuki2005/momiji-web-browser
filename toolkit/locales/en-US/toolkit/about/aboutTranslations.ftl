@@ -39,6 +39,11 @@ about-translations-detect-language = { $language } (detected)
 about-translations-output-placeholder =
   .placeholder = Translation
 
+# Button label for copying the translated output to the clipboard.
+about-translations-copy-button-default =
+  .label = Copy
+  .title = Copy translation
+
 # Text displayed on target-language selector when no language option is selected.
 about-translations-select = Select language
 

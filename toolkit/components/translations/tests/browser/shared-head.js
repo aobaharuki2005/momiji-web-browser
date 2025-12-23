@@ -181,6 +181,7 @@ async function openAboutTranslations({
     swapLanguagesButton: "moz-button#about-translations-swap-languages-button",
     sourceSectionTextArea: "textarea#about-translations-source-textarea",
     targetSectionTextArea: "textarea#about-translations-target-textarea",
+    copyButton: "moz-button#about-translations-copy-button",
     unsupportedInfoMessage:
       "moz-message-bar#about-translations-unsupported-info-message",
     languageLoadErrorMessage:
@@ -4910,6 +4911,55 @@ class AboutTranslationsTestUtils {
   }
 
   /**
+   * Asserts properties of the copy button.
+   *
+   * @param {object} options
+   * @param {boolean} [options.visible=true]
+   * @param {boolean} [options.enabled=false]
+   * @returns {Promise<void>}
+   */
+  async assertCopyButton({ visible = true, enabled = false } = {}) {
+    await doubleRaf(document);
+
+    let pageResult = {};
+    try {
+      pageResult = await this.#runInPage(selectors => {
+        const { document } = content;
+        const button = document.querySelector(selectors.copyButton);
+        return {
+          exists: !!button,
+          isDisabled: button?.hasAttribute("disabled") ?? true,
+        };
+      });
+    } catch (error) {
+      AboutTranslationsTestUtils.#reportTestFailure(error);
+    }
+
+    const { exists, isDisabled } = pageResult;
+
+    ok(exists, "Expected copy button to be present.");
+
+    await this.assertIsVisible({
+      pageHeader: true,
+      mainUserInterface: true,
+      sourceLanguageSelector: true,
+      targetLanguageSelector: true,
+      copyButton: visible,
+      swapLanguagesButton: true,
+      sourceSectionTextArea: true,
+      targetSectionTextArea: true,
+    });
+
+    if (enabled !== undefined) {
+      if (enabled) {
+        ok(!isDisabled, "Expected copy button to be enabled.");
+      } else {
+        ok(isDisabled, "Expected copy button to be disabled.");
+      }
+    }
+  }
+
+  /**
    * Asserts that the target textarea shows the translating placeholder.
    *
    * @returns {Promise<void>}
@@ -5091,6 +5141,7 @@ class AboutTranslationsTestUtils {
    * @param {boolean} [options.mainUserInterface=false]
    * @param {boolean} [options.sourceLanguageSelector=false]
    * @param {boolean} [options.targetLanguageSelector=false]
+   * @param {boolean} [options.copyButton=false]
    * @param {boolean} [options.swapLanguagesButton=false]
    * @param {boolean} [options.sourceSectionTextArea=false]
    * @param {boolean} [options.targetSectionTextArea=false]
@@ -5103,6 +5154,7 @@ class AboutTranslationsTestUtils {
     mainUserInterface = false,
     sourceLanguageSelector = false,
     targetLanguageSelector = false,
+    copyButton = false,
     swapLanguagesButton = false,
     sourceSectionTextArea = false,
     targetSectionTextArea = false,
@@ -5138,6 +5190,7 @@ class AboutTranslationsTestUtils {
           targetLanguageSelector: isElementVisible(
             selectors.targetLanguageSelector
           ),
+          copyButton: isElementVisible(selectors.copyButton),
           swapLanguagesButton: isElementVisible(selectors.swapLanguagesButton),
           sourceSectionTextArea: isElementVisible(
             selectors.sourceSectionTextArea
@@ -5154,10 +5207,15 @@ class AboutTranslationsTestUtils {
         };
       });
 
-      const assertVisibility = (expectedVisibility, actualVisibility, label) =>
+      const assertVisibility = (
+        expectedVisibility,
+        actualVisibility,
+        label
+      ) => {
         expectedVisibility
           ? ok(actualVisibility, `Expected ${label} to be visible.`)
           : ok(!actualVisibility, `Expected ${label} to be hidden.`);
+      };
 
       assertVisibility(pageHeader, visibilityMap.pageHeader, "page header");
       assertVisibility(
@@ -5175,6 +5233,7 @@ class AboutTranslationsTestUtils {
         visibilityMap.targetLanguageSelector,
         "target-language selector"
       );
+      assertVisibility(copyButton, visibilityMap.copyButton, "copy button");
       assertVisibility(
         swapLanguagesButton,
         visibilityMap.swapLanguagesButton,
