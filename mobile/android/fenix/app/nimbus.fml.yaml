@@ -402,13 +402,6 @@ features:
           Whether to show the smaller height bottom addressbar with just the URL when entering text in a website.
         type: Boolean
         default: false
-    defaults:
-      - channel: nightly
-        value:
-          at-bottom-while-entering-text: true
-      - channel: developer
-        value:
-          at-bottom-while-entering-text: true
 
   remote-tab-management:
     description: >
