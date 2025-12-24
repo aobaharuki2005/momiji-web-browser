@@ -22,6 +22,7 @@
 #ifndef mozilla_Span_h
 #define mozilla_Span_h
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
