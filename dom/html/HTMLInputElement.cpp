@@ -754,7 +754,7 @@ static void SerializeColorForHTMLCompatibility(const StyleAbsoluteColor& aColor,
 }
 
 nsTArray<nsString> HTMLInputElement::GetColorsFromList() {
-  RefPtr<HTMLDataListElement> dataList = GetList();
+  RefPtr<HTMLDataListElement> dataList = GetListInternal();
   if (!dataList) {
     return {};
   }
@@ -1796,7 +1796,11 @@ void HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
   }
 }
 
-HTMLDataListElement* HTMLInputElement::GetList() const {
+HTMLDataListElement* HTMLInputElement::GetListForBindings() const {
+  return GetListInternal();
+}
+
+HTMLDataListElement* HTMLInputElement::GetListInternal() const {
   nsAutoString dataListId;
   GetAttr(nsGkAtoms::list, dataListId);
   if (dataListId.IsEmpty()) {
@@ -6008,7 +6012,7 @@ void HTMLInputElement::ShowPicker(ErrorResult& aRv) {
   // I.e. show the autocomplete dropdown based on the list attribute.
   // XXX Form-fill support on android is bug 1535985.
   if (StaticPrefs::dom_input_showPicker_datalist_enabled() &&
-      IsSingleLineTextControl(true) && GetList()) {
+      IsSingleLineTextControl(true) && GetListInternal()) {
     if (nsCOMPtr<nsIFormFillController> controller =
             do_GetService("@mozilla.org/satchel/form-fill-controller;1")) {
       controller->SetControlledElement(this);

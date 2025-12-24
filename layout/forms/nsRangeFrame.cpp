@@ -409,7 +409,7 @@ void nsRangeFrame::UpdateForValueChange() {
 nsTArray<Decimal> nsRangeFrame::TickMarks() {
   nsTArray<Decimal> tickMarks;
   auto& input = InputElement();
-  auto* list = input.GetList();
+  auto* list = input.GetListInternal();
   if (!list) {
     return tickMarks;
   }
