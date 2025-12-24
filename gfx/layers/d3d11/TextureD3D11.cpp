@@ -1226,6 +1226,32 @@ bool DXGITextureHostD3D11::SupportsExternalCompositing(
   return false;
 }
 
+void DXGITextureHostD3D11::NotifyNotUsed() {
+  if (!mReadFence || mFencesHolderId.isNothing()) {
+    return;
+  }
+
+  auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
+  if (!fenceHolderMap) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    return;
+  }
+  fenceHolderMap->SetReadFence(mFencesHolderId.ref(), mReadFence);
+  mReadFence = nullptr;
+}
+
+void DXGITextureHostD3D11::SetReadFence(Fence* aReadFence) {
+  MOZ_ASSERT(aReadFence);
+  MOZ_ASSERT(aReadFence->AsFenceD3D11());
+
+  if (!aReadFence || !aReadFence->AsFenceD3D11() ||
+      mFencesHolderId.isNothing()) {
+    return;
+  }
+
+  mReadFence = aReadFence->AsFenceD3D11();
+}
+
 DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
     TextureFlags aFlags, const SurfaceDescriptorDXGIYCbCr& aDescriptor)
     : TextureHost(TextureHostType::DXGIYCbCr, aFlags),
@@ -1352,14 +1378,15 @@ void DXGIYCbCrTextureHostD3D11::NotifyNotUsed() {
   mReadFence = nullptr;
 }
 
-void DXGIYCbCrTextureHostD3D11::SetReadFence(RefPtr<FenceD3D11> aReadFence) {
+void DXGIYCbCrTextureHostD3D11::SetReadFence(Fence* aReadFence) {
   MOZ_ASSERT(aReadFence);
+  MOZ_ASSERT(aReadFence->AsFenceD3D11());
 
-  if (!aReadFence) {
+  if (!aReadFence || !aReadFence->AsFenceD3D11()) {
     return;
   }
 
-  mReadFence = aReadFence;
+  mReadFence = aReadFence->AsFenceD3D11();
 }
 
 bool DataTextureSourceD3D11::Update(DataSourceSurface* aSurface,

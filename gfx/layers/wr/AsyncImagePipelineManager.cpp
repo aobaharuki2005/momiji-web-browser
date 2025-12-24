@@ -711,7 +711,7 @@ void AsyncImagePipelineManager::ProcessPipelineUpdates() {
     auto& holder = update.second;
     const auto& info = holder.mInfo->Raw();
 
-    mReleaseFence = std::move(holder.mFence);
+    mReadFence = std::move(holder.mFence);
 
     for (auto& epoch : info.epochs) {
       ProcessPipelineRendered(epoch.pipeline_id, epoch.epoch, update.first);
@@ -742,10 +742,10 @@ void AsyncImagePipelineManager::ProcessPipelineRendered(
     for (auto it = holder->mTextureHostsUntilRenderSubmitted.begin();
          it != firstSubmittedHostToKeep; ++it) {
       const auto& entry = it;
-      if (entry->mTexture->GetAndroidHardwareBuffer() && mReleaseFence &&
-          mReleaseFence->AsFenceFileHandle()) {
+      if (entry->mTexture->GetAndroidHardwareBuffer() && mReadFence &&
+          mReadFence->AsFenceFileHandle()) {
         entry->mTexture->SetReleaseFence(
-            mReleaseFence->AsFenceFileHandle()->DuplicateFileHandle());
+            mReadFence->AsFenceFileHandle()->DuplicateFileHandle());
       }
     }
 #endif
@@ -762,16 +762,14 @@ void AsyncImagePipelineManager::ProcessPipelineRendered(
         holder->mTextureHostsUntilRenderCompleted.end(),
         [&aEpoch](const auto& entry) { return aEpoch <= entry->mEpoch; });
 
-#ifdef XP_WIN
     for (auto it = holder->mTextureHostsUntilRenderCompleted.begin();
          it != firstCompletedHostToKeep; ++it) {
       const auto& entry = *it;
-      auto* host = entry->mTexture->AsDXGIYCbCrTextureHostD3D11();
-      if (host && mReleaseFence && mReleaseFence->AsFenceD3D11()) {
-        host->SetReadFence(mReleaseFence->AsFenceD3D11());
+      auto* texture = entry->mTexture.get();
+      if (texture && mReadFence) {
+        texture->SetReadFence(mReadFence);
       }
     }
-#endif
 
     if (firstCompletedHostToKeep !=
         holder->mTextureHostsUntilRenderCompleted.begin()) {

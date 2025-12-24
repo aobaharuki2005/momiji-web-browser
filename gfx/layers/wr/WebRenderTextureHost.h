@@ -107,6 +107,8 @@ class WebRenderTextureHost final : public TextureHost {
 
   void SetReleaseFence(UniqueFileHandle&& aFenceFd) override;
 
+  void SetReadFence(Fence* aReadFence) override;
+
   UniqueFileHandle GetAndResetReleaseFence() override;
 
   AndroidHardwareBuffer* GetAndroidHardwareBuffer() const override;

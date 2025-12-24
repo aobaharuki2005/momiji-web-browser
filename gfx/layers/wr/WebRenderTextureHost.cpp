@@ -123,15 +123,7 @@ void WebRenderTextureHost::NotifyNotUsed() {
     wr::RenderThread::Get()->NotifyNotUsed(GetExternalImageKey());
   }
 #endif
-  if (mWrappedTextureHost->AsRemoteTextureHostWrapper() ||
-      mWrappedTextureHost->AsTextureHostWrapperD3D11()) {
-    mWrappedTextureHost->NotifyNotUsed();
-  }
-#ifdef XP_WIN
-  if (auto* host = AsDXGIYCbCrTextureHostD3D11()) {
-    host->NotifyNotUsed();
-  }
-#endif
+  mWrappedTextureHost->NotifyNotUsed();
   TextureHost::NotifyNotUsed();
 }
 
@@ -218,6 +210,10 @@ void WebRenderTextureHost::SetReleaseFence(UniqueFileHandle&& aFenceFd) {
 
 UniqueFileHandle WebRenderTextureHost::GetAndResetReleaseFence() {
   return mWrappedTextureHost->GetAndResetReleaseFence();
+}
+
+void WebRenderTextureHost::SetReadFence(Fence* aReadFence) {
+  return mWrappedTextureHost->SetReadFence(aReadFence);
 }
 
 AndroidHardwareBuffer* WebRenderTextureHost::GetAndroidHardwareBuffer() const {

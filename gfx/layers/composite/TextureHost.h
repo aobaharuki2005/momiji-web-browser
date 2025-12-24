@@ -64,6 +64,7 @@ class ReadLockDescriptor;
 class CompositorBridgeParent;
 class DXGITextureHostD3D11;
 class DXGIYCbCrTextureHostD3D11;
+class Fence;
 class SurfaceDescriptor;
 class HostIPCAllocator;
 class ISurfaceAllocator;
@@ -717,6 +718,8 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   }
 
   virtual TextureHostType GetTextureHostType() { return mTextureHostType; }
+
+  virtual void SetReadFence(Fence* aReadFence) {}
 
   // Our WebRender backend may impose restrictions on whether textures are
   // prepared as native textures or not, or it may have no restriction at
