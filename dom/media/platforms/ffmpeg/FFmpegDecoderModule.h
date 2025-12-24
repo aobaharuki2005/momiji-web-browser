@@ -89,16 +89,19 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
         {AV_CODEC_ID_VP8, gfx::gfxVars::UseVP8HwDecode()},
 #  endif
 
+#  if defined(MOZ_WIDGET_GTK) && !defined(FFVPX_VERSION)
     // These proprietary video codecs can only be decoded via hardware by using
     // the system ffmpeg, not supported by ffvpx.
-#  if (defined(MOZ_WIDGET_GTK) && !defined(FFVPX_VERSION)) || \
-      defined(MOZ_WIDGET_ANDROID)
 #    if LIBAVCODEC_VERSION_MAJOR >= 55
         {AV_CODEC_ID_HEVC, gfx::gfxVars::UseHEVCHwDecode()},
 #    endif
         {AV_CODEC_ID_H264, gfx::gfxVars::UseH264HwDecode()},
 #  endif
 #  ifdef MOZ_WIDGET_ANDROID
+        // These proprietary codecs can only be decoded via MediaCodec decoders,
+        // but the underlying implementation may be software or hardware.
+        {AV_CODEC_ID_HEVC, true},
+        {AV_CODEC_ID_H264, true},
         {AV_CODEC_ID_AAC, true},
 #  endif
     };
@@ -261,7 +264,28 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
       supports += media::DecodeSupport::SoftwareDecode;
     }
     if (IsHWDecodingSupported(codecId)) {
+#ifdef MOZ_WIDGET_ANDROID
+      // Because we don't provide software implementations of H264 or HEVC on
+      // Android, we must use the platform software decoders even if true
+      // hardware decoding support is missing.
+      switch (codecId) {
+        case AV_CODEC_ID_H264:
+          supports += gfx::gfxVars::UseH264HwDecode()
+                          ? media::DecodeSupport::HardwareDecode
+                          : media::DecodeSupport::SoftwareDecode;
+          break;
+        case AV_CODEC_ID_HEVC:
+          supports += gfx::gfxVars::UseHEVCHwDecode()
+                          ? media::DecodeSupport::HardwareDecode
+                          : media::DecodeSupport::SoftwareDecode;
+          break;
+        default:
+          supports += media::DecodeSupport::HardwareDecode;
+          break;
+      }
+#else
       supports += media::DecodeSupport::HardwareDecode;
+#endif
     }
 
 #ifdef XP_WIN

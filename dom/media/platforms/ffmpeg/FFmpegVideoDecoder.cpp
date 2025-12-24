@@ -23,6 +23,7 @@
 #  include "libavutil/pixfmt.h"
 #endif
 #include "mozilla/UniquePtr.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/KnowsCompositor.h"
 #include "nsPrintfCString.h"
 #if LIBAVCODEC_VERSION_MAJOR >= 57
@@ -37,7 +38,6 @@
 #endif
 #if defined(MOZ_USE_HWDECODE) && defined(MOZ_WIDGET_GTK)
 #  include "FFmpegVideoFramePool.h"
-#  include "mozilla/gfx/gfxVars.h"
 #  include "mozilla/layers/DMABUFSurfaceImage.h"
 #  include "va/va.h"
 #endif
@@ -73,7 +73,6 @@
 
 #ifdef XP_WIN
 #  include "mozilla/gfx/DeviceManagerDx.h"
-#  include "mozilla/gfx/gfxVars.h"
 #endif
 
 #ifdef MOZ_ENABLE_D3D11VA
@@ -519,7 +518,34 @@ void FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset() {
 #if defined(MOZ_USE_HWDECODE)
 bool FFmpegVideoDecoder<LIBAV_VER>::ShouldDisableHWDecoding(
     bool aDisableHardwareDecoding) const {
-#  ifdef MOZ_WIDGET_GTK
+#  ifdef MOZ_WIDGET_ANDROID
+#    ifdef FFVPX_VERSION
+  // We only support decrypt and decode with MediaCodec.
+  if (mCDM) {
+    FFMPEG_LOG("CDM requires platform decoder");
+    return false;
+  }
+#    endif
+  switch (mCodecID) {
+    case AV_CODEC_ID_H264:
+    case AV_CODEC_ID_HEVC:
+      // We only support decoding H264/HEVC with MediaCodec.
+      FFMPEG_LOG("Codec %s requires platform decoder",
+                 AVCodecToString(mCodecID));
+      return false;
+    case AV_CODEC_ID_AV1:
+      // We only support main profile AV1 with MediaCodec. See bug 1967752.
+      if (!AOMDecoder::IsMainProfile(mInfo.mExtraData)) {
+        FFMPEG_LOG("Cannot use platfrom decoder AV1 without main profile");
+        return true;
+      }
+      break;
+    default:
+      break;
+  }
+#  endif
+
+#  if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_ANDROID)
   bool supported = false;
   switch (mCodecID) {
     case AV_CODEC_ID_H264:
@@ -541,10 +567,16 @@ bool FFmpegVideoDecoder<LIBAV_VER>::ShouldDisableHWDecoding(
       break;
   }
   if (!supported) {
-    FFMPEG_LOG("Codec %s is not accelerated", mLib->avcodec_get_name(mCodecID));
+    FFMPEG_LOG("Codec %s is not accelerated", AVCodecToString(mCodecID));
     return true;
   }
+  if (!XRE_IsRDDProcess()) {
+    FFMPEG_LOG("Platform decoder works in RDD process only");
+    return true;
+  }
+#  endif
 
+#  ifdef MOZ_WIDGET_GTK
   bool isHardwareWebRenderUsed = mImageAllocator &&
                                  (mImageAllocator->GetCompositorBackendType() ==
                                   layers::LayersBackend::LAYERS_WR) &&
@@ -552,15 +584,6 @@ bool FFmpegVideoDecoder<LIBAV_VER>::ShouldDisableHWDecoding(
   if (!isHardwareWebRenderUsed) {
     FFMPEG_LOG("Hardware WebRender is off, VAAPI is disabled");
     return true;
-  }
-  if (!XRE_IsRDDProcess()) {
-    FFMPEG_LOG("VA-API works in RDD process only");
-    return true;
-  }
-#  elif defined(MOZ_WIDGET_ANDROID)
-  // We only support decoding these with hardware on Android.
-  if (mCodecID == AV_CODEC_ID_H264 || mCodecID == AV_CODEC_ID_HEVC) {
-    return false;
   }
 #  endif
   return aDisableHardwareDecoding;
