@@ -162,8 +162,6 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #endif
 
   RefPtr<KnowsCompositor> mImageAllocator;
-  RefPtr<ImageContainer> mImageContainer;
-  VideoInfo mInfo;
 
 #ifdef MOZ_USE_HWDECODE
  public:
@@ -241,6 +239,9 @@ class FFmpegVideoDecoder<LIBAV_VER>
   UniquePtr<VideoFramePool<LIBAV_VER>> mVideoFramePool;
   static nsTArray<AVCodecID> mAcceleratedFormats;
 #endif
+
+  RefPtr<ImageContainer> mImageContainer;
+  VideoInfo mInfo;
 
 #if LIBAVCODEC_VERSION_MAJOR >= 58
   class DecodeStats {

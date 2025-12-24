@@ -26,7 +26,6 @@ class FFmpegDecoderModule {
 template <int V>
 class FFmpegEncoderModule {
  public:
-  static void Init(FFmpegLibWrapper*);
   static already_AddRefed<PlatformEncoderModule> Create(FFmpegLibWrapper*);
 };
 
@@ -82,7 +81,6 @@ bool FFVPXRuntimeLinker::Init() {
   if (sLinkStatus) {
     if (sLinkStatus == LinkStatus_SUCCEEDED) {
       FFmpegDecoderModule<FFVPX_VERSION>::Init(&sFFVPXLib);
-      FFmpegEncoderModule<FFVPX_VERSION>::Init(&sFFVPXLib);
     }
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
@@ -137,7 +135,6 @@ bool FFVPXRuntimeLinker::Init() {
   if (res == FFmpegLibWrapper::LinkResult::Success) {
     sLinkStatus = LinkStatus_SUCCEEDED;
     FFmpegDecoderModule<FFVPX_VERSION>::Init(&sFFVPXLib);
-    FFmpegEncoderModule<FFVPX_VERSION>::Init(&sFFVPXLib);
     return true;
   }
   return false;
