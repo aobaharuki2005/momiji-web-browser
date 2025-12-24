@@ -167,6 +167,12 @@ def assert_all_task_statuses(objdir, acceptable_statuses, always_executed_tasks=
             # which get timestamps updated by the mach tasks above. Takes 0.000 seconds so not
             # a performance issue, but will be resolved when mach tasks get proper Gradle dependencies.
             ":geckoview:generateDebugAssets",
+            # Always executes because suppressUselessCastInSafeArgs sets `outputs.upToDateWhen { false }`.
+            # We could try using a marker file otherwise, but the task runtime is negligible and the added
+            # complexity doesn't seem worth it for what should only be a short-term workaround until Google
+            # fixes the upstream Navigation bug that led to it being added in the first place.
+            ":fenix:generateSafeArgsDebug",
+            ":fenix:suppressUselessCastInSafeArgs",
         ]
 
     build_metrics = get_test_run_build_metrics(objdir)
