@@ -18,5 +18,5 @@ interface HTMLLabelElement : HTMLElement {
   [BinaryName=formForBindings] readonly attribute Element? form;
   [CEReactions]
            attribute DOMString htmlFor;
-  readonly attribute HTMLElement? control;
+  [BinaryName="controlForBindings"] readonly attribute HTMLElement? control;
 };

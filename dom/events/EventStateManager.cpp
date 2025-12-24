@@ -6534,7 +6534,7 @@ static Element* GetLabelTarget(nsIContent* aPossibleLabel) {
       mozilla::dom::HTMLLabelElement::FromNode(aPossibleLabel);
   if (!label) return nullptr;
 
-  return label->GetLabeledElement();
+  return label->GetLabeledElementInternal();
 }
 
 /* static */

@@ -59,6 +59,7 @@ interface HTMLSelectElement : HTMLElement {
   [Throws, Pref="dom.select.showPicker.enabled"]
   undefined showPicker();
 
+  [BinaryName=labelsForBindings]
   readonly attribute NodeList labels;
 
   // https://www.w3.org/Bugs/Public/show_bug.cgi?id=20720

@@ -186,40 +186,6 @@ class DocumentOrShadowRoot {
                               void* aData, bool aForImage);
 
   /**
-   * Callback called when a shadow root's reference target changes.
-   * @return true to keep the callback in the callback set, false to remove it.
-   */
-  typedef bool (*ReferenceTargetChangeObserver)(void* aData);
-  /**
-   * Listen for changes to the given element's resolved reference target. This
-   * could happen in a number of ways:
-   * - The given element's shadow root's referenceTarget property changes, or is
-   *   added or removed;
-   * - The element referred to by the referenceTarget property changes (e.g.
-   *   because an element with that ID is added to the shadow root);
-   * - The resolved reference target of the element referred to by the
-   *   referenceTarget property changes for one of the above two reasons (i.e.
-   *   the referenceTarget property refers to an element foo, which also has a
-   *   shadow root, and foo's resolved reference target changes)
-   * @param aElement an element on which to listen for resolved
-   * reference target changes. The element must have this document or shadow
-   * root as its root (i.e. aElement.GetUncomposedDocOrConnectedShadowRoot() ==
-   * this).
-   * @param aObserver the callback to fire when the resolved reference target
-   * changes.
-   * @param aData data to pass to the callback.
-   */
-  void AddReferenceTargetChangeObserver(Element* aElement,
-                                        ReferenceTargetChangeObserver aObserver,
-                                        void* aData);
-  void RemoveReferenceTargetChangeObserver(
-      Element* aElement, ReferenceTargetChangeObserver aObserver, void* aData);
-  /**
-   * Called when aElement's resolved reference target changes.
-   */
-  void NotifyReferenceTargetChanged(Element* aElement);
-
-  /**
    * Lookup an image element using its associated ID, which is usually provided
    * by |-moz-element()|. Similar to GetElementById, with the difference that
    * elements set using mozSetImageElement have higher priority.
@@ -316,42 +282,6 @@ class DocumentOrShadowRoot {
    *    new ones for IDs.
    */
   nsTHashtable<IdentifierMapEntry> mIdentifierMap;
-
-  /**
-   * mReferenceTargetObserverMap keeps track of the callbacks which should be
-   * called when an element's resolved reference target changes.
-   * See AddReferenceTargetChangeObserver().
-   */
-  struct ReferenceTargetChangeCallback {
-    ReferenceTargetChangeObserver mObserver;
-    void* mData;
-  };
-  struct ReferenceTargetChangeCallbackEntry : public PLDHashEntryHdr {
-    typedef const ReferenceTargetChangeCallback KeyType;
-    typedef const ReferenceTargetChangeCallback* KeyTypePointer;
-
-    explicit ReferenceTargetChangeCallbackEntry(
-        const ReferenceTargetChangeCallback* aKey)
-        : mKey(*aKey) {}
-    ReferenceTargetChangeCallbackEntry(
-        ReferenceTargetChangeCallbackEntry&& aOther)
-        : PLDHashEntryHdr(std::move(aOther)), mKey(std::move(aOther.mKey)) {}
-
-    KeyType GetKey() const { return mKey; }
-    bool KeyEquals(KeyTypePointer aKey) const {
-      return aKey->mObserver == mKey.mObserver && aKey->mData == mKey.mData;
-    }
-
-    static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
-    static PLDHashNumber HashKey(KeyTypePointer aKey) {
-      return HashGeneric(aKey->mObserver, aKey->mData);
-    }
-    enum { ALLOW_MEMMOVE = true };
-
-    ReferenceTargetChangeCallback mKey;
-  };
-  nsTHashMap<Element*, nsTHashSet<ReferenceTargetChangeCallbackEntry>>
-      mReferenceTargetObserverMap;
 
   // Always non-null, see comment in the constructor as to why a pointer instead
   // of a reference.

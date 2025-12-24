@@ -142,6 +142,7 @@ inline DocAccessible::AttrRelProviders* DocAccessible::GetRelProviders(
 
 inline DocAccessible::AttrRelProviders* DocAccessible::GetOrCreateRelProviders(
     dom::Element* aElement, nsAtom* aID) {
+  // TODO (bug 1983819): need to update when reference targets change
   dom::DocumentOrShadowRoot* docOrShadowRoot =
       aElement->GetUncomposedDocOrConnectedShadowRoot();
   DependentIDsHashtable* hash =

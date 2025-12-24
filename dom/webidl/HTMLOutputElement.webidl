@@ -38,5 +38,6 @@ interface HTMLOutputElement : HTMLElement {
   boolean reportValidity();
   undefined setCustomValidity(DOMString error);
 
+  [BinaryName=labelsForBindings]
   readonly attribute NodeList labels;
 };

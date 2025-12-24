@@ -39,7 +39,7 @@ class HTMLLabelElement final : public nsGenericHTMLElement {
   void SetHtmlFor(const nsAString& aHtmlFor) {
     SetHTMLAttr(nsGkAtoms::_for, aHtmlFor);
   }
-  nsGenericHTMLElement* GetControl() const { return GetLabeledElement(); }
+  nsGenericHTMLElement* GetControlForBindings() const;
 
   using nsGenericHTMLElement::Focus;
   virtual void Focus(const FocusOptions& aOptions,
@@ -54,7 +54,7 @@ class HTMLLabelElement final : public nsGenericHTMLElement {
       bool aKeyCausesActivation, bool aIsTrustedEvent) override;
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  nsGenericHTMLElement* GetLabeledElement() const;
+  nsGenericHTMLElement* GetLabeledElementInternal() const;
 
  protected:
   virtual ~HTMLLabelElement();

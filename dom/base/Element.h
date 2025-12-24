@@ -1460,6 +1460,45 @@ class Element : public FragmentOrElement {
   Maybe<nsTArray<RefPtr<dom::Element>>> GetExplicitlySetAttrElements(
       nsAtom* aAttr) const;
 
+  /**
+   * Callback called when an element's resolved reference target changes.
+   * @param aData The callback data which was stored using
+   * AddReferenceTargetChangeObserver.
+   * @return true to keep the callback in the callback set, false to remove
+   * it.
+   */
+  typedef bool (*ReferenceTargetChangeObserver)(void* aData);
+
+  /**
+   * Listen for changes to the given element's resolved reference target. This
+   * could happen in a number of ways:
+   * - The given element's shadow root's referenceTarget property changes, or is
+   *   added or removed;
+   * - The element referred to by the referenceTarget property changes (e.g.
+   *   because an element with that ID is added to the shadow root);
+   * - Recursively: that is, when the resolved reference target of the element
+   *   referred to by the referenceTarget property changes for one of the above
+   *   two reasons (i.e. the referenceTarget property refers to an element foo,
+   *   which also has a shadow root, and foo's resolved reference target
+   *   changes).
+   * @param aElement an element on which to listen for resolved
+   * reference target changes. The element must have this document or shadow
+   * root as its root (i.e. aElement.GetUncomposedDocOrConnectedShadowRoot() ==
+   * this).
+   * @param aObserver The callback to fire when the resolved reference target
+   * changes.
+   * @param aData Data to pass to the callback.
+   */
+  void AddReferenceTargetChangeObserver(ReferenceTargetChangeObserver aObserver,
+                                        void* aData);
+  void RemoveReferenceTargetChangeObserver(
+      ReferenceTargetChangeObserver aObserver, void* aData);
+  /**
+   * Called when aElement's resolved reference target changes.
+   * @param aElement the element whose reference target has changed
+   */
+  void NotifyReferenceTargetChanged();
+
   PseudoStyleType GetPseudoElementType() const {
     nsresult rv = NS_OK;
     auto raw = GetProperty(nsGkAtoms::pseudoProperty, &rv);

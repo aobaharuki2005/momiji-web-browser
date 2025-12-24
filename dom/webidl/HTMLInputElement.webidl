@@ -116,6 +116,7 @@ interface HTMLInputElement : HTMLElement {
   boolean reportValidity();
   undefined setCustomValidity(DOMString error);
 
+  [BinaryName=labelsForBindings]
   readonly attribute NodeList? labels;
 
   undefined select();

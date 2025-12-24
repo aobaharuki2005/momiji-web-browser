@@ -2262,16 +2262,13 @@ bool IDTargetChangedAttrAssociatedElementCallback(Element* aOldElement,
 
   nsWeakPtr weakElement = data->mElement;
   if (nsCOMPtr<Element> element = do_QueryReferent(weakElement)) {
-    DocumentOrShadowRoot* root = element->GetContainingDocumentOrShadowRoot();
     if (aOldElement) {
-      root->RemoveReferenceTargetChangeObserver(
-          aOldElement, ReferenceTargetChangedAttrAssociatedElementCallback,
-          aData);
+      aOldElement->RemoveReferenceTargetChangeObserver(
+          ReferenceTargetChangedAttrAssociatedElementCallback, aData);
     }
     if (aNewElement) {
-      root->AddReferenceTargetChangeObserver(
-          aNewElement, ReferenceTargetChangedAttrAssociatedElementCallback,
-          aData);
+      aNewElement->AddReferenceTargetChangeObserver(
+          ReferenceTargetChangedAttrAssociatedElementCallback, aData);
     }
 
     return element->AttrAssociatedElementUpdated(data->mAttr);
@@ -2406,9 +2403,8 @@ void Element::IDREFAttributeValueChanged(nsAtom* aAttr,
     Element* oldIdTarget =
         docOrShadow->GetElementById(observerData->mLastKnownAttrValue);
     if (oldIdTarget) {
-      docOrShadow->RemoveReferenceTargetChangeObserver(
-          oldIdTarget, ReferenceTargetChangedAttrAssociatedElementCallback,
-          callbackData);
+      oldIdTarget->RemoveReferenceTargetChangeObserver(
+          ReferenceTargetChangedAttrAssociatedElementCallback, callbackData);
     }
   }
 
@@ -2425,9 +2421,8 @@ void Element::IDREFAttributeValueChanged(nsAtom* aAttr,
 
   Element* newIdTarget = docOrShadow->GetElementById(idValue);
   if (newIdTarget) {
-    docOrShadow->AddReferenceTargetChangeObserver(
-        newIdTarget, ReferenceTargetChangedAttrAssociatedElementCallback,
-        callbackData);
+    newIdTarget->AddReferenceTargetChangeObserver(
+        ReferenceTargetChangedAttrAssociatedElementCallback, callbackData);
   }
 }
 
@@ -2467,8 +2462,7 @@ void Element::AddDocOrShadowObserversForAttrAssociatedElement(
       observerData->mCallbackData.get();
 
   if (explicitlySetAttrElement) {
-    aContainingDocOrShadow.AddReferenceTargetChangeObserver(
-        explicitlySetAttrElement,
+    explicitlySetAttrElement->AddReferenceTargetChangeObserver(
         ReferenceTargetChangedAttrAssociatedElementCallback, callbackData);
   } else {
     MOZ_ASSERT(observerData->mLastKnownAttrValue);
@@ -2479,9 +2473,8 @@ void Element::AddDocOrShadowObserversForAttrAssociatedElement(
     Element* idTarget = aContainingDocOrShadow.GetElementById(
         observerData->mLastKnownAttrValue);
     if (idTarget) {
-      aContainingDocOrShadow.AddReferenceTargetChangeObserver(
-          idTarget, ReferenceTargetChangedAttrAssociatedElementCallback,
-          callbackData);
+      idTarget->AddReferenceTargetChangeObserver(
+          ReferenceTargetChangedAttrAssociatedElementCallback, callbackData);
     }
   }
 }
@@ -2503,8 +2496,7 @@ void Element::RemoveDocOrShadowObserversForAttrAssociatedElement(
       observerData->mCallbackData.get();
 
   if (explicitlySetAttrElement) {
-    aContainingDocOrShadow.RemoveReferenceTargetChangeObserver(
-        explicitlySetAttrElement,
+    explicitlySetAttrElement->RemoveReferenceTargetChangeObserver(
         ReferenceTargetChangedAttrAssociatedElementCallback, callbackData);
   } else if (observerData->mLastKnownAttrValue) {
     aContainingDocOrShadow.RemoveIDTargetObserver(
@@ -2515,9 +2507,8 @@ void Element::RemoveDocOrShadowObserversForAttrAssociatedElement(
     Element* idTarget = aContainingDocOrShadow.GetElementById(
         observerData->mLastKnownAttrValue);
     if (idTarget) {
-      aContainingDocOrShadow.RemoveReferenceTargetChangeObserver(
-          idTarget, ReferenceTargetChangedAttrAssociatedElementCallback,
-          callbackData);
+      idTarget->RemoveReferenceTargetChangeObserver(
+          ReferenceTargetChangedAttrAssociatedElementCallback, callbackData);
     }
   }
 }
@@ -2538,6 +2529,63 @@ void Element::UnbindAttrAssociatedElementObservers(
     for (const RefPtr<nsAtom>& attr : slots->mAttrElementObserverMap.Keys()) {
       RemoveDocOrShadowObserversForAttrAssociatedElement(aContainingDocOrShadow,
                                                          attr);
+    }
+  }
+}
+
+void Element::AddReferenceTargetChangeObserver(
+    ReferenceTargetChangeObserver aObserver, void* aData) {
+  if (!StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
+    return;
+  }
+  ExtendedDOMSlots()->mReferenceTargetObservers.Insert({aObserver, aData});
+}
+
+void Element::RemoveReferenceTargetChangeObserver(
+    ReferenceTargetChangeObserver aObserver, void* aData) {
+  if (!StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
+    return;
+  }
+  nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+  if (!slots) {
+    return;
+  }
+  slots->mReferenceTargetObservers.Remove({aObserver, aData});
+}
+
+void Element::NotifyReferenceTargetChanged() {
+  using ReferenceTargetChangeCallback =
+      FragmentOrElement::nsExtendedDOMSlots::ReferenceTargetChangeCallback;
+
+  nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
+  if (!slots) {
+    return;
+  }
+
+  // TODO (bug 1983819): Adjust initial N for the increased number of callbacks
+  // once accessibility code is listening for reference target changes.
+  // At time of writing, 2 accounts for:
+  // - (Rarely) observer in ShadowRoot for nested shadow roots, and EITHER
+  //   - Observer in nsLabelsNodeList to update the .labels property, OR
+  //   - Observer added via AddAttrAssociatedElementObserver() call in
+  //     nsGenericHTMLFormElement for form-associated elements using the form
+  //     content attribute, to ensure the form's .elements list is updated.
+  AutoTArray<ReferenceTargetChangeCallback, 2> callbacks;
+  callbacks.SetCapacity(slots->mReferenceTargetObservers.Count());
+  for (auto iter = slots->mReferenceTargetObservers.begin();
+       iter != slots->mReferenceTargetObservers.end(); ++iter) {
+    const ReferenceTargetChangeCallback& from = *iter;
+    ReferenceTargetChangeCallback callback({from.mObserver, from.mData});
+    callbacks.AppendElement(callback);
+  }
+
+  for (const ReferenceTargetChangeCallback& callback : callbacks) {
+    if (!slots->mReferenceTargetObservers.Contains(callback)) {
+      continue;
+    }
+    bool keep = callback.mObserver(callback.mData);
+    if (!keep) {
+      slots->mReferenceTargetObservers.Remove(callback);
     }
   }
 }
@@ -3687,7 +3735,7 @@ bool Element::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     return true;
   }
 
-  if (aAttribute == nsGkAtoms::form) {
+  if (aAttribute == nsGkAtoms::form || aAttribute == nsGkAtoms::_for) {
     aResult.ParseAtom(aValue);
     return true;
   }

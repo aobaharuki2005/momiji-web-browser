@@ -44,6 +44,7 @@ interface HTMLButtonElement : HTMLElement {
   boolean reportValidity();
   undefined setCustomValidity(DOMString error);
 
+  [BinaryName=labelsForBindings]
   readonly attribute NodeList labels;
 
   [Pref="dom.element.commandfor.enabled", BinaryName="commandForElementForBindings", CEReactions] attribute Element? commandForElement;

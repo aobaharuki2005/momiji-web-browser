@@ -341,7 +341,7 @@ already_AddRefed<nsINodeList> ElementInternals::GetLabels(
         "Target element is not a form-associated custom element");
     return nullptr;
   }
-  return mTarget->Labels();
+  return mTarget->LabelsInternal();
 }
 
 nsGenericHTMLElement* ElementInternals::GetValidationAnchor(
