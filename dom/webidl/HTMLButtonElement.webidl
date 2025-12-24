@@ -17,8 +17,8 @@ interface HTMLButtonElement : HTMLElement {
 
   [CEReactions, SetterThrows, Pure]
            attribute boolean disabled;
-  [Pure]
-  readonly attribute HTMLFormElement? form;
+  [Pure, BinaryName=formForBindings]
+  readonly attribute Element? form;
   [CEReactions, SetterThrows, Pure]
            attribute DOMString formAction;
   [CEReactions, SetterThrows, Pure]

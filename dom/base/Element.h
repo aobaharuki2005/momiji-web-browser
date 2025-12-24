@@ -1388,6 +1388,46 @@ class Element : public FragmentOrElement {
       nsAtom* aAttr, bool* aUseCachedValue,
       Nullable<nsTArray<RefPtr<Element>>>& aElements);
 
+  typedef bool (*AttrTargetObserver)(Element* aOldElement, Element* aNewElement,
+                                     Element* thisElement);
+  /**
+   * Add an attr-associated element observer for a given attribute. The observer
+   * will fire whenever the element associated with |aAttr| for this element
+   * changes. This can occur in multiple scenarios:
+   * - The attribute value or explicitly set attr-element changes;
+   * - An element with an ID matching the attribute value is added or removed
+   *   from the document or shadow root containing the element with the
+   *   attribute;
+   * - The explicitly set attr-element is added or removed from the document or
+   *   shadow root containing the element with the attribute;
+   * - The reference target of the element directly referred to by the attribute
+   *   changes.
+   * @return the current attr-associated element for |aAttr| for this element,
+   * if any.
+   */
+  Element* AddAttrAssociatedElementObserver(nsAtom* aAttr,
+                                            AttrTargetObserver aObserver);
+  void RemoveAttrAssociatedElementObserver(nsAtom* aAttr,
+                                           AttrTargetObserver aObserver);
+  bool AttrAssociatedElementUpdated(nsAtom* aAttr);
+
+ protected:
+  void IDREFAttributeValueChanged(nsAtom* aAttr, const nsAttrValue* aValue);
+
+ private:
+  FragmentOrElement::nsExtendedDOMSlots::AttrElementObserverData*
+  GetAttrElementObserverData(nsAtom* aAttr);
+  void DeleteAttrAssociatedElementObserverData(nsAtom* aAttr);
+  void AddDocOrShadowObserversForAttrAssociatedElement(
+      DocumentOrShadowRoot& aContainingDocOrShadow, nsAtom* aAttr);
+  void RemoveDocOrShadowObserversForAttrAssociatedElement(
+      DocumentOrShadowRoot& aContainingDocOrShadow, nsAtom* aAttr);
+  void BindAttrAssociatedElementObservers(
+      DocumentOrShadowRoot& aContainingDocOrShadow);
+  void UnbindAttrAssociatedElementObservers(
+      DocumentOrShadowRoot& aContainingDocOrShadow);
+
+ public:
   /**
    * Sets an attribute element for the given attribute.
    * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
@@ -1561,6 +1601,7 @@ class Element : public FragmentOrElement {
   }
 
   Element* ResolveReferenceTarget() const;
+  Element* RetargetReferenceTargetForBindings(Element* aElement) const;
 
   const Maybe<float> GetLastRememberedBSize() const {
     const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();

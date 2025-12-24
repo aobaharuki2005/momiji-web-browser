@@ -343,6 +343,12 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
 
   RefPtr<nsAtom> mReferenceTarget;
 
+  static bool ReferenceTargetIDTargetChanged(Element* aOldElement,
+                                             Element* aNewElement, void* aData);
+  static bool RecursiveReferenceTargetChanged(void* aData);
+
+  void NotifyReferenceTargetChangedObservers();
+
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };
 

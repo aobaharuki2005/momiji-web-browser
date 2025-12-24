@@ -15,7 +15,7 @@
 interface HTMLLabelElement : HTMLElement {
   [HTMLConstructor] constructor();
 
-  readonly attribute HTMLFormElement? form;
+  [BinaryName=formForBindings] readonly attribute Element? form;
   [CEReactions]
            attribute DOMString htmlFor;
   readonly attribute HTMLElement? control;

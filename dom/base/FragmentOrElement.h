@@ -23,6 +23,7 @@
 #include "nsIContent.h"                    // base class
 #include "nsIHTMLCollection.h"
 #include "nsIWeakReferenceUtils.h"
+#include "nsTHashSet.h"
 
 class ContentUnbinder;
 class nsContentList;
@@ -285,6 +286,29 @@ class FragmentOrElement : public nsIContent {
     nsTHashMap<RefPtr<nsAtom>, std::pair<Maybe<nsTArray<nsWeakPtr>>,
                                          Maybe<nsTArray<RefPtr<Element>>>>>
         mAttrElementsMap;
+
+    typedef bool (*AttrTargetObserver)(Element* aOldElement,
+                                       Element* aNewelement,
+                                       Element* aThisElement);
+    struct AttrElementObserverCallbackData {
+      nsWeakPtr mElement;
+      RefPtr<nsAtom> mAttr;
+    };
+    struct AttrElementObserverData {
+      // Used as the value for |aOldElement| when calling an AttrTargetObserver
+      // callback.
+      nsWeakPtr mLastKnownAttrElement;  // TODO: should be an array
+
+      // Used to add/remove ID target observers when the attribute value changes
+      // or the attribute host is added to or removed from a document or shadow
+      // root.
+      RefPtr<nsAtom> mLastKnownAttrValue;  // TODO: should be a ParsedAttr
+      nsTHashSet<AttrTargetObserver> mObservers;
+
+      // Used for removing the IDTargetObserver(s)
+      UniquePtr<AttrElementObserverCallbackData> mCallbackData;
+    };
+    nsTHashMap<RefPtr<nsAtom>, AttrElementObserverData> mAttrElementObserverMap;
   };
 
   class nsDOMSlots : public nsIContent::nsContentSlots {

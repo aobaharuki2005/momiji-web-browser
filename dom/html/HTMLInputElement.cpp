@@ -1797,11 +1797,7 @@ void HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
 }
 
 Element* HTMLInputElement::GetListForBindings() const {
-  HTMLDataListElement* list = GetListInternal();
-  if (!StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
-    return list;
-  }
-  return Element::FromNodeOrNull(nsContentUtils::Retarget(list, this));
+  return RetargetReferenceTargetForBindings(GetListInternal());
 }
 
 HTMLDataListElement* HTMLInputElement::GetListInternal() const {
