@@ -585,12 +585,12 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
     Maybe<TrackingId> aTrackingId, PRemoteCDMActor* aCDM)
     : FFmpegDataDecoder(aLib, GetCodecId(aConfig.mMimeType), aCDM),
       mImageAllocator(aAllocator),
+      mImageContainer(aImageContainer),
+      mInfo(aConfig),
 #ifdef MOZ_USE_HWDECODE
       mHardwareDecodingDisabled(
           ShouldDisableHWDecoding(aDisableHardwareDecoding)),
 #endif  // MOZ_USE_HWDECODE
-      mImageContainer(aImageContainer),
-      mInfo(aConfig),
       mLowLatency(aLowLatency),
       mTrackingId(std::move(aTrackingId)),
       // Value may be changed later when codec is known after initialization.
