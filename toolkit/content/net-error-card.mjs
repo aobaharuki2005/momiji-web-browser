@@ -44,7 +44,6 @@ export class NetErrorCard extends MozLitElement {
 
   static queries = {
     copyButtonTop: "#copyToClipboardTop",
-    copyButtonBot: "#copyToClipboardBot",
     exceptionButton: "#exception-button",
     errorCode: "#errorCode",
     advancedContainer: ".advanced-container",
@@ -61,7 +60,6 @@ export class NetErrorCard extends MozLitElement {
     netErrorTitleText: "#neterror-title-text",
     netErrorLearnMoreLink: "#neterror-learn-more-link",
     httpAuthIntroText: "#fp-http-auth-disabled-intro-text",
-    tryAgainButton: "#tryAgainButton",
   };
 
   static ERROR_CODES = new Set([
@@ -72,7 +70,7 @@ export class NetErrorCard extends MozLitElement {
     "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT",
     "SEC_ERROR_EXPIRED_CERTIFICATE",
     "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE",
-    // Bug #2006790 - Temporarily disabling SSL_ERROR_NO_CYPHER_OVERLAP until we create a pref reset button.
+    "SSL_ERROR_NO_CYPHER_OVERLAP",
     "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY",
     "NS_ERROR_OFFLINE",
     "NS_ERROR_DOM_COOP_FAILED",
@@ -98,16 +96,10 @@ export class NetErrorCard extends MozLitElement {
       return false;
     }
 
-    let errorInfo;
-    try {
-      errorInfo = gIsCertError
-        ? document.getFailedCertSecurityInfo()
-        : document.getNetErrorInfo();
-    } catch {
-      return false;
-    }
-
-    let defaultErrorCode = errorInfo.errorCodeString
+    const errorInfo = gIsCertError
+      ? document.getFailedCertSecurityInfo()
+      : document.getNetErrorInfo();
+    const defaultErrorCode = errorInfo.errorCodeString
       ? errorInfo.errorCodeString
       : gErrorCode;
     const errorCode = NetErrorCard.getCustomErrorCode(defaultErrorCode);
@@ -154,6 +146,17 @@ export class NetErrorCard extends MozLitElement {
     document.dispatchEvent(
       new CustomEvent("AboutNetErrorLoad", { bubbles: true })
     );
+
+    // Record telemetry when the error page loads
+    if (gIsCertError && !isCaptive()) {
+      if (this.failedCertInfo) {
+        recordSecurityUITelemetry(
+          "securityUiCerterror",
+          "loadAboutcerterror",
+          this.failedCertInfo
+        );
+      }
+    }
   }
 
   shouldHideExceptionButton() {
@@ -177,31 +180,6 @@ export class NetErrorCard extends MozLitElement {
 
     this.errorInfo = this.getErrorInfo();
     this.hideExceptionButton = this.shouldHideExceptionButton();
-
-    // Record telemetry when the error page loads
-    if (gIsCertError && !isCaptive()) {
-      recordSecurityUITelemetry(
-        "securityUiCerterror",
-        "loadAboutcerterror",
-        this.errorInfo
-      );
-    }
-
-    // Check if the connection is being man-in-the-middled. When the parent
-    // detects an intercepted connection, the page may be reloaded with a new
-    // error code (MOZILLA_PKIX_ERROR_MITM_DETECTED).
-    const mitmPrimingEnabled = RPMGetBoolPref(
-      "security.certerrors.mitm.priming.enabled"
-    );
-    if (
-      mitmPrimingEnabled &&
-      this.errorInfo.errorCodeString == "SEC_ERROR_UNKNOWN_ISSUER" &&
-      // Only do this check for top-level failures.
-      window.parent == window
-    ) {
-      RPMSendAsyncMessage("Browser:PrimeMitm");
-    }
-
     this.hostname = HOST_NAME;
     const { port } = document.location;
     if (port && port != 443) {
@@ -795,7 +773,6 @@ export class NetErrorCard extends MozLitElement {
       ></moz-button>
       <div id="certificateErrorText">${this.certificateErrorText}</div>
       <moz-button
-        id="copyToClipboardBot"
         data-telemetry-id="clipboard_button_bot"
         data-l10n-id="neterror-copy-to-clipboard-button"
         @click=${this.copyCertErrorTextToClipboard}

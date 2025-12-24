@@ -3,17 +3,14 @@
 
 "use strict";
 
-requestLongerTimeout(4);
+requestLongerTimeout(2);
 
 const BAD_CERT = "https://expired.example.com/";
 const BAD_STS_CERT =
   "https://badchain.include-subdomains.pinning.example.com:443";
 
-async function checkTelemetryClickEvents(useFelt) {
+add_task(async function checkTelemetryClickEvents() {
   info("Loading a bad cert page and verifying telemetry click events arrive.");
-  await SpecialPowers.pushPrefEnv({
-    set: [["security.certerrors.felt-privacy-v1", useFelt]],
-  });
 
   let oldCanRecord = Services.telemetry.canRecordExtended;
   Services.telemetry.canRecordExtended = true;
@@ -50,24 +47,12 @@ async function checkTelemetryClickEvents(useFelt) {
       "error_code_link",
       "clipboard_button_top",
       "clipboard_button_bot",
+      "return_button_top",
     ];
-
-    const mapRecordObjectsFelt = {
-      advanced_button: "advancedButton",
-      learn_more_link: "learnMoreLink",
-      error_code_link: "errorCode",
-      clipboard_button_top: "copyButtonTop",
-      clipboard_button_bot: "copyButtonBot",
-      return_button_adv: "returnButton",
-      exception_button: "exceptionButton",
-    };
 
     recordedObjects.push("return_button_adv");
     if (!useFrame) {
       recordedObjects.push("exception_button");
-    }
-    if (!useFelt) {
-      recordedObjects.push("return_button_top");
     }
 
     for (let object of recordedObjects) {
@@ -104,62 +89,17 @@ async function checkTelemetryClickEvents(useFelt) {
         bc = bc.children[0];
       }
 
-      await SpecialPowers.spawn(
-        bc,
-        [object, useFelt, mapRecordObjectsFelt],
-        async function (objectId, use_felt, mapFelt) {
-          let doc = content.document;
+      await SpecialPowers.spawn(bc, [object], async function (objectId) {
+        let doc = content.document;
 
-          if (use_felt) {
-            const netErrorCard =
-              doc.querySelector("net-error-card").wrappedJSObject;
-            const advancedButton = netErrorCard.advancedButton;
-            if (
-              !netErrorCard.advancedContainer &&
-              objectId !== "advanced_button"
-            ) {
-              advancedButton.scrollIntoView(true);
-              EventUtils.synthesizeMouseAtCenter(advancedButton, {}, content);
+        await ContentTaskUtils.waitForCondition(
+          () => doc.body.classList.contains("certerror"),
+          "Wait for certerror to be loaded"
+        );
 
-              await ContentTaskUtils.waitForCondition(
-                () => netErrorCard.advancedContainer,
-                "Advanced section should be rendered for revoked certificate"
-              );
-            }
-            if (
-              ["clipboard_button_top", "clipboard_button_bot"].includes(
-                objectId
-              )
-            ) {
-              netErrorCard.errorCode.click();
-              await ContentTaskUtils.waitForCondition(
-                () => netErrorCard[mapFelt[objectId]],
-                "Wait for component to render."
-              );
-            }
-            if (objectId === "exception_button") {
-              await ContentTaskUtils.waitForCondition(
-                () =>
-                  netErrorCard.exceptionButton &&
-                  !netErrorCard.exceptionButton.disabled,
-                "Wait for the exception button to be created."
-              );
-            }
-            const el = netErrorCard[mapFelt[objectId]];
-            el.scrollIntoView(true);
-            EventUtils.synthesizeMouseAtCenter(el, {}, content);
-          } else {
-            await ContentTaskUtils.waitForCondition(
-              () => doc.body.classList.contains("certerror"),
-              "Wait for certerror to be loaded"
-            );
-            let domElement = doc.querySelector(
-              `[data-telemetry-id='${objectId}']`
-            );
-            domElement.click();
-          }
-        }
-      );
+        let domElement = doc.querySelector(`[data-telemetry-id='${objectId}']`);
+        domElement.click();
+      });
 
       let clickEvents = await TestUtils.waitForCondition(() => {
         let events = Services.telemetry.snapshotEvents(
@@ -207,11 +147,5 @@ async function checkTelemetryClickEvents(useFelt) {
 
       BrowserTestUtils.removeTab(gBrowser.selectedTab);
     }
-  }
-}
-
-add_task(async function runCheckTelemetryClickEvents() {
-  for (const useFelt of [true, false]) {
-    await checkTelemetryClickEvents(useFelt);
   }
 });
