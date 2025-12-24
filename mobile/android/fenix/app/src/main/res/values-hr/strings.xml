@@ -630,6 +630,8 @@
   <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">Nastavi</string>
   <!-- "Not now" onboarding button. -->
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Ne sada</string>
+  <!-- Terms of use (ToU) onboarding body line one link text for nova_onboarding_tou_body_line_1. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_tou_body_line_1_link_text" tools:ignore="BrandUsage,UnusedResources">Firefox uvjete korištenja</string>
   <!-- Terms of use (ToU) onboarding body line three link text for nova_onboarding_tou_body_line_3. -->
   <string name="nova_onboarding_tou_body_line_3_link_text" tools:ignore="UnusedResources">Upravljaj postavkama</string>
   <!-- Toolbar selection onboarding title. -->
@@ -3771,11 +3773,11 @@
   <!-- Homepage card title about old Firefox version -->
   <string name="certificate_warning_homepage_card_hcw2_title" tools:ignore="UnusedResources">Za aktualiziranje je preostalo manje od 7 dana</string>
   <!-- Homepage card message about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
-  <string name="certificate_warning_homepage_card_hcw2_message" tools:ignore="BrandUsage,UnusedResources">14. ožujka će dodaci i druge Firefox funkcije prestati raditi jer ističe korijenski certifikat.</string>
+  <string name="certificate_warning_homepage_card_hcw2_message" tools:ignore="BrandUsage,UnusedResources">14. ožujka će dodaci i druge Firefox funkcije prestati raditi jer jedan korijenski certifikat isteče.</string>
   <!-- Homepage card title about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
   <string name="certificate_warning_homepage_card_hcw3_title" tools:ignore="BrandUsage,UnusedResources">Zadnja prilika da zadržiš svoj Firefox</string>
   <!-- Homepage card message about old Firefox version. Note: The word "Firefox" should NOT be translated. -->
-  <string name="certificate_warning_homepage_card_hcw3_message" tools:ignore="BrandUsage,UnusedResources">Tvoja će Firefox verzija prestati ispravno raditi 14. ožujka jer jedan korijenski certifikat ističe.</string>
+  <string name="certificate_warning_homepage_card_hcw3_message" tools:ignore="BrandUsage,UnusedResources">Tvoja će Firefox verzija prestati ispravno raditi 14. ožujka jer jedan korijenski certifikat isteče.</string>
   <!-- Push notification title about old Firefox version. "Update" is a noun. -->
   <string name="certificate_warning_push_notification_update_recommended_title" tools:ignore="UnusedResources">Preporučuje se aktualiziranje</string>
   <!-- Push notification message about old Firefox version -->
@@ -3974,6 +3976,8 @@
   <string name="terms_of_use_prompt_postpone">Podsjeti me kasnije</string>
   <!-- ==== Experiment strings. ==== -->
 
+  <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
+  <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">ovdje</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
   <!--
