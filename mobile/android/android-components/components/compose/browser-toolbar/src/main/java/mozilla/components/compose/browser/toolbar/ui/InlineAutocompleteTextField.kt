@@ -4,7 +4,6 @@
 
 package mozilla.components.compose.browser.toolbar.ui
 
-import android.content.ClipData
 import android.content.Context
 import android.text.Spanned
 import android.view.inputmethod.EditorInfo
@@ -61,7 +60,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.PlatformTextInputMethodRequest
 import androidx.compose.ui.platform.TextToolbar
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
@@ -82,6 +80,7 @@ import mozilla.components.support.utils.SafeUrl
 
 private const val TEXT_SIZE = 15f
 private const val TEXT_HIGHLIGHT_COLOR = "#5C592ACB"
+private const val MAX_TEXT_LENGTH_TO_PASTE = 2_000
 
 /**
  * A text field composable that displays a suggestion inline with the user's input,
@@ -138,7 +137,18 @@ internal fun InlineAutocompleteTextField(
     val clipboard = LocalClipboard.current
     val coroutineScope = rememberCoroutineScope()
     val pasteInterceptorToolbar = remember(defaultTextToolbar, clipboard) {
-        PasteSanitizerTextToolbar(context, defaultTextToolbar, clipboard, coroutineScope)
+        PasteSanitizerTextToolbar(context, defaultTextToolbar, clipboard, coroutineScope) {
+            val originalText = textFieldState
+            textFieldState.edit {
+                replace(originalText.selection.start, originalText.selection.end, it)
+            }
+            onUrlEdit(
+                BrowserToolbarQuery(
+                    previous = originalText.text.toString(),
+                    current = textFieldState.text.toString(),
+                ),
+            )
+        }
     }
     DisposableEffect(Unit) {
         onDispose { pasteInterceptorToolbar.hide() }
@@ -446,6 +456,7 @@ private class PasteSanitizerTextToolbar(
     private val delegate: TextToolbar,
     private val clipboard: Clipboard,
     private val scope: CoroutineScope,
+    private val handlePaste: (String) -> Unit,
 ) : TextToolbar {
     init {
         // Temporary workaround for https://issuetracker.google.com/issues/447192728
@@ -468,7 +479,9 @@ private class PasteSanitizerTextToolbar(
             rect = rect,
             onCopyRequested = onCopyRequested,
             onPasteRequested = {
-                sanitizeAvailableTextClip { onPasteRequested?.invoke() }
+                scope.launch {
+                    handlePaste(sanitizeAvailableTextClip())
+                }
             },
             onCutRequested = onCutRequested,
             onSelectAllRequested = onSelectAllRequested,
@@ -487,17 +500,17 @@ private class PasteSanitizerTextToolbar(
             rect = rect,
             onCopyRequested = onCopyRequested,
             onPasteRequested = {
-                sanitizeAvailableTextClip { onPasteRequested?.invoke() }
+                scope.launch {
+                    handlePaste(sanitizeAvailableTextClip())
+                }
             },
             onCutRequested = onCutRequested,
             onSelectAllRequested = onSelectAllRequested,
         )
     }
 
-    private fun sanitizeAvailableTextClip(
-        pasteDelegate: () -> Unit,
-    ) = scope.launch {
-        val originalClip = clipboard.getClipEntry() ?: return@launch
+    private suspend fun sanitizeAvailableTextClip(): String {
+        val originalClip = clipboard.getClipEntry() ?: return ""
 
         val sb = StringBuilder()
         for (i in 0 until originalClip.clipData.itemCount) {
@@ -510,13 +523,7 @@ private class PasteSanitizerTextToolbar(
             sb.append(safeTextToBePasted)
         }
 
-        // Setup a temporary clip with the sanitized text to allow the framework pasting it
-        // then restore the original clip.
-        SafeUrl.stripUnsafeUrlSchemes(context, sb.toString())?.let { safeText ->
-            clipboard.setClipEntry(ClipData.newPlainText("", safeText).toClipEntry())
-            pasteDelegate.invoke()
-            clipboard.setClipEntry(originalClip)
-        }
+        return sb.toString().take(MAX_TEXT_LENGTH_TO_PASTE)
     }
 }
 
