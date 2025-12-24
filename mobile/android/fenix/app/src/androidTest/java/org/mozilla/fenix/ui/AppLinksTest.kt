@@ -26,6 +26,7 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.appLinksRedirectAsset
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.mDevice
+import org.mozilla.fenix.helpers.TestHelper.waitForAppWindowToBeUpdated
 import org.mozilla.fenix.helpers.TestSetup
 import org.mozilla.fenix.helpers.perf.DetectMemoryLeaksRule
 import org.mozilla.fenix.ui.robots.clickPageObject
@@ -411,8 +412,9 @@ class AppLinksTest : TestSetup() {
 
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(externalLinksPage.url) {
+            verifyUrl(externalLinksPage.url.toString())
             clickPageObject(composeTestRule, linkWithAndroidFallbackLink)
-            mDevice.waitForIdle()
+            waitForPageToLoad()
             verifyUrl("mozilla.org")
         }
     }
