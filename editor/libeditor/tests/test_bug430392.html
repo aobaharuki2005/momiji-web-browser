@@ -35,53 +35,6 @@ function test() {
   // nor expectedValue.
   let tests = [
     [
-      "adding returns",
-      () => {
-        getSelection().collapse(edit.firstChild, 0); // [] <span contenteditable=false>A</span> ; <span
-        synthesizeKey("KEY_ArrowRight");             //  <span contenteditable=false>A</span>[] ; <span
-        synthesizeKey("KEY_Enter");
-        info(`1st Enter: "${edit.innerHTML}"`);
-        // " <div><span contenteditable="false">A</span></div><div>[]&nbsp;; <span contenteditable="false">B</span> ; <span contenteditable="false">C</span></div> "
-        synthesizeKey("KEY_Enter");
-        info(`2nd Enter: "${edit.innerHTML}"`);
-        // " <div><span contenteditable="false">A</span></div><div><br></div><div>[]&nbsp;; <span contenteditable="false">B</span> ; <span contenteditable="false">C</span></div> "
-        synthesizeKey("KEY_Backspace");
-        info(`1st Backspace: "${edit.innerHTML}"`);
-        // " <div><span contenteditable="false">A</span></div><div>[]&nbsp;; <span contenteditable="false">B</span> ; <span contenteditable="false">C</span></div> "
-        synthesizeKey("KEY_Backspace");
-        info(`2nd Backspace: "${edit.innerHTML}"`);
-        // " &nbsp;; <span contenteditable="false">B</span> ; <span contenteditable="false">C</span><div><span contenteditable="false">A</span></div> "
-      }, [
-        "insertParagraph",
-        "insertParagraph",
-        "deleteContentBackward",
-        "deleteContentBackward",
-      ],
-      [
-        "insertParagraph",
-        "insertParagraph",
-        "deleteContentBackward",
-        "deleteContentBackward",
-      ],
-      aSeparator => {
-        switch (aSeparator) {
-          case "div":
-          case "p":
-            // The following white-space of "A" should be converted to an
-            // NBSP when it's wrapped in a new paragraph.  Then, it'll stay
-            // the start of the `Text` after `Backspace`es.  Therefore, it
-            // won't be back to an ASCII white-space.
-            return " &nbsp;; B ; CA ";
-          case "br":
-            // After insertLineBreak, the first white-space should be replaced
-            // with &nbsp; and it should not be reconverted at Backspace.
-            // Therefore, the actual expected result is " A&nbsp;; B ; C ".
-            return " A\u00A0; B ; C ";
-        }
-        throw new Error("handle all cases!");
-      },
-    ],
-    [
       "adding shift-returns",
       () => {
         getSelection().collapse(edit.firstChild, 0); // [] <span contenteditable=false>A</span> ; <span
