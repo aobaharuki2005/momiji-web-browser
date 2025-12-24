@@ -276,16 +276,22 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
   void GetHTML(const GetHTMLOptions& aOptions, nsAString& aResult);
 
   void GetReferenceTarget(nsAString& aResult) const {
+    if (!mReferenceTarget) {
+      aResult.SetIsVoid(true);
+      return;
+    }
     mReferenceTarget->ToString(aResult);
   }
   nsAtom* ReferenceTarget() const { return mReferenceTarget; }
   void SetReferenceTarget(const nsAString& aValue) {
+    if (aValue.IsVoid()) {
+      return SetReferenceTarget(nullptr);
+    }
     SetReferenceTarget(NS_Atomize(aValue));
   }
   void SetReferenceTarget(RefPtr<nsAtom> aTarget);
   Element* GetReferenceTargetElement() const {
-    return mReferenceTarget->IsEmpty() ? nullptr
-                                       : GetElementById(mReferenceTarget);
+    return mReferenceTarget ? GetElementById(mReferenceTarget) : nullptr;
   }
 
  protected:
