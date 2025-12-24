@@ -711,12 +711,12 @@ private suspend fun BookmarksStorage.hasDesktopBookmarks(): Boolean {
     ) > 0u
 }
 
-private fun BookmarksState.createMovePairs() = bookmarksMultiselectMoveState?.let { moveState ->
-    moveState.guidsToMove.map { guid ->
-        val bookmarkItem = bookmarkItems.firstOrNull { it.guid == guid }
-        if (bookmarkItem == null) {
-            return null
-        }
+private fun BookmarksState.createMovePairs(): List<Pair<String, BookmarkInfo>>? {
+    val moveState = bookmarksMultiselectMoveState ?: return null
+
+    return moveState.guidsToMove.mapNotNull { guid ->
+        val bookmarkItem = bookmarkItems.firstOrNull { it.guid == guid } ?: return@mapNotNull null
+
         guid to BookmarkInfo(
             moveState.destination,
             // Setting position to 'null' is treated as a 'move to the end' by the storage API.
