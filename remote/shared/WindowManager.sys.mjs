@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -339,12 +337,8 @@ class WindowManager {
    * @param {string=} options.userContextId
    *     The id of the user context which should own the initial tab of the new
    *     window.
-   *
-   * @returns {Promise<ChromeWindow>}
+   * @returns {Promise}
    *     A promise resolving to the newly created chrome window.
-   *
-   * @throws {UnsupportedOperationError}
-   *     When opening a new browser window is not supported.
    */
   async openBrowserWindow(options = {}) {
     let {
@@ -397,10 +391,7 @@ class WindowManager {
           await this.focusWindow(openerWindow);
         }
 
-        const chromeWindow = browser.ownerGlobal;
-        await this.waitForChromeWindowLoaded(chromeWindow);
-
-        return chromeWindow;
+        return browser.ownerGlobal;
       }
 
       default:
@@ -479,32 +470,38 @@ class WindowManager {
   }
 
   /**
-   * Wait until the browser window is initialized and loaded.
+   * Wait until the initial application window has been opened and loaded.
    *
-   * @param {ChromeWindow} window
-   *     The chrome window to check for completed loading.
-   *
-   * @returns {Promise}
-   *     A promise that resolves when the chrome window finished loading.
+   * @returns {Promise<WindowProxy>}
+   *     A promise that resolved to the application window.
    */
-  async waitForChromeWindowLoaded(window) {
-    const loaded =
-      window.document.readyState === "complete" &&
-      !window.document.isUncommittedInitialDocument;
+  waitForInitialApplicationWindowLoaded() {
+    return new lazy.TimedPromise(
+      async resolve => {
+        // This call includes a fallback to "mail:3pane" as well.
+        const win = Services.wm.getMostRecentBrowserWindow();
 
-    if (!loaded) {
-      await new lazy.EventPromise(window, "load");
-    }
+        const windowLoaded = lazy.waitForObserverTopic(
+          "browser-delayed-startup-finished",
+          {
+            checkFn: subject => (win !== null ? subject == win : true),
+          }
+        );
 
-    if (
-      window.document.documentURI === AppConstants.BROWSER_CHROME_URL &&
-      !(window.gBrowserInit && window.gBrowserInit.delayedStartupFinished)
-    ) {
-      // If it's a browser window wait for it to be fully initialized.
-      await lazy.waitForObserverTopic("browser-delayed-startup-finished", {
-        checkFn: subject => subject === window,
-      });
-    }
+        // The current window has already been finished loading.
+        if (win && win.document.readyState == "complete") {
+          resolve(win);
+          return;
+        }
+
+        // Wait for the next browser/mail window to open and finished loading.
+        const { subject } = await windowLoaded;
+        resolve(subject);
+      },
+      {
+        errorMessage: "No applicable application window found",
+      }
+    );
   }
 
   #setChromeWindowForBrowsingContext(context) {

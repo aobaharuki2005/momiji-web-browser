@@ -96,22 +96,27 @@ class WindowManagerMixin(object):
                   const { NavigableManager } = ChromeUtils.importESModule(
                     "chrome://remote/content/shared/NavigableManager.sys.mjs"
                   );
-                  const { windowManager } = ChromeUtils.importESModule(
-                    "chrome://remote/content/shared/WindowManager.sys.mjs"
-                  );
 
-                  const browsingContext =
-                    NavigableManager.getBrowsingContextById(handle);
-                  const window =
-                    windowManager.getChromeWindowForBrowsingContext(browsingContext);
+                  const isLoaded = window =>
+                    window?.document.readyState === "complete" &&
+                    !window?.document.isUncommittedInitialDocument;
 
-                  (async function() {
-                    if (window) {
-                      await windowManager.waitForChromeWindowLoaded(window);
-                    }
+                  const browsingContext = NavigableManager.getBrowsingContextById(handle);
+                  const targetWindow = browsingContext?.window;
 
+                  if (isLoaded(targetWindow)) {
                     resolve();
-                  })();
+                  } else {
+                    const onLoad = () => {
+                      if (isLoaded(targetWindow)) {
+                        targetWindow.removeEventListener("load", onLoad);
+                        resolve();
+                      } else {
+                        dump(`** Target window not loaded yet.  Waiting for the next "load" event\n`);
+                      }
+                    };
+                    targetWindow.addEventListener("load", onLoad);
+                  }
                 """,
                     script_args=[handle],
                 )
