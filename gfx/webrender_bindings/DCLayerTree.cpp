@@ -1321,33 +1321,10 @@ bool DCLayerTree::SupportsSwapChainTearing() {
 }
 
 bool DCLayerTree::SupportsDCompositionTexture() {
-  RefPtr<ID3D11Device> device = mDevice;
-  RefPtr<IDCompositionDevice2> compositionDevice = mCompositionDevice;
-  static const bool supported = [device, compositionDevice] {
-    const auto dcomp4 = QI<IDCompositionDevice4>::From(compositionDevice.get());
-    if (!dcomp4) {
-      return false;
-    }
-
-    BOOL supportCompositionTexture = FALSE;
-    HRESULT hr = dcomp4->CheckCompositionTextureSupport(
-        device, &supportCompositionTexture);
-    if (FAILED(hr)) {
-      return false;
-    }
-
-    if (supportCompositionTexture == FALSE) {
-      return false;
-    }
-
-    return true;
-  }();
-
   if (!gfx::gfxVars::WebRenderLayerCompositorDCompTexture()) {
     return false;
   }
-
-  return supported;
+  return gfx::DeviceManagerDx::Get()->CanUseDCompositionTexture();
 }
 
 DXGI_FORMAT DCLayerTree::GetOverlayFormatForSDR() {
