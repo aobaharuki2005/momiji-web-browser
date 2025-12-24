@@ -16,13 +16,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.ComposeView
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.compose.ui.unit.dp
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -121,20 +117,6 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                     )
                 }
 
-                var translationsHeightDp by remember {
-                    mutableStateOf(0.dp)
-                }
-
-                var translationsOptionsHeightDp by remember {
-                    mutableStateOf(0.dp)
-                }
-
-                var translationsWidthDp by remember {
-                    mutableStateOf(0.dp)
-                }
-
-                val density = LocalDensity.current
-
                 val translationsDialogState =
                     translationsDialogStore.observeAsComposableState { it }.value
 
@@ -163,43 +145,26 @@ class TranslationsDialogFragment : BottomSheetDialogFragment() {
                         showMainSheet = translationsVisibility,
                     ) { showMainPage ->
                         if (showMainPage) {
-                            Column(
-                                modifier = Modifier.onGloballyPositioned { coordinates ->
-                                    translationsHeightDp = with(density) {
-                                        coordinates.size.height.toDp()
-                                    }
-                                    translationsWidthDp = with(density) {
-                                        coordinates.size.width.toDp()
-                                    }
-                                },
-                            ) {
-                                translationsDialogState.let {
-                                    TranslationsDialogContent(
-                                        learnMoreUrl = learnMoreUrl,
-                                        showPageSettings = FxNimbus.features.translations.value().pageSettingsEnabled,
-                                        translationsDialogState = it,
-                                        onSettingClicked = {
-                                            Translations.action.record(
-                                                Translations.ActionExtra(
-                                                    "page_settings",
-                                                ),
-                                            )
-                                            translationsVisibility = false
-                                        },
-                                        onShowDownloadLanguageFileDialog = {
-                                            showDownloadLanguageFileDialog = true
-                                        },
-                                    )
-                                }
+                            Column {
+                                TranslationsDialogContent(
+                                    learnMoreUrl = learnMoreUrl,
+                                    showPageSettings = FxNimbus.features.translations.value().pageSettingsEnabled,
+                                    translationsDialogState = translationsDialogState,
+                                    onSettingClicked = {
+                                        Translations.action.record(
+                                            Translations.ActionExtra(
+                                                "page_settings",
+                                            ),
+                                        )
+                                        translationsVisibility = false
+                                    },
+                                    onShowDownloadLanguageFileDialog = {
+                                        showDownloadLanguageFileDialog = true
+                                    },
+                                )
                             }
                         } else {
-                            Column(
-                                modifier = Modifier.onGloballyPositioned { coordinates ->
-                                    translationsOptionsHeightDp = with(density) {
-                                        coordinates.size.height.toDp()
-                                    }
-                                },
-                            ) {
+                            Column {
                                 TranslationsOptionsDialogContent(
                                     learnMoreUrl = learnMoreUrl,
                                     showGlobalSettings = FxNimbus.features.translations.value().globalSettingsEnabled,
