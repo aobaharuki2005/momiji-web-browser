@@ -181,8 +181,6 @@ document.addEventListener(
           if (!event.target.parentNode._placesView) {
             new HistoryMenu(event);
           }
-
-          AIWindow.appMenu(event, window);
           break;
         case "historyUndoPopup":
           document

@@ -223,13 +223,6 @@ menu-history-undo-window-menu =
 menu-history-search =
     .label = Search History
 
-# Chat History
-
-menu-history-chats =
-    .label = Chats
-menu-history-chats-recent =
-    .label = Recent Chats
-
 ## Bookmarks Menu
 
 menu-bookmarks-menu =
