@@ -329,7 +329,7 @@ class DocAccessible : public HyperTextAccessible,
   /**
    * Return true if the given ID is referred by relation attribute.
    */
-  bool IsDependentID(dom::Element* aElement, const nsAString& aID) const {
+  bool IsDependentID(dom::Element* aElement, nsAtom* aID) const {
     return GetRelProviders(aElement, aID);
   }
 
@@ -756,7 +756,7 @@ class DocAccessible : public HyperTextAccessible,
   };
 
   typedef nsTArray<mozilla::UniquePtr<AttrRelProvider>> AttrRelProviders;
-  typedef nsClassHashtable<nsStringHashKey, AttrRelProviders>
+  typedef nsClassHashtable<nsAtomHashKey, AttrRelProviders>
       DependentIDsHashtable;
 
   /**
@@ -764,11 +764,10 @@ class DocAccessible : public HyperTextAccessible,
    * a DOM document if the element is in uncomposed document or associated
    * with shadow DOM the element is in.
    */
-  AttrRelProviders* GetRelProviders(dom::Element* aElement,
-                                    const nsAString& aID) const;
+  AttrRelProviders* GetRelProviders(dom::Element* aElement, nsAtom* aID) const;
   AttrRelProviders* GetOrCreateRelProviders(dom::Element* aElement,
-                                            const nsAString& aID);
-  void RemoveRelProvidersIfEmpty(dom::Element* aElement, const nsAString& aID);
+                                            nsAtom* aID);
+  void RemoveRelProvidersIfEmpty(dom::Element* aElement, nsAtom* aID);
 
   /**
    * A map used to look up the target node for an implicit reverse relation

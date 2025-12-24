@@ -1406,8 +1406,8 @@ class Element : public FragmentOrElement {
    * shadow-including ancestors. It also does not attempt to retrieve elements
    * using the ids set in the content attribute.
    */
-  void GetExplicitlySetAttrElements(nsAtom* aAttr,
-                                    nsTArray<Element*>& aElements) const;
+  Maybe<nsTArray<RefPtr<dom::Element>>> GetExplicitlySetAttrElements(
+      nsAtom* aAttr) const;
 
   PseudoStyleType GetPseudoElementType() const {
     nsresult rv = NS_OK;

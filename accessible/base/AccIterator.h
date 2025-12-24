@@ -245,7 +245,7 @@ class AssociatedElementsIterator : public AccIterable {
   nsIContent* mContent;
   DocAccessible* mDoc;
   nsAString::index_type mCurrIdx;
-  nsTArray<dom::Element*> mElements;
+  nsTArray<RefPtr<dom::Element>> mElements;
   uint32_t mElemIdx;
 };
 
