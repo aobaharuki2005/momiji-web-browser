@@ -875,7 +875,7 @@
   <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the second. -->
   <string name="errorpage_httpsonly_message_summary">Dut câs al è ancje pussibil che al sedi un tentatîf di atac. Se tu continuis su chest sît web, no tu varessis di inserî nissune informazion sensibile. Se tu continuis, la modalitât dome-HTTPS e vignarà disativade in mût temporani par chest sît.</string>
   <!-- Preference for accessibility -->
-  <string name="preferences_accessibility">Acessibilitât</string>
+  <string name="preferences_accessibility">Acès facilitât</string>
   <!-- Preference to override the Mozilla account server -->
   <string name="preferences_override_account_server">Servidôr di account Mozilla personalizât</string>
   <!-- Preference to override the Sync token server -->

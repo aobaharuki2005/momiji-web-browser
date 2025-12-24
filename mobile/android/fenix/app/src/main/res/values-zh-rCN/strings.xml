@@ -671,13 +671,13 @@
   <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">允许通知可让 Firefox 更好地为您保驾护航</string>
   <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
-  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">探索 Firefox 最新的隐私功能，了解保护隐私的新鲜方式。</string>
+  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">探索 Firefox 最新隐私功能，紧跟隐私保护新潮流。</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">开启通知</string>
   <!-- "Add search widget" onboarding title. -->
   <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">让每次搜索都更有隐私</string>
   <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
-  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">直接从手机主屏幕开始搜索，让 Firefox 的自动保护功能为您护航。</string>
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">直接从手机主屏幕开始搜索，Firefox 的自动保护功能时刻为您护航。</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">添加 Firefox 小组件</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
@@ -2708,7 +2708,7 @@
   <!-- Preference to access list of saved passwords -->
   <string name="preferences_passwords_saved_logins_2">保存的密码</string>
   <!-- Description of empty list of saved passwords. %s is the name of the app (for example "Firefox"). -->
-  <string name="preferences_passwords_saved_logins_description_empty_text_2">保存和同步到 %s 的密码会显示在这里，所有密码均已加密保存。</string>
+  <string name="preferences_passwords_saved_logins_description_empty_text_2">保存和同步到 %s 的密码会显示在这里，所有保存的密码均受加密保护。</string>
   <!-- Clickable text for opening an external link for more information about Sync. -->
   <string name="preferences_passwords_saved_logins_description_empty_learn_more_link_2">详细了解同步功能</string>
   <!-- Preference to access list of login exceptions that we never save logins for -->
