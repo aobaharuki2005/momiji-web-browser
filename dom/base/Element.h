@@ -269,15 +269,16 @@ class TrustedHTMLOrTrustedScriptOrTrustedScriptURLOrString;
     ExplicitlySetAttrElement(nsGkAtoms::attr, aElement);         \
   }
 
-#define REFLECT_NULLABLE_ELEMENTS_ATTR(method, attr)                        \
-  void Get##method(bool* aUseCachedValue,                                   \
-                   Nullable<nsTArray<RefPtr<Element>>>& aElements) {        \
-    GetAttrAssociatedElements(nsGkAtoms::attr, aUseCachedValue, aElements); \
-  }                                                                         \
-                                                                            \
-  void Set##method(                                                         \
-      const Nullable<Sequence<OwningNonNull<Element>>>& aElements) {        \
-    ExplicitlySetAttrElements(nsGkAtoms::attr, aElements);                  \
+#define REFLECT_NULLABLE_ELEMENTS_ATTR(method, attr)                       \
+  void Get##method(bool* aUseCachedValue,                                  \
+                   Nullable<nsTArray<RefPtr<Element>>>& aElements) {       \
+    GetAttrAssociatedElementsForBindings(nsGkAtoms::attr, aUseCachedValue, \
+                                         aElements);                       \
+  }                                                                        \
+                                                                           \
+  void Set##method(                                                        \
+      const Nullable<Sequence<OwningNonNull<Element>>>& aElements) {       \
+    ExplicitlySetAttrElements(nsGkAtoms::attr, aElements);                 \
   }
 
 class Element : public FragmentOrElement {
@@ -1362,18 +1363,28 @@ class Element : public FragmentOrElement {
       const nsAString& aClassNames);
 
   /**
-   * Returns attribute associated element for the given attribute name. See
+   * Returns attribute-associated element for the given attribute name. See
    * https://whatpr.org/html/10995/common-microsyntaxes.html#get-the-attr-associated-element
    */
   Element* GetAttrAssociatedElementInternal(nsAtom* aAttr,
                                             bool aForBindings = false) const;
   /**
    * The getter for the IDL attribute which reflects the given attribute. See
-   * https://whatpr.org/html/10995/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:reflected-idl-attribute-33
+   * https://whatpr.org/html/10995/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:reflected-idl-attribute-31
    */
   Element* GetAttrAssociatedElementForBindings(nsAtom* aAttr) const;
 
-  void GetAttrAssociatedElements(
+  /**
+   * Returns attribute associated elements for the given attribute name. See
+   * https://whatpr.org/html/10995/common-microsyntaxes.html#attr-associated-elements
+   */
+  Maybe<nsTArray<RefPtr<Element>>> GetAttrAssociatedElementsInternal(
+      nsAtom* aAttr, bool aForBindings = false);
+  /**
+   * The getter for the IDL attribute which reflects the given attribute. See
+   * https://whatpr.org/html/10995/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:reflected-idl-attribute-33
+   */
+  void GetAttrAssociatedElementsForBindings(
       nsAtom* aAttr, bool* aUseCachedValue,
       Nullable<nsTArray<RefPtr<Element>>>& aElements);
 
