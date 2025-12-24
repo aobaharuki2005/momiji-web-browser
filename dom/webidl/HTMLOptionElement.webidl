@@ -18,8 +18,7 @@ interface HTMLOptionElement : HTMLElement {
 
   [CEReactions, SetterThrows]
   attribute boolean disabled;
-  [BinaryName=formForBindings]
-  readonly attribute Element? form;
+  readonly attribute HTMLFormElement? form;
   [CEReactions, SetterThrows]
   attribute DOMString label;
   [CEReactions, SetterThrows]

@@ -116,8 +116,8 @@ class HTMLInputElement final : public TextControlElement,
 
  public:
   using ConstraintValidation::GetValidationMessage;
+  using nsGenericHTMLFormControlElementWithState::GetForm;
   using nsGenericHTMLFormControlElementWithState::GetFormAction;
-  using nsGenericHTMLFormControlElementWithState::GetFormForBindings;
   using ValueSetterOption = TextControlState::ValueSetterOption;
   using ValueSetterOptions = TextControlState::ValueSetterOptions;
 
@@ -531,8 +531,7 @@ class HTMLInputElement final : public TextControlElement,
   bool IsDraggingRange() const { return mIsDraggingRange; }
   void SetIndeterminate(bool aValue);
 
-  Element* GetListForBindings() const;
-  HTMLDataListElement* GetListInternal() const;
+  HTMLDataListElement* GetList() const;
 
   void GetMax(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::max, aValue); }
   void SetMax(const nsAString& aValue, ErrorResult& aRv) {
@@ -693,8 +692,7 @@ class HTMLInputElement final : public TextControlElement,
   // <input> element.
   bool StepsInputValue(const WidgetKeyboardEvent&) const;
 
-  already_AddRefed<nsINodeList> GetLabelsForBindings();
-  already_AddRefed<nsINodeList> GetLabelsInternal();
+  already_AddRefed<nsINodeList> GetLabels();
 
   MOZ_CAN_RUN_SCRIPT void Select();
 

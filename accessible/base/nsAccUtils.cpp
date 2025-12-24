@@ -579,19 +579,20 @@ const nsAttrValue* nsAccUtils::GetARIAAttr(dom::Element* aElement,
   return defaults->GetAttr(aName, kNameSpaceID_None);
 }
 
-Maybe<nsTArray<RefPtr<dom::Element>>> nsAccUtils::GetARIAElementsAttr(
-    dom::Element* aElement, nsAtom* aName) {
+bool nsAccUtils::GetARIAElementsAttr(dom::Element* aElement, nsAtom* aName,
+                                     nsTArray<dom::Element*>& aElements) {
   if (aElement->HasAttr(aName)) {
-    return aElement->GetExplicitlySetAttrElements(aName);
+    aElement->GetExplicitlySetAttrElements(aName, aElements);
+    return true;
   }
 
   if (auto* element = nsGenericHTMLElement::FromNode(aElement)) {
     if (auto* internals = element->GetInternals()) {
-      return internals->GetAttrElements(aName);
+      return internals->GetAttrElements(aName, aElements);
     }
   }
 
-  return Nothing();
+  return false;
 }
 
 bool nsAccUtils::ARIAAttrValueIs(dom::Element* aElement, const nsAtom* aName,

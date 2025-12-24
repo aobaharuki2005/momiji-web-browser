@@ -31,15 +31,14 @@ class HTMLLabelElement final : public nsGenericHTMLElement {
   // Element
   virtual bool IsInteractiveHTMLContent() const override { return true; }
 
-  Element* GetFormForBindings() const;
-  HTMLFormElement* GetFormInternal() const;
+  HTMLFormElement* GetForm() const;
   void GetHtmlFor(nsString& aHtmlFor) {
     GetHTMLAttr(nsGkAtoms::_for, aHtmlFor);
   }
   void SetHtmlFor(const nsAString& aHtmlFor) {
     SetHTMLAttr(nsGkAtoms::_for, aHtmlFor);
   }
-  nsGenericHTMLElement* GetControlForBindings() const;
+  nsGenericHTMLElement* GetControl() const { return GetLabeledElement(); }
 
   using nsGenericHTMLElement::Focus;
   virtual void Focus(const FocusOptions& aOptions,
@@ -54,7 +53,7 @@ class HTMLLabelElement final : public nsGenericHTMLElement {
       bool aKeyCausesActivation, bool aIsTrustedEvent) override;
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 
-  nsGenericHTMLElement* GetLabeledElementInternal() const;
+  nsGenericHTMLElement* GetLabeledElement() const;
 
  protected:
   virtual ~HTMLLabelElement();

@@ -149,7 +149,7 @@ void ElementInternals::SetFormValue(
 }
 
 // https://html.spec.whatwg.org/#dom-elementinternals-form
-Element* ElementInternals::GetFormForBindings(ErrorResult& aRv) const {
+HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
   MOZ_ASSERT(mTarget);
 
   if (!mTarget->IsFormAssociatedElement()) {
@@ -157,8 +157,7 @@ Element* ElementInternals::GetFormForBindings(ErrorResult& aRv) const {
         "Target element is not a form-associated custom element");
     return nullptr;
   }
-
-  return GetFormForBindings();
+  return GetForm();
 }
 
 // https://html.spec.whatwg.org/commit-snapshots/3ad5159be8f27e110a70cefadcb50fc45ec21b05/#dom-elementinternals-setvalidity
@@ -341,7 +340,7 @@ already_AddRefed<nsINodeList> ElementInternals::GetLabels(
         "Target element is not a form-associated custom element");
     return nullptr;
   }
-  return mTarget->LabelsInternal();
+  return mTarget->Labels();
 }
 
 nsGenericHTMLElement* ElementInternals::GetValidationAnchor(
@@ -362,10 +361,6 @@ CustomStateSet* ElementInternals::States() {
   }
   return mCustomStateSet;
 }
-
-Element* ElementInternals::GetFormForBindings() const {
-  return GetFormInternal();
-};
 
 void ElementInternals::SetForm(HTMLFormElement* aForm) { mForm = aForm; }
 
@@ -623,9 +618,9 @@ void ElementInternals::GetAttrElements(
 
     for (const nsWeakPtr& weakEl : attrElements) {
       // For each attrElement in reflectedTarget's explicitly set attr-elements:
-      if (RefPtr<Element> attrEl = do_QueryReferent(weakEl)) {
+      if (nsCOMPtr<Element> attrEl = do_QueryReferent(weakEl)) {
         // Append attrElement to elements.
-        elements.AppendElement(std::move(attrEl));
+        elements.AppendElement(attrEl);
       }
     }
 
@@ -659,22 +654,22 @@ void ElementInternals::GetAttrElements(
   cachedAttrElements = std::move(elements);
 }
 
-Maybe<nsTArray<RefPtr<Element>>> ElementInternals::GetAttrElements(
-    nsAtom* aAttr) {
+bool ElementInternals::GetAttrElements(nsAtom* aAttr,
+                                       nsTArray<Element*>& aElements) {
+  aElements.Clear();
   auto attrElementsMaybeEntry = mAttrElementsMap.Lookup(aAttr);
   if (!attrElementsMaybeEntry) {
-    return Nothing();
+    return false;
   }
 
-  nsTArray<RefPtr<Element>> elements;
   auto& [attrElements, cachedAttrElements] = attrElementsMaybeEntry.Data();
   for (const nsWeakPtr& weakEl : attrElements) {
-    if (RefPtr<Element> attrEl = do_QueryReferent(weakEl)) {
-      elements.AppendElement(std::move(attrEl));
+    if (nsCOMPtr<Element> attrEl = do_QueryReferent(weakEl)) {
+      aElements.AppendElement(attrEl);
     }
   }
 
-  return Some(std::move(elements));
+  return true;
 }
 
 }  // namespace mozilla::dom

@@ -1389,18 +1389,6 @@ nsresult nsXULPrototypeElement::SetAttrAt(uint32_t aPos,
     mAttributes[aPos].mValue.ParseAtom(aValue);
 
     return NS_OK;
-  } else if (mAttributes[aPos].mName.Equals(nsGkAtoms::aria_controls) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_describedby) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_details) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_errormessage) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_flowto) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_labelledby) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::aria_owns) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::_for) ||
-             mAttributes[aPos].mName.Equals(nsGkAtoms::headers)) {
-    mAttributes[aPos].mValue.ParseAtomArray(aValue);
-
-    return NS_OK;
   } else if (mAttributes[aPos].mName.Equals(nsGkAtoms::is)) {
     // Store is as atom.
     mAttributes[aPos].mValue.ParseAtom(aValue);

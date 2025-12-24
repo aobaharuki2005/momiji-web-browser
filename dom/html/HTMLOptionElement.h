@@ -73,8 +73,7 @@ class HTMLOptionElement final : public nsGenericHTMLElement {
     SetHTMLBoolAttr(nsGkAtoms::disabled, aValue, aRv);
   }
 
-  Element* GetFormForBindings();
-  HTMLFormElement* GetFormInternal();
+  HTMLFormElement* GetForm();
 
   void GetRenderedLabel(nsAString& aLabel) {
     if (!GetAttr(nsGkAtoms::label, aLabel) || aLabel.IsEmpty()) {

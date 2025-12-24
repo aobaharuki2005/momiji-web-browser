@@ -275,24 +275,17 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
 
   void GetHTML(const GetHTMLOptions& aOptions, nsAString& aResult);
 
-  bool HasReferenceTarget() const { return mReferenceTarget; }
   void GetReferenceTarget(nsAString& aResult) const {
-    if (!mReferenceTarget) {
-      aResult.SetIsVoid(true);
-      return;
-    }
     mReferenceTarget->ToString(aResult);
   }
   nsAtom* ReferenceTarget() const { return mReferenceTarget; }
   void SetReferenceTarget(const nsAString& aValue) {
-    if (aValue.IsVoid()) {
-      return SetReferenceTarget(nullptr);
-    }
     SetReferenceTarget(NS_Atomize(aValue));
   }
   void SetReferenceTarget(RefPtr<nsAtom> aTarget);
   Element* GetReferenceTargetElement() const {
-    return mReferenceTarget ? GetElementById(mReferenceTarget) : nullptr;
+    return mReferenceTarget->IsEmpty() ? nullptr
+                                       : GetElementById(mReferenceTarget);
   }
 
  protected:
@@ -342,12 +335,6 @@ class ShadowRoot final : public DocumentFragment, public DocumentOrShadowRoot {
   const IsSerializable mIsSerializable;
 
   RefPtr<nsAtom> mReferenceTarget;
-
-  static bool ReferenceTargetIDTargetChanged(Element* aOldElement,
-                                             Element* aNewElement, void* aData);
-  static bool RecursiveReferenceTargetChanged(void* aData);
-
-  void NotifyReferenceTargetChangedObservers();
 
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
 };

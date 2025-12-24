@@ -1265,7 +1265,7 @@ void nsFormFillController::GetValue(mozilla::dom::Element* aElement,
 
 Element* nsFormFillController::GetList(mozilla::dom::Element* aElement) {
   if (auto* input = HTMLInputElement::FromNodeOrNull(aElement)) {
-    return input->GetListInternal();
+    return input->GetList();
   }
   return nullptr;
 }
