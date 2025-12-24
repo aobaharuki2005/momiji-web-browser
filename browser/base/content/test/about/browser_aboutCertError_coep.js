@@ -10,8 +10,6 @@ add_task(async function test_coepError() {
   let browser;
   let pageLoaded;
 
-  await setSecurityCertErrorsFeltPrivacyToFalse();
-
   const uri = `${AUTH_ROUTE}?error=coep`;
 
   await BrowserTestUtils.openNewForegroundTab(

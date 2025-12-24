@@ -6,7 +6,6 @@
 async function checkErrorForInvalidUriLoad(l10nId) {
   let browser;
   let pageLoaded;
-  await setSecurityCertErrorsFeltPrivacyToFalse();
   await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     () => {

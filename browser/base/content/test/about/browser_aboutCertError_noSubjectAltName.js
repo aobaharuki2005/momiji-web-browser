@@ -8,55 +8,34 @@ const BROWSER_NAME = document
   .getString("brandShortName");
 const UNKNOWN_ISSUER = "https://no-subject-alt-name.example.com:443";
 
-const checkAdvancedAndGetTechnicalInfoText = async useFelt => {
+const checkAdvancedAndGetTechnicalInfoText = async () => {
   let doc = content.document;
-  let badCertTechnicalInfo;
-  const netErrorCard = doc.querySelector("net-error-card")?.wrappedJSObject;
 
-  let advancedButton = useFelt
-    ? netErrorCard.advancedButton
-    : doc.getElementById("advancedButton");
+  let advancedButton = doc.getElementById("advancedButton");
   ok(advancedButton, "advancedButton found");
   is(
     advancedButton.hasAttribute("disabled"),
     false,
     "advancedButton should be clickable"
   );
+  advancedButton.click();
 
-  if (useFelt) {
-    advancedButton.scrollIntoView(true);
-    EventUtils.synthesizeMouseAtCenter(advancedButton, {}, content);
+  let badCertAdvancedPanel = doc.getElementById("badCertAdvancedPanel");
+  ok(badCertAdvancedPanel, "badCertAdvancedPanel found");
 
-    await ContentTaskUtils.waitForCondition(
-      () => netErrorCard.advancedContainer,
-      "Advanced section should be rendered for revoked certificate"
-    );
-    ok(netErrorCard.advancedContainer, "advancedContainer found");
-  } else {
-    advancedButton.click();
-    let badCertAdvancedPanel = doc.getElementById("badCertAdvancedPanel");
-    ok(badCertAdvancedPanel, "badCertAdvancedPanel found");
-
-    badCertTechnicalInfo = doc.getElementById("badCertTechnicalInfo");
-    ok(badCertTechnicalInfo, "badCertTechnicalInfo found");
-  }
+  let badCertTechnicalInfo = doc.getElementById("badCertTechnicalInfo");
+  ok(badCertTechnicalInfo, "badCertTechnicalInfo found");
 
   // Wait until fluent sets the errorCode inner text.
   await ContentTaskUtils.waitForCondition(() => {
-    let errorCode = useFelt
-      ? netErrorCard.errorCode
-      : doc.getElementById("errorCode");
-    return errorCode.textContent.includes("SSL_ERROR_BAD_CERT_DOMAIN");
+    let errorCode = doc.getElementById("errorCode");
+    return errorCode.textContent == "SSL_ERROR_BAD_CERT_DOMAIN";
   }, "correct error code has been set inside the advanced button panel");
 
-  let viewCertificate = useFelt
-    ? netErrorCard.viewCertificate
-    : doc.getElementById("viewCertificate");
+  let viewCertificate = doc.getElementById("viewCertificate");
   ok(viewCertificate, "viewCertificate found");
 
-  return useFelt
-    ? netErrorCard.advancedContainer.innerHTML
-    : badCertTechnicalInfo.innerHTML;
+  return badCertTechnicalInfo.innerHTML;
 };
 
 const checkCorrectMessages = message => {
@@ -71,30 +50,7 @@ const checkCorrectMessages = message => {
   is(isWrongMessage, false, "That message shouldn't appear");
 };
 
-const checkFeltCopy = () => {
-  const netErrorCard =
-    content.document.querySelector("net-error-card")?.wrappedJSObject;
-  Assert.equal(
-    netErrorCard.whyDangerous.dataset.l10nId,
-    "fp-certerror-bad-domain-why-dangerous-body",
-    "Using the 'bad domain' variant of the 'Why Dangerous' copy."
-  );
-  Assert.equal(
-    netErrorCard.whatCanYouDo.dataset.l10nId,
-    "fp-certerror-bad-domain-what-can-you-do-body",
-    "Using the 'bad domain' variant of the 'What can you do' copy."
-  );
-  Assert.equal(
-    netErrorCard.learnMoreLink.getAttribute("support-page"),
-    "connection-not-secure",
-    "'Learn more' link points to the standard support page."
-  );
-};
-
-async function checkUntrustedCertError(useFelt) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["security.certerrors.felt-privacy-v1", useFelt]],
-  });
+add_task(async function checkUntrustedCertError() {
   info(
     `Loading ${UNKNOWN_ISSUER} which does not have a subject specified in the certificate`
   );
@@ -103,19 +59,9 @@ async function checkUntrustedCertError(useFelt) {
   info("Clicking the exceptionDialogButton in advanced panel");
   let badCertTechnicalInfoText = await SpecialPowers.spawn(
     browser,
-    [useFelt],
+    [],
     checkAdvancedAndGetTechnicalInfoText
   );
-  if (useFelt) {
-    await SpecialPowers.spawn(browser, [], checkFeltCopy);
-  } else {
-    checkCorrectMessages(badCertTechnicalInfoText, browser);
-  }
+  checkCorrectMessages(badCertTechnicalInfoText, browser);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-}
-
-add_task(async function runCheckUntrustedCertError() {
-  for (const useFelt of [true, false]) {
-    await checkUntrustedCertError(useFelt);
-  }
 });
