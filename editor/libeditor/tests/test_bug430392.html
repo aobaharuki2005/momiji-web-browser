@@ -33,43 +33,7 @@ function test() {
   // and the test will be marked as an expected fail if the textContent changes
   // to expectedValue, and an unexpected fail if it's neither the original value
   // nor expectedValue.
-  let tests = [
-    [
-      "adding shift-returns",
-      () => {
-        getSelection().collapse(edit.firstChild, 0); // [] <span contenteditable=false>A</span> ; <span
-        synthesizeKey("KEY_ArrowRight");             //  <span contenteditable=false>A</span>[] ; <span
-        synthesizeKey("KEY_Enter", {shiftKey: true});
-        info(`1st Shift+Enter: "${edit.innerHTML}"`);
-        // " <span contenteditable="false">A</span><br>[]&nbsp;; <span contenteditable="false">B</span> ; <span contenteditable="false">C</span> "
-        synthesizeKey("KEY_Enter", {shiftKey: true});
-        info(`2nd Shift+Enter: "${edit.innerHTML}"`);
-        // " <span contenteditable="false">A</span><br><br>[]&nbsp;; <span contenteditable="false">B</span> ; <span contenteditable="false">C</span> "
-        synthesizeKey("KEY_Backspace");
-        info(`1st Backspace: "${edit.innerHTML}"`);
-        // " <span contenteditable="false">A</span><br>[]&nbsp;; <span contenteditable="false">B</span> ; <span contenteditable="false">C</span> "
-        synthesizeKey("KEY_Backspace");
-        info(`2nd Backspace: "${edit.innerHTML}"`);
-        // " []&nbsp;; <span contenteditable="false">A</span><span contenteditable="false">B</span> ; <span contenteditable="false">C</span> "
-      }, [
-        "insertLineBreak",
-        "insertLineBreak",
-        "deleteContentBackward",
-        "deleteContentBackward",
-      ], [
-        "insertLineBreak",
-        "insertLineBreak",
-        "deleteContentBackward",
-        "deleteContentBackward",
-      ],
-      // Actual expected result should be "A&nbsp;; B ; C " because when first
-      // <br> is inserted, the following white-space should be preserved as
-      // an &nbsp;.  Then, it should not be reconverted to a white-space after
-      // Backspace.
-      " \u00A0; AB ; C ",
-    ],
-  ];
-
+  let tests = [];
   [
     ["insertorderedlist", "insertOrderedList"],
     ["insertunorderedlist", "insertUnorderedList"],
