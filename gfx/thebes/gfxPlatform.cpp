@@ -3101,11 +3101,6 @@ void gfxPlatform::InitHardwareVideoConfig() {
   CODEC_HW_FEATURE_SETUP(HEVC)
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-  gfxVars::SetVP9HwDecodeIsAccelerated(
-      java::HardwareCodecCapabilityUtils::HasHWVP9(false /* aIsEncoder */));
-#endif
-
 #undef CODEC_HW_FEATURE_SETUP_PLATFORM
 #undef CODEC_HW_FEATURE_SETUP
 }
