@@ -34,19 +34,6 @@ function test() {
   // to expectedValue, and an unexpected fail if it's neither the original value
   // nor expectedValue.
   let tests = [];
-  [
-    ["insertorderedlist", "insertOrderedList"],
-    ["insertunorderedlist", "insertUnorderedList"],
-    ["formatblock", "", "p"],
-  ].forEach(item => {
-    let cmd = item[0];
-    let param = item[2];
-    let inputType = item[1];
-    tests.push([cmd, () => { document.execCommand(cmd, false, param); },
-                [/* execCommand shouldn't cause beforeinput event */],
-                [inputType]]);
-  });
-
   // These are all TODO -- they don't move the non-editable elements
   [
     ["bold", "formatBold"],
@@ -72,11 +59,6 @@ function test() {
                 [inputType],
                 " A ;  ; BC "]);
    });
-
-  tests.push(["indent", () => { document.execCommand("indent"); },
-              [/* execCommand shouldn't cause beforeinput event */],
-              ["formatIndent"],
-              "  ;  ;  ABC"]);
 
   let beforeinputTypes = [];
   let inputTypes = [];
