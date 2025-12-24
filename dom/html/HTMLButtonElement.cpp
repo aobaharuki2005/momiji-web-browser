@@ -612,12 +612,15 @@ Element::Command HTMLButtonElement::GetCommand() const {
 }
 
 Element* HTMLButtonElement::GetCommandForElementForBindings() const {
-  return GetCommandForElementInternal();
+  if (StaticPrefs::dom_element_commandfor_enabled()) {
+    return GetAttrAssociatedElementForBindings(nsGkAtoms::commandfor);
+  }
+  return nullptr;
 }
 
 Element* HTMLButtonElement::GetCommandForElementInternal() const {
   if (StaticPrefs::dom_element_commandfor_enabled()) {
-    return GetAttrAssociatedElement(nsGkAtoms::commandfor);
+    return GetAttrAssociatedElementInternal(nsGkAtoms::commandfor);
   }
   return nullptr;
 }

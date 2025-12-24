@@ -260,13 +260,13 @@ class TrustedHTMLOrTrustedScriptOrTrustedScriptURLOrString;
     SetOrRemoveNullableStringAttr(nsGkAtoms::attr, aValue, aRv); \
   }
 
-#define REFLECT_NULLABLE_ELEMENT_ATTR(method, attr)      \
-  Element* Get##method() const {                         \
-    return GetAttrAssociatedElement(nsGkAtoms::attr);    \
-  }                                                      \
-                                                         \
-  void Set##method(Element* aElement) {                  \
-    ExplicitlySetAttrElement(nsGkAtoms::attr, aElement); \
+#define REFLECT_NULLABLE_ELEMENT_ATTR(method, attr)              \
+  Element* Get##method() const {                                 \
+    return GetAttrAssociatedElementForBindings(nsGkAtoms::attr); \
+  }                                                              \
+                                                                 \
+  void Set##method(Element* aElement) {                          \
+    ExplicitlySetAttrElement(nsGkAtoms::attr, aElement);         \
   }
 
 #define REFLECT_NULLABLE_ELEMENTS_ATTR(method, attr)                        \
@@ -1362,10 +1362,17 @@ class Element : public FragmentOrElement {
       const nsAString& aClassNames);
 
   /**
-   * Returns attribute associated element for the given attribute name, see
-   * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#attr-associated-element
+   * Returns attribute associated element for the given attribute name. See
+   * https://whatpr.org/html/10995/common-microsyntaxes.html#get-the-attr-associated-element
    */
-  Element* GetAttrAssociatedElement(nsAtom* aAttr) const;
+  Element* GetAttrAssociatedElementInternal(nsAtom* aAttr,
+                                            bool aForBindings = false) const;
+  /**
+   * The getter for the IDL attribute which reflects the given attribute. See
+   * https://whatpr.org/html/10995/common-dom-interfaces.html#reflecting-content-attributes-in-idl-attributes:reflected-idl-attribute-33
+   */
+  Element* GetAttrAssociatedElementForBindings(nsAtom* aAttr) const;
+
   void GetAttrAssociatedElements(
       nsAtom* aAttr, bool* aUseCachedValue,
       Nullable<nsTArray<RefPtr<Element>>>& aElements);
@@ -1541,6 +1548,8 @@ class Element : public FragmentOrElement {
     const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
     return slots ? slots->mShadowRoot.get() : nullptr;
   }
+
+  Element* ResolveReferenceTarget() const;
 
   const Maybe<float> GetLastRememberedBSize() const {
     const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
