@@ -623,5 +623,7 @@ skip-if = [
   "http3",
 ]
 
+["test_ext_windowtracker_initialization.html"]
+
 ["test_startup_canary.html"]
 # test_startup_canary.html is at the bottom to minimize the time spent waiting in the test.
