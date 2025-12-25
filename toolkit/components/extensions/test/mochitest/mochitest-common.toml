@@ -215,6 +215,9 @@ skip-if = [
 ]
 
 ["test_ext_contentscript_data_url.html"]
+skip-if = [
+  "os == 'android' && os_version == '14' && processor == 'x86_64'", # Bug 1897040
+]
 
 ["test_ext_contentscript_devtools_metadata.html"]
 skip-if = [
