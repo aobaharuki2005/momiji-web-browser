@@ -257,11 +257,6 @@ pref("formhelper.autozoom", true);
 // Optionally send web console output to logcat (bug 1415318)
 pref("geckoview.console.enabled", false);
 
-#ifdef NIGHTLY_BUILD
-  // Used for mocking data for GeckoView shopping tests, should use in addition with an automation check.
-  pref("geckoview.shopping.mock_test_response", false);
-#endif
-
 pref("image.cache.size", 1048576); // bytes
 
 // Inherit locale from the OS, used for multi-locale builds
