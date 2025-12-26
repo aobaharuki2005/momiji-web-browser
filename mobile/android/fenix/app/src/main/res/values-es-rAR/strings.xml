@@ -633,7 +633,7 @@
   <!-- Terms of use (ToU) onboarding title. -->
   <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Prepárate para correr libre</string>
   <!-- Terms of use (ToU) onboarding subtitle. -->
-  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Rápido, seguro y no te traicionará. La navegación ahora es mejor.</string>
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Rápido, seguro y no te traicionará.\nLa navegación ahora es mejor.</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
