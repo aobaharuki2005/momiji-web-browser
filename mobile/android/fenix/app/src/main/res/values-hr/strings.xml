@@ -449,7 +449,7 @@
 
     Description for learning more about our privacy notice.
   -->
-  <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Firefoxova napomena o privatnosti</string>
+  <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Firefox napomene o privatnosti</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Volimo vas čuvati</string>
   <!--
@@ -548,7 +548,7 @@
   <!-- Line two of the terms of service onboarding page. 'Firefox' is intentionally hardcoded. %1$s is replaced by an active link, using onboarding_term_of_service_line_two_link_text as text (“Privacy Notice”). -->
   <string name="onboarding_term_of_service_line_two_2" tools:ignore="BrandUsage">Firefox brine o tvojoj privatnosti. Saznaj više na stranici %1$s.</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_two. -->
-  <string name="onboarding_term_of_service_line_two_link_text">Napomena o privatnosti</string>
+  <string name="onboarding_term_of_service_line_two_link_text">Napomene o privatnosti</string>
   <!-- Line three of the terms of service onboarding page. 'Firefox' and 'Mozilla' are intentionally hardcoded. %1$s is replaced by an active link using onboarding_term_of_service_line_three_link_text as text (“Manage”). -->
   <string name="onboarding_term_of_service_line_three" tools:ignore="BrandUsage">Kako bi poboljšao preglednik, Firefox šalje dijagnostičke podatke i podatke o interakciji Mozilli. %1$s</string>
   <!-- Used as text for the link in onboarding_term_of_service_line_three. -->
@@ -574,7 +574,7 @@
   -->
   <string name="onboarding_redesign_tou_body_two" tools:ignore="BrandUsage">Firefox brine o tvojoj privatnosti. Saznaj više na stranici %1$s.</string>
   <!-- Used as text for the link in onboarding_redesign_tou_body_two. -->
-  <string name="onboarding_redesign_tou_body_two_link_text">Politika privatnosti</string>
+  <string name="onboarding_redesign_tou_body_two_link_text">Napomene o privatnosti</string>
   <!--
     Terms of use (ToU) third body text. 'Firefox' and 'Mozilla' are intentionally hardcoded.
     %1$s is replaced by an active link using onboarding_redesign_tou_body_three_link_text as text (“Manage Settings”).
@@ -630,10 +630,37 @@
   <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">Nastavi</string>
   <!-- "Not now" onboarding button. -->
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Ne sada</string>
+  <!-- Terms of use (ToU) onboarding title. -->
+  <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Spremi se za slobodu</string>
+  <!-- Terms of use (ToU) onboarding subtitle. -->
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Brzo, sigurno i neće te izdati.\nPregledavanje je upravo postalo bolje.</string>
+  <!--
+    Terms of use (ToU) onboarding body line one.
+    %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
+  -->
+  <string name="nova_onboarding_tou_body_line_1" tools:ignore="UnusedResources">Nastavljanjem prihvaćaš %1$s.</string>
   <!-- Terms of use (ToU) onboarding body line one link text for nova_onboarding_tou_body_line_1. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_tou_body_line_1_link_text" tools:ignore="BrandUsage,UnusedResources">Firefox uvjete korištenja</string>
+  <!--
+    Terms of use (ToU) onboarding body line two. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_tou_body_line_2_link_text as text (“Privacy Notice”).
+  -->
+  <string name="nova_onboarding_tou_body_line_2" tools:ignore="BrandUsage,UnusedResources">Firefox brine o tvojoj privatnosti. Saznaj više na stranici %1$s.</string>
+  <!-- Terms of use (ToU) onboarding body line two link text for nova_onboarding_tou_body_line_2. -->
+  <string name="nova_onboarding_tou_body_line_2_link_text" tools:ignore="UnusedResources">Napomene o privatnosti</string>
+  <!--
+    Terms of use (ToU) onboarding body line three. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_tou_body_line_3_link_text as text (“Manage Settings”).
+  -->
+  <string name="nova_onboarding_tou_body_line_3" tools:ignore="BrandUsage,UnusedResources">Kako bi poboljšao preglednik, Firefox šalje dijagnostičke podatke i podatke o interakciji Mozilli. %1$s</string>
   <!-- Terms of use (ToU) onboarding body line three link text for nova_onboarding_tou_body_line_3. -->
   <string name="nova_onboarding_tou_body_line_3_link_text" tools:ignore="UnusedResources">Upravljaj postavkama</string>
+  <!-- "Set to default" onboarding title. -->
+  <string name="nova_onboarding_set_to_default_title" tools:ignore="UnusedResources">Riješi se jezivih programa za praćenje</string>
+  <!-- "Set to default" onboarding subtitle. -->
+  <string name="nova_onboarding_set_to_default_subtitle" tools:ignore="UnusedResources">Štitimo tvoje podatke i automatski blokiramo tvrtke od špijuniranja tvojih klikova.</string>
+  <!-- "Set to default" onboarding button. -->
+  <string name="nova_onboarding_set_to_default_button" tools:ignore="UnusedResources">Postavi kao standardni preglednik</string>
   <!-- Toolbar selection onboarding title. -->
   <string name="nova_onboarding_toolbar_selection_title" tools:ignore="UnusedResources">Odaberi adresnu traku</string>
   <!-- Toolbar selection onboarding "top" option label. -->
@@ -648,8 +675,31 @@
   <string name="nova_onboarding_theme_selection_light_label" tools:ignore="UnusedResources">Svijetla</string>
   <!-- Theme selection onboarding "dark" option label. -->
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">Tamna</string>
+  <!-- Sync onboarding title. -->
+  <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">Nastavi tamo gdje si stao/la</string>
+  <!-- Sync onboarding subtitle. -->
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">U trenu dohvati zabilješke, lozinke i još toga na bilo kojem uređaju. Tvoji osobni podaci ostaju sigurni i zaštićeni pomoću šifriranja.</string>
+  <!-- Sync onboarding button. -->
+  <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Pokreni sinkronizaciju</string>
+  <!-- Marketing onboarding title. -->
+  <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Pomogni nam graditi bolji internet</string>
+  <!--
+    Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
+  -->
+  <string name="nova_onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Dijeli s Mozillinim marketinškim partnerima kako si otkrio/la Firefox i da ga koristiš. Ti se podaci nikada ne prodaju. %1$s</string>
   <!-- Marketing onboarding body link text. -->
   <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">Kako koristimo podatke</string>
+  <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Obavijesti ti pomažu da ostaneš sigurniji/a s Firefoxom</string>
+  <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">Otkrij najnovije funkcije privatnosti u Firefoxu i ostani u toku s načinima osobne zaštite.</string>
+  <!-- Notifications onboarding button. -->
+  <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Uključi obavijesti</string>
+  <!-- "Add search widget" onboarding title. -->
+  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Učini svaku pretragu privatnijom</string>
+  <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">Započni svaku pretragu s početnog ekrana svog telefona i znaj da te Firefoxove automatske zaštite uvijek štite.</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Dodaj Firefoxov widget</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
@@ -1543,6 +1593,8 @@
   <string name="tabs_tray_select_tabs">Odaberi kartice</string>
   <!-- Text for tab manager search page when there are no results. -->
   <string name="tab_manager_no_search_results">Nema podudaranja.</string>
+  <!-- Additional text for tab manager search page when there are no results. -->
+  <string name="tab_manager_no_search_results_additional_text">Pokušaj s jednom drugom pretragom!</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
   <string name="close_tab">Zatvori karticu</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. %s is the tab title -->
@@ -1962,6 +2014,8 @@
   <string name="bookmark_empty_list_folder_description">Dodaj zabilješke dok pregledavaš. Na taj način kasnije možeš pronaći svoje omiljene stranice.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Nova mapa</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">Zabilješka %1$s je premještena u mapu %2$s</string>
   <!--
     Site Permissions
 
@@ -2618,7 +2672,7 @@
   <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
   <string name="about_crashes">Rušenja</string>
   <!-- About page link text to open privacy notice link -->
-  <string name="about_privacy_notice">Napomena o privatnosti</string>
+  <string name="about_privacy_notice">Napomene o privatnosti</string>
   <!-- About page link text to open know your rights link -->
   <string name="about_know_your_rights">Poznaj svoja prava</string>
   <!-- About page link text to open terms of use link -->
@@ -3603,7 +3657,7 @@
   -->
   <string name="micro_survey_survey_header_2">Ispuni anketu</string>
   <!-- The privacy notice link -->
-  <string name="micro_survey_privacy_notice_2">Napomena o privatnosti</string>
+  <string name="micro_survey_privacy_notice_2">Napomene o privatnosti</string>
   <!-- The submit button label text -->
   <string name="micro_survey_submit_button_label">Pošalji</string>
   <!-- The survey completion header -->
@@ -3967,7 +4021,7 @@
   <!-- Terms of use link in the pop up prompt message that links to the terms of use -->
   <string name="terms_of_use_prompt_link_terms_of_use">Uvjeti korištenja</string>
   <!-- Privacy notice link in the pop up prompt message that links to the privacy notice -->
-  <string name="terms_of_use_prompt_link_privacy_notice">Politika privatnosti</string>
+  <string name="terms_of_use_prompt_link_privacy_notice">Napomene o privatnosti</string>
   <!-- Learn more link in the pop up prompt message that links to a site with more information about the terms of use -->
   <string name="terms_of_use_prompt_link_learn_more">Saznaj više</string>
   <!-- Label for a button to accept the terms of use -->
@@ -3976,6 +4030,18 @@
   <string name="terms_of_use_prompt_postpone">Podsjeti me kasnije</string>
   <!-- ==== Experiment strings. ==== -->
 
+  <!-- A title for the popup prompt. -->
+  <string name="terms_of_use_prompt_title_option_a" tools:ignore="UnusedResources">Uvjeti korištenja</string>
+  <!--
+    A title for the popup prompt.
+    %1$s is the product name "Firefox"
+  -->
+  <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">Poruka od preglednika %1$s</string>
+  <!--
+    Copy for the Terms of Use popup prompt body line two.
+    %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
+  -->
+  <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">Saznaj %1$s više.</string>
   <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
   <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">ovdje</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
@@ -3989,7 +4055,7 @@
   -->
   <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">Aktualizirali smo naš dokument %1$s kako bi odražavao najnovije funkcije u Firefoxu. %2$s</string>
   <!-- The first active link used in privacy_notice_updated_homepage_message -->
-  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Politika privatnosti</string>
+  <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Napomene o privatnosti</string>
   <!-- The second active link used in privacy_notice_updated_homepage_message -->
   <string name="privacy_notice_updated_homepage_message_learn_more" tools:ignore="UnusedResources">Saznaj više</string>
 </resources>
