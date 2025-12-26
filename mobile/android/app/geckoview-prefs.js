@@ -295,16 +295,6 @@ pref("media.eme.require-app-approval", true);
 // Enable autoplay permission prompts (bug 1577596)
 pref("media.geckoview.autoplay.request", true);
 
-// Disable future downloads of OpenH264 on Android (bug 1548679)
-pref("media.gmp-gmpopenh264.autoupdate", false);
-
-// Keep OpenH264 if already installed before. (bug 1532578)
-pref("media.gmp-gmpopenh264.enabled", true);
-pref("media.gmp-gmpopenh264.visible", true);
-
-// Enable GMP support in the addon manager (bug 1089867)
-pref("media.gmp-provider.enabled", true);
-
 // Enable Widevine MediaKeySystem (bug 1306219)
 pref("media.mediadrm-widevinecdm.visible", true);
 
