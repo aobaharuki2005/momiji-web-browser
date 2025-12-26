@@ -7203,11 +7203,23 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     case nsIEditor::eToEndOfLine: {
       // Collapse Selection to next node of after empty block element
       // if there is.  Otherwise, to just after the empty block.
-      auto afterEmptyBlock(
-          EditorDOMPoint::After(mEmptyInclusiveAncestorBlockElement));
-      MOZ_ASSERT(afterEmptyBlock.IsSet());
-      if (nsIContent* nextContentOfEmptyBlock = HTMLEditUtils::GetNextContent(
-              afterEmptyBlock, {}, BlockInlineCheck::Unused, &aEditingHost)) {
+      nsIContent* const nextContentOfEmptyBlock = [&]() -> nsIContent* {
+        for (EditorRawDOMPoint scanStartPoint =
+                 EditorRawDOMPoint::After(mEmptyInclusiveAncestorBlockElement);
+             scanStartPoint.IsInContentNode();) {
+          nsIContent* const nextContent = HTMLEditUtils::GetNextContent(
+              scanStartPoint, {}, BlockInlineCheck::Unused, &aEditingHost);
+          // Let's ignore invisible `Text`.
+          if (nextContent && nextContent->IsText() &&
+              !HTMLEditUtils::IsVisibleTextNode(*nextContent->AsText())) {
+            scanStartPoint = EditorRawDOMPoint::After(*nextContent);
+            continue;
+          }
+          return nextContent;
+        }
+        return nullptr;
+      }();
+      if (nextContentOfEmptyBlock) {
         EditorDOMPoint pt = HTMLEditUtils::GetGoodCaretPointFor<EditorDOMPoint>(
             *nextContentOfEmptyBlock, aDirectionAndAmount);
         if (!pt.IsSet()) {
@@ -7216,6 +7228,8 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         }
         return CaretPoint(std::move(pt));
       }
+      EditorDOMPoint afterEmptyBlock =
+          EditorDOMPoint::After(mEmptyInclusiveAncestorBlockElement);
       if (NS_WARN_IF(!afterEmptyBlock.IsSet())) {
         return Err(NS_ERROR_FAILURE);
       }
@@ -7226,11 +7240,24 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     case nsIEditor::eToBeginningOfLine: {
       // Collapse Selection to previous editable node of the empty block
       // if there is.
-      EditorRawDOMPoint atEmptyBlock(mEmptyInclusiveAncestorBlockElement);
-      if (nsIContent* const previousContentOfEmptyBlock =
-              HTMLEditUtils::GetPreviousContent(
-                  atEmptyBlock, {WalkTreeOption::IgnoreNonEditableNode},
-                  BlockInlineCheck::Unused, &aEditingHost)) {
+      nsIContent* const previousContentOfEmptyBlock = [&]() -> nsIContent* {
+        for (EditorRawDOMPoint scanStartPoint =
+                 EditorRawDOMPoint(mEmptyInclusiveAncestorBlockElement);
+             scanStartPoint.IsInContentNode();) {
+          nsIContent* const previousContent = HTMLEditUtils::GetPreviousContent(
+              scanStartPoint, {WalkTreeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::Unused, &aEditingHost);
+          // Let's ignore invisible `Text`.
+          if (previousContent && previousContent->IsText() &&
+              !HTMLEditUtils::IsVisibleTextNode(*previousContent->AsText())) {
+            scanStartPoint = EditorRawDOMPoint(previousContent, 0u);
+            continue;
+          }
+          return previousContent;
+        }
+        return nullptr;
+      }();
+      if (previousContentOfEmptyBlock) {
         const EditorRawDOMPoint atEndOfPreviousContent =
             HTMLEditUtils::GetGoodCaretPointFor<EditorRawDOMPoint>(
                 *previousContentOfEmptyBlock, aDirectionAndAmount);
