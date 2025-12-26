@@ -43,6 +43,4 @@ skip-if = [
   "devedition",
 ]
 
-["browser_ipprotection_upgrade.js"]
-
 ["browser_ipprotection_usage.js"]

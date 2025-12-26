@@ -245,7 +245,7 @@ export default class IPProtectionContentElement extends MozLitElement {
     `;
   }
 
-  beforeUpgradeTemplate() {
+  pausedTemplate() {
     return html`
       <div id="upgrade-vpn-content" class="vpn-bottom-content">
         <h2
@@ -280,10 +280,12 @@ export default class IPProtectionContentElement extends MozLitElement {
     if (this.state.isSignedOut) {
       return html` <ipprotection-signedout></ipprotection-signedout> `;
     }
-    return html`
-      ${this.statusCardTemplate()}
-      ${!this.state.hasUpgraded ? this.beforeUpgradeTemplate() : null}
-    `;
+
+    if (this.state.paused) {
+      return html` ${this.pausedTemplate()} `;
+    }
+
+    return html` ${this.statusCardTemplate()} `;
   }
 
   render() {

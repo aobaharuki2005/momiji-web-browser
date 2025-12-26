@@ -81,6 +81,8 @@ export class IPProtectionPanel {
    *  True if a Mozilla VPN subscription is linked to the user's Mozilla account.
    * @property {string} onboardingMessage
    * Continuous onboarding message to display in-panel, empty string if none applicable
+   * @property {boolean} paused
+   * True if the VPN service has been paused due to bandwidth limits
    */
 
   /**
@@ -126,6 +128,7 @@ export class IPProtectionPanel {
       hasUpgraded: lazy.IPPEnrollAndEntitleManager.hasUpgraded,
       onboardingMessage: "",
       bandwidthWarning: "",
+      paused: false,
     };
 
     if (window) {

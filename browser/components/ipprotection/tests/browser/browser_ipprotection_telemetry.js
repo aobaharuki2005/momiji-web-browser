@@ -224,10 +224,12 @@ add_task(async function click_upgrade_button() {
   );
 
   let content = panelView.querySelector(IPProtectionPanel.CONTENT_TAGNAME);
+  let originalState = structuredClone(content.state);
 
   Assert.ok(content, "Panel content should be present");
 
   content.state.isSignedOut = false;
+  content.state.paused = true;
   content.requestUpdate();
   await content.updateComplete;
 
@@ -244,7 +246,7 @@ add_task(async function click_upgrade_button() {
   Assert.equal(upgradeEvent.length, 1, "should have recorded a toggle");
 
   Services.fog.testResetFOG();
-
+  await resetStateToObj(content, originalState);
   BrowserTestUtils.removeTab(newTab);
 });
 
