@@ -3,10 +3,8 @@
 const PAGE_PREFS = "about:preferences";
 const PAGE_PRIVACY = PAGE_PREFS + "#privacy";
 const SELECTORS = {
-  savedCreditCardsBtn:
-    "#formAutofillGroupBox setting-group[groupid=payments] #savedPaymentsButton",
-  reauthCheckbox:
-    "#formAutofillGroupBox setting-group[groupid=payments] #requireOSAuthForPayments",
+  savedCreditCardsBtn: "setting-group[groupid=payments] #savedPaymentsButton",
+  reauthCheckbox: "setting-group[groupid=payments] #requireOSAuthForPayments",
 };
 
 // On mac, this test times out in chaos mode

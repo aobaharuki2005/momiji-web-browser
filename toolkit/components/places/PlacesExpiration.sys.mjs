@@ -271,17 +271,15 @@ const EXPIRATION_QUERIES = {
     WHERE (page_id, icon_id) IN (
      	SELECT page_id, icon_id
       FROM moz_icons_to_pages ip
-      JOIN moz_icons i ON i.id = icon_id
       JOIN moz_pages_w_icons pi ON pi.id = page_id
       JOIN moz_places ON url_hash = page_url_hash
       WHERE
-      last_visit_date BETWEEN
-      strftime('%s', ip.expire_ms / 1000, 'unixepoch', '+6 months', 'localtime', 'utc') * 1000000
-      AND strftime('%s', 'now', 'localtime', '-6 months', 'utc') * 1000000
-      AND root = 0
-      AND foreign_count = 0
-      ORDER BY last_visit_date ASC
-      LIMIT 100
+        last_visit_date BETWEEN
+          strftime('%s', ip.expire_ms / 1000, 'unixepoch', '+6 months', 'localtime', 'utc') * 1000000
+          AND strftime('%s', 'now', 'localtime', '-6 months', 'utc') * 1000000
+        AND foreign_count = 0
+        AND NOT EXISTS (SELECT 1 FROM moz_icons WHERE id = icon_id AND root = 1)
+      LIMIT 50
     )
     `,
     actions: ACTION.IDLE_DIRTY | ACTION.IDLE_DAILY | ACTION.DEBUG,

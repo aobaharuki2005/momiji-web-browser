@@ -632,6 +632,8 @@
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Ani ko’ág̃a</string>
   <!-- Terms of use (ToU) onboarding title. -->
   <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Eime eñani hag̃uáicha</string>
+  <!-- Terms of use (ToU) onboarding subtitle. -->
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Ipya’e, hekorosã ha hekovai’ỹre.\nÑeikundaha ko’ág̃a ndahasyive.</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
@@ -679,8 +681,12 @@
   <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Rojaporoína Ñanduti iporãvéva</string>
   <!-- Marketing onboarding body link text. -->
   <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">Mba’éichapa jaiporu mba’ekuaarãita</string>
+  <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Umi marandu ne pytyvõta eime hag̃ua tekorosãme Firefox ndive</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Emyandy marandu’i</string>
+  <!-- "Add search widget" onboarding title. -->
+  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Ejapo nde jeheka hekorosãve hag̃ua</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Embjuaju Firefox widget</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
@@ -1975,6 +1981,8 @@
   <string name="bookmark_delete_folder_content_description">Embogue ñongatuha</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Eheka techaukahápe</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">Eheka ñongatuha</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Poravoha ítem %s peg̃uarã</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1993,6 +2001,8 @@
   <string name="bookmark_empty_list_folder_description">Embojuaju techaukaha eikundaha aja ejuju hag̃ua erohoryvéva tenda ag̃ave.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Ñongatuha pyahu</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">Oku’éva %1$s-gui %2$s-pe</string>
   <!--
     Site Permissions
 
@@ -4007,6 +4017,18 @@
   <string name="terms_of_use_prompt_postpone">Chemomandu’a ag̃ave</string>
   <!-- ==== Experiment strings. ==== -->
 
+  <!-- A title for the popup prompt. -->
+  <string name="terms_of_use_prompt_title_option_a" tools:ignore="UnusedResources">Jeporurã reko</string>
+  <!--
+    A title for the popup prompt.
+    %1$s is the product name "Firefox"
+  -->
+  <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">Jehai’i %1$s rehegua</string>
+  <!--
+    Copy for the Terms of Use popup prompt body line two.
+    %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
+  -->
+  <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">Eikuaavekuaa %1$s.</string>
   <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
   <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">ko’ápe</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->

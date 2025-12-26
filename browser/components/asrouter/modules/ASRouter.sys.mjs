@@ -991,7 +991,8 @@ export class _ASRouter {
           lazy.ASRouterTriggerListeners.get(trigger.id).init(
             this._triggerHandler,
             trigger.params,
-            trigger.patterns
+            trigger.patterns,
+            trigger.regexPatterns
           );
           unseenListeners.delete(trigger.id);
         }
