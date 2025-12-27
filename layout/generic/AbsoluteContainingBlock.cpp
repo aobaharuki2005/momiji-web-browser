@@ -1176,8 +1176,10 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   AutoNoisyIndenter indent(nsBlockFrame::gNoisy);
 #endif  // DEBUG
 
+  const WritingMode outerWM = aReflowInput.GetWritingMode();
+  const WritingMode wm = aKidFrame->GetWritingMode();
+
   const bool isGrid = aFlags.contains(AbsPosReflowFlag::IsGridContainerCB);
-  // TODO(bug 1989059): position-try-order.
   auto fallbacks =
       aKidFrame->StylePosition()->mPositionTryFallbacks._0.AsSpan();
   Maybe<uint32_t> currentFallbackIndex;
@@ -1185,6 +1187,31 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
   RefPtr<ComputedStyle> currentFallbackStyle;
   RefPtr<ComputedStyle> firstTryStyle;
   Maybe<uint32_t> firstTryIndex;
+  // If non-'normal' position-try-order is in effect, we keep track of the
+  // index of the "best" option seen, and its size in the relevant axis, so
+  // that once all fallbacks have been considered we can reset to the one
+  // that provided the most space.
+  Maybe<uint32_t> bestIndex;
+  nscoord bestSize = -1;
+  // Flag to indicate that we've determined which fallback to use and should
+  // exit the loop.
+  bool finalizing = false;
+
+  auto tryOrder = aKidFrame->StylePosition()->mPositionTryOrder;
+  // If position-try-order is a logical value, resolve to physical using
+  // the containing block's writing mode.
+  switch (tryOrder) {
+    case StylePositionTryOrder::MostInlineSize:
+      tryOrder = outerWM.IsVertical() ? StylePositionTryOrder::MostHeight
+                                      : StylePositionTryOrder::MostWidth;
+      break;
+    case StylePositionTryOrder::MostBlockSize:
+      tryOrder = outerWM.IsVertical() ? StylePositionTryOrder::MostWidth
+                                      : StylePositionTryOrder::MostHeight;
+      break;
+    default:
+      break;
+  }
 
   // Set the current fallback to the given index, or reset to the base position
   // if Nothing() is passed.
@@ -1355,8 +1382,6 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       aAnchorPosResolutionCache->mReferenceData->mAdjustedContainingBlock =
           cb.mFinalRect;
     }
-    const WritingMode outerWM = aReflowInput.GetWritingMode();
-    const WritingMode wm = aKidFrame->GetWritingMode();
     const LogicalSize cbSize(outerWM, cb.mFinalRect.Size());
 
     ReflowInput::InitFlags initFlags;
@@ -1658,7 +1683,9 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
     // containing-block, see:
     // https://drafts.csswg.org/css-anchor-position-1/#fallback-apply
     const auto fits = aStatus.IsComplete() && FitsInContainingBlock();
-    if (fallbacks.IsEmpty() || fits) {
+    if (fallbacks.IsEmpty() || finalizing ||
+        (fits && (tryOrder == StylePositionTryOrder::Normal ||
+                  currentFallbackIndex == firstTryIndex))) {
       // We completed the reflow - Either we had a fallback that fit, or we
       // didn't have any to try in the first place.
       isOverflowingCB = !fits;
@@ -1669,9 +1696,36 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       break;
     }
 
+    if (fits) {
+      auto imcbSize = cb.mFinalRect.Size();
+      imcbSize -= nsSize{insets.LeftRight(), insets.TopBottom()};
+      switch (tryOrder) {
+        case StylePositionTryOrder::MostWidth:
+          if (imcbSize.Width() > bestSize) {
+            bestSize = imcbSize.Width();
+            bestIndex = currentFallbackIndex;
+          }
+          break;
+        case StylePositionTryOrder::MostHeight:
+          if (imcbSize.Height() > bestSize) {
+            bestSize = imcbSize.Height();
+            bestIndex = currentFallbackIndex;
+          }
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("unexpected try-order value");
+          break;
+      }
+    }
+
     if (!TryAdvanceFallback()) {
       // If there are no further fallbacks, we're done.
-      break;
+      if (bestSize >= 0) {
+        finalizing = true;
+        SeekFallbackTo(bestIndex);
+      } else {
+        break;
+      }
     }
 
     // Try with the next  fallback.
