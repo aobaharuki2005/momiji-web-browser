@@ -200,6 +200,18 @@ bool WebRenderTextureHost::SupportsExternalCompositing(
   return mWrappedTextureHost->SupportsExternalCompositing(aBackend);
 }
 
+void WebRenderTextureHost::SetAcquireFence(UniqueFileHandle&& aFenceFd) {
+  mWrappedTextureHost->SetAcquireFence(std::move(aFenceFd));
+}
+
+void WebRenderTextureHost::SetReleaseFence(UniqueFileHandle&& aFenceFd) {
+  mWrappedTextureHost->SetReleaseFence(std::move(aFenceFd));
+}
+
+UniqueFileHandle WebRenderTextureHost::GetAndResetReleaseFence() {
+  return mWrappedTextureHost->GetAndResetReleaseFence();
+}
+
 void WebRenderTextureHost::SetReadFence(Fence* aReadFence) {
   return mWrappedTextureHost->SetReadFence(aReadFence);
 }

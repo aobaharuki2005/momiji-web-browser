@@ -540,7 +540,11 @@ class AndroidHardwareBufferTextureHost : public TextureHost {
                         const Range<wr::ImageKey>& aImageKeys,
                         PushDisplayItemFlagSet aFlags) override;
 
-  void SetReadFence(Fence* aReadFence) override;
+  void SetAcquireFence(UniqueFileHandle&& aFenceFd) override;
+
+  void SetReleaseFence(UniqueFileHandle&& aFenceFd) override;
+
+  UniqueFileHandle GetAndResetReleaseFence() override;
 
   AndroidHardwareBuffer* GetAndroidHardwareBuffer() const override {
     return mAndroidHardwareBuffer;

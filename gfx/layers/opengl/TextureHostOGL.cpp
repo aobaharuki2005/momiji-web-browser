@@ -818,19 +818,27 @@ void AndroidHardwareBufferTextureHost::DeallocateDeviceData() {
   mAndroidHardwareBuffer = nullptr;
 }
 
-void AndroidHardwareBufferTextureHost::SetReadFence(Fence* aReadFence) {
-  MOZ_ASSERT(aReadFence);
-  MOZ_ASSERT(mReadFence->AsFenceFileHandle());
-  MOZ_ASSERT(mAndroidHardwareBuffer);
-
-  if (!aReadFence || !mReadFence->AsFenceFileHandle() ||
-      !mAndroidHardwareBuffer) {
+void AndroidHardwareBufferTextureHost::SetAcquireFence(
+    UniqueFileHandle&& aFenceFd) {
+  if (!mAndroidHardwareBuffer) {
     return;
   }
+  mAndroidHardwareBuffer->SetAcquireFence(std::move(aFenceFd));
+}
 
-  UniqueFileHandle handle =
-      aReadFence->AsFenceFileHandle()->DuplicateFileHandle();
-  mAndroidHardwareBuffer->SetReleaseFence(std::move(handle));
+void AndroidHardwareBufferTextureHost::SetReleaseFence(
+    UniqueFileHandle&& aFenceFd) {
+  if (!mAndroidHardwareBuffer) {
+    return;
+  }
+  mAndroidHardwareBuffer->SetReleaseFence(std::move(aFenceFd));
+}
+
+UniqueFileHandle AndroidHardwareBufferTextureHost::GetAndResetReleaseFence() {
+  if (!mAndroidHardwareBuffer) {
+    return UniqueFileHandle();
+  }
+  return mAndroidHardwareBuffer->GetAndResetReleaseFence();
 }
 
 void AndroidHardwareBufferTextureHost::CreateRenderTexture(
