@@ -6,7 +6,7 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
   <!--
     #######################################################################################
 
@@ -63,9 +63,168 @@
   <string name="menu_about">په اړه</string>
   <string name="menu_help">مرسته</string>
   <string name="menu_terms_of_use">د کارولو شرایط</string>
+  <!--
+    Menu item: This is the label for a menu entry that shows how many trackers have been blocked
+    for the currently loaded website. The number of blocked trackers is shown below this label.
+    Next to this label is a switch that allows the user to temporarily enable / disable the
+    blocking of trackers for the current browsing session - for example if the current website
+    doesn't work correctly with blocked content.
+  -->
+  <string name="menu_trackers_blocked_title">ټرېکرونه بند شوي</string>
+  <!--
+    This is the title of a dialog that shows all the share targets (apps or contacts) when
+    sharing an URL.
+  -->
+  <string name="share_dialog_title">له لارې شریک کړئ</string>
+  <string name="notification_erase_title_android_14">د پلټنې تاریخچه پاکه کړئ؟</string>
+  <!-- Notification action to open Focus and resume the current browsing session. -->
+  <string name="notification_action_open">پرانیستل</string>
+  <!--
+    Notification action to erase the current browsing session AND switch to Focus (bring it
+    to the foreground)
+  -->
+  <string name="notification_action_erase_and_open">پاکول او پرانیستل</string>
+  <!--
+    On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+    This is the label for this shortcut. Android recommends a maximum length of 10 characters.
+  -->
+  <string name="shortcut_erase_short_label">پاکول</string>
+  <!--
+    The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+    instead of the short title when it has enough space. Android recommends a maximum length
+    of 25 characters.
+  -->
+  <string name="shortcut_erase_long_label">د پلټنې تاریخچه پاکه کړئ؟</string>
+  <!--
+    On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
+    This is the label for this shortcut. Android recommends a maximum length of 10 characters.
+  -->
+  <string name="shortcut_erase_and_open_short_label">پاک کړئ او خلاص کړئ</string>
+  <!--
+    The same as 'shortcut_erase_short_label' but more descriptive. The launcher shows this
+    instead of the short title when it has enough space. Android recommends a maximum length
+    of 25 characters.
+    %1$s will be replaced by the app name (e.g. Firefox Focus)
+  -->
+  <string name="shortcut_erase_and_open_long_label">پاکول او %1$s پرانیستل</string>
+  <!--
+    This is the label of an action we offer when the user selects text in other third-party apps.
+    Focus is hard coded since we can't use variables in this context.
+    Do not translate or transliterate Focus.
+  -->
+  <string name="text_selection_search_action_focus" tools:ignore="BrandUsage">په Focus کې لټون</string>
+  <!--
+    This is the label of an action we offer when the user selects text in other third-party apps.
+    Klar is hard coded since we can't use variables in this context.
+    Do not translate or transliterate Klar.
+  -->
+  <string name="text_selection_search_action_klar" tools:ignore="BrandUsage">په Klar کې لټون</string>
+  <!-- A link to SUMO at the bottom of About Focus screen. -->
+  <string name="about_screen_learn_more">نور مالومات ترلاسه کړئ</string>
+  <!-- Preference category for General Settings -->
+  <string name="preference_category_general">عمومي</string>
+  <string name="preference_category_search">لټون</string>
+  <!-- Text that is shown below a "switch" preference that is enabled. -->
+  <string name="preference_state_on">فعال</string>
+  <!-- Text that is shown below a "switch" preference that is disabled. -->
+  <string name="preference_state_off">غير فغال</string>
+  <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+  <string name="preference_autocomplete_action_add2">URL اضافه کړئ</string>
+  <!-- A link to SUMO at autocomplete settings. -->
+  <string name="preference_autocomplete_learn_more">نور مالومات ترلاسه کړئ</string>
+  <string name="preference_category_privacy">محرمیت</string>
+  <!--
+    Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
+    only (Only 3rd-party Cookies Blocked), No (No cookies blocked)
+  -->
+  <string name="preference_privacy_should_block_cookies_no_option2">نه مننه</string>
+  <!--
+    Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
+    and prevents the user from taking screenshots or casting the app to other displays.
+  -->
+  <string name="preference_privacy_secure_mode">پټ حالت</string>
+  <string name="preference_category_security">خونديتوب</string>
+  <string name="preference_category_mozilla">موزیلا</string>
+  <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
+  <string name="preference_mozilla_telemetry_summary">نور مالومات ترلاسه کړئ</string>
+  <string name="preference_search_remove">لېرې کړئ</string>
+  <string name="error_hostLookup_title">سرور ونه موندل شو</string>
+  <!--
+    New Onboarding flow first screen 'terms of use link'
+
+    Text for the link used in onboarding_first_screen_terms_of_use_text
+  -->
+  <string name="onboarding_first_screen_terms_of_use_link_2" tools:ignore="BrandUsage">د فایرفوکس د کارولو شرایط</string>
+  <!-- New Onboarding flow first screen button label -->
+  <string name="onboarding_first_screen_button_agree_and_continue_2">دوام ورکړئ</string>
+  <!-- New Onboarding flow second screen skip onboarding button label -->
+  <string name="onboarding_second_screen_skip_button_text">پرېږدئ</string>
+  <string name="firstrun_close_button">سمه ده، پوه شوم!</string>
+  <string name="firstrun_skip_button">پرېږدئ</string>
+  <string name="firstrun_next_button">بل</string>
+  <!-- Indicator that no trackers are being blocked because content blocking is disabled; normally shows the number of blocked trackers -->
+  <string name="content_blocking_disabled">-</string>
+  <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+  <string name="dialog_addtohomescreen_action_add">اضافه کول</string>
+  <!--
+    If the user decides to open the current page in another browser and if Firefox is not installed then we show this
+    item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play).
+  -->
+  <string name="download_firefox" tools:ignore="BrandUsage">فایرفوکس راښکته کړئ</string>
+  <!-- Text shown in prompts for GeckoView -->
+  <string name="gv_prompt_username_hint">کارن نوم</string>
+  <string name="gv_prompt_password_hint">پاسورډ</string>
+  <string name="gv_prompt_clear">پاکول</string>
+  <!--
+    Text shown in Security Information Popup
+
+    Text to denote secure or insecure connection
+  -->
+  <string name="security_popup_secure_connection">خوندي اړیکه</string>
+  <string name="security_popup_insecure_connection">ناخوندي اړیکه</string>
+  <!-- Label for the Find in page button -->
+  <string name="find_in_page">په پاڼه کې لټون</string>
+  <!-- Watermark/Hint for the find in page input field -->
+  <string name="find_in_page_input">په پاڼه کې ولټوئ</string>
+  <!--
+    String to show the number of results found in the page and the position
+    the user is at. %1$d is the position, %2$d is the total number of
+    results.
+  -->
+  <string name="find_in_page_result">%1$d/%2$d</string>
+  <!-- String to be read by the accessibility service when focusing the previous result button -->
+  <string name="accessibility_previous_result">مخکينۍ پایله ومومئ</string>
+  <!-- Checkbox menu item text to request desktop site -->
+  <string name="preference_performance_request_desktop_site2">ډېسکټاپ سایټ</string>
+  <!-- Displayed after a user long presses on the URL in a custom tab to copy the URL -->
+  <string name="custom_tab_copy_url_action">URL کاپي شو</string>
+  <!-- Title of Advanced Setting category -->
+  <string name="preference_category_advanced">پرمختللی</string>
+  <!-- Preference summary for the cookie banner. If the cookie banner option is not disabled. -->
+  <string name="preferences_cookie_banner_summary_on">فعال</string>
+  <!-- Preference summary for the cookie banner. If the cookie banner option is disabled. -->
+  <string name="preferences_cookie_banner_summary_off">غير فغال</string>
+  <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
+  <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">لغوه کول</string>
+  <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
+  <string name="enable_search_suggestions_no">نه</string>
+  <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
+  <string name="enable_search_suggestions_yes">هو</string>
   <!-- Tips displayed on the home view -->
 
+  <!-- Menu item to remove existing exceptions. -->
+  <string name="preference_exceptions_menu_remove">لیرې کول</string>
   <!-- Tracking protection bottom sheet -->
 
+  <!-- Preference for using light theme -->
+  <string name="preference_light_theme">روښانه</string>
+  <!-- Preference for using dark theme -->
+  <string name="preference_dark_theme">تیاره</string>
   <!-- Promote SearchWidget Dialog -->
+
+  <!--
+    Content description (not visible, for screen readers etc.): This is the description for the
+    close button from promote search widget dialog.
+  -->
+  <string name="promote_search_widget_dialog_content_description">بندول</string>
 </resources>

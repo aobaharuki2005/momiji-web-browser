@@ -677,6 +677,25 @@
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">قاراڭغۇ</string>
   <!-- Sync onboarding title. -->
   <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">شۇئان ئالدىنقى قېتىم كەلگەن جايدىن داۋاملاشتۇرىدۇ</string>
+  <!-- Sync onboarding button. -->
+  <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">قەدەمداشلاشنى باشلا</string>
+  <!-- Marketing onboarding title. -->
+  <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">تېخىمۇ ياخشى ئىنتېرنېت قۇرۇشىمىزغا ياردەم قىلىڭ</string>
+  <!--
+    Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
+  -->
+  <string name="nova_onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Firefox نى قانداق بايقىغانلىقىڭىز ۋە ئۇنى ئىشلىتىشنى Mozilla نىڭ بازارچىلىق ھەمكارلاشقۇچىلىرى بىلەن ھەمبەھىرلەڭ. بۇ سانلىق مەلۇماتلار ھەرگىز سېتىلمايدۇ. %1$s</string>
+  <!-- Marketing onboarding body link text. -->
+  <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">سانلىق مەلۇماتنى قانداق ئىشلىتىمىز</string>
+  <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">ئۇقتۇرۇش Firefox ئارقىلىق تېخىمۇ بىخەتەر بولۇشىڭىزغا ياردەم بېرىدۇ</string>
+  <!-- Notifications onboarding button. -->
+  <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">ئۇقتۇرۇشنى ئاچ</string>
+  <!-- "Add search widget" onboarding title. -->
+  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">ھەر بىر ئىزدەشنى تېخىمۇ شەخسىي قىلىدۇ</string>
+  <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Firefox ئەپچە قوش</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
 
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
@@ -1522,6 +1541,8 @@
   <string name="tab_drawer_fab_content">شەخسىي</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">قەدەمداش</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">بەتكۈچ ئىزدەيدۇ</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">ھەممە بەتكۈچ ھەمبەھىر</string>
   <!-- Text shown in the menu to view recently closed tabs -->
@@ -1564,12 +1585,18 @@
   <string name="remove_tab_from_collection">بەتكۈچنى يىغقۇچتىن چىقىرىۋەت</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
   <string name="tabs_tray_select_tabs">بەتكۈچنى تاللا</string>
+  <!-- Text for tab manager search page when there are no results. -->
+  <string name="tab_manager_no_search_results">ماس كەلگىنى تېپىلمىدى.</string>
+  <!-- Additional text for tab manager search page when there are no results. -->
+  <string name="tab_manager_no_search_results_additional_text">باشقىسىنى ئىزدەپ بېقىڭ!</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
   <string name="close_tab">بەتكۈچنى تاقاش</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. %s is the tab title -->
   <string name="close_tab_title">%s بەتكۈچنى ياپ</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">بەتكۈچ تىزىملىكىنى ئاچ</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">بەتكۈچ باشقۇرغۇچقا قايتىدۇ</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">بەتكۈچلەرنى يىغقۇچقا ساقلا</string>
   <!-- Text for the menu button to delete a collection -->
@@ -1961,6 +1988,8 @@
   <string name="bookmark_delete_folder_content_description">قىسقۇچ ئۆچۈر</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">خەتكۈچ ئىزدەيدۇ</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">قىسقۇچ ئىزدە</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">%s نىڭ تۈر تىزىملىكى</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1979,6 +2008,8 @@
   <string name="bookmark_empty_list_folder_description">زىيارەت قىلىۋاتقاندا خەتكۈچكە قوشسىڭىز كېيىن ياقتۇرغان تور بېكەتلىرىڭىزنى تاپالايسىز.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">يېڭى قىسقۇچ</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">%1$s دىن %2$s غا يۆتكەلدى</string>
   <!--
     Site Permissions
 
@@ -3993,6 +4024,20 @@
   <string name="terms_of_use_prompt_postpone">مېنى كېيىن ئەسكەرت</string>
   <!-- ==== Experiment strings. ==== -->
 
+  <!-- A title for the popup prompt. -->
+  <string name="terms_of_use_prompt_title_option_a" tools:ignore="UnusedResources">ئىشلىتىش شەرتلىرى</string>
+  <!--
+    A title for the popup prompt.
+    %1$s is the product name "Firefox"
+  -->
+  <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">%1$s نىڭ ئەسكەرتىشى</string>
+  <!--
+    Copy for the Terms of Use popup prompt body line two.
+    %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
+  -->
+  <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">سىز %1$s ھەققىدە مول بىلىمگە ئېرىشەلەيسىز.</string>
+  <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
+  <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">بۇ جاي</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
   <!--
