@@ -986,9 +986,6 @@ static bool TriggerFallbackReflow(PresShell* aPresShell, nsIFrame* aPositioned,
   if (!needsRetry) {
     return false;
   }
-  // We want to retry from the first position; remove the last position
-  // property so all potential positions are re-evaluated.
-  aPositioned->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
   aPresShell->MarkPositionedFrameForReflow(aPositioned);
   return true;
 }
