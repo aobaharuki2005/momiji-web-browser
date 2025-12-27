@@ -9954,7 +9954,7 @@
 # Whether to enable position-try-order
 - name: layout.css.anchor-positioning.position-try-order.enabled
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
   rust: true
 
