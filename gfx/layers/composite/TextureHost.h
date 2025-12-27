@@ -701,14 +701,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   virtual bool NeedsYFlip() const;
 
-  virtual void SetAcquireFence(UniqueFileHandle&& aFenceFd) {}
-
-  virtual void SetReleaseFence(UniqueFileHandle&& aFenceFd) {}
-
-  virtual UniqueFileHandle GetAndResetReleaseFence() {
-    return UniqueFileHandle();
-  }
-
   virtual AndroidHardwareBuffer* GetAndroidHardwareBuffer() const {
     return nullptr;
   }
