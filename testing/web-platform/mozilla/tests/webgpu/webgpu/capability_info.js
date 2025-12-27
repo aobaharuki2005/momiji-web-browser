@@ -215,9 +215,10 @@ export const kTextureUsageInfo =
 /** List of all GPUTextureUsage values. */
 export const kTextureUsages = numericKeysOf(kTextureUsageInfo);
 
-/** Check if `usage` is TRANSIENT_ATTACHMENT | RENDER_ATTACHMENT. */
-export function IsValidTransientAttachmentUsage(usage) {
+/** Check if `usage` does not contain TRANSIENT_ATTACHMENT or is TRANSIENT_ATTACHMENT | RENDER_ATTACHMENT. */
+export function IsValidTextureUsageCombination(usage) {
   return (
+    (usage & GPUConst.TextureUsage.TRANSIENT_ATTACHMENT) === 0 ||
     usage === (GPUConst.TextureUsage.TRANSIENT_ATTACHMENT | GPUConst.TextureUsage.RENDER_ATTACHMENT));
 
 }
@@ -402,12 +403,12 @@ export const kPerStageBindingLimits =
 
 {
   'uniformBuf': { class: 'uniformBuf', maxLimits: { COMPUTE: 'maxUniformBuffersPerShaderStage', FRAGMENT: 'maxUniformBuffersPerShaderStage', VERTEX: 'maxUniformBuffersPerShaderStage' } },
-  'storageBuf': { class: 'storageBuf', maxLimits: { COMPUTE: 'maxStorageBuffersPerShaderStage', FRAGMENT: 'maxStorageBuffersPerShaderStage', VERTEX: 'maxStorageBuffersPerShaderStage' } },
+  'storageBuf': { class: 'storageBuf', maxLimits: { COMPUTE: 'maxStorageBuffersPerShaderStage', FRAGMENT: 'maxStorageBuffersInFragmentStage', VERTEX: 'maxStorageBuffersInVertexStage' } },
   'sampler': { class: 'sampler', maxLimits: { COMPUTE: 'maxSamplersPerShaderStage', FRAGMENT: 'maxSamplersPerShaderStage', VERTEX: 'maxSamplersPerShaderStage' } },
   'sampledTex': { class: 'sampledTex', maxLimits: { COMPUTE: 'maxSampledTexturesPerShaderStage', FRAGMENT: 'maxSampledTexturesPerShaderStage', VERTEX: 'maxSampledTexturesPerShaderStage' } },
-  'readonlyStorageTex': { class: 'readonlyStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesPerShaderStage', VERTEX: 'maxStorageTexturesPerShaderStage' } },
-  'writeonlyStorageTex': { class: 'writeonlyStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesPerShaderStage', VERTEX: 'maxStorageTexturesPerShaderStage' } },
-  'readwriteStorageTex': { class: 'readwriteStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesPerShaderStage', VERTEX: 'maxStorageTexturesPerShaderStage' } }
+  'readonlyStorageTex': { class: 'readonlyStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesInFragmentStage', VERTEX: 'maxStorageTexturesInVertexStage' } },
+  'writeonlyStorageTex': { class: 'writeonlyStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesInFragmentStage', VERTEX: 'maxStorageTexturesInVertexStage' } },
+  'readwriteStorageTex': { class: 'readwriteStorageTex', maxLimits: { COMPUTE: 'maxStorageTexturesPerShaderStage', FRAGMENT: 'maxStorageTexturesInFragmentStage', VERTEX: 'maxStorageTexturesInVertexStage' } }
 };
 
 /**
@@ -738,7 +739,7 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
 ['maximum',,, kMaxUnsignedLongValue], {
   'maxTextureDimension1D': [, 8192, 4096],
   'maxTextureDimension2D': [, 8192, 4096],
-  'maxTextureDimension3D': [, 2048, 1024],
+  'maxTextureDimension3D': [, 2048, 2048],
   'maxTextureArrayLayers': [, 256, 256],
 
   'maxBindGroups': [, 4, 4],
@@ -775,17 +776,8 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxComputeWorkgroupSizeX': [, 256, 128],
   'maxComputeWorkgroupSizeY': [, 256, 128],
   'maxComputeWorkgroupSizeZ': [, 64, 64],
-  'maxComputeWorkgroupsPerDimension': [, 65535, 65535],
-  'maxImmediateSize': [, 64, 64]
+  'maxComputeWorkgroupsPerDimension': [, 65535, 65535]
 }];
-
-// MAINTENANCE_TODO: Remove when the compat spec is merged.
-const kCompatOnlyLimits = [
-'maxStorageTexturesInFragmentStage',
-'maxStorageTexturesInVertexStage',
-'maxStorageBuffersInFragmentStage',
-'maxStorageBuffersInVertexStage'];
-
 
 /**
  * Feature levels corresponding to core WebGPU and WebGPU
@@ -824,14 +816,7 @@ export const kLimitClasses = Object.fromEntries(
 );
 
 export function getDefaultLimits(featureLevel) {
-  return Object.fromEntries(
-    Object.entries(kLimitInfos[featureLevel]).filter(([k]) => {
-      // Filter out compat-only limits when in core mode
-      return featureLevel === 'core' ?
-      !kCompatOnlyLimits.includes(k) :
-      true;
-    })
-  );
+  return kLimitInfos[featureLevel];
 }
 
 /**
