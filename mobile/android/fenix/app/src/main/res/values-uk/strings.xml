@@ -591,7 +591,7 @@
   <!-- Marketing onboarding page title. 'Firefox' is intentionally hardcoded. -->
   <string name="onboarding_marketing_redesign_title" tools:ignore="BrandUsage">Допоможіть нам розвивати Firefox</string>
   <!-- Marketing onboarding page opt-out checkbox. Unchecking the box does not increase data collection. Our data practices remain the same. 'Mozilla' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Поділіться з маркетинговими партнерами Mozilla, як ви дізналися про Firefox і чому ним користуєтеся. Ці дані ніколи не продаються.</string>
+  <string name="onboarding_marketing_redesign_opt_out_checkbox" tools:ignore="BrandUsage">Повідомте маркетингових партнерів Mozilla про те, як ви відкрили для себе Firefox і про те, що ви ним користуєтесь. Ці дані ніколи не продаються.</string>
   <!-- Marketing onboarding page clickable link text to "learn more" on how data is used. -->
   <string name="onboarding_marketing_redesign_learn_more">Як ми використовуємо дані</string>
   <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
@@ -621,7 +621,7 @@
   <!-- Marketing onboarding page title variant. “One last thing” refers to the final step or action in the onboarding process that we’re asking users to take before they can start using the browser. -->
   <string name="onboarding_marketing_title_1" tools:ignore="UnusedResources">І ще дещо</string>
   <!-- Marketing onboarding page body variant. 'Firefox' is intentionally hardcoded. -->
-  <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Поділіться з маркетинговими партнерами Mozilla, як ви дізналися про Firefox і що ви ним користуєтеся. Ці дані ніколи не продаються.</string>
+  <string name="onboarding_marketing_body_1" tools:ignore="BrandUsage,UnusedResources">Повідомте маркетингових партнерів Mozilla про те, як ви відкрили для себе Firefox і про те, що ви ним користуєтесь. Ці дані ніколи не продаються.</string>
   <!-- Marketing onboarding page button label variant. Button to confirm choice and start browsing. -->
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">Погодитися і почати перегляд</string>
   <!-- ==== Project "Nova" onboarding strings ==== -->

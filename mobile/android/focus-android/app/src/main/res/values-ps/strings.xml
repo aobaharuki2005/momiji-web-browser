@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<resources>
+  <!--
+    #######################################################################################
+
+    ## Put only strings into this file that should be translated. Move all other strings ##
+
+    ## into a separate file like strings_references.xml                                  ##
+
+    #######################################################################################
+  -->
+
+  <!-- Label used for buttons, e.g. in dialogs -->
+  <string name="action_cancel">لغوه کول</string>
+  <!-- Label used for buttons, e.g. in dialogs -->
+  <string name="action_ok">سمه ده</string>
+  <string name="action_save">خوندي کړئ</string>
+  <!-- This text is shown in the URL bar when it's empty -->
+  <string name="urlbar_hint">پته ولټوئ يا وليکئ</string>
+  <string name="teaser">اتومات شخصي لټون.\nولټوئ. پاک کړئ. بيا تکرار کړئ.</string>
+  <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a browsing session -->
+  <string name="feedback_erase">ستاسو د لټون تاريخچه پاکه شوې ده.</string>
+  <string name="feedback_erase2">د لټون تاريخچه پاکه شوه</string>
+  <!-- "Snackbar" shown after the user has pressed the 'erase' button at the end of a custom tab browsing session -->
+  <string name="feedback_erase_custom_tab">د ټب د لټون تاريخچه پاکه شوې ده.</string>
+  <!--
+    This label is shown below the URL bar as soon as the user enters text. Clicking the label will perform a search.
+    %1$s is the text typed by the user.
+  -->
+  <string name="search_hint">د %1$s لټون وکړئ</string>
+  <!-- Menu item: Share the currently visible page -->
+  <string name="menu_share">شریکول…</string>
+  <!-- Menu item: Report an issue on the current site -->
+  <string name="menu_report_site_issue">د سایټ ستونزه راپور کړئ</string>
+  <!--
+    Menu item: Switch to another browser to open the currently visible page. %1$s will be
+    replaced with the name of the browser like: "Open in Firefox" or "Open in Chrome". Some
+    links can be opened by native apps that aren't a browser, e.g. "Open in YouTube"
+  -->
+  <string name="menu_open_with_default_browser2">په %1$s کې پرانیستل کیږي</string>
+  <!--
+    Menu item: Switch to another browser to open the currently visible page. This menu item
+    will be shown if there are multiple browsers and we do not know which one is the default
+    browser or in case Focus is actually the default browser. Clicking this menu item will show
+    a screen with multiple browsers (or other apps that can open the current URL) to choose from.
+  -->
+  <string name="menu_open_with_a_browser2">خلاص کړئ په…</string>
+  <!-- Menu item: Add the current page as a shortcut to the device's home screen (launcher). -->
+  <string name="menu_add_to_home_screen">کور سکرين ته زيات کړئ</string>
+  <!-- Menu item: Add the current site as a shortcut on the Home screen -->
+  <string name="menu_add_to_shortcuts">لنډلارو ته اضافه کړئ</string>
+  <!-- Menu item: Remove the current site as a shortcut from the Home screen -->
+  <string name="menu_remove_from_shortcuts">له شارټ کټونو څخه لرې کړئ</string>
+  <!-- Menu item: Shows information about features and changes that are new to this version -->
+  <string name="menu_settings">امستنې</string>
+  <string name="menu_about">په اړه</string>
+  <string name="menu_help">مرسته</string>
+  <string name="menu_terms_of_use">د کارولو شرایط</string>
+  <!-- Tips displayed on the home view -->
+
+  <!-- Tracking protection bottom sheet -->
+
+  <!-- Promote SearchWidget Dialog -->
+</resources>

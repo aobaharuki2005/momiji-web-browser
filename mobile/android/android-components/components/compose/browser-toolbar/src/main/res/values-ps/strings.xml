@@ -8,19 +8,19 @@
 
 <resources>
   <!-- Content description for the clear URL text button. -->
-  <string name="mozac_clear_button_description">Пок кардан</string>
+  <string name="mozac_clear_button_description">پاک کړئ</string>
   <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
-  <string name="mozac_browser_toolbar_search_hint">Нишониеро ҷустуҷӯ кунед ё ворид намоед</string>
+  <string name="mozac_browser_toolbar_search_hint">پته ولټوئ يا وليکئ</string>
   <!-- Contextual menu option for long pressing on the toolbar URL. Clicking it will copy the current URL -->
-  <string name="mozac_browser_toolbar_long_press_popup_copy">Нусха бардоштан</string>
+  <string name="mozac_browser_toolbar_long_press_popup_copy">کاپي کړئ</string>
   <!-- Contextual menu option for long pressing on the toolbar URL. Clicking it will paste the text from clipboard and allow user to edit it -->
-  <string name="mozac_browser_toolbar_long_press_popup_paste">Гузоштан</string>
+  <string name="mozac_browser_toolbar_long_press_popup_paste">پېسټ کړئ</string>
   <!-- Contextual menu option for long pressing on the toolbar URL. Clicking it will paste the text from clipboard and search for or load it as an URL. '&amp;' is replaced with the ampersand symbol: & -->
-  <string name="mozac_browser_toolbar_long_press_popup_paste_and_go">Гузоштан ва идома додан</string>
+  <string name="mozac_browser_toolbar_long_press_popup_paste_and_go">پېسټ کړئ او لاړ شئ</string>
   <!-- Text for the title displayed in the contextual feature recommendation popup promoting the new toolbar redesign. -->
-  <string name="mozac_toolbar_cfr_title">Барои низоми мобилии «Android» тарҳрезӣ шудааст. Барои шумо боз ҳам беҳтар карда шудааст</string>
+  <string name="mozac_toolbar_cfr_title">د اندرويډ لپاره جوړ شوی، ستاسو لپاره لا ښه شوی</string>
   <!-- Text for the description displayed in the contextual feature recommendation popup promoting the new toolbar redesign. -->
-  <string name="mozac_toolbar_cfr_description">Мо тарҳро бо намуди зоҳирии олӣ ва замонавӣ нав кардем</string>
+  <string name="mozac_toolbar_cfr_description">موږ ډيزاين د يو ښکلي او عصري احساس لپاره تازه کړی دی</string>
   <!-- Content description (not visible, for screen readers etc.) for the "minimal toolbar" containing just the URL instead of the big toolbar containing also other buttons. %1$s will be replaced with the domain name of the current website. -->
-  <string name="mozac_minimal_display_toolbar_content_description">Воридкунии матн дар %1$s. Барои қатъ кардани амал, ду маротиба зарба занед</string>
+  <string name="mozac_minimal_display_toolbar_content_description">په %1$s کې متن داخلول. د بندولو لپاره دوه ځله ټېپ کړئ</string>
 </resources>
