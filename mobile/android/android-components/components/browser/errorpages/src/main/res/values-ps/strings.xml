@@ -35,4 +35,16 @@
   <string name="mozac_browser_errorpages_security_bad_hsts_cert_message"><![CDATA[<ul>\n<li>هغه پاڼه چې تاسو یې د کتلو هڅه کوئ نه شي ښودل کېدای، ځکه چې دا وېب‌پاڼه خوندي اړيکې (کنکشن) ته اړتیا لري.</li>\n<li>ستونزه ډېر امکان لري د وېب‌پاڼې له لوري وي، او تاسو د حل لپاره څه نه شئ کولای.</li>\n<li>تاسو کولای شئ د دې ستونزې په اړه د وېب‌پاڼې له مدير سره اړیکه ونیسئ.</li>\n</ul>\n]]></string>
   <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
   <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">پرمختللی…</string>
+  <!-- The advanced certificate information shown when a website uses HSTS. The %1$s will be replaced by the website URL and %2$s will be replaced by the app name. It's only shown when a website uses HSTS. -->
+  <string name="mozac_browser_errorpages_security_bad_hsts_cert_techInfo2"><![CDATA[<label> <b>%1$s</b> د HTTP سخت ټرانسپورټ امنیت (HSTS) په نوم د امنیت تګلاره لري، چې معنا یې دا ده چې <b>%2$s</b> یوازې په خوندي ډول ورسره نښلېدای شي. ته نشې کولی د دې سایټ د لیدو لپاره استثنا اضافه کړې. </label>]]></string>
+  <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
+  <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">شاته لاړ شه</string>
+  <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+  <string name="mozac_browser_errorpages_net_interrupt_title">اړیکه پرې شوه</string>
+  <!-- The document title and heading of an error page. -->
+  <string name="mozac_browser_errorpages_malformed_uri_title">ناسمه پته</string>
+  <!-- The document title and heading of an error page. -->
+  <string name="mozac_browser_errorpages_file_not_found_title">فایل ونه موندل شو</string>
+  <!-- The document title and heading of an error page. -->
+  <string name="mozac_browser_errorpages_unknown_proxy_host_title">پراکسي سرور ونه موندل شو</string>
 </resources>

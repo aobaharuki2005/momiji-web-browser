@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this file,
+  You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<resources>
+  <!-- Description for text button that expands the list of domain permissions -->
+  <string name="mozac_feature_addons_permissions_show_all_sites">ټول سایټونه وښایاست</string>
+  <!-- The author of an add-on. -->
+  <string name="mozac_feature_addons_author">لیکوال</string>
+  <!-- The developer website (Homepage) of the add-on. -->
+  <string name="mozac_feature_addons_home_page">کور پاڼه</string>
+  <!-- The rating of the add-on. -->
+  <string name="mozac_feature_addons_rating">ارزونه</string>
+  <!-- The settings of the add-on. -->
+  <string name="mozac_feature_addons_settings">امستنې</string>
+  <!-- Indicates the add-on is enabled. -->
+  <string name="mozac_feature_addons_settings_on">فعال</string>
+  <!-- Displays a page with all the details of an add-on. -->
+  <string name="mozac_feature_addons_details">جزیات</string>
+  <!-- This is a button to add (install) an add-on . -->
+  <string name="mozac_feature_addons_permissions_dialog_add">اضافه کول</string>
+  <!-- This is a button to allow the optional permissions requested by an add-on . -->
+  <string name="mozac_feature_addons_permissions_dialog_allow">اجازه ورکول</string>
+  <!-- This is a button to deny the optional permissions requested by an add-on . -->
+  <string name="mozac_feature_addons_permissions_dialog_deny">ردول</string>
+  <!-- This is a button to cancel the add-on installation . -->
+  <string name="mozac_feature_addons_permissions_dialog_cancel">لغوه کول</string>
+  <!-- This is the label of a button to cancel an ongoing add-on installation. -->
+  <string name="mozac_feature_addons_install_addon_dialog_cancel">لغوه کول</string>
+</resources>
