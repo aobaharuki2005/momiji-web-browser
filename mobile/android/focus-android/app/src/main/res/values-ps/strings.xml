@@ -129,15 +129,21 @@
   <!-- Text that is shown below a "switch" preference that is disabled. -->
   <string name="preference_state_off">غير فغال</string>
   <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
-  <string name="preference_autocomplete_action_add2">URL اضافه کړئ</string>
+  <string name="preference_autocomplete_action_add2">URL اضافه کول</string>
   <!-- A link to SUMO at autocomplete settings. -->
   <string name="preference_autocomplete_learn_more">نور مالومات ترلاسه کړئ</string>
+  <!-- Menu item to remove existing autocomplete URLs. -->
+  <string name="preference_autocomplete_menu_remove">لېرې کول</string>
+  <!-- Content description (not visible, for screen readers etc.): Button that will delete all selected custom autocomplete URLs. -->
+  <string name="preference_autocomplete_action_remove_content_description">لېرې کول</string>
+  <string name="preference_language">ژبه</string>
   <string name="preference_category_privacy">محرمیت</string>
   <!--
     Three options for Cookie blocking. Yes (All cookies Blocked), Block 3rd-party cookies
     only (Only 3rd-party Cookies Blocked), No (No cookies blocked)
   -->
   <string name="preference_privacy_should_block_cookies_no_option2">نه مننه</string>
+  <string name="preference_privacy_should_block_cookies_yes_option2">هو، مهرباني وکړئ</string>
   <!--
     Preference Title: Secure Mode is a setting that prevents the app's content to show up in the "recent apps" screen
     and prevents the user from taking screenshots or casting the app to other displays.

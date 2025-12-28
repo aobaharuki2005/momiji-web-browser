@@ -677,6 +677,8 @@
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">قاراڭغۇ</string>
   <!-- Sync onboarding title. -->
   <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">شۇئان ئالدىنقى قېتىم كەلگەن جايدىن داۋاملاشتۇرىدۇ</string>
+  <!-- Sync onboarding subtitle. -->
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">كۆزنى يۇمۇپ ئاچقۇچە خالىغان ئۈسكۈنىدە خەتكۈچ، ئىم قاتارلىق ئۇچۇرلارنى كۆرەلەيسىز. شەخسىي ئۇچۇرلىرىڭىز شىفىرلىنىپ بىخەتەر ساقلىنىدۇ.</string>
   <!-- Sync onboarding button. -->
   <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">قەدەمداشلاشنى باشلا</string>
   <!-- Marketing onboarding title. -->
@@ -690,10 +692,14 @@
   <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">سانلىق مەلۇماتنى قانداق ئىشلىتىمىز</string>
   <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">ئۇقتۇرۇش Firefox ئارقىلىق تېخىمۇ بىخەتەر بولۇشىڭىزغا ياردەم بېرىدۇ</string>
+  <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">Firefox نىڭ ئەڭ يېڭى شەخسىيەت ئىقتىدارىنى بايقاپ، شەخسىيەت قوغداشنىڭ ئەڭ يېڭى ئېقىمىغا ئەگىشەلەيسىز.</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">ئۇقتۇرۇشنى ئاچ</string>
   <!-- "Add search widget" onboarding title. -->
   <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">ھەر بىر ئىزدەشنى تېخىمۇ شەخسىي قىلىدۇ</string>
+  <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">تېلېفوننىڭ باش ئېكرانىدىنلا ئىزدىيەلەيسىز، Firefox نىڭ ئۆزلۈكىدىن قوغداش ئىقتىدارى ھەر ۋاقىت سىزگە ماياك بولىدۇ.</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Firefox ئەپچە قوش</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
