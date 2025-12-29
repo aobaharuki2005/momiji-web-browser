@@ -716,6 +716,7 @@ projects:
     - components:support-base
     - components:support-images
     - components:support-ktx
+    - components:support-locale
     - components:support-remotesettings
     - components:support-test
     - components:support-utils
@@ -782,6 +783,7 @@ projects:
     - components:support-base
     - components:support-images
     - components:support-ktx
+    - components:support-locale
     - components:support-remotesettings
     - components:support-test
     - components:support-test-libstate
@@ -827,6 +829,7 @@ projects:
     - components:support-base
     - components:support-images
     - components:support-ktx
+    - components:support-locale
     - components:support-remotesettings
     - components:support-test
     - components:support-test-libstate
@@ -943,6 +946,7 @@ projects:
     - components:support-base
     - components:support-images
     - components:support-ktx
+    - components:support-locale
     - components:support-remotesettings
     - components:support-test
     - components:support-test-libstate
@@ -1122,6 +1126,7 @@ projects:
     - components:support-base
     - components:support-images
     - components:support-ktx
+    - components:support-locale
     - components:support-remotesettings
     - components:support-test
     - components:support-test-libstate
@@ -1239,6 +1244,7 @@ projects:
     - components:support-base
     - components:support-images
     - components:support-ktx
+    - components:support-locale
     - components:support-remotesettings
     - components:support-test
     - components:support-test-fakes
@@ -1612,6 +1618,7 @@ projects:
     - components:support-base
     - components:support-images
     - components:support-ktx
+    - components:support-locale
     - components:support-remotesettings
     - components:support-test
     - components:support-utils

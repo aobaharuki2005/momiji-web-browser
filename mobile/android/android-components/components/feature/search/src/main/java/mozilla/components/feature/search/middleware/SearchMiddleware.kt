@@ -81,7 +81,7 @@ class SearchMiddleware(
         searchEngineSelectorConfig?.service?.remoteSettingsService?.makeClient(SEARCH_CONFIG_ICONS_COLLECTION_NAME)
     private val searchEngineSelectorRepository: SearchEngineRepository? =
         searchEngineSelectorConfig?.let {
-                SearchEngineSelectorRepository(it, defaultSearchEngineIcon, client)
+                SearchEngineSelectorRepository(context, it, defaultSearchEngineIcon, client)
         }
 
     override fun invoke(
