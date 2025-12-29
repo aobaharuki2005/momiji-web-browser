@@ -2554,9 +2554,9 @@
   <!-- Description of redirect tracker cookies that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_redirect_trackers_description">Maže cookies nastavené během přesměrování známými sledujícími servery.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
-  <string name="etp_suspected_fingerprinters_title">Podezřelé vytváření otisku prohlížeče</string>
+  <string name="etp_suspected_fingerprinters_title">Předpokládané vytváření otisku prohlížeče</string>
   <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
-  <string name="etp_suspected_fingerprinters_description">Zapne ochranu před vytvářením otisku prohlížeče, která je podezřelá.</string>
+  <string name="etp_suspected_fingerprinters_description">Zapne ochranu před případným vytvářením otisku prohlížeče.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_known_fingerprinters_title">Známé vytváření otisků prohlížeče</string>
   <!--

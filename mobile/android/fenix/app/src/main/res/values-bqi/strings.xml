@@ -3584,7 +3584,7 @@
   <!-- Text for the connection security panel when the site is secure. -->
   <string name="connection_security_panel_secure">منپیز ٱمن</string>
   <!-- Text for the connection security panel when the site is not secure. -->
-  <string name="connection_security_panel_not_secure">منپیز ن ٱمن</string>
+  <string name="connection_security_panel_not_secure">منپیز ٱمن نؽ</string>
   <!-- Text for the connection security panel when accessed from local PDF. -->
   <string name="connection_security_panel_local_pdf">ای بلگه من دسگا ایسا زفت وابیڌه</string>
   <!--

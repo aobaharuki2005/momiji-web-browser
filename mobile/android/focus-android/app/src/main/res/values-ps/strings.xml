@@ -72,11 +72,25 @@
   -->
   <string name="menu_trackers_blocked_title">ټرېکرونه بند شوي</string>
   <!--
+    Menu item: This is the subtitle for the Trackers blocked menu entry that shows how many
+    trackers have been blocked for the currently loaded website.
+  -->
+  <string name="menu_trackers_blocked_subtitle">د دې بندول ښايي د سايټ ځينې ستونزې هوارې کړي</string>
+  <!-- Menu item: This is the label for turning off content blocking for the current website. -->
+  <string name="menu_content_blocking">د محتوا بندول</string>
+  <!--
+    This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
+    See https://github.com/mozilla-mobile/focus-android/issues/2106
+    %1$s will be replaced by the app name (e.g. Firefox Focus)
+  -->
+  <string name="menu_custom_tab_branding">د %1$s لخوا پرمخ وړل کیږي</string>
+  <!--
     This is the title of a dialog that shows all the share targets (apps or contacts) when
     sharing an URL.
   -->
   <string name="share_dialog_title">له لارې شریک کړئ</string>
   <string name="notification_erase_title_android_14">د پلټنې تاریخچه پاکه کړئ؟</string>
+  <string name="notification_erase_text">د پلټنې تاریخچه پاکول</string>
   <!-- Notification action to open Focus and resume the current browsing session. -->
   <string name="notification_action_open">پرانیستل</string>
   <!--
@@ -121,6 +135,8 @@
   <string name="text_selection_search_action_klar" tools:ignore="BrandUsage">په Klar کې لټون</string>
   <!-- A link to SUMO at the bottom of About Focus screen. -->
   <string name="about_screen_learn_more">نور مالومات ترلاسه کړئ</string>
+  <!-- Preference category for settings related to controlling web content -->
+  <string name="preference_category_web_content">د وېب منځپانګه</string>
   <!-- Preference category for General Settings -->
   <string name="preference_category_general">عمومي</string>
   <string name="preference_category_search">لټون</string>
@@ -154,6 +170,8 @@
   <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
   <string name="preference_mozilla_telemetry_summary">نور مالومات ترلاسه کړئ</string>
   <string name="preference_search_remove">لېرې کړئ</string>
+  <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+  <string name="content_description_menu">نور غوراوي</string>
   <string name="error_hostLookup_title">سرور ونه موندل شو</string>
   <!--
     New Onboarding flow first screen 'terms of use link'
@@ -172,6 +190,12 @@
   <string name="content_blocking_disabled">-</string>
   <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
   <string name="dialog_addtohomescreen_action_add">اضافه کول</string>
+  <!-- Label of the action that will add the current website to the home screen (shown in the confirmation dialog). -->
+  <string name="dialog_addtohomescreen_action_yes">هو</string>
+  <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+  <string name="dialog_addtohomescreen_action_cancel">لغوه کول</string>
+  <!-- Label of the action that will close the dialog and not add anything to the home screen (shown in the confirmation dialog). -->
+  <string name="dialog_addtohomescreen_action_no">نه</string>
   <!--
     If the user decides to open the current page in another browser and if Firefox is not installed then we show this
     item in the list of browsers. Clicking it will open the app store installed on the device (usually that's Google Play).
@@ -212,6 +236,8 @@
   <string name="preferences_cookie_banner_summary_off">غير فغال</string>
   <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner panel in the toolbar. -->
   <string name="cookie_banner_exception_panel_site_is_not_supported_cancel_button">لغوه کول</string>
+  <!-- CFR for Cookie Banner (Banner Info Message). This string is used as text for a link in cfr_cookie_banner and takes the user to the app settings. -->
+  <string name="cfr_cookie_banner_link">امستنې</string>
   <!-- Label used for the "NO button" for the prompt to enable search suggestions -->
   <string name="enable_search_suggestions_no">نه</string>
   <!-- Label used for the "YES button" for the prompt to enable search suggestions -->
@@ -222,6 +248,18 @@
   <string name="preference_exceptions_menu_remove">لیرې کول</string>
   <!-- Tracking protection bottom sheet -->
 
+  <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection. -->
+  <string name="content">منځپانګه</string>
+  <!-- Content description (not visible, for screen readers etc.): Navigate back button description. -->
+  <string name="go_back">شاته تلل</string>
+  <!--
+    Top Sites
+
+    Text for the menu button to remove a top site
+  -->
+  <string name="remove_top_site">ړنګول</string>
+  <!-- Text for the dialog title for renaming a top site -->
+  <string name="rename_top_site">نوم بدلول</string>
   <!-- Preference for using light theme -->
   <string name="preference_light_theme">روښانه</string>
   <!-- Preference for using dark theme -->
