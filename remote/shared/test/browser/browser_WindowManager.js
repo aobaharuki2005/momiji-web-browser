@@ -328,3 +328,96 @@ add_task(async function test_getWindowById() {
     windowManager.destroy();
   }
 });
+
+add_task(async function test_waitForChromeWindowLoaded_newBrowserWindow() {
+  const win = Services.ww.openWindow(
+    null,
+    AppConstants.BROWSER_CHROME_URL,
+    "_blank",
+    "chrome,all,dialog=no",
+    null
+  );
+
+  try {
+    ok(
+      !win.gBrowserInit?.delayedStartupFinished,
+      "Browser window not finished delayed startup"
+    );
+
+    await windowManager.waitForChromeWindowLoaded(win);
+
+    ok(
+      win.gBrowserInit.delayedStartupFinished,
+      "Browser window finished delayed startup"
+    );
+    is(
+      win.document.readyState,
+      "complete",
+      "Window document is in complete state"
+    );
+    ok(
+      !win.document.isUncommittedInitialDocument,
+      "Window document is not an uncommitted initial document"
+    );
+  } finally {
+    await BrowserTestUtils.closeWindow(win);
+  }
+});
+
+add_task(async function test_waitForChromeWindowLoaded_alreadyLoadedWindow() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+
+  try {
+    ok(
+      win.gBrowserInit.delayedStartupFinished,
+      "Browser window is already fully loaded"
+    );
+
+    await windowManager.waitForChromeWindowLoaded(win);
+
+    is(
+      win.document.readyState,
+      "complete",
+      "Window document is in complete state"
+    );
+    ok(
+      !win.document.isUncommittedInitialDocument,
+      "Window document is not an uncommitted initial document"
+    );
+  } finally {
+    await BrowserTestUtils.closeWindow(win);
+  }
+});
+
+add_task(
+  async function test_waitForChromeWindowLoaded_nonBrowserChromeWindow() {
+    const win = Services.ww.openWindow(
+      gBrowser.ownerGlobal,
+      "chrome://browser/content/pageinfo/pageInfo.xhtml",
+      "_blank",
+      "chrome,dialog=no,all",
+      null
+    );
+
+    try {
+      await windowManager.waitForChromeWindowLoaded(win);
+
+      isnot(
+        win.document.documentURI,
+        AppConstants.BROWSER_CHROME_URL,
+        "Window is not a browser window"
+      );
+      is(
+        win.document.readyState,
+        "complete",
+        "Window document is in complete state"
+      );
+      ok(
+        !win.document.isUncommittedInitialDocument,
+        "Window document is not an uncommitted initial document"
+      );
+    } finally {
+      await BrowserTestUtils.closeWindow(win);
+    }
+  }
+);

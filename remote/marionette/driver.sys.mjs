@@ -678,8 +678,9 @@ GeckoDriver.prototype.newSession = async function (cmd) {
       lazy.logger.debug(`Waiting for initial application window`);
       await lazy.Marionette.browserStartupFinished;
 
-      const appWin =
-        await lazy.windowManager.waitForInitialApplicationWindowLoaded();
+      // This call includes a fallback to "mail:3pane" as well.
+      const appWin = Services.wm.getMostRecentBrowserWindow();
+      await lazy.windowManager.waitForChromeWindowLoaded(appWin);
 
       if (lazy.MarionettePrefs.clickToStart) {
         Services.prompt.alert(
