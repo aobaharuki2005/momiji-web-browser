@@ -118,9 +118,8 @@ add_task(async function testHiddenWhenDisabled() {
   ok(profilesCategory, "The category exists");
   ok(!BrowserTestUtils.isVisible(profilesCategory), "The category is hidden");
 
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
-
   await SpecialPowers.popPrefEnv();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 add_task(async function testEnabled() {
@@ -343,8 +342,8 @@ add_task(async function testPrivacyInfoHiddenWhenDisabled() {
 
   ok(!BrowserTestUtils.isVisible(profilesNote), "The profiles note is hidden");
 
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
   await SpecialPowers.popPrefEnv();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
 // If the user disables data collection, then re-enables data collection in
