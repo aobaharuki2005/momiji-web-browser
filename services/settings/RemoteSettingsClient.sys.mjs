@@ -1153,7 +1153,7 @@ export class RemoteSettingsClient extends EventEmitter {
     const hasLocalData = localTimestamp !== null;
     const { retry = false } = options;
     // On retry, we fully re-fetch the collection (no `?_since`).
-    const since = retry || !hasLocalData ? undefined : `"${localTimestamp}"`;
+    const since = retry || !hasLocalData ? undefined : localTimestamp;
 
     // Define an executor that will verify the signature of the local data.
     const verifySignatureLocalData = (resolve, reject) => {
