@@ -3415,6 +3415,26 @@ characteristics:
       # is more like 'technical' (per the Data Review), I'm marking highly sensitive.
       - highly_sensitive
 
+  math_ops_fdlibm_2:
+    type: text
+    description: >
+      Result of additional fingerprintable math operations, with fdlibm enabled
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005866
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005866
+    expires: never
+    data_sensitivity:
+      # Text metrics are _required_ to be web_activity or highly_sensitive, so even though this
+      # is more like 'technical' (per the Data Review), I'm marking highly sensitive.
+      - highly_sensitive
+
   keyboard_layout:
     type: string
     description: >
