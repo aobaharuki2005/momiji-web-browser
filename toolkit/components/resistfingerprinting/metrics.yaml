@@ -4009,6 +4009,30 @@ characteristics:
     data_sensitivity:
       - technical
 
+  fpu_control_state:
+    type: string
+    description: >
+      The current FPU (Floating-Point Unit) rounding mode and precision settings.
+      Format depends on architecture:
+      - x86/x86-64: "std:X;x87:Y;sse:Z;prec:P" where X,Y,Z are rounding modes (0-3)
+        and P is precision (single/double/extended)
+      - ARM: "std:X;arm:Y" where X,Y are rounding modes (0-3)
+      Rounding modes: 0=nearest, 1=down/negative, 2=up/positive, 3=toward-zero
+      This helps identify unusual FPU configurations that may cause math variations.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005866
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005866
+    expires: never
+    data_sensitivity:
+      - technical
+
   mathml1:
     type: string
     description: >
