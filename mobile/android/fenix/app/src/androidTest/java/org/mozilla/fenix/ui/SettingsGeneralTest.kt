@@ -83,21 +83,27 @@ class SettingsGeneralTest : TestSetup() {
         }.openThreeDotMenu {
         }.clickSettingsButton {
         }.openAccessibilitySubMenu {
+            verifyFontSizingMenuItems(
+                composeTestRule,
+                isTheAutomaticFontSizingToggleChecked = true,
+                isTheFontSizingSliderEnabled = false,
+                isTheZoomOnAllWbsitesToggleChecked = false,
+            )
             clickFontSizingSwitch()
-            verifyEnabledMenuItems()
-            changeTextSizeSlider(textSizePercentage)
-            verifyTextSizePercentage(textSizePercentage)
+            verifyFontSizingMenuItems(
+                composeTestRule,
+                isTheAutomaticFontSizingToggleChecked = false,
+                isTheFontSizingSliderEnabled = true,
+                isTheZoomOnAllWbsitesToggleChecked = false,
+            )
+            changeTextSizeSlider(textSizePercentage, composeTestRule)
+            verifyTextSizePercentage(textSizePercentage, composeTestRule)
         }.goBack {
         }.goBack(composeTestRule) {
         }
         navigationToolbar(composeTestRule) {
         }.enterURLAndEnterToBrowser(webpage) {
             checkTextSizeOnWebsite(textSizePercentage, fenixApp.components)
-        }.openThreeDotMenu {
-        }.clickSettingsButton {
-        }.openAccessibilitySubMenu {
-            clickFontSizingSwitch()
-            verifyMenuItemsAreDisabled()
         }
     }
 

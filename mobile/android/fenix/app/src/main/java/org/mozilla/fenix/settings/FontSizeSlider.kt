@@ -30,6 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,11 +73,19 @@ fun FontSizePreference(
     ) {
         Text(
             text = stringResource(id = R.string.preference_accessibility_font_size_title),
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = "fontSizeTitle"
+            },
             style = MaterialTheme.typography.bodyLarge,
         )
 
         Text(
             text = stringResource(id = R.string.preference_accessibility_text_size_summary),
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = "fontSizeSubtitle"
+            },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -106,6 +117,10 @@ private fun SampleText(fontSize: Float) {
     ) {
         Text(
             text = stringResource(id = R.string.accessibility_text_size_sample_text_1),
+            modifier = Modifier.semantics {
+                testTagsAsResourceId = true
+                testTag = "sampleText"
+            },
             style = MaterialTheme.typography.bodyMedium,
             fontSize = textSize.sp,
             lineHeight = (textSize + BASE_SAMPLE_HEIGHT_LINE_DIFFERENCE).sp,
@@ -137,7 +152,12 @@ private fun FontSizeSlider(
                 onValueChange(newSliderValue.toFloat())
             },
             valueRange = start.toFloat()..end.toFloat(),
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .semantics {
+                    testTagsAsResourceId = true
+                    testTag = "fontSizeSlider"
+                },
             enabled = isEnabled,
             onValueChangeFinished = onValueChangeFinished,
             thumb = { Thumb(isEnabled) },
@@ -155,7 +175,12 @@ private fun FontSizeSlider(
 
         Text(
             text = "${value.toInt()} %",
-            modifier = Modifier.padding(start = 8.dp),
+            modifier = Modifier
+                .padding(start = 8.dp)
+                .semantics {
+                    testTagsAsResourceId = true
+                    testTag = "fontSizeSliderValue"
+                },
         )
     }
 }

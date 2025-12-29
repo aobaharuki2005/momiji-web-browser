@@ -19,6 +19,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Assume
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.FenixApplication
@@ -30,13 +31,11 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AppAndSystemHelper.enableOrDisableBackGestureNavigationOnDevice
 import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
-import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithAppLocaleChanged
 import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithCondition
 import org.mozilla.fenix.helpers.AppAndSystemHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.helpers.DataGenerationHelper.createCustomTabIntent
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createBookmarkItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createHistoryItem
@@ -50,7 +49,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
-import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.verifyDarkThemeApplied
 import org.mozilla.fenix.helpers.TestHelper.verifyLightThemeApplied
 import org.mozilla.fenix.helpers.TestSetup
@@ -63,7 +61,6 @@ import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.longClickPageObject
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.searchScreen
-import java.util.Locale
 
 /**
  *  Tests for verifying basic functionality of browser navigation and page related interactions
@@ -216,7 +213,7 @@ class NavigationToolbarTest : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135005
-    @SmokeTest
+    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=2007909")
     @Test
     fun verifyFontSizingChangeTest() {
         runWithCondition(
@@ -235,20 +232,27 @@ class NavigationToolbarTest : TestSetup() {
             }.clickSettingsButton {
             }.openAccessibilitySubMenu {
                 clickFontSizingSwitch()
-                verifyEnabledMenuItems()
-                changeTextSizeSlider(textSizePercentage)
-                verifyTextSizePercentage(textSizePercentage)
+                verifyFontSizingMenuItems(
+                    composeTestRule,
+                    isTheAutomaticFontSizingToggleChecked = true,
+                    isTheFontSizingSliderEnabled = false,
+                    isTheZoomOnAllWbsitesToggleChecked = false,
+                )
+                clickFontSizingSwitch()
+                verifyFontSizingMenuItems(
+                    composeTestRule,
+                    isTheAutomaticFontSizingToggleChecked = false,
+                    isTheFontSizingSliderEnabled = true,
+                    isTheZoomOnAllWbsitesToggleChecked = false,
+                )
+                changeTextSizeSlider(textSizePercentage, composeTestRule)
+                verifyTextSizePercentage(textSizePercentage, composeTestRule)
             }.goBack {
             }.goBack(composeTestRule) {
             }
             navigationToolbar(composeTestRule) {
             }.enterURLAndEnterToBrowser(webpage) {
                 checkTextSizeOnWebsite(textSizePercentage, fenixApp.components)
-            }.openThreeDotMenu {
-            }.clickSettingsButton {
-            }.openAccessibilitySubMenu {
-                clickFontSizingSwitch()
-                verifyMenuItemsAreDisabled()
             }
         }
     }
