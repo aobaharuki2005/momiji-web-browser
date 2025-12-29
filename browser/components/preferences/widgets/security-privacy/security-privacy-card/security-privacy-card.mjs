@@ -112,11 +112,28 @@ export default class SecurityPrivacyCard extends MozLitElement {
     };
   }
 
-  getStatusImageSrc() {
-    if (this.configIssueCount > 0) {
-      return "chrome://global/skin/illustrations/kit-looking-left.svg";
+  #openWarningCardAndScroll() {
+    let accordion = document.getElementById("warningCard");
+    if (!accordion) {
+      return;
     }
-    return "chrome://global/skin/illustrations/kit-looking-forward.svg";
+    accordion.expanded = true;
+    this.#scrollToTargetOnPanel("#privacy", "warningCard")();
+  }
+
+  getStatusImage() {
+    if (this.configIssueCount > 0) {
+      return html`<img
+        class="status-image"
+        src="chrome://global/skin/illustrations/kit-looking-left.svg"
+        data-l10n-id="security-privacy-image-warning"
+      />`;
+    }
+    return html`<img
+      class="status-image"
+      src="chrome://global/skin/illustrations/kit-looking-forward.svg"
+      data-l10n-id="security-privacy-image-ok"
+    />`;
   }
 
   /**
@@ -149,10 +166,7 @@ export default class SecurityPrivacyCard extends MozLitElement {
           <small
             ><a
               href=""
-              @click=${this.#scrollToTargetOnPanel(
-                "#privacy",
-                "securityWarningsGroup"
-              )}
+              @click=${() => this.#openWarningCardAndScroll()}
               data-l10n-id=${L10N_IDS.problemHelperLabel}
             ></a
           ></small>
@@ -329,7 +343,7 @@ export default class SecurityPrivacyCard extends MozLitElement {
             ${this.buildIssuesElement()} ${this.buildTrackersElement()}
             ${this.buildUpdateElement()}
           </div>
-          <img class="status-image" src=${this.getStatusImageSrc()} />
+          ${this.getStatusImage()}
         </div>
       </moz-card>
     `;

@@ -883,7 +883,7 @@ class WarningSettingConfig {
   }
 }
 
-if (Services.prefs.getBoolPref("privacy.ui.status_card", false)) {
+if (SECURITY_PRIVACY_STATUS_CARD_ENABLED) {
   Preferences.addSetting(
     new WarningSettingConfig(
       "warningTest",
@@ -1314,9 +1314,24 @@ const SECURITY_WARNINGS = [
   {
     l10nId: "security-privacy-issue-warning-crlite",
     id: "warningCRLite",
-  },
-  {
-    l10nId: "security-privacy-issue-warning-certificate-pinning",
+  Preferences.addSetting({
+    id: "privacyCard",
+    deps: [
+      "appUpdateStatus",
+      "trackerCount",
+      "etpStrictEnabled",
+      ...SECURITY_WARNINGS.map(warning => warning.id),
+    ],
+  });
+
+  Preferences.addSetting({
+    id: "warningCard",
+    deps: SECURITY_WARNINGS.map(warning => warning.id),
+    visible: deps => {
+      return Object.values(deps).some(depSetting => depSetting.visible);
+    },
+  });
+}
     id: "warningCertificatePinning",
   },
   {
@@ -1409,6 +1424,10 @@ Preferences.addSetting({
     "etpStrictEnabled",
     ...SECURITY_WARNINGS.map(warning => warning.id),
   ],
+});
+
+Preferences.addSetting({
+  id: "warningCard",
 });
 
 Preferences.addSetting({
@@ -3719,9 +3738,8 @@ var gPrivacyPane = {
    */
   init() {
     initSettingGroup("nonTechnicalPrivacy");
-    if (Services.prefs.getBoolPref("privacy.ui.status_card", false)) {
-      initSettingGroup("securityPrivacyStatus");
-    }
+    initSettingGroup("securityPrivacyStatus");
+    initSettingGroup("securityPrivacyWarnings");
     initSettingGroup("httpsOnly");
     initSettingGroup("browsingProtection");
     initSettingGroup("cookiesAndSiteData");

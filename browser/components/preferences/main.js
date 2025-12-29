@@ -2704,17 +2704,33 @@ SettingGroupManager.registerGroups({
     ],
   },
   securityPrivacyStatus: {
+    inProgress: true,
     items: [
       {
         id: "privacyCard",
         control: "security-privacy-card",
       },
+    ],
+  },
+  securityPrivacyWarnings: {
+    inProgress: true,
+    items: [
       {
-        id: "securityWarningsGroup",
-        control: "moz-box-group",
+        id: "warningCard",
+        l10nId: "security-privacy-issue-card",
+        control: "moz-card",
         controlAttrs: {
-          type: "list",
+          type: "accordion",
         },
+        items: [
+          {
+            id: "securityWarningsGroup",
+            control: "moz-box-group",
+            controlAttrs: {
+              type: "list",
+            },
+          },
+        ],
       },
     ],
   },

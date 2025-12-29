@@ -32,6 +32,11 @@ security-privacy-status-update-needed-description = Update { -brand-short-name }
 security-privacy-status-update-button-label =
   .label = Update { -brand-short-name }
 
+security-privacy-image-warning =
+  .alt = The { -brand-short-name } mascot, expressing concern over your security warnings
+security-privacy-image-ok =
+  .alt = The { -brand-short-name } mascot, pleased that you have no outstanding security issues
+
 security-privacy-issue-card =
   .heading = Security warnings
 issue-card-reset-button =
