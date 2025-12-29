@@ -27,6 +27,19 @@ export class CanonicalURLChild extends JSWindowActorChild {
   }
 
   /**
+   * Called when a message is received from the parent process.
+   *
+   * @param {ReceiveMessageArgument} msg
+   */
+  receiveMessage(msg) {
+    switch (msg.name) {
+      case "CanonicalURL:Detect":
+        this.#discoverCanonicalUrl();
+        break;
+    }
+  }
+
+  /**
    * Find a canonical URL in the document and tell the parent about it.
    */
   #discoverCanonicalUrl() {
