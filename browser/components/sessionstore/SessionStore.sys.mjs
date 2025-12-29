@@ -1904,6 +1904,9 @@ var SessionStoreInternal = {
     switch (aEvent.type) {
       case "TabOpen":
         this.onTabAdd(win);
+        if (aEvent.detail.adoptedTab) {
+          this.moveCustomTabValue(aEvent.detail.adoptedTab, target);
+        }
         break;
       case "TabBrowserInserted":
         this.onTabBrowserInserted(win, target);
@@ -1912,6 +1915,7 @@ var SessionStoreInternal = {
         // `adoptedBy` will be set if the tab was closed because it is being
         // moved to a new window.
         if (aEvent.detail.adoptedBy) {
+          this.moveCustomTabValue(target, aEvent.detail.adoptedBy);
           this.onMoveToNewWindow(
             target.linkedBrowser,
             aEvent.detail.adoptedBy.linkedBrowser
@@ -4959,6 +4963,17 @@ var SessionStoreInternal = {
     if (state && aKey in state) {
       delete state[aKey];
       this.saveStateDelayed(aTab.ownerGlobal);
+    }
+  },
+
+  moveCustomTabValue(aFromTab, aToTab) {
+    let state = TAB_CUSTOM_VALUES.get(aFromTab);
+    if (state) {
+      TAB_CUSTOM_VALUES.set(aToTab, state);
+      TAB_CUSTOM_VALUES.delete(aFromTab);
+      // No saveStateDelayed calls for either window here, because the callers
+      // of moveCustomTabValue already call saveStateDelayed for both windows
+      // as needed, from onTabAdd and onTabRemove.
     }
   },
 
