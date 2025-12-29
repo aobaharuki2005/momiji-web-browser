@@ -28,7 +28,6 @@ MOZ_SRC_FILES += [
     "InsightsSchemas.sys.mjs",
     "IntentClassifier.sys.mjs",
     "SearchBrowsingHistory.sys.mjs",
-    "SearchBrowsingHistoryDomainBoost.sys.mjs",
     "TitleGeneration.sys.mjs",
     "Tools.sys.mjs",
     "Utils.sys.mjs",

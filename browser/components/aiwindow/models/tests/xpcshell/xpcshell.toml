@@ -28,8 +28,6 @@ support-files = []
 
 ["test_SearchBrowsingHistory.js"]
 
-["test_SearchBrowsingHistoryDomainBoost.js"]
-
 ["test_TitleGeneration.js"]
 
 ["test_Tools_GetOpenTabs.js"]
