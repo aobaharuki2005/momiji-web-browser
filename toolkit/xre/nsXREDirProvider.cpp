@@ -1363,19 +1363,7 @@ bool nsXREDirProvider::LegacyHomeExists(nsIFile** aFile) {
   rv = AppendFromAppData(localDir, true);
   NS_ENSURE_SUCCESS(rv, false);
 
-  // Check for profiles.ini instead of directory existence
-  nsCOMPtr<nsIFile> profilesIni;
-  rv = localDir->Clone(getter_AddRefs(profilesIni));
-  NS_ENSURE_SUCCESS(rv, false);
-
-  /* Fix bug 2003137. "profiles.ini" is only created when profiles exist.
-   * Other subsystems (crash reporting, telemetry) may create subdirectories
-   * without this file.
-   */
-  rv = profilesIni->AppendNative("profiles.ini"_ns);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  rv = profilesIni->Exists(&exists);
+  rv = localDir->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, false);
 
   // Give a chance to (3)
@@ -1388,10 +1376,6 @@ bool nsXREDirProvider::LegacyHomeExists(nsIFile** aFile) {
     mozUserDir = nsLiteralCString(MOZ_USER_DIR);
 
     rv = userDir->AppendRelativeNativePath(mozUserDir);
-    NS_ENSURE_SUCCESS(rv, false);
-
-    // Check for profiles.ini in MOZ_USER_DIR
-    rv = userDir->AppendNative("profiles.ini"_ns);
     NS_ENSURE_SUCCESS(rv, false);
 
     rv = userDir->Exists(&exists);
