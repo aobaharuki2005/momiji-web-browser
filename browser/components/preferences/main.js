@@ -2959,7 +2959,7 @@ SettingGroupManager.registerGroups({
       },
       {
         id: "requireOSAuthForPasswords",
-        l10nId: "forms-os-reauth",
+        l10nId: "forms-os-reauth-2",
       },
       {
         id: "allowWindowSSO",
@@ -2985,7 +2985,7 @@ SettingGroupManager.registerGroups({
             items: [
               {
                 id: "usePrimaryPassword",
-                l10nId: "forms-primary-pw-use",
+                l10nId: "forms-primary-pw-use-2",
                 control: "moz-box-item",
                 supportPage: "primary-password-stored-logins",
               },

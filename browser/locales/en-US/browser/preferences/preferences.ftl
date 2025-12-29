@@ -1461,6 +1461,10 @@ forms-additional-protections-header =
 forms-primary-pw-use =
     .label = Use a primary password
     .accesskey = U
+forms-primary-pw-use-2 =
+    .label = Use a primary password
+    .description = Adds an extra layer of security to protect your saved passwords.
+    .accesskey = U
 forms-primary-pw-set =
     .label = Set primary password
 forms-primary-pw-on =
@@ -1473,6 +1477,8 @@ forms-primary-pw-turn-off =
 # This operation requires the user to authenticate with the operating system (device sign-in)
 forms-os-reauth =
     .label = Require device sign in to fill and manage passwords
+forms-os-reauth-2 =
+    .label = Require device sign in to manage passwords
 forms-primary-pw-learn-more-link = Learn more
 # This string uses the former name of the Primary Password feature
 # ("Master Password" in English) so that the preferences can be found
