@@ -633,7 +633,7 @@
   <!-- Terms of use (ToU) onboarding title. -->
   <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Prepárate para correr libre</string>
   <!-- Terms of use (ToU) onboarding subtitle. -->
-  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Rápido, seguro y no te traicionará. La navegación ahora es mejor.</string>
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Rápido, seguro y no te traicionará.\nLa navegación ahora es mejor.</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
@@ -678,16 +678,16 @@
   <!-- Sync onboarding title. -->
   <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">Continuá instantáneamente desde donde lo dejaste</string>
   <!-- Sync onboarding subtitle. -->
-  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Conseguí marcadores, contraseñas y más en cualquier dispositivo en un instante. Tus datos personales se mantienen seguros y protegidos con cifrado.</string>
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Llevate marcadores, contraseñas y más a cualquier dispositivo en un instante. Tus datos personales se mantienen seguros y protegidos con cifrado.</string>
   <!-- Sync onboarding button. -->
   <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Iniciar sincronización</string>
   <!-- Marketing onboarding title. -->
-  <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Ayudanos a construir una mejor internet</string>
+  <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Ayudanos a crear una mejor internet</string>
   <!--
     Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
     %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
   -->
-  <string name="nova_onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Compartí con los socios de marketing de Mozilla cómo descubriste Firefox y lo usás. Estos datos nunca se venden. %1$s</string>
+  <string name="nova_onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Compartí con los socios de marketing de Mozilla cómo descubriste Firefox y lo usás. Estos datos nunca serán vendidos. %1$s</string>
   <!-- Marketing onboarding body link text. -->
   <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">Como usamos los datos</string>
   <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
@@ -4043,7 +4043,7 @@
   -->
   <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">Podés conocer más %1$s.</string>
   <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
-  <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">aquí</string>
+  <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">acá</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
   <!--
