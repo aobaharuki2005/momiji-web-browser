@@ -7,12 +7,11 @@ package org.mozilla.fenix.home.setup.store
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.test.runTest
 import mozilla.components.lib.state.Store
-import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.junit.MockitoJUnitRunner
@@ -23,17 +22,14 @@ import org.mozilla.fenix.components.appstate.setup.checklist.ChecklistItem
 @RunWith(MockitoJUnitRunner::class)
 class SetupChecklistPreferencesMiddlewareTest {
 
-    @get:Rule
-    val mainCoroutineTestRule = MainCoroutineRule()
-
-    // tests for invoke action
     @Test
-    fun `GIVEN init action WHEN invoked the repository is initialised`() {
+    fun `GIVEN init action WHEN invoked the repository is initialised`() = runTest {
         val repository = FakeRepository()
-        val middleware = SetupChecklistPreferencesMiddleware(repository)
+        val middleware = SetupChecklistPreferencesMiddleware(repository, this)
 
         val store: Store<AppState, AppAction> = mockk(relaxed = true)
         middleware.invoke(store, {}, AppAction.SetupChecklistAction.Init)
+        testScheduler.advanceUntilIdle()
 
         assertTrue(repository.initInvoked)
     }
