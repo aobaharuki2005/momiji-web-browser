@@ -459,10 +459,6 @@ if (SECURITY_PRIVACY_STATUS_CARD_ENABLED) {
       type: "bool",
     },
     {
-      id: "security.disallow_privilegedabout_remote_script_loads",
-      type: "bool",
-    },
-    {
       id: "dom.security.skip_html_fragment_assertion",
       type: "bool",
     },
@@ -1165,7 +1161,6 @@ if (SECURITY_PRIVACY_STATUS_CARD_ENABLED) {
     new WarningSettingConfig(
       "warningPrivilegedConstraint",
       {
-        rsl: "security.disallow_privilegedabout_remote_script_loads",
         shfa: "dom.security.skip_html_fragment_assertion",
         xhtmlcsp: "security.browser_xhtml_csp.enabled",
         allowUDPEE: "security.allow_unsafe_dangerous_privileged_evil_eval",
@@ -1178,7 +1173,6 @@ if (SECURITY_PRIVACY_STATUS_CARD_ENABLED) {
           "dom.security.skip_remote_script_assertion_in_system_priv_context",
       },
       ({
-        rsl,
         shfa,
         xhtmlcsp,
         allowUDPEE,
@@ -1188,7 +1182,6 @@ if (SECURITY_PRIVACY_STATUS_CARD_ENABLED) {
         allowParentUnrestrictedJSLoads,
         skipRemoteScriptAssertionInSystem,
       }) =>
-        (!rsl.value && !rsl.locked) ||
         (!xhtmlcsp.value && !xhtmlcsp.locked) ||
         (shfa.value && !shfa.locked) ||
         (allowUDPEE.value && !allowUDPEE.locked) ||
