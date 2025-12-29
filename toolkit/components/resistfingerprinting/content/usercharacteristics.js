@@ -999,12 +999,15 @@ async function populateAudioDeviceProperties() {
 async function populateTimezoneWeb() {
   try {
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const offset = new Date().getTimezoneOffset();
     return {
       timezoneWeb: timezone || "",
+      timezoneOffsetWeb: offset,
     };
   } catch (e) {
     return {
       timezoneWeb: "",
+      timezoneOffsetWeb: 0,
     };
   }
 }

@@ -421,6 +421,25 @@ characteristics:
     data_sensitivity:
       - interaction
 
+  timezone_offset_web:
+    type: quantity
+    unit: minutes
+    description: >
+      The timezone offset in minutes exposed to web content via getTimezoneOffset()
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005864
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005864
+    expires: never
+    data_sensitivity:
+      - interaction
+
   system_locale:
     type: string
     description: >
