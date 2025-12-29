@@ -630,6 +630,8 @@
   <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">Continuar</string>
   <!-- "Not now" onboarding button. -->
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Agora não</string>
+  <!-- Terms of use (ToU) onboarding title. -->
+  <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Prepare-se para se libertar</string>
   <!-- Terms of use (ToU) onboarding subtitle. -->
   <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Rápido, seguro e não vende seus dados.\nNavegar ficou ainda melhor.</string>
   <!--
@@ -675,16 +677,29 @@
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">Escuro</string>
   <!-- Sync onboarding title. -->
   <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">Continue imediatamente de onde parou</string>
+  <!-- Sync onboarding subtitle. -->
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Acesse favoritos, senhas e muito mais em qualquer dispositivo num piscar de olhos. Seus dados pessoais permanecem seguros e protegidos com criptografia.</string>
   <!-- Sync onboarding button. -->
   <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Iniciar sincronização</string>
   <!-- Marketing onboarding title. -->
   <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Ajude-nos a construir uma internet melhor</string>
+  <!--
+    Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
+  -->
+  <string name="nova_onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Compartilhe que você usa o Firefox e como o descobriu, com parceiros de marketing da Mozilla. Esses dados nunca são vendidos. %1$s</string>
   <!-- Marketing onboarding body link text. -->
   <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">Como usamos os dados</string>
   <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Notificações ajudam você a ficar mais seguro com o Firefox</string>
+  <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">Descubra os mais recentes recursos de privacidade do Firefox para estar sempre em dia sobre como se manter protegido.</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Ativar notificações</string>
+  <!-- "Add search widget" onboarding title. -->
+  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Torne cada pesquisa mais privativa</string>
+  <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">Inicie todas as pesquisas na tela inicial do celular, sabendo que as proteções automáticas do Firefox te protegem.</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Adicionar widget do Firefox</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
@@ -1532,6 +1547,8 @@
   <string name="tab_drawer_fab_content">Privativa</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">Sincronizar</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">Pesquisar em abas</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">Compartilhar todas as abas</string>
   <!-- Text shown in the menu to view recently closed tabs -->
@@ -1576,12 +1593,16 @@
   <string name="tabs_tray_select_tabs">Selecionar abas</string>
   <!-- Text for tab manager search page when there are no results. -->
   <string name="tab_manager_no_search_results">Nenhum resultado encontrado.</string>
+  <!-- Additional text for tab manager search page when there are no results. -->
+  <string name="tab_manager_no_search_results_additional_text">Tente outra pesquisa!</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
   <string name="close_tab">Fechar aba</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. %s is the tab title -->
   <string name="close_tab_title">Fechar aba %s</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">Menu de abas abertas</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">Retornar ao gerenciador de abas</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">Salvar abas em coleção</string>
   <!-- Text for the menu button to delete a collection -->
@@ -1598,6 +1619,8 @@
   <string name="delete_from_history">Excluir do histórico</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (modo privativo)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">Abrir pesquisa em abas</string>
   <!--
     History
 
@@ -1971,6 +1994,8 @@
   <string name="bookmark_delete_folder_content_description">Excluir pasta</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Pesquisar nos favoritos</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">Pesquisar em pastas</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Menu de %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -2762,6 +2787,8 @@
   <string name="edit_login_navigate_back_button_content_description">Voltar à página anterior</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">Editar conta de acesso</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">Adicionar conta</string>
   <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
   <string name="saved_logins_clear_search_text_button_content_description">Limpar texto de pesquisa</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
@@ -4005,6 +4032,11 @@
 
   <!-- A title for the popup prompt. -->
   <string name="terms_of_use_prompt_title_option_a" tools:ignore="UnusedResources">Termos de uso</string>
+  <!--
+    A title for the popup prompt.
+    %1$s is the product name "Firefox"
+  -->
+  <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">Uma nota do %1$s</string>
   <!--
     Copy for the Terms of Use popup prompt body line two.
     %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
