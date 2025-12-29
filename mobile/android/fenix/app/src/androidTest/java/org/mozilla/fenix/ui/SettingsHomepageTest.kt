@@ -204,7 +204,7 @@ class SettingsHomepageTest : TestSetup() {
             with(composeTestRule.activityRule) {
                 finishActivity()
                 mDevice.waitForIdle()
-                openAppFromExternalLink(genericPage.url.toString())
+                openAppFromExternalLink(composeTestRule, genericPage.url.toString())
             }
         }
 

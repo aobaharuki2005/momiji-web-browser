@@ -80,7 +80,7 @@ class CustomTabsTest : TestSetup() {
             clickPageObject(composeTestRule, itemWithText("Save"))
         }
 
-        openAppFromExternalLink(loginPage)
+        openAppFromExternalLink(composeTestRule, loginPage)
 
         browserScreen(composeTestRule) {
         }.openThreeDotMenu {
@@ -110,7 +110,7 @@ class CustomTabsTest : TestSetup() {
             longClickAndCopyToolbarUrl()
         }
 
-        openAppFromExternalLink(customTabPage.url.toString())
+        openAppFromExternalLink(composeTestRule, customTabPage.url.toString())
 
         browserScreen(composeTestRule) {
         }.openSearch {
@@ -272,7 +272,7 @@ class CustomTabsTest : TestSetup() {
         }.closeSiteSecuritySheet(composeTestRule) {
         }
 
-        openAppFromExternalLink(customTabPage.url.toString())
+        openAppFromExternalLink(composeTestRule, customTabPage.url.toString())
 
         browserScreen(composeTestRule) {
         }.openThreeDotMenu {

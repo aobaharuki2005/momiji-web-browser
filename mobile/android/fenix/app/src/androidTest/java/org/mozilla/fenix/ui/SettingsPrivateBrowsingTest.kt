@@ -70,7 +70,7 @@ class SettingsPrivateBrowsingTest : TestSetup() {
             verifyHomeComponent()
         }
 
-        AppAndSystemHelper.openAppFromExternalLink(firstWebPage.url.toString())
+        AppAndSystemHelper.openAppFromExternalLink(composeTestRule, firstWebPage.url.toString())
 
         browserScreen(composeTestRule) {
             verifyUrl(firstWebPage.url.toString())
@@ -89,7 +89,7 @@ class SettingsPrivateBrowsingTest : TestSetup() {
         }
 
         // We need to open a different link, otherwise it will open the same session
-        AppAndSystemHelper.openAppFromExternalLink(secondWebPage.url.toString())
+        AppAndSystemHelper.openAppFromExternalLink(composeTestRule, secondWebPage.url.toString())
 
         browserScreen(composeTestRule) {
             verifyUrl(secondWebPage.url.toString())
