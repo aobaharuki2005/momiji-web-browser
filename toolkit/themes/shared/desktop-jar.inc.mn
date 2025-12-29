@@ -128,6 +128,8 @@
   skin/classic/global/icons/warning.svg                    (../../shared/icons/warning.svg)
   skin/classic/global/icons/warning-fill-12.svg            (../../shared/icons/warning-fill-12.svg)
   skin/classic/global/illustrations/about-license.svg      (../../shared/illustrations/about-license.svg)
+  skin/classic/global/illustrations/kit-looking-forward.svg     (../../shared/illustrations/kit-looking-forward.svg)
+  skin/classic/global/illustrations/kit-looking-left.svg     (../../shared/illustrations/kit-looking-left.svg)
   skin/classic/global/illustrations/security-error.svg     (../../shared/illustrations/security-error.svg)
   skin/classic/global/media/picture-in-picture-open.svg    (../../shared/media/picture-in-picture-open.svg)
   skin/classic/global/media/picture-in-picture-closed.svg  (../../shared/media/picture-in-picture-closed.svg)

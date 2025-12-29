@@ -72,4 +72,5 @@ moz-card {
 
 .status-image {
   margin-inline-start: var(--space-xsmall);
+  max-width: 100px;
 }

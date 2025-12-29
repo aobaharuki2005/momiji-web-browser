@@ -58,6 +58,7 @@ module.exports = [
       "browser/components/places/metadataViewer/interactionsViewer.css",
       "browser/components/preferences/dialogs/sitePermissions.css",
       "browser/components/preferences/widgets/placeholder-message/placeholder-message.css",
+      "browser/components/preferences/widgets/security-privacy/security-privacy-card/security-privacy-card.css",
       "browser/components/profiles/content/avatar.css",
       "browser/components/profiles/content/edit-profile-card.css",
       "browser/components/profiles/content/profile-avatar-selector.css",

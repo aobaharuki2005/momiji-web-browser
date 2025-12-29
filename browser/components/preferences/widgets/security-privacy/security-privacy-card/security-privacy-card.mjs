@@ -112,6 +112,13 @@ export default class SecurityPrivacyCard extends MozLitElement {
     };
   }
 
+  getStatusImageSrc() {
+    if (this.configIssueCount > 0) {
+      return "chrome://global/skin/illustrations/kit-looking-left.svg";
+    }
+    return "chrome://global/skin/illustrations/kit-looking-forward.svg";
+  }
+
   /**
    * Create the bullet point for the current count of "issues" in the user profile.
    * Really only depends on `this.configIssueCount`
@@ -322,6 +329,7 @@ export default class SecurityPrivacyCard extends MozLitElement {
             ${this.buildIssuesElement()} ${this.buildTrackersElement()}
             ${this.buildUpdateElement()}
           </div>
+          <img class="status-image" src=${this.getStatusImageSrc()} />
         </div>
       </moz-card>
     `;
