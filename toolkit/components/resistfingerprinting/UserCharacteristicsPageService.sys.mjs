@@ -740,6 +740,19 @@ export class UserCharacteristicsPageService {
     Glean.characteristics.osVersion.set(
       Services.sysinfo.getProperty("version")
     );
+    if (Services.sysinfo.hasKey("distro")) {
+      Glean.characteristics.osDistro.set(
+        Services.sysinfo.getProperty("distro")
+      );
+    }
+    if (Services.sysinfo.hasKey("distroVersion")) {
+      Glean.characteristics.osDistroVersion.set(
+        Services.sysinfo.getProperty("distroVersion")
+      );
+    }
+    if (Services.appinfo.distributionID) {
+      Glean.characteristics.osDistroId.set(Services.appinfo.distributionID);
+    }
     Glean.characteristics.buildDate.set(buildDate);
   }
 

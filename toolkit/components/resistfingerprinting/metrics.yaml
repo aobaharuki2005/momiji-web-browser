@@ -3842,6 +3842,60 @@ characteristics:
     data_sensitivity:
       - technical
 
+  os_distro:
+    type: string
+    description: >
+      User's OS distribution, as reported by lsb_release (Linux only, blank otherwise)
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005865
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005865
+    expires: never
+    data_sensitivity:
+      - technical
+
+  os_distro_id:
+    type: string
+    description: >
+      User's OS distribution, as reported by MOZ_DISTRIBUTION_ID
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005865
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005865
+    expires: never
+    data_sensitivity:
+      - technical
+
+  os_distro_version:
+    type: string
+    description: >
+      User's OS distribution version, as reported by lsb_release (Linux only, blank otherwise)
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005865
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005865
+    expires: never
+    data_sensitivity:
+      - technical
+
   cpu_model:
     type: string
     description: >
