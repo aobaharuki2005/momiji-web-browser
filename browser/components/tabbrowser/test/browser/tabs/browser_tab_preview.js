@@ -558,6 +558,10 @@ add_task(async function tabContentChangeTests() {
  * Test that if a note is set on a tab, the note appears in the preview panel
  */
 add_task(async function tabNotesTests() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.notes.enabled", true]],
+  });
+
   const previewPanel = document.getElementById(TAB_PREVIEW_PANEL_ID);
   const noteText = "Hello world";
 
@@ -598,6 +602,7 @@ add_task(async function tabNotesTests() {
 
   BrowserTestUtils.removeTab(tab);
   await resetState();
+  await SpecialPowers.popPrefEnv();
 });
 
 /*
