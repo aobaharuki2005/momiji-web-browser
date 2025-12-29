@@ -128,10 +128,15 @@ add_task(async function test_tabContextMenu_prefDisabled() {
   let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let addNoteElement = document.getElementById("context_addNote");
+  let updateNoteElement = document.getElementById("context_updateNote");
   let tabContextMenu = await getContextMenu(tab, "tabContextMenu");
   Assert.ok(
     addNoteElement.hidden,
     "'Add Note' is hidden from context menu when pref disabled"
+  );
+  Assert.ok(
+    updateNoteElement.hidden,
+    "'Update Note' is hidden from context menu when pref disabled"
   );
   await closeContextMenu(tabContextMenu);
   BrowserTestUtils.removeTab(tab);
@@ -289,5 +294,117 @@ add_task(async function test_deleteTabNote() {
   Assert.ok(!result, "Tab note was deleted");
 
   BrowserTestUtils.removeTab(tab);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_ineligibleTabsDisableMenus() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.tabs.notes.enabled", true]],
+  });
+
+  let tabContextMenu = document.getElementById("tabContextMenu");
+  let addNoteEntry = document.querySelector("#context_addNote");
+  let updateNoteEntry = document.querySelector("#context_updateNote");
+
+  let eligibleTab = BrowserTestUtils.addTab(
+    gBrowser,
+    "https://www.example.com"
+  );
+  await BrowserTestUtils.browserLoaded(eligibleTab.linkedBrowser);
+
+  let ineligibleTab = BrowserTestUtils.addTab(gBrowser, "about:logo");
+  await BrowserTestUtils.browserLoaded(ineligibleTab.linkedBrowser);
+
+  info(
+    "Test that an eligible tab without a note has an enabled 'Add Note' entry"
+  );
+  await getContextMenu(eligibleTab, "tabContextMenu");
+  Assert.ok(
+    !addNoteEntry.hasAttribute("disabled"),
+    "Eligible tab has enabled 'Add Note' entry"
+  );
+  await closeContextMenu(tabContextMenu);
+
+  info("Test that an ineligible tab has a disabled 'Add Note' entry");
+  await getContextMenu(ineligibleTab, "tabContextMenu");
+  Assert.ok(
+    addNoteEntry.hasAttribute("disabled"),
+    "Ineligible tab has disabled 'Add Note' entry"
+  );
+  await closeContextMenu(tabContextMenu);
+
+  info(
+    "Test that a multiselection with at least one ineligible tab has a disabled 'Add Note' entry"
+  );
+  gBrowser.selectedTabs = [eligibleTab, ineligibleTab];
+  await getContextMenu(eligibleTab, "tabContextMenu");
+  Assert.ok(
+    addNoteEntry.hasAttribute("disabled"),
+    "Multiselection with an ineligible tab has disabled 'Add Note' entry"
+  );
+  await closeContextMenu(tabContextMenu);
+
+  let eligibleSameCanonicalUrl = BrowserTestUtils.addTab(
+    gBrowser,
+    "https://www.example.com"
+  );
+  await BrowserTestUtils.browserLoaded(eligibleSameCanonicalUrl.linkedBrowser);
+  let eligibleDifferentCanonicalUrl = BrowserTestUtils.addTab(
+    gBrowser,
+    "https://www.example.com/abc"
+  );
+  await BrowserTestUtils.browserLoaded(
+    eligibleDifferentCanonicalUrl.linkedBrowser
+  );
+
+  info(
+    "Test that a multiselection with two tabs with the same canonical URL and no note has an enabled 'Add Note' entry"
+  );
+  gBrowser.selectedTabs = [eligibleTab, eligibleSameCanonicalUrl];
+  await getContextMenu(eligibleTab, "tabContextMenu");
+  Assert.ok(
+    !addNoteEntry.hasAttribute("disabled"),
+    "Multiselection with two same canonical URLs has enabled 'Add Note' entry"
+  );
+  await closeContextMenu(tabContextMenu);
+
+  info(
+    "Test that a multiselection with two tabs with different canonical URLs has a disabled 'Add Note' entry"
+  );
+  gBrowser.selectedTabs = [eligibleTab, eligibleDifferentCanonicalUrl];
+  await getContextMenu(eligibleTab, "tabContextMenu");
+  Assert.ok(
+    addNoteEntry.hasAttribute("disabled"),
+    "Multiselection with two different canonical URLs has disabled 'Add Note' entry"
+  );
+  await closeContextMenu(tabContextMenu);
+
+  info(
+    "Test that an eligible tab with a note has an enabled 'Update Note' entry"
+  );
+  gBrowser.selectedTabs = [eligibleTab];
+  await TabNotes.set(eligibleTab, "Some tab note");
+  await getContextMenu(eligibleTab, "tabContextMenu");
+  Assert.ok(
+    !updateNoteEntry.hasAttribute("disabled"),
+    "Eligible tab has enabled 'Update Note' entry"
+  );
+  await closeContextMenu(tabContextMenu);
+
+  info(
+    "Test that a multiselection with a tab with a note and an ineligible tab has a disabled 'Update Note' entry"
+  );
+  gBrowser.selectedTabs = [eligibleTab, ineligibleTab];
+  await getContextMenu(eligibleTab, "tabContextMenu");
+  Assert.ok(
+    updateNoteEntry.hasAttribute("disabled"),
+    "Multiselection with a tab with note and ineligible tab has disabled 'Update Note' entry"
+  );
+  await closeContextMenu(tabContextMenu);
+
+  BrowserTestUtils.removeTab(eligibleTab);
+  BrowserTestUtils.removeTab(ineligibleTab);
+  BrowserTestUtils.removeTab(eligibleSameCanonicalUrl);
+  BrowserTestUtils.removeTab(eligibleDifferentCanonicalUrl);
   await SpecialPowers.popPrefEnv();
 });
