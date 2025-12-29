@@ -843,6 +843,20 @@ export class UserCharacteristicsPageService {
       await Services.sysinfo.processInfo.then(r => r.name)
     );
     Glean.characteristics.cpuArch.set(Services.sysinfo.get("arch"));
+
+    // Collect Firefox binary architecture (can differ from CPU arch)
+    // e.g., x86-64 Firefox via Rosetta 2 on ARM64 Mac
+    let binaryArch = "unknown";
+    try {
+      const xpcomAbi = Services.appinfo.XPCOMABI || "unknown";
+      const is64Bit = Services.appinfo.is64Bit ? "true" : "false";
+      // Concatenate both values for robustness
+      binaryArch = `xpcomabi:${xpcomAbi}|is64bit:${is64Bit}`;
+    } catch (e) {
+      lazy.console.error("Failed to get Firefox binary architecture:", e);
+      binaryArch = "error";
+    }
+    Glean.characteristics.firefoxBinaryArch.set(binaryArch);
   }
 
   async populateWebGlInfo(window, document, version, forceSoftwareRendering) {

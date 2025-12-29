@@ -3987,6 +3987,28 @@ characteristics:
     data_sensitivity:
       - technical
 
+  firefox_binary_arch:
+    type: string
+    description: >
+      Architecture of the Firefox binary itself (not the CPU). This can differ
+      from cpu_arch when running under emulation (e.g., x86-64 Firefox via
+      Rosetta 2 on ARM64 Mac) or when running 32-bit Firefox on 64-bit CPU.
+      Format: "xpcomabi:<abi>|is64bit:<bool>" where abi is from XPCOMABI
+      (e.g., "Darwin_x86_64-gcc3") and is64bit indicates 64-bit build.
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005866
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005866
+    expires: never
+    data_sensitivity:
+      - technical
+
   mathml1:
     type: string
     description: >
