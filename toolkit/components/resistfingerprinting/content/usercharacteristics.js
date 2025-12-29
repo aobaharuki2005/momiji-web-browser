@@ -996,6 +996,19 @@ async function populateAudioDeviceProperties() {
   };
 }
 
+async function populateTimezoneWeb() {
+  try {
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    return {
+      timezoneWeb: timezone || "",
+    };
+  } catch (e) {
+    return {
+      timezoneWeb: "",
+    };
+  }
+}
+
 // A helper function to generate an array of asynchronous functions to populate
 // canvases using both software and hardware rendering.
 function getCanvasSources() {
@@ -1063,6 +1076,7 @@ async function startPopulating() {
     populateCSSQueries,
     populateNavigatorProperties,
     populateAudioDeviceProperties,
+    populateTimezoneWeb,
   ];
   // Catches errors in promise-creating functions. E.g. if populateVoiceList
   // throws an error before returning any of its `key: (Promise<any> | any)`

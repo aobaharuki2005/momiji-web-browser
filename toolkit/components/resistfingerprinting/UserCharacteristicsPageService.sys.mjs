@@ -665,6 +665,7 @@ export class UserCharacteristicsPageService {
         "audioFrames",
         "audioRate",
         "audioChannels",
+        "timezoneWeb",
       ],
     };
 

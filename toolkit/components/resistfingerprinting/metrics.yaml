@@ -403,6 +403,24 @@ characteristics:
     data_sensitivity:
       - interaction
 
+  timezone_web:
+    type: string
+    description: >
+      The timezone string reported via the web using Intl API (e.g. America/New_York)
+    lifetime: application
+    send_in_pings:
+      - user-characteristics
+    notification_emails:
+      - tom@mozilla.com
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1879151
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005864
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2005864
+    expires: never
+    data_sensitivity:
+      - interaction
+
   system_locale:
     type: string
     description: >
