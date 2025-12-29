@@ -10372,9 +10372,7 @@ void PresShell::DidDoReflow(bool aInterruptible) {
       docShell->NotifyReflowObservers(aInterruptible, mLastReflowStart, now);
     }
 
-    if (StaticPrefs::layout_reflow_synthMouseMove()) {
-      SynthesizeMouseMove(false);
-    }
+    SynthesizeMouseMove(false);
 
     mPresContext->NotifyMissingFonts();
   }
