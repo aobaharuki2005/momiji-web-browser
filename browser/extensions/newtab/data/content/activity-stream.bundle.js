@@ -1301,6 +1301,22 @@ class _ConfirmDialog extends (external_React_default()).PureComponent {
     super(props);
     this._handleCancelBtn = this._handleCancelBtn.bind(this);
     this._handleConfirmBtn = this._handleConfirmBtn.bind(this);
+    this.dialogRef = /*#__PURE__*/external_React_default().createRef();
+  }
+  componentDidUpdate() {
+    const dialogElement = this.dialogRef.current;
+    if (!dialogElement) {
+      return;
+    }
+
+    // Open dialog when visible becomes true
+    if (this.props.visible && !dialogElement.open) {
+      dialogElement.showModal();
+    }
+    // Close dialog when visible becomes false
+    else if (!this.props.visible && dialogElement.open) {
+      dialogElement.close();
+    }
   }
   _handleCancelBtn() {
     this.props.dispatch({
@@ -1325,32 +1341,32 @@ class _ConfirmDialog extends (external_React_default()).PureComponent {
     })));
   }
   render() {
-    if (!this.props.visible) {
-      return null;
-    }
-    return /*#__PURE__*/external_React_default().createElement("div", {
-      className: "confirmation-dialog"
+    return /*#__PURE__*/external_React_default().createElement("dialog", {
+      ref: this.dialogRef,
+      className: "confirmation-dialog",
+      onClick: e => {
+        // Close modal when clicking on the backdrop pseudo element (the background of the modal)
+        if (e.target === this.dialogRef.current) {
+          this._handleCancelBtn();
+        }
+      }
     }, /*#__PURE__*/external_React_default().createElement("div", {
-      className: "modal-overlay",
-      onClick: this._handleCancelBtn,
-      role: "presentation"
-    }), /*#__PURE__*/external_React_default().createElement("div", {
       className: "modal"
     }, /*#__PURE__*/external_React_default().createElement("section", {
       className: "modal-message"
     }, this.props.data.icon && /*#__PURE__*/external_React_default().createElement("span", {
       className: `icon icon-spacer icon-${this.props.data.icon}`
     }), this._renderModalMessage()), /*#__PURE__*/external_React_default().createElement("section", {
-      className: "actions"
-    }, /*#__PURE__*/external_React_default().createElement("button", {
+      className: "button-group"
+    }, /*#__PURE__*/external_React_default().createElement("moz-button-group", null, /*#__PURE__*/external_React_default().createElement("moz-button", {
       onClick: this._handleCancelBtn,
       "data-l10n-id": this.props.data.cancel_button_string_id
-    }), /*#__PURE__*/external_React_default().createElement("button", {
-      className: "done",
+    }), /*#__PURE__*/external_React_default().createElement("moz-button", {
+      type: "primary",
       onClick: this._handleConfirmBtn,
       "data-l10n-id": this.props.data.confirm_button_string_id,
       "data-l10n-args": JSON.stringify(this.props.data.confirm_button_string_args)
-    }))));
+    })))));
   }
 }
 const ConfirmDialog = (0,external_ReactRedux_namespaceObject.connect)(state => state.Dialog)(_ConfirmDialog);
