@@ -1824,16 +1824,14 @@ main section {
   pointer-events: none;
 }
 
-.confirmation-dialog {
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-small);
-  padding: 0;
+.confirmation-dialog .modal {
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
+  inset-inline-start: 0;
+  margin: auto;
+  position: fixed;
+  inset-inline-end: 0;
+  inset-block-start: 20%;
   width: 400px;
-  box-shadow: var(--box-shadow-popup);
-  background: var(--newtab-background-color-secondary);
-}
-.confirmation-dialog::backdrop {
-  background: var(--newtab-overlay-color);
 }
 .confirmation-dialog section {
   margin: 0;
@@ -1847,12 +1845,41 @@ main section {
   margin: 0;
   margin-block-end: var(--space-large);
 }
-.confirmation-dialog .button-group {
+.confirmation-dialog .actions {
   border: 0;
-  padding: var(--space-large);
+  display: flex;
+  flex-wrap: nowrap;
+  padding: 0 var(--space-large);
+}
+.confirmation-dialog .actions button {
+  margin-inline-end: var(--space-large);
+  padding-inline: var(--space-large);
+  white-space: normal;
+  width: 50%;
+}
+.confirmation-dialog .actions button.done {
+  margin-inline-end: 0;
+  margin-inline-start: 0;
 }
 .confirmation-dialog .icon {
   margin-inline-end: var(--space-large);
+}
+
+.modal-overlay {
+  background: var(--newtab-overlay-color);
+  height: 100%;
+  inset-inline-start: 0;
+  position: fixed;
+  inset-block-start: 0;
+  width: 100%;
+  z-index: 11001;
+}
+
+.modal {
+  background: var(--newtab-background-color-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-small);
+  z-index: 11002;
 }
 
 .personalizeButtonWrapper {
