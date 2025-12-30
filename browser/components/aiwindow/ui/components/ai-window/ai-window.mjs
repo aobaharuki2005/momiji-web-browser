@@ -49,6 +49,7 @@ export class AIWindow extends MozLitElement {
     browser.setAttribute("maychangeremoteness", "true");
     browser.setAttribute("disableglobalhistory", "true");
     browser.setAttribute("src", "about:aichatcontent");
+    browser.setAttribute("transparent", true);
 
     const container = this.renderRoot.querySelector("#browser-container");
     container.appendChild(browser);

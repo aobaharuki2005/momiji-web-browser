@@ -1,9 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-:root {
-  --background-color-canvas: transparent;
-}
+
 @keyframes springUp {
   from {
     opacity: 0;
@@ -20,9 +18,6 @@
   --bg-transparent: transparent;
   --tile-border-color: #f1e7f8;
   --shadow-color: rgb(59 34 121);
-
-  --gradient-button: linear-gradient(97deg, #8341ca -31.39%, #656fff 90.52%);
-  --gradient-selected-border: linear-gradient(117deg, #321bfd -17.87%, #cf30e2 52.93%, #f90 89.02%, #f5c451 109.44%);
 
   .main-content,
   .section-main,
@@ -74,6 +69,7 @@
       margin: 0 auto;
       border: var(--border-width) solid var(--border-color-transparent);
       border-radius: var(--border-radius-medium);
+      /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- gradient defined in ai-window-content.css */
       background: var(--gradient-button);
       color: var(--button-text-color-primary);
       text-align: center;
@@ -142,6 +138,7 @@
 
       &:has(.selected) {
         border: calc(var(--border-width) * 2) solid var(--border-color-transparent);
+        /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens -- gradient defined in ai-window-content.css */
         background:
           linear-gradient(#fff, #fff) padding-box,
           var(--gradient-selected-border) border-box;

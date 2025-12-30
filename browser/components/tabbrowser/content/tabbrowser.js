@@ -626,6 +626,19 @@
           browser
         );
 
+      if (AIWindow.isAIWindowActive(window)) {
+        let uriToLoad = gBrowserInit.uriToLoadPromise;
+        let firstURI = Array.isArray(uriToLoad) ? uriToLoad[0] : uriToLoad;
+
+        if (!this._allowTransparentBrowser) {
+          browser.toggleAttribute(
+            "transparent",
+            !firstURI ||
+              AIWindow.isAIWindowContentPage(Services.io.newURI(firstURI))
+          );
+        }
+      }
+
       let uniqueId = this._generateUniquePanelID();
       let panel = this.getPanel(browser);
       panel.id = uniqueId;
@@ -2437,7 +2450,7 @@
         b.setAttribute("name", name);
       }
 
-      if (this._allowTransparentBrowser) {
+      if (AIWindow.isAIWindowActive(window) || this._allowTransparentBrowser) {
         b.setAttribute("transparent", "true");
       }
 
@@ -9061,6 +9074,14 @@
             !isBlankPageURL(aRequest.originalURI.spec)
           ) {
             this.mBrowser.originalURI = aRequest.originalURI;
+          }
+
+          if (!this._allowTransparentBrowser) {
+            this.mBrowser.toggleAttribute(
+              "transparent",
+              AIWindow.isAIWindowActive(window) &&
+                AIWindow.isAIWindowContentPage(aLocation)
+            );
           }
         }
 

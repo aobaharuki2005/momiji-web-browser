@@ -6,6 +6,7 @@
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const AIWINDOW_URL = "chrome://browser/content/aiwindow/aiWindow.html";
+const AIWINDOW_URI = Services.io.newURI(AIWINDOW_URL);
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ChatStore:
@@ -118,6 +119,16 @@ export const AIWindow = {
 
   isAIWindowActiveAndEnabled(win) {
     return this.isAIWindowActive(win) && this.AIWindowEnabled;
+  },
+
+  /**
+   * Is AI Window content page active
+   *
+   * @param {nsIURI} uri current URI
+   * @returns {boolean} whether AI Window content page is active
+   */
+  isAIWindowContentPage(uri) {
+    return AIWINDOW_URI.equalsExceptRef(uri);
   },
 
   /**

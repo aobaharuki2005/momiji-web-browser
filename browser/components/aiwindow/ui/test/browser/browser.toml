@@ -1,4 +1,7 @@
 [DEFAULT]
+support-files = [
+  "head.js",
+]
 
 ["browser_actor_user_prompt.js"]
 
@@ -9,6 +12,8 @@
 ["browser_aiwindow_firstrun.js"]
 
 ["browser_aiwindow_integration.js"]
+
+["browser_aiwindow_transparency.js"]
 
 ["browser_open_aiwindow.js"]
 
