@@ -343,3 +343,19 @@ sitedata-cookies-exceptions3 =
     .label = Manage exceptions
     .accesskey = x
     .description = Choose how specific sites handle cookies and site data.
+
+## History
+
+history-header2 =
+    .heading = History
+
+history-section-header =
+    .label = History
+    .description = Choose what you want { -brand-short-name } to remember when you close the browser.
+
+history-custom-section-header =
+    .label = Advanced settings
+    .description = Customize what you want { -brand-short-name } to remember when you close the browser.
+
+history-custom-button =
+    .label = Choose what you want { -brand-short-name } to remember
