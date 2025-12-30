@@ -429,7 +429,6 @@ export class InsightsManager {
         type: "json_schema",
         schema: INSIGHTS_MESSAGE_CLASSIFY_SCHEMA,
       },
-      fxAccountToken: await openAIEngine.getFxAccountToken(),
     });
 
     const parsed = parseAndExtractJSON(response, {

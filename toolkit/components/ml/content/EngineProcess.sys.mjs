@@ -596,21 +596,6 @@ export class PipelineOptions {
   staticEmbeddingsOptions = null;
 
   /**
-   * The service type for an OpenAIPipeline.
-   *
-   * @type {"ai" | "memories" | "s2s" | null}
-   */
-  serviceType = null;
-
-  /**
-   * This option allows for extra headers to be passed to
-   * OpenAI-API-compatable endpoints
-   *
-   * @type {?Record<string, string>}
-   */
-  extraHeaders = null;
-
-  /**
    * Create a PipelineOptions instance.
    *
    * @param {object} options - The options for the pipeline. Must include mandatory fields.
@@ -816,8 +801,6 @@ export class PipelineOptions {
       "baseURL",
       "apiKey",
       "staticEmbeddingsOptions",
-      "serviceType",
-      "extraHeaders",
     ];
 
     if (options instanceof PipelineOptions) {
@@ -963,8 +946,6 @@ export class PipelineOptions {
       baseURL: this.baseURL,
       apiKey: this.apiKey,
       staticEmbeddingsOptions: this.staticEmbeddingsOptions,
-      serviceType: this.serviceType,
-      extraHeaders: this.extraHeaders,
     };
   }
 

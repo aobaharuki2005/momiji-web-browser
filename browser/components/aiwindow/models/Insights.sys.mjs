@@ -24,7 +24,7 @@
  *
  */
 
-import { renderPrompt, openAIEngine } from "./Utils.sys.mjs";
+import { renderPrompt } from "./Utils.sys.mjs";
 
 import {
   HISTORY,
@@ -365,7 +365,6 @@ function normalizeInsightList(parsed) {
  */
 export async function generateInitialInsightsList(engine, sources) {
   const promptText = await buildInitialInsightsGenerationPrompt(sources);
-
   const response = await engine.run({
     args: [
       {
@@ -375,7 +374,6 @@ export async function generateInitialInsightsList(engine, sources) {
       { role: "user", content: promptText },
     ],
     responseFormat: { type: "json_schema", schema: INITIAL_INSIGHTS_SCHEMA },
-    fxAccountToken: await openAIEngine.getFxAccountToken(),
   });
 
   const parsed = parseAndExtractJSON(response, []);
@@ -399,7 +397,6 @@ export async function deduplicateInsights(
     existingInsightsList,
     newInsightsList
   );
-
   const response = await engine.run({
     args: [
       {
@@ -412,7 +409,6 @@ export async function deduplicateInsights(
       type: "json_schema",
       schema: INSIGHTS_DEDUPLICATION_SCHEMA,
     },
-    fxAccountToken: await openAIEngine.getFxAccountToken(),
   });
 
   const parsed = parseAndExtractJSON(response, { unique_insights: [] });
@@ -444,7 +440,6 @@ export async function deduplicateInsights(
 export async function filterSensitiveInsights(engine, insightsList) {
   const sensitivityFilterPrompt =
     await buildInsightsSensitivityFilterPrompt(insightsList);
-
   const response = await engine.run({
     args: [
       {
@@ -457,7 +452,6 @@ export async function filterSensitiveInsights(engine, insightsList) {
       type: "json_schema",
       schema: INSIGHTS_NON_SENSITIVE_SCHEMA,
     },
-    fxAccountToken: await openAIEngine.getFxAccountToken(),
   });
 
   const parsed = parseAndExtractJSON(response, { non_sensitive_insights: [] });

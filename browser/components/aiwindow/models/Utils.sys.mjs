@@ -11,11 +11,6 @@
  */
 
 import { createEngine } from "chrome://global/content/ml/EngineProcess.sys.mjs";
-import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
-import {
-  OAUTH_CLIENT_ID,
-  SCOPE_PROFILE,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 
 /**
  * openAIEngine class
@@ -28,61 +23,19 @@ export class openAIEngine {
    */
   static _createEngine = createEngine;
 
-  /**
-   * Returns an OpenAIEngine instance with the specified engine and service types
-   *
-   * @param {string} engineId     The identifier for the engine instance
-   * @param {string} serviceType  The type of message to be sent ("ai", "memories", "s2s")
-   * @returns {Promise<openAIEngine>}  The OpenAIEngine instance
-   */
-  static async build(engineId = "smart-openai", serviceType = "ai") {
+  static async build(engineId = "smart-openai") {
     const engine = new openAIEngine();
-    engine.engineInstance = await openAIEngine.#createOpenAIEngine(
-      engineId,
-      serviceType
-    );
+    engine.engineInstance = await openAIEngine.#createOpenAIEngine(engineId);
     return engine;
-  }
-
-  /**
-   * Retrieves the Firefox account token
-   *
-   * @returns {Promise<string|null>}   The Firefox account token (string) or null
-   */
-  static async getFxAccountToken() {
-    try {
-      const fxAccounts = getFxAccountsSingleton();
-      return await fxAccounts.getOAuthToken({
-        // Scope needs to be updated in accordance with https://bugzilla.mozilla.org/show_bug.cgi?id=2005290
-        scope: SCOPE_PROFILE,
-        client_id: OAUTH_CLIENT_ID,
-      });
-    } catch (error) {
-      console.warn("Error obtaining FxA token:", error);
-      return null;
-    }
   }
 
   /**
    * Creates an OpenAI engine instance
    *
-   * @param {string} engineId     The identifier for the engine instance
-   * @param {string} serviceType  The type of message to be sent ("ai", "memories", "s2s")
-   * @returns {Promise<object>}   The configured engine instance
+   * @param {string} engineId   The identifier for the engine instance
+   * @returns {Promise<object>} The configured engine instance
    */
-  static async #createOpenAIEngine(engineId, serviceType) {
-    const extraHeadersPref = Services.prefs.getStringPref(
-      "browser.aiwindow.extraHeaders",
-      "{}"
-    );
-    let extraHeaders = {};
-    try {
-      extraHeaders = JSON.parse(extraHeadersPref);
-    } catch (e) {
-      console.error("Failed to parse extra headers from prefs:", e);
-      Services.prefs.clearUserPref("browser.aiwindow.extraHeaders");
-    }
-
+  static async #createOpenAIEngine(engineId) {
     try {
       const engineInstance = await openAIEngine._createEngine({
         apiKey: Services.prefs.getStringPref("browser.aiwindow.apiKey"),
@@ -92,8 +45,6 @@ export class openAIEngine {
         modelId: Services.prefs.getStringPref("browser.aiwindow.model"),
         modelRevision: "main",
         taskName: "text-generation",
-        serviceType,
-        extraHeaders,
       });
       return engineInstance;
     } catch (error) {
