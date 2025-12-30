@@ -60,7 +60,10 @@ export async function generateChatTitle(message, current_tab) {
     ];
 
     // Call the LLM
-    const response = await engine.run({ messages });
+    const response = await engine.run({
+      messages,
+      fxAccountToken: await openAIEngine.getFxAccountToken(),
+    });
 
     // Extract the generated title from the response
     const title =
