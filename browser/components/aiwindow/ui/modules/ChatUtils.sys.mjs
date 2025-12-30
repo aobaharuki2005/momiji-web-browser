@@ -11,7 +11,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 import { MESSAGE_ROLE } from "./ChatConstants.sys.mjs";
 import { ChatConversation } from "./ChatConversation.sys.mjs";
-import { ChatMessage } from "./ChatMessage.sys.mjs";
+import { ChatMessage, ChatHistoryResult } from "./ChatMessage.sys.mjs";
 
 /**
  * Creates a 12 characters GUID with 72 bits of entropy.
@@ -74,6 +74,28 @@ export function parseMessageRows(rows) {
       webSearchQueries: parseJSONOrNull(
         row.getResultByName("web_search_queries")
       ),
+    });
+  });
+}
+
+/**
+ * Parse conversation rows from the database into an array of ChatHistoryResult
+ * objects.
+ *
+ * @param {Array<object>} rows - The database rows to parse.
+ * @returns {Array<ChatHistoryResult>} The parsed chat history result entries
+ */
+export function parseChatHistoryViewRows(rows) {
+  return rows.map(row => {
+    return new ChatHistoryResult({
+      convId: row.getResultByName("conv_id"),
+      title: row.getResultByName("title"),
+      createdDate: row.getResultByName("created_date"),
+      updatedDate: row.getResultByName("updated_date"),
+      urls: row
+        .getResultByName("urls")
+        .split(",")
+        .map(url => new URL(url)),
     });
   });
 }

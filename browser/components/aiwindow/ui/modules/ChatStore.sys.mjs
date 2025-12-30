@@ -24,6 +24,7 @@ import {
   MESSAGE_ORDINAL_INDEX,
   MESSAGE_URL_INDEX,
   MESSAGE_CREATED_DATE_INDEX,
+  MESSAGE_CONV_ID_INDEX,
   MESSAGE_INSERT,
   CONVERSATIONS_MOST_RECENT,
   CONVERSATION_BY_ID,
@@ -36,6 +37,7 @@ import {
   MESSAGES_BY_DATE_AND_ROLE,
   DELETE_CONVERSATION_BY_ID,
   CONVERSATIONS_OLDEST,
+  CONVERSATION_HISTORY,
   ESCAPE_CHAR,
   getConversationMessagesSql,
 } from "./ChatSql.sys.mjs";
@@ -61,6 +63,7 @@ import {
 import {
   parseConversationRow,
   parseMessageRows,
+  parseChatHistoryViewRows,
   toJSONOrNull,
 } from "./ChatUtils.sys.mjs";
 
@@ -72,6 +75,7 @@ import {
 import { migrations } from "./ChatMigrations.sys.mjs";
 
 const MAX_DB_SIZE_BYTES = 75 * 1024 * 1024;
+const SORTS = ["ASC", "DESC"];
 
 /**
  * Simple interface to store and retrieve chat conversations and messages.
@@ -395,6 +399,30 @@ export class ChatStore {
     const conversations = rows.map(parseConversationRow);
 
     return await this.#getMessagesForConversations(conversations);
+  }
+
+  /**
+   * Gets a list of chat history items to display in Chat History view.
+   *
+   * @param {number} [pageNumber=1] - The page number to get, 1 based indexing
+   * @param {number} [pageSize=20] - Number of items to get per page
+   * @param {string} [sort="desc"] - desc|asc The sorting order based on updated_date for conversations
+   */
+  async chatHistoryView(pageNumber = 1, pageSize = 20, sort = "desc") {
+    const sorting = SORTS.find(item => item === sort.toUpperCase()) ?? "DESC";
+    const offset = pageSize * (pageNumber - 1);
+    const limit = pageSize;
+    const params = {
+      limit,
+      offset,
+    };
+
+    const rows = await this.#conn.executeCached(
+      CONVERSATION_HISTORY.replace("{sort}", sorting),
+      params
+    );
+
+    return parseChatHistoryViewRows(rows);
   }
 
   /**
@@ -762,6 +790,7 @@ export class ChatStore {
     await this.#conn.execute(MESSAGE_ORDINAL_INDEX);
     await this.#conn.execute(MESSAGE_URL_INDEX);
     await this.#conn.execute(MESSAGE_CREATED_DATE_INDEX);
+    await this.#conn.execute(MESSAGE_CONV_ID_INDEX);
   }
 
   get #removeDatabaseOnStartup() {

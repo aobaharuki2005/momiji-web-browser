@@ -611,3 +611,87 @@ add_atomic_task(
     });
   }
 );
+
+async function addChatHistoryTestData() {
+  await addConvoWithSpecificTestData(
+    new Date("1/2/2025"),
+    new URL("https://www.firefox.com"),
+    new URL("https://www.mozilla.org"),
+    "Mozilla.org conversation 1",
+    "a random message"
+  );
+
+  await addConvoWithSpecificTestData(
+    new Date("1/3/2025"),
+    new URL("https://www.firefox.com"),
+    new URL("https://www.mozilla.org"),
+    "Mozilla.org interesting conversation 2",
+    "a random message again"
+  );
+
+  await addConvoWithSpecificTestData(
+    new Date("1/4/2025"),
+    new URL("https://www.firefox.com"),
+    new URL("https://www.mozilla.org"),
+    "Mozilla.org conversation 3",
+    "some other message"
+  );
+}
+
+add_atomic_task(async function test_chatHistoryView() {
+  await addChatHistoryTestData();
+
+  const entries = await gChatStore.chatHistoryView();
+
+  Assert.withSoftAssertions(function (soft) {
+    soft.equal(entries.length, 3);
+    soft.equal(entries[0].title, "Mozilla.org conversation 3");
+    soft.equal(entries[1].title, "Mozilla.org interesting conversation 2");
+    soft.equal(entries[2].title, "Mozilla.org conversation 1");
+  });
+});
+
+add_atomic_task(async function test_chatHistoryView_sorting_desc() {
+  await addChatHistoryTestData();
+
+  const entries = await gChatStore.chatHistoryView(1, 20, "desc");
+
+  Assert.withSoftAssertions(function (soft) {
+    soft.equal(entries.length, 3);
+    soft.equal(entries[0].title, "Mozilla.org conversation 3");
+    soft.equal(entries[1].title, "Mozilla.org interesting conversation 2");
+    soft.equal(entries[2].title, "Mozilla.org conversation 1");
+  });
+});
+
+add_atomic_task(async function test_chatHistoryView_sorting_asc() {
+  await addChatHistoryTestData();
+
+  const entries = await gChatStore.chatHistoryView(1, 20, "asc");
+
+  Assert.withSoftAssertions(function (soft) {
+    soft.equal(entries.length, 3);
+    soft.equal(entries[0].title, "Mozilla.org conversation 1");
+    soft.equal(entries[1].title, "Mozilla.org interesting conversation 2");
+    soft.equal(entries[2].title, "Mozilla.org conversation 3");
+  });
+});
+
+add_atomic_task(async function test_chatHistoryView_pageSize() {
+  await addChatHistoryTestData();
+
+  const entries = await gChatStore.chatHistoryView(1, 2, "asc");
+
+  Assert.equal(entries.length, 2);
+});
+
+add_atomic_task(async function test_chatHistoryView_pageNumber() {
+  await addChatHistoryTestData();
+
+  const entries = await gChatStore.chatHistoryView(3, 1, "asc");
+
+  Assert.withSoftAssertions(function (soft) {
+    soft.equal(entries.length, 1);
+    soft.equal(entries[0].title, "Mozilla.org conversation 3");
+  });
+});

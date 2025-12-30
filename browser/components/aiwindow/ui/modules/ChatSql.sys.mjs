@@ -77,6 +77,10 @@ export const MESSAGE_CREATED_DATE_INDEX = `
 CREATE INDEX message_created_date_idx ON message(created_date);
 `;
 
+export const MESSAGE_CONV_ID_INDEX = `
+CREATE INDEX IF NOT EXISTS message_conv_id_idx ON message(conv_id);
+`;
+
 export const CONVERSATION_INSERT = `
 INSERT INTO conversation (
   conv_id, title, description, page_url, page_meta_jsonb,
@@ -241,4 +245,27 @@ LIMIT :limit OFFSET :offset;
 
 export const DELETE_CONVERSATION_BY_ID = `
 DELETE FROM conversation WHERE conv_id = :conv_id;
+`;
+
+export const CONVERSATION_HISTORY = `
+SELECT c.conv_id, c.title, c.created_date, c.updated_date, (
+  SELECT group_concat(t.page_url)
+  FROM (
+    SELECT
+      m.page_url
+    FROM message m
+    WHERE m.conv_id = c.conv_id
+      AND m.page_url IS NOT NULL
+    GROUP BY m.page_url
+    ORDER BY MAX(m.created_date) ASC
+  ) AS t
+) AS urls
+FROM conversation c
+WHERE EXISTS (
+  SELECT 1
+  FROM message AS m
+  WHERE m.conv_id = c.conv_id
+)
+ORDER BY c.updated_date {sort}
+LIMIT :limit OFFSET :offset;
 `;

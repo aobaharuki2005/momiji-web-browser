@@ -211,3 +211,57 @@ export class ChatMinimal {
     return this.#title;
   }
 }
+
+/**
+ * Used to retrieve chat entries for Chat History view
+ */
+export class ChatHistoryResult {
+  #convId;
+  #title;
+  #createdDate;
+  #updatedDate;
+  #urls;
+
+  constructor({ convId, title, createdDate, updatedDate, urls }) {
+    this.#convId = convId;
+    this.#title = title;
+    this.#createdDate = createdDate;
+    this.#updatedDate = updatedDate;
+    this.#urls = urls;
+  }
+
+  /**
+   * @returns {string}
+   */
+  get convId() {
+    return this.#convId;
+  }
+
+  /**
+   * @returns {string}
+   */
+  get title() {
+    return this.#title;
+  }
+
+  /**
+   * @returns {Date}
+   */
+  get createdDate() {
+    return this.#createdDate;
+  }
+
+  /**
+   * @returns {Date}
+   */
+  get updatedDate() {
+    return this.#updatedDate;
+  }
+
+  /**
+   * @returns {Array<URL>}
+   */
+  get urls() {
+    return this.#urls;
+  }
+}
