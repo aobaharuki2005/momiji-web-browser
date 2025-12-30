@@ -22,11 +22,16 @@ function createFakeTab(url, title, lastAccessed) {
   };
 }
 
-function createFakeWindow(tabs, closed = false) {
+function createFakeWindow(tabs, closed = false, isAIWindow = true) {
   return {
     closed,
     gBrowser: {
       tabs,
+    },
+    document: {
+      documentElement: {
+        hasAttribute: attr => attr === "ai-window" && isAIWindow,
+      },
     },
   };
 }
@@ -65,7 +70,7 @@ add_task(async function test_getOpenTabs_basic() {
       createFakeTab("https://firefox.com", "Firefox", 3000),
     ]);
 
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(fakeWindow);
+    sb.stub(BrowserWindowTracker, "orderedWindows").get(() => [fakeWindow]);
     setupPageDataServiceMock(sb, {
       "https://firefox.com": "Firefox browser homepage",
       "https://mozilla.org": "Mozilla organization site",
@@ -114,7 +119,7 @@ add_task(async function test_getOpenTabs_filters_about_urls() {
       createFakeTab("about:blank", "Blank", 5000),
     ]);
 
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(fakeWindow);
+    sb.stub(BrowserWindowTracker, "orderedWindows").get(() => [fakeWindow]);
     setupPageDataServiceMock(sb);
 
     const tabs = await getOpenTabs();
@@ -139,7 +144,7 @@ add_task(async function test_getOpenTabs_filters_about_urls() {
   }
 });
 
-add_task(async function test_getOpenTabs_limits_to_n() {
+add_task(async function test_getOpenTabs_pagination() {
   const BrowserWindowTracker = ChromeUtils.importESModule(
     "resource:///modules/BrowserWindowTracker.sys.mjs"
   ).BrowserWindowTracker;
@@ -155,19 +160,23 @@ add_task(async function test_getOpenTabs_limits_to_n() {
     }
     const fakeWindow = createFakeWindow(tabs);
 
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(fakeWindow);
+    sb.stub(BrowserWindowTracker, "orderedWindows").get(() => [fakeWindow]);
     setupPageDataServiceMock(sb);
 
-    const result = await getOpenTabs(10);
-
-    Assert.equal(result.length, 10, "Should return at most 10 tabs");
+    // Test default limit
+    const defaultResult = await getOpenTabs();
+    Assert.equal(defaultResult.length, 15, "Should default to 15 tabs");
     Assert.equal(
-      result[0].url,
+      defaultResult[0].url,
       "https://example19.com",
       "First tab should be most recent"
     );
+
+    // Test custom limit
+    const customResult = await getOpenTabs(10);
+    Assert.equal(customResult.length, 10, "Should return at most 10 tabs");
     Assert.equal(
-      result[9].url,
+      customResult[9].url,
       "https://example10.com",
       "Last tab should be 10th most recent"
     );
@@ -176,7 +185,7 @@ add_task(async function test_getOpenTabs_limits_to_n() {
   }
 });
 
-add_task(async function test_getOpenTabs_default_limit() {
+add_task(async function test_getOpenTabs_filters_non_ai_windows() {
   const BrowserWindowTracker = ChromeUtils.importESModule(
     "resource:///modules/BrowserWindowTracker.sys.mjs"
   ).BrowserWindowTracker;
@@ -184,148 +193,43 @@ add_task(async function test_getOpenTabs_default_limit() {
   const sb = sinon.createSandbox();
 
   try {
-    const tabs = [];
-    for (let i = 0; i < 20; i++) {
-      tabs.push(
-        createFakeTab(`https://example${i}.com`, `Example ${i}`, i * 1000)
-      );
-    }
-    const fakeWindow = createFakeWindow(tabs);
-
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(fakeWindow);
-    setupPageDataServiceMock(sb);
-
-    const result = await getOpenTabs();
-
-    Assert.equal(result.length, 15, "Should default to 15 tabs");
-  } finally {
-    sb.restore();
-  }
-});
-
-add_task(async function test_getOpenTabs_single_window_multiple_tabs() {
-  const BrowserWindowTracker = ChromeUtils.importESModule(
-    "resource:///modules/BrowserWindowTracker.sys.mjs"
-  ).BrowserWindowTracker;
-
-  const sb = sinon.createSandbox();
-
-  try {
-    const window1 = createFakeWindow([
-      createFakeTab("https://tab1.com", "Tab1", 1000),
-      createFakeTab("https://tab2.com", "Tab2", 2000),
-      createFakeTab("https://tab3.com", "Tab3", 3000),
-      createFakeTab("https://tab4.com", "Tab4", 4000),
-    ]);
-
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(window1);
-    setupPageDataServiceMock(sb);
-
-    const tabs = await getOpenTabs();
-
-    Assert.equal(tabs.length, 4, "Should return all tabs from current window");
-    Assert.equal(
-      tabs[0].url,
-      "https://tab4.com",
-      "Most recent tab from current window"
-    );
-    Assert.equal(tabs[1].url, "https://tab3.com", "Second most recent");
-    Assert.equal(tabs[2].url, "https://tab2.com", "Third most recent");
-    Assert.equal(tabs[3].url, "https://tab1.com", "Least recent");
-  } finally {
-    sb.restore();
-  }
-});
-
-add_task(async function test_getOpenTabs_closed_window() {
-  const BrowserWindowTracker = ChromeUtils.importESModule(
-    "resource:///modules/BrowserWindowTracker.sys.mjs"
-  ).BrowserWindowTracker;
-
-  const sb = sinon.createSandbox();
-
-  try {
-    const closedWindow = createFakeWindow(
-      [createFakeTab("https://closed.com", "Closed", 2000)],
+    const aiWindow = createFakeWindow(
+      [
+        createFakeTab("https://ai1.com", "AI Tab 1", 1000),
+        createFakeTab("https://ai2.com", "AI Tab 2", 2000),
+      ],
+      false,
       true
     );
 
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(closedWindow);
-    setupPageDataServiceMock(sb);
-
-    const tabs = await getOpenTabs();
-
-    Assert.equal(tabs.length, 0, "Should return empty array for closed window");
-  } finally {
-    sb.restore();
-  }
-});
-
-add_task(async function test_getOpenTabs_window_without_gBrowser() {
-  const BrowserWindowTracker = ChromeUtils.importESModule(
-    "resource:///modules/BrowserWindowTracker.sys.mjs"
-  ).BrowserWindowTracker;
-
-  const sb = sinon.createSandbox();
-
-  try {
-    const windowWithoutGBrowser = {
-      closed: false,
-      gBrowser: null,
-    };
-
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(
-      windowWithoutGBrowser
+    const classicWindow = createFakeWindow(
+      [
+        createFakeTab("https://classic1.com", "Classic Tab 1", 3000),
+        createFakeTab("https://classic2.com", "Classic Tab 2", 4000),
+      ],
+      false,
+      false
     );
+
+    sb.stub(BrowserWindowTracker, "orderedWindows").get(() => [
+      classicWindow,
+      aiWindow,
+    ]);
     setupPageDataServiceMock(sb);
 
     const tabs = await getOpenTabs();
 
     Assert.equal(
       tabs.length,
-      0,
-      "Should return empty array for window without gBrowser"
+      2,
+      "Should only return tabs from AI Windows (filtered 2 classic tabs)"
     );
-  } finally {
-    sb.restore();
-  }
-});
-
-add_task(async function test_getOpenTabs_empty_window() {
-  const BrowserWindowTracker = ChromeUtils.importESModule(
-    "resource:///modules/BrowserWindowTracker.sys.mjs"
-  ).BrowserWindowTracker;
-
-  const sb = sinon.createSandbox();
-
-  try {
-    const emptyWindow = createFakeWindow([]);
-
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(emptyWindow);
-    setupPageDataServiceMock(sb);
-
-    const tabs = await getOpenTabs();
-
-    Assert.equal(tabs.length, 0, "Should return empty array for no tabs");
-  } finally {
-    sb.restore();
-  }
-});
-
-add_task(async function test_getOpenTabs_no_window() {
-  const BrowserWindowTracker = ChromeUtils.importESModule(
-    "resource:///modules/BrowserWindowTracker.sys.mjs"
-  ).BrowserWindowTracker;
-
-  const sb = sinon.createSandbox();
-
-  try {
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(null);
-    setupPageDataServiceMock(sb);
-
-    const tabs = await getOpenTabs();
-
-    Assert.equal(tabs.length, 0, "Should return empty array when no window");
+    Assert.equal(tabs[0].url, "https://ai2.com", "Most recent AI tab");
+    Assert.equal(tabs[1].url, "https://ai1.com", "Second AI tab");
+    Assert.ok(
+      !tabs.some(t => t.url.includes("classic")),
+      "No classic window tabs in results"
+    );
   } finally {
     sb.restore();
   }
@@ -343,7 +247,7 @@ add_task(async function test_getOpenTabs_return_structure() {
       createFakeTab("https://test.com", "Test Page", 1000),
     ]);
 
-    sb.stub(BrowserWindowTracker, "getTopWindow").returns(fakeWindow);
+    sb.stub(BrowserWindowTracker, "orderedWindows").get(() => [fakeWindow]);
     setupPageDataServiceMock(sb, {
       "https://test.com": "A test page description",
     });

@@ -26,6 +26,20 @@ add_task(async function test_get_page_content_basic() {
 
   const { url, GetPageContent, cleanup } = await setupGetPageContentTest(html);
 
+  // Manually set the ai-window attribute for testing
+  // (in production this is set via window features when opening the window)
+  window.document.documentElement.setAttribute("ai-window", "true");
+
+  // Verify we're in an AI Window
+  const { AIWindow } = ChromeUtils.importESModule(
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs"
+  );
+  info("Is AI Window: " + AIWindow.isAIWindowActive(window));
+  info(
+    "Window has ai-window attribute: " +
+      window.document.documentElement.hasAttribute("ai-window")
+  );
+
   // Create an allowed URLs set containing the test page
   const allowedUrls = new Set([url]);
 
