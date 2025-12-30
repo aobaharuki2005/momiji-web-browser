@@ -1753,6 +1753,29 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       position -=
           aAnchorPosResolutionCache->mReferenceData->mDefaultScrollShift;
     }
+
+    if (isOverflowingCB &&
+        !aKidFrame->StylePosition()->mPositionArea.IsNone()) {
+      // The anchored element overflows the IMCB of its position-area. Would it
+      // have fit within the original CB? If so, shift it to stay within that.
+      nsSize size = aKidFrame->GetSize();
+      if (size.width <= aOriginalContainingBlockRect.width &&
+          size.height <= aOriginalContainingBlockRect.height) {
+        if (position.x < aOriginalContainingBlockRect.x) {
+          position.x = aOriginalContainingBlockRect.x;
+        } else if (position.x + size.width >
+                   aOriginalContainingBlockRect.XMost()) {
+          position.x = aOriginalContainingBlockRect.XMost() - size.width;
+        }
+        if (position.y < aOriginalContainingBlockRect.y) {
+          position.y = aOriginalContainingBlockRect.y;
+        } else if (position.y + size.height >
+                   aOriginalContainingBlockRect.YMost()) {
+          position.y = aOriginalContainingBlockRect.YMost() - size.height;
+        }
+      }
+    }
+
     const auto oldPosition = aKidFrame->GetPosition();
     if (position == oldPosition) {
       return;
