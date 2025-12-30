@@ -6151,8 +6151,6 @@ class MoreRecommendations extends (external_React_default()).PureComponent {
 
 
 function ModalOverlayWrapper({
-  // eslint-disable-next-line no-shadow
-  document = globalThis.document,
   unstyled,
   innerClassName,
   onClose,
@@ -6160,37 +6158,40 @@ function ModalOverlayWrapper({
   headerId,
   id
 }) {
-  const modalRef = (0,external_React_namespaceObject.useRef)(null);
-  let className = unstyled ? "" : "modalOverlayInner active";
+  const dialogRef = (0,external_React_namespaceObject.useRef)(null);
+  let className = unstyled ? "" : "modalOverlayInner";
   if (innerClassName) {
     className += ` ${innerClassName}`;
   }
-
-  // The intended behaviour is to listen for an escape key
-  // but not for a click; see Bug 1582242
-  const onKeyDown = (0,external_React_namespaceObject.useCallback)(event => {
-    if (event.key === "Escape") {
-      onClose(event);
-    }
-  }, [onClose]);
   (0,external_React_namespaceObject.useEffect)(() => {
-    document.addEventListener("keydown", onKeyDown);
-    document.body.classList.add("modal-open");
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.classList.remove("modal-open");
+    const dialogElement = dialogRef.current;
+    if (dialogElement && !dialogElement.open) {
+      dialogElement.showModal();
+    }
+    const handleCancel = e => {
+      e.preventDefault();
+      onClose(e);
     };
-  }, [document, onKeyDown]);
-  return /*#__PURE__*/external_React_default().createElement("div", {
-    className: "modalOverlayOuter active",
-    onKeyDown: onKeyDown,
-    role: "presentation"
+    dialogElement?.addEventListener("cancel", handleCancel);
+    return () => {
+      dialogElement?.removeEventListener("cancel", handleCancel);
+      if (dialogElement && dialogElement.open) {
+        dialogElement.close();
+      }
+    };
+  }, [onClose]);
+  return /*#__PURE__*/external_React_default().createElement("dialog", {
+    ref: dialogRef,
+    className: "modalOverlayOuter",
+    onClick: e => {
+      if (e.target === dialogRef.current) {
+        onClose(e);
+      }
+    }
   }, /*#__PURE__*/external_React_default().createElement("div", {
     className: className,
     "aria-labelledby": headerId,
-    id: id,
-    role: "dialog",
-    ref: modalRef
+    id: id
   }, children));
 }
 
@@ -9300,20 +9301,21 @@ class TopSiteForm extends (external_React_default()).PureComponent {
       title: this.state.label
     }))), /*#__PURE__*/external_React_default().createElement("section", {
       className: "actions"
-    }, /*#__PURE__*/external_React_default().createElement("button", {
-      className: "cancel",
-      type: "button",
-      onClick: this.onCancelButtonClick,
-      "data-l10n-id": "newtab-topsites-cancel-button"
-    }), previewMode ? /*#__PURE__*/external_React_default().createElement("button", {
-      className: "done preview",
-      type: "submit",
-      "data-l10n-id": "newtab-topsites-preview-button"
-    }) : /*#__PURE__*/external_React_default().createElement("button", {
-      className: "done",
-      type: "submit",
-      "data-l10n-id": showAsAdd ? "newtab-topsites-add-button" : "newtab-topsites-save-button"
-    })));
+    }, /*#__PURE__*/external_React_default().createElement("moz-button-group", {
+      className: "button-group"
+    }, /*#__PURE__*/external_React_default().createElement("moz-button", {
+      type: "default",
+      "data-l10n-id": "newtab-topsites-cancel-button",
+      onClick: this.onCancelButtonClick
+    }), previewMode ? /*#__PURE__*/external_React_default().createElement("moz-button", {
+      type: "primary",
+      "data-l10n-id": "newtab-topsites-preview-button",
+      onClick: this.onPreviewButtonClick
+    }) : /*#__PURE__*/external_React_default().createElement("moz-button", {
+      type: "primary",
+      "data-l10n-id": showAsAdd ? "newtab-topsites-add-button" : "newtab-topsites-save-button",
+      onClick: this.onDoneButtonClick
+    }))));
   }
 }
 TopSiteForm.defaultProps = {
@@ -15206,23 +15208,9 @@ function TopicSelection({
     inputRef?.current?.focus();
   }, [inputRef]);
   const handleFocus = (0,external_React_namespaceObject.useCallback)(e => {
-    // this list will have to be updated with other reusable components that get used inside of this modal
-    const tabbableElements = modalRef.current.querySelectorAll('a[href], button, moz-button, input[tabindex="0"]');
-    const [firstTabableEl] = tabbableElements;
-    const lastTabbableEl = tabbableElements[tabbableElements.length - 1];
-    let isTabPressed = e.key === "Tab" || e.keyCode === 9;
-    let isArrowPressed = e.key === "ArrowUp" || e.key === "ArrowDown";
-    if (isTabPressed) {
-      if (e.shiftKey) {
-        if (document.activeElement === firstTabableEl) {
-          lastTabbableEl.focus();
-          e.preventDefault();
-        }
-      } else if (document.activeElement === lastTabbableEl) {
-        firstTabableEl.focus();
-        e.preventDefault();
-      }
-    } else if (isArrowPressed && checkboxWrapperRef.current.contains(document.activeElement)) {
+    const isArrowPressed = e.key === "ArrowUp" || e.key === "ArrowDown";
+    if (isArrowPressed && checkboxWrapperRef.current.contains(document.activeElement)) {
+      e.preventDefault();
       const checkboxElements = checkboxWrapperRef.current.querySelectorAll("input");
       const [firstInput] = checkboxElements;
       const lastInput = checkboxElements[checkboxElements.length - 1];
