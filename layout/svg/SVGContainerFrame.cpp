@@ -187,10 +187,13 @@ void SVGDisplayContainerFrame::RemoveFrame(DestroyContext& aContext,
   // SVGContainerFrame::RemoveFrame doesn't call down into
   // nsContainerFrame::RemoveFrame, so it doesn't call FrameNeedsReflow. We
   // need to schedule a repaint and schedule an update to our overflow rects.
+  // TODO(emilio, bug 2008045): It sure looks like it should just call into
+  // nsContainerFrame.
   SchedulePaint();
   if (!HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
     PresContext()->RestyleManager()->PostRestyleEvent(
         mContent->AsElement(), RestyleHint{0}, nsChangeHint_UpdateOverflow);
+    PresShell()->SynthesizeMouseMove(false);
   }
 
   SVGContainerFrame::RemoveFrame(aContext, aListID, aOldFrame);
