@@ -2703,6 +2703,35 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  nonTechnicalPrivacy2: {
+    inProgress: true,
+    l10nId: "non-technical-privacy-heading",
+    headingLevel: 2,
+    items: [
+      {
+        id: "gpcEnabled",
+        l10nId: "global-privacy-control-description",
+        supportPage: "global-privacy-control",
+        controlAttrs: {
+          "search-l10n-ids": "global-privacy-control-search",
+        },
+      },
+      {
+        id: "relayIntegration",
+        l10nId: "preferences-privacy-relay-available",
+        supportPage: "firefox-relay-integration",
+      },
+      {
+        id: "dntRemoval",
+        l10nId: "do-not-track-removal3",
+        control: "moz-message-bar",
+        supportPage: "how-do-i-turn-do-not-track-feature",
+        controlAttrs: {
+          dismissable: true,
+        },
+      },
+    ],
+  },
   securityPrivacyStatus: {
     inProgress: true,
     items: [
