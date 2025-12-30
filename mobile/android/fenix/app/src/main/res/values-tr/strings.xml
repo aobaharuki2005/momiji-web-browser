@@ -630,6 +630,10 @@
   <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">Devam et</string>
   <!-- "Not now" onboarding button. -->
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Şimdi değil</string>
+  <!-- Terms of use (ToU) onboarding title. -->
+  <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Özgürleşmeye hazır olun</string>
+  <!-- Terms of use (ToU) onboarding subtitle. -->
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Hızlı, güvenli ve sizi satmayan tarayıcı.\nİnternette gezinmek artık daha keyifli.</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
@@ -653,6 +657,8 @@
   <string name="nova_onboarding_tou_body_line_3_link_text" tools:ignore="UnusedResources">Ayarları yönet</string>
   <!-- "Set to default" onboarding title. -->
   <string name="nova_onboarding_set_to_default_title" tools:ignore="UnusedResources">Ürpertici takip kodlarına veda edin</string>
+  <!-- "Set to default" onboarding subtitle. -->
+  <string name="nova_onboarding_set_to_default_subtitle" tools:ignore="UnusedResources">Verilerinizi koruyoruz ve şirketlerin tıklamalarınızı izlemesini otomatik olarak engelliyoruz.</string>
   <!-- "Set to default" onboarding button. -->
   <string name="nova_onboarding_set_to_default_button" tools:ignore="UnusedResources">Varsayılan tarayıcı yap</string>
   <!-- Toolbar selection onboarding title. -->
@@ -671,8 +677,12 @@
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">Koyu</string>
   <!-- Sync onboarding title. -->
   <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">Kaldığınız yerden anında devam edin</string>
+  <!-- Sync onboarding subtitle. -->
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Yer imlerinizi, parolalarınızı ve daha fazlasını istediğiniz cihazdan hızlıca alın. Kişisel verileriniz şifrelemeyle güvende kalır.</string>
   <!-- Sync onboarding button. -->
   <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Eşitlemeyi başlat</string>
+  <!-- Marketing onboarding title. -->
+  <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Daha iyi bir internet inşa etmemize yardım edin</string>
   <!--
     Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
     %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
@@ -682,8 +692,14 @@
   <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">Bu verileri nasıl kullanıyoruz?</string>
   <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Bildirimler Firefox ile daha güvende kalmanızı sağlar</string>
+  <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">Firefox’taki en yeni gizlilik özelliklerini keşfedin, nasıl korunacağınızı daha iyi öğrenin.</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Bildirimleri aç</string>
+  <!-- "Add search widget" onboarding title. -->
+  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Arama yaparken gizlilikten vazgeçmeyin</string>
+  <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">Aramaya telefonunuzun ana ekranından başladığınızda bile Firefox’un otomatik korumaları sizi korusun.</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Firefox widget’ını ekle</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
@@ -1998,6 +2014,8 @@
   <string name="bookmark_empty_list_folder_description">Gezinirken sevdiğiniz siteleri yer imlerinize ekleyerek onları daha sonra bulabilirsiniz.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Yeni klasör</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">%1$s %2$s klasörüne taşındı</string>
   <!--
     Site Permissions
 
@@ -4019,6 +4037,13 @@
     %1$s is the product name "Firefox"
   -->
   <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">%1$s’tan bir not</string>
+  <!--
+    Copy for the Terms of Use popup prompt body line two.
+    %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
+  -->
+  <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">Daha fazla bilgiyi %1$s bulabilirsiniz.</string>
+  <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
+  <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">burada</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
   <!--

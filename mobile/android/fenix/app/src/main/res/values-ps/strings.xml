@@ -6,7 +6,7 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 -->
 
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">شخصي %s</string>
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
@@ -87,6 +87,8 @@
   <string name="felt_privacy_desc_card_title">په دې آله کې هېڅ نښه مه پرېږدئ</string>
   <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
 
+  <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+  <string name="tab_tray_inactive_auto_close_button_content_description">بندول</string>
   <!--
     Home screen icons - Long press shortcuts
 
@@ -129,7 +131,7 @@
     Text for the menu button to remove a grouped highlight from the user's browsing history
     in the Recently visited section
   -->
-  <string name="recently_visited_menu_item_remove">لېرې کړئ</string>
+  <string name="recently_visited_menu_item_remove">لېرې کول</string>
   <!-- Content description for the button which navigates the user to show all of their history. -->
   <string name="past_explorations_show_all_content_description_2">ټولې پخوانۍ پلټنې وښایاست</string>
   <!--
@@ -146,6 +148,50 @@
   <string name="browser_menu_stop">ودروئ</string>
   <!-- Browser menu button that opens the extensions manager -->
   <string name="browser_menu_extensions">وروستاړي</string>
+  <!-- Browser menu button that sends a user to help articles -->
+  <string name="browser_menu_help">مرسته</string>
+  <!-- Browser menu button that sends a to a the what's new article -->
+  <string name="browser_menu_whats_new">څه نوي دي</string>
+  <!-- Browser menu button that opens the settings menu -->
+  <string name="browser_menu_settings">امستنې</string>
+  <!-- Browser menu button that opens a user's library -->
+  <string name="browser_menu_library">کتابتون</string>
+  <!-- Browser menu toggle that requests a desktop site -->
+  <string name="browser_menu_desktop_site">ډېسکټاپ سایټ</string>
+  <!-- Browser menu button that open a share menu to share the current site -->
+  <string name="browser_menu_share">شریکول</string>
+  <!-- Browser menu button that goes to the homepage screen -->
+  <string name="browser_menu_homepage">کور پاڼه</string>
+  <!-- Browser menu label for adding a bookmark -->
+  <string name="browser_menu_add">زياتول</string>
+  <!-- Browser menu label for editing a bookmark -->
+  <string name="browser_menu_edit">سمول</string>
+  <!-- Browser menu label that navigates to the Password screen -->
+  <string name="browser_menu_passwords">پاسورډونه</string>
+  <!-- Content description (not visible, for screen readers etc.) for the handle used to drag the main menu at the bottom of the screen. -->
+  <string name="browser_close_main_menu_handlebar_content_description">مینو بندول</string>
+  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
+  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">امستنې</string>
+  <!-- Browser menu label for the print feature -->
+  <string name="browser_menu_print_2">چاپ</string>
+  <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
+  <string name="search_suggestions_onboarding_allow_button">اجازه ورکول</string>
+  <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
+  <string name="search_suggestions_onboarding_do_not_allow_button">اجازه نه ورکول</string>
+  <!--
+    Home onboarding
+
+    Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog
+  -->
+  <string name="onboarding_home_content_description_close_button">بندول</string>
+  <!-- Text for the button to sign in to sync on the device -->
+  <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ننوتل</string>
+  <!-- Text for the button dismiss the screen and move on with the flow -->
+  <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">اوس نه</string>
+  <!-- Used as text for the link in onboarding_redesign_tou_body_one. -->
+  <string name="onboarding_redesign_tou_body_one_link_text" tools:ignore="BrandUsage">د فایرفوکس د کارولو شرایط</string>
+  <!-- Marketing onboarding page button label. Button to confirm choice and start browsing. -->
+  <string name="onboarding_marketing_redesign_positive_button">تاییدول</string>
   <!-- ==== Project "Nova" onboarding strings ==== -->
 
   <!-- ==== End of Project "Nova" onboarding strings ==== -->

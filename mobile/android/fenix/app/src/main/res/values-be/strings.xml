@@ -568,10 +568,18 @@
   <string name="nova_onboarding_toolbar_selection_top_label" tools:ignore="UnusedResources">Уверсе</string>
   <!-- Toolbar selection onboarding "bottom" option label. -->
   <string name="nova_onboarding_toolbar_selection_bottom_label" tools:ignore="UnusedResources">Унізе</string>
+  <!-- Theme selection onboarding title. -->
+  <string name="nova_onboarding_theme_selection_title" tools:ignore="UnusedResources">Выберыце тэму</string>
   <!-- Theme selection onboarding "automatic" option label. -->
   <string name="nova_onboarding_theme_selection_automatic_label" tools:ignore="UnusedResources">Аўтаматычна</string>
+  <!-- Theme selection onboarding "light" option label. -->
+  <string name="nova_onboarding_theme_selection_light_label" tools:ignore="UnusedResources">Светлая</string>
   <!-- Theme selection onboarding "dark" option label. -->
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">Цёмная</string>
+  <!-- Sync onboarding button. -->
+  <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Пачаць сінхранізацыю</string>
+  <!-- Marketing onboarding title. -->
+  <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Дапамажыце нам будаваць лепшы інтэрнэт</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
 
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
@@ -1489,12 +1497,16 @@
     The title of the Web Compat Reporter feature. This is displayed in the top app bar.
   -->
   <string name="webcompat_reporter_screen_title">Паведаміць пра пашкоджаны сайт</string>
+  <!-- The button text for navigating to the SUMO link to learn more about reporting a broken site. -->
+  <string name="webcompat_reporter_learn_more">Падрабязней</string>
   <!-- The text field label of the URL text field. This is displayed above the user-inputted URL. -->
   <string name="webcompat_reporter_label_url">URL</string>
   <!-- The error message of the URL text field when an invalid URL has been entered. -->
   <string name="webcompat_reporter_url_error_invalid">Калі ласка, увядзіце сапраўдны URL</string>
   <!-- The label/title of a field in the Web Compat Reporter feature for explaining a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_label_whats_broken_2">Што пашкоджана?</string>
+  <!-- The placeholder text for the dropdown where a user selects a high-level reason why the site is broken. -->
+  <string name="webcompat_reporter_choose_reason_2">Выберыце прычыну</string>
   <!-- The error message of the dropdown, prompting the user to select a high-level reason why the site is broken. -->
   <string name="webcompat_reporter_choose_reason_error">Калі ласка, выберыце прычыну</string>
   <!-- The label/title of an optional field in the Web Compat Reporter feature for adding additional information. -->
@@ -1505,6 +1517,10 @@
   <string name="webcompat_reporter_send">Даслаць</string>
   <!-- Text for a snackbar to confirm the successful submission of a WebCompat report. -->
   <string name="webcompat_reporter_success_snackbar_text_2">Справаздача адпраўлена</string>
+  <!-- Label of the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. -->
+  <string name="webcompat_reporter_etp_checkbox_text">Адпраўляць URL-адрасы, заблакаваныя аховай ад сачэння</string>
+  <!-- Description text for the checkbox on the “Report broken site” screen for sending URLS blocked by Enhanced Tracking Protection. It informs the user when checked, the report will include the list of URLs that were blocked by Enhanced Tracking Protection on the current page. -->
+  <string name="webcompat_reporter_etp_checkbox_description">Узмоцненая ахова ад сачэння можа блакаваць трэкеры і\u00a0скрыпты, неабходныя для правільнай працы некаторых сайтаў.</string>
   <!-- Label for the “Send” button shown in the WebCompat Report preview panel, which the user taps to submit the report. -->
   <string name="webcompat_reporter_preview_bottom_sheet_send">Даслаць</string>
   <!-- Broken site reason text for site is slow -->
@@ -3069,6 +3085,14 @@
   <string name="certificate_warning_push_notification_update_recommended_title" tools:ignore="UnusedResources">Рэкамендуецца абнавіць</string>
   <!-- TextField Design System Component -->
 
+  <!-- Title for the setup checklist feature when the state is 'completed' -->
+  <string name="setup_checklist_title_state_completed">Віншуем!</string>
+  <!-- The title of the theme selection task for the setup checklist -->
+  <string name="setup_checklist_task_theme_selection">Выберыце тэму</string>
+  <!-- The title of the toolbar selection task for the setup checklist -->
+  <string name="setup_checklist_task_toolbar_selection">Выберыце размяшчэнне панэлі інструментаў</string>
+  <!-- Label for the primary action button to unlock private tabs -->
+  <string name="pbm_authentication_unlock">Разблакаваць</string>
   <!-- Negative button text for the contextual feature recommendation (CFR) dismissing the screen lock suggestion -->
   <string name="private_tab_cfr_negative">Не, дзякуй</string>
   <!-- Label for a button opening a feedback forum -->
