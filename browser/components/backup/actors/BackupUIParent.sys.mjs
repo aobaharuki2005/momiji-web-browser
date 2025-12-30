@@ -7,6 +7,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BackupService: "resource:///modules/backup/BackupService.sys.mjs",
   ERRORS: "chrome://browser/content/backup/backup-constants.mjs",
+  E10SUtils: "resource://gre/modules/E10SUtils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
@@ -121,6 +122,22 @@ export class BackupUIParent extends JSWindowActorParent {
    *   Returns either a success object, a file details object, or null.
    */
   async receiveMessage(message) {
+    let currentWindowGlobal = this.browsingContext.currentWindowGlobal;
+    // The backup spotlights can be embedded in less privileged content pages, so let's
+    // make sure that any messages from content are coming from the privileged
+    // about content process type
+    if (
+      !currentWindowGlobal ||
+      (!currentWindowGlobal.isInProcess &&
+        this.browsingContext.currentRemoteType !=
+          lazy.E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE)
+    ) {
+      lazy.logConsole.debug(
+        "BackupUIParent: received message from the wrong content process type."
+      );
+      return null;
+    }
+
     if (message.name == "RequestState") {
       this.sendState();
     } else if (message.name == "TriggerCreateBackup") {
