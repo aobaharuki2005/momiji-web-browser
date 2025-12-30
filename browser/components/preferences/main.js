@@ -3196,6 +3196,93 @@ SettingGroupManager.registerGroups({
       },
     ],
   },
+  history2: {
+    inProgress: true,
+    l10nId: "history-section-header",
+    items: [
+      {
+        id: "deleteOnCloseInfo",
+        l10nId: "sitedata-delete-on-close-private-browsing3",
+        control: "moz-message-bar",
+      },
+      {
+        id: "historyMode",
+        control: "moz-radio-group",
+        options: [
+          {
+            value: "remember",
+            l10nId: "history-remember-option-all",
+          },
+          { value: "dontremember", l10nId: "history-remember-option-never" },
+          {
+            value: "custom",
+            l10nId: "history-remember-option-custom",
+            items: [
+              {
+                id: "customHistoryButton",
+                control: "moz-box-button",
+                l10nId: "history-custom-button",
+              },
+            ],
+          },
+        ],
+        controlAttrs: {
+          "search-l10n-ids": `
+            history-remember-description3,
+            history-dontremember-description3,
+            history-private-browsing-permanent.label,
+            history-remember-browser-option.label,
+            history-remember-search-option.label,
+            history-clear-on-close-option.label,
+            history-clear-on-close-settings.label
+          `,
+        },
+      },
+    ],
+  },
+  historyAdvanced: {
+    l10nId: "history-custom-section-header",
+    headingLevel: 2,
+    items: [
+      {
+        id: "privateBrowsingAutoStart",
+        l10nId: "history-private-browsing-permanent",
+      },
+      {
+        id: "rememberHistory",
+        l10nId: "history-remember-browser-option",
+      },
+      {
+        id: "rememberForms",
+        l10nId: "history-remember-search-option",
+      },
+      {
+        id: "alwaysClear",
+        l10nId: "history-clear-on-close-option",
+        items: [
+          {
+            id: "clearDataSettings",
+            l10nId: "history-clear-on-close-settings",
+            control: "moz-box-button",
+            controlAttrs: {
+              "search-l10n-ids": `
+                    clear-data-settings-label,
+                    history-section-label,
+                    item-history-and-downloads.label,
+                    item-cookies.label,
+                    item-active-logins.label,
+                    item-cache.label,
+                    item-form-search-history.label,
+                    data-section-label,
+                    item-site-settings.label,
+                    item-offline-apps.label
+                  `,
+            },
+          },
+        ],
+      },
+    ],
+  },
   permissions: {
     id: "permissions",
     l10nId: "permissions-header2",
