@@ -48,7 +48,6 @@ add_task(async function testMigrationForDeleteOnClose() {
   );
   // We are done changing settings in about:preferences, remove the tab
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-
   // Open the clear on shutdown preferences dialog
   let dh = new ClearHistoryDialogHelper({ mode: "clearOnShutdown" });
   dh.onload = function () {
