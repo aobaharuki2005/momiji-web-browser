@@ -254,17 +254,7 @@ skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && a11y_checks && opt",
 ]
 
-["browser_privacypane_2_srd.js"]
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && a11y_checks && opt",
-]
-
 ["browser_privacypane_3.js"]
-skip-if = [
-  "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && a11y_checks && opt",
-]
-
-["browser_privacypane_3_srd.js"]
 skip-if = [
   "os == 'linux' && os_version == '24.04' && arch == 'x86_64' && display == 'x11' && a11y_checks && opt",
 ]
@@ -380,8 +370,6 @@ support-files = [
 ["browser_usage_telemetry.js"]
 
 ["browser_warning_permanent_private_browsing.js"]
-
-["browser_warning_permanent_private_browsing_srd.js"]
 
 ["browser_windows_launch_on_login.js"]
 run-if = [

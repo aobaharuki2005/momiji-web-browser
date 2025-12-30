@@ -285,11 +285,6 @@ const CONFIG_PANES = Object.freeze({
     module: "chrome://browser/content/preferences/config/aiFeatures.mjs",
     visible: () => srdSectionEnabled("aiFeatures"),
   },
-  history: {
-    parent: "privacy",
-    l10nId: "history-header2",
-    groupIds: ["historyAdvanced"],
-  },
 });
 
 var gLastCategory = { category: undefined, subcategory: undefined };
