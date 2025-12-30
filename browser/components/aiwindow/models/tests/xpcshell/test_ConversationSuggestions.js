@@ -35,6 +35,8 @@ const { sinon } = ChromeUtils.importESModule(
 const PREF_API_KEY = "browser.aiwindow.apiKey";
 const PREF_ENDPOINT = "browser.aiwindow.endpoint";
 const PREF_MODEL = "browser.aiwindow.model";
+const PREF_HISTORY_ENABLED = "places.history.enabled";
+const PREF_PRIVATE_BROWSING = "browser.privatebrowsing.autostart";
 
 const API_KEY = "test-api-key";
 const ENDPOINT = "https://api.test-endpoint.com/v1";
@@ -44,7 +46,13 @@ const MODEL = "test-model";
  * Cleans up preferences after testing
  */
 registerCleanupFunction(() => {
-  for (let pref of [PREF_API_KEY, PREF_ENDPOINT, PREF_MODEL]) {
+  for (let pref of [
+    PREF_API_KEY,
+    PREF_ENDPOINT,
+    PREF_MODEL,
+    PREF_HISTORY_ENABLED,
+    PREF_PRIVATE_BROWSING,
+  ]) {
     if (Services.prefs.prefHasUserValue(pref)) {
       Services.prefs.clearUserPref(pref);
     }
@@ -257,78 +265,177 @@ add_task(function test_cleanInferenceOutput() {
 /**
  * Tests for createNewTabPromptGenerator generating prompts based on tab count
  */
-add_task(async function test_createNewTabPromptGenerator() {
-  const sb = sinon.createSandbox();
-  const writingPrompts = [
-    "Write a first draft",
-    "Improve writing",
-    "Proofread a message",
-  ];
-
-  const planningPrompts = [
-    "Simplify a topic",
-    "Brainstorm ideas",
-    "Help make a plan",
-  ];
-  try {
-    const cases = [
-      {
-        input: { tabCount: -1 },
-        expectedBrowsing: ["Find tabs in history"],
-      },
-      {
-        input: { tabCount: 0 },
-        expectedBrowsing: ["Find tabs in history"],
-      },
-      {
-        input: { tabCount: 1 },
-        expectedBrowsing: ["Find tabs in history", "Summarize tabs"],
-      },
-      {
-        input: { tabCount: 2 },
-        expectedBrowsing: [
-          "Find tabs in history",
-          "Summarize tabs",
-          "Compare tabs",
-        ],
-      },
-      {
-        input: { tabCount: 3 },
-        expectedBrowsing: [
-          "Find tabs in history",
-          "Summarize tabs",
-          "Compare tabs",
-        ],
-      },
+add_task(
+  async function test_createNewTabPromptGenerator_with_history_enabled() {
+    const sb = sinon.createSandbox();
+    const writingPrompts = [
+      "Write a first draft",
+      "Improve writing",
+      "Proofread a message",
     ];
-    const promptGenerator = NewTabStarterGenerator;
-    for (const { input, expectedBrowsing } of cases) {
-      const results = await promptGenerator.getPrompts(input.tabCount);
-      Assert.equal(results.length, 3, "Should return 3 suggestions");
-      for (const result of results) {
-        Assert.equal(
-          result.type,
-          "chat",
-          "Each result should have type 'chat'"
+
+    const planningPrompts = [
+      "Simplify a topic",
+      "Brainstorm ideas",
+      "Help make a plan",
+    ];
+    try {
+      const cases = [
+        {
+          input: { tabCount: -1 },
+          expectedBrowsing: [],
+        },
+        {
+          input: { tabCount: 0 },
+          expectedBrowsing: ["Find tabs in history"],
+        },
+        {
+          input: { tabCount: 1 },
+          expectedBrowsing: ["Find tabs in history", "Summarize tabs"],
+        },
+        {
+          input: { tabCount: 2 },
+          expectedBrowsing: [
+            "Find tabs in history",
+            "Summarize tabs",
+            "Compare tabs",
+          ],
+        },
+        {
+          input: { tabCount: 3 },
+          expectedBrowsing: [
+            "Find tabs in history",
+            "Summarize tabs",
+            "Compare tabs",
+          ],
+        },
+      ];
+      const promptGenerator = NewTabStarterGenerator;
+      for (const { input, expectedBrowsing } of cases) {
+        const results = await promptGenerator.getPrompts(input.tabCount);
+        if (input.tabCount <= -1) {
+          Assert.equal(results.length, 2, "Should return 2 suggestions");
+        } else {
+          Assert.equal(results.length, 3, "Should return 3 suggestions");
+        }
+        for (const result of results) {
+          Assert.equal(
+            result.type,
+            "chat",
+            "Each result should have type 'chat'"
+          );
+        }
+        Assert.ok(
+          writingPrompts.includes(results[0].text),
+          "Results should include a valid writing prompt"
         );
+        Assert.ok(
+          planningPrompts.includes(results[1].text),
+          "Results should include a valid planning prompt"
+        );
+        if (results[2]) {
+          Assert.ok(
+            expectedBrowsing.includes(results[2].text),
+            "Results should include a valid browsing prompt"
+          );
+        }
       }
-      Assert.ok(
-        writingPrompts.includes(results[0].text),
-        "Results should include a valid writing prompt"
-      );
-      Assert.ok(
-        planningPrompts.includes(results[1].text),
-        "Results should include a valid planning prompt"
-      );
-      Assert.ok(
-        expectedBrowsing.includes(results[2].text),
-        "Results should include a valid browsing prompt"
-      );
+    } finally {
+      sb.restore();
     }
-  } finally {
-    sb.restore();
   }
-});
+);
+
+/**
+ * Tests for createNewTabPromptGenerator generating prompts based on tab count, with history disabled
+ */
+add_task(
+  async function test_createNewTabPromptGenerator_with_history_disabled() {
+    const sb = sinon.createSandbox();
+    const writingPrompts = [
+      "Write a first draft",
+      "Improve writing",
+      "Proofread a message",
+    ];
+
+    const planningPrompts = [
+      "Simplify a topic",
+      "Brainstorm ideas",
+      "Help make a plan",
+    ];
+    try {
+      const cases = [
+        {
+          input: { tabCount: -1 },
+          expectedBrowsing: [],
+        },
+        {
+          input: { tabCount: 0 },
+          expectedBrowsing: [],
+        },
+        {
+          input: { tabCount: 1 },
+          expectedBrowsing: ["Summarize tabs"],
+        },
+        {
+          input: { tabCount: 2 },
+          expectedBrowsing: ["Summarize tabs", "Compare tabs"],
+        },
+        {
+          input: { tabCount: 3 },
+          expectedBrowsing: ["Summarize tabs", "Compare tabs"],
+        },
+      ];
+      for (const pref of [
+        [{ key: PREF_HISTORY_ENABLED, value: false }],
+        [{ key: PREF_PRIVATE_BROWSING, value: true }],
+        [
+          { key: PREF_HISTORY_ENABLED, value: false },
+          { key: PREF_PRIVATE_BROWSING, value: true },
+        ],
+      ]) {
+        for (const p of pref) {
+          Services.prefs.setBoolPref(p.key, p.value);
+        }
+        const promptGenerator = NewTabStarterGenerator;
+        for (const { input, expectedBrowsing } of cases) {
+          const results = await promptGenerator.getPrompts(input.tabCount);
+          if (input.tabCount <= 0) {
+            Assert.equal(results.length, 2, "Should return 2 suggestions");
+          } else {
+            Assert.equal(results.length, 3, "Should return 3 suggestions");
+          }
+          for (const result of results) {
+            Assert.equal(
+              result.type,
+              "chat",
+              "Each result should have type 'chat'"
+            );
+          }
+          Assert.ok(
+            writingPrompts.includes(results[0].text),
+            "Results should include a valid writing prompt"
+          );
+          Assert.ok(
+            planningPrompts.includes(results[1].text),
+            "Results should include a valid planning prompt"
+          );
+          if (results[2]) {
+            Assert.ok(
+              expectedBrowsing.includes(results[2].text),
+              "Results should include a valid browsing prompt"
+            );
+          }
+        }
+        for (const p of pref) {
+          Services.prefs.clearUserPref(p.key);
+        }
+      }
+    } finally {
+      sb.restore();
+    }
+  }
+);
 
 /**
  * Tests for generateConversationStartersSidebar successfully generating suggestions

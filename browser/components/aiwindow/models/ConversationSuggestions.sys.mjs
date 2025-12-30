@@ -114,9 +114,9 @@ export const NewTabStarterGenerator = {
 
   // TODO: discuss with design about updating phrasing to "pages" instead of "tabs"
   browsingPrompts: [
-    { text: "Find tabs in history", minTabs: 0 },
-    { text: "Summarize tabs", minTabs: 1 },
-    { text: "Compare tabs", minTabs: 2 },
+    { text: "Find tabs in history", minTabs: 0, needsHistory: true },
+    { text: "Summarize tabs", minTabs: 1, needsHistory: false },
+    { text: "Compare tabs", minTabs: 2, needsHistory: false },
   ],
 
   getRandom(arr) {
@@ -124,27 +124,41 @@ export const NewTabStarterGenerator = {
   },
 
   /**
-   * Generate conversation starter prompts based on number of open tabs
+   * Generate conversation starter prompts based on number of open tabs and browsing history prefs.
+   * "places.history.enabled" covers "Remember browsing and download history" while
+   * "browser.privatebrowsing.autostart" covers "Always use private mode" and "Never remember history".
+   * We need to check both prefs to cover all cases where history can be disabled.
    *
    * @param {number} tabCount - number of open tabs
    * @returns {Promise<Array>} Array of {text, type} suggestion objects
    */
   async getPrompts(tabCount) {
+    const historyEnabled = Services.prefs.getBoolPref("places.history.enabled");
+    const privateBrowsing = Services.prefs.getBoolPref(
+      "browser.privatebrowsing.autostart"
+    );
     const validBrowsingPrompts = this.browsingPrompts.filter(
-      p => tabCount >= p.minTabs
+      p =>
+        tabCount >= p.minTabs &&
+        (!p.needsHistory || (historyEnabled && !privateBrowsing))
     );
 
     const writingPrompt = this.getRandom(this.writingPrompts);
     const planningPrompt = this.getRandom(this.planningPrompts);
     const browsingPrompt = validBrowsingPrompts.length
       ? this.getRandom(validBrowsingPrompts)
-      : this.browsingPrompts[0];
+      : null;
 
-    return [
+    const prompts = [
       { text: writingPrompt, type: "chat" },
       { text: planningPrompt, type: "chat" },
-      { text: browsingPrompt.text, type: "chat" },
     ];
+
+    if (browsingPrompt) {
+      prompts.push({ text: browsingPrompt.text, type: "chat" });
+    }
+
+    return prompts;
   },
 };
 
