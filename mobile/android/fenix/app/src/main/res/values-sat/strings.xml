@@ -632,6 +632,37 @@
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">ᱱᱤᱛᱚᱜ ᱫᱚ ᱵᱟᱝᱟ</string>
   <!-- Terms of use (ToU) onboarding title. -->
   <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">ᱯᱷᱨᱤ ᱫᱟᱹᱲ ᱞᱟᱹᱜᱤᱫ ᱥᱟᱯᱲᱟᱣ ᱛᱟᱦᱮᱱ ᱢᱮ</string>
+  <!-- Terms of use (ToU) onboarding subtitle. -->
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">ᱞᱚᱜᱚᱱ, ᱨᱚᱯᱟ ᱨᱮ, ᱟᱨ ᱟᱢ ᱵᱟᱦᱨᱮ ᱵᱟᱝ ᱟᱠᱨᱤᱧ ᱢᱮᱭᱟᱭ ᱾\nᱵᱽᱨᱟᱣᱩᱡᱤᱝ ᱫᱚ ᱱᱤᱛ ᱜᱮ ᱵᱮᱥ ᱮᱱᱟ ᱾</string>
+  <!--
+    Terms of use (ToU) onboarding body line one.
+    %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
+  -->
+  <string name="nova_onboarding_tou_body_line_1" tools:ignore="UnusedResources">ᱞᱟᱦᱟᱜ ᱠᱟᱛᱮ, ᱟᱢ %1$s ᱨᱮᱢ ᱦᱮᱸᱥᱮᱨᱤᱭᱟᱹ ᱮᱫᱟ ᱾</string>
+  <!-- Terms of use (ToU) onboarding body line one link text for nova_onboarding_tou_body_line_1. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_tou_body_line_1_link_text" tools:ignore="BrandUsage,UnusedResources">Firefox ᱵᱮᱵᱷᱟᱨ ᱨᱮᱭᱟᱜ ᱥᱚᱨᱛᱚ</string>
+  <!--
+    Terms of use (ToU) onboarding body line two. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_tou_body_line_2_link_text as text (“Privacy Notice”).
+  -->
+  <string name="nova_onboarding_tou_body_line_2" tools:ignore="BrandUsage,UnusedResources">Firefox ᱟᱢᱟᱜ ᱯᱨᱟᱭᱣᱮᱥᱤ ᱵᱟᱵᱚᱛ ᱡᱚᱛᱚᱱ ᱤᱫᱤᱭᱟᱭ ᱾ ᱟᱞᱮᱭᱟᱜ %1$s ᱨᱮ ᱵᱟᱹᱲᱛᱤ ᱵᱟᱲᱟᱭ ᱢᱮ ᱾</string>
+  <!-- Terms of use (ToU) onboarding body line two link text for nova_onboarding_tou_body_line_2. -->
+  <string name="nova_onboarding_tou_body_line_2_link_text" tools:ignore="UnusedResources">ᱫᱟᱱᱟᱝ ᱠᱷᱚᱵᱚᱨ</string>
+  <!--
+    Terms of use (ToU) onboarding body line three. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_tou_body_line_3_link_text as text (“Manage Settings”).
+  -->
+  <string name="nova_onboarding_tou_body_line_3" tools:ignore="BrandUsage,UnusedResources">ᱵᱽᱨᱟᱣᱩᱡᱟᱨ ᱥᱩᱫᱷᱨᱟᱹᱣ ᱜᱚᱲᱚ ᱞᱟᱹᱜᱤᱫ, Firefox ᱫᱚ Mozilla ᱴᱷᱮᱱ ᱰᱟᱭᱜᱽᱱᱚᱥᱴᱤᱠ ᱟᱨ ᱜᱟᱯᱟᱞᱢᱟᱨᱟᱣ ᱰᱟᱴᱟ ᱠᱩᱞᱟ ᱾ %1$s</string>
+  <!-- Terms of use (ToU) onboarding body line three link text for nova_onboarding_tou_body_line_3. -->
+  <string name="nova_onboarding_tou_body_line_3_link_text" tools:ignore="UnusedResources">ᱥᱟᱡᱟᱣ ᱠᱚ ᱢᱮᱱᱮᱡᱽ ᱢᱮ</string>
+  <!-- "Set to default" onboarding title. -->
+  <string name="nova_onboarding_set_to_default_title" tools:ignore="UnusedResources">ᱵᱚᱛᱚᱨᱟᱱ ᱴᱨᱮᱠᱟᱨ ᱠᱚ ᱵᱤᱫᱟᱹ ᱢᱮᱱ ᱢᱮ</string>
+  <!-- "Set to default" onboarding subtitle. -->
+  <string name="nova_onboarding_set_to_default_subtitle" tools:ignore="UnusedResources">ᱟᱞᱮ ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱞᱮ ᱨᱩᱠᱷᱤᱭᱟᱹᱭᱟ ᱟᱨ ᱟᱢᱟᱜ ᱠᱞᱤᱠ ᱨᱮ ᱡᱟᱹᱥᱛᱤ ᱠᱷᱚᱱ ᱠᱚᱢᱯᱟᱱᱤ ᱠᱚ ᱟᱡ ᱛᱮ ᱵᱚᱱ ᱵᱚᱱᱫᱚ ᱠᱚᱣᱟ᱾</string>
+  <!-- "Set to default" onboarding button. -->
+  <string name="nova_onboarding_set_to_default_button" tools:ignore="UnusedResources">ᱢᱩᱞ ᱵᱽᱨᱟᱣᱩᱡᱟᱹᱨ ᱞᱮᱠᱷᱟ ᱥᱟᱡᱟᱣ ᱢᱮ</string>
+  <!-- Toolbar selection onboarding title. -->
+  <string name="nova_onboarding_toolbar_selection_title" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱴᱷᱤᱠᱟᱹᱱᱟ ᱵᱟᱨ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
 
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->

@@ -1612,7 +1612,7 @@
   <!-- Text for the button to open tabs of the selected collection -->
   <string name="collection_open_tabs">Варақаҳои кушодашуда</string>
   <!-- Hint for adding name of a collection -->
-  <string name="collection_name_hint">Номи пайваст</string>
+  <string name="collection_name_hint">Номи маҷмуа</string>
   <!-- Text for the menu button to remove a top site -->
   <string name="remove_top_site">Тоза кардан</string>
   <!-- Text for the menu button to delete a top site from history -->
