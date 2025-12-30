@@ -129,17 +129,9 @@ class GitRepository(Repository):
             if is_official_remote(url):
                 yield name
 
-    def get_mozilla_remote_args(self) -> list[str]:
-        """Return a list of `--remotes` arguments to limit commits to official remotes."""
-        official_remotes = [
-            f"--remotes={remote}" for remote in self.get_mozilla_upstream_remotes()
-        ]
-
-        return official_remotes if official_remotes else ["--remotes"]
-
     @property
     def base_ref(self):
-        remote_args = self.get_mozilla_remote_args()
+        remote_args = self.get_mozilla_upstream_remotes()
 
         refs = self._run(
             "rev-list", "HEAD", "--topo-order", "--boundary", "--not", *remote_args
@@ -364,7 +356,7 @@ class GitRepository(Repository):
         follow: Optional[list[str]] = None,
     ) -> list[str]:
         """Return a list of commit SHAs for nodes on the current branch."""
-        remote_args = self.get_mozilla_remote_args()
+        remote_args = self.get_mozilla_upstream_remotes()
 
         cmd = [
             "log",
