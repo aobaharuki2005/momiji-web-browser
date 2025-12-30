@@ -202,9 +202,11 @@ Preferences.addAll([
   // Do not track and Global Privacy Control
   { id: "privacy.donottrackheader.enabled", type: "bool" },
   { id: "privacy.globalprivacycontrol.functionality.enabled", type: "bool" },
-
-  // Global Privacy Control
   { id: "privacy.globalprivacycontrol.enabled", type: "bool" },
+  {
+    id: "browser.preferences.config_warning.donottrackheader.dismissed",
+    type: "bool",
+  },
 
   // Firefox VPN
   { id: "browser.ipProtection.enabled", type: "bool" },
@@ -1528,14 +1530,56 @@ Preferences.addSetting({
   },
 });
 Preferences.addSetting({
+  id: "relayFeature",
+  pref: "signon.firefoxRelay.feature",
+});
+Preferences.addSetting({
+  id: "relayIntegration",
+  deps: ["savePasswords", "relayFeature"],
+  visible: () => {
+    return FirefoxRelay.isAvailable;
+  },
+  disabled: ({ savePasswords, relayFeature }) => {
+    return !savePasswords.value || relayFeature.pref.locked;
+  },
+  get() {
+    return FirefoxRelay.isAvailable && !FirefoxRelay.isDisabled;
+  },
+  set(checked) {
+    if (checked) {
+      FirefoxRelay.markAsAvailable();
+    } else {
+      FirefoxRelay.markAsDisabled();
+    }
+  },
+  onUserChange(checked) {
+    if (checked) {
+      Glean.relayIntegration.enabledPrefChange.record();
+    } else {
+      Glean.relayIntegration.disabledPrefChange.record();
+    }
+  },
+});
+Preferences.addSetting({
   id: "dntHeaderEnabled",
   pref: "privacy.donottrackheader.enabled",
 });
 Preferences.addSetting({
   id: "dntRemoval",
+  pref: "browser.preferences.config_warning.donottrackheader.dismissed",
   deps: ["dntHeaderEnabled"],
-  visible: ({ dntHeaderEnabled }) => {
-    return dntHeaderEnabled.value;
+  visible: ({ dntHeaderEnabled }, setting) => {
+    return dntHeaderEnabled.value && !setting.value;
+  },
+  onUserClick: (event, _deps, setting) => {
+    let dismissButton = event.target?.shadowRoot?.querySelector(".close");
+    if (
+      dismissButton?.shadowRoot &&
+      event.originalTarget &&
+      dismissButton.shadowRoot.contains(event.originalTarget)
+    ) {
+      setting.value = true;
+    }
   },
 });
 
@@ -3727,6 +3771,7 @@ var gPrivacyPane = {
    */
   init() {
     initSettingGroup("nonTechnicalPrivacy");
+    initSettingGroup("nonTechnicalPrivacy2");
     initSettingGroup("securityPrivacyStatus");
     initSettingGroup("securityPrivacyWarnings");
     initSettingGroup("httpsOnly");
