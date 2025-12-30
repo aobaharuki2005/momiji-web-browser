@@ -204,16 +204,17 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream) {
   return NotifyLoadDone();
 }
 
-static void GetNodeInfos(nsXULPrototypeElement* aPrototype,
-                         nsTArray<RefPtr<mozilla::dom::NodeInfo>>& aArray) {
+static nsresult GetNodeInfos(nsXULPrototypeElement* aPrototype,
+                             nsTArray<RefPtr<mozilla::dom::NodeInfo>>& aArray) {
   if (aArray.IndexOf(aPrototype->mNodeInfo) == aArray.NoIndex) {
     aArray.AppendElement(aPrototype->mNodeInfo);
   }
 
   // Search attributes
-  for (nsXULPrototypeAttribute& attr : aPrototype->mAttributes) {
+  size_t i;
+  for (i = 0; i < aPrototype->mAttributes.Length(); ++i) {
     RefPtr<mozilla::dom::NodeInfo> ni;
-    nsAttrName* name = &attr.mName;
+    nsAttrName* name = &aPrototype->mAttributes[i].mName;
     if (name->IsAtom()) {
       ni = aPrototype->mNodeInfo->NodeInfoManager()->GetNodeInfo(
           name->Atom(), nullptr, kNameSpaceID_None, nsINode::ATTRIBUTE_NODE);
@@ -227,11 +228,16 @@ static void GetNodeInfos(nsXULPrototypeElement* aPrototype,
   }
 
   // Search children
-  for (nsXULPrototypeNode* child : aPrototype->mChildren) {
+  for (i = 0; i < aPrototype->mChildren.Length(); ++i) {
+    nsXULPrototypeNode* child = aPrototype->mChildren[i];
     if (child->mType == nsXULPrototypeNode::eType_Element) {
-      GetNodeInfos(static_cast<nsXULPrototypeElement*>(child), aArray);
+      nsresult rv =
+          GetNodeInfos(static_cast<nsXULPrototypeElement*>(child), aArray);
+      NS_ENSURE_SUCCESS(rv, rv);
     }
   }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -264,7 +270,10 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream) {
   // mozilla::dom::NodeInfo table
   nsTArray<RefPtr<mozilla::dom::NodeInfo>> nodeInfos;
   if (mRoot) {
-    GetNodeInfos(mRoot, nodeInfos);
+    tmp = GetNodeInfos(mRoot, nodeInfos);
+    if (NS_FAILED(tmp)) {
+      rv = tmp;
+    }
   }
 
   uint32_t nodeInfoCount = nodeInfos.Length();
@@ -420,6 +429,9 @@ void nsXULPrototypeDocument::SetIsL10nCached(bool aIsCached) {
 
 void nsXULPrototypeDocument::RebuildPrototypeFromElement(
     nsXULPrototypeElement* aPrototype, Element* aElement, bool aDeep) {
+  aPrototype->mHasIdAttribute = aElement->HasID();
+  aPrototype->mHasClassAttribute = aElement->MayHaveClass();
+  aPrototype->mHasStyleAttribute = aElement->MayHaveStyle();
   NodeInfo* oldNodeInfo = aElement->NodeInfo();
   RefPtr<NodeInfo> newNodeInfo = mNodeInfoManager->GetNodeInfo(
       oldNodeInfo->NameAtom(), oldNodeInfo->GetPrefixAtom(),
@@ -445,10 +457,7 @@ void nsXULPrototypeDocument::RebuildPrototypeFromElement(
       protoAttr->mName.SetTo(newNodeInfo);
     }
     protoAttr->mValue.SetTo(*attr.mValue);
-    if (protoAttr->mValue.Type() == nsAttrValue::eCSSDeclaration) {
-      // Ensure declarations get copied-on-write if needed.
-      protoAttr->mValue.GetCSSDeclarationValue()->SetImmutable();
-    }
+
     protoAttr++;
   }
 

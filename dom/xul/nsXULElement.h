@@ -168,6 +168,9 @@ class nsXULPrototypeElement : public nsXULPrototypeNode {
   explicit nsXULPrototypeElement(mozilla::dom::NodeInfo* aNodeInfo = nullptr)
       : nsXULPrototypeNode(eType_Element),
         mNodeInfo(aNodeInfo),
+        mHasIdAttribute(false),
+        mHasClassAttribute(false),
+        mHasStyleAttribute(false),
         mIsAtom(nullptr) {}
 
  private:
@@ -199,6 +202,9 @@ class nsXULPrototypeElement : public nsXULPrototypeNode {
 
   RefPtr<mozilla::dom::NodeInfo> mNodeInfo;
 
+  uint32_t mHasIdAttribute : 1;
+  uint32_t mHasClassAttribute : 1;
+  uint32_t mHasStyleAttribute : 1;
   nsTArray<nsXULPrototypeAttribute> mAttributes;  // [OWNER]
   RefPtr<nsAtom> mIsAtom;
 };
@@ -518,6 +524,7 @@ class nsXULElement : public nsStyledElement {
   /**
    * Add a listener for the specified attribute, if appropriate.
    */
+  void AddListenerForAttributeIfNeeded(const nsAttrName& aName);
   void AddListenerForAttributeIfNeeded(nsAtom* aLocalName);
 
  protected:
