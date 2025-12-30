@@ -335,10 +335,6 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/IntentClassifier.sys.mjs",
   },
-  // Bug 2000961 - Add ChatStore.sys.mjs module
-  {
-    file: "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs",
-  },
   // Bug 2002840 - add function to return real time info injection message & tests (backed out due to unused file)
   {
     file: "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs",

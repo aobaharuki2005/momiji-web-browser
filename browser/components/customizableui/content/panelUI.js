@@ -1073,9 +1073,15 @@ const PanelUI = {
       document,
       "appMenu-new-classic-window-button"
     );
+    const chatHistoryMenuItem = PanelMultiView.getViewNode(
+      document,
+      "appMenu-chats-history-button"
+    );
 
     aiMenuItem.hidden = !this.isAIWindowEnabled || isAIWindowActive;
     classicWindowMenuItem.hidden = !this.isAIWindowEnabled || !isAIWindowActive;
+
+    chatHistoryMenuItem.hidden = !this.isAIWindowEnabled || !isAIWindowActive;
   },
 
   _showBadge(notification) {

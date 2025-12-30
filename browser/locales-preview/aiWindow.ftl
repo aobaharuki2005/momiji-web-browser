@@ -16,6 +16,12 @@ menu-file-new-ai-window =
 menu-file-new-classic-window =
     .label = New Classic Window
 
+menu-history-chats =
+    .label = Chats
+
+menu-history-chats-recent =
+    .label = Recent Chats
+
 ## Input CTA
 
 aiwindow-input-cta-label-chat = Chat
