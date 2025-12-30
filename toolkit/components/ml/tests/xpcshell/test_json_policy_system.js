@@ -12,13 +12,16 @@
  * - @Mentions support
  */
 
-const { SecurityOrchestrator } = ChromeUtils.importESModule(
-  "chrome://global/content/ml/security/SecurityOrchestrator.sys.mjs"
-);
+const { SecurityOrchestrator, getSecurityOrchestrator } =
+  ChromeUtils.importESModule(
+    "chrome://global/content/ml/security/SecurityOrchestrator.sys.mjs"
+  );
 
 const PREF_SECURITY_ENABLED = "browser.ml.security.enabled";
 const POLICY_JSON_URL =
   "chrome://global/content/ml/security/policies/tool-execution-policies.json";
+
+const TEST_SESSION_ID = "test-session";
 
 /** @type {SecurityOrchestrator|null} */
 let orchestrator = null;
@@ -27,8 +30,9 @@ function setup() {
   Services.prefs.clearUserPref(PREF_SECURITY_ENABLED);
 }
 
-function teardown() {
+async function teardown() {
   Services.prefs.clearUserPref(PREF_SECURITY_ENABLED);
+  await SecurityOrchestrator.resetForTesting();
   orchestrator = null;
 }
 
@@ -59,7 +63,7 @@ add_task(async function test_json_policy_file_loads_and_validates() {
   Assert.ok(policy.phase, "Policy should have phase");
   Assert.ok(policy.effect, "Policy should have effect");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -73,16 +77,20 @@ add_task(async function test_json_policy_file_loads_and_validates() {
 add_task(async function test_orchestrator_initializes_with_policies() {
   setup();
 
-  // If create succeeds, policies loaded correctly
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  // If getSecurityOrchestrator succeeds, policies loaded correctly
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
 
   Assert.ok(ledger, "Should initialize successfully");
-  Assert.ok(orchestrator.getSessionLedger(), "Should have session ledger");
+  Assert.ok(
+    orchestrator.getSessionLedger(TEST_SESSION_ID),
+    "Should have session ledger"
+  );
 
   // Verify policies work by testing actual evaluation
   ledger.forTab("tab-1");
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -108,7 +116,7 @@ add_task(async function test_orchestrator_initializes_with_policies() {
     "Should use JSON policy"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -122,11 +130,12 @@ add_task(async function test_orchestrator_initializes_with_policies() {
 add_task(async function test_e2e_deny_unseen_link() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1"); // Empty ledger
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -157,7 +166,7 @@ add_task(async function test_e2e_deny_unseen_link() {
     "Should be from block-unseen-links policy"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -171,12 +180,13 @@ add_task(async function test_e2e_deny_unseen_link() {
 add_task(async function test_e2e_deny_if_any_url_unseen() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   const tabLedger = ledger.forTab("tab-1");
   tabLedger.add("https://example.com");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -201,7 +211,7 @@ add_task(async function test_e2e_deny_if_any_url_unseen() {
   );
   Assert.equal(decision.code, "UNSEEN_LINK");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -215,11 +225,12 @@ add_task(async function test_e2e_deny_if_any_url_unseen() {
 add_task(async function test_e2e_deny_malformed_url() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -243,7 +254,7 @@ add_task(async function test_e2e_deny_malformed_url() {
   // caught as specifically malformed
   Assert.equal(decision.code, "UNSEEN_LINK");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -257,12 +268,13 @@ add_task(async function test_e2e_deny_malformed_url() {
 add_task(async function test_e2e_allow_seeded_url() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   const tabLedger = ledger.forTab("tab-1");
   tabLedger.add("https://example.com");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -283,7 +295,7 @@ add_task(async function test_e2e_allow_seeded_url() {
     "CRITICAL: Should allow seeded URL (real policy from JSON)"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -297,13 +309,14 @@ add_task(async function test_e2e_allow_seeded_url() {
 add_task(async function test_e2e_allow_multiple_seeded_urls() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   const tabLedger = ledger.forTab("tab-1");
   tabLedger.add("https://example.com");
   tabLedger.add("https://mozilla.org");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -320,7 +333,7 @@ add_task(async function test_e2e_allow_multiple_seeded_urls() {
 
   Assert.equal(decision.effect, "allow", "Should allow when all URLs seeded");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -333,11 +346,12 @@ add_task(async function test_e2e_allow_multiple_seeded_urls() {
 add_task(async function test_e2e_allow_empty_urls() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -354,7 +368,7 @@ add_task(async function test_e2e_allow_empty_urls() {
 
   Assert.equal(decision.effect, "allow", "Should allow when no URLs to check");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -368,8 +382,9 @@ add_task(async function test_e2e_allow_empty_urls() {
 add_task(async function test_e2e_allow_url_from_mentioned_tab() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
 
   // Current tab
   ledger.forTab("tab-1").add("https://example.com");
@@ -377,7 +392,7 @@ add_task(async function test_e2e_allow_url_from_mentioned_tab() {
   // Mentioned tab (different URL)
   ledger.forTab("tab-2").add("https://mozilla.org");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -398,7 +413,7 @@ add_task(async function test_e2e_allow_url_from_mentioned_tab() {
     "Should allow URL from @mentioned tab (merged ledger)"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -412,13 +427,14 @@ add_task(async function test_e2e_allow_url_from_mentioned_tab() {
 add_task(async function test_e2e_deny_url_not_in_mentioned_tabs() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
 
   ledger.forTab("tab-1").add("https://example.com");
   ledger.forTab("tab-2").add("https://mozilla.org");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -439,7 +455,7 @@ add_task(async function test_e2e_deny_url_not_in_mentioned_tabs() {
     "Should deny URL not in current or @mentioned tabs"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -453,11 +469,12 @@ add_task(async function test_e2e_deny_url_not_in_mentioned_tabs() {
 add_task(async function test_e2e_url_normalization_strips_fragments() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1").add("https://example.com/page"); // No fragment
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -478,7 +495,7 @@ add_task(async function test_e2e_url_normalization_strips_fragments() {
     "Should allow after normalizing (fragments stripped)"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -495,11 +512,12 @@ add_task(async function test_e2e_pref_switch_bypasses_policies() {
   // Disable security
   Services.prefs.setBoolPref(PREF_SECURITY_ENABLED, false);
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1"); // Empty ledger
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -520,5 +538,5 @@ add_task(async function test_e2e_pref_switch_bypasses_policies() {
     "Pref switch OFF: should bypass all policies (allow everything)"
   );
 
-  teardown();
+  await teardown();
 });

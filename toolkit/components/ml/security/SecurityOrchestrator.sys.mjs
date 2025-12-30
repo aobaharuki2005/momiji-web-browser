@@ -41,7 +41,9 @@ function isSecurityEnabled() {
 
 /**
  * Central security orchestrator for Firefox AI features.
- * Each AI Window instance creates its own SecurityOrchestrator via create().
+ *
+ * This is a singleton service. Use getSecurityOrchestrator() to access the instance.
+ * The orchestrator is lazily initialized on first access and shared across all callers.
  *
  * ## Evaluation Flow
  *
@@ -75,6 +77,13 @@ function isSecurityEnabled() {
  */
 export class SecurityOrchestrator {
   /**
+   * Singleton instance promise.
+   *
+   * @type {Promise<SecurityOrchestrator>|null}
+   */
+  static #instancePromise = null;
+
+  /**
    * Registry of security policies by phase.
    *
    * @type {Map<string, Array<object>>}
@@ -82,46 +91,135 @@ export class SecurityOrchestrator {
   #policies = new Map();
 
   /**
-   * Session ledger for URL tracking across tabs in this window.
+   * Session ledgers keyed by sessionId.
+   * Each AI Window session has its own isolated ledger.
    *
-   * @type {lazy.SessionLedger}
+   * @type {Map<string, lazy.SessionLedger>}
    */
-  #sessionLedger;
+  #sessionLedgers = new Map();
 
   /**
-   * Session identifier for this window.
-   *
-   * @type {string}
+   * Private constructor. Use getSecurityOrchestrator() to get the singleton instance.
    */
-  #sessionId;
-
-  /**
-   * Used by create() to instantiate SecurityOrchestrator instance.
-   *
-   * @param {string} sessionId - Unique identifier for this session
-   */
-  constructor(sessionId) {
-    this.#sessionId = sessionId;
-    this.#sessionLedger = new lazy.SessionLedger(sessionId);
+  constructor() {
+    // Session ledgers are created via registerSession()
   }
 
   /**
-   * Creates and initializes a new SecurityOrchestrator instance.
+   * Creates and initializes the singleton SecurityOrchestrator instance.
+   * Called only once via getInstance().
    *
-   * @param {string} sessionId - Unique identifier for this session
    * @returns {Promise<SecurityOrchestrator>} Initialized orchestrator instance
+   * @private
    */
-  static async create(sessionId) {
-    const instance = new SecurityOrchestrator(sessionId);
+  static async #createInstance() {
+    const instance = new SecurityOrchestrator();
     await instance.#loadPolicies();
 
-    lazy.console.warn(
-      `[Security] Orchestrator initialized for session ${sessionId} with ${Array.from(
+    lazy.console.debug(
+      `[Security] Orchestrator singleton initialized with ${Array.from(
         instance.#policies.values()
       ).reduce((sum, policies) => sum + policies.length, 0)} policies`
     );
 
     return instance;
+  }
+
+  /**
+   * Gets the singleton SecurityOrchestrator instance.
+   *
+   * The orchestrator is lazily initialized on first call. Subsequent calls
+   * return the same instance. If initialization fails, the error is thrown
+   * and the next call will retry initialization.
+   *
+   * @returns {Promise<SecurityOrchestrator>} The singleton orchestrator instance
+   * @throws {Error} If policy loading or initialization fails
+   */
+  static async getInstance() {
+    if (!SecurityOrchestrator.#instancePromise) {
+      SecurityOrchestrator.#instancePromise =
+        SecurityOrchestrator.#createInstance().catch(error => {
+          // Reset so next call can retry
+          SecurityOrchestrator.#instancePromise = null;
+          lazy.console.error(
+            "[Security] Orchestrator initialization failed:",
+            error
+          );
+          throw error;
+        });
+    }
+    return SecurityOrchestrator.#instancePromise;
+  }
+
+  /**
+   * Registers a new session with its own isolated ledger.
+   * Called when an AI Window opens.
+   *
+   * This method is idempotent - calling it multiple times with the same
+   * sessionId will not create duplicate ledgers.
+   *
+   * @param {string} sessionId - Unique identifier for the session
+   */
+  registerSession(sessionId) {
+    if (!sessionId || typeof sessionId !== "string") {
+      throw new TypeError(
+        "registerSession requires a non-empty string sessionId"
+      );
+    }
+    if (this.#sessionLedgers.has(sessionId)) {
+      lazy.console.debug(`[Security] Session ${sessionId} already registered`);
+      return;
+    }
+    this.#sessionLedgers.set(sessionId, new lazy.SessionLedger(sessionId));
+    lazy.console.debug(`[Security] Registered session ${sessionId}`);
+  }
+
+  /**
+   * Cleans up a session and removes its ledger.
+   * Called when an AI Window closes.
+   *
+   * This method is idempotent - calling it with a non-existent sessionId
+   * will not throw an error.
+   *
+   * @param {string} sessionId - Unique identifier for the session
+   */
+  cleanupSession(sessionId) {
+    const deleted = this.#sessionLedgers.delete(sessionId);
+    if (deleted) {
+      lazy.console.debug(`[Security] Cleaned up session ${sessionId}`);
+    }
+  }
+
+  /**
+   * Clears internal state for testing purposes.
+   * Called by resetForTesting() to clean up instance data.
+   */
+  clearForTesting() {
+    this.#sessionLedgers.clear();
+  }
+
+  /**
+   * Resets the orchestrator state for testing purposes.
+   * Only available in automation (tests).
+   *
+   * This clears all session ledgers and resets the singleton instance,
+   * allowing tests to start with a clean state.
+   *
+   * @returns {Promise<void>}
+   * @throws {Error} If called outside of automation
+   */
+  static async resetForTesting() {
+    if (!Cu.isInAutomation) {
+      throw new Error("resetForTesting() only available in automation");
+    }
+
+    const instancePromise = SecurityOrchestrator.#instancePromise;
+    if (instancePromise) {
+      await instancePromise.then(instance => instance.clearForTesting());
+    }
+    SecurityOrchestrator.#instancePromise = null;
+
+    lazy.console.debug("[Security] Orchestrator reset for testing");
   }
 
   /**
@@ -179,12 +277,13 @@ export class SecurityOrchestrator {
   }
 
   /**
-   * Gets the session ledger for this orchestrator.
+   * Gets the session ledger for a specific session.
    *
-   * @returns {lazy.SessionLedger} The session ledger
+   * @param {string} sessionId - The session identifier
+   * @returns {lazy.SessionLedger|undefined} The session ledger, or undefined if not found
    */
-  getSessionLedger() {
-    return this.#sessionLedger;
+  getSessionLedger(sessionId) {
+    return this.#sessionLedgers.get(sessionId);
   }
 
   /**
@@ -196,7 +295,7 @@ export class SecurityOrchestrator {
    *
    * @example
    * // AI Window dispatching a tool call:
-   * const decision = await orchestrator.evaluate({
+   * const decision = await orchestrator.evaluate("session-123", {
    *   phase: "tool.execution",
    *   action: {
    *     type: "tool.call",
@@ -212,35 +311,40 @@ export class SecurityOrchestrator {
    * });
    * // Returns: { effect: "allow" } or { effect: "deny", code: "UNSEEN_LINK", ... }
    *
+   * @param {string} sessionId - The session identifier
    * @param {object} envelope - Security check request
    * @param {string} envelope.phase - Security phase ("tool.execution", etc.)
    * @param {object} envelope.action - Action being checked (type, tool, urls, etc.)
    * @param {object} envelope.context - Request context (tabId, requestId, etc.)
    * @returns {Promise<object>} Decision object with effect (allow/deny), code, reason
+   * @throws {Error} If session is not registered or envelope is invalid
    */
-  async evaluate(envelope) {
+  async evaluate(sessionId, envelope) {
     const startTime = ChromeUtils.now();
 
+    // Check for valid session first
+    const sessionLedger = this.#sessionLedgers.get(sessionId);
+    if (!sessionLedger) {
+      throw new Error(`Session ${sessionId} is not registered`);
+    }
+
+    if (!envelope || typeof envelope !== "object") {
+      throw new Error("Security envelope is null or invalid");
+    }
+
+    const { phase, action, context } = envelope;
+    if (!phase || !action || !context) {
+      throw new Error(
+        "Security envelope missing required fields (phase, action, or context)"
+      );
+    }
+
+    const requestId = context.requestId;
     try {
-      if (!envelope || typeof envelope !== "object") {
-        return lazy.createDenyDecision(
-          "INVALID_REQUEST",
-          "Security envelope is null or invalid"
-        );
-      }
-
-      const { phase, action, context } = envelope;
-      if (!phase || !action || !context) {
-        return lazy.createDenyDecision(
-          "INVALID_REQUEST",
-          "Security envelope missing required fields (phase, action, or context)"
-        );
-      }
-
       if (!isSecurityEnabled()) {
         lazy.logSecurityEvent({
-          requestId: context.requestId,
-          sessionId: this.#sessionId,
+          requestId,
+          sessionId,
           phase,
           action,
           context: {
@@ -263,8 +367,8 @@ export class SecurityOrchestrator {
           reason: "No policies for phase",
         });
         lazy.logSecurityEvent({
-          requestId: context.requestId,
-          sessionId: this.#sessionId,
+          requestId,
+          sessionId,
           phase,
           action,
           context: {
@@ -279,14 +383,14 @@ export class SecurityOrchestrator {
 
       const fullContext = {
         ...context,
-        sessionLedger: this.#sessionLedger,
-        sessionId: this.#sessionId,
+        sessionLedger,
+        sessionId,
         timestamp: ChromeUtils.now(),
       };
 
       const { currentTabId, mentionedTabIds = [] } = context;
       const tabsToCheck = [currentTabId, ...mentionedTabIds];
-      const linkLedger = this.#sessionLedger.merge(tabsToCheck);
+      const linkLedger = sessionLedger.merge(tabsToCheck);
       fullContext.linkLedger = linkLedger;
 
       const decision = lazy.evaluatePhasePolicies(
@@ -296,8 +400,8 @@ export class SecurityOrchestrator {
       );
 
       lazy.logSecurityEvent({
-        requestId: context.requestId,
-        sessionId: this.#sessionId,
+        requestId,
+        sessionId,
         phase,
         action,
         context: {
@@ -317,12 +421,12 @@ export class SecurityOrchestrator {
       );
 
       lazy.logSecurityEvent({
-        requestId: envelope?.context?.requestId,
-        sessionId: this.#sessionId,
-        phase: envelope?.phase || "unknown",
-        action: envelope?.action || {},
+        requestId,
+        sessionId,
+        phase,
+        action,
         context: {
-          tainted: envelope?.context?.tainted ?? false,
+          tainted: context.tainted ?? false,
           trustedCount: 0,
         },
         decision: errorDecision,
@@ -366,21 +470,37 @@ export class SecurityOrchestrator {
       };
     }
 
+    const sessionStats = {};
+    for (const [sessionId, ledger] of this.#sessionLedgers.entries()) {
+      sessionStats[sessionId] = {
+        tabCount: ledger.tabCount(),
+        totalUrls: Array.from(ledger.tabs.values()).reduce(
+          (sum, tabLedger) => sum + tabLedger.size(),
+          0
+        ),
+      };
+    }
+
     return {
-      sessionId: this.#sessionId,
-      initialized: this.#sessionLedger !== null,
+      initialized: this.#policies.size > 0,
       registeredPhases: Array.from(this.#policies.keys()),
       totalPolicies,
       policyBreakdown,
-      sessionLedgerStats: this.#sessionLedger
-        ? {
-            tabCount: this.#sessionLedger.tabCount(),
-            totalUrls: Array.from(this.#sessionLedger.tabs.values()).reduce(
-              (sum, ledger) => sum + ledger.size(),
-              0
-            ),
-          }
-        : null,
+      sessionCount: this.#sessionLedgers.size,
+      sessionStats,
     };
   }
+}
+
+/**
+ * Gets the singleton SecurityOrchestrator instance.
+ *
+ * This is the preferred way to access the SecurityOrchestrator.
+ * The orchestrator is lazily initialized on first call.
+ *
+ * @returns {Promise<SecurityOrchestrator>} The singleton orchestrator instance
+ * @throws {Error} If policy loading or initialization fails
+ */
+export async function getSecurityOrchestrator() {
+  return SecurityOrchestrator.getInstance();
 }

@@ -12,11 +12,14 @@
  * Focus: Testing condition evaluation behavior through policy execution
  */
 
-const { SecurityOrchestrator } = ChromeUtils.importESModule(
-  "chrome://global/content/ml/security/SecurityOrchestrator.sys.mjs"
-);
+const { SecurityOrchestrator, getSecurityOrchestrator } =
+  ChromeUtils.importESModule(
+    "chrome://global/content/ml/security/SecurityOrchestrator.sys.mjs"
+  );
 
 const PREF_SECURITY_ENABLED = "browser.ml.security.enabled";
+
+const TEST_SESSION_ID = "test-session";
 
 /** @type {SecurityOrchestrator|null} */
 let orchestrator = null;
@@ -25,8 +28,9 @@ function setup() {
   Services.prefs.clearUserPref(PREF_SECURITY_ENABLED);
 }
 
-function teardown() {
+async function teardown() {
   Services.prefs.clearUserPref(PREF_SECURITY_ENABLED);
+  await SecurityOrchestrator.resetForTesting();
   orchestrator = null;
 }
 
@@ -42,13 +46,14 @@ function teardown() {
 add_task(async function test_condition_passes_when_all_urls_in_ledger() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   const tabLedger = ledger.forTab("tab-1");
   tabLedger.add("https://example.com");
   tabLedger.add("https://mozilla.org");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -69,7 +74,7 @@ add_task(async function test_condition_passes_when_all_urls_in_ledger() {
     "Should allow when all URLs in ledger (condition passes)"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -83,11 +88,12 @@ add_task(async function test_condition_passes_when_all_urls_in_ledger() {
 add_task(async function test_condition_fails_when_url_missing_from_ledger() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1").add("https://example.com");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -109,7 +115,7 @@ add_task(async function test_condition_fails_when_url_missing_from_ledger() {
   );
   Assert.equal(decision.code, "UNSEEN_LINK");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -123,11 +129,12 @@ add_task(async function test_condition_fails_when_url_missing_from_ledger() {
 add_task(async function test_condition_passes_with_empty_urls_array() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -148,7 +155,7 @@ add_task(async function test_condition_passes_with_empty_urls_array() {
     "Should allow with empty URLs (nothing to check)"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -162,11 +169,12 @@ add_task(async function test_condition_passes_with_empty_urls_array() {
 add_task(async function test_condition_fails_with_malformed_url() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -190,7 +198,7 @@ add_task(async function test_condition_fails_with_malformed_url() {
   // caught as specifically malformed at this layer
   Assert.equal(decision.code, "UNSEEN_LINK");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -204,11 +212,12 @@ add_task(async function test_condition_fails_with_malformed_url() {
 add_task(async function test_condition_checks_current_tab_only() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1").add("https://example.com");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -229,7 +238,7 @@ add_task(async function test_condition_checks_current_tab_only() {
     "Should check current tab ledger only"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -244,13 +253,14 @@ add_task(async function test_condition_checks_current_tab_only() {
 add_task(async function test_condition_merges_mentioned_tabs() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
 
   ledger.forTab("tab-1").add("https://example.com");
   ledger.forTab("tab-2").add("https://mozilla.org");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -271,7 +281,7 @@ add_task(async function test_condition_merges_mentioned_tabs() {
     "Should merge current tab + @mentioned tabs"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -286,11 +296,12 @@ add_task(async function test_condition_merges_mentioned_tabs() {
 add_task(async function test_condition_normalizes_urls() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1").add("https://example.com/page"); // No fragment
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -311,5 +322,5 @@ add_task(async function test_condition_normalizes_urls() {
     "Should allow after normalizing URLs (fragments stripped)"
   );
 
-  teardown();
+  await teardown();
 });

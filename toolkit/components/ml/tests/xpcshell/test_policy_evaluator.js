@@ -12,11 +12,14 @@
  * Focus: Policy matching, deny/allow effects, multiple conditions
  */
 
-const { SecurityOrchestrator } = ChromeUtils.importESModule(
-  "chrome://global/content/ml/security/SecurityOrchestrator.sys.mjs"
-);
+const { SecurityOrchestrator, getSecurityOrchestrator } =
+  ChromeUtils.importESModule(
+    "chrome://global/content/ml/security/SecurityOrchestrator.sys.mjs"
+  );
 
 const PREF_SECURITY_ENABLED = "browser.ml.security.enabled";
+
+const TEST_SESSION_ID = "test-session";
 
 /** @type {SecurityOrchestrator|null} */
 let orchestrator = null;
@@ -25,8 +28,9 @@ function setup() {
   Services.prefs.clearUserPref(PREF_SECURITY_ENABLED);
 }
 
-function teardown() {
+async function teardown() {
   Services.prefs.clearUserPref(PREF_SECURITY_ENABLED);
+  await SecurityOrchestrator.resetForTesting();
   orchestrator = null;
 }
 
@@ -41,12 +45,13 @@ function teardown() {
 add_task(async function test_policy_matches_correct_phase() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1");
 
   // tool.execution phase should match our policies
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -68,7 +73,7 @@ add_task(async function test_policy_matches_correct_phase() {
   );
   Assert.equal(decision.policyId, "block-unseen-links");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -82,12 +87,13 @@ add_task(async function test_policy_matches_correct_phase() {
 add_task(async function test_policy_ignores_unknown_phase() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1");
 
   // Unknown phase should not match any policies
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "unknown.phase",
     action: {
       type: "tool.call",
@@ -108,7 +114,7 @@ add_task(async function test_policy_ignores_unknown_phase() {
     "Unknown phase should not match policies (allow by default)"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -122,12 +128,13 @@ add_task(async function test_policy_ignores_unknown_phase() {
 add_task(async function test_deny_policy_denies_when_condition_fails() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1").add("https://example.com");
 
   // URL not in ledger = condition fails = deny
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -148,7 +155,7 @@ add_task(async function test_deny_policy_denies_when_condition_fails() {
   Assert.equal(decision.policyId, "block-unseen-links");
   Assert.ok(decision.details, "Should include failure details");
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -163,12 +170,13 @@ add_task(
   async function test_deny_policy_passes_through_when_condition_passes() {
     setup();
 
-    orchestrator = await SecurityOrchestrator.create("test-session");
-    const ledger = orchestrator.getSessionLedger();
+    orchestrator = await getSecurityOrchestrator();
+    orchestrator.registerSession(TEST_SESSION_ID);
+    const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
     ledger.forTab("tab-1").add("https://example.com");
 
     // URL in ledger = condition passes = policy doesn't apply (allow)
-    const decision = await orchestrator.evaluate({
+    const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
       phase: "tool.execution",
       action: {
         type: "tool.call",
@@ -189,7 +197,7 @@ add_task(
       "Should allow when deny policy condition passes (policy doesn't apply)"
     );
 
-    teardown();
+    await teardown();
   }
 );
 
@@ -204,12 +212,13 @@ add_task(
 add_task(async function test_policy_checks_all_urls() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1").add("https://example.com");
   // Not adding evil.com
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -233,7 +242,7 @@ add_task(async function test_policy_checks_all_urls() {
     "Should deny if ANY URL fails condition (all-or-nothing)"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -247,13 +256,14 @@ add_task(async function test_policy_checks_all_urls() {
 add_task(async function test_policy_allows_when_all_urls_valid() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   const tabLedger = ledger.forTab("tab-1");
   tabLedger.add("https://example.com");
   tabLedger.add("https://mozilla.org");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -274,7 +284,7 @@ add_task(async function test_policy_allows_when_all_urls_valid() {
     "Should allow when all URLs pass condition"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -288,12 +298,13 @@ add_task(async function test_policy_allows_when_all_urls_valid() {
 add_task(async function test_policy_applies_to_get_page_content() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1");
 
   // Verify policy applies to get_page_content (the main URL-fetching tool)
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -314,7 +325,7 @@ add_task(async function test_policy_applies_to_get_page_content() {
     "Policy should apply to get_page_content"
   );
 
-  teardown();
+  await teardown();
 });
 
 /**
@@ -328,11 +339,12 @@ add_task(async function test_policy_applies_to_get_page_content() {
 add_task(async function test_deny_decision_includes_policy_info() {
   setup();
 
-  orchestrator = await SecurityOrchestrator.create("test-session");
-  const ledger = orchestrator.getSessionLedger();
+  orchestrator = await getSecurityOrchestrator();
+  orchestrator.registerSession(TEST_SESSION_ID);
+  const ledger = orchestrator.getSessionLedger(TEST_SESSION_ID);
   ledger.forTab("tab-1");
 
-  const decision = await orchestrator.evaluate({
+  const decision = await orchestrator.evaluate(TEST_SESSION_ID, {
     phase: "tool.execution",
     action: {
       type: "tool.call",
@@ -362,5 +374,5 @@ add_task(async function test_deny_decision_includes_policy_info() {
     "Should identify failed condition"
   );
 
-  teardown();
+  await teardown();
 });
