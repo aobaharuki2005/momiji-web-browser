@@ -213,10 +213,18 @@ add_task(async function test_saveTabNote() {
   let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   let tabNoteMenu = await openTabNoteMenuByAddNote(tab);
-  tabNoteMenu.querySelector("textarea").value = "Lorem ipsum dolor";
+  let tabNoteInput = tabNoteMenu.querySelector("textarea");
+  tabNoteInput.focus();
+  EventUtils.sendString("Lorem ipsum dolor", window);
+
+  let saveButton = tabNoteMenu.querySelector("#tab-note-editor-button-save");
+  await BrowserTestUtils.waitForCondition(() => {
+    return !saveButton.disabled;
+  });
+
   let menuHidden = BrowserTestUtils.waitForPopupEvent(tabNoteMenu, "hidden");
   let tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
-  tabNoteMenu.querySelector("#tab-note-editor-button-save").click();
+  saveButton.click();
   await Promise.all([menuHidden, tabNoteCreated]);
 
   const tabNote = await TabNotes.get(tab);
@@ -252,9 +260,17 @@ add_task(async function test_editTabNote() {
     "Tab note panel has initial note value in textarea"
   );
 
-  let updatedNoteValue = initialNoteValue + " sit amet";
+  let updatedNoteValue = " sit amet";
 
-  tabNoteMenu.querySelector("textarea").value = updatedNoteValue;
+  let tabNoteInput = tabNoteMenu.querySelector("textarea");
+  tabNoteInput.focus();
+  EventUtils.sendString(updatedNoteValue, window);
+
+  let saveButton = tabNoteMenu.querySelector("#tab-note-editor-button-save");
+  await BrowserTestUtils.waitForCondition(() => {
+    return !saveButton.disabled;
+  });
+
   let menuHidden = BrowserTestUtils.waitForPopupEvent(tabNoteMenu, "hidden");
   let tabNoteEdited = BrowserTestUtils.waitForEvent(tab, "TabNote:Edited");
   tabNoteMenu.querySelector("#tab-note-editor-button-save").click();
@@ -263,7 +279,7 @@ add_task(async function test_editTabNote() {
   const tabNote = await TabNotes.get(tab);
   Assert.equal(
     tabNote.text,
-    updatedNoteValue,
+    initialNoteValue + updatedNoteValue,
     "The updated text entered into the textarea was saved as a note"
   );
 
@@ -294,6 +310,49 @@ add_task(async function test_deleteTabNote() {
   Assert.ok(!result, "Tab note was deleted");
 
   BrowserTestUtils.removeTab(tab);
+});
+
+add_task(async function test_tabNoteOverflow() {
+  let tab = BrowserTestUtils.addTab(gBrowser, "https://www.example.com");
+  await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  let tabNoteMenu = await openTabNoteMenuByAddNote(tab);
+  let saveButton = tabNoteMenu.querySelector("#tab-note-editor-button-save");
+
+  Assert.ok(
+    !tabNoteMenu.hasAttribute("overflow"),
+    "Sanity check: tab note menu overflow is false"
+  );
+
+  let textarea = tabNoteMenu.querySelector("textarea");
+  textarea.focus();
+  EventUtils.sendString("x".repeat(990));
+
+  Assert.equal(
+    tabNoteMenu.getAttribute("overflow"),
+    "warn",
+    "Tab note overflow warning indicator is set"
+  );
+  Assert.ok(
+    !saveButton.disabled,
+    "Save button is not disabled when warning indicator is active"
+  );
+
+  textarea.focus();
+  EventUtils.sendString("x".repeat(100));
+
+  Assert.equal(
+    tabNoteMenu.getAttribute("overflow"),
+    "overflow",
+    "Tab note overflow indicator is set"
+  );
+  Assert.ok(
+    saveButton.disabled,
+    "Save button is disabled when overflow indicator is active"
+  );
+
+  await closeTabNoteMenu();
+  BrowserTestUtils.removeTab(tab);
+
   await SpecialPowers.popPrefEnv();
 });
 
