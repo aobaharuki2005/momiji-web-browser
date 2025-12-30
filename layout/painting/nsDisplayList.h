@@ -2787,16 +2787,6 @@ class nsDisplayItem {
   virtual bool NeedsGeometryUpdates() const { return false; }
 
   /**
-   * When this item is rendered using fallback rendering, whether it should use
-   * blob rendering (i.e. a recording DrawTarget), as opposed to a pixel-backed
-   * DrawTarget.
-   * Some items, such as those calling into the native themed widget machinery,
-   * are more efficiently painted without blob recording. Those should return
-   * false here.
-   */
-  virtual bool ShouldUseBlobRenderingForFallback() const { return true; }
-
-  /**
    * If this has a child list where the children are in the same coordinate
    * system as this item (i.e., they have the same reference frame),
    * return the list.
@@ -4515,10 +4505,6 @@ class nsDisplayThemedBackground : public nsPaintedDisplayItem {
       layers::RenderRootStateManager* aManager,
       nsDisplayListBuilder* aDisplayListBuilder) override;
 
-  bool ShouldUseBlobRenderingForFallback() const override {
-    return !XRE_IsParentProcess();
-  }
-
   /**
    * GetBounds() returns the background painting area.
    */
@@ -4844,12 +4830,6 @@ class nsDisplayOutline final : public nsPaintedDisplayItem {
   MOZ_COUNTED_DTOR_FINAL(nsDisplayOutline)
 
   NS_DISPLAY_DECL_NAME("Outline", TYPE_OUTLINE)
-
-  bool ShouldUseBlobRenderingForFallback() const override {
-    MOZ_ASSERT(IsThemedOutline(),
-               "The only fallback path we have is for themed outlines");
-    return !XRE_IsParentProcess();
-  }
 
   bool CreateWebRenderCommands(
       wr::DisplayListBuilder& aBuilder, wr::IpcResourceUpdateQueue& aResources,
