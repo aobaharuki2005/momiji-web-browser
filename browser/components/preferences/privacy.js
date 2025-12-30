@@ -3779,6 +3779,7 @@ var gPrivacyPane = {
     initSettingGroup("httpsOnly");
     initSettingGroup("browsingProtection");
     initSettingGroup("cookiesAndSiteData");
+    initSettingGroup("cookiesAndSiteData2");
     initSettingGroup("certificates");
     initSettingGroup("ipprotection");
     initSettingGroup("history");
