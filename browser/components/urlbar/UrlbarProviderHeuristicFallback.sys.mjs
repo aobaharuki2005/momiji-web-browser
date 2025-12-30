@@ -44,9 +44,11 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
    * Whether this provider should be invoked for the given context.
    * If this method returns false, the providers manager won't start a query
    * with this provider, to save on resources.
+   *
+   * @param {UrlbarQueryContext} queryContext
    */
-  async isActive() {
-    return true;
+  async isActive(queryContext) {
+    return !!queryContext.searchString.length;
   }
 
   /**

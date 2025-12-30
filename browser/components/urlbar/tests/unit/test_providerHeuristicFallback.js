@@ -827,6 +827,13 @@ add_task(async function dont_fixup_urls_with_at_symbol() {
       }),
     ],
   });
+
+  query = "";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [],
+  });
 });
 
 /**
