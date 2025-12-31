@@ -14,6 +14,10 @@ async function openFirstrunPage() {
 }
 
 add_task(async function test_firstrun_welcome_screen_renders() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.aiwindow.firstrun.autoAdvanceMS", 0]],
+  });
+
   const tab = await openFirstrunPage();
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
@@ -32,8 +36,7 @@ add_task(async function test_firstrun_welcome_screen_renders() {
 
     await ContentTaskUtils.waitForCondition(
       () => content.document.querySelector(".screen.AI_WINDOW_CHOOSE_MODEL"),
-      "Wait for the AI Window choose model screen to be rendered",
-      25000
+      "Wait for the AI Window choose model screen to be rendered"
     );
   });
 

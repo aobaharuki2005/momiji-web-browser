@@ -2255,6 +2255,7 @@ pref("browser.aiwindow.enabled", false);
 pref("browser.aiwindow.endpoint", "https://mlpa-prod-prod-mozilla.global.ssl.fastly.net/v1");
 pref("browser.aiwindow.insights", false);
 pref("browser.aiwindow.insightsLogLevel", "Warn");
+pref("browser.aiwindow.firstrun.autoAdvanceMS", 3000);
 pref("browser.aiwindow.firstrun.modelChoice", "");
 pref("browser.aiwindow.model", "");
 

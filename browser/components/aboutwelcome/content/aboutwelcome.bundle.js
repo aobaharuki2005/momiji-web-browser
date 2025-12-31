@@ -1080,6 +1080,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const DEFAULT_AUTO_ADVANCE_MS = 20000;
 const MultiStageProtonScreen = props => {
   const {
     autoAdvance,
@@ -1088,14 +1089,16 @@ const MultiStageProtonScreen = props => {
   } = props;
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(() => {
     if (autoAdvance) {
+      const value = autoAdvance?.actionEl ?? autoAdvance;
+      const timeout = autoAdvance?.actionTimeMS ?? DEFAULT_AUTO_ADVANCE_MS;
       const timer = setTimeout(() => {
         handleAction({
           currentTarget: {
-            value: autoAdvance
+            value
           },
           name: "AUTO_ADVANCE"
         });
-      }, 20000);
+      }, timeout);
       return () => clearTimeout(timer);
     }
     return () => {};
