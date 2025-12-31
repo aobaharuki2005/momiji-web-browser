@@ -62,24 +62,10 @@ export async function getCurrentTabMetadata(depsOverride) {
 
   let description = "";
   if (url) {
-    const cachedData = PageDataService.getCached(url);
-    if (cachedData?.description) {
-      description = cachedData.description;
-    } else {
-      try {
-        const actor =
-          browser.browsingContext?.currentWindowGlobal?.getActor("PageData");
-        if (actor) {
-          const pageData = await actor.collectPageData();
-          description = pageData?.description || "";
-        }
-      } catch (e) {
-        console.error(
-          "Failed to collect page description data from current tab:",
-          e
-        );
-      }
-    }
+    description =
+      PageDataService.getCached(url)?.description ||
+      (await PageDataService.fetchPageData(url))?.description ||
+      "";
   }
 
   return { url, title, description };
