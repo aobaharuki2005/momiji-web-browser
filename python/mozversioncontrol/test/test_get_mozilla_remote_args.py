@@ -30,12 +30,12 @@ STEPS = {
         (
             True,
             [
-                "--remotes=central",
-                "--remotes=firefox",
-                "--remotes=unified",
+                "central",
+                "firefox",
+                "unified",
             ],
         ),
-        (False, ["--remotes=firefox"]),
+        (False, ["firefox"]),
     ),
 )
 def test_get_mozilla_remote_args(is_cinnabar, expected_remotes, repo):
