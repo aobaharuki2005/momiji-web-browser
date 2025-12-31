@@ -558,9 +558,13 @@ add_task(async function tabContentChangeTests() {
  * Test that if a note is set on a tab, the note appears in the preview panel
  */
 add_task(async function tabNotesTests() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.tabs.notes.enabled", true]],
-  });
+  if (!Services.prefs.getBoolPref("browser.tabs.notes.enabled", false)) {
+    // Skip tests if tab notes is not enabled
+    // This is necessary because some tab notes functionality only loads at
+    // startup if the pref is enabled
+    todo(false, "Skip when tab notes is not enabled; see bug2008033");
+    return;
+  }
 
   const previewPanel = document.getElementById(TAB_PREVIEW_PANEL_ID);
   const noteText = "Hello world";
@@ -602,7 +606,6 @@ add_task(async function tabNotesTests() {
 
   BrowserTestUtils.removeTab(tab);
   await resetState();
-  await SpecialPowers.popPrefEnv();
 });
 
 /*
