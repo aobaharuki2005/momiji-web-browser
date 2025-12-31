@@ -657,6 +657,65 @@ add_task(async function test_helpers_login_another_user_signed_in() {
   Assert.ok(helpers._disconnect.called);
 });
 
+// The FxA server sends the `login` command after the user is signed in
+// when upgrading from third-party auth to password + sync
+add_task(async function test_helpers_login_same_user_signed_in() {
+  let updateUserAccountDataCalled = false;
+  let setSignedInUserCalled = false;
+
+  let helpers = new FxAccountsWebChannelHelpers({
+    fxAccounts: {
+      getSignedInUser() {
+        return Promise.resolve({
+          uid: "testuser",
+          email: "testuser@testuser.com",
+        });
+      },
+      _internal: {
+        updateUserAccountData(accountData) {
+          updateUserAccountDataCalled = true;
+          Assert.equal(accountData.email, "testuser@testuser.com");
+          Assert.equal(accountData.uid, "testuser");
+          return Promise.resolve();
+        },
+        setSignedInUser() {
+          setSignedInUserCalled = true;
+          return Promise.resolve();
+        },
+      },
+      telemetry: {
+        recordConnection: sinon.spy(),
+      },
+    },
+    weaveXPCOM: {
+      whenLoaded() {},
+      Weave: {
+        Service: {
+          configure() {},
+        },
+      },
+    },
+  });
+  helpers._disconnect = sinon.spy();
+
+  await helpers.login({
+    uid: "testuser",
+    email: "testuser@testuser.com",
+    verifiedCanLinkAccount: true,
+    customizeSync: false,
+  });
+
+  Assert.ok(
+    updateUserAccountDataCalled,
+    "updateUserAccountData should be called"
+  );
+  Assert.ok(!setSignedInUserCalled, "setSignedInUser should not be called");
+  Assert.ok(!helpers._disconnect.called, "_disconnect should not be called");
+  Assert.ok(
+    helpers._fxAccounts.telemetry.recordConnection.calledWith([], "webchannel")
+  );
+});
+
 add_task(async function test_helpers_login_with_customize_sync() {
   let helpers = new FxAccountsWebChannelHelpers({
     fxAccounts: {
@@ -708,6 +767,10 @@ add_task(async function test_helpers_persist_requested_services() {
       _internal: {
         async setSignedInUser(newAccountData) {
           accountData = newAccountData;
+          return accountData;
+        },
+        async updateUserAccountData(updatedFields) {
+          accountData = { ...accountData, ...updatedFields };
           return accountData;
         },
       },

@@ -667,8 +667,17 @@ FxAccountsWebChannelHelpers.prototype = {
     accountData.requestedServices = JSON.stringify(requestedServices);
 
     this.setPreviousAccountHashPref(accountData.uid);
-    await this._fxAccounts._internal.setSignedInUser(accountData);
-    log.debug("Webchannel finished logging a user in.");
+
+    // For scenarios like user is logged in via third-party but wants
+    // to enable sync (password) the server will send an additional login command
+    // we need to ensure we don't destroy the existing session
+    if (signedInUser && signedInUser.uid === accountData.uid) {
+      await this._fxAccounts._internal.updateUserAccountData(accountData);
+      log.debug("Webchannel finished updating already logged in user.");
+    } else {
+      await this._fxAccounts._internal.setSignedInUser(accountData);
+      log.debug("Webchannel finished logging a user in.");
+    }
   },
 
   /**
