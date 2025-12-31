@@ -378,6 +378,8 @@
   <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">%1$s നിന്നു് %2$s-ലേക്കു് വിവൎത്തനം ചെയ്തു</string>
   <!-- Content description for the translate toolbar action that opens the translations dialog. -->
   <string name="translation_toolbar_expand_action">വിവൎത്തന കടലാസു തുറക്കുക</string>
+  <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
+  <string name="translation_toolbar_close_action">സന്ദേശം തള്ളിക്കളയുക</string>
   <!--
     Locale Settings Fragment
 
@@ -581,6 +583,10 @@
   <string name="onboarding_marketing_positive_button_1" tools:ignore="UnusedResources">തീൎച്ചപ്പെടുത്തിയിട്ടു് തിരയാൻ തുടങ്ങുവിൻ</string>
   <!-- ==== Project "Nova" onboarding strings ==== -->
 
+  <!-- "Continue" onboarding button. -->
+  <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">തുടരുക</string>
+  <!-- Notifications onboarding button. -->
+  <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">അറിയിപ്പുകൾ തുടങ്ങിവയ്ക്കുക</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
 
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
