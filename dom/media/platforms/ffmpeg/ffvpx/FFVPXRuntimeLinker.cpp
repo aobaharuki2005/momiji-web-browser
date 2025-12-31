@@ -92,6 +92,12 @@ bool FFVPXRuntimeLinker::Init() {
 #ifdef XP_WIN
   PathString path =
       GetLibraryFilePathname(LXUL_DLL, (PRFuncPtr)&FFVPXRuntimeLinker::Init);
+#elif defined(ANDROID)
+  // On Android, libxul is either pulled from the APK or from a temporary folder
+  // for gtests/fuzzing. libmozavutil and libmozavcodec are always in the APK,
+  // so let's use libmozglue instead to find the base pathname.
+  PathString path = GetLibraryFilePathname(
+      MOZ_DLL_PREFIX "mozglue" MOZ_DLL_SUFFIX, (PRFuncPtr)&malloc);
 #else
   PathString path =
       GetLibraryFilePathname(XUL_DLL, (PRFuncPtr)&FFVPXRuntimeLinker::Init);
@@ -104,10 +110,11 @@ bool FFVPXRuntimeLinker::Init() {
     return false;
   }
 
+#ifndef ANDROID
   if (getenv("MOZ_RUN_GTEST")
-#ifdef FUZZING
+#  ifdef FUZZING
       || getenv("FUZZER")
-#endif
+#  endif
   ) {
     // The condition above is the same as in
     // xpcom/glue/standalone/nsXPCOMGlue.cpp. This means we can't reach here
@@ -120,6 +127,7 @@ bool FFVPXRuntimeLinker::Init() {
     }
     libFile = parent;
   }
+#endif
 
   if (NS_FAILED(libFile->SetNativeLeafName(MOZ_DLL_PREFIX
                                            "mozavutil" MOZ_DLL_SUFFIX ""_ns))) {
