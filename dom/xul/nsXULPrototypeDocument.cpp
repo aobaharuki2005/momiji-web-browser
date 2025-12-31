@@ -204,17 +204,16 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream) {
   return NotifyLoadDone();
 }
 
-static nsresult GetNodeInfos(nsXULPrototypeElement* aPrototype,
-                             nsTArray<RefPtr<mozilla::dom::NodeInfo>>& aArray) {
+static void GetNodeInfos(nsXULPrototypeElement* aPrototype,
+                         nsTArray<RefPtr<mozilla::dom::NodeInfo>>& aArray) {
   if (aArray.IndexOf(aPrototype->mNodeInfo) == aArray.NoIndex) {
     aArray.AppendElement(aPrototype->mNodeInfo);
   }
 
   // Search attributes
-  size_t i;
-  for (i = 0; i < aPrototype->mAttributes.Length(); ++i) {
+  for (nsXULPrototypeAttribute& attr : aPrototype->mAttributes) {
     RefPtr<mozilla::dom::NodeInfo> ni;
-    nsAttrName* name = &aPrototype->mAttributes[i].mName;
+    nsAttrName* name = &attr.mName;
     if (name->IsAtom()) {
       ni = aPrototype->mNodeInfo->NodeInfoManager()->GetNodeInfo(
           name->Atom(), nullptr, kNameSpaceID_None, nsINode::ATTRIBUTE_NODE);
@@ -228,16 +227,11 @@ static nsresult GetNodeInfos(nsXULPrototypeElement* aPrototype,
   }
 
   // Search children
-  for (i = 0; i < aPrototype->mChildren.Length(); ++i) {
-    nsXULPrototypeNode* child = aPrototype->mChildren[i];
+  for (nsXULPrototypeNode* child : aPrototype->mChildren) {
     if (child->mType == nsXULPrototypeNode::eType_Element) {
-      nsresult rv =
-          GetNodeInfos(static_cast<nsXULPrototypeElement*>(child), aArray);
-      NS_ENSURE_SUCCESS(rv, rv);
+      GetNodeInfos(static_cast<nsXULPrototypeElement*>(child), aArray);
     }
   }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -270,10 +264,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream) {
   // mozilla::dom::NodeInfo table
   nsTArray<RefPtr<mozilla::dom::NodeInfo>> nodeInfos;
   if (mRoot) {
-    tmp = GetNodeInfos(mRoot, nodeInfos);
-    if (NS_FAILED(tmp)) {
-      rv = tmp;
-    }
+    GetNodeInfos(mRoot, nodeInfos);
   }
 
   uint32_t nodeInfoCount = nodeInfos.Length();
