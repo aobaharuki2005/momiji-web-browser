@@ -1020,42 +1020,22 @@ describe("<TopSiteForm>", () => {
     );
 
     it("should render the preview button on invalid urls", () => {
-      assert.equal(
-        0,
-        wrapper.find(
-          'moz-button[data-l10n-id="newtab-topsites-preview-button"]'
-        ).length
-      );
+      assert.equal(0, wrapper.find(".preview").length);
 
       wrapper.setState({ customScreenshotUrl: " " });
 
-      assert.equal(
-        1,
-        wrapper.find(
-          'moz-button[data-l10n-id="newtab-topsites-preview-button"]'
-        ).length
-      );
+      assert.equal(1, wrapper.find(".preview").length);
     });
 
     it("should render the preview button when input value updated", () => {
-      assert.equal(
-        0,
-        wrapper.find(
-          'moz-button[data-l10n-id="newtab-topsites-preview-button"]'
-        ).length
-      );
+      assert.equal(0, wrapper.find(".preview").length);
 
       wrapper.setState({
         customScreenshotUrl: "http://baz.com",
         screenshotPreview: null,
       });
 
-      assert.equal(
-        1,
-        wrapper.find(
-          'moz-button[data-l10n-id="newtab-topsites-preview-button"]'
-        ).length
-      );
+      assert.equal(1, wrapper.find(".preview").length);
     });
   });
 
@@ -1070,18 +1050,14 @@ describe("<TopSiteForm>", () => {
     it("shouldn't dispatch a request for invalid urls", () => {
       wrapper.setState({ customScreenshotUrl: " ", url: "foo" });
 
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-preview-button"]')
-        .simulate("click");
+      wrapper.find(".preview").simulate("click");
 
       assert.notCalled(wrapper.props().dispatch);
     });
 
     it("should dispatch a PREVIEW_REQUEST", () => {
       wrapper.setState({ customScreenshotUrl: "screenshot" });
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-preview-button"]')
-        .simulate("click");
+      wrapper.find(".preview").simulate("submit");
 
       assert.calledTwice(wrapper.props().dispatch);
       assert.calledWith(
@@ -1178,31 +1154,23 @@ describe("<TopSiteForm>", () => {
       assert.equal(0, wrapper.find(".custom-image-input-container").length);
     });
     it("should call onClose if Cancel button is clicked", () => {
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-cancel-button"]')
-        .simulate("click");
+      wrapper.find(".cancel").simulate("click");
       assert.calledOnce(wrapper.instance().props.onClose);
     });
     it("should set validationError if url is empty", () => {
       assert.equal(wrapper.state().validationError, false);
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-add-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.equal(wrapper.state().validationError, true);
     });
     it("should set validationError if url is invalid", () => {
       wrapper.setState({ url: "not valid" });
       assert.equal(wrapper.state().validationError, false);
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-add-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.equal(wrapper.state().validationError, true);
     });
     it("should call onClose and dispatch with right args if URL is valid", () => {
       wrapper.setState({ url: "valid.com", label: "a label" });
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-add-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.calledOnce(wrapper.instance().props.onClose);
       assert.calledWith(wrapper.instance().props.dispatch, {
         data: {
@@ -1224,9 +1192,7 @@ describe("<TopSiteForm>", () => {
     });
     it("should not pass empty string label in dispatch data", () => {
       wrapper.setState({ url: "valid.com", label: "" });
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-add-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.calledWith(wrapper.instance().props.dispatch, {
         data: { site: { url: "http://valid.com" }, index: -1 },
         meta: { from: "ActivityStream:Content", to: "ActivityStream:Main" },
@@ -1280,17 +1246,13 @@ describe("<TopSiteForm>", () => {
       );
     });
     it("should call onClose if Cancel button is clicked", () => {
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-cancel-button"]')
-        .simulate("click");
+      wrapper.find(".cancel").simulate("click");
       assert.calledOnce(wrapper.instance().props.onClose);
     });
     it("should show error and not call onClose or dispatch if URL is empty", () => {
       wrapper.setState({ url: "" });
       assert.equal(wrapper.state().validationError, false);
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-save-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.equal(wrapper.state().validationError, true);
       assert.notCalled(wrapper.instance().props.onClose);
       assert.notCalled(wrapper.instance().props.dispatch);
@@ -1298,17 +1260,13 @@ describe("<TopSiteForm>", () => {
     it("should show error and not call onClose or dispatch if URL is invalid", () => {
       wrapper.setState({ url: "not valid" });
       assert.equal(wrapper.state().validationError, false);
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-save-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.equal(wrapper.state().validationError, true);
       assert.notCalled(wrapper.instance().props.onClose);
       assert.notCalled(wrapper.instance().props.dispatch);
     });
     it("should call onClose and dispatch with right args if URL is valid", () => {
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-save-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.calledOnce(wrapper.instance().props.onClose);
       assert.calledTwice(wrapper.instance().props.dispatch);
       assert.calledWith(wrapper.instance().props.dispatch, {
@@ -1338,9 +1296,7 @@ describe("<TopSiteForm>", () => {
     it("should set customScreenshotURL to null if it was removed", () => {
       wrapper.setState({ customScreenshotUrl: "" });
 
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-save-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
 
       assert.calledWith(wrapper.instance().props.dispatch, {
         data: {
@@ -1357,9 +1313,7 @@ describe("<TopSiteForm>", () => {
     });
     it("should call onClose and dispatch with right args if URL is valid (negative index)", () => {
       wrapper.setProps({ index: -1 });
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-save-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.calledOnce(wrapper.instance().props.onClose);
       assert.calledTwice(wrapper.instance().props.dispatch);
       assert.calledWith(wrapper.instance().props.dispatch, {
@@ -1377,9 +1331,7 @@ describe("<TopSiteForm>", () => {
     });
     it("should not pass empty string label in dispatch data", () => {
       wrapper.setState({ label: "" });
-      wrapper
-        .find('moz-button[data-l10n-id="newtab-topsites-save-button"]')
-        .simulate("click");
+      wrapper.find(".done").simulate("submit");
       assert.calledWith(wrapper.instance().props.dispatch, {
         data: {
           site: { url: "https://foo.bar", customScreenshotURL: "http://foo" },
@@ -1394,32 +1346,14 @@ describe("<TopSiteForm>", () => {
         customScreenshotUrl: "foo",
         screenshotPreview: "custom",
       });
-      assert.equal(
-        0,
-        wrapper.find(
-          'moz-button[data-l10n-id="newtab-topsites-preview-button"]'
-        ).length
-      );
-      assert.equal(
-        1,
-        wrapper.find('moz-button[data-l10n-id="newtab-topsites-save-button"]')
-          .length
-      );
+      assert.equal(0, wrapper.find(".preview").length);
+      assert.equal(1, wrapper.find(".done").length);
     });
     it("should render the save button if custom screenshot url was cleared", () => {
       wrapper.setState({ customScreenshotUrl: "" });
       wrapper.setProps({ site: { customScreenshotURL: "foo" } });
-      assert.equal(
-        0,
-        wrapper.find(
-          'moz-button[data-l10n-id="newtab-topsites-preview-button"]'
-        ).length
-      );
-      assert.equal(
-        1,
-        wrapper.find('moz-button[data-l10n-id="newtab-topsites-save-button"]')
-          .length
-      );
+      assert.equal(0, wrapper.find(".preview").length);
+      assert.equal(1, wrapper.find(".done").length);
     });
   });
 
