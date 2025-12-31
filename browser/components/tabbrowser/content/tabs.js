@@ -71,6 +71,10 @@
       this.pinnedTabsContainer = document.getElementById(
         "pinned-tabs-container"
       );
+      this.pinnedTabsContainer.setAttribute(
+        "orient",
+        this.getAttribute("orient")
+      );
 
       // Override arrowscrollbox.js method, since our scrollbox's children are
       // inherited from the scrollbox binding parent (this).
@@ -245,20 +249,13 @@
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-      if (name != "orient") {
-        return;
-      }
-
-      if (this.overflowing) {
-        // reset this value so we don't have incorrect styling for vertical tabs
+      if (name == "orient") {
+        // reset this attribute so we don't have incorrect styling for vertical tabs
         this.removeAttribute("overflow");
+        this.#updateTabMinWidth();
+        this.#updateTabMinHeight();
+        this.pinnedTabsContainer?.setAttribute("orient", newValue);
       }
-
-      this.#updateTabMinWidth();
-      this.#updateTabMinHeight();
-
-      this.pinnedTabsContainer.setAttribute("orient", newValue);
-
       super.attributeChangedCallback(name, oldValue, newValue);
     }
 
