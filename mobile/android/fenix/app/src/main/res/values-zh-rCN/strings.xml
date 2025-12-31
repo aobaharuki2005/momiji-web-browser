@@ -2763,6 +2763,10 @@
   <string name="edit_login_navigate_back_button_content_description">后退</string>
   <!-- Content description, used by tools like screenreaders, to press on the edit login button. -->
   <string name="edit_login_button_content_description">编辑登录信息</string>
+  <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
+  <string name="saved_logins_add_new_login_button_content_description">添加新登录信息</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">清空搜索文本</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">在浏览器中打开网站</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
