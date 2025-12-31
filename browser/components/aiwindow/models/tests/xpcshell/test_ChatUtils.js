@@ -108,21 +108,27 @@ add_task(async function test_getCurrentTabMetadata_fetch_fallback() {
   const tracker = { getTopWindow: sb.stub() };
   const pageData = {
     getCached: sb.stub(),
-    fetchPageData: sb.stub(),
+  };
+  const fakeActor = {
+    collectPageData: sb.stub().resolves({
+      description: "Collected description",
+    }),
   };
   const fakeBrowser = {
     currentURI: { spec: "https://example.com/article" },
     contentTitle: "",
     documentTitle: "Example Article",
+    browsingContext: {
+      currentWindowGlobal: {
+        getActor: sb.stub().returns(fakeActor),
+      },
+    },
   };
 
   tracker.getTopWindow.returns({
     gBrowser: { selectedBrowser: fakeBrowser },
   });
   pageData.getCached.returns(null);
-  const fetchStub = pageData.fetchPageData.resolves({
-    description: "Fetched description",
-  });
 
   try {
     const result = await getCurrentTabMetadata({
@@ -132,9 +138,18 @@ add_task(async function test_getCurrentTabMetadata_fetch_fallback() {
     Assert.deepEqual(result, {
       url: "https://example.com/article",
       title: "Example Article",
-      description: "Fetched description",
+      description: "Collected description",
     });
-    Assert.ok(fetchStub.calledOnce, "Should fetch description when not cached");
+    Assert.ok(
+      fakeActor.collectPageData.calledOnce,
+      "Should collect page data from actor when not cached"
+    );
+    Assert.ok(
+      fakeBrowser.browsingContext.currentWindowGlobal.getActor.calledWith(
+        "PageData"
+      ),
+      "Should get PageData actor"
+    );
   } finally {
     sb.restore();
   }
@@ -146,13 +161,20 @@ add_task(
     const tracker = { getTopWindow: sb.stub() };
     const pageData = {
       getCached: sb.stub(),
-      fetchPageData: sb.stub(),
     };
     const locale = Services.locale.appLocaleAsBCP47;
+    const fakeActor = {
+      collectPageData: sb.stub(),
+    };
     const fakeBrowser = {
       currentURI: { spec: "https://mozilla.org" },
       contentTitle: "Mozilla",
       documentTitle: "Mozilla",
+      browsingContext: {
+        currentWindowGlobal: {
+          getActor: sb.stub().returns(fakeActor),
+        },
+      },
     };
 
     tracker.getTopWindow.returns({
@@ -161,7 +183,6 @@ add_task(
     pageData.getCached.returns({
       description: "Internet for people",
     });
-    const fetchStub = pageData.fetchPageData;
     const clock = sb.useFakeTimers({ now: Date.UTC(2025, 11, 27, 14, 0, 0) });
 
     try {
@@ -191,8 +212,8 @@ add_task(
         "Should include tab description"
       );
       Assert.ok(
-        fetchStub.notCalled,
-        "Should not fetch when cached data exists"
+        fakeActor.collectPageData.notCalled,
+        "Should not collect page data when cached data exists"
       );
     } finally {
       clock.restore();
