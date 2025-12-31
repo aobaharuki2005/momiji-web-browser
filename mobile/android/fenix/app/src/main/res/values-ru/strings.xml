@@ -10,7 +10,7 @@
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
   <string name="app_name_private_5">Приватный %s</string>
   <!-- App name for private browsing mode. %s is the name of the app (for example "Firefox"). -->
-  <string name="app_name_private_4">%s (Приватно)</string>
+  <string name="app_name_private_4">%s (приватно)</string>
   <!--
     Home Fragment
 
@@ -847,7 +847,7 @@
   <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
   <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s не может автоматически отклонять запросы на использование кук на этом сайте. Вы можете отправить запрос на поддержку этого сайта в будущем.</string>
   <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Выключите, и %1$s удалит куки и перезагрузит этот сайт. Это может привести к выходу из системы или опустошению корзины покупок.</string>
+  <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Отключите, и %1$s удалит куки и перезагрузит этот сайт. Это может привести к выходу из системы или опустошению корзины покупок.</string>
   <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. %1$s is the name of the app (for example "Firefox"). -->
   <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Включите, и %1$s попытается автоматически отклонить все уведомления о куки на этом сайте.</string>
   <!-- Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name. %1$s is the name of the app (for example "Firefox"). -->
@@ -1186,7 +1186,7 @@
   -->
   <string name="preferences_manage_account">Управление аккаунтом</string>
   <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
-  <string name="preferences_manage_account_summary">Измените свой пароль, управляйте сбором данных или удалите свою учетную запись</string>
+  <string name="preferences_manage_account_summary">Измените свой пароль, управляйте сбором данных или удалите свой аккаунт</string>
   <!-- Preference for triggering sync -->
   <string name="preferences_sync_now">Синхронизировать</string>
   <!-- Preference category for sync -->
@@ -2109,7 +2109,7 @@
   <!-- Toggle if desktop site is turned on -->
   <string name="browser_feature_desktop_site_on">Вкл.</string>
   <!-- Toggle if desktop site is turned off -->
-  <string name="browser_feature_desktop_site_off">Выкл.</string>
+  <string name="browser_feature_desktop_site_off">Откл.</string>
   <!-- Category header of a preference that allows a user to alter settings related to web permissions. -->
   <string name="preferences_category_permissions">Разрешения</string>
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
@@ -2452,7 +2452,7 @@
   <!-- Preference description for enhanced tracking protection for the strict protection settings -->
   <string name="preference_enhanced_tracking_protection_strict_description_4">Строгая защита от отслеживания с увеличенной производительностью, некоторые сайты могут работать неправильно.</string>
   <!-- Preference description for the checkbox setting for "baseline" exceptions (a set of content blocking exceptions applied to fix major website breakage). %1$s is the name of the application (e.g. Fenix). -->
-  <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Разрешить %1$s автоматически применять исключения, необходимые для избежания серьезных проблем с сайтом.</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_baseline" tools:ignore="UnusedResources" moz:removedIn="144">Разрешить %1$s автоматически применять исключения, необходимые для избежания серьёзных проблем с сайтом.</string>
   <!-- Preference description for the checkbox setting for "convenience" exceptions (a set of content blocking exceptions applied to fix convenience site features). -->
   <string name="preference_enhanced_tracking_protection_allow_list_convenience" tools:ignore="UnusedResources" moz:removedIn="144">Также автоматически применить исключения, которые требуются только для исправления незначительных проблем и обеспечения доступности удобных функций.</string>
   <!-- Preference label for the enhanced tracking protection option to fix major site issues caused by tracker blocking -->
@@ -2472,7 +2472,7 @@
   -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_title">Вы уверены, что хотите отключить исправления?</string>
   <!-- Message for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. %1$s is the name of the application (e.g. Fenix). -->
-  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Эта настройка помогает устранить наиболее распространенные проблемы с сайтами. Если вы отключите её, некоторые сайты могут не работать, и %1$s не сможет помочь устранить эти проблемы.</string>
+  <string name="preference_enhanced_tracking_protection_allow_list_dialog_message">Эта настройка помогает устранить наиболее распространённые проблемы с сайтами. Если вы отключите её, некоторые сайты могут не работать, и %1$s не сможет помочь устранить эти проблемы.</string>
   <!-- Confirmation button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection -->
   <string name="preference_enhanced_tracking_protection_allow_list_dialog_confirm">Отключить исправления</string>
   <!-- Cancel button text for the dialog that appears after disabling the baseline exceptions preference under Strict or Custom tracking protection. This dismisses the dialog and re-enables the preference. -->
@@ -2630,7 +2630,7 @@
   <!-- Bullet point 3 for "Max Protection" information page under "DNS over HTTPS" -->
   <string name="preference_doh_max_protection_info_3">Если безопасный DNS недоступен, сайты не будут загружаться или работать должным образом</string>
   <!-- Title displayed for "Off" option under "DNS over HTTPS" -->
-  <string name="preference_doh_off">Выкл.</string>
+  <string name="preference_doh_off">Откл.</string>
   <!-- Summary displayed for "Off" option under "DNS over HTTPS" -->
   <string name="preference_doh_off_summary">Использовать разрешение DNS по умолчанию</string>
   <!-- Text displayed above provider dropdown under "DNS over HTTPS" -->
@@ -3543,7 +3543,7 @@
   <!-- Toggle if Enhanced Tracking Protection is turned on -->
   <string name="protection_panel_etp_toggle_on">Вкл.</string>
   <!-- Toggle if Enhanced Tracking Protection is turned off -->
-  <string name="protection_panel_etp_toggle_off">Выкл.</string>
+  <string name="protection_panel_etp_toggle_off">Откл.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is enabled. -->
   <string name="protection_panel_etp_toggle_enabled_description_2">Если что-то не работает на этом сайте, попробуйте её отключить.</string>
   <!-- Description text for the Enhanced Tracking Protection toggle when tracking protection is disabled. -->
