@@ -101,10 +101,12 @@ void nsICanvasRenderingContextInternal::RecordCanvasUsage(
     auto usage =
         mozilla::CanvasUsage::CreateUsage(true, contextType, aAPI, size, this);
     if (NS_IsMainThread()) {
-      if (nsPIDOMWindowInner* inner =
-              mOffscreenCanvas->GetOwnerGlobal()->GetAsInnerWindow()) {
-        if (mozilla::dom::Document* doc = inner->GetExtantDoc()) {
-          doc->RecordCanvasUsage(usage);
+      nsIGlobalObject* global = mOffscreenCanvas->GetOwnerGlobal();
+      if (global) {
+        if (nsPIDOMWindowInner* inner = global->GetAsInnerWindow()) {
+          if (mozilla::dom::Document* doc = inner->GetExtantDoc()) {
+            doc->RecordCanvasUsage(usage);
+          }
         }
       }
     } else {
