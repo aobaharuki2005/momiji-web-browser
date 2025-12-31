@@ -1420,21 +1420,54 @@ function setFocus(selector, position = "afterbegin") {
   }
 }
 
-if (!NetErrorCard.isSupported()) {
-  for (let button of document.querySelectorAll(".try-again")) {
-    button.addEventListener("click", function () {
-      retryThis(this);
-    });
+async function getErrorCode() {
+  try {
+    const errorInfo = gIsCertError
+      ? document.getFailedCertSecurityInfo()
+      : document.getNetErrorInfo();
+    return errorInfo.errorCodeString;
+  } catch (e) {
+    return undefined;
   }
-
-  initPage();
-
-  // Dispatch this event so tests can detect that we finished loading the error page.
-  document.dispatchEvent(
-    new CustomEvent("AboutNetErrorLoad", { bubbles: true })
-  );
-} else {
-  customElements.define("net-error-card", NetErrorCard);
-  document.body.classList.add("felt-privacy-body");
-  document.body.replaceChildren(document.createElement("net-error-card"));
 }
+
+async function retryErrorCode() {
+  return new Promise(res => {
+    setTimeout(() => {
+      res(getErrorCode());
+    }, 100);
+  });
+}
+
+async function init() {
+  let errorCode = await getErrorCode();
+  let i = 0;
+  while (!errorCode && i < 3) {
+    i++;
+    errorCode = await retryErrorCode();
+  }
+}
+
+async function main() {
+  await init();
+  if (!NetErrorCard.isSupported()) {
+    for (let button of document.querySelectorAll(".try-again")) {
+      button.addEventListener("click", function () {
+        retryThis(this);
+      });
+    }
+
+    initPage();
+
+    // Dispatch this event so tests can detect that we finished loading the error page.
+    document.dispatchEvent(
+      new CustomEvent("AboutNetErrorLoad", { bubbles: true })
+    );
+  } else {
+    customElements.define("net-error-card", NetErrorCard);
+    document.body.classList.add("felt-privacy-body");
+    document.body.replaceChildren(document.createElement("net-error-card"));
+  }
+}
+
+main();
