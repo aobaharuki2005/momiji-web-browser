@@ -67,8 +67,7 @@ internal fun TrackingProtectionPolicy.getStrictSocialTrackingProtection(): Boole
 internal fun TrackingProtectionPolicy.getEtpLevel(): Int {
     return when {
         trackingCategories.contains(TrackingCategory.NONE) -> ContentBlocking.EtpLevel.NONE
-        trackingCategories.contains(TrackingCategory.STRICT) -> ContentBlocking.EtpLevel.STRICT
-        else -> ContentBlocking.EtpLevel.DEFAULT
+        else -> ContentBlocking.EtpLevel.STRICT
     }
 }
 
