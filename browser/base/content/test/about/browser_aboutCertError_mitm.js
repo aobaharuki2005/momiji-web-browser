@@ -9,17 +9,16 @@ const PREF_MITM_CANARY_ISSUER = "security.pki.mitm_canary_issuer";
 const PREF_MITM_AUTO_ENABLE_ENTERPRISE_ROOTS =
   "security.certerrors.mitm.auto_enable_enterprise_roots";
 const PREF_ENTERPRISE_ROOTS = "security.enterprise_roots.enabled";
-const PREF_FELT_PRIV_V1 = "security.certerrors.felt-privacy-v1";
 
 const UNKNOWN_ISSUER = "https://untrusted.example.com";
 
-async function checkMitmPriming(useFelt) {
+// Check that basic MitM priming works and the MitM error page is displayed successfully.
+add_task(async function checkMitmPriming() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_MITM_PRIMING, true],
       [PREF_MITM_PRIMING_ENDPOINT, UNKNOWN_ISSUER],
       [PREF_ENTERPRISE_ROOTS, false],
-      [PREF_FELT_PRIV_V1, useFelt],
     ],
   });
 
@@ -89,18 +88,18 @@ async function checkMitmPriming(useFelt) {
   });
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await SpecialPowers.clearUserPref(PREF_MITM_CANARY_ISSUER);
-  await SpecialPowers.flushPrefEnv();
-}
 
-async function checkMitmAutoEnableEnterpriseRoots(useFelt) {
+  Services.prefs.clearUserPref(PREF_MITM_CANARY_ISSUER);
+});
+
+// Check that we set the enterprise roots pref correctly on MitM
+add_task(async function checkMitmAutoEnableEnterpriseRoots() {
   await SpecialPowers.pushPrefEnv({
     set: [
       [PREF_MITM_PRIMING, true],
       [PREF_MITM_PRIMING_ENDPOINT, UNKNOWN_ISSUER],
       [PREF_MITM_AUTO_ENABLE_ENTERPRISE_ROOTS, true],
       [PREF_ENTERPRISE_ROOTS, false],
-      [PREF_FELT_PRIV_V1, !!useFelt],
     ],
   });
 
@@ -155,19 +154,6 @@ async function checkMitmAutoEnableEnterpriseRoots(useFelt) {
   );
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-  await SpecialPowers.clearUserPref(PREF_MITM_CANARY_ISSUER);
-  await SpecialPowers.flushPrefEnv();
-}
-// Check that basic MitM priming works and the MitM error page is displayed successfully.
-add_task(async function runCheckMitmPriming() {
-  for (const useFelt of [true, false]) {
-    await checkMitmPriming(useFelt);
-  }
-});
 
-// Check that we set the enterprise roots pref correctly on MitM
-add_task(async function runCheckMitmAutoEnableEnterpriseRoots() {
-  for (const useFelt of [true, false]) {
-    await checkMitmAutoEnableEnterpriseRoots(useFelt);
-  }
+  Services.prefs.clearUserPref(PREF_MITM_CANARY_ISSUER);
 });

@@ -24,16 +24,9 @@ add_task(async function open_test_xfo_error_page() {
     await loaded;
 
     await SpecialPowers.spawn(browser, [], async function () {
-      const getErrorPage = async () =>
-        ContentTaskUtils.waitForCondition(
-          () =>
-            content.document.getElementById("testframe").contentDocument?.body
-              .innerHTML
-        );
-      await ContentTaskUtils.waitForCondition(() =>
-        getErrorPage()?.then(p => p.includes("csp-xfo-error-title"))
-      );
-      const errorPage = await getErrorPage();
+      const iframeDoc =
+        content.document.getElementById("testframe").contentDocument;
+      let errorPage = iframeDoc.body.innerHTML;
       ok(errorPage.includes("csp-xfo-error-title"), "xfo error page correct");
     });
   });
@@ -51,16 +44,9 @@ add_task(async function open_test_csp_frame_ancestor_error_page() {
     await loaded;
 
     await SpecialPowers.spawn(browser, [], async function () {
-      const getErrorPage = async () =>
-        ContentTaskUtils.waitForCondition(
-          () =>
-            content.document.getElementById("testframe").contentDocument?.body
-              .innerHTML
-        );
-      await ContentTaskUtils.waitForCondition(() =>
-        getErrorPage()?.then(p => p.includes("csp-xfo-error-title"))
-      );
-      const errorPage = await getErrorPage();
+      const iframeDoc =
+        content.document.getElementById("testframe").contentDocument;
+      let errorPage = iframeDoc.body.innerHTML;
       ok(errorPage.includes("csp-xfo-error-title"), "csp error page correct");
     });
   });

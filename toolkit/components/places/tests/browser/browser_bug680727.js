@@ -82,19 +82,14 @@ function errorAsyncListener(aURI, aIsVisited) {
     reloadListener
   );
 
-  SpecialPowers.spawn(ourTab.linkedBrowser, [], async function () {
-    const netErrorCard = await ContentTaskUtils.waitForCondition(
-      () => content.document.querySelector("net-error-card")?.wrappedJSObject
-    );
+  SpecialPowers.spawn(ourTab.linkedBrowser, [], function () {
     Assert.ok(
-      netErrorCard.tryAgainButton,
+      content.document.querySelector("#netErrorButtonContainer > .try-again"),
       "The error page has got a .try-again element"
     );
-    EventUtils.synthesizeMouseAtCenter(
-      netErrorCard.tryAgainButton,
-      {},
-      content
-    );
+    content.document
+      .querySelector("#netErrorButtonContainer > .try-again")
+      .click();
   });
 }
 

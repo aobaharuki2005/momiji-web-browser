@@ -45,10 +45,7 @@ async function checkTelemetry(expectedIssuedByCCA) {
   ]);
 }
 
-async function test_cca_site(useFeltPrivacyV1) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["security.certerrors.felt-privacy-v1", useFeltPrivacyV1]],
-  });
+add_task(async function test_cca_site() {
   await resetTelemetry();
   let browser;
   let pageLoaded;
@@ -69,12 +66,9 @@ async function test_cca_site(useFeltPrivacyV1) {
   // Check that telemetry indicates this was issued by CCA.
   await checkTelemetry("true");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-}
+});
 
-async function test_non_cca_site(useFeltPrivacyV1) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["security.certerrors.felt-privacy-v1", useFeltPrivacyV1]],
-  });
+add_task(async function test_non_cca_site() {
   await resetTelemetry();
   let browser;
   let pageLoaded;
@@ -95,16 +89,4 @@ async function test_non_cca_site(useFeltPrivacyV1) {
   // Check that telemetry indicates this was not issued by CCA.
   await checkTelemetry("false");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
-}
-
-add_task(async function test_cca_sites() {
-  for (const useFeltPrivacyV1 of [true, false]) {
-    await test_cca_site(useFeltPrivacyV1);
-  }
-});
-
-add_task(async function test_non_cca_sites() {
-  for (const useFeltPrivacyV1 of [true, false]) {
-    await test_non_cca_site(useFeltPrivacyV1);
-  }
 });
