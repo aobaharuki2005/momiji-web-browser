@@ -156,8 +156,26 @@ bool AbsoluteContainingBlock::PrepareAbsoluteFrames(
 
   DrainPushedChildList(aDelegatingFrame);
 
-  // TODO (Bug 1994346 or Bug 1997696): Consider stealing absolute frames from
-  // our next-in-flow's absolute child list.
+  // Steal absolute frame's first-in-flow from our next-in-flow's child lists.
+  for (const nsIFrame* nextInFlow = aDelegatingFrame->GetNextInFlow();
+       nextInFlow; nextInFlow = nextInFlow->GetNextInFlow()) {
+    AbsoluteContainingBlock* nextAbsCB =
+        nextInFlow->GetAbsoluteContainingBlock();
+    MOZ_ASSERT(nextAbsCB,
+               "If this delegating frame has an absCB, its next-in-flow must "
+               "have one, too!");
+
+    nextAbsCB->DrainPushedChildList(nextInFlow);
+
+    for (auto iter = nextAbsCB->GetChildList().begin();
+         iter != nextAbsCB->GetChildList().end();) {
+      nsIFrame* const child = *iter++;
+      if (!child->GetPrevInFlow()) {
+        nextAbsCB->StealFrame(child);
+        mAbsoluteFrames.AppendFrame(aDelegatingFrame, child);
+      }
+    }
+  }
 
   return HasAbsoluteFrames();
 }
@@ -356,7 +374,7 @@ void AbsoluteContainingBlock::Reflow(nsContainerFrame* aDelegatingFrame,
                      aDelegatingFrame->GetNextInFlow()) {
             nextFrame->GetParent()->GetAbsoluteContainingBlock()->StealFrame(
                 nextFrame);
-            mPushedAbsoluteFrames.AppendFrame(nullptr, nextFrame);
+            mPushedAbsoluteFrames.AppendFrame(aDelegatingFrame, nextFrame);
           }
           reflowStatus.MergeCompletionStatusFrom(kidStatus);
         } else if (nextFrame) {
