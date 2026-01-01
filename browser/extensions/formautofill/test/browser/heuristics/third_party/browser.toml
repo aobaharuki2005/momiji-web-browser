@@ -15,6 +15,9 @@ skip-if = [
 ]
 
 ["browser_CostCo.js"]
+skip-if = [
+  "true", # Bug 2008281
+]
 
 ["browser_DirectAsda.js"]
 
