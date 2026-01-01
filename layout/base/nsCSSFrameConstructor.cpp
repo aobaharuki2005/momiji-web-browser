@@ -4994,8 +4994,8 @@ static bool ShouldSuppressFrameInSelect(const nsIContent* aParent,
     return true;
   }
 
-  // Option is always fine.
-  if (aChild.IsHTMLElement(nsGkAtoms::option)) {
+  // <option> and <hr> are always fine.
+  if (aChild.IsAnyOfHTMLElements(nsGkAtoms::option, nsGkAtoms::hr)) {
     return false;
   }
 
