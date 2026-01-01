@@ -3232,8 +3232,8 @@ nsresult Element::SetAttrAndNotify(
     }
   }
 
-  const CustomElementData* data = GetCustomElementData();
-  if (data && data->mState == CustomElementData::State::eCustom) {
+  if (const CustomElementData* data = GetCustomElementData();
+      data && data->mState == CustomElementData::State::eCustom && aNotify) {
     CustomElementDefinition* definition = data->GetCustomElementDefinition();
     MOZ_ASSERT(definition, "Should have a valid CustomElementDefinition");
 
