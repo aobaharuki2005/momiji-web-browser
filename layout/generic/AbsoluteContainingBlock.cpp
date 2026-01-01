@@ -137,15 +137,15 @@ bool AbsoluteContainingBlock::PrepareAbsoluteFrames(
   // hasn't reflowed yet. Move any child in that list that is a first-in-flow,
   // or whose prev-in-flow is not in our absolute child list, into our absolute
   // child list.
-  nsIFrame* child = mPushedAbsoluteFrames.FirstChild();
-  while (child) {
-    nsIFrame* next = child->GetNextInFlow();
+  for (auto iter = mPushedAbsoluteFrames.begin();
+       iter != mPushedAbsoluteFrames.end();) {
+    // Advance the iterator first, so it's safe to move |child|.
+    nsIFrame* const child = *iter++;
     if (!child->GetPrevInFlow() ||
         child->GetPrevInFlow()->GetParent() != aDelegatingFrame) {
       mPushedAbsoluteFrames.RemoveFrame(child);
       mAbsoluteFrames.AppendFrame(nullptr, child);
     }
-    child = next;
   }
 
   // TODO (Bug 1994346 or Bug 1997696): Consider stealing absolute frames from
