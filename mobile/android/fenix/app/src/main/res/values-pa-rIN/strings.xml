@@ -632,6 +632,8 @@
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">ਹੁਣੇ ਨਹੀਂ</string>
   <!-- Terms of use (ToU) onboarding title. -->
   <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">ਆਜ਼ਾਦ ਹੋਣ ਲੀ ਤਿਆਰ ਹੋ ਜਾਓ</string>
+  <!-- Terms of use (ToU) onboarding subtitle. -->
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">ਤੇਜ਼, ਸੁਰੱਖਿਅਤ ਅਤੇ ਤੁਹਾਨੂੰ ਵੇਚਦਾ ਨਹੀਂ ਹੈ।\nਬੱਸ ਬਰਾਊਜ਼ ਕਰਨਾ ਬੇਹਤਰ ਹੋ ਗਿਆ ਹੈ।</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
@@ -683,6 +685,8 @@
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">ਨੋਟੀਫ਼ਿਕੇਸ਼ਨ Firefox ਨਾਲ ਤੁਹਾਨੂੰ ਸੁਰੱਖਿਅਤ ਰਹਿਣ ਲਈ ਮਦਦ ਕਰਦੇ ਹਨ</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">ਸੂਚਨਾਵਾਂ ਨੂੰ ਚਾਲੂ ਕਰੋ</string>
+  <!-- "Add search widget" onboarding title. -->
+  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">ਹਰ ਖੋਜ ਨੂੰ ਵੱਧ ਪ੍ਰਾਈਵੇਟ ਬਣਾਓ</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Firefox ਵਿਜੈਟ ਨੂੰ ਜੋੜੋ</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->

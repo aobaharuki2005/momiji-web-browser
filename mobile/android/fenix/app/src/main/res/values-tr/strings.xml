@@ -386,7 +386,7 @@
     %1$s is the name of the language that is displayed in the original page. (For example: English)
     %2$s is the name of the language which the page was translated to. (For example: French)
   -->
-  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">%1$s dilinden %2$s diline çevrildi</string>
+  <string name="translation_toolbar_translated_from_and_to" tools:ignore="UnusedResources">%1$s &gt; %2$s çeviri</string>
   <!-- Content description for the translate toolbar action that opens the translations dialog. -->
   <string name="translation_toolbar_expand_action">Çeviri sayfasını aç</string>
   <!-- Content description for the translate toolbar action that closes the translations toolbar. -->
