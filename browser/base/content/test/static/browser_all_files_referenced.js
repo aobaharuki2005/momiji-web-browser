@@ -335,6 +335,14 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/IntentClassifier.sys.mjs",
   },
+  // Bug 2002840 - add function to return real time info injection message & tests (backed out due to unused file)
+  {
+    file: "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs",
+  },
+  // Bug 2003623 - Add assistant system prompt
+  {
+    file: "moz-src:///browser/components/aiwindow/models/prompts/AssistantPrompts.sys.mjs",
+  },
   // Bug 2004888 - [FirstRun] Create Firstrun.html opening firstrun welcome screen
   {
     file: "chrome://browser/content/aiwindow/firstrun.html",
@@ -342,6 +350,10 @@ var allowlist = [
   // Bug 2005768 - Insights scheduler for generation from history
   {
     file: "moz-src:///browser/components/aiwindow/models/InsightsHistoryScheduler.sys.mjs",
+  },
+  // Bug 2000987 - get user messages from chat source
+  {
+    file: "moz-src:///browser/components/aiwindow/models/InsightsChatSource.sys.mjs",
   },
   // Bug 2003303 - Implement Title Generation (backed out due to unused file)
   {

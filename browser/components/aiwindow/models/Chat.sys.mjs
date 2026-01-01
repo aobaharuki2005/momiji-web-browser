@@ -4,8 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { ToolRoleOpts } from "moz-src:///browser/components/aiwindow/ui/modules/ChatMessage.sys.mjs";
-
 /* eslint-disable-next-line mozilla/reject-import-system-module-from-non-system */
 import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
 import { openAIEngine } from "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs";
@@ -51,21 +49,21 @@ export const Chat = {
    * we execute them locally, append results to the conversation, and continue
    * streaming the model’s follow-up answer. Repeats until no more tool calls.
    *
-   * @param {ChatConversation} conversation
+   * @param {Array<{role:string, content?:string, tool_call_id?:string, tool_calls?:any}>} messages
    * @yields {string} Assistant text chunks
    */
-  async *fetchWithHistory(conversation) {
+  async *fetchWithHistory(messages) {
+    const engineInstance = await openAIEngine.build();
     // Note FXA token fetching disabled for now - this is still in progress
     // We can flip this switch on when more realiable
     const fxAccountToken = await this._getFxAccountToken();
 
-    // @todo Bug 2007046
-    // Update this with correct model id
-    const modelId = "qwen3-235b-a22b-instruct-2507-maas";
-
-    const toolRoleOpts = new ToolRoleOpts(modelId);
-    const currentTurn = conversation.currentTurnIndex();
-    const engineInstance = await openAIEngine.build();
+    // We'll mutate a local copy of the thread as we loop
+    // We also filter out empty assistant messages because
+    //  these kinds of messages can produce unexpected model responses
+    let convo = Array.isArray(messages)
+      ? messages.filter(msg => !(msg.role == "assistant" && !msg.content))
+      : [];
 
     // Helper to run the model once (streaming) on current convo
     const streamModelResponse = () =>
@@ -74,7 +72,7 @@ export const Chat = {
         fxAccountToken,
         tool_choice: "auto",
         tools: toolsConfig,
-        args: conversation.getMessagesInOpenAiFormat(),
+        args: convo,
       });
 
     // Keep calling until the model finishes without requesting tools
@@ -100,23 +98,25 @@ export const Chat = {
       }
 
       // 3) Build the assistant tool_calls message exactly as expected by the API
-      //
-      // @todo Bug 2006159 - Implement parallel tool calling
-      // Temporarily only include the first tool call due to quality issue
+      // Bug 2006159 - Implement parallel tool calling
+      // TODO: Temporarily only include the first tool call due to quality issue
       // with subsequent tool call responses, will include all later once above
       // ticket is resolved.
-      const tool_calls = pendingToolCalls.slice(0, 1).map(toolCall => ({
-        id: toolCall.id,
-        type: "function",
-        function: {
-          name: toolCall.function.name,
-          arguments: toolCall.function.arguments,
-        },
-      }));
-      conversation.addAssistantMessage("function", { tool_calls });
+      const assistantToolMsg = {
+        role: "assistant",
+        tool_calls: pendingToolCalls.slice(0, 1).map(toolCall => ({
+          id: toolCall.id,
+          type: "function",
+          function: {
+            name: toolCall.function.name,
+            arguments: toolCall.function.arguments,
+          },
+        })),
+      };
 
       // 4) Execute each tool locally and create a tool message with the result
       // TODO: Temporarily only execute the first tool call, will run all later
+      const toolResultMessages = [];
       for (const toolCall of pendingToolCalls) {
         const { id, function: functionSpec } = toolCall;
         const name = functionSpec?.name || "";
@@ -127,11 +127,11 @@ export const Chat = {
             ? JSON.parse(functionSpec.arguments)
             : {};
         } catch {
-          const content = {
+          toolResultMessages.push({
+            role: "tool",
             tool_call_id: id,
-            body: { error: "Invalid JSON arguments" },
-          };
-          conversation.addToolCallMessage(content, currentTurn, toolRoleOpts);
+            content: JSON.stringify({ error: "Invalid JSON arguments" }),
+          });
           continue;
         }
 
@@ -146,17 +146,31 @@ export const Chat = {
           result = await toolFunc(toolParams);
 
           // Create special tool call log message to show in the UI log panel
-          const content = { tool_call_id: id, body: result };
-          conversation.addToolCallMessage(content, currentTurn, toolRoleOpts);
+          const assistantToolCallLogMsg = {
+            role: "assistant",
+            content: `Tool Call: ${name} with parameters: ${JSON.stringify(
+              toolParams
+            )}`,
+            type: "tool_call_log",
+            result,
+          };
+          convo.push(assistantToolCallLogMsg);
+          yield assistantToolCallLogMsg;
         } catch (e) {
           result = { error: `Tool execution failed: ${String(e)}` };
-          const content = { tool_call_id: id, body: result };
-          conversation.addToolCallMessage(content, currentTurn, toolRoleOpts);
         }
+
+        toolResultMessages.push({
+          role: "tool",
+          tool_call_id: id,
+          content: typeof result === "string" ? result : JSON.stringify(result),
+        });
 
         // Bug 	2006159 - Implement parallel tool calling, remove after implemented
         break;
       }
+
+      convo = [...convo, assistantToolMsg, ...toolResultMessages];
     }
   },
 };

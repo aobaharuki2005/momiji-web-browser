@@ -3,19 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import { assistantPrompt } from "moz-src:///browser/components/aiwindow/models/prompts/AssistantPrompts.sys.mjs";
-
-import {
-  constructRelevantInsightsContextMessage,
-  constructRealTimeInfoInjectionMessage,
-} from "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs";
-
-import { makeGuid, getRoleLabel } from "./ChatUtils.sys.mjs";
-import {
-  CONVERSATION_STATUS,
-  MESSAGE_ROLE,
-  SYSTEM_PROMPT_TYPE,
-} from "./ChatConstants.sys.mjs";
+import { makeGuid } from "./ChatUtils.sys.mjs";
+import { CONVERSATION_STATUS, MESSAGE_ROLE } from "./ChatConstants.sys.mjs";
 import {
   AssistantRoleOpts,
   ChatMessage,
@@ -154,9 +143,15 @@ export class ChatConversation {
    *
    * @param {string} contentBody - The user message content
    * @param {string?} [pageUrl=""] - The current page url when message was submitted
+   * @param {number?} [turnIndex=0] - The conversation turn/cycle
    * @param {UserRoleOpts} [userOpts=new UserRoleOpts()] - User message options
    */
-  addUserMessage(contentBody, pageUrl = "", userOpts = new UserRoleOpts()) {
+  addUserMessage(
+    contentBody,
+    pageUrl = "",
+    turnIndex = 0,
+    userOpts = new UserRoleOpts()
+  ) {
     const content = {
       type: "text",
       body: contentBody,
@@ -164,11 +159,7 @@ export class ChatConversation {
 
     let url = URL.parse(pageUrl);
 
-    let currentTurn = this.currentTurnIndex();
-    const newTurnIndex =
-      this.#messages.length === 1 ? currentTurn : currentTurn + 1;
-
-    this.addMessage(MESSAGE_ROLE.USER, content, url, newTurnIndex, userOpts);
+    this.addMessage(MESSAGE_ROLE.USER, content, url, turnIndex, userOpts);
   }
 
   /**
@@ -176,15 +167,17 @@ export class ChatConversation {
    *
    * @param {string} type - The assistant message type: text|function
    * @param {string} contentBody - The assistant message content
+   * @param {number} turnIndex - The current conversation turn/cycle
    * @param {AssistantRoleOpts} [assistantOpts=new AssistantRoleOpts()] - ChatMessage options specific to assistant messages
    */
   addAssistantMessage(
     type,
     contentBody,
+    turnIndex,
     assistantOpts = new AssistantRoleOpts()
   ) {
     const content = {
-      type,
+      type: "text",
       body: contentBody,
     };
 
@@ -192,7 +185,7 @@ export class ChatConversation {
       MESSAGE_ROLE.ASSISTANT,
       content,
       "",
-      this.currentTurnIndex(),
+      turnIndex,
       assistantOpts
     );
   }
@@ -201,16 +194,11 @@ export class ChatConversation {
    * Add a tool call message to the conversation
    *
    * @param {object} content - The tool call object to be saved as JSON
+   * @param {number} turnIndex - The current conversation turn/cycle
    * @param {ToolRoleOpts} [toolOpts=new ToolRoleOpts()] - Message opts for a tool role message
    */
-  addToolCallMessage(content, toolOpts = new ToolRoleOpts()) {
-    this.addMessage(
-      MESSAGE_ROLE.TOOL,
-      content,
-      "",
-      this.currentTurnIndex(),
-      toolOpts
-    );
+  addToolCallMessage(content, turnIndex, toolOpts = new ToolRoleOpts()) {
+    this.addMessage(MESSAGE_ROLE.TOOL, content, "", turnIndex, toolOpts);
   }
 
   /**
@@ -218,44 +206,12 @@ export class ChatConversation {
    *
    * @param {string} type - The assistant message type: text|injected_insights|injected_real_time_info
    * @param {string} contentBody - The system message object to be saved as JSON
+   * @param {number} turnIndex - The current conversation turn/cycle
    */
-  addSystemMessage(type, contentBody) {
+  addSystemMessage(type, contentBody, turnIndex) {
     const content = { type, body: contentBody };
 
-    this.addMessage(MESSAGE_ROLE.SYSTEM, content, "", this.currentTurnIndex());
-  }
-
-  /**
-   * Takes a new prompt and generates LLM context messages before
-   * adding new user prompt to messages.
-   *
-   * @param {string} prompt - new user prompt
-   * @param {URL} pageUrl - The URL of the page when prompt was submitted
-   */
-  async generatePrompt(prompt, pageUrl) {
-    if (!this.#messages.length) {
-      this.addSystemMessage(SYSTEM_PROMPT_TYPE.TEXT, assistantPrompt);
-    }
-
-    const nextConversationTurn = this.currentTurnIndex() + 1;
-
-    const realTime = await constructRealTimeInfoInjectionMessage();
-    if (realTime.content) {
-      this.addSystemMessage(SYSTEM_PROMPT_TYPE.REAL_TIME, realTime.content);
-    }
-
-    const insightsContext = await constructRelevantInsightsContextMessage();
-    if (insightsContext?.content) {
-      this.addSystemMessage(
-        SYSTEM_PROMPT_TYPE.INSIGHTS,
-        insightsContext.content,
-        nextConversationTurn
-      );
-    }
-
-    this.addUserMessage(prompt, pageUrl, nextConversationTurn);
-
-    return this;
+    this.addMessage(MESSAGE_ROLE.SYSTEM, content, "", turnIndex);
   }
 
   /**
@@ -299,26 +255,6 @@ export class ChatConversation {
     const sites = this.getSitesList();
 
     return sites.length ? sites.pop() : null;
-  }
-
-  /**
-   * Converts the persisted message data to OpenAI API format
-   *
-   * @returns {Array<{ role: string, content: string }>}
-   */
-  getMessagesInOpenAiFormat() {
-    return this.#messages
-      .filter(message => {
-        return !(
-          message.role === MESSAGE_ROLE.ASSISTANT && !message?.content?.body
-        );
-      })
-      .map(message => {
-        return {
-          role: getRoleLabel(message.role).toLowerCase(),
-          content: message.content?.body ?? message.content,
-        };
-      });
   }
 
   #updateActiveBranchTipMessageId() {

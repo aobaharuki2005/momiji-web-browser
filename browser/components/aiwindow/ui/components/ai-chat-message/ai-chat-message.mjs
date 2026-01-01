@@ -14,8 +14,7 @@ export class AIChatMessage extends MozLitElement {
    */
 
   static properties = {
-    role: { type: String },
-    message: { type: String },
+    message: { type: Object },
   };
 
   constructor() {
@@ -34,9 +33,9 @@ export class AIChatMessage extends MozLitElement {
       />
 
       <article>
-        <div class=${"message-" + this.role}>
+        <div class=${"message-" + this.message.role}>
           <!-- TODO: Add markdown parsing here -->
-          ${this.message}
+          ${this.message.content}
         </div>
       </article>
     `;

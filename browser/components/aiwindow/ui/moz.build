@@ -16,7 +16,6 @@ MOZ_SRC_FILES += [
     "modules/AIWindowMenu.sys.mjs",
     "modules/ChatConstants.sys.mjs",
     "modules/ChatConversation.sys.mjs",
-    "modules/ChatEnums.sys.mjs",
     "modules/ChatMessage.sys.mjs",
     "modules/ChatMigrations.sys.mjs",
     "modules/ChatSql.sys.mjs",

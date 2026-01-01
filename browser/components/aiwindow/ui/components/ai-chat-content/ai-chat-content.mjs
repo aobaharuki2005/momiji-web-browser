@@ -51,9 +51,10 @@ export class AIChatContent extends MozLitElement {
 
   handleUserPromptEvent(event) {
     const { content } = event.detail;
-
-    this.conversationState.push({ role: "user", content });
-
+    this.conversationState = [
+      ...this.conversationState,
+      { role: "user", content },
+    ];
     this.requestUpdate();
   }
 
@@ -64,10 +65,17 @@ export class AIChatContent extends MozLitElement {
    */
 
   handleAIResponseEvent(event) {
-    const { ordinal } = event.detail;
-
-    this.conversationState[ordinal] = event.detail;
-
+    const { content, latestAssistantMessageIndex } = event.detail;
+    if (!this.conversationState[latestAssistantMessageIndex]) {
+      this.conversationState[latestAssistantMessageIndex] = {
+        role: "assistant",
+        content: "",
+      };
+    }
+    this.conversationState[latestAssistantMessageIndex] = {
+      ...this.conversationState[latestAssistantMessageIndex],
+      content,
+    };
     this.requestUpdate();
   }
 
@@ -78,12 +86,9 @@ export class AIChatContent extends MozLitElement {
         href="chrome://browser/content/aiwindow/components/ai-chat-content.css"
       />
       <div class="chat-content-wrapper">
-        ${this.conversationState.map(msg => {
-          return html`<ai-chat-message
-            .message=${msg.content.body}
-            .role=${msg.role}
-          ></ai-chat-message>`;
-        })}
+        ${this.conversationState.map(
+          msg => html`<ai-chat-message .message=${msg}></ai-chat-message>`
+        )}
       </div>
     `;
   }
