@@ -110,6 +110,27 @@ nsFrameList AbsoluteContainingBlock::StealPushedChildList() {
   return std::move(mPushedAbsoluteFrames);
 }
 
+void AbsoluteContainingBlock::DrainPushedChildList(
+    const nsIFrame* aDelegatingFrame) {
+  MOZ_ASSERT(aDelegatingFrame->GetAbsoluteContainingBlock() == this,
+             "aDelegatingFrame's absCB should be us!");
+
+  // Our pushed absolute child list might be non-empty if our next-in-flow
+  // hasn't reflowed yet. Move any child in that list that is a first-in-flow,
+  // or whose prev-in-flow is not in our absolute child list, into our absolute
+  // child list.
+  for (auto iter = mPushedAbsoluteFrames.begin();
+       iter != mPushedAbsoluteFrames.end();) {
+    // Advance the iterator first, so it's safe to move |child|.
+    nsIFrame* const child = *iter++;
+    if (!child->GetPrevInFlow() ||
+        child->GetPrevInFlow()->GetParent() != aDelegatingFrame) {
+      mPushedAbsoluteFrames.RemoveFrame(child);
+      mAbsoluteFrames.AppendFrame(nullptr, child);
+    }
+  }
+}
+
 bool AbsoluteContainingBlock::PrepareAbsoluteFrames(
     nsContainerFrame* aDelegatingFrame) {
   if (!aDelegatingFrame->PresContext()
@@ -133,20 +154,7 @@ bool AbsoluteContainingBlock::PrepareAbsoluteFrames(
     }
   }
 
-  // Our pushed absolute child list might be non-empty if our next-in-flow
-  // hasn't reflowed yet. Move any child in that list that is a first-in-flow,
-  // or whose prev-in-flow is not in our absolute child list, into our absolute
-  // child list.
-  for (auto iter = mPushedAbsoluteFrames.begin();
-       iter != mPushedAbsoluteFrames.end();) {
-    // Advance the iterator first, so it's safe to move |child|.
-    nsIFrame* const child = *iter++;
-    if (!child->GetPrevInFlow() ||
-        child->GetPrevInFlow()->GetParent() != aDelegatingFrame) {
-      mPushedAbsoluteFrames.RemoveFrame(child);
-      mAbsoluteFrames.AppendFrame(nullptr, child);
-    }
-  }
+  DrainPushedChildList(aDelegatingFrame);
 
   // TODO (Bug 1994346 or Bug 1997696): Consider stealing absolute frames from
   // our next-in-flow's absolute child list.
