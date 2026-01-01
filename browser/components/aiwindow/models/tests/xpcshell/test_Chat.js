@@ -1,6 +1,14 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+do_get_profile();
+
+const { ChatConversation } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/ui/modules/ChatConversation.sys.mjs"
+);
+const { SYSTEM_PROMPT_TYPE, MESSAGE_ROLE } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/ui/modules/ChatConstants.sys.mjs"
+);
 const { Chat } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/Chat.sys.mjs"
 );
@@ -111,14 +119,22 @@ add_task(async function test_Chat_fetchWithHistory_streams_and_forwards_args() {
     sb.stub(openAIEngine, "build").resolves(fakeEngine);
     // sb.stub(Chat, "_getFxAccountToken").resolves("mock_token");
 
-    const messages = [
-      { role: "system", content: "You are helpful" },
-      { role: "user", content: "Hi there" },
-    ];
+    const conversation = new ChatConversation({
+      title: "chat title",
+      description: "chat desc",
+      pageUrl: new URL("https://www.firefox.com"),
+      pageMeta: {},
+    });
+    conversation.addSystemMessage(
+      SYSTEM_PROMPT_TYPE.TEXT,
+      "You are helpful",
+      0
+    );
+    conversation.addUserMessage("Hi there", "https://www.firefox.com", 0);
 
     // Collect streamed output
     let acc = "";
-    for await (const chunk of Chat.fetchWithHistory(messages)) {
+    for await (const chunk of Chat.fetchWithHistory(conversation)) {
       if (typeof chunk === "string") {
         acc += chunk;
       }
@@ -130,8 +146,8 @@ add_task(async function test_Chat_fetchWithHistory_streams_and_forwards_args() {
       "Should concatenate streamed chunks"
     );
     Assert.deepEqual(
-      capturedArgs,
-      messages,
+      [capturedArgs[0].body, capturedArgs[1].body],
+      [conversation.messages[0].body, conversation.messages[1].body],
       "Should forward messages as args to runWithGenerator()"
     );
     Assert.deepEqual(
@@ -181,26 +197,41 @@ add_task(async function test_Chat_fetchWithHistory_handles_tool_calls() {
     sb.stub(openAIEngine, "build").resolves(fakeEngine);
     // sb.stub(Chat, "_getFxAccountToken").resolves("mock_token");
 
-    const messages = [{ role: "user", content: "Use the test tool" }];
+    const conversation = new ChatConversation({
+      title: "chat title",
+      description: "chat desc",
+      pageUrl: new URL("https://www.firefox.com"),
+      pageMeta: {},
+    });
+    conversation.addUserMessage(
+      "Use the test tool",
+      "https://www.firefox.com",
+      0
+    );
 
     let textOutput = "";
-    let toolCallLogs = [];
-    for await (const chunk of Chat.fetchWithHistory(messages)) {
+    for await (const chunk of Chat.fetchWithHistory(conversation)) {
       if (typeof chunk === "string") {
         textOutput += chunk;
-      } else if (chunk?.type === "tool_call_log") {
-        toolCallLogs.push(chunk);
       }
     }
+
+    const toolCalls = conversation.messages.filter(
+      message =>
+        message.role === MESSAGE_ROLE.ASSISTANT &&
+        message?.content?.type === "function"
+    );
 
     Assert.equal(
       textOutput,
       "I'll help you with that. Tool executed successfully!",
       "Should yield text from both model calls"
     );
-    Assert.equal(toolCallLogs.length, 1, "Should have one tool call log");
+    Assert.equal(toolCalls.length, 1, "Should have one tool call");
     Assert.ok(
-      toolCallLogs[0].content.includes("test_tool"),
+      toolCalls[0].content.body.tool_calls[0].function.name.includes(
+        "test_tool"
+      ),
       "Tool call log should mention tool name"
     );
     Assert.ok(Chat.toolMap.test_tool.calledOnce, "Tool should be called once");
@@ -228,10 +259,16 @@ add_task(
       sb.stub(openAIEngine, "build").rejects(err);
       // sb.stub(Chat, "_getFxAccountToken").resolves("mock_token");
 
-      const messages = [{ role: "user", content: "Hi" }];
+      const conversation = new ChatConversation({
+        title: "chat title",
+        description: "chat desc",
+        pageUrl: new URL("https://www.firefox.com"),
+        pageMeta: {},
+      });
+      conversation.addUserMessage("Hi", "https://www.firefox.com", 0);
 
       const consume = async () => {
-        for await (const _chunk of Chat.fetchWithHistory(messages)) {
+        for await (const _chunk of Chat.fetchWithHistory(conversation)) {
           void _chunk;
         }
       };
@@ -284,10 +321,20 @@ add_task(
       sb.stub(openAIEngine, "build").resolves(fakeEngine);
       // sb.stub(Chat, "_getFxAccountToken").resolves("mock_token");
 
-      const messages = [{ role: "user", content: "Test bad JSON" }];
+      const conversation = new ChatConversation({
+        title: "chat title",
+        description: "chat desc",
+        pageUrl: new URL("https://www.firefox.com"),
+        pageMeta: {},
+      });
+      conversation.addUserMessage(
+        "Test bad JSON",
+        "https://www.firefox.com",
+        0
+      );
 
       let textOutput = "";
-      for await (const chunk of Chat.fetchWithHistory(messages)) {
+      for await (const chunk of Chat.fetchWithHistory(conversation)) {
         if (typeof chunk === "string") {
           textOutput += chunk;
         }

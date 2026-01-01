@@ -147,13 +147,13 @@ add_task(function test_ChatConversation_addUserMessage() {
   const conversation = new ChatConversation({});
 
   const content = "user to assistant msg";
-  conversation.addUserMessage(content, "https://www.mozilla.com", 0);
+  conversation.addUserMessage(content, "https://www.mozilla.com");
 
   const message = conversation.messages[0];
 
   Assert.withSoftAssertions(function (soft) {
     soft.equal(message.role, MESSAGE_ROLE.USER);
-    soft.equal(message.turnIndex, 0);
+    soft.equal(message.turnIndex, 1);
     soft.deepEqual(message.pageUrl, new URL("https://www.mozilla.com"));
     soft.deepEqual(message.content, {
       type: "text",
@@ -166,7 +166,7 @@ add_task(function test_revisionRootMessageId_ChatConversation_addUserMessage() {
   const conversation = new ChatConversation({});
 
   const content = "user to assistant msg";
-  conversation.addUserMessage(content, "https://www.firefox.com", 0);
+  conversation.addUserMessage(content, "https://www.firefox.com");
 
   const message = conversation.messages[0];
 
@@ -180,7 +180,6 @@ add_task(function test_opts_ChatConversation_addUserMessage() {
   conversation.addUserMessage(
     content,
     "https://www.firefox.com",
-    0,
     new UserRoleOpts("321")
   );
 
@@ -193,7 +192,7 @@ add_task(function test_ChatConversation_addAssistantMessage() {
   const conversation = new ChatConversation({});
 
   const content = "response from assistant";
-  conversation.addAssistantMessage("text", content, 0);
+  conversation.addAssistantMessage("text", content);
 
   const message = conversation.messages[0];
 
@@ -244,7 +243,7 @@ add_task(function test_opts_ChatConversation_addAssistantMessage() {
     ["insight"],
     ["search"]
   );
-  conversation.addAssistantMessage("text", content, 0, assistantOpts);
+  conversation.addAssistantMessage("text", content, assistantOpts);
 
   const message = conversation.messages[0];
 
@@ -300,7 +299,7 @@ add_task(function test_ChatConversation_addToolCallMessage() {
   const content = {
     random: "tool call specific keys",
   };
-  conversation.addToolCallMessage(content, 0);
+  conversation.addToolCallMessage(content);
 
   const message = conversation.messages[0];
 
@@ -321,7 +320,7 @@ add_task(function test_opts_ChatConversation_addToolCallMessage() {
   const content = {
     random: "tool call specific keys",
   };
-  conversation.addToolCallMessage(content, 0, new ToolRoleOpts("the-model-id"));
+  conversation.addToolCallMessage(content, new ToolRoleOpts("the-model-id"));
 
   const message = conversation.messages[0];
 
@@ -346,7 +345,7 @@ add_task(function test_ChatConversation_addSystemMessage() {
   const content = {
     random: "system call specific keys",
   };
-  conversation.addSystemMessage("text", content, 0);
+  conversation.addSystemMessage("text", content);
 
   const message = conversation.messages[0];
 
@@ -365,12 +364,12 @@ add_task(function test_ChatConversation_getSitesList() {
   const conversation = new ChatConversation({});
 
   const content = "user to assistant msg";
-  conversation.addUserMessage(content, "https://www.mozilla.com", 0);
-  conversation.addUserMessage(content, "https://www.mozilla.com", 1);
-  conversation.addUserMessage(content, "https://www.firefox.com", 2);
-  conversation.addUserMessage(content, "https://www.cnn.com", 3);
-  conversation.addUserMessage(content, "https://www.espn.com", 4);
-  conversation.addUserMessage(content, "https://www.espn.com", 5);
+  conversation.addUserMessage(content, "https://www.mozilla.com");
+  conversation.addUserMessage(content, "https://www.mozilla.com");
+  conversation.addUserMessage(content, "https://www.firefox.com");
+  conversation.addUserMessage(content, "https://www.cnn.com");
+  conversation.addUserMessage(content, "https://www.espn.com");
+  conversation.addUserMessage(content, "https://www.espn.com");
 
   const sites = conversation.getSitesList();
 
@@ -386,12 +385,12 @@ add_task(function test_ChatConversation_getMostRecentPageVisited() {
   const conversation = new ChatConversation({});
 
   const content = "user to assistant msg";
-  conversation.addUserMessage(content, "https://www.mozilla.com", 0);
-  conversation.addUserMessage(content, "https://www.mozilla.com", 1);
-  conversation.addUserMessage(content, "https://www.firefox.com", 2);
-  conversation.addUserMessage(content, "https://www.cnn.com", 3);
-  conversation.addUserMessage(content, "https://www.espn.com", 4);
-  conversation.addUserMessage(content, "https://www.espn.com", 5);
+  conversation.addUserMessage(content, "https://www.mozilla.com");
+  conversation.addUserMessage(content, "https://www.mozilla.com");
+  conversation.addUserMessage(content, "https://www.firefox.com");
+  conversation.addUserMessage(content, "https://www.cnn.com");
+  conversation.addUserMessage(content, "https://www.espn.com");
+  conversation.addUserMessage(content, "https://www.espn.com");
 
   const mostRecentPageVisited = conversation.getMostRecentPageVisited();
 
@@ -402,9 +401,9 @@ add_task(function test_noBrowsing_ChatConversation_getMostRecentPageVisited() {
   const conversation = new ChatConversation({});
 
   const content = "user to assistant msg";
-  conversation.addUserMessage(content, "about:aiwindow", 0);
-  conversation.addUserMessage(content, "", 1);
-  conversation.addUserMessage(content, null, 2);
+  conversation.addUserMessage(content, "about:aiwindow");
+  conversation.addUserMessage(content, "");
+  conversation.addUserMessage(content, null);
 
   const mostRecentPageVisited = conversation.getMostRecentPageVisited();
 
@@ -416,12 +415,12 @@ add_task(function test_ChatConversation_renderState() {
 
   const content = "user to assistant msg";
 
-  conversation.addUserMessage(content, "about:aiwindow", 0);
-  conversation.addToolCallMessage("some content", 0);
-  conversation.addAssistantMessage("text", "a response", 0);
-  conversation.addUserMessage(content, "about:aiwindow", 1);
-  conversation.addSystemMessage("text", "some system message", 1);
-  conversation.addAssistantMessage("text", "a response", 1);
+  conversation.addUserMessage(content, "about:aiwindow");
+  conversation.addToolCallMessage("some content");
+  conversation.addAssistantMessage("text", "a response");
+  conversation.addUserMessage(content, "about:aiwindow");
+  conversation.addSystemMessage("text", "some system message");
+  conversation.addAssistantMessage("text", "a response");
 
   const renderState = conversation.renderState();
 
@@ -438,16 +437,67 @@ add_task(function test_ChatConversation_currentTurnIndex() {
 
   const content = "user to assistant msg";
 
-  conversation.addUserMessage(content, "about:aiwindow", 0);
-  conversation.addAssistantMessage("text", "a response", 0);
-  conversation.addUserMessage(content, "about:aiwindow", 2);
-  conversation.addAssistantMessage("text", "a response", 2);
-  conversation.addUserMessage(content, "about:aiwindow", 1);
-  conversation.addAssistantMessage("text", "a response", 1);
-  conversation.addUserMessage(content, "about:aiwindow", 4);
-  conversation.addAssistantMessage("text", "a response", 4);
-  conversation.addUserMessage(content, "about:aiwindow", 3);
-  conversation.addAssistantMessage("text", "a response", 3);
+  conversation.addSystemMessage("text", "the system prompt");
+  conversation.addUserMessage(content, "about:aiwindow");
+  conversation.addAssistantMessage("text", "a response");
+  conversation.addUserMessage(content, "about:aiwindow");
+  conversation.addAssistantMessage("text", "a response");
+  conversation.addUserMessage(content, "about:aiwindow");
+  conversation.addAssistantMessage("text", "a response");
+  conversation.addUserMessage(content, "about:aiwindow");
+  conversation.addAssistantMessage("text", "a response");
+  conversation.addUserMessage(content, "about:aiwindow");
+  conversation.addAssistantMessage("text", "a response");
 
   Assert.deepEqual(conversation.currentTurnIndex(), 4);
+});
+
+add_task(function test_ChatConversation_helpersTurnIndexing() {
+  const conversation = new ChatConversation({});
+
+  conversation.addSystemMessage("text", "the system prompt");
+  conversation.addUserMessage("a user's prompt", "https://www.somesite.com");
+  conversation.addToolCallMessage({ some: "tool call details" });
+  conversation.addAssistantMessage("text", "the llm response");
+  conversation.addUserMessage(
+    "a user's second prompt",
+    "https://www.somesite.com"
+  );
+  conversation.addToolCallMessage({ some: "more tool call details" });
+  conversation.addAssistantMessage("text", "the second llm response");
+
+  Assert.withSoftAssertions(function (soft) {
+    soft.equal(conversation.messages.length, 7);
+
+    soft.equal(conversation.messages[0].turnIndex, 0);
+    soft.equal(conversation.messages[1].turnIndex, 0);
+    soft.equal(conversation.messages[2].turnIndex, 0);
+    soft.equal(conversation.messages[3].turnIndex, 0);
+    soft.equal(conversation.messages[4].turnIndex, 1);
+    soft.equal(conversation.messages[5].turnIndex, 1);
+    soft.equal(conversation.messages[6].turnIndex, 1);
+  });
+});
+
+add_task(function test_ChatConversation_getMessagesInOpenAiFormat() {
+  const conversation = new ChatConversation({});
+  conversation.addSystemMessage("text", "the system prompt");
+  conversation.addUserMessage("a user's prompt", "https://www.somesite.com");
+  conversation.addToolCallMessage({ some: "tool call details" });
+  conversation.addAssistantMessage("text", "the llm response");
+  conversation.addUserMessage("a user's second prompt", "some question");
+  conversation.addToolCallMessage({ some: "more tool call details" });
+  conversation.addAssistantMessage("text", "the second llm response");
+
+  const openAiFormat = conversation.getMessagesInOpenAiFormat();
+
+  Assert.deepEqual(openAiFormat, [
+    { role: "system", content: "the system prompt" },
+    { role: "user", content: "a user's prompt" },
+    { role: "tool", content: { some: "tool call details" } },
+    { role: "assistant", content: "the llm response" },
+    { role: "user", content: "a user's second prompt" },
+    { role: "tool", content: { some: "more tool call details" } },
+    { role: "assistant", content: "the second llm response" },
+  ]);
 });

@@ -8,16 +8,24 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Chat: "moz-src:///browser/components/aiwindow/models/Chat.sys.mjs",
+  AIWindow:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
+  ChatConversation:
+    "moz-src:///browser/components/aiwindow/ui/modules/ChatConversation.sys.mjs",
+  MESSAGE_ROLE:
+    "moz-src:///browser/components/aiwindow/ui/modules//ChatEnums.sys.mjs",
+  AssistantRoleOpts:
+    "moz-src:///browser/components/aiwindow/ui/modules/ChatMessage.sys.mjs",
+  getRoleLabel:
+    "moz-src:///browser/components/aiwindow/ui/modules/ChatUtils.sys.mjs",
 });
 
-/**
- * State Management Strategy:
- *
- * - On initialization, this component will call `.renderState()` from ChatStore to hydrate the UI
- * - Currently using temporary local state (`this.conversationState`) that only tracks the current conversation turn
- * - When ChatStore is integrated, rely on it as the source of truth for full conversation history
- * - When calling Chat.sys.mjs to fetch responses, supplement the request with complete history from ChatStore
- */
+ChromeUtils.defineLazyGetter(lazy, "log", function () {
+  return console.createInstance({
+    prefix: "ChatStore",
+    maxLogLevelPref: "browser.aiwindow.chatStore.loglevel",
+  });
+});
 
 /**
  * A custom element for managing AI Window
@@ -25,14 +33,17 @@ ChromeUtils.defineESModuleGetters(lazy, {
 export class AIWindow extends MozLitElement {
   static properties = {
     userPrompt: { type: String },
-    conversationState: { type: Array },
   };
+
+  #browser;
+  #conversation;
 
   constructor() {
     super();
-    this._browser = null;
+
     this.userPrompt = "";
-    this.conversationState = [];
+    this.#browser = null;
+    this.#conversation = new lazy.ChatConversation({});
   }
 
   connectedCallback() {
@@ -54,21 +65,21 @@ export class AIWindow extends MozLitElement {
     const container = this.renderRoot.querySelector("#browser-container");
     container.appendChild(browser);
 
-    this._browser = browser;
+    this.#browser = browser;
   }
 
   /**
-   * Adds a new message to the conversation history.
+   * Persists the current conversation state to the database.
    *
-   * @param {object} chatEntry - A message object to add to the conversation
-   * @param {("system"|"user"|"assistant")} chatEntry.role - The role of the message sender
-   * @param {string} chatEntry.content - The text content of the message
+   * @private
    */
-
-  // TODO - can remove this method after ChatStore is integrated
-  #updateConversationState = chatEntry => {
-    this.conversationState = [...this.conversationState, chatEntry];
-  };
+  async #updateConversation() {
+    await lazy.AIWindow.chatStore
+      .updateConversation(this.#conversation)
+      .catch(updateError => {
+        lazy.log.error(`Error updating conversation: ${updateError.message}`);
+      });
+  }
 
   /**
    * Fetches an AI response based on the current user prompt.
@@ -85,39 +96,39 @@ export class AIWindow extends MozLitElement {
     }
 
     // Handle User Prompt
-    await this.#dispatchMessageToChatContent({
-      role: "user",
-      content: this.userPrompt,
+    this.#dispatchMessageToChatContent({
+      role: lazy.MESSAGE_ROLE.USER,
+      content: {
+        body: this.userPrompt,
+      },
     });
 
-    // TODO - can remove this call after ChatStore is integrated
-    this.#updateConversationState({ role: "user", content: formattedPrompt });
-    this.userPrompt = "";
-
-    // Create an empty assistant placeholder.
-    // TODO - can remove this call after ChatStore is integrated
-    this.#updateConversationState({ role: "assistant", content: "" });
-    const latestAssistantMessageIndex = this.conversationState.length - 1;
-
-    let acc = "";
+    const nextTurnIndex = this.#conversation.currentTurnIndex() + 1;
     try {
-      // TODO - replace with ChatStore integration IE pass chatstore.getConversationState(this.userPrompt)
-      const stream = lazy.Chat.fetchWithHistory(this.conversationState);
+      const stream = lazy.Chat.fetchWithHistory(
+        await this.#conversation.generatePrompt(this.userPrompt)
+      );
+      this.#updateConversation();
+
+      this.userPrompt = "";
+
+      // @todo
+      // fill out these assistant message flags
+      const assistantRoleOpts = new lazy.AssistantRoleOpts();
+      this.#conversation.addAssistantMessage(
+        "text",
+        "",
+        nextTurnIndex,
+        assistantRoleOpts
+      );
+
       for await (const chunk of stream) {
-        acc += chunk;
+        const currentMessage = this.#conversation.messages.at(-1);
+        currentMessage.content.body += chunk;
 
-        // TODO - can remove this after ChatStore is integrated
-        this.conversationState[latestAssistantMessageIndex] = {
-          ...this.conversationState[latestAssistantMessageIndex],
-          content: acc,
-        };
+        this.#updateConversation();
+        this.#dispatchMessageToChatContent(currentMessage);
 
-        // TODO - can pass chatstore.getLastturnIndex() instead of latestAssistantMessageIndex after ChatStore is integrated
-        await this.#dispatchMessageToChatContent({
-          role: "assistant",
-          content: acc,
-          latestAssistantMessageIndex,
-        });
         this.requestUpdate?.();
       }
     } catch (e) {
@@ -133,23 +144,23 @@ export class AIWindow extends MozLitElement {
    * @private
    */
 
-  async #getAIChatContentActor() {
-    if (!this._browser) {
-      console.warn("AI browser not set, cannot get AIChatContent actor");
+  #getAIChatContentActor() {
+    if (!this.#browser) {
+      lazy.log.warn("AI browser not set, cannot get AIChatContent actor");
       return null;
     }
 
-    const windowGlobal = this._browser.browsingContext?.currentWindowGlobal;
+    const windowGlobal = this.#browser.browsingContext?.currentWindowGlobal;
 
     if (!windowGlobal) {
-      console.warn("No window global found for AI browser");
+      lazy.log.warn("No window global found for AI browser");
       return null;
     }
 
     try {
       return windowGlobal.getActor("AIChatContent");
     } catch (error) {
-      console.error("Failed to get AIChatContent actor:", error);
+      lazy.log.error("Failed to get AIChatContent actor:", error);
       return null;
     }
   }
@@ -157,13 +168,19 @@ export class AIWindow extends MozLitElement {
   /**
    * Dispatches a message to the AIChatContent actor.
    *
-   * @param {object} message - message to dispatch to chat content actor
+   * @param {ChatMessage} message - message to dispatch to chat content actor
    * @returns
    */
 
-  async #dispatchMessageToChatContent(message) {
-    const actor = await this.#getAIChatContentActor();
-    return await actor.dispatchMessageToChatContent(message);
+  #dispatchMessageToChatContent(message) {
+    const actor = this.#getAIChatContentActor();
+
+    if (typeof message.role !== "string") {
+      const roleLabel = lazy.getRoleLabel(message.role).toLowerCase();
+      message.role = roleLabel;
+    }
+
+    return actor.dispatchMessageToChatContent(message);
   }
 
   /**
