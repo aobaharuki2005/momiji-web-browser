@@ -265,7 +265,7 @@
                 <menuitem id="recentChatsHeader" class="recent-chats-header"
                           data-l10n-id="menu-history-chats-recent"
                           disabled="true" hidden="true"/>
-                # Chat history menu items are added dynamically in browser-menubar.js
+                <!-- Chat history menu items -->
 
                 <menuseparator id="startHistorySeparator"
                                class="hide-if-empty-places-result"/>
