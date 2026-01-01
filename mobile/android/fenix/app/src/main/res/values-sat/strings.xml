@@ -663,6 +663,45 @@
   <string name="nova_onboarding_set_to_default_button" tools:ignore="UnusedResources">ᱢᱩᱞ ᱵᱽᱨᱟᱣᱩᱡᱟᱹᱨ ᱞᱮᱠᱷᱟ ᱥᱟᱡᱟᱣ ᱢᱮ</string>
   <!-- Toolbar selection onboarding title. -->
   <string name="nova_onboarding_toolbar_selection_title" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱴᱷᱤᱠᱟᱹᱱᱟ ᱵᱟᱨ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+  <!-- Toolbar selection onboarding "top" option label. -->
+  <string name="nova_onboarding_toolbar_selection_top_label" tools:ignore="UnusedResources">ᱪᱮᱛᱟᱱ</string>
+  <!-- Toolbar selection onboarding "bottom" option label. -->
+  <string name="nova_onboarding_toolbar_selection_bottom_label" tools:ignore="UnusedResources">ᱞᱟᱛᱟᱨ</string>
+  <!-- Theme selection onboarding title. -->
+  <string name="nova_onboarding_theme_selection_title" tools:ignore="UnusedResources">ᱟᱢᱟᱜ ᱛᱷᱤᱢ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+  <!-- Theme selection onboarding "automatic" option label. -->
+  <string name="nova_onboarding_theme_selection_automatic_label" tools:ignore="UnusedResources">ᱟᱡ ᱛᱮ</string>
+  <!-- Theme selection onboarding "light" option label. -->
+  <string name="nova_onboarding_theme_selection_light_label" tools:ignore="UnusedResources">ᱢᱟᱨᱥᱟᱞ</string>
+  <!-- Theme selection onboarding "dark" option label. -->
+  <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">ᱧᱩᱛ</string>
+  <!-- Sync onboarding title. -->
+  <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">ᱞᱚᱜᱚᱱ ᱪᱟᱞᱟᱜ ᱢᱮ ᱡᱟᱦᱟᱸ ᱨᱮ ᱢᱟᱲᱟᱝ ᱛᱟᱦᱮᱸ ᱠᱟᱱᱟᱢ</string>
+  <!-- Sync onboarding subtitle. -->
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">ᱢᱤᱫ ᱥᱱᱮᱯ ᱨᱮ ᱡᱟᱦᱟᱱ ᱥᱟᱫᱷᱚᱱ ᱨᱮ ᱵᱩᱠᱢᱟᱨᱠ, ᱯᱟᱥᱣᱟᱨᱰ ᱟᱨ ᱟᱭᱢᱟ ᱥᱟᱵ ᱢᱮ ᱾ ᱟᱢᱟᱜ ᱯᱚᱨᱥᱚᱱᱟᱞ ᱰᱟᱴᱟ ᱮᱱᱠᱨᱤᱯᱥᱚᱱ ᱥᱟᱶ ᱨᱚᱯᱟ ᱟᱨ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱛᱟᱦᱮᱱᱟ ᱾</string>
+  <!-- Sync onboarding button. -->
+  <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">ᱥᱤᱱᱠᱤᱝ ᱮᱦᱚᱵ ᱢᱮ</string>
+  <!-- Marketing onboarding title. -->
+  <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">ᱟᱞᱮ ᱵᱮᱥ ᱤᱱᱴᱟᱨᱱᱮᱴ ᱵᱮᱱᱟᱣ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱞᱮᱢ</string>
+  <!--
+    Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
+  -->
+  <string name="nova_onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">ᱟᱢ ᱪᱮᱫ ᱞᱮᱠᱟ Firefox ᱮᱢ ᱧᱟᱢ ᱠᱮᱫᱟ, ᱟᱨ ᱚᱱᱟ ᱮᱢ ᱵᱮᱵᱷᱟᱨ ᱮᱫᱟ, Mozilla ᱨᱮᱱ ᱢᱟᱨᱠᱮᱴᱤᱝ ᱵᱷᱟᱜᱫᱟᱨ ᱠᱚ ᱥᱟᱶ ᱦᱟᱹᱴᱤᱧ ᱢᱮ ᱾ ᱱᱚᱶᱟ ᱰᱟᱴᱟ ᱫᱚ ᱛᱤᱥ ᱦᱚᱸ ᱵᱟᱝ ᱟᱠᱷᱨᱤᱧ ᱟᱠᱟᱱᱟ ᱾%1$s</string>
+  <!-- Marketing onboarding body link text. -->
+  <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">ᱟᱵᱚ ᱰᱟᱴᱟ ᱪᱮᱫ ᱞᱮᱠᱟ ᱵᱚᱱ ᱵᱮᱵᱷᱟᱨᱮᱫᱟ</string>
+  <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Firefox ᱮᱛᱞᱟᱤᱭᱟᱹ ᱥᱟᱞᱟᱜ ᱟᱢ ᱴᱷᱤᱠ ᱨᱮ ᱫᱚᱦᱚᱢᱮ ᱞᱟᱹᱜᱤᱫ ᱜᱚᱲᱚ ᱮᱢᱚᱜᱼᱟᱭ</string>
+  <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">Firefox ᱨᱮ ᱱᱟᱶᱟ ᱯᱨᱟᱭᱣᱮᱥᱤ ᱯᱷᱤᱪᱟᱨ ᱠᱚ ᱯᱟᱱᱛᱮ ᱢᱮ ᱡᱮᱢᱚᱱ ᱟᱢ ᱥᱟᱨᱟ ᱜᱷᱟᱹᱲᱤᱡ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱛᱟᱦᱮᱱ ᱞᱟᱹᱜᱤᱫ ᱱᱟᱦᱟᱜ ᱛᱮ ᱛᱟᱦᱮᱱ ᱢᱮ᱾</string>
+  <!-- Notifications onboarding button. -->
+  <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">ᱠᱷᱚᱵᱚᱨ ᱠᱚ ᱦᱮᱡ ᱪᱷᱚᱭ ᱢᱮ</string>
+  <!-- "Add search widget" onboarding title. -->
+  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">ᱥᱟᱱᱟᱢ ᱥᱮᱸᱫᱽᱨᱟ ᱟᱨᱦᱚᱸ ᱯᱨᱟᱭᱣᱮᱴ ᱢᱮ</string>
+  <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">ᱟᱢᱟᱜ ᱯᱷᱚᱱ ᱨᱮᱭᱟᱜ ᱦᱚᱢ ᱥᱠᱨᱤᱱ ᱠᱷᱚᱱ ᱥᱟᱱᱟᱢ ᱥᱮᱸᱫᱽᱨᱟ ᱮᱦᱚᱵ ᱢᱮ ᱟᱨ ᱵᱟᱲᱟᱭ ᱢᱮ Firefox ᱨᱮᱭᱟᱜ ᱟᱡ ᱛᱮ ᱨᱩᱠᱷᱤᱭᱟᱹ ᱟᱢᱟᱜ ᱫᱮᱭᱟ ᱨᱮ ᱢᱮᱱᱟᱜᱼᱟ ᱾</string>
+  <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Firefox ᱣᱤᱡᱮᱴ ᱥᱮᱞᱮᱫ ᱢᱮ</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
 
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
@@ -1552,6 +1591,10 @@
   <string name="remove_tab_from_collection">ᱴᱮᱵᱽ ᱛᱩᱢᱟᱹᱞ ᱠᱷᱚᱱ ᱚᱪᱚᱜ ᱢᱮ</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
   <string name="tabs_tray_select_tabs">ᱴᱮᱵᱽ ᱠᱚ ᱵᱟᱪᱷᱟᱣ ᱢᱮ</string>
+  <!-- Text for tab manager search page when there are no results. -->
+  <string name="tab_manager_no_search_results">ᱪᱮᱫ ᱢᱮᱲᱟᱣ ᱵᱟᱭ ᱧᱟᱢ ᱞᱮᱱᱟ ᱾</string>
+  <!-- Additional text for tab manager search page when there are no results. -->
+  <string name="tab_manager_no_search_results_additional_text">ᱮᱴᱟᱜ ᱥᱮᱸᱫᱽᱨᱟ ᱪᱮᱥᱴᱟᱭ ᱢᱮ!</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
   <string name="close_tab">ᱴᱮᱵᱽ ᱵᱚᱸᱫᱚᱭ ᱢᱮ</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. %s is the tab title -->
@@ -3987,6 +4030,20 @@
   <string name="terms_of_use_prompt_postpone">ᱛᱟᱭᱚᱢ ᱛᱮ ᱵᱟᱛᱟᱣ ᱤᱧ ᱢᱮ</string>
   <!-- ==== Experiment strings. ==== -->
 
+  <!-- A title for the popup prompt. -->
+  <string name="terms_of_use_prompt_title_option_a" tools:ignore="UnusedResources">ᱵᱮᱵᱷᱟᱨ ᱨᱮᱭᱟᱜ ᱥᱚᱨᱛᱚ</string>
+  <!--
+    A title for the popup prompt.
+    %1$s is the product name "Firefox"
+  -->
+  <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">%1$s ᱠᱷᱚᱱ ᱢᱤᱫ ᱱᱚᱴ</string>
+  <!--
+    Copy for the Terms of Use popup prompt body line two.
+    %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
+  -->
+  <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">ᱟᱢ ᱵᱟᱹᱲᱛᱤ ᱪᱮᱫ ᱫᱟᱲᱮᱭᱟᱜᱼᱟᱢ %1$s᱾</string>
+  <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
+  <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">ᱱᱚᱰᱮ</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
   <!--

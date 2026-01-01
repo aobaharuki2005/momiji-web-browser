@@ -630,6 +630,10 @@
   <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">Pokračovat</string>
   <!-- "Not now" onboarding button. -->
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Teď ne</string>
+  <!-- Terms of use (ToU) onboarding title. -->
+  <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Připravte se na volnost</string>
+  <!-- Terms of use (ToU) onboarding subtitle. -->
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Rychlý, bezpečný a nikdy vás neprozradí.\nProhlížení se právě stalo lepším.</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
@@ -673,6 +677,8 @@
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">Tmavý</string>
   <!-- Sync onboarding title. -->
   <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">Okamžitě pokračujte tam, kde jste skončili</string>
+  <!-- Sync onboarding subtitle. -->
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Získejte záložky, hesla a další údaje na libovolném zařízení během okamžiku. Vaše osobní údaje zůstanou v bezpečí díky šifrování.</string>
   <!-- Sync onboarding button. -->
   <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Spustit synchronizaci</string>
   <!-- Marketing onboarding title. -->
@@ -692,6 +698,8 @@
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Zapnout oznámení</string>
   <!-- "Add search widget" onboarding title. -->
   <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Zvyšte soukromí každého vyhledávání</string>
+  <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">Každé vyhledávání můžete začít z domovské obrazovky telefonu a vědět, že vám automatická ochrana Firefoxu kryje záda.</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Přidat miniaplikaci Firefox</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
@@ -1611,6 +1619,8 @@
   <string name="delete_from_history">Vymazat z historie</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (anonymní režim)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">Otevřít vyhledávání v panelech</string>
   <!--
     History
 
@@ -4027,10 +4037,23 @@
     %1$s is the product name "Firefox"
   -->
   <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">Poznámka z aplikace %1$s</string>
+  <!--
+    Copy for the Terms of Use popup prompt body line two.
+    %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
+  -->
+  <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">Více se můžete dozvědět %1$s.</string>
   <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
   <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">zde</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">Aktualizovali jsme náš dokument %1$s, aby reflektoval nejnovější funkce ve Firefoxu. %2$s</string>
   <!-- The first active link used in privacy_notice_updated_homepage_message -->
   <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">Zásady ochrany osobních údajů</string>
   <!-- The second active link used in privacy_notice_updated_homepage_message -->
