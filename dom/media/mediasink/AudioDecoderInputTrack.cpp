@@ -597,7 +597,7 @@ void AudioDecoderInputTrack::NotifyInTheEndOfProcessInput(
   LOG("Notify, fill=%" PRId64 ", total written=%" PRId64 ", ended=%d",
       aFillDuration, mWrittenFrames, Ended());
   if (aFillDuration > 0) {
-    mOnOutput.Notify(mWrittenFrames, TimeStamp::Now(), AwakeTimeStamp::Now());
+    mOnOutput.Notify(mWrittenFrames);
   }
   if (Ended()) {
     mOnEnd.Notify();
