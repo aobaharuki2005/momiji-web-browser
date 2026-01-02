@@ -4033,6 +4033,14 @@
   <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">ਇੱਥੇ</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
+  <!--
+    Privacy notice homepage banner
+
+    A message we show the user on the homepage when there is a new version of the privacy notice. 'Firefox' is intentionally hardcoded.
+    %1$s is replaced by an active link using privacy_notice_updated_homepage_message_privacy_notice as text (Privacy Notice)
+    %2$s is replaced by an active link using privacy_notice_updated_homepage_message_learn_more as text (Learn more)
+  -->
+  <string name="privacy_notice_updated_homepage_message" tools:ignore="BrandUsage,UnusedResources">ਅਸੀਂ Firefox ਵਿੱਚ ਨਵੇਂ ਫ਼ੀਚਰਾਂ ਮੁਤਾਬਕ ਆਪਣੀ %1$s ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ ਹੈ। %2$s</string>
   <!-- The first active link used in privacy_notice_updated_homepage_message -->
   <string name="privacy_notice_updated_homepage_message_privacy_notice" tools:ignore="UnusedResources">ਪਰਦੇਦਾਰੀ ਸੂਚਨਾ</string>
   <!-- The second active link used in privacy_notice_updated_homepage_message -->

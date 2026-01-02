@@ -92,7 +92,7 @@
     Description of private browsing mode displayed to users on the homepage when they enable private mode.
     %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="felt_privacy_info_card_subtitle_3">സ്വകാര്യ ടാബു് അടക്കുമ്പോൾ %1$s താങ്ങളുടെ കുക്കീകളും നാൾവഴിയും %1$s മായ്ക്കും.</string>
+  <string name="felt_privacy_info_card_subtitle_3">സ്വകാര്യ ടാബു് അടക്കുമ്പോൾ %1$s താങ്ങളുടെ കുക്കീകളും നാൾവഴിയും എന്നിവ മായ്ക്കും.</string>
   <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
