@@ -4314,8 +4314,7 @@ nsCSSFrameConstructor::FindDisplayData(const nsStyleDisplay& aDisplay,
       return MOZ_UNLIKELY(propagatedScrollToViewport) ? &nonScrollableData
                                                       : &data;
     }
-    case StyleDisplayInside::Grid:
-    case StyleDisplayInside::GridLanes: {
+    case StyleDisplayInside::Grid: {
       static constexpr FrameConstructionData nonScrollableData(
           ToCreationFunc(NS_NewGridContainerFrame));
       static constexpr FrameConstructionData data(

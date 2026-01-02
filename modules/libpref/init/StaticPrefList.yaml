@@ -10273,19 +10273,6 @@
   mirror: always
   rust: true
 
-# Enable the new css-grid-3 specification of grid-lanes. Always disabled for
-# Thunderbird, because it is using an older syntax.
-# https://drafts.csswg.org/css-grid-3/
-- name: layout.css.display-grid-lanes.enabled
-  type: RelaxedAtomicBool
-#if defined(MOZ_THUNDERBIRD)
-  value: false
-#else
-  value: @IS_NIGHTLY_BUILD@
-#endif
-  mirror: always
-  rust: true
-
 # Is support for :heading and :heading() pseudo classes enabled?
 - name: layout.css.heading-selector.enabled
   type: RelaxedAtomicBool
