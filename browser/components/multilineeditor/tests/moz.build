@@ -5,6 +5,4 @@
 with Files("**"):
     BUG_COMPONENT = ("Firefox", "Address Bar")
 
-JAR_MANIFESTS += ["jar.mn"]
-
-TEST_DIRS += ["tests"]
+MOCHITEST_CHROME_MANIFESTS += ["chrome/chrome.toml"]
