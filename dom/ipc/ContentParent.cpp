@@ -7989,6 +7989,32 @@ mozilla::ipc::IPCResult ContentParent::RecvSetContainerFeaturePolicy(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvUpdateAncestorOriginsList(
+    const MaybeDiscardedBrowsingContext& aContext) {
+  if (!aContext.IsNullOrDiscarded()) {
+    auto* canonical = aContext.get_canonical();
+    if (WindowGlobalParent* windowGlobal =
+            canonical->GetCurrentWindowGlobal()) {
+      canonical->CreateRedactedAncestorOriginsList(
+          windowGlobal->DocumentPrincipal(),
+          canonical->GetEmbedderFrameReferrerPolicy());
+    }
+  }
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult ContentParent::RecvSetReferrerPolicyForEmbedderFrame(
+    const MaybeDiscardedBrowsingContext& aContext,
+    const ReferrerPolicy& aPolicy) {
+  if (!aContext.IsNullOrDiscarded()) {
+    auto* canonical = aContext.get_canonical();
+    canonical->SetEmbedderFrameReferrerPolicy(aPolicy);
+  }
+
+  return IPC_OK();
+}
+
 NS_IMETHODIMP ContentParent::GetCanSend(bool* aCanSend) {
   *aCanSend = CanSend();
   return NS_OK;

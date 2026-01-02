@@ -8,6 +8,7 @@
 #define mozilla_LoadInfo_h
 
 #include "mozilla/dom/FeaturePolicy.h"
+#include "mozilla/dom/ReferrerPolicyBinding.h"
 #include "mozilla/dom/UserNavigationInvolvement.h"
 #include "nsIInterceptionInfo.h"
 #include "nsILoadInfo.h"
@@ -351,6 +352,9 @@ class LoadInfo final : public nsILoadInfo {
   void SetBrowserWouldUpgradeInsecureRequests();
   void SetIsFromProcessingFrameAttributes();
 
+  dom::ReferrerPolicy GetFrameReferrerPolicySnapshot() const;
+  void SetFrameReferrerPolicySnapshot(dom::ReferrerPolicy aPolicy);
+
   // Hands off from the cspToInherit functionality!
   //
   // For navigations, GetCSPToInherit returns what the spec calls the
@@ -502,6 +506,8 @@ class LoadInfo final : public nsILoadInfo {
   nsWeakPtr mContextForTopLevelLoad;
   nsSecurityFlags mSecurityFlags;
   uint32_t mSandboxFlags;
+  dom::ReferrerPolicy mFrameReferrerPolicySnapshot =
+      dom::ReferrerPolicy::_empty;
   nsContentPolicyType mInternalContentPolicyType;
   LoadTainting mTainting = LoadTainting::Basic;
 
