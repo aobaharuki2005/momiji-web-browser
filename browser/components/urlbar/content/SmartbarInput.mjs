@@ -12,6 +12,7 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 /**
  * @import {UrlbarSearchOneOffs} from "moz-src:///browser/components/urlbar/UrlbarSearchOneOffs.sys.mjs"
+ * @import {SmartbarInputController} from "chrome://browser/content/urlbar/SmartbarInputController.mjs"
  */
 
 const lazy = XPCOMUtils.declareLazy({
@@ -31,6 +32,8 @@ const lazy = XPCOMUtils.declareLazy({
     "moz-src:///browser/components/urlbar/SearchModeSwitcher.sys.mjs",
   SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
   SearchUtils: "moz-src:///toolkit/components/search/SearchUtils.sys.mjs",
+  SmartbarInputController:
+    "chrome://browser/content/urlbar/SmartbarInputController.mjs",
   UrlbarController:
     "moz-src:///browser/components/urlbar/UrlbarController.sys.mjs",
   UrlbarEventBufferer:
@@ -65,7 +68,11 @@ const lazy = XPCOMUtils.declareLazy({
     pref: "privacy.query_stripping.strip_on_share.enabled",
     default: false,
   },
-  logger: () => lazy.UrlbarUtils.getLogger({ prefix: "Input" }),
+  createEditor: () =>
+    ChromeUtils.importESModule(
+      "chrome://browser/content/urlbar/SmartbarInputUtils.mjs"
+    ).createEditor,
+  logger: () => lazy.UrlbarUtils.getLogger({ prefix: "SmartbarInput" }),
 });
 
 const UNLIMITED_MAX_RESULTS = 99;
@@ -77,7 +84,7 @@ let px = number => number.toFixed(2) + "px";
 /**
  * Implements the text input part of the address bar UI.
  */
-export class UrlbarInput extends HTMLElement {
+export class SmartbarInput extends HTMLElement {
   static get #markup() {
     return `
       <hbox class="urlbar-background"/>
@@ -156,23 +163,21 @@ export class UrlbarInput extends HTMLElement {
       </vbox>`;
   }
 
-  /** @type {DocumentFragment} */
-  static get fragment() {
-    if (!UrlbarInput.#fragment) {
-      UrlbarInput.#fragment = window.MozXULElement.parseXULToFragment(
-        UrlbarInput.#markup
-      );
-    }
-    // @ts-ignore
-    return document.importNode(UrlbarInput.#fragment, true);
-  }
-
   /**
    * @type {DocumentFragment=}
    *
    * The cached fragment.
    */
   static #fragment;
+
+  /** @type {DocumentFragment} */
+  static get fragment() {
+    if (!this.#fragment) {
+      this.#fragment = window.MozXULElement.parseXULToFragment(this.#markup);
+    }
+    // @ts-ignore
+    return document.importNode(this.#fragment, true);
+  }
 
   static #inputFieldEvents = [
     "compositionstart",
@@ -200,7 +205,19 @@ export class UrlbarInput extends HTMLElement {
   #gBrowserListenersAdded = false;
   #breakoutBlockerCount = 0;
   #isAddressbar = false;
+  /**
+   * `True` if this instance is in `smartbar` mode.
+   *
+   * Smartbar mode is enabled by adding the attribute `sap-name="smartbar"`.
+   * Both `#isSmartbarMode` and `#isAddressbar` are `false` if `sap-name` is neither
+   * `smartbar` nor `urlbar`.
+   */
+  #isSmartbarMode = false;
   #sapName = "";
+  /** @type {object | null} */
+  #smartbarEditor = null;
+  /** @type {SmartbarEditorController | null} */
+  #smartbarEditorController = null;
   _userTypedValue = "";
   _actionOverrideKeyCount = 0;
   _lastValidURLStr = "";
@@ -277,6 +294,7 @@ export class UrlbarInput extends HTMLElement {
   #initOnce() {
     this.#sapName = this.getAttribute("sap-name");
     this.#isAddressbar = this.#sapName == "urlbar";
+    this.#isSmartbarMode = this.#sapName == "smartbar";
 
     // This listener must be added before connecting the fragment
     // because the event could fire while or after connecting it.
@@ -285,7 +303,7 @@ export class UrlbarInput extends HTMLElement {
       this.#onContextMenuRebuilt.bind(this)
     );
 
-    this.appendChild(UrlbarInput.fragment);
+    this.appendChild(SmartbarInput.fragment);
 
     // Make sure all children have been parsed before calling #populateSlots.
     if (document.readyState === "loading") {
@@ -302,6 +320,9 @@ export class UrlbarInput extends HTMLElement {
     this.inputField = /** @type {HTMLInputElement} */ (
       this.querySelector(".urlbar-input")
     );
+    if (this.#isSmartbarMode) {
+      this.#ensureSmartbarEditor();
+    }
     this._inputContainer = this.querySelector(".urlbar-input-container");
 
     this.controller = new lazy.UrlbarController({ input: this });
@@ -373,7 +394,7 @@ export class UrlbarInput extends HTMLElement {
 
     this._initCopyCutController();
 
-    for (let event of UrlbarInput.#inputFieldEvents) {
+    for (let event of SmartbarInput.#inputFieldEvents) {
       this.inputField.addEventListener(event, this);
     }
 
@@ -460,7 +481,7 @@ export class UrlbarInput extends HTMLElement {
       delete this._copyCutController;
     }
 
-    for (let event of UrlbarInput.#inputFieldEvents) {
+    for (let event of SmartbarInput.#inputFieldEvents) {
       this.inputField.removeEventListener(event, this);
     }
 
@@ -515,12 +536,33 @@ export class UrlbarInput extends HTMLElement {
   }
 
   addGBrowserListeners() {
+    // The following listeners are only used for the address bar.
+    if (!this.#isAddressbar) {
+      return;
+    }
     if (this.window.gBrowser && !this.#gBrowserListenersAdded) {
       this.window.gBrowser.tabContainer.addEventListener("TabSelect", this);
       this.window.gBrowser.tabContainer.addEventListener("TabClose", this);
       this.window.gBrowser.addTabsProgressListener(this);
       this.#gBrowserListenersAdded = true;
     }
+  }
+
+  #initSmartbarEditor() {
+    const adapter = lazy.createEditor(this.inputField);
+    if (!adapter) {
+      return;
+    }
+    this.#smartbarEditorController = new lazy.SmartbarInputController(adapter);
+    this.inputField = adapter.input;
+    this.#smartbarEditor = adapter.editor;
+  }
+
+  #ensureSmartbarEditor() {
+    if (!this.#smartbarEditorController) {
+      this.#initSmartbarEditor();
+    }
+    return this.#smartbarEditor;
   }
 
   #lazy = XPCOMUtils.declareLazy({
@@ -536,7 +578,7 @@ export class UrlbarInput extends HTMLElement {
   }
 
   /**
-   * The search access point name of the UrlbarInput for use with telemetry or
+   * The search access point name of the SmartbarInput for use with telemetry or
    * logging, e.g. `urlbar`, `searchbar`.
    */
   get sapName() {
@@ -707,7 +749,7 @@ export class UrlbarInput extends HTMLElement {
   } = {}) {
     if (!this.#isAddressbar) {
       throw new Error(
-        "Cannot set URI for UrlbarInput that is not an address bar"
+        "Cannot set URI for SmartbarInput that is not an address bar"
       );
     }
     // We only need to update the searchModeUI on tab switch conditionally
@@ -950,10 +992,10 @@ export class UrlbarInput extends HTMLElement {
       try {
         this[methodName](event);
       } catch (e) {
-        console.error(`Error calling UrlbarInput::${methodName}:`, e);
+        console.error(`Error calling SmartbarInput::${methodName}:`, e);
       }
     } else {
-      throw new Error("Unrecognized UrlbarInput event: " + event.type);
+      throw new Error("Unrecognized SmartbarInput event: " + event.type);
     }
   }
 
@@ -1017,6 +1059,20 @@ export class UrlbarInput extends HTMLElement {
    *   The principal that the action was triggered from.
    */
   handleNavigation({ event, oneOffParams, triggeringPrincipal }) {
+    if (this.#isSmartbarMode) {
+      const committedValue = this.untrimmedValue;
+      lazy.logger.debug(`commit: ${committedValue}`);
+      this.#clearSmartbarInput();
+      this.dispatchEvent(
+        new CustomEvent("smartbar-commit", {
+          detail: { value: committedValue, event },
+        })
+      );
+      if (!this.window.gBrowser) {
+        return;
+      }
+      // Fall through to default navigation behaviour.
+    }
     let element = this.view.selectedElement;
     let result = this.view.getResultFromElement(element);
     let openParams = oneOffParams?.openParams || { triggeringPrincipal };
@@ -1259,6 +1315,9 @@ export class UrlbarInput extends HTMLElement {
   }
 
   maybeHandleRevertFromPopup(anchorElement) {
+    if (!this.#isAddressbar) {
+      return;
+    }
     let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
     if (anchorElement?.closest("#urlbar") && state.persist?.shouldPersist) {
       this.handleRevert();
@@ -1768,6 +1827,15 @@ export class UrlbarInput extends HTMLElement {
     );
   }
 
+  #clearSmartbarInput() {
+    this.value = "";
+    this.userTypedValue = "";
+    this._lastSearchString = "";
+    this._autofillPlaceholder = null;
+    this._resultForCurrentValue = null;
+    this.setSelectionRange(0, 0);
+  }
+
   /**
    * Called by the view when moving through results with the keyboard, and when
    * picking a result.  This sets the input value to the value of the result and
@@ -2262,7 +2330,6 @@ export class UrlbarInput extends HTMLElement {
    *
    * @param {MozBrowser} browser
    *   The search mode for this browser will be returned.
-   *   Pass the selected browser for the searchbar.
    * @param {boolean} [confirmedOnly]
    *   Normally, if the browser has both preview and confirmed modes, preview
    *   mode will be returned since it takes precedence.  If this argument is
@@ -2310,6 +2377,9 @@ export class UrlbarInput extends HTMLElement {
    *   Pass the selected browser for the searchbar.
    */
   async setSearchMode(searchMode, browser) {
+    if (this.#isSmartbarMode) {
+      return;
+    }
     let currentSearchMode = this.getSearchMode(browser);
     let areSearchModesSame =
       (!currentSearchMode && !searchMode) ||
@@ -2447,9 +2517,11 @@ export class UrlbarInput extends HTMLElement {
    * Restores the current browser search mode from a previously stored state.
    */
   restoreSearchModeState() {
-    this.searchMode = this.#getSearchModesObject(
-      this.window.gBrowser.selectedBrowser
-    ).confirmed;
+    if (this.#isSmartbarMode) {
+      return;
+    }
+    let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
+    this.searchMode = state.searchModes?.confirmed;
   }
 
   /**
@@ -2489,6 +2561,9 @@ export class UrlbarInput extends HTMLElement {
   // Getters and Setters below.
 
   get editor() {
+    if (this.#isSmartbarMode) {
+      return this.#ensureSmartbarEditor();
+    }
     return this.inputField.editor;
   }
 
@@ -2531,6 +2606,9 @@ export class UrlbarInput extends HTMLElement {
   }
 
   get searchMode() {
+    if (this.#isSmartbarMode) {
+      return null;
+    }
     if (!this.window.gBrowser) {
       // This only happens before DOMContentLoaded.
       return null;
@@ -2539,6 +2617,9 @@ export class UrlbarInput extends HTMLElement {
   }
 
   set searchMode(searchMode) {
+    if (this.#isSmartbarMode) {
+      return;
+    }
     this.setSearchMode(searchMode, this.window.gBrowser.selectedBrowser);
     this.searchModeSwitcher?.onSearchModeChanged();
     lazy.UrlbarSearchTermsPersistence.onSearchModeChanged(this.window);
@@ -2634,6 +2715,9 @@ export class UrlbarInput extends HTMLElement {
     updatePopupNotifications,
     forceUnifiedSearchButtonAvailable = false
   ) {
+    if (!this.#isAddressbar) {
+      return;
+    }
     let prevState = this.getAttribute("pageproxystate");
 
     this.setAttribute("pageproxystate", state);
@@ -3607,6 +3691,10 @@ export class UrlbarInput extends HTMLElement {
     // beginning.  Do not allow it to be trimmed.
     this._setValue(value, { untrimmedValue });
     this.inputField.setSelectionRange(selectionStart, selectionEnd);
+    // Ensure selection state is cached for contenteditable and events fire.
+    this.inputField.dispatchEvent(
+      new Event("selectionchange", { bubbles: true, cancelable: false })
+    );
     this._autofillPlaceholder = {
       value,
       type,
@@ -3916,6 +4004,10 @@ export class UrlbarInput extends HTMLElement {
   }
 
   _initCopyCutController() {
+    // Clipboard handling is managed by the multiline editor in smartbar mode.
+    if (this.#isSmartbarMode) {
+      return;
+    }
     if (this._copyCutController) {
       return;
     }
@@ -4366,6 +4458,9 @@ export class UrlbarInput extends HTMLElement {
     isSameDocument,
     uri,
   }) {
+    if (!this.#isAddressbar) {
+      return false;
+    }
     if (!lazy.UrlbarPrefs.isPersistedSearchTermsEnabled()) {
       if (state.persist) {
         this.removeAttribute("persistsearchterms");
@@ -4516,6 +4611,9 @@ export class UrlbarInput extends HTMLElement {
    * @param {boolean} available If true Unified Search Button will be available.
    */
   setUnifiedSearchButtonAvailability(available) {
+    if (this.#isSmartbarMode) {
+      return;
+    }
     this.toggleAttribute("unifiedsearchbutton-available", available);
     this.getBrowserState(
       this.window.gBrowser.selectedBrowser
@@ -4940,19 +5038,21 @@ export class UrlbarInput extends HTMLElement {
       this.setPageProxyState("invalid", true);
     }
 
-    let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
-    if (
-      state.persist?.shouldPersist &&
-      this.value !== state.persist.searchTerms
-    ) {
-      state.persist.shouldPersist = false;
-      this.removeAttribute("persistsearchterms");
+    if (this.#isAddressbar) {
+      let state = this.getBrowserState(this.window.gBrowser.selectedBrowser);
+      if (
+        state.persist?.shouldPersist &&
+        this.value !== state.persist.searchTerms
+      ) {
+        state.persist.shouldPersist = false;
+        this.removeAttribute("persistsearchterms");
+      }
     }
 
     if (this.view.isOpen) {
       if (lazy.UrlbarPrefs.get("closeOtherPanelsOnOpen")) {
-        // UrlbarView rolls up all popups when it opens, but we should
-        // do the same for UrlbarInput when it's already open in case
+        // SmartbarView rolls up all popups when it opens, but we should
+        // do the same for SmartbarInput when it's already open in case
         // a tab preview was opened
         this.window.docShell.treeOwner
           .QueryInterface(Ci.nsIInterfaceRequestor)
@@ -5208,17 +5308,21 @@ export class UrlbarInput extends HTMLElement {
       sapName: this.sapName,
       maxResults,
       searchString,
-      userContextId: parseInt(
-        this.window.gBrowser.selectedBrowser.getAttribute("usercontextid") || 0
-      ),
-      tabGroup: this.window.gBrowser.selectedTab.group?.id ?? null,
-      currentPage: this.window.gBrowser.currentURI.spec,
       prohibitRemoteResults:
         event &&
         lazy.UrlbarUtils.isPasteEvent(event) &&
         lazy.UrlbarPrefs.get("maxCharsForSearchSuggestions") <
           event.data?.length,
     };
+
+    // Only add gBrowser-dependent properties if gBrowser exists.
+    if (this.window.gBrowser) {
+      options.userContextId = parseInt(
+        this.window.gBrowser.selectedBrowser?.getAttribute("usercontextid") ?? 0
+      );
+      options.tabGroup = this.window.gBrowser.selectedTab.group?.id ?? null;
+      options.currentPage = this.window.gBrowser.currentURI?.spec ?? "";
+    }
 
     if (this.searchMode) {
       options.searchMode = this.searchMode;
@@ -5784,8 +5888,8 @@ function losslessDecodeURI(aURI) {
  */
 class CopyCutController {
   /**
-   * @param {UrlbarInput} urlbar
-   *   The UrlbarInput instance to use this controller for.
+   * @param {SmartbarInput} urlbar
+   *   The SmartbarInput instance to use this controller for.
    */
   constructor(urlbar) {
     this.urlbar = urlbar;
@@ -5868,7 +5972,7 @@ class AddSearchEngineHelper {
   shortcutButtons;
 
   /**
-   * @param {UrlbarInput} input The parent UrlbarInput.
+   * @param {SmartbarInput} input The parent SmartbarInput.
    */
   constructor(input) {
     this.input = input;
@@ -6007,4 +6111,4 @@ class AddSearchEngineHelper {
   }
 }
 
-customElements.define("moz-urlbar", UrlbarInput);
+customElements.define("moz-smartbar", SmartbarInput);

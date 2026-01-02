@@ -27,6 +27,7 @@
   skin/classic/browser/sanitizeDialog_v2.css                   (../shared/sanitizeDialog_v2.css)
   skin/classic/browser/setDesktopBackground.css                (../shared/setDesktopBackground.css)
   skin/classic/browser/sidebar.css                             (../shared/sidebar.css)
+  skin/classic/browser/smartbar.css                            (../shared/smartbar.css)
   skin/classic/browser/toolbarbuttons.css                      (../shared/toolbarbuttons.css)
   skin/classic/browser/toolbarbutton-icons.css                 (../shared/toolbarbutton-icons.css)
   skin/classic/browser/urlbar/flight-airline.svg               (../shared/urlbar/flight-airline.svg)
