@@ -125,8 +125,6 @@ export class AIWindowMenu {
       newBrowserTabUrl += `#convId/${convId}/site/${site}`;
     }
 
-    // @todo Bug 2007484
-    // Verify this behavior should differ from the rest of the history menu items
     let where = lazy.BrowserUtils.whereToOpenLink(event);
     if (where === "current") {
       where = "tab";
