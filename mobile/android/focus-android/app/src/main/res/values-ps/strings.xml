@@ -140,6 +140,8 @@
   <!-- Preference category for General Settings -->
   <string name="preference_category_general">عمومي</string>
   <string name="preference_category_search">لټون</string>
+  <!-- Title of "switch" preference that enables/disables search suggestions -->
+  <string name="preference_show_search_suggestions">د پلټلو وړانديزونه ترلاسه کول</string>
   <!-- Text that is shown below a "switch" preference that is enabled. -->
   <string name="preference_state_on">فعال</string>
   <!-- Text that is shown below a "switch" preference that is disabled. -->
@@ -246,10 +248,18 @@
 
   <!-- Menu item to remove existing exceptions. -->
   <string name="preference_exceptions_menu_remove">لیرې کول</string>
+  <!-- Button to remove all websites from the exception list -->
+  <string name="preference_exceptions_remove_all_button_label">ټولې وېبپاڼې لرې کول</string>
+  <!-- Title for Preference screen for cookie blocking for exceptions tracking protection -->
+  <string name="preference_block_cookies_title">کوکيز باندې بنديز لګول</string>
+  <!-- Message for Preference screen for cookie blocking for exceptions tracking protection -->
+  <string name="preference_category_block_cookies">ايا تاسو کوکيز بندول غواړئ؟</string>
   <!-- Tracking protection bottom sheet -->
 
   <!-- Category of trackers (content) that can be blocked by Enhanced Tracking Protection. -->
   <string name="content">منځپانګه</string>
+  <!-- Category of trackers (analytics) that can be blocked by Enhanced Tracking Protection. -->
+  <string name="analytics">ارزونې</string>
   <!-- Content description (not visible, for screen readers etc.): Navigate back button description. -->
   <string name="go_back">شاته تلل</string>
   <!--

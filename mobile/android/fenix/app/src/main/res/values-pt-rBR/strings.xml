@@ -396,7 +396,7 @@
 
     Content description for tick mark on selected language
   -->
-  <string name="a11y_selected_locale_content_description">Selecionar idioma</string>
+  <string name="a11y_selected_locale_content_description">Idioma selecionado</string>
   <!-- Text for default locale item -->
   <string name="default_locale_text">Usar idioma do dispositivo</string>
   <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -2067,7 +2067,7 @@
   <!-- Label that indicates that a permission must be asked always -->
   <string name="preference_option_phone_feature_ask_to_allow">Perguntar se deve permitir</string>
   <!-- Label that indicates that a permission must be blocked -->
-  <string name="preference_option_phone_feature_blocked">Bloquear</string>
+  <string name="preference_option_phone_feature_blocked">Bloqueado</string>
   <!-- Label that indicates that a permission must be allowed -->
   <string name="preference_option_phone_feature_allowed">Permitido</string>
   <!-- Label that indicates a permission is by the Android OS -->
@@ -2374,7 +2374,7 @@
   <!-- Dialog message to the user asking to delete browsing data. %s is the name of the app (for example "Firefox"). -->
   <string name="delete_browsing_data_prompt_message_3">O %s excluirá os dados de navegação selecionados.</string>
   <!-- Text for the cancel button for the data deletion dialog -->
-  <string name="delete_browsing_data_prompt_cancel">Cancel</string>
+  <string name="delete_browsing_data_prompt_cancel">Cancelar</string>
   <!-- Text for the allow button for the data deletion dialog -->
   <string name="delete_browsing_data_prompt_allow">Excluir</string>
   <!-- Text for the snackbar confirmation that the data was deleted -->
@@ -2952,7 +2952,7 @@
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Significant in places where parishes are used for local administration and addressing. Ensures users can specify parish details for better autofill accuracy. Used in Barbados and Jamaica. -->
   <string name="addresses_parish" tools:ignore="UnusedResources">Freguesia</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Essential for addresses in countries like Japan where prefectures are a major administrative division. -->
-  <string name="addresses_prefecture" tools:ignore="UnusedResources">Prefeitura</string>
+  <string name="addresses_prefecture" tools:ignore="UnusedResources">Província</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. Allowing users to specify a particular area within a city or region. Used in Hong Kong -->
   <string name="addresses_area" tools:ignore="UnusedResources">Área</string>
   <!-- Label for an address field (e.g. mailing address) used as part of the form autofill feature. The header for the Do/Si of the address. Do/Si refers to provincial level divisions, pertinent to addresses in South Korea. -->
