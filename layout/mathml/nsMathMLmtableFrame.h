@@ -216,7 +216,7 @@ class nsMathMLmtdFrame final : public nsTableCellFrame {
   nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
                             AttrModType aModType) override;
 
-  mozilla::StyleVerticalAlignKeyword GetVerticalAlign() const override;
+  TableCellAlignment GetTableCellAlignment() const override;
   void ProcessBorders(nsTableFrame* aFrame,
                       mozilla::nsDisplayListBuilder* aBuilder,
                       const mozilla::nsDisplayListSet& aLists) override;

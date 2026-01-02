@@ -88,6 +88,7 @@
 #include "nsRange.h"
 #include "nsString.h"
 #include "nsStyleUtil.h"
+#include "nsTableCellFrame.h"
 #include "nsTextNode.h"
 #include "nsThreadUtils.h"
 #include "nscore.h"
@@ -1129,10 +1130,10 @@ static constexpr nsAttrValue::EnumTableEntry kScrollingTable[] = {
 };
 
 static constexpr nsAttrValue::EnumTableEntry kTableVAlignTable[] = {
-    {"top", StyleVerticalAlignKeyword::Top},
-    {"middle", StyleVerticalAlignKeyword::Middle},
-    {"bottom", StyleVerticalAlignKeyword::Bottom},
-    {"baseline", StyleVerticalAlignKeyword::Baseline},
+    {"top", TableCellAlignment::Top},
+    {"middle", TableCellAlignment::Middle},
+    {"bottom", TableCellAlignment::Bottom},
+    {"baseline", TableCellAlignment::Baseline},
 };
 
 static constexpr nsAttrValue::EnumTableEntry kAlignTable[] = {
@@ -1435,9 +1436,26 @@ void nsGenericHTMLElement::MapVAlignAttributeInto(
   if (!aBuilder.PropertyIsSet(eCSSProperty_vertical_align)) {
     // align: enum
     const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::valign);
-    if (value && value->Type() == nsAttrValue::eEnum)
-      aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
-                               value->GetEnumValue());
+    if (value && value->Type() == nsAttrValue::eEnum) {
+      switch (static_cast<TableCellAlignment>(value->GetEnumValue())) {
+        case TableCellAlignment::Top:
+          aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                   StyleVerticalAlignKeyword::Top);
+          break;
+        case TableCellAlignment::Middle:
+          aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                   StyleVerticalAlignKeyword::Middle);
+          break;
+        case TableCellAlignment::Bottom:
+          aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                   StyleVerticalAlignKeyword::Bottom);
+          break;
+        case TableCellAlignment::Baseline:
+          aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                   StyleVerticalAlignKeyword::Baseline);
+          break;
+      }
+    }
   }
 }
 
