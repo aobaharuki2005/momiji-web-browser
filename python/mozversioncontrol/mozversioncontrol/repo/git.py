@@ -130,10 +130,12 @@ class GitRepository(Repository):
                 yield name
 
     def get_mozilla_remote_args(self) -> list[str]:
-        """Return a list of arguments to limit commits to official remotes."""
-        return [remote for remote in self.get_mozilla_upstream_remotes()] or [
-            "--remotes"
+        """Return a list of `--remotes` arguments to limit commits to official remotes."""
+        official_remotes = [
+            f"--remotes={remote}" for remote in self.get_mozilla_upstream_remotes()
         ]
+
+        return official_remotes if official_remotes else ["--remotes"]
 
     @property
     def base_ref(self):
