@@ -305,6 +305,28 @@ export class SmartAssist extends MozLitElement {
     }
   }
 
+  /**
+   * Helper method to get or create the smartbar element
+   *
+   * @param {Document} chromeDoc - The chrome document
+   * @param {Element} box - The container element
+   */
+  _getOrCreateSmartbar(chromeDoc, box) {
+    // Find existing Smartbar, or create it the first time we open the sidebar.
+    let smartbar = chromeDoc.getElementById("ai-window-smartbar");
+
+    if (!smartbar) {
+      smartbar = chromeDoc.createElement("moz-smartbar");
+      smartbar.id = "ai-window-smartbar";
+      smartbar.setAttribute("sap-name", "smartbar");
+      smartbar.setAttribute("pageproxystate", "invalid");
+      smartbar.setAttribute("popover", "manual");
+      smartbar.classList.add("smartbar", "urlbar");
+      box.append(smartbar);
+    }
+    return smartbar;
+  }
+
   _toggleAIWindowSidebar() {
     const chromeDoc = this._getChromeDocument();
     const box = chromeDoc.getElementById("ai-window-box");
@@ -315,6 +337,7 @@ export class SmartAssist extends MozLitElement {
     }
 
     this._getOrCreateBrowser(chromeDoc, box);
+    this._getOrCreateSmartbar(chromeDoc, box);
 
     // Toggle visibility
     const opening = box.hidden;
