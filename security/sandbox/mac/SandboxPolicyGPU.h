@@ -122,10 +122,10 @@ static const char SandboxPolicyGPU[] = R"SANDBOX_LITERAL(
     (global-name "com.apple.CARenderServer")
     (global-name "com.apple.windowserver.active")
     (global-name "com.apple.MTLCompilerService")
-    (global-name "com.apple.CARenderServer")
     (global-name "com.apple.CoreDisplay.master")
     (global-name "com.apple.CoreDisplay.Notification")
-    (global-name "com.apple.cvmsServ"))
+    (global-name "com.apple.cvmsServ")
+    (global-name "com.apple.ImageIOXPCService"))
 
   ; Allow access to defaults services
   (allow mach-lookup
