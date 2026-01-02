@@ -326,20 +326,49 @@ export class OpenAIPipeline {
   ) {
     lazy.console.debug("Running OpenAI pipeline");
     try {
-      const { baseURL, apiKey, modelId } = this.#options;
+      const { baseURL, apiKey, modelId, serviceType, extraHeaders, engineId } =
+        this.#options;
       const fxAccountToken = request.fxAccountToken
         ? request.fxAccountToken
         : null;
-      const defaultHeaders = fxAccountToken
-        ? {
-            Authorization: `Bearer ${fxAccountToken}`,
-            "service-type": "ai",
+
+      let isFastlyRequest = false;
+      if (extraHeaders) {
+        for (const headerKey of Object.keys(extraHeaders)) {
+          if (headerKey.toLowerCase() == "x-fastly-request") {
+            isFastlyRequest = true;
+            break;
           }
-        : undefined;
+        }
+      }
+
+      /** @type {Record<string, string>} */
+      let authHeaders;
+      if (isFastlyRequest) {
+        // If the x-fastly-request extra header is present, we want to hit the LiteLLM
+        // endpoint directly, so don't use an FxA token
+        authHeaders = {
+          authorization: `Bearer ${apiKey}`,
+        };
+      } else if (fxAccountToken) {
+        // Use a Firefox account token if available
+        authHeaders = {
+          authorization: `Bearer ${fxAccountToken}`,
+          "service-type": serviceType || "ai",
+        };
+      } else {
+        // Don't use any authentication headers
+        authHeaders = {};
+      }
+
       const client = new OpenAIPipeline.OpenAILib.OpenAI({
         baseURL: baseURL ? baseURL : "http://localhost:11434/v1",
         apiKey: apiKey || "ollama",
-        ...(defaultHeaders ? { defaultHeaders } : {}),
+        defaultHeaders: {
+          ...authHeaders,
+          ...extraHeaders,
+          "x-engine-id": engineId,
+        },
       });
       const stream = request.streamOptions?.enabled || false;
       const tools = request.tools || [];

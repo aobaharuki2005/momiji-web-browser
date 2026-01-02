@@ -16,10 +16,12 @@ const { sinon } = ChromeUtils.importESModule(
 const PREF_API_KEY = "browser.aiwindow.apiKey";
 const PREF_ENDPOINT = "browser.aiwindow.endpoint";
 const PREF_MODEL = "browser.aiwindow.model";
+const PREF_EXTRA_HEADERS = "browser.aiwindow.extraHeaders";
 
 const API_KEY = "fake-key";
 const ENDPOINT = "https://api.fake-endpoint.com/v1";
 const MODEL = "fake-model";
+const EXTRA_HEADERS = '{"x-fastly-request": "fake-key"}';
 
 /**
  * Cleans up preferences after testing
@@ -39,6 +41,7 @@ add_task(async function test_createOpenAIEngine() {
   Services.prefs.setStringPref(PREF_API_KEY, API_KEY);
   Services.prefs.setStringPref(PREF_ENDPOINT, ENDPOINT);
   Services.prefs.setStringPref(PREF_MODEL, MODEL);
+  Services.prefs.setStringPref(PREF_EXTRA_HEADERS, EXTRA_HEADERS);
 
   const sb = sinon.createSandbox();
   try {
@@ -74,6 +77,12 @@ add_task(async function test_createOpenAIEngine() {
       opts.taskName,
       "text-generation",
       "taskName should be text-generation"
+    );
+    Assert.equal(opts.serviceType, "ai", "serviceType should be ai");
+    Assert.deepEqual(
+      opts.extraHeaders,
+      JSON.parse(EXTRA_HEADERS),
+      "extraHeaders should come from pref"
     );
   } finally {
     sb.restore();

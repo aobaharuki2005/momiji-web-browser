@@ -5,14 +5,7 @@
  */
 
 import { ToolRoleOpts } from "moz-src:///browser/components/aiwindow/ui/modules/ChatMessage.sys.mjs";
-
-/* eslint-disable-next-line mozilla/reject-import-system-module-from-non-system */
-import { getFxAccountsSingleton } from "resource://gre/modules/FxAccounts.sys.mjs";
 import { openAIEngine } from "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs";
-import {
-  OAUTH_CLIENT_ID,
-  SCOPE_PROFILE,
-} from "resource://gre/modules/FxAccountsCommon.sys.mjs";
 import {
   toolsConfig,
   getOpenTabs,
@@ -30,21 +23,6 @@ export const Chat = {
     get_page_content: GetPageContent.getPageContent.bind(GetPageContent),
   },
 
-  async _getFxAccountToken() {
-    try {
-      const fxAccounts = getFxAccountsSingleton();
-      const token = await fxAccounts.getOAuthToken({
-        // Scope needs to be updated in accordance with https://bugzilla.mozilla.org/show_bug.cgi?id=2005290
-        scope: SCOPE_PROFILE,
-        client_id: OAUTH_CLIENT_ID,
-      });
-      return token;
-    } catch (error) {
-      console.warn("Error obtaining FxA token:", error);
-      return null;
-    }
-  },
-
   /**
    * Stream assistant output with tool-call support.
    * Yields assistant text chunks as they arrive. If the model issues tool calls,
@@ -57,7 +35,7 @@ export const Chat = {
   async *fetchWithHistory(conversation) {
     // Note FXA token fetching disabled for now - this is still in progress
     // We can flip this switch on when more realiable
-    const fxAccountToken = await this._getFxAccountToken();
+    const fxAccountToken = await openAIEngine.getFxAccountToken();
 
     // @todo Bug 2007046
     // Update this with correct model id
