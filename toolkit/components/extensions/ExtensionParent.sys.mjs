@@ -2151,15 +2151,15 @@ let IconDetails = {
 
       if (themeIcons) {
         themeIcons.forEach(({ size, light, dark }) => {
-          // light and dark are reversed. theme_icons specifies
-          // the color of the icon instead of the toolbar color
-          const lightURL = baseURI.resolve(dark);
-          const darkURL = baseURI.resolve(light);
+          let lightURL = baseURI.resolve(light);
+          let darkURL = baseURI.resolve(dark);
 
           this._checkURL(lightURL, extension);
           this._checkURL(darkURL, extension);
 
+          let defaultURL = result[size] || result[19]; // always fallback to default first
           result[size] = {
+            default: defaultURL || darkURL, // Fallback to the dark url if no default is specified.
             light: lightURL,
             dark: darkURL,
           };
