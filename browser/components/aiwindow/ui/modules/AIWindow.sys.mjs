@@ -102,7 +102,7 @@ export const AIWindow = {
   /**
    * Is current window an AI Window
    *
-   * @param {Window} win current Window
+   * @param {object} win current Window
    * @returns {boolean} whether current Window is an AI Window
    */
   isAIWindowActive(win) {
@@ -120,21 +120,6 @@ export const AIWindow = {
 
   isAIWindowActiveAndEnabled(win) {
     return this.isAIWindowActive(win) && this.AIWindowEnabled;
-  },
-
-  /**
-   * Check if window is being opened as an AI Window.
-   *
-   * @param {Window} win - The window to check
-   * @returns {boolean} whether the window is being opened as an AI Window
-   */
-  isOpeningAIWindow(win) {
-    const windowArgs = win?.arguments?.[1];
-    if (!(windowArgs instanceof Ci.nsIPropertyBag2)) {
-      return false;
-    }
-
-    return windowArgs.hasKey("ai-window");
   },
 
   /**

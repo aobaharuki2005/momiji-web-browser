@@ -47,7 +47,6 @@ DIRS += [
     "messagepreview",
     "migration",
     "mozcachedohttp",
-    "multilineeditor",
     "newtab",
     "originattributes",
     "pagedata",

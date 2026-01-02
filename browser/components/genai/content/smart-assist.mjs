@@ -277,16 +277,18 @@ export class SmartAssist extends MozLitElement {
    */
 
   _getOrCreateBrowser(chromeDoc, box) {
-    let stack = box.querySelector(".ai-window-browser-stack");
-    if (!stack) {
-      stack = chromeDoc.createXULElement("stack");
+    // Find existing browser, or create it the first time we open the sidebar.
+    let browser = chromeDoc.getElementById("ai-window-browser");
+
+    if (!browser) {
+      const stack =
+        box.querySelector(".ai-window-browser-stack") ||
+        chromeDoc.createXULElement("stack");
+
       stack.className = "ai-window-browser-stack";
       stack.setAttribute("flex", "1");
       box.appendChild(stack);
-    }
 
-    let browser = stack.querySelector("#ai-window-browser");
-    if (!browser) {
       browser = chromeDoc.createXULElement("browser");
       browser.setAttribute("id", "ai-window-browser");
       browser.setAttribute("flex", "1");
@@ -301,29 +303,6 @@ export class SmartAssist extends MozLitElement {
 
       stack.appendChild(browser);
     }
-    return stack;
-  }
-
-  /**
-   * Helper method to get or create the smartbar element
-   *
-   * @param {Document} chromeDoc - The chrome document
-   * @param {Element} container - The container element
-   */
-  _getOrCreateSmartbar(chromeDoc, container) {
-    // Find existing Smartbar, or create it the first time we open the sidebar.
-    let smartbar = chromeDoc.getElementById("ai-window-smartbar");
-
-    if (!smartbar) {
-      smartbar = chromeDoc.createElement("moz-smartbar");
-      smartbar.id = "ai-window-smartbar";
-      smartbar.setAttribute("sap-name", "smartbar");
-      smartbar.setAttribute("pageproxystate", "invalid");
-      smartbar.setAttribute("popover", "manual");
-      smartbar.classList.add("smartbar", "urlbar");
-      container.append(smartbar);
-    }
-    return smartbar;
   }
 
   _toggleAIWindowSidebar() {
@@ -335,8 +314,7 @@ export class SmartAssist extends MozLitElement {
       return;
     }
 
-    const stack = this._getOrCreateBrowser(chromeDoc, box);
-    this._getOrCreateSmartbar(chromeDoc, stack);
+    this._getOrCreateBrowser(chromeDoc, box);
 
     // Toggle visibility
     const opening = box.hidden;

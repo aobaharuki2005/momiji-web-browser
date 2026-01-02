@@ -171,7 +171,6 @@ module.exports = [
       "browser/themes/shared/privatebrowsing/aboutPrivateBrowsing.css",
       "browser/themes/shared/search/searchbar.css",
       "browser/themes/shared/sidebar.css",
-      "browser/themes/shared/smartbar.css",
       "browser/themes/shared/syncedtabs/sidebar.css",
       "browser/themes/shared/tab-list-tree.css",
       "browser/themes/shared/tabbrowser/content-area.css",
