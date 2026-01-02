@@ -5377,6 +5377,19 @@ export class SmartbarInput extends HTMLElement {
       return;
     }
 
+    if (
+      this.#isSmartbarMode &&
+      event.keyCode === KeyEvent.DOM_VK_RETURN &&
+      event.shiftKey
+    ) {
+      event.preventDefault();
+      return;
+    }
+
+    if (!this.controller) {
+      return;
+    }
+
     // Repeated KeyboardEvents can easily cause subtle bugs in this logic, if
     // not properly handled, so let's first handle things that should not be
     // evaluated repeatedly.
