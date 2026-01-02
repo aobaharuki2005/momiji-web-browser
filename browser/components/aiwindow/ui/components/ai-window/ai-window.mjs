@@ -13,7 +13,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ChatConversation:
     "moz-src:///browser/components/aiwindow/ui/modules/ChatConversation.sys.mjs",
   MESSAGE_ROLE:
-    "moz-src:///browser/components/aiwindow/ui/modules//ChatEnums.sys.mjs",
+    "moz-src:///browser/components/aiwindow/ui/modules/ChatEnums.sys.mjs",
   AssistantRoleOpts:
     "moz-src:///browser/components/aiwindow/ui/modules/ChatMessage.sys.mjs",
   getRoleLabel:
