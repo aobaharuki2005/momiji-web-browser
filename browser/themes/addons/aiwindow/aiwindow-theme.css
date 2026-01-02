@@ -29,3 +29,7 @@ body {
 #urlbar:not([open]) > .urlbar-background {
   border-radius: var(--border-radius-circle);
 }
+
+.tab-preview-thumbnail-container > canvas {
+  background-image: var(--ai-gradient);
+}
