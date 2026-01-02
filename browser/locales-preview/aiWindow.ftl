@@ -28,6 +28,11 @@ aiwindow-input-cta-label-chat = Chat
 aiwindow-input-cta-label-search = Search
 aiwindow-input-cta-label-navigate = Navigate
 
+## Smartbar
+
+smartbar-placeholder =
+    .placeholder = Ask, search, or type a URL
+
 ## Firstrun onboarding
 
 aiwindow-firstrun-title = Welcome to Smart Window
