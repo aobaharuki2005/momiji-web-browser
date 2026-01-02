@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { createEditor } from "chrome://browser/content/urlbar/SmartbarInputUtils.mjs";
+
 const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
@@ -12,7 +14,6 @@ const { AppConstants } = ChromeUtils.importESModule(
 
 /**
  * @import {UrlbarSearchOneOffs} from "moz-src:///browser/components/urlbar/UrlbarSearchOneOffs.sys.mjs"
- * @import {SmartbarInputController} from "chrome://browser/content/urlbar/SmartbarInputController.mjs"
  */
 
 const lazy = XPCOMUtils.declareLazy({
@@ -68,10 +69,6 @@ const lazy = XPCOMUtils.declareLazy({
     pref: "privacy.query_stripping.strip_on_share.enabled",
     default: false,
   },
-  createEditor: () =>
-    ChromeUtils.importESModule(
-      "chrome://browser/content/urlbar/SmartbarInputUtils.mjs"
-    ).createEditor,
   logger: () => lazy.UrlbarUtils.getLogger({ prefix: "SmartbarInput" }),
 });
 
@@ -136,7 +133,7 @@ export class SmartbarInput extends HTMLElement {
                       aria-controls="urlbar-results"
                       aria-autocomplete="both"
                       inputmode="mozAwesomebar"
-                      data-l10n-id="urlbar-placeholder"/>
+                      data-l10n-id="smartbar-placeholder"/>
         </moz-input-box>
         <moz-urlbar-slot name="revert-button"> </moz-urlbar-slot>
         <image class="urlbar-icon urlbar-go-button"
@@ -201,6 +198,8 @@ export class SmartbarInput extends HTMLElement {
     "selectionchange",
   ];
 
+  static #validSmartbarModes = ["chat", "search", "navigate"];
+
   #allowBreakout = false;
   #gBrowserListenersAdded = false;
   #breakoutBlockerCount = 0;
@@ -214,10 +213,9 @@ export class SmartbarInput extends HTMLElement {
    */
   #isSmartbarMode = false;
   #sapName = "";
-  /** @type {object | null} */
   #smartbarEditor = null;
-  /** @type {SmartbarEditorController | null} */
-  #smartbarEditorController = null;
+  #smartbarInputController = null;
+  #smartbarMode = "search";
   _userTypedValue = "";
   _actionOverrideKeyCount = 0;
   _lastValidURLStr = "";
@@ -556,20 +554,25 @@ export class SmartbarInput extends HTMLElement {
   }
 
   #initSmartbarEditor() {
-    const adapter = lazy.createEditor(this.inputField);
-    if (!adapter) {
-      return;
-    }
-    this.#smartbarEditorController = new lazy.SmartbarInputController(adapter);
+    const adapter = createEditor(this.inputField);
+    this.#smartbarInputController = new lazy.SmartbarInputController(adapter);
     this.inputField = adapter.input;
     this.#smartbarEditor = adapter.editor;
   }
 
   #ensureSmartbarEditor() {
-    if (!this.#smartbarEditorController) {
+    if (!this.#smartbarInputController) {
       this.#initSmartbarEditor();
     }
     return this.#smartbarEditor;
+  }
+
+  #setInputValue(val) {
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController.setValue(val);
+    } else {
+      this.inputField.value = val;
+    }
   }
 
   #lazy = XPCOMUtils.declareLazy({
@@ -592,29 +595,118 @@ export class SmartbarInput extends HTMLElement {
     return this.#sapName;
   }
 
+  get smartbarMode() {
+    const mode = this.getAttribute("smartbar-mode") || this.#smartbarMode;
+    return SmartbarInput.#validSmartbarModes.includes(mode)
+      ? mode
+      : SmartbarInput.#validSmartbarModes[0];
+  }
+
+  set smartbarMode(mode) {
+    if (!SmartbarInput.#validSmartbarModes.includes(mode)) {
+      return;
+    }
+    this.#smartbarMode = mode;
+    this.setAttribute("smartbar-mode", mode);
+  }
+
   blur() {
-    this.inputField.blur();
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController.blur();
+    } else {
+      this.inputField.blur();
+    }
   }
 
   /**
    * @type {typeof HTMLInputElement.prototype.placeholder}
    */
-  placeholder;
+  get placeholder() {
+    return (
+      this.#smartbarInputController?.placeholder ?? this.inputField?.placeholder
+    );
+  }
+
+  /**
+   * @type {typeof HTMLInputElement.prototype.placeholder}
+   */
+  set placeholder(val) {
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController.placeholder = val;
+      return;
+    }
+    if (this.inputField) {
+      this.inputField.placeholder = val;
+    }
+  }
 
   /**
    * @type {typeof HTMLInputElement.prototype.readOnly}
    */
-  readOnly;
+  get readOnly() {
+    return this.#smartbarInputController?.readOnly ?? this.inputField?.readOnly;
+  }
+
+  /**
+   * @type {typeof HTMLInputElement.prototype.readOnly}
+   */
+  set readOnly(val) {
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController.readOnly = val;
+      return;
+    }
+    if (this.inputField) {
+      this.inputField.readOnly = val;
+    }
+  }
 
   /**
    * @type {typeof HTMLInputElement.prototype.selectionStart}
    */
-  selectionStart;
+  get selectionStart() {
+    return (
+      this.#smartbarInputController?.selectionStart ??
+      this.inputField?.selectionStart ??
+      0
+    );
+  }
+
+  /**
+   * @type {typeof HTMLInputElement.prototype.selectionStart}
+   */
+  set selectionStart(val) {
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController.selectionStart = val;
+      return;
+    }
+    if (this.inputField) {
+      this.inputField.selectionStart = val;
+    }
+  }
 
   /**
    * @type {typeof HTMLInputElement.prototype.selectionEnd}
    */
-  selectionEnd;
+  get selectionEnd() {
+    return (
+      this.#smartbarInputController?.selectionEnd ??
+      this.inputField?.selectionEnd ??
+      0
+    );
+  }
+
+  /**
+   * @type {typeof HTMLInputElement.prototype.selectionEnd}
+   */
+  set selectionEnd(val) {
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController.selectionEnd = val;
+      return;
+    }
+    if (this.inputField) {
+      this.inputField.selectionEnd = val;
+    }
+  }
 
   /**
    * Called when a urlbar or urlbar related pref changes.
@@ -664,7 +756,11 @@ export class SmartbarInput extends HTMLElement {
       return;
     }
 
-    this.inputField.focus();
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController.focus();
+    } else {
+      this.inputField.focus();
+    }
   }
 
   select() {
@@ -680,7 +776,11 @@ export class SmartbarInput extends HTMLElement {
     // See _on_select().  HTMLInputElement.select() dispatches a "select"
     // event but does not set the primary selection.
     this._suppressPrimaryAdjustment = true;
-    this.inputField.select();
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController?.select();
+    } else {
+      this.inputField.select();
+    }
     this._suppressPrimaryAdjustment = false;
   }
 
@@ -697,7 +797,14 @@ export class SmartbarInput extends HTMLElement {
     // See _on_select().  HTMLInputElement.select() dispatches a "select"
     // event but does not set the primary selection.
     this._suppressPrimaryAdjustment = true;
-    this.inputField.setSelectionRange(selectionStart, selectionEnd);
+    if (this.#smartbarInputController) {
+      this.#smartbarInputController.setSelectionRange(
+        selectionStart,
+        selectionEnd
+      );
+    } else {
+      this.inputField.setSelectionRange(selectionStart, selectionEnd);
+    }
     this._suppressPrimaryAdjustment = false;
   }
 
@@ -863,7 +970,7 @@ export class SmartbarInput extends HTMLElement {
       ) {
         // If the same text is in the same place as the previously selected text,
         // the selection is kept.
-        this.inputField.setSelectionRange(
+        this.setSelectionRange(
           previousSelectionStart - offset,
           previousSelectionEnd - offset
         );
@@ -875,11 +982,11 @@ export class SmartbarInput extends HTMLElement {
         // If the previous end caret is not 0 and the caret is at the end of the
         // input or its position is beyond the end of the new value, keep the
         // position at the end.
-        this.inputField.setSelectionRange(value.length, value.length);
+        this.setSelectionRange(value.length, value.length);
       } else {
         // Otherwise clear selection and set the caret position to the previous
         // caret end position.
-        this.inputField.setSelectionRange(
+        this.setSelectionRange(
           previousSelectionEnd - offset,
           previousSelectionEnd - offset
         );
@@ -1068,11 +1175,12 @@ export class SmartbarInput extends HTMLElement {
   handleNavigation({ event, oneOffParams, triggeringPrincipal }) {
     if (this.#isSmartbarMode) {
       const committedValue = this.untrimmedValue;
-      lazy.logger.debug(`commit: ${committedValue}`);
+      const mode = this.smartbarMode;
+      lazy.logger.debug(`commit (${mode}): ${committedValue}`);
       this.#clearSmartbarInput();
       this.dispatchEvent(
         new CustomEvent("smartbar-commit", {
-          detail: { value: committedValue, event },
+          detail: { value: committedValue, event, mode },
         })
       );
       if (!this.window.gBrowser) {
@@ -2035,9 +2143,8 @@ export class SmartbarInput extends HTMLElement {
     let currentSelectionEnd = this.selectionEnd;
 
     // Overriding this value clears the selection.
-    this.inputField.value = this.value.substring(
-      0,
-      this._autofillPlaceholder.selectionStart
+    this.#setInputValue(
+      this.value.substring(0, this._autofillPlaceholder.selectionStart)
     );
     this._autofillPlaceholder = null;
     // Restore selection
@@ -2216,7 +2323,7 @@ export class SmartbarInput extends HTMLElement {
         value += " ";
       }
     }
-    this.inputField.value = value;
+    this.#setInputValue(value);
     // Avoid selecting the text if this method is called twice in a row.
     this.selectionStart = -1;
 
@@ -2293,7 +2400,7 @@ export class SmartbarInput extends HTMLElement {
 
     this._lastSearchString = "";
     if (this.#isAddressbar) {
-      this.inputField.value = url;
+      this.#setInputValue(url);
     }
     this.selectionStart = -1;
 
@@ -2575,7 +2682,10 @@ export class SmartbarInput extends HTMLElement {
   }
 
   get focused() {
-    return this.document.activeElement == this.inputField;
+    return (
+      this.document.activeElement ==
+      (this.#smartbarInputController?.input ?? this.inputField)
+    );
   }
 
   get goButton() {
@@ -2583,7 +2693,7 @@ export class SmartbarInput extends HTMLElement {
   }
 
   get value() {
-    return this.inputField.value;
+    return this.#smartbarInputController?.value ?? this.inputField.value;
   }
 
   set value(val) {
@@ -3103,7 +3213,7 @@ export class SmartbarInput extends HTMLElement {
 
     this.valueIsTyped = valueIsTyped;
     this._resultForCurrentValue = null;
-    this.inputField.value = val;
+    this.#setInputValue(val);
     this.formatValue();
 
     if (actionType !== undefined) {
@@ -3302,6 +3412,13 @@ export class SmartbarInput extends HTMLElement {
     ) {
       let autofillValue =
         value + this._autofillPlaceholder.value.substring(value.length);
+      if (
+        this.value === autofillValue &&
+        this.selectionStart === value.length &&
+        this.selectionEnd === autofillValue.length
+      ) {
+        return true;
+      }
       this._autofillValue({
         value: autofillValue,
         selectionStart: value.length,
@@ -3694,14 +3811,29 @@ export class SmartbarInput extends HTMLElement {
     adaptiveHistoryInput,
     untrimmedValue,
   }) {
+    const valueMatches = this.value === value;
+    const selectionMatches =
+      this.selectionStart === selectionStart &&
+      this.selectionEnd === selectionEnd;
+    if (valueMatches && selectionMatches) {
+      return;
+    }
     // The autofilled value may be a URL that includes a scheme at the
     // beginning.  Do not allow it to be trimmed.
-    this._setValue(value, { untrimmedValue });
-    this.inputField.setSelectionRange(selectionStart, selectionEnd);
+    if (!valueMatches) {
+      this._setValue(value, { untrimmedValue });
+    }
+    this.setSelectionRange(selectionStart, selectionEnd);
     // Ensure selection state is cached for contenteditable and events fire.
-    this.inputField.dispatchEvent(
-      new Event("selectionchange", { bubbles: true, cancelable: false })
-    );
+    if (!selectionMatches) {
+      if (this.#smartbarInputController) {
+        this.#smartbarInputController.dispatchSelectionChange();
+      } else {
+        this.inputField.dispatchEvent(
+          new Event("selectionchange", { bubbles: true, cancelable: false })
+        );
+      }
+    }
     this._autofillPlaceholder = {
       value,
       type,
@@ -3943,7 +4075,7 @@ export class SmartbarInput extends HTMLElement {
     if (!params.avoidBrowserFocus) {
       browser.focus();
       // Make sure the domain name stays visible for spoof protection and usability.
-      this.inputField.setSelectionRange(0, 0);
+      this.setSelectionRange(0, 0);
     }
 
     if (openUILinkWhere != "current") {
@@ -4682,6 +4814,11 @@ export class SmartbarInput extends HTMLElement {
    * The name of the engine or null to use the default placeholder.
    */
   _setPlaceholder(engineName) {
+    if (this.#isSmartbarMode) {
+      this.document.l10n.setAttributes(this.inputField, "smartbar-placeholder");
+      return;
+    }
+
     if (!this.#isAddressbar) {
       this.document.l10n.setAttributes(this.inputField, "searchbar-input");
       return;
@@ -4714,7 +4851,7 @@ export class SmartbarInput extends HTMLElement {
       !this._preventClickSelectsAll &&
       this.#compositionState != lazy.UrlbarUtils.COMPOSITION.COMPOSING &&
       this.focused &&
-      this.inputField.selectionStart == this.inputField.selectionEnd
+      this.selectionStart == this.selectionEnd
     ) {
       this.select();
     }
@@ -4957,7 +5094,7 @@ export class SmartbarInput extends HTMLElement {
         // Clear any previous selection unless we are focused, to ensure it
         // doesn't affect drag selection.
         if (this.focusedViaMousedown) {
-          this.inputField.setSelectionRange(0, 0);
+          this.setSelectionRange(0, 0);
         }
 
         // Do not suppress the focus border if we are already focused. If we
@@ -5230,7 +5367,7 @@ export class SmartbarInput extends HTMLElement {
 
       // Fix up cursor/selection:
       let newCursorPos = oldStart.length + pasteData.length;
-      this.inputField.setSelectionRange(newCursorPos, newCursorPos);
+      this.setSelectionRange(newCursorPos, newCursorPos);
 
       this.startQuery({
         searchString: this.value,
@@ -5486,7 +5623,7 @@ export class SmartbarInput extends HTMLElement {
           if (this.window.gBrowser.selectedBrowser === loadingBrowser) {
             loadingBrowser.focus();
             // Make sure the domain name stays visible for spoof protection and usability.
-            this.inputField.setSelectionRange(0, 0);
+            this.setSelectionRange(0, 0);
           }
         } catch (ex) {
           // Not all the Enter actions in the urlbar will cause a navigation, then it

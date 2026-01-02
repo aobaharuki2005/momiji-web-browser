@@ -39,6 +39,8 @@ module.exports = {
     `${projectRoot}/browser/components/webrtc/content/**/*.stories.mjs`,
     // AI Window components stories
     `${projectRoot}/browser/components/aiwindow/ui/**/*.stories.mjs`,
+    // Multiline editor components stories
+    `${projectRoot}/browser/components/multilineeditor/**/*.stories.mjs`,
     // Everything else
     "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx|md)",
     // Design system files
@@ -88,6 +90,7 @@ module.exports = {
     // Make whatever fine-grained changes you need
     config.resolve.alias = {
       browser: `${projectRoot}/browser`,
+      third_party: `${projectRoot}/third_party`,
       toolkit: `${projectRoot}/toolkit`,
       "toolkit-widgets": `${projectRoot}/toolkit/content/widgets/`,
       "lit.all.mjs": `${projectRoot}/toolkit/content/widgets/vendor/lit.all.mjs`,

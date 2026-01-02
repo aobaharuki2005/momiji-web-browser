@@ -2,86 +2,87 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
+import { MultilineEditor } from "chrome://browser/content/multilineeditor/multiline-editor.mjs";
 
 /**
- * Minimal multiline editor placeholder for SmartBarInput.
+ * Creates a Smartbar editor element.
+ *
+ * @param {HTMLInputElement | MultilineEditor} inputElement
+ *   The input element to replace.
+ * @returns {{
+ *   input: MultilineEditor,
+ *   editor: object
+ * } | null}
+ *   An object with the new editor element and the adapter.
  */
-class SmartbarEditor extends MozLitElement {
-  createRenderRoot() {
-    return this;
-  }
-
-  get value() {
-    return this.textContent ?? "";
-  }
-
-  set value(val) {
-    this.textContent = val ?? "";
-  }
-
-  initializeFromInput(inputElement) {
-    if (!inputElement) {
-      return null;
-    }
-
-    // Copy existing input attributes.
-    for (const inputAttribute of inputElement.attributes) {
-      this.setAttribute(inputAttribute.name, inputAttribute.value);
-    }
-
-    this.setAttribute("contenteditable", "true");
-    this.setAttribute("aria-multiline", "true");
-    this.removeAttribute("type");
-    this.removeAttribute("value");
-    this.className = inputElement.className;
-    this.textContent = inputElement.value ?? "";
-
-    inputElement.replaceWith(this);
-    return { input: this, editor: createEditorAdapter(this) };
-  }
-}
-
-function createEditor(inputElement) {
+export function createEditor(inputElement) {
   if (!inputElement) {
     return null;
   }
-  if (inputElement.localName == "moz-smartbar-editor") {
+
+  if (inputElement instanceof MultilineEditor) {
     return {
       input: inputElement,
       editor: createEditorAdapter(inputElement),
     };
   }
-  const host = inputElement.ownerDocument.createElement("moz-smartbar-editor");
-  return host.initializeFromInput(inputElement);
+
+  const doc = inputElement.ownerDocument;
+  const editorElement = /** @type {MultilineEditor} */ (
+    doc.createElement("moz-multiline-editor")
+  );
+
+  // Copy attributes except those that don’t apply.
+  for (const attr of inputElement.attributes) {
+    if (attr.name == "type" || attr.name == "value") {
+      continue;
+    }
+    editorElement.setAttribute(attr.name, attr.value);
+  }
+
+  editorElement.className = inputElement.className;
+  editorElement.id = inputElement.id;
+  editorElement.value = inputElement.value ?? "";
+
+  inputElement.replaceWith(editorElement);
+  return {
+    input: editorElement,
+    editor: createEditorAdapter(editorElement),
+  };
 }
 
-// Adapter for Smartbar editor element.
-function createEditorAdapter(editorElement) {
+/**
+ * Creates an adapter for the Smartbar editor element.
+ *
+ * @param {MultilineEditor} editorElement
+ *   The editor element.
+ */
+export function createEditorAdapter(editorElement) {
+  const getSelectionBounds = () => {
+    let start = editorElement.selectionStart ?? 0;
+    let end = editorElement.selectionEnd ?? start;
+    if (start > end) {
+      [start, end] = [end, start];
+    }
+    return { start, end };
+  };
+
   return {
     get composing() {
-      return false;
+      return !!editorElement.composing;
     },
     selection: {
       get rangeCount() {
-        const selection = editorElement.ownerGlobal.getSelection();
-        return selection?.rangeCount ?? 0;
+        const { start, end } = getSelectionBounds();
+        return start === end && editorElement.value === "" ? 0 : 1;
       },
       toStringWithFormat() {
-        const selection = editorElement.ownerGlobal.getSelection();
-        if (
-          !selection ||
-          !selection.rangeCount ||
-          !editorElement.contains(selection.anchorNode)
-        ) {
+        const { start, end } = getSelectionBounds();
+        if (start == null || end == null) {
           return "";
         }
-        return selection.toString();
+        return editorElement.value?.substring(start, end);
       },
     },
   };
 }
-
-customElements.define("moz-smartbar-editor", SmartbarEditor);
-
-export { createEditor, createEditorAdapter };
