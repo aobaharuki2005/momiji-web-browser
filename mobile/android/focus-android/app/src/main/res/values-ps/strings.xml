@@ -21,7 +21,7 @@
   <string name="action_cancel">لغوه کول</string>
   <!-- Label used for buttons, e.g. in dialogs -->
   <string name="action_ok">سمه ده</string>
-  <string name="action_save">خوندي کړئ</string>
+  <string name="action_save">خوندي کول</string>
   <!-- This text is shown in the URL bar when it's empty -->
   <string name="urlbar_hint">پته ولټوئ يا وليکئ</string>
   <string name="teaser">اتومات شخصي لټون.\nولټوئ. پاک کړئ. بيا تکرار کړئ.</string>
@@ -78,6 +78,8 @@
   <string name="menu_trackers_blocked_subtitle">د دې بندول ښايي د سايټ ځينې ستونزې هوارې کړي</string>
   <!-- Menu item: This is the label for turning off content blocking for the current website. -->
   <string name="menu_content_blocking">د محتوا بندول</string>
+  <!-- This is the subtitle content blocking toggle -->
+  <string name="menu_content_blocking_subtitle">د ځینو وېبپاڼو د سم کار کولو لپاره بندول</string>
   <!--
     This is a small text at the bottom of the menu shown in a "custom tab" for branding purposes.
     See https://github.com/mozilla-mobile/focus-android/issues/2106
@@ -90,6 +92,11 @@
   -->
   <string name="share_dialog_title">له لارې شریک کړئ</string>
   <string name="notification_erase_title_android_14">د پلټنې تاریخچه پاکه کړئ؟</string>
+  <!--
+    Text shown in the notification description that pops up to remind the user that a browsing session is active
+    for Android 14+.
+  -->
+  <string name="notification_erase_text_android_14_1">د خپل لټون تاریخچې د خوندي ړنګولو لپاره پر دې خبرتیا ټک وکړئ یا یې راکاږئ.</string>
   <string name="notification_erase_text">د پلټنې تاریخچه پاکول</string>
   <!-- Notification action to open Focus and resume the current browsing session. -->
   <string name="notification_action_open">پرانیستل</string>
@@ -108,7 +115,7 @@
     instead of the short title when it has enough space. Android recommends a maximum length
     of 25 characters.
   -->
-  <string name="shortcut_erase_long_label">د پلټنې تاریخچه پاکه کړئ؟</string>
+  <string name="shortcut_erase_long_label">د پلټنې تاریخچه پاکول</string>
   <!--
     On Android 7+ users can add a shortcut for erasing the browsing history to the home screen.
     This is the label for this shortcut. Android recommends a maximum length of 10 characters.
@@ -133,19 +140,54 @@
     Do not translate or transliterate Klar.
   -->
   <string name="text_selection_search_action_klar" tools:ignore="BrandUsage">په Klar کې لټون</string>
+  <!--
+    This is the label of an action we offer when the user selects text in other third-party apps.
+    Focus Beta is hard coded since we can't use variables in this context.
+    Do not translate or transliterate Focus Beta.
+  -->
+  <string name="text_selection_search_action_focus_beta" tools:ignore="BrandUsage">په Focus Beta کې لټون کول</string>
+  <!--
+    This is the label of an action we offer when the user selects text in other third-party apps.
+    Focus Nightly is hard coded since we can't use variables in this context.
+    Do not translate or transliterate Focus Nightly.
+  -->
+  <string name="text_selection_search_action_focus_nightly" tools:ignore="BrandUsage">په Focus Nightly کې لټون کول</string>
+  <!--
+    Content of about focus. %1$s is the name of the app (for example "Firefox Focus" or "Firefox Klar").
+    %2$s is the url for the learn-more link.
+  -->
+  <string name="about_content" tools:ignore="IncorrectStraightDoubleQuote"><![CDATA[<p>%1$s تاسو ته بشپړ کنټرول درکوي.</p>\n<p>دا د یو شخصي براوزر په توګه وکاروئ:\n<ul>\n<li>په همدې کاريال کې لټون او براوز کول</li>\n<li>تعقیبوونکي بندول (یا د تنظیماتو له لارې یې اجازه ورکول)</li>\n<li>پاکول، تر څو کوکيز، پلټنې او د براوزر تاريخچه ړنګه شي</li>\n</ul> </p>\n<p>%1$s د موزيلا لخوا جوړ شوی دی. زموږ موخه یو سالم او پرانیستي انټرنېټ ته وده ورکول دي.<br/>\n<a href=\"%2$s\">نور مالومات</a></p>\n]]></string>
   <!-- A link to SUMO at the bottom of About Focus screen. -->
   <string name="about_screen_learn_more">نور مالومات ترلاسه کړئ</string>
+  <!-- Preference category for ad blocking and enhanced tracking protection settings -->
+  <string name="preference_category_tracking_protection3">د پرمختللي څار خوندیتوب</string>
   <!-- Preference category for settings related to controlling web content -->
   <string name="preference_category_web_content">د وېب منځپانګه</string>
+  <!-- Preference category: stealth settings for while switching apps -->
+  <string name="preference_category_switching_apps">کاريالونه بدلول</string>
   <!-- Preference category for General Settings -->
   <string name="preference_category_general">عمومي</string>
   <string name="preference_category_search">لټون</string>
   <!-- Title of "switch" preference that enables/disables search suggestions -->
   <string name="preference_show_search_suggestions">د پلټلو وړانديزونه ترلاسه کول</string>
+  <!-- This label is shown below the name of the default search engine in settings -->
+  <string name="preference_search_engine_default">اصلي</string>
+  <!-- This label is shown above the currently selected search engine in settings -->
+  <string name="preference_search_engine_label">پلټونکی انجن</string>
   <!-- Text that is shown below a "switch" preference that is enabled. -->
   <string name="preference_state_on">فعال</string>
   <!-- Text that is shown below a "switch" preference that is disabled. -->
   <string name="preference_state_off">غير فغال</string>
+  <!-- Item in settings that will open a new preference screen for configuring the URL autocomplete behavior. -->
+  <string name="preference_subitem_autocomplete">د URL اتومات بشپړول</string>
+  <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
+  <string name="preference_switch_autocomplete_topsites">د غوره سایټونو لپاره</string>
+  <!-- Preference category: Manage (user-defined) sites -->
+  <string name="preference_category_autocomplete_manage_sites">د سایټونو اداره کول</string>
+  <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list -->
+  <string name="preference_autocomplete_subitem_manage_sites">د سایټونو اداره کول</string>
+  <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
+  <string name="preference_autocomplete_action_add">+ دودیز URL زياتول</string>
   <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
   <string name="preference_autocomplete_action_add2">URL اضافه کول</string>
   <!-- A link to SUMO at autocomplete settings. -->

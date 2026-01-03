@@ -657,6 +657,8 @@
   <string name="nova_onboarding_tou_body_line_3_link_text" tools:ignore="UnusedResources">Eñangareko ñembohekóre</string>
   <!-- "Set to default" onboarding title. -->
   <string name="nova_onboarding_set_to_default_title" tools:ignore="UnusedResources">Embojepyhéi tapykuehohaitépe</string>
+  <!-- "Set to default" onboarding subtitle. -->
+  <string name="nova_onboarding_set_to_default_subtitle" tools:ignore="UnusedResources">Romo’ã ne mba’ekuaarãita ha rojoko opaite mba’apohaguasuita oma’ẽñemíva eikehápe.</string>
   <!-- "Set to default" onboarding button. -->
   <string name="nova_onboarding_set_to_default_button" tools:ignore="UnusedResources">Ejapo kundahára ijypyguávarõ</string>
   <!-- Toolbar selection onboarding title. -->
@@ -675,18 +677,29 @@
   <string name="nova_onboarding_theme_selection_dark_label" tools:ignore="UnusedResources">Ypytũ</string>
   <!-- Sync onboarding title. -->
   <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">Eku’ejey pya’e eheja haguetégui</string>
+  <!-- Sync onboarding subtitle. -->
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Eraha techaukaha, ñe’ẽñemi ha hetave oimeraẽva mba’e’okápe pya’e. Ne mba’ekuaarãita hekorosãta ha oñemo’ã papapy rupive.</string>
   <!-- Sync onboarding button. -->
   <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Eñepyrũ ñembojuehe</string>
   <!-- Marketing onboarding title. -->
   <string name="nova_onboarding_marketing_title" tools:ignore="UnusedResources">Rojaporoína Ñanduti iporãvéva</string>
+  <!--
+    Marketing onboarding body. 'Firefox' and 'Mozilla' are intentionally hardcoded.
+    %1$s is replaced by an active link, using nova_onboarding_marketing_body_link_text as text (“How we use the data”).
+  -->
+  <string name="nova_onboarding_marketing_body" tools:ignore="BrandUsage,UnusedResources">Emombe’u marketing Mozilla-guápe mba’éichapa eikuaáraka’e Firefox ha ijeporu. Ko’ã mba’ekuaarã noñevendemo’ãi. %1$s</string>
   <!-- Marketing onboarding body link text. -->
   <string name="nova_onboarding_marketing_body_link_text" tools:ignore="UnusedResources">Mba’éichapa jaiporu mba’ekuaarãita</string>
   <!-- Notifications onboarding title. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Umi marandu ne pytyvõta eime hag̃ua tekorosãme Firefox ndive</string>
+  <!-- Notifications onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_notifications_subtitle" tools:ignore="BrandUsage,UnusedResources">Eikuaa Firefox rekoñemi rembiapoite ipyahuvéva eime hag̃ua opaite ára tekorosã añetetépe.</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Emyandy marandu’i</string>
   <!-- "Add search widget" onboarding title. -->
   <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Ejapo nde jeheka hekorosãve hag̃ua</string>
+  <!-- "Add search widget" onboarding subtitle. 'Firefox' is intentionally hardcoded. -->
+  <string name="nova_onboarding_add_search_widget_subtitle" tools:ignore="BrandUsage,UnusedResources">Eñepyrũ peteĩteĩva jeheka ne pumbyry mba’erechaha guive ha péicha eikuaáta Firefox ñemo’ã eguerekoha.</string>
   <!-- "Add search widget" onboarding button. 'Firefox' is intentionally hardcoded. -->
   <string name="nova_onboarding_add_search_widget_button" tools:ignore="BrandUsage,UnusedResources">Embjuaju Firefox widget</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
@@ -2306,7 +2319,7 @@
   <!-- Title for Accessibility Text Size Scaling Preference -->
   <string name="preference_accessibility_font_size_title">Taireñoiha tuichakue</string>
   <!-- %d is the percentage of the slide bar for setting the text font size and %% will be announced as "percent". -->
-  <string name="a11y_preference_accessibility_font_size_percentage">%d %%.</string>
+  <string name="a11y_preference_accessibility_font_size_percentage" tools:ignore="UnusedResources" moz:removedIn="148">%d %%.</string>
   <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
   <string name="preference_accessibility_auto_size_2">Tai tuichakue ijeheguíva</string>
   <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
