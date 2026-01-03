@@ -151,6 +151,10 @@ class PerformanceTimingData final : public CacheablePerformanceTimingData {
   DOMHighResTimeStamp ConnectEndHighRes(Performance* aPerformance);
   DOMHighResTimeStamp RequestStartHighRes(Performance* aPerformance);
   DOMHighResTimeStamp ResponseStartHighRes(Performance* aPerformance);
+  DOMHighResTimeStamp FirstInterimResponseStartHighRes(
+      Performance* aPerformance);
+  DOMHighResTimeStamp FinalResponseHeadersStartHighRes(
+      Performance* aPerformance);
   DOMHighResTimeStamp ResponseEndHighRes(Performance* aPerformance);
 
   DOMHighResTimeStamp ZeroTime() const { return mZeroTime; }
@@ -180,6 +184,7 @@ class PerformanceTimingData final : public CacheablePerformanceTimingData {
   TimeStamp mConnectEnd;
   TimeStamp mRequestStart;
   TimeStamp mResponseStart;
+  TimeStamp mFinalResponseHeadersStart;
   TimeStamp mCacheReadStart;
   TimeStamp mResponseEnd;
   TimeStamp mCacheReadEnd;
@@ -412,6 +417,7 @@ struct ParamTraits<mozilla::dom::PerformanceTimingData> {
     WriteParam(aWriter, aParam.mConnectEnd);
     WriteParam(aWriter, aParam.mRequestStart);
     WriteParam(aWriter, aParam.mResponseStart);
+    WriteParam(aWriter, aParam.mFinalResponseHeadersStart);
     WriteParam(aWriter, aParam.mCacheReadStart);
     WriteParam(aWriter, aParam.mResponseEnd);
     WriteParam(aWriter, aParam.mCacheReadEnd);
@@ -447,6 +453,7 @@ struct ParamTraits<mozilla::dom::PerformanceTimingData> {
            ReadParam(aReader, &aResult->mConnectEnd) &&
            ReadParam(aReader, &aResult->mRequestStart) &&
            ReadParam(aReader, &aResult->mResponseStart) &&
+           ReadParam(aReader, &aResult->mFinalResponseHeadersStart) &&
            ReadParam(aReader, &aResult->mCacheReadStart) &&
            ReadParam(aReader, &aResult->mResponseEnd) &&
            ReadParam(aReader, &aResult->mCacheReadEnd) &&
