@@ -3160,44 +3160,50 @@
 
 # The root margin for image lazy loading, defined as four (value, percentage)
 # pairs.
-- name: dom.image-lazy-loading.root-margin.top
+- name: dom.lazy-loading.margin.top
   type: float
   value: 600
   mirror: always
 
-- name: dom.image-lazy-loading.root-margin.top.percentage
+- name: dom.lazy-loading.margin.top.percentage
   type: bool
   value: false
   mirror: always
 
-- name: dom.image-lazy-loading.root-margin.bottom
+- name: dom.lazy-loading.margin.bottom
   type: float
   value: 600
   mirror: always
 
-- name: dom.image-lazy-loading.root-margin.bottom.percentage
+- name: dom.lazy-loading.margin.bottom.percentage
   type: bool
   value: false
   mirror: always
 
-- name: dom.image-lazy-loading.root-margin.left
+- name: dom.lazy-loading.margin.left
   type: float
   value: 600
   mirror: always
 
-- name: dom.image-lazy-loading.root-margin.left.percentage
+- name: dom.lazy-loading.margin.left.percentage
   type: bool
   value: false
   mirror: always
 
-- name: dom.image-lazy-loading.root-margin.right
+- name: dom.lazy-loading.margin.right
   type: float
   value: 600
   mirror: always
 
-- name: dom.image-lazy-loading.root-margin.right.percentage
+- name: dom.lazy-loading.margin.right.percentage
   type: bool
   value: false
+  mirror: always
+
+# Whether we use scrollMargin or rootMargin
+- name: dom.lazy-loading.margin.is-scroll
+  type: bool
+  value: true
   mirror: always
 
 # Enable indexedDB in private browsing mode with encryption
