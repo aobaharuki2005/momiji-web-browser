@@ -11,6 +11,7 @@
 #include "mozilla/GlobalFreezeObserver.h"
 #include "mozilla/GlobalTeardownObserver.h"
 #include "mozilla/Result.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
