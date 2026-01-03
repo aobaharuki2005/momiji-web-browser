@@ -1070,12 +1070,6 @@ bool InspectorUtils::IsBlockContainer(GlobalObject&, Element& aElement) {
   if (!frame) {
     return false;
   }
-
-  // For fieldset elements, we need to check the inner frame.
-  if (nsFieldSetFrame* fieldsetFrame = do_QueryFrame(frame)) {
-    frame = fieldsetFrame->GetInner();
-  }
-
   if (frame->IsBlockFrameOrSubclass()) {
     return true;
   }
@@ -1092,7 +1086,6 @@ bool InspectorUtils::IsBlockContainer(GlobalObject&, Element& aElement) {
       return true;
     }
   }
-
   return false;
 }
 
