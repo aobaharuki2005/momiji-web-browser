@@ -18402,7 +18402,10 @@ static void PropagateUserGestureActivationBetweenPiP(
     // this means activation in a cross-origin subframe in the opener will
     // cause the PIP window to get activation.
     nsPIDOMWindowOuter* outer = currentBC->Top()->GetDOMWindow();
-    NS_ENSURE_TRUE_VOID(outer);
+    if (!outer) {
+      // We don't warn on failure due to the frequency. See bug 2008394.
+      return;
+    }
     nsPIDOMWindowInner* inner = outer->GetCurrentInnerWindow();
     NS_ENSURE_TRUE_VOID(inner);
     DocumentPictureInPicture* dpip = inner->GetExtantDocumentPictureInPicture();
