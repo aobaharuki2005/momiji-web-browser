@@ -154,8 +154,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   void SetConnectEnd(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
   void SetRequestStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
   void SetResponseStart(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
-  void SetFinalResponseHeadersStart(mozilla::TimeStamp timeStamp,
-                                    bool onlyIfNull = false);
   void SetResponseEnd(mozilla::TimeStamp timeStamp, bool onlyIfNull = false);
 
   [[nodiscard]] bool Do0RTT() override;
