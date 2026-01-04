@@ -41,6 +41,8 @@
   <string name="mozac_browser_errorpages_security_bad_hsts_cert_back">شاته لاړ شه</string>
   <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
   <string name="mozac_browser_errorpages_net_interrupt_title">اړیکه پرې شوه</string>
+  <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+  <string name="mozac_browser_errorpages_offline_title">آفلاين حالت</string>
   <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
   <string name="mozac_browser_errorpages_corrupted_content_title">د منځپانګې د خرابوالي تېروتنه</string>
   <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
