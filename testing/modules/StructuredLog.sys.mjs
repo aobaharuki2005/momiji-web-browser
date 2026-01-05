@@ -215,10 +215,18 @@ export class StructuredLogger {
     }
 
     if (this.#dumpScope) {
-      this.#dumpFun(Cu.cloneInto(allData, this.#dumpScope));
-    } else {
-      this.#dumpFun(allData);
+      try {
+        allData = Cu.cloneInto(allData, this.#dumpScope);
+      } catch (e) {
+        try {
+          this.error(`Failed to cloneInto: ${e}`);
+          this.warning(`Tried to clone: ${uneval(allData)}`);
+        } catch (e2) {
+          console.error("Failed to handle clone error", e, e2);
+        }
+      }
     }
+    this.#dumpFun(allData);
   }
 
   #testId(test) {
