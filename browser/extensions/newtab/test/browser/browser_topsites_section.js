@@ -144,9 +144,7 @@ test_newtab({
     );
 
     // Click the "Add" button
-    let addBtn = content.document.querySelector(
-      'moz-button[data-l10n-id="newtab-topsites-add-button"]'
-    );
+    let addBtn = content.document.querySelector(".done");
     addBtn.click();
 
     // Wait for Topsite to be populated
