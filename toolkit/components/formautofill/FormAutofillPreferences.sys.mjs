@@ -195,6 +195,7 @@ export class FormAutofillPreferences {
     addressesGroup.getSetting = win.Preferences.getSetting.bind(
       win.Preferences
     );
+    Services.obs.notifyObservers(win, "formautofill-preferences-initialized");
   }
 
   async initializePaymentsStorage() {

@@ -1443,12 +1443,27 @@ Preferences.addSetting({
 Preferences.addSetting({
   id: "add-payment-button",
   deps: ["saveAndFillPayments"],
+  setup: (emitChange, _, setting) => {
+    function updateDepsAndChange() {
+      setting._deps = null;
+      emitChange();
+    }
+    Services.obs.addObserver(
+      updateDepsAndChange,
+      "formautofill-preferences-initialized"
+    );
+    return () =>
+      Services.obs.removeObserver(
+        updateDepsAndChange,
+        "formautofill-preferences-initialized"
+      );
+  },
   onUserClick: ({ target }) => {
     target.ownerGlobal.gSubDialog.open(
       "chrome://formautofill/content/editCreditCard.xhtml"
     );
   },
-  disabled: ({ saveAndFillPayments }) => !saveAndFillPayments.value,
+  disabled: ({ saveAndFillPayments }) => !saveAndFillPayments?.value,
 });
 
 Preferences.addSetting({
@@ -1942,10 +1957,25 @@ Preferences.addSetting({
 Preferences.addSetting({
   id: "add-address-button",
   deps: ["saveAndFillAddresses"],
+  setup: (emitChange, _, setting) => {
+    function updateDepsAndChange() {
+      setting._deps = null;
+      emitChange();
+    }
+    Services.obs.addObserver(
+      updateDepsAndChange,
+      "formautofill-preferences-initialized"
+    );
+    return () =>
+      Services.obs.removeObserver(
+        updateDepsAndChange,
+        "formautofill-preferences-initialized"
+      );
+  },
   onUserClick: () => {
     FormAutofillPreferences.prototype.openEditAddressDialog(undefined, window);
   },
-  disabled: ({ saveAndFillAddresses }) => !saveAndFillAddresses.value,
+  disabled: ({ saveAndFillAddresses }) => !saveAndFillAddresses?.value,
 });
 
 Preferences.addSetting({
