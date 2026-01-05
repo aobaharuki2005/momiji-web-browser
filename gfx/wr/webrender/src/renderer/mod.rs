@@ -38,7 +38,7 @@ use api::{ClipMode, ColorF, ColorU, MixBlendMode, TextureCacheCategory};
 use api::{DocumentId, Epoch, ExternalImageHandler, RenderReasons};
 #[cfg(feature = "replay")]
 use api::ExternalImageId;
-use api::{ExternalImageSource, ExternalImageType, ImageFormat, PremultipliedColorF};
+use api::{ImageFormat, PremultipliedColorF};
 use api::{PipelineId, ImageRendering, Checkpoint, NotificationRequest, ImageBufferKind};
 #[cfg(feature = "replay")]
 use api::ExternalImage;
@@ -80,7 +80,6 @@ use crate::internal_types::{TextureCacheAllocInfo, TextureCacheAllocationKind, T
 use crate::internal_types::{RenderTargetInfo, Swizzle, DeferredResolveIndex};
 use crate::picture::ResolvedSurfaceTexture;
 use crate::tile_cache::TileId;
-use crate::prim_store::DeferredResolve;
 use crate::profiler::{self, RenderCommandLog, GpuProfileTag, TransactionProfile};
 use crate::profiler::{Profiler, add_event_marker, add_text_marker, thread_is_being_profiled};
 use crate::device::query::GpuProfiler;
@@ -121,6 +120,7 @@ use std::{
 use std::collections::hash_map::Entry;
 
 mod debug;
+mod external_image;
 mod gpu_buffer;
 mod shade;
 mod vertex;
@@ -1721,7 +1721,14 @@ impl Renderer {
                     "Cleared texture cache without sending new document frame.");
         }
 
-        self.update_deferred_resolves(&frame.deferred_resolves, &mut frame.gpu_buffer_f);
+        external_image::update_deferred_resolves(
+            self.external_image_handler.as_mut(),
+            &mut self.texture_resolver.external_images,
+            &mut self.gpu_profiler,
+            &mut self.device,
+            &frame.deferred_resolves,
+            &mut frame.gpu_buffer_f,
+        );
 
         self.draw_frame(
             frame,
@@ -1746,7 +1753,11 @@ impl Renderer {
 
         self.profile.merge(profile);
 
-        self.unlock_external_images(&frame.deferred_resolves);
+        external_image::unlock_external_images(
+            self.external_image_handler.as_mut(),
+            &mut self.texture_resolver.external_images,
+            &frame.deferred_resolves,
+        );
 
         let _gm = self.gpu_profiler.start_marker("end frame");
         self.gpu_profiler.end_frame();
@@ -4930,101 +4941,6 @@ impl Renderer {
                 &textures,
                 stats,
             );
-        }
-    }
-
-    fn update_deferred_resolves(
-        &mut self,
-        deferred_resolves: &[DeferredResolve],
-        gpu_buffer: &mut GpuBufferF,
-    ) {
-        // The first thing we do is run through any pending deferred
-        // resolves, and use a callback to get the UV rect for this
-        // custom item. Then we patch the resource_rects structure
-        // here before it's uploaded to the GPU.
-        if deferred_resolves.is_empty() {
-            return;
-        }
-
-        let handler = self.external_image_handler
-            .as_mut()
-            .expect("Found external image, but no handler set!");
-
-        for (i, deferred_resolve) in deferred_resolves.iter().enumerate() {
-            self.gpu_profiler.place_marker("deferred resolve");
-            let props = &deferred_resolve.image_properties;
-            let ext_image = props
-                .external_image
-                .expect("BUG: Deferred resolves must be external images!");
-            // Provide rendering information for NativeTexture external images.
-            let image = handler.lock(ext_image.id, ext_image.channel_index, deferred_resolve.is_composited);
-            let texture_target = match ext_image.image_type {
-                ExternalImageType::TextureHandle(target) => target,
-                ExternalImageType::Buffer => {
-                    panic!("not a suitable image type in update_deferred_resolves()");
-                }
-            };
-
-            // In order to produce the handle, the external image handler may call into
-            // the GL context and change some states.
-            self.device.reset_state();
-
-            let texture = match image.source {
-                ExternalImageSource::NativeTexture(texture_id) => {
-                    ExternalTexture::new(
-                        texture_id,
-                        texture_target,
-                        image.uv,
-                        deferred_resolve.rendering,
-                    )
-                }
-                ExternalImageSource::Invalid => {
-                    warn!("Invalid ext-image");
-                    debug!(
-                        "For ext_id:{:?}, channel:{}.",
-                        ext_image.id,
-                        ext_image.channel_index
-                    );
-                    // Just use 0 as the gl handle for this failed case.
-                    ExternalTexture::new(
-                        0,
-                        texture_target,
-                        image.uv,
-                        deferred_resolve.rendering,
-                    )
-                }
-                ExternalImageSource::RawData(_) => {
-                    panic!("Raw external data is not expected for deferred resolves!");
-                }
-            };
-
-            self.texture_resolver
-                .external_images
-                .insert(DeferredResolveIndex(i as u32), texture);
-
-            let addr = gpu_buffer.resolve_handle(deferred_resolve.handle);
-            let index = addr.as_u32() as usize;
-            gpu_buffer.data[index] = image.uv.to_array().into();
-            gpu_buffer.data[index + 1] = [0f32; 4].into();
-        }
-    }
-
-    fn unlock_external_images(
-        &mut self,
-        deferred_resolves: &[DeferredResolve],
-    ) {
-        if !self.texture_resolver.external_images.is_empty() {
-            let handler = self.external_image_handler
-                .as_mut()
-                .expect("Found external image, but no handler set!");
-
-            for (index, _) in self.texture_resolver.external_images.drain() {
-                let props = &deferred_resolves[index.0 as usize].image_properties;
-                let ext_image = props
-                    .external_image
-                    .expect("BUG: Deferred resolves must be external images!");
-                handler.unlock(ext_image.id, ext_image.channel_index);
-            }
         }
     }
 
