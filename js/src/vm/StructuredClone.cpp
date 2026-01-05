@@ -3679,7 +3679,9 @@ JSObject* JSStructuredCloneReader::readSavedFrameHeader(
       source = mutedErrors;
       mutedErrors.setBoolean(true);  // Safe default value.
     } else {
-      // Invalid type.
+      JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                                JSMSG_SC_BAD_SERIALIZED_DATA,
+                                "invalid mutedErrors");
       return nullptr;
     }
   }
