@@ -246,6 +246,10 @@ class nsHostResolver : public nsISupports, public AHostResolver {
                          const mozilla::MutexAutoLock& aLock)
       MOZ_REQUIRES(mLock);
 
+  void MaybeAddToEvictionQ(nsHostRecord* rec,
+                           const mozilla::MutexAutoLock& aLock)
+      MOZ_REQUIRES(mLock);
+
   void AddToEvictionQ(nsHostRecord* rec, const mozilla::MutexAutoLock& aLock)
       MOZ_REQUIRES(mLock);
 
@@ -266,8 +270,8 @@ class nsHostResolver : public nsISupports, public AHostResolver {
   already_AddRefed<nsHostRecord> FromUnspecEntry(
       nsHostRecord* aRec, const nsACString& aHost, const nsACString& aTrrServer,
       const nsACString& aOriginSuffix, uint16_t aType,
-      nsIDNSService::DNSFlags aFlags, uint16_t af, bool aPb, nsresult& aStatus)
-      MOZ_REQUIRES(mLock);
+      nsIDNSService::DNSFlags aFlags, uint16_t af, bool aPb, nsresult& aStatus,
+      const mozilla::MutexAutoLock& aLock) MOZ_REQUIRES(mLock);
 
   enum {
     METHOD_HIT = 1,

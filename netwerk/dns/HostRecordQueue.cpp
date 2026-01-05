@@ -38,11 +38,22 @@ void HostRecordQueue::InsertRecord(nsHostRecord* aRec,
   mPendingCount++;
 }
 
-void HostRecordQueue::AddToEvictionQ(
+void HostRecordQueue::MaybeAddToEvictionQ(
     nsHostRecord* aRec, uint32_t aMaxCacheEntries,
     nsRefPtrHashtable<nsGenericHashKey<nsHostKey>, nsHostRecord>& aDB,
     const MutexAutoLock& aProofOfLock) {
   if (aRec->isInList()) {
+    return;
+  }
+
+  AddToEvictionQ(aRec, aMaxCacheEntries, aDB, aProofOfLock, true);
+}
+
+void HostRecordQueue::AddToEvictionQ(
+    nsHostRecord* aRec, uint32_t aMaxCacheEntries,
+    nsRefPtrHashtable<nsGenericHashKey<nsHostKey>, nsHostRecord>& aDB,
+    const MutexAutoLock& aProofOfLock, bool aSkipCheck) {
+  if (aRec->isInList() && !aSkipCheck) {
     bool inEvictionQ = mEvictionQ.contains(aRec);
     MOZ_DIAGNOSTIC_ASSERT(!inEvictionQ, "Already in eviction queue");
     bool inHighQ = mHighQ.contains(aRec);
@@ -90,6 +101,21 @@ void HostRecordQueue::AddToEvictionQ(
       }
     }
   }
+}
+
+void HostRecordQueue::MoveToEvictionQueueTail(
+    nsHostRecord* aRec, const MutexAutoLock& aProofOfLock) {
+  bool inEvictionQ = mEvictionQ.contains(aRec);
+  if (!inEvictionQ) {
+    // Note: this function can be called when the record isn’t in the
+    // mEvictionQ. For example, if we immediately start a TTL lookup (see
+    // nsHostResolver::CompleteLookupLocked), the record may not be in
+    // mEvictionQ.
+    return;
+  }
+
+  aRec->remove();
+  mEvictionQ.insertBack(aRec);
 }
 
 void HostRecordQueue::MaybeRenewHostRecord(nsHostRecord* aRec,
