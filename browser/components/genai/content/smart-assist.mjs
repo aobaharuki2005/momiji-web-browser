@@ -16,8 +16,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
-  AIWindowUI:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowUI.sys.mjs",
 });
 
 const FULL_PAGE_URL = "chrome://browser/content/genai/smartAssistPage.html";
@@ -249,8 +247,107 @@ export class SmartAssist extends MozLitElement {
     );
   }
 
+  /**
+   * Helper method to get the chrome document
+   *
+   * @returns {Document} The top-level chrome window's document
+   */
+
+  _getChromeDocument() {
+    return window.browsingContext.topChromeWindow.document;
+  }
+
+  /**
+   * Helper method to find an element in the chrome document
+   *
+   * @param {string} id - The element ID to find
+   * @returns {Element|null} The found element or null
+   */
+
+  _getChromeElement(id) {
+    return this._getChromeDocument().getElementById(id);
+  }
+
+  /**
+   * Helper method to get or create the AI window browser element
+   *
+   * @param {Document} chromeDoc - The chrome document
+   * @param {Element} box - The AI window box element
+   * @returns {Element} The AI window browser element
+   */
+
+  _getOrCreateBrowser(chromeDoc, box) {
+    let stack = box.querySelector(".ai-window-browser-stack");
+    if (!stack) {
+      stack = chromeDoc.createXULElement("stack");
+      stack.className = "ai-window-browser-stack";
+      stack.setAttribute("flex", "1");
+      box.appendChild(stack);
+    }
+
+    let browser = stack.querySelector("#ai-window-browser");
+    if (!browser) {
+      browser = chromeDoc.createXULElement("browser");
+      browser.setAttribute("id", "ai-window-browser");
+      browser.setAttribute("flex", "1");
+      browser.setAttribute("disablehistory", "true");
+      browser.setAttribute("disablefullscreen", "true");
+      browser.setAttribute("tooltip", "aHTMLTooltip");
+
+      browser.setAttribute(
+        "src",
+        "chrome://browser/content/aiwindow/aiWindow.html"
+      );
+
+      stack.appendChild(browser);
+    }
+    return stack;
+  }
+
+  /**
+   * Helper method to get or create the smartbar element
+   *
+   * @param {Document} chromeDoc - The chrome document
+   * @param {Element} container - The container element
+   */
+  _getOrCreateSmartbar(chromeDoc, container) {
+    // Find existing Smartbar, or create it the first time we open the sidebar.
+    let smartbar = chromeDoc.getElementById("ai-window-smartbar");
+
+    if (!smartbar) {
+      smartbar = chromeDoc.createElement("moz-smartbar");
+      smartbar.id = "ai-window-smartbar";
+      smartbar.setAttribute("sap-name", "smartbar");
+      smartbar.setAttribute("pageproxystate", "invalid");
+      smartbar.setAttribute("popover", "manual");
+      smartbar.classList.add("smartbar", "urlbar");
+      container.append(smartbar);
+    }
+    return smartbar;
+  }
+
   _toggleAIWindowSidebar() {
-    lazy.AIWindowUI.toggleSidebar(window.browsingContext.topChromeWindow);
+    const chromeDoc = this._getChromeDocument();
+    const box = chromeDoc.getElementById("ai-window-box");
+    const splitter = chromeDoc.getElementById("ai-window-splitter");
+
+    if (!box || !splitter) {
+      return;
+    }
+
+    const stack = this._getOrCreateBrowser(chromeDoc, box);
+    this._getOrCreateSmartbar(chromeDoc, stack);
+
+    // Toggle visibility
+    const opening = box.hidden;
+
+    box.hidden = !opening;
+    splitter.hidden = !opening;
+
+    // Make sure parent container is also visible
+    if (box.parentElement && box.parentElement.hidden) {
+      box.parentElement.hidden = false;
+    }
   }
 
   render() {
