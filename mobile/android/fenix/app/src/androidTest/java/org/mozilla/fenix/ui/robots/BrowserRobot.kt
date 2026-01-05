@@ -1021,7 +1021,7 @@ class BrowserRobot(private val composeTestRule: ComposeTestRule) {
                 if (i == RETRY_COUNT) {
                     throw e
                 } else {
-                    browserScreen(this@BrowserRobot.composeTestRule) {
+                    browserScreen(composeTestRule) {
                     }.openThreeDotMenu {
                     }.clickRefreshButton {
                         waitForPageToLoad(pageLoadWaitingTime = waitingTimeLong)
