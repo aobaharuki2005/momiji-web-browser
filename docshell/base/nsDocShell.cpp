@@ -443,9 +443,7 @@ nsresult nsDocShell::InitWindow(nsIWidget* aParentWidget, int32_t aX,
                                 mozilla::dom::WindowGlobalChild* aWindowActor) {
   SetParentWidget(aParentWidget);
   SetPositionAndSize(aX, aY, aWidth, aHeight, 0);
-  if (!Initialize(aOpenWindowInfo, aWindowActor)) {
-    NS_WARNING("Failed to initialize docshell");
-  }
+  NS_ENSURE_TRUE(Initialize(aOpenWindowInfo, aWindowActor), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
