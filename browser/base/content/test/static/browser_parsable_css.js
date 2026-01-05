@@ -196,9 +196,9 @@ let propNameAllowlist = [
   /* Allow design tokens in devtools without all variables being used there */
   { sourceName: /\/design-system\/tokens-.*\.css$/, isFromDevTools: true },
 
-  // Ignore token properties that follow the pattern --color-[name]-[number]
+  // Ignore token properties that follow the pattern --color-[name]-[number] or --color-[name]-alpha-[number]
   // This enables us to provide our full color palette for developers.
-  { propName: /--color-[a-z]+-\d+/, isFromDevTools: false },
+  { propName: /--color-[a-z]+(-alpha)?-\d+/, isFromDevTools: false },
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and

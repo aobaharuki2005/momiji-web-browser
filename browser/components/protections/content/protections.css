@@ -33,7 +33,7 @@
 
   --block-background-color: var(--color-gray-70);
   --breaches-background-color: var(--color-orange-30);
-  --feature-banner-color: rgba(0, 0, 0, 0.05);
+  --feature-banner-color: var(--color-black-alpha-10);
 }
 
 body {
@@ -208,7 +208,7 @@ a.hidden,
 
     --gear-icon-fill: oklch(from var(--color-gray-05) l c h / 60%);
     --hover-grey-link: var(--grey-30);
-    --feature-banner-color: rgba(255, 255, 255, 0.1);
+    --feature-banner-color: var(--color-white-alpha-10);
   }
 
   .etp-card .icon.dark,

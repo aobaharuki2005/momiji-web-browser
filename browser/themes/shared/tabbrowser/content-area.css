@@ -23,7 +23,6 @@
       --tabpanel-background-color: linear-gradient(45deg, #722291 0%, #45278d 50%, #393473 100%) !important;
     }
   }
-  --dialog-backdrop-color: rgba(28, 27, 34, 0.45);
 }
 
 #navigator-toolbox {
@@ -581,7 +580,7 @@ split-view-footer {
 
 .dialogOverlay[topmost="true"],
 #window-modal-dialog::backdrop {
-  background-color: var(--dialog-backdrop-color);
+  background-color: var(--background-color-overlay);
 }
 
 .dialogOverlay[hideContent="true"][topmost="true"] {
