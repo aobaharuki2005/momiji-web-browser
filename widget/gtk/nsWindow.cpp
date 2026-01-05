@@ -2251,15 +2251,21 @@ bool nsWindow::WaylandPopupFitsToplevelWindow() {
 
   int parentWidth = gdk_window_get_width(toplevelGdkWindow);
   int parentHeight = gdk_window_get_height(toplevelGdkWindow);
-  LOG("  parent size %d x %d", parentWidth, parentHeight);
+  DesktopIntRect parentWidgetRect(0, 0, parentWidth, parentHeight);
 
-  GdkRectangle requestedRect{mLastMoveRequest.x, mLastMoveRequest.y,
-                             mLastSizeRequest.width, mLastSizeRequest.height};
-  LOG("  popup topleft %d, %d size %d x %d", requestedRect.x, requestedRect.y,
-      requestedRect.width, requestedRect.height);
-  bool fits = requestedRect.x >= 0 && requestedRect.y >= 0 &&
-              requestedRect.x + requestedRect.width <= parentWidth &&
-              requestedRect.y + requestedRect.height <= parentHeight;
+  nsWindow* parentWindow = get_window_for_gtk_widget(GTK_WIDGET(parent));
+  if (!parentWindow) {
+    return false;
+  }
+
+  LOG("  parent size %d x %d", parentWindow->mClientArea.width,
+      parentWindow->mClientArea.height);
+
+  DesktopIntRect popupRect(mLastMoveRequest, mLastSizeRequest);
+  LOG("  popup topleft %d, %d size %d x %d", popupRect.x, popupRect.y,
+      popupRect.width, popupRect.height);
+
+  bool fits = parentWindow->mClientArea.Contains(popupRect);
   LOG("  fits %d", fits);
   return fits;
 }
