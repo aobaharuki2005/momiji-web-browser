@@ -1359,24 +1359,22 @@ void ServoStyleSet::UpdateStylist() {
   AUTO_PROFILER_LABEL_RELEVANT_FOR_JS("Update stylesheet information", LAYOUT);
   MOZ_ASSERT(StylistNeedsUpdate());
 
-  if (mStylistState & StylistState::StyleSheetsDirty) {
-    Element* root = mDocument->GetRootElement();
-    const ServoElementSnapshotTable* snapshots = nullptr;
-    if (nsPresContext* pc = GetPresContext()) {
-      snapshots = &pc->RestyleManager()->Snapshots();
-    }
-    Servo_StyleSet_FlushStyleSheets(mRawData.get(), root, snapshots);
+  AutoTArray<StyleAuthorStyles*, 20> nonDocumentStyles;
+  Element* root = mDocument->GetRootElement();
+  const ServoElementSnapshotTable* snapshots = nullptr;
+  if (nsPresContext* pc = GetPresContext()) {
+    snapshots = &pc->RestyleManager()->Snapshots();
   }
 
   if (MOZ_UNLIKELY(mStylistState & StylistState::ShadowDOMStyleSheetsDirty)) {
     EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
       if (auto* authorStyles = aShadowRoot.GetServoStyles()) {
-        Servo_AuthorStyles_Flush(authorStyles, mRawData.get());
+        nonDocumentStyles.AppendElement(authorStyles);
       }
     });
-    Servo_StyleSet_RemoveUniqueEntriesFromAuthorStylesCache(mRawData.get());
   }
-
+  Servo_StyleSet_FlushStyleSheets(mRawData.get(), root, snapshots,
+                                  &nonDocumentStyles);
   mStylistState = StylistState::NotDirty;
 }
 

@@ -303,6 +303,15 @@ bool Gecko_AnimationNameMayBeReferencedFromStyle(
   return aPresContext->AnimationManager()->AnimationMayBeReferenced(aName);
 }
 
+void Gecko_InvalidatePositionTry(const Element* aElement) {
+  auto* f = aElement->GetPrimaryFrame();
+  if (!f || !f->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    return;
+  }
+  f->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
+  f->PresShell()->MarkPositionedFrameForReflow(f);
+}
+
 float Gecko_GetScrollbarInlineSize(const nsPresContext* aPc) {
   MOZ_ASSERT(aPc);
   auto overlay = aPc->UseOverlayScrollbars() ? nsITheme::Overlay::Yes
