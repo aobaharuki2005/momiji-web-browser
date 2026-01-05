@@ -14,15 +14,15 @@ import {
 import {
   conversationStarterPrompt,
   conversationFollowupPrompt,
-  conversationInsightsPrompt,
+  conversationMemoriesPrompt,
 } from "moz-src:///browser/components/aiwindow/models/prompts/ConversationSuggestionsPrompts.sys.mjs";
 
 import { MESSAGE_ROLE } from "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs";
 
-import { InsightsManager } from "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs";
+import { MemoriesManager } from "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs";
 
-// Max number of insights to include in prompts
-const MAX_NUM_INSIGHTS = 8;
+// Max number of memories to include in prompts
+const MAX_NUM_MEMORIES = 8;
 
 /**
  * Helper to trim conversation history to recent messages, dropping empty messages, tool calls and responses
@@ -49,22 +49,22 @@ export function trimConversation(messages, maxMessages = 15) {
 }
 
 /**
- * Helper to add insights to base prompt if applicable
+ * Helper to add memories to base prompt if applicable
  *
  * @param {string} base - base prompt
- * @returns {Promise<string>} - prompt with insights added if applicable
+ * @returns {Promise<string>} - prompt with memories added if applicable
  */
-export async function addInsightsToPrompt(base) {
-  let insightSummaries =
-    await InsightsGetterForSuggestionPrompts.getInsightSummariesForPrompt(
-      MAX_NUM_INSIGHTS
+export async function addMemoriesToPrompt(base) {
+  let memorySummaries =
+    await MemoriesGetterForSuggestionPrompts.getMemorySummariesForPrompt(
+      MAX_NUM_MEMORIES
     );
-  if (insightSummaries.length) {
-    const insightsBlock = insightSummaries.map(s => `- ${s}`).join("\n");
-    const insightPrompt = await renderPrompt(conversationInsightsPrompt, {
-      insights: insightsBlock,
+  if (memorySummaries.length) {
+    const memoriesBlock = memorySummaries.map(s => `- ${s}`).join("\n");
+    const memoryPrompt = await renderPrompt(conversationMemoriesPrompt, {
+      memories: memoriesBlock,
     });
-    return `${base}\n${insightPrompt}`;
+    return `${base}\n${memoryPrompt}`;
   }
   return base;
 }
@@ -163,17 +163,17 @@ export const NewTabStarterGenerator = {
 };
 
 /**
- * Generates conversation starter prompts based on tab context + (optional) user insights
+ * Generates conversation starter prompts based on tab context + (optional) user memories
  *
  * @param {Array} contextTabs - Array of tab objects with title, url, favicon
  * @param {number} n - Number of suggestions to generate (default 6)
- * @param {boolean} useInsights - Whether to include user insights in prompt (default false)
+ * @param {boolean} useMemories - Whether to include user memories in prompt (default false)
  * @returns {Promise<Array>} Array of {text, type} suggestion objects
  */
 export async function generateConversationStartersSidebar(
   contextTabs = [],
   n = 2,
-  useInsights = false
+  useMemories = false
 ) {
   try {
     const today = new Date().toISOString().slice(0, 10);
@@ -204,8 +204,8 @@ export async function generateConversationStartersSidebar(
       date: today,
     });
 
-    let filled = useInsights
-      ? await addInsightsToPrompt(base, useInsights)
+    let filled = useMemories
+      ? await addMemoriesToPrompt(base, useMemories)
       : base;
 
     const engineInstance = await openAIEngine.build("starter");
@@ -238,14 +238,14 @@ export async function generateConversationStartersSidebar(
  * @param {Array} conversationHistory - Array of chat messages
  * @param {object} currentTab - Current tab object with title, url
  * @param {number} n - Number of suggestions to generate (default 6)
- * @param {boolean} useInsights - Whether to include user insights in prompt (default false)
+ * @param {boolean} useMemories - Whether to include user memories in prompt (default false)
  * @returns {Promise<Array>} Array of {text, type} suggestion objects
  */
 export async function generateFollowupPrompts(
   conversationHistory,
   currentTab,
   n = 2,
-  useInsights = false
+  useMemories = false
 ) {
   try {
     const today = new Date().toISOString().slice(0, 10);
@@ -261,8 +261,8 @@ export async function generateFollowupPrompts(
       date: today,
     });
 
-    let filled = useInsights
-      ? await addInsightsToPrompt(base, useInsights)
+    let filled = useMemories
+      ? await addMemoriesToPrompt(base, useMemories)
       : base;
 
     const engineInstance = await openAIEngine.build("followup");
@@ -286,21 +286,21 @@ export async function generateFollowupPrompts(
   }
 }
 
-export const InsightsGetterForSuggestionPrompts = {
+export const MemoriesGetterForSuggestionPrompts = {
   /**
-   * Gets the requested number of unique insight summaries for prompt inclusion
+   * Gets the requested number of unique memory summaries for prompt inclusion
    *
-   * @param {number} maxInsights - Max number of insights to return (default MAX_NUM_INSIGHTS)
-   * @returns {Promise<Array>} Array of string insight summaries
+   * @param {number} maxMemories - Max number of memories to return (default MAX_NUM_MEMORIES)
+   * @returns {Promise<Array>} Array of string memory summaries
    */
 
-  async getInsightSummariesForPrompt(maxInsights) {
-    const insightSummaries = [];
-    const insightEntries = (await InsightsManager.getAllInsights()) || {};
+  async getMemorySummariesForPrompt(maxMemories) {
+    const memorySummaries = [];
+    const memoryEntries = (await MemoriesManager.getAllMemories()) || {};
     const seenSummaries = new Set();
 
-    for (const { insight_summary } of insightEntries) {
-      const summaryText = String(insight_summary ?? "").trim();
+    for (const { memory_summary } of memoryEntries) {
+      const summaryText = String(memory_summary ?? "").trim();
       if (!summaryText) {
         continue;
       }
@@ -309,12 +309,12 @@ export const InsightsGetterForSuggestionPrompts = {
         continue;
       }
       seenSummaries.add(lower);
-      insightSummaries.push(summaryText);
-      if (insightSummaries.length >= maxInsights) {
+      memorySummaries.push(summaryText);
+      if (memorySummaries.length >= maxMemories) {
         break;
       }
     }
 
-    return insightSummaries;
+    return memorySummaries;
   },
 };

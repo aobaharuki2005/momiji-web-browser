@@ -47,7 +47,7 @@ export async function getRecentChats(
   maxResults = DEFAULT_MAX_RESULTS,
   halfLifeDays = DEFAULT_HALF_LIFE_DAYS
 ) {
-  // Underlying Chatstore uses Date type but InsightsStore maintains in TS
+  // Underlying Chatstore uses Date type but MemoriesStore maintains in TS
   const startDate = new Date(startTime);
   const endDate = new Date();
   const chatStore = new ChatStore();

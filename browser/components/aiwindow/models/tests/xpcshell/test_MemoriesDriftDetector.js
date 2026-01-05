@@ -6,15 +6,15 @@
 do_get_profile();
 ("use strict");
 
-const { InsightsDriftDetector } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/InsightsDriftDetector.sys.mjs"
+const { MemoriesDriftDetector } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/models/memories/MemoriesDriftDetector.sys.mjs"
 );
-const { InsightsManager } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs"
+const { MemoriesManager } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs"
 );
 
 add_task(function test_computeDriftTriggerFromBaseline_no_data() {
-  const result = InsightsDriftDetector.computeDriftTriggerFromBaseline(
+  const result = MemoriesDriftDetector.computeDriftTriggerFromBaseline(
     [],
     [],
     {}
@@ -73,7 +73,7 @@ add_task(function test_computeDriftTriggerFromBaseline_triggers_on_delta() {
     },
   ];
 
-  const result = InsightsDriftDetector.computeDriftTriggerFromBaseline(
+  const result = MemoriesDriftDetector.computeDriftTriggerFromBaseline(
     baselineMetrics,
     deltaMetrics,
     {
@@ -108,7 +108,7 @@ add_task(function test_computeDriftTriggerFromBaseline_no_delta() {
 
   const deltaMetrics = [];
 
-  const result = InsightsDriftDetector.computeDriftTriggerFromBaseline(
+  const result = MemoriesDriftDetector.computeDriftTriggerFromBaseline(
     baselineMetrics,
     deltaMetrics,
     {}
@@ -167,7 +167,7 @@ add_task(
       },
     ];
 
-    const result = InsightsDriftDetector.computeDriftTriggerFromBaseline(
+    const result = MemoriesDriftDetector.computeDriftTriggerFromBaseline(
       baselineMetrics,
       // only d2 and d3 should be evaluated (setting evalDeltaCount = 2)
       deltaMetrics,
@@ -226,7 +226,7 @@ add_task(function test_computeDriftTriggerFromBaseline_non_spiky_no_trigger() {
     },
   ];
 
-  const result = InsightsDriftDetector.computeDriftTriggerFromBaseline(
+  const result = MemoriesDriftDetector.computeDriftTriggerFromBaseline(
     baselineMetrics,
     deltaMetrics,
     {
@@ -246,16 +246,16 @@ add_task(function test_computeDriftTriggerFromBaseline_non_spiky_no_trigger() {
   );
 });
 
-add_task(async function test_computeHistoryDriftAndTrigger_no_prior_insight() {
-  const originalGetLastHistoryInsightTimestamp =
-    InsightsManager.getLastHistoryInsightTimestamp;
+add_task(async function test_computeHistoryDriftAndTrigger_no_prior_memory() {
+  const originalGetLastHistoryMemoryTimestamp =
+    MemoriesManager.getLastHistoryMemoryTimestamp;
 
-  // Force "no previous insight" so computeHistoryDriftSessionMetrics bails out.
-  InsightsManager.getLastHistoryInsightTimestamp = async () => null;
+  // Force "no previous memory" so computeHistoryDriftSessionMetrics bails out.
+  MemoriesManager.getLastHistoryMemoryTimestamp = async () => null;
 
-  const result = await InsightsDriftDetector.computeHistoryDriftAndTrigger({});
+  const result = await MemoriesDriftDetector.computeHistoryDriftAndTrigger({});
 
-  dump(`no_prior_insight result = ${JSON.stringify(result)}\n`);
+  dump(`no_prior_memory result = ${JSON.stringify(result)}\n`);
 
   Assert.ok(
     Array.isArray(result.baselineMetrics),
@@ -268,19 +268,19 @@ add_task(async function test_computeHistoryDriftAndTrigger_no_prior_insight() {
   Assert.equal(
     result.baselineMetrics.length,
     0,
-    "No baseline metrics when there is no prior insight timestamp"
+    "No baseline metrics when there is no prior memory timestamp"
   );
   Assert.equal(
     result.deltaMetrics.length,
     0,
-    "No delta metrics when there is no prior insight timestamp"
+    "No delta metrics when there is no prior memory timestamp"
   );
   Assert.ok(
     !result.trigger.triggered,
-    "Trigger should be false when there is no prior insight"
+    "Trigger should be false when there is no prior memory"
   );
 
   // Restore original implementation.
-  InsightsManager.getLastHistoryInsightTimestamp =
-    originalGetLastHistoryInsightTimestamp;
+  MemoriesManager.getLastHistoryMemoryTimestamp =
+    originalGetLastHistoryMemoryTimestamp;
 });
