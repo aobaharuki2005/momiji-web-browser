@@ -3,6 +3,7 @@ support-files = [
   "Bug422543Child.sys.mjs",
   "dummy_page.html",
   "favicon_bug655270.ico",
+  "file_2007897.html",
   "file_bug234628-1-child.html",
   "file_bug234628-1.html",
   "file_bug234628-10-child.xhtml",
@@ -277,6 +278,11 @@ skip-if = [
 ["browser_bug2002654.js"]
 
 ["browser_bug2004165.js"]
+skip-if = [
+  "debug", # bug 2005202
+]
+
+["browser_bug2007897.js"]
 skip-if = [
   "debug", # bug 2005202
 ]

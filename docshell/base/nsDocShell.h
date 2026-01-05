@@ -677,8 +677,9 @@ class nsDocShell final : public nsDocLoader,
       bool aNotifiedBeforeUnloadListeners = false);
 
  public:
-  bool IsAboutBlankLoadOntoInitialAboutBlank(nsIURI* aURI,
-                                             nsIPrincipal* aPrincipalToInherit);
+  bool ShouldDoInitialAboutBlankSyncLoad(nsIURI* aURI,
+                                         nsDocShellLoadState* aLoadState,
+                                         nsIPrincipal* aPrincipalToInherit);
 
   void UnsuppressPaintingIfNoNavigationAwayFromAboutBlank(
       mozilla::PresShell* aPresShell);
