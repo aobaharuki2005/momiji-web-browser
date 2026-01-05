@@ -64,6 +64,16 @@
   -webkit-line-clamp: 10;
 }
 
+.tab-preview-add-note {
+  --box-border-color: transparent;
+  --box-padding: var(--space-medium);
+  margin: 0 var(--space-small) var(--space-small);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
 @keyframes tab-hover-preview-fadein {
   from {
     opacity: 0;
