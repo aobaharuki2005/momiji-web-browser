@@ -298,6 +298,7 @@
           gBrowser.appendStatusPanel(browser);
           break;
         case "mouseout":
+          StatusPanel.panel.setAttribute("inactive", true);
           gBrowser.appendStatusPanel();
           break;
       }
