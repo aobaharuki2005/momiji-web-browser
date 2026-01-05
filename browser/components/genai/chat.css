@@ -23,6 +23,7 @@ browser {
 
 #header {
   align-items: center;
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
   background-color: var(--sidebar-background-color);
   border-bottom: 1px solid var(--border-color);
   display: flex;
@@ -88,7 +89,7 @@ browser {
 }
 
 #multi-stage-message-root {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--background-color-overlay);
   display: flex;
   flex-direction: column;
   inset: 0;
@@ -241,6 +242,7 @@ browser {
   .badge {
     --badge-background-color-new: var(--color-green-40);
 
+    /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
     background: var(--badge-background-color-new);
     border-radius: var(--border-radius-small);
     color: var(--button-text-color-primary-hover);

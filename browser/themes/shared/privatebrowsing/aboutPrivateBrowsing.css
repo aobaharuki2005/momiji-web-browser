@@ -107,7 +107,8 @@ p {
 }
 
 .promo.top {
-  background: rgba(255, 255, 255, 0.2);
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+  background: var(--color-white-alpha-20);
   position: absolute;
   top: 0;
   left: 0;
@@ -356,7 +357,8 @@ p {
 
 .info {
   margin-top: 64px;
-  background-color: rgba(0, 0, 0, 0.2);
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+  background-color: var(--color-black-alpha-20);
   background-image: url("chrome://global/skin/icons/indicator-private-browsing.svg");
   background-position: left 32px top 20px;
   background-repeat: no-repeat;
@@ -455,7 +457,8 @@ p {
   display: flex;
   border: 1px solid transparent;
   border-radius: var(--border-radius-small);
-  background-color: rgba(0, 0, 0, 0.2);
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-design-tokens */
+  background-color: var(--color-black-alpha-20);
 }
 
 .promo-dismiss {
