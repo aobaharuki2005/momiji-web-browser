@@ -227,6 +227,10 @@ notes = "This is a first-party crate which is also published to crates.io, but w
 audit-as-crates-io = true
 notes = "This is a first-party crate which is also published to crates.io, but we should publish audits for it for the benefit of the ecosystem."
 
+[policy.spirv]
+audit-as-crates-io = true
+notes = "Contains only upstream mainline history pending release."
+
 [policy.storage]
 audit-as-crates-io = false
 notes = "This is a first-party crate which is entirely unrelated to the crates.io package of the same name."
