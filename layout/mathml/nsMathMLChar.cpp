@@ -67,7 +67,7 @@ static const nsGlyphCode kNullGlyph = {{{0, 0}}, false};
 // Partial glyphs can be retrieved with ElementAt(...).
 //
 // A table consists of "nsGlyphCode"s which are viewed either as Unicode
-// points (for nsPropertiesTable) or as direct glyph indices (for
+// points (for nsUnicodeTable) or as direct glyph indices (for
 // nsOpenTypeTable)
 // -----------------------------------------------------------------------------
 
@@ -109,14 +109,10 @@ class nsGlyphTable {
   gfx::ShapedTextFlags mFlags;
 };
 
-// An instance of nsPropertiesTable is associated with one primary font.
-
 // General format of MathFont Property Files from which glyph data are
 // retrieved:
 // -----------------------------------------------------------------------------
-// Each font should have its set of glyph data. For example, the glyph data for
-// the "Symbol" font and the "MT Extra" font are in "mathfontSymbol.properties"
-// and "mathfontMTExtra.properties", respectively. The mathfont property file
+// The mathfontUnicode.properties property file
 // is a set of all the stretchy MathML characters that can be rendered with that
 // font using larger and/or partial glyphs. The entry of each stretchy character
 // in the mathfont property file gives, in that order, the 4 partial glyphs:
@@ -152,16 +148,13 @@ static nsresult LoadProperties(const nsACString& aName,
                                                 uriStr);
 }
 
-class nsPropertiesTable final : public nsGlyphTable {
+class nsUnicodeTable final : public nsGlyphTable {
  public:
-  explicit nsPropertiesTable(const nsACString& aPrimaryFontName)
-      : mPrimaryFontName(aPrimaryFontName), mState(NS_TABLE_STATE_EMPTY) {
-    MOZ_COUNT_CTOR(nsPropertiesTable);
+  nsUnicodeTable() : mState(NS_TABLE_STATE_EMPTY) {
+    MOZ_COUNT_CTOR(nsUnicodeTable);
   }
 
-  MOZ_COUNTED_DTOR(nsPropertiesTable)
-
-  const nsCString& PrimaryFontName() const { return mPrimaryFontName; }
+  MOZ_COUNTED_DTOR(nsUnicodeTable)
 
   const nsCString& FontNameFor(const nsGlyphCode& aGlyphCode) const override {
     MOZ_ASSERT_UNREACHABLE();
@@ -203,8 +196,6 @@ class nsPropertiesTable final : public nsGlyphTable {
       gfxFontGroup* aFontGroup, const nsGlyphCode& aGlyph) override;
 
  private:
-  nsCString mPrimaryFontName;
-
   // Tri-state variable for error/empty/ready
   int32_t mState;
 
@@ -223,24 +214,19 @@ class nsPropertiesTable final : public nsGlyphTable {
 };
 
 /* virtual */
-nsGlyphCode nsPropertiesTable::ElementAt(DrawTarget* /* aDrawTarget */,
-                                         int32_t /* aAppUnitsPerDevPixel */,
-                                         gfxFontGroup* /* aFontGroup */,
-                                         char16_t aChar, bool /* aVertical */,
-                                         uint32_t aPosition) {
+nsGlyphCode nsUnicodeTable::ElementAt(DrawTarget* /* aDrawTarget */,
+                                      int32_t /* aAppUnitsPerDevPixel */,
+                                      gfxFontGroup* /* aFontGroup */,
+                                      char16_t aChar, bool /* aVertical */,
+                                      uint32_t aPosition) {
   if (mState == NS_TABLE_STATE_ERROR) {
     return kNullGlyph;
   }
   // Load glyph properties if this is the first time we have been here
   if (mState == NS_TABLE_STATE_EMPTY) {
-    nsresult rv = LoadProperties(PrimaryFontName(), mGlyphProperties);
+    nsresult rv = LoadProperties("Unicode"_ns, mGlyphProperties);
 #ifdef DEBUG
-    nsAutoCString uriStr;
-    uriStr.AssignLiteral("resource://gre/res/fonts/mathfont");
-    uriStr.Append(PrimaryFontName());
-    uriStr.StripWhitespace();  // that may come from mGlyphCodeFonts
-    uriStr.AppendLiteral(".properties");
-    printf("Loading %s ... %s\n", uriStr.get(),
+    printf("Loading mathfontUnicode.properties ... %s\n",
            (NS_FAILED(rv)) ? "Failed" : "Done");
 #endif
     if (NS_FAILED(rv)) {
@@ -298,11 +284,11 @@ nsGlyphCode nsPropertiesTable::ElementAt(DrawTarget* /* aDrawTarget */,
 }
 
 /* virtual */
-already_AddRefed<gfxTextRun> nsPropertiesTable::MakeTextRun(
+already_AddRefed<gfxTextRun> nsUnicodeTable::MakeTextRun(
     DrawTarget* aDrawTarget, int32_t aAppUnitsPerDevPixel,
     gfxFontGroup* aFontGroup, const nsGlyphCode& aGlyph) {
   NS_ASSERTION(!aGlyph.isGlyphID,
-               "nsPropertiesTable can only access glyphs by code point");
+               "nsUnicodeTable can only access glyphs by code point");
   return aFontGroup->MakeTextRun(aGlyph.code, aGlyph.Length(), aDrawTarget,
                                  aAppUnitsPerDevPixel, mFlags,
                                  nsTextFrameUtils::Flags(), nullptr);
@@ -482,22 +468,15 @@ class nsGlyphTableList final : public nsIObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  nsPropertiesTable mUnicodeTable;
+  nsUnicodeTable mUnicodeTable;
 
-  nsGlyphTableList() : mUnicodeTable("Unicode"_ns) {}
+  nsGlyphTableList() {}
 
   nsresult Initialize();
   nsresult Finalize();
 
  private:
   ~nsGlyphTableList() = default;
-
-  nsPropertiesTable* PropertiesTableAt(int32_t aIndex) {
-    return &mPropertiesTableList.ElementAt(aIndex);
-  }
-  int32_t PropertiesTableCount() { return mPropertiesTableList.Length(); }
-  // List of glyph tables;
-  nsTArray<nsPropertiesTable> mPropertiesTableList;
 };
 
 NS_IMPL_ISUPPORTS(nsGlyphTableList, nsIObserver)
@@ -884,7 +863,7 @@ class nsMathMLChar::StretchEnumContext {
   bool mTryParts;
 
  private:
-  AutoTArray<nsGlyphTable*, 16> mTablesTried;
+  bool mUnicodeTableTried = false;
   bool& mGlyphFound;
 };
 
@@ -1244,12 +1223,11 @@ bool nsMathMLChar::StretchEnumContext::EnumCallback(
   }
 
   if (!openTypeTable) {
-    if (context->mTablesTried.Contains(glyphTable)) {
-      return false;  // already tried this one
+    // Make sure we only try the UnicodeTable once.
+    if (context->mUnicodeTableTried) {
+      return false;
     }
-
-    // Only try this table once.
-    context->mTablesTried.AppendElement(glyphTable);
+    context->mUnicodeTableTried = true;
   }
 
   // If the unicode table is being used, then search all font families.  If a
