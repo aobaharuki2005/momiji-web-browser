@@ -4230,6 +4230,10 @@ void nsWindow::SchedulePendingBounds() {
 void nsWindow::MaybeRecomputeBounds() {
   LOG("MaybeRecomputeBounds %d", mPendingBoundsChange);
   if (mPendingBoundsChange) {
+    // Make sure GTK has laid out our child window / mContainer properly,
+    // so that we don't get broken client margins, and in order to avoid
+    // spurious resize events.
+    gtk_container_check_resize(GTK_CONTAINER(mShell));
     RecomputeBounds();
   }
 }
