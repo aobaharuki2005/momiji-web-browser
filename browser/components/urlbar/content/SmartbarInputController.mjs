@@ -51,11 +51,6 @@ export class SmartbarInputController {
     return this.input.readOnly;
   }
 
-  /**
-   * Sets the read-only state of the input.
-   *
-   * @param {boolean} val
-   */
   set readOnly(val) {
     this.input.readOnly = val;
   }
@@ -69,11 +64,6 @@ export class SmartbarInputController {
     return this.input.placeholder ?? "";
   }
 
-  /**
-   * Sets the placeholder text for the input.
-   *
-   * @param {string} val
-   */
   set placeholder(val) {
     this.input.placeholder = val ?? "";
   }
@@ -105,11 +95,6 @@ export class SmartbarInputController {
     return this.input.selectionStart ?? 0;
   }
 
-  /**
-   * Sets the start offset of the selection.
-   *
-   * @param {number} val
-   */
   set selectionStart(val) {
     this.setSelectionRange(val, this.selectionEnd ?? val);
   }
@@ -123,11 +108,6 @@ export class SmartbarInputController {
     return this.input.selectionEnd ?? 0;
   }
 
-  /**
-   * Sets the end offset of the selection.
-   *
-   * @param {number} val
-   */
   set selectionEnd(val) {
     this.setSelectionRange(this.selectionStart ?? 0, val);
   }

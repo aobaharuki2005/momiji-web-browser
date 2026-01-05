@@ -620,9 +620,6 @@ export class SmartbarInput extends HTMLElement {
     );
   }
 
-  /**
-   * @type {typeof HTMLInputElement.prototype.placeholder}
-   */
   set placeholder(val) {
     if (this.#smartbarInputController) {
       this.#smartbarInputController.placeholder = val;
@@ -640,9 +637,6 @@ export class SmartbarInput extends HTMLElement {
     return this.#smartbarInputController?.readOnly ?? this.inputField?.readOnly;
   }
 
-  /**
-   * @type {typeof HTMLInputElement.prototype.readOnly}
-   */
   set readOnly(val) {
     if (this.#smartbarInputController) {
       this.#smartbarInputController.readOnly = val;
@@ -664,9 +658,6 @@ export class SmartbarInput extends HTMLElement {
     );
   }
 
-  /**
-   * @type {typeof HTMLInputElement.prototype.selectionStart}
-   */
   set selectionStart(val) {
     if (this.#smartbarInputController) {
       this.#smartbarInputController.selectionStart = val;
@@ -688,9 +679,6 @@ export class SmartbarInput extends HTMLElement {
     );
   }
 
-  /**
-   * @type {typeof HTMLInputElement.prototype.selectionEnd}
-   */
   set selectionEnd(val) {
     if (this.#smartbarInputController) {
       this.#smartbarInputController.selectionEnd = val;
