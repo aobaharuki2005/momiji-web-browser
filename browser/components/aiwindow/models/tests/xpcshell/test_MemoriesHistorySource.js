@@ -9,7 +9,7 @@ const {
   aggregateSessions,
   topkAggregates,
 } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs"
+  "moz-src:///browser/components/aiwindow/models/memories/MemoriesHistorySource.sys.mjs"
 );
 
 /**

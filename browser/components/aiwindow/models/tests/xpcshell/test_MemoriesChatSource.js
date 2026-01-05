@@ -5,7 +5,7 @@
 do_get_profile();
 
 const { getRecentChats, computeFreshnessScore } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/InsightsChatSource.sys.mjs"
+  "moz-src:///browser/components/aiwindow/models/memories/MemoriesChatSource.sys.mjs"
 );
 const { ChatStore, ChatMessage, MESSAGE_ROLE } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs"

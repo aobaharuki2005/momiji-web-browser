@@ -4,15 +4,15 @@
  */
 
 import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
-import { InsightsManager } from "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs";
-import { sessionizeVisits } from "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs";
+import { MemoriesManager } from "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs";
+import { sessionizeVisits } from "moz-src:///browser/components/aiwindow/models/memories/MemoriesHistorySource.sys.mjs";
 
 import {
   // How many of the most recent delta sessions to evaluate against thresholds.
   DRIFT_EVAL_DELTA_COUNT as DEFAULT_EVAL_DELTA_COUNT,
   // Quantile of baseline scores used as a threshold (e.g. 0.9 => 90th percentile).
   DRIFT_TRIGGER_QUANTILE as DEFAULT_TRIGGER_QUANTILE,
-} from "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs";
+} from "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs";
 
 /**
  * @typedef {object} SessionMetric
@@ -23,16 +23,16 @@ import {
  */
 
 /**
- * This class detects drift to help decide when to run insights generation.
+ * This class detects drift to help decide when to run memories generation.
  *
  * High-level flow for history-based drift:
- *  1. Read last_history_insight_ts via InsightsManager.getLastHistoryInsightTimestamp().
+ *  1. Read last_history_memory_ts via MemoriesManager.getLastHistoryMemoryTimestamp().
  *  2. Use a DRIFT_LOOKBACK_DAYS (e.g. 14 days) lookback prior to that timestamp
  *     to define a baseline window, and include all visits from that lookback to "now".
  *  3. Sessionize visits via sessionizeVisits().
  *  4. Split sessions into:
- *        baseline: session_start_ms < last_history_insight_ts
- *        delta:    session_start_ms >= last_history_insight_ts
+ *        baseline: session_start_ms < last_history_memory_ts
+ *        delta:    session_start_ms >= last_history_memory_ts
  *  5. Build a baseline host distribution from baseline sessions.
  *  6. For BOTH baseline and delta sessions, compute:
  *        - JS divergence vs baseline.
@@ -41,7 +41,7 @@ import {
  *     and compare recent delta sessions to those thresholds to decide a trigger.
  */
 
-// Lookback period before lastHistoryInsightTS to define the baseline window.
+// Lookback period before lastHistoryMemoryTS to define the baseline window.
 const DRIFT_LOOKBACK_DAYS = 14;
 // Cap on how many visits to fetch from Places.
 const DRIFT_HISTORY_LIMIT = 5000;
@@ -185,7 +185,7 @@ function averageSurprisal(hosts, baselineDist) {
 /**
  *
  */
-export class InsightsDriftDetector {
+export class MemoriesDriftDetector {
   /**
    * Convenience helper: compute metrics AND a trigger decision in one call.
    *
@@ -253,8 +253,8 @@ export class InsightsDriftDetector {
    * @param {SessionMetric[]} baselineMetrics
    * @param {SessionMetric[]} deltaMetrics
    * @param {object} [options]
-   * @param {number} [options.triggerQuantile=InsightsDriftDetector.DEFAULT_TRIGGER_QUANTILE]
-   * @param {number} [options.evalDeltaCount=InsightsDriftDetector.DEFAULT_EVAL_DELTA_COUNT]
+   * @param {number} [options.triggerQuantile=MemoriesDriftDetector.DEFAULT_TRIGGER_QUANTILE]
+   * @param {number} [options.evalDeltaCount=MemoriesDriftDetector.DEFAULT_EVAL_DELTA_COUNT]
    * @returns {{
    *   jsThreshold: number,
    *   surpriseThreshold: number,
@@ -315,22 +315,22 @@ export class InsightsDriftDetector {
   /**
    * Compute per-session drift metrics (JS divergence and average surprisal)
    * for baseline and delta sessions, based on history around the last
-   * history insight timestamp.
+   * history memory timestamp.
    *
    * Baseline window:
-   *   [last_history_insight_ts - DRIFT_LOOKBACK_DAYS, last_history_insight_ts)
+   *   [last_history_memory_ts - DRIFT_LOOKBACK_DAYS, last_history_memory_ts)
    * Delta window:
-   *   [last_history_insight_ts, now)
+   *   [last_history_memory_ts, now)
    *
-   * If there is no prior history insight timestamp, or if there is not enough
+   * If there is no prior history memory timestamp, or if there is not enough
    * data to form both baseline and delta, this returns empty arrays.
    *
    * @returns {Promise<{ baselineMetrics: SessionMetric[], deltaMetrics: SessionMetric[] }>}
    */
   static async computeHistoryDriftSessionMetrics() {
-    const lastTsMs = await InsightsManager.getLastHistoryInsightTimestamp();
+    const lastTsMs = await MemoriesManager.getLastHistoryMemoryTimestamp();
     if (!lastTsMs) {
-      // No prior insights -> no meaningful baseline yet.
+      // No prior memories -> no meaningful baseline yet.
       return { baselineMetrics: [], deltaMetrics: [] };
     }
 
@@ -340,7 +340,7 @@ export class InsightsDriftDetector {
     /** @type {Array<{ place_id:number, url:string, host:string, title:string, visit_date:number }>} */
     const rows = [];
     await PlacesUtils.withConnectionWrapper(
-      "InsightsDriftDetector:computeHistoryDriftSessionMetrics",
+      "MemoriesDriftDetector:computeHistoryDriftSessionMetrics",
       async db => {
         const stmt = await db.executeCached(DRIFT_HISTORY_SQL, {
           cutoff: cutoffMicros,

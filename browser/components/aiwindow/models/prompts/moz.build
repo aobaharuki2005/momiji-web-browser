@@ -8,6 +8,6 @@ with Files("**"):
 MOZ_SRC_FILES += [
     "AssistantPrompts.sys.mjs",
     "ConversationSuggestionsPrompts.sys.mjs",
-    "InsightsPrompts.sys.mjs",
+    "MemoriesPrompts.sys.mjs",
     "TitleGenerationPrompts.sys.mjs",
 ]

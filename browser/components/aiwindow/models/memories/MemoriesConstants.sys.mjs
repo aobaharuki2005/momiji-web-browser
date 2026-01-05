@@ -7,7 +7,7 @@ export const CONVERSATION = "conversation";
 export const ALL_SOURCES = new Set([HISTORY, CONVERSATION]);
 
 /**
- * Insight categories
+ * Memory categories
  */
 export const CATEGORIES = "categories";
 export const CATEGORIES_LIST = [
@@ -37,7 +37,7 @@ export const CATEGORIES_LIST = [
 ];
 
 /**
- * Insight intents
+ * Memory intents
  */
 export const INTENTS = "intents";
 export const INTENTS_LIST = [
@@ -52,9 +52,9 @@ export const INTENTS_LIST = [
   "Resume / Revisit",
 ];
 
-// if generate insights is enabled. This is used by
-// - InsightsScheduler
-export const PREF_GENERATE_INSIGHTS = "browser.aiwindow.insights";
+// if generate memories is enabled. This is used by
+// - MemoriesScheduler
+export const PREF_GENERATE_MEMORIES = "browser.aiwindow.memories";
 
 // Number of latest sessions to check drift
 export const DRIFT_EVAL_DELTA_COUNT = 3;
