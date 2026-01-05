@@ -5,7 +5,6 @@
 #include "desktop_device_info.h"
 
 #include <cstddef>
-#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <memory>

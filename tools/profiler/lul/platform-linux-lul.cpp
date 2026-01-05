@@ -5,7 +5,6 @@
 
 #include <signal.h>
 #include <string.h>
-#include <stdlib.h>
 #include <time.h>
 
 #include "mozilla/ProfilerState.h"

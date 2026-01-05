@@ -62,7 +62,6 @@ static_assert(sizeof(BLOCKSIZE) < (SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t)),
 #  define _FILE_OFFSET_BITS 64
 #  include <netinet/in.h>
 #  include <unistd.h>
-#  include <stdio.h>
 #endif
 
 #define HOST_TO_NETWORK64(x)                                               \
