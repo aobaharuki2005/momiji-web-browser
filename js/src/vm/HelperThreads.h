@@ -307,7 +307,7 @@ void WaitForAllHelperThreads(AutoLockHelperThreadState& lock);
 
 // Start handling any compression tasks for this runtime. Called at the start of
 // major GC.
-void StartOffThreadCompressionsOnGC(JSRuntime* rt);
+void StartOffThreadCompressionsOnGC(JSRuntime* rt, bool isShrinkingGC);
 
 // Cancel all scheduled, in progress, or finished compression tasks for
 // runtime.

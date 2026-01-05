@@ -430,7 +430,7 @@ class GlobalHelperThreadState {
 
  public:
   // Used by a major GC to create and enqueue compression tasks.
-  enum class ScheduleCompressionTask { GC, API };
+  enum class ScheduleCompressionTask { NonShrinkingGC, ShrinkingGC, API };
   void createAndSubmitCompressionTasks(ScheduleCompressionTask schedule,
                                        JSRuntime* rt);
 
