@@ -2,8 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import ctypes
 import enum
 import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -217,16 +219,37 @@ def storage_freespace(topsrcdir: str, topobjdir: str, **kwargs) -> list[DoctorCh
 
 def fix_lastaccess_win():
     """Run `fsutil` to fix lastaccess behaviour."""
+    print("Disabling filesystem lastaccess")
+
+    cmd_args = ["behavior", "set", "disablelastaccess", "1"]
     try:
-        print("Disabling filesystem lastaccess")
-
-        command = ["fsutil", "behavior", "set", "disablelastaccess", "1"]
-        subprocess.check_output(command)
-
+        subprocess.check_output(["fsutil"] + cmd_args, stderr=subprocess.STDOUT)
         print("Filesystem lastaccess disabled.")
+        return
+    except subprocess.CalledProcessError as e:
+        output = e.output.decode("utf-8", errors="replace") if e.output else ""
+        is_privilege_error = (
+            "Access is denied" in output
+            or "requires elevation" in output.lower()
+            or e.returncode == 1
+        )
 
-    except subprocess.CalledProcessError:
-        print("Could not disable filesystem lastaccess.")
+        if not is_privilege_error:
+            print(f"Could not disable filesystem lastaccess: {output}")
+            return
+
+    print("Retrying with elevated privileges...")
+    print("Note: This will trigger a UAC prompt.")
+
+    fsutil_exe = shutil.which("fsutil")
+    if not fsutil_exe:
+        print("Could not find fsutil executable.")
+        return
+
+    ctypes.windll.shell32.ShellExecuteW(
+        None, "runas", fsutil_exe, " ".join(cmd_args), None, 0
+    )
+    print("Re-run `./mach doctor` to verify the change was applied.")
 
 
 @check
@@ -259,7 +282,10 @@ def fs_lastaccess(
             return DoctorCheck(
                 name="lastaccess",
                 status=CheckStatus.WARNING,
-                display_text=["lastaccess enabled"],
+                display_text=[
+                    "lastaccess enabled",
+                    DISABLE_LASTACCESS_WIN.strip(),
+                ],
                 fix=fix_lastaccess_win,
             )
 
