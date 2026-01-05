@@ -33,17 +33,7 @@ class HostRecordQueue final {
   void AddToEvictionQ(
       nsHostRecord* aRec, uint32_t aMaxCacheEntries,
       nsRefPtrHashtable<nsGenericHashKey<nsHostKey>, nsHostRecord>& aDB,
-      const MutexAutoLock& aProofOfLock, bool aSkipCheck = false);
-
-  void MaybeAddToEvictionQ(
-      nsHostRecord* aRec, uint32_t aMaxCacheEntries,
-      nsRefPtrHashtable<nsGenericHashKey<nsHostKey>, nsHostRecord>& aDB,
       const MutexAutoLock& aProofOfLock);
-
-  // Move aRec to the tail of mEvictionQ (the most-recently-used end).
-  void MoveToEvictionQueueTail(nsHostRecord* aRec,
-                               const MutexAutoLock& aProofOfLock);
-
   // Called for removing the record from mEvictionQ. When this function is
   // called, the record should be either in mEvictionQ or not in any queue.
   void MaybeRenewHostRecord(nsHostRecord* aRec,
