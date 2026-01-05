@@ -12,6 +12,7 @@
 #include "gfxMathTable.h"
 #include "gfxTextRun.h"
 #include "gfxUtils.h"
+#include "mozilla/BinarySearch.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MathAlgorithms.h"
@@ -31,7 +32,6 @@
 #include "nsIFrame.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
-#include "nsIPersistentProperties2.h"
 #include "nsLayoutUtils.h"
 #include "nsMathMLOperators.h"
 #include "nsNetUtil.h"
@@ -56,7 +56,7 @@ static void NormalizeDefaultFont(nsFont& aFont, float aFontSizeInflation) {
 }
 
 // -----------------------------------------------------------------------------
-static const nsGlyphCode kNullGlyph = {{{0, 0}}, false};
+static const nsGlyphCode kNullGlyph = {{0}, false};
 
 // -----------------------------------------------------------------------------
 // nsGlyphTable is a class that provides an interface for accessing glyphs
@@ -109,50 +109,72 @@ class nsGlyphTable {
   gfx::ShapedTextFlags mFlags;
 };
 
-// General format of MathFont Property Files from which glyph data are
-// retrieved:
-// -----------------------------------------------------------------------------
-// The mathfontUnicode.properties property file
-// is a set of all the stretchy MathML characters that can be rendered with that
-// font using larger and/or partial glyphs. The entry of each stretchy character
-// in the mathfont property file gives, in that order, the 4 partial glyphs:
-// Top (or Left), Middle, Bottom (or Right), Glue; and the variants of bigger
-// sizes (if any).
+// A Unicode construction is a set of all the stretchy MathML characters that
+// can be rendered with Unicode using larger and/or partial glyphs. The entry
+// of each stretchy character gives the 4 partial glyphs and the variants of
+// bigger sizes (if any):
+// Base | Top (or Left) | Middle | Bottom (or Right) | Glue | Size 0 | Size 1
 // A position that is not relevant to a particular character is indicated there
 // with the UNICODE REPLACEMENT CHARACTER 0xFFFD.
-// -----------------------------------------------------------------------------
-
-#define NS_TABLE_STATE_ERROR -1
-#define NS_TABLE_STATE_EMPTY 0
-#define NS_TABLE_STATE_READY 1
-
-// helper to trim off comments from data in a MathFont Property File
-static void Clean(nsString& aValue) {
-  // chop the trailing # comment portion if any ...
-  int32_t comment = aValue.RFindChar('#');
-  if (comment > 0) {
-    aValue.Truncate(comment);
-  }
-  aValue.CompressWhitespace();
-}
-
-// helper to load a MathFont Property File
-static nsresult LoadProperties(const nsACString& aName,
-                               nsCOMPtr<nsIPersistentProperties>& aProperties) {
-  nsAutoCString uriStr;
-  uriStr.AssignLiteral("resource://gre/res/fonts/mathfont");
-  uriStr.Append(aName);
-  uriStr.StripWhitespace();  // that may come from aName
-  uriStr.AppendLiteral(".properties");
-  return NS_LoadPersistentPropertiesFromURISpec(getter_AddRefs(aProperties),
-                                                uriStr);
-}
+// FIXME: This table was converted from the original mathfontUnicode.properties
+// in bug 1007090. It has been unchanged for backward compatibility but probably
+// at some point this should be standardized and implemented cross-browser.
+// See also https://w3c.github.io/mathml-core/#unicode-based-glyph-assemblies
+typedef char16_t const UnicodeConstruction[7];
+// clang-format off
+static const UnicodeConstruction gUnicodeTableConstructions[] = {
+  { 0x0028, 0x239B, 0x0000, 0x239D, 0x239C, 0x0028, 0x0000 },
+  { 0x0029, 0x239E, 0x0000, 0x23A0, 0x239F, 0x0029, 0x0000 },
+  { 0x003D, 0x0000, 0x0000, 0x0000, 0x003D, 0x003D, 0x0000 },
+  { 0x005B, 0x23A1, 0x0000, 0x23A3, 0x23A2, 0x005B, 0x0000 },
+  { 0x005D, 0x23A4, 0x0000, 0x23A6, 0x23A5, 0x005D, 0x0000 },
+  { 0x005F, 0x0000, 0x0000, 0x0000, 0x0332, 0x0332, 0x0000 },
+  { 0x007B, 0x23A7, 0x23A8, 0x23A9, 0x23AA, 0x007B, 0x0000 },
+  { 0x007C, 0x0000, 0x0000, 0x0000, 0x007C, 0x007C, 0x0000 },
+  { 0x007D, 0x23AB, 0x23AC, 0x23AD, 0x23AA, 0x007D, 0x0000 },
+  { 0x00AF, 0x0000, 0x0000, 0x0000, 0x0305, 0x00AF, 0x0000 },
+  { 0x0332, 0x0000, 0x0000, 0x0000, 0x0332, 0x0332, 0x0000 },
+  { 0x2016, 0x0000, 0x0000, 0x0000, 0x2016, 0x2016, 0x0000 },
+  { 0x203E, 0x0000, 0x0000, 0x0000, 0x0305, 0x00AF, 0x0000 },
+  { 0x2190, 0x2190, 0x0000, 0x0000, 0x23AF, 0x2190, 0x27F5 },
+  { 0x2191, 0x2191, 0x0000, 0x0000, 0x23D0, 0x2191, 0x0000 },
+  { 0x2192, 0x0000, 0x0000, 0x2192, 0x23AF, 0x2192, 0x27F6 },
+  { 0x2193, 0x0000, 0x0000, 0x2193, 0x23D0, 0x2193, 0x0000 },
+  { 0x2194, 0x2190, 0x0000, 0x2192, 0x23AF, 0x2194, 0x27F7 },
+  { 0x2195, 0x2191, 0x0000, 0x2193, 0x23D0, 0x2195, 0x0000 },
+  { 0x21A4, 0x2190, 0x0000, 0x22A3, 0x23AF, 0x21AA, 0x27FB },
+  { 0x21A6, 0x22A2, 0x0000, 0x2192, 0x23AF, 0x21A6, 0x27FC },
+  { 0x21BC, 0x21BC, 0x0000, 0x0000, 0x23AF, 0x21BC, 0x0000 },
+  { 0x21BD, 0x21BD, 0x0000, 0x0000, 0x23AF, 0x21BD, 0x0000 },
+  { 0x21C0, 0x0000, 0x0000, 0x21C0, 0x23AF, 0x21C0, 0x0000 },
+  { 0x21C1, 0x0000, 0x0000, 0x21C1, 0x23AF, 0x21C1, 0x0000 },
+  { 0x21D0, 0x0000, 0x0000, 0x0000, 0x0000, 0x21D0, 0x27F8 },
+  { 0x21D2, 0x0000, 0x0000, 0x0000, 0x0000, 0x21D2, 0x27F9 },
+  { 0x21D4, 0x0000, 0x0000, 0x0000, 0x0000, 0x21D4, 0x27FA },
+  { 0x2223, 0x0000, 0x0000, 0x0000, 0x2223, 0x2223, 0x0000 },
+  { 0x2225, 0x0000, 0x0000, 0x0000, 0x2225, 0x2225, 0x0000 },
+  { 0x222B, 0x2320, 0x0000, 0x2321, 0x23AE, 0x222B, 0x0000 },
+  { 0x2308, 0x23A1, 0x0000, 0x0000, 0x23A2, 0x2308, 0x0000 },
+  { 0x2309, 0x23A4, 0x0000, 0x0000, 0x23A5, 0x2309, 0x0000 },
+  { 0x230A, 0x0000, 0x0000, 0x23A3, 0x23A2, 0x230A, 0x0000 },
+  { 0x230B, 0x0000, 0x0000, 0x23A6, 0x23A5, 0x230B, 0x0000 },
+  { 0x23B0, 0x23A7, 0x0000, 0x23AD, 0x23AA, 0x23B0, 0x0000 },
+  { 0x23B1, 0x23AB, 0x0000, 0x23A9, 0x23AA, 0x23B1, 0x0000 },
+  { 0x27F5, 0x2190, 0x0000, 0x0000, 0x23AF, 0x27F5, 0x0000 },
+  { 0x27F6, 0x0000, 0x0000, 0x2192, 0x23AF, 0x27F6, 0x0000 },
+  { 0x27F7, 0x2190, 0x0000, 0x2192, 0x23AF, 0x27F7, 0x0000 },
+  { 0x294E, 0x21BC, 0x0000, 0x21C0, 0x23AF, 0x294E, 0x0000 },
+  { 0x2950, 0x21BD, 0x0000, 0x21C1, 0x23AF, 0x2950, 0x0000 },
+  { 0x295A, 0x21BC, 0x0000, 0x22A3, 0x23AF, 0x295A, 0x0000 },
+  { 0x295B, 0x22A2, 0x0000, 0x21C0, 0x23AF, 0x295B, 0x0000 },
+  { 0x295E, 0x21BD, 0x0000, 0x22A3, 0x23AF, 0x295E, 0x0000 },
+  { 0x295F, 0x22A2, 0x0000, 0x21C1, 0x23AF, 0x295F, 0x0000 },
+};
+// clang-format on
 
 class nsUnicodeTable final : public nsGlyphTable {
  public:
-  nsUnicodeTable() : mState(NS_TABLE_STATE_EMPTY) {
-    MOZ_COUNT_CTOR(nsUnicodeTable);
-  }
+  nsUnicodeTable() { MOZ_COUNT_CTOR(nsUnicodeTable); }
 
   MOZ_COUNTED_DTOR(nsUnicodeTable)
 
@@ -196,21 +218,21 @@ class nsUnicodeTable final : public nsGlyphTable {
       gfxFontGroup* aFontGroup, const nsGlyphCode& aGlyph) override;
 
  private:
-  // Tri-state variable for error/empty/ready
-  int32_t mState;
-
-  // The set of glyph data in this table, as provided by the MathFont Property
-  // File
-  nsCOMPtr<nsIPersistentProperties> mGlyphProperties;
-
-  // mGlyphCache is a buffer containing the glyph data associated with
-  // mCharCache.
-  // For a property line 'key = value' in the MathFont Property File,
-  // mCharCache will retain the 'key' -- which is a Unicode point, while
-  // mGlyphCache will retain the 'value', which is a consecutive list of
-  // nsGlyphCodes. Specifically therefore, the k-th glyph is characterized its
-  // Unicode point described at mGlyphCache[2*k],mGlyphCache[2*k+1].
-  nsString mGlyphCache;
+  struct UnicodeConstructionComparator {
+    int operator()(const UnicodeConstruction& aValue) const {
+      if (mTarget < aValue[0]) {
+        return -1;
+      }
+      if (mTarget > aValue[0]) {
+        return 1;
+      }
+      return 0;
+    }
+    explicit UnicodeConstructionComparator(char16_t aTarget)
+        : mTarget(aTarget) {}
+    const char16_t mTarget;
+  };
+  size_t mCachedIndex;
 };
 
 /* virtual */
@@ -219,68 +241,28 @@ nsGlyphCode nsUnicodeTable::ElementAt(DrawTarget* /* aDrawTarget */,
                                       gfxFontGroup* /* aFontGroup */,
                                       char16_t aChar, bool /* aVertical */,
                                       uint32_t aPosition) {
-  if (mState == NS_TABLE_STATE_ERROR) {
-    return kNullGlyph;
-  }
-  // Load glyph properties if this is the first time we have been here
-  if (mState == NS_TABLE_STATE_EMPTY) {
-    nsresult rv = LoadProperties("Unicode"_ns, mGlyphProperties);
-#ifdef DEBUG
-    printf("Loading mathfontUnicode.properties ... %s\n",
-           (NS_FAILED(rv)) ? "Failed" : "Done");
-#endif
-    if (NS_FAILED(rv)) {
-      mState = NS_TABLE_STATE_ERROR;  // never waste time with this table again
-      return kNullGlyph;
-    }
-    mState = NS_TABLE_STATE_READY;
-  }
-
   // Update our cache if it is not associated to this character
   if (mCharCache != aChar) {
-    // The key in the property file is interpreted as ASCII and kept
-    // as such ...
-    char key[10];
-    SprintfLiteral(key, "\\u%04X", aChar);
-    nsAutoString value;
-    nsresult rv =
-        mGlyphProperties->GetStringProperty(nsDependentCString(key), value);
-    if (NS_FAILED(rv)) {
+    size_t match;
+    if (!BinarySearchIf(gUnicodeTableConstructions, 0,
+                        std::size(gUnicodeTableConstructions),
+                        UnicodeConstructionComparator(aChar), &match)) {
       return kNullGlyph;
     }
-    Clean(value);
-    // Note: font identifier is internally an ASCII digit to avoid the null
-    // char issue
-    nsAutoString buffer;
-    int32_t length = value.Length();
-    int32_t i = 0;  // index in value
-    while (i < length) {
-      char16_t code = value[i];
-      ++i;
-      buffer.Append(code);
-      // Read the next word if we have a non-BMP character.
-      if (i < length && NS_IS_HIGH_SURROGATE(code)) {
-        code = value[i];
-        ++i;
-      } else {
-        code = char16_t('\0');
-      }
-      buffer.Append(code);
-    }
     // update our cache with the new settings
-    mGlyphCache.Assign(buffer);
+    mCachedIndex = match;
     mCharCache = aChar;
   }
 
-  uint32_t index = 2 * aPosition;
-  if (index + 1 >= mGlyphCache.Length()) {
+  const UnicodeConstruction& construction =
+      gUnicodeTableConstructions[mCachedIndex];
+  if (aPosition + 1 >= std::size(construction)) {
     return kNullGlyph;
   }
   nsGlyphCode ch;
-  ch.code[0] = mGlyphCache.CharAt(index);
-  ch.code[1] = mGlyphCache.CharAt(index + 1);
+  ch.code = construction[aPosition + 1];
   ch.isGlyphID = false;
-  return ch.code[0] == char16_t(0xFFFD) ? kNullGlyph : ch;
+  return ch.code == char16_t(0xFFFD) ? kNullGlyph : ch;
 }
 
 /* virtual */
@@ -289,7 +271,7 @@ already_AddRefed<gfxTextRun> nsUnicodeTable::MakeTextRun(
     gfxFontGroup* aFontGroup, const nsGlyphCode& aGlyph) {
   NS_ASSERTION(!aGlyph.isGlyphID,
                "nsUnicodeTable can only access glyphs by code point");
-  return aFontGroup->MakeTextRun(aGlyph.code, aGlyph.Length(), aDrawTarget,
+  return aFontGroup->MakeTextRun(&aGlyph.code, 1, aDrawTarget,
                                  aAppUnitsPerDevPixel, mFlags,
                                  nsTextFrameUtils::Flags(), nullptr);
 }
