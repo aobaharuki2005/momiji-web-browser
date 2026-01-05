@@ -207,6 +207,7 @@ struct LoadInfoArgs
   InterceptionInfoArg?        interceptionInfo;
   bool                        isNewWindowTarget;
   UserNavigationInvolvement   userNavigationInvolvement;
+  FeaturePolicyInfo?          containerFeaturePolicyInfo;
 };
 
 /**
