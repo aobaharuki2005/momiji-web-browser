@@ -66,7 +66,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
   typedef mozilla::layers::KnowsCompositor KnowsCompositor;
 
  public:
-  FFmpegVideoDecoder(FFmpegLibWrapper* aLib, const VideoInfo& aConfig,
+  FFmpegVideoDecoder(const FFmpegLibWrapper* aLib, const VideoInfo& aConfig,
                      KnowsCompositor* aAllocator,
                      ImageContainer* aImageContainer, bool aLowLatency,
                      bool aDisableHardwareDecoding, bool a8BitOutput,
@@ -168,7 +168,7 @@ class FFmpegVideoDecoder<LIBAV_VER>
 #ifdef MOZ_USE_HWDECODE
  public:
   static AVCodec* FindVideoHardwareAVCodec(
-      FFmpegLibWrapper* aLib, AVCodecID aCodec,
+      const FFmpegLibWrapper* aLib, AVCodecID aCodec,
       AVHWDeviceType aDeviceType = AV_HWDEVICE_TYPE_NONE);
 
  private:

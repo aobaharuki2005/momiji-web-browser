@@ -29,7 +29,7 @@ using mozilla::media::EncodeSupportSet;
 namespace mozilla {
 
 template <int V>
-/* static */ void FFmpegEncoderModule<V>::Init(FFmpegLibWrapper* aLib) {
+/* static */ void FFmpegEncoderModule<V>::Init(const FFmpegLibWrapper* aLib) {
 #if (defined(XP_WIN) || defined(MOZ_WIDGET_GTK) ||                \
      defined(MOZ_WIDGET_ANDROID)) &&                              \
     defined(MOZ_USE_HWDECODE) && !defined(MOZ_FFVPX_AUDIOONLY) && \

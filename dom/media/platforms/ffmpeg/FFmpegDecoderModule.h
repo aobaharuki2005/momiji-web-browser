@@ -36,7 +36,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
     return "FFmpeg(OS library)";
 #endif
   }
-  static void Init(FFmpegLibWrapper* aLib) {
+  static void Init(const FFmpegLibWrapper* aLib) {
 #if (defined(XP_WIN) || defined(MOZ_WIDGET_GTK) || \
      defined(MOZ_WIDGET_ANDROID)) &&               \
     defined(MOZ_USE_HWDECODE) && !defined(MOZ_FFVPX_AUDIOONLY)
@@ -144,13 +144,13 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
   }
 
   static already_AddRefed<PlatformDecoderModule> Create(
-      FFmpegLibWrapper* aLib) {
+      const FFmpegLibWrapper* aLib) {
     RefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule(aLib);
 
     return pdm.forget();
   }
 
-  explicit FFmpegDecoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) {}
+  explicit FFmpegDecoderModule(const FFmpegLibWrapper* aLib) : mLib(aLib) {}
   virtual ~FFmpegDecoderModule() = default;
 
   already_AddRefed<MediaDataDecoder> CreateVideoDecoder(
@@ -334,7 +334,7 @@ class FFmpegDecoderModule : public PlatformDecoderModule {
   }
 
  private:
-  FFmpegLibWrapper* mLib;
+  const FFmpegLibWrapper* mLib;
   MOZ_RUNINIT static inline StaticDataMutex<nsTArray<AVCodecID>>
       sSupportedHWCodecs{"sSupportedHWCodecs"};
 };

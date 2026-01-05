@@ -29,7 +29,7 @@ namespace mozilla {
 using TimeUnit = media::TimeUnit;
 
 FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
-    FFmpegLibWrapper* aLib, const CreateDecoderParams& aDecoderParams)
+    const FFmpegLibWrapper* aLib, const CreateDecoderParams& aDecoderParams)
     : FFmpegDataDecoder(aLib,
                         GetCodecId(aDecoderParams.AudioConfig().mMimeType,
                                    aDecoderParams.AudioConfig()),

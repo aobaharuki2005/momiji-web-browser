@@ -19,15 +19,17 @@ const char* FFmpegRuntimeLinker::sLinkStatusLibraryName = "";
 template <int V>
 class FFmpegDecoderModule {
  public:
-  static void Init(FFmpegLibWrapper*);
-  static already_AddRefed<PlatformDecoderModule> Create(FFmpegLibWrapper*);
+  static void Init(const FFmpegLibWrapper*);
+  static already_AddRefed<PlatformDecoderModule> Create(
+      const FFmpegLibWrapper*);
 };
 
 template <int V>
 class FFmpegEncoderModule {
  public:
-  static void Init(FFmpegLibWrapper*);
-  static already_AddRefed<PlatformEncoderModule> Create(FFmpegLibWrapper*);
+  static void Init(const FFmpegLibWrapper*);
+  static already_AddRefed<PlatformEncoderModule> Create(
+      const FFmpegLibWrapper*);
 };
 
 static FFmpegLibWrapper sLibAV;
