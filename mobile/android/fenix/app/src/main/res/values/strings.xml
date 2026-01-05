@@ -1438,7 +1438,7 @@
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Close all tabs</string>
     <!-- Text shown as the title of the Close all tabs confirmation dialog in Tab Manager -->
-    <string name="tab_manager_close_all_tabs_dialog_title">Close all tabs?</string>Í
+    <string name="tab_manager_close_all_tabs_dialog_title">Close all tabs?</string>
     <!-- Text shown in the body of the Close all tabs confirmation dialog in Tab Manager -->
     <string name="tab_manager_close_all_tabs_dialog_body">This will close all open tabs.</string>
     <!-- Text shown on the confirm button in the Close all tabs confirmation dialog -->
