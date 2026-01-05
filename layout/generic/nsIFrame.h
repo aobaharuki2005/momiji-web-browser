@@ -4506,8 +4506,8 @@ class nsIFrame : public nsQueryFrame {
   }
 
   template <typename T>
-  void RemoveProperty(FrameProperties::Descriptor<T> aProperty) {
-    mProperties.Remove(aProperty, this);
+  bool RemoveProperty(FrameProperties::Descriptor<T> aProperty) {
+    return mProperties.Remove(aProperty, this);
   }
 
   /**
