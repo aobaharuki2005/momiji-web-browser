@@ -52,20 +52,15 @@ enum {
 // 2) a glyph index from the Open Type MATH table.
 struct nsGlyphCode {
   union {
-    char16_t code[2];
+    char16_t code;
     uint32_t glyphID;
   };
   bool isGlyphID = true;
 
-  int32_t Length() const {
-    return (isGlyphID || code[1] == char16_t('\0') ? 1 : 2);
-  }
-  bool Exists() const { return isGlyphID ? glyphID != 0 : code[0] != 0; }
+  bool Exists() const { return isGlyphID ? glyphID != 0 : code != 0; }
   bool operator==(const nsGlyphCode& other) const {
     return (other.isGlyphID == isGlyphID &&
-            (isGlyphID
-                 ? other.glyphID == glyphID
-                 : (other.code[0] == code[0] && other.code[1] == code[1])));
+            (isGlyphID ? other.glyphID == glyphID : other.code == code));
   }
   bool operator!=(const nsGlyphCode&) const = default;
 };
