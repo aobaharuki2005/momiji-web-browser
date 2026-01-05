@@ -766,7 +766,6 @@ function promiseTargetFile(
 
     aFpP.saveAsType = fp.filterIndex;
     aFpP.file = fp.file;
-    aFpP.file.leafName = validateFileName(aFpP.file.leafName);
 
     return true;
   })();
