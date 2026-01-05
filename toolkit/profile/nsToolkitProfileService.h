@@ -116,11 +116,8 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
                        nsToolkitProfile** aResult);
   already_AddRefed<nsToolkitProfile> GetProfileByStoreID(
       const nsACString& aStoreID);
-
-  nsresult GetProfileDescriptor(nsIFile* aRootDir, nsACString& aDescriptor,
-                                bool* aIsRelative);
-  nsresult GetProfileDescriptor(nsToolkitProfile* aProfile,
-                                nsACString& aDescriptor, bool* aIsRelative);
+  nsresult GetProfileDescriptor(nsToolkitProfile* aProfile, bool* aIsRelative,
+                                nsACString& aDescriptor);
   bool IsProfileForCurrentInstall(nsToolkitProfile* aProfile);
   void ClearProfileFromOtherInstalls(nsToolkitProfile* aProfile);
   nsresult MaybeMakeDefaultDedicatedProfile(nsToolkitProfile* aProfile,
@@ -135,7 +132,6 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   already_AddRefed<nsToolkitProfile> GetProfileByName(const nsACString& aName);
   void SetNormalDefault(nsToolkitProfile* aProfile);
   already_AddRefed<nsToolkitProfile> GetDefaultProfile();
-  nsresult GetLocalDirFromRootDir(nsIFile* aRootDir, nsIFile** aResult);
   void FlushProfileData(
       const nsMainThreadPtrHandle<nsStartupLock>& aStartupLock,
       const CurrentProfileData* aProfileInfo);
