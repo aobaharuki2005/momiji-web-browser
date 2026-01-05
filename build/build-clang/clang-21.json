@@ -16,6 +16,7 @@
         "arm64e-hack.patch",
         "symbols.patch",
         "no-no-rosegment.patch",
+        "sanitizer_deadlock_suppression.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
     ]
 }

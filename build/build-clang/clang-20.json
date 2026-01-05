@@ -18,6 +18,7 @@
         "android-hardware-buffer-header-workaround.patch",
         "arm64e-hack.patch",
         "no-no-rosegment.patch",
+        "sanitizer_deadlock_suppression.patch",
         "compiler-rt-rss-limit-heap-profile.patch"
     ]
 }
