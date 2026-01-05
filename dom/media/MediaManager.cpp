@@ -4518,8 +4518,9 @@ already_AddRefed<DeviceListener> DeviceListener::Clone() const {
       [thisDevice = RefPtr(thisDevice), device, prefs = mgr->mPrefs,
        windowId = mWindowListener->WindowID(), listener,
        principal = GetPrincipalHandle(), track,
-       startDevice = !listener->mDeviceState->mDeviceMuted &&
-                     listener->mDeviceState->mDeviceEnabled] {
+       startDevice = !listener->mDeviceState->mOffWhileDisabled ||
+                     (!listener->mDeviceState->mDeviceMuted &&
+                      listener->mDeviceState->mDeviceEnabled)] {
         const char* outBadConstraint{};
         nsresult rv = device->Source()->Allocate(
             thisDevice->Constraints(), prefs, windowId, &outBadConstraint);
