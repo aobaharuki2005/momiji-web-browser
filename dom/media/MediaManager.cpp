@@ -243,7 +243,7 @@ struct DeviceState {
   bool mOperationInProgress = false;
 
   // true if we are allowed to turn off the underlying source while all tracks
-  // are disabled. Only affects disabling; always turns off on user-agent mute.
+  // are disabled or muted.
   // MainThread only.
   bool mOffWhileDisabled = false;
 
