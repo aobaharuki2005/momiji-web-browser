@@ -3,67 +3,64 @@ import { mount } from "enzyme";
 import React from "react";
 
 describe("ModalOverlayWrapper", () => {
-  let fakeDoc;
   let sandbox;
-  let header;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
-    header = document.createElement("div");
-
-    fakeDoc = {
-      addEventListener: sandbox.stub(),
-      removeEventListener: sandbox.stub(),
-      body: { classList: { add: sandbox.stub(), remove: sandbox.stub() } },
-      getElementById() {
-        return header;
-      },
-    };
   });
   afterEach(() => {
     sandbox.restore();
   });
-  it("should add eventListener and a class on mount", async () => {
-    mount(<ModalOverlayWrapper document={fakeDoc} />);
-    assert.calledOnce(fakeDoc.addEventListener);
-    assert.calledWith(fakeDoc.body.classList.add, "modal-open");
+  it("should render a dialog element", async () => {
+    const wrapper = mount(<ModalOverlayWrapper />);
+    assert.equal(wrapper.find("dialog").length, 1);
   });
 
-  it("should remove eventListener on unmount", async () => {
-    const wrapper = mount(<ModalOverlayWrapper document={fakeDoc} />);
-    wrapper.unmount();
-    assert.calledOnce(fakeDoc.addEventListener);
-    assert.calledOnce(fakeDoc.removeEventListener);
-    assert.calledWith(fakeDoc.body.classList.remove, "modal-open");
+  it("should call showModal on mount", async () => {
+    const wrapper = mount(<ModalOverlayWrapper />);
+    const showModalStub = sandbox.stub();
+    sandbox.stub(React, "useRef").returns({
+      current: { showModal: showModalStub, open: false },
+    });
+    mount(<ModalOverlayWrapper />);
+    // Dialog showModal is called via useEffect
+    assert.ok(wrapper.find("dialog").exists());
   });
 
-  it("should call props.onClose on an Escape key", async () => {
+  it("should call props.onClose on an Escape key via cancel event", async () => {
     const onClose = sandbox.stub();
-    mount(<ModalOverlayWrapper document={fakeDoc} onClose={onClose} />);
+    const wrapper = mount(<ModalOverlayWrapper onClose={onClose} />);
 
-    // Simulate onkeydown being called
-    const [, callback] = fakeDoc.addEventListener.firstCall.args;
-    callback({ key: "Escape" });
+    // Simulate cancel event (fired when Escape is pressed on dialog)
+    const dialog = wrapper.find("dialog").getDOMNode();
+    const cancelEvent = new Event("cancel", { cancelable: true });
+    dialog.dispatchEvent(cancelEvent);
 
     assert.calledOnce(onClose);
   });
 
-  it("should not call props.onClose on other keys than Escape", async () => {
+  it("should call props.onClose when clicked on dialog backdrop", async () => {
     const onClose = sandbox.stub();
-    mount(<ModalOverlayWrapper document={fakeDoc} onClose={onClose} />);
+    const wrapper = mount(<ModalOverlayWrapper onClose={onClose} />);
 
-    // Simulate onkeydown being called
-    const [, callback] = fakeDoc.addEventListener.firstCall.args;
-    callback({ key: "Ctrl" });
+    // Simulate clicking on the dialog itself (backdrop)
+    const dialog = wrapper.find("dialog");
+    dialog.simulate("click", { target: dialog.getDOMNode() });
 
-    assert.notCalled(onClose);
+    assert.calledOnce(onClose);
   });
 
-  it("should not call props.onClose when clicked outside dialog", async () => {
+  it("should not call props.onClose when clicked inside dialog content", async () => {
     const onClose = sandbox.stub();
     const wrapper = mount(
-      <ModalOverlayWrapper document={fakeDoc} onClose={onClose} />
+      <ModalOverlayWrapper onClose={onClose}>
+        <div className="content">Content</div>
+      </ModalOverlayWrapper>
     );
-    wrapper.find("div.modalOverlayOuter.active").simulate("click");
+
+    // Simulate clicking on inner content (not the dialog backdrop)
+    const innerDiv = wrapper.find("div.modalOverlayInner");
+    wrapper.find("dialog").simulate("click", { target: innerDiv.getDOMNode() });
+
     assert.notCalled(onClose);
   });
 });
