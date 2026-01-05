@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2025-12-23T16:18:33.726389+00:00'
+updated_at: '2026-01-05T18:23:30.208815+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -4607,9 +4607,9 @@ modules:
       - browser/components/translations/**/*
     excludes: []
     owners:
-      - *gregtatum
-    peers:
       - *nordzilla
+    peers:
+      - *gregtatum
       - *epavlov
       - *marco
     meta:
@@ -4668,5 +4668,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 0af34a194c8ba9a91345e7284d63a4c9e514daaf
-  export: a4bcaced302a106f29c24fea2980827439aa7edb
+  config: 6cadb278bdd7e657594f1b38a8935cb8311f3451
+  export: 87e0bdd183fe19a34d160229c67a2269f118c31d
