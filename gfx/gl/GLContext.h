@@ -9,7 +9,6 @@
 
 #include <bitset>
 #include <stdint.h>
-#include <stdio.h>
 #include <stack>
 #include <vector>
 

@@ -56,7 +56,6 @@ static_assert(sizeof(BLOCKSIZE) < (SIGNATURE_BLOCK_OFFSET + sizeof(uint32_t)),
 #  include <winsock2.h>
 /* Include stdio.h before redefining ftello and fseeko to avoid clobbering
  * the ftello() and fseeko() function declarations in MinGW's stdio.h. */
-#  include <stdio.h>
 #  define ftello _ftelli64
 #  define fseeko _fseeki64
 #else

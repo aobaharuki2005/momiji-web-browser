@@ -7,7 +7,6 @@
 
 #include <inttypes.h>
 #include <stdarg.h>
-#include <stdio.h>
 
 #include "GMPLog.h"
 #include "gmp-api/gmp-errors.h"
