@@ -73,6 +73,7 @@ static const nsGlyphCode kNullGlyph = {{0}, false};
 class nsGlyphTable {
  public:
   virtual ~nsGlyphTable() = default;
+  virtual bool IsUnicodeTable() const { return false; }
 
   virtual const nsCString& FontNameFor(const nsGlyphCode& aGlyphCode) const = 0;
 
@@ -170,6 +171,8 @@ class nsUnicodeTable final : public nsGlyphTable {
   constexpr nsUnicodeTable() { MOZ_COUNT_CTOR(nsUnicodeTable); }
 
   MOZ_COUNTED_DTOR(nsUnicodeTable)
+
+  bool IsUnicodeTable() const final { return true; };
 
   const nsCString& FontNameFor(const nsGlyphCode& aGlyphCode) const override {
     MOZ_ASSERT_UNREACHABLE();
@@ -661,7 +664,7 @@ bool nsMathMLChar::SetFontFamily(nsPresContext* aPresContext,
     // Set the font if it is an unicode table or if the same family name has
     // been found.
     const bool shouldSetFont = [&] {
-      if (aGlyphTable == &gUnicodeTable) {
+      if (aGlyphTable && aGlyphTable->IsUnicodeTable()) {
         return true;
       }
 
@@ -937,7 +940,7 @@ bool nsMathMLChar::StretchEnumContext::TryParts(
 
   // For the Unicode table, we check that all the glyphs are actually found and
   // come from the same font.
-  if (aGlyphTable == &gUnicodeTable) {
+  if (aGlyphTable->IsUnicodeTable()) {
     gfxFont* unicodeFont = nullptr;
     for (int32_t i = 0; i < 4; i++) {
       if (!textRun[i]) {
@@ -1105,6 +1108,7 @@ bool nsMathMLChar::StretchEnumContext::EnumCallback(
     // Fallback to the Unicode table.
     return &gUnicodeTable;
   }();
+  MOZ_ASSERT(glyphTable);
 
   if (!openTypeTable) {
     // Make sure we only try the UnicodeTable once.
@@ -1118,7 +1122,7 @@ bool nsMathMLChar::StretchEnumContext::EnumCallback(
   // special table is being used then the font in this family should have the
   // specified glyphs.
   const StyleFontFamilyList& familyList =
-      glyphTable == &gUnicodeTable ? context->mFamilyList : family;
+      glyphTable->IsUnicodeTable() ? context->mFamilyList : family;
 
   return (context->mTryVariants &&
           context->TryVariants(glyphTable, &fontGroup, familyList, aRtl)) ||
