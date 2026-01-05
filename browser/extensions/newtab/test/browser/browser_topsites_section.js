@@ -144,11 +144,7 @@ test_newtab({
     );
 
     // Click the "Add" button
-    await ContentTaskUtils.waitForCondition(
-      () => content.document.getElementById("topsites-form-save-button"),
-      "No add button found"
-    );
-    let addBtn = content.document.getElementById("topsites-form-save-button");
+    let addBtn = content.document.querySelector(".done");
     addBtn.click();
 
     // Wait for Topsite to be populated
