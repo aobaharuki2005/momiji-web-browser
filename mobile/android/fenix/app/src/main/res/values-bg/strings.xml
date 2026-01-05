@@ -1602,7 +1602,7 @@
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">Отваряне на меню Раздели</string>
   <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
-  <string name="tab_manager_search_bar_back_content_description">Връщане към управление на раздели</string>
+  <string name="tab_manager_search_bar_back_content_description">Връщане към управителя на разделите</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">Запазване на раздели в списък</string>
   <!-- Text for the menu button to delete a collection -->
@@ -1620,7 +1620,7 @@
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (поверителен режим)</string>
   <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
-  <string name="tab_manager_open_tab_search">Отваряне на раздели за търсене</string>
+  <string name="tab_manager_open_tab_search">Отваряне на раздел за търсене</string>
   <!--
     History
 
