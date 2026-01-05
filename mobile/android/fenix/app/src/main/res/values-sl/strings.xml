@@ -678,6 +678,8 @@
   <string name="nova_onboarding_notifications_title" tools:ignore="BrandUsage,UnusedResources">Obvestila vam pomagajo, da ostanete varni v Firefoxu</string>
   <!-- Notifications onboarding button. -->
   <string name="nova_onboarding_notifications_button" tools:ignore="UnusedResources">Vklopi obvestila</string>
+  <!-- "Add search widget" onboarding title. -->
+  <string name="nova_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Naj bo vsako iskanje zasebnejše</string>
   <!-- ==== End of Project "Nova" onboarding strings ==== -->
 
   <!-- Onboarding header for the toolbar selection card, used by Nimbus experiments. -->
@@ -1565,12 +1567,16 @@
   <string name="tabs_tray_select_tabs">Izberi zavihke</string>
   <!-- Text for tab manager search page when there are no results. -->
   <string name="tab_manager_no_search_results">Ni zadetkov.</string>
+  <!-- Additional text for tab manager search page when there are no results. -->
+  <string name="tab_manager_no_search_results_additional_text">Poskusite z drugačnim iskanjem!</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
   <string name="close_tab">Zapri zavihek</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. %s is the tab title -->
   <string name="close_tab_title">Zapri zavihek %s</string>
   <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
   <string name="open_tabs_menu">Meni odprtih zavihkov</string>
+  <!-- Content description (not visible, for screen readers etc.): Return to tab manager -->
+  <string name="tab_manager_search_bar_back_content_description">Nazaj na upravitelja zavihkov</string>
   <!-- Open tabs menu item to save tabs to collection -->
   <string name="tabs_menu_save_to_collection1">Shrani zavihke v zbirko</string>
   <!-- Text for the menu button to delete a collection -->
@@ -1962,6 +1968,8 @@
   <string name="bookmark_delete_folder_content_description">Izbriši mapo</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">Iskanje po zaznamkih</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">Iskanje map</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Meni za %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
@@ -1980,6 +1988,8 @@
   <string name="bookmark_empty_list_folder_description">Med brskanjem dodajajte zaznamke, da boste lahko svoja priljubljena spletna mesta našli pozneje.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Nova mapa</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">%1$s premaknjen v mapo %2$s</string>
   <!--
     Site Permissions
 
@@ -2751,6 +2761,8 @@
   <string name="edit_login_button_content_description">Uredi prijavo</string>
   <!-- Content description, used by tools like screenreaders, to press on the add new login button. -->
   <string name="saved_logins_add_new_login_button_content_description">Dodaj novo prijavo</string>
+  <!-- Content description, used by tools like screenreaders, to press on the clear search text button. -->
+  <string name="saved_logins_clear_search_text_button_content_description">Počisti iskano besedilo</string>
   <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
   <string name="saved_login_open_site">Odpri stran v brskalniku</string>
   <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -3992,6 +4004,11 @@
 
   <!-- A title for the popup prompt. -->
   <string name="terms_of_use_prompt_title_option_a" tools:ignore="UnusedResources">Pogoji uporabe</string>
+  <!--
+    A title for the popup prompt.
+    %1$s is the product name "Firefox"
+  -->
+  <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">Sporočilo %1$sa</string>
   <!--
     Copy for the Terms of Use popup prompt body line two.
     %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use

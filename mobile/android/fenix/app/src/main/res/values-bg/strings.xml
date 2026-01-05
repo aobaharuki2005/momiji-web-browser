@@ -631,9 +631,9 @@
   <!-- "Not now" onboarding button. -->
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Не сега</string>
   <!-- Terms of use (ToU) onboarding title. -->
-  <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Пригответе се да бягате свободни</string>
+  <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Пригответе се за свобода</string>
   <!-- Terms of use (ToU) onboarding subtitle. -->
-  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Бърз, сигурен и няма да ви продаде. Сърфирането стана по-добро.</string>
+  <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Бърз, сигурен и честен. Сърфирането стана по-добро.</string>
   <!--
     Terms of use (ToU) onboarding body line one.
     %1$s is replaced by an active link, using nova_onboarding_tou_body_line_1_link_text as text (“Firefox Terms of Use”).
@@ -654,21 +654,21 @@
   -->
   <string name="nova_onboarding_tou_body_line_3" tools:ignore="BrandUsage,UnusedResources">За да помогне за подобряването на четеца, Firefox изпраща данни за диагностика и взаимодействие към Mozilla. %1$s</string>
   <!-- Terms of use (ToU) onboarding body line three link text for nova_onboarding_tou_body_line_3. -->
-  <string name="nova_onboarding_tou_body_line_3_link_text" tools:ignore="UnusedResources">Настройки</string>
+  <string name="nova_onboarding_tou_body_line_3_link_text" tools:ignore="UnusedResources">Управление на настройките</string>
   <!-- "Set to default" onboarding title. -->
-  <string name="nova_onboarding_set_to_default_title" tools:ignore="UnusedResources">Кажете сбогом на зловещите тракери</string>
+  <string name="nova_onboarding_set_to_default_title" tools:ignore="UnusedResources">Кажете сбогом на зловещите проследители</string>
   <!-- "Set to default" onboarding subtitle. -->
-  <string name="nova_onboarding_set_to_default_subtitle" tools:ignore="UnusedResources">Ние защитаваме вашите данни и автоматично спираме компаниите да следят кликванията ви.</string>
+  <string name="nova_onboarding_set_to_default_subtitle" tools:ignore="UnusedResources">Ние защитаваме вашите данни и автоматично спираме компаниите да следят дейността ви.</string>
   <!-- "Set to default" onboarding button. -->
   <string name="nova_onboarding_set_to_default_button" tools:ignore="UnusedResources">Четец по подразбиране</string>
   <!-- Toolbar selection onboarding title. -->
-  <string name="nova_onboarding_toolbar_selection_title" tools:ignore="UnusedResources">Изберете адресната си лента</string>
+  <string name="nova_onboarding_toolbar_selection_title" tools:ignore="UnusedResources">Избор на позиция на адресната лента</string>
   <!-- Toolbar selection onboarding "top" option label. -->
   <string name="nova_onboarding_toolbar_selection_top_label" tools:ignore="UnusedResources">Горе</string>
   <!-- Toolbar selection onboarding "bottom" option label. -->
-  <string name="nova_onboarding_toolbar_selection_bottom_label" tools:ignore="UnusedResources">Отдолу</string>
+  <string name="nova_onboarding_toolbar_selection_bottom_label" tools:ignore="UnusedResources">Долу</string>
   <!-- Theme selection onboarding title. -->
-  <string name="nova_onboarding_theme_selection_title" tools:ignore="UnusedResources">Изберете темата си</string>
+  <string name="nova_onboarding_theme_selection_title" tools:ignore="UnusedResources">Избор на тема</string>
   <!-- Theme selection onboarding "automatic" option label. -->
   <string name="nova_onboarding_theme_selection_automatic_label" tools:ignore="UnusedResources">Автоматично</string>
   <!-- Theme selection onboarding "light" option label. -->
@@ -678,7 +678,7 @@
   <!-- Sync onboarding title. -->
   <string name="nova_onboarding_sync_title" tools:ignore="UnusedResources">Продължете моментално откъдето сте спрели</string>
   <!-- Sync onboarding subtitle. -->
-  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Вземете отметки, пароли и други на всяко устройство за един миг. Вашите лични данни остават защитени и защитени с криптиране.</string>
+  <string name="nova_onboarding_sync_subtitle" tools:ignore="UnusedResources">Вземете отметки, пароли и други данни от всяко устройство. Вашите лични данни остават сигурни и защитени чрез шифроване.</string>
   <!-- Sync onboarding button. -->
   <string name="nova_onboarding_sync_button" tools:ignore="UnusedResources">Започване на синхронизацията на данни</string>
   <!-- Marketing onboarding title. -->
