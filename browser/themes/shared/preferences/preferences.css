@@ -581,7 +581,7 @@ html|dialog {
 
 html|dialog::backdrop,
 .dialogOverlay[topmost="true"] {
-  background-color: var(--background-color-overlay);
+  background-color: rgba(0, 0, 0, 0.5);
 }
 
 html|dialog,
