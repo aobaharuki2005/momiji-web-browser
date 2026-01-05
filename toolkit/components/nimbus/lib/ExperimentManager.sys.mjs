@@ -940,6 +940,7 @@ export class ExperimentManager {
           enrollment,
           UnenrollmentCause.fromCheckRecipeResult(result)
         );
+        return false;
       }
 
       if (result.status === lazy.MatchStatus.TARGETING_AND_BUCKETING) {
