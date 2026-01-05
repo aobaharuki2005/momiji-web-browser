@@ -14,7 +14,8 @@ module.exports = logTest(
     const testType = `${context.options.browsertime.test_type}`;
     context.log.info("testType: " + testType);
 
-    const url = "https://httpbin.org/";
+    const url = context.options.browsertime.test_url || "https://httpbin.org/";
+    context.log.info("url: " + url);
 
     await commands.navigate("about:blank");
 
