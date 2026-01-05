@@ -15740,9 +15740,20 @@ class BaseContent extends (external_React_default()).PureComponent {
         if (hash === "#customize-topics") {
           this.toggleSectionsMgmtPanel();
         }
+      } else if (this.props.App.customizeMenuVisible) {
+        this.closeCustomizationMenu();
       }
     };
-    this._onHashChange();
+
+    // Using the Performance API to detect page reload vs fresh navigation.
+    // Only open customize menu on fresh navigation, not on page refresh.
+    // See: https://developer.mozilla.org/en-US/docs/Web/API/Performance/getEntriesByType
+    // See: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceEntry/entryType#navigation
+    // See: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/type
+    const isReload = globalThis.performance?.getEntriesByType("navigation")[0]?.type === "reload";
+    if (!isReload) {
+      this._onHashChange();
+    }
     globalThis.addEventListener("hashchange", this._onHashChange);
   }
   componentDidUpdate(prevProps) {
