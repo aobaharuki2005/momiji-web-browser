@@ -420,9 +420,6 @@ void nsXULPrototypeDocument::SetIsL10nCached(bool aIsCached) {
 
 void nsXULPrototypeDocument::RebuildPrototypeFromElement(
     nsXULPrototypeElement* aPrototype, Element* aElement, bool aDeep) {
-  aPrototype->mHasIdAttribute = aElement->HasID();
-  aPrototype->mHasClassAttribute = aElement->MayHaveClass();
-  aPrototype->mHasStyleAttribute = aElement->MayHaveStyle();
   NodeInfo* oldNodeInfo = aElement->NodeInfo();
   RefPtr<NodeInfo> newNodeInfo = mNodeInfoManager->GetNodeInfo(
       oldNodeInfo->NameAtom(), oldNodeInfo->GetPrefixAtom(),
@@ -448,7 +445,10 @@ void nsXULPrototypeDocument::RebuildPrototypeFromElement(
       protoAttr->mName.SetTo(newNodeInfo);
     }
     protoAttr->mValue.SetTo(*attr.mValue);
-
+    if (protoAttr->mValue.Type() == nsAttrValue::eCSSDeclaration) {
+      // Ensure declarations get copied-on-write if needed.
+      protoAttr->mValue.GetCSSDeclarationValue()->SetImmutable();
+    }
     protoAttr++;
   }
 
