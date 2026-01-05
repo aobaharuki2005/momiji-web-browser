@@ -325,44 +325,17 @@ function eventMatchesKey(aEvent, aKey) {
 }
 
 // Gather all descendent text under given document node.
+// NOTE: Keep this in sync with _gatherTextUnder in
+// browser/actors/ContextMenuChild.sys.mjs
 function gatherTextUnder(root) {
-  var text = "";
-  var node = root.firstChild;
-  var depth = 1;
-  while (node && depth > 0) {
-    // See if this node is text.
-    if (node.nodeType == Node.TEXT_NODE) {
-      // Add this text to our collection.
-      text += " " + node.data;
-    } else if (HTMLImageElement.isInstance(node)) {
-      // If it has an "alt" attribute, add that.
-      var altText = node.getAttribute("alt");
-      if (altText) {
-        text += " " + altText;
-      }
-    }
-    // Find next node to test.
-    // First, see if this node has children.
-    if (node.hasChildNodes()) {
-      // Go to first child.
-      node = node.firstChild;
-      depth++;
-    } else {
-      // No children, try next sibling (or parent next sibling).
-      while (depth > 0 && !node.nextSibling) {
-        node = node.parentNode;
-        depth--;
-      }
-      if (node.nextSibling) {
-        node = node.nextSibling;
-      }
-    }
-  }
-  // Strip leading and tailing whitespace.
-  text = text.trim();
-  // Compress remaining whitespace.
-  text = text.replace(/\s+/g, " ");
-  return text;
+  const encoder = Cu.createDocumentEncoder("text/plain");
+  encoder.init(
+    root.ownerDocument,
+    "text/plain",
+    Ci.nsIDocumentEncoder.SkipInvisibleContent
+  );
+  encoder.setNode(root);
+  return encoder.encodeToString().trim();
 }
 
 // This function exists for legacy reasons.
