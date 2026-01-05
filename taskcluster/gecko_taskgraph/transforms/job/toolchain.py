@@ -8,7 +8,7 @@ Support for running toolchain-building jobs via dedicated scripts
 import os
 
 import taskgraph
-from mozbuild.shellutil import quote as shell_quote
+from mozshellutil import quote as shell_quote
 from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from voluptuous import Any, Optional, Required
 

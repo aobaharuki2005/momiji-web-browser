@@ -10,11 +10,11 @@ from io import StringIO
 
 from buildconfig import topsrcdir
 from mozpack import path as mozpath
+from mozshellutil import quote as shell_quote
 from mozunit import MockedOpen, main
 
 from common import ConfigureTestSandbox, ensure_exe_extension, fake_short_path
 from mozbuild.configure import ConfigureError, ConfigureSandbox
-from mozbuild.shellutil import quote as shell_quote
 
 
 class TestChecksConfigure(unittest.TestCase):

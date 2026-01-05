@@ -1349,7 +1349,7 @@ with only_when(compile_environment):
     configured_moz_optimize_flags,
     when="--enable-compile-environment",
 )
-@imports(_from="mozbuild.shellutil", _import="split")
+@imports(_from="mozshellutil", _import="split")
 def moz_js_optimize_flags(target, compiler, configured_moz_optimize_flags):
     if configured_moz_optimize_flags:
         return configured_moz_optimize_flags

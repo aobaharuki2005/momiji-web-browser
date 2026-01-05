@@ -13,6 +13,7 @@ from operator import itemgetter
 
 import mozpack.path as mozpath
 from mozpack.manifests import InstallManifest
+from mozshellutil import quote as shell_quote
 
 from mozbuild import frontend
 from mozbuild.frontend.context import (
@@ -22,7 +23,6 @@ from mozbuild.frontend.context import (
     RenamedSourcePath,
     SourcePath,
 )
-from mozbuild.shellutil import quote as shell_quote
 
 from ..frontend.data import (
     BaseLibrary,

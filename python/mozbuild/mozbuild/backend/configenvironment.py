@@ -11,8 +11,8 @@ from pathlib import Path
 from types import ModuleType
 
 import mozpack.path as mozpath
+from mozshellutil import quote as shell_quote
 
-from mozbuild.shellutil import quote as shell_quote
 from mozbuild.util import (
     FileAvoidWrite,
     ReadOnlyDict,

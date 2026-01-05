@@ -317,7 +317,7 @@ def mozharness_on_generic_worker(config, job, taskdesc):
         mh_command.append(run.pop("custom-build-variant-cfg"))
 
     if job["worker"]["os"] == "macosx":
-        # Ideally, we'd use shellutil.quote, but that would single-quote
+        # Ideally, we'd use mozshellutil.quote, but that would single-quote
         # $GECKO_PATH, which would defeat having the variable in the command
         # in the first place, as it wouldn't be expanded.
         # In practice, arguments are expected not to contain characters that

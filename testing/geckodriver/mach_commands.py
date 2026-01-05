@@ -103,11 +103,11 @@ def run(command_context, binary, params, debug, debugger, debugger_args):
         # Parameters come from the CLI. We need to convert them before
         # their use.
         if debugger_args:
-            from mozbuild import shellutil
+            import mozshellutil
 
             try:
-                debugger_args = shellutil.split(debugger_args)
-            except shellutil.MetaCharacterException as e:
+                debugger_args = mozshellutil.split(debugger_args)
+            except mozshellutil.MetaCharacterException as e:
                 print(
                     "The --debugger-args you passed require a real shell to parse them."
                 )
