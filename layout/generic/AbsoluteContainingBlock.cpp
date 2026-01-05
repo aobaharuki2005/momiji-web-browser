@@ -865,11 +865,13 @@ static nscoord OffsetToAlignedStaticPos(
           ? aKidReflowInput.mStylePosition->mJustifySelf._0
           : aKidReflowInput.mStylePosition->mAlignSelf._0;
   if (aNonAutoAlignParams && !safetyBits &&
-      rawAlignConst != StyleAlignFlags::AUTO) {
+      (rawAlignConst != StyleAlignFlags::AUTO ||
+       alignConst == StyleAlignFlags::ANCHOR_CENTER)) {
     // No `safe` or `unsafe` specified - "in-between" behaviour for relevant
     // alignment values: https://drafts.csswg.org/css-position-3/#abspos-layout
     // Skip if the raw self alignment for this element is `auto` to preserve
-    // legacy behaviour.
+    // legacy behaviour, except in the case where the resolved value is
+    // anchor-center (where "legacy behavior" is not a concern).
     // Follows https://drafts.csswg.org/css-align-3/#auto-safety-position
     const auto cbSize = aAbsPosCBSize.Size(aAbsPosCBAxis, aAbsPosCBWM);
     // IMCB stands for "Inset-Modified Containing Block."
