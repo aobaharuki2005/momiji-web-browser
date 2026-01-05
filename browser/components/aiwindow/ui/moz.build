@@ -14,6 +14,7 @@ MOZ_SRC_FILES += [
     "modules/AIWindow.sys.mjs",
     "modules/AIWindowAccountAuth.sys.mjs",
     "modules/AIWindowMenu.sys.mjs",
+    "modules/AIWindowUI.sys.mjs",
     "modules/ChatConstants.sys.mjs",
     "modules/ChatConversation.sys.mjs",
     "modules/ChatEnums.sys.mjs",
