@@ -59,6 +59,7 @@ export class NetErrorCard extends MozLitElement {
     whatCanYouDo: "#whatCanYouDo",
     whyDangerous: "#fp-why-site-dangerous",
     netErrorTitleText: "#neterror-title-text",
+    netErrorIntro: "#netErrorIntro",
     netErrorLearnMoreLink: "#neterror-learn-more-link",
     httpAuthIntroText: "#fp-http-auth-disabled-intro-text",
     tryAgainButton: "#tryAgainButton",
@@ -79,12 +80,14 @@ export class NetErrorCard extends MozLitElement {
     "NS_ERROR_DOM_COEP_FAILED",
     "MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE",
     "NS_ERROR_BASIC_HTTP_AUTH_DISABLED",
+    "NS_ERROR_NET_EMPTY_RESPONSE",
   ]);
 
   static CUSTOM_ERROR_CODES = {
     blockedByCOOP: "NS_ERROR_DOM_COOP_FAILED",
     blockedByCOEP: "NS_ERROR_DOM_COEP_FAILED",
     basicHttpAuthDisabled: "NS_ERROR_BASIC_HTTP_AUTH_DISABLED",
+    netReset: "NS_ERROR_NET_EMPTY_RESPONSE",
   };
 
   static getCustomErrorCode(defaultCode) {
@@ -294,6 +297,12 @@ export class NetErrorCard extends MozLitElement {
                 data-l10n-id="fp-neterror-http-auth-disabled-secure-connection"
               ></p> `
             : null} `;
+      case "NS_ERROR_NET_EMPTY_RESPONSE":
+        return html`<p
+          id="netErrorIntro"
+          data-l10n-id="neterror-http-empty-response-description"
+          data-l10n-args='{"hostname": "${this.hostname}"}'
+        ></p> `;
     }
 
     return null;
@@ -637,6 +646,16 @@ export class NetErrorCard extends MozLitElement {
         });
         break;
       }
+      case "NS_ERROR_NET_EMPTY_RESPONSE": {
+        content = this.customNetErrorSectionTemplate({
+          titleL10nId: "problem-with-this-site-title",
+          whatCanYouDoL10nId: "neterror-http-empty-response",
+          buttons: {
+            tryAgain: true,
+          },
+        });
+        break;
+      }
     }
 
     return html`<div class="custom-net-error-card">${content}</div>`;
@@ -673,6 +692,7 @@ export class NetErrorCard extends MozLitElement {
         ? html`<p>
             <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
             <span
+              id="whatCanYouDo"
               data-l10n-id=${whatCanYouDoL10nId}
               data-l10n-args=${JSON.stringify(whatCanYouDoL10nArgs)}
             ></span>
@@ -941,10 +961,23 @@ export class NetErrorCard extends MozLitElement {
     );
   }
 
+  getErrorImage(errorCode) {
+    switch (errorCode) {
+      case "NS_ERROR_NET_EMPTY_RESPONSE": {
+        return "chrome://global/skin/illustrations/no-connection.svg";
+      }
+      default: {
+        return "chrome://global/skin/illustrations/security-error.svg";
+      }
+    }
+  }
+
   render() {
     if (!this.errorInfo) {
       return null;
     }
+
+    const img = this.getErrorImage(this.errorInfo.errorCodeString);
 
     return html`<link
         rel="stylesheet"
@@ -952,7 +985,7 @@ export class NetErrorCard extends MozLitElement {
       />
       <article class="felt-privacy-container">
         <div class="img-container">
-          <img src="chrome://global/skin/illustrations/security-error.svg" />
+          <img src=${img} />
         </div>
         <div class="container">
           ${this.showCustomNetErrorCard
