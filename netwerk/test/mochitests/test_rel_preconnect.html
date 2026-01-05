@@ -18,9 +18,11 @@ var observer;
 async function doTest()
 {
   await SpecialPowers.setBoolPref("network.http.debug-observations", true);
+  await SpecialPowers.setBoolPref("browser.newtabpage.activity-stream.discoverystream.imageProxy.enabled", false);
 
   SimpleTest.registerCleanupFunction(async () => {
     await SpecialPowers.setBoolPref("network.http.debug-observations", false);
+    await SpecialPowers.setBoolPref("browser.newtabpage.activity-stream.discoverystream.imageProxy.enabled", true);
   });
 
   observer = SpecialPowers.wrapCallback(function() {
