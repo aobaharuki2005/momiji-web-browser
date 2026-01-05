@@ -56,8 +56,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
                                 uint32_t rtp_timestamp,
                                 TimeDelta expected_retransmission_time,
                                 uint32_t ssrc,
-                                std::vector<uint32_t> csrcs,
-                                const std::string& rid)
+                                std::vector<uint32_t> csrcs)
       : TransformableVideoFrameInterface(Passkey()),
         encoded_data_(encoded_image.GetEncodedData()),
         pre_transform_payload_size_(encoded_image.size()),
@@ -70,8 +69,7 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
         presentation_timestamp_(encoded_image.PresentationTimestamp()),
         expected_retransmission_time_(expected_retransmission_time),
         ssrc_(ssrc),
-        csrcs_(csrcs),
-        rid_(rid) {
+        csrcs_(csrcs) {
     RTC_DCHECK_GE(payload_type_, 0);
     RTC_DCHECK_LE(payload_type_, 127);
   }
@@ -144,8 +142,6 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
     return std::nullopt;
   }
 
-  const std::string& GetRid() const override { return rid_; }
-
  private:
   scoped_refptr<EncodedImageBufferInterface> encoded_data_;
   const size_t pre_transform_payload_size_;
@@ -160,19 +156,16 @@ class TransformableVideoSenderFrame : public TransformableVideoFrameInterface {
 
   uint32_t ssrc_;
   std::vector<uint32_t> csrcs_;
-  const std::string rid_;
 };
 
 RTPSenderVideoFrameTransformerDelegate::RTPSenderVideoFrameTransformerDelegate(
     RTPVideoFrameSenderInterface* sender,
     scoped_refptr<FrameTransformerInterface> frame_transformer,
     uint32_t ssrc,
-    const std::string& rid,
     TaskQueueFactory* task_queue_factory)
     : sender_(sender),
       frame_transformer_(std::move(frame_transformer)),
       ssrc_(ssrc),
-      rid_(rid),
       transformation_queue_(task_queue_factory->CreateTaskQueue(
           "video_frame_transformer",
           TaskQueueFactory::Priority::NORMAL)) {}
@@ -202,7 +195,7 @@ bool RTPSenderVideoFrameTransformerDelegate::TransformFrame(
   }
   frame_transformer_->Transform(std::make_unique<TransformableVideoSenderFrame>(
       encoded_image, video_header, payload_type, codec_type, rtp_timestamp,
-      expected_retransmission_time, ssrc_, csrcs, rid_));
+      expected_retransmission_time, ssrc_, csrcs));
   return true;
 }
 
@@ -313,7 +306,7 @@ std::unique_ptr<TransformableVideoFrameInterface> CloneSenderVideoFrame(
   return std::make_unique<TransformableVideoSenderFrame>(
       encoded_image, new_header, original->GetPayloadType(), new_header.codec,
       original->GetTimestamp(), kDefaultRetransmissionsTime,
-      original->GetSsrc(), metadata.GetCsrcs(), original->GetRid());
+      original->GetSsrc(), metadata.GetCsrcs());
 }
 
 }  // namespace webrtc

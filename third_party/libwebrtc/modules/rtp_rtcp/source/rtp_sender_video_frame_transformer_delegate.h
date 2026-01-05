@@ -67,7 +67,6 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
       RTPVideoFrameSenderInterface* sender,
       scoped_refptr<FrameTransformerInterface> frame_transformer,
       uint32_t ssrc,
-      const std::string& rid,
       TaskQueueFactory* send_transport_queue);
 
   void Init();
@@ -117,7 +116,6 @@ class RTPSenderVideoFrameTransformerDelegate : public TransformedFrameCallback {
   RTPVideoFrameSenderInterface* sender_ RTC_GUARDED_BY(sender_lock_);
   scoped_refptr<FrameTransformerInterface> frame_transformer_;
   const uint32_t ssrc_;
-  const std::string rid_;
   // Used when the encoded frames arrives without a current task queue. This can
   // happen if a hardware encoder was used.
   std::unique_ptr<TaskQueueBase, TaskQueueDeleter> transformation_queue_;
