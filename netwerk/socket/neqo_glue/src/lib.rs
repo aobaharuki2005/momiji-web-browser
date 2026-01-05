@@ -707,6 +707,26 @@ impl NeqoHttp3Conn {
                 debug_assert!(false, "{msg}");
             }
         }
+
+        // Collect congestion event reason metric
+        if let Ok(ce_loss) = i32::try_from(stats.cc.congestion_events[CongestionEvent::Loss]) {
+            glean::http_3_congestion_event_reason
+                .get("loss")
+                .add(ce_loss);
+        } else {
+            let msg = "Failed to convert to i32 for use with glean";
+            qwarn!("{msg}");
+            debug_assert!(false, "{msg}");
+        }
+        if let Ok(ce_ecn) = i32::try_from(stats.cc.congestion_events[CongestionEvent::Ecn]) {
+            glean::http_3_congestion_event_reason
+                .get("ecn-ce")
+                .add(ce_ecn);
+        } else {
+            let msg = "Failed to convert to i32 for use with glean";
+            qwarn!("{msg}");
+            debug_assert!(false, "{msg}");
+        }
     }
 
     fn increment_would_block_rx(&mut self) {

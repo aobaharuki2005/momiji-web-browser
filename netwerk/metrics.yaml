@@ -1131,6 +1131,24 @@ networking:
       - exited
       - not_exited
 
+  http_3_congestion_event_reason:
+    type: labeled_counter
+    description: >
+      The type of signal that caused a congestion event in Firefox's QUIC stack.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004031
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=2004031
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - necko@mozilla.com
+      - omansfeld@mozilla.com
+    expires: 157
+    labels:
+      - loss
+      - ecn-ce
+
   http_3_connection_close_reason:
     type: labeled_counter
     description: >
