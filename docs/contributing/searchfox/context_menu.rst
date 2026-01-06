@@ -88,14 +88,11 @@ Expansion on ...
 Class field layout
 ------------------
 
+See :ref:`class field layout <searchfox_field_layout>` document for more details..
+
 For C++ classes, Searchfox can show the field layout table for each compilation target.
 
 This is behind the alpha feature gate "Semantic Info Queries".
-
-.. image:: img/context-menu-layout.png
-    :class: border
-    :alt: The context menu for classes
-    :width: 448px
 
 Class layout of ...
   Open the class field layout table of given class.
