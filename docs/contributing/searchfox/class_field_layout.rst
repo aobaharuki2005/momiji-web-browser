@@ -72,4 +72,3 @@ Show the class field layout table of given a class or struct.
     field-layout:'nsTString'
 
 https://searchfox.org/mozilla-central/query/default?q=field-layout%3A%27nsTString%27
-
