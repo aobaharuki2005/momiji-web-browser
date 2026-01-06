@@ -1579,6 +1579,21 @@ void Element::UnattachShadow() {
   SetShadowRoot(nullptr);
 }
 
+Element* Element::ResolveReferenceTarget() const {
+  if (!StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
+    return const_cast<Element*>(this);
+  }
+
+  const Element* element = this;
+  ShadowRoot* shadow = GetShadowRoot();
+
+  while (shadow && shadow->HasReferenceTarget()) {
+    element = shadow->GetReferenceTargetElement();
+    shadow = element ? element->GetShadowRoot() : nullptr;
+  }
+  return const_cast<Element*>(element);
+}
+
 void Element::GetAttribute(const nsAString& aName, DOMString& aReturn) {
   const nsAttrValue* val = mAttrs.GetAttr(
       aName,
@@ -1935,29 +1950,51 @@ Element* Element::GetElementByIdInDocOrSubtree(nsAtom* aID) const {
   return nsContentUtils::MatchElementId(SubtreeRoot()->AsContent(), aID);
 }
 
-Element* Element::GetAttrAssociatedElement(nsAtom* aAttr) const {
+Element* Element::GetAttrAssociatedElementInternal(nsAtom* aAttr,
+                                                   bool aForBindings) const {
+  Element* attrEl = nullptr;
+  bool hasExplicitEl = false;
+
   if (const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
-    nsWeakPtr weakAttrEl = slots->mExplicitlySetAttrElementMap.Get(aAttr);
-    if (nsCOMPtr<Element> attrEl = do_QueryReferent(weakAttrEl)) {
-      // If reflectedTarget's explicitly set attr-element |attrEl| is
+    nsWeakPtr weakExplicitEl = slots->mExplicitlySetAttrElementMap.Get(aAttr);
+    if (nsCOMPtr<Element> explicitEl = do_QueryReferent(weakExplicitEl)) {
+      hasExplicitEl = true;
+
+      // If reflectedTarget's explicitly set attr-element |explicitEl| is
       // a descendant of any of element's shadow-including ancestors, then
-      // return |atrEl|.
-      if (HasSharedRoot(attrEl)) {
-        return attrEl;
+      // return |explicitEl|.
+      if (HasSharedRoot(explicitEl)) {
+        attrEl = explicitEl;
       }
-      return nullptr;
     }
   }
 
-  const nsAttrValue* value = GetParsedAttr(aAttr);
-  if (!value) {
+  if (!hasExplicitEl) {
+    const nsAttrValue* value = GetParsedAttr(aAttr);
+    if (!value) {
+      return nullptr;
+    }
+
+    MOZ_ASSERT(value->Type() == nsAttrValue::eAtom,
+               "Attribute used for attr associated element must be parsed");
+
+    attrEl = GetElementByIdInDocOrSubtree(value->GetAtomValue());
+  }
+
+  if (!attrEl) {
     return nullptr;
   }
 
-  MOZ_ASSERT(value->Type() == nsAttrValue::eAtom,
-             "Attribute used for attr associated element must be parsed");
+  Element* resolved = attrEl->ResolveReferenceTarget();
+  if (resolved && aForBindings) {
+    return attrEl;
+  }
 
-  return GetElementByIdInDocOrSubtree(value->GetAtomValue());
+  return resolved;
+}
+
+Element* Element::GetAttrAssociatedElementForBindings(nsAtom* aAttr) const {
+  return GetAttrAssociatedElementInternal(aAttr, true);
 }
 
 void Element::GetAttrAssociatedElements(

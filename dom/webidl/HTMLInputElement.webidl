@@ -60,7 +60,7 @@ interface HTMLInputElement : HTMLElement {
   [Pure]
            attribute boolean indeterminate;
   [Pure, BinaryName=listForBindings]
-  readonly attribute HTMLDataListElement? list;
+  readonly attribute Element? list;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString max;
   [CEReactions, Pure, SetterThrows]
