@@ -247,9 +247,8 @@ struct nsCSSRendering {
    * Uses a fixed style equivalent to "1px dotted |aColor|".
    * Not used for controls, because the native theme may differ.
    */
-  static nsCSSBorderRenderer GetBorderRendererForFocus(nsIFrame*, DrawTarget*,
-                                                       const nsRect& aFocusRect,
-                                                       nscolor aColor);
+  static void PaintFocus(nsPresContext* aPresContext, DrawTarget* aDrawTarget,
+                         const nsRect& aFocusRect, nscolor aColor);
 
   /**
    * Render a gradient for an element.

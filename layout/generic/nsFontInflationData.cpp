@@ -312,7 +312,8 @@ static uint32_t DoCharCountOfLargestOption(nsIFrame* aContainer) {
 
 static uint32_t CharCountOfLargestOption(nsIFrame* aListControlFrame) {
   return DoCharCountOfLargestOption(
-      aListControlFrame->GetContentInsertionFrame());
+      static_cast<nsListControlFrame*>(aListControlFrame)
+          ->GetOptionsContainer());
 }
 
 void nsFontInflationData::ScanTextIn(nsIFrame* aFrame) {

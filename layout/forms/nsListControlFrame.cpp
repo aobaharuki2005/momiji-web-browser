@@ -79,6 +79,22 @@ void nsListControlFrame::Destroy(DestroyContext& aContext) {
   ScrollContainerFrame::Destroy(aContext);
 }
 
+void nsListControlFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
+                                          const nsDisplayListSet& aLists) {
+  // We allow visibility:hidden <select>s to contain visible options.
+
+  // Don't allow painting of list controls when painting is suppressed.
+  // XXX why do we need this here? we should never reach this. Maybe
+  // because these can have widgets? Hmm
+  if (aBuilder->IsBackgroundOnly()) {
+    return;
+  }
+
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsListControlFrame");
+
+  ScrollContainerFrame::BuildDisplayList(aBuilder, aLists);
+}
+
 HTMLOptionElement* nsListControlFrame::GetCurrentOption() const {
   return mEventListener->GetCurrentOption();
 }
@@ -87,7 +103,66 @@ bool nsListControlFrame::IsFocused() const {
   return Select().State().HasState(ElementState::FOCUS);
 }
 
-void nsListControlFrame::InvalidateFocus() { InvalidateFrame(); }
+/**
+ * This is called by the SelectsAreaFrame, which is the same
+ * as the frame returned by GetOptionsContainer. It's the frame which is
+ * scrolled by us.
+ * @param aPt the offset of this frame, relative to the rendering reference
+ * frame
+ */
+void nsListControlFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt) {
+  if (!IsFocused()) {
+    return;
+  }
+
+  nsIFrame* containerFrame = GetOptionsContainer();
+  if (!containerFrame) {
+    return;
+  }
+
+  nsIFrame* childframe = nullptr;
+  nsCOMPtr<nsIContent> focusedContent = GetCurrentOption();
+  if (focusedContent) {
+    childframe = focusedContent->GetPrimaryFrame();
+  }
+
+  nsRect fRect;
+  if (childframe) {
+    // get the child rect
+    fRect = childframe->GetRect();
+    // get it into our coordinates
+    fRect.MoveBy(childframe->GetParent()->GetOffsetTo(this));
+  } else {
+    float inflation = nsLayoutUtils::FontSizeInflationFor(this);
+    fRect.x = fRect.y = 0;
+    if (GetWritingMode().IsVertical()) {
+      fRect.width = GetScrollPortRect().width;
+      fRect.height = CalcFallbackRowBSize(inflation);
+    } else {
+      fRect.width = CalcFallbackRowBSize(inflation);
+      fRect.height = GetScrollPortRect().height;
+    }
+    fRect.MoveBy(containerFrame->GetOffsetTo(this));
+  }
+  fRect += aPt;
+
+  const auto* domOpt = HTMLOptionElement::FromNodeOrNull(focusedContent);
+  const bool isSelected = domOpt && domOpt->Selected();
+
+  // Set up back stop colors and then ask L&F service for the real colors
+  nscolor color =
+      LookAndFeel::Color(isSelected ? LookAndFeel::ColorID::Selecteditemtext
+                                    : LookAndFeel::ColorID::Selecteditem,
+                         this);
+
+  nsCSSRendering::PaintFocus(PresContext(), aDrawTarget, fRect, color);
+}
+
+void nsListControlFrame::InvalidateFocus() {
+  if (nsIFrame* containerFrame = GetOptionsContainer()) {
+    containerFrame->InvalidateFrame();
+  }
+}
 
 NS_QUERYFRAME_HEAD(nsListControlFrame)
   NS_QUERYFRAME_ENTRY(nsISelectControlFrame)
@@ -141,8 +216,7 @@ nscoord nsListControlFrame::CalcBSizeOfARow() {
   // fonts, etc.
   nscoord rowBSize(0);
   if (GetContainSizeAxes().mBContained ||
-      !GetMaxRowBSize(GetContentInsertionFrame(), GetWritingMode(),
-                      &rowBSize)) {
+      !GetMaxRowBSize(GetOptionsContainer(), GetWritingMode(), &rowBSize)) {
     // We don't have any <option>s or <optgroup> labels with a frame.
     // (Or we're size-contained in block axis, which has the same outcome for
     // our sizing.)
@@ -252,8 +326,6 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
 
   ScrollContainerFrame::Reflow(aPresContext, aDesiredSize, state, aStatus);
 
-  mBSizeOfARow = CalcBSizeOfARow();
-
   if (!mMightNeedSecondPass) {
     NS_ASSERTION(!autoBSize || BSizeOfARow() == oldBSizeOfARow,
                  "How did our BSize of a row change if nothing was dirty?");
@@ -261,6 +333,8 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
                      usingContainBSize,
                  "How do we not need a second pass during initial reflow at "
                  "auto BSize?");
+    NS_ASSERTION(!IsScrollbarUpdateSuppressed(),
+                 "Shouldn't be suppressing if we don't need a second pass!");
     if (!autoBSize || usingContainBSize) {
       // Update our mNumDisplayRows based on our new row block size now
       // that we know it.  Note that if autoBSize and we landed in this
@@ -283,9 +357,12 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
 
   // Now see whether we need a second pass.  If we do, our
   // nsSelectsAreaFrame will have suppressed the scrollbar update.
-  if (mBSizeOfARow == oldBSizeOfARow) {
+  if (!IsScrollbarUpdateSuppressed()) {
+    // All done.  No need to do more reflow.
     return;
   }
+
+  SetSuppressScrollbarUpdate(false);
 
   // Gotta reflow again.
   // XXXbz We're just changing the block size here; do we need to dirty
@@ -312,6 +389,11 @@ void nsListControlFrame::Reflow(nsPresContext* aPresContext,
 
 bool nsListControlFrame::ShouldPropagateComputedBSizeToScrolledContent() const {
   return true;
+}
+
+//---------------------------------------------------------
+nsContainerFrame* nsListControlFrame::GetContentInsertionFrame() {
+  return GetOptionsContainer()->GetContentInsertionFrame();
 }
 
 //---------------------------------------------------------
