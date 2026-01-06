@@ -4,17 +4,6 @@ const TEST_URLS = [
   "",
 ];
 
-add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      [
-        "browser.newtabpage.activity-stream.discoverystream.imageProxy.enabled",
-        false,
-      ],
-    ],
-  });
-});
-
 /**
  * This will open tabs in browser. This will also make the last tab
  * inserted to be the selected tab.
