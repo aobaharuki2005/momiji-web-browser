@@ -7,7 +7,7 @@ const { HttpServer, HTTP_404 } = ChromeUtils.importESModule(
   "resource://testing-common/httpd.sys.mjs"
 );
 const { GuardianClient } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/GuardianClient.sys.mjs"
+  "moz-src:///browser/components/ipprotection/GuardianClient.sys.mjs"
 );
 
 function makeGuardianServer(

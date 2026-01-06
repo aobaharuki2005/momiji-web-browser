@@ -4,10 +4,10 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 const { IPProtectionPanel } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPProtectionPanel.sys.mjs"
+  "moz-src:///browser/components/ipprotection/IPProtectionPanel.sys.mjs"
 );
 const { IPPEnrollAndEntitleManager } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
+  "moz-src:///browser/components/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
 );
 
 /**

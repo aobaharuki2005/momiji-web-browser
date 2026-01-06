@@ -7,8 +7,10 @@ import { ONBOARDING_PREF_FLAGS } from "chrome://browser/content/ipprotection/ipp
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  IPPProxyManager: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
-  IPPProxyStates: "resource:///modules/ipprotection/IPPProxyManager.sys.mjs",
+  IPPProxyManager:
+    "moz-src:///browser/components/ipprotection/IPPProxyManager.sys.mjs",
+  IPPProxyStates:
+    "moz-src:///browser/components/ipprotection/IPPProxyManager.sys.mjs",
 });
 
 const ONBOARDING_MESSAGE_MASK_PREF =

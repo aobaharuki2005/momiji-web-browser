@@ -6,18 +6,19 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   IPPEnrollAndEntitleManager:
-    "resource:///modules/ipprotection/IPPEnrollAndEntitleManager.sys.mjs",
-  IPPChannelFilter: "resource:///modules/ipprotection/IPPChannelFilter.sys.mjs",
+    "moz-src:///browser/components/ipprotection/IPPEnrollAndEntitleManager.sys.mjs",
+  IPPChannelFilter:
+    "moz-src:///browser/components/ipprotection/IPPChannelFilter.sys.mjs",
   IPProtectionUsage:
-    "resource:///modules/ipprotection/IPProtectionUsage.sys.mjs",
+    "moz-src:///browser/components/ipprotection/IPProtectionUsage.sys.mjs",
   IPPNetworkErrorObserver:
-    "resource:///modules/ipprotection/IPPNetworkErrorObserver.sys.mjs",
+    "moz-src:///browser/components/ipprotection/IPPNetworkErrorObserver.sys.mjs",
   IPProtectionServerlist:
-    "resource:///modules/ipprotection/IPProtectionServerlist.sys.mjs",
+    "moz-src:///browser/components/ipprotection/IPProtectionServerlist.sys.mjs",
   IPProtectionService:
-    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+    "moz-src:///browser/components/ipprotection/IPProtectionService.sys.mjs",
   IPProtectionStates:
-    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+    "moz-src:///browser/components/ipprotection/IPProtectionService.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(

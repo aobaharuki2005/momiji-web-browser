@@ -5,16 +5,16 @@
 "use strict";
 
 const { IPProtectionService, IPProtectionStates } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPProtectionService.sys.mjs"
+  "moz-src:///browser/components/ipprotection/IPProtectionService.sys.mjs"
 );
 const { IPPProxyManager, IPPProxyStates } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPProxyManager.sys.mjs"
+  "moz-src:///browser/components/ipprotection/IPPProxyManager.sys.mjs"
 );
 const { IPPSignInWatcher } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPSignInWatcher.sys.mjs"
+  "moz-src:///browser/components/ipprotection/IPPSignInWatcher.sys.mjs"
 );
 const { ProxyPass } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/GuardianClient.sys.mjs"
+  "moz-src:///browser/components/ipprotection/GuardianClient.sys.mjs"
 );
 const { RemoteSettings } = ChromeUtils.importESModule(
   "resource://services-settings/remote-settings.sys.mjs"

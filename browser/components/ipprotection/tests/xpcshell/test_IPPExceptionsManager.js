@@ -4,7 +4,7 @@ https://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
 const { IPPExceptionsManager } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPExceptionsManager.sys.mjs"
+  "moz-src:///browser/components/ipprotection/IPPExceptionsManager.sys.mjs"
 );
 
 const ONBOARDING_MESSAGE_MASK_PREF =

@@ -5,7 +5,7 @@
 "use strict";
 
 const { IPPOnboardingMessage } = ChromeUtils.importESModule(
-  "resource:///modules/ipprotection/IPPOnboardingMessageHelper.sys.mjs"
+  "moz-src:///browser/components/ipprotection/IPPOnboardingMessageHelper.sys.mjs"
 );
 const { ONBOARDING_PREF_FLAGS } = ChromeUtils.importESModule(
   "chrome://browser/content/ipprotection/ipprotection-constants.mjs"
