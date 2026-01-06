@@ -17,6 +17,7 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   NewTabUtils: "resource://gre/modules/NewTabUtils.sys.mjs",
+  PersistentCache: "resource://newtab/lib/PersistentCache.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
@@ -44,13 +45,17 @@ ChromeUtils.defineLazyGetter(lazy, "pageFrecencyThreshold", () => {
   return 101;
 });
 
+const CACHE_KEY = "frecency_boost_cache";
 const RS_FALLBACK_BASE_URL =
   "https://firefox-settings-attachments.cdn.mozilla.net/";
 const SPONSORED_TILE_PARTNER_FREC_BOOST = "frec-boost";
+const DEFAULT_SOV_NUM_ITEMS = 200;
 
 export class FrecencyBoostProvider {
   constructor(frecentCache) {
+    this.cache = new lazy.PersistentCache(CACHE_KEY, true);
     this.frecentCache = frecentCache;
+    this._links = null;
     this._frecencyBoostedSponsors = new Map();
     this._frecencyBoostRS = null;
   }
@@ -192,12 +197,37 @@ export class FrecencyBoostProvider {
     return candidates;
   }
 
-  async getLinks(numItems) {
-    if (this._frecencyBoostedSponsors.size === 0) {
+  async update(numItems = DEFAULT_SOV_NUM_ITEMS) {
+    if (!this._frecencyBoostedSponsors.size) {
       await this._importFrecencyBoostedSponsors();
     }
 
-    const domainList = Array.from(this._frecencyBoostedSponsors.values());
-    return this.buildFrecencyBoostedSpocs(domainList, numItems);
+    let candidates = [];
+    if (this._frecencyBoostedSponsors.size) {
+      const domainList = Array.from(this._frecencyBoostedSponsors.values());
+      // Find all matches from the sponsor domains, sorted by frecency
+      candidates = await this.buildFrecencyBoostedSpocs(domainList, numItems);
+    }
+    this._links = candidates;
+    await this.cache.set("links", this._links);
+  }
+
+  async fetch(numItems) {
+    if (!this._links) {
+      this._links = await this.cache.get("links");
+
+      // If we still have no links we are likely in first startup.
+      // In that case, we can fire off a background update.
+      if (!this._links) {
+        void this.update(numItems);
+      }
+    }
+
+    const links = this._links || [];
+
+    // Apply blocking at read time so it’s always current.
+    return links.filter(
+      link => !lazy.NewTabUtils.blockedLinks.isBlocked({ url: link.url })
+    );
   }
 }

@@ -14,7 +14,7 @@ const PREF_SOV_ENABLED = "sov.enabled";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const ROWS_PREF = "topSitesRows";
 
-function getTopSitesFeedForTest(sandbox, { frecent = [] } = {}) {
+async function getTopSitesFeedForTest(sandbox, { frecent = [] } = {}) {
   let feed = new TopSitesFeed();
 
   feed.store = {
@@ -97,6 +97,9 @@ function getTopSitesFeedForTest(sandbox, { frecent = [] } = {}) {
     .stub(feed.frecencyBoostProvider, "_frecencyBoostedSponsors")
     .value(frecencyBoostedSponsors);
 
+  // Kick off an update so the cache is populated.
+  await feed.frecencyBoostProvider.update();
+
   return feed;
 }
 
@@ -108,7 +111,7 @@ add_task(async function test_frecency_sponsored_topsites() {
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should return an empty array with no history"
     );
-    const feed = getTopSitesFeedForTest(sandbox);
+    const feed = await getTopSitesFeedForTest(sandbox);
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 0);
@@ -120,7 +123,7 @@ add_task(async function test_frecency_sponsored_topsites() {
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should return a single match with the right format"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         {
           url: "https://domain1.com",
@@ -150,7 +153,7 @@ add_task(async function test_frecency_sponsored_topsites() {
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should return multiple matches"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         {
           url: "https://domain1.com",
@@ -175,7 +178,7 @@ add_task(async function test_frecency_sponsored_topsites() {
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should return a single match with partial url"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         {
           url: "https://domain1.com/path",
@@ -195,7 +198,7 @@ add_task(async function test_frecency_sponsored_topsites() {
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should return a single match with a subdomain"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         {
           url: "https://www.domain1.com",
@@ -215,7 +218,7 @@ add_task(async function test_frecency_sponsored_topsites() {
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should not return a match with a different subdomain"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         {
           url: "https://bus.domain1.com",
@@ -234,7 +237,7 @@ add_task(async function test_frecency_sponsored_topsites() {
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should return a match with the same subdomain"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         {
           url: "https://sub.domain1.com",
@@ -254,7 +257,7 @@ add_task(async function test_frecency_sponsored_topsites() {
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
         "Should not match a partial domain"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         {
           url: "https://domain12.com",

@@ -112,7 +112,6 @@ const PREF_SOV_NAME = "sov.name";
 const PREF_SOV_AMP_ALLOCATION = "sov.amp.allocation";
 const PREF_SOV_FRECENCY_ALLOCATION = "sov.frecency.allocation";
 const DEFAULT_SOV_SLOT_COUNT = 3;
-const DEFAULT_SOV_NUM_ITEMS = 200;
 
 // Search experiment stuff
 const FILTER_DEFAULT_SEARCH_PREF = "improvesearch.noDefaultSearchTile";
@@ -1389,10 +1388,9 @@ export class TopSitesFeed {
       this.store.getState().Prefs.values[SHOW_SPONSORED_PREF]
     ) {
       const { values } = this.store.getState().Prefs;
-      const numItems =
-        values?.trainhopConfig?.sov?.numItems || DEFAULT_SOV_NUM_ITEMS;
+      const numItems = values?.trainhopConfig?.sov?.numItems;
 
-      candidates = await this.frecencyBoostProvider.getLinks(numItems);
+      candidates = await this.frecencyBoostProvider.fetch(numItems);
 
       // If we have a matched set of candidates,
       // we can check if it's an exposure event.
@@ -1401,6 +1399,15 @@ export class TopSitesFeed {
       }
     }
     return candidates;
+  }
+
+  /**
+   * Updates frecency boosted topsites spocs cache.
+   */
+  async updateFrecencyBoostedSpocs() {
+    const { values } = this.store.getState().Prefs;
+    const numItems = values?.trainhopConfig?.sov?.numItems;
+    await this.frecencyBoostProvider.update(numItems);
   }
 
   /**
@@ -2321,6 +2328,9 @@ export class TopSitesFeed {
       case at.SYSTEM_TICK:
         this.refresh({ broadcast: false });
         this._contile.periodicUpdate();
+        // We don't need to await on this,
+        // we can let this update in the background.
+        void this.updateFrecencyBoostedSpocs();
         break;
       // All these actions mean we need new top sites
       case at.PLACES_HISTORY_CLEARED:

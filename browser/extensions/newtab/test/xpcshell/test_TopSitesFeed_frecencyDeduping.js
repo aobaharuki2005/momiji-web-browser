@@ -13,7 +13,10 @@ const PREF_SOV_ENABLED = "sov.enabled";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const ROWS_PREF = "topSitesRows";
 
-function getTopSitesFeedForTest(sandbox, { frecent = [], contile = [] } = {}) {
+async function getTopSitesFeedForTest(
+  sandbox,
+  { frecent = [], contile = [] } = {}
+) {
   let feed = new TopSitesFeed();
 
   feed.store = {
@@ -87,6 +90,9 @@ function getTopSitesFeedForTest(sandbox, { frecent = [], contile = [] } = {}) {
   DEFAULT_TOP_SITES.length = 0;
   feed._readContile();
 
+  // Kick off an update so the cache is populated.
+  await feed.frecencyBoostProvider.update();
+
   return feed;
 }
 
@@ -94,7 +100,7 @@ add_task(async function test_dedupeSponsorsAgainstNothing() {
   let sandbox = sinon.createSandbox();
   {
     info("TopSitesFeed.getLinksWithDefaults - Should return all defaults");
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         { url: "https://default1.com", frecency: 1000 },
         { url: "https://default2.com", frecency: 1000 },
@@ -119,7 +125,7 @@ add_task(async function test_dedupeSponsorsAgainstNothing() {
       "TopSitesFeed.getLinksWithDefaults - " +
         "Should return a frecency match in the second position"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         { url: "https://default1.com", frecency: 1000 },
         { url: "https://default2.com", frecency: 1000 },
@@ -145,7 +151,7 @@ add_task(async function test_dedupeSponsorsAgainstNothing() {
       "TopSitesFeed.getLinksWithDefaults - " +
         "Should return a frecency match with path in the second position"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         { url: "https://default1.com", frecency: 1000 },
         { url: "https://default2.com", frecency: 1000 },
@@ -175,7 +181,7 @@ add_task(async function test_dedupeSponsorsAgainstTopsites() {
       "TopSitesFeed.getLinksWithDefaults - " +
         "Should dedupe against matching topsite"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         { url: "https://default1.com", frecency: 1000 },
         { url: "https://default2.com", frecency: 1000 },
@@ -201,7 +207,7 @@ add_task(async function test_dedupeSponsorsAgainstTopsites() {
       "TopSitesFeed.getLinksWithDefaults - " +
         "Should dedupe against matching topsite with path"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         { url: "https://default1.com", frecency: 1000 },
         { url: "https://default2.com", frecency: 1000 },
@@ -231,7 +237,7 @@ add_task(async function test_dedupeSponsorsAgainstContile() {
       "TopSitesFeed.getLinksWithDefaults - " +
         "Should dedupe against matching contile"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         { url: "https://default1.com", frecency: 1000 },
         { url: "https://default2.com", frecency: 1000 },
@@ -257,7 +263,7 @@ add_task(async function test_dedupeSponsorsAgainstContile() {
       "TopSitesFeed.getLinksWithDefaults - " +
         "Should dedupe against matching contile label"
     );
-    const feed = getTopSitesFeedForTest(sandbox, {
+    const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
         { url: "https://default1.com", frecency: 1000 },
         { url: "https://default2.com", frecency: 1000 },
