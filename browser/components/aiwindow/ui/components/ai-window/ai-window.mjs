@@ -8,8 +8,6 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   Chat: "moz-src:///browser/components/aiwindow/models/Chat.sys.mjs",
-  generateChatTitle:
-    "moz-src:///browser/components/aiwindow/models/TitleGeneration.sys.mjs",
   AIWindow:
     "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
   ChatConversation:
@@ -84,33 +82,6 @@ export class AIWindow extends MozLitElement {
   }
 
   /**
-   * Generates and sets a title for the conversation if one doesn't exist.
-   *
-   * @private
-   */
-  async #addConversationTitle() {
-    if (this.#conversation.title) {
-      return;
-    }
-
-    const firstUserMessage = this.#conversation.messages.find(
-      m => m.role === lazy.MESSAGE_ROLE.USER
-    );
-
-    const title = await lazy.generateChatTitle(
-      firstUserMessage?.content?.body,
-      {
-        url: firstUserMessage?.pageUrl?.href || "",
-        title: this.#conversation.pageMeta?.title || "",
-        description: this.#conversation.pageMeta?.description || "",
-      }
-    );
-
-    this.#conversation.title = title;
-    this.#updateConversation();
-  }
-
-  /**
    * Fetches an AI response based on the current user prompt.
    * Validates the prompt, updates conversation state, streams the response,
    * and dispatches updates to the browser actor.
@@ -138,7 +109,6 @@ export class AIWindow extends MozLitElement {
         await this.#conversation.generatePrompt(this.userPrompt)
       );
       this.#updateConversation();
-      this.#addConversationTitle();
 
       this.userPrompt = "";
 
