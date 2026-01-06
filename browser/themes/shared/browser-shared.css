@@ -590,7 +590,7 @@ menupopup::part(drop-indicator) {
   list-style-image: none;
   height: 2px;
   margin-inline-end: -4em;
-  background-color: SelectedItem;
+  background-color: AccentColor;
   pointer-events: none;
 }
 
@@ -1294,8 +1294,8 @@ popupnotificationcontent {
 
 #historySwipeAnimationPreviousArrow,
 #historySwipeAnimationNextArrow {
-  --swipe-nav-icon-primary-color: SelectedItemText;
-  --swipe-nav-icon-accent-color: SelectedItem;
+  --swipe-nav-icon-primary-color: AccentColorText;
+  --swipe-nav-icon-accent-color: AccentColor;
 
   will-change: transform;
 
