@@ -224,7 +224,7 @@ private fun RecentSearchesContent(
                     store.dispatch(SettingsSearchAction.ClearRecentSearchesClicked)
                 },
                 colors = ButtonDefaults.textButtonColors(),
-                modifier = Modifier,
+                modifier = Modifier.heightIn(min = 48.dp),
                 enabled = true,
             ) {
                Text(
