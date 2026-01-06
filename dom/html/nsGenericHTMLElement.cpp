@@ -1103,13 +1103,33 @@ nsMapRuleToAttributesFunc nsGenericHTMLElement::GetAttributeMappingFunction()
   return &MapCommonAttributesInto;
 }
 
-static constexpr nsAttrValue::EnumTableEntry kDivAlignTable[] = {
-    {"left", StyleTextAlign::MozLeft},
-    {"right", StyleTextAlign::MozRight},
-    {"center", StyleTextAlign::MozCenter},
-    {"middle", StyleTextAlign::MozCenter},
-    {"justify", StyleTextAlign::Justify},
+// Represents a possible value for the "align" attribute. Different
+// elements may support different subsets of these values and map
+// them into different CSS properties.
+enum class HTMLAlignValue : uint8_t {
+  Left,
+  Right,
+  Top,
+  Middle,
+  Bottom,
+  Center,
+  Baseline,
+  TextTop,
+  AbsMiddle,
+  AbsCenter,
+  AbsBottom,
+  Justify,
 };
+
+// clang-format off
+static constexpr nsAttrValue::EnumTableEntry kDivAlignTable[] = {
+    {"left", HTMLAlignValue::Left},
+    {"right", HTMLAlignValue::Right},
+    {"center", HTMLAlignValue::Center},
+    {"middle", HTMLAlignValue::Middle},
+    {"justify", HTMLAlignValue::Justify},
+};
+// clang-format on
 
 static constexpr nsAttrValue::EnumTableEntry kFrameborderTable[] = {
     {"yes", FrameBorderProperty::Yes},
@@ -1137,62 +1157,30 @@ static constexpr nsAttrValue::EnumTableEntry kTableVAlignTable[] = {
 };
 
 static constexpr nsAttrValue::EnumTableEntry kAlignTable[] = {
-    {"left", StyleTextAlign::Left},
-    {"right", StyleTextAlign::Right},
-
-    {"top", StyleVerticalAlignKeyword::Top},
-    {"middle", StyleVerticalAlignKeyword::MozMiddleWithBaseline},
-
-    // Intentionally not bottom.
-    {"bottom", StyleVerticalAlignKeyword::Baseline},
-
-    {"center", StyleVerticalAlignKeyword::MozMiddleWithBaseline},
-    {"baseline", StyleVerticalAlignKeyword::Baseline},
-
-    {"texttop", StyleVerticalAlignKeyword::TextTop},
-    {"absmiddle", StyleVerticalAlignKeyword::Middle},
-    {"abscenter", StyleVerticalAlignKeyword::Middle},
-    {"absbottom", StyleVerticalAlignKeyword::Bottom},
+    {"left", HTMLAlignValue::Left},
+    {"right", HTMLAlignValue::Right},
+    {"top", HTMLAlignValue::Top},
+    {"middle", HTMLAlignValue::Middle},
+    {"bottom", HTMLAlignValue::Bottom},
+    {"center", HTMLAlignValue::Center},
+    {"baseline", HTMLAlignValue::Baseline},
+    {"texttop", HTMLAlignValue::TextTop},
+    {"absmiddle", HTMLAlignValue::AbsMiddle},
+    {"abscenter", HTMLAlignValue::AbsCenter},
+    {"absbottom", HTMLAlignValue::AbsBottom},
 };
 
 bool nsGenericHTMLElement::ParseAlignValue(const nsAString& aString,
                                            nsAttrValue& aResult) {
-  static_assert(uint8_t(StyleTextAlign::Left) !=
-                    uint8_t(StyleVerticalAlignKeyword::Top) &&
-                uint8_t(StyleTextAlign::Left) !=
-                    uint8_t(StyleVerticalAlignKeyword::MozMiddleWithBaseline) &&
-                uint8_t(StyleTextAlign::Left) !=
-                    uint8_t(StyleVerticalAlignKeyword::Baseline) &&
-                uint8_t(StyleTextAlign::Left) !=
-                    uint8_t(StyleVerticalAlignKeyword::TextTop) &&
-                uint8_t(StyleTextAlign::Left) !=
-                    uint8_t(StyleVerticalAlignKeyword::Middle) &&
-                uint8_t(StyleTextAlign::Left) !=
-                    uint8_t(StyleVerticalAlignKeyword::Bottom));
-
-  static_assert(uint8_t(StyleTextAlign::Right) !=
-                    uint8_t(StyleVerticalAlignKeyword::Top) &&
-                uint8_t(StyleTextAlign::Right) !=
-                    uint8_t(StyleVerticalAlignKeyword::MozMiddleWithBaseline) &&
-                uint8_t(StyleTextAlign::Right) !=
-                    uint8_t(StyleVerticalAlignKeyword::Baseline) &&
-                uint8_t(StyleTextAlign::Right) !=
-                    uint8_t(StyleVerticalAlignKeyword::TextTop) &&
-                uint8_t(StyleTextAlign::Right) !=
-                    uint8_t(StyleVerticalAlignKeyword::Middle) &&
-                uint8_t(StyleTextAlign::Right) !=
-                    uint8_t(StyleVerticalAlignKeyword::Bottom));
-
   return aResult.ParseEnumValue(aString, kAlignTable, false);
 }
 
 //----------------------------------------
 
 static constexpr nsAttrValue::EnumTableEntry kTableHAlignTable[] = {
-    {"left", StyleTextAlign::Left},
-    {"right", StyleTextAlign::Right},
-    {"center", StyleTextAlign::Center},
-    {"justify", StyleTextAlign::Justify},
+    {"left", HTMLAlignValue::Left},
+    {"right", HTMLAlignValue::Right},
+    {"center", HTMLAlignValue::Center},
 };
 
 bool nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
@@ -1204,12 +1192,12 @@ bool nsGenericHTMLElement::ParseTableHAlignValue(const nsAString& aString,
 
 // This table is used for td, th, tr, col, thead, tbody and tfoot.
 static constexpr nsAttrValue::EnumTableEntry kTableCellHAlignTable[] = {
-    {"left", StyleTextAlign::MozLeft},
-    {"right", StyleTextAlign::MozRight},
-    {"center", StyleTextAlign::MozCenter},
-    {"justify", StyleTextAlign::Justify},
-    {"middle", StyleTextAlign::MozCenter},
-    {"absmiddle", StyleTextAlign::Center},
+    {"left", HTMLAlignValue::Left},
+    {"right", HTMLAlignValue::Right},
+    {"center", HTMLAlignValue::Center},
+    {"justify", HTMLAlignValue::Justify},
+    {"middle", HTMLAlignValue::Middle},
+    {"absmiddle", HTMLAlignValue::AbsMiddle},
 };
 
 bool nsGenericHTMLElement::ParseTableCellHAlignValue(const nsAString& aString,
@@ -1400,61 +1388,153 @@ void nsGenericHTMLElement::MapImageAlignAttributeInto(
     MappedDeclarationsBuilder& aBuilder) {
   const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::align);
   if (value && value->Type() == nsAttrValue::eEnum) {
-    int32_t align = value->GetEnumValue();
-    if (!aBuilder.PropertyIsSet(eCSSProperty_float)) {
-      if (align == uint8_t(StyleTextAlign::Left)) {
+    switch (HTMLAlignValue(value->GetEnumValue())) {
+      case HTMLAlignValue::Left:
         aBuilder.SetKeywordValue(eCSSProperty_float, StyleFloat::Left);
-      } else if (align == uint8_t(StyleTextAlign::Right)) {
+        break;
+      case HTMLAlignValue::Right:
         aBuilder.SetKeywordValue(eCSSProperty_float, StyleFloat::Right);
-      }
-    }
-    if (!aBuilder.PropertyIsSet(eCSSProperty_vertical_align)) {
-      switch (align) {
-        case uint8_t(StyleTextAlign::Left):
-        case uint8_t(StyleTextAlign::Right):
-          break;
-        default:
-          aBuilder.SetKeywordValue(eCSSProperty_vertical_align, align);
-          break;
-      }
+        break;
+      case HTMLAlignValue::TextTop:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::TextTop);
+        break;
+      case HTMLAlignValue::Top:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::Top);
+        break;
+      case HTMLAlignValue::Middle:
+      case HTMLAlignValue::Center:
+        aBuilder.SetKeywordValue(
+            eCSSProperty_vertical_align,
+            StyleVerticalAlignKeyword::MozMiddleWithBaseline);
+        break;
+      case HTMLAlignValue::AbsMiddle:
+      case HTMLAlignValue::AbsCenter:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::Middle);
+        break;
+      case HTMLAlignValue::AbsBottom:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::Bottom);
+        break;
+      case HTMLAlignValue::Bottom:  // Intentionally mapped to `baseline`
+      case HTMLAlignValue::Baseline:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::Baseline);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected align value");
+        break;
     }
   }
 }
 
 void nsGenericHTMLElement::MapDivAlignAttributeInto(
     MappedDeclarationsBuilder& aBuilder) {
-  if (!aBuilder.PropertyIsSet(eCSSProperty_text_align)) {
-    // align: enum
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::align);
-    if (value && value->Type() == nsAttrValue::eEnum)
-      aBuilder.SetKeywordValue(eCSSProperty_text_align, value->GetEnumValue());
+  const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::align);
+  if (value && value->Type() == nsAttrValue::eEnum) {
+    switch (HTMLAlignValue(value->GetEnumValue())) {
+      case HTMLAlignValue::Left:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::MozLeft);
+        break;
+      case HTMLAlignValue::Right:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::MozRight);
+        break;
+      case HTMLAlignValue::Center:
+      case HTMLAlignValue::Middle:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::MozCenter);
+        break;
+      case HTMLAlignValue::Justify:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::Justify);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected align value");
+        break;
+    }
   }
 }
 
-void nsGenericHTMLElement::MapVAlignAttributeInto(
+void nsGenericHTMLElement::MapTableVAlignAttributeInto(
     MappedDeclarationsBuilder& aBuilder) {
-  if (!aBuilder.PropertyIsSet(eCSSProperty_vertical_align)) {
-    // align: enum
-    const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::valign);
-    if (value && value->Type() == nsAttrValue::eEnum) {
-      switch (static_cast<TableCellAlignment>(value->GetEnumValue())) {
-        case TableCellAlignment::Top:
-          aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
-                                   StyleVerticalAlignKeyword::Top);
-          break;
-        case TableCellAlignment::Middle:
-          aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
-                                   StyleVerticalAlignKeyword::Middle);
-          break;
-        case TableCellAlignment::Bottom:
-          aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
-                                   StyleVerticalAlignKeyword::Bottom);
-          break;
-        case TableCellAlignment::Baseline:
-          aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
-                                   StyleVerticalAlignKeyword::Baseline);
-          break;
-      }
+  const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::valign);
+  if (value && value->Type() == nsAttrValue::eEnum) {
+    switch (TableCellAlignment(value->GetEnumValue())) {
+      case TableCellAlignment::Top:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::Top);
+        break;
+      case TableCellAlignment::Middle:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::Middle);
+        break;
+      case TableCellAlignment::Bottom:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::Bottom);
+        break;
+      case TableCellAlignment::Baseline:
+        aBuilder.SetKeywordValue(eCSSProperty_vertical_align,
+                                 StyleVerticalAlignKeyword::Baseline);
+        break;
+    }
+  }
+}
+
+void nsGenericHTMLElement::MapTableHAlignAttributeInto(
+    MappedDeclarationsBuilder& aBuilder) {
+  const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::align);
+  if (value && value->Type() == nsAttrValue::eEnum) {
+    switch (HTMLAlignValue(value->GetEnumValue())) {
+      case HTMLAlignValue::Center:
+        aBuilder.SetAutoValueIfUnset(eCSSProperty_margin_left);
+        aBuilder.SetAutoValueIfUnset(eCSSProperty_margin_right);
+        break;
+      case HTMLAlignValue::Left:
+        aBuilder.SetKeywordValue(eCSSProperty_float, StyleFloat::Left);
+        break;
+      case HTMLAlignValue::Right:
+        aBuilder.SetKeywordValue(eCSSProperty_float, StyleFloat::Right);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected align value");
+        break;
+    }
+  }
+}
+
+void nsGenericHTMLElement::MapTableCellHAlignAttributeInto(
+    MappedDeclarationsBuilder& aBuilder) {
+  const nsAttrValue* value = aBuilder.GetAttr(nsGkAtoms::align);
+  if (value && value->Type() == nsAttrValue::eEnum) {
+    switch (HTMLAlignValue(value->GetEnumValue())) {
+      case HTMLAlignValue::Left:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::MozLeft);
+        break;
+      case HTMLAlignValue::Right:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::MozRight);
+        break;
+      case HTMLAlignValue::Center:
+      case HTMLAlignValue::Middle:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::MozCenter);
+        break;
+      case HTMLAlignValue::AbsMiddle:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::Center);
+        break;
+      case HTMLAlignValue::Justify:
+        aBuilder.SetKeywordValue(eCSSProperty_text_align,
+                                 StyleTextAlign::Justify);
+        break;
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected align value");
+        break;
     }
   }
 }
