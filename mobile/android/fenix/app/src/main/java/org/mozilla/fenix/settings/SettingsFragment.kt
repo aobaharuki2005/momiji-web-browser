@@ -224,6 +224,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
         if (showSearch) {
             showToolbarWithIconButton(
                 title = toolbarTitle,
+                contentDescription = getString(R.string.settings_search_button_content_description),
                 iconResId = R.drawable.ic_search,
                 onClick = {
                     SettingsSearch.opened.record()
