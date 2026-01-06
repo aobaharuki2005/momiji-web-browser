@@ -119,7 +119,7 @@
         TaskbarTabs: "resource:///modules/taskbartabs/TaskbarTabs.sys.mjs",
         UrlbarProviderOpenTabs:
           "moz-src:///browser/components/urlbar/UrlbarProviderOpenTabs.sys.mjs",
-        SVG_DATA_URI_PREFIX: "moz-src:///browser/modules/FaviconUtils.sys.mjs",
+        FaviconUtils: "moz-src:///browser/modules/FaviconUtils.sys.mjs",
       });
       ChromeUtils.defineLazyGetter(this, "tabLocalization", () => {
         return new Localization(
@@ -1153,16 +1153,11 @@
           let url = aIconURL;
           if (
             this._remoteSVGIconDecoding &&
-            url.startsWith(this.SVG_DATA_URI_PREFIX)
+            url.startsWith(this.FaviconUtils.SVG_DATA_URI_PREFIX)
           ) {
             // 16px is hardcoded for .tab-icon-image in tabs.css
             let size = Math.floor(16 * window.devicePixelRatio);
-            let params = new URLSearchParams({
-              url,
-              width: size,
-              height: size,
-            });
-            url = "moz-remote-image://?" + params;
+            url = this.FaviconUtils.getMozRemoteImageURL(url, size);
           }
           aTab.setAttribute("image", url);
         } else {

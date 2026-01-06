@@ -20,6 +20,7 @@ ChromeUtils.defineESModuleGetters(this, {
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
   FormAutofillPreferences:
     "resource://autofill/FormAutofillPreferences.sys.mjs",
+  getMozRemoteImageURL: "moz-src:///browser/modules/FaviconUtils.sys.mjs",
 });
 
 // Constants & Enumeration Values
@@ -7003,12 +7004,7 @@ var gMainPane = {
     ) {
       // As the favicon originates from web content and is displayed in the parent process,
       // use the moz-remote-image: protocol to safely re-encode it.
-      let params = new URLSearchParams({
-        url: uri.prePath + "/favicon.ico",
-        width: 16,
-        height: 16,
-      });
-      return "moz-remote-image://?" + params;
+      return getMozRemoteImageURL(uri.prePath + "/favicon.ico", 16);
     }
 
     return "";

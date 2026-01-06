@@ -18,6 +18,18 @@ export const TRUSTED_FAVICON_SCHEMES = Object.freeze([
   "resource",
 ]);
 
+// Creates a moz-remote-image: URL wrapping the specified URL.
+function getMozRemoteImageURL(imageUrl, size) {
+  let params = new URLSearchParams({
+    url: imageUrl,
+    width: size,
+    height: size,
+  });
+  return "moz-remote-image://?" + params;
+}
+
+export { getMozRemoteImageURL };
+
 /**
  * Converts a Blob into a data: URL.
  *
@@ -33,3 +45,9 @@ export function blobAsDataURL(blob) {
     reader.readAsDataURL(blob);
   });
 }
+
+// Shim for tabbrowser.js that uses `defineESModuleGetters`.
+export let FaviconUtils = {
+  SVG_DATA_URI_PREFIX,
+  getMozRemoteImageURL,
+};
