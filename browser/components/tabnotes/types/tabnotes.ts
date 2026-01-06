@@ -30,7 +30,6 @@ interface TabNoteCreatedEvent extends CustomEvent {
   target: MozTabbrowserTab;
   detail: {
     note: TabNoteRecord;
-    telemetrySource?: TabNoteTelemetrySource;
   };
 }
 
@@ -39,7 +38,6 @@ interface TabNoteEditedEvent extends CustomEvent {
   target: MozTabbrowserTab;
   detail: {
     note: TabNoteRecord;
-    telemetrySource?: TabNoteTelemetrySource;
   };
 }
 
@@ -48,7 +46,6 @@ interface TabNoteRemovedEvent extends CustomEvent {
   target: MozTabbrowserTab;
   detail: {
     note: TabNoteRecord;
-    telemetrySource?: TabNoteTelemetrySource;
   };
 }
 
@@ -58,11 +55,3 @@ type TabbrowserWebProgressListener<
 > = F extends (...args: any) => any
   ? (aBrowser: MozBrowser, ...rest: Parameters<F>) => ReturnType<F>
   : never;
-
-/**
- * Constant values used to record the UI surface when a user interacted
- * with tab notes.
- */
-type TabNoteTelemetrySource =
-  | "context_menu" // tab context menu
-  | "hover_menu"; // tab hover preview panel

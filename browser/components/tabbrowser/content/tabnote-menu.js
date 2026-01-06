@@ -88,8 +88,6 @@
     #cancelButton;
     #saveButton;
     #overflowIndicator;
-    /** @type {TabNoteTelemetrySource|null} */
-    #telemetrySource = null;
 
     connectedCallback() {
       if (this.#initialized) {
@@ -147,7 +145,6 @@
     on_popuphidden() {
       this.#currentTab = null;
       this.#noteField.value = "";
-      this.#telemetrySource = null;
     }
 
     get createMode() {
@@ -213,17 +210,12 @@
 
     /**
      * @param {MozTabbrowserTab} tab
-     *   The tab whose note this panel will control.
-     * @param {object} [options]
-     * @param {TabNoteTelemetrySource} [options.telemetrySource]
-     *   The UI surface that requested to open this panel.
      */
-    openPanel(tab, options = {}) {
+    openPanel(tab) {
       if (!TabNotes.isEligible(tab)) {
         return;
       }
       this.#currentTab = tab;
-      this.#telemetrySource = options.telemetrySource;
 
       this.#updatePanel();
 
@@ -254,9 +246,7 @@
       let note = this.#noteField.value;
 
       if (TabNotes.isEligible(this.#currentTab) && note.length) {
-        TabNotes.set(this.#currentTab, note, {
-          telemetrySource: this.#telemetrySource,
-        });
+        TabNotes.set(this.#currentTab, note);
       }
 
       this.#panel.hidePopup();

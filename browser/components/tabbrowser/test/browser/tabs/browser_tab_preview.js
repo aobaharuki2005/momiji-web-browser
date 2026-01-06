@@ -605,21 +605,9 @@ add_task(async function tabNotesTests() {
   EventUtils.sendString(noteText, window);
   await input;
   let menuHidden = BrowserTestUtils.waitForPopupEvent(tabNotePanel, "hidden");
-  let tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
+  const tabNoteCreated = BrowserTestUtils.waitForEvent(tab, "TabNote:Created");
   tabNotePanel.querySelector("#tab-note-editor-button-save").click();
   await Promise.all([menuHidden, tabNoteCreated]);
-
-  await BrowserTestUtils.waitForCondition(
-    () => Glean.tabNotes.added.testGetValue()?.length,
-    "wait for event to be recorded"
-  );
-
-  const [addedEvent] = Glean.tabNotes.added.testGetValue();
-  Assert.deepEqual(
-    addedEvent.extra,
-    { source: "hover_menu" },
-    "added event extra data should say the tab note was added from the tab hover preview menu"
-  );
 
   await closeTabPreviews();
 
