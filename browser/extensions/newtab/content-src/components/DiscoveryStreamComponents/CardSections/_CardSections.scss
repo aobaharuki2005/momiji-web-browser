@@ -59,17 +59,6 @@
       height: 32px;
       width: 32px;
     }
-
-    &:hover,
-    &:active,
-    &:focus-within,
-    &.active {
-      .meta {
-        .source-wrapper .source {
-          display: none;
-        }
-      }
-    }
   }
 
   &.ds-card.sections-card-ui {

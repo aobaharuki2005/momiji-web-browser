@@ -5176,9 +5176,6 @@ dialog:dir(rtl)::after {
     height: 32px;
     width: 32px;
   }
-  .ds-section-grid.ds-card-grid .col-1-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-1-small.refined-cards.active .meta .source-wrapper .source {
-    display: none;
-  }
   .ds-section-grid.ds-card-grid .col-1-small.ds-card.sections-card-ui {
     padding: unset;
   }
@@ -5535,9 +5532,6 @@ dialog:dir(rtl)::after {
   .ds-section-grid.ds-card-grid .col-2-small.refined-cards .context-menu-position-container .context-menu-button {
     height: 32px;
     width: 32px;
-  }
-  .ds-section-grid.ds-card-grid .col-2-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-2-small.refined-cards.active .meta .source-wrapper .source {
-    display: none;
   }
   .ds-section-grid.ds-card-grid .col-2-small.ds-card.sections-card-ui {
     padding: unset;
@@ -5905,9 +5899,6 @@ dialog:dir(rtl)::after {
     height: 32px;
     width: 32px;
   }
-  .ds-section-grid.ds-card-grid .col-3-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-3-small.refined-cards.active .meta .source-wrapper .source {
-    display: none;
-  }
   .ds-section-grid.ds-card-grid .col-3-small.ds-card.sections-card-ui {
     padding: unset;
   }
@@ -6272,9 +6263,6 @@ dialog:dir(rtl)::after {
   .ds-section-grid.ds-card-grid .col-4-small.refined-cards .context-menu-position-container .context-menu-button {
     height: 32px;
     width: 32px;
-  }
-  .ds-section-grid.ds-card-grid .col-4-small.refined-cards:hover .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:active .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards:focus-within .meta .source-wrapper .source, .ds-section-grid.ds-card-grid .col-4-small.refined-cards.active .meta .source-wrapper .source {
-    display: none;
   }
   .ds-section-grid.ds-card-grid .col-4-small.ds-card.sections-card-ui {
     padding: unset;
