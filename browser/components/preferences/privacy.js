@@ -299,6 +299,7 @@ Preferences.addAll([
 if (SECURITY_PRIVACY_STATUS_CARD_ENABLED) {
   Preferences.addAll([
     // Security and Privacy Warnings
+    { id: "browser.preferences.config_warning.dismissAll", type: "bool" },
     { id: "privacy.ui.status_card.testing.show_issue", type: "bool" },
     {
       id: "browser.preferences.config_warning.warningTest.dismissed",
@@ -812,6 +813,8 @@ class WarningSettingConfig {
     if (isDismissable) {
       this.dismissedPrefId = `browser.preferences.config_warning.${this.id}.dismissed`;
       this.prefMapping.dismissed = this.dismissedPrefId;
+      this.dismissAllPrefId = `browser.preferences.config_warning.dismissAll`;
+      this.prefMapping.dismissAll = this.dismissAllPrefId;
     }
     this.problematic = problematic;
   }
@@ -823,7 +826,11 @@ class WarningSettingConfig {
    * @returns {boolean} Whether or not to show this configuration as a warning to the user
    */
   visible() {
-    return !this.dismissed?.value && this.problematic(this);
+    return (
+      !this.dismissAll?.value &&
+      !this.dismissed?.value &&
+      this.problematic(this)
+    );
   }
 
   /**
@@ -878,10 +885,12 @@ class WarningSettingConfig {
     switch (event.target.id) {
       case "reset": {
         this.reset();
+        Glean.securityPreferencesWarnings.warningFixed.record();
         break;
       }
       case "dismiss": {
         this.dismiss();
+        Glean.securityPreferencesWarnings.warningDismissed.record();
         break;
       }
     }
@@ -1416,7 +1425,14 @@ if (SECURITY_PRIVACY_STATUS_CARD_ENABLED) {
     id: "warningCard",
     deps: SECURITY_WARNINGS.map(warning => warning.id),
     visible: deps => {
-      return Object.values(deps).some(depSetting => depSetting.visible);
+      const count = Object.values(deps).filter(
+        depSetting => depSetting.visible
+      ).length;
+      if (!this._telemetrySent) {
+        Glean.securityPreferencesWarnings.warningsShown.record({ count });
+        this._telemetrySent = true;
+      }
+      return count > 0;
     },
   });
 }

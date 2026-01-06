@@ -208,6 +208,7 @@ add_task(async function test_issue_fix() {
       ["privacy.ui.status_card.testing.show_issue", true],
     ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
+  Services.fog.testResetFOG();
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
@@ -239,6 +240,28 @@ add_task(async function test_issue_fix() {
         ),
         "Pref has no user value after clicking the fix button"
       );
+      let events =
+        Glean.securityPreferencesWarnings.warningFixed.testGetValue();
+      Assert.equal(events.length, 1, "One telemetry event was recorded");
+      Assert.equal(
+        events[0].category,
+        "security.preferences.warnings",
+        "Category is correct"
+      );
+      Assert.equal(events[0].name, "warning_fixed", "Event name is correct");
+
+      let warningsShownEvents =
+        Glean.securityPreferencesWarnings.warningsShown.testGetValue();
+      Assert.equal(
+        warningsShownEvents.length,
+        1,
+        "warningsShown telemetry was recorded exactly once"
+      );
+      Assert.equal(
+        warningsShownEvents[0].extra.count,
+        "1",
+        "Count of warnings shown is correct"
+      );
     }
   );
 
@@ -252,6 +275,7 @@ add_task(async function test_issue_dismiss() {
       ["privacy.ui.status_card.testing.show_issue", true],
     ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
   });
+  Services.fog.testResetFOG();
 
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
@@ -283,8 +307,62 @@ add_task(async function test_issue_dismiss() {
         ),
         "Pref has no user value after clicking the fix button"
       );
+      let events =
+        Glean.securityPreferencesWarnings.warningDismissed.testGetValue();
+      Assert.equal(events.length, 1, "One telemetry event was recorded");
+      Assert.equal(
+        events[0].category,
+        "security.preferences.warnings",
+        "Category is correct"
+      );
+      Assert.equal(
+        events[0].name,
+        "warning_dismissed",
+        "Event name is correct"
+      );
+      let warningsShownEvents =
+        Glean.securityPreferencesWarnings.warningsShown.testGetValue();
+      Assert.equal(
+        warningsShownEvents.length,
+        1,
+        "warningsShown telemetry was recorded exactly once"
+      );
+      Assert.equal(
+        warningsShownEvents[0].extra.count,
+        "1",
+        "Count of warnings shown is correct"
+      );
       Services.prefs.clearUserPref(
         "browser.preferences.config_warning.warningTest.dismissed"
+      );
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_dismiss_all_hides_issues() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [FEATURE_PREF, true],
+      ["privacy.ui.status_card.testing.show_issue", true],
+      ["browser.preferences.config_warning.dismissAll", true],
+    ].concat(RESET_PROBLEMATIC_TEST_DEFAULTS),
+  });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:preferences#privacy" },
+    async function (browser) {
+      let card = getCardAndCheckHeader(
+        browser.contentDocument,
+        "security-privacy-status-ok-header"
+      );
+      assertHappyBullets(card);
+
+      let configCard = browser.contentDocument.getElementById(ISSUE_CONTROL_ID);
+      Assert.ok(
+        BrowserTestUtils.isHidden(configCard),
+        "Issue card is not present when dismissAll is true"
       );
     }
   );
