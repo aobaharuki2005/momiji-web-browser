@@ -8,7 +8,6 @@
 
 #include "mozilla/net/NeckoChannelParams.h"
 #include "nsCOMPtr.h"
-#include "nsIProtocolProxyService.h"
 
 namespace mozilla {
 namespace net {
@@ -61,10 +60,6 @@ nsProxyInfo::nsProxyInfo(const nsACString& aType, const nsACString& aHost,
     mType = kProxyType_MASQUE;
   } else {
     mType = kProxyType_DIRECT;
-  }
-
-  if (mFlags & nsIProxyInfo::ALWAYS_TUNNEL_VIA_PROXY) {
-    mResolveFlags |= nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL;
   }
 }
 
