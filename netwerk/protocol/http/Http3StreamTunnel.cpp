@@ -267,27 +267,9 @@ nsresult Http3TransportLayer::OutputStreamTunnel::OnSocketReady(
   nsresult rv = NS_OK;
   if (callback) {
     rv = callback->OnOutputStreamReady(this);
-    MaybeSetRequestDone(callback);
   }
 
   return rv;
-}
-
-void Http3TransportLayer::OutputStreamTunnel::MaybeSetRequestDone(
-    nsIOutputStreamCallback* aCallback) {
-  RefPtr<nsHttpConnection> conn = do_QueryObject(aCallback);
-  if (!conn) {
-    return;
-  }
-
-  RefPtr<Http3StreamTunnel> tunnel = mTransport->GetStream();
-  if (!tunnel) {
-    return;
-  }
-
-  if (conn->RequestDone()) {
-    tunnel->SetRequestDone();
-  }
 }
 
 NS_IMETHODIMP
@@ -765,10 +747,6 @@ nsresult Http3StreamTunnel::OnWriteSegment(char* buf, uint32_t count,
   }
 
   return Http3Stream::OnWriteSegment(buf, count, countWritten);
-}
-
-void Http3StreamTunnel::SetRequestDone() {
-  LOG(("Http3StreamTunnel::SetRequestDone %p", this));
 }
 
 void Http3StreamTunnel::HasDataToWrite() {
