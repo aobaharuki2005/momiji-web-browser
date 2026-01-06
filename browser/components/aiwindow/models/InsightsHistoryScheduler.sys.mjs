@@ -8,49 +8,49 @@ ChromeUtils.defineESModuleGetters(lazy, {
   setInterval: "resource://gre/modules/Timer.sys.mjs",
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
   PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
-  MemoriesManager:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs",
-  MemoriesDriftDetector:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesDriftDetector.sys.mjs",
-  PREF_GENERATE_MEMORIES:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
+  InsightsManager:
+    "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
+  InsightsDriftDetector:
+    "moz-src:///browser/components/aiwindow/models/InsightsDriftDetector.sys.mjs",
+  PREF_GENERATE_INSIGHTS:
+    "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs",
   DRIFT_EVAL_DELTA_COUNT:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs",
   DRIFT_TRIGGER_QUANTILE:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "console", function () {
   return console.createInstance({
-    prefix: "MemoriesHistoryScheduler",
-    maxLogLevelPref: "browser.aiwindow.memoriesLogLevel",
+    prefix: "InsightsHistoryScheduler",
+    maxLogLevelPref: "browser.aiwindow.insightsLogLevel",
   });
 });
 
-// Special case - Minimum number of pages before the first time memories run.
-const INITIAL_MEMORIES_PAGES_THRESHOLD = 10;
+// Special case - Minimum number of pages before the first time insights run.
+const INITIAL_INSIGHTS_PAGES_THRESHOLD = 10;
 
 // Only run if at least this many pages have been visited.
-const MEMORIES_SCHEDULER_PAGES_THRESHOLD = 25;
+const INSIGHTS_SCHEDULER_PAGES_THRESHOLD = 25;
 
-// Memories history schedule every 6 hours
-const MEMORIES_SCHEDULER_INTERVAL_MS = 6 * 60 * 60 * 1000;
+// Insights history schedule every 6 hours
+const INSIGHTS_SCHEDULER_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 /**
- * Schedules periodic generation of browsing history based memories.
+ * Schedules periodic generation of browsing history based insights.
  *
  * This decides based on the #pagesVisited and periodically evaluates history drift metrics.
- * Triggers memories generation when drift exceeds a configured threshold.
+ * Triggers insights generation when drift exceeds a configured threshold.
  *
- * E.g. Usage: MemoriesHistoryScheduler.maybeInit()
+ * E.g. Usage: InsightsHistoryScheduler.maybeInit()
  */
-export class MemoriesHistoryScheduler {
+export class InsightsHistoryScheduler {
   #pagesVisited = 0;
   #intervalHandle = 0;
   #destroyed = false;
   #running = false;
 
-  /** @type {MemoriesHistoryScheduler | null} */
+  /** @type {InsightsHistoryScheduler | null} */
   static #instance = null;
 
   /**
@@ -58,15 +58,15 @@ export class MemoriesHistoryScheduler {
    *
    * This should be called from startup/feature initialization code.
    *
-   * @returns {MemoriesHistoryScheduler|null}
+   * @returns {InsightsHistoryScheduler|null}
    *          The scheduler instance if initialized, otherwise null.
    */
   static maybeInit() {
-    if (!Services.prefs.getBoolPref(lazy.PREF_GENERATE_MEMORIES, false)) {
+    if (!Services.prefs.getBoolPref(lazy.PREF_GENERATE_INSIGHTS, false)) {
       return null;
     }
     if (!this.#instance) {
-      this.#instance = new MemoriesHistoryScheduler();
+      this.#instance = new InsightsHistoryScheduler();
     }
 
     return this.#instance;
@@ -85,12 +85,12 @@ export class MemoriesHistoryScheduler {
       ["page-visited"],
       this.#onPageVisited
     );
-    lazy.console.debug("[MemoriesHistoryScheduler] Initialized");
+    lazy.console.debug("[InsightsHistoryScheduler] Initialized");
   }
 
   /**
    * Starts the interval that periodically evaluates history drift and
-   * potentially triggers memory generation.
+   * potentially triggers insight generation.
    *
    * @throws {Error} If an interval is already running.
    */
@@ -102,7 +102,7 @@ export class MemoriesHistoryScheduler {
     }
     this.#intervalHandle = lazy.setInterval(
       this.#onInterval,
-      MEMORIES_SCHEDULER_INTERVAL_MS
+      INSIGHTS_SCHEDULER_INTERVAL_MS
     );
   }
 
@@ -120,7 +120,7 @@ export class MemoriesHistoryScheduler {
    * Places "page-visited" observer callback.
    *
    * Increments the internal counter of pages visited since the last
-   * successful memory generation run.
+   * successful insight generation run.
    */
   #onPageVisited = () => {
     this.#pagesVisited++;
@@ -131,8 +131,8 @@ export class MemoriesHistoryScheduler {
    *
    * - Skips if the scheduler is destroyed or already running.
    * - Skips if the minimum pages-visited threshold is not met.
-   * - Computes history drift metrics and decides whether to run memories.
-   * - Invokes {@link lazy.MemoriesManager.generateMemoriesFromBrowsingHistory}
+   * - Computes history drift metrics and decides whether to run insights.
+   * - Invokes {@link lazy.InsightsManager.generateInsightsFromBrowsingHistory}
    *   when appropriate.
    *
    * @private
@@ -141,14 +141,14 @@ export class MemoriesHistoryScheduler {
   #onInterval = async () => {
     if (this.#destroyed) {
       lazy.console.warn(
-        "[MemoriesHistoryScheduler] Interval fired after destroy; ignoring."
+        "[InsightsHistoryScheduler] Interval fired after destroy; ignoring."
       );
       return;
     }
 
     if (this.#running) {
       lazy.console.debug(
-        "[MemoriesHistoryScheduler] Skipping run because a previous run is still in progress."
+        "[InsightsHistoryScheduler] Skipping run because a previous run is still in progress."
       );
       return;
     }
@@ -157,17 +157,17 @@ export class MemoriesHistoryScheduler {
     this.#stopInterval();
 
     try {
-      // Detect whether generated history memories were before.
-      const lastMemoryTs =
-        (await lazy.MemoriesManager.getLastHistoryMemoryTimestamp()) ?? 0;
-      const isFirstRun = lastMemoryTs === 0;
+      // Detect whether generated history insights were before.
+      const lastInsightTs =
+        (await lazy.InsightsManager.getLastHistoryInsightTimestamp()) ?? 0;
+      const isFirstRun = lastInsightTs === 0;
       const minPagesThreshold = isFirstRun
-        ? INITIAL_MEMORIES_PAGES_THRESHOLD
-        : MEMORIES_SCHEDULER_PAGES_THRESHOLD;
+        ? INITIAL_INSIGHTS_PAGES_THRESHOLD
+        : INSIGHTS_SCHEDULER_PAGES_THRESHOLD;
 
       if (this.#pagesVisited < minPagesThreshold) {
         lazy.console.debug(
-          `[MemoriesHistoryScheduler] Not enough pages visited (${this.#pagesVisited}/${minPagesThreshold}); ` +
+          `[InsightsHistoryScheduler] Not enough pages visited (${this.#pagesVisited}/${minPagesThreshold}); ` +
             `skipping analysis. isFirstRun=${isFirstRun}`
         );
         return;
@@ -175,29 +175,29 @@ export class MemoriesHistoryScheduler {
 
       if (!isFirstRun) {
         lazy.console.debug(
-          "[MemoriesHistoryScheduler] Computing history drift metrics before running memories..."
+          "[InsightsHistoryScheduler] Computing history drift metrics before running insights..."
         );
 
         const { baselineMetrics, deltaMetrics, trigger } =
-          await lazy.MemoriesDriftDetector.computeHistoryDriftAndTrigger({
+          await lazy.InsightsDriftDetector.computeHistoryDriftAndTrigger({
             triggerQuantile: lazy.DRIFT_TRIGGER_QUANTILE,
             evalDeltaCount: lazy.DRIFT_EVAL_DELTA_COUNT,
           });
 
         if (!baselineMetrics.length || !deltaMetrics.length) {
           lazy.console.debug(
-            "[MemoriesHistoryScheduler] Drift metrics incomplete (no baseline or delta); falling back to non-drift scheduling."
+            "[InsightsHistoryScheduler] Drift metrics incomplete (no baseline or delta); falling back to non-drift scheduling."
           );
         } else if (!trigger.triggered) {
           lazy.console.debug(
-            "[MemoriesHistoryScheduler] History drift below threshold; skipping memories run for this interval."
+            "[InsightsHistoryScheduler] History drift below threshold; skipping insights run for this interval."
           );
           // Reset pages so we don’t repeatedly attempt with the same data.
           this.#pagesVisited = 0;
           return;
         } else {
           lazy.console.debug(
-            `[MemoriesHistoryScheduler] Drift triggered (jsThreshold=${trigger.jsThreshold.toFixed(4)}, ` +
+            `[InsightsHistoryScheduler] Drift triggered (jsThreshold=${trigger.jsThreshold.toFixed(4)}, ` +
               `surpriseThreshold=${trigger.surpriseThreshold.toFixed(4)}); sessions=${trigger.triggeredSessionIds.join(
                 ","
               )}`
@@ -206,17 +206,17 @@ export class MemoriesHistoryScheduler {
       }
 
       lazy.console.debug(
-        `[MemoriesHistoryScheduler] Generating memories from history with ${this.#pagesVisited} new pages`
+        `[InsightsHistoryScheduler] Generating insights from history with ${this.#pagesVisited} new pages`
       );
-      await lazy.MemoriesManager.generateMemoriesFromBrowsingHistory();
+      await lazy.InsightsManager.generateInsightsFromBrowsingHistory();
       this.#pagesVisited = 0;
 
       lazy.console.debug(
-        "[MemoriesHistoryScheduler] History memories generation complete."
+        "[InsightsHistoryScheduler] History insights generation complete."
       );
     } catch (error) {
       lazy.console.error(
-        "[MemoriesHistoryScheduler] Failed to generate history memories",
+        "[InsightsHistoryScheduler] Failed to generate history insights",
         error
       );
     } finally {
@@ -241,7 +241,7 @@ export class MemoriesHistoryScheduler {
       this.#onPageVisited
     );
     this.#destroyed = true;
-    lazy.console.debug("[MemoriesHistoryScheduler] Destroyed");
+    lazy.console.debug("[InsightsHistoryScheduler] Destroyed");
   }
 
   /**

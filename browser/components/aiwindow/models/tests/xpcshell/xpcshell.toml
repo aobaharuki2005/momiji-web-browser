@@ -12,19 +12,19 @@ support-files = []
 
 ["test_ConversationSuggestions.js"]
 
-["test_Memories.js"]
+["test_Insights.js"]
 
-["test_MemoriesChatSource.js"]
+["test_InsightsChatSource.js"]
 
-["test_MemoriesConversationScheduler.js"]
+["test_InsightsConversationScheduler.js"]
 
-["test_MemoriesDriftDetector.js"]
+["test_InsightsDriftDetector.js"]
 
-["test_MemoriesHistoryScheduler.js"]
+["test_InsightsHistoryScheduler.js"]
 
-["test_MemoriesHistorySource.js"]
+["test_InsightsHistorySource.js"]
 
-["test_MemoriesManager.js"]
+["test_InsightsManager.js"]
 
 ["test_SearchBrowsingHistory.js"]
 

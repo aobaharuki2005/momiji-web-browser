@@ -8,29 +8,29 @@ import {
   generateProfileInputs,
   aggregateSessions,
   topkAggregates,
-} from "moz-src:///browser/components/aiwindow/models/memories/MemoriesHistorySource.sys.mjs";
-import { getRecentChats } from "./MemoriesChatSource.sys.mjs";
+} from "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs";
+import { getRecentChats } from "./InsightsChatSource.sys.mjs";
 import {
   openAIEngine,
   renderPrompt,
 } from "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs";
-import { MemoryStore } from "moz-src:///browser/components/aiwindow/services/MemoryStore.sys.mjs";
+import { InsightStore } from "moz-src:///browser/components/aiwindow/services/InsightStore.sys.mjs";
 import {
   CATEGORIES,
   INTENTS,
   HISTORY as SOURCE_HISTORY,
   CONVERSATION as SOURCE_CONVERSATION,
-} from "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs";
+} from "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs";
 import {
-  getFormattedMemoryAttributeList,
+  getFormattedInsightAttributeList,
   parseAndExtractJSON,
-  generateMemories,
-} from "moz-src:///browser/components/aiwindow/models/memories/Memories.sys.mjs";
+  generateInsights,
+} from "moz-src:///browser/components/aiwindow/models/Insights.sys.mjs";
 import {
-  messageMemoryClassificationSystemPrompt,
-  messageMemoryClassificationPrompt,
-} from "moz-src:///browser/components/aiwindow/models/prompts/MemoriesPrompts.sys.mjs";
-import { MEMORIES_MESSAGE_CLASSIFY_SCHEMA } from "moz-src:///browser/components/aiwindow/models/memories/MemoriesSchemas.sys.mjs";
+  messageInsightClassificationSystemPrompt,
+  messageInsightClassificationPrompt,
+} from "moz-src:///browser/components/aiwindow/models/prompts/InsightsPrompts.sys.mjs";
+import { INSIGHTS_MESSAGE_CLASSIFY_SCHEMA } from "moz-src:///browser/components/aiwindow/models/InsightsSchemas.sys.mjs";
 
 const K_DOMAINS_FULL = 100;
 const K_TITLES_FULL = 60;
@@ -45,12 +45,12 @@ const DEFAULT_HISTORY_DELTA_MAX_RESULTS = 500;
 const DEFAULT_CHAT_FULL_MAX_RESULTS = 50;
 const DEFAULT_CHAT_HALF_LIFE_DAYS_FULL_RESULTS = 7;
 
-const LAST_HISTORY_MEMORY_TS_ATTRIBUTE = "last_history_memory_ts";
-const LAST_CONVERSATION_MEMORY_TS_ATTRIBUTE = "last_chat_memory_ts";
+const LAST_HISTORY_INSIGHT_TS_ATTRIBUTE = "last_history_insight_ts";
+const LAST_CONVERSATION_INSIGHT_TS_ATTRIBUTE = "last_chat_insight_ts";
 /**
- * MemoriesManager class
+ * InsightsManager class
  */
-export class MemoriesManager {
+export class InsightsManager {
   static #openAIEnginePromise = null;
 
   // Exposed to be stubbed for testing
@@ -58,7 +58,7 @@ export class MemoriesManager {
 
   /**
    * Creates and returns an class-level openAIEngine instance if one has not already been created.
-   * This current pulls from the general browser.aiwindow.* prefs, but will likely pull from memories-specific ones in the future
+   * This current pulls from the general browser.aiwindow.* prefs, but will likely pull from insights-specific ones in the future
    *
    * @returns {Promise<openAIEngine>}  openAIEngine instance
    */
@@ -70,40 +70,40 @@ export class MemoriesManager {
   }
 
   /**
-   * Generates, saves, and returns memories from pre-computed sources
+   * Generates, saves, and returns insights from pre-computed sources
    *
    * @param {object} sources      User data source type to aggregrated records (i.e., {history: [domainItems, titleItems, searchItems]})
-   * @param {string} sourceName   Specific source type from which memories are generated ("history" or "conversation")
-   * @returns {Promise<Memory[]>}
-   *          A promise that resolves to the list of persisted memories
+   * @param {string} sourceName   Specific source type from which insights are generated ("history" or "conversation")
+   * @returns {Promise<Insight[]>}
+   *          A promise that resolves to the list of persisted insights
    *          (newly created or updated), sorted and shaped as returned by
-   *          {@link MemoryStore.addMemory}.
+   *          {@link InsightStore.addInsight}.
    */
-  static async generateAndSaveMemoriesFromSources(sources, sourceName) {
+  static async generateAndSaveInsightsFromSources(sources, sourceName) {
     const now = Date.now();
-    const existingMemories = await this.getAllMemories();
-    const existingMemoriesSummaries = existingMemories.map(
-      i => i.memory_summary
+    const existingInsights = await this.getAllInsights();
+    const existingInsightsSummaries = existingInsights.map(
+      i => i.insight_summary
     );
     const engine = await this.ensureOpenAIEngine();
-    const memories = await generateMemories(
+    const insights = await generateInsights(
       engine,
       sources,
-      existingMemoriesSummaries
+      existingInsightsSummaries
     );
-    const { persistedMemories } = await this.saveMemories(
-      memories,
+    const { persistedInsights } = await this.saveInsights(
+      insights,
       sourceName,
       now
     );
-    return persistedMemories;
+    return persistedInsights;
   }
 
   /**
-   * Generates and persists memories derived from the user's recent browsing history.
+   * Generates and persists insights derived from the user's recent browsing history.
    *
    * This method:
-   *  1. Reads {@link last_history_memory_ts} via {@link getLastHistoryMemoryTimestamp}.
+   *  1. Reads {@link last_history_insight_ts} via {@link getLastHistoryInsightTimestamp}.
    *  2. Decides between:
    *     - Full processing (first run, no prior timestamp):
    *         * Uses a days-based cutoff (DEFAULT_HISTORY_FULL_LOOKUP_DAYS).
@@ -115,17 +115,17 @@ export class MemoriesManager {
    *         * Uses delta top-k settings (K_DOMAINS_DELTA, K_TITLES_DELTA, K_SEARCHES_DELTA).
    *  3. Calls {@link getAggregatedBrowserHistory} with the computed options to obtain
    *     domain, title, and search aggregates.
-   *  4. Calls {@link generateAndSaveMemoriesFromSources} with retrieved history to generate and save new memories.
+   *  4. Calls {@link generateAndSaveInsightsFromSources} with retrieved history to generate and save new insights.
    *
-   * @returns {Promise<Memory[]>}
-   *          A promise that resolves to the list of persisted history memories
+   * @returns {Promise<Insight[]>}
+   *          A promise that resolves to the list of persisted history insights
    *          (newly created or updated), sorted and shaped as returned by
-   *          {@link MemoryStore.addMemory}.
+   *          {@link InsightStore.addInsight}.
    */
-  static async generateMemoriesFromBrowsingHistory() {
+  static async generateInsightsFromBrowsingHistory() {
     const now = Date.now();
-    // get last history memory timestamp in ms
-    const lastTsMs = await this.getLastHistoryMemoryTimestamp();
+    // get last history insight timestamp in ms
+    const lastTsMs = await this.getLastHistoryInsightTimestamp();
     const isDelta = typeof lastTsMs === "number" && lastTsMs > 0;
     // set up the options based on delta or full (first) run
     let recentHistoryOpts = {};
@@ -160,38 +160,38 @@ export class MemoriesManager {
         topkAggregatesOpts
       );
     const sources = { history: [domainItems, titleItems, searchItems] };
-    return await this.generateAndSaveMemoriesFromSources(
+    return await this.generateAndSaveInsightsFromSources(
       sources,
       SOURCE_HISTORY
     );
   }
 
   /**
-   * Generates and persists memories derived from the user's recent chat history.
+   * Generates and persists insights derived from the user's recent chat history.
    *
    * This method:
-   *  1. Reads {@link last_chat_memory_ts} via {@link getLastConversationMemoryTimestamp}.
+   *  1. Reads {@link last_chat_insight_ts} via {@link getLastConversationInsightTimestamp}.
    *  2. Decides between:
    *     - Full processing (first run, no prior timestamp):
    *         * Pulls all messages from the beginning of time.
    *     - Delta processing (subsequent runs, prior timestamp present):
    *         * Pulls all messages since the last timestamp.
    *  3. Calls {@link getRecentChats} with the computed options to obtain messages.
-   *  4. Calls {@link generateAndSaveMemoriesFromSources} with messages to generate and save new memories.
+   *  4. Calls {@link generateAndSaveInsightsFromSources} with messages to generate and save new insights.
    *
-   * @returns {Promise<Memory[]>}
-   *          A promise that resolves to the list of persisted conversation memories
+   * @returns {Promise<Insight[]>}
+   *          A promise that resolves to the list of persisted conversation insights
    *          (newly created or updated), sorted and shaped as returned by
-   *          {@link MemoryStore.addMemory}.
+   *          {@link InsightStore.addInsight}.
    */
-  static async generateMemoriesFromConversationHistory() {
-    // get last chat memory timestamp in ms
-    const lastTsMs = await this.getLastConversationMemoryTimestamp();
+  static async generateInsightsFromConversationHistory() {
+    // get last chat insight timestamp in ms
+    const lastTsMs = await this.getLastConversationInsightTimestamp();
     const isDelta = typeof lastTsMs === "number" && lastTsMs > 0;
 
     let startTime = 0;
 
-    // If this is a subsequent run, set startTime to lastTsMs, the last time we generated chat-based memories
+    // If this is a subsequent run, set startTime to lastTsMs, the last time we generated chat-based insights
     if (isDelta) {
       startTime = lastTsMs;
     }
@@ -202,7 +202,7 @@ export class MemoriesManager {
       DEFAULT_CHAT_HALF_LIFE_DAYS_FULL_RESULTS
     );
     const sources = { conversation: chatMessages };
-    return await this.generateAndSaveMemoriesFromSources(
+    return await this.generateAndSaveInsightsFromSources(
       sources,
       SOURCE_CONVERSATION
     );
@@ -264,89 +264,89 @@ export class MemoriesManager {
   }
 
   /**
-   * Retrieves all stored memories.
-   * This is a quick-access wrapper around MemoryStore.getMemories() with no additional processing.
+   * Retrieves all stored insights.
+   * This is a quick-access wrapper around InsightStore.getInsights() with no additional processing.
    *
    * @param {object} [opts={}]
    * @param {boolean} [opts.includeSoftDeleted=false]
-   *        Whether to include soft-deleted memories.
+   *        Whether to include soft-deleted insights.
    * @returns {Promise<Array<Map<{
-   *  memory_summary: string,
+   *  insight_summary: string,
    *  category: string,
    *  intent: string,
    *  score: number,
-   * }>>>}                                    List of memories
+   * }>>>}                                    List of insights
    */
-  static async getAllMemories(opts = { includeSoftDeleted: false }) {
-    return await MemoryStore.getMemories(opts);
+  static async getAllInsights(opts = { includeSoftDeleted: false }) {
+    return await InsightStore.getInsights(opts);
   }
 
   /**
    * Returns the last timestamp (in ms since Unix epoch) when a history-based
-   * memory was generated, as persisted in MemoryStore.meta.
+   * insight was generated, as persisted in InsightStore.meta.
    *
    * If the store has never been updated, this returns 0.
    *
    * @returns {Promise<number>}  Milliseconds since Unix epoch
    */
-  static async getLastHistoryMemoryTimestamp() {
-    const meta = await MemoryStore.getMeta();
-    return meta.last_history_memory_ts || 0;
+  static async getLastHistoryInsightTimestamp() {
+    const meta = await InsightStore.getMeta();
+    return meta.last_history_insight_ts || 0;
   }
 
   /**
    * Returns the last timestamp (in ms since Unix epoch) when a chat-based
-   * memory was generated, as persisted in MemoryStore.meta.
+   * insight was generated, as persisted in InsightStore.meta.
    *
    * If the store has never been updated, this returns 0.
    *
    * @returns {Promise<number>}  Milliseconds since Unix epoch
    */
-  static async getLastConversationMemoryTimestamp() {
-    const meta = await MemoryStore.getMeta();
-    return meta.last_chat_memory_ts || 0;
+  static async getLastConversationInsightTimestamp() {
+    const meta = await InsightStore.getMeta();
+    return meta.last_chat_insight_ts || 0;
   }
 
   /**
-   * Persist a list of generated memories and update the appropriate meta timestamp.
+   * Persist a list of generated insights and update the appropriate meta timestamp.
    *
-   * @param {Array<object>|null|undefined} generatedMemories
-   *        Array of MemoryPartial-like objects to persist.
+   * @param {Array<object>|null|undefined} generatedInsights
+   *        Array of InsightPartial-like objects to persist.
    * @param {"history"|"conversation"} source
-   *        Source of these memories; controls which meta timestamp to update.
+   *        Source of these insights; controls which meta timestamp to update.
    * @param {number} [nowMs=Date.now()]
    *        Optional "now" timestamp in ms, for meta update fallback.
    *
-   * @returns {Promise<{ persistedMemories: Array<object>, newTimestampMs: number | null }>}
+   * @returns {Promise<{ persistedInsights: Array<object>, newTimestampMs: number | null }>}
    */
-  static async saveMemories(generatedMemories, source, nowMs = Date.now()) {
-    const persistedMemories = [];
+  static async saveInsights(generatedInsights, source, nowMs = Date.now()) {
+    const persistedInsights = [];
 
-    if (Array.isArray(generatedMemories)) {
-      for (const memoryPartial of generatedMemories) {
-        const stored = await MemoryStore.addMemory(memoryPartial);
-        persistedMemories.push(stored);
+    if (Array.isArray(generatedInsights)) {
+      for (const insightPartial of generatedInsights) {
+        const stored = await InsightStore.addInsight(insightPartial);
+        persistedInsights.push(stored);
       }
     }
 
     // Decide which meta field to update
     let metaKey;
     if (source === SOURCE_HISTORY) {
-      metaKey = LAST_HISTORY_MEMORY_TS_ATTRIBUTE;
+      metaKey = LAST_HISTORY_INSIGHT_TS_ATTRIBUTE;
     } else if (source === SOURCE_CONVERSATION) {
-      metaKey = LAST_CONVERSATION_MEMORY_TS_ATTRIBUTE;
+      metaKey = LAST_CONVERSATION_INSIGHT_TS_ATTRIBUTE;
     } else {
       // Unknown source: don't update meta, just return persisted results.
       return {
-        persistedMemories,
+        persistedInsights,
         newTimestampMs: null,
       };
     }
 
     // Compute new timestamp: prefer max(updated_at) if present, otherwise fall back to nowMs.
     let newTsMs = nowMs;
-    if (persistedMemories.length) {
-      const maxUpdated = persistedMemories.reduce(
+    if (persistedInsights.length) {
+      const maxUpdated = persistedInsights.reduce(
         (max, i) => Math.max(max, i.updated_at ?? 0),
         0
       );
@@ -355,53 +355,53 @@ export class MemoriesManager {
       }
     }
 
-    await MemoryStore.updateMeta({
+    await InsightStore.updateMeta({
       [metaKey]: newTsMs,
     });
 
     return {
-      persistedMemories,
+      persistedInsights,
       newTimestampMs: newTsMs,
     };
   }
 
   /**
-   * Soft deletes a memory by its ID.
-   * Soft deletion sets the memory's `is_deleted` flag to true. This prevents memory getter functions
-   * from returning the memory when using default parameters. It does not delete the memory from storage.
+   * Soft deletes an insight by its ID.
+   * Soft deletion sets the insight's `is_deleted` flag to true. This prevents insight getter functions
+   * from returning the insight when using default parameters. It does not delete the insight from storage.
    *
-   * From the user's perspective, soft-deleted memories will not be used in assistant responses but will still exist in storage.
+   * From the user's perspective, soft-deleted insights will not be used in assistant responses but will still exist in storage.
    *
-   * @param {string} memoryId        ID of the memory to soft-delete
-   * @returns {Promise<Memory|null>} The soft-deleted memory, or null if not found
+   * @param {string} insightId        ID of the insight to soft-delete
+   * @returns {Promise<Insight|null>} The soft-deleted insight, or null if not found
    */
-  static async softDeleteMemoryById(memoryId) {
-    return await MemoryStore.softDeleteMemory(memoryId);
+  static async softDeleteInsightById(insightId) {
+    return await InsightStore.softDeleteInsight(insightId);
   }
 
   /**
-   * Hard deletes a memory by its ID.
-   * Hard deletion permenantly removes the memory from storage entirely. This method should be used
-   * by UI to allow users to delete memories they no longer want stored.
+   * Hard deletes an insight by its ID.
+   * Hard deletion permenantly removes the insight from storage entirely. This method should be used
+   * by UI to allow users to delete insights they no longer want stored.
    *
-   * @param {string} memoryId        ID of the memory to hard-delete
-   * @returns {Promise<boolean>}      True if the memory was found and deleted, false otherwise
+   * @param {string} insightId        ID of the insight to hard-delete
+   * @returns {Promise<boolean>}      True if the insight was found and deleted, false otherwise
    */
-  static async hardDeleteMemoryById(memoryId) {
-    return await MemoryStore.hardDeleteMemory(memoryId);
+  static async hardDeleteInsightById(insightId) {
+    return await InsightStore.hardDeleteInsight(insightId);
   }
 
   /**
-   * Builds the prompt to classify a user message into memory categories and intents.
+   * Builds the prompt to classify a user message into insight categories and intents.
    *
    * @param {string} message          User message to classify
    * @returns {Promise<string>}       Prompt string to send to LLM for classifying the message
    */
-  static async buildMessageMemoryClassificationPrompt(message) {
-    const categories = getFormattedMemoryAttributeList(CATEGORIES);
-    const intents = getFormattedMemoryAttributeList(INTENTS);
+  static async buildMessageInsightClassificationPrompt(message) {
+    const categories = getFormattedInsightAttributeList(CATEGORIES);
+    const intents = getFormattedInsightAttributeList(INTENTS);
 
-    return await renderPrompt(messageMemoryClassificationPrompt, {
+    return await renderPrompt(messageInsightClassificationPrompt, {
       message,
       categories,
       intents,
@@ -409,25 +409,25 @@ export class MemoriesManager {
   }
 
   /**
-   * Classifies a user message into memory categories and intents.
+   * Classifies a user message into insight categories and intents.
    *
    * @param {string} message                                                        User message to classify
    * @returns {Promise<Map<{categories: Array<string>, intents: Array<string>}>>}}  Categories and intents into which the message was classified
    */
-  static async memoryClassifyMessage(message) {
+  static async insightClassifyMessage(message) {
     const messageClassifPrompt =
-      await this.buildMessageMemoryClassificationPrompt(message);
+      await this.buildMessageInsightClassificationPrompt(message);
 
     const engine = await this.ensureOpenAIEngine();
 
     const response = await engine.run({
       args: [
-        { role: "system", content: messageMemoryClassificationSystemPrompt },
+        { role: "system", content: messageInsightClassificationSystemPrompt },
         { role: "user", content: messageClassifPrompt },
       ],
       responseFormat: {
         type: "json_schema",
-        schema: MEMORIES_MESSAGE_CLASSIFY_SCHEMA,
+        schema: INSIGHTS_MESSAGE_CLASSIFY_SCHEMA,
       },
       fxAccountToken: await openAIEngine.getFxAccountToken(),
     });
@@ -444,35 +444,35 @@ export class MemoriesManager {
   }
 
   /**
-   * Fetches relevant memories for a given user message.
+   * Fetches relevant insights for a given user message.
    *
-   * @param {string} message                  User message to find relevant memories for
+   * @param {string} message                  User message to find relevant insights for
    * @returns {Promise<Array<Map<{
-   *  memory_summary: string,
+   *  insight_summary: string,
    *  category: string,
    *  intent: string,
    *  score: number,
-   * }>>>}                                    List of relevant memories
+   * }>>>}                                    List of relevant insights
    */
-  static async getRelevantMemories(message) {
-    const existingMemories = await MemoriesManager.getAllMemories();
-    // Shortcut: if there aren't any existing memories, return empty list immediately
-    if (existingMemories.length === 0) {
+  static async getRelevantInsights(message) {
+    const existingInsights = await InsightsManager.getAllInsights();
+    // Shortcut: if there aren't any existing insights, return empty list immediately
+    if (existingInsights.length === 0) {
       return [];
     }
 
     const messageClassification =
-      await MemoriesManager.memoryClassifyMessage(message);
+      await InsightsManager.insightClassifyMessage(message);
     // Shortcut: if the message's category and/or intent is null, return empty list immediately
     if (!messageClassification.categories || !messageClassification.intents) {
       return [];
     }
 
-    // Filter existing memories to those that match the message's category
-    const candidateRelevantMemories = existingMemories.filter(memory => {
-      return messageClassification.categories.includes(memory.category);
+    // Filter existing insights to those that match the message's category
+    const candidateRelevantInsights = existingInsights.filter(insight => {
+      return messageClassification.categories.includes(insight.category);
     });
 
-    return candidateRelevantMemories;
+    return candidateRelevantInsights;
   }
 }

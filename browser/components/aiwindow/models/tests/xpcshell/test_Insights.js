@@ -13,10 +13,10 @@ const {
   aggregateSessions,
   topkAggregates,
 } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/memories/MemoriesHistorySource.sys.mjs"
+  "moz-src:///browser/components/aiwindow/models/InsightsHistorySource.sys.mjs"
 );
 const { getRecentChats } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/memories/MemoriesChatSource.sys.mjs"
+  "moz-src:///browser/components/aiwindow/models/InsightsChatSource.sys.mjs"
 );
 const { openAIEngine } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs"
@@ -26,23 +26,23 @@ const { sinon } = ChromeUtils.importESModule(
 );
 
 const { CATEGORIES, INTENTS } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs"
+  "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs"
 );
 
 const {
   formatListForPrompt,
-  getFormattedMemoryAttributeList,
+  getFormattedInsightAttributeList,
   renderRecentHistoryForPrompt,
   renderRecentConversationForPrompt,
-  mapFilteredMemoriesToInitialList,
-  buildInitialMemoriesGenerationPrompt,
-  buildMemoriesDeduplicationPrompt,
-  buildMemoriesSensitivityFilterPrompt,
-  generateInitialMemoriesList,
-  deduplicateMemories,
-  filterSensitiveMemories,
+  mapFilteredInsightsToInitialList,
+  buildInitialInsightsGenerationPrompt,
+  buildInsightsDeduplicationPrompt,
+  buildInsightsSensitivityFilterPrompt,
+  generateInitialInsightsList,
+  deduplicateInsights,
+  filterSensitiveInsights,
 } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/memories/Memories.sys.mjs"
+  "moz-src:///browser/components/aiwindow/models/Insights.sys.mjs"
 );
 
 /**
@@ -56,12 +56,12 @@ const API_KEY = "fake-key";
 const ENDPOINT = "https://api.fake-endpoint.com/v1";
 const MODEL = "fake-model";
 
-const EXISTING_MEMORIES = [
+const EXISTING_INSIGHTS = [
   "Loves outdoor activities",
   "Enjoys cooking recipes",
   "Like sci-fi media",
 ];
-const NEW_MEMORIES = [
+const NEW_INSIGHTS = [
   "Loves hiking and camping",
   "Reads science fiction novels",
   "Likes both dogs and cats",
@@ -162,9 +162,9 @@ async function buildFakeChatHistory() {
 }
 
 /**
- * Tests building the prompt for initial memories generation
+ * Tests building the prompt for initial insights generation
  */
-add_task(async function test_buildInitialMemoriesGenerationPrompt() {
+add_task(async function test_buildInitialInsightsGenerationPrompt() {
   // Check that history is rendered correctly into CSV tables
   await buildFakeBrowserHistory();
   const [domainItems, titleItems, searchItems] =
@@ -195,24 +195,26 @@ Google Search: firefox history,1`.trim()
 
   // Check that the full prompt is built correctly with injected categories, intents, and browsing history
   const sources = { history: [domainItems, titleItems, searchItems] };
-  const initialMemoriesPrompt =
-    await buildInitialMemoriesGenerationPrompt(sources);
+  const initialInsightsPrompt =
+    await buildInitialInsightsGenerationPrompt(sources);
   Assert.ok(
-    initialMemoriesPrompt.includes(
-      "You are an expert at extracting memories from user browser data."
+    initialInsightsPrompt.includes(
+      "You are an expert at extracting insights from user browser data."
     ),
-    "Initial memories generation prompt should pull from the correct base"
+    "Initial insights generation prompt should pull from the correct base"
   );
   Assert.ok(
-    initialMemoriesPrompt.includes(getFormattedMemoryAttributeList(CATEGORIES)),
+    initialInsightsPrompt.includes(
+      getFormattedInsightAttributeList(CATEGORIES)
+    ),
     "Prompt should include formatted categories list"
   );
   Assert.ok(
-    initialMemoriesPrompt.includes(getFormattedMemoryAttributeList(INTENTS)),
+    initialInsightsPrompt.includes(getFormattedInsightAttributeList(INTENTS)),
     "Prompt should include formatted intents list"
   );
   Assert.ok(
-    initialMemoriesPrompt.includes(renderedBrowserHistory),
+    initialInsightsPrompt.includes(renderedBrowserHistory),
     "Prompt should include rendered browsing history"
   );
 });
@@ -297,9 +299,9 @@ Internet for people, not profit — Mozilla,100`.trim()
 });
 
 /**
- * Tests building the prompt for initial memories generation with only chat data
+ * Tests building the prompt for initial insights generation with only chat data
  */
-add_task(async function test_buildInitialMemoriesGenerationPrompt_only_chat() {
+add_task(async function test_buildInitialInsightsGenerationPrompt_only_chat() {
   const messages = await buildFakeChatHistory();
   const sb = sinon.createSandbox();
   const maxResults = 3;
@@ -341,16 +343,16 @@ Tell me a joke about my favorite animals.`.trim(),
 
     // Build the actual prompt and check its contents
     const sources = { conversation: recentMessages };
-    const initialMemoriesPrompt =
-      await buildInitialMemoriesGenerationPrompt(sources);
+    const initialInsightsPrompt =
+      await buildInitialInsightsGenerationPrompt(sources);
     Assert.ok(
-      initialMemoriesPrompt.includes(
-        "You are an expert at extracting memories from user browser data."
+      initialInsightsPrompt.includes(
+        "You are an expert at extracting insights from user browser data."
       ),
-      "Initial memories generation prompt should pull from the correct base"
+      "Initial insights generation prompt should pull from the correct base"
     );
     Assert.ok(
-      initialMemoriesPrompt.includes(renderedConversationHistory),
+      initialInsightsPrompt.includes(renderedConversationHistory),
       "Prompt should include rendered conversation history"
     );
   } finally {
@@ -359,59 +361,59 @@ Tell me a joke about my favorite animals.`.trim(),
 });
 
 /**
- * Tests building the prompt for memories deduplication
+ * Tests building the prompt for insights deduplication
  */
-add_task(async function test_buildMemoriesDeduplicationPrompt() {
-  const memoriesDeduplicationPrompt = await buildMemoriesDeduplicationPrompt(
-    EXISTING_MEMORIES,
-    NEW_MEMORIES
+add_task(async function test_buildInsightsDeduplicationPrompt() {
+  const insightsDeduplicationPrompt = await buildInsightsDeduplicationPrompt(
+    EXISTING_INSIGHTS,
+    NEW_INSIGHTS
   );
   Assert.ok(
-    memoriesDeduplicationPrompt.includes(
+    insightsDeduplicationPrompt.includes(
       "You are an expert at identifying duplicate statements."
     ),
-    "Memories deduplication prompt should pull from the correct base"
+    "Insights deduplication prompt should pull from the correct base"
   );
   Assert.ok(
-    memoriesDeduplicationPrompt.includes(
-      formatListForPrompt(EXISTING_MEMORIES)
+    insightsDeduplicationPrompt.includes(
+      formatListForPrompt(EXISTING_INSIGHTS)
     ),
-    "Deduplication prompt should include existing memories list"
+    "Deduplication prompt should include existing insights list"
   );
   Assert.ok(
-    memoriesDeduplicationPrompt.includes(formatListForPrompt(NEW_MEMORIES)),
-    "Deduplication prompt should include new memories list"
+    insightsDeduplicationPrompt.includes(formatListForPrompt(NEW_INSIGHTS)),
+    "Deduplication prompt should include new insights list"
   );
 });
 
 /**
- * Tests building the prompt for memories sensitivity filtering
+ * Tests building the prompt for insights sensitivity filtering
  */
-add_task(async function test_buildMemoriesSensitivityFilterPrompt() {
-  /** Memories sensitivity filter prompt */
-  const memoriesSensitivityFilterPrompt =
-    await buildMemoriesSensitivityFilterPrompt(NEW_MEMORIES);
+add_task(async function test_buildInsightsSensitivityFilterPrompt() {
+  /** Insights sensitivity filter prompt */
+  const insightsSensitivityFilterPrompt =
+    await buildInsightsSensitivityFilterPrompt(NEW_INSIGHTS);
   Assert.ok(
-    memoriesSensitivityFilterPrompt.includes(
+    insightsSensitivityFilterPrompt.includes(
       "You are an expert at identifying sensitive statements and content."
     ),
-    "Memories sensitivity filter prompt should pull from the correct base"
+    "Insights sensitivity filter prompt should pull from the correct base"
   );
   Assert.ok(
-    memoriesSensitivityFilterPrompt.includes(formatListForPrompt(NEW_MEMORIES)),
-    "Sensitivity filter prompt should include memories list"
+    insightsSensitivityFilterPrompt.includes(formatListForPrompt(NEW_INSIGHTS)),
+    "Sensitivity filter prompt should include insights list"
   );
 });
 
 /**
- * Tests successful initial memories generation
+ * Tests successful initial insights generation
  */
-add_task(async function test_generateInitialMemoriesList_happy_path() {
+add_task(async function test_generateInitialInsightsList_happy_path() {
   const sb = sinon.createSandbox();
   try {
     /**
      * The fake engine returns canned LLM response.
-     * The main `generateInitialMemoriesList` function should modify this heavily, cutting it back to only the required fields.
+     * The main `generateInitialInsightsList` function should modify this heavily, cutting it back to only the required fields.
      */
     const fakeEngine = {
       run() {
@@ -421,7 +423,7 @@ add_task(async function test_generateInitialMemoriesList_happy_path() {
     "why": "User has recently searched for Firefox history and visited mozilla.org.",
     "category": "Internet & Telecom",
     "intent": "Research / Learn",
-    "memory_summary": "Searches for Firefox information",
+    "insight_summary": "Searches for Firefox information",
     "score": 7,
     "evidence": [
       {
@@ -438,7 +440,7 @@ add_task(async function test_generateInitialMemoriesList_happy_path() {
     "why": "User buys dog food online regularly from multiple sources.",
     "category": "Pets & Animals",
     "intent": "Buy / Acquire",
-    "memory_summary": "Purchases dog food online",
+    "insight_summary": "Purchases dog food online",
     "score": -1,
     "evidence": [
       {
@@ -460,54 +462,54 @@ add_task(async function test_generateInitialMemoriesList_happy_path() {
     const [domainItems, titleItems, searchItems] =
       await getBrowserHistoryAggregates();
     const sources = { history: [domainItems, titleItems, searchItems] };
-    const memoriesList = await generateInitialMemoriesList(engine, sources);
+    const insightsList = await generateInitialInsightsList(engine, sources);
 
     // Check top level structure
     Assert.ok(
-      Array.isArray(memoriesList),
-      "Should return an array of memories"
+      Array.isArray(insightsList),
+      "Should return an array of insights"
     );
-    Assert.equal(memoriesList.length, 2, "Array should contain 2 memories");
+    Assert.equal(insightsList.length, 2, "Array should contain 2 insights");
 
-    // Check first memory structure and content
-    const firstMemory = memoriesList[0];
+    // Check first insight structure and content
+    const firstInsight = insightsList[0];
     Assert.equal(
-      typeof firstMemory,
+      typeof firstInsight,
       "object",
-      "First memory should be an object/map"
+      "First insight should be an object/map"
     );
     Assert.equal(
-      Object.keys(firstMemory).length,
+      Object.keys(firstInsight).length,
       4,
-      "First memory should have 4 keys"
+      "First insight should have 4 keys"
     );
     Assert.equal(
-      firstMemory.category,
+      firstInsight.category,
       "Internet & Telecom",
-      "First memory should have expected category (Internet & Telecom)"
+      "First insight should have expected category (Internet & Telecom)"
     );
     Assert.equal(
-      firstMemory.intent,
+      firstInsight.intent,
       "Research / Learn",
-      "First memory should have expected intent (Research / Learn)"
+      "First insight should have expected intent (Research / Learn)"
     );
     Assert.equal(
-      firstMemory.memory_summary,
+      firstInsight.insight_summary,
       "Searches for Firefox information",
-      "First memory should have expected summary"
+      "First insight should have expected summary"
     );
     Assert.equal(
-      firstMemory.score,
+      firstInsight.score,
       5,
-      "First memory should have expected score, clamping 7 to 5"
+      "First insight should have expected score, clamping 7 to 5"
     );
 
-    // Check that the second memory's score was clamped to the minimum
-    const secondMemory = memoriesList[1];
+    // Check that the second insight's score was clamped to the minimum
+    const secondInsight = insightsList[1];
     Assert.equal(
-      secondMemory.score,
+      secondInsight.score,
       1,
-      "Second memory should have expected score, clamping -1 to 1"
+      "Second insight should have expected score, clamping -1 to 1"
     );
   } finally {
     sb.restore();
@@ -515,13 +517,13 @@ add_task(async function test_generateInitialMemoriesList_happy_path() {
 });
 
 /**
- * Tests failed initial memories generation - Empty output
+ * Tests failed initial insights generation - Empty output
  */
 add_task(
-  async function test_generateInitialMemoriesList_sad_path_empty_output() {
+  async function test_generateInitialInsightsList_sad_path_empty_output() {
     const sb = sinon.createSandbox();
     try {
-      // LLM returns an empty memories list
+      // LLM returns an empty insights list
       const fakeEngine = {
         run() {
           return {
@@ -538,10 +540,10 @@ add_task(
       const [domainItems, titleItems, searchItems] =
         await getBrowserHistoryAggregates();
       const sources = { history: [domainItems, titleItems, searchItems] };
-      const memoriesList = await generateInitialMemoriesList(engine, sources);
+      const insightsList = await generateInitialInsightsList(engine, sources);
 
-      Assert.equal(Array.isArray(memoriesList), true, "Should return an array");
-      Assert.equal(memoriesList.length, 0, "Array should contain 0 memories");
+      Assert.equal(Array.isArray(insightsList), true, "Should return an array");
+      Assert.equal(insightsList.length, 0, "Array should contain 0 insights");
     } finally {
       sb.restore();
     }
@@ -549,10 +551,10 @@ add_task(
 );
 
 /**
- * Tests failed initial memories generation - Output not array
+ * Tests failed initial insights generation - Output not array
  */
 add_task(
-  async function test_generateInitialMemoriesList_sad_path_output_not_array() {
+  async function test_generateInitialInsightsList_sad_path_output_not_array() {
     const sb = sinon.createSandbox();
     try {
       // LLM doesn't return an array
@@ -572,10 +574,10 @@ add_task(
       const [domainItems, titleItems, searchItems] =
         await getBrowserHistoryAggregates();
       const sources = { history: [domainItems, titleItems, searchItems] };
-      const memoriesList = await generateInitialMemoriesList(engine, sources);
+      const insightsList = await generateInitialInsightsList(engine, sources);
 
-      Assert.equal(Array.isArray(memoriesList), true, "Should return an array");
-      Assert.equal(memoriesList.length, 0, "Array should contain 0 memories");
+      Assert.equal(Array.isArray(insightsList), true, "Should return an array");
+      Assert.equal(insightsList.length, 0, "Array should contain 0 insights");
     } finally {
       sb.restore();
     }
@@ -583,10 +585,10 @@ add_task(
 );
 
 /**
- * Tests failed initial memories generation - Output not array of maps
+ * Tests failed initial insights generation - Output not array of maps
  */
 add_task(
-  async function test_generateInitialMemoriesList_sad_path_output_not_array_of_maps() {
+  async function test_generateInitialInsightsList_sad_path_output_not_array_of_maps() {
     const sb = sinon.createSandbox();
     try {
       // LLM doesn't return an array of maps
@@ -606,10 +608,10 @@ add_task(
       const [domainItems, titleItems, searchItems] =
         await getBrowserHistoryAggregates();
       const sources = { history: [domainItems, titleItems, searchItems] };
-      const memoriesList = await generateInitialMemoriesList(engine, sources);
+      const insightsList = await generateInitialInsightsList(engine, sources);
 
-      Assert.equal(Array.isArray(memoriesList), true, "Should return an array");
-      Assert.equal(memoriesList.length, 0, "Array should contain 0 memories");
+      Assert.equal(Array.isArray(insightsList), true, "Should return an array");
+      Assert.equal(insightsList.length, 0, "Array should contain 0 insights");
     } finally {
       sb.restore();
     }
@@ -617,13 +619,13 @@ add_task(
 );
 
 /**
- * Tests failed initial memories generation - Some correct memories
+ * Tests failed initial insights generation - Some correct insights
  */
 add_task(
-  async function test_generateInitialMemoriesList_sad_path_some_correct_memories() {
+  async function test_generateInitialInsightsList_sad_path_some_correct_insights() {
     const sb = sinon.createSandbox();
     try {
-      // LLM returns an memories list where 1 is fully correct and 1 is missing required keys (category in this case)
+      // LLM returns an insights list where 1 is fully correct and 1 is missing required keys (category in this case)
       const fakeEngine = {
         run() {
           return {
@@ -631,7 +633,7 @@ add_task(
   {
     "why": "User has recently searched for Firefox history and visited mozilla.org.",
     "intent": "Research / Learn",
-    "memory_summary": "Searches for Firefox information",
+    "insight_summary": "Searches for Firefox information",
     "score": 7,
     "evidence": [
       {
@@ -648,7 +650,7 @@ add_task(
     "why": "User buys dog food online regularly from multiple sources.",
     "category": "Pets & Animals",
     "intent": "Buy / Acquire",
-    "memory_summary": "Purchases dog food online",
+    "insight_summary": "Purchases dog food online",
     "score": -1,
     "evidence": [
       {
@@ -670,18 +672,18 @@ add_task(
       const [domainItems, titleItems, searchItems] =
         await getBrowserHistoryAggregates();
       const sources = { history: [domainItems, titleItems, searchItems] };
-      const memoriesList = await generateInitialMemoriesList(engine, sources);
+      const insightsList = await generateInitialInsightsList(engine, sources);
 
       Assert.equal(
-        Array.isArray(memoriesList),
+        Array.isArray(insightsList),
         true,
-        "Should return an array of memories"
+        "Should return an array of insights"
       );
-      Assert.equal(memoriesList.length, 1, "Array should contain 1 memory");
+      Assert.equal(insightsList.length, 1, "Array should contain 1 insight");
       Assert.equal(
-        memoriesList[0].memory_summary,
+        insightsList[0].insight_summary,
         "Purchases dog food online",
-        "Memory summary should match the valid memory"
+        "Insight summary should match the valid insight"
       );
     } finally {
       sb.restore();
@@ -690,38 +692,38 @@ add_task(
 );
 
 /**
- * Tests successful memories deduplication
+ * Tests successful insights deduplication
  */
-add_task(async function test_deduplicateMemoriesList_happy_path() {
+add_task(async function test_deduplicateInsightsList_happy_path() {
   const sb = sinon.createSandbox();
   try {
     /**
      * The fake engine that returns a canned LLM response for deduplication.
-     * The `deduplicateMemories` function should return an array containing only the `main_memory` values.
+     * The `deduplicateInsights` function should return an array containing only the `main_insight` values.
      */
     const fakeEngine = {
       run() {
         return {
           finalOutput: `{
-            "unique_memories": [
+            "unique_insights": [
               {
-                "main_memory": "Loves outdoor activities",
+                "main_insight": "Loves outdoor activities",
                 "duplicates": ["Loves hiking and camping"]
               },
               {
-                "main_memory": "Enjoys cooking recipes",
+                "main_insight": "Enjoys cooking recipes",
                 "duplicates": []
               },
               {
-                "main_memory": "Like sci-fi media",
+                "main_insight": "Like sci-fi media",
                 "duplicates": ["Reads science fiction novels"]
               },
               {
-                "main_memory": "Likes both dogs and cats",
+                "main_insight": "Likes both dogs and cats",
                 "duplicates": []
               },
               {
-                "main_memory": "Likes risky stock bets",
+                "main_insight": "Likes risky stock bets",
                 "duplicates": []
               }
             ]
@@ -735,37 +737,37 @@ add_task(async function test_deduplicateMemoriesList_happy_path() {
     const engine = await openAIEngine.build();
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-    const dedupedMemoriesList = await deduplicateMemories(
+    const dedupedInsightsList = await deduplicateInsights(
       engine,
-      EXISTING_MEMORIES,
-      NEW_MEMORIES
+      EXISTING_INSIGHTS,
+      NEW_INSIGHTS
     );
 
-    // Check that the deduplicated list contains only unique memories (`main_memory` values)
+    // Check that the deduplicated list contains only unique insights (`main_insight` values)
     Assert.equal(
-      dedupedMemoriesList.length,
+      dedupedInsightsList.length,
       5,
-      "Deduplicated memories list should contain 5 unique memories"
+      "Deduplicated insights list should contain 5 unique insights"
     );
     Assert.ok(
-      dedupedMemoriesList.includes("Loves outdoor activities"),
-      "Deduplicated memories should include 'Loves outdoor activities'"
+      dedupedInsightsList.includes("Loves outdoor activities"),
+      "Deduplicated insights should include 'Loves outdoor activities'"
     );
     Assert.ok(
-      dedupedMemoriesList.includes("Enjoys cooking recipes"),
-      "Deduplicated memories should include 'Enjoys cooking recipes'"
+      dedupedInsightsList.includes("Enjoys cooking recipes"),
+      "Deduplicated insights should include 'Enjoys cooking recipes'"
     );
     Assert.ok(
-      dedupedMemoriesList.includes("Like sci-fi media"),
-      "Deduplicated memories should include 'Like sci-fi media'"
+      dedupedInsightsList.includes("Like sci-fi media"),
+      "Deduplicated insights should include 'Like sci-fi media'"
     );
     Assert.ok(
-      dedupedMemoriesList.includes("Likes both dogs and cats"),
-      "Deduplicated memories should include 'Likes both dogs and cats'"
+      dedupedInsightsList.includes("Likes both dogs and cats"),
+      "Deduplicated insights should include 'Likes both dogs and cats'"
     );
     Assert.ok(
-      dedupedMemoriesList.includes("Likes risky stock bets"),
-      "Deduplicated memories should include 'Likes risky stock bets'"
+      dedupedInsightsList.includes("Likes risky stock bets"),
+      "Deduplicated insights should include 'Likes risky stock bets'"
     );
   } finally {
     sb.restore();
@@ -773,17 +775,17 @@ add_task(async function test_deduplicateMemoriesList_happy_path() {
 });
 
 /**
- * Tests failed memories deduplication - Empty output
+ * Tests failed insights deduplication - Empty output
  */
-add_task(async function test_deduplicateMemoriesList_sad_path_empty_output() {
+add_task(async function test_deduplicateInsightsList_sad_path_empty_output() {
   const sb = sinon.createSandbox();
   try {
-    // LLM returns the correct schema but with an empty unique_memories array
+    // LLM returns the correct schema but with an empty unique_insights array
     const fakeEngine = {
       run() {
         return {
           finalOutput: `{
-            "unique_memories": []
+            "unique_insights": []
           }`,
         };
       },
@@ -794,24 +796,24 @@ add_task(async function test_deduplicateMemoriesList_sad_path_empty_output() {
     const engine = await openAIEngine.build();
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-    const dedupedMemoriesList = await deduplicateMemories(
+    const dedupedInsightsList = await deduplicateInsights(
       engine,
-      EXISTING_MEMORIES,
-      NEW_MEMORIES
+      EXISTING_INSIGHTS,
+      NEW_INSIGHTS
     );
 
-    Assert.ok(Array.isArray(dedupedMemoriesList), "Should return an array");
-    Assert.equal(dedupedMemoriesList.length, 0, "Should return an empty array");
+    Assert.ok(Array.isArray(dedupedInsightsList), "Should return an array");
+    Assert.equal(dedupedInsightsList.length, 0, "Should return an empty array");
   } finally {
     sb.restore();
   }
 });
 
 /**
- * Tests failed memories deduplication - Wrong top-level data type
+ * Tests failed insights deduplication - Wrong top-level data type
  */
 add_task(
-  async function test_deduplicateMemoriesList_sad_path_wrong_top_level_data_type() {
+  async function test_deduplicateInsightsList_sad_path_wrong_top_level_data_type() {
     const sb = sinon.createSandbox();
     try {
       // LLM returns an incorrect data type
@@ -828,15 +830,15 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const dedupedMemoriesList = await deduplicateMemories(
+      const dedupedInsightsList = await deduplicateInsights(
         engine,
-        EXISTING_MEMORIES,
-        NEW_MEMORIES
+        EXISTING_INSIGHTS,
+        NEW_INSIGHTS
       );
 
-      Assert.ok(Array.isArray(dedupedMemoriesList), "Should return an array");
+      Assert.ok(Array.isArray(dedupedInsightsList), "Should return an array");
       Assert.equal(
-        dedupedMemoriesList.length,
+        dedupedInsightsList.length,
         0,
         "Should return an empty array"
       );
@@ -847,10 +849,10 @@ add_task(
 );
 
 /**
- * Tests failed memories deduplication - Wrong inner data type
+ * Tests failed insights deduplication - Wrong inner data type
  */
 add_task(
-  async function test_deduplicateMemoriesList_sad_path_wrong_inner_data_type() {
+  async function test_deduplicateInsightsList_sad_path_wrong_inner_data_type() {
     const sb = sinon.createSandbox();
     try {
       // LLM returns a map with the right top-level key, but the inner structure is wrong
@@ -858,7 +860,7 @@ add_task(
         run() {
           return {
             finalOutput: `{
-            "unique_memories": "testing"
+            "unique_insights": "testing"
           }`,
           };
         },
@@ -869,15 +871,15 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const dedupedMemoriesList = await deduplicateMemories(
+      const dedupedInsightsList = await deduplicateInsights(
         engine,
-        EXISTING_MEMORIES,
-        NEW_MEMORIES
+        EXISTING_INSIGHTS,
+        NEW_INSIGHTS
       );
 
-      Assert.ok(Array.isArray(dedupedMemoriesList), "Should return an array");
+      Assert.ok(Array.isArray(dedupedInsightsList), "Should return an array");
       Assert.equal(
-        dedupedMemoriesList.length,
+        dedupedInsightsList.length,
         0,
         "Should return an empty array"
       );
@@ -888,10 +890,10 @@ add_task(
 );
 
 /**
- * Tests failed memories deduplication - Wrong inner array structure
+ * Tests failed insights deduplication - Wrong inner array structure
  */
 add_task(
-  async function test_deduplicateMemoriesList_sad_path_wrong_inner_array_structure() {
+  async function test_deduplicateInsightsList_sad_path_wrong_inner_array_structure() {
     const sb = sinon.createSandbox();
     try {
       // LLM returns a map of nested arrays, but the array structure is wrong
@@ -899,7 +901,7 @@ add_task(
         run() {
           return {
             finalOutput: `{
-            "unique_memories": ["testing1", "testing2"]
+            "unique_insights": ["testing1", "testing2"]
           }`,
           };
         },
@@ -910,15 +912,15 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const dedupedMemoriesList = await deduplicateMemories(
+      const dedupedInsightsList = await deduplicateInsights(
         engine,
-        EXISTING_MEMORIES,
-        NEW_MEMORIES
+        EXISTING_INSIGHTS,
+        NEW_INSIGHTS
       );
 
-      Assert.ok(Array.isArray(dedupedMemoriesList), "Should return an array");
+      Assert.ok(Array.isArray(dedupedInsightsList), "Should return an array");
       Assert.equal(
-        dedupedMemoriesList.length,
+        dedupedInsightsList.length,
         0,
         "Should return an empty array"
       );
@@ -929,10 +931,10 @@ add_task(
 );
 
 /**
- * Tests failed memories deduplication - Incorrect top-level schema key
+ * Tests failed insights deduplication - Incorrect top-level schema key
  */
 add_task(
-  async function test_deduplicateMemoriesList_sad_path_bad_top_level_key() {
+  async function test_deduplicateInsightsList_sad_path_bad_top_level_key() {
     const sb = sinon.createSandbox();
     try {
       // LLm returns correct output except that the top-level key is wrong
@@ -940,25 +942,25 @@ add_task(
         run() {
           return {
             finalOutput: `{
-            "correct_memories": [
+            "correct_insights": [
               {
-                "main_memory": "Loves outdoor activities",
+                "main_insight": "Loves outdoor activities",
                 "duplicates": ["Loves hiking and camping"]
               },
               {
-                "main_memory": "Enjoys cooking recipes",
+                "main_insight": "Enjoys cooking recipes",
                 "duplicates": []
               },
               {
-                "main_memory": "Like sci-fi media",
+                "main_insight": "Like sci-fi media",
                 "duplicates": ["Reads science fiction novels"]
               },
               {
-                "main_memory": "Likes both dogs and cats",
+                "main_insight": "Likes both dogs and cats",
                 "duplicates": []
               },
               {
-                "main_memory": "Likes risky stock bets",
+                "main_insight": "Likes risky stock bets",
                 "duplicates": []
               }
             ]
@@ -972,15 +974,15 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const dedupedMemoriesList = await deduplicateMemories(
+      const dedupedInsightsList = await deduplicateInsights(
         engine,
-        EXISTING_MEMORIES,
-        NEW_MEMORIES
+        EXISTING_INSIGHTS,
+        NEW_INSIGHTS
       );
 
-      Assert.ok(Array.isArray(dedupedMemoriesList), "Should return an array");
+      Assert.ok(Array.isArray(dedupedInsightsList), "Should return an array");
       Assert.equal(
-        dedupedMemoriesList.length,
+        dedupedInsightsList.length,
         0,
         "Should return an empty array"
       );
@@ -991,28 +993,28 @@ add_task(
 );
 
 /**
- * Tests failed memories deduplication - Some correct inner schema
+ * Tests failed insights deduplication - Some correct inner schema
  */
 add_task(
-  async function test_deduplicateMemoriesList_sad_path_bad_some_correct_inner_schema() {
+  async function test_deduplicateInsightsList_sad_path_bad_some_correct_inner_schema() {
     const sb = sinon.createSandbox();
     try {
-      // LLm returns correct output except that 1 of the inner maps is wrong and 1 main_memory is the wrong data type
+      // LLm returns correct output except that 1 of the inner maps is wrong and 1 main_insight is the wrong data type
       const fakeEngine = {
         run() {
           return {
             finalOutput: `{
-            "unique_memories": [
+            "unique_insights": [
               {
-                "primary_memory": "Loves outdoor activities",
+                "primary_insight": "Loves outdoor activities",
                 "duplicates": ["Loves hiking and camping"]
               },
               {
-                "main_memory": "Enjoys cooking recipes",
+                "main_insight": "Enjoys cooking recipes",
                 "duplicates": []
               },
               {
-                "main_memory": 12345,
+                "main_insight": 12345,
                 "duplicates": []
               }
             ]
@@ -1026,22 +1028,22 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const dedupedMemoriesList = await deduplicateMemories(
+      const dedupedInsightsList = await deduplicateInsights(
         engine,
-        EXISTING_MEMORIES,
-        NEW_MEMORIES
+        EXISTING_INSIGHTS,
+        NEW_INSIGHTS
       );
 
-      Assert.ok(Array.isArray(dedupedMemoriesList), "Should return an array");
+      Assert.ok(Array.isArray(dedupedInsightsList), "Should return an array");
       Assert.equal(
-        dedupedMemoriesList.length,
+        dedupedInsightsList.length,
         1,
-        "Should return an array with one valid memory"
+        "Should return an array with one valid insight"
       );
       Assert.equal(
-        dedupedMemoriesList[0],
+        dedupedInsightsList[0],
         "Enjoys cooking recipes",
-        "Should return the single valid memory"
+        "Should return the single valid insight"
       );
     } finally {
       sb.restore();
@@ -1050,20 +1052,20 @@ add_task(
 );
 
 /**
- * Tests successful memories sensitivity filtering
+ * Tests successful insights sensitivity filtering
  */
-add_task(async function test_filterSensitiveMemories_happy_path() {
+add_task(async function test_filterSensitiveInsights_happy_path() {
   const sb = sinon.createSandbox();
   try {
     /**
      * The fake engine that returns a canned LLM response for deduplication.
-     * The `filterSensitiveMemories` function should return the inner array from `non_sensitive_memories`.
+     * The `filterSensitiveInsights` function should return the inner array from `non_sensitive_insights`.
      */
     const fakeEngine = {
       run() {
         return {
           finalOutput: `{
-  "non_sensitive_memories": [
+  "non_sensitive_insights": [
     "Loves hiking and camping",
     "Reads science fiction novels",
     "Likes both dogs and cats"
@@ -1078,28 +1080,28 @@ add_task(async function test_filterSensitiveMemories_happy_path() {
     const engine = await openAIEngine.build();
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-    const nonSensitiveMemoriesList = await filterSensitiveMemories(
+    const nonSensitiveInsightsList = await filterSensitiveInsights(
       engine,
-      NEW_MEMORIES
+      NEW_INSIGHTS
     );
 
-    // Check that the non-sensitive memories list contains only non-sensitive memories
+    // Check that the non-sensitive insights list contains only non-sensitive insights
     Assert.equal(
-      nonSensitiveMemoriesList.length,
+      nonSensitiveInsightsList.length,
       3,
-      "Non-sensitive memories list should contain 3 memories"
+      "Non-sensitive insights list should contain 3 insights"
     );
     Assert.ok(
-      nonSensitiveMemoriesList.includes("Loves hiking and camping"),
-      "Non-sensitive memories should include 'Loves hiking and camping'"
+      nonSensitiveInsightsList.includes("Loves hiking and camping"),
+      "Non-sensitive insights should include 'Loves hiking and camping'"
     );
     Assert.ok(
-      nonSensitiveMemoriesList.includes("Reads science fiction novels"),
-      "Non-sensitive memories should include 'Reads science fiction novels'"
+      nonSensitiveInsightsList.includes("Reads science fiction novels"),
+      "Non-sensitive insights should include 'Reads science fiction novels'"
     );
     Assert.ok(
-      nonSensitiveMemoriesList.includes("Likes both dogs and cats"),
-      "Non-sensitive memories should include 'Likes both dogs and cats'"
+      nonSensitiveInsightsList.includes("Likes both dogs and cats"),
+      "Non-sensitive insights should include 'Likes both dogs and cats'"
     );
   } finally {
     sb.restore();
@@ -1107,17 +1109,17 @@ add_task(async function test_filterSensitiveMemories_happy_path() {
 });
 
 /**
- * Tests failed memories sensitivity filtering - Empty output
+ * Tests failed insights sensitivity filtering - Empty output
  */
-add_task(async function test_filterSensitiveMemories_sad_path_empty_output() {
+add_task(async function test_filterSensitiveInsights_sad_path_empty_output() {
   const sb = sinon.createSandbox();
   try {
-    // LLM returns an empty non_sensitive_memories array
+    // LLM returns an empty non_sensitive_insights array
     const fakeEngine = {
       run() {
         return {
           finalOutput: `{
-  "non_sensitive_memories": []
+  "non_sensitive_insights": []
 }`,
         };
       },
@@ -1128,17 +1130,17 @@ add_task(async function test_filterSensitiveMemories_sad_path_empty_output() {
     const engine = await openAIEngine.build();
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-    const nonSensitiveMemoriesList = await filterSensitiveMemories(
+    const nonSensitiveInsightsList = await filterSensitiveInsights(
       engine,
-      NEW_MEMORIES
+      NEW_INSIGHTS
     );
 
     Assert.ok(
-      Array.isArray(nonSensitiveMemoriesList),
+      Array.isArray(nonSensitiveInsightsList),
       "Should return an array"
     );
     Assert.equal(
-      nonSensitiveMemoriesList.length,
+      nonSensitiveInsightsList.length,
       0,
       "Should return an empty array"
     );
@@ -1148,10 +1150,10 @@ add_task(async function test_filterSensitiveMemories_sad_path_empty_output() {
 });
 
 /**
- * Tests failed memories sensitivity filtering - Wrong data type
+ * Tests failed insights sensitivity filtering - Wrong data type
  */
 add_task(
-  async function test_filterSensitiveMemories_sad_path_wrong_data_type() {
+  async function test_filterSensitiveInsights_sad_path_wrong_data_type() {
     const sb = sinon.createSandbox();
     try {
       // LLM returns the wrong outer data type
@@ -1168,17 +1170,17 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const nonSensitiveMemoriesList = await filterSensitiveMemories(
+      const nonSensitiveInsightsList = await filterSensitiveInsights(
         engine,
-        NEW_MEMORIES
+        NEW_INSIGHTS
       );
 
       Assert.ok(
-        Array.isArray(nonSensitiveMemoriesList),
+        Array.isArray(nonSensitiveInsightsList),
         "Should return an array"
       );
       Assert.equal(
-        nonSensitiveMemoriesList.length,
+        nonSensitiveInsightsList.length,
         0,
         "Should return an empty array"
       );
@@ -1189,18 +1191,18 @@ add_task(
 );
 
 /**
- * Tests failed memories sensitivity filtering - Wrong inner data type
+ * Tests failed insights sensitivity filtering - Wrong inner data type
  */
 add_task(
-  async function test_filterSensitiveMemories_sad_path_wrong_inner_data_type() {
+  async function test_filterSensitiveInsights_sad_path_wrong_inner_data_type() {
     const sb = sinon.createSandbox();
     try {
-      // LLM returns a map with the non_sensitive_memories key, but its value's data type is wrong
+      // LLM returns a map with the non_sensitive_insights key, but its value's data type is wrong
       const fakeEngine = {
         run() {
           return {
             finalOutput: `{
-  "non_sensitive_memories": "testing"
+  "non_sensitive_insights": "testing"
 }`,
           };
         },
@@ -1211,17 +1213,17 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const nonSensitiveMemoriesList = await filterSensitiveMemories(
+      const nonSensitiveInsightsList = await filterSensitiveInsights(
         engine,
-        NEW_MEMORIES
+        NEW_INSIGHTS
       );
 
       Assert.ok(
-        Array.isArray(nonSensitiveMemoriesList),
+        Array.isArray(nonSensitiveInsightsList),
         "Should return an array"
       );
       Assert.equal(
-        nonSensitiveMemoriesList.length,
+        nonSensitiveInsightsList.length,
         0,
         "Should return an empty array"
       );
@@ -1232,10 +1234,10 @@ add_task(
 );
 
 /**
- * Tests failed memories sensitivity filtering - Wrong outer schema
+ * Tests failed insights sensitivity filtering - Wrong outer schema
  */
 add_task(
-  async function test_filterSensitiveMemories_sad_path_wrong_outer_schema() {
+  async function test_filterSensitiveInsights_sad_path_wrong_outer_schema() {
     const sb = sinon.createSandbox();
     try {
       // LLM returns a map but with the wrong top-level key
@@ -1243,7 +1245,7 @@ add_task(
         run() {
           return {
             finalOutput: `{
-  "these_are_non_sensitive_memories": [
+  "these_are_non_sensitive_insights": [
     "testing1", "testing2", "testing3"
   ]
 }`,
@@ -1256,17 +1258,17 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const nonSensitiveMemoriesList = await filterSensitiveMemories(
+      const nonSensitiveInsightsList = await filterSensitiveInsights(
         engine,
-        NEW_MEMORIES
+        NEW_INSIGHTS
       );
 
       Assert.ok(
-        Array.isArray(nonSensitiveMemoriesList),
+        Array.isArray(nonSensitiveInsightsList),
         "Should return an array"
       );
       Assert.equal(
-        nonSensitiveMemoriesList.length,
+        nonSensitiveInsightsList.length,
         0,
         "Should return an empty array"
       );
@@ -1277,18 +1279,18 @@ add_task(
 );
 
 /**
- * Tests failed memories sensitivity filtering - Some correct inner schema
+ * Tests failed insights sensitivity filtering - Some correct inner schema
  */
 add_task(
-  async function test_filterSensitiveMemories_sad_path_some_correct_inner_schema() {
+  async function test_filterSensitiveInsights_sad_path_some_correct_inner_schema() {
     const sb = sinon.createSandbox();
     try {
-      // LLM returns a map with the non_sensitive_memories key, but the inner schema has a mix of correct and incorrect data types
+      // LLM returns a map with the non_sensitive_insights key, but the inner schema has a mix of correct and incorrect data types
       const fakeEngine = {
         run() {
           return {
             finalOutput: `{
-  "non_sensitive_memories": [
+  "non_sensitive_insights": [
     "correct",
     12345,
     {"bad": "schema"}
@@ -1303,24 +1305,24 @@ add_task(
       const engine = await openAIEngine.build();
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-      const nonSensitiveMemoriesList = await filterSensitiveMemories(
+      const nonSensitiveInsightsList = await filterSensitiveInsights(
         engine,
-        NEW_MEMORIES
+        NEW_INSIGHTS
       );
 
       Assert.ok(
-        Array.isArray(nonSensitiveMemoriesList),
+        Array.isArray(nonSensitiveInsightsList),
         "Should return an array"
       );
       Assert.equal(
-        nonSensitiveMemoriesList.length,
+        nonSensitiveInsightsList.length,
         1,
-        "Should return an array with one valid memory"
+        "Should return an array with one valid insight"
       );
       Assert.equal(
-        nonSensitiveMemoriesList[0],
+        nonSensitiveInsightsList[0],
         "correct",
-        "Should return the single valid memory"
+        "Should return the single valid insight"
       );
     } finally {
       sb.restore();
@@ -1329,65 +1331,65 @@ add_task(
 );
 
 /**
- * Tests mapping filtered memories back to full memory objects
+ * Tests mapping filtered insights back to full insight objects
  */
-add_task(async function test_mapFilteredMemoriesToInitialList() {
-  // Raw mock full memories object list
-  const initialMemoriesList = [
+add_task(async function test_mapFilteredInsightsToInitialList() {
+  // Raw mock full insights object list
+  const initialInsightsList = [
     // Imagined duplicate - should have been filtered out
     {
       category: "Pets & Animals",
       intent: "Buy / Acquire",
-      memory_summary: "Buys dog food online",
+      insight_summary: "Buys dog food online",
       score: 4,
     },
     // Sensitive content (stocks) - should have been filtered out
     {
       category: "News",
       intent: "Research / Learn",
-      memory_summary: "Likes to invest in risky stocks",
+      insight_summary: "Likes to invest in risky stocks",
       score: 5,
     },
     {
       category: "Games",
       intent: "Entertain / Relax",
-      memory_summary: "Enjoys strategy games",
+      insight_summary: "Enjoys strategy games",
       score: 3,
     },
   ];
 
-  // Mock list of good memories to keep
-  const filteredMemoriesList = ["Enjoys strategy games"];
+  // Mock list of good insights to keep
+  const filteredInsightsList = ["Enjoys strategy games"];
 
-  const finalMemoriesList = await mapFilteredMemoriesToInitialList(
-    initialMemoriesList,
-    filteredMemoriesList
+  const finalInsightsList = await mapFilteredInsightsToInitialList(
+    initialInsightsList,
+    filteredInsightsList
   );
 
-  // Check that only the non-duplicate, non-sensitive memory remains
+  // Check that only the non-duplicate, non-sensitive insight remains
   Assert.equal(
-    finalMemoriesList.length,
+    finalInsightsList.length,
     1,
-    "Final memories should contain 1 memory"
+    "Final insights should contain 1 insight"
   );
   Assert.equal(
-    finalMemoriesList[0].category,
+    finalInsightsList[0].category,
     "Games",
-    "Final memory should have the correct category"
+    "Final insight should have the correct category"
   );
   Assert.equal(
-    finalMemoriesList[0].intent,
+    finalInsightsList[0].intent,
     "Entertain / Relax",
-    "Final memory should have the correct intent"
+    "Final insight should have the correct intent"
   );
   Assert.equal(
-    finalMemoriesList[0].memory_summary,
+    finalInsightsList[0].insight_summary,
     "Enjoys strategy games",
-    "Final memory should match the filtered memory"
+    "Final insight should match the filtered insight"
   );
   Assert.equal(
-    finalMemoriesList[0].score,
+    finalInsightsList[0].score,
     3,
-    "Final memory should have the correct score"
+    "Final insight should have the correct score"
   );
 });

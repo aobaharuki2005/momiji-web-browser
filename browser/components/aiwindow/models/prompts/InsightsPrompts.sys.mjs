@@ -2,33 +2,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-export const initialMemoriesGenerationSystemPromptMetadata = {
+export const initialInsightsGenerationSystemPromptMetadata = {
   version: "0.1",
 };
 
-export const initialMemoriesGenerationSystemPrompt =
-  "You are a privacy respecting data analyst who tries to generate useful memories about user preferences EXCLUDING personal, medical, health, financial, political, religion, private and any sensitive activities of users. Return ONLY valid JSON.";
+export const initialInsightsGenerationSystemPrompt =
+  "You are a privacy respecting data analyst who tries to generate useful insights about user preferences EXCLUDING personal, medical, health, financial, political, religion, private and any sensitive activities of users. Return ONLY valid JSON.";
 
-export const initialMemoriesGenerationPromptMetadata = {
+export const initialInsightsGenerationPromptMetadata = {
   version: "0.1",
 };
 
-export const initialMemoriesGenerationPrompt = `
+export const initialInsightsGenerationPrompt = `
 # Overview
-You are an expert at extracting memories from user browser data. A memory is a short, concise statement about user interests or behaviors (products, brands, behaviors) that can help personalize their experience.
+You are an expert at extracting insights from user browser data. An insight is a short, concise statement about user interests or behaviors (products, brands, behaviors) that can help personalize their experience.
 
-You will receive CSV tables and/or JSON objects of data representing the user's browsing history, search history, and chat history. Use ONLY this data to generate memories. Each table has a header row that defines the schema.
+You will receive CSV tables and/or JSON objects of data representing the user's browsing history, search history, and chat history. Use ONLY this data to generate insights. Each table has a header row that defines the schema.
 
 # Instructions
-- Extract up as many memories as you can.
-- Each memory must be supported by 1-4 pieces of evidence from the user records. ONLY USE VERBATIM STRINGS FROM THE USER RECORDS!
-- Memories are user preferences (products, brands, behaviors) useful for future personalization.
+- Extract up as many insights as you can.
+- Each insight must be supported by 1-4 pieces of evidence from the user records. ONLY USE VERBATIM STRINGS FROM THE USER RECORDS!
+- Insights are user preferences (products, brands, behaviors) useful for future personalization.
 - Do not imagine actions without evidence. Prefer "shops for / plans / looked for" over "bought / booked / watched" unless explicit.
 - Do not include personal names unless widely public (avoid PII).
-- Base memories on patterns, not single instances.
+- Base insights on patterns, not single instances.
 
 ## Exemplars
-Below are examples of high quality memories (for reference only; do NOT copy):
+Below are examples of high quality insights (for reference only; do NOT copy):
 - "Prefers LLBean & Nordstrom formalwear collections"
 - "Compares white jeans under $80 at Target"
 - "Streams new-release movies via Fandango"
@@ -36,11 +36,11 @@ Below are examples of high quality memories (for reference only; do NOT copy):
 - "Tracks minimalist fashion drops at Uniqlo"
 
 ## Category rules
-Every memory requires a category. Choose ONLY one from this list; if none fits, use null:
+Every insight requires a category. Choose ONLY one from this list; if none fits, use null:
 {categoriesList}
 
 ## Intent rules
-Every memory requires an intent. Choose ONLY one from this list; if none fits, use null:
+Every insight requires an intent. Choose ONLY one from this list; if none fits, use null:
 {intentsList}
 
 # Output Schema
@@ -52,7 +52,7 @@ Return ONLY a JSON array of objects, no prose, no code fences. Each object must 
     "why": "<12-40 words that briefly explains the rationale, referencing the cited evidence (no new claims or invented entities).>",
     "category": "<one of the categories or null>",
     "intent": "<one of the intents or null>",
-    "memory_summary": "<4-10 words, crisp and specific or null>",
+    "insight_summary": "<4-10 words, crisp and specific or null>",
     "score": <integer 1-5>,
     "evidence": [
       {
@@ -74,44 +74,44 @@ Return ONLY a JSON array of objects, no prose, no code fences. Each object must 
 - Do not assign 5 unless pattern is strong and recent.
 
 # Inputs
-Analyze the records below to generate as many unique, non-sensitive, specific user memories as possible. Each set of records is a CSV table with header row that defines the schema or JSON object.
+Analyze the records below to generate as many unique, non-sensitive, specific user insights as possible. Each set of records is a CSV table with header row that defines the schema or JSON object.
 
 {profileRecordsRenderedStr}
 
-** CREATE ALL POSSIBLE UNIQUE MEMORIES WITHOUT VIOLATING THE RULES ABOVE **`.trim();
+** CREATE ALL POSSIBLE UNIQUE INSIGHTS WITHOUT VIOLATING THE RULES ABOVE **`.trim();
 
-export const memoriesDeduplicationSystemPromptMetadata = {
+export const insightsDeduplicationSystemPromptMetadata = {
   version: "0.1",
 };
 
-export const memoriesDeduplicationSystemPrompt =
+export const insightsDeduplicationSystemPrompt =
   "You are an expert at identifying duplicate statements. Return ONLY valid JSON.";
 
-export const memoriesDeduplicationPromptMetadata = {
+export const insightsDeduplicationPromptMetadata = {
   version: "0.1",
 };
 
-export const memoriesDeduplicationPrompt = `
+export const insightsDeduplicationPrompt = `
 You are an expert at identifying duplicate statements.
 
-Examine the following list of statements and find the unique ones. If you identify a set of statements that express the same general idea, pick the most general one from the set as the "main memory" and mark the rest as duplicates of it.
+Examine the following list of statements and find the unique ones. If you identify a set of statements that express the same general idea, pick the most general one from the set as the "main insight" and mark the rest as duplicates of it.
 
-There are 2 lists of statements: Existing Statements and New Statements. If you find a duplicate between the 2, **ALWAYS** pick the Existing Statement as the "main memory".
+There are 2 lists of statements: Existing Statements and New Statements. If you find a duplicate between the 2, **ALWAYS** pick the Existing Statement as the "main insight".
 
 If all statements are unique, simply return them all.
 
 ## Existing Statements:
-{existingMemoriesList}
+{existingInsightsList}
 
 ## New Statements:
-{newMemoriesList}
+{newInsightsList}
 
 Return ONLY JSON per the schema below.
 \`\`\`json
 {
-  "unique_memories": [
+  "unique_insights": [
     {
-      "main_memory": "<the main unique memory statement>",
+      "main_insight": "<the main unique insight statement>",
       "duplicates": [
         "<duplicate_statement_1>",
         "<duplicate_statement_2>",
@@ -123,18 +123,18 @@ Return ONLY JSON per the schema below.
 }
 \`\`\``.trim();
 
-export const memoriesSensitivityFilterSystemPromptMetadata = {
+export const insightSensitivityFilterSystemPromptMetadata = {
   version: "0.1",
 };
 
-export const memoriesSensitivityFilterSystemPrompt =
+export const insightSensitivityFilterSystemPrompt =
   "You are an expert at identifying sensitive statements and content. Return ONLY valid JSON.";
 
-export const memoriesSensitivityFilterPromptMetadata = {
+export const insightsSensitivityFilterPromptMetadata = {
   version: "0.1",
 };
 
-export const memoriesSensitivityFilterPrompt = `
+export const insightsSensitivityFilterPrompt = `
 You are an expert at identifying sensitive statements and content.
 
 Examine the following list of statements and filter out any that contain sensitive information or content.
@@ -160,27 +160,27 @@ Below are exemplars of sensitive statements:
 If all statements are not sensitive, simply return them all.
 
 Here are the statements to analyze:
-{memoriesList}
+{insightsList}
 
 Return ONLY JSON per the schema below.
 \`\`\`json
 {
-  "non_sensitive_memories": [
-    "<memory_statement_1>",
-    "<memory_statement_2>",
+  "non_sensitive_insights": [
+    "<insight_statement_1>",
+    "<insight_statement_2>",
     ...
   ]
 }
 \`\`\``.trim();
 
-export const messageMemoryClassificationSystemPromptMetadata = {
+export const messageInsightClassificationSystemPromptMetadata = {
   version: "0.1",
 };
 
-export const messageMemoryClassificationSystemPrompt =
+export const messageInsightClassificationSystemPrompt =
   "Classify the user's message into one more more high-level Categories and Intents. Return ONLY valid JSON per schema.";
 
-export const messageMemoryClassificationPrompt = `
+export const messageInsightClassificationPrompt = `
 {message}
 
 Pick Categories from:
@@ -202,21 +202,21 @@ Return ONLY JSON per the schema below.
 }
 \`\`\``.trim();
 
-export const relevantMemoriesContextPromptMetadata = {
+export const relevantInsightsContextPromptMetadata = {
   version: "0.1",
 };
 
-export const relevantMemoriesContextPrompt = `
-# Existing Memories
+export const relevantInsightsContextPrompt = `
+# Existing Insights
 
-Below is a list of existing memories:
+Below is a list of existing insights:
 
-{relevantMemoriesList}
+{relevantInsightsList}
 
 Use them to personalized your response using the following guidelines:
 
 1. Consider the user message below
-2. Choose SPECIFIC and RELEVANT memories from the list above to personalize your response to the user
-3. Write those SPECIFIC memories into your response to make it more helpful and tailored, then tag them AFTER your response using the format: \`§existing_memory: memory text§\`
+2. Choose SPECIFIC and RELEVANT insights from the list above to personalize your response to the user
+3. Write those SPECIFIC insights into your response to make it more helpful and tailored, then tag them AFTER your response using the format: \`§existing_insight: insight text§\`
 
-- NEVER tag memories you DID NOT USE in your response.`.trim();
+- NEVER tag insights you DID NOT USE in your response.`.trim();

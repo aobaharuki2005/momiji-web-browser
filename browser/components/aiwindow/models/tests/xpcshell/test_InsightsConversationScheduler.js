@@ -8,23 +8,23 @@ do_get_profile();
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
-const { MemoriesConversationScheduler } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/memories/MemoriesConversationScheduler.sys.mjs"
+const { InsightsConversationScheduler } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/models/InsightsConversationScheduler.sys.mjs"
 );
-const { MemoriesManager } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs"
+const { InsightsManager } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs"
 );
-const { PREF_GENERATE_MEMORIES } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs"
+const { PREF_GENERATE_INSIGHTS } = ChromeUtils.importESModule(
+  "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs"
 );
 const { ChatStore, ChatMessage, MESSAGE_ROLE } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs"
 );
 
-// Clear memories pref after testing
+// Clear insights pref after testing
 add_setup(async function () {
   registerCleanupFunction(() => {
-    Services.prefs.clearUserPref(PREF_GENERATE_MEMORIES);
+    Services.prefs.clearUserPref(PREF_GENERATE_INSIGHTS);
   });
 });
 
@@ -55,12 +55,12 @@ async function buildFakeChatHistory(numMessagesToCreate = 10) {
 }
 
 /**
- * Tests the scheduler does not initialize when the memories preference is false
+ * Tests the scheduler does not initialize when the insights preference is false
  */
 add_task(async function test_schedule_not_init_when_pref_false() {
-  Services.prefs.setBoolPref(PREF_GENERATE_MEMORIES, false);
+  Services.prefs.setBoolPref(PREF_GENERATE_INSIGHTS, false);
 
-  let scheduler = MemoriesConversationScheduler.maybeInit();
+  let scheduler = InsightsConversationScheduler.maybeInit();
   Assert.equal(
     scheduler,
     null,
@@ -72,9 +72,9 @@ add_task(async function test_schedule_not_init_when_pref_false() {
  * Tests the scheduler initializes but does not run when there aren't enough messages
  */
 add_task(async function test_scheduler_doesnt_run_with_insufficient_messages() {
-  Services.prefs.setBoolPref(PREF_GENERATE_MEMORIES, true);
+  Services.prefs.setBoolPref(PREF_GENERATE_INSIGHTS, true);
 
-  // Need at least 10 messages for memories generation to trigger
+  // Need at least 10 messages for insights generation to trigger
   // 5 will cause the expected failure
   const messages = await buildFakeChatHistory(5);
   const sb = sinon.createSandbox();
@@ -87,14 +87,14 @@ add_task(async function test_scheduler_doesnt_run_with_insufficient_messages() {
       });
 
     const lastTsStub = sb
-      .stub(MemoriesManager, "getLastConversationMemoryTimestamp")
+      .stub(InsightsManager, "getLastConversationInsightTimestamp")
       .resolves(0);
 
     const generateStub = sb
-      .stub(MemoriesManager, "generateMemoriesFromConversationHistory")
+      .stub(InsightsManager, "generateInsightsFromConversationHistory")
       .resolves();
 
-    let scheduler = MemoriesConversationScheduler.maybeInit();
+    let scheduler = InsightsConversationScheduler.maybeInit();
     Assert.ok(scheduler, "Scheduler should be initialized when pref is true");
 
     await scheduler.runNowForTesting();
@@ -102,10 +102,13 @@ add_task(async function test_scheduler_doesnt_run_with_insufficient_messages() {
       findMessagesStub.calledOnce,
       "Should check for recent messages once"
     );
-    Assert.ok(lastTsStub.calledOnce, "Should check last memory timestamp once");
+    Assert.ok(
+      lastTsStub.calledOnce,
+      "Should check last insight timestamp once"
+    );
     Assert.ok(
       !generateStub.calledOnce,
-      "Memories generation should not be triggered with only 5 messages"
+      "Insights generation should not be triggered with only 5 messages"
     );
   } finally {
     sb.restore();
@@ -116,7 +119,7 @@ add_task(async function test_scheduler_doesnt_run_with_insufficient_messages() {
  * Tests the scheduler initializes and runs when there are enough messages
  */
 add_task(async function test_scheduler_runs_with_small_history() {
-  Services.prefs.setBoolPref(PREF_GENERATE_MEMORIES, true);
+  Services.prefs.setBoolPref(PREF_GENERATE_INSIGHTS, true);
 
   const messages = await buildFakeChatHistory();
   const sb = sinon.createSandbox();
@@ -129,14 +132,14 @@ add_task(async function test_scheduler_runs_with_small_history() {
       });
 
     const lastTsStub = sb
-      .stub(MemoriesManager, "getLastConversationMemoryTimestamp")
+      .stub(InsightsManager, "getLastConversationInsightTimestamp")
       .resolves(0);
 
     const generateStub = sb
-      .stub(MemoriesManager, "generateMemoriesFromConversationHistory")
+      .stub(InsightsManager, "generateInsightsFromConversationHistory")
       .resolves();
 
-    let scheduler = MemoriesConversationScheduler.maybeInit();
+    let scheduler = InsightsConversationScheduler.maybeInit();
     Assert.ok(scheduler, "Scheduler should be initialized when pref is true");
 
     await scheduler.runNowForTesting();
@@ -144,10 +147,13 @@ add_task(async function test_scheduler_runs_with_small_history() {
       findMessagesStub.calledOnce,
       "Should check for recent messages once"
     );
-    Assert.ok(lastTsStub.calledOnce, "Should check last memory timestamp once");
+    Assert.ok(
+      lastTsStub.calledOnce,
+      "Should check last insight timestamp once"
+    );
     Assert.ok(
       generateStub.calledOnce,
-      "Memories generation should be triggered once"
+      "Insights generation should be triggered once"
     );
   } finally {
     sb.restore();

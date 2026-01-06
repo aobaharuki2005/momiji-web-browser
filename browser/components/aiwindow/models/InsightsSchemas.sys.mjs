@@ -2,12 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-import { CATEGORIES_LIST, INTENTS_LIST } from "./MemoriesConstants.sys.mjs";
+import { CATEGORIES_LIST, INTENTS_LIST } from "./InsightsConstants.sys.mjs";
 
 /**
- * JSON Schema for initial memories generation
+ * JSON Schema for initial insights generation
  */
-export const INITIAL_MEMORIES_SCHEMA = {
+export const INITIAL_INSIGHTS_SCHEMA = {
   type: "array",
   minItems: 1,
   items: {
@@ -16,7 +16,7 @@ export const INITIAL_MEMORIES_SCHEMA = {
     required: [
       "category",
       "intent",
-      "memory_summary",
+      "insight_summary",
       "score",
       "why",
       "evidence",
@@ -30,7 +30,7 @@ export const INITIAL_MEMORIES_SCHEMA = {
         type: ["string", "null"],
         enum: [...INTENTS_LIST, null],
       },
-      memory_summary: { type: ["string", "null"] },
+      insight_summary: { type: ["string", "null"] },
       score: { type: "integer" },
 
       why: { type: "string", minLength: 12, maxLength: 200 },
@@ -62,25 +62,25 @@ export const INITIAL_MEMORIES_SCHEMA = {
 };
 
 /**
- * JSON Schema for memories deduplication
+ * JSON Schema for insights deduplication
  */
-export const MEMORIES_DEDUPLICATION_SCHEMA = {
+export const INSIGHTS_DEDUPLICATION_SCHEMA = {
   type: "array",
   minItems: 1,
   items: {
     type: "object",
     additionalProperties: false,
-    required: ["unique_memories"],
+    required: ["unique_insights"],
     properties: {
-      unique_memories: {
+      unique_insights: {
         type: "array",
         minItems: 1,
         items: {
           type: "object",
           additionalProperties: false,
-          required: ["main_memory", "duplicates"],
+          required: ["main_insight", "duplicates"],
           properties: {
-            main_memory: { type: "string" },
+            main_insight: { type: "string" },
             duplicates: {
               type: "array",
               minItems: 1,
@@ -94,17 +94,17 @@ export const MEMORIES_DEDUPLICATION_SCHEMA = {
 };
 
 /**
- * JSON schema for filtering sensitive memories
+ * JSON schema for filtering sensitive insights
  */
-export const MEMORIES_NON_SENSITIVE_SCHEMA = {
+export const INSIGHTS_NON_SENSITIVE_SCHEMA = {
   type: "array",
   minItems: 1,
   items: {
     type: "object",
     additionalProperties: false,
-    required: ["non_sensitive_memories"],
+    required: ["non_sensitive_insights"],
     properties: {
-      non_sensitive_memories: {
+      non_sensitive_insights: {
         type: "array",
         minItems: 1,
         items: { type: "string" },
@@ -116,7 +116,7 @@ export const MEMORIES_NON_SENSITIVE_SCHEMA = {
 /**
  * JSON schema for classifying message category and intent
  */
-export const MEMORIES_MESSAGE_CLASSIFY_SCHEMA = {
+export const INSIGHTS_MESSAGE_CLASSIFY_SCHEMA = {
   name: "ClassifyMessage",
   schema: {
     type: "object",

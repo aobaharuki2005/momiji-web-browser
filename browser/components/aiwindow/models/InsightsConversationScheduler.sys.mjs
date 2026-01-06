@@ -6,46 +6,46 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   setInterval: "resource://gre/modules/Timer.sys.mjs",
   clearInterval: "resource://gre/modules/Timer.sys.mjs",
-  MemoriesManager:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs",
+  InsightsManager:
+    "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
   getRecentChats:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesChatSource.sys.mjs",
-  PREF_GENERATE_MEMORIES:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesConstants.sys.mjs",
+    "moz-src:///browser/components/aiwindow/models/InsightsChatSource.sys.mjs",
+  PREF_GENERATE_INSIGHTS:
+    "moz-src:///browser/components/aiwindow/models/InsightsConstants.sys.mjs",
 });
 ChromeUtils.defineLazyGetter(lazy, "console", function () {
   return console.createInstance({
-    prefix: "MemoriesConversationScheduler",
-    maxLogLevelPref: "browser.aiwindow.memoriesLogLevel",
+    prefix: "InsightsConversationScheduler",
+    maxLogLevelPref: "browser.aiwindow.insightsLogLevel",
   });
 });
 
-// Generate memories if there have been at least 10 user messages since the last run
-const MEMORIES_SCHEDULER_MESSAGES_THRESHOLD = 10;
+// Generate insights if there have been at least 10 user messages since the last run
+const INSIGHTS_SCHEDULER_MESSAGES_THRESHOLD = 10;
 
-// Memories conversation schedule every 4 hours
-const MEMORIES_SCHEDULER_INTERVAL_MS = 4 * 60 * 60 * 1000;
+// Insights conversation schedule every 4 hours
+const INSIGHTS_SCHEDULER_INTERVAL_MS = 4 * 60 * 60 * 1000;
 
 /**
- * Schedules periodic generation of conversation-based memories.
- * Triggers memories generation when number of user messages exceeds the configured threshold ({@link MEMORIES_SCHEDULER_MESSAGES_THRESHOLD})
+ * Schedules periodic generation of conversation-based insights.
+ * Triggers insights generation when number of user messages exceeds the configured threshold ({@link INSIGHTS_SCHEDULER_MESSAGES_THRESHOLD})
  *
- * E.g. Usage: MemoriesConversationScheduler.maybeInit()
+ * E.g. Usage: InsightsConversationScheduler.maybeInit()
  */
-export class MemoriesConversationScheduler {
+export class InsightsConversationScheduler {
   #intervalHandle = 0;
   #destroyed = false;
   #running = false;
 
-  /** @type {MemoriesConversationScheduler | null} */
+  /** @type {InsightsConversationScheduler | null} */
   static #instance = null;
 
   static maybeInit() {
-    if (!Services.prefs.getBoolPref(lazy.PREF_GENERATE_MEMORIES, false)) {
+    if (!Services.prefs.getBoolPref(lazy.PREF_GENERATE_INSIGHTS, false)) {
       return null;
     }
     if (!this.#instance) {
-      this.#instance = new MemoriesConversationScheduler();
+      this.#instance = new InsightsConversationScheduler();
     }
     return this.#instance;
   }
@@ -57,7 +57,7 @@ export class MemoriesConversationScheduler {
 
   /**
    * Starts the interval that periodically evaluates history drift and
-   * potentially triggers memory generation.
+   * potentially triggers insight generation.
    *
    * @throws {Error} If an interval is already running.
    */
@@ -69,7 +69,7 @@ export class MemoriesConversationScheduler {
     }
     this.#intervalHandle = lazy.setInterval(
       this.#onInterval,
-      MEMORIES_SCHEDULER_INTERVAL_MS
+      INSIGHTS_SCHEDULER_INTERVAL_MS
     );
   }
 
@@ -100,26 +100,26 @@ export class MemoriesConversationScheduler {
     this.#stopInterval();
 
     try {
-      // Detect whether conversation memories were generated before.
-      const lastMemoryTs =
-        (await lazy.MemoriesManager.getLastConversationMemoryTimestamp()) ?? 0;
+      // Detect whether conversation insights were generated before.
+      const lastInsightTs =
+        (await lazy.InsightsManager.getLastConversationInsightTimestamp()) ?? 0;
 
       // Get user chat messages
-      const chatMessagesSinceLastMemory =
-        await lazy.getRecentChats(lastMemoryTs);
+      const chatMessagesSinceLastInsight =
+        await lazy.getRecentChats(lastInsightTs);
 
       // Not enough new messages
       if (
-        chatMessagesSinceLastMemory.length <
-        MEMORIES_SCHEDULER_MESSAGES_THRESHOLD
+        chatMessagesSinceLastInsight.length <
+        INSIGHTS_SCHEDULER_MESSAGES_THRESHOLD
       ) {
         return;
       }
 
-      // Generate memories
-      await lazy.MemoriesManager.generateMemoriesFromConversationHistory();
+      // Generate insights
+      await lazy.InsightsManager.generateInsightsFromConversationHistory();
     } catch (error) {
-      lazy.console.error("Failed to generate conversation memories", error);
+      lazy.console.error("Failed to generate conversation insights", error);
     } finally {
       if (!this.#destroyed) {
         this.#startInterval();

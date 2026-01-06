@@ -9,11 +9,11 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   PageDataService:
     "moz-src:///browser/components/pagedata/PageDataService.sys.mjs",
-  MemoriesManager:
-    "moz-src:///browser/components/aiwindow/models/memories/MemoriesManager.sys.mjs",
+  InsightsManager:
+    "moz-src:///browser/components/aiwindow/models/InsightsManager.sys.mjs",
   renderPrompt: "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs",
-  relevantMemoriesContextPrompt:
-    "moz-src:///browser/components/aiwindow/models/prompts/MemoriesPrompts.sys.mjs",
+  relevantInsightsContextPrompt:
+    "moz-src:///browser/components/aiwindow/models/prompts/InsightsPrompts.sys.mjs",
 });
 
 /**
@@ -87,7 +87,7 @@ export async function getCurrentTabMetadata(depsOverride) {
 
 /**
  * Construct real time information injection message, to be inserted before
- * the memories injection message and the user message in the conversation
+ * the insights injection message and the user message in the conversation
  * messages list.
  *
  * @param {object} [depsOverride]
@@ -126,28 +126,28 @@ export async function constructRealTimeInfoInjectionMessage(depsOverride) {
 }
 
 /**
- * Constructs the relevant memories context message to be inejcted before the user message.
+ * Constructs the relevant insights context message to be inejcted before the user message.
  *
- * @param {string} message                                                          User message to find relevant memories for
- * @returns {Promise<null|{role: string, tool_call_id: string, content: string}>}   Relevant memories context message or null if no relevant memories
+ * @param {string} message                                                          User message to find relevant insights for
+ * @returns {Promise<null|{role: string, tool_call_id: string, content: string}>}   Relevant insights context message or null if no relevant insights
  */
-export async function constructRelevantMemoriesContextMessage(message) {
-  const relevantMemories =
-    await lazy.MemoriesManager.getRelevantMemories(message);
+export async function constructRelevantInsightsContextMessage(message) {
+  const relevantInsights =
+    await lazy.InsightsManager.getRelevantInsights(message);
 
-  // If there are relevant memories, render and return the context message
-  if (relevantMemories.length) {
-    const relevantMemoriesList =
+  // If there are relevant insights, render and return the context message
+  if (relevantInsights.length) {
+    const relevantInsightsList =
       "- " +
-      relevantMemories
-        .map(memory => {
-          return memory.memory_summary;
+      relevantInsights
+        .map(insight => {
+          return insight.insight_summary;
         })
         .join("\n- ");
     const content = await lazy.renderPrompt(
-      lazy.relevantMemoriesContextPrompt,
+      lazy.relevantInsightsContextPrompt,
       {
-        relevantMemoriesList,
+        relevantInsightsList,
       }
     );
 
@@ -156,12 +156,12 @@ export async function constructRelevantMemoriesContextMessage(message) {
       content,
     };
   }
-  // If there aren't any relevant memories, return null
+  // If there aren't any relevant insights, return null
   return null;
 }
 
 /**
- * Response parsing funtions to detect special tagged information like memories and search terms.
+ * Response parsing funtions to detect special tagged information like insights and search terms.
  * Also return the cleaned content after removing all the taggings.
  *
  * @param {string} content
@@ -169,12 +169,12 @@ export async function constructRelevantMemoriesContextMessage(message) {
  */
 export async function parseContentWithTokens(content) {
   const searchRegex = /§search:\s*([^§]+)§/gi;
-  const memoriesRegex = /§existing_memory:\s*([^§]+)§/gi;
+  const insightsRegex = /§existing_insight:\s*([^§]+)§/gi;
 
   const searchTokens = detectTokens(content, searchRegex, "query");
-  const memoriesTokens = detectTokens(content, memoriesRegex, "memories");
+  const insightsTokens = detectTokens(content, insightsRegex, "insights");
   // Sort all tokens in reverse index order for easier removal
-  const allTokens = [...searchTokens, ...memoriesTokens].sort(
+  const allTokens = [...searchTokens, ...insightsTokens].sort(
     (a, b) => b.startIndex - a.startIndex
   );
 
@@ -182,21 +182,21 @@ export async function parseContentWithTokens(content) {
     return {
       cleanContent: content,
       searchQueries: [],
-      usedMemories: [],
+      usedInsights: [],
     };
   }
 
   // Clean content by removing tagged information
   let cleanContent = content;
   const searchQueries = [];
-  const usedMemories = [];
+  const usedInsights = [];
 
   for (const token of allTokens) {
     if (token.query) {
       searchQueries.unshift(token.query);
-    } else if (token.memories) {
-      usedMemories.unshift(token.memories);
-      // TODO: do we need customEvent to dispatch used memories as we iterate?
+    } else if (token.insights) {
+      usedInsights.unshift(token.insights);
+      // TODO: do we need customEvent to dispatch used insights as we iterate?
     }
     cleanContent =
       cleanContent.slice(0, token.startIndex) +
@@ -206,7 +206,7 @@ export async function parseContentWithTokens(content) {
   return {
     cleanContent: cleanContent.trim(),
     searchQueries,
-    usedMemories,
+    usedInsights,
   };
 }
 

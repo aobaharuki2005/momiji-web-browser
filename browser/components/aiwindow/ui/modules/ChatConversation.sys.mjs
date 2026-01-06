@@ -6,7 +6,7 @@
 import { assistantPrompt } from "moz-src:///browser/components/aiwindow/models/prompts/AssistantPrompts.sys.mjs";
 
 import {
-  constructRelevantMemoriesContextMessage,
+  constructRelevantInsightsContextMessage,
   constructRealTimeInfoInjectionMessage,
 } from "moz-src:///browser/components/aiwindow/models/ChatUtils.sys.mjs";
 
@@ -244,7 +244,7 @@ export class ChatConversation {
       this.addSystemMessage(SYSTEM_PROMPT_TYPE.REAL_TIME, realTime.content);
     }
 
-    const insightsContext = await constructRelevantMemoriesContextMessage();
+    const insightsContext = await constructRelevantInsightsContextMessage();
     if (insightsContext?.content) {
       this.addSystemMessage(
         SYSTEM_PROMPT_TYPE.INSIGHTS,

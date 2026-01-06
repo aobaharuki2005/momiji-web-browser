@@ -337,18 +337,16 @@ var allowlist = [
     file: "chrome://browser/content/aiwindow/firstrun.html",
   },
   // Bug 2005768 - Insights scheduler for generation from history
-  // Bug 2007939 - Rename "insights" to "memories"
   {
-    file: "moz-src:///browser/components/aiwindow/models/memories/MemoriesHistoryScheduler.sys.mjs",
+    file: "moz-src:///browser/components/aiwindow/models/InsightsHistoryScheduler.sys.mjs",
   },
   // Bug 2003303 - Implement Title Generation (backed out due to unused file)
   {
     file: "moz-src:///browser/components/aiwindow/models/TitleGeneration.sys.mjs",
   },
   // Bug 2006090 - Insight updation - Day 0 and incremental updates from Chat history
-  // Bug 2007939 - Rename "insights" to "memories"
   {
-    file: "moz-src:///browser/components/aiwindow/models/memories/MemoriesConversationScheduler.sys.mjs",
+    file: "moz-src:///browser/components/aiwindow/models/InsightsConversationScheduler.sys.mjs",
   },
   // Bug 2006433 - Implement conversation starter/followup inference
   {

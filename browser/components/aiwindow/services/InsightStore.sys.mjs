@@ -3,38 +3,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Implementation of all the disk I/O required by the Memory store
+ * Implementation of all the disk I/O required by the Insight store
  */
 
 import { JSONFile } from "resource://gre/modules/JSONFile.sys.mjs";
 
 /**
- * MemoryStore
+ * InsightStore
  *
  * In-memory JSON state + persisted JSON file, modeled after SessionStore.
  *
  * File format (on disk):
  * {
- *   "memories": [ { ... } ],
+ *   "insights": [ { ... } ],
  *   "meta": {
- *     "last_history_memory_ts": 0,
- *     "last_chat_memory_ts": 0,
+ *     "last_history_insight_ts": 0,
+ *     "last_chat_insight_ts": 0,
  *   },
  *   "version": 1
  * }
  */
 
-const MEMORY_STORE_FILE = "memories.json.lz4";
-const MEMORY_STORE_VERSION = 1;
+const INSIGHT_STORE_FILE = "insights.json.lz4";
+const INSIGHT_STORE_VERSION = 1;
 
 // In-memory state
 let gState = {
-  memories: [],
+  insights: [],
   meta: {
-    last_history_memory_ts: 0,
-    last_chat_memory_ts: 0,
+    last_history_insight_ts: 0,
+    last_chat_insight_ts: 0,
   },
-  version: MEMORY_STORE_VERSION,
+  version: INSIGHT_STORE_VERSION,
 };
 
 // Whether we've finished initial load
@@ -46,26 +46,26 @@ let gJSONFile = null;
 // Where we store the file (choose something similar to sessionstore)
 ChromeUtils.defineLazyGetter(lazy, "gStorePath", () => {
   const profD = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
-  return PathUtils.join(profD, MEMORY_STORE_FILE);
+  return PathUtils.join(profD, INSIGHT_STORE_FILE);
 });
 
 /**
- * Internal helper to load (and possibly migrate) memory data from disk.
+ * Internal helper to load (and possibly migrate) insight data from disk.
  *
  * @returns {Promise<void>}
  */
-async function loadMemories() {
+async function loadInsights() {
   gJSONFile = new JSONFile({
     path: lazy.gStorePath,
     saveDelayMs: 1000,
     compression: "lz4",
-    sanitizedBasename: "memories",
+    sanitizedBasename: "insights",
   });
 
   try {
     await gJSONFile.load();
   } catch (ex) {
-    console.error("MemoryStore: failed to load state", ex);
+    console.error("InsightStore: failed to load state", ex);
     // If load fails, fall back to default gState.
     gJSONFile.data = gState;
     gInitialized = true;
@@ -78,13 +78,13 @@ async function loadMemories() {
     gJSONFile.data = gState;
   } else {
     gState = {
-      memories: Array.isArray(data.memories) ? data.memories : [],
+      insights: Array.isArray(data.insights) ? data.insights : [],
       meta: {
-        last_history_memory_ts: data.meta?.last_history_memory_ts || 0,
-        last_chat_memory_ts: data.meta?.last_chat_memory_ts || 0,
+        last_history_insight_ts: data.meta?.last_history_insight_ts || 0,
+        last_chat_insight_ts: data.meta?.last_chat_insight_ts || 0,
       },
       version:
-        typeof data.version === "number" ? data.version : MEMORY_STORE_VERSION,
+        typeof data.version === "number" ? data.version : INSIGHT_STORE_VERSION,
     };
     // Ensure JSONFile.data points at our normalized state object.
     gJSONFile.data = gState;
@@ -94,7 +94,7 @@ async function loadMemories() {
 }
 
 // Public API object
-export const MemoryStore = {
+export const InsightStore = {
   /**
    * Initialize the store: set up JSONFile and load from disk.
    *
@@ -106,7 +106,7 @@ export const MemoryStore = {
     }
 
     if (!gInitPromise) {
-      gInitPromise = loadMemories();
+      gInitPromise = loadInsights();
     }
 
     await gInitPromise;
@@ -126,19 +126,19 @@ export const MemoryStore = {
   },
 
   /**
-   * @typedef {object} Memory
-   * @property {string} id - Unique identifier for the memory.
-   * @property {string} memory_summary - Short human-readable summary of the memory.
-   * @property {string} category - Category label for the memory.
-   * @property {string} intent - Intent label associated with the memory.
-   * @property {number} score - Numeric score representing the memory's relevance.
+   * @typedef {object} Insight
+   * @property {string} id - Unique identifier for the insight.
+   * @property {string} insight_summary - Short human-readable summary of the insight.
+   * @property {string} category - Category label for the insight.
+   * @property {string} intent - Intent label associated with the insight.
+   * @property {number} score - Numeric score representing the insight's relevance.
    * @property {number} updated_at - Last-updated time in milliseconds since Unix epoch.
-   * @property {boolean} is_deleted - Whether the memory is marked as deleted.
+   * @property {boolean} is_deleted - Whether the insight is marked as deleted.
    */
   /**
-   * @typedef {object} MemoryPartial
-   * @property {string} [id] Optional identifier; if omitted, one is derived by makeMemoryId.
-   * @property {string} [memory_summary] Optional summary; defaults to an empty string.
+   * @typedef {object} InsightPartial
+   * @property {string} [id] Optional identifier; if omitted, one is derived by makeInsightId.
+   * @property {string} [insight_summary] Optional summary; defaults to an empty string.
    * @property {string} [category] Optional category label; defaults to an empty string.
    * @property {string} [intent] Optional intent label; defaults to an empty string.
    * @property {number} [score] Optional numeric score; non-finite values are ignored.
@@ -146,26 +146,26 @@ export const MemoryStore = {
    * @property {boolean} [is_deleted] Optional deleted flag; defaults to false.
    */
   /**
-   * Add a new memory, or update an existing one with the same id.
+   * Add a new insight, or update an existing one with the same id.
    *
-   * Any missing fields on {@link MemoryPartial} are defaulted.
+   * Any missing fields on {@link InsightPartial} are defaulted.
    *
-   * @param {MemoryPartial} memoryPartial
-   * @returns {Promise<Memory>}
+   * @param {InsightPartial} insightPartial
+   * @returns {Promise<Insight>}
    */
-  async addMemory(memoryPartial) {
+  async addInsight(insightPartial) {
     await this.ensureInitialized();
 
     const now = Date.now();
-    const id = makeMemoryId(memoryPartial);
+    const id = makeInsightId(insightPartial);
 
-    let memory = gState.memories.find(i => i.id === id);
+    let insight = gState.insights.find(i => i.id === id);
 
-    if (memory) {
-      const simpleProperties = ["memory_summary", "category", "intent"];
+    if (insight) {
+      const simpleProperties = ["insight_summary", "category", "intent"];
       for (const prop of simpleProperties) {
-        if (prop in memoryPartial) {
-          memory[prop] = memoryPartial[prop];
+        if (prop in insightPartial) {
+          insight[prop] = insightPartial[prop];
         }
       }
 
@@ -175,52 +175,52 @@ export const MemoryStore = {
       ];
 
       for (const [prop, validator] of validatedProperties) {
-        if (prop in memoryPartial && validator(memoryPartial[prop])) {
-          memory[prop] = memoryPartial[prop];
+        if (prop in insightPartial && validator(insightPartial[prop])) {
+          insight[prop] = insightPartial[prop];
         }
       }
 
-      memory.updated_at = memoryPartial.updated_at || now;
+      insight.updated_at = insightPartial.updated_at || now;
 
       gJSONFile?.saveSoon();
-      return memory;
+      return insight;
     }
 
     // Otherwise create a new one
-    memory = {
+    insight = {
       id,
-      memory_summary: memoryPartial.memory_summary || "",
-      category: memoryPartial.category || "",
-      intent: memoryPartial.intent || "",
-      score: Number.isFinite(memoryPartial.score) ? memoryPartial.score : 0,
-      updated_at: memoryPartial.updated_at || now,
-      is_deleted: memoryPartial.is_deleted ?? false,
+      insight_summary: insightPartial.insight_summary || "",
+      category: insightPartial.category || "",
+      intent: insightPartial.intent || "",
+      score: Number.isFinite(insightPartial.score) ? insightPartial.score : 0,
+      updated_at: insightPartial.updated_at || now,
+      is_deleted: insightPartial.is_deleted ?? false,
     };
 
-    gState.memories.push(memory);
+    gState.insights.push(insight);
     gJSONFile?.saveSoon();
-    return memory;
+    return insight;
   },
 
   /**
-   * Update an existing memory by id.
+   * Update an existing insight by id.
    *
    * @param {string} id
    * @param {object} updates
-   * @returns {Promise<Memory|null>}
+   * @returns {Promise<Insight|null>}
    */
-  async updateMemory(id, updates) {
+  async updateInsight(id, updates) {
     await this.ensureInitialized();
 
-    const memory = gState.memories.find(i => i.id === id);
-    if (!memory) {
+    const insight = gState.insights.find(i => i.id === id);
+    if (!insight) {
       return null;
     }
 
-    const simpleProperties = ["memory_summary", "category", "intent"];
+    const simpleProperties = ["insight_summary", "category", "intent"];
     for (const prop of simpleProperties) {
       if (prop in updates) {
-        memory[prop] = updates[prop];
+        insight[prop] = updates[prop];
       }
     }
 
@@ -231,26 +231,26 @@ export const MemoryStore = {
 
     for (const [prop, validator] of validatedProperties) {
       if (prop in updates && validator(updates[prop])) {
-        memory[prop] = updates[prop];
+        insight[prop] = updates[prop];
       }
     }
 
-    memory.updated_at = updates.updated_at || Date.now();
+    insight.updated_at = updates.updated_at || Date.now();
 
     gJSONFile?.saveSoon();
-    return memory;
+    return insight;
   },
 
   /**
-   * Soft delete an memory (set is_deleted = true).
+   * Soft delete an insight (set is_deleted = true).
    *
-   *  soft deleted memories will be filtered from getMemories
+   *  soft deleted insights will be filtered from getInsights
    *
    * @param {string} id
-   * @returns {Promise<Memory|null>}
+   * @returns {Promise<Insight|null>}
    */
-  async softDeleteMemory(id) {
-    return this.updateMemory(id, { is_deleted: true });
+  async softDeleteInsight(id) {
+    return this.updateInsight(id, { is_deleted: true });
   },
 
   /**
@@ -259,19 +259,19 @@ export const MemoryStore = {
    * @param {string} id
    * @returns {Promise<boolean>}
    */
-  async hardDeleteMemory(id) {
+  async hardDeleteInsight(id) {
     await this.ensureInitialized();
-    const idx = gState.memories.findIndex(i => i.id === id);
+    const idx = gState.insights.findIndex(i => i.id === id);
     if (idx === -1) {
       return false;
     }
-    gState.memories.splice(idx, 1);
+    gState.insights.splice(idx, 1);
     gJSONFile?.saveSoon();
     return true;
   },
 
   /**
-   * Get all memories (optionally filtered and sorted).
+   * Get all insights (optionally filtered and sorted).
    *
    * @param {object} [options]
    *   Optional sorting options.
@@ -280,17 +280,17 @@ export const MemoryStore = {
    * @param {"asc"|"desc"} [options.sortDir="desc"]
    *   Sort direction.
    * @param {boolean} [options.includeSoftDeleted=false]
-   *   Whether to include soft-deleted memories.
-   * @returns {Promise<Memory[]>}
+   *   Whether to include soft-deleted insights.
+   * @returns {Promise<Insight[]>}
    */
-  async getMemories({
+  async getInsights({
     sortBy = "updated_at",
     sortDir = "desc",
     includeSoftDeleted = false,
   } = {}) {
     await this.ensureInitialized();
 
-    let res = gState.memories;
+    let res = gState.insights;
 
     if (!includeSoftDeleted) {
       res = res.filter(i => !i.is_deleted);
@@ -326,7 +326,7 @@ export const MemoryStore = {
    *
    * Example payload:
    * {
-   * last_history_memory_ts: 12345,
+   * last_history_insight_ts: 12345,
    * }
    *
    * @param {object} partialMeta
@@ -336,8 +336,8 @@ export const MemoryStore = {
     await this.ensureInitialized();
     const meta = gState.meta;
     const validatedProps = [
-      ["last_history_memory_ts", v => Number.isFinite(v)],
-      ["last_chat_memory_ts", v => Number.isFinite(v)],
+      ["last_history_insight_ts", v => Number.isFinite(v)],
+      ["last_chat_insight_ts", v => Number.isFinite(v)],
     ];
 
     for (const [prop, validator] of validatedProps) {
@@ -370,19 +370,19 @@ function hashStringToHex(str) {
 }
 
 /**
- * Build a deterministic memory id from its core fields.
+ * Build a deterministic insight id from its core fields.
  * If the caller passes an explicit id, we honor that instead.
  *
- * @param {object} memoryPartial
+ * @param {object} insightPartial
  */
-function makeMemoryId(memoryPartial) {
-  if (memoryPartial.id) {
-    return memoryPartial.id;
+function makeInsightId(insightPartial) {
+  if (insightPartial.id) {
+    return insightPartial.id;
   }
 
-  const summary = (memoryPartial.memory_summary || "").trim().toLowerCase();
-  const category = (memoryPartial.category || "").trim().toLowerCase();
-  const intent = (memoryPartial.intent || "").trim().toLowerCase();
+  const summary = (insightPartial.insight_summary || "").trim().toLowerCase();
+  const category = (insightPartial.category || "").trim().toLowerCase();
+  const intent = (insightPartial.intent || "").trim().toLowerCase();
 
   const key = `${summary}||${category}||${intent}`;
   const hex = hashStringToHex(key);

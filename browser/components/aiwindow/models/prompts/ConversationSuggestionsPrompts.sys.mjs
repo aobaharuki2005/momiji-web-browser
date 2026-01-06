@@ -107,14 +107,14 @@ Rules:
 
 Return ONLY the suggestions, one per line, no numbering, no extra formatting.`;
 
-export const conversationMemoriesPromptMetadata = {
+export const conversationInsightsPromptMetadata = {
   version: "0.1",
 };
-export const conversationMemoriesPrompt = `========
-User Memories:
-{memories}
+export const conversationInsightsPrompt = `========
+User Insights:
+{insights}
 
 Guideline:
-- Only use memories that are relevant to the current tab; ignore irrelevant memories
-- Do not repeat memories verbatim or reveal sensitive details; just use them to inform suggestion generation
-- Do not invent new personal attributes or memories; prefer neutral phrasing when unsure`;
+- Only use insights that are relevant to the current tab; ignore irrelevant insights
+- Do not repeat insights verbatim or reveal sensitive details; just use them to inform suggestion generation
+- Do not invent new personal attributes or insights; prefer neutral phrasing when unsure`;
