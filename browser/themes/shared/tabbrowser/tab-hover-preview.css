@@ -58,10 +58,6 @@
 
 .tab-note-text-container:not(:empty) {
   margin: 0 var(--space-large) var(--space-large);
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 10;
 }
 
 .tab-preview-add-note {
