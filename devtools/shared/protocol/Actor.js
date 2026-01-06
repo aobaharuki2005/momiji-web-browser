@@ -140,8 +140,15 @@ class Actor extends Pool {
       fileName: error.fileName || error.filename,
       lineNumber: error.lineNumber,
       columnNumber: error.columnNumber,
-      // Also pass the whole stack as string
-      stack: error.stack,
+      // Also pass the whole stack as string.
+      //
+      // "out of memory" string may be thrown by SpiderMonkey,
+      // in which case getLastOOMStackTrace can return a last resort stack as a string.
+      // https://searchfox.org/firefox-main/rev/33bba5cfe4a89dda0ee07fa9fbac578353713fd3/js/src/vm/JSContext.cpp#296-297
+      stack:
+        error == "out of memory"
+          ? ChromeUtils.getLastOOMStackTrace()
+          : error.stack,
     });
   }
 
