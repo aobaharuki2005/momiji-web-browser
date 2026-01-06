@@ -159,13 +159,3 @@ class StyleEditorPanel extends EventEmitter {
 }
 
 exports.StyleEditorPanel = StyleEditorPanel;
-
-ChromeUtils.defineLazyGetter(
-  StyleEditorPanel.prototype,
-  "strings",
-  function () {
-    return Services.strings.createBundle(
-      "chrome://devtools/locale/styleeditor.properties"
-    );
-  }
-);
