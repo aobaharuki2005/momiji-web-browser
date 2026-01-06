@@ -115,6 +115,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   0
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  lazy,
+  "parserUtils",
+  "@mozilla.org/parserutils;1",
+  Ci.nsIParserUtils
+);
+
 export const GenAI = {
   // Cache of potentially localized prompt
   chatPromptPrefix: "",
@@ -989,7 +996,7 @@ export const GenAI = {
                 selection: `%selection|${this.estimateSelectionLimit(
                   this.chatProviders.get(lazy.chatProvider)?.maxLength
                 )}%`,
-                tabTitle: "%tabTitle%",
+                tabTitle: "%tabTitle|50%",
                 url: "%url%",
               },
             },
@@ -1011,18 +1018,50 @@ export const GenAI = {
    *
    * @param {MozMenuItem} item Use value falling back to label
    * @param {object} context Placeholder keys with values to replace
+   * @param {Document} document Document for sanitizing context values
    * @returns {string} Prompt with placeholders replaced
    */
-  buildChatPrompt(item, context = {}) {
+  buildChatPrompt(item, context = {}, document = null) {
     // Combine prompt prefix with the item then replace placeholders from the
     // original prompt (and not from context)
     return (this.chatPromptPrefix + (item.value || item.label)).replace(
       // Handle %placeholder% as key|options
       /\%(\w+)(?:\|([^%]+))?\%/g,
-      (placeholder, key, options) =>
+      (placeholder, key, options) => {
         // Currently only supporting numeric options for slice with `undefined`
-        // resulting in whole string
-        `<${key}>${context[key]?.slice(0, options) ?? placeholder}</${key}>`
+        // resulting in whole string. Also remove fake int tags from untrusted content.
+        const value = context[key];
+        let sanitized;
+
+        // Sanitize and truncate context values before sending prompt
+        // otherwise return placeholder
+        if (value !== undefined) {
+          const contextElement = document.createElement("div");
+          sanitized = lazy.parserUtils.parseFragment(
+            value,
+            Ci.nsIParserUtils.SanitizerDropForms |
+              Ci.nsIParserUtils.SanitizerDropMedia,
+            false,
+            Services.io.newURI("about:blank"),
+            contextElement
+          ).textContent;
+
+          if (options) {
+            sanitized = sanitized.slice(0, Number(options));
+          }
+
+          sanitized = sanitized
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+        } else {
+          sanitized = placeholder;
+        }
+
+        return `<${key}>${sanitized}</${key}>`;
+      }
     );
   },
 
@@ -1204,7 +1243,13 @@ export const GenAI = {
 
     // Build prompt after provider is confirmed to use correct length limits
     await this.prepareChatPromptPrefix();
-    const prompt = this.buildChatPrompt(promptObj, context);
+    const prompt = this.buildChatPrompt(
+      promptObj,
+      {
+        ...context,
+      },
+      context.window.document
+    );
 
     // Pass the prompt via GET url ?q= param or request header
     const {
