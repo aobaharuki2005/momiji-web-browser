@@ -525,7 +525,7 @@ bool WeakMap<K, V, AP>::sweepAfterMinorGC() {
 
   if (nurseryKeysValid) {
     nurseryKeys.mutableEraseIf([&](K& key) {
-      auto ptr = lookupUnbarriered(key);
+      auto ptr = lookupMutableUnbarriered(key);
       if (!ptr) {
         if (!gc::IsForwarded(key)) {
           return true;
@@ -536,7 +536,7 @@ bool WeakMap<K, V, AP>::sweepAfterMinorGC() {
         //
         // TODO: Try to update cached nursery information there instead.
         key = gc::Forwarded(key);
-        ptr = lookupUnbarriered(key);
+        ptr = lookupMutableUnbarriered(key);
         if (!ptr) {
           return true;
         }
