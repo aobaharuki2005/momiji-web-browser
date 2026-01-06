@@ -544,23 +544,10 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   static void MapDivAlignAttributeInto(mozilla::MappedDeclarationsBuilder&);
 
   /**
-   * Helper to map the valign attribute for various table elements.
+   * Helper to map the valign attribute for things like <col>, <tr>, <section>.
    * @see GetAttributeMappingFunction
    */
-  static void MapTableVAlignAttributeInto(mozilla::MappedDeclarationsBuilder&);
-
-  /**
-   * Helper to map the align attribute for <table>.
-   * @see GetAttributeMappingFunction
-   */
-  static void MapTableHAlignAttributeInto(mozilla::MappedDeclarationsBuilder&);
-
-  /**
-   * Helper to map the align attribute for various table elements.
-   * @see GetAttributeMappingFunction
-   */
-  static void MapTableCellHAlignAttributeInto(
-      mozilla::MappedDeclarationsBuilder&);
+  static void MapVAlignAttributeInto(mozilla::MappedDeclarationsBuilder&);
 
   /**
    * Helper to map the image border attribute.

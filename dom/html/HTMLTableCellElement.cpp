@@ -178,8 +178,8 @@ void HTMLTableCellElement::MapAttributesIntoRule(
     }
   }
 
-  nsGenericHTMLElement::MapTableCellHAlignAttributeInto(aBuilder);
-  nsGenericHTMLElement::MapTableVAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapVAlignAttributeInto(aBuilder);
   nsGenericHTMLElement::MapBackgroundAttributesInto(aBuilder);
   nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }

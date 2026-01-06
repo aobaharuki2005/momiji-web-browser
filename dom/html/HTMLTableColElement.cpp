@@ -74,8 +74,8 @@ void HTMLTableColElement::MapAttributesIntoRule(
   }
 
   nsGenericHTMLElement::MapWidthAttributeInto(aBuilder);
-  nsGenericHTMLElement::MapTableCellHAlignAttributeInto(aBuilder);
-  nsGenericHTMLElement::MapTableVAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aBuilder);
+  nsGenericHTMLElement::MapVAlignAttributeInto(aBuilder);
   nsGenericHTMLElement::MapCommonAttributesInto(aBuilder);
 }
 
