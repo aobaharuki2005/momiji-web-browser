@@ -341,10 +341,6 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/memories/MemoriesHistoryScheduler.sys.mjs",
   },
-  // Bug 2003303 - Implement Title Generation (backed out due to unused file)
-  {
-    file: "moz-src:///browser/components/aiwindow/models/TitleGeneration.sys.mjs",
-  },
   // Bug 2006090 - Insight updation - Day 0 and incremental updates from Chat history
   // Bug 2007939 - Rename "insights" to "memories"
   {
