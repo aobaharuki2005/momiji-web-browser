@@ -347,6 +347,7 @@ class ChromeUtils {
 
   static Nullable<bool> GetGlobalWindowCommandEnabled(GlobalObject&,
                                                       const nsACString& aName);
+  static void GetLastOOMStackTrace(GlobalObject& aGlobal, nsAString& aRetval);
 
   static void EncodeURIForSrcset(GlobalObject&, const nsACString& aIn,
                                  nsACString& aOut);

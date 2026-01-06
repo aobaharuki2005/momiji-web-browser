@@ -7411,6 +7411,10 @@ extern JS_PUBLIC_API bool JS_DefineDebuggerObject(JSContext* cx,
   return true;
 }
 
+extern JS_PUBLIC_API const char* JS_GetLastOOMStackTrace(JSContext* cx) {
+  return cx->getOOMStackTrace();
+}
+
 JS_PUBLIC_API bool JS::dbg::IsDebugger(JSObject& obj) {
   /* We only care about debugger objects, so CheckedUnwrapStatic is OK. */
   JSObject* unwrapped = CheckedUnwrapStatic(&obj);

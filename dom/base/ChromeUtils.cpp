@@ -2807,4 +2807,10 @@ void ChromeUtils::EncodeURIForSrcset(GlobalObject&, const nsACString& aIn,
   }
 }
 
+void ChromeUtils::GetLastOOMStackTrace(GlobalObject& aGlobal,
+                                       nsAString& aRetval) {
+  JSContext* cx = aGlobal.Context();
+  aRetval = NS_ConvertUTF8toUTF16(JS_GetLastOOMStackTrace(cx));
+}
+
 }  // namespace mozilla::dom
