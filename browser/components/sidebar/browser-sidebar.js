@@ -1764,6 +1764,8 @@ var SidebarController = {
     sidebar.label = label;
 
     const updateAttributes = el => {
+      // TODO Bug 1996762 - Add support for dark-theme sidebar icons
+      // --webextension-menuitem-image-dark is used in dark themes
       el.style.setProperty("--webextension-menuitem-image", sidebar.icon);
       el.setAttribute("label", sidebar.label);
     };
