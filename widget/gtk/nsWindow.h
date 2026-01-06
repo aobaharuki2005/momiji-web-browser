@@ -204,6 +204,7 @@ class nsWindow final : public nsIWidget {
   void Resize(const DesktopRect&, bool aRepaint) override;
   bool IsEnabled() const override;
 
+  nsSizeMode GetSizeMode() const { return mSizeMode; }
   nsSizeMode SizeMode() override { return mSizeMode; }
   void SetSizeMode(nsSizeMode aMode) override;
   void GetWorkspaceID(nsAString& workspaceID) override;

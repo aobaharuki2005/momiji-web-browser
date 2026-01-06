@@ -3356,6 +3356,12 @@ auto nsWindow::Bounds::ComputeX11(const nsWindow* aWindow) -> Bounds {
   LOG_WIN(aWindow, "  toplevelBoundsWithTitlebar %s",
           ToString(toplevelBoundsWithTitlebar).c_str());
 
+  if (aWindow->GetSizeMode() == nsSizeMode_Fullscreen) {
+    // In order to avoid spurious extra resizes during fullscreen transitions,
+    // we assume we're not decorated.
+    return {.mClientArea = toplevelBoundsWithTitlebar, .mClientMargin = {}};
+  }
+
   const auto toplevelBounds = GetBounds(toplevel);
   LOG_WIN(aWindow, "  toplevelBounds %s", ToString(toplevelBounds).c_str());
 
@@ -3416,6 +3422,11 @@ auto nsWindow::Bounds::ComputeWayland(const nsWindow* aWindow) -> Bounds {
 
   const auto toplevelBounds = GetBounds(aWindow->GetToplevelGdkWindow());
   LOG_WIN(aWindow, "  toplevelBounds %s", ToString(toplevelBounds).c_str());
+
+  if (aWindow->GetSizeMode() == nsSizeMode_Fullscreen) {
+    return {.mClientArea = toplevelBounds, .mClientMargin = {}};
+  }
+
   Bounds result;
   result.mClientArea = GetBounds(aWindow->GetGdkWindow());
   LOG_WIN(aWindow, "  bounds %s", ToString(result.mClientArea).c_str());
@@ -5533,11 +5544,19 @@ void nsWindow::OnWindowStateEvent(GtkWidget* aWidget,
   }();
 
   if (mSizeMode != oldSizeMode) {
+    const bool fullscreenChanging = mSizeMode == nsSizeMode_Fullscreen ||
+                                    oldSizeMode == nsSizeMode_Fullscreen;
+    if (fullscreenChanging) {
+      // As a special-case when going in / out of fullscreen mode we recompute
+      // bounds synchronously. This avoids spurious resizes when going into
+      // fullscreen mode if the relevant configure hasn't happened yet or what
+      // not.
+      RecomputeBounds();
+    }
     if (mWidgetListener) {
       mWidgetListener->SizeModeChanged(mSizeMode);
     }
-    if (mSizeMode == nsSizeMode_Fullscreen ||
-        oldSizeMode == nsSizeMode_Fullscreen) {
+    if (fullscreenChanging) {
       if (mCompositorWidgetDelegate) {
         mCompositorWidgetDelegate->NotifyFullscreenChanged(
             mSizeMode == nsSizeMode_Fullscreen);
