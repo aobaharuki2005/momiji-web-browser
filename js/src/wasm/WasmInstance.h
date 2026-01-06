@@ -618,8 +618,6 @@ class alignas(16) Instance {
   static int32_t arrayCopy(Instance* instance, void* dstArray,
                            uint32_t dstIndex, void* srcArray, uint32_t srcIndex,
                            uint32_t numElements, uint32_t elementSize);
-  static int32_t arrayFill(Instance* instance, void* array, uint32_t index,
-                           uint32_t numElements);
   static int32_t refTest(Instance* instance, void* refPtr,
                          const wasm::TypeDef* typeDef);
   static int32_t intrI8VecMul(Instance* instance, uint32_t dest, uint32_t src1,

@@ -144,8 +144,12 @@ constexpr SymbolicAddressSignature SASigArrayMemMove = {
     6,
     {_WAD, _I32, _WAD, _I32, _I32, _I32, _END}};
 constexpr SymbolicAddressSignature SASigArrayRefsMove = {
-    SymbolicAddress::ArrayRefsMove,      _VOID, _Infallible, _NoTrap, 5,
-    {_WAD, _I32, _WAD, _I32, _I32, _END}};
+    SymbolicAddress::ArrayRefsMove,
+    _VOID,
+    _Infallible,
+    _NoTrap,
+    6,
+    {_RoN, _WAD, _I32, _WAD, _I32, _I32, _END}};
 constexpr SymbolicAddressSignature SASigMemoryGrowM32 = {
     SymbolicAddress::MemoryGrowM32, _I32, _Infallible, _NoTrap, 3,
     {_PTR, _I32, _I32, _END}};
@@ -1323,17 +1327,27 @@ static void WasmArrayMemMove(uint8_t* destArrayData, uint32_t destIndex,
           size_t(elementSize) * count);
 }
 
-static void WasmArrayRefsMove(GCPtr<AnyRef>* destArrayData, uint32_t destIndex,
-                              AnyRef* srcArrayData, uint32_t srcIndex,
-                              uint32_t count) {
+static void WasmArrayRefsMove(WasmArrayObject* destArrayObject,
+                              WriteBarriered<AnyRef>* destArrayData,
+                              uint32_t destIndex, AnyRef* srcArrayData,
+                              uint32_t srcIndex, uint32_t count) {
   AutoUnsafeCallWithABI unsafe;
-  GCPtr<AnyRef>* dstBegin = destArrayData + destIndex;
+
+  // Using std::copy will call set() on the barrier wrapper under the hood.
+  auto copyElements = [count](auto* dstBegin, auto* srcBegin) {
+    if (uintptr_t(dstBegin) < uintptr_t(srcBegin)) {
+      std::copy(srcBegin, srcBegin + count, dstBegin);
+    } else {
+      std::copy_backward(srcBegin, srcBegin + count, dstBegin + count);
+    }
+  };
+
+  WriteBarriered<AnyRef>* dstBegin = destArrayData + destIndex;
   AnyRef* srcBegin = srcArrayData + srcIndex;
-  // The std::copy performs GCPtr::set() operation under the hood.
-  if (uintptr_t(dstBegin) < uintptr_t(srcBegin)) {
-    std::copy(srcBegin, srcBegin + count, dstBegin);
+  if (destArrayObject->isTenured()) {
+    copyElements((GCPtr<AnyRef>*)dstBegin, srcBegin);
   } else {
-    std::copy_backward(srcBegin, srcBegin + count, dstBegin + count);
+    copyElements((PreBarriered<AnyRef>*)dstBegin, srcBegin);
   }
 }
 
@@ -1514,7 +1528,7 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
       *abiType = Args_Void_GeneralInt32GeneralInt32Int32Int32;
       return FuncCast(WasmArrayMemMove, *abiType);
     case SymbolicAddress::ArrayRefsMove:
-      *abiType = Args_Void_GeneralInt32GeneralInt32Int32;
+      *abiType = Args_Void_GeneralGeneralInt32GeneralInt32Int32;
       return FuncCast(WasmArrayRefsMove, *abiType);
 
     case SymbolicAddress::MemoryGrowM32:

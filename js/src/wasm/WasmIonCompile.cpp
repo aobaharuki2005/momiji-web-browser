@@ -5550,9 +5550,9 @@ class FunctionCompiler {
     if (elemsAreRefTyped) {
       MOZ_RELEASE_ASSERT(elemSize == sizeof(void*));
 
-      if (!builtinCall5(SASigArrayRefsMove, lineOrBytecode, dstData,
-                        dstArrayIndex, srcData, srcArrayIndex, numElements,
-                        nullptr)) {
+      if (!builtinCall6(SASigArrayRefsMove, lineOrBytecode, dstArrayObject,
+                        dstData, dstArrayIndex, srcData, srcArrayIndex,
+                        numElements, nullptr)) {
         return false;
       }
     } else {

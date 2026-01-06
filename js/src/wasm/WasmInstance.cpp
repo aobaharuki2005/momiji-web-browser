@@ -1619,9 +1619,16 @@ static bool ArrayCopyFromElem(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
     return false;
   }
 
-  GCPtr<AnyRef>* dst = reinterpret_cast<GCPtr<AnyRef>*>(arrayObj->data_);
-  for (uint32_t i = 0; i < numElements; i++) {
-    dst[arrayIndex + i] = seg[segOffset + i];
+  auto copyElements = [&](auto* dst) {
+    for (uint32_t i = 0; i < numElements; i++) {
+      dst[arrayIndex + i] = seg[segOffset + i];
+    }
+  };
+
+  if (arrayObj->isTenured()) {
+    copyElements(reinterpret_cast<GCPtr<AnyRef>*>(arrayObj->data_));
+  } else {
+    copyElements(reinterpret_cast<PreBarriered<AnyRef>*>(arrayObj->data_));
   }
 
   return true;
@@ -1906,14 +1913,22 @@ static bool ArrayCopyFromElem(JSContext* cx, Handle<WasmArrayObject*> arrayObj,
     return 0;
   }
 
-  GCPtr<AnyRef>* dst = (GCPtr<AnyRef>*)dstBase;
   AnyRef* src = (AnyRef*)srcBase;
-  // The std::copy performs GCPtr::set() operation under the hood.
-  if (uintptr_t(dstBase) < uintptr_t(srcBase)) {
-    std::copy(src, src + numElements, dst);
+  // Using std::copy will call set() on the barrier wrapper under the hood.
+  auto copyElements = [&](auto* dst) {
+    if (uintptr_t(dst) < uintptr_t(src)) {
+      std::copy(src, src + numElements, dst);
+    } else {
+      std::copy_backward(src, src + numElements, dst + numElements);
+    }
+  };
+
+  if (dstArrayObj->isTenured()) {
+    copyElements((GCPtr<AnyRef>*)dstBase);
   } else {
-    std::copy_backward(src, src + numElements, dst + numElements);
+    copyElements((PreBarriered<AnyRef>*)dstBase);
   }
+
   return 0;
 }
 

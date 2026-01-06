@@ -217,7 +217,8 @@ bool WasmGcObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   return true;
 }
 
-static void WriteValTo(const Val& val, StorageType ty, void* dest) {
+static void WriteValTo(WasmGcObject* owner, const Val& val, StorageType ty,
+                       void* dest) {
   switch (ty.kind()) {
     case StorageType::I8:
       *((uint8_t*)dest) = val.i32();
@@ -241,7 +242,11 @@ static void WriteValTo(const Val& val, StorageType ty, void* dest) {
       *((V128*)dest) = val.v128();
       break;
     case StorageType::Ref:
-      *((GCPtr<AnyRef>*)dest) = val.ref();
+      if (owner->isTenured()) {
+        *((GCPtr<AnyRef>*)dest) = val.ref();
+      } else {
+        *((PreBarriered<AnyRef>*)dest) = val.ref();
+      }
       break;
   }
 }
@@ -371,7 +376,7 @@ void WasmArrayObject::storeVal(const Val& val, uint32_t itemIndex) {
   size_t elementSize = arrayType.elementType().size();
   MOZ_ASSERT(itemIndex < numElements_);
   uint8_t* data = data_ + elementSize * itemIndex;
-  WriteValTo(val, arrayType.elementType(), data);
+  WriteValTo(this, val, arrayType.elementType(), data);
 }
 
 void WasmArrayObject::fillVal(const Val& val, uint32_t itemIndex,
@@ -381,7 +386,7 @@ void WasmArrayObject::fillVal(const Val& val, uint32_t itemIndex,
   uint8_t* data = data_ + elementSize * itemIndex;
   MOZ_ASSERT(itemIndex <= numElements_ && len <= numElements_ - itemIndex);
   for (uint32_t i = 0; i < len; i++) {
-    WriteValTo(val, arrayType.elementType(), data);
+    WriteValTo(this, val, arrayType.elementType(), data);
     data += elementSize;
   }
 }
@@ -551,7 +556,7 @@ void WasmStructObject::storeVal(const Val& val, uint32_t fieldIndex) {
   StorageType fieldType = structType.fields_[fieldIndex].type;
   uint8_t* data = fieldIndexToAddress(fieldIndex);
 
-  WriteValTo(val, fieldType, data);
+  WriteValTo(this, val, fieldType, data);
 }
 
 static const JSClassOps WasmStructObjectOutlineClassOps = {

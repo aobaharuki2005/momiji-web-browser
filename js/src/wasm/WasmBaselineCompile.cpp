@@ -7337,6 +7337,13 @@ bool BaseCompiler::emitPostBarrierEdgeImprecise(const Maybe<RegRef>& object,
 bool BaseCompiler::emitPostBarrierEdgePrecise(const Maybe<RegRef>& object,
                                               RegPtr valueAddr,
                                               RegRef prevValue, RegRef value) {
+  // Currently this is only called to write into wasm tables.
+  //
+  // If this changes and we use this method to write into objects which might be
+  // in the nursery then we need to check for that here and skip the barrier (we
+  // only need to record pointers from the tenured heap into the nursery).
+  MOZ_ASSERT(object.isNothing());
+
   // Push `object` and `value` to preserve them across the call.
   if (object) {
     pushRef(*object);
