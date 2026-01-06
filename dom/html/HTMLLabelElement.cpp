@@ -11,6 +11,7 @@
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/dom/HTMLFormElement.h"
 #include "mozilla/dom/HTMLLabelElementBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
@@ -36,14 +37,18 @@ JSObject* HTMLLabelElement::WrapNode(JSContext* aCx,
 
 NS_IMPL_ELEMENT_CLONE(HTMLLabelElement)
 
-HTMLFormElement* HTMLLabelElement::GetForm() const {
+Element* HTMLLabelElement::GetFormForBindings() const {
+  return RetargetReferenceTargetForBindings(GetFormInternal());
+}
+
+HTMLFormElement* HTMLLabelElement::GetFormInternal() const {
   // Not all labeled things have a form association.  Stick to the ones that do.
   const auto* formControl = nsIFormControl::FromNodeOrNull(GetControl());
   if (!formControl) {
     return nullptr;
   }
 
-  return formControl->GetForm();
+  return formControl->GetFormInternal();
 }
 
 void HTMLLabelElement::Focus(const FocusOptions& aOptions,

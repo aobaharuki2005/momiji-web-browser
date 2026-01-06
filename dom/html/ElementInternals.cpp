@@ -149,7 +149,7 @@ void ElementInternals::SetFormValue(
 }
 
 // https://html.spec.whatwg.org/#dom-elementinternals-form
-HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
+Element* ElementInternals::GetFormForBindings(ErrorResult& aRv) const {
   MOZ_ASSERT(mTarget);
 
   if (!mTarget->IsFormAssociatedElement()) {
@@ -157,7 +157,8 @@ HTMLFormElement* ElementInternals::GetForm(ErrorResult& aRv) const {
         "Target element is not a form-associated custom element");
     return nullptr;
   }
-  return GetForm();
+
+  return GetFormForBindings();
 }
 
 // https://html.spec.whatwg.org/commit-snapshots/3ad5159be8f27e110a70cefadcb50fc45ec21b05/#dom-elementinternals-setvalidity
@@ -361,6 +362,10 @@ CustomStateSet* ElementInternals::States() {
   }
   return mCustomStateSet;
 }
+
+Element* ElementInternals::GetFormForBindings() const {
+  return GetFormInternal();
+};
 
 void ElementInternals::SetForm(HTMLFormElement* aForm) { mForm = aForm; }
 

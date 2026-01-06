@@ -41,9 +41,14 @@ HTMLOptionElement::~HTMLOptionElement() = default;
 
 NS_IMPL_ELEMENT_CLONE(HTMLOptionElement)
 
-mozilla::dom::HTMLFormElement* HTMLOptionElement::GetForm() {
+mozilla::dom::Element* HTMLOptionElement::GetFormForBindings() {
+  HTMLFormElement* form = GetFormInternal();
+  return RetargetReferenceTargetForBindings(form);
+}
+
+mozilla::dom::HTMLFormElement* HTMLOptionElement::GetFormInternal() {
   HTMLSelectElement* selectControl = GetSelect();
-  return selectControl ? selectControl->GetForm() : nullptr;
+  return selectControl ? selectControl->GetFormInternal() : nullptr;
 }
 
 void HTMLOptionElement::SetSelectedInternal(bool aValue, bool aNotify) {

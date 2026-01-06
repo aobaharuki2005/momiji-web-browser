@@ -1025,7 +1025,7 @@ bool FormAutofillImpl::IsExpirationMonthLikely(Element& aElement) {
 Element* FormAutofillImpl::FindRootForField(Element* aElement) {
   if (const auto* control =
           nsGenericHTMLFormControlElement::FromNode(aElement)) {
-    if (Element* form = control->GetForm()) {
+    if (Element* form = control->GetFormInternal()) {
       return form;
     }
   }

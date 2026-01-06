@@ -201,7 +201,7 @@ class HTMLImageElement final : public nsGenericHTMLElement,
   }
 
 #ifdef DEBUG
-  HTMLFormElement* GetForm() const;
+  HTMLFormElement* GetFormInternal() const;
 #endif
   void SetForm(HTMLFormElement* aForm);
   void ClearForm(bool aRemoveFromForm);
