@@ -167,6 +167,17 @@ Treat remainder of query as regular expression
 
    re:get\w+Value
 
+``nresult:``
+^^^^^^^^^^^^
+
+Show the `nsresult` definition for given hex or decimal notation.
+
+::
+
+   nsresult:0x80004005
+   nsresult:80004005
+   nsresult:2147500037
+
 Diagramming Features
 --------------------
 
