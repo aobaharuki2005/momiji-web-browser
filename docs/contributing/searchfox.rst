@@ -12,6 +12,7 @@ Searchfox
    searchfox/context_menu
    searchfox/navigation_panel
    searchfox/blame
+   searchfox/diagramming
    searchfox/backend
 
 Repositories

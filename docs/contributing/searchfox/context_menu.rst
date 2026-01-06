@@ -102,8 +102,10 @@ Class layout of ...
 
   This item is shown on the classes which has the class field layout information.
 
-Diagrams
---------
+Diagramming
+-----------
+
+See :ref:`diagramming <searchfox_diagramming>` document for more details..
 
 For functions, classes, methods, and fields, Searchfox can show the diagram of how they're used, called, or related.
 
