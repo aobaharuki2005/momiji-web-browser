@@ -94,6 +94,25 @@ private fun BookmarksState.handleOpenTabsConfirmationDialogAction(
     }
 }
 
+private fun List<SelectFolderItem>.updateItemInTree(
+    guidToUpdate: String,
+    transform: (SelectFolderItem) -> SelectFolderItem,
+): List<SelectFolderItem> =
+    map {
+        if (it.guid == guidToUpdate) {
+            transform(it)
+        } else if (it.expansionState is SelectFolderExpansionState.Open) {
+            it.copy(
+                expansionState = SelectFolderExpansionState.Open(
+                    children =
+                        it.expansionState.children.updateItemInTree(guidToUpdate, transform),
+                ),
+            )
+        } else {
+            it
+        }
+    }
+
 private fun BookmarksState.handleSelectFolderAction(action: SelectFolderAction): BookmarksState {
     return when (action) {
         is SelectFolderAction.SearchQueryUpdated -> copy(
@@ -137,6 +156,26 @@ private fun BookmarksState.handleSelectFolderAction(action: SelectFolderAction):
             ),
         )
         is SelectFolderAction.SortMenu -> this.handleSortMenuAction(action)
+
+        is SelectFolderAction.ChevronClicked -> if (action.folder.expansionState is SelectFolderExpansionState.Open) {
+            copy(
+                bookmarksSelectFolderState = bookmarksSelectFolderState?.copy(
+                    folders = bookmarksSelectFolderState.folders.updateItemInTree(
+                        guidToUpdate = action.folder.guid,
+                        transform = { it.copy(expansionState = SelectFolderExpansionState.Closed) },
+                    ),
+                ) ?: this.bookmarksSelectFolderState,
+            )
+        } else {
+            // we wait for additional items to load when we are expanding a folder
+            this
+        }
+
+        is SelectFolderAction.ExpandedFolderLoaded -> copy(
+            bookmarksSelectFolderState = bookmarksSelectFolderState?.copy(
+                folders = bookmarksSelectFolderState.folders.updateItemInTree(action.folder.guid, { action.folder }),
+            ) ?: bookmarksSelectFolderState,
+        )
 
         SelectFolderAction.ViewAppeared -> this
     }
@@ -193,7 +232,6 @@ private fun BookmarksState.handleAddFolderAction(action: AddFolderAction): Bookm
                 folder = action.folder,
             ),
         )
-
         is AddFolderAction.TitleChanged -> this.copy(
             bookmarksAddFolderState = bookmarksAddFolderState?.copy(
                 folderBeingAddedTitle = action.updatedText,
@@ -345,6 +383,13 @@ private fun BookmarksState.respondToBackClick(): BookmarksState = when {
             }
             bookmarksAddFolderState != null && bookmarksEditBookmarkState != null -> {
                 copy(bookmarksAddFolderState = null)
+            }
+            bookmarksAddFolderState != null && bookmarksMultiselectMoveState != null -> {
+                copy(
+                    bookmarksAddFolderState = null,
+                    bookmarksMultiselectMoveState = null,
+                    bookmarksSelectFolderState = null,
+                )
             }
             else -> copy(
                 bookmarksMultiselectMoveState = null,

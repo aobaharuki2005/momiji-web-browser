@@ -1835,6 +1835,10 @@
     <string name="select_bookmark_search_button_content_description">Search folders</string>
     <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
     <string name="bookmark_item_menu_button_content_description">Item Menu for %s</string>
+    <!-- Content description for the chevron that will open a folder on the select folder screen and display its children. %s is the title of the folder that will be opened -->
+    <string name="bookmark_select_folder_expand_folder_content_description">Expand folder: %s</string>
+    <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+    <string name="bookmark_select_folder_close_folder_content_description">Close folder: %s</string>
     <!-- Content description for the "close" button in bookmarks screen. -->
     <string name="bookmark_close_button_content_description">Close bookmarks</string>
     <!-- Title for the bookmark list empty state-->

@@ -480,9 +480,8 @@ class BookmarksMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN current screen is add folder and previous screen is select folder WHEN back is clicked THEN navigate back to the edit bookmark screen`() = runTestOnMain {
+    fun `GIVEN current screen is add folder and previous screen is select folder WHEN back is clicked THEN skip selection screen straight back to the edit bookmark screen`() = runTestOnMain {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
-        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = true)).thenReturn(Result.success(generateBookmarkTree()))
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = false)).thenReturn(Result.success(generateBookmarkTree()))
         `when`(bookmarksStorage.addFolder(BookmarkRoot.Mobile.id, "i'm a new folder")).thenReturn(Result.success("new-guid"))
         val middleware = buildMiddleware()
@@ -492,14 +491,14 @@ class BookmarksMiddlewareTest {
         val newFolderTitle = "i'm a new folder"
 
         store.dispatch(BookmarksListMenuAction.Bookmark.EditClicked(bookmark))
-        store.dispatch(AddFolderAction.ParentFolderClicked)
+        store.dispatch(EditBookmarkAction.FolderClicked)
         store.dispatch(SelectFolderAction.ViewAppeared)
         store.dispatch(AddFolderClicked)
         store.dispatch(AddFolderAction.TitleChanged(newFolderTitle))
         store.dispatch(BackClicked)
 
         assertNull(store.state.bookmarksSelectFolderState)
-        verify(bookmarksStorage, times(1)).getTree(BookmarkRoot.Mobile.id, recursive = true)
+        verify(bookmarksStorage, times(3)).getTree(BookmarkRoot.Mobile.id, recursive = false)
         verify(navController, times(1)).popBackStack(BookmarksDestinations.EDIT_BOOKMARK, inclusive = false)
     }
 
@@ -610,7 +609,7 @@ class BookmarksMiddlewareTest {
         store.dispatch(EditFolderAction.TitleChanged(newFolderTitle))
         store.dispatch(EditFolderAction.ParentFolderClicked)
         store.dispatch(SelectFolderAction.ViewAppeared)
-        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, newParentItem)))
+        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, newParentItem, SelectFolderExpansionState.None)))
         store.dispatch(BackClicked)
         store.dispatch(BackClicked)
 
@@ -623,7 +622,7 @@ class BookmarksMiddlewareTest {
                 url = null,
             ),
         )
-        verify(bookmarksStorage, times(2)).getTree(BookmarkRoot.Mobile.id)
+        verify(bookmarksStorage, times(3)).getTree(BookmarkRoot.Mobile.id)
         assertNull(store.state.bookmarksEditFolderState)
     }
 
@@ -702,7 +701,7 @@ class BookmarksMiddlewareTest {
         store.dispatch(EditBookmarkClicked(bookmark = bookmark))
         store.dispatch(EditBookmarkAction.TitleChanged(title = newBookmarkTitle))
         store.dispatch(EditBookmarkAction.FolderClicked)
-        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, newParentItem)))
+        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, newParentItem, SelectFolderExpansionState.None)))
         store.dispatch(BackClicked)
 
         assertNotNull(store.state.bookmarksEditBookmarkState)
@@ -815,9 +814,9 @@ class BookmarksMiddlewareTest {
     }
 
     @Test
-    fun `GIVEN bookmarks in storage and not signed into sync WHEN select folder sub screen view is loaded THEN load folders into sub screen state`() = runTestOnMain {
+    fun `GIVEN bookmarks in storage and not signed into sync WHEN select folder sub screen view is loaded THEN only mobile root is loaded onto screen`() = runTestOnMain {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
-        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = true)).thenReturn(Result.success(generateBookmarkTree()))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = false)).thenReturn(Result.success(generateBookmarkTree()))
         val middleware = buildMiddleware()
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
         val store = middleware.makeStore(
@@ -828,7 +827,43 @@ class BookmarksMiddlewareTest {
 
         store.dispatch(SelectFolderAction.ViewAppeared)
 
-        assertEquals(6, store.state.bookmarksSelectFolderState?.folders?.count())
+        assertEquals(1, store.state.bookmarksSelectFolderState?.folders?.count())
+    }
+
+    @Test
+    fun `GIVEN bookmarks in storage and not signed into sync WHEN expanding mobile root on select folder screen THEN mobile root children are shown as well`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        tree.children?.forEach {
+            if (it.type == BookmarkNodeType.FOLDER) {
+                `when`(bookmarksStorage.getTree(it.guid, false)).thenReturn(Result.success(generateBookmarkFolder(it.guid, "title", BookmarkRoot.Mobile.id, 0u)))
+            }
+        }
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, false)).thenReturn(Result.success(tree))
+        val middleware = buildMiddleware()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(0u)
+        val store = middleware.makeStore(
+            initialState = BookmarksState.default.copy(
+                bookmarksSelectFolderState = BookmarksSelectFolderState(outerSelectionGuid = "selection guid"),
+            ),
+        )
+
+        store.dispatch(SelectFolderAction.ViewAppeared)
+        store.dispatch(
+            SelectFolderAction.ChevronClicked(
+                SelectFolderItem(
+            indentation = 0,
+            folder = BookmarkItem.Folder(
+                guid = BookmarkRoot.Mobile.id,
+                title = "",
+                position = 0u,
+            ),
+            expansionState = SelectFolderExpansionState.Closed,
+        ),
+            ),
+        )
+
+        assertEquals(6, store.state.bookmarksSelectFolderState?.folders?.flattenToList()?.count())
     }
 
     @Test
@@ -904,7 +939,7 @@ class BookmarksMiddlewareTest {
     @Test
     fun `GIVEN bookmarks in storage and not signed into sync but have pre-existing desktop bookmarks saved WHEN select folder sub screen view is loaded THEN load folders, including desktop folders into sub screen state`() = runTestOnMain {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(1u)
-        `when`(bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = true)).thenReturn(Result.success(generateDesktopRootTree()))
+        mockDesktopFoldersForSelectScreen()
         val middleware = buildMiddleware()
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(1u)
         val store = middleware.makeStore(
@@ -915,15 +950,19 @@ class BookmarksMiddlewareTest {
 
         store.dispatch(SelectFolderAction.ViewAppeared)
 
-        assertEquals(10, store.state.bookmarksSelectFolderState?.folders?.count())
+        assertEquals(4, store.state.bookmarksSelectFolderState?.folders?.count())
     }
 
     @Test
     fun `GIVEN bookmarks in storage and has desktop bookmarks WHEN select folder sub screen view is loaded THEN load folders, including desktop folders into sub screen state`() = runTestOnMain {
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(1u)
-        `when`(bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = true)).thenReturn(Result.success(generateDesktopRootTree()))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = false)).thenReturn(Result.success(generateDesktopRootTree()))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = false)).thenReturn(Result.success(generateBookmarkTree()))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Menu.id, recursive = false)).thenReturn(Result.success(generateBookmarkFolder(BookmarkRoot.Menu.id, "Menu", BookmarkRoot.Root.id, position = 0u)))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Toolbar.id, recursive = false)).thenReturn(Result.success(generateBookmarkFolder(BookmarkRoot.Toolbar.id, "Toolbar", BookmarkRoot.Root.id, position = 1u)))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Unfiled.id, recursive = false)).thenReturn(Result.success(generateBookmarkFolder(BookmarkRoot.Unfiled.id, "Unfiled", BookmarkRoot.Root.id, position = 2u)))
+
         val middleware = buildMiddleware()
-        `when`(bookmarksStorage.countBookmarksInTrees(listOf(any()))).thenReturn(1u)
         val store = middleware.makeStore(
             initialState = BookmarksState.default.copy(
                 isSignedIntoSync = true,
@@ -933,7 +972,49 @@ class BookmarksMiddlewareTest {
 
         store.dispatch(SelectFolderAction.ViewAppeared)
 
-        assertEquals(10, store.state.bookmarksSelectFolderState?.folders?.count())
+        assertEquals(5, store.state.bookmarksSelectFolderState?.folders?.count())
+    }
+
+    @Test
+    fun `GIVEN bookmarks in storage and has desktop bookmarks WHEN desktop folder is expanded THEN then load its children`() = runTestOnMain {
+        val childFolderGuid = "child folder"
+        val childFolder = generateBookmarkFolder(childFolderGuid, "title", BookmarkRoot.Toolbar.id, 5u)
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(1u)
+        mockDesktopFoldersForSelectScreen()
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Toolbar.id, recursive = false))
+            .thenReturn(
+                Result.success(
+                generateBookmarkFolder(BookmarkRoot.Toolbar.id, "Toolbar", BookmarkRoot.Root.id, position = 1u)
+                    .let { it.copy(children = it.children!! + listOf(childFolder)) },
+            ),
+        )
+        `when`(bookmarksStorage.getTree("child folder", recursive = false)).thenReturn(Result.success(childFolder))
+
+        val middleware = buildMiddleware()
+        val store = middleware.makeStore(
+            initialState = BookmarksState.default.copy(
+                isSignedIntoSync = true,
+                bookmarksSelectFolderState = BookmarksSelectFolderState(outerSelectionGuid = "selection guid"),
+            ),
+        )
+
+        store.dispatch(SelectFolderAction.ViewAppeared)
+        store.dispatch(
+            SelectFolderAction.ChevronClicked(
+                SelectFolderItem(
+            indentation = 0,
+            folder = BookmarkItem.Folder(
+                guid = BookmarkRoot.Toolbar.id,
+                title = "",
+                position = 0u,
+            ),
+            expansionState = SelectFolderExpansionState.Closed,
+        ),
+            ),
+        )
+
+        assertEquals(5, store.state.bookmarksSelectFolderState?.folders?.count())
+        assertEquals(6, store.state.bookmarksSelectFolderState?.folders?.flattenToList()?.count())
     }
 
     @Test
@@ -992,17 +1073,58 @@ class BookmarksMiddlewareTest {
 
     @Test
     fun `GIVEN current screen select folder WHEN the search query is updated THEN FilteredFoldersLoaded gets dispatched with the filtered folders`() = runTestOnMain {
-        val bookmarksFolder = SelectFolderItem(0, BookmarkItem.Folder("Bookmarks", "guid0", null))
         val folders = listOf(
-            bookmarksFolder,
-            SelectFolderItem(1, BookmarkItem.Folder("Nested One", "guid0", null)),
-            SelectFolderItem(2, BookmarkItem.Folder("Nested Two", "guid0", null)),
-            SelectFolderItem(2, BookmarkItem.Folder("Nested Two", "guid0", null)),
-            SelectFolderItem(1, BookmarkItem.Folder("Nested One", "guid0", null)),
-            SelectFolderItem(2, BookmarkItem.Folder("Nested Two", "guid1", null)),
-            SelectFolderItem(3, BookmarkItem.Folder("Nested Three", "guid0", null)),
-            SelectFolderItem(0, BookmarkItem.Folder("Nested 0", "guid0", null)),
+            SelectFolderItem(
+                0,
+                BookmarkItem.Folder("Bookmarks", "guid0", null),
+                SelectFolderExpansionState.Open(
+                    listOf(
+                        SelectFolderItem(
+                            1,
+                            BookmarkItem.Folder("Nested One", "guid0", null),
+                            SelectFolderExpansionState.Open(
+                                listOf(
+                                    SelectFolderItem(
+                                        2,
+                                        BookmarkItem.Folder("Nested Two", "guid0", null),
+                                        SelectFolderExpansionState.None,
+                                    ),
+                                    SelectFolderItem(
+                                        2,
+                                        BookmarkItem.Folder("Nested Two", "guid0", null),
+                                        SelectFolderExpansionState.None,
+                                    ),
+                                ),
+                            ),
+                        ),
+                        SelectFolderItem(
+                            1,
+                            BookmarkItem.Folder("Nested One", "guid0", null),
+                            SelectFolderExpansionState.Open(
+                                listOf(
+                                    SelectFolderItem(
+                                        2,
+                                        BookmarkItem.Folder("Nested Two", "guid1", null),
+                                        SelectFolderExpansionState.Open(
+                                            listOf(
+                                                SelectFolderItem(
+                                                    3,
+                                                    BookmarkItem.Folder("Nested Three", "guid0", null),
+                                                    SelectFolderExpansionState.None,
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            SelectFolderItem(0, BookmarkItem.Folder("Nested 0", "guid0", null), SelectFolderExpansionState.None),
         )
+
+        val bookmarksFolder = folders.first()
 
         val middleware = buildMiddleware()
         val store = middleware.makeStore(
@@ -1606,7 +1728,7 @@ class BookmarksMiddlewareTest {
         store.dispatch(AddFolderAction.TitleChanged(newFolderTitle))
         store.dispatch(AddFolderAction.ParentFolderClicked)
         store.dispatch(SelectFolderAction.ViewAppeared)
-        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, newParentItem)))
+        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, newParentItem, SelectFolderExpansionState.None)))
         store.dispatch(BackClicked)
 
         assertNull(store.state.bookmarksSelectFolderState)
@@ -1634,7 +1756,7 @@ class BookmarksMiddlewareTest {
         store.dispatch(BookmarksListMenuAction.Folder.EditClicked(folderItem))
         store.dispatch(EditFolderAction.ParentFolderClicked)
         store.dispatch(SelectFolderAction.ViewAppeared)
-        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, newParentItem)))
+        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, newParentItem, SelectFolderExpansionState.None)))
         store.dispatch(BackClicked)
 
         assertNull(store.state.bookmarksSelectFolderState)
@@ -1656,13 +1778,13 @@ class BookmarksMiddlewareTest {
     @Test
     fun `GIVEN editing a bookmark WHEN selecting a new parent THEN user can successfully add a new folder`() = runTestOnMain {
         val tree = generateBookmarkTree()
+        val newFolderGuid = "newFolderGuid"
         `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
         `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(tree))
-        `when`(bookmarksStorage.addFolder("folder guid 4", "newFolder")).thenReturn(Result.success("new-guid"))
+        `when`(bookmarksStorage.addFolder("folder guid 4", "newFolder")).thenReturn(Result.success(newFolderGuid))
         val bookmark = tree.children?.first { it.type == BookmarkNodeType.ITEM }!!
         val bookmarkItem = BookmarkItem.Bookmark(title = bookmark.title!!, guid = bookmark.guid, url = bookmark.url!!, previewImageUrl = bookmark.url!!, position = bookmark.position)
         val newFolderTitle = "newFolder"
-        val newFolderGuid = "newFolderGuid"
         val parentForNewFolder = tree.children?.last { it.type == BookmarkNodeType.FOLDER }!!
         val parentForNewFolderItem = BookmarkItem.Folder(title = parentForNewFolder.title!!, guid = parentForNewFolder.guid, position = parentForNewFolder.position)
 
@@ -1671,12 +1793,12 @@ class BookmarksMiddlewareTest {
         val store = middleware.makeStore()
 
         store.dispatch(BookmarksListMenuAction.Bookmark.EditClicked(bookmarkItem))
-        store.dispatch(EditFolderAction.ParentFolderClicked)
+        store.dispatch(EditBookmarkAction.FolderClicked)
         store.dispatch(SelectFolderAction.ViewAppeared)
         store.dispatch(AddFolderClicked)
         store.dispatch(AddFolderAction.TitleChanged(newFolderTitle))
         store.dispatch(AddFolderAction.ParentFolderClicked)
-        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, parentForNewFolderItem)))
+        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, parentForNewFolderItem, SelectFolderExpansionState.None)))
         store.dispatch(BackClicked)
 
         assertNotNull(store.state.bookmarksSelectFolderState)
@@ -1687,21 +1809,6 @@ class BookmarksMiddlewareTest {
         store.dispatch(BackClicked)
         assertNull(store.state.bookmarksAddFolderState)
         verify(bookmarksStorage).addFolder(parentGuid = parentForNewFolder.guid, title = newFolderTitle)
-
-        // replace the previous parent for the new folder in the tree with the updated version
-        val newFolder = generateBookmarkFolder(guid = newFolderGuid, title = newFolderTitle, parentForNewFolder.guid, (parentForNewFolder.children!!.size + 1).toUInt())
-        val updatedParentForNewFolder = parentForNewFolder.copy(
-            children = listOf(newFolder),
-        )
-        val updatedTree = tree.copy(
-            children = tree.children!!.mapNotNull { it.takeIf { it.guid != parentForNewFolder.guid } } + updatedParentForNewFolder,
-        )
-        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = true)).thenReturn(Result.success(updatedTree))
-        store.dispatch(SelectFolderAction.ViewAppeared)
-
-        val selectFolderItem = store.state.bookmarksSelectFolderState?.folders?.find { it.guid == newFolderGuid }!!
-        store.dispatch(SelectFolderAction.ItemClicked(selectFolderItem))
-        store.dispatch(BackClicked)
 
         assertNull(store.state.bookmarksSelectFolderState)
         assertEquals(newFolderGuid, store.state.bookmarksEditBookmarkState?.folder?.guid)
@@ -1848,6 +1955,91 @@ class BookmarksMiddlewareTest {
         assertEquals(BookmarksSnackbarState.SelectFolderFailed, store.state.bookmarksSnackbarState)
     }
 
+    @Test
+    fun `while moving items and adding a new folder, returning from the add folder screen results in the move items being moved to the new folder`() = runTestOnMain {
+        val tree = generateBookmarkTree()
+        `when`(bookmarksStorage.countBookmarksInTrees(listOf(BookmarkRoot.Menu.id, BookmarkRoot.Toolbar.id, BookmarkRoot.Unfiled.id))).thenReturn(0u)
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id)).thenReturn(Result.success(tree))
+
+        val middleware = buildMiddleware()
+        val guidsToMove = listOf("item guid 1", "item guid 2")
+        val store = middleware.makeStore(
+            initialState = BookmarksState.default.copy(
+                bookmarksMultiselectMoveState = MultiselectMoveState(
+                    guidsToMove = guidsToMove,
+                    destination = "folder guid 1",
+                ),
+                bookmarksSelectFolderState = BookmarksSelectFolderState(
+                    outerSelectionGuid = "folder guid 1",
+                ),
+            ),
+        )
+
+        store.dispatch(AddFolderClicked)
+        store.dispatch(AddFolderAction.ParentFolderClicked)
+        store.dispatch(SelectFolderAction.ViewAppeared)
+
+        val parentNodeForNewFolder = tree.children!!.first { it.type == BookmarkNodeType.FOLDER }
+        val parentForNewFolder = parentNodeForNewFolder.let {
+            BookmarkItem.Folder(
+                title = it.title!!,
+                guid = it.guid,
+                position = it.position,
+            )
+        }
+        val newFolder = BookmarkNode(
+            type = BookmarkNodeType.FOLDER,
+            guid = "new folder guid",
+            title = "new folder title",
+            parentGuid = parentForNewFolder.guid,
+            position = 10u,
+            url = "url",
+            dateAdded = 0,
+            lastModified = 0,
+            children = null,
+        )
+        val mobileRootSelectableItem = SelectFolderItem(
+            indentation = 0,
+            folder = BookmarkItem.Folder(
+                title = tree.title!!,
+                guid = tree.guid,
+                position = tree.position!!,
+            ),
+            expansionState = SelectFolderExpansionState.Closed,
+        )
+        `when`(bookmarksStorage.addFolder(parentForNewFolder.guid, newFolder.title!!)).thenReturn(Result.success(newFolder.guid))
+        `when`(bookmarksStorage.getBookmark(newFolder.guid)).thenReturn(Result.success(newFolder))
+
+        `when`(bookmarksStorage.getTree(parentForNewFolder.guid)).thenReturn(Result.success(parentNodeForNewFolder))
+        store.dispatch(SelectFolderAction.ChevronClicked(mobileRootSelectableItem))
+        assertTrue((store.state.bookmarksSelectFolderState?.folders?.first()?.expansionState as? SelectFolderExpansionState.Open)?.children?.any { it.guid == parentForNewFolder.guid } == true)
+
+        store.dispatch(SelectFolderAction.ItemClicked(SelectFolderItem(0, parentForNewFolder, SelectFolderExpansionState.None)))
+        assertNotNull(store.state.bookmarksSelectFolderState?.innerSelectionGuid)
+
+        store.dispatch(BackClicked)
+        assertNull(store.state.bookmarksSelectFolderState?.innerSelectionGuid)
+        assertEquals(parentForNewFolder, store.state.bookmarksAddFolderState?.parent)
+
+        store.dispatch(AddFolderAction.TitleChanged(newFolder.title!!))
+        store.dispatch(BackClicked)
+        assertNull(store.state.bookmarksAddFolderState)
+        assertNull(store.state.bookmarksSelectFolderState)
+        assertNull(store.state.bookmarksMultiselectMoveState)
+        guidsToMove.forEachIndexed { idx, guid ->
+            verify(bookmarksStorage).updateNode(
+                guid,
+                BookmarkInfo(
+                newFolder.guid,
+                null,
+                "item title ${idx + 1}",
+                "item url ${idx + 1}",
+            ),
+            )
+        }
+        verify(navController).popBackStack(BookmarksDestinations.LIST, false)
+    }
+
     private fun buildMiddleware(
         useNewSearchUX: Boolean = false,
         openBookmarksInNewTab: Boolean = false,
@@ -1958,5 +2150,12 @@ class BookmarksMiddlewareTest {
         `when`(destination.id).thenReturn(expectedId)
         `when`(backStackEntry.destination).thenReturn(destination)
         `when`(previousBackStackEntry).thenReturn(backStackEntry)
+    }
+
+    private suspend fun mockDesktopFoldersForSelectScreen() {
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Root.id, recursive = false)).thenReturn(Result.success(generateDesktopRootTree()))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Mobile.id, recursive = false)).thenReturn(Result.success(generateBookmarkTree()))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Menu.id, recursive = false)).thenReturn(Result.success(generateBookmarkFolder(BookmarkRoot.Menu.id, "Menu", BookmarkRoot.Root.id, position = 0u)))
+        `when`(bookmarksStorage.getTree(BookmarkRoot.Unfiled.id, recursive = false)).thenReturn(Result.success(generateBookmarkFolder(BookmarkRoot.Unfiled.id, "Unfiled", BookmarkRoot.Root.id, position = 2u)))
     }
 }

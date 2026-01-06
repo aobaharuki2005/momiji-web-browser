@@ -227,9 +227,16 @@ internal data class BookmarksEditFolderState(
     val folder: BookmarkItem.Folder,
 )
 
+internal sealed class SelectFolderExpansionState {
+    data object None : SelectFolderExpansionState()
+    data object Closed : SelectFolderExpansionState()
+    data class Open(val children: List<SelectFolderItem>) : SelectFolderExpansionState()
+}
+
 internal data class SelectFolderItem(
     val indentation: Int,
     val folder: BookmarkItem.Folder,
+    val expansionState: SelectFolderExpansionState,
 ) {
     val guid: String
         get() = folder.guid
@@ -243,6 +250,18 @@ internal data class SelectFolderItem(
     val startPadding: Dp
         get() = (16 * indentation).dp
 }
+
+internal fun List<SelectFolderItem>.flattenToList(): List<SelectFolderItem> =
+    if (isEmpty()) {
+        emptyList()
+    } else {
+        map {
+            listOf(it) + (
+                (it.expansionState as? SelectFolderExpansionState.Open)
+                ?.children?.flattenToList() ?: listOf()
+            )
+        }.flatten()
+    }
 
 /**
  * State representing the select folder subscreen.

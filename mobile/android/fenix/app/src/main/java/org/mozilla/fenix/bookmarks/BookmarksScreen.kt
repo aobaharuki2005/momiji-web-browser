@@ -125,6 +125,7 @@ import mozilla.components.lib.state.ext.observeAsComposableState
 import mozilla.components.lib.state.ext.observeAsState
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.GleanMetrics.BookmarksManagement
 import org.mozilla.fenix.R
 import org.mozilla.fenix.bookmarks.BookmarksTestTag.BOOKMARK_TOOLBAR
@@ -998,13 +999,15 @@ private fun SelectFolderScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             items(
-                items = state?.visibleFolders ?: listOf(),
+                key = { item -> item.folder.guid },
+                items = state?.visibleFolders.orEmpty().flattenToList(),
             ) { folder ->
                 FolderListItem(
                     folder = folder,
                     isSelected = folder.guid == state?.selectedGuid,
                     showPadding = state?.isSearching ?: true,
                     onClick = { store.dispatch(SelectFolderAction.ItemClicked(folder)) },
+                    onChevronClick = { store.dispatch(SelectFolderAction.ChevronClicked(folder)) },
                 )
             }
 
@@ -1080,6 +1083,7 @@ private fun FolderListItem(
     isSelected: Boolean,
     showPadding: Boolean = true,
     onClick: () -> Unit,
+    onChevronClick: () -> Unit,
 ) {
     if (folder.isDesktopRoot) {
         Box(
@@ -1097,19 +1101,49 @@ private fun FolderListItem(
             }
         }
     } else {
-        Box(modifier = Modifier.padding(start = if (!showPadding) folder.startPadding else 0.dp)) {
-            SelectableIconListItem(
-                label = folder.title,
-                isSelected = isSelected,
-                beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
-                modifier = Modifier
-                    .width(FirefoxTheme.layout.size.containerMaxWidth)
-                    .toggleable(
-                        value = isSelected,
-                        role = Role.RadioButton,
-                        onValueChange = { onClick() },
-                    ),
-            )
+        Box(
+            modifier = Modifier
+            .padding(start = if (!showPadding) folder.startPadding else 0.dp)
+            .width(FirefoxTheme.layout.size.containerMaxWidth),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                when (folder.expansionState) {
+                    is SelectFolderExpansionState.None -> Spacer(modifier = Modifier.size(width = 48.dp, height = 0.dp))
+                    is SelectFolderExpansionState.Open -> {
+                        IconButton(onClick = onChevronClick) {
+                            Icon(
+                                painter = painterResource(iconsR.drawable.mozac_ic_chevron_down_24),
+                                contentDescription = stringResource(
+                                    R.string.bookmark_select_folder_close_folder_content_description,
+                                    folder.title,
+                                ),
+                            )
+                        }
+                    }
+                    is SelectFolderExpansionState.Closed -> {
+                        IconButton(onClick = onChevronClick) {
+                            Icon(
+                                painter = painterResource(iconsR.drawable.mozac_ic_chevron_right_24),
+                                contentDescription = stringResource(
+                                    R.string.bookmark_select_folder_expand_folder_content_description,
+                                    folder.title,
+                                ),
+                            )
+                        }
+                    }
+                }
+                SelectableIconListItem(
+                    label = folder.title,
+                    isSelected = isSelected,
+                    beforeIconPainter = painterResource(iconsR.drawable.mozac_ic_folder_24),
+                    modifier = Modifier
+                        .toggleable(
+                            value = isSelected,
+                            role = Role.RadioButton,
+                            onValueChange = { onClick() },
+                        ),
+                )
+            }
         }
     }
 }
@@ -1165,15 +1199,20 @@ private fun SelectFolderTopBar(store: BookmarksStore) {
                 SelectFolderSortOverflowMenu(store = store)
             }
 
-            IconButton(onClick = {
-                store.dispatch(SelectFolderAction.SearchClicked)
-            }) {
-                Icon(
-                    painter = painterResource(iconsR.drawable.mozac_ic_search_24),
-                    contentDescription = stringResource(
-                        R.string.select_bookmark_search_button_content_description,
-                    ),
-                )
+            // TODO https://bugzilla.mozilla.org/show_bug.cgi?id=2006505
+            if (Config.channel.isDebug) {
+                IconButton(
+                    onClick = {
+                        store.dispatch(SelectFolderAction.SearchClicked)
+                    },
+                ) {
+                    Icon(
+                        painter = painterResource(iconsR.drawable.mozac_ic_search_24),
+                        contentDescription = stringResource(
+                            R.string.select_bookmark_search_button_content_description,
+                        ),
+                    )
+                }
             }
 
             if (onNewFolderClick != null) {
@@ -2159,50 +2198,73 @@ private fun SelectFolderPreview() {
                     SelectFolderItem(
                         indentation = PREVIEW_INDENTATION_0,
                         folder = BookmarkItem.Folder("Bookmarks", "guid0", null),
+                        expansionState = SelectFolderExpansionState.Closed,
                     ),
                     SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_2,
+                        indentation = PREVIEW_INDENTATION_0,
                         folder = BookmarkItem.Folder("Bookmarks Menu", BookmarkRoot.Menu.id, null),
+                        expansionState = SelectFolderExpansionState.None,
                     ),
                     SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_2,
+                        indentation = PREVIEW_INDENTATION_0,
                         folder = BookmarkItem.Folder("Bookmarks Toolbar", BookmarkRoot.Toolbar.id, position = null),
+                        expansionState = SelectFolderExpansionState.None,
                     ),
                     SelectFolderItem(
                         indentation = PREVIEW_INDENTATION_1,
                         folder = BookmarkItem.Folder("Desktop Bookmarks", BookmarkRoot.Root.id, position = null),
-                    ),
-                    SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_2,
-                        folder = BookmarkItem.Folder("Bookmarks Unfiled", BookmarkRoot.Unfiled.id, position = null),
-                    ),
-                    SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_1,
-                        folder = BookmarkItem.Folder("Nested One", "guid0", position = null),
-                    ),
-                    SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_2,
-                        folder = BookmarkItem.Folder("Nested Two", "guid0", position = null),
-                    ),
-                    SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_2,
-                        folder = BookmarkItem.Folder("Nested Two", "guid0", position = null),
-                    ),
-                    SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_1,
-                        folder = BookmarkItem.Folder("Nested One", "guid0", position = null),
-                    ),
-                    SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_2,
-                        folder = BookmarkItem.Folder("Nested Two", "guid1", position = null),
-                    ),
-                    SelectFolderItem(
-                        indentation = PREVIEW_INDENTATION_3,
-                        folder = BookmarkItem.Folder("Nested Three", "guid0", position = null),
+                        expansionState = SelectFolderExpansionState.None,
                     ),
                     SelectFolderItem(
                         indentation = PREVIEW_INDENTATION_0,
-                        folder = BookmarkItem.Folder("Nested 0", "guid0", position = null),
+                        folder = BookmarkItem.Folder("Bookmarks Unfiled", BookmarkRoot.Unfiled.id, position = null),
+                        expansionState = SelectFolderExpansionState.Open(
+                            listOf(
+                                SelectFolderItem(
+                                    indentation = PREVIEW_INDENTATION_1,
+                                    folder = BookmarkItem.Folder("Nested One", "guid0", position = null),
+                                    expansionState = SelectFolderExpansionState.Open(
+                                        listOf(
+                                            SelectFolderItem(
+                                                indentation = PREVIEW_INDENTATION_2,
+                                                folder = BookmarkItem.Folder("Nested Two", "guid0", position = null),
+                                                expansionState = SelectFolderExpansionState.None,
+                                            ),
+                                            SelectFolderItem(
+                                                indentation = PREVIEW_INDENTATION_2,
+                                                folder = BookmarkItem.Folder("Nested Two", "guid0", position = null),
+                                                expansionState = SelectFolderExpansionState.None,
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                                SelectFolderItem(
+                                    indentation = PREVIEW_INDENTATION_1,
+                                    folder = BookmarkItem.Folder("Nested One", "guid0", position = null),
+                                    expansionState = SelectFolderExpansionState.Open(
+                                        listOf(
+                                            SelectFolderItem(
+                                                indentation = PREVIEW_INDENTATION_2,
+                                                folder = BookmarkItem.Folder("Nested Two", "guid1", position = null),
+                                                expansionState = SelectFolderExpansionState.Open(
+                                                    listOf(
+                                                        SelectFolderItem(
+                                                            indentation = PREVIEW_INDENTATION_3,
+                                                            folder = BookmarkItem.Folder(
+                                                                title = "Nested Three",
+                                                                guid = "guid0",
+                                                                position = null,
+                                                            ),
+                                                            expansionState = SelectFolderExpansionState.None,
+                                                        ),
+                                                    ),
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
                     ),
                 ),
             ),

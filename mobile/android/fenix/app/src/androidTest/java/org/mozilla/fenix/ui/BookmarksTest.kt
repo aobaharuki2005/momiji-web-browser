@@ -64,6 +64,7 @@ class BookmarksTest : TestSetup() {
         }.openThreeDotMenu("Test_Page_1") {
         }.clickEdit {
             clickParentFolderSelector()
+            expandSelectableFolder("Bookmarks")
             selectFolder(bookmarkFolderName)
             navigateUp()
             saveEditBookmark()
@@ -72,6 +73,7 @@ class BookmarksTest : TestSetup() {
         }.openThreeDotMenu("My Folder 2") {
         }.clickEdit {
             clickParentFolderSelector()
+            expandSelectableFolder("Bookmarks")
             selectFolder(bookmarkFolderName)
             navigateUp()
             saveEditBookmark()
