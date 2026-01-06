@@ -2253,7 +2253,7 @@ add_task(async function test_prefFlip_setPref_restore() {
     );
     Assert.deepEqual(
       Glean.nimbusEvents.enrollmentStatus
-        .testGetValue("nimbus-targeting-context")
+        .testGetValue("events")
         ?.map(ev => ev.extra),
       [
         {

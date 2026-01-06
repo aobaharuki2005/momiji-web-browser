@@ -1880,9 +1880,7 @@ add_task(async function test_updateRecipes_enrollmentStatus_telemetry() {
 
   await loader.updateRecipes("test");
 
-  const events = Glean.nimbusEvents.enrollmentStatus.testGetValue(
-    "nimbus-targeting-context"
-  );
+  const events = Glean.nimbusEvents.enrollmentStatus.testGetValue("events");
 
   Assert.deepEqual(events?.map(ev => ev.extra) ?? [], [
     {
@@ -2069,7 +2067,7 @@ add_task(async function test_updateRecipes_enrollmentStatus_notEnrolled() {
 
   Assert.deepEqual(
     Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("nimbus-targeting-context")
+      .testGetValue("events")
       ?.map(ev => ev.extra),
     [
       {
@@ -2446,7 +2444,7 @@ add_task(async function testUnenrolledInAnotherProfileBeforeUpdate() {
 
   Assert.deepEqual(
     Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("nimbus-targeting-context")
+      .testGetValue("events")
       ?.map(ev => ev.extra),
     [
       {
@@ -2616,7 +2614,7 @@ add_task(async function testUnenrolledInAnotherProfileBetweenUpdates() {
 
   Assert.deepEqual(
     Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("nimbus-targeting-context")
+      .testGetValue("events")
       ?.map(ev => ev.extra),
     [
       {
