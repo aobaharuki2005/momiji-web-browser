@@ -443,7 +443,11 @@ nsresult nsDocShell::InitWindow(nsIWidget* aParentWidget, int32_t aX,
                                 mozilla::dom::WindowGlobalChild* aWindowActor) {
   SetParentWidget(aParentWidget);
   SetPositionAndSize(aX, aY, aWidth, aHeight, 0);
-  NS_ENSURE_TRUE(Initialize(aOpenWindowInfo, aWindowActor), NS_ERROR_FAILURE);
+  if (!Initialize(aOpenWindowInfo, aWindowActor)) {
+    // Since bug 543435, Initialize can fail and propagating this would
+    // cause callers to crash when they didn't previously (bug 2003244).
+    NS_WARNING("Failed to initialize docshell");
+  }
 
   return NS_OK;
 }

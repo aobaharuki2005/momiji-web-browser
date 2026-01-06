@@ -1170,6 +1170,8 @@ nsresult ContentChild::ProvideWindowCommon(
   // Now change the principal to what it should be according to aOpenWindowInfo.
   // This creates a new document and the timing is quite fragile.
   NS_ENSURE_TRUE(browsingContext->GetDOMWindow(), NS_ERROR_ABORT);
+  NS_ENSURE_TRUE(browsingContext->GetDOMWindow()->GetExtantDoc(),
+                 NS_ERROR_ABORT);
   browsingContext->GetDOMWindow()->SetInitialPrincipal(
       aOpenWindowInfo->PrincipalToInheritForAboutBlank());
 

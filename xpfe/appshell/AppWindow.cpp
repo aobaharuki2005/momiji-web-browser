@@ -242,6 +242,7 @@ nsresult AppWindow::Initialize(nsIAppWindow* aParent, nsIAppWindow* aOpener,
   NS_ENSURE_SUCCESS(mDocShell->InitWindow(mWindow, r.X(), r.Y(), r.Width(),
                                           r.Height(), aOpenWindowInfo, nullptr),
                     NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(mDocShell->GetDocument(), NS_ERROR_FAILURE);
 
   // Attach a WebProgress listener.during initialization...
   mDocShell->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_NETWORK);
