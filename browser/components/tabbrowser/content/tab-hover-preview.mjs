@@ -507,7 +507,9 @@ class TabPanel extends HoverPanel {
    * panel.
    */
   #openTabNotePanel() {
-    this.win.gBrowser.tabNoteMenu.openPanel(this.#tab);
+    this.win.gBrowser.tabNoteMenu.openPanel(this.#tab, {
+      telemetrySource: lazy.TabNotes.TELEMETRY_SOURCE.TAB_HOVER_PREVIEW_PANEL,
+    });
     this.deactivate(this.#tab, { force: true });
   }
 
