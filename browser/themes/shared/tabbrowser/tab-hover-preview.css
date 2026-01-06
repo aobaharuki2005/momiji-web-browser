@@ -57,6 +57,7 @@
 }
 
 .tab-note-text-container:not(:empty) {
+  font: menu;
   margin: 0 var(--space-large) var(--space-large);
 }
 
