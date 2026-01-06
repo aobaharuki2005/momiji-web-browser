@@ -59,7 +59,7 @@ interface HTMLInputElement : HTMLElement {
            attribute unsigned long height;
   [Pure]
            attribute boolean indeterminate;
-  [Pure]
+  [Pure, BinaryName=listForBindings]
   readonly attribute HTMLDataListElement? list;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString max;

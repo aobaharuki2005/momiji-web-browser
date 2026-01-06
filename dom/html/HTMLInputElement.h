@@ -531,7 +531,8 @@ class HTMLInputElement final : public TextControlElement,
   bool IsDraggingRange() const { return mIsDraggingRange; }
   void SetIndeterminate(bool aValue);
 
-  HTMLDataListElement* GetList() const;
+  HTMLDataListElement* GetListForBindings() const;
+  HTMLDataListElement* GetListInternal() const;
 
   void GetMax(nsAString& aValue) { GetHTMLAttr(nsGkAtoms::max, aValue); }
   void SetMax(const nsAString& aValue, ErrorResult& aRv) {

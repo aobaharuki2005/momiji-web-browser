@@ -46,7 +46,7 @@ interface HTMLButtonElement : HTMLElement {
 
   readonly attribute NodeList labels;
 
-  [Pref="dom.element.commandfor.enabled", CEReactions] attribute Element? commandForElement;
+  [Pref="dom.element.commandfor.enabled", BinaryName="commandForElementForBindings", CEReactions] attribute Element? commandForElement;
   [Pref="dom.element.commandfor.enabled", CEReactions] attribute DOMString command;
 };
 

@@ -2951,12 +2951,19 @@ bool nsGenericHTMLFormControlElementWithState::ParseAttribute(
 }
 
 mozilla::dom::Element*
-nsGenericHTMLFormControlElementWithState::GetPopoverTargetElement() const {
+nsGenericHTMLFormControlElementWithState::GetPopoverTargetElementForBindings()
+    const {
+  return GetPopoverTargetElementInternal();
+}
+
+mozilla::dom::Element*
+nsGenericHTMLFormControlElementWithState::GetPopoverTargetElementInternal()
+    const {
   return GetAttrAssociatedElement(nsGkAtoms::popovertarget);
 }
 
-void nsGenericHTMLFormControlElementWithState::SetPopoverTargetElement(
-    mozilla::dom::Element* aElement) {
+void nsGenericHTMLFormControlElementWithState::
+    SetPopoverTargetElementForBindings(mozilla::dom::Element* aElement) {
   ExplicitlySetAttrElement(nsGkAtoms::popovertarget, aElement);
 }
 

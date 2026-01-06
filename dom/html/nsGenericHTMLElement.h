@@ -1279,8 +1279,9 @@ class nsGenericHTMLFormControlElementWithState
                       nsAttrValue& aResult) override;
 
   // PopoverInvokerElement
-  mozilla::dom::Element* GetPopoverTargetElement() const;
-  void SetPopoverTargetElement(mozilla::dom::Element*);
+  mozilla::dom::Element* GetPopoverTargetElementForBindings() const;
+  mozilla::dom::Element* GetPopoverTargetElementInternal() const;
+  void SetPopoverTargetElementForBindings(mozilla::dom::Element*);
   void GetPopoverTargetAction(nsAString& aValue) const {
     GetHTMLEnumAttr(nsGkAtoms::popovertargetaction, aValue);
   }
