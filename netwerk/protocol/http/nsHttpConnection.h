@@ -197,8 +197,6 @@ class nsHttpConnection final : public HttpConnectionBase,
                               HttpConnectionBase** aHttpConnection,
                               bool aIsExtendedCONNECT = false) override;
 
-  bool RequestDone() { return mRequestDone; }
-
  private:
   void SetTunnelSetupDone() override;
   nsresult SetupProxyConnectStream() override;
@@ -366,7 +364,6 @@ class nsHttpConnection final : public HttpConnectionBase,
 
   nsCOMPtr<nsIInputStream> mProxyConnectStream;
 
-  bool mRequestDone{false};
   bool mHasTLSTransportLayer{false};
   bool mTransactionDisallowHttp3{false};
 };

@@ -7,7 +7,6 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
-#include "Http2StreamTunnel.h"
 #include "TLSTransportLayer.h"
 #include "nsISocketProvider.h"
 #include "nsITLSSocketControl.h"
@@ -451,11 +450,6 @@ TLSTransportLayer::OnOutputStreamReady(nsIAsyncOutputStream* out) {
   nsresult rv = NS_OK;
   if (callback) {
     rv = callback->OnOutputStreamReady(&mSocketOutWrapper);
-
-    RefPtr<OutputStreamTunnel> tunnel = do_QueryObject(out);
-    if (tunnel) {
-      tunnel->MaybeSetRequestDone(callback);
-    }
   }
   return rv;
 }

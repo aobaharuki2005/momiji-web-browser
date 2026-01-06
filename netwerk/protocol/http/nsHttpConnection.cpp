@@ -1778,17 +1778,7 @@ nsresult nsHttpConnection::OnSocketWritable() {
 
         rv = ResumeRecv();  // start reading
       }
-      // When Spdy tunnel is used we need to explicitly set when a request is
-      // done.
-      if ((mState != HttpConnectionState::SETTING_UP_TUNNEL) && !mSpdySession) {
-        nsHttpTransaction* trans =
-            mTransaction ? mTransaction->QueryHttpTransaction() : nullptr;
-        // needed for websocket over h2 (direct)
-        if (!trans ||
-            (!trans->IsWebsocketUpgrade() && !trans->IsForWebTransport())) {
-          mRequestDone = true;
-        }
-      }
+
       again = false;
     } else if (writeAttempts >= maxWriteAttempts) {
       LOG(("  yield for other transactions\n"));

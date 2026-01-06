@@ -66,7 +66,6 @@ class Http3TransportLayer final : public nsISocketTransport,
     explicit OutputStreamTunnel(Http3TransportLayer* aTransport);
 
     nsresult OnSocketReady(nsresult condition);
-    void MaybeSetRequestDone(nsIOutputStreamCallback* aCallback);
 
    private:
     friend class Http3TransportLayer;
@@ -108,7 +107,7 @@ class Http3StreamTunnel final : public Http3Stream {
       bool aIsExtendedCONNECT);
 
   void CleanupStream(nsresult aReason);
-  void SetRequestDone();
+
   void HasDataToWrite();
   void HasDataToRead();
 

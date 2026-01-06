@@ -350,28 +350,9 @@ nsresult OutputStreamTunnel::OnSocketReady(nsresult condition) {
   nsresult rv = NS_OK;
   if (callback) {
     rv = callback->OnOutputStreamReady(this);
-    MaybeSetRequestDone(callback);
   }
 
   return rv;
-}
-
-void OutputStreamTunnel::MaybeSetRequestDone(
-    nsIOutputStreamCallback* aCallback) {
-  RefPtr<nsHttpConnection> conn = do_QueryObject(aCallback);
-  if (!conn) {
-    return;
-  }
-
-  RefPtr<Http2StreamTunnel> tunnel;
-  nsresult rv = GetStream(getter_AddRefs(tunnel));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  if (conn->RequestDone()) {
-    tunnel->SetRequestDone();
-  }
 }
 
 NS_IMPL_ISUPPORTS(OutputStreamTunnel, nsIOutputStream, nsIAsyncOutputStream)
