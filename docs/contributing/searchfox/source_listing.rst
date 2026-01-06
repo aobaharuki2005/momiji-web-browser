@@ -63,6 +63,8 @@ Nesting header
 
 For nesting structures inside a source code, such as namespaces, classes, functions, etc, Searchfox shows a sticky header for the nesting.
 
+For variable declarations spans across multiple lines in C++ code, the nesting header is shown if it has 10+ lines.
+
 Symbols
 -------
 
