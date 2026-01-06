@@ -3034,8 +3034,7 @@ nsIFrame* nsCSSFrameConstructor::ConstructListBoxSelectFrame(
   nsContainerFrame* listFrame =
       NS_NewListControlFrame(mPresShell, computedStyle);
 
-  nsContainerFrame* scrolledFrame =
-      NS_NewSelectsAreaFrame(mPresShell, computedStyle);
+  nsContainerFrame* scrolledFrame = NS_NewBlockFrame(mPresShell, computedStyle);
 
   // ******* this code stolen from Initialze ScrollFrame ********
   // please adjust this code to use BuildScrollFrame.
