@@ -2185,20 +2185,23 @@ Element* Element::GetExplicitlySetAttrElement(nsAtom* aAttr) const {
   return nullptr;
 }
 
-void Element::GetExplicitlySetAttrElements(
-    nsAtom* aAttr, nsTArray<Element*>& aElements) const {
+Maybe<nsTArray<RefPtr<dom::Element>>> Element::GetExplicitlySetAttrElements(
+    nsAtom* aAttr) const {
   if (const nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots()) {
     if (auto attrElementsMaybeEntry = slots->mAttrElementsMap.Lookup(aAttr)) {
       auto& [attrElements, cachedAttrElements] = attrElementsMaybeEntry.Data();
       if (attrElements) {
+        nsTArray<RefPtr<dom::Element>> elements;
         for (const nsWeakPtr& weakEl : *attrElements) {
           if (nsCOMPtr<Element> attrEl = do_QueryReferent(weakEl)) {
-            aElements.AppendElement(attrEl);
+            elements.AppendElement(attrEl);
           }
         }
+        return Some(std::move(elements));
       }
     }
   }
+  return Nothing();
 }
 
 void Element::GetElementsWithGrid(nsTArray<RefPtr<Element>>& aElements) {

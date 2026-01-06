@@ -9,6 +9,7 @@
 
 #include "Filters.h"
 #include "mozilla/a11y/DocAccessible.h"
+#include "mozilla/dom/Element.h"
 #include "nsTArray.h"
 
 #include <memory>
@@ -245,7 +246,7 @@ class AssociatedElementsIterator : public AccIterable {
   nsIContent* mContent;
   DocAccessible* mDoc;
   nsAString::index_type mCurrIdx;
-  nsTArray<dom::Element*> mElements;
+  nsTArray<RefPtr<dom::Element>> mElements;
   uint32_t mElemIdx;
 };
 

@@ -80,9 +80,8 @@ RelatedAccIterator::RelatedAccIterator(DocAccessible* aDocument,
       mProviders(nullptr),
       mIndex(0),
       mIsWalkingDependentElements(false) {
-  nsAutoString id;
-  if (aDependentContent->IsElement() &&
-      aDependentContent->AsElement()->GetAttr(nsGkAtoms::id, id)) {
+  if (!aDependentContent->IsElement()) return;
+  if (nsAtom* id = aDependentContent->GetID()) {
     mProviders = mDocument->GetRelProviders(aDependentContent->AsElement(), id);
   }
 }
@@ -254,8 +253,10 @@ AssociatedElementsIterator::AssociatedElementsIterator(DocAccessible* aDoc,
     mContent->AsElement()->GetAttr(aIDRefsAttr, mIDs);
     if (mIDs.IsEmpty() &&
         (aria::AttrCharacteristicsFor(aIDRefsAttr) & ATTR_REFLECT_ELEMENTS)) {
-      nsAccUtils::GetARIAElementsAttr(mContent->AsElement(), aIDRefsAttr,
-                                      mElements);
+      if (auto elements = nsAccUtils::GetARIAElementsAttr(mContent->AsElement(),
+                                                          aIDRefsAttr)) {
+        mElements.SwapElements(*elements);
+      }
     }
   }
 }

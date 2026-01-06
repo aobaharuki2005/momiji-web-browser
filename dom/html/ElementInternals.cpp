@@ -618,9 +618,9 @@ void ElementInternals::GetAttrElements(
 
     for (const nsWeakPtr& weakEl : attrElements) {
       // For each attrElement in reflectedTarget's explicitly set attr-elements:
-      if (nsCOMPtr<Element> attrEl = do_QueryReferent(weakEl)) {
+      if (RefPtr<Element> attrEl = do_QueryReferent(weakEl)) {
         // Append attrElement to elements.
-        elements.AppendElement(attrEl);
+        elements.AppendElement(std::move(attrEl));
       }
     }
 
@@ -654,22 +654,22 @@ void ElementInternals::GetAttrElements(
   cachedAttrElements = std::move(elements);
 }
 
-bool ElementInternals::GetAttrElements(nsAtom* aAttr,
-                                       nsTArray<Element*>& aElements) {
-  aElements.Clear();
+Maybe<nsTArray<RefPtr<Element>>> ElementInternals::GetAttrElements(
+    nsAtom* aAttr) {
   auto attrElementsMaybeEntry = mAttrElementsMap.Lookup(aAttr);
   if (!attrElementsMaybeEntry) {
-    return false;
+    return Nothing();
   }
 
+  nsTArray<RefPtr<Element>> elements;
   auto& [attrElements, cachedAttrElements] = attrElementsMaybeEntry.Data();
   for (const nsWeakPtr& weakEl : attrElements) {
-    if (nsCOMPtr<Element> attrEl = do_QueryReferent(weakEl)) {
-      aElements.AppendElement(attrEl);
+    if (RefPtr<Element> attrEl = do_QueryReferent(weakEl)) {
+      elements.AppendElement(std::move(attrEl));
     }
   }
 
-  return true;
+  return Some(std::move(elements));
 }
 
 }  // namespace mozilla::dom
