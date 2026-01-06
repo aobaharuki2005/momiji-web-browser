@@ -218,6 +218,8 @@ bool RenderCompositorOGLSWGL::RequestFullRender() { return mFullRender; }
 void RenderCompositorOGLSWGL::Pause() {
 #ifdef MOZ_WIDGET_ANDROID
   DestroyEGLSurface();
+#elif defined(MOZ_WIDGET_GTK)
+  mCompositor->Pause();
 #endif
 }
 
@@ -259,6 +261,12 @@ bool RenderCompositorOGLSWGL::Resume() {
 
   gl::GLContextEGL::Cast(GetGLContext())->SetEGLSurfaceOverride(mEGLSurface);
   mCompositor->SetDestinationSurfaceSize(size.ToUnknownSize());
+#elif defined(MOZ_WIDGET_GTK)
+  bool resumed = mCompositor->Resume();
+  if (!resumed) {
+    RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
+    return false;
+  }
 #endif
   return true;
 }
