@@ -428,6 +428,6 @@ private fun SettingsSearchScreenNoResultsPreview() {
     }
 }
 
-private val RECENT_SEARCHES_HEADER_TEXT_COLOR = mozilla.components.ui.colors.R.color.photonDarkGrey05
+private val RECENT_SEARCHES_HEADER_TEXT_COLOR = mozilla.components.ui.colors.R.color.photonLightGrey40
 private val RECENT_SEARCHES_CLEAR_RECENTS_TEXT_COLOR = mozilla.components.ui.colors.R.color.photonViolet70
 private const val VERTICAL_BIAS_OFFSET_IMAGE_MESSAGE = -0.33f
