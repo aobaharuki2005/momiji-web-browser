@@ -933,6 +933,7 @@ export class TopSitesFeed {
     Services.prefs.addObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.addObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
     lazy.NimbusFeatures.newtab.onUpdate(this._nimbusChangeListener);
+    this.frecencyBoostProvider.init();
   }
 
   uninit() {
@@ -943,6 +944,7 @@ export class TopSitesFeed {
     Services.prefs.removeObserver(DEFAULT_SITES_OVERRIDE_PREF, this);
     Services.prefs.removeObserver(DEFAULT_SITES_EXPERIMENTS_PREF_BRANCH, this);
     lazy.NimbusFeatures.newtab.offUpdate(this._nimbusChangeListener);
+    this.frecencyBoostProvider.uninit();
   }
 
   observe(subj, topic, data) {

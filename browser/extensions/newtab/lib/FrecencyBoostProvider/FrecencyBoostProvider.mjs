@@ -58,15 +58,28 @@ export class FrecencyBoostProvider {
     this._links = null;
     this._frecencyBoostedSponsors = new Map();
     this._frecencyBoostRS = null;
+    this._onSync = this.onSync.bind(this);
   }
 
-  get _frecencyBoostRemoteSettings() {
+  init() {
     if (!this._frecencyBoostRS) {
       this._frecencyBoostRS = lazy.RemoteSettings(
         "newtab-frecency-boosted-sponsors"
       );
+      this._frecencyBoostRS.on("sync", this._onSync);
     }
-    return this._frecencyBoostRS;
+  }
+
+  uninit() {
+    if (this._frecencyBoostRS) {
+      this._frecencyBoostRS.off("sync", this._onSync);
+      this._frecencyBoostRS = null;
+    }
+  }
+
+  async onSync() {
+    this._frecencyBoostedSponsors = new Map();
+    await this._importFrecencyBoostedSponsors();
   }
 
   /**
@@ -75,7 +88,10 @@ export class FrecencyBoostProvider {
    * We fetch all favicons regardless of whether the user has visited these sites.
    */
   async _importFrecencyBoostedSponsors() {
-    const records = await this._frecencyBoostRemoteSettings.get();
+    const records = await this._frecencyBoostRS?.get();
+    if (!records) {
+      return;
+    }
 
     const userRegion = lazy.Region.home || "";
     const regionRecords = records.filter(
