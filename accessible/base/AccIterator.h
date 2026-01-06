@@ -219,20 +219,9 @@ class AssociatedElementsIterator : public AccIterable {
   virtual ~AssociatedElementsIterator() {}
 
   /**
-   * Return next ID.
-   */
-  const nsDependentSubstring NextID();
-
-  /**
    * Return next element.
    */
   dom::Element* NextElem();
-
-  /**
-   * Return the element with the given ID.
-   */
-  static dom::Element* GetElem(nsIContent* aContent, const nsAString& aID);
-  dom::Element* GetElem(const nsDependentSubstring& aID);
 
   // AccIterable
   virtual LocalAccessible* Next() override;
@@ -242,10 +231,8 @@ class AssociatedElementsIterator : public AccIterable {
   AssociatedElementsIterator(const AssociatedElementsIterator&);
   AssociatedElementsIterator operator=(const AssociatedElementsIterator&);
 
-  nsString mIDs;
   nsIContent* mContent;
   DocAccessible* mDoc;
-  nsAString::index_type mCurrIdx;
   nsTArray<RefPtr<dom::Element>> mElements;
   uint32_t mElemIdx;
 };

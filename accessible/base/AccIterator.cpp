@@ -14,6 +14,7 @@
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementInternals.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 
 using namespace mozilla;
@@ -248,73 +249,26 @@ LocalAccessible* XULDescriptionIterator::Next() {
 AssociatedElementsIterator::AssociatedElementsIterator(DocAccessible* aDoc,
                                                        nsIContent* aContent,
                                                        nsAtom* aIDRefsAttr)
-    : mContent(aContent), mDoc(aDoc), mCurrIdx(0), mElemIdx(0) {
-  if (mContent->IsElement()) {
-    mContent->AsElement()->GetAttr(aIDRefsAttr, mIDs);
-    if (mIDs.IsEmpty() &&
-        (aria::AttrCharacteristicsFor(aIDRefsAttr) & ATTR_REFLECT_ELEMENTS)) {
-      if (auto elements = nsAccUtils::GetARIAElementsAttr(mContent->AsElement(),
-                                                          aIDRefsAttr)) {
+    : mContent(aContent), mDoc(aDoc), mElemIdx(0) {
+  if (!mContent->IsElement()) {
+    return;
+  }
+  auto elements =
+      mContent->AsElement()->GetAttrAssociatedElementsInternal(aIDRefsAttr);
+  if (elements) {
+    mElements.SwapElements(*elements);
+  } else if (auto* element = nsGenericHTMLElement::FromNode(aContent)) {
+    if (auto* internals = element->GetInternals()) {
+      elements = internals->GetAttrElements(aIDRefsAttr);
+      if (elements) {
         mElements.SwapElements(*elements);
       }
     }
   }
 }
 
-const nsDependentSubstring AssociatedElementsIterator::NextID() {
-  for (; mCurrIdx < mIDs.Length(); mCurrIdx++) {
-    if (!NS_IsAsciiWhitespace(mIDs[mCurrIdx])) break;
-  }
-
-  if (mCurrIdx >= mIDs.Length()) return nsDependentSubstring();
-
-  nsAString::index_type idStartIdx = mCurrIdx;
-  while (++mCurrIdx < mIDs.Length()) {
-    if (NS_IsAsciiWhitespace(mIDs[mCurrIdx])) break;
-  }
-
-  return Substring(mIDs, idStartIdx, mCurrIdx++ - idStartIdx);
-}
-
 dom::Element* AssociatedElementsIterator::NextElem() {
-  while (true) {
-    const nsDependentSubstring id = NextID();
-    if (id.IsEmpty()) break;
-
-    dom::Element* refContent = GetElem(id);
-    if (refContent) return refContent;
-  }
-
-  while (dom::Element* element = mElements.SafeElementAt(mElemIdx++)) {
-    if (nsCoreUtils::IsDescendantOfAnyShadowIncludingAncestor(element,
-                                                              mContent)) {
-      return element;
-    }
-  }
-
-  return nullptr;
-}
-
-dom::Element* AssociatedElementsIterator::GetElem(nsIContent* aContent,
-                                                  const nsAString& aID) {
-  // Get elements in DOM tree by ID attribute if this is an explicit content.
-  // In case of bound element check its anonymous subtree.
-  if (!aContent->IsInNativeAnonymousSubtree()) {
-    dom::DocumentOrShadowRoot* docOrShadowRoot =
-        aContent->GetUncomposedDocOrConnectedShadowRoot();
-    if (docOrShadowRoot) {
-      dom::Element* refElm = docOrShadowRoot->GetElementById(aID);
-      if (refElm) {
-        return refElm;
-      }
-    }
-  }
-  return nullptr;
-}
-
-dom::Element* AssociatedElementsIterator::GetElem(
-    const nsDependentSubstring& aID) {
-  return GetElem(mContent, aID);
+  return mElements.SafeElementAt(mElemIdx++);
 }
 
 LocalAccessible* AssociatedElementsIterator::Next() {
