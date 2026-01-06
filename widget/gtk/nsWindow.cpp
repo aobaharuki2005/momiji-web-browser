@@ -2080,28 +2080,25 @@ void nsWindow::NativeMoveResizeWaylandPopupCallback(
   // perfectly round-trip. Compare gdk rects to check whether size or positions
   // have changed from what we'd request otherwise, in order to avoid
   // flickering.
-  const GdkRectangle currentGdkRect{mClientArea.x, mClientArea.y,
-                                    mClientArea.width, mClientArea.height};
+  const auto currentRect = mClientArea;
   auto scale = GdkCeiledScaleFactor();
   auto IsSubstantiallyDifferent = [=](gint a, gint b) {
     return std::abs(a - b) > scale;
   };
 
   const bool needsPositionUpdate =
-      IsSubstantiallyDifferent(finalGdkRect.x, currentGdkRect.x) ||
-      IsSubstantiallyDifferent(finalGdkRect.y, currentGdkRect.y);
+      IsSubstantiallyDifferent(finalGdkRect.x, currentRect.x) ||
+      IsSubstantiallyDifferent(finalGdkRect.y, currentRect.y);
   const bool needsSizeUpdate =
-      IsSubstantiallyDifferent(finalGdkRect.width, currentGdkRect.width) ||
-      IsSubstantiallyDifferent(finalGdkRect.height, currentGdkRect.height);
+      IsSubstantiallyDifferent(finalGdkRect.width, currentRect.width) ||
+      IsSubstantiallyDifferent(finalGdkRect.height, currentRect.height);
   const DesktopIntRect newClientArea = DesktopIntRect(
       finalGdkRect.x, finalGdkRect.y, finalGdkRect.width, finalGdkRect.height);
 
-  LOG("  orig gdk [%d, %d] -> [%d x %d]", currentGdkRect.x, currentGdkRect.y,
-      currentGdkRect.width, currentGdkRect.height);
+  LOG("  orig gdk [%d, %d] -> [%d x %d]", currentRect.x, currentRect.y,
+      currentRect.width, currentRect.height);
   LOG("  new gdk [%d, %d] -> [%d x %d]\n", finalGdkRect.x, finalGdkRect.y,
       finalGdkRect.width, finalGdkRect.height);
-  LOG("  orig mClientArea [%d, %d] -> [%d x %d]", mClientArea.x, mClientArea.y,
-      mClientArea.width, mClientArea.height);
   LOG("  new mClientArea [%d, %d] -> [%d x %d]", newClientArea.x,
       newClientArea.y, newClientArea.width, newClientArea.height);
 
@@ -2174,21 +2171,19 @@ bool nsWindow::IsPopupDirectionRTL() {
 // It's used when we position noautihode popup and we don't use xdg_positioner.
 // See Bug 1718867
 void nsWindow::WaylandPopupSetDirectPosition() {
-  GdkRectangle rect{mLastMoveRequest.x, mLastMoveRequest.y,
-                    mLastSizeRequest.width, mLastSizeRequest.height};
+  const DesktopIntRect newRect(mLastMoveRequest, mLastSizeRequest);
 
-  LOG("nsWindow::WaylandPopupSetDirectPosition %d,%d -> %d x %d\n", rect.x,
-      rect.y, rect.width, rect.height);
+  LOG("nsWindow::WaylandPopupSetDirectPosition %s", ToString(newRect).c_str());
 
-  mClientArea.MoveTo(mLastMoveRequest);
-  mClientArea.SizeTo(mLastSizeRequest);
+  mClientArea = newRect;
 
   if (mIsDragPopup) {
-    gtk_window_move(GTK_WINDOW(mShell), rect.x, rect.y);
-    gtk_window_resize(GTK_WINDOW(mShell), rect.width, rect.height);
+    gtk_window_move(GTK_WINDOW(mShell), newRect.x, newRect.y);
+    gtk_window_resize(GTK_WINDOW(mShell), newRect.width, newRect.height);
     // DND window is placed inside container so we need to make hard size
     // request to ensure parent container is resized too.
-    gtk_widget_set_size_request(GTK_WIDGET(mShell), rect.width, rect.height);
+    gtk_widget_set_size_request(GTK_WIDGET(mShell), newRect.width,
+                                newRect.height);
     return;
   }
 
@@ -2203,12 +2198,12 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   }
 
   int parentWidth = gdk_window_get_width(gdkWindow);
-  int popupWidth = rect.width;
+  int popupWidth = newRect.width;
 
   int x;
   gdk_window_get_position(gdkWindow, &x, nullptr);
 
-  auto pos = mClientArea.TopLeft();
+  auto pos = newRect.TopLeft();
   // If popup is bigger than main window just center it.
   if (popupWidth > parentWidth) {
     pos.x = -(parentWidth - popupWidth) / 2 + x;
@@ -2225,12 +2220,11 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   LOG("  set position [%d, %d]\n", pos.x.value, pos.y.value);
   gtk_window_move(GTK_WINDOW(mShell), pos.x, pos.y);
 
-  LOG("  set size [%d, %d]\n", rect.width, rect.height);
-  gtk_window_resize(GTK_WINDOW(mShell), rect.width, rect.height);
+  LOG("  set size [%d, %d]\n", newRect.width, newRect.height);
+  gtk_window_resize(GTK_WINDOW(mShell), newRect.width, newRect.height);
 
-  if (pos.x != rect.x) {
-    mClientArea.MoveTo(pos.x, pos.y);
-    LOG("  setting new client area [%d, %d]\n", mClientArea.x, mClientArea.y);
+  if (pos.x != newRect.x) {
+    mClientArea.MoveTo(pos);
     WaylandPopupPropagateChangesToLayout(/* move */ true, /* resize */ false);
   }
 }
@@ -2336,8 +2330,7 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
   // Mark popup as changed as we're updating position/size.
   mPopupChanged = true;
 
-  mClientArea.MoveTo(mLastMoveRequest);
-  mClientArea.SizeTo(mLastSizeRequest);
+  mClientArea = DesktopIntRect(mLastMoveRequest, mLastSizeRequest);
 
   UpdateWaylandPopupHierarchy();
 }
