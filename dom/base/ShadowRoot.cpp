@@ -71,8 +71,7 @@ ShadowRoot::ShadowRoot(Element* aElement, ShadowRootMode aMode,
       mIsAvailableToElementInternals(false),
       mIsDeclarative(aDeclarative),
       mIsClonable(aIsClonable),
-      mIsSerializable(aIsSerializable),
-      mReferenceTarget(nsGkAtoms::_empty) {
+      mIsSerializable(aIsSerializable) {
   // nsINode.h relies on this.
   MOZ_ASSERT(static_cast<nsINode*>(this) == reinterpret_cast<nsINode*>(this));
   MOZ_ASSERT(static_cast<nsIContent*>(this) ==
@@ -941,6 +940,5 @@ void ShadowRoot::GetHTML(const GetHTMLOptions& aOptions, nsAString& aResult) {
       aOptions.mShadowRoots);
 }
 void ShadowRoot::SetReferenceTarget(RefPtr<nsAtom> aTarget) {
-  MOZ_ASSERT(aTarget);
   mReferenceTarget = std::move(aTarget);
 }
