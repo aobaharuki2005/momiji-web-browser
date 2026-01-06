@@ -47,7 +47,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   Sampling: "resource://gre/modules/components-utils/Sampling.sys.mjs",
   Screenshots: "resource://newtab/lib/Screenshots.sys.mjs",
-  Utils: "resource://services-settings/Utils.sys.mjs",
 });
 
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
@@ -159,9 +158,6 @@ const DISPLAY_FAIL_REASON_OVERSOLD = "oversold";
 const DISPLAY_FAIL_REASON_DISMISSED = "dismissed";
 const DISPLAY_FAIL_REASON_UNRESOLVED = "unresolved";
 
-const RS_FALLBACK_BASE_URL =
-  "https://firefox-settings-attachments.cdn.mozilla.net/";
-
 ChromeUtils.defineLazyGetter(lazy, "userAgent", () => {
   return Cc["@mozilla.org/network/protocol;1?name=http"].getService(
     Ci.nsIHttpProtocolHandler
@@ -170,6 +166,7 @@ ChromeUtils.defineLazyGetter(lazy, "userAgent", () => {
 
 // Smart shortcuts
 import { RankShortcutsProvider } from "resource://newtab/lib/SmartShortcutsRanker/RankShortcuts.mjs";
+import { FrecencyBoostProvider } from "resource://newtab/lib/FrecencyBoostProvider/FrecencyBoostProvider.mjs";
 
 const PREF_SYSTEM_SHORTCUTS_PERSONALIZATION =
   "discoverystream.shortcuts.personalization.enabled";
@@ -885,8 +882,6 @@ export class TopSitesFeed {
     this._telemetryUtility = new TopSitesTelemetry();
     this._contile = new ContileIntegration(this);
     this._tippyTopProvider = new TippyTopProvider();
-    this._frecencyBoostedSponsors = new Map();
-    this._frecencyBoostRS = null;
     ChromeUtils.defineLazyGetter(
       this,
       "_currentSearchHostname",
@@ -903,6 +898,7 @@ export class TopSitesFeed {
         // Refresh if no old options or requesting more items
         !(oldOptions.numItems >= newOptions.numItems)
     );
+    this.frecencyBoostProvider = new FrecencyBoostProvider(this.frecentCache);
     this.pinnedCache = new lazy.LinksCache(
       lazy.NewTabUtils.pinnedLinks,
       "links",
@@ -1381,172 +1377,30 @@ export class TopSitesFeed {
     return fetch(...args);
   }
 
-  get _frecencyBoostRemoteSettings() {
-    if (!this._frecencyBoostRS) {
-      this._frecencyBoostRS = lazy.RemoteSettings(
-        "newtab-frecency-boosted-sponsors"
-      );
-    }
-    return this._frecencyBoostRS;
-  }
-
-  /**
-   * Import all sponsors from Remote Settings and save their favicons.
-   * This is called lazily when frecency boosted spocs are first requested.
-   * We fetch all favicons regardless of whether the user has visited these sites.
-   */
-  async _importFrecencyBoostedSponsors() {
-    const records = await this._frecencyBoostRemoteSettings.get();
-
-    const userRegion = lazy.Region.home || "";
-    const regionRecords = records.filter(
-      record => record.region === userRegion
-    );
-
-    await Promise.all(
-      regionRecords.map(record =>
-        this._importFrecencyBoostedSponsor(record).catch(error => {
-          lazy.log.warn(
-            `Failed to import sponsor ${record.title || "unknown"}`,
-            error
-          );
-        })
-      )
-    );
-  }
-
-  /**
-   * Import a single sponsor record and fetch its favicon as data URI.
-   *
-   * @param {object} record - Remote Settings record with title, domain, redirect_url, and attachment
-   */
-  async _importFrecencyBoostedSponsor(record) {
-    const { title, domain, redirect_url, attachment } = record;
-    const faviconDataURI = await this._fetchSponsorFaviconAsDataURI(attachment);
-    const hostname = lazy.NewTabUtils.shortURL({ url: domain });
-
-    const sponsorData = {
-      title,
-      domain,
-      hostname,
-      redirectURL: redirect_url,
-      faviconDataURI,
-    };
-
-    this._frecencyBoostedSponsors.set(hostname, sponsorData);
-  }
-
-  /**
-   * Fetch favicon from Remote Settings attachment and return as data URI.
-   *
-   * @param {object} attachment - Remote Settings attachment object
-   * @returns {Promise<string|null>} Favicon data URI, or null on error
-   */
-  async _fetchSponsorFaviconAsDataURI(attachment) {
-    let baseAttachmentURL = RS_FALLBACK_BASE_URL;
-    try {
-      baseAttachmentURL = await lazy.Utils.baseAttachmentsURL();
-    } catch (error) {
-      lazy.log.warn(
-        `Error fetching remote settings base url from CDN. Falling back to ${RS_FALLBACK_BASE_URL}`,
-        error
-      );
-    }
-
-    const faviconURL = baseAttachmentURL + attachment.location;
-    const response = await fetch(faviconURL);
-
-    const blob = await response.blob();
-    const dataURI = await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.addEventListener("load", () => resolve(reader.result));
-      reader.addEventListener("error", reject);
-      reader.readAsDataURL(blob);
-    });
-
-    return dataURI;
-  }
-
-  /**
-   * Build frecency-boosted spocs from a list of sponsor domains by checking Places history.
-   * Checks if domains exist in history, dedupes against organic topsites,
-   * and returns all matches sorted by frecency.
-   *
-   * @param {Array} sponsors - List of sponsor domain objects with hostname and title
-   * @returns {Array} Array of sponsored tile objects sorted by frecency, or empty array
-   */
-  async buildFrecencyBoostedSpocs(sponsorsToCheck = []) {
-    if (!sponsorsToCheck.length) {
-      return [];
-    }
-
-    const { values } = this.store.getState().Prefs;
-    const numItems =
-      values?.trainhopConfig?.sov?.numItems || DEFAULT_SOV_NUM_ITEMS;
-    const topsiteFrecency = lazy.pageFrecencyThreshold;
-
-    // Get all frecent sites from history.
-    const frecent = await this.frecentCache.request({
-      numItems,
-      topsiteFrecency,
-    });
-
-    const candidates = [];
-    frecent.forEach(site => {
-      const normalizedSiteUrl = lazy.NewTabUtils.shortURL(site);
-      for (const domainObj of sponsorsToCheck) {
-        if (
-          normalizedSiteUrl !== domainObj.hostname ||
-          lazy.NewTabUtils.blockedLinks.isBlocked({ url: domainObj.domain })
-        ) {
-          continue;
-        }
-
-        candidates.push({
-          hostname: domainObj.hostname,
-          url: domainObj.redirectURL,
-          label: domainObj.title,
-          partner: SPONSORED_TILE_PARTNER_FREC_BOOST,
-          type: "frecency-boost",
-          frecency: site.frecency,
-          show_sponsored_label: true,
-          favicon: domainObj.faviconDataURI,
-          faviconSize: 96,
-        });
-      }
-    });
-
-    // If we have a matched set of candidates,
-    // we can check if it's an exposure event.
-    if (candidates.length) {
-      this.frecencyBoostedSpocsExposureEvent();
-    }
-
-    candidates.sort((a, b) => b.frecency - a.frecency);
-    return candidates;
-  }
-
   /**
    * Fetch topsites spocs that are frecency boosted.
    *
    * @returns {Array} An array of sponsored tile objects.
    */
   async fetchFrecencyBoostedSpocs() {
+    let candidates = [];
     if (
-      !this._contile.sovEnabled() ||
-      !this.store.getState().Prefs.values[SHOW_SPONSORED_PREF]
+      this._contile.sovEnabled() &&
+      this.store.getState().Prefs.values[SHOW_SPONSORED_PREF]
     ) {
-      return [];
+      const { values } = this.store.getState().Prefs;
+      const numItems =
+        values?.trainhopConfig?.sov?.numItems || DEFAULT_SOV_NUM_ITEMS;
+
+      candidates = await this.frecencyBoostProvider.getLinks(numItems);
+
+      // If we have a matched set of candidates,
+      // we can check if it's an exposure event.
+      if (candidates.length) {
+        this.frecencyBoostedSpocsExposureEvent();
+      }
     }
-
-    if (this._frecencyBoostedSponsors.size === 0) {
-      await this._importFrecencyBoostedSponsors();
-    }
-
-    const domainList = Array.from(this._frecencyBoostedSponsors.values());
-
-    // Find all matches from the sponsor domains, sorted by frecency
-    return this.buildFrecencyBoostedSpocs(domainList);
+    return candidates;
   }
 
   /**

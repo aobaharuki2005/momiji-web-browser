@@ -31,12 +31,15 @@ function getTopSitesFeedForTest(sandbox, { frecent = [] } = {}) {
       },
     },
   };
+
   feed.frecentCache = {
     request() {
       return this.cache;
     },
     cache: frecent,
   };
+  feed.frecencyBoostProvider.frecentCache = feed.frecentCache;
+
   const frecencyBoostedSponsors = new Map([
     [
       "domain1",
@@ -90,7 +93,9 @@ function getTopSitesFeedForTest(sandbox, { frecent = [] } = {}) {
     ],
   ]);
 
-  sandbox.stub(feed, "_frecencyBoostedSponsors").value(frecencyBoostedSponsors);
+  sandbox
+    .stub(feed.frecencyBoostProvider, "_frecencyBoostedSponsors")
+    .value(frecencyBoostedSponsors);
 
   return feed;
 }
