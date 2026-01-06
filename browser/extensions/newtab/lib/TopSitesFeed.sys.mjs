@@ -985,6 +985,69 @@ export class TopSitesFeed {
   }
 
   /**
+   * _readContile - sets DEFAULT_TOP_SITES with contile
+   */
+  _readContile() {
+    // Keep the number of positions in the array in sync with CONTILE_MAX_NUM_SPONSORED.
+    // sponsored_position is a 1-based index, and contilePositions is a 0-based index,
+    // so we need to add 1 to each of these.
+    // Also currently this does not work with SOV.
+    let contilePositions = lazy.NimbusFeatures.pocketNewtab
+      .getVariable(NIMBUS_VARIABLE_CONTILE_POSITIONS)
+      ?.split(",")
+      .map(item => parseInt(item, 10) + 1)
+      .filter(item => !Number.isNaN(item));
+    if (!contilePositions || contilePositions.length === 0) {
+      contilePositions = [1, 2];
+    }
+
+    let hasContileTiles = false;
+
+    let contilePositionIndex = 0;
+    // We need to loop through potential spocs and set their positions.
+    // If we run out of spocs or positions, we stop.
+    // First, we need to know which array is shortest. This is our exit condition.
+    const minLength = Math.min(
+      contilePositions.length,
+      this._contile.sites.length
+    );
+    // Loop until we run out of spocs or positions.
+    for (let i = 0; i < minLength; i++) {
+      let site = this._contile.sites[i];
+      let hostname = lazy.NewTabUtils.shortURL(site);
+      let link = {
+        isDefault: true,
+        url: site.url,
+        hostname,
+        sendAttributionRequest: false,
+        label: site.name,
+        show_sponsored_label: hostname !== "yandex",
+        sponsored_position: contilePositions[contilePositionIndex++],
+        sponsored_click_url: site.click_url,
+        sponsored_impression_url: site.impression_url,
+        sponsored_tile_id: site.id,
+        partner: SPONSORED_TILE_PARTNER_AMP,
+        block_key: site.id,
+        attribution: site.attribution,
+      };
+      if (site.image_url && site.image_size >= MIN_FAVICON_SIZE) {
+        // Only use the image from Contile if it's hi-res, otherwise, fallback
+        // to the built-in favicons.
+        link.favicon = site.image_url;
+        link.faviconSize = site.image_size;
+      }
+      DEFAULT_TOP_SITES.push(link);
+    }
+    hasContileTiles = contilePositionIndex > 0;
+    // This is to catch where we receive 3 tiles but reduce to 2 early in the filtering, before blocked list applied.
+    this._telemetryUtility.determineFilteredTilesAndSetToOversold(
+      DEFAULT_TOP_SITES
+    );
+
+    return hasContileTiles;
+  }
+
+  /**
    * _readDefaults - sets DEFAULT_TOP_SITES
    */
   async _readDefaults({ isStartup = false } = {}) {
@@ -1018,61 +1081,10 @@ export class TopSitesFeed {
       NIMBUS_VARIABLE_CONTILE_ENABLED
     );
 
-    // Keep the number of positions in the array in sync with CONTILE_MAX_NUM_SPONSORED.
-    // sponsored_position is a 1-based index, and contilePositions is a 0-based index,
-    // so we need to add 1 to each of these.
-    // Also currently this does not work with SOV.
-    let contilePositions = lazy.NimbusFeatures.pocketNewtab
-      .getVariable(NIMBUS_VARIABLE_CONTILE_POSITIONS)
-      ?.split(",")
-      .map(item => parseInt(item, 10) + 1)
-      .filter(item => !Number.isNaN(item));
-    if (!contilePositions || contilePositions.length === 0) {
-      contilePositions = [1, 2];
-    }
-
     let hasContileTiles = false;
+
     if (contileEnabled) {
-      let contilePositionIndex = 0;
-      // We need to loop through potential spocs and set their positions.
-      // If we run out of spocs or positions, we stop.
-      // First, we need to know which array is shortest. This is our exit condition.
-      const minLength = Math.min(
-        contilePositions.length,
-        this._contile.sites.length
-      );
-      // Loop until we run out of spocs or positions.
-      for (let i = 0; i < minLength; i++) {
-        let site = this._contile.sites[i];
-        let hostname = lazy.NewTabUtils.shortURL(site);
-        let link = {
-          isDefault: true,
-          url: site.url,
-          hostname,
-          sendAttributionRequest: false,
-          label: site.name,
-          show_sponsored_label: hostname !== "yandex",
-          sponsored_position: contilePositions[contilePositionIndex++],
-          sponsored_click_url: site.click_url,
-          sponsored_impression_url: site.impression_url,
-          sponsored_tile_id: site.id,
-          partner: SPONSORED_TILE_PARTNER_AMP,
-          block_key: site.id,
-          attribution: site.attribution,
-        };
-        if (site.image_url && site.image_size >= MIN_FAVICON_SIZE) {
-          // Only use the image from Contile if it's hi-res, otherwise, fallback
-          // to the built-in favicons.
-          link.favicon = site.image_url;
-          link.faviconSize = site.image_size;
-        }
-        DEFAULT_TOP_SITES.push(link);
-      }
-      hasContileTiles = contilePositionIndex > 0;
-      //This is to catch where we receive 3 tiles but reduce to 2 early in the filtering, before blocked list applied.
-      this._telemetryUtility.determineFilteredTilesAndSetToOversold(
-        DEFAULT_TOP_SITES
-      );
+      hasContileTiles = this._readContile();
     }
 
     // Read defaults from remote settings.
@@ -1411,7 +1423,7 @@ export class TopSitesFeed {
   async _importFrecencyBoostedSponsor(record) {
     const { title, domain, redirect_url, attachment } = record;
     const faviconDataURI = await this._fetchSponsorFaviconAsDataURI(attachment);
-    const { hostname } = new URL(domain);
+    const hostname = lazy.NewTabUtils.shortURL({ url: domain });
 
     const sponsorData = {
       title,
@@ -1456,51 +1468,6 @@ export class TopSitesFeed {
   }
 
   /**
-   * Dedupe sponsored domains against organic topsites.
-   *
-   * @param {Array} sponsors - List of sponsor domain objects
-   * @returns {Array} Filtered list of sponsors not in organic topsites
-   */
-  dedupeSponsorsAgainstTopsites(sponsors = []) {
-    const topSitesCount =
-      this.store.getState().Prefs.values[ROWS_PREF] *
-      TOP_SITES_MAX_SITES_PER_ROW;
-
-    const linksWithDefaults = this._linksWithDefaults || [];
-    const topsites = new Set(
-      linksWithDefaults
-        .slice(0, topSitesCount)
-        .filter(site => site.type !== "frecency-boost")
-        .map(site => {
-          try {
-            return site.hostname || lazy.NewTabUtils.shortURL(site);
-          } catch (e) {
-            return null;
-          }
-        })
-        .filter(Boolean)
-    );
-
-    return sponsors.filter(
-      ({ hostname }) =>
-        !topsites.has(lazy.NewTabUtils.shortURL({ url: `https://${hostname}` }))
-    );
-  }
-
-  normalizeUrl(url) {
-    let normalized = url;
-    if (normalized.startsWith("https://")) {
-      normalized = normalized.slice(8);
-    } else if (normalized.startsWith("http://")) {
-      normalized = normalized.slice(7);
-    }
-    if (normalized.startsWith("www.")) {
-      normalized = normalized.slice(4);
-    }
-    return normalized;
-  }
-
-  /**
    * Build frecency-boosted spocs from a list of sponsor domains by checking Places history.
    * Checks if domains exist in history, dedupes against organic topsites,
    * and returns all matches sorted by frecency.
@@ -1508,13 +1475,7 @@ export class TopSitesFeed {
    * @param {Array} sponsors - List of sponsor domain objects with hostname and title
    * @returns {Array} Array of sponsored tile objects sorted by frecency, or empty array
    */
-  async buildFrecencyBoostedSpocs(sponsors) {
-    if (!sponsors || !sponsors.length) {
-      return [];
-    }
-
-    const sponsorsToCheck = this.dedupeSponsorsAgainstTopsites(sponsors);
-
+  async buildFrecencyBoostedSpocs(sponsorsToCheck = []) {
     if (!sponsorsToCheck.length) {
       return [];
     }
@@ -1532,21 +1493,14 @@ export class TopSitesFeed {
 
     const candidates = [];
     frecent.forEach(site => {
-      const normalizedSiteUrl = this.normalizeUrl(site.url);
-
+      const normalizedSiteUrl = lazy.NewTabUtils.shortURL(site);
       for (const domainObj of sponsorsToCheck) {
-        const normalizedDomain = this.normalizeUrl(domainObj.domain);
-
         if (
-          !normalizedSiteUrl.startsWith(normalizedDomain) ||
+          normalizedSiteUrl !== domainObj.hostname ||
           lazy.NewTabUtils.blockedLinks.isBlocked({ url: domainObj.domain })
         ) {
           continue;
         }
-
-        const sponsorData = this._frecencyBoostedSponsors.get(
-          domainObj.hostname
-        );
 
         candidates.push({
           hostname: domainObj.hostname,
@@ -1556,7 +1510,7 @@ export class TopSitesFeed {
           type: "frecency-boost",
           frecency: site.frecency,
           show_sponsored_label: true,
-          favicon: sponsorData.faviconDataURI,
+          favicon: domainObj.faviconDataURI,
           faviconSize: 96,
         });
       }
@@ -1580,7 +1534,6 @@ export class TopSitesFeed {
   async fetchFrecencyBoostedSpocs() {
     if (
       !this._contile.sovEnabled() ||
-      !this._linksWithDefaults?.length ||
       !this.store.getState().Prefs.values[SHOW_SPONSORED_PREF]
     ) {
       return [];
@@ -1729,12 +1682,19 @@ export class TopSitesFeed {
             : link),
           hostname,
         });
+        // LinksCache can return the previous cached result
+        // if it's equal to or greater than the requested amount.
+        // In this case we can just take what we need.
+        if (frecent.length >= numFetch) {
+          break;
+        }
       }
     }
 
     // Get defaults.
     let contileSponsored = [];
     let notBlockedDefaultSites = [];
+
     for (let link of DEFAULT_TOP_SITES) {
       // For sponsored Yandex links, default filtering is reversed: we only
       // show them if Yandex is the default search engine.
@@ -1786,17 +1746,6 @@ export class TopSitesFeed {
     const discoverySponsored = this.fetchDiscoveryStreamSpocs();
     const frecencyBoostedSponsored = await this.fetchFrecencyBoostedSpocs();
     this._telemetryUtility.setTiles(discoverySponsored);
-
-    const sponsored = this._mergeSponsoredLinks({
-      [SPONSORED_TILE_PARTNER_AMP]: contileSponsored,
-      [SPONSORED_TILE_PARTNER_MOZ_SALES]: discoverySponsored,
-      [SPONSORED_TILE_PARTNER_FREC_BOOST]: frecencyBoostedSponsored,
-    });
-
-    this._maybeCapSponsoredLinks(sponsored);
-
-    // This will set all extra tiles to oversold, including moz-sales.
-    this._telemetryUtility.determineFilteredTilesAndSetToOversold(sponsored);
 
     // Get pinned links augmented with desired properties
     let plainPinned = await this.pinnedCache.request();
@@ -1866,9 +1815,36 @@ export class TopSitesFeed {
     );
 
     // Remove any duplicates from frecent and default sites
-    const [, dedupedSponsored, dedupedFrecent, dedupedDefaults] =
-      this.dedupe.group(pinned, sponsored, frecent, notBlockedDefaultSites);
+    const [
+      ,
+      dedupedContileSponsored,
+      dedupedDiscoverySponsored,
+      dedupedFrecent,
+      dedupedFrecencyBoostedSponsored,
+      dedupedDefaults,
+    ] = this.dedupe.group(
+      pinned,
+      contileSponsored,
+      discoverySponsored,
+      frecent,
+      frecencyBoostedSponsored,
+      notBlockedDefaultSites
+    );
+
     const dedupedUnpinned = [...dedupedFrecent, ...dedupedDefaults];
+
+    const dedupedSponsored = this._mergeSponsoredLinks({
+      [SPONSORED_TILE_PARTNER_AMP]: dedupedContileSponsored,
+      [SPONSORED_TILE_PARTNER_MOZ_SALES]: dedupedDiscoverySponsored,
+      [SPONSORED_TILE_PARTNER_FREC_BOOST]: dedupedFrecencyBoostedSponsored,
+    });
+
+    this._maybeCapSponsoredLinks(dedupedSponsored);
+
+    // This will set all extra tiles to oversold, including moz-sales.
+    this._telemetryUtility.determineFilteredTilesAndSetToOversold(
+      dedupedSponsored
+    );
 
     // Remove adult sites if we need to
     const checkedAdult = lazy.FilterAdult.filter(dedupedUnpinned);
@@ -1975,22 +1951,26 @@ export class TopSitesFeed {
       let link = null;
       const { assignedPartner } = allocation;
       if (assignedPartner) {
-        while (sponsoredLinks[assignedPartner].length) {
+        const candidates = sponsoredLinks[assignedPartner] || [];
+        while (candidates.length) {
           // Unknown partners are allowed so that new partners can be added to Shepherd
           // sooner without waiting for client changes.
-          const candidate = sponsoredLinks[assignedPartner]?.shift();
-
-          // Deduplicate against sponsored links that have already been added.
-          const duplicateSponsor = sponsored.find(
-            s =>
-              s.label?.toLowerCase() === candidate.label?.toLowerCase() ||
-              s.hostname === candidate.hostname
-          );
-
-          if (!duplicateSponsor) {
-            link = candidate;
-            break;
+          const candidate = candidates?.shift();
+          if (!candidate) {
+            continue;
           }
+          const candLabel = candidate.label?.trim().toLowerCase();
+          // Deduplicate against sponsored links that have already been added.
+          if (candLabel) {
+            const duplicateSponsor = sponsored.some(
+              s => s.label?.trim().toLowerCase() === candLabel
+            );
+            if (duplicateSponsor) {
+              continue; // skip this candidate, try next
+            }
+          }
+          link = candidate;
+          break;
         }
       }
 

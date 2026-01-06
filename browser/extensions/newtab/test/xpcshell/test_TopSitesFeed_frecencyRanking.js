@@ -14,19 +14,7 @@ const PREF_SOV_ENABLED = "sov.enabled";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const ROWS_PREF = "topSitesRows";
 
-function getTopSitesFeedForTest(
-  sandbox,
-  {
-    frecent = [],
-    linksWithDefaults = [
-      {
-        url: "url",
-        hostname: "hostname",
-        label: "label",
-      },
-    ],
-  } = {}
-) {
+function getTopSitesFeedForTest(sandbox, { frecent = [] } = {}) {
   let feed = new TopSitesFeed();
 
   feed.store = {
@@ -49,54 +37,53 @@ function getTopSitesFeedForTest(
     },
     cache: frecent,
   };
-  feed._linksWithDefaults = linksWithDefaults;
   const frecencyBoostedSponsors = new Map([
     [
-      "hostname1",
+      "domain1",
       {
         domain: "https://domain1.com",
         faviconDataURI: "faviconDataURI1",
-        hostname: "hostname1",
+        hostname: "domain1",
         redirectURL: "https://redirectURL1.com",
         title: "title1",
       },
     ],
     [
-      "hostname2",
+      "domain2",
       {
         domain: "https://domain2.com",
         faviconDataURI: "faviconDataURI2",
-        hostname: "hostname2",
+        hostname: "domain2",
         redirectURL: "https://redirectURL2.com",
         title: "title2",
       },
     ],
     [
-      "hostname3",
+      "domain3",
       {
         domain: "https://domain3.com",
         faviconDataURI: "faviconDataURI3",
-        hostname: "hostname3",
+        hostname: "domain3",
         redirectURL: "https://redirectURL3.com",
         title: "title3",
       },
     ],
     [
-      "hostname4",
+      "domain4",
       {
         domain: "https://domain4.com",
         faviconDataURI: "faviconDataURI4",
-        hostname: "hostname4",
+        hostname: "domain4",
         redirectURL: "https://redirectURL4.com",
         title: "title4",
       },
     ],
     [
-      "hostname1sub",
+      "sub.domain1",
       {
         domain: "https://sub.domain1.com",
         faviconDataURI: "faviconDataURI1",
-        hostname: "hostname1sub",
+        hostname: "sub.domain1",
         redirectURL: "https://redirectURL1.com",
         title: "title1",
       },
@@ -140,7 +127,7 @@ add_task(async function test_frecency_sponsored_topsites() {
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
     Assert.deepEqual(frecencyBoostedSpocs[0], {
-      hostname: "hostname1",
+      hostname: "domain1",
       url: "https://redirectURL1.com",
       label: "title1",
       partner: "frec-boost",
@@ -173,8 +160,8 @@ add_task(async function test_frecency_sponsored_topsites() {
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 2);
-    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname1");
-    Assert.equal(frecencyBoostedSpocs[1].hostname, "hostname3");
+    Assert.equal(frecencyBoostedSpocs[0].hostname, "domain1");
+    Assert.equal(frecencyBoostedSpocs[1].hostname, "domain3");
 
     sandbox.restore();
   }
@@ -194,7 +181,7 @@ add_task(async function test_frecency_sponsored_topsites() {
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
-    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname1");
+    Assert.equal(frecencyBoostedSpocs[0].hostname, "domain1");
 
     sandbox.restore();
   }
@@ -214,47 +201,7 @@ add_task(async function test_frecency_sponsored_topsites() {
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
-    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname1");
-
-    sandbox.restore();
-  }
-  {
-    info(
-      "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
-        "Should return a single match with a subdomain"
-    );
-    const feed = getTopSitesFeedForTest(sandbox, {
-      frecent: [
-        {
-          url: "https://domain1.com",
-          frecency: 1234,
-        },
-        {
-          url: "https://domain2.com",
-          frecency: 1234,
-        },
-        {
-          url: "https://domain3.com",
-          frecency: 1234,
-        },
-      ],
-      linksWithDefaults: [
-        {
-          url: "",
-          hostname: "hostname1",
-          label: "",
-        },
-        {
-          url: "https://hostname2.com",
-          hostname: "",
-          label: "",
-        },
-      ],
-    });
-
-    const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
-    Assert.equal(frecencyBoostedSpocs.length, 1);
-    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname3");
+    Assert.equal(frecencyBoostedSpocs[0].hostname, "domain1");
 
     sandbox.restore();
   }
@@ -293,7 +240,26 @@ add_task(async function test_frecency_sponsored_topsites() {
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
-    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname1sub");
+    Assert.equal(frecencyBoostedSpocs[0].hostname, "sub.domain1");
+
+    sandbox.restore();
+  }
+  {
+    info(
+      "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
+        "Should not match a partial domain"
+    );
+    const feed = getTopSitesFeedForTest(sandbox, {
+      frecent: [
+        {
+          url: "https://domain12.com",
+          frecency: 1234,
+        },
+      ],
+    });
+
+    const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
+    Assert.equal(frecencyBoostedSpocs.length, 0);
 
     sandbox.restore();
   }

@@ -6,19 +6,18 @@
 ChromeUtils.defineESModuleGetters(this, {
   sinon: "resource://testing-common/Sinon.sys.mjs",
   TopSitesFeed: "resource://newtab/lib/TopSitesFeed.sys.mjs",
+  DEFAULT_TOP_SITES: "resource://newtab/lib/TopSitesFeed.sys.mjs",
 });
 
 const PREF_SOV_ENABLED = "sov.enabled";
 const SHOW_SPONSORED_PREF = "showSponsoredTopSites";
 const ROWS_PREF = "topSitesRows";
 
-function getTopSitesFeedForTest(
-  sandbox,
-  { frecent = [], linksWithDefaults = [] } = {}
-) {
+function getTopSitesFeedForTest(sandbox, { frecent = [], contile = [] } = {}) {
   let feed = new TopSitesFeed();
 
   feed.store = {
+    dispatch: sandbox.spy(),
     getState() {
       return this.state;
     },
@@ -31,7 +30,13 @@ function getTopSitesFeedForTest(
         },
       },
       TopSites: {
-        sov: { ready: true },
+        sov: {
+          ready: true,
+          positions: [
+            { position: 1, assignedPartner: "amp" },
+            { position: 2, assignedPartner: "frec-boost" },
+          ],
+        },
       },
     },
   };
@@ -43,30 +48,29 @@ function getTopSitesFeedForTest(
     cache: frecent,
   };
 
-  feed._linksWithDefaults = linksWithDefaults;
-
   feed._contile = {
     sov: true,
     sovEnabled: () => true,
+    sites: contile,
   };
 
   const frecencyBoostedSponsors = new Map([
     [
-      "hostname1",
+      "domain1",
       {
         domain: "https://domain1.com",
         faviconDataURI: "faviconDataURI1",
-        hostname: "hostname1",
+        hostname: "domain1",
         redirectURL: "https://redirectURL1.com",
         title: "title1",
       },
     ],
     [
-      "hostname2",
+      "domain2",
       {
         domain: "https://domain2.com",
         faviconDataURI: "faviconDataURI2",
-        hostname: "hostname2",
+        hostname: "domain2",
         redirectURL: "https://redirectURL2.com",
         title: "title2",
       },
@@ -75,147 +79,199 @@ function getTopSitesFeedForTest(
 
   sandbox.stub(feed, "_frecencyBoostedSponsors").value(frecencyBoostedSponsors);
 
+  // We need to refresh, because TopSitesFeed's
+  // DEFAULT_TOP_SITES acts like a singleton.
+  DEFAULT_TOP_SITES.length = 0;
+  feed._readContile();
+
   return feed;
 }
 
-add_task(async function test_dedupeSponsorsAgainstTopsites() {
+add_task(async function test_dedupeSponsorsAgainstNothing() {
   let sandbox = sinon.createSandbox();
   {
-    info(
-      "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
-        "Should return a single match with the right format"
-    );
+    info("TopSitesFeed.getLinksWithDefaults - Should return all defaults");
     const feed = getTopSitesFeedForTest(sandbox, {
-      frecent: [{ url: "https://domain1.com", frecency: 1000 }],
-      linksWithDefaults: [
-        { url: "https://otherdomain.com", hostname: "otherdomain" },
+      frecent: [
+        { url: "https://default1.com", frecency: 1000 },
+        { url: "https://default2.com", frecency: 1000 },
+        { url: "https://default3.com", frecency: 1000 },
+        { url: "https://default4.com", frecency: 1000 },
+        { url: "https://default5.com", frecency: 1000 },
+        { url: "https://default6.com", frecency: 1000 },
+        { url: "https://default7.com", frecency: 1000 },
+        { url: "https://default8.com", frecency: 1000 },
       ],
+      contile: [{ url: "https://contile1.com", name: "contile1" }],
     });
 
-    const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
-    Assert.equal(frecencyBoostedSpocs.length, 1);
-    Assert.equal(frecencyBoostedSpocs[0].hostname, "hostname1");
+    const withPinned = await feed.getLinksWithDefaults();
+    Assert.equal(withPinned.length, 8);
+    Assert.equal(withPinned[1].hostname, "default1");
 
     sandbox.restore();
   }
   {
     info(
-      "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
-        "Should dedupe against matching topsite"
+      "TopSitesFeed.getLinksWithDefaults - " +
+        "Should return a frecency match in the second position"
     );
     const feed = getTopSitesFeedForTest(sandbox, {
-      frecent: [{ url: "https://domain1.com", frecency: 1000 }],
-      linksWithDefaults: [
-        {
-          url: "https://domain1.com",
-          hostname: "hostname1",
-          label: "Domain 1",
-        },
+      frecent: [
+        { url: "https://default1.com", frecency: 1000 },
+        { url: "https://default2.com", frecency: 1000 },
+        { url: "https://default3.com", frecency: 1000 },
+        { url: "https://default4.com", frecency: 1000 },
+        { url: "https://default5.com", frecency: 1000 },
+        { url: "https://default6.com", frecency: 1000 },
+        { url: "https://default7.com", frecency: 1000 },
+        { url: "https://default8.com", frecency: 1000 },
+        { url: "https://domain1.com", frecency: 1000 },
       ],
+      contile: [{ url: "https://contile1.com", name: "contile1" }],
     });
 
-    const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
-    Assert.equal(frecencyBoostedSpocs.length, 0);
+    const withPinned = await feed.getLinksWithDefaults();
+    Assert.equal(withPinned.length, 8);
+    Assert.equal(withPinned[1].hostname, "domain1");
 
     sandbox.restore();
   }
   {
     info(
-      "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
-        "Should dedupe against matching topsite with path"
+      "TopSitesFeed.getLinksWithDefaults - " +
+        "Should return a frecency match with path in the second position"
     );
     const feed = getTopSitesFeedForTest(sandbox, {
-      frecent: [{ url: "https://domain1.com", frecency: 1000 }],
-      linksWithDefaults: [
-        {
-          url: "https://domain1.com/page",
-          hostname: "hostname1",
-          label: "Domain 1",
-        },
+      frecent: [
+        { url: "https://default1.com", frecency: 1000 },
+        { url: "https://default2.com", frecency: 1000 },
+        { url: "https://default3.com", frecency: 1000 },
+        { url: "https://default4.com", frecency: 1000 },
+        { url: "https://default5.com", frecency: 1000 },
+        { url: "https://default6.com", frecency: 1000 },
+        { url: "https://default7.com", frecency: 1000 },
+        { url: "https://default8.com", frecency: 1000 },
+        { url: "https://domain1.com/path", frecency: 1000 },
       ],
+      contile: [{ url: "https://contile1.com", name: "contile1" }],
     });
 
-    const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
-    Assert.equal(frecencyBoostedSpocs.length, 0);
+    const withPinned = await feed.getLinksWithDefaults();
+    Assert.equal(withPinned.length, 8);
+    Assert.equal(withPinned[1].hostname, "domain1");
 
     sandbox.restore();
   }
 });
 
-add_task(async function test_mergeSponsoredLinks_deduplication() {
+add_task(async function test_dedupeSponsorsAgainstTopsites() {
+  let sandbox = sinon.createSandbox();
   {
-    let sandbox = sinon.createSandbox();
-    info("Two sponsored shortcuts with same hostname should dedupe");
-    const feed = getTopSitesFeedForTest(sandbox);
-
-    feed.store.state.TopSites.sov = {
-      ready: true,
-      positions: [
-        { position: 1, assignedPartner: "amp" },
-        { position: 2, assignedPartner: "moz-sales" },
+    info(
+      "TopSitesFeed.getLinksWithDefaults - " +
+        "Should dedupe against matching topsite"
+    );
+    const feed = getTopSitesFeedForTest(sandbox, {
+      frecent: [
+        { url: "https://default1.com", frecency: 1000 },
+        { url: "https://default2.com", frecency: 1000 },
+        { url: "https://default3.com", frecency: 1000 },
+        { url: "https://default4.com", frecency: 1000 },
+        { url: "https://default5.com", frecency: 1000 },
+        { url: "https://domain1.com", frecency: 1000 },
+        { url: "https://default6.com", frecency: 1000 },
+        { url: "https://default7.com", frecency: 1000 },
+        { url: "https://default8.com", frecency: 1000 },
       ],
-    };
+      contile: [{ url: "https://contile1.com", name: "contile1" }],
+    });
 
-    const sponsoredLinks = {
-      amp: [
-        {
-          url: "https://sponsor1.com",
-          hostname: "sponsor1",
-          label: "Sponsor 1",
-        },
-      ],
-      "moz-sales": [
-        {
-          url: "https://sponsor1.com",
-          hostname: "sponsor1",
-          label: "Different Label",
-        },
-      ],
-      "frec-boost": [],
-    };
-
-    const result = feed._mergeSponsoredLinks(sponsoredLinks);
-    Assert.equal(result.length, 1);
-    Assert.equal(result[0].label, "Sponsor 1");
+    const withPinned = await feed.getLinksWithDefaults();
+    Assert.equal(withPinned.length, 8);
+    Assert.equal(withPinned[1].hostname, "default1");
 
     sandbox.restore();
   }
   {
-    let sandbox = sinon.createSandbox();
     info(
-      "Two sponsored shortcuts with same label but different hostname should dedupe"
+      "TopSitesFeed.getLinksWithDefaults - " +
+        "Should dedupe against matching topsite with path"
     );
-    const feed = getTopSitesFeedForTest(sandbox);
-
-    feed.store.state.TopSites.sov = {
-      ready: true,
-      positions: [
-        { position: 1, assignedPartner: "amp" },
-        { position: 2, assignedPartner: "moz-sales" },
+    const feed = getTopSitesFeedForTest(sandbox, {
+      frecent: [
+        { url: "https://default1.com", frecency: 1000 },
+        { url: "https://default2.com", frecency: 1000 },
+        { url: "https://default3.com", frecency: 1000 },
+        { url: "https://default4.com", frecency: 1000 },
+        { url: "https://default5.com", frecency: 1000 },
+        { url: "https://domain1.com/page", frecency: 1000 },
+        { url: "https://default6.com", frecency: 1000 },
+        { url: "https://default7.com", frecency: 1000 },
+        { url: "https://default8.com", frecency: 1000 },
       ],
-    };
+      contile: [{ url: "https://contile1.com", name: "contile1" }],
+    });
 
-    const sponsoredLinks = {
-      amp: [
-        {
-          url: "https://sponsor1.com",
-          hostname: "sponsor1",
-          label: "Brand Name",
-        },
-      ],
-      "moz-sales": [
-        {
-          url: "https://affiliate.com",
-          hostname: "affiliate",
-          label: "Brand Name",
-        },
-      ],
-      "frec-boost": [],
-    };
+    const withPinned = await feed.getLinksWithDefaults();
+    Assert.equal(withPinned.length, 8);
+    Assert.equal(withPinned[1].hostname, "default1");
 
-    const result = feed._mergeSponsoredLinks(sponsoredLinks);
-    Assert.equal(result.length, 1);
-    Assert.equal(result[0].hostname, "sponsor1");
+    sandbox.restore();
+  }
+});
+
+add_task(async function test_dedupeSponsorsAgainstContile() {
+  let sandbox = sinon.createSandbox();
+  {
+    info(
+      "TopSitesFeed.getLinksWithDefaults - " +
+        "Should dedupe against matching contile"
+    );
+    const feed = getTopSitesFeedForTest(sandbox, {
+      frecent: [
+        { url: "https://default1.com", frecency: 1000 },
+        { url: "https://default2.com", frecency: 1000 },
+        { url: "https://default3.com", frecency: 1000 },
+        { url: "https://default4.com", frecency: 1000 },
+        { url: "https://default5.com", frecency: 1000 },
+        { url: "https://default6.com", frecency: 1000 },
+        { url: "https://default7.com", frecency: 1000 },
+        { url: "https://default8.com", frecency: 1000 },
+        { url: "https://domain1.com", frecency: 1000 },
+      ],
+      contile: [{ url: "https://domain1.com", name: "contile1" }],
+    });
+
+    const withPinned = await feed.getLinksWithDefaults();
+    Assert.equal(withPinned.length, 8);
+    Assert.equal(withPinned[1].hostname, "default1");
+
+    sandbox.restore();
+  }
+  {
+    info(
+      "TopSitesFeed.getLinksWithDefaults - " +
+        "Should dedupe against matching contile label"
+    );
+    const feed = getTopSitesFeedForTest(sandbox, {
+      frecent: [
+        { url: "https://default1.com", frecency: 1000 },
+        { url: "https://default2.com", frecency: 1000 },
+        { url: "https://default3.com", frecency: 1000 },
+        { url: "https://default4.com", frecency: 1000 },
+        { url: "https://default5.com", frecency: 1000 },
+        { url: "https://default6.com", frecency: 1000 },
+        { url: "https://default7.com", frecency: 1000 },
+        { url: "https://default8.com", frecency: 1000 },
+        { url: "https://domain1.com", frecency: 1000 },
+      ],
+      contile: [{ url: "https://contile1.com", name: "title1" }],
+    });
+
+    const withPinned = await feed.getLinksWithDefaults();
+    Assert.equal(withPinned.length, 8);
+    Assert.equal(withPinned[1].hostname, "default1");
 
     sandbox.restore();
   }
