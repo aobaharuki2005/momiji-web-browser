@@ -14,6 +14,7 @@
 /* MingW currently does not implement a wide version of the
    startup routines.  Workaround is to implement something like
    it ourselves.  See bug 472063 */
+#  include <stdio.h>
 #  include <shellapi.h>
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
 
