@@ -1691,15 +1691,13 @@ void MacroAssemblerLOONG64::ma_mod_mask(Register src, Register dest,
   // Check the hold to see if we need to negate the result.
   ma_b(hold, hold, &done, NotSigned, ShortJump);
 
-  // If the hold was non-zero, negate the result to be in line with
-  // what JS wants
   if (negZero != nullptr) {
     // Jump out in case of negative zero.
-    ma_b(hold, hold, negZero, Zero);
-    as_sub_w(dest, zero, dest);
-  } else {
-    as_sub_w(dest, zero, dest);
+    ma_b(dest, dest, negZero, Zero);
   }
+  // If the hold was non-zero, negate the result to be in line with
+  // what JS wants
+  as_sub_w(dest, zero, dest);
 
   bind(&done);
 }
