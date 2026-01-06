@@ -70,16 +70,6 @@ class WindowSurfaceProvider final {
 
   RefPtr<WindowSurface> mWindowSurface;
 
-  /* While CleanupResources() can be called from Main thread when nsWindow is
-   * destroyed/hidden, StartRemoteDrawingInRegion()/EndRemoteDrawingInRegion()
-   * is called from Compositor thread during rendering.
-   *
-   * As nsWindow CleanupResources() call comes from Gtk/X11 we can't synchronize
-   * that with WebRender so we use lock to synchronize the access.
-   */
-  mozilla::Mutex mMutex MOZ_UNANNOTATED;
-  // WindowSurface needs to be re-created as underlying window was changed.
-  bool mWindowSurfaceValid;
 #ifdef MOZ_WAYLAND
   RefPtr<nsWindow> mWidget;
   // WindowSurfaceProvider is owned by GtkCompositorWidget so we don't need
@@ -88,12 +78,7 @@ class WindowSurfaceProvider final {
 #endif
 #ifdef MOZ_X11
   int mXDepth;
-  // Make mXWindow atomic to allow it read from different threads
-  // and make tsan happy.
-  // We don't care much about actual mXWindow value (it may be valid XWindow or
-  // nullptr) because we invalidate mXWindow at compositor/renderer thread
-  // before it's release in unmap handler.
-  Atomic<Window, Relaxed> mXWindow;
+  Window mXWindow;
   Visual* mXVisual;
 #endif
 };

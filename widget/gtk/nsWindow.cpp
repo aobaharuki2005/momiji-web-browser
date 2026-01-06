@@ -859,8 +859,6 @@ void nsWindow::SetModal(bool aModal) {
 // nsIWidget method, which means IsShown.
 bool nsWindow::IsVisible() const { return mIsShown; }
 
-bool nsWindow::IsMapped() const { return mIsMapped; }
-
 void nsWindow::RegisterTouchWindow() {
   mHandleTouchEvent = true;
   mTouches.Clear();
@@ -1398,7 +1396,6 @@ void nsWindow::HideWaylandToplevelWindow() {
       popup = prev;
     }
   }
-  WaylandStopVsync();
   gtk_widget_hide(mShell);
 }
 
@@ -6082,22 +6079,6 @@ Window nsWindow::GetX11Window() {
   return (Window) nullptr;
 }
 
-void nsWindow::ConfigureCompositor() {
-  LOG("nsWindow::ConfigureCompositor()");
-
-  if (mIsDestroyed) {
-    LOG("  quit, mIsDestroyed = %d", !!mIsDestroyed);
-    return;
-  }
-  // Compositor will be resumed at nsWindow::SetCompositorWidgetDelegate().
-  if (!mCompositorWidgetDelegate) {
-    LOG("  quit, missing mCompositorWidgetDelegate");
-    return;
-  }
-
-  ResumeCompositorImpl();
-}
-
 void nsWindow::SetGdkWindow(GdkWindow* aGdkWindow) {
   LOG("nsWindow::SetGdkWindow() %p", aGdkWindow);
   if (!aGdkWindow) {
@@ -6361,6 +6342,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
   }
 
   gtk_widget_realize(container);
+  // mGdkWindow is set by moz_container_realize() / SetGdkWindow().
+  MOZ_DIAGNOSTIC_ASSERT(mGdkWindow, "MozContainer realize failed?");
 
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
@@ -6369,13 +6352,31 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
 #endif
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay() && mIsAccelerated) {
-    mEGLWindow = MOZ_WL_SURFACE(container)->GetEGLWindow(mClientArea.Size());
+    mEGLWindow = mSurface->GetEGLWindow(mClientArea.Size());
   }
 #endif
   if (mEGLWindow) {
     LOG("Get NS_NATIVE_EGL_WINDOW mGdkWindow %p returned mEGLWindow %p",
         mGdkWindow, mEGLWindow);
   }
+
+#ifdef MOZ_X11
+  if (GdkIsX11Display()) {
+    mSurfaceProvider.Initialize(GetX11Window());
+
+    // Set window manager hint to keep fullscreen windows composited.
+    //
+    // If the window were to get unredirected, there could be visible
+    // tearing because Gecko does not align its framebuffer updates with
+    // vblank.
+    SetCompositorHint(GTK_WIDGET_COMPOSITED_ENABLED);
+  }
+#endif
+#ifdef MOZ_WAYLAND
+  if (GdkIsWaylandDisplay()) {
+    mSurfaceProvider.Initialize(this);
+  }
+#endif
 
   // make sure this is the focus widget in the container
   gtk_widget_show(container);
@@ -6507,6 +6508,7 @@ nsresult nsWindow::Create(nsIWidget* aParent, const LayoutDeviceIntRect& aRect,
     mWaylandVsyncSource = new WaylandVsyncSource(this);
     mWaylandVsyncSource->Init();
     mWaylandVsyncDispatcher = new VsyncDispatcher(mWaylandVsyncSource);
+    mWaylandVsyncSource->EnableVSyncSource();
   }
 #endif
 
@@ -6789,44 +6791,6 @@ void nsWindow::NativeMoveResize(bool aMoved, bool aResized) {
       DispatchResized();
     }
   }
-}
-
-void nsWindow::ResumeCompositorImpl() {
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  LOG("nsWindow::ResumeCompositorImpl()\n");
-
-  MOZ_DIAGNOSTIC_ASSERT(mCompositorWidgetDelegate);
-  mCompositorWidgetDelegate->SetRenderingSurface(GetX11Window());
-
-  // As WaylandStartVsync needs mCompositorWidgetDelegate this is the right
-  // time to start it.
-  WaylandStartVsync();
-
-  CompositorBridgeChild* remoteRenderer = GetRemoteRenderer();
-  MOZ_RELEASE_ASSERT(remoteRenderer);
-  remoteRenderer->SendResume();
-  remoteRenderer->SendForcePresent(wr::RenderReasons::WIDGET);
-}
-
-void nsWindow::WaylandStartVsync() {
-#ifdef MOZ_WAYLAND
-  if (!mWaylandVsyncSource) {
-    return;
-  }
-  LOG_VSYNC("nsWindow::WaylandStartVsync");
-  mWaylandVsyncSource->EnableVSyncSource();
-#endif
-}
-
-void nsWindow::WaylandStopVsync() {
-#ifdef MOZ_WAYLAND
-  if (!mWaylandVsyncSource) {
-    return;
-  }
-  LOG_VSYNC("nsWindow::WaylandStopVsync");
-  mWaylandVsyncSource->DisableVSyncSource();
-#endif
 }
 
 void nsWindow::NativeShow(bool aAction) {
@@ -8933,17 +8897,8 @@ void nsWindow::SetCompositorWidgetDelegate(CompositorWidgetDelegate* delegate) {
       delegate, !!mIsMapped, mCompositorWidgetDelegate);
 
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (delegate) {
-    mCompositorWidgetDelegate = delegate->AsPlatformSpecificDelegate();
-    MOZ_ASSERT(mCompositorWidgetDelegate,
-               "nsWindow::SetCompositorWidgetDelegate called with a "
-               "non-PlatformCompositorWidgetDelegate");
-    if (mIsMapped) {
-      ConfigureCompositor();
-    }
-  } else {
-    mCompositorWidgetDelegate = nullptr;
-  }
+  mCompositorWidgetDelegate =
+      delegate ? delegate->AsPlatformSpecificDelegate() : nullptr;
 }
 
 bool nsWindow::IsAlwaysUndecoratedWindow() const {
@@ -9517,24 +9472,11 @@ nsWindow::GtkWindowDecoration nsWindow::GetSystemGtkWindowDecoration() {
 
 void nsWindow::GetCompositorWidgetInitData(
     mozilla::widget::CompositorWidgetInitData* aInitData) {
-  nsCString displayName;
+  MOZ_DIAGNOSTIC_ASSERT(!mIsDestroyed);
 
   LOG("nsWindow::GetCompositorWidgetInitData");
 
-  Window window = GetX11Window();
-#ifdef MOZ_X11
-  // We're bit hackish here. Old GLX backend needs XWindow when GLContext
-  // is created so get XWindow now before map signal.
-  // We may see crashes/errors when nsWindow is unmapped (XWindow is
-  // invalidated) but we can't do anything about it.
-  if (!window && !gfxVars::UseEGL()) {
-    window =
-        gdk_x11_window_get_xid(gtk_widget_get_window(GTK_WIDGET(mContainer)));
-  }
-#endif
-  *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
-      window, displayName, GdkIsX11Display(), GetClientSize());
-
+  nsCString displayName;
 #ifdef MOZ_X11
   if (GdkIsX11Display()) {
     // Make sure the window XID is propagated to X server, we can fail otherwise
@@ -9544,6 +9486,9 @@ void nsWindow::GetCompositorWidgetInitData(
     displayName = nsCString(XDisplayString(display));
   }
 #endif
+
+  *aInitData = mozilla::widget::GtkCompositorWidgetInitData(
+      GetX11Window(), displayName, GdkIsX11Display(), GetClientSize());
 }
 
 #ifdef MOZ_X11
@@ -9831,24 +9776,6 @@ void nsWindow::OnMap() {
     if (mIsAlert) {
       gdk_window_set_override_redirect(GetToplevelGdkWindow(), TRUE);
     }
-
-#ifdef MOZ_X11
-    if (GdkIsX11Display()) {
-      mSurfaceProvider.Initialize(GetX11Window());
-
-      // Set window manager hint to keep fullscreen windows composited.
-      //
-      // If the window were to get unredirected, there could be visible
-      // tearing because Gecko does not align its framebuffer updates with
-      // vblank.
-      SetCompositorHint(GTK_WIDGET_COMPOSITED_ENABLED);
-    }
-#endif
-#ifdef MOZ_WAYLAND
-    if (GdkIsWaylandDisplay()) {
-      mSurfaceProvider.Initialize(this);
-    }
-#endif
   }
 
   if (mIsDragPopup && GdkIsX11Display()) {
@@ -9864,12 +9791,7 @@ void nsWindow::OnMap() {
 
   RefreshWindowClass();
 
-  // We're not mapped yet but we have already created compositor.
-  if (mCompositorWidgetDelegate) {
-    ConfigureCompositor();
-  }
-
-  LOG("  finished, new GdkWindow %p XID 0x%lx\n", mGdkWindow, GetX11Window());
+  LOG("  finished, GdkWindow %p XID 0x%lx\n", mGdkWindow, GetX11Window());
 }
 
 void nsWindow::OnUnmap() {
