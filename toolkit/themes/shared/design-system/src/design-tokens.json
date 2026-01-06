@@ -80,6 +80,21 @@
       },
       "overlay": {
         "value": "{color.black.alpha.50}"
+      },
+      "list": {
+        "item": {
+          "hover": {
+            "value": {
+              "brand": {
+                "default": "color-mix(in srgb, var(--color-accent-primary) 20%, transparent)"
+              },
+              "platform": {
+                "default": "color-mix(in srgb, currentColor 20%, transparent)"
+              },
+              "prefersContrast": "SelectedItem"
+            }
+          }
+        }
       }
     }
   },
@@ -1591,6 +1606,16 @@
               "platform": {
                 "default": "SelectedItemText"
               }
+            }
+          }
+        }
+      },
+      "list": {
+        "item": {
+          "hover": {
+            "value": {
+              "default": "{text.color.@base}",
+              "prefersContrast": "SelectedItemText"
             }
           }
         }

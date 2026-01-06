@@ -496,8 +496,10 @@ a[is="moz-support-link"]:not(.sidebar-footer-link, [hidden]) {
 @media (forced-colors) {
   #engineList > treechildren::-moz-tree-image(hover),
   #blocklistsTree > treechildren::-moz-tree-image(hover) {
-    fill: var(--in-content-item-hover-text);
-    stroke: var(--in-content-item-hover);
+    fill: var(--text-color-list-item-hover);
+    /* fill allows icon and text colors, but we have no such rules for stroke */
+    /* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
+    stroke: var(--background-color-list-item-hover);
   }
 }
 

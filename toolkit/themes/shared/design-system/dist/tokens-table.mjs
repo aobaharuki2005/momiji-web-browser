@@ -287,6 +287,19 @@ export const tokensTable = {
     },
     {
       value: {
+        brand: {
+          default:
+            "color-mix(in srgb, var(--color-accent-primary) 20%, transparent)",
+        },
+        platform: {
+          default: "color-mix(in srgb, currentColor 20%, transparent)",
+        },
+        prefersContrast: "SelectedItem",
+      },
+      name: "--background-color-list-item-hover",
+    },
+    {
+      value: {
         forcedColors: "ButtonFace",
         brand: { default: "color-mix(in srgb, currentColor 7%, transparent)" },
         platform: {
@@ -1027,6 +1040,13 @@ export const tokensTable = {
       },
       name: "--text-color-accent-primary-selected",
     },
+    {
+      value: {
+        default: "var(--text-color)",
+        prefersContrast: "SelectedItemText",
+      },
+      name: "--text-color-list-item-hover",
+    },
   ],
   outline: [
     {
@@ -1184,6 +1204,14 @@ export const variableLookupTable = {
     default: "light-dark(var(--color-yellow-0), var(--color-yellow-90))",
   },
   "background-color-overlay": "var(--color-black-alpha-50)",
+  "background-color-list-item-hover": {
+    brand: {
+      default:
+        "color-mix(in srgb, var(--color-accent-primary) 20%, transparent)",
+    },
+    platform: { default: "color-mix(in srgb, currentColor 20%, transparent)" },
+    prefersContrast: "SelectedItem",
+  },
   "border-color": {
     brand: {
       light: "var(--color-gray-50)",
@@ -1856,5 +1884,9 @@ export const variableLookupTable = {
       default: "light-dark(var(--color-white), var(--color-gray-100))",
     },
     platform: { default: "SelectedItemText" },
+  },
+  "text-color-list-item-hover": {
+    default: "var(--text-color)",
+    prefersContrast: "SelectedItemText",
   },
 };

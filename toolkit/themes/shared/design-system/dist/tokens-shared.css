@@ -327,6 +327,7 @@
     --text-color-disabled: color-mix(in srgb, currentColor 40%, transparent);
     --text-color-deemphasized: color-mix(in srgb, currentColor 69%, transparent);
     --text-color-error: light-dark(var(--color-red-70), var(--color-red-20));
+    --text-color-list-item-hover: var(--text-color);
   }
 }
 
@@ -345,6 +346,7 @@
       --background-color-canvas: Canvas;
       --background-color-critical: var(--background-color-canvas);
       --background-color-information: var(--background-color-canvas);
+      --background-color-list-item-hover: SelectedItem;
       --background-color-success: var(--background-color-canvas);
       --background-color-warning: var(--background-color-canvas);
 
@@ -374,6 +376,7 @@
       --text-color: CanvasText;
       --text-color-deemphasized: inherit;
       --text-color-error: inherit;
+      --text-color-list-item-hover: SelectedItemText;
     }
   }
 }
