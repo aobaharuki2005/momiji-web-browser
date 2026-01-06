@@ -72,6 +72,10 @@ RETURNING
  */
 export class TabNotesStorage {
   DATABASE_FILE_NAME = Object.freeze("tabnotes.sqlite");
+  TELEMETRY_SOURCE = Object.freeze({
+    TAB_CONTEXT_MENU: "context_menu",
+    TAB_HOVER_PREVIEW_PANEL: "hover_menu",
+  });
 
   /** @type {OpenedConnection|undefined} */
   #connection;
@@ -167,12 +171,15 @@ export class TabNotesStorage {
    *   The tab that the note should be associated with
    * @param {string} note
    *   The note itself
+   * @param {object} [options]
+   * @param {TabNoteTelemetrySource} [options.telemetrySource]
+   *   The UI surface that requested to set a note.
    * @returns {Promise<TabNoteRecord>}
    *   The actual note that was set after sanitization
    * @throws {RangeError}
    *   if `tab` is not eligible for a tab note or `note` is empty
    */
-  async set(tab, note) {
+  async set(tab, note, options = {}) {
     if (!this.isEligible(tab)) {
       throw new RangeError("Tab notes must be associated to an eligible tab");
     }
@@ -200,6 +207,7 @@ export class TabNotesStorage {
             bubbles: true,
             detail: {
               note: insertedRecord,
+              telemetrySource: options.telemetrySource,
             },
           })
         );
@@ -217,6 +225,7 @@ export class TabNotesStorage {
           bubbles: true,
           detail: {
             note: updatedRecord,
+            telemetrySource: options.telemetrySource,
           },
         })
       );
@@ -229,10 +238,13 @@ export class TabNotesStorage {
    *
    * @param {MozTabbrowserTab} tab
    *   The tab that has a note
+   * @param {object} [options]
+   * @param {TabNoteTelemetrySource} [options.telemetrySource]
+   *   The UI surface that requested to delete a note.
    * @returns {Promise<boolean>}
    *   True if there was a note and it was deleted; false otherwise
    */
-  async delete(tab) {
+  async delete(tab, options = {}) {
     /** @type {mozIStorageRow[]} */
     const deleteResult = await this.#connection.executeCached(DELETE_NOTE, {
       url: tab.canonicalUrl,
@@ -245,6 +257,7 @@ export class TabNotesStorage {
           bubbles: true,
           detail: {
             note: deletedRecord,
+            telemetrySource: options.telemetrySource,
           },
         })
       );

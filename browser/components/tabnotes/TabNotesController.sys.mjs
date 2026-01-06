@@ -126,6 +126,12 @@ class TabNotesControllerClass {
         break;
       case "TabNote:Created":
         {
+          const { telemetrySource } = event.detail;
+          if (telemetrySource) {
+            Glean.tabNotes.added.record({
+              source: telemetrySource,
+            });
+          }
           // A new tab note was created for a specific canonical URL. Ensure that
           // all tabs with the same canonical URL also indicate that there is a
           // tab note.
