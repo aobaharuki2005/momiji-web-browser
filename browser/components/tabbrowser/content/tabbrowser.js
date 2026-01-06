@@ -3356,7 +3356,7 @@
       if (panelEl) {
         const footer = document.createXULElement("split-view-footer");
         footer.setTab(tab);
-        panelEl.appendChild(footer);
+        panelEl.querySelector(".browserStack").appendChild(footer);
       }
     }
 

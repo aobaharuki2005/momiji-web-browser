@@ -322,7 +322,7 @@ add_task(async function test_click_findbar_to_select_panel() {
   await promiseFindbarOpen;
 
   info("Select the second panel by clicking the find bar.");
-  EventUtils.synthesizeMouseAtCenter(findbar, {});
+  EventUtils.synthesizeMouseAtCenter(findbar.getElement("findbar-textbox"), {});
   await BrowserTestUtils.waitForMutationCondition(
     panel2,
     { attributeFilter: ["class"] },

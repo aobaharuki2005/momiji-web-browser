@@ -227,8 +227,8 @@
     }
 
     /* Display split view footer within inactive panels. */
-    .split-view-panel:not(.deck-selected) > split-view-footer {
-      display: inherit;
+    .split-view-panel:not(.deck-selected) > .browserContainer > .browserStack > split-view-footer {
+      display: flex;
 
       &[hidden] {
         display: none;
