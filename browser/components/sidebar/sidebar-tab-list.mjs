@@ -271,7 +271,7 @@ export class SidebarTabRow extends FxviewTabRowBase {
             "activemedia-blocked"
           ),
         })}
-        disabled=${this.closeRequested}
+        ?disabled=${this.closeRequested}
         data-l10n-args=${ifDefined(this.primaryL10nArgs)}
         data-l10n-id=${ifDefined(this.primaryL10nId)}
         href=${ifDefined(this.url)}

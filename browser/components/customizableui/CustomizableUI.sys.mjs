@@ -2572,9 +2572,7 @@ var CustomizableUIInternal = {
       node.setAttribute("id", aWidget.id);
       node.setAttribute("widget-id", aWidget.id);
       node.setAttribute("widget-type", aWidget.type);
-      if (aWidget.disabled) {
-        node.setAttribute("disabled", true);
-      }
+      node.toggleAttribute("disabled", !!aWidget.disabled);
       node.setAttribute("removable", aWidget.removable);
       node.setAttribute("overflows", aWidget.overflows);
       if (aWidget.tabSpecific) {

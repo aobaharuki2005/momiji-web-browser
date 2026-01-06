@@ -295,7 +295,7 @@ xul|description {
   margin-bottom: 4px;
 }
 
-xul|label[disabled="true"] {
+xul|label[disabled] {
   color: GrayText;
 }
 

@@ -54,11 +54,10 @@ export var ToolbarContextMenu = {
         popup.triggerNode.id
       );
     checkbox.hidden = !isDownloads;
-    if (DownloadsButton.autoHideDownloadsButton) {
-      checkbox.setAttribute("checked", "true");
-    } else {
-      checkbox.removeAttribute("checked");
-    }
+    checkbox.toggleAttribute(
+      "checked",
+      DownloadsButton.autoHideDownloadsButton
+    );
   },
 
   /**
@@ -70,7 +69,7 @@ export var ToolbarContextMenu = {
    * @param {CommandEvent} event
    */
   onDownloadsAutoHideChange(event) {
-    let autoHide = event.target.getAttribute("checked") == "true";
+    let autoHide = event.target.hasAttribute("checked");
     Services.prefs.setBoolPref("browser.download.autohideButton", autoHide);
   },
 
@@ -99,9 +98,7 @@ export var ToolbarContextMenu = {
         popup.triggerNode.id
       );
     separator.hidden = checkbox.hidden = !isDownloads;
-    lazy.gAlwaysOpenPanel
-      ? checkbox.setAttribute("checked", "true")
-      : checkbox.removeAttribute("checked");
+    checkbox.toggleAttribute("checked", lazy.gAlwaysOpenPanel);
   },
 
   /**
@@ -113,7 +110,7 @@ export var ToolbarContextMenu = {
    * @param {CommandEvent} event
    */
   onDownloadsAlwaysOpenPanelChange(event) {
-    let alwaysOpen = event.target.getAttribute("checked") == "true";
+    let alwaysOpen = event.target.hasAttribute("checked");
     Services.prefs.setBoolPref("browser.download.alwaysOpenPanel", alwaysOpen);
   },
 
@@ -216,7 +213,7 @@ export var ToolbarContextMenu = {
             toolbar.getAttribute("type") == "menubar"
               ? "autohide"
               : "collapsed";
-          menuItem.setAttribute(
+          menuItem.toggleAttribute(
             "checked",
             !toolbar.hasAttribute(hidingAttribute)
           );
@@ -441,11 +438,10 @@ export var ToolbarContextMenu = {
     );
     if (isCustomizingExtsButton) {
       checkbox.hidden = false;
-      if (gUnifiedExtensions.buttonAlwaysVisible) {
-        checkbox.setAttribute("checked", "true");
-      } else {
-        checkbox.removeAttribute("checked");
-      }
+      checkbox.toggleAttribute(
+        "checked",
+        gUnifiedExtensions.buttonAlwaysVisible
+      );
     } else if (isExtsButton && !gUnifiedExtensions.buttonAlwaysVisible) {
       // The button may be visible despite the user's preference, which could
       // remind the user of the button's existence. Offer an option to unhide
@@ -516,7 +512,7 @@ export var ToolbarContextMenu = {
         if (widgetId) {
           let area = lazy.CustomizableUI.getPlacementOfWidget(widgetId).area;
           let inToolbar = area != lazy.CustomizableUI.AREA_ADDONS;
-          pinToToolbar.setAttribute("checked", inToolbar);
+          pinToToolbar.toggleAttribute("checked", inToolbar);
         }
       }
 

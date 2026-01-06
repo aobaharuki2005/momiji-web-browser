@@ -603,7 +603,7 @@ function OnLDBUnload() {
 function toggle(menuitem) {
   // trim the initial "menu_"
   var feature = menuitem.id.substring(5);
-  gDebugger[feature] = menuitem.getAttribute("checked") == "true";
+  gDebugger[feature] = menuitem.hasAttribute("checked");
 }
 
 function openFile() {

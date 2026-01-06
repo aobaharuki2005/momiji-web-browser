@@ -257,7 +257,7 @@ document.addEventListener(
           ToolbarContextMenu.onDownloadsAutoHideChange(event);
           break;
         case "toolbar-context-always-show-extensions-button":
-          if (event.target.getAttribute("checked") == "true") {
+          if (event.target.hasAttribute("checked")) {
             gUnifiedExtensions.showExtensionsButtonInToolbar();
           } else {
             gUnifiedExtensions.hideExtensionsButtonFromToolbar();

@@ -69,14 +69,10 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel,
 
   // decide enabled state based on command content if it exists, otherwise do it
   // based on our own content
-  bool isEnabled;
-  if (mCommandElement) {
-    isEnabled = !mCommandElement->AttrValueIs(
-        kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
-  } else {
-    isEnabled = !mContent->AsElement()->AttrValueIs(
-        kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
-  }
+  const bool isEnabled =
+      mCommandElement
+          ? !mCommandElement->GetBoolAttr(nsGkAtoms::disabled)
+          : !mContent->AsElement()->GetBoolAttr(nsGkAtoms::disabled);
 
   // set up the native menu item
   if (mType == eSeparatorMenuItemType) {
@@ -88,8 +84,7 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel,
                                                       action:nil
                                                keyEquivalent:@""];
 
-    mIsChecked = mContent->AsElement()->AttrValueIs(
-        kNameSpaceID_None, nsGkAtoms::checked, nsGkAtoms::_true, eCaseMatters);
+    mIsChecked = mContent->AsElement()->GetBoolAttr(nsGkAtoms::checked);
 
     mNativeMenuItem.enabled = isEnabled;
     mNativeMenuItem.state =
@@ -168,13 +163,7 @@ nsresult nsMenuItemX::SetChecked(bool aIsChecked) {
 
   // update the content model. This will also handle unchecking our siblings
   // if we are a radiomenu
-  if (mIsChecked) {
-    mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                                   u"true"_ns, true);
-  } else {
-    mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                                     true);
-  }
+  mContent->AsElement()->SetBoolAttr(nsGkAtoms::checked, mIsChecked);
 
   // update native menu item
   mNativeMenuItem.state =
@@ -243,7 +232,7 @@ nsresult nsMenuItemX::DispatchDOMEvent(const nsString& eventName,
 void nsMenuItemX::UncheckRadioSiblings(nsIContent* aCheckedContent) {
   nsAutoString myGroupName;
   aCheckedContent->AsElement()->GetAttr(nsGkAtoms::name, myGroupName);
-  if (!myGroupName.Length()) {  // no groupname, nothing to do
+  if (myGroupName.IsEmpty()) {  // no groupname, nothing to do
     return;
   }
 
@@ -259,8 +248,8 @@ void nsMenuItemX::UncheckRadioSiblings(nsIContent* aCheckedContent) {
       // if the current sibling is in the same group, clear it
       if (sibling->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                             myGroupName, eCaseMatters)) {
-        sibling->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                                      u"false"_ns, true);
+        sibling->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
+                                        true);
       }
     }
   }
@@ -361,10 +350,9 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument,
     if (aAttribute == nsGkAtoms::checked) {
       // if we're a radio menu, uncheck our sibling radio items. No need to
       // do any of this if we're just a normal check menu.
+      // XXX isn't this done by XULButtonElement as well?
       if (mType == eRadioMenuItemType &&
-          mContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                             nsGkAtoms::checked,
-                                             nsGkAtoms::_true, eCaseMatters)) {
+          mContent->AsElement()->GetBoolAttr(nsGkAtoms::checked)) {
         UncheckRadioSiblings(mContent);
       }
       mMenuParent->SetRebuild(true);
@@ -392,33 +380,24 @@ void nsMenuItemX::ObserveAttributeChanged(dom::Document* aDocument,
     } else if (aAttribute == nsGkAtoms::key) {
       SetKeyEquiv();
     } else if (aAttribute == nsGkAtoms::disabled) {
-      mNativeMenuItem.enabled = !aContent->AsElement()->AttrValueIs(
-          kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true,
-          eCaseMatters);
+      mNativeMenuItem.enabled =
+          !aContent->AsElement()->GetBoolAttr(nsGkAtoms::disabled);
     }
   } else if (aContent == mCommandElement) {
     // the only thing that really matters when the menu isn't showing is the
     // enabled state since it enables/disables keyboard commands
     if (aAttribute == nsGkAtoms::disabled) {
       // first we sync our menu item DOM node with the command DOM node
-      nsAutoString commandDisabled;
-      nsAutoString menuDisabled;
-      aContent->AsElement()->GetAttr(nsGkAtoms::disabled, commandDisabled);
-      mContent->AsElement()->GetAttr(nsGkAtoms::disabled, menuDisabled);
-      if (!commandDisabled.Equals(menuDisabled)) {
-        // The menu's disabled state needs to be updated to match the command.
-        if (commandDisabled.IsEmpty()) {
-          mContent->AsElement()->UnsetAttr(kNameSpaceID_None,
-                                           nsGkAtoms::disabled, true);
-        } else {
-          mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::disabled,
-                                         commandDisabled, true);
-        }
+      const bool commandDisabled =
+          mCommandElement->GetBoolAttr(nsGkAtoms::disabled);
+      const bool menuDisabled =
+          mContent->AsElement()->GetBoolAttr(nsGkAtoms::disabled);
+      if (commandDisabled != menuDisabled) {
+        mContent->AsElement()->SetBoolAttr(nsGkAtoms::disabled,
+                                           commandDisabled);
       }
       // now we sync our native menu item with the command DOM node
-      mNativeMenuItem.enabled = !aContent->AsElement()->AttrValueIs(
-          kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true,
-          eCaseMatters);
+      mNativeMenuItem.enabled = !commandDisabled;
     }
   } else if (aContent == mImageElement && aAttribute == nsGkAtoms::srcset) {
     SetupIcon();

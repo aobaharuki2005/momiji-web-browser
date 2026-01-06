@@ -1719,21 +1719,6 @@ LayoutDeviceIntSize nsNativeThemeCocoa::GetMinimumWidgetSize(
   NS_OBJC_END_TRY_BLOCK_RETURN(LayoutDeviceIntSize());
 }
 
-bool nsNativeThemeCocoa::WidgetAttributeChangeRequiresRepaint(
-    StyleAppearance aAppearance, nsAtom* aAttribute) {
-  // Some widget types just never change state.
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::MozSidebar:
-    case StyleAppearance::Tooltip:
-    case StyleAppearance::Menupopup:
-      return false;
-    default:
-      break;
-  }
-  return Theme::WidgetAttributeChangeRequiresRepaint(aAppearance, aAttribute);
-}
-
 bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
                                              nsIFrame* aFrame,
                                              StyleAppearance aAppearance) {

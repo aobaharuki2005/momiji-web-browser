@@ -58,13 +58,9 @@
     }
 
     set checked(val) {
-      let change = val != (this.getAttribute("checked") == "true");
-      if (val) {
-        this.setAttribute("checked", "true");
-      } else {
-        this.removeAttribute("checked");
-      }
-
+      val = !!val;
+      let change = val != this.hasAttribute("checked");
+      this.toggleAttribute("checked", val);
       if (change) {
         let event = document.createEvent("Events");
         event.initEvent("CheckboxStateChange", true, true);
@@ -73,7 +69,7 @@
     }
 
     get checked() {
-      return this.getAttribute("checked") == "true";
+      return this.hasAttribute("checked");
     }
   }
 

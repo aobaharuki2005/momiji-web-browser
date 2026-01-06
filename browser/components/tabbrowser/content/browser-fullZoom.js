@@ -358,11 +358,7 @@ var FullZoom = {
     }
 
     let fullZoomCmd = document.getElementById("cmd_fullZoomToggle");
-    if (!ZoomManager.useFullZoom) {
-      fullZoomCmd.setAttribute("checked", "true");
-    } else {
-      fullZoomCmd.setAttribute("checked", "false");
-    }
+    fullZoomCmd.toggleAttribute("checked", !ZoomManager.useFullZoom);
   },
 
   // Setting & Pref Manipulation

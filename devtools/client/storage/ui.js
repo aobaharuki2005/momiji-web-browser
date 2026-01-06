@@ -1604,7 +1604,7 @@ class StorageUI {
 
   onVariableViewPopupShowing() {
     const item = this.view.getFocusedItem();
-    this._variableViewPopupCopy.setAttribute("disabled", !item);
+    this._variableViewPopupCopy.toggleAttribute("disabled", !item);
   }
 
   /**

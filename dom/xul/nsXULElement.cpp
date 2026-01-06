@@ -899,7 +899,9 @@ void nsXULElement::Click(CallerType aCallerType) {
 
 void nsXULElement::ClickWithInputSource(uint16_t aInputSource,
                                         bool aIsTrustedEvent) {
-  if (BoolAttrIsTrue(nsGkAtoms::disabled)) return;
+  if (State().HasState(ElementState::DISABLED)) {
+    return;
+  }
 
   nsCOMPtr<Document> doc = GetComposedDoc();  // Strong just in case
   if (doc) {
@@ -1003,13 +1005,6 @@ nsresult nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype) {
         protoattr.mName.GetPrefix(), value, /* aNotify = */ false));
   }
   return NS_OK;
-}
-
-bool nsXULElement::BoolAttrIsTrue(nsAtom* aName) const {
-  const nsAttrValue* attr = GetAttrInfo(kNameSpaceID_None, aName).mValue;
-
-  return attr && attr->Type() == nsAttrValue::eAtom &&
-         attr->GetAtomValue() == nsGkAtoms::_true;
 }
 
 bool nsXULElement::IsEventAttributeNameInternal(nsAtom* aName) {

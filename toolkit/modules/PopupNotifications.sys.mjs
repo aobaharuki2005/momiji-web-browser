@@ -1211,15 +1211,12 @@ PopupNotifications.prototype = {
 
   _setNotificationUIState(notification, state = {}) {
     let mainAction = notification.notification.mainAction;
-    if (
+    notification.toggleAttribute(
+      "mainactiondisabled",
       (mainAction && mainAction.disabled) ||
-      state.disableMainAction ||
-      notification.hasAttribute("invalidselection")
-    ) {
-      notification.setAttribute("mainactiondisabled", "true");
-    } else {
-      notification.removeAttribute("mainactiondisabled");
-    }
+        state.disableMainAction ||
+        notification.hasAttribute("invalidselection")
+    );
     if (state.warningLabel) {
       notification.setAttribute("warninglabel", state.warningLabel);
       notification.removeAttribute("warninghidden");

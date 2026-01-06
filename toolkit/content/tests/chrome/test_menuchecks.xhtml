@@ -99,7 +99,7 @@
     var children = document.getElementById("popup").childNodes;
     for (var c = 0; c < children.length; c++) {
       var child = children[c];
-      if ((checkedItems.includes(child.id) && child.getAttribute("checked") != "true") ||
+      if ((checkedItems.includes(child.id) && !child.hasAttribute("checked")) ||
           (!checkedItems.includes(child.id) && child.hasAttribute("checked"))) {
         isok = false;
         break;

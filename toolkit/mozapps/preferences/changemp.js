@@ -213,15 +213,10 @@ function checkPasswords() {
       return;
     }
   }
-
-  if (
+  let enabled =
     pw1 == pw2 &&
-    (pw1 != "" || Services.policies.isAllowed("removeMasterPassword"))
-  ) {
-    ok.setAttribute("disabled", "false");
-  } else {
-    ok.setAttribute("disabled", "true");
-  }
+    (pw1 != "" || Services.policies.isAllowed("removeMasterPassword"));
+  ok.toggleAttribute("disabled", !enabled);
 }
 
 window.addEventListener("load", init);
