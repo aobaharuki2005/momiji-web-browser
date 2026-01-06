@@ -7,10 +7,21 @@ Source listing
     :alt: The source listing and each component
     :width: 958px
 
+Search field
+------------
+
+The header shows the :ref:`search <searchfox_search>` field.
+
+Revision
+--------
+
+In the file listing, the header shows the currently-showing revision's hash and
+the commit message.
+
 Breadcrumbs
 -----------
 
-At the top of the source listing, breadcrumbs for the file is shown.
+Below the header, breadcrumbs for the file is shown.
 
 You can select different tree from the repository drop down menu there, and also navigate to other directory, or open a context menu for the file symbol.
 

@@ -1,3 +1,5 @@
+.. _searchfox_search:
+
 Searchfox Query Language Documentation
 ======================================
 
