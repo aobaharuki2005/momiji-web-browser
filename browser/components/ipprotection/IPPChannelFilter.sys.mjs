@@ -12,8 +12,7 @@ const lazy = XPCOMUtils.declareLazy({
     iid: Ci.nsIProtocolProxyService,
   },
 });
-const { TRANSPARENT_PROXY_RESOLVES_HOST, ALWAYS_TUNNEL_VIA_PROXY } =
-  Ci.nsIProxyInfo;
+const { TRANSPARENT_PROXY_RESOLVES_HOST } = Ci.nsIProxyInfo;
 const failOverTimeout = 10; // seconds
 
 const MODE_PREF = "browser.ipProtection.mode";
@@ -109,7 +108,7 @@ export class IPPChannelFilter {
           protocol.port,
           authToken,
           isolationKey,
-          TRANSPARENT_PROXY_RESOLVES_HOST | ALWAYS_TUNNEL_VIA_PROXY,
+          TRANSPARENT_PROXY_RESOLVES_HOST,
           failOverTimeout,
           fallBackInfo
         );

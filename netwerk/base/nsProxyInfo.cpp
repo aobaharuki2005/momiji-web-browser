@@ -61,10 +61,6 @@ nsProxyInfo::nsProxyInfo(const nsACString& aType, const nsACString& aHost,
   } else {
     mType = kProxyType_DIRECT;
   }
-
-  if (mFlags & nsIProxyInfo::ALWAYS_TUNNEL_VIA_PROXY) {
-    mResolveFlags |= nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL;
-  }
 }
 
 NS_IMETHODIMP
