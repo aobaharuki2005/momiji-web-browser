@@ -1985,39 +1985,43 @@ pub unsafe extern "C" fn Servo_StyleSet_FlushStyleSheets(
     let mut data = raw_data.borrow_mut();
     let doc_element = doc_element.map(GeckoElement);
 
-    let mut doc_flush_result = data.flush_stylesheets(&guard, doc_element, snapshots.as_ref());
+    let mut invalidations = data.flush_stylesheets(&guard);
     if !non_document_styles.is_empty() {
         for author_styles in non_document_styles {
-            // TODO(emilio): This is going to need an element or something to do proper
-            // invalidation in ShadowRoots.
-            let difference = author_styles.flush::<GeckoElement>(&mut data.stylist, &guard);
-            // TODO(emilio): Consider doing scoped invalidation, specially once we have tree-scoped
-            // names.
-            doc_flush_result.difference.merge_with(difference);
+            let shadow_invalidations = author_styles.flush(&mut data.stylist, &guard);
+            // TODO(emilio): For now we drop the style invalidations on the floor, relying on
+            // explicit invalidation from C++.
+            // TODO(emilio): Consider doing scoped cascade data invalidation, specially once we
+            // have tree-scoped names.
+            invalidations
+                .cascade_data_difference
+                .merge_with(shadow_invalidations.cascade_data_difference);
         }
         data.stylist.remove_unique_author_data_cache_entries();
     }
 
     // TODO(emilio): consider merging the existing stylesheet invalidation machinery into the
     // `CascadeDataDifference`.
-    if let Some(doc_element) = doc_element {
-        let changed_position_try_names = &doc_flush_result.difference.changed_position_try_names;
-        if !changed_position_try_names.is_empty() {
-            style::invalidation::stylesheets::invalidate_position_try(
-                doc_element,
-                &changed_position_try_names,
-                &mut |e, _data| unsafe {
-                    bindings::Gecko_InvalidatePositionTry(e.0);
-                },
-                &mut |_| {},
-            );
-        }
-
-        if doc_flush_result.had_invalidations {
-            // The invalidation machinery propagates the bits up, but we still need to tell the Gecko
-            // restyle root machinery about it.
-            bindings::Gecko_NoteDirtySubtreeForInvalidation(doc_element.0);
-        }
+    let Some(doc_element) = doc_element else {
+        return;
+    };
+    if invalidations.process_style(doc_element, snapshots.as_ref()) {
+        // The style invalidation machinery propagates the bits up, but we still need to tell the
+        // Gecko restyle root machinery about it.
+        bindings::Gecko_NoteDirtySubtreeForInvalidation(doc_element.0);
+    }
+    let changed_position_try_names = &invalidations
+        .cascade_data_difference
+        .changed_position_try_names;
+    if !changed_position_try_names.is_empty() {
+        style::invalidation::stylesheets::invalidate_position_try(
+            doc_element,
+            &changed_position_try_names,
+            &mut |e, _data| unsafe {
+                bindings::Gecko_InvalidatePositionTry(e.0);
+            },
+            &mut |_| {},
+        );
     }
 }
 
