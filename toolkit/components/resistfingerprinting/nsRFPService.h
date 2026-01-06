@@ -568,12 +568,10 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   // --------------------------------------------------------------------------
 
   static void MaybeReportCanvasFingerprinter(nsTArray<CanvasUsage>& aUses,
-                                             nsIChannel* aChannel,
-                                             const nsACString& aURI,
+                                             nsIChannel* aChannel, nsIURI* aURI,
                                              const nsACString& aOriginNoSuffix);
 
-  static void MaybeReportFontFingerprinter(nsIChannel* aChannel,
-                                           const nsACString& aURI,
+  static void MaybeReportFontFingerprinter(nsIChannel* aChannel, nsIURI* aURI,
                                            const nsACString& aOriginNoSuffix);
 
   // --------------------------------------------------------------------------

@@ -17700,13 +17700,13 @@ void Document::RecordCanvasUsage(CanvasUsage& aUsage) {
   uint64_t now = PR_Now();
 
   nsCString originNoSuffix;
-  nsCString uri;
   if (NS_FAILED(NodePrincipal()->GetOriginNoSuffix(originNoSuffix))) {
     MOZ_LOG(gFingerprinterDetection, LogLevel::Error,
             ("Document:: %p Could not get originsuffix", this));
     return;
   }
-  if (NS_FAILED(NodePrincipal()->GetSpec(uri))) {
+  nsCOMPtr<nsIURI> uri = NodePrincipal()->GetURI();
+  if (!uri) {
     MOZ_LOG(gFingerprinterDetection, LogLevel::Error,
             ("Document:: %p Could not get uri", this));
     return;
@@ -17727,11 +17727,14 @@ void Document::RecordCanvasUsage(CanvasUsage& aUsage) {
       }
     }
 
+    nsAutoCString uriString;
+    (void)uri->GetSpec(uriString);
+
     MOZ_LOG(gFingerprinterDetection, LogLevel::Debug,
             ("Document:: %p %s recording canvas usage of type %s on %s in %s",
              this, originNoSuffix.get(),
-             CanvasUsageSourceToString(aUsage.mUsageSource).get(), uri.get(),
-             filename.get()));
+             CanvasUsageSourceToString(aUsage.mUsageSource).get(),
+             uriString.get(), filename.get()));
   }
 
   // Check if we need to clear the usage data for this source.
@@ -17809,12 +17812,12 @@ void Document::RecordCanvasUsage(CanvasUsage& aUsage) {
 }
 
 void Document::RecordFontFingerprinting() {
-  nsCString uri;
   nsCString originNoSuffix;
   if (NS_FAILED(NodePrincipal()->GetOriginNoSuffix(originNoSuffix))) {
     return;
   }
-  if (NS_FAILED(NodePrincipal()->GetSpec(uri))) {
+  nsCOMPtr<nsIURI> uri = NodePrincipal()->GetURI();
+  if (!uri) {
     return;
   }
 

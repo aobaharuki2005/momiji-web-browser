@@ -2401,9 +2401,16 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
 }
 
 /* static */ void nsRFPService::MaybeReportCanvasFingerprinter(
-    nsTArray<CanvasUsage>& aUses, nsIChannel* aChannel, const nsACString& aURI,
+    nsTArray<CanvasUsage>& aUses, nsIChannel* aChannel, nsIURI* aURI,
     const nsACString& aOriginNoSuffix) {
   if (!aChannel) {
+    return;
+  }
+
+  nsAutoCString scheme;
+  (void)aURI->GetScheme(scheme);
+  // We exclude reporting for chrome and resource URIs.
+  if (scheme.EqualsLiteral("chrome") || scheme.EqualsLiteral("resource")) {
     return;
   }
 
@@ -2514,7 +2521,8 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     fingerprinter = CanvasFingerprinterAlias::eVariant2;
   }
 
-  nsAutoCString uri(aURI);
+  nsAutoCString uri;
+  (void)aURI->GetSpec(uri);
   nsAutoCString origin(aOriginNoSuffix);
   nsAutoCString filename;
   if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Info)) {
@@ -2553,9 +2561,15 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
 }
 
 /* static */ void nsRFPService::MaybeReportFontFingerprinter(
-    nsIChannel* aChannel, const nsACString& aURI,
-    const nsACString& aOriginNoSuffix) {
+    nsIChannel* aChannel, nsIURI* aURI, const nsACString& aOriginNoSuffix) {
   if (!aChannel) {
+    return;
+  }
+
+  nsAutoCString scheme;
+  (void)aURI->GetScheme(scheme);
+  // We exclude reporting for chrome and resource URIs.
+  if (scheme.EqualsLiteral("chrome") || scheme.EqualsLiteral("resource")) {
     return;
   }
 
@@ -2566,7 +2580,7 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "nsRFPService::MaybeReportFontFingerprinter",
         [channel = nsCOMPtr{aChannel},
-         originNoSuffix = nsCString(aOriginNoSuffix), uri = nsCString(aURI)]() {
+         originNoSuffix = nsCString(aOriginNoSuffix), uri = nsCOMPtr{aURI}]() {
           nsRFPService::MaybeReportFontFingerprinter(channel, uri,
                                                      originNoSuffix);
         }));
@@ -2574,7 +2588,8 @@ static void MaybeCurrentCaller(nsACString& aFilename, uint32_t& aLineNum,
     return;
   }
 
-  nsAutoCString uri(aURI);
+  nsAutoCString uri;
+  (void)aURI->GetSpec(uri);
   nsAutoCString origin(aOriginNoSuffix);
 
   if (MOZ_LOG_TEST(gFingerprinterDetection, LogLevel::Info)) {
