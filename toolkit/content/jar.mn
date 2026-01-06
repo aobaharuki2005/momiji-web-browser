@@ -52,7 +52,7 @@ toolkit.jar:
    content/global/buildconfig.css
    content/global/colorpicker.html
    content/global/contentAreaUtils.js
-#ifndef MOZ_FENNEC
+#ifndef MOZ_GECKOVIEW
    content/global/editMenuOverlay.js
 #endif
    content/global/filepicker.properties
@@ -73,7 +73,7 @@ toolkit.jar:
    content/global/TopLevelVideoDocument.js
    content/global/datetimepicker.xhtml
    content/global/treeUtils.js
-#ifndef MOZ_FENNEC
+#ifndef MOZ_GECKOVIEW
    content/global/viewZoomOverlay.js
 #endif
    content/global/widgets.css
