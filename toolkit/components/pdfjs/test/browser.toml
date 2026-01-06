@@ -102,6 +102,9 @@ support-files = [
 
 ["browser_pdfjs_properties.js"]
 
+["browser_pdfjs_response_link.js"]
+support-files = ["pdf_response_link.sjs"]
+
 ["browser_pdfjs_saveas.js"]
 support-files = [
   "!/toolkit/content/tests/browser/common/mockTransfer.js",

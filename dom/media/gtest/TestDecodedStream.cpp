@@ -6,22 +6,16 @@
 
 #include "BlankDecoderModule.h"
 #include "DecodedStream.h"
-#include "ImageContainer.h"
 #include "MediaData.h"
 #include "MediaQueue.h"
 #include "MediaTrackGraphImpl.h"
 #include "MediaTrackListener.h"
 #include "MockCubeb.h"
-#include "VideoSegment.h"
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "mozilla/gtest/WaitFor.h"
 #include "nsJSEnvironment.h"
 
-using mozilla::layers::ImageContainer;
-using mozilla::layers::ImageUsageType;
 using mozilla::media::TimeUnit;
-using testing::ElementsAre;
 using testing::Test;
 
 namespace mozilla {
@@ -77,36 +71,6 @@ class OnFallbackListener : public MediaTrackListener {
   }
 };
 
-template <typename Segment>
-class CapturingListener : public MediaTrackListener {
- public:
-  Segment mSegment;
-
-  void NotifyQueuedChanges(MediaTrackGraph* aGraph, TrackTime aTrackOffset,
-                           const MediaSegment& aQueuedMedia) {
-    mSegment.AppendSlice(aQueuedMedia, 0, aQueuedMedia.GetDuration());
-  }
-};
-
-class TestableDecodedStream : public DecodedStream {
- public:
-  TestableDecodedStream(
-      AbstractThread* aOwnerThread,
-      nsMainThreadPtrHandle<SharedDummyTrack> aDummyTrack,
-      CopyableTArray<RefPtr<ProcessedMediaTrack>> aOutputTracks,
-      AbstractCanonical<PrincipalHandle>* aCanonicalOutputPrincipal,
-      double aVolume, double aPlaybackRate, bool aPreservesPitch,
-      MediaQueue<AudioData>& aAudioQueue, MediaQueue<VideoData>& aVideoQueue)
-      : DecodedStream(aOwnerThread, std::move(aDummyTrack),
-                      std::move(aOutputTracks), aCanonicalOutputPrincipal,
-                      aVolume, aPlaybackRate, aPreservesPitch, aAudioQueue,
-                      aVideoQueue) {}
-
-  using DecodedStream::GetPositionImpl;
-  using DecodedStream::LastOutputSystemTime;
-  using DecodedStream::LastVideoTimeStamp;
-};
-
 template <MediaType Type>
 class TestDecodedStream : public Test {
  public:
@@ -120,7 +84,7 @@ class TestDecodedStream : public Test {
   nsMainThreadPtrHandle<SharedDummyTrack> mDummyTrack;
   CopyableTArray<RefPtr<ProcessedMediaTrack>> mOutputTracks;
   Canonical<PrincipalHandle> mCanonicalOutputPrincipal;
-  RefPtr<TestableDecodedStream> mDecodedStream;
+  RefPtr<DecodedStream> mDecodedStream;
 
   TestDecodedStream()
       : mMockCubeb(MakeRefPtr<MockCubeb>(MockCubeb::RunningMode::Manual)),
@@ -134,7 +98,7 @@ class TestDecodedStream : public Test {
         mCanonicalOutputPrincipal(
             AbstractThread::GetCurrent(), PRINCIPAL_HANDLE_NONE,
             "TestDecodedStream::mCanonicalOutputPrincipal"),
-        mDecodedStream(MakeRefPtr<TestableDecodedStream>(
+        mDecodedStream(MakeRefPtr<DecodedStream>(
             AbstractThread::GetCurrent(), mDummyTrack, mOutputTracks,
             &mCanonicalOutputPrincipal, /* aVolume = */ 1.0,
             /* aPlaybackRate = */ 1.0,
@@ -220,8 +184,6 @@ class TestDecodedStream : public Test {
   }
 
   MediaInfo CreateMediaInfo() { return mozilla::CreateMediaInfo<Type>(); }
-
-  void TestVideoTimestampsWithPlaybackRate(double aPlaybackRate);
 };
 
 using TestDecodedStreamA = TestDecodedStream<Audio>;
@@ -232,151 +194,5 @@ TEST_F(TestDecodedStreamAV, StartStop) {
   mDecodedStream->Start(TimeUnit::Zero(), CreateMediaInfo());
   mDecodedStream->SetPlaying(true);
   mDecodedStream->Stop();
-}
-
-TEST_F(TestDecodedStreamA, LastOutputSystemTime) {
-  auto start = AwakeTimeStamp::Now();
-  BlankAudioDataCreator creator(2, kRate);
-  auto raw = MakeRefPtr<MediaRawData>();
-  raw->mDuration = TimeUnit(kRate, kRate);
-  mAudioQueue.Push(RefPtr(creator.Create(raw))->As<AudioData>());
-
-  mDecodedStream->Start(TimeUnit::Zero(), CreateMediaInfo());
-  mDecodedStream->SetPlaying(true);
-  NS_ProcessPendingEvents(nullptr);
-  mMockCubebStream->ManualDataCallback(0);
-
-  auto before = AwakeTimeStamp::Now();
-  // This runs the events on the graph thread, sampling the system clock.
-  mMockCubebStream->ManualDataCallback(512);
-  auto after = AwakeTimeStamp::Now();
-  // This runs the event handlers on the MDSM thread, updating the timestamps.
-  NS_ProcessPendingEvents(nullptr);
-  EXPECT_GE(mDecodedStream->LastOutputSystemTime() - start, before - start);
-  EXPECT_LE(mDecodedStream->LastOutputSystemTime() - start, after - start);
-
-  mDecodedStream->Stop();
-}
-
-TEST_F(TestDecodedStreamA, InterpolatedPosition) {
-  BlankAudioDataCreator creator(2, kRate);
-  auto raw = MakeRefPtr<MediaRawData>();
-  raw->mDuration = TimeUnit(kRate, kRate);
-  mAudioQueue.Push(RefPtr(creator.Create(raw))->As<AudioData>());
-
-  mDecodedStream->Start(TimeUnit::Zero(), CreateMediaInfo());
-  mDecodedStream->SetPlaying(true);
-  NS_ProcessPendingEvents(nullptr);
-  mMockCubebStream->ManualDataCallback(0);
-
-  auto now = TimeStamp::Now();
-  auto awakeNow = AwakeTimeStamp::Now();
-  TimeStamp outNow;
-  TimeUnit pos = mDecodedStream->GetPositionImpl(now, awakeNow, &outNow);
-  EXPECT_EQ(now, outNow);
-  EXPECT_EQ(pos, TimeUnit::Zero()) << pos.ToMilliseconds();
-
-  mMockCubebStream->ManualDataCallback(512);
-  NS_ProcessPendingEvents(nullptr);
-
-  now += TimeDuration::FromSeconds(
-      (mDecodedStream->LastOutputSystemTime() - awakeNow).ToSeconds());
-  awakeNow = mDecodedStream->LastOutputSystemTime();
-  pos = mDecodedStream->GetPositionImpl(now, awakeNow);
-  EXPECT_EQ(pos.ToMicroseconds(), TimeUnit(512, kRate).ToMicroseconds());
-
-  // Check that the position is interpolated based on wall clock time since last
-  // output notification.
-  now += TimeDuration::FromSeconds(
-             (mDecodedStream->LastOutputSystemTime() - awakeNow).ToSeconds()) +
-         TimeDuration::FromMilliseconds(10);
-  awakeNow = mDecodedStream->LastOutputSystemTime() +
-             AwakeTimeDuration::FromMilliseconds(10);
-  pos = mDecodedStream->GetPositionImpl(now, awakeNow);
-  EXPECT_EQ(pos.ToMicroseconds(),
-            (TimeUnit(512, kRate) + TimeUnit(10, 1000)).ToMicroseconds());
-
-  mDecodedStream->Stop();
-}
-
-template <MediaType Type>
-void TestDecodedStream<Type>::TestVideoTimestampsWithPlaybackRate(
-    double aPlaybackRate) {
-  static_assert(Type == MediaType::Video);
-
-  auto imageContainer = MakeRefPtr<ImageContainer>(ImageUsageType::Webrtc,
-                                                   ImageContainer::SYNCHRONOUS);
-  // Capture the output into a dedicated segment, that the graph will not prune
-  // like it will for the output track's mSegment.
-  RefPtr capturingListener = new CapturingListener<VideoSegment>();
-  mOutputTracks[0]->AddListener(capturingListener);
-  VideoSegment* segment = &capturingListener->mSegment;
-
-  {
-    // Add 4 video frames a 100ms each. Later we'll check timestamps of 3. We
-    // add 4 here to make the 3rd frames duration deterministic.
-    BlankVideoDataCreator creator(640, 480, imageContainer);
-    TimeUnit t = TimeUnit::Zero();
-    for (size_t i = 0; i < 4; ++i) {
-      constexpr TimeUnit kDuration = TimeUnit(kRate / 10, kRate);
-      auto raw = MakeRefPtr<MediaRawData>();
-      raw->mTime = t;
-      raw->mDuration = kDuration;
-      t += kDuration;
-      mVideoQueue.Push(RefPtr(creator.Create(raw))->template As<VideoData>());
-    }
-  }
-
-  mDecodedStream->SetPlaybackRate(aPlaybackRate);
-  mDecodedStream->Start(TimeUnit::Zero(), CreateMediaInfo());
-  mDecodedStream->SetPlaying(true);
-  NS_ProcessPendingEvents(nullptr);
-  mMockCubebStream->ManualDataCallback(0);
-
-  // Advance time enough to extract all 3 video frames.
-  long duration = 0;
-  while (duration < static_cast<long>((static_cast<double>(kRate) / 10) * 3 /
-                                      aPlaybackRate)) {
-    constexpr long kChunk = 512;
-    mMockCubebStream->ManualDataCallback(kChunk);
-    NS_ProcessPendingEvents(nullptr);
-    duration += kChunk;
-  }
-  EXPECT_EQ(segment->GetDuration(), duration);
-
-  // Calculate the expected timestamp of the first frame. At this point all
-  // frames in the VideoQueue have been sent, so LastVideoTimeStamp() matches
-  // the timestamp of frame 4.
-  const auto frameGap =
-      TimeDuration::FromMilliseconds(100).MultDouble(1 / aPlaybackRate);
-  TimeStamp videoStartOffset =
-      mDecodedStream->LastVideoTimeStamp() - frameGap * 3;
-
-  // Check durations of the first 3 frames.
-  AutoTArray<TrackTime, 3> durations;
-  AutoTArray<TimeDuration, 3> timestamps;
-  for (VideoSegment::ConstChunkIterator i(*segment);
-       durations.Length() < 3 && !i.IsEnded(); i.Next()) {
-    durations.AppendElement(i->GetDuration());
-    timestamps.AppendElement(i->mTimeStamp - videoStartOffset);
-  }
-  const TrackTime d =
-      static_cast<TrackTime>(static_cast<double>(kRate) / 10 / aPlaybackRate);
-  EXPECT_THAT(durations, ElementsAre(d, d, d));
-  EXPECT_THAT(timestamps,
-              ElementsAre(frameGap * 0, frameGap * 1, frameGap * 2));
-
-  mOutputTracks[0]->RemoveListener(capturingListener);
-  mDecodedStream->Stop();
-}
-
-TEST_F(TestDecodedStreamV, VideoTimeStamps) {
-  TestVideoTimestampsWithPlaybackRate(1.0);
-}
-TEST_F(TestDecodedStreamV, VideoTimeStampsFaster) {
-  TestVideoTimestampsWithPlaybackRate(2.0);
-}
-TEST_F(TestDecodedStreamV, VideoTimeStampsSlower) {
-  TestVideoTimestampsWithPlaybackRate(0.5);
 }
 }  // namespace mozilla
