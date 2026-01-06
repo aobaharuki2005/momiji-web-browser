@@ -11,6 +11,8 @@
 #include "mozilla/a11y/DocAccessible.h"
 #include "mozilla/dom/Element.h"
 #include "nsTArray.h"
+#include "nsContentUtils.h"
+#include "mozilla/dom/TreeOrderedArray.h"
 
 #include <memory>
 
@@ -19,7 +21,8 @@ class nsITreeView;
 namespace mozilla {
 namespace dom {
 class Element;
-}
+class HTMLLabelElement;
+}  // namespace dom
 
 namespace a11y {
 class DocAccessibleParent;
@@ -103,12 +106,16 @@ class RelatedAccIterator : public AccIterable {
   RelatedAccIterator(const RelatedAccIterator&);
   RelatedAccIterator& operator=(const RelatedAccIterator&);
 
+  void Initialize();
+
   DocAccessible* mDocument;
   nsIContent* mDependentContent;
   nsAtom* mRelAttr;
-  DocAccessible::AttrRelProviders* mProviders;
-  uint32_t mIndex;
-  bool mIsWalkingDependentElements;
+
+  dom::TreeOrderedArray<nsIContent*, TreeKind::ShadowIncludingDOM>
+      mRelatedNodes;
+  size_t mNextIndex = 0;
+  bool mInitialized = false;
 };
 
 /**

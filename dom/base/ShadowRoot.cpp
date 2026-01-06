@@ -946,12 +946,12 @@ bool ShadowRoot::ReferenceTargetIDTargetChanged(Element* aOldElement,
                                                 void* aData) {
   ShadowRoot* shadowRoot = static_cast<ShadowRoot*>(aData);
   if (aOldElement) {
-    shadowRoot->RemoveReferenceTargetChangeObserver(
-        aOldElement, RecursiveReferenceTargetChanged, shadowRoot);
+    aOldElement->RemoveReferenceTargetChangeObserver(
+        RecursiveReferenceTargetChanged, shadowRoot);
   }
   if (aNewElement) {
-    shadowRoot->AddReferenceTargetChangeObserver(
-        aNewElement, RecursiveReferenceTargetChanged, shadowRoot);
+    aNewElement->AddReferenceTargetChangeObserver(
+        RecursiveReferenceTargetChanged, shadowRoot);
   }
   shadowRoot->NotifyReferenceTargetChangedObservers();
   return true;
@@ -976,6 +976,10 @@ void ShadowRoot::SetReferenceTarget(RefPtr<nsAtom> aTarget) {
   if (mReferenceTarget) {
     RemoveIDTargetObserver(mReferenceTarget, ReferenceTargetIDTargetChanged,
                            this, false);
+    if (Element* oldElement = GetReferenceTargetElement()) {
+      oldElement->RemoveReferenceTargetChangeObserver(
+          RecursiveReferenceTargetChanged, this);
+    }
   }
 
   if (!aTarget) {
@@ -986,8 +990,8 @@ void ShadowRoot::SetReferenceTarget(RefPtr<nsAtom> aTarget) {
     Element* referenceTargetElement = AddIDTargetObserver(
         mReferenceTarget, ReferenceTargetIDTargetChanged, this, false);
     if (referenceTargetElement) {
-      AddReferenceTargetChangeObserver(referenceTargetElement,
-                                       RecursiveReferenceTargetChanged, this);
+      referenceTargetElement->AddReferenceTargetChangeObserver(
+          RecursiveReferenceTargetChanged, this);
     }
   }
 
@@ -999,9 +1003,5 @@ void ShadowRoot::NotifyReferenceTargetChangedObservers() {
   if (!host) {
     return;
   }
-
-  DocumentOrShadowRoot* root = host->GetContainingDocumentOrShadowRoot();
-  if (root) {
-    root->NotifyReferenceTargetChanged(host);
-  }
+  host->NotifyReferenceTargetChanged();
 }

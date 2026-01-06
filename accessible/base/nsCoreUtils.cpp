@@ -56,7 +56,7 @@ using mozilla::a11y::nsAccUtils;
 
 bool nsCoreUtils::IsLabelWithControl(nsIContent* aContent) {
   dom::HTMLLabelElement* label = dom::HTMLLabelElement::FromNode(aContent);
-  if (label && label->GetControl()) return true;
+  if (label && label->GetLabeledElementInternal()) return true;
 
   return false;
 }

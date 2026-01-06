@@ -7571,12 +7571,16 @@ void HTMLInputElement::GetWebkitEntries(
   aSequence.AppendElements(mFileData->mEntries);
 }
 
-already_AddRefed<nsINodeList> HTMLInputElement::GetLabels() {
+already_AddRefed<nsINodeList> HTMLInputElement::GetLabelsForBindings() {
+  return GetLabelsInternal();
+}
+
+already_AddRefed<nsINodeList> HTMLInputElement::GetLabelsInternal() {
   if (!IsLabelable()) {
     return nullptr;
   }
 
-  return nsGenericHTMLElement::Labels();
+  return nsGenericHTMLElement::LabelsInternal();
 }
 
 void HTMLInputElement::MaybeFireInputPasswordRemoved() {

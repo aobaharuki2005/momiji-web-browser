@@ -1149,7 +1149,7 @@ void FormAutofillImpl::GetFormAutofillConfidences(
       if (NS_WARN_IF(!label)) {
         continue;
       }
-      auto* control = label->GetControl();
+      auto* control = label->GetLabeledElementInternal();
       if (!control) {
         continue;
       }

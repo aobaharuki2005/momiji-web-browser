@@ -4128,11 +4128,11 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       if (data.mType == RelationType::LABEL_FOR) {
         // Labels are a special case -- we need to validate that the target of
         // their `for` attribute is in fact labelable. DOM checks this when we
-        // call GetControl(). If a label contains an element we will return it
-        // here.
+        // call GetLabeledElementInternal(). If a label contains an element we
+        // will return it here.
         if (dom::HTMLLabelElement* labelEl =
                 dom::HTMLLabelElement::FromNode(mContent)) {
-          rel.AppendTarget(mDoc, labelEl->GetControl());
+          rel.AppendTarget(mDoc, labelEl->GetLabeledElementInternal());
         }
       } else if (data.mType == RelationType::DETAILS) {
         if (relAtom == nsGkAtoms::aria_details) {

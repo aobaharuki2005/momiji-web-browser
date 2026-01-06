@@ -361,6 +361,7 @@ opaque-types = [
     "mozilla::detail::ThreadLocal.*",
     "std::make_signed_t",
     "mozilla::ProfileChunkedBuffer",
+    "nsLabelsNodeList", # Wrong layout in armv7
 ]
 
 # All cbindgen-types are in mod "structs::root::mozilla".

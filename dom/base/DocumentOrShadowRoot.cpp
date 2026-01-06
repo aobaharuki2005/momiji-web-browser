@@ -586,62 +586,6 @@ void DocumentOrShadowRoot::RemoveIDTargetObserver(nsAtom* aID,
   entry->RemoveContentChangeCallback(aObserver, aData, aForImage);
 }
 
-void DocumentOrShadowRoot::AddReferenceTargetChangeObserver(
-    Element* aElement, ReferenceTargetChangeObserver aObserver, void* aData) {
-  if (!StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
-    return;
-  }
-
-  MOZ_ASSERT(aElement);
-  MOZ_ASSERT(aElement->GetContainingDocumentOrShadowRoot() == this);
-  auto& callbackEntries = mReferenceTargetObserverMap.LookupOrInsert(aElement);
-  callbackEntries.Insert({aObserver, aData});
-}
-
-void DocumentOrShadowRoot::RemoveReferenceTargetChangeObserver(
-    Element* aElement, ReferenceTargetChangeObserver aObserver, void* aData) {
-  if (!StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
-    return;
-  }
-
-  MOZ_ASSERT(aElement);
-
-  auto entry = mReferenceTargetObserverMap.Lookup(aElement);
-  if (!entry) {
-    return;
-  }
-  nsTHashSet<ReferenceTargetChangeCallbackEntry>& callbacks = entry.Data();
-  callbacks.Remove({aObserver, aData});
-
-  if (entry.Data().IsEmpty()) {
-    entry.Remove();
-  }
-}
-
-void DocumentOrShadowRoot::NotifyReferenceTargetChanged(Element* aElement) {
-  if (!StaticPrefs::dom_shadowdom_referenceTarget_enabled()) {
-    return;
-  }
-
-  MOZ_ASSERT(aElement);
-
-  auto entry = mReferenceTargetObserverMap.Lookup(aElement);
-  if (!entry) {
-    return;
-  }
-
-  for (auto iter = entry.Data().begin(); iter != entry.Data().end(); ++iter) {
-    const ReferenceTargetChangeCallback& callback = *iter;
-    bool keep = callback.mObserver(callback.mData);
-    if (!keep) {
-      entry.Data().Remove(iter);
-    }
-  }
-  if (entry.Data().IsEmpty()) {
-    entry.Remove();
-  }
-}
-
 Element* DocumentOrShadowRoot::LookupImageElement(nsAtom* aId) {
   if (aId->IsEmpty()) {
     return nullptr;

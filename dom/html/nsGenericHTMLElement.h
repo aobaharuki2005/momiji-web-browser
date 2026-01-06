@@ -694,7 +694,8 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   static bool MatchLabelsElement(Element* aElement, int32_t aNamespaceID,
                                  nsAtom* aAtom, void* aData);
 
-  already_AddRefed<nsINodeList> Labels();
+  already_AddRefed<nsINodeList> LabelsForBindings();
+  already_AddRefed<nsINodeList> LabelsInternal();
 
   static bool LegacyTouchAPIEnabled(JSContext* aCx, JSObject* aObj);
 

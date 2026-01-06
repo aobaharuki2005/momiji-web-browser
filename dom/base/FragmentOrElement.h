@@ -309,6 +309,46 @@ class FragmentOrElement : public nsIContent {
       UniquePtr<AttrElementObserverCallbackData> mCallbackData;
     };
     nsTHashMap<RefPtr<nsAtom>, AttrElementObserverData> mAttrElementObserverMap;
+
+    /**
+     * Callback called when an element's resolved reference target changes.
+     * @param aData The callback data which was stored using
+     * AddReferenceTargetChangeObserver.
+     * @return true to keep the callback in the callback set, false to remove
+     * it.
+     */
+    typedef bool (*ReferenceTargetChangeObserver)(void* aData);
+
+    struct ReferenceTargetChangeCallback {
+      ReferenceTargetChangeObserver mObserver;
+      void* mData;
+    };
+
+    struct ReferenceTargetChangeCallbackEntry : public PLDHashEntryHdr {
+      typedef const ReferenceTargetChangeCallback KeyType;
+      typedef const ReferenceTargetChangeCallback* KeyTypePointer;
+
+      explicit ReferenceTargetChangeCallbackEntry(
+          const ReferenceTargetChangeCallback* aKey)
+          : mKey(*aKey) {}
+      ReferenceTargetChangeCallbackEntry(
+          ReferenceTargetChangeCallbackEntry&& aOther)
+          : PLDHashEntryHdr(std::move(aOther)), mKey(std::move(aOther.mKey)) {}
+
+      KeyType GetKey() const { return mKey; }
+      bool KeyEquals(KeyTypePointer aKey) const {
+        return aKey->mObserver == mKey.mObserver && aKey->mData == mKey.mData;
+      }
+
+      static KeyTypePointer KeyToPointer(KeyType& aKey) { return &aKey; }
+      static PLDHashNumber HashKey(KeyTypePointer aKey) {
+        return HashGeneric(aKey->mObserver, aKey->mData);
+      }
+      enum { ALLOW_MEMMOVE = true };
+
+      ReferenceTargetChangeCallback mKey;
+    };
+    nsTHashSet<ReferenceTargetChangeCallbackEntry> mReferenceTargetObservers;
   };
 
   class nsDOMSlots : public nsIContent::nsContentSlots {

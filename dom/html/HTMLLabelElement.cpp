@@ -43,12 +43,24 @@ Element* HTMLLabelElement::GetFormForBindings() const {
 
 HTMLFormElement* HTMLLabelElement::GetFormInternal() const {
   // Not all labeled things have a form association.  Stick to the ones that do.
-  const auto* formControl = nsIFormControl::FromNodeOrNull(GetControl());
+  const auto* formControl =
+      nsIFormControl::FromNodeOrNull(GetLabeledElementInternal());
   if (!formControl) {
     return nullptr;
   }
 
   return formControl->GetFormInternal();
+}
+
+nsGenericHTMLElement* HTMLLabelElement::GetControlForBindings() const {
+  nsINode* retargeted =
+      nsContentUtils::Retarget(GetLabeledElementInternal(), this);
+  if (!retargeted) {
+    return nullptr;
+  }
+  Element* element = retargeted->AsElement();
+  MOZ_ASSERT(element);
+  return static_cast<nsGenericHTMLElement*>(element);
 }
 
 void HTMLLabelElement::Focus(const FocusOptions& aOptions,
@@ -61,7 +73,7 @@ void HTMLLabelElement::Focus(const FocusOptions& aOptions,
     }
   }
 
-  if (RefPtr<Element> elem = GetLabeledElement()) {
+  if (RefPtr<Element> elem = GetLabeledElementInternal()) {
     return elem->Focus(aOptions, aCallerType, aError);
   }
 }
@@ -85,7 +97,7 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   }
 
   // Strong ref because event dispatch is going to happen.
-  RefPtr<Element> content = GetLabeledElement();
+  RefPtr<Element> content = GetLabeledElementInternal();
 
   if (!content || content->IsDisabled()) {
     return NS_OK;
@@ -181,7 +193,7 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
 Result<bool, nsresult> HTMLLabelElement::PerformAccesskey(
     bool aKeyCausesActivation, bool aIsTrustedEvent) {
   if (!aKeyCausesActivation) {
-    RefPtr<Element> element = GetLabeledElement();
+    RefPtr<Element> element = GetLabeledElementInternal();
     if (element) {
       return element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
     }
@@ -203,7 +215,7 @@ Result<bool, nsresult> HTMLLabelElement::PerformAccesskey(
   return true;
 }
 
-nsGenericHTMLElement* HTMLLabelElement::GetLabeledElement() const {
+nsGenericHTMLElement* HTMLLabelElement::GetLabeledElementInternal() const {
   nsAutoString elementId;
 
   if (!GetAttr(nsGkAtoms::_for, elementId)) {
@@ -214,17 +226,7 @@ nsGenericHTMLElement* HTMLLabelElement::GetLabeledElement() const {
 
   // We have a @for. The id has to be linked to an element in the same tree
   // and this element should be a labelable form control.
-  Element* element = nullptr;
-
-  if (ShadowRoot* shadowRoot = GetContainingShadow()) {
-    element = shadowRoot->GetElementById(elementId);
-  } else if (Document* doc = GetUncomposedDoc()) {
-    element = doc->GetElementById(elementId);
-  } else {
-    element =
-        nsContentUtils::MatchElementId(SubtreeRoot()->AsContent(), elementId);
-  }
-
+  Element* element = GetAttrAssociatedElementInternal(nsGkAtoms::_for);
   if (element && element->IsLabelable()) {
     return static_cast<nsGenericHTMLElement*>(element);
   }
@@ -236,8 +238,11 @@ nsGenericHTMLElement* HTMLLabelElement::GetFirstLabelableDescendant() const {
   for (nsIContent* cur = nsINode::GetFirstChild(); cur;
        cur = cur->GetNextNode(this)) {
     Element* element = Element::FromNode(cur);
-    if (element && element->IsLabelable()) {
-      return static_cast<nsGenericHTMLElement*>(element);
+    if (element) {
+      Element* referenceTarget = element->ResolveReferenceTarget();
+      if (referenceTarget && referenceTarget->IsLabelable()) {
+        return static_cast<nsGenericHTMLElement*>(referenceTarget);
+      }
     }
   }
 

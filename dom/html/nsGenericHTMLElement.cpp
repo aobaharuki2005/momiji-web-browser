@@ -428,7 +428,7 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
   // as well.
   nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
   if (slots && slots->mLabelsList) {
-    slots->mLabelsList->MaybeResetRoot(SubtreeRoot());
+    slots->mLabelsList->ResetRoots();
   }
 
   return rv;
@@ -476,7 +476,7 @@ void nsGenericHTMLElement::UnbindFromTree(UnbindContext& aContext) {
   // Invalidate .labels list. It will be repopulated when used the next time.
   nsExtendedDOMSlots* slots = GetExistingExtendedDOMSlots();
   if (slots && slots->mLabelsList) {
-    slots->mLabelsList->MaybeResetRoot(SubtreeRoot());
+    slots->mLabelsList->ResetRoots();
   }
 }
 
@@ -1840,17 +1840,21 @@ bool nsGenericHTMLElement::MatchLabelsElement(Element* aElement,
                                               int32_t aNamespaceID,
                                               nsAtom* aAtom, void* aData) {
   HTMLLabelElement* element = HTMLLabelElement::FromNode(aElement);
-  return element && element->GetControl() == aData;
+  return element && element->GetLabeledElementInternal() == aData;
 }
 
-already_AddRefed<nsINodeList> nsGenericHTMLElement::Labels() {
+already_AddRefed<nsINodeList> nsGenericHTMLElement::LabelsForBindings() {
+  return LabelsInternal();
+}
+
+already_AddRefed<nsINodeList> nsGenericHTMLElement::LabelsInternal() {
   MOZ_ASSERT(IsLabelable(),
              "Labels() only allow labelable elements to use it.");
   nsExtendedDOMSlots* slots = ExtendedDOMSlots();
 
   if (!slots->mLabelsList) {
     slots->mLabelsList =
-        new nsLabelsNodeList(SubtreeRoot(), MatchLabelsElement, nullptr, this);
+        new nsLabelsNodeList(this, SubtreeRoot(), MatchLabelsElement, nullptr);
   }
 
   RefPtr<nsLabelsNodeList> labels = slots->mLabelsList;
