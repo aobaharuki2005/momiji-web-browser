@@ -42,6 +42,9 @@ export default class TabHoverPanelSet {
   /** @type {HoverPanel|null} */
   #activePanel;
 
+  /**
+   * @param {Window} win
+   */
   constructor(win) {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -59,10 +62,21 @@ export default class TabHoverPanelSet {
       this.#win
     );
 
-    this.tabPanel = new TabPanel(
-      this.#win.document.getElementById("tab-preview-panel"),
-      this
+    /** @type {HTMLTemplateElement} */
+    const tabPreviewTemplate = win.document.getElementById(
+      "tabPreviewPanelTemplate"
     );
+    const importedFragment = win.document.importNode(
+      tabPreviewTemplate.content,
+      true
+    );
+    // #tabPreviewPanelTemplate is currently just the .tab-preview-add-note
+    // button element, so append it to the tab preview panel body.
+    const addNoteButton = importedFragment.firstElementChild;
+    const tabPreviewPanel =
+      this.#win.document.getElementById("tab-preview-panel");
+    tabPreviewPanel.append(addNoteButton);
+    this.tabPanel = new TabPanel(tabPreviewPanel, this);
     this.tabGroupPanel = new TabGroupPanel(
       this.#win.document.getElementById("tabgroup-preview-panel"),
       this
@@ -274,8 +288,15 @@ class TabPanel extends HoverPanel {
 
     this.#tab = null;
     this.#thumbnailElement = null;
+
+    this.panelElement
+      .querySelector(".tab-preview-add-note")
+      .addEventListener("click", () => this.#openTabNotePanel());
   }
 
+  /**
+   * @param {Event} e
+   */
   handleEvent(e) {
     switch (e.type) {
       case "popupshowing":
@@ -334,6 +355,11 @@ class TabPanel extends HoverPanel {
     }
   }
 
+  /**
+   * @param {MozTabbrowserTab} [leavingTab]
+   * @param {object} [options]
+   * @param {boolean} [options.force=false]
+   */
   deactivate(leavingTab = null, { force = false } = {}) {
     if (!this._prefUseTabNotes) {
       force = true;
@@ -475,6 +501,16 @@ class TabPanel extends HoverPanel {
       : "";
   }
 
+  /**
+   * Opens the tab note menu in the context of the current tab. Since only
+   * one panel should be open at a time, this also closes the tab hover preview
+   * panel.
+   */
+  #openTabNotePanel() {
+    this.win.gBrowser.tabNoteMenu.openPanel(this.#tab);
+    this.deactivate(this.#tab, { force: true });
+  }
+
   #updatePreview(tab = null) {
     if (tab) {
       this.#tab = tab;
@@ -496,10 +532,21 @@ class TabPanel extends HoverPanel {
         "";
     }
 
-    lazy.TabNotes.get(this.#tab).then(note => {
-      this.panelElement.querySelector(".tab-note-text-container").textContent =
-        note?.text || "";
-    });
+    const noteTextContainer = this.panelElement.querySelector(
+      ".tab-note-text-container"
+    );
+    const addNoteButton = this.panelElement.querySelector(
+      ".tab-preview-add-note"
+    );
+    if (this._prefUseTabNotes && lazy.TabNotes.isEligible(this.#tab)) {
+      lazy.TabNotes.get(this.#tab).then(note => {
+        noteTextContainer.textContent = note?.text || "";
+        addNoteButton.toggleAttribute("hidden", !!note);
+      });
+    } else {
+      noteTextContainer.textContent = "";
+      addNoteButton.setAttribute("hidden", "");
+    }
 
     let thumbnailContainer = this.panelElement.querySelector(
       ".tab-preview-thumbnail-container"
