@@ -164,15 +164,13 @@ export class FrecencyBoostProvider {
 
   /**
    * Build frecency-boosted spocs from a list of sponsor domains by checking Places history.
-   * Checks if domains exist in history, dedupes against organic topsites,
-   * and returns all matches sorted by frecency.
+   * Checks if domains exist in history, and returns all matches sorted by frecency.
    *
-   * @param {Array} sponsors - List of sponsor domain objects with hostname and title
    * @param {Integer} numItems - Number of frecency items to check against.
    * @returns {Array} Array of sponsored tile objects sorted by frecency, or empty array
    */
-  async buildFrecencyBoostedSpocs(sponsorsToCheck, numItems) {
-    if (!sponsorsToCheck.length) {
+  async buildFrecencyBoostedSpocs(numItems) {
+    if (!this._frecencyBoostedSponsors.size) {
       return [];
     }
 
@@ -187,23 +185,21 @@ export class FrecencyBoostProvider {
     const candidates = [];
     frecent.forEach(site => {
       const normalizedSiteUrl = lazy.NewTabUtils.shortURL(site);
-      for (const domainObj of sponsorsToCheck) {
-        if (
-          normalizedSiteUrl !== domainObj.hostname ||
-          lazy.NewTabUtils.blockedLinks.isBlocked({ url: domainObj.domain })
-        ) {
-          continue;
-        }
+      const candidate = this._frecencyBoostedSponsors.get(normalizedSiteUrl);
 
+      if (
+        candidate &&
+        !lazy.NewTabUtils.blockedLinks.isBlocked({ url: candidate.domain })
+      ) {
         candidates.push({
-          hostname: domainObj.hostname,
-          url: domainObj.redirectURL,
-          label: domainObj.title,
+          hostname: candidate.hostname,
+          url: candidate.redirectURL,
+          label: candidate.title,
           partner: SPONSORED_TILE_PARTNER_FREC_BOOST,
           type: "frecency-boost",
           frecency: site.frecency,
           show_sponsored_label: true,
-          favicon: domainObj.faviconDataURI,
+          favicon: candidate.faviconDataURI,
           faviconSize: 96,
         });
       }
@@ -218,13 +214,8 @@ export class FrecencyBoostProvider {
       await this._importFrecencyBoostedSponsors();
     }
 
-    let candidates = [];
-    if (this._frecencyBoostedSponsors.size) {
-      const domainList = Array.from(this._frecencyBoostedSponsors.values());
-      // Find all matches from the sponsor domains, sorted by frecency
-      candidates = await this.buildFrecencyBoostedSpocs(domainList, numItems);
-    }
-    this._links = candidates;
+    // Find all matches from the sponsor domains, sorted by frecency
+    this._links = await this.buildFrecencyBoostedSpocs(numItems);
     await this.cache.set("links", this._links);
   }
 
