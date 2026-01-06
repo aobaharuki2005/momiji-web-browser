@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.paddingFromBaseline
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -1827,10 +1826,7 @@ private fun ClearableTextField(
         onValueChange = onValueChange,
         placeholder = placeholder,
         errorText = "",
-        modifier = modifier
-            .onFocusChanged { isFocused = it.isFocused }
-            .padding(0.dp)
-            .paddingFromBaseline(0.dp),
+        modifier = modifier.onFocusChanged { isFocused = it.isFocused },
         trailingIcon = {
             if (isFocused && value.isNotEmpty()) {
                 CrossTextFieldButton { onValueChange("") }
