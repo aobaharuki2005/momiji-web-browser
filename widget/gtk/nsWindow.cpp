@@ -609,8 +609,8 @@ void nsWindow::DispatchResized() {
 
 #ifdef MOZ_WAYLAND
   if (mSurface) {
-    LOG("  WaylanSurface unscaled size [%d, %d]", mClientArea.Size().width,
-        mClientArea.Size().height);
+    LOG("  WaylandSurface unscaled size [%d, %d]", mClientArea.width,
+        mClientArea.height);
     mSurface->SetSize(mClientArea.Size());
   }
 #endif
@@ -1114,21 +1114,20 @@ DesktopIntRect nsWindow::ToDesktopPixels(const LayoutDeviceIntRect& aRect) {
 void nsWindow::ResizeInt(const Maybe<DesktopIntPoint>& aMove,
                          DesktopIntSize aSize) {
   LOG("nsWindow::ResizeInt w:%d h:%d\n", aSize.width, aSize.height);
-
-  const bool moved =
-      aMove && (*aMove != mLastMoveRequest || mClientArea.TopLeft() != *aMove);
+  auto currentBounds = GetScreenBoundsUnscaled();
+  const bool moved = aMove && (*aMove != mLastMoveRequest ||
+                               currentBounds.TopLeft() != *aMove);
   if (moved) {
     LOG("  with move to left:%d top:%d", aMove->x.value, aMove->y.value);
     mLastMoveRequest = *aMove;
   }
 
-  const bool resized = aSize != mLastSizeRequest || mClientArea.Size() != aSize;
-#if MOZ_LOGGING
+  const bool resized =
+      aSize != mLastSizeRequest || currentBounds.Size() != aSize;
   LOG("  resized %d aSize [%d, %d] mLastSizeRequest [%d, %d] "
-      "mClientArea [%d, %d]",
+      "bounds [%d, %d]",
       resized, aSize.width, aSize.height, mLastSizeRequest.width,
-      mLastSizeRequest.height, mClientArea.width, mClientArea.height);
-#endif
+      mLastSizeRequest.height, currentBounds.width, currentBounds.height);
 
   mLastSizeRequest = aSize;
 
