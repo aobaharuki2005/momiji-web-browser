@@ -245,7 +245,7 @@ add_task(async function test_enroll() {
 
   Assert.deepEqual(
     Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("events")
+      .testGetValue("nimbus-targeting-context")
       ?.map(ev => ev.extra),
     [
       {
@@ -378,7 +378,7 @@ add_task(async function test_unenroll() {
 
   Assert.deepEqual(
     Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("events")
+      .testGetValue("nimbus-targeting-context")
       ?.map(ev => ev.extra),
     [
       {

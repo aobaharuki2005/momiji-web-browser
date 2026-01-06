@@ -1706,7 +1706,7 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
 
   Assert.deepEqual(
     Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("events")
+      .testGetValue("nimbus-targeting-context")
       .map(event => event.extra),
     [
       {
