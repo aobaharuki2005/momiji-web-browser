@@ -1159,14 +1159,13 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
     } else {
       containingBlock->SetInitialChildList(aChildListID, std::move(aFrameList));
     }
-  } else if (childList.IsEmpty() || aChildListID == FrameChildListID::Fixed ||
+  } else if (aChildListID == FrameChildListID::Fixed ||
              aChildListID == FrameChildListID::Absolute) {
     // The order is not important for abs-pos/fixed-pos frame list, just
     // append the frame items to the list directly.
     mFrameConstructor->AppendFrames(containingBlock, aChildListID,
                                     std::move(aFrameList));
   } else {
-    MOZ_ASSERT(aChildListID == FrameChildListID::Float);
     // Note that whether the frame construction context is doing an append or
     // not is not helpful here, since it could be appending to some frame in
     // the middle of the document, which means we're not necessarily
@@ -1175,31 +1174,34 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
     // We need to make sure the 'append to the end of document' case is fast.
     // So first test the last child of the containing block
     nsIFrame* lastChild = childList.LastChild();
-    lastChild = lastChild->GetPlaceholderFrame();
 
     // CompareTreePosition uses placeholder hierarchy for out of flow frames,
     // so this will make out-of-flows respect the ordering of placeholders,
     // which is great because it takes care of anonymous content.
     nsIFrame* firstNewFrame = aFrameList.FirstChild();
-    firstNewFrame = firstNewFrame->GetPlaceholderFrame();
 
     // Cache the ancestor chain so that we can reuse it if needed.
     AutoTArray<const nsIFrame*, 20> firstNewFrameAncestors;
-    const nsIFrame* notCommonAncestor = nsLayoutUtils::FillAncestors(
-        firstNewFrame, containingBlock, &firstNewFrameAncestors);
+    const nsIFrame* notCommonAncestor = nullptr;
+    if (lastChild) {
+      notCommonAncestor = nsLayoutUtils::FillAncestors(
+          firstNewFrame, containingBlock, &firstNewFrameAncestors);
+    }
 
-    if (nsLayoutUtils::CompareTreePosition(
-            lastChild, firstNewFrame, firstNewFrameAncestors,
-            notCommonAncestor ? containingBlock : nullptr) < 0) {
-      // lastChild comes before the new children, so just append
+    if (!lastChild || nsLayoutUtils::CompareTreePosition(
+                          lastChild, firstNewFrame, firstNewFrameAncestors,
+                          notCommonAncestor ? containingBlock : nullptr) < 0) {
+      // no lastChild, or lastChild comes before the new children, so just
+      // append
       mFrameConstructor->AppendFrames(containingBlock, aChildListID,
                                       std::move(aFrameList));
     } else {
       // Try the other children. First collect them to an array so that a
       // reasonable fast binary search can be used to find the insertion point.
       AutoTArray<nsIFrame*, 128> children;
-      for (nsIFrame* f : childList) {
-        children.AppendElement(f->GetPlaceholderFrame());
+      for (nsIFrame* f = childList.FirstChild(); f != lastChild;
+           f = f->GetNextSibling()) {
+        children.AppendElement(f);
       }
 
       nsIFrame* insertionPoint = nullptr;
