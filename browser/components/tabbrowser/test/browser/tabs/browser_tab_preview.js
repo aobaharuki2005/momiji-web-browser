@@ -1292,6 +1292,81 @@ add_task(async function testDragToCancelPreview() {
   await SpecialPowers.popPrefEnv();
 });
 
+add_task(async function tabPreviewHidesWhenDraggingOverPanel() {
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:robots"
+  );
+  const previewElement = document.getElementById(TAB_PREVIEW_PANEL_ID);
+
+  await openTabPreview(tab);
+
+  const previewHidden = BrowserTestUtils.waitForPopupEvent(
+    previewElement,
+    "hidden"
+  );
+  const dragend = BrowserTestUtils.waitForEvent(tab, "dragend");
+
+  EventUtils.synthesizePlainDragAndDrop({
+    srcElement: tab,
+    destElement: null,
+    stepX: 10,
+    stepY: 0,
+  });
+
+  await previewHidden;
+  Assert.equal(
+    previewElement.state,
+    "closed",
+    "Preview closes when dragging downward over the panel"
+  );
+
+  await dragend;
+
+  BrowserTestUtils.removeTab(tab);
+  await resetState();
+
+  const groupTab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:robots"
+  );
+  const group = gBrowser.addTabGroup([groupTab]);
+  group.collapsed = true;
+
+  await openGroupPreview(group);
+
+  const groupPreviewElement = document.getElementById(
+    TAB_GROUP_PREVIEW_PANEL_ID
+  );
+  const groupPreviewHidden = BrowserTestUtils.waitForPopupEvent(
+    groupPreviewElement,
+    "hidden"
+  );
+  const groupDragend = BrowserTestUtils.waitForEvent(
+    group.labelElement,
+    "dragend"
+  );
+
+  EventUtils.synthesizePlainDragAndDrop({
+    srcElement: group.labelElement,
+    destElement: null,
+    stepX: 10,
+    stepY: 0,
+  });
+
+  await groupPreviewHidden;
+  Assert.equal(
+    groupPreviewElement.state,
+    "closed",
+    "Group preview closes when dragging downward over the panel"
+  );
+
+  await groupDragend;
+
+  BrowserTestUtils.removeTab(groupTab);
+  await resetState();
+});
+
 /**
  * Other open panels should prevent tab preview from opening
  */
