@@ -89,8 +89,9 @@ export class TabNotesStorage {
    */
   init(options) {
     const basePath = options?.basePath ?? PathUtils.profileDir;
+    this.dbPath = PathUtils.join(basePath, this.DATABASE_FILE_NAME);
     return Sqlite.openConnection({
-      path: PathUtils.join(basePath, this.DATABASE_FILE_NAME),
+      path: this.dbPath,
     }).then(async connection => {
       this.#connection = connection;
       await this.#connection.execute("PRAGMA journal_mode = WAL");

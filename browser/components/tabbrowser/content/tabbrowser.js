@@ -10419,7 +10419,9 @@ var TabContextMenu = {
 
   deleteTabNotes() {
     for (let tab of this.contextTabs) {
-      this.TabNotes.delete(tab);
+      this.TabNotes.delete(tab, {
+        telemetrySource: this.TabNotes.TELEMETRY_SOURCE.TAB_CONTEXT_MENU,
+      });
     }
   },
 };

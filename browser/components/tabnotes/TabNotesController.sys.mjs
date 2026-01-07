@@ -148,6 +148,18 @@ class TabNotesControllerClass {
         break;
       case "TabNote:Removed":
         {
+          const { telemetrySource, note } = event.detail;
+          const now = Temporal.Now.instant();
+          const noteAgeHours = Math.round(
+            now.since(note.created).total("hours")
+          );
+          if (telemetrySource) {
+            Glean.tabNotes.deleted.record({
+              source: telemetrySource,
+              note_age_hours: noteAgeHours,
+            });
+          }
+
           // A new tab note was removed from a specific canonical URL. Ensure that
           // all tabs with the same canonical URL also indicate that there is no
           // longer a tab note.

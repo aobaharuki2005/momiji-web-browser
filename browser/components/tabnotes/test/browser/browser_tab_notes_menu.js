@@ -4,6 +4,10 @@
 
 "use strict";
 
+const { Sqlite } = ChromeUtils.importESModule(
+  "resource://gre/modules/Sqlite.sys.mjs"
+);
+
 registerCleanupFunction(async () => {
   await TabNotes.reset();
 });
@@ -274,15 +278,49 @@ add_task(async function test_deleteTabNote() {
   await TabNotes.set(tab, initialNoteValue);
   await tabNoteCreated;
 
+  // Modify the created time of the note so we can test the max age recorded by
+  // Glean
+  const dbConn = await Sqlite.openConnection({
+    path: TabNotes.dbPath,
+  });
+  dbConn.executeCached(
+    'UPDATE tabnotes SET created = unixepoch("now", "-12 hours") WHERE canonical_url = :url',
+    {
+      url: tab.canonicalUrl,
+    }
+  );
+
   let tabNoteRemoved = BrowserTestUtils.waitForEvent(tab, "TabNote:Removed");
   activateTabContextMenuItem(tab, "#context_deleteNote", "#context_updateNote");
   await tabNoteRemoved;
+
+  await BrowserTestUtils.waitForCondition(
+    () => Glean.tabNotes.deleted.testGetValue()?.length,
+    "wait for event to be recorded"
+  );
 
   let result = await TabNotes.has(tab);
 
   Assert.ok(!result, "Tab note was deleted");
 
+  const [deletedMetric] = Glean.tabNotes.deleted.testGetValue();
+  Assert.equal(
+    deletedMetric.extra.source,
+    "context_menu",
+    "deleted event extra data should say the tab note was deleted from the context menu"
+  );
+  Assert.equal(
+    deletedMetric.extra.note_age_hours,
+    12,
+    "note_age_hours should show that note was created 12 hours ago"
+  );
+
   BrowserTestUtils.removeTab(tab);
+  await dbConn.close();
+
+  // Reset Glean metrics
+  await Services.fog.testFlushAllChildren();
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_tabNoteOverflow() {
