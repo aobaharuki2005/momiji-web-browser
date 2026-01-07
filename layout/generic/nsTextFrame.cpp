@@ -6290,7 +6290,9 @@ void nsTextFrame::PaintDecorationLine(
   params.color = aParams.overrideColor ? *aParams.overrideColor : aParams.color;
   params.icoordInFrame = Float(aParams.icoordInFrame);
   params.baselineOffset = Float(aParams.baselineOffset);
-  params.allowInkSkipping = aParams.allowInkSkipping;
+  // Disable ink-skipping for frames with text-combine-upright.
+  params.allowInkSkipping =
+      aParams.allowInkSkipping && !Style()->IsTextCombined();
   params.skipInk = aParams.skipInk;
   if (aParams.callbacks) {
     Rect path = nsCSSRendering::DecorationLineToPath(params);
