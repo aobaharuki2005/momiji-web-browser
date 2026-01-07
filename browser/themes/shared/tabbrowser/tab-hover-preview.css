@@ -38,8 +38,6 @@
 
 .tab-preview-thumbnail-container {
   width: 264px;
-  border: 1px solid var(--border-color-deemphasized);
-  border-radius: var(--border-radius-medium);
   margin: 0 auto var(--space-small);
   overflow: hidden;
 
@@ -53,6 +51,9 @@
     display: block;
     width: 100%;
     animation: tab-hover-preview-fadein 0.2s ease;
+    border: 1px solid var(--border-color-deemphasized);
+    border-radius: var(--border-radius-medium);
+    box-sizing: border-box;
   }
 }
 
