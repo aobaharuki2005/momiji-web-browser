@@ -14,7 +14,6 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Variant.h"
 
-#include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
 

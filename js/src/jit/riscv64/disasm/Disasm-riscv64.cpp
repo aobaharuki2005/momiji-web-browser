@@ -27,7 +27,6 @@
 
 #include "jit/riscv64/disasm/Disasm-riscv64.h"
 
-#include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 #include <string_view>

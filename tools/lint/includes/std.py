@@ -424,6 +424,13 @@ api["type_traits"].extend(
 )
 
 capi = {
+    "stdarg.h": [
+        "va_list",
+        "va_arg",
+        "va_begin",
+        "va_end",
+        "ca_copy",
+    ],
     "stdio.h": [
         # macros
         "BUFSIZ",

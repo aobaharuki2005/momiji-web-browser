@@ -10,8 +10,6 @@
 #include "mozilla/RefPtr.h"  // RefPtr, mozilla::StaticRefPtr
 #include "mozilla/Utf8.h"    // mozilla::Utf8Unit
 
-#include <cstdarg>
-
 #include "mozilla/Logging.h"
 #include "mozilla/dom/RequestBinding.h"
 #ifdef ANDROID
