@@ -11,6 +11,7 @@ from mozlint import result
 from mozlint.pathutils import expand_exclusions
 
 from .std import api as std_api
+from .std import capi as std_capi
 
 here = os.path.dirname(__file__)
 with open(os.path.join(here, "..", "..", "..", "mfbt", "api.yml")) as fd:
@@ -133,6 +134,41 @@ def lint_std_headers(results, path, raw_content, config, fix):
             )
 
 
+def lint_cstd_headers(results, path, raw_content, config, fix):
+    symbol_pattern = r"\b((std)?::)?{}\b"
+
+    for header, symbols in std_capi.items():
+        headerline = rf"#\s*include <({header}|c{header[:-2]})>"
+        if not (match := re.search(headerline, raw_content)):
+            continue
+        if re.search(
+            "|".join(symbol_pattern.format(symbol) for symbol in symbols), raw_content
+        ):
+            continue
+
+        msg = (
+            f"{path} includes <{match.group(1)}> but does not reference any of its API"
+        )
+        lineno = 1 + raw_content.count("\n", 0, match.start())
+
+        if fix:
+            fix_includes(path, raw_content, lineno)
+            results["fixed"] += 1
+        else:
+            diff = generate_diff(path, raw_content, lineno)
+
+            results["results"].append(
+                result.from_config(
+                    config,
+                    path=path,
+                    message=msg,
+                    level="error",
+                    lineno=lineno,
+                    diff=diff,
+                )
+            )
+
+
 def lint(paths, config, **lintargs):
     results = {"results": [], "fixed": 0}
     paths = list(expand_exclusions(paths, config, lintargs["root"]))
@@ -147,5 +183,6 @@ def lint(paths, config, **lintargs):
 
         lint_mfbt_headers(results, path, raw_content, config, fix)
         lint_std_headers(results, path, raw_content, config, fix)
+        lint_cstd_headers(results, path, raw_content, config, fix)
 
     return results

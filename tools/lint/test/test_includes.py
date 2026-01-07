@@ -91,5 +91,25 @@ def test_lint_std_includes(lint, paths):
     )
 
 
+def test_lint_c_std_includes(lint, paths):
+    results = lint(paths("correct_stdio.h"))
+    assert not results
+
+    results = lint(paths("correct_cstdio.h"))
+    assert not results
+
+    results = lint(paths("incorrect_stdio.h"))
+    assert len(results) == 1
+    assert results[0].message.endswith(
+        "incorrect_stdio.h includes <stdio.h> but does not reference any of its API"
+    )
+
+    results = lint(paths("incorrect_cstdio.h"))
+    assert len(results) == 1
+    assert results[0].message.endswith(
+        "incorrect_cstdio.h includes <cstdio> but does not reference any of its API"
+    )
+
+
 if __name__ == "__main__":
     mozunit.main()
