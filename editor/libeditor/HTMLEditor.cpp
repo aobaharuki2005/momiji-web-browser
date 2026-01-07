@@ -6686,8 +6686,8 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(
   }
   while (deepestEditableContent &&
          deepestEditableContent->IsHTMLElement(nsGkAtoms::br)) {
-    deepestEditableContent = HTMLEditUtils::GetPreviousContent(
-        *deepestEditableContent, {WalkTreeOption::IgnoreNonEditableNode},
+    deepestEditableContent = HTMLEditUtils::GetPreviousLeafContent(
+        *deepestEditableContent, {LeafNodeOption::IgnoreNonEditableNode},
         BlockInlineCheck::UseComputedDisplayOutsideStyle, &aEditingHost);
   }
   if (!deepestEditableContent) {

@@ -1831,6 +1831,96 @@ TEST(HTMLEditUtilsTest, GetPreviousLeafContentOrPreviousBlockElement_Content)
 // TODO: Test GetPreviousLeafContentOrPreviousBlockElement() which takes
 // EditorDOMPoint
 
+TEST(HTMLEditUtilsTest, GetNextLeafContent_Content)
+{
+  using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+  const RefPtr<Document> doc = CreateHTMLDoc();
+  const RefPtr<nsGenericHTMLElement> body = doc->GetBody();
+  MOZ_RELEASE_ASSERT(body);
+  for (const auto& testData : {
+           GetLeafNodeTest{u"<div><br></div><p><br></p>", "div", {}, "p > br"},
+           GetLeafNodeTest{
+               u"<div><br></div><!--abc--><p><br></p>", "div", {}, "p > br"},
+           GetLeafNodeTest{u"<div><br></div><!--abc--><p><br></p>",
+                           "div",
+                           {LeafNodeOption::TreatCommentAsLeafNode},
+                           nullptr,
+                           "body",
+                           1u},
+           GetLeafNodeTest{
+               u"<div><br></div><span><br></span>", "div", {}, "span > br"},
+           GetLeafNodeTest{u"<div><br></div><span><!--abc--><br></span>",
+                           "div",
+                           {},
+                           "span > br"},
+           GetLeafNodeTest{u"<div><br></div><span><!--abc--><br></span>",
+                           "div",
+                           {LeafNodeOption::TreatCommentAsLeafNode},
+                           nullptr,
+                           "span",
+                           0u},
+       }) {
+    body->SetInnerHTMLTrusted(nsDependentString(testData.mInnerHTML),
+                              doc->NodePrincipal(), IgnoreErrors());
+    const Element* const target = body->QuerySelector(
+        nsDependentCString(testData.mContentSelector), IgnoreErrors());
+    MOZ_RELEASE_ASSERT(target);
+    const nsIContent* result = HTMLEditUtils::GetNextLeafContent(
+        *target, testData.mOptions,
+        BlockInlineCheck::UseComputedDisplayOutsideStyle);
+    EXPECT_EQ(result, testData.GetExpectedTarget(*body->GetParentNode()))
+        << "GetNextLeafContent: " << testData
+        << "(Got: " << ToString(RefPtr{result}) << ")";
+  }
+}
+
+// TODO: Test GetNextLeafContent() which takes EditorDOMPoint
+
+TEST(HTMLEditUtilsTest, GetPreviousLeafContent_Content)
+{
+  using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+  const RefPtr<Document> doc = CreateHTMLDoc();
+  const RefPtr<nsGenericHTMLElement> body = doc->GetBody();
+  MOZ_RELEASE_ASSERT(body);
+  for (const auto& testData : {
+           GetLeafNodeTest{u"<p><br></p><div><br></div>", "div", {}, "p > br"},
+           GetLeafNodeTest{
+               u"<p><br></p><!--abc--><div><br></div>", "div", {}, "p > br"},
+           GetLeafNodeTest{u"<p><br></p><!--abc--><div><br></div>",
+                           "div",
+                           {LeafNodeOption::TreatCommentAsLeafNode},
+                           nullptr,
+                           "body",
+                           1u},
+           GetLeafNodeTest{
+               u"<span><br></span><div><br></div>", "div", {}, "span > br"},
+           GetLeafNodeTest{u"<span><br><!--abc--></span><div><br></div>",
+                           "div",
+                           {},
+                           "span > br"},
+           GetLeafNodeTest{u"<span><br><!--abc--></span><div><br></div>",
+                           "div",
+                           {LeafNodeOption::TreatCommentAsLeafNode},
+                           nullptr,
+                           "span",
+                           1u},
+       }) {
+    body->SetInnerHTMLTrusted(nsDependentString(testData.mInnerHTML),
+                              doc->NodePrincipal(), IgnoreErrors());
+    const Element* const target = body->QuerySelector(
+        nsDependentCString(testData.mContentSelector), IgnoreErrors());
+    MOZ_RELEASE_ASSERT(target);
+    const nsIContent* result = HTMLEditUtils::GetPreviousLeafContent(
+        *target, testData.mOptions,
+        BlockInlineCheck::UseComputedDisplayOutsideStyle);
+    EXPECT_EQ(result, testData.GetExpectedTarget(*body->GetParentNode()))
+        << "GetPreviousLeafContent: " << testData
+        << "(Got: " << ToString(RefPtr{result}) << ")";
+  }
+}
+
+// TODO: Test GetPreviousLeafContent() which takes EditorDOMPoint
+
 struct MOZ_STACK_CLASS LineBreakBeforeBlockBoundaryTest final {
   const char16_t* const mInnerHTML;
   const char* const mContainer;

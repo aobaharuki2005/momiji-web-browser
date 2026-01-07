@@ -144,6 +144,7 @@ using namespace dom;
 using namespace widget;
 
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
+using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 static LazyLogModule gEventLog("EditorEvent");
@@ -4417,14 +4418,19 @@ EditorBase::CreateTransactionForCollapsedRange(
   if (aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward &&
       point.IsStartOfContainer()) {
     MOZ_ASSERT(IsHTMLEditor());
+    if (MOZ_UNLIKELY(!point.IsInContentNode())) {
+      NS_WARNING("There was no editable content before the collapsed range");
+      return nullptr;
+    }
     // We're backspacing from the beginning of a node.  Delete the last thing
     // of previous editable content.
-    nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
-        *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
+    nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousLeafContent(
+        *point.ContainerAs<nsIContent>(),
+        {LeafNodeOption::IgnoreNonEditableNode},
         IsTextEditor() ? BlockInlineCheck::UseHTMLDefaultStyle
                        : BlockInlineCheck::UseComputedDisplayOutsideStyle,
         anonymousDivOrEditingHost);
-    if (!previousEditableContent) {
+    if (MOZ_UNLIKELY(!previousEditableContent)) {
       NS_WARNING("There was no editable content before the collapsed range");
       return nullptr;
     }
@@ -4467,14 +4473,19 @@ EditorBase::CreateTransactionForCollapsedRange(
   if (aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendForward &&
       point.IsEndOfContainer()) {
     MOZ_ASSERT(IsHTMLEditor());
+    if (MOZ_UNLIKELY(!point.IsInContentNode())) {
+      NS_WARNING("There was no editable content after the collapsed range");
+      return nullptr;
+    }
     // We're deleting from the end of a node.  Delete the first thing of
     // next editable content.
-    nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
-        *point.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
+    nsIContent* nextEditableContent = HTMLEditUtils::GetNextLeafContent(
+        *point.ContainerAs<nsIContent>(),
+        {LeafNodeOption::IgnoreNonEditableNode},
         IsTextEditor() ? BlockInlineCheck::UseHTMLDefaultStyle
                        : BlockInlineCheck::UseComputedDisplayOutsideStyle,
         anonymousDivOrEditingHost);
-    if (!nextEditableContent) {
+    if (MOZ_UNLIKELY(!nextEditableContent)) {
       NS_WARNING("There was no editable content after the collapsed range");
       return nullptr;
     }
@@ -4538,12 +4549,12 @@ EditorBase::CreateTransactionForCollapsedRange(
   if (IsHTMLEditor()) {
     editableContent =
         aHowToHandleCollapsedRange == HowToHandleCollapsedRange::ExtendBackward
-            ? HTMLEditUtils::GetPreviousContent(
-                  point, {WalkTreeOption::IgnoreNonEditableNode},
+            ? HTMLEditUtils::GetPreviousLeafContent(
+                  point, {LeafNodeOption::IgnoreNonEditableNode},
                   BlockInlineCheck::UseComputedDisplayOutsideStyle,
                   anonymousDivOrEditingHost)
-            : HTMLEditUtils::GetNextContent(
-                  point, {WalkTreeOption::IgnoreNonEditableNode},
+            : HTMLEditUtils::GetNextLeafContent(
+                  point, {LeafNodeOption::IgnoreNonEditableNode},
                   BlockInlineCheck::UseComputedDisplayOutsideStyle,
                   anonymousDivOrEditingHost);
     if (!editableContent) {
@@ -4556,12 +4567,12 @@ EditorBase::CreateTransactionForCollapsedRange(
       editableContent =
           aHowToHandleCollapsedRange ==
                   HowToHandleCollapsedRange::ExtendBackward
-              ? HTMLEditUtils::GetPreviousContent(
-                    *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
+              ? HTMLEditUtils::GetPreviousLeafContent(
+                    *editableContent, {LeafNodeOption::IgnoreNonEditableNode},
                     BlockInlineCheck::UseComputedDisplayOutsideStyle,
                     anonymousDivOrEditingHost)
-              : HTMLEditUtils::GetNextContent(
-                    *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
+              : HTMLEditUtils::GetNextLeafContent(
+                    *editableContent, {LeafNodeOption::IgnoreNonEditableNode},
                     BlockInlineCheck::UseComputedDisplayOutsideStyle,
                     anonymousDivOrEditingHost);
     }

@@ -38,6 +38,7 @@ namespace mozilla {
 using namespace dom;
 
 using EditorType = EditorUtils::EditorType;
+using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 /*****************************************************************************
@@ -282,9 +283,9 @@ AlignStateAtSelection::AlignStateAtSelection(HTMLEditor& aHTMLEditor,
   else if (atStartOfSelection.IsContainerHTMLElement(nsGkAtoms::html) &&
            atBodyOrDocumentElement.IsSet() &&
            atStartOfSelection.Offset() == atBodyOrDocumentElement.Offset()) {
-    editTargetContent = HTMLEditUtils::GetNextContent(
-        atStartOfSelection, {WalkTreeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::Unused, aHTMLEditor.ComputeEditingHost());
+    editTargetContent = HTMLEditUtils::GetNextLeafContent(
+        atStartOfSelection, {LeafNodeOption::IgnoreNonEditableNode},
+        BlockInlineCheck::Auto, aHTMLEditor.ComputeEditingHost());
     if (NS_WARN_IF(!editTargetContent)) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;

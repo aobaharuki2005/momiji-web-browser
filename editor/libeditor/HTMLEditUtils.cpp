@@ -57,60 +57,35 @@ namespace mozilla {
 using namespace dom;
 using EditorType = EditorBase::EditorType;
 
-template nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-    const EditorDOMPoint&, const LeafNodeOptions&, BlockInlineCheck,
-    const Element*);
-template nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-    const EditorRawDOMPoint&, const LeafNodeOptions&, BlockInlineCheck,
-    const Element*);
-template nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-    const EditorDOMPointInText&, const LeafNodeOptions&, BlockInlineCheck,
-    const Element*);
-template nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-    const EditorRawDOMPointInText&, const LeafNodeOptions&, BlockInlineCheck,
-    const Element*);
+template nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
+    const EditorDOMPoint&, StopAtBlockSibling, const LeafNodeOptions&,
+    BlockInlineCheck, const Element*);
+template nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
+    const EditorRawDOMPoint&, StopAtBlockSibling, const LeafNodeOptions&,
+    BlockInlineCheck, const Element*);
+template nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
+    const EditorDOMPointInText&, StopAtBlockSibling, const LeafNodeOptions&,
+    BlockInlineCheck, const Element*);
+template nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
+    const EditorRawDOMPointInText&, StopAtBlockSibling, const LeafNodeOptions&,
+    BlockInlineCheck, const Element*);
 
 template nsIContent*
-HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-    const EditorDOMPoint&, const LeafNodeOptions&, BlockInlineCheck,
-    const Element*);
+HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
+    const EditorDOMPoint&, StopAtBlockSibling, const LeafNodeOptions&,
+    BlockInlineCheck, const Element*);
 template nsIContent*
-HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-    const EditorRawDOMPoint&, const LeafNodeOptions&, BlockInlineCheck,
-    const Element*);
+HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
+    const EditorRawDOMPoint&, StopAtBlockSibling, const LeafNodeOptions&,
+    BlockInlineCheck, const Element*);
 template nsIContent*
-HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-    const EditorDOMPointInText&, const LeafNodeOptions&, BlockInlineCheck,
-    const Element*);
+HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
+    const EditorDOMPointInText&, StopAtBlockSibling, const LeafNodeOptions&,
+    BlockInlineCheck, const Element*);
 template nsIContent*
-HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-    const EditorRawDOMPointInText&, const LeafNodeOptions&, BlockInlineCheck,
-    const Element*);
-
-template nsIContent* HTMLEditUtils::GetPreviousContent(
-    const EditorDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
-template nsIContent* HTMLEditUtils::GetPreviousContent(
-    const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
-template nsIContent* HTMLEditUtils::GetPreviousContent(
-    const EditorDOMPointInText& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
-template nsIContent* HTMLEditUtils::GetPreviousContent(
-    const EditorRawDOMPointInText& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
-template nsIContent* HTMLEditUtils::GetNextContent(
-    const EditorDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
-template nsIContent* HTMLEditUtils::GetNextContent(
-    const EditorRawDOMPoint& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
-template nsIContent* HTMLEditUtils::GetNextContent(
-    const EditorDOMPointInText& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
-template nsIContent* HTMLEditUtils::GetNextContent(
-    const EditorRawDOMPointInText& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
+HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
+    const EditorRawDOMPointInText&, StopAtBlockSibling, const LeafNodeOptions&,
+    BlockInlineCheck, const Element*);
 
 template EditorDOMPoint HTMLEditUtils::GetPreviousEditablePoint(
     nsIContent& aContent, const Element* aAncestorLimiter,
@@ -1325,9 +1300,9 @@ nsIContent* HTMLEditUtils::GetFirstLeafContent(
 }
 
 // static
-nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-    const nsIContent& aStartContent, const LeafNodeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck,
+nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
+    const nsIContent& aStartContent, StopAtBlockSibling aStopAtBlockSibling,
+    const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
     const Element* aAncestorLimiter /* = nullptr */) {
   MOZ_ASSERT_IF(
       aOptions.contains(LeafNodeOption::IgnoreNonEditableNode),
@@ -1347,9 +1322,10 @@ nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
       for (Element* const parentElement :
            container->InclusiveAncestorsOfType<Element>()) {
         if (parentElement == aAncestorLimiter ||
-            HTMLEditUtils::IsBlockElement(
-                *parentElement,
-                UseComputedDisplayStyleIfAuto(aBlockInlineCheck))) {
+            (static_cast<bool>(aStopAtBlockSibling) &&
+             HTMLEditUtils::IsBlockElement(
+                 *parentElement,
+                 UseComputedDisplayStyleIfAuto(aBlockInlineCheck)))) {
           return nullptr;
         }
         if (aOptions.contains(LeafNodeOption::TreatNonEditableNodeAsLeafNode) &&
@@ -1370,7 +1346,8 @@ nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
     }
 
     // We have a next content.  If it's a block, return it.
-    if (HTMLEditUtils::IsBlockElement(
+    if (static_cast<bool>(aStopAtBlockSibling) &&
+        HTMLEditUtils::IsBlockElement(
             *nextContent,
             PreferDisplayOutsideIfUsingDisplay(
                 UseComputedDisplayStyleIfAuto(aBlockInlineCheck)))) {
@@ -1409,9 +1386,10 @@ nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
 
 // static
 template <typename PT, typename CT>
-nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
     const EditorDOMPointBase<PT, CT>& aStartPoint,
-    const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
+    StopAtBlockSibling aStopAtBlockSibling, const LeafNodeOptions& aOptions,
+    BlockInlineCheck aBlockInlineCheck,
     const Element* aAncestorLimiter /* = nullptr */) {
   MOZ_ASSERT(aStartPoint.IsSet());
   MOZ_ASSERT_IF(
@@ -1422,38 +1400,40 @@ nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
     return nullptr;
   }
   if (!aStartPoint.GetContainer()->IsElement()) {
-    return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-        *aStartPoint.template ContainerAs<nsIContent>(), aOptions,
-        aBlockInlineCheck, aAncestorLimiter);
+    return HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
+        *aStartPoint.template ContainerAs<nsIContent>(), aStopAtBlockSibling,
+        aOptions, aBlockInlineCheck, aAncestorLimiter);
   }
   if (!HTMLEditUtils::IsContainerNode(
           *aStartPoint.template ContainerAs<Element>()) ||
       HTMLEditUtils::IsReplacedElement(
           *aStartPoint.template ContainerAs<Element>())) {
-    return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-        *aStartPoint.template ContainerAs<nsIContent>(), aOptions,
-        aBlockInlineCheck, aAncestorLimiter);
+    return HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
+        *aStartPoint.template ContainerAs<nsIContent>(), aStopAtBlockSibling,
+        aOptions, aBlockInlineCheck, aAncestorLimiter);
   }
 
   for (nsIContent* nextContent = aStartPoint.GetChild();;) {
     if (!nextContent) {
       if (aStartPoint.GetContainer() == aAncestorLimiter ||
-          HTMLEditUtils::IsBlockElement(
-              *aStartPoint.template ContainerAs<Element>(),
-              UseComputedDisplayStyleIfAuto(aBlockInlineCheck))) {
+          (static_cast<bool>(aStopAtBlockSibling) &&
+           HTMLEditUtils::IsBlockElement(
+               *aStartPoint.template ContainerAs<Element>(),
+               UseComputedDisplayStyleIfAuto(aBlockInlineCheck)))) {
         // We are at end of the block.
         return nullptr;
       }
 
       // We are at end of non-block container
-      return HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-          *aStartPoint.template ContainerAs<Element>(), aOptions,
-          PreferDisplayOutsideIfUsingDisplay(aBlockInlineCheck),
+      return HTMLEditUtils::GetNextLeafContentOrNextBlockElementImpl(
+          *aStartPoint.template ContainerAs<Element>(), aStopAtBlockSibling,
+          aOptions, PreferDisplayOutsideIfUsingDisplay(aBlockInlineCheck),
           aAncestorLimiter);
     }
 
     // We have a next node.  If it's a block, return it.
-    if (HTMLEditUtils::IsBlockElement(
+    if (static_cast<bool>(aStopAtBlockSibling) &&
+        HTMLEditUtils::IsBlockElement(
             *nextContent,
             UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck))) {
       return nextContent;
@@ -1488,9 +1468,9 @@ nsIContent* HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
 }
 
 // static
-nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-    const nsIContent& aStartContent, const LeafNodeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck,
+nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
+    const nsIContent& aStartContent, StopAtBlockSibling aStopAtBlockSibling,
+    const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
     const Element* aAncestorLimiter /* = nullptr */) {
   MOZ_ASSERT_IF(
       aOptions.contains(LeafNodeOption::IgnoreNonEditableNode),
@@ -1510,9 +1490,10 @@ nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
       for (Element* parentElement :
            container->InclusiveAncestorsOfType<Element>()) {
         if (parentElement == aAncestorLimiter ||
-            HTMLEditUtils::IsBlockElement(
-                *parentElement,
-                UseComputedDisplayStyleIfAuto(aBlockInlineCheck))) {
+            (static_cast<bool>(aStopAtBlockSibling) &&
+             HTMLEditUtils::IsBlockElement(
+                 *parentElement,
+                 UseComputedDisplayStyleIfAuto(aBlockInlineCheck)))) {
           return nullptr;
         }
         if (aOptions.contains(LeafNodeOption::TreatNonEditableNodeAsLeafNode) &&
@@ -1532,7 +1513,8 @@ nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
       MOZ_ASSERT(previousContent);
     }
     // We have a next content.  If it's a block, return it.
-    if (HTMLEditUtils::IsBlockElement(
+    if (static_cast<bool>(aStopAtBlockSibling) &&
+        HTMLEditUtils::IsBlockElement(
             *previousContent,
             PreferDisplayOutsideIfUsingDisplay(
                 UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck)))) {
@@ -1573,9 +1555,10 @@ nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
 
 // static
 template <typename PT, typename CT>
-nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
     const EditorDOMPointBase<PT, CT>& aStartPoint,
-    const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
+    StopAtBlockSibling aStopAtBlockSibling, const LeafNodeOptions& aOptions,
+    BlockInlineCheck aBlockInlineCheck,
     const Element* aAncestorLimiter /* = nullptr */) {
   MOZ_ASSERT(aStartPoint.IsSet());
   MOZ_ASSERT_IF(
@@ -1586,32 +1569,33 @@ nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
     return nullptr;
   }
   if (!aStartPoint.GetContainer()->IsElement()) {
-    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-        *aStartPoint.template ContainerAs<nsIContent>(), aOptions,
-        aBlockInlineCheck, aAncestorLimiter);
+    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
+        *aStartPoint.template ContainerAs<nsIContent>(), aStopAtBlockSibling,
+        aOptions, aBlockInlineCheck, aAncestorLimiter);
   }
   if (!HTMLEditUtils::IsContainerNode(
           *aStartPoint.template ContainerAs<Element>()) ||
       HTMLEditUtils::IsReplacedElement(
           *aStartPoint.template ContainerAs<Element>())) {
-    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-        *aStartPoint.template ContainerAs<Element>(), aOptions,
-        aBlockInlineCheck, aAncestorLimiter);
+    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
+        *aStartPoint.template ContainerAs<Element>(), aStopAtBlockSibling,
+        aOptions, aBlockInlineCheck, aAncestorLimiter);
   }
 
   if (aStartPoint.IsStartOfContainer()) {
     if (aStartPoint.GetContainer() == aAncestorLimiter ||
-        HTMLEditUtils::IsBlockElement(
-            *aStartPoint.template ContainerAs<Element>(),
-            UseComputedDisplayStyleIfAuto(aBlockInlineCheck))) {
+        (static_cast<bool>(aStopAtBlockSibling) &&
+         HTMLEditUtils::IsBlockElement(
+             *aStartPoint.template ContainerAs<Element>(),
+             UseComputedDisplayStyleIfAuto(aBlockInlineCheck)))) {
       // We are at start of the block.
       return nullptr;
     }
 
     // We are at start of non-block container
-    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-        *aStartPoint.template ContainerAs<Element>(), aOptions,
-        PreferDisplayOutsideIfUsingDisplay(aBlockInlineCheck),
+    return HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
+        *aStartPoint.template ContainerAs<Element>(), aStopAtBlockSibling,
+        aOptions, PreferDisplayOutsideIfUsingDisplay(aBlockInlineCheck),
         aAncestorLimiter);
   }
 
@@ -1619,7 +1603,8 @@ nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
        previousContent;
        previousContent = previousContent->GetPreviousSibling()) {
     // We have a prior node.  If it's a block, return it.
-    if (HTMLEditUtils::IsBlockElement(
+    if (static_cast<bool>(aStopAtBlockSibling) &&
+        HTMLEditUtils::IsBlockElement(
             *previousContent,
             UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck))) {
       return previousContent;
@@ -2544,222 +2529,6 @@ bool HTMLEditUtils::IsSingleLineContainer(const nsIContent& aContent) {
   return IsNonListSingleLineContainer(aContent) ||
          aContent.IsAnyOfHTMLElements(nsGkAtoms::li, nsGkAtoms::dt,
                                       nsGkAtoms::dd);
-}
-
-// static
-template <typename PT, typename CT>
-nsIContent* HTMLEditUtils::GetPreviousContent(
-    const EditorDOMPointBase<PT, CT>& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  MOZ_ASSERT(aPoint.IsSetAndValid());
-  NS_WARNING_ASSERTION(
-      !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
-      "GetPreviousContent() doesn't assume that the start point is a "
-      "data node except text node");
-
-  // If we are at the beginning of the node, or it is a text node, then just
-  // look before it.
-  if (aPoint.IsStartOfContainer() || aPoint.IsInTextNode()) {
-    if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-        aPoint.IsInContentNode() &&
-        HTMLEditUtils::IsBlockElement(
-            *aPoint.template ContainerAs<nsIContent>(),
-            UseComputedDisplayStyleIfAuto(aBlockInlineCheck))) {
-      // If we aren't allowed to cross blocks, don't look before this block.
-      return nullptr;
-    }
-    return HTMLEditUtils::GetPreviousContent(
-        *aPoint.GetContainer(), aOptions, aBlockInlineCheck, aAncestorLimiter);
-  }
-
-  // else look before the child at 'aOffset'
-  if (aPoint.GetChild()) {
-    return HTMLEditUtils::GetPreviousContent(
-        *aPoint.GetChild(), aOptions, aBlockInlineCheck, aAncestorLimiter);
-  }
-
-  // unless there isn't one, in which case we are at the end of the node
-  // and want the deep-right child.
-  nsIContent* lastLeafContent = HTMLEditUtils::GetLastLeafContent(
-      *aPoint.GetContainer(),
-      aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
-          ? LeafNodeOptions{LeafNodeOption::TreatChildBlockAsLeafNode}
-          : LeafNodeOptions{},
-      aBlockInlineCheck);
-  if (!lastLeafContent) {
-    return nullptr;
-  }
-
-  if (!HTMLEditUtils::IsContentIgnored(*lastLeafContent, aOptions)) {
-    return lastLeafContent;
-  }
-
-  // restart the search from the non-editable node we just found
-  return HTMLEditUtils::GetPreviousContent(*lastLeafContent, aOptions,
-                                           aBlockInlineCheck, aAncestorLimiter);
-}
-
-// static
-template <typename PT, typename CT>
-nsIContent* HTMLEditUtils::GetNextContent(
-    const EditorDOMPointBase<PT, CT>& aPoint, const WalkTreeOptions& aOptions,
-    BlockInlineCheck aBlockInlineCheck,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  MOZ_ASSERT(aPoint.IsSetAndValid());
-  NS_WARNING_ASSERTION(
-      !aPoint.IsInDataNode() || aPoint.IsInTextNode(),
-      "GetNextContent() doesn't assume that the start point is a "
-      "data node except text node");
-
-  auto point = aPoint.template To<EditorRawDOMPoint>();
-
-  // if the container is a text node, use its location instead
-  if (point.IsInTextNode()) {
-    point.SetAfter(point.GetContainer());
-    if (NS_WARN_IF(!point.IsSet())) {
-      return nullptr;
-    }
-  }
-
-  if (point.GetChild()) {
-    if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-        HTMLEditUtils::IsBlockElement(
-            *point.GetChild(),
-            UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck))) {
-      return point.GetChild();
-    }
-
-    nsIContent* firstLeafContent = HTMLEditUtils::GetFirstLeafContent(
-        *point.GetChild(),
-        aOptions.contains(WalkTreeOption::StopAtBlockBoundary)
-            ? LeafNodeOptions{LeafNodeOption::TreatChildBlockAsLeafNode}
-            : LeafNodeOptions{},
-        aBlockInlineCheck);
-    if (!firstLeafContent) {
-      return point.GetChild();
-    }
-
-    // XXX Why do we need to do this check?  The leaf node must be a descendant
-    //     of `point.GetChild()`.
-    if (aAncestorLimiter &&
-        (firstLeafContent == aAncestorLimiter ||
-         !firstLeafContent->IsInclusiveDescendantOf(aAncestorLimiter))) {
-      return nullptr;
-    }
-
-    if (!HTMLEditUtils::IsContentIgnored(*firstLeafContent, aOptions)) {
-      return firstLeafContent;
-    }
-
-    // restart the search from the non-editable node we just found
-    return HTMLEditUtils::GetNextContent(*firstLeafContent, aOptions,
-                                         aBlockInlineCheck, aAncestorLimiter);
-  }
-
-  // unless there isn't one, in which case we are at the end of the node
-  // and want the next one.
-  if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-      point.IsInContentNode() &&
-      HTMLEditUtils::IsBlockElement(
-          *point.template ContainerAs<nsIContent>(),
-          UseComputedDisplayStyleIfAuto(aBlockInlineCheck))) {
-    // don't cross out of parent block
-    return nullptr;
-  }
-
-  return HTMLEditUtils::GetNextContent(*point.GetContainer(), aOptions,
-                                       aBlockInlineCheck, aAncestorLimiter);
-}
-
-// static
-nsIContent* HTMLEditUtils::GetAdjacentLeafContent(
-    const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-    const WalkTreeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  // called only by GetPriorNode so we don't need to check params.
-  MOZ_ASSERT(&aNode != aAncestorLimiter);
-  MOZ_ASSERT_IF(aAncestorLimiter,
-                aAncestorLimiter->IsInclusiveDescendantOf(aAncestorLimiter));
-
-  const nsINode* node = &aNode;
-  for (;;) {
-    // if aNode has a sibling in the right direction, return
-    // that sibling's closest child (or itself if it has no children)
-    nsIContent* sibling = aWalkTreeDirection == WalkTreeDirection::Forward
-                              ? node->GetNextSibling()
-                              : node->GetPreviousSibling();
-    if (sibling) {
-      // XXX If `sibling` belongs to siblings of inclusive ancestors of aNode,
-      //     perhaps, we need to use
-      //     PreferDisplayOutsideIfUsingDisplay(aBlockInlineCheck) here.
-      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-          HTMLEditUtils::IsBlockElement(
-              *sibling,
-              UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck))) {
-        // don't look inside previous sibling, since it is a block
-        return sibling;
-      }
-      LeafNodeOptions leafNodeOptions;
-      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary)) {
-        leafNodeOptions += LeafNodeOption::TreatChildBlockAsLeafNode;
-      }
-      if (aOptions.contains(WalkTreeOption::IgnoreNonEditableNode)) {
-        leafNodeOptions += LeafNodeOption::IgnoreNonEditableNode;
-      }
-      nsIContent* leafContent =
-          aWalkTreeDirection == WalkTreeDirection::Forward
-              ? HTMLEditUtils::GetFirstLeafContent(*sibling, leafNodeOptions,
-                                                   aBlockInlineCheck)
-              : HTMLEditUtils::GetLastLeafContent(*sibling, leafNodeOptions,
-                                                  aBlockInlineCheck);
-      return leafContent ? leafContent : sibling;
-    }
-
-    nsIContent* parent = node->GetParent();
-    if (!parent) {
-      return nullptr;
-    }
-
-    if (parent == aAncestorLimiter ||
-        (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-         HTMLEditUtils::IsBlockElement(
-             *parent, UseComputedDisplayStyleIfAuto(aBlockInlineCheck)))) {
-      return nullptr;
-    }
-
-    node = parent;
-  }
-
-  MOZ_ASSERT_UNREACHABLE("What part of for(;;) do you not understand?");
-  return nullptr;
-}
-
-// static
-nsIContent* HTMLEditUtils::GetAdjacentContent(
-    const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-    const WalkTreeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
-    const Element* aAncestorLimiter /* = nullptr */) {
-  if (&aNode == aAncestorLimiter) {
-    // Don't allow traversal above the root node! This helps
-    // prevent us from accidentally editing browser content
-    // when the editor is in a text widget.
-    return nullptr;
-  }
-
-  nsIContent* leafContent = HTMLEditUtils::GetAdjacentLeafContent(
-      aNode, aWalkTreeDirection, aOptions, aBlockInlineCheck, aAncestorLimiter);
-  if (!leafContent) {
-    return nullptr;
-  }
-
-  if (!HTMLEditUtils::IsContentIgnored(*leafContent, aOptions)) {
-    return leafContent;
-  }
-
-  return HTMLEditUtils::GetAdjacentContent(*leafContent, aWalkTreeDirection,
-                                           aOptions, aBlockInlineCheck,
-                                           aAncestorLimiter);
 }
 
 // static

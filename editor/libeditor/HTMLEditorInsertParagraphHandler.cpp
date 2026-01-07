@@ -1250,9 +1250,9 @@ bool HTMLEditor::AutoInsertParagraphHandler::ShouldCreateNewParagraph(
   //     moving to the caret, but I think that this could be handled in fewer
   //     cases than this.
   const auto* const precedingBRElement =
-      HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousContent(
-          aPointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
-          BlockInlineCheck::Unused, &mEditingHost));
+      HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousLeafContent(
+          aPointToSplit, {LeafNodeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::Auto, &mEditingHost));
   if (!IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
           precedingBRElement)) {
     return true;
@@ -1261,9 +1261,9 @@ bool HTMLEditor::AutoInsertParagraphHandler::ShouldCreateNewParagraph(
   // followed by a <br> or followed by an invisible <br>, we should not create a
   // new paragraph.
   const auto* followingBRElement =
-      HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextContent(
-          aPointToSplit, {WalkTreeOption::IgnoreNonEditableNode},
-          BlockInlineCheck::Unused, &mEditingHost));
+      HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextLeafContent(
+          aPointToSplit, {LeafNodeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::Auto, &mEditingHost));
   return !IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
       followingBRElement);
 }

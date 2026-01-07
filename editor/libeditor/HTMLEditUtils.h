@@ -1129,19 +1129,6 @@ class HTMLEditUtils final {
                                               aFoundLinkElement);
   }
 
-  /**
-   * Get adjacent content node of aNode if there is (even if one is in different
-   * parent element).
-   *
-   * @param aNode               The node from which we start to walk the DOM
-   *                            tree.
-   * @param aOptions            See WalkTreeOption for the detail.
-   * @param aBlockInlineCheck   Whether considering block vs. inline with the
-   *                            computed style or the HTML default style.
-   * @param aAncestorLimiter    Ancestor limiter element which these methods
-   *                            never cross its boundary.  This is typically
-   *                            the editing host.
-   */
   enum class WalkTreeOption {
     IgnoreNonEditableNode,     // Ignore non-editable nodes and their children.
     IgnoreDataNodeExceptText,  // Ignore data nodes which are not text node.
@@ -1149,71 +1136,6 @@ class HTMLEditUtils final {
     StopAtBlockBoundary,       // Stop waking the tree at a block boundary.
   };
   using WalkTreeOptions = EnumSet<WalkTreeOption>;
-  static nsIContent* GetPreviousContent(
-      const nsINode& aNode, const WalkTreeOptions& aOptions,
-      BlockInlineCheck aBlockInlineCheck,
-      const Element* aAncestorLimiter = nullptr) {
-    if (&aNode == aAncestorLimiter ||
-        (aAncestorLimiter &&
-         !aNode.IsInclusiveDescendantOf(aAncestorLimiter))) {
-      return nullptr;
-    }
-    return HTMLEditUtils::GetAdjacentContent(aNode, WalkTreeDirection::Backward,
-                                             aOptions, aBlockInlineCheck,
-                                             aAncestorLimiter);
-  }
-  static nsIContent* GetNextContent(const nsINode& aNode,
-                                    const WalkTreeOptions& aOptions,
-                                    BlockInlineCheck aBlockInlineCheck,
-                                    const Element* aAncestorLimiter = nullptr) {
-    if (&aNode == aAncestorLimiter ||
-        (aAncestorLimiter &&
-         !aNode.IsInclusiveDescendantOf(aAncestorLimiter))) {
-      return nullptr;
-    }
-    return HTMLEditUtils::GetAdjacentContent(aNode, WalkTreeDirection::Forward,
-                                             aOptions, aBlockInlineCheck,
-                                             aAncestorLimiter);
-  }
-
-  /**
-   * And another version that takes a point in DOM tree rather than a node.
-   */
-  template <typename PT, typename CT>
-  static nsIContent* GetPreviousContent(
-      const EditorDOMPointBase<PT, CT>& aPoint, const WalkTreeOptions& aOptions,
-      BlockInlineCheck aBlockInlineCheck,
-      const Element* aAncestorLimiter = nullptr);
-
-  /**
-   * And another version that takes a point in DOM tree rather than a node.
-   *
-   * Note that this may return the child at the offset.  E.g., following code
-   * causes infinite loop.
-   *
-   * EditorRawDOMPoint point(aEditableNode);
-   * while (nsIContent* content =
-   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode})) {
-   *   // Do something...
-   *   point.Set(content);
-   * }
-   *
-   * Following code must be you expected:
-   *
-   * while (nsIContent* content =
-   *          GetNextContent(point, {WalkTreeOption::IgnoreNonEditableNode}) {
-   *   // Do something...
-   *   DebugOnly<bool> advanced = point.Advanced();
-   *   MOZ_ASSERT(advanced);
-   *   point.Set(point.GetChild());
-   * }
-   */
-  template <typename PT, typename CT>
-  static nsIContent* GetNextContent(const EditorDOMPointBase<PT, CT>& aPoint,
-                                    const WalkTreeOptions& aOptions,
-                                    BlockInlineCheck aBlockInlineCheck,
-                                    const Element* aAncestorLimiter = nullptr);
-
   /**
    * GetPreviousSibling() return the preceding sibling of aContent which matches
    * with aOption.
@@ -1367,15 +1289,15 @@ class HTMLEditUtils final {
 
     nsIContent* editableContent = nullptr;
     if (aWalkTreeDirection == WalkTreeDirection::Backward) {
-      editableContent = HTMLEditUtils::GetPreviousContent(
-          aPoint, {WalkTreeOption::IgnoreNonEditableNode},
+      editableContent = HTMLEditUtils::GetPreviousLeafContent(
+          aPoint, {LeafNodeOption::IgnoreNonEditableNode},
           BlockInlineCheck::Auto, &aEditingHost);
       if (!editableContent) {
         return nullptr;  // Not illegal.
       }
     } else {
-      editableContent = HTMLEditUtils::GetNextContent(
-          aPoint, {WalkTreeOption::IgnoreNonEditableNode},
+      editableContent = HTMLEditUtils::GetNextLeafContent(
+          aPoint, {LeafNodeOption::IgnoreNonEditableNode},
           BlockInlineCheck::Auto, &aEditingHost);
       if (NS_WARN_IF(!editableContent)) {
         // Perhaps, illegal because the node pointed by aPoint isn't editable
@@ -1392,15 +1314,15 @@ class HTMLEditUtils final {
            !editableContent->IsHTMLElement(nsGkAtoms::br) &&
            !HTMLEditUtils::IsImageElement(*editableContent)) {
       if (aWalkTreeDirection == WalkTreeDirection::Backward) {
-        editableContent = HTMLEditUtils::GetPreviousContent(
-            *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
+        editableContent = HTMLEditUtils::GetPreviousLeafContent(
+            *editableContent, {LeafNodeOption::IgnoreNonEditableNode},
             BlockInlineCheck::Auto, &aEditingHost);
         if (NS_WARN_IF(!editableContent)) {
           return nullptr;
         }
       } else {
-        editableContent = HTMLEditUtils::GetNextContent(
-            *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
+        editableContent = HTMLEditUtils::GetNextLeafContent(
+            *editableContent, {LeafNodeOption::IgnoreNonEditableNode},
             BlockInlineCheck::Auto, &aEditingHost);
         if (NS_WARN_IF(!editableContent)) {
           return nullptr;
@@ -1489,6 +1411,101 @@ class HTMLEditUtils final {
       const nsINode& aNode, const LeafNodeOptions& aOptions,
       BlockInlineCheck aBlockInlineCheck = BlockInlineCheck::Unused);
 
+ private:
+  enum class StopAtBlockSibling : bool { No, Yes };
+  static nsIContent* GetNextLeafContentOrNextBlockElementImpl(
+      const nsIContent& aStartContent, StopAtBlockSibling aStopAtBlockSibling,
+      const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
+      const Element* aAncestorLimiter);
+  template <typename PT, typename CT>
+  static nsIContent* GetNextLeafContentOrNextBlockElementImpl(
+      const EditorDOMPointBase<PT, CT>& aStartPoint,
+      StopAtBlockSibling aStopAtBlockSibling, const LeafNodeOptions& aOptions,
+      BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
+  static nsIContent* GetPreviousLeafContentOrPreviousBlockElementImpl(
+      const nsIContent& aStartContent, StopAtBlockSibling aStopAtBlockSibling,
+      const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
+      const Element* aAncestorLimiter);
+  template <typename PT, typename CT>
+  static nsIContent* GetPreviousLeafContentOrPreviousBlockElementImpl(
+      const EditorDOMPointBase<PT, CT>& aStartPoint,
+      StopAtBlockSibling aStopAtBlockSibling, const LeafNodeOptions& aOptions,
+      BlockInlineCheck aBlockInlineCheck, const Element* aAncestorLimiter);
+
+ public:
+  /**
+   * Return next leaf content of aStartContent inside aAncestorLimiter.
+   * This does not stop at a block inclusive ancestor nor a block sibling of an
+   * inclusive ancestor different from GetNextLeafContentOrNextBlockElement().
+   * However, if you specify LeafNodeOption::TreatChildBlockAsLeafNode, this
+   * stops at a child block boundary. So, the behavior becomes complicated so
+   * that you need to be careful if you specify that.
+   *
+   * @param aStartContent       The start content to scan next content.
+   * @param aOptions            See LeafNodeOption.
+   * @param aAncestorLimiter    Optional, if you set this, it must be an
+   *                            inclusive ancestor of aStartContent.
+   */
+  static nsIContent* GetNextLeafContent(
+      const nsIContent& aStartContent, const LeafNodeOptions& aOptions,
+      BlockInlineCheck aBlockInlineCheck,
+      const Element* aAncestorLimiter = nullptr) {
+    return GetNextLeafContentOrNextBlockElementImpl(
+        aStartContent, StopAtBlockSibling::No, aOptions, aBlockInlineCheck,
+        aAncestorLimiter);
+  }
+
+  /**
+   * Similar to the above method, but take a DOM point to specify scan start
+   * point.
+   */
+  template <typename PT, typename CT>
+  static nsIContent* GetNextLeafContent(
+      const EditorDOMPointBase<PT, CT>& aStartPoint,
+      const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
+      const Element* aAncestorLimiter = nullptr) {
+    return GetNextLeafContentOrNextBlockElementImpl(
+        aStartPoint, StopAtBlockSibling::No, aOptions, aBlockInlineCheck,
+        aAncestorLimiter);
+  }
+
+  /**
+   * Return previous leaf content of aStartContent inside aAncestorLimiter.
+   * This does not stop at a block inclusive ancestor nor a block sibling of an
+   * inclusive ancestor different from
+   * GetPreviousLeafContentOrPreviousBlockElement(). However, if you specify
+   * LeafNodeOption::TreatChildBlockAsLeafNode, this stops at a child block
+   * boundary. So, the behavior becomes complicated so that you need to be
+   * careful if you specify that.
+   *
+   * @param aStartContent       The start content to scan previous content.
+   * @param aOptions            See LeafNodeOption.
+   * @param aAncestorLimiter    Optional, if you set this, it must be an
+   *                            inclusive ancestor of aStartContent.
+   */
+  static nsIContent* GetPreviousLeafContent(
+      const nsIContent& aStartContent, const LeafNodeOptions& aOptions,
+      BlockInlineCheck aBlockInlineCheck,
+      const Element* aAncestorLimiter = nullptr) {
+    return GetPreviousLeafContentOrPreviousBlockElementImpl(
+        aStartContent, StopAtBlockSibling::No, aOptions, aBlockInlineCheck,
+        aAncestorLimiter);
+  }
+
+  /**
+   * Similar to the above method, but take a DOM point to specify scan start
+   * point.
+   */
+  template <typename PT, typename CT>
+  static nsIContent* GetPreviousLeafContent(
+      const EditorDOMPointBase<PT, CT>& aStartPoint,
+      const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
+      const Element* aAncestorLimiter = nullptr) {
+    return GetPreviousLeafContentOrPreviousBlockElementImpl(
+        aStartPoint, StopAtBlockSibling::No, aOptions, aBlockInlineCheck,
+        aAncestorLimiter);
+  }
+
   /**
    * GetNextLeafContentOrNextBlockElement() returns next leaf content or
    * next block element of aStartContent inside aAncestorLimiter.
@@ -1501,7 +1518,11 @@ class HTMLEditUtils final {
   static nsIContent* GetNextLeafContentOrNextBlockElement(
       const nsIContent& aStartContent, const LeafNodeOptions& aOptions,
       BlockInlineCheck aBlockInlineCheck,
-      const Element* aAncestorLimiter = nullptr);
+      const Element* aAncestorLimiter = nullptr) {
+    return GetNextLeafContentOrNextBlockElementImpl(
+        aStartContent, StopAtBlockSibling::Yes, aOptions, aBlockInlineCheck,
+        aAncestorLimiter);
+  }
 
   /**
    * Similar to the above method, but take a DOM point to specify scan start
@@ -1511,7 +1532,11 @@ class HTMLEditUtils final {
   static nsIContent* GetNextLeafContentOrNextBlockElement(
       const EditorDOMPointBase<PT, CT>& aStartPoint,
       const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
-      const Element* aAncestorLimiter = nullptr);
+      const Element* aAncestorLimiter = nullptr) {
+    return GetNextLeafContentOrNextBlockElementImpl(
+        aStartPoint, StopAtBlockSibling::Yes, aOptions, aBlockInlineCheck,
+        aAncestorLimiter);
+  }
 
   /**
    * GetPreviousLeafContentOrPreviousBlockElement() returns previous leaf
@@ -1526,7 +1551,11 @@ class HTMLEditUtils final {
   static nsIContent* GetPreviousLeafContentOrPreviousBlockElement(
       const nsIContent& aStartContent, const LeafNodeOptions& aOptions,
       BlockInlineCheck aBlockInlineCheck,
-      const Element* aAncestorLimiter = nullptr);
+      const Element* aAncestorLimiter = nullptr) {
+    return GetPreviousLeafContentOrPreviousBlockElementImpl(
+        aStartContent, StopAtBlockSibling::Yes, aOptions, aBlockInlineCheck,
+        aAncestorLimiter);
+  }
 
   /**
    * Similar to the above method, but take a DOM point to specify scan start
@@ -1536,7 +1565,11 @@ class HTMLEditUtils final {
   static nsIContent* GetPreviousLeafContentOrPreviousBlockElement(
       const EditorDOMPointBase<PT, CT>& aStartPoint,
       const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
-      const Element* aAncestorLimiter = nullptr);
+      const Element* aAncestorLimiter = nullptr) {
+    return GetPreviousLeafContentOrPreviousBlockElementImpl(
+        aStartPoint, StopAtBlockSibling::Yes, aOptions, aBlockInlineCheck,
+        aAncestorLimiter);
+  }
 
   /**
    * Returns a content node whose inline styles should be preserved after
@@ -2035,11 +2068,9 @@ class HTMLEditUtils final {
   static Maybe<EditorLineBreakType> GetFirstLineBreak(
       const dom::Element& aElement) {
     for (nsIContent* content = HTMLEditUtils::GetFirstLeafContent(aElement, {});
-         content; content = HTMLEditUtils::GetNextContent(
-                      *content,
-                      {WalkTreeOption::IgnoreDataNodeExceptText,
-                       WalkTreeOption::IgnoreWhiteSpaceOnlyText},
-                      BlockInlineCheck::Unused, &aElement)) {
+         content; content = HTMLEditUtils::GetNextLeafContent(
+                      *content, {LeafNodeOption::IgnoreInvisibleText},
+                      BlockInlineCheck::Auto, &aElement)) {
       if (auto* brElement = dom::HTMLBRElement::FromNode(*content)) {
         return Some(EditorLineBreakType(*brElement));
       }
@@ -2869,18 +2900,6 @@ class HTMLEditUtils final {
     }
     return count;
   }
-
-  /**
-   * Helper for GetPreviousContent() and GetNextContent().
-   */
-  static nsIContent* GetAdjacentLeafContent(
-      const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-      const WalkTreeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
-      const Element* aAncestorLimiter = nullptr);
-  static nsIContent* GetAdjacentContent(
-      const nsINode& aNode, WalkTreeDirection aWalkTreeDirection,
-      const WalkTreeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
-      const Element* aAncestorLimiter = nullptr);
 
   /**
    * GetElementOfImmediateBlockBoundary() returns a block element if its

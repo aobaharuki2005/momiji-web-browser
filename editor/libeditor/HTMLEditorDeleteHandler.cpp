@@ -2554,11 +2554,11 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
   auto ScanJoinTarget = [&]() MOZ_NEVER_INLINE_DEBUG -> nsIContent* {
     nsIContent* targetContent =
         aDirectionAndAmount == nsIEditor::ePrevious
-            ? HTMLEditUtils::GetPreviousContent(
-                  aCurrentBlockElement, {WalkTreeOption::IgnoreNonEditableNode},
+            ? HTMLEditUtils::GetPreviousLeafContent(
+                  aCurrentBlockElement, {LeafNodeOption::IgnoreNonEditableNode},
                   BlockInlineCheck::Auto, &aEditingHost)
-            : HTMLEditUtils::GetNextContent(
-                  aCurrentBlockElement, {WalkTreeOption::IgnoreNonEditableNode},
+            : HTMLEditUtils::GetNextLeafContent(
+                  aCurrentBlockElement, {LeafNodeOption::IgnoreNonEditableNode},
                   BlockInlineCheck::Auto, &aEditingHost);
     // If found content is an invisible text node, let's scan visible things.
     auto IsIgnorableDataNode = [](nsIContent* aContent) {
@@ -5050,10 +5050,11 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangeToDeleteRangeWithTransaction(
   EditorRawDOMPoint caretPoint(aRangeToDelete.StartRef());
   if (howToHandleCollapsedRange ==
           EditorBase::HowToHandleCollapsedRange::ExtendBackward &&
-      caretPoint.IsStartOfContainer()) {
-    nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousContent(
-        *caretPoint.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::Unused, &aEditingHost);
+      caretPoint.IsStartOfContainer() && caretPoint.IsInContentNode()) {
+    nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousLeafContent(
+        *caretPoint.ContainerAs<nsIContent>(),
+        {LeafNodeOption::IgnoreNonEditableNode}, BlockInlineCheck::Auto,
+        &aEditingHost);
     if (!previousEditableContent) {
       return NS_OK;
     }
@@ -5073,10 +5074,11 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangeToDeleteRangeWithTransaction(
 
   if (howToHandleCollapsedRange ==
           EditorBase::HowToHandleCollapsedRange::ExtendForward &&
-      caretPoint.IsEndOfContainer()) {
-    nsIContent* nextEditableContent = HTMLEditUtils::GetNextContent(
-        *caretPoint.GetContainer(), {WalkTreeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::Unused, &aEditingHost);
+      caretPoint.IsEndOfContainer() && caretPoint.IsInContentNode()) {
+    nsIContent* nextEditableContent = HTMLEditUtils::GetNextLeafContent(
+        *caretPoint.ContainerAs<nsIContent>(),
+        {LeafNodeOption::IgnoreNonEditableNode}, BlockInlineCheck::Auto,
+        &aEditingHost);
     if (!nextEditableContent) {
       return NS_OK;
     }
@@ -5113,12 +5115,12 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangeToDeleteRangeWithTransaction(
   nsIContent* editableContent =
       howToHandleCollapsedRange ==
               EditorBase::HowToHandleCollapsedRange::ExtendBackward
-          ? HTMLEditUtils::GetPreviousContent(
-                caretPoint, {WalkTreeOption::IgnoreNonEditableNode},
-                BlockInlineCheck::Unused, &aEditingHost)
-          : HTMLEditUtils::GetNextContent(
-                caretPoint, {WalkTreeOption::IgnoreNonEditableNode},
-                BlockInlineCheck::Unused, &aEditingHost);
+          ? HTMLEditUtils::GetPreviousLeafContent(
+                caretPoint, {LeafNodeOption::IgnoreNonEditableNode},
+                BlockInlineCheck::Auto, &aEditingHost)
+          : HTMLEditUtils::GetNextLeafContent(
+                caretPoint, {LeafNodeOption::IgnoreNonEditableNode},
+                BlockInlineCheck::Auto, &aEditingHost);
   if (!editableContent) {
     return NS_OK;
   }
@@ -5127,12 +5129,12 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangeToDeleteRangeWithTransaction(
     editableContent =
         howToHandleCollapsedRange ==
                 EditorBase::HowToHandleCollapsedRange::ExtendBackward
-            ? HTMLEditUtils::GetPreviousContent(
-                  *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                  BlockInlineCheck::Unused, &aEditingHost)
-            : HTMLEditUtils::GetNextContent(
-                  *editableContent, {WalkTreeOption::IgnoreNonEditableNode},
-                  BlockInlineCheck::Unused, &aEditingHost);
+            ? HTMLEditUtils::GetPreviousLeafContent(
+                  *editableContent, {LeafNodeOption::IgnoreNonEditableNode},
+                  BlockInlineCheck::Auto, &aEditingHost)
+            : HTMLEditUtils::GetNextLeafContent(
+                  *editableContent, {LeafNodeOption::IgnoreNonEditableNode},
+                  BlockInlineCheck::Auto, &aEditingHost);
   }
   if (!editableContent) {
     return NS_OK;
@@ -7215,7 +7217,7 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         for (EditorRawDOMPoint scanStartPoint =
                  EditorRawDOMPoint::After(mEmptyInclusiveAncestorBlockElement);
              scanStartPoint.IsInContentNode();) {
-          nsIContent* const nextContent = HTMLEditUtils::GetNextContent(
+          nsIContent* const nextContent = HTMLEditUtils::GetNextLeafContent(
               scanStartPoint, {}, BlockInlineCheck::Auto, &aEditingHost);
           // Let's ignore invisible `Text`.
           if (nextContent && nextContent->IsText() &&
@@ -7252,9 +7254,10 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoDeleteRangesHandler::
         for (EditorRawDOMPoint scanStartPoint =
                  EditorRawDOMPoint(mEmptyInclusiveAncestorBlockElement);
              scanStartPoint.IsInContentNode();) {
-          nsIContent* const previousContent = HTMLEditUtils::GetPreviousContent(
-              scanStartPoint, {WalkTreeOption::IgnoreNonEditableNode},
-              BlockInlineCheck::Auto, &aEditingHost);
+          nsIContent* const previousContent =
+              HTMLEditUtils::GetPreviousLeafContent(
+                  scanStartPoint, {LeafNodeOption::IgnoreNonEditableNode},
+                  BlockInlineCheck::Auto, &aEditingHost);
           // Let's ignore invisible `Text`.
           if (previousContent && previousContent->IsText() &&
               !HTMLEditUtils::IsVisibleTextNode(*previousContent->AsText())) {
