@@ -1238,11 +1238,9 @@ function RegExpMatchAll(string) {
     // Steps 9-12.
     flags =
       (callFunction(std_String_includes, flags, "g") ? REGEXP_GLOBAL_FLAG : 0) |
-      (callFunction(std_String_includes, flags, "u") ? REGEXP_UNICODE_FLAG : 0);
-
-      if (C === builtinCtor) {
-      flags |= REGEXP_LEGACY_FEATURES_ENABLED_FLAG;
-      }
+      (callFunction(std_String_includes, flags, "u") ? REGEXP_UNICODE_FLAG : 0) |
+      (callFunction(std_String_includes, flags, "v") ? REGEXP_UNICODESETS_FLAG : 0);
+    
     // Take the non-optimized path.
     lastIndex = REGEXP_STRING_ITERATOR_LASTINDEX_SLOW;
   }
