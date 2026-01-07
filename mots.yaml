@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2026-01-05T18:23:30.208815+00:00'
+updated_at: '2026-01-06T20:18:20.713926+00:00'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -861,6 +861,10 @@ people:
     bmo_id: 690738
     name: Niklas Baumgardner
     nick: niklas
+  - &ninapy
+    bmo_id: 731746
+    name: Nina Pypchenko
+    nick: nina-py
   - &nlapre
     bmo_id: 711793
     name: Nathan LaPré
@@ -873,10 +877,6 @@ people:
     bmo_id: 651777
     name: Erik Nordin
     nick: nordzilla
-  - &npypchenko
-    bmo_id: 731746
-    name: Nina Pypchenko
-    nick: npypchenko
   - &nrishel
     bmo_id: 697005
     name: Nick Rishel
@@ -3759,7 +3759,7 @@ modules:
           - *maxx
           - *mconley
           - *nbarrett
-          - *npypchenko
+          - *ninapy
           - *rhamoui
         machine_name: new_tab_page
 
@@ -4668,5 +4668,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 6cadb278bdd7e657594f1b38a8935cb8311f3451
-  export: 87e0bdd183fe19a34d160229c67a2269f118c31d
+  config: 3cf0f5ab20db1a5c5120fe66954f6c6e1f4a3018
+  export: 81a7a835536803c8ec5b654be6f52cb73746d7e0
