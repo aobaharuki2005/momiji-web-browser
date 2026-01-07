@@ -487,8 +487,12 @@ add_task(async function test_handoff_pbm() {
   let tab = win.gBrowser.selectedBrowser;
 
   await SpecialPowers.spawn(tab, [], async function () {
-    let btn = content.document.getElementById("search-handoff-button");
-    btn.click();
+    await ContentTaskUtils.waitForCondition(() =>
+      content.document.querySelector("content-search-handoff-ui")
+    );
+    let handoffUI = content.document.querySelector("content-search-handoff-ui");
+    await handoffUI.updateComplete;
+    handoffUI.shadowRoot.querySelector(".search-handoff-button").click();
   });
 
   let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
