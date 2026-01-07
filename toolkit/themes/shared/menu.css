@@ -362,7 +362,7 @@ menuitem[highlightable] > .menu-text {
 
 /* On linux, we use regular checkboxes and radio buttons */
 @media (-moz-platform: linux) {
-  menuitem:is([type="checkbox"], [checked="true"]) > .menu-icon {
+  menuitem:is([type="checkbox"], [checked]) > .menu-icon {
     visibility: inherit;
     appearance: auto;
     -moz-default-appearance: checkbox;
@@ -381,7 +381,7 @@ menuitem[highlightable] > .menu-text {
      checkboxes and radio buttons because the native drawing we use on other
      Windows versions looks pretty bad with the Win10 styles, so for now we'll
      insert a generic checkmark icon for both types. */
-  menuitem[checked="true"] > .menu-icon {
+  menuitem[checked] > .menu-icon {
     visibility: inherit;
     -moz-context-properties: fill, fill-opacity;
     fill: currentColor;
@@ -416,7 +416,7 @@ menupopup[needsgutter] {
       }
     }
 
-    > menuitem:is([checked="true"], [selected="true"])::before {
+    > menuitem:is([checked], [selected])::before {
       visibility: inherit;
     }
   }
