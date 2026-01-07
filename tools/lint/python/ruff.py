@@ -4,26 +4,15 @@
 
 import json
 import os
-import platform
 import re
 import signal
 import subprocess
-import sys
 from pathlib import Path
 
 import toml
 from mozlint import result
 
 here = os.path.abspath(os.path.dirname(__file__))
-
-
-def default_bindir():
-    # We use sys.prefix to find executables as that gets modified with
-    # virtualenv's activate_this.py, whereas sys.executable doesn't.
-    if platform.system() == "Windows":
-        return os.path.join(sys.prefix, "Scripts")
-    else:
-        return os.path.join(sys.prefix, "bin")
 
 
 def get_pyproject_excludes(pyproject_toml: Path):
