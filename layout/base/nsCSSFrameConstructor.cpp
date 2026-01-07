@@ -1159,13 +1159,14 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
     } else {
       containingBlock->SetInitialChildList(aChildListID, std::move(aFrameList));
     }
-  } else if (aChildListID == FrameChildListID::Fixed ||
+  } else if (childList.IsEmpty() || aChildListID == FrameChildListID::Fixed ||
              aChildListID == FrameChildListID::Absolute) {
     // The order is not important for abs-pos/fixed-pos frame list, just
     // append the frame items to the list directly.
     mFrameConstructor->AppendFrames(containingBlock, aChildListID,
                                     std::move(aFrameList));
   } else {
+    MOZ_ASSERT(aChildListID == FrameChildListID::Float);
     // Note that whether the frame construction context is doing an append or
     // not is not helpful here, since it could be appending to some frame in
     // the middle of the document, which means we're not necessarily
@@ -1174,34 +1175,32 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
     // We need to make sure the 'append to the end of document' case is fast.
     // So first test the last child of the containing block
     nsIFrame* lastChild = childList.LastChild();
+    lastChild = lastChild->FirstContinuation()->GetPlaceholderFrame();
 
     // CompareTreePosition uses placeholder hierarchy for out of flow frames,
     // so this will make out-of-flows respect the ordering of placeholders,
     // which is great because it takes care of anonymous content.
     nsIFrame* firstNewFrame = aFrameList.FirstChild();
+    firstNewFrame = firstNewFrame->GetPlaceholderFrame();
 
     // Cache the ancestor chain so that we can reuse it if needed.
     AutoTArray<const nsIFrame*, 20> firstNewFrameAncestors;
-    const nsIFrame* notCommonAncestor = nullptr;
-    if (lastChild) {
-      notCommonAncestor = nsLayoutUtils::FillAncestors(
-          firstNewFrame, containingBlock, &firstNewFrameAncestors);
-    }
+    const nsIFrame* notCommonAncestor = nsLayoutUtils::FillAncestors(
+        firstNewFrame, containingBlock, &firstNewFrameAncestors);
 
-    if (!lastChild || nsLayoutUtils::CompareTreePosition(
-                          lastChild, firstNewFrame, firstNewFrameAncestors,
-                          notCommonAncestor ? containingBlock : nullptr) < 0) {
-      // no lastChild, or lastChild comes before the new children, so just
-      // append
+    if (nsLayoutUtils::CompareTreePosition(
+            lastChild, firstNewFrame, firstNewFrameAncestors,
+            notCommonAncestor ? containingBlock : nullptr) < 0) {
+      // lastChild comes before the new children, so just append
       mFrameConstructor->AppendFrames(containingBlock, aChildListID,
                                       std::move(aFrameList));
     } else {
       // Try the other children. First collect them to an array so that a
       // reasonable fast binary search can be used to find the insertion point.
-      AutoTArray<nsIFrame*, 128> children;
-      for (nsIFrame* f = childList.FirstChild(); f != lastChild;
-           f = f->GetNextSibling()) {
-        children.AppendElement(f);
+      AutoTArray<std::pair<nsIFrame*, nsPlaceholderFrame*>, 128> children;
+      for (nsIFrame* f : childList) {
+        children.AppendElement(
+            std::make_pair(f, f->FirstContinuation()->GetPlaceholderFrame()));
       }
 
       nsIFrame* insertionPoint = nullptr;
@@ -1209,32 +1208,31 @@ MOZ_NEVER_INLINE void nsFrameConstructorState::ProcessFrameInsertions(
       int32_t max = children.Length();
       while (max > imin) {
         int32_t imid = imin + ((max - imin) / 2);
-        nsIFrame* f = children[imid];
+        const auto& pair = children[imid];
         int32_t compare = nsLayoutUtils::CompareTreePosition(
-            f, firstNewFrame, firstNewFrameAncestors,
+            pair.second, firstNewFrame, firstNewFrameAncestors,
             notCommonAncestor ? containingBlock : nullptr);
         if (compare > 0) {
           // f is after the new frame.
           max = imid;
-          insertionPoint = imid > 0 ? children[imid - 1] : nullptr;
+          insertionPoint = imid > 0 ? children[imid - 1].first : nullptr;
         } else if (compare < 0) {
           // f is before the new frame.
           imin = imid + 1;
-          insertionPoint = f;
+          insertionPoint = pair.first;
         } else {
           // This is for the old behavior. Should be removed once it is
           // guaranteed that CompareTreePosition can't return 0!
           // See bug 928645.
           NS_WARNING("Something odd happening???");
           insertionPoint = nullptr;
-          for (uint32_t i = 0; i < children.Length(); ++i) {
-            nsIFrame* f = children[i];
+          for (auto [frame, placeholder] : children) {
             if (nsLayoutUtils::CompareTreePosition(
-                    f, firstNewFrame, firstNewFrameAncestors,
+                    placeholder, firstNewFrame, firstNewFrameAncestors,
                     notCommonAncestor ? containingBlock : nullptr) > 0) {
               break;
             }
-            insertionPoint = f;
+            insertionPoint = frame;
           }
           break;
         }
