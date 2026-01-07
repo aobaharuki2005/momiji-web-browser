@@ -1189,7 +1189,7 @@ toolbar[inactive="true"] .urlbar,
 
 .searchmode-switcher-chicklet {
   background-color: var(--urlbar-box-bgcolor);
-  border-start-end-radius: var(--toolbarbutton-border-radius);
+  border-start-end-radius: var(--urlbar-inner-border-radius);
   border-end-end-radius: var(--urlbar-inner-border-radius);
   align-items: center;
   height: 100%;
