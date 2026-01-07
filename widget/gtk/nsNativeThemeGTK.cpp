@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsNativeThemeGTK.h"
+#include "cairo.h"
 #include "nsDeviceContext.h"
 #include "gtk/gtk.h"
 #include "nsPresContext.h"
@@ -15,12 +16,6 @@
 #include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/WidgetUtilsGtk.h"
-
-#ifdef MOZ_X11
-#  ifdef CAIRO_HAS_XLIB_SURFACE
-#    include "cairo-xlib.h"
-#  endif
-#endif
 
 #include <dlfcn.h>
 
@@ -61,70 +56,6 @@ static Maybe<GtkWidgets::Type> AppearanceToWidgetType(
   return {};
 }
 
-class SystemCairoClipper : public ClipExporter {
- public:
-  explicit SystemCairoClipper(cairo_t* aContext, gint aScaleFactor = 1)
-      : mContext(aContext), mScaleFactor(aScaleFactor) {}
-
-  void BeginClip(const Matrix& aTransform) override {
-    cairo_matrix_t mat;
-    GfxMatrixToCairoMatrix(aTransform, mat);
-    // We also need to remove the scale factor effect from the matrix
-    mat.y0 = mat.y0 / mScaleFactor;
-    mat.x0 = mat.x0 / mScaleFactor;
-    cairo_set_matrix(mContext, &mat);
-
-    cairo_new_path(mContext);
-  }
-
-  void MoveTo(const Point& aPoint) override {
-    cairo_move_to(mContext, aPoint.x / mScaleFactor, aPoint.y / mScaleFactor);
-    mBeginPoint = aPoint;
-    mCurrentPoint = aPoint;
-  }
-
-  void LineTo(const Point& aPoint) override {
-    cairo_line_to(mContext, aPoint.x / mScaleFactor, aPoint.y / mScaleFactor);
-    mCurrentPoint = aPoint;
-  }
-
-  void BezierTo(const Point& aCP1, const Point& aCP2,
-                const Point& aCP3) override {
-    cairo_curve_to(mContext, aCP1.x / mScaleFactor, aCP1.y / mScaleFactor,
-                   aCP2.x / mScaleFactor, aCP2.y / mScaleFactor,
-                   aCP3.x / mScaleFactor, aCP3.y / mScaleFactor);
-    mCurrentPoint = aCP3;
-  }
-
-  void QuadraticBezierTo(const Point& aCP1, const Point& aCP2) override {
-    Point CP0 = CurrentPoint();
-    Point CP1 = (CP0 + aCP1 * 2.0) / 3.0;
-    Point CP2 = (aCP2 + aCP1 * 2.0) / 3.0;
-    Point CP3 = aCP2;
-    cairo_curve_to(mContext, CP1.x / mScaleFactor, CP1.y / mScaleFactor,
-                   CP2.x / mScaleFactor, CP2.y / mScaleFactor,
-                   CP3.x / mScaleFactor, CP3.y / mScaleFactor);
-    mCurrentPoint = aCP2;
-  }
-
-  void Arc(const Point& aOrigin, float aRadius, float aStartAngle,
-           float aEndAngle, bool aAntiClockwise) override {
-    ArcToBezier(this, aOrigin, Size(aRadius, aRadius), aStartAngle, aEndAngle,
-                aAntiClockwise);
-  }
-
-  void Close() override {
-    cairo_close_path(mContext);
-    mCurrentPoint = mBeginPoint;
-  }
-
-  void EndClip() override { cairo_clip(mContext); }
-
- private:
-  cairo_t* mContext;
-  gint mScaleFactor;
-};
-
 static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
                                const GtkWidgets::DrawingParams& aParams,
                                double aScaleFactor, bool aSnapped,
@@ -136,162 +67,54 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
   const bool useHiDPIWidgets =
       aScaleFactor != 1.0 && sCairoSurfaceSetDeviceScalePtr;
-
-  Point drawOffsetScaled;
-  Point drawOffsetOriginal;
-  Matrix transform;
-  if (!aSnapped) {
-    // If we are not snapped, we depend on the DT for translation.
-    drawOffsetOriginal = aDrawOrigin;
-    drawOffsetScaled = useHiDPIWidgets ? drawOffsetOriginal / aScaleFactor
-                                       : drawOffsetOriginal;
-    transform = aDrawTarget->GetTransform().PreTranslate(drawOffsetScaled);
-  } else {
-    // Otherwise, we only need to take the device offset into account.
-    drawOffsetOriginal = aDrawOrigin - aContext->GetDeviceOffset();
-    drawOffsetScaled = useHiDPIWidgets ? drawOffsetOriginal / aScaleFactor
-                                       : drawOffsetOriginal;
-    transform = Matrix::Translation(drawOffsetScaled);
+  // If we are not snapped, we depend on the DT for translation.
+  // Otherwise, we only need to take the device offset into account.
+  const Point drawOffset =
+      aSnapped ? aDrawOrigin - aContext->GetDeviceOffset() : aDrawOrigin;
+  // If the widget has any transparency, make sure to choose an alpha format.
+  const SurfaceFormat format = aTransparency != nsITheme::eOpaque
+                                   ? SurfaceFormat::B8G8R8A8
+                                   : aDrawTarget->GetFormat();
+  // Create a temporary data surface to render the widget into.
+  RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
+      aDrawSize, format, aTransparency != nsITheme::eOpaque);
+  if (!dataSurface) {
+    return;
   }
 
-  if (!useHiDPIWidgets && aScaleFactor != 1) {
-    transform.PreScale(aScaleFactor, aScaleFactor);
-  }
-
-  cairo_matrix_t mat;
-  GfxMatrixToCairoMatrix(transform, mat);
-
-  Size clipSize((aDrawSize.width + aScaleFactor - 1) / aScaleFactor,
-                (aDrawSize.height + aScaleFactor - 1) / aScaleFactor);
-
-  // A direct Cairo draw target is not available, so we need to create a
-  // temporary one.
-#if defined(MOZ_X11) && defined(CAIRO_HAS_XLIB_SURFACE)
-  if (GdkIsX11Display()) {
-    // If using a Cairo xlib surface, then try to reuse it.
-    BorrowedXlibDrawable borrow(aDrawTarget);
-    if (Drawable drawable = borrow.GetDrawable()) {
-      nsIntSize size = borrow.GetSize();
-      cairo_surface_t* surf = cairo_xlib_surface_create(
-          borrow.GetDisplay(), drawable, borrow.GetVisual(), size.width,
-          size.height);
-      if (!NS_WARN_IF(!surf)) {
-        Point offset = borrow.GetOffset();
-        if (offset != Point()) {
-          cairo_surface_set_device_offset(surf, offset.x, offset.y);
-        }
-        cairo_t* cr = cairo_create(surf);
-        if (!NS_WARN_IF(!cr)) {
-          RefPtr<SystemCairoClipper> clipper = new SystemCairoClipper(cr);
-          aContext->ExportClip(*clipper);
-
-          cairo_set_matrix(cr, &mat);
-
-          cairo_new_path(cr);
-          cairo_rectangle(cr, 0, 0, clipSize.width, clipSize.height);
-          cairo_clip(cr);
-
-          GtkWidgets::Draw(cr, &aParams);
-
-          cairo_destroy(cr);
-        }
-        cairo_surface_destroy(surf);
-      }
-      borrow.Finish();
+  {
+    DataSourceSurface::ScopedMap map(dataSurface,
+                                     DataSourceSurface::MapType::WRITE);
+    if (NS_WARN_IF(!map.IsMapped())) {
       return;
     }
-  }
-#endif
-
-  // Check if the widget requires complex masking that must be composited.
-  // Try to directly write to the draw target's pixels if possible.
-  uint8_t* data;
-  nsIntSize size;
-  int32_t stride;
-  SurfaceFormat format;
-  IntPoint origin;
-  if (aDrawTarget->LockBits(&data, &size, &stride, &format, &origin)) {
-    // Create a Cairo image surface context the device rectangle.
+    // Create a Cairo image surface wrapping the data surface.
     cairo_surface_t* surf = cairo_image_surface_create_for_data(
-        data, GfxFormatToCairoFormat(format), size.width, size.height, stride);
-    if (!NS_WARN_IF(!surf)) {
-      if (useHiDPIWidgets) {
-        sCairoSurfaceSetDeviceScalePtr(surf, aScaleFactor, aScaleFactor);
-      }
-      if (origin != IntPoint()) {
-        cairo_surface_set_device_offset(surf, -origin.x, -origin.y);
-      }
-      cairo_t* cr = cairo_create(surf);
-      if (!NS_WARN_IF(!cr)) {
-        RefPtr<SystemCairoClipper> clipper =
-            new SystemCairoClipper(cr, useHiDPIWidgets ? aScaleFactor : 1);
-        aContext->ExportClip(*clipper);
-
-        cairo_set_matrix(cr, &mat);
-
-        cairo_new_path(cr);
-        cairo_rectangle(cr, 0, 0, clipSize.width, clipSize.height);
-        cairo_clip(cr);
-
-        GtkWidgets::Draw(cr, &aParams);
-
-        cairo_destroy(cr);
-      }
-      cairo_surface_destroy(surf);
+        map.GetData(), GfxFormatToCairoFormat(format), aDrawSize.width,
+        aDrawSize.height, map.GetStride());
+    if (NS_WARN_IF(!surf)) {
+      return;
     }
-    aDrawTarget->ReleaseBits(data);
-  } else {
-    // If the widget has any transparency, make sure to choose an alpha format.
-    format = aTransparency != nsITheme::eOpaque ? SurfaceFormat::B8G8R8A8
-                                                : aDrawTarget->GetFormat();
-    // Create a temporary data surface to render the widget into.
-    RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
-        aDrawSize, format, aTransparency != nsITheme::eOpaque);
-    DataSourceSurface::MappedSurface map;
-    if (!NS_WARN_IF(
-            !(dataSurface &&
-              dataSurface->Map(DataSourceSurface::MapType::WRITE, &map)))) {
-      // Create a Cairo image surface wrapping the data surface.
-      cairo_surface_t* surf = cairo_image_surface_create_for_data(
-          map.mData, GfxFormatToCairoFormat(format), aDrawSize.width,
-          aDrawSize.height, map.mStride);
-      cairo_t* cr = nullptr;
-      if (!NS_WARN_IF(!surf)) {
-        cr = cairo_create(surf);
-        if (!NS_WARN_IF(!cr)) {
-          if (aScaleFactor != 1) {
-            if (useHiDPIWidgets) {
-              sCairoSurfaceSetDeviceScalePtr(surf, aScaleFactor, aScaleFactor);
-            } else {
-              cairo_scale(cr, aScaleFactor, aScaleFactor);
-            }
-          }
-
-          GtkWidgets::Draw(cr, &aParams);
+    if (cairo_t* cr = cairo_create(surf)) {
+      if (aScaleFactor != 1) {
+        if (useHiDPIWidgets) {
+          sCairoSurfaceSetDeviceScalePtr(surf, aScaleFactor, aScaleFactor);
+        } else {
+          cairo_scale(cr, aScaleFactor, aScaleFactor);
         }
       }
-
-      // Unmap the surface before using it as a source
-      dataSurface->Unmap();
-
-      if (cr) {
-        // The widget either needs to be masked or has transparency, so use the
-        // slower drawing path.
-        aDrawTarget->DrawSurface(
-            dataSurface,
-            Rect(aSnapped ? drawOffsetOriginal -
-                                aDrawTarget->GetTransform().GetTranslation()
-                          : drawOffsetOriginal,
-                 Size(aDrawSize)),
-            Rect(0, 0, aDrawSize.width, aDrawSize.height));
-        cairo_destroy(cr);
-      }
-
-      if (surf) {
-        cairo_surface_destroy(surf);
-      }
+      GtkWidgets::Draw(cr, &aParams);
+      cairo_destroy(cr);
     }
+    cairo_surface_destroy(surf);
   }
+
+  aDrawTarget->DrawSurface(
+      dataSurface,
+      Rect(aSnapped ? drawOffset - aDrawTarget->GetTransform().GetTranslation()
+                    : drawOffset,
+           Size(aDrawSize)),
+      Rect(0, 0, aDrawSize.width, aDrawSize.height));
 }
 
 void nsNativeThemeGTK::DrawWidgetBackground(
