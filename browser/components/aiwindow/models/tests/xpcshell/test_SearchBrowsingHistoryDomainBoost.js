@@ -12,8 +12,8 @@ add_task(async function test_matchDomains_games_and_boundary_behavior() {
   // Positive: should match games category
   const domains = matchDomains("video games");
   Assert.ok(
-    domains?.includes("steampowered.com"),
-    "Should include steampowered.com for games"
+    domains?.includes("store.steampowered.com"),
+    "Should include store.steampowered.com for games"
   );
 
   // Negative: should not match substrings inside words ("endgame" should not trigger "game")

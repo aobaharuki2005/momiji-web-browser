@@ -27,7 +27,7 @@ export const CATEGORIES_JSON = {
         "console games",
       ],
       domains: [
-        "steampowered.com",
+        "store.steampowered.com",
         "roblox.com",
         "ign.com",
         "gamespot.com",
@@ -394,3 +394,9 @@ export function mergeDedupe(primary, secondary, limit) {
 
   return out;
 }
+
+export const SearchBrowsingHistoryDomainBoost = Object.freeze({
+  matchDomains,
+  searchByDomains,
+  mergeDedupe,
+});
