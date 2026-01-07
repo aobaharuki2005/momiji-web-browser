@@ -8,7 +8,7 @@ browser.jar:
         content/browser/search/addEngine.xhtml                      (content/addEngine.xhtml)
         content/browser/search/autocomplete-popup.js                (content/autocomplete-popup.js)
         content/browser/search/searchbar.js                         (content/searchbar.js)
-        content/browser/contentSearchHandoffUI.js                   (content/contentSearchHandoffUI.js)
+        content/browser/contentSearchHandoffUI.mjs                  (content/contentSearchHandoffUI.mjs)
         search-extensions/                                          (extensions/**)
 
 % resource search-extensions %search-extensions/ contentaccessible=yes

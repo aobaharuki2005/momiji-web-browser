@@ -34,7 +34,6 @@ function templateHTML(options) {
   const debugString = options.debug ? "-dev" : "";
   // This list must match any similar ones in AboutNewTabChild.sys.mjs
   const scripts = [
-    "chrome://browser/content/contentSearchHandoffUI.js",
     "chrome://browser/content/contentTheme.js",
     `${options.baseVendorUrl}vendor/react${debugString}.js`,
     `${options.baseVendorUrl}vendor/react-dom${debugString}.js`,
