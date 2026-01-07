@@ -55,17 +55,21 @@ async function testClearData(clearSiteData, clearCache) {
       let siteDataSizeItem = content.document.getElementById("siteDataSize");
       // The <strong> element contains the data size.
       let usage = siteDataSizeItem.querySelector("strong");
-      let siteDataSizeText = usage.textContent;
-      return siteDataSizeText;
+      return usage.textContent;
     }
   );
 
   let doc = gBrowser.selectedBrowser.contentDocument;
   let clearSiteDataButton = doc.getElementById("clearSiteDataButton");
 
-  let url = "chrome://browser/content/sanitize_v2.xhtml";
+  let url = "chrome://browser/content/preferences/dialogs/clearSiteData.xhtml";
   let dialogOpened = promiseLoadSubDialog(url);
-  clearSiteDataButton.click();
+  clearSiteDataButton.scrollIntoView();
+  EventUtils.synthesizeMouseAtCenter(
+    clearSiteDataButton.buttonEl,
+    {},
+    doc.ownerGlobal
+  );
   let dialogWin = await dialogOpened;
 
   // Convert the usage numbers in the same way the UI does it to assert
@@ -75,8 +79,8 @@ async function testClearData(clearSiteData, clearCache) {
   // since we've had cache intermittently changing under our feet.
   let [, convertedCacheUnit] = DownloadUtils.convertByteUnits(cacheUsage);
 
-  let cookiesCheckboxId = "cookiesAndStorage";
-  let cacheCheckboxId = "cache";
+  let cookiesCheckboxId = "clearSiteData";
+  let cacheCheckboxId = "clearCache";
   let clearSiteDataCheckbox =
     dialogWin.document.getElementById(cookiesCheckboxId);
   let clearCacheCheckbox = dialogWin.document.getElementById(cacheCheckboxId);
@@ -101,19 +105,15 @@ async function testClearData(clearSiteData, clearCache) {
   clearSiteDataCheckbox.checked = clearSiteData;
   clearCacheCheckbox.checked = clearCache;
 
-  // select clear everything to match the old dialog boxes behaviour for this test
-  let timespanSelection = dialogWin.document.getElementById(
-    "sanitizeDurationChoice"
-  );
-  timespanSelection.value = 1;
-
   // Some additional promises/assertions to wait for
   // when deleting site data.
+  let acceptPromise;
   let updatePromise;
+  let cookiesClearedPromise;
   if (clearSiteData) {
-    // the new clear history dialog does not have a extra prompt
-    // to clear site data after clicking clear
+    acceptPromise = BrowserTestUtils.promiseAlertDialogOpen("accept");
     updatePromise = promiseSiteDataManagerSitesUpdated();
+    cookiesClearedPromise = promiseCookiesCleared();
   }
 
   let dialogClosed = BrowserTestUtils.waitForEvent(dialogWin, "unload");
@@ -121,16 +121,29 @@ async function testClearData(clearSiteData, clearCache) {
   let clearButton = dialogWin.document
     .querySelector("dialog")
     .getButton("accept");
-  let cancelButton = dialogWin.document
-    .querySelector("dialog")
-    .getButton("cancel");
-
   if (!clearSiteData && !clearCache) {
+    // Simulate user input on one of the checkboxes to trigger the event listener for
+    // disabling the clearButton.
+    clearCacheCheckbox.doCommand();
+    // Check that the clearButton gets disabled by unchecking both options.
+    await TestUtils.waitForCondition(
+      () => clearButton.disabled,
+      "Clear button should be disabled"
+    );
+    let cancelButton = dialogWin.document
+      .querySelector("dialog")
+      .getButton("cancel");
     // Cancel, since we can't delete anything.
     cancelButton.click();
   } else {
     // Delete stuff!
     clearButton.click();
+  }
+
+  // For site data we display an extra warning dialog, make sure
+  // to accept it.
+  if (clearSiteData) {
+    await acceptPromise;
   }
 
   await dialogClosed;
@@ -150,6 +163,7 @@ async function testClearData(clearSiteData, clearCache) {
 
   if (clearSiteData) {
     await updatePromise;
+    await cookiesClearedPromise;
     await promiseServiceWorkersCleared();
 
     TestUtils.waitForCondition(async function () {
@@ -170,7 +184,6 @@ async function testClearData(clearSiteData, clearCache) {
       [{ initialSizeLabelValue }],
       async function (opts) {
         let siteDataSizeItem = content.document.getElementById("siteDataSize");
-        // The <strong> element contains the data size.
         let usage = siteDataSizeItem.querySelector("strong");
         let siteDataSizeText = usage.textContent;
         await ContentTaskUtils.waitForCondition(() => {
@@ -196,68 +209,26 @@ async function testClearData(clearSiteData, clearCache) {
 
 add_setup(function () {
   SpecialPowers.pushPrefEnv({
-    set: [["privacy.sanitize.useOldClearHistoryDialog", false]],
+    set: [["privacy.sanitize.useOldClearHistoryDialog", true]],
   });
-
-  // The tests in this file all test specific interactions with the new clear
-  // history dialog and can't be split up.
-  requestLongerTimeout(2);
 });
 
 // Test opening the "Clear All Data" dialog and cancelling.
-add_task(async function testNoSiteDataNoCacheClearing() {
+add_task(async function () {
   await testClearData(false, false);
 });
 
 // Test opening the "Clear All Data" dialog and removing all site data.
-add_task(async function testSiteDataClearing() {
+add_task(async function () {
   await testClearData(true, false);
 });
 
 // Test opening the "Clear All Data" dialog and removing all cache.
-add_task(async function testCacheClearing() {
+add_task(async function () {
   await testClearData(false, true);
 });
 
 // Test opening the "Clear All Data" dialog and removing everything.
-add_task(async function testSiteDataAndCacheClearing() {
+add_task(async function () {
   await testClearData(true, true);
-});
-
-// Test clearing persistent storage
-add_task(async function testPersistentStorage() {
-  PermissionTestUtils.add(
-    TEST_QUOTA_USAGE_ORIGIN,
-    "persistent-storage",
-    Services.perms.ALLOW_ACTION
-  );
-
-  await openPreferencesViaOpenPreferencesAPI("privacy", { leaveOpen: true });
-
-  let doc = gBrowser.selectedBrowser.contentDocument;
-  let clearSiteDataButton = doc.getElementById("clearSiteDataButton");
-
-  let url = "chrome://browser/content/sanitize_v2.xhtml";
-  let dialogOpened = promiseLoadSubDialog(url);
-  clearSiteDataButton.click();
-  let dialogWin = await dialogOpened;
-  let dialogClosed = BrowserTestUtils.waitForEvent(dialogWin, "unload");
-
-  let timespanSelection = dialogWin.document.getElementById(
-    "sanitizeDurationChoice"
-  );
-  timespanSelection.value = 1;
-  let clearButton = dialogWin.document
-    .querySelector("dialog")
-    .getButton("accept");
-  clearButton.click();
-  await dialogClosed;
-
-  let permission = PermissionTestUtils.getPermissionObject(
-    TEST_QUOTA_USAGE_ORIGIN,
-    "persistent-storage"
-  );
-  is(permission, null, "Should have the correct permission state.");
-
-  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
