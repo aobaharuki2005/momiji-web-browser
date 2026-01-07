@@ -427,7 +427,6 @@ module.exports = [
       "browser/components/ipprotection/content/ipprotection-status-card.css",
       "browser/components/messagepreview/messagepreview.css",
       "browser/components/places/metadataViewer/interactionsViewer.css",
-      "browser/components/preferences/dialogs/clearSiteData.css",
       "browser/components/preferences/dialogs/sitePermissions.css",
       "browser/components/preferences/widgets/nav-notice/nav-notice.css",
       "browser/components/preferences/widgets/security-privacy/security-privacy-card/security-privacy-card.css",

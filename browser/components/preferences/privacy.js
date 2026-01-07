@@ -76,13 +76,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "useOldClearHistoryDialog",
-  "privacy.sanitize.useOldClearHistoryDialog",
-  false
-);
-
 ChromeUtils.defineESModuleGetters(this, {
   AppUpdater: "resource://gre/modules/AppUpdater.sys.mjs",
   DoHConfigController: "moz-src:///toolkit/components/doh/DoHConfig.sys.mjs",
@@ -1871,16 +1864,8 @@ Preferences.addSetting(
       };
     },
     onUserClick() {
-      let uri;
-      if (useOldClearHistoryDialog) {
-        uri =
-          "chrome://browser/content/preferences/dialogs/clearSiteData.xhtml";
-      } else {
-        uri = "chrome://browser/content/sanitize_v2.xhtml";
-      }
-
       gSubDialog.open(
-        uri,
+        "chrome://browser/content/sanitize_v2.xhtml",
         {
           features: "resizable=no",
         },
@@ -1954,16 +1939,6 @@ Preferences.addSetting({
 });
 
 function isCookiesAndStorageClearingOnShutdown() {
-  // We have to branch between the old clear on shutdown prefs and new prefs after the clear history revamp (Bug 1853996)
-  // Once the old dialog is deprecated, we can remove these branches.
-  if (useOldClearHistoryDialog) {
-    return (
-      Preferences.get("privacy.sanitize.sanitizeOnShutdown").value &&
-      Preferences.get("privacy.clearOnShutdown.cookies").value &&
-      Preferences.get("privacy.clearOnShutdown.cache").value &&
-      Preferences.get("privacy.clearOnShutdown.offlineApps").value
-    );
-  }
   return (
     Preferences.get("privacy.sanitize.sanitizeOnShutdown").value &&
     Preferences.get("privacy.clearOnShutdown_v2.cookiesAndStorage").value &&
@@ -1975,32 +1950,22 @@ function isCookiesAndStorageClearingOnShutdown() {
  * Unsets cleaning prefs that do not belong to DeleteOnClose
  */
 function resetCleaningPrefs() {
-  let sanitizeOnShutdownPrefsArray = useOldClearHistoryDialog
-    ? SANITIZE_ON_SHUTDOWN_PREFS_ONLY
-    : SANITIZE_ON_SHUTDOWN_PREFS_ONLY_V2;
-
-  return sanitizeOnShutdownPrefsArray.forEach(
+  return SANITIZE_ON_SHUTDOWN_PREFS_ONLY_V2.forEach(
     pref => (Preferences.get(pref).value = false)
   );
 }
 
 Preferences.addSetting({
   id: "clearOnCloseCookies",
-  pref: useOldClearHistoryDialog
-    ? "privacy.clearOnShutdown.cookies"
-    : "privacy.clearOnShutdown_v2.cookiesAndStorage",
+  pref: "privacy.clearOnShutdown_v2.cookiesAndStorage",
 });
 Preferences.addSetting({
   id: "clearOnCloseCache",
-  pref: useOldClearHistoryDialog
-    ? "privacy.clearOnShutdown.cache"
-    : "privacy.clearOnShutdown_v2.cache",
+  pref: "privacy.clearOnShutdown_v2.cache",
 });
 Preferences.addSetting({
   id: "clearOnCloseStorage",
-  pref: useOldClearHistoryDialog
-    ? "privacy.clearOnShutdown.offlineApps"
-    : "privacy.clearOnShutdown_v2.cookiesAndStorage",
+  pref: "privacy.clearOnShutdown_v2.cookiesAndStorage",
 });
 Preferences.addSetting({
   id: "sanitizeOnShutdown",
@@ -2288,12 +2253,8 @@ Preferences.addSetting({
     return !alwaysClear.value || alwaysClear.disabled;
   },
   onUserClick() {
-    let dialogFile = useOldClearHistoryDialog
-      ? "chrome://browser/content/preferences/dialogs/sanitize.xhtml"
-      : "chrome://browser/content/sanitize_v2.xhtml";
-
     gSubDialog.open(
-      dialogFile,
+      "chrome://browser/content/sanitize_v2.xhtml",
       {
         features: "resizable=no",
       },
@@ -4626,9 +4587,7 @@ var gPrivacyPane = {
    * Displays the Clear Private Data settings dialog.
    */
   showClearPrivateDataSettings() {
-    let dialogFile = useOldClearHistoryDialog
-      ? "chrome://browser/content/preferences/dialogs/sanitize.xhtml"
-      : "chrome://browser/content/sanitize_v2.xhtml";
+    let dialogFile = "chrome://browser/content/sanitize_v2.xhtml";
 
     gSubDialog.open(
       dialogFile,
@@ -4653,10 +4612,7 @@ var gPrivacyPane = {
       ts.value = 0;
     }
 
-    // Bug 1856418 We intend to remove the old dialog box
-    let dialogFile = useOldClearHistoryDialog
-      ? "chrome://browser/content/sanitize.xhtml"
-      : "chrome://browser/content/sanitize_v2.xhtml";
+    let dialogFile = "chrome://browser/content/sanitize_v2.xhtml";
 
     gSubDialog.open(dialogFile, {
       features: "resizable=no",
@@ -4675,9 +4631,7 @@ var gPrivacyPane = {
    Checks if the user set cleaning prefs that do not belong to DeleteOnClose
    */
   _isCustomCleaningPrefPresent() {
-    let sanitizeOnShutdownPrefsArray = useOldClearHistoryDialog
-      ? SANITIZE_ON_SHUTDOWN_PREFS_ONLY
-      : SANITIZE_ON_SHUTDOWN_PREFS_ONLY_V2;
+    let sanitizeOnShutdownPrefsArray = SANITIZE_ON_SHUTDOWN_PREFS_ONLY_V2;
 
     return sanitizeOnShutdownPrefsArray.some(
       pref => Preferences.get(pref).value

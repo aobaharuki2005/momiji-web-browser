@@ -91,16 +91,10 @@ add_task(async function selected_result_tip() {
 });
 
 add_task(async function selected_result_intervention_clear() {
-  let useOldClearHistoryDialog = Services.prefs.getBoolPref(
-    "privacy.sanitize.useOldClearHistoryDialog"
-  );
-  let dialogURL = useOldClearHistoryDialog
-    ? "chrome://browser/content/sanitize.xhtml"
-    : "chrome://browser/content/sanitize_v2.xhtml";
   await doInterventionTest(
     SEARCH_STRINGS.CLEAR,
     "intervention_clear",
-    dialogURL,
+    "chrome://browser/content/sanitize_v2.xhtml",
     [
       {
         selected_result: "intervention_clear",

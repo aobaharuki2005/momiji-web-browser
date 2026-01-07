@@ -243,8 +243,6 @@ skip-if = [
 
 ["browser_privacy_status_card.js"]
 
-["browser_privacy_syncDataClearing.js"]
-
 ["browser_privacy_syncDataClearing_v2.js"]
 
 ["browser_privacy_uploadEnabled.js"]

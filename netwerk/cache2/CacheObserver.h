@@ -75,10 +75,6 @@ class CacheObserver : public nsIObserver, public nsSupportsWeakReference {
     if (!StaticPrefs::privacy_sanitize_sanitizeOnShutdown()) {
       return false;
     }
-    if (StaticPrefs::privacy_sanitize_useOldClearHistoryDialog()) {
-      return StaticPrefs::privacy_clearOnShutdown_cache();
-    }
-    // use the new cache clearing pref for the new clear history dialog
     return StaticPrefs::privacy_clearOnShutdown_v2_cache();
   }
   static void ParentDirOverride(nsIFile** aDir);

@@ -41,21 +41,19 @@ add_task(async function refresh() {
 add_task(async function clear() {
   // Pick the tip, which should open the refresh dialog.  Click its cancel
   // button.
-  let useOldClearHistoryDialog = Services.prefs.getBoolPref(
-    "privacy.sanitize.useOldClearHistoryDialog"
-  );
-  let dialogURL = useOldClearHistoryDialog
-    ? "chrome://browser/content/sanitize.xhtml"
-    : "chrome://browser/content/sanitize_v2.xhtml";
   await checkIntervention({
     searchString: SEARCH_STRINGS.CLEAR,
     tip: UrlbarProviderInterventions.TIP_TYPE.CLEAR,
     title: "Clear your cache, cookies, history and more.",
     button: "Choose What to Clear…",
     awaitCallback() {
-      return BrowserTestUtils.promiseAlertDialog("cancel", dialogURL, {
-        isSubDialog: true,
-      });
+      return BrowserTestUtils.promiseAlertDialog(
+        "cancel",
+        "chrome://browser/content/sanitize_v2.xhtml",
+        {
+          isSubDialog: true,
+        }
+      );
     },
   });
 });
