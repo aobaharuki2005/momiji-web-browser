@@ -4349,7 +4349,7 @@
 
 # How many reports should be stored in the report queue before being delivered.
 - name: dom.reporting.delivering.maxReports
-  type: uint32_t
+  type: RelaxedAtomicUint32
   value: 100
   mirror: always
 
