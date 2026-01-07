@@ -14868,6 +14868,16 @@ function Logo() {
 
 /* globals ContentSearchHandoffUIController */
 
+/**
+ * @backward-compat { version 148 }
+ *
+ * Temporary dual implementation to support train hopping. The old handoff UI
+ * is kept alongside the new contentSearchHandoffUI.mjs custom element until
+ * the module lands on all channels. Controlled by the pref
+ * browser.newtabpage.activity-stream.search.useHandoffComponent.
+ * Remove the old implementation and the pref once this ships to Release.
+ */
+
 
 
 
@@ -14928,17 +14938,31 @@ class _Search extends (external_React_default()).PureComponent {
     }
   }
   componentDidMount() {
-    const caret = this.fakeCaret;
     const {
       caretBlinkCount,
-      caretBlinkTime
+      caretBlinkTime,
+      "search.useHandoffComponent": useHandoffComponent
     } = this.props.Prefs.values;
-    if (caret) {
-      // If caret blink count isn't defined, use the default infinite behavior for animation
-      caret.style.setProperty("--caret-blink-count", caretBlinkCount > -1 ? caretBlinkCount : "infinite");
+    if (useHandoffComponent) {
+      const {
+        handoffUI
+      } = this;
+      if (handoffUI) {
+        // If caret blink count isn't defined, use the default infinite behavior for animation
+        handoffUI.style.setProperty("--caret-blink-count", caretBlinkCount > -1 ? caretBlinkCount : "infinite");
 
-      // Apply custom blink rate if set, else fallback to default (567ms on/off --> 1134ms total)
-      caret.style.setProperty("--caret-blink-time", caretBlinkTime > 0 ? `${caretBlinkTime * 2}ms` : `${1134}ms`);
+        // Apply custom blink rate if set, else fallback to default (567ms on/off --> 1134ms total)
+        handoffUI.style.setProperty("--caret-blink-time", caretBlinkTime > 0 ? `${caretBlinkTime * 2}ms` : `${1134}ms`);
+      }
+    } else {
+      const caret = this.fakeCaret;
+      if (caret) {
+        // If caret blink count isn't defined, use the default infinite behavior for animation
+        caret.style.setProperty("--caret-blink-count", caretBlinkCount > -1 ? caretBlinkCount : "infinite");
+
+        // Apply custom blink rate if set, else fallback to default (567ms on/off --> 1134ms total)
+        caret.style.setProperty("--caret-blink-time", caretBlinkTime > 0 ? `${caretBlinkTime * 2}ms` : `${1134}ms`);
+      }
     }
   }
   onInputMountHandoff(input) {
@@ -14959,6 +14983,18 @@ class _Search extends (external_React_default()).PureComponent {
    * in order to execute searches in various tests
    */
   render() {
+    const useHandoffComponent = this.props.Prefs.values["search.useHandoffComponent"];
+    if (useHandoffComponent) {
+      return /*#__PURE__*/external_React_default().createElement("div", {
+        className: "search-wrapper"
+      }, this.props.showLogo && /*#__PURE__*/external_React_default().createElement(Logo, null), /*#__PURE__*/external_React_default().createElement("div", {
+        className: "search-inner-wrapper"
+      }, /*#__PURE__*/external_React_default().createElement("content-search-handoff-ui", {
+        ref: el => {
+          this.handoffUI = el;
+        }
+      })));
+    }
     const wrapperClassName = ["search-wrapper", this.props.disable && "search-disabled", this.props.fakeFocus && "fake-focus"].filter(v => v).join(" ");
     return /*#__PURE__*/external_React_default().createElement("div", {
       className: wrapperClassName
@@ -15705,6 +15741,16 @@ class BaseContent extends (external_React_default()).PureComponent {
     __webpack_require__.g.addEventListener("keydown", this.handleOnKeyDown);
     const prefs = this.props.Prefs.values;
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
+    if (prefs["search.useHandoffComponent"]) {
+      // Dynamically import the contentSearchHandoffUI module, but don't worry
+      // about webpacking this one.
+      import(/* webpackIgnore: true */"chrome://browser/content/contentSearchHandoffUI.mjs");
+    } else {
+      const scriptURL = "chrome://browser/content/contentSearchHandoffUI.js";
+      const scriptEl = document.createElement("script");
+      scriptEl.src = scriptURL;
+      document.head.appendChild(scriptEl);
+    }
     if (this.props.document.visibilityState === Base_VISIBLE) {
       this.onVisible();
     } else {

@@ -1470,6 +1470,33 @@ main section {
   padding: 0;
   margin-block: var(--space-xxlarge);
   margin-block-start: 0;
+  /**
+   * @backward-compat { version 148 }
+   *
+   * Temporary dual implementation to support train hopping. The old handoff UI
+   * is kept alongside the new contentSearchHandoffUI.mjs custom element until
+   * the module lands on all channels. Controlled by the pref
+   * browser.newtabpage.activity-stream.search.useHandoffComponent.
+   * Remove the old implementation and the pref once this ships to Release.
+   */
+  /**
+   * @backward-compat { version 148 }
+   *
+   * Temporary dual implementation to support train hopping. The old handoff UI
+   * is kept alongside the new contentSearchHandoffUI.mjs custom element until
+   * the module lands on all channels. Controlled by the pref
+   * browser.newtabpage.activity-stream.search.useHandoffComponent.
+   * Remove the old implementation and the pref once this ships to Release.
+   */
+  /**
+   * @backward-compat { version 148 }
+   *
+   * Temporary dual implementation to support train hopping. The old handoff UI
+   * is kept alongside the new contentSearchHandoffUI.mjs custom element until
+   * the module lands on all channels. Controlled by the pref
+   * browser.newtabpage.activity-stream.search.useHandoffComponent.
+   * Remove the old implementation and the pref once this ships to Release.
+   */
 }
 .search-wrapper .logo-and-wordmark {
   margin-block-end: var(--space-xxlarge);
@@ -1554,6 +1581,15 @@ main section {
 }
 .search-wrapper .search-handoff-button .fake-caret:dir(rtl) {
   background-position-x: right 16px;
+}
+.search-wrapper content-search-handoff-ui {
+  --content-search-handoff-ui-background-color: var(--newtab-background-color-secondary);
+  --content-search-handoff-ui-color: var(--newtab-text-primary-color);
+  --content-search-handoff-ui-fill: var(--newtab-text-secondary-color);
+  --content-search-handoff-ui-caret-color: var(--newtab-text-primary-color);
+  --content-search-handoff-ui-fakefocus-border-color: var(--newtab-primary-action-background);
+  --content-search-handoff-ui-fakefocus-box-shadow-inner: var(--newtab-primary-action-background-dimmed);
+  --content-search-handoff-ui-fakefocus-box-shadow-outer: transparent;
 }
 .search-wrapper.visible-logo .logo-and-wordmark .wordmark {
   fill: var(--newtab-wordmark-color);

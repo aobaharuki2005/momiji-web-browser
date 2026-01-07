@@ -31,6 +31,8 @@ module.exports = {
     `${projectRoot}/browser/components/backup/content/**/*.stories.mjs`,
     // Settings components stories
     `${projectRoot}/browser/components/preferences/widgets/**/*.stories.mjs`,
+    // Search components stories
+    `${projectRoot}/browser/components/search/**/*.stories.mjs`,
     // Reader View components stories
     `${projectRoot}/toolkit/components/reader/**/*.stories.mjs`,
     // megalist components stories

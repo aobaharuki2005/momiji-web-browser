@@ -98,10 +98,16 @@ async function ensurePlaceholder(tab, expectedId, expectedEngine) {
       await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
 
       await ContentTaskUtils.waitForCondition(
-        () => content.document.querySelector(".search-handoff-button"),
-        "l10n ID not set."
+        () => content.document.querySelector("content-search-handoff-ui"),
+        "content-search-handoff-ui not found."
       );
-      let buttonNode = content.document.querySelector(".search-handoff-button");
+      let handoffUI = content.document.querySelector(
+        "content-search-handoff-ui"
+      );
+      await handoffUI.updateComplete;
+      let buttonNode = handoffUI.shadowRoot.querySelector(
+        ".search-handoff-button"
+      );
       let expectedAttributes = { id, args: engine ? { engine } : null };
       Assert.deepEqual(
         content.document.l10n.getAttributes(buttonNode),

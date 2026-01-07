@@ -77,9 +77,18 @@ add_task(async function test_search() {
 
   info("Focus on search input in newtab content");
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-    const searchInput = content.document.querySelector(".fake-editable");
+    let handoffUI = content.document.querySelector("content-search-handoff-ui");
+    await handoffUI.updateComplete;
+    let searchInput = handoffUI.shadowRoot.querySelector(
+      ".search-handoff-button"
+    );
     searchInput.click();
   });
+
+  await BrowserTestUtils.waitForCondition(
+    () => window.gURLBar._hideFocus,
+    "Wait until _hideFocus will be true"
+  );
 
   info("Search and wait the result");
   const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
@@ -106,9 +115,18 @@ add_task(async function test_search_private_mode() {
 
   info("Focus on search input in newtab content");
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
-    const searchInput = content.document.querySelector(".fake-editable");
+    let handoffUI = content.document.querySelector("content-search-handoff-ui");
+    await handoffUI.updateComplete;
+    let searchInput = handoffUI.shadowRoot.querySelector(
+      ".search-handoff-button"
+    );
     searchInput.click();
   });
+
+  await BrowserTestUtils.waitForCondition(
+    () => privateWindow.gURLBar._hideFocus,
+    "Wait until _hideFocus will be true"
+  );
 
   info("Search and wait the result");
   const onLoaded = BrowserTestUtils.browserLoaded(tab.linkedBrowser);

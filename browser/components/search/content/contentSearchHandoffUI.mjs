@@ -2,15 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
+
 /**
  * Handles handing off searches from an in-page search input field to the
  * browser's main URL bar. Communicates with the parent via the ContentSearch
  * actor, using custom events to talk to the child actor.
  */
 class ContentSearchHandoffUIController {
-  constructor() {
+  #ui = null;
+  #shadowRoot = null;
+
+  constructor(ui) {
     this._isPrivateEngine = false;
     this._engineIcon = null;
+    this.#ui = ui;
+    this.#shadowRoot = ui.shadowRoot;
 
     window.addEventListener("ContentSearchService", this);
     this._sendMsg("GetEngine");
@@ -26,6 +34,10 @@ class ContentSearchHandoffUIController {
 
   get defaultEngine() {
     return this._defaultEngine;
+  }
+
+  doSearchHandoff(text) {
+    this._sendMsg("SearchHandoff", { text });
   }
 
   static privateBrowsingRegex = /^about:privatebrowsing([#?]|$)/i;
@@ -57,6 +69,15 @@ class ContentSearchHandoffUIController {
     this._updatel10nIds();
   }
 
+  _onMsgDisableSearch() {
+    this.#ui.disabled = true;
+  }
+
+  _onMsgShowSearch() {
+    this.#ui.disabled = false;
+    this.#ui.fakeFocus = false;
+  }
+
   _updateEngine(engine) {
     this._defaultEngine = engine;
     if (this._engineIcon) {
@@ -82,8 +103,8 @@ class ContentSearchHandoffUIController {
 
   _updatel10nIds() {
     let engine = this._defaultEngine;
-    let fakeButton = document.querySelector(".search-handoff-button");
-    let fakeInput = document.querySelector(".fake-textbox");
+    let fakeButton = this.#shadowRoot.querySelector(".search-handoff-button");
+    let fakeInput = this.#shadowRoot.querySelector(".fake-textbox");
     if (!fakeButton || !fakeInput) {
       return;
     }
@@ -167,3 +188,82 @@ class ContentSearchHandoffUIController {
 }
 
 window.ContentSearchHandoffUIController = ContentSearchHandoffUIController;
+
+/**
+ * This custom element encapsulates the UI for the search handoff experience
+ * for about:newtab and about:privatebrowsing. It is a temporary component
+ * while we wait for the multi-context address bar (MCAB) to be available.
+ */
+class ContentSearchHandoffUI extends MozLitElement {
+  static queries = {
+    fakeCaret: ".fake-caret",
+  };
+
+  static properties = {
+    fakeFocus: { type: Boolean, reflect: true },
+    disabled: { type: Boolean, reflect: true },
+  };
+
+  #controller = null;
+
+  #doSearchHandoff(text = "") {
+    this.fakeFocus = true;
+    this.#controller.doSearchHandoff(text);
+  }
+
+  #onSearchHandoffClick(event) {
+    // When search hand-off is enabled, we render a big button that is styled to
+    // look like a search textbox. If the button is clicked, we style
+    // the button as if it was a focused search box and show a fake cursor but
+    // really focus the awesomebar without the focus styles ("hidden focus").
+    event.preventDefault();
+    this.#doSearchHandoff();
+  }
+
+  #onSearchHandoffPaste(event) {
+    event.preventDefault();
+    this.#doSearchHandoff(event.clipboardData.getData("Text"));
+  }
+
+  #onSearchHandoffDrop(event) {
+    event.preventDefault();
+    let text = event.dataTransfer.getData("text");
+    if (text) {
+      this.#doSearchHandoff(text);
+    }
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    if (!this.#controller) {
+      this.#controller = new window.ContentSearchHandoffUIController(this);
+    }
+  }
+
+  render() {
+    return html`
+      <link
+        rel="stylesheet"
+        href="chrome://browser/content/contentSearchHandoffUI.css"
+      />
+      <button
+        class="search-handoff-button"
+        @click=${this.#onSearchHandoffClick}
+        tabindex="-1"
+      >
+        <div class="fake-textbox"></div>
+        <input
+          type="search"
+          class="fake-editable"
+          tabindex="-1"
+          aria-hidden="true"
+          @drop=${this.#onSearchHandoffDrop}
+          @paste=${this.#onSearchHandoffPaste}
+        />
+        <div class="fake-caret"></div>
+      </button>
+    `;
+  }
+}
+
+customElements.define("content-search-handoff-ui", ContentSearchHandoffUI);
