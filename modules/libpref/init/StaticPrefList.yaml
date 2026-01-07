@@ -6997,6 +6997,26 @@
   value: true # Match naive behavior, but hopefully we can stop soon!
   mirror: always
 
+# Enable HDR video support.
+- name: gfx.color_management.hdr_video
+  type: RelaxedAtomicBool
+#if defined(XP_WIN)
+  value: @IS_EARLY_BETA_OR_EARLIER@
+#else
+  value: true
+#endif
+  mirror: always
+
+# Pending a better refactor we assume BT2020 colorspace is used with PQ transfer
+# function (HDR) rather than assuming it is BT709/BT1886 transfer function,
+# we've been making this assumption for a while on macOS HDR videos and it seems
+# to be the norm. We should refactor to get mTransferFunction to compositor code
+# instead...
+- name: gfx.color_management.hdr_video_assume_rec2020_uses_pq
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 #ifdef XP_MACOSX
 # Whether GL contexts can be migrated to a different GPU (to match the one the
 # OS is using for composition).
@@ -8147,6 +8167,12 @@
 #else
   value: false
 #endif
+  mirror: once
+
+# Enable overlays for HDR content
+- name: gfx.webrender.overlay-hdr
+  type: bool
+  value: true
   mirror: once
 
 # Enable a dedicated arena on frame builder threads.
@@ -11064,11 +11090,7 @@
 # Is matching video-dynamic-range: high allowed?
 - name: layout.css.video-dynamic-range.allows-high
   type: RelaxedAtomicBool
-#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
   value: true
-#else
-  value: false
-#endif
   mirror: always
 
 # Is support for CSS Typed Object Model API enabled?

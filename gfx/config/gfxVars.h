@@ -118,7 +118,8 @@ class MOZ_STACK_CLASS gfxVarsCollectUpdates;
   _(DMABufModifiersP010, ArrayOfuint64_t, nsTArray<uint64_t>())    \
   _(DMABufModifiersNV12, ArrayOfuint64_t, nsTArray<uint64_t>())    \
   _(AllowGLNorm16Textures, bool, false)                            \
-  _(WebRenderLayerCompositorDCompTexture, bool, false)
+  _(WebRenderLayerCompositorDCompTexture, bool, false)             \
+  _(WebRenderOverlayHDR, bool, false)
 
 /* Add new entries above this line. */
 

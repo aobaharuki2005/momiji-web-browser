@@ -2905,6 +2905,10 @@ void gfxPlatform::InitWebRenderConfig() {
     gfxVars::SetWebRenderOverlayVpAutoHDR(true);
   }
 
+  if (StaticPrefs::gfx_webrender_overlay_hdr_AtStartup()) {
+    gfxVars::SetWebRenderOverlayHDR(true);
+  }
+
   bool allowOverlayVpSuperResolution = false;
   if (StaticPrefs::gfx_webrender_overlay_vp_super_resolution_AtStartup()) {
     allowOverlayVpSuperResolution = true;
@@ -3776,13 +3780,16 @@ void gfxPlatform::GetOverlayInfo(mozilla::widget::InfoObject& aObj) {
   };
 
   nsPrintfCString value(
-      "NV12=%s YUV2=%s BGRA8=%s RGB10A2=%s VpSR=%s VpAutoHDR=%s",
+      "NV12=%s YUV2=%s BGRA8=%s RGB10A2=%s RGBA16F=%s VpSR=%s VpAutoHDR=%s "
+      "HDR=%s",
       toString(mOverlayInfo.ref().mNv12Overlay),
       toString(mOverlayInfo.ref().mYuy2Overlay),
       toString(mOverlayInfo.ref().mBgra8Overlay),
       toString(mOverlayInfo.ref().mRgb10a2Overlay),
+      toString(mOverlayInfo.ref().mRgba16fOverlay),
       toStringBool(mOverlayInfo.ref().mSupportsVpSuperResolution),
-      toStringBool(mOverlayInfo.ref().mSupportsVpAutoHDR));
+      toStringBool(mOverlayInfo.ref().mSupportsVpAutoHDR),
+      toStringBool(mOverlayInfo.ref().mSupportsHDR));
 
   aObj.DefineProperty("OverlaySupport", NS_ConvertUTF8toUTF16(value));
 }

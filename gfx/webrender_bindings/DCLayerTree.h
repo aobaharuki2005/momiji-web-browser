@@ -77,14 +77,16 @@ struct GpuOverlayInfo {
   bool mSupportsOverlays = false;
   bool mSupportsHardwareOverlays = false;
   DXGI_FORMAT mOverlayFormatUsed = DXGI_FORMAT_B8G8R8A8_UNORM;
-  DXGI_FORMAT mOverlayFormatUsedHdr = DXGI_FORMAT_R10G10B10A2_UNORM;
+  DXGI_FORMAT mOverlayFormatUsedHdr = DXGI_FORMAT_R16G16B16A16_FLOAT;
   UINT mNv12OverlaySupportFlags = 0;
   UINT mYuy2OverlaySupportFlags = 0;
   UINT mBgra8OverlaySupportFlags = 0;
   UINT mRgb10a2OverlaySupportFlags = 0;
+  UINT mRgba16fOverlaySupportFlags = 0;
 
   bool mSupportsVpSuperResolution = false;
   bool mSupportsVpAutoHDR = false;
+  bool mSupportsHDR = false;
 };
 
 // -
@@ -573,7 +575,7 @@ class DCSurfaceVideo : public DCSurface {
  protected:
   virtual ~DCSurfaceVideo();
 
-  DXGI_FORMAT GetSwapChainFormat(bool aUseVpAutoHDR);
+  DXGI_FORMAT GetSwapChainFormat(bool aUseVpAutoHDR, bool aUseHDR);
   bool CreateVideoSwapChain(DXGI_FORMAT aFormat);
   bool CallVideoProcessorBlt();
   void ReleaseDecodeSwapChainResources();
@@ -596,6 +598,8 @@ class DCSurfaceVideo : public DCSurface {
   bool mUseVpAutoHDR = false;
   bool mVpAutoHDRFailed = false;
   bool mVpSuperResolutionFailed = false;
+  bool mContentIsHDR = false;
+  bool mUseHDR = false;
 };
 
 /**

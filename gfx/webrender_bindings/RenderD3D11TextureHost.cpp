@@ -74,11 +74,40 @@ ID3D11Texture2D* RenderDXGITextureHost::GetD3D11Texture2DWithGL() {
 }
 
 size_t RenderDXGITextureHost::GetPlaneCount() const {
-  if (mFormat == gfx::SurfaceFormat::NV12 ||
-      mFormat == gfx::SurfaceFormat::P010 ||
-      mFormat == gfx::SurfaceFormat::P016) {
-    return 2;
+  switch (mFormat) {
+    case gfx::SurfaceFormat::NV12:
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016: {
+      return 2;
+    }
+    case gfx::SurfaceFormat::B8G8R8A8:
+    case gfx::SurfaceFormat::B8G8R8X8:
+    case gfx::SurfaceFormat::R8G8B8A8:
+    case gfx::SurfaceFormat::R8G8B8X8:
+    case gfx::SurfaceFormat::A8R8G8B8:
+    case gfx::SurfaceFormat::X8R8G8B8:
+    case gfx::SurfaceFormat::R8G8B8:
+    case gfx::SurfaceFormat::B8G8R8:
+    case gfx::SurfaceFormat::R5G6B5_UINT16:
+    case gfx::SurfaceFormat::R10G10B10A2_UINT32:
+    case gfx::SurfaceFormat::R10G10B10X2_UINT32:
+    case gfx::SurfaceFormat::R16G16B16A16F:
+    case gfx::SurfaceFormat::A8:
+    case gfx::SurfaceFormat::A16:
+    case gfx::SurfaceFormat::R8G8:
+    case gfx::SurfaceFormat::R16G16:
+    case gfx::SurfaceFormat::YUV420:
+    case gfx::SurfaceFormat::YUV420P10:
+    case gfx::SurfaceFormat::YUV422P10:
+    case gfx::SurfaceFormat::NV16:
+    case gfx::SurfaceFormat::YUY2:
+    case gfx::SurfaceFormat::HSV:
+    case gfx::SurfaceFormat::Lab:
+    case gfx::SurfaceFormat::Depth:
+    case gfx::SurfaceFormat::UNKNOWN:
+      return 1;
   }
+  MOZ_ASSERT_UNREACHABLE("unhandled enum value for gfx::SurfaceFormat");
   return 1;
 }
 
