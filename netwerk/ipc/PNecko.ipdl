@@ -158,6 +158,11 @@ parent:
   async GetPageThumbStream(nullable nsIURI uri, LoadInfoArgs loadInfo) returns (RemoteStreamInfo? info);
   async GetPageIconStream(nullable nsIURI uri, LoadInfoArgs loadInfo) returns (RemoteStreamInfo? info);
 
+  /**
+   * New Tab wallpaper remote resource loading
+   */
+  async GetMozNewTabWallpaperStream(nullable nsIURI uri, LoadInfoArgs loadInfo) returns (RemoteStreamInfo? info);
+
 child:
   async SpeculativeConnectRequest();
 

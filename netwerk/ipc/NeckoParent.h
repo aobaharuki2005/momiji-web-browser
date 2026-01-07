@@ -8,6 +8,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/net/PNeckoParent.h"
 #include "mozilla/net/NeckoCommon.h"
+#include "mozilla/MozPromise.h"
 #include "nsIAuthPrompt2.h"
 #include "nsNetUtil.h"
 
@@ -16,6 +17,10 @@
 
 namespace mozilla {
 namespace net {
+
+class RemoteStreamInfo;
+using RemoteStreamPromise =
+    mozilla::MozPromise<RemoteStreamInfo, nsresult, false>;
 
 // Used to override channel Private Browsing status if needed.
 enum PBOverrideStatus {
@@ -54,6 +59,14 @@ class NeckoParent : public PNeckoParent {
       PCookieServiceParent* aActor) override {
     return PNeckoParent::RecvPCookieServiceConstructor(aActor);
   }
+
+  /*
+   * Helper method to create a remote stream from a resolved file URI.
+   * Shared by PageThumbProtocolHandler and MozNewTabWallpaperProtocolHandler.
+   */
+  static RefPtr<RemoteStreamPromise> CreateRemoteStreamForResolvedURI(
+      nsIURI* aChildURI, const nsACString& aResolvedSpec,
+      const nsACString& aDefaultMimeType);
 
  protected:
   virtual ~NeckoParent() = default;
@@ -195,6 +208,11 @@ class NeckoParent : public PNeckoParent {
   mozilla::ipc::IPCResult RecvGetPageIconStream(
       nsIURI* aURI, const LoadInfoArgs& aLoadInfoArgs,
       GetPageIconStreamResolver&& aResolve);
+
+  /* New Tab wallpaper remote resource loading */
+  mozilla::ipc::IPCResult RecvGetMozNewTabWallpaperStream(
+      nsIURI* aURI, const LoadInfoArgs& aLoadInfoArgs,
+      GetMozNewTabWallpaperStreamResolver&& aResolve);
 
   mozilla::ipc::IPCResult RecvInitSocketProcessBridge(
       InitSocketProcessBridgeResolver&& aResolver);
