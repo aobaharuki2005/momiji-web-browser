@@ -93,6 +93,8 @@ skip-if = [
   "os == 'win' && debug", # bug 1393761
 ]
 
+["browser_devices_get_user_media_muted_on_init.js"]
+
 ["browser_devices_get_user_media_paused.js"]
 https_first_disabled = true
 skip-if = [
