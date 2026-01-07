@@ -5,7 +5,6 @@
 """
 Utility functions for the glean_parser-based code generator
 """
-
 import copy
 from hashlib import sha1
 

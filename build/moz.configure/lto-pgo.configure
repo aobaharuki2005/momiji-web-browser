@@ -207,7 +207,7 @@ set_config("PROFILE_USE_LDFLAGS", pgo_flags.use_ldflags)
 
 option(
     "--with-pgo-jarlog",
-    help="Use the provided jarlog file when packaging during a profile-use build",
+    help="Use the provided jarlog file when packaging during a profile-use " "build",
     nargs=1,
 )
 

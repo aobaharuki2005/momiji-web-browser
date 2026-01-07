@@ -137,9 +137,9 @@ def main():
         pp.out = StringIO()
         pp.do_filter("substitution")
         pp.do_include(filename)
-        allowed_dupes.extend([
-            line.partition("#")[0].rstrip() for line in pp.out.getvalue().splitlines()
-        ])
+        allowed_dupes.extend(
+            [line.partition("#")[0].rstrip() for line in pp.out.getvalue().splitlines()]
+        )
 
     find_dupes(args.directory, bail=not args.warning, allowed_dupes=allowed_dupes)
 

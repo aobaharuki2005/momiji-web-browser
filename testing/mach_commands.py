@@ -164,6 +164,7 @@ def addtest(
     editor=MISSING_ARG,
     **kwargs,
 ):
+
     import addtest
     from moztest.resolve import TEST_SUITES
 
@@ -403,10 +404,12 @@ def test(command_context, what, extra_args, **log_args):
 
         repo = get_specific_repository_object(".", "git")
         base_commit = repo.base_ref_as_commit()
-        patch = "\n".join([
-            repo.get_patches_after_ref(base_commit),
-            repo.get_patch_for_uncommitted_changes(),
-        ])
+        patch = "\n".join(
+            [
+                repo.get_patches_after_ref(base_commit),
+                repo.get_patch_for_uncommitted_changes(),
+            ]
+        )
         if not patch.strip():
             print("No local changes detected; no tests to run.")
             return 1
@@ -441,10 +444,9 @@ def test(command_context, what, extra_args, **log_args):
 
         if not mozdebug.get_debugger_info(log_args.get("debugger")):
             sys.exit(1)
-        extra_args_debugger_notation = "=".join([
-            "--debugger",
-            log_args.get("debugger"),
-        ])
+        extra_args_debugger_notation = "=".join(
+            ["--debugger", log_args.get("debugger")]
+        )
         if extra_args:
             extra_args.append(extra_args_debugger_notation)
         else:
@@ -1338,10 +1340,12 @@ def run_migration_tests(command_context, test_paths=None, **kwargs):
                 )
             if context["issues"]:
                 continue
-            with_context.append({
-                "to_test": to_test,
-                "references": context["references"],
-            })
+            with_context.append(
+                {
+                    "to_test": to_test,
+                    "references": context["references"],
+                }
+            )
         except Exception as e:
             command_context.log(
                 logging.ERROR,

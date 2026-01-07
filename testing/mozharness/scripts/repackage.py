@@ -87,14 +87,18 @@ class Repackage(BaseScript):
             command = [sys.executable, "mach", "--log-no-times", "repackage"]
             command.extend([arg.format(**subst) for arg in repack_config["args"]])
             for arg, filename in repack_config["inputs"].items():
-                command.extend([
-                    f"--{arg}",
-                    os.path.join(dirs["abs_input_dir"], filename),
-                ])
-            command.extend([
-                "--output",
-                os.path.join(dirs["abs_output_dir"], repack_config["output"]),
-            ])
+                command.extend(
+                    [
+                        f"--{arg}",
+                        os.path.join(dirs["abs_input_dir"], filename),
+                    ]
+                )
+            command.extend(
+                [
+                    "--output",
+                    os.path.join(dirs["abs_output_dir"], repack_config["output"]),
+                ]
+            )
             self.run_command(
                 command=command,
                 cwd=dirs["abs_src_dir"],
@@ -124,10 +128,12 @@ class Repackage(BaseScript):
             os.path.join(dirs["abs_src_dir"], "toolchains.json"),
         ]
         if manifest_src:
-            cmd.extend([
-                "--tooltool-manifest",
-                os.path.join(dirs["abs_src_dir"], manifest_src),
-            ])
+            cmd.extend(
+                [
+                    "--tooltool-manifest",
+                    os.path.join(dirs["abs_src_dir"], manifest_src),
+                ]
+            )
         cache = config.get("tooltool_cache")
         if cache:
             cmd.extend(["--cache-dir", cache])

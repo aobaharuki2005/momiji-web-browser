@@ -6,7 +6,6 @@
 """
 Mozilla universal manifest parser
 """
-
 import os
 import sys
 from optparse import OptionParser

@@ -117,7 +117,7 @@ def find_mozconfig(topsrcdir: Union[str, Path], env=os.environ):
 
         if not env_path.is_file():
             raise MozconfigFindException(
-                f"MOZCONFIG environment variable refers to a non-file: {env_path}"
+                "MOZCONFIG environment variable refers to a " f"non-file: {env_path}"
             )
 
     srcdir_paths = [topsrcdir / p for p in DEFAULT_TOPSRCDIR_PATHS]

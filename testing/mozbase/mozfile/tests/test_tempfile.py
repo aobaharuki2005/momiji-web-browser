@@ -7,7 +7,6 @@
 """
 tests for mozfile.NamedTemporaryFile
 """
-
 import os
 import unittest
 

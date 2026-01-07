@@ -278,7 +278,7 @@ def new_label(label, tasks):
                 "maximum": 10,
                 "title": "Times",
                 "description": (
-                    "The number of times to execute each job you are backfilling."
+                    "The number of times to execute each job " "you are backfilling."
                 ),
             },
             "retrigger": {

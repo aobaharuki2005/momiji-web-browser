@@ -875,7 +875,8 @@ class BuildReader:
 
     def summary(self):
         return ExecutionSummary(
-            "Finished reading {file_count:d} moz.build files in {execution_time:.2f}s",
+            "Finished reading {file_count:d} moz.build files in "
+            "{execution_time:.2f}s",
             file_count=self._file_count,
             execution_time=self._execution_time,
         )
@@ -1216,7 +1217,7 @@ class BuildReader:
             for v in ("input", "variables"):
                 if not getattr(gyp_dir, v):
                     raise SandboxValidationError(
-                        'Missing value for GYP_DIRS["%s"].%s' % (target_dir, v),
+                        "Missing value for " 'GYP_DIRS["%s"].%s' % (target_dir, v),
                         context,
                     )
 

@@ -60,10 +60,12 @@ class FailedPlatform:
         # This avoids creating a too broad skip-if condition
         if len(possible_build_types) == 0:
             return False
-        return all([
-            bt in build_types and self.is_full_test_variants_fail(bt)
-            for bt in possible_build_types
-        ])
+        return all(
+            [
+                bt in build_types and self.is_full_test_variants_fail(bt)
+                for bt in possible_build_types
+            ]
+        )
 
     def is_full_high_freq_fail(self) -> bool:
         """
@@ -75,10 +77,12 @@ class FailedPlatform:
         # This avoids creating a too broad skip-if condition
         if len(possible_build_types) == 0:
             return False
-        return all([
-            bt in build_types and sum(list(self.failures[bt].values())) >= 7
-            for bt in possible_build_types
-        ])
+        return all(
+            [
+                bt in build_types and sum(list(self.failures[bt].values())) >= 7
+                for bt in possible_build_types
+            ]
+        )
 
     def is_full_test_variants_fail(self, build_type: str) -> bool:
         """

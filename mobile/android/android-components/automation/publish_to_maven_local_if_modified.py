@@ -124,11 +124,9 @@ else:
             shell=True,
         )
     else:
-        run_cmd_checked([
-            "./gradlew",
-            "publishToMavenLocal",
-            f"-Plocal={time.time_ns()}",
-        ])
+        run_cmd_checked(
+            ["./gradlew", "publishToMavenLocal", f"-Plocal={time.time_ns()}"]
+        )
     with open(LAST_CONTENTS_HASH_FILE, "w") as f:
         f.write(contents_hash)
         f.write("\n")

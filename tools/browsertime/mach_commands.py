@@ -454,13 +454,15 @@ def activate_browsertime_virtualenv(command_context, *args, **kwargs):
         "opencv-python==%s" % OPENCV_VERSION,
     ):
         if _need_install(command_context, dep):
-            subprocess.check_call([
-                command_context.virtualenv_manager.python_path,
-                "-m",
-                "pip",
-                "install",
-                dep,
-            ])
+            subprocess.check_call(
+                [
+                    command_context.virtualenv_manager.python_path,
+                    "-m",
+                    "pip",
+                    "install",
+                    dep,
+                ]
+            )
 
 
 def check(command_context):
@@ -546,10 +548,9 @@ def extra_default_args(command_context, args=[]):
 
         if not specifies_binaryPath:
             try:
-                extra_args.extend((
-                    "--firefox.binaryPath",
-                    command_context.get_binary_path(),
-                ))
+                extra_args.extend(
+                    ("--firefox.binaryPath", command_context.get_binary_path())
+                )
             except BinaryNotFoundException as e:
                 command_context.log(
                     logging.ERROR,

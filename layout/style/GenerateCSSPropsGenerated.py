@@ -45,7 +45,7 @@ def generate(output, dataFile):
 
     # Generate kIDLNameTable
     output.write(
-        "const char* const nsCSSProps::kIDLNameTable[eCSSProperty_COUNT] = {\n"
+        "const char* const nsCSSProps::" "kIDLNameTable[eCSSProperty_COUNT] = {\n"
     )
     for p in properties:
         if p.idlname is None:
@@ -59,7 +59,8 @@ def generate(output, dataFile):
     ps = [(p, position) for position, p in enumerate(ps)]
     ps.sort(key=lambda item: item[0].index)
     output.write(
-        "const int32_t nsCSSProps::kIDLNameSortPositionTable[eCSSProperty_COUNT] = {\n"
+        "const int32_t nsCSSProps::"
+        "kIDLNameSortPositionTable[eCSSProperty_COUNT] = {\n"
     )
     for p, position in ps:
         output.write("  {},\n".format(position))
@@ -67,7 +68,7 @@ def generate(output, dataFile):
 
     # Generate preferences table
     output.write(
-        "const nsCSSProps::PropertyPref nsCSSProps::kPropertyPrefTable[] = {\n"
+        "const nsCSSProps::PropertyPref " "nsCSSProps::kPropertyPrefTable[] = {\n"
     )
     for p in raw_properties.values():
         if not p.pref:

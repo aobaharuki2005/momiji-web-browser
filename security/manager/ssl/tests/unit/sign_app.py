@@ -9,7 +9,6 @@ Given a directory of files, packages them up and signs the
 resulting zip file. Mainly for creating test inputs to the
 nsIX509CertDB.openSignedAppFileAsync API.
 """
-
 from base64 import b64encode
 from cbor2 import dumps
 from cbor2.types import CBORTag

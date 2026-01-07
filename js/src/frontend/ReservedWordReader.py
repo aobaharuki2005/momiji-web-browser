@@ -6,6 +6,7 @@ import re
 
 
 def read_reserved_word_list(filename, *args):
+
     enable_decorators = False
     enable_explicit_resource_management = False
 

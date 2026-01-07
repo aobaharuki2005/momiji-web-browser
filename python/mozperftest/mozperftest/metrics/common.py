@@ -245,9 +245,9 @@ class MetricsStorage:
         for data_type, data_info in results.items():
             newresults = []
             for res in data_info:
-                if any([met["name"] in res["subtest"] for met in metrics]) and not any([
-                    met in res["subtest"] for met in exclude
-                ]):
+                if any([met["name"] in res["subtest"] for met in metrics]) and not any(
+                    [met in res["subtest"] for met in exclude]
+                ):
                     res["transformer"] = self.ptnb_config[data_type][
                         "custom_transformer"
                     ]

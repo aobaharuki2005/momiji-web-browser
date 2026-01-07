@@ -121,12 +121,14 @@ class TestResult:
                     test_output += "expected %s, found %s" % (expected, test.status)
                     if test.message:
                         test_output += ' (with message: "%s")' % (test.message,)
-                subtests.append({
-                    "test": output.test.wpt.id,
-                    "subtest": test.name,
-                    "status": test.status,
-                    "expected": expected,
-                })
+                subtests.append(
+                    {
+                        "test": output.test.wpt.id,
+                        "subtest": test.name,
+                        "status": test.status,
+                        "expected": expected,
+                    }
+                )
                 results.append(test_result)
                 stdout.append(test_output)
 
@@ -170,7 +172,8 @@ class TestResult:
                 results.append((cls.PASS, msg))
             else:
                 m = re.match(
-                    "--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE ((?:-|\\d)+) ---",
+                    "--- NOTE: IN THIS TESTCASE, WE EXPECT EXIT CODE"
+                    " ((?:-|\\d)+) ---",
                     line,
                 )
                 if m:

@@ -36,11 +36,13 @@ def order_tasks(config, tasks):
 
 
 def format_task_digest(cached_task):
-    return "/".join([
-        cached_task["type"],
-        cached_task["name"],
-        cached_task["digest"],
-    ])
+    return "/".join(
+        [
+            cached_task["type"],
+            cached_task["name"],
+            cached_task["digest"],
+        ]
+    )
 
 
 @transforms.add

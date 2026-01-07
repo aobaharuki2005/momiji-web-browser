@@ -242,7 +242,7 @@ def config_status(config, execute=True):
             fh.write("%s = " % k)
             pprint.pprint(v, stream=fh, indent=4)
         fh.write(
-            "__all__ = ['topobjdir', 'topsrcdir', 'defines', 'substs', 'mozconfig']"
+            "__all__ = ['topobjdir', 'topsrcdir', 'defines', " "'substs', 'mozconfig']"
         )
 
         if execute:

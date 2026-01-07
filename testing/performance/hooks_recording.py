@@ -77,7 +77,7 @@ def before_iterations(kw):
                 ):
                     print(
                         f"Skipping login test `{test.get('name')}` "
-                        f"Because SCM = `{os.environ.get('MOZ_SCM_LEVEL')}`"
+                        f"Because SCM = `{os.environ.get('MOZ_SCM_LEVEL') }`"
                         f"and there is no secret available at this level"
                     )
                     return False

@@ -74,7 +74,8 @@ def WebIDLTest(parser, harness):
 
     harness.ok(
         threw,
-        "Should have thrown on nullable inside nullable const typedef after interface.",
+        "Should have thrown on nullable inside nullable const typedef "
+        "after interface.",
     )
 
     parser = parser.reset()

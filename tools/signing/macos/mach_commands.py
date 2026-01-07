@@ -131,7 +131,8 @@ from mozbuild.base import MachCommandConditions as conditions
     default=None,
     type=str,
     dest="p12_password_file_arg",
-    help="The rcodesign pkcs12 password file, passed to rcodesign without validation.",
+    help="The rcodesign pkcs12 password file, passed to rcodesign without "
+    "validation.",
 )
 def macos_sign(
     command_context,
@@ -174,7 +175,7 @@ def macos_sign(
                 logging.ERROR,
                 "macos-sign",
                 {},
-                "ERROR: p12 password file with no p12 file, use both or neither",
+                "ERROR: p12 password file with no p12 file, " "use both or neither",
             )
             sys.exit(1)
         if p12_file_arg is not None and p12_password_file_arg is None:
@@ -182,7 +183,7 @@ def macos_sign(
                 logging.ERROR,
                 "macos-sign",
                 {},
-                "ERROR: p12 file with no p12 password file, use both or neither",
+                "ERROR: p12 file with no p12 password file, " "use both or neither",
             )
             sys.exit(1)
         if p12_file_arg is not None and p12_password_file_arg is not None:
@@ -196,7 +197,8 @@ def macos_sign(
             logging.ERROR,
             "macos-sign",
             {},
-            "ERROR: pkcs12 signing not supported with native codesign, only rcodesign",
+            "ERROR: pkcs12 signing not supported with "
+            "native codesign, only rcodesign",
         )
         sys.exit(1)
 
@@ -216,7 +218,7 @@ def macos_sign(
                     logging.ERROR,
                     "macos-sign",
                     {},
-                    "ERROR: rcodesign requires pkcs12 or ad-hoc signing",
+                    "ERROR: rcodesign requires pkcs12 or " "ad-hoc signing",
                 )
                 sys.exit(1)
 
@@ -226,7 +228,7 @@ def macos_sign(
                 logging.ERROR,
                 "macos-sign",
                 {},
-                "ERROR: both ad-hoc and pkcs12 signing requested",
+                "ERROR: both ad-hoc and pkcs12 signing " "requested",
             )
             sys.exit(1)
 
@@ -240,7 +242,7 @@ def macos_sign(
             logging.ERROR,
             "macos-sign",
             {},
-            "ERROR: Production entitlements and self-signing are not compatible",
+            "ERROR: " "Production entitlements and self-signing are " "not compatible",
         )
         sys.exit(1)
 

@@ -113,13 +113,9 @@ class AggregatedGTestReport(dict):
     def reset(self):
         """Clear all results."""
         self.clear()
-        self.update({
-            "tests": 0,
-            "failures": 0,
-            "disabled": 0,
-            "errors": 0,
-            "testsuites": [],
-        })
+        self.update(
+            {"tests": 0, "failures": 0, "disabled": 0, "errors": 0, "testsuites": []}
+        )
 
     def gtest_output(self, job_id):
         """

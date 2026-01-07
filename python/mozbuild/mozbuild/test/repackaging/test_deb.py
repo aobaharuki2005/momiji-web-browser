@@ -142,6 +142,7 @@ Name[zh_TW]=zh-TW-desktop-action-open-profile-manager
 
 
 def test_generate_deb_desktop_entry_file_text(monkeypatch):
+
     def check_call(cmd=[], cwd=None):
         assert len(cmd) > 1
         assert cmd[0] == "git"

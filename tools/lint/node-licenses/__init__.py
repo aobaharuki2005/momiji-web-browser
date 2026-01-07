@@ -77,7 +77,7 @@ def lint(paths, config, binary=None, skip_reinstall=False, **lintargs):
                             "path": path,
                             "message": "Unable to install node_modules for this package, try running 'npm ci' in the directory to debug",
                             "level": "error",
-                        },
+                        }
                     )
                 )
 

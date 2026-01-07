@@ -430,7 +430,8 @@ option(
     "--enable-execution-tracing",
     env="MOZ_EXECUTION_TRACING",
     default=enable_execution_tracing,
-    help="{Set|Do not set} compile flags necessary for running the JS execution tracer",
+    help="{Set|Do not set} compile flags necessary for running the JS "
+    "execution tracer",
 )
 
 
@@ -519,7 +520,7 @@ set_define("JS_ION_PERF", ion_perf)
 option(
     "--enable-jitspew",
     default=depends(when=moz_debug)(lambda: True),
-    help="{Enable|Disable} the Jit spew and IONFLAGS environment variable",
+    help="{Enable|Disable} the Jit spew and IONFLAGS environment " "variable",
 )
 
 set_define("JS_JITSPEW", depends_if("--enable-jitspew")(lambda _: True))

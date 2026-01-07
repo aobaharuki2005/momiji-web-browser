@@ -170,10 +170,9 @@ def test_is_backstop(
 
     urls = {
         "index": get_index_url(
-            BACKSTOP_INDEX.format(**{
-                "trust-domain": "gecko",
-                "project": params["project"],
-            })
+            BACKSTOP_INDEX.format(
+                **{"trust-domain": "gecko", "project": params["project"]}
+            )
         ),
         "artifact": get_artifact_url(LAST_BACKSTOP_PUSHID, "public%2Fparameters.yml"),
         "status": get_task_url(LAST_BACKSTOP_PUSHID) + "/status",

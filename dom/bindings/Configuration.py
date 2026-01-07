@@ -837,7 +837,8 @@ class Descriptor(DescriptorProvider):
                         )
                     if len(m.signatures()) != 1:
                         raise TypeError(
-                            "We don't support overloaded legacycaller.\n%s" % m.location
+                            "We don't support overloaded "
+                            "legacycaller.\n%s" % m.location
                         )
                     addOperation("LegacyCaller", m)
 

@@ -226,16 +226,18 @@ def _collect(pipe, poll_interval):
             swap_entry[sout_index] = swap_mem.sout - swap_last.sout
             swap_last = swap_mem
 
-            data.append((
-                last_time,
-                measured_end_time,
-                io_diff,
-                net_io_diff,
-                cpu_diff,
-                cpu_percent,
-                list(virt_mem),
-                swap_entry,
-            ))
+            data.append(
+                (
+                    last_time,
+                    measured_end_time,
+                    io_diff,
+                    net_io_diff,
+                    cpu_diff,
+                    cpu_percent,
+                    list(virt_mem),
+                    swap_entry,
+                )
+            )
 
             update_known_processes()
 
@@ -253,24 +255,19 @@ def _collect(pipe, poll_interval):
         for pid, create_time, end_time, cmd, ppid in processes:
             if len(cmd) > 0:
                 cmd[0] = os.path.basename(cmd[0])
-            cmdline = " ".join([
-                arg
-                for arg in cmd
-                if not arg.startswith("-D")
-                and not arg.startswith("-I")
-                and not arg.startswith("-W")
-                and not arg.startswith("-L")
-            ])
-            pipe.send((
-                "process",
-                pid,
-                create_time,
-                end_time,
-                cmdline,
-                ppid,
-                None,
-                None,
-            ))
+            cmdline = " ".join(
+                [
+                    arg
+                    for arg in cmd
+                    if not arg.startswith("-D")
+                    and not arg.startswith("-I")
+                    and not arg.startswith("-W")
+                    and not arg.startswith("-L")
+                ]
+            )
+            pipe.send(
+                ("process", pid, create_time, end_time, cmdline, ppid, None, None)
+            )
 
         pipe.send(("done", None, None, None, None, None, None, None))
         pipe.close()
@@ -535,15 +532,17 @@ class SystemResourceMonitor:
                 # We also can't recover, but output the data that caused the exception
                 warnings.warn(
                     "failed to read the received data: %s"
-                    % str((
-                        start_time,
-                        end_time,
-                        io_diff,
-                        cpu_diff,
-                        cpu_percent,
-                        virt_mem,
-                        swap_mem,
-                    ))
+                    % str(
+                        (
+                            start_time,
+                            end_time,
+                            io_diff,
+                            cpu_diff,
+                            cpu_percent,
+                            virt_mem,
+                            swap_mem,
+                        )
+                    )
                 )
 
                 break
@@ -681,12 +680,14 @@ class SystemResourceMonitor:
                     if "write_time" in data:
                         marker_data["write_time"] = data["write_time"]
 
-                self.markers.append((
-                    "sccache",
-                    data["start_time"],
-                    data["end_time"],
-                    marker_data,
-                ))
+                self.markers.append(
+                    (
+                        "sccache",
+                        data["start_time"],
+                        data["end_time"],
+                        marker_data,
+                    )
+                )
 
         except Exception as e:
             warnings.warn(f"Failed to parse sccache.log: {e}")
@@ -696,15 +697,17 @@ class SystemResourceMonitor:
             num_markers = len(compilations)
             # Add as a duration marker
             if num_markers > 0:
-                self.markers.append((
-                    "sccache parsing",
-                    parse_start,
-                    parse_end,
-                    {
-                        "type": "Text",
-                        "text": f"Parsed {num_markers} sccache entries from log",
-                    },
-                ))
+                self.markers.append(
+                    (
+                        "sccache parsing",
+                        parse_start,
+                        parse_end,
+                        {
+                            "type": "Text",
+                            "text": f"Parsed {num_markers} sccache entries from log",
+                        },
+                    )
+                )
 
     # Methods to record events alongside the monitored data.
 
@@ -2001,11 +2004,9 @@ class SystemResourceMonitor:
             "idle": "Idle %",
         }.items():
             if field in valid_cpu_fields or field == "idle":
-                cpuData.append({
-                    "key": field + "_pct",
-                    "label": label,
-                    "format": "string",
-                })
+                cpuData.append(
+                    {"key": field + "_pct", "label": label, "format": "string"}
+                )
         cpuGraphs = cpuSchema["graphs"]
         for field, color in {
             "softirq": "orange",

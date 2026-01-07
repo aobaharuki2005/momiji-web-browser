@@ -63,12 +63,14 @@ def test_new_package_metadta_is_found():
         pass
 
     with tempfile.TemporaryDirectory() as venv_dir:
-        subprocess.check_call([
-            sys.executable,
-            "-m",
-            "venv",
-            venv_dir,
-        ])
+        subprocess.check_call(
+            [
+                sys.executable,
+                "-m",
+                "venv",
+                venv_dir,
+            ]
+        )
 
         venv = PythonVirtualenv(venv_dir)
         venv.pip_install([f"{pkg}=={version}"])

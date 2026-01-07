@@ -33,15 +33,12 @@ def test_mochitest_metrics(*mocked):
     sys = env.layers[SYSTEM]
     mochitest = env.layers[TEST]
 
-    with (
-        mock.patch("moztest.resolve.TestResolver") as test_resolver_mock,
-        mock.patch(
-            "mozperftest.test.functionaltestrunner.load_class_from_path"
-        ) as load_class_path_mock,
-        mock.patch(
-            "mozperftest.test.functionaltestrunner.mozlog.formatters.MachFormatter.__new__"
-        ) as formatter_mock,
-        mock.patch("mozperftest.test.mochitest.install_requirements_file"),
+    with mock.patch("moztest.resolve.TestResolver") as test_resolver_mock, mock.patch(
+        "mozperftest.test.functionaltestrunner.load_class_from_path"
+    ) as load_class_path_mock, mock.patch(
+        "mozperftest.test.functionaltestrunner.mozlog.formatters.MachFormatter.__new__"
+    ) as formatter_mock, mock.patch(
+        "mozperftest.test.mochitest.install_requirements_file"
     ):
         formatter_mock.return_value = lambda x: x
 
@@ -89,15 +86,12 @@ def test_mochitest_android_metrics(*mocked):
     sys = env.layers[SYSTEM]
     mochitest = env.layers[TEST]
 
-    with (
-        mock.patch("moztest.resolve.TestResolver") as test_resolver_mock,
-        mock.patch(
-            "mozperftest.test.functionaltestrunner.load_class_from_path"
-        ) as load_class_path_mock,
-        mock.patch(
-            "mozperftest.test.functionaltestrunner.mozlog.formatters.MachFormatter.__new__"
-        ) as formatter_mock,
-        mock.patch("mozperftest.test.mochitest.install_requirements_file"),
+    with mock.patch("moztest.resolve.TestResolver") as test_resolver_mock, mock.patch(
+        "mozperftest.test.functionaltestrunner.load_class_from_path"
+    ) as load_class_path_mock, mock.patch(
+        "mozperftest.test.functionaltestrunner.mozlog.formatters.MachFormatter.__new__"
+    ) as formatter_mock, mock.patch(
+        "mozperftest.test.mochitest.install_requirements_file"
     ):
         formatter_mock.return_value = lambda x: x
 
@@ -145,15 +139,12 @@ def test_mochitest_multi_metrics(multimetrics_output):
     sys = env.layers[SYSTEM]
     mochitest = env.layers[TEST]
 
-    with (
-        mock.patch("moztest.resolve.TestResolver") as test_resolver_mock,
-        mock.patch(
-            "mozperftest.test.functionaltestrunner.load_class_from_path"
-        ) as load_class_path_mock,
-        mock.patch(
-            "mozperftest.test.functionaltestrunner.mozlog.formatters.MachFormatter.__new__"
-        ) as formatter_mock,
-        mock.patch("mozperftest.test.mochitest.install_requirements_file"),
+    with mock.patch("moztest.resolve.TestResolver") as test_resolver_mock, mock.patch(
+        "mozperftest.test.functionaltestrunner.load_class_from_path"
+    ) as load_class_path_mock, mock.patch(
+        "mozperftest.test.functionaltestrunner.mozlog.formatters.MachFormatter.__new__"
+    ) as formatter_mock, mock.patch(
+        "mozperftest.test.mochitest.install_requirements_file"
     ):
         formatter_mock.return_value = lambda x: x
 
@@ -212,12 +203,12 @@ def test_mochitest_profiling(fake_file_path):
     )
     environ_patch.start()
 
-    with (
-        mock.patch(
-            "mozperftest.test.functionaltestrunner.FunctionalTestRunner.test"
-        ) as test_mock,
-        mock.patch("mozperftest.test.mochitest.install_requirements_file"),
-        mock.patch("mozperftest.test.mochitest.Path"),
+    with mock.patch(
+        "mozperftest.test.functionaltestrunner.FunctionalTestRunner.test"
+    ) as test_mock, mock.patch(
+        "mozperftest.test.mochitest.install_requirements_file"
+    ), mock.patch(
+        "mozperftest.test.mochitest.Path"
     ):
         test_mock.return_value = (0, mock.MagicMock())
         try:
@@ -243,12 +234,9 @@ def test_mochitest_extra_args(*mocked):
     sys = env.layers[SYSTEM]
     mochitest = env.layers[TEST]
 
-    with (
-        mock.patch(
-            "mozperftest.test.functionaltestrunner.FunctionalTestRunner.test"
-        ) as test_mock,
-        mock.patch("mozperftest.test.mochitest.install_requirements_file"),
-    ):
+    with mock.patch(
+        "mozperftest.test.functionaltestrunner.FunctionalTestRunner.test"
+    ) as test_mock, mock.patch("mozperftest.test.mochitest.install_requirements_file"):
         test_mock.return_value = (0, mock.MagicMock())
         try:
             with pytest.raises(NoPerfMetricsError):

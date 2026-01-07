@@ -753,12 +753,14 @@ def get_vc_paths(host, topsrcdir):
         return json.loads(check_cmd_output(vswhere, "-format", "json", *args))
 
     variant = "arm64" if host.cpu == "aarch64" else "x86.x64"
-    for install in vswhere([
-        "-products",
-        "*",
-        "-requires",
-        f"Microsoft.VisualStudio.Component.VC.Tools.{variant}",
-    ]):
+    for install in vswhere(
+        [
+            "-products",
+            "*",
+            "-requires",
+            f"Microsoft.VisualStudio.Component.VC.Tools.{variant}",
+        ]
+    ):
         path = install["installationPath"]
         tools_version = (
             open(
@@ -1301,7 +1303,9 @@ def sysroot(host_or_target, target_sysroot=None):
     sysroot_input = depends(opt, when=when)(lambda x: x)
     bootstrap_sysroot = depends(bootstrap_when, sysroot_input)(
         # Only bootstrap when no flag was explicitly given (either --with or --without)
-        lambda bootstrap, input: bootstrap and not input and input.origin == "default"
+        lambda bootstrap, input: bootstrap
+        and not input
+        and input.origin == "default"
     )
 
     @depends(
@@ -2247,19 +2251,21 @@ def die_on_old_libstdcxx():
 
 try_compile(
     includes=["cstddef"],
-    body="\n".join([
-        # _GLIBCXX_RELEASE showed up in libstdc++ 7.
-        "#if defined(__GLIBCXX__) && !defined(_GLIBCXX_RELEASE)",
-        "#  error libstdc++ not new enough",
-        "#endif",
-        "#if defined(_GLIBCXX_RELEASE)",
-        "#  if _GLIBCXX_RELEASE < %d" % minimum_gcc_version().major,
-        "#    error libstdc++ not new enough",
-        "#  else",
-        "     (void) 0",
-        "#  endif",
-        "#endif",
-    ]),
+    body="\n".join(
+        [
+            # _GLIBCXX_RELEASE showed up in libstdc++ 7.
+            "#if defined(__GLIBCXX__) && !defined(_GLIBCXX_RELEASE)",
+            "#  error libstdc++ not new enough",
+            "#endif",
+            "#if defined(_GLIBCXX_RELEASE)",
+            "#  if _GLIBCXX_RELEASE < %d" % minimum_gcc_version().major,
+            "#    error libstdc++ not new enough",
+            "#  else",
+            "     (void) 0",
+            "#  endif",
+            "#endif",
+        ]
+    ),
     check_msg="for new enough STL headers from libstdc++",
     when=needs_libstdcxx_newness_check,
     onerror=die_on_old_libstdcxx,
@@ -2831,10 +2837,9 @@ def ub_unsigned_overflow_san_flags(
     compilation_flags.cflags.extend(flags)
     compilation_flags.cxxflags.extend(flags)
     if c_compiler.type != "clang-cl":
-        linker_flags.ldflags.extend([
-            "-fsanitize=unsigned-integer-overflow",
-            "-rdynamic",
-        ])
+        linker_flags.ldflags.extend(
+            ["-fsanitize=unsigned-integer-overflow", "-rdynamic"]
+        )
 
 
 #
@@ -3815,10 +3820,9 @@ def path_remappings(target, build_env, sysroot_path, windows_sdk_dir, vc_path):
     if sysroot_path:
         path_remappings.append((sysroot_path, "k:/" if win else "/sysroot/"))
     if windows_sdk_dir:
-        path_remappings.append((
-            windows_sdk_dir.path,
-            "k:/" if win else "/windows_sdk/",
-        ))
+        path_remappings.append(
+            (windows_sdk_dir.path, "k:/" if win else "/windows_sdk/")
+        )
     if vc_path:
         path_remappings.append((vc_path, "v:/" if win else "/vc/"))
 

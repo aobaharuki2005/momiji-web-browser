@@ -27,23 +27,12 @@ import sys
 
 architecture_independent = set(["generic"])
 all_unsupported_architectures_names = set(["mips64", "mips_shared"])
-all_architecture_names = set([
-    "x86",
-    "x64",
-    "arm",
-    "arm64",
-    "loong64",
-    "riscv64",
-    "wasm32",
-])
-all_shared_architecture_names = set([
-    "x86_shared",
-    "arm",
-    "arm64",
-    "loong64",
-    "riscv64",
-    "wasm32",
-])
+all_architecture_names = set(
+    ["x86", "x64", "arm", "arm64", "loong64", "riscv64", "wasm32"]
+)
+all_shared_architecture_names = set(
+    ["x86_shared", "arm", "arm64", "loong64", "riscv64", "wasm32"]
+)
 
 reBeforeArg = r"(?<=[(,\s])"
 reArgType = r"(?P<type>[\w\s:*&<>]+)"
@@ -112,12 +101,14 @@ def get_normalized_signatures(signature, fileAnnot=None):
     return signatures
 
 
-file_suffixes = set([
-    a.replace("_", "-")
-    for a in all_architecture_names.union(all_shared_architecture_names).union(
-        all_unsupported_architectures_names
-    )
-])
+file_suffixes = set(
+    [
+        a.replace("_", "-")
+        for a in all_architecture_names.union(all_shared_architecture_names).union(
+            all_unsupported_architectures_names
+        )
+    ]
+)
 
 
 def get_file_annotation(filename):

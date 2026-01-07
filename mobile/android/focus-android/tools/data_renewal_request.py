@@ -29,19 +29,19 @@ for row in csv_reader:
     if row["keep(Y/N)"] == "n":
         continue
     total_count += 1
-    output_string += f"` {row['name']}`\n"
+    output_string += f'` {row["name"]}`\n'
     output_string += "1) Provide a link to the initial Data Collection Review Request for this collection.\n"
-    output_string += f"    - {eval(row['data_reviews'])[0]}\n"
+    output_string += f'    - {eval(row["data_reviews"])[0]}\n'
     output_string += "\n"
     output_string += "2) When will this collection now expire?\n"
     if len(row["new expiry version"]) == 0:
         output_string += f"    - {updated_version}\n"
     else:
-        output_string += f"    - {row['new expiry version']}\n"
+        output_string += f'    - {row["new expiry version"]}\n'
 
     output_string += "\n"
     output_string += "3) Why was the initial period of collection insufficient?\n"
-    output_string += f"    - {row['reason to extend']}\n"
+    output_string += f'    - {row["reason to extend"]}\n'
     output_string += "\n"
     output_string += "———\n"
 

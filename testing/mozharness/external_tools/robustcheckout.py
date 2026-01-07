@@ -79,14 +79,15 @@ def peerlookup(remote, v):
             b"",
             b"networkattempts",
             3,
-            b"Maximum number of attempts for network operations",
+            b"Maximum number of attempts for network " b"operations",
         ),
         (b"", b"sparseprofile", b"", b"Sparse checkout profile to use (path in repo)"),
         (
             b"U",
             b"noupdate",
             False,
-            b"the clone will include an empty working directory\n(only a repository)",
+            b"the clone will include an empty working directory\n"
+            b"(only a repository)",
         ),
     ],
     b"[OPTION]... URL DEST",
@@ -149,7 +150,7 @@ def robustcheckout(
             or not re.match(b"^[a-f0-9]+$", revision)
         ):
             raise error.Abort(
-                b"--revision must be a SHA-1 fragment 12-40 characters long"
+                b"--revision must be a SHA-1 fragment 12-40 " b"characters long"
             )
 
     sharebase = sharebase or ui.config(b"share", b"pool")
@@ -170,7 +171,7 @@ def robustcheckout(
             extensions.find(b"sparse")
         except KeyError:
             raise error.Abort(
-                b"sparse extension must be enabled to use --sparseprofile"
+                b"sparse extension must be enabled to use " b"--sparseprofile"
             )
 
     ui.warn(b"(using Mercurial %s)\n" % util.version())
@@ -278,16 +279,18 @@ def robustcheckout(
                 "suites": [],
             }
             for op, duration in optimes:
-                perfherder["suites"].append({
-                    "name": op,
-                    "value": duration,
-                    "lowerIsBetter": True,
-                    "shouldAlert": False,
-                    "serverUrl": server_url.decode("utf-8"),
-                    "hgVersion": util.version().decode("utf-8"),
-                    "extraOptions": [os.environ["TASKCLUSTER_INSTANCE_TYPE"]],
-                    "subtests": [],
-                })
+                perfherder["suites"].append(
+                    {
+                        "name": op,
+                        "value": duration,
+                        "lowerIsBetter": True,
+                        "shouldAlert": False,
+                        "serverUrl": server_url.decode("utf-8"),
+                        "hgVersion": util.version().decode("utf-8"),
+                        "extraOptions": [os.environ["TASKCLUSTER_INSTANCE_TYPE"]],
+                        "subtests": [],
+                    }
+                )
             ui.write(
                 b"PERFHERDER_DATA: %s\n"
                 % pycompat.bytestr(json.dumps(perfherder, sort_keys=True))
@@ -377,14 +380,14 @@ def _docheckout(
     # enabled sparse, we would lock them out.
     if destvfs.exists() and sparse_profile and not destvfs.exists(b".hg/sparse"):
         raise error.Abort(
-            b"cannot enable sparse profile on existing non-sparse checkout",
+            b"cannot enable sparse profile on existing " b"non-sparse checkout",
             hint=b"use a separate working directory to use sparse",
         )
 
     # And the other direction for symmetry.
     if not sparse_profile and destvfs.exists(b".hg/sparse"):
         raise error.Abort(
-            b"cannot use non-sparse checkout on existing sparse checkout",
+            b"cannot use non-sparse checkout on existing sparse " b"checkout",
             hint=b"use a separate working directory to use sparse",
         )
 
@@ -426,7 +429,7 @@ def _docheckout(
             ui.warn(b"(abandoned transaction found; trying to recover)\n")
             repo = hg.repository(ui, dest)
             if not repo.recover():
-                ui.warn(b"(could not recover repo state; deleting shared store)\n")
+                ui.warn(b"(could not recover repo state; " b"deleting shared store)\n")
                 with timeit("remove_unrecovered_shared_store", "remove-store"):
                     deletesharedstore()
 
@@ -441,7 +444,7 @@ def _docheckout(
     def handlenetworkfailure():
         if networkattempts[0] >= networkattemptlimit:
             raise error.Abort(
-                b"reached maximum number of network attempts; giving up\n"
+                b"reached maximum number of network attempts; " b"giving up\n"
             )
 
         ui.warn(
@@ -535,7 +538,7 @@ def _docheckout(
         clonepeer = hg.peer(ui, {}, cloneurl)
         rootnode = peerlookup(clonepeer, b"0")
     except error.RepoLookupError:
-        raise error.Abort(b"unable to resolve root revision from clone source")
+        raise error.Abort(b"unable to resolve root revision from clone " b"source")
     except (
         error.Abort,
         ssl.SSLError,
@@ -680,7 +683,7 @@ def _docheckout(
             if not ctx.hex().startswith(revision):
                 raise error.Abort(
                     b"--revision argument is ambiguous",
-                    hint=b"must be the first 12+ characters of a SHA-1 fragment",
+                    hint=b"must be the first 12+ characters of a " b"SHA-1 fragment",
                 )
 
             checkoutrevision = ctx.hex()
@@ -758,7 +761,7 @@ def _docheckout(
                     abort_on_err=True,
                     # The function expects all arguments to be
                     # defined.
-                    **{"print": None, "print0": None, "dirs": None, "files": None},
+                    **{"print": None, "print0": None, "dirs": None, "files": None}
                 ):
                     raise error.Abort(b"error purging")
         finally:
@@ -816,10 +819,8 @@ def _docheckout(
                     return repo.dirstate.changing_parents(repo)
                 return repo.dirstate.parentchange()
 
-            with (
-                repo.wlock(),
-                parentchange(repo),
-                timeit("sparse_update_config", "sparse-update-config"),
+            with repo.wlock(), parentchange(repo), timeit(
+                "sparse_update_config", "sparse-update-config"
             ):
                 # pylint --py3k: W1636
                 fcounts = list(

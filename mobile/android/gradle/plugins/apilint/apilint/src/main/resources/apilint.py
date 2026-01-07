@@ -449,12 +449,9 @@ class Class:
         self.name = self.fullname[self.fullname.rindex(".") + 1 :]
 
     def __hash__(self):
-        return hash((
-            self.raw,
-            tuple(self.ctors),
-            tuple(self.fields),
-            tuple(self.methods),
-        ))
+        return hash(
+            (self.raw, tuple(self.ctors), tuple(self.fields), tuple(self.methods))
+        )
 
     def __repr__(self):
         return self.raw
@@ -616,6 +613,7 @@ noticed = {}
 
 
 def notice(clazz):
+
     noticed[clazz.fullname] = clazz
 
 

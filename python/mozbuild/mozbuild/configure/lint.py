@@ -237,7 +237,8 @@ class LintSandbox(ConfigureSandbox):
             if name.startswith(f"--{prefix}-"):
                 frame = self._pretty_current_frame()
                 e = ConfigureError(
-                    "{} should be used instead of {} with default={}".format(
+                    "{} should be used instead of "
+                    "{} with default={}".format(
                         name.replace(f"--{prefix}-", f"--{replacement}-"),
                         name,
                         default,

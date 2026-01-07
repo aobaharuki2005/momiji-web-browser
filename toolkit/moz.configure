@@ -2431,7 +2431,8 @@ with only_when(compile_environment):
             flags=jpeg_flags.cflags,
             check_msg="for sufficient jpeg library version",
             onerror=lambda: die(
-                "Insufficient JPEG library version for --with-system-jpeg (62 required)"
+                "Insufficient JPEG library version for "
+                "--with-system-jpeg (62 required)"
             ),
         )
 
@@ -2449,7 +2450,7 @@ with only_when(compile_environment):
             flags=jpeg_flags.cflags,
             check_msg="for sufficient libjpeg-turbo JCS_EXTENSIONS",
             onerror=lambda: die(
-                "libjpeg-turbo JCS_EXTENSIONS required for --with-system-jpeg"
+                "libjpeg-turbo JCS_EXTENSIONS required for " "--with-system-jpeg"
             ),
         )
 
@@ -3343,6 +3344,7 @@ confvar(
 
 
 with only_when(target_is_android):
+
     confvar(
         env="ANDROID_APPEND_USERNAME_TO_PACKAGE_NAME",
         set_as_config=False,

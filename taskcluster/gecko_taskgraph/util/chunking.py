@@ -260,6 +260,7 @@ class DefaultLoader(BaseManifestLoader):
                     if any(x in manifest for x in subsuite_paths):
                         manifests.add(manifest)
             else:
+
                 all_subsuite_paths = [
                     path for paths in WPT_SUBSUITES.values() for path in paths
                 ]

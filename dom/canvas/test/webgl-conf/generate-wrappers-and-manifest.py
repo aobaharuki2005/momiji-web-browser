@@ -32,12 +32,14 @@ EXTRA_SUPPORT_FILES = [
     "mochi-single.html",
 ]
 
-ACCEPTABLE_ERRATA_KEYS = set([
-    "fail-if",
-    "prefs",
-    "skip-if",
-    "tags",
-])
+ACCEPTABLE_ERRATA_KEYS = set(
+    [
+        "fail-if",
+        "prefs",
+        "skip-if",
+        "tags",
+    ]
+)
 
 
 def ChooseSubsuite(name):
@@ -473,9 +475,9 @@ def LoadTOML(path):
                 if line[0] == "[":
                     assert line[-1] == "]", f"{path}:{lineNum}"
                     curSectionName = line[1:-1].strip('"')
-                    assert curSectionName not in ret, (
-                        f"Line {lineNum}: Duplicate section: {line}"
-                    )
+                    assert (
+                        curSectionName not in ret
+                    ), f"Line {lineNum}: Duplicate section: {line}"
                     curSectionMap = {}
                     ret[curSectionName] = (lineNum, curSectionMap)
                     continue
@@ -504,9 +506,9 @@ def LoadErrata():
             continue
         elif sectionName != "DEFAULT":
             path = sectionName.replace("/", os.sep)
-            assert os.path.exists(path), (
-                f"Errata line {sectionLineNum}: Invalid file: {sectionName}"
-            )
+            assert os.path.exists(
+                path
+            ), f"Errata line {sectionLineNum}: Invalid file: {sectionName}"
 
         for key, (lineNum, val) in sectionMap.items():
             assert key in ACCEPTABLE_ERRATA_KEYS, f"Line {lineNum}: {key}"

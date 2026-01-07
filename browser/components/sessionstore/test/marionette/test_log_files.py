@@ -16,10 +16,12 @@ def inline(doc):
 class TestSessionRestoreLogging(WindowManagerMixin, MarionetteTestCase):
     def setUp(self):
         super().setUp()
-        self.marionette.enforce_gecko_prefs({
-            "browser.sessionstore.loglevel": "Debug",
-            "browser.sessionstore.log.appender.file.logOnSuccess": True,
-        })
+        self.marionette.enforce_gecko_prefs(
+            {
+                "browser.sessionstore.loglevel": "Debug",
+                "browser.sessionstore.log.appender.file.logOnSuccess": True,
+            }
+        )
 
     def tearDown(self):
         try:
@@ -99,9 +101,11 @@ class TestSessionRestoreLogging(WindowManagerMixin, MarionetteTestCase):
         self.marionette.start_session()
 
     def test_errors_flush_to_disk(self):
-        self.marionette.enforce_gecko_prefs({
-            "browser.sessionstore.log.appender.file.logOnSuccess": False,
-        })
+        self.marionette.enforce_gecko_prefs(
+            {
+                "browser.sessionstore.log.appender.file.logOnSuccess": False,
+            }
+        )
         self.marionette.quit()
         sessionFile = self.getSessionFilePath()
         self.assertTrue(
@@ -110,7 +114,7 @@ class TestSessionRestoreLogging(WindowManagerMixin, MarionetteTestCase):
         )
         # replace the contents with nonsense so we get a not-readable error on startup
         with open(sessionFile, "wb") as f:
-            f.write(b"\x00\xff\xabgarbageDATA")
+            f.write(b"\x00\xFF\xABgarbageDATA")
 
         self.marionette.start_session()
         self.marionette.set_context("chrome")

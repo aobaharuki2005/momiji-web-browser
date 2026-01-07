@@ -160,10 +160,12 @@ class TestSimplePackager(unittest.TestCase):
             packager.add(
                 "qux/qux.manifest",
                 GeneratedFile(
-                    b"".join([
-                        b"resource qux qux/\n",
-                        b"binary-component qux.so\n",
-                    ])
+                    b"".join(
+                        [
+                            b"resource qux qux/\n",
+                            b"binary-component qux.so\n",
+                        ]
+                    )
                 ),
             )
         bar_xpt = GeneratedFile(b"bar.xpt")
@@ -178,10 +180,12 @@ class TestSimplePackager(unittest.TestCase):
 
         file = GeneratedFileWithPath(
             os.path.join(curdir, "foo.manifest"),
-            b"".join([
-                b"manifest foo/bar.manifest\n",
-                b"manifest bar/baz.manifest\n",
-            ]),
+            b"".join(
+                [
+                    b"manifest foo/bar.manifest\n",
+                    b"manifest bar/baz.manifest\n",
+                ]
+            ),
         )
         with errors.context("manifest", 6):
             packager.add("foo.manifest", file)
@@ -395,24 +399,26 @@ class TestSimplePackager(unittest.TestCase):
 
         self.assertEqual(
             packager.get_bases(),
-            set([
-                "",
-                "addon",
-                "addon2",
-                "addon3",
-                "addon4",
-                "addon5",
-                "addon6",
-                "addon7",
-                "addon8",
-                "addon9",
-                "addon10",
-                "addon11",
-                "qux",
-                "hybrid",
-                "hybrid2",
-                "webextension",
-            ]),
+            set(
+                [
+                    "",
+                    "addon",
+                    "addon2",
+                    "addon3",
+                    "addon4",
+                    "addon5",
+                    "addon6",
+                    "addon7",
+                    "addon8",
+                    "addon9",
+                    "addon10",
+                    "addon11",
+                    "qux",
+                    "hybrid",
+                    "hybrid2",
+                    "webextension",
+                ]
+            ),
         )
         self.assertEqual(packager.get_bases(addons=False), set(["", "qux"]))
 
@@ -423,7 +429,9 @@ class TestSimplePackager(unittest.TestCase):
         packager = SimplePackager(formatter)
         packager.add(
             "base.manifest",
-            GeneratedFile(b"manifest foo/bar.manifest\nmanifest bar/baz.manifest\n"),
+            GeneratedFile(
+                b"manifest foo/bar.manifest\n" b"manifest bar/baz.manifest\n"
+            ),
         )
         packager.add("foo/bar.manifest", GeneratedFile(b"resource bar bar"))
         packager.add("bar/baz.manifest", GeneratedFile(b"resource baz baz"))
@@ -444,7 +452,9 @@ class TestSimplePackager(unittest.TestCase):
         packager = SimplePackager(formatter)
         packager.add(
             "base.manifest",
-            GeneratedFile(b"manifest foo/bar.manifest\nmanifest bar/baz.manifest\n"),
+            GeneratedFile(
+                b"manifest foo/bar.manifest\n" b"manifest bar/baz.manifest\n"
+            ),
         )
         packager.add("foo/bar.manifest", GeneratedFile(b"resource bar bar"))
         packager.add("bar/baz.manifest", GeneratedFile(b"resource baz baz"))
@@ -477,14 +487,16 @@ class TestSimpleManifestSink(unittest.TestCase):
         foobaz = GeneratedFile(b"foobaz")
         fooqux = GeneratedFile(b"fooqux")
         foozot = GeneratedFile(b"foozot")
-        finder = MockFinder({
-            "bin/foo/bar": foobar,
-            "bin/foo/baz": foobaz,
-            "bin/foo/qux": fooqux,
-            "bin/foo/zot": foozot,
-            "bin/foo/chrome.manifest": GeneratedFile(b"resource foo foo/"),
-            "bin/chrome.manifest": GeneratedFile(b"manifest foo/chrome.manifest"),
-        })
+        finder = MockFinder(
+            {
+                "bin/foo/bar": foobar,
+                "bin/foo/baz": foobaz,
+                "bin/foo/qux": fooqux,
+                "bin/foo/zot": foozot,
+                "bin/foo/chrome.manifest": GeneratedFile(b"resource foo foo/"),
+                "bin/chrome.manifest": GeneratedFile(b"manifest foo/chrome.manifest"),
+            }
+        )
         parser = SimpleManifestSink(finder, formatter)
         component0 = Component("component0")
         component1 = Component("component1")

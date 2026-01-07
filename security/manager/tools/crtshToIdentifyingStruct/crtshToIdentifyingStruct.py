@@ -12,7 +12,6 @@ duplicates.
 
 Requires Python 3.
 """
-
 import argparse
 import io
 import re

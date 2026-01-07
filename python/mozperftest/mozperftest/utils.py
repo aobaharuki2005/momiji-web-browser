@@ -236,13 +236,9 @@ def install_package(virtualenv_manager, package, ignore_failure=False):
             return True
     with silence():
         try:
-            subprocess.check_call([
-                virtualenv_manager.python_path,
-                "-m",
-                "pip",
-                "install",
-                package,
-            ])
+            subprocess.check_call(
+                [virtualenv_manager.python_path, "-m", "pip", "install", package]
+            )
             return True
         except Exception:
             if not ignore_failure:
@@ -285,17 +281,19 @@ def install_requirements_file(
         cwd = os.getcwd()
         try:
             os.chdir(Path(requirements_file).parent)
-            subprocess.check_call([
-                virtualenv_manager.python_path,
-                "-m",
-                "pip",
-                "install",
-                "-r",
-                requirements_file,
-                "--no-index",
-                "--find-links",
-                "https://pypi.pub.build.mozilla.org/pub/",
-            ])
+            subprocess.check_call(
+                [
+                    virtualenv_manager.python_path,
+                    "-m",
+                    "pip",
+                    "install",
+                    "-r",
+                    requirements_file,
+                    "--no-index",
+                    "--find-links",
+                    "https://pypi.pub.build.mozilla.org/pub/",
+                ]
+            )
             return True
         except Exception:
             if not ignore_failure:

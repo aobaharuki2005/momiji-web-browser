@@ -24,10 +24,12 @@ def add_command(config, jobs):
             "python",
             "testing/mozharness/scripts/release/bouncer_check.py",
         ]
-        job["run"].update({
-            "using": "mach",
-            "mach": command,
-        })
+        job["run"].update(
+            {
+                "using": "mach",
+                "mach": command,
+            }
+        )
         yield job
 
 
@@ -78,10 +80,12 @@ def handle_keyed_by(config, jobs):
             job["run"]["mach"].extend(["--config", cfg])
 
         if config.kind == "cron-bouncer-check":
-            job["run"]["mach"].extend([
-                "--product-field={}".format(job["run"]["product-field"]),
-                "--products-url={}".format(job["run"]["products-url"]),
-            ])
+            job["run"]["mach"].extend(
+                [
+                    "--product-field={}".format(job["run"]["product-field"]),
+                    "--products-url={}".format(job["run"]["products-url"]),
+                ]
+            )
             del job["run"]["product-field"]
             del job["run"]["products-url"]
         elif config.kind == "release-bouncer-check":

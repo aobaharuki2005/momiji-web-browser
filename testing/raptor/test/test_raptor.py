@@ -200,7 +200,7 @@ def test_post_startup_delay(
         debug_mode=debug_mode,
         post_startup_delay=post_startup_delay,
         conditioned_profile=conditioned_profile,
-        **options,
+        **options
     )
 
     assert perftest.post_startup_delay == expected_post_startup_delay

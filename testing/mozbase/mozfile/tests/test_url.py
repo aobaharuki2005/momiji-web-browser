@@ -3,7 +3,6 @@
 """
 tests for is_url
 """
-
 import unittest
 
 import mozunit

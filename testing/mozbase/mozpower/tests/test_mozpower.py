@@ -22,12 +22,11 @@ def test_mozpower_oscpu_combo_missing_error():
     when we can't find a OS, and CPU combination (and, therefore, cannot
     find a power measurer).
     """
-    with (
-        mock.patch.object(MozPower, "_get_os", return_value="Not-An-OS") as _,
-        mock.patch.object(
-            MozPower, "_get_processor_info", return_value="Not-A-Processor"
-        ) as _,
-    ):
+    with mock.patch.object(
+        MozPower, "_get_os", return_value="Not-An-OS"
+    ) as _, mock.patch.object(
+        MozPower, "_get_processor_info", return_value="Not-A-Processor"
+    ) as _:
         with pytest.raises(OsCpuComboMissingError):
             MozPower()
 
@@ -100,15 +99,13 @@ def test_mozpower_oscpu_combo(mozpower_obj):
 
 def test_mozpower_measuring(mozpower_obj):
     """Tests that measurers are properly called with each method."""
-    with (
-        mock.patch(
-            "mozpower.macintelpower.MacIntelPower.initialize_power_measurements"
-        ) as _,
-        mock.patch(
-            "mozpower.macintelpower.MacIntelPower.finalize_power_measurements"
-        ) as _,
-        mock.patch("mozpower.macintelpower.MacIntelPower.get_perfherder_data") as _,
-    ):
+    with mock.patch(
+        "mozpower.macintelpower.MacIntelPower.initialize_power_measurements"
+    ) as _, mock.patch(
+        "mozpower.macintelpower.MacIntelPower.finalize_power_measurements"
+    ) as _, mock.patch(
+        "mozpower.macintelpower.MacIntelPower.get_perfherder_data"
+    ) as _:
         mozpower_obj.initialize_power_measurements()
         mozpower_obj.measurer.initialize_power_measurements.assert_called()
 
@@ -123,15 +120,13 @@ def test_mozpower_measuring_with_no_measurer(mozpower_obj):
     """Tests that no errors occur when the measurer is None, and the
     initialize, finalize, and get_perfherder_data functions are called.
     """
-    with (
-        mock.patch(
-            "mozpower.macintelpower.MacIntelPower.initialize_power_measurements"
-        ) as _,
-        mock.patch(
-            "mozpower.macintelpower.MacIntelPower.finalize_power_measurements"
-        ) as _,
-        mock.patch("mozpower.macintelpower.MacIntelPower.get_perfherder_data") as _,
-    ):
+    with mock.patch(
+        "mozpower.macintelpower.MacIntelPower.initialize_power_measurements"
+    ) as _, mock.patch(
+        "mozpower.macintelpower.MacIntelPower.finalize_power_measurements"
+    ) as _, mock.patch(
+        "mozpower.macintelpower.MacIntelPower.get_perfherder_data"
+    ) as _:
         measurer = mozpower_obj.measurer
         mozpower_obj.measurer = None
 

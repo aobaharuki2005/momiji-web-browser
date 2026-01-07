@@ -68,10 +68,12 @@ class TalosRunner(MozbuildObject):
 
     def make_config(self):
         default_actions = ["populate-webroot"]
-        default_actions.extend([
-            "create-virtualenv",
-            "run-tests",
-        ])
+        default_actions.extend(
+            [
+                "create-virtualenv",
+                "run-tests",
+            ]
+        )
         self.config = {
             "run_local": True,
             "talos_json": self.talos_json,

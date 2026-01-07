@@ -206,7 +206,9 @@ def rust_compiler(rustc_info, cargo_info, target):
         If you have the 'rustup' tool installed you can upgrade
         to the latest release by typing 'rustup update'. The
         installer is available from https://rustup.rs/
-        """.format(version, rustc_min_version, rustc_min_version)
+        """.format(
+                    version, rustc_min_version, rustc_min_version
+                )
             )
         )
 
@@ -433,10 +435,9 @@ def assert_rust_compile(host_or_target, rustc_target, rustc):
     # Check to see whether our rustc has a reasonably functional stdlib
     # for our chosen target.
     target_arg = "--target=" + rustc_target
-    with (
-        create_temporary_file(suffix=".rs") as in_path,
-        create_temporary_file(suffix=".rlib") as out_path,
-    ):
+    with create_temporary_file(suffix=".rs") as in_path, create_temporary_file(
+        suffix=".rlib"
+    ) as out_path:
         with open(in_path, "w") as fd:
             source = b'pub extern "C" fn hello() { println!("Hello world"); }'
             log.debug("Creating `%s` with content:", in_path)
@@ -464,7 +465,9 @@ def assert_rust_compile(host_or_target, rustc_target, rustc):
             a rust std library for that target installed. Try:
 
               rustup target add {}
-            """.format(host_or_target.alias, rustc, rustc_target)
+            """.format(
+                        host_or_target.alias, rustc, rustc_target
+                    )
                 )
             )
 

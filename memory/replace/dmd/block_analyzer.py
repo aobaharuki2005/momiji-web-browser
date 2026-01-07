@@ -117,7 +117,8 @@ parser.add_argument(
     "-c",
     "--chain-reports",
     action="store_true",
-    help="if only one block is found to hold onto the object, report the next one, too",
+    help="if only one block is found to hold onto the object, report "
+    "the next one, too",
 )
 
 

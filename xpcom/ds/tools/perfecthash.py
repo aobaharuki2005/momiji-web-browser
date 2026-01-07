@@ -227,26 +227,32 @@ class CGHelper:
             if idx and idx % 16 == 0:  # 16 bases per line
                 bases += "\n  "
             bases += "%4d," % base
-        return textwrap.dedent(
-            """\
+        return (
+            textwrap.dedent(
+                """\
             static const %s %s[] = {
               %s
             };
             """
-        ) % (self.basis_ty(), name, bases)
+            )
+            % (self.basis_ty(), name, bases)
+        )
 
     def gen_entries(self, lower_entry):
         """Generate code for an entries table"""
         entries = self._indent(
             ",\n".join(lower_entry(entry).rstrip() for entry in self.phf.entries)
         )
-        return textwrap.dedent(
-            """\
+        return (
+            textwrap.dedent(
+                """\
             const %s %s[] = {
               %s
             };
             """
-        ) % (self.entry_type, self.entries_name, entries)
+            )
+            % (self.entry_type, self.entries_name, entries)
+        )
 
     def gen_getter(
         self,
@@ -274,8 +280,9 @@ class CGHelper:
         if return_type is None:
             return_type = "const %s&" % self.entry_type
 
-        return textwrap.dedent(
-            """
+        return (
+            textwrap.dedent(
+                """
             %(return_type)s
             %(name)s(%(key_type)s aKey)
             {
@@ -288,16 +295,18 @@ class CGHelper:
               %(return_entry)s
             }
             """
-        ) % {
-            "name": name,
-            "basis_table": self._indent(self.basis_table()),
-            "entries_name": self.entries_name,
-            "return_type": return_type,
-            "return_entry": self._indent(return_entry),
-            "key_type": key_type,
-            "key_bytes": key_bytes,
-            "key_length": key_length,
-        }
+            )
+            % {
+                "name": name,
+                "basis_table": self._indent(self.basis_table()),
+                "entries_name": self.entries_name,
+                "return_type": return_type,
+                "return_entry": self._indent(return_entry),
+                "key_type": key_type,
+                "key_bytes": key_bytes,
+                "key_length": key_length,
+            }
+        )
 
     def gen_jslinearstr_getter(
         self, name, return_type=None, return_entry="return entry;"
@@ -313,15 +322,16 @@ class CGHelper:
                             can be used for additional checks, e.g. for keys
                             not in the table."""
 
-        assert all(b <= 0x7F for e in self.phf.entries for b in self.phf.key(e)), (
-            "non-ASCII key"
-        )
+        assert all(
+            b <= 0x7F for e in self.phf.entries for b in self.phf.key(e)
+        ), "non-ASCII key"
 
         if return_type is None:
             return_type = "const %s&" % self.entry_type
 
-        return textwrap.dedent(
-            """
+        return (
+            textwrap.dedent(
+                """
             %(return_type)s
             %(name)s(JSLinearString* aKey)
             {
@@ -345,10 +355,12 @@ class CGHelper:
               }
             }
             """
-        ) % {
-            "name": name,
-            "basis_table": self._indent(self.basis_table()),
-            "entries_name": self.entries_name,
-            "return_type": return_type,
-            "return_entry": self._indent(return_entry, 2),
-        }
+            )
+            % {
+                "name": name,
+                "basis_table": self._indent(self.basis_table()),
+                "entries_name": self.entries_name,
+                "return_type": return_type,
+                "return_entry": self._indent(return_entry, 2),
+            }
+        )

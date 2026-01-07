@@ -18,18 +18,20 @@ transforms = TransformSequence()
 """List of available test variants defined."""
 
 
-variant_description_schema = Schema({
-    str: {
-        Required("description"): str,
-        Required("suffix"): str,
-        Optional("mozinfo"): str,
-        Required("component"): str,
-        Required("expiration"): str,
-        Optional("when"): {Any("$eval", "$if"): str},
-        Optional("replace"): {str: object},
-        Optional("merge"): {str: object},
+variant_description_schema = Schema(
+    {
+        str: {
+            Required("description"): str,
+            Required("suffix"): str,
+            Optional("mozinfo"): str,
+            Required("component"): str,
+            Required("expiration"): str,
+            Optional("when"): {Any("$eval", "$if"): str},
+            Optional("replace"): {str: object},
+            Optional("merge"): {str: object},
+        }
     }
-})
+)
 """variant description schema"""
 
 

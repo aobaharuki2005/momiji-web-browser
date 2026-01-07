@@ -16,6 +16,7 @@ from marionette_harness import MarionetteTestCase, WindowManagerMixin
 
 
 class TestHTTPSFirst(WindowManagerMixin, MarionetteTestCase):
+
     def setUp(self):
         super().setUp()
 

@@ -118,27 +118,29 @@ def locFromTok(p, num):
 
 # -----------------------------------------------------------------------------
 
-reserved = set((
-    "async",
-    "both",
-    "child",
-    "class",
-    "from",
-    "include",
-    "manager",
-    "manages",
-    "namespace",
-    "nullable",
-    "or",
-    "parent",
-    "protocol",
-    "returns",
-    "struct",
-    "sync",
-    "union",
-    "UniquePtr",
-    "using",
-))
+reserved = set(
+    (
+        "async",
+        "both",
+        "child",
+        "class",
+        "from",
+        "include",
+        "manager",
+        "manages",
+        "namespace",
+        "nullable",
+        "or",
+        "parent",
+        "protocol",
+        "returns",
+        "struct",
+        "sync",
+        "union",
+        "UniquePtr",
+        "using",
+    )
+)
 tokens = [
     "COLONCOLON",
     "ID",

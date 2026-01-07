@@ -345,7 +345,7 @@ class BaseConfig:
             "--dump-config",
             action="store_true",
             dest="dump_config",
-            help="List and dump the config generated from this run to a JSON file.",
+            help="List and dump the config generated from this run to " "a JSON file.",
         )
         self.config_parser.add_option(
             "--dump-config-hierarchy",
@@ -532,21 +532,25 @@ class BaseConfig:
                     file_name = os.path.basename(cf)
                     file_path = os.path.join(os.getcwd(), file_name)
                     download_config_file(cf, file_path)
-                    all_cfg_files_and_dicts.append((
-                        file_path,
-                        parse_config_file(
+                    all_cfg_files_and_dicts.append(
+                        (
                             file_path,
-                            search_path=["."],
-                        ),
-                    ))
+                            parse_config_file(
+                                file_path,
+                                search_path=["."],
+                            ),
+                        )
+                    )
                 else:
-                    all_cfg_files_and_dicts.append((
-                        cf,
-                        parse_config_file(
+                    all_cfg_files_and_dicts.append(
+                        (
                             cf,
-                            search_path=config_paths + [DEFAULT_CONFIG_PATH],
-                        ),
-                    ))
+                            parse_config_file(
+                                cf,
+                                search_path=config_paths + [DEFAULT_CONFIG_PATH],
+                            ),
+                        )
+                    )
             except Exception:
                 if cf in options.opt_config_files:
                     print("WARNING: optional config file not found %s" % cf)

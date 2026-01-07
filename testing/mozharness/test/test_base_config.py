@@ -112,32 +112,38 @@ class TestParseConfigFile(unittest.TestCase):
 
     def test_optional_config_files_override_value(self):
         c = config.BaseConfig(initial_config_file="test/test.py")
-        c.parse_args([
-            "--cfg",
-            "test/test_override.py,test/test_override2.py",
-            "--opt-cfg",
-            "test/test_optional.py",
-        ])
+        c.parse_args(
+            [
+                "--cfg",
+                "test/test_override.py,test/test_override2.py",
+                "--opt-cfg",
+                "test/test_optional.py",
+            ]
+        )
         self.assertEqual(c._config["opt_override"], "new stuff")
 
     def test_optional_config_files_missing_config(self):
         c = config.BaseConfig(initial_config_file="test/test.py")
-        c.parse_args([
-            "--cfg",
-            "test/test_override.py,test/test_override2.py",
-            "--opt-cfg",
-            "test/test_optional.py,does_not_exist.py",
-        ])
+        c.parse_args(
+            [
+                "--cfg",
+                "test/test_override.py,test/test_override2.py",
+                "--opt-cfg",
+                "test/test_optional.py,does_not_exist.py",
+            ]
+        )
         self.assertEqual(c._config["opt_override"], "new stuff")
 
     def test_optional_config_files_keep_string(self):
         c = config.BaseConfig(initial_config_file="test/test.py")
-        c.parse_args([
-            "--cfg",
-            "test/test_override.py,test/test_override2.py",
-            "--opt-cfg",
-            "test/test_optional.py",
-        ])
+        c.parse_args(
+            [
+                "--cfg",
+                "test/test_override.py,test/test_override2.py",
+                "--opt-cfg",
+                "test/test_optional.py",
+            ]
+        )
         self.assertEqual(c._config["keep_string"], "don't change me")
 
 

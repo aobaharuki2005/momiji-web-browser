@@ -150,15 +150,10 @@ def test_browsertime_no_reinstall():
         tests=[EXAMPLE_TEST],
     )
 
-    with (
-        mock.patch(
-            "mozperftest.test.browsertime.runner.pathlib.Path.open",
-            build_mock_open([BTIME_PKG_DEP, BTIME_PKG_NO_INSTALL]),
-        ),
-        mock.patch(
-            "mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload
-        ),
-    ):
+    with mock.patch(
+        "mozperftest.test.browsertime.runner.pathlib.Path.open",
+        build_mock_open([BTIME_PKG_DEP, BTIME_PKG_NO_INSTALL]),
+    ), mock.patch("mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload):
         browser = env.layers[TEST]
         btime_layer = browser.layers[0]
         assert not btime_layer._should_install()
@@ -177,15 +172,10 @@ def test_browsertime_should_reinstall():
         tests=[EXAMPLE_TEST],
     )
 
-    with (
-        mock.patch(
-            "mozperftest.test.browsertime.runner.pathlib.Path.open",
-            build_mock_open([BTIME_PKG_DEP, BTIME_PKG_REINSTALL]),
-        ),
-        mock.patch(
-            "mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload
-        ),
-    ):
+    with mock.patch(
+        "mozperftest.test.browsertime.runner.pathlib.Path.open",
+        build_mock_open([BTIME_PKG_DEP, BTIME_PKG_REINSTALL]),
+    ), mock.patch("mozperftest.test.browsertime.runner.json.load", new=mocked_jsonload):
         browser = env.layers[TEST]
         btime_layer = browser.layers[0]
         assert btime_layer._should_install()
@@ -300,9 +290,9 @@ def test_add_options():
     "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages"
 )
 def test_install_url(*mocked):
-    url = "https://here/tarball/" + "".join([
-        random.choice(string.hexdigits[:-6]) for c in range(40)
-    ])
+    url = "https://here/tarball/" + "".join(
+        [random.choice(string.hexdigits[:-6]) for c in range(40)]
+    )
     mach, metadata, env = get_running_env(
         browsertime_install_url=url,
         tests=[EXAMPLE_TEST],

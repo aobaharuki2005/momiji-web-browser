@@ -18,6 +18,6 @@ def make_task_description(config, jobs):
                 job,
                 key,
                 item_name=job["name"],
-                **{"release-level": release_level(config.params)},
+                **{"release-level": release_level(config.params)}
             )
         yield job

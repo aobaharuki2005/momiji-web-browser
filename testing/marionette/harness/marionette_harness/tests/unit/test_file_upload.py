@@ -19,7 +19,9 @@ upload = lambda url: "data:text/html,{}".format(
     <form action='{}' method=post enctype='multipart/form-data'>
      <input type=file>
      <input type=submit>
-    </form>""".format(url)
+    </form>""".format(
+            url
+        )
     )
 )
 
