@@ -80,6 +80,24 @@ add_task(async function test_splitViewCreateAndAddTabs() {
     "The split view wrapper has the expected attribute when it does not contain the selected tab"
   );
 
+  // Verify ARIA labels for split view tabs
+  const splitViewLeft = gBrowser.tabLocalization.formatValueSync(
+    "tabbrowser-tab-label-tab-split-view-left",
+    { label: "" }
+  );
+  const splitViewRight = gBrowser.tabLocalization.formatValueSync(
+    "tabbrowser-tab-label-tab-split-view-right",
+    { label: "" }
+  );
+  Assert.ok(
+    tab1.getAttribute("aria-label").includes(splitViewLeft),
+    "Left tab has the correct ARIA label."
+  );
+  Assert.ok(
+    tab2.getAttribute("aria-label").includes(splitViewRight),
+    "Right tab has the correct ARIA label."
+  );
+
   gBrowser.selectTabAtIndex(tab1._tPos);
   await BrowserTestUtils.waitForMutationCondition(
     splitview,
@@ -102,6 +120,14 @@ add_task(async function test_splitViewCreateAndAddTabs() {
     document.querySelectorAll("tab-split-view-wrapper").length,
     1,
     "Tabs have been unsplit from split view"
+  );
+  Assert.ok(
+    !tab1.hasAttribute("aria-label"),
+    "ARIA label was removed from the left tab."
+  );
+  Assert.ok(
+    !tab2.hasAttribute("aria-label"),
+    "ARIA label was removed from the right tab."
   );
 
   let tab3Panel = tab3.linkedBrowser.closest(".browserSidebarContainer");

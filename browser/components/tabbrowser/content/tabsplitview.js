@@ -115,6 +115,7 @@
               // tab is "1 of 2" in the split view, for example.
               tab.setAttribute("aria-posinset", index + 1);
               tab.setAttribute("aria-setsize", this.tabs.length);
+              tab.updateSplitViewAriaLabel(index);
             });
           } else {
             this.remove();
