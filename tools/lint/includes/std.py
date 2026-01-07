@@ -424,6 +424,16 @@ api["type_traits"].extend(
 )
 
 capi = {
+    "stddef.h": [
+        "NULL",
+        "offsetof",
+        "size_t",
+        "ptrdiff_t",
+        "nullptr_t",
+        "max_align_t",
+        "byte",
+        "to_integer",
+    ],
     "stdarg.h": [
         "va_list",
         "va_arg",

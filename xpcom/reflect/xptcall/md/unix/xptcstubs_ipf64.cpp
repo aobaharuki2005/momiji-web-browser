@@ -8,7 +8,6 @@
 
 #include "xptcprivate.h"
 
-#include <stddef.h>
 #include <stdint.h>
 
 // "This code is for IA64 only"
