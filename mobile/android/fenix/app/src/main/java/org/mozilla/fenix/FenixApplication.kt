@@ -230,9 +230,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         run {
             // Make sure the engine is initialized and ready to use.
-            components.strictMode.allowViolation(StrictMode::allowThreadDiskReads) {
-                components.core.engine.warmUp()
-            }
+            components.core.engine.warmUp()
 
             initializeGlean()
 
