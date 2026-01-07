@@ -279,13 +279,11 @@ static bool TryFoldingGuardShapes(JSContext* cx, ICFallbackStub* fallback,
 
     for (uint32_t i = 0; i < shapeList.length(); i++) {
       if (!shapeObj->append(cx, shapeList[i])) {
-        cx->recoverFromOutOfMemory();
         return false;
       }
 
       if (hasSlotOffsets) {
         if (!shapeObj->append(cx, offsetList[i])) {
-          cx->recoverFromOutOfMemory();
           return false;
         }
       }
