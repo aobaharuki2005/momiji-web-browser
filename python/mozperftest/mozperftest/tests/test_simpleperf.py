@@ -397,8 +397,9 @@ def test_simpleperf_invalid_symbolicate_arguments():
         profiler._validate_symbolication_paths(None, None)
 
     # Verify local symbolication is skipped if args not provided
-    with mock.patch.object(profiler, "_cleanup") as mock_cleanup, mock.patch(
-        "mozperftest.system.simpleperf.ON_TRY", False
+    with (
+        mock.patch.object(profiler, "_cleanup") as mock_cleanup,
+        mock.patch("mozperftest.system.simpleperf.ON_TRY", False),
     ):
         profiler.teardown()
         mock_cleanup.assert_called_once()
@@ -412,8 +413,9 @@ def test_simpleperf_invalid_symbolicate_arguments():
     profiler.set_arg("symbolicator-path", "/fake/symbolicator/path")
 
     # Verify local symbolication is skipped if args are invalid
-    with mock.patch.object(profiler, "_cleanup") as mock_cleanup, mock.patch(
-        "mozperftest.system.simpleperf.ON_TRY", False
+    with (
+        mock.patch.object(profiler, "_cleanup") as mock_cleanup,
+        mock.patch("mozperftest.system.simpleperf.ON_TRY", False),
     ):
         profiler.teardown()
         mock_cleanup.assert_called_once()
@@ -453,13 +455,15 @@ def test_local_simpleperf_symbolicate(tmp_path):
     profiler.test_name = "unit_test"
 
     # Test local symbolication
-    with mock.patch("mozperftest.system.simpleperf.ON_TRY", False), mock.patch(
-        "tempfile.mkdtemp", return_value=str(mock_work_dir_path)
-    ), mock.patch("shutil.rmtree") as mock_rmtree, mock.patch(
-        "subprocess.Popen"
-    ) as mock_popen, mock.patch(
-        "mozperftest.system.simpleperf.find_node_executable",
-        return_value=[str(node_path)],
+    with (
+        mock.patch("mozperftest.system.simpleperf.ON_TRY", False),
+        mock.patch("tempfile.mkdtemp", return_value=str(mock_work_dir_path)),
+        mock.patch("shutil.rmtree") as mock_rmtree,
+        mock.patch("subprocess.Popen") as mock_popen,
+        mock.patch(
+            "mozperftest.system.simpleperf.find_node_executable",
+            return_value=[str(node_path)],
+        ),
     ):
         import_process = make_mock_process(context=True)
 
@@ -573,16 +577,17 @@ def test_local_simpleperf_symbolicate_timeout(tmp_path):
     profiler.test_name = "unit_test"
 
     # Test timeout error in local run
-    with mock.patch("mozperftest.system.simpleperf.ON_TRY", False), mock.patch(
-        "tempfile.mkdtemp", return_value=str(mock_work_dir_path)
-    ), mock.patch("shutil.rmtree") as mock_rmtree, mock.patch(
-        "subprocess.Popen"
-    ) as mock_popen, mock.patch(
-        "mozperftest.system.simpleperf.find_node_executable",
-        return_value=[str(node_path)],
-    ), mock.patch.object(
-        profiler, "_cleanup"
-    ) as mock_cleanup:
+    with (
+        mock.patch("mozperftest.system.simpleperf.ON_TRY", False),
+        mock.patch("tempfile.mkdtemp", return_value=str(mock_work_dir_path)),
+        mock.patch("shutil.rmtree") as mock_rmtree,
+        mock.patch("subprocess.Popen") as mock_popen,
+        mock.patch(
+            "mozperftest.system.simpleperf.find_node_executable",
+            return_value=[str(node_path)],
+        ),
+        mock.patch.object(profiler, "_cleanup") as mock_cleanup,
+    ):
         # Mock processes
         import_process = make_mock_process(context=True)
 
@@ -674,22 +679,20 @@ def test_ci_simpleperf_symbolicate(tmp_path):
     profiler.test_name = "unit_test"
 
     # Test symbolication in CI
-    with mock.patch.dict(
-        os.environ,
-        {
-            "MOZ_FETCHES_DIR": str(mock_fetch_path),
-        },
-        clear=False,
-    ), mock.patch("mozperftest.system.simpleperf.ON_TRY", True), mock.patch(
-        "mozperftest.utils.ON_TRY", True
-    ), mock.patch(
-        "tempfile.mkdtemp", return_value=str(mock_work_dir_path)
-    ), mock.patch(
-        "shutil.rmtree"
-    ) as mock_rmtree, mock.patch(
-        "subprocess.Popen"
-    ) as mock_popen:
-
+    with (
+        mock.patch.dict(
+            os.environ,
+            {
+                "MOZ_FETCHES_DIR": str(mock_fetch_path),
+            },
+            clear=False,
+        ),
+        mock.patch("mozperftest.system.simpleperf.ON_TRY", True),
+        mock.patch("mozperftest.utils.ON_TRY", True),
+        mock.patch("tempfile.mkdtemp", return_value=str(mock_work_dir_path)),
+        mock.patch("shutil.rmtree") as mock_rmtree,
+        mock.patch("subprocess.Popen") as mock_popen,
+    ):
         # Mock processes
         import_process = make_mock_process(context=True)
 
@@ -829,27 +832,25 @@ def test_ci_simpleperf_symbolicate_timeout(tmp_path):
     profiler.test_name = "unit_test"
 
     # Test timeout error in CI
-    with mock.patch("mozperftest.system.simpleperf.ON_TRY", True), mock.patch(
-        "mozperftest.utils.ON_TRY", True
-    ), mock.patch(
-        "tempfile.mkdtemp", return_value=str(mock_work_dir_path)
-    ), mock.patch.dict(
-        os.environ,
-        {
-            "MOZ_FETCHES_DIR": str(mock_fetch_path),
-        },
-        clear=False,
-    ), mock.patch(
-        "shutil.rmtree"
-    ) as mock_rmtree, mock.patch(
-        "subprocess.Popen"
-    ) as mock_popen, mock.patch(
-        "mozperftest.system.simpleperf.find_node_executable",
-        return_value=[str(node_path)],
-    ), mock.patch.object(
-        profiler, "_cleanup"
-    ) as mock_cleanup:
-
+    with (
+        mock.patch("mozperftest.system.simpleperf.ON_TRY", True),
+        mock.patch("mozperftest.utils.ON_TRY", True),
+        mock.patch("tempfile.mkdtemp", return_value=str(mock_work_dir_path)),
+        mock.patch.dict(
+            os.environ,
+            {
+                "MOZ_FETCHES_DIR": str(mock_fetch_path),
+            },
+            clear=False,
+        ),
+        mock.patch("shutil.rmtree") as mock_rmtree,
+        mock.patch("subprocess.Popen") as mock_popen,
+        mock.patch(
+            "mozperftest.system.simpleperf.find_node_executable",
+            return_value=[str(node_path)],
+        ),
+        mock.patch.object(profiler, "_cleanup") as mock_cleanup,
+    ):
         # Mock processes
         import_process = make_mock_process(context=True)
 

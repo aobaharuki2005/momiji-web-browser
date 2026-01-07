@@ -63,9 +63,10 @@ def try_fetch_symbols(filename, build_id, destination):
         u = urlopen(url)
         if u.getcode() != 200:
             return None
-        with open(debug_file, "wb") as f, gzip.GzipFile(
-            fileobj=io.BytesIO(u.read()), mode="r"
-        ) as z:
+        with (
+            open(debug_file, "wb") as f,
+            gzip.GzipFile(fileobj=io.BytesIO(u.read()), mode="r") as z,
+        ):
             shutil.copyfileobj(z, f)
             print(f"Fetched symbols from {url}")
             return debug_file

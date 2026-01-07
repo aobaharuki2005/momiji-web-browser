@@ -5,6 +5,7 @@
 Apply some defaults and minor modifications to the jobs defined in the build
 kind.
 """
+
 import logging
 
 from mozbuild.artifact_builds import JOB_CHOICES as ARTIFACT_JOBS
@@ -118,9 +119,9 @@ def mozconfig(config, jobs):
         )
         mozconfig_variant = job["run"].pop("mozconfig-variant", None)
         if mozconfig_variant:
-            job["run"].setdefault("extra-config", {})[
-                "mozconfig_variant"
-            ] = mozconfig_variant
+            job["run"].setdefault("extra-config", {})["mozconfig_variant"] = (
+                mozconfig_variant
+            )
         yield job
 
 
@@ -247,9 +248,9 @@ def add_signing_artifacts(config, jobs):
             # Not macosx build or no artifacts defined, so skip
             yield job
             continue
-        assert (
-            "artifacts" in job["worker"]
-        ), "macosx build jobs must have worker.artifacts defined."
+        assert "artifacts" in job["worker"], (
+            "macosx build jobs must have worker.artifacts defined."
+        )
         is_shippable = (
             ("shippable" in job["attributes"] and job["attributes"]["shippable"])
             # Instrumented builds don't have attributes.shippable set
@@ -283,13 +284,11 @@ def add_signing_artifacts(config, jobs):
                     )
         # Add utility.xml if not prod/shippable
         if not is_prod_project or not is_shippable:
-            job["worker"]["artifacts"].append(
-                {
-                    "name": "public/build/security/utility.xml",
-                    "path": "checkouts/gecko/security/mac/hardenedruntime/developer/utility.xml",
-                    "type": "file",
-                }
-            )
+            job["worker"]["artifacts"].append({
+                "name": "public/build/security/utility.xml",
+                "path": "checkouts/gecko/security/mac/hardenedruntime/developer/utility.xml",
+                "type": "file",
+            })
         impl, _ = worker_type_implementation(
             config.graph_config, config.params, job["worker-type"]
         )

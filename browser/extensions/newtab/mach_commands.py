@@ -104,9 +104,13 @@ def watch(command_context):
     processes = []
 
     try:
-        p1 = subprocess.Popen(
-            ["./mach", "npm", "run", "watchmc", "--prefix=browser/extensions/newtab"]
-        )
+        p1 = subprocess.Popen([
+            "./mach",
+            "npm",
+            "run",
+            "watchmc",
+            "--prefix=browser/extensions/newtab",
+        ])
         p2 = subprocess.Popen(["./mach", "watch"])
         processes.extend([p1, p2])
         print("Watching subprocesses started. Press Ctrl-C to terminate them.")
@@ -145,9 +149,13 @@ def update_locales(command_context):
     # Step 1: We download the latest reckoning of strings from firefox-l10n
     print("Cloning the latest HEAD of firefox-l10n repository")
     with tempfile.TemporaryDirectory() as clone_dir:
-        subprocess.check_call(
-            ["git", "clone", "--depth=1", FIREFOX_L10N_REPO, clone_dir]
-        )
+        subprocess.check_call([
+            "git",
+            "clone",
+            "--depth=1",
+            FIREFOX_L10N_REPO,
+            clone_dir,
+        ])
         # Step 2: Get some metadata about what we just pulled down -
         # specifically, the revision.
         revision = subprocess.check_output(
@@ -831,9 +839,13 @@ def bundle(command_context):
     proc = None
 
     try:
-        proc = subprocess.Popen(
-            ["./mach", "npm", "run", "bundle", "--prefix=browser/extensions/newtab"]
-        )
+        proc = subprocess.Popen([
+            "./mach",
+            "npm",
+            "run",
+            "bundle",
+            "--prefix=browser/extensions/newtab",
+        ])
         print("Bundling newtab started. Press Ctrl-C to terminate.")
         proc.wait()
     except KeyboardInterrupt:
@@ -871,9 +883,12 @@ def install(command_context):
     proc = None
 
     try:
-        proc = subprocess.Popen(
-            ["./mach", "npm", "install", "--prefix=browser/extensions/newtab"]
-        )
+        proc = subprocess.Popen([
+            "./mach",
+            "npm",
+            "install",
+            "--prefix=browser/extensions/newtab",
+        ])
         print(
             "Installing node dependencies for newtab started. Press Ctrl-C to terminate."
         )

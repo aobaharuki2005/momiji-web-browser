@@ -397,14 +397,12 @@ def verify_test_packaging(task, taskgraph, scratch_pad, graph_config, parameters
     if task is None:
         # In certain cases there are valid reasons for tests to be missing,
         # don't error out when that happens.
-        missing_tests_allowed = any(
-            (
-                # user specified `--target-kind`
-                bool(parameters.get("target-kinds")),
-                # manifest scheduling is enabled
-                parameters["test_manifest_loader"] != "default",
-            )
-        )
+        missing_tests_allowed = any((
+            # user specified `--target-kind`
+            bool(parameters.get("target-kinds")),
+            # manifest scheduling is enabled
+            parameters["test_manifest_loader"] != "default",
+        ))
 
         test_env = parameters["try_task_config"].get("env", {})
         if test_env.get("MOZHARNESS_TEST_PATHS", "") or test_env.get(

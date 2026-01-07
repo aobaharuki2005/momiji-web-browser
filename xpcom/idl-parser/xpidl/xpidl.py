@@ -48,12 +48,10 @@ def attlistToIDL(attlist):
     attlist = list(attlist)
     attlist.sort(key=lambda a: a[0])
 
-    return "[%s] " % ",".join(
-        [
-            "%s%s" % (name, value is not None and "(%s)" % value or "")
-            for name, value, aloc in attlist
-        ]
-    )
+    return "[%s] " % ",".join([
+        "%s%s" % (name, value is not None and "(%s)" % value or "")
+        for name, value, aloc in attlist
+    ])
 
 
 _paramsHardcode = {
@@ -83,12 +81,10 @@ def paramAttlistToIDL(attlist):
 
     sorted.extend(attlist)
 
-    return "[%s] " % ", ".join(
-        [
-            "%s%s" % (name, value is not None and " (%s)" % value or "")
-            for name, value, aloc in sorted
-        ]
-    )
+    return "[%s] " % ", ".join([
+        "%s%s" % (name, value is not None and " (%s)" % value or "")
+        for name, value, aloc in sorted
+    ])
 
 
 def unaliasType(t):
@@ -783,9 +779,9 @@ class WebIDL:
         # interfaces.
         # TODO: More explicit compile-time checks?
 
-        assert (
-            parent.webidlconfig is not None
-        ), "WebIDL declarations require passing webidlconfig to resolve."
+        assert parent.webidlconfig is not None, (
+            "WebIDL declarations require passing webidlconfig to resolve."
+        )
 
         # Resolve our native name according to the WebIDL configs.
         config = parent.webidlconfig.get(self.name, {})
@@ -1398,14 +1394,14 @@ class Attribute:
             elif attr_name == "setter_can_run_script":
                 if self.explicit_setter_can_run_script:
                     raise IDLError(
-                        "Redundant setter_can_run_script annotation " "on attribute",
+                        "Redundant setter_can_run_script annotation on attribute",
                         aloc,
                     )
                 self.explicit_setter_can_run_script = True
             elif attr_name == "getter_can_run_script":
                 if self.explicit_getter_can_run_script:
                     raise IDLError(
-                        "Redundant getter_can_run_script annotation " "on attribute",
+                        "Redundant getter_can_run_script annotation on attribute",
                         aloc,
                     )
                 self.explicit_getter_can_run_script = True

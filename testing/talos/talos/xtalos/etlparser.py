@@ -393,7 +393,7 @@ def etlparser(
 
     allowlist = loadAllowlist(allowlist_file)
 
-    header = "filename, tid, stage, readcount, readbytes, writecount," " writebytes"
+    header = "filename, tid, stage, readcount, readbytes, writecount, writebytes"
     outFile.write(header + "\n")
 
     # Filter out stages, threads, and allowlisted files that we're not

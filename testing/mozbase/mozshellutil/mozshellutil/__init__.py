@@ -6,4 +6,5 @@
 """
 This module contains utilities for parsing and quoting shell command lines.
 """
+
 from .shellutil import *

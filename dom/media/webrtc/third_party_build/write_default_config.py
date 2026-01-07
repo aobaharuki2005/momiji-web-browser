@@ -220,6 +220,6 @@ if __name__ == "__main__":
     run_shell(
         f"{'git commit -m' if repo_type == RepoType.GIT else 'hg commit --message'} "
         f'"Bug {args.bug_number} - '
-        f'updated default_config_env for v{args.milestone+1}"'
+        f'updated default_config_env for v{args.milestone + 1}"'
         f" {args.output_path}"
     )

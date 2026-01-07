@@ -134,9 +134,10 @@ def test_one_entry(prepareRunTests, create_manifest):
         mock_os_makedirs.assert_called_once_with(".snap_firefox_current_real")
 
         opts = mock.Mock(pidFile="")  # so cleanup() does not check it
-        with mock.patch("os.path.exists") as mock_os_path_exists, mock.patch(
-            "shutil.rmtree"
-        ) as mock_shutil_rmtree:
+        with (
+            mock.patch("os.path.exists") as mock_os_path_exists,
+            mock.patch("shutil.rmtree") as mock_shutil_rmtree,
+        ):
             md.cleanup(opts, False)
             mock_os_path_exists.assert_called_once_with(".snap_firefox_current_real")
             mock_shutil_rmtree.assert_called_once_with(".snap_firefox_current_real")
@@ -144,9 +145,10 @@ def test_one_entry(prepareRunTests, create_manifest):
 
 def test_one_entry_already_exists(prepareRunTests, create_manifest):
     options = create_manifest_one(create_manifest)
-    with mock.patch(
-        "os.path.exists", return_value=True
-    ) as mock_os_path_exists, mock.patch("os.makedirs") as mock_os_makedirs:
+    with (
+        mock.patch("os.path.exists", return_value=True) as mock_os_path_exists,
+        mock.patch("os.makedirs") as mock_os_makedirs,
+    ):
         with pytest.raises(FileExistsError):
             _ = prepareRunTests(**options)
         mock_os_path_exists.assert_called_once_with(".snap_firefox_current_real")
@@ -158,60 +160,55 @@ def test_mult_entry(prepareRunTests, create_manifest):
     with mock.patch("os.makedirs") as mock_os_makedirs:
         md = prepareRunTests(**options)
         assert mock_os_makedirs.call_count == 2
-        mock_os_makedirs.assert_has_calls(
-            [
-                mock.call(".snap_firefox_current_real"),
-                mock.call(".snap_firefox_current_real2"),
-            ]
-        )
+        mock_os_makedirs.assert_has_calls([
+            mock.call(".snap_firefox_current_real"),
+            mock.call(".snap_firefox_current_real2"),
+        ])
 
         opts = mock.Mock(pidFile="")  # so cleanup() does not check it
-        with mock.patch("os.path.exists") as mock_os_path_exists, mock.patch(
-            "shutil.rmtree"
-        ) as mock_shutil_rmtree:
+        with (
+            mock.patch("os.path.exists") as mock_os_path_exists,
+            mock.patch("shutil.rmtree") as mock_shutil_rmtree,
+        ):
             md.cleanup(opts, False)
 
             assert mock_os_path_exists.call_count == 2
-            mock_os_path_exists.assert_has_calls(
-                [
-                    mock.call(".snap_firefox_current_real"),
-                    mock.call().__bool__(),
-                    mock.call(".snap_firefox_current_real2"),
-                    mock.call().__bool__(),
-                ]
-            )
+            mock_os_path_exists.assert_has_calls([
+                mock.call(".snap_firefox_current_real"),
+                mock.call().__bool__(),
+                mock.call(".snap_firefox_current_real2"),
+                mock.call().__bool__(),
+            ])
 
             assert mock_os_makedirs.call_count == 2
-            mock_shutil_rmtree.assert_has_calls(
-                [
-                    mock.call(".snap_firefox_current_real"),
-                    mock.call(".snap_firefox_current_real2"),
-                ]
-            )
+            mock_shutil_rmtree.assert_has_calls([
+                mock.call(".snap_firefox_current_real"),
+                mock.call(".snap_firefox_current_real2"),
+            ])
 
 
 def test_mult_entry_one_already_exists(prepareRunTests, create_manifest):
     options = create_manifest_mult(create_manifest)
-    with mock.patch(
-        "os.path.exists", side_effect=[True, False]
-    ) as mock_os_path_exists, mock.patch("os.makedirs") as mock_os_makedirs:
+    with (
+        mock.patch("os.path.exists", side_effect=[True, False]) as mock_os_path_exists,
+        mock.patch("os.makedirs") as mock_os_makedirs,
+    ):
         with pytest.raises(FileExistsError):
             _ = prepareRunTests(**options)
         mock_os_path_exists.assert_called_once_with(".snap_firefox_current_real")
         mock_os_makedirs.assert_not_called()
 
-    with mock.patch(
-        "os.path.exists", side_effect=[False, True]
-    ) as mock_os_path_exists, mock.patch("os.makedirs") as mock_os_makedirs:
+    with (
+        mock.patch("os.path.exists", side_effect=[False, True]) as mock_os_path_exists,
+        mock.patch("os.makedirs") as mock_os_makedirs,
+    ):
         with pytest.raises(FileExistsError):
             _ = prepareRunTests(**options)
         assert mock_os_path_exists.call_count == 2
-        mock_os_path_exists.assert_has_calls(
-            [
-                mock.call(".snap_firefox_current_real"),
-                mock.call(".snap_firefox_current_real2"),
-            ]
-        )
+        mock_os_path_exists.assert_has_calls([
+            mock.call(".snap_firefox_current_real"),
+            mock.call(".snap_firefox_current_real2"),
+        ])
         mock_os_makedirs.assert_not_called()
 
 

@@ -135,9 +135,7 @@ towrite = """
     }
   }
 }
-""".replace(
-    "TOKENHERE", phabricator_token
-).replace(
+""".replace("TOKENHERE", phabricator_token).replace(
     "PHAB_URL_HERE", phabricator_url + "api/"
 )
 arcrc.write(towrite)

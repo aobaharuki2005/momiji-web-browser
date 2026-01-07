@@ -215,18 +215,22 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
 
         # Ensure that we can access old versions of packages.
         if b"homebrew/cask-versions" not in known_taps:
-            subprocess.check_output(
-                [to_optional_str(self.brew), "tap", "homebrew/cask-versions"]
-            )
+            subprocess.check_output([
+                to_optional_str(self.brew),
+                "tap",
+                "homebrew/cask-versions",
+            ])
 
         # "caskroom/versions" has been renamed to "homebrew/cask-versions", so
         # it is safe to remove the old tap. Removing the old tap is necessary
         # to avoid the error "Cask [name of cask] exists in multiple taps".
         # See https://bugzilla.mozilla.org/show_bug.cgi?id=1544981
         if b"caskroom/versions" in known_taps:
-            subprocess.check_output(
-                [to_optional_str(self.brew), "untap", "caskroom/versions"]
-            )
+            subprocess.check_output([
+                to_optional_str(self.brew),
+                "untap",
+                "caskroom/versions",
+            ])
 
         self._ensure_homebrew_packages(casks, is_for_cask=True)
 

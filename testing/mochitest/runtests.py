@@ -150,21 +150,19 @@ class MessageLogger:
     # This is a delimiter used by the JS side to avoid logs interleaving
     DELIMITER = "\ue175\uee31\u2c32\uacbf"
     BUFFERED_ACTIONS = set(["test_status", "log"])
-    VALID_ACTIONS = set(
-        [
-            "suite_start",
-            "suite_end",
-            "group_start",
-            "group_end",
-            "test_start",
-            "test_end",
-            "test_status",
-            "log",
-            "assertion_count",
-            "buffering_on",
-            "buffering_off",
-        ]
-    )
+    VALID_ACTIONS = set([
+        "suite_start",
+        "suite_end",
+        "group_start",
+        "group_end",
+        "test_start",
+        "test_end",
+        "test_status",
+        "log",
+        "assertion_count",
+        "buffering_on",
+        "buffering_off",
+    ])
     # Regexes that will be replaced with an empty string if found in a test
     # name. We do this to normalize test names which may contain URLs and test
     # package prefixes.
@@ -536,9 +534,10 @@ class MochitestServer:
             env["LD_LIBRARY_PATH"] = ":".join([self._xrePath, env["LD_LIBRARY_PATH"]])
 
         if self._trainHop:
-            env["LD_LIBRARY_PATH"] = ":".join(
-                [os.path.join(os.path.dirname(here), "bin"), env["LD_LIBRARY_PATH"]]
-            )
+            env["LD_LIBRARY_PATH"] = ":".join([
+                os.path.join(os.path.dirname(here), "bin"),
+                env["LD_LIBRARY_PATH"],
+            ])
 
         # When running with an ASan build, our xpcshell server will also be ASan-enabled,
         # thus consuming too much resources when running together with the browser on
@@ -912,18 +911,16 @@ def findTestMediaDevices(log):
         gst = gst010
     else:
         gst = gst10
-    process = subprocess.Popen(
-        [
-            gst,
-            "--no-fault",
-            "videotestsrc",
-            "pattern=green",
-            "num-buffers=1",
-            "!",
-            "v4l2sink",
-            "device=%s" % device,
-        ]
-    )
+    process = subprocess.Popen([
+        gst,
+        "--no-fault",
+        "videotestsrc",
+        "pattern=green",
+        "num-buffers=1",
+        "!",
+        "v4l2sink",
+        "device=%s" % device,
+    ])
     info["video"] = {"name": name, "process": process}
     info["speaker"] = {"name": "44100Hz Null Output"}
     info["audio"] = {"name": "Monitor of {}".format(info["speaker"]["name"])}
@@ -3124,13 +3121,11 @@ toolbar#nav-bar {
         input_devices = []
         for i in range(1, INPUT_DEVICES_COUNT + 1):
             freq = i * DEVICES_BASE_FREQUENCY
-            input_devices.append(
-                {
-                    "name": f"sine-{freq}",
-                    "description": f"{freq}Hz Sine Source",
-                    "frequency": freq,
-                }
-            )
+            input_devices.append({
+                "name": f"sine-{freq}",
+                "description": f"{freq}Hz Sine Source",
+                "frequency": freq,
+            })
 
         # Determine if this is running PulseAudio or PipeWire
         # `pactl info` works on both systems, but when running on PipeWire it says
@@ -3272,8 +3267,9 @@ toolbar#nav-bar {
 
             except subprocess.CalledProcessError:
                 self.log.error(
-                    "Could not create device with module-sine-source"
-                    " (freq={})".format(device["frequency"])
+                    "Could not create device with module-sine-source (freq={})".format(
+                        device["frequency"]
+                    )
                 )
 
         self.virtualDeviceIdList = idList
@@ -3507,53 +3503,49 @@ toolbar#nav-bar {
         self.extraPrefs["fission.autostart"] = not options.disable_fission
 
         # for test manifest parsing.
-        mozinfo.update(
-            {
-                "a11y_checks": options.a11y_checks,
-                "e10s": options.e10s,
-                "fission": not options.disable_fission,
-                "headless": options.headless,
-                "http3": options.useHttp3Server,
-                "http2": options.useHttp2Server,
-                "inc_origin_init": os.environ.get("MOZ_ENABLE_INC_ORIGIN_INIT") == "1",
-                # Until the test harness can understand default pref values,
-                # (https://bugzilla.mozilla.org/show_bug.cgi?id=1577912) this value
-                # should by synchronized with the default pref value indicated in
-                # StaticPrefList.yaml.
-                #
-                # Currently for automation, the pref defaults to true (but can be
-                # overridden with --setpref).
-                "sessionHistoryInParent": not options.disable_fission
-                or not self.extraPrefs.get("fission.disableSessionHistoryInParent"),
-                "socketprocess_e10s": self.extraPrefs.get(
-                    "network.process.enabled", False
-                ),
-                "socketprocess_networking": self.extraPrefs.get(
-                    "network.http.network_access_on_socket_process.enabled", False
-                ),
-                "swgl": self.extraPrefs.get("gfx.webrender.software", False),
-                "verify": options.verify,
-                "verify_fission": options.verify_fission,
-                "vertical_tab": self.extraPrefs.get("sidebar.verticalTabs", False),
-                "webgl_ipc": self.extraPrefs.get("webgl.out-of-process", False),
-                "wmfme": (
-                    self.extraPrefs.get("media.wmf.media-engine.enabled", 0)
-                    and self.extraPrefs.get(
-                        "media.wmf.media-engine.channel-decoder.enabled", False
-                    )
-                ),
-                "mda_gpu": self.extraPrefs.get(
-                    "media.hardware-video-decoding.force-enabled", False
-                ),
-                "xorigin": options.xOriginTests,
-                "condprof": options.conditionedProfile,
-                "msix": "WindowsApps" in options.app,
-                "android": mozinfo.info.get("android", False),
-                "is_emulator": mozinfo.info.get("is_emulator", False),
-                "coverage": mozinfo.info.get("coverage", False),
-                "nogpu": mozinfo.info.get("nogpu", False),
-            }
-        )
+        mozinfo.update({
+            "a11y_checks": options.a11y_checks,
+            "e10s": options.e10s,
+            "fission": not options.disable_fission,
+            "headless": options.headless,
+            "http3": options.useHttp3Server,
+            "http2": options.useHttp2Server,
+            "inc_origin_init": os.environ.get("MOZ_ENABLE_INC_ORIGIN_INIT") == "1",
+            # Until the test harness can understand default pref values,
+            # (https://bugzilla.mozilla.org/show_bug.cgi?id=1577912) this value
+            # should by synchronized with the default pref value indicated in
+            # StaticPrefList.yaml.
+            #
+            # Currently for automation, the pref defaults to true (but can be
+            # overridden with --setpref).
+            "sessionHistoryInParent": not options.disable_fission
+            or not self.extraPrefs.get("fission.disableSessionHistoryInParent"),
+            "socketprocess_e10s": self.extraPrefs.get("network.process.enabled", False),
+            "socketprocess_networking": self.extraPrefs.get(
+                "network.http.network_access_on_socket_process.enabled", False
+            ),
+            "swgl": self.extraPrefs.get("gfx.webrender.software", False),
+            "verify": options.verify,
+            "verify_fission": options.verify_fission,
+            "vertical_tab": self.extraPrefs.get("sidebar.verticalTabs", False),
+            "webgl_ipc": self.extraPrefs.get("webgl.out-of-process", False),
+            "wmfme": (
+                self.extraPrefs.get("media.wmf.media-engine.enabled", 0)
+                and self.extraPrefs.get(
+                    "media.wmf.media-engine.channel-decoder.enabled", False
+                )
+            ),
+            "mda_gpu": self.extraPrefs.get(
+                "media.hardware-video-decoding.force-enabled", False
+            ),
+            "xorigin": options.xOriginTests,
+            "condprof": options.conditionedProfile,
+            "msix": "WindowsApps" in options.app,
+            "android": mozinfo.info.get("android", False),
+            "is_emulator": mozinfo.info.get("is_emulator", False),
+            "coverage": mozinfo.info.get("coverage", False),
+            "nogpu": mozinfo.info.get("nogpu", False),
+        })
 
         if not self.mozinfo_variables_shown:
             self.mozinfo_variables_shown = True
@@ -3773,8 +3765,7 @@ toolbar#nav-bar {
 
         if (valgrindArgs or valgrindSuppFiles) and not valgrindPath:
             self.log.error(
-                "Specified --valgrind-args or --valgrind-supp-files,"
-                " but not --valgrind"
+                "Specified --valgrind-args or --valgrind-supp-files, but not --valgrind"
             )
             return 1
 

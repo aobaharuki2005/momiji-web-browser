@@ -557,15 +557,13 @@ def write_interface(iface, fd):
     else:
         implclass = "_MYCLASS_"
 
-    names.update(
-        {
-            "defname": defname,
-            "macroname": iface.name.upper(),
-            "name": iface.name,
-            "iid": iface.attributes.uuid,
-            "implclass": implclass,
-        }
-    )
+    names.update({
+        "defname": defname,
+        "macroname": iface.name.upper(),
+        "name": iface.name,
+        "iid": iface.attributes.uuid,
+        "implclass": implclass,
+    })
 
     fd.write(iface_header % names)
 

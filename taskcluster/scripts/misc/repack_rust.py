@@ -191,9 +191,14 @@ def fetch(url, validate=True):
     if validate:
         log("Verifying %s..." % base)
         verify_sha(base, sha)
-        subprocess.check_call(
-            ["gpg", "--keyid-format", "0xlong", "--verify", base + ".asc", base]
-        )
+        subprocess.check_call([
+            "gpg",
+            "--keyid-format",
+            "0xlong",
+            "--verify",
+            base + ".asc",
+            base,
+        ])
     return sha
 
 
@@ -237,8 +242,7 @@ def fetch_package(manifest, pkg, host):
     sha = fetch(info["url"], info["hash"] is not None)
     if info["hash"] and sha != info["hash"]:
         log(
-            "Checksum mismatch: package resource is different from manifest"
-            "\n  %s" % sha
+            "Checksum mismatch: package resource is different from manifest\n  %s" % sha
         )
         raise AssertionError
     return info
@@ -507,24 +511,20 @@ def build_src(install_dir, host, targets, patches):
             shutil.copy(f"{clang_bin}/llvm-ml.exe", f"{tmpdir}/ml64.exe")
 
         env = os.environ.copy()
-        env.update(
-            {
-                "PATH": os.pathsep.join((tmpdir, clang_bin, os.environ["PATH"])),
-                "LD_LIBRARY_PATH": clang_lib,
-                "DESTDIR": install_dir,
-            }
-        )
+        env.update({
+            "PATH": os.pathsep.join((tmpdir, clang_bin, os.environ["PATH"])),
+            "LD_LIBRARY_PATH": clang_lib,
+            "DESTDIR": install_dir,
+        })
         if "msvc" in host:
             cmake_bin = os.path.join(fetches, "cmake", "bin")
             ninja_bin = os.path.join(fetches, "ninja", "bin")
-            env.update(
-                {
-                    "PATH": os.pathsep.join((env["PATH"], cmake_bin, ninja_bin)),
-                    "CC_x86_64_pc_windows_msvc": "clang-cl.bat",
-                    "CXX_x86_64_pc_windows_msvc": "clang-cl.bat",
-                    "AR_x86_64_pc_windows_msvc": "llvm-lib",
-                }
-            )
+            env.update({
+                "PATH": os.pathsep.join((env["PATH"], cmake_bin, ninja_bin)),
+                "CC_x86_64_pc_windows_msvc": "clang-cl.bat",
+                "CXX_x86_64_pc_windows_msvc": "clang-cl.bat",
+                "AR_x86_64_pc_windows_msvc": "llvm-lib",
+            })
 
         # x.py install does everything we need for us.
         # If you're running into issues, consider using `-vv` to debug it.

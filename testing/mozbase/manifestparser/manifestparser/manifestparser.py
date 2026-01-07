@@ -505,9 +505,9 @@ class ManifestParser:
                         if os.path.splitext(filename)[-1] in extensions
                     ]
 
-                files.update(
-                    [os.path.join(dirpath, filename) for filename in filenames]
-                )
+                files.update([
+                    os.path.join(dirpath, filename) for filename in filenames
+                ])
 
         paths = set(self.paths())
         missing_from_filesystem = paths.difference(files)
@@ -854,9 +854,9 @@ class ManifestParser:
                 filenames = [relpath(filename, relative_to) for filename in filenames]
 
             # write to manifest
-            write_content = "\n".join(
-                [f"[{denormalize_path(filename)}]" for filename in filenames]
-            )
+            write_content = "\n".join([
+                f"[{denormalize_path(filename)}]" for filename in filenames
+            ])
             print(write_content, file=write)
 
         cls._walk_directories(directories, callback, pattern=pattern, ignore=ignore)

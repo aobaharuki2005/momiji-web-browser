@@ -71,9 +71,11 @@ class PKCS12:
         self.key = pykey.keyFromSpecification("default")
 
     def toDER(self):
-        with NamedTemporaryFile(mode="wt+") as certTmp, NamedTemporaryFile(
-            mode="wt+"
-        ) as keyTmp, NamedTemporaryFile(mode="rb+") as pkcs12Tmp:
+        with (
+            NamedTemporaryFile(mode="wt+") as certTmp,
+            NamedTemporaryFile(mode="wt+") as keyTmp,
+            NamedTemporaryFile(mode="rb+") as pkcs12Tmp,
+        ):
             certTmp.write(self.cert.toPEM())
             certTmp.flush()
             keyTmp.write(self.key.toPEM())

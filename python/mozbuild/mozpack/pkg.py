@@ -130,11 +130,11 @@ def create_payload(destination: Path, root_path: Path, cpio_tool: str):
                     break
                 yield chunk
 
-        with tmp_payload_path.open("rb") as f_in, destination.open(
-            "wb"
-        ) as f_out, concurrent.futures.ThreadPoolExecutor(
-            max_workers=cpu_count()
-        ) as executor:
+        with (
+            tmp_payload_path.open("rb") as f_in,
+            destination.open("wb") as f_out,
+            concurrent.futures.ThreadPoolExecutor(max_workers=cpu_count()) as executor,
+        ):
             f_out.write(b"pbzx")
             f_out.write(struct.pack(">Q", PBZX_CHUNK_SIZE))
             chunks = chunker(f_in, PBZX_CHUNK_SIZE)
@@ -165,17 +165,15 @@ def create_bom(bom_path: Path, root_path: Path, mkbom_tool: Path):
         mkbom_tool: Path, mkbom tool Path
     """
     print(f"Creating BOM file from {root_path} to {bom_path}")
-    subprocess.check_call(
-        [
-            mkbom_tool,
-            "-u",
-            "0",
-            "-g",
-            "80",
-            str(root_path),
-            str(bom_path),
-        ]
-    )
+    subprocess.check_call([
+        mkbom_tool,
+        "-u",
+        "0",
+        "-g",
+        "80",
+        str(root_path),
+        str(bom_path),
+    ])
     print(f"Created BOM File size: {bom_path.stat().st_size // 1024}kb")
 
 
@@ -256,14 +254,12 @@ def create_pkg(
         root_path.mkdir(parents=True, exist_ok=True)
 
         # Copy files over
-        subprocess.check_call(
-            [
-                "cp",
-                "-R",
-                str(source_app),
-                str(root_path),
-            ]
-        )
+        subprocess.check_call([
+            "cp",
+            "-R",
+            str(source_app),
+            str(root_path),
+        ])
 
         # Count all files (innards + itself)
         file_count = len(list(source_app.glob("**/*"))) + 1

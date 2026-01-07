@@ -83,18 +83,19 @@ def test_perfdocs_generator_generate_perfdocs_metrics_pass(
             "perfdocs.framework_gatherers.RaptorGatherer.get_test_list"
         ) as m:
             m.return_value = sample_gatherer_result
-            with perfdocs_sample["config"].open("w") as f1, perfdocs_sample[
-                "config_metrics"
-            ].open("r") as f2:
+            with (
+                perfdocs_sample["config"].open("w") as f1,
+                perfdocs_sample["config_metrics"].open("r") as f2,
+            ):
                 # Overwrite content of config.yml with metrics config
                 f1.write(f2.read())
 
             verifier = Verifier(top_dir)
             verifier.validate_tree()
 
-            verifier._gatherer.framework_gatherers["raptor"]._descriptions = (
-                sample_test_list_result
-            )
+            verifier._gatherer.framework_gatherers[
+                "raptor"
+            ]._descriptions = sample_test_list_result
 
         generator = Generator(verifier, generate=True, workspace=top_dir)
         with temp_file(

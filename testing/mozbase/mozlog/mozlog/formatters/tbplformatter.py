@@ -61,9 +61,11 @@ class TbplFormatter(BaseFormatter):
         if subtract_context:
             count -= len(self.buffer)
         self.subtests_count = 0
-        return self._log(
-            {"level": "INFO", "message": "." * count, "component": component}
-        )
+        return self._log({
+            "level": "INFO",
+            "message": "." * count,
+            "component": component,
+        })
 
     @output_subtests
     def log(self, data):

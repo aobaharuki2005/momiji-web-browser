@@ -119,7 +119,7 @@ api = {
         "u16string",
         "u32string",
         "wstring",
-        "pmr::string" "pmr::u8string",
+        "pmr::stringpmr::u8string",
         "pmr::u16string",
         "pmr::u32string",
         "pmr::wstring",

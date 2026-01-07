@@ -43,8 +43,11 @@ def test_get_missing_xpi_msg(lint, paths):
 
 def test_xpi_missing_from_firefox_addons_tar(lint, paths):
     fixture_customizations = paths("with-missing-xpi.json")
-    with linter_module_mocks(), linter_class_mocks(
-        get_firefox_addons_tar_names=mock.Mock(return_value=list()),
+    with (
+        linter_module_mocks(),
+        linter_class_mocks(
+            get_firefox_addons_tar_names=mock.Mock(return_value=list()),
+        ),
     ):
         logger_mock = mock.Mock()
         lint(fixture_customizations, logger=logger_mock)
@@ -69,8 +72,11 @@ def test_xpi_all_found_in_firefox_addons_tar(lint, paths):
         }
     )
 
-    with linter_module_mocks(), linter_class_mocks(
-        get_firefox_addons_tar_names=get_tarnames_mock, read_json=read_json_mock
+    with (
+        linter_module_mocks(),
+        linter_class_mocks(
+            get_firefox_addons_tar_names=get_tarnames_mock, read_json=read_json_mock
+        ),
     ):
         logger_mock = mock.Mock()
         # Compute a fake condprof customization path, the content is
@@ -94,8 +100,9 @@ def test_lint_error_on_missing_or_invalid_firefoxaddons_fetch_task(
     read_json_mock = mock.Mock(return_value=dict())
     read_yaml_mock = mock.Mock(return_value=dict())
     # Verify that an explicit linter error is reported if the fetch task is not found.
-    with linter_module_mocks(), linter_class_mocks(
-        read_json=read_json_mock, read_yaml=read_yaml_mock
+    with (
+        linter_module_mocks(),
+        linter_class_mocks(read_json=read_json_mock, read_yaml=read_yaml_mock),
     ):
         logger_mock = mock.Mock()
         fixture_customizations = paths("fake-condprof-config.json")
@@ -162,11 +169,15 @@ def test_get_xpi_list_from_downloaded_tar(lint, paths):
 
     # Verify that when executed locally on a developer machine, the tar archive is downloaded
     # and the list of xpi files included in it returned by the helper method.
-    with tempfile.TemporaryDirectory() as tempdir, linter_module_mocks(
-        MOZ_AUTOMATION=0,
-        tempdir=tempdir,
-    ), linter_class_mocks(
-        download_firefox_addons_tar=download_firefox_addons_tar_mock,
+    with (
+        tempfile.TemporaryDirectory() as tempdir,
+        linter_module_mocks(
+            MOZ_AUTOMATION=0,
+            tempdir=tempdir,
+        ),
+        linter_class_mocks(
+            download_firefox_addons_tar=download_firefox_addons_tar_mock,
+        ),
     ):
         condprof_addons = importlib.import_module("condprof-addons")
         logger_mock = mock.Mock()
@@ -186,8 +197,9 @@ def test_get_xpi_list_from_downloaded_tar(lint, paths):
 def test_error_on_downloading_tar(requests_get_mock, lint, paths):
     # Verify that when executed locally and the tar archive fails to download
     # the linter does report an explicit linting error with the http error included.
-    with tempfile.TemporaryDirectory() as tempdir, linter_module_mocks(
-        MOZ_AUTOMATION=0, tempdir=tempdir
+    with (
+        tempfile.TemporaryDirectory() as tempdir,
+        linter_module_mocks(MOZ_AUTOMATION=0, tempdir=tempdir),
     ):
         condprof_addons = importlib.import_module("condprof-addons")
         logger_mock = mock.Mock()
@@ -218,8 +230,9 @@ def test_error_on_downloading_tar(requests_get_mock, lint, paths):
 def test_error_on_opening_tar(requests_get_mock, lint, paths):
     # Verify that when executed locally and the tar archive fails to open
     # the linter does report an explicit linting error with the tarfile error included.
-    with tempfile.TemporaryDirectory() as tempdir, linter_module_mocks(
-        MOZ_AUTOMATION=0, tempdir=tempdir
+    with (
+        tempfile.TemporaryDirectory() as tempdir,
+        linter_module_mocks(MOZ_AUTOMATION=0, tempdir=tempdir),
     ):
         condprof_addons = importlib.import_module("condprof-addons")
         logger_mock = mock.Mock()
@@ -261,11 +274,14 @@ def test_lint_all_customization_files_when_linting_browsertime_yml(
             "addons": {"an-extension": "http://localhost/ext/an-extension.xpi"}
         }
     )
-    with linter_module_mocks(
-        customizations_path="fake-customizations-dir",
-    ), linter_class_mocks(
-        get_firefox_addons_tar_names=get_tarnames_mock,
-        read_json=read_json_mock,
+    with (
+        linter_module_mocks(
+            customizations_path="fake-customizations-dir",
+        ),
+        linter_class_mocks(
+            get_firefox_addons_tar_names=get_tarnames_mock,
+            read_json=read_json_mock,
+        ),
     ):
         logger_mock = mock.Mock()
         importlib.import_module("condprof-addons")

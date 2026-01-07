@@ -323,13 +323,11 @@ def show_taskgraph(options):
     for param in parameters[:]:
         if isinstance(param, str) and os.path.isdir(param):
             parameters.remove(param)
-            parameters.extend(
-                [
-                    p.as_posix()
-                    for p in Path(param).iterdir()
-                    if p.suffix in (".yml", ".json")
-                ]
-            )
+            parameters.extend([
+                p.as_posix()
+                for p in Path(param).iterdir()
+                if p.suffix in (".yml", ".json")
+            ])
 
     logdir = None
     if len(parameters) > 1:

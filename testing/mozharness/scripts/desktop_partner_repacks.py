@@ -6,6 +6,7 @@
 
 This script manages Desktop partner repacks for beta/release builds.
 """
+
 import os
 import sys
 

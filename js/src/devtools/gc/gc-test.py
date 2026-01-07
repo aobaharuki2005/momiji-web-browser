@@ -150,7 +150,7 @@ if __name__ == "__main__":
         "--baseline",
         metavar="JSON_PATH",
         dest="baseline_path",
-        help="json file with baseline values to " "compare against",
+        help="json file with baseline values to compare against",
     )
 
     (OPTIONS, args) = op.parse_args()

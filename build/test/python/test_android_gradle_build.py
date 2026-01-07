@@ -186,13 +186,13 @@ def assert_all_task_statuses(objdir, acceptable_statuses, always_executed_tasks=
         actual_status = task.get("status")
 
         if task_name in always_executed_tasks:
-            assert (
-                actual_status == "EXECUTED"
-            ), f"Task {task_name} should always execute, got '{actual_status}'"
+            assert actual_status == "EXECUTED", (
+                f"Task {task_name} should always execute, got '{actual_status}'"
+            )
         else:
-            assert (
-                actual_status in acceptable_statuses
-            ), f"Task {task_name} had status '{actual_status}', expected one of {acceptable_statuses}"
+            assert actual_status in acceptable_statuses, (
+                f"Task {task_name} had status '{actual_status}', expected one of {acceptable_statuses}"
+            )
 
 
 def assert_ordered_task_outcomes(objdir, ordered_expected_task_statuses):
@@ -219,18 +219,18 @@ def assert_ordered_task_outcomes(objdir, ordered_expected_task_statuses):
     assert not missing_tasks, f"Tasks not found in build metrics: {missing_tasks}"
 
     # Check order matches expectation
-    assert (
-        task_order == expected_order
-    ), f"Task execution order mismatch. Expected: {expected_order}, Got: {task_order}"
+    assert task_order == expected_order, (
+        f"Task execution order mismatch. Expected: {expected_order}, Got: {task_order}"
+    )
 
     # Check statuses for each task
     task_lookup = {task.get("path"): task for task in metrics_tasks}
     for task_name, expected_status in ordered_expected_task_statuses:
         task_info = task_lookup[task_name]
         actual_status = task_info.get("status")
-        assert (
-            actual_status == expected_status
-        ), f"Task {task_name} had status '{actual_status}', expected '{expected_status}'"
+        assert actual_status == expected_status, (
+            f"Task {task_name} had status '{actual_status}', expected '{expected_status}'"
+        )
 
 
 def test_artifact_build(objdir, mozconfig, run_mach):

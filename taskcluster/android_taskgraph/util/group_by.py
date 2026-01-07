@@ -25,13 +25,11 @@ def component_grouping(config, tasks):
         and task.attributes.get("is_final_chunked_task", True)
     ]
     for (_, build_type), group_tasks in groups.items():
-        group_tasks.extend(
-            [
-                task
-                for task in tasks_for_all_components
-                if task.attributes.get("build-type") == build_type
-            ]
-        )
+        group_tasks.extend([
+            task
+            for task in tasks_for_all_components
+            if task.attributes.get("build-type") == build_type
+        ])
 
     return groups.values()
 

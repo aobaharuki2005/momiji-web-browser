@@ -58,11 +58,11 @@ def WebIDLTest(parser, harness):
 
     harness.ok(
         not nullableUnionType.isDistinguishableFrom(nullableIfaceType),
-        "Nullable type not distinguishable from union with nullable " "member type",
+        "Nullable type not distinguishable from union with nullable member type",
     )
     harness.ok(
         not nullableIfaceType.isDistinguishableFrom(nullableUnionType),
-        "Union with nullable member type not distinguishable from " "nullable type",
+        "Union with nullable member type not distinguishable from nullable type",
     )
 
     parser = parser.reset()

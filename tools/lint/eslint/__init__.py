@@ -69,9 +69,10 @@ def lint(paths, config, binary=None, fix=None, rules=[], setup=None, **lintargs)
     if not lintargs.get("formatonly", False):
         exclude_args = []
         for path in config.get("exclude", []):
-            exclude_args.extend(
-                ["--ignore-pattern", os.path.relpath(path, lintargs["root"])]
-            )
+            exclude_args.extend([
+                "--ignore-pattern",
+                os.path.relpath(path, lintargs["root"]),
+            ])
 
         for rule in rules:
             extra_args.extend(["--rule", rule])
@@ -188,15 +189,13 @@ def run(cmd_args, config):
             fixed = fixed + 1
 
         for err in errors:
-            err.update(
-                {
-                    "hint": err.get("fix"),
-                    "level": "error" if err["severity"] == 2 else "warning",
-                    "lineno": err.get("line") or 0,
-                    "path": obj["filePath"],
-                    "rule": err.get("ruleId"),
-                }
-            )
+            err.update({
+                "hint": err.get("fix"),
+                "level": "error" if err["severity"] == 2 else "warning",
+                "lineno": err.get("line") or 0,
+                "path": obj["filePath"],
+                "rule": err.get("ruleId"),
+            })
             results.append(result.from_config(config, **err))
 
     return {"results": results, "fixed": fixed}

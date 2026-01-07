@@ -57,12 +57,10 @@ RELEASE_PROMOTION_PROJECTS = {
     "try-comm-central",
 } | RELEASE_PROJECTS
 
-TEMPORARY_PROJECTS = set(
-    {
-        # When using a "Disposable Project Branch" you can specify your branch here. e.g.:
-        "oak",
-    }
-)
+TEMPORARY_PROJECTS = set({
+    # When using a "Disposable Project Branch" you can specify your branch here. e.g.:
+    "oak",
+})
 
 TRY_PROJECTS = {
     "staging-firefox",  # https://github.com/mozilla-releng/staging-firefox

@@ -34,23 +34,21 @@ VALID_BOOL_TYPES = {
 }
 
 VALID_TYPES = VALID_BOOL_TYPES.copy()
-VALID_TYPES.update(
-    {
-        "int32_t": "int32_t",
-        "uint32_t": "uint32_t",
-        "float": "float",
-        # These ones are defined in StaticPrefsBase.h.
-        "RelaxedAtomicInt32": "int32_t",
-        "RelaxedAtomicUint32": "uint32_t",
-        "ReleaseAcquireAtomicInt32": "int32_t",
-        "ReleaseAcquireAtomicUint32": "uint32_t",
-        "SequentiallyConsistentAtomicInt32": "int32_t",
-        "SequentiallyConsistentAtomicUint32": "uint32_t",
-        "AtomicFloat": "float",
-        "String": None,
-        "DataMutexString": "nsACString",
-    }
-)
+VALID_TYPES.update({
+    "int32_t": "int32_t",
+    "uint32_t": "uint32_t",
+    "float": "float",
+    # These ones are defined in StaticPrefsBase.h.
+    "RelaxedAtomicInt32": "int32_t",
+    "RelaxedAtomicUint32": "uint32_t",
+    "ReleaseAcquireAtomicInt32": "int32_t",
+    "ReleaseAcquireAtomicUint32": "uint32_t",
+    "SequentiallyConsistentAtomicInt32": "int32_t",
+    "SequentiallyConsistentAtomicUint32": "uint32_t",
+    "AtomicFloat": "float",
+    "String": None,
+    "DataMutexString": "nsACString",
+})
 
 # Map non-atomic C++ types to equivalent Rust types.
 RUST_TYPES = {

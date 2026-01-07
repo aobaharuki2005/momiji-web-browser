@@ -181,10 +181,9 @@ class BackendMakeFile:
             self.fh.write("NONRECURSIVE_TARGETS += export\n")
             self.fh.write("NONRECURSIVE_TARGETS_export += xpidl\n")
             self.fh.write(
-                "NONRECURSIVE_TARGETS_export_xpidl_DIRECTORY = "
-                "$(DEPTH)/xpcom/xpidl\n"
+                "NONRECURSIVE_TARGETS_export_xpidl_DIRECTORY = $(DEPTH)/xpcom/xpidl\n"
             )
-            self.fh.write("NONRECURSIVE_TARGETS_export_xpidl_TARGETS += " "export\n")
+            self.fh.write("NONRECURSIVE_TARGETS_export_xpidl_TARGETS += export\n")
 
         return self.fh.close()
 
@@ -1617,9 +1616,12 @@ class RecursiveMakeBackend(MakeBackend):
                         else:
                             install_manifest.add_pattern_link(f.srcdir, f, dest_dir)
                     elif isinstance(f, AbsolutePath):
-                        if not f.full_path.lower().endswith(
-                            (".dll", ".pdb", ".so", ".dylib")
-                        ):
+                        if not f.full_path.lower().endswith((
+                            ".dll",
+                            ".pdb",
+                            ".so",
+                            ".dylib",
+                        )):
                             raise Exception(
                                 "Absolute paths installed to FINAL_TARGET_FILES must"
                                 " only be shared libraries or associated debug"
@@ -1761,16 +1763,16 @@ class RecursiveMakeBackend(MakeBackend):
                 mozpath.join("$(DEPTH)", top_level),
                 make_quote(shell_quote("manifest %s" % path)),
             ]
-            rule.add_commands(
-                ["$(call py_action,buildlist %s,%s)" % (path, " ".join(args))]
-            )
+            rule.add_commands([
+                "$(call py_action,buildlist %s,%s)" % (path, " ".join(args))
+            ])
         args = [
             mozpath.join("$(DEPTH)", obj.path),
             make_quote(shell_quote(str(obj.entry))),
         ]
-        rule.add_commands(
-            ["$(call py_action,buildlist %s,%s)" % (obj.entry.path, " ".join(args))]
-        )
+        rule.add_commands([
+            "$(call py_action,buildlist %s,%s)" % (obj.entry.path, " ".join(args))
+        ])
         fragment.dump(backend_file.fh, removal_guard=False)
 
         self._no_skip["misc"].add(obj.relsrcdir)
@@ -1853,22 +1855,17 @@ class RecursiveMakeBackend(MakeBackend):
             basename = os.path.basename(source)
             sorted_nonstatic_ipdl_basenames.append(basename)
             rule = mk.create_rule([basename])
-            rule.add_dependencies(
-                [
-                    source,
-                    "backend.mk",
-                    "Makefile",
-                    "$(DEPTH)/config/autoconf.mk",
-                    "$(topsrcdir)/config/config.mk",
-                ]
-            )
-            rule.add_commands(
-                [
-                    "$(RM) $@",
-                    "$(call py_action,preprocessor $@,$(DEFINES) $(ACDEFINES) "
-                    "$< -o $@)",
-                ]
-            )
+            rule.add_dependencies([
+                source,
+                "backend.mk",
+                "Makefile",
+                "$(DEPTH)/config/autoconf.mk",
+                "$(topsrcdir)/config/config.mk",
+            ])
+            rule.add_commands([
+                "$(RM) $@",
+                "$(call py_action,preprocessor $@,$(DEFINES) $(ACDEFINES) $< -o $@)",
+            ])
 
         mk.add_statement(
             "ALL_IPDLSRCS := %s %s"
@@ -1943,25 +1940,20 @@ class RecursiveMakeBackend(MakeBackend):
         for source in sorted(webidls.all_preprocessed_sources()):
             basename = os.path.basename(source)
             rule = mk.create_rule([basename])
-            rule.add_dependencies(
-                [
-                    source,
-                    "backend.mk",
-                    "Makefile",
-                    "$(DEPTH)/config/autoconf.mk",
-                    "$(topsrcdir)/config/config.mk",
-                ]
-            )
-            rule.add_commands(
-                [
-                    # Remove the file before writing so bindings that go from
-                    # static to preprocessed don't end up writing to a symlink,
-                    # which would modify content in the source directory.
-                    "$(RM) $@",
-                    "$(call py_action,preprocessor $@,$(DEFINES) $(ACDEFINES) "
-                    "$< -o $@)",
-                ]
-            )
+            rule.add_dependencies([
+                source,
+                "backend.mk",
+                "Makefile",
+                "$(DEPTH)/config/autoconf.mk",
+                "$(topsrcdir)/config/config.mk",
+            ])
+            rule.add_commands([
+                # Remove the file before writing so bindings that go from
+                # static to preprocessed don't end up writing to a symlink,
+                # which would modify content in the source directory.
+                "$(RM) $@",
+                "$(call py_action,preprocessor $@,$(DEFINES) $(ACDEFINES) $< -o $@)",
+            ])
 
         self._add_unified_build_rules(
             mk,

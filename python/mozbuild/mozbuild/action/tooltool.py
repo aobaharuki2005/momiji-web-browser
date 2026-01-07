@@ -132,7 +132,7 @@ def retry(
     action_name = getattr(action, "__name__", action)
     if log_args and (args or kwargs):
         log_attempt_args = (
-            "retry: calling %s with args: %s," " kwargs: %s, attempt #%d",
+            "retry: calling %s with args: %s, kwargs: %s, attempt #%d",
             action_name,
             args,
             kwargs,
@@ -330,24 +330,22 @@ def normalize_string(
     port,
     content_hash,
 ):
-    return "\n".join(
-        [
-            normalize_header_attr(header)
-            # The blank lines are important. They follow what the Node Hawk lib does.
-            for header in [
-                "hawk." + str(HAWK_VER) + "." + mac_type,
-                timestamp,
-                nonce,
-                method or "",
-                name or "",
-                host,
-                port,
-                content_hash or "",
-                "",  # for ext which is empty in this case
-                "",  # Add trailing new line.
-            ]
+    return "\n".join([
+        normalize_header_attr(header)
+        # The blank lines are important. They follow what the Node Hawk lib does.
+        for header in [
+            "hawk." + str(HAWK_VER) + "." + mac_type,
+            timestamp,
+            nonce,
+            method or "",
+            name or "",
+            host,
+            port,
+            content_hash or "",
+            "",  # for ext which is empty in this case
+            "",  # Add trailing new line.
         ]
-    )
+    ])
 
 
 def calculate_mac(
@@ -888,9 +886,10 @@ def fetch_file(base_urls, file_record, grabchunk=1024 * 4, auth_file=None, regio
 
         # Well, the file doesn't exist locally.  Let's fetch it.
         try:
-            with request(url, auth_file) as f, builtins.open(
-                temp_path, mode="wb"
-            ) as out:
+            with (
+                request(url, auth_file) as f,
+                builtins.open(temp_path, mode="wb") as out,
+            ):
                 k = True
                 size = 0
                 while k:
@@ -984,9 +983,11 @@ class TarFile(tarfile.TarFile):
                     shutil.copy(source, targetpath)
                     self.chown(member, targetpath, numeric_owner)
                 else:
-                    deferred_links.setdefault(source, []).append(
-                        (member, targetpath, numeric_owner)
-                    )
+                    deferred_links.setdefault(source, []).append((
+                        member,
+                        targetpath,
+                        numeric_owner,
+                    ))
             return
 
         extract(member, path, set_attrs, numeric_owner=numeric_owner, **kwargs)
@@ -1637,8 +1638,7 @@ Supported commands are:
         default=False,
         dest="unpack",
         action="store_true",
-        help="Request unpacking this file after fetch."
-        " This is helpful with tarballs.",
+        help="Request unpacking this file after fetch. This is helpful with tarballs.",
     )
     parser.add_option(
         "--version",
@@ -1661,8 +1661,7 @@ Supported commands are:
         "--url",
         dest="base_url",
         action="append",
-        help="RelengAPI URL ending with /tooltool/; default "
-        "is appropriate for Mozilla",
+        help="RelengAPI URL ending with /tooltool/; default is appropriate for Mozilla",
     )
     parser.add_option(
         "-c", "--cache-folder", dest="cache_folder", help="Local cache folder"
@@ -1678,7 +1677,7 @@ Supported commands are:
     parser.add_option(
         "-r",
         "--region",
-        help="Preferred AWS region for upload or fetch; " "example: --region=us-west-2",
+        help="Preferred AWS region for upload or fetch; example: --region=us-west-2",
     )
     parser.add_option(
         "--message",

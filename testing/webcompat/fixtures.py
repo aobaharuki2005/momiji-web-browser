@@ -219,11 +219,9 @@ async def test_failed_check(request):
         and request.node.rep_call.failed
     ):
         session = request.node.funcargs["session"]
-        file_name = f'{request.node.nodeid}_failure_{datetime.today().strftime("%Y-%m-%d_%H:%M")}.png'.replace(
+        file_name = f"{request.node.nodeid}_failure_{datetime.today().strftime('%Y-%m-%d_%H:%M')}.png".replace(
             "/", "_"
-        ).replace(
-            "::", "__"
-        )
+        ).replace("::", "__")
         dest_dir = request.config.getoption("failure_screenshots_dir")
         try:
             await take_screenshot(session, file_name, dest_dir=dest_dir)
@@ -328,13 +326,11 @@ def install_addon(session, addon_file_path):
 @pytest.fixture(scope="function")
 async def session(driver, request, test_config):
     caps = driver.capabilities(request, test_config)
-    caps.update(
-        {
-            "acceptInsecureCerts": True,
-            "webSocketUrl": True,
-            "unhandledPromptBehavior": "dismiss",
-        }
-    )
+    caps.update({
+        "acceptInsecureCerts": True,
+        "webSocketUrl": True,
+        "unhandledPromptBehavior": "dismiss",
+    })
     caps = {"alwaysMatch": caps}
     print(caps)
 

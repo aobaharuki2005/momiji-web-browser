@@ -31,11 +31,15 @@ def test_post_to_iodide(ptnb, standarized_data, analysis):
     def mocked_open(self, *args, **kwargs):
         return opener(self, *args, **kwargs)
 
-    with mock.patch.object(Path, "open", mocked_open), mock.patch(
-        "mozperftest.metrics.notebook.perftestnotebook.webbrowser.open_new_tab"
-    ) as browser, mock.patch(
-        "mozperftest.metrics.notebook.perftestnotebook.HTTPServer"
-    ) as server:
+    with (
+        mock.patch.object(Path, "open", mocked_open),
+        mock.patch(
+            "mozperftest.metrics.notebook.perftestnotebook.webbrowser.open_new_tab"
+        ) as browser,
+        mock.patch(
+            "mozperftest.metrics.notebook.perftestnotebook.HTTPServer"
+        ) as server,
+    ):
         ptnb.post_to_iodide(analysis=analysis)
 
         list_of_calls = opener.mock_calls
@@ -66,9 +70,10 @@ def test_post_to_iodide(ptnb, standarized_data, analysis):
             assert list_of_calls.count(mock.call().__enter__()) == 3
 
         browser.assert_called_with(str(upload_file_path))
-        server.assert_has_calls(
-            [mock.call().serve_forever(), mock.call().server_close()]
-        )
+        server.assert_has_calls([
+            mock.call().serve_forever(),
+            mock.call().server_close(),
+        ])
 
 
 if __name__ == "__main__":

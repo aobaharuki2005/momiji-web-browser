@@ -1,7 +1,7 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
-""" Smoke test script for Fuzzing
+"""Smoke test script for Fuzzing
 
 This script can be used to perform simple calls using `jsshell`
 or whatever other tools you may add.
@@ -15,6 +15,7 @@ Everything included in this directory will be added in
 tools if you need. They will be located in `$MOZ_FETCHES_DIR` and follow the
 same directory structure than the source tree.
 """
+
 import os
 import os.path
 import shlex

@@ -59,13 +59,11 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
             )
 
             for ext in my_file_extensions:
-                files.extend(
-                    [
-                        f"{f}.{ext}"
-                        for f in base_names
-                        if f and f.endswith("-proto") == is_v4
-                    ]
-                )
+                files.extend([
+                    f"{f}.{ext}"
+                    for f in base_names
+                    if f and f.endswith("-proto") == is_v4
+                ])
 
         return set(sorted(files))
 
@@ -77,11 +75,9 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
             f.startswith("goog-") or f.startswith("googpub-")
             for f in self.safebrowsing_shavar_files
         ):
-            self.prefs_provider_update_time.update(
-                {
-                    "browser.safebrowsing.provider.google.nextupdatetime": 1,
-                }
-            )
+            self.prefs_provider_update_time.update({
+                "browser.safebrowsing.provider.google.nextupdatetime": 1,
+            })
 
         # if V5 is enabled, we use the V5 update time to determine if the files
         # have been downloaded. Otherwise, we use the V4 update time.
@@ -95,17 +91,13 @@ class TestSafeBrowsingInitialDownload(MarionetteTestCase):
             for f in self.safebrowsing_protobuf_files
         ):
             if is_safebrowsing_v5_enabled:
-                self.prefs_provider_update_time.update(
-                    {
-                        "browser.safebrowsing.provider.google5.nextupdatetime": 1,
-                    }
-                )
+                self.prefs_provider_update_time.update({
+                    "browser.safebrowsing.provider.google5.nextupdatetime": 1,
+                })
             else:
-                self.prefs_provider_update_time.update(
-                    {
-                        "browser.safebrowsing.provider.google4.nextupdatetime": 1,
-                    }
-                )
+                self.prefs_provider_update_time.update({
+                    "browser.safebrowsing.provider.google4.nextupdatetime": 1,
+                })
 
         # Force the preferences for the new profile
         enforce_prefs = self.prefs_safebrowsing

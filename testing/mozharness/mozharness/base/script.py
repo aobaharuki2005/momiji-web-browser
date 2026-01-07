@@ -2248,7 +2248,7 @@ class BaseScript(ScriptMixin, LogMixin):
         )
         cfg_files_dump_config["not_from_cfg_file"] = not_from_file_dict
         self.action_message(
-            "Not from any config file (default_config, " "cmd line options, etc)"
+            "Not from any config file (default_config, cmd line options, etc)"
         )
         self.info(pprint.pformat(not_from_file_dict))
 
@@ -2396,16 +2396,14 @@ class BaseScript(ScriptMixin, LogMixin):
                 start = time.monotonic()
                 self.run_action(action)
                 end = time.monotonic()
-                perfherder_data["suites"].append(
-                    {
-                        "name": action,
-                        "value": end - start,
-                        "lowerIsBetter": True,
-                        "unit": "s",
-                        "shouldAlert": False,
-                        "subtests": [],
-                    }
-                )
+                perfherder_data["suites"].append({
+                    "name": action,
+                    "value": end - start,
+                    "lowerIsBetter": True,
+                    "unit": "s",
+                    "shouldAlert": False,
+                    "subtests": [],
+                })
         except Exception:
             self.fatal("Uncaught exception: %s" % traceback.format_exc())
         finally:

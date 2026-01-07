@@ -55,9 +55,11 @@ def test_shell_script_metric_parsing():
 def test_shell_script(
     mocked_mozprocess, mocked_metrics, mocked_temp_dir, on_try_setting
 ):
-    with mock.patch(
-        "mozperftest.test.shellscript.ON_TRY", new=on_try_setting
-    ), temp_dir() as tmp_output_dir, temp_dir() as tmp_testing_dir:
+    with (
+        mock.patch("mozperftest.test.shellscript.ON_TRY", new=on_try_setting),
+        temp_dir() as tmp_output_dir,
+        temp_dir() as tmp_testing_dir,
+    ):
         mach_cmd, metadata, env = running_env(
             app="firefox", tests=[str(EXAMPLE_SHELL_TEST)], output=tmp_output_dir
         )

@@ -330,22 +330,20 @@ class ConfigureSandbox(dict):
 
     # Expose a limited set of functions from os.path
     OS = ReadOnlyNamespace(
-        path=ReadOnlyNamespace(
-            **{
-                k: getattr(mozpath, k, getattr(os.path, k))
-                for k in (
-                    "abspath",
-                    "basename",
-                    "dirname",
-                    "isabs",
-                    "join",
-                    "normcase",
-                    "normpath",
-                    "realpath",
-                    "relpath",
-                )
-            }
-        )
+        path=ReadOnlyNamespace(**{
+            k: getattr(mozpath, k, getattr(os.path, k))
+            for k in (
+                "abspath",
+                "basename",
+                "dirname",
+                "isabs",
+                "join",
+                "normcase",
+                "normpath",
+                "realpath",
+                "relpath",
+            )
+        })
     )
 
     def __init__(
@@ -708,7 +706,7 @@ class ConfigureSandbox(dict):
                 raise ConfigureError("Option must not contain an '='")
             if name not in self._options:
                 raise ConfigureError(
-                    "'%s' is not a known option. " "Maybe it's declared too late?" % arg
+                    "'%s' is not a known option. Maybe it's declared too late?" % arg
                 )
             arg = self._options[name]
             self._seen.add(arg)
@@ -833,8 +831,7 @@ class ConfigureSandbox(dict):
         for c in conditions:
             if c != when:
                 raise ConfigureError(
-                    "@depends function needs the same `when` "
-                    "as options it depends on"
+                    "@depends function needs the same `when` as options it depends on"
                 )
 
         def decorator(func):
@@ -1088,7 +1085,7 @@ class ConfigureSandbox(dict):
             raise TypeError("Unexpected type: '%s'" % type(name).__name__)
         if name in data:
             raise ConfigureError(
-                "Cannot add '%s' to configuration: Key already " "exists" % name
+                "Cannot add '%s' to configuration: Key already exists" % name
             )
         value = self._resolve(value)
         if value is not None:
@@ -1108,9 +1105,10 @@ class ConfigureSandbox(dict):
         """
         when = self._normalize_when(when, "set_config")
 
-        self._execution_queue.append(
-            (self._resolve_and_set, (self._config, name, value, when))
-        )
+        self._execution_queue.append((
+            self._resolve_and_set,
+            (self._config, name, value, when),
+        ))
 
     def set_define_impl(self, name, value, when=None):
         """Implementation of set_define().
@@ -1123,9 +1121,10 @@ class ConfigureSandbox(dict):
         when = self._normalize_when(when, "set_define")
 
         defines = self._config.setdefault("DEFINES", {})
-        self._execution_queue.append(
-            (self._resolve_and_set, (defines, name, value, when))
-        )
+        self._execution_queue.append((
+            self._resolve_and_set,
+            (defines, name, value, when),
+        ))
 
     def imply_option_impl(self, option, value, reason=None, when=None):
         """Implementation of imply_option().

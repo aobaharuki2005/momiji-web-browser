@@ -20,7 +20,6 @@ None of the instances (or the underlying caches) are safe for concurrent use.
 A future need, perhaps.
 """
 
-
 import binascii
 import hashlib
 import logging

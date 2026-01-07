@@ -19,13 +19,11 @@ def inline(doc):
 
 # Each list element represents a window of tabs loaded at
 # some testing URL
-DEFAULT_WINDOWS = set(
-    [
-        # Window 1. Note the comma after the inline call -
-        # this is Python's way of declaring a 1 item tuple.
-        (inline("""<div">Lorem</div>"""), inline("""<div">Ipsum</div>""")),
-    ]
-)
+DEFAULT_WINDOWS = set([
+    # Window 1. Note the comma after the inline call -
+    # this is Python's way of declaring a 1 item tuple.
+    (inline("""<div">Lorem</div>"""), inline("""<div">Ipsum</div>""")),
+])
 
 
 class TestAutoRestoreWithTabGroups(SessionStoreTestCase):

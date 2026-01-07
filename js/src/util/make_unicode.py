@@ -571,15 +571,13 @@ def process_special_casing(special_casing, table, index):
     )
 
     # Ensure all case mapping contexts are known (see Unicode 9.0, §3.13 Default Case Algorithms).
-    assert set(
-        [
-            "After_I",
-            "After_Soft_Dotted",
-            "Final_Sigma",
-            "More_Above",
-            "Not_Before_Dot",
-        ]
-    ).issuperset(
+    assert set([
+        "After_I",
+        "After_Soft_Dotted",
+        "Final_Sigma",
+        "More_Above",
+        "Not_Before_Dot",
+    ]).issuperset(
         set(
             filter(
                 partial(is_not, None),
@@ -1442,15 +1440,20 @@ def update_unicode(args):
         pat_version = re.compile(r"# %s-(?P<version>\d+\.\d+\.\d+).txt" % fname)
         return pat_version.match(f.readline()).group("version")
 
-    with open(
-        os.path.join(base_path, "UnicodeData.txt"), encoding="utf-8"
-    ) as unicode_data, open(
-        os.path.join(base_path, "CaseFolding.txt"), encoding="utf-8"
-    ) as case_folding, open(
-        os.path.join(base_path, "DerivedCoreProperties.txt"), encoding="utf-8"
-    ) as derived_core_properties, open(
-        os.path.join(base_path, "SpecialCasing.txt"), encoding="utf-8"
-    ) as special_casing:
+    with (
+        open(
+            os.path.join(base_path, "UnicodeData.txt"), encoding="utf-8"
+        ) as unicode_data,
+        open(
+            os.path.join(base_path, "CaseFolding.txt"), encoding="utf-8"
+        ) as case_folding,
+        open(
+            os.path.join(base_path, "DerivedCoreProperties.txt"), encoding="utf-8"
+        ) as derived_core_properties,
+        open(
+            os.path.join(base_path, "SpecialCasing.txt"), encoding="utf-8"
+        ) as special_casing,
+    ):
         unicode_version = version_from_file(
             derived_core_properties, "DerivedCoreProperties"
         )

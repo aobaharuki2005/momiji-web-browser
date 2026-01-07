@@ -5,6 +5,7 @@
 """
 Module to handle Gecko profiling.
 """
+
 import json
 import os
 import tempfile
@@ -115,32 +116,30 @@ class GeckoProfile(RaptorProfiling):
                 LOG.error("No profiles collected")
             return
 
-        symbolicator = ProfileSymbolicator(
-            {
-                # Trace-level logging (verbose)
-                "enableTracing": 0,
-                # Fallback server if symbol is not found locally
-                "remoteSymbolServer": "https://symbolication.services.mozilla.com/symbolicate/v4",
-                # Maximum number of symbol files to keep in memory
-                "maxCacheEntries": 2000000,
-                # Frequency of checking for recent symbols to
-                # cache (in hours)
-                "prefetchInterval": 12,
-                # Oldest file age to prefetch (in hours)
-                "prefetchThreshold": 48,
-                # Maximum number of library versions to pre-fetch
-                # per library
-                "prefetchMaxSymbolsPerLib": 3,
-                # Default symbol lookup directories
-                "defaultApp": "FIREFOX",
-                "defaultOs": "WINDOWS",
-                # Paths to .SYM files, expressed internally as a
-                # mapping of app or platform names to directories
-                # Note: App & OS names from requests are converted
-                # to all-uppercase internally
-                "symbolPaths": self.symbol_paths,
-            }
-        )
+        symbolicator = ProfileSymbolicator({
+            # Trace-level logging (verbose)
+            "enableTracing": 0,
+            # Fallback server if symbol is not found locally
+            "remoteSymbolServer": "https://symbolication.services.mozilla.com/symbolicate/v4",
+            # Maximum number of symbol files to keep in memory
+            "maxCacheEntries": 2000000,
+            # Frequency of checking for recent symbols to
+            # cache (in hours)
+            "prefetchInterval": 12,
+            # Oldest file age to prefetch (in hours)
+            "prefetchThreshold": 48,
+            # Maximum number of library versions to pre-fetch
+            # per library
+            "prefetchMaxSymbolsPerLib": 3,
+            # Default symbol lookup directories
+            "defaultApp": "FIREFOX",
+            "defaultOs": "WINDOWS",
+            # Paths to .SYM files, expressed internally as a
+            # mapping of app or platform names to directories
+            # Note: App & OS names from requests are converted
+            # to all-uppercase internally
+            "symbolPaths": self.symbol_paths,
+        })
 
         if self.raptor_config.get("symbols_path") is not None:
             if mozfile.is_url(self.raptor_config["symbols_path"]):

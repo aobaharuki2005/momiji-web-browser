@@ -16,7 +16,7 @@ from mozbuild.util import ReadOnlyNamespace
 
 class IndexSearch:
     def should_replace_task(self, task, *args):
-        return f'fake-task-id-for-{task["index"][0]}'
+        return f"fake-task-id-for-{task['index'][0]}"
 
 
 class TestBootstrap(BaseConfigureTest):

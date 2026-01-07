@@ -138,9 +138,9 @@ class AndroidProfileRun(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         """
         Install APKs on the device.
         """
-        assert (
-            self.installer_path is not None
-        ), "Either add installer_path to the config or use --installer-path."
+        assert self.installer_path is not None, (
+            "Either add installer_path to the config or use --installer-path."
+        )
         self.install_android_app(self.installer_path)
         self.info("Finished installing apps for %s" % self.device_serial)
 
