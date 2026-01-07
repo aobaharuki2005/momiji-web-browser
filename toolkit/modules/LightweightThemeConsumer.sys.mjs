@@ -241,14 +241,19 @@ export function LightweightThemeConsumer(aDocument) {
   this.forcedColorsMediaQuery = this._win.matchMedia("(forced-colors)");
   this.forcedColorsMediaQuery.addListener(this);
 
-  this._aiWindowObserver = new this._win.MutationObserver(() => {
-    this.toggleAIWindowMode(this._win);
-  });
-  this._aiWindowObserver.observe(this._doc.documentElement, {
-    attributeFilter: ["ai-window"],
-  });
+  const manager = lazy.LightweightThemeManager;
+  const theme =
+    this._isAIWindow && manager.aiThemeData
+      ? manager.aiThemeData
+      : manager.themeData;
 
-  this._update(lazy.LightweightThemeManager.themeData);
+  this._update(theme);
+
+  if (this._isAIWindow && !manager.aiThemeData) {
+    manager.promiseAIThemeData().then(() => {
+      this._update(manager.aiThemeData);
+    });
+  }
 
   this._win.addEventListener("unload", this, { once: true });
 }
@@ -284,8 +289,6 @@ LightweightThemeConsumer.prototype = {
       case "unload":
         Services.obs.removeObserver(this, "lightweight-theme-styling-update");
         Services.ppmm.sharedData.delete(`theme/${this._winId}`);
-        this._aiWindowObserver?.disconnect();
-        this._aiWindowObserver = null;
         this._win = this._doc = null;
         this.darkThemeMediaQuery?.removeListener(this);
         this.darkThemeMediaQuery = null;
@@ -296,18 +299,6 @@ LightweightThemeConsumer.prototype = {
   },
 
   _update(themeData) {
-    if (this._isAIWindow) {
-      const manager = lazy.LightweightThemeManager;
-      if (manager.aiThemeData) {
-        themeData = manager.aiThemeData;
-      } else {
-        manager.promiseAIThemeData().then(() => {
-          if (this._isAIWindow) {
-            this._update(manager.aiThemeData);
-          }
-        });
-      }
-    }
     this._lastData = themeData;
 
     let supportsDarkTheme =
@@ -338,10 +329,6 @@ LightweightThemeConsumer.prototype = {
       updateGlobalThemeData = false;
       return true;
     })();
-
-    if (this._isAIWindow) {
-      updateGlobalThemeData = false;
-    }
 
     let theme = useDarkTheme ? themeData.darkTheme : themeData.theme;
     let forcedColorsThemeOverride =
@@ -506,11 +493,6 @@ LightweightThemeConsumer.prototype = {
       this._doc.head.appendChild(stylesheet);
       this._lastExperimentData.stylesheet = stylesheet;
     }
-  },
-
-  toggleAIWindowMode(win) {
-    this._isAIWindow = win.document.documentElement.hasAttribute("ai-window");
-    this._update(lazy.LightweightThemeManager.themeData);
   },
 };
 
