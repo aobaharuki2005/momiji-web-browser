@@ -398,22 +398,6 @@ mscom-init:
             - '**/*.rs'
             - 'tools/lint/mscom-init.yml'
 
-py-black:
-    description: black run over the gecko codebase
-    treeherder:
-        symbol: py(black)
-    run:
-        mach: lint -v -l black -f treeherder -f json:/builds/worker/mozlint.json .
-    when:
-        files-changed:
-            # The list of extensions should match tools/lint/black.yml
-            - '**/*.py'
-            - '**/moz.build'
-            - '**/*.configure'
-            - '**/*.mozbuild'
-            - 'pyproject.toml'
-            - 'tools/lint/black.yml'
-
 py-ruff:
     description: Run ruff over the gecko codebase
     treeherder:

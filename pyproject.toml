@@ -20,7 +20,7 @@ lint.ignore = [
   "PLC0206",   # dict-index-missing-items
   "PLC0415",   # `import` should be at the top-level of a file
 
-  # These are handled by black.
+  # These are handled by ruff format.
   "E1", "E4", "E5", "W2", "W5",
 ]
 builtins = ["gdb"]
