@@ -466,9 +466,11 @@ check_and_add_linker_flag("-Wl,-Bsymbolic", when=check_Bsymbolic)
 @imports("os")
 @imports(_from="__builtin__", _import="open")
 def expand_libs_list_style(c_compiler, link, linker_flags, extra_flags):
-    with create_temporary_file(suffix=".o") as objname, create_temporary_file(
-        suffix=".list"
-    ) as listname, create_temporary_file(suffix=".out") as outname:
+    with (
+        create_temporary_file(suffix=".o") as objname,
+        create_temporary_file(suffix=".list") as listname,
+        create_temporary_file(suffix=".out") as outname,
+    ):
         with open(listname, "w") as fd:
             fd.write(objname)
 

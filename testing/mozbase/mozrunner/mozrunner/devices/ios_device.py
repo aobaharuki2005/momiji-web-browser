@@ -41,23 +41,21 @@ def verify_ios_device(
             # FIXME: This should probably be happening as a build step, rather
             # than happening during verify_ios_device!
             print("Packaging GeckoTestBrowser...")
-            subprocess.check_call(
-                [
-                    "xcodebuild",
-                    "-project",
-                    os.path.join(
-                        build_obj.topsrcdir,
-                        "mobile/ios/GeckoTestBrowser/GeckoTestBrowser.xcodeproj",
-                    ),
-                    "-scheme",
-                    "GeckoTestBrowser",
-                    "-destination",
-                    device.xcode_destination_specifier(),
-                    "install",
-                    "DSTROOT=" + build_obj.distdir,
-                    "TOPOBJDIR=" + build_obj.topobjdir,
-                ]
-            )
+            subprocess.check_call([
+                "xcodebuild",
+                "-project",
+                os.path.join(
+                    build_obj.topsrcdir,
+                    "mobile/ios/GeckoTestBrowser/GeckoTestBrowser.xcodeproj",
+                ),
+                "-scheme",
+                "GeckoTestBrowser",
+                "-destination",
+                device.xcode_destination_specifier(),
+                "install",
+                "DSTROOT=" + build_obj.distdir,
+                "TOPOBJDIR=" + build_obj.topobjdir,
+            ])
 
             print("Installing GeckoTestBrowser...")
             device.install(

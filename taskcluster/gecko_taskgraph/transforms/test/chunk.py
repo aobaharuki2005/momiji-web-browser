@@ -283,9 +283,9 @@ def split_chunks(config, tasks):
                 and manifests["active"]
                 and "skipped" in manifests
             ):
-                chunked_manifests[0].extend(
-                    [m for m in manifests["skipped"] if not m.endswith(".list")]
-                )
+                chunked_manifests[0].extend([
+                    m for m in manifests["skipped"] if not m.endswith(".list")
+                ])
         last_chunk = task["chunks"]
         for i in range(task["chunks"]):
             this_chunk = i + 1

@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-"""Python environment for Windows a11y browser tests.
-"""
+"""Python environment for Windows a11y browser tests."""
 
 import ctypes
 import os

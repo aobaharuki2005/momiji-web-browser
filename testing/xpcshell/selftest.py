@@ -1494,9 +1494,9 @@ add_test({
         Check that the manifest entry overrides the explicit default.
         """
         self.writeFile("test_notHeadlessWhenFalseInManifest.js", HEADLESS_FALSE)
-        self.writeManifest(
-            [("test_notHeadlessWhenFalseInManifest.js", "headless = false")]
-        )
+        self.writeManifest([
+            ("test_notHeadlessWhenFalseInManifest.js", "headless = false")
+        ])
         self.assertTestResult(True, headless=True)
 
 

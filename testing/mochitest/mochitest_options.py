@@ -84,7 +84,7 @@ def strtobool(value: str):
     if value in false_vals:
         return 0
 
-    raise ValueError(f'Expected one of: {", ".join(true_vals + false_vals)}')
+    raise ValueError(f"Expected one of: {', '.join(true_vals + false_vals)}")
 
 
 def get_default_valgrind_suppression_files():
@@ -1217,7 +1217,7 @@ class MochitestArguments(ArgumentContainer):
 
             if not pactl:
                 parser.error(
-                    "Missing binary pactl required for " "--use-test-media-devices"
+                    "Missing binary pactl required for --use-test-media-devices"
                 )
 
         # The a11y and chrome flavors can't run with e10s.

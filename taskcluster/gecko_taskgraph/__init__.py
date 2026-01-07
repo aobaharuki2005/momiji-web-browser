@@ -32,16 +32,14 @@ tc_util.PRODUCTION_TASKCLUSTER_ROOT_URL = "https://firefox-ci-tc.services.mozill
 # Schemas for YAML files should use dashed identifiers by default. If there are
 # components of the schema for which there is a good reason to use another format,
 # exceptions can be added here.
-schema.EXCEPTED_SCHEMA_IDENTIFIERS.extend(
-    [
-        "test_name",
-        "json_location",
-        "video_location",
-        "profile_name",
-        "target_path",
-        "try_task_config",
-    ]
-)
+schema.EXCEPTED_SCHEMA_IDENTIFIERS.extend([
+    "test_name",
+    "json_location",
+    "video_location",
+    "profile_name",
+    "target_path",
+    "try_task_config",
+])
 
 # TODO: These are temporarily redefined in gecko_taskgraph. Remove them from
 # upstream until they can be consolidated.

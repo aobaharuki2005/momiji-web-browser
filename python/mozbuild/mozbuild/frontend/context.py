@@ -495,13 +495,11 @@ class LinkFlags(BaseCompileFlags):
 
         # TODO: This is pretty convoluted, and isn't really a per-context thing,
         # configure would be a better place to aggregate these.
-        if all(
-            [
-                self._context.config.substs.get("OS_ARCH") == "WINNT",
-                self._context.config.substs.get("CC_TYPE") == "clang-cl",
-                not self._context.config.substs.get("MOZ_DEBUG"),
-            ]
-        ):
+        if all([
+            self._context.config.substs.get("OS_ARCH") == "WINNT",
+            self._context.config.substs.get("CC_TYPE") == "clang-cl",
+            not self._context.config.substs.get("MOZ_DEBUG"),
+        ]):
             if self._context.config.substs.get("MOZ_OPTIMIZE"):
                 flags.append("-OPT:REF,ICF")
 
@@ -540,7 +538,7 @@ class TargetCompileFlags(BaseCompileFlags):
     def __setitem__(self, key, value):
         if key not in self._known_keys:
             raise ValueError(
-                "Invalid value. `%s` is not a compile flags " "category." % key
+                "Invalid value. `%s` is not a compile flags category." % key
             )
         if key in self and self[key] is None:
             raise ValueError(
@@ -1190,9 +1188,12 @@ SchedulingComponents = ContextDerivedTypedRecord(
     ("exclusive", TypedList(str, StrictOrderingOnAppendList)),
 )
 
-GeneratedFilesList = StrictOrderingOnAppendListWithFlagsFactory(
-    {"script": str, "inputs": list, "force": bool, "flags": list}
-)
+GeneratedFilesList = StrictOrderingOnAppendListWithFlagsFactory({
+    "script": str,
+    "inputs": list,
+    "force": bool,
+    "flags": list,
+})
 
 
 class Files(SubContext):
@@ -2359,17 +2360,15 @@ VARIABLES = {
         """,
     ),
     "GYP_DIRS": (
-        StrictOrderingOnAppendListWithFlagsFactory(
-            {
-                "variables": dict,
-                "input": str,
-                "sandbox_vars": dict,
-                "no_chromium": bool,
-                "no_unified": bool,
-                "non_unified_sources": StrictOrderingOnAppendList,
-                "action_overrides": dict,
-            }
-        ),
+        StrictOrderingOnAppendListWithFlagsFactory({
+            "variables": dict,
+            "input": str,
+            "sandbox_vars": dict,
+            "no_chromium": bool,
+            "no_unified": bool,
+            "non_unified_sources": StrictOrderingOnAppendList,
+            "action_overrides": dict,
+        }),
         list,
         """Defines a list of object directories handled by gyp configurations.
 

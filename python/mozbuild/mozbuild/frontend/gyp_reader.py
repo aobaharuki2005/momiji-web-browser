@@ -431,12 +431,10 @@ class GypProcessor:
         if config.substs["CC_TYPE"] == "clang-cl":
             # This isn't actually used anywhere in this generator, but it's needed
             # to override the registry detection of VC++ in gyp.
-            os.environ.update(
-                {
-                    "GYP_MSVS_OVERRIDE_PATH": "fake_path",
-                    "GYP_MSVS_VERSION": config.substs["MSVS_VERSION"],
-                }
-            )
+            os.environ.update({
+                "GYP_MSVS_OVERRIDE_PATH": "fake_path",
+                "GYP_MSVS_VERSION": config.substs["MSVS_VERSION"],
+            })
 
         params = {
             "parallel": False,

@@ -23,7 +23,6 @@ def check_symbols_unicity(symbols):
 
 
 def test_lint_api_yml(lint):
-
     with open(api_yaml) as fd:
         description = yaml.safe_load(fd)
 
@@ -39,9 +38,9 @@ def test_lint_api_yml(lint):
     mfbt_dir = os.path.join(topsrcdir, "mfbt")
     for header, categories in description.items():
         header_path = os.path.join(mfbt_dir, header)
-        assert os.path.exists(
-            header_path
-        ), f"{header} described in {api_yaml}, but missing in mfbt/"
+        assert os.path.exists(header_path), (
+            f"{header} described in {api_yaml}, but missing in mfbt/"
+        )
 
         with open(header_path) as fd:
             header_content = fd.read()
@@ -55,9 +54,9 @@ def test_lint_api_yml(lint):
                 symbol_found = re.search(
                     category_re[category].format(symbol), header_content
                 )
-                assert (
-                    symbol_found
-                ), f"{symbol} described as a {category} available in {header}, but cannot be found there"
+                assert symbol_found, (
+                    f"{symbol} described as a {category} available in {header}, but cannot be found there"
+                )
 
 
 def test_lint_mfbt_includes(lint, paths):

@@ -22,15 +22,13 @@ class TestTaskbarTabSessionState(SessionStoreTestCase):
             include_private=False,
             restore_on_demand=False,
             taskbartabs_enable=True,
-            test_windows=set(
-                [
-                    # Window 1
-                    (
-                        inline("lorem ipsom"),
-                        inline("dolor"),
-                    ),
-                ]
-            ),
+            test_windows=set([
+                # Window 1
+                (
+                    inline("lorem ipsom"),
+                    inline("dolor"),
+                ),
+            ]),
         )
 
     """

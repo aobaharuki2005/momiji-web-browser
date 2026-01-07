@@ -10,7 +10,6 @@ pytestmark = pytest.mark.asyncio
 async def test_accept_insecure_certs(
     configuration, url, create_custom_profile, geckodriver, accept_insecure_certs
 ):
-
     # Create a fresh profile without any item in the certificate storage so that
     # loading a HTTPS page will cause an insecure certificate error
     custom_profile = create_custom_profile(clone=False)

@@ -131,8 +131,7 @@ set_define("FMT_USE_LOCALE", 0)
 option(
     "--enable-debug",
     nargs="?",
-    help="Enable building with developer debug info "
-    "(using the given compiler flags)",
+    help="Enable building with developer debug info (using the given compiler flags)",
 )
 
 
@@ -439,7 +438,6 @@ include(include_project_configure)
 
 @template
 def load_keyvalue_file(location, filename):
-
     @depends(build_environment, location, "--help", when=location)
     @checking(f"if configuration file {filename} exists")
     # This gives access to the sandbox. Don't copy this blindly.

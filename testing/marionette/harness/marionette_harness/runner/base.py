@@ -596,8 +596,7 @@ class RemoteMarionetteArguments:
             ["--device"],
             {
                 "help": (
-                    "Serial ID to connect to as seen in `adb devices`,"
-                    "e.g emulator-5444"
+                    "Serial ID to connect to as seen in `adb devices`,e.g emulator-5444"
                 ),
                 "dest": "device_serial",
             },
@@ -735,9 +734,7 @@ class BaseMarionetteTestRunner:
 
         self.reset_test_stats()
 
-        self.logger.info(
-            "Using workspace for temporary data: " f'"{self.workspace_path}"'
-        )
+        self.logger.info(f'Using workspace for temporary data: "{self.workspace_path}"')
 
         if not gecko_log:
             self.gecko_log = os.path.join(self.workspace_path or "", "gecko.log")
@@ -861,53 +858,43 @@ class BaseMarionetteTestRunner:
                 debugger_info = mozdebug.get_debugger_info(
                     self.debugger, self.debugger_args
                 )
-            kwargs.update(
-                {
-                    "host": "127.0.0.1",
-                    "port": 2828,
-                    "app": self.app,
-                    "app_args": self.app_args,
-                    "debugger_info": debugger_info,
-                    "profile": self.profile,
-                    "addons": self.addons,
-                    "gecko_log": self.gecko_log,
-                    # ensure Marionette class takes care of starting gecko instance
-                    "bin": True,
-                }
-            )
+            kwargs.update({
+                "host": "127.0.0.1",
+                "port": 2828,
+                "app": self.app,
+                "app_args": self.app_args,
+                "debugger_info": debugger_info,
+                "profile": self.profile,
+                "addons": self.addons,
+                "gecko_log": self.gecko_log,
+                # ensure Marionette class takes care of starting gecko instance
+                "bin": True,
+            })
 
         if self.bin:
-            kwargs.update(
-                {
-                    "bin": self.bin,
-                }
-            )
+            kwargs.update({
+                "bin": self.bin,
+            })
 
         if self.emulator:
-            kwargs.update(
-                {
-                    "avd_home": self.extra_kwargs.get("avd_home"),
-                    "adb_path": self.extra_kwargs.get("adb_path"),
-                    "emulator_binary": self.extra_kwargs.get("emulator_bin"),
-                    "avd": self.extra_kwargs.get("avd"),
-                    "package_name": self.extra_kwargs.get("package_name"),
-                }
-            )
+            kwargs.update({
+                "avd_home": self.extra_kwargs.get("avd_home"),
+                "adb_path": self.extra_kwargs.get("adb_path"),
+                "emulator_binary": self.extra_kwargs.get("emulator_bin"),
+                "avd": self.extra_kwargs.get("avd"),
+                "package_name": self.extra_kwargs.get("package_name"),
+            })
 
         if self.address:
             host, port = self.address.split(":")
-            kwargs.update(
-                {
-                    "host": host,
-                    "port": int(port),
-                }
-            )
+            kwargs.update({
+                "host": host,
+                "port": int(port),
+            })
             if self.emulator:
-                kwargs.update(
-                    {
-                        "connect_to_running_emulator": True,
-                    }
-                )
+                kwargs.update({
+                    "connect_to_running_emulator": True,
+                })
             if not self.bin and not self.emulator:
                 try:
                     # Establish a socket connection so we can vertify the data come back
@@ -1128,13 +1115,11 @@ class BaseMarionetteTestRunner:
             manifest.read(filepath)
 
             json_path = update_mozinfo(filepath)
-            mozinfo.update(
-                {
-                    "appname": self.appName,
-                    "manage_instance": self.marionette.instance is not None,
-                    "headless": self.headless,
-                }
-            )
+            mozinfo.update({
+                "appname": self.appName,
+                "manage_instance": self.marionette.instance is not None,
+                "headless": self.headless,
+            })
             self.logger.info(f"mozinfo updated from: {json_path}")
             self.logger.info(f"mozinfo is: {mozinfo.info}")
 
@@ -1203,20 +1188,20 @@ class BaseMarionetteTestRunner:
                 self.todo += len(results.skipped)
             self.passed += results.passed
             for failure in results.failures + results.errors:
-                self.failures.append(
-                    (results.getInfo(failure), failure.output, "TEST-UNEXPECTED-FAIL")
-                )
+                self.failures.append((
+                    results.getInfo(failure),
+                    failure.output,
+                    "TEST-UNEXPECTED-FAIL",
+                ))
             if hasattr(results, "unexpectedSuccesses"):
                 self.failed += len(results.unexpectedSuccesses)
                 self.unexpected_successes += len(results.unexpectedSuccesses)
                 for failure in results.unexpectedSuccesses:
-                    self.failures.append(
-                        (
-                            results.getInfo(failure),
-                            failure.output,
-                            "TEST-UNEXPECTED-PASS",
-                        )
-                    )
+                    self.failures.append((
+                        results.getInfo(failure),
+                        failure.output,
+                        "TEST-UNEXPECTED-PASS",
+                    ))
             if hasattr(results, "expectedFailures"):
                 self.todo += len(results.expectedFailures)
 

@@ -162,9 +162,9 @@ class CommonBackend(BuildBackend):
             return False
 
         elif isinstance(obj, SandboxedWasmLibrary):
-            self._handle_generated_sources(
-                [mozpath.join(obj.relobjdir, f"{obj.basename}.h")]
-            )
+            self._handle_generated_sources([
+                mozpath.join(obj.relobjdir, f"{obj.basename}.h")
+            ])
             return False
 
         elif isinstance(obj, (Sources, HostSources)):
@@ -203,9 +203,9 @@ class CommonBackend(BuildBackend):
                 for f in files:
                     basename = FinalTargetPreprocessedFiles.get_obj_basename(f)
                     relpath = mozpath.join(obj.install_target, path, basename)
-                    self._handle_generated_sources(
-                        [ObjDirPath(obj._context, "!/" + relpath).full_path]
-                    )
+                    self._handle_generated_sources([
+                        ObjDirPath(obj._context, "!/" + relpath).full_path
+                    ])
             return False
 
         else:

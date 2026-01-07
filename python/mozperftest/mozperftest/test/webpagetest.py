@@ -358,22 +358,20 @@ class WebPageTest(Layer):
     def add_wpt_run_to_metadata(self, wbt_run, metadata, website):
         requested_values = self.extract_desired_values_from_wpt_run(wbt_run)
         if requested_values is not None:
-            metadata.add_result(
-                {
-                    "name": ("WebPageTest:" + re.match(r"(^.\w+)", website)[0]),
-                    "framework": {"name": "mozperftest"},
-                    "transformer": "mozperftest.test.webpagetest:WebPageTestData",
-                    "shouldAlert": True,
-                    "results": [
-                        {
-                            "values": [metric_value],
-                            "name": metric_name,
-                            "shouldAlert": True,
-                        }
-                        for metric_name, metric_value in requested_values.items()
-                    ],
-                }
-            )
+            metadata.add_result({
+                "name": ("WebPageTest:" + re.match(r"(^.\w+)", website)[0]),
+                "framework": {"name": "mozperftest"},
+                "transformer": "mozperftest.test.webpagetest:WebPageTestData",
+                "shouldAlert": True,
+                "results": [
+                    {
+                        "values": [metric_value],
+                        "name": metric_name,
+                        "shouldAlert": True,
+                    }
+                    for metric_name, metric_value in requested_values.items()
+                ],
+            })
 
     def extract_desired_values_from_wpt_run(self, wpt_run):
         view_types = ["firstView"]

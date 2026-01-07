@@ -411,11 +411,9 @@ class List(list):
     def __setitem__(self, key, val):
         if isinstance(key, slice):
             if not isinstance(val, list):
-                raise ValueError(
-                    "List can only be sliced with other list " "instances."
-                )
+                raise ValueError("List can only be sliced with other list instances.")
             if key.step:
-                raise ValueError("List cannot be sliced with a nonzero step " "value")
+                raise ValueError("List cannot be sliced with a nonzero step value")
             return super().__setitem__(key, val)
         return super().__setitem__(key, val)
 

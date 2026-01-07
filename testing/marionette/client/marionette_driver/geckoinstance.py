@@ -343,15 +343,13 @@ class GeckoInstance:
             args["preferences"]["remote.log.level"] = level
 
         if "-jsdebugger" in self.app_args:
-            args["preferences"].update(
-                {
-                    "devtools.browsertoolbox.panel": "jsdebugger",
-                    "devtools.chrome.enabled": True,
-                    "devtools.debugger.prompt-connection": False,
-                    "devtools.debugger.remote-enabled": True,
-                    "devtools.testing": True,
-                }
-            )
+            args["preferences"].update({
+                "devtools.browsertoolbox.panel": "jsdebugger",
+                "devtools.chrome.enabled": True,
+                "devtools.debugger.prompt-connection": False,
+                "devtools.debugger.remote-enabled": True,
+                "devtools.testing": True,
+            })
 
         if self.addons:
             args["addons"] = self.addons
@@ -420,13 +418,11 @@ class GeckoInstance:
 
         # environment variables needed for crashreporting
         # https://developer.mozilla.org/docs/Environment_variables_affecting_crash_reporting
-        env.update(
-            {
-                "MOZ_CRASHREPORTER": "1",
-                "MOZ_CRASHREPORTER_NO_REPORT": "1",
-                "MOZ_CRASHREPORTER_SHUTDOWN": "1",
-            }
-        )
+        env.update({
+            "MOZ_CRASHREPORTER": "1",
+            "MOZ_CRASHREPORTER_NO_REPORT": "1",
+            "MOZ_CRASHREPORTER_SHUTDOWN": "1",
+        })
 
         extra_args = ["-marionette", "-remote-allow-system-access"]
         args = {

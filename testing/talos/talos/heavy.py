@@ -5,6 +5,7 @@
 """
 Downloads Heavy profiles from TaskCluster.
 """
+
 import datetime
 import functools
 import os

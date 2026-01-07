@@ -31,7 +31,6 @@ environment.  ``mach artifact`` ensures these modules are available, but other
 consumers will need to arrange this themselves.
 """
 
-
 import collections
 import functools
 import glob
@@ -277,8 +276,7 @@ class ArtifactJob:
                 )
         if self._tests_re and not tests_artifact:
             raise ValueError(
-                f'Expected tests archive matching "{self._tests_re}", but '
-                "found none!"
+                f'Expected tests archive matching "{self._tests_re}", but found none!'
             )
         if self._maven_zip_re and not maven_zip_artifact:
             raise ValueError(
@@ -746,15 +744,13 @@ class MacArtifactJob(ArtifactJob):
     @property
     def _extra_archives(self):
         extra_archives = super()._extra_archives
-        extra_archives.update(
-            {
-                ".update_framework_artifacts.zip": {
-                    "description": "Update-related macOS Framework Artifacts",
-                    "src_prefix": "",
-                    "dest_prefix": "update_framework_artifacts",
-                },
-            }
-        )
+        extra_archives.update({
+            ".update_framework_artifacts.zip": {
+                "description": "Update-related macOS Framework Artifacts",
+                "src_prefix": "",
+                "dest_prefix": "update_framework_artifacts",
+            },
+        })
         return extra_archives
 
     @property
@@ -919,12 +915,10 @@ class UnfilteredProjectPackageArtifactJob(ArtifactJob):
     """
 
     # Can't yet handle `AndroidArtifactJob` uniformly, since the `product` is "mobile".
-    package_re = "|".join(
-        [
-            f"({cls.package_re})"
-            for cls in (LinuxArtifactJob, MacArtifactJob, WinArtifactJob)
-        ]
-    )
+    package_re = "|".join([
+        f"({cls.package_re})"
+        for cls in (LinuxArtifactJob, MacArtifactJob, WinArtifactJob)
+    ])
     job_configuration = GeckoJobConfiguration
 
     @property

@@ -140,9 +140,9 @@ def run_tests(config, browser_config):
         # so that the browser pref will be turned on (in ffsetup)
         if test.get("fnbpaint", False):
             LOG.info("Test is using firstNonBlankPaint, browser pref will be turned on")
-            test["preferences"][
-                "dom.performance.time_to_non_blank_paint.enabled"
-            ] = True
+            test["preferences"]["dom.performance.time_to_non_blank_paint.enabled"] = (
+                True
+            )
 
         test["setup"] = utils.interpolate(test["setup"])
         test["cleanup"] = utils.interpolate(test["cleanup"])
@@ -163,16 +163,13 @@ def run_tests(config, browser_config):
         browser_config["preferences"]["fission.autostart"] = False
 
     browser_config["preferences"]["network.proxy.type"] = 2
-    browser_config["preferences"]["network.proxy.autoconfig_url"] = (
-        """data:text/plain,
+    browser_config["preferences"]["network.proxy.autoconfig_url"] = """data:text/plain,
 function FindProxyForURL(url, host) {
   if (url.startsWith('http')) {
    return 'PROXY %s';
   }
   return 'DIRECT';
-}"""
-        % browser_config["webserver"]
-    )
+}""" % browser_config["webserver"]
 
     # If --code-coverage files are expected, set flag in browser config so ffsetup knows
     # that it needs to delete any ccov files resulting from browser initialization
@@ -182,8 +179,7 @@ function FindProxyForURL(url, host) {
     if config.get("code_coverage", False):
         if browser_config["develop"]:
             raise TalosError(
-                "Aborting: talos --code-coverage flag is only "
-                "supported in production"
+                "Aborting: talos --code-coverage flag is only supported in production"
             )
         else:
             browser_config["code_coverage"] = True
@@ -458,15 +454,13 @@ def make_comparison_result(base_and_reference_results):
         sub_test_name = base_and_reference_results.results[0].results[x]["page"]
 
         # populate our new comparison result with 'base' and 'ref' replicates
-        comp_results.append(
-            {
-                "index": 0,
-                "runs": [],
-                "page": sub_test_name,
-                "base_runs": base_result_runs,
-                "ref_runs": ref_result_runs,
-            }
-        )
+        comp_results.append({
+            "index": 0,
+            "runs": [],
+            "page": sub_test_name,
+            "base_runs": base_result_runs,
+            "ref_runs": ref_result_runs,
+        })
 
         # now step thru each result, compare 'base' vs 'ref', and store the difference in 'runs'
         _index = 0

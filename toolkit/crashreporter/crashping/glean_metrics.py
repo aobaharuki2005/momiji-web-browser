@@ -50,20 +50,18 @@ def generate_string(annotations):
             make_bugzilla_url(bug) for bug in definition.get("bugs", ["1950749"])
         ]
 
-        glean.update(
-            {
-                "description": definition["description"].strip(),
-                "notification_emails": [
-                    "crash-reporting-wg@mozilla.org",
-                    "stability@mozilla.org",
-                ],
-                "bugs": bug_urls,
-                "data_reviews": bug_urls.copy(),  # Copy so the produced yaml doesn't use anchors
-                "data_sensitivity": ["technical"],
-                "expires": "never",
-                "send_in_pings": ["crash"],
-            }
-        )
+        glean.update({
+            "description": definition["description"].strip(),
+            "notification_emails": [
+                "crash-reporting-wg@mozilla.org",
+                "stability@mozilla.org",
+            ],
+            "bugs": bug_urls,
+            "data_reviews": bug_urls.copy(),  # Copy so the produced yaml doesn't use anchors
+            "data_sensitivity": ["technical"],
+            "expires": "never",
+            "send_in_pings": ["crash"],
+        })
 
         output.setdefault(metric_category, {})[metric_name] = glean
 

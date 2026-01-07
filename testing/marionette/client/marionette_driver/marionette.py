@@ -1104,7 +1104,7 @@ class Marionette:
         """
         if not self.instance:
             raise errors.MarionetteException(
-                "quit() can only be called " "on Gecko instances launched by Marionette"
+                "quit() can only be called on Gecko instances launched by Marionette"
             )
 
         quit_details = {"cause": "shutdown", "forced": False}
@@ -1164,8 +1164,9 @@ class Marionette:
 
         if quit_details.get("cause") not in (None, "shutdown"):
             raise errors.MarionetteException(
-                "Unexpected shutdown reason '{}' for "
-                "quitting the process.".format(quit_details["cause"])
+                "Unexpected shutdown reason '{}' for quitting the process.".format(
+                    quit_details["cause"]
+                )
             )
 
         return quit_details
@@ -1204,8 +1205,7 @@ class Marionette:
         """
         if not self.instance:
             raise errors.MarionetteException(
-                "restart() can only be called "
-                "on Gecko instances launched by Marionette"
+                "restart() can only be called on Gecko instances launched by Marionette"
             )
 
         context = self._send_message("Marionette:GetContext", key="value")
@@ -1299,8 +1299,9 @@ class Marionette:
 
         if restart_details.get("cause") not in (None, "restart"):
             raise errors.MarionetteException(
-                "Unexpected shutdown reason '{}' for "
-                "restarting the process".format(restart_details["cause"])
+                "Unexpected shutdown reason '{}' for restarting the process".format(
+                    restart_details["cause"]
+                )
             )
 
         return restart_details

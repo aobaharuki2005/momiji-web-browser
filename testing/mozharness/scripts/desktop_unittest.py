@@ -726,12 +726,10 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 c.get("install_extension", [])
             ):
                 fetches_dir = os.environ.get("MOZ_FETCHES_DIR", '""')
-                base_cmd.extend(
-                    [
-                        f"--install-extension={os.path.join(fetches_dir, e)}"
-                        for e in c["install_extension"]
-                    ]
-                )
+                base_cmd.extend([
+                    f"--install-extension={os.path.join(fetches_dir, e)}"
+                    for e in c["install_extension"]
+                ])
 
             # do not add --disable fission if we don't have --disable-e10s
             if c["disable_fission"] and suite_category not in [
@@ -778,14 +776,12 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                                 "'{suite_category}' suite."
                             )
                 elif c.get("total_chunks") and c.get("this_chunk"):
-                    base_cmd.extend(
-                        [
-                            "--total-chunks",
-                            c["total_chunks"],
-                            "--this-chunk",
-                            c["this_chunk"],
-                        ]
-                    )
+                    base_cmd.extend([
+                        "--total-chunks",
+                        c["total_chunks"],
+                        "--this-chunk",
+                        c["this_chunk"],
+                    ])
 
                 if c.get("timeout_factor"):
                     base_cmd.extend(["--timeout-factor", c["timeout_factor"]])
@@ -1061,16 +1057,14 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
         command = []
         # Implies that underlying system is Linux.
         if os.environ.get("NEED_PULSEAUDIO") == "true":
-            command.extend(
-                [
-                    "pulseaudio",
-                    "--daemonize",
-                    "--log-level=4",
-                    "--log-time=1",
-                    "-vvvvv",
-                    "--exit-idle-time=-1",
-                ]
-            )
+            command.extend([
+                "pulseaudio",
+                "--daemonize",
+                "--log-level=4",
+                "--log-time=1",
+                "-vvvvv",
+                "--exit-idle-time=-1",
+            ])
 
             # Only run the initialization for Debian.
             # Ubuntu appears to have an alternate method of starting pulseaudio.

@@ -227,7 +227,6 @@ def has_manifest(module_rc, manifest_id):
 
 
 def generate_module_rc():
-
     parser = ArgumentParser()
     parser.add_argument(
         "binary", help="Binary for which the resource file is generated"

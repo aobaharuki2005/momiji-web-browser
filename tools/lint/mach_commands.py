@@ -50,13 +50,11 @@ def get_global_excludes(**lintargs):
     topsrcdir = lintargs["root"]
 
     # exclude top level paths that look like objdirs
-    excludes.extend(
-        [
-            name
-            for name in os.listdir(topsrcdir)
-            if name.startswith("obj") and os.path.isdir(name)
-        ]
-    )
+    excludes.extend([
+        name
+        for name in os.listdir(topsrcdir)
+        if name.startswith("obj") and os.path.isdir(name)
+    ])
 
     if lintargs.get("include_third-party"):
         # For some linters, we want to include the thirdparty code too.
@@ -175,7 +173,7 @@ def eslint(command_context, paths, extra_args=[], **kwargs):
         linters=["eslint"],
         paths=paths,
         argv=extra_args,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -204,7 +202,7 @@ def prettier(command_context, paths, extra_args=[], **kwargs):
         linters=["eslint", "stylelint"],
         paths=paths,
         argv=extra_args,
-        **kwargs
+        **kwargs,
     )
 
 

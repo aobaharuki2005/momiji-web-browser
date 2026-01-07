@@ -25,11 +25,9 @@ test_data_path = mozpath.join(test_data_path, "data")
 class TestSandbox(unittest.TestCase):
     def sandbox(self):
         return Sandbox(
-            Context(
-                {
-                    "DIRS": (list, list, None),
-                }
-            )
+            Context({
+                "DIRS": (list, list, None),
+            })
         )
 
     def test_exec_source_success(self):
@@ -498,11 +496,9 @@ def Template():
         def foo(a, b):
             return type(a), type(b)
 
-        FUNCTIONS.update(
-            {
-                "foo": (lambda self: foo, (Foo, int), ""),
-            }
-        )
+        FUNCTIONS.update({
+            "foo": (lambda self: foo, (Foo, int), ""),
+        })
 
         try:
             sandbox = self.sandbox()

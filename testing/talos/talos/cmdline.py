@@ -264,7 +264,7 @@ def create_parser(mach_interface=False):
     add_arg(
         "--tppagecycles",
         type=int,
-        help="number of pageloader cycles to run for each page in" " the manifest",
+        help="number of pageloader cycles to run for each page in the manifest",
     )
     add_arg(
         "--no-download",

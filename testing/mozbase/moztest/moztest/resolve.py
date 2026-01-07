@@ -738,7 +738,6 @@ class TestResolver(MozbuildObject):
 
     @lru_cache(maxsize=1024)
     def _get_metadata_paths(self, metadata_base, dir_path):
-
         paths = []
         path_parts = dir_path.split(os.path.sep) if dir_path else []
 
@@ -752,7 +751,6 @@ class TestResolver(MozbuildObject):
         return tuple(paths)
 
     def _extract_tags_from_file(self, file_path):
-
         tags = []
         try:
             with open(file_path, encoding="utf-8") as f:
@@ -766,7 +764,6 @@ class TestResolver(MozbuildObject):
         return tags
 
     def get_test_tags(self, test_tags, metadata_base, path):
-
         dir_path = os.path.dirname(path) if path else ""
         dir_metadata_paths = self._get_metadata_paths(metadata_base, dir_path)
 
@@ -957,21 +954,19 @@ class TestResolver(MozbuildObject):
         for root, dirs, paths in os.walk(test_path):
             for filename in fnmatch.filter(paths, "*.spec.js"):
                 path = os.path.join(root, filename)
-                self._tests.append(
-                    {
-                        "path": os.path.abspath(path),
-                        "flavor": "puppeteer",
-                        "here": os.path.dirname(path),
-                        "manifest": None,
-                        "name": path,
-                        "file_relpath": path,
-                        "head": "",
-                        "support-files": "",
-                        "subsuite": "puppeteer",
-                        "dir_relpath": os.path.dirname(path),
-                        "srcdir_relpath": path,
-                    }
-                )
+                self._tests.append({
+                    "path": os.path.abspath(path),
+                    "flavor": "puppeteer",
+                    "here": os.path.dirname(path),
+                    "manifest": None,
+                    "name": path,
+                    "file_relpath": path,
+                    "head": "",
+                    "support-files": "",
+                    "subsuite": "puppeteer",
+                    "dir_relpath": os.path.dirname(path),
+                    "srcdir_relpath": path,
+                })
 
         self._puppeteer_loaded = True
 
@@ -988,21 +983,19 @@ class TestResolver(MozbuildObject):
             if "test" in root:
                 for filename in fnmatch.filter(paths, "*.kt"):
                     path = os.path.join(root, filename)
-                    self._tests.append(
-                        {
-                            "path": os.path.abspath(path),
-                            "flavor": "fenix",
-                            "here": os.path.dirname(path),
-                            "manifest": None,
-                            "name": path,
-                            "file_relpath": path,
-                            "head": "",
-                            "support-files": "",
-                            "subsuite": "",
-                            "dir_relpath": os.path.dirname(path),
-                            "srcdir_relpath": path,
-                        }
-                    )
+                    self._tests.append({
+                        "path": os.path.abspath(path),
+                        "flavor": "fenix",
+                        "here": os.path.dirname(path),
+                        "manifest": None,
+                        "name": path,
+                        "file_relpath": path,
+                        "head": "",
+                        "support-files": "",
+                        "subsuite": "",
+                        "dir_relpath": os.path.dirname(path),
+                        "srcdir_relpath": path,
+                    })
 
         self._fenix_loaded = True
 
@@ -1026,21 +1019,19 @@ class TestResolver(MozbuildObject):
             if "test" in root:
                 for filename in fnmatch.filter(paths, "*.kt"):
                     path = os.path.join(root, filename)
-                    self._tests.append(
-                        {
-                            "path": os.path.abspath(path),
-                            "flavor": "focus",
-                            "here": os.path.dirname(path),
-                            "manifest": None,
-                            "name": path,
-                            "file_relpath": path,
-                            "head": "",
-                            "support-files": "",
-                            "subsuite": "",
-                            "dir_relpath": os.path.dirname(path),
-                            "srcdir_relpath": path,
-                        }
-                    )
+                    self._tests.append({
+                        "path": os.path.abspath(path),
+                        "flavor": "focus",
+                        "here": os.path.dirname(path),
+                        "manifest": None,
+                        "name": path,
+                        "file_relpath": path,
+                        "head": "",
+                        "support-files": "",
+                        "subsuite": "",
+                        "dir_relpath": os.path.dirname(path),
+                        "srcdir_relpath": path,
+                    })
 
         self._focus_loaded = True
 
@@ -1059,21 +1050,19 @@ class TestResolver(MozbuildObject):
             if test_subdir_path in root:
                 for filename in fnmatch.filter(paths, "*.kt"):
                     path = os.path.join(root, filename)
-                    self._tests.append(
-                        {
-                            "path": os.path.abspath(path),
-                            "flavor": "android-components",
-                            "here": os.path.dirname(path),
-                            "manifest": None,
-                            "name": path,
-                            "file_relpath": path,
-                            "head": "",
-                            "support-files": "",
-                            "subsuite": "",
-                            "dir_relpath": os.path.dirname(path),
-                            "srcdir_relpath": path,
-                        }
-                    )
+                    self._tests.append({
+                        "path": os.path.abspath(path),
+                        "flavor": "android-components",
+                        "here": os.path.dirname(path),
+                        "manifest": None,
+                        "name": path,
+                        "file_relpath": path,
+                        "head": "",
+                        "support-files": "",
+                        "subsuite": "",
+                        "dir_relpath": os.path.dirname(path),
+                        "srcdir_relpath": path,
+                    })
 
         self._ac_loaded = True
 
@@ -1096,21 +1085,19 @@ class TestResolver(MozbuildObject):
             if "test" in root:
                 for filename in fnmatch.filter(paths, "*.kt"):
                     path = os.path.join(root, filename)
-                    self._tests.append(
-                        {
-                            "path": os.path.abspath(path),
-                            "flavor": "geckoview",
-                            "here": os.path.dirname(path),
-                            "manifest": None,
-                            "name": path,
-                            "file_relpath": path,
-                            "head": "",
-                            "support-files": "",
-                            "subsuite": "",
-                            "dir_relpath": os.path.dirname(path),
-                            "srcdir_relpath": path,
-                        }
-                    )
+                    self._tests.append({
+                        "path": os.path.abspath(path),
+                        "flavor": "geckoview",
+                        "here": os.path.dirname(path),
+                        "manifest": None,
+                        "name": path,
+                        "file_relpath": path,
+                        "head": "",
+                        "support-files": "",
+                        "subsuite": "",
+                        "dir_relpath": os.path.dirname(path),
+                        "srcdir_relpath": path,
+                    })
 
         self._geckooview_junit_loaded = True
 
@@ -1158,9 +1145,10 @@ class TestResolver(MozbuildObject):
 
         # Webdriver BiDi tests are nested even further as tests are grouped by
         # module but also by command / event name.
-        if test["name"].startswith(
-            ("/webdriver/tests/bidi", "/_mozilla/webdriver/bidi")
-        ):
+        if test["name"].startswith((
+            "/webdriver/tests/bidi",
+            "/_mozilla/webdriver/bidi",
+        )):
             depth = depth + 1
 
         # wpt canvas tests are mostly nested under subfolders of /html/canvas,

@@ -774,21 +774,25 @@ class Raptor(
         if self.gecko_profile:
             gecko_results.append("--gecko-profile")
             if self.gecko_profile_interval:
-                gecko_results.extend(
-                    ["--gecko-profile-interval", str(self.gecko_profile_interval)]
-                )
+                gecko_results.extend([
+                    "--gecko-profile-interval",
+                    str(self.gecko_profile_interval),
+                ])
             if self.gecko_profile_entries:
-                gecko_results.extend(
-                    ["--gecko-profile-entries", str(self.gecko_profile_entries)]
-                )
+                gecko_results.extend([
+                    "--gecko-profile-entries",
+                    str(self.gecko_profile_entries),
+                ])
             if self.gecko_profile_features:
-                gecko_results.extend(
-                    ["--gecko-profile-features", self.gecko_profile_features]
-                )
+                gecko_results.extend([
+                    "--gecko-profile-features",
+                    self.gecko_profile_features,
+                ])
             if self.gecko_profile_threads:
-                gecko_results.extend(
-                    ["--gecko-profile-threads", self.gecko_profile_threads]
-                )
+                gecko_results.extend([
+                    "--gecko-profile-threads",
+                    self.gecko_profile_threads,
+                ])
         elif self.extra_profiler_run:
             gecko_results.append("--extra-profiler-run")
         return gecko_results
@@ -918,7 +922,7 @@ class Raptor(
                 self.chromium_dist_path = "/usr/bin/google-chrome"
             elif mac in self.platform_name():
                 self.chromium_dist_path = (
-                    "/Applications/Google Chrome.app/" "Contents/MacOS/Google Chrome"
+                    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
                 )
             else:
                 self.error(
@@ -1088,26 +1092,24 @@ class Raptor(
         if self.config.get("enable_marionette_trace", False):
             options.extend(["--enable-marionette-trace"])
         if self.config.get("browser_cycles"):
-            options.extend(
-                ["--browser-cycles={}".format(self.config.get("browser_cycles"))]
-            )
+            options.extend([
+                "--browser-cycles={}".format(self.config.get("browser_cycles"))
+            ])
         if self.config.get("test_bytecode_cache", False):
             options.extend(["--test-bytecode-cache"])
         if self.config.get("collect_perfstats", False):
             options.extend(["--collect-perfstats"])
         if self.config.get("extra_summary_methods"):
-            options.extend(
-                [
-                    f"--extra-summary-methods={method}"
-                    for method in self.config.get("extra_summary_methods")
-                ]
-            )
+            options.extend([
+                f"--extra-summary-methods={method}"
+                for method in self.config.get("extra_summary_methods")
+            ])
         if self.config.get("page_timeout"):
             options.extend([f"--page-timeout={self.page_timeout}"])
         if self.config.get("post_startup_delay"):
-            options.extend(
-                [f"--post-startup-delay={self.config['post_startup_delay']}"]
-            )
+            options.extend([
+                f"--post-startup-delay={self.config['post_startup_delay']}"
+            ])
         if (
             self.config.get("screenshot_on_failure", False)
             or os.environ.get("MOZ_AUTOMATION", None) is not None
@@ -1239,35 +1241,29 @@ class Raptor(
         # components are particularly fussy about python version.
         py3_minor = sys.version_info.minor
         if py3_minor <= 7:
-            modules.extend(
-                [
-                    "numpy==1.16.1",
-                    "Pillow==6.1.0",
-                    "scipy==1.2.3",
-                    "pyssim==0.4",
-                    "opencv-python==4.5.4.60",
-                ]
-            )
+            modules.extend([
+                "numpy==1.16.1",
+                "Pillow==6.1.0",
+                "scipy==1.2.3",
+                "pyssim==0.4",
+                "opencv-python==4.5.4.60",
+            ])
         elif py3_minor <= 11:
-            modules.extend(
-                [
-                    "numpy==1.23.5",
-                    "Pillow==9.2.0",
-                    "scipy==1.9.3",
-                    "pyssim==0.4",
-                    "opencv-python==4.6.0.66",
-                ]
-            )
+            modules.extend([
+                "numpy==1.23.5",
+                "Pillow==9.2.0",
+                "scipy==1.9.3",
+                "pyssim==0.4",
+                "opencv-python==4.6.0.66",
+            ])
         else:  # python version >= 3.12
-            modules.extend(
-                [
-                    "numpy==2.2.3",
-                    "Pillow==11.1.0",
-                    "scipy==1.15.2",
-                    "pyssim==0.7",
-                    "opencv-python==4.11.0.86",
-                ]
-            )
+            modules.extend([
+                "numpy==2.2.3",
+                "Pillow==11.1.0",
+                "scipy==1.15.2",
+                "pyssim==0.7",
+                "opencv-python==4.11.0.86",
+            ])
 
         if self.run_local:
             self.setup_local_ffmpeg()

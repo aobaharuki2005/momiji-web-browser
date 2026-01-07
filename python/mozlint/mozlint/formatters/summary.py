@@ -33,12 +33,12 @@ class SummaryFormatter:
                 ]
                 abspath = mozpath.join(commonprefix, *parts)
 
-            summary[abspath][0] += len(
-                [r for r in result.issues[path] if r.level == "error"]
-            )
-            summary[abspath][1] += len(
-                [r for r in result.issues[path] if r.level == "warning"]
-            )
+            summary[abspath][0] += len([
+                r for r in result.issues[path] if r.level == "error"
+            ])
+            summary[abspath][1] += len([
+                r for r in result.issues[path] if r.level == "warning"
+            ])
             summary[abspath][1] += result.suppressed_warnings[path]
 
         msg = []

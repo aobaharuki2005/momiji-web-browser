@@ -159,8 +159,9 @@ CLOBBER_CHOICES = {"objdir", "work", "shell", "all"}
     "what",
     default=["objdir", "work"],
     nargs="*",
-    help="Target to clobber, must be one of {{{}}} (default "
-    "objdir and work).".format(", ".join(CLOBBER_CHOICES)),
+    help="Target to clobber, must be one of {{{}}} (default objdir and work).".format(
+        ", ".join(CLOBBER_CHOICES)
+    ),
 )
 def clobber(command_context, what, **kwargs):
     from mozbuild.controller.clobber import Clobberer
@@ -344,15 +345,13 @@ def gather_hazard_data(command_context, **kwargs):
         )
         fh.write(data)
 
-    buildscript = " ".join(
-        [
-            command_context.topsrcdir + "/mach hazards compile",
-            *kwargs.get("what", []),
-            "--job-size=3.0",  # Conservatively estimate 3GB/process
-            "--project=" + project,
-            "--haz-objdir=" + objdir,
-        ]
-    )
+    buildscript = " ".join([
+        command_context.topsrcdir + "/mach hazards compile",
+        *kwargs.get("what", []),
+        "--job-size=3.0",  # Conservatively estimate 3GB/process
+        "--project=" + project,
+        "--haz-objdir=" + objdir,
+    ])
     args = [
         os.path.join(script_dir(command_context), "run_complete"),
         "--foreground",

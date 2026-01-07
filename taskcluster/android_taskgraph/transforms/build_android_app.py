@@ -6,7 +6,6 @@ Apply some defaults and minor modifications to the jobs defined in the
 build-apk and build-bundle kinds.
 """
 
-
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util import path
 
@@ -82,30 +81,26 @@ def add_shippable_secrets(config, tasks):
             task.pop("include-shippable-secrets", False)
             and config.params["level"] == "3"
         ):
-            secrets.extend(
-                [
-                    {
-                        "key": key,
-                        "name": _get_secret_index(task["name"]),
-                        "path": target_file,
-                    }
-                    for key, target_file in _get_secrets_keys_and_target_files(task)
-                ]
-            )
+            secrets.extend([
+                {
+                    "key": key,
+                    "name": _get_secret_index(task["name"]),
+                    "path": target_file,
+                }
+                for key, target_file in _get_secrets_keys_and_target_files(task)
+            ])
         else:
-            dummy_secrets.extend(
-                [
-                    {
-                        "content": fake_value,
-                        "path": target_file,
-                    }
-                    for fake_value, target_file in (
-                        ("faketoken", ".adjust_token"),
-                        ("faketoken", ".mls_token"),
-                        ("https://fake@sentry.prod.mozaws.net/368", ".sentry_token"),
-                    )
-                ]
-            )
+            dummy_secrets.extend([
+                {
+                    "content": fake_value,
+                    "path": target_file,
+                }
+                for fake_value, target_file in (
+                    ("faketoken", ".adjust_token"),
+                    ("faketoken", ".mls_token"),
+                    ("https://fake@sentry.prod.mozaws.net/368", ".sentry_token"),
+                )
+            ])
 
         yield task
 
@@ -120,16 +115,14 @@ def _get_secrets_keys_and_target_files(task):
 
     if task["name"].startswith("fenix-"):
         gradle_build_type = task["run"]["gradle-build-type"]
-        secrets.extend(
-            [
-                (
-                    "firebase",
-                    f"app/src/{gradle_build_type}/res/values/firebase.xml",
-                ),
-                ("wallpaper_url", ".wallpaper_url"),
-                ("pocket_consumer_key", ".pocket_consumer_key"),
-            ]
-        )
+        secrets.extend([
+            (
+                "firebase",
+                f"app/src/{gradle_build_type}/res/values/firebase.xml",
+            ),
+            ("wallpaper_url", ".wallpaper_url"),
+            ("pocket_consumer_key", ".pocket_consumer_key"),
+        ])
 
     return secrets
 
@@ -221,13 +214,11 @@ def add_disable_optimization(config, tasks):
 def add_nightly_version(config, tasks):
     for task in tasks:
         if task.pop("include-nightly-version", False):
-            task["run"]["gradlew"].extend(
-                [
-                    # We only set the `official` flag here. The actual version name will be determined
-                    # by Gradle (depending on the Gecko/A-C version being used)
-                    "-Pofficial"
-                ]
-            )
+            task["run"]["gradlew"].extend([
+                # We only set the `official` flag here. The actual version name will be determined
+                # by Gradle (depending on the Gecko/A-C version being used)
+                "-Pofficial"
+            ])
         yield task
 
 
@@ -235,9 +226,10 @@ def add_nightly_version(config, tasks):
 def add_release_version(config, tasks):
     for task in tasks:
         if task.pop("include-release-version", False):
-            task["run"]["gradlew"].extend(
-                ["-PversionName={}".format(config.params["version"]), "-Pofficial"]
-            )
+            task["run"]["gradlew"].extend([
+                "-PversionName={}".format(config.params["version"]),
+                "-Pofficial",
+            ])
         yield task
 
 
@@ -271,19 +263,17 @@ def add_artifacts(config, tasks):
                 apk_name = artifact_template["name"].format(
                     gradle_build=gradle_build, **apk
                 )
-                artifacts.append(
-                    {
-                        "type": artifact_template["type"],
-                        "name": apk_name,
-                        "path": artifact_template["path"].format(
-                            gradle_build_type=gradle_build_type,
-                            gradle_build=gradle_build,
-                            apk_path=apk_path,
-                            source_project_name=source_project_name,
-                            **apk,
-                        ),
-                    }
-                )
+                artifacts.append({
+                    "type": artifact_template["type"],
+                    "name": apk_name,
+                    "path": artifact_template["path"].format(
+                        gradle_build_type=gradle_build_type,
+                        gradle_build=gradle_build,
+                        apk_path=apk_path,
+                        source_project_name=source_project_name,
+                        **apk,
+                    ),
+                })
                 apks[apk["abi"]] = {
                     "name": apk_name,
                 }
@@ -297,19 +287,17 @@ def add_artifacts(config, tasks):
             else:
                 aab_filename = f"app-{gradle_build}-{gradle_build_type}.aab"
 
-            artifacts.append(
-                {
-                    "type": artifact_template["type"],
-                    "name": artifact_template["name"],
-                    "path": artifact_template["path"].format(
-                        gradle_build_type=gradle_build_type,
-                        gradle_build=gradle_build,
-                        source_project_name=source_project_name,
-                        variant_name=variant_name,
-                        aab_filename=aab_filename,
-                    ),
-                }
-            )
+            artifacts.append({
+                "type": artifact_template["type"],
+                "name": artifact_template["name"],
+                "path": artifact_template["path"].format(
+                    gradle_build_type=gradle_build_type,
+                    gradle_build=gradle_build,
+                    source_project_name=source_project_name,
+                    variant_name=variant_name,
+                    aab_filename=aab_filename,
+                ),
+            })
             task["attributes"]["aab"] = artifact_template["name"]
 
         yield task

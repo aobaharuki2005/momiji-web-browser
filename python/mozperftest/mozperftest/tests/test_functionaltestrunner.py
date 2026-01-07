@@ -8,12 +8,13 @@ from mozperftest.test.functionaltestrunner import (
 
 
 def test_functionaltestrunner_pass():
-    with mock.patch("moztest.resolve.TestResolver") as test_resolver_mock, mock.patch(
-        "mozperftest.test.functionaltestrunner.load_class_from_path"
-    ) as load_class_path_mock, mock.patch(
-        "mozperftest.test.functionaltestrunner.FunctionalTestProcessor"
-    ), mock.patch(
-        "mozperftest.test.functionaltestrunner.mozlog"
+    with (
+        mock.patch("moztest.resolve.TestResolver") as test_resolver_mock,
+        mock.patch(
+            "mozperftest.test.functionaltestrunner.load_class_from_path"
+        ) as load_class_path_mock,
+        mock.patch("mozperftest.test.functionaltestrunner.FunctionalTestProcessor"),
+        mock.patch("mozperftest.test.functionaltestrunner.mozlog"),
     ):
         test_mock = mock.MagicMock()
         test_mock.test.return_value = 0

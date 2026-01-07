@@ -129,13 +129,11 @@ class CompileDBBackend(CommonBackend):
             per_source_flags = self._per_source_flags.get(filename)
             if per_source_flags is not None:
                 c.extend(per_source_flags)
-            db.append(
-                {
-                    "directory": directory,
-                    "command": shell_quote(*c),
-                    "file": mozpath.join(directory, filename),
-                }
-            )
+            db.append({
+                "directory": directory,
+                "command": shell_quote(*c),
+                "file": mozpath.join(directory, filename),
+            })
 
         import json
 

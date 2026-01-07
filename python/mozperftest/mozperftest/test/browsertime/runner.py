@@ -353,9 +353,10 @@ class BrowsertimeRunner(NodeRunner):
 
         existing = self.get_arg("browsertime-existing-results")
         if existing:
-            metadata.add_result(
-                {"results": existing, "name": self._test_script["name"]}
-            )
+            metadata.add_result({
+                "results": existing,
+                "name": self._test_script["name"],
+            })
             return metadata
 
         cycles = self.get_arg("cycles", 1)
@@ -464,8 +465,9 @@ class BrowsertimeRunner(NodeRunner):
         if exit_code != 0:
             raise NodeException(exit_code)
 
-        metadata.add_result(
-            {"results": str(result_dir), "name": self._test_script["name"]}
-        )
+        metadata.add_result({
+            "results": str(result_dir),
+            "name": self._test_script["name"],
+        })
 
         return metadata

@@ -150,19 +150,17 @@ def repackage_flatpak(
 
         application_ini_data = application_ini_data_from_directory(str(lib_dir))
         variables = get_build_variables(application_ini_data, arch, version)
-        variables.update(
-            {
-                "FREEDESKTOP_VERSION": FREEDESKTOP_VERSION,
-                "FIREFOX_BASEAPP_CHANNEL": FIREFOX_BASEAPP_CHANNEL,
-                "FLATPAK_BRANCH": flatpak_branch,
-                "DATE": variables["TIMESTAMP"].strftime("%Y-%m-%d"),
-                # Override PKG_NAME since we use branches for beta vs release
-                "PKG_NAME": product,
-                "DBusActivatable": "false",
-                # Override Icon to match the flatpak's name
-                "Icon": flatpak_name,
-            }
-        )
+        variables.update({
+            "FREEDESKTOP_VERSION": FREEDESKTOP_VERSION,
+            "FIREFOX_BASEAPP_CHANNEL": FIREFOX_BASEAPP_CHANNEL,
+            "FLATPAK_BRANCH": flatpak_branch,
+            "DATE": variables["TIMESTAMP"].strftime("%Y-%m-%d"),
+            # Override PKG_NAME since we use branches for beta vs release
+            "PKG_NAME": product,
+            "DBusActivatable": "false",
+            # Override Icon to match the flatpak's name
+            "Icon": flatpak_name,
+        })
         _render_flatpak_templates(template_dir, build_dir, variables)
 
         from fluent.runtime.fallback import FluentLocalization, FluentResourceLoader

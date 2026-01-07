@@ -880,9 +880,9 @@ def test_category_expansion(
 
     assert len(expanded_cats) == expected_counts
     assert not any([expanded_cats.get(ucat, None) is not None for ucat in missing])
-    assert all(
-        [expanded_cats.get(ucat, None) is not None for ucat in unique_categories.keys()]
-    )
+    assert all([
+        expanded_cats.get(ucat, None) is not None for ucat in unique_categories.keys()
+    ])
 
     # Ensure that the queries are as expected
     for cat_name, cat_query in unique_categories.items():
@@ -1052,25 +1052,31 @@ def test_category_expansion_with_non_pgo_flag(category_options, call_counts):
 )
 @pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
 def test_full_run(options, call_counts, log_ind, expected_log_message):
-    with mock.patch("tryselect.selectors.perf.push_to_try") as ptt, mock.patch(
-        "tryselect.selectors.perf.run_fzf"
-    ) as fzf, mock.patch(
-        "tryselect.selectors.perf.get_repository_object", new=mock.MagicMock()
-    ), mock.patch(
-        "tryselect.selectors.perf.LogProcessor.revision",
-        new_callable=mock.PropertyMock,
-        return_value="revision",
-    ) as logger, mock.patch(
-        "tryselect.selectors.perf.PerfParser.check_cached_revision",
-    ) as ccr, mock.patch(
-        "tryselect.selectors.perf.PerfParser.save_revision_treeherder"
-    ) as srt, mock.patch(
-        "tryselect.selectors.perf.print",
-    ) as perf_print, mock.patch(
-        "tryselect.selectors.perf.PerfParser.set_categories_for_test"
-    ) as tests_mock, mock.patch(
-        "tryselect.selectors.perf.requests"
-    ) as requests_mock:
+    with (
+        mock.patch("tryselect.selectors.perf.push_to_try") as ptt,
+        mock.patch("tryselect.selectors.perf.run_fzf") as fzf,
+        mock.patch(
+            "tryselect.selectors.perf.get_repository_object", new=mock.MagicMock()
+        ),
+        mock.patch(
+            "tryselect.selectors.perf.LogProcessor.revision",
+            new_callable=mock.PropertyMock,
+            return_value="revision",
+        ) as logger,
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.check_cached_revision",
+        ) as ccr,
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.save_revision_treeherder"
+        ) as srt,
+        mock.patch(
+            "tryselect.selectors.perf.print",
+        ) as perf_print,
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.set_categories_for_test"
+        ) as tests_mock,
+        mock.patch("tryselect.selectors.perf.requests") as requests_mock,
+    ):
 
         def test_mock_func(*args, **kwargs):
             """Used for testing any --test functionality."""
@@ -1170,25 +1176,31 @@ def test_full_run(options, call_counts, log_ind, expected_log_message):
 )
 @pytest.mark.skipif(os.name == "nt", reason="fzf not installed on host")
 def test_full_run_lando(options, call_counts, log_ind, expected_log_message):
-    with mock.patch("tryselect.selectors.perf.push_to_try") as ptt, mock.patch(
-        "tryselect.selectors.perf.run_fzf"
-    ) as fzf, mock.patch(
-        "tryselect.selectors.perf.get_repository_object", new=mock.MagicMock()
-    ), mock.patch(
-        "tryselect.selectors.perf.LogProcessor.revision",
-        new_callable=mock.PropertyMock,
-        return_value="revision",
-    ) as logger, mock.patch(
-        "tryselect.selectors.perf.PerfParser.check_cached_revision",
-    ) as ccr, mock.patch(
-        "tryselect.selectors.perf.PerfParser.save_revision_treeherder"
-    ) as srt, mock.patch(
-        "tryselect.selectors.perf.print",
-    ) as perf_print, mock.patch(
-        "tryselect.selectors.perf.PerfParser.set_categories_for_test"
-    ) as tests_mock, mock.patch(
-        "tryselect.selectors.perf.requests"
-    ) as requests_mock:
+    with (
+        mock.patch("tryselect.selectors.perf.push_to_try") as ptt,
+        mock.patch("tryselect.selectors.perf.run_fzf") as fzf,
+        mock.patch(
+            "tryselect.selectors.perf.get_repository_object", new=mock.MagicMock()
+        ),
+        mock.patch(
+            "tryselect.selectors.perf.LogProcessor.revision",
+            new_callable=mock.PropertyMock,
+            return_value="revision",
+        ) as logger,
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.check_cached_revision",
+        ) as ccr,
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.save_revision_treeherder"
+        ) as srt,
+        mock.patch(
+            "tryselect.selectors.perf.print",
+        ) as perf_print,
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.set_categories_for_test"
+        ) as tests_mock,
+        mock.patch("tryselect.selectors.perf.requests") as requests_mock,
+    ):
 
         def test_mock_func(*args, **kwargs):
             """Used for testing any --test functionality."""
@@ -1295,19 +1307,22 @@ def test_change_detection_task_injection_failure(
 ):
     setup_perfparser()
 
-    with mock.patch("tryselect.selectors.perf.push_to_try") as ptt, mock.patch(
-        "tryselect.selectors.perf.run_fzf"
-    ) as fzf, mock.patch(
-        "tryselect.selectors.perf.get_repository_object", new=mock.MagicMock()
-    ), mock.patch(
-        "tryselect.selectors.perf.LogProcessor.revision",
-        new_callable=mock.PropertyMock,
-        return_value="revision",
-    ) as logger, mock.patch(
-        "tryselect.selectors.perf.PerfParser.check_cached_revision"
-    ) as ccr, mock.patch(
-        "tryselect.selectors.perf.print",
-    ) as perf_print:
+    with (
+        mock.patch("tryselect.selectors.perf.push_to_try") as ptt,
+        mock.patch("tryselect.selectors.perf.run_fzf") as fzf,
+        mock.patch(
+            "tryselect.selectors.perf.get_repository_object", new=mock.MagicMock()
+        ),
+        mock.patch(
+            "tryselect.selectors.perf.LogProcessor.revision",
+            new_callable=mock.PropertyMock,
+            return_value="revision",
+        ) as logger,
+        mock.patch("tryselect.selectors.perf.PerfParser.check_cached_revision") as ccr,
+        mock.patch(
+            "tryselect.selectors.perf.print",
+        ) as perf_print,
+    ):
         fzf_side_effects = [
             ["", ["Benchmarks linux"]],
             ["", TASKS],
@@ -1391,9 +1406,10 @@ def test_category_rules(query, should_fail):
     ],
 )
 def test_apk_upload(apk_name, apk_content, should_fail, failure_message):
-    with mock.patch("tryselect.selectors.perf.subprocess") as _, mock.patch(
-        "tryselect.selectors.perf.shutil"
-    ) as _:
+    with (
+        mock.patch("tryselect.selectors.perf.subprocess") as _,
+        mock.patch("tryselect.selectors.perf.shutil") as _,
+    ):
         temp_dir = None
         try:
             temp_dir = tempfile.mkdtemp()
@@ -1504,12 +1520,11 @@ def test_apk_upload(apk_name, apk_content, should_fail, failure_message):
 def test_check_cached_revision(
     args, load_data, return_value, call_counts, exists_cache_file
 ):
-    with mock.patch("tryselect.selectors.perf.json.load") as load, mock.patch(
-        "tryselect.selectors.perf.json.dump"
-    ) as dump, mock.patch(
-        "tryselect.selectors.perf.pathlib.Path.is_file"
-    ) as is_file, mock.patch(
-        "tryselect.selectors.perf.pathlib.Path.open"
+    with (
+        mock.patch("tryselect.selectors.perf.json.load") as load,
+        mock.patch("tryselect.selectors.perf.json.dump") as dump,
+        mock.patch("tryselect.selectors.perf.pathlib.Path.is_file") as is_file,
+        mock.patch("tryselect.selectors.perf.pathlib.Path.open"),
     ):
         load.return_value = load_data
         is_file.return_value = exists_cache_file
@@ -1536,12 +1551,11 @@ def test_check_cached_revision(
     ],
 )
 def test_save_revision_treeherder(args, call_counts, exists_cache_file):
-    with mock.patch("tryselect.selectors.perf.json.load") as load, mock.patch(
-        "tryselect.selectors.perf.json.dump"
-    ) as dump, mock.patch(
-        "tryselect.selectors.perf.pathlib.Path.is_file"
-    ) as is_file, mock.patch(
-        "tryselect.selectors.perf.pathlib.Path.open"
+    with (
+        mock.patch("tryselect.selectors.perf.json.load") as load,
+        mock.patch("tryselect.selectors.perf.json.dump") as dump,
+        mock.patch("tryselect.selectors.perf.pathlib.Path.is_file") as is_file,
+        mock.patch("tryselect.selectors.perf.pathlib.Path.open"),
     ):
         is_file.return_value = exists_cache_file
 
@@ -1561,7 +1575,7 @@ def test_save_revision_treeherder(args, call_counts, exists_cache_file):
             [1, 0, 0, 1],
             (
                 "\n\n----------------------------------------------------------------------------------------------\n"
-                f"You have selected {MAX_PERF_TASKS+1} total test runs! (selected tasks({MAX_PERF_TASKS+1}) * rebuild"
+                f"You have selected {MAX_PERF_TASKS + 1} total test runs! (selected tasks({MAX_PERF_TASKS + 1}) * rebuild"
                 f" count(1) \nThese tests won't be triggered as the current maximum for a single ./mach try "
                 f"perf run is {MAX_PERF_TASKS}. \nIf this was unexpected, please file a bug in Testing :: Performance."
                 "\n----------------------------------------------------------------------------------------------\n\n"
@@ -1607,23 +1621,28 @@ def test_max_perf_tasks(
 ):
     setup_perfparser()
 
-    with mock.patch("tryselect.selectors.perf.push_to_try") as ptt, mock.patch(
-        "tryselect.selectors.perf.print",
-    ) as perf_print, mock.patch(
-        "tryselect.selectors.perf.LogProcessor.revision",
-        new_callable=mock.PropertyMock,
-        return_value="revision",
-    ), mock.patch(
-        "tryselect.selectors.perf.PerfParser.perf_push_to_try",
-        new_callable=mock.MagicMock,
-    ) as perf_push_to_try_mock, mock.patch(
-        "tryselect.selectors.perf.PerfParser.get_perf_tasks"
-    ) as get_perf_tasks_mock, mock.patch(
-        "tryselect.selectors.perf.PerfParser.get_tasks"
-    ) as get_tasks_mock, mock.patch(
-        "tryselect.selectors.perf.run_fzf"
-    ) as fzf, mock.patch(
-        "tryselect.selectors.perf.fzf_bootstrap", return_value=mock.MagicMock()
+    with (
+        mock.patch("tryselect.selectors.perf.push_to_try") as ptt,
+        mock.patch(
+            "tryselect.selectors.perf.print",
+        ) as perf_print,
+        mock.patch(
+            "tryselect.selectors.perf.LogProcessor.revision",
+            new_callable=mock.PropertyMock,
+            return_value="revision",
+        ),
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.perf_push_to_try",
+            new_callable=mock.MagicMock,
+        ) as perf_push_to_try_mock,
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.get_perf_tasks"
+        ) as get_perf_tasks_mock,
+        mock.patch("tryselect.selectors.perf.PerfParser.get_tasks") as get_tasks_mock,
+        mock.patch("tryselect.selectors.perf.run_fzf") as fzf,
+        mock.patch(
+            "tryselect.selectors.perf.fzf_bootstrap", return_value=mock.MagicMock()
+        ),
     ):
         tasks = ["a-task"] * total_tasks
         get_tasks_mock.return_value = tasks
@@ -1692,15 +1711,17 @@ def test_build_category_description():
     ],
 )
 def test_preview_description(options, call_count):
-    with mock.patch("tryselect.selectors.perf.PerfParser.perf_push_to_try"), mock.patch(
-        "tryselect.selectors.perf.fzf_bootstrap"
-    ), mock.patch(
-        "tryselect.selectors.perf.PerfParser.get_perf_tasks"
-    ) as get_perf_tasks, mock.patch(
-        "tryselect.selectors.perf.PerfParser.get_tasks"
-    ), mock.patch(
-        "tryselect.selectors.perf.PerfParser.build_category_description"
-    ) as bcd:
+    with (
+        mock.patch("tryselect.selectors.perf.PerfParser.perf_push_to_try"),
+        mock.patch("tryselect.selectors.perf.fzf_bootstrap"),
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.get_perf_tasks"
+        ) as get_perf_tasks,
+        mock.patch("tryselect.selectors.perf.PerfParser.get_tasks"),
+        mock.patch(
+            "tryselect.selectors.perf.PerfParser.build_category_description"
+        ) as bcd,
+    ):
         get_perf_tasks.return_value = [], [], []
 
         run(**options)
@@ -1718,11 +1739,12 @@ def test_preview_description(options, call_count):
 
     taskfile = option[option.index("-t") + 1]
 
-    with mock.patch("tryselect.selectors.perf_preview.open"), mock.patch(
-        "tryselect.selectors.perf_preview.pathlib.Path.open"
-    ), mock.patch("tryselect.selectors.perf_preview.json.load") as load, mock.patch(
-        "tryselect.selectors.perf_preview.print"
-    ) as preview_print:
+    with (
+        mock.patch("tryselect.selectors.perf_preview.open"),
+        mock.patch("tryselect.selectors.perf_preview.pathlib.Path.open"),
+        mock.patch("tryselect.selectors.perf_preview.json.load") as load,
+        mock.patch("tryselect.selectors.perf_preview.print") as preview_print,
+    ):
         load.return_value = {line: "test description"}
 
         plain_display(taskfile, description, line)
@@ -1746,12 +1768,12 @@ def test_preview_description(options, call_count):
     ],
 )
 def test_test_selection(tests, tasks_found, categories_produced):
-    with mock.patch(
-        "tryselect.selectors.perfselector.classification.pathlib"
-    ), mock.patch(
-        "tryselect.selectors.perfselector.classification.json"
-    ) as mocked_json, mock.patch(
-        "tryselect.selectors.perfselector.classification.ScriptInfo"
+    with (
+        mock.patch("tryselect.selectors.perfselector.classification.pathlib"),
+        mock.patch(
+            "tryselect.selectors.perfselector.classification.json"
+        ) as mocked_json,
+        mock.patch("tryselect.selectors.perfselector.classification.ScriptInfo"),
     ):
 
         def mocked_json_load(*args, **kwargs):
@@ -1782,12 +1804,15 @@ def test_test_selection(tests, tasks_found, categories_produced):
     ],
 )
 def test_perftest_test_selection(tests, tasks_found, categories_produced):
-    with mock.patch("pathlib.Path.is_file", return_value=True), mock.patch(
-        "tryselect.selectors.perfselector.classification.ScriptInfo"
-    ) as mock_script_info, mock.patch(
-        "mozperftest.argparser.PerftestArgumentParser.parse_known_args"
-    ) as mock_parse_args:
-
+    with (
+        mock.patch("pathlib.Path.is_file", return_value=True),
+        mock.patch(
+            "tryselect.selectors.perfselector.classification.ScriptInfo"
+        ) as mock_script_info,
+        mock.patch(
+            "mozperftest.argparser.PerftestArgumentParser.parse_known_args"
+        ) as mock_parse_args,
+    ):
         mock_si_instance = mock_script_info.return_value
         mock_si_instance.get.return_value = "background-resource"
         mock_si_instance.script = pathlib.Path(

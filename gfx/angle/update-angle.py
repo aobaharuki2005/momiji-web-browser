@@ -165,9 +165,7 @@ angle_enable_share_context_lock = true
 angle_enable_vulkan = false
 angle_has_astc_encoder = false
 use_custom_libcxx = false
-"""[
-    1:
-]
+"""[1:]
 args_gn_path = OUT_DIR / "args.gn"
 args_gn_path.write_bytes(GN_ARGS)
 

@@ -237,9 +237,7 @@ def valid_ucrt_sdk_dir(
 
     valid_sdks = sorted(sdks, key=lambda x: sdks[x][0], reverse=True)
     if not valid_sdks:
-        raise FatalCheckError(
-            "Cannot find the Universal CRT SDK. " "Please install it."
-        )
+        raise FatalCheckError("Cannot find the Universal CRT SDK. Please install it.")
 
     version, sdk = sdks[valid_sdks[0]]
     minimum_ucrt_version = Version("10.0.17134.0")
@@ -314,17 +312,15 @@ def include_path(vc_path, windows_sdk_dir, ucrt_sdk_dir):
     include_env = os.environ.get("INCLUDE")
     if include_env:
         includes.append(include_env)
-    includes.extend(
-        (
-            os.path.join(vc_path, "include"),
-            atlmfc_dir,
-            os.path.join(windows_sdk_dir.include, "shared"),
-            os.path.join(windows_sdk_dir.include, "um"),
-            winrt_dir,
-            cppwinrt_dir,
-            os.path.join(ucrt_sdk_dir.include, "ucrt"),
-        )
-    )
+    includes.extend((
+        os.path.join(vc_path, "include"),
+        atlmfc_dir,
+        os.path.join(windows_sdk_dir.include, "shared"),
+        os.path.join(windows_sdk_dir.include, "um"),
+        winrt_dir,
+        cppwinrt_dir,
+        os.path.join(ucrt_sdk_dir.include, "ucrt"),
+    ))
     # Set in the environment for old-configure
     includes = ";".join(includes)
     os.environ["INCLUDE"] = includes
@@ -370,14 +366,12 @@ def lib_path_for(host_or_target):
         lib_env = os.environ.get("LIB")
         if lib_env and not is_host:
             libs.extend(lib_env.split(";"))
-        libs.extend(
-            (
-                os.path.join(vc_path, "lib", sdk_target),
-                atlmfc_dir,
-                os.path.join(windows_sdk_dir.lib, "um", sdk_target),
-                os.path.join(ucrt_sdk_dir.lib, "ucrt", sdk_target),
-            )
-        )
+        libs.extend((
+            os.path.join(vc_path, "lib", sdk_target),
+            atlmfc_dir,
+            os.path.join(windows_sdk_dir.lib, "um", sdk_target),
+            os.path.join(ucrt_sdk_dir.lib, "ucrt", sdk_target),
+        ))
         if compiler.type == "clang-cl":
             runtime_dir = check_cmd_output(
                 compiler.compiler,

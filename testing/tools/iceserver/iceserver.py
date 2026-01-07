@@ -889,15 +889,13 @@ def create_self_signed_cert(name):
     # date already? Who knows!
     key = rsa.generate_private_key(key_size=2048, public_exponent=65537)
 
-    subject = x509.Name(
-        [
-            x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
-            x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "TX"),
-            x509.NameAttribute(NameOID.LOCALITY_NAME, "Dallas"),
-            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Mozilla test iceserver"),
-            x509.NameAttribute(NameOID.COMMON_NAME, name),
-        ]
-    )
+    subject = x509.Name([
+        x509.NameAttribute(NameOID.COUNTRY_NAME, "US"),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "TX"),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, "Dallas"),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Mozilla test iceserver"),
+        x509.NameAttribute(NameOID.COMMON_NAME, name),
+    ])
 
     # create a self-signed cert
     cert = (
