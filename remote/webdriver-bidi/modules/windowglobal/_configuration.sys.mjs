@@ -174,7 +174,7 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
           },
           params: {
             context: this.messageHandler.context,
-            orientationOverride: this.#screenOrientationOverride,
+            value: this.#screenOrientationOverride,
           },
         });
       }
@@ -322,6 +322,9 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       let localeOverridePerContext = null;
       let localeOverridePerUserContext = null;
 
+      let screenOrientationOverridePerContext = null;
+      let screenOrientationOverridePerUserContext = null;
+
       let screenSettingsOverridePerContext = null;
       let screenSettingsOverridePerUserContext = null;
 
@@ -377,6 +380,19 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
             }
             break;
           }
+          case "screen-orientation-override": {
+            switch (contextDescriptor.type) {
+              case lazy.ContextDescriptorType.TopBrowsingContext: {
+                screenOrientationOverridePerContext = value;
+                break;
+              }
+              case lazy.ContextDescriptorType.UserContext: {
+                screenOrientationOverridePerUserContext = value;
+                break;
+              }
+            }
+            break;
+          }
           case "screen-settings-override": {
             switch (contextDescriptor.type) {
               case lazy.ContextDescriptorType.TopBrowsingContext: {
@@ -388,10 +404,6 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
                 break;
               }
             }
-            break;
-          }
-          case "screen-orientation-override": {
-            this.#screenOrientationOverride = value;
             break;
           }
           case "timezone-override": {
@@ -445,6 +457,15 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
             localeOverridePerContext,
             localeOverridePerUserContext
           );
+          break;
+        }
+        case "screen-orientation-override": {
+          this.#screenOrientationOverride = this.#findCorrectOverrideValue(
+            "object",
+            screenOrientationOverridePerContext,
+            screenOrientationOverridePerUserContext
+          );
+
           break;
         }
         case "screen-settings-override": {
