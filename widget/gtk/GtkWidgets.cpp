@@ -554,10 +554,6 @@ style_path_print(GtkStyleContext *context)
 void Refresh() { ResetWidgetCache(); }
 
 static void DrawWindowDecoration(cairo_t* cr, const DrawingParams& aParams) {
-  if (GdkIsWaylandDisplay()) {
-    // Doesn't seem to be needed.
-    return;
-  }
   GtkStyleContext* decorationStyle =
       GetStyle(Type::WindowDecoration, aParams.image_scale, aParams.state);
 

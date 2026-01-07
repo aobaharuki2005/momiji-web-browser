@@ -12,10 +12,9 @@
 #include "nsIFrame.h"
 
 #include "gfxContext.h"
-#include "mozilla/gfx/BorrowedContext.h"
 #include "mozilla/gfx/HelpersCairo.h"
-#include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/WidgetUtilsGtk.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 #include <dlfcn.h>
 
@@ -23,98 +22,127 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
 
-// Return widget scale factor of the monitor where the window is located by the
-// most part. We intentionally honor the text scale factor here in order to
-// have consistent scaling with other UI elements, except for the window
-// decorations, which should use unscaled pixels.
-static inline CSSToLayoutDeviceScale GetWidgetScaleFactor(
-    nsIFrame* aFrame, StyleAppearance aAppearance) {
-  if (aAppearance == StyleAppearance::MozWindowDecorations) {
-    // Window decorations can't honor the text scale.
-    return CSSToLayoutDeviceScale{
-        float(AppUnitsPerCSSPixel()) /
-        float(aFrame->PresContext()
-                  ->DeviceContext()
-                  ->AppUnitsPerDevPixelAtUnitFullZoom())};
-  }
-  return aFrame->PresContext()->CSSToDevPixelScale();
-}
-
 nsNativeThemeGTK::nsNativeThemeGTK() : Theme(ScrollbarStyle()) {}
 
 nsNativeThemeGTK::~nsNativeThemeGTK() { GtkWidgets::Shutdown(); }
 
-static Maybe<GtkWidgets::Type> AppearanceToWidgetType(
-    StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowDecorations:
-      return Some(GtkWidgets::Type::WindowDecoration);
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unknown widget");
-      break;
-  }
-  return {};
-}
-
-static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
-                               const GtkWidgets::DrawingParams& aParams,
-                               double aScaleFactor, bool aSnapped,
-                               const Point& aDrawOrigin,
-                               const nsIntSize& aDrawSize,
-                               nsITheme::Transparency aTransparency) {
+// This is easy to extend to 9-patch if we ever paint native widgets
+// again, but we are very unlikely to do that.
+static RefPtr<DataSourceSurface> GetWidgetFourPatch(
+    nsIFrame* aFrame, GtkWidgets::Type aWidget, CSSIntCoord aSectionSize,
+    CSSToLayoutDeviceScale aScale) {
   static auto sCairoSurfaceSetDeviceScalePtr =
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
-  const bool useHiDPIWidgets =
-      aScaleFactor != 1.0 && sCairoSurfaceSetDeviceScalePtr;
+
+  CSSIntRect rect(0, 0, aSectionSize * 2, aSectionSize * 2);
+  // Save actual widget scale to GtkWidgetState as we don't provide
+  // the frame to gtk3drawing routines.
+  GtkWidgets::DrawingParams params{
+      .widget = aWidget,
+      .rect = {rect.x, rect.y, rect.width, rect.height},
+      .state = GTK_STATE_FLAG_NORMAL,
+      .image_scale = gint(std::ceil(aScale.scale)),
+  };
+
+  if (aFrame->PresContext()->Document()->State().HasState(
+          dom::DocumentState::WINDOW_INACTIVE)) {
+    params.state = GtkStateFlags(gint(params.state) | GTK_STATE_FLAG_BACKDROP);
+  }
+
+  auto surfaceRect = RoundedOut(rect * aScale);
+  RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
+      surfaceRect.Size().ToUnknownSize(), SurfaceFormat::B8G8R8A8,
+      /* aZero = */ true);
+  if (NS_WARN_IF(!dataSurface)) {
+    return nullptr;
+  }
+  DataSourceSurface::ScopedMap map(dataSurface,
+                                   DataSourceSurface::MapType::WRITE);
+  if (NS_WARN_IF(!map.IsMapped())) {
+    return nullptr;
+  }
+  // Create a Cairo image surface wrapping the data surface.
+  cairo_surface_t* surf = cairo_image_surface_create_for_data(
+      map.GetData(), GfxFormatToCairoFormat(dataSurface->GetFormat()),
+      surfaceRect.width, surfaceRect.height, map.GetStride());
+  if (NS_WARN_IF(!surf)) {
+    return nullptr;
+  }
+  if (cairo_t* cr = cairo_create(surf)) {
+    if (aScale.scale != 1.0) {
+      if (sCairoSurfaceSetDeviceScalePtr) {
+        sCairoSurfaceSetDeviceScalePtr(surf, aScale.scale, aScale.scale);
+      } else {
+        cairo_scale(cr, aScale.scale, aScale.scale);
+      }
+    }
+    GtkWidgets::Draw(cr, &params);
+    cairo_destroy(cr);
+  }
+  cairo_surface_destroy(surf);
+  return dataSurface;
+}
+
+static void DrawWindowDecorationsWithCairo(nsIFrame* aFrame,
+                                           gfxContext* aContext, bool aSnapped,
+                                           const Point& aDrawOrigin,
+                                           const nsIntSize& aDrawSize) {
+  DrawTarget* dt = aContext->GetDrawTarget();
   // If we are not snapped, we depend on the DT for translation.
   // Otherwise, we only need to take the device offset into account.
-  const Point drawOffset =
-      aSnapped ? aDrawOrigin - aContext->GetDeviceOffset() : aDrawOrigin;
-  // If the widget has any transparency, make sure to choose an alpha format.
-  const SurfaceFormat format = aTransparency != nsITheme::eOpaque
-                                   ? SurfaceFormat::B8G8R8A8
-                                   : aDrawTarget->GetFormat();
-  // Create a temporary data surface to render the widget into.
-  RefPtr<DataSourceSurface> dataSurface = Factory::CreateDataSourceSurface(
-      aDrawSize, format, aTransparency != nsITheme::eOpaque);
-  if (!dataSurface) {
+  const Point drawOffset = aSnapped ? aDrawOrigin -
+                                          dt->GetTransform().GetTranslation() -
+                                          aContext->GetDeviceOffset()
+                                    : aDrawOrigin;
+
+  const CSSIntCoord sectionSize =
+      LookAndFeel::GetInt(LookAndFeel::IntID::TitlebarRadius);
+  if (!sectionSize) {
     return;
   }
 
-  {
-    DataSourceSurface::ScopedMap map(dataSurface,
-                                     DataSourceSurface::MapType::WRITE);
-    if (NS_WARN_IF(!map.IsMapped())) {
-      return;
-    }
-    // Create a Cairo image surface wrapping the data surface.
-    cairo_surface_t* surf = cairo_image_surface_create_for_data(
-        map.GetData(), GfxFormatToCairoFormat(format), aDrawSize.width,
-        aDrawSize.height, map.GetStride());
-    if (NS_WARN_IF(!surf)) {
-      return;
-    }
-    if (cairo_t* cr = cairo_create(surf)) {
-      if (aScaleFactor != 1) {
-        if (useHiDPIWidgets) {
-          sCairoSurfaceSetDeviceScalePtr(surf, aScaleFactor, aScaleFactor);
-        } else {
-          cairo_scale(cr, aScaleFactor, aScaleFactor);
-        }
-      }
-      GtkWidgets::Draw(cr, &aParams);
-      cairo_destroy(cr);
-    }
-    cairo_surface_destroy(surf);
+  const CSSToLayoutDeviceScale scaleFactor{
+      float(AppUnitsPerCSSPixel()) /
+      float(aFrame->PresContext()
+                ->DeviceContext()
+                ->AppUnitsPerDevPixelAtUnitFullZoom())};
+  RefPtr dataSurface = GetWidgetFourPatch(
+      aFrame, GtkWidgets::Type::WindowDecoration, sectionSize, scaleFactor);
+  if (NS_WARN_IF(!dataSurface)) {
+    return;
   }
 
-  aDrawTarget->DrawSurface(
-      dataSurface,
-      Rect(aSnapped ? drawOffset - aDrawTarget->GetTransform().GetTranslation()
-                    : drawOffset,
-           Size(aDrawSize)),
-      Rect(0, 0, aDrawSize.width, aDrawSize.height));
+  LayoutDeviceSize scaledSize(CSSCoord(sectionSize) * scaleFactor,
+                              CSSCoord(sectionSize) * scaleFactor);
+
+  // Top left.
+  dt->DrawSurface(dataSurface, Rect(drawOffset, scaledSize.ToUnknownSize()),
+                  Rect(Point(), scaledSize.ToUnknownSize()));
+  // Top right.
+  dt->DrawSurface(dataSurface,
+                  Rect(Point(drawOffset.x + aDrawSize.width - scaledSize.width,
+                             drawOffset.y),
+                       scaledSize.ToUnknownSize()),
+                  Rect(Point(scaledSize.width, 0), scaledSize.ToUnknownSize()));
+  if (StaticPrefs::widget_gtk_rounded_bottom_corners_enabled()) {
+    // Bottom left.
+    dt->DrawSurface(
+        dataSurface,
+        Rect(Point(drawOffset.x,
+                   drawOffset.y + aDrawSize.height - scaledSize.height),
+             scaledSize.ToUnknownSize()),
+        Rect(Point(0, scaledSize.height), scaledSize.ToUnknownSize()));
+
+    // Bottom right
+    dt->DrawSurface(
+        dataSurface,
+        Rect(Point(drawOffset.x + aDrawSize.width - scaledSize.width,
+                   drawOffset.y + aDrawSize.height - scaledSize.height),
+             scaledSize.ToUnknownSize()),
+        Rect(Point(scaledSize.width, scaledSize.height),
+             scaledSize.ToUnknownSize()));
+  }
 }
 
 void nsNativeThemeGTK::DrawWidgetBackground(
@@ -125,8 +153,13 @@ void nsNativeThemeGTK::DrawWidgetBackground(
                                        aDirtyRect, aDrawOverflow);
   }
 
-  auto gtkType = AppearanceToWidgetType(aAppearance);
-  if (!gtkType) {
+  if (NS_WARN_IF(aAppearance != StyleAppearance::MozWindowDecorations)) {
+    return;
+  }
+
+  if (GdkIsWaylandDisplay()) {
+    // We don't need to paint window decorations on Wayland, see the comments in
+    // browser.css
     return;
   }
 
@@ -169,34 +202,10 @@ void nsNativeThemeGTK::DrawWidgetBackground(
     return;
   }
 
-  Transparency transparency = GetWidgetTransparency(aFrame, aAppearance);
-
-  // gdk rectangles are wrt the drawing rect.
-  auto scaleFactor = GetWidgetScaleFactor(aFrame, aAppearance);
-  LayoutDeviceIntRect gdkDevRect(-drawingRect.TopLeft(), widgetRect.Size());
-
-  auto gdkCssRect = CSSIntRect::RoundIn(gdkDevRect / scaleFactor);
-  GdkRectangle gdk_rect = {gdkCssRect.x, gdkCssRect.y, gdkCssRect.width,
-                           gdkCssRect.height};
-
-  // Save actual widget scale to GtkWidgetState as we don't provide
-  // the frame to gtk3drawing routines.
-  GtkWidgets::DrawingParams params{
-      .widget = *gtkType,
-      .rect = gdk_rect,
-      .state = GTK_STATE_FLAG_NORMAL,
-      .image_scale = gint(std::ceil(scaleFactor.scale)),
-  };
-  if (aFrame->PresContext()->Document()->State().HasState(
-          dom::DocumentState::WINDOW_INACTIVE)) {
-    params.state = GtkStateFlags(gint(params.state) | GTK_STATE_FLAG_BACKDROP);
-  }
   // translate everything so (0,0) is the top left of the drawingRect
   gfxPoint origin = rect.TopLeft() + drawingRect.TopLeft().ToUnknownPoint();
-
-  DrawThemeWithCairo(ctx, aContext->GetDrawTarget(), params, scaleFactor.scale,
-                     snapped, ToPoint(origin),
-                     drawingRect.Size().ToUnknownSize(), transparency);
+  DrawWindowDecorationsWithCairo(aFrame, ctx, snapped, ToPoint(origin),
+                                 drawingRect.Size().ToUnknownSize());
 }
 
 bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
@@ -298,15 +307,7 @@ bool nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   if (IsWidgetAlwaysNonNative(aFrame, aAppearance)) {
     return Theme::ThemeSupportsWidget(aPresContext, aFrame, aAppearance);
   }
-
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowDecorations:
-      return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
-    default:
-      break;
-  }
-
-  return false;
+  return aAppearance == StyleAppearance::MozWindowDecorations;
 }
 
 bool nsNativeThemeGTK::ThemeDrawsFocusForWidget(nsIFrame* aFrame,
