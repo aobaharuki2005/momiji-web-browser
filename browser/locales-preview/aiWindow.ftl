@@ -22,6 +22,28 @@ menu-history-chats =
 menu-history-chats-recent =
     .label = Recent Chats
 
+## AI Window Toggle Button
+
+toolbar-button-ai-window-toggle =
+    .label = AI window
+    .tooltiptext = Switch between AI and Classic windows.
+
+ai-window-toggleview-switch-classic =
+    .label = Classic Window
+
+ai-window-toggleview-switch-ai =
+    .label = AI Window
+
+ai-window-toggleview-switch-private =
+    .label = Private Window
+
+ai-window-toggleview-open-private =
+    .label = Open New Private Window
+
+ai-window-toggleview-status-label-active = AI Window
+
+ai-window-toggleview-status-label-inactive = Classic Window
+
 ## Input CTA
 
 aiwindow-input-cta-label-chat = Chat

@@ -13,6 +13,8 @@ support-files = [
 
 ["browser_aiwindow_integration.js"]
 
+["browser_aiwindow_switcher.js"]
+
 ["browser_aiwindow_transparency.js"]
 
 ["browser_aiwindowui.js"]
