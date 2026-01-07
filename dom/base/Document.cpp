@@ -1888,29 +1888,25 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
   }
 
   rv = cert->GetValidity(getter_AddRefs(validity));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
-  }
-  if (NS_WARN_IF(!validity)) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
+  if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!validity)) {
+    aInfo.mValidNotBefore = 0;
+    aInfo.mValidNotAfter = 0;
+  } else {
+    PRTime validityResult;
+    rv = validity->GetNotBefore(&validityResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aInfo.mValidNotBefore = 0;
+    } else {
+      aInfo.mValidNotBefore = DOMTimeStamp(validityResult / PR_USEC_PER_MSEC);
+    }
 
-  PRTime validityResult;
-  rv = validity->GetNotBefore(&validityResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
+    rv = validity->GetNotAfter(&validityResult);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aInfo.mValidNotAfter = 0;
+    } else {
+      aInfo.mValidNotAfter = DOMTimeStamp(validityResult / PR_USEC_PER_MSEC);
+    }
   }
-  aInfo.mValidNotBefore = DOMTimeStamp(validityResult / PR_USEC_PER_MSEC);
-
-  rv = validity->GetNotAfter(&validityResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return;
-  }
-  aInfo.mValidNotAfter = DOMTimeStamp(validityResult / PR_USEC_PER_MSEC);
 
   nsAutoString issuerCommonName;
   nsAutoString certChainPEMString;
@@ -1938,25 +1934,18 @@ void Document::GetFailedCertSecurityInfo(FailedCertSecurityInfo& aInfo,
     }
 
     rv = certificate->GetValidity(getter_AddRefs(validity));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
-    }
-    if (NS_WARN_IF(!validity)) {
-      aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-      return;
-    }
-
-    rv = validity->GetNotBefore(&notBefore);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
-    }
-
-    rv = validity->GetNotAfter(&notAfter);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      aRv.Throw(rv);
-      return;
+    if (NS_WARN_IF(NS_FAILED(rv)) || NS_WARN_IF(!validity)) {
+      notBefore = 0;
+      notAfter = 0;
+    } else {
+      rv = validity->GetNotBefore(&notBefore);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        notBefore = 0;
+      }
+      rv = validity->GetNotAfter(&notAfter);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        notAfter = 0;
+      }
     }
 
     notBefore = std::max(minValidity, notBefore);

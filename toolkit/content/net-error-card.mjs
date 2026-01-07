@@ -65,6 +65,26 @@ export class NetErrorCard extends MozLitElement {
     tryAgainButton: "#tryAgainButton",
   };
 
+  static NSS_ERRORS = [
+    "MOZILLA_PKIX_ERROR_INVALID_INTEGER_ENCODING",
+    "MOZILLA_PKIX_ERROR_ISSUER_NO_LONGER_TRUSTED",
+    "MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE",
+    "MOZILLA_PKIX_ERROR_SIGNATURE_ALGORITHM_MISMATCH",
+    "SEC_ERROR_BAD_DER",
+    "SEC_ERROR_BAD_SIGNATURE",
+    "SEC_ERROR_CERT_NOT_IN_NAME_SPACE",
+    "SEC_ERROR_EXTENSION_VALUE_INVALID",
+    "SEC_ERROR_INADEQUATE_CERT_TYPE",
+    "SEC_ERROR_INADEQUATE_KEY_USAGE",
+    "SEC_ERROR_INVALID_KEY",
+    "SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID",
+    "SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION",
+    "SEC_ERROR_UNSUPPORTED_EC_POINT_FORM",
+    "SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE",
+    "SEC_ERROR_UNSUPPORTED_KEYALG",
+    "SEC_ERROR_UNTRUSTED_CERT",
+  ];
+
   static ERROR_CODES = new Set([
     "SEC_ERROR_UNTRUSTED_ISSUER",
     "SEC_ERROR_REVOKED_CERTIFICATE",
@@ -81,6 +101,7 @@ export class NetErrorCard extends MozLitElement {
     "MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE",
     "NS_ERROR_BASIC_HTTP_AUTH_DISABLED",
     "NS_ERROR_NET_EMPTY_RESPONSE",
+    ...NetErrorCard.NSS_ERRORS,
   ]);
 
   static CUSTOM_ERROR_CODES = {
@@ -251,13 +272,30 @@ export class NetErrorCard extends MozLitElement {
 
   introContentTemplate() {
     switch (this.errorInfo.errorCodeString) {
-      case "SEC_ERROR_UNTRUSTED_ISSUER":
-      case "SEC_ERROR_REVOKED_CERTIFICATE":
-      case "SEC_ERROR_UNKNOWN_ISSUER":
-      case "SSL_ERROR_BAD_CERT_DOMAIN":
-      case "SEC_ERROR_EXPIRED_CERTIFICATE":
-      case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
+      case "MOZILLA_PKIX_ERROR_INVALID_INTEGER_ENCODING":
+      case "MOZILLA_PKIX_ERROR_ISSUER_NO_LONGER_TRUSTED":
+      case "MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE":
       case "MOZILLA_PKIX_ERROR_NOT_YET_VALID_CERTIFICATE":
+      case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
+      case "MOZILLA_PKIX_ERROR_SIGNATURE_ALGORITHM_MISMATCH":
+      case "SEC_ERROR_BAD_DER":
+      case "SEC_ERROR_BAD_SIGNATURE":
+      case "SEC_ERROR_CERT_NOT_IN_NAME_SPACE":
+      case "SEC_ERROR_EXPIRED_CERTIFICATE":
+      case "SEC_ERROR_EXTENSION_VALUE_INVALID":
+      case "SEC_ERROR_INADEQUATE_CERT_TYPE":
+      case "SEC_ERROR_INADEQUATE_KEY_USAGE":
+      case "SEC_ERROR_INVALID_KEY":
+      case "SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID":
+      case "SEC_ERROR_REVOKED_CERTIFICATE":
+      case "SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION":
+      case "SEC_ERROR_UNKNOWN_ISSUER":
+      case "SEC_ERROR_UNSUPPORTED_EC_POINT_FORM":
+      case "SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE":
+      case "SEC_ERROR_UNSUPPORTED_KEYALG":
+      case "SEC_ERROR_UNTRUSTED_CERT":
+      case "SEC_ERROR_UNTRUSTED_ISSUER":
+      case "SSL_ERROR_BAD_CERT_DOMAIN":
         return html`<p
           id="certErrorIntro"
           data-l10n-id="fp-certerror-intro"
@@ -498,12 +536,41 @@ export class NetErrorCard extends MozLitElement {
         });
         break;
       }
+      case "MOZILLA_PKIX_ERROR_INVALID_INTEGER_ENCODING":
+      case "MOZILLA_PKIX_ERROR_ISSUER_NO_LONGER_TRUSTED":
+      case "MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE":
+      case "MOZILLA_PKIX_ERROR_SIGNATURE_ALGORITHM_MISMATCH":
+      case "SEC_ERROR_BAD_DER":
+      case "SEC_ERROR_BAD_SIGNATURE":
+      case "SEC_ERROR_CERT_NOT_IN_NAME_SPACE":
+      case "SEC_ERROR_EXTENSION_VALUE_INVALID":
+      case "SEC_ERROR_INADEQUATE_CERT_TYPE":
+      case "SEC_ERROR_INADEQUATE_KEY_USAGE":
+      case "SEC_ERROR_INVALID_KEY":
+      case "SEC_ERROR_PATH_LEN_CONSTRAINT_INVALID":
+      case "SEC_ERROR_UNKNOWN_CRITICAL_EXTENSION":
+      case "SEC_ERROR_UNSUPPORTED_EC_POINT_FORM":
+      case "SEC_ERROR_UNSUPPORTED_ELLIPTIC_CURVE":
+      case "SEC_ERROR_UNSUPPORTED_KEYALG":
+      case "SEC_ERROR_UNTRUSTED_CERT": {
+        content = this.advancedSectionTemplate({
+          titleL10nId: "fp-certerror-body-title",
+          whyDangerousL10nId: this.getNSSErrorWhyDangerousL10nId(
+            this.errorInfo.errorCodeString
+          ),
+        });
+        break;
+      }
     }
 
     return html`<div class="advanced-container">
       <h2 data-l10n-id="fp-certerror-advanced-title"></h2>
       ${content}
     </div>`;
+  }
+
+  getNSSErrorWhyDangerousL10nId(errorString) {
+    return errorString.toLowerCase().replace(/_/g, "-");
   }
 
   advancedSectionTemplate(params) {
