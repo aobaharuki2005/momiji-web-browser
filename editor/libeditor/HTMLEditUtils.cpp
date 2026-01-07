@@ -992,16 +992,12 @@ Element* HTMLEditUtils::GetElementOfImmediateBlockBoundary(
   auto getNextContent = [&aDirection, &maybeNonEditableAncestorBlock](
                             const nsIContent& aContent) -> nsIContent* {
     return aDirection == WalkTreeDirection::Forward
-               ? HTMLEditUtils::GetNextContent(
-                     aContent,
-                     {WalkTreeOption::IgnoreDataNodeExceptText,
-                      WalkTreeOption::StopAtBlockBoundary},
+               ? HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+                     aContent, {LeafNodeOption::TreatChildBlockAsLeafNode},
                      BlockInlineCheck::UseComputedDisplayStyle,
                      maybeNonEditableAncestorBlock)
-               : HTMLEditUtils::GetPreviousContent(
-                     aContent,
-                     {WalkTreeOption::IgnoreDataNodeExceptText,
-                      WalkTreeOption::StopAtBlockBoundary},
+               : HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+                     aContent, {LeafNodeOption::TreatChildBlockAsLeafNode},
                      BlockInlineCheck::UseComputedDisplayStyle,
                      maybeNonEditableAncestorBlock);
   };
@@ -1657,25 +1653,24 @@ template <typename EditorLineBreakType>
 Maybe<EditorLineBreakType> HTMLEditUtils::GetUnnecessaryLineBreak(
     const Element& aBlockElement, ScanLineBreak aScanLineBreak) {
   auto* lastLineBreakContent = [&]() -> nsIContent* {
-    const WalkTreeOptions onlyPrecedingLine{
-        WalkTreeOption::StopAtBlockBoundary};
     for (nsIContent* content =
              aScanLineBreak == ScanLineBreak::AtEndOfBlock
                  ? HTMLEditUtils::GetLastLeafContent(aBlockElement, {})
-                 : HTMLEditUtils::GetPreviousContent(
-                       aBlockElement, onlyPrecedingLine,
+                 : HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+                       aBlockElement,
+                       {LeafNodeOption::TreatChildBlockAsLeafNode},
                        BlockInlineCheck::UseComputedDisplayStyle,
                        aBlockElement.GetParentElement());
          content;
-         content =
+         content = HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+             *content,
              aScanLineBreak == ScanLineBreak::AtEndOfBlock
-                 ? HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-                       *content, {}, BlockInlineCheck::UseComputedDisplayStyle,
-                       &aBlockElement)
-                 : HTMLEditUtils::GetPreviousContent(
-                       *content, onlyPrecedingLine,
-                       BlockInlineCheck::UseComputedDisplayStyle,
-                       aBlockElement.GetParentElement())) {
+                 ? LeafNodeOptions{}
+                 : LeafNodeOptions{LeafNodeOption::TreatChildBlockAsLeafNode},
+             BlockInlineCheck::UseComputedDisplayStyle,
+             aScanLineBreak == ScanLineBreak::AtEndOfBlock
+                 ? &aBlockElement
+                 : aBlockElement.GetParentElement())) {
       // If we're scanning preceding <br> element of aBlockElement, we don't
       // need to look for a line break in another block because the caller
       // needs to handle only preceding <br> element of aBlockElement.

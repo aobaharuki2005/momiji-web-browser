@@ -4234,11 +4234,13 @@ HTMLEditor::FormatBlockContainerWithTransaction(
     }
 
     // We are making a block.  Consume a br, if needed.
-    if (nsCOMPtr<nsIContent> maybeBRContent = HTMLEditUtils::GetNextContent(
-            pointToInsertBlock,
-            {WalkTreeOption::IgnoreNonEditableNode,
-             WalkTreeOption::StopAtBlockBoundary},
-            BlockInlineCheck::UseComputedDisplayOutsideStyle, &aEditingHost)) {
+    if (nsCOMPtr<nsIContent> maybeBRContent =
+            HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+                pointToInsertBlock,
+                {LeafNodeOption::IgnoreNonEditableNode,
+                 LeafNodeOption::TreatChildBlockAsLeafNode},
+                BlockInlineCheck::UseComputedDisplayOutsideStyle,
+                &aEditingHost)) {
       if (maybeBRContent->IsHTMLElement(nsGkAtoms::br)) {
         AutoEditorDOMPointChildInvalidator lockOffset(pointToInsertBlock);
         nsresult rv = DeleteNodeWithTransaction(*maybeBRContent);
@@ -8317,11 +8319,13 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
   if (aBRElementNextToSplitPoint == BRElementNextToSplitPoint::Delete) {
     // Consume a trailing br, if any.  This is to keep an alignment from
     // creating extra lines, if possible.
-    if (nsCOMPtr<nsIContent> maybeBRContent = HTMLEditUtils::GetNextContent(
-            splitPoint,
-            {WalkTreeOption::IgnoreNonEditableNode,
-             WalkTreeOption::StopAtBlockBoundary},
-            BlockInlineCheck::UseComputedDisplayOutsideStyle, &aEditingHost)) {
+    if (nsCOMPtr<nsIContent> maybeBRContent =
+            HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+                splitPoint,
+                {LeafNodeOption::IgnoreNonEditableNode,
+                 LeafNodeOption::TreatChildBlockAsLeafNode},
+                BlockInlineCheck::UseComputedDisplayOutsideStyle,
+                &aEditingHost)) {
       if (maybeBRContent->IsHTMLElement(nsGkAtoms::br) &&
           splitPoint.GetChild()) {
         // Making use of html structure... if next node after where we are
@@ -8800,10 +8804,10 @@ void HTMLEditor::SetSelectionInterlinePosition() {
   //     content is `<br>`, does this do right thing?
   if (Element* editingHost = ComputeEditingHost()) {
     if (nsIContent* previousEditableContentInBlock =
-            HTMLEditUtils::GetPreviousContent(
+            HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
                 atCaret,
-                {WalkTreeOption::IgnoreNonEditableNode,
-                 WalkTreeOption::StopAtBlockBoundary},
+                {LeafNodeOption::IgnoreNonEditableNode,
+                 LeafNodeOption::TreatChildBlockAsLeafNode},
                 BlockInlineCheck::UseComputedDisplayStyle, editingHost)) {
       if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br)) {
         DebugOnly<nsresult> rvIgnored = SelectionRef().SetInterlinePosition(
@@ -8996,10 +9000,10 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
       // If it's a visible `<br>` element and next editable content is a
       // padding `<br>` element, we need to set interline position.
       else if (nsIContent* nextEditableContentInBlock =
-                   HTMLEditUtils::GetNextContent(
+                   HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
                        *previousEditableContent,
-                       {WalkTreeOption::IgnoreNonEditableNode,
-                        WalkTreeOption::StopAtBlockBoundary},
+                       {LeafNodeOption::IgnoreNonEditableNode,
+                        LeafNodeOption::TreatChildBlockAsLeafNode},
                        BlockInlineCheck::UseComputedDisplayStyle,
                        editingHost)) {
         if (EditorUtils::IsPaddingBRElementForEmptyLastLine(
@@ -9020,10 +9024,10 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
   // If previous editable content in same block is `<br>`, text node, `<img>`
   //  or `<hr>`, current caret position is fine.
   if (nsIContent* const previousEditableContentInBlock =
-          HTMLEditUtils::GetPreviousContent(
+          HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
               point,
-              {WalkTreeOption::IgnoreNonEditableNode,
-               WalkTreeOption::StopAtBlockBoundary},
+              {LeafNodeOption::IgnoreNonEditableNode,
+               LeafNodeOption::TreatChildBlockAsLeafNode},
               BlockInlineCheck::UseComputedDisplayStyle, editingHost)) {
     if (previousEditableContentInBlock->IsHTMLElement(nsGkAtoms::br) ||
         previousEditableContentInBlock->IsText() ||
@@ -9035,11 +9039,12 @@ nsresult HTMLEditor::AdjustCaretPositionAndEnsurePaddingBRElement(
 
   // If next editable content in same block is `<br>`, text node, `<img>` or
   // `<hr>`, current caret position is fine.
-  if (nsIContent* nextEditableContentInBlock = HTMLEditUtils::GetNextContent(
-          point,
-          {WalkTreeOption::IgnoreNonEditableNode,
-           WalkTreeOption::StopAtBlockBoundary},
-          BlockInlineCheck::UseComputedDisplayStyle, editingHost)) {
+  if (nsIContent* nextEditableContentInBlock =
+          HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+              point,
+              {LeafNodeOption::IgnoreNonEditableNode,
+               LeafNodeOption::TreatChildBlockAsLeafNode},
+              BlockInlineCheck::UseComputedDisplayStyle, editingHost)) {
     if (nextEditableContentInBlock->IsText() ||
         nextEditableContentInBlock->IsAnyOfHTMLElements(
             nsGkAtoms::br, nsGkAtoms::img, nsGkAtoms::hr)) {

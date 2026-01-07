@@ -2574,23 +2574,27 @@ bool HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
     MOZ_ASSERT(mSkippedInvisibleContents.IsEmpty());
     for (nsIContent* adjacentContent =
              aDirectionAndAmount == nsIEditor::ePrevious
-                 ? HTMLEditUtils::GetPreviousContent(
-                       *targetContent, {WalkTreeOption::StopAtBlockBoundary},
+                 ? HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+                       *targetContent,
+                       {LeafNodeOption::TreatChildBlockAsLeafNode},
                        BlockInlineCheck::UseComputedDisplayOutsideStyle,
                        &aEditingHost)
-                 : HTMLEditUtils::GetNextContent(
-                       *targetContent, {WalkTreeOption::StopAtBlockBoundary},
+                 : HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+                       *targetContent,
+                       {LeafNodeOption::TreatChildBlockAsLeafNode},
                        BlockInlineCheck::UseComputedDisplayOutsideStyle,
                        &aEditingHost);
          adjacentContent;
          adjacentContent =
              aDirectionAndAmount == nsIEditor::ePrevious
-                 ? HTMLEditUtils::GetPreviousContent(
-                       *adjacentContent, {WalkTreeOption::StopAtBlockBoundary},
+                 ? HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
+                       *adjacentContent,
+                       {LeafNodeOption::TreatChildBlockAsLeafNode},
                        BlockInlineCheck::UseComputedDisplayOutsideStyle,
                        &aEditingHost)
-                 : HTMLEditUtils::GetNextContent(
-                       *adjacentContent, {WalkTreeOption::StopAtBlockBoundary},
+                 : HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
+                       *adjacentContent,
+                       {LeafNodeOption::TreatChildBlockAsLeafNode},
                        BlockInlineCheck::UseComputedDisplayOutsideStyle,
                        &aEditingHost)) {
       // If non-editable element is found, we should not skip it to avoid
@@ -5589,10 +5593,9 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::AutoBlockElementsJoiner::
           atStart.IsEndOfContainer() && range.StartRef().GetChild() &&
                   HTMLEditUtils::IsInvisibleBRElement(
                       *range.StartRef().GetChild())
-              ? HTMLEditUtils::GetNextContent(
+              ? HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
                     *atStart.ContainerAs<nsIContent>(),
-                    {WalkTreeOption::IgnoreDataNodeExceptText,
-                     WalkTreeOption::StopAtBlockBoundary},
+                    {LeafNodeOption::TreatChildBlockAsLeafNode},
                     BlockInlineCheck::UseComputedDisplayOutsideStyle,
                     editingHost)
               : nullptr;
@@ -6366,9 +6369,9 @@ nsresult HTMLEditor::AutoMoveOneLineHandler::
     const RefPtr<Text> textNodeEndingWithUnnecessaryLineBreak = [&]() -> Text* {
       Text* lastTextNode = Text::FromNodeOrNull(
           mMovingToParentBlock
-              ? HTMLEditUtils::GetPreviousContent(
+              ? HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
                     *mTopmostSrcAncestorBlockInDestBlock,
-                    {WalkTreeOption::StopAtBlockBoundary},
+                    {LeafNodeOption::TreatChildBlockAsLeafNode},
                     BlockInlineCheck::UseComputedDisplayOutsideStyle,
                     mDestInclusiveAncestorBlock)
               : HTMLEditUtils::GetLastLeafContent(
