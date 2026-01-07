@@ -236,15 +236,18 @@ class TabNotesControllerClass {
         // changed.
         /** @type {CanonicalURLParent|undefined} */
         let parent =
-          aBrowser.browsingContext?.currentWindowGlobal.getActor(
+          aBrowser.browsingContext?.currentWindowGlobal.getExistingActor(
             "CanonicalURL"
           );
 
-        parent?.sendAsyncMessage("CanonicalURL:Detect");
-        lazy.logConsole.debug(
-          "requesting CanonicalURL:Detect due to history.pushState",
-          aLocation.spec
-        );
+        if (parent) {
+          parent.sendAsyncMessage("CanonicalURL:Detect");
+          lazy.logConsole.debug(
+            "requesting CanonicalURL:Detect due to history.pushState",
+            aLocation.spec
+          );
+        }
+
         return;
       }
 
