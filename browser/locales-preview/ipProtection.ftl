@@ -80,6 +80,11 @@ ipprotection-toggle-active =
 ipprotection-toggle-inactive =
   .aria-label = Turn VPN on
 
+# Button to turn off the VPN
+ipprotection-button-turn-vpn-off = Turn off VPN
+# Button to turn on the VPN
+ipprotection-button-turn-vpn-on = Turn on VPN
+
 ## Messages and errors
 
 ipprotection-message-generic-error =
