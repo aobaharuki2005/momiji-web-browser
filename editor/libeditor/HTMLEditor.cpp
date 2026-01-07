@@ -100,8 +100,8 @@ using namespace widget;
 LazyLogModule gHTMLEditorFocusLog("HTMLEditorFocus");
 
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
-using LeafNodeType = HTMLEditUtils::LeafNodeType;
-using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
+using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+using LeafNodeOptions = HTMLEditUtils::LeafNodeOptions;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 // Some utilities to handle overloading of "A" tag for link and named anchor.
@@ -1041,8 +1041,8 @@ nsresult HTMLEditor::CollapseSelectionToEndOfLastLeafNodeOfDocument() const {
   }
 
   auto pointToPutCaret = [&]() -> EditorRawDOMPoint {
-    nsCOMPtr<nsIContent> lastLeafContent = HTMLEditUtils::GetLastLeafContent(
-        *bodyOrDocumentElement, {LeafNodeType::OnlyLeafNode});
+    nsCOMPtr<nsIContent> lastLeafContent =
+        HTMLEditUtils::GetLastLeafContent(*bodyOrDocumentElement, {});
     if (!lastLeafContent) {
       return EditorRawDOMPoint::AtEndOf(*bodyOrDocumentElement);
     }
@@ -1136,11 +1136,15 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
     }
   }
 
+  constexpr LeafNodeOptions leafNodeOptions = {
+      LeafNodeOption::TreatNonEditableNodeAsLeafNode,
+      LeafNodeOption::TreatChildBlockAsLeafNode,
+      // FIXME: Ignore empty inline containers such as <span></span> because we
+      // cannot visually put caret into it.
+  };
   for (nsIContent* leafContent = HTMLEditUtils::GetFirstLeafContent(
-           *editingHost,
-           {LeafNodeType::LeafNodeOrNonEditableNode,
-            LeafNodeType::LeafNodeOrChildBlock},
-           BlockInlineCheck::UseComputedDisplayStyle, editingHost);
+           *editingHost, leafNodeOptions,
+           BlockInlineCheck::UseComputedDisplayStyle);
        leafContent;) {
     // If we meet a non-editable node first, we should move caret to start
     // of the container block or editing host.
@@ -1177,9 +1181,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
         // Chromium collapses selection to start of the editing host when this
         // is the last leaf content.  So, we don't need special handling here.
         leafContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-            *leafElement,
-            {LeafNodeType::LeafNodeOrNonEditableNode,
-             LeafNodeType::LeafNodeOrChildBlock},
+            *leafElement, leafNodeOptions,
             BlockInlineCheck::UseComputedDisplayStyle, editingHost);
         continue;
       }
@@ -1203,9 +1205,7 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
       }
       // If it's an invisible text node, keep scanning next leaf.
       leafContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-          *leafContent,
-          {LeafNodeType::LeafNodeOrNonEditableNode,
-           LeafNodeType::LeafNodeOrChildBlock},
+          *leafContent, leafNodeOptions,
           BlockInlineCheck::UseComputedDisplayStyle, editingHost);
       continue;
     }
@@ -1240,19 +1240,15 @@ nsresult HTMLEditor::MaybeCollapseSelectionAtFirstEditableNode(
              EmptyCheckOption::TreatNonEditableContentAsInvisible}) &&
         !HTMLEditUtils::IsNeverElementContentsEditableByUser(*leafContent)) {
       leafContent = HTMLEditUtils::GetFirstLeafContent(
-          *leafContent,
-          {LeafNodeType::LeafNodeOrNonEditableNode,
-           LeafNodeType::LeafNodeOrChildBlock},
-          BlockInlineCheck::UseComputedDisplayStyle, editingHost);
+          *leafContent, leafNodeOptions,
+          BlockInlineCheck::UseComputedDisplayStyle);
       continue;
     }
 
     // Otherwise, we must meet an empty block element or a data node like
     // comment node.  Let's ignore it.
     leafContent = HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
-        *leafContent,
-        {LeafNodeType::LeafNodeOrNonEditableNode,
-         LeafNodeType::LeafNodeOrChildBlock},
+        *leafContent, leafNodeOptions,
         BlockInlineCheck::UseComputedDisplayStyle, editingHost);
   }
 
@@ -3306,7 +3302,9 @@ already_AddRefed<Element> HTMLEditor::GetSelectedElement(const nsAtom* aTagName,
         return nullptr;
       }
       nsIContent* firstEditableLeaf = HTMLEditUtils::GetFirstLeafContent(
-          *nextSibling, {LeafNodeType::OnlyLeafNode});
+          *nextSibling,
+          // XXX Should we ignore invisible inline elements and text nodes?
+          {});
       if (firstEditableLeaf &&
           firstEditableLeaf->IsHTMLElement(nsGkAtoms::br)) {
         return nullptr;

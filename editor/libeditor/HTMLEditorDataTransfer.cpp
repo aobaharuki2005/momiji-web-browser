@@ -97,7 +97,7 @@ namespace mozilla {
 
 using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
-using LeafNodeType = HTMLEditUtils::LeafNodeType;
+using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 
 #define kInsertCookie "_moz_Insert Here_moz_"
 
@@ -506,9 +506,13 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
   if (!aLastInsertedPoint.GetChild() ||
       !aLastInsertedPoint.GetChild()->IsHTMLElement(nsGkAtoms::table)) {
     containerContent = HTMLEditUtils::GetLastLeafContent(
-        *aLastInsertedPoint.GetChild(), {LeafNodeType::OnlyEditableLeafNode},
-        BlockInlineCheck::Unused,
-        aLastInsertedPoint.GetChild()->GetAsElementOrParentElement());
+        *aLastInsertedPoint.GetChild(),
+        {
+            LeafNodeOption::IgnoreNonEditableNode,
+            LeafNodeOption::IgnoreInvisibleText,
+            // FIXME: We cannot visually put caret into empty inline containers
+            // like <span></span> so that let's ignore them.
+        });
     if (containerContent) {
       Element* mostDistantInclusiveAncestorTableElement = nullptr;
       for (Element* maybeTableElement =

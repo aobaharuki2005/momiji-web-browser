@@ -78,8 +78,8 @@ extern LazyLogModule gTextInputLog;  // Defined in EditorBase.cpp
 using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using EmptyCheckOptions = HTMLEditUtils::EmptyCheckOptions;
-using LeafNodeType = HTMLEditUtils::LeafNodeType;
-using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
+using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+using LeafNodeOptions = HTMLEditUtils::LeafNodeOptions;
 using WalkTextOption = HTMLEditUtils::WalkTextOption;
 using WalkTreeDirection = HTMLEditUtils::WalkTreeDirection;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
@@ -926,8 +926,8 @@ nsresult HTMLEditor::ReflectPaddingBRElementForEmptyEditor() {
   // here and at redo, or doing it everywhere else that might care.  Since undo
   // and redo are relatively rare, it makes sense to take the (small)
   // performance hit here.
-  nsIContent* firstLeafChild = HTMLEditUtils::GetFirstLeafContent(
-      *mRootElement, {LeafNodeType::OnlyLeafNode});
+  nsIContent* firstLeafChild =
+      HTMLEditUtils::GetFirstLeafContent(*mRootElement, {});
   if (firstLeafChild &&
       EditorUtils::IsPaddingBRElementForEmptyEditor(*firstLeafChild)) {
     mPaddingBRElementForEmptyEditor =
@@ -2566,7 +2566,8 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
       // Try to put caret next to immediately after previous editable leaf.
       nsIContent* previousContent =
           HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElement(
-              newCaretPosition, {LeafNodeType::LeafNodeOrNonEditableNode},
+              newCaretPosition,
+              {LeafNodeOption::TreatNonEditableNodeAsLeafNode},
               BlockInlineCheck::UseComputedDisplayStyle,
               editableBlockElementOrInlineEditingHost);
       if (previousContent &&
@@ -2584,7 +2585,7 @@ HTMLEditor::DeleteTextAndNormalizeSurroundingWhiteSpaces(
       else if (nsIContent* nextContent =
                    HTMLEditUtils::GetNextLeafContentOrNextBlockElement(
                        newCaretPosition,
-                       {LeafNodeType::LeafNodeOrNonEditableNode},
+                       {LeafNodeOption::TreatNonEditableNodeAsLeafNode},
                        BlockInlineCheck::UseComputedDisplayStyle,
                        editableBlockElementOrInlineEditingHost)) {
         if (HTMLEditUtils::IsSimplyEditableNode(*nextContent) &&
@@ -7231,7 +7232,7 @@ HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction(
         // endpoint is just after the close of a block.
         if (nsIContent* child = HTMLEditUtils::GetLastLeafContent(
                 *prevVisibleThingOfEndPoint.ElementPtr(),
-                {LeafNodeType::LeafNodeOrChildBlock},
+                {LeafNodeOption::TreatChildBlockAsLeafNode},
                 BlockInlineCheck::UseHTMLDefaultStyle)) {
           newRange.SetEnd(EditorRawDOMPoint::After(*child));
         }
@@ -7272,7 +7273,7 @@ HTMLEditor::GetRangeExtendedToHardLineEdgesForBlockEditAction(
         // startpoint is just before the start of a block.
         if (nsIContent* child = HTMLEditUtils::GetFirstLeafContent(
                 *nextVisibleThingOfStartPoint.ElementPtr(),
-                {LeafNodeType::LeafNodeOrChildBlock},
+                {LeafNodeOption::TreatChildBlockAsLeafNode},
                 BlockInlineCheck::UseHTMLDefaultStyle)) {
           newRange.SetStart(EditorRawDOMPoint(child));
         }

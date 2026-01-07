@@ -526,6 +526,14 @@ class MOZ_STACK_CLASS WSRunScanner final {
     ReferHTMLDefaultStyle,
     // If set, stop scanning the DOM when it reaches a `Comment` node.
     StopAtComment,
+    // If set, ignore empty inline containers such as <span></span>.
+    IgnoreEmptyInlineContainers,
+    // If set, ignore empty inline containers which is not visible.  E.g.,
+    // <span></span> is ignored but <span style="border:1px solid"></span>
+    // and <span style="border:padding 1px"></span> are not ignored.
+    // XXX Currently, this does not work well if the inline container has only
+    // `::before` and/or `::after` content and the frame is dirty.
+    IgnoreInvisibleInlines,
   };
   using Options = EnumSet<Option>;
 
@@ -552,6 +560,32 @@ class MOZ_STACK_CLASS WSRunScanner final {
         aOptions.contains(Option::ReferHTMLDefaultStyle));
   }
 
+ private:
+  [[nodiscard]] static HTMLEditUtils::LeafNodeOptions ToLeafNodeOptions(
+      const Options& aOptions) {
+    using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+    using LeafNodeOptions = HTMLEditUtils::LeafNodeOptions;
+    auto types =
+        aOptions.contains(Option::OnlyEditableNodes)
+            ? LeafNodeOptions{LeafNodeOption::TreatNonEditableNodeAsLeafNode}
+            : LeafNodeOptions{};
+    if (aOptions.contains(Option::StopAtComment)) {
+      types += LeafNodeOption::TreatCommentAsLeafNode;
+    }
+    if (aOptions.contains(Option::IgnoreInvisibleInlines)) {
+      types +=
+          LeafNodeOptions{LeafNodeOption::IgnoreInvisibleEmptyInlineContainers,
+                          LeafNodeOption::IgnoreInvisibleInlineVoidElements,
+                          LeafNodeOption::IgnoreInvisibleText};
+    }
+    if (aOptions.contains(Option::IgnoreEmptyInlineContainers)) {
+      types += LeafNodeOptions{LeafNodeOption::IgnoreAnyEmptyInlineContainers,
+                               LeafNodeOption::IgnoreEmptyText};
+    }
+    return types;
+  }
+
+ public:
   template <typename EditorDOMPointType>
   WSRunScanner(Options aOptions,  // NOLINT(performance-unnecessary-value-param)
                const EditorDOMPointType& aScanStartPoint,

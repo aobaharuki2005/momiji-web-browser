@@ -49,8 +49,8 @@ namespace mozilla {
 using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using EmptyCheckOptions = HTMLEditUtils::EmptyCheckOptions;
-using LeafNodeType = HTMLEditUtils::LeafNodeType;
-using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
+using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+using LeafNodeOptions = HTMLEditUtils::LeafNodeOptions;
 using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 Result<EditActionResult, nsresult>
@@ -1753,7 +1753,7 @@ HTMLEditor::AutoInsertParagraphHandler::SplitParagraphWithTransaction(
 
   // Let's put caret at start of the first leaf container.
   nsIContent* child = HTMLEditUtils::GetFirstLeafContent(
-      *rightDivOrParagraphElement, {LeafNodeType::LeafNodeOrChildBlock},
+      *rightDivOrParagraphElement, {LeafNodeOption::TreatChildBlockAsLeafNode},
       BlockInlineCheck::UseComputedDisplayStyle);
   if (MOZ_UNLIKELY(!child)) {
     return SplitNodeResult(std::move(splitDivOrPResult),

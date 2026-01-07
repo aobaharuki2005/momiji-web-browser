@@ -73,15 +73,17 @@ void WSScanResult::AssertIfInvalidData(const WSRunScanner& aScanner) const {
                 mContent->IsHTMLElement(nsGkAtoms::br));
   MOZ_ASSERT_IF(mReason == WSType::PreformattedLineBreak,
                 EditorUtils::IsNewLinePreformatted(*mContent));
-  MOZ_ASSERT_IF(
-      mReason == WSType::EmptyInlineContainerElement,
-      HTMLEditUtils::IsEmptyInlineContainer(
-          *mContent,
-          {HTMLEditUtils::EmptyCheckOption::TreatSingleBRElementAsVisible,
-           HTMLEditUtils::EmptyCheckOption::TreatBlockAsVisible},
-          aScanner.ReferredHTMLDefaultStyle()
-              ? BlockInlineCheck::UseHTMLDefaultStyle
-              : BlockInlineCheck::UseComputedDisplayOutsideStyle));
+  auto MaybeNonVoidEmptyInlineContainerElement = [&]() {
+    return HTMLEditUtils::IsInlineContent(
+               *mContent,
+               aScanner.ReferredHTMLDefaultStyle()
+                   ? BlockInlineCheck::UseHTMLDefaultStyle
+                   : BlockInlineCheck::UseComputedDisplayOutsideStyle) &&
+           HTMLEditUtils::IsContainerNode(*mContent) &&
+           !HTMLEditUtils::IsReplacedElement(*mContent->AsElement());
+  };
+  MOZ_ASSERT_IF(mReason == WSType::EmptyInlineContainerElement,
+                MaybeNonVoidEmptyInlineContainerElement());
   MOZ_ASSERT_IF(
       mReason == WSType::SpecialContent,
       (mContent->IsText() && !mContent->IsEditable()) ||
@@ -90,14 +92,9 @@ void WSScanResult::AssertIfInvalidData(const WSRunScanner& aScanner) const {
                *mContent,
                aScanner.ReferredHTMLDefaultStyle()
                    ? BlockInlineCheck::UseHTMLDefaultStyle
-                   : BlockInlineCheck::UseComputedDisplayOutsideStyle) &&
-           !HTMLEditUtils::IsEmptyInlineContainer(
-               *mContent,
-               {HTMLEditUtils::EmptyCheckOption::TreatSingleBRElementAsVisible,
-                HTMLEditUtils::EmptyCheckOption::TreatBlockAsVisible},
-               aScanner.ReferredHTMLDefaultStyle()
-                   ? BlockInlineCheck::UseHTMLDefaultStyle
-                   : BlockInlineCheck::UseComputedDisplayOutsideStyle)));
+                   : BlockInlineCheck::UseComputedDisplayOutsideStyle)) &&
+              (!mContent->IsEditable() ||
+               !MaybeNonVoidEmptyInlineContainerElement()));
   MOZ_ASSERT_IF(
       mReason == WSType::OtherBlockBoundary,
       HTMLEditUtils::IsBlockElement(
