@@ -1586,8 +1586,6 @@ run-sequentially = ["true"] # node server exceptions dont replay well
 
 ["test_verify_traffic.js"]
 
-["test_wallpaper_protocol.js"]
-
 ["test_websocket_500k.js"]
 skip-if = [
   "verify",

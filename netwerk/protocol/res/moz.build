@@ -13,7 +13,6 @@ XPIDL_MODULE = "necko_res"
 
 EXPORTS.mozilla.net += [
     "ExtensionProtocolHandler.h",
-    "MozNewTabWallpaperProtocolHandler.h",
     "MozSrcProtocolHandler.h",
     "PageThumbProtocolHandler.h",
     "RemoteStreamGetter.h",
@@ -28,7 +27,6 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     "ExtensionProtocolHandler.cpp",
-    "MozNewTabWallpaperProtocolHandler.cpp",
     "MozSrcProtocolHandler.cpp",
     "nsResProtocolHandler.cpp",
     "PageThumbProtocolHandler.cpp",

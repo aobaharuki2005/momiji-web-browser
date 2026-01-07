@@ -202,10 +202,10 @@ add_task(async function test_Wallpaper_Upload() {
 });
 
 /**
- * Tests that the parent process sends down a moz-newtab-wallpaper:// protocol URI
- * to newtab to render as the background.
+ * Tests that the parent process sends down a consistent object URL to newtab to
+ * render as the background.
  */
-add_task(async function test_Wallpaper_protocolURI() {
+add_task(async function test_Wallpaper_objectURI() {
   let sandbox = sinon.createSandbox();
   let feed = getWallpaperFeedForTest(sandbox);
 
@@ -243,26 +243,22 @@ add_task(async function test_Wallpaper_protocolURI() {
     feed.store.dispatch.calledWith(
       actionCreators.BroadcastToContent({
         type: actionTypes.WALLPAPERS_CUSTOM_SET,
-        data: sandbox.match("moz-newtab-wallpaper://"),
+        data: sandbox.match("blob:null/"),
       })
-    ),
-    "Should dispatch WALLPAPERS_CUSTOM_SET with moz-newtab-wallpaper:// URI"
+    )
   );
 
-  // Verify the protocol URI uses the correct scheme and gets stored in state
+  // Now ensure that a consistent object URL gets returned for each subsequent
+  // request for a wallpaper by checking to see that it exists in the state
+  // object. This URL is non-deterministic, but we can pull it out from what was
+  // just passed to the store dispatch method.
   const [action] = feed.store.dispatch.getCall(0).args;
-  const wallpaperURI = action.data;
-
-  Assert.ok(
-    wallpaperURI.startsWith("moz-newtab-wallpaper://"),
-    "Wallpaper URI should use moz-newtab-wallpaper:// protocol"
-  );
-
+  const wallpaperURL = action.data;
   const state = reducers.Wallpapers(null, action);
   Assert.equal(
     state.uploadedWallpaper,
-    wallpaperURI,
-    "Should have updated the state to include the protocol URI"
+    wallpaperURL,
+    "Should have updated the state to include the object URL"
   );
 
   // Cleanup files
