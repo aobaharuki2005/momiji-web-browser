@@ -329,10 +329,7 @@ def test_copy_plain_config(monkeypatch):
 
 
 def test_render_templates():
-    with (
-        tempfile.TemporaryDirectory() as template_dir,
-        tempfile.TemporaryDirectory() as source_dir,
-    ):
+    with tempfile.TemporaryDirectory() as template_dir, tempfile.TemporaryDirectory() as source_dir:
         with open(os.path.join(template_dir, "debian_file1.in"), "w") as f:
             f.write("${some_build_variable}")
 
@@ -614,10 +611,7 @@ def test_prepare_langpack_files(monkeypatch, languages, remoting_name, expected)
 
     monkeypatch.setattr(utils.shutil, "copy", _mock_copy)
 
-    with (
-        tempfile.TemporaryDirectory() as xpi_dir,
-        tempfile.TemporaryDirectory() as output_dir,
-    ):
+    with tempfile.TemporaryDirectory() as xpi_dir, tempfile.TemporaryDirectory() as output_dir:
         for language in languages:
             path = os.path.join(xpi_dir, f"{language}.langpack.xpi")
             with zipfile.ZipFile(path, "w") as zip_file:

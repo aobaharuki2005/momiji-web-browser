@@ -200,12 +200,14 @@ class ShellScriptRunner(Layer):
                     shutil.copytree(testing_dir, output_dir)
                     self.env.set_arg("output", output_dir)
 
-        metadata.add_result({
-            "name": test["name"],
-            "framework": {"name": "mozperftest"},
-            "transformer": "mozperftest.test.shellscript:ShellScriptData",
-            "shouldAlert": True,
-            "results": self.parse_metrics(),
-        })
+        metadata.add_result(
+            {
+                "name": test["name"],
+                "framework": {"name": "mozperftest"},
+                "transformer": "mozperftest.test.shellscript:ShellScriptData",
+                "shouldAlert": True,
+                "results": self.parse_metrics(),
+            }
+        )
 
         return metadata

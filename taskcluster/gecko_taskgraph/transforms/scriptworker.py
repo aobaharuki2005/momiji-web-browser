@@ -6,6 +6,7 @@
 Transforms for adding appropriate scopes to scriptworker tasks.
 """
 
+
 from gecko_taskgraph.util.scriptworker import get_balrog_server_scope
 
 

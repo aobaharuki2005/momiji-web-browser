@@ -125,9 +125,9 @@ class ReftestManifest:
 
             for annotation in annotations:
                 key, condition = self.translate_condition_for_mozinfo(annotation)
-                test_dict[key] = "\n".join([
-                    t for t in [test_dict.get(key, ""), condition] if t
-                ])
+                test_dict[key] = "\n".join(
+                    [t for t in [test_dict.get(key, ""), condition] if t]
+                )
 
             self.tests.append(test_dict)
 

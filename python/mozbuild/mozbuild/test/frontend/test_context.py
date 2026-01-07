@@ -29,11 +29,13 @@ from mozbuild.util import StrictOrderingOnAppendListWithFlagsFactory
 
 class TestContext(unittest.TestCase):
     def test_defaults(self):
-        test = Context({
-            "foo": (int, int, ""),
-            "bar": (bool, bool, ""),
-            "baz": (dict, dict, ""),
-        })
+        test = Context(
+            {
+                "foo": (int, int, ""),
+                "bar": (bool, bool, ""),
+                "baz": (dict, dict, ""),
+            }
+        )
 
         self.assertEqual(list(test), [])
 
@@ -55,10 +57,12 @@ class TestContext(unittest.TestCase):
         self.assertEqual(set(test.keys()), {"foo", "bar", "baz"})
 
     def test_type_check(self):
-        test = Context({
-            "foo": (int, int, ""),
-            "baz": (dict, list, ""),
-        })
+        test = Context(
+            {
+                "foo": (int, int, ""),
+                "baz": (dict, list, ""),
+            }
+        )
 
         test["foo"] = 5
 
@@ -77,11 +81,13 @@ class TestContext(unittest.TestCase):
         self.assertEqual(test["baz"], {"a": 1, "b": 2})
 
     def test_update(self):
-        test = Context({
-            "foo": (int, int, ""),
-            "bar": (bool, bool, ""),
-            "baz": (dict, list, ""),
-        })
+        test = Context(
+            {
+                "foo": (int, int, ""),
+                "bar": (bool, bool, ""),
+                "baz": (dict, list, ""),
+            }
+        )
 
         self.assertEqual(list(test), [])
 
@@ -542,9 +548,11 @@ class TestPaths(unittest.TestCase):
 
         MyListWithFlags = ContextDerivedTypedListWithItems(
             Path,
-            StrictOrderingOnAppendListWithFlagsFactory({
-                "foo": bool,
-            }),
+            StrictOrderingOnAppendListWithFlagsFactory(
+                {
+                    "foo": bool,
+                }
+            ),
         )
         l = MyListWithFlags(ctxt1)
         l += paths

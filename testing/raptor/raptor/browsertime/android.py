@@ -96,10 +96,12 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
         ]
 
         if self.config["app"] in CHROME_ANDROID_APPS:
-            args_list.extend([
-                "--browser",
-                "chrome",
-            ])
+            args_list.extend(
+                [
+                    "--browser",
+                    "chrome",
+                ]
+            )
             if self.config["app"] == "cstm-car-m":
                 args_list.extend(["--chrome.android.package", "org.chromium.chrome"])
         else:
@@ -112,19 +114,23 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
                 activity = "mozilla.telemetry.glean.debug.GleanDebugActivity"
 
             # all hardware we test on is android 11+
-            args_list.extend([
-                '--firefox.geckodriverArgs="--android-storage"',
-                '--firefox.geckodriverArgs="app"',
-            ])
+            args_list.extend(
+                [
+                    '--firefox.geckodriverArgs="--android-storage"',
+                    '--firefox.geckodriverArgs="app"',
+                ]
+            )
 
-            args_list.extend([
-                "--browser",
-                "firefox",
-                "--firefox.android.package",
-                self.config["binary"],
-                "--firefox.android.activity",
-                activity,
-            ])
+            args_list.extend(
+                [
+                    "--browser",
+                    "firefox",
+                    "--firefox.android.package",
+                    self.config["binary"],
+                    "--firefox.android.activity",
+                    activity,
+                ]
+            )
 
         if self.config["app"] == "geckoview":
             # This is needed as geckoview is crashing on shutdown and is throwing marionette errors similar to 1768889
@@ -138,23 +144,24 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             # special non-default one there
             if self.config.get("intent") is not None:
                 args_list.extend(["--firefox.android.intentArgument=-a"])
-                args_list.extend([
-                    "--firefox.android.intentArgument",
-                    self.config["intent"],
-                ])
+                args_list.extend(
+                    ["--firefox.android.intentArgument", self.config["intent"]]
+                )
 
                 # Change glean ping names in all cases on Fenix
-                args_list.extend([
-                    "--firefox.android.intentArgument=--es",
-                    "--firefox.android.intentArgument=startNext",
-                    "--firefox.android.intentArgument=" + self.config["activity"],
-                    "--firefox.android.intentArgument=--esa",
-                    "--firefox.android.intentArgument=sourceTags",
-                    "--firefox.android.intentArgument=automation",
-                    "--firefox.android.intentArgument=--ez",
-                    "--firefox.android.intentArgument=performancetest",
-                    "--firefox.android.intentArgument=true",
-                ])
+                args_list.extend(
+                    [
+                        "--firefox.android.intentArgument=--es",
+                        "--firefox.android.intentArgument=startNext",
+                        "--firefox.android.intentArgument=" + self.config["activity"],
+                        "--firefox.android.intentArgument=--esa",
+                        "--firefox.android.intentArgument=sourceTags",
+                        "--firefox.android.intentArgument=automation",
+                        "--firefox.android.intentArgument=--ez",
+                        "--firefox.android.intentArgument=performancetest",
+                        "--firefox.android.intentArgument=true",
+                    ]
+                )
 
                 args_list.extend(["--firefox.android.intentArgument=-d"])
                 args_list.extend(["--firefox.android.intentArgument", "about:blank"])

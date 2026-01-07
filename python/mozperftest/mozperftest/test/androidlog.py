@@ -50,11 +50,13 @@ class AndroidLog(Layer):
             "transform-subtest-name": self.get_arg("subtest-name"),
         }
 
-        metadata.add_result({
-            "results": str(self._get_logcat()),
-            "transformer": "LogCatTimeTransformer",
-            "transformer-options": options,
-            "name": "LogCat",
-        })
+        metadata.add_result(
+            {
+                "results": str(self._get_logcat()),
+                "transformer": "LogCatTimeTransformer",
+                "transformer-options": options,
+                "name": "LogCat",
+            }
+        )
 
         return metadata

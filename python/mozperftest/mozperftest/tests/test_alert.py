@@ -41,11 +41,13 @@ def test_alert_basic_command(alert_json, expected_command):
     alert_layer = get_alert_layer(test.layers)
     line_handler = alert_layer.create_line_handler("a-test")
 
-    with (
-        mock.patch("mozperftest.test.alert.requests.get") as mocked_request,
-        mock.patch("mozperftest.test.alert.mozprocess") as mocked_mozprocess,
-        (MOCK_DATA_DIR / alert_json).open() as f,
-    ):
+    with mock.patch(
+        "mozperftest.test.alert.requests.get"
+    ) as mocked_request, mock.patch(
+        "mozperftest.test.alert.mozprocess"
+    ) as mocked_mozprocess, (
+        MOCK_DATA_DIR / alert_json
+    ).open() as f:
         mocked_response = mock.MagicMock()
         mocked_response.configure_mock(status_code=200)
         mocked_response.json.return_value = json.load(f)
@@ -88,11 +90,13 @@ def test_alert_basic_command_test_specification(alert_json, tests, expected_comm
     alert_layer = get_alert_layer(test.layers)
     line_handler = alert_layer.create_line_handler("a-test")
 
-    with (
-        mock.patch("mozperftest.test.alert.requests.get") as mocked_request,
-        mock.patch("mozperftest.test.alert.mozprocess") as mocked_mozprocess,
-        (MOCK_DATA_DIR / alert_json).open() as f,
-    ):
+    with mock.patch(
+        "mozperftest.test.alert.requests.get"
+    ) as mocked_request, mock.patch(
+        "mozperftest.test.alert.mozprocess"
+    ) as mocked_mozprocess, (
+        MOCK_DATA_DIR / alert_json
+    ).open() as f:
         mocked_response = mock.MagicMock()
         mocked_response.configure_mock(status_code=200)
         mocked_response.json.return_value = json.load(f)
@@ -290,12 +294,15 @@ def test_alert_exact_command(
     mach_cmd, metadata, env = get_running_env(**args)
     test = env.layers[TEST]
 
-    with (
-        mock.patch("mozperftest.test.alert.requests.get") as mocked_request,
-        mock.patch("mozperftest.test.alert.mozprocess") as mocked_mozprocess,
-        (MOCK_DATA_DIR / alert_json).open() as alert_file,
-        (MOCK_DATA_DIR / task_info_json).open() as task_file,
-    ):
+    with mock.patch(
+        "mozperftest.test.alert.requests.get"
+    ) as mocked_request, mock.patch(
+        "mozperftest.test.alert.mozprocess"
+    ) as mocked_mozprocess, (
+        MOCK_DATA_DIR / alert_json
+    ).open() as alert_file, (
+        MOCK_DATA_DIR / task_info_json
+    ).open() as task_file:
         mocked_alert_response = mock.MagicMock()
         mocked_alert_response.configure_mock(status_code=200)
         mocked_alert_response.json.return_value = json.load(alert_file)
@@ -326,11 +333,13 @@ def test_alert_basic_command_failed():
     alert_layer = get_alert_layer(test.layers)
     alert_layer.create_line_handler("a-test")
 
-    with (
-        mock.patch("mozperftest.test.alert.requests.get") as mocked_request,
-        mock.patch("mozperftest.test.alert.mozprocess") as mocked_mozprocess,
-        (MOCK_DATA_DIR / alert_json).open() as f,
-    ):
+    with mock.patch(
+        "mozperftest.test.alert.requests.get"
+    ) as mocked_request, mock.patch(
+        "mozperftest.test.alert.mozprocess"
+    ) as mocked_mozprocess, (
+        MOCK_DATA_DIR / alert_json
+    ).open() as f:
         mocked_response = mock.MagicMock()
         mocked_response.configure_mock(status_code=200)
         mocked_response.json.return_value = json.load(f)

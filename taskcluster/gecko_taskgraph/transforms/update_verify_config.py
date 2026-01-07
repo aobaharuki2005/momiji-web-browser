@@ -143,10 +143,12 @@ def add_command(config, tasks):
             command.append(f"--{arg}")
             command.append(task["extra"][arg])
 
-        task["run"].update({
-            "using": "mach",
-            "mach": " ".join(command),
-        })
+        task["run"].update(
+            {
+                "using": "mach",
+                "mach": " ".join(command),
+            }
+        )
 
         if task.get("index"):
             task["index"].setdefault(

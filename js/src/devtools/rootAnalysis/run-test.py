@@ -84,11 +84,9 @@ if not cfg.sixgill_plugin:
         cfg.sixgill, "usr", "libexec", "sixgill", "gcc", "xgill.so"
     )
 
-subprocess.check_call([
-    cfg.js,
-    "-e",
-    'if (!getBuildConfiguration("has-ctypes")) quit(1)',
-])
+subprocess.check_call(
+    [cfg.js, "-e", 'if (!getBuildConfiguration("has-ctypes")) quit(1)']
+)
 
 
 def binpath(prog):

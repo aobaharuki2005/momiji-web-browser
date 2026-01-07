@@ -64,9 +64,11 @@ VARIABLES = {
     "HOGEHOGE": (
         ContextDerivedTypedListWithItems(
             Piyo,
-            StrictOrderingOnAppendListWithFlagsFactory({
-                "foo": bool,
-            }),
+            StrictOrderingOnAppendListWithFlagsFactory(
+                {
+                    "foo": bool,
+                }
+            ),
         ),
         list,
         None,

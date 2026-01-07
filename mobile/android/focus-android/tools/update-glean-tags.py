@@ -5,7 +5,6 @@ Scrapes GitHub labels for Focus and generates a set of glean tags for use in met
 
 See https://mozilla.github.io/glean/book/reference/yaml/tags.html
 """
-
 import urllib
 from pathlib import Path
 

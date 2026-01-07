@@ -125,7 +125,8 @@ def get_flavors(graph_config, param):
             "rebuild_kinds": {
                 "type": "array",
                 "description": (
-                    "Optional: an array of kinds to ignore from the previous graph(s)."
+                    "Optional: an array of kinds to ignore from the previous "
+                    "graph(s)."
                 ),
                 "default": graph_config["release-promotion"].get("rebuild-kinds", []),
                 "items": {
@@ -157,9 +158,8 @@ def get_flavors(graph_config, param):
             "next_version": {
                 "type": "string",
                 "description": (
-                    "Next version. Required in the following flavors: {}".format(
-                        get_flavors(graph_config, "version-bump")
-                    )
+                    "Next version. Required in the following flavors: "
+                    "{}".format(get_flavors(graph_config, "version-bump"))
                 ),
                 "default": "",
             },
@@ -177,9 +177,8 @@ def get_flavors(graph_config, param):
             "partial_updates": {
                 "type": "object",
                 "description": (
-                    "Partial updates. Required in the following flavors: {}".format(
-                        get_flavors(graph_config, "partial-updates")
-                    )
+                    "Partial updates. Required in the following flavors: "
+                    "{}".format(get_flavors(graph_config, "partial-updates"))
                 ),
                 "default": {},
                 "additionalProperties": {
@@ -397,11 +396,13 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     parameters["release_enable_emefree"] = release_enable_emefree
 
     partner_config = input.get("release_partner_config")
-    if not partner_config and any([
-        release_enable_partner_repack,
-        release_enable_partner_attribution,
-        release_enable_emefree,
-    ]):
+    if not partner_config and any(
+        [
+            release_enable_partner_repack,
+            release_enable_partner_attribution,
+            release_enable_emefree,
+        ]
+    ):
         github_token = get_token(parameters)
         partner_config = get_partner_config(partner_url_config, github_token)
     if partner_config:

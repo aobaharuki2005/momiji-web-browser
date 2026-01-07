@@ -4,25 +4,24 @@
 
 import json
 import os
+import platform
 import re
 import signal
 import subprocess
-from pathlib import Path
+import sys
 
-import toml
 from mozlint import result
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 
-def get_pyproject_excludes(pyproject_toml: Path):
-    if not pyproject_toml.exists():
-        return []
-
-    with pyproject_toml.open() as f:
-        data = toml.load(f)
-
-    return data.get("tool", {}).get("ruff", {}).get("exclude", [])
+def default_bindir():
+    # We use sys.prefix to find executables as that gets modified with
+    # virtualenv's activate_this.py, whereas sys.executable doesn't.
+    if platform.system() == "Windows":
+        return os.path.join(sys.prefix, "Scripts")
+    else:
+        return os.path.join(sys.prefix, "bin")
 
 
 def get_ruff_version(binary):
@@ -44,23 +43,19 @@ def get_ruff_version(binary):
     print(f"Error: Could not parse the version '{output}'")
 
 
-def run_process(cmd, log):
+def run_process(config, cmd, **kwargs):
     orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
     proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
     )
     signal.signal(signal.SIGINT, orig)
     try:
-        stdout, stderr = proc.communicate()
+        output, _ = proc.communicate()
         proc.wait()
-        for line in stderr.splitlines():
-            if line:
-                log.debug(line)
     except KeyboardInterrupt:
         proc.kill()
-        return "", -1
 
-    return stdout, proc.returncode
+    return output
 
 
 def lint(paths, config, log, **lintargs):
@@ -75,6 +70,8 @@ def lint(paths, config, log, **lintargs):
     if config.get("exclude"):
         args.append(f"--extend-exclude={','.join(config['exclude'])}")
 
+    process_kwargs = {"processStderrLine": lambda line: log.debug(line)}
+
     warning_rules = set(config.get("warning-rules", []))
     if lintargs.get("fix"):
         # Do a first pass with --fix-only as the json format doesn't return the
@@ -86,26 +83,16 @@ def lint(paths, config, log, **lintargs):
             fix_args.append(f"--extend-ignore={','.join(warning_rules)}")
 
         log.debug(f"Running --fix: {fix_args}")
-        output, returncode = run_process(fix_args, log)
-        if returncode == 2:
-            log.error(
-                f"ruff terminated abnormally (invalid config, CLI options, or internal error): {output}"
-            )
-            return {"results": [], "fixed": 0}
+        output = run_process(config, fix_args, **process_kwargs)
         matches = re.match(r"Fixed (\d+) errors?.", output)
         if matches:
             fixed = int(matches[1])
     args += ["--output-format=json"]
     log.debug(f"Running with args: {args}")
 
-    output, returncode = run_process(args, log)
-    if returncode == 2:
-        log.error(
-            f"ruff terminated abnormally (invalid config, CLI options, or internal error): {output}"
-        )
-        return {"results": [], "fixed": fixed}
+    output = run_process(config, args, **process_kwargs)
     if not output:
-        return {"results": [], "fixed": fixed}
+        return []
 
     try:
         issues = json.loads(output)
@@ -131,75 +118,6 @@ def lint(paths, config, log, **lintargs):
         if issue["fix"]:
             res["hint"] = issue["fix"]["message"]
 
-        results.append(result.from_config(config, **res))
-
-    return {"results": results, "fixed": fixed}
-
-
-def format(paths, config, log, **lintargs):
-    """Run ruff format to check/fix Python formatting."""
-    fixed = 0
-    results = []
-
-    if not paths:
-        return {"results": results, "fixed": fixed}
-
-    args = ["ruff", "format", "--force-exclude"] + paths
-
-    log.debug(f"Ruff version {get_ruff_version('ruff')}")
-
-    topsrcdir = Path(lintargs["root"])
-    pyproject_toml = topsrcdir / "pyproject.toml"
-    exclude_patterns = get_pyproject_excludes(pyproject_toml)
-
-    # Merge pyproject.toml excludes with config excludes.
-    # This is needed because ruff format's --exclude replaces rather than extends
-    # the pyproject.toml excludes (unlike ruff check which has --extend-exclude).
-    if config.get("exclude"):
-        exclude_patterns.extend(config["exclude"])
-
-    for exclude in exclude_patterns:
-        args.extend(["--exclude", exclude])
-
-    if lintargs.get("fix"):
-        # Do a first pass to fix, as JSON output doesn't include fix counts
-        log.debug(f"Running --fix: {args}")
-        output, returncode = run_process(args, log)
-        if returncode == 2:
-            log.error(
-                f"ruff terminated abnormally (invalid config, CLI options, or internal error): {output}"
-            )
-            return {"results": [], "fixed": 0}
-        match = re.search(r"(\d+) files? reformatted", output)
-        if match:
-            fixed = int(match.group(1))
-
-    args += ["--check", "--output-format=json"]
-    log.debug(f"Running with args: {args}")
-
-    output, returncode = run_process(args, log)
-    if returncode == 2 and not output:
-        log.error(
-            "ruff format terminated abnormally (invalid config, CLI options, or internal error)"
-        )
-        return {"results": [], "fixed": fixed}
-    if not output:
-        return {"results": [], "fixed": fixed}
-
-    try:
-        issues = json.loads(output)
-    except json.JSONDecodeError:
-        log.error(f"could not parse output: {output}")
-        return {"results": [], "fixed": fixed}
-
-    for issue in issues:
-        res = {
-            "path": issue["filename"],
-            "lineno": issue["location"]["row"],
-            "column": issue["location"]["column"],
-            "message": issue["message"],
-            "level": "error",
-        }
         results.append(result.from_config(config, **res))
 
     return {"results": results, "fixed": fixed}

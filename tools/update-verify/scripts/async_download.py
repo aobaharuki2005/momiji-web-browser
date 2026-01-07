@@ -105,7 +105,7 @@ async def fetch_url(url, path, connector):
                             break
                         fd.write(chunk)
                 result = _result(response)
-                log.info(f"Finished downloading {url}\n{result['headers']}")
+                log.info(f'Finished downloading {url}\n{result["headers"]}')
                 return result
 
     except (
@@ -345,7 +345,7 @@ async def _download_from_config(verifyConfig):
     with open(cacheIndexPath) as cache:
         for ln, url in enumerate(cache.readlines()):
             line = url.replace("\n", "")
-            log.info(f"Line {ln + 1}: {line}")
+            log.info(f"Line {ln+1}: {line}")
 
 
 def download_from_config(verifyConfig):

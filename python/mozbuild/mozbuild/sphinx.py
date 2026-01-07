@@ -17,18 +17,22 @@ from sphinx.util.docutils import ReferenceRole
 def function_reference(f, attr, args, doc):
     lines = []
 
-    lines.extend([
-        f,
-        "-" * len(f),
-        "",
-    ])
+    lines.extend(
+        [
+            f,
+            "-" * len(f),
+            "",
+        ]
+    )
 
     docstring = prepare_docstring(doc)
 
-    lines.extend([
-        docstring[0],
-        "",
-    ])
+    lines.extend(
+        [
+            docstring[0],
+            "",
+        ]
+    )
 
     arg_types = []
 
@@ -42,10 +46,12 @@ def function_reference(f, attr, args, doc):
 
     arg_s = "(%s)" % ", ".join(arg_types)
 
-    lines.extend([
-        ":Arguments: %s" % arg_s,
-        "",
-    ])
+    lines.extend(
+        [
+            ":Arguments: %s" % arg_s,
+            "",
+        ]
+    )
 
     lines.extend(docstring[1:])
     lines.append("")
@@ -62,16 +68,20 @@ def variable_reference(v, st_type, in_type, doc):
 
     docstring = prepare_docstring(doc)
 
-    lines.extend([
-        docstring[0],
-        "",
-    ])
+    lines.extend(
+        [
+            docstring[0],
+            "",
+        ]
+    )
 
-    lines.extend([
-        ":Storage Type: ``%s``" % st_type.__name__,
-        ":Input Type: ``%s``" % in_type.__name__,
-        "",
-    ])
+    lines.extend(
+        [
+            ":Storage Type: ``%s``" % st_type.__name__,
+            ":Input Type: ``%s``" % in_type.__name__,
+            "",
+        ]
+    )
 
     lines.extend(docstring[1:])
     lines.append("")
@@ -88,12 +98,14 @@ def special_reference(v, func, typ, doc):
 
     docstring = prepare_docstring(doc)
 
-    lines.extend([
-        docstring[0],
-        "",
-        ":Type: ``%s``" % typ.__name__,
-        "",
-    ])
+    lines.extend(
+        [
+            docstring[0],
+            "",
+            ":Type: ``%s``" % typ.__name__,
+            "",
+        ]
+    )
 
     lines.extend(docstring[1:])
     lines.append("")
@@ -104,21 +116,25 @@ def special_reference(v, func, typ, doc):
 def format_module(m):
     lines = []
 
-    lines.extend([
-        ".. note::",
-        "   moz.build files' implementation includes a ``Path`` class.",
-    ])
+    lines.extend(
+        [
+            ".. note::",
+            "   moz.build files' implementation includes a ``Path`` class.",
+        ]
+    )
     path_docstring_minus_summary = prepare_docstring(m.Path.__doc__)[2:]
     lines.extend(["   " + line for line in path_docstring_minus_summary])
 
     for subcontext, cls in sorted(m.SUBCONTEXTS.items()):
-        lines.extend([
-            ".. _mozbuild_subcontext_%s:" % subcontext,
-            "",
-            "Sub-Context: %s" % subcontext,
-            "=============" + "=" * len(subcontext),
-            "",
-        ])
+        lines.extend(
+            [
+                ".. _mozbuild_subcontext_%s:" % subcontext,
+                "",
+                "Sub-Context: %s" % subcontext,
+                "=============" + "=" * len(subcontext),
+                "",
+            ]
+        )
         lines.extend(prepare_docstring(cls.__doc__))
         if lines[-1]:
             lines.append("")
@@ -126,29 +142,35 @@ def format_module(m):
         for k, v in sorted(cls.VARIABLES.items()):
             lines.extend(variable_reference(k, *v))
 
-    lines.extend([
-        "Variables",
-        "=========",
-        "",
-    ])
+    lines.extend(
+        [
+            "Variables",
+            "=========",
+            "",
+        ]
+    )
 
     for v in sorted(m.VARIABLES):
         lines.extend(variable_reference(v, *m.VARIABLES[v]))
 
-    lines.extend([
-        "Functions",
-        "=========",
-        "",
-    ])
+    lines.extend(
+        [
+            "Functions",
+            "=========",
+            "",
+        ]
+    )
 
     for func in sorted(m.FUNCTIONS):
         lines.extend(function_reference(func, *m.FUNCTIONS[func]))
 
-    lines.extend([
-        "Special Variables",
-        "=================",
-        "",
-    ])
+    lines.extend(
+        [
+            "Special Variables",
+            "=================",
+            "",
+        ]
+    )
 
     for v in sorted(m.SPECIAL_VARIABLES):
         lines.extend(special_reference(v, *m.SPECIAL_VARIABLES[v]))

@@ -42,7 +42,7 @@ def search_for_smoke_tests(tests_name):
                 locations.append(count)
 
         for location in locations:
-            test_names.append(f"{class_name}#{code[location + 3].strip('()')}")
+            test_names.append(f"{class_name}#{code[location+3].strip('()')}")
     return test_names
 
 

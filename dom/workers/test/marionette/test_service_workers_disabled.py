@@ -23,9 +23,11 @@ class ServiceWorkersDisabledTestCase(MarionetteServiceWorkerTestCase):
     def test_service_workers_disabled_at_startup(self):
         # self.marionette.set_pref sets preferences after startup.  Using it
         # here causes intermittent failures.
-        self.marionette.instance.profile.set_preferences({
-            "dom.serviceWorkers.enabled": False,
-        })
+        self.marionette.instance.profile.set_preferences(
+            {
+                "dom.serviceWorkers.enabled": False,
+            }
+        )
 
         self.marionette.restart()
 

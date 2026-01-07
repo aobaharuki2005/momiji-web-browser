@@ -25,12 +25,14 @@ class TestSessionRestore(SessionStoreTestCase):
             startup_page=1,
             include_private=False,
             restore_on_demand=True,
-            test_windows=set([
-                (
-                    inline("lorem ipsom"),
-                    inline("dolor"),
-                ),
-            ]),
+            test_windows=set(
+                [
+                    (
+                        inline("lorem ipsom"),
+                        inline("dolor"),
+                    ),
+                ]
+            ),
         )
 
     def test_restore_sidebar_open(self):

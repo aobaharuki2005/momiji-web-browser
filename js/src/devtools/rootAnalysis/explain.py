@@ -158,13 +158,11 @@ num_refs = 0
 num_missing = 0
 
 try:
-    with (
-        open(args.rootingHazards) as rootingHazards,
-        open(args.hazards, "w") as hazards,
-        open(args.extra, "w") as extra,
-        open(args.refs, "w") as refs,
-        open(args.html, "w") as html,
-    ):
+    with open(args.rootingHazards) as rootingHazards, open(
+        args.hazards, "w"
+    ) as hazards, open(args.extra, "w") as extra, open(args.refs, "w") as refs, open(
+        args.html, "w"
+    ) as html:
         current_gcFunction = None
 
         hazardousGCFunctions = set()

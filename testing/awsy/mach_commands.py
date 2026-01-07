@@ -249,7 +249,8 @@ def run_awsy(command_context, tests, binary=None, **kwargs):
     action="store",
     type=int,
     dest="iterations",
-    help="Number of times to run through the test suite. Defaults to %s." % ITERATIONS,
+    help="Number of times to run through the test suite. "
+    "Defaults to %s." % ITERATIONS,
 )
 @CommandArgument(
     "--per-tab-pause",

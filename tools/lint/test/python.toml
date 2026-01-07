@@ -3,6 +3,8 @@ subsuite = "mozlint"
 
 ["test_android_format.py"]
 
+["test_black.py"]
+
 ["test_cargo-audit.py"]
 # testing it on linux is enough
 skip-if = [
@@ -59,8 +61,6 @@ skip-if = ["os == 'win'"]
 ["test_rst.py"]
 
 ["test_ruff.py"]
-
-["test_ruff_format.py"]
 
 ["test_rustfmt.py"]
 

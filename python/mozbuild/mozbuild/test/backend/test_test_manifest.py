@@ -120,12 +120,14 @@ class TestTestManifestBackend(BackendTester):
 
         self.assertEqual(
             sources,
-            set([
-                mozpath.join(env.topsrcdir, "mochitest.toml"),
-                mozpath.join(env.topsrcdir, "mochitest-common.toml"),
-                mozpath.join(env.topsrcdir, "moz.build"),
-                status_path,
-            ]),
+            set(
+                [
+                    mozpath.join(env.topsrcdir, "mochitest.toml"),
+                    mozpath.join(env.topsrcdir, "mochitest-common.toml"),
+                    mozpath.join(env.topsrcdir, "moz.build"),
+                    status_path,
+                ]
+            ),
         )
 
 

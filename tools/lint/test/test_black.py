@@ -4,7 +4,7 @@
 
 import mozunit
 
-LINTER = "ruff-format"
+LINTER = "black"
 fixed = 0
 
 
@@ -34,18 +34,16 @@ if __name__ == "__main__":
     assert fixed == 1
 
 
-def test_lint_ruff_format(lint, paths):
+def test_lint_black(lint, paths):
     results = lint(paths())
     assert len(results) == 2
 
     assert results[0].level == "error"
-    assert results[0].relpath.endswith("bad.py")
-    assert results[0].lineno == 4
-    assert results[0].column == 6
+    assert results[0].relpath == "bad.py"
 
     assert "EOF" in results[1].message
     assert results[1].level == "error"
-    assert results[1].relpath.endswith("invalid.py")
+    assert results[1].relpath == "invalid.py"
 
 
 if __name__ == "__main__":

@@ -5,6 +5,7 @@
 Transform the beetmover task into an actual task description.
 """
 
+
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.copy import deepcopy
 from taskgraph.util.treeherder import add_suffix, inherit_treeherder_from_dep

@@ -150,10 +150,12 @@ elif processor == "arm" and bits == "64bit":
     processor = "aarch64"
 
 bits = re.search(r"(\d+)bit", bits).group(1)
-info.update({
-    "processor": processor,
-    "bits": int(bits),
-})
+info.update(
+    {
+        "processor": processor,
+        "bits": int(bits),
+    }
+)
 
 if info.get("arch", "") != "aarch64":
     info["arch"] = info["processor"]

@@ -160,11 +160,9 @@ def subs(ctx):
 
 
 def tsc(ctx, *args):
-    return ctx._sub_mach([
-        "node",
-        os.path.join("node_modules", "typescript", "bin", "tsc"),
-        *args,
-    ])
+    return ctx._sub_mach(
+        ["node", os.path.join("node_modules", "typescript", "bin", "tsc"), *args]
+    )
 
 
 def node(ctx, script, *args):

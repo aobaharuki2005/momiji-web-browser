@@ -2,7 +2,8 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
-"""Mercurial VCS support."""
+"""Mercurial VCS support.
+"""
 
 import hashlib
 import os
@@ -381,7 +382,7 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
         # only have 1 local copy of logical repo stores.
         if not share_base:
             raise VCSException(
-                "vcs share base not defined; refusing to operate sub-optimally"
+                "vcs share base not defined; " "refusing to operate sub-optimally"
             )
 
         if not self.robustcheckout_path:

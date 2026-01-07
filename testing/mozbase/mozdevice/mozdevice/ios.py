@@ -53,16 +53,18 @@ class IosDeviceReal(IosDevice):
         super().__init__(uuid, name, False)
 
     def install(self, app_bundle):
-        subprocess.check_call([
-            "xcrun",
-            "devicectl",
-            "device",
-            "install",
-            "app",
-            "--device",
-            self.uuid,
-            app_bundle,
-        ])
+        subprocess.check_call(
+            [
+                "xcrun",
+                "devicectl",
+                "device",
+                "install",
+                "app",
+                "--device",
+                self.uuid,
+                app_bundle,
+            ]
+        )
 
     @staticmethod
     def all_devices():
@@ -104,7 +106,7 @@ class IosDeviceSimulator(IosDevice):
         env=None,
         wait_for_debugger=False,
         terminate_running_process=True,
-        **kwargs,
+        **kwargs
     ):
         # Put provided environment variables in `SIMCTL_CHILD_` so they
         # propagate into the simulator.
@@ -137,7 +139,7 @@ class IosDeviceSimulator(IosDevice):
                 bundle_id,
                 *args,
             ],
-            **kwargs,
+            **kwargs
         )
 
     def test_root(self, bundle_id):
@@ -203,13 +205,9 @@ class IosDeviceSimulator(IosDevice):
 
     def stop_application(self, bundle_id):
         try:
-            subprocess.check_call([
-                "xcrun",
-                "simctl",
-                "terminate",
-                self.uuid,
-                bundle_id,
-            ])
+            subprocess.check_call(
+                ["xcrun", "simctl", "terminate", self.uuid, bundle_id]
+            )
         except subprocess.CalledProcessError:
             pass
 

@@ -1,7 +1,6 @@
 ---
-ruff-format:
-    description: Reformat python with ruff
-    # Excludes should be added to topsrcdir/pyproject.toml
+black:
+    description: Reformat python
     exclude:
         - gfx/harfbuzz/src/meson.build
         - '**/*.mako.py'
@@ -15,6 +14,5 @@ ruff-format:
         - py
     support-files:
         - 'tools/lint/python/**'
-        - '**/pyproject.toml'
     type: external
-    payload: python.ruff:format
+    payload: python.black:lint

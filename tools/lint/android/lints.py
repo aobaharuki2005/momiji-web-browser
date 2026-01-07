@@ -454,7 +454,9 @@ def read_lint_report(config, subdir, tasks=[], **lintargs):
                 open(
                     os.path.join(reports, "lint", file),
                 )
-            ).get("runs", [{}])[0]
+            ).get(
+                "runs", [{}]
+            )[0]
 
             issues = data.get("results", [])
             rules = data.get("tool", {}).get("driver", {}).get("rules", [])

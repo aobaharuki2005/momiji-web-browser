@@ -462,10 +462,12 @@ class AlertTestRunner(Layer):
                     text=False,
                 )
                 if test not in self.perfherder_data:
-                    failed_commands.append({
-                        "cmd": cmd,
-                        "test": test,
-                    })
+                    failed_commands.append(
+                        {
+                            "cmd": cmd,
+                            "test": test,
+                        }
+                    )
 
         # Output results in a more readable manner
         for test, perfherder_data in self.perfherder_data.items():

@@ -224,13 +224,13 @@ def test_help_help_selected(*kwargs):
 @mock.patch("mozperftest.utils.run_python_script")
 @mock.patch("mozperftest.utils.install_package")
 def test_side_by_side(mock1, mock2, mock3, patched_mozperftest_tools):
-    with (
-        mock.patch("mozperftest.utils.create_path", return_value="fake_path") as _,
-        mock.patch(
-            "mozperftest.runner._create_artifacts_dir", return_value="fake_path"
-        ) as _,
-        mock.patch("mozperftest.runner._save_params", return_value="fake_path") as _,
-    ):
+    with mock.patch(
+        "mozperftest.utils.create_path", return_value="fake_path"
+    ) as _, mock.patch(
+        "mozperftest.runner._create_artifacts_dir", return_value="fake_path"
+    ) as _, mock.patch(
+        "mozperftest.runner._save_params", return_value="fake_path"
+    ) as _:
         with _get_tools_command() as (cmd, command_context), silence(command_context):
             cmd(command_context)
     patched_mozperftest_tools.run.assert_called()
@@ -241,20 +241,17 @@ def test_side_by_side(mock1, mock2, mock3, patched_mozperftest_tools):
 @mock.patch("mozperftest.utils.run_python_script")
 @mock.patch("mozperftest.utils.install_package")
 def test_change_detector(mock1, mock2, mock3, patched_mozperftest_tools):
-    with (
-        mock.patch("mozperftest.utils.create_path", return_value="fake_path") as _,
-        mock.patch(
-            "mozperftest.runner._create_artifacts_dir", return_value="fake_path"
-        ) as _,
-        mock.patch("mozperftest.runner._save_params", return_value="fake_path") as _,
-    ):
-        with (
-            _get_tools_command(tool="change-detector") as (
-                cmd,
-                command_context,
-            ),
-            silence(command_context),
-        ):
+    with mock.patch(
+        "mozperftest.utils.create_path", return_value="fake_path"
+    ) as _, mock.patch(
+        "mozperftest.runner._create_artifacts_dir", return_value="fake_path"
+    ) as _, mock.patch(
+        "mozperftest.runner._save_params", return_value="fake_path"
+    ) as _:
+        with _get_tools_command(tool="change-detector") as (
+            cmd,
+            command_context,
+        ), silence(command_context):
             cmd(command_context)
     patched_mozperftest_tools.run.assert_called()
 

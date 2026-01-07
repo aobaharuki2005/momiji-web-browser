@@ -166,15 +166,17 @@ class XPCShell(Layer):
         if len(results.items()) == 0:
             raise NoPerfMetricsError("xpcshell")
 
-        metadata.add_result({
-            "name": test.name,
-            "framework": {"name": "mozperftest"},
-            "transformer": "mozperftest.test.xpcshell:XPCShellData",
-            "results": [
-                {"values": measures, "name": subtest}
-                for subtest, measures in results.items()
-            ],
-        })
+        metadata.add_result(
+            {
+                "name": test.name,
+                "framework": {"name": "mozperftest"},
+                "transformer": "mozperftest.test.xpcshell:XPCShellData",
+                "results": [
+                    {"values": measures, "name": subtest}
+                    for subtest, measures in results.items()
+                ],
+            }
+        )
 
         return metadata
 

@@ -29,7 +29,9 @@ def set_default(d):
     output.write(
         """
         if self.default_is is not {}:
-            return\n""".format("True" if d == "T" else "False")
+            return\n""".format(
+            "True" if d == "T" else "False"
+        )
     )
 
 
@@ -94,7 +96,9 @@ def print_assertion(assertion):
             experimentStatus=ExperimentStatus.{},
             pref={},
             enrollmentStatusPref=ExperimentStatus.{},
-        )\n""".format(*assertion)
+        )\n""".format(
+            *assertion
+        )
     )
 
 

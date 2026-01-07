@@ -1381,7 +1381,9 @@ enum class nsresult : uint32_t
 {}
 }};
 
-""".format(",\n".join(items))
+""".format(
+            ",\n".join(items)
+        )
     )
 
     items = []
@@ -1395,7 +1397,9 @@ const nsresult
 ;
 
 #endif // ErrorList_h__
-""".format(",\n".join(items))
+""".format(
+            ",\n".join(items)
+        )
     )
 
 

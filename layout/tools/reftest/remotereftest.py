@@ -329,7 +329,7 @@ class RemoteReftest(RefTest):
             options,
             server=options.remoteWebServer,
             port=options.httpPort,
-            **kwargs,
+            **kwargs
         )
         profileDir = profile.profile
         prefs = {}
@@ -407,7 +407,7 @@ class RemoteReftest(RefTest):
         valgrindPath=None,
         valgrindArgs=None,
         valgrindSuppFiles=None,
-        **profileArgs,
+        **profileArgs
     ):
         if cmdargs is None:
             cmdargs = []

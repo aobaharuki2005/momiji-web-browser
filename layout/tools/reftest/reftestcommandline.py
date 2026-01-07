@@ -152,7 +152,8 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
             dest="ignoreWindowSize",
             action="store_true",
             default=False,
-            help="ignore the window size, which may cause spurious failures and passes",
+            help="ignore the window size, which may cause spurious "
+            "failures and passes",
         )
 
         self.add_argument(
@@ -187,7 +188,7 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
             default=[],
             dest="environment",
             metavar="NAME=VALUE",
-            help="sets the given variable in the application's environment",
+            help="sets the given variable in the application's " "environment",
         )
 
         self.add_argument(
@@ -367,11 +368,13 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
         return moznetwork.get_ip()
 
     def set_default_suite(self, options):
-        manifests = OrderedDict([
-            ("reftest.list", "reftest"),
-            ("crashtests.list", "crashtest"),
-            ("jstests.list", "jstestbrowser"),
-        ])
+        manifests = OrderedDict(
+            [
+                ("reftest.list", "reftest"),
+                ("crashtests.list", "crashtest"),
+                ("jstests.list", "jstestbrowser"),
+            ]
+        )
 
         for test_path in options.tests:
             file_name = os.path.basename(test_path)

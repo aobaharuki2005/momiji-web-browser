@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """module for tooltool operations"""
-
 import os
 import sys
 
@@ -72,10 +71,9 @@ class TooltoolMixin:
 
         if self.topsrcdir:
             cmd.extend(["--tooltool-manifest", manifest])
-            cmd.extend([
-                "--artifact-manifest",
-                os.path.join(self.topsrcdir, "toolchains.json"),
-            ])
+            cmd.extend(
+                ["--artifact-manifest", os.path.join(self.topsrcdir, "toolchains.json")]
+            )
         else:
             cmd.extend(["fetch", "-m", manifest, "-o"])
 

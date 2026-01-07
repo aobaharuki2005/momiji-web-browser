@@ -57,7 +57,9 @@ def configure_ssh(ssh_key_secret):
         ssh_key_file.chmod(0o600)
 
         hgrc_content = (
-            "[ui]\nusername = trybld\nssh = ssh -i {path} -l {user}\n".format(
+            "[ui]\n"
+            "username = trybld\n"
+            "ssh = ssh -i {path} -l {user}\n".format(
                 path=ssh_key_file, user=ssh_key["user"]
             )
         )
@@ -88,12 +90,14 @@ def push_canary(scriptworkers, addresses, ssh_key_secret):
     mach = Path(GECKO) / "mach"
     base_command = [str(mach), "try", "scriptworker", "--closed-tree", "--push-to-vcs"]
     for address in addresses:
-        base_command.extend([
-            "--route",
-            f"notify.email.{address}.on-failed",
-            "--route",
-            f"notify.email.{address}.on-exception",
-        ])
+        base_command.extend(
+            [
+                "--route",
+                f"notify.email.{address}.on-failed",
+                "--route",
+                f"notify.email.{address}.on-exception",
+            ]
+        )
 
     with configure_ssh(ssh_key_secret):
         env = os.environ.copy()

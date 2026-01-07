@@ -663,13 +663,18 @@ class VendorManifest(MozbuildObject):
             f.write(("".join(yaml)).encode("utf-8"))
 
     def spurious_check(self, revision, ignore_modified):
-        changed_files = set([
-            os.path.abspath(f) for f in self.repository.get_changed_files(mode="staged")
-        ])
-        generated_files = set([
-            self.get_full_path(f)
-            for f in self.manifest["vendoring"].get("generated", [])
-        ])
+        changed_files = set(
+            [
+                os.path.abspath(f)
+                for f in self.repository.get_changed_files(mode="staged")
+            ]
+        )
+        generated_files = set(
+            [
+                self.get_full_path(f)
+                for f in self.manifest["vendoring"].get("generated", [])
+            ]
+        )
         changed_files = set(changed_files) - generated_files
         if not changed_files:
             self.logInfo({"r": revision}, "Upstream {r} hasn't modified files locally.")

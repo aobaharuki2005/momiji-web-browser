@@ -115,12 +115,14 @@ def generate_beetmover_upstream_artifacts(
         if not paths:
             continue
 
-        upstream_artifacts.append({
-            "taskId": {"task-reference": f"<{dep}>"},
-            "taskType": map_config["tasktype_map"].get(dep),
-            "paths": sorted(paths),
-            "locale": current_locale,
-        })
+        upstream_artifacts.append(
+            {
+                "taskId": {"task-reference": f"<{dep}>"},
+                "taskType": map_config["tasktype_map"].get(dep),
+                "paths": sorted(paths),
+                "locale": current_locale,
+            }
+        )
 
     upstream_artifacts.sort(key=lambda u: u["paths"])
     return upstream_artifacts
@@ -269,17 +271,17 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
         else:
             folder_prefix = f"{version}-candidates/build{build_number}/android/"
 
-        kwargs.update({
-            "locale": locale,
-            "version": version,
-            "folder_prefix": folder_prefix,
-        })
+        kwargs.update(
+            {"locale": locale, "version": version, "folder_prefix": folder_prefix}
+        )
         kwargs.update(**platforms)
         paths = jsone.render(paths, kwargs)
-        artifacts.append({
-            "taskId": {"task-reference": f"<{dep}>"},
-            "locale": locale,
-            "paths": paths,
-        })
+        artifacts.append(
+            {
+                "taskId": {"task-reference": f"<{dep}>"},
+                "locale": locale,
+                "paths": paths,
+            }
+        )
 
     return artifacts
