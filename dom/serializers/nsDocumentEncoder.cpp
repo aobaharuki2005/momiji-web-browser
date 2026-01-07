@@ -1895,7 +1895,8 @@ nsresult nsHTMLCopyEncoder::PromoteRange(nsRange* inRange) {
 
   // if both range endpoints are at the common ancestor, check for possible
   // inclusion of ancestors
-  if (opStartNode == common && opEndNode == common) {
+  if (StaticPrefs::dom_serializer_includeCommonAncestor_enabled() &&
+      opStartNode == common && opEndNode == common) {
     rv = PromoteAncestorChain(address_of(opStartNode), &opStartOffset,
                               &opEndOffset);
     NS_ENSURE_SUCCESS(rv, rv);

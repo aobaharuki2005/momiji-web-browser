@@ -31,6 +31,10 @@
 
 /* global describe, it, beforeEach */
 
+const alwaysIncludeCommonAncestor = SpecialPowers.getBoolPref(
+  "dom.serializer.includeCommonAncestor.enabled"
+);
+
 const TESTS = [
   {
     selector: `caption`,
@@ -38,8 +42,12 @@ const TESTS = [
     expectedContext: `<html><body><div id="container"><table></table></div></body></html>`,
   }, {
     selector: `caption span`,
-    expectedResult: `<table><caption><span>Title1</span></caption></table>`,
-    expectedContext: `<html><body><div id="container"><table></table></div></body></html>`,
+    expectedResult: `${alwaysIncludeCommonAncestor ? `<table><caption>` : ``}` +
+                    `<span>Title1</span>` +
+                    `${alwaysIncludeCommonAncestor ? `</caption></table>` : ``}`,
+    expectedContext: `<html><body><div id="container"><table>` +
+                     `${alwaysIncludeCommonAncestor ? `` : `<caption></caption>`}` +
+                     `</table></div></body></html>`,
   }, {
     selector: `thead th`,
     expectedResult: `<table><thead><tr><th>First</th></tr></thead></table>`,

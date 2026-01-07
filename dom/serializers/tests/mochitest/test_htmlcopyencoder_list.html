@@ -27,6 +27,10 @@
 
 /* global describe, it, beforeEach */
 
+const alwaysIncludeCommonAncestor = SpecialPowers.getBoolPref(
+  "dom.serializer.includeCommonAncestor.enabled"
+);
+
 const TESTS = [
   {
     selector: `ul li`,
@@ -34,32 +38,58 @@ const TESTS = [
     expectedContext: `<html><body><div id="container"><ul></ul></div></body></html>`,
   }, {
     selector: `ul li span`,
-    expectedResult: `<li><span>Item2</span></li>`,
-    expectedContext: `<html><body><div id="container"><ul></ul></div></body></html>`,
+    expectedResult: `${alwaysIncludeCommonAncestor ? `<li>` : ``}` +
+                    `<span>Item2</span>` +
+                    `${alwaysIncludeCommonAncestor ? `</li>` : ``}`,
+    expectedContext: `<html><body><div id="container"><ul>` +
+                     `${alwaysIncludeCommonAncestor ? `` : `<li></li>`}` +
+                     `</ul></div></body></html>`,
   }, {
     selector: `ul li div`,
-    expectedResult: `<li><div>Item3</div></li>`,
-    expectedContext: `<html><body><div id="container"><ul></ul></div></body></html>`,
+    expectedResult: `${alwaysIncludeCommonAncestor ? `<li>` : ``}` +
+                    `<div>Item3</div>` +
+                    `${alwaysIncludeCommonAncestor ? `</li>` : ``}`,
+    expectedContext: `<html><body><div id="container"><ul>` +
+                     `${alwaysIncludeCommonAncestor ? `` : `<li></li>`}` +
+                     `</ul></div></body></html>`,
   }, {
     selector: `ul ol li`,
-    expectedResult: `<li><ol><li>SubItem1</li></ol></li>`,
-    expectedContext: `<html><body><div id="container"><ul></ul></div></body></html>`,
+    expectedResult: `${alwaysIncludeCommonAncestor ? `<li><ol>` : ``}` +
+                    `<li>SubItem1</li>` +
+                    `${alwaysIncludeCommonAncestor ? `</ol></li>` : ``}`,
+    expectedContext: `<html><body><div id="container"><ul>` +
+                     `${alwaysIncludeCommonAncestor ? `` : `<li><ol></ol></li>`}` +
+                     `</ul></div></body></html>`,
   }, {
     selector: `ul ol li span`,
-    expectedResult: `<li><span>SubItem2</span></li>`,
-    expectedContext: `<html><body><div id="container"><ul><li><ol></ol></li></ul></div></body></html>`,
+    expectedResult: `${alwaysIncludeCommonAncestor ? `<li>` : ``}` +
+                    `<span>SubItem2</span>` +
+                    `${alwaysIncludeCommonAncestor ? `</li>` : ``}`,
+    expectedContext: `<html><body><div id="container"><ul><li><ol>` +
+                     `${alwaysIncludeCommonAncestor ? `` : `<li></li>`}` +
+                     `</ol></li></ul></div></body></html>`,
   }, {
     selector: `ul ol li div`,
-    expectedResult: `<li><div>SubItem3</div></li>`,
-    expectedContext: `<html><body><div id="container"><ul><li><ol></ol></li></ul></div></body></html>`,
+    expectedResult: `${alwaysIncludeCommonAncestor ? `<li>` : ``}` +
+                    `<div>SubItem3</div>` +
+                    `${alwaysIncludeCommonAncestor ? `</li>` : ``}`,
+    expectedContext: `<html><body><div id="container"><ul><li><ol>` +
+                     `${alwaysIncludeCommonAncestor ? `` : `<li value="2"></li>`}` +
+                     `</ol></li></ul></div></body></html>`,
   }, {
     selector: `ul span li`,
     expectedResult: `<span><li>ItemInSpan1</li></span>`,
-    expectedContext: `<html><body><div id="container"><ul></ul></div></body></html>`,
+    expectedContext: `<html><body><div id="container"><ul>` +
+                     `${alwaysIncludeCommonAncestor ? `` : `<span></span>`}` +
+                     `</ul></div></body></html>`,
   }, {
     selector: `ul div span`,
-    expectedResult: `<div><li><span>ItemInDiv1</span></li></div>`,
-    expectedContext: `<html><body><div id="container"><ul></ul></div></body></html>`,
+    expectedResult: `${alwaysIncludeCommonAncestor ? `<div><li>` : ``}` +
+                    `<span>ItemInDiv1</span>` +
+                    `${alwaysIncludeCommonAncestor ? `</li></div>` : ``}`,
+    expectedContext: `<html><body><div id="container"><ul>` +
+                     `${alwaysIncludeCommonAncestor ? `` : `<div><li></li></div>`}` +
+                     `</ul></div></body></html>`,
   },
 ];
 
