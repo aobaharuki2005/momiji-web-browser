@@ -148,10 +148,19 @@ body {
   border: none;
   border-radius: 0;
   background-color: transparent;
-  padding-inline-end: var(--space-xsmall);
+  padding-inline: var(--AT-input-padding) var(--space-xsmall);
 
   &:focus-visible {
     outline: none;
+  }
+
+  :dir(ltr) > &:dir(rtl),
+  :dir(rtl) > &:dir(ltr) {
+    /*
+      We need to reverse which side has the small padding when the
+      locale direction is different than the textarea direction.
+    */
+    padding-inline: var(--space-xsmall) var(--AT-input-padding);
   }
 }
 
@@ -174,6 +183,7 @@ body {
 
 #about-translations-target-actions {
   padding: var(--space-xsmall);
+  padding-block-end: var(--space-small);
   background-color: transparent;
 
   &:focus-visible {
