@@ -130,6 +130,12 @@ skip-if = [
 
 ["test_htmlcopyencoder.xhtml"]
 
+["test_htmlcopyencoder_common_ancestor.html"]
+
+["test_htmlcopyencoder_list.html"]
+
+["test_htmlcopyencoder_table.html"]
+
 ["test_plaintext_linebreak.html"]
 
 ["test_plaintext_linebreak_compress.html"]
