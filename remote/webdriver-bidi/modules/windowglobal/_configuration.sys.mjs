@@ -316,6 +316,9 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       ].includes(category) &&
       !this.messageHandler.context.parent
     ) {
+      let geolocationOverridePerContext = null;
+      let geolocationOverridePerUserContext = null;
+
       let localeOverridePerContext = null;
       let localeOverridePerUserContext = null;
 
@@ -336,7 +339,16 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
 
         switch (category) {
           case "geolocation-override": {
-            this.#geolocationConfiguration = value;
+            switch (contextDescriptor.type) {
+              case lazy.ContextDescriptorType.TopBrowsingContext: {
+                geolocationOverridePerContext = value;
+                break;
+              }
+              case lazy.ContextDescriptorType.UserContext: {
+                geolocationOverridePerUserContext = value;
+                break;
+              }
+            }
             break;
           }
           case "viewport-overrides": {
@@ -419,6 +431,14 @@ class _ConfigurationModule extends WindowGlobalBiDiModule {
       // Now from these items we have to choose the one that would take precedence.
       // The order is the user context item overrides the global one, and the browsing context overrides the user context item.
       switch (category) {
+        case "geolocation-override": {
+          this.#geolocationConfiguration = this.#findCorrectOverrideValue(
+            "object",
+            geolocationOverridePerContext,
+            geolocationOverridePerUserContext
+          );
+          break;
+        }
         case "locale-override": {
           this.#localeOverride = this.#findCorrectOverrideValue(
             "string",

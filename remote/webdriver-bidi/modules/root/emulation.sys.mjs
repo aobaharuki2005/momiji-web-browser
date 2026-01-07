@@ -218,34 +218,16 @@ class EmulationModule extends RootBiDiModule {
       userContextIds
     );
 
-    const sessionDataItems = [];
-    if (userContextIds !== null) {
-      for (const userContext of userContexts) {
-        sessionDataItems.push({
-          category: "geolocation-override",
-          moduleName: "_configuration",
-          values: [coordinates],
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.UserContext,
-            id: userContext,
-          },
-          method: lazy.SessionDataMethod.Add,
-        });
-      }
-    } else {
-      for (const navigable of navigables) {
-        sessionDataItems.push({
-          category: "geolocation-override",
-          moduleName: "_configuration",
-          values: [coordinates],
-          contextDescriptor: {
-            type: lazy.ContextDescriptorType.TopBrowsingContext,
-            id: navigable.browserId,
-          },
-          method: lazy.SessionDataMethod.Add,
-        });
-      }
-    }
+    const sessionDataItems = this.#generateSessionDataUpdate({
+      category: "geolocation-override",
+      contextOverride: contextIds !== null,
+      hasGlobalOverride: false,
+      navigables,
+      resetValue: null,
+      userContexts,
+      userContextOverride: userContextIds !== null,
+      value: coordinates,
+    });
 
     if (sessionDataItems.length) {
       // TODO: Bug 1953079. Saving the geolocation override in the session data works fine
@@ -254,22 +236,16 @@ class EmulationModule extends RootBiDiModule {
       await this.messageHandler.updateSessionData(sessionDataItems);
     }
 
-    const commands = [];
-
-    for (const navigable of navigables) {
-      commands.push(
-        this._forwardToWindowGlobal(
-          "_setGeolocationOverride",
-          navigable.id,
-          {
-            coordinates,
-          },
-          { retryOnAbort: true }
-        )
-      );
-    }
-
-    await Promise.all(commands);
+    await this.#applyOverride({
+      async: true,
+      callback: this.#applyGeolocationOverride.bind(this),
+      category: "geolocation-override",
+      contextIds,
+      navigables,
+      resetValue: null,
+      userContextIds,
+      value: coordinates,
+    });
   }
 
   /**
@@ -930,6 +906,31 @@ class EmulationModule extends RootBiDiModule {
         `Failed to override user agent for context with id: ${contextId} (${e.message})`
       );
     }
+  }
+
+  /**
+   * Apply the geolocation override to the top-level browsing context.
+   *
+   * @param {object} options
+   * @param {BrowsingContext} options.context
+   *     Top-level browsing context object which is a target
+   *     for the geolocation override.
+   * @param {(GeolocationCoordinates|null)} options.value
+   *     Geolocation coordinates which have to override
+   *     the return result of geolocation APIs.
+   *     Null value resets the override.
+   */
+  #applyGeolocationOverride(options) {
+    const { context, value } = options;
+
+    return this._forwardToWindowGlobal(
+      "_setGeolocationOverride",
+      context.id,
+      {
+        coordinates: value,
+      },
+      { retryOnAbort: true }
+    );
   }
 
   async #applyOverride(options) {
