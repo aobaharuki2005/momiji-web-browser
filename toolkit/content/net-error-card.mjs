@@ -265,7 +265,7 @@ export class NetErrorCard extends MozLitElement {
         ></p>`;
       case "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE":
         return html`<p
-          data-l10n-id="fp-certerror-expired-intro"
+          data-l10n-id="fp-certerror-expired-into"
           data-l10n-args='{"hostname": "${this.hostname}"}'
         ></p>`;
       case "SSL_ERROR_NO_CYPHER_OVERLAP":
@@ -519,29 +519,36 @@ export class NetErrorCard extends MozLitElement {
       viewCert,
       viewDateTime,
     } = params;
-    return html`<p>
+    return html`<div>
         ${whyDangerousL10nId
-          ? html`<strong
-                data-l10n-id="fp-certerror-why-site-dangerous"
-              ></strong>
-              <span
+          ? html`<h3 data-l10n-id="fp-certerror-why-site-dangerous"></h3>
+              <p
                 id="fp-why-site-dangerous"
                 data-l10n-id=${whyDangerousL10nId}
                 data-l10n-args=${JSON.stringify(whyDangerousL10nArgs)}
-              ></span>`
+              ></p>`
           : null}
-      </p>
+      </div>
       ${whatCanYouDoL10nId
-        ? html`<p>
-            <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
-            <span
+        ? html`<div>
+            <h3 data-l10n-id="fp-certerror-what-can-you-do"></h3>
+            <p
               id="whatCanYouDo"
               data-l10n-id=${whatCanYouDoL10nId}
               data-l10n-args=${JSON.stringify(whatCanYouDoL10nArgs)}
-            ></span>
-          </p>`
+            ></p>
+          </div>`
         : null}
       ${importantNote ? html`<p data-l10n-id=${importantNote}></p>` : null}
+      ${viewCert
+        ? html`<p>
+            <a
+              id="viewCertificate"
+              data-l10n-id="fp-certerror-view-certificate-link"
+              href="javascript:void(0)"
+            ></a>
+          </p>`
+        : null}
       ${learnMoreL10nId
         ? html`<p>
             <a
@@ -552,15 +559,6 @@ export class NetErrorCard extends MozLitElement {
               data-telemetry-id="learn_more_link"
               id="learnMoreLink"
               @click=${this.handleTelemetryClick}
-            ></a>
-          </p>`
-        : null}
-      ${viewCert
-        ? html`<p>
-            <a
-              id="viewCertificate"
-              data-l10n-id="fp-certerror-view-certificate-link"
-              href="javascript:void(0)"
             ></a>
           </p>`
         : null}
@@ -680,32 +678,32 @@ export class NetErrorCard extends MozLitElement {
 
     const content = html`
       ${whyDangerousL10nId
-        ? html`<p>
-            <strong data-l10n-id="fp-certerror-why-site-dangerous"></strong>
-            <span
+        ? html`<div>
+            <h3 data-l10n-id="fp-certerror-why-site-dangerous"></h3>
+            <p
               data-l10n-id=${whyDangerousL10nId}
               data-l10n-args=${JSON.stringify(whyDangerousL10nArgs)}
-            ></span>
-          </p>`
+            ></p>
+          </div>`
         : null}
       ${whatCanYouDoL10nId
-        ? html`<p>
-            <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
-            <span
+        ? html`<div>
+            <h3 data-l10n-id="fp-certerror-what-can-you-do"></h3>
+            <p
               id="whatCanYouDo"
               data-l10n-id=${whatCanYouDoL10nId}
               data-l10n-args=${JSON.stringify(whatCanYouDoL10nArgs)}
-            ></span>
-          </p>`
+            ></p>
+          </div>`
         : null}
       ${whyDidThisHappenL10nId
-        ? html`<p>
-            <strong data-l10n-id="fp-certerror-what-can-you-do"></strong>
-            <span
+        ? html`<div>
+            <h3 data-l10n-id="fp-certerror-what-can-you-do"></h3>
+            <p
               data-l10n-id=${whyDidThisHappenL10nId}
               data-l10n-args=${JSON.stringify(whyDidThisHappenL10nArgs)}
-            ></span>
-          </p>`
+            ></p>
+          </div>`
         : null}
       ${learnMoreL10nId
         ? html`<p>
