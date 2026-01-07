@@ -400,14 +400,17 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback,
 
   cx->runtime()->gc.gcIfRequested();
 
-  // A worker thread may have requested an interrupt after finishing an
-  // offthread compilation.
-  jit::AttachFinishedCompilations(cx);
-
   if (oomStackTrace) {
     // Capture OOM stack trace this way because we don't have memory to handle
     // it the way ComputeStackString does.
     cx->captureOOMStackTrace();
+  } else {
+    // We can handle OOM interrupts while handling exceptions, when it isn't
+    // safe to attach finished compilations
+
+    // A worker thread may have requested an interrupt after finishing an
+    // offthread compilation.
+    jit::AttachFinishedCompilations(cx);
   }
 
   // Don't call the interrupt callback if we only interrupted for GC, Ion, or
