@@ -90,7 +90,7 @@ class TestDefaultLauncherVisible(MarionetteTestCase):
         )
 
     def test_first_use_default_visible_pref_false(self):
-        # We test with the default pref values, then flip sidebar.revamp to true,
+        # We test with the default pre-148 pref values, then flip sidebar.revamp to true,
         # for a profile that has never enabled or seen the sidebar launcher.
         # We want to ensure the sidebar state is correctly persisted and restored
 
@@ -157,6 +157,11 @@ class TestDefaultLauncherVisible(MarionetteTestCase):
         self.marionette.find_element(By.ID, "browserLayoutShowSidebar").click()
 
         self.marionette.set_context("chrome")
+        self.assertTrue(
+            self.marionette.get_pref("sidebar.revamp"),
+            "The sidebar.revamp pref should now be true",
+        )
+
         # We expect that to add the button to the toolbar
         Wait(self.marionette).until(
             lambda _: self.is_button_visible(),
@@ -174,6 +179,11 @@ class TestDefaultLauncherVisible(MarionetteTestCase):
         self.marionette.restart()
         self.marionette.set_context("chrome")
         self.wait_for_sidebar_initialized()
+
+        self.assertTrue(
+            self.marionette.get_pref("sidebar.revamp"),
+            "The sidebar.revamp pref should still be true",
+        )
 
         self.assertTrue(
             self.is_launcher_visible(),

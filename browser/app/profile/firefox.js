@@ -2177,11 +2177,12 @@ pref("pdfjs.handleOctetStream", true);
 
 // Is the sidebar positioned ahead of the content browser
 pref("sidebar.position_start", true);
-pref("sidebar.revamp", false);
-// This is nightly only for now, as we need to address bug 1933527 and bug 1934039.
 #ifdef NIGHTLY_BUILD
+pref("sidebar.revamp", true);
+// This is nightly only for now, as we need to address bug 1933527 and bug 1934039.
 pref("sidebar.revamp.round-content-area", true);
 #else
+pref("sidebar.revamp", false);
 pref("sidebar.revamp.round-content-area", false);
 #endif
 pref("sidebar.animation.enabled", true);
