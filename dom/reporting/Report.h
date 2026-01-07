@@ -37,9 +37,8 @@ class Report final : public nsISupports, public nsWrapperCache {
 
   nsIGlobalObject* GetParentObject() const { return mGlobal; }
 
-  const nsString& Type() const;
-
   void GetType(nsAString& aType) const;
+
   void GetUrl(nsAString& aURL) const;
 
   ReportBody* GetBody() const;
@@ -49,8 +48,8 @@ class Report final : public nsISupports, public nsWrapperCache {
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
 
-  nsString mType;
-  nsString mURL;
+  const nsString mType;
+  const nsString mURL;
   RefPtr<ReportBody> mBody;
 };
 

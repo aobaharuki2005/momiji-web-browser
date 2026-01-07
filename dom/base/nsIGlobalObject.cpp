@@ -26,6 +26,9 @@
 #include "nsGlobalWindowInner.h"
 #include "nsThreadUtils.h"
 
+// Max number of Report objects
+constexpr auto MAX_REPORT_RECORDS = 100;
+
 using mozilla::AutoSlowOperation;
 using mozilla::CycleCollectedJSContext;
 using mozilla::DOMEventTargetHelper;
@@ -134,7 +137,7 @@ void nsIGlobalObject::UnlinkObjectsInGlobal() {
     }
   }
 
-  ClearReports();
+  mReportRecords.Clear();
   mReportingObservers.Clear();
   mCountQueuingStrategySizeFunction = nullptr;
   mByteLengthQueuingStrategySizeFunction = nullptr;
@@ -151,7 +154,7 @@ void nsIGlobalObject::TraverseObjectsInGlobal(
   }
 
   nsIGlobalObject* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReportBuffer)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReportRecords)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReportingObservers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCountQueuingStrategySizeFunction)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByteLengthQueuingStrategySizeFunction)
@@ -386,7 +389,7 @@ void nsIGlobalObject::RegisterReportingObserver(ReportingObserver* aObserver,
     return;
   }
 
-  for (const auto& report : mReportBuffer) {
+  for (Report* report : mReportRecords) {
     aObserver->MaybeReport(report);
   }
 }
@@ -404,24 +407,12 @@ void nsIGlobalObject::BroadcastReport(Report* aReport) {
     observer->MaybeReport(aReport);
   }
 
-  if (NS_WARN_IF(!mReportBuffer.AppendElement(aReport, mozilla::fallible))) {
+  if (NS_WARN_IF(!mReportRecords.AppendElement(aReport, mozilla::fallible))) {
     return;
   }
 
-  uint32_t& count = mReportPerTypeCount.LookupOrInsert(aReport->Type());
-  ++count;
-
-  const uint32_t maxReportCount =
-      mozilla::StaticPrefs::dom_reporting_delivering_maxReports();
-  const nsString& reportType = aReport->Type();
-
-  for (size_t i = 0u; count > maxReportCount && i < mReportBuffer.Length();) {
-    if (mReportBuffer[i]->Type() == reportType) {
-      mReportBuffer.RemoveElementAt(i);
-      --count;
-    } else {
-      ++i;
-    }
+  while (mReportRecords.Length() > MAX_REPORT_RECORDS) {
+    mReportRecords.RemoveElementAt(0);
   }
 }
 
@@ -437,7 +428,7 @@ void nsIGlobalObject::NotifyReportingObservers() {
 }
 
 void nsIGlobalObject::RemoveReportRecords() {
-  ClearReports();
+  mReportRecords.Clear();
 
   for (auto& observer : mReportingObservers) {
     observer->ForgetReports();
@@ -526,9 +517,4 @@ void nsIGlobalObject::ReportToConsole(
   // override.
   nsContentUtils::ReportToConsole(aErrorFlags, aCategory, nullptr, aFile,
                                   aMessageName.get(), aParams, aLocation);
-}
-
-void nsIGlobalObject::ClearReports() {
-  mReportBuffer.Clear();
-  mReportPerTypeCount.Clear();
 }
