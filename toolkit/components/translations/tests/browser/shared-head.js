@@ -4213,12 +4213,12 @@ class AboutTranslationsTestUtils {
       "AboutTranslationsTest:PageOrientationChanged";
 
     /**
-     * Event fired when the source/target textarea heights change.
+     * Event fired when the source/target section heights change.
      *
      * @type {string}
      */
-    static TextAreaHeightsChanged =
-      "AboutTranslationsTest:TextAreaHeightsChanged";
+    static SectionHeightsChanged =
+      "AboutTranslationsTest:SectionHeightsChanged";
 
     /**
      * Event fired when the source text is cleared programmatically.

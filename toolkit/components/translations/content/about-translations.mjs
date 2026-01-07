@@ -130,8 +130,8 @@ class AboutTranslations {
    *
    * When the page orientation is vertical, each section spans the full width
    * of the content, and resizing the window width or changing the zoom level
-   * must trigger section resizing, whereas that synchronization is not
-   * necessary when the page orientation is horizontal.
+   * must trigger section resizing, whereas those updates are not necessary
+   * when the page orientation is horizontal.
    *
    * @type {("vertical"|"horizontal")}
    */
@@ -139,14 +139,25 @@ class AboutTranslations {
 
   /**
    * A timeout id that gets set when a pending callback is scheduled
-   * to synchronize the heights of the source and target sections.
+   * to update the section heights.
    *
    * This helps ensure that we do not make repeated calls to this function
    * that would cause unnecessary and excessive reflow.
    *
    * @type {number | null}
    */
-  #synchronizeSectionHeightsTimeoutId = null;
+  #updateSectionHeightsTimeoutId = null;
+
+  /**
+   * Returns the maximum of the given numbers, rounded up.
+   *
+   * @param  {...number} numbers
+   *
+   * @returns {number}
+   */
+  static #maxInteger(...numbers) {
+    return Math.ceil(Math.max(...numbers));
+  }
 
   /**
    * Constructs a new {@link AboutTranslations} instance.
@@ -323,7 +334,7 @@ class AboutTranslations {
 
     this.#showMainUserInterface();
     this.#updateSourceSectionClearButtonVisibility();
-    this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+    this.#requestSectionHeightsUpdate({ scheduleCallback: false });
     this.#setInitialFocus();
   }
 
@@ -599,9 +610,9 @@ class AboutTranslations {
     const orientationChanged = this.#updatePageOrientation();
 
     if (orientationChanged) {
-      this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+      this.#requestSectionHeightsUpdate({ scheduleCallback: false });
     } else if (this.#pageOrientation === "vertical") {
-      this.#ensureSectionHeightsMatch({ scheduleCallback: true });
+      this.#requestSectionHeightsUpdate({ scheduleCallback: true });
     }
   };
 
@@ -1009,7 +1020,7 @@ class AboutTranslations {
 
     this.#updateSourceScriptDirection();
     this.#updateTargetScriptDirection();
-    this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+    this.#requestSectionHeightsUpdate({ scheduleCallback: false });
     this.#updateSourceSectionClearButtonVisibility();
 
     if (sourceSectionTextArea.value) {
@@ -1106,7 +1117,7 @@ class AboutTranslations {
 
     this.#maybeUpdateDetectedSourceLanguage();
     this.#updateSourceScriptDirection();
-    this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+    this.#requestSectionHeightsUpdate({ scheduleCallback: false });
 
     if (!value && hadValueBefore) {
       document.dispatchEvent(
@@ -1133,7 +1144,7 @@ class AboutTranslations {
     }
 
     this.#updateTargetScriptDirection();
-    this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+    this.#requestSectionHeightsUpdate({ scheduleCallback: false });
     this.#setCopyButtonEnabled(Boolean(value) && isTranslationResult);
   }
 
@@ -1384,7 +1395,7 @@ class AboutTranslations {
     onDebounce: async () => {
       try {
         this.#updateURLFromUI();
-        this.#ensureSectionHeightsMatch({ scheduleCallback: false });
+        this.#requestSectionHeightsUpdate({ scheduleCallback: false });
 
         await this.#maybeUpdateDetectedSourceLanguage();
 
@@ -1476,8 +1487,11 @@ class AboutTranslations {
   });
 
   /**
-   * Ensures that the heights of the source and target sections match by syncing
-   * them to the maximum height of either of their content.
+   * Requests that the heights of each section is updated to at least match its content.
+   *
+   * In horizontal orientation the source and target sections are synchronized to
+   * the maximum content height between the two. In vertical orientation, each section
+   * is sized to its own content height.
    *
    * There are many situations in which this function needs to be called:
    *   - Every time the source text is updated
@@ -1487,33 +1501,52 @@ class AboutTranslations {
    *   - Etc.
    *
    * Some of these events happen infrequently, or are already debounced, such as
-   * each time a translation occurs. In these situations it is okay to synchronize
+   * each time a translation occurs. In these situations it is okay to update
    * the section heights immediately.
    *
    * Some of these events can trigger quite rapidly, such as resizing the window
    * via click-and-drag semantics. In this case, a single callback should be scheduled
-   * to synchronize the section heights to prevent unnecessary and excessive reflow.
+   * to update the section heights to prevent unnecessary and excessive reflow.
    *
    * @param {object} params
    * @param {boolean} params.scheduleCallback
    */
-  #ensureSectionHeightsMatch({ scheduleCallback }) {
+  #requestSectionHeightsUpdate({ scheduleCallback }) {
     if (scheduleCallback) {
-      if (this.#synchronizeSectionHeightsTimeoutId) {
+      if (this.#updateSectionHeightsTimeoutId) {
         // There is already a pending callback: no need to schedule another.
         return;
       }
 
-      this.#synchronizeSectionHeightsTimeoutId = setTimeout(
-        this.#synchronizeSectionsToMaxContentHeight,
+      this.#updateSectionHeightsTimeoutId = setTimeout(
+        this.#updateSectionHeights,
         100
       );
 
       return;
     }
 
-    this.#synchronizeSectionsToMaxContentHeight();
+    this.#updateSectionHeights();
   }
+
+  /**
+   * Updates the section heights based on the current page orientation.
+   *
+   * This function is intentionally written as a lambda so that it can be passed
+   * as a callback without the need to explicitly bind `this` to the function object.
+   */
+  #updateSectionHeights = () => {
+    if (this.#updateSectionHeightsTimeoutId) {
+      clearTimeout(this.#updateSectionHeightsTimeoutId);
+      this.#updateSectionHeightsTimeoutId = null;
+    }
+
+    if (this.#pageOrientation === "horizontal") {
+      this.#synchronizeSectionsToMaxContentHeight();
+    } else {
+      this.#resizeSectionsToIndividualContentHeights();
+    }
+  };
 
   /**
    * Retrieves the combined border and padding height of an element.
@@ -1539,7 +1572,7 @@ class AboutTranslations {
     const paddingTop = Number.parseFloat(style.paddingTop) || 0;
     const paddingBottom = Number.parseFloat(style.paddingBottom) || 0;
 
-    return borderTop + borderBottom + paddingTop + paddingBottom;
+    return Math.ceil(borderTop + borderBottom + paddingTop + paddingBottom);
   }
 
   /**
@@ -1565,18 +1598,61 @@ class AboutTranslations {
   }
 
   /**
+   * Returns whether a section height increased or decreased.
+   *
+   * @param {number} beforeHeight
+   * @param {number} afterHeight
+   * @returns {null | "decreased" | "increased"}
+   */
+  #getSectionHeightChange(beforeHeight, afterHeight) {
+    const changeThreshold = 1;
+    if (!Number.isFinite(beforeHeight) || beforeHeight <= changeThreshold) {
+      return null;
+    }
+
+    const delta = afterHeight - beforeHeight;
+    if (Math.abs(delta) <= changeThreshold) {
+      return null;
+    }
+
+    return delta < 0 ? "decreased" : "increased";
+  }
+
+  /**
+   * Dispatches a test event when section height changes are detected.
+   *
+   * @param {object} params
+   * @param {null | "decreased" | "increased"} params.sourceSectionHeightChange
+   * @param {null | "decreased" | "increased"} params.targetSectionHeightChange
+   */
+  #dispatchSectionHeightsChangedEvent({
+    sourceSectionHeightChange,
+    targetSectionHeightChange,
+  }) {
+    if (!sourceSectionHeightChange && !targetSectionHeightChange) {
+      return;
+    }
+
+    document.dispatchEvent(
+      new CustomEvent("AboutTranslationsTest:SectionHeightsChanged", {
+        detail: {
+          sourceSectionHeightChange: sourceSectionHeightChange ?? "unchanged",
+          targetSectionHeightChange: targetSectionHeightChange ?? "unchanged",
+        },
+      })
+    );
+  }
+
+  /**
    * Calculates the content heights in both the source and target sections,
    * then syncs them to the maximum calculated content height among the two.
    *
-   * This function is intentionally written as a lambda so that it can be passed
-   * as a callback without the need to explicitly bind `this` to the function object.
-   *
-   * Prefer calling #ensureSectionHeightsMatch to make it clear whether this function
+   * Prefer calling #requestSectionHeightsUpdate to make it clear whether this function
    * needs to run immediately, or is okay to be scheduled as a callback.
    *
-   * @see {AboutTranslations#ensureSectionHeightsMatch}
+   * @see {AboutTranslations#requestSectionHeightsUpdate}
    */
-  #synchronizeSectionsToMaxContentHeight = () => {
+  #synchronizeSectionsToMaxContentHeight() {
     const {
       sourceSection,
       sourceSectionTextArea,
@@ -1585,14 +1661,12 @@ class AboutTranslations {
       targetSectionTextArea,
     } = this.elements;
 
-    const currentHeight = Number.parseFloat(sourceSection?.style.height);
-    const sectionWidth = Math.max(
-      sourceSection?.scrollWidth ?? sourceSectionTextArea.scrollWidth,
-      1
+    const sourceSectionHeightBefore = Number.parseFloat(
+      sourceSection?.style.height
     );
-    const textAreaRatioBefore = Number.isNaN(currentHeight)
-      ? 0
-      : currentHeight / sectionWidth;
+    const targetSectionHeightBefore = Number.parseFloat(
+      targetSection?.style.height
+    );
 
     sourceSection.style.height = "auto";
     targetSection.style.height = "auto";
@@ -1601,20 +1675,18 @@ class AboutTranslations {
 
     const targetActionsHeight =
       targetSectionActionsRow.getBoundingClientRect().height;
-    const minSectionHeight = Math.max(
+    const minSectionHeight = AboutTranslations.#maxInteger(
       this.#getMinHeight(sourceSection),
       this.#getMinHeight(targetSection)
     );
     const targetSectionContentHeight =
       targetSectionTextArea.scrollHeight + targetActionsHeight;
-    const maxContentHeight = Math.ceil(
-      Math.max(
-        sourceSectionTextArea.scrollHeight,
-        targetSectionContentHeight,
-        minSectionHeight
-      )
+    const maxContentHeight = AboutTranslations.#maxInteger(
+      sourceSectionTextArea.scrollHeight,
+      targetSectionContentHeight,
+      minSectionHeight
     );
-    const sectionBorderHeight = Math.max(
+    const sectionBorderHeight = AboutTranslations.#maxInteger(
       this.#getBorderAndPaddingHeight(sourceSection),
       this.#getBorderAndPaddingHeight(targetSection)
     );
@@ -1624,6 +1696,14 @@ class AboutTranslations {
       maxContentHeight - targetActionsHeight,
       0
     )}px`;
+    const sourceSectionHeightChange = this.#getSectionHeightChange(
+      sourceSectionHeightBefore,
+      maxSectionHeight
+    );
+    const targetSectionHeightChange = this.#getSectionHeightChange(
+      targetSectionHeightBefore,
+      maxSectionHeight
+    );
 
     sourceSection.style.height = maxSectionHeightPixels;
     targetSection.style.height = maxSectionHeightPixels;
@@ -1631,27 +1711,81 @@ class AboutTranslations {
     sourceSectionTextArea.style.height = "100%";
     targetSectionTextArea.style.height = targetSectionTextAreaHeightPixels;
 
-    const textAreaRatioAfter = maxSectionHeight / sectionWidth;
-    const ratioDelta = textAreaRatioAfter - textAreaRatioBefore;
-    const changeThreshold = 0.001;
+    this.#dispatchSectionHeightsChangedEvent({
+      sourceSectionHeightChange,
+      targetSectionHeightChange,
+    });
+  }
 
-    if (
-      // The section heights were not 0px prior to growing.
-      textAreaRatioBefore > changeThreshold &&
-      // The section aspect ratio changed beyond typical floating-point error.
-      Math.abs(ratioDelta) > changeThreshold
-    ) {
-      document.dispatchEvent(
-        new CustomEvent("AboutTranslationsTest:TextAreaHeightsChanged", {
-          detail: {
-            textAreaHeights: ratioDelta < 0 ? "decreased" : "increased",
-          },
-        })
-      );
-    }
+  /**
+   * Calculates the content heights in both the source and target sections,
+   * then sizes each section to its own calculated content height.
+   *
+   * Prefer calling #requestSectionHeightsUpdate to make it clear whether this function
+   * needs to run immediately, or is okay to be scheduled as a callback.
+   *
+   * @see {AboutTranslations#requestSectionHeightsUpdate}
+   */
+  #resizeSectionsToIndividualContentHeights() {
+    const {
+      sourceSection,
+      sourceSectionTextArea,
+      targetSection,
+      targetSectionActionsRow,
+      targetSectionTextArea,
+    } = this.elements;
 
-    this.#synchronizeSectionHeightsTimeoutId = null;
-  };
+    const sourceSectionHeightBefore = Number.parseFloat(
+      sourceSection?.style.height
+    );
+    const targetSectionHeightBefore = Number.parseFloat(
+      targetSection?.style.height
+    );
+
+    sourceSection.style.height = "auto";
+    targetSection.style.height = "auto";
+    sourceSectionTextArea.style.height = "auto";
+    targetSectionTextArea.style.height = "auto";
+
+    const targetActionsHeight =
+      targetSectionActionsRow.getBoundingClientRect().height;
+    const sourceMinHeight = this.#getMinHeight(sourceSection);
+    const targetMinHeight = this.#getMinHeight(targetSection);
+    const sourceContentHeight = AboutTranslations.#maxInteger(
+      sourceSectionTextArea.scrollHeight,
+      sourceMinHeight
+    );
+    const targetContentHeight = AboutTranslations.#maxInteger(
+      targetSectionTextArea.scrollHeight + targetActionsHeight,
+      targetMinHeight
+    );
+    const sourceSectionHeight =
+      sourceContentHeight + this.#getBorderAndPaddingHeight(sourceSection);
+    const targetSectionHeight =
+      targetContentHeight + this.#getBorderAndPaddingHeight(targetSection);
+    const targetSectionTextAreaHeightPixels = `${Math.max(
+      targetContentHeight - targetActionsHeight,
+      0
+    )}px`;
+    const sourceSectionHeightChange = this.#getSectionHeightChange(
+      sourceSectionHeightBefore,
+      sourceSectionHeight
+    );
+    const targetSectionHeightChange = this.#getSectionHeightChange(
+      targetSectionHeightBefore,
+      targetSectionHeight
+    );
+
+    sourceSection.style.height = `${sourceSectionHeight}px`;
+    targetSection.style.height = `${targetSectionHeight}px`;
+    sourceSectionTextArea.style.height = "100%";
+    targetSectionTextArea.style.height = targetSectionTextAreaHeightPixels;
+
+    this.#dispatchSectionHeightsChangedEvent({
+      sourceSectionHeightChange,
+      targetSectionHeightChange,
+    });
+  }
 }
 
 /**

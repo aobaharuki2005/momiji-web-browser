@@ -198,7 +198,7 @@ body {
   #about-translations-main-user-interface {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
-    grid-template-rows: auto 1fr 1fr;
+    grid-template-rows: auto auto auto;
     margin: 0;
     width: 100%;
     gap: var(--space-medium);

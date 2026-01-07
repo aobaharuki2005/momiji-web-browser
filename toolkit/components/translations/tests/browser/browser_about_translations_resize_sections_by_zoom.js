@@ -51,9 +51,10 @@ add_task(
             { translationId: 1 },
           ],
           [
-            AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+            AboutTranslationsTestUtils.Events.SectionHeightsChanged,
             {
-              textAreaHeights: "increased",
+              sourceSectionHeightChange: "increased",
+              targetSectionHeightChange: "increased",
             },
           ],
         ],
@@ -78,7 +79,7 @@ add_task(
     await aboutTranslationsTestUtils.assertEvents(
       {
         unexpected: [
-          AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+          AboutTranslationsTestUtils.Events.SectionHeightsChanged,
           AboutTranslationsTestUtils.Events.PageOrientationChanged,
         ],
       },
@@ -93,7 +94,7 @@ add_task(
     await aboutTranslationsTestUtils.assertEvents(
       {
         unexpected: [
-          AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+          AboutTranslationsTestUtils.Events.SectionHeightsChanged,
           AboutTranslationsTestUtils.Events.PageOrientationChanged,
         ],
       },
@@ -156,9 +157,10 @@ add_task(
             { translationId: 1 },
           ],
           [
-            AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+            AboutTranslationsTestUtils.Events.SectionHeightsChanged,
             {
-              textAreaHeights: "increased",
+              sourceSectionHeightChange: "unchanged",
+              targetSectionHeightChange: "increased",
             },
           ],
         ],
@@ -184,8 +186,11 @@ add_task(
       {
         expected: [
           [
-            AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
-            { textAreaHeights: "increased" },
+            AboutTranslationsTestUtils.Events.SectionHeightsChanged,
+            {
+              sourceSectionHeightChange: "increased",
+              targetSectionHeightChange: "increased",
+            },
           ],
         ],
         unexpected: [AboutTranslationsTestUtils.Events.PageOrientationChanged],
@@ -202,8 +207,11 @@ add_task(
       {
         expected: [
           [
-            AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
-            { textAreaHeights: "decreased" },
+            AboutTranslationsTestUtils.Events.SectionHeightsChanged,
+            {
+              sourceSectionHeightChange: "decreased",
+              targetSectionHeightChange: "decreased",
+            },
           ],
         ],
         unexpected: [AboutTranslationsTestUtils.Events.PageOrientationChanged],
@@ -224,8 +232,11 @@ add_task(
             { orientation: "horizontal" },
           ],
           [
-            AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
-            { textAreaHeights: "increased" },
+            AboutTranslationsTestUtils.Events.SectionHeightsChanged,
+            {
+              sourceSectionHeightChange: "increased",
+              targetSectionHeightChange: "increased",
+            },
           ],
         ],
       },

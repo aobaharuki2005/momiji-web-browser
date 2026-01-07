@@ -51,7 +51,7 @@ add_task(async function test_about_translations_no_resize_for_small_input() {
       ],
       unexpected: [
         AboutTranslationsTestUtils.Events.PageOrientationChanged,
-        AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+        AboutTranslationsTestUtils.Events.SectionHeightsChanged,
       ],
     },
     async () => {
@@ -111,9 +111,10 @@ add_task(async function test_about_translations_resize_by_input() {
         ],
         [AboutTranslationsTestUtils.Events.ShowTranslatingPlaceholder],
         [
-          AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+          AboutTranslationsTestUtils.Events.SectionHeightsChanged,
           {
-            textAreaHeights: "increased",
+            sourceSectionHeightChange: "increased",
+            targetSectionHeightChange: "increased",
           },
         ],
       ],
@@ -139,9 +140,10 @@ add_task(async function test_about_translations_resize_by_input() {
           { translationId: 1 },
         ],
         [
-          AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+          AboutTranslationsTestUtils.Events.SectionHeightsChanged,
           {
-            textAreaHeights: "increased",
+            sourceSectionHeightChange: "increased",
+            targetSectionHeightChange: "increased",
           },
         ],
       ],
@@ -173,9 +175,10 @@ add_task(async function test_about_translations_resize_by_input() {
           { translationId: 2 },
         ],
         [
-          AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+          AboutTranslationsTestUtils.Events.SectionHeightsChanged,
           {
-            textAreaHeights: "decreased",
+            sourceSectionHeightChange: "decreased",
+            targetSectionHeightChange: "decreased",
           },
         ],
       ],
@@ -204,9 +207,10 @@ add_task(async function test_about_translations_resize_by_input() {
     {
       expected: [
         [
-          AboutTranslationsTestUtils.Events.TextAreaHeightsChanged,
+          AboutTranslationsTestUtils.Events.SectionHeightsChanged,
           {
-            textAreaHeights: "decreased",
+            sourceSectionHeightChange: "decreased",
+            targetSectionHeightChange: "decreased",
           },
         ],
       ],
