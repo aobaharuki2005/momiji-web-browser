@@ -105,7 +105,6 @@ class ContentPermissionRequestBase : public nsIContentPermissionRequest {
       bool* aHasValidTransientUserGestureActivation) override;
   NS_IMETHOD GetIsRequestDelegatedToUnsafeThirdParty(
       bool* aIsRequestDelegatedToUnsafeThirdParty) override;
-  NS_IMETHOD NotifyShown(void) override;
   // Overrides for Allow() and Cancel() aren't provided by this class.
   // That is the responsibility of the subclasses.
 

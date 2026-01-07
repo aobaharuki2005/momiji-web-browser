@@ -15,8 +15,7 @@ static constexpr nsLiteralCString LOCAL_HOST_PERMISSION_KEY = "localhost"_ns;
 static constexpr nsLiteralCString LOCAL_NETWORK_PERMISSION_KEY =
     "local-network"_ns;
 
-using PermissionPromptCallback =
-    std::function<void(bool granted, const nsACString& type, bool promptShown)>;
+using PermissionPromptCallback = std::function<void(bool, const nsACString&)>;
 
 /**
  * Handles permission dialog management for local network accesses
@@ -34,7 +33,6 @@ class LNAPermissionRequest final : public dom::ContentPermissionRequestBase {
   NS_IMETHOD
   Cancel(void) override;
   NS_IMETHOD Allow(JS::Handle<JS::Value> choices) override;
-  NS_IMETHOD NotifyShown(void) override;
   NS_IMETHOD GetElement(mozilla::dom::Element** aElement) override;
 
   nsresult RequestPermission();
@@ -43,7 +41,6 @@ class LNAPermissionRequest final : public dom::ContentPermissionRequestBase {
   ~LNAPermissionRequest() = default;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   PermissionPromptCallback mPermissionPromptCallback;
-  bool mPromptWasShown = false;
 };
 
 }  // namespace mozilla::net

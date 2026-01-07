@@ -471,13 +471,6 @@ ContentPermissionRequestBase::GetElement(Element** aElement) {
 }
 
 NS_IMETHODIMP
-ContentPermissionRequestBase::NotifyShown() {
-  // Default implementation does nothing.
-  // Subclasses can override to perform actions when prompt is shown.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ContentPermissionRequestBase::GetHasValidTransientUserGestureActivation(
     bool* aHasValidTransientUserGestureActivation) {
   *aHasValidTransientUserGestureActivation =
@@ -762,14 +755,6 @@ nsContentPermissionRequestProxy::GetIsRequestDelegatedToUnsafeThirdParty(
   }
   *aIsRequestDelegatedToUnsafeThirdParty =
       mParent->mIsRequestDelegatedToUnsafeThirdParty;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsContentPermissionRequestProxy::NotifyShown() {
-  // This is a proxy class that forwards to content process.
-  // The actual NotifyShown() logic is handled by the real implementation
-  // in the content process, so we don't need to do anything here.
   return NS_OK;
 }
 
