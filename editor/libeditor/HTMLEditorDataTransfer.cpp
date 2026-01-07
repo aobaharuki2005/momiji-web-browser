@@ -559,9 +559,12 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
             {WSRunScanner::Option::OnlyEditableNodes},
             EditorRawDOMPoint(prevVisibleThing.BRElementPtr()));
     if (prevVisibleThingOfBRElement.InVisibleOrCollapsibleCharacters()) {
+      // XXX Why not end of the text node?
       pointToPutCaret = prevVisibleThingOfBRElement
                             .PointAfterReachedContent<EditorDOMPoint>();
-    } else if (prevVisibleThingOfBRElement.ReachedSpecialContent()) {
+    } else if (prevVisibleThingOfBRElement.ReachedSpecialContent() ||
+               prevVisibleThingOfBRElement
+                   .ReachedEmptyInlineContainerElement()) {
       pointToPutCaret = prevVisibleThingOfBRElement
                             .PointAfterReachedContentNode<EditorDOMPoint>();
     }

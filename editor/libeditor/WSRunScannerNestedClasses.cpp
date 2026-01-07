@@ -274,6 +274,19 @@ WSRunScanner::TextFragmentData::BoundaryData WSRunScanner::TextFragmentData::
                         WSType::OtherBlockBoundary);
   }
 
+  if (previousLeafContentOrBlock->IsElement() &&
+      HTMLEditUtils::IsEmptyInlineContainer(
+          *previousLeafContentOrBlock,
+          {HTMLEditUtils::EmptyCheckOption::TreatSingleBRElementAsVisible,
+           HTMLEditUtils::EmptyCheckOption::TreatBlockAsVisible},
+          UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck))) {
+    // Okay, it's an empty inline container. Basically, it's invisible but may
+    // be visible if it has non-zero padding/margin, etc. So, the scanner user
+    // may need to additional check.
+    return BoundaryData(aPoint, *previousLeafContentOrBlock,
+                        WSType::EmptyInlineContainerElement);
+  }
+
   if (!previousLeafContentOrBlock->IsText() ||
       (aOptions.contains(Option::OnlyEditableNodes) &&
        HTMLEditUtils::IsSimplyEditableNode(*previousLeafContentOrBlock) !=
@@ -438,6 +451,19 @@ WSRunScanner::TextFragmentData::BoundaryData::ScanCollapsibleWhiteSpaceEndFrom(
                         WSType::OtherBlockBoundary);
   }
 
+  if (nextLeafContentOrBlock->IsElement() &&
+      HTMLEditUtils::IsEmptyInlineContainer(
+          *nextLeafContentOrBlock,
+          {HTMLEditUtils::EmptyCheckOption::TreatSingleBRElementAsVisible,
+           HTMLEditUtils::EmptyCheckOption::TreatBlockAsVisible},
+          UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck))) {
+    // Okay, it's an empty inline container. Basically, it's invisible but may
+    // be visible if it has non-zero padding/margin, etc. So, the scanner user
+    // may need to additional check.
+    return BoundaryData(aPoint, *nextLeafContentOrBlock,
+                        WSType::EmptyInlineContainerElement);
+  }
+
   if (!nextLeafContentOrBlock->IsText() ||
       (aOptions.contains(Option::OnlyEditableNodes) &&
        HTMLEditUtils::IsSimplyEditableNode(*nextLeafContentOrBlock) !=
@@ -599,9 +625,19 @@ WSRunScanner::TextFragmentData::VisibleWhiteSpacesDataRef() const {
     // If all things are obviously visible, we can return range for all of the
     // things quickly.
     const bool mayHaveInvisibleLeadingSpace =
-        !StartsFromNonCollapsibleCharacters() && !StartsFromSpecialContent();
+        !StartsFromNonCollapsibleCharacters() && !StartsFromSpecialContent() &&
+        !(StartsFromEmptyInlineContainerElement() &&
+          // XXX I think we don't need to check display:none here for now
+          // because in the other cases, we don't do that.
+          HTMLEditUtils::IsVisibleElementEvenIfLeafNode(
+              *GetStartReasonContent()));
     const bool mayHaveInvisibleTrailingWhiteSpace =
         !EndsByNonCollapsibleCharacters() && !EndsBySpecialContent() &&
+        !(EndsByEmptyInlineContainerElement() &&
+          // XXX I think we don't need to check display:none here for now
+          // because in the other cases, we don't do that.
+          HTMLEditUtils::IsVisibleElementEvenIfLeafNode(
+              *GetEndReasonContent())) &&
         !EndsByBRElement() && !EndsByInvisiblePreformattedLineBreak();
 
     if (!mayHaveInvisibleLeadingSpace && !mayHaveInvisibleTrailingWhiteSpace) {
@@ -1398,7 +1434,10 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
   const VisibleWhiteSpacesData& visibleWhiteSpaces =
       VisibleWhiteSpacesDataRef();
   if (!visibleWhiteSpaces.StartsFromNonCollapsibleCharacters() &&
-      !visibleWhiteSpaces.StartsFromSpecialContent()) {
+      !visibleWhiteSpaces.StartsFromSpecialContent() &&
+      !(visibleWhiteSpaces.StartsFromEmptyInlineContainerElement() &&
+        HTMLEditUtils::IsVisibleElementEvenIfLeafNode(
+            *GetStartReasonContent()))) {
     return EditorDOMPointInText();
   }
   return atPreviousChar;
@@ -1456,6 +1495,9 @@ EditorDOMPointInText WSRunScanner::TextFragmentData::
       VisibleWhiteSpacesDataRef();
   if (!visibleWhiteSpaces.EndsByNonCollapsibleCharacters() &&
       !visibleWhiteSpaces.EndsBySpecialContent() &&
+      !(visibleWhiteSpaces.EndsByEmptyInlineContainerElement() &&
+        HTMLEditUtils::IsVisibleElementEvenIfLeafNode(
+            *GetEndReasonContent())) &&
       !visibleWhiteSpaces.EndsByBRElement()) {
     return EditorDOMPointInText();
   }

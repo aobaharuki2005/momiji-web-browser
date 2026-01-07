@@ -783,7 +783,8 @@ class HTMLEditUtils final {
   /**
    * Return true if `display` of inclusive ancestor of aContent is `none`.
    */
-  static bool IsInclusiveAncestorCSSDisplayNone(const nsIContent& aContent);
+  [[nodiscard]] static bool IsInclusiveAncestorCSSDisplayNone(
+      const nsIContent& aContent, const nsIContent* aAncestorLimiter = nullptr);
 
   /**
    * IsVisiblePreformattedNewLine() and IsInvisiblePreformattedNewLine() return

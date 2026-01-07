@@ -36,6 +36,7 @@ void WSScanResult::AssertIfInvalidData(const WSRunScanner& aScanner) const {
              mReason == WSType::CollapsibleWhiteSpaces ||
              mReason == WSType::BRElement ||
              mReason == WSType::PreformattedLineBreak ||
+             mReason == WSType::EmptyInlineContainerElement ||
              mReason == WSType::SpecialContent ||
              mReason == WSType::CurrentBlockBoundary ||
              mReason == WSType::OtherBlockBoundary ||
@@ -73,11 +74,27 @@ void WSScanResult::AssertIfInvalidData(const WSRunScanner& aScanner) const {
   MOZ_ASSERT_IF(mReason == WSType::PreformattedLineBreak,
                 EditorUtils::IsNewLinePreformatted(*mContent));
   MOZ_ASSERT_IF(
+      mReason == WSType::EmptyInlineContainerElement,
+      HTMLEditUtils::IsEmptyInlineContainer(
+          *mContent,
+          {HTMLEditUtils::EmptyCheckOption::TreatSingleBRElementAsVisible,
+           HTMLEditUtils::EmptyCheckOption::TreatBlockAsVisible},
+          aScanner.ReferredHTMLDefaultStyle()
+              ? BlockInlineCheck::UseHTMLDefaultStyle
+              : BlockInlineCheck::UseComputedDisplayOutsideStyle));
+  MOZ_ASSERT_IF(
       mReason == WSType::SpecialContent,
       (mContent->IsText() && !mContent->IsEditable()) ||
           (!mContent->IsHTMLElement(nsGkAtoms::br) &&
            !HTMLEditUtils::IsBlockElement(
                *mContent,
+               aScanner.ReferredHTMLDefaultStyle()
+                   ? BlockInlineCheck::UseHTMLDefaultStyle
+                   : BlockInlineCheck::UseComputedDisplayOutsideStyle) &&
+           !HTMLEditUtils::IsEmptyInlineContainer(
+               *mContent,
+               {HTMLEditUtils::EmptyCheckOption::TreatSingleBRElementAsVisible,
+                HTMLEditUtils::EmptyCheckOption::TreatBlockAsVisible},
                aScanner.ReferredHTMLDefaultStyle()
                    ? BlockInlineCheck::UseHTMLDefaultStyle
                    : BlockInlineCheck::UseComputedDisplayOutsideStyle)));
@@ -1030,6 +1047,7 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
     if (textFragmentDataAtStart.EndsByVisibleBRElement()) {
       startContent = textFragmentDataAtStart.EndReasonBRElementPtr();
     } else if (textFragmentDataAtStart.EndsBySpecialContent() ||
+               textFragmentDataAtStart.EndsByEmptyInlineContainerElement() ||
                (textFragmentDataAtStart.EndsByOtherBlockElement() &&
                 !HTMLEditUtils::IsContainerNode(
                     *textFragmentDataAtStart
@@ -1052,6 +1070,7 @@ WSRunScanner::ShrinkRangeIfStartsFromOrEndsAfterAtomicContent(
     if (textFragmentDataAtEnd.StartsFromVisibleBRElement()) {
       endContent = textFragmentDataAtEnd.StartReasonBRElementPtr();
     } else if (textFragmentDataAtEnd.StartsFromSpecialContent() ||
+               textFragmentDataAtEnd.EndsByEmptyInlineContainerElement() ||
                (textFragmentDataAtEnd.StartsFromOtherBlockElement() &&
                 !HTMLEditUtils::IsContainerNode(
                     *textFragmentDataAtEnd

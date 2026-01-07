@@ -866,7 +866,7 @@ nsresult HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDelete(
         if (scanFromCaretPointResult.BRElementPtr() == &aEditingHost) {
           return NS_OK;
         }
-        if (!scanFromCaretPointResult.IsContentEditable()) {
+        if (!scanFromCaretPointResult.ContentIsEditable()) {
           return NS_SUCCESS_DOM_NO_OPERATION;
         }
         if (scanFromCaretPointResult.ReachedInvisibleBRElement()) {
@@ -1162,7 +1162,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::Run(
         if (scanFromCaretPointResult.BRElementPtr() == &aEditingHost) {
           return EditActionResult::HandledResult();
         }
-        if (!scanFromCaretPointResult.IsContentEditable()) {
+        if (!scanFromCaretPointResult.ContentIsEditable()) {
           return EditActionResult::CanceledResult();
         }
         if (scanFromCaretPointResult.ReachedInvisibleBRElement()) {
@@ -1276,6 +1276,7 @@ HTMLEditor::AutoDeleteRangesHandler::ComputeRangesToDeleteAroundCollapsedRanges(
   }
 
   if (aScanFromCaretPointResult.ReachedSpecialContent() ||
+      aScanFromCaretPointResult.ReachedEmptyInlineContainerElement() ||
       aScanFromCaretPointResult.ReachedBRElement() ||
       aScanFromCaretPointResult.ReachedHRElement() ||
       aScanFromCaretPointResult.ReachedNonEditableOtherBlockElement()) {
@@ -1408,6 +1409,7 @@ HTMLEditor::AutoDeleteRangesHandler::HandleDeleteAroundCollapsedRanges(
   }
 
   if (aScanFromCaretPointResult.ReachedSpecialContent() ||
+      aScanFromCaretPointResult.ReachedEmptyInlineContainerElement() ||
       aScanFromCaretPointResult.ReachedBRElement() ||
       aScanFromCaretPointResult.ReachedHRElement() ||
       aScanFromCaretPointResult.ReachedNonEditableOtherBlockElement()) {
@@ -1657,7 +1659,8 @@ nsIContent* HTMLEditor::AutoDeleteRangesHandler::GetAtomicContentToDelete(
     const WSScanResult& aScanFromCaretPointResult) {
   MOZ_ASSERT(aScanFromCaretPointResult.GetContent());
 
-  if (!aScanFromCaretPointResult.ReachedSpecialContent()) {
+  if (!aScanFromCaretPointResult.ReachedSpecialContent() &&
+      !aScanFromCaretPointResult.ReachedEmptyInlineContainerElement()) {
     return aScanFromCaretPointResult.GetContent();
   }
 
@@ -2082,7 +2085,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     const WSScanResult maybePreviousText =
         scanner.ScanPreviousVisibleNodeOrBlockBoundaryFrom(
             EditorRawDOMPoint(mBRElement));
-    if (maybePreviousText.IsContentEditable() &&
+    if (maybePreviousText.ContentIsEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters() &&
         !HTMLEditor::GetLinkElement(maybePreviousText.TextPtr())) {
       return maybePreviousText.PointAfterReachedContent<EditorDOMPoint>();
@@ -2090,7 +2093,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     const WSScanResult maybeNextText =
         scanner.ScanInclusiveNextVisibleNodeOrBlockBoundaryFrom(
             EditorRawDOMPoint::After(*mBRElement));
-    if (maybeNextText.IsContentEditable() &&
+    if (maybeNextText.ContentIsEditable() &&
         maybeNextText.InVisibleOrCollapsibleCharacters()) {
       return maybeNextText.PointAtReachedContent<EditorDOMPoint>();
     }
@@ -3705,7 +3708,7 @@ Result<EditActionResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
     const WSScanResult maybePreviousText =
         WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
             {}, startOfRightContent, &aEditingHost);
-    if (maybePreviousText.IsContentEditable() &&
+    if (maybePreviousText.ContentIsEditable() &&
         maybePreviousText.InVisibleOrCollapsibleCharacters()) {
       nsresult rv = aHTMLEditor.CollapseSelectionTo(
           maybePreviousText.PointAfterReachedContent<EditorRawDOMPoint>());
@@ -5657,7 +5660,7 @@ Result<DeleteRangeResult, nsresult> HTMLEditor::AutoDeleteRangesHandler::
       const WSScanResult maybePreviousText =
           WSRunScanner::ScanPreviousVisibleNodeOrBlockBoundary(
               {}, maybeDeepStartOfRightContent, &aEditingHost);
-      if (maybePreviousText.IsContentEditable() &&
+      if (maybePreviousText.ContentIsEditable() &&
           maybePreviousText.InVisibleOrCollapsibleCharacters()) {
         return maybePreviousText.PointAfterReachedContent<EditorDOMPoint>();
       }

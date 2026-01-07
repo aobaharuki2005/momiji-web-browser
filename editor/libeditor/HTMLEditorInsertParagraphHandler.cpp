@@ -1060,7 +1060,9 @@ nsresult HTMLEditor::AutoInsertParagraphHandler::
   if (!backwardScanFromPointToCreateNewBRElementResult
            .InVisibleOrCollapsibleCharacters() &&
       !backwardScanFromPointToCreateNewBRElementResult
-           .ReachedSpecialContent()) {
+           .ReachedSpecialContent() &&
+      !backwardScanFromPointToCreateNewBRElementResult
+           .ReachedEmptyInlineContainerElement()) {
     return NS_SUCCESS_DOM_NO_OPERATION;
   }
   const WSScanResult forwardScanFromPointAfterNewBRElementResult =
@@ -1075,6 +1077,8 @@ nsresult HTMLEditor::AutoInsertParagraphHandler::
   if (!forwardScanFromPointAfterNewBRElementResult
            .InVisibleOrCollapsibleCharacters() &&
       !forwardScanFromPointAfterNewBRElementResult.ReachedSpecialContent() &&
+      !forwardScanFromPointAfterNewBRElementResult
+           .ReachedEmptyInlineContainerElement() &&
       // In case we're at the very end.
       !forwardScanFromPointAfterNewBRElementResult
            .ReachedCurrentBlockBoundary()) {
