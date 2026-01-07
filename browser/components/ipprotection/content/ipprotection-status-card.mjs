@@ -53,13 +53,11 @@ export default class IPProtectionStatusCard extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.dispatchEvent(new CustomEvent("IPProtection:Init", { bubbles: true }));
     this.addEventListener("keydown", this.keyListener, { capture: true });
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-
     this.removeEventListener("keydown", this.keyListener, { capture: true });
   }
 
