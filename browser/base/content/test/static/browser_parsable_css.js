@@ -145,10 +145,6 @@ let propNameAllowlist = [
   { propName: "--panel-shadow", isFromDevTools: true },
   { propName: "--panel-shadow-margin", isFromDevTools: true },
 
-  // These variables are set in host CSS but consumed in shadow DOM CSS
-  // (content-search-handoff-ui component), which confuses the test.
-  { propName: /^--content-search-handoff-ui-/, isFromDevTools: false },
-
   // These variables are used in JS in viewer.mjs (PDF.js).
   {
     propName: "--scale-round-x",

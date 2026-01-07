@@ -283,14 +283,11 @@ add_task(async function test_source_urlbar_handoff() {
       await BrowserTestUtils.browserStopped(tab.linkedBrowser, "about:newtab");
 
       info("Focus on search input in newtab content");
-      await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-        let handoffUI = content.document.querySelector(
-          "content-search-handoff-ui"
-        );
-        await handoffUI.updateComplete;
-        let fakeEditable = handoffUI.shadowRoot.querySelector(".fake-editable");
-        fakeEditable.click();
-      });
+      await BrowserTestUtils.synthesizeMouseAtCenter(
+        ".fake-editable",
+        {},
+        tab.linkedBrowser
+      );
 
       info("Get suggestions");
       for (const c of "searchSuggestion".split("")) {

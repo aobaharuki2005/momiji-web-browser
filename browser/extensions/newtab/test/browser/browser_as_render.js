@@ -2,17 +2,8 @@
 
 test_newtab({
   test: function test_render_search_handoff() {
-    const usingHandoffComponent = Services.prefs.getBoolPref(
-      "browser.newtabpage.activity-stream.search.useHandoffComponent",
-      false
-    );
-
-    const selector = usingHandoffComponent
-      ? "content-search-handoff-ui"
-      : ".search-handoff-button";
-
-    let search = content.document.querySelector(selector);
-    ok(search, "Got the content search handoff UI");
+    let search = content.document.querySelector(".search-handoff-button");
+    ok(search, "Got the search handoff button");
   },
 });
 
