@@ -19,7 +19,6 @@
 #include <mach/task_info.h>
 #include <mach/task.h>
 #include <sstream>
-#include <stdlib.h>
 #include <string.h>
 #include <vector>
 

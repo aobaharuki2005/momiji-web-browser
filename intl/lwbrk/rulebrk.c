@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #define TH_UNICODE
 
-#include <stdlib.h>
 #include <stdint.h>
 #include <assert.h>
 #include "th_char.h"

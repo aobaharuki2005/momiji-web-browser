@@ -6,7 +6,6 @@
 
 #include <algorithm>
 #include <stdio.h>
-#include <stdlib.h>
 
 #ifdef XP_WIN
 #  include <winsock.h>  // for htonl, htons, ntohl, ntohs
