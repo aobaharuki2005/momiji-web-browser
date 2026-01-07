@@ -61,17 +61,6 @@ browser {
       --caret-anchor: right;
     }
   }
-
-  /* Hide some content, e.g., dropdown, when onboarding exists */
-  #multi-stage-message-root + & {
-    select {
-      background-image: none;
-    }
-
-    #header-more {
-      display: none;
-    }
-  }
 }
 
 #header-close {
@@ -232,6 +221,12 @@ browser {
     color: var(--text-color-deemphasized);
     font-size: 0.8em;
   }
+
+  + #header,
+  + #browser-container,
+  + #summarize-btn-container {
+    display: none;
+  }
 }
 
 #summarize-btn-container {
@@ -262,11 +257,6 @@ browser {
 
   /* stylelint-disable-next-line media-query-no-invalid */
   @media (not -moz-pref("browser.ml.chat.page")) or -moz-pref("browser.ml.chat.provider", "") {
-    display: none;
-  }
-
-  /* Hide footer when onboarding exists */
-  #multi-stage-message-root ~ & {
     display: none;
   }
 }
