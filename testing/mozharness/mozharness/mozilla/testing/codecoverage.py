@@ -308,6 +308,7 @@ class CodeCoverageMixin(SingleTestMixin):
         # Run grcov on the zipped .gcno and .gcda files.
         grcov_command = [
             os.path.join(self.grcov_dir, self.grcov_bin),
+            "--llvm",
             "-t",
             output_format,
             "-p",
@@ -323,9 +324,6 @@ class CodeCoverageMixin(SingleTestMixin):
 
         if merge:
             grcov_command += [jsvm_output_file]
-
-        if mozinfo.os in {"win", "mac"}:
-            grcov_command += ["--llvm"]
 
         if filter_covered:
             grcov_command += ["--filter", "covered"]
