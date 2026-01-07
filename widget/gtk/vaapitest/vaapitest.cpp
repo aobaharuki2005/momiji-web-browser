@@ -13,7 +13,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <getopt.h>
-#include <stdint.h>
 
 #if defined(MOZ_ASAN) || defined(FUZZING)
 #  include <signal.h>

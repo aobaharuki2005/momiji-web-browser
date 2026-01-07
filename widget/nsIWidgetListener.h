@@ -5,8 +5,6 @@
 #ifndef nsIWidgetListener_h__
 #define nsIWidgetListener_h__
 
-#include <stdint.h>
-
 #include "mozilla/EventForwards.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/TimeStamp.h"
