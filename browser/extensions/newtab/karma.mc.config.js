@@ -354,6 +354,12 @@ module.exports = function (config) {
               functions: 31.2,
               branches: 31.2,
             },
+            "content-src/components/Search/Search.jsx": {
+              statements: 38,
+              lines: 39,
+              functions: 28,
+              branches: 25,
+            },
             "content-src/components/**/*.jsx": {
               statements: 51.1,
               lines: 52.38,

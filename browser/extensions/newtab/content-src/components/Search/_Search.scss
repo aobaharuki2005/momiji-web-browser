@@ -67,6 +67,15 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
   }
 
+  /**
+   * @backward-compat { version 148 }
+   *
+   * Temporary dual implementation to support train hopping. The old handoff UI
+   * is kept alongside the new contentSearchHandoffUI.mjs custom element until
+   * the module lands on all channels. Controlled by the pref
+   * browser.newtabpage.activity-stream.search.useHandoffComponent.
+   * Remove the old implementation and the pref once this ships to Release.
+   */
   .search-handoff-button {
     background: var(--newtab-background-color-secondary) var(--newtab-search-icon) $search-icon-padding center no-repeat;
     background-size: $search-icon-size;
@@ -87,6 +96,15 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
   }
 
+  /**
+   * @backward-compat { version 148 }
+   *
+   * Temporary dual implementation to support train hopping. The old handoff UI
+   * is kept alongside the new contentSearchHandoffUI.mjs custom element until
+   * the module lands on all channels. Controlled by the pref
+   * browser.newtabpage.activity-stream.search.useHandoffComponent.
+   * Remove the old implementation and the pref once this ships to Release.
+   */
   &.fake-focus:not(.search.disabled) {
     .search-handoff-button {
       border: 1px solid var(--newtab-primary-action-background);
@@ -94,6 +112,15 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
   }
 
+  /**
+   * @backward-compat { version 148 }
+   *
+   * Temporary dual implementation to support train hopping. The old handoff UI
+   * is kept alongside the new contentSearchHandoffUI.mjs custom element until
+   * the module lands on all channels. Controlled by the pref
+   * browser.newtabpage.activity-stream.search.useHandoffComponent.
+   * Remove the old implementation and the pref once this ships to Release.
+   */
   .search-handoff-button {
     padding-inline-end: var(--space-large);
     color: var(--newtab-text-primary-color);
@@ -109,6 +136,16 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
         background-position-x: right $search-icon-padding;
       }
     }
+  }
+
+  content-search-handoff-ui {
+    --content-search-handoff-ui-background-color: var(--newtab-background-color-secondary);
+    --content-search-handoff-ui-color: var(--newtab-text-primary-color);
+    --content-search-handoff-ui-fill: var(--newtab-text-secondary-color);
+    --content-search-handoff-ui-caret-color: var(--newtab-text-primary-color);
+    --content-search-handoff-ui-fakefocus-border-color: var(--newtab-primary-action-background);
+    --content-search-handoff-ui-fakefocus-box-shadow-inner: var(--newtab-primary-action-background-dimmed);
+    --content-search-handoff-ui-fakefocus-box-shadow-outer: transparent;
   }
 
   &.visible-logo {

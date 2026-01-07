@@ -9,6 +9,7 @@ browser.jar:
         content/browser/search/autocomplete-popup.js                (content/autocomplete-popup.js)
         content/browser/search/searchbar.js                         (content/searchbar.js)
         content/browser/contentSearchHandoffUI.mjs                  (content/contentSearchHandoffUI.mjs)
+        content/browser/contentSearchHandoffUI.css                  (content/contentSearchHandoffUI.css)
         search-extensions/                                          (extensions/**)
 
 % resource search-extensions %search-extensions/ contentaccessible=yes
