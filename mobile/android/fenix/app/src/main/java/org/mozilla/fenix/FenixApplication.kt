@@ -13,7 +13,6 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.StrictMode
 import android.os.SystemClock
 import android.util.Log.INFO
-import androidx.annotation.OpenForTesting
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.NotificationManagerCompat
@@ -147,13 +146,15 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     override fun onCreate() {
         super.onCreate()
-        initialize()
+        initializeFenixProcess()
     }
 
     /**
-     * Initializes Fenix and all required subsystems such as Nimbus, Glean and Gecko.
+     * Process-level initialization for Fenix and its services. Sets up required native subsystems
+     * such as Nimbus, Glean and Gecko. Note that Robolectric tests override this with an empty
+     * implementation that skips this initialization.
      */
-    fun initialize() {
+    protected open fun initializeFenixProcess() {
         // We measure ourselves to avoid a call into Glean before its loaded.
         val start = SystemClock.elapsedRealtimeNanos()
 
@@ -190,8 +191,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     }
 
     @OptIn(DelicateCoroutinesApi::class) // GlobalScope usage
-    @VisibleForTesting
-    protected open fun initializeGlean() {
+    private fun initializeGlean() {
         val settings = settings()
         // We delay the Glean initialization until, we have user consent (After onboarding).
         // If onboarding is disabled (when in local builds), continue to initialize Glean.
@@ -207,8 +207,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
     }
 
     @SuppressLint("NewApi")
-    @VisibleForTesting
-    protected open fun setupInAllProcesses() {
+    private fun setupInAllProcesses() {
         // See Bug 1969818: Crash reporting requires updates to be compatible with
         // isolated content process.
         if (!android.os.Process.isIsolated()) {
@@ -218,8 +217,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         Log.addSink(FenixLogSink(logsDebug = Config.channel.isDebug, AndroidLogSink()))
     }
 
-    @VisibleForTesting
-    protected open fun setupInMainProcessOnly() {
+    private fun setupInMainProcessOnly() {
         // ⚠️ DO NOT ADD ANYTHING ABOVE THIS LINE.
         // Especially references to the engine/BrowserStore which can alter the app initialization.
         // See: https://github.com/mozilla-mobile/fenix/issues/26320
@@ -532,7 +530,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
-    protected open fun initializeNimbus() {
+    private fun initializeNimbus() {
         beginSetupMegazord()
 
         // This lazily constructs the Nimbus object…
@@ -995,9 +993,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         reportHomeScreenMetrics(settings)
     }
 
-    @VisibleForTesting
-    @OpenForTesting
-    internal open fun setAutofillMetrics() {
+    private fun setAutofillMetrics() {
         @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(IO) {
             try {
