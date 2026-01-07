@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import codecs
 import itertools
 import logging
 import os
@@ -227,7 +226,7 @@ def config_status(config, execute=True):
     # Create config.status. Eventually, we'll want to just do the work it does
     # here, when we're able to skip configure tests/use cached results/not rely
     # on autoconf.
-    with codecs.open("config.status", "w", "utf-8") as fh:
+    with open("config.status", "w", encoding="utf-8") as fh:
         fh.write(
             textwrap.dedent(
                 """\
