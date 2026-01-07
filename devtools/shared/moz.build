@@ -23,7 +23,6 @@ DIRS += [
     "performance-new",
     "platform",
     "protocol",
-    "qrcode",
     "security",
     "sprintfjs",
     "specs",
