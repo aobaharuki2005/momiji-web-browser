@@ -570,4 +570,14 @@ export class FormAutofillPreferences {
       l10nStrings: lazy.ManageAddresses.getAddressL10nStrings(),
     });
   }
+
+  static openPaymentPreference() {
+    const win = Services.wm.getMostRecentBrowserWindow();
+    win.openPreferences("privacy-payment-methods-autofill");
+  }
+
+  static openAddressPreference() {
+    const win = Services.wm.getMostRecentBrowserWindow();
+    win.openPreferences("privacy-address-autofill");
+  }
 }
