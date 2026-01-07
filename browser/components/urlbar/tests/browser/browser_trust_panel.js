@@ -230,3 +230,21 @@ add_task(async function test_update() {
 
   BrowserTestUtils.removeTab(tab);
 });
+
+add_task(async function test_etld() {
+  const tab = await BrowserTestUtils.openNewForegroundTab({
+    gBrowser,
+    opening: "https://www.example.com",
+    waitForLoad: true,
+  });
+
+  await UrlbarTestUtils.openTrustPanel(window);
+
+  Assert.equal(
+    window.document.getElementById("trustpanel-popup-host").value,
+    "example.com",
+    "Showing the eTLD+1"
+  );
+
+  await BrowserTestUtils.removeTab(tab);
+});
