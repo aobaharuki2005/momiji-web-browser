@@ -37,19 +37,16 @@ chai.use(chaiAssertions);
 
 const overrider = new GlobalOverrider();
 
-// Create HTMLDialogElement mock if it doesn't exist
-if (typeof window.HTMLDialogElement === "undefined") {
-  window.HTMLDialogElement = function () {};
-  window.HTMLDialogElement.prototype = Object.create(HTMLElement.prototype);
+// Patch dialog element's .showModal()/close() functions to prevent errors in tests
+// Some test environments may not have proper HTMLDialogElement support
+if (typeof HTMLDialogElement !== "undefined") {
+  HTMLDialogElement.prototype.showModal = function () {
+    this.open = true;
+  };
+  HTMLDialogElement.prototype.close = function () {
+    this.open = false;
+  };
 }
-
-// Patch the showModal and close methods
-window.HTMLDialogElement.prototype.showModal = function () {
-  this.open = true;
-};
-window.HTMLDialogElement.prototype.close = function () {
-  this.open = false;
-};
 
 const RemoteSettings = name => ({
   get: () => {
