@@ -2060,7 +2060,7 @@ Maybe<nsTArray<RefPtr<Element>>> Element::GetAttrAssociatedElementsInternal(
   // 5. Let resolvedCandidates be an empty list.
   nsTArray<RefPtr<Element>> resolvedElements;
   // 6. For each candidate in candidates:
-  for (const RefPtr<Element> element : elements) {
+  for (const RefPtr<Element>& element : elements) {
     // 6.1 Let resolvedCandidate be the result of resolving the reference target
     // on candidate.
     if (Element* resolvedCandidate = element->ResolveReferenceTarget()) {
