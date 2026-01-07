@@ -59,6 +59,11 @@ skip-if = [
   "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1989731
 ]
 
+["browser_devices_get_user_media_camera_preview_abort.js"]
+skip-if = [
+  "os == 'mac' && os_version == '15.30' && arch == 'aarch64'", # Bug 1989731
+]
+
 ["browser_devices_get_user_media_default_permissions.js"]
 https_first_disabled = true
 skip-if = [
