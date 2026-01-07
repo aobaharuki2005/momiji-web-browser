@@ -6,11 +6,9 @@
  * Test encoding a simple message.
  */
 
-const { require } = ChromeUtils.importESModule(
-  "resource://devtools/shared/loader/Loader.sys.mjs"
+const { QR } = ChromeUtils.importESModule(
+  "moz-src:///toolkit/components/qrcode/encoder.mjs"
 );
-
-const QR = require("resource://devtools/shared/qrcode/index.js");
 
 function run_test() {
   const imgData = QR.encodeToDataURI("HELLO", "L");
