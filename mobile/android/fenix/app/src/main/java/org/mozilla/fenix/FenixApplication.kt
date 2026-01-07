@@ -167,15 +167,23 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         // content providers from Fenix and its libraries have run their initializers already.
         val start = SystemClock.elapsedRealtimeNanos()
 
-        // See Bug 1969818: Crash reporting requires updates to be compatible with
-        // isolated content process.
-        if (!android.os.Process.isIsolated()) {
-            setupCrashReporting()
-        }
-
         // Capture A-C logs to Android logcat. Note that gecko maybe directly post to logcat
         // regardless of what we do here.
         Log.addSink(FenixLogSink(logsDebug = Config.channel.isDebug, AndroidLogSink()))
+
+        // Register a deferred initializer for crash reporting that will be called lazily when
+        // CrashReporter.requireInstance is first accessed. This allows all processes to register
+        // the initializer without immediately constructing the Components object and its dependencies.
+        // Non-main processes genera
+
+        // Some of our non-main processes are for CrashReporter business and need to know our
+        // configuration from Fenix (the Analytics object). To avoid the Gecko processes that don't
+        // need this from initializing the Components/Objects/CrashReporter we register a lazy
+        // initializer so only processes that need it setup this Fenix code.
+        //
+        // Note: This doesn't setup any [UncaughtExceptionHandler].
+        // Note: Gecko processes have their own crash handling mechanisms.
+        CrashReporter.registerDeferredInitializer(::setupCrashReporting)
 
         // While this [initializeFenixProcess] method is run for _all processes_ in the app, we only
         // do global initialization for the _main process_ here. This main process initialization
@@ -236,6 +244,9 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         //
         // - Glean will queue (most) messages before being started so it is safe for Nimbus to begin
         //   before Glean does and any metrics will be processed once Glean is ready.
+
+        // Setup the crash reporter and register the [UncaughtExceptionHandler].
+        setupCrashReporting()
 
         // Begin application-services initialization. The megazord contains Nimbus, but not Glean.
         setupMegazordInitial()
@@ -547,8 +558,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
         }
     }
 
-    private fun setupCrashReporting() {
-        components
+    private fun setupCrashReporting(): CrashReporter {
+        return components
             .analytics
             .crashReporter
             .install(this, ::handleCaughtException)
@@ -621,9 +632,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
         logger.info("onTrimMemory(), level=$level, main=${isMainProcess()}")
 
-        // See Bug 1969818: Crash reporting requires updates to be compatible with
-        // isolated content process.
-        if (!android.os.Process.isIsolated()) {
+        runOnlyInMainProcess {
             components.analytics.crashReporter.recordCrashBreadcrumb(
                 Breadcrumb(
                     category = "Memory",
@@ -635,9 +644,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                     level = Breadcrumb.Level.INFO,
                 ),
             )
-        }
 
-        runOnlyInMainProcess {
             components.core.icons.onTrimMemory(level)
             components.core.store.dispatch(SystemAction.LowMemoryAction(level))
         }
