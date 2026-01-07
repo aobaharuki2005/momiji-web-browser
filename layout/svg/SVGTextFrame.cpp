@@ -3053,18 +3053,19 @@ void SVGTextFrame::FindCloserFrameForSelection(
 //----------------------------------------------------------------------
 // ISVGDisplayableFrame methods
 
-void SVGTextFrame::NotifySVGChanged(uint32_t aFlags) {
-  MOZ_ASSERT(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
+void SVGTextFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
+  MOZ_ASSERT(aFlags.contains(ChangeFlags::TransformChanged) ||
+                 aFlags.contains(ChangeFlags::CoordContextChanged),
              "Invalidation logic may need adjusting");
 
   bool needNewBounds = false;
   bool needGlyphMetricsUpdate = false;
-  if ((aFlags & COORD_CONTEXT_CHANGED) &&
+  if (aFlags.contains(ChangeFlags::CoordContextChanged) &&
       HasAnyStateBits(NS_STATE_SVG_POSITIONING_MAY_USE_PERCENTAGES)) {
     needGlyphMetricsUpdate = true;
   }
 
-  if (aFlags & TRANSFORM_CHANGED) {
+  if (aFlags.contains(ChangeFlags::TransformChanged)) {
     if (mCanvasTM && mCanvasTM->IsSingular()) {
       // We won't have calculated the glyph positions correctly.
       needNewBounds = true;

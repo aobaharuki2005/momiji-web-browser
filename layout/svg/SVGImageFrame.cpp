@@ -826,8 +826,9 @@ bool SVGImageFrame::IgnoreHitTest() const {
   return true;
 }
 
-void SVGImageFrame::NotifySVGChanged(uint32_t aFlags) {
-  MOZ_ASSERT(aFlags & (TRANSFORM_CHANGED | COORD_CONTEXT_CHANGED),
+void SVGImageFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
+  MOZ_ASSERT(aFlags.contains(ChangeFlags::TransformChanged) ||
+                 aFlags.contains(ChangeFlags::CoordContextChanged),
              "Invalidation logic may need adjusting");
 }
 

@@ -33,7 +33,7 @@ class SVGViewportFrame : public SVGDisplayContainerFrame, public ISVGSVGFrame {
   void PaintSVG(gfxContext& aContext, const gfxMatrix& aTransform,
                 imgDrawingParams& aImgParams) override;
   void ReflowSVG() override;
-  void NotifySVGChanged(uint32_t aFlags) override;
+  void NotifySVGChanged(EnumSet<ChangeFlags> aFlags) override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
                               uint32_t aFlags) override;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
@@ -42,7 +42,7 @@ class SVGViewportFrame : public SVGDisplayContainerFrame, public ISVGSVGFrame {
   bool HasChildrenOnlyTransform(Matrix* aTransform) const override;
 
   // ISVGSVGFrame interface:
-  void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
+  void NotifyViewportOrTransformChanged(EnumSet<ChangeFlags> aFlags) override;
 };
 
 }  // namespace mozilla

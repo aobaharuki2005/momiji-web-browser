@@ -91,7 +91,7 @@ class SVGGeometryFrame final : public nsIFrame, public ISVGDisplayableFrame {
                 imgDrawingParams& aImgParams) override;
   nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
   void ReflowSVG() override;
-  void NotifySVGChanged(uint32_t aFlags) override;
+  void NotifySVGChanged(EnumSet<ChangeFlags> aFlags) override;
   SVGBBox GetBBoxContribution(const Matrix& aToBBoxUserspace,
                               uint32_t aFlags) override;
   bool IsDisplayContainer() override { return false; }

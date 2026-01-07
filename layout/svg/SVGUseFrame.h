@@ -51,7 +51,7 @@ class SVGUseFrame final : public SVGGFrame {
 
   // ISVGDisplayableFrame interface:
   void ReflowSVG() override;
-  void NotifySVGChanged(uint32_t aFlags) override;
+  void NotifySVGChanged(EnumSet<ChangeFlags> aFlags) override;
 
  private:
   bool mHasValidDimensions;
