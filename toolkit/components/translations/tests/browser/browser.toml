@@ -41,6 +41,12 @@ skip-if = [
 
 ["browser_about_translations_flip_lexical_shortlist.js"]
 
+["browser_about_translations_resize_sections_by_input.js"]
+
+["browser_about_translations_resize_sections_by_window.js"]
+
+["browser_about_translations_resize_sections_by_zoom.js"]
+
 ["browser_about_translations_source_clear_button_functionality.js"]
 
 ["browser_about_translations_source_clear_button_visibility.js"]
@@ -50,12 +56,6 @@ skip-if = [
 ["browser_about_translations_swap_languages_button_explicit.js"]
 
 ["browser_about_translations_telemetry_open.js"]
-
-["browser_about_translations_textarea_resize_by_input.js"]
-
-["browser_about_translations_textarea_resize_by_window.js"]
-
-["browser_about_translations_textarea_resize_by_zoom.js"]
 
 ["browser_about_translations_url_load.js"]
 
