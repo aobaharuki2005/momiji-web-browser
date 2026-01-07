@@ -5510,6 +5510,8 @@ var SessionStoreInternal = {
     if (workspaceID) {
       winData.workspaceID = workspaceID;
     }
+
+    winData.isAIWindow = lazy.AIWindow.isAIWindowActiveAndEnabled(aWindow);
   },
 
   /**
