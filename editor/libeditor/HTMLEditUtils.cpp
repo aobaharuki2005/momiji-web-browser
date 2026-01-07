@@ -493,7 +493,11 @@ bool HTMLEditUtils::IsVisibleElementEvenIfLeafNode(const nsIContent& aContent) {
   if (!aContent.IsHTMLElement()) {
     return true;
   }
-  // XXX Should we return false if the element is display:none?
+  nsIFrame* const primaryFrame = aContent.GetPrimaryFrame();
+  if (primaryFrame && aContent.IsInComposedDoc() &&
+      HTMLEditUtils::IsInclusiveAncestorCSSDisplayNone(aContent)) {
+    return false;
+  }
   if (HTMLEditUtils::IsBlockElement(
           aContent, BlockInlineCheck::UseComputedDisplayStyle)) {
     return true;
@@ -511,18 +515,19 @@ bool HTMLEditUtils::IsVisibleElementEvenIfLeafNode(const nsIContent& aContent) {
           HTMLInputElement::FromNode(&aContent)) {
     return inputElement->ControlType() != FormControlType::InputHidden;
   }
-  // If the element has a primary frame and it's not empty, the element is
-  // visible.
-  // XXX This method does not guarantee that the layout has already been
-  // updated.  Therefore, this check might be wrong in the edge cases.
-  // However, basically, editor apps should not depend on this path, this
-  // is required if last <br> before a block boundary becomes visible because
-  // of followed by empty but styled frame like <span style=padding:1px></span>.
-  if (aContent.GetPrimaryFrame() &&
-      !aContent.GetPrimaryFrame()->GetSize().IsEmpty()) {
-    return true;
+  if (primaryFrame) {
+    // If the frame is not dirty or non-inline container frame, we can trust
+    // whether the frame is empty or not.
+    if (!primaryFrame->IsSubtreeDirty() || !primaryFrame->IsInlineFrame()) {
+      return !primaryFrame->GetSize().IsEmpty();
+    }
+    // Otherwise, the inner content may have been changed by the editor or JS.
+    // Let's treat it's visible only when it has non-zero border or padding.
+    return !primaryFrame->IsSelfEmpty();
   }
-  // Maybe, empty inline element such as <span>.
+  // If aContent does not have a primary frame, it may be inserted to the
+  // document and has not been flushed the pending notifications.  Then, we
+  // cannot know the actual style so that let's assume it's invisible.
   return false;
 }
 

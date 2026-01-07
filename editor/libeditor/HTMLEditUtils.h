@@ -236,11 +236,13 @@ class HTMLEditUtils final {
                                             BlockInlineCheck aBlockInlineCheck);
 
   /**
-   * IsVisibleElementEvenIfLeafNode() returns true if aContent is an empty block
-   * element, a visible replaced element such as a form control.  This does not
-   * check the layout information.
+   * IsVisibleElementEvenIfLeafNode() returns true if aContent is a visible
+   * element when aContent is empty. If aContent has a primary frame (even if
+   * dirty), this checks whether aContent is actually visible.  Otherwise, this
+   * guesses it from the element type.
    */
-  static bool IsVisibleElementEvenIfLeafNode(const nsIContent& aContent);
+  [[nodiscard]] static bool IsVisibleElementEvenIfLeafNode(
+      const nsIContent& aContent);
 
   /**
    * Return true if aContent is an inline element which formats the content
