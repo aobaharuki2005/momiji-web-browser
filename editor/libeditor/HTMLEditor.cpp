@@ -102,7 +102,6 @@ LazyLogModule gHTMLEditorFocusLog("HTMLEditorFocus");
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 using LeafNodeOptions = HTMLEditUtils::LeafNodeOptions;
-using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 // Some utilities to handle overloading of "A" tag for link and named anchor.
 static bool IsLinkTag(const nsAtom& aTagName) {

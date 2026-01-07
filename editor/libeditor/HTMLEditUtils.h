@@ -1990,14 +1990,30 @@ class HTMLEditUtils final {
     return GetTableCellElementIfOnlyOneSelected(*firstRange);
   }
 
-  enum class WalkTreeOption {
-    IgnoreNonEditableNode,     // Ignore non-editable nodes and their children.
-    IgnoreDataNodeExceptText,  // Ignore data nodes which are not text node.
-    IgnoreWhiteSpaceOnlyText,  // Ignore text nodes having only white-spaces.
-    StopAtBlockBoundary,       // Stop waking the tree at a block boundary.
-  };
-  using WalkTreeOptions = EnumSet<WalkTreeOption>;
+ private:
+  static uint32_t CountMeaningfulChildren(const nsINode& aNode,
+                                          const LeafNodeOptions& aOptions,
+                                          BlockInlineCheck aBlockInlineCheck) {
+    uint32_t count = 0;
+    for (nsIContent* child = aNode.GetFirstChild(); child;
+         child = child->GetNextSibling()) {
+      const LeafNodeType leafNodeType = HTMLEditUtils::GetLeafNodeType(
+          *child, aOptions, aBlockInlineCheck, IgnoreChildren::No);
+      if (leafNodeType == LeafNodeType::Ignore) {
+        continue;
+      }
+      if (leafNodeType == LeafNodeType::NonEmptyContainer) {
+        if (!HTMLEditUtils::GetFirstLeafContent(*child, aOptions,
+                                                aBlockInlineCheck)) {
+          continue;
+        }
+      }
+      ++count;
+    }
+    return count;
+  }
 
+ public:
   /**
    * GetInclusiveFirstChildWhichHasOneChild() returns the deepest element whose
    * tag name is one of `aFirstElementName` and `aOtherElementNames...` if and
@@ -2012,7 +2028,7 @@ class HTMLEditUtils final {
    */
   template <typename FirstElementName, typename... OtherElementNames>
   static Element* GetInclusiveDeepestFirstChildWhichHasOneChild(
-      const nsINode& aNode, const WalkTreeOptions& aOptions,
+      const nsINode& aNode, const LeafNodeOptions& aOptions,
       BlockInlineCheck aBlockInlineCheck, FirstElementName aFirstElementName,
       OtherElementNames... aOtherElementNames) {
     if (!aNode.IsElement()) {
@@ -2022,11 +2038,10 @@ class HTMLEditUtils final {
     for (nsIContent* content = const_cast<nsIContent*>(aNode.AsContent());
          content && content->IsElement() &&
          content->IsAnyOfHTMLElements(aFirstElementName, aOtherElementNames...);
-         // XXX Why do we scan only the first child of every element?  If it's
-         //     not editable, why do we ignore it when aOptions specifies so.
-         content = content->GetFirstChild()) {
-      if (HTMLEditUtils::CountChildren(*content, aOptions, aBlockInlineCheck) !=
-          1) {
+         content = HTMLEditUtils::GetFirstChild(*content, aOptions,
+                                                aBlockInlineCheck)) {
+      if (HTMLEditUtils::CountMeaningfulChildren(*content, aOptions,
+                                                 aBlockInlineCheck) != 1) {
         return content->AsElement();
       }
       parentElement = content->AsElement();
@@ -2837,45 +2852,6 @@ class HTMLEditUtils final {
         (aHowToTreatTableBoundary == TableBoundary::NoCrossTableElement &&
          aContent.IsHTMLElement(nsGkAtoms::table));
     return !cannotCrossBoundary;
-  }
-
-  static bool IsContentIgnored(const nsIContent& aContent,
-                               const WalkTreeOptions& aOptions) {
-    if (aOptions.contains(WalkTreeOption::IgnoreNonEditableNode) &&
-        !EditorUtils::IsEditableContent(aContent,
-                                        EditorUtils::EditorType::HTML)) {
-      return true;
-    }
-    if (aOptions.contains(WalkTreeOption::IgnoreDataNodeExceptText) &&
-        !EditorUtils::IsElementOrText(aContent)) {
-      return true;
-    }
-    if (aOptions.contains(WalkTreeOption::IgnoreWhiteSpaceOnlyText) &&
-        aContent.IsText() &&
-        const_cast<Text*>(aContent.AsText())->TextIsOnlyWhitespace()) {
-      return true;
-    }
-    return false;
-  }
-
-  static uint32_t CountChildren(const nsINode& aNode,
-                                const WalkTreeOptions& aOptions,
-                                BlockInlineCheck aBlockInlineCheck) {
-    uint32_t count = 0;
-    for (nsIContent* child = aNode.GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      if (HTMLEditUtils::IsContentIgnored(*child, aOptions)) {
-        continue;
-      }
-      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-          HTMLEditUtils::IsBlockElement(
-              *child,
-              UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck))) {
-        break;
-      }
-      ++count;
-    }
-    return count;
   }
 
   /**

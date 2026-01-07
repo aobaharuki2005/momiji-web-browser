@@ -39,7 +39,6 @@ using namespace dom;
 
 using EditorType = EditorUtils::EditorType;
 using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
-using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 /*****************************************************************************
  * ListElementSelectionState

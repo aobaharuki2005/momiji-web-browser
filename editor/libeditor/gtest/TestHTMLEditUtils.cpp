@@ -2199,6 +2199,72 @@ TEST(HTMLEditUtilsTest, GetLastChild)
   }
 }
 
+TEST(HTMLEditUtilsTest, GetInclusiveDeepestFirstChildWhichHasOneChild)
+{
+  using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+  const RefPtr<Document> doc = CreateHTMLDoc();
+  const RefPtr<nsGenericHTMLElement> body = doc->GetBody();
+  MOZ_RELEASE_ASSERT(body);
+  for (const auto& testData : {
+           GetLeafNodeTest{u"<div></div>", "div", {}, "div"},
+           GetLeafNodeTest{u"<div><br></div>", "div", {}, "div"},
+           GetLeafNodeTest{
+               u"<div><div><br></div></div>", "div", {}, "div > div"},
+           GetLeafNodeTest{
+               u"<div><!-- comment --><br></div>", "div", {}, "div"},
+           GetLeafNodeTest{u"<div><!-- comment --><br></div>",
+                           "div",
+                           {LeafNodeOption::TreatCommentAsLeafNode},
+                           "div"},
+           GetLeafNodeTest{u"<div><div><!-- comment --><br></div></div>",
+                           "div",
+                           {},
+                           "div > div"},
+           GetLeafNodeTest{u"<div><div><!-- comment --><br></div></div>",
+                           "div",
+                           {LeafNodeOption::TreatCommentAsLeafNode},
+                           "div > div"},
+           GetLeafNodeTest{u"<div><!-- comment --><div><br></div></div>",
+                           "div",
+                           {},
+                           "div > div"},
+           GetLeafNodeTest{u"<div><!-- comment --><div><br></div></div>",
+                           "div",
+                           {LeafNodeOption::TreatCommentAsLeafNode},
+                           "div"},
+           GetLeafNodeTest{u"<div> <br></div>", "div", {}, "div"},
+           GetLeafNodeTest{u"<div> <br></div>",
+                           "div",
+                           {LeafNodeOption::IgnoreInvisibleText},
+                           "div"},
+           GetLeafNodeTest{
+               u"<div><div> <br></div></div>", "div", {}, "div > div"},
+           GetLeafNodeTest{u"<div><div> <br></div></div>",
+                           "div",
+                           {LeafNodeOption::IgnoreInvisibleText},
+                           "div > div"},
+           GetLeafNodeTest{u"<div> <div><br></div></div>", "div", {}, "div"},
+           GetLeafNodeTest{u"<div> <div><br></div></div>",
+                           "div",
+                           {LeafNodeOption::IgnoreInvisibleText},
+                           "div > div"},
+       }) {
+    body->SetInnerHTMLTrusted(nsDependentString(testData.mInnerHTML),
+                              doc->NodePrincipal(), IgnoreErrors());
+    const Element* const target = body->QuerySelector(
+        nsDependentCString(testData.mContentSelector), IgnoreErrors());
+    MOZ_RELEASE_ASSERT(target);
+    const nsIContent* result =
+        HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
+            *target, testData.mOptions,
+            BlockInlineCheck::UseComputedDisplayOutsideStyle, nsGkAtoms::div,
+            nsGkAtoms::blockquote, nsGkAtoms::ul, nsGkAtoms::ol, nsGkAtoms::dl);
+    EXPECT_EQ(result, testData.GetExpectedTarget(*body->GetParentNode()))
+        << "GetInclusiveDeepestFirstChildWhichHasOneChild: " << testData
+        << "(Got: " << ToString(RefPtr{result}) << ")";
+  }
+}
+
 struct MOZ_STACK_CLASS LineBreakBeforeBlockBoundaryTest final {
   const char16_t* const mInnerHTML;
   const char* const mContainer;

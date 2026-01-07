@@ -33,7 +33,6 @@ namespace mozilla {
 using namespace dom;
 
 using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
-using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 Result<EditorDOMPoint, nsresult>
 WhiteSpaceVisibilityKeeper::PrepareToSplitBlockElement(

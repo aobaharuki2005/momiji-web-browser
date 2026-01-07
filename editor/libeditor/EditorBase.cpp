@@ -145,7 +145,6 @@ using namespace widget;
 
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
-using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 static LazyLogModule gEventLog("EditorEvent");
 static LazyLogModule gHTMLEditorEditActionStartLog("HTMLEditorEditActionStart");

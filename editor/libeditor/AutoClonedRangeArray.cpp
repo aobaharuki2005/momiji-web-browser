@@ -1061,11 +1061,10 @@ nsresult AutoClonedRangeArray::CollectEditTargetNodes(
       if (aOutArrayOfContents.Length() != 1) {
         break;
       }
-      Element* deepestDivBlockquoteOrListElement =
+      Element* const deepestDivBlockquoteOrListElement =
           HTMLEditUtils::GetInclusiveDeepestFirstChildWhichHasOneChild(
-              aOutArrayOfContents[0],
-              {HTMLEditUtils::WalkTreeOption::IgnoreNonEditableNode},
-              BlockInlineCheck::Unused, nsGkAtoms::div, nsGkAtoms::blockquote,
+              aOutArrayOfContents[0], {LeafNodeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::Auto, nsGkAtoms::div, nsGkAtoms::blockquote,
               nsGkAtoms::ul, nsGkAtoms::ol, nsGkAtoms::dl);
       if (!deepestDivBlockquoteOrListElement) {
         break;

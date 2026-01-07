@@ -63,7 +63,6 @@ using InvisibleWhiteSpaces = HTMLEditUtils::InvisibleWhiteSpaces;
 using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 using ScanLineBreak = HTMLEditUtils::ScanLineBreak;
 using TableBoundary = HTMLEditUtils::TableBoundary;
-using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 static LazyLogModule gOneLineMoverLog("AutoMoveOneLineHandler");
 

@@ -65,7 +65,6 @@ using EditablePointOption = HTMLEditUtils::EditablePointOption;
 using EditablePointOptions = HTMLEditUtils::EditablePointOptions;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
-using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 template nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
     const AutoTArray<EditorInlineStyleAndValue, 1>& aStylesToSet,

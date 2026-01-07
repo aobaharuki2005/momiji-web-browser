@@ -51,7 +51,6 @@ using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
 using EmptyCheckOptions = HTMLEditUtils::EmptyCheckOptions;
 using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
 using LeafNodeOptions = HTMLEditUtils::LeafNodeOptions;
-using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 Result<EditActionResult, nsresult>
 HTMLEditor::InsertParagraphSeparatorAsSubAction(const Element& aEditingHost) {
