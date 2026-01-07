@@ -630,8 +630,6 @@
   <string name="nova_onboarding_continue_button" tools:ignore="UnusedResources">Continuer</string>
   <!-- "Not now" onboarding button. -->
   <string name="nova_onboarding_negative_button" tools:ignore="UnusedResources">Plus tard</string>
-  <!-- Terms of use (ToU) onboarding title. -->
-  <string name="nova_onboarding_tou_title" tools:ignore="UnusedResources">Soyez prêt à fonctionner librement</string>
   <!-- Terms of use (ToU) onboarding subtitle. -->
   <string name="nova_onboarding_tou_subtitle" tools:ignore="UnusedResources">Rapide, sûr et digne de confiance.\nLa navigation vient de passer à la vitesse supérieure.</string>
   <!--
@@ -4036,14 +4034,14 @@
     A title for the popup prompt.
     %1$s is the product name "Firefox"
   -->
-  <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">Une note de %1$s</string>
+  <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">Un message de %1$s</string>
   <!--
     Copy for the Terms of Use popup prompt body line two.
     %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
   -->
   <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">Vous pouvez en savoir plus %1$s.</string>
   <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
-  <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">ici</string>
+  <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">via ce lien</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->
 
   <!--

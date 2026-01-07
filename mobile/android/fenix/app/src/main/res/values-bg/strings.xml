@@ -2015,7 +2015,7 @@
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">Нова папка</string>
   <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
-  <string name="bookmark_moved_single_item">Преместено %1$s в %2$s</string>
+  <string name="bookmark_moved_single_item">Преместване на %1$s в %2$s</string>
   <!--
     Site Permissions
 
