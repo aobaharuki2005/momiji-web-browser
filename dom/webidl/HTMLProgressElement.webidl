@@ -20,6 +20,5 @@ interface HTMLProgressElement : HTMLElement {
            [CEReactions, SetterThrows]
            attribute double max;
   readonly attribute double position;
-  [BinaryName=labelsForBindings]
   readonly attribute NodeList labels;
 };

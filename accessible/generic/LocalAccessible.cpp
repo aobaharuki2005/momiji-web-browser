@@ -2301,7 +2301,7 @@ Relation LocalAccessible::RelationByType(RelationType aType) const {
       if (mContent->IsHTMLElement()) {
         // HTML form controls implements nsIFormControl interface.
         if (auto* control = nsIFormControl::FromNode(mContent)) {
-          if (dom::HTMLFormElement* form = control->GetFormInternal()) {
+          if (dom::HTMLFormElement* form = control->GetForm()) {
             return Relation(mDoc, form->GetDefaultSubmitElement());
           }
         }
@@ -4127,11 +4127,11 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
       if (data.mType == RelationType::LABEL_FOR) {
         // Labels are a special case -- we need to validate that the target of
         // their `for` attribute is in fact labelable. DOM checks this when we
-        // call GetLabeledElementInternal(). If a label contains an element we
-        // will return it here.
+        // call GetControl(). If a label contains an element we will return it
+        // here.
         if (dom::HTMLLabelElement* labelEl =
                 dom::HTMLLabelElement::FromNode(mContent)) {
-          rel.AppendTarget(mDoc, labelEl->GetLabeledElementInternal());
+          rel.AppendTarget(mDoc, labelEl->GetControl());
         }
       } else if (data.mType == RelationType::DETAILS) {
         if (relAtom == nsGkAtoms::aria_details) {

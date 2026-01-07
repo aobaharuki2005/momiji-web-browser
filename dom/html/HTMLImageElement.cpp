@@ -586,7 +586,7 @@ JSObject* HTMLImageElement::WrapNode(JSContext* aCx,
 }
 
 #ifdef DEBUG
-HTMLFormElement* HTMLImageElement::GetFormInternal() const { return mForm; }
+HTMLFormElement* HTMLImageElement::GetForm() const { return mForm; }
 #endif
 
 void HTMLImageElement::SetForm(HTMLFormElement* aForm) {

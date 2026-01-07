@@ -242,7 +242,8 @@ static bool MustBeAccessible(nsIContent* aContent, DocAccessible* aDocument) {
 
     // If the given ID is referred by relation attribute then create an
     // Accessible for it.
-    if (nsAtom* id = aContent->GetID()) {
+    nsAutoString id;
+    if (nsCoreUtils::GetID(aContent, id) && !id.IsEmpty()) {
       return aDocument->IsDependentID(aContent->AsElement(), id);
     }
   }

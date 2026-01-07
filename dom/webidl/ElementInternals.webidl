@@ -17,8 +17,8 @@ interface ElementInternals {
   undefined setFormValue((File or USVString or FormData)? value,
                          optional (File or USVString or FormData)? state);
 
-  [Throws, BinaryName=formForBindings]
-  readonly attribute Element? form;
+  [Throws]
+  readonly attribute HTMLFormElement? form;
 
   [Throws]
   undefined setValidity(optional ValidityStateFlags flags = {},

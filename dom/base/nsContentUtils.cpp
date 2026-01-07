@@ -1420,7 +1420,7 @@ bool nsContentUtils::IsAutocompleteEnabled(mozilla::dom::Element* aElement) {
 
   if (autocomplete.IsEmpty()) {
     auto* control = nsGenericHTMLFormControlElement::FromNode(aElement);
-    auto* form = control->GetFormInternal();
+    auto* form = control->GetForm();
     if (!form) {
       return true;
     }
@@ -4122,7 +4122,7 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
       KeyAppendInt(int32_t(control->ControlType()), aKey);
 
       // If in a form, add form name / index of form / index in form
-      HTMLFormElement* formElement = control->GetFormInternal();
+      HTMLFormElement* formElement = control->GetForm();
       if (formElement) {
         if (IsAutocompleteOff(formElement)) {
           aKey.Truncate();

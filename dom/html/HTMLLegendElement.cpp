@@ -128,16 +128,9 @@ HTMLLegendElement::LegendAlignValue HTMLLegendElement::LogicalAlign(
   }
 }
 
-Element* HTMLLegendElement::GetFormForBindings() const {
-  HTMLFormElement* form = GetFormInternal();
-  if (!form) {
-    return nullptr;
-  }
-  return RetargetReferenceTargetForBindings(form);
-}
-HTMLFormElement* HTMLLegendElement::GetFormInternal() const {
+HTMLFormElement* HTMLLegendElement::GetForm() const {
   const auto* fieldsetControl = nsIFormControl::FromNodeOrNull(GetFieldSet());
-  return fieldsetControl ? fieldsetControl->GetFormInternal() : nullptr;
+  return fieldsetControl ? fieldsetControl->GetForm() : nullptr;
 }
 
 JSObject* HTMLLegendElement::WrapNode(JSContext* aCx,

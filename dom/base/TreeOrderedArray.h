@@ -8,7 +8,6 @@
 #define mozilla_dom_TreeOrderedArray_h
 
 #include "FastFrontRemovableArray.h"
-#include "nsContentUtils.h"
 
 class nsINode;
 template <typename T>
@@ -17,7 +16,7 @@ class RefPtr;
 namespace mozilla::dom {
 
 // A sorted tree-ordered list of pointers (either raw or RefPtr) to nodes.
-template <typename NodePointer, TreeKind K = TreeKind::DOM>
+template <typename NodePointer>
 class TreeOrderedArray : public FastFrontRemovableArray<NodePointer, 1> {
   using Base = FastFrontRemovableArray<NodePointer, 1>;
 

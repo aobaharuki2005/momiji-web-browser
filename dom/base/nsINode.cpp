@@ -3586,7 +3586,7 @@ nsGenericHTMLElement* nsINode::GetEffectiveCommandForElement() const {
 
   if (const auto* buttonControl = HTMLButtonElement::FromNodeOrNull(this)) {
     if (auto* popover = nsGenericHTMLElement::FromNodeOrNull(
-            buttonControl->GetCommandForElementInternal())) {
+            buttonControl->GetCommandForElement())) {
       if (popover->GetPopoverAttributeState() != PopoverAttributeState::None) {
         return popover;
       }
@@ -3603,7 +3603,7 @@ nsGenericHTMLElement* nsINode::GetEffectivePopoverTargetElement() const {
     return nullptr;
   }
   if (auto* popover = nsGenericHTMLElement::FromNodeOrNull(
-          formControl->GetPopoverTargetElementInternal())) {
+          formControl->GetPopoverTargetElement())) {
     if (popover->GetPopoverAttributeState() != PopoverAttributeState::None) {
       return popover;
     }

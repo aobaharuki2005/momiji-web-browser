@@ -694,8 +694,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
   static bool MatchLabelsElement(Element* aElement, int32_t aNamespaceID,
                                  nsAtom* aAtom, void* aData);
 
-  already_AddRefed<nsINodeList> LabelsForBindings();
-  already_AddRefed<nsINodeList> LabelsInternal();
+  already_AddRefed<nsINodeList> Labels();
 
   static bool LegacyTouchAPIEnabled(JSContext* aCx, JSObject* aObj);
 
@@ -1134,26 +1133,25 @@ class nsGenericHTMLFormElement : public nsGenericHTMLElement {
   void UpdateFieldSet(bool aNotify);
 
   /**
-   * Add a form attribute observer which will observe when the element
-   * associated with
+   * Add a form id observer which will observe when the element with the id in
    * @form will change.
    *
    * @return The element associated with the current id in @form (may be null).
    */
-  Element* AddFormAttributeObserver();
+  Element* AddFormIdObserver();
 
   /**
-   * Remove the form attribute attribute observer.
+   * Remove the form id observer.
    */
-  void RemoveFormAttributeObserver();
+  void RemoveFormIdObserver();
 
   /**
-   * This method is a a callback for AttrAssociatedElementUpdated (from
-   * Element). It will be called each time the element associated with @form
+   * This method is a a callback for IDTargetObserver (from Document).
+   * It will be called each time the element associated with the id in @form
    * changes.
    */
-  static bool FormAttributeUpdated(Element* aOldElement, Element* aNewElement,
-                                   Element* thisElement);
+  static bool FormIdUpdated(Element* aOldElement, Element* aNewElement,
+                            void* aData);
 
   // Returns true if the event should not be handled from GetEventTargetParent
   bool IsElementDisabledForEvents(mozilla::WidgetEvent* aEvent,
@@ -1217,8 +1215,7 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
 
   // nsIFormControl
   mozilla::dom::HTMLFieldSetElement* GetFieldSet() override;
-  mozilla::dom::Element* GetFormForBindings() const override;
-  mozilla::dom::HTMLFormElement* GetFormInternal() const override;
+  mozilla::dom::HTMLFormElement* GetForm() const override { return mForm; }
   void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
 
@@ -1233,6 +1230,7 @@ class nsGenericHTMLFormControlElement : public nsGenericHTMLFormElement,
   bool DoesReadWriteApply() const override;
   void SetFormInternal(mozilla::dom::HTMLFormElement* aForm,
                        bool aBindToTree) override;
+  mozilla::dom::HTMLFormElement* GetFormInternal() const override;
   mozilla::dom::HTMLFieldSetElement* GetFieldSetInternal() const override;
   void SetFieldSetInternal(
       mozilla::dom::HTMLFieldSetElement* aFieldset) override;
@@ -1281,9 +1279,8 @@ class nsGenericHTMLFormControlElementWithState
                       nsAttrValue& aResult) override;
 
   // PopoverInvokerElement
-  mozilla::dom::Element* GetPopoverTargetElementForBindings() const;
-  mozilla::dom::Element* GetPopoverTargetElementInternal() const;
-  void SetPopoverTargetElementForBindings(mozilla::dom::Element*);
+  mozilla::dom::Element* GetPopoverTargetElement() const;
+  void SetPopoverTargetElement(mozilla::dom::Element*);
   void GetPopoverTargetAction(nsAString& aValue) const {
     GetHTMLEnumAttr(nsGkAtoms::popovertargetaction, aValue);
   }

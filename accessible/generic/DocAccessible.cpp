@@ -468,17 +468,19 @@ void DocAccessible::QueueCacheUpdateForDependentRelations(
     QueueCacheUpdate(relatedAcc, CacheDomain::Relations);
   }
 
-  if (aOldId && !aOldId->IsEmptyString()) {
+  if (aOldId) {
     // If we have an old ID, we need to update any accessibles that depended on
     // that ID as well.
-    MOZ_ASSERT(aOldId->Type() == nsAttrValue::eAtom);
-    RefPtr<nsAtom> id = aOldId->GetAtomValue();
-    auto* providers = GetRelProviders(el, id);
-    if (providers) {
-      for (auto& provider : *providers) {
-        if (LocalAccessible* oldRelatedAcc =
-                GetAccessible(provider->mContent)) {
-          QueueCacheUpdate(oldRelatedAcc, CacheDomain::Relations);
+    nsAutoString id;
+    aOldId->ToString(id);
+    if (!id.IsEmpty()) {
+      auto* providers = GetRelProviders(el, id);
+      if (providers) {
+        for (auto& provider : *providers) {
+          if (LocalAccessible* oldRelatedAcc =
+                  GetAccessible(provider->mContent)) {
+            QueueCacheUpdate(oldRelatedAcc, CacheDomain::Relations);
+          }
         }
       }
     }
@@ -961,8 +963,6 @@ void DocAccessible::AttributeChanged(dom::Element* aElement,
              "DOM attribute change on an accessible detached from the tree");
 
   if (aAttribute == nsGkAtoms::id) {
-    // TODO(1983819): updates to referenceTarget should trigger these same
-    // actions
     dom::Element* elm = accessible->Elm();
     RelocateARIAOwnedIfNeeded(elm);
     ARIAActiveDescendantIDMaybeMoved(accessible);
@@ -1670,8 +1670,8 @@ void DocAccessible::ProcessInvalidationList() {
       if (container) {
         // Check if the node is a target of aria-owns, and if so, don't process
         // it here and let DoARIAOwnsRelocation process it.
-        AttrRelProviders* list =
-            GetRelProviders(content->AsElement(), content->GetID());
+        AttrRelProviders* list = GetRelProviders(
+            content->AsElement(), nsDependentAtomString(content->GetID()));
         bool shouldProcess = !!list;
         if (shouldProcess) {
           for (uint32_t idx = 0; idx < list->Length(); idx++) {
@@ -1926,46 +1926,31 @@ void DocAccessible::AddDependentIDsFor(LocalAccessible* aRelProvider,
       }
     }
 
-    if (const nsAttrValue* parsedAttrValue =
-            relProviderEl->GetParsedAttr(relAttr)) {
-      if (parsedAttrValue->GetAtomCount() == 0) {
-        continue;
-      }
-      MOZ_ASSERT(
-          parsedAttrValue->Type() == nsAttrValue::eAtomArray ||
-              parsedAttrValue->Type() == nsAttrValue::eAtom,
-          "Attribute used for adding accessible relations must be parsed.");
-      for (uint32_t i = 0; i < parsedAttrValue->GetAtomCount(); i++) {
-        auto id = parsedAttrValue->AtomAt(static_cast<int32_t>(i));
-        AttrRelProviders* providers =
-            GetOrCreateRelProviders(relProviderEl, id);
-        if (!providers) {
-          continue;
-        }
+    AssociatedElementsIterator iter(this, relProviderEl, relAttr);
+    while (true) {
+      const nsDependentSubstring id = iter.NextID();
+      if (id.IsEmpty()) break;
 
+      AttrRelProviders* providers = GetOrCreateRelProviders(relProviderEl, id);
+      if (providers) {
         AttrRelProvider* provider = new AttrRelProvider(relAttr, relProviderEl);
-        if (!provider) {
-          continue;
-        }
+        if (provider) {
+          providers->AppendElement(provider);
 
-        providers->AppendElement(provider);
-
-        // We've got here during the children caching. If the referenced
-        // content is not accessible then store it to pend its container
-        // children invalidation (this happens immediately after the caching
-        // is finished).
-        dom::DocumentOrShadowRoot* docOrShadowRoot =
-            relProviderEl->GetUncomposedDocOrConnectedShadowRoot();
-        if (!docOrShadowRoot) {
-          continue;
-        }
-
-        nsIContent* dependentContent = docOrShadowRoot->GetElementById(id);
-        if (dependentContent && !HasAccessible(dependentContent)) {
-          mInvalidationList.AppendElement(dependentContent);
+          // We've got here during the children caching. If the referenced
+          // content is not accessible then store it to pend its container
+          // children invalidation (this happens immediately after the caching
+          // is finished).
+          nsIContent* dependentContent = iter.GetElem(id);
+          if (dependentContent) {
+            if (!HasAccessible(dependentContent)) {
+              mInvalidationList.AppendElement(dependentContent);
+            }
+          }
         }
       }
     }
+
     // If the relation attribute is given then we don't have anything else to
     // check.
     if (aRelAttr) break;
@@ -1984,29 +1969,20 @@ void DocAccessible::RemoveDependentIDsFor(LocalAccessible* aRelProvider,
     nsStaticAtom* relAttr = kRelationAttrs[idx];
     if (aRelAttr && aRelAttr != kRelationAttrs[idx]) continue;
 
-    if (const nsAttrValue* parsedAttrValue =
-            relProviderElm->GetParsedAttr(relAttr)) {
-      if (parsedAttrValue->GetAtomCount() == 0) {
-        continue;
-      }
-      MOZ_ASSERT(
-          parsedAttrValue->Type() == nsAttrValue::eAtomArray ||
-              parsedAttrValue->Type() == nsAttrValue::eAtom,
-          "Attribute used for removing accessible relations must be parsed.");
+    AssociatedElementsIterator iter(this, relProviderElm, relAttr);
+    while (true) {
+      const nsDependentSubstring id = iter.NextID();
+      if (id.IsEmpty()) break;
 
-      for (uint32_t i = 0; i < parsedAttrValue->GetAtomCount(); i++) {
-        nsAtom* id = parsedAttrValue->AtomAt(static_cast<int32_t>(i));
+      AttrRelProviders* providers = GetRelProviders(relProviderElm, id);
+      if (providers) {
+        providers->RemoveElementsBy(
+            [relAttr, relProviderElm](const auto& provider) {
+              return provider->mRelAttr == relAttr &&
+                     provider->mContent == relProviderElm;
+            });
 
-        AttrRelProviders* providers = GetRelProviders(relProviderElm, id);
-        if (providers) {
-          providers->RemoveElementsBy(
-              [relAttr, relProviderElm](const auto& provider) {
-                return provider->mRelAttr == relAttr &&
-                       provider->mContent == relProviderElm;
-              });
-
-          RemoveRelProvidersIfEmpty(relProviderElm, id);
-        }
+        RemoveRelProvidersIfEmpty(relProviderElm, id);
       }
     }
 
@@ -2047,13 +2023,13 @@ void DocAccessible::AddDependentElementsFor(LocalAccessible* aRelProvider,
     if (aRelAttr && aRelAttr != attr) {
       continue;
     }
-    if (auto elements = nsAccUtils::GetARIAElementsAttr(providerEl, attr)) {
-      for (auto targetEl : *elements) {
-        AttrRelProviders& providers =
-            mDependentElementsMap.LookupOrInsert(targetEl);
-        AttrRelProvider* provider = new AttrRelProvider(attr, providerEl);
-        providers.AppendElement(provider);
-      }
+    nsTArray<dom::Element*> elements;
+    nsAccUtils::GetARIAElementsAttr(providerEl, attr, elements);
+    for (dom::Element* targetEl : elements) {
+      AttrRelProviders& providers =
+          mDependentElementsMap.LookupOrInsert(targetEl);
+      AttrRelProvider* provider = new AttrRelProvider(attr, providerEl);
+      providers.AppendElement(provider);
     }
     // If the relation attribute was given, we've already handled it. We don't
     // have anything else to check.
@@ -2099,17 +2075,16 @@ void DocAccessible::RemoveDependentElementsFor(LocalAccessible* aRelProvider,
     if (aRelAttr && aRelAttr != attr) {
       continue;
     }
-    if (auto elements = nsAccUtils::GetARIAElementsAttr(providerEl, attr)) {
-      for (auto targetEl : *elements) {
-        if (auto providers = mDependentElementsMap.Lookup(targetEl)) {
-          providers.Data().RemoveElementsBy(
-              [attr, providerEl](const auto& provider) {
-                return provider->mRelAttr == attr &&
-                       provider->mContent == providerEl;
-              });
-          if (providers.Data().IsEmpty()) {
-            providers.Remove();
-          }
+    nsTArray<dom::Element*> elements;
+    nsAccUtils::GetARIAElementsAttr(providerEl, attr, elements);
+    for (dom::Element* targetEl : elements) {
+      if (auto providers = mDependentElementsMap.Lookup(targetEl)) {
+        providers.Data().RemoveElementsBy([attr,
+                                           providerEl](const auto& provider) {
+          return provider->mRelAttr == attr && provider->mContent == providerEl;
+        });
+        if (providers.Data().IsEmpty()) {
+          providers.Remove();
         }
       }
     }
@@ -3202,7 +3177,8 @@ void DocAccessible::MaybeHandleChangeToHiddenNameOrDescription(
     if (!id) {
       continue;
     }
-    auto* providers = GetRelProviders(content->AsElement(), id);
+    auto* providers =
+        GetRelProviders(content->AsElement(), nsDependentAtomString(id));
     if (!providers) {
       continue;
     }
