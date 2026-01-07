@@ -64,7 +64,9 @@ using namespace dom;
 using EditablePointOption = HTMLEditUtils::EditablePointOption;
 using EditablePointOptions = HTMLEditUtils::EditablePointOptions;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
-using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+using LeafNodeType = HTMLEditUtils::LeafNodeType;
+using LeafNodeTypes = HTMLEditUtils::LeafNodeTypes;
+using WalkTreeOption = HTMLEditUtils::WalkTreeOption;
 
 template nsresult HTMLEditor::SetInlinePropertiesAsSubAction(
     const AutoTArray<EditorInlineStyleAndValue, 1>& aStylesToSet,
@@ -950,8 +952,7 @@ HTMLEditor::AutoInlineStyleSetter::SplitTextNodeAndApplyStyleToMiddleNode(
   if (mAttribute) {
     // Look for siblings that are correct type of node
     nsIContent* sibling = HTMLEditUtils::GetPreviousSibling(
-        *middleTextNode, {LeafNodeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::UseComputedDisplayOutsideStyle);
+        *middleTextNode, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsElement()) {
       OwningNonNull<Element> element(*sibling->AsElement());
       Result<bool, nsresult> result =
@@ -980,8 +981,7 @@ HTMLEditor::AutoInlineStyleSetter::SplitTextNodeAndApplyStyleToMiddleNode(
       }
     }
     sibling = HTMLEditUtils::GetNextSibling(
-        *middleTextNode, {LeafNodeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::UseComputedDisplayOutsideStyle);
+        *middleTextNode, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsElement()) {
       OwningNonNull<Element> element(*sibling->AsElement());
       Result<bool, nsresult> result =
@@ -1062,13 +1062,10 @@ Result<CaretPoint, nsresult> HTMLEditor::AutoInlineStyleSetter::ApplyStyle(
   }
 
   // First check if there's an adjacent sibling we can put our node into.
-  const nsCOMPtr<nsIContent> previousSibling =
-      HTMLEditUtils::GetPreviousSibling(
-          aContent, {LeafNodeOption::IgnoreNonEditableNode},
-          BlockInlineCheck::UseComputedDisplayOutsideStyle);
-  const nsCOMPtr<nsIContent> nextSibling = HTMLEditUtils::GetNextSibling(
-      aContent, {LeafNodeOption::IgnoreNonEditableNode},
-      BlockInlineCheck::UseComputedDisplayOutsideStyle);
+  nsCOMPtr<nsIContent> previousSibling = HTMLEditUtils::GetPreviousSibling(
+      aContent, {WalkTreeOption::IgnoreNonEditableNode});
+  nsCOMPtr<nsIContent> nextSibling = HTMLEditUtils::GetNextSibling(
+      aContent, {WalkTreeOption::IgnoreNonEditableNode});
   if (RefPtr<Element> previousElement =
           Element::FromNodeOrNull(previousSibling)) {
     Result<bool, nsresult> canMoveIntoPreviousSibling =
@@ -2397,7 +2394,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
   // `<p><b><i>a</i></b><b><i></i></b><b><i>bc</i></b></p>`.
   //                    ^^^^^^^^^^^^^^
   nsIContent* firstLeafChildOfNextNode = HTMLEditUtils::GetFirstLeafContent(
-      *unwrappedSplitNodeResult.GetNextContent(), {});
+      *unwrappedSplitNodeResult.GetNextContent(), {LeafNodeType::OnlyLeafNode});
   EditorDOMPoint atStartOfNextNode(
       firstLeafChildOfNextNode ? firstLeafChildOfNextNode
                                : unwrappedSplitNodeResult.GetNextContent(),
@@ -2487,7 +2484,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::ClearStyleAt(
   // it was in next node of the first split.
   // E.g., `<p><b><i>a</i></b><b><i><br></i></b><b><i>bc</i></b></p>`
   nsIContent* firstLeafChildOfPreviousNode = HTMLEditUtils::GetFirstLeafContent(
-      *unwrappedSplitResultAtStartOfNextNode.GetPreviousContent(), {});
+      *unwrappedSplitResultAtStartOfNextNode.GetPreviousContent(),
+      {LeafNodeType::OnlyLeafNode});
   pointToPutCaret.Set(
       firstLeafChildOfPreviousNode
           ? firstLeafChildOfPreviousNode
@@ -4177,8 +4175,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::SetFontSizeOnTextNode(
       aIncrementOrDecrement == FontSize::incr ? nsGkAtoms::big
                                               : nsGkAtoms::small;
   nsCOMPtr<nsIContent> sibling = HTMLEditUtils::GetPreviousSibling(
-      *textNodeForTheRange, {LeafNodeOption::IgnoreNonEditableNode},
-      BlockInlineCheck::UseComputedDisplayOutsideStyle);
+      *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
     // Previous sib is already right kind of inline node; slide this over
     Result<MoveNodeResult, nsresult> moveTextNodeResult =
@@ -4194,8 +4191,7 @@ Result<CreateElementResult, nsresult> HTMLEditor::SetFontSizeOnTextNode(
     return CreateElementResult::NotHandled(std::move(pointToPutCaret));
   }
   sibling = HTMLEditUtils::GetNextSibling(
-      *textNodeForTheRange, {LeafNodeOption::IgnoreNonEditableNode},
-      BlockInlineCheck::UseComputedDisplayOutsideStyle);
+      *textNodeForTheRange, {WalkTreeOption::IgnoreNonEditableNode});
   if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
     // Following sib is already right kind of inline node; slide this over
     Result<MoveNodeResult, nsresult> moveTextNodeResult =
@@ -4329,8 +4325,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetFontSizeWithBigOrSmallElement(
 
     // Next, if next or previous is <big> or <small>, move aContent into it.
     nsCOMPtr<nsIContent> sibling = HTMLEditUtils::GetPreviousSibling(
-        aContent, {LeafNodeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::UseComputedDisplayOutsideStyle);
+        aContent, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
       Result<MoveNodeResult, nsresult> moveNodeResult =
           MoveNodeToEndWithTransaction(aContent, *sibling);
@@ -4345,8 +4340,7 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::SetFontSizeWithBigOrSmallElement(
     }
 
     sibling = HTMLEditUtils::GetNextSibling(
-        aContent, {LeafNodeOption::IgnoreNonEditableNode},
-        BlockInlineCheck::UseComputedDisplayOutsideStyle);
+        aContent, {WalkTreeOption::IgnoreNonEditableNode});
     if (sibling && sibling->IsHTMLElement(bigOrSmallTagName)) {
       Result<MoveNodeResult, nsresult> moveNodeResult =
           MoveNodeWithTransaction(aContent, EditorDOMPoint(sibling, 0u));

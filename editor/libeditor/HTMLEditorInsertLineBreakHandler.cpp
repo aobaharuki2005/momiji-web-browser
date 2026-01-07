@@ -235,14 +235,10 @@ nsresult HTMLEditor::AutoInsertLineBreakHandler::HandleInsertBRElement() {
     pointToPutCaret = forwardScanFromAfterBRElementResult
                           .PointAtReachedContent<EditorDOMPoint>();
   } else if (forwardScanFromAfterBRElementResult.ReachedSpecialContent()) {
-    pointToPutCaret = forwardScanFromAfterBRElementResult
-                          .PointAtReachedContent<EditorDOMPoint>();
-  } else if (forwardScanFromAfterBRElementResult
-                 .ReachedEmptyInlineContainerElement()) {
     // Next inserting text should be inserted into styled inline elements if
     // they have first visible thing in the new line.
-    pointToPutCaret =
-        EditorDOMPoint(forwardScanFromAfterBRElementResult.ElementPtr(), 0);
+    pointToPutCaret = forwardScanFromAfterBRElementResult
+                          .PointAtReachedContent<EditorDOMPoint>();
   }
 
   nsresult rv = mHTMLEditor.CollapseSelectionTo(pointToPutCaret);

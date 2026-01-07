@@ -97,7 +97,7 @@ namespace mozilla {
 
 using namespace dom;
 using EmptyCheckOption = HTMLEditUtils::EmptyCheckOption;
-using LeafNodeOption = HTMLEditUtils::LeafNodeOption;
+using LeafNodeType = HTMLEditUtils::LeafNodeType;
 
 #define kInsertCookie "_moz_Insert Here_moz_"
 
@@ -506,13 +506,9 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
   if (!aLastInsertedPoint.GetChild() ||
       !aLastInsertedPoint.GetChild()->IsHTMLElement(nsGkAtoms::table)) {
     containerContent = HTMLEditUtils::GetLastLeafContent(
-        *aLastInsertedPoint.GetChild(),
-        {
-            LeafNodeOption::IgnoreNonEditableNode,
-            LeafNodeOption::IgnoreInvisibleText,
-            // FIXME: We cannot visually put caret into empty inline containers
-            // like <span></span> so that let's ignore them.
-        });
+        *aLastInsertedPoint.GetChild(), {LeafNodeType::OnlyEditableLeafNode},
+        BlockInlineCheck::Unused,
+        aLastInsertedPoint.GetChild()->GetAsElementOrParentElement());
     if (containerContent) {
       Element* mostDistantInclusiveAncestorTableElement = nullptr;
       for (Element* maybeTableElement =
@@ -563,12 +559,9 @@ HTMLEditor::HTMLWithContextInserter::GetNewCaretPointAfterInsertingHTML(
             {WSRunScanner::Option::OnlyEditableNodes},
             EditorRawDOMPoint(prevVisibleThing.BRElementPtr()));
     if (prevVisibleThingOfBRElement.InVisibleOrCollapsibleCharacters()) {
-      // XXX Why not end of the text node?
       pointToPutCaret = prevVisibleThingOfBRElement
                             .PointAfterReachedContent<EditorDOMPoint>();
-    } else if (prevVisibleThingOfBRElement.ReachedSpecialContent() ||
-               prevVisibleThingOfBRElement
-                   .ReachedEmptyInlineContainerElement()) {
+    } else if (prevVisibleThingOfBRElement.ReachedSpecialContent()) {
       pointToPutCaret = prevVisibleThingOfBRElement
                             .PointAfterReachedContentNode<EditorDOMPoint>();
     }
