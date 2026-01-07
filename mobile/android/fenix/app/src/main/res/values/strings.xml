@@ -1566,6 +1566,8 @@
     <string name="download_delete_item">Delete</string>
     <!-- Content description for the toolbar "Navigate back" button -->
     <string name="download_navigate_back_description">Navigate back</string>
+    <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+    <string name="download_navigate_settings_description">Navigate to Downloads Settings</string>
     <!-- Content description for the toolbar back button while searching the downloads -->
     <string name="download_close_search_description">Back and close search</string>
     <!-- Content description for the search bar clear text button on the downloads screen -->
