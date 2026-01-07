@@ -1634,6 +1634,77 @@ nsIContent* HTMLEditUtils::GetPreviousLeafContentOrPreviousBlockElementImpl(
   return nullptr;
 }
 
+nsIContent* HTMLEditUtils::GetSibling(const nsIContent& aContent,
+                                      WalkTreeDirection aDirection,
+                                      const LeafNodeOptions& aOptions,
+                                      BlockInlineCheck aBlockInlineCheck) {
+  MOZ_ASSERT(aBlockInlineCheck != BlockInlineCheck::Unused);
+  aBlockInlineCheck = UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck);
+  for (nsIContent* sibling = aDirection == WalkTreeDirection::Backward
+                                 ? aContent.GetPreviousSibling()
+                                 : aContent.GetNextSibling();
+       sibling; sibling = aDirection == WalkTreeDirection::Backward
+                              ? sibling->GetPreviousSibling()
+                              : sibling->GetNextSibling()) {
+    const LeafNodeType leafNodeType = HTMLEditUtils::GetLeafNodeType(
+        *sibling, aOptions, aBlockInlineCheck, IgnoreChildren::No);
+    if (leafNodeType == LeafNodeType::Ignore) {
+      continue;
+    }
+    if (HTMLEditUtils::IsBlockElement(*sibling, aBlockInlineCheck)) {
+      return sibling;
+    }
+    if (leafNodeType == LeafNodeType::NonEmptyContainer) {
+      if (HTMLEditUtils::GetFirstLeafContent(*sibling, aOptions,
+                                             aBlockInlineCheck)) {
+        return sibling;  // Has meaningful child so that it's meaningful.
+      }
+      if (HTMLEditUtils::GetLeafNodeType(*sibling, aOptions, aBlockInlineCheck,
+                                         IgnoreChildren::Yes) ==
+          LeafNodeType::Ignore) {
+        continue;  // The sibling itself can be ignored.
+      }
+    }
+    return sibling;
+  }
+  return nullptr;
+}
+
+nsIContent* HTMLEditUtils::GetFirstOrLastChild(
+    const nsINode& aNode, FirstOrLastChild aFirstOrLastChild,
+    const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck) {
+  MOZ_ASSERT(aBlockInlineCheck != BlockInlineCheck::Unused);
+  aBlockInlineCheck = UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck);
+  for (nsIContent* child = aFirstOrLastChild == FirstOrLastChild::First
+                               ? aNode.GetFirstChild()
+                               : aNode.GetLastChild();
+       child; child = aFirstOrLastChild == FirstOrLastChild::First
+                          ? child->GetNextSibling()
+                          : child->GetPreviousSibling()) {
+    const LeafNodeType leafNodeType = HTMLEditUtils::GetLeafNodeType(
+        *child, aOptions, aBlockInlineCheck, IgnoreChildren::No);
+    if (leafNodeType == LeafNodeType::Ignore) {
+      continue;
+    }
+    if (HTMLEditUtils::IsBlockElement(*child, aBlockInlineCheck)) {
+      return child;
+    }
+    if (leafNodeType == LeafNodeType::NonEmptyContainer) {
+      if (HTMLEditUtils::GetFirstLeafContent(*child, aOptions,
+                                             aBlockInlineCheck)) {
+        return child;  // Has meaningful child so that it's meaningful.
+      }
+      if (HTMLEditUtils::GetLeafNodeType(*child, aOptions, aBlockInlineCheck,
+                                         IgnoreChildren::Yes) ==
+          LeafNodeType::Ignore) {
+        continue;  // The child itself can be ignored.
+      }
+    }
+    return child;
+  }
+  return nullptr;
+}
+
 template <typename EditorLineBreakType>
 Maybe<EditorLineBreakType> HTMLEditUtils::GetUnnecessaryLineBreak(
     const Element& aBlockElement, ScanLineBreak aScanLineBreak) {
@@ -3301,7 +3372,8 @@ HTMLEditUtils::ComputePointToPutCaretInElementIfOutside(
   if (nodeBefore) {
     // selection is after block.  put at end of block.
     const nsIContent* lastEditableContent = HTMLEditUtils::GetLastChild(
-        aElement, {WalkTreeOption::IgnoreNonEditableNode});
+        aElement, {LeafNodeOption::IgnoreNonEditableNode},
+        BlockInlineCheck::UseComputedDisplayOutsideStyle);
     if (!lastEditableContent) {
       lastEditableContent = &aElement;
     }
@@ -3315,7 +3387,8 @@ HTMLEditUtils::ComputePointToPutCaretInElementIfOutside(
 
   // selection is before block.  put at start of block.
   const nsIContent* firstEditableContent = HTMLEditUtils::GetFirstChild(
-      aElement, {WalkTreeOption::IgnoreNonEditableNode});
+      aElement, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (!firstEditableContent) {
     firstEditableContent = &aElement;
   }
@@ -3394,7 +3467,8 @@ size_t HTMLEditUtils::CollectChildren(
 
   size_t numberOfFoundChildren = 0;
   for (nsIContent* content =
-           GetFirstChild(aNode, {WalkTreeOption::IgnoreNonEditableNode});
+           GetFirstChild(aNode, {LeafNodeOption::IgnoreNonEditableNode},
+                         BlockInlineCheck::UseComputedDisplayOutsideStyle);
        content; content = content->GetNextSibling()) {
     if ((aOptions.contains(CollectChildrenOption::CollectListChildren) &&
          (HTMLEditUtils::IsListElement(*content) ||

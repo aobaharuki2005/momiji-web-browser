@@ -1220,7 +1220,8 @@ bool HTMLEditor::AutoInsertParagraphHandler::ShouldCreateNewParagraph(
       const auto* const precedingBRElement =
           HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetPreviousSibling(
               *aPointToSplit.ContainerAs<Text>(),
-              {WalkTreeOption::IgnoreNonEditableNode}));
+              {LeafNodeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::UseComputedDisplayOutsideStyle));
       return !IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
           precedingBRElement);
     }
@@ -1232,7 +1233,8 @@ bool HTMLEditor::AutoInsertParagraphHandler::ShouldCreateNewParagraph(
       const auto* const followingBRElement =
           HTMLBRElement::FromNodeOrNull(HTMLEditUtils::GetNextSibling(
               *aPointToSplit.ContainerAs<Text>(),
-              {WalkTreeOption::IgnoreNonEditableNode}));
+              {LeafNodeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::UseComputedDisplayOutsideStyle));
       return !IsNullOrInvisibleBRElementOrPaddingOneForEmptyLastLine(
           followingBRElement);
     }
@@ -1834,8 +1836,9 @@ HTMLEditor::AutoInsertParagraphHandler::HandleInListItemElement(
     // If the given list item element is not the last list item element of
     // its parent nor not followed by sub list elements, split the parent
     // before it.
-    if (!HTMLEditUtils::IsLastChild(aListItemElement,
-                                    {WalkTreeOption::IgnoreNonEditableNode})) {
+    if (!HTMLEditUtils::IsLastChild(
+            aListItemElement, {LeafNodeOption::IgnoreNonEditableNode},
+            BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
       Result<SplitNodeResult, nsresult> splitListItemParentResult =
           mHTMLEditor.SplitNodeWithTransaction(
               EditorDOMPoint(&aListItemElement));

@@ -4430,8 +4430,10 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::IndentListChildWithTransaction(
   // same as the parent list element's tag, we can move it to start of the
   // sub-list.
   if (nsIContent* const nextEditableSibling = HTMLEditUtils::GetNextSibling(
-          aContentMovingToSubList, {WalkTreeOption::IgnoreWhiteSpaceOnlyText,
-                                    WalkTreeOption::IgnoreNonEditableNode})) {
+          aContentMovingToSubList,
+          {LeafNodeOption::IgnoreInvisibleText,
+           LeafNodeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
     if (HTMLEditUtils::IsListElement(*nextEditableSibling) &&
         aPointInListElement.GetContainer()->NodeInfo()->NameAtom() ==
             nextEditableSibling->NodeInfo()->NameAtom() &&
@@ -4453,8 +4455,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::IndentListChildWithTransaction(
   if (const nsCOMPtr<nsIContent> previousEditableSibling =
           HTMLEditUtils::GetPreviousSibling(
               aContentMovingToSubList,
-              {WalkTreeOption::IgnoreWhiteSpaceOnlyText,
-               WalkTreeOption::IgnoreNonEditableNode})) {
+              {LeafNodeOption::IgnoreInvisibleText,
+               LeafNodeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
     if (HTMLEditUtils::IsListElement(*previousEditableSibling) &&
         aPointInListElement.GetContainer()->NodeInfo()->NameAtom() ==
             previousEditableSibling->NodeInfo()->NameAtom() &&
@@ -4477,8 +4480,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::IndentListChildWithTransaction(
   nsIContent* previousEditableSibling =
       *aSubListElement ? HTMLEditUtils::GetPreviousSibling(
                              aContentMovingToSubList,
-                             {WalkTreeOption::IgnoreWhiteSpaceOnlyText,
-                              WalkTreeOption::IgnoreNonEditableNode})
+                             {LeafNodeOption::IgnoreInvisibleText,
+                              LeafNodeOption::IgnoreNonEditableNode},
+                             BlockInlineCheck::UseComputedDisplayOutsideStyle)
                        : nullptr;
   if (!*aSubListElement || (previousEditableSibling &&
                             previousEditableSibling != *aSubListElement)) {
@@ -5184,10 +5188,11 @@ nsresult HTMLEditor::HandleHTMLIndentAroundRanges(
       }
       // check to see if subListElement is still appropriate.  Which it is if
       // content is still right after it in the same list.
-      nsIContent* previousEditableSibling =
+      nsIContent* const previousEditableSibling =
           subListElement
               ? HTMLEditUtils::GetPreviousSibling(
-                    *listItem, {WalkTreeOption::IgnoreNonEditableNode})
+                    *listItem, {LeafNodeOption::IgnoreNonEditableNode},
+                    BlockInlineCheck::UseComputedDisplayOutsideStyle)
               : nullptr;
       if (!subListElement || (previousEditableSibling &&
                               previousEditableSibling != subListElement)) {
@@ -7101,8 +7106,9 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AlignBlockContentsWithDivElement(
   // XXX I don't understand why we should NOT align non-editable children
   //     with modifying EDITABLE `<div>` element.
   const nsCOMPtr<nsIContent> firstEditableContent =
-      HTMLEditUtils::GetFirstChild(aBlockElement,
-                                   {WalkTreeOption::IgnoreNonEditableNode});
+      HTMLEditUtils::GetFirstChild(
+          aBlockElement, {LeafNodeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (!firstEditableContent) {
     // This block has no editable content, nothing to align.
     return EditorDOMPoint();
@@ -7111,7 +7117,8 @@ Result<EditorDOMPoint, nsresult> HTMLEditor::AlignBlockContentsWithDivElement(
   // If there is only one editable content and it's a `<div>` element,
   // just set `align` attribute of it.
   const nsCOMPtr<nsIContent> lastEditableContent = HTMLEditUtils::GetLastChild(
-      aBlockElement, {WalkTreeOption::IgnoreNonEditableNode});
+      aBlockElement, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (firstEditableContent == lastEditableContent &&
       firstEditableContent->IsHTMLElement(nsGkAtoms::div)) {
     // XXX Chrome uses `style="text-align: foo"` instead of the legacy `align`
@@ -8331,9 +8338,11 @@ HTMLEditor::InsertElementWithSplittingAncestorsWithTransaction(
         // Making use of html structure... if next node after where we are
         // putting our div is not a block, then the br we found is in same
         // block we are, so it's safe to consume it.
-        if (nsIContent* nextEditableSibling = HTMLEditUtils::GetNextSibling(
-                *splitPoint.GetChild(),
-                {WalkTreeOption::IgnoreNonEditableNode})) {
+        if (nsIContent* const nextEditableSibling =
+                HTMLEditUtils::GetNextSibling(
+                    *splitPoint.GetChild(),
+                    {LeafNodeOption::IgnoreNonEditableNode},
+                    BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
           if (!HTMLEditUtils::IsBlockElement(
                   *nextEditableSibling,
                   BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
@@ -8420,16 +8429,18 @@ nsresult HTMLEditor::JoinNearestEditableNodesWithTransaction(
   }
 
   // Remember the last left child, and first right child
-  nsCOMPtr<nsIContent> lastEditableChildOfLeftContent =
-      HTMLEditUtils::GetLastChild(aNodeLeft,
-                                  {WalkTreeOption::IgnoreNonEditableNode});
+  const nsCOMPtr<nsIContent> lastEditableChildOfLeftContent =
+      HTMLEditUtils::GetLastChild(
+          aNodeLeft, {LeafNodeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (MOZ_UNLIKELY(NS_WARN_IF(!lastEditableChildOfLeftContent))) {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContent> firstEditableChildOfRightContent =
-      HTMLEditUtils::GetFirstChild(aNodeRight,
-                                   {WalkTreeOption::IgnoreNonEditableNode});
+  const nsCOMPtr<nsIContent> firstEditableChildOfRightContent =
+      HTMLEditUtils::GetFirstChild(
+          aNodeRight, {LeafNodeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (NS_WARN_IF(!firstEditableChildOfRightContent)) {
     return NS_ERROR_FAILURE;
   }
@@ -8829,9 +8840,10 @@ void HTMLEditor::SetSelectionInterlinePosition() {
   // XXX Although I don't understand "interline position", if caret is
   //     immediately after non-editable contents, but previous editable
   //     content is a block, does this do right thing?
-  if (nsIContent* previousEditableContentInBlockAtCaret =
+  if (nsIContent* const previousEditableContentInBlockAtCaret =
           HTMLEditUtils::GetPreviousSibling(
-              *atCaret.GetChild(), {WalkTreeOption::IgnoreNonEditableNode})) {
+              *atCaret.GetChild(), {LeafNodeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
     if (HTMLEditUtils::IsBlockElement(
             *previousEditableContentInBlockAtCaret,
             BlockInlineCheck::UseComputedDisplayStyle)) {
@@ -8848,9 +8860,10 @@ void HTMLEditor::SetSelectionInterlinePosition() {
   // XXX Although I don't understand "interline position", if caret is
   //     immediately before non-editable contents, but next editable
   //     content is a block, does this do right thing?
-  if (nsIContent* nextEditableContentInBlockAtCaret =
+  if (nsIContent* const nextEditableContentInBlockAtCaret =
           HTMLEditUtils::GetNextSibling(
-              *atCaret.GetChild(), {WalkTreeOption::IgnoreNonEditableNode})) {
+              *atCaret.GetChild(), {LeafNodeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
     if (HTMLEditUtils::IsBlockElement(
             *nextEditableContentInBlockAtCaret,
             BlockInlineCheck::UseComputedDisplayStyle)) {
@@ -9341,9 +9354,11 @@ nsresult HTMLEditor::LiftUpListItemElement(
   // if it's first or last list item, don't need to split the list
   // otherwise we do.
   const bool isFirstListItem = HTMLEditUtils::IsFirstChild(
-      aListItemElement, {WalkTreeOption::IgnoreNonEditableNode});
+      aListItemElement, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   const bool isLastListItem = HTMLEditUtils::IsLastChild(
-      aListItemElement, {WalkTreeOption::IgnoreNonEditableNode});
+      aListItemElement, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
 
   Element* leftListElement = aListItemElement.GetParentElement();
   if (NS_WARN_IF(!leftListElement)) {
@@ -9925,8 +9940,9 @@ HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     Element& aRemovingContainerElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsIContent* firstEditableChild = HTMLEditUtils::GetFirstChild(
-      aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
+  nsIContent* const firstEditableChild = HTMLEditUtils::GetFirstChild(
+      aRemovingContainerElement, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (!firstEditableChild) {
     return CreateElementResult::NotHandled();
   }
@@ -9937,8 +9953,9 @@ HTMLEditor::EnsureHardLineBeginsWithFirstChildOf(
     return CreateElementResult::NotHandled();
   }
 
-  nsIContent* previousEditableContent = HTMLEditUtils::GetPreviousSibling(
-      aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
+  nsIContent* const previousEditableContent = HTMLEditUtils::GetPreviousSibling(
+      aRemovingContainerElement, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (!previousEditableContent) {
     return CreateElementResult::NotHandled();
   }
@@ -9970,8 +9987,9 @@ HTMLEditor::EnsureHardLineEndsWithLastChildOf(
     Element& aRemovingContainerElement) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  nsIContent* firstEditableContent = HTMLEditUtils::GetLastChild(
-      aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
+  nsIContent* const firstEditableContent = HTMLEditUtils::GetLastChild(
+      aRemovingContainerElement, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (!firstEditableContent) {
     return CreateElementResult::NotHandled();
   }
@@ -9982,8 +10000,9 @@ HTMLEditor::EnsureHardLineEndsWithLastChildOf(
     return CreateElementResult::NotHandled();
   }
 
-  nsIContent* nextEditableContent = HTMLEditUtils::GetPreviousSibling(
-      aRemovingContainerElement, {WalkTreeOption::IgnoreNonEditableNode});
+  nsIContent* const nextEditableContent = HTMLEditUtils::GetPreviousSibling(
+      aRemovingContainerElement, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (!nextEditableContent) {
     return CreateElementResult::NotHandled();
   }
@@ -10481,10 +10500,11 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       // list element in the target `<div>` element for the destination.
       // Therefore, duplicate same list element into the target `<div>`
       // element.
-      nsIContent* previousEditableContent =
+      nsIContent* const previousEditableContent =
           createdListElement
               ? HTMLEditUtils::GetPreviousSibling(
-                    content, {WalkTreeOption::IgnoreNonEditableNode})
+                    content, {LeafNodeOption::IgnoreNonEditableNode},
+                    BlockInlineCheck::UseComputedDisplayOutsideStyle)
               : nullptr;
       if (!createdListElement ||
           (previousEditableContent &&
@@ -10588,10 +10608,11 @@ nsresult HTMLEditor::MoveSelectedContentsToDivElementToMakeItAbsolutePosition(
       }
       // If we cannot move the list item element into created list element,
       // we need another list element in the target `<div>` element.
-      nsIContent* previousEditableContent =
+      nsIContent* const previousEditableContent =
           createdListElement
               ? HTMLEditUtils::GetPreviousSibling(
-                    *listItemElement, {WalkTreeOption::IgnoreNonEditableNode})
+                    *listItemElement, {LeafNodeOption::IgnoreNonEditableNode},
+                    BlockInlineCheck::UseComputedDisplayOutsideStyle)
               : nullptr;
       if (!createdListElement ||
           (previousEditableContent &&

@@ -904,17 +904,17 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetInclusiveNextCharPoint(
   const LeafNodeOptions leafNodeOptions =
       ToLeafNodeOptions(aOptions) + LeafNodeOption::TreatChildBlockAsLeafNode;
   const EditorRawDOMPoint point = [&]() MOZ_NEVER_INLINE_DEBUG {
-    // TODO: Use HTMLEditUtils::GetNextSibling().
-    nsIContent* const child = [&]() -> nsIContent* {
-      nsIContent* child =
-          aPoint.CanContainerHaveChildren() ? aPoint.GetChild() : nullptr;
-      // XXX Why don't we skip non-editable nodes here?
-      while (child && child->IsComment() &&
-             !aOptions.contains(Option::StopAtComment)) {
-        child = child->GetNextSibling();
-      }
-      return child;
-    }();
+    if (!aPoint.CanContainerHaveChildren()) {
+      return aPoint.template To<EditorRawDOMPoint>();
+    }
+    nsIContent* const child =
+        aPoint.GetPreviousSiblingOfChild()
+            ? HTMLEditUtils::GetNextSibling(
+                  *aPoint.GetPreviousSiblingOfChild(), leafNodeOptions,
+                  UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck))
+            : HTMLEditUtils::GetFirstChild(
+                  *aPoint.GetContainer(), leafNodeOptions,
+                  UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck));
     if (!child ||
         HTMLEditUtils::IsBlockElement(
             *child, UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck)) ||
@@ -1028,18 +1028,17 @@ EditorDOMPointType WSRunScanner::TextFragmentData::GetPreviousCharPoint(
   const LeafNodeOptions leafNodeOptions =
       ToLeafNodeOptions(aOptions) + LeafNodeOption::TreatChildBlockAsLeafNode;
   const EditorRawDOMPoint point = [&]() MOZ_NEVER_INLINE_DEBUG {
-    // TODO: Use HTMLEditUtils::GetPreviousSibling().
-    nsIContent* const previousChild = [&]() -> nsIContent* {
-      nsIContent* previousChild = aPoint.CanContainerHaveChildren()
-                                      ? aPoint.GetPreviousSiblingOfChild()
-                                      : nullptr;
-      // XXX Why don't we skip non-editable nodes here?
-      while (previousChild && previousChild->IsComment() &&
-             !aOptions.contains(Option::StopAtComment)) {
-        previousChild = previousChild->GetPreviousSibling();
-      }
-      return previousChild;
-    }();
+    if (!aPoint.CanContainerHaveChildren()) {
+      return aPoint.template To<EditorRawDOMPoint>();
+    }
+    nsIContent* const previousChild =
+        aPoint.GetChild()
+            ? HTMLEditUtils::GetPreviousSibling(
+                  *aPoint.GetChild(), leafNodeOptions,
+                  UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck))
+            : HTMLEditUtils::GetLastChild(
+                  *aPoint.GetContainer(), leafNodeOptions,
+                  UseComputedDisplayOutsideStyleIfAuto(blockInlineCheck));
     if (!previousChild ||
         HTMLEditUtils::IsBlockElement(
             *previousChild,

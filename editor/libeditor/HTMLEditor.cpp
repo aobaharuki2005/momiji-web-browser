@@ -1988,8 +1988,9 @@ nsresult HTMLEditor::InsertElementAtSelectionAsAction(
   // check for inserting a whole table at the end of a block. If so insert
   // a br after it.
   if (!aElement->IsHTMLElement(nsGkAtoms::table) ||
-      !HTMLEditUtils::IsLastChild(*aElement,
-                                  {WalkTreeOption::IgnoreNonEditableNode})) {
+      !HTMLEditUtils::IsLastChild(
+          *aElement, {LeafNodeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
     return NS_OK;
   }
 
@@ -4932,16 +4933,18 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
   }
   EditorDOMPoint pointToPutCaret;
   if (HTMLEditUtils::CanNodeContain(*parentElement, *nsGkAtoms::br)) {
-    if (nsCOMPtr<nsIContent> child = HTMLEditUtils::GetFirstChild(
-            aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
+    if (const nsCOMPtr<nsIContent> child = HTMLEditUtils::GetFirstChild(
+            aElement, {LeafNodeOption::IgnoreNonEditableNode},
+            BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
       // The case of aNode not being empty.  We need a br at start unless:
       // 1) previous sibling of aNode is a block, OR
       // 2) previous sibling of aNode is a br, OR
       // 3) first child of aNode is a block OR
       // 4) either is null
 
-      if (nsIContent* previousSibling = HTMLEditUtils::GetPreviousSibling(
-              aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
+      if (nsIContent* const previousSibling = HTMLEditUtils::GetPreviousSibling(
+              aElement, {LeafNodeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
         if (!HTMLEditUtils::IsBlockElement(
                 *previousSibling,
                 BlockInlineCheck::UseComputedDisplayOutsideStyle) &&
@@ -4971,14 +4974,15 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
       // 3) last child of aNode is a br OR
       // 4) either is null
 
-      if (nsIContent* nextSibling = HTMLEditUtils::GetNextSibling(
-              aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
+      if (nsIContent* const nextSibling = HTMLEditUtils::GetNextSibling(
+              aElement, {LeafNodeOption::IgnoreNonEditableNode},
+              BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
         if (nextSibling &&
             !HTMLEditUtils::IsBlockElement(
                 *nextSibling, BlockInlineCheck::UseComputedDisplayStyle)) {
-          if (nsIContent* lastChild = HTMLEditUtils::GetLastChild(
-                  aElement, {WalkTreeOption::IgnoreNonEditableNode},
-                  BlockInlineCheck::Unused)) {
+          if (nsIContent* const lastChild = HTMLEditUtils::GetLastChild(
+                  aElement, {LeafNodeOption::IgnoreNonEditableNode},
+                  BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
             if (!HTMLEditUtils::IsBlockElement(
                     *lastChild, BlockInlineCheck::UseComputedDisplayStyle) &&
                 !lastChild->IsHTMLElement(nsGkAtoms::br)) {
@@ -5001,8 +5005,10 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
           }
         }
       }
-    } else if (nsIContent* previousSibling = HTMLEditUtils::GetPreviousSibling(
-                   aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
+    } else if (nsIContent* const previousSibling =
+                   HTMLEditUtils::GetPreviousSibling(
+                       aElement, {LeafNodeOption::IgnoreNonEditableNode},
+                       BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
       // The case of aNode being empty.  We need a br at start unless:
       // 1) previous sibling of aNode is a block, OR
       // 2) previous sibling of aNode is a br, OR
@@ -5013,7 +5019,8 @@ HTMLEditor::RemoveBlockContainerWithTransaction(Element& aElement) {
               *previousSibling, BlockInlineCheck::UseComputedDisplayStyle) &&
           !previousSibling->IsHTMLElement(nsGkAtoms::br)) {
         if (nsIContent* nextSibling = HTMLEditUtils::GetNextSibling(
-                aElement, {WalkTreeOption::IgnoreNonEditableNode})) {
+                aElement, {LeafNodeOption::IgnoreNonEditableNode},
+                BlockInlineCheck::UseComputedDisplayOutsideStyle)) {
           if (!HTMLEditUtils::IsBlockElement(
                   *nextSibling, BlockInlineCheck::UseComputedDisplayStyle) &&
               !nextSibling->IsHTMLElement(nsGkAtoms::br)) {
@@ -6678,12 +6685,10 @@ HTMLEditor::CopyLastEditableChildStylesWithTransaction(
 
   // Look for the deepest last editable leaf node in aPreviousBlock.
   // Then, if found one is a <br> element, look for non-<br> element.
-  nsIContent* deepestEditableContent = nullptr;
-  for (nsCOMPtr<nsIContent> child = &aPreviousBlock; child;
-       child = HTMLEditUtils::GetLastChild(
-           *child, {WalkTreeOption::IgnoreNonEditableNode})) {
-    deepestEditableContent = child;
-  }
+  nsIContent* deepestEditableContent = HTMLEditUtils::GetPreviousLeafContent(
+      EditorRawDOMPoint::AtEndOf(aPreviousBlock),
+      {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   while (deepestEditableContent &&
          deepestEditableContent->IsHTMLElement(nsGkAtoms::br)) {
     deepestEditableContent = HTMLEditUtils::GetPreviousLeafContent(

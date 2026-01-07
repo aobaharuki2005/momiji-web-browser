@@ -2523,9 +2523,10 @@ WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
     }
   }
 
-  nsCOMPtr<nsIContent> previousEditableSibling =
+  const nsCOMPtr<nsIContent> previousEditableSibling =
       HTMLEditUtils::GetPreviousSibling(
-          aContentToDelete, {WalkTreeOption::IgnoreNonEditableNode});
+          aContentToDelete, {LeafNodeOption::IgnoreNonEditableNode},
+          BlockInlineCheck::UseComputedDisplayOutsideStyle);
   // Delete the node, and join like nodes if appropriate
   nsresult rv = aHTMLEditor.DeleteNodeWithTransaction(aContentToDelete);
   if (NS_FAILED(rv)) {
@@ -2548,8 +2549,9 @@ WhiteSpaceVisibilityKeeper::DeleteContentNodeAndJoinTextNodesAroundIt(
     return CaretPoint(std::move(pointToPutCaret));
   }
 
-  nsIContent* nextEditableSibling = HTMLEditUtils::GetNextSibling(
-      *previousEditableSibling, {WalkTreeOption::IgnoreNonEditableNode});
+  nsIContent* const nextEditableSibling = HTMLEditUtils::GetNextSibling(
+      *previousEditableSibling, {LeafNodeOption::IgnoreNonEditableNode},
+      BlockInlineCheck::UseComputedDisplayOutsideStyle);
   if (aCaretPoint.GetContainer() != nextEditableSibling) {
     return CaretPoint(std::move(pointToPutCaret));
   }

@@ -1129,147 +1129,6 @@ class HTMLEditUtils final {
                                               aFoundLinkElement);
   }
 
-  enum class WalkTreeOption {
-    IgnoreNonEditableNode,     // Ignore non-editable nodes and their children.
-    IgnoreDataNodeExceptText,  // Ignore data nodes which are not text node.
-    IgnoreWhiteSpaceOnlyText,  // Ignore text nodes having only white-spaces.
-    StopAtBlockBoundary,       // Stop waking the tree at a block boundary.
-  };
-  using WalkTreeOptions = EnumSet<WalkTreeOption>;
-  /**
-   * GetPreviousSibling() return the preceding sibling of aContent which matches
-   * with aOption.
-   *
-   * @param aBlockInlineCheck   Can be Unused if aOptions does not contain
-   *                            StopAtBlockBoundary.
-   */
-  static nsIContent* GetPreviousSibling(
-      const nsIContent& aContent, const WalkTreeOptions& aOptions,
-      BlockInlineCheck aBlockInlineCheck = BlockInlineCheck::Unused) {
-    aBlockInlineCheck = UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck);
-    for (nsIContent* sibling = aContent.GetPreviousSibling(); sibling;
-         sibling = sibling->GetPreviousSibling()) {
-      if (HTMLEditUtils::IsContentIgnored(*sibling, aOptions)) {
-        continue;
-      }
-      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-          HTMLEditUtils::IsBlockElement(*sibling, aBlockInlineCheck)) {
-        return nullptr;
-      }
-      return sibling;
-    }
-    return nullptr;
-  }
-
-  /**
-   * GetNextSibling() return the following sibling of aContent which matches
-   * with aOption.
-   *
-   * @param aBlockInlineCheck   Can be Unused if aOptions does not contain
-   *                            StopAtBlockBoundary.
-   */
-  static nsIContent* GetNextSibling(
-      const nsIContent& aContent, const WalkTreeOptions& aOptions,
-      BlockInlineCheck aBlockInlineCheck = BlockInlineCheck::Unused) {
-    aBlockInlineCheck = UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck);
-    for (nsIContent* sibling = aContent.GetNextSibling(); sibling;
-         sibling = sibling->GetNextSibling()) {
-      if (HTMLEditUtils::IsContentIgnored(*sibling, aOptions)) {
-        continue;
-      }
-      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-          HTMLEditUtils::IsBlockElement(*sibling, aBlockInlineCheck)) {
-        return nullptr;
-      }
-      return sibling;
-    }
-    return nullptr;
-  }
-
-  /**
-   * Return the last child of aNode which matches with aOption.
-   *
-   * @param aBlockInlineCheck   Can be unused if aOptions does not contain
-   *                            StopAtBlockBoundary.
-   */
-  static nsIContent* GetLastChild(
-      const nsINode& aNode, const WalkTreeOptions& aOptions,
-      BlockInlineCheck aBlockInlineCheck = BlockInlineCheck::Unused) {
-    aBlockInlineCheck = UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck);
-    for (nsIContent* child = aNode.GetLastChild(); child;
-         child = child->GetPreviousSibling()) {
-      if (HTMLEditUtils::IsContentIgnored(*child, aOptions)) {
-        continue;
-      }
-      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-          HTMLEditUtils::IsBlockElement(*child, aBlockInlineCheck)) {
-        return nullptr;
-      }
-      return child;
-    }
-    return nullptr;
-  }
-
-  /**
-   * Return the first child of aNode which matches with aOption.
-   *
-   * @param aBlockInlineCheck   Can be unused if aOptions does not contain
-   *                            StopAtBlockBoundary.
-   */
-  static nsIContent* GetFirstChild(
-      const nsINode& aNode, const WalkTreeOptions& aOptions,
-      BlockInlineCheck aBlockInlineCheck = BlockInlineCheck::Unused) {
-    aBlockInlineCheck = UseComputedDisplayOutsideStyleIfAuto(aBlockInlineCheck);
-    for (nsIContent* child = aNode.GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      if (HTMLEditUtils::IsContentIgnored(*child, aOptions)) {
-        continue;
-      }
-      if (aOptions.contains(WalkTreeOption::StopAtBlockBoundary) &&
-          HTMLEditUtils::IsBlockElement(*child, aBlockInlineCheck)) {
-        return nullptr;
-      }
-      return child;
-    }
-    return nullptr;
-  }
-
-  /**
-   * Return true if aContent is the last child of aNode with ignoring all
-   * children which do not match with aOption.
-   *
-   * @param aBlockInlineCheck   Can be unused if aOptions does not contain
-   *                            StopAtBlockBoundary.
-   */
-  static bool IsLastChild(
-      const nsIContent& aContent, const WalkTreeOptions& aOptions,
-      BlockInlineCheck aBlockInlineCheck = BlockInlineCheck::Unused) {
-    nsINode* parentNode = aContent.GetParentNode();
-    if (!parentNode) {
-      return false;
-    }
-    return HTMLEditUtils::GetLastChild(*parentNode, aOptions,
-                                       aBlockInlineCheck) == &aContent;
-  }
-
-  /**
-   * Return true if aContent is the first child of aNode with ignoring all
-   * children which do not match with aOption.
-   *
-   * @param aBlockInlineCheck   Can be unused if aOptions does not contain
-   *                            StopAtBlockBoundary.
-   */
-  static bool IsFirstChild(
-      const nsIContent& aContent, const WalkTreeOptions& aOptions,
-      BlockInlineCheck aBlockInlineCheck = BlockInlineCheck::Unused) {
-    nsINode* parentNode = aContent.GetParentNode();
-    if (!parentNode) {
-      return false;
-    }
-    return HTMLEditUtils::GetFirstChild(*parentNode, aOptions,
-                                        aBlockInlineCheck) == &aContent;
-  }
-
   /**
    * GetAdjacentContentToPutCaret() walks the DOM tree to find an editable node
    * near aPoint where may be a good point to put caret and keep typing or
@@ -1413,6 +1272,7 @@ class HTMLEditUtils final {
 
  private:
   enum class StopAtBlockSibling : bool { No, Yes };
+
   static nsIContent* GetNextLeafContentOrNextBlockElementImpl(
       const nsIContent& aStartContent, StopAtBlockSibling aStopAtBlockSibling,
       const LeafNodeOptions& aOptions, BlockInlineCheck aBlockInlineCheck,
@@ -1569,6 +1429,115 @@ class HTMLEditUtils final {
     return GetPreviousLeafContentOrPreviousBlockElementImpl(
         aStartPoint, StopAtBlockSibling::Yes, aOptions, aBlockInlineCheck,
         aAncestorLimiter);
+  }
+
+ private:
+  static nsIContent* GetSibling(const nsIContent& aContent,
+                                WalkTreeDirection aDirection,
+                                const LeafNodeOptions& aOptions,
+                                BlockInlineCheck aBlockInlineCheck);
+
+ public:
+  /**
+   * Return the preceding sibling of aContent with ignoring leaf nodes which are
+   * specified by aOptions.
+   *
+   * @param aOptions    If a sibling is a leaf node or does not have meaningful
+   *                    children against aOptions, the sibling is ignored.
+   *                    NOTE: LeafNodeOption::TreatChildBlockAsLeafNode is
+   *                    ignored.
+   */
+  static nsIContent* GetPreviousSibling(const nsIContent& aContent,
+                                        const LeafNodeOptions& aOptions,
+                                        BlockInlineCheck aBlockInlineCheck) {
+    return GetSibling(aContent, WalkTreeDirection::Backward, aOptions,
+                      aBlockInlineCheck);
+  }
+
+  /**
+   * Return the following sibling of aContent with ignoring leaf nodes which are
+   * specified by aOptions.
+   *
+   * @param aOptions    If a sibling is a leaf node or does not have meaningful
+   *                    children against aOptions, the sibling is ignored.
+   *                    NOTE: LeafNodeOption::TreatChildBlockAsLeafNode is
+   *                    ignored.
+   */
+  static nsIContent* GetNextSibling(const nsIContent& aContent,
+                                    const LeafNodeOptions& aOptions,
+                                    BlockInlineCheck aBlockInlineCheck) {
+    return GetSibling(aContent, WalkTreeDirection::Forward, aOptions,
+                      aBlockInlineCheck);
+  }
+
+ private:
+  enum class FirstOrLastChild { First, Last };
+  static nsIContent* GetFirstOrLastChild(const nsINode& aNode,
+                                         FirstOrLastChild aFirstOrLastChild,
+                                         const LeafNodeOptions& aOptions,
+                                         BlockInlineCheck aBlockInlineCheck);
+
+ public:
+  /**
+   * Return the last child of aNode with ignoring leaf nodes which are specified
+   * by aOptions.
+   *
+   * @param aOptions    If a child is a leaf node or does not have meaningful
+   *                    children against aOptions, the child is ignored.
+   *                    NOTE: LeafNodeOption::TreatChildBlockAsLeafNode is
+   *                    ignored.
+   */
+  static nsIContent* GetLastChild(const nsINode& aNode,
+                                  const LeafNodeOptions& aOptions,
+                                  BlockInlineCheck aBlockInlineCheck) {
+    return GetFirstOrLastChild(aNode, FirstOrLastChild::Last, aOptions,
+                               aBlockInlineCheck);
+  }
+
+  /**
+   * Return the first child of aNode with ignoring leaf nodes which are
+   * specified by aOptions.
+   *
+   * @param aOptions    If a child is a leaf node or does not have meaningful
+   *                    children against aOptions, the child is ignored.
+   *                    NOTE: LeafNodeOption::TreatChildBlockAsLeafNode is
+   *                    ignored.
+   */
+  static nsIContent* GetFirstChild(const nsINode& aNode,
+                                   const LeafNodeOptions& aOptions,
+                                   BlockInlineCheck aBlockInlineCheck) {
+    return GetFirstOrLastChild(aNode, FirstOrLastChild::First, aOptions,
+                               aBlockInlineCheck);
+  }
+
+  /**
+   * Return true if aContent is the last child of aNode with ignoring all
+   * children which are specified by aOptions.
+   */
+  static bool IsLastChild(const nsIContent& aContent,
+                          const LeafNodeOptions& aOptions,
+                          BlockInlineCheck aBlockInlineCheck) {
+    nsINode* const parentNode = aContent.GetParentNode();
+    if (MOZ_UNLIKELY(!parentNode)) {
+      return false;
+    }
+    return HTMLEditUtils::GetLastChild(*parentNode, aOptions,
+                                       aBlockInlineCheck) == &aContent;
+  }
+
+  /**
+   * Return true if aContent is the first child of aNode with ignoring all
+   * children which are specified by aOptions.
+   */
+  static bool IsFirstChild(const nsIContent& aContent,
+                           const LeafNodeOptions& aOptions,
+                           BlockInlineCheck aBlockInlineCheck) {
+    nsINode* const parentNode = aContent.GetParentNode();
+    if (MOZ_UNLIKELY(!parentNode)) {
+      return false;
+    }
+    return HTMLEditUtils::GetFirstChild(*parentNode, aOptions,
+                                        aBlockInlineCheck) == &aContent;
   }
 
   /**
@@ -2020,6 +1989,14 @@ class HTMLEditUtils final {
     }
     return GetTableCellElementIfOnlyOneSelected(*firstRange);
   }
+
+  enum class WalkTreeOption {
+    IgnoreNonEditableNode,     // Ignore non-editable nodes and their children.
+    IgnoreDataNodeExceptText,  // Ignore data nodes which are not text node.
+    IgnoreWhiteSpaceOnlyText,  // Ignore text nodes having only white-spaces.
+    StopAtBlockBoundary,       // Stop waking the tree at a block boundary.
+  };
+  using WalkTreeOptions = EnumSet<WalkTreeOption>;
 
   /**
    * GetInclusiveFirstChildWhichHasOneChild() returns the deepest element whose
