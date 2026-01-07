@@ -103,7 +103,7 @@ class TabNotesControllerClass {
   }
 
   /**
-   * @param {CanonicalURLIdentifiedEvent|TabNoteCreatedEvent|TabNoteRemovedEvent} event
+   * @param {CanonicalURLIdentifiedEvent|TabNoteCreatedEvent|TabNoteEditedEvent|TabNoteRemovedEvent} event
    */
   handleEvent(event) {
     switch (event.type) {
@@ -144,6 +144,18 @@ class TabNotesControllerClass {
             }
           }
           lazy.logConsole.debug("TabNote:Created", canonicalUrl);
+        }
+        break;
+      case "TabNote:Edited":
+        {
+          const { canonicalUrl } = event.target;
+          const { telemetrySource } = event.detail;
+          if (telemetrySource) {
+            Glean.tabNotes.edited.record({
+              source: telemetrySource,
+            });
+          }
+          lazy.logConsole.debug("TabNote:Edited", canonicalUrl);
         }
         break;
       case "TabNote:Removed":

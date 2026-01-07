@@ -253,11 +253,23 @@ add_task(async function test_editTabNote() {
   tabNoteMenu.querySelector("#tab-note-editor-button-save").click();
   await Promise.all([menuHidden, tabNoteEdited]);
 
+  await BrowserTestUtils.waitForCondition(
+    () => Glean.tabNotes.edited.testGetValue()?.length,
+    "wait for event to be recorded"
+  );
+
   const tabNote = await TabNotes.get(tab);
   Assert.equal(
     tabNote.text,
     initialNoteValue + updatedNoteValue,
     "The updated text entered into the textarea was saved as a note"
+  );
+
+  const [editedMetric] = Glean.tabNotes.edited.testGetValue();
+  Assert.deepEqual(
+    editedMetric.extra,
+    { source: "context_menu" },
+    "edited event extra data should show that the tab note was edited from the context menu"
   );
 
   await TabNotes.delete(tab);
