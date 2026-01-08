@@ -122,7 +122,8 @@ class ProfileCreator:
             ]
 
         for name in names:
-            # remove `cache` from profile
+            # The following removes files from the profile before archival. An
+            # alternative is to exclude the file in the _filter of create_archive.
             shutil.rmtree(os.path.join(self.env.profile, "cache"), ignore_errors=True)
             shutil.rmtree(os.path.join(self.env.profile, "cache2"), ignore_errors=True)
 
