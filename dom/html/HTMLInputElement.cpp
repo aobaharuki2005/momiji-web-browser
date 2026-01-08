@@ -754,7 +754,7 @@ static void SerializeColorForHTMLCompatibility(const StyleAbsoluteColor& aColor,
 }
 
 nsTArray<nsString> HTMLInputElement::GetColorsFromList() {
-  RefPtr<HTMLDataListElement> dataList = GetListInternal();
+  RefPtr<HTMLDataListElement> dataList = GetList();
   if (!dataList) {
     return {};
   }
@@ -1796,11 +1796,7 @@ void HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
   }
 }
 
-Element* HTMLInputElement::GetListForBindings() const {
-  return RetargetReferenceTargetForBindings(GetListInternal());
-}
-
-HTMLDataListElement* HTMLInputElement::GetListInternal() const {
+HTMLDataListElement* HTMLInputElement::GetList() const {
   nsAutoString dataListId;
   GetAttr(nsGkAtoms::list, dataListId);
   if (dataListId.IsEmpty()) {
@@ -1812,9 +1808,8 @@ HTMLDataListElement* HTMLInputElement::GetListInternal() const {
     return nullptr;
   }
 
-  Element* target = docOrShadow->GetElementById(dataListId);
-  Element* list = target ? target->ResolveReferenceTarget() : nullptr;
-  return HTMLDataListElement::FromNodeOrNull(list);
+  return HTMLDataListElement::FromNodeOrNull(
+      docOrShadow->GetElementById(dataListId));
 }
 
 void HTMLInputElement::SetValue(Decimal aValue, CallerType aCallerType) {
@@ -6013,7 +6008,7 @@ void HTMLInputElement::ShowPicker(ErrorResult& aRv) {
   // I.e. show the autocomplete dropdown based on the list attribute.
   // XXX Form-fill support on android is bug 1535985.
   if (StaticPrefs::dom_input_showPicker_datalist_enabled() &&
-      IsSingleLineTextControl(true) && GetListInternal()) {
+      IsSingleLineTextControl(true) && GetList()) {
     if (nsCOMPtr<nsIFormFillController> controller =
             do_GetService("@mozilla.org/satchel/form-fill-controller;1")) {
       controller->SetControlledElement(this);
@@ -7571,16 +7566,12 @@ void HTMLInputElement::GetWebkitEntries(
   aSequence.AppendElements(mFileData->mEntries);
 }
 
-already_AddRefed<nsINodeList> HTMLInputElement::GetLabelsForBindings() {
-  return GetLabelsInternal();
-}
-
-already_AddRefed<nsINodeList> HTMLInputElement::GetLabelsInternal() {
+already_AddRefed<nsINodeList> HTMLInputElement::GetLabels() {
   if (!IsLabelable()) {
     return nullptr;
   }
 
-  return nsGenericHTMLElement::LabelsInternal();
+  return nsGenericHTMLElement::Labels();
 }
 
 void HTMLInputElement::MaybeFireInputPasswordRemoved() {

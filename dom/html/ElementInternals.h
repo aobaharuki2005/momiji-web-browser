@@ -77,7 +77,7 @@ class ElementInternals final : public nsIFormControl,
   void SetFormValue(const Nullable<FileOrUSVStringOrFormData>& aValue,
                     const Optional<Nullable<FileOrUSVStringOrFormData>>& aState,
                     ErrorResult& aRv);
-  mozilla::dom::Element* GetFormForBindings(ErrorResult& aRv) const;
+  mozilla::dom::HTMLFormElement* GetForm(ErrorResult& aRv) const;
   void SetValidity(const ValidityStateFlags& aFlags,
                    const Optional<nsAString>& aMessage,
                    const Optional<NonNull<nsGenericHTMLElement>>& aAnchor,
@@ -96,10 +96,7 @@ class ElementInternals final : public nsIFormControl,
   mozilla::dom::HTMLFieldSetElement* GetFieldSet() override {
     return mFieldSet;
   }
-  mozilla::dom::Element* GetFormForBindings() const override;
-  mozilla::dom::HTMLFormElement* GetFormInternal() const override {
-    return mForm;
-  }
+  mozilla::dom::HTMLFormElement* GetForm() const override { return mForm; }
   void SetForm(mozilla::dom::HTMLFormElement* aForm) override;
   void ClearForm(bool aRemoveFromForm, bool aUnbindOrDelete) override;
   NS_IMETHOD Reset() override;
@@ -196,7 +193,7 @@ class ElementInternals final : public nsIFormControl,
 
   nsresult SetAttr(nsAtom* aName, const nsAString& aValue);
 
-  Maybe<nsTArray<RefPtr<Element>>> GetAttrElements(nsAtom* aAttr);
+  bool GetAttrElements(nsAtom* aAttr, nsTArray<Element*>& aElements);
 
   const AttrArray& GetAttrs() const { return mAttrs; }
 

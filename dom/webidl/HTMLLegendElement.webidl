@@ -17,7 +17,7 @@
 interface HTMLLegendElement : HTMLElement {
   [HTMLConstructor] constructor();
 
-  [BinaryName=formForBindings] readonly attribute Element? form;
+  readonly attribute HTMLFormElement? form;
 };
 
 // http://www.whatwg.org/specs/web-apps/current-work/#other-elements,-attributes-and-apis

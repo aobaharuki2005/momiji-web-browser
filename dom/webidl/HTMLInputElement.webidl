@@ -42,8 +42,7 @@ interface HTMLInputElement : HTMLElement {
            attribute DOMString dirName;
   [CEReactions, Pure, SetterThrows]
            attribute boolean disabled;
-  [BinaryName=formForBindings]
-  readonly attribute Element? form;
+  readonly attribute HTMLFormElement? form;
   [Pure]
            attribute FileList? files;
   [CEReactions, Pure, SetterThrows]
@@ -60,8 +59,8 @@ interface HTMLInputElement : HTMLElement {
            attribute unsigned long height;
   [Pure]
            attribute boolean indeterminate;
-  [Pure, BinaryName=listForBindings]
-  readonly attribute Element? list;
+  [Pure]
+  readonly attribute HTMLDataListElement? list;
   [CEReactions, Pure, SetterThrows]
            attribute DOMString max;
   [CEReactions, Pure, SetterThrows]
@@ -116,7 +115,6 @@ interface HTMLInputElement : HTMLElement {
   boolean reportValidity();
   undefined setCustomValidity(DOMString error);
 
-  [BinaryName=labelsForBindings]
   readonly attribute NodeList? labels;
 
   undefined select();

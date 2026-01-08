@@ -111,16 +111,10 @@ class nsIFormControl : public nsISupports {
   virtual mozilla::dom::HTMLFieldSetElement* GetFieldSet() = 0;
 
   /**
-   * Get the form for this form control, retargeted to the appropriate scope.
-   * @return the form
-   */
-  virtual mozilla::dom::Element* GetFormForBindings() const = 0;
-
-  /**
    * Get the form for this form control.
    * @return the form
    */
-  virtual mozilla::dom::HTMLFormElement* GetFormInternal() const = 0;
+  virtual mozilla::dom::HTMLFormElement* GetForm() const = 0;
 
   /**
    * Set the form for this form control.
@@ -291,7 +285,7 @@ bool nsIFormControl::IsConceptButton() const {
 }
 
 bool nsIFormControl::IsButtonControl() const {
-  return IsConceptButton() && (!GetFormInternal() || !IsSubmitControl());
+  return IsConceptButton() && (!GetForm() || !IsSubmitControl());
 }
 
 bool nsIFormControl::AllowDraggableChildren() const {

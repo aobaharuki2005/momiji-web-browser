@@ -363,7 +363,7 @@ void HTMLElement::SetFormInternal(HTMLFormElement* aForm, bool aBindToTree) {
 HTMLFormElement* HTMLElement::GetFormInternal() const {
   ElementInternals* internals = GetElementInternals();
   MOZ_ASSERT(internals);
-  return internals->GetFormInternal();
+  return internals->GetForm();
 }
 
 void HTMLElement::SetFieldSetInternal(HTMLFieldSetElement* aFieldset) {

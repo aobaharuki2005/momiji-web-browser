@@ -15,8 +15,8 @@ interface HTMLSelectElement : HTMLElement {
   attribute DOMString autocomplete;
   [CEReactions, SetterThrows, Pure]
   attribute boolean disabled;
-  [Pure, BinaryName=formForBindings]
-  readonly attribute Element? form;
+  [Pure]
+  readonly attribute HTMLFormElement? form;
   [CEReactions, SetterThrows, Pure]
   attribute boolean multiple;
   [CEReactions, SetterThrows, Pure]
@@ -59,7 +59,6 @@ interface HTMLSelectElement : HTMLElement {
   [Throws, Pref="dom.select.showPicker.enabled"]
   undefined showPicker();
 
-  [BinaryName=labelsForBindings]
   readonly attribute NodeList labels;
 
   // https://www.w3.org/Bugs/Public/show_bug.cgi?id=20720
