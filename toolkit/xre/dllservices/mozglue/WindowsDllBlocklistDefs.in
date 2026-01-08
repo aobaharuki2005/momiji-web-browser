@@ -410,8 +410,11 @@ CHILD_PROCESSES += [
     DllBlocklistEntry("tmmon.dll", ALL_VERSIONS),
     DllBlocklistEntry("TmUmEvt.dll", ALL_VERSIONS),
 
-    # McAfee DLLs that cause content process crashes for 32-bit (bug 2006941)
-    DllBlocklistEntry("fcagff.dll", ALL_VERSIONS),
+    # Trellix DLLs that cause content process crashes for 32-bit (bug 2006941)
+    DllBlocklistEntry("fcagff.dll", (11, 12, 0, 483)),
+    
+    # Trellix DLLs that cause content process crashes for 64-bit (bug 2008739)
+    DllBlocklistEntry("fcagff64.dll", (11, 12, 0, 483)),
 ]
 
 GPU_PROCESSES += [
