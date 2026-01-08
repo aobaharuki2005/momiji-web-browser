@@ -215,7 +215,7 @@ class TbplFormatter(BaseFormatter):
         )
 
     def _format_status(self, data):
-        message = "- " + data["message"] if "message" in data else ""
+        message = data.get("message", "")
         if "stack" in data:
             message += "\n%s" % data["stack"]
         if message and message[-1] == "\n":
@@ -224,30 +224,42 @@ class TbplFormatter(BaseFormatter):
         status = data["status"]
 
         subtest = data["subtest"]
-        subtest_str = (" | %s" % subtest) if subtest else ""
 
         if "expected" in data:
             if status in data.get("known_intermittent", []):
                 status = "KNOWN-INTERMITTENT-%s" % status
             else:
                 if not message:
-                    message = "- expected %s" % data["expected"]
-                failure_line = "TEST-UNEXPECTED-%s | %s%s %s\n" % (
+                    message = "expected %s" % data["expected"]
+                # When there's a subtest, format as: "subtest - message"
+                # Otherwise just use the message as-is
+                if subtest:
+                    subtest_msg = subtest + " - " + message
+                else:
+                    subtest_msg = message
+                failure_line = "TEST-UNEXPECTED-%s | %s | %s\n" % (
                     status,
                     data["test"],
-                    subtest_str,
-                    message,
+                    subtest_msg,
                 )
                 if data["expected"] != "PASS":
                     info_line = "TEST-INFO | expected %s\n" % data["expected"]
                     return failure_line + info_line
                 return failure_line
 
-        return "TEST-%s | %s%s %s\n" % (
+        # When there's a subtest, format as: "subtest - message"
+        # Otherwise just use the message as-is
+        if subtest:
+            subtest_msg = subtest
+            if message:
+                subtest_msg += " - " + message
+        else:
+            subtest_msg = message
+
+        return "TEST-%s | %s | %s\n" % (
             status,
             data["test"],
-            subtest_str,
-            message,
+            subtest_msg,
         )
 
     def test_end(self, data):
