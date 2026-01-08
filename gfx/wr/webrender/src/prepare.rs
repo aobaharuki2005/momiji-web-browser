@@ -729,10 +729,10 @@ fn prepare_interned_prim_for_render(
                 },
             );
         }
-        PrimitiveInstanceKind::LinearGradient { data_handle, ref mut visible_tiles_range, use_legacy_path: cached, .. } => {
+        PrimitiveInstanceKind::LinearGradient { data_handle, ref mut visible_tiles_range, use_legacy_path, .. } => {
             profile_scope!("LinearGradient");
             let prim_data = &mut data_stores.linear_grad[*data_handle];
-            if !*cached {
+            if !*use_legacy_path {
                 quad::prepare_repeatable_quad(
                     prim_data,
                     &prim_data.common.prim_rect,
@@ -925,6 +925,7 @@ fn prepare_interned_prim_for_render(
                     quad::cache_key(
                         data_handle.uid(),
                         prim_spatial_node_index,
+                        frame_context.spatial_tree,
                         &prim_instance.vis.clip_chain,
                         frame_state.clip_store,
                         &data_stores.clip,

@@ -42,6 +42,7 @@ const MAX_TILES_PER_QUAD: usize = 4;
 pub struct QuadCacheKey {
     pub prim: u64,
     pub clips: [u64; 3],
+    pub spatial_node: u64,
 }
 
 /// Describes how clipping affects the rendering of a quad primitive.
@@ -1020,6 +1021,7 @@ fn get_prim_render_strategy(
 pub fn cache_key(
     prim_uid: ItemUid,
     prim_spatial_node_index: SpatialNodeIndex,
+    spatial_tree: &SpatialTree,
     clip_chain: &ClipChainInstance,
     clip_store: &ClipStore,
     interned_clips: &DataStore<ClipIntern>,
@@ -1041,9 +1043,14 @@ pub fn cache_key(
         }
     }
 
+    let spatial_uid = spatial_tree
+        .get_spatial_node(prim_spatial_node_index)
+        .uid;
+
     Some(QuadCacheKey {
         prim: prim_uid.get_uid(),
-        clips: clip_uids
+        clips: clip_uids,
+        spatial_node: spatial_uid,
     })
 }
 

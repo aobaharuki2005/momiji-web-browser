@@ -1651,7 +1651,6 @@ impl<'a> SceneBuilder<'a> {
                 let mut start = info.gradient.start_point;
                 let mut end = info.gradient.end_point;
                 let flags = layout.flags;
-
                 let optimized = optimize_linear_gradient(
                     &mut layout.rect,
                     &mut tile_size,
