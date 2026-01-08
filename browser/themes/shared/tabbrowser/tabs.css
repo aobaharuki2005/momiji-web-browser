@@ -1331,7 +1331,7 @@ tab-group > tab-split-view-wrapper {
 
     @media (forced-colors) {
       border: 1px solid SelectedItem;
-      background: ButtonFace;
+      background: SelectedItemText;
     }
   }
 
@@ -1345,6 +1345,12 @@ tab-group > tab-split-view-wrapper {
 
     .tab-content {
       padding-inline: var(--space-medium);
+
+      @media (forced-colors) {
+        #tabbrowser-tabs tab-split-view-wrapper[hasactivetab] .tabbrowser-tab:not([selected]) & {
+          color: SelectedItem;
+        }
+      }
     }
 
     &:first-child {
