@@ -43,19 +43,22 @@ def get_ruff_version(binary):
     print(f"Error: Could not parse the version '{output}'")
 
 
-def run_process(config, cmd, **kwargs):
+def run_process(cmd, log):
     orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
     proc = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
     signal.signal(signal.SIGINT, orig)
     try:
-        output, _ = proc.communicate()
+        stdout, stderr = proc.communicate()
         proc.wait()
+        for line in stderr.splitlines():
+            if line:
+                log.debug(line)
     except KeyboardInterrupt:
         proc.kill()
 
-    return output
+    return stdout
 
 
 def lint(paths, config, log, **lintargs):
@@ -70,8 +73,6 @@ def lint(paths, config, log, **lintargs):
     if config.get("exclude"):
         args.append(f"--extend-exclude={','.join(config['exclude'])}")
 
-    process_kwargs = {"processStderrLine": lambda line: log.debug(line)}
-
     warning_rules = set(config.get("warning-rules", []))
     if lintargs.get("fix"):
         # Do a first pass with --fix-only as the json format doesn't return the
@@ -83,14 +84,14 @@ def lint(paths, config, log, **lintargs):
             fix_args.append(f"--extend-ignore={','.join(warning_rules)}")
 
         log.debug(f"Running --fix: {fix_args}")
-        output = run_process(config, fix_args, **process_kwargs)
+        output = run_process(fix_args, log)
         matches = re.match(r"Fixed (\d+) errors?.", output)
         if matches:
             fixed = int(matches[1])
     args += ["--output-format=json"]
     log.debug(f"Running with args: {args}")
 
-    output = run_process(config, args, **process_kwargs)
+    output = run_process(args, log)
     if not output:
         return []
 
