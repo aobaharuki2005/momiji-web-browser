@@ -4149,10 +4149,6 @@ void nsINode::NotifyDevToolsOfRemovalsOfChildren() {
   }
 }
 
-ShadowRoot* nsINode::GetShadowRoot() const {
-  return IsContent() ? AsContent()->GetShadowRoot() : nullptr;
-}
-
 ShadowRoot* nsINode::GetShadowRootForSelection() const {
   if (!StaticPrefs::dom_shadowdom_selection_across_boundary_enabled()) {
     return nullptr;

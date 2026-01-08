@@ -48,14 +48,6 @@ inline void nsIContent::SetPrimaryFrame(nsIFrame* aFrame) {
   mPrimaryFrame = aFrame;
 }
 
-inline mozilla::dom::ShadowRoot* nsIContent::GetShadowRoot() const {
-  if (!IsElement()) {
-    return nullptr;
-  }
-
-  return AsElement()->GetShadowRoot();
-}
-
 template <nsINode::FlattenedParentType aType>
 static inline nsINode* GetFlattenedTreeParentNode(const nsINode* aNode) {
   if (!aNode->IsContent()) {

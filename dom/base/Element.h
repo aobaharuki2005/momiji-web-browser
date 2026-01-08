@@ -2482,6 +2482,10 @@ inline mozilla::dom::Element* nsINode::GetPreviousElementSibling() const {
   return nullptr;
 }
 
+inline mozilla::dom::ShadowRoot* nsINode::GetShadowRoot() const {
+  return IsElement() ? AsElement()->GetShadowRoot() : nullptr;
+}
+
 inline mozilla::dom::Element* nsINode::GetAsElementOrParentElement() const {
   return IsElement() ? const_cast<mozilla::dom::Element*>(AsElement())
                      : GetParentElement();
