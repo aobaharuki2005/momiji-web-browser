@@ -44,12 +44,19 @@ const TESTS = [
   },
   {
     action: {
-      selector: "#viewer",
-      event: "keydown",
-      keyCode: 34,
+      selector: "#thumbnailView a:nth-child(4)",
+      event: "click",
+    },
+    expectedPage: 4,
+    message: "navigated to 4th page using thumbnail view",
+  },
+  {
+    action: {
+      selector: "#thumbnailView a:nth-child(2)",
+      event: "click",
     },
     expectedPage: 2,
-    message: "navigated to 2nd page using 'Page Down' key",
+    message: "navigated to 2nd page using thumbnail view",
   },
   {
     action: {
@@ -107,7 +114,7 @@ const TESTS = [
   },
   {
     action: {
-      selector: "#outlinesView .treeItem:nth-child(1) a",
+      selector: "#outlineView .treeItem:nth-child(1) a",
       event: "click",
     },
     expectedPage: 1,
@@ -115,8 +122,7 @@ const TESTS = [
   },
   {
     action: {
-      selector:
-        "#outlinesView .treeItem:nth-child(" + PDF_OUTLINE_ITEMS + ") a",
+      selector: "#outlineView .treeItem:nth-child(" + PDF_OUTLINE_ITEMS + ") a",
       event: "click",
     },
     expectedPage: 4,
@@ -279,6 +285,7 @@ async function runTests(browser) {
           keyCode: test.action.keyCode,
           charCode: 0,
         });
+        el.dispatchEvent(ev);
       } else {
         ev = new content.Event(test.action.event);
       }
