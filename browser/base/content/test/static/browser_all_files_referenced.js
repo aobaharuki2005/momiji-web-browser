@@ -332,10 +332,6 @@ var allowlist = [
   {
     file: "moz-src:///browser/components/aiwindow/models/IntentClassifier.sys.mjs",
   },
-  // Bug 2004888 - [FirstRun] Create Firstrun.html opening firstrun welcome screen
-  {
-    file: "chrome://browser/content/aiwindow/firstrun.html",
-  },
   // Bug 2005768 - Insights scheduler for generation from history
   // Bug 2007939 - Rename "insights" to "memories"
   {

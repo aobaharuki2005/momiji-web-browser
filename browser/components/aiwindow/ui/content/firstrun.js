@@ -202,6 +202,14 @@ function renderFirstRun() {
     window.location.href = lazy.AIWindow.newTabURL;
   };
 
+  window.addEventListener(
+    "unload",
+    () => {
+      AWParent.didDestroy();
+    },
+    { once: true }
+  );
+
   const script = document.createElement("script");
   script.src = "chrome://browser/content/aboutwelcome/aboutwelcome.bundle.js";
   document.body.appendChild(script);

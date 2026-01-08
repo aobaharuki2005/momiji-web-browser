@@ -1,4 +1,5 @@
 [DEFAULT]
+prefs = ["browser.newtab.preload=false"]
 support-files = [
   "head.js",
   "test_chat_search_button.html",

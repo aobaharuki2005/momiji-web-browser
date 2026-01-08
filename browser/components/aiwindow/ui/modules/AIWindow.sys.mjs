@@ -7,6 +7,8 @@ import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
 const AIWINDOW_URL = "chrome://browser/content/aiwindow/aiWindow.html";
 const AIWINDOW_URI = Services.io.newURI(AIWINDOW_URL);
+const FIRSTRUN_URL = "chrome://browser/content/aiwindow/firstrun.html";
+const FIRSTRUN_URI = Services.io.newURI(FIRSTRUN_URL);
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -229,7 +231,9 @@ export const AIWindow = {
    * @returns {boolean} whether AI Window content page is active
    */
   isAIWindowContentPage(uri) {
-    return AIWINDOW_URI.equalsExceptRef(uri);
+    return (
+      AIWINDOW_URI.equalsExceptRef(uri) || FIRSTRUN_URI.equalsExceptRef(uri)
+    );
   },
 
   /**
