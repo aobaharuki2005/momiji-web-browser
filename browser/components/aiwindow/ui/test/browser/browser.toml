@@ -17,6 +17,8 @@ support-files = [
 
 ["browser_aiwindow_search_button.js"]
 
+["browser_aiwindow_switcher.js"]
+
 ["browser_aiwindow_transparency.js"]
 
 ["browser_aiwindowui.js"]
