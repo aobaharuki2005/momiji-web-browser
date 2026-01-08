@@ -2431,21 +2431,6 @@
       }
     ]
   },
-  "1898994": {
-    "label": "eportal.uestc.edu.cn",
-    "bugs": {
-      "1898994": {
-        "issue": "firefox-blocked-completely",
-        "matches": ["*://eportal.uestc.edu.cn/*"]
-      }
-    },
-    "interventions": [
-      {
-        "platforms": ["all"],
-        "ua_string": ["add_Chrome"]
-      }
-    ]
-  },
   "1898996": {
     "label": "oculus.com and meta.com",
     "bugs": {
