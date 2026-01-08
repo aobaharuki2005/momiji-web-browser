@@ -42,7 +42,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.Mockito.atLeastOnce
-import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -76,16 +75,14 @@ class TranslationsMiddlewareTest {
     fun setup() {
         engine = mock()
         engineSession = mock()
-        tab = spy(
-            createTab(
-                url = "https://www.firefox.com",
-                title = "Firefox",
-                id = "1",
-                engineSession = engineSession,
-            ),
+        tab = createTab(
+            url = "https://www.firefox.com",
+            title = "Firefox",
+            id = "1",
+            engineSession = engineSession,
         )
-        tabs = spy(listOf(tab))
-        state = spy(BrowserState(tabs = tabs, selectedTabId = tab.id))
+        tabs = listOf(tab)
+        state = BrowserState(tabs = tabs, selectedTabId = tab.id)
         translationsMiddleware = TranslationsMiddleware(engine = engine, scope = scope)
         store = spy(BrowserStore(middleware = listOf(translationsMiddleware), initialState = state))
 
@@ -103,14 +100,23 @@ class TranslationsMiddlewareTest {
             supportedDocumentLang = true,
             userPreferredLangTag = mockTo.code,
         )
-        val mockSessionState = TranslationsState(
+        val mockTranslationsState = TranslationsState(
             translationEngineState = TranslationEngineState(mockDetectedLanguages),
         )
+        val mockTranslationEngine = TranslationsBrowserState(
+            isEngineSupported = true,
+            supportedLanguages = mockSupportedLanguages,
+            languageModels = mockLanguageModels,
+        )
 
-        val mockBrowserState = TranslationsBrowserState(isEngineSupported = true, supportedLanguages = mockSupportedLanguages, languageModels = mockLanguageModels)
+        // Replace the TabSessionState/BrowserState with mocked translation engines
+        tab = tab.copy(translationsState = mockTranslationsState)
+        tabs = listOf(tab)
+        state = state.copy(
+            tabs = tabs,
+            translationEngine = mockTranslationEngine,
+        )
 
-        doReturn(mockSessionState).`when`(tab).translationsState
-        doReturn(mockBrowserState).`when`(state).translationEngine
         whenever(store.state).thenReturn(state)
     }
 
