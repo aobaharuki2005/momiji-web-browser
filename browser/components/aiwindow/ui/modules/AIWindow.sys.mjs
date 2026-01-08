@@ -10,13 +10,11 @@ const AIWINDOW_URI = Services.io.newURI(AIWINDOW_URL);
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  AIWindowMenu:
-    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowMenu.sys.mjs",
   ChatStore:
     "moz-src:///browser/components/aiwindow/ui/modules/ChatStore.sys.mjs",
-  PanelMultiView:
-    "moz-src:///browser/components/customizableui/PanelMultiView.sys.mjs",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
+
+  AIWindowMenu:
+    "moz-src:///browser/components/aiwindow/ui/modules/AIWindowMenu.sys.mjs",
 });
 
 /**
@@ -25,7 +23,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 export const AIWindow = {
   _initialized: false,
-  _windowStates: new WeakMap(),
+  _windowStates: new Map(),
   _aiWindowMenu: null,
 
   /**
@@ -33,37 +31,21 @@ export const AIWindow = {
    */
 
   init(win) {
-    if (!this._windowStates.has(win)) {
-      this._windowStates.set(win, {});
-      this.initializeAITabsToolbar(win);
-    }
-
     if (this._initialized) {
       return;
     }
 
-    ChromeUtils.defineLazyGetter(
-      AIWindow,
-      "chatStore",
-      () => new lazy.ChatStore()
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "AIWindowEnabled",
+      "browser.aiwindow.enabled",
+      false
     );
+
+    ChromeUtils.defineLazyGetter(this, "chatStore", () => new lazy.ChatStore());
+
     this._initialized = true;
-  },
-
-  _onAIWindowEnabledPrefChange() {
-    ChromeUtils.nondeterministicGetWeakMapKeys(this._windowStates).forEach(
-      win => {
-        this._updateButtonVisibility(win);
-      }
-    );
-  },
-
-  _updateButtonVisibility(win) {
-    const isPrivateWindow = lazy.PrivateBrowsingUtils.isWindowPrivate(win);
-    const modeSwitcherButton = win.document.getElementById("ai-window-toggle");
-    if (modeSwitcherButton) {
-      modeSwitcherButton.hidden = !this.isAIWindowEnabled() || isPrivateWindow;
-    }
+    this._windowStates.set(win, {});
   },
 
   /**
@@ -115,71 +97,6 @@ export const AIWindow = {
     }
 
     return args;
-  },
-
-  /**
-   * Show Window Switcher button in tabs toolbar
-   *
-   * @param {object} win caller window
-   */
-  handleAIWindowSwitcher(win) {
-    let view = lazy.PanelMultiView.getViewNode(
-      win.document,
-      "ai-window-toggle-view"
-    );
-
-    const isPrivateWindow = lazy.PrivateBrowsingUtils.isWindowPrivate(win);
-
-    if (!isPrivateWindow) {
-      view.querySelector("#ai-window-switch-classic").hidden = false;
-      view.querySelector("#ai-window-switch-ai").hidden = false;
-    }
-
-    let windowState = this._windowStates.get(win);
-    if (!windowState) {
-      windowState = {};
-      this._windowStates.set(win, windowState);
-    }
-
-    if (windowState.viewInitialized) {
-      return;
-    }
-
-    view.addEventListener("command", event => {
-      switch (event.target.id) {
-        case "ai-window-switch-classic":
-          this.toggleAIWindow(win, false);
-          break;
-        case "ai-window-switch-ai":
-          this.toggleAIWindow(win, true);
-          break;
-      }
-    });
-
-    windowState.viewInitialized = true;
-  },
-
-  /**
-   * Show Window Switcher button in tabs toolbar
-   *
-   * @param {Window} win caller window
-   */
-  initializeAITabsToolbar(win) {
-    const modeSwitcherButton = win.document.getElementById("ai-window-toggle");
-    if (!modeSwitcherButton) {
-      return;
-    }
-
-    this._updateButtonVisibility(win);
-
-    modeSwitcherButton.addEventListener("command", event => {
-      if (win.PanelUI.panel.state == "open") {
-        win.PanelUI.hide();
-      } else if (win.PanelUI.panel.state == "closed") {
-        this.handleAIWindowSwitcher(win);
-        win.PanelUI.showSubView("ai-window-toggle-view", event.target, event);
-      }
-    });
   },
 
   /**
@@ -249,20 +166,4 @@ export const AIWindow = {
   get newTabURL() {
     return AIWINDOW_URL;
   },
-
-  async toggleAIWindow(win, isTogglingToAIWindow) {
-    let isActive = this.isAIWindowActive(win);
-    if (isActive != isTogglingToAIWindow) {
-      win.document.documentElement.toggleAttribute("ai-window");
-      Services.obs.notifyObservers(win, "ai-window-state-changed");
-    }
-  },
 };
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  AIWindow,
-  "AIWindowEnabled",
-  "browser.aiwindow.enabled",
-  false,
-  AIWindow._onAIWindowEnabledPrefChange.bind(AIWindow)
-);
