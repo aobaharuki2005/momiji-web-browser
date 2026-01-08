@@ -28,7 +28,7 @@ class nsMathMLFrame : public nsIMathMLFrame {
   // nsIMathMLFrame ---
 
   bool IsSpaceLike() override {
-    return NS_MATHML_IS_SPACE_LIKE(mPresentationData.flags);
+    return mPresentationData.flags.contains(MathMLPresentationFlag::SpaceLike);
   }
 
   NS_IMETHOD
@@ -78,13 +78,14 @@ class nsMathMLFrame : public nsIMathMLFrame {
   TransmitAutomaticData() override { return NS_OK; }
 
   NS_IMETHOD
-  UpdatePresentationData(uint32_t aFlagsValues,
-                         uint32_t aFlagsToUpdate) override;
+  UpdatePresentationData(MathMLPresentationFlags aFlagsValues,
+                         MathMLPresentationFlags aFlagsToUpdate) override;
 
   NS_IMETHOD
-  UpdatePresentationDataFromChildAt(int32_t aFirstIndex, int32_t aLastIndex,
-                                    uint32_t aFlagsValues,
-                                    uint32_t aFlagsToUpdate) override {
+  UpdatePresentationDataFromChildAt(
+      int32_t aFirstIndex, int32_t aLastIndex,
+      MathMLPresentationFlags aFlagsValues,
+      MathMLPresentationFlags aFlagsToUpdate) override {
     return NS_OK;
   }
 

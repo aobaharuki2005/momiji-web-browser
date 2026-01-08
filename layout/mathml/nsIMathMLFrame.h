@@ -31,6 +31,37 @@ enum eMathMLFrameType {
   eMathMLFrameType_COUNT
 };
 
+// Bits used for the presentation flags -- these bits are set
+// in their relevant situation as they become available
+enum class MathMLPresentationFlag : uint8_t {
+  // This bit is used to emulate TeX rendering.
+  // Internal use only, cannot be set by the user with an attribute.
+  Compressed,
+
+  // This bit is set if the frame will fire a vertical stretch
+  // command on all its (non-empty) children.
+  // Tags like <mrow> (or an inferred mrow), mpadded, etc, will fire a
+  // vertical stretch command on all their non-empty children
+  StretchAllChildrenVertically,
+
+  // This bit is set if the frame will fire a horizontal stretch
+  // command on all its (non-empty) children.
+  // Tags like munder, mover, munderover, will fire a
+  // horizontal stretch command on all their non-empty children
+  StretchAllChildrenHorizontally,
+
+  // This bit is set if the frame is "space-like", as defined by the spec.
+  SpaceLike,
+
+  // This bit is set if a token frame should be rendered with the dtls font
+  // feature setting.
+  Dtls,
+
+  // a bit used for debug
+  StretchDone,
+};
+using MathMLPresentationFlags = mozilla::EnumSet<MathMLPresentationFlag>;
+
 // Abstract base class that provides additional methods for MathML frames
 class nsIMathMLFrame {
  public:
@@ -168,7 +199,8 @@ class nsIMathMLFrame {
    *        update some flags in the frame, leaving the other flags unchanged.
    */
   NS_IMETHOD
-  UpdatePresentationData(uint32_t aFlagsValues, uint32_t aWhichFlags) = 0;
+  UpdatePresentationData(MathMLPresentationFlags aFlagsValues,
+                         MathMLPresentationFlags aWhichFlags) = 0;
 
   /* UpdatePresentationDataFromChildAt :
    * Sets compression flag on the whole tree. For child frames
@@ -193,8 +225,8 @@ class nsIMathMLFrame {
    */
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(int32_t aFirstIndex, int32_t aLastIndex,
-                                    uint32_t aFlagsValues,
-                                    uint32_t aWhichFlags) = 0;
+                                    MathMLPresentationFlags aFlagsValues,
+                                    MathMLPresentationFlags aWhichFlags) = 0;
 
   // If aFrame is a child frame, returns the script increment which this frame
   // imposes on the specified frame, ignoring any artificial adjustments to
@@ -242,65 +274,13 @@ struct nsEmbellishData {
 // descendants that affects us.
 struct nsPresentationData {
   // bits for: compressed, etc
-  uint32_t flags = 0;
+  MathMLPresentationFlags flags;
 
   // handy pointer on our base child (the 'nucleus' in TeX), but it may be
   // null here (e.g., tags like <mrow>, <mfrac>, <mtable>, etc, won't
   // pick a particular child in their child list to be the base)
   nsIFrame* baseFrame = nullptr;
 };
-
-// ==========================================================================
-// Bits used for the presentation flags -- these bits are set
-// in their relevant situation as they become available
-
-// This bit is used to emulate TeX rendering.
-// Internal use only, cannot be set by the user with an attribute.
-#define NS_MATHML_COMPRESSED 0x00000002U
-
-// This bit is set if the frame will fire a vertical stretch
-// command on all its (non-empty) children.
-// Tags like <mrow> (or an inferred mrow), mpadded, etc, will fire a
-// vertical stretch command on all their non-empty children
-#define NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY 0x00000004U
-
-// This bit is set if the frame will fire a horizontal stretch
-// command on all its (non-empty) children.
-// Tags like munder, mover, munderover, will fire a
-// horizontal stretch command on all their non-empty children
-#define NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY 0x00000008U
-
-// This bit is set if the frame is "space-like", as defined by the spec.
-#define NS_MATHML_SPACE_LIKE 0x00000040U
-
-// This bit is set if a token frame should be rendered with the dtls font
-// feature setting.
-#define NS_MATHML_DTLS 0x00000080U
-
-// a bit used for debug
-#define NS_MATHML_STRETCH_DONE 0x20000000U
-
-// Macros that retrieve those bits
-
-#define NS_MATHML_IS_COMPRESSED(_flags) \
-  (NS_MATHML_COMPRESSED == ((_flags) & NS_MATHML_COMPRESSED))
-
-#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(_flags) \
-  (NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY ==                \
-   ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY))
-
-#define NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(_flags) \
-  (NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY ==                \
-   ((_flags) & NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY))
-
-#define NS_MATHML_IS_SPACE_LIKE(_flags) \
-  (NS_MATHML_SPACE_LIKE == ((_flags) & NS_MATHML_SPACE_LIKE))
-
-#define NS_MATHML_IS_DTLS_SET(_flags) \
-  (NS_MATHML_DTLS == ((_flags) & NS_MATHML_DTLS))
-
-#define NS_MATHML_STRETCH_WAS_DONE(_flags) \
-  (NS_MATHML_STRETCH_DONE == ((_flags) & NS_MATHML_STRETCH_DONE))
 
 // ==========================================================================
 // Bits used for the embellish flags -- these bits are set

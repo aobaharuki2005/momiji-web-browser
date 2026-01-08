@@ -2441,7 +2441,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
       if (mathFrame) {
         nsPresentationData presData;
         mathFrame->GetPresentationData(presData);
-        if (NS_MATHML_IS_DTLS_SET(presData.flags)) {
+        if (presData.flags.contains(MathMLPresentationFlag::Dtls)) {
           mathFlags |= MathMLTextRunFactory::MATH_FONT_FEATURE_DTLS;
           anyMathMLStyling = true;
         }

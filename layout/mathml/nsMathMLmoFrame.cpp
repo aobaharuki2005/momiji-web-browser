@@ -603,11 +603,11 @@ nsMathMLmoFrame::Stretch(DrawTarget* aDrawTarget,
                          nsStretchDirection aStretchDirection,
                          nsBoundingMetrics& aContainerSize,
                          ReflowOutput& aDesiredStretchSize) {
-  if (NS_MATHML_STRETCH_WAS_DONE(mPresentationData.flags)) {
+  if (mPresentationData.flags.contains(MathMLPresentationFlag::StretchDone)) {
     NS_WARNING("it is wrong to fire stretch more than once on a frame");
     return NS_OK;
   }
-  mPresentationData.flags |= NS_MATHML_STRETCH_DONE;
+  mPresentationData.flags += MathMLPresentationFlag::StretchDone;
 
   nsIFrame* firstChild = mFrames.FirstChild();
 
