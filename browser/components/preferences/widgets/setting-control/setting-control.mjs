@@ -123,12 +123,6 @@ export class SettingControl extends SettingElement {
     /** @type {Ref<LitElement>} */
     this.controlRef = createRef();
 
-    /** @type {Ref<LitElement>} */
-    this.controlledMessageBarRef = createRef();
-
-    /** @type {Ref<LitElement>} */
-    this.enableMessageBarRef = createRef();
-
     /**
      * @type {Preferences['getSetting'] | undefined}
      */
@@ -198,7 +192,6 @@ export class SettingControl extends SettingElement {
     if (!this.setting) {
       throw new SettingNotDefinedError(this.config.id);
     }
-    this.id = `setting-control-${this.config.id}`;
     let prevHidden = this.hidden;
     this.hidden = !this.setting.visible;
     if (prevHidden != this.hidden) {
@@ -266,7 +259,7 @@ export class SettingControl extends SettingElement {
       "?disabled":
         this.setting.disabled ||
         this.setting.locked ||
-        this.isDisabledByExtension(),
+        this.isControlledByExtension(),
       // Hide moz-message-bar directly to maintain the role=alert functionality.
       // This setting-control will be visually hidden in CSS.
       ".hidden": config.control == "moz-message-bar" && this.hidden,
@@ -329,13 +322,6 @@ export class SettingControl extends SettingElement {
     return (
       this.setting.controllingExtensionInfo?.id &&
       this.setting.controllingExtensionInfo?.name
-    );
-  }
-
-  isDisabledByExtension() {
-    return (
-      this.isControlledByExtension() &&
-      !this.setting.controllingExtensionInfo.allowControl
     );
   }
 
@@ -450,7 +436,6 @@ export class SettingControl extends SettingElement {
       let supportPage = this.extensionSupportPage;
       messageBar = html`<moz-message-bar
         class="extension-controlled-message-bar"
-        ${ref(this.controlledMessageBarRef)}
         .messageL10nId=${this.extensionMessageId}
         .messageL10nArgs=${args}
       >
@@ -472,7 +457,6 @@ export class SettingControl extends SettingElement {
       messageBar = html`<moz-message-bar
         class="reenable-extensions-message-bar"
         dismissable=""
-        ${ref(this.enableMessageBarRef)}
         @message-bar:user-dismissed=${this.handleEnableExtensionDismiss}
       >
         <span

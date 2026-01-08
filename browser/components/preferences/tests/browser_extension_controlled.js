@@ -861,21 +861,6 @@ add_task(async function testExtensionControlledWebNotificationsPermission() {
     "The extension controlled row is now hidden"
   );
 
-  // Close the site permissions dialog and wait for it to finish closing
-  let dialogClosed = BrowserTestUtils.waitForEvent(
-    gBrowser.contentWindow.gSubDialog._dialogStack,
-    "dialogclose"
-  );
-  sitePermissionsDialog.document
-    .querySelector("dialog")
-    .getButton("cancel")
-    .click();
-  await dialogClosed;
-  sitePermissionsDialog = null;
-
-  // Wait a tick to allow cleanup to complete
-  await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
-
   await extension.unload();
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
@@ -1182,7 +1167,7 @@ add_task(async function testExtensionControlledProxyConfig() {
   const EXTENSION_ID = "@set_proxy";
   const CONTROLLED_SECTION_ID = "proxyExtensionContent";
   const CONTROLLED_BUTTON_ID = "disableProxyExtension";
-  const CONNECTION_SETTINGS_SETTING_ID = "connectionSettings";
+  const CONNECTION_SETTINGS_DESC_ID = "connectionSettingsDescription";
   const PANEL_URL =
     "chrome://browser/content/preferences/dialogs/connection.xhtml";
 
@@ -1192,41 +1177,18 @@ add_task(async function testExtensionControlledProxyConfig() {
     browser.proxy.settings.set({ value: { proxyType: "none" } });
   }
 
-  function assertConnectionSettingsMessage(doc, isControlled) {
-    let settingControl = getSettingControl(
-      CONNECTION_SETTINGS_SETTING_ID,
-      doc.ownerGlobal
-    );
-    Assert.ok(
-      settingControl,
-      `Got setting for ${CONNECTION_SETTINGS_SETTING_ID}`
-    );
-    let messageBar = settingControl.controlledMessageBarRef.value;
-    if (isControlled) {
-      Assert.ok(messageBar, "Controlled message exists");
-      Assert.ok(
-        BrowserTestUtils.isVisible(messageBar),
-        "Controlled message exists"
-      );
-    } else {
-      Assert.ok(!messageBar, "Controlled message does not exist");
-    }
+  function expectedConnectionSettingsMessage(doc, isControlled) {
+    return isControlled
+      ? "extension-controlling-proxy-config"
+      : "network-proxy-connection-description";
   }
 
-  async function connectionSettingsMessagePromise(doc, isControlled) {
-    let settingControl = getSettingControl(
-      CONNECTION_SETTINGS_SETTING_ID,
-      doc.ownerGlobal
+  function connectionSettingsMessagePromise(doc, isControlled) {
+    return waitForMessageContent(
+      CONNECTION_SETTINGS_DESC_ID,
+      expectedConnectionSettingsMessage(doc, isControlled),
+      doc
     );
-    Assert.ok(
-      settingControl,
-      `Got setting for ${CONNECTION_SETTINGS_SETTING_ID}`
-    );
-    let messageBar = settingControl.controlledMessageBarRef.value;
-    if (isControlled != messageBar) {
-      await waitForSettingChange(settingControl.setting);
-    }
-    assertConnectionSettingsMessage(doc, isControlled);
   }
 
   function verifyProxyState(doc, isControlled) {
@@ -1313,7 +1275,12 @@ add_task(async function testExtensionControlledProxyConfig() {
         );
       }
     } else {
-      assertConnectionSettingsMessage(doc, isControlled);
+      let elem = doc.getElementById(CONNECTION_SETTINGS_DESC_ID);
+      is(
+        doc.l10n.getAttributes(elem).id,
+        expectedConnectionSettingsMessage(doc, isControlled),
+        "The connection settings description is as expected."
+      );
     }
   }
 

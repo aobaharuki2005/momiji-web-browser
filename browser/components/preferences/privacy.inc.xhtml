@@ -393,13 +393,22 @@
     </vbox>
   </vbox>
 </groupbox>
-<html:setting-group id="nonTechnicalPrivacyGroup" groupid="nonTechnicalPrivacy" data-category="panePrivacy" hidden="true" data-srd-groupid="nonTechnicalPrivacy2"/>
+<groupbox id="nonTechnicalPrivacyGroup" data-category="panePrivacy" hidden="true" data-srd-groupid="nonTechnicalPrivacy2">
+  <label id="nonTechnicalPrivacyHeader"><html:h2 data-l10n-id="non-technical-privacy-header" class="section-heading"/></label>
+  <html:setting-group groupid="nonTechnicalPrivacy" />
+</groupbox>
 <html:setting-group groupid="nonTechnicalPrivacy2" data-category="panePrivacy" hidden="true"/>
 
 <!-- Firefox VPN - IP Protection -->
-<html:setting-group groupid="ipprotection" data-category="panePrivacy" hidden="true"></html:setting-group>
+<groupbox id="dataIPProtectionGroup" data-category="panePrivacy" hidden="true">
+  <html:setting-group groupid="ipprotection"></html:setting-group>
+</groupbox>
 
-<html:setting-group groupid="cookiesAndSiteData" data-category="panePrivacy" hidden="true" data-srd-groupid="cookiesAndSiteData2"/>
+
+<groupbox id="siteDataGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize" data-srd-groupid="cookiesAndSiteData2">
+  <label><html:h2 data-l10n-id="sitedata-header"/></label>
+  <html:setting-group groupid="cookiesAndSiteData"/>
+</groupbox>
 <html:setting-group groupid="cookiesAndSiteData2" data-category="panePrivacy" hidden="true" />
 
 <!-- Cookie Banner Handling -->
@@ -553,15 +562,38 @@
 
 <html:setting-group groupid="passwords" hidden="true" data-category="panePrivacy" />
 
-<html:setting-group data-category="panePrivacy" data-subcategory="payment-methods-autofill credit-card-autofill" groupid="payments" data-group="formAutofill" hidden="true" />
-<html:setting-group data-category="panePrivacy" data-subcategory="addresses-autofill address-autofill" groupid="addresses" data-group="formAutofill" hidden="true" />
+<groupbox id="paymentsGroupBox"
+          data-category="panePrivacy"
+          data-subcategory="payment-methods-autofill" hidden="true">
+  <label><html:h2 data-l10n-id="autofill-payment-methods-title" class="subsection-heading"/></label>
+  <html:setting-group data-subcategory="credit-card-autofill" groupid="payments"/>
+</groupbox>
+
+<groupbox id="addressesGroupBox"
+          data-category="panePrivacy"
+          data-subcategory="addresses-autofill" hidden="true">
+  <label><html:h2 data-l10n-id="autofill-addresses-title" class="subsection-heading"/></label>
+  <html:setting-group data-subcategory="address-autofill" groupid="addresses"/>
+</groupbox>
 
 <!-- History -->
-<html:setting-group groupid="history" data-category="panePrivacy" hidden="true" data-srd-groupid="history2"/>
+<groupbox id="historyGroup" data-category="panePrivacy" hidden="true" aria-describedby="totalSiteDataSize" data-srd-groupid="history2">
+  <label><html:h2 data-l10n-id="history-header"/></label>
+  <html:setting-group groupid="history"/>
+</groupbox>
 <html:setting-group groupid="history2"  data-category="panePrivacy" hidden="true"/>
 
+<hbox id="permissionsCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="panePrivacy">
+  <html:h1 data-l10n-id="permissions-header2"/>
+</hbox>
+
 <!-- Permissions -->
-<html:setting-group groupid="permissions" data-category="panePrivacy" data-subcategory="permissions" hidden="true"></html:setting-group>
+<groupbox id="permissionsGroup" data-category="panePrivacy" hidden="true" data-subcategory="permissions">
+  <html:setting-group groupid="permissions"></html:setting-group>
+</groupbox>
 
 <!-- Firefox Data Collection and Use -->
 <hbox id="dataCollectionCategory"
@@ -694,25 +726,32 @@
 </hbox>
 
 <!-- addons, forgery (phishing) UI Security -->
-<html:setting-group groupid="browsingProtection" data-category="panePrivacy" hidden="true"></html:setting-group>
+<groupbox data-category="panePrivacy" hidden="true">
+  <label><html:h2 data-l10n-id="security-browsing-protection" class="section-heading"/></label>
+  <html:setting-group groupid="browsingProtection"></html:setting-group>
+</groupbox>
 
 <!-- Certificates -->
-<html:setting-group groupid="certificates" data-category="panePrivacy" hidden="true"></html:setting-group>
+<groupbox id="certSelection" data-category="panePrivacy" hidden="true">
+  <html:setting-group groupid="certificates"></html:setting-group>
+</groupbox>
 
 <!-- HTTPS-ONLY Mode -->
-<html:setting-group groupid="httpsOnly" data-category="panePrivacy" hidden="true"/>
+
+<groupbox data-category="panePrivacy" hidden="true">
+  <label><html:h2 data-l10n-id="httpsonly-header"/></label>
+  <html:setting-group groupid="httpsOnly"/>
+</groupbox>
 
 <!-- DoH -->
-<html:setting-group hidden="true" data-category="panePrivacy" groupid="dnsOverHttps" />
-
 <hbox id="DoHCategory"
       class="subcategory"
       hidden="true"
-      data-category="panePrivacy"
-      data-srd-groupid="dnsOverHttps">
+      data-category="panePrivacy">
   <html:h1 data-l10n-id="preferences-doh-header"/>
 </hbox>
 
+<html:setting-group hidden="true" data-category="panePrivacy" groupid="dnsOverHttps" />
 <groupbox id="dohBox" data-category="panePrivacy" data-subcategory="doh" hidden="true" class="highlighting-group"  data-srd-groupid="dnsOverHttps">
   <label class="search-header" searchkeywords="doh trr" hidden="true"><html:h2 data-l10n-id="preferences-doh-header"/></label>
   <vbox flex="1">
