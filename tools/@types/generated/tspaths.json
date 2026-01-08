@@ -956,9 +956,6 @@
       "resource:///actors/WebRTCChild.sys.mjs": [
         "browser/actors/WebRTCChild.sys.mjs"
       ],
-      "resource:///bar.sys.mjs": [
-        "python/mozbuild/mozbuild/test/backend/data/build/bar.sys.mjs"
-      ],
       "resource:///modules/360seMigrationUtils.sys.mjs": [
         "browser/components/migration/360seMigrationUtils.sys.mjs"
       ],
@@ -1333,63 +1330,6 @@
       ],
       "resource:///modules/firefox-view-tabs-setup-manager.sys.mjs": [
         "browser/components/firefoxview/firefox-view-tabs-setup-manager.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/GuardianClient.sys.mjs": [
-        "browser/components/ipprotection/GuardianClient.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPAutoStart.sys.mjs": [
-        "browser/components/ipprotection/IPPAutoStart.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPChannelFilter.sys.mjs": [
-        "browser/components/ipprotection/IPPChannelFilter.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPEnrollAndEntitleManager.sys.mjs": [
-        "browser/components/ipprotection/IPPEnrollAndEntitleManager.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPExceptionsManager.sys.mjs": [
-        "browser/components/ipprotection/IPPExceptionsManager.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPNetworkErrorObserver.sys.mjs": [
-        "browser/components/ipprotection/IPPNetworkErrorObserver.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPNimbusHelper.sys.mjs": [
-        "browser/components/ipprotection/IPPNimbusHelper.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPOnboardingMessageHelper.sys.mjs": [
-        "browser/components/ipprotection/IPPOnboardingMessageHelper.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPOptOutHelper.sys.mjs": [
-        "browser/components/ipprotection/IPPOptOutHelper.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPProxyManager.sys.mjs": [
-        "browser/components/ipprotection/IPPProxyManager.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPSignInWatcher.sys.mjs": [
-        "browser/components/ipprotection/IPPSignInWatcher.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPStartupCache.sys.mjs": [
-        "browser/components/ipprotection/IPPStartupCache.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPPVPNAddonHelper.sys.mjs": [
-        "browser/components/ipprotection/IPPVPNAddonHelper.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPProtection.sys.mjs": [
-        "browser/components/ipprotection/IPProtection.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPProtectionHelpers.sys.mjs": [
-        "browser/components/ipprotection/IPProtectionHelpers.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPProtectionPanel.sys.mjs": [
-        "browser/components/ipprotection/IPProtectionPanel.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPProtectionServerlist.sys.mjs": [
-        "browser/components/ipprotection/IPProtectionServerlist.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPProtectionService.sys.mjs": [
-        "browser/components/ipprotection/IPProtectionService.sys.mjs"
-      ],
-      "moz-src:///browser/components/ipprotection/IPProtectionUsage.sys.mjs": [
-        "browser/components/ipprotection/IPProtectionUsage.sys.mjs"
       ],
       "resource:///modules/policies/BookmarksPolicies.sys.mjs": [
         "browser/components/enterprisepolicies/helpers/BookmarksPolicies.sys.mjs"
@@ -6548,9 +6488,6 @@
       "resource://newtab/common/Reducers.sys.mjs": [
         "browser/extensions/newtab/common/Reducers.sys.mjs"
       ],
-      "resource://newtab/data/content/activity-stream.bundle.js": [
-        "browser/extensions/newtab/data/content/activity-stream.bundle.js"
-      ],
       "resource://newtab/lib/AboutPreferences.sys.mjs": [
         "browser/extensions/newtab/lib/AboutPreferences.sys.mjs"
       ],
@@ -6577,6 +6514,9 @@
       ],
       "resource://newtab/lib/FaviconFeed.sys.mjs": [
         "browser/extensions/newtab/lib/FaviconFeed.sys.mjs"
+      ],
+      "resource://newtab/lib/FrecencyBoostProvider/FrecencyBoostProvider.mjs": [
+        "browser/extensions/newtab/lib/FrecencyBoostProvider/FrecencyBoostProvider.mjs"
       ],
       "resource://newtab/lib/HighlightsFeed.sys.mjs": [
         "browser/extensions/newtab/lib/HighlightsFeed.sys.mjs"
