@@ -39,10 +39,10 @@ static const char16_t kInvisibleTimes = char16_t(0x2062);
 static const char16_t kInvisibleSeparator = char16_t(0x2063);
 static const char16_t kInvisiblePlus = char16_t(0x2064);
 
-eMathMLFrameType nsMathMLmoFrame::GetMathMLFrameType() {
+MathMLFrameType nsMathMLmoFrame::GetMathMLFrameType() {
   return NS_MATHML_OPERATOR_IS_INVISIBLE(mFlags)
-             ? eMathMLFrameType_OperatorInvisible
-             : eMathMLFrameType_OperatorOrdinary;
+             ? MathMLFrameType::OperatorInvisible
+             : MathMLFrameType::OperatorOrdinary;
 }
 
 // since a mouse click implies selection, we cannot just rely on the

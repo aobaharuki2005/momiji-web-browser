@@ -49,7 +49,7 @@ class nsMathMLFrame : public nsIMathMLFrame {
     return NS_OK;
   }
 
-  eMathMLFrameType GetMathMLFrameType() override;
+  MathMLFrameType GetMathMLFrameType() override;
 
   NS_IMETHOD
   Stretch(mozilla::gfx::DrawTarget* aDrawTarget,
@@ -129,13 +129,13 @@ class nsMathMLFrame : public nsIMathMLFrame {
   static nscoord CalcLength(const nsCSSValue& aCSSValue,
                             float aFontSizeInflation, nsIFrame* aFrame);
 
-  static eMathMLFrameType GetMathMLFrameTypeFor(nsIFrame* aFrame) {
+  static MathMLFrameType GetMathMLFrameTypeFor(nsIFrame* aFrame) {
     if (aFrame->IsMathMLFrame()) {
       if (nsIMathMLFrame* mathMLFrame = do_QueryFrame(aFrame)) {
         return mathMLFrame->GetMathMLFrameType();
       }
     }
-    return eMathMLFrameType_UNKNOWN;
+    return MathMLFrameType::Unknown;
   }
 
   // estimate of the italic correction

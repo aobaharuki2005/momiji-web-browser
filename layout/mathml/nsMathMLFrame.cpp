@@ -30,7 +30,7 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-eMathMLFrameType nsMathMLFrame::GetMathMLFrameType() {
+MathMLFrameType nsMathMLFrame::GetMathMLFrameType() {
   // see if it is an embellished operator (mapped to 'Op' in TeX)
   if (mEmbellishData.coreFrame) {
     return GetMathMLFrameTypeFor(mEmbellishData.coreFrame);
@@ -42,7 +42,7 @@ eMathMLFrameType nsMathMLFrame::GetMathMLFrameType() {
   }
 
   // everything else is treated as ordinary (mapped to 'Ord' in TeX)
-  return eMathMLFrameType_Ordinary;
+  return MathMLFrameType::Ordinary;
 }
 
 NS_IMETHODIMP

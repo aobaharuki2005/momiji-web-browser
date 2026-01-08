@@ -37,7 +37,7 @@ class nsMathMLTokenFrame : public nsMathMLContainerFrame {
   NS_IMETHOD
   InheritAutomaticData(nsIFrame* aParent) override;
 
-  eMathMLFrameType GetMathMLFrameType() override;
+  MathMLFrameType GetMathMLFrameType() override;
 
   void SetInitialChildList(ChildListID aListID,
                            nsFrameList&& aChildList) override;

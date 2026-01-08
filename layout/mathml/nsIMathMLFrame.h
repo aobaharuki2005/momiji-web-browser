@@ -19,16 +19,16 @@ class ReflowOutput;
 
 // For MathML, this 'type' will be used to determine the spacing between frames
 // Subclasses can return a 'type' that will give them a particular spacing
-enum eMathMLFrameType {
-  eMathMLFrameType_UNKNOWN = -1,
-  eMathMLFrameType_Ordinary,
-  eMathMLFrameType_OperatorOrdinary,
-  eMathMLFrameType_OperatorInvisible,
-  eMathMLFrameType_OperatorUserDefined,
-  eMathMLFrameType_Inner,
-  eMathMLFrameType_ItalicIdentifier,
-  eMathMLFrameType_UprightIdentifier,
-  eMathMLFrameType_COUNT
+enum class MathMLFrameType {
+  Unknown = -1,
+  Ordinary,
+  OperatorOrdinary,
+  OperatorInvisible,
+  OperatorUserDefined,
+  Inner,
+  ItalicIdentifier,
+  UprightIdentifier,
+  Count
 };
 
 // Bits used for the presentation flags -- these bits are set
@@ -120,7 +120,7 @@ class nsIMathMLFrame {
   NS_IMETHOD
   SetReference(const nsPoint& aReference) = 0;
 
-  virtual eMathMLFrameType GetMathMLFrameType() = 0;
+  virtual MathMLFrameType GetMathMLFrameType() = 0;
 
   /* SUPPORT FOR STRETCHY ELEMENTS */
   /*====================================================================*/
