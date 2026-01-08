@@ -3,6 +3,7 @@ import pytest
 URL = "https://godotfest.com/talks"
 
 TOP_BAR_BLUR_CSS = "#menu-blur"
+HERO_CSS = ".talk-card__body"
 
 
 async def are_blurs_working(client):
@@ -15,20 +16,19 @@ async def are_blurs_working(client):
     client.add_stylesheet(
         """
       * { color: transparent !important; }
-      #test { position: fixed; color: white !important; }
       svg { display: none; }
     """
     )
 
     top_bar_blur = client.await_css(TOP_BAR_BLUR_CSS)
+    hero = client.await_css(HERO_CSS, is_displayed=True)
 
+    # scroll down to a point where the site enables the blur and something obvious is behind.
     client.execute_script(
         """
-        const test = document.createElement("div");
-        test.innerText = test.id = "test";
-        document.body.insertBefore(test, document.body.firstElementChild);
-        window.scrollTo({ top: 200, behavior: 'instant' });
-    """
+      arguments[0].scrollIntoView({behavior: "instant", block: "start"});
+    """,
+        hero,
     )
 
     # now take a screenshot, remove the blur element, and compare.
@@ -42,6 +42,13 @@ async def are_blurs_working(client):
 
 @pytest.mark.only_platforms("android")
 @pytest.mark.asyncio
-@pytest.mark.without_interventions
-async def test_regression(client):
+@pytest.mark.with_interventions
+async def test_enabled(client):
     assert await are_blurs_working(client)
+
+
+@pytest.mark.only_platforms("android")
+@pytest.mark.asyncio
+@pytest.mark.without_interventions
+async def test_disabled(client):
+    assert not await are_blurs_working(client)

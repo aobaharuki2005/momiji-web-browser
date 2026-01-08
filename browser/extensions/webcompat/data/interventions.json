@@ -2146,6 +2146,21 @@
       }
     ]
   },
+  "1898928": {
+    "label": "cleanfeed.net",
+    "bugs": {
+      "1898928": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://cleanfeed.net/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1898929": {
     "label": "app.sessionlinkpro.com",
     "bugs": {
@@ -2431,6 +2446,21 @@
       }
     ]
   },
+  "1898994": {
+    "label": "eportal.uestc.edu.cn",
+    "bugs": {
+      "1898994": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://eportal.uestc.edu.cn/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
   "1898996": {
     "label": "oculus.com and meta.com",
     "bugs": {
@@ -2680,6 +2710,21 @@
       "1902367": {
         "issue": "unsupported-warning",
         "matches": ["*://seller.kuajingmaihuo.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
+  "1902378": {
+    "label": "acesso.processo.rio",
+    "bugs": {
+      "1902378": {
+        "issue": "unsupported-warning",
+        "matches": ["*://acesso.processo.rio/*"]
       }
     },
     "interventions": [
@@ -3513,7 +3558,7 @@
     "bugs": {
       "1913720": {
         "issue": "firefox-blocked-completely",
-        "matches": ["https://h2breeze.com/*", "https://is-sets.com/*"]
+        "matches": ["*://cotota.app/*", "https://is-sets.com/*"]
       }
     },
     "interventions": [
@@ -5458,6 +5503,25 @@
       }
     ]
   },
+  "1974686": {
+    "label": "hermes.admin.ch",
+    "bugs": {
+      "1974686": {
+        "issue": "broken-layout",
+        "matches": [
+          "*://www.hermes.admin.ch/de/projektmanagement/szenarien/it-entwicklung/szenariouebersicht.html*"
+        ]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "css": ["bug1974686-hermes_admin_ch.css"]
+        }
+      }
+    ]
+  },
   "1980129": {
     "label": "app.simplenote.com",
     "bugs": {
@@ -5635,6 +5699,24 @@
       }
     ]
   },
+  "1987351": {
+    "label": "mirage.decart.ai",
+    "bugs": {
+      "1987351": {
+        "issue": "firefox-blocked-completely",
+        "matches": ["*://mirage.decart.ai/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "content_scripts": {
+          "js": ["bug1928941-oasis.decart.ai-window-chrome-shim.js"]
+        },
+        "ua_string": ["Chrome", "add_Firefox_as_Gecko"]
+      }
+    ]
+  },
   "1989241": {
     "label": "useinsider.com",
     "bugs": {
@@ -5692,6 +5774,23 @@
       {
         "platforms": ["all"],
         "ua_string": ["add_Chrome"]
+      }
+    ]
+  },
+  "1992923": {
+    "label": "godotfest.com",
+    "bugs": {
+      "1992923": {
+        "issue": "broken-images",
+        "matches": ["*://godotfest.com/*"]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["android"],
+        "content_scripts": {
+          "css": ["1992923-godotfest.com-fix-blur-effects.css"]
+        }
       }
     ]
   },
