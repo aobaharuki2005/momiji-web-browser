@@ -293,12 +293,6 @@ nsresult nsOSXSystemProxySettings::GetProxyForURI(const nsACString& aSpec,
                                                   const nsACString& aHost,
                                                   const int32_t aPort,
                                                   nsACString& aResult) {
-  nsresult rv = mozilla::toolkit::system::GetProxyFromEnvironment(
-      aScheme, aHost, aPort, aResult);
-  if (NS_SUCCEEDED(rv)) {
-    return rv;
-  }
-
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   int32_t proxyPort;
