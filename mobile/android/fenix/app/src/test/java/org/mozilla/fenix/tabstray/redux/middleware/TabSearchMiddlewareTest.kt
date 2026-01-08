@@ -10,6 +10,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
+import mozilla.components.concept.engine.utils.ABOUT_HOME_URL
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -370,5 +371,97 @@ class TabSearchMiddlewareTest {
         advanceUntilIdle()
 
         assertTrue(store.state.tabSearchState.searchResults.isEmpty())
+    }
+
+    @Test
+    fun `WHEN SearchQueryChanged AND multiple about home tabs match THEN only the most recently accessed about home tab is included`() = runTest {
+        val aboutHomeOld = createTab(url = ABOUT_HOME_URL, title = "Homepage", lastAccess = 10L)
+        val aboutHomeNew = createTab(url = ABOUT_HOME_URL, title = "Homepage", lastAccess = 20L)
+        val aboutHomeNewest = createTab(url = ABOUT_HOME_URL, title = "Homepage", lastAccess = 30L)
+
+        val matchingNonHomepage = listOf(
+            createTab(url = "mozilla.org/home"),
+            createTab(url = "mozilla.org", title = "Homepage"),
+        )
+        val nonMatching = listOf(
+            createTab(url = "example.com"),
+        )
+
+        val store = TabsTrayStore(
+            middlewares = listOf(
+                TabSearchMiddleware(
+                    scope = this,
+                    mainScope = this,
+                ),
+            ),
+            initialState = TabsTrayState(
+                selectedPage = Page.NormalTabs,
+                normalTabs = listOf(aboutHomeOld, aboutHomeNew, aboutHomeNewest) + matchingNonHomepage + nonMatching,
+                inactiveTabs = emptyList(),
+            ),
+        )
+
+        store.dispatch(TabSearchAction.SearchQueryChanged("home"))
+        advanceUntilIdle()
+
+        val expectedSearchResults = listOf(aboutHomeNewest) + matchingNonHomepage
+        assertEquals(expectedSearchResults, store.state.tabSearchState.searchResults)
+    }
+
+    @Test
+    fun `WHEN SearchQueryChanged AND about home tabs do not match query THEN no about home tabs are included`() = runTest {
+        val aboutHomeOld = createTab(url = ABOUT_HOME_URL, title = "Home", lastAccess = 10L)
+        val aboutHomeNew = createTab(url = ABOUT_HOME_URL, title = "Home", lastAccess = 20L)
+
+        val matchingNonHomepage = listOf(
+            createTab(url = "mozilla.org"),
+        )
+
+        val store = TabsTrayStore(
+            middlewares = listOf(
+                TabSearchMiddleware(
+                    scope = this,
+                    mainScope = this,
+                ),
+            ),
+            initialState = TabsTrayState(
+                selectedPage = Page.NormalTabs,
+                normalTabs = listOf(aboutHomeOld, aboutHomeNew) + matchingNonHomepage,
+                inactiveTabs = emptyList(),
+            ),
+        )
+
+        store.dispatch(TabSearchAction.SearchQueryChanged("mozilla"))
+        advanceUntilIdle()
+
+        assertEquals(matchingNonHomepage, store.state.tabSearchState.searchResults)
+    }
+
+    @Test
+    fun `WHEN SearchQueryChanged AND single about home tab matches THEN it is included`() = runTest {
+        val aboutHome = createTab(url = ABOUT_HOME_URL, title = "Homepage", lastAccess = 42L)
+        val matchingNonHomepage = listOf(
+            createTab(url = "mozilla.org/home"),
+        )
+
+        val store = TabsTrayStore(
+            middlewares = listOf(
+                TabSearchMiddleware(
+                    scope = this,
+                    mainScope = this,
+                ),
+            ),
+            initialState = TabsTrayState(
+                selectedPage = Page.NormalTabs,
+                normalTabs = listOf(aboutHome) + matchingNonHomepage,
+                inactiveTabs = emptyList(),
+            ),
+        )
+
+        store.dispatch(TabSearchAction.SearchQueryChanged("home"))
+        advanceUntilIdle()
+
+        val expectedSearchResults = listOf(aboutHome) + matchingNonHomepage
+        assertEquals(expectedSearchResults, store.state.tabSearchState.searchResults)
     }
 }
