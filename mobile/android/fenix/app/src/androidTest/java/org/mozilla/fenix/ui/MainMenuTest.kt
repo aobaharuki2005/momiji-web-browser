@@ -771,6 +771,7 @@ class MainMenuTest : TestSetup() {
     }
 
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3080162
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=2002573")
     @SmokeTest
     @Test
     fun verifyTheExtensionMenuListWhileExtensionsAreDisabledTest() {
