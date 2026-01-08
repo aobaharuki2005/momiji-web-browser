@@ -555,20 +555,6 @@ nsresult Http3Session::ProcessEvents() {
         stream->SetResponseHeaders(data, event.header_ready.fin,
                                    event.header_ready.interim);
 
-        // Capture response timing
-        RefPtr<Http3Stream> http3Stream = stream->GetHttp3Stream();
-        MOZ_RELEASE_ASSERT(http3Stream, "This must be a Http3Stream");
-        RefPtr<nsAHttpTransaction> trans = http3Stream->Transaction();
-        nsHttpTransaction* httpTrans =
-            trans ? trans->QueryHttpTransaction() : nullptr;
-        if (httpTrans) {
-          auto now = TimeStamp::Now();
-          httpTrans->SetResponseStart(now, true);  // Won't overwrite if set
-          if (!event.header_ready.interim) {
-            httpTrans->SetFinalResponseHeadersStart(now, true);
-          }
-        }
-
         rv = ProcessTransactionRead(stream);
 
         if (NS_FAILED(rv)) {

@@ -180,8 +180,6 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD GetConnectEnd(mozilla::TimeStamp* aConnectEnd) override;
   NS_IMETHOD GetRequestStart(mozilla::TimeStamp* aRequestStart) override;
   NS_IMETHOD GetResponseStart(mozilla::TimeStamp* aResponseStart) override;
-  NS_IMETHOD GetFinalResponseHeadersStart(
-      mozilla::TimeStamp* aFinalResponseHeadersStart) override;
   NS_IMETHOD GetResponseEnd(mozilla::TimeStamp* aResponseEnd) override;
 
   NS_IMETHOD GetTransactionPending(

@@ -20,7 +20,6 @@ struct TimingStruct {
   TimeStamp connectEnd;
   TimeStamp requestStart;
   TimeStamp responseStart;
-  TimeStamp finalResponseHeadersStart;
   TimeStamp responseEnd;
   TimeStamp transactionPending;
 };

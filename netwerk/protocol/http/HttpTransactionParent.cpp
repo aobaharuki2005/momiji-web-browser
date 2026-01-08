@@ -317,10 +317,6 @@ mozilla::TimeStamp HttpTransactionParent::GetResponseStart() {
   return mTimings.responseStart;
 }
 
-mozilla::TimeStamp HttpTransactionParent::GetFinalResponseHeadersStart() {
-  return mTimings.finalResponseHeadersStart;
-}
-
 mozilla::TimeStamp HttpTransactionParent::GetResponseEnd() {
   return mTimings.responseEnd;
 }

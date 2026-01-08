@@ -1703,21 +1703,8 @@ nsresult Http2Session::ResponseHeadersComplete() {
   }
 
   // allow more headers in the case of 1xx
-  if (didFirstSetAllRecvd) {
-    RefPtr<nsAHttpTransaction> trans = mInputFrameDataStream->Transaction();
-    nsHttpTransaction* httpTrans =
-        trans ? trans->QueryHttpTransaction() : nullptr;
-    auto now = TimeStamp::Now();
-    if (httpTrans) {
-      // Set responseStart only the first time
-      httpTrans->SetResponseStart(now, true);
-    }
-
-    if ((httpResponseCode / 100) == 1) {
-      mInputFrameDataStream->UnsetAllHeadersReceived();
-    } else if (httpTrans) {  // For non interim responses
-      httpTrans->SetFinalResponseHeadersStart(now, true);
-    }
+  if (((httpResponseCode / 100) == 1) && didFirstSetAllRecvd) {
+    mInputFrameDataStream->UnsetAllHeadersReceived();
   }
 
   ChangeDownstreamState(PROCESSING_COMPLETE_HEADERS);

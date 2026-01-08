@@ -587,7 +587,6 @@ struct TimingStructArgs {
   TimeStamp connectEnd;
   TimeStamp requestStart;
   TimeStamp responseStart;
-  TimeStamp finalResponseHeadersStart;
   TimeStamp responseEnd;
   TimeStamp transactionPending;
 };
@@ -601,7 +600,6 @@ struct ResourceTimingStructArgs {
   TimeStamp connectEnd;
   TimeStamp requestStart;
   TimeStamp responseStart;
-  TimeStamp finalResponseHeadersStart;
   TimeStamp responseEnd;
   TimeStamp fetchStart;
   TimeStamp redirectStart;
