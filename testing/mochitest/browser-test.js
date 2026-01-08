@@ -1284,8 +1284,6 @@ Tester.prototype = {
     let desc = isSetup ? "setup" : "test";
     currentScope.SimpleTest.info(`Entering ${desc} ${task.name}`);
     let startTimestamp = ChromeUtils.now();
-    currentScope.SimpleTest._currentTaskName = task.name;
-
     let controller = new AbortController();
     currentScope.__signal = controller.signal;
     if (isSetup) {
@@ -1314,7 +1312,7 @@ Tester.prototype = {
       }
       currentTest.addResult(
         new testResult({
-          name: `Uncaught exception in ${desc}`,
+          name: `Uncaught exception in ${desc} ${task.name}`,
           pass: currentScope.SimpleTest.isExpectingUncaughtException(),
           ex,
           stack: typeof ex == "object" && "stack" in ex ? ex.stack : null,
@@ -1330,10 +1328,9 @@ Tester.prototype = {
     ChromeUtils.addProfilerMarker(
       isSetup ? "setup-task" : "task",
       { category: "Test", startTime: startTimestamp },
-      task.name || undefined
+      task.name.replace(/^bound /, "") || undefined
     );
     currentScope.SimpleTest.info(`Leaving ${desc} ${task.name}`);
-    currentScope.SimpleTest._currentTaskName = null;
   },
 
   async _runTaskBasedTest(currentTest) {
@@ -1707,23 +1704,8 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
 
   if (ex) {
     if (typeof ex == "object" && "fileName" in ex) {
-      // Only add "at fileName:lineNumber" if stack doesn't start with same location
-      let stackMatchesExLocation = false;
-
-      if (stack instanceof Ci.nsIStackFrame) {
-        stackMatchesExLocation =
-          stack.filename == ex.fileName && stack.lineNumber == ex.lineNumber;
-      } else if (typeof stack === "string") {
-        // For string stacks, format is: functionName@fileName:lineNumber:columnNumber
-        // Check if first line contains fileName:lineNumber
-        let firstLine = stack.split("\n")[0];
-        let expectedLocation = ex.fileName + ":" + ex.lineNumber;
-        stackMatchesExLocation = firstLine.includes(expectedLocation);
-      }
-
-      if (!stackMatchesExLocation) {
-        this.msg += "at " + ex.fileName + ":" + ex.lineNumber + " - ";
-      }
+      // we have an exception - print filename and linenumber information
+      this.msg += "at " + ex.fileName + ":" + ex.lineNumber + " - ";
     }
 
     if (
@@ -1740,8 +1722,8 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
     }
   }
 
-  // Store stack separately instead of appending to msg
   if (stack) {
+    this.msg += "\nStack trace:\n";
     let normalized;
     if (stack instanceof Ci.nsIStackFrame) {
       let frames = [];
@@ -1757,7 +1739,7 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
     } else {
       normalized = "" + stack;
     }
-    this.stack = normalized;
+    this.msg += normalized;
   }
 
   if (gConfig.debugOnFailure) {
@@ -2015,10 +1997,7 @@ function testScope(aTester, aTest, expected) {
 }
 
 function decorateTaskFn(fn) {
-  let originalName = fn.name;
   fn = fn.bind(this);
-  // Restore original name to avoid "bound " prefix in task name
-  Object.defineProperty(fn, "name", { value: originalName });
   fn.skip = (val = true) => (fn.__skipMe = val);
   fn.only = () => (this.__runOnlyThisTask = fn);
   return fn;
