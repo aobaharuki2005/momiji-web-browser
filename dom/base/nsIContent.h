@@ -301,6 +301,13 @@ class nsIContent : public nsINode {
   virtual IMEState GetDesiredIMEState();
 
   /**
+   * Gets the ShadowRoot binding for this element.
+   *
+   * @return The ShadowRoot currently bound to this element.
+   */
+  inline mozilla::dom::ShadowRoot* GetShadowRoot() const;
+
+  /**
    * Gets the root of the node tree for this content if it is in a shadow tree.
    *
    * @return The ShadowRoot that is the root of the node tree.
