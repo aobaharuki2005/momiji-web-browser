@@ -182,6 +182,7 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
     aChannel->GetConnectEnd(&mConnectEnd);
     aChannel->GetRequestStart(&mRequestStart);
     aChannel->GetResponseStart(&mResponseStart);
+    aChannel->GetFinalResponseHeadersStart(&mFinalResponseHeadersStart);
     aChannel->GetCacheReadStart(&mCacheReadStart);
     aChannel->GetResponseEnd(&mResponseEnd);
     aChannel->GetCacheReadEnd(&mCacheReadEnd);
@@ -741,20 +742,60 @@ DOMHighResTimeStamp PerformanceTimingData::ResponseStartHighRes(
   if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
     return mZeroTime;
   }
-  if (mResponseStart.IsNull() ||
-      (!mCacheReadStart.IsNull() && mCacheReadStart < mResponseStart)) {
-    mResponseStart = mCacheReadStart;
+
+  // responseStart is already set correctly in the network layer:
+  // - For 1xx responses: set on first interim response
+  // - For final responses: set to the same value as finalResponseHeadersStart
+  TimeStamp effectiveResponseStart = mResponseStart;
+
+  if (effectiveResponseStart.IsNull() ||
+      (!mCacheReadStart.IsNull() && mCacheReadStart < effectiveResponseStart)) {
+    effectiveResponseStart = mCacheReadStart;
   }
 
-  if (mResponseStart.IsNull() ||
-      (!mRequestStart.IsNull() && mResponseStart < mRequestStart)) {
-    mResponseStart = mRequestStart;
+  if (effectiveResponseStart.IsNull() ||
+      (!mRequestStart.IsNull() && effectiveResponseStart < mRequestStart)) {
+    effectiveResponseStart = mRequestStart;
   }
-  return TimeStampToReducedDOMHighResOrFetchStart(aPerformance, mResponseStart);
+  return TimeStampToReducedDOMHighResOrFetchStart(aPerformance,
+                                                  effectiveResponseStart);
 }
 
 DOMTimeMilliSec PerformanceTiming::ResponseStart() {
   return static_cast<int64_t>(mTimingData->ResponseStartHighRes(mPerformance));
+}
+
+DOMHighResTimeStamp PerformanceTimingData::FirstInterimResponseStartHighRes(
+    Performance* aPerformance) {
+  MOZ_ASSERT(aPerformance);
+
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
+    return mZeroTime;
+  }
+
+  // If responseStart < finalResponseHeadersStart, then responseStart was set
+  // from a 1xx interim response. Otherwise, there was no interim response.
+  if (!mResponseStart.IsNull() && !mFinalResponseHeadersStart.IsNull() &&
+      mResponseStart < mFinalResponseHeadersStart) {
+    return TimeStampToReducedDOMHighResOrFetchStart(aPerformance,
+                                                    mResponseStart);
+  }
+
+  return 0;  // No interim response
+}
+
+DOMHighResTimeStamp PerformanceTimingData::FinalResponseHeadersStartHighRes(
+    Performance* aPerformance) {
+  MOZ_ASSERT(aPerformance);
+
+  if (!StaticPrefs::dom_enable_performance() || !IsInitialized()) {
+    return mZeroTime;
+  }
+  if (mFinalResponseHeadersStart.IsNull()) {
+    return 0;
+  }
+  return TimeStampToReducedDOMHighResOrFetchStart(aPerformance,
+                                                  mFinalResponseHeadersStart);
 }
 
 DOMHighResTimeStamp PerformanceTimingData::ResponseEndHighRes(

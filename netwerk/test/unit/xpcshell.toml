@@ -871,6 +871,13 @@ skip-if = [
   "os == 'win' && os_version == '11.26100' && arch == 'x86_64' && msix", # Bug 1807931
 ]
 
+["test_http3_interim_response_timing.js"]
+run-sequentially = ["true"] # node server exceptions dont replay well
+skip-if = [
+  "os == 'android'",  # H3 servers don't work well on Android
+  "msix",  # H3 servers don't work well on MSIX
+]
+
 ["test_http3_kyber.js"]
 skip-if = [
   "os == 'android' && os_version == '14' && arch == 'x86_64'",
