@@ -15,6 +15,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
   AIWindowMenu:
     "moz-src:///browser/components/aiwindow/ui/modules/AIWindowMenu.sys.mjs",
+
+  SearchUIUtils: "moz-src:///browser/components/search/SearchUIUtils.sys.mjs",
 });
 
 /**
@@ -165,5 +167,36 @@ export const AIWindow = {
 
   get newTabURL() {
     return AIWINDOW_URL;
+  },
+
+  /**
+   * Performs a search in the default search engine with
+   * passed query in the current tab.
+   *
+   * @param {string} query
+   * @param {Window} window
+   */
+  async performSearch(query, window) {
+    let engine = null;
+    try {
+      engine = await Services.search.getDefault();
+    } catch (error) {
+      console.error(`Failed to get default search engine:`, error);
+    }
+
+    const triggeringPrincipal =
+      Services.scriptSecurityManager.getSystemPrincipal();
+
+    await lazy.SearchUIUtils.loadSearch({
+      window,
+      searchText: query,
+      where: "current",
+      usePrivate: false,
+      triggeringPrincipal,
+      policyContainer: null,
+      engine,
+      searchUrlType: null,
+      sapSource: "aiwindow_assistant",
+    });
   },
 };

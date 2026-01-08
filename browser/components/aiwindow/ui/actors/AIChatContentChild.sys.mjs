@@ -9,14 +9,44 @@ ChromeUtils.defineESModuleGetters(lazy, {});
  * Represents a child actor for getting page data from the browser.
  */
 export class AIChatContentChild extends JSWindowActorChild {
-  static #EVENT_MAPPINGS = {
+  static #EVENT_MAPPINGS_FROM_PARENT = {
     "AIChatContent:DispatchMessage": {
       event: "aiChatContentActor:message",
     },
   };
 
+  static #VALID_EVENTS_FROM_CONTENT = new Set(["AIChatContent:DispatchSearch"]);
+
+  /**
+   *  Receives event from the content process and sends to the parent.
+   *
+   * @param {CustomEvent} event
+   */
+  handleEvent(event) {
+    if (!AIChatContentChild.#VALID_EVENTS_FROM_CONTENT.has(event.type)) {
+      console.warn(`AIChatContentChild received unknown event: ${event.type}`);
+      return;
+    }
+
+    switch (event.type) {
+      case "AIChatContent:DispatchSearch":
+        this.#handleSearchDispatch(event);
+        break;
+
+      default:
+        console.warn(
+          `AIChatContentChild received unknown event: ${event.type}`
+        );
+    }
+  }
+
+  #handleSearchDispatch(event) {
+    this.sendAsyncMessage("aiChatContentActor:search", event.detail);
+  }
+
   async receiveMessage(message) {
-    const mapping = AIChatContentChild.#EVENT_MAPPINGS[message.name];
+    const mapping =
+      AIChatContentChild.#EVENT_MAPPINGS_FROM_PARENT[message.name];
 
     if (!mapping) {
       console.warn(

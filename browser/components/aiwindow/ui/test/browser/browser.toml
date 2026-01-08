@@ -1,6 +1,8 @@
 [DEFAULT]
 support-files = [
   "head.js",
+  "test_chat_search_button.html",
+  "test_chat_search_button.mjs",
 ]
 
 ["browser_actor_user_prompt.js"]
@@ -12,6 +14,8 @@ support-files = [
 ["browser_aiwindow_firstrun.js"]
 
 ["browser_aiwindow_integration.js"]
+
+["browser_aiwindow_search_button.js"]
 
 ["browser_aiwindow_transparency.js"]
 

@@ -5,6 +5,9 @@
 import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/ai-chat-search-button.mjs";
+
 /**
  * A custom element for managing AI Chat Content
  */
@@ -24,6 +27,24 @@ export class AIChatMessage extends MozLitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.addEventListener(
+      "AIWindow:chat-search",
+      this.handleSearchHandoffEvent.bind(this)
+    );
+  }
+
+  /**
+   * Handle search handoff events
+   *
+   * @param {CustomEvent} event - The custom event containing the search query.
+   */
+  handleSearchHandoffEvent(event) {
+    const e = new CustomEvent("AIChatContent:DispatchSearch", {
+      detail: event.detail,
+      bubbles: true,
+      composed: true,
+    });
+    this.dispatchEvent(e);
   }
 
   render() {
@@ -38,6 +59,11 @@ export class AIChatMessage extends MozLitElement {
           <!-- TODO: Add markdown parsing here -->
           ${this.message}
         </div>
+        <!-- TODO: update props based on assistant response -->
+        <ai-chat-search-button
+          query="Ada Lovelace"
+          label="Ada Lovelace"
+        ></ai-chat-search-button>
       </article>
     `;
   }

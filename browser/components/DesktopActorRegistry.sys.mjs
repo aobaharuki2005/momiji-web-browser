@@ -226,6 +226,9 @@ let JSWINDOWACTORS = {
     child: {
       esModuleURI:
         "moz-src:///browser/components/aiwindow/ui/actors/AIChatContentChild.sys.mjs",
+      events: {
+        "AIChatContent:DispatchSearch": { wantUntrusted: true },
+      },
     },
     allFrames: true,
     matches: ["about:aichatcontent"],
