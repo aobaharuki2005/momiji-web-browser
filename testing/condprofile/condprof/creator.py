@@ -68,7 +68,13 @@ class ProfileCreator:
         # Make a temporary directory for the logs if an
         # archive dir is not provided
         if not self.archive:
-            self.tmp_dir = tempfile.mkdtemp()
+            if os.environ.get("MOZ_UPLOAD_DIR"):
+                self.tmp_dir = os.path.join(
+                    os.environ.get("MOZ_UPLOAD_DIR"), "condprof"
+                )
+                os.makedirs(self.tmp_dir, exist_ok=True)
+            else:
+                self.tmp_dir = tempfile.mkdtemp()
 
     def _log_filename(self, name):
         filename = "%s-%s-%s.log" % (
