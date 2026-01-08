@@ -99,10 +99,7 @@ class StreetNameRegExp extends StreetAddressPartRegExp {
 
 // A regular expression to match the apartment number portion of a street address,
 class ApartmentNumberRegExp extends StreetAddressPartRegExp {
-  static keyword =
-    "apt|apartment|wohnung|apto|-" +
-    "|unit|suite|ste|#|room" + // From chromium source // Firefox specific
-    "|dpto|int"; // es-MX
+  static keyword = "apt|apartment|wohnung|apto|-" + "|unit|suite|ste|#|room"; // From chromium source // Firefox specific
   static PREFIX = `(${ApartmentNumberRegExp.keyword})(\\.|\\s|-)*`;
 
   static PATTERN = "\\w*([-|\\/]\\w*)?";
