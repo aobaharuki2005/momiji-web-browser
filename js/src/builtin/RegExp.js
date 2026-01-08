@@ -949,7 +949,10 @@ function RegExpSplit(string, limit) {
   if (optimizable) {
     // Step 5.
     flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
-    assert(!!(flags & REGEXP_LEGACY_FEATURES_ENABLED_FLAG), "Legacy features must be enabled in optimized path");
+    #ifdef NIGHTLY_BUILD
+    assert(!!(flags & REGEXP_LEGACY_FEATURES_ENABLED_FLAG),
+           "Legacy features must be enabled in optimized path");
+    #endif
     // Steps 6-7.
     unicodeMatching = !!(flags & REGEXP_UNICODE_FLAG);
 
@@ -1215,7 +1218,10 @@ function RegExpMatchAll(string) {
     // Step 5, 9-12.
     source = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
     flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
-    assert(!!(flags & REGEXP_LEGACY_FEATURES_ENABLED_FLAG), "Legacy features must be enabled in optimized path");
+    #ifdef NIGHTLY_BUILD
+    assert(!!(flags & REGEXP_LEGACY_FEATURES_ENABLED_FLAG),
+    "Legacy features must be enabled in optimized path");
+    #endif
 
     // Step 6.
     matcher = rx;
