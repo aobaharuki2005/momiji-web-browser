@@ -15,6 +15,10 @@
 // This must be the last header included
 #include "FFmpegLibs.h"
 
+#if LIBAVCODEC_VERSION_MAJOR < 60 || defined(MOZ_WIDGET_ANDROID)
+#  define MOZ_FFMPEG_ENCODER_USE_DURATION_MAP
+#endif
+
 namespace mozilla {
 
 template <int V>
@@ -80,6 +84,9 @@ class FFmpegVideoEncoder<LIBAV_VER> final
   Maybe<SVCInfo> mSVCInfo{};
   // Can be accessed on any thread, but only written on during init.
   Atomic<bool> mIsHardwareAccelerated{false};
+#ifdef MOZ_FFMPEG_ENCODER_USE_DURATION_MAP
+  bool mUseDurationMap = false;
+#endif
   // Some codecs use the input frames pts for rate control. We'd rather only use
   // the duration. Synthetize fake pts based on integrating over the duration of
   // input frames.
