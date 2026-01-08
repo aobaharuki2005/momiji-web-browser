@@ -38,65 +38,61 @@ add_task(async function test() {
         );
 
         // open sidebar
-        var sidebar = content.document.querySelector(
-          "#viewsManagerToggleButton"
-        );
+        var sidebar = content.document.querySelector("#sidebarToggleButton");
         var outerContainer =
           content.document.querySelector("div#outerContainer");
 
         sidebar.click();
-        await ContentTaskUtils.waitForCondition(
-          () => outerContainer.classList.contains("viewsManagerOpen"),
+        Assert.ok(
+          outerContainer.classList.contains("sidebarOpen"),
           "sidebar opens on click"
         );
 
         // check that thumbnail view is open
-        var thumbnailsView =
-          content.document.querySelector("div#thumbnailsView");
-        var outlinesView = content.document.querySelector("div#outlinesView");
+        var thumbnailView = content.document.querySelector("div#thumbnailView");
+        var outlineView = content.document.querySelector("div#outlineView");
 
         Assert.equal(
-          thumbnailsView.getAttribute("class"),
-          "thumbnailsView",
+          thumbnailView.getAttribute("class"),
+          null,
           "Initial view is thumbnail view"
         );
         Assert.equal(
-          outlinesView.getAttribute("class"),
-          "treeView hidden",
+          outlineView.getAttribute("class"),
+          "hidden",
           "Outline view is hidden initially"
         );
 
         // switch to outline view
-        var viewOutlineButton = content.document.querySelector(
-          "button#outlinesViewMenu"
-        );
+        var viewOutlineButton =
+          content.document.querySelector("button#viewOutline");
         viewOutlineButton.click();
 
         Assert.equal(
-          thumbnailsView.getAttribute("class"),
-          "thumbnailsView hidden",
+          thumbnailView.getAttribute("class"),
+          "hidden",
           "Thumbnail view is hidden when outline is selected"
         );
         Assert.equal(
-          outlinesView.getAttribute("class"),
-          "treeView",
+          outlineView.getAttribute("class"),
+          "",
           "Outline view is visible when selected"
         );
 
         // switch back to thumbnail view
         var viewThumbnailButton = content.document.querySelector(
-          "button#thumbnailsViewMenu"
+          "button#viewThumbnail"
         );
         viewThumbnailButton.click();
 
         Assert.equal(
-          thumbnailsView.getAttribute("class"),
-          "thumbnailsView",
+          thumbnailView.getAttribute("class"),
+          "",
           "Thumbnail view is visible when selected"
         );
         Assert.equal(
-          outlinesView.getAttribute("class"),
-          "treeView hidden",
+          outlineView.getAttribute("class"),
+          "hidden",
           "Outline view is hidden when thumbnail is selected"
         );
 

@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.549
- * pdfjsBuild = 3532ac39d
+ * pdfjsVersion = 5.4.486
+ * pdfjsBuild = ff4529d12
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -584,11 +584,6 @@ function apiPageModeToSidebarView(mode) {
 function toggleCheckedBtn(button, toggle, view = null) {
   button.classList.toggle("toggled", toggle);
   button.setAttribute("aria-checked", toggle);
-  view?.classList.toggle("hidden", !toggle);
-}
-function toggleSelectedBtn(button, toggle, view = null) {
-  button.classList.toggle("selected", toggle);
-  button.setAttribute("aria-selected", toggle);
   view?.classList.toggle("hidden", !toggle);
 }
 function toggleExpandedBtn(button, toggle, view = null) {
@@ -2248,10 +2243,10 @@ const PDFFindBar = null;
 const PDFLayerViewer = null;
 const PDFOutlineViewer = null;
 const PDFPresentationMode = null;
+const PDFSidebar = null;
 const PDFThumbnailViewer = null;
 const SecondaryToolbar = null;
 const SignatureManager = null;
-const ViewsManager = null;
 
 ;// ./web/caret_browsing.js
 const PRECISION = 1e-1;
@@ -3890,7 +3885,7 @@ const CHARACTERS_TO_NORMALIZE = {
 const DIACRITICS_EXCEPTION = new Set([0x3099, 0x309a, 0x094d, 0x09cd, 0x0a4d, 0x0acd, 0x0b4d, 0x0bcd, 0x0c4d, 0x0ccd, 0x0d3b, 0x0d3c, 0x0d4d, 0x0dca, 0x0e3a, 0x0eba, 0x0f84, 0x1039, 0x103a, 0x1714, 0x1734, 0x17d2, 0x1a60, 0x1b44, 0x1baa, 0x1bab, 0x1bf2, 0x1bf3, 0x2d7f, 0xa806, 0xa82c, 0xa8c4, 0xa953, 0xa9c0, 0xaaf6, 0xabed, 0x0c56, 0x0f71, 0x0f72, 0x0f7a, 0x0f7b, 0x0f7c, 0x0f7d, 0x0f80, 0x0f74]);
 let DIACRITICS_EXCEPTION_STR;
 const DIACRITICS_REG_EXP = /\p{M}+/gu;
-const SPECIAL_CHARS_REG_EXP = /([+^$|])|(\p{P}+)|(\s+)|(\p{M})|(\p{L})/gu;
+const SPECIAL_CHARS_REG_EXP = /([*+^${}()|[\]\\])|(\p{P}+)|(\s+)|(\p{M})|(\p{L})/gu;
 const NOT_DIACRITIC_FROM_END_REG_EXP = /([^\p{M}])\p{M}*$/u;
 const NOT_DIACRITIC_FROM_START_REG_EXP = /^\p{M}*([^\p{M}])/u;
 const SYLLABLES_REG_EXP = /[\uAC00-\uD7AF\uFA6C\uFACF-\uFAD1\uFAD5-\uFAD7]+/g;
@@ -4300,10 +4295,10 @@ class PDFFindController {
     };
     query = query.replaceAll(SPECIAL_CHARS_REG_EXP, (match, p1, p2, p3, p4, p5) => {
       if (p1) {
-        return addExtraWhitespaces(p1, RegExp.escape(p1));
+        return addExtraWhitespaces(p1, `\\${p1}`);
       }
       if (p2) {
-        return addExtraWhitespaces(p2, RegExp.escape(p2));
+        return addExtraWhitespaces(p2, p2.replaceAll(/[.?]/g, "\\$&"));
       }
       if (p3) {
         return "[ ]+";
@@ -6275,9 +6270,8 @@ function createLinkAnnotation({
 class Autolinker {
   static #index = 0;
   static #regex;
-  static #numericTLDRegex;
   static findLinks(text) {
-    this.#regex ??= /\b(?:https?:\/\/|mailto:|www\.)(?:[\S--[\p{P}<>]]|\/|[\S--[\[\]]]+[\S--[\p{P}<>]])+|(?=\p{L})[\S--[@\p{Ps}\p{Pe}<>]]+@([\S--[\p{P}<>]]+(?:\.[\S--[\p{P}<>]]+)+)/gmv;
+    this.#regex ??= /\b(?:https?:\/\/|mailto:|www\.)(?:[\S--[\p{P}<>]]|\/|[\S--[\[\]]]+[\S--[\p{P}<>]])+|\b[\S--[@\p{Ps}\p{Pe}<>]]+@([\S--[\p{P}<>]]+(?:\.[\S--[\p{P}<>]]+)+)/gmv;
     const [normalizedText, diffs] = normalize(text, {
       ignoreDashEOL: true
     });
@@ -6288,17 +6282,11 @@ class Autolinker {
       let raw;
       if (url.startsWith("www.") || url.startsWith("http://") || url.startsWith("https://")) {
         raw = url;
-      } else if (emailDomain) {
-        const hostname = URL.parse(`http://${emailDomain}`)?.hostname;
-        if (!hostname) {
-          continue;
-        }
-        this.#numericTLDRegex ??= /\.\d+$/;
-        if (this.#numericTLDRegex.test(hostname)) {
-          continue;
-        }
+      } else if (URL.canParse(`http://${emailDomain}`)) {
+        raw = url.startsWith("mailto:") ? url : `mailto:${url}`;
+      } else {
+        continue;
       }
-      raw ??= url.startsWith("mailto:") ? url : `mailto:${url}`;
       const absoluteURL = createValidAbsoluteUrl(raw, null, {
         addDefaultProtocol: true
       });
@@ -7011,11 +6999,9 @@ class StructTreeLayerBuilder {
               elem.ariaHidden = true;
             }
           }
-          delete node.alt;
         }
         if (!node.mathML && node.children.length === 1 && node.children[0].role !== "math") {
           element = document.createElementNS(MathMLNamespace, "math");
-          delete node.alt;
         }
       }
     }
@@ -8437,7 +8423,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.549";
+    const viewerVersion = "5.4.486";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -10180,7 +10166,7 @@ const PDFViewerApplication = {
   pdfLinkService: null,
   pdfTextExtractor: null,
   pdfHistory: null,
-  viewsManager: null,
+  pdfSidebar: null,
   pdfOutlineViewer: null,
   pdfAttachmentViewer: null,
   pdfLayerViewer: null,
@@ -10455,9 +10441,9 @@ const PDFViewerApplication = {
     renderingQueue.setViewer(pdfViewer);
     linkService.setViewer(pdfViewer);
     pdfScriptingManager.setViewer(pdfViewer);
-    if (appConfig.viewsManager?.thumbnailsView) {
+    if (appConfig.sidebar?.thumbnailView) {
       this.pdfThumbnailViewer = new PDFThumbnailViewer({
-        container: appConfig.viewsManager.thumbnailsView,
+        container: appConfig.sidebar.thumbnailView,
         eventBus,
         renderingQueue,
         linkService,
@@ -10530,38 +10516,38 @@ const PDFViewerApplication = {
     if (appConfig.passwordOverlay) {
       this.passwordPrompt = new PasswordPrompt(appConfig.passwordOverlay, overlayManager, this.isViewerEmbedded);
     }
-    if (appConfig.viewsManager?.outlinesView) {
+    if (appConfig.sidebar?.outlineView) {
       this.pdfOutlineViewer = new PDFOutlineViewer({
-        container: appConfig.viewsManager.outlinesView,
+        container: appConfig.sidebar.outlineView,
         eventBus,
         l10n,
         linkService,
         downloadManager
       });
     }
-    if (appConfig.viewsManager?.attachmentsView) {
+    if (appConfig.sidebar?.attachmentsView) {
       this.pdfAttachmentViewer = new PDFAttachmentViewer({
-        container: appConfig.viewsManager.attachmentsView,
+        container: appConfig.sidebar.attachmentsView,
         eventBus,
         l10n,
         downloadManager
       });
     }
-    if (appConfig.viewsManager?.layersView) {
+    if (appConfig.sidebar?.layersView) {
       this.pdfLayerViewer = new PDFLayerViewer({
-        container: appConfig.viewsManager.layersView,
+        container: appConfig.sidebar.layersView,
         eventBus,
         l10n
       });
     }
-    if (appConfig.viewsManager) {
-      this.viewsManager = new ViewsManager({
-        elements: appConfig.viewsManager,
+    if (appConfig.sidebar) {
+      this.pdfSidebar = new PDFSidebar({
+        elements: appConfig.sidebar,
         eventBus,
         l10n
       });
-      this.viewsManager.onToggled = this.forceRendering.bind(this);
-      this.viewsManager.onUpdateThumbnails = () => {
+      this.pdfSidebar.onToggled = this.forceRendering.bind(this);
+      this.pdfSidebar.onUpdateThumbnails = () => {
         for (const pageView of pdfViewer.getCachedPageViews()) {
           if (pageView.renderingState === RenderingStates.FINISHED) {
             this.pdfThumbnailViewer.getThumbnail(pageView.id - 1)?.setImage(pageView);
@@ -10773,7 +10759,7 @@ const PDFViewerApplication = {
     this._hasAnnotationEditors = false;
     promises.push(this.pdfScriptingManager.destroyPromise, this.passwordPrompt.close());
     this.setTitle();
-    this.viewsManager?.reset();
+    this.pdfSidebar?.reset();
     this.pdfOutlineViewer?.reset();
     this.pdfAttachmentViewer?.reset();
     this.pdfLayerViewer?.reset();
@@ -11243,7 +11229,7 @@ const PDFViewerApplication = {
       }
     };
     this.isInitialViewSet = true;
-    this.viewsManager?.setInitialView(sidebarView);
+    this.pdfSidebar?.setInitialView(sidebarView);
     setViewerModes(scrollMode, spreadMode);
     if (this.initialBookmark) {
       setRotation(this.initialRotation);
@@ -11270,7 +11256,7 @@ const PDFViewerApplication = {
   },
   forceRendering() {
     this.pdfRenderingQueue.printing = !!this.printService;
-    this.pdfRenderingQueue.isThumbnailViewEnabled = this.viewsManager?.visibleView === SidebarView.THUMBS;
+    this.pdfRenderingQueue.isThumbnailViewEnabled = this.pdfSidebar?.visibleView === SidebarView.THUMBS;
     this.pdfRenderingQueue.renderHighestPriority();
   },
   beforePrint() {
@@ -11563,7 +11549,7 @@ function onPageRendered({
   if (pageNumber === this.page) {
     this.toolbar?.updateLoadingIndicatorState(false);
   }
-  if (!isDetailView && this.viewsManager?.visibleView === SidebarView.THUMBS) {
+  if (!isDetailView && this.pdfSidebar?.visibleView === SidebarView.THUMBS) {
     const pageView = this.pdfViewer.getPageView(pageNumber - 1);
     const thumbnailView = this.pdfThumbnailViewer?.getThumbnail(pageNumber - 1);
     if (pageView) {
@@ -11599,7 +11585,7 @@ function onPageMode({
       console.error('Invalid "pagemode" hash parameter: ' + mode);
       return;
   }
-  this.viewsManager?.switchView(view, true);
+  this.pdfSidebar?.switchView(view, true);
 }
 function onNamedAction(evt) {
   switch (evt.action) {
@@ -11751,7 +11737,7 @@ function onPageChanging({
 }) {
   this.toolbar?.setPageNumber(pageNumber, pageLabel);
   this.secondaryToolbar?.setPageNumber(pageNumber);
-  if (this.viewsManager?.visibleView === SidebarView.THUMBS) {
+  if (this.pdfSidebar?.visibleView === SidebarView.THUMBS) {
     this.pdfThumbnailViewer?.scrollThumbnailIntoView(pageNumber);
   }
   const currentPage = this.pdfViewer.getPageView(pageNumber - 1);
@@ -12035,7 +12021,7 @@ function onKeyDown(evt) {
         this.rotatePages(90);
         break;
       case 115:
-        this.viewsManager?.toggle();
+        this.pdfSidebar?.toggle();
         break;
     }
     if (turnPage !== 0 && (!turnOnlyIfPageFit || pdfViewer.currentScaleValue === "page-fit")) {

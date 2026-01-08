@@ -38,22 +38,19 @@ add_task(async function test() {
         );
 
         // Sidebar: open
-        var sidebar = content.document.querySelector(
-            "#viewsManagerToggleButton"
-          ),
+        var sidebar = content.document.querySelector("#sidebarToggleButton"),
           outerContainer = content.document.querySelector("div#outerContainer");
 
         sidebar.click();
-
-        await ContentTaskUtils.waitForCondition(
-          () => outerContainer.classList.contains("viewsManagerOpen"),
+        Assert.ok(
+          outerContainer.classList.contains("sidebarOpen"),
           "sidebar opens on click"
         );
 
         // Sidebar: close
         sidebar.click();
-        await ContentTaskUtils.waitForCondition(
-          () => !outerContainer.classList.contains("viewsManagerOpen"),
+        Assert.ok(
+          !outerContainer.classList.contains("sidebarOpen"),
           "sidebar closes on click"
         );
 
