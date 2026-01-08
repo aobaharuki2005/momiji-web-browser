@@ -28,7 +28,7 @@
 #include "mozilla/dom/ImageUtils.h"
 #include "mozilla/dom/VideoFrameBinding.h"
 #ifdef MOZ_WIDGET_ANDROID
-#include "mozilla/gfx/gfxVars.h"
+#  include "mozilla/gfx/gfxVars.h"
 #endif
 #include "nsPrintfCString.h"
 
