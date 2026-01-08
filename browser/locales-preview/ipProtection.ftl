@@ -133,4 +133,28 @@ ip-protection-exclusions-desc = Use VPN for all websites except ones on this lis
 ipprotection-site-settings-title =
   .title = VPN site settings
 
+## IP Proctection Bandwidth
+
+ip-protection-bandwidth-header = Monthly VPN data
+
+## Variables
+##   $usageLeft (number) - The amount of data a user has left in a month (in GB)
+##   $maxUsage (number) - The maximum amount of data a user can use in a month (in GB)
+
+ip-protection-bandwidth-left-this-month-gb = { $usageLeft } GB of { $maxUsage } GB left this month
+ip-protection-bandwidth-left-gb = { $usageLeft } GB of { $maxUsage } GB left
+
+## Variables
+##   $usageLeft (number) - The amount of data a user has left in a month (in MB)
+##   $maxUsage (number) - The maximum amount of data a user can use in a month (in GB)
+
+ip-protection-bandwidth-left-this-month-mb = { $usageLeft } MB of { $maxUsage } GB left this month
+ip-protection-bandwidth-left-mb = { $usageLeft } MB of { $maxUsage } GB left
+
+## Variables
+##   $maxUsage (number) - The maximum amount of data a user can use in a month (in GB)
+
+ip-protection-bandwidth-hit-for-the-month = You’ve used all { $maxUsage } GB of your VPN data. Access will reset next month.
+ip-protection-bandwidth-help-text = Resets to { $maxUsage } GB on the first of every month.
+
 ##

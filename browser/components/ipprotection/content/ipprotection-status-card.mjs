@@ -13,6 +13,8 @@ import {
 import "chrome://global/content/elements/moz-toggle.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/ipprotection/ipprotection-site-settings-control.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/ipprotection/bandwidth-usage.mjs";
 
 /**
  * Custom element that implements a status card for IP protection.
@@ -233,20 +235,20 @@ export default class IPProtectionStatusCard extends MozLitElement {
       fill: "currentColor",
     });
 
-    return this.location
-      ? html`
-          <div id="vpn-details">
-            <div id="location-label" style=${labelStyles}>
+    return html`
+      <div id="vpn-details">
+        <bandwidth-usage numeric></bandwidth-usage>${this.location
+          ? html`<div id="location-label" style=${labelStyles}>
               <span>${this.location.name}</span>
               <img
                 src="chrome://global/skin/icons/info.svg"
                 data-l10n-id="ipprotection-location-title"
                 style=${imgStyles}
               />
-            </div>
-          </div>
-        `
-      : null;
+            </div>`
+          : null}
+      </div>
+    `;
   }
 
   render() {

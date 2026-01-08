@@ -2873,6 +2873,10 @@ SettingGroupManager.registerGroups({
         ],
       },
       {
+        id: "ipProtectionBandwidth",
+        control: "bandwidth-usage",
+      },
+      {
         id: "ipProtectionAdditionalLinks",
         control: "moz-box-group",
         options: [

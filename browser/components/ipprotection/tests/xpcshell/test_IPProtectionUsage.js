@@ -130,10 +130,12 @@ add_task(async function test_countChannel_get() {
       resp.write("hello world");
     },
     async url => {
+      const usage = new IPProtectionUsage();
+
       let channel = makeChannel(url, "GET");
       await promiseChannelDone(channel);
 
-      IPProtectionUsage.countChannel(channel);
+      usage.countChannel(channel);
 
       Assert.greater(
         Glean.ipprotection.usageRx.testGetValue().sum,
@@ -166,10 +168,12 @@ add_task(async function test_countChannel_post() {
       resp.write("posted!");
     },
     async url => {
+      const usage = new IPProtectionUsage();
+
       let channel = makeChannel(url, "POST", "some data");
       await promiseChannelDone(channel);
 
-      IPProtectionUsage.countChannel(channel);
+      usage.countChannel(channel);
 
       Assert.greater(
         Glean.ipprotection.usageRx.testGetValue().sum,
@@ -194,10 +198,12 @@ add_task(async function test_countChannel_cache() {
       resp.write("cached response");
     },
     async url => {
+      const usage = new IPProtectionUsage();
+
       let channel = makeChannel(url, "GET");
       await promiseChannelDone(channel);
 
-      IPProtectionUsage.countChannel(channel);
+      usage.countChannel(channel);
 
       const afterRx = Glean.ipprotection.usageRx.testGetValue().sum;
       Assert.greater(
@@ -209,7 +215,7 @@ add_task(async function test_countChannel_cache() {
       let channel2 = makeChannel(url, "GET");
       await promiseChannelDone(channel2);
 
-      IPProtectionUsage.countChannel(channel2);
+      usage.countChannel(channel2);
 
       Assert.equal(
         afterRx,
