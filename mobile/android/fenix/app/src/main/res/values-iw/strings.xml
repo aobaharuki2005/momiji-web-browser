@@ -2563,6 +2563,8 @@
   <string name="etp_redirect_trackers_description">מנקה עוגיות המוגדרות על־ידי הפניות לאתרי מעקב ידועים.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
   <string name="etp_suspected_fingerprinters_title">רכיבי זהות דיגיטלית חשודים</string>
+  <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
+  <string name="etp_suspected_fingerprinters_description">הפעלת הגנה מפני מעקב זהות דיגיטלית כדי לבלום רכיבי זהות דיגיטלית חשודים.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_known_fingerprinters_title">רכיבי זהות דיגיטלית ידועים</string>
   <!--
