@@ -6037,17 +6037,12 @@ nsCSSFrameConstructor::GetRangeInsertionPoint(nsIContent* aStartChild,
                                               nsIContent* aEndChild,
                                               InsertionKind aInsertionKind) {
   MOZ_ASSERT(aStartChild);
-
-  nsIContent* parent = aStartChild->GetParent();
-  if (!parent) {
-    IssueSingleInsertNofications(aStartChild, aEndChild, aInsertionKind);
-    return {};
-  }
+  MOZ_ASSERT(aStartChild->GetParentNode());
 
   // If the children of the container may be distributed to different insertion
   // points, insert them separately and bail out, letting ContentInserted handle
   // the mess.
-  if (parent->GetShadowRoot()) {
+  if (aStartChild->GetParentNode()->GetShadowRoot()) {
     IssueSingleInsertNofications(aStartChild, aEndChild, aInsertionKind);
     return {};
   }
@@ -6228,17 +6223,23 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
   }
 #endif
 
-  const bool isSingleInsert = (aStartChild->GetNextSibling() == aEndChild);
-
   // If we have a null parent, then this must be the document element being
-  // inserted, or some other child of the document in the DOM (might be a PI,
-  // say).
+  // inserted, or some other child of the document in the DOM (might be a
+  // processing instruction or comment).
   if (!aStartChild->GetParent()) {
-    MOZ_ASSERT(isSingleInsert,
-               "root node insertion should be a single insertion");
     Element* docElement = mDocument->GetRootElement();
-    if (aStartChild != docElement) {
-      // Not the root element; just bail out
+    const bool foundRoot = [&] {
+      for (nsIContent* cur = aStartChild; cur != aEndChild;
+           cur = cur->GetNextSibling()) {
+        if (cur == docElement) {
+          return true;
+        }
+      }
+      return false;
+    }();
+
+    if (!foundRoot) {
+      // Not the root element (could be e.g. a comment), just bail out
       return;
     }
 
@@ -6251,7 +6252,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
 
     // Create frames for the document element and its child elements
     if (ConstructDocElementFrame(docElement)) {
-      InvalidateCanvasIfNeeded(mPresShell, aStartChild);
+      InvalidateCanvasIfNeeded(mPresShell, docElement);
 #ifdef DEBUG
       if (gReallyNoisyContentUpdates) {
         printf(
@@ -6267,10 +6268,10 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
       accService->ContentRangeInserted(mPresShell, aStartChild, aEndChild);
     }
 #endif
-
     return;
   }
 
+  const bool isSingleInsert = aStartChild->GetNextSibling() == aEndChild;
   InsertionPoint insertion;
   if (isSingleInsert) {
     // See if we have a Shadow DOM insertion point. If so, then that's our real
