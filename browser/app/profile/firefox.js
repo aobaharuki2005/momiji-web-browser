@@ -1873,6 +1873,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.refinedCardsLayout.enab
  * Remove the old implementation and the pref once this ships to Release.
  */
 pref("browser.newtabpage.activity-stream.search.useHandoffComponent", true);
+pref("browser.newtabpage.activity-stream.externalComponents.enabled", true);
 
 // Mozilla Ad Routing Service (MARS) unified ads service
 pref("browser.newtabpage.activity-stream.unifiedAds.tiles.enabled", true);

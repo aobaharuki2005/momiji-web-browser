@@ -18,6 +18,7 @@ import { actionCreators as ac, actionTypes as at } from "common/Actions.mjs";
 import { connect } from "react-redux";
 import { Logo } from "content-src/components/Logo/Logo";
 import React from "react";
+import { ExternalComponentWrapper } from "content-src/components/ExternalComponentWrapper/ExternalComponentWrapper";
 
 export class _Search extends React.PureComponent {
   constructor(props) {
@@ -75,7 +76,14 @@ export class _Search extends React.PureComponent {
       caretBlinkCount,
       caretBlinkTime,
       "search.useHandoffComponent": useHandoffComponent,
+      "externalComponents.enabled": useExternalComponents,
     } = this.props.Prefs.values;
+
+    if (useExternalComponents) {
+      // Nothing to do - the external component will have set the caret
+      // values itself.
+      return;
+    }
 
     if (useHandoffComponent) {
       const { handoffUI } = this;
@@ -131,8 +139,21 @@ export class _Search extends React.PureComponent {
   render() {
     const useHandoffComponent =
       this.props.Prefs.values["search.useHandoffComponent"];
+    const useExternalComponents =
+      this.props.Prefs.values["externalComponents.enabled"];
 
     if (useHandoffComponent) {
+      if (useExternalComponents) {
+        return (
+          <div className="search-wrapper">
+            {this.props.showLogo && <Logo />}
+            <ExternalComponentWrapper
+              type="SEARCH"
+              className="search-inner-wrapper"
+            ></ExternalComponentWrapper>
+          </div>
+        );
+      }
       return (
         <div className="search-wrapper">
           {this.props.showLogo && <Logo />}

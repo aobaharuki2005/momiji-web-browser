@@ -207,17 +207,19 @@ export class BaseContent extends React.PureComponent {
     const prefs = this.props.Prefs.values;
     const wallpapersEnabled = prefs["newtabWallpapers.enabled"];
 
-    if (prefs["search.useHandoffComponent"]) {
-      // Dynamically import the contentSearchHandoffUI module, but don't worry
-      // about webpacking this one.
-      import(
-        /* webpackIgnore: true */ "chrome://browser/content/contentSearchHandoffUI.mjs"
-      );
-    } else {
-      const scriptURL = "chrome://browser/content/contentSearchHandoffUI.js";
-      const scriptEl = document.createElement("script");
-      scriptEl.src = scriptURL;
-      document.head.appendChild(scriptEl);
+    if (!prefs["externalComponents.enabled"]) {
+      if (prefs["search.useHandoffComponent"]) {
+        // Dynamically import the contentSearchHandoffUI module, but don't worry
+        // about webpacking this one.
+        import(
+          /* webpackIgnore: true */ "chrome://browser/content/contentSearchHandoffUI.mjs"
+        );
+      } else {
+        const scriptURL = "chrome://browser/content/contentSearchHandoffUI.js";
+        const scriptEl = document.createElement("script");
+        scriptEl.src = scriptURL;
+        document.head.appendChild(scriptEl);
+      }
     }
 
     if (this.props.document.visibilityState === VISIBLE) {
