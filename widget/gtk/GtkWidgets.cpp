@@ -566,8 +566,6 @@ static void DrawWindowDecoration(cairo_t* cr, const DrawingParams& aParams) {
 
 /* cairo_t *cr argument has to be a system-cairo. */
 void Draw(cairo_t* cr, const DrawingParams* aParams) {
-  /* A workaround for https://bugzilla.gnome.org/show_bug.cgi?id=694086 */
-  cairo_new_path(cr);
   switch (aParams->widget) {
     case Type::WindowDecoration:
       return DrawWindowDecoration(cr, *aParams);
