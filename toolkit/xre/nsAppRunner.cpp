@@ -10,6 +10,7 @@
 #include "mozilla/AppShutdown.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/BaseProfiler.h"
 #include "mozilla/Components.h"
 #include "mozilla/FilePreferences.h"
 #include "mozilla/ChaosMode.h"
@@ -39,7 +40,6 @@
 #include "mozilla/glean/ToolkitXreMetrics.h"
 #include "mozilla/glean/GleanPings.h"
 #include "mozilla/widget/TextRecognition.h"
-#include "BaseProfiler.h"
 #include "mozJSModuleLoader.h"
 
 #include "nsAppRunner.h"

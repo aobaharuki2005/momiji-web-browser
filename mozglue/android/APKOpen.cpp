@@ -29,10 +29,10 @@
 #include <sys/prctl.h>
 #include "sqlite3.h"
 #include "Linker.h"
-#include "BaseProfiler.h"
 #include "application.ini.h"
 
 #include "mozilla/arm.h"
+#include "mozilla/BaseProfiler.h"
 #include "mozilla/Bootstrap.h"
 #include "mozilla/Printf.h"
 #include "mozilla/ProcessType.h"

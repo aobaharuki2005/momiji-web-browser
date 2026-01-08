@@ -51,9 +51,9 @@
 
 #include "nsXPCOMPrivate.h"  // for MAXPATHLEN and XPCOM_DLL
 
+#include "mozilla/BaseProfiler.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StartupTimeline.h"
-#include "BaseProfiler.h"
 
 #ifdef LIBFUZZER
 #  include "FuzzerDefs.h"

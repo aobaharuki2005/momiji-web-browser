@@ -8,10 +8,10 @@
 #include <time.h>
 
 #include "mozilla/ProfilerState.h"
+#include "mozilla/SharedLibraries.h"
 #include "platform.h"
 #include "PlatformMacros.h"
 #include "LulMain.h"
-#include "SharedLibraries.h"
 #include "AutoObjectMapper.h"
 
 // Contains miscellaneous helpers that are used to connect the Gecko Profiler

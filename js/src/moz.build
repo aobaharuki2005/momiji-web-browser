@@ -214,12 +214,6 @@ EXPORTS.js += [
     "../public/Zone.h",
 ]
 
-# This lives in mozglue/baseprofiler but we re-publish ourselves to support
-# standalone SpiderMonkey configurations.
-EXPORTS.js += [
-    "!/mozglue/baseprofiler/public/ProfilingCategoryList.h",
-]
-
 # Public APIs that are experimental: the precise contour of the APIs may still
 # change, but they're at least plausible first passes at designing something.
 # We expose them as-is, buyer beware.
