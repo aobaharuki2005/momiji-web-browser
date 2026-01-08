@@ -98,7 +98,8 @@ class IPProtectionServiceSingleton extends EventTarget {
   async maybeEarlyInit() {
     if (
       this.featureEnabled &&
-      Services.prefs.getBoolPref("browser.ipProtection.autoStartEnabled")
+      (Services.prefs.getBoolPref("browser.ipProtection.autoStartEnabled") ||
+        Services.prefs.getBoolPref("browser.ipProtection.userEnabled"))
     ) {
       await this.init();
     }

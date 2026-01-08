@@ -11,6 +11,8 @@ prefs = [
 
 ["test_GuardianClient.js"]
 
+["test_IPPAutoStart.js"]
+
 ["test_IPPChannelFilter.js"]
 
 ["test_IPPExceptionsManager.js"]

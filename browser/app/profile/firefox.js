@@ -3554,6 +3554,7 @@ pref("browser.ipProtection.features.autoStart", false);
 // Prefs to track the user turning on autostart preference
 pref("browser.ipProtection.autoStartEnabled", false);
 pref("browser.ipProtection.autoStartPrivateEnabled", false);
+pref("browser.ipProtection.autoRestoreEnabled", true);
 // Pref to track whether the user has turned IP protection on
 pref("browser.ipProtection.userEnabled", false);
 // Pref to track which experiment version the user is enrolled in
