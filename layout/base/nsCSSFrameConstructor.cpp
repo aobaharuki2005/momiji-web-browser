@@ -6385,21 +6385,6 @@ void nsCSSFrameConstructor::ContentRangeInserted(nsIContent* aStartChild,
       // and creating frames.  We need to reget our prevsibling, parent frame,
       // etc.
       prevSibling = GetInsertionPrevSibling(&insertion, aStartChild, &isAppend);
-
-      // Need check whether a range insert is still safe.
-      if (!isSingleInsert) {
-        // Need to recover the letter frames first.
-        RecoverLetterFrames(state.mFloatedList.mContainingBlock);
-
-        // must fall back to a single ContertInserted for each child in the
-        // range
-        LAYOUT_PHASE_TEMP_EXIT();
-        IssueSingleInsertNofications(aStartChild, aEndChild,
-                                     InsertionKind::Sync);
-        LAYOUT_PHASE_TEMP_REENTER();
-        return;
-      }
-
       frameType = insertion.mParentFrame->Type();
     }
   }
