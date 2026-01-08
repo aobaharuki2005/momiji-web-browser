@@ -237,4 +237,48 @@ export class FrecencyBoostProvider {
       link => !lazy.NewTabUtils.blockedLinks.isBlocked({ url: link.url })
     );
   }
+
+  async retrieveRandomFrecencyTile() {
+    if (!this._frecencyBoostedSponsors.size) {
+      await this._importFrecencyBoostedSponsors();
+    }
+
+    const storedTile = await this.cache.get("randomFrecencyTile");
+    if (storedTile) {
+      const tile = JSON.parse(storedTile);
+      if (
+        this._frecencyBoostedSponsors.has(tile.hostname) &&
+        !lazy.NewTabUtils.blockedLinks.isBlocked({ url: tile.url })
+      ) {
+        return tile;
+      }
+      await this.cache.set("randomFrecencyTile", null);
+    }
+
+    const candidates = Array.from(
+      this._frecencyBoostedSponsors.values()
+    ).filter(s => !lazy.NewTabUtils.blockedLinks.isBlocked({ url: s.domain }));
+
+    if (!candidates.length) {
+      return null;
+    }
+
+    const selected = candidates[Math.floor(Math.random() * candidates.length)];
+    const tile = {
+      hostname: selected.hostname,
+      url: selected.redirectURL,
+      label: selected.title,
+      partner: SPONSORED_TILE_PARTNER_FREC_BOOST,
+      type: "frecency-boost-random",
+      show_sponsored_label: true,
+      favicon: selected.faviconDataURI,
+      faviconSize: 96,
+    };
+    await this.cache.set("randomFrecencyTile", JSON.stringify(tile));
+    return tile;
+  }
+
+  async clearRandomFrecencyTile() {
+    await this.cache.set("randomFrecencyTile", null);
+  }
 }
