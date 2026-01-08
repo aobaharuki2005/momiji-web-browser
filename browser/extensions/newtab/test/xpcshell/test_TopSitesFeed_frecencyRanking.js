@@ -109,12 +109,13 @@ add_task(async function test_frecency_sponsored_topsites() {
   {
     info(
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
-        "Should return an empty array with no history"
+        "Should return random fallback tile with no history"
     );
     const feed = await getTopSitesFeedForTest(sandbox);
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
-    Assert.equal(frecencyBoostedSpocs.length, 0);
+    Assert.equal(frecencyBoostedSpocs.length, 1);
+    Assert.equal(frecencyBoostedSpocs[0].type, "frecency-boost-random");
 
     sandbox.restore();
   }
@@ -190,6 +191,7 @@ add_task(async function test_frecency_sponsored_topsites() {
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
     Assert.equal(frecencyBoostedSpocs[0].hostname, "domain1");
+    Assert.equal(frecencyBoostedSpocs[0].type, "frecency-boost");
 
     sandbox.restore();
   }
@@ -210,13 +212,14 @@ add_task(async function test_frecency_sponsored_topsites() {
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
     Assert.equal(frecencyBoostedSpocs[0].hostname, "domain1");
+    Assert.equal(frecencyBoostedSpocs[0].type, "frecency-boost");
 
     sandbox.restore();
   }
   {
     info(
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
-        "Should not return a match with a different subdomain"
+        "Should not return a match with a different subdomain (returns random fallback)"
     );
     const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
@@ -228,7 +231,8 @@ add_task(async function test_frecency_sponsored_topsites() {
     });
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
-    Assert.equal(frecencyBoostedSpocs.length, 0);
+    Assert.equal(frecencyBoostedSpocs.length, 1);
+    Assert.equal(frecencyBoostedSpocs[0].type, "frecency-boost-random");
 
     sandbox.restore();
   }
@@ -249,13 +253,14 @@ add_task(async function test_frecency_sponsored_topsites() {
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
     Assert.equal(frecencyBoostedSpocs.length, 1);
     Assert.equal(frecencyBoostedSpocs[0].hostname, "sub.domain1");
+    Assert.equal(frecencyBoostedSpocs[0].type, "frecency-boost");
 
     sandbox.restore();
   }
   {
     info(
       "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
-        "Should not match a partial domain"
+        "Should not match a partial domain (returns random fallback)"
     );
     const feed = await getTopSitesFeedForTest(sandbox, {
       frecent: [
@@ -267,7 +272,34 @@ add_task(async function test_frecency_sponsored_topsites() {
     });
 
     const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
-    Assert.equal(frecencyBoostedSpocs.length, 0);
+    Assert.equal(frecencyBoostedSpocs.length, 1);
+    Assert.equal(frecencyBoostedSpocs[0].type, "frecency-boost-random");
+
+    sandbox.restore();
+  }
+  {
+    info(
+      "TopSitesFeed.fetchFrecencyBoostedSpocs - " +
+        "Control group always returns random tile (ignores frecency matches)"
+    );
+    const feed = await getTopSitesFeedForTest(sandbox, {
+      frecent: [
+        {
+          url: "https://domain1.com",
+          frecency: 1234,
+        },
+      ],
+    });
+
+    feed.store.state.Prefs.values.trainhopConfig = {
+      sov: {
+        random_sponsor: true,
+      },
+    };
+
+    const frecencyBoostedSpocs = await feed.fetchFrecencyBoostedSpocs();
+    Assert.equal(frecencyBoostedSpocs.length, 1);
+    Assert.equal(frecencyBoostedSpocs[0].type, "frecency-boost-random");
 
     sandbox.restore();
   }

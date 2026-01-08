@@ -1391,13 +1391,23 @@ export class TopSitesFeed {
     ) {
       const { values } = this.store.getState().Prefs;
       const numItems = values?.trainhopConfig?.sov?.numItems;
+      const randomSponsorEnabled = values?.trainhopConfig?.sov?.random_sponsor;
 
-      candidates = await this.frecencyBoostProvider.fetch(numItems);
+      if (!randomSponsorEnabled) {
+        candidates = await this.frecencyBoostProvider.fetch(numItems);
+        // If we have a matched set of candidates,
+        // we can check if it's an exposure event.
+        if (candidates.length) {
+          this.frecencyBoostedSpocsExposureEvent();
+        }
+      }
 
-      // If we have a matched set of candidates,
-      // we can check if it's an exposure event.
-      if (candidates.length) {
-        this.frecencyBoostedSpocsExposureEvent();
+      if (!candidates.length) {
+        const randomTile =
+          await this.frecencyBoostProvider.retrieveRandomFrecencyTile();
+        if (randomTile) {
+          candidates = [randomTile];
+        }
       }
     }
     return candidates;

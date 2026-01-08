@@ -85,6 +85,11 @@ async function getTopSitesFeedForTest(
     .stub(feed.frecencyBoostProvider, "_frecencyBoostedSponsors")
     .value(frecencyBoostedSponsors);
 
+  // Stub random fallback to return null for testing deduping logic.
+  sandbox
+    .stub(feed.frecencyBoostProvider, "retrieveRandomFrecencyTile")
+    .returns(null);
+
   // We need to refresh, because TopSitesFeed's
   // DEFAULT_TOP_SITES acts like a singleton.
   DEFAULT_TOP_SITES.length = 0;
