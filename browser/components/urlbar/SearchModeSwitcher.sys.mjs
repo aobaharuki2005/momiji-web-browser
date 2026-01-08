@@ -504,16 +504,11 @@ export class SearchModeSwitcher {
     }
 
     if (openEngineHomePage) {
-      opts.focus = false;
-      opts.startQuery = false;
-    }
-
-    this.#input.search(search, opts);
-
-    if (openEngineHomePage) {
       this.#input.openEngineHomePage(search, {
         searchEngine: opts.searchEngine,
       });
+    } else {
+      this.#input.search(search, opts);
     }
 
     this.#popup.hidePopup();
