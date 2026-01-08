@@ -7006,10 +7006,12 @@
 # Enable HDR video support.
 - name: gfx.color_management.hdr_video
   type: RelaxedAtomicBool
-#if defined(XP_WIN)
+#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
+  value: true
+#elif defined(XP_WIN)
   value: @IS_EARLY_BETA_OR_EARLIER@
 #else
-  value: true
+  value: false
 #endif
   mirror: always
 
@@ -11096,7 +11098,13 @@
 # Is matching video-dynamic-range: high allowed?
 - name: layout.css.video-dynamic-range.allows-high
   type: RelaxedAtomicBool
+#if defined(XP_MACOSX) || defined(MOZ_WAYLAND)
   value: true
+#elif defined(XP_WIN)
+  value: @IS_EARLY_BETA_OR_EARLIER@
+#else
+  value: false
+#endif
   mirror: always
 
 # Is support for CSS Typed Object Model API enabled?
