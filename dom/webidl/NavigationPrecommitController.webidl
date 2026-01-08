@@ -10,8 +10,6 @@
 interface NavigationPrecommitController {
   [Throws]
   undefined redirect(USVString url, optional NavigationNavigateOptions options = {});
-  [Throws]
-  undefined addHandler(NavigationInterceptHandler handler);
 };
 
 callback NavigationPrecommitHandler = Promise<undefined>(NavigationPrecommitController controller);
