@@ -1061,7 +1061,7 @@
     </fragment>
     <fragment
         android:id="@+id/openDownloadsSettingsFragment"
-        android:name="org.mozilla.fenix.settings.DownloadsSettingsFragment">
+        android:name="org.mozilla.fenix.settings.downloads.DownloadsSettingsFragment">
         <argument
             android:name="preference_to_scroll_to"
             android:defaultValue="@null"

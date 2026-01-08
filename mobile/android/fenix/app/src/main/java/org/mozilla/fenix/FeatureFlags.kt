@@ -17,6 +17,11 @@ object FeatureFlags {
     val customExtensionCollectionFeature = Config.channel.isNightlyOrDebug || Config.channel.isBeta
 
     /**
+     * Controls whether the "Choose download location" feature is enabled or not.
+     */
+    val downloadsDefaultLocation = Config.channel.isDebug
+
+    /**
      * Pull-to-refresh allows you to pull the web content down far enough to have the page to
      * reload.
      */

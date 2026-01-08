@@ -512,6 +512,8 @@
     <string name="pref_key_distribution_id" translatable="false">pref_key_distribution_id</string>
 
     <!-- Downloads Settings-->
+    <string name="pref_key_downloads_default_location" translatable="false">pref_key_downloads_default_location</string>
+    <string name="pref_key_downloads_storage_category" translatable="false">pref_key_downloads_storage_category</string>
     <string name="pref_key_downloads" translatable="false">pref_key_downloads</string>
     <string name="pref_key_external_download_manager" translatable="false">pref_key_external_download_manager</string>
     <string name="pref_key_downloads_clean_up_files_automatically" translatable="false">pref_key_downloads_clean_up_files_automatically</string>
