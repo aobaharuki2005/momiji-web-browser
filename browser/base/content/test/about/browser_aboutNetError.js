@@ -299,6 +299,35 @@ add_task(async function onlyAllow3DESWithDeprecatedTLS() {
     async browser => {
       BrowserTestUtils.startLoadingURIString(browser, TRIPLEDES_PAGE);
       await BrowserTestUtils.waitForErrorPage(browser);
+      await SpecialPowers.spawn(browser, [], async function () {
+        const doc = content.document;
+        const netErrorCard =
+          doc.querySelector("net-error-card")?.wrappedJSObject;
+        Assert.ok(netErrorCard, "netErrorCard is rendered.");
+
+        netErrorCard.advancedButton.scrollIntoView();
+        EventUtils.synthesizeMouseAtCenter(
+          netErrorCard.advancedButton,
+          {},
+          content
+        );
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(netErrorCard.advancedContainer),
+          "Advanced container is visible"
+        );
+
+        const prefResetButton = netErrorCard.prefResetButton;
+        Assert.ok(prefResetButton, "prefResetButton exists in the DOM.");
+        netErrorCard.prefResetButton.scrollIntoView();
+        await ContentTaskUtils.waitForCondition(
+          () => ContentTaskUtils.isVisible(netErrorCard.prefResetButton),
+          "Pref reset button is visible"
+        );
+        ok(
+          ContentTaskUtils.isVisible(prefResetButton),
+          "prefResetButton is visible"
+        );
+      });
     }
   );
 

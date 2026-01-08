@@ -13,6 +13,7 @@ import {
   getHostName,
   getSubjectAltNames,
   getFailedCertificatesAsPEMString,
+  handleNSSFailure,
   recordSecurityUITelemetry,
   gOffline,
   retryThis,
@@ -40,6 +41,7 @@ export class NetErrorCard extends MozLitElement {
     advancedShowing: { type: Boolean, reflect: true },
     certErrorDebugInfoShowing: { type: Boolean, reflect: true },
     certificateErrorText: { type: String },
+    showPrefReset: { type: Boolean },
   };
 
   static queries = {
@@ -63,6 +65,7 @@ export class NetErrorCard extends MozLitElement {
     netErrorLearnMoreLink: "#neterror-learn-more-link",
     httpAuthIntroText: "#fp-http-auth-disabled-intro-text",
     tryAgainButton: "#tryAgainButton",
+    prefResetButton: "#prefResetButton",
   };
 
   static NSS_ERRORS = [
@@ -93,7 +96,7 @@ export class NetErrorCard extends MozLitElement {
     "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT",
     "SEC_ERROR_EXPIRED_CERTIFICATE",
     "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE",
-    // Bug #2006790 - Temporarily disabling SSL_ERROR_NO_CYPHER_OVERLAP until we create a pref reset button.
+    "SSL_ERROR_NO_CYPHER_OVERLAP",
     "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY",
     "NS_ERROR_OFFLINE",
     "NS_ERROR_DOM_COOP_FAILED",
@@ -154,6 +157,7 @@ export class NetErrorCard extends MozLitElement {
     this.domainMismatchNamesPromise = null;
     this.certificateErrorTextPromise = null;
     this.showCustomNetErrorCard = false;
+    this.showPrefReset = false;
   }
 
   async getUpdateComplete() {
@@ -258,6 +262,47 @@ export class NetErrorCard extends MozLitElement {
     }
   }
 
+  handlePrefChangeDetected() {
+    this.showPrefReset = true;
+    this.focusPrefResetButton();
+  }
+
+  async focusPrefResetButton() {
+    await this.getUpdateComplete();
+
+    if (window.top != window) {
+      return;
+    }
+
+    if (!this.prefResetButton) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      this.prefResetButton.focus();
+    });
+  }
+
+  handlePrefResetClick() {
+    RPMSendAsyncMessage("Browser:ResetSSLPreferences");
+  }
+
+  prefResetContainerTemplate() {
+    if (!this.showPrefReset) {
+      return null;
+    }
+
+    return html`<div id="prefChangeContainer" class="button-container">
+      <p data-l10n-id="neterror-pref-reset"></p>
+      <moz-button
+        id="prefResetButton"
+        type="primary"
+        data-l10n-id="neterror-pref-reset-button"
+        @click=${this.handlePrefResetClick}
+      ></moz-button>
+    </div>`;
+  }
+
   getErrorInfo() {
     const errorInfo = gIsCertError
       ? document.getFailedCertSecurityInfo()
@@ -266,6 +311,10 @@ export class NetErrorCard extends MozLitElement {
     if (!errorInfo.errorCodeString) {
       this.showCustomNetErrorCard = true;
       errorInfo.errorCodeString = NetErrorCard.getCustomErrorCode(gErrorCode);
+    }
+
+    if (gErrorCode === "nssFailure2") {
+      handleNSSFailure(() => this.handlePrefChangeDetected());
     }
     return errorInfo;
   }
@@ -482,10 +531,7 @@ export class NetErrorCard extends MozLitElement {
         content = this.advancedSectionTemplate({
           whyDangerousL10nId: "fp-neterror-cypher-overlap-why-dangerous-body",
           whatCanYouDoL10nId: "fp-neterror-cypher-overlap-what-can-you-do-body",
-          learnMoreL10nId: "fp-cert-error-code",
-          learnMoreL10nArgs: {
-            error: this.errorInfo.errorCodeString,
-          },
+          learnMoreL10nId: "fp-learn-more-about-secure-connection-failures",
           learnMoreSupportPage: "connection-not-secure",
         });
         break;
@@ -607,6 +653,7 @@ export class NetErrorCard extends MozLitElement {
           </div>`
         : null}
       ${importantNote ? html`<p data-l10n-id=${importantNote}></p>` : null}
+      ${this.prefResetContainerTemplate()}
       ${viewCert
         ? html`<p>
             <a

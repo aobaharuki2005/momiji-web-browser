@@ -108,6 +108,9 @@ export let RemotePageAccessManager = {
         "network.trr_ui.skip_reason_learn_more_url",
       ],
       RPMGetBoolPref: [
+        "security.certerrors.mitm.priming.enabled",
+        "security.certerrors.permanentOverride",
+        "security.enterprise_roots.auto-enabled",
         "security.certerror.hideAddException",
         "security.certerrors.felt-privacy-v1",
       ],

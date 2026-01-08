@@ -194,3 +194,33 @@ export function errorHasNoUserFix(errorCodeString) {
       return false;
   }
 }
+
+export function handleNSSFailure(callback) {
+  const netErrorInfo = document.getNetErrorInfo();
+  void recordSecurityUITelemetry(
+    "securityUiTlserror",
+    "loadAbouttlserror",
+    netErrorInfo
+  );
+  const errorCode = netErrorInfo.errorCodeString;
+  const result = {};
+  switch (errorCode) {
+    case "SSL_ERROR_UNSUPPORTED_VERSION":
+    case "SSL_ERROR_PROTOCOL_VERSION_ALERT": {
+      result.versionError = true;
+    }
+    // fallthrough
+
+    case "SSL_ERROR_NO_CIPHERS_SUPPORTED":
+    case "SSL_ERROR_NO_CYPHER_OVERLAP":
+    case "SSL_ERROR_SSL_DISABLED":
+      RPMAddMessageListener("HasChangedCertPrefs", msg => {
+        if (msg.data.hasChangedCertPrefs) {
+          // Configuration overrides might have caused this; offer to reset.
+          callback?.();
+        }
+      });
+      RPMSendAsyncMessage("GetChangedCertPrefs");
+  }
+  return result;
+}

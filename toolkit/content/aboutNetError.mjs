@@ -18,6 +18,7 @@ import {
   getCSSClass,
   gNoConnectivity,
   retryThis,
+  handleNSSFailure,
   errorHasNoUserFix,
   COOP_MDN_DOCS,
   COEP_MDN_DOCS,
@@ -373,35 +374,12 @@ function initTitleAndBodyIds(baseURL, isTRROnlyFailure) {
     // failures) are of type nssFailure2.
     case "nssFailure2": {
       learnMore.hidden = false;
-
-      const netErrorInfo = document.getNetErrorInfo();
-      void recordSecurityUITelemetry(
-        "securityUiTlserror",
-        "loadAbouttlserror",
-        netErrorInfo
-      );
-      const errorCode = netErrorInfo.errorCodeString;
-      switch (errorCode) {
-        case "SSL_ERROR_UNSUPPORTED_VERSION":
-        case "SSL_ERROR_PROTOCOL_VERSION_ALERT": {
-          const tlsNotice = document.getElementById("tlsVersionNotice");
-          tlsNotice.hidden = false;
-          document.l10n.setAttributes(tlsNotice, "cert-error-old-tls-version");
-        }
-        // fallthrough
-
-        case "SSL_ERROR_NO_CIPHERS_SUPPORTED":
-        case "SSL_ERROR_NO_CYPHER_OVERLAP":
-        case "SSL_ERROR_SSL_DISABLED":
-          RPMAddMessageListener("HasChangedCertPrefs", msg => {
-            if (msg.data.hasChangedCertPrefs) {
-              // Configuration overrides might have caused this; offer to reset.
-              showPrefChangeContainer();
-            }
-          });
-          RPMSendAsyncMessage("GetChangedCertPrefs");
+      const result = handleNSSFailure(showPrefChangeContainer);
+      if (result.versionError) {
+        const tlsNotice = document.getElementById("tlsVersionNotice");
+        tlsNotice.hidden = false;
+        document.l10n.setAttributes(tlsNotice, "cert-error-old-tls-version");
       }
-
       break;
     }
 
