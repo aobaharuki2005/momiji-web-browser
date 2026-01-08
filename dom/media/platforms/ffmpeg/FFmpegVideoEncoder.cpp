@@ -10,6 +10,7 @@
 
 #include <algorithm>
 
+#include "AnnexB.h"
 #include "BufferReader.h"
 #include "EncoderConfig.h"
 #include "FFmpegEncoderModule.h"
@@ -733,6 +734,20 @@ FFmpegVideoEncoder<LIBAV_VER>::ToMediaRawData(AVPacket* aPacket) {
                 e.Description().get());
   }
 
+  if (mCodecID == AV_CODEC_ID_H264 &&
+      mConfig.mCodecSpecific.is<H264Specific>() &&
+      mConfig.mCodecSpecific.as<H264Specific>().mFormat ==
+          H264BitStreamFormat::AVC &&
+      !mCodecName.Equals("libx264"_ns) && AnnexB::IsAnnexB(*data)) {
+    if (data->mExtraData) {
+      mLastExtraData = std::move(data->mExtraData);
+    }
+    if (!AnnexB::ConvertSampleToAVCC(data, mLastExtraData)) {
+      return Err(MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                             "Failed to convert to AVCC"_ns));
+    }
+  }
+
   // TODO(bug 1869560): The unit of pts, dts, and duration is time_base, which
   // is recommended to be the reciprocal of the frame rate, but we set it to
   // microsecond for now.
@@ -773,18 +788,32 @@ FFmpegVideoEncoder<LIBAV_VER>::GetExtraData(AVPacket* aPacket) {
   MOZ_ASSERT(mTaskQueue->IsOnCurrentThread());
   MOZ_ASSERT(aPacket);
 
-  // H264 Extra data comes with the key frame and we only extract it when
-  // encoding into AVCC format.
+  // We only extract the extra data when encoding into AVCC format.
   if (mCodecID != AV_CODEC_ID_H264 ||
       !mConfig.mCodecSpecific.is<H264Specific>() ||
       mConfig.mCodecSpecific.as<H264Specific>().mFormat !=
-          H264BitStreamFormat::AVC ||
-      !(aPacket->flags & AV_PKT_FLAG_KEY)) {
+          H264BitStreamFormat::AVC) {
     return Err(
-        MediaResult(NS_ERROR_NOT_AVAILABLE, "No available extra data"_ns));
+        MediaResult(NS_ERROR_NOT_AVAILABLE, "Extra data unnecessary"_ns));
   }
 
-  if (mCodecName != "libx264") {
+  Span<const uint8_t> packetBuf(aPacket->data,
+                                static_cast<size_t>(aPacket->size));
+  if (!mCodecName.Equals("libx264"_ns) && AnnexB::IsAnnexB(packetBuf)) {
+    auto extraData = AnnexB::ExtractExtraDataForAVCC(packetBuf);
+    if (!extraData) {
+      return Err(MediaResult(NS_ERROR_NOT_AVAILABLE,
+                             "Extra data missing from packet"_ns));
+    }
+    return extraData.forget();
+  }
+
+  if (!(aPacket->flags & AV_PKT_FLAG_KEY)) {
+    return Err(MediaResult(NS_ERROR_NOT_AVAILABLE,
+                           "Extra data only comes with key frame"_ns));
+  }
+
+  if (!mCodecName.Equals("libx264"_ns)) {
     return Err(MediaResult(
         NS_ERROR_NOT_IMPLEMENTED,
         RESULT_DETAIL(
@@ -805,8 +834,7 @@ FFmpegVideoEncoder<LIBAV_VER>::GetExtraData(AVPacket* aPacket) {
         Span<const uint8_t>(mCodecContext->extradata,
                             static_cast<size_t>(mCodecContext->extradata_size));
   } else {
-    buf =
-        Span<const uint8_t>(aPacket->data, static_cast<size_t>(aPacket->size));
+    buf = packetBuf;
   }
   if (buf.empty()) {
     return Err(MediaResult(NS_ERROR_UNEXPECTED,

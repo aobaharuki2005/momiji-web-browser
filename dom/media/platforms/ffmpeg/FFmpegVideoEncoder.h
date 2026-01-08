@@ -86,6 +86,7 @@ class FFmpegVideoEncoder<LIBAV_VER> final
   int64_t mFakePts = 0;
   int64_t mCurrentFramePts = 0;
   PtsMap mPtsMap;
+  RefPtr<MediaByteBuffer> mLastExtraData;
 };
 
 }  // namespace mozilla
