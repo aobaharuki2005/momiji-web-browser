@@ -872,7 +872,12 @@ bool js::regexp_construct_raw_flags(JSContext* cx, unsigned argc, Value* vp) {
   uint32_t rawFlags = args[1].toInt32();
   JS::RegExpFlags flags =
       AssertedCast<uint8_t>(rawFlags & RegExpFlag::AllFlags);
-  bool legacy = args[2].toBoolean();
+
+  // Self-hosted code can't check prefs efficiently. In some cases it will
+  // call this with the flag set even when the pref is disabled, in which
+  // case we should ignore it.
+  // TODO(bug 2009034): Clean this up when we ship the proposal.
+  bool legacy = args[2].toBoolean() && JS::Prefs::experimental_legacy_regexp();
 
   // Step 7.
   RegExpObject* regexp = RegExpAlloc(cx, GenericObject);
