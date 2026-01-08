@@ -236,10 +236,6 @@ export class NetErrorCard extends MozLitElement {
     }
 
     this.hostname = HOST_NAME;
-    const { port } = document.location;
-    if (port && port != 443) {
-      this.hostname += ":" + port;
-    }
 
     // We show an offline support page in case of a system-wide error,
     // when a user cannot connect to the internet and access the SUMO website.
