@@ -180,8 +180,15 @@ async function promiseDismissPasteButton() {
 
 // @param aBrowser browser object of the content tab.
 // @param aContentElementId the ID of the element to be clicked.
-function promiseClickContentElement(aBrowser, aContentElementId) {
-  return SpecialPowers.spawn(
+async function promiseClickContentElement(aBrowser, aContentElementId) {
+  // We intentionally turn off this a11y check, because the following click
+  // is send on an arbitrary web content that is not expected to be tested
+  // by itself with the browser mochitests, therefore this rule check shall
+  // be ignored by a11y-checks suite.
+  AccessibilityUtils.setEnv({
+    mustHaveAccessibleRule: false,
+  });
+  let result = await SpecialPowers.spawn(
     aBrowser,
     [aContentElementId],
     async _contentElementId => {
@@ -201,6 +208,8 @@ function promiseClickContentElement(aBrowser, aContentElementId) {
       return promise;
     }
   );
+  AccessibilityUtils.resetEnv();
+  return result;
 }
 
 // @param aBrowser browser object of the content tab.
