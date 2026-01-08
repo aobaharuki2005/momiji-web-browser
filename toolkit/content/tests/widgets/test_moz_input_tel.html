@@ -28,7 +28,9 @@
       });
 
       add_task(async function testMozInputTelProperties() {
-        await testHelpers.testCommonInputProperties("moz-input-tel");
+        await testHelpers.testCommonInputProperties("moz-input-tel", {
+          type: "tel",
+        });
       });
 
       add_task(async function testMozInputTelEvents() {

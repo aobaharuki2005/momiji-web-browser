@@ -54,6 +54,7 @@
         await testHelpers.verifySupportPage("moz-input-number");
         await testHelpers.verifyAccesskey("moz-input-number");
         await testHelpers.verifyNoWhitespace("moz-input-number");
+        await testHelpers.verifyType("moz-input-number", "number");
       });
 
       add_task(async function testMozInputNumberEvents() {

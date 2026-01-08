@@ -29,7 +29,9 @@
       });
 
       add_task(async function testMozSelectProperties() {
-        await testHelpers.testCommonInputProperties("moz-select");
+        await testHelpers.testCommonInputProperties("moz-select", {
+          type: "select-one",
+        });
       });
 
       add_task(async function testMozSelectChange() {
