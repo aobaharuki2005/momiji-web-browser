@@ -108,9 +108,16 @@ ip-protection-learn-more = Learn more
 
 ip-protection-site-exceptions =
   .label = Site specific settings
+
+# Variables:
+#   $count (number) - The number of sites saved as VPN exclusions.
 ip-protection-site-exceptions-all-sites-button =
   .label = Manage website settings
-  .description = No websites added yet
+  .description =
+    { $count ->
+        [one] { $count } website
+       *[other] { $count } websites
+    }
 
 ip-protection-autostart =
   .label = Turn on VPN automatically

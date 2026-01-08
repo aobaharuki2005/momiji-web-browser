@@ -2850,7 +2850,6 @@ SettingGroupManager.registerGroups({
         items: [
           {
             id: "ipProtectionExceptionAllListButton",
-            l10nId: "ip-protection-site-exceptions-all-sites-button",
             control: "moz-box-button",
           },
         ],

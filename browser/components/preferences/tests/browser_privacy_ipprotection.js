@@ -201,6 +201,101 @@ add_task(async function test_exclusions_add_button() {
   );
 });
 
+// Test that we show the correct number of site exclusions
+add_task(async function test_exclusions_count() {
+  const PERM_NAME = "ipp-vpn";
+  await setupVpnPrefs({ feature: "beta", siteExceptions: true });
+
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:preferences#privacy" },
+    async function (browser) {
+      let section = browser.contentDocument.getElementById(SECTION_ID);
+      let settingGroup = section.querySelector(
+        `setting-group[groupid="ipprotection"]`
+      );
+      is_element_visible(section, "#dataIPProtectionGroup is shown");
+      is_element_visible(settingGroup, "ipprotection setting group is shown");
+
+      let siteExceptionsGroup = settingGroup?.querySelector(
+        "#ipProtectionExceptions"
+      );
+      is_element_visible(siteExceptionsGroup, "Site exceptions group is shown");
+
+      let exceptionAllListButton = siteExceptionsGroup?.querySelector(
+        "#ipProtectionExceptionAllListButton"
+      );
+      is_element_visible(
+        exceptionAllListButton,
+        "Button for list of exclusions is shown"
+      );
+
+      let sitesCountUpdatedPromise = BrowserTestUtils.waitForMutationCondition(
+        exceptionAllListButton,
+        { attributes: true, attributeFilter: ["data-l10n-args"] },
+        () => {
+          let args = exceptionAllListButton.getAttribute("data-l10n-args");
+          return args && JSON.parse(args)?.count === 0;
+        }
+      );
+
+      // Clear ipp-vpn to start with 0 exclusions
+      Services.perms.removeByType(PERM_NAME);
+
+      await sitesCountUpdatedPromise;
+
+      Assert.ok(true, "Should show 0 exclusions initially");
+
+      // Now test with 1 exclusion
+      sitesCountUpdatedPromise = BrowserTestUtils.waitForMutationCondition(
+        exceptionAllListButton,
+        { attributes: true, attributeFilter: ["data-l10n-args"] },
+        () => {
+          let args = exceptionAllListButton.getAttribute("data-l10n-args");
+          return args && JSON.parse(args)?.count === 1;
+        }
+      );
+      let site1 = "https://example.com";
+      let principal1 =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(site1);
+      Services.perms.addFromPrincipal(
+        principal1,
+        PERM_NAME,
+        Services.perms.DENY_ACTION
+      );
+
+      await sitesCountUpdatedPromise;
+
+      Assert.ok(true, "Should show 1 exclusion after adding the first site");
+
+      // Now test with 2 exclusions
+      sitesCountUpdatedPromise = BrowserTestUtils.waitForMutationCondition(
+        exceptionAllListButton,
+        { attributes: true, attributeFilter: ["data-l10n-args"] },
+        () => {
+          let args = exceptionAllListButton.getAttribute("data-l10n-args");
+          return args && JSON.parse(args)?.count === 2;
+        }
+      );
+      let site2 = "https://example.org";
+      let principal2 =
+        Services.scriptSecurityManager.createContentPrincipalFromOrigin(site2);
+      Services.perms.addFromPrincipal(
+        principal2,
+        PERM_NAME,
+        Services.perms.DENY_ACTION
+      );
+
+      await sitesCountUpdatedPromise;
+
+      Assert.ok(true, "Should show 2 exclusions after adding the second site");
+
+      // Clean up
+      Services.perms.removeByType(PERM_NAME);
+      Services.prefs.clearUserPref(ONBOARDING_MESSAGE_MASK_PREF);
+    }
+  );
+});
+
 // Test that autostart checkboxes exist and map to the correct preferences
 add_task(async function test_autostart_checkboxes() {
   await setupVpnPrefs({
