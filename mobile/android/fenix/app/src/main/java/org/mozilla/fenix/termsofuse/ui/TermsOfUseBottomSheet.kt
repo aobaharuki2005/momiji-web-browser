@@ -171,11 +171,11 @@ private fun BottomSheetContent(
 
         Spacer(Modifier.size(20.dp))
 
-        BottomSheetMessage(
-            onTermsOfUseClicked = onTermsOfUseClicked,
-            onPrivacyNoticeClicked = onPrivacyNoticeClicked,
-            onLearnMoreClicked = onLearnMoreClicked,
-        )
+        TermsOfUseContent(onTermsOfUseClicked, onPrivacyNoticeClicked)
+
+        Spacer(Modifier.size(20.dp))
+
+        LearnMoreContent(onLearnMoreClicked)
 
         Spacer(Modifier.size(34.dp))
 
@@ -208,10 +208,9 @@ private fun BottomSheetContent(
 }
 
 @Composable
-private fun BottomSheetMessage(
-    onTermsOfUseClicked: () -> Unit = {},
-    onPrivacyNoticeClicked: () -> Unit = {},
-    onLearnMoreClicked: () -> Unit = {},
+private fun TermsOfUseContent(
+    onTermsOfUseClicked: () -> Unit,
+    onPrivacyNoticeClicked: () -> Unit,
 ) {
     val termsOfUseLinkState = LinkTextState(
         text = stringResource(R.string.terms_of_use_prompt_link_terms_of_use),
@@ -222,11 +221,6 @@ private fun BottomSheetMessage(
         text = stringResource(R.string.terms_of_use_prompt_link_privacy_notice),
         url = "",
         onClick = { onPrivacyNoticeClicked() },
-    )
-    val learnMoreLinkState = LinkTextState(
-        text = stringResource(R.string.terms_of_use_prompt_link_learn_more),
-        url = "",
-        onClick = { onLearnMoreClicked() },
     )
 
     LinkText(
@@ -245,8 +239,15 @@ private fun BottomSheetMessage(
         ),
         linkTextDecoration = TextDecoration.Underline,
     )
+}
 
-    Spacer(Modifier.size(20.dp))
+@Composable
+private fun LearnMoreContent(onLearnMoreClicked: () -> Unit) {
+    val learnMoreLinkState = LinkTextState(
+        text = stringResource(R.string.terms_of_use_prompt_link_learn_more),
+        url = "",
+        onClick = { onLearnMoreClicked() },
+    )
 
     LinkText(
         text = stringResource(
