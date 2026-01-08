@@ -99,3 +99,13 @@
 .fxview-tab-row-main.activemedia-blocked .fxview-tab-row-favicon::after {
   background-image: url("chrome://browser/skin/tabbrowser/tab-audio-blocked-small.svg");
 }
+
+.fxview-tab-row-container-indicator {
+  height: var(--size-item-small);
+  width: var(--size-item-small);
+  background-image: var(--identity-icon);
+  /* stylelint-disable-next-line stylelint-plugin-mozilla/use-size-tokens */
+  background-size: cover;
+  -moz-context-properties: fill;
+  fill: var(--identity-icon-color);
+}

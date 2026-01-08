@@ -180,6 +180,7 @@ export class SidebarTabList extends FxviewTabListBase {
         compact
         .currentActiveElementId=${this.currentActiveElementId}
         .closeRequested=${tabItem.closeRequested}
+        .containerObj=${tabItem.containerObj}
         .fxaDeviceId=${ifDefined(tabItem.fxaDeviceId)}
         .favicon=${tabItem.icon}
         .guid=${tabItem.guid}
@@ -220,6 +221,7 @@ customElements.define("sidebar-tab-list", SidebarTabList);
 
 export class SidebarTabRow extends FxviewTabRowBase {
   static properties = {
+    containerObj: { type: Object },
     guid: { type: String },
     selected: { type: Boolean, reflect: true },
     indicators: { type: Array },
@@ -231,6 +233,25 @@ export class SidebarTabRow extends FxviewTabRowBase {
    */
   focus() {
     HTMLElement.prototype.focus.call(this);
+  }
+
+  #getContainerClasses() {
+    let containerClasses = ["fxview-tab-row-container-indicator", "icon"];
+    if (this.containerObj) {
+      let { icon, color } = this.containerObj;
+      containerClasses.push(`identity-icon-${icon}`);
+      containerClasses.push(`identity-color-${color}`);
+    }
+    return containerClasses;
+  }
+
+  #containerIndicatorTemplate() {
+    let tabList = this.getRootNode().host;
+    let tabsToCheck = tabList.tabItems;
+    return html`${when(
+      tabsToCheck.some(tab => tab.containerObj),
+      () => html`<span class=${this.#getContainerClasses().join(" ")}></span>`
+    )}`;
   }
 
   secondaryButtonTemplate() {
@@ -256,6 +277,15 @@ export class SidebarTabRow extends FxviewTabRowBase {
   render() {
     return html`
       ${this.stylesheets()}
+      ${when(
+        this.containerObj,
+        () => html`
+          <link
+            rel="stylesheet"
+            href="chrome://browser/content/usercontext/usercontext.css"
+          />
+        `
+      )}
       <link
         rel="stylesheet"
         href="chrome://browser/content/sidebar/sidebar-tab-row.css"
@@ -283,7 +313,7 @@ export class SidebarTabRow extends FxviewTabRowBase {
       >
         ${this.faviconTemplate()} ${this.titleTemplate()}
       </a>
-      ${this.secondaryButtonTemplate()}
+      ${this.secondaryButtonTemplate()} ${this.#containerIndicatorTemplate()}
     `;
   }
 }
