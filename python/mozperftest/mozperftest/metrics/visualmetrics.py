@@ -87,14 +87,12 @@ class VisualMetrics(Layer):
         self.info(f"Treated {treated} videos.")
 
         if len(self.metrics) > 0:
-            metadata.add_result(
-                {
-                    "name": metadata.script["name"] + "-vm",
-                    "framework": {"name": "mozperftest"},
-                    "transformer": "mozperftest.metrics.visualmetrics:VisualData",
-                    "results": list(self.metrics.values()),
-                }
-            )
+            metadata.add_result({
+                "name": metadata.script["name"] + "-vm",
+                "framework": {"name": "mozperftest"},
+                "transformer": "mozperftest.metrics.visualmetrics:VisualData",
+                "results": list(self.metrics.values()),
+            })
 
             # we also extend --perfherder-metrics and --console-metrics if they
             # are activated

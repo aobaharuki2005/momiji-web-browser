@@ -580,9 +580,7 @@ def test_local_simpleperf_symbolicate_timeout(tmp_path):
     ) as mock_popen, mock.patch(
         "mozperftest.system.simpleperf.find_node_executable",
         return_value=[str(node_path)],
-    ), mock.patch.object(
-        profiler, "_cleanup"
-    ) as mock_cleanup:
+    ), mock.patch.object(profiler, "_cleanup") as mock_cleanup:
         # Mock processes
         import_process = make_mock_process(context=True)
 
@@ -682,14 +680,9 @@ def test_ci_simpleperf_symbolicate(tmp_path):
         clear=False,
     ), mock.patch("mozperftest.system.simpleperf.ON_TRY", True), mock.patch(
         "mozperftest.utils.ON_TRY", True
-    ), mock.patch(
-        "tempfile.mkdtemp", return_value=str(mock_work_dir_path)
-    ), mock.patch(
+    ), mock.patch("tempfile.mkdtemp", return_value=str(mock_work_dir_path)), mock.patch(
         "shutil.rmtree"
-    ) as mock_rmtree, mock.patch(
-        "subprocess.Popen"
-    ) as mock_popen:
-
+    ) as mock_rmtree, mock.patch("subprocess.Popen") as mock_popen:
         # Mock processes
         import_process = make_mock_process(context=True)
 
@@ -839,17 +832,12 @@ def test_ci_simpleperf_symbolicate_timeout(tmp_path):
             "MOZ_FETCHES_DIR": str(mock_fetch_path),
         },
         clear=False,
-    ), mock.patch(
-        "shutil.rmtree"
-    ) as mock_rmtree, mock.patch(
+    ), mock.patch("shutil.rmtree") as mock_rmtree, mock.patch(
         "subprocess.Popen"
     ) as mock_popen, mock.patch(
         "mozperftest.system.simpleperf.find_node_executable",
         return_value=[str(node_path)],
-    ), mock.patch.object(
-        profiler, "_cleanup"
-    ) as mock_cleanup:
-
+    ), mock.patch.object(profiler, "_cleanup") as mock_cleanup:
         # Mock processes
         import_process = make_mock_process(context=True)
 

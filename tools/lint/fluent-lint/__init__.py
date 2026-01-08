@@ -128,8 +128,7 @@ class Linter(visitor.Visitor):
             "node_can_be_resource_comment"
         ] and (
             # This is the root node, empty space is allowed, comments are allowed
-            node_name
-            in {"Resource", "Span", "Comment"}
+            node_name in {"Resource", "Span", "Comment"}
         )
 
         if self.debug_print_json:
@@ -472,9 +471,9 @@ def get_exclusions(root):
     ) as f:
         exclusions = list(yaml.safe_load_all(f))[0]
         for error_type in exclusions:
-            exclusions[error_type]["files"] = set(
-                [mozpath.join(root, x) for x in exclusions[error_type]["files"]]
-            )
+            exclusions[error_type]["files"] = set([
+                mozpath.join(root, x) for x in exclusions[error_type]["files"]
+            ])
         return exclusions
 
 

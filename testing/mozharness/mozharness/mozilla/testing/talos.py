@@ -655,39 +655,31 @@ class Talos(
         webextension_dest = os.path.join(self.talos_path, "talos", "webextensions")
 
         if self.query_pagesets_name():
-            tooltool_artifacts.append(
-                {
-                    "name": self.pagesets_name,
-                    "manifest": self.pagesets_name_manifest,
-                    "dest": src_talos_pageset_dest,
-                }
-            )
-            tooltool_artifacts.append(
-                {
-                    "name": self.pagesets_name,
-                    "manifest": self.pagesets_name_manifest,
-                    "dest": src_talos_pageset_multidomain_dest,
-                    "postprocess": self.replace_relative_iframe_paths,
-                }
-            )
+            tooltool_artifacts.append({
+                "name": self.pagesets_name,
+                "manifest": self.pagesets_name_manifest,
+                "dest": src_talos_pageset_dest,
+            })
+            tooltool_artifacts.append({
+                "name": self.pagesets_name,
+                "manifest": self.pagesets_name_manifest,
+                "dest": src_talos_pageset_multidomain_dest,
+                "postprocess": self.replace_relative_iframe_paths,
+            })
 
         if self.query_benchmark_zip():
-            tooltool_artifacts.append(
-                {
-                    "name": self.benchmark_zip,
-                    "manifest": self.benchmark_zip_manifest,
-                    "dest": src_talos_pageset_dest,
-                }
-            )
+            tooltool_artifacts.append({
+                "name": self.benchmark_zip,
+                "manifest": self.benchmark_zip_manifest,
+                "dest": src_talos_pageset_dest,
+            })
 
         if self.query_webextensions_zip():
-            tooltool_artifacts.append(
-                {
-                    "name": self.webextensions_zip,
-                    "manifest": self.webextensions_zip_manifest,
-                    "dest": webextension_dest,
-                }
-            )
+            tooltool_artifacts.append({
+                "name": self.webextensions_zip,
+                "manifest": self.webextensions_zip_manifest,
+                "dest": webextension_dest,
+            })
 
         # now that have the suite name, check if artifact is required, if so download it
         # the --no-download option will override this

@@ -220,8 +220,7 @@ class Option:
     ):
         if not name and not env:
             raise InvalidOptionError(
-                "At least an option name or an environment variable name must "
-                "be given"
+                "At least an option name or an environment variable name must be given"
             )
         if name:
             if not isinstance(name, str):

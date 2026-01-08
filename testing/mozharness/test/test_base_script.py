@@ -418,9 +418,11 @@ class TestHelperFunctions(unittest.TestCase):
     def test_get_output_from_command(self):
         self._create_temp_file()
         self.s = script.BaseScript(initial_config_file="test/test.json")
-        contents = self.s.get_output_from_command(
-            ["bash", "-c", "cat %s" % self.temp_file]
-        )
+        contents = self.s.get_output_from_command([
+            "bash",
+            "-c",
+            "cat %s" % self.temp_file,
+        ])
         self.assertEqual(
             test_string,
             contents,

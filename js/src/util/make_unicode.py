@@ -571,15 +571,13 @@ def process_special_casing(special_casing, table, index):
     )
 
     # Ensure all case mapping contexts are known (see Unicode 9.0, §3.13 Default Case Algorithms).
-    assert set(
-        [
-            "After_I",
-            "After_Soft_Dotted",
-            "Final_Sigma",
-            "More_Above",
-            "Not_Before_Dot",
-        ]
-    ).issuperset(
+    assert set([
+        "After_I",
+        "After_Soft_Dotted",
+        "Final_Sigma",
+        "More_Above",
+        "Not_Before_Dot",
+    ]).issuperset(
         set(
             filter(
                 partial(is_not, None),

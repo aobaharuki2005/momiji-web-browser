@@ -447,7 +447,7 @@ class Version:
         for component in arg:
             if not isinstance(component, int) or component < 0 or component > 0xFFFF:
                 raise ValueError(
-                    "Each version component must be a 16-bit " "unsigned integer"
+                    "Each version component must be a 16-bit unsigned integer"
                 )
 
     def build_long(self, args):
@@ -699,12 +699,10 @@ class LspBlocklistEntry(DllBlocklistEntry):
         # We dump the entire contents of Guids on the first call, and then
         # clear it. Remaining invocations of this method are no-ops.
         if LspBlocklistEntry.Guids:
-            result = ",\n".join(
-                [
-                    self.as_c_struct(guid, names)
-                    for guid, names in LspBlocklistEntry.Guids.items()
-                ]
-            )
+            result = ",\n".join([
+                self.as_c_struct(guid, names)
+                for guid, names in LspBlocklistEntry.Guids.items()
+            ])
             print(result, file=output)
             LspBlocklistEntry.Guids.clear()
 

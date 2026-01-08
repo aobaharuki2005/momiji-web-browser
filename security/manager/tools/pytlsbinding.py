@@ -28,7 +28,6 @@ Currently only the algorithms RS256 (RSA PKCS#1v1.5 with SHA-256) and S256
 (SHA-256) are supported.
 """
 
-
 import base64
 import hashlib
 import json

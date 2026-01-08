@@ -10,11 +10,9 @@ import sys
 
 import taskcluster
 
-queue = taskcluster.Queue(
-    {
-        "rootUrl": os.environ.get("TASKCLUSTER_PROXY_URL", "https://taskcluster.net"),
-    }
-)
+queue = taskcluster.Queue({
+    "rootUrl": os.environ.get("TASKCLUSTER_PROXY_URL", "https://taskcluster.net"),
+})
 
 
 def check_all_dependencies_are_completed(current_task_id):

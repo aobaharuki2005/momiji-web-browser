@@ -80,9 +80,9 @@ class GeckoProfilerController:
 
         config_content = f"""env:
   MOZ_PROFILER_STARTUP: 1
-  MOZ_PROFILER_STARTUP_INTERVAL: {geckoprofiler_opts['interval']}
-  MOZ_PROFILER_STARTUP_FEATURES: {geckoprofiler_opts['features']}
-  MOZ_PROFILER_STARTUP_FILTERS: {geckoprofiler_opts['filters']}
+  MOZ_PROFILER_STARTUP_INTERVAL: {geckoprofiler_opts["interval"]}
+  MOZ_PROFILER_STARTUP_FEATURES: {geckoprofiler_opts["features"]}
+  MOZ_PROFILER_STARTUP_FILTERS: {geckoprofiler_opts["filters"]}
 """.encode()
 
         with tempfile.NamedTemporaryFile(delete=False) as config_file:

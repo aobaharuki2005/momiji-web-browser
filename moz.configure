@@ -131,8 +131,7 @@ set_define("FMT_USE_LOCALE", 0)
 option(
     "--enable-debug",
     nargs="?",
-    help="Enable building with developer debug info "
-    "(using the given compiler flags)",
+    help="Enable building with developer debug info (using the given compiler flags)",
 )
 
 

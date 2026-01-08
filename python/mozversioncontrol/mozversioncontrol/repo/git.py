@@ -415,24 +415,22 @@ class GitRepository(Repository):
         # adding or modifying the files from `changed_files`.
         # fast-import will output the sha1 for that temporary commit on stdout
         # (via `get-mark`).
-        fast_import = "\n".join(
-            [
-                f"commit refs/machtry/{branch}",
-                "mark :1",
-                f"author {author}",
-                f"committer {committer}",
-                data(commit_message),
-                f"from {current_head}",
-                "\n".join(
-                    f"M 100644 inline {path}\n{data(content)}"
-                    for path, content in (changed_files or {}).items()
-                ),
-                f"reset refs/machtry/{branch}",
-                "from 0000000000000000000000000000000000000000",
-                "get-mark :1",
-                "",
-            ]
-        )
+        fast_import = "\n".join([
+            f"commit refs/machtry/{branch}",
+            "mark :1",
+            f"author {author}",
+            f"committer {committer}",
+            data(commit_message),
+            f"from {current_head}",
+            "\n".join(
+                f"M 100644 inline {path}\n{data(content)}"
+                for path, content in (changed_files or {}).items()
+            ),
+            f"reset refs/machtry/{branch}",
+            "from 0000000000000000000000000000000000000000",
+            "get-mark :1",
+            "",
+        ])
 
         cmd = (str(self._tool), "fast-import", "--quiet")
         stdout = subprocess.check_output(

@@ -49,9 +49,11 @@ class BrowsertimeDesktop(PerftestDesktop, Browsertime):
 
         # Add this argument here, it's added by mozrunner
         # for raptor
-        chrome_args.extend(
-            ["--no-first-run", "--no-experiments", "--disable-site-isolation-trials"]
-        )
+        chrome_args.extend([
+            "--no-first-run",
+            "--no-experiments",
+            "--disable-site-isolation-trials",
+        ])
 
         # Disable finch experiments
         chrome_args += ["--enable-benchmarking"]

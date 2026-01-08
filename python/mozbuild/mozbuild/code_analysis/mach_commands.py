@@ -582,8 +582,7 @@ def _get_clang_tidy_command(
 @StaticAnalysisSubCommand(
     "static-analysis",
     "autotest",
-    "Run the auto-test suite in order to determine that"
-    " the analysis did not regress.",
+    "Run the auto-test suite in order to determine that the analysis did not regress.",
 )
 @CommandArgument(
     "--dump-results",

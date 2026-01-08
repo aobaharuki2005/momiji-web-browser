@@ -174,16 +174,13 @@ def WebIDLTest(parser, harness):
     parser = parser.reset()
 
     for invalid in invalidUnionTypes:
-        interface = (
-            testPre
-            + string.Template(
-                """
+        interface = testPre + string.Template(
+            """
             interface TestUnion {
               undefined method(${type} arg);
             };
         """
-            ).substitute(type=invalid)
-        )
+        ).substitute(type=invalid)
 
         threw = False
         try:

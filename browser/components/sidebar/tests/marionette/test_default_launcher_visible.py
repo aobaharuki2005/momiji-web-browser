@@ -15,7 +15,6 @@ initial_prefs = {
 
 
 class TestDefaultLauncherVisible(MarionetteTestCase):
-
     def setUp(self):
         MarionetteTestCase.setUp(self)
 
@@ -106,12 +105,10 @@ class TestDefaultLauncherVisible(MarionetteTestCase):
         )
 
         # Mimic an update which enables sidebar.revamp for the first time
-        self.restart_with_prefs(
-            {
-                "sidebar.revamp": True,
-                "browser.startup.page": 3,
-            }
-        )
+        self.restart_with_prefs({
+            "sidebar.revamp": True,
+            "browser.startup.page": 3,
+        })
 
         self.assertTrue(
             self.is_button_visible(),
@@ -222,12 +219,10 @@ class TestDefaultLauncherVisible(MarionetteTestCase):
         )
 
         # This mocks the enrollment in which Nimbus sets the following prefs
-        self.marionette.set_prefs(
-            {
-                "sidebar.revamp": True,
-                "sidebar.revamp.defaultLauncherVisible": False,
-            }
-        )
+        self.marionette.set_prefs({
+            "sidebar.revamp": True,
+            "sidebar.revamp.defaultLauncherVisible": False,
+        })
 
         # We expect enabling the pref to add the button to the toolbar
         Wait(self.marionette).until(
@@ -254,13 +249,11 @@ class TestDefaultLauncherVisible(MarionetteTestCase):
     def test_vertical_tabs_default_hidden(self):
         # Verify that starting with verticalTabs enabled and default visibility false results in a visible
         # launcher with the vertical tabstrip
-        self.restart_with_prefs(
-            {
-                "sidebar.revamp": True,
-                "sidebar.verticalTabs": True,
-                "sidebar.visibility": "always-show",
-            }
-        )
+        self.restart_with_prefs({
+            "sidebar.revamp": True,
+            "sidebar.verticalTabs": True,
+            "sidebar.visibility": "always-show",
+        })
 
         Wait(self.marionette).until(
             lambda _: self.is_launcher_visible(),

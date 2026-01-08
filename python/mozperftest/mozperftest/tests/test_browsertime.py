@@ -290,9 +290,9 @@ def test_add_options():
     "mozperftest.test.browsertime.runner.BrowsertimeRunner._setup_node_packages"
 )
 def test_install_url(*mocked):
-    url = "https://here/tarball/" + "".join(
-        [random.choice(string.hexdigits[:-6]) for c in range(40)]
-    )
+    url = "https://here/tarball/" + "".join([
+        random.choice(string.hexdigits[:-6]) for c in range(40)
+    ])
     mach, metadata, env = get_running_env(
         browsertime_install_url=url,
         tests=[EXAMPLE_TEST],

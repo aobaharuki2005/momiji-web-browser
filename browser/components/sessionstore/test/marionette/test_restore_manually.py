@@ -26,17 +26,15 @@ class TestSessionRestoreManually(SessionStoreTestCase):
             startup_page=1,
             include_private=False,
             restore_on_demand=True,
-            test_windows=set(
-                [
-                    # Window 1
-                    (
-                        inline("lorem ipsom"),
-                        inline("dolor"),
-                    ),
-                    # Window 2
-                    (inline("sit"),),
-                ]
-            ),
+            test_windows=set([
+                # Window 1
+                (
+                    inline("lorem ipsom"),
+                    inline("dolor"),
+                ),
+                # Window 2
+                (inline("sit"),),
+            ]),
         )
 
     def test_restore(self):

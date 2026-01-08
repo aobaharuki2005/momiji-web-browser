@@ -58,7 +58,7 @@ def check(params, file_patterns):
         revision = params.get("comm_head_rev")
         if not revision:
             logger.warning(
-                "Missing `comm_head_rev` parameters; " "assuming all files have changed"
+                "Missing `comm_head_rev` parameters; assuming all files have changed"
             )
             return True
 

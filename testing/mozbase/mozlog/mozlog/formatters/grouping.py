@@ -155,7 +155,7 @@ class GroupingFormatter(base.BaseFormatter):
     def wrap_and_indent_lines(self, lines, indent):
         assert len(lines) > 0
 
-        output = indent + "\u25B6 %s\n" % lines[0]
+        output = indent + "\u25b6 %s\n" % lines[0]
         for line in lines[1:-1]:
             output += indent + "\u2502 %s\n" % line
         if len(lines) > 1:

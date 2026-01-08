@@ -50,7 +50,7 @@ def main(output, annotations_path):
 
         args = ""
         if glean_type == "string_list":
-            args += f", \"{glean['delimiter']}\""
+            args += f', "{glean["delimiter"]}"'
 
         output.write(
             f'#[allow(non_upper_case_globals)] pub const {name}: Annotation = convert!({namespace}::{metric} = {conversion}("{name}"{args}));\n'

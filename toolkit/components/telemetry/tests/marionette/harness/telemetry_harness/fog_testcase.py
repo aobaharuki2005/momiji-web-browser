@@ -43,22 +43,20 @@ class FOGTestCase(TelemetryTestCase):
             f"Submitting to FOG ping server at {self.fog_ping_server.url}"
         )
 
-        self.marionette.enforce_gecko_prefs(
-            {
-                "telemetry.fog.test.localhost_port": self.fog_ping_server.port,
-                # Enable FOG logging. 5 means "Verbose". See
-                # https://firefox-source-docs.mozilla.org/xpcom/logging.html
-                # for details.
-                "logging.config.clear_on_startup": False,
-                "logging.config.sync": True,
-                "logging.fog::*": 5,
-                "logging.fog_control::*": 5,
-                "logging.glean::*": 5,
-                "logging.glean_core::*": 5,
-                # Slow down the user inactivity timeout (bug 1690728)
-                "dom.events.user_interaction_interval": 60000,
-            }
-        )
+        self.marionette.enforce_gecko_prefs({
+            "telemetry.fog.test.localhost_port": self.fog_ping_server.port,
+            # Enable FOG logging. 5 means "Verbose". See
+            # https://firefox-source-docs.mozilla.org/xpcom/logging.html
+            # for details.
+            "logging.config.clear_on_startup": False,
+            "logging.config.sync": True,
+            "logging.fog::*": 5,
+            "logging.fog_control::*": 5,
+            "logging.glean::*": 5,
+            "logging.glean_core::*": 5,
+            # Slow down the user inactivity timeout (bug 1690728)
+            "dom.events.user_interaction_interval": 60000,
+        })
 
     def tearDown(self, *args, **kwargs):
         super().tearDown(*args, **kwargs)

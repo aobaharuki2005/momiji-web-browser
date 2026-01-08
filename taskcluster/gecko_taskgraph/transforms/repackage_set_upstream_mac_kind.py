@@ -36,7 +36,7 @@ def repackage_set_upstream_mac_kind(config, tasks):
             **{
                 "build-platform": primary_dep.attributes["build_platform"],
                 "release-level": release_level(config.params),
-            }
+            },
         )
         upstream_mac_kind = task.pop("upstream-mac-kind")
 

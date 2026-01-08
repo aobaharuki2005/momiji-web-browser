@@ -132,8 +132,7 @@ class CommonTestCase(unittest.TestCase, metaclass=MetaParameterized):
                 addExpectedFailure(self, exc_info)
             else:
                 warnings.warn(
-                    "TestResult has no addExpectedFailure method, "
-                    "reporting as passes",
+                    "TestResult has no addExpectedFailure method, reporting as passes",
                     RuntimeWarning,
                 )
                 result.addSuccess(self)

@@ -609,16 +609,13 @@ class Perftest(metaclass=ABCMeta):
             playback_manifest = test.get("playback_pageset_manifest")
         playback_manifests = playback_manifest.split(",")
 
-        self.config.update(
-            {
-                "playback_tool": test.get("playback"),
-                "playback_version": test.get("playback_version", "8.1.1"),
-                "playback_files": [
-                    os.path.join(playback_dir, manifest)
-                    for manifest in playback_manifests
-                ],
-            }
-        )
+        self.config.update({
+            "playback_tool": test.get("playback"),
+            "playback_version": test.get("playback_version", "8.1.1"),
+            "playback_files": [
+                os.path.join(playback_dir, manifest) for manifest in playback_manifests
+            ],
+        })
 
         LOG.info("test uses playback tool: %s " % self.config["playback_tool"])
 

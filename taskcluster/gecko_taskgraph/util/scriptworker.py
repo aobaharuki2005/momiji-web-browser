@@ -15,6 +15,7 @@ happen on mozilla-beta and mozilla-release.
 
 Additional configuration is found in the :ref:`graph config <taskgraph-graph-config>`.
 """
+
 import functools
 import itertools
 import json
@@ -457,12 +458,10 @@ def get_release_config(config):
         "release-secondary-balrog-submit-toplevel",
     ):
         partial_updates = json.loads(partial_updates)
-        release_config["partial_versions"] = ", ".join(
-            [
-                "{}build{}".format(v, info["buildNumber"])
-                for v, info in partial_updates.items()
-            ]
-        )
+        release_config["partial_versions"] = ", ".join([
+            "{}build{}".format(v, info["buildNumber"])
+            for v, info in partial_updates.items()
+        ])
         if release_config["partial_versions"] == "{}":
             del release_config["partial_versions"]
 
@@ -593,14 +592,12 @@ def generate_beetmover_upstream_artifacts(
         if not paths:
             continue
 
-        upstream_artifacts.append(
-            {
-                "taskId": {"task-reference": f"<{dep}>"},
-                "taskType": map_config["tasktype_map"].get(dep),
-                "paths": sorted(paths),
-                "locale": current_locale,
-            }
-        )
+        upstream_artifacts.append({
+            "taskId": {"task-reference": f"<{dep}>"},
+            "taskType": map_config["tasktype_map"].get(dep),
+            "paths": sorted(paths),
+            "locale": current_locale,
+        })
 
     upstream_artifacts.sort(key=lambda u: u["paths"])
     return upstream_artifacts
@@ -788,28 +785,24 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
 
         upload_date = datetime.fromtimestamp(config.params["build_date"])
 
-        kwargs.update(
-            {
-                "locale": locale,
-                "version": config.params["version"],
-                "branch": config.params["project"],
-                "build_number": config.params["build_number"],
-                "year": upload_date.year,
-                "month": upload_date.strftime("%m"),  # zero-pad the month
-                "day": upload_date.strftime("%d"),
-                "upload_date": upload_date.strftime("%Y-%m-%d-%H-%M-%S"),
-                "head_rev": config.params["head_rev"],
-            }
-        )
+        kwargs.update({
+            "locale": locale,
+            "version": config.params["version"],
+            "branch": config.params["project"],
+            "build_number": config.params["build_number"],
+            "year": upload_date.year,
+            "month": upload_date.strftime("%m"),  # zero-pad the month
+            "day": upload_date.strftime("%d"),
+            "upload_date": upload_date.strftime("%Y-%m-%d-%H-%M-%S"),
+            "head_rev": config.params["head_rev"],
+        })
         kwargs.update(**platforms)
         paths = jsone.render(paths, kwargs)
-        artifacts.append(
-            {
-                "taskId": {"task-reference": f"<{dep}>"},
-                "locale": locale,
-                "paths": paths,
-            }
-        )
+        artifacts.append({
+            "taskId": {"task-reference": f"<{dep}>"},
+            "locale": locale,
+            "paths": paths,
+        })
 
     return artifacts
 
@@ -942,34 +935,30 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
                     }
 
                 # render buildid
-                kwargs.update(
-                    {
-                        "partial": pname,
-                        "from_buildid": info["buildid"],
-                        "previous_version": info.get("previousVersion"),
-                        "buildid": str(config.params["moz_build_date"]),
-                        "locale": locale,
-                        "version": config.params["version"],
-                        "branch": config.params["project"],
-                        "build_number": config.params["build_number"],
-                        "year": upload_date.year,
-                        "month": upload_date.strftime("%m"),  # zero-pad the month
-                        "upload_date": upload_date.strftime("%Y-%m-%d-%H-%M-%S"),
-                    }
-                )
+                kwargs.update({
+                    "partial": pname,
+                    "from_buildid": info["buildid"],
+                    "previous_version": info.get("previousVersion"),
+                    "buildid": str(config.params["moz_build_date"]),
+                    "locale": locale,
+                    "version": config.params["version"],
+                    "branch": config.params["project"],
+                    "build_number": config.params["build_number"],
+                    "year": upload_date.year,
+                    "month": upload_date.strftime("%m"),  # zero-pad the month
+                    "upload_date": upload_date.strftime("%Y-%m-%d-%H-%M-%S"),
+                })
                 kwargs.update(**platforms)
                 paths.update(jsone.render(partials_paths, kwargs))
 
         if not paths:
             continue
 
-        artifacts.append(
-            {
-                "taskId": {"task-reference": f"<{dep}>"},
-                "locale": locale,
-                "paths": paths,
-            }
-        )
+        artifacts.append({
+            "taskId": {"task-reference": f"<{dep}>"},
+            "locale": locale,
+            "paths": paths,
+        })
 
     artifacts.sort(key=lambda a: sorted(a["paths"].items()))
     return artifacts

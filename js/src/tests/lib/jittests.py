@@ -288,12 +288,12 @@ class JitTest:
                             else:
                                 test.expect_status = status
                         except ValueError:
-                            print("warning: couldn't parse exit status" f" {value}")
+                            print(f"warning: couldn't parse exit status {value}")
                     elif name == "thread-count":
                         try:
                             test.jitflags.append(f"--thread-count={int(value, 0)}")
                         except ValueError:
-                            print("warning: couldn't parse thread-count" f" {value}")
+                            print(f"warning: couldn't parse thread-count {value}")
                     elif name == "include":
                         test.other_lib_includes.append(value)
                     elif name == "local-include":
@@ -310,8 +310,7 @@ class JitTest:
                             print("warning: couldn't parse skip-variant-if")
                     else:
                         print(
-                            f"{path}: warning: unrecognized |jit-test| attribute"
-                            f" {part}"
+                            f"{path}: warning: unrecognized |jit-test| attribute {part}"
                         )
                 elif name == "slow":
                     test.slow = True
@@ -339,9 +338,9 @@ class JitTest:
                     # works, and not meant as a way to accept temporary
                     # failing tests. These tests should either be fixed or
                     # skipped.
-                    assert (
-                        "self-test" in path
-                    ), f"{path}: has an unexpected crash annotation."
+                    assert "self-test" in path, (
+                        f"{path}: has an unexpected crash annotation."
+                    )
                     test.expect_crash = True
                 elif name.startswith("--"):
                     # // |jit-test| --ion-gvn=off; --no-sse4
@@ -352,9 +351,7 @@ class JitTest:
                     # // |jit-test| -P pref(=value)?
                     test.jitflags.append("--setpref=" + prefAndValue[1])
                 else:
-                    print(
-                        f"{path}: warning: unrecognized |jit-test| attribute" f" {part}"
-                    )
+                    print(f"{path}: warning: unrecognized |jit-test| attribute {part}")
 
         if options.valgrind_all:
             test.valgrind = True

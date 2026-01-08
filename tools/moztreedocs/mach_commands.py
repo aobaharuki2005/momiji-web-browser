@@ -474,7 +474,7 @@ def _s3_upload(root, project, unique_id, version=None):
 def generate_telemetry_docs(command_context):
     args = [
         sys.executable,
-        "-m" "glean_parser",
+        "-mglean_parser",
         "translate",
         "-f",
         "markdown",
@@ -489,9 +489,9 @@ def generate_telemetry_docs(command_context):
         for handler in Registrar.command_handlers.values()
         if handler.metrics_path is not None
     ]
-    args.extend(
-        [os.path.join(command_context.topsrcdir, path) for path in set(metrics_paths)]
-    )
+    args.extend([
+        os.path.join(command_context.topsrcdir, path) for path in set(metrics_paths)
+    ])
     subprocess.check_call(args)
 
 

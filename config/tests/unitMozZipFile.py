@@ -207,6 +207,7 @@ for first in allfiles:
 
 class TestExtensiveDeflated(TestExtensiveStored):
     "Test all that has been tested with ZIP_STORED with DEFLATED, too."
+
     compression = zipfile.ZIP_DEFLATED
 
 

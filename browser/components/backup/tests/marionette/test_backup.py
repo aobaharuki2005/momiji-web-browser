@@ -21,19 +21,17 @@ class BackupTest(MarionetteTestCase):
         # We need to force the service to be enabled because it's disabled
         # by default for Marionette. Also "browser.backup.log" has to be set
         # to true before Firefox starts in order for it to be displayed.
-        self.marionette.enforce_gecko_prefs(
-            {
-                "browser.backup.enabled": True,
-                "browser.backup.log": True,
-                "browser.backup.archive.enabled": True,
-                "browser.backup.restore.enabled": True,
-                "browser.backup.archive.overridePlatformCheck": True,
-                "browser.backup.restore.overridePlatformCheck": True,
-                # Necessary to test Session Restore from backup, which relies on
-                # the crash restore mechanism.
-                "browser.sessionstore.resume_from_crash": True,
-            }
-        )
+        self.marionette.enforce_gecko_prefs({
+            "browser.backup.enabled": True,
+            "browser.backup.log": True,
+            "browser.backup.archive.enabled": True,
+            "browser.backup.restore.enabled": True,
+            "browser.backup.archive.overridePlatformCheck": True,
+            "browser.backup.restore.overridePlatformCheck": True,
+            # Necessary to test Session Restore from backup, which relies on
+            # the crash restore mechanism.
+            "browser.sessionstore.resume_from_crash": True,
+        })
 
         self.marionette.set_context("chrome")
 

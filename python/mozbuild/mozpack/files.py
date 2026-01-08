@@ -1253,13 +1253,11 @@ class MercurialRevisionFinder(BaseFinder):
 
         # Immediately populate the list of files in the repo since nearly every
         # operation requires this list.
-        out = self._client.rawcommand(
-            [
-                b"files",
-                b"--rev",
-                self._rev.encode(),
-            ]
-        )
+        out = self._client.rawcommand([
+            b"files",
+            b"--rev",
+            self._rev.encode(),
+        ])
         for relpath in out.splitlines():
             # Mercurial may use \ as path separator on Windows. So use
             # normpath().

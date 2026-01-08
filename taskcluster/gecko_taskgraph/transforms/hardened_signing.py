@@ -122,12 +122,10 @@ def add_upstream_signing_resources(config, jobs):
         task_type = "build"
         if "notarization" in dep_job.kind:
             task_type = "scriptworker"
-        job["worker"].setdefault("upstream-artifacts", []).append(
-            {
-                "paths": sorted(upstream_files),
-                "taskId": {"task-reference": task_ref},
-                "taskType": task_type,
-                "formats": [],  # Not for signing
-            }
-        )
+        job["worker"].setdefault("upstream-artifacts", []).append({
+            "paths": sorted(upstream_files),
+            "taskId": {"task-reference": task_ref},
+            "taskType": task_type,
+            "formats": [],  # Not for signing
+        })
         yield job

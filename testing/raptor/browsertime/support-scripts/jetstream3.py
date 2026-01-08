@@ -20,7 +20,6 @@ class JetStreamSupport(BasePythonSupport):
         score_tracker = {}
 
         for k, v in raw_result["extras"][0]["js3_res"]["tests"].items():
-
             score_tracker[k + "-" + "Geometric"] = v["metrics"]["Score"]["current"]
             for measure, metrics in v["tests"].items():
                 score_tracker[k + "-" + measure] = metrics["metrics"]["Time"]["current"]

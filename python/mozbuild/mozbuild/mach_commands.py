@@ -127,36 +127,34 @@ def _cargo_config_yaml_schema():
         else:
             raise ValueError
 
-    return Schema(
-        {
-            # The name of the command (not checked for now, but maybe
-            #  later)
-            Required("command"): All(str, starts_with_cargo),
-            # Whether `make` should stop immediately in case
-            # of error returned by the command. Default: False
-            "continue_on_error": Boolean,
-            # Whether this command requires pre_export and export build
-            # targets to have run. Defaults to bool(cargo_build_flags).
-            "requires_export": Boolean,
-            # Build flags to use.  If this variable is not
-            # defined here, the build flags are generated automatically and are
-            # the same as for `cargo build`. See available substitutions at the
-            # end.
-            "cargo_build_flags": [str],
-            # Extra build flags to use. These flags are added
-            # after the cargo_build_flags both when they are provided or
-            # automatically generated. See available substitutions at the end.
-            "cargo_extra_flags": [str],
-            # Available substitutions for `cargo_*_flags`:
-            # * {arch}: architecture target
-            # * {crate}: current crate name
-            # * {directory}: Directory of the current crate within the source tree
-            # * {features}: Rust features (for `--features`)
-            # * {manifest}: full path of `Cargo.toml` file
-            # * {target}: `--lib` for library, `--bin CRATE` for executables
-            # * {topsrcdir}: Top directory of sources
-        }
-    )
+    return Schema({
+        # The name of the command (not checked for now, but maybe
+        #  later)
+        Required("command"): All(str, starts_with_cargo),
+        # Whether `make` should stop immediately in case
+        # of error returned by the command. Default: False
+        "continue_on_error": Boolean,
+        # Whether this command requires pre_export and export build
+        # targets to have run. Defaults to bool(cargo_build_flags).
+        "requires_export": Boolean,
+        # Build flags to use.  If this variable is not
+        # defined here, the build flags are generated automatically and are
+        # the same as for `cargo build`. See available substitutions at the
+        # end.
+        "cargo_build_flags": [str],
+        # Extra build flags to use. These flags are added
+        # after the cargo_build_flags both when they are provided or
+        # automatically generated. See available substitutions at the end.
+        "cargo_extra_flags": [str],
+        # Available substitutions for `cargo_*_flags`:
+        # * {arch}: architecture target
+        # * {crate}: current crate name
+        # * {directory}: Directory of the current crate within the source tree
+        # * {features}: Rust features (for `--features`)
+        # * {manifest}: full path of `Cargo.toml` file
+        # * {target}: `--lib` for library, `--bin CRATE` for executables
+        # * {topsrcdir}: Top directory of sources
+    })
 
 
 @Command(
@@ -487,8 +485,9 @@ CLOBBER_CHOICES = {"objdir", "python", "gradle", "artifacts"}
     "what",
     default=["objdir", "python"],
     nargs="*",
-    help="Target to clobber, must be one of {{{}}} (default "
-    "objdir and python).".format(", ".join(CLOBBER_CHOICES)),
+    help="Target to clobber, must be one of {{{}}} (default objdir and python).".format(
+        ", ".join(CLOBBER_CHOICES)
+    ),
 )
 @CommandArgument("--full", action="store_true", help="Perform a full clobber")
 def clobber(command_context, what, full=False):
@@ -717,16 +716,14 @@ def handle_log_file(command_context, log_file):
             start_time = created
             command_context.log_manager.terminal_handler.formatter.start_time = created
         if "line" in params:
-            record = logging.makeLogRecord(
-                {
-                    "created": created,
-                    "name": command_context._logger.name,
-                    "levelno": logging.INFO,
-                    "msg": "{line}",
-                    "params": params,
-                    "action": action,
-                }
-            )
+            record = logging.makeLogRecord({
+                "created": created,
+                "name": command_context._logger.name,
+                "levelno": logging.INFO,
+                "msg": "{line}",
+                "params": params,
+                "action": action,
+            })
             command_context._logger.handle(record)
 
 
@@ -1582,8 +1579,7 @@ def _get_android_run_parser():
         "--no-wait",
         action="store_true",
         default=False,
-        help="Do not wait for application to start before returning "
-        "(default: False)",
+        help="Do not wait for application to start before returning (default: False)",
     )
     group.add_argument(
         "--enable-fission",
@@ -1736,8 +1732,7 @@ def _get_desktop_run_parser():
     group.add_argument(
         "--temp-profile",
         action="store_true",
-        help="Run the program using a new temporary profile created inside "
-        "the objdir.",
+        help="Run the program using a new temporary profile created inside the objdir.",
     )
     group.add_argument(
         "--macos-open",
@@ -3097,8 +3092,7 @@ def repackage_msi(
     "--unsigned",
     default=False,
     action="store_true",
-    help="Support `Add-AppxPackage ... -AllowUnsigned` on Windows 11."
-    "(Default: false)",
+    help="Support `Add-AppxPackage ... -AllowUnsigned` on Windows 11.(Default: false)",
 )
 def repackage_msix(
     command_context,
@@ -3541,8 +3535,7 @@ def repackage_snap_install(command_context, snap_file, snap_name, sudo=None):
             logging.ERROR,
             "repackage-snap-install-no-sudo",
             {},
-            "Couldn't find a command to run snap as root; please use the"
-            " --sudo option",
+            "Couldn't find a command to run snap as root; please use the --sudo option",
         )
 
     if not snap_file:
