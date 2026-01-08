@@ -1797,6 +1797,7 @@ export class DiscoveryStreamFeed {
                   publisher: item.publisher,
                   raw_image_src: item.imageUrl,
                   received_rank: item.receivedRank,
+                  server_score: item.serverScore,
                   recommended_at: feedResponse.recommendedAt,
                   section: sectionKey,
                   icon_src: item.iconUrl,
