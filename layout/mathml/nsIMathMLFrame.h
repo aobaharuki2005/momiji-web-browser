@@ -216,28 +216,20 @@ class nsIMathMLFrame {
 // state in those frames that are not part of the embellished hierarchy.
 struct nsEmbellishData {
   // bits used to mark certain properties of our embellishments
-  uint32_t flags;
+  uint32_t flags = 0;
 
   // pointer on the <mo> frame at the core of the embellished hierarchy
-  nsIFrame* coreFrame;
+  nsIFrame* coreFrame = nullptr;
 
   // stretchy direction that the nsMathMLChar owned by the core <mo> supports
-  nsStretchDirection direction;
+  nsStretchDirection direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
 
   // spacing that may come from <mo> depending on its 'form'. Since
   // the 'form' may also depend on the position of the outermost
   // embellished ancestor, the set up of these values may require
   // looking up the position of our ancestors.
-  nscoord leadingSpace;
-  nscoord trailingSpace;
-
-  nsEmbellishData() {
-    flags = 0;
-    coreFrame = nullptr;
-    direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    leadingSpace = 0;
-    trailingSpace = 0;
-  }
+  nscoord leadingSpace = 0;
+  nscoord trailingSpace = 0;
 };
 
 // struct used by a container frame to modulate its presentation.
@@ -250,17 +242,12 @@ struct nsEmbellishData {
 // descendants that affects us.
 struct nsPresentationData {
   // bits for: compressed, etc
-  uint32_t flags;
+  uint32_t flags = 0;
 
   // handy pointer on our base child (the 'nucleus' in TeX), but it may be
   // null here (e.g., tags like <mrow>, <mfrac>, <mtable>, etc, won't
   // pick a particular child in their child list to be the base)
-  nsIFrame* baseFrame;
-
-  nsPresentationData() {
-    flags = 0;
-    baseFrame = nullptr;
-  }
+  nsIFrame* baseFrame = nullptr;
 };
 
 // ==========================================================================
