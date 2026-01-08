@@ -47,7 +47,7 @@ eMathMLFrameType nsMathMLFrame::GetMathMLFrameType() {
 
 NS_IMETHODIMP
 nsMathMLFrame::InheritAutomaticData(nsIFrame* aParent) {
-  mEmbellishData.flags = 0;
+  mEmbellishData.flags.clear();
   mEmbellishData.coreFrame = nullptr;
   mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   mEmbellishData.leadingSpace = 0;
@@ -95,7 +95,7 @@ nsMathMLFrame::UpdatePresentationData(MathMLPresentationFlags aFlagsValues,
 void nsMathMLFrame::GetEmbellishDataFrom(nsIFrame* aFrame,
                                          nsEmbellishData& aEmbellishData) {
   // initialize OUT params
-  aEmbellishData.flags = 0;
+  aEmbellishData.flags.clear();
   aEmbellishData.coreFrame = nullptr;
   aEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   aEmbellishData.leadingSpace = 0;

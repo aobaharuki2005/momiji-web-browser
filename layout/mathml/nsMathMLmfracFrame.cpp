@@ -71,7 +71,7 @@ nsMathMLmfracFrame::TransmitAutomaticData() {
 
   // if our numerator is an embellished operator, let its state bubble to us
   GetEmbellishDataFrom(mFrames.FirstChild(), mEmbellishData);
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
+  if (mEmbellishData.flags.contains(MathMLEmbellishFlag::EmbellishedOperator)) {
     // even when embellished, we need to record that <mfrac> won't fire
     // Stretch() on its embellished child
     mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;

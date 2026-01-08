@@ -210,9 +210,10 @@ void nsMathMLContainerFrame::GetPreferredStretchSize(
     NS_ASSERTION(aStretchDirection == NS_STRETCH_DIRECTION_HORIZONTAL ||
                      aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL,
                  "You must specify a direction in which to stretch");
-    NS_ASSERTION(
-        NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) || stretchAll,
-        "invalid call to GetPreferredStretchSize");
+    NS_ASSERTION(mEmbellishData.flags.contains(
+                     MathMLEmbellishFlag::EmbellishedOperator) ||
+                     stretchAll,
+                 "invalid call to GetPreferredStretchSize");
     bool firstTime = true;
     nsBoundingMetrics bm, bmChild;
     nsIFrame* childFrame = stretchAll ? PrincipalChildList().FirstChild()
@@ -225,7 +226,8 @@ void nsMathMLContainerFrame::GetPreferredStretchSize(
         nsPresentationData presentationData;
         mathMLFrame->GetEmbellishData(embellishData);
         mathMLFrame->GetPresentationData(presentationData);
-        if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) &&
+        if (embellishData.flags.contains(
+                MathMLEmbellishFlag::EmbellishedOperator) &&
             embellishData.direction == aStretchDirection &&
             presentationData.baseFrame) {
           // embellishements are not included, only consider the inner first
@@ -292,7 +294,7 @@ nsMathMLContainerFrame::Stretch(DrawTarget* aDrawTarget,
                                 nsStretchDirection aStretchDirection,
                                 nsBoundingMetrics& aContainerSize,
                                 ReflowOutput& aDesiredStretchSize) {
-  if (NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
+  if (mEmbellishData.flags.contains(MathMLEmbellishFlag::EmbellishedOperator)) {
     if (mPresentationData.flags.contains(MathMLPresentationFlag::StretchDone)) {
       NS_WARNING("it is wrong to fire stretch more than once on a frame");
       return NS_OK;
@@ -466,7 +468,8 @@ nsresult nsMathMLContainerFrame::FinalizeReflow(DrawTarget* aDrawTarget,
   // <mo>...</mo> itself.
   // (<mo> needs to fire stretch on its MathMLChar in any case to initialize it)
   bool placeOrigin =
-      !NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) ||
+      !mEmbellishData.flags.contains(
+          MathMLEmbellishFlag::EmbellishedOperator) ||
       (mEmbellishData.coreFrame != this && !mPresentationData.baseFrame &&
        mEmbellishData.direction == NS_STRETCH_DIRECTION_UNSUPPORTED);
   PlaceFlags flags;
@@ -491,7 +494,8 @@ nsresult nsMathMLContainerFrame::FinalizeReflow(DrawTarget* aDrawTarget,
               MathMLPresentationFlag::StretchAllChildrenVertically) ||
           presentationData.flags.contains(
               MathMLPresentationFlag::StretchAllChildrenHorizontally) ||
-          (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) &&
+          (embellishData.flags.contains(
+               MathMLEmbellishFlag::EmbellishedOperator) &&
            presentationData.baseFrame == this)) {
         parentWillFireStretch = true;
       }
@@ -862,7 +866,8 @@ void nsMathMLContainerFrame::Reflow(nsPresContext* aPresContext,
 
   DrawTarget* drawTarget = aReflowInput.mRenderingContext->GetDrawTarget();
 
-  if (!NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) &&
+  if (!mEmbellishData.flags.contains(
+          MathMLEmbellishFlag::EmbellishedOperator) &&
       (mPresentationData.flags.contains(
            MathMLPresentationFlag::StretchAllChildrenVertically) ||
        mPresentationData.flags.contains(
@@ -1389,7 +1394,8 @@ nsresult nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement() {
       }
       baseFrame = childFrame;
       GetEmbellishDataFrom(baseFrame, embellishData);
-      if (!NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags)) {
+      if (!embellishData.flags.contains(
+              MathMLEmbellishFlag::EmbellishedOperator)) {
         break;
       }
       embellishedOpFound = true;
@@ -1413,7 +1419,7 @@ nsresult nsMathMLContainerFrame::TransmitAutomaticDataForMrowLikeElement() {
   if (childFrame || !embellishedOpFound) {
     // The element is not embellished operator
     mPresentationData.baseFrame = nullptr;
-    mEmbellishData.flags = 0;
+    mEmbellishData.flags.clear();
     mEmbellishData.coreFrame = nullptr;
     mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
     mEmbellishData.leadingSpace = 0;

@@ -62,6 +62,36 @@ enum class MathMLPresentationFlag : uint8_t {
 };
 using MathMLPresentationFlags = mozilla::EnumSet<MathMLPresentationFlag>;
 
+// Bits used for the embellish flags -- these bits are set
+// in their relevant situation as they become available
+enum class MathMLEmbellishFlag : uint8_t {
+  // This bit is set if the frame is an embellished operator.
+  EmbellishedOperator,
+
+  // This bit is set if the frame is an <mo> frame or an embellihsed
+  // operator for which the core <mo> has movablelimits="true"
+  MovableLimits,
+
+  // This bit is set if the frame is an <mo> frame or an embellihsed
+  // operator for which the core <mo> has accent="true"
+  Accent,
+
+  // This bit is set if the frame is an <mover> or <munderover> with
+  // an accent frame
+  AccentOver,
+
+  // This bit is set if the frame is an <munder> or <munderover> with
+  // an accentunder frame
+  AccentUnder,
+
+  // This bit is set on the core if it is a fence operator.
+  Fence,
+
+  // This bit is set on the core if it is a separator operator.
+  Separator,
+};
+using MathMLEmbellishFlags = mozilla::EnumSet<MathMLEmbellishFlag>;
+
 // Abstract base class that provides additional methods for MathML frames
 class nsIMathMLFrame {
  public:
@@ -248,7 +278,7 @@ class nsIMathMLFrame {
 // state in those frames that are not part of the embellished hierarchy.
 struct nsEmbellishData {
   // bits used to mark certain properties of our embellishments
-  uint32_t flags = 0;
+  MathMLEmbellishFlags flags;
 
   // pointer on the <mo> frame at the core of the embellished hierarchy
   nsIFrame* coreFrame = nullptr;
@@ -281,60 +311,5 @@ struct nsPresentationData {
   // pick a particular child in their child list to be the base)
   nsIFrame* baseFrame = nullptr;
 };
-
-// ==========================================================================
-// Bits used for the embellish flags -- these bits are set
-// in their relevant situation as they become available
-
-// This bit is set if the frame is an embellished operator.
-#define NS_MATHML_EMBELLISH_OPERATOR 0x00000001
-
-// This bit is set if the frame is an <mo> frame or an embellihsed
-// operator for which the core <mo> has movablelimits="true"
-#define NS_MATHML_EMBELLISH_MOVABLELIMITS 0x00000002
-
-// This bit is set if the frame is an <mo> frame or an embellihsed
-// operator for which the core <mo> has accent="true"
-#define NS_MATHML_EMBELLISH_ACCENT 0x00000004
-
-// This bit is set if the frame is an <mover> or <munderover> with
-// an accent frame
-#define NS_MATHML_EMBELLISH_ACCENTOVER 0x00000008
-
-// This bit is set if the frame is an <munder> or <munderover> with
-// an accentunder frame
-#define NS_MATHML_EMBELLISH_ACCENTUNDER 0x00000010
-
-// This bit is set on the core if it is a fence operator.
-#define NS_MATHML_EMBELLISH_FENCE 0x00000020
-
-// This bit is set on the core if it is a separator operator.
-#define NS_MATHML_EMBELLISH_SEPARATOR 0x00000040
-
-// Macros that retrieve those bits
-
-#define NS_MATHML_IS_EMBELLISH_OPERATOR(_flags) \
-  (NS_MATHML_EMBELLISH_OPERATOR == ((_flags) & NS_MATHML_EMBELLISH_OPERATOR))
-
-#define NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(_flags) \
-  (NS_MATHML_EMBELLISH_MOVABLELIMITS ==              \
-   ((_flags) & NS_MATHML_EMBELLISH_MOVABLELIMITS))
-
-#define NS_MATHML_EMBELLISH_IS_ACCENT(_flags) \
-  (NS_MATHML_EMBELLISH_ACCENT == ((_flags) & NS_MATHML_EMBELLISH_ACCENT))
-
-#define NS_MATHML_EMBELLISH_IS_ACCENTOVER(_flags) \
-  (NS_MATHML_EMBELLISH_ACCENTOVER ==              \
-   ((_flags) & NS_MATHML_EMBELLISH_ACCENTOVER))
-
-#define NS_MATHML_EMBELLISH_IS_ACCENTUNDER(_flags) \
-  (NS_MATHML_EMBELLISH_ACCENTUNDER ==              \
-   ((_flags) & NS_MATHML_EMBELLISH_ACCENTUNDER))
-
-#define NS_MATHML_EMBELLISH_IS_FENCE(_flags) \
-  (NS_MATHML_EMBELLISH_FENCE == ((_flags) & NS_MATHML_EMBELLISH_FENCE))
-
-#define NS_MATHML_EMBELLISH_IS_SEPARATOR(_flags) \
-  (NS_MATHML_EMBELLISH_SEPARATOR == ((_flags) & NS_MATHML_EMBELLISH_SEPARATOR))
 
 #endif /* nsIMathMLFrame_h___ */
