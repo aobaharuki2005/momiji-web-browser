@@ -7,12 +7,10 @@ package org.mozilla.fenix.bookmarks
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.lib.state.Middleware
 import mozilla.components.lib.state.Store
-import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.AppStore
@@ -20,9 +18,6 @@ import org.mozilla.fenix.components.appstate.AppState
 
 @RunWith(AndroidJUnit4::class)
 class PrivateBrowsingLockMiddlewareTest {
-
-    @get:Rule
-    val coroutinesTestRule = MainCoroutineRule()
 
     // Locked cases
 
