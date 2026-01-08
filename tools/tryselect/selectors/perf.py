@@ -102,6 +102,7 @@ class PerfParser(CompareParser):
     task_configs = [
         "artifact",
         "browsertime",
+        "build-car",
         "disable-pgo",
         "env",
         "gecko-profile",
