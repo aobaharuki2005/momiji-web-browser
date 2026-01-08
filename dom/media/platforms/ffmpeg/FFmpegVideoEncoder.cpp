@@ -522,21 +522,33 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitEncoderInternal(bool aHardware) {
     }
   }
 
+#ifdef MOZ_WIDGET_ANDROID
+  // If we are using MediaCodec, we can set more options.
+  if (aHardware) {
+    if (mConfig.mBitrateMode == BitrateMode::Constant) {
+      mLib->av_opt_set(mCodecContext->priv_data, "bitrate_mode", "cbr", 0);
+    } else {
+      mLib->av_opt_set(mCodecContext->priv_data, "bitrate_mode", "vbr", 0);
+    }
+  }
+#endif
+
   nsAutoCString h264Log;
   if (mConfig.mCodecSpecific.is<H264Specific>()) {
-    // TODO: Set profile, level, avcc/annexb for openh264 and others.
-    if (mCodecName == "libx264") {
-      const H264Specific& h264Specific =
-          mConfig.mCodecSpecific.as<H264Specific>();
-      H264Settings s = GetH264Settings(h264Specific);
-      mCodecContext->profile = s.mProfile;
-      mCodecContext->level = s.mLevel;
-      for (const auto& pair : s.mSettingKeyValuePairs) {
-        mLib->av_opt_set(mCodecContext->priv_data, pair.first.get(),
-                         pair.second.get(), 0);
-      }
+    const H264Specific& h264Specific =
+        mConfig.mCodecSpecific.as<H264Specific>();
+    H264Settings s = GetH264Settings(h264Specific);
+    mCodecContext->profile = s.mProfile;
+    mCodecContext->level = s.mLevel;
+    for (const auto& pair : s.mSettingKeyValuePairs) {
+      mLib->av_opt_set(mCodecContext->priv_data, pair.first.get(),
+                       pair.second.get(), 0);
+    }
 
-      // Log the settings.
+    // Log the settings.
+    const char* formatStr =
+        h264Specific.mFormat == H264BitStreamFormat::AVC ? "AVCC" : "AnnexB";
+    if (mCodecName.Equals("libx264"_ns)) {
       // When using profile other than EXTENDED, the profile string is in the
       // first element of mSettingKeyValuePairs, while EXTENDED profile has no
       // profile string.
@@ -550,11 +562,13 @@ MediaResult FFmpegVideoEncoder<LIBAV_VER>::InitEncoderInternal(bool aHardware) {
       const char* levelStr = s.mSettingKeyValuePairs.Length() == 3
                                  ? s.mSettingKeyValuePairs[1].second.get()
                                  : s.mSettingKeyValuePairs[0].second.get();
-      const char* formatStr =
-          h264Specific.mFormat == H264BitStreamFormat::AVC ? "AVCC" : "AnnexB";
       h264Log.AppendPrintf(", H264: profile - %d (%s), level %d (%s), %s",
                            mCodecContext->profile, profileStr,
                            mCodecContext->level, levelStr, formatStr);
+    } else {
+      h264Log.AppendPrintf(", H264: profile - %d, level %d, %s",
+                           mCodecContext->profile, mCodecContext->level,
+                           formatStr);
     }
   }
 
@@ -912,34 +926,34 @@ FFmpegVideoEncoder<LIBAV_VER>::GetSVCSettings() {
 
 FFmpegVideoEncoder<LIBAV_VER>::H264Settings FFmpegVideoEncoder<
     LIBAV_VER>::GetH264Settings(const H264Specific& aH264Specific) {
-  MOZ_ASSERT(mCodecName == "libx264",
-             "GetH264Settings is libx264-only for now");
-
   nsTArray<std::pair<nsCString, nsCString>> keyValuePairs;
 
   Maybe<H264Setting> profile = GetH264Profile(aH264Specific.mProfile);
   MOZ_RELEASE_ASSERT(profile.isSome());
-  if (!profile->mString.IsEmpty()) {
-    keyValuePairs.AppendElement(std::make_pair("profile"_ns, profile->mString));
-  } else {
-    MOZ_RELEASE_ASSERT(aH264Specific.mProfile ==
-                       H264_PROFILE::H264_PROFILE_EXTENDED);
-  }
+  MOZ_RELEASE_ASSERT(!profile->mString.IsEmpty() ||
+                     aH264Specific.mProfile ==
+                         H264_PROFILE::H264_PROFILE_EXTENDED);
 
   Maybe<H264Setting> level = GetH264Level(aH264Specific.mLevel);
   MOZ_RELEASE_ASSERT(level.isSome());
   MOZ_RELEASE_ASSERT(!level->mString.IsEmpty());
+
+  if (!profile->mString.IsEmpty()) {
+    keyValuePairs.AppendElement(std::make_pair("profile"_ns, profile->mString));
+  }
   keyValuePairs.AppendElement(std::make_pair("level"_ns, level->mString));
 
-  // Set format: libx264's default format is annexb.
-  if (aH264Specific.mFormat == H264BitStreamFormat::AVC) {
-    keyValuePairs.AppendElement(std::make_pair("x264-params"_ns, "annexb=0"));
-    // mCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER
-    // if we don't want to append SPS/PPS data in all keyframe
-    // (LIBAVCODEC_VERSION_MAJOR >= 57 only).
-  } else {
-    // Set annexb explicitly even if it's default format.
-    keyValuePairs.AppendElement(std::make_pair("x264-params"_ns, "annexb=1"));
+  if (mCodecName.Equals("libx264"_ns)) {
+    // Set format: libx264's default format is annexb.
+    if (aH264Specific.mFormat == H264BitStreamFormat::AVC) {
+      keyValuePairs.AppendElement(std::make_pair("x264-params"_ns, "annexb=0"));
+      // mCodecContext->flags |= AV_CODEC_FLAG_GLOBAL_HEADER
+      // if we don't want to append SPS/PPS data in all keyframe
+      // (LIBAVCODEC_VERSION_MAJOR >= 57 only).
+    } else {
+      // Set annexb explicitly even if it's default format.
+      keyValuePairs.AppendElement(std::make_pair("x264-params"_ns, "annexb=1"));
+    }
   }
 
   return H264Settings{.mProfile = profile->mValue,
