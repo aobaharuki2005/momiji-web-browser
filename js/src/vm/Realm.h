@@ -406,7 +406,7 @@ class JS::Realm : public JS::shadow::Realm {
     DebuggerObservesWasm = 1 << 4,
     DebuggerObservesNativeCall = 1 << 5,
   };
-  unsigned debugModeBits_ = 0;
+  uint32_t debugModeBits_ = 0;
   friend class js::AutoRestoreRealmDebugMode;
 
   bool isSystem_ = false;
@@ -478,6 +478,7 @@ class JS::Realm : public JS::shadow::Realm {
 
  private:
   void updateDebuggerObservesFlag(unsigned flag);
+  void restoreDebugModeBitsOnOOM(uint32_t bits);
 
   Realm(const Realm&) = delete;
   void operator=(const Realm&) = delete;

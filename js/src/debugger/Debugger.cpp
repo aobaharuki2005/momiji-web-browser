@@ -223,7 +223,7 @@ bool js::ValueToIdentifier(JSContext* cx, HandleValue v, MutableHandleId id) {
 
 class js::AutoRestoreRealmDebugMode {
   Realm* realm_;
-  unsigned bits_;
+  uint32_t bits_;
 
  public:
   explicit AutoRestoreRealmDebugMode(Realm* realm)
@@ -233,7 +233,7 @@ class js::AutoRestoreRealmDebugMode {
 
   ~AutoRestoreRealmDebugMode() {
     if (realm_) {
-      realm_->debugModeBits_ = bits_;
+      realm_->restoreDebugModeBitsOnOOM(bits_);
     }
   }
 
