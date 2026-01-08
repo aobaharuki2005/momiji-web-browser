@@ -10,9 +10,12 @@
  * @import { SearchUtils } from "moz-src:///toolkit/components/search/SearchUtils.sys.mjs"
  * @import { UrlbarInput } from "chrome://browser/content/urlbar/UrlbarInput.mjs";
  */
-
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import {
+  AboutNewTabComponentRegistry,
+  BaseAboutNewTabComponentRegistrant,
+} from "moz-src:///browser/components/newtab/AboutNewTabComponents.sys.mjs";
 
 const lazy = XPCOMUtils.declareLazy({
   BrowserSearchTelemetry:
@@ -34,7 +37,6 @@ export var SearchUIUtils = {
   init() {
     if (!this.initialized) {
       Services.obs.addObserver(this, "browser-search-engine-modified");
-
       this.initialized = true;
     }
   },
@@ -525,3 +527,27 @@ export var SearchUIUtils = {
     });
   },
 };
+
+/**
+ * A registrant that adds the handoff search bar to about:newtab / about:home.
+ */
+export class SearchNewTabComponentsRegistrant extends BaseAboutNewTabComponentRegistrant {
+  getComponents() {
+    const { caretBlinkCount, caretBlinkTime } = Services.appinfo;
+
+    return [
+      {
+        type: AboutNewTabComponentRegistry.TYPES.SEARCH,
+        l10nURLs: [],
+        componentURL: "chrome://browser/content/contentSearchHandoffUI.mjs",
+        tagName: "content-search-handoff-ui",
+        cssVariables: {
+          "--caret-blink-count":
+            caretBlinkCount > -1 ? caretBlinkCount : "infinite",
+          "--caret-blink-time":
+            caretBlinkTime > 0 ? `${caretBlinkTime * 2}ms` : `${1134}ms`,
+        },
+      },
+    ];
+  }
+}
