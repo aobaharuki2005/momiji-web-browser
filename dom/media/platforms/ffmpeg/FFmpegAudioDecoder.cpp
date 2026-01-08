@@ -451,6 +451,7 @@ MediaResult FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
 
   packet->data = const_cast<uint8_t*>(aData);
   packet->size = aSize;
+  packet->pts = aSample->mTime.ToMicroseconds();
 
   if (aGotFrame) {
     *aGotFrame = false;
