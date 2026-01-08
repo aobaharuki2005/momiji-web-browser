@@ -398,6 +398,23 @@ mscom-init:
             - '**/*.rs'
             - 'tools/lint/mscom-init.yml'
 
+py-ruff-format:
+    description: ruff format run over the gecko codebase
+    treeherder:
+        symbol: py(ruff-format)
+    run:
+        mach: lint -v -l ruff-format -f treeherder -f json:/builds/worker/mozlint.json .
+    when:
+        files-changed:
+            # The list of extensions should match tools/lint/ruff-format.yml
+            - '**/*.py'
+            - '**/moz.build'
+            - '**/*.configure'
+            - '**/*.mozbuild'
+            - 'pyproject.toml'
+            - 'tools/lint/ruff-format.yml'
+            - 'tools/lint/python/ruff.py'
+
 py-ruff:
     description: Run ruff over the gecko codebase
     treeherder:
