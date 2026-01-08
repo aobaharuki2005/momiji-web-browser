@@ -884,8 +884,10 @@ add_task(async function test_search_mode_switcher_private_engine_icon() {
   await SpecialPowers.popPrefEnv();
 });
 
-add_task(async function open_with_option() {
-  info("Open the urlbar and searchmode switcher popup with arrow+option key");
+add_task(async function open_with_alt_option_with_open_view() {
+  info(
+    "Open the urlbar and searchmode switcher popup with Arrow Down + Alt/Option keys while the results view is open"
+  );
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "",
@@ -896,6 +898,22 @@ add_task(async function open_with_option() {
     "shown"
   );
   EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+  await promiseMenuOpen;
+
+  let popupHidden = UrlbarTestUtils.searchModeSwitcherPopupClosed(window);
+  EventUtils.synthesizeKey("KEY_Escape");
+  await popupHidden;
+});
+
+add_task(async function open_with_alt_option_with_closed_view() {
+  info(
+    "Open the urlbar and searchmode switcher popup with Arrow Up + Alt/Option keys while the results view is closed"
+  );
+  let promiseMenuOpen = BrowserTestUtils.waitForPopupEvent(
+    UrlbarTestUtils.searchModeSwitcherPopup(window),
+    "shown"
+  );
+  EventUtils.synthesizeKey("KEY_ArrowUp", { altKey: true });
   await promiseMenuOpen;
 
   let popupHidden = UrlbarTestUtils.searchModeSwitcherPopupClosed(window);

@@ -254,8 +254,7 @@ export class SearchModeSwitcher {
   }
 
   /**
-   * If the user presses Option+Up or Option+Down while navigating the urlbar results
-   * we open the engine list.
+   * If the user presses Option+Up or Option+Down we open the engine list.
    *
    * @param {KeyboardEvent} event
    *   The key down event.
