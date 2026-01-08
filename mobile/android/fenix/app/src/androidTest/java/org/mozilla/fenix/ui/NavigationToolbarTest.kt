@@ -212,51 +212,6 @@ class NavigationToolbarTest : TestSetup() {
         }
     }
 
-    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135005
-    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=2007909")
-    @Test
-    fun verifyFontSizingChangeTest() {
-        runWithCondition(
-            composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.BETA &&
-                composeTestRule.activity.components.core.engine.version.releaseChannel !== EngineReleaseChannel.RELEASE,
-        ) {
-            // Goes through the settings and changes the default text on a webpage, then verifies if the text has changed.
-            val fenixApp = composeTestRule.activity.applicationContext as FenixApplication
-            val webpage = mockWebServer.loremIpsumAsset.url
-
-            // This value will represent the text size percentage the webpage will scale to. The default value is 100%.
-            val textSizePercentage = 180
-
-            homeScreen(composeTestRule) {
-            }.openThreeDotMenu {
-            }.clickSettingsButton {
-            }.openAccessibilitySubMenu {
-                clickFontSizingSwitch()
-                verifyFontSizingMenuItems(
-                    composeTestRule,
-                    isTheAutomaticFontSizingToggleChecked = true,
-                    isTheFontSizingSliderEnabled = false,
-                    isTheZoomOnAllWbsitesToggleChecked = false,
-                )
-                clickFontSizingSwitch()
-                verifyFontSizingMenuItems(
-                    composeTestRule,
-                    isTheAutomaticFontSizingToggleChecked = false,
-                    isTheFontSizingSliderEnabled = true,
-                    isTheZoomOnAllWbsitesToggleChecked = false,
-                )
-                changeTextSizeSlider(textSizePercentage, composeTestRule)
-                verifyTextSizePercentage(textSizePercentage, composeTestRule)
-            }.goBack {
-            }.goBack(composeTestRule) {
-            }
-            navigationToolbar(composeTestRule) {
-            }.enterURLAndEnterToBrowser(webpage) {
-                checkTextSizeOnWebsite(textSizePercentage, fenixApp.components)
-            }
-        }
-    }
-
     // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135034
     @SmokeTest
     @Test

@@ -68,7 +68,7 @@ class SettingsGeneralTest : TestSetup() {
         }
     }
 
-    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/344213
+    // TestRail link: https://mozilla.testrail.io/index.php?/cases/view/3135005
     @SmokeTest
     @Test
     fun verifyFontSizingChangeTest() {
