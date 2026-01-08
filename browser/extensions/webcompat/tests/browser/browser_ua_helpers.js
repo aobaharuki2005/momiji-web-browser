@@ -18,7 +18,7 @@ function shimUA() {
 const WEBKIT = "AppleWebKit/537.36 (KHTML, like Gecko)";
 const SAFARI = " Safari/537.36";
 
-const PREFIX_WIN = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)";
+const PREFIX_WIN = "Mozilla/5.0 (Windows NT 11.0; Win64; x64)";
 const PREFIX_LIN = "Mozilla/5.0 (X11; Ubuntu; Linux x86_64)";
 const PREFIX_MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)";
 const PREFIX_AND = "Mozilla/5.0 (Linux; Android 6.0; Nexus 7 Build/JSS15Q)";
@@ -391,7 +391,7 @@ const TESTS = {
     UA = "Firefox/1.0";
     is(
       helper(),
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1 Safari/605.1.15"
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.1 Safari/605.1.15"
     );
     is(
       helper({ osVersion: "1.2", version: "VER", webkitVersion: "WKVER" }),
