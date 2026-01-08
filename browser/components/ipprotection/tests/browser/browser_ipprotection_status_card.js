@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { BANDWIDTH_USAGE, LINKS } = ChromeUtils.importESModule(
+const { LINKS } = ChromeUtils.importESModule(
   "chrome://browser/content/ipprotection/ipprotection-constants.mjs"
 );
 const lazy = {};
@@ -27,10 +27,6 @@ add_task(async function test_status_card_in_panel() {
     code: "us",
   };
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.ipProtection.bandwidth", 50 * BANDWIDTH_USAGE.MB_TO_GB]],
-  });
-
   let content = await openPanel({
     isSignedOut: false,
     location: mockLocation,
@@ -50,18 +46,17 @@ add_task(async function test_status_card_in_panel() {
     "Status card connection toggle data-l10n-id should be correct by default"
   );
 
-  const locationEl =
-    statusCard.statusGroupEl.shadowRoot.querySelector("#location-label");
+  let descriptionMetadata = statusCard?.statusGroupEl.description;
 
   Assert.ok(
-    BrowserTestUtils.isVisible(locationEl),
-    "Location element should be present and visible"
+    descriptionMetadata.values.length,
+    "Ensure there are elements loaded in the description slot"
   );
-  Assert.equal(
-    locationEl.textContent.trim(),
-    mockLocation.name,
-    "Location element should be showing correct location"
+
+  let locationNameFilter = descriptionMetadata.values.filter(
+    locationName => locationName === mockLocation.name
   );
+  Assert.ok(locationNameFilter.length, "Found location in status card");
 
   // Set state as if protection is enabled
   await setPanelState({
@@ -78,23 +73,6 @@ add_task(async function test_status_card_in_panel() {
     statusCard?.statusGroupEl.getAttribute("data-l10n-id"),
     l10nIdOn,
     "Status card connection toggle data-l10n-id should be correct when protection is enabled"
-  );
-
-  const bandwidthEl =
-    statusCard.statusGroupEl.shadowRoot.querySelector("bandwidth-usage");
-  Assert.ok(
-    BrowserTestUtils.isVisible(bandwidthEl),
-    "bandwidth-usage should be present and visible"
-  );
-  Assert.equal(
-    bandwidthEl.bandwidthUsedGB,
-    50,
-    "Bandwidth should have 50 GB used"
-  );
-  Assert.equal(
-    bandwidthEl.bandwidthUsageLeftGB,
-    100,
-    "Bandwidth should have 100 GB left"
   );
 
   await closePanel();

@@ -294,7 +294,6 @@ add_setup(async function setupVPN() {
     Services.prefs.clearUserPref("browser.ipProtection.entitlementCache");
     Services.prefs.clearUserPref("browser.ipProtection.locationListCache");
     Services.prefs.clearUserPref("browser.ipProtection.onboardingMessageMask");
-    Services.prefs.clearUserPref("browser.ipProtection.bandwidth");
   });
 });
 
@@ -435,95 +434,3 @@ async function putServerInRemoteSettings(
   }
 }
 /* exported putServerInRemoteSettings */
-
-/**
- * Creates a new channel for the given URI.
- *
- * @param {*} aUri the URI to create the channel for.
- * @param {*} method the HTTP method to use (default: "GET").
- * @param {*} body the request body (for POST requests).
- * @param {*} proxyInfo proxy information (if any) makes this channel a proxied channel.
- * @returns {nsIHttpChannel | nsIProxiedChannel}
- */
-function makeChannel(aUri, method = "GET", body = null, proxyInfo = null) {
-  let channel;
-  if (proxyInfo) {
-    let httpHandler = Services.io.getProtocolHandler("http");
-    httpHandler.QueryInterface(Ci.nsIProxiedProtocolHandler);
-    let uri = Services.io.newURI(aUri);
-
-    let { loadInfo } = NetUtil.newChannel({
-      uri,
-      loadUsingSystemPrincipal: true,
-    });
-
-    channel = httpHandler.newProxiedChannel(
-      uri,
-      proxyInfo,
-      0, // proxy resolve flags
-      null, // proxy resolve URI
-      loadInfo
-    );
-  } else {
-    channel = NetUtil.newChannel({
-      uri: aUri,
-      loadUsingSystemPrincipal: true,
-    }).QueryInterface(Ci.nsIHttpChannel);
-    channel.requestMethod = method;
-  }
-
-  if (body) {
-    let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(
-      Ci.nsIStringInputStream
-    );
-    stream.setUTF8Data(body);
-    channel
-      .QueryInterface(Ci.nsIUploadChannel)
-      .setUploadStream(stream, "text/plain", body.length);
-  }
-  return channel;
-}
-
-function promiseChannelDone(chan) {
-  return new Promise((resolve, reject) => {
-    chan.asyncOpen(new ChannelListener(resolve, reject));
-  });
-}
-
-/**
- * Mocks a channel listener.
- */
-class ChannelListener {
-  constructor(resolve, reject) {
-    this.resolve = resolve;
-    this.reject = reject;
-  }
-  onStartRequest() {}
-  onDataAvailable() {}
-  onStopRequest() {
-    this.resolve();
-  }
-}
-
-/**
- *  • Creates a profile dir & initialises FOG.
- *  • Resets/flushes metrics so each test starts clean.
- *  • Spins‑up an HttpServer, hands its URL to the test body, then stops it.
- *
- * @param {string}   path      Path for the single route, e.g. "/get".
- * @param {Function} handler   httpd.js style path handler.
- * @param {Function} testBody  async fn(url:string):void – the real test.
- */
-async function withSetup(path, handler, testBody) {
-  let server = new HttpServer();
-  server.registerPathHandler(path, handler);
-  server.start(-1);
-  let port = server.identity.primaryPort;
-  let url = `http://localhost:${port}${path}`;
-
-  try {
-    await testBody(url);
-  } finally {
-    await new Promise(r => server.stop(r));
-  }
-}

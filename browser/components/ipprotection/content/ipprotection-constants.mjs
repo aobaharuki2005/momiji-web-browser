@@ -41,8 +41,3 @@ export const ONBOARDING_PREF_FLAGS = {
   EVER_USED_SITE_EXCEPTIONS: 1 << 1,
   EVER_TURNED_ON_VPN: 1 << 2,
 };
-
-export const BANDWIDTH_USAGE = Object.freeze({
-  MAX_BANDWIDTH: 150,
-  MB_TO_GB: 1000,
-});

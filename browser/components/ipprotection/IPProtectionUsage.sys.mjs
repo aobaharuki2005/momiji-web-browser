@@ -2,18 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const lazy = {};
-
-ChromeUtils.defineESModuleGetters(lazy, {
-  DeferredTask: "resource://gre/modules/DeferredTask.sys.mjs",
-});
-
-const BANDWIDTH_PREF = "browser.ipProtection.bandwidth";
-const BYTES_TO_MB = 1000000;
-// 200 ms for testing, 60 seconds for real scenarios
-const BANDWIDTH_WRITE_TIMEOUT = Cu.isInAutomation ? 1000 : 60 * 1000;
-const BYTES_TO_GB = 1000000000;
-
 /**
  * Service Class to observe and record IP protection usage.
  *
@@ -36,8 +24,6 @@ export class IPProtectionUsage {
     if (this.#active) {
       return;
     }
-    this.#bandwidthUsageSinceLastWrite = 0;
-    this.#writeBandwidthUsageTask = null;
     Services.obs.addObserver(this, "http-on-stop-request");
     this.#active = true;
   }
@@ -48,9 +34,6 @@ export class IPProtectionUsage {
     this.#active = false;
     this.#isolationKeys.clear();
     Services.obs.removeObserver(this, "http-on-stop-request");
-    this.#writeBandwidthUsageTask?.finalize().then(() => {
-      this.#writeBandwidthUsageTask = null;
-    });
   }
 
   addIsolationKey(key) {
@@ -67,7 +50,7 @@ export class IPProtectionUsage {
     try {
       const chan = subject.QueryInterface(Ci.nsIHttpChannel);
       if (this.shouldCountChannel(chan)) {
-        this.countChannel(chan);
+        IPProtectionUsage.countChannel(chan);
       }
     } catch (err) {
       // If the channel is not an nsIHttpChannel
@@ -96,31 +79,12 @@ export class IPProtectionUsage {
     return false;
   }
 
-  writeUsage() {
-    // The pref is synced so we only add the bandwidth usage since
-    // our last write
-    const prefUsage = Services.prefs.getIntPref(BANDWIDTH_PREF, 0);
-    const totalUsage =
-      this.#bandwidthUsageSinceLastWrite / BYTES_TO_MB + prefUsage;
-
-    // Bandwidth is stored in MB so we covert it when getting/setting
-    // the pref
-    Services.prefs.setIntPref(BANDWIDTH_PREF, totalUsage);
-    this.#bandwidthUsageSinceLastWrite = 0;
-  }
-
-  forceWriteUsage() {
-    this.#writeBandwidthUsageTask?.disarm();
-    this.writeUsage();
-    this.#writeBandwidthUsageTask?.arm();
-  }
-
   /**
    * Checks a completed channel and records the transfer sizes to glean.
    *
    * @param {nsIHttpChannel} chan - A completed Channel to check.
    */
-  countChannel(chan) {
+  static countChannel(chan) {
     try {
       const cacheInfo = chan.QueryInterface(Ci.nsICacheInfoChannel);
       if (cacheInfo.isFromCache()) {
@@ -132,30 +96,14 @@ export class IPProtectionUsage {
 
     if (chan.transferSize > 0) {
       Glean.ipprotection.usageRx.accumulate(chan.transferSize);
-      this.#bandwidthUsageSinceLastWrite += chan.transferSize;
     }
     if (chan.requestSize > 0) {
       Glean.ipprotection.usageTx.accumulate(chan.requestSize);
-      this.#bandwidthUsageSinceLastWrite += chan.requestSize;
     }
-
-    if (!this.#writeBandwidthUsageTask) {
-      this.#writeBandwidthUsageTask = new lazy.DeferredTask(() => {
-        this.writeUsage();
-      }, BANDWIDTH_WRITE_TIMEOUT);
-    }
-
-    if (this.#bandwidthUsageSinceLastWrite > BYTES_TO_GB) {
-      this.forceWriteUsage();
-    }
-
-    this.#writeBandwidthUsageTask.arm();
   }
 
   #active = false;
   #isolationKeys = new Set();
-  #bandwidthUsageSinceLastWrite = 0;
-  #writeBandwidthUsageTask;
 }
 
 IPProtectionUsage.prototype.QueryInterface = ChromeUtils.generateQI([

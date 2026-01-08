@@ -1503,11 +1503,6 @@ Preferences.addSetting({
   visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
 });
 Preferences.addSetting({
-  id: "ipProtectionBandwidth",
-  deps: ["ipProtectionVisible"],
-  visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
-});
-Preferences.addSetting({
   id: "ipProtectionAdditionalLinks",
   deps: ["ipProtectionVisible"],
   visible: ({ ipProtectionVisible }) => ipProtectionVisible.value,
