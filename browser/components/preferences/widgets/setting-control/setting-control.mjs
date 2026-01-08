@@ -80,10 +80,14 @@ const KNOWN_OPTIONS = new Map([
  */
 const ITEM_SLOT_BY_PARENT = new Map([
   ["moz-checkbox", "nested"],
-  ["moz-input-text", "nested"],
-  ["moz-input-search", "nested"],
+  ["moz-input-email", "nested"],
   ["moz-input-folder", "nested"],
+  ["moz-input-number", "nested"],
   ["moz-input-password", "nested"],
+  ["moz-input-search", "nested"],
+  ["moz-input-tel", "nested"],
+  ["moz-input-text", "nested"],
+  ["moz-input-url", "nested"],
   ["moz-radio", "nested"],
   ["moz-radio-group", "nested"],
   // NOTE: moz-select does not support the nested slot.

@@ -54,13 +54,21 @@ skip-if = [
 
 ["test_moz_input_elems_in_form.html"]
 
+["test_moz_input_email.html"]
+
 ["test_moz_input_folder.html"]
+
+["test_moz_input_number.html"]
 
 ["test_moz_input_password.html"]
 
 ["test_moz_input_search.html"]
 
+["test_moz_input_tel.html"]
+
 ["test_moz_input_text.html"]
+
+["test_moz_input_url.html"]
 
 ["test_moz_label.html"]
 
