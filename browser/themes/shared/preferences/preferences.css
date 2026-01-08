@@ -79,6 +79,13 @@ setting-group[data-category] {
   margin: 0 0 32px;
 }
 
+/* Bug 2002963 - payments and addresses are in a groupbox together, but they probably shouldn't be */
+#formAutofillGroupBox:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
 html|h1 {
   margin: 0 0 var(--space-small);
 }
@@ -1425,9 +1432,13 @@ setting-group[groupid="home"] {
 }
 /** SRD rows control for New Tab END **/
 
-setting-group[groupid="aiFeatures"] {
-  --select-max-width: fit-content;
+/** SRD History first item is label-less START **/
+/* bug 2001196: Workaround for using legend as label for the select. */
+setting-group[groupid="history"] > moz-fieldset::part(inputs),
+setting-group[groupid="history"] > moz-card > moz-fieldset::part(inputs) {
+  margin-block-start: 0;
 }
+/** SRD History first item is label-less END **/
 
 #translations-manage-install-list {
   height: 220px;

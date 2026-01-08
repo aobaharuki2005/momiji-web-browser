@@ -56,12 +56,15 @@ export class SettingGroup extends SettingElement {
      * @type {SettingGroupConfig | undefined}
      */
     this.config = undefined;
+
+    this.srdEnabled = true;
   }
 
   static properties = {
     config: { type: Object },
     groupId: { type: String },
     getSetting: { type: Function },
+    srdEnabled: { type: Boolean },
   };
 
   static queries = {
@@ -70,6 +73,12 @@ export class SettingGroup extends SettingElement {
 
   createRenderRoot() {
     return this;
+  }
+
+  willUpdate() {
+    if (!this.srdEnabled) {
+      this.classList.toggle("subcategory", this.config?.headingLevel == 1);
+    }
   }
 
   async handleVisibilityChange() {
