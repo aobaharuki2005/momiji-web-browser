@@ -99,7 +99,6 @@ export class UrlbarInput extends HTMLElement {
           <menupopup class="searchmode-switcher-popup toolbar-menupopup"
                      consumeoutsideclicks="false">
             <label class="searchmode-switcher-popup-description"
-                   data-l10n-id="urlbar-searchmode-popup-description"
                    role="heading" />
             <menuseparator/>
             <menuseparator class="searchmode-switcher-popup-footer-separator"/>
@@ -307,6 +306,16 @@ export class UrlbarInput extends HTMLElement {
     this.controller = new lazy.UrlbarController({ input: this });
     this.view = new lazy.UrlbarView(this);
     this.searchModeSwitcher = new lazy.SearchModeSwitcher(this);
+
+    let searchModeSwitcherDescription = this.querySelector(
+      ".searchmode-switcher-popup-description"
+    );
+    searchModeSwitcherDescription.setAttribute(
+      "data-l10n-id",
+      this.#isAddressbar
+        ? "urlbar-searchmode-popup-description"
+        : "urlbar-searchmode-popup-sticky-description"
+    );
 
     // The event bufferer can be used to defer events that may affect users
     // muscle memory; for example quickly pressing DOWN+ENTER should end up
