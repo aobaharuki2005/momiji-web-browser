@@ -22,7 +22,6 @@ import kotlinx.coroutines.test.runTest
 import mozilla.components.browser.engine.gecko.profiler.Profiler
 import mozilla.components.concept.engine.Engine
 import mozilla.components.support.base.android.NotificationsDelegate
-import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -31,7 +30,6 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.components.Core
@@ -49,9 +47,7 @@ import org.robolectric.shadows.ShadowService
 @Config(application = FenixRobolectricTestApplication::class, sdk = [Build.VERSION_CODES.TIRAMISU])
 class ProfilerServiceTest {
 
-    @get:Rule
-    val coroutineRule = MainCoroutineRule(StandardTestDispatcher())
-
+    private val testDispatcher = StandardTestDispatcher()
     private lateinit var context: Context
     private lateinit var notificationManager: NotificationManager
     private lateinit var shadowNotificationManager: ShadowNotificationManager
@@ -160,7 +156,7 @@ class ProfilerServiceTest {
     }
 
     @Test
-    fun `GIVEN profiler service is running WHEN receiving inactive broadcast THEN the service stops`() = runTest(coroutineRule.testDispatcher) {
+    fun `GIVEN profiler service is running WHEN receiving inactive broadcast THEN the service stops`() = runTest(testDispatcher) {
         serviceController = Robolectric.buildService(ProfilerService::class.java)
         serviceController.create()
         service = serviceController.get()
