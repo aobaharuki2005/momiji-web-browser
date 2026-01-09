@@ -1080,7 +1080,7 @@ class PaintFrameCallback : public gfxDrawingCallback {
  public:
   PaintFrameCallback(nsIFrame* aFrame, const nsSize aPaintServerSize,
                      const IntSize aRenderSize,
-                     EnumSet<SVGIntegrationUtils::DecodeFlags> aFlags)
+                     SVGIntegrationUtils::DecodeFlags aFlags)
       : mFrame(aFrame),
         mPaintServerSize(aPaintServerSize),
         mRenderSize(aRenderSize),
@@ -1093,7 +1093,7 @@ class PaintFrameCallback : public gfxDrawingCallback {
   nsIFrame* mFrame;
   nsSize mPaintServerSize;
   IntSize mRenderSize;
-  EnumSet<SVGIntegrationUtils::DecodeFlags> mFlags;
+  SVGIntegrationUtils::DecodeFlags mFlags;
 };
 
 bool PaintFrameCallback::operator()(gfxContext* aContext,
@@ -1141,7 +1141,7 @@ bool PaintFrameCallback::operator()(gfxContext* aContext,
 
   using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
   PaintFrameFlags flags = PaintFrameFlags::InTransform;
-  if (mFlags.contains(SVGIntegrationUtils::DecodeFlags::SyncDecodeImages)) {
+  if (mFlags.contains(SVGIntegrationUtils::DecodeFlag::SyncDecodeImages)) {
     flags |= PaintFrameFlags::SyncDecodeImages;
   }
   nsLayoutUtils::PaintFrame(aContext, mFrame, dirty, NS_RGBA(0, 0, 0, 0),
@@ -1173,7 +1173,7 @@ bool PaintFrameCallback::operator()(gfxContext* aContext,
 already_AddRefed<gfxDrawable> SVGIntegrationUtils::DrawableFromPaintServer(
     nsIFrame* aFrame, nsIFrame* aTarget, const nsSize& aPaintServerSize,
     const IntSize& aRenderSize, const DrawTarget* aDrawTarget,
-    const gfxMatrix& aContextMatrix, EnumSet<DecodeFlags> aFlags) {
+    const gfxMatrix& aContextMatrix, DecodeFlags aFlags) {
   // aPaintServerSize is the size that would be filled when using
   // background-repeat:no-repeat and background-size:auto. For normal background
   // images, this would be the intrinsic size of the image; for gradients and
@@ -1188,7 +1188,7 @@ already_AddRefed<gfxDrawable> SVGIntegrationUtils::DrawableFromPaintServer(
                            aPaintServerSize.height);
     overrideBounds.Scale(1.0 / aFrame->PresContext()->AppUnitsPerDevPixel());
     uint32_t imgFlags = imgIContainer::FLAG_ASYNC_NOTIFY;
-    if (aFlags.contains(DecodeFlags::SyncDecodeImages)) {
+    if (aFlags.contains(DecodeFlag::SyncDecodeImages)) {
       imgFlags |= imgIContainer::FLAG_SYNC_DECODE;
     }
     imgDrawingParams imgParams(imgFlags);

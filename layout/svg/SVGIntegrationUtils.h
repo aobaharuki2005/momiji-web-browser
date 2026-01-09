@@ -258,14 +258,15 @@ class SVGIntegrationUtils final {
    * @param aFlags pass SyncDecodeImages and any images in the paint
    * server will be decoding synchronously if they are not decoded already.
    */
-  enum class DecodeFlags {
+  enum class DecodeFlag {
     SyncDecodeImages,
   };
+  using DecodeFlags = EnumSet<DecodeFlag>;
 
   static already_AddRefed<gfxDrawable> DrawableFromPaintServer(
       nsIFrame* aFrame, nsIFrame* aTarget, const nsSize& aPaintServerSize,
       const gfx::IntSize& aRenderSize, const DrawTarget* aDrawTarget,
-      const gfxMatrix& aContextMatrix, EnumSet<DecodeFlags> aFlags);
+      const gfxMatrix& aContextMatrix, DecodeFlags aFlags);
 
   /**
    * For non-SVG frames, this gives the offset to the frame's "user space".

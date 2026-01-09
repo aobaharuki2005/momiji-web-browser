@@ -783,7 +783,7 @@ already_AddRefed<gfxDrawable> nsImageRenderer::DrawableForElement(
       drawable = SVGIntegrationUtils::DrawableFromPaintServer(
           mPaintServerFrame, mForFrame, mSize, imageSize,
           aContext.GetDrawTarget(), aContext.CurrentMatrixDouble(),
-          SVGIntegrationUtils::DecodeFlags::SyncDecodeImages);
+          SVGIntegrationUtils::DecodeFlag::SyncDecodeImages);
     }
 
     return drawable.forget();
