@@ -7,6 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
   NewTabAttributionServiceClass:
     "resource://newtab/lib/NewTabAttributionService.sys.mjs",
   ObliviousHTTP: "resource://gre/modules/ObliviousHTTP.sys.mjs",
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
 });
 
@@ -133,6 +134,22 @@ add_setup(async function () {
         default_measurement: 0,
       });
     },
+  });
+
+  const mockStore = {
+    getState: () => ({
+      Prefs: {
+        values: {
+          trainhopConfig: {
+            attribution: {},
+          },
+        },
+      },
+    }),
+  };
+
+  globalSandbox.stub(AboutNewTab, "activityStream").value({
+    store: mockStore,
   });
 });
 

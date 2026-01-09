@@ -10,6 +10,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   DAPSender: "resource://gre/modules/DAPSender.sys.mjs",
   ObliviousHTTP: "resource://gre/modules/ObliviousHTTP.sys.mjs",
   HPKEConfigManager: "resource://gre/modules/HPKEConfigManager.sys.mjs",
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
 });
 
 const MAX_CONVERSIONS = 2;
@@ -84,6 +85,13 @@ class NewTabAttributionService {
 
   #now() {
     return this.#dateProvider.now();
+  }
+
+  #getTrainhopConfig() {
+    return (
+      lazy.AboutNewTab.activityStream?.store.getState().Prefs.values
+        .trainhopConfig ?? {}
+    );
   }
 
   /**
@@ -169,7 +177,15 @@ class NewTabAttributionService {
    */
   async onAttributionConversion(partnerId, lookbackDays, impressionType) {
     try {
-      if (lookbackDays > MAX_LOOKBACK_DAYS) {
+      const trainhopConfig = this.#getTrainhopConfig();
+      const attributionConfig = trainhopConfig.attribution || {};
+
+      const maxLookbackDays =
+        attributionConfig.maxLookbackDays ?? MAX_LOOKBACK_DAYS;
+      const maxConversions =
+        attributionConfig.maxConversions ?? MAX_CONVERSIONS;
+
+      if (lookbackDays > maxLookbackDays) {
         return;
       }
       // we don't want to request the gateway key at time of conversion to avoid an IP address leak
@@ -205,7 +221,7 @@ class NewTabAttributionService {
 
       let measurement = receivedTaskConfig.default_measurement;
       let budgetSpend = 0;
-      if (budget.conversions < MAX_CONVERSIONS && impression) {
+      if (budget.conversions < maxConversions && impression) {
         budgetSpend = 1;
         const conversionIndex = impression.conversion.index;
         if (
