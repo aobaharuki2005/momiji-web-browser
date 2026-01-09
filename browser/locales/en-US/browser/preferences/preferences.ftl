@@ -9,10 +9,8 @@ global-privacy-control-description =
     .label = Tell websites not to sell or share my data
     .accesskey = s
 
-non-technical-privacy-header = Website Privacy Preferences
-
-non-technical-privacy-label =
-     .aria-label = { non-technical-privacy-header }
+non-technical-privacy-group =
+    .label = Website Privacy Preferences
 
 # Do not translate.
 # "Global Privacy Control" or "GPC" are a web platform feature name and abbreviation
@@ -141,7 +139,8 @@ search-results-help-link = Need help? Visit <a data-l10n-name="url">{ -brand-sho
 
 ## General Section
 
-startup-header = Startup
+startup-group =
+    .label = Startup
 
 always-check-default =
     .label = Always check if { -brand-short-name } is your default browser
@@ -322,9 +321,9 @@ browser-layout-show-sidebar-desc = Quickly access bookmarks, tabs from your phon
 
 language-and-appearance-header = Language and Appearance
 
-preferences-web-appearance-header = Website appearance
-
-preferences-web-appearance-description = Some websites adapt their color scheme based on your preferences. Choose which color scheme you’d like to use for those sites.
+appearance-group =
+  .label = Website appearance
+  .description = Some websites adapt their color scheme based on your preferences. Choose which color scheme you’d like to use for those sites.
 
 preferences-web-appearance-choice-auto2 =
   .label = Automatic
@@ -634,7 +633,8 @@ applications-ask-before-handling =
     .label = Ask whether to open or save files
     .accesskey = A
 
-drm-content-header = Digital Rights Management (DRM) Content
+drm-group =
+  .label = Digital Rights Management (DRM) Content
 
 play-drm-content =
     .label = Play DRM-controlled content
@@ -708,7 +708,8 @@ support-share-ideas =
 
 ## General Section - Performance
 
-performance-title = Performance
+performance-group =
+  .label = Performance
 
 performance-use-recommended-settings-checkbox =
     .label = Use recommended performance settings
@@ -735,9 +736,8 @@ performance-default-content-process-count =
 
 ## General Section - Browsing
 
-browsing-title = Browsing
-browsing-group-label =
-    .aria-label = Browsing
+browsing-group =
+  .label = Browsing
 
 browsing-use-autoscroll =
     .label = Use autoscrolling
@@ -792,11 +792,9 @@ browsing-cfr-features =
 
 ## General Section - Proxy
 
-network-settings-title = Network Settings
-
-network-proxy-connection-description = Configure how { -brand-short-name } connects to the internet.
-
-network-proxy-connection-learn-more = Learn more
+network-proxy-group =
+  .label = Network Settings
+  .description = Configure how { -brand-short-name } connects to the internet.
 
 network-proxy-connection-settings =
     .label = Settings…
@@ -1524,7 +1522,9 @@ autofill-creditcard-os-auth-dialog-caption = { -brand-full-name }
 
 ## Privacy section - Autofill
 
-autofill-payment-methods-title = Payment methods
+payments-group =
+    .label = Payment methods
+
 autofill-payment-methods-header =
     .aria-label = Payment methods
 autofill-payment-methods-checkbox-message-2 =
@@ -1560,9 +1560,8 @@ payment-moz-box-item =
   .label = { $cardNumber }
   .description = { $expDate }
 
-autofill-addresses-title = Addresses and more
-autofill-addresses-header =
-    .aria-label = Addresses and more
+addresses-group =
+    .label = Addresses and more
 autofill-addresses-checkbox-message =
     .label = Save and autofill addresses
     .accesskey = S
@@ -1596,18 +1595,8 @@ address-moz-box-item =
 
 ## Privacy Section - History
 
-history-header = History
-
-# This label is followed, on the same line, by a dropdown list of options
-# (Remember history, etc.).
-# In English it visually creates a full sentence, e.g.
-# "Firefox will" + "Remember history".
-#
-# If this doesn't work for your language, you can translate this message:
-#   - Simply as "Firefox", moving the verb into each option.
-#     This will result in "Firefox" + "Will remember history", etc.
-#   - As a stand-alone message, for example "Firefox history settings:".
-history-remember-label2 = { -brand-short-name } will
+history-group =
+    .label = History
 
 history-remember-option-all =
     .label = Remember history
@@ -1616,16 +1605,16 @@ history-remember-option-never =
 history-remember-option-custom =
     .label = Use custom settings for history
 
-history-remember-description3 =
-    .aria-label = { history-remember-label2 }
+history-remember-description4 =
+    .aria-label = { history-group.label }
     .description = { -brand-short-name } will remember your browsing, download, form, and search history.
 
-history-dontremember-description3 =
-    .aria-label = { history-remember-label2 }
+history-dontremember-description4 =
+    .aria-label = { history-group.label }
     .description = { -brand-short-name } will use the same settings as private browsing, and will not remember any history as you browse the Web.
 
-history-custom-description3 =
-    .aria-label = { history-remember-label2 }
+history-custom-description4 =
+    .aria-label = { history-group.label }
     .description = { -brand-short-name } will use custom settings for your browsing, download, form and search history.
 
 history-private-browsing-permanent =
@@ -1654,10 +1643,8 @@ history-clear-button =
 
 ## Privacy Section - Site Data
 
-sitedata-header = Cookies and Site Data
-
-sitedata-label =
-     .aria-label = { sitedata-header }
+cookies-site-data-group =
+    .label = Cookies and Site Data
 
 sitedata-total-size-calculating = Calculating site data and cache size…
 
@@ -1957,7 +1944,8 @@ privacy-segmentation-radio-on =
 
 security-header = Security
 
-security-browsing-protection = Deceptive Content and Dangerous Software Protection
+browsing-protection-group =
+    .label = Deceptive Content and Dangerous Software Protection
 
 security-enable-safe-browsing =
     .label = Block dangerous and deceptive content
@@ -2002,11 +1990,12 @@ space-alert-under-5gb-message2 = <strong>{ -brand-short-name } is running out of
 
 ## Privacy Section - HTTPS-Only
 
-httpsonly-header = HTTPS-Only Mode
-
-httpsonly-label =
-    .aria-label = { httpsonly-header }
+httpsonly-group =
+    .label = HTTPS-Only Mode
     .description = Only allows secure connections to websites. { -brand-short-name } will ask before connecting insecurely.
+
+httpsonly-label2 =
+    .aria-label = { httpsonly-group.label }
 
 httpsonly-learn-more2 = How HTTPS-Only works
 
@@ -2023,6 +2012,8 @@ httpsonly-radio-disabled3 =
 ## DoH Section
 
 preferences-doh-header = DNS over HTTPS
+dns-over-https-group =
+    .label = DNS over HTTPS
 
 preferences-doh-description2 = Domain Name System (DNS) over HTTPS sends your request for a domain name through an encrypted connection, providing a secure DNS and making it harder for others to see which website you’re about to access.
 

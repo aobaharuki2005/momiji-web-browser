@@ -175,7 +175,19 @@ async function evaluateSearchResults(
     if (!includeExperiments && child.id?.startsWith("pane-experimental")) {
       continue;
     }
-    if (searchResults.includes(child.id)) {
+    if (child.localName == "setting-group") {
+      if (searchResults.includes(child.groupId)) {
+        is_element_visible(
+          child,
+          `${child.groupId} should be in search results`
+        );
+      } else {
+        is_element_hidden(
+          child,
+          `${child.groupId} should not be in search results`
+        );
+      }
+    } else if (searchResults.includes(child.id)) {
       is_element_visible(child, `${child.id} should be in search results`);
     } else if (child.id) {
       is_element_hidden(child, `${child.id} should not be in search results`);

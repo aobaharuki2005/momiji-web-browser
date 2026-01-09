@@ -15,8 +15,6 @@ const AUTOSTART_PRIVATE_PREF = "browser.ipProtection.autoStartPrivateEnabled";
 const ONBOARDING_MESSAGE_MASK_PREF =
   "browser.ipProtection.onboardingMessageMask";
 
-const SECTION_ID = "dataIPProtectionGroup";
-
 async function setupVpnPrefs({
   feature = false,
   siteExceptions = false,
@@ -35,12 +33,10 @@ async function setupVpnPrefs({
   });
 }
 
-function testSettingsGroupVisible(browser, sectionId) {
-  let section = browser.contentDocument.getElementById(sectionId);
-  let settingGroup = section.querySelector(
+function testSettingsGroupVisible(browser) {
+  let settingGroup = browser.contentDocument.querySelector(
     `setting-group[groupid="ipprotection"]`
   );
-  is_element_visible(section, "#dataIPProtectionGroup is shown");
   is_element_visible(settingGroup, "ipprotection setting group is shown");
 
   return settingGroup;
@@ -54,8 +50,10 @@ add_task(
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: "about:preferences#privacy" },
       async function (browser) {
-        let section = browser.contentDocument.getElementById(SECTION_ID);
-        is_element_hidden(section, "#dataIPProtectionGroup is hidden");
+        let settingGroup = browser.contentDocument.querySelector(
+          `setting-group[groupid="ipprotection"]`
+        );
+        is_element_hidden(settingGroup, "ipprotection setting group is hidden");
       }
     );
 
@@ -71,7 +69,7 @@ add_task(
     await BrowserTestUtils.withNewTab(
       { gBrowser, url: "about:preferences#privacy" },
       async function (browser) {
-        testSettingsGroupVisible(browser, SECTION_ID);
+        testSettingsGroupVisible(browser);
       }
     );
   }
@@ -84,7 +82,7 @@ add_task(async function test_exceptions_settings() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
     async function (browser) {
-      let settingGroup = testSettingsGroupVisible(browser, SECTION_ID);
+      let settingGroup = testSettingsGroupVisible(browser);
       let siteExceptionsGroup = settingGroup?.querySelector(
         "#ipProtectionExceptions"
       );
@@ -110,7 +108,7 @@ add_task(async function test_exclusions_add_button() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
     async function (browser) {
-      let settingGroup = testSettingsGroupVisible(browser, SECTION_ID);
+      let settingGroup = testSettingsGroupVisible(browser);
       let siteExceptionsGroup = settingGroup?.querySelector(
         "#ipProtectionExceptions"
       );
@@ -308,7 +306,7 @@ add_task(async function test_autostart_checkboxes() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
     async function (browser) {
-      let settingGroup = testSettingsGroupVisible(browser, SECTION_ID);
+      let settingGroup = testSettingsGroupVisible(browser);
       let autoStartSettings = settingGroup?.querySelector(
         "#ipProtectionAutoStart"
       );
@@ -345,7 +343,7 @@ add_task(async function test_additional_links() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:preferences#privacy" },
     async function (browser) {
-      let settingGroup = testSettingsGroupVisible(browser, SECTION_ID);
+      let settingGroup = testSettingsGroupVisible(browser);
       let additionalLinks = settingGroup?.querySelector(
         "#ipProtectionAdditionalLinks"
       );

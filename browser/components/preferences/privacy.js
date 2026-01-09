@@ -2226,14 +2226,14 @@ Preferences.addSetting({
     return privateBrowsingAutoStart.locked && privateBrowsingAutoStart.value;
   },
   getControlConfig(config, { privateBrowsingAutoStart }, setting) {
-    let l10nId = undefined;
+    let l10nId = null;
     if (!srdSectionEnabled("history2")) {
       if (setting.value == "remember") {
-        l10nId = "history-remember-description3";
+        l10nId = "history-remember-description4";
       } else if (setting.value == "dontremember") {
-        l10nId = "history-dontremember-description3";
+        l10nId = "history-dontremember-description4";
       } else if (setting.value == "custom") {
-        l10nId = "history-custom-description3";
+        l10nId = "history-custom-description4";
       }
     }
 

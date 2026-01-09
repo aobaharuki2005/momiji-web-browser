@@ -50,7 +50,8 @@ const { ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF } =
 
 const FORM_AUTOFILL_CONFIG = {
   payments: {
-    l10nId: "autofill-payment-methods-header",
+    l10nId: "payments-group",
+    headingLevel: 2,
     items: [
       {
         id: "saveAndFillPayments",
@@ -78,7 +79,8 @@ const FORM_AUTOFILL_CONFIG = {
     ],
   },
   addresses: {
-    l10nId: "autofill-addresses-header",
+    l10nId: "addresses-group",
+    headingLevel: 2,
     items: [
       {
         id: "saveAndFillAddresses",
