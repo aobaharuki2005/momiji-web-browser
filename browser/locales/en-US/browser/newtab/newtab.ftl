@@ -379,6 +379,8 @@ newtab-weather-change-location-search-input-placeholder =
     .placeholder = Search location
     .aria-label = Search location
 newtab-weather-menu-weather-display = Weather display
+newtab-weather-todays-forecast = Today’s forecast
+newtab-weather-see-full-forecast = See full forecast
 # Display options are:
 # - Simple: Displays a current weather condition icon and the current temperature
 # - Detailed: Include simple information plus a short text summary: e.g. "Mostly cloudy"

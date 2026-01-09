@@ -13108,8 +13108,9 @@ function WeatherForecast() {
   }), WEATHER_SUGGESTION.forecast.low[prefs["weather.temperatureUnits"]], "\xB0"))), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
     className: "forecast-row"
   }, /*#__PURE__*/React.createElement("p", {
-    className: "today-forecast"
-  }, "Today's forecast"), /*#__PURE__*/React.createElement("ul", {
+    className: "today-forecast",
+    "data-l10n-id": "newtab-weather-todays-forecast"
+  }), /*#__PURE__*/React.createElement("ul", {
     className: "forecast-row-items"
   }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("span", null, "80\xB0"), /*#__PURE__*/React.createElement("span", {
     className: `weather-icon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
@@ -13125,10 +13126,13 @@ function WeatherForecast() {
     className: "weather-forecast-footer"
   }, /*#__PURE__*/React.createElement("a", {
     href: "#",
-    className: "full-forecast"
-  }, "See full forecast"), /*#__PURE__*/React.createElement("span", {
-    className: "sponsored-text"
-  }, "Accuweather Sponsored")));
+    className: "full-forecast",
+    "data-l10n-id": "newtab-weather-see-full-forecast"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sponsored-text",
+    "data-l10n-id": "newtab-weather-sponsored",
+    "data-l10n-args": "{\"provider\": \"AccuWeather\xAE\"}"
+  })));
 }
 
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/FeatureHighlight/WidgetsFeatureHighlight.jsx

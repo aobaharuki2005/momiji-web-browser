@@ -60,7 +60,10 @@ function WeatherForecast() {
       </div>
       <hr />
       <div className="forecast-row">
-        <p className="today-forecast">Today's forecast</p>
+        <p
+          className="today-forecast"
+          data-l10n-id="newtab-weather-todays-forecast"
+        ></p>
         <ul className="forecast-row-items">
           <li>
             <span>80&deg;</span>
@@ -101,10 +104,16 @@ function WeatherForecast() {
       </div>
 
       <div className="weather-forecast-footer">
-        <a href="#" className="full-forecast">
-          See full forecast
-        </a>
-        <span className="sponsored-text">Accuweather Sponsored</span>
+        <a
+          href="#"
+          className="full-forecast"
+          data-l10n-id="newtab-weather-see-full-forecast"
+        ></a>
+        <span
+          className="sponsored-text"
+          data-l10n-id="newtab-weather-sponsored"
+          data-l10n-args='{"provider": "AccuWeather®"}'
+        ></span>
       </div>
     </article>
   );
