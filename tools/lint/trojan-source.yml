@@ -11,7 +11,6 @@ trojan-source:
         - modules/freetype2/builds/amiga/include/config/ftmodule.h
         - modules/freetype2/builds/amiga/src/base/ftsystem.c
         - third_party/aom/test/dr_prediction_test.cc
-        - third_party/python/arrow/arrow/locales.py
         # TODO: Remove this when https://github.com/jaraco/zipp/pull/125 lands
         # to setuptools
         - third_party/python/setuptools/setuptools/_vendor/zipp/__init__.py
