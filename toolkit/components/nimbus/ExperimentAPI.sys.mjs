@@ -37,7 +37,6 @@ const CRASHREPORTER_ENABLED =
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
-const ROLLOUTS_ENABLED_PREF = "nimbus.rollouts.enabled";
 const UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
@@ -149,13 +148,6 @@ export const ExperimentAPI = new (class {
    */
   #prefValues = {
     /**
-     * Whether or not rollouts are enabled.
-     *
-     * @see {@link ROLLOUTS_ENABLED_PREF}
-     */
-    rolloutsEnabled: false,
-
-    /**
      * Whether or not opt-out studies are enabled.
      *
      * @see {@link STUDIES_OPT_OUT_PREF}
@@ -170,11 +162,6 @@ export const ExperimentAPI = new (class {
     telemetryEnabled: false,
   };
 
-  /**
-   * Whether or not studies are enabled.
-   *
-   * @see {@link studiesEnabled}
-   */
   #studiesEnabled = false;
 
   constructor() {
@@ -196,7 +183,7 @@ export const ExperimentAPI = new (class {
       }
     }
 
-    this._onEnabledPrefChange = this._onEnabledPrefChange.bind(this);
+    this._onStudiesEnabledChanged = this._onStudiesEnabledChanged.bind(this);
     this._annotateCrashReport = this._annotateCrashReport.bind(this);
     this._removeCrashReportAnnotator =
       this._removeCrashReportAnnotator.bind(this);
@@ -207,7 +194,8 @@ export const ExperimentAPI = new (class {
   }
 
   /**
-   * The topic that is notified when the Nimbus enabled state changes.
+   * The topic that is notified when either the studies enabled pref or the
+   * telemetry enabled pref changes.
    *
    * Consumers can listen for notifications on this topic to react to
    * Nimbus being enabled or disabled.
@@ -245,6 +233,7 @@ export const ExperimentAPI = new (class {
     // state to change during ExperimentAPI initialization, but we do not
     // register our observers until the end of this function.
     this.#computeEnabled();
+    const studiesEnabled = this.studiesEnabled;
 
     try {
       await lazy.NimbusMigrations.applyMigrations(
@@ -258,8 +247,6 @@ export const ExperimentAPI = new (class {
         e
       );
     }
-
-    this.#computeEnabled();
 
     try {
       await this.manager.store.init();
@@ -313,18 +300,19 @@ export const ExperimentAPI = new (class {
     }
 
     Services.prefs.addObserver(
-      ROLLOUTS_ENABLED_PREF,
-      this._onEnabledPrefChange
+      STUDIES_OPT_OUT_PREF,
+      this._onStudiesEnabledChanged
     );
-    Services.prefs.addObserver(STUDIES_OPT_OUT_PREF, this._onEnabledPrefChange);
-    Services.prefs.addObserver(UPLOAD_ENABLED_PREF, this._onEnabledPrefChange);
+    Services.prefs.addObserver(
+      UPLOAD_ENABLED_PREF,
+      this._onStudiesEnabledChanged
+    );
 
     // If Nimbus was disabled between the start of this function and registering
     // the pref observers we have not handled it yet.
-    //
-    // If the enabled state hasn't actually changed, calling this function is a
-    // no-op.
-    await this._onEnabledPrefChange();
+    if (studiesEnabled !== this.studiesEnabled) {
+      await this._onStudiesEnabledChanged();
+    }
 
     return true;
   }
@@ -380,26 +368,18 @@ export const ExperimentAPI = new (class {
     this.#experimentManager = null;
 
     Services.prefs.removeObserver(
-      ROLLOUTS_ENABLED_PREF,
-      this._onEnabledPrefChange
-    );
-    Services.prefs.removeObserver(
       STUDIES_OPT_OUT_PREF,
-      this._onEnabledPrefChange
+      this._onStudiesEnabledChanged
     );
     Services.prefs.removeObserver(
       UPLOAD_ENABLED_PREF,
-      this._onEnabledPrefChange
+      this._onStudiesEnabledChanged
     );
 
     this.#initialized = false;
   }
 
   #computeEnabled() {
-    this.#prefValues.rolloutsEnabled = Services.prefs.getBoolPref(
-      ROLLOUTS_ENABLED_PREF,
-      false
-    );
     this.#prefValues.studiesEnabled = Services.prefs.getBoolPref(
       STUDIES_OPT_OUT_PREF,
       false
@@ -416,15 +396,11 @@ export const ExperimentAPI = new (class {
   }
 
   get enabled() {
-    return this.labsEnabled || this.rolloutsEnabled || this.studiesEnabled;
+    return this.studiesEnabled || this.labsEnabled;
   }
 
   get labsEnabled() {
     return Services.policies.isAllowed("FirefoxLabs");
-  }
-
-  get rolloutsEnabled() {
-    return this.#prefValues.rolloutsEnabled;
   }
 
   get studiesEnabled() {
@@ -496,36 +472,31 @@ export const ExperimentAPI = new (class {
     }
   }
 
-  /**
-   * Handle a pref change that may result in Nimbus being enabled or disabled.
-   */
-  async _onEnabledPrefChange() {
+  async _onStudiesEnabledChanged(_topic, _subject, prefName) {
+    const studiesPreviouslyEnabled = this.studiesEnabled;
+
+    switch (prefName) {
+      case STUDIES_OPT_OUT_PREF:
+      case UPLOAD_ENABLED_PREF:
+        this.#computeEnabled();
+        break;
+
+      default:
+        return;
+    }
+
     if (!this.#initialized) {
       return;
     }
 
-    const studiesPreviouslyEnabled = this.studiesEnabled;
-    const rolloutsPreviouslyEnabled = this.rolloutsEnabled;
-
-    this.#computeEnabled();
-
-    const studiesEnabledChanged =
-      studiesPreviouslyEnabled !== this.studiesEnabled;
-    const rolloutsEnabledChanged =
-      rolloutsPreviouslyEnabled !== this.rolloutsEnabled;
-
-    if (studiesEnabledChanged || rolloutsEnabledChanged) {
+    if (studiesPreviouslyEnabled !== this.studiesEnabled) {
       if (!this.studiesEnabled) {
         this.manager._handleStudiesOptOut();
       }
 
-      if (!this.rolloutsEnabled) {
-        this.manager._handleRolloutsOptOut();
-      }
-
       // Labs is disabled only by policy, so it cannot be disabled at runtime.
       // Thus we only need to notify the RemoteSettingsExperimentLoader when
-      // studies or rollouts become enabled or disabled.
+      // studies become enabled or disabled.
       await this._rsLoader.onEnabledPrefChange();
 
       Services.obs.notifyObservers(null, this.STUDIES_ENABLED_CHANGED);

@@ -3,12 +3,7 @@
 const { TelemetryEnvironment } = ChromeUtils.importESModule(
   "resource://gre/modules/TelemetryEnvironment.sys.mjs"
 );
-const { FirefoxLabs } = ChromeUtils.importESModule(
-  "resource://nimbus/FirefoxLabs.sys.mjs"
-);
-
-const ROLLOUTS_ENABLED_PREF = "nimbus.rollouts.enabled";
-const STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
+const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 const UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
 
 add_setup(function test_setup() {
@@ -40,44 +35,14 @@ add_task(async function test_set_inactive() {
   await cleanup();
 });
 
-async function doOptOutTest({
-  rolloutsEnabled = true,
-  studiesEnabled = true,
-} = {}) {
-  Services.prefs.setBoolPref(ROLLOUTS_ENABLED_PREF, true);
-  Services.prefs.setBoolPref(STUDIES_ENABLED_PREF, true);
+add_task(async function test_unenroll_opt_out() {
+  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, true);
 
-  const recipes = {
-    experiment: NimbusTestUtils.factories.recipe.withFeatureConfig(
-      "experiment",
-      { featureId: "no-feature-firefox-desktop" }
-    ),
-    rollout: NimbusTestUtils.factories.recipe.withFeatureConfig(
-      "rollout",
-      { featureId: "no-feature-firefox-desktop" },
-      { isRollout: true }
-    ),
-    optin: NimbusTestUtils.factories.recipe.withFeatureConfig(
-      "optin",
-      { featureId: "no-feature-firefox-desktop" },
-      {
-        isRollout: true,
-        isFirefoxLabsOptIn: true,
-        firefoxLabsTitle: "title",
-        firefoxLabsDescription: "description",
-        firefoxLabsDescriptionLinks: null,
-        firefoxLabsGroup: "group",
-        requiresRestart: false,
-      }
-    ),
-  };
-
-  const { manager, cleanup } = await setupTest({
-    experiments: Object.values(recipes),
+  const { manager, cleanup } = await setupTest();
+  const experiment = NimbusTestUtils.factories.recipe.withFeatureConfig("foo", {
+    featureId: "testFeature",
   });
-
-  const labs = await FirefoxLabs.create();
-  await labs.enroll(recipes.optin.slug, "control");
+  await manager.enroll(experiment, "test");
 
   // Check that there aren't any Glean normandy unenrollNimbusExperiment events yet
   Assert.equal(
@@ -93,88 +58,109 @@ async function doOptOutTest({
     "no Glean unenrollment events before unenrollment"
   );
 
-  Services.prefs.setBoolPref(ROLLOUTS_ENABLED_PREF, rolloutsEnabled);
-  Services.prefs.setBoolPref(STUDIES_ENABLED_PREF, studiesEnabled);
+  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, false);
 
-  await NimbusTestUtils.assert.enrollmentExists(recipes.experiment.slug, {
-    active: studiesEnabled,
+  await NimbusTestUtils.assert.enrollmentExists(experiment.slug, {
+    active: false,
   });
+
   Assert.equal(
-    manager.store.get(recipes.experiment.slug).active,
-    studiesEnabled
+    manager.store.get(experiment.slug).active,
+    false,
+    "should set .active to false"
   );
 
-  await NimbusTestUtils.assert.enrollmentExists(recipes.rollout.slug, {
-    active: rolloutsEnabled,
-  });
-  Assert.equal(manager.store.get(recipes.rollout.slug).active, rolloutsEnabled);
-
-  await NimbusTestUtils.assert.enrollmentExists(recipes.optin.slug, {
-    active: true,
-  });
-  Assert.ok(manager.store.get(recipes.optin.slug).active);
-
-  const normandyEvents =
+  // We expect only one event and that that one event matches the expected enrolled experiment
+  Assert.deepEqual(
     Glean.normandy.unenrollNimbusExperiment
       .testGetValue("events")
-      ?.map(ev => ev.extra) ?? [];
-  const nimbusEvents =
-    Glean.nimbusEvents.unenrollment
-      .testGetValue("events")
-      ?.map(ev => ev.extra) ?? [];
-
-  const unenrolledSlugs = [];
-  if (!rolloutsEnabled) {
-    unenrolledSlugs.push(recipes.rollout.slug);
-  }
-  if (!studiesEnabled) {
-    unenrolledSlugs.push(recipes.experiment.slug);
-  }
-
-  Assert.deepEqual(
-    normandyEvents,
-    unenrolledSlugs.map(slug => ({
-      value: slug,
-      branch: "control",
-      reason: recipes[slug].isRollout ? "rollouts-opt-out" : "studies-opt-out",
-    })),
-    "Expected normandy unenroll events"
+      .map(ev => ev.extra),
+    [
+      {
+        value: experiment.slug,
+        branch: experiment.branches[0].slug,
+        reason: "studies-opt-out",
+      },
+    ]
   );
 
+  // We expect only one event and that that one event matches the expected enrolled experiment
   Assert.deepEqual(
-    nimbusEvents,
-    unenrolledSlugs.map(slug => ({
-      experiment: slug,
-      branch: "control",
-      reason: recipes[slug].isRollout ? "rollouts-opt-out" : "studies-opt-out",
-    })),
-    "Expected nimbus unenroll events"
+    Glean.nimbusEvents.unenrollment.testGetValue("events").map(ev => ev.extra),
+    [
+      {
+        experiment: experiment.slug,
+        branch: experiment.branches[0].slug,
+        reason: "studies-opt-out",
+      },
+    ]
   );
 
-  if (rolloutsEnabled) {
-    manager.unenroll(recipes.rollout.slug, { reason: "test" });
-  }
-  if (studiesEnabled) {
-    manager.unenroll(recipes.experiment.slug, { reason: "test" });
-  }
-
-  labs.unenroll(recipes.optin.slug);
   await cleanup();
-
-  Services.prefs.clearUserPref(ROLLOUTS_ENABLED_PREF);
-  Services.prefs.clearUserPref(STUDIES_ENABLED_PREF);
-}
-
-add_task(async function testUnenrollStudiesOptOut() {
-  await doOptOutTest({ studiesEnabled: false });
+  Services.prefs.clearUserPref(STUDIES_OPT_OUT_PREF);
 });
 
-add_task(async function testUnenrollRolloutOptOut() {
-  await doOptOutTest({ rolloutsEnabled: false });
-});
+add_task(async function test_unenroll_rollout_opt_out() {
+  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, true);
 
-add_task(async function testUnenrollAllOptOut() {
-  await doOptOutTest({ rolloutsEnabled: false, studiesEnabled: false });
+  const { manager, cleanup } = await setupTest();
+  const rollout = NimbusTestUtils.factories.recipe("foo", { isRollout: true });
+  await manager.enroll(rollout, "test");
+
+  // Check that there aren't any Glean normandy unenrollNimbusExperiment events yet
+  Assert.equal(
+    Glean.normandy.unenrollNimbusExperiment.testGetValue("events"),
+    undefined,
+    "no Glean normandy unenrollNimbusExperiment events before unenrollment"
+  );
+
+  // Check that there aren't any Glean unenrollment events yet
+  Assert.equal(
+    Glean.nimbusEvents.unenrollment.testGetValue("events"),
+    undefined,
+    "no Glean unenrollment events before unenrollment"
+  );
+
+  Services.prefs.setBoolPref(STUDIES_OPT_OUT_PREF, false);
+
+  await NimbusTestUtils.assert.enrollmentExists(rollout.slug, {
+    active: false,
+  });
+
+  Assert.equal(
+    manager.store.get(rollout.slug).active,
+    false,
+    "should set .active to false"
+  );
+
+  // We expect only one event and that that one event matches the expected enrolled experiment
+  Assert.deepEqual(
+    Glean.normandy.unenrollNimbusExperiment
+      .testGetValue("events")
+      .map(ev => ev.extra),
+    [
+      {
+        value: rollout.slug,
+        branch: rollout.branches[0].slug,
+        reason: "studies-opt-out",
+      },
+    ]
+  );
+
+  // We expect only one event and that that one event matches the expected enrolled experiment
+  Assert.deepEqual(
+    Glean.nimbusEvents.unenrollment.testGetValue("events").map(ev => ev.extra),
+    [
+      {
+        experiment: rollout.slug,
+        branch: rollout.branches[0].slug,
+        reason: "studies-opt-out",
+      },
+    ]
+  );
+
+  await cleanup();
+  Services.prefs.clearUserPref(STUDIES_OPT_OUT_PREF);
 });
 
 add_task(async function test_unenroll_uploadPref() {

@@ -189,7 +189,6 @@ Preferences.addAll([
     id: "privacy.userContext.newTabContainerOnLeftClick.enabled",
     type: "bool",
   },
-  { id: "nimbus.rollouts.enabled", type: "bool" },
 
   // Picture-in-Picture
   {

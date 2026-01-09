@@ -330,16 +330,12 @@ export class ExperimentManager {
 
     this._prefFlips.init();
 
-    if (!lazy.ExperimentAPI.labsEnabled) {
-      this._handleLabsDisabled();
-    }
-
-    if (!lazy.ExperimentAPI.rolloutsEnabled) {
-      this._handleRolloutsOptOut();
-    }
-
     if (!lazy.ExperimentAPI.studiesEnabled) {
       this._handleStudiesOptOut();
+    }
+
+    if (!lazy.ExperimentAPI.labsEnabled) {
+      this._handleLabsDisabled();
     }
 
     lazy.NimbusFeatures.nimbusTelemetry.onUpdate(() => {
@@ -975,7 +971,6 @@ export class ExperimentManager {
       [
         UnenrollReason.BUCKETING,
         UnenrollReason.TARGETING_MISMATCH,
-        UnenrollReason.ROLLOUTS_OPT_OUT,
         UnenrollReason.STUDIES_OPT_OUT,
       ].includes(enrollment.unenrollReason)
     ) {
@@ -1072,30 +1067,12 @@ export class ExperimentManager {
   }
 
   /**
-   * Unenroll from all active rollouts if user opts out.
-   */
-  _handleRolloutsOptOut() {
-    const enrollments = this.store
-      .getAll()
-      .filter(e => e.active && !e.isFirefoxLabsOptIn && e.isRollout);
-
-    for (const enrollment of enrollments) {
-      this._unenroll(
-        enrollment,
-        UnenrollmentCause.fromReason(
-          lazy.NimbusTelemetry.UnenrollReason.ROLLOUTS_OPT_OUT
-        )
-      );
-    }
-  }
-
-  /**
    * Unenroll from all active studies if user opts out.
    */
   _handleStudiesOptOut() {
     const enrollments = this.store
       .getAll()
-      .filter(e => e.active && !e.isFirefoxLabsOptIn && !e.isRollout);
+      .filter(e => e.active && !e.isFirefoxLabsOptIn);
 
     for (const enrollment of enrollments) {
       this._unenroll(
