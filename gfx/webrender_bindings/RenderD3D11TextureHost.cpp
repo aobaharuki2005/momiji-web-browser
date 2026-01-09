@@ -6,6 +6,8 @@
 
 #include "RenderD3D11TextureHost.h"
 
+#include <dcomp.h>
+
 #include "GLContextEGL.h"
 #include "GLLibraryEGL.h"
 #include "RenderThread.h"
@@ -14,6 +16,7 @@
 #include "ScopedGLHelpers.h"
 #include "mozilla/gfx/CanvasManagerParent.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/layers/FenceD3D11.h"
 #include "mozilla/layers/GpuProcessD3D11TextureMap.h"
@@ -54,6 +57,76 @@ RenderDXGITextureHost::RenderDXGITextureHost(
 RenderDXGITextureHost::~RenderDXGITextureHost() {
   MOZ_COUNT_DTOR_INHERITED(RenderDXGITextureHost, RenderTextureHost);
   DeleteTextureHandle();
+}
+
+/* static */
+bool RenderDXGITextureHost::UseDCompositionTextureOverlay(
+    gfx::SurfaceFormat aFormat) {
+  if (!gfx::gfxVars::UseWebRenderDCompositionTextureOverlayWin()) {
+    return false;
+  }
+
+  if (!gfx::DeviceManagerDx::Get()->CanUseDCompositionTexture()) {
+    return false;
+  }
+
+  if (aFormat != gfx::SurfaceFormat::B8G8R8A8 &&
+      aFormat != gfx::SurfaceFormat::B8G8R8X8) {
+    return false;
+  }
+
+  return true;
+}
+
+IDCompositionTexture* RenderDXGITextureHost::GetDCompositionTexture() {
+  if (mDCompositionTexture) {
+    return mDCompositionTexture;
+  }
+
+  if (!UseDCompositionTextureOverlay(mFormat)) {
+    return nullptr;
+  }
+
+  if (mFencesHolderId.isNothing()) {
+    MOZ_ASSERT_UNREACHABLE("Unexpected to be called!");
+    return nullptr;
+  }
+
+  HRESULT hr;
+  RefPtr<IDCompositionDevice2> dcomp =
+      gfx::DeviceManagerDx::Get()->GetDirectCompositionDevice();
+  if (!dcomp) {
+    MOZ_ASSERT_UNREACHABLE("Unexpected to be called!");
+    gfxCriticalNoteOnce << "Failed to get DirectCompositionDevice";
+    return nullptr;
+  }
+
+  RefPtr<IDCompositionDevice4> dcomp4;
+  hr = dcomp->QueryInterface((IDCompositionDevice4**)getter_AddRefs(dcomp4));
+  if (FAILED(hr)) {
+    MOZ_ASSERT_UNREACHABLE("Unexpected to be called!");
+    gfxCriticalNoteOnce << "Failed to get DCompositionDevice4";
+    return nullptr;
+  }
+
+  RefPtr<ID3D11Texture2D> texture2D = GetD3D11Texture2DWithGL();
+  if (!texture2D) {
+    gfxCriticalNoteOnce << "Failed to get D3D11Texture";
+    return nullptr;
+  }
+
+  RefPtr<IDCompositionTexture> dcompTexture;
+  hr =
+      dcomp4->CreateCompositionTexture(texture2D, getter_AddRefs(dcompTexture));
+  if (FAILED(hr)) {
+    gfxCriticalNoteOnce << "CreateCompositionTexture failed:  "
+                        << gfx::hexa(hr);
+    return nullptr;
+  }
+
+  mDCompositionTexture = dcompTexture;
+
+  return mDCompositionTexture;
 }
 
 ID3D11Texture2D* RenderDXGITextureHost::GetD3D11Texture2DWithGL() {

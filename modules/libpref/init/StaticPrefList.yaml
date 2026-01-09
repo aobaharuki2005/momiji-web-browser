@@ -7830,6 +7830,11 @@
   mirror: once
 #endif
 
+- name: gfx.webrender.dcomp-texture-overlay-win
+  type: bool
+  value: false
+  mirror: once
+
 - name: gfx.webrender.scissored-cache-clears.enabled
   type: bool
   value: true

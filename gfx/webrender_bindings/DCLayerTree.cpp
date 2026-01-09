@@ -849,7 +849,7 @@ void DCLayerTree::CreateSwapChainSurface(wr::NativeSurfaceId aId,
   MOZ_RELEASE_ASSERT(it == mDCSurfaces.end());
 
   UniquePtr<DCSurface> surface;
-  if (SupportsDCompositionTexture()) {
+  if (UseDCLayerDCompositionTexture()) {
     surface = MakeUnique<DCLayerDCompositionTexture>(aSize, aIsOpaque, this);
     if (!surface->Initialize()) {
       gfxCriticalNote << "Failed to initialize DCLayerDCompositionTexture: "
@@ -962,11 +962,25 @@ DCSurface* DCExternalSurfaceWrapper::EnsureSurfaceForExternalImage(
   RenderTextureHost* texture =
       RenderThread::Get()->GetRenderTexture(aExternalImage);
   if (texture && texture->AsRenderDXGITextureHost()) {
-    mSurface.reset(new DCSurfaceVideo(mIsOpaque, mDCLayerTree));
-    if (!mSurface->Initialize()) {
-      gfxCriticalNote << "Failed to initialize DCSurfaceVideo: "
-                      << wr::AsUint64(aExternalImage);
-      mSurface = nullptr;
+    auto format = texture->GetFormat();
+    if (format == gfx::SurfaceFormat::B8G8R8A8 ||
+        format == gfx::SurfaceFormat::B8G8R8X8) {
+      MOZ_ASSERT(RenderDXGITextureHost::UseDCompositionTextureOverlay(format));
+      mSurface.reset(
+          new DCSurfaceDCompositionTextureOverlay(mIsOpaque, mDCLayerTree));
+      if (!mSurface->Initialize()) {
+        gfxCriticalNote
+            << "Failed to initialize DCSurfaceDCompositionTextureOverlay: "
+            << wr::AsUint64(aExternalImage);
+        mSurface = nullptr;
+      }
+    } else {
+      mSurface.reset(new DCSurfaceVideo(mIsOpaque, mDCLayerTree));
+      if (!mSurface->Initialize()) {
+        gfxCriticalNote << "Failed to initialize DCSurfaceVideo: "
+                        << wr::AsUint64(aExternalImage);
+        mSurface = nullptr;
+      }
     }
   } else if (texture && texture->AsRenderDcompSurfaceTextureHost()) {
     mSurface.reset(new DCSurfaceHandle(mIsOpaque, mDCLayerTree));
@@ -1098,6 +1112,9 @@ void DCExternalSurfaceWrapper::PresentExternalSurface(gfx::Matrix& aTransform) {
     }
   } else if (auto* surface = mSurface->AsDCSurfaceHandle()) {
     surface->PresentSurfaceHandle();
+  } else if (auto* surface =
+                 mSurface->AsDCSurfaceDCompositionTextureOverlay()) {
+    surface->Present();
   }
 }
 
@@ -1321,7 +1338,7 @@ bool DCLayerTree::SupportsSwapChainTearing() {
   return supported;
 }
 
-bool DCLayerTree::SupportsDCompositionTexture() {
+bool DCLayerTree::UseDCLayerDCompositionTexture() {
   if (!gfx::gfxVars::WebRenderLayerCompositorDCompTexture()) {
     return false;
   }
@@ -2158,6 +2175,53 @@ void DCLayerCompositionSurface::Present(const wr::DeviceIntRect* aDirtyRects,
 
   egl->fDestroySurface(mEGLSurface);
   mEGLSurface = EGL_NO_SURFACE;
+}
+
+DCSurfaceDCompositionTextureOverlay::DCSurfaceDCompositionTextureOverlay(
+    bool aIsOpaque, DCLayerTree* aDCLayerTree)
+    : DCSurface(wr::DeviceIntSize{}, wr::DeviceIntPoint{}, false, aIsOpaque,
+                aDCLayerTree) {}
+
+DCSurfaceDCompositionTextureOverlay::~DCSurfaceDCompositionTextureOverlay() {}
+
+void DCSurfaceDCompositionTextureOverlay::AttachExternalImage(
+    wr::ExternalImageId aExternalImage) {
+  auto* texture = RenderThread::Get()->GetRenderTexture(aExternalImage);
+  if (!texture) {
+    return;
+  }
+  mRenderTextureHost = texture;
+}
+
+void DCSurfaceDCompositionTextureOverlay::Present() {
+  if (!mRenderTextureHost) {
+    return;
+  }
+
+  // Content is not updated
+  if (mPrevRenderTextureHost == mRenderTextureHost) {
+    return;
+  }
+
+  const auto textureHost = mRenderTextureHost->AsRenderDXGITextureHost();
+  RefPtr<IDCompositionTexture> dcompTexture =
+      textureHost->GetDCompositionTexture();
+  if (!dcompTexture) {
+    gfxCriticalNote << "Failed to get DCompTexture";
+    RenderThread::Get()->NotifyWebRenderError(
+        WebRenderError::DCOMP_TEXTURE_OVERLAY);
+    return;
+  }
+
+  const auto alphaMode =
+      mIsOpaque ? DXGI_ALPHA_MODE_IGNORE : DXGI_ALPHA_MODE_PREMULTIPLIED;
+  dcompTexture->SetAlphaMode(alphaMode);
+  //  XXX
+  //  dcompTexture->SetColorSpace();
+
+  mContentVisual->SetContent(dcompTexture);
+  mPrevRenderTextureHost = mRenderTextureHost;
+  mDCLayerTree->SetPendingCommet();
 }
 
 DCSurfaceVideo::DCSurfaceVideo(bool aIsOpaque, DCLayerTree* aDCLayerTree)

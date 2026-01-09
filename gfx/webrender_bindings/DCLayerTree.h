@@ -67,6 +67,7 @@ class DCTile;
 class DCLayerDCompositionTexture;
 class DCSurface;
 class DCSwapChain;
+class DCSurfaceDCompositionTextureOverlay;
 class DCSurfaceVideo;
 class DCSurfaceHandle;
 class RenderTextureHost;
@@ -201,11 +202,13 @@ class DCLayerTree {
   DXGI_FORMAT GetOverlayFormatForSDR();
 
   bool SupportsSwapChainTearing();
-  bool SupportsDCompositionTexture();
+  bool UseDCLayerDCompositionTexture();
 
   void SetUsedOverlayTypeInFrame(DCompOverlayTypes aTypes);
 
   int GetFrameId() { return mCurrentFrame; }
+
+  void SetPendingCommet() { mPendingCommit = true; }
 
  protected:
   bool Initialize(HWND aHwnd, nsACString& aError);
@@ -360,6 +363,10 @@ class DCSurface {
   virtual DCLayerSurface* AsDCLayerSurface() { return nullptr; }
   virtual DCSwapChain* AsDCSwapChain() { return nullptr; }
   virtual DCLayerDCompositionTexture* AsDCLayerDCompositionTexture() {
+    return nullptr;
+  }
+  virtual DCSurfaceDCompositionTextureOverlay*
+  AsDCSurfaceDCompositionTextureOverlay() {
     return nullptr;
   }
 
@@ -553,12 +560,38 @@ class DCExternalSurfaceWrapper : public DCSurface {
     return mSurface ? mSurface->AsDCSurfaceHandle() : nullptr;
   }
 
+  DCSurfaceDCompositionTextureOverlay* AsDCSurfaceDCompositionTextureOverlay()
+      override {
+    return mSurface ? mSurface->AsDCSurfaceDCompositionTextureOverlay()
+                    : nullptr;
+  }
+
  private:
   DCSurface* EnsureSurfaceForExternalImage(wr::ExternalImageId aExternalImage);
 
   UniquePtr<DCSurface> mSurface;
   const bool mIsOpaque;
   Maybe<ColorManagementChain> mCManageChain;
+};
+
+class DCSurfaceDCompositionTextureOverlay : public DCSurface {
+ public:
+  DCSurfaceDCompositionTextureOverlay(bool aIsOpaque,
+                                      DCLayerTree* aDCLayerTree);
+
+  void AttachExternalImage(wr::ExternalImageId aExternalImage) override;
+  void Present();
+
+  DCSurfaceDCompositionTextureOverlay* AsDCSurfaceDCompositionTextureOverlay()
+      override {
+    return this;
+  }
+
+ protected:
+  virtual ~DCSurfaceDCompositionTextureOverlay();
+
+  RefPtr<RenderTextureHost> mRenderTextureHost;
+  RefPtr<RenderTextureHost> mPrevRenderTextureHost;
 };
 
 class DCSurfaceVideo : public DCSurface {

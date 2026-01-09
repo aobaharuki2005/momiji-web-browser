@@ -2875,13 +2875,16 @@ void gfxPlatform::InitWebRenderConfig() {
     }
   }
 
-#  ifdef XP_WIN
   if (StaticPrefs::
           gfx_webrender_layer_compositor_use_dcomp_texture_AtStartup() &&
       IsWin1122H2OrLater() && gfxVars::UseWebRenderDCompWin()) {
     gfxVars::SetWebRenderLayerCompositorDCompTexture(true);
   }
-#  endif
+
+  if (StaticPrefs::gfx_webrender_dcomp_texture_overlay_win_AtStartup() &&
+      IsWin1122H2OrLater() && gfxVars::UseWebRenderDCompWin()) {
+    gfxVars::SetUseWebRenderDCompositionTextureOverlayWin(true);
+  }
 #endif
 
   bool allowOverlayVpAutoHDR = false;

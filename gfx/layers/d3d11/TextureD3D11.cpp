@@ -1312,6 +1312,15 @@ bool DXGITextureHostD3D11::SupportsExternalCompositing(
       return true;
     }
   }
+
+  bool useDcompTextureOverlay =
+      wr::RenderDXGITextureHost::UseDCompositionTextureOverlay(GetFormat()) &&
+      mFencesHolderId.isSome() &&
+      !(mFlags & TextureFlags::ALLOC_BY_BUFFER_PROVIDER);
+  if (useDcompTextureOverlay) {
+    return true;
+  }
+
   return false;
 }
 
