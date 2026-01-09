@@ -709,16 +709,6 @@ class Settings(
         default = false,
     )
 
-    /**
-     * Controls whether the user is opted into rollouts (remote improvements).
-     * Rollouts are completely decoupled from telemetry and experiments, so users
-     * can receive feature updates regardless of their telemetry or experiment settings.
-     */
-    var isRolloutsEnabled by booleanPreference(
-        appContext.getPreferenceKey(R.string.pref_key_rollouts),
-        default = appContext.components.nimbus.sdk.rolloutParticipation,
-    )
-
     var isOverrideTPPopupsForPerformanceTest = false
 
     // We do not use `booleanPreference` because we only want the "read" part of this setting to be

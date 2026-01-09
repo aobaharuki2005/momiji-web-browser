@@ -270,7 +270,7 @@ private fun TogglePreferenceSection(
 }
 
 /**
- * Composable section that displays the user's participation status in studies or experiments.
+ * Composable section that displays the user’s participation status in studies or experiments.
  *
  * @param studiesEnabled Whether the user is currently enrolled in studies.
  *                       Affects the summary text shown in the section.
@@ -295,7 +295,7 @@ private fun StudiesSection(
         )
 
         TextListItem(
-            label = stringResource(R.string.studies_title_2),
+            label = stringResource(R.string.studies_title),
             description = stringResource(if (studiesEnabled) R.string.studies_on else R.string.studies_off),
             enabled = sectionEnabled,
             onClick = onClick,
