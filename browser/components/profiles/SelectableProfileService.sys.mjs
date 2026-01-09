@@ -1669,10 +1669,58 @@ export class CommandLineHandler {
     return null;
   }
 
+  /**
+   * Attempts to parse the arguments expected when opening URLs from other
+   * applications on macOS.
+   *
+   * @param {Array<string>} args The command line arguments.
+   * @returns {boolean} True if the arguments matched the expected form.
+   */
+  openUrls(args) {
+    // Arguments are expected to be in pairs of "-url" "<url>".
+    if (args.length % 2 != 0) {
+      return false;
+    }
+
+    for (let i = 0; i < args.length; i += 2) {
+      if (args[i] != "-url") {
+        return false;
+      }
+    }
+
+    // Now the arguments are verified to only be "-url" arguments we can pass
+    // them directly to the only handler for those arguments.
+    let workingDir = Services.dirsvc.get("CurWorkD", Ci.nsIFile);
+    let cmdLine = Cu.createCommandLine(
+      args,
+      workingDir,
+      Ci.nsICommandLine.STATE_REMOTE_EXPLICIT
+    );
+
+    try {
+      let handler = Cc["@mozilla.org/browser/final-clh;1"].createInstance(
+        Ci.nsICommandLineHandler
+      );
+      handler.handle(cmdLine);
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+
+    return true;
+  }
+
   async redirectCommandLine(args) {
     let defaultPath = await this.findDefaultProfilePath();
 
     if (defaultPath) {
+      if (
+        defaultPath == SelectableProfileService.currentProfile.path &&
+        this.openUrls(args)
+      ) {
+        return;
+      }
+
       // Attempt to use the remoting service to send the arguments to any
       // existing instance of this profile (this even works for the current
       // instance on macOS which is the only platform we call this for).
