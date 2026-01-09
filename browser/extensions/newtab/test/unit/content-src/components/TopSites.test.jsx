@@ -25,6 +25,18 @@ import { TopSiteFormInput } from "content-src/components/TopSites/TopSiteFormInp
 import { _TopSites as TopSites } from "content-src/components/TopSites/TopSites";
 import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 
+// Patch dialog element's .showModal()/close() functions to prevent errors in tests
+before(() => {
+  if (typeof HTMLDialogElement !== "undefined") {
+    HTMLDialogElement.prototype.showModal = function () {
+      this.open = true;
+    };
+    HTMLDialogElement.prototype.close = function () {
+      this.open = false;
+    };
+  }
+});
+
 const perfSvc = {
   mark() {},
   getMostRecentAbsMarkStartByName() {},
