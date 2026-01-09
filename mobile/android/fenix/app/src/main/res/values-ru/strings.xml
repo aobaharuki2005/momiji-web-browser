@@ -1021,7 +1021,7 @@
 
     Preference to customize the configured AMO (addons.mozilla.org) collection
   -->
-  <string name="preferences_customize_extension_collection">Коллекция пользовательских расширений</string>
+  <string name="preferences_customize_extension_collection">Подборка пользовательских расширений</string>
   <!-- Button caption to confirm the add-on collection configuration -->
   <string name="customize_addon_collection_ok">OK</string>
   <!-- Button caption to abort the add-on collection configuration -->
@@ -1031,7 +1031,7 @@
   <!-- Hint displayed on input field for custom collection user ID -->
   <string name="customize_addon_collection_user_hint">Владелец сборника (идентификатор пользователя)</string>
   <!-- Toast shown after confirming the custom extension collection configuration -->
-  <string name="toast_customize_extension_collection_done">Коллекция расширений изменёна. Выход из приложения для применения изменений…</string>
+  <string name="toast_customize_extension_collection_done">Подборка расширений изменена. Выход из приложения для применения изменений…</string>
   <!--
     Customize Home
 
