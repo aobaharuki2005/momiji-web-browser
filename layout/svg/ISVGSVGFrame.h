@@ -20,11 +20,11 @@ class ISVGSVGFrame {
    * Called when non-attribute changes have caused the element's width/height
    * or its for-children transform to change, and to get the element to notify
    * its children appropriately. aFlags must be set to
-   * ISVGDisplayableFrame::ChangeFlags::CoordContextChanged and/or
-   * ISVGDisplayableFrame::ChangeFlags::TransformChanged.
+   * ISVGDisplayableFrame::ChangeFlag::CoordContextChanged and/or
+   * ISVGDisplayableFrame::ChangeFlag::TransformChanged.
    */
   virtual void NotifyViewportOrTransformChanged(
-      EnumSet<ISVGDisplayableFrame::ChangeFlags> aFlags) = 0;
+      ISVGDisplayableFrame::ChangeFlags aFlags) = 0;
 };
 
 }  // namespace mozilla

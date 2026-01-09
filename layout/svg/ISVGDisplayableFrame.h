@@ -103,11 +103,12 @@ class ISVGDisplayableFrame : public nsQueryFrame {
   //   lengths must be reevaluated)
   // FullZoomChanged:
   //   the page's zoom level has changed
-  enum class ChangeFlags {
+  enum class ChangeFlag {
     TransformChanged,
     CoordContextChanged,
     FullZoomChanged
   };
+  using ChangeFlags = EnumSet<ChangeFlag>;
 
   /**
    * This is called on a frame when there has been a change to one of its
@@ -118,7 +119,7 @@ class ISVGDisplayableFrame : public nsQueryFrame {
    * invalidate the entire area of the ancestor that changed. However, they
    * may need to update their bounds.
    */
-  virtual void NotifySVGChanged(EnumSet<ChangeFlags> aFlags) = 0;
+  virtual void NotifySVGChanged(ChangeFlags aFlags) = 0;
 
   /**
    * Get this frame's contribution to the rect returned by a GetBBox() call

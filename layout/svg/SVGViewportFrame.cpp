@@ -73,12 +73,12 @@ void SVGViewportFrame::ReflowSVG() {
   SVGDisplayContainerFrame::ReflowSVG();
 }
 
-void SVGViewportFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
-  MOZ_ASSERT(aFlags.contains(ChangeFlags::TransformChanged) ||
-                 aFlags.contains(ChangeFlags::CoordContextChanged),
+void SVGViewportFrame::NotifySVGChanged(ChangeFlags aFlags) {
+  MOZ_ASSERT(aFlags.contains(ChangeFlag::TransformChanged) ||
+                 aFlags.contains(ChangeFlag::CoordContextChanged),
              "Invalidation logic may need adjusting");
 
-  if (aFlags.contains(ChangeFlags::CoordContextChanged)) {
+  if (aFlags.contains(ChangeFlag::CoordContextChanged)) {
     SVGViewportElement* svg = static_cast<SVGViewportElement*>(GetContent());
 
     bool xOrYIsPercentage =
@@ -102,17 +102,17 @@ void SVGViewportFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
     // percentage 'x' or 'y', or if we have a percentage 'width' or 'height' AND
     // a 'viewBox'.
 
-    if (!aFlags.contains(ChangeFlags::TransformChanged) &&
+    if (!aFlags.contains(ChangeFlag::TransformChanged) &&
         (xOrYIsPercentage ||
          (widthOrHeightIsPercentage && svg->HasViewBox()))) {
-      aFlags += ChangeFlags::TransformChanged;
+      aFlags += ChangeFlag::TransformChanged;
     }
 
     if (svg->HasViewBox() || !widthOrHeightIsPercentage) {
       // Remove COORD_CONTEXT_CHANGED, since we establish the coordinate
       // context for our descendants and this notification won't change its
       // dimensions:
-      aFlags -= ChangeFlags::CoordContextChanged;
+      aFlags -= ChangeFlag::CoordContextChanged;
 
       if (aFlags.isEmpty()) {
         return;  // No notification flags left
@@ -181,13 +181,12 @@ nsresult SVGViewportFrame::AttributeChanged(int32_t aNameSpaceID,
         // make sure our cached transform matrix gets (lazily) updated
         mCanvasTM = nullptr;
         content->ChildrenOnlyTransformChanged();
-        SVGUtils::NotifyChildrenOfSVGChange(this,
-                                            ChangeFlags::TransformChanged);
+        SVGUtils::NotifyChildrenOfSVGChange(this, ChangeFlag::TransformChanged);
       } else {
-        EnumSet<ChangeFlags> flags(ChangeFlags::CoordContextChanged);
+        ChangeFlags flags(ChangeFlag::CoordContextChanged);
         if (mCanvasTM && mCanvasTM->IsSingular()) {
           mCanvasTM = nullptr;
-          flags += ChangeFlags::TransformChanged;
+          flags += ChangeFlag::TransformChanged;
         }
         SVGUtils::NotifyChildrenOfSVGChange(this, flags);
       }
@@ -200,9 +199,9 @@ nsresult SVGViewportFrame::AttributeChanged(int32_t aNameSpaceID,
 
       SVGUtils::NotifyChildrenOfSVGChange(
           this, aAttribute == nsGkAtoms::viewBox
-                    ? EnumSet<ChangeFlags>(ChangeFlags::TransformChanged,
-                                           ChangeFlags::CoordContextChanged)
-                    : ChangeFlags::TransformChanged);
+                    ? ChangeFlags(ChangeFlag::TransformChanged,
+                                  ChangeFlag::CoordContextChanged)
+                    : ChangeFlag::TransformChanged);
 
       if (aAttribute == nsGkAtoms::x || aAttribute == nsGkAtoms::y) {
         nsLayoutUtils::PostRestyleEvent(
@@ -232,8 +231,7 @@ nsIFrame* SVGViewportFrame::GetFrameForPoint(const gfxPoint& aPoint) {
 //----------------------------------------------------------------------
 // ISVGSVGFrame methods:
 
-void SVGViewportFrame::NotifyViewportOrTransformChanged(
-    EnumSet<ChangeFlags> aFlags) {
+void SVGViewportFrame::NotifyViewportOrTransformChanged(ChangeFlags aFlags) {
   // The dimensions of inner-<svg> frames are purely defined by their "width"
   // and "height" attributes, and transform changes can only occur as a result
   // of changes to their "width", "height", "viewBox" or "preserveAspectRatio"

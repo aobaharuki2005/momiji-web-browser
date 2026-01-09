@@ -381,16 +381,16 @@ void SVGDisplayContainerFrame::DidSetComputedStyle(ComputedStyle* aOldStyle) {
   }
   if (StyleDisplay()->CalcTransformPropertyDifference(
           *aOldStyle->StyleDisplay())) {
-    NotifySVGChanged(ChangeFlags::TransformChanged);
+    NotifySVGChanged(ChangeFlag::TransformChanged);
   }
 }
 
-void SVGDisplayContainerFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
-  MOZ_ASSERT(aFlags.contains(ChangeFlags::TransformChanged) ||
-                 aFlags.contains(ChangeFlags::CoordContextChanged),
+void SVGDisplayContainerFrame::NotifySVGChanged(ChangeFlags aFlags) {
+  MOZ_ASSERT(aFlags.contains(ChangeFlag::TransformChanged) ||
+                 aFlags.contains(ChangeFlag::CoordContextChanged),
              "Invalidation logic may need adjusting");
 
-  if (aFlags.contains(ChangeFlags::TransformChanged)) {
+  if (aFlags.contains(ChangeFlag::TransformChanged)) {
     // make sure our cached transform matrix gets (lazily) updated
     mCanvasTM = nullptr;
   }

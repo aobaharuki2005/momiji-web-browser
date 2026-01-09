@@ -172,7 +172,7 @@ void SVGClipPathFrame::PaintFrameIntoMask(nsIFrame* aFrame,
   }
 
   // The CTM of each frame referencing us can be different.
-  frame->NotifySVGChanged(ISVGDisplayableFrame::ChangeFlags::TransformChanged);
+  frame->NotifySVGChanged(ISVGDisplayableFrame::ChangeFlag::TransformChanged);
 
   // Children of this clipPath may themselves be clipped.
   SVGClipPathFrame* clipPathThatClipsChild;

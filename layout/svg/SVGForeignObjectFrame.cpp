@@ -280,16 +280,16 @@ void SVGForeignObjectFrame::ReflowSVG() {
                   NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
-void SVGForeignObjectFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
-  MOZ_ASSERT(aFlags.contains(ChangeFlags::TransformChanged) ||
-                 aFlags.contains(ChangeFlags::CoordContextChanged),
+void SVGForeignObjectFrame::NotifySVGChanged(ChangeFlags aFlags) {
+  MOZ_ASSERT(aFlags.contains(ChangeFlag::TransformChanged) ||
+                 aFlags.contains(ChangeFlag::CoordContextChanged),
              "Invalidation logic may need adjusting");
 
   bool needNewBounds = false;  // i.e. mRect or ink overflow rect
   bool needReflow = false;
   bool needNewCanvasTM = false;
 
-  if (aFlags.contains(ChangeFlags::CoordContextChanged)) {
+  if (aFlags.contains(ChangeFlag::CoordContextChanged)) {
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
     if (StyleSVGReset()->mX.HasPercent() || StyleSVGReset()->mY.HasPercent()) {
@@ -307,7 +307,7 @@ void SVGForeignObjectFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
     }
   }
 
-  if (aFlags.contains(ChangeFlags::TransformChanged)) {
+  if (aFlags.contains(ChangeFlag::TransformChanged)) {
     if (mCanvasTM && mCanvasTM->IsSingular()) {
       needNewBounds = true;  // old bounds are bogus
     }

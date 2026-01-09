@@ -361,7 +361,7 @@ bool SVGUtils::GetParentSVGTransforms(const nsIFrame* aFrame,
 }
 
 void SVGUtils::NotifyChildrenOfSVGChange(
-    nsIFrame* aFrame, EnumSet<ISVGDisplayableFrame::ChangeFlags> aFlags) {
+    nsIFrame* aFrame, ISVGDisplayableFrame::ChangeFlags aFlags) {
   for (nsIFrame* kid : aFrame->PrincipalChildList()) {
     ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {

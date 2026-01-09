@@ -374,7 +374,7 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
       nsPresContext::AppUnitsToFloatCSSPixels(aReflowInput.ComputedWidth()),
       nsPresContext::AppUnitsToFloatCSSPixels(aReflowInput.ComputedHeight()));
 
-  EnumSet<ChangeFlags> changeBits;
+  ChangeFlags changeBits;
   if (newViewportSize != svgElem->GetViewportSize()) {
     // When our viewport size changes, we may need to update the overflow rects
     // of our child frames. This is the case if:
@@ -403,14 +403,14 @@ void SVGOuterSVGFrame::Reflow(nsPresContext* aPresContext,
         child->MarkSubtreeDirty();
       }
     }
-    changeBits += ChangeFlags::CoordContextChanged;
+    changeBits += ChangeFlag::CoordContextChanged;
     svgElem->SetViewportSize(newViewportSize);
   }
   if (mIsRootContent && !mIsInIframe) {
     const auto oldZoom = mFullZoom;
     mFullZoom = ComputeFullZoom();
     if (oldZoom != mFullZoom) {
-      changeBits += ChangeFlags::FullZoomChanged;
+      changeBits += ChangeFlag::FullZoomChanged;
     }
   }
   if (!changeBits.isEmpty() && !HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
@@ -513,9 +513,9 @@ nsresult SVGOuterSVGFrame::AttributeChanged(int32_t aNameSpaceID,
       SVGUtils::NotifyChildrenOfSVGChange(
           PrincipalChildList().FirstChild(),
           aAttribute == nsGkAtoms::viewBox
-              ? EnumSet<ChangeFlags>(ChangeFlags::TransformChanged,
-                                     ChangeFlags::CoordContextChanged)
-              : ChangeFlags::TransformChanged);
+              ? ChangeFlags(ChangeFlag::TransformChanged,
+                            ChangeFlag::CoordContextChanged)
+              : ChangeFlag::TransformChanged);
 
       if (aAttribute != nsGkAtoms::transform) {
         static_cast<SVGSVGElement*>(GetContent())
@@ -578,39 +578,38 @@ void SVGOuterSVGFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 //----------------------------------------------------------------------
 // ISVGSVGFrame methods:
 
-void SVGOuterSVGFrame::NotifyViewportOrTransformChanged(
-    EnumSet<ChangeFlags> aFlags) {
+void SVGOuterSVGFrame::NotifyViewportOrTransformChanged(ChangeFlags aFlags) {
   auto* content = static_cast<SVGSVGElement*>(GetContent());
-  if (aFlags.contains(ChangeFlags::CoordContextChanged)) {
+  if (aFlags.contains(ChangeFlag::CoordContextChanged)) {
     if (content->HasViewBox()) {
       // Percentage lengths on children resolve against the viewBox rect so we
       // don't need to notify them of the viewport change, but the viewBox
       // transform will have changed, so we need to notify them of that instead.
-      aFlags = ChangeFlags::TransformChanged;
+      aFlags = ChangeFlag::TransformChanged;
     } else if (content->ShouldSynthesizeViewBox()) {
       // In the case of a synthesized viewBox, the synthetic viewBox's rect
       // changes as the viewport changes. As a result we need to maintain the
       // COORD_CONTEXT_CHANGED flag.
-      aFlags += ChangeFlags::TransformChanged;
+      aFlags += ChangeFlag::TransformChanged;
     } else if (mCanvasTM && mCanvasTM->IsSingular()) {
       // A width/height of zero will result in us having a singular mCanvasTM
       // even when we don't have a viewBox. So we also want to recompute our
       // mCanvasTM for this width/height change even though we don't have a
       // viewBox.
-      aFlags += ChangeFlags::TransformChanged;
+      aFlags += ChangeFlag::TransformChanged;
     }
   }
 
   bool haveNonFullZoomTransformChange =
-      aFlags.contains(ChangeFlags::TransformChanged);
+      aFlags.contains(ChangeFlag::TransformChanged);
 
-  if (aFlags.contains(ChangeFlags::FullZoomChanged)) {
+  if (aFlags.contains(ChangeFlag::FullZoomChanged)) {
     // Convert FullZoomChanged to TransformChanged.
-    aFlags -= ChangeFlags::FullZoomChanged;
-    aFlags += ChangeFlags::TransformChanged;
+    aFlags -= ChangeFlag::FullZoomChanged;
+    aFlags += ChangeFlag::TransformChanged;
   }
 
-  if (aFlags.contains(ChangeFlags::TransformChanged)) {
+  if (aFlags.contains(ChangeFlag::TransformChanged)) {
     // Make sure our canvas transform matrix gets (lazily) recalculated:
     mCanvasTM = nullptr;
 

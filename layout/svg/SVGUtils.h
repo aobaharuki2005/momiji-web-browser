@@ -262,7 +262,7 @@ class SVGUtils final {
    * that might affect them.
    */
   static void NotifyChildrenOfSVGChange(
-      nsIFrame* aFrame, EnumSet<ISVGDisplayableFrame::ChangeFlags> aFlags);
+      nsIFrame* aFrame, ISVGDisplayableFrame::ChangeFlags aFlags);
 
   /*
    * Convert a surface size to an integer for use by thebes

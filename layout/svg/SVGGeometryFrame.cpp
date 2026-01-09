@@ -116,7 +116,7 @@ void SVGGeometryFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
 
   if (StyleDisplay()->CalcTransformPropertyDifference(
           *aOldComputedStyle->StyleDisplay())) {
-    NotifySVGChanged(ChangeFlags::TransformChanged);
+    NotifySVGChanged(ChangeFlag::TransformChanged);
   }
 
   if (element->IsGeometryChangedViaCSS(*Style(), *aOldComputedStyle) ||
@@ -310,9 +310,9 @@ void SVGGeometryFrame::ReflowSVG() {
   }
 }
 
-void SVGGeometryFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
-  MOZ_ASSERT(aFlags.contains(ChangeFlags::TransformChanged) ||
-                 aFlags.contains(ChangeFlags::CoordContextChanged),
+void SVGGeometryFrame::NotifySVGChanged(ChangeFlags aFlags) {
+  MOZ_ASSERT(aFlags.contains(ChangeFlag::TransformChanged) ||
+                 aFlags.contains(ChangeFlag::CoordContextChanged),
              "Invalidation logic may need adjusting");
 
   // Changes to our ancestors may affect how we render when we are rendered as
@@ -328,7 +328,7 @@ void SVGGeometryFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
   // overflow rects or not, and we sometimes deliberately include stroke
   // when it's not visible. See the complexities of GetBBoxContribution.
 
-  if (aFlags.contains(ChangeFlags::CoordContextChanged)) {
+  if (aFlags.contains(ChangeFlag::CoordContextChanged)) {
     auto* geom = static_cast<SVGGeometryElement*>(GetContent());
     // Stroke currently contributes to our mRect, which is why we have to take
     // account of stroke-width here. Note that we do not need to take account
@@ -344,7 +344,7 @@ void SVGGeometryFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
     }
   }
 
-  if (aFlags.contains(ChangeFlags::TransformChanged) &&
+  if (aFlags.contains(ChangeFlag::TransformChanged) &&
       StyleSVGReset()->HasNonScalingStroke()) {
     // Stroke currently contributes to our mRect, and our stroke depends on
     // the transform to our outer-<svg> if |vector-effect:non-scaling-stroke|.

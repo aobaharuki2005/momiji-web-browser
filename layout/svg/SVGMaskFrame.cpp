@@ -90,7 +90,7 @@ already_AddRefed<SourceSurface> SVGMaskFrame::GetMaskForMaskedFrame(
     ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
     if (SVGFrame) {
       SVGFrame->NotifySVGChanged(
-          ISVGDisplayableFrame::ChangeFlags::TransformChanged);
+          ISVGDisplayableFrame::ChangeFlag::TransformChanged);
       m = SVGUtils::GetTransformMatrixInUserSpace(kid) * m;
     }
 

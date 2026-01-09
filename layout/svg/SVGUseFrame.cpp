@@ -55,7 +55,7 @@ void SVGUseFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
     // make sure our cached transform matrix gets (lazily) updated
     mCanvasTM = nullptr;
     SVGUtils::ScheduleReflowSVG(this);
-    SVGUtils::NotifyChildrenOfSVGChange(this, ChangeFlags::TransformChanged);
+    SVGUtils::NotifyChildrenOfSVGChange(this, ChangeFlag::TransformChanged);
   }
 }
 
@@ -105,13 +105,13 @@ void SVGUseFrame::ReflowSVG() {
   SVGGFrame::ReflowSVG();
 }
 
-void SVGUseFrame::NotifySVGChanged(EnumSet<ChangeFlags> aFlags) {
-  if (aFlags.contains(ChangeFlags::CoordContextChanged) &&
-      !aFlags.contains(ChangeFlags::TransformChanged)) {
+void SVGUseFrame::NotifySVGChanged(ChangeFlags aFlags) {
+  if (aFlags.contains(ChangeFlag::CoordContextChanged) &&
+      !aFlags.contains(ChangeFlag::TransformChanged)) {
     // Coordinate context changes affect mCanvasTM if we have a
     // percentage 'x' or 'y'
     if (StyleSVGReset()->mX.HasPercent() || StyleSVGReset()->mY.HasPercent()) {
-      aFlags += ChangeFlags::TransformChanged;
+      aFlags += ChangeFlag::TransformChanged;
       // Ancestor changes can't affect how we render from the perspective of
       // any rendering observers that we may have, so we don't need to
       // invalidate them. We also don't need to invalidate ourself, since our

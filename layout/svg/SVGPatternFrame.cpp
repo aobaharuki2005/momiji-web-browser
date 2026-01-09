@@ -240,7 +240,7 @@ void SVGPatternFrame::PaintChildren(DrawTarget* aDrawTarget,
       ISVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
       if (SVGFrame) {
         SVGFrame->NotifySVGChanged(
-            ISVGDisplayableFrame::ChangeFlags::TransformChanged);
+            ISVGDisplayableFrame::ChangeFlag::TransformChanged);
         tm = SVGUtils::GetTransformMatrixInUserSpace(kid) * tm;
       }
 
