@@ -301,6 +301,10 @@ export class UrlbarInput extends HTMLElement {
     this.inputField = /** @type {HTMLInputElement} */ (
       this.querySelector(".urlbar-input")
     );
+    if (this.#sapName == "searchbar") {
+      // This adds a native clear button.
+      this.inputField.setAttribute("type", "search");
+    }
     this._inputContainer = this.querySelector(".urlbar-input-container");
 
     this.controller = new lazy.UrlbarController({ input: this });
@@ -3003,7 +3007,7 @@ export class UrlbarInput extends HTMLElement {
    * @param {object} [options] Options for setting.
    * @param {boolean} [options.allowTrim] Whether the value can be trimmed.
    * @param {string} [options.untrimmedValue] Override for this._untrimmedValue.
-   * @param {boolean} [options.valueIsTyped] Override for this.valueIsTypede.
+   * @param {boolean} [options.valueIsTyped] Override for this.valueIsTyped.
    * @param {string} [options.actionType] Value for the `actiontype` attribute.
    *
    * @returns {string} The set value.
