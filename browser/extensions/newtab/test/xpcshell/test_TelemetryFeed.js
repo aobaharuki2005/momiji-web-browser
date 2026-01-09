@@ -2668,3 +2668,76 @@ add_task(function test_randomizeOrganicContentEvent() {
 
   sandbox.restore();
 });
+
+add_task(async function test_handleSpocPlaceholderDuration_records_metric() {
+  info(
+    "TelemetryFeed.handleSpocPlaceholderDuration should record the " +
+      "spoc_placeholder_duration metric"
+  );
+
+  let instance = new TelemetryFeed();
+  Services.fog.testResetFOG();
+
+  const DURATION_MS = 150;
+  let action = {
+    type: actionTypes.DISCOVERY_STREAM_SPOC_PLACEHOLDER_DURATION,
+    data: { duration: DURATION_MS },
+  };
+
+  instance.handleSpocPlaceholderDuration(action);
+
+  let recordedDuration = Glean.pocket.spocPlaceholderDuration.testGetValue();
+  Assert.ok(recordedDuration, "Metric should be recorded");
+  Assert.equal(recordedDuration.count, 1, "Should have 1 sample");
+  Assert.greaterOrEqual(
+    recordedDuration.sum,
+    DURATION_MS,
+    "Duration should be at least the input value"
+  );
+});
+
+add_task(async function test_handleSpocPlaceholderDuration_ignores_negative() {
+  info(
+    "TelemetryFeed.handleSpocPlaceholderDuration should ignore negative durations"
+  );
+
+  let instance = new TelemetryFeed();
+  Services.fog.testResetFOG();
+
+  let action = {
+    type: actionTypes.DISCOVERY_STREAM_SPOC_PLACEHOLDER_DURATION,
+    data: { duration: -1 },
+  };
+
+  instance.handleSpocPlaceholderDuration(action);
+
+  let recordedDuration = Glean.pocket.spocPlaceholderDuration.testGetValue();
+  Assert.equal(
+    recordedDuration,
+    null,
+    "Metric should not be recorded for negative duration"
+  );
+});
+
+add_task(async function test_handleSpocPlaceholderDuration_ignores_undefined() {
+  info(
+    "TelemetryFeed.handleSpocPlaceholderDuration should ignore undefined durations"
+  );
+
+  let instance = new TelemetryFeed();
+  Services.fog.testResetFOG();
+
+  let action = {
+    type: actionTypes.DISCOVERY_STREAM_SPOC_PLACEHOLDER_DURATION,
+    data: {},
+  };
+
+  instance.handleSpocPlaceholderDuration(action);
+
+  let recordedDuration = Glean.pocket.spocPlaceholderDuration.testGetValue();
+  Assert.equal(
+    recordedDuration,
+    null,
+    "Metric should not be recorded for undefined duration"
+  );
+});

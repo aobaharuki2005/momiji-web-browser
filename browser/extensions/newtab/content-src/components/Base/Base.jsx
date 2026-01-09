@@ -123,6 +123,7 @@ export class BaseContent extends React.PureComponent {
       visible: false,
       showSectionsMgmtPanel: false,
     };
+    this.spocPlaceholderStartTime = null;
   }
 
   setFirstVisibleTimestamp() {
@@ -140,6 +141,10 @@ export class BaseContent extends React.PureComponent {
     this.setFirstVisibleTimestamp();
     this.shouldDisplayTopicSelectionModal();
     this.onVisibilityDispatch();
+
+    if (this.isSpocsOnDemandExpired && !this.spocPlaceholderStartTime) {
+      this.spocPlaceholderStartTime = Date.now();
+    }
   }
 
   onVisibilityDispatch() {
@@ -333,6 +338,36 @@ export class BaseContent extends React.PureComponent {
     }
 
     this.spocsOnDemandUpdated();
+    this.trackSpocPlaceholderDuration(prevProps);
+  }
+
+  trackSpocPlaceholderDuration(prevProps) {
+    // isExpired returns true when the current props have expired spocs (showing placeholders)
+    const isExpired = this.isSpocsOnDemandExpired;
+
+    // Init tracking when placeholders become visible
+    if (isExpired && this.state.visible && !this.spocPlaceholderStartTime) {
+      this.spocPlaceholderStartTime = Date.now();
+    }
+
+    // wasExpired returns true when the previous props had expired spocs (showing placeholders)
+    const wasExpired =
+      prevProps.DiscoveryStream.spocs.onDemand?.enabled &&
+      !prevProps.DiscoveryStream.spocs.onDemand?.loaded &&
+      Date.now() - prevProps.DiscoveryStream.spocs.lastUpdated >=
+        prevProps.DiscoveryStream.spocs.cacheUpdateTime;
+
+    // Record duration telemetry event when placeholders are replaced with real content
+    if (wasExpired && !isExpired && this.spocPlaceholderStartTime) {
+      const duration = Date.now() - this.spocPlaceholderStartTime;
+      this.props.dispatch(
+        ac.OnlyToMain({
+          type: at.DISCOVERY_STREAM_SPOC_PLACEHOLDER_DURATION,
+          data: { duration },
+        })
+      );
+      this.spocPlaceholderStartTime = null;
+    }
   }
 
   handleColorModeChange() {

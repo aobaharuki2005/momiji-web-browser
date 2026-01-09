@@ -2023,6 +2023,28 @@ pocket:
     send_in_pings:
       - newtab
 
+  spoc_placeholder_duration:
+      type: timing_distribution
+      time_unit: millisecond
+      description: >
+        Time in milliseconds that a placeholder for a sponsored story (spoc) is
+        visible to the user before being replaced with actual sponsored content.
+        This measures how long users see loading placeholders when spocs need to
+        be fetched, which can happen during startup, cache expiration, or other
+        loading scenarios.
+      bugs:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1993586
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1993586
+      data_sensitivity:
+        - technical
+      notification_emails:
+        - mcrawford@mozilla.com
+      expires: never
+      send_in_pings:
+        - newtab
+
+
   shim:
     type: text
     lifetime: ping

@@ -157,6 +157,7 @@ for (const type of [
   "DISCOVERY_STREAM_SPOCS_UPDATE",
   "DISCOVERY_STREAM_SPOC_BLOCKED",
   "DISCOVERY_STREAM_SPOC_IMPRESSION",
+  "DISCOVERY_STREAM_SPOC_PLACEHOLDER_DURATION",
   "DISCOVERY_STREAM_TOPICS_LOADING",
   "DISCOVERY_STREAM_USER_EVENT",
   "DOWNLOAD_CHANGED",
@@ -15888,6 +15889,7 @@ class BaseContent extends (external_React_default()).PureComponent {
       visible: false,
       showSectionsMgmtPanel: false
     };
+    this.spocPlaceholderStartTime = null;
   }
   setFirstVisibleTimestamp() {
     if (!this.state.firstVisibleTimestamp) {
@@ -15903,6 +15905,9 @@ class BaseContent extends (external_React_default()).PureComponent {
     this.setFirstVisibleTimestamp();
     this.shouldDisplayTopicSelectionModal();
     this.onVisibilityDispatch();
+    if (this.isSpocsOnDemandExpired && !this.spocPlaceholderStartTime) {
+      this.spocPlaceholderStartTime = Date.now();
+    }
   }
   onVisibilityDispatch() {
     const {
@@ -16064,6 +16069,31 @@ class BaseContent extends (external_React_default()).PureComponent {
       }
     }
     this.spocsOnDemandUpdated();
+    this.trackSpocPlaceholderDuration(prevProps);
+  }
+  trackSpocPlaceholderDuration(prevProps) {
+    // isExpired returns true when the current props have expired spocs (showing placeholders)
+    const isExpired = this.isSpocsOnDemandExpired;
+
+    // Init tracking when placeholders become visible
+    if (isExpired && this.state.visible && !this.spocPlaceholderStartTime) {
+      this.spocPlaceholderStartTime = Date.now();
+    }
+
+    // wasExpired returns true when the previous props had expired spocs (showing placeholders)
+    const wasExpired = prevProps.DiscoveryStream.spocs.onDemand?.enabled && !prevProps.DiscoveryStream.spocs.onDemand?.loaded && Date.now() - prevProps.DiscoveryStream.spocs.lastUpdated >= prevProps.DiscoveryStream.spocs.cacheUpdateTime;
+
+    // Record duration telemetry event when placeholders are replaced with real content
+    if (wasExpired && !isExpired && this.spocPlaceholderStartTime) {
+      const duration = Date.now() - this.spocPlaceholderStartTime;
+      this.props.dispatch(actionCreators.OnlyToMain({
+        type: actionTypes.DISCOVERY_STREAM_SPOC_PLACEHOLDER_DURATION,
+        data: {
+          duration
+        }
+      }));
+      this.spocPlaceholderStartTime = null;
+    }
   }
   handleColorModeChange() {
     const colorMode = this.prefersDarkQuery?.matches ? "dark" : "light";

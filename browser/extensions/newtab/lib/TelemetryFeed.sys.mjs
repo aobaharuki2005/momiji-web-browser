@@ -744,6 +744,20 @@ export class TelemetryFeed {
     }
   }
 
+  /**
+   * Records the duration that spoc (ads) placeholders were visible to the user.
+   * This tracks how long placeholder content is shown before being replaced
+   * with actual sponsored content when using onDemand mode.
+   *
+   * @param {number} action.data.duration - Duration in milliseconds
+   */
+  handleSpocPlaceholderDuration(action) {
+    const { duration } = action.data;
+    if (duration !== undefined && duration >= 0) {
+      Glean.pocket.spocPlaceholderDuration.accumulateSingleSample(duration);
+    }
+  }
+
   handleUserEvent(action) {
     let userEvent = this.createUserEvent(action);
     try {
@@ -1300,6 +1314,9 @@ export class TelemetryFeed {
           au.getPortIdOfSender(action),
           action.data
         );
+        break;
+      case at.DISCOVERY_STREAM_SPOC_PLACEHOLDER_DURATION:
+        this.handleSpocPlaceholderDuration(action);
         break;
       case at.DISCOVERY_STREAM_USER_EVENT:
         this.handleDiscoveryStreamUserEvent(action);
