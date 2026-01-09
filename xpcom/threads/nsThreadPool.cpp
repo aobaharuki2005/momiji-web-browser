@@ -209,7 +209,7 @@ nsresult nsThreadPool::PutEvent(already_AddRefed<nsIRunnable> aEvent,
       mThreadNaming.GetNextThreadName(mName), getter_AddRefs(thread), this,
       {.stackSize = mStackSize, .blockDispatch = true});
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_UNEXPECTED;
+    MOZ_CRASH("nsThreadPool::PutEvent() - Failed to create a new thread");
   }
 
   mThreads.AppendObject(thread);
