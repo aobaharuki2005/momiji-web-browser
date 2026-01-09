@@ -20,7 +20,7 @@ export default {
 };
 
 const Template = ({ role, content }) => html`
-  <ai-chat-message .role=${role} .message=${content}></ai-chat-message>
+  <ai-chat-message .message=${{ role, content }}></ai-chat-message>
 `;
 
 export const UserMessage = Template.bind({});
@@ -34,11 +34,4 @@ AssistantMessage.args = {
   role: "assistant",
   content:
     "Test: I don't have access to real-time weather data, but I can help you with other tasks!",
-};
-
-export const AssistantMessageWithMarkdown = Template.bind({});
-AssistantMessageWithMarkdown.args = {
-  role: "assistant",
-  content:
-    "Here's some **bold text** and *italic text*:\n\n- Item 1\n- Item 2\n\n```javascript\nconsole.log('code block');\n```",
 };
