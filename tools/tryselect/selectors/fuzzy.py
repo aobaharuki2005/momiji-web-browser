@@ -160,7 +160,6 @@ def run(
     all_tasks = tg.tasks
 
     if not full and not disable_target_task_filter:
-
         all_tasks = {
             task_name: task
             for task_name, task in all_tasks.items()

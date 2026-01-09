@@ -1398,7 +1398,7 @@ def get_taskcluster_client(service: str, block_proxy=False):
     if "TASKCLUSTER_PROXY_URL" in os.environ and not block_proxy:
         options = {"rootUrl": os.environ["TASKCLUSTER_PROXY_URL"].rstrip("/")}
     else:
-        options = taskcluster.optionsFromEnvironment(
-            {"rootUrl": get_root_url(block_proxy)}
-        )
+        options = taskcluster.optionsFromEnvironment({
+            "rootUrl": get_root_url(block_proxy)
+        })
     return getattr(taskcluster, service[0].upper() + service[1:])(options)
