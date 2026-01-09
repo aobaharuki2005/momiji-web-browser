@@ -190,6 +190,38 @@ add_task(async function test_openNewBrowserWindow_and_ai_inherit() {
   await SpecialPowers.popPrefEnv();
 });
 
+/**
+ * Test AI window mode detection in aiWindow.html
+ */
+add_task(async function test_aiwindow_html_mode_detection() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.aiwindow.enabled", true]],
+  });
+
+  // Open aiWindow.html directly
+  await BrowserTestUtils.withNewTab(
+    "chrome://browser/content/aiwindow/aiWindow.html",
+    async browser => {
+      await SpecialPowers.spawn(browser, [], async () => {
+        await content.customElements.whenDefined("ai-window");
+
+        const aiWindowElement = content.document.querySelector("ai-window");
+        Assert.ok(aiWindowElement, "ai-window element should exist");
+
+        // Check that mode is detected (should be FULLPAGE when loaded directly)
+        info(`aiWindowElement.mode: ${aiWindowElement.mode}`);
+        Assert.strictEqual(
+          aiWindowElement.mode,
+          "fullpage",
+          `Mode should be detected as fullpage, got: ${aiWindowElement.mode}`
+        );
+      });
+    }
+  );
+
+  await SpecialPowers.popPrefEnv();
+});
+
 function checkMenuItemVisibility(
   aiWindowEnabled,
   aiOpenerButton,
