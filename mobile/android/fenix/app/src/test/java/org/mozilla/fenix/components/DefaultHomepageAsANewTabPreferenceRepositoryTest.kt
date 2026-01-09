@@ -5,24 +5,15 @@
 package org.mozilla.fenix.components
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import io.mockk.every
-import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import mozilla.components.support.test.robolectric.testContext
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(AndroidJUnit4::class)
 class DefaultHomepageAsANewTabPreferenceRepositoryTest {
-
-    @Before
-    fun setup() {
-        every { testContext.components.nimbus } returns mockk(relaxed = true)
-    }
 
     @Test
     fun `WHEN homepage as a new tab enabled getter is called THEN return the value in shared preferences`() {

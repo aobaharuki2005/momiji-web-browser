@@ -480,10 +480,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 SettingsFragmentDirections.actionSettingsFragmentToLinkSharingFragment()
             }
 
-            resources.getString(R.string.pref_key_remote_improvements) -> {
-                SettingsFragmentDirections.actionSettingsFragmentToRemoteImprovementsFragment()
-            }
-
             resources.getString(R.string.pref_key_open_links_in_apps) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToOpenLinksInAppsFragment()
             }

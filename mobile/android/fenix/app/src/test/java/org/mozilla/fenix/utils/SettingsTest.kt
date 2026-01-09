@@ -7,7 +7,6 @@ package org.mozilla.fenix.utils
 import android.content.pm.PackageInfo
 import androidx.core.content.edit
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.spyk
 import mozilla.components.concept.engine.Engine.HttpsOnlyMode.DISABLED
 import mozilla.components.concept.engine.Engine.HttpsOnlyMode.ENABLED
@@ -27,7 +26,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.nimbus.DefaultBrowserPrompt
 import org.mozilla.fenix.nimbus.FakeNimbusEventStore
 import org.mozilla.fenix.settings.PhoneFeature
@@ -59,7 +57,6 @@ class SettingsTest {
 
     @Before
     fun setUp() {
-        every { testContext.components.nimbus } returns mockk(relaxed = true)
         settings = Settings(testContext)
     }
 
