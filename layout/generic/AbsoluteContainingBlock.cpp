@@ -1136,6 +1136,9 @@ struct ContainingBlockRect {
 
   explicit ContainingBlockRect(const nsRect& aRect)
       : mMaybeScrollableRect{aRect}, mFinalRect{aRect} {}
+  ContainingBlockRect(const nsRect& aMaybeScrollableRect,
+                      const nsRect& aFinalRect)
+      : mMaybeScrollableRect{aMaybeScrollableRect}, mFinalRect{aFinalRect} {}
   ContainingBlockRect(const nsPoint& aOffset,
                       const StylePositionArea& aResolvedArea,
                       const nsRect& aMaybeScrollableRect,
@@ -1385,7 +1388,8 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
               // scroll offset (See above), the offset will be applied later.
               scrolledAnchorCb + offset};
         }
-        return ContainingBlockRect{containingBlock};
+        return ContainingBlockRect{aOriginalScrollableContainingBlockRect,
+                                   containingBlock};
       }
 
       if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
