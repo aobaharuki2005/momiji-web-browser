@@ -996,14 +996,6 @@ export var Policies = {
     },
   },
 
-  DisableRemoteImprovements: {
-    onBeforeAddons(manager, param) {
-      if (param) {
-        manager.disallowFeature("NimbusRollouts");
-      }
-    },
-  },
-
   DisableForgetButton: {
     onProfileAfterChange(manager, param) {
       if (param) {

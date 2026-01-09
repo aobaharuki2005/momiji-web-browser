@@ -424,10 +424,7 @@ export const ExperimentAPI = new (class {
   }
 
   get rolloutsEnabled() {
-    return (
-      this.#prefValues.rolloutsEnabled &&
-      Services.policies.isAllowed("NimbusRollouts")
-    );
+    return this.#prefValues.rolloutsEnabled;
   }
 
   get studiesEnabled() {
