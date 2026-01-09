@@ -1927,6 +1927,10 @@ collection-studies2 =
 collection-studies-description = Try out features and ideas before they’re released to everyone.
 collection-studies-link = View { -brand-short-name } studies
 
+nimbus-rollouts-enabled =
+    .label = Allow { -brand-short-name } to improve features, performance, and stability between updates
+nimbus-rollouts-enabled-description = Changes will be applied remotely.
+
 addon-recommendations2 =
     .label = Allow personalized extension recommendations
 addon-recommendations-description = Get extension recommendations to improve your browsing experience.
