@@ -363,7 +363,7 @@ export class DiscoveryStreamAdminUI extends React.PureComponent {
 
   sendConversionEvent() {
     const detail = {
-      partnerId: "demo-partner",
+      partnerId: "295BEEF7-1E3B-4128-B8F8-858E12AA660B",
       lookbackDays: 7,
       impressionType: "default",
     };
