@@ -2,14 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html, unsafeHTML } from "chrome://global/content/vendor/lit.all.mjs";
+import { html } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
-import {
-  defaultMarkdownParser,
-  DOMSerializer,
-} from "chrome://browser/content/multilineeditor/prosemirror.bundle.mjs";
-
-const SERIALIZER = DOMSerializer.fromSchema(defaultMarkdownParser.schema);
 
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/aiwindow/components/ai-chat-search-button.mjs";
@@ -53,31 +47,6 @@ export class AIChatMessage extends MozLitElement {
     this.dispatchEvent(e);
   }
 
-  /**
-   * Parse markdown content to HTML using ProseMirror
-   *
-   * @param {string} markdown
-   * @returns {string} HTML string
-   */
-  parseMarkdown(markdown) {
-    if (!markdown) {
-      return "";
-    }
-
-    const node = defaultMarkdownParser.parse(markdown);
-    const fragment = SERIALIZER.serializeFragment(node.content);
-
-    // Convert DocumentFragment to HTML string
-    const container = this.ownerDocument.createElement("div");
-    container.appendChild(fragment);
-    const containerString = container.innerHTML;
-
-    // Sanitize the HTML string before returning useing "setHTML"
-    const sanitizedContainer = this.ownerDocument.createElement("div");
-    sanitizedContainer.setHTML(containerString);
-    return sanitizedContainer.innerHTML;
-  }
-
   render() {
     return html`
       <link
@@ -85,23 +54,17 @@ export class AIChatMessage extends MozLitElement {
         href="chrome://browser/content/aiwindow/components/ai-chat-message.css"
       />
 
-      ${this.role === "user"
-        ? html`<article>
-            <div class=${"message-" + this.role}>
-              <!-- TODO: Parse user prompt to add any mentions pills -->
-              ${this.message}
-            </div>
-            <!-- TODO: update props based on assistant response -->
-            <ai-chat-search-button
-              query="Ada Lovelace"
-              label="Ada Lovelace"
-            ></ai-chat-search-button>
-          </article>`
-        : html`<article>
-            <div class=${"message-" + this.role}>
-              ${unsafeHTML(this.parseMarkdown(this.message))}
-            </div>
-          </article>`}
+      <article>
+        <div class=${"message-" + this.role}>
+          <!-- TODO: Add markdown parsing here -->
+          ${this.message}
+        </div>
+        <!-- TODO: update props based on assistant response -->
+        <ai-chat-search-button
+          query="Ada Lovelace"
+          label="Ada Lovelace"
+        ></ai-chat-search-button>
+      </article>
     `;
   }
 }
