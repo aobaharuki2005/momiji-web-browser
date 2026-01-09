@@ -616,9 +616,11 @@ void SVGOuterSVGFrame::NotifyViewportOrTransformChanged(
 
     if (haveNonFullZoomTransformChange &&
         !HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
-      uint32_t flags = HasAnyStateBits(NS_FRAME_IN_REFLOW)
-                           ? SVGSVGElement::eDuringReflow
-                           : 0;
+      SVGViewportElement::ChildrenOnlyTransformChangedFlags flags;
+      if (HasAnyStateBits(NS_FRAME_IN_REFLOW)) {
+        flags +=
+            SVGViewportElement::ChildrenOnlyTransformChangedFlag::DuringReflow;
+      }
       content->ChildrenOnlyTransformChanged(flags);
     }
   }
