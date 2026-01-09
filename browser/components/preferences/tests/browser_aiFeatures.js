@@ -8,10 +8,7 @@ describe("settings ai features", () => {
 
   beforeEach(async function setup() {
     await SpecialPowers.pushPrefEnv({
-      set: [
-        ["browser.ml.chat.provider", ""],
-        ["browser.settings-redesign.aiFeatures.enabled", true],
-      ],
+      set: [["browser.settings-redesign.aiFeatures.enabled", true]],
     });
     await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
     doc = gBrowser.selectedBrowser.contentDocument;
@@ -20,10 +17,21 @@ describe("settings ai features", () => {
 
   afterEach(() => {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
-    gBrowser.ownerGlobal.SidebarController.hide();
   });
 
+  async function openAiFeaturePanel() {
+    const paneLoaded = waitForPaneChange("aiFeatures");
+    const categoryButton = doc.getElementById("category-ai-features");
+    categoryButton.scrollIntoView();
+    EventUtils.synthesizeMouseAtCenter(categoryButton, {}, win);
+    await paneLoaded;
+  }
+
   it("can change the chatbot provider value", async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.ml.chat.provider", ""]],
+    });
+
     const categoryButton = doc.getElementById("category-ai-features");
     Assert.ok(categoryButton, "category exists");
     Assert.ok(
@@ -31,10 +39,7 @@ describe("settings ai features", () => {
       "category is visible"
     );
 
-    const paneLoaded = waitForPaneChange("aiFeatures");
-    categoryButton.scrollIntoView();
-    EventUtils.synthesizeMouseAtCenter(categoryButton, {}, win);
-    await paneLoaded;
+    await openAiFeaturePanel();
 
     const providerControl = doc.getElementById("chatbotProvider");
     Assert.ok(providerControl, "control exists");
@@ -67,5 +72,63 @@ describe("settings ai features", () => {
       "",
       "Pref is not empty"
     );
+
+    await gBrowser.ownerGlobal.SidebarController.hide();
   });
+
+  it("hides AI Window when preferences not enabled", async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [["browser.aiwindow.preferences.enabled", false]],
+    });
+
+    await openAiFeaturePanel();
+
+    const aiWindowItem = doc.getElementById("AIWindowItem");
+    const aiWindowFeatures = doc.getElementById("aiFeaturesAIWindowGroup");
+
+    Assert.ok(
+      !BrowserTestUtils.isVisible(aiWindowItem),
+      "AIWindowItem is hidden when preferences not enabled"
+    );
+    Assert.ok(
+      !BrowserTestUtils.isVisible(aiWindowFeatures),
+      "aiWindowFeatures is hidden when preferences not enabled"
+    );
+  });
+
+  it("shows AI Window activate when preferences enabled and feature not enabled", async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.aiwindow.preferences.enabled", true],
+        ["browser.aiwindow.enabled", false],
+      ],
+    });
+
+    await openAiFeaturePanel();
+
+    const aiWindowItem = doc.getElementById("AIWindowItem");
+    Assert.ok(
+      BrowserTestUtils.isVisible(aiWindowItem),
+      "AIWindowItem is visible when preferences enabled and feature not enabled"
+    );
+  });
+
+  it("hides AI Window activate when feature enabled", async () => {
+    await SpecialPowers.pushPrefEnv({
+      set: [
+        ["browser.aiwindow.preferences.enabled", true],
+        ["browser.aiwindow.enabled", true],
+      ],
+    });
+
+    await openAiFeaturePanel();
+
+    const aiWindowItem = doc.getElementById("AIWindowItem");
+    Assert.ok(
+      !BrowserTestUtils.isVisible(aiWindowItem),
+      "AIWindowItem is hidden when feature enabled"
+    );
+  });
+
+  // TODO: Add tests for aiFeaturesAIWindowGroup when Model and Insight options are added
 });

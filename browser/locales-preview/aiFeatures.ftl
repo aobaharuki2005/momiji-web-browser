@@ -19,3 +19,13 @@ try-ai-features-chatbot-provider =
 # This labels the unset option for AI Chatbot selection, the other options are brand names like "ChatGPT" and "Anthropic Claude"
 try-ai-features-chatbot-choose-label =
     .label = Choose provider
+
+try-ai-features-ai-window =
+    .label = AI Window
+    .description = A separate window that learns as you browse. Get quick answers about your tabs and a more personalized experience.
+try-ai-features-ai-window-activate-link =
+    .label = Activate AI Window
+
+ai-window-features-group =
+    .label = AI Window
+    .description = Choose which model powers the assistant and control what AI Window learns from your activity.

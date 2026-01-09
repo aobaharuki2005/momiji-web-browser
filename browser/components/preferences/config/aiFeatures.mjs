@@ -12,7 +12,11 @@ const lazy = XPCOMUtils.declareLazy({
   GenAI: "resource:///modules/GenAI.sys.mjs",
 });
 
-Preferences.addAll([{ id: "browser.ml.chat.provider", type: "string" }]);
+Preferences.addAll([
+  { id: "browser.ml.chat.provider", type: "string" },
+  { id: "browser.aiwindow.enabled", type: "bool" },
+  { id: "browser.aiwindow.preferences.enabled", type: "bool" },
+]);
 
 Preferences.addSetting({ id: "chatbotProviderItem" });
 Preferences.addSetting({
@@ -50,6 +54,39 @@ Preferences.addSetting({
   },
 });
 
+Preferences.addSetting({
+  id: "AIWindowEnabled",
+  pref: "browser.aiwindow.enabled",
+});
+
+Preferences.addSetting({
+  id: "AIWindowPreferencesEnabled",
+  pref: "browser.aiwindow.preferences.enabled",
+});
+
+// Only show the feature settings if the prefs are allowed to show and the
+// feature isn't enabled.
+Preferences.addSetting({
+  id: "AIWindowItem",
+  deps: ["AIWindowEnabled", "AIWindowPreferencesEnabled"],
+  visible: deps => {
+    return deps.AIWindowPreferencesEnabled.value && !deps.AIWindowEnabled.value;
+  },
+});
+Preferences.addSetting({ id: "AIWindowHeader" });
+Preferences.addSetting({ id: "AIWindowActivateLink" });
+
+// Only show the AI Window features if the prefs are allowed to show and the
+// feature is enabled.
+// TODO: Enable when Model and Insight options are added
+Preferences.addSetting({
+  id: "aiFeaturesAIWindowGroup",
+  deps: ["AIWindowEnabled", "AIWindowPreferencesEnabled"],
+  visible: deps => {
+    return deps.AIWindowPreferencesEnabled.value && deps.AIWindowEnabled.value;
+  },
+});
+
 SettingGroupManager.registerGroups({
   aiFeatures: {
     l10nId: "try-ai-features-group",
@@ -71,6 +108,35 @@ SettingGroupManager.registerGroups({
             ],
           },
         ],
+      },
+      {
+        id: "AIWindowItem",
+        control: "moz-box-group",
+        items: [
+          {
+            id: "AIWindowHeader",
+            l10nId: "try-ai-features-ai-window",
+            control: "moz-box-item",
+          },
+          {
+            id: "AIWindowActivateLink",
+            l10nId: "try-ai-features-ai-window-activate-link",
+            control: "moz-box-link",
+          },
+        ],
+      },
+    ],
+  },
+  aiWindowFeatures: {
+    l10nId: "ai-window-features-group",
+    headingLevel: 2,
+    items: [
+      {
+        id: "aiFeaturesAIWindowGroup",
+        control: "moz-box-group",
+        // TODO: Add Model and Insight list
+        // options: [
+        // ],
       },
     ],
   },

@@ -2275,6 +2275,7 @@ pref("browser.aiwindow.memoriesLogLevel", "Warn");
 pref("browser.aiwindow.firstrun.autoAdvanceMS", 3000);
 pref("browser.aiwindow.firstrun.modelChoice", "");
 pref("browser.aiwindow.model", "qwen3-235b-a22b-instruct-2507-maas");
+pref("browser.aiwindow.preferences.enabled", false);
 
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
