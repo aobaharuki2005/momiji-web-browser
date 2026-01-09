@@ -13064,6 +13064,72 @@ function EditableTimerFields({
     tabIndex: tabIndex
   }, formatTime(props.timeLeft).split(":")[1]));
 }
+;// CONCATENATED MODULE: ./content-src/components/Widgets/WeatherForecast/WeatherForecast.jsx
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
+
+
+function WeatherForecast() {
+  const prefs = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Prefs.values);
+  const weatherData = (0,external_ReactRedux_namespaceObject.useSelector)(state => state.Weather);
+  const WEATHER_SUGGESTION = weatherData.suggestions?.[0];
+  const showDetailedView = prefs["weather.display"] === "detailed";
+  if (!showDetailedView || !weatherData?.initialized) {
+    return null;
+  }
+  return /*#__PURE__*/React.createElement("article", {
+    className: "weather-forecast-widget"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "city-wrapper"
+  }, /*#__PURE__*/React.createElement("h3", null, weatherData.locationData.city)), /*#__PURE__*/React.createElement("div", {
+    className: "current-weather-wrapper"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "weather-icon-column"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: `weather-icon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "weather-info-column"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "temperature-unit"
+  }, WEATHER_SUGGESTION.current_conditions.temperature[prefs["weather.temperatureUnits"]], "\xB0", prefs["weather.temperatureUnits"]), /*#__PURE__*/React.createElement("span", {
+    className: "temperature-description"
+  }, WEATHER_SUGGESTION.current_conditions.summary)), /*#__PURE__*/React.createElement("div", {
+    className: "high-low-column"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "high-temperature"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "arrow-icon arrow-up"
+  }), WEATHER_SUGGESTION.forecast.high[prefs["weather.temperatureUnits"]], "\xB0"), /*#__PURE__*/React.createElement("span", {
+    className: "low-temperature"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "arrow-icon arrow-down"
+  }), WEATHER_SUGGESTION.forecast.low[prefs["weather.temperatureUnits"]], "\xB0"))), /*#__PURE__*/React.createElement("hr", null), /*#__PURE__*/React.createElement("div", {
+    className: "forecast-row"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "today-forecast"
+  }, "Today's forecast"), /*#__PURE__*/React.createElement("ul", {
+    className: "forecast-row-items"
+  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("span", null, "80\xB0"), /*#__PURE__*/React.createElement("span", {
+    className: `weather-icon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
+  }), /*#__PURE__*/React.createElement("span", null, "7:00")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("span", null, "80\xB0"), /*#__PURE__*/React.createElement("span", {
+    className: `weather-icon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
+  }), /*#__PURE__*/React.createElement("span", null, "7:00")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("span", null, "80\xB0"), /*#__PURE__*/React.createElement("span", {
+    className: `weather-icon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
+  }), /*#__PURE__*/React.createElement("span", null, "7:00")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("span", null, "80\xB0"), /*#__PURE__*/React.createElement("span", {
+    className: `weather-icon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
+  }), /*#__PURE__*/React.createElement("span", null, "7:00")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("span", null, "80\xB0"), /*#__PURE__*/React.createElement("span", {
+    className: `weather-icon iconId${WEATHER_SUGGESTION.current_conditions.icon_id}`
+  }), /*#__PURE__*/React.createElement("span", null, "7:00")))), /*#__PURE__*/React.createElement("div", {
+    className: "weather-forecast-footer"
+  }, /*#__PURE__*/React.createElement("a", {
+    href: "#",
+    className: "full-forecast"
+  }, "See full forecast"), /*#__PURE__*/React.createElement("span", {
+    className: "sponsored-text"
+  }, "Accuweather Sponsored")));
+}
+
 ;// CONCATENATED MODULE: ./content-src/components/DiscoveryStreamComponents/FeatureHighlight/WidgetsFeatureHighlight.jsx
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13117,10 +13183,13 @@ function WidgetsFeatureHighlight({
 
 
 
+
 const PREF_WIDGETS_LISTS_ENABLED = "widgets.lists.enabled";
 const PREF_WIDGETS_SYSTEM_LISTS_ENABLED = "widgets.system.lists.enabled";
 const PREF_WIDGETS_TIMER_ENABLED = "widgets.focusTimer.enabled";
 const PREF_WIDGETS_SYSTEM_TIMER_ENABLED = "widgets.system.focusTimer.enabled";
+const PREF_WIDGETS_WEATHER_FORECAST_ENABLED = "widgets.weatherForecast.enabled";
+const PREF_WIDGETS_SYSTEM_WEATHER_FORECAST_ENABLED = "widgets.system.weatherForecast.enabled";
 const PREF_WIDGETS_MAXIMIZED = "widgets.maximized";
 const PREF_WIDGETS_SYSTEM_MAXIMIZED = "widgets.system.maximized";
 
@@ -13162,10 +13231,13 @@ function Widgets() {
   const dispatch = (0,external_ReactRedux_namespaceObject.useDispatch)();
   const nimbusListsEnabled = prefs.widgetsConfig?.listsEnabled;
   const nimbusTimerEnabled = prefs.widgetsConfig?.timerEnabled;
+  const nimbusWeatherForecastEnabled = prefs.widgetsConfig?.weatherForecastEnabled;
   const nimbusListsTrainhopEnabled = prefs.trainhopConfig?.widgets?.listsEnabled;
   const nimbusTimerTrainhopEnabled = prefs.trainhopConfig?.widgets?.timerEnabled;
+  const nimbusWeatherForecastTrainhopEnabled = prefs.trainhopConfig?.widgets?.weatherForecastEnabled;
   const listsEnabled = (nimbusListsTrainhopEnabled || nimbusListsEnabled || prefs[PREF_WIDGETS_SYSTEM_LISTS_ENABLED]) && prefs[PREF_WIDGETS_LISTS_ENABLED];
   const timerEnabled = (nimbusTimerTrainhopEnabled || nimbusTimerEnabled || prefs[PREF_WIDGETS_SYSTEM_TIMER_ENABLED]) && prefs[PREF_WIDGETS_TIMER_ENABLED];
+  const weatherForecastEnabled = (nimbusWeatherForecastTrainhopEnabled || nimbusWeatherForecastEnabled || prefs[PREF_WIDGETS_SYSTEM_WEATHER_FORECAST_ENABLED]) && prefs[PREF_WIDGETS_WEATHER_FORECAST_ENABLED];
 
   // track previous timerEnabled state to detect when it becomes disabled
   const prevTimerEnabledRef = (0,external_React_namespaceObject.useRef)(timerEnabled);
@@ -13221,7 +13293,7 @@ function Widgets() {
       dispatch(actionCreators.SetPref(prefName, true));
     }
   }
-  if (!(listsEnabled || timerEnabled)) {
+  if (!(listsEnabled || timerEnabled || weatherForecastEnabled)) {
     return null;
   }
   return /*#__PURE__*/external_React_default().createElement("div", {
@@ -13257,6 +13329,10 @@ function Widgets() {
     handleUserInteraction: handleUserInteraction,
     isMaximized: isMaximized
   }), timerEnabled && /*#__PURE__*/external_React_default().createElement(FocusTimer, {
+    dispatch: dispatch,
+    handleUserInteraction: handleUserInteraction,
+    isMaximized: isMaximized
+  }), weatherForecastEnabled && /*#__PURE__*/external_React_default().createElement(WeatherForecast, {
     dispatch: dispatch,
     handleUserInteraction: handleUserInteraction,
     isMaximized: isMaximized
