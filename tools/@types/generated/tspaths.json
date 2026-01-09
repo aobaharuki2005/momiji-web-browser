@@ -116,6 +116,9 @@
       "chrome://browser/content/nsContextMenu.sys.mjs": [
         "browser/base/content/nsContextMenu.sys.mjs"
       ],
+      "chrome://browser/content/preferences/OnDeviceModelManager.mjs": [
+        "browser/components/preferences/OnDeviceModelManager.mjs"
+      ],
       "chrome://browser/content/preferences/config/SettingGroupManager.mjs": [
         "browser/components/preferences/config/SettingGroupManager.mjs"
       ],

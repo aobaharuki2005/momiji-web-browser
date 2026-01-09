@@ -2,6 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+debug-model-management-group =
+  .label = DEBUG model management
+debug-model-management-feature =
+  .label = features
+debug-model-management-install =
+  .label = install feature
+debug-model-management-uninstall =
+  .label = uninstall feature
+debug-model-management-uninstall-all =
+  .label = uninstall all features
+
 pane-ai-features-title = AI Features
 category-ai-features =
     .tooltiptext = { pane-ai-features-title }

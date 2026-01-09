@@ -4,12 +4,22 @@
 
 import { Preferences } from "chrome://global/content/preferences/Preferences.mjs";
 import { SettingGroupManager } from "chrome://browser/content/preferences/config/SettingGroupManager.mjs";
+import { OnDeviceModelManager } from "chrome://browser/content/preferences/OnDeviceModelManager.mjs";
+
+/**
+ * @import { OnDeviceModelFeaturesEnum } from "chrome://browser/content/preferences/OnDeviceModelManager.mjs"
+ */
 
 const XPCOMUtils = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 ).XPCOMUtils;
 const lazy = XPCOMUtils.declareLazy({
   GenAI: "resource:///modules/GenAI.sys.mjs",
+  log: () =>
+    console.createInstance({
+      prefix: "aiFeatures",
+      maxLogLevel: "Info",
+    }),
 });
 
 Preferences.addAll([
@@ -53,6 +63,65 @@ Preferences.addSetting({
     };
   },
 });
+Preferences.addSetting(
+  /** @type {{ selected: string } & SettingConfig} */ ({
+    id: "onDeviceModel",
+    selected: Object.values(OnDeviceModelManager.features)[0],
+    getControlConfig(config) {
+      if (!config.options) {
+        config.options = Object.entries(OnDeviceModelManager.features).map(
+          ([key, value]) => ({
+            value,
+            controlAttrs: { label: key },
+          })
+        );
+      }
+      return config;
+    },
+    get() {
+      return this.selected;
+    },
+    set(val) {
+      this.selected = String(val);
+    },
+  })
+);
+Preferences.addSetting({
+  id: "onDeviceModelInstall",
+  deps: ["onDeviceModel"],
+  async onUserClick(_, deps) {
+    let feature = /** @type {OnDeviceModelFeaturesEnum} */ (
+      deps.onDeviceModel.value
+    );
+    lazy.log.info("Will install: ", feature);
+    await OnDeviceModelManager.install(feature);
+    lazy.log.info("Done install: ", feature);
+  },
+});
+Preferences.addSetting({
+  id: "onDeviceModelUninstall",
+  deps: ["onDeviceModel"],
+  async onUserClick(_, deps) {
+    let feature = /** @type {OnDeviceModelFeaturesEnum} */ (
+      deps.onDeviceModel.value
+    );
+    lazy.log.info("Will uninstall: ", feature);
+    await OnDeviceModelManager.uninstall(feature);
+    lazy.log.info("Done uninstall: ", feature);
+  },
+});
+Preferences.addSetting({
+  id: "onDeviceModelUninstallAll",
+  async onUserClick() {
+    lazy.log.info("Will uninstall: ALL");
+    await Promise.all(
+      Object.values(OnDeviceModelManager.features).map(feature =>
+        OnDeviceModelManager.uninstall(feature)
+      )
+    );
+    lazy.log.info("Done uninstall: ALL");
+  },
+});
 
 Preferences.addSetting({
   id: "AIWindowEnabled",
@@ -88,6 +157,31 @@ Preferences.addSetting({
 });
 
 SettingGroupManager.registerGroups({
+  debugModelManagement: {
+    l10nId: "debug-model-management-group",
+    items: [
+      {
+        id: "onDeviceModel",
+        control: "moz-select",
+        l10nId: "debug-model-management-feature",
+      },
+      {
+        id: "onDeviceModelInstall",
+        control: "moz-button",
+        l10nId: "debug-model-management-install",
+      },
+      {
+        id: "onDeviceModelUninstall",
+        control: "moz-button",
+        l10nId: "debug-model-management-uninstall",
+      },
+      {
+        id: "onDeviceModelUninstallAll",
+        control: "moz-button",
+        l10nId: "debug-model-management-uninstall-all",
+      },
+    ],
+  },
   aiFeatures: {
     l10nId: "try-ai-features-group",
     items: [

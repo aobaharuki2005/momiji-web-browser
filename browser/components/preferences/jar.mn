@@ -25,6 +25,7 @@ browser.jar:
    content/browser/preferences/web-appearance-light.svg
    content/browser/preferences/etp-toggle-promo.svg
    content/browser/preferences/etp-advanced-banner.svg
+   content/browser/preferences/OnDeviceModelManager.mjs
    content/browser/preferences/config/aiFeatures.mjs                    (config/aiFeatures.mjs)
    content/browser/preferences/config/SettingGroupManager.mjs           (config/SettingGroupManager.mjs)
    content/browser/preferences/widgets/dialog-button.mjs                (widgets/dialog-button/dialog-button.mjs)
