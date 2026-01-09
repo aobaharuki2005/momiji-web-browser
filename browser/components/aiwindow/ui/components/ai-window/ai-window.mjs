@@ -29,16 +29,26 @@ ChromeUtils.defineLazyGetter(lazy, "log", function () {
   });
 });
 
+const FULLPAGE = "fullpage";
+const SIDEBAR = "sidebar";
+
 /**
  * A custom element for managing AI Window
  */
 export class AIWindow extends MozLitElement {
   static properties = {
     userPrompt: { type: String },
+    mode: { type: String }, // sidebar | fullpage
   };
 
   #browser;
   #conversation;
+
+  #detectModeFromContext() {
+    return window.browsingContext?.embedderElement?.id === "ai-window-browser"
+      ? SIDEBAR
+      : FULLPAGE;
+  }
 
   constructor() {
     super();
@@ -46,6 +56,7 @@ export class AIWindow extends MozLitElement {
     this.userPrompt = "";
     this.#browser = null;
     this.#conversation = new lazy.ChatConversation({});
+    this.mode = this.#detectModeFromContext();
   }
 
   connectedCallback() {
@@ -251,6 +262,11 @@ export class AIWindow extends MozLitElement {
         <moz-button type="primary" size="small" @click=${this.#handleSubmit}>
           Submit mock prompt
         </moz-button>
+
+        <!-- TODO : Example of mode-based rendering -->
+        ${this.mode === FULLPAGE
+          ? html`<div>Fullpage Footer Content</div>`
+          : ""}
       </div>
     `;
   }
