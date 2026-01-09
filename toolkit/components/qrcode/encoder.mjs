@@ -2,15 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+const lazy = {};
 
-const lazy = XPCOMUtils.declareLazy({
-  qrcode: "moz-src:///third_party/js/qrcode/qrcode.mjs",
-  QRErrorCorrectionLevel: "moz-src:///third_party/js/qrcode/qrcode.mjs",
-  QRRSBlock: "moz-src:///third_party/js/qrcode/qrcode.mjs",
-});
+ChromeUtils.defineESModuleGetters(
+  lazy,
+  {
+    qrcode: "moz-src:///third_party/js/qrcode/qrcode.mjs",
+    QRErrorCorrectionLevel: "moz-src:///third_party/js/qrcode/qrcode.mjs",
+    QRRSBlock: "moz-src:///third_party/js/qrcode/qrcode.mjs",
+  },
+  { global: "current" }
+);
 
 /**
  * There are many "versions" of QR codes, which describes how many dots appear
