@@ -33,12 +33,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.Hyphens
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 @Suppress("LongParameterList")
@@ -186,10 +186,12 @@ private fun getIconTint(state: MenuItemState): Color {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
-private fun MenuNavigationPreview() {
-    FirefoxTheme {
+private fun MenuNavigationPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         MenuNavigation(
             isSiteLoading = false,
             isExtensionsExpanded = false,
@@ -203,10 +205,12 @@ private fun MenuNavigationPreview() {
     }
 }
 
-@PreviewLightDark
+@Preview
 @Composable
-private fun MenuNavigationExpandedPreview() {
-    FirefoxTheme {
+private fun MenuNavigationExpandedPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         MenuNavigation(
             isSiteLoading = false,
             isExtensionsExpanded = true,
@@ -222,12 +226,12 @@ private fun MenuNavigationExpandedPreview() {
 
 @Preview
 @Composable
-private fun MenuNavigationPrivatePreview(
-    @PreviewParameter(SiteLoadingPreviewParameterProvider::class) isSiteLoading: Boolean,
+private fun MenuNavigationSiteLoadingPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
-    FirefoxTheme(theme = Theme.Private) {
+    FirefoxTheme(theme) {
         MenuNavigation(
-            isSiteLoading = isSiteLoading,
+            isSiteLoading = true,
             isExtensionsExpanded = false,
             isMoreMenuExpanded = false,
             onBackButtonClick = {},
@@ -241,12 +245,12 @@ private fun MenuNavigationPrivatePreview(
 
 @Preview
 @Composable
-private fun MenuNavigationExpandedPrivatePreview(
-    @PreviewParameter(SiteLoadingPreviewParameterProvider::class) isSiteLoading: Boolean,
+private fun MenuNavigationExpandedSiteLoadingPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
 ) {
-    FirefoxTheme(theme = Theme.Private) {
+    FirefoxTheme(theme) {
         MenuNavigation(
-            isSiteLoading = isSiteLoading,
+            isSiteLoading = true,
             isExtensionsExpanded = true,
             isMoreMenuExpanded = false,
             onBackButtonClick = {},

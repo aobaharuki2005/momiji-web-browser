@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import mozilla.components.compose.base.Banner
 import mozilla.components.compose.base.BannerColors
@@ -22,6 +22,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.home.fake.FakeHomepagePreview
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import org.mozilla.fenix.wallpapers.WallpaperState
 
 /**
@@ -60,10 +61,12 @@ fun MessageCard(
     }
 }
 
+@Preview
 @Composable
-@PreviewLightDark
-private fun MessageCardPreview() {
-    FirefoxTheme {
+private fun MessageCardPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         Surface {
             MessageCard(
                 messageCardState = FakeHomepagePreview.messageCardState(),
@@ -75,27 +78,12 @@ private fun MessageCardPreview() {
     }
 }
 
-@Composable
 @Preview
-private fun MessageCardPrivatePreview() {
-    FirefoxTheme(
-        theme = Theme.Private,
-    ) {
-        Surface {
-            MessageCard(
-                messageCardState = FakeHomepagePreview.messageCardState(),
-                modifier = Modifier.padding(all = 16.dp),
-                onClick = {},
-                onCloseButtonClick = {},
-            )
-        }
-    }
-}
-
 @Composable
-@PreviewLightDark
-private fun MessageCardWithoutTitlePreview() {
-    FirefoxTheme {
+private fun MessageCardWithoutTitlePreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         Surface {
             MessageCard(
                 messageCardState = MessageCardState(
@@ -110,51 +98,12 @@ private fun MessageCardWithoutTitlePreview() {
     }
 }
 
-@Composable
 @Preview
-private fun MessageCardWithoutTitlePrivatePreview() {
-    FirefoxTheme(
-        theme = Theme.Private,
-    ) {
-        Surface {
-            MessageCard(
-                messageCardState = MessageCardState(
-                    messageText = stringResource(id = R.string.default_browser_experiment_card_text),
-                    bannerColors = BannerColors.bannerColors(),
-                ),
-                modifier = Modifier.padding(all = 16.dp),
-                onClick = {},
-                onCloseButtonClick = {},
-            )
-        }
-    }
-}
-
 @Composable
-@PreviewLightDark
-private fun MessageCardWithButtonLabelPreview() {
-    FirefoxTheme {
-        Surface {
-            MessageCard(
-                messageCardState = MessageCardState(
-                    messageText = stringResource(id = R.string.default_browser_experiment_card_text),
-                    titleText = stringResource(id = R.string.default_browser_experiment_card_title),
-                    buttonText = stringResource(id = R.string.preferences_set_as_default_browser),
-                    bannerColors = BannerColors.bannerColors(),
-                ),
-                onClick = {},
-                onCloseButtonClick = {},
-            )
-        }
-    }
-}
-
-@Composable
-@Preview
-private fun MessageCardWithButtonLabelPrivatePreview() {
-    FirefoxTheme(
-        theme = Theme.Private,
-    ) {
+private fun MessageCardWithButtonLabelPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         Surface {
             MessageCard(
                 messageCardState = MessageCardState(
