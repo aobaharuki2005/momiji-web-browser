@@ -17,13 +17,6 @@ if ("@mozilla.org/xre/app-info;1" in Cc) {
 
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
-const MOZ_COMPATIBILITY_NIGHTLY = ![
-  "aurora",
-  "beta",
-  "release",
-  "esr",
-].includes(AppConstants.MOZ_UPDATE_CHANNEL);
-
 const INTL_LOCALES_CHANGED = "intl:app-locales-changed";
 const XPIPROVIDER_BLOCKLIST_ATTENTION_UPDATED =
   "xpi-provider:blocklist-attention-updated";
@@ -57,7 +50,7 @@ const UPDATE_REQUEST_VERSION = 2;
 
 const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 const PREF_EM_CHECK_COMPATIBILITY_BASE = "extensions.checkCompatibility";
-var PREF_EM_CHECK_COMPATIBILITY = MOZ_COMPATIBILITY_NIGHTLY
+var PREF_EM_CHECK_COMPATIBILITY = AppConstants.NIGHTLY_BUILD
   ? PREF_EM_CHECK_COMPATIBILITY_BASE + ".nightly"
   : undefined;
 
@@ -689,7 +682,7 @@ var AddonManagerInternal = {
         );
       }
 
-      if (!MOZ_COMPATIBILITY_NIGHTLY) {
+      if (!AppConstants.NIGHTLY_BUILD) {
         PREF_EM_CHECK_COMPATIBILITY =
           PREF_EM_CHECK_COMPATIBILITY_BASE +
           "." +
