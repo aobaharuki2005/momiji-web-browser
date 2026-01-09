@@ -25,6 +25,7 @@ struct CurrentProfileData {
   nsCString mPath;
   nsCString mStoreID;
   bool mShowSelector;
+  bool mIsRelative;
 };
 
 struct IniData {

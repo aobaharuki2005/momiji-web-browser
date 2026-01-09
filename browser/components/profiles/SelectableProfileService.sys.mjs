@@ -1616,10 +1616,9 @@ export class CommandLineHandler {
   async findDefaultProfilePath() {
     try {
       let profilesRoot =
-        ProfilesDatastoreService.constructor.getDirectory("DefProfRt").parent
-          .path;
+        ProfilesDatastoreService.constructor.getDirectory("UAppData");
 
-      let iniPath = PathUtils.join(profilesRoot, "profiles.ini");
+      let iniPath = PathUtils.join(profilesRoot.path, "profiles.ini");
 
       let iniData = await IOUtils.readUTF8(iniPath);
 
@@ -1650,7 +1649,11 @@ export class CommandLineHandler {
 
           let isRelative = iniParser.getString(section, "IsRelative") == "1";
           if (isRelative) {
-            path = PathUtils.joinRelative(profilesRoot, path);
+            let profileDir = Cc["@mozilla.org/file/local;1"].createInstance(
+              Ci.nsIFile
+            );
+            profileDir.setRelativeDescriptor(profilesRoot, path);
+            path = profileDir.path;
           }
 
           return path;

@@ -2372,6 +2372,10 @@ nsresult WriteProfileInfo(nsIFile* profilesDBFile, nsIFile* installDBFile,
     rv = profilesIni.SetString(iniSection.get(), "Path",
                                profileInfo->mPath.get());
     NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = profilesIni.SetString(iniSection.get(), "IsRelative",
+                               profileInfo->mIsRelative ? "1" : "0");
+    NS_ENSURE_SUCCESS(rv, rv);
     changed = true;
 
     // We must update the install default profile if it matches the old profile.
@@ -2443,8 +2447,7 @@ nsToolkitProfileService::AsyncFlushCurrentProfile(JSContext* aCx,
   profileData->mStoreID = mCurrent->mStoreID;
   profileData->mShowSelector = mCurrent->mShowProfileSelector;
 
-  bool isRelative;
-  GetProfileDescriptor(mCurrent, &isRelative, profileData->mPath);
+  GetProfileDescriptor(mCurrent, &profileData->mIsRelative, profileData->mPath);
 
   nsCOMPtr<nsIRemoteService> rs = GetRemoteService();
   RefPtr<nsRemoteService> remoteService =
