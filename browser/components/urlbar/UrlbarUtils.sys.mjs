@@ -1510,11 +1510,14 @@ export var UrlbarUtils = {
 
     // Appends subtype to certain result types.
     function checkForSubType(type, res) {
-      if (res.providerName == "UrlbarProviderSemanticHistorySearch") {
+      if (res.providerName == "UrlbarProviderInputHistory") {
+        type += "_adaptive";
+      } else if (res.providerName == "UrlbarProviderSemanticHistorySearch") {
         type += "_semantic";
       }
       if (
         lazy.UrlbarSearchUtils.resultIsSERP(res, [
+          UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
           UrlbarUtils.RESULT_SOURCE.HISTORY,
           UrlbarUtils.RESULT_SOURCE.TABS,
         ])
@@ -1611,7 +1614,7 @@ export var UrlbarUtils = {
           return "clipboard";
         }
         if (result.source === this.RESULT_SOURCE.BOOKMARKS) {
-          return "bookmark";
+          return checkForSubType("bookmark", result);
         }
         return checkForSubType("history", result);
       case this.RESULT_TYPE.RESTRICT:
