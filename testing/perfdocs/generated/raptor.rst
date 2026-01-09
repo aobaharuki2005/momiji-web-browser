@@ -561,47 +561,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-jetstream2-chrome-m-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-cstm-car-m-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-fenix-jetstream2**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-fenix-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-geckoview-jetstream2**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-geckoview-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -875,47 +834,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-jetstream2-fenix-jetstream2**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-fenix-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-geckoview-jetstream2**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-geckoview-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-jetstream2-chrome-m-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream2-cstm-car-m-jetstream2-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-jetstream2-fenix-jetstream2**
         - ❌
         - ❌
@@ -1226,37 +1144,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-jetstream3-chrome-m-jetstream3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream3-cstm-car-m-jetstream3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream3-fenix-jetstream3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream3-fenix-jetstream3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -1553,37 +1440,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-jetstream3-fenix-jetstream3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream3-fenix-jetstream3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-jetstream3-chrome-m-jetstream3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-jetstream3-cstm-car-m-jetstream3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-jetstream3-fenix-jetstream3**
         - ❌
         - ❌
@@ -2145,47 +2001,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-cstm-car-m-motionmark-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-geckoview-motionmark-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-geckoview-motionmark-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -2490,47 +2305,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-geckoview-motionmark-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-geckoview-motionmark-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-cstm-car-m-motionmark-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-1-3**
         - ❌
         - ❌
@@ -2890,47 +2664,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-htmlsuite-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-cstm-car-m-motionmark-htmlsuite-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-htmlsuite-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-htmlsuite-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-geckoview-motionmark-htmlsuite-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-geckoview-motionmark-htmlsuite-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -3235,47 +2968,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-htmlsuite-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-htmlsuite-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-geckoview-motionmark-htmlsuite-1-3**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-geckoview-motionmark-htmlsuite-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-motionmark-1-3-chrome-m-motionmark-htmlsuite-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-motionmark-1-3-cstm-car-m-motionmark-htmlsuite-1-3-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-motionmark-1-3-fenix-motionmark-htmlsuite-1-3**
         - ❌
         - ❌
@@ -5956,47 +5648,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-unity-webgl-mobile-chrome-m-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-fenix**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-fenix-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-geckoview**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-geckoview-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-refbrow**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-linux1804-64-clang-trunk-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -6241,47 +5892,6 @@ Standard benchmarks are third-party tests (i.e. Speedometer) that we have integr
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-benchmark-unity-webgl-mobile-fenix**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-fenix-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-geckoview**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-geckoview-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-benchmark-unity-webgl-mobile-refbrow**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-benchmark-unity-webgl-mobile-chrome-m-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-benchmark-unity-webgl-mobile-fenix**
         - ❌
         - ❌
@@ -13691,726 +13301,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
-.. dropdown:: dns-multi
-   :class-container: anchor-id-dns-multi-c
-
-   * Command to Run Locally
-
-   .. code-block::
-
-      ./mach raptor -t dns-multi
-
-   **Owner**: Network Team
-
-   **Description**: Tests multi-domain DNS lookup and pageload performance via native DNS.
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox,fenix
-   * **browser cycles**: 3
-   * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:0
-   * **cold**: true
-   * **custom data**: true
-   * **expected**: pass
-   * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#16>`__
-   * **lower is better**: true
-   * **page cycles**: 1
-   * **page timeout**: 60000
-   * **test script**: trr_multi_domain_performance.js
-   * **test url**: `<None>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: true
-   * **Test Task**:
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-multi**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-multi-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-multi-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-multi**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-multi-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64-nightlyasrelease/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2-nightlyasrelease/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-
-.. dropdown:: dns-native
-   :class-container: anchor-id-dns-native-c
-
-   * Command to Run Locally
-
-   .. code-block::
-
-      ./mach raptor -t dns-native
-
-   **Owner**: Network Team
-
-   **Description**: Tests DNS lookup time via native DNS.
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox,fenix
-   * **browser cycles**: 3
-   * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:0
-   * **cold**: true
-   * **custom data**: true
-   * **expected**: pass
-   * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#58>`__
-   * **lower is better**: true
-   * **page cycles**: 1
-   * **page timeout**: 60000
-   * **test script**: trr_performance.js
-   * **test url**: `<None>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: true
-   * **Test Task**:
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-native**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-native-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-native-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-native**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-native-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64-nightlyasrelease/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2-nightlyasrelease/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-native**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-
-.. dropdown:: dns-usatdy
-   :class-container: anchor-id-dns-usatdy-c
-
-   * Command to Run Locally
-
-   .. code-block::
-
-      ./mach raptor -t dns-usatdy
-
-   **Owner**: Network Team
-
-   **Description**: Tests DNS lookup time via native DNS for usatoday.com.
-
-   * **alert threshold**: 2.0
-   * **apps**: firefox,fenix
-   * **browser cycles**: 3
-   * **browsertime args**: --browsertime.test_type=browser_idle --browsertime.test_url=https://www.usatoday.com/ --firefox.preference network.trr.mode:0
-   * **cold**: true
-   * **custom data**: true
-   * **expected**: pass
-   * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#23>`__
-   * **lower is better**: true
-   * **page cycles**: 1
-   * **page timeout**: 60000
-   * **test script**: trr_performance.js
-   * **test url**: `<None>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: true
-   * **Test Task**:
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-usatdy**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-usatdy-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-usatdy-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-dns-usatdy**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-dns-usatdy-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64-nightlyasrelease/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2-nightlyasrelease/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-dns-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-
 .. dropdown:: getkeyrng
    :class-container: anchor-id-getkeyrng-c
 
@@ -18346,7 +17236,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#30>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#23>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -18502,6 +17392,81 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: trr-clou-m
+   :class-container: anchor-id-trr-clou-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-clou-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time on a Cloudflare TRR server, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://mozilla.cloudflare-dns.com/dns-query
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#79>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-clou-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-clou-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-clou-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-clou-m-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: trr-cloudf
    :class-container: anchor-id-trr-cloudf-c
 
@@ -18523,7 +17488,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#37>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#16>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -18533,69 +17498,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: true
    * **Test Task**:
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-cloudf**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-cloudf-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-cloudf**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-cloudf-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-cloudf**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-cloudf-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
 
    .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
       :widths: 30 15 15 15 15
@@ -18763,7 +17665,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#44>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#30>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -18940,7 +17842,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#51>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#114>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -18950,69 +17852,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: true
    * **Test Task**:
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-multi**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-multi-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-multi**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-multi-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-multi**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-multi-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
 
    .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
       :widths: 30 15 15 15 15
@@ -19152,6 +17991,333 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - mozilla-release
         - mozilla-beta
       * - **browsertime-trr-performance-firefox-trr-multi**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: trr-multm
+   :class-container: anchor-id-trr-multm-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-multm
+
+   **Owner**: Network Team
+
+   **Description**: Tests multi-domain DNS lookup and pageload performance on a Cloudflare TRR server, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://mozilla.cloudflare-dns.com/dns-query
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#121>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_multi_domain_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-multm**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-multm-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-multm**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-multm-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: trr-native
+   :class-container: anchor-id-trr-native-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-native
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time via native DNS.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:0
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#44>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-linux1804-64-shippable-qr/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1470-64-nightlyasrelease/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1470-64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-macosx1470-64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows11-64-24h2-nightlyasrelease/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows11-64-24h2-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-windows11-64-24h2/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-firefox-trr-native**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
+.. dropdown:: trr-natv-m
+   :class-container: anchor-id-trr-natv-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-natv-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time via native DNS, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:0
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#93>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-natv-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-natv-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-natv-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-natv-m-nofis**
         - ❌
         - ❌
         - ❌
@@ -19180,7 +18346,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#65>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#37>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -19190,69 +18356,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: true
    * **Test Task**:
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-next**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-next-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-next**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-next-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-next**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-next-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
 
    .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
       :widths: 30 15 15 15 15
@@ -19399,28 +18502,28 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
-.. dropdown:: trr-usatdy
-   :class-container: anchor-id-trr-usatdy-c
+.. dropdown:: trr-next-m
+   :class-container: anchor-id-trr-next-m-c
 
    * Command to Run Locally
 
    .. code-block::
 
-      ./mach raptor -t trr-usatdy
+      ./mach raptor -t trr-next-m
 
    **Owner**: Network Team
 
-   **Description**: Tests DNS lookup time on a Cloudflare TRR server for usatoday.com.
+   **Description**: Tests DNS lookup time on a NextDNS TRR server, mobile.
 
    * **alert threshold**: 2.0
    * **apps**: firefox,fenix
    * **browser cycles**: 3
-   * **browsertime args**: --browsertime.test_type=browser_idle --browsertime.test_url=https://www.usatoday.com/ --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://mozilla.cloudflare-dns.com/dns-query
+   * **browsertime args**: --browsertime.test_type=browser_idle --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://firefox.dns.nextdns.io/dns-query
    * **cold**: true
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#72>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#86>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -19440,12 +18543,12 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-usatdy**
+      * - **browsertime-trr-performance-m-fenix-trr-next-m**
         - ✅
         - ❌
         - ❌
         - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-usatdy-nofis**
+      * - **browsertime-trr-performance-m-fenix-trr-next-m-nofis**
         - ✅
         - ❌
         - ❌
@@ -19461,177 +18564,12 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-usatdy**
+      * - **browsertime-trr-performance-m-fenix-trr-next-m**
         - ❌
         - ❌
         - ❌
         - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-usatdy-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-usatdy**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-usatdy-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-linux1804-64-shippable-qr/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64-nightlyasrelease/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-macosx1470-64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2-nightlyasrelease/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-windows11-64-24h2/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-firefox-trr-usatdy**
+      * - **browsertime-trr-performance-m-fenix-trr-next-m-nofis**
         - ❌
         - ❌
         - ❌
@@ -19660,7 +18598,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#79>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#58>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -19816,6 +18754,81 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: trr-w-cl-m
+   :class-container: anchor-id-trr-w-cl-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-w-cl-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time on a Cloudflare TRR server, with the TRR connection warmed up, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://mozilla.cloudflare-dns.com/dns-query
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#100>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-w-cl-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-w-cl-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-w-cl-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-w-cl-m-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: trr-w-clou
    :class-container: anchor-id-trr-w-clou-c
 
@@ -19837,7 +18850,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#86>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#51>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -19847,69 +18860,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: true
    * **Test Task**:
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-w-clou**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-w-clou-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-w-clou**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-w-clou-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-w-clou**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-w-clou-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
 
    .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
       :widths: 30 15 15 15 15
@@ -20077,7 +19027,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#93>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#65>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -20233,6 +19183,81 @@ Browsertime tests that use a custom pageload test script. These use the pageload
 
 
 
+.. dropdown:: trr-w-ne-m
+   :class-container: anchor-id-trr-w-ne-m-c
+
+   * Command to Run Locally
+
+   .. code-block::
+
+      ./mach raptor -t trr-w-ne-m
+
+   **Owner**: Network Team
+
+   **Description**: Tests DNS lookup time on a NextDNS TRR server, with the TRR connection warmed up, mobile.
+
+   * **alert threshold**: 2.0
+   * **apps**: firefox,fenix
+   * **browser cycles**: 3
+   * **browsertime args**: --browsertime.test_type=trr_warm --firefox.preference network.trr.mode:3 --firefox.preference network.trr.uri:https://firefox.dns.nextdns.io/dns-query
+   * **cold**: true
+   * **custom data**: true
+   * **expected**: pass
+   * **gecko profile interval**: 1
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#107>`__
+   * **lower is better**: true
+   * **page cycles**: 1
+   * **page timeout**: 60000
+   * **test script**: trr_performance.js
+   * **test url**: `<None>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: true
+   * **Test Task**:
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-w-ne-m**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-w-ne-m-nofis**
+        - ✅
+        - ❌
+        - ❌
+        - ❌
+
+
+   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
+      :widths: 30 15 15 15 15
+      :header-rows: 1
+
+      * - **Test Name**
+        - mozilla-central
+        - autoland
+        - mozilla-release
+        - mozilla-beta
+      * - **browsertime-trr-performance-m-fenix-trr-w-ne-m**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+      * - **browsertime-trr-performance-m-fenix-trr-w-ne-m-nofis**
+        - ❌
+        - ❌
+        - ❌
+        - ❌
+
+
+
 .. dropdown:: trr-w-next
    :class-container: anchor-id-trr-w-next-c
 
@@ -20254,7 +19279,7 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **custom data**: true
    * **expected**: pass
    * **gecko profile interval**: 1
-   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#100>`__
+   * **link searchfox**: `<https://searchfox.org/mozilla-central/source/testing/raptor/raptor/tests/custom/browsertime-trr-performance.toml#72>`__
    * **lower is better**: true
    * **page cycles**: 1
    * **page timeout**: 60000
@@ -20264,69 +19289,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
    * **unit**: ms
    * **use live sites**: true
    * **Test Task**:
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-w-next**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-w-next-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-a55-14-0-aarch64/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-w-next**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-w-next-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-trr-performance-m-fenix-trr-w-next**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-trr-performance-m-fenix-trr-w-next-nofis**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-
 
    .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
       :widths: 30 15 15 15 15
@@ -22827,42 +21789,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-av1-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-fenix-vpl-av1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-fenix-vpl-av1-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-geckoview-vpl-av1**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-geckoview-vpl-av1-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
    .. list-table:: **test-linux1804-64-nightlyasrelease-qr/opt**
       :widths: 30 15 15 15 15
       :header-rows: 1
@@ -23144,42 +22070,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-video-playback-latency-mobile-fenix-vpl-h264**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-fenix-vpl-h264-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-geckoview-vpl-h264**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-geckoview-vpl-h264-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-h264-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-video-playback-latency-mobile-fenix-vpl-h264**
         - ❌
         - ❌
@@ -23488,42 +22378,6 @@ Browsertime tests that use a custom pageload test script. These use the pageload
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-video-playback-latency-mobile-fenix-vpl-vp9**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-fenix-vpl-vp9-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-geckoview-vpl-vp9**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-video-playback-latency-mobile-geckoview-vpl-vp9-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-video-playback-latency-mobile-chrome-m-vpl-vp9-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-video-playback-latency-mobile-fenix-vpl-vp9**
         - ❌
         - ❌
@@ -35506,42 +34360,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-booking-sf-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-booking-sf**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-booking-sf-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-booking-sf**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-booking-sf-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: discord
    :class-container: anchor-id-discord-l
@@ -35615,42 +34433,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-fenix-discord**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-discord-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-discord**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-discord-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-discord-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-discord**
         - ❌
         - ❌
@@ -35768,42 +34550,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-fashionbeans-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-fashionbeans**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-fashionbeans-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-fashionbeans**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-fashionbeans-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: google-accounts
    :class-container: anchor-id-google-accounts-l
@@ -35877,42 +34623,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-fenix-google-accounts**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-google-accounts-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-google-accounts**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-google-accounts-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-google-accounts-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-google-accounts**
         - ❌
         - ❌
@@ -36030,42 +34740,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-imdb-firefox-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-imdb-firefox**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-imdb-firefox-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-imdb-firefox**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-imdb-firefox-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: medium-article
    :class-container: anchor-id-medium-article-l
@@ -36139,42 +34813,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-fenix-medium-article**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-medium-article-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-medium-article**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-medium-article-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-medium-article-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-medium-article**
         - ❌
         - ❌
@@ -36292,42 +34930,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-people-article-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-people-article**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-people-article-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-people-article**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-people-article-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: reddit-thread
    :class-container: anchor-id-reddit-thread-l
@@ -36401,42 +35003,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-fenix-reddit-thread**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-reddit-thread-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-reddit-thread**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-reddit-thread-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-reddit-thread-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-reddit-thread**
         - ❌
         - ❌
@@ -36554,42 +35120,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-rumble-fox-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-rumble-fox**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-rumble-fox-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-rumble-fox**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-rumble-fox-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: stackoverflow-question
    :class-container: anchor-id-stackoverflow-question-l
@@ -36663,42 +35193,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-fenix-stackoverflow-question**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-stackoverflow-question-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-stackoverflow-question**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-stackoverflow-question-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-stackoverflow-question-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-stackoverflow-question**
         - ❌
         - ❌
@@ -36816,42 +35310,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-urbandictionary-define-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-urbandictionary-define**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-urbandictionary-define-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-urbandictionary-define**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-urbandictionary-define-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: wikia-marvel
    :class-container: anchor-id-wikia-marvel-l
@@ -36925,42 +35383,6 @@ A set of test pages that are run as live sites instead of recorded versions. The
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-fenix-wikia-marvel**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-wikia-marvel-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-wikia-marvel**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-wikia-marvel-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-wikia-marvel-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-wikia-marvel**
         - ❌
         - ❌
@@ -37147,77 +35569,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-allrecipes-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-allrecipes-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-allrecipes**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-allrecipes-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-allrecipes**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-allrecipes-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-allrecipes**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-allrecipes-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-allrecipes**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-allrecipes-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-allrecipes**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-allrecipes-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: amazon
    :class-container: anchor-id-amazon-m
@@ -37346,77 +35697,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-amazon**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-amazon**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-amazon-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-amazon-nofis**
         - ❌
         - ❌
         - ❌
@@ -37627,87 +35907,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-amazon-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-amazon-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-amazon-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-amazon-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-amazon-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-webextensions-fenix-amazon-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-webextensions-fenix-amazon-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: bild-de
    :class-container: anchor-id-bild-de-m
@@ -37836,77 +36035,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-bild-de**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-bild-de**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-bild-de**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-bild-de**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-bild-de**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-bild-de-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-bild-de-nofis**
         - ❌
         - ❌
         - ❌
@@ -38097,77 +36225,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-bing**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-bing**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-bing**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-bing**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-bing-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-bing**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: bing-search-restaurants
    :class-container: anchor-id-bing-search-restaurants-m
@@ -38296,77 +36353,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-bing-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-bing-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-bing-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-bing-search-restaurants**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-bing-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-bing-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-bing-search-restaurants-nofis**
         - ❌
         - ❌
         - ❌
@@ -38557,77 +36543,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-booking**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-booking**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-booking**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-booking**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-booking-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-booking**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: cnn
    :class-container: anchor-id-cnn-m
@@ -38756,77 +36671,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-cnn**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-cnn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-cnn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-cnn-nofis**
         - ❌
         - ❌
         - ❌
@@ -39017,77 +36861,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-cnn-ampstories**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-cnn-ampstories**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-cnn-ampstories**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-cnn-ampstories**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-cnn-ampstories-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-cnn-ampstories**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: dailymail
    :class-container: anchor-id-dailymail-m
@@ -39216,77 +36989,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-dailymail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-dailymail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-dailymail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-dailymail**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-dailymail**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-dailymail-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-dailymail-nofis**
         - ❌
         - ❌
         - ❌
@@ -39477,77 +37179,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-ebay-kleinanzeigen**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-ebay-kleinanzeigen**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-ebay-kleinanzeigen**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-ebay-kleinanzeigen**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-ebay-kleinanzeigen**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: ebay-kleinanzeigen-search
    :class-container: anchor-id-ebay-kleinanzeigen-search-m
@@ -39676,77 +37307,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-ebay-kleinanzeigen-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-ebay-kleinanzeigen-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-ebay-kleinanzeigen-search**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-ebay-kleinanzeigen-search**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-ebay-kleinanzeigen-search-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-ebay-kleinanzeigen-search-nofis**
         - ❌
         - ❌
         - ❌
@@ -39937,77 +37497,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-espn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-espn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-espn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-espn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-espn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-espn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-espn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-espn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-espn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-espn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-espn**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-espn-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: facebook
    :class-container: anchor-id-facebook-m
@@ -40086,42 +37575,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-live-fenix-facebook**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-facebook**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-live-chrome-m-facebook-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-live-fenix-facebook**
         - ❌
         - ❌
@@ -40272,77 +37725,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-facebook-cristiano**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-facebook-cristiano**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-facebook-cristiano**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-facebook-cristiano**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-facebook-cristiano**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-facebook-cristiano-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-facebook-cristiano-nofis**
         - ❌
         - ❌
         - ❌
@@ -40534,77 +37916,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-google-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-google-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-google**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-google-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-google**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-google-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-google**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-google-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-google**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-google-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-google**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-google-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: google-maps
    :class-container: anchor-id-google-maps-m
@@ -40733,77 +38044,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-google-maps**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-google-maps**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-google-maps**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-google-maps**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-google-maps**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-google-maps-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-google-maps-nofis**
         - ❌
         - ❌
         - ❌
@@ -40995,77 +38235,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-google-search-restaurants**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-google-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-google-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-google-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-google-search-restaurants-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-google-search-restaurants**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: imdb
    :class-container: anchor-id-imdb-m
@@ -41194,77 +38363,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-imdb**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-imdb**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-imdb**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-imdb**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-imdb**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-imdb-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-imdb-nofis**
         - ❌
         - ❌
         - ❌
@@ -41456,77 +38554,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-instagram**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-instagram-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-instagram**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: microsoft-support
    :class-container: anchor-id-microsoft-support-m
@@ -41660,77 +38687,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-essential-refbrow-microsoft-support**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-microsoft-support**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-microsoft-support-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-microsoft-support**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-microsoft-support-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-microsoft-support-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-microsoft-support-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-microsoft-support**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-microsoft-support-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-microsoft-support**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-microsoft-support-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-microsoft-support**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-microsoft-support-nofis**
         - ❌
         - ❌
         - ❌
@@ -41916,77 +38872,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-reddit**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-reddit**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-reddit**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-reddit**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-reddit-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-reddit**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: sina
    :class-container: anchor-id-sina-m
@@ -42074,52 +38959,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - autoland
         - mozilla-release
         - mozilla-beta
-      * - **browsertime-tp6m-fenix-sina**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-sina-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-sina**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-sina-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-sina**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-sina-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-sina-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
       * - **browsertime-tp6m-fenix-sina**
         - ✅
         - ❌
@@ -42275,77 +39114,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-stackoverflow**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-stackoverflow**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-stackoverflow**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-stackoverflow**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-stackoverflow**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-stackoverflow-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-stackoverflow-nofis**
         - ❌
         - ❌
         - ❌
@@ -42536,77 +39304,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
 
 
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-wikipedia**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-wikipedia-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-wikipedia**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
 
 .. dropdown:: youtube
    :class-container: anchor-id-youtube-m
@@ -42735,77 +39432,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-geckoview-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-youtube**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-youtube**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-refbrow-youtube**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-chrome-m-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-cstm-car-m-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-youtube**
-        - ✅
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-fenix-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-youtube**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-geckoview-youtube-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-youtube-nofis**
         - ❌
         - ❌
         - ❌
@@ -42970,77 +39596,6 @@ Page-load performance test suite on Android. The links direct to the actual webs
         - ❌
         - ❌
       * - **browsertime-tp6m-essential-refbrow-youtube-watch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-youtube-watch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-fenix-youtube-watch-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-youtube-watch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-geckoview-youtube-watch-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-
-
-   .. list-table:: **test-android-hw-p6-13-0-aarch64-shippable/opt**
-      :widths: 30 15 15 15 15
-      :header-rows: 1
-
-      * - **Test Name**
-        - mozilla-central
-        - autoland
-        - mozilla-release
-        - mozilla-beta
-      * - **browsertime-tp6m-essential-chrome-m-youtube-watch-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-cstm-car-m-youtube-watch-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-youtube-watch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-fenix-youtube-watch-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-youtube-watch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-geckoview-youtube-watch-nofis**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-essential-refbrow-youtube-watch**
-        - ❌
-        - ❌
-        - ❌
-        - ❌
-      * - **browsertime-tp6m-live-chrome-m-youtube-watch-nofis**
         - ❌
         - ❌
         - ❌

@@ -561,15 +561,12 @@ browsertime-trr-performance-m:
         apps: [fenix]
         run-visual-metrics: false
         subtests:
-            - dns-multi
-            - dns-native
-            - dns-usatdy
-            - trr-cloudf
-            - trr-multi
-            - trr-next
-            - trr-usatdy
-            - trr-w-clou
-            - trr-w-next
+            - trr-clou-m
+            - trr-next-m
+            - trr-natv-m
+            - trr-multm
+            - trr-w-cl-m
+            - trr-w-ne-m
 
     description: Raptor (browsertime) trr performance tests, mobile
     max-run-time: 600
@@ -578,7 +575,6 @@ browsertime-trr-performance-m:
             fenix:
                 by-test-platform:
                     android-hw-a55.*shippable.*: [mozilla-central]
-                    android-hw-p6.*shippable.*: [mozilla-central]
                     default: []
     tier: 3
     treeherder-symbol: Btime(trrperfm)

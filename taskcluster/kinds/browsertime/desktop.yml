@@ -1248,17 +1248,14 @@ browsertime-trr-performance:
         apps: [firefox]
         run-visual-metrics: false
         subtests:
-            - dns-multi
-            - dns-native
-            - dns-usatdy
-            - trr-cira
             - trr-cloudf
+            - trr-cira
             - trr-comcas
-            - trr-multi
             - trr-next
-            - trr-usatdy
-            - trr-w-cira
+            - trr-native
+            - trr-multi
             - trr-w-clou
+            - trr-w-cira
             - trr-w-comc
             - trr-w-next
 
