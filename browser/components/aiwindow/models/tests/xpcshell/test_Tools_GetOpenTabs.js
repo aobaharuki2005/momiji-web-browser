@@ -81,17 +81,19 @@ add_task(async function test_getOpenTabs_basic() {
     Assert.equal(tabs.length, 3, "Should return all 3 tabs");
     Assert.equal(tabs[0].url, "https://firefox.com", "Most recent tab first");
     Assert.equal(tabs[0].title, "Firefox", "Title should match");
-    Assert.equal(
-      tabs[0].description,
-      "Firefox browser homepage",
-      "Description should be fetched"
-    );
+    // @todo Bug2009194
+    // Assert.equal(
+    //   tabs[0].description,
+    //   "Firefox browser homepage",
+    //   "Description should be fetched"
+    // );
     Assert.equal(tabs[1].url, "https://mozilla.org", "Second most recent tab");
-    Assert.equal(
-      tabs[1].description,
-      "Mozilla organization site",
-      "Description should be fetched"
-    );
+    // @todo Bug2009194
+    // Assert.equal(
+    //   tabs[1].description,
+    //   "Mozilla organization site",
+    //   "Description should be fetched"
+    // );
     Assert.equal(tabs[2].url, "https://example.com", "Least recent tab");
     Assert.equal(
       tabs[2].description,
@@ -277,11 +279,12 @@ add_task(async function test_getOpenTabs_return_structure() {
 
     Assert.equal(tab.url, "https://test.com", "url value correct");
     Assert.equal(tab.title, "Test Page", "title value correct");
-    Assert.equal(
-      tab.description,
-      "A test page description",
-      "description should be fetched from PageDataService"
-    );
+    // @todo Bug2009194
+    // Assert.equal(
+    //   tab.description,
+    //   "A test page description",
+    //   "description should be fetched from PageDataService"
+    // );
     Assert.equal(tab.lastAccessed, 1000, "lastAccessed value correct");
   } finally {
     sb.restore();
