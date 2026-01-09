@@ -177,17 +177,18 @@ void SVGGeometryFrame::PaintSVG(gfxContext& aContext,
 
   uint32_t paintOrder = StyleSVG()->mPaintOrder;
   if (!paintOrder) {
-    Render(&aContext, eRenderFill | eRenderStroke, newMatrix, aImgParams);
+    Render(&aContext, RenderFlags(RenderFlag::Fill, RenderFlag::Stroke),
+           newMatrix, aImgParams);
     PaintMarkers(aContext, aTransform, aImgParams);
   } else {
     while (paintOrder) {
       auto component = StylePaintOrder(paintOrder & kPaintOrderMask);
       switch (component) {
         case StylePaintOrder::Fill:
-          Render(&aContext, eRenderFill, newMatrix, aImgParams);
+          Render(&aContext, RenderFlag::Fill, newMatrix, aImgParams);
           break;
         case StylePaintOrder::Stroke:
-          Render(&aContext, eRenderStroke, newMatrix, aImgParams);
+          Render(&aContext, RenderFlag::Stroke, newMatrix, aImgParams);
           break;
         case StylePaintOrder::Markers:
           PaintMarkers(aContext, aTransform, aImgParams);
@@ -550,7 +551,8 @@ gfxMatrix SVGGeometryFrame::GetCanvasTM() {
   return content->ChildToUserSpaceTransform() * parent->GetCanvasTM();
 }
 
-void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
+void SVGGeometryFrame::Render(gfxContext* aContext,
+                              RenderFlags aRenderComponents,
                               const gfxMatrix& aTransform,
                               imgDrawingParams& aImgParams) {
   MOZ_ASSERT(!aTransform.IsSingular());
@@ -602,7 +604,7 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
   SVGContextPaint* contextPaint =
       SVGContextPaint::GetContextPaint(GetContent());
 
-  if (aRenderComponents & eRenderFill) {
+  if (aRenderComponents.contains(RenderFlag::Fill)) {
     GeneralPattern fillPattern;
     SVGUtils::MakeFillPatternFor(this, aContext, &fillPattern, aImgParams,
                                  contextPaint);
@@ -617,7 +619,7 @@ void SVGGeometryFrame::Render(gfxContext* aContext, uint32_t aRenderComponents,
     }
   }
 
-  if ((aRenderComponents & eRenderStroke) &&
+  if (aRenderComponents.contains(RenderFlag::Stroke) &&
       SVGUtils::HasStroke(this, contextPaint)) {
     // Account for vector-effect:non-scaling-stroke:
     gfxMatrix userToOuterSVG;
