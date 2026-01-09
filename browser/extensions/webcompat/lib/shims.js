@@ -353,14 +353,8 @@ class Shim {
 
   async _unregisterContentScripts() {
     if (this.shouldUseScriptingAPI) {
-      const ids = (
-        await browser.scripting.getRegisteredContentScripts({
-          ids: this._contentScriptRegistrations,
-        })
-      )?.map(script => script.id);
-      if (ids?.length) {
-        await browser.scripting.unregisterContentScripts({ ids });
-      }
+      const ids = this._contentScriptRegistrations;
+      await browser.scripting.unregisterContentScripts({ ids });
     } else {
       for (const registration of this._contentScriptRegistrations) {
         registration.unregister();
