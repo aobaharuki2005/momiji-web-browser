@@ -141,9 +141,9 @@ static LocaleObject* CreateLocaleObject(JSContext* cx, HandleObject prototype,
     return nullptr;
   }
 
-  locale->setFixedSlot(LocaleObject::LANGUAGE_TAG_SLOT, StringValue(tagStr));
-  locale->setFixedSlot(LocaleObject::BASENAME_SLOT, StringValue(baseName));
-  locale->setFixedSlot(LocaleObject::UNICODE_EXTENSION_SLOT, unicodeExtension);
+  locale->initFixedSlot(LocaleObject::LANGUAGE_TAG_SLOT, StringValue(tagStr));
+  locale->initFixedSlot(LocaleObject::BASENAME_SLOT, StringValue(baseName));
+  locale->initFixedSlot(LocaleObject::UNICODE_EXTENSION_SLOT, unicodeExtension);
 
   return locale;
 }
