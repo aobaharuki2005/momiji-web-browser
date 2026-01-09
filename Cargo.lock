@@ -6694,6 +6694,8 @@ dependencies = [
  "smallvec",
  "static_assertions",
  "static_prefs",
+ "strum",
+ "strum_macros",
  "style_derive",
  "style_traits",
  "thin-vec",
