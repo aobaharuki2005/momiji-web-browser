@@ -6,8 +6,6 @@
 import sys
 from pathlib import PurePath
 
-from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
-
 from ..cli import BaseTryParser
 from ..push import check_working_directory, generate_try_task_config, push_to_try
 from ..tasks import filter_tasks_by_paths, filter_tasks_by_worker_type, generate_tasks
@@ -138,6 +136,8 @@ def run(
     new_test_config=False,
     **kwargs,
 ):
+    from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
+
     fzf = fzf_bootstrap(update)
 
     if not fzf:
@@ -160,6 +160,7 @@ def run(
     all_tasks = tg.tasks
 
     if not full and not disable_target_task_filter:
+
         all_tasks = {
             task_name: task
             for task_name, task in all_tasks.items()

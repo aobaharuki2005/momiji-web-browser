@@ -13,7 +13,9 @@ import hashlib
 import os
 import re
 import time
+from pathlib import Path
 
+import taskgraph
 from mozbuild.util import memoize
 from mozilla_taskgraph.util.signed_artifacts import get_signed_artifacts
 from taskcluster.utils import fromNow
@@ -43,16 +45,8 @@ from gecko_taskgraph.util.partners import get_partners_to_be_published
 from gecko_taskgraph.util.scriptworker import BALROG_ACTIONS, get_release_config
 from gecko_taskgraph.util.workertypes import get_worker_type, worker_type_implementation
 
-RUN_TASK_HG = os.path.join(GECKO, "taskcluster", "scripts", "run-task")
-RUN_TASK_GIT = os.path.join(
-    GECKO,
-    "third_party",
-    "python",
-    "taskcluster_taskgraph",
-    "taskgraph",
-    "run-task",
-    "run-task",
-)
+RUN_TASK_HG = Path(GECKO, "taskcluster", "scripts", "run-task")
+RUN_TASK_GIT = Path(taskgraph.__file__).parent / "run-task" / "run-task"
 
 SCCACHE_GCS_PROJECT = "sccache-3"
 
@@ -61,8 +55,8 @@ SCCACHE_GCS_PROJECT = "sccache-3"
 def _run_task_suffix(repo_type):
     """String to append to cache names under control of run-task."""
     if repo_type == "hg":
-        return hash_path(RUN_TASK_HG)[0:20]
-    return hash_path(RUN_TASK_GIT)[0:20]
+        return hash_path(str(RUN_TASK_HG))[0:20]
+    return hash_path(str(RUN_TASK_GIT))[0:20]
 
 
 def _compute_geckoview_version(app_version, moz_build_date):

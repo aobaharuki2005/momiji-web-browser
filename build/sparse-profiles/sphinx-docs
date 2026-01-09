@@ -3,6 +3,7 @@
 [include]
 # List of dependencies for the command
 path:python/sites/docs.txt
+path:taskcluster/requirements.txt
 
 # Code for generating docs.
 glob:docs/**
