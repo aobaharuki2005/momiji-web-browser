@@ -399,8 +399,9 @@ SVGBBox SVGGeometryFrame::GetBBoxContribution(const Matrix& aToBBoxUserspace,
 
   SVGContentUtils::AutoStrokeOptions strokeOptions;
   if (getStroke) {
-    SVGContentUtils::GetStrokeOptions(&strokeOptions, element, Style(), nullptr,
-                                      SVGContentUtils::eIgnoreStrokeDashing);
+    SVGContentUtils::GetStrokeOptions(
+        &strokeOptions, element, Style(), nullptr,
+        SVGContentUtils::StrokeOptionFlag::IgnoreStrokeDashing);
   } else {
     // Override the default line width of 1.f so that when we call
     // GetGeometryBounds below the result doesn't include stroke bounds.
