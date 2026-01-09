@@ -9,7 +9,7 @@ add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("allowed to install add-ons", "permissions");
+  await evaluateSearchResults("allowed to install add-ons", "permissionsGroup");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
@@ -22,7 +22,7 @@ add_task(async function () {
   });
   await evaluateSearchResults(
     "identify these certificate authorities",
-    "certificates"
+    "certSelection"
   );
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

@@ -129,10 +129,7 @@ export class SettingPane extends MozLitElement {
 
   /** @param {string} groupId */
   groupTemplate(groupId) {
-    return html`<setting-group
-      groupid=${groupId}
-      .inSubPane=${this.isSubPane}
-    ></setting-group>`;
+    return html`<setting-group groupid=${groupId}></setting-group>`;
   }
 
   render() {

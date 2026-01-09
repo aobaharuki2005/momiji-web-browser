@@ -9,6 +9,6 @@ add_task(async function () {
   await openPreferencesViaOpenPreferencesAPI("paneGeneral", {
     leaveOpen: true,
   });
-  await evaluateSearchResults("open pop-up windows", "permissions");
+  await evaluateSearchResults("open pop-up windows", "permissionsGroup");
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });

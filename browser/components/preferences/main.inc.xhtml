@@ -22,16 +22,29 @@
 </hbox>
 
 <!-- Startup -->
-<html:setting-group id="startupGroup" groupid="startup" data-category="paneGeneral" hidden="true"/>
+<groupbox id="startupGroup"
+          data-category="paneGeneral"
+          hidden="true">
+  <label><html:h2 data-l10n-id="startup-header"/></label>
+
+  <vbox id="startupPageBox">
+    <html:setting-group groupid="startup"/>
+  </vbox>
+
+</groupbox>
 
 <!-- Data migration -->
 <html:setting-group groupid="importBrowserData" id="dataMigrationGroup" data-category="paneGeneral" hidden="true" />
 
 <!-- Profiles -->
-<html:setting-group id="profilesGroup" groupid="profiles" data-category="paneGeneral" hidden="true" />
+<groupbox id="profilesGroup" data-category="paneGeneral" hidden="true">
+  <html:setting-group groupid="profiles" data-category="paneGeneral"></html:setting-group>
+</groupbox>
 
 <!-- Tab preferences -->
-<html:setting-group data-category="paneGeneral" hidden="true" groupid="tabs" />
+<groupbox data-category="paneGeneral" hidden="true">
+  <html:setting-group groupid="tabs"></html:setting-group>
+</groupbox>
 
 <!-- Browser layout -->
 <groupbox data-category="paneGeneral"
@@ -58,7 +71,11 @@
 </hbox>
 
 <!-- Website appearance -->
-<html:setting-group groupid="appearance" data-category="paneGeneral" hidden="true"></html:setting-group>
+<groupbox id="webAppearanceGroup" data-category="paneGeneral" hidden="true">
+  <html:h2 data-l10n-id="preferences-web-appearance-header"/>
+  <description class="description-deemphasized" data-l10n-id="preferences-web-appearance-description" />
+  <html:setting-group groupid="appearance"></html:setting-group>
+</groupbox>
 
 <!-- Colors -->
 <html:setting-group id="contrastControlGroup" groupid="contrast" data-category="paneGeneral" hidden="true" />
@@ -254,7 +271,9 @@
 </hbox>
 
 <!--Downloads-->
-<html:setting-group groupid="downloads" data-category="paneGeneral" hidden="true"/>
+<groupbox id="downloadsGroup" data-category="paneGeneral" hidden="true">
+  <html:setting-group groupid="downloads"/>
+</groupbox>
 
 <groupbox id="applicationsGroup" data-category="paneGeneral" hidden="true">
   <label><html:h2 data-l10n-id="applications-header"/></label>
@@ -290,7 +309,12 @@
 
 
 <!-- DRM Content -->
-<html:setting-group groupid="drm" data-category="paneGeneral" data-subcategory="drm" hidden="true" />
+<groupbox id="drmGroup" data-category="paneGeneral" data-subcategory="drm" hidden="true">
+  <label class="section-heading">
+    <html:h2 data-l10n-id="drm-content-header"/>
+  </label>
+  <html:setting-group groupid="drm" />
+</groupbox>
 
 <hbox id="updatesCategory"
       class="subcategory"
@@ -465,12 +489,51 @@
 <!-- Support -->
 <html:setting-group groupid="support" data-category="paneGeneral" hidden="true" />
 
+<hbox id="performanceCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <html:h1 data-l10n-id="performance-title"/>
+</hbox>
+
 <!-- Performance -->
-<html:setting-group groupid="performance" data-category="paneGeneral" hidden="true" />
+<groupbox id="performanceGroup" data-category="paneGeneral" hidden="true">
+  <label class="search-header section-heading" hidden="true"><html:h2 data-l10n-id="performance-title"/></label>
+  <html:setting-group groupid="performance" />
+</groupbox>
+
+<hbox id="browsingCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <html:h1 data-l10n-id="browsing-title"/>
+</hbox>
 
 <!-- Browsing -->
-<html:setting-group groupid="browsing" data-category="paneGeneral" hidden="true"/>
+<groupbox id="browsingGroup" data-category="paneGeneral" hidden="true">
+  <label class="search-header section-heading" hidden="true"><html:h2 data-l10n-id="browsing-title"/></label>
+
+  <html:setting-group groupid="browsing"/>
+</groupbox>
+
+<hbox id="networkProxyCategory"
+      class="subcategory"
+      hidden="true"
+      data-category="paneGeneral">
+  <html:h1 data-l10n-id="network-settings-title"/>
+</hbox>
 
 <!-- Network Settings-->
-<html:setting-group groupid="networkProxy" data-category="paneGeneral" data-subcategory="netsettings" hidden="true" />
+<groupbox id="connectionGroup" data-category="paneGeneral" hidden="true">
+  <label class="search-header" hidden="true"><html:h2 data-l10n-id="network-settings-title"/></label>
+  <description flex="1" control="connectionSettings" data-subcategory="netsettings"
+    class="section-description">
+    <html:span id="connectionSettingsDescription"/>
+    <html:a is="moz-support-link"
+          data-l10n-id="network-proxy-connection-learn-more"
+          support-page="prefs-connection-settings"
+    />
+  </description>
+  <html:setting-group groupid="networkProxy" />
+</groupbox>
 </html:template>

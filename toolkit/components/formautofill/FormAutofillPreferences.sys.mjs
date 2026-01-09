@@ -50,8 +50,7 @@ const { ENABLED_AUTOFILL_ADDRESSES_PREF, ENABLED_AUTOFILL_CREDITCARDS_PREF } =
 
 const FORM_AUTOFILL_CONFIG = {
   payments: {
-    l10nId: "payments-group",
-    headingLevel: 2,
+    l10nId: "autofill-payment-methods-header",
     items: [
       {
         id: "saveAndFillPayments",
@@ -79,8 +78,7 @@ const FORM_AUTOFILL_CONFIG = {
     ],
   },
   addresses: {
-    l10nId: "addresses-group",
-    headingLevel: 2,
+    l10nId: "autofill-addresses-header",
     items: [
       {
         id: "saveAndFillAddresses",
@@ -184,9 +182,19 @@ export class FormAutofillPreferences {
       },
     });
 
-    win.SettingGroupManager.registerGroups(FORM_AUTOFILL_CONFIG);
-    win.initSettingGroup("payments");
-    win.initSettingGroup("addresses");
+    let paymentsGroup = document.querySelector(
+      "setting-group[groupid=payments]"
+    );
+    paymentsGroup.config = FORM_AUTOFILL_CONFIG.payments;
+    paymentsGroup.getSetting = win.Preferences.getSetting.bind(win.Preferences);
+
+    let addressesGroup = document.querySelector(
+      "setting-group[groupid=addresses]"
+    );
+    addressesGroup.config = FORM_AUTOFILL_CONFIG.addresses;
+    addressesGroup.getSetting = win.Preferences.getSetting.bind(
+      win.Preferences
+    );
     Services.obs.notifyObservers(win, "formautofill-preferences-initialized");
   }
 

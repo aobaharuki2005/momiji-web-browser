@@ -137,9 +137,7 @@ add_task(async function () {
   await aboutPrefPromise;
   let aboutPrefTab = win.gBrowser.selectedTab;
   let prefDoc = win.gBrowser.selectedBrowser.contentDocument;
-  let siteDataGroup = prefDoc.querySelector(
-    'setting-group:is([groupid="cookiesAndSiteData"], [groupid="cookiesAndSiteData2"])'
-  );
+  let siteDataGroup = prefDoc.getElementById("siteDataGroup");
   is_element_visible(
     siteDataGroup,
     "Should open to the siteDataGroup section in about:preferences"

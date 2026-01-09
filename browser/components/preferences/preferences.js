@@ -625,20 +625,16 @@ function spotlight(subcategory, category) {
 }
 
 function scrollAndHighlight(subcategory) {
-  let elements = document.querySelectorAll(
-    `[data-subcategory~="${subcategory}"]`
-  );
-  if (!elements.length) {
+  let element = document.querySelector(`[data-subcategory="${subcategory}"]`);
+  if (!element) {
     return;
   }
 
-  elements[0].scrollIntoView({
+  element.scrollIntoView({
     behavior: "smooth",
     block: "center",
   });
-  for (let element of elements) {
-    element.classList.add("spotlight");
-  }
+  element.classList.add("spotlight");
 }
 
 function friendlyPrefCategoryNameToInternalName(aName) {
