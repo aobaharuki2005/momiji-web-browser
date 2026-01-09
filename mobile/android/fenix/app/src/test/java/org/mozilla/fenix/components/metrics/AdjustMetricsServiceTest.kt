@@ -7,15 +7,25 @@ package org.mozilla.fenix.components.metrics
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import io.mockk.every
+import io.mockk.mockk
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.Settings
 
 @RunWith(AndroidJUnit4::class)
 internal class AdjustMetricsServiceTest {
     val context: Context = ApplicationProvider.getApplicationContext()
+
+    @Before
+    fun setup() {
+        every { testContext.components.nimbus } returns mockk(relaxed = true)
+    }
 
     @Test
     fun `WHEN Adjust attribution data already exist THEN already known is true`() {

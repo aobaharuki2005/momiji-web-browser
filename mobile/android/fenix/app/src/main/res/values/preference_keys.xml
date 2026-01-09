@@ -61,8 +61,11 @@
     <string name="pref_key_private_browsing" translatable="false">pref_key_private_browsing</string>
     <string name="pref_key_leakcanary" translatable="false">pref_key_leakcanary</string>
     <string name="pref_key_remote_debugging" translatable="false">pref_key_remote_debugging</string>
+    <string name="pref_key_remote_improvements" translatable="false">pref_key_remote_improvements</string>
     <string name="pref_key_crash_reporting_choice" translatable="false">pref_key_crash_reporting_choice</string>
     <string name="pref_key_experimentation_v2" translatable="false">pref_key_experimentation_v2</string>
+    <string name="pref_key_rollouts" translatable="false">pref_key_rollouts</string>
+    <string name="pref_key_rollouts_learn_more" translatable="false">pref_key_rollouts_learn_more</string>
     <string name="pref_key_user_disabled_experimentation" translatable="false">pref_key_user_disabled_experimentation</string>
     <string name="pref_key_private_mode_opened" translatable="false">pref_key_private_mode_opened</string>
     <string name="pref_key_open_in_app_opened" translatable="false">pref_key_open_in_app_opened</string>

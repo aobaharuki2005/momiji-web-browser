@@ -42,6 +42,7 @@ object SupportUtils {
         TRACKING_PROTECTION("tracking-protection-firefox-android"),
         TOTAL_COOKIE_PROTECTION("enhanced-tracking-protection-android"),
         OPT_OUT_STUDIES("how-opt-out-studies-firefox-android"),
+        REMOTE_IMPROVEMENTS("remote-improvements"),
         SEND_TABS("send-tab-preview"),
         SET_AS_DEFAULT_BROWSER("make-firefox-default-browser-android"),
         SEARCH_SUGGESTION("how-search-firefox-preview"),

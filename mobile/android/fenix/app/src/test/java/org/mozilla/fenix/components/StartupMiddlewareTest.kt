@@ -32,6 +32,8 @@ class StartupMiddlewareTest {
 
     @Before
     fun setup() {
+        every { testContext.components.nimbus } returns mockk(relaxed = true)
+
         useCases = mockk(relaxed = true)
         settings = Settings(testContext)
         repository = DefaultHomepageAsANewTabPreferenceRepository(settings)

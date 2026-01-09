@@ -8,6 +8,8 @@ import android.app.PendingIntent
 import android.content.Intent
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import io.mockk.every
+import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.state.state.ReaderState
@@ -57,6 +59,7 @@ import org.mozilla.fenix.components.menu.store.BrowserMenuState
 import org.mozilla.fenix.components.menu.store.MenuAction
 import org.mozilla.fenix.components.menu.store.MenuState
 import org.mozilla.fenix.components.menu.store.MenuStore
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.utils.LastSavedFolderCache
 import org.mozilla.fenix.utils.Settings
 import org.robolectric.RobolectricTestRunner
@@ -92,6 +95,8 @@ class MenuDialogMiddlewareTest {
 
     @Before
     fun setup() {
+        every { testContext.components.nimbus } returns mockk(relaxed = true)
+
         alertDialogBuilder = mock()
         pinnedSiteStorage = mock()
         addPinnedSiteUseCase = mock()
