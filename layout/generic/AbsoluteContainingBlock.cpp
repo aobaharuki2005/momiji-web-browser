@@ -1326,6 +1326,7 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
       // The current containing block, with ongoing modifications.
       // Starts as a local containing block.
       nsRect containingBlock = aOriginalContainingBlockRect;
+      nsRect scrollableContainingBlock = aOriginalScrollableContainingBlockRect;
       const auto defaultAnchorInfo = [&]() -> Maybe<AnchorPosInfo> {
         if (!aAnchorPosResolutionCache) {
           return Nothing{};
@@ -1339,6 +1340,18 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
         // containing block.
         // https://github.com/w3c/csswg-drafts/issues/12552#issuecomment-3210696721
         containingBlock = aOriginalScrollableContainingBlockRect;
+      }
+
+      if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
+        if (IsSnapshotContainingBlock(aKidFrame)) {
+          return ContainingBlockRect{
+              dom::ViewTransition::SnapshotContainingBlockRect(
+                  viewport->PresContext())};
+        }
+        MOZ_ASSERT(aOriginalScrollableContainingBlockRect ==
+                   aOriginalContainingBlockRect);
+        containingBlock = scrollableContainingBlock =
+            viewport->GetContainingBlockAdjustedForScrollbars(aReflowInput);
       }
 
       // https://drafts.csswg.org/css-position/#original-cb
@@ -1382,24 +1395,12 @@ void AbsoluteContainingBlock::ReflowAbsoluteFrame(
           aAnchorPosResolutionCache->mReferenceData->mScrollCompensatedSides =
               GetScrollCompensatedSidesFor(resolvedPositionArea);
           return ContainingBlockRect{
-              offset, resolvedPositionArea,
-              aOriginalScrollableContainingBlockRect,
+              offset, resolvedPositionArea, scrollableContainingBlock,
               // Unscroll the CB by canceling out the previously applied
               // scroll offset (See above), the offset will be applied later.
               scrolledAnchorCb + offset};
         }
-        return ContainingBlockRect{aOriginalScrollableContainingBlockRect,
-                                   containingBlock};
-      }
-
-      if (ViewportFrame* viewport = do_QueryFrame(aDelegatingFrame)) {
-        if (!IsSnapshotContainingBlock(aKidFrame)) {
-          return ContainingBlockRect{
-              viewport->GetContainingBlockAdjustedForScrollbars(aReflowInput)};
-        }
-        return ContainingBlockRect{
-            dom::ViewTransition::SnapshotContainingBlockRect(
-                viewport->PresContext())};
+        return ContainingBlockRect{scrollableContainingBlock, containingBlock};
       }
       return ContainingBlockRect{containingBlock};
     }();
