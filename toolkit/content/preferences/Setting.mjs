@@ -109,6 +109,8 @@ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs
  * @property {string} l10nId A fluent id to show in a controlled by extension message.
  * @property {string} [name] The controlling extension's name.
  * @property {string} [id] The controlling extension's id.
+ * @property {string} [supportPage] A support page to show in the message.
+ * @property {boolean} [allowControl] If the control should be enabled while controlled.
  */
 
 /**
@@ -116,7 +118,7 @@ import { Preferences } from "chrome://global/content/preferences/Preferences.mjs
  * @property {string} id - The ID for the Setting, this should match the layout id
  * @property {string} [pref] - A {@link Services.prefs} id that will be used as the backend if it is provided
  * @property {string[]} [deps] - An array of setting IDs that this setting depends on, when these settings change this setting will emit a change event to update the UI
- * @property {Pick<SettingControllingExtensionInfo, "storeId" | "l10nId">} [controllingExtensionInfo] Data related to the setting being controlled by an extension.
+ * @property {Pick<SettingControllingExtensionInfo, "storeId" | "l10nId" | "allowControl" | "supportPage">} [controllingExtensionInfo] Data related to the setting being controlled by an extension.
  * @property {SettingVisibleCallback} [visible] - Function to determine if a setting is visible in the UI
  * @property {SettingGetCallback} [get] - Function to get the value of the setting. Optional if {@link SettingConfig#pref} is set.
  * @property {SettingSetCallback} [set] - Function to set the value of the setting. Optional if {@link SettingConfig#pref} is set.

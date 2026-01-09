@@ -263,7 +263,7 @@ export class SettingControl extends SettingElement {
       "?disabled":
         this.setting.disabled ||
         this.setting.locked ||
-        this.isControlledByExtension(),
+        this.isDisabledByExtension(),
       // Hide moz-message-bar directly to maintain the role=alert functionality.
       // This setting-control will be visually hidden in CSS.
       ".hidden": config.control == "moz-message-bar" && this.hidden,
@@ -326,6 +326,13 @@ export class SettingControl extends SettingElement {
     return (
       this.setting.controllingExtensionInfo?.id &&
       this.setting.controllingExtensionInfo?.name
+    );
+  }
+
+  isDisabledByExtension() {
+    return (
+      this.isControlledByExtension() &&
+      !this.setting.controllingExtensionInfo.allowControl
     );
   }
 

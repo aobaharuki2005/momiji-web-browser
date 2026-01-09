@@ -1,6 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+/**
+ * @import { SettingControl } from "chrome://browser/content/preferences/widgets/setting-control.mjs"
+ */
+
 const { NimbusTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/NimbusTestUtils.sys.mjs"
 );
@@ -773,14 +777,31 @@ async function waitForSettingControlChange(control) {
  * Wait for the current setting pane to change.
  *
  * @param {string} paneId
+ * @param {Window} [win] The window to check, defaults to current window.
  */
-async function waitForPaneChange(paneId) {
-  let doc = gBrowser.selectedBrowser.contentDocument;
-  let event = await BrowserTestUtils.waitForEvent(doc, "paneshown");
+async function waitForPaneChange(
+  paneId,
+  win = gBrowser.selectedBrowser.ownerGlobal
+) {
+  let event = await BrowserTestUtils.waitForEvent(win.document, "paneshown");
   let expectId = paneId.startsWith("pane")
     ? paneId
     : `pane${paneId[0].toUpperCase()}${paneId.substring(1)}`;
   is(event.detail.category, expectId, "Loaded the correct pane");
+}
+
+/**
+ * Get a reference to the setting-control for a specific setting ID.
+ *
+ * @param {string} settingId The setting ID
+ * @param {Window} [win] The window to check, defaults to current window.
+ * @returns {SettingControl}
+ */
+function getSettingControl(
+  settingId,
+  win = gBrowser.selectedBrowser.ownerGlobal
+) {
+  return win.document.getElementById(`setting-control-${settingId}`);
 }
 
 function getControl(doc, id) {
