@@ -46,6 +46,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -376,16 +377,10 @@ class ThreeDotMenuMainRobot(private val composeTestRule: ComposeTestRule) {
 
     @OptIn(ExperimentalTestApi::class)
     fun verifyExtensionsButtonWithInstalledExtension(extensionTitle: String) {
-        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Waiting for $waitingTime for the collapsed \"Extensions\" button with installed $extensionTitle to exist.")
-        composeTestRule.waitUntilAtLeastOneExists(hasContentDescription(extensionTitle, substring = true, ignoreCase = true), waitingTime)
-        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Waited for $waitingTime for the collapsed \"Extensions\" button with installed $extensionTitle to exist.")
-        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Trying to verify that the collapsed \"Extensions\" button with installed $extensionTitle exists.")
-        composeTestRule.onNode(
-            hasTestTag("mainMenu.extensions"),
-        ).assert(
-            hasContentDescription(extensionTitle, substring = true, ignoreCase = true),
-        ).assertIsDisplayed()
-        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Verified that the collapsed \"Extensions\" button with installed $extensionTitle exists.")
+        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Waiting for the compose test rule to be idle.")
+        composeTestRule.waitForIdle()
+        Log.i(TAG, "verifyExtensionsButtonWithInstalledExtension: Waited for the compose test rule to be idle.")
+        assertUIObjectExists(itemWithResIdAndDescription("mainMenu.extensions", extensionTitle))
     }
 
     @OptIn(ExperimentalTestApi::class)
