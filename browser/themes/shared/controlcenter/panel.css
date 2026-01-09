@@ -960,6 +960,7 @@
     background-repeat: no-repeat;
     background-size: var(--icon-size);
     padding-inline-start: calc(var(--icon-size) + var(--space-small));
+    -moz-context-properties: fill;
 
     &:-moz-locale-dir(rtl) {
       background-position-x: right;
