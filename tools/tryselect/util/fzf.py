@@ -10,6 +10,7 @@ import subprocess
 import sys
 
 import mozfile
+from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
 from mach.util import get_state_dir
 from mozboot.util import http_download_and_save
 from mozbuild.base import MozbuildObject
@@ -351,8 +352,6 @@ def setup_tasks_for_fzf(
     full=False,
     disable_target_task_filter=False,
 ):
-    from gecko_taskgraph.target_tasks import filter_by_uncommon_try_tasks
-
     check_working_directory(push)
     tg = generate_tasks(
         parameters, full=full, disable_target_task_filter=disable_target_task_filter

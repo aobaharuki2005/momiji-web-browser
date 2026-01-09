@@ -12,13 +12,16 @@ import pathlib
 import shutil
 from collections import OrderedDict
 
+# As a result of the selective module loading changes, this import has to be
+# done here. It is not explicitly used, but it has an implicit side-effect
+# (bringing in TASKCLUSTER_ROOT_URL) which is necessary.
+import gecko_taskgraph.main  # noqa: F401
 import mozversioncontrol
 from mach.decorators import Command, CommandArgument, SubCommand
 
 from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.base import MachCommandConditions as conditions
 from mozbuild.dirutils import ensureParentDir
-from mozbuild.util import get_root_url, get_taskcluster_client
 
 _COULD_NOT_FIND_ARTIFACTS_TEMPLATE = (
     "ERROR!!!!!! Could not find artifacts for a toolchain build named "
@@ -287,6 +290,7 @@ def artifact_toolchain(
 
     import redo
     import requests
+    from taskgraph.util.taskcluster import get_artifact_url
 
     from mozbuild.action.tooltool import FileRecord, open_manifest, unpack_file
     from mozbuild.artifacts import ArtifactCache
@@ -312,8 +316,9 @@ def artifact_toolchain(
         cache_dir = os.path.join(command_context._mach_context.state_dir, "toolchains")
 
     tooltool_host = os.environ.get("TOOLTOOL_HOST", "tooltool.mozilla-releng.net")
-    if "TASKCLUSTER_PROXY_URL" in os.environ:
-        tooltool_url = f"{get_root_url()}/{tooltool_host}"
+    taskcluster_proxy_url = os.environ.get("TASKCLUSTER_PROXY_URL")
+    if taskcluster_proxy_url:
+        tooltool_url = f"{taskcluster_proxy_url}/{tooltool_host}"
     else:
         tooltool_url = f"https://{tooltool_host}"
 
@@ -338,12 +343,10 @@ def artifact_toolchain(
 
     class ArtifactRecord(DownloadRecord):
         def __init__(self, task_id, artifact_name):
-            queue = get_taskcluster_client("queue")
             for _ in redo.retrier(attempts=retry + 1, sleeptime=60):
-                cot_url = queue.buildUrl(
-                    "getArtifact", task_id, "public/chain-of-trust.json"
+                cot = cache._download_manager.session.get(
+                    get_artifact_url(task_id, "public/chain-of-trust.json")
                 )
-                cot = cache._download_manager.session.get(cot_url)
                 if cot.status_code >= 500:
                     continue
                 cot.raise_for_status()
@@ -359,18 +362,11 @@ def artifact_toolchain(
                 pass
 
             name = os.path.basename(artifact_name)
-            if (
-                not artifact_name.startswith("public/")
-                and "TASKCLUSTER_PROXY_URL" in os.environ
-            ):
-                artifact_url = queue.buildUrl(
-                    "getLatestArtifact", task_id, artifact_name
-                )
-            else:
-                public_queue = get_taskcluster_client("queue", block_proxy=True)
-                artifact_url = public_queue.buildUrl(
-                    "getLatestArtifact", task_id, artifact_name
-                )
+            artifact_url = get_artifact_url(
+                task_id,
+                artifact_name,
+                use_proxy=not artifact_name.startswith("public/"),
+            )
             super().__init__(artifact_url, name, None, digest, algorithm, unpack=True)
 
     records = OrderedDict()

@@ -59,11 +59,13 @@ from mozpack import executables
 from mozpack.files import FileFinder, JarFinder, TarFinder
 from mozpack.mozjar import JarReader, JarWriter
 from mozpack.packager.unpack import UnpackFinder
+from taskcluster.exceptions import TaskclusterRestFailure
+from taskgraph.util.taskcluster import find_task_id, get_artifact_url, list_artifacts
 
 from mozbuild.artifact_builds import JOB_CHOICES
 from mozbuild.artifact_cache import ArtifactCache
 from mozbuild.dirutils import ensureParentDir, mkdir
-from mozbuild.util import FileAvoidWrite, get_root_url, get_taskcluster_client
+from mozbuild.util import FileAvoidWrite
 
 # Number of candidate pushheads to cache per parent changeset.
 NUM_PUSHHEADS_TO_QUERY_PER_PARENT = 50
@@ -1171,13 +1173,8 @@ class TaskCache(CacheManager):
             {"namespace": namespace},
             "Searching Taskcluster index with namespace: {namespace}",
         )
-
-        from taskcluster.exceptions import TaskclusterRestFailure
-
         try:
-            index = get_taskcluster_client("index")
-            task = index.findTask(namespace)
-            taskId = task["taskId"]
+            taskId = find_task_id(namespace)
         except (KeyError, TaskclusterRestFailure) as e:
             if isinstance(e, TaskclusterRestFailure) and e.status_code != 404:
                 raise
@@ -1186,9 +1183,7 @@ class TaskCache(CacheManager):
             # care about; and even those that do may not have completed yet.
             raise ValueError(f"Task for {namespace} does not exist (yet)!")
 
-        queue = get_taskcluster_client("queue")
-        response = queue.listLatestArtifacts(taskId)
-        return taskId, response["artifacts"]
+        return taskId, list_artifacts(taskId)
 
 
 class Artifacts:
@@ -1598,9 +1593,7 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
 
         urls = []
         for artifact_name in self._artifact_job.find_candidate_artifacts(artifacts):
-            url = (
-                f"{get_root_url()}/api/queue/v1/task/{taskId}/artifacts/{artifact_name}"
-            )
+            url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if urls:
             self.log(
@@ -1816,15 +1809,11 @@ https://firefox-source-docs.mozilla.org/contributing/vcs/mercurial_bundles.html
         return self._install_from_hg_pushheads(pushheads, distdir)
 
     def install_from_task(self, taskId, distdir):
-        queue = get_taskcluster_client("queue")
-        response = queue.listLatestArtifacts(taskId)
-        artifacts = response["artifacts"]
+        artifacts = list_artifacts(taskId)
 
         urls = []
         for artifact_name in self._artifact_job.find_candidate_artifacts(artifacts):
-            url = (
-                f"{get_root_url()}/api/queue/v1/task/{taskId}/artifacts/{artifact_name}"
-            )
+            url = get_artifact_url(taskId, artifact_name)
             urls.append(url)
         if not urls:
             raise ValueError(f"Task {taskId} existed, but no artifacts found!")

@@ -10,7 +10,6 @@ import time
 from collections import defaultdict
 from pathlib import Path
 
-import taskgraph
 import yaml
 from redo import retry
 from taskgraph import create
@@ -244,7 +243,9 @@ def taskgraph_decision(options, parameters=None):
     # upload run-task, fetch-content, robustcheckout.py and more as artifacts
     mozharness_dir = Path(GECKO, "testing", "mozharness")
     scripts_dir = Path(GECKO, "taskcluster", "scripts")
-    taskgraph_dir = Path(taskgraph.__file__).parent
+    taskgraph_dir = Path(
+        GECKO, "third_party", "python", "taskcluster_taskgraph", "taskgraph"
+    )
     to_copy = {
         scripts_dir / "run-task": f"{ARTIFACTS_DIR}/run-task-hg",
         scripts_dir / "tester" / "test-linux.sh": ARTIFACTS_DIR,

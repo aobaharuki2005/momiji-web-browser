@@ -58,7 +58,7 @@ firefox-ci:
             - '.taskcluster.yml'
             - 'taskcluster/kinds/**'
             - 'taskcluster/**/*.py'
-            - 'taskcluster/requirements.txt'
+            - 'third_party/python/taskcluster_taskgraph/**/*.py'
             - 'tools/tryselect/selectors/auto.py'
 
 fog:
@@ -354,7 +354,7 @@ taskgraph-tests:
         files-changed:
             - 'python/mach/**/*.py'
             - 'taskcluster/**/*.py'
-            - 'taskcluster/requirements.txt'
+            - 'third_party/python/taskcluster_taskgraph/**/*.py'
 
 tryselect:
     description: tools/tryselect unit tests
@@ -371,7 +371,7 @@ tryselect:
             - 'taskcluster/config.yml'
             - 'taskcluster/kinds/test/**'
             - 'taskcluster/gecko_taskgraph/transforms/**'
-            - 'taskcluster/requirements.txt'
+            - 'third_party/python/taskcluster_taskgraph/**/*.py'
             - 'tools/tryselect/**'
 
 mozbuild:
@@ -645,6 +645,8 @@ verify-decision:
             - .cron.yml
             - .taskcluster.yml
             - 'taskcluster/**'
+            - 'third_party/python/taskcluster/**'
+            - 'third_party/python/taskcluster_taskgraph/**'
 
 webext:
     description: WebExtensions python utilities unit tests
