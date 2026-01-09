@@ -234,6 +234,8 @@ export class ChatConversation {
    */
   async generatePrompt(prompt, pageUrl) {
     if (!this.#messages.length) {
+      // TODO: Bug 2008865
+      // switch to use remote settings prompt accessed via engine.loadPrompt(feature)
       this.addSystemMessage(SYSTEM_PROMPT_TYPE.TEXT, assistantPrompt);
     }
 

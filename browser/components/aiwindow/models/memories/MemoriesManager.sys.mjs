@@ -11,8 +11,11 @@ import {
 } from "moz-src:///browser/components/aiwindow/models/memories/MemoriesHistorySource.sys.mjs";
 import { getRecentChats } from "./MemoriesChatSource.sys.mjs";
 import {
+  DEFAULT_ENGINE_ID,
+  MODEL_FEATURES,
   openAIEngine,
   renderPrompt,
+  SERVICE_TYPES,
 } from "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs";
 import { MemoryStore } from "moz-src:///browser/components/aiwindow/services/MemoryStore.sys.mjs";
 import {
@@ -64,7 +67,11 @@ export class MemoriesManager {
    */
   static async ensureOpenAIEngine() {
     if (!this.#openAIEnginePromise) {
-      this.#openAIEnginePromise = await openAIEngine.build();
+      this.#openAIEnginePromise = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
     }
     return this.#openAIEnginePromise;
   }

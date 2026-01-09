@@ -12,7 +12,7 @@ const { SYSTEM_PROMPT_TYPE, MESSAGE_ROLE } = ChromeUtils.importESModule(
 const { Chat } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/Chat.sys.mjs"
 );
-const { openAIEngine } = ChromeUtils.importESModule(
+const { MODEL_FEATURES, openAIEngine } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs"
 );
 
@@ -52,47 +52,53 @@ add_task(async function test_Chat_real_tools_are_registered() {
   );
 });
 
-add_task(async function test_openAIEngine_build_uses_prefs() {
-  Services.prefs.setStringPref(PREF_API_KEY, "test-key-123");
-  Services.prefs.setStringPref(PREF_ENDPOINT, "https://example.test/v1");
-  Services.prefs.setStringPref(PREF_MODEL, "gpt-fake");
+add_task(
+  async function test_openAIEngine_build_with_chat_feature_and_nonexistent_model() {
+    Services.prefs.setStringPref(PREF_API_KEY, "test-key-123");
+    Services.prefs.setStringPref(PREF_ENDPOINT, "https://example.test/v1");
+    Services.prefs.setStringPref(PREF_MODEL, "nonexistent-model");
 
-  const sb = sinon.createSandbox();
-  try {
-    const fakeEngineInstance = {
-      runWithGenerator() {
-        throw new Error("not used");
-      },
-    };
-    const stub = sb
-      .stub(openAIEngine, "_createEngine")
-      .resolves(fakeEngineInstance);
+    const sb = sinon.createSandbox();
+    try {
+      const fakeEngineInstance = {
+        runWithGenerator() {
+          throw new Error("not used");
+        },
+      };
+      const stub = sb
+        .stub(openAIEngine, "_createEngine")
+        .resolves(fakeEngineInstance);
 
-    const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(MODEL_FEATURES.CHAT);
 
-    Assert.ok(
-      engine instanceof openAIEngine,
-      "Should return openAIEngine instance"
-    );
-    Assert.strictEqual(
-      engine.engineInstance,
-      fakeEngineInstance,
-      "Should store engine instance"
-    );
-    Assert.ok(stub.calledOnce, "_createEngine should be called once");
+      Assert.ok(
+        engine instanceof openAIEngine,
+        "Should return openAIEngine instance"
+      );
+      Assert.strictEqual(
+        engine.engineInstance,
+        fakeEngineInstance,
+        "Should store engine instance"
+      );
+      Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
-    const opts = stub.firstCall.args[0];
-    Assert.equal(opts.apiKey, "test-key-123", "apiKey should come from pref");
-    Assert.equal(
-      opts.baseURL,
-      "https://example.test/v1",
-      "baseURL should come from pref"
-    );
-    Assert.equal(opts.modelId, "gpt-fake", "modelId should come from pref");
-  } finally {
-    sb.restore();
+      const opts = stub.firstCall.args[0];
+      Assert.equal(opts.apiKey, "test-key-123", "apiKey should come from pref");
+      Assert.equal(
+        opts.baseURL,
+        "https://example.test/v1",
+        "baseURL should come from pref"
+      );
+      Assert.equal(
+        opts.modelId,
+        "qwen3-235b-a22b-instruct-2507-maas",
+        "modelId should fallback to default"
+      );
+    } finally {
+      sb.restore();
+    }
   }
-});
+);
 
 add_task(async function test_Chat_fetchWithHistory_streams_and_forwards_args() {
   const sb = sinon.createSandbox();
@@ -113,6 +119,9 @@ add_task(async function test_Chat_fetchWithHistory_streams_and_forwards_args() {
           // No toolCalls yielded, so loop will exit after first iteration
         }
         return gen();
+      },
+      getConfig() {
+        return {};
       },
     };
 
@@ -188,6 +197,9 @@ add_task(async function test_Chat_fetchWithHistory_handles_tool_calls() {
           }
         }
         return gen();
+      },
+      getConfig() {
+        return {};
       },
     };
 
@@ -313,6 +325,9 @@ add_task(
             }
           }
           return gen();
+        },
+        getConfig() {
+          return {};
         },
       };
 

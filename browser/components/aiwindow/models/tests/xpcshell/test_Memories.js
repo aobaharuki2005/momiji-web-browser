@@ -18,9 +18,10 @@ const {
 const { getRecentChats } = ChromeUtils.importESModule(
   "moz-src:///browser/components/aiwindow/models/memories/MemoriesChatSource.sys.mjs"
 );
-const { openAIEngine } = ChromeUtils.importESModule(
-  "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs"
-);
+const { DEFAULT_ENGINE_ID, MODEL_FEATURES, openAIEngine, SERVICE_TYPES } =
+  ChromeUtils.importESModule(
+    "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs"
+  );
 const { sinon } = ChromeUtils.importESModule(
   "resource://testing-common/Sinon.sys.mjs"
 );
@@ -454,7 +455,11 @@ add_task(async function test_generateInitialMemoriesList_happy_path() {
 
     // Check that the stub was called
     const stub = sb.stub(openAIEngine, "_createEngine").returns(fakeEngine);
-    const engine = await openAIEngine.build();
+    const engine = await openAIEngine.build(
+      MODEL_FEATURES.MEMORIES,
+      DEFAULT_ENGINE_ID,
+      SERVICE_TYPES.MEMORIES
+    );
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
     const [domainItems, titleItems, searchItems] =
@@ -532,7 +537,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").returns(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const [domainItems, titleItems, searchItems] =
@@ -566,7 +575,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").returns(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const [domainItems, titleItems, searchItems] =
@@ -600,7 +613,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").returns(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const [domainItems, titleItems, searchItems] =
@@ -664,7 +681,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").returns(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const [domainItems, titleItems, searchItems] =
@@ -732,7 +753,11 @@ add_task(async function test_deduplicateMemoriesList_happy_path() {
 
     // Check that the stub was called
     const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-    const engine = await openAIEngine.build();
+    const engine = await openAIEngine.build(
+      MODEL_FEATURES.MEMORIES,
+      DEFAULT_ENGINE_ID,
+      SERVICE_TYPES.MEMORIES
+    );
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
     const dedupedMemoriesList = await deduplicateMemories(
@@ -791,7 +816,11 @@ add_task(async function test_deduplicateMemoriesList_sad_path_empty_output() {
 
     // Check that the stub was called
     const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-    const engine = await openAIEngine.build();
+    const engine = await openAIEngine.build(
+      MODEL_FEATURES.MEMORIES,
+      DEFAULT_ENGINE_ID,
+      SERVICE_TYPES.MEMORIES
+    );
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
     const dedupedMemoriesList = await deduplicateMemories(
@@ -825,7 +854,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const dedupedMemoriesList = await deduplicateMemories(
@@ -866,7 +899,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const dedupedMemoriesList = await deduplicateMemories(
@@ -907,7 +944,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const dedupedMemoriesList = await deduplicateMemories(
@@ -969,7 +1010,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const dedupedMemoriesList = await deduplicateMemories(
@@ -1023,7 +1068,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const dedupedMemoriesList = await deduplicateMemories(
@@ -1075,7 +1124,11 @@ add_task(async function test_filterSensitiveMemories_happy_path() {
 
     // Check that the stub was called
     const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-    const engine = await openAIEngine.build();
+    const engine = await openAIEngine.build(
+      MODEL_FEATURES.MEMORIES,
+      DEFAULT_ENGINE_ID,
+      SERVICE_TYPES.MEMORIES
+    );
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
     const nonSensitiveMemoriesList = await filterSensitiveMemories(
@@ -1125,7 +1178,11 @@ add_task(async function test_filterSensitiveMemories_sad_path_empty_output() {
 
     // Check that the stub was called
     const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-    const engine = await openAIEngine.build();
+    const engine = await openAIEngine.build(
+      MODEL_FEATURES.MEMORIES,
+      DEFAULT_ENGINE_ID,
+      SERVICE_TYPES.MEMORIES
+    );
     Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
     const nonSensitiveMemoriesList = await filterSensitiveMemories(
@@ -1165,7 +1222,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const nonSensitiveMemoriesList = await filterSensitiveMemories(
@@ -1208,7 +1269,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const nonSensitiveMemoriesList = await filterSensitiveMemories(
@@ -1253,7 +1318,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const nonSensitiveMemoriesList = await filterSensitiveMemories(
@@ -1300,7 +1369,11 @@ add_task(
 
       // Check that the stub was called
       const stub = sb.stub(openAIEngine, "_createEngine").resolves(fakeEngine);
-      const engine = await openAIEngine.build();
+      const engine = await openAIEngine.build(
+        MODEL_FEATURES.MEMORIES,
+        DEFAULT_ENGINE_ID,
+        SERVICE_TYPES.MEMORIES
+      );
       Assert.ok(stub.calledOnce, "_createEngine should be called once");
 
       const nonSensitiveMemoriesList = await filterSensitiveMemories(

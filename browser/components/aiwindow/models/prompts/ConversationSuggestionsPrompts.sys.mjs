@@ -4,7 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-const assistantLimitations = `The following tools are available to the browser assistant:
+export const assistantLimitationstMetadata = {
+  version: "v1.0",
+};
+export const assistantLimitations = `The following tools are available to the browser assistant:
 - get_open_tabs(): Access the user's browser and return a list of the most recently browsed data
 - get_page_content(url): Retrieve cleaned text content of the provided browser page URL
 - search_browsing_history(search_term, start_ts, end_ts): Retrieve pages from the user's past browsing history, optionally filtered by topic and/or time range
@@ -27,7 +30,7 @@ Browser Assistant Capabilities & Limitations:
 3. The assistant will decline to answer when it identifies agentic or unsafe requests.`;
 
 export const conversationStarterPromptMetadata = {
-  version: "0.1",
+  version: "v1.0",
 };
 export const conversationStarterPrompt = `You are an expert in suggesting conversation starters for a browser assistant.
 
@@ -44,7 +47,7 @@ Open Tabs:
 {open_tabs}
 
 ========
-${assistantLimitations}
+{assistant_limitations}
 
 ========
 Task:
@@ -70,7 +73,7 @@ Rules:
 Return ONLY the suggestions, one per line, no numbering, no extra formatting. Sort from most to least relevant.`;
 
 export const conversationFollowupPromptMetadata = {
-  version: "0.1",
+  version: "v1.0",
 };
 export const conversationFollowupPrompt = `You are an expert suggesting next responses or queries for a user during a conversation with an AI browser assistant.
 
@@ -87,7 +90,7 @@ Conversation History (latest last):
 {conversation}
 
 ========
-${assistantLimitations}
+{assistant_limitations}
 
 ========
 Generate {n} suggested next responses or queries that the user might want to message next.

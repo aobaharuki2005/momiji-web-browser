@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
+export const titleGenerationPromptMetadata = {
+  version: "v1.0",
+};
 export const titleGenerationPrompt = `Generate a concise chat title using only the current user message and the current context.
 
 Rules:

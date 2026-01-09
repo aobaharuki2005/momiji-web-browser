@@ -5,7 +5,10 @@
  */
 
 import { ToolRoleOpts } from "moz-src:///browser/components/aiwindow/ui/modules/ChatMessage.sys.mjs";
-import { openAIEngine } from "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs";
+import {
+  MODEL_FEATURES,
+  openAIEngine,
+} from "moz-src:///browser/components/aiwindow/models/Utils.sys.mjs";
 import {
   toolsConfig,
   getOpenTabs,
@@ -39,11 +42,14 @@ export const Chat = {
 
     // @todo Bug 2007046
     // Update this with correct model id
+    // Move engineInstance initialization up to access engineInstance.model
     const modelId = "qwen3-235b-a22b-instruct-2507-maas";
 
     const toolRoleOpts = new ToolRoleOpts(modelId);
     const currentTurn = conversation.currentTurnIndex();
-    const engineInstance = await openAIEngine.build();
+    const engineInstance = await openAIEngine.build(MODEL_FEATURES.CHAT);
+    const config = engineInstance.getConfig(engineInstance.feature);
+    const inferenceParams = config?.parameters || {};
 
     // Helper to run the model once (streaming) on current convo
     const streamModelResponse = () =>
@@ -53,6 +59,7 @@ export const Chat = {
         tool_choice: "auto",
         tools: toolsConfig,
         args: conversation.getMessagesInOpenAiFormat(),
+        ...inferenceParams,
       });
 
     // Keep calling until the model finishes without requesting tools

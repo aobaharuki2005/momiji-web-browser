@@ -5,9 +5,8 @@
  */
 
 export const assistantPromptMetadata = {
-  version: "0.1",
+  version: "v1.0",
 };
-
 export const assistantPrompt = `You are a very knowledgeable personal browser assistant, designed to assist the user in navigating the web. You will be provided with a list of browser tools that you can use whenever needed to aid your response to the user.
 
 Your internal knowledge cutoff date is: July, 2024.
