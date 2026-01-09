@@ -81,7 +81,6 @@ class FenixApplicationTest {
         browserStore = BrowserStore()
 
         every { testContext.components.core } returns mockk(relaxed = true)
-        every { testContext.components.nimbus } returns mockk(relaxed = true)
         every { testContext.components.distributionIdManager } returns DistributionIdManager(
             packageManager = testContext.packageManagerWrapper,
             browserStoreProvider = DefaultDistributionBrowserStoreProvider(browserStore),
