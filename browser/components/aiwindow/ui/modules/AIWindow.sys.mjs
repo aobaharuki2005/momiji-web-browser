@@ -5,7 +5,7 @@
  */
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
 
-export const AIWINDOW_URL = "chrome://browser/content/aiwindow/aiWindow.html";
+const AIWINDOW_URL = "chrome://browser/content/aiwindow/aiWindow.html";
 const AIWINDOW_URI = Services.io.newURI(AIWINDOW_URL);
 const FIRSTRUN_URL = "chrome://browser/content/aiwindow/firstrun.html";
 const FIRSTRUN_URI = Services.io.newURI(FIRSTRUN_URL);

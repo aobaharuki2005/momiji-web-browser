@@ -4,7 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-import { AIWINDOW_URL } from "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs";
+const AIWINDOW_SIDEBAR_URL =
+  "chrome://browser/content/aiwindow/aiWindow.html#mode=sidebar";
 
 export const AIWindowUI = {
   BOX_ID: "ai-window-box",
@@ -59,7 +60,7 @@ export const AIWindowUI = {
     browser.setAttribute("disablehistory", "true");
     browser.setAttribute("disablefullscreen", "true");
     browser.setAttribute("tooltip", "aHTMLTooltip");
-    browser.setAttribute("src", AIWINDOW_URL);
+    browser.setAttribute("src", AIWINDOW_SIDEBAR_URL);
     stack.appendChild(browser);
     return browser;
   },
