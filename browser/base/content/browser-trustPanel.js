@@ -325,9 +325,13 @@ class TrustPanel {
   }
 
   async #updatePopup() {
-    this.#host = BrowserUtils.formatURIForDisplay(this.#uri, {
-      onlyBaseDomain: true,
-    });
+    if (this.#uri) {
+      this.#host = BrowserUtils.formatURIForDisplay(this.#uri, {
+        onlyBaseDomain: true,
+      });
+    } else {
+      this.#host = "";
+    }
     this.#popup.setAttribute(
       "connection",
       this.#isSecurePage() ? "secure" : "not-secure"
