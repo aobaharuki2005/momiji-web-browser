@@ -67,3 +67,15 @@ aiwindow-firstrun-model-allpurpose-body = Best for a variety of quick and comple
 aiwindow-firstrun-model-personal-label = Personalization
 aiwindow-firstrun-model-personal-body = Best for learning with you
 aiwindow-firstrun-button = Let’s go
+
+## Assistant Message footer
+
+aiwindow-memories-used = Memories used
+aiwindow-retry-without-memories =
+    .label = Retry without memories
+aiwindow-retry =
+  .tooltiptext = Retry
+  .aria-label = Retry
+aiwindow-copy-message =
+    .tooltiptext = Copy
+    .aria-label = Copy message

@@ -55,7 +55,7 @@ export class AIChatMessage extends MozLitElement {
       />
 
       <article>
-        <div class=${"message-" + this.role}>
+        <div class=${`message-${this.role}`}>
           <!-- TODO: Add markdown parsing here -->
           ${this.message}
         </div>

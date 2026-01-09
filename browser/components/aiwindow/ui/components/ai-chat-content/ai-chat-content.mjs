@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { html } from "chrome://global/content/vendor/lit.all.mjs";
+import { html, nothing } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
+// eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/aiwindow/components/assistant-message-footer.mjs";
 
 /**
  * A custom element for managing AI Chat Content
@@ -46,14 +48,15 @@ export class AIChatContent extends MozLitElement {
   /**
    *  Handle user prompt events
    *
-   * @param {CustomeEvent} event - The custom event containing the user prompt
+   * @param {CustomEvent} event - The custom event containing the user prompt
    */
 
   handleUserPromptEvent(event) {
     const { content } = event.detail;
-
-    this.conversationState.push({ role: "user", content });
-
+    this.conversationState.push({
+      role: "user",
+      body: content.body,
+    });
     this.requestUpdate();
   }
 
@@ -64,9 +67,15 @@ export class AIChatContent extends MozLitElement {
    */
 
   handleAIResponseEvent(event) {
-    const { ordinal } = event.detail;
+    // TODO (bug 2009434): update reference to insights
+    const { ordinal, id: messageId, content, insightsApplied } = event.detail;
 
-    this.conversationState[ordinal] = event.detail;
+    this.conversationState[ordinal] = {
+      role: "assistant",
+      messageId,
+      body: content.body,
+      appliedMemories: insightsApplied ?? [],
+    };
 
     this.requestUpdate();
   }
@@ -79,10 +88,23 @@ export class AIChatContent extends MozLitElement {
       />
       <div class="chat-content-wrapper">
         ${this.conversationState.map(msg => {
-          return html`<ai-chat-message
-            .message=${msg.content.body}
-            .role=${msg.role}
-          ></ai-chat-message>`;
+          return html`
+            <div class=${`chat-bubble chat-bubble-${msg.role}`}>
+              <ai-chat-message
+                .message=${msg.body}
+                .role=${msg.role}
+              ></ai-chat-message>
+
+              ${msg.role === "assistant"
+                ? html`
+                    <assistant-message-footer
+                      .messageId=${msg.messageId}
+                      .appliedMemories=${msg.appliedMemories}
+                    ></assistant-message-footer>
+                  `
+                : nothing}
+            </div>
+          `;
         })}
       </div>
     `;

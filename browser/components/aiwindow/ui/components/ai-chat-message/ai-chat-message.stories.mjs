@@ -20,7 +20,7 @@ export default {
 };
 
 const Template = ({ role, content }) => html`
-  <ai-chat-message .message=${{ role, content }}></ai-chat-message>
+  <ai-chat-message .role=${role} .message=${content}></ai-chat-message>
 `;
 
 export const UserMessage = Template.bind({});

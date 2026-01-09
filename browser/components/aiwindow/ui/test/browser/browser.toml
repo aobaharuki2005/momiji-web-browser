@@ -4,6 +4,8 @@ support-files = [
   "head.js",
   "test_chat_search_button.html",
   "test_chat_search_button.mjs",
+  "test_assistant_message_footer_page.html",
+  "test_applied_memories_page.html",
 ]
 
 ["browser_actor_user_prompt.js"]
@@ -11,6 +13,10 @@ support-files = [
 ["browser_aichat_content_actors.js"]
 
 ["browser_aichat_message.js"]
+
+["browser_aiwindow_applied_memories_button.js"]
+
+["browser_aiwindow_assistant_message_footer.js"]
 
 ["browser_aiwindow_firstrun.js"]
 
