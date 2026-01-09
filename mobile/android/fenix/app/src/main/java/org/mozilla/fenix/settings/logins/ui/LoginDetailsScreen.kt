@@ -39,11 +39,11 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.menu.DropdownMenu
@@ -56,6 +56,7 @@ import mozilla.components.lib.state.ext.observeAsState
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 @Composable
@@ -394,37 +395,22 @@ private fun createStore() = LoginsStore(
     ),
 )
 
+@FlexibleWindowPreview
 @Composable
-@FlexibleWindowLightDarkPreview
-private fun LoginDetailsScreenPreview() {
-    FirefoxTheme {
+private fun LoginDetailsScreenPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         LoginDetailsScreen(store = createStore())
     }
 }
 
-@Composable
 @Preview
-private fun LoginDetailsScreenPrivatePreview() {
-    FirefoxTheme(theme = Theme.Private) {
-        LoginDetailsScreen(store = createStore())
-    }
-}
-
 @Composable
-@PreviewLightDark
-private fun LoginDeletionDialogPreview() {
-    FirefoxTheme {
-        LoginDeletionDialog(
-            onCancelTapped = {},
-            onDeleteTapped = {},
-        )
-    }
-}
-
-@Composable
-@Preview
-private fun LoginDeletionDialogPrivatePreview() {
-    FirefoxTheme(theme = Theme.Private) {
+private fun LoginDeletionDialogPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         LoginDeletionDialog(
             onCancelTapped = {},
             onDeleteTapped = {},

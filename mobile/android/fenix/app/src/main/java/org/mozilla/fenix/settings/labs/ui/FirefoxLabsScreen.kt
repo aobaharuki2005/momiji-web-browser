@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
@@ -50,6 +49,7 @@ import org.mozilla.fenix.settings.labs.store.LabsState
 import org.mozilla.fenix.settings.labs.store.LabsStore
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -358,10 +358,12 @@ private fun FirefoxLabsScreenPrivatePreview(
     }
 }
 
+@Preview
 @Composable
-@PreviewLightDark
-private fun ToggleFeatureDialogPreview() {
-    FirefoxTheme {
+private fun ToggleFeatureDialogPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         ToggleFeatureDialog(
             featureEnabled = true,
             onConfirm = {},
@@ -370,10 +372,12 @@ private fun ToggleFeatureDialogPreview() {
     }
 }
 
+@Preview
 @Composable
-@PreviewLightDark
-private fun RestoreDefaultsDialogPreview() {
-    FirefoxTheme {
+private fun RestoreDefaultsDialogPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         RestoreDefaultsDialog(
             onConfirm = {},
             onDismiss = {},

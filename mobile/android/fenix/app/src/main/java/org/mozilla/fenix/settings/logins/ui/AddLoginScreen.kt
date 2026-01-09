@@ -33,9 +33,9 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.text.Text
 import mozilla.components.compose.base.textfield.TextField
@@ -45,6 +45,7 @@ import mozilla.components.support.ktx.util.URLStringUtils.isValidHost
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 @Composable
@@ -250,24 +251,15 @@ private fun AddLoginPassword(store: LoginsStore) {
     )
 }
 
+@FlexibleWindowPreview
 @Composable
-@FlexibleWindowLightDarkPreview
-private fun AddLoginScreenPreview() {
+private fun AddLoginScreenPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
     val store = LoginsStore(
         initialState = LoginsState.default,
     )
-    FirefoxTheme {
-        AddLoginScreen(store)
-    }
-}
-
-@Composable
-@Preview
-private fun AddLoginScreenPrivatePreview() {
-    val store = LoginsStore(
-        initialState = LoginsState.default,
-    )
-    FirefoxTheme(theme = Theme.Private) {
+    FirefoxTheme(theme) {
         AddLoginScreen(store)
     }
 }

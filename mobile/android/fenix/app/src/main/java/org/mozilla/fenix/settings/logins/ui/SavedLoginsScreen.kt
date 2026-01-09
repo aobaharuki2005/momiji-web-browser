@@ -43,13 +43,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.button.IconButton
 import mozilla.components.compose.base.menu.DropdownMenu
 import mozilla.components.compose.base.menu.MenuItem
@@ -65,6 +65,7 @@ import org.mozilla.fenix.settings.biometric.ui.SecureScreen
 import org.mozilla.fenix.settings.logins.ui.LoginsSortOrder.Alphabetical.isGuidToDelete
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import mozilla.components.ui.icons.R as iconsR
 
 /**
@@ -425,34 +426,22 @@ private fun createStore() = LoginsStore(
     ),
 )
 
+@FlexibleWindowPreview
 @Composable
-@FlexibleWindowLightDarkPreview
-private fun LoginsListScreenPreview() {
-    FirefoxTheme {
+private fun LoginsListScreenPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         LoginsList(store = createStore())
     }
 }
 
+@FlexibleWindowPreview
 @Composable
-@Preview
-private fun LoginsListScreenPrivatePreview() {
-    FirefoxTheme(theme = Theme.Private) {
-        LoginsList(store = createStore())
-    }
-}
-
-@Composable
-@FlexibleWindowLightDarkPreview
-private fun EmptyLoginsListScreenPreview() {
-    FirefoxTheme {
-        LoginsList(store = LoginsStore())
-    }
-}
-
-@Composable
-@Preview
-private fun EmptyLoginsListScreenPrivatePreview() {
-    FirefoxTheme(theme = Theme.Private) {
+private fun EmptyLoginsListScreenPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         LoginsList(store = LoginsStore())
     }
 }

@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.pbmlock
 
-import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -24,8 +23,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.compose.base.button.FilledButton
 import mozilla.components.compose.base.button.TextButton
 import mozilla.components.compose.base.utils.getResolvedAttrResId
@@ -33,13 +33,10 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.isLargeWindow
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 
 private const val FILL_WIDTH_LARGE_WINDOW = 0.5f
 private const val FILL_WIDTH_DEFAULT = 1.0f
-private const val PHONE_WIDTH = 400
-private const val PHONE_HEIGHT = 640
-private const val TABLET_WIDTH = 700
-private const val TABLET_HEIGHT = 1280
 
 /**
  * A screen allowing users to unlock their private tabs.
@@ -143,32 +140,11 @@ private fun Footer(onUnlockClicked: () -> Unit, onLeaveClicked: () -> Unit, show
     }
 }
 
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, widthDp = PHONE_WIDTH, heightDp = PHONE_HEIGHT)
+@FlexibleWindowPreview
 @Composable
-private fun ScreenPreviewLightPhone() = ScreenPreview(Theme.Light)
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, widthDp = PHONE_WIDTH, heightDp = PHONE_HEIGHT)
-@Composable
-private fun ScreenPreviewDarkPhone() = ScreenPreview(Theme.Dark)
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, widthDp = PHONE_WIDTH, heightDp = PHONE_HEIGHT)
-@Composable
-private fun ScreenPreviewPrivatePhone() = ScreenPreview(Theme.Private)
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, widthDp = TABLET_WIDTH, heightDp = TABLET_HEIGHT)
-@Composable
-private fun ScreenPreviewLightTablet() = ScreenPreview(Theme.Light)
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, widthDp = TABLET_WIDTH, heightDp = TABLET_HEIGHT)
-@Composable
-private fun ScreenPreviewDarkTablet() = ScreenPreview(Theme.Dark)
-
-@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, widthDp = TABLET_WIDTH, heightDp = TABLET_HEIGHT)
-@Composable
-private fun ScreenPreviewPrivateTablet() = ScreenPreview(Theme.Private)
-
-@Composable
-private fun ScreenPreview(theme: Theme) {
+private fun ScreenPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
     FirefoxTheme(theme) {
         UnlockPrivateTabsScreen(
             onUnlockClicked = {},

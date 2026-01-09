@@ -26,9 +26,9 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import mozilla.components.compose.base.annotation.FlexibleWindowLightDarkPreview
+import mozilla.components.compose.base.annotation.FlexibleWindowPreview
 import mozilla.components.lib.crash.store.CrashReportOption
 import mozilla.components.lib.state.ext.observeAsComposableState
 import org.mozilla.fenix.R
@@ -40,6 +40,7 @@ import org.mozilla.fenix.compose.list.TextListItem
 import org.mozilla.fenix.compose.settings.SettingsSectionHeader
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 
 /**
  * Composable function that renders the Data Choices settings screen.
@@ -333,10 +334,12 @@ private fun LearnMoreLink(onLearnMoreClicked: () -> Unit, learnMoreText: String)
     }
 }
 
-@FlexibleWindowLightDarkPreview
+@FlexibleWindowPreview
 @Composable
-private fun DataChoicesPreview() {
-    FirefoxTheme {
+private fun DataChoicesPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         DataChoicesScreen(
             store = DataChoicesStore(
                 initialState = DataChoicesState(),
@@ -347,20 +350,10 @@ private fun DataChoicesPreview() {
 
 @Preview
 @Composable
-private fun DataChoicesPrivatePreview() {
-    FirefoxTheme(theme = Theme.Private) {
-        DataChoicesScreen(
-            store = DataChoicesStore(
-                initialState = DataChoicesState(),
-            ),
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun DataChoicesTelemetryDisabledPreview() {
-    FirefoxTheme {
+private fun DataChoicesTelemetryDisabledPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         DataChoicesScreen(
             store = DataChoicesStore(
                 initialState = DataChoicesState(
@@ -374,23 +367,10 @@ private fun DataChoicesTelemetryDisabledPreview() {
 
 @Preview
 @Composable
-private fun DataChoicesTelemetryDisabledPrivatePreview() {
-    FirefoxTheme(theme = Theme.Private) {
-        DataChoicesScreen(
-            store = DataChoicesStore(
-                initialState = DataChoicesState(
-                    studiesEnabled = false,
-                    telemetryEnabled = false,
-                ),
-            ),
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun DataChoicesMarketingSectionDisabledPreview() {
-    FirefoxTheme {
+private fun DataChoicesMarketingSectionDisabledPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         DataChoicesScreen(
             store = DataChoicesStore(
                 initialState = DataChoicesState(

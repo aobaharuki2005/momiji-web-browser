@@ -35,12 +35,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewLightDark
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.theme.Theme
+import org.mozilla.fenix.theme.ThemeProvider
 import kotlin.math.roundToInt
 
 private const val HALF_ALPHA = 0.5F
@@ -254,10 +255,12 @@ private fun FilledTrack(fraction: Float, isEnabled: Boolean) {
     ) {}
 }
 
-@PreviewLightDark
+@Preview
 @Composable
-private fun FontSizePreferencePreview() {
-    FirefoxTheme {
+private fun FontSizePreferencePreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         FontSizePreference(
             isEnabled = true,
             value = 100f,
@@ -269,38 +272,10 @@ private fun FontSizePreferencePreview() {
 
 @Preview
 @Composable
-private fun PrivateFontSizePreferencePreview() {
-    FirefoxTheme(
-        theme = Theme.Private,
-    ) {
-        FontSizePreference(
-            isEnabled = true,
-            value = 100f,
-            onValueChange = {},
-            onValueChangeFinished = {},
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun FontSizePreferenceDisabledPreview() {
-    FirefoxTheme {
-        FontSizePreference(
-            isEnabled = false,
-            value = 200f,
-            onValueChange = {},
-            onValueChangeFinished = {},
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PrivateFontSizePreferenceDisabledPreview() {
-    FirefoxTheme(
-        theme = Theme.Private,
-    ) {
+private fun FontSizePreferenceDisabledPreview(
+    @PreviewParameter(ThemeProvider::class) theme: Theme,
+) {
+    FirefoxTheme(theme) {
         FontSizePreference(
             isEnabled = false,
             value = 200f,
