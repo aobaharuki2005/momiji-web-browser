@@ -483,18 +483,10 @@ add_task(function test_ChatConversation_getMessagesInOpenAiFormat() {
   const conversation = new ChatConversation({});
   conversation.addSystemMessage("text", "the system prompt");
   conversation.addUserMessage("a user's prompt", "https://www.somesite.com");
-  conversation.addToolCallMessage({
-    tool_call_id: "123",
-    name: "tool_1",
-    body: [1, 2, 3],
-  });
+  conversation.addToolCallMessage({ some: "tool call details" });
   conversation.addAssistantMessage("text", "the llm response");
   conversation.addUserMessage("a user's second prompt", "some question");
-  conversation.addToolCallMessage({
-    tool_call_id: "456",
-    name: "tool_1",
-    body: [4, 5, 6],
-  });
+  conversation.addToolCallMessage({ some: "more tool call details" });
   conversation.addAssistantMessage("text", "the second llm response");
 
   const openAiFormat = conversation.getMessagesInOpenAiFormat();
@@ -502,10 +494,10 @@ add_task(function test_ChatConversation_getMessagesInOpenAiFormat() {
   Assert.deepEqual(openAiFormat, [
     { role: "system", content: "the system prompt" },
     { role: "user", content: "a user's prompt" },
-    { role: "tool", content: "[1,2,3]", name: "tool_1", tool_call_id: "123" },
+    { role: "tool", content: { some: "tool call details" } },
     { role: "assistant", content: "the llm response" },
     { role: "user", content: "a user's second prompt" },
-    { role: "tool", content: "[4,5,6]", name: "tool_1", tool_call_id: "456" },
+    { role: "tool", content: { some: "more tool call details" } },
     { role: "assistant", content: "the second llm response" },
   ]);
 });

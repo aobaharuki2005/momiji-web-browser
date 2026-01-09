@@ -163,11 +163,8 @@ export class AIWindow extends MozLitElement {
         assistantRoleOpts
       );
 
-      const currentMessage = this.#conversation.messages
-        .filter(message => message.role === lazy.MESSAGE_ROLE.ASSISTANT)
-        .at(-1);
-
       for await (const chunk of stream) {
+        const currentMessage = this.#conversation.messages.at(-1);
         currentMessage.content.body += chunk;
 
         this.#updateConversation();
@@ -219,13 +216,12 @@ export class AIWindow extends MozLitElement {
   #dispatchMessageToChatContent(message) {
     const actor = this.#getAIChatContentActor();
 
-    const newMessage = { ...message };
     if (typeof message.role !== "string") {
-      const roleLabel = lazy.getRoleLabel(newMessage.role).toLowerCase();
-      newMessage.role = roleLabel;
+      const roleLabel = lazy.getRoleLabel(message.role).toLowerCase();
+      message.role = roleLabel;
     }
 
-    return actor.dispatchMessageToChatContent(newMessage);
+    return actor.dispatchMessageToChatContent(message);
   }
 
   /**
