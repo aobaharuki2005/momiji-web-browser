@@ -130,7 +130,7 @@ export class ChatConversation {
     const currentMessages = this?.messages || [];
     const ordinal = currentMessages.length ? currentMessages.length + 1 : 1;
 
-    const message_data = {
+    const messageData = {
       parentMessageId,
       content,
       ordinal,
@@ -141,7 +141,7 @@ export class ChatConversation {
       ...opts,
     };
 
-    const newMessage = new ChatMessage(message_data);
+    const newMessage = new ChatMessage(messageData);
 
     this.messages.push(newMessage);
   }
@@ -233,6 +233,18 @@ export class ChatConversation {
    * @param {URL} pageUrl - The URL of the page when prompt was submitted
    */
   async generatePrompt(prompt, pageUrl) {
+    this.#messages = this.#messages.filter(message => {
+      const isRealTimeInjection =
+        message.role === MESSAGE_ROLE.SYSTEM &&
+        message.content.type === SYSTEM_PROMPT_TYPE.REAL_TIME;
+
+      const isInsightsInjection =
+        message.role === MESSAGE_ROLE.SYSTEM &&
+        message.content.type === SYSTEM_PROMPT_TYPE.INSIGHTS;
+
+      return !isRealTimeInjection && !isInsightsInjection;
+    });
+
     if (!this.#messages.length) {
       // TODO: Bug 2008865
       // switch to use remote settings prompt accessed via engine.loadPrompt(feature)
@@ -316,10 +328,23 @@ export class ChatConversation {
         );
       })
       .map(message => {
-        return {
+        const msg = {
           role: getRoleLabel(message.role).toLowerCase(),
           content: message.content?.body ?? message.content,
         };
+
+        if (msg.content.tool_calls) {
+          msg.tool_calls = msg.content.tool_calls;
+          msg.content = "";
+        }
+
+        if (msg.role === "tool") {
+          msg.tool_call_id = message.content.tool_call_id;
+          msg.name = message.content.name;
+          msg.content = JSON.stringify(message.content.body);
+        }
+
+        return msg;
       });
   }
 

@@ -16,8 +16,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AIWindow:
     "moz-src:///browser/components/aiwindow/ui/modules/AIWindow.sys.mjs",
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
-  PageDataService:
-    "moz-src:///browser/components/pagedata/PageDataService.sys.mjs",
+  // @todo Bug 2009194
+  // PageDataService:
+  //   "moz-src:///browser/components/pagedata/PageDataService.sys.mjs",
 });
 
 const GET_OPEN_TABS = "get_open_tabs";
@@ -143,10 +144,18 @@ export async function getOpenTabs(n = 15) {
     topTabs.map(async ({ url, title, lastAccessed }) => {
       let description = "";
       if (url) {
-        description =
-          lazy.PageDataService.getCached(url)?.description ||
-          (await lazy.PageDataService.fetchPageData(url))?.description ||
-          "";
+        // @todo Bug 2009194
+        // PageDataService halts code execution even in try/catch
+        //
+        // try {
+        //   description =
+        //     lazy.PageDataService.getCached(url)?.description ||
+        //     (await lazy.PageDataService.fetchPageData(url))?.description ||
+        //     "";
+        // } catch (e) {
+        //   console.log(e);
+        //   description = "";
+        // }
       }
       return { url, title, description, lastAccessed };
     })

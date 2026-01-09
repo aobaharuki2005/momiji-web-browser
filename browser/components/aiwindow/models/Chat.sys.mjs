@@ -128,10 +128,14 @@ export const Chat = {
             throw new Error(`No such tool: ${name}`);
           }
 
-          result = await toolFunc(toolParams);
+          if (Object.keys(toolParams).length) {
+            result = await toolFunc(toolParams);
+          } else {
+            result = await toolFunc();
+          }
 
           // Create special tool call log message to show in the UI log panel
-          const content = { tool_call_id: id, body: result };
+          const content = { tool_call_id: id, body: result, name };
           conversation.addToolCallMessage(content, currentTurn, toolRoleOpts);
         } catch (e) {
           result = { error: `Tool execution failed: ${String(e)}` };
