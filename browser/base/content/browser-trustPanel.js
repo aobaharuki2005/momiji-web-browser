@@ -332,10 +332,7 @@ class TrustPanel {
     } else {
       this.#host = "";
     }
-    this.#popup.setAttribute(
-      "connection",
-      this.#isSecurePage() ? "secure" : "not-secure"
-    );
+    this.#popup.setAttribute("connection", this.#connectionState());
     this.#popup.setAttribute(
       "tracking-protection",
       this.#trackingProtectionStatus()
