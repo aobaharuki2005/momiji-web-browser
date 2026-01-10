@@ -920,10 +920,12 @@ class VendorManifest(MozbuildObject):
                         "--input",
                         os.path.abspath(patch),
                         "--no-backup-if-mismatch",
+                        "--batch",
                     ]
                     self.run_process(
                         args=script,
                         log_name=script,
+                        ensure_exit_code=0,
                     )
                 except Exception as e:
                     # Check if reject file has content (patch failed)
