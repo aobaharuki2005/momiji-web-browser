@@ -63,6 +63,14 @@ add_task(async function basic_test() {
   await BrowserTestUtils.waitForCondition(() => urlbarIcon(window) != "none");
 
   Assert.equal(urlbarIcon(window), ETP_ACTIVE_ICON, "Showing trusted icon");
+  Assert.equal(
+    window.document
+      .getElementById("trust-icon-container")
+      .getAttribute("tooltiptext"),
+    "Verified by: Mozilla Testing",
+    "Tooltip has been set"
+  );
+
   Assert.ok(
     !BrowserTestUtils.isVisible(urlbarLabel(window)),
     "Not showing Not Secure label"

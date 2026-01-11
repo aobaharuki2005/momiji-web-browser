@@ -321,6 +321,7 @@ class TrustPanel {
       icon.classList.add("inactive");
     }
 
+    icon.setAttribute("tooltiptext", this.#tooltipText());
     icon.classList.toggle("chickletShown", this.#isSecureInternalUI);
   }
 
@@ -864,7 +865,7 @@ class TrustPanel {
     if (this.#isEV) {
       let iData = this.#getIdentityData();
       owner = iData.subjectOrg;
-      verifier = this._identityIconLabel.tooltipText;
+      verifier = this.#tooltipText();
 
       // Build an appropriate supplemental block out of whatever location data we have
       if (iData.city) {
