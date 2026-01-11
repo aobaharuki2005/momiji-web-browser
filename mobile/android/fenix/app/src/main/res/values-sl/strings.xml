@@ -1523,6 +1523,8 @@
   <string name="tab_drawer_fab_content">Zasebno</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">Sinhroniziraj</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">Iskanje po zavihkih</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">Deli vse zavihke</string>
   <!-- Text shown in the menu to view recently closed tabs -->
