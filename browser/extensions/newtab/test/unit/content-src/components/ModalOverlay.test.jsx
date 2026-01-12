@@ -2,18 +2,6 @@ import { ModalOverlayWrapper } from "content-src/components/ModalOverlay/ModalOv
 import { mount } from "enzyme";
 import React from "react";
 
-// Patch dialog element's .showModal()/close() functions to prevent errors in tests
-before(() => {
-  if (typeof HTMLDialogElement !== "undefined") {
-    HTMLDialogElement.prototype.showModal = function () {
-      this.open = true;
-    };
-    HTMLDialogElement.prototype.close = function () {
-      this.open = false;
-    };
-  }
-});
-
 describe("ModalOverlayWrapper", () => {
   let sandbox;
   beforeEach(() => {
