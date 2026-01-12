@@ -689,6 +689,12 @@ wheels = [
 ]
 
 [[package]]
+name = "jsmin"
+version = "3.0.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/73/e01e4c5e11ad0494f4407a3f623ad4d87714909f50b17a06ed121034ff6e/jsmin-3.0.1.tar.gz", hash = "sha256:c0959a121ef94542e807a674142606f7e90214a2b3d1eb17300244bbb5cc2bfc", size = 13925, upload-time = "2022-01-16T20:35:59.13Z" }
+
+[[package]]
 name = "json-e"
 version = "4.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -896,6 +902,7 @@ dependencies = [
     { name = "glean-parser" },
     { name = "importlib-metadata" },
     { name = "jinja2" },
+    { name = "jsmin" },
     { name = "json-e" },
     { name = "jsonschema" },
     { name = "looseversion" },
@@ -958,6 +965,7 @@ requires-dist = [
     { name = "glean-parser", specifier = "==18.1.0" },
     { name = "importlib-metadata", specifier = "~=8.0" },
     { name = "jinja2", specifier = "==3.1.6" },
+    { name = "jsmin", specifier = "~=3.0" },
     { name = "json-e", specifier = "~=4.5" },
     { name = "jsonschema", specifier = "==4.17.3" },
     { name = "looseversion", specifier = "~=1.0" },
