@@ -85,7 +85,7 @@
     color: FieldText;
   }
 
-  #viewGroup > radio[selected] {
+  #viewGroup > radio[selected="true"] {
     background-color: SelectedItem;
     color: SelectedItemText;
   }
@@ -101,12 +101,12 @@
     color: black;
   }
 
-  #viewGroup > radio[selected] {
+  #viewGroup > radio[selected="true"] {
     background-color: #c1d2ee;
     color: black;
   }
 
-  #viewGroup > radio:is(:hover, [selected]) .radio-icon {
+  #viewGroup > radio:is(:hover, [selected="true"]) .radio-icon {
     background-position-y: -32px;
   }
 }
