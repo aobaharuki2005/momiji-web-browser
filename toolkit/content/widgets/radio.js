@@ -154,14 +154,14 @@
     init() {
       this._radioChildren = null;
 
-      if (this.hasAttribute("disabled")) {
+      if (this.getAttribute("disabled") == "true") {
         this.disabled = true;
       }
 
       var children = this._getRadioChildren();
       var length = children.length;
       for (var i = 0; i < length; i++) {
-        if (children[i].hasAttribute("selected")) {
+        if (children[i].getAttribute("selected") == "true") {
           this.selectedIndex = i;
           return;
         }
@@ -230,7 +230,7 @@
     }
 
     get disabled() {
-      if (this.hasAttribute("disabled")) {
+      if (this.getAttribute("disabled") == "true") {
         return true;
       }
       var children = this._getRadioChildren();
@@ -265,12 +265,12 @@
     }
 
     set selectedItem(val) {
-      var focused = this.hasAttribute("focused");
+      var focused = this.getAttribute("focused") == "true";
       var alreadySelected = false;
 
       if (val) {
-        alreadySelected = val.hasAttribute("selected");
-        val.toggleAttribute("focused", focused);
+        alreadySelected = val.getAttribute("selected") == "true";
+        val.setAttribute("focused", focused);
         val.setAttribute("selected", "true");
         this.setAttribute("value", val.value);
       } else {
@@ -282,7 +282,7 @@
       var previousItem = null;
       for (var i = 0; i < children.length; ++i) {
         if (children[i] != val) {
-          if (children[i].hasAttribute("selected")) {
+          if (children[i].getAttribute("selected") == "true") {
             previousItem = children[i];
           }
 
@@ -350,7 +350,7 @@
     get focusedItem() {
       var children = this._getRadioChildren();
       for (var i = 0; i < children.length; ++i) {
-        if (children[i].hasAttribute("focused")) {
+        if (children[i].getAttribute("focused") == "true") {
           return children[i];
         }
       }

@@ -53,8 +53,8 @@ async function waitForCommandEnabledState(expectedState) {
 function assertTextZoomCommandCheckedState(isChecked) {
   let command = document.getElementById("cmd_fullZoomToggle");
   Assert.equal(
-    command.hasAttribute("checked"),
-    isChecked,
+    command.getAttribute("checked"),
+    "" + isChecked,
     "Text zoom command has expected checked attribute"
   );
 }

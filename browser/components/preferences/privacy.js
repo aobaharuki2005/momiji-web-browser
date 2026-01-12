@@ -3315,10 +3315,11 @@ function dataCollectionCheckboxHandler({
     );
 
     if (collectionEnabled && matchPref()) {
-      checkbox.toggleAttribute(
-        "checked",
-        Services.prefs.getBoolPref(pref, false)
-      );
+      if (Services.prefs.getBoolPref(pref, false)) {
+        checkbox.setAttribute("checked", "true");
+      } else {
+        checkbox.removeAttribute("checked");
+      }
       checkbox.setAttribute("preference", pref);
     } else {
       checkbox.removeAttribute("preference");
@@ -3958,7 +3959,7 @@ var gPrivacyPane = {
         let notificationsDoNotDisturb = document.getElementById(
           "notificationsDoNotDisturb"
         );
-        notificationsDoNotDisturb.toggleAttribute("checked", true);
+        notificationsDoNotDisturb.setAttribute("checked", true);
       }
     }
 
@@ -5397,7 +5398,7 @@ var gPrivacyPane = {
       return;
     }
 
-    osReauthCheckbox.toggleAttribute("checked", LoginHelper.getOSAuthEnabled());
+    osReauthCheckbox.setAttribute("checked", LoginHelper.getOSAuthEnabled());
 
     setEventListener(
       "osReauthCheckbox",
@@ -5619,10 +5620,11 @@ var gPrivacyPane = {
         Services.prefs.getBoolPref(PREF_UPLOAD_ENABLED, false) &&
         Services.prefs.getBoolPref(PREF_NORMANDY_ENABLED, false)
       ) {
-        checkbox.toggleAttribute(
-          "checked",
-          Services.prefs.getBoolPref(PREF_OPT_OUT_STUDIES_ENABLED, false)
-        );
+        if (Services.prefs.getBoolPref(PREF_OPT_OUT_STUDIES_ENABLED, false)) {
+          checkbox.setAttribute("checked", "true");
+        } else {
+          checkbox.removeAttribute("checked");
+        }
         checkbox.setAttribute("preference", PREF_OPT_OUT_STUDIES_ENABLED);
         checkbox.removeAttribute("disabled");
       } else {

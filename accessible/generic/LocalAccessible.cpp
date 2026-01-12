@@ -426,8 +426,9 @@ uint64_t LocalAccessible::NativeLinkState() const { return 0; }
 bool LocalAccessible::NativelyUnavailable() const {
   if (mContent->IsHTMLElement()) return mContent->AsElement()->IsDisabled();
 
-  return mContent->IsElement() &&
-         mContent->AsElement()->GetBoolAttr(nsGkAtoms::disabled);
+  return mContent->IsElement() && mContent->AsElement()->AttrValueIs(
+                                      kNameSpaceID_None, nsGkAtoms::disabled,
+                                      nsGkAtoms::_true, eCaseMatters);
 }
 
 Accessible* LocalAccessible::ChildAtPoint(int32_t aX, int32_t aY,

@@ -13,8 +13,9 @@ add_setup(async function () {
 add_task(async function test_help_menu() {
   buildHelpMenu();
   let troubleshootingInfoMenu = document.getElementById("troubleShooting");
-  ok(
-    troubleshootingInfoMenu.hasAttribute("disabled"),
+  is(
+    troubleshootingInfoMenu.getAttribute("disabled"),
+    "true",
     "The `More Troubleshooting Information` item should be disabled"
   );
 });

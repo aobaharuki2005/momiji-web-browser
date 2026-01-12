@@ -737,14 +737,23 @@ var FullPageTranslationsPanel = new (class {
         (await TranslationsParent.getTopPreferredSupportedToLang());
 
     for (const menuitem of alwaysOfferTranslationsMenuItems) {
-      menuitem.toggleAttribute("checked", alwaysOfferTranslations);
+      menuitem.setAttribute(
+        "checked",
+        alwaysOfferTranslations ? "true" : "false"
+      );
     }
     for (const menuitem of alwaysTranslateMenuItems) {
-      menuitem.toggleAttribute("checked", alwaysTranslateLanguage);
+      menuitem.setAttribute(
+        "checked",
+        alwaysTranslateLanguage ? "true" : "false"
+      );
       menuitem.disabled = shouldDisable;
     }
     for (const menuitem of neverTranslateMenuItems) {
-      menuitem.toggleAttribute("checked", neverTranslateLanguage);
+      menuitem.setAttribute(
+        "checked",
+        neverTranslateLanguage ? "true" : "false"
+      );
       menuitem.disabled = shouldDisable;
     }
   }
@@ -763,7 +772,7 @@ var FullPageTranslationsPanel = new (class {
     ).shouldNeverTranslateSite();
 
     for (const menuitem of neverTranslateSiteMenuItems) {
-      menuitem.toggleAttribute("checked", neverTranslateSite);
+      menuitem.setAttribute("checked", neverTranslateSite ? "true" : "false");
     }
   }
 
@@ -1275,11 +1284,11 @@ var FullPageTranslationsPanel = new (class {
     } = this.elements;
 
     const alwaysTranslateLanguage =
-      alwaysTranslateLanguageMenuItem.hasAttribute("checked");
+      alwaysTranslateLanguageMenuItem.getAttribute("checked") === "true";
     const neverTranslateLanguage =
-      neverTranslateLanguageMenuItem.hasAttribute("checked");
+      neverTranslateLanguageMenuItem.getAttribute("checked") === "true";
     const neverTranslateSite =
-      neverTranslateSiteMenuItem.hasAttribute("checked");
+      neverTranslateSiteMenuItem.getAttribute("checked") === "true";
 
     return new CheckboxPageAction(
       this.#isTranslationsActive(),

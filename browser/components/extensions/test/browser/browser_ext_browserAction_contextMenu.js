@@ -714,7 +714,11 @@ add_task(async function test_unified_extensions_toolbar_pinning() {
   );
   let pinToToolbar = menu.querySelector(".customize-context-pinToToolbar");
   Assert.ok(!pinToToolbar.hidden, "Pin to Toolbar is visible.");
-  Assert.ok(pinToToolbar.hasAttribute("checked"), "Pin to Toolbar is checked.");
+  Assert.equal(
+    pinToToolbar.getAttribute("checked"),
+    "true",
+    "Pin to Toolbar is checked."
+  );
 
   info("Pinning addon to the addons panel.");
   await closeChromeContextMenu(TOOLBAR_CONTEXT_MENU, pinToToolbar);
@@ -739,8 +743,9 @@ add_task(async function test_unified_extensions_toolbar_pinning() {
   );
 
   Assert.ok(!pinToToolbar.hidden, "Pin to Toolbar is visible.");
-  Assert.ok(
-    !pinToToolbar.hasAttribute("checked"),
+  Assert.equal(
+    pinToToolbar.getAttribute("checked"),
+    "false",
     "Pin to Toolbar is not checked."
   );
   await closeChromeContextMenu(UNIFIED_CONTEXT_MENU, pinToToolbar);

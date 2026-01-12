@@ -146,13 +146,13 @@ function enableButtons() {
     return;
   }
 
-  var login_toggle = true;
-  var logout_toggle = true;
-  var pw_toggle = true;
-  var unload_toggle = true;
+  var login_toggle = "true";
+  var logout_toggle = "true";
+  var pw_toggle = "true";
+  var unload_toggle = "true";
   getSelectedItem();
   if (selected_module) {
-    unload_toggle = false;
+    unload_toggle = "false";
     showModuleInfo();
   } else if (selected_slot) {
     // here's the workaround - login functions are all with token,
@@ -160,12 +160,12 @@ function enableButtons() {
     var selected_token = selected_slot.getToken();
     if (selected_token != null) {
       if (selected_token.needsLogin() || !selected_token.needsUserInit) {
-        pw_toggle = false;
+        pw_toggle = "false";
         if (selected_token.needsLogin()) {
           if (selected_token.isLoggedIn()) {
-            logout_toggle = false;
+            logout_toggle = "false";
           } else {
-            login_toggle = false;
+            login_toggle = "false";
           }
         }
       }
@@ -182,16 +182,16 @@ function enableButtons() {
   }
   document
     .getElementById("login_button")
-    .toggleAttribute("disabled", login_toggle);
+    .setAttribute("disabled", login_toggle);
   document
     .getElementById("logout_button")
-    .toggleAttribute("disabled", logout_toggle);
+    .setAttribute("disabled", logout_toggle);
   document
     .getElementById("change_pw_button")
-    .toggleAttribute("disabled", pw_toggle);
+    .setAttribute("disabled", pw_toggle);
   document
     .getElementById("unload_button")
-    .toggleAttribute("disabled", unload_toggle);
+    .setAttribute("disabled", unload_toggle);
 }
 
 // clear the display of information for the slot

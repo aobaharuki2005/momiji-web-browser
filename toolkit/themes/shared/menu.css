@@ -101,7 +101,7 @@ menulist > menupopup {
   }
 
   @media (-moz-platform: windows) {
-    > menuitem[_moz-menuactive][disabled] {
+    > menuitem[_moz-menuactive][disabled="true"] {
       color: GrayText;
     }
   }
@@ -189,10 +189,10 @@ menubar > menu {
       color: ThreeDShadow;
     }
 
-    &:not([disabled]) {
+    &:not([disabled="true"]) {
       color: inherit;
     }
-    &[_moz-menuactive]:not([disabled]) {
+    &[_moz-menuactive]:not([disabled="true"]) {
       color: -moz-menubarhovertext;
 
       *|*:root[lwtheme] & {
@@ -226,17 +226,17 @@ menucaption {
 
 menu,
 menuitem {
-  &:where([disabled]) {
+  &:where([disabled="true"]) {
     color: var(--text-color-disabled);
     text-shadow: none;
   }
 
-  &:where([_moz-menuactive]:not([disabled])) {
+  &:where([_moz-menuactive]:not([disabled="true"])) {
     color: -moz-menuhovertext;
     background-color: -moz-menuhover;
   }
 
-  &:where([_moz-menuactive][disabled]) {
+  &:where([_moz-menuactive][disabled="true"]) {
     background-color: -moz-menuhoverdisabled;
   }
 }

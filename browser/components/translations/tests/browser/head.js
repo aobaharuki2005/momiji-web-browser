@@ -1360,12 +1360,12 @@ class FullPageTranslationsTestUtils {
         `Should match expected disabled state for ${dataL10nId}`
       );
       await waitForCondition(
-        () => menuItem.hasAttribute("checked") === checked,
+        () => menuItem.getAttribute("checked") === (checked ? "true" : "false"),
         "Waiting for checkbox state"
       );
       is(
-        menuItem.hasAttribute("checked"),
-        checked,
+        menuItem.getAttribute("checked"),
+        checked ? "true" : "false",
         `Should match expected checkbox state for ${dataL10nId}`
       );
     }

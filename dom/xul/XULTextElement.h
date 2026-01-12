@@ -16,9 +16,9 @@ class XULTextElement final : public nsXULElement {
   explicit XULTextElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : nsXULElement(std::move(aNodeInfo)) {}
 
-  bool Disabled() { return IsDisabled(); }
+  bool Disabled() { return GetXULBoolAttr(nsGkAtoms::disabled); }
   MOZ_CAN_RUN_SCRIPT void SetDisabled(bool aValue) {
-    SetBoolAttr(nsGkAtoms::disabled, aValue);
+    SetXULBoolAttr(nsGkAtoms::disabled, aValue, mozilla::IgnoreErrors());
   }
   void GetValue(DOMString& aValue) const {
     GetXULAttr(nsGkAtoms::value, aValue);
@@ -35,10 +35,6 @@ class XULTextElement final : public nsXULElement {
 
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       AttrModType aModType) const override;
-
-  void AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
-                    const nsAttrValue* aValue, const nsAttrValue* aOldValue,
-                    nsIPrincipal* aSubjectPrincipal, bool aNotify) override;
 
   NS_IMPL_FROMNODE_HELPER(XULTextElement,
                           IsAnyOfXULElements(nsGkAtoms::label,

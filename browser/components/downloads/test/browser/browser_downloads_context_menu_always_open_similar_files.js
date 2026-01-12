@@ -103,9 +103,8 @@ add_task(async function test_checkbox_useSystemDefault() {
     !BrowserTestUtils.isHidden(alwaysOpenSimilarFilesItem),
     "alwaysOpenSimilarFiles should be visible"
   );
-  is(
-    alwaysOpenSimilarFilesItem.getAttribute("type"),
-    "checkbox",
+  ok(
+    alwaysOpenSimilarFilesItem.hasAttribute("checked"),
     "alwaysOpenSimilarFiles should have checkbox attribute"
   );
 

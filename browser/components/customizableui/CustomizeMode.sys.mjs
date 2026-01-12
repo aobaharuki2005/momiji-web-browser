@@ -1148,7 +1148,7 @@ export class CustomizeMode {
     for (let command of this.#document.querySelectorAll("command")) {
       if (!command.id || !this.#enabledCommands.has(command.id)) {
         if (shouldBeDisabled) {
-          if (!command.hasAttribute("disabled")) {
+          if (command.getAttribute("disabled") != "true") {
             command.setAttribute("disabled", true);
           } else {
             command.setAttribute("wasdisabled", true);
@@ -1352,7 +1352,7 @@ export class CustomizeMode {
       aNode.removeAttribute("observes");
     }
 
-    if (aNode.hasAttribute("checked")) {
+    if (aNode.getAttribute("checked") == "true") {
       wrapper.setAttribute("itemchecked", "true");
       aNode.removeAttribute("checked");
     }
@@ -1482,7 +1482,7 @@ export class CustomizeMode {
 
       // XXX Bug 309953 - toolbarbuttons aren't in sync with their commands after customizing
       let command = this.$(commandID);
-      if (command?.hasAttribute("disabled")) {
+      if (command && command.hasAttribute("disabled")) {
         toolbarItem.setAttribute("disabled", command.getAttribute("disabled"));
       }
     }

@@ -467,7 +467,7 @@ async function closeDialog(browser, dialog, confirm, scheme) {
       listItem.click();
     }
 
-    dialogEl.removeAttribute("buttondisabledaccept");
+    dialogEl.setAttribute("buttondisabledaccept", false);
     dialogEl.acceptDialog();
   } else {
     dialogEl.cancelDialog();

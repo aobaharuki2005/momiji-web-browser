@@ -68,7 +68,7 @@
       if (
         (controlElement.localName == "checkbox" ||
           controlElement.localName == "radio") &&
-        controlElement.hasAttribute("disabled")
+        controlElement.getAttribute("disabled") == "true"
       ) {
         return;
       }

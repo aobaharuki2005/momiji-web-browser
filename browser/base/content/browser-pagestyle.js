@@ -55,7 +55,7 @@ var gPageStyleMenu = {
         menuItem.setAttribute("type", "radio");
         menuItem.setAttribute("label", currentStyleSheet.title);
         menuItem.setAttribute("data", currentStyleSheet.title);
-        menuItem.toggleAttribute(
+        menuItem.setAttribute(
           "checked",
           !currentStyleSheet.disabled && !styleDisabled
         );
@@ -69,11 +69,8 @@ var gPageStyleMenu = {
       }
     }
 
-    noStyle.toggleAttribute("checked", styleDisabled);
-    persistentOnly.toggleAttribute(
-      "checked",
-      !altStyleSelected && !styleDisabled
-    );
+    noStyle.setAttribute("checked", styleDisabled);
+    persistentOnly.setAttribute("checked", !altStyleSelected && !styleDisabled);
     persistentOnly.hidden = styleSheetInfo.preferredStyleSheetSet
       ? haveAltSheets
       : false;

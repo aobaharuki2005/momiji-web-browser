@@ -1258,7 +1258,7 @@ function HandleAppCommandEvent(evt) {
       BrowserCommands.reloadSkipCache();
       break;
     case "Stop":
-      if (XULBrowserWindow.stopCommand.hasAttribute("disabled")) {
+      if (XULBrowserWindow.stopCommand.getAttribute("disabled") != "true") {
         BrowserCommands.stop();
       }
       break;
@@ -2705,7 +2705,7 @@ var CombinedStopReload = {
     }
 
     this._initialized = true;
-    if (!XULBrowserWindow.stopCommand.hasAttribute("disabled")) {
+    if (XULBrowserWindow.stopCommand.getAttribute("disabled") != "true") {
       reload.setAttribute("displaystop", "true");
     }
     stop.addEventListener("click", this);
@@ -2833,7 +2833,7 @@ var CombinedStopReload = {
       this._stopClicked = false;
       this._cancelTransition();
       this.reload.disabled =
-        XULBrowserWindow.reloadCommand.hasAttribute("disabled");
+        XULBrowserWindow.reloadCommand.getAttribute("disabled") == "true";
       return;
     }
 
@@ -2848,7 +2848,7 @@ var CombinedStopReload = {
       function (self) {
         self._timer = 0;
         self.reload.disabled =
-          XULBrowserWindow.reloadCommand.hasAttribute("disabled");
+          XULBrowserWindow.reloadCommand.getAttribute("disabled") == "true";
       },
       650,
       this
@@ -3029,7 +3029,7 @@ function onViewToolbarCommand(aEvent) {
   } else {
     menuId = node.parentNode.id;
     toolbarId = node.getAttribute("toolbarId");
-    isVisible = node.hasAttribute("checked");
+    isVisible = node.getAttribute("checked") == "true";
   }
   CustomizableUI.setToolbarVisibility(toolbarId, isVisible);
   BrowserUsageTelemetry.recordToolbarVisibility(toolbarId, isVisible, menuId);
@@ -3135,7 +3135,7 @@ function updateToggleControlLabel(control) {
   if (!control.hasAttribute("label-unchecked")) {
     control.setAttribute("label-unchecked", control.getAttribute("label"));
   }
-  let prefix = control.hasAttribute("checked") ? "" : "un";
+  let prefix = control.getAttribute("checked") == "true" ? "" : "un";
   control.setAttribute("label", control.getAttribute(`label-${prefix}checked`));
 }
 
@@ -3754,8 +3754,11 @@ var BrowserOffline = {
   _uiElement: null,
   _updateOfflineUI(aOffline) {
     var offlineLocked = Services.prefs.prefIsLocked("network.online");
-    this._uiElement.toggleAttribute("disabled", !!offlineLocked);
-    this._uiElement.toggleAttribute("checked", aOffline);
+    if (offlineLocked) {
+      this._uiElement.setAttribute("disabled", "true");
+    }
+
+    this._uiElement.setAttribute("checked", aOffline);
   },
 };
 
@@ -4765,7 +4768,7 @@ var gDialogBox = {
         continue;
       }
       if (!shouldBeEnabled) {
-        if (!element.hasAttribute("disabled")) {
+        if (element.getAttribute("disabled") != "true") {
           element.setAttribute("disabled", true);
         } else {
           element.setAttribute("wasdisabled", true);

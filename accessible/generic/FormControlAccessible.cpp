@@ -47,7 +47,9 @@ uint64_t CheckboxAccessible::NativeState() const {
       return state | states::CHECKED;
     }
 
-  } else if (mContent->AsElement()->GetBoolAttr(nsGkAtoms::checked)) {
+  } else if (mContent->AsElement()->AttrValueIs(
+                 kNameSpaceID_None, nsGkAtoms::checked, nsGkAtoms::_true,
+                 eCaseMatters)) {  // XUL checkbox
     return state | states::CHECKED;
   }
 

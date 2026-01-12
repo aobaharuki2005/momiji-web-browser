@@ -122,11 +122,15 @@
     }
 
     set disabled(val) {
-      this.toggleAttribute("disabled", !!val);
+      if (val) {
+        this.setAttribute("disabled", "true");
+      } else {
+        this.removeAttribute("disabled");
+      }
     }
 
     get disabled() {
-      return this.hasAttribute("disabled");
+      return this.getAttribute("disabled") == "true";
     }
 
     set group(val) {
@@ -159,7 +163,12 @@
           sibs[i].removeAttribute("checked");
         }
       }
-      this.toggleAttribute("checked", !!val);
+
+      if (val) {
+        this.setAttribute("checked", "true");
+      } else {
+        this.removeAttribute("checked");
+      }
     }
 
     get checked() {

@@ -15,8 +15,9 @@ add_task(async function () {
     !PanelUI.menuButton.hasAttribute("open"),
     "Menu button should still not be 'pressed' when in customize mode"
   );
-  ok(
-    PanelUI.menuButton.hasAttribute("disabled"),
+  is(
+    PanelUI.menuButton.getAttribute("disabled"),
+    "true",
     "Menu button should be disabled in customize mode"
   );
 
@@ -34,12 +35,14 @@ add_task(async function () {
     !PanelUI.menuButton.hasAttribute("open"),
     "Menu button should still not be 'pressed' when in customize mode after opening a context menu"
   );
-  ok(
-    PanelUI.menuButton.hasAttribute("disabled"),
+  is(
+    PanelUI.menuButton.getAttribute("disabled"),
+    "true",
     "Menu button should still be disabled in customize mode"
   );
-  ok(
-    PanelUI.menuButton.hasAttribute("disabled"),
+  is(
+    PanelUI.menuButton.getAttribute("disabled"),
+    "true",
     "Menu button should still be disabled in customize mode after opening context menu"
   );
 
@@ -50,8 +53,9 @@ add_task(async function () {
     !PanelUI.menuButton.hasAttribute("open"),
     "Menu button should still not be 'pressed' when in customize mode after hiding a context menu"
   );
-  ok(
-    PanelUI.menuButton.hasAttribute("disabled"),
+  is(
+    PanelUI.menuButton.getAttribute("disabled"),
+    "true",
     "Menu button should still be disabled in customize mode after hiding context menu"
   );
   await endCustomizing();

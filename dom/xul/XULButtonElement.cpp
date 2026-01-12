@@ -20,7 +20,6 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "mozilla/dom/XULMenuBarElement.h"
-#include "mozilla/glue/Debug.h"
 #include "nsCaseTreatment.h"
 #include "nsChangeHint.h"
 #include "nsGkAtoms.h"
@@ -39,9 +38,7 @@ XULButtonElement::XULButtonElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : nsXULElement(std::move(aNodeInfo)),
       mIsAlwaysMenu(IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menulist,
-                                       nsGkAtoms::menuitem)),
-      mCheckable(IsAnyOfXULElements(nsGkAtoms::menuitem, nsGkAtoms::radio,
-                                    nsGkAtoms::checkbox)) {}
+                                       nsGkAtoms::menuitem)) {}
 
 XULButtonElement::~XULButtonElement() {
   StopBlinking();
@@ -54,6 +51,11 @@ nsChangeHint XULButtonElement::GetAttributeChangeHint(
       IsAnyOfXULElements(nsGkAtoms::button, nsGkAtoms::toolbarbutton)) {
     // type=menu switches to a menu frame.
     return nsChangeHint_ReconstructFrame;
+  }
+  if (aAttribute == nsGkAtoms::checked &&
+      IsAnyOfXULElements(nsGkAtoms::menuitem, nsGkAtoms::radio,
+                         nsGkAtoms::checkbox)) {
+    return nsChangeHint_RepaintFrame;
   }
   return nsXULElement::GetAttributeChangeHint(aAttribute, aModType);
 }
@@ -245,8 +247,7 @@ void XULButtonElement::ExecuteMenu(Modifiers aModifiers, int16_t aButton,
   // Flip "checked" state if we're a checkbox menu, or an un-checked radio menu.
   bool needToFlipChecked = false;
   if (*menuType == MenuType::Checkbox ||
-      (*menuType == MenuType::Radio &&
-       !State().HasState(ElementState::CHECKED))) {
+      (*menuType == MenuType::Radio && !GetXULBoolAttr(nsGkAtoms::checked))) {
     needToFlipChecked = !AttrValueIs(kNameSpaceID_None, nsGkAtoms::autocheck,
                                      nsGkAtoms::_false, eCaseMatters);
   }
@@ -700,7 +701,7 @@ void XULButtonElement::UncheckRadioSiblings() {
     }
     // we're in the same group, only uncheck if we're checked (for some reason,
     // some tests rely on that specifically).
-    return button->GetBoolAttr(nsGkAtoms::checked);
+    return button->GetXULBoolAttr(nsGkAtoms::checked);
   };
 
   for (nsIContent* child = parent->GetFirstChild(); child;
@@ -719,24 +720,16 @@ void XULButtonElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                     bool aNotify) {
   nsXULElement::AfterSetAttr(aNamespaceID, aName, aValue, aOldValue,
                              aSubjectPrincipal, aNotify);
-  if (aNamespaceID != kNameSpaceID_None) {
-    return;
-  }
-  if (aName == nsGkAtoms::checked && mCheckable) {
-    SetStates(ElementState::CHECKED, !!aValue, aNotify);
-  }
-  if (aName == nsGkAtoms::disabled) {
-    SetStates(ElementState::DISABLED, !!aValue, aNotify);
-  }
-  if (IsAlwaysMenu()) {
+  if (IsAlwaysMenu() && aNamespaceID == kNameSpaceID_None) {
     // We need to uncheck radio siblings when we're a checked radio and switch
     // groups, or become checked.
     const bool shouldUncheckSiblings = [&] {
       if (aName == nsGkAtoms::type || aName == nsGkAtoms::name) {
         return *GetMenuType() == MenuType::Radio &&
-               State().HasState(ElementState::CHECKED);
+               GetXULBoolAttr(nsGkAtoms::checked);
       }
-      if (aName == nsGkAtoms::checked && aValue) {
+      if (aName == nsGkAtoms::checked && aValue &&
+          aValue->Equals(nsGkAtoms::_true, eCaseMatters)) {
         return *GetMenuType() == MenuType::Radio;
       }
       return false;

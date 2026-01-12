@@ -694,11 +694,15 @@
   MozElements.BaseControlMixin = Base => {
     class BaseControl extends Base {
       get disabled() {
-        return this.hasAttribute("disabled");
+        return this.getAttribute("disabled") == "true";
       }
 
       set disabled(val) {
-        this.toggleAttribute("disabled", !!val);
+        if (val) {
+          this.setAttribute("disabled", "true");
+        } else {
+          this.removeAttribute("disabled");
+        }
       }
 
       get tabIndex() {

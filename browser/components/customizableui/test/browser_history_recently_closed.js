@@ -111,15 +111,15 @@ add_task(async function testRecentlyClosedDisabled() {
   // Wait for the disabled attribute to change, as we receive
   // the "viewshown" event before this changes
   await BrowserTestUtils.waitForCondition(
-    () => recentlyClosedTabs.hasAttribute("disabled"),
+    () => recentlyClosedTabs.getAttribute("disabled"),
     "Waiting for button to become disabled"
   );
   Assert.ok(
-    recentlyClosedTabs.hasAttribute("disabled"),
+    recentlyClosedTabs.getAttribute("disabled"),
     "Recently closed tabs button disabled"
   );
   Assert.ok(
-    recentlyClosedWindows.hasAttribute("disabled"),
+    recentlyClosedWindows.getAttribute("disabled"),
     "Recently closed windows button disabled"
   );
 
@@ -134,15 +134,15 @@ add_task(async function testRecentlyClosedDisabled() {
   await openHistoryPanel();
 
   await BrowserTestUtils.waitForCondition(
-    () => !recentlyClosedTabs.hasAttribute("disabled"),
+    () => !recentlyClosedTabs.getAttribute("disabled"),
     "Waiting for button to be enabled"
   );
   Assert.ok(
-    !recentlyClosedTabs.hasAttribute("disabled"),
+    !recentlyClosedTabs.getAttribute("disabled"),
     "Recently closed tabs is available"
   );
   Assert.ok(
-    recentlyClosedWindows.hasAttribute("disabled"),
+    recentlyClosedWindows.getAttribute("disabled"),
     "Recently closed windows button disabled"
   );
 
@@ -162,15 +162,15 @@ add_task(async function testRecentlyClosedDisabled() {
   await openHistoryPanel();
 
   await BrowserTestUtils.waitForCondition(
-    () => !recentlyClosedWindows.hasAttribute("disabled"),
+    () => !recentlyClosedWindows.getAttribute("disabled"),
     "Waiting for button to be enabled"
   );
   Assert.ok(
-    !recentlyClosedTabs.hasAttribute("disabled"),
+    !recentlyClosedTabs.getAttribute("disabled"),
     "Recently closed tabs is available"
   );
   Assert.ok(
-    !recentlyClosedWindows.hasAttribute("disabled"),
+    !recentlyClosedWindows.getAttribute("disabled"),
     "Recently closed windows is available"
   );
 
@@ -189,7 +189,7 @@ add_task(async function testRecentlyClosedTabsDisabledPersists() {
 
   let recentlyClosedTabs = document.getElementById("appMenuRecentlyClosedTabs");
   Assert.ok(
-    recentlyClosedTabs.hasAttribute("disabled"),
+    recentlyClosedTabs.getAttribute("disabled"),
     "Recently closed tabs button disabled"
   );
 
@@ -202,7 +202,7 @@ add_task(async function testRecentlyClosedTabsDisabledPersists() {
     "appMenuRecentlyClosedTabs"
   );
   Assert.ok(
-    recentlyClosedTabs.hasAttribute("disabled"),
+    recentlyClosedTabs.getAttribute("disabled"),
     "Recently closed tabs is disabled"
   );
 
@@ -216,7 +216,7 @@ add_task(async function testRecentlyClosedTabsDisabledPersists() {
     "appMenuRecentlyClosedTabs"
   );
   Assert.ok(
-    recentlyClosedTabs.hasAttribute("disabled"),
+    recentlyClosedTabs.getAttribute("disabled"),
     "Recently closed tabs is disabled"
   );
   await hideHistoryPanel(newWin.document);

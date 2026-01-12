@@ -228,7 +228,7 @@ async function acceptNextProtocolPermissionDialog(browser) {
   let dialogEl = getDialogElementFromSubDialog(dialog);
 
   // Bypass the security delay.
-  dialogEl.removeAttribute("buttondisabledaccept");
+  dialogEl.setAttribute("buttondisabledaccept", "false");
   dialogEl.acceptDialog();
 
   await dialogWindowClosePromise;

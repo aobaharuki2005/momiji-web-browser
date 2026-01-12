@@ -555,7 +555,7 @@ a[is="moz-support-link"]:not(.sidebar-footer-link, [hidden]) {
   margin-bottom: 0;
 }
 
-.text-link[disabled] {
+.text-link[disabled="true"] {
   pointer-events: none;
 }
 

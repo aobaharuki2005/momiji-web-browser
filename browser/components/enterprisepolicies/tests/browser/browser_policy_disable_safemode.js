@@ -13,8 +13,9 @@ add_setup(async function () {
 add_task(async function test_help_menu() {
   buildHelpMenu();
   let safeModeMenu = document.getElementById("helpSafeMode");
-  ok(
-    safeModeMenu.hasAttribute("disabled"),
+  is(
+    safeModeMenu.getAttribute("disabled"),
+    "true",
     "The `Restart with Add-ons Disabled...` item should be disabled"
   );
 });
@@ -27,8 +28,9 @@ add_task(async function test_safemode_from_about_support() {
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let button = content.document.getElementById("restart-in-safe-mode-button");
-    ok(
-      button.hasAttribute("disabled"),
+    is(
+      button.getAttribute("disabled"),
+      "true",
       "The `Restart with Add-ons Disabled...` button should be disabled"
     );
   });
@@ -44,8 +46,9 @@ add_task(async function test_safemode_from_about_profiles() {
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async function () {
     let button = content.document.getElementById("restart-in-safe-mode-button");
-    ok(
-      button.hasAttribute("disabled"),
+    is(
+      button.getAttribute("disabled"),
+      "true",
       "The `Restart with Add-ons Disabled...` button should be disabled"
     );
   });

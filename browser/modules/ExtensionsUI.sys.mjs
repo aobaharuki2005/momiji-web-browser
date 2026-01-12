@@ -806,7 +806,7 @@ export var ExtensionsUI = {
     if (state.allDomains) {
       let allDomains = doc.createXULElement("menuitem");
       allDomains.setAttribute("type", "radio");
-      allDomains.toggleAttribute("checked", state.hasAccess);
+      allDomains.setAttribute("checked", state.hasAccess);
       doc.l10n.setAttributes(allDomains, "origin-controls-option-all-domains");
       items.push(allDomains);
     }
@@ -814,7 +814,7 @@ export var ExtensionsUI = {
     if (state.whenClicked) {
       let whenClicked = doc.createXULElement("menuitem");
       whenClicked.setAttribute("type", "radio");
-      whenClicked.toggleAttribute("checked", !state.hasAccess);
+      whenClicked.setAttribute("checked", !state.hasAccess);
       doc.l10n.setAttributes(
         whenClicked,
         "origin-controls-option-when-clicked"
@@ -829,7 +829,7 @@ export var ExtensionsUI = {
     if (state.alwaysOn) {
       let alwaysOn = doc.createXULElement("menuitem");
       alwaysOn.setAttribute("type", "radio");
-      alwaysOn.toggleAttribute("checked", state.hasAccess);
+      alwaysOn.setAttribute("checked", state.hasAccess);
       doc.l10n.setAttributes(alwaysOn, "origin-controls-option-always-on", {
         domain: uri.host,
       });

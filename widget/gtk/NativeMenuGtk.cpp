@@ -39,8 +39,10 @@ using GtkMenuPopupAtRect = void (*)(GtkMenu* menu, GdkWindow* rect_window,
                                     const GdkEvent* trigger_event);
 
 static bool IsDisabled(const dom::Element& aElement) {
-  return aElement.GetBoolAttr(nsGkAtoms::disabled) ||
-         aElement.GetBoolAttr(nsGkAtoms::hidden);
+  return aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::disabled,
+                              nsGkAtoms::_true, eCaseMatters) ||
+         aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::hidden,
+                              nsGkAtoms::_true, eCaseMatters);
 }
 static bool NodeIsRelevant(const nsINode& aNode) {
   return aNode.IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menuseparator,
@@ -62,7 +64,8 @@ static Maybe<bool> GetChecked(const dom::Element& aMenuItem) {
       return Nothing();
   }
 
-  return Some(aMenuItem.GetBoolAttr(nsGkAtoms::checked));
+  return Some(aMenuItem.AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                                    nsGkAtoms::_true, eCaseMatters));
 }
 
 struct Actions {
@@ -598,7 +601,8 @@ static void UpdateRadioOrCheck(DbusmenuMenuitem* aItem,
                                    DBUSMENU_MENUITEM_TOGGLE_RADIO);
   }
 
-  const bool isChecked = aContent->GetBoolAttr(nsGkAtoms::checked);
+  bool isChecked = aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::checked,
+                                         nsGkAtoms::_true, eCaseMatters);
   dbusmenu_menuitem_property_set_int(
       aItem, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE,
       isChecked ? DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED
@@ -606,7 +610,9 @@ static void UpdateRadioOrCheck(DbusmenuMenuitem* aItem,
 }
 
 static void UpdateEnabled(DbusmenuMenuitem* aItem, const nsIContent* aContent) {
-  const bool disabled = aContent->AsElement()->GetBoolAttr(nsGkAtoms::disabled);
+  bool disabled = aContent->AsElement()->AttrValueIs(
+      kNameSpaceID_None, nsGkAtoms::disabled, nsGkAtoms::_true, eCaseMatters);
+
   dbusmenu_menuitem_property_set_bool(aItem, DBUSMENU_MENUITEM_PROP_ENABLED,
                                       !disabled);
 }

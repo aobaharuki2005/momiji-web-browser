@@ -80,7 +80,11 @@ async function downloadAndCheckPanel({ openDownloadsListOnStart = true } = {}) {
 
 function clickCheckbox(checkbox) {
   // Clicking a checkbox toggles its checkedness first.
-  checkbox.toggleAttribute("checked");
+  if (checkbox.getAttribute("checked") == "true") {
+    checkbox.removeAttribute("checked");
+  } else {
+    checkbox.setAttribute("checked", "true");
+  }
   // Then it runs the command and closes the popup.
   checkbox.doCommand();
   checkbox.parentElement.hidePopup();
@@ -595,7 +599,7 @@ add_task(async function test_alwaysOpenPanel_menuitem() {
   info("Check context menu for downloads button.");
   await openContextMenu(button);
   is(checkbox.hidden, false, "Always Open checkbox is visible.");
-  ok(checkbox.hasAttribute("checked"), "Always Open is enabled.");
+  is(checkbox.getAttribute("checked"), "true", "Always Open is enabled.");
 
   info("Disable Always Open via context menu.");
   clickCheckbox(checkbox);
@@ -609,7 +613,7 @@ add_task(async function test_alwaysOpenPanel_menuitem() {
 
   await openContextMenu(button);
   is(checkbox.hidden, false, "Always Open checkbox is visible.");
-  ok(!checkbox.hasAttribute("checked"), "Always Open is disabled.");
+  isnot(checkbox.getAttribute("checked"), "true", "Always Open is disabled.");
 
   info("Enable Always Open via context menu");
   clickCheckbox(checkbox);

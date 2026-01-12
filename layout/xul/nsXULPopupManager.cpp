@@ -2308,9 +2308,6 @@ void nsXULPopupManager::UpdateMenuItems(Element* aPopup) {
           if (commandElement->GetAttr(nsGkAtoms::checked, commandValue)) {
             grandChildElement->SetAttr(kNameSpaceID_None, nsGkAtoms::checked,
                                        commandValue, true);
-          } else {
-            grandChildElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked,
-                                         true);
           }
 
           if (commandElement->GetAttr(nsGkAtoms::hidden, commandValue)) {
@@ -3062,8 +3059,11 @@ nsXULMenuCommandEvent::Run() {
   RefPtr menu = XULButtonElement::FromNode(mMenu);
   MOZ_ASSERT(menu);
   if (mFlipChecked) {
-    menu->SetBoolAttr(nsGkAtoms::checked,
-                      !menu->GetBoolAttr(nsGkAtoms::checked));
+    if (menu->GetXULBoolAttr(nsGkAtoms::checked)) {
+      menu->UnsetAttr(kNameSpaceID_None, nsGkAtoms::checked, true);
+    } else {
+      menu->SetAttr(kNameSpaceID_None, nsGkAtoms::checked, u"true"_ns, true);
+    }
   }
 
   RefPtr<nsPresContext> presContext = menu->OwnerDoc()->GetPresContext();

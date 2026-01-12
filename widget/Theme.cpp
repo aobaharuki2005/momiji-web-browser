@@ -1548,8 +1548,18 @@ nsITheme::Transparency Theme::GetWidgetTransparency(
 
 bool Theme::WidgetAttributeChangeRequiresRepaint(StyleAppearance aAppearance,
                                                  nsAtom* aAttribute) {
-  return aAttribute == nsGkAtoms::_default ||  // Used in IsDefaultButton()
-         aAttribute == nsGkAtoms::open;        // Used in GetContentState()
+  // Check the attribute to see if it's relevant.
+  // TODO(emilio): The non-native theme doesn't use these attributes. Other
+  // themes do, but not all of them (and not all of the ones they check are
+  // here).
+  return aAttribute == nsGkAtoms::disabled ||
+         aAttribute == nsGkAtoms::checked ||
+         aAttribute == nsGkAtoms::selected ||
+         aAttribute == nsGkAtoms::visuallyselected ||
+         aAttribute == nsGkAtoms::menuactive ||
+         aAttribute == nsGkAtoms::sortDirection ||
+         aAttribute == nsGkAtoms::focused ||
+         aAttribute == nsGkAtoms::_default || aAttribute == nsGkAtoms::open;
 }
 
 bool Theme::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppearance) {

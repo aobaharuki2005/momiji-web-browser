@@ -993,7 +993,7 @@
     }
 
     get selected() {
-      return this.hasAttribute("selected");
+      return this.getAttribute("selected") == "true";
     }
     /**
      * nsIDOMXULSelectControlItemElement

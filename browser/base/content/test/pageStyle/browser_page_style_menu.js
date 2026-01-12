@@ -43,7 +43,7 @@ add_task(async function test_menu() {
   let menuitems = fillPopupAndGetItems();
   let items = menuitems.map(el => ({
     label: el.getAttribute("label"),
-    checked: el.hasAttribute("checked"),
+    checked: el.getAttribute("checked") == "true",
   }));
 
   let validLinks = await SpecialPowers.spawn(

@@ -418,8 +418,8 @@ async function testOtherBookmarksCheckedState(expectedCheckedState) {
   );
 
   is(
-    otherBookmarksMenuItem.hasAttribute("checked"),
-    expectedCheckedState,
+    otherBookmarksMenuItem.getAttribute("checked"),
+    `${expectedCheckedState}`,
     `Other Bookmarks item's checked state should be ${expectedCheckedState}`
   );
 

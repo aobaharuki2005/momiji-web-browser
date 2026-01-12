@@ -141,7 +141,7 @@ class MozTextLabel extends HTMLLabelElement {
     if (
       (controlElement.localName == "checkbox" ||
         controlElement.localName == "radio") &&
-      controlElement.hasAttribute("disabled")
+      controlElement.getAttribute("disabled") == "true"
     ) {
       return;
     }

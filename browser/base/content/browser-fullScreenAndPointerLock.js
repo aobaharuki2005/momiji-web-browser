@@ -343,7 +343,11 @@ var FullScreen = {
     // Toggle the View:FullScreen command, which controls elements like the
     // fullscreen menuitem, and menubars.
     let fullscreenCommand = document.getElementById("View:FullScreen");
-    fullscreenCommand.toggleAttribute("checked", enterFS);
+    if (enterFS) {
+      fullscreenCommand.setAttribute("checked", enterFS);
+    } else {
+      fullscreenCommand.removeAttribute("checked");
+    }
 
     if (AppConstants.platform == "macosx") {
       // Make sure the menu items are adjusted.
@@ -831,7 +835,7 @@ var FullScreen = {
 
   // Autohide helpers for the context menu item
   updateAutohideMenuitem(aItem) {
-    aItem.toggleAttribute(
+    aItem.setAttribute(
       "checked",
       Services.prefs.getBoolPref("browser.fullscreen.autohide")
     );

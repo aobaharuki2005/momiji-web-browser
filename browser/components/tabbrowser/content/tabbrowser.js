@@ -5819,7 +5819,7 @@
       // We should be using the disabled property here instead of the attribute,
       // but some elements that this function is used with don't support it (e.g.
       // menuitem).
-      if (node.hasAttribute("disabled")) {
+      if (node.getAttribute("disabled") == "true") {
         return;
       } // Do nothing
 
@@ -9689,7 +9689,7 @@ var TabContextMenu = {
     let closedCount = SessionStore.getLastClosedTabCount(window);
     document
       .getElementById("History:UndoCloseTab")
-      .toggleAttribute("disabled", closedCount == 0);
+      .setAttribute("disabled", closedCount == 0);
     document.l10n.setArgs(document.getElementById("context_undoCloseTab"), {
       tabCount: closedCount,
     });

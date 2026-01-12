@@ -281,7 +281,7 @@
 
 /* Popup states */
 .autocomplete-richlistitem {
-  &:not([disabled]):not([selected]):hover {
+  &:not([disabled="true"]):not([selected]):hover {
     background-color: var(--arrowpanel-dimmed);
     @media (forced-colors) {
       background-color: ButtonText;

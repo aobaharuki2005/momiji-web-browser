@@ -114,12 +114,12 @@ xul|separator.groove[orient="vertical"] {
     font-weight: var(--font-weight-bold);
   }
 
-  > menuitem[_moz-menuactive="true"][disabled] {
+  > menuitem[_moz-menuactive="true"][disabled="true"] {
     color: GrayText;
     background-color: unset;
   }
 
-  > menucaption[disabled] {
+  > menucaption[disabled="true"] {
     color: GrayText;
   }
 }
