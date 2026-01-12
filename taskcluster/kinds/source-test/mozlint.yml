@@ -327,7 +327,6 @@ node-licenses:
             ln -s ../tools/lint/eslint/eslint-plugin-spidermonkey-js node_modules &&
             cp -r $MOZ_FETCHES_DIR/eslint-plugin-mozilla/node_modules tools/lint/eslint/eslint-plugin-mozilla/node_modules &&
             cp -r $MOZ_FETCHES_DIR/stylelint-plugin-mozilla/node_modules tools/lint/stylelint/stylelint-plugin-mozilla/node_modules &&
-            cp -r $MOZ_FETCHES_DIR/terser/node_modules tools/terser/node_modules &&
             ./mach lint -v -l node-licenses -f treeherder -f json:/builds/worker/mozlint.json .
     when:
         files-changed:
@@ -339,14 +338,12 @@ node-licenses:
             - package.json
             - tools/lint/eslint/eslint-plugin-mozilla/package.json
             - tools/lint/stylelint/stylelint-plugin-mozilla/package.json
-            - tools/terser/package.json
     fetches:
         toolchain:
             - linux64-node
             - node-modules
             - eslint-plugin-mozilla
             - stylelint-plugin-mozilla
-            - terser
 
 node-package-names:
     description: Lint for node package name issues
