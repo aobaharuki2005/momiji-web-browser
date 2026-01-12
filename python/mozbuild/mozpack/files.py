@@ -939,7 +939,7 @@ class FileFinder(BaseFinder):
         ignore=(),
         ignore_broken_symlinks=False,
         find_dotfiles=False,
-        **kargs
+        **kargs,
     ):
         """
         Create a FileFinder for files under the given base directory.
