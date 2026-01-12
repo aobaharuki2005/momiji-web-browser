@@ -785,7 +785,7 @@ class TableWidget extends EventEmitter {
       menuitem.setAttribute("label", column.header.getAttribute("value"));
       menuitem.setAttribute("data-id", column.id);
       menuitem.setAttribute("type", "checkbox");
-      menuitem.toggleAttribute("checked", !column.hidden);
+      menuitem.setAttribute("checked", !column.hidden);
       if (column.id == this.uniqueId) {
         menuitem.setAttribute("disabled", "true");
       }
@@ -802,7 +802,7 @@ class TableWidget extends EventEmitter {
    */
   onPopupCommand(event) {
     const item = event.originalTarget;
-    let checked = item.hasAttribute("checked");
+    let checked = !!item.getAttribute("checked");
     const id = item.getAttribute("data-id");
     this.emit(EVENTS.HEADER_CONTEXT_MENU, id, checked);
     checked = this.menupopup.querySelectorAll("menuitem[checked]");
