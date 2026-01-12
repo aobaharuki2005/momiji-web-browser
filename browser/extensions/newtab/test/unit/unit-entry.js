@@ -37,17 +37,6 @@ chai.use(chaiAssertions);
 
 const overrider = new GlobalOverrider();
 
-// Patch dialog element's .showModal()/close() functions to prevent errors in tests
-// Some test environments may not have proper HTMLDialogElement support
-if (typeof HTMLDialogElement !== "undefined") {
-  HTMLDialogElement.prototype.showModal = function () {
-    this.open = true;
-  };
-  HTMLDialogElement.prototype.close = function () {
-    this.open = false;
-  };
-}
-
 const RemoteSettings = name => ({
   get: () => {
     if (name === "attachment") {

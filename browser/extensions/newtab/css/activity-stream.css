@@ -1092,9 +1092,14 @@ main section {
   border: 1px solid var(--border-color);
 }
 .edit-topsites-wrapper .modal {
-  border: 0;
-  min-height: fit-content;
+  box-shadow: 0 1px 4px 0 rgba(12, 12, 13, 0.2);
+  inset-inline-start: 0;
+  margin: 0 auto;
+  max-height: calc(100% - 40px);
+  position: fixed;
+  inset-inline-end: 0;
   inset-block-start: var(--space-xxlarge);
+  width: 274px;
 }
 @media (min-width: 610px) {
   .edit-topsites-wrapper .modal {
@@ -1248,7 +1253,10 @@ main section {
 }
 .topsite-form .actions {
   justify-content: flex-end;
-  padding: var(--space-large) var(--space-xlarge);
+}
+.topsite-form .actions button {
+  margin-inline-start: var(--space-small);
+  margin-inline-end: 0;
 }
 @media (max-width: 610px) {
   .topsite-form .fields-and-preview {
@@ -4136,14 +4144,95 @@ dialog:dir(rtl)::after {
   text-decoration: none;
 }
 
-.modalOverlayOuter {
-  border: none;
-  box-shadow: var(--box-shadow-popup);
-  padding: 0;
-  border-radius: var(--border-radius-medium);
+.activity-stream.modal-open {
+  overflow: hidden;
 }
-.modalOverlayOuter::backdrop {
+
+.modalOverlayOuter {
   background: var(--newtab-overlay-color);
+  height: 100%;
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 100%;
+  display: none;
+  z-index: 1100;
+  overflow: auto;
+}
+.modalOverlayOuter.active {
+  display: flex;
+}
+
+.modalOverlayInner {
+  min-width: min-content;
+  width: 100%;
+  max-width: 960px;
+  position: relative;
+  margin: auto;
+  background: var(--newtab-background-color-secondary);
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius-small);
+  display: none;
+  z-index: 1100;
+}
+@media (width <= 960px) {
+  .modalOverlayInner {
+    height: 100%;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+}
+.modalOverlayInner.active {
+  display: block;
+}
+.modalOverlayInner h2 {
+  color: var(--newtab-text-primary-color);
+  text-align: center;
+  margin-block-start: var(--space-xxlarge);
+  font-size: var(--font-size-xxlarge);
+}
+@media (width <= 960px) {
+  .modalOverlayInner h2 {
+    margin-block-start: calc(var(--space-xlarge) * 4);
+  }
+}
+@media (width <= 850px) {
+  .modalOverlayInner h2 {
+    margin-block-start: var(--space-xxlarge);
+  }
+}
+.modalOverlayInner .footer {
+  border-block-start: 1px solid var(--border-color);
+  border-radius: var(--border-radius-small);
+  height: 70px;
+  width: 100%;
+  position: absolute;
+  inset-block-end: 0;
+  text-align: center;
+  background-color: var(--color-white);
+}
+@media (width <= 850px) and (height <= 730px) {
+  .modalOverlayInner .footer {
+    position: sticky;
+  }
+}
+@media (width <= 650px) and (height <= 600px) {
+  .modalOverlayInner .footer {
+    position: sticky;
+  }
+}
+.modalOverlayInner .footer .modalButton {
+  margin-block-start: var(--space-large);
+  min-width: 150px;
+  height: 30px;
+  padding: var(--space-xsmall) var(--space-xxlarge);
+  font-size: inherit;
+}
+.modalOverlayInner .footer .modalButton:focus, .modalOverlayInner .footer .modalButton.active, .modalOverlayInner .footer .modalButton:hover {
+  box-shadow: 0 0 0 5px var(--newtab-element-secondary-color);
+  transition: box-shadow 150ms;
 }
 
 .notification-wrapper {
@@ -8420,9 +8509,15 @@ hr {
 }
 
 /* stylelint-disable max-nesting-depth */
+.modalOverlayOuter.active:has(.topic-selection-container) {
+  background-color: rgba(21, 20, 26, 0.5);
+}
+
 .topic-selection-container {
   --transition: 0.6s opacity, 0.6s scale, 0.6s rotate, 0.6s translate;
   position: relative;
+  border-radius: var(--border-radius-medium);
+  box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
   padding: var(--space-xxlarge);
   max-width: 745px;
   height: auto;
@@ -8469,6 +8564,18 @@ hr {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+.topic-selection-container .modal-footer > a {
+  color: var(--link-color);
+}
+.topic-selection-container .modal-footer > a:hover {
+  color: var(--link-color-hover);
+}
+.topic-selection-container .modal-footer > a:hover:active {
+  color: var(--link-color-active);
+}
+.topic-selection-container .modal-footer > a:visited {
+  color: var(--link-color-visited);
 }
 .topic-selection-container .modal-footer .button-group {
   gap: var(--space-medium);
