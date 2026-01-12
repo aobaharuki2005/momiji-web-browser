@@ -48,7 +48,6 @@ def _inject_flatpak_distribution_ini(log, target):
                 "https://github.com/mozilla-partners/flatpak.git",
                 git_clone_dir,
             ],
-            check=True,
         )
         shutil.copyfile(
             os.path.join(
@@ -115,7 +114,6 @@ def repackage_flatpak(
                 "flathub",
                 "https://dl.flathub.org/repo/flathub.flatpakrepo",
             ],
-            check=True,
         )
         run_command(
             log,
@@ -128,7 +126,6 @@ def repackage_flatpak(
                 f"{FIREFOX_BASEAPP}/{arch}/{FIREFOX_BASEAPP_CHANNEL}",
                 "--no-deps",
             ],
-            check=True,
         )
         # Copy files from the base app to our build dir
         base = (
@@ -139,9 +136,7 @@ def repackage_flatpak(
 
         # Extract our build to the app dir
         lib_dir.mkdir(exist_ok=True)
-        run_command(
-            log, ["tar", "xf", os.path.abspath(infile)], cwd=lib_dir, check=True
-        )
+        run_command(log, ["tar", "xf", os.path.abspath(infile)], cwd=lib_dir)
 
         if product == "firefox":
             distribution_ini = lib_dir / "firefox" / "distribution" / "distribution.ini"
@@ -207,7 +202,6 @@ def repackage_flatpak(
                 f"--basename={flatpak_name}",
                 flatpak_name,
             ],
-            check=True,
         )
         run_command(
             log,
@@ -219,7 +213,6 @@ def repackage_flatpak(
                 "build/screenshots",
                 f"build/screenshots/{flatpak_name}-{flatpak_branch}",
             ],
-            check=True,
             cwd=tmpdir,
         )
 
@@ -270,14 +263,12 @@ def repackage_flatpak(
                 "--own-name=org.mozilla.firefox_beta.*",
                 "--command=firefox",
             ],
-            check=True,
             cwd=tmpdir,
         )
 
         run_command(
             log,
             ["find", "build"],
-            check=True,
             cwd=tmpdir,
         )
 
@@ -294,7 +285,6 @@ def repackage_flatpak(
                 "build",
                 flatpak_branch,
             ],
-            check=True,
             cwd=tmpdir,
         )
         run_command(
@@ -311,7 +301,6 @@ def repackage_flatpak(
                 "build",
                 flatpak_branch,
             ],
-            check=True,
             cwd=tmpdir,
         )
         run_command(
@@ -324,13 +313,11 @@ def repackage_flatpak(
                 f"--branch=screenshots/{arch}",
                 "build/screenshots",
             ],
-            check=True,
             cwd=tmpdir,
         )
         run_command(
             log,
             ["flatpak", "build-update-repo", "--generate-static-deltas", "repo"],
-            check=True,
             cwd=tmpdir,
         )
         env = os.environ.copy()
@@ -338,7 +325,6 @@ def repackage_flatpak(
         run_command(
             log,
             ["tar", "cvfJ", os.path.abspath(output), "repo"],
-            check=True,
             env=env,
             cwd=tmpdir,
         )
