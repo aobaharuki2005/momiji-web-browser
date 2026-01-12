@@ -290,7 +290,7 @@ let dialog = {
    * Determines if the accept button should be disabled or not
    */
   updateAcceptButton() {
-    this._dialog.toggleAttribute(
+    this._dialog.setAttribute(
       "buttondisabledaccept",
       this._acceptBtnDisabled || this._itemChoose.selected
     );
