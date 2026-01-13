@@ -1059,6 +1059,14 @@ export var Policies = {
     },
   },
 
+  DisableRemoteImprovements: {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        manager.disallowFeature("NimbusRollouts");
+      }
+    },
+  },
+
   DisableSafeMode: {
     onBeforeUIStartup(manager, param) {
       if (param) {
