@@ -56,7 +56,7 @@ add_task(
           uri: "http://cat/",
           heuristic: true,
           source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-          fallbackTitle: "cat/",
+          title: "cat/",
         }),
         makeBookmarkResult(context, {
           title: "cat",

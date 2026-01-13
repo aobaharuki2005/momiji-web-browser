@@ -293,6 +293,12 @@ class nsLayoutUtils {
    */
   static nsIFrame* GetMarkerFrame(const nsIContent* aContent);
 
+  /**
+   * Returns the ::backdrop pseudo-element for aContent, if any.
+   */
+  static mozilla::dom::Element* GetBackdropPseudo(const nsIContent* aContent);
+  static nsIFrame* GetBackdropFrame(const nsIContent* aContent);
+
 #ifdef ACCESSIBILITY
   /**
    * Set aText to the spoken text for the given ::marker content (aContent)
@@ -3056,7 +3062,7 @@ class nsLayoutUtils {
    *   assigned to first frame on the next line if such a next line exists, null
    *   otherwise.
    */
-  static bool IsInvisibleBreak(nsINode* aNode,
+  static bool IsInvisibleBreak(const nsINode* aNode,
                                nsIFrame** aNextLineFrame = nullptr);
 
   static nsRect ComputeSVGOriginBox(mozilla::dom::SVGViewportElement*);

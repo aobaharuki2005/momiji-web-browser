@@ -7,7 +7,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   IPProtectionService:
-    "resource:///modules/ipprotection/IPProtectionService.sys.mjs",
+    "moz-src:///browser/components/ipprotection/IPProtectionService.sys.mjs",
 });
 
 const VPN_ADDON_ID = "vpn@mozilla.com";
@@ -31,6 +31,16 @@ class VPNAddonHelperSingleton {
       },
 
       onUninstalled(addon) {
+        if (addon.id === VPN_ADDON_ID) {
+          self.#vpnAddonDetected = false;
+          lazy.IPProtectionService.updateState();
+        }
+      },
+
+      onUninstalling(addon) {
+        // In some scenarios, the add-on is not fully uninstalled, but it's set
+        // in a pending state. When this happens, `onUninstalled` is not
+        // triggered. Let's use `onUninstalling` instead.
         if (addon.id === VPN_ADDON_ID) {
           self.#vpnAddonDetected = false;
           lazy.IPProtectionService.updateState();

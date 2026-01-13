@@ -363,7 +363,7 @@ add_task(async function test_unenroll_individualOptOut_statusTelemetry() {
 
   Assert.deepEqual(
     Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("events")
+      .testGetValue("nimbus-targeting-context")
       ?.map(ev => ev.extra),
     [
       {
@@ -408,7 +408,7 @@ add_task(async function testUnenrollBogusReason() {
 
   Assert.deepEqual(
     Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("events")
+      .testGetValue("nimbus-targeting-context")
       ?.map(ev => ev.extra),
     [
       {

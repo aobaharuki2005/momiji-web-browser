@@ -499,6 +499,8 @@ add_task(async function test_ml_engine_get_status_by_engine_id() {
         modelHub: null,
         baseURL: null,
         apiKey: null,
+        extraHeaders: null,
+        serviceType: null,
       },
     },
   };

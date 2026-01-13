@@ -77,11 +77,16 @@ const UI_TARGET_CHANGE_ELEMENTS = new Set([
   "moz-select",
   "moz-radio",
   "moz-toggle",
+  "moz-input-email",
   "moz-input-folder",
+  "moz-input-number",
   "moz-input-password",
   "moz-input-search",
+  "moz-input-tel",
   "moz-input-text",
+  "moz-input-url",
   "moz-visual-picker-item",
+  "sync-device-name",
 ]);
 const UI_TARGET_COMMAND_ELEMENTS = new Set([
   "menuitem",
@@ -148,6 +153,7 @@ const PREFERENCES_PANES = [
   "paneContainers",
   "paneExperimental",
   "paneMoreFromMozilla",
+  "paneAiFeatures",
 ];
 
 const IGNORABLE_EVENTS = new WeakMap();
@@ -1705,7 +1711,7 @@ export let BrowserUsageTelemetry = {
   /**
    * Tracks the window count and registers the listeners for the tab count.
    *
-   * @param{Object} win The window object.
+   * @param {object} win The window object.
    */
   _onWindowOpen(win) {
     // Make sure to have a |nsIDOMWindow|.
@@ -1889,8 +1895,9 @@ export let BrowserUsageTelemetry = {
    * @param {Array<string>} [msixPackagePrefixes] Optional, list of prefixes to
             consider "existing" installs when looking at installed MSIX packages.
             Defaults to prefixes for builds produced in Firefox automation.
-   * @return {Promise<object>} A JSON object containing install telemetry.
-   * @resolves When the event has been recorded, or if the data file was not found.
+   * @returns {Promise<object>}
+   *   Resolves to a JSON object containing install telemetry when the event has
+   *   been recorded, or if the data file was not found.
    * @rejects JavaScript exception on any failure.
    */
   async collectInstallationTelemetry(

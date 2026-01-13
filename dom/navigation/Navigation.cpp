@@ -298,9 +298,7 @@ bool SupportsInterface(nsISupports* aSupports) {
 bool Navigation::HasEntriesAndEventsDisabled() const {
   Document* doc = GetAssociatedDocument();
   return !doc || !doc->IsCurrentActiveDocument() ||
-         doc->GetInitialStatus() == Document::InitialStatus::IsInitial ||
-         doc->GetInitialStatus() ==
-             Document::InitialStatus::IsInitialButExplicitlyOpened ||
+         doc->IsEverInitialDocument() ||
          doc->GetPrincipal()->GetIsNullPrincipal() ||
          // We explicitly disallow documents loaded through multipart and script
          // channels from having events or entries. See bug 1996218 and bug
@@ -444,7 +442,9 @@ void Navigation::SetEarlyErrorResult(JSContext* aCx, NavigationResult& aResult,
   // «[ "committed" → a promise rejected with e,
   //    "finished" → a promise rejected with e ]».
 
-  RefPtr global = GetOwnerGlobal();
+  // Get the global of the current realm to create the DOMException.
+  // See https://webidl.spec.whatwg.org/#js-creating-throwing-exceptions
+  nsIGlobalObject* global = GetCurrentGlobal();
   if (!global) {
     // Creating a promise should only fail if there is no global.
     // In this case, the only solution is to ignore the error.

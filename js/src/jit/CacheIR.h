@@ -81,6 +81,8 @@ class ValOperandId : public OperandId {
  public:
   ValOperandId() = default;
   explicit ValOperandId(uint16_t id) : OperandId(id) {}
+
+  bool operator==(const ValOperandId& other) const { return id_ == other.id_; }
 };
 
 class ValueTagOperandId : public OperandId {

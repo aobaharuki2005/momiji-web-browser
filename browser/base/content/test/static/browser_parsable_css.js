@@ -145,6 +145,10 @@ let propNameAllowlist = [
   { propName: "--panel-shadow", isFromDevTools: true },
   { propName: "--panel-shadow-margin", isFromDevTools: true },
 
+  // These variables are set in host CSS but consumed in shadow DOM CSS
+  // (content-search-handoff-ui component), which confuses the test.
+  { propName: /^--content-search-handoff-ui-/, isFromDevTools: false },
+
   // These variables are used in JS in viewer.mjs (PDF.js).
   {
     propName: "--scale-round-x",
@@ -196,9 +200,9 @@ let propNameAllowlist = [
   /* Allow design tokens in devtools without all variables being used there */
   { sourceName: /\/design-system\/tokens-.*\.css$/, isFromDevTools: true },
 
-  // Ignore token properties that follow the pattern --color-[name]-[number]
+  // Ignore token properties that follow the patterns --color-[name], --color-[name]-[number], or --color-[name]-alpha-[number]
   // This enables us to provide our full color palette for developers.
-  { propName: /--color-[a-z]+-\d+/, isFromDevTools: false },
+  { propName: /--color-[a-z]+(-alpha)?(-\d+)?/, isFromDevTools: false },
 ];
 
 // Add suffix to stylesheets' URI so that we always load them here and

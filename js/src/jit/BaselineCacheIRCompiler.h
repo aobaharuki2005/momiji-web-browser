@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 
-#include <stddef.h>
 #include <stdint.h>
 
 #include "jstypes.h"

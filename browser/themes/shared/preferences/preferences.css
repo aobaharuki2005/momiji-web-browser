@@ -14,6 +14,7 @@
   --heading-font-size-xlarge: var(--font-size-xlarge);
   --heading-font-size-large: var(--font-size-large);
   --heading-font-size-medium: var(--font-size-medium);
+  --select-max-width: 20rem;
   user-select: text;
 }
 
@@ -232,6 +233,10 @@ radio {
 
 #category-sync > .category-icon {
   list-style-image: url("chrome://browser/skin/preferences/category-sync.svg");
+}
+
+#category-ai-features > .category-icon {
+  list-style-image: url("chrome://global/skin/icons/highlights.svg");
 }
 
 #category-experimental > .category-icon {
@@ -491,8 +496,10 @@ a[is="moz-support-link"]:not(.sidebar-footer-link, [hidden]) {
 @media (forced-colors) {
   #engineList > treechildren::-moz-tree-image(hover),
   #blocklistsTree > treechildren::-moz-tree-image(hover) {
-    fill: var(--in-content-item-hover-text);
-    stroke: var(--in-content-item-hover);
+    fill: var(--text-color-list-item-hover);
+    /* fill allows icon and text colors, but we have no such rules for stroke */
+    /* stylelint-disable-next-line stylelint-plugin-mozilla/no-non-semantic-token-usage */
+    stroke: var(--background-color-list-item-hover);
   }
 }
 
@@ -576,7 +583,7 @@ html|dialog {
 
 html|dialog::backdrop,
 .dialogOverlay[topmost="true"] {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--background-color-overlay);
 }
 
 html|dialog,
@@ -736,8 +743,26 @@ html|dialog,
   margin-block: 0 4px;
 }
 
-#noFxaSignIn {
+button#noFxaSignIn {
   margin-inline-start: 8px;
+}
+
+#syncConfigured {
+  --box-icon-start-fill: var(--icon-color-success);
+}
+
+#syncNotConfigured,
+#noFxaSignIn {
+  --box-icon-start-fill: var(--icon-color-warning);
+}
+
+#syncSetup {
+  white-space: nowrap;
+}
+
+#syncNow,
+#syncing {
+  min-width: 150px;
 }
 
 .fxaSyncIllustration {
@@ -771,6 +796,16 @@ html|dialog,
   -moz-context-properties: fill;
   fill: #ffbf00;
   margin-inline: 4px 8px;
+}
+
+#fxaLoginVerified {
+  --box-icon-size: calc(var(--icon-size-xlarge) * 2);
+  --box-icon-border-radius: var(--border-radius-circle);
+
+  &[description] {
+    --box-label-alignment: end;
+    --box-description-alignment: start;
+  }
 }
 
 #syncStatusContainer {
@@ -1377,11 +1412,22 @@ richlistitem .text-link:hover {
 }
 /** SRD web-appearance-chooser control END **/
 
+/** SRD rows control for Homepage START **/
+setting-group[groupid="homepage"] {
+  --select-max-width: fit-content;
+  --select-min-width: 15em;
+}
+/** SRD rows control for Homepage END **/
+
 /** SRD rows control for New Tab START **/
 setting-group[groupid="home"] {
   --select-max-width: 17rem;
 }
 /** SRD rows control for New Tab END **/
+
+setting-group[groupid="aiFeatures"] {
+  --select-max-width: fit-content;
+}
 
 #translations-manage-install-list {
   height: 220px;
@@ -1412,6 +1458,10 @@ setting-group[groupid="home"] {
 #translations-manage-error {
   color: var(--text-color-error);
   margin: var(--space-large) 0;
+}
+
+.translations-download-language-error {
+  background-color: var(--background-color-critical);
 }
 
 .hidden-category {
@@ -1509,4 +1559,18 @@ setting-group[groupid="home"] {
 
 #etpLevelWarning {
   --promo-image-position: top;
+}
+
+#etpResetButtonGroup {
+  display: flex;
+  gap: var(--space-small);
+}
+
+#addresses-list-header,
+#payments-list-header {
+  --box-label-font-weight: var(--heading-font-weight);
+}
+
+.box-header-bold {
+  --box-label-font-weight: var(--heading-font-weight);
 }

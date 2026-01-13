@@ -1548,18 +1548,8 @@ nsITheme::Transparency Theme::GetWidgetTransparency(
 
 bool Theme::WidgetAttributeChangeRequiresRepaint(StyleAppearance aAppearance,
                                                  nsAtom* aAttribute) {
-  // Check the attribute to see if it's relevant.
-  // TODO(emilio): The non-native theme doesn't use these attributes. Other
-  // themes do, but not all of them (and not all of the ones they check are
-  // here).
-  return aAttribute == nsGkAtoms::disabled ||
-         aAttribute == nsGkAtoms::checked ||
-         aAttribute == nsGkAtoms::selected ||
-         aAttribute == nsGkAtoms::visuallyselected ||
-         aAttribute == nsGkAtoms::menuactive ||
-         aAttribute == nsGkAtoms::sortDirection ||
-         aAttribute == nsGkAtoms::focused ||
-         aAttribute == nsGkAtoms::_default || aAttribute == nsGkAtoms::open;
+  return aAttribute == nsGkAtoms::_default ||  // Used in IsDefaultButton()
+         aAttribute == nsGkAtoms::open;        // Used in GetContentState()
 }
 
 bool Theme::WidgetAppearanceDependsOnWindowFocus(StyleAppearance aAppearance) {
@@ -1604,17 +1594,6 @@ bool Theme::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* aFrame,
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
     default:
       return false;
-  }
-}
-
-bool Theme::WidgetIsContainer(StyleAppearance aAppearance) {
-  switch (aAppearance) {
-    case StyleAppearance::MozMenulistArrowButton:
-    case StyleAppearance::Radio:
-    case StyleAppearance::Checkbox:
-      return false;
-    default:
-      return true;
   }
 }
 

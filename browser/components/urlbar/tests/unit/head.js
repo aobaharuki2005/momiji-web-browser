@@ -430,7 +430,7 @@ async function cleanupPlaces() {
  *   The context that this result will be displayed in.
  * @param {object} options
  *   Options for the result.
- * @param {string} options.title
+ * @param {string} [options.title]
  *   The page title.
  * @param {string} options.uri
  *   The page URI.
@@ -459,12 +459,12 @@ function makeBookmarkResult(
     type: UrlbarUtils.RESULT_TYPE.URL,
     source,
     heuristic,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-      url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
+    payload: {
+      url: uri,
+      title,
+      tags,
       // Check against undefined so consumers can pass in the empty string.
-      icon: [typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`],
-      title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
-      tags: [tags, UrlbarUtils.HIGHLIGHT.TYPED],
+      icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
       isBlockable:
         source == UrlbarUtils.RESULT_SOURCE.HISTORY ? true : undefined,
       blockL10n:
@@ -476,7 +476,12 @@ function makeBookmarkResult(
           ? Services.urlFormatter.formatURLPref("app.support.baseURL") +
             "awesome-bar-result-menu"
           : undefined,
-    }),
+    },
+    highlights: {
+      url: UrlbarUtils.HIGHLIGHT.TYPED,
+      title: UrlbarUtils.HIGHLIGHT.TYPED,
+      tags: UrlbarUtils.HIGHLIGHT.TYPED,
+    },
   });
 }
 
@@ -497,16 +502,21 @@ function makeFormHistoryResult(queryContext, { suggestion, engineName }) {
   return new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.SEARCH,
     source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+    payload: {
       engine: engineName,
-      suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+      suggestion,
+      title: suggestion,
       lowerCaseSuggestion: suggestion.toLocaleLowerCase(),
       isBlockable: true,
       blockL10n: { id: "urlbar-result-menu-remove-from-history" },
       helpUrl:
         Services.urlFormatter.formatURLPref("app.support.baseURL") +
         "awesome-bar-result-menu",
-    }),
+    },
+    highlights: {
+      suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      title: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+    },
   });
 }
 
@@ -533,17 +543,21 @@ function makeOmniboxResult(
   queryContext,
   { content, description, keyword, heuristic = false }
 ) {
-  let payload = {
-    title: [description, UrlbarUtils.HIGHLIGHT.TYPED],
-    content: [content, UrlbarUtils.HIGHLIGHT.TYPED],
-    keyword: [keyword, UrlbarUtils.HIGHLIGHT.TYPED],
-    icon: [UrlbarUtils.ICON.EXTENSION],
-  };
   return new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.OMNIBOX,
     source: UrlbarUtils.RESULT_SOURCE.ADDON,
     heuristic,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload),
+    payload: {
+      title: description,
+      content,
+      keyword,
+      icon: UrlbarUtils.ICON.EXTENSION,
+    },
+    highlights: {
+      title: UrlbarUtils.HIGHLIGHT.TYPED,
+      content: UrlbarUtils.HIGHLIGHT.TYPED,
+      keyword: UrlbarUtils.HIGHLIGHT.TYPED,
+    },
   });
 }
 
@@ -573,14 +587,18 @@ function makeTabSwitchResult(
   return new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.TAB_SWITCH,
     source: UrlbarUtils.RESULT_SOURCE.TABS,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-      url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
-      title: [title, UrlbarUtils.HIGHLIGHT.TYPED],
+    payload: {
+      url: uri,
+      title,
       // Check against undefined so consumers can pass in the empty string.
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
-      userContextId: [userContextId || 0],
-      tabGroup: [tabGroup || null],
-    }),
+      userContextId: userContextId || 0,
+      tabGroup,
+    },
+    highlights: {
+      url: UrlbarUtils.HIGHLIGHT.TYPED,
+      title: UrlbarUtils.HIGHLIGHT.TYPED,
+    },
   });
 }
 
@@ -613,14 +631,20 @@ function makeKeywordSearchResult(
     type: UrlbarUtils.RESULT_TYPE.KEYWORD,
     source: UrlbarUtils.RESULT_SOURCE.BOOKMARKS,
     heuristic,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-      title: [title ? title : uri, UrlbarUtils.HIGHLIGHT.TYPED],
-      url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
-      keyword: [keyword, UrlbarUtils.HIGHLIGHT.TYPED],
-      input: [queryContext.searchString, UrlbarUtils.HIGHLIGHT.TYPED],
+    payload: {
+      title: title || uri,
+      url: uri,
+      keyword,
+      input: queryContext.searchString,
       postData: postData || null,
       icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
-    }),
+    },
+    highlights: {
+      title: UrlbarUtils.HIGHLIGHT.TYPED,
+      url: UrlbarUtils.HIGHLIGHT.TYPED,
+      keyword: UrlbarUtils.HIGHLIGHT.TYPED,
+      input: UrlbarUtils.HIGHLIGHT.TYPED,
+    },
   });
 }
 
@@ -649,8 +673,8 @@ function makeRemoteTabResult(
   { uri, device, title, iconUri, lastUsed = 0 }
 ) {
   let payload = {
-    url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
-    device: [device, UrlbarUtils.HIGHLIGHT.TYPED],
+    url: uri,
+    device,
     // Check against undefined so consumers can pass in the empty string.
     icon: typeof iconUri != "undefined" ? iconUri : `page-icon:${uri}`,
     lastUsed: lastUsed * 1000,
@@ -658,15 +682,20 @@ function makeRemoteTabResult(
 
   // Check against undefined so consumers can pass in the empty string.
   if (typeof title != "undefined") {
-    payload.title = [title, UrlbarUtils.HIGHLIGHT.TYPED];
+    payload.title = title;
   } else {
-    payload.title = [uri, UrlbarUtils.HIGHLIGHT.TYPED];
+    payload.title = uri;
   }
 
   return new UrlbarResult({
     type: UrlbarUtils.RESULT_TYPE.REMOTE_TAB,
     source: UrlbarUtils.RESULT_SOURCE.TABS,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload),
+    payload,
+    highlights: {
+      url: UrlbarUtils.HIGHLIGHT.TYPED,
+      title: UrlbarUtils.HIGHLIGHT.TYPED,
+      device: UrlbarUtils.HIGHLIGHT.TYPED,
+    },
   });
 }
 
@@ -762,33 +791,35 @@ function makeSearchResult(
   }
 
   let payload = {
-    engine: [engineName, UrlbarUtils.HIGHLIGHT.TYPED],
-    suggestion: [suggestion, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+    engine: engineName,
+    suggestion,
     tailPrefix,
-    tail: [tail, UrlbarUtils.HIGHLIGHT.SUGGESTED],
+    tail,
     tailOffsetIndex,
-    keyword: [
-      alias,
-      providesSearchMode
-        ? UrlbarUtils.HIGHLIGHT.TYPED
-        : UrlbarUtils.HIGHLIGHT.NONE,
-    ],
+    keyword: alias,
     // Check against undefined so consumers can pass in the empty string.
-    query: [
+    query:
       typeof query != "undefined" ? query : queryContext.trimmedSearchString,
-      UrlbarUtils.HIGHLIGHT.TYPED,
-    ],
     icon: engineIconUri,
     providesSearchMode,
     inPrivateWindow,
     isPrivateEngine,
   };
 
-  // Passing even an undefined URL in the payload creates a potentially-unwanted
-  // displayUrl parameter, so we add it only if specified.
+  if (providesSearchMode) {
+    // No title.
+  } else if (payload.tail && payload.tailOffsetIndex >= 0) {
+    payload.title = payload.tail;
+  } else if (payload.suggestion != undefined) {
+    payload.title = payload.suggestion;
+  } else if (payload.query != undefined) {
+    payload.title = payload.query;
+  }
+
   if (uri) {
     payload.url = uri;
   }
+
   if (providerName == "UrlbarProviderTabToSearch") {
     if (searchUrlDomainWithoutSuffix.startsWith("www.")) {
       searchUrlDomainWithoutSuffix = searchUrlDomainWithoutSuffix.substring(4);
@@ -819,7 +850,14 @@ function makeSearchResult(
     heuristic,
     isRichSuggestion,
     providerName,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload),
+    payload,
+    highlights: {
+      engine: UrlbarUtils.HIGHLIGHT.TYPED,
+      suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      tail: UrlbarUtils.HIGHLIGHT.SUGGESTED,
+      keyword: providesSearchMode ? UrlbarUtils.HIGHLIGHT.TYPED : undefined,
+      query: UrlbarUtils.HIGHLIGHT.TYPED,
+    },
   });
 }
 
@@ -831,9 +869,6 @@ function makeSearchResult(
  * @param {object} options Options for the result.
  * @param {string} options.title
  *   The page title.
- * @param {string} [options.fallbackTitle]
- *   The provider has capability to use the actual page title though,
- *   when the provider can’t get the page title, use this value as the fallback.
  * @param {string} options.uri
  *   The page URI.
  * @param {Array} [options.tags]
@@ -853,7 +888,6 @@ function makeVisitResult(
   queryContext,
   {
     title,
-    fallbackTitle,
     uri,
     iconUri,
     providerName,
@@ -863,15 +897,11 @@ function makeVisitResult(
   }
 ) {
   let payload = {
-    url: [uri, UrlbarUtils.HIGHLIGHT.TYPED],
+    url: uri,
   };
 
-  if (title) {
-    payload.title = [title, UrlbarUtils.HIGHLIGHT.TYPED];
-  }
-
-  if (fallbackTitle) {
-    payload.fallbackTitle = [fallbackTitle, UrlbarUtils.HIGHLIGHT.TYPED];
+  if (title != undefined) {
+    payload.title = title;
   }
 
   if (
@@ -896,7 +926,7 @@ function makeVisitResult(
   }
 
   if (!heuristic && tags) {
-    payload.tags = [tags, UrlbarUtils.HIGHLIGHT.TYPED];
+    payload.tags = tags;
   }
 
   return new UrlbarResult({
@@ -904,7 +934,13 @@ function makeVisitResult(
     source,
     heuristic,
     providerName,
-    ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload),
+    payload,
+    highlights: {
+      url: UrlbarUtils.HIGHLIGHT.TYPED,
+      title: UrlbarUtils.HIGHLIGHT.TYPED,
+      fallbackTitle: UrlbarUtils.HIGHLIGHT.TYPED,
+      tags: UrlbarUtils.HIGHLIGHT.TYPED,
+    },
   });
 }
 
@@ -944,10 +980,6 @@ function makeCalculatorResult(queryContext, { value }) {
  *  Original input length.
  * @param {boolean} [options.showOnboardingLabel]
  *   Whether the “press Tab” hint should appear.
- * @param {boolean} [options.providesSearchMode]
- *   Whether selecting an action enters a search mode.
- * @param {string | null} [options.engine]
- *   The engine name, if providesSearchMode is true.
  * @returns {UrlbarResult}
  */
 function makeGlobalActionsResult({
@@ -955,8 +987,6 @@ function makeGlobalActionsResult({
   query,
   inputLength,
   showOnboardingLabel = false,
-  providesSearchMode = false,
-  engine,
 }) {
   const payload = {
     actionsResults,
@@ -965,8 +995,6 @@ function makeGlobalActionsResult({
     input: query,
     inputLength,
     showOnboardingLabel,
-    providesSearchMode,
-    engine,
   };
 
   return new UrlbarResult({

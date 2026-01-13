@@ -11,6 +11,10 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
   });
 });
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  isAddonEngineId: "chrome://global/content/ml/Utils.sys.mjs",
+});
+
 /**
  * MLTelemetry provides a mechanism tracking a "flow" of operations
  * related to a machine learning feature. A flow is a sequence of related
@@ -67,6 +71,20 @@ export class MLTelemetry {
    */
   get featureId() {
     return this.#featureId;
+  }
+
+  /**
+   * Returns the label used in telemetry for a given engine ID.
+   * Converts addon engine IDs to "webextension" label.
+   *
+   * @param {string} engineId - The engine ID to convert.
+   * @returns {string} The Glean label for the engine.
+   */
+  static getGleanLabel(engineId) {
+    if (lazy.isAddonEngineId(engineId)) {
+      return "webextension";
+    }
+    return engineId;
   }
 
   /**
@@ -149,13 +167,12 @@ export class MLTelemetry {
    * @param {object} options - Engine creation success options.
    * @param {string} [options.flowId] - The flow ID. Uses instance flowId if not provided.
    * @param {string} options.engineId - The engine identifier (e.g., "pdfjs", "ml-suggest-intent").
-   * @param {string} [options.label] - Label for the old timing distribution metric. Defaults to engineId if not provided.
    * @param {number} options.duration - Engine creation time in milliseconds.
    */
-  recordEngineCreationSuccessFlow({ flowId, engineId, label, duration }) {
+  recordEngineCreationSuccessFlow({ flowId, engineId, duration }) {
     const currentFlowId = flowId || this.#flowId;
     const actualEngineId = engineId;
-    const actualLabel = label || engineId;
+    const actualLabel = MLTelemetry.getGleanLabel(engineId);
 
     Glean.firefoxAiRuntime.engineCreationSuccessFlow.record({
       flow_id: currentFlowId,
@@ -185,7 +202,7 @@ export class MLTelemetry {
    * @param {string} options.featureId - The feature identifier.
    * @param {string} options.taskName - The task name.
    * @param {string} options.engineId - The engine identifier.
-   * @param {string} options.error - The error class/message.
+   * @param {string|object} options.error - The error class/message or object.
    */
   recordEngineCreationFailure({
     flowId,
@@ -196,6 +213,11 @@ export class MLTelemetry {
     error,
   }) {
     const currentFlowId = flowId || this.#flowId;
+    // Ensure error is always a string
+    const errorString =
+      typeof error === "object" && error !== null
+        ? String(error.name || error.message || error)
+        : String(error);
 
     Glean.firefoxAiRuntime.engineCreationFailure.record({
       flow_id: currentFlowId,
@@ -203,7 +225,7 @@ export class MLTelemetry {
       featureId,
       taskName,
       engineId,
-      error,
+      error: errorString,
     });
 
     this.logEventToConsole(this.recordEngineCreationFailure, {
@@ -212,67 +234,112 @@ export class MLTelemetry {
       featureId,
       taskName,
       engineId,
-      error,
+      error: errorString,
     });
   }
 
   /**
    * Records a successful inference run event.
    *
-   * @param {object} options - Inference success options.
-   * @param {string} [options.flowId] - The flow ID. Uses instance flowId if not provided.
-   * @param {string} [options.engineId] - The engine identifier. Defaults to undefined.
-   * @param {string} [options.label] - Label for the old timing distribution metric. Defaults to no-label if not provided.
-   * @param {number} options.tokenizingTime - Time spent tokenizing in milliseconds.
-   * @param {number} options.inferenceTime - Time spent on inference in milliseconds.
+   * @param {string} engineId - The engine identifier.
+   * @param {object} metrics - The inference metrics object.
+   * @param {number} [metrics.preprocessingTime] - Time spent preprocessing (legacy).
+   * @param {number} [metrics.tokenizingTime] - Time spent tokenizing in milliseconds.
+   * @param {number} [metrics.inferenceTime] - Time spent on inference in milliseconds.
+   * @param {number} [metrics.decodingTime] - Time spent decoding in milliseconds.
+   * @param {number} [metrics.inputTokens] - Number of input tokens.
+   * @param {number} [metrics.outputTokens] - Number of output tokens.
+   * @param {number} [metrics.timeToFirstToken] - Time to first token in milliseconds.
+   * @param {number} [metrics.tokensPerSecond] - Tokens per second.
+   * @param {number} [metrics.timePerOutputToken] - Time per output token in milliseconds.
    */
-  recordRunInferenceSuccessFlow({
-    flowId,
-    engineId,
-    label,
-    tokenizingTime,
-    inferenceTime,
-  }) {
-    const currentFlowId = flowId || this.#flowId;
-    const EngineId = engineId || undefined;
-    const Label = label || "no-label";
+  recordRunInferenceSuccessFlow(engineId, metrics) {
+    try {
+      const currentFlowId = this.#flowId;
+      const EngineId = engineId || undefined;
+      const Label = engineId ? MLTelemetry.getGleanLabel(engineId) : "no-label";
 
-    Glean.firefoxAiRuntime.runInferenceSuccessFlow.record({
-      flow_id: currentFlowId,
-      tokenizing_time: Math.round(tokenizingTime),
-      inference_time: Math.round(inferenceTime),
-    });
+      // Handle legacy preprocessingTime field
+      const tokenizingTime =
+        metrics.preprocessingTime ?? metrics.tokenizingTime;
 
-    // Also record the old labeled timing distribution metric
-    const totalTime = Math.round(tokenizingTime + inferenceTime);
-    Glean.firefoxAiRuntime.runInferenceSuccess[Label].accumulateSingleSample(
-      totalTime
-    );
+      // Ensure all metrics are properly rounded/typed for Glean
+      // This will be updated to use the method from revision(D271263)
+      const gleanPayload = {
+        flow_id: currentFlowId,
+        tokenizing_time:
+          tokenizingTime != null ? Math.round(tokenizingTime) : undefined,
+        inference_time:
+          metrics.inferenceTime != null
+            ? Math.round(metrics.inferenceTime)
+            : undefined,
+        decoding_time:
+          metrics.decodingTime != null
+            ? Math.round(metrics.decodingTime)
+            : undefined,
+        input_tokens:
+          metrics.inputTokens != null
+            ? Math.round(metrics.inputTokens)
+            : undefined,
+        output_tokens:
+          metrics.outputTokens != null
+            ? Math.round(metrics.outputTokens)
+            : undefined,
+        time_to_first_token:
+          metrics.timeToFirstToken != null
+            ? Math.round(metrics.timeToFirstToken)
+            : undefined,
+        tokens_per_second:
+          metrics.tokensPerSecond != null
+            ? Math.round(metrics.tokensPerSecond * 100) / 100
+            : undefined,
+        time_per_output_token:
+          metrics.timePerOutputToken != null
+            ? Math.round(metrics.timePerOutputToken * 100) / 100
+            : undefined,
+      };
 
-    this.logEventToConsole(this.recordRunInferenceSuccessFlow, {
-      flowId: currentFlowId,
-      engineId: EngineId,
-      label: Label,
-      tokenizingTime,
-      inferenceTime,
-    });
+      Glean.firefoxAiRuntime.runInferenceSuccessFlow.record(gleanPayload);
+
+      // record the old labeled timing distribution metric
+      const totalTime = Math.round(
+        (tokenizingTime || 0) +
+          (metrics.inferenceTime || 0) +
+          (metrics.decodingTime || 0)
+      );
+
+      Glean.firefoxAiRuntime.runInferenceSuccess[Label].accumulateSingleSample(
+        totalTime
+      );
+
+      this.logEventToConsole(this.recordRunInferenceSuccessFlow, {
+        ...gleanPayload,
+        engineId: EngineId,
+        label: Label,
+      });
+    } catch (telemetryError) {
+      lazy.console.error("Failed to record ML telemetry:", telemetryError);
+    }
   }
 
   /**
    * Records a failed inference run event.
    *
-   * @param {string} error - The error class/message.
+   * @param {string|object} error - The error class/message or object.
    * @param {string} [flow_id=this.#flowId] - The flow ID. Uses instance flowId if not provided.
    */
   recordRunInferenceFailure(error, flow_id = this.flowId) {
+    // Ensure error is always a string
+    const errorString = error instanceof Error ? error.message : String(error);
+
     Glean.firefoxAiRuntime.runInferenceFailure.record({
       flow_id,
-      error,
+      error: errorString,
     });
 
     this.logEventToConsole(this.recordRunInferenceFailure, {
       flow_id,
-      error,
+      error: errorString,
     });
   }
 

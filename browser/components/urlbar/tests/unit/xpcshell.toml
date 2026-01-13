@@ -24,6 +24,8 @@ support-files = ["data/engine.xml"]
 
 ["test_UrlbarQueryContext_restrictSource.js"]
 
+["test_UrlbarResult_getDisplayableValueAndHighlights.js"]
+
 ["test_UrlbarSearchUtils.js"]
 
 ["test_UrlbarUtils_addToUrlbarHistory.js"]

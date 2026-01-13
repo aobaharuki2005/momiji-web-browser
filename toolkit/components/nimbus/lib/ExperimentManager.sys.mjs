@@ -940,6 +940,7 @@ export class ExperimentManager {
           enrollment,
           UnenrollmentCause.fromCheckRecipeResult(result)
         );
+        return false;
       }
 
       if (result.status === lazy.MatchStatus.TARGETING_AND_BUCKETING) {
@@ -1198,8 +1199,8 @@ export class ExperimentManager {
   /**
    * Generate the list of prefs a recipe will set.
    *
-   * @params {object} branch The recipe branch that will be enrolled.
-   * @params {boolean} isRollout Whether or not this recipe is a rollout.
+   * @param {object} branch The recipe branch that will be enrolled.
+   * @param {boolean} isRollout Whether or not this recipe is a rollout.
    *
    * @returns {object} An object with the following keys:
    *

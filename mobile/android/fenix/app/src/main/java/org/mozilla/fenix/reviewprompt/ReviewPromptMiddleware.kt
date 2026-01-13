@@ -6,7 +6,7 @@ package org.mozilla.fenix.reviewprompt
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.state.Middleware
-import mozilla.components.lib.state.MiddlewareContext
+import mozilla.components.lib.state.Store
 import mozilla.components.service.nimbus.evalJexlSafe
 import mozilla.components.service.nimbus.messaging.use
 import org.mozilla.experiments.nimbus.NimbusEventStore
@@ -74,7 +74,7 @@ class ReviewPromptMiddleware(
     }
 
     override fun invoke(
-        context: MiddlewareContext<AppState, AppAction>,
+        store: Store<AppState, AppAction>,
         next: (AppAction) -> Unit,
         action: AppAction,
     ) {
@@ -84,7 +84,7 @@ class ReviewPromptMiddleware(
         }
 
         when (action) {
-            CheckIfEligibleForReviewPrompt -> handleReviewPromptCheck(context)
+            CheckIfEligibleForReviewPrompt -> handleReviewPromptCheck(store)
             ReviewPromptShown -> nimbusEventStore.recordEvent(REVIEW_PROMPT_SHOWN_NIMBUS_EVENT_ID)
             DoNotShowReviewPrompt -> Unit
             ShowCustomReviewPrompt -> Unit
@@ -95,8 +95,8 @@ class ReviewPromptMiddleware(
     }
 
     @Suppress("CognitiveComplexMethod")
-    private fun handleReviewPromptCheck(context: MiddlewareContext<AppState, AppAction>) {
-        if (context.state.reviewPrompt != ReviewPromptState.Unknown) {
+    private fun handleReviewPromptCheck(store: Store<AppState, AppAction>) {
+        if (store.state.reviewPrompt != ReviewPromptState.Unknown) {
             // We only want to try to show it once to avoid unnecessary disk reads.
             return
         }
@@ -123,12 +123,12 @@ class ReviewPromptMiddleware(
             if (isTelemetryEnabled()) {
                 // This is a temporary change while investigating repeated custom review prompts as
                 // filed in https://bugzilla.mozilla.org/show_bug.cgi?id=2001801.
-                context.dispatch(ShowPlayStorePrompt)
+                store.dispatch(ShowPlayStorePrompt)
             } else {
-                context.dispatch(ShowPlayStorePrompt)
+                store.dispatch(ShowPlayStorePrompt)
             }
         } else {
-            context.dispatch(DoNotShowReviewPrompt)
+            store.dispatch(DoNotShowReviewPrompt)
         }
     }
 }

@@ -16,8 +16,6 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsThreadUtils.h"
 
-#undef LOG
-#undef LOG_ENABLED
 mozilla::LazyLogModule gCamerasChildLog("CamerasChild");
 #define LOG(args) MOZ_LOG(gCamerasChildLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasChildLog, mozilla::LogLevel::Debug)
@@ -568,3 +566,6 @@ FrameRelay* CamerasChild::Callback(int capture_id) {
 }
 
 }  // namespace mozilla::camera
+
+#undef LOG
+#undef LOG_ENABLED

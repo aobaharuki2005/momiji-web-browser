@@ -578,6 +578,9 @@ void Sanitizer::IsValid(ErrorResult& aRv) {
       // Step 7.1.1 For any element in config[elements]:
       for (const auto& entry : *mElements) {
         const CanonicalElementAttributes& elemAttributes = entry.GetData();
+        MOZ_ASSERT(
+            elemAttributes.mAttributes || elemAttributes.mRemoveAttributes,
+            "Canonical elements must at least have removeAttributes");
 
         // Step 7.1.1.1. Neither element[attributes] or
         // element[removeAttributes], if they exist, has duplicates.
@@ -782,6 +785,11 @@ void Sanitizer::MaybeMaterializeDefaultConfig() {
         }
         i++;
         elementAttributes.mAttributes = Some(std::move(attributes));
+      } else {
+        // In the default config all elements have a (maybe empty) `attributes`
+        // list.
+        CanonicalAttributeSet set{};
+        elementAttributes.mAttributes = Some(std::move(set));
       }
 
       CanonicalElement elementName(name, aNamespace);
@@ -1065,8 +1073,12 @@ bool Sanitizer::AllowElement(
        !elementAttributes.mRemoveAttributes->IsEmpty())) {
     // Step 3.1.1. The user agent may report a warning to the console that this
     // operation is not supported.
-    LogLocalizedString("SanitizerAllowElementIgnored", {},
-                       nsIScriptError::warningFlag);
+    if (auto* win = mGlobal->GetAsInnerWindow()) {
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      "Sanitizer"_ns, win->GetDoc(),
+                                      nsContentUtils::eSECURITY_PROPERTIES,
+                                      "SanitizerAllowElementIgnored2");
+    }
 
     // Step 3.1.2. Return false.
     return false;
@@ -1605,7 +1617,10 @@ void Sanitizer::SanitizeChildren(nsINode* aNode, bool aSafe) {
       // and if configuration["replaceWithChildrenElements"] contains
       // elementName:
       if (mReplaceWithChildrenElements &&
-          mReplaceWithChildrenElements->Contains(*elementName)) {
+          mReplaceWithChildrenElements->Contains(*elementName) &&
+          // Temporary fix for Bug 2004112
+          // To be specified by https://github.com/WICG/sanitizer-api/issues/365
+          !!child->GetParent()) {
         // Note: This follows nsTreeSanitizer by first inserting the
         // child's children in place of the current child and then
         // continueing the sanitization from the first inserted grandchild.
@@ -1959,48 +1974,6 @@ void Sanitizer::SanitizeDefaultConfigAttributes(
       --count;
       i = count;  // i will be decremented immediately thanks to the for loop
     }
-  }
-}
-
-/* ------ Logging ------ */
-
-void Sanitizer::LogLocalizedString(const char* aName,
-                                   const nsTArray<nsString>& aParams,
-                                   uint32_t aFlags) {
-  uint64_t innerWindowID = 0;
-  bool isPrivateBrowsing = true;
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-  if (window && window->GetDoc()) {
-    auto* doc = window->GetDoc();
-    innerWindowID = doc->InnerWindowID();
-    isPrivateBrowsing = doc->IsInPrivateBrowsing();
-  }
-  nsAutoString logMsg;
-  nsContentUtils::FormatLocalizedString(nsContentUtils::eSECURITY_PROPERTIES,
-                                        aName, aParams, logMsg);
-  LogMessage(logMsg, aFlags, innerWindowID, isPrivateBrowsing);
-}
-
-/* static */
-void Sanitizer::LogMessage(const nsAString& aMessage, uint32_t aFlags,
-                           uint64_t aInnerWindowID, bool aFromPrivateWindow) {
-  // Prepending 'Sanitizer' to the outgoing console message
-  nsString message;
-  message.AppendLiteral(u"Sanitizer: ");
-  message.Append(aMessage);
-
-  // Allow for easy distinction in devtools code.
-  constexpr auto category = "Sanitizer"_ns;
-
-  if (aInnerWindowID > 0) {
-    // Send to content console
-    nsContentUtils::ReportToConsoleByWindowID(message, aFlags, category,
-                                              aInnerWindowID);
-  } else {
-    // Send to browser console
-    nsContentUtils::LogSimpleConsoleError(message, category, aFromPrivateWindow,
-                                          true /* from chrome context */,
-                                          aFlags);
   }
 }
 

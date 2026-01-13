@@ -24,7 +24,7 @@ add_task(async function test_untrimmed_secure_www() {
     matches: [
       makeVisitResult(context, {
         uri: "https://www.mozilla.org/",
-        fallbackTitle: UrlbarTestUtils.trimURL("https://www.mozilla.org"),
+        title: UrlbarTestUtils.trimURL("https://www.mozilla.org"),
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -70,7 +70,7 @@ add_task(async function test_untrimmed_secure() {
     matches: [
       makeVisitResult(context, {
         uri: "https://mozilla.org/",
-        fallbackTitle: UrlbarTestUtils.trimURL("https://mozilla.org"),
+        title: UrlbarTestUtils.trimURL("https://mozilla.org"),
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -116,7 +116,7 @@ add_task(async function test_untrimmed_www() {
     matches: [
       makeVisitResult(context, {
         uri: "http://www.mozilla.org/",
-        fallbackTitle: UrlbarTestUtils.trimURL("http://www.mozilla.org"),
+        title: UrlbarTestUtils.trimURL("http://www.mozilla.org"),
         heuristic: true,
       }),
       makeVisitResult(context, {

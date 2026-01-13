@@ -63,8 +63,8 @@ class nsWebBrowserFind : public nsIWebBrowserFind,
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult OnFind(nsPIDOMWindowOuter* aFoundWindow);
 
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void SetSelectionAndScroll(
-      nsPIDOMWindowOuter* aWindow, nsRange* aRange);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<mozilla::dom::Selection>
+  UpdateSelection(nsPIDOMWindowOuter* aWindow, nsRange* aRange);
 
   nsresult GetSearchLimits(nsRange* aSearchRange, nsRange* aStartPt,
                            nsRange* aEndPt, mozilla::dom::Document* aDoc,

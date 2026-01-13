@@ -862,12 +862,13 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
     }
 
     let payload = {
-      url: [finalCompleteValue, UrlbarUtils.HIGHLIGHT.TYPED],
+      url: finalCompleteValue,
       icon: UrlbarUtils.getIconForUrl(finalCompleteValue),
     };
 
+    let noVisitAction = !!title;
     if (title) {
-      payload.title = [title, UrlbarUtils.HIGHLIGHT.TYPED];
+      payload.title = title;
     } else {
       let trimHttps = lazy.UrlbarPrefs.getScotchBonnetPref("trimHttps");
       let displaySpec = UrlbarUtils.prepareUrlForDisplay(finalCompleteValue, {
@@ -879,7 +880,7 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
         trimEmptyQuery: true,
         trimSlash: !this._searchString.includes("/"),
       });
-      payload.fallbackTitle = [fallbackTitle, UrlbarUtils.HIGHLIGHT.TYPED];
+      payload.title = fallbackTitle;
     }
 
     return new lazy.UrlbarResult({
@@ -892,11 +893,14 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
         selectionStart: queryContext.searchString.length,
         selectionEnd: autofilledValue.length,
         type: autofilledType,
+        noVisitAction,
       },
-      ...lazy.UrlbarResult.payloadAndSimpleHighlights(
-        queryContext.tokens,
-        payload
-      ),
+      payload,
+      highlights: {
+        url: UrlbarUtils.HIGHLIGHT.TYPED,
+        title: UrlbarUtils.HIGHLIGHT.TYPED,
+        fallbackTitle: UrlbarUtils.HIGHLIGHT.TYPED,
+      },
     });
   }
 
@@ -943,11 +947,15 @@ export class UrlbarProviderAutofill extends UrlbarProvider {
             selectionStart: queryContext.searchString.length,
             selectionEnd: autofilledValue.length,
           },
-          ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
-            title: [trimmedUrl, UrlbarUtils.HIGHLIGHT.TYPED],
-            url: [aboutUrl, UrlbarUtils.HIGHLIGHT.TYPED],
+          payload: {
+            title: trimmedUrl,
+            url: aboutUrl,
             icon: UrlbarUtils.getIconForUrl(aboutUrl),
-          }),
+          },
+          highlights: {
+            title: UrlbarUtils.HIGHLIGHT.TYPED,
+            url: UrlbarUtils.HIGHLIGHT.TYPED,
+          },
         });
       }
     }

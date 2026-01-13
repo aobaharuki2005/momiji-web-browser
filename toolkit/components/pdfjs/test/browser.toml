@@ -74,6 +74,9 @@ support-files = ["file_pdfjs_jp2_image.pdf"]
 
 ["browser_pdfjs_js.js"]
 support-files = ["file_pdfjs_js.pdf"]
+skip-if = [
+  "tsan",
+]
 
 ["browser_pdfjs_load_telemetry.js"]
 

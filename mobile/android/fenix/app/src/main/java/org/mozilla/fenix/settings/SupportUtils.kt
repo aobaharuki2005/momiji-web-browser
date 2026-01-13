@@ -47,7 +47,6 @@ object SupportUtils {
         SEARCH_SUGGESTION("how-search-firefox-preview"),
         CUSTOM_SEARCH_ENGINES("custom-search-engines"),
         SYNC_SETUP("how-set-firefox-sync-firefox-android"),
-        QR_CAMERA_ACCESS("qr-camera-access"),
         SMARTBLOCK("smartblock-enhanced-tracking-protection"),
         SPONSOR_PRIVACY("sponsor-privacy"),
         HTTPS_ONLY_MODE("https-only-mode-firefox-android"),
@@ -57,7 +56,6 @@ object SupportUtils {
         ),
         DNS_OVER_HTTPS_NETWORK("configure-dns-over-https-protection-levels-firefox-android"),
         UNSIGNED_ADDONS("unsigned-addons"),
-        REVIEW_QUALITY_CHECK("review_checker_mobile"),
         FX_SUGGEST("search-suggestions-firefox"),
         TRANSLATIONS("android-translation"),
         MANAGE_OPTIONAL_EXTENSION_PERMISSIONS("manage-optional-permissions-android-extensions"),
@@ -77,7 +75,9 @@ object SupportUtils {
     }
 
     enum class MozillaPage(internal val path: String) {
-        PRIVATE_NOTICE("privacy/firefox/"),
+        PRIVACY_NOTICE("privacy/firefox/"),
+        PRIVACY_NOTICE_UPDATE("${PRIVACY_NOTICE.path}update/"),
+        PRIVACY_NOTICE_NEXT("${PRIVACY_NOTICE.path}next/"),
         MANIFESTO("about/manifesto/"),
         TERMS_OF_SERVICE("about/legal/terms/firefox/"),
     }

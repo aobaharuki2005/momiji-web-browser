@@ -18,9 +18,11 @@ import {
   getCSSClass,
   gNoConnectivity,
   retryThis,
+  handleNSSFailure,
   errorHasNoUserFix,
   COOP_MDN_DOCS,
   COEP_MDN_DOCS,
+  HTTPS_UPGRADES_MDN_DOCS,
 } from "chrome://global/content/aboutNetErrorHelpers.mjs";
 
 const formatter = new Intl.DateTimeFormat();
@@ -74,7 +76,6 @@ const KNOWN_ERROR_TITLE_IDS = new Set([
  * aboutNetErrorCodes.js which is loaded before we are: */
 /* global KNOWN_ERROR_MESSAGE_IDS */
 const ERROR_MESSAGES_FTL = "toolkit/neterror/nsserrors.ftl";
-const HTTPS_UPGRADES_MDN_DOCS = "https://support.mozilla.org/kb/https-upgrades";
 
 // If the location of the favicon changes, FAVICON_CERTERRORPAGE_URL and/or
 // FAVICON_ERRORPAGE_URL in toolkit/components/places/nsFaviconService.idl
@@ -373,35 +374,12 @@ function initTitleAndBodyIds(baseURL, isTRROnlyFailure) {
     // failures) are of type nssFailure2.
     case "nssFailure2": {
       learnMore.hidden = false;
-
-      const netErrorInfo = document.getNetErrorInfo();
-      void recordSecurityUITelemetry(
-        "securityUiTlserror",
-        "loadAbouttlserror",
-        netErrorInfo
-      );
-      const errorCode = netErrorInfo.errorCodeString;
-      switch (errorCode) {
-        case "SSL_ERROR_UNSUPPORTED_VERSION":
-        case "SSL_ERROR_PROTOCOL_VERSION_ALERT": {
-          const tlsNotice = document.getElementById("tlsVersionNotice");
-          tlsNotice.hidden = false;
-          document.l10n.setAttributes(tlsNotice, "cert-error-old-tls-version");
-        }
-        // fallthrough
-
-        case "SSL_ERROR_NO_CIPHERS_SUPPORTED":
-        case "SSL_ERROR_NO_CYPHER_OVERLAP":
-        case "SSL_ERROR_SSL_DISABLED":
-          RPMAddMessageListener("HasChangedCertPrefs", msg => {
-            if (msg.data.hasChangedCertPrefs) {
-              // Configuration overrides might have caused this; offer to reset.
-              showPrefChangeContainer();
-            }
-          });
-          RPMSendAsyncMessage("GetChangedCertPrefs");
+      const result = handleNSSFailure(showPrefChangeContainer);
+      if (result.versionError) {
+        const tlsNotice = document.getElementById("tlsVersionNotice");
+        tlsNotice.hidden = false;
+        document.l10n.setAttributes(tlsNotice, "cert-error-old-tls-version");
       }
-
       break;
     }
 
@@ -846,16 +824,10 @@ function setNetErrorMessageFromCode() {
     console.warn("This error page has no error code in its security info");
   }
 
-  let hostname = HOST_NAME;
-  const { port } = document.location;
-  if (port && port != 443) {
-    hostname += ":" + port;
-  }
-
   const shortDesc = document.getElementById("errorShortDesc");
   document.l10n.setAttributes(shortDesc, "cert-error-ssl-connection-error", {
     errorMessage: errorMessage ?? errorCode ?? "",
-    hostname,
+    hostname: HOST_NAME,
   });
 }
 
@@ -1226,12 +1198,6 @@ function setTechnicalDetailsOnCertError(
     });
   }
 
-  let hostname = HOST_NAME;
-  const { port } = document.location;
-  if (port && port != 443) {
-    hostname += ":" + port;
-  }
-
   switch (failedCertInfo.overridableErrorCategory) {
     case "trust-error":
       switch (failedCertInfo.errorCodeString) {
@@ -1242,33 +1208,35 @@ function setTechnicalDetailsOnCertError(
           break;
         case "SEC_ERROR_UNKNOWN_ISSUER":
           addLabel("cert-error-trust-unknown-issuer-intro");
-          addLabel("cert-error-trust-unknown-issuer", { hostname });
+          addLabel("cert-error-trust-unknown-issuer", { hostname: HOST_NAME });
           break;
         case "SEC_ERROR_CA_CERT_INVALID":
-          addLabel("cert-error-intro", { hostname });
+          addLabel("cert-error-intro", { hostname: HOST_NAME });
           addLabel("cert-error-trust-cert-invalid");
           break;
         case "SEC_ERROR_UNTRUSTED_ISSUER":
-          addLabel("cert-error-intro", { hostname });
+          addLabel("cert-error-intro", { hostname: HOST_NAME });
           addLabel("cert-error-trust-untrusted-issuer");
           break;
         case "SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED":
-          addLabel("cert-error-intro", { hostname });
+          addLabel("cert-error-intro", { hostname: HOST_NAME });
           addLabel("cert-error-trust-signature-algorithm-disabled");
           break;
         case "SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE":
-          addLabel("cert-error-intro", { hostname });
+          addLabel("cert-error-intro", { hostname: HOST_NAME });
           addLabel("cert-error-trust-expired-issuer");
           break;
         case "MOZILLA_PKIX_ERROR_SELF_SIGNED_CERT":
-          addLabel("cert-error-intro", { hostname });
+          addLabel("cert-error-intro", { hostname: HOST_NAME });
           addLabel("cert-error-trust-self-signed");
           break;
         case "MOZILLA_PKIX_ERROR_INSUFFICIENT_CERTIFICATE_TRANSPARENCY":
-          addLabel("cert-error-trust-certificate-transparency", { hostname });
+          addLabel("cert-error-trust-certificate-transparency", {
+            hostname: HOST_NAME,
+          });
           break;
         default:
-          addLabel("cert-error-intro", { hostname });
+          addLabel("cert-error-intro", { hostname: HOST_NAME });
           addLabel("cert-error-untrusted-default");
       }
       addErrorCodeLink();
@@ -1279,12 +1247,12 @@ function setTechnicalDetailsOnCertError(
       const notAfter = failedCertInfo.validNotAfter;
       if (notBefore && Date.now() < notAfter) {
         addLabel("cert-error-not-yet-valid-now", {
-          hostname,
+          hostname: HOST_NAME,
           "not-before-local-time": formatter.format(new Date(notBefore)),
         });
       } else {
         addLabel("cert-error-expired-now", {
-          hostname,
+          hostname: HOST_NAME,
           "not-after-local-time": formatter.format(new Date(notAfter)),
         });
       }
@@ -1295,11 +1263,11 @@ function setTechnicalDetailsOnCertError(
     case "domain-mismatch":
       getSubjectAltNames(failedCertInfo).then(subjectAltNames => {
         if (!subjectAltNames.length) {
-          addLabel("cert-error-domain-mismatch", { hostname });
+          addLabel("cert-error-domain-mismatch", { hostname: HOST_NAME });
         } else if (subjectAltNames.length > 1) {
           const names = subjectAltNames.join(", ");
           addLabel("cert-error-domain-mismatch-multiple", {
-            hostname,
+            hostname: HOST_NAME,
             "subject-alt-names": names,
           });
         } else {
@@ -1333,7 +1301,7 @@ function setTechnicalDetailsOnCertError(
              */
             HOST_NAME.endsWith("." + okHost);
 
-          const l10nArgs = { hostname, "alt-name": altName };
+          const l10nArgs = { hostname: HOST_NAME, "alt-name": altName };
           if (showLink) {
             // Set the link if we want it.
             const proto = document.location.protocol + "//";
@@ -1392,7 +1360,7 @@ function setTechnicalDetailsOnCertError(
   if (failedCertInfo.errorCodeString in nonoverridableErrorCodeToLabelMap) {
     addLabel(
       nonoverridableErrorCodeToLabelMap[failedCertInfo.errorCodeString],
-      { hostname }
+      { hostname: HOST_NAME }
     );
     addErrorCodeLink();
   }
@@ -1420,21 +1388,54 @@ function setFocus(selector, position = "afterbegin") {
   }
 }
 
-if (!NetErrorCard.isSupported()) {
-  for (let button of document.querySelectorAll(".try-again")) {
-    button.addEventListener("click", function () {
-      retryThis(this);
-    });
+async function getErrorCode() {
+  try {
+    const errorInfo = gIsCertError
+      ? document.getFailedCertSecurityInfo()
+      : document.getNetErrorInfo();
+    return errorInfo.errorCodeString;
+  } catch (e) {
+    return undefined;
   }
-
-  initPage();
-
-  // Dispatch this event so tests can detect that we finished loading the error page.
-  document.dispatchEvent(
-    new CustomEvent("AboutNetErrorLoad", { bubbles: true })
-  );
-} else {
-  customElements.define("net-error-card", NetErrorCard);
-  document.body.classList.add("felt-privacy-body");
-  document.body.replaceChildren(document.createElement("net-error-card"));
 }
+
+async function retryErrorCode() {
+  return new Promise(res => {
+    setTimeout(() => {
+      res(getErrorCode());
+    }, 100);
+  });
+}
+
+async function init() {
+  let errorCode = await getErrorCode();
+  let i = 0;
+  while (!errorCode && i < 3) {
+    i++;
+    errorCode = await retryErrorCode();
+  }
+}
+
+async function main() {
+  await init();
+  if (!NetErrorCard.isSupported()) {
+    for (let button of document.querySelectorAll(".try-again")) {
+      button.addEventListener("click", function () {
+        retryThis(this);
+      });
+    }
+
+    initPage();
+
+    // Dispatch this event so tests can detect that we finished loading the error page.
+    document.dispatchEvent(
+      new CustomEvent("AboutNetErrorLoad", { bubbles: true })
+    );
+  } else {
+    customElements.define("net-error-card", NetErrorCard);
+    document.body.classList.add("felt-privacy-body");
+    document.body.replaceChildren(document.createElement("net-error-card"));
+  }
+}
+
+main();

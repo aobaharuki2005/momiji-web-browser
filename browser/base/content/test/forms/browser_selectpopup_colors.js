@@ -32,7 +32,7 @@ const gSelects = {
     "  #one { background-color: transparent; }" +
     "</style>" +
     "<body><select id='one'>" +
-    '  <option value="One">{"unstyled": "true"}</option>' +
+    '  <option value="One">{"color": "-moz-ComboboxText", "backgroundColor": "rgba(0, 0, 0, 0)"}</option>' +
     '  <option value="Two" selected="true">{"end": "true"}</option>' +
     "</select></body></html>",
 
@@ -500,7 +500,6 @@ add_task(async function test_colors_applied_to_popup() {
 // This test checks when a <select> element has a transparent background applied to itself.
 add_task(async function test_transparent_applied_to_popup() {
   let options = {
-    unstyled: true,
     skipSelectColorTest: true,
   };
   await testSelectColors("TRANSPARENT_SELECT", 2, options);

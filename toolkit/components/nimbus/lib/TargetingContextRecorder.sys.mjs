@@ -401,6 +401,4 @@ export async function recordTargetingContext() {
 
   // This will ensure that the profile group ID metric has been set.
   await lazy.ClientID.getProfileGroupID();
-
-  GleanPings.nimbusTargetingContext.submit();
 }

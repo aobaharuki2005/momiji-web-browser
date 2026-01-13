@@ -314,7 +314,7 @@ export class UrlbarController {
       return;
     }
 
-    if (this.view.isOpen && executeAction && this._lastQueryContextWrapper) {
+    if (executeAction) {
       // In native inputs on most platforms, Shift+Up/Down moves the caret to the
       // start/end of the input and changes its selection, so in that case defer
       // handling to the input instead of changing the view's selection.
@@ -326,11 +326,11 @@ export class UrlbarController {
         return;
       }
 
-      let { queryContext } = this._lastQueryContextWrapper;
       let handled = false;
       if (lazy.UrlbarPrefs.get("scotchBonnet.enableOverride")) {
         handled = this.input.searchModeSwitcher.handleKeyDown(event);
-      } else {
+      } else if (this.view.isOpen && this._lastQueryContextWrapper) {
+        let { queryContext } = this._lastQueryContextWrapper;
         handled = this.view.oneOffSearchButtons?.handleKeyDown(
           event,
           this.view.visibleRowCount,

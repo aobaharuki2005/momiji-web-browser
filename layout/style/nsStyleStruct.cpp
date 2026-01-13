@@ -13,6 +13,7 @@
 
 #include <algorithm>
 
+#include "AnchorPositioningUtils.h"
 #include "CounterStyleManager.h"
 #include "ImageLoader.h"
 #include "imgIContainer.h"
@@ -286,6 +287,77 @@ static StyleRect<T> StyleRectWithAllSides(const T& aSide) {
   return {aSide, aSide, aSide, aSide};
 }
 
+bool AnchorPosResolutionParams::AutoResolutionOverrideParams::OverriddenToZero(
+    StylePhysicalAxis aAxis) const {
+  if (mPositionAreaInUse) {
+    // If `position-area` is used "Any auto inset properties resolve to 0":
+    // https://drafts.csswg.org/css-anchor-position-1/#valdef-position-area-position-area
+    return true;
+  }
+
+  // If `anchor-center` is used with a valid anchor, "auto inset
+  // properties resolve to 0" on that axis:
+  // https://drafts.csswg.org/css-anchor-position-1/#anchor-center
+  if (aAxis == StylePhysicalAxis::Vertical) {
+    return mVAnchorCenter;
+  }
+  MOZ_ASSERT(aAxis == StylePhysicalAxis::Horizontal);
+  return mHAnchorCenter;
+}
+
+static AnchorPosResolutionParams::AutoResolutionOverrideParams
+GetAutoResolutionOverrideParams(const nsIFrame* aFrame,
+                                bool aDefaultAnchorValid) {
+  if (!aFrame) {
+    return {};
+  }
+  nsIFrame* parent = aFrame->GetParent();
+  if (!parent || !aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW) ||
+      !aDefaultAnchorValid) {
+    return {};
+  }
+
+  const auto* stylePos = aFrame->StylePosition();
+  const auto cbwm = parent->GetWritingMode();
+
+  auto checkAxis = [&](LogicalAxis aAxis) {
+    StyleAlignFlags alignment =
+        stylePos->UsedSelfAlignment(aAxis, parent->Style());
+    return (alignment & ~StyleAlignFlags::FLAG_BITS) ==
+           StyleAlignFlags::ANCHOR_CENTER;
+  };
+
+  const auto horizontalLogicalAxis =
+      cbwm.IsVertical() ? LogicalAxis::Block : LogicalAxis::Inline;
+  AnchorPosResolutionParams::AutoResolutionOverrideParams result;
+  result.mHAnchorCenter = checkAxis(horizontalLogicalAxis);
+  result.mVAnchorCenter = checkAxis(GetOrthogonalAxis(horizontalLogicalAxis));
+  result.mPositionAreaInUse = !stylePos->mPositionArea.IsNone();
+  return result;
+}
+
+AnchorPosResolutionParams::AutoResolutionOverrideParams::
+    AutoResolutionOverrideParams(
+        const nsIFrame* aFrame, const mozilla::AnchorPosResolutionCache* aCache)
+    : AutoResolutionOverrideParams{GetAutoResolutionOverrideParams(
+          aFrame, aCache && aCache->mDefaultAnchorCache.mAnchor)} {}
+
+AnchorPosResolutionParams::AutoResolutionOverrideParams::
+    AutoResolutionOverrideParams(const nsIFrame* aFrame)
+    : AutoResolutionOverrideParams{
+          GetAutoResolutionOverrideParams(aFrame, [&]() {
+            if (!aFrame) {
+              return false;
+            }
+            const auto* references =
+                aFrame->GetProperty(nsIFrame::AnchorPosReferences());
+            if (!references || !references->mDefaultAnchorName) {
+              // It is presumed that this is called on a reflowed frame.
+              return false;
+            }
+            return references->Lookup(references->mDefaultAnchorName)->isSome();
+          }())} {}
+
 AnchorResolvedMargin AnchorResolvedMarginHelper::ResolveAnchor(
     const StyleMargin& aValue, StylePhysicalAxis aAxis,
     const AnchorPosResolutionParams& aParams) {
@@ -324,7 +396,8 @@ nsStyleMargin::nsStyleMargin()
     : mMargin(StyleRectWithAllSides(
           StyleMargin::LengthPercentage(LengthPercentage::Zero()))),
       mScrollMargin(StyleRectWithAllSides(StyleLength{0.})),
-      mOverflowClipMargin(StyleLength::Zero()) {
+      mOverflowClipMargin(
+          {StyleLength::Zero(), StyleOverflowClipMarginBox::PaddingBox}) {
   MOZ_COUNT_CTOR(nsStyleMargin);
 }
 
@@ -1327,25 +1400,6 @@ StyleSelfAlignment nsStylePosition::UsedJustifySelf(
   return {StyleAlignFlags::NORMAL};
 }
 
-bool AnchorResolvedInsetHelper::SideUsesAnchorCenter(
-    mozilla::Side aSide, const AnchorPosOffsetResolutionParams& aParams) {
-  const nsIFrame* frame = aParams.mBaseParams.mFrame;
-  if (!frame) {
-    return false;
-  }
-  const nsIFrame* parent = frame->GetParent();
-  if (!parent) {
-    return false;
-  }
-
-  WritingMode wm = parent->GetWritingMode();
-  LogicalSide logicalSide = wm.LogicalSideForPhysicalSide(aSide);
-  LogicalAxis axis = GetAxis(logicalSide);
-
-  return axis == LogicalAxis::Inline ? aParams.mBaseParams.mIAnchorCenter
-                                     : aParams.mBaseParams.mBAnchorCenter;
-}
-
 AnchorResolvedInset AnchorResolvedInsetHelper::ResolveAnchor(
     const mozilla::StyleInset& aValue, mozilla::StylePhysicalSide aSide,
     const AnchorPosOffsetResolutionParams& aParams) {
@@ -1553,41 +1607,57 @@ static bool GradientItemsAreOpaque(
 
 template <>
 bool StyleGradient::IsOpaque() const {
-  if (IsLinear()) {
-    return GradientItemsAreOpaque(AsLinear().items.AsSpan());
+  switch (tag) {
+    case Tag::Linear:
+      return GradientItemsAreOpaque(AsLinear().items.AsSpan());
+    case Tag::Radial:
+      return GradientItemsAreOpaque(AsRadial().items.AsSpan());
+    case Tag::Conic:
+      return GradientItemsAreOpaque(AsConic().items.AsSpan());
   }
-  if (IsRadial()) {
-    return GradientItemsAreOpaque(AsRadial().items.AsSpan());
-  }
-  return GradientItemsAreOpaque(AsConic().items.AsSpan());
+  MOZ_ASSERT_UNREACHABLE("Unexpected gradient type");
+  return false;
 }
 
 template <>
 bool StyleImage::IsOpaque() const {
-  if (IsImageSet()) {
-    return FinalImage().IsOpaque();
+  switch (tag) {
+    case Tag::ImageSet:
+      return FinalImage().IsOpaque();
+    case Tag::Gradient:
+      return AsGradient()->IsOpaque();
+    case Tag::Url: {
+      if (!IsComplete()) {
+        return false;
+      }
+      MOZ_ASSERT(GetImageRequest(), "should've returned earlier above");
+      nsCOMPtr<imgIContainer> imageContainer;
+      GetImageRequest()->GetImage(getter_AddRefs(imageContainer));
+      MOZ_ASSERT(imageContainer, "IsComplete() said image container is ready");
+      return imageContainer->WillDrawOpaqueNow();
+    }
+    case Tag::CrossFade:
+      for (const auto& el : AsCrossFade()->elements.AsSpan()) {
+        if (el.image.IsColor()) {
+          if (el.image.AsColor().MaybeTransparent()) {
+            return false;
+          }
+          continue;
+        }
+        MOZ_ASSERT(el.image.IsImage());
+        if (!el.image.AsImage().IsOpaque()) {
+          return false;
+        }
+      }
+      return true;
+    case Tag::LightDark:
+      MOZ_FALLTHROUGH_ASSERT("Should be computed already");
+    case Tag::Element:
+    case Tag::MozSymbolicIcon:
+    case Tag::None:
+      break;
   }
-
-  if (!IsComplete()) {
-    return false;
-  }
-
-  if (IsGradient()) {
-    return AsGradient()->IsOpaque();
-  }
-
-  if (IsElement() || IsMozSymbolicIcon()) {
-    return false;
-  }
-
-  MOZ_ASSERT(IsImageRequestType(), "unexpected image type");
-  MOZ_ASSERT(GetImageRequest(), "should've returned earlier above");
-
-  nsCOMPtr<imgIContainer> imageContainer;
-  GetImageRequest()->GetImage(getter_AddRefs(imageContainer));
-  MOZ_ASSERT(imageContainer, "IsComplete() said image container is ready");
-
-  return imageContainer->WillDrawOpaqueNow();
+  return false;
 }
 
 template <>

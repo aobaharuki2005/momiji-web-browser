@@ -13,6 +13,7 @@
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/net/EarlyHintRegistrar.h"
 #include "mozilla/net/HttpChannelParent.h"
+#include "mozilla/net/CacheEntryWriteHandleParent.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/Element.h"
@@ -1355,20 +1356,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
     (void)SendOnStartRequestSent();
   }
 
-  if (!args.timing().domainLookupEnd().IsNull() &&
-      !args.timing().connectStart().IsNull()) {
-    nsAutoCString protocolVersion;
-    mChannel->GetProtocolVersion(protocolVersion);
-    uint32_t classOfServiceFlags = 0;
-    mChannel->GetClassFlags(&classOfServiceFlags);
-    nsAutoCString cosString;
-    ClassOfService::ToString(classOfServiceFlags, cosString);
-    nsAutoCString key(
-        nsPrintfCString("%s_%s", protocolVersion.get(), cosString.get()));
-    glean::network::dns_end_to_connect_start_exp.Get(key).AccumulateRawDuration(
-        args.timing().connectStart() - args.timing().domainLookupEnd());
-  }
-
   return rv;
 }
 
@@ -1964,6 +1951,37 @@ HttpChannelParent::CompleteRedirect(nsresult status) {
 
   mRedirectChannel = nullptr;
   return NS_OK;
+}
+
+NS_IMPL_ADDREF(CacheEntryWriteHandleParent)
+NS_IMPL_RELEASE(CacheEntryWriteHandleParent)
+NS_INTERFACE_MAP_BEGIN(CacheEntryWriteHandleParent)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsICacheEntryWriteHandle)
+NS_INTERFACE_MAP_END
+
+CacheEntryWriteHandleParent::CacheEntryWriteHandleParent(
+    nsICacheEntry* aCacheEntry)
+    : mCacheEntry(aCacheEntry) {}
+
+NS_IMETHODIMP
+CacheEntryWriteHandleParent::OpenAlternativeOutputStream(
+    const nsACString& type, int64_t predictedSize,
+    nsIAsyncOutputStream** _retval) {
+  if (!mCacheEntry) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv =
+      mCacheEntry->OpenAlternativeOutputStream(type, predictedSize, _retval);
+  if (NS_SUCCEEDED(rv)) {
+    mCacheEntry->SetMetaDataElement("alt-data-from-child", "1");
+  }
+  return rv;
+}
+
+CacheEntryWriteHandleParent* HttpChannelParent::AllocCacheEntryWriteHandle() {
+  return new CacheEntryWriteHandleParent(mCacheEntry);
 }
 
 nsresult HttpChannelParent::OpenAlternativeOutputStream(

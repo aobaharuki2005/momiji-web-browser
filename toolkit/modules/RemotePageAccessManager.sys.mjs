@@ -62,6 +62,7 @@ export let RemotePageAccessManager = {
     "about:home": {
       RPMSendAsyncMessage: ["ActivityStream:ContentToMain"],
       RPMAddMessageListener: ["ActivityStream:MainToContent"],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
     },
     "about:httpsonlyerror": {
       RPMGetFormatURLPref: ["app.support.baseURL"],
@@ -107,6 +108,9 @@ export let RemotePageAccessManager = {
         "network.trr_ui.skip_reason_learn_more_url",
       ],
       RPMGetBoolPref: [
+        "security.certerrors.mitm.priming.enabled",
+        "security.certerrors.permanentOverride",
+        "security.enterprise_roots.auto-enabled",
         "security.certerror.hideAddException",
         "security.certerrors.felt-privacy-v1",
       ],
@@ -126,6 +130,7 @@ export let RemotePageAccessManager = {
     "about:newtab": {
       RPMSendAsyncMessage: ["ActivityStream:ContentToMain"],
       RPMAddMessageListener: ["ActivityStream:MainToContent"],
+      RPMGetFormatURLPref: ["app.support.baseURL"],
     },
     "about:privatebrowsing": {
       RPMSendAsyncMessage: [

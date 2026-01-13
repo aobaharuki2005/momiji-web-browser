@@ -39,9 +39,6 @@
 #  define getpid() _getpid()
 #endif
 
-#undef LOG
-#undef LOG_VERBOSE
-#undef LOG_ENABLED
 mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
 #define LOG(...) \
   MOZ_LOG(gCamerasParentLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -1646,3 +1643,8 @@ already_AddRefed<CamerasParent> CamerasParent::Create() {
 
 }  // namespace camera
 }  // namespace mozilla
+
+#undef LOG
+#undef LOG_FUNCTION
+#undef LOG_VERBOSE
+#undef LOG_ENABLED

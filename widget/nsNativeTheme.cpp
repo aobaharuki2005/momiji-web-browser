@@ -73,49 +73,13 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
     return flags;
   }
 
-  if (CheckBooleanAttr(aFrame, nsGkAtoms::disabled)) {
-    flags |= ElementState::DISABLED;
-  }
-
   switch (aAppearance) {
-    case StyleAppearance::Radio: {
-      if (CheckBooleanAttr(aFrame, nsGkAtoms::focused)) {
-        flags |= ElementState::FOCUS;
-        nsPIDOMWindowOuter* window =
-            aFrame->GetContent()->OwnerDoc()->GetWindow();
-        if (window && window->ShouldShowFocusRing()) {
-          flags |= ElementState::FOCUSRING;
-        }
-      }
-      if (CheckBooleanAttr(aFrame, nsGkAtoms::selected) ||
-          CheckBooleanAttr(aFrame, nsGkAtoms::checked)) {
-        flags |= ElementState::CHECKED;
-      }
-      break;
-    }
-    case StyleAppearance::Checkbox: {
-      if (CheckBooleanAttr(aFrame, nsGkAtoms::checked)) {
-        flags |= ElementState::CHECKED;
-      } else if (CheckBooleanAttr(aFrame, nsGkAtoms::indeterminate)) {
-        flags |= ElementState::INDETERMINATE;
-      }
-      break;
-    }
     case StyleAppearance::Toolbarbutton:
       if (CheckBooleanAttr(aFrame, nsGkAtoms::open)) {
+        // TODO: Consider using :open instead of faking :hover:active?
         flags |= ElementState::HOVER | ElementState::ACTIVE;
       }
       break;
-    case StyleAppearance::Menulist:
-    case StyleAppearance::NumberInput:
-    case StyleAppearance::Textfield:
-    case StyleAppearance::PasswordInput:
-    case StyleAppearance::Textarea: {
-      if (CheckBooleanAttr(aFrame, nsGkAtoms::focused)) {
-        flags |= ElementState::FOCUS | ElementState::FOCUSRING;
-      }
-      break;
-    }
     default:
       break;
   }
@@ -137,23 +101,6 @@ bool nsNativeTheme::CheckBooleanAttr(nsIFrame* aFrame, nsAtom* aAtom) {
   // be counted as true.
   return content->AsElement()->AttrValueIs(kNameSpaceID_None, aAtom, u"true"_ns,
                                            eCaseMatters);
-}
-
-/* static */
-int32_t nsNativeTheme::CheckIntAttr(nsIFrame* aFrame, nsAtom* aAtom,
-                                    int32_t defaultValue) {
-  if (!aFrame) return defaultValue;
-
-  nsIContent* content = aFrame->GetContent();
-  if (!content || !content->IsElement()) return defaultValue;
-
-  nsAutoString attr;
-  content->AsElement()->GetAttr(aAtom, attr);
-  nsresult err;
-  int32_t value = attr.ToInteger(&err);
-  if (attr.IsEmpty() || NS_FAILED(err)) return defaultValue;
-
-  return value;
 }
 
 /* static */
@@ -244,99 +191,6 @@ bool nsNativeTheme::IsHTMLContent(nsIFrame* aFrame) {
   }
   nsIContent* content = aFrame->GetContent();
   return content && content->IsHTMLElement();
-}
-
-// treeheadercell:
-nsNativeTheme::TreeSortDirection nsNativeTheme::GetTreeSortDirection(
-    nsIFrame* aFrame) {
-  if (!aFrame || !aFrame->GetContent()) return eTreeSortDirection_Natural;
-
-  static Element::AttrValuesArray strings[] = {nsGkAtoms::descending,
-                                               nsGkAtoms::ascending, nullptr};
-
-  nsIContent* content = aFrame->GetContent();
-  if (content->IsElement()) {
-    switch (content->AsElement()->FindAttrValueIn(
-        kNameSpaceID_None, nsGkAtoms::sortDirection, strings, eCaseMatters)) {
-      case 0:
-        return eTreeSortDirection_Descending;
-      case 1:
-        return eTreeSortDirection_Ascending;
-    }
-  }
-
-  return eTreeSortDirection_Natural;
-}
-
-bool nsNativeTheme::IsLastTreeHeaderCell(nsIFrame* aFrame) {
-  if (!aFrame) {
-    return false;
-  }
-
-  // A tree column picker button is always the last header cell.
-  if (aFrame->GetContent()->IsXULElement(nsGkAtoms::button)) {
-    return true;
-  }
-
-  // Find the parent tree.
-  nsIContent* parent = aFrame->GetContent()->GetParent();
-  while (parent && !parent->IsXULElement(nsGkAtoms::tree)) {
-    parent = parent->GetParent();
-  }
-
-  // If the column picker is visible, this can't be the last column.
-  if (parent && !parent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                                  nsGkAtoms::hidecolumnpicker,
-                                                  u"true"_ns, eCaseMatters))
-    return false;
-
-  while ((aFrame = aFrame->GetNextSibling())) {
-    if (aFrame->GetRect().Width() > 0) return false;
-  }
-  return true;
-}
-
-// tab:
-bool nsNativeTheme::IsBottomTab(nsIFrame* aFrame) {
-  if (!aFrame) return false;
-
-  nsAutoString classStr;
-  if (aFrame->GetContent()->IsElement()) {
-    aFrame->GetContent()->AsElement()->GetAttr(nsGkAtoms::_class, classStr);
-  }
-  // FIXME: This looks bogus, shouldn't this be looking at GetClasses()?
-  return !classStr.IsEmpty() && classStr.Find(u"tab-bottom") != kNotFound;
-}
-
-bool nsNativeTheme::IsFirstTab(nsIFrame* aFrame) {
-  if (!aFrame) return false;
-
-  for (nsIFrame* first : aFrame->GetParent()->PrincipalChildList()) {
-    if (first->GetRect().Width() > 0 &&
-        first->GetContent()->IsXULElement(nsGkAtoms::tab))
-      return (first == aFrame);
-  }
-  return false;
-}
-
-bool nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, int32_t aOffset) {
-  if (!aFrame) return false;
-
-  if (aOffset == 0) return IsSelectedTab(aFrame);
-
-  int32_t thisTabIndex = -1, selectedTabIndex = -1;
-
-  nsIFrame* currentTab = aFrame->GetParent()->PrincipalChildList().FirstChild();
-  for (int32_t i = 0; currentTab; currentTab = currentTab->GetNextSibling()) {
-    if (currentTab->GetRect().Width() == 0) continue;
-    if (aFrame == currentTab) thisTabIndex = i;
-    if (IsSelectedTab(currentTab)) selectedTabIndex = i;
-    ++i;
-  }
-
-  if (thisTabIndex == -1 || selectedTabIndex == -1) return false;
-
-  return (thisTabIndex - selectedTabIndex == aOffset);
 }
 
 bool nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame) {

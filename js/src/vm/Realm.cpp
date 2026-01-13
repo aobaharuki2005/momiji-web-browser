@@ -483,6 +483,22 @@ void Realm::unsetIsDebuggee() {
   }
 }
 
+void Realm::restoreDebugModeBitsOnOOM(uint32_t bits) {
+  // This is called from Debugger::addDebuggeeGlobal after calling
+  // Realm::setIsDebuggee. If the realm was not a debuggee realm before, we need
+  // to call unsetIsDebuggee to update counters on the JSRuntime.
+
+  MOZ_RELEASE_ASSERT(isDebuggee());
+
+  if (!(bits & IsDebuggee)) {
+    MOZ_ASSERT(bits == 0);
+    unsetIsDebuggee();
+    MOZ_ASSERT(debugModeBits_ == 0);
+  } else {
+    debugModeBits_ = bits;
+  }
+}
+
 void Realm::updateDebuggerObservesCoverage() {
   bool previousState = debuggerObservesCoverage();
   updateDebuggerObservesFlag(DebuggerObservesCoverage);

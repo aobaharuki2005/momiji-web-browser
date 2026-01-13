@@ -5486,13 +5486,13 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
     }
   }
 
-  if (aGridRI.mFrame->IsAbsoluteContainer()) {
+  if (auto* absCB = aGridRI.mFrame->GetAbsoluteContainingBlock();
+      absCB && absCB->PrepareAbsoluteFrames(aGridRI.mFrame)) {
     // 10.1. With a Grid Container as Containing Block
     // https://drafts.csswg.org/css-grid-2/#abspos-items
     // We only resolve definite lines here; we'll align auto positions to the
     // grid container later during reflow.
-    const nsFrameList& children =
-        aGridRI.mFrame->GetChildList(aGridRI.mFrame->GetAbsoluteListID());
+    const nsFrameList& children = absCB->GetChildList();
     const int32_t offsetToColZero = int32_t(mExplicitGridOffsetCol) - 1;
     const int32_t offsetToRowZero = int32_t(mExplicitGridOffsetRow) - 1;
     // Untranslate the grid again temporarily while resolving abs.pos. lines.
@@ -9299,46 +9299,53 @@ nscoord nsGridContainerFrame::ReflowChildren(GridReflowInput& aGridRI,
   aDesiredSize.mOverflowAreas.UnionWith(ocBounds);
   aStatus.MergeCompletionStatusFrom(ocStatus);
 
-  auto* absoluteContainer = GetAbsoluteContainingBlock();
-  // We have prepared the absolute frames when initializing GridReflowInput.
-  if (absoluteContainer && absoluteContainer->HasAbsoluteFrames()) {
-    // 'gridOrigin' is the origin of the grid (the start of the first track),
-    // with respect to the grid container's padding-box (CB).
-    LogicalMargin pad(aGridRI.mReflowInput->ComputedLogicalPadding(wm));
-    const LogicalPoint gridOrigin(wm, pad.IStart(wm), pad.BStart(wm));
-    const LogicalRect gridCB(wm, 0, 0,
-                             aContentArea.ISize(wm) + pad.IStartEnd(wm),
-                             bSize + pad.BStartEnd(wm));
-    const nsSize gridCBPhysicalSize = gridCB.Size(wm).GetPhysicalSize(wm);
-    size_t i = 0;
-    for (nsIFrame* child : absoluteContainer->GetChildList()) {
-      MOZ_ASSERT(i < aGridRI.mAbsPosItems.Length());
-      MOZ_ASSERT(aGridRI.mAbsPosItems[i].mFrame == child);
-      GridArea& area = aGridRI.mAbsPosItems[i].mArea;
-      LogicalRect itemCB =
-          aGridRI.ContainingBlockForAbsPos(area, gridOrigin, gridCB);
-      // AbsoluteContainingBlock::Reflow uses physical coordinates.
-      nsRect* cb = child->GetProperty(GridItemContainingBlockRect());
-      if (!cb) {
-        cb = new nsRect;
-        child->SetProperty(GridItemContainingBlockRect(), cb);
-      }
-      *cb = itemCB.GetPhysicalRect(wm, gridCBPhysicalSize);
-      ++i;
-    }
-    const auto border = aGridRI.mReflowInput->ComputedPhysicalBorder();
-    const nsPoint borderShift{border.left, border.top};
-    const nsRect paddingRect(borderShift, gridCBPhysicalSize);
-    // XXX: To optimize the performance, set the flags only when the CB width
-    // or height actually changes.
-    AbsPosReflowFlags flags{
-        AbsPosReflowFlag::AllowFragmentation, AbsPosReflowFlag::CBWidthChanged,
-        AbsPosReflowFlag::CBHeightChanged, AbsPosReflowFlag::IsGridContainerCB};
-    absoluteContainer->Reflow(this, PresContext(), *aGridRI.mReflowInput,
-                              aStatus, paddingRect, flags,
-                              &aDesiredSize.mOverflowAreas);
-  }
   return bSize;
+}
+
+void nsGridContainerFrame::ReflowAbsoluteChildren(
+    GridReflowInput& aGridRI, const LogicalRect& aContentArea,
+    nscoord aContentBSize, ReflowOutput& aDesiredSize,
+    nsReflowStatus& aStatus) {
+  WritingMode wm = aGridRI.mReflowInput->GetWritingMode();
+  auto* absoluteContainer = GetAbsoluteContainingBlock();
+  // We have prepared the absolute frames in Grid::PlaceGridItems() or in
+  // GridReflowInput::InitializeForContinuation().
+  if (!absoluteContainer || !absoluteContainer->HasAbsoluteFrames()) {
+    return;
+  }
+  // 'gridOrigin' is the origin of the grid (the start of the first track),
+  // with respect to the grid container's padding-box (CB).
+  LogicalMargin pad(aGridRI.mReflowInput->ComputedLogicalPadding(wm));
+  const LogicalPoint gridOrigin(wm, pad.IStart(wm), pad.BStart(wm));
+  const LogicalRect gridCB(wm, 0, 0, aContentArea.ISize(wm) + pad.IStartEnd(wm),
+                           aContentBSize + pad.BStartEnd(wm));
+  const nsSize gridCBPhysicalSize = gridCB.Size(wm).GetPhysicalSize(wm);
+  size_t i = 0;
+  for (nsIFrame* child : absoluteContainer->GetChildList()) {
+    MOZ_ASSERT(i < aGridRI.mAbsPosItems.Length());
+    MOZ_ASSERT(aGridRI.mAbsPosItems[i].mFrame == child);
+    GridArea& area = aGridRI.mAbsPosItems[i].mArea;
+    LogicalRect itemCB =
+        aGridRI.ContainingBlockForAbsPos(area, gridOrigin, gridCB);
+    // AbsoluteContainingBlock::Reflow uses physical coordinates.
+    nsRect* cb = child->GetProperty(GridItemContainingBlockRect());
+    if (!cb) {
+      cb = new nsRect;
+      child->SetProperty(GridItemContainingBlockRect(), cb);
+    }
+    *cb = itemCB.GetPhysicalRect(wm, gridCBPhysicalSize);
+    ++i;
+  }
+  const auto border = aGridRI.mReflowInput->ComputedPhysicalBorder();
+  const nsPoint borderShift{border.left, border.top};
+  const nsRect paddingRect(borderShift, gridCBPhysicalSize);
+  // XXX: To optimize the performance, set the flags only when the CB width
+  // or height actually changes.
+  AbsPosReflowFlags flags{
+      AbsPosReflowFlag::AllowFragmentation, AbsPosReflowFlag::CBWidthChanged,
+      AbsPosReflowFlag::CBHeightChanged, AbsPosReflowFlag::IsGridContainerCB};
+  absoluteContainer->Reflow(this, PresContext(), *aGridRI.mReflowInput, aStatus,
+                            paddingRect, flags, &aDesiredSize.mOverflowAreas);
 }
 
 nscoord nsGridContainerFrame::ComputeBSizeForResolvingRowSizes(
@@ -9603,29 +9610,6 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
 
   contentBSize =
       ReflowChildren(gridRI, contentArea, containerSize, aDesiredSize, aStatus);
-  contentBSize = std::max(contentBSize - consumedBSize, 0);
-
-  // Skip our block-end border if we're INCOMPLETE.
-  if (!aStatus.IsComplete() && !gridRI.mSkipSides.BEnd() &&
-      StyleBorder()->mBoxDecorationBreak != StyleBoxDecorationBreak::Clone) {
-    bp.BEnd(wm) = nscoord(0);
-  }
-
-  LogicalSize desiredSize(wm, computedISize + bp.IStartEnd(wm),
-                          contentBSize + bp.BStartEnd(wm));
-  aDesiredSize.SetSize(wm, desiredSize);
-  nsRect frameRect(0, 0, aDesiredSize.Width(), aDesiredSize.Height());
-  aDesiredSize.mOverflowAreas.UnionAllWith(frameRect);
-
-  if (repositionChildren) {
-    nsPoint physicalDelta(aDesiredSize.Width() - bp.LeftRight(wm), 0);
-    for (const auto& item : gridRI.mGridItems) {
-      auto* child = item.mFrame;
-      child->MovePositionBy(physicalDelta);
-      ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
-    }
-  }
-
   if (Style()->GetPseudoType() == PseudoStyleType::scrolledContent) {
     // Per spec, the grid area is included in a grid container's scrollable
     // overflow region [1], as well as the padding on the end-edge sides that
@@ -9671,6 +9655,30 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
           gridItemMarginBoxBounds.Union(item.mFrame->GetMarginRect());
     }
     aDesiredSize.mOverflowAreas.UnionAllWith(gridItemMarginBoxBounds);
+  }
+  ReflowAbsoluteChildren(gridRI, contentArea, contentBSize, aDesiredSize,
+                         aStatus);
+  contentBSize = std::max(contentBSize - consumedBSize, 0);
+
+  // Skip our block-end border if we're INCOMPLETE.
+  if (!aStatus.IsComplete() && !gridRI.mSkipSides.BEnd() &&
+      StyleBorder()->mBoxDecorationBreak != StyleBoxDecorationBreak::Clone) {
+    bp.BEnd(wm) = nscoord(0);
+  }
+
+  LogicalSize desiredSize(wm, computedISize + bp.IStartEnd(wm),
+                          contentBSize + bp.BStartEnd(wm));
+  aDesiredSize.SetSize(wm, desiredSize);
+  nsRect frameRect(0, 0, aDesiredSize.Width(), aDesiredSize.Height());
+  aDesiredSize.mOverflowAreas.UnionAllWith(frameRect);
+
+  if (repositionChildren) {
+    nsPoint physicalDelta(aDesiredSize.Width() - bp.LeftRight(wm), 0);
+    for (const auto& item : gridRI.mGridItems) {
+      auto* child = item.mFrame;
+      child->MovePositionBy(physicalDelta);
+      ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
+    }
   }
 
   // TODO: fix align-tracks alignment in fragments
@@ -10265,7 +10273,7 @@ void nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
 
   if (GetPrevInFlow()) {
     DisplayOverflowContainers(aBuilder, aLists);
-    DisplayAbsoluteContinuations(aBuilder, aLists);
+    DisplayPushedAbsoluteFrames(aBuilder, aLists);
   }
 
   // Our children are all grid-level boxes, which behave the same as
@@ -10559,12 +10567,7 @@ void nsGridContainerFrame::StoreUsedTrackSizes(LogicalAxis aAxis,
 void nsGridContainerFrame::SetInitialChildList(ChildListID aListID,
                                                nsFrameList&& aChildList) {
   ChildListIDs supportedLists = {FrameChildListID::Principal};
-  // We don't handle the FrameChildListID::Backdrop frames in any way, but it
-  // only contains a placeholder for ::backdrop which is OK to not reflow (for
-  // now anyway).
-  supportedLists += FrameChildListID::Backdrop;
   MOZ_ASSERT(supportedLists.contains(aListID), "unexpected child list");
-
   return nsContainerFrame::SetInitialChildList(aListID, std::move(aChildList));
 }
 

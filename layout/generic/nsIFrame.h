@@ -3224,8 +3224,12 @@ class nsIFrame : public nsQueryFrame {
       const mozilla::PhysicalAxes aClipAxes, nsRect& aOutRect,
       nsRectCornerRadii& aOutRadii) const;
 
-  // Returns the applicable overflow-clip-margin values.
-  nsSize OverflowClipMargin(mozilla::PhysicalAxes aClipAxes) const;
+  // Returns the applicable overflow-clip-margin values relative to our
+  // border-box. If aAllowNegative is false, prevents us from returning margins
+  // that are less than zero. This is useful for overflow computation (where you
+  // don't want the box to shrink).
+  nsMargin OverflowClipMargin(mozilla::PhysicalAxes aClipAxes,
+                              bool aAllowNegative = true) const;
 
   // Returns the axes on which this frame should apply overflow clipping.
   mozilla::PhysicalAxes ShouldApplyOverflowClipping(
@@ -4502,8 +4506,8 @@ class nsIFrame : public nsQueryFrame {
   }
 
   template <typename T>
-  void RemoveProperty(FrameProperties::Descriptor<T> aProperty) {
-    mProperties.Remove(aProperty, this);
+  bool RemoveProperty(FrameProperties::Descriptor<T> aProperty) {
+    return mProperties.Remove(aProperty, this);
   }
 
   /**
@@ -5907,17 +5911,8 @@ inline nsIFrame* nsFrameList::BackwardFrameTraversal::Prev(nsIFrame* aFrame) {
 inline AnchorPosResolutionParams AnchorPosResolutionParams::From(
     const nsIFrame* aFrame,
     mozilla::AnchorPosResolutionCache* aAnchorPosResolutionCache) {
-  bool inlineUsesAnchorCenter = false;
-  bool blockUsesAnchorCenter = false;
-  ComputeAnchorCenterUsage(aFrame, aAnchorPosResolutionCache,
-                           inlineUsesAnchorCenter, blockUsesAnchorCenter);
-
-  return {aFrame,
-          aFrame->StyleDisplay()->mPosition,
-          aFrame->StylePosition()->mPositionArea,
-          aAnchorPosResolutionCache,
-          inlineUsesAnchorCenter,
-          blockUsesAnchorCenter};
+  return {aFrame, aFrame->StyleDisplay()->mPosition, aAnchorPosResolutionCache,
+          AutoResolutionOverrideParams{aFrame, aAnchorPosResolutionCache}};
 }
 
 #endif /* nsIFrame_h___ */

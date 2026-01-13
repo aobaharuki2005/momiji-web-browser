@@ -20,7 +20,6 @@
 const SUGGESTION_SEARCH_STRING = "example";
 const SUGGESTION_URL = "http://example.com/";
 const SUGGESTION_URL_WWW = "http://www.example.com/";
-const SUGGESTION_URL_DISPLAY = "http://example.com";
 
 const MERINO_SUGGESTIONS = [
   {
@@ -171,7 +170,6 @@ function makeExpectedResult({
       telemetryType,
       title: "title",
       url: SUGGESTION_URL,
-      displayUrl: SUGGESTION_URL_DISPLAY,
       icon: "icon",
       isSponsored: false,
       shouldShowUrl: true,

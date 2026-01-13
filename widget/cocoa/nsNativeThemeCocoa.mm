@@ -3363,29 +3363,6 @@ LayoutDeviceIntSize nsNativeThemeCocoa::GetMinimumWidgetSize(
   NS_OBJC_END_TRY_BLOCK_RETURN(LayoutDeviceIntSize());
 }
 
-bool nsNativeThemeCocoa::WidgetAttributeChangeRequiresRepaint(
-    StyleAppearance aAppearance, nsAtom* aAttribute) {
-  // Some widget types just never change state.
-  switch (aAppearance) {
-    case StyleAppearance::MozWindowTitlebar:
-    case StyleAppearance::Statusbar:
-    case StyleAppearance::Tooltip:
-    case StyleAppearance::Menupopup:
-    case StyleAppearance::Progresschunk:
-    case StyleAppearance::ProgressBar:
-    case StyleAppearance::Meter:
-    case StyleAppearance::Meterchunk:
-    case StyleAppearance::MozMacVibrancyLight:
-    case StyleAppearance::MozMacVibrancyDark:
-    case StyleAppearance::MozMacVibrantTitlebarLight:
-    case StyleAppearance::MozMacVibrantTitlebarDark:
-      return false;
-    default:
-      break;
-  }
-  return Theme::WidgetAttributeChangeRequiresRepaint(aAppearance, aAttribute);
-}
-
 bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
                                              nsIFrame* aFrame,
                                              StyleAppearance aAppearance) {
@@ -3460,25 +3437,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
   }
 
   return false;
-}
-
-bool nsNativeThemeCocoa::WidgetIsContainer(StyleAppearance aAppearance) {
-  // flesh this out at some point
-  switch (aAppearance) {
-    case StyleAppearance::MozMenulistArrowButton:
-    case StyleAppearance::Radio:
-    case StyleAppearance::Checkbox:
-    case StyleAppearance::ProgressBar:
-    case StyleAppearance::Meter:
-    case StyleAppearance::Range:
-    case StyleAppearance::MozMacHelpButton:
-    case StyleAppearance::MozMacDisclosureButtonOpen:
-    case StyleAppearance::MozMacDisclosureButtonClosed:
-      return false;
-    default:
-      break;
-  }
-  return true;
 }
 
 bool nsNativeThemeCocoa::ThemeDrawsFocusForWidget(nsIFrame*,

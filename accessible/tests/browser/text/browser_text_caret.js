@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* import-globals-from ../../mochitest/attributes.js */
+loadScripts({ name: "attributes.js", dir: MOCHITESTS_DIR });
 /* import-globals-from ../../mochitest/text.js */
 
 /**
@@ -692,4 +694,87 @@ addAccessibleTask(
     is(input.caretOffset, -1, "No caret in inputAfterEmpty");
   },
   { chrome: true, topLevel: true }
+);
+
+/**
+ * Test retrieving the caret line number.
+ */
+addAccessibleTask(
+  `
+ab
+<blockquote id="blockquote">
+  cd<br>
+  ef
+  <p id="p">gh</p>
+</blockquote>
+ij
+  `,
+  async function testLineNumber(browser, docAcc) {
+    docAcc.QueryInterface(nsIAccessibleText);
+    testAttrs(docAcc, { "line-number": "1" }, true);
+    info("Moving caret to b");
+    let moved = waitForEvent(EVENT_TEXT_CARET_MOVED, docAcc);
+    docAcc.caretOffset = 1;
+    await moved;
+    testAttrs(docAcc, { "line-number": "1" }, true);
+    info("Moving caret to c");
+    const blockquote = findAccessibleChildByID(docAcc, "blockquote", [
+      nsIAccessibleText,
+    ]);
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, blockquote);
+    blockquote.caretOffset = 0;
+    await moved;
+    testAttrs(docAcc, { "line-number": "2" }, true);
+    info("Moving caret to d");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, blockquote);
+    blockquote.caretOffset = 1;
+    await moved;
+    testAttrs(docAcc, { "line-number": "2" }, true);
+    info("Moving caret to e");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, blockquote);
+    blockquote.caretOffset = 3;
+    await moved;
+    testAttrs(docAcc, { "line-number": "3" }, true);
+    info("Moving caret to f");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, blockquote);
+    blockquote.caretOffset = 4;
+    await moved;
+    testAttrs(docAcc, { "line-number": "3" }, true);
+    info("moving caret to g");
+    const p = findAccessibleChildByID(docAcc, "p", [nsIAccessibleText]);
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, p);
+    p.caretOffset = 0;
+    await moved;
+    testAttrs(docAcc, { "line-number": "4" }, true);
+    info("moving caret to h");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, p);
+    p.caretOffset = 1;
+    await moved;
+    testAttrs(docAcc, { "line-number": "4" }, true);
+    info("moving caret to i");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, docAcc);
+    docAcc.caretOffset = 4;
+    await moved;
+    testAttrs(docAcc, { "line-number": "5" }, true);
+    info("moving caret to j");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, docAcc);
+    docAcc.caretOffset = 5;
+    await moved;
+    testAttrs(docAcc, { "line-number": "5" }, true);
+    info("moving caret to end");
+    moved = waitForEvent(EVENT_TEXT_CARET_MOVED, docAcc);
+    // We end up with space at the end of the document, so use characterCount to
+    // ensure we really move to the end.
+    docAcc.caretOffset = docAcc.characterCount;
+    await moved;
+    testAttrs(docAcc, { "line-number": "5" }, true);
+  },
+  {
+    // Bug 2007033: This is currently only supported for LocalAccessible.
+    chrome: true,
+    topLevel: false,
+    contentSetup: async function contentSetup() {
+      content.document.designMode = "on";
+    },
+  }
 );

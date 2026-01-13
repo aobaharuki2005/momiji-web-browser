@@ -138,6 +138,9 @@ void Gecko_GetAnonymousContentForElement(const Element* aElement,
                                          nsTArray<nsIContent*>* aArray) {
   MOZ_ASSERT(aElement->MayHaveAnonymousChildren());
   if (aElement->HasProperties()) {
+    if (auto* backdrop = nsLayoutUtils::GetBackdropPseudo(aElement)) {
+      aArray->AppendElement(backdrop);
+    }
     if (auto* marker = nsLayoutUtils::GetMarkerPseudo(aElement)) {
       aArray->AppendElement(marker);
     }
@@ -157,10 +160,12 @@ void Gecko_DestroyAnonymousContentList(nsTArray<nsIContent*>* aAnonContent) {
   delete aAnonContent;
 }
 
-const nsTArray<RefPtr<nsINode>>* Gecko_GetAssignedNodes(
-    const Element* aElement) {
+RustSpan<const nsINode* const> Gecko_GetAssignedNodes(const Element* aElement) {
   MOZ_ASSERT(HTMLSlotElement::FromNode(aElement));
-  return &static_cast<const HTMLSlotElement*>(aElement)->AssignedNodes();
+  Span<const RefPtr<nsINode>> span =
+      static_cast<const HTMLSlotElement*>(aElement)->AssignedNodes();
+  return {reinterpret_cast<const nsINode* const*>(span.Elements()),
+          span.Length()};
 }
 
 void Gecko_GetQueryContainerSize(const Element* aElement, nscoord* aOutWidth,
@@ -296,6 +301,15 @@ bool Gecko_AnimationNameMayBeReferencedFromStyle(
     const nsPresContext* aPresContext, nsAtom* aName) {
   MOZ_ASSERT(aPresContext);
   return aPresContext->AnimationManager()->AnimationMayBeReferenced(aName);
+}
+
+void Gecko_InvalidatePositionTry(const Element* aElement) {
+  auto* f = aElement->GetPrimaryFrame();
+  if (!f || !f->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
+    return;
+  }
+  f->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
+  f->PresShell()->MarkPositionedFrameForReflow(f);
 }
 
 float Gecko_GetScrollbarInlineSize(const nsPresContext* aPc) {
@@ -1602,18 +1616,20 @@ void Gecko_ContentList_AppendAll(nsSimpleContentList* aList,
   }
 }
 
-const nsTArray<Element*>* Gecko_Document_GetElementsWithId(const Document* aDoc,
-                                                           nsAtom* aId) {
+RustSpan<const Element* const> Gecko_Document_GetElementsWithId(
+    const Document* aDoc, nsAtom* aId) {
   MOZ_ASSERT(aDoc);
   MOZ_ASSERT(aId);
-  return aDoc->GetAllElementsForId(aId);
+  auto span = aDoc->GetAllElementsForId(aId);
+  return {span.Elements(), span.Length()};
 }
 
-const nsTArray<Element*>* Gecko_ShadowRoot_GetElementsWithId(
+RustSpan<const Element* const> Gecko_ShadowRoot_GetElementsWithId(
     const ShadowRoot* aShadowRoot, nsAtom* aId) {
   MOZ_ASSERT(aShadowRoot);
   MOZ_ASSERT(aId);
-  return aShadowRoot->GetAllElementsForId(aId);
+  auto span = aShadowRoot->GetAllElementsForId(aId);
+  return {span.Elements(), span.Length()};
 }
 
 static StyleComputedMozPrefFeatureValue GetPrefValue(const nsCString& aPref) {
@@ -1787,6 +1803,10 @@ nsAtom** Gecko_Element_ExportedParts(const nsAttrValue* aValue,
   return reinterpret_cast<nsAtom**>(parts->Elements());
 }
 
+uint64_t Gecko_Element_GetSubtreeBloomFilter(const Element* aElement) {
+  return aElement->GetSubtreeBloomFilter();
+}
+
 bool StyleSingleFontFamily::IsNamedFamily(const nsAString& aFamilyName) const {
   if (!IsFamilyName()) {
     return false;
@@ -1899,23 +1919,30 @@ bool Gecko_GetAnchorPosOffset(const AnchorPosOffsetResolutionParams* aParams,
   if (!info) {
     return false;
   }
-  if (info->mCompensatesForScroll && cache) {
-    // Without cache (Containing information on default anchor) being available,
-    // we woudln't be able to determine scroll compensation status.
-    const auto axis = [aPropSide]() {
-      switch (aPropSide) {
-        case StylePhysicalSide::Left:
-        case StylePhysicalSide::Right:
-          return PhysicalAxis::Horizontal;
-        case StylePhysicalSide::Top:
-        case StylePhysicalSide::Bottom:
-          break;
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unhandled side?");
-      }
-      return PhysicalAxis::Vertical;
-    }();
-    cache->mReferenceData->AdjustCompensatingForScroll(axis);
+  if (cache) {
+    // Cache is set during reflow, which is really the only time we want to
+    // actively modify scroll compensation state & side.
+    if (info->mCompensatesForScroll) {
+      const auto axis = [aPropSide]() {
+        switch (aPropSide) {
+          case StylePhysicalSide::Left:
+          case StylePhysicalSide::Right:
+            return PhysicalAxis::Horizontal;
+          case StylePhysicalSide::Top:
+          case StylePhysicalSide::Bottom:
+            break;
+          default:
+            MOZ_ASSERT_UNREACHABLE("Unhandled side?");
+        }
+        return PhysicalAxis::Vertical;
+      }();
+      cache->mReferenceData->AdjustCompensatingForScroll(axis);
+      // Non scroll-compensated anchor will not have any impact on the
+      // containing block due to scrolling. See documentation for
+      // `mScrollCompensatedSides`.
+      cache->mReferenceData->mScrollCompensatedSides |=
+          SideToSideBit(ToSide(aPropSide));
+    }
   }
   // Compute the offset here in C++, where translating between physical/logical
   // coordinates is easier.

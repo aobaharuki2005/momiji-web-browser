@@ -208,7 +208,8 @@ bool IsAnchorLaidOutStrictlyBeforeElement(
     // possible anchor's containing block isn't.
     if (positionedContainingBlock->IsViewportFrame() &&
         !anchorContainingBlock->IsViewportFrame()) {
-      return true;
+      return !nsLayoutUtils::IsProperAncestorFrame(aPositionedFrame,
+                                                   aPossibleAnchorFrame);
     }
 
     auto isLastContainingBlockOrderable =
@@ -320,21 +321,21 @@ bool IsPositionedElementAlsoSkippedWhenAnchorIsSkipped(
   return true;
 }
 
-struct LazyAncestorHolder {
+class LazyAncestorHolder {
   const nsIFrame* mFrame;
-  Maybe<nsTArray<const nsIFrame*>> mAncestors;
+  AutoTArray<const nsIFrame*, 8> mAncestors;
+  bool mFilled = false;
+
+ public:
+  const nsTArray<const nsIFrame*>& GetAncestors() {
+    if (!mFilled) {
+      nsLayoutUtils::FillAncestors(mFrame, nullptr, &mAncestors);
+      mFilled = true;
+    }
+    return mAncestors;
+  }
 
   explicit LazyAncestorHolder(const nsIFrame* aFrame) : mFrame(aFrame) {}
-
-  const nsTArray<const nsIFrame*>& GetAncestors() {
-    if (!mAncestors) {
-      AutoTArray<const nsIFrame*, 8> ancestors;
-      nsLayoutUtils::FillAncestors(mFrame, nullptr, &ancestors);
-      mAncestors.emplace(std::move(ancestors));
-    }
-
-    return *mAncestors;
-  }
 };
 
 bool IsAcceptableAnchorElement(
@@ -874,8 +875,42 @@ bool AnchorPositioningUtils::FitsInContainingBlock(
     const nsIFrame* aPositioned, const AnchorPosReferenceData& aReferenceData) {
   MOZ_ASSERT(aPositioned->GetProperty(nsIFrame::AnchorPosReferences()) ==
              &aReferenceData);
-  return aReferenceData.mOriginalContainingBlockRect.Contains(
-      aPositioned->GetMarginRect());
+
+  const auto& scrollShift = aReferenceData.mDefaultScrollShift;
+  const auto scrollCompensatedSides = aReferenceData.mScrollCompensatedSides;
+  nsSize checkSize = [&]() {
+    const auto& adjustedCB = aReferenceData.mAdjustedContainingBlock;
+    if (scrollShift == nsPoint{} || scrollCompensatedSides == SideBits::eNone) {
+      return adjustedCB.Size();
+    }
+
+    // We now know that this frame's anchor has moved in relation to
+    // the original containing block, and that at least one side of our
+    // IMCB is attached to it.
+
+    // Scroll shift the adjusted containing block.
+    const auto shifted = aReferenceData.mAdjustedContainingBlock - scrollShift;
+    const auto& originalCB = aReferenceData.mOriginalContainingBlockRect;
+
+    // Now, move edges that are not attached to the anchors and pin it
+    // to the original containing block.
+    const nsPoint pt{
+        scrollCompensatedSides & SideBits::eLeft ? shifted.X() : originalCB.X(),
+        scrollCompensatedSides & SideBits::eTop ? shifted.Y() : originalCB.Y()};
+    const nsPoint ptMost{
+        scrollCompensatedSides & SideBits::eRight ? shifted.XMost()
+                                                  : originalCB.XMost(),
+        scrollCompensatedSides & SideBits::eBottom ? shifted.YMost()
+                                                   : originalCB.YMost()};
+
+    return nsSize{ptMost.x - pt.x, ptMost.y - pt.y};
+  }();
+
+  // Finally, reduce by inset.
+  checkSize -= nsSize{aReferenceData.mInsets.LeftRight(),
+                      aReferenceData.mInsets.TopBottom()};
+
+  return aPositioned->GetMarginRectRelativeToSelf().Size() <= checkSize;
 }
 
 nsIFrame* AnchorPositioningUtils::GetAnchorThatFrameScrollsWith(
@@ -951,9 +986,6 @@ static bool TriggerFallbackReflow(PresShell* aPresShell, nsIFrame* aPositioned,
   if (!needsRetry) {
     return false;
   }
-  // We want to retry from the first position; remove the last position
-  // property so all potential positions are re-evaluated.
-  aPositioned->RemoveProperty(nsIFrame::LastSuccessfulPositionFallback());
   aPresShell->MarkPositionedFrameForReflow(aPositioned);
   return true;
 }

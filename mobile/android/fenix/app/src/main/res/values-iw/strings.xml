@@ -317,6 +317,8 @@
   <string name="browser_save_menu_handlebar_content_description">סגירת תפריט השמירה</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar tools menu. -->
   <string name="browser_tools_menu_handlebar_content_description">סגירת תפריט הכלים</string>
+  <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar custom tab menu. -->
+  <string name="browser_custom_tab_menu_handlebar_content_description">סגירת גיליון תפריט לשונית מותאמת אישית</string>
   <!-- Browser menu label that bookmarks the currently visited page -->
   <string name="browser_menu_bookmark_this_page_2">הוספת העמוד לסימניות</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
@@ -1996,6 +1998,10 @@
   <string name="select_bookmark_search_button_content_description">חיפוש בתיקיות</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">תפריט הפריט עבור %s</string>
+  <!-- Content description for the chevron that will open a folder on the select folder screen and display its children. %s is the title of the folder that will be opened -->
+  <string name="bookmark_select_folder_expand_folder_content_description">הרחבת התיקייה: %s</string>
+  <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+  <string name="bookmark_select_folder_close_folder_content_description">סגירת התיקייה: %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">סגירת סימניות</string>
   <!-- Title for the bookmark list empty state -->
@@ -2563,6 +2569,8 @@
   <string name="etp_redirect_trackers_description">מנקה עוגיות המוגדרות על־ידי הפניות לאתרי מעקב ידועים.</string>
   <!-- Preference for fingerprinting protection for the custom protection settings -->
   <string name="etp_suspected_fingerprinters_title">רכיבי זהות דיגיטלית חשודים</string>
+  <!-- Description of fingerprinters that can be blocked by fingerprinting protection -->
+  <string name="etp_suspected_fingerprinters_description">הפעלת הגנה מפני מעקב זהות דיגיטלית כדי לבלום רכיבי זהות דיגיטלית חשודים.</string>
   <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
   <string name="etp_known_fingerprinters_title">רכיבי זהות דיגיטלית ידועים</string>
   <!--
@@ -3994,6 +4002,8 @@
   <string name="settings_search_no_results_title">לא נמצאו תוצאות</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">אולי לנסות חיפוש אחר?</string>
+  <!-- Content Description for the button to open Settings Search (to search through settings). -->
+  <string name="settings_search_button_content_description">כפתור חיפוש הגדרות</string>
   <!-- ==== Terms of use pop up prompt ==== -->
 
   <!-- Title for the pop up prompt -->

@@ -269,9 +269,9 @@ static void* pages_map(void* aAddr, size_t aSize, ShouldCommit should_commit) {
   void* region = MAP_FAILED;
   for (hint = start; region == MAP_FAILED && hint + aSize <= end;
        hint += kChunkSize) {
-    region =
-        mmap((void*)hint, aSize, committed ? PROT_READ | PROT_WRITE : PROT_NONE,
-             MAP_PRIVATE | MAP_ANON, -1, 0);
+    region = mmap((void*)hint, aSize,
+                  should_commit ? PROT_READ | PROT_WRITE : PROT_NONE,
+                  MAP_PRIVATE | MAP_ANON, -1, 0);
     if (region != MAP_FAILED) {
       if (((size_t)region + (aSize - 1)) & 0xffff800000000000) {
         if (munmap(region, aSize)) {

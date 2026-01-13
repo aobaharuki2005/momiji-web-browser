@@ -146,7 +146,7 @@ add_task(async function test_www() {
     matches: [
       makeVisitResult(context, {
         uri: `http://www.${host}/`,
-        fallbackTitle: UrlbarTestUtils.trimURL(`http://www.${host}`),
+        title: UrlbarTestUtils.trimURL(`http://www.${host}`),
         heuristic: true,
       }),
     ],
@@ -160,7 +160,7 @@ add_task(async function test_www() {
     matches: [
       makeVisitResult(context, {
         uri: `http://www.${host}/`,
-        fallbackTitle: UrlbarTestUtils.trimURL(`http://www.${host}`),
+        title: UrlbarTestUtils.trimURL(`http://www.${host}`),
         heuristic: true,
       }),
     ],
@@ -174,7 +174,7 @@ add_task(async function test_www() {
     matches: [
       makeVisitResult(context, {
         uri: `http://www.${host}/`,
-        fallbackTitle: UrlbarTestUtils.trimURL(`http://www.${host}`),
+        title: UrlbarTestUtils.trimURL(`http://www.${host}`),
         heuristic: true,
       }),
     ],

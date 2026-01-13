@@ -25,6 +25,8 @@ skip-if = [
   "verify-standalone",
 ]
 
+["browser_chat_prompt.js"]
+
 ["browser_chat_request.js"]
 support-files = [
   "file_chat-autosubmit.html",

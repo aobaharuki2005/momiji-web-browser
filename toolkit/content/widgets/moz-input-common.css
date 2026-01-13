@@ -148,4 +148,10 @@
      * element has a margin between it and the parent. */
     margin-block-start: var(--space-large);
   }
+
+  /* Maintain direction in some input types, even when the page is rtl */
+  input:is([type="tel"], [type="url"], [type="email"], [type="number"]):not(:placeholder-shown) {
+    direction: ltr;
+    text-align: match-parent;
+  }
 }

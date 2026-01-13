@@ -432,6 +432,9 @@ class MOZ_STANDALONE_DEBUG HashMap {
   static size_t offsetOfTable() {
     return offsetof(HashMap, mImpl) + Impl::offsetOfTable();
   }
+  static size_t offsetOfEntryCount() {
+    return offsetof(HashMap, mImpl) + Impl::offsetOfEntryCount();
+  }
 };
 
 //---------------------------------------------------------------------------
@@ -2359,6 +2362,9 @@ class MOZ_STANDALONE_DEBUG HashTable : private AllocPolicy {
 #endif
   }
   static size_t offsetOfTable() { return offsetof(HashTable, mTable); }
+  static size_t offsetOfEntryCount() {
+    return offsetof(HashTable, mEntryCount);
+  }
 };
 
 }  // namespace detail

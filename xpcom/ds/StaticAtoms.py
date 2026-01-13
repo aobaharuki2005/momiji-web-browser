@@ -59,6 +59,7 @@ STATIC_ATOMS = [
     Atom("mozgeneratedcontentafter", "_moz_generated_content_after"),
     Atom("mozgeneratedcontentmarker", "_moz_generated_content_marker"),
     Atom("mozgeneratedcontentimage", "_moz_generated_content_image"),
+    Atom("mozgeneratedcontentbackdrop", "_moz_generated_content_backdrop"),
     Atom("mozquote", "_moz_quote"),
     Atom("mozsignature", "moz-signature"),  # Used by MailNews.
     Atom("_moz_bullet_font", "-moz-bullet-font"),
@@ -2219,6 +2220,7 @@ STATIC_ATOMS = [
     Atom("pseudoProperty", "PseudoProperty"),  # PseudoStyleType
     Atom("manualNACProperty", "ManualNACProperty"),  # ManualNAC*
     Atom("markerPseudoProperty", "markerPseudoProperty"),  # nsXMLElement*
+    Atom("backdropPseudoProperty", "backdropPseudoProperty"),  # nsXMLElement*
     # Languages for lang-specific transforms
     Atom("Japanese", "ja"),
     Atom("Chinese", "zh-CN"),
@@ -2660,20 +2662,18 @@ def generate_nsgkatomlist_h(output, *ignore):
         "#undef small\n"
         "#endif\n\n"
         "// GK_ATOM(identifier, string, hash, is_ascii_lower, gecko_type, atom_type)\n"
-        + "".join(
-            [
-                'GK_ATOM(%s, "%s", 0x%08x, %s, %s, %s)\n'
-                % (
-                    a.ident,
-                    a.string,
-                    a.hash,
-                    str(a.is_ascii_lowercase).lower(),
-                    a.ty,
-                    a.atom_type,
-                )
-                for a in STATIC_ATOMS
-            ]
-        )
+        + "".join([
+            'GK_ATOM(%s, "%s", 0x%08x, %s, %s, %s)\n'
+            % (
+                a.ident,
+                a.string,
+                a.hash,
+                str(a.is_ascii_lowercase).lower(),
+                a.ty,
+                a.atom_type,
+            )
+            for a in STATIC_ATOMS
+        ])
     )
 
 

@@ -27,6 +27,8 @@ export const MDN_DOCS_HEADERS =
   "https://developer.mozilla.org/docs/Web/HTTP/Reference/Headers/";
 export const COOP_MDN_DOCS = MDN_DOCS_HEADERS + "Cross-Origin-Opener-Policy";
 export const COEP_MDN_DOCS = MDN_DOCS_HEADERS + "Cross-Origin-Embedder-Policy";
+export const HTTPS_UPGRADES_MDN_DOCS =
+  "https://support.mozilla.org/kb/https-upgrades";
 export let gErrorCode = searchParams.get("e");
 export let gIsCertError = gErrorCode == "nssBadCert";
 export let gHasSts = gIsCertError && getCSSClass() === "badStsCert";
@@ -191,4 +193,34 @@ export function errorHasNoUserFix(errorCodeString) {
     default:
       return false;
   }
+}
+
+export function handleNSSFailure(callback) {
+  const netErrorInfo = document.getNetErrorInfo();
+  void recordSecurityUITelemetry(
+    "securityUiTlserror",
+    "loadAbouttlserror",
+    netErrorInfo
+  );
+  const errorCode = netErrorInfo.errorCodeString;
+  const result = {};
+  switch (errorCode) {
+    case "SSL_ERROR_UNSUPPORTED_VERSION":
+    case "SSL_ERROR_PROTOCOL_VERSION_ALERT": {
+      result.versionError = true;
+    }
+    // fallthrough
+
+    case "SSL_ERROR_NO_CIPHERS_SUPPORTED":
+    case "SSL_ERROR_NO_CYPHER_OVERLAP":
+    case "SSL_ERROR_SSL_DISABLED":
+      RPMAddMessageListener("HasChangedCertPrefs", msg => {
+        if (msg.data.hasChangedCertPrefs) {
+          // Configuration overrides might have caused this; offer to reset.
+          callback?.();
+        }
+      });
+      RPMSendAsyncMessage("GetChangedCertPrefs");
+  }
+  return result;
 }

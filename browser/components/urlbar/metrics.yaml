@@ -102,10 +102,15 @@ urlbar:
           `autofill_unknown`,
           `autofill_url`,
           `bookmark`,
+          `bookmark_adaptive`,
+          `bookmark_adaptive_serp`,
+          `bookmark_serp`,
           `calc`,
           `clipboard`,
           `fxsuggest_data_sharing_opt_in`,
           `history`,
+          `history_adaptive`,
+          `history_adaptive_serp`,
           `history_semantic`,
           `history_semantic_serp`,
           `history_serp`,
@@ -139,6 +144,8 @@ urlbar:
           `search_suggest`,
           `search_suggest_rich`,
           `tab`,
+          `tab_adaptive`,
+          `tab_adaptive_serp`,
           `tab_semantic`,
           `tab_semantic_serp`,
           `tab_serp`,
@@ -467,11 +474,16 @@ urlbar:
           `autofill_unknown`,
           `autofill_url`,
           `bookmark`,
+          `bookmark_adaptive`,
+          `bookmark_adaptive_serp`,
+          `bookmark_serp`,
           `calc`,
           `clipboard`,
           `experimental_addon`,
           `fxsuggest_data_sharing_opt_in`,
           `history`,
+          `history_adaptive`,
+          `history_adaptive_serp`,
           `history_semantic`,
           `history_semantic_serp`,
           `history_serp`,
@@ -508,6 +520,8 @@ urlbar:
           `search_suggest_rich`,
           `site_specific_contextual_search`,
           `tab`,
+          `tab_adaptive`,
+          `tab_adaptive_serp`,
           `tab_semantic`,
           `tab_semantic_serp`,
           `tab_serp`,
@@ -596,10 +610,15 @@ urlbar:
           `autofill_unknown`,
           `autofill_url`,
           `bookmark`,
+          `bookmark_adaptive`,
+          `bookmark_adaptive_serp`,
+          `bookmark_serp`,
           `calc`,
           `clipboard`,
           `fxsuggest_data_sharing_opt_in`,
           `history`,
+          `history_adaptive`,
+          `history_adaptive_serp`,
           `history_semantic`,
           `history_semantic_serp`,
           `history_serp`,
@@ -633,6 +652,8 @@ urlbar:
           `search_suggest`,
           `search_suggest_rich`,
           `tab`,
+          `tab_adaptive`,
+          `tab_adaptive_serp`,
           `tab_semantic`,
           `tab_semantic_serp`,
           `tab_serp`,
@@ -881,22 +902,6 @@ urlbar:
     expires: never
     send_in_pings:
       - events
-
-  pref_switch_tabs_search_all_containers:
-    lifetime: application
-    type: boolean
-    description: >
-      Whether the "Switch to Tab" feature searches across all containers.
-      Corresponds to the value of the `browser.urlbar.switchTabs.searchAllContainers` pref.
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1974961
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1974961
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - fx-search-telemetry@mozilla.com
-    expires: 149
 
   autofill_deletion:
     type: counter

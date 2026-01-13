@@ -514,8 +514,8 @@ export class FeatureModel {
             this.privateFeatures.includes(key)
           )
         );
-        this.applyPostProcessing({ ...originalInterestValues });
       }
+      coarsePrivateValues = this.applyPostProcessing(coarsePrivateValues);
       this.applyThresholding(coarsePrivateValues, true);
 
       if (condensePrivateValues) {

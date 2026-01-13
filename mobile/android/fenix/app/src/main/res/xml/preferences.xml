@@ -20,7 +20,7 @@
         android:layout="@layout/preference_category_no_icon_style">
 
         <org.mozilla.fenix.settings.account.AccountPreference
-            android:icon="@drawable/ic_account"
+            android:icon="@drawable/mozac_ic_avatar_circle_24"
             android:key="@string/pref_key_account" />
 
         <org.mozilla.fenix.settings.account.AccountAuthErrorPreference
@@ -182,6 +182,12 @@
             android:key="@string/pref_key_downloads"
             app:iconSpaceReserved="false"
             android:title="@string/preferences_downloads" />
+
+        <androidx.preference.Preference
+            android:key="@string/pref_key_firefox_labs"
+            app:iconSpaceReserved="false"
+            app:isPreferenceVisible="false"
+            android:title="@string/firefox_labs_title" />
 
         <androidx.preference.SwitchPreference
             android:key="@string/pref_key_leakcanary"

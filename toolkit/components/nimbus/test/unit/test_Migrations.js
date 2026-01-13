@@ -1648,25 +1648,47 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
   );
 
   Services.prefs.setBoolPref(ENABLED_PREF, true);
-  const { cleanup, manager } = await NimbusTestUtils.setupTest({
-    storePath: await NimbusTestUtils.createStoreWith(store => {
-      NimbusTestUtils.addEnrollmentForRecipe(recipe, {
-        store,
-        extra: {
-          prefs: [
-            {
-              name: ENABLED_PREF,
-              featureId: "auto-pip",
-              variable: "enabled",
-              branch: "user",
-              originalValue: false,
+
+  let cleanup, manager;
+  await GleanPings.nimbusTargetingContext.testSubmission(
+    () => {
+      Assert.deepEqual(
+        Glean.nimbusEvents.enrollmentStatus
+          .testGetValue("nimbus-targeting-context")
+          .map(event => event.extra),
+        [
+          {
+            slug: "firefox-labs-auto-pip",
+            branch: "control",
+            status: "WasEnrolled",
+            reason: "Migration",
+            migration: "graduate-firefox-labs-auto-pip",
+          },
+        ]
+      );
+    },
+    async () =>
+      ({ cleanup, manager } = await NimbusTestUtils.setupTest({
+        storePath: await NimbusTestUtils.createStoreWith(store => {
+          NimbusTestUtils.addEnrollmentForRecipe(recipe, {
+            store,
+            extra: {
+              prefs: [
+                {
+                  name: ENABLED_PREF,
+                  featureId: "auto-pip",
+                  variable: "enabled",
+                  branch: "user",
+                  originalValue: false,
+                },
+              ],
             },
-          ],
-        },
-      });
-    }),
-    migrationState: NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
-  });
+          });
+        }),
+        migrationState:
+          NimbusTestUtils.migrationState.IMPORTED_ENROLLMENTS_TO_SQL,
+      }))
+  );
 
   const enrollment = manager.store.get(SLUG);
 
@@ -1699,21 +1721,6 @@ add_task(async function testGraduateFirefoxLabsAutoPip() {
         experiment: "firefox-labs-auto-pip",
         branch: "control",
         reason: "migration",
-        migration: "graduate-firefox-labs-auto-pip",
-      },
-    ]
-  );
-
-  Assert.deepEqual(
-    Glean.nimbusEvents.enrollmentStatus
-      .testGetValue("events")
-      .map(event => event.extra),
-    [
-      {
-        slug: "firefox-labs-auto-pip",
-        branch: "control",
-        status: "WasEnrolled",
-        reason: "Migration",
         migration: "graduate-firefox-labs-auto-pip",
       },
     ]

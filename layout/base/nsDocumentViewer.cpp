@@ -913,6 +913,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
 
   // First, get the window from the document...
   nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
+  RefPtr<nsDocShell> docShell = nsDocShell::Cast(window->GetDocShell());
 
   mLoaded = true;
 
@@ -938,7 +939,6 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     // onload to the document content since that would likely confuse scripts
     // on the page.
 
-    RefPtr<nsDocShell> docShell = nsDocShell::Cast(window->GetDocShell());
     NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
 
     // Unfortunately, docShell->GetRestoringDocument() might no longer be set
@@ -947,15 +947,16 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     // But we can detect the restoring case very simply: by whether our
     // document's readyState is COMPLETE.
     restoring =
-        (mDocument->GetReadyStateEnum() == Document::READYSTATE_COMPLETE);
+        (mDocument->GetReadyStateEnum() == Document::READYSTATE_COMPLETE) &&
+        !mDocument->InitialAboutBlankLoadCompleting();
     if (!restoring) {
       NS_ASSERTION(
           mDocument->GetReadyStateEnum() == Document::READYSTATE_INTERACTIVE ||
               // test_stricttransportsecurity.html has old-style
               // docshell-generated about:blank docs reach this code!
               (mDocument->GetReadyStateEnum() ==
-                   Document::READYSTATE_UNINITIALIZED &&
-               NS_IsAboutBlank(mDocument->GetDocumentURI())),
+                   Document::READYSTATE_COMPLETE &&
+               mDocument->InitialAboutBlankLoadCompleting()),
           "Bad readystate");
 #ifdef DEBUG
       bool docShellThinksWeAreRestoring;
@@ -965,7 +966,9 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
                  "READYSTATE_COMPLETE document?");
 #endif  // DEBUG
       nsCOMPtr<Document> d = mDocument;
-      mDocument->SetReadyStateInternal(Document::READYSTATE_COMPLETE);
+      if (!mDocument->InitialAboutBlankLoadCompleting()) {
+        mDocument->SetReadyStateInternal(Document::READYSTATE_COMPLETE);
+      }
 
       RefPtr<nsDOMNavigationTiming> timing(d->GetNavigationTiming());
       if (timing) {
@@ -1027,7 +1030,7 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     // Re-get window, since it might have changed during above firing of onload
     window = mDocument->GetWindow();
     if (window) {
-      nsIDocShell* docShell = window->GetDocShell();
+      docShell = nsDocShell::Cast(window->GetDocShell());
       bool isInUnload;
       if (docShell && NS_SUCCEEDED(docShell->GetIsInUnload(&isInUnload)) &&
           !isInUnload) {
@@ -1049,11 +1052,27 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
     // Now that the document has loaded, we can tell the presshell
     // to unsuppress painting.
     if (mPresShell) {
-      RefPtr<PresShell> presShell = mPresShell;
-      presShell->UnsuppressPainting();
-      // mPresShell could have been removed now, see bug 378682/421432
-      if (mPresShell) {
-        mPresShell->LoadComplete();
+      if (mDocument && mDocument->IsInitialDocument() && docShell &&
+          !docShell->HasStartedLoadingOtherThanInitialBlankURI()) {
+        // Delay paint unsuppression in case a new load elsewhere is started
+        // in the same task that permitted the initial about:blank to fire
+        // its load event. This is important for the front end, which assumes
+        // that it's performance-wise OK to create an empty XUL browser,
+        // append it in a document, and only then make it start navigating
+        // away from the initial about:blank.
+        nsCOMPtr<nsIRunnable> task = NewRunnableMethod<RefPtr<PresShell>>(
+            "nsDocShell::UnsuppressPaintingIfNoNavigationAwayFromAboutBlank",
+            docShell,
+            &nsDocShell::UnsuppressPaintingIfNoNavigationAwayFromAboutBlank,
+            mPresShell);
+        mDocument->Dispatch(task.forget());
+      } else {
+        RefPtr<PresShell> presShell = mPresShell;
+        presShell->UnsuppressPainting();
+        // mPresShell could have been removed now, see bug 378682/421432
+        if (mPresShell) {
+          mPresShell->LoadComplete();
+        }
       }
     }
   }
@@ -1127,6 +1146,11 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
 
   RefPtr<BrowsingContext> bc = mContainer->GetBrowsingContext();
   if (!bc) {
+    return NS_OK;
+  }
+
+  if (bc->GetIsDocumentPiP()) {
+    // https://wicg.github.io/document-picture-in-picture/#close-document-pip-window
     return NS_OK;
   }
 

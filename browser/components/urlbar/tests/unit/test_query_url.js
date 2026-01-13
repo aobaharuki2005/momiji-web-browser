@@ -20,7 +20,7 @@ add_task(async function test_no_slash() {
     matches: [
       makeVisitResult(context, {
         uri: "http://file.org/",
-        fallbackTitle: UrlbarTestUtils.trimURL("http://file.org/"),
+        title: UrlbarTestUtils.trimURL("http://file.org/"),
         heuristic: true,
       }),
       makeVisitResult(context, {
@@ -56,7 +56,7 @@ add_task(async function test_w_slash() {
     matches: [
       makeVisitResult(context, {
         uri: "http://file.org/",
-        fallbackTitle: UrlbarTestUtils.trimURL("http://file.org/", {
+        title: UrlbarTestUtils.trimURL("http://file.org/", {
           removeSingleTrailingSlash: false,
         }),
         heuristic: true,
