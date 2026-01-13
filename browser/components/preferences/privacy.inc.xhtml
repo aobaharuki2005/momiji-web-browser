@@ -676,6 +676,18 @@
       </description>
 #endif # MOZ_NORMANDY
     </vbox>
+#ifdef MOZ_NORMANDY
+    <checkbox id="enableNimbusRollouts"
+              data-l10n-id="nimbus-rollouts-enabled"
+              preference="nimbus.rollouts.enabled"/>
+    <description class="indent tip-caption">
+      <html:span data-l10n-id="nimbus-rollouts-enabled-description" />
+      <html:a is="moz-support-link"
+              id="enableRolloutsLearnMore"
+              class="learnMore"
+              support-page="remote-improvements" />
+    </description>
+#endif # MOZ_NORMANDY
 
     <checkbox id="submitUsagePingBox"
               data-l10n-id="collection-usage-ping"
