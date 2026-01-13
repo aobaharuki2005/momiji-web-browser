@@ -119,6 +119,27 @@ export const MatchStatus = Object.freeze({
   DISABLED: "DISABLED",
 });
 
+const DeliveryKind = Object.freeze({
+  FIREFOX_LABS_OPT_IN: "firefox-labs-opt-in",
+  ROLLOUT: "rollout",
+  STUDY: "study",
+});
+
+/**
+ * @returns {DeliveryKind}
+ */
+function getDeliveryKind(recipe) {
+  if (recipe.isFirefoxLabsOptIn) {
+    return DeliveryKind.FIREFOX_LABS_OPT_IN;
+  }
+
+  if (recipe.isRollout) {
+    return DeliveryKind.ROLLOUT;
+  }
+
+  return DeliveryKind.STUDY;
+}
+
 export const CheckRecipeResult = {
   Ok(status) {
     return {
@@ -435,6 +456,7 @@ export class RemoteSettingsExperimentLoader {
           {
             validationEnabled,
             labsEnabled: lazy.ExperimentAPI.labsEnabled,
+            rolloutsEnabled: lazy.ExperimentAPI.rolloutsEnabled,
             studiesEnabled: lazy.ExperimentAPI.studiesEnabled,
             shouldCheckTargeting: true,
             unenrolledExperimentSlugs,
@@ -931,16 +953,18 @@ export class EnrollmentsContext {
       validationEnabled = true,
       shouldCheckTargeting = true,
       unenrolledExperimentSlugs,
-      studiesEnabled = true,
       labsEnabled = true,
+      rolloutsEnabled = true,
+      studiesEnabled = true,
     } = {}
   ) {
     this.manager = manager;
     this.recipeValidator = recipeValidator;
 
     this.validationEnabled = validationEnabled;
-    this.studiesEnabled = studiesEnabled;
     this.labsEnabled = labsEnabled;
+    this.rolloutsEnabled = rolloutsEnabled;
+    this.studiesEnabled = studiesEnabled;
 
     this.validatorCache = {};
     this.shouldCheckTargeting = shouldCheckTargeting;
@@ -975,9 +999,12 @@ export class EnrollmentsContext {
       }
     }
 
+    const deliveryKind = getDeliveryKind(recipe);
     if (
-      (recipe.isFirefoxLabsOptIn && !this.labsEnabled) ||
-      (!recipe.isFirefoxLabsOptIn && !this.studiesEnabled)
+      (deliveryKind === DeliveryKind.FIREFOX_LABS_OPT_IN &&
+        !this.labsEnabled) ||
+      (deliveryKind === DeliveryKind.ROLLOUT && !this.rolloutsEnabled) ||
+      (deliveryKind === DeliveryKind.STUDY && !this.studiesEnabled)
     ) {
       return CheckRecipeResult.Ok(MatchStatus.DISABLED);
     }
