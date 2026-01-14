@@ -315,7 +315,7 @@ end = "2025-08-30"
 [[wildcard-audits.hawk]]
 who = "Ryan Safaeian <rsafaeian@mozilla.com>"
 criteria = "safe-to-deploy"
-user-id = 158511 # Yaraslau Kurmyza (lotas)
+user-id = 158511 # Yarik (lotas)
 start = "2022-05-05"
 end = "2026-04-24"
 notes = "Hawk is written and maintained by mozilla employees."
@@ -4384,9 +4384,10 @@ delta = "27.0.0 -> 28.0.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "28.0.0 -> 28.0.0@git:a2c8c0de7cdb57a74070ce70b9912e853893d502"
+delta = "28.0.0 -> 28.0.0@git:a3164af1e1922052966e00147be12ea7e2a5bb22"
 importable = false
 
 [[audits.net2]]
@@ -6995,9 +6996,10 @@ delta = "27.0.0 -> 28.0.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "28.0.0 -> 28.0.0@git:a2c8c0de7cdb57a74070ce70b9912e853893d502"
+delta = "28.0.0 -> 28.0.0@git:a3164af1e1922052966e00147be12ea7e2a5bb22"
 importable = false
 
 [[audits.wgpu-core-deps-apple]]
@@ -7034,9 +7036,10 @@ delta = "27.0.0 -> 28.0.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "28.0.0 -> 28.0.0@git:a2c8c0de7cdb57a74070ce70b9912e853893d502"
+delta = "28.0.0 -> 28.0.0@git:a3164af1e1922052966e00147be12ea7e2a5bb22"
 importable = false
 
 [[audits.wgpu-core-deps-windows-linux-android]]
@@ -7073,9 +7076,10 @@ delta = "27.0.0 -> 28.0.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "28.0.0 -> 28.0.0@git:a2c8c0de7cdb57a74070ce70b9912e853893d502"
+delta = "28.0.0 -> 28.0.0@git:a3164af1e1922052966e00147be12ea7e2a5bb22"
 importable = false
 
 [[audits.wgpu-hal]]
@@ -7190,9 +7194,10 @@ delta = "27.0.0 -> 28.0.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "28.0.0 -> 28.0.0@git:a2c8c0de7cdb57a74070ce70b9912e853893d502"
+delta = "28.0.0 -> 28.0.0@git:a3164af1e1922052966e00147be12ea7e2a5bb22"
 importable = false
 
 [[audits.wgpu-types]]
@@ -7302,9 +7307,10 @@ delta = "27.0.0 -> 28.0.0"
 who = [
     "Jim Blandy <jimb@red-bean.com>",
     "Erich Gubler <erichdongubler@gmail.com>",
+    "Teodor Tanasoaia <ttanasoaia@mozilla.com>",
 ]
 criteria = "safe-to-deploy"
-delta = "28.0.0 -> 28.0.0@git:a2c8c0de7cdb57a74070ce70b9912e853893d502"
+delta = "28.0.0 -> 28.0.0@git:a3164af1e1922052966e00147be12ea7e2a5bb22"
 importable = false
 
 [[audits.whatsys]]
