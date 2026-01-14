@@ -1260,9 +1260,11 @@ var FullPageTranslationsPanel = new (class {
   /**
    * A handler for opening the settings context menu.
    */
-  openSettingsPopup(button) {
-    this.#updateSettingsMenuLanguageCheckboxStates();
-    this.#updateSettingsMenuSiteCheckboxStates();
+  async openSettingsPopup(button) {
+    await Promise.all([
+      this.#updateSettingsMenuLanguageCheckboxStates(),
+      this.#updateSettingsMenuSiteCheckboxStates(),
+    ]);
     const popup = button.ownerDocument.getElementById(
       "full-page-translations-panel-settings-menupopup"
     );
