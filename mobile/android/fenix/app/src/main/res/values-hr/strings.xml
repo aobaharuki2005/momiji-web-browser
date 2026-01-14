@@ -237,7 +237,7 @@
   <!-- Browser menu button that opens a user's library -->
   <string name="browser_menu_library">Biblioteka</string>
   <!-- Browser menu toggle that requests a desktop site -->
-  <string name="browser_menu_desktop_site">Klasični prikaz</string>
+  <string name="browser_menu_desktop_site">Desktop web-stranica</string>
   <!-- Browser menu button that reopens a private tab as a regular tab -->
   <string name="browser_menu_open_in_regular_tab">Otvori u redovnoj kartici</string>
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -408,7 +408,7 @@
   -->
   <string name="search_scan_button_2">Snimi QR kod</string>
   <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-  <string name="search_shortcuts_engine_settings">Traži postavke tražilice</string>
+  <string name="search_shortcuts_engine_settings">Postavke tražilice</string>
   <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
   <string name="awesomebar_clipboard_title">Umetni poveznicu iz međuspremnika</string>
   <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -418,7 +418,7 @@
   <!-- Search suggestion onboarding hint title text -->
   <string name="search_suggestions_onboarding_title">Dozvoliti prijedloge za pretraživanje u privatnoj sesiji?</string>
   <!-- Search suggestion onboarding hint description text, %s is the name of the app (for example "Firefox"). -->
-  <string name="search_suggestions_onboarding_text">%s će podijeliti sve što upišeš u adresnu traku s tvojom standardnom tražilicom.</string>
+  <string name="search_suggestions_onboarding_text">%s će dijeliti sve što upišeš u adresnu traku s tvojom standardnom tražilicom.</string>
   <!-- Search engine suggestion title text. %s is the name of the suggested engine. -->
   <string name="search_engine_suggestions_title">Pretraži %s</string>
   <!-- Search engine suggestion description text -->
@@ -2115,7 +2115,7 @@
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
   <string name="preferences_category_content">Sadržaj</string>
   <!-- Preference for altering the default browsing mode. When enabled, the desktop site will always be requested. -->
-  <string name="preference_feature_desktop_mode_default">Uvijek zatraži verziju web stranice za računalo</string>
+  <string name="preference_feature_desktop_mode_default">Uvijek zatraži desktop web-stranicu</string>
   <!--
     Collections
 
@@ -2990,7 +2990,7 @@
   <!-- Title of the Add search engine screen -->
   <string name="search_engine_add_custom_search_engine_title">Dodaj tražilicu</string>
   <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-  <string name="search_engine_add_custom_search_engine_button_content_description">Dodaj novi pretraživač</string>
+  <string name="search_engine_add_custom_search_engine_button_content_description">Dodaj novu tražilicu</string>
   <!-- Title of the Edit search engine screen -->
   <string name="search_engine_edit_custom_search_engine_title">Uredi tražilicu</string>
   <!-- Text for the menu button to edit a search engine -->
@@ -3000,7 +3000,7 @@
   <!-- Label for the TextField in which user enters custom search engine name -->
   <string name="search_add_custom_engine_name_label">Naziv</string>
   <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-  <string name="search_add_custom_engine_name_hint_2">Naziv pretraživača</string>
+  <string name="search_add_custom_engine_name_hint_2">Ime tražilice</string>
   <!-- Label for the TextField in which user enters custom search engine URL -->
   <string name="search_add_custom_engine_url_label">URL pojma za pretraživanje</string>
   <!-- Placeholder text shown in the Search String TextField before a user enters text -->
@@ -3394,9 +3394,9 @@
 
     Preference option for offering to translate. Radio button title text.
   -->
-  <string name="automatic_translation_option_offer_to_translate_title_preference">Ponudi prijevod (standardno)</string>
+  <string name="automatic_translation_option_offer_to_translate_title_preference">Ponudi prevođenje (standardno)</string>
   <!-- Preference option for offering to translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s će ponuditi prevesti web stranice na ovom jeziku.</string>
+  <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s će ponuditi prevođenje web-stranica na ovom jeziku.</string>
   <!-- Preference option for always translate. Radio button title text. -->
   <string name="automatic_translation_option_always_translate_title_preference">Uvijek prevedi</string>
   <!-- Preference option for always translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
@@ -3404,7 +3404,7 @@
   <!-- Preference option for never translate. Radio button title text. -->
   <string name="automatic_translation_option_never_translate_title_preference">Nikada ne prevodi</string>
   <!-- Preference option for never translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="automatic_translation_option_never_translate_summary_preference">%1$s nikada neće ponuditi prijevod web stranica na ovom jeziku.</string>
+  <string name="automatic_translation_option_never_translate_summary_preference">%1$s nikada neće ponuditi prevođenje web-stranica na ovom jeziku.</string>
   <!--
     Never translate site preference screen
 
