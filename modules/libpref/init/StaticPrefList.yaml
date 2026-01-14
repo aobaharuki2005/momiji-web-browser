@@ -5169,7 +5169,8 @@
     *.nvidia.com,
     *.fedex.com,
     *.msci.com,
-    *.the-saleroom.com
+    *.the-saleroom.com,
+    *.si.com
   mirror: never
 
 # Maximum amount of time in milliseconds consecutive setTimeout()/setInterval()
