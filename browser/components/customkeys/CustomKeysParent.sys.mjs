@@ -201,6 +201,9 @@ export class CustomKeysParent extends JSWindowActorParent {
         data.keycode =
           KEY_NAMES_TO_CODES[event.key] ??
           ShortcutUtils.getKeycodeAttribute(event.key);
+        if (event.key == "Backspace") {
+          data.isValid = false;
+        }
       }
       data.shortcut = this.prettifyShortcut(data);
       this.sendAsyncMessage("CustomKeys:CapturedKey", data);
