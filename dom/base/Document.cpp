@@ -10029,7 +10029,7 @@ void Document::MaybeInitializeFinalizeFrameLoaders() {
   while (mInitializableFrameLoaders.Length()) {
     RefPtr<nsFrameLoader> loader = mInitializableFrameLoaders[0];
     mInitializableFrameLoaders.RemoveElementAt(0);
-    NS_ASSERTION(loader, "null frameloader in the array?");
+    MOZ_RELEASE_ASSERT(loader, "null frameloader in the array?");
     loader->ReallyStartLoading();
   }
 
