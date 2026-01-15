@@ -3,7 +3,8 @@ tags = "local"
 
 ["test_default_launcher_visible.py"]
 skip-if = [
-  "true", # bug 2008998, fails when sidebar.revamp defaults to true.
+  "asan", # Bug 2010115
+  "tsan", # Bug 2010115
 ]
 
 ["test_initialize_vertical_tabs.py"]
