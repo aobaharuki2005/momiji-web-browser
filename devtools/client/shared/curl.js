@@ -459,7 +459,7 @@ const CurlUtils = {
       encapsChars +
       str
         // Replace all the \ (used as the escape character in the next replace) with \\
-        .replace(/\\/g, '\\\\')
+        .replace(/\\/g, "\\\\")
 
         // Replace all " with \" to ensure the first parser does not remove it.
         .replace(/"/g, '\\"')
