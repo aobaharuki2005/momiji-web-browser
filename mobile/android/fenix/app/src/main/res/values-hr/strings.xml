@@ -972,6 +972,15 @@
   <string name="preferences_open_links_in_apps_ask">Pitaj prije otvaranja</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Nikad</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">Spremište datoteka</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">Standardno mjesto za preuzimanja</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">Nemaš dozvole za korištenje ove mape. Odaberi jednu drugu mapu.</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Upravljaj preuzimanjima pomoću jedne druge aplikacije</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1703,6 +1712,8 @@
   <string name="download_delete_item">Izbriši</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Idi natrag</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">Idi na postavke preuzimanja</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Natrag i zatvori pretragu</string>
   <!--
@@ -1998,6 +2009,10 @@
   <string name="select_bookmark_search_button_content_description">Pretraži mape</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Izbornik stavki za %s</string>
+  <!-- Content description for the chevron that will open a folder on the select folder screen and display its children. %s is the title of the folder that will be opened -->
+  <string name="bookmark_select_folder_expand_folder_content_description">Proširi mapu: %s</string>
+  <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+  <string name="bookmark_select_folder_close_folder_content_description">Zatvori mapu: %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">Zatvori zabilješke</string>
   <!-- Title for the bookmark list empty state -->
@@ -4002,6 +4017,8 @@
   <string name="settings_search_no_results_title">Ništa nije pronađeno</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">Probati drugačiju pretragu?</string>
+  <!-- Content Description for the button to open Settings Search (to search through settings). -->
+  <string name="settings_search_button_content_description">Gumb za pretraživanje postavki</string>
   <!-- ==== Terms of use pop up prompt ==== -->
 
   <!-- Title for the pop up prompt -->

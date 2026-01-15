@@ -972,6 +972,15 @@
   <string name="preferences_open_links_in_apps_ask">Հարցել բացելուց առաջ</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Երբեք</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">Ֆայլերի պահեստ</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">Ներբեռնման սկզբնադիր տեղադրություն</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">Դուք չունեք այս պանակն օգտագործելու թույլտվություն։ Փորձեք ընտրել մեկ ուրիշը։</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Կառավարեք ներբեռնումները մեկ այլ հավելվածով</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1703,6 +1712,8 @@
   <string name="download_delete_item">Ջնջել</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Նավարկել ետ</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">Անցնել Ներբեռնումների կարգավորումներին</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Վերադառնալ և փակել որոնումը</string>
   <!--
