@@ -458,11 +458,10 @@ const CurlUtils = {
     return (
       encapsChars +
       str
-        //  Replace \ with \\ first because it is an escape character for certain
-        // conditions in both parsers.
-        .replace(/\\/g, "\\\\")
+        // Replace all the \ (used as the escape character in the next replace) with \\
+        .replace(/\\/g, '\\\\')
 
-        // Escape double quotes with double slashes.
+        // Replace all " with \" to ensure the first parser does not remove it.
         .replace(/"/g, '\\"')
 
         // Escape ` and $ so commands do not get executed e.g $(calc.exe) or `\$(calc.exe)
