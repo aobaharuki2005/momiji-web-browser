@@ -972,6 +972,15 @@
   <string name="preferences_open_links_in_apps_ask">Demandar ante aperir</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Jammais</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">Archivation de file</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">Position predefinite pro le discargamento</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">Tu non ha permisso pro usar iste plica. Tenta eliger un differente.</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Gere discargamentos con un altere app</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1703,6 +1712,8 @@
   <string name="download_delete_item">Deler</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Navigar retro</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">Aperir parametros de discargamentos</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Retornar e clauder recerca</string>
   <!--

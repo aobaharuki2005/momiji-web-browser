@@ -900,6 +900,15 @@
   <string name="preferences_open_links_in_apps_ask">തുറക്കുന്നതിനു് മുമ്പു് ചോദിക്കുക</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">ഒരിക്കലുമില്ല</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">ഫയൽ സംഭരണം</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">തനിമട്ടു് ഇറക്കിവയ്ക്കലിടം</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">ഈ അറ ഉപയോഗിക്കാൻ താങ്ങൾക്കനുവാദമില്ല. മറ്റൊരെണ്ണം തിരഞ്ഞെടുത്തുനോക്കു്.</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">മറ്റൊരു പ്രയോഗംവഴി ഇറക്കിവയ്ക്കലുകൾ കൈകാര്യം ചെയ്യുക</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1427,6 +1436,8 @@
   <string name="tab_drawer_fab_content">സ്വകാര്യം</string>
   <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
   <string name="tab_drawer_fab_sync">സമന്വയം</string>
+  <!-- Text for the tab search bar placeholder -->
+  <string name="tab_manager_search_bar_placeholder">ടാബുകൾക്കായി തിരയുക</string>
   <!-- Text shown in the menu for sharing all tabs -->
   <string name="tab_tray_menu_item_share">എല്ലാ ടാബുകളും പങ്കിടുക</string>
   <!-- Text shown in the menu to view recently closed tabs -->
@@ -1469,6 +1480,8 @@
   <string name="remove_tab_from_collection">ശേഖരത്തിൽ നിന്ന് ടാബ് നീക്കം ചെയ്യുക</string>
   <!-- Text for button to enter multiselect mode in tabs tray -->
   <string name="tabs_tray_select_tabs">ടാബുകൾ തിരഞ്ഞെടുക്കുക</string>
+  <!-- Text for tab manager search page when there are no results. -->
+  <string name="tab_manager_no_search_results">പൊരുത്തങ്ങളൊന്നും കണ്ടെത്തിയില്ല.</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
   <string name="close_tab">ടാബ് അടയ്ക്കുക</string>
   <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. %s is the tab title -->
@@ -1491,6 +1504,8 @@
   <string name="delete_from_history">നാള്‍വഴിയിൽ നിന്ന് മായ്ക്കുക</string>
   <!-- Postfix for private WebApp titles. %1$s is the name of the app (for example "Firefox"). -->
   <string name="pwa_site_controls_title_private">%1$s (സ്വകാര്യ രീതി)</string>
+  <!-- Content description (not visible, for screen readers etc.) for the button to open the Tab Search feature to search through tabs. -->
+  <string name="tab_manager_open_tab_search">ടാബുതിരയൽ തുറക്കുക</string>
   <!--
     History
 
@@ -1848,8 +1863,12 @@
   <string name="bookmark_delete_folder_content_description">അറ മായ്ക്കുക</string>
   <!-- Content description for bookmark search floating action button -->
   <string name="bookmark_search_button_content_description">അടയാളക്കുറിപ്പുകളിൽ തേടുക</string>
+  <!-- Content description for select folder screen search action button ("search" is a verb) -->
+  <string name="select_bookmark_search_button_content_description">അറകൾക്കായി തിരയുക</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">%s-നുള്ള ഇനം പട്ടിക</string>
+  <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+  <string name="bookmark_select_folder_close_folder_content_description">അറ അടയ്ക്കുക: %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">അടയാളക്കുറിപ്പുകൾ അടയ്ക്കുക</string>
   <!-- Title for the bookmark list empty state -->
@@ -1866,6 +1885,8 @@
   <string name="bookmark_empty_list_folder_description">താങ്ങളുടെ പ്രയപ്പെട്ട വെബ്സ്ഥാനങ്ങളെ പിന്നീടു് കണ്ടെത്താൻ താങ്ങൾക്കു് തിരയുമ്പോൾ അടയാളക്കുറിപ്പുകളൾ ചേൎക്കാം.</string>
   <!-- Description for the add new folder button when selecting a folder. -->
   <string name="bookmark_select_folder_new_folder_button_title">പുതിയ അറ</string>
+  <!-- Bookmark snackbar message for moving a single item. %1$s is the title of the item being moved and %2$s is the new parent folder of the bookmark -->
+  <string name="bookmark_moved_single_item">%2$s-ലേക്കു %1$s-ഇനെ മാറ്റി</string>
   <!--
     Site Permissions
 
@@ -3745,6 +3766,11 @@
     %1$s is the product name "Firefox"
   -->
   <string name="terms_of_use_prompt_title_option_b" tools:ignore="UnusedResources">%1$s-ൽ നിന്നൊരു കുറിപ്പു്</string>
+  <!--
+    Copy for the Terms of Use popup prompt body line two.
+    %1$s is the string terms_of_use_prompt_body_line_two_alternative_link ("here") that is a link to the Terms of Use
+  -->
+  <string name="terms_of_use_prompt_body_line_two_alternative" tools:ignore="UnusedResources">%1$s-ൽ താങ്ങൾക്കു കൂടുതലറിയാം.</string>
   <!-- Link text for terms_of_use_prompt_body_line_two_alternative that links to a site with more information about the Terms of Use -->
   <string name="terms_of_use_prompt_body_line_two_alternative_link" tools:ignore="UnusedResources">ഇവിടെ</string>
   <!-- ==== End of Terms of use popup prompt. ==== -->

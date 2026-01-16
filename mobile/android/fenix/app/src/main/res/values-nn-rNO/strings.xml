@@ -96,7 +96,7 @@
     Description of private browsing mode displayed to users on the homepage when they enable private mode.
     %1$s is the name of the app (for example "Firefox").
   -->
-  <string name="felt_privacy_info_card_subtitle_3">%1$s slettar infokapslar, historikk og nettstaddata når du lèt att alle dei private fanene dine.</string>
+  <string name="felt_privacy_info_card_subtitle_3">%1$s slettar infokapslar, historikk og nettstad-data når du lèt att alle dei private fanene dine.</string>
   <!--
     Clickable portion of the explanation for private browsing that links the user to our
     about privacy page.
@@ -972,6 +972,15 @@
   <string name="preferences_open_links_in_apps_ask">Spør før du opnar</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Aldri</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">Fillagring</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">Standard nedlastingsplassering</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">Du har ikkje løyve til å bruke denne mappa. Prøv å velje ei anna.</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Handsam nedlastingar med ein annen app</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1703,6 +1712,8 @@
   <string name="download_delete_item">Slett</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Naviger tilbake</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">Naviger til nedlastingsinnstillingar</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Tilbake og lat att søk</string>
   <!--
@@ -3042,7 +3053,7 @@
   <!-- Label that indicates a site is displaying a local document -->
   <string name="quick_settings_sheet_local_page">Denne siden er lagra på eininga di.</string>
   <!-- Label to clear site data -->
-  <string name="clear_site_data">Slett infokapslar og nettstaddata</string>
+  <string name="clear_site_data">Slett infokapslar og nettstad-data</string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site. %s is the domain of the site. -->
   <string name="confirm_clear_site_data"><![CDATA[Er du sikker på at du vil fjerne alle infokapslar og data på nettstaden <b>%s</b>?]]></string>
   <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites -->

@@ -265,9 +265,27 @@ addAboutKbTask(async function testChange(tab) {
   await SpecialPowers.spawn(tab, [consts], async _consts => {
     await content.selected;
     is(content.input.value, "Invalid", "Input shows invalid");
-    info(`Pressing ${_consts.unusedDisplay}`);
+    content.selected = ContentTaskUtils.waitForEvent(content.input, "select");
+  });
+  info(`Pressing ${consts.unusedModifiersDisplay}`);
+  EventUtils.synthesizeKey(...consts.unusedModifiersArgs, window);
+  await SpecialPowers.spawn(tab, [consts], async _consts => {
+    await content.selected;
+    is(
+      content.input.value,
+      _consts.unusedModifiersDisplay,
+      "Input shows modifiers as they're pressed"
+    );
+    content.selected = ContentTaskUtils.waitForEvent(content.input, "select");
+  });
+  info("Pressing Backspace");
+  EventUtils.synthesizeKey("KEY_Backspace", {}, window);
+  await SpecialPowers.spawn(tab, [consts], async _consts => {
+    await content.selected;
+    is(content.input.value, "Invalid", "Input shows invalid");
     content.focused = ContentTaskUtils.waitForEvent(content.change, "focus");
   });
+  info(`Pressing ${consts.unusedDisplay}`);
   EventUtils.synthesizeKey(consts.unusedKey, consts.unusedOptions, window);
   await SpecialPowers.spawn(tab, [consts], async _consts => {
     await content.focused;

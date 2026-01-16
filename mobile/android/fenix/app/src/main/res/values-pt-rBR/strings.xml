@@ -972,6 +972,15 @@
   <string name="preferences_open_links_in_apps_ask">Perguntar antes de abrir</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Nunca</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">Armazenamento de arquivos</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">Local padrão de download</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">Você não tem permissão para usar esta pasta. Tente escolher outra.</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Gerenciar downloads com outro aplicativo</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1703,6 +1712,8 @@
   <string name="download_delete_item">Excluir</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Página anterior</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">Abrir configurações de download</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Voltar e fechar a pesquisa</string>
   <!--
@@ -1998,6 +2009,10 @@
   <string name="select_bookmark_search_button_content_description">Pesquisar em pastas</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Menu de %s</string>
+  <!-- Content description for the chevron that will open a folder on the select folder screen and display its children. %s is the title of the folder that will be opened -->
+  <string name="bookmark_select_folder_expand_folder_content_description">Expandir pasta: %s</string>
+  <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+  <string name="bookmark_select_folder_close_folder_content_description">Fechar pasta: %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">Fechar favoritos</string>
   <!-- Title for the bookmark list empty state -->
@@ -4002,6 +4017,8 @@
   <string name="settings_search_no_results_title">Nada encontrado</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">Talvez tentar uma pesquisa diferente?</string>
+  <!-- Content Description for the button to open Settings Search (to search through settings). -->
+  <string name="settings_search_button_content_description">Botão de pesquisa nas configurações</string>
   <!-- ==== Terms of use pop up prompt ==== -->
 
   <!-- Title for the pop up prompt -->

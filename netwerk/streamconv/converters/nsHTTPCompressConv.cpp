@@ -333,7 +333,7 @@ nsHTTPCompressConv::OnStopRequest(nsIRequest* request, nsresult aStatus) {
   // Bug 1886237 : TRRServiceChannel calls OnStopRequest OMT
   // MOZ_ASSERT(NS_IsMainThread());
   LOG(("nsHttpCompresssConv %p onstop %" PRIx32 " mDispatchToMainThread %d\n",
-       this, static_cast<uint32_t>(aStatus), mDispatchToMainThread));
+       this, static_cast<uint32_t>(aStatus), bool(mDispatchToMainThread)));
 
   // Framing integrity is enforced for content-encoding: gzip, but not for
   // content-encoding: deflate. Note that gzip vs deflate is NOT determined
@@ -894,7 +894,7 @@ nsresult nsHTTPCompressConv::do_OnDataAvailable(nsIRequest* request,
   LOG(
       ("nsHttpCompressConv %p do_OnDataAvailable mDispatchToMainThread %d "
        "count %u",
-       this, mDispatchToMainThread, count));
+       this, bool(mDispatchToMainThread), count));
   if (count == 0) {
     // Never send 0-byte OnDataAvailables; imglib at least barfs on them and
     // they're not useful

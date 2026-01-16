@@ -55,7 +55,7 @@ fun featureFlagBooleanPreference(key: String, defaultValue: Boolean, featureFlag
         DummyProperty()
     }
 
-private class LazyBooleanPreference(val key: String, val defaultValue: () -> Boolean) :
+internal class LazyBooleanPreference(val key: String, val defaultValue: () -> Boolean) :
     ReadWriteProperty<PreferencesHolder, Boolean> {
 
     override fun getValue(thisRef: PreferencesHolder, property: KProperty<*>): Boolean =
@@ -104,3 +104,14 @@ fun lazyFeatureFlagBooleanPreference(key: String, featureFlag: Boolean, defaultV
     } else {
         DummyProperty()
     }
+
+/**
+ * Property delegate for getting and setting a boolean shared preference with a lazily evaluated
+ * default value.
+ *
+ * @param key The key for the shared preference.
+ * @param defaultValue A lambda that provides the default value when the preference is unset.
+ * The lambda is only evaluated when the preference is read, not during property initialization.
+ */
+fun lazyBooleanPreference(key: String, defaultValue: () -> Boolean): ReadWriteProperty<PreferencesHolder, Boolean> =
+    LazyBooleanPreference(key, defaultValue)

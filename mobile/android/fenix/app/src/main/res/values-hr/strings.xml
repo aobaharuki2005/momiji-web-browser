@@ -237,7 +237,7 @@
   <!-- Browser menu button that opens a user's library -->
   <string name="browser_menu_library">Biblioteka</string>
   <!-- Browser menu toggle that requests a desktop site -->
-  <string name="browser_menu_desktop_site">Klasični prikaz</string>
+  <string name="browser_menu_desktop_site">Desktop web-stranica</string>
   <!-- Browser menu button that reopens a private tab as a regular tab -->
   <string name="browser_menu_open_in_regular_tab">Otvori u redovnoj kartici</string>
   <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
@@ -408,7 +408,7 @@
   -->
   <string name="search_scan_button_2">Snimi QR kod</string>
   <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-  <string name="search_shortcuts_engine_settings">Traži postavke tražilice</string>
+  <string name="search_shortcuts_engine_settings">Postavke tražilice</string>
   <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
   <string name="awesomebar_clipboard_title">Umetni poveznicu iz međuspremnika</string>
   <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -418,7 +418,7 @@
   <!-- Search suggestion onboarding hint title text -->
   <string name="search_suggestions_onboarding_title">Dozvoliti prijedloge za pretraživanje u privatnoj sesiji?</string>
   <!-- Search suggestion onboarding hint description text, %s is the name of the app (for example "Firefox"). -->
-  <string name="search_suggestions_onboarding_text">%s će podijeliti sve što upišeš u adresnu traku s tvojom standardnom tražilicom.</string>
+  <string name="search_suggestions_onboarding_text">%s će dijeliti sve što upišeš u adresnu traku s tvojom standardnom tražilicom.</string>
   <!-- Search engine suggestion title text. %s is the name of the suggested engine. -->
   <string name="search_engine_suggestions_title">Pretraži %s</string>
   <!-- Search engine suggestion description text -->
@@ -972,6 +972,15 @@
   <string name="preferences_open_links_in_apps_ask">Pitaj prije otvaranja</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Nikad</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">Spremište datoteka</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">Standardno mjesto za preuzimanja</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">Nemaš dozvole za korištenje ove mape. Odaberi jednu drugu mapu.</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Upravljaj preuzimanjima pomoću jedne druge aplikacije</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1703,6 +1712,8 @@
   <string name="download_delete_item">Izbriši</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Idi natrag</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">Idi na postavke preuzimanja</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Natrag i zatvori pretragu</string>
   <!--
@@ -1998,6 +2009,10 @@
   <string name="select_bookmark_search_button_content_description">Pretraži mape</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Izbornik stavki za %s</string>
+  <!-- Content description for the chevron that will open a folder on the select folder screen and display its children. %s is the title of the folder that will be opened -->
+  <string name="bookmark_select_folder_expand_folder_content_description">Proširi mapu: %s</string>
+  <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+  <string name="bookmark_select_folder_close_folder_content_description">Zatvori mapu: %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">Zatvori zabilješke</string>
   <!-- Title for the bookmark list empty state -->
@@ -2115,7 +2130,7 @@
   <!-- Category header of a preference that allows a user to alter settings related to web content. -->
   <string name="preferences_category_content">Sadržaj</string>
   <!-- Preference for altering the default browsing mode. When enabled, the desktop site will always be requested. -->
-  <string name="preference_feature_desktop_mode_default">Uvijek zatraži verziju web stranice za računalo</string>
+  <string name="preference_feature_desktop_mode_default">Uvijek zatraži desktop web-stranicu</string>
   <!--
     Collections
 
@@ -2990,7 +3005,7 @@
   <!-- Title of the Add search engine screen -->
   <string name="search_engine_add_custom_search_engine_title">Dodaj tražilicu</string>
   <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
-  <string name="search_engine_add_custom_search_engine_button_content_description">Dodaj novi pretraživač</string>
+  <string name="search_engine_add_custom_search_engine_button_content_description">Dodaj novu tražilicu</string>
   <!-- Title of the Edit search engine screen -->
   <string name="search_engine_edit_custom_search_engine_title">Uredi tražilicu</string>
   <!-- Text for the menu button to edit a search engine -->
@@ -3000,7 +3015,7 @@
   <!-- Label for the TextField in which user enters custom search engine name -->
   <string name="search_add_custom_engine_name_label">Naziv</string>
   <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
-  <string name="search_add_custom_engine_name_hint_2">Naziv pretraživača</string>
+  <string name="search_add_custom_engine_name_hint_2">Ime tražilice</string>
   <!-- Label for the TextField in which user enters custom search engine URL -->
   <string name="search_add_custom_engine_url_label">URL pojma za pretraživanje</string>
   <!-- Placeholder text shown in the Search String TextField before a user enters text -->
@@ -3394,9 +3409,9 @@
 
     Preference option for offering to translate. Radio button title text.
   -->
-  <string name="automatic_translation_option_offer_to_translate_title_preference">Ponudi prijevod (standardno)</string>
+  <string name="automatic_translation_option_offer_to_translate_title_preference">Ponudi prevođenje (standardno)</string>
   <!-- Preference option for offering to translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s će ponuditi prevesti web stranice na ovom jeziku.</string>
+  <string name="automatic_translation_option_offer_to_translate_summary_preference">%1$s će ponuditi prevođenje web-stranica na ovom jeziku.</string>
   <!-- Preference option for always translate. Radio button title text. -->
   <string name="automatic_translation_option_always_translate_title_preference">Uvijek prevedi</string>
   <!-- Preference option for always translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
@@ -3404,7 +3419,7 @@
   <!-- Preference option for never translate. Radio button title text. -->
   <string name="automatic_translation_option_never_translate_title_preference">Nikada ne prevodi</string>
   <!-- Preference option for never translate. Radio button summary text. %1$s is the name of the app (for example "Firefox"). -->
-  <string name="automatic_translation_option_never_translate_summary_preference">%1$s nikada neće ponuditi prijevod web stranica na ovom jeziku.</string>
+  <string name="automatic_translation_option_never_translate_summary_preference">%1$s nikada neće ponuditi prevođenje web-stranica na ovom jeziku.</string>
   <!--
     Never translate site preference screen
 
@@ -4002,6 +4017,8 @@
   <string name="settings_search_no_results_title">Ništa nije pronađeno</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">Probati drugačiju pretragu?</string>
+  <!-- Content Description for the button to open Settings Search (to search through settings). -->
+  <string name="settings_search_button_content_description">Gumb za pretraživanje postavki</string>
   <!-- ==== Terms of use pop up prompt ==== -->
 
   <!-- Title for the pop up prompt -->

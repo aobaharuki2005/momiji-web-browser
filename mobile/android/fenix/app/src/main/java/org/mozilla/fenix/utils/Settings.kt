@@ -47,6 +47,7 @@ import org.mozilla.fenix.autofill.address.RegionAddressFeatureGate
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.settings.counterPreference
 import org.mozilla.fenix.components.settings.featureFlagBooleanPreference
+import org.mozilla.fenix.components.settings.lazyBooleanPreference
 import org.mozilla.fenix.components.settings.lazyFeatureFlagBooleanPreference
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.debugsettings.addresses.EmptyAddressesDebugRegionRepository
@@ -707,6 +708,16 @@ class Settings(
     var hasUserDisabledExperimentation by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_user_disabled_experimentation),
         default = false,
+    )
+
+    /**
+     * Controls whether the user is opted into rollouts (remote improvements).
+     * Rollouts are completely decoupled from telemetry and experiments, so users
+     * can receive feature updates regardless of their telemetry or experiment settings.
+     */
+    var isRolloutsEnabled by lazyBooleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_rollouts),
+        defaultValue = { appContext.components.nimbus.sdk.rolloutParticipation },
     )
 
     var isOverrideTPPopupsForPerformanceTest = false
