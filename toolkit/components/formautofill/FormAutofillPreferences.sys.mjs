@@ -273,6 +273,7 @@ export class FormAutofillPreferences {
                 control: "moz-button",
                 iconSrc: "chrome://global/skin/icons/delete.svg",
                 type: "icon",
+                l10nId: "payments-delete-payment-button-label",
                 controlAttrs: {
                   slot: "actions",
                   action: "remove",
@@ -283,6 +284,7 @@ export class FormAutofillPreferences {
                 control: "moz-button",
                 iconSrc: "chrome://global/skin/icons/edit.svg",
                 type: "icon",
+                l10nId: "payments-edit-payment-button-label",
                 controlAttrs: {
                   slot: "actions",
                   action: "edit",
