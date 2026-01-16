@@ -1715,7 +1715,7 @@ export class CommandLineHandler {
 
     if (defaultPath) {
       if (
-        defaultPath == SelectableProfileService.currentProfile.path &&
+        defaultPath == SelectableProfileService.currentProfile?.path &&
         this.openUrls(args)
       ) {
         return;
