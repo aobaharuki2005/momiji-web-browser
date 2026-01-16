@@ -21,8 +21,8 @@
  */
 
 /**
- * pdfjsVersion = 5.4.549
- * pdfjsBuild = 3532ac39d
+ * pdfjsVersion = 5.4.550
+ * pdfjsBuild = dd12ed2b2
  */
 /******/ // The require scope
 /******/ var __webpack_require__ = {};
@@ -9814,6 +9814,8 @@ class StructTreeLayerBuilder {
   #elementAttributes = new Map();
   #rawDims;
   #elementsToAddToTextLayer = null;
+  #elementsToHideInTextLayer = null;
+  #elementsToStealFromTextLayer = null;
   constructor(pdfPage, rawDims) {
     this.#promise = pdfPage.getStructTree();
     this.#rawDims = rawDims;
@@ -9922,15 +9924,43 @@ class StructTreeLayerBuilder {
     style.top = `${calc}${pageHeight - bbox[3] + pageY}px)`;
     return true;
   }
-  addElementsToTextLayer() {
-    if (!this.#elementsToAddToTextLayer) {
-      return;
+  updateTextLayer() {
+    if (this.#elementsToAddToTextLayer) {
+      for (const [id, img] of this.#elementsToAddToTextLayer) {
+        document.getElementById(id)?.append(img);
+      }
+      this.#elementsToAddToTextLayer.clear();
+      this.#elementsToAddToTextLayer = null;
     }
-    for (const [id, img] of this.#elementsToAddToTextLayer) {
-      document.getElementById(id)?.append(img);
+    if (this.#elementsToHideInTextLayer) {
+      for (const id of this.#elementsToHideInTextLayer) {
+        const elem = document.getElementById(id);
+        if (elem) {
+          elem.ariaHidden = true;
+        }
+      }
+      this.#elementsToHideInTextLayer.length = 0;
+      this.#elementsToHideInTextLayer = null;
     }
-    this.#elementsToAddToTextLayer.clear();
-    this.#elementsToAddToTextLayer = null;
+    if (this.#elementsToStealFromTextLayer) {
+      for (let i = 0, ii = this.#elementsToStealFromTextLayer.length; i < ii; i += 2) {
+        const element = this.#elementsToStealFromTextLayer[i];
+        const ids = this.#elementsToStealFromTextLayer[i + 1];
+        let textContent = "";
+        for (const id of ids) {
+          const elem = document.getElementById(id);
+          if (elem) {
+            textContent += elem.textContent.trim() || "";
+            elem.ariaHidden = "true";
+          }
+        }
+        if (textContent) {
+          element.textContent = textContent;
+        }
+      }
+      this.#elementsToStealFromTextLayer.length = 0;
+      this.#elementsToStealFromTextLayer = null;
+    }
   }
   #walk(node) {
     if (!node) {
@@ -9943,22 +9973,16 @@ class StructTreeLayerBuilder {
       } = node;
       if (MathMLElements.has(role)) {
         element = document.createElementNS(MathMLNamespace, role);
-        let text = "";
+        const ids = [];
+        (this.#elementsToStealFromTextLayer ||= []).push(element, ids);
         for (const {
           type,
           id
         } of node.children || []) {
-          if (type !== "content" || !id) {
-            continue;
+          if (type === "content" && id) {
+            ids.push(id);
           }
-          const elem = document.getElementById(id);
-          if (!elem) {
-            continue;
-          }
-          text += elem.textContent.trim() || "";
-          elem.ariaHidden = "true";
         }
-        element.textContent = text;
       } else {
         element = document.createElement("span");
       }
@@ -9983,10 +10007,7 @@ class StructTreeLayerBuilder {
             if (!id) {
               continue;
             }
-            const elem = document.getElementById(id);
-            if (elem) {
-              elem.ariaHidden = true;
-            }
+            (this.#elementsToHideInTextLayer ||= []).push(id);
           }
           delete node.alt;
         }
@@ -10798,7 +10819,7 @@ class PDFPageView extends BasePDFPageView {
     const treeDom = await this.structTreeLayer?.render();
     if (treeDom) {
       this.l10n.pause();
-      this.structTreeLayer?.addElementsToTextLayer();
+      this.structTreeLayer?.updateTextLayer();
       if (this.canvas && treeDom.parentNode !== this.canvas) {
         this.canvas.append(treeDom);
       }
@@ -11414,7 +11435,7 @@ class PDFViewer {
   #textLayerMode = TextLayerMode.ENABLE;
   #viewerAlert = null;
   constructor(options) {
-    const viewerVersion = "5.4.549";
+    const viewerVersion = "5.4.550";
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
