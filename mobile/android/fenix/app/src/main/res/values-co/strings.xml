@@ -451,7 +451,7 @@
   -->
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Dichjarazione di cunfidenzialità di Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_2">A vostra prutezzione cunta per noi</string>
+  <string name="juno_onboarding_default_browser_title_nimbus_2">A vostra prutezzione ci impreme</string>
   <!--
     Title for set firefox as default browser screen used by Nimbus experiments.
     Note: The word "Firefox" should NOT be translated
