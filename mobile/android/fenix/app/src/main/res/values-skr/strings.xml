@@ -260,10 +260,6 @@
   <string name="browser_menu_new_private_tab">نویں نجی ٹیب</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">پاس ورڈز</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">مدد</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">ترتیباں</string>
   <!-- Browser menu label that navigates to the edit bookmark screen for the current bookmarked page -->
   <string name="browser_menu_edit_bookmark">نشانی وچ تبدیلی کرو</string>
   <!--
@@ -343,19 +339,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">فائرفوکس رازداری نوٹس</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">اَساکوں تُہاکوں محفوظ رکّھݨ بھان٘دا ہِے</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">معلوم کرو جو لَکّھاں لوکاں کوں فائر فاکس کیوں بھان٘دے</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">ٻئے چوݨ دے نال محفوظ براؤزنگ</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">اَساݙا غیر منافع بخش حمایت یافتہ براؤزر کمپنیاں کوں لُکّل طور تے ویب دے چَودھار تُہاݙی پیروی کرݨ کنوں روکݨ وِچ مَدَت کرین٘دا ہِے۔</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">100 ملین کنوں وَدھ لوک براؤزر دا چوݨ کر کے آپݨی رازداری دی راکھی کرین٘دے ہِن جین٘دی حمایت غیر منافع بخش ہِے۔</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">معلوم ٹریکرز؟ خود کار طریقے نال بلاک تِھی ڳِیا۔ ایکسٹنشناں؟ سبھے 700 کوں اَزماؤ۔ پی ڈی ایف ایس؟ اَساݙا بِلٹ اِن ریڈر اِنّھاں دا انتظام سَوکھا بݨین٘دا ہِے۔</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">پہلوں مقرر براؤز تے طور تے سیٹ کرو</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

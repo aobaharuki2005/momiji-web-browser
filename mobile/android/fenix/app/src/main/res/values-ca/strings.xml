@@ -305,10 +305,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">Tanca el menú</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Navegació</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Ajuda</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Paràmetres</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Tanca el full de menú d’extensions</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -450,19 +446,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Avís de privadesa del Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Ens encanta mantenir-vos segur</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Descobriu per què milions de persones estimen el Firefox</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Navegació segura amb més opcions</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">El nostre navegador sense ànim de lucre ajuda a blocar automàticament les empreses que, en secret, us fan el seguiment mentre navegueu.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Més de 100 milions de persones protegeixen la seva privadesa triant un navegador creat per una organització sense ànim de lucre.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Els elements de seguiment habituals? Els bloquem automàticament. Voleu extensions? Proveu-ne 700. Treballeu amb documents PDF? El nostre lector integrat ho fa fàcil.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Defineix com a navegador per defecte</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1059,8 +1044,6 @@
   <string name="alternative_app_icon_group_solid_colors">Colors sòlids</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Degradats</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Altres</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Voleu canviar la icona de l’aplicació?</string>
   <!-- Message to warn users that applying an alternative app icon may require an app restart. Whether or not the app closes depends on what version of Android it is, so we use the word "may" instead of "will". %1$s is replaced by the brand name (e.g. Firefox). -->
@@ -1421,9 +1404,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Actius</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Proveu funcions i idees abans que estiguin disponibles per a tothom.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Proveu funcions i idees abans que estiguin disponibles per a tothom.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Instal·la i executa estudis</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Instal·la i executa estudis</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Més informació</string>
   <!--

@@ -270,10 +270,6 @@
   <string name="browser_menu_new_private_tab">Bagong pribadong tab</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">Mga password</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Tulong</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Mga setting</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Isara ang extension menu sheet</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -382,19 +378,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Abiso sa Pribasiya ng Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Nais naming panatilihin kang ligtas</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Alamin kung bakit milyun-milyon ang mahilig sa Firefox</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Ligtas na pag-browse nang may karagdagang mga pagpipilian</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Ang browser namin na suportado ng isang non-profit ay tumutulong para pigilan ng mga kumpanya na manmanan ka online.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Napoprotektahan ng higit sa 100 milyong tao ang kanilang pribasiya sa pagpili ng browser na suportado ng isang nonprofit.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Kilalang mga tracker? Kusang hinaharang. Mga extension? Subukan mo lahat ng 700 extension. Mga PDF? Mas madali gamit ang aming built-in reader.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Itakda bilang default browser</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1134,9 +1119,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Aktibo</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Subukan ang mga feature at ideya bago pa ito mailabas sa lahat.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Subukan ang mga feature at ideya bago pa ito mailabas sa lahat.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Mag-install at magpatakbo ng mga study</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Mag-install at magpatakbo ng mga study</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Alamin</string>
   <!--

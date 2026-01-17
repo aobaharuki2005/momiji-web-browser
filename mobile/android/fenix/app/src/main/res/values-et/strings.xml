@@ -738,9 +738,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Praegu toimuvad</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Proovi funktsioone ja ideid enne, kui need kõigile avaldatakse.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Proovi funktsioone ja ideid enne, kui need kõigile avaldatakse.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Uuringute paigaldamine ja käivitamine</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Uuringute paigaldamine ja käivitamine</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Rohkem teavet</string>
   <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->

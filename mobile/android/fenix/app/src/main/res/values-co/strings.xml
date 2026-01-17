@@ -307,10 +307,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">Chjode u listinu</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Navigazione</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Aiutu</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Parametri</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Chjode u pannellu di u listinu di l’estensioni</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -452,19 +448,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Dichjarazione di cunfidenzialità di Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">A vostra prutezzione ci impreme</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Scuprite perchè Firefox piace à milioni di persone</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">A navigazione assicurizata cù più di scelta</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">U nostru navigatore sustinutu da un urganismu senza scopu lucrativu impedisce l’imprese di seguitavvi da manera sicreta nant’à u Web.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Più di 10 milioni di persone prutegenu a so vita privata scigliendu un navigatore sustinutu da un’organizazione senza scopu lucrativu.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Perseguitatori cunnisciuti ? Bluccati autumaticamente. Estensioni ? Ci n’hè più di 700 ; pruvatele. Schedarii PDF ? U nostru lettore integratu ne faciliteghja a ghjestione.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Sceglie cum’è navigatore predefinitu</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1137,8 +1122,6 @@
   <string name="alternative_app_icon_group_solid_colors">Culori uniti</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Sgradati</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Altru</string>
   <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_featured">Cunsigliate</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
@@ -1505,9 +1488,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Attivi</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Pruvate funzioni è idee prima ch’elle sianu dispunibule à tutti.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Pruvate funzioni è idee prima ch’elle sianu dispunibule à tutti.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Installà è lancià studii</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Installà è lancià studii</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Sapene di più</string>
   <!--

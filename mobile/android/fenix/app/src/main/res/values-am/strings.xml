@@ -278,10 +278,6 @@
   <string name="browser_menu_new_private_tab">አዲስ የግል ትር</string>
   <!-- Browser menu label that navigates to the Password screen -->
   <string name="browser_menu_passwords">የይለፍ ቃሎች</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">እገዛ</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">ቅንብሮች</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">የቅጥያዎች ምናሌ ገፅን ዝጋ</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -405,19 +401,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">የFirefox ግላዊነት ማስታወቂያ</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">ደህንነትዎን መጠበቅ እንወዳለን</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">ሚሊዮኖች ለምን Firefoxን እንደሚወዱ ይወቁ</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">ከተጨማሪ ምርጫዎች ጋር ደህንነቱ የተጠበቀ አሰሳ</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">የእኛ ለትርፍ-ባልተቋቋመ የሚደገፈው አሳሽ ኩባንያዎች በድር ላይ እርስዎን በድብቅ እንዳይከተሉዎት ያግዛል።</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">ከ100 ሚሊዮን በላይ ሰዎች በትርፍ ያልተቋቋመ አሳሽ በመምረጥ ግላዊነትን ይጠብቃሉ።</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">የታወቁ መከታተያዎች? በራስ ሰር ታግደዋል። ቅጥያዎች? ሁሉንም ይሞክሩ 700. ፒዲኤፍ? የእኛ አብሮ-የተገነባ አንባቢ ለማስተዳደር ቀላል ያደርጋቸዋል።</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">ነባሪ አሳሽ አድርገህ አስቀምጥ</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -929,8 +914,6 @@
   <string name="alternative_app_icon_group_solid_colors">ድፍን ቀለሞች</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">ቅልቅል ቀለሞች</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">ሌላ</string>
   <!--
     Add-ons general availability nimbus message
 
@@ -1247,9 +1230,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">ንቁ</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">ለሁሉም ሰው ከመለቀቃቸው በፊት ባህሪያትን እና ሀሳቦችን ይሞክሩ።</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">ለሁሉም ሰው ከመለቀቃቸው በፊት ባህሪያትን እና ሀሳቦችን ይሞክሩ።</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">ጥናቶችን ይጫኑ እና ያሂዱ</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">ጥናቶችን ይጫኑ እና ያሂዱ</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">ተጨማሪ ይወቁ</string>
   <!--

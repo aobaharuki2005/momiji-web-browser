@@ -303,10 +303,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">Mdel umuɣ</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Tunigin</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Tallalt</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Iɣewwaṛen</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Mdel tiferkit n wumuɣ n yisiɣzaf</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -446,19 +442,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Tasertit tabaḍnit n Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Nḥemmel ad teqqimeḍ d aɣellsan</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Wali ayɣer aṭas i iḥemmlen Firefox</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Tunigin tusligt s wugar n yifranen</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Iminig-nneɣ tettallit yiwet n tkebbanit ur nettnadi ɣef tedrimt, tessewḥal tikebbaniyin ara ak-iḍefren deg web.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Ugar n 100 yimelyan n yimdanen mmestnen tabaḍnit-nsen s ufran n yiminig n tkebbanit ur nettnadi ara ɣef tedrimt.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Ineḍfaren i yettwassnen? Ttusweḥlen s wudem awurman. Isiɣzaf? Ԑreḍ-iten i 700. Ifuyla PDFs? Imeɣri-nneɣ usliɣ yessifsus asefrek-nsen.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Sbadu-t d iminig amezwer</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1021,8 +1006,6 @@
   <string name="alternative_app_icon_group_solid_colors">Initen imsariyen</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Tafesna n yini</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Wayeḍ</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Beddel tignit n usnas?</string>
   <!-- Dialog button text for confirming the possible app restart and new icon selection -->
@@ -1374,9 +1357,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Rmed</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Ɛreḍ timahilin d tektiwin send ma ad asent-nserrḥen akk i medden.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Ɛreḍ timahilin d tektiwin send ma ad asent-nserrḥen akk i medden.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Sbedd syen bdu almad</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Sbedd syen bdu almad</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Issin ugar</string>
   <!--

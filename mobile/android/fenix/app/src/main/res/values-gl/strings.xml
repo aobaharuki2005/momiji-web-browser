@@ -307,10 +307,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">Pechar menú</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Navegación</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Axuda</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Configuración</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Pechar a folla do menú de extensións</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -438,6 +434,10 @@
     The colon character (in "%s:") is intended to have the screen reader make a small pause between the search engine name and the description of the button.
   -->
   <string name="search_engine_selector_content_description">%s: selector do buscador</string>
+  <!-- Text for the snackbar shown to confirm the deletion of a single browsing history item. %1$s is the shortened URL of the deleted history entry or the the actual deleted search term. Only one such item is deleted at a time. -->
+  <string name="search_suggestions_delete_history_item_snackbar">Elimináronse %1$s do historial</string>
+  <!-- Content description (not visible, for screen readers etc.): Button shown near a history search result allowing to delete it from browsing history. -->
+  <string name="mozac_browser_awesomebar_remove_suggestion" tools:ignore="UnusedResources">Elimina esta entrada do historial</string>
   <!--
     Home onboarding
 
@@ -452,19 +452,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Política de privacidade de Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Encántanos telo seguro</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Descubra por que millóns de persoas adoran Firefox</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Navegación segura con máis opcións</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">O noso navegador sen ánimo de lucro axuda a evitar que as empresas o sigan en segredo pola web.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Máis de 100 millóns de persoas protexen a súa privacidade escollendo un navegador que está apoiado por unha organización sen ánimo de lucro.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Rastrexadores coñecidos? Bloqueados automaticamente. Extensións? Probe as 700. PDF? O noso lector integrado fai que sexan fáciles de xestionar.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Estabelecer como navegador predeterminado</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1146,8 +1135,6 @@
   <string name="alternative_app_icon_group_solid_colors">Cores sólidas</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Degradados</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Outro</string>
   <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_featured">Destacado</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
@@ -1514,11 +1501,27 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Activos</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Proba funcións e ideas antes de que se publiquen a todos.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Proba funcións e ideas antes de que se publiquen a todos.</string>
+  <!-- Description for studies. Note: The word "Firefox" should NOT be translated -->
+  <string name="studies_description_4" tools:ignore="BrandUsage">Firefox selecciona aos usuarios de forma aleatoria para probar funcións, o que mellora a calidade para todos.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Instalar e executar estudos</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Instalar e executar estudos</string>
+  <!-- Title of the Studies data preference -->
+  <string name="studies_title_2">Permitir estudos de características</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Máis información</string>
+  <!--
+    Remote Improvements (Rollouts)
+
+    Title of the Remote Improvements (rollouts) data preference
+  -->
+  <string name="remote_improvements_title">Permitir melloras remotas</string>
+  <!-- Description for remote improvements. Note: The word "Firefox" should NOT be translated -->
+  <string name="remote_improvements_description" tools:ignore="BrandUsage">Firefox mellorará as funcións, o rendemento e a estabilidade entre actualizacións. Cambios aplicados de forma remota.</string>
+  <!-- Learn more link for remote improvements, links to an article for more information about rollouts. -->
+  <string name="remote_improvements_learn_more">Máis información</string>
+  <!-- Title for remote improvements preference in Advanced settings -->
+  <string name="preferences_remote_improvements">Melloras a distancia</string>
   <!--
     Sessions
 
@@ -1929,6 +1932,8 @@
   <string name="bookmark_error_edit_bookmark">Non se puido editar o marcador</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">EDITAR</string>
+  <!-- Bookmark menu select button -->
+  <string name="bookmark_menu_select_button">Seleccionar</string>
   <!-- Bookmark menu move button -->
   <string name="bookmark_menu_move_button">Mover</string>
   <!-- Bookmark overflow menu edit button -->

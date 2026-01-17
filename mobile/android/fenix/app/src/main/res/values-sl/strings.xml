@@ -307,10 +307,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">Zapri meni</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Krmarjenje</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Pomoč</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Nastavitve</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Zapri meni razširitev</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -450,19 +446,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Obvestilo o zasebnosti za Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Z veseljem skrbimo za vašo varnost</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Odkrijte, zakaj milijoni prisegajo na Firefox</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Varno brskanje z več izbire</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Naš neprofitni brskalnik preprečuje podjetjem, da bi vas skrivaj spremljala po spletu.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Več kot 100 milijonov ljudi ščiti svojo zasebnost z izbiro brskalnika, ki ga razvija neprofitna organizacija.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Znani sledilci? Samodejno blokirani. Razširitve? Preskusite vseh 700. PDF-ji? Naš vgrajeni bralnik omogoča enostavno pregledovanje.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Nastavi kot privzeti brskalnik</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -1113,8 +1098,6 @@
   <string name="alternative_app_icon_group_solid_colors">Enobarvno</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Prelivi</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Drugo</string>
   <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_featured">Predstavljamo</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
@@ -1481,11 +1464,13 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Dejavna</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Preizkusite funkcije in ideje, preden postanejo na voljo vsem.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Preizkusite funkcije in ideje, preden postanejo na voljo vsem.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Nameščaj in izvajaj raziskave</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Nameščaj in izvajaj raziskave</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Več o tem</string>
+  <!-- Learn more link for remote improvements, links to an article for more information about rollouts. -->
+  <string name="remote_improvements_learn_more">Več o tem</string>
   <!--
     Sessions
 
@@ -1976,6 +1961,8 @@
   <string name="bookmark_item_menu_button_content_description">Meni za %s</string>
   <!-- Content description for the chevron that will open a folder on the select folder screen and display its children. %s is the title of the folder that will be opened -->
   <string name="bookmark_select_folder_expand_folder_content_description">Razširi mapo: %s</string>
+  <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+  <string name="bookmark_select_folder_close_folder_content_description">Zapri mapo: %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">Zapri zaznamke</string>
   <!-- Title for the bookmark list empty state -->
@@ -3978,6 +3965,8 @@
   <string name="settings_search_no_results_title">Nič se ni našlo</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">Morda poskusite z drugačnim iskanjem?</string>
+  <!-- Content Description for the button to open Settings Search (to search through settings). -->
+  <string name="settings_search_button_content_description">Gumb za iskanje nastavitev</string>
   <!-- ==== Terms of use pop up prompt ==== -->
 
   <!-- Title for the pop up prompt -->
