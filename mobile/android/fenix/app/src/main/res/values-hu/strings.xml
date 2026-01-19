@@ -434,6 +434,10 @@
     The colon character (in "%s:") is intended to have the screen reader make a small pause between the search engine name and the description of the button.
   -->
   <string name="search_engine_selector_content_description">%s: keresőszolgáltatás-választó</string>
+  <!-- Text for the snackbar shown to confirm the deletion of a single browsing history item. %1$s is the shortened URL of the deleted history entry or the the actual deleted search term. Only one such item is deleted at a time. -->
+  <string name="search_suggestions_delete_history_item_snackbar">%1$s törölve az előzményekből</string>
+  <!-- Content description (not visible, for screen readers etc.): Button shown near a history search result allowing to delete it from browsing history. -->
+  <string name="mozac_browser_awesomebar_remove_suggestion" tools:ignore="UnusedResources">Előzménybejegyzés törlése</string>
   <!--
     Home onboarding
 
@@ -1498,10 +1502,26 @@
   <string name="studies_active">Aktív</string>
   <!-- Description for studies -->
   <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Próbálja ki a funkciókat és az ötleteket, mielőtt mindenki számára hozzáférhetővé válnak.</string>
+  <!-- Description for studies. Note: The word "Firefox" should NOT be translated -->
+  <string name="studies_description_4" tools:ignore="BrandUsage">A Firefox véletlenszerűen választja ki a felhasználókat a funkciók teszteléséhez, ami mindenki számára javítja a minőséget.</string>
   <!-- Title of the Studies data preference -->
   <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Tanulmányok telepítése és futtatása</string>
+  <!-- Title of the Studies data preference -->
+  <string name="studies_title_2">Funkciótanulmányok engedélyezése</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">További tudnivalók</string>
+  <!--
+    Remote Improvements (Rollouts)
+
+    Title of the Remote Improvements (rollouts) data preference
+  -->
+  <string name="remote_improvements_title">Távoli fejlesztések engedélyezése</string>
+  <!-- Description for remote improvements. Note: The word "Firefox" should NOT be translated -->
+  <string name="remote_improvements_description" tools:ignore="BrandUsage">A Firefox funkciókat, teljesítményt és stabilitást érintő módosításokat fog telepíteni a frissítések között. A módosítások távolról vannak alkalmazva.</string>
+  <!-- Learn more link for remote improvements, links to an article for more information about rollouts. -->
+  <string name="remote_improvements_learn_more">További tudnivalók</string>
+  <!-- Title for remote improvements preference in Advanced settings -->
+  <string name="preferences_remote_improvements">Távoli fejlesztések</string>
   <!--
     Sessions
 
@@ -1912,6 +1932,8 @@
   <string name="bookmark_error_edit_bookmark">Nem sikerült szerkeszteni a könyvjelzőt</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">SZERKESZTÉS</string>
+  <!-- Bookmark menu select button -->
+  <string name="bookmark_menu_select_button">Kijelölés</string>
   <!-- Bookmark menu move button -->
   <string name="bookmark_menu_move_button">Áthelyezés</string>
   <!-- Bookmark overflow menu edit button -->
