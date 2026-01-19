@@ -846,6 +846,10 @@ bool ParamTraits<MaybeDiscarded<WindowContext>>::Read(
   if (id == 0) {
     *aResult = nullptr;
   } else if (RefPtr<WindowContext> wc = WindowContext::GetById(id)) {
+    if (!wc->Group()->IsKnownForMessageReader(aReader)) {
+      return false;
+    }
+
     *aResult = std::move(wc);
   } else {
     aResult->SetDiscarded(id);

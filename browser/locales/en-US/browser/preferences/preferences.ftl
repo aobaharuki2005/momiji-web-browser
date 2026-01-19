@@ -1546,6 +1546,10 @@ payments-list-header =
 payments-delete-payment-prompt-title = Delete this payment method?
 payments-delete-payment-prompt-confirm-button = Delete
 payments-delete-payment-prompt-cancel-button = Cancel
+payments-delete-payment-button-label =
+    .aria-label = Delete
+payments-edit-payment-button-label =
+    .aria-label = Edit
 
 # This message is displayed when no payment methods such as credit card are stored in Firefox
 payments-no-payments-stored-message =

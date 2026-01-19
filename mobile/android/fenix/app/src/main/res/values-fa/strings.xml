@@ -303,10 +303,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">بستن منو</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">پیمایش</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">راهنما</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">تنظیمات</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">بستن برگه منوی افزونه‌ها</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -448,19 +444,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">نکات حفظ محرمانگی Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">ما عاشق حفظ امنیت شما هستیم</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">متوجه شوید چرا میلیون‌ها نفر Firefox را دوست دارند</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">مرور امن با انتخاب‌های بیشتر</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">مرورگر ناسودبر ما به شما کمک می‌کند که شرکت‌ها نتوانند به طور مخفیانه شما را در وب دنبال کنند.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">بیش از ۱۰۰ میلیون نفر حریم خصوصی خود را با انتخاب مرورگری که ناسودبر است، محافظت می‌کنند.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">ردیاب‌های شناخته‌ شده‌؟ به‌طور خودکار مسدود شده‌اند. افزونه‌ها؟ همه ۷۰۰ تای آن‌ها را امتحان کنید. PDF‌ها؟ خواننده داخلی ما مدیریت آن‌ها را آسان کرده است.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">تنظیم به عنوان مرورگر پیش‌فرض</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -973,8 +958,6 @@
   <string name="alternative_app_icon_option_gradient_midnight">نیمه شب</string>
   <!-- Title for the "Northern Lights" gradient alternative app icon variant in the icon picker screen. The app icon has a dynamic green, blue, and purple gradient background, resembling the aurora borealis. -->
   <string name="alternative_app_icon_option_gradient_northern_lights">شفق قطبی</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">‏‏سایر</string>
   <!-- Dialog button text for cancelling app icon change -->
   <string name="restart_warning_dialog_button_negative">انصراف</string>
   <!--
@@ -1299,9 +1282,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">فعال</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">ویژگی‌ها و ایده‌ها را قبل از انتشار برای همه امتحان کنید.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">ویژگی‌ها و ایده‌ها را قبل از انتشار برای همه امتحان کنید.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">نصب و اجرای مطالعات</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">نصب و اجرای مطالعات</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">بیشتر بدانید</string>
   <!--

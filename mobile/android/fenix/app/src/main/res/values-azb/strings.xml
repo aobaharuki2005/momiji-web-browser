@@ -320,19 +320,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">فایرفاکس گیزللیک بیلدیریمی</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">سیزی قوروماغی سئویریک</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">میلیون‌لارجا فایرفاکسی نییه سئودیگینی اؤرگه‌شین</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">داها چوخ سئچیمله گوونلی مورور</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">نفع آختارمیان مورورچوموز، شیرکتلرین سیزی وب‌ده گیزلیجه تعقیب ائتمه‌سینی مسدود ائلییر.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">100 میلیون‌دان چوْخ آدام، منفعت آختارمیان بیر قورولوش طرفیندن آرخالانان بیر موروچویو سئچه‌رک گیزلیلیک‌لرینی قوْرویور.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">تانینمیش ایزله‌ییجی‌لر؟ اوْتوماتیک مسدود اوْلور. اوزانتیْ‌لار؟ بوتون 700. پی‌دی‌اف فایل‌لارینیْ ایمتیحان ائله‌یین؟ داخیلی اوْخویوجوموز بونلاریْ مودیریته آسانلاشدیریر.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">وارساییلان مورورچو ائله</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->

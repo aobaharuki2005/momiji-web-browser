@@ -307,10 +307,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">关闭菜单</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">导航</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">帮助</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">设置</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">关闭扩展菜单表单</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -452,19 +448,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Firefox 隐私声明</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">我们乐于为您护航</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">探究 Firefox 何以受亿万用户青睐</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">更多保障上网安全的选项</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">这款由非营利组织支持的浏览器会自动阻止大公司在网上偷偷跟踪您。</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">这款由非营利组织支持的浏览器，是超过一亿用户的隐私保护之选。</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">已知跟踪器？自动拦截！好用扩展？足足 700 款任您选！PDF 文档？内置阅读器轻松满足您的需求。</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">设为默认浏览器</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -972,6 +957,15 @@
   <string name="preferences_open_links_in_apps_ask">打开前询问</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">永不</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">文件存储</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">默认下载位置</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">您没有使用此文件夹的权限，请尝试选择其他文件夹。</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">通过其他应用管理下载</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1137,8 +1131,6 @@
   <string name="alternative_app_icon_group_solid_colors">纯色</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">渐变</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">其他</string>
   <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_featured">精选</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
@@ -1505,9 +1497,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">进行中</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">抢先体验尚未全面推出的功能和概念。</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">抢先体验尚未全面推出的功能和概念。</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">安装并运行研究</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">安装并运行研究</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">详细了解</string>
   <!--
@@ -1703,6 +1695,8 @@
   <string name="download_delete_item">删除</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">浏览上一页</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">前往“下载设置”</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">返回并关闭搜索</string>
   <!--
@@ -4002,6 +3996,8 @@
   <string name="settings_search_no_results_title">无结果</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">试试搜索其他关键词？</string>
+  <!-- Content Description for the button to open Settings Search (to search through settings). -->
+  <string name="settings_search_button_content_description">在设置中搜索，按钮</string>
   <!-- ==== Terms of use pop up prompt ==== -->
 
   <!-- Title for the pop up prompt -->

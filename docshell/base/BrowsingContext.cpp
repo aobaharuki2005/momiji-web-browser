@@ -4579,6 +4579,10 @@ bool ParamTraits<MaybeDiscarded<BrowsingContext>>::Read(
   if (id == 0) {
     *aResult = nullptr;
   } else if (RefPtr<BrowsingContext> bc = BrowsingContext::Get(id)) {
+    if (!bc->Group()->IsKnownForMessageReader(aReader)) {
+      return false;
+    }
+
     *aResult = std::move(bc);
   } else {
     aResult->SetDiscarded(id);

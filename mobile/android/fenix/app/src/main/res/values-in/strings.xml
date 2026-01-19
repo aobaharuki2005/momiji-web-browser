@@ -307,10 +307,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">Tutup menu</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Navigasi</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Bantuan</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Pengaturan</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Tutup lembar menu ekstensi</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -438,6 +434,10 @@
     The colon character (in "%s:") is intended to have the screen reader make a small pause between the search engine name and the description of the button.
   -->
   <string name="search_engine_selector_content_description">%s: pemilih mesin pencari</string>
+  <!-- Text for the snackbar shown to confirm the deletion of a single browsing history item. %1$s is the shortened URL of the deleted history entry or the the actual deleted search term. Only one such item is deleted at a time. -->
+  <string name="search_suggestions_delete_history_item_snackbar">Dihapus %1$s dari riwayat</string>
+  <!-- Content description (not visible, for screen readers etc.): Button shown near a history search result allowing to delete it from browsing history. -->
+  <string name="mozac_browser_awesomebar_remove_suggestion" tools:ignore="UnusedResources">Hapus entri riwayat ini</string>
   <!--
     Home onboarding
 
@@ -452,19 +452,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Pemberitahuan privasi Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Kami senang menjaga Anda tetap aman</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Cari tahu mengapa jutaan orang menyukai Firefox</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Penjelajahan aman dengan lebih banyak pilihan</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">Peramban nirlaba kami membantu menghentikan perusahaan secara diam-diam mengikuti Anda di web.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Lebih dari 100 juta orang melindungi privasi mereka dengan memilih peramban yang didukung oleh organisasi nirlaba.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Pelacak yang dikenal? Diblokir secara otomatis. Ekstensi? Coba semua 700. PDF? Pembaca bawaan kami membuatnya mudah dikelola.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Setel sebagai peramban baku</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -972,6 +961,15 @@
   <string name="preferences_open_links_in_apps_ask">Tanyakan sebelum buka</string>
   <!-- Preference for open links in third party apps never open in apps option -->
   <string name="preferences_open_links_in_apps_never">Jangan pernah</string>
+  <!-- Preference category for file storage. -->
+  <string name="preferences_category_file_storage">Penyimpanan berkas</string>
+  <!-- Preference title for downloads default location. -->
+  <string name="preferences_downloads_default_location_title">Lokasi unduh baku</string>
+  <!--
+    Message shown as the summary of the download location preference when the
+    app has lost the permission to access a previously selected custom folder.
+  -->
+  <string name="preference_downloads_folder_permission_lost">Anda tidak memiliki izin untuk menggunakan folder ini. Coba pilih yang lain.</string>
   <!-- Preference title for choosing an app to handle downloads -->
   <string name="preferences_choose_app_for_downloads">Kelola unduhan dengan aplikasi lain</string>
   <!-- Title for the setting to automatically clean up downloaded files. %s is the name of the app (for example "Firefox"). -->
@@ -1137,8 +1135,6 @@
   <string name="alternative_app_icon_group_solid_colors">Warna rata</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Gradien</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Lainnya</string>
   <!-- Title for the "Featured" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
   <string name="alternative_app_icon_group_featured">Unggulan</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
@@ -1505,11 +1501,27 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Aktif</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Cobalah fitur dan ide sebelum dirilis ke semua orang.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Cobalah fitur dan ide sebelum dirilis ke semua orang.</string>
+  <!-- Description for studies. Note: The word "Firefox" should NOT be translated -->
+  <string name="studies_description_4" tools:ignore="BrandUsage">Firefox secara acak memilih pengguna untuk menguji fitur, yang meningkatkan kualitas untuk semua orang.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Pasang dan jalankan studi</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Pasang dan jalankan studi</string>
+  <!-- Title of the Studies data preference -->
+  <string name="studies_title_2">Izinkan studi fitur</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Pelajari lebih lanjut</string>
+  <!--
+    Remote Improvements (Rollouts)
+
+    Title of the Remote Improvements (rollouts) data preference
+  -->
+  <string name="remote_improvements_title">Izinkan peningkatan jarak jauh</string>
+  <!-- Description for remote improvements. Note: The word "Firefox" should NOT be translated -->
+  <string name="remote_improvements_description" tools:ignore="BrandUsage">Firefox akan meningkatkan fitur, kinerja, dan stabilitas antar pembaruan. Perubahan diterapkan dari jarak jauh.</string>
+  <!-- Learn more link for remote improvements, links to an article for more information about rollouts. -->
+  <string name="remote_improvements_learn_more">Pelajari lebih lanjut</string>
+  <!-- Title for remote improvements preference in Advanced settings -->
+  <string name="preferences_remote_improvements">Peningkatan jarak jauh</string>
   <!--
     Sessions
 
@@ -1703,6 +1715,8 @@
   <string name="download_delete_item">Hapus</string>
   <!-- Content description for the toolbar "Navigate back" button -->
   <string name="download_navigate_back_description">Arahkan kembali</string>
+  <!-- Content description for the toolbar "Navigate to Downloads Settings" button -->
+  <string name="download_navigate_settings_description">Navigasikan ke Pengaturan Unduh</string>
   <!-- Content description for the toolbar back button while searching the downloads -->
   <string name="download_close_search_description">Kembali dan tutup pencarian</string>
   <!--
@@ -1918,6 +1932,8 @@
   <string name="bookmark_error_edit_bookmark">Tidak dapat mengedit markah</string>
   <!-- Snackbar edit button shown after a bookmark has been created. -->
   <string name="edit_bookmark_snackbar_action">EDIT</string>
+  <!-- Bookmark menu select button -->
+  <string name="bookmark_menu_select_button">Pilih</string>
   <!-- Bookmark menu move button -->
   <string name="bookmark_menu_move_button">Pindah</string>
   <!-- Bookmark overflow menu edit button -->
@@ -1998,6 +2014,10 @@
   <string name="select_bookmark_search_button_content_description">Cari folder</string>
   <!-- Content description for the overflow menu for a bookmark item. %s is a folder name or bookmark title. -->
   <string name="bookmark_item_menu_button_content_description">Item Menu untuk %s</string>
+  <!-- Content description for the chevron that will open a folder on the select folder screen and display its children. %s is the title of the folder that will be opened -->
+  <string name="bookmark_select_folder_expand_folder_content_description">Bentangkan folder: %s</string>
+  <!-- Content description for the chevron that will close a folder on the select folder screen so that its children are no longer visible. %s is the title of the folder that will be closed -->
+  <string name="bookmark_select_folder_close_folder_content_description">Tutup folder: %s</string>
   <!-- Content description for the "close" button in bookmarks screen. -->
   <string name="bookmark_close_button_content_description">Tutup markah</string>
   <!-- Title for the bookmark list empty state -->
@@ -4002,6 +4022,8 @@
   <string name="settings_search_no_results_title">Tidak ada yang muncul</string>
   <!-- Sub-message displayed when the search field is not empty but search results is empty. -->
   <string name="settings_search_no_results_message">Mungkin mencoba pencarian lain?</string>
+  <!-- Content Description for the button to open Settings Search (to search through settings). -->
+  <string name="settings_search_button_content_description">Tombol pencarian pengaturan</string>
   <!-- ==== Terms of use pop up prompt ==== -->
 
   <!-- Title for the pop up prompt -->

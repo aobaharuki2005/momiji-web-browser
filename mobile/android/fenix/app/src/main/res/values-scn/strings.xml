@@ -286,10 +286,6 @@
   <string name="browser_close_main_menu_handlebar_content_description">Chiuji u minù</string>
   <!-- Content description (not visible, for screen readers etc.) for main menu navigation header. -->
   <string name="browser_main_menu_content_description_navigation_header">Navicazzioni</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu help button. -->
-  <string name="browser_main_menu_content_description_help_button" tools:ignore="UnusedResources" moz:removedIn="146">Ajutu</string>
-  <!-- Content description (not visible, for screen readers etc.) for main menu settings button. -->
-  <string name="browser_main_menu_content_description_settings_button" tools:ignore="UnusedResources" moz:removedIn="146">Mpustazzioni</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar extensions menu. -->
   <string name="browser_extensions_menu_handlebar_content_description">Chiuji u minù dî stinneri</string>
   <!-- Content description (not visible, for screen readers etc.) for bottom sheet handlebar save menu. -->
@@ -419,19 +415,8 @@
   <string name="juno_onboarding_privacy_notice_text" tools:ignore="BrandUsage">Abbisu di privatizza di Firefox</string>
   <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_title_nimbus_2">Ni piaci tinìriti ô sicuru</string>
-  <!--
-    Title for set firefox as default browser screen used by Nimbus experiments.
-    Note: The word "Firefox" should NOT be translated
-  -->
-  <string name="juno_onboarding_default_browser_title_nimbus_3" tools:ignore="BrandUsage,UnusedResources" moz:removedIn="146">Scopri picchì a miliuna di cristiani ci piaci Firefox</string>
-  <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_title_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Navicazzioni privata cu cchiù assai scartati</string>
   <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
   <string name="juno_onboarding_default_browser_description_nimbus_3">U nostru navicaturi senza scopu di lucru t’ajuta a bluccari ’n autumàticu l’urganizzazzioni chi, ’n sicritu, ti sicùtanu riti riti mentri chi nàvichi.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_4" tools:ignore="UnusedResources" moz:removedIn="146">Cchiù assai di 100 miliuna di cristiani prutègginu a so privatizza scartannu un navicaturi criatu di n’urganizzazzioni senza scopu di lucru.</string>
-  <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-  <string name="juno_onboarding_default_browser_description_nimbus_5" tools:ignore="UnusedResources" moz:removedIn="146">Trazzatura canusciuti? Bluccati ’n autumàticu. Stinneri? I po’ pruvari tutti, cci nn’è 700. PDF? U nostru litturi ntigratu tî fa manijari fàcili.</string>
   <!-- Text for the button to set firefox as default browser on the device -->
   <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Mposta comu navicaturi pridifinutu</string>
   <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -949,8 +934,6 @@
   <string name="alternative_app_icon_group_solid_colors">Culura chiatti</string>
   <!-- Title for the "Gradients" group of alternative app icon variants in the icon picker screen. This group contains icons with gradient backgrounds inspired by natural light conditions. -->
   <string name="alternative_app_icon_group_gradients">Sfumaturi</string>
-  <!-- Title for the "Other" group of alternative app icon variants in the icon picker screen. This group includes retro, pixel art, themed, and artist-created icons. -->
-  <string name="alternative_app_icon_group_other" tools:ignore="UnusedResources" moz:removedIn="146">Autru</string>
   <!-- Title to show in alert when user selects an alternative app icon -->
   <string name="restart_warning_dialog_title">Vo’ canciari a cona di l\'app?</string>
   <!-- Dialog button text for cancelling app icon change -->
@@ -1287,9 +1270,9 @@
   <!-- Title of the active section on the studies list -->
   <string name="studies_active">Attivi</string>
   <!-- Description for studies -->
-  <string name="studies_description_3">Prova i funzioni e i pinzati novi prima chi vennu fatti pùbblichi.</string>
+  <string name="studies_description_3" moz:removedIn="148" tools:ignore="UnusedResources">Prova i funzioni e i pinzati novi prima chi vennu fatti pùbblichi.</string>
   <!-- Title of the Studies data preference -->
-  <string name="studies_title">Nzita e abbìa studi</string>
+  <string name="studies_title" moz:removedIn="148" tools:ignore="UnusedResources">Nzita e abbìa studi</string>
   <!-- Learn more link for studies, links to an article for more information about studies. -->
   <string name="studies_learn_more">Cchiù nfurmazzioni</string>
   <!--

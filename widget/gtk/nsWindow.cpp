@@ -2302,12 +2302,12 @@ void nsWindow::NativeMoveResizeWaylandPopup(bool aMove, bool aResize) {
   mResizedAfterMoveToRect = false;
 
   bool trackedInHierarchy = WaylandPopupConfigure();
-  // Read popup position from layout if it was moved or newly created.
+  // Read popup position from layout if it was moved.
   // This position is used by move-to-rect method as we need anchor and other
   // info to place popup correctly.
   // We need WaylandPopupConfigure() to be called before to have all needed
   // popup info in place (mainly the anchored flag).
-  if (aMove || !mPopupMoveToRectParams.mAnchorSet) {
+  if (aMove) {
     mPopupMoveToRectParams = WaylandPopupGetPositionFromLayout();
   }
   if (!trackedInHierarchy) {
@@ -2634,9 +2634,9 @@ bool nsWindow::WaylandPopupCheckAndGetAnchor(GdkRectangle* aPopupAnchor,
   }
 
   if (!mPopupMoveToRectParams.mAnchorSet) {
-    LOG("  can't use move-to-rect due missing anchor");
-    return false;
+    mPopupMoveToRectParams = WaylandPopupGetPositionFromLayout();
   }
+
   // Update popup layout coordinates from layout by recent popup hierarchy
   // (calculate correct position according to parent window)
   // and convert to Gtk coordinates.
@@ -6839,15 +6839,19 @@ void nsWindow::NativeShow(bool aAction) {
 
     if (IsWaylandPopup()) {
       mPopupClosed = false;
-      if (WaylandPopupConfigure()) {
+      const bool trackedInHierarchy = WaylandPopupConfigure();
+      if (trackedInHierarchy) {
         AddWindowToPopupHierarchy();
-        UpdateWaylandPopupHierarchy();
-        if (mPopupClosed) {
-          return;
-        }
       }
       if (mWaylandApplyPopupPositionBeforeShow) {
+        // NOTE(emilio): This will end up calling UpdateWaylandPopupHierarchy if
+        // needed.
         NativeMoveResize(/* move */ true, /* resize */ false);
+      } else if (trackedInHierarchy) {
+        UpdateWaylandPopupHierarchy();
+      }
+      if (mPopupClosed) {
+        return;
       }
     }
     // Set up usertime/startupID metadata for the created window.
