@@ -2902,6 +2902,7 @@ webgl::ExplicitPixelPackingState::ForUseWith(
   auto metrics = Metrics{};
 
   metrics.usedSize = subrectSize;
+  metrics.usedPixelsPerRow = usedPixelsPerRow.value();
   metrics.bytesPerPixel = BytesPerPixel(pi);
 
   // -
