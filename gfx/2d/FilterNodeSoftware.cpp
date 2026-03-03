@@ -1765,12 +1765,10 @@ void FilterNodeComponentTransferSoftware::SetAttribute(uint32_t aIndex,
 
 void FilterNodeComponentTransferSoftware::GenerateLookupTable(
     ptrdiff_t aComponent, uint8_t aTables[4][256], bool aDisabled) {
-  if (aDisabled) {
+  if (aDisabled || !FillLookupTable(aComponent, aTables[aComponent])) {
     for (int32_t i = 0; i < 256; ++i) {
       aTables[aComponent][i] = i;
     }
-  } else {
-    FillLookupTable(aComponent, aTables[aComponent]);
   }
 }
 
@@ -1927,32 +1925,29 @@ void FilterNodeTableTransferSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-void FilterNodeTableTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
+bool FilterNodeTableTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
                                                       uint8_t aTable[256]) {
   switch (aComponent) {
     case B8G8R8A8_COMPONENT_BYTEOFFSET_R:
-      FillLookupTableImpl(mTableR, aTable);
+      return FillLookupTableImpl(mTableR, aTable);
       break;
     case B8G8R8A8_COMPONENT_BYTEOFFSET_G:
-      FillLookupTableImpl(mTableG, aTable);
-      break;
+      return FillLookupTableImpl(mTableG, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_B:
-      FillLookupTableImpl(mTableB, aTable);
-      break;
+      return FillLookupTableImpl(mTableB, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_A:
-      FillLookupTableImpl(mTableA, aTable);
-      break;
+      return FillLookupTableImpl(mTableA, aTable);
     default:
       MOZ_ASSERT(false, "unknown component");
-      break;
+      return false;
   }
 }
 
-void FilterNodeTableTransferSoftware::FillLookupTableImpl(
+bool FilterNodeTableTransferSoftware::FillLookupTableImpl(
     std::vector<Float>& aTableValues, uint8_t aTable[256]) {
   uint32_t tvLength = aTableValues.size();
-  if (tvLength < 2) {
-    return;
+  if (tvLength < 1) {
+    return false;
   }
 
   for (size_t i = 0; i < 256; i++) {
@@ -1965,6 +1960,7 @@ void FilterNodeTableTransferSoftware::FillLookupTableImpl(
     val = std::max(0, val);
     aTable[i] = val;
   }
+  return true;
 }
 
 void FilterNodeDiscreteTransferSoftware::SetAttribute(uint32_t aIndex,
@@ -1990,32 +1986,28 @@ void FilterNodeDiscreteTransferSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-void FilterNodeDiscreteTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
+bool FilterNodeDiscreteTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
                                                          uint8_t aTable[256]) {
   switch (aComponent) {
     case B8G8R8A8_COMPONENT_BYTEOFFSET_R:
-      FillLookupTableImpl(mTableR, aTable);
-      break;
+      return FillLookupTableImpl(mTableR, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_G:
-      FillLookupTableImpl(mTableG, aTable);
-      break;
+      return FillLookupTableImpl(mTableG, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_B:
-      FillLookupTableImpl(mTableB, aTable);
-      break;
+      return FillLookupTableImpl(mTableB, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_A:
-      FillLookupTableImpl(mTableA, aTable);
-      break;
+      return FillLookupTableImpl(mTableA, aTable);
     default:
       MOZ_ASSERT(false, "unknown component");
-      break;
+      return false;
   }
 }
 
-void FilterNodeDiscreteTransferSoftware::FillLookupTableImpl(
+bool FilterNodeDiscreteTransferSoftware::FillLookupTableImpl(
     std::vector<Float>& aTableValues, uint8_t aTable[256]) {
   uint32_t tvLength = aTableValues.size();
   if (tvLength < 1) {
-    return;
+    return false;
   }
 
   for (size_t i = 0; i < 256; i++) {
@@ -2027,6 +2019,7 @@ void FilterNodeDiscreteTransferSoftware::FillLookupTableImpl(
     val = std::max(0, val);
     aTable[i] = val;
   }
+  return true;
 }
 
 FilterNodeLinearTransferSoftware::FilterNodeLinearTransferSoftware()
@@ -2072,28 +2065,24 @@ void FilterNodeLinearTransferSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-void FilterNodeLinearTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
+bool FilterNodeLinearTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
                                                        uint8_t aTable[256]) {
   switch (aComponent) {
     case B8G8R8A8_COMPONENT_BYTEOFFSET_R:
-      FillLookupTableImpl(mSlopeR, mInterceptR, aTable);
-      break;
+      return FillLookupTableImpl(mSlopeR, mInterceptR, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_G:
-      FillLookupTableImpl(mSlopeG, mInterceptG, aTable);
-      break;
+      return FillLookupTableImpl(mSlopeG, mInterceptG, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_B:
-      FillLookupTableImpl(mSlopeB, mInterceptB, aTable);
-      break;
+      return FillLookupTableImpl(mSlopeB, mInterceptB, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_A:
-      FillLookupTableImpl(mSlopeA, mInterceptA, aTable);
-      break;
+      return FillLookupTableImpl(mSlopeA, mInterceptA, aTable);
     default:
       MOZ_ASSERT(false, "unknown component");
-      break;
+      return false;
   }
 }
 
-void FilterNodeLinearTransferSoftware::FillLookupTableImpl(
+bool FilterNodeLinearTransferSoftware::FillLookupTableImpl(
     Float aSlope, Float aIntercept, uint8_t aTable[256]) {
   for (size_t i = 0; i < 256; i++) {
     int32_t val = NS_lround(aSlope * i + 255 * aIntercept);
@@ -2101,6 +2090,7 @@ void FilterNodeLinearTransferSoftware::FillLookupTableImpl(
     val = std::max(0, val);
     aTable[i] = val;
   }
+  return true;
 }
 
 FilterNodeGammaTransferSoftware::FilterNodeGammaTransferSoftware()
@@ -2162,28 +2152,24 @@ void FilterNodeGammaTransferSoftware::SetAttribute(uint32_t aIndex,
   Invalidate();
 }
 
-void FilterNodeGammaTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
+bool FilterNodeGammaTransferSoftware::FillLookupTable(ptrdiff_t aComponent,
                                                       uint8_t aTable[256]) {
   switch (aComponent) {
     case B8G8R8A8_COMPONENT_BYTEOFFSET_R:
-      FillLookupTableImpl(mAmplitudeR, mExponentR, mOffsetR, aTable);
-      break;
+      return FillLookupTableImpl(mAmplitudeR, mExponentR, mOffsetR, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_G:
-      FillLookupTableImpl(mAmplitudeG, mExponentG, mOffsetG, aTable);
-      break;
+      return FillLookupTableImpl(mAmplitudeG, mExponentG, mOffsetG, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_B:
-      FillLookupTableImpl(mAmplitudeB, mExponentB, mOffsetB, aTable);
-      break;
+      return FillLookupTableImpl(mAmplitudeB, mExponentB, mOffsetB, aTable);
     case B8G8R8A8_COMPONENT_BYTEOFFSET_A:
-      FillLookupTableImpl(mAmplitudeA, mExponentA, mOffsetA, aTable);
-      break;
+      return FillLookupTableImpl(mAmplitudeA, mExponentA, mOffsetA, aTable);
     default:
       MOZ_ASSERT(false, "unknown component");
-      break;
+      return false;
   }
 }
 
-void FilterNodeGammaTransferSoftware::FillLookupTableImpl(Float aAmplitude,
+bool FilterNodeGammaTransferSoftware::FillLookupTableImpl(Float aAmplitude,
                                                           Float aExponent,
                                                           Float aOffset,
                                                           uint8_t aTable[256]) {
@@ -2194,6 +2180,7 @@ void FilterNodeGammaTransferSoftware::FillLookupTableImpl(Float aAmplitude,
     val = std::max(0, val);
     aTable[i] = val;
   }
+  return true;
 }
 
 FilterNodeConvolveMatrixSoftware::FilterNodeConvolveMatrixSoftware()
