@@ -54,7 +54,7 @@ elif CONFIG["OS_TARGET"] == "Darwin":
     DEFINES["HAVE_POINTER_LOCALTIME_R"] = True
     SOURCES += [
         "/nsprpub/pr/src/md/unix/darwin.c",
-        "/nsprpub/pr/src/md/unix/os_Darwin.s",
+        "/nsprpub/pr/src/md/unix/os_Darwin_x86_64.s",
     ]
     DEFINES["HAVE_CRT_EXTERNS_H"] = True
 elif CONFIG["OS_TARGET"] == "SunOS":

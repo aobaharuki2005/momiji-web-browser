@@ -897,7 +897,7 @@ class OSXToolchainTest(BaseToolchainTest):
             [
                 "-isysroot",
                 xcrun("", ("--show-sdk-path",))[1],
-                "-mmacosx-version-min=10.13",
+                "-mmacosx-version-min=10.15",
             ]
         )
     }
