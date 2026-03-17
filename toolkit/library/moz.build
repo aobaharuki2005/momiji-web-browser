@@ -207,6 +207,8 @@ if CONFIG["MOZ_WEBRTC"]:
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
     OS_LIBS += [
+        "-framework ApplicationServices",
+        "-framework AppKit",
         "-framework Foundation",
         "-framework CoreFoundation",
         "-framework CoreLocation",
@@ -221,8 +223,6 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
         "-framework Security",
         "-framework ServiceManagement",
         "-framework CoreServices",
-        "-framework ApplicationServices",
-        "-framework AppKit",
         "-framework CoreMIDI",
         "-framework SystemConfiguration",
         "-framework AVFoundation",
@@ -240,10 +240,11 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "cocoa":
 
 if CONFIG["MOZ_WIDGET_TOOLKIT"] == "uikit":
     OS_LIBS += [
+        "-framework ApplicationServices",
+        "-framework AppKit",
         "-framework Foundation",
         "-framework CoreFoundation",
         "-framework CoreGraphics",
-        "-framework CoreText",
         "-framework AVFoundation",
         "-framework AudioToolbox",
         "-framework CoreMedia",
