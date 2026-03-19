@@ -59,38 +59,12 @@ warningDesc-version = { -brand-short-name } is experimental and may be unstable.
 aboutdialog-help-user = { -brand-product-name } Help
 aboutdialog-submit-feedback = Submit Feedback
 
-community-exp = <label data-l10n-name="community-exp-mozillaLink">{ -vendor-short-name }</label> is a <label data-l10n-name="community-exp-creditsLink">global community</label> working together to keep the Web open, public and accessible to all.
+# Phần nội dung thay đổi theo yêu cầu của bạn
+community-exp = { -brand-full-name } (community build) version { aboutDialog-version }
+community-2 = Based on Mozilla Firefox 140 ESR. Licensed under <label data-l10n-name="community-mozillaLink">MPL 2.0</label>. 
+helpus = Source: <label data-l10n-name="helpus-getInvolvedLink">https://github.com/aobaharuki2005/momiji-web-browser</label>. This is an independent community project, not affiliated with Mozilla Foundation. 
 
-community-2 = { -brand-short-name } is designed by <label data-l10n-name="community-mozillaLink">{ -vendor-short-name }</label>, a <label data-l10n-name="community-creditsLink">global community</label> working together to keep the Web open, public and accessible to all.
-
-helpus = Want to help? <label data-l10n-name="helpus-donateLink">Make a donation</label> or <label data-l10n-name="helpus-getInvolvedLink">get involved!</label>
-
-bottomLinks-license = Licensing Information
-bottom-links-terms = Terms of Use
-bottom-links-privacy = Privacy Notice
-
-# Example of resulting string: 66.0.1 (64-bit)
-# Variables:
-#   $version (String): version of Firefox, e.g. 66.0.1
-#   $bits (Number): bits of the architecture (32 or 64)
-aboutDialog-version = { $version } ({ $bits }-bit)
-
-# Example of resulting string: 66.0a1 (2019-01-16) (64-bit)
-# Variables:
-#   $version (String): version of Firefox for Nightly builds, e.g. 66.0a1
-#   $isodate (String): date in ISO format, e.g. 2019-01-16
-#   $bits (Number): bits of the architecture (32 or 64)
+aboutDialog-version = { $version } ({ $bits }-bit) 
 aboutDialog-version-nightly = { $version } ({ $isodate }) ({ $bits }-bit)
-
-# Example of resulting string: 131.0a1 (aarch64)
-# Variables:
-#   $version (String): version of Firefox, e.g. 66.0.1
-#   $arch (String): name of the architecture (arm, aarch64, etc.)
 aboutdialog-version-arch = { $version } ({ $arch })
-
-# Example of resulting string: 131.0a1 (2024-08-27) (aarch64)
-# Variables:
-#   $version (String): version of Firefox for Nightly builds, e.g. 66.0a1
-#   $isodate (String): date in ISO format, e.g. 2019-01-16
-#   $arch (String): name of the architecture (arm, aarch64, etc.)
 aboutdialog-version-arch-nightly = { $version } ({ $isodate }) ({ $arch })
