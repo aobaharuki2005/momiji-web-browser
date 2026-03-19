@@ -19,9 +19,9 @@
 -brand-shorter-name = Momiji
 -brand-short-name = Momiji
 -brand-shortcut-name = Momiji
--brand-full-name = Momiji
+-brand-full-name = Momiji Web Browser
 # This brand name can be used in messages where the product name needs to
 # remain unchanged across different versions (Momiji, Beta, etc.).
--brand-product-name = Firefox
+-brand-product-name = Momiji
 -vendor-short-name = aobaharuki2005
 trademarkInfo = { " " }
