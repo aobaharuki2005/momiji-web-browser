@@ -8,22 +8,22 @@
 
 # BrandFullNameInternal is used for some registry and file system values
 # instead of BrandFullName and typically should not be modified.
-!define BrandFullNameInternal "Nightly"
-!define BrandFullName         "Firefox Nightly"
-!define CompanyName           "mozilla.org"
-!define URLInfoAbout          "https://www.mozilla.org"
-!define HelpLink              "https://support.mozilla.org"
+!define BrandFullNameInternal "Momiji"
+!define BrandFullName         "Momiji"
+!define CompanyName           "https://github.com/aobaharuki2005"
+!define URLInfoAbout          "https://github.com/aobaharuki2005/momiji-web-browser"
+!define HelpLink              "https://github.com/aobaharuki2005/momiji-web-browser"
 
-!define URLStubDownloadX86 "https://download.mozilla.org/?os=win&lang=${AB_CD}&product=firefox-nightly-latest"
-!define URLStubDownloadAMD64 "https://download.mozilla.org/?os=win64&lang=${AB_CD}&product=firefox-nightly-latest"
-!define URLStubDownloadAArch64 "https://download.mozilla.org/?os=win64-aarch64&lang=${AB_CD}&product=firefox-nightly-latest"
-!define URLManualDownload "https://www.mozilla.org/${AB_CD}/firefox/installer-help/?channel=nightly&installer_lang=${AB_CD}"
-!define URLSystemRequirements "https://www.mozilla.org/firefox/system-requirements/"
-!define Channel "nightly"
+!define URLStubDownloadX86 "https://github.com/aobaharuki2005/momiji-web-browser"
+!define URLStubDownloadAMD64 "https://github.com/aobaharuki2005/momiji-web-browser"
+!define URLStubDownloadAArch64 "https://github.com/aobaharuki2005/momiji-web-browser"
+!define URLManualDownload "https://github.com/aobaharuki2005/momiji-web-browser"
+!define URLSystemRequirements "https://github.com/aobaharuki2005/momiji-web-browser"
+!define Channel "momiji"
 
 # The installer's certificate name and issuer expected by the stub installer
-!define CertNameDownload   "Mozilla Corporation"
-!define CertIssuerDownload "DigiCert Trusted G4 Code Signing RSA4096 SHA384 2021 CA1"
+!define CertNameDownload   "null"
+!define CertIssuerDownload "null"
 
 # Dialog units are used so the UI displays correctly with the system's DPI
 # settings.

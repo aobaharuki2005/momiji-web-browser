@@ -16,12 +16,12 @@
 ## For further details, consult:
 ## https://mozilla-l10n.github.io/styleguides/mozilla_general/#brands-copyright-and-trademark
 
--brand-shorter-name = Nightly
--brand-short-name = Nightly
--brand-shortcut-name = Firefox Nightly
--brand-full-name = Firefox Nightly
+-brand-shorter-name = Momiji
+-brand-short-name = Momiji
+-brand-shortcut-name = Momiji
+-brand-full-name = Momiji
 # This brand name can be used in messages where the product name needs to
-# remain unchanged across different versions (Nightly, Beta, etc.).
+# remain unchanged across different versions (Momiji, Beta, etc.).
 -brand-product-name = Firefox
--vendor-short-name = Mozilla
+-vendor-short-name = aobaharuki2005
 trademarkInfo = { " " }
