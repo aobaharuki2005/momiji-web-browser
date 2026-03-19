@@ -4,6 +4,8 @@
 
 # Trình duyệt web Momiji - hỗ trợ đối với macOS phiên bản cũ (10.7-10.14)
 
+<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot.png)</span>
+
 ## Về Momiji
 
 Đây là trình duyệt Firefox tuỳ chỉnh được xây dựng tương thích ngược và duy trì dành cho macOS phiên bản 10.7-10.14.
@@ -12,8 +14,21 @@ Dự án này là sự kế thừa và tiếp tục của dự án [firefox-dyna
 
 Momiji （紅葉、もみじ）- nghĩa là "lá đỏ mùa thu" trong tiếng Nhật. Ý tưởng này bắt nguồn từ sự tương đồng giữa âm tiếng Nhật "mo" và âm "mo" trong thương hiệu gốc "Quỹ Mozilla" (Mozilla Foundation). Bên cạnh đó, chiếc lá đỏ thường được nhắc đến như là 1 hình ảnh gợi con người nhớ lại những ký ức, kỉ niệm đẹp đã qua; do đó, tôi nghĩ rằng việc đặt tên này cho một bản tuỳ chỉnh của Firefox chạy trên nền tảng cũ (macOS 10.7-10.14) là một ý tưởng hay (có lẽ vậy).
 
+## Tính năng
+- Cho phép truy cập Web hiện đại và sử dụng các dịch vụ Web tiên tiến một cách an toàn (với các bản vá bảo mật đã được cập nhật đầy đủ) trên các phiên bản macOS không còn được Apple và Mozilla chính thức hỗ trợ với gần như đầy đủ các tính năng (chi tiết những tính năng không được hỗ trợ đầy đủ, vui lòng đọc phần Hạn chế)
+- Lược bỏ những thành phần không cần thiết và không được hỗ trợ: Crash Reporter (trình báo lỗi), WebAssembly, Tests (bộ kiểm thử), Debug (bộ gỡ lỗi), Dark Matter Detector (công cụ theo dõi rò rỉ bộ nhớ), Geckodriver (điều khiển trình duyệt tự động), Profiling (công cụ đo đạc hiệu năng)
+
 ## Hạn chế
-- **Với người dùng macOS 10.7**: tăng tốc đồ hoạ bằng phần cứng hoàn toàn không được hỗ trợ. Hiện tại chỉ có thể kết xuất hiển thị đồ hoạ Web bằng phần mềm (sẽ chậm hơn đáng kể so với tăng tốc đồ hoạ bằng phần cứng)
+- Icon logo do tôi tự thiết kế cho Momiji bị vỡ và nhoè trong chế độ hiển thị Danh sách (List) của Finder (đặc biệt ,là macOS 10.10 trở lên). Tuy nhiên trong các chế độ khác thì icon vẫn hiển thị bình thường.
+- Một số chức năng đặc thù như live-streaming, họp trực tuyến hoặc thiết kế đồ hoạ (Canva, Adobe Cloud Creative, ...) có thể không hoạt động mượt mà hoặc đầy đủ tính năng như kì vọng trên các phiên bản macOS rất cũ (vì sự thiếu hụt máy tính Mac phù hợp nên tôi chưa thể kiểm thử và đưa ra đánh giá đầy đủ)
+- **Với người dùng macOS 10.7**: 
+    - Tăng tốc đồ hoạ bằng phần cứng hoàn toàn không được hỗ trợ. Hiện tại chỉ có thể kết xuất hiển thị đồ hoạ Web bằng phần mềm (sẽ chậm hơn đáng kể so với tăng tốc đồ hoạ bằng phần cứng)
+    - Trên macOS 10.8 trở về sau, `CoreText.framework` nằm ở `/System/Library/Frameworks`. Tuy nhiên, trong macOS 10.7 trở về trước, Apple lại lồng nó bên trong `ApplicationServices.framework`, cụ thể: `/System/Library/Frameworks/ApplicationServices.framework/Versions/A` (Apple đang ám chỉ điều gì ở đây vậy?). Để khắc phục sự khác biệt về đường dẫn này, trước khi chạy Momiji trên macOS 10.7 của bạn lần đầu tiên, HÃY NHỚ chạy lệnh này đầu tiên:
+
+    `sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework`
+
+    Lệnh này sẽ đánh lừa Momiji rằng macOS 10.7 "thực sự có" `CoreText.framework` tại `/System/Library/Frameworks` và tiếp tục chạy như bình thuờng.
+
 - **Với người dùng macOS 10.8**: tăng tốc đồ hoạ được hỗ trợ một phần, nhưng còn nhiều lỗi (trên máy tính vi xử lý Ivy Bridge thế hệ thứ 3 của tôi, font chữ thường xuyên bị "vỡ"). Trong trường hợp gặp lỗi hiển thị font/hình ảnh, hãy làm theo [hướng dẫn này](https://support.mozilla.org/en-US/kb/performance-settings) để tắt tăng tốc đồ hoạ bằng phần cứng để có trải nghiệm duyệt Web tốt hơn.
 
 ## Các thay đổi

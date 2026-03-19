@@ -2,6 +2,8 @@
 
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support
 
+<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot.png)</span>
+
 ## About Momiji
 
 Custom Firefox browser backported and maintained for macOS 10.7-10.14.
@@ -10,8 +12,21 @@ This project is the successor and inheritance of [firefox-dynasty](https://githu
 
 Momiji（紅葉、もみじ）means "red leaves of autumn" in Japanese. I came up with the idea because the Japanese "mo" sound resembles the "mo" sound in the original "Mozilla Foundation" trademark. Additionally, red leaves are also told to be able to make people remind of good old memories, so using such a name for this backported Firefox distribution, to my thought, is a good idea (maybe).
 
+## Features:
+- Allow browsing modern Web and using up-to-date Web services securely (with fully applied security patches) on macOS version unsupported by Apple and Mozilla, with almost fully working functions (for more detail about poorly supported Web functions, especially if you are using macOS 10.7, please check out for "Known caveats" subsection)
+- Disable unnecessary and unsupported components: Crash Reporter, WebAssembly, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
+
 ## Known caveats
-- **For 10.7 users:** hardware-accelerated rendering is completely unavailable, only software rendering is usable.
+- My self-designed Momiji icon logo for Momiji is broken in Finder's List view mode (especiall on macOS 10.10 and up). In other modes, however, the logo icon is still displaying fine. 
+- Some special functions like live-streaming, online meeting and graphics design (Canva, Adobe Cloud Creative, ...) may not work smoothly or functionally as expected on very old macOS version (due to insufficient of proper Mac machine for unit testing, I haven't been able to carry out intensive test and make comprehensive judgements)
+- **For 10.7 users:** 
+    - Hardware-accelerated rendering is completely unavailable, only software rendering is usable.
+    - On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A` (Hey Apple, what the logic are you implying here?). To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
+
+    `sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework`
+
+    This command will trick Momiji to think that macOS 10.7 "really" locates `CoreText.framework` at `/System/Library/Frameworks` and continues to execute as usual.
+
 - **For 10.8 users:** hardware acceleration is available but stills buggy (on my Ivy Bridge machine, fonts look partially broken). In case of bug experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web experience.
 
 ## Modifications
