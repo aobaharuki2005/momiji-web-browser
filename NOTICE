@@ -1,0 +1,29 @@
+# Momiji - Attributions
+
+This project contains code from Mozilla Firefox, which is licensed 
+under the Mozilla Public License 2.0.
+
+## Original Work
+- Firefox Browser
+- Copyright © Mozilla Foundation and Contributors
+- License: Mozilla Public License 2.0
+- Source: https://hg.mozilla.org/mozilla-central/
+
+## Modifications
+
+This fork contains modifications to support legacy macOS versions (10.7-10.14).
+Modifications are documented in CHANGES.md.
+
+Modified by: aobaharuki2005
+Year: 2026
+Modifications License: MPL 2.0 (same as original)
+
+## Additional Components:
+- Rust compiler patches: Rust's MIT/Apache 2.0 license
+- Build scripts: MPL 2.0
+- Documentation: MPL 2.0
+
+## Credits
+- Original firefox-dynasty concept: i3roly (repository & account deleted)
+- Rust compiler modifications: aobaharuki2005
+- macOS compatibility patches: aobaharuki2005
