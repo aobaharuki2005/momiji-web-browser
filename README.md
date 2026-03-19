@@ -1,63 +1,86 @@
-<span style="display:block;text-align:center">![Eclipse r3dfox](./docs/readme/banner.jpg)</span>
+<span style="display:block;text-align:center">![Momiji](./docs/readme/banner.jpg)</span>
 
-# Momiji Web Browser - macOS Legacy (10.7-10.14) support
+**If you are not Vietnamese speakers, please read the English edition in [this link](README.en.md)**
 
-Firefox browser backported and maintained for macOS 10.7-10.14.
+# Trình duyệt web Momiji - hỗ trợ đối với macOS phiên bản cũ (10.7-10.14)
 
-Successor of [firefox-dynasty](https://github.com/i3roly/firefox-dynasty) - which has been, unfortunately, taken down due to Github violation of Term of Use. Details are at this [MacRumors post](https://forums.macrumors.com/threads/firefox-dynasty-firefox-for-os-x-10-8-also-web-app-templates.2446475/post-34441749).
+## Về Momiji
 
-Momiji（紅葉、もみじ）means "red leaves of autumn" in Japanese. I came up with the idea because the Japanese "mo" sound resembles the "mo" sound in the original "Mozilla Foundation" trademark. Additionally, red leaves also make people remind of old memories, so using such a name for this backported Firefox distribution, to my thought, is a good idea (maybe).
+Đây là trình duyệt Firefox tuỳ chỉnh được xây dựng tương thích ngược và duy trì dành cho macOS phiên bản 10.7-10.14.
 
-## Modifications
+Dự án này là sự kế thừa và tiếp tục của dự án [firefox-dynasty](https://github.com/i3roly/firefox-dynasty) - thật không may, dự án này (cùng với chủ sở hữu của nó) đã bị gỡ bỏ do vi phạm các điều khoản sử dụng của GitHub. Bạn có thể tìm hiểu về chi tiết sự việc trong [bài viết sau trên diễn đàn MacRumors](https://forums.macrumors.com/threads/firefox-dynasty-firefox-for-os-x-10-8-also-web-app-templates.2446475/post-34441749) (bài viết tiếng Anh).
 
-Here is a summary of modifications I have made to produce macOS 10.7-10.14-compatible Firefox distributions:
-- Rust compiler patches (deployment target)
-- Standard library patches (API compatibility)
-- Build system modifications (framework linking)
+Momiji （紅葉、もみじ）- nghĩa là "lá đỏ mùa thu" trong tiếng Nhật. Ý tưởng này bắt nguồn từ sự tương đồng giữa âm tiếng Nhật "mo" và âm "mo" trong thương hiệu gốc "Quỹ Mozilla" (Mozilla Foundation). Bên cạnh đó, chiếc lá đỏ thường được nhắc đến như là 1 hình ảnh gợi con người nhớ lại những ký ức, kỉ niệm đẹp đã qua; do đó, tôi nghĩ rằng việc đặt tên này cho một bản tuỳ chỉnh của Firefox chạy trên nền tảng cũ (macOS 10.7-10.14) là một ý tưởng hay (có lẽ vậy).
 
-*The above modifications are planned to be documented in [CHANGES.md](CHANGES.md) file, which is still being in progress. I will commit and make an update notice as soon as the documenting process is completed.*
+## Hạn chế
+- **Với người dùng macOS 10.7**: tăng tốc đồ hoạ bằng phần cứng hoàn toàn không được hỗ trợ. Hiện tại chỉ có thể kết xuất hiển thị đồ hoạ Web bằng phần mềm (sẽ chậm hơn đáng kể so với tăng tốc đồ hoạ bằng phần cứng)
+- **Với người dùng macOS 10.8**: tăng tốc đồ hoạ được hỗ trợ một phần, nhưng còn nhiều lỗi (trên máy tính vi xử lý Ivy Bridge thế hệ thứ 3 của tôi, font chữ thường xuyên bị "vỡ"). Trong trường hợp gặp lỗi hiển thị font/hình ảnh, hãy làm theo [hướng dẫn này](https://support.mozilla.org/en-US/kb/performance-settings) để tắt tăng tốc đồ hoạ bằng phần cứng để có trải nghiệm duyệt Web tốt hơn.
 
-## Trademarks
-Firefox® is a registered trademark of the Mozilla Foundation.
-This project is NOT AFFILIATED WITH, ENDORSED BY, OR SPONSERED by Mozilla Foundation.
+## Các thay đổi
 
-## Disclaimer
-This is an independent community project. Use at your own risk.
-No warranty provided.
+Dưới đây là tóm tắt những thay đổi tôi đã thực hiện với mã nguồn để xuất ra được phiên bản Firefox chạy được trên macOS 10.7-10.14:
+- Các bản vá với trình biên dịch Rust (về mặt Nền tảng triển khai đích - deployment target)
+- Các bản vá với thư viện chuẩn (về mặt tương thích Giao diện lập trình ứng dụng - API compatibility)
+- Các thay đổi đối với cấu hình hệ thống biên dịch (về mặt liên kết macOS Framewrork - Framework linking)
 
-## Source Code
-Full source code is available in this repository, as required
-by the Mozilla Public License 2.0.
+Chi tiết các thay đổi được đề cập trong file [CHANGES.md](CHANGES.md) (tiếng Anh). (Tính tới commit mới nhất vào ngày 19/03/2026, việc tài liệu hoá vẫn đang được tiếp tục tiến hành.)
 
-Modified file will be fully enlisted in [CHANGES.md](CHANGES.md) as soon as the documenting process has been completed.
+## Giấy phép và Thương hiệu
 
-## Credits
+Momiji tuân thủ Giấy phép Công cộng Mozilla 2.0 [(Mozilla Public License 2.0)](LICENSE)
 
-If I've forgotten to put your name here, please let me know and I'll add it.
+Firefox® là thương hiệu đã được đăng kí bảo hộ và thuộc quyền sở hữu của Quỹ Mozilla.
+Dự án này KHÔNG LIÊN KẾT VỚI, KHÔNG ĐƯỢC HỖ TRỢ CÔNG KHAI VÀ KHÔNG ĐƯỢC TÀI TRỢ bởi Quỹ Mozilla.
 
-[Mozilla Developers](https://github.com/mozilla-firefox) - Firefox browser base
+## Tuyên bố Miễn trừ trách nhiệm
 
-[i3roly](https://github.com/i3roly) - Original ideas, patches and owners of firefox-dynasty project
+Đây là một dự án mã nguồn mở cộng đồng độc lập. Người dùng tự chịu trách nhiệm cho mọi rủi ro khi cài đặt, sử dụng và tự biên dịch phần mềm mà không có bất kì sự đảm bảo bổ sung nào.
 
-[Wowfunhappy](https://github.com/Wowfunhappy) - Maintainers of the firefox-dynasty fork of the original project. Without his invaluable forked source, I wouldn't have been able to rebuilt, reverse engineered and revive the project from the scratch like today.
+## Về Mã nguồn
 
-# Original repository readme
+Mã nguồn chi tiết được lưu trữ trong kho lưu trữ (repository) này, như được yêu cầu bởi Giấy phép Công cộng Mozilla 2.0.
+
+Danh sách những file đã được chỉnh sửa được tài liệu hoá chi tiết trong file [CHANGES.md](CHANGES.md).
+
+## Tải về
+
+Để tải về các phiên bản chính thức, vui lòng truy cập trang [Releases](https://github.com/aobaharuki2005/firefox-dynasty-RELIFE/releases) (Xuất bản) của dự án.
+
+## Lời cảm ơn
+
+Xin chân thành gửi lời cảm ơn tới:
+
+[Các nhà phát triển Mozilla](https://github.com/mozilla-firefox) - cộng đồng tác giả mã nguồn gốc của Firefox
+
+[i3roly](https://github.com/i3roly) - ý tưởng, các bản vá ban đầu và chủ sở hữu dự án firefox-dynasty gốc (tài khoản đã bị xoá)
+
+[Wowfunhappy](https://github.com/Wowfunhappy) - người duy trì bản sao (fork) của dự án firefox-dynasty gốc. Không có bản sao mã nguồn quý giá này, tôi đã không thể tái biên dịch, phân tích phiên mã ngược (reverse engineering) và hồi sinh được dự án từ con số 0 như ngày hôm nay.
+
+## Liên hệ
+
+Trong trường hợp có bất kì câu hỏi nào, vui lòng liên hệ với tôi qua email: tranbaohnth@outlook.com.vn
+
+# README từ kho lưu trữ mã nguồn (repository) gốc
 
 ![Firefox Browser](./docs/readme/readme-banner.svg)
 
-[Firefox](https://firefox.com/) is a fast, reliable and private web browser from the non-profit [Mozilla organization](https://mozilla.org/).
+[Firefox](https://firefox.com/) là một trình duyệt nhanh, đáng tin cậy và riêng tư đến từ tổ chức phi lợi nhuận [Mozilla organization](https://mozilla.org).
 
-## Contributing
+## Đóng góp
 
-To learn how to contribute to Firefox read the [Firefox Contributors' Quick Reference document](https://firefox-source-docs.mozilla.org/contributing/contribution_quickref.html).
+Để tìm hiểu cách đóng góp cho dự án Firefox, vui lòng đọc tài liệu tiếng Anh [Firefox Contributors' Quick Reference document](https://firefox-source-docs.mozilla.org/contributing/contribution_quickref.html)
 
-We use [bugzilla.mozilla.org](https://bugzilla.mozilla.org/) as our issue tracker, please file bugs there.
+Chúng tôi (Các nhà phát triển Mozilla) sử dụng [bugzilla.mozilla.org](https://bugzilla.mozilla.org/) làm trình giám sát vấn đề (issue tracker), trong trường hợp gặp lỗi xin hãy vui lòng báo cáo theo file đính kèm tại đây.
 
-## Resources
+## Các nguồn liên quan
 
-* [Firefox Source Docs](https://firefox-source-docs.mozilla.org/) is our primary documentation repository
-* Nightly development builds can be downloaded from [Firefox Nightly page](https://www.mozilla.org/firefox/channel/desktop/#nightly)
+- [Trang tài liệu mã nguồn Firefox](https://firefox-source-docs.mozilla.org/) là kho lưu trữ tài liệu kĩ thuật chính của chúng tôi.
+- Các phiên bản thử nghiệm "Nightly" có thể được tải về từ [Firefox Nightly page](https://www.mozilla.org/firefox/channel/desktop/#nightly)
 
-If you have a question about developing Firefox, and can't find the solution
-on [Firefox Source Docs](https://firefox-source-docs.mozilla.org/), you can try asking your question on Matrix at
-chat.mozilla.org in the [Introduction channel](https://chat.mozilla.org/#/room/#introduction:mozilla.org).
+Nếu bạn có bất kì câu hỏi nào liên quan tới việc phát triển Firefox, và không thể tìm được lời giải đáp trong [Trang tài liệu mã nguồn Firefox](https://firefox-source-docs.mozilla.org/), hãy thử đặt câu hỏi với Matrix tại chat.mozilla.org tại trang [Introduction channel](https://chat.mozilla.org/#/room/#introduction:mozilla.org).
+
+
+
+
+
+
