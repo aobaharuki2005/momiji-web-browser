@@ -3,17 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #aboutDialogContainer {
-  background-color: #20123a;
+  background-color: #617d8b;
   color: #fff;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 #rightBox {
   margin-inline: 30px;
   padding-top: 64px;
 }
-
+/* 
 #bottomBox {
   background-color: hsla(235, 43%, 10%, .5);
   padding: 15px 10px 15px;
-}
+} */
