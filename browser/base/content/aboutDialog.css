@@ -153,11 +153,11 @@
   height: 16px;
   margin-inline: 5px;
 
-  &.noUpdatesFound {
+  /* &.noUpdatesFound {
     display: block;
     content: url("chrome://global/skin/icons/check.svg");
     fill: #30e60b;
-  }
+  } */
 
   &.apply {
     display: block;
