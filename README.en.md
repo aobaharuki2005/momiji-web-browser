@@ -2,7 +2,7 @@
 
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support
 
-<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot.png)</span>
+<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot_new.png)</span>
 
 ## About Momiji
 

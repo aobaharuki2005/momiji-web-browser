@@ -4,7 +4,7 @@
 
 # Trình duyệt web Momiji - hỗ trợ đối với macOS phiên bản cũ (10.7-10.14)
 
-<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot.png)</span>
+<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot_new.png)</span>
 
 ## Về Momiji
 
