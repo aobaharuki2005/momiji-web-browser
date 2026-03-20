@@ -5,7 +5,9 @@
 aboutDialog-title =
     .title = About { -brand-full-name }
 
-releaseNotes-link = What’s new
+# ============= What's new => (none) ===========
+releaseNotes-link = 
+# ====================
 
 update-checkForUpdatesButton =
     .label = Check for updates
@@ -32,7 +34,11 @@ update-failed-main =
     Update failed. <a data-l10n-name="failed-link-main">Download the latest version</a>
 
 update-policy-disabled = Updates disabled by your organization
-update-noUpdatesFound = { -brand-short-name } is up to date
+
+# ==== Momiji is up to date => Version (architecture): =====
+update-noUpdatesFound = Version (architecture): 
+# ==========================================================
+
 aboutdialog-update-checking-failed = Failed to check for updates.
 update-otherInstanceHandlingUpdates = { -brand-short-name } is being updated by another instance
 
@@ -51,13 +57,16 @@ update-internal-error2 = Unable to check for updates due to internal error. Upda
 ##
 
 # Variables:
-#   $channel (String): description of the update channel (e.g. "release", "beta", "nightly" etc.)
-aboutdialog-channel-description = You are currently on the <label data-l10n-name="current-channel">{ $channel }</label> update channel.
+#   $channel (String): description of the update channel (e.g. "release", "beta", "nightly" etc.) 
+# ========= You are currently on the default update channel => (none)
+aboutdialog-channel-description = 
 
 warningDesc-version = { -brand-short-name } is experimental and may be unstable.
 
-aboutdialog-help-user = { -brand-product-name } Help
-aboutdialog-submit-feedback = Submit Feedback
+# ========== Momiji Help & Submit feedback => false =============
+aboutdialog-help-user = 
+aboutdialog-submit-feedback = 
+# ===============================================================
 
 # Phần nội dung thay đổi theo yêu cầu của bạn
 community-exp = { -brand-full-name } (community build) version { aboutDialog-version }
