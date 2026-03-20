@@ -17,7 +17,7 @@ Momiji（紅葉、もみじ）means "red leaves of autumn" in Japanese. I came u
 - Disable unnecessary and unsupported components: Crash Reporter, WebAssembly, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
 
 ## Known caveats
-- My self-designed Momiji icon logo for Momiji is broken in Finder's List view mode (especiall on macOS 10.10 and up). In other modes, however, the logo icon is still displaying fine. 
+- **(FIXED in 2026-Mar-20)** My self-designed Momiji icon logo for Momiji is broken in Finder's List view mode (especiall on macOS 10.10 and up). In other modes, however, the logo icon is still displaying fine. 
 - Some special functions like live-streaming, online meeting and graphics design (Canva, Adobe Cloud Creative, ...) may not work smoothly or functionally as expected on very old macOS version (due to insufficient of proper Mac machine for unit testing, I haven't been able to carry out intensive test and make comprehensive judgements)
 - **For 10.7 users:** 
     - Hardware-accelerated rendering is completely unavailable, only software rendering is usable.
