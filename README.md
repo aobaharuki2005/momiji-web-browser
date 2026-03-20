@@ -19,7 +19,7 @@ Momiji （紅葉、もみじ）- nghĩa là "lá đỏ mùa thu" trong tiếng N
 - Lược bỏ những thành phần không cần thiết và không được hỗ trợ: Crash Reporter (trình báo lỗi), WebAssembly, Tests (bộ kiểm thử), Debug (bộ gỡ lỗi), Dark Matter Detector (công cụ theo dõi rò rỉ bộ nhớ), Geckodriver (điều khiển trình duyệt tự động), Profiling (công cụ đo đạc hiệu năng)
 
 ## Hạn chế
-- Icon logo do tôi tự thiết kế cho Momiji bị vỡ và nhoè trong chế độ hiển thị Danh sách (List) của Finder (đặc biệt ,là macOS 10.10 trở lên). Tuy nhiên trong các chế độ khác thì icon vẫn hiển thị bình thường.
+- **(ĐÃ FIX ngày 20/03/2026)** Icon logo do tôi tự thiết kế cho Momiji bị vỡ và nhoè trong chế độ hiển thị Danh sách (List) của Finder (đặc biệt là macOS 10.10 trở lên). Tuy nhiên trong các chế độ khác thì icon vẫn hiển thị bình thường.
 - Một số chức năng đặc thù như live-streaming, họp trực tuyến hoặc thiết kế đồ hoạ (Canva, Adobe Cloud Creative, ...) có thể không hoạt động mượt mà hoặc đầy đủ tính năng như kì vọng trên các phiên bản macOS rất cũ (vì sự thiếu hụt máy tính Mac phù hợp nên tôi chưa thể kiểm thử và đưa ra đánh giá đầy đủ)
 - **Với người dùng macOS 10.7**: 
     - Tăng tốc đồ hoạ bằng phần cứng hoàn toàn không được hỗ trợ. Hiện tại chỉ có thể kết xuất hiển thị đồ hoạ Web bằng phần mềm (sẽ chậm hơn đáng kể so với tăng tốc đồ hoạ bằng phần cứng)
