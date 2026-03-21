@@ -14,13 +14,19 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Create mozconfig build config from template
-        id: buildcfg-link
-        run: ln -s ./mozconfig-cicd.sh mozconfig
+      - name: Setup Python 3.10 (to supress mach errors)
+        id: setup-python
+        uses: actions/setup-python@v6.2.0
+        with:
+          python-version: '3.10'
 
       - name: Bootstrapping build deps
         id: bootstrap
         run: ./mach bootstrap --application-choice=browser
+
+      - name: Create mozconfig build config from template
+        id: buildcfg-link
+        run: ln -sf ./mozconfig-cicd.sh mozconfig
 
       - name: Manually configure Rust toolchain
         id: rust-cfg
