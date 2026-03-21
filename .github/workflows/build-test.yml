@@ -14,10 +14,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Update all installed Brew packages
-        id: update-brew
-        run: brew update && brew upgrade
-
       - name: Setup Python 3.10 (to supress mach errors)
         id: setup-python
         uses: actions/setup-python@v6.2.0
