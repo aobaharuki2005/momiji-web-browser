@@ -72,6 +72,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'uikit':
     OS_LIBS += [
       '-framework CoreFoundation',
+      '-framework AudioUnit',
       '-framework AudioToolbox',
     ]
 
