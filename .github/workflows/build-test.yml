@@ -64,7 +64,7 @@ jobs:
         run: ./mach package
 
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3.2.2
+        uses: actions/upload-artifact@v7.0.0
         with:
           name: momiji-build-output
           path: obj-ff-dbg-esr/dist/*.dmg
