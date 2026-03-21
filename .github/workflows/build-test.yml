@@ -1,6 +1,9 @@
 name: build Momiji testing distribution
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
