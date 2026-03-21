@@ -30,8 +30,8 @@ export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.7"
 export CARGOFLAGS="-C link-arg=-mmacosx-version-min=10.7"
 
 # ========== C/C++ ==========
-export CC="$HOME/.mozbuild/clang-19/bin/clang"
-export CXX="$HOME/.mozbuild/clang-19/bin/clang++"
+export CC="$HOME/.mozbuild/clang/bin/clang"
+export CXX="$HOME/.mozbuild/clang/bin/clang++"
 export LDFLAGS="-mmacosx-version-min=10.7"
 export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070"
 export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070"
