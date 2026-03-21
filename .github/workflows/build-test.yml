@@ -37,17 +37,17 @@ jobs:
           # Installing rustc
           curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/rustc.pkg -o rustc.pkg
           pkgutil --expand rustc.pkg /tmp/rust-extract/rustc
-          /tmp/rust-extract/rustc/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
+          /tmp/rust-extract/rustc/Scripts/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
 
           # Install rust-std:
           curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/rust-std.pkg -o rust-std.pkg
           pkgutil --expand rust-std.pkg /tmp/rust-extract/rust-std
-          /tmp/rust-extract/rust-std/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
+          /tmp/rust-extract/rust-std/Scripts/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
 
           # Install cargo
           curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/cargo.pkg -o cargo.pkg
           pkgutil --expand cargo.pkg /tmp/rust-extract/cargo
-          /tmp/rust-extract/cargo/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
+          /tmp/rust-extract/cargo/Scripts/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
 
           # Change default Rust toolchain
           rustup default 1.91.0-custom
