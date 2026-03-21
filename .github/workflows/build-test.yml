@@ -1,0 +1,73 @@
+name: build Momiji testing distribution
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build Momiji
+    runs-on: macos-15
+    steps:
+      - name: Checkout source code
+        id: checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Create mozconfig build config from template
+        id: buildcfg-link
+        run: ln -s ./mozconfig-cicd.sh mozconfig
+
+      - name: Bootstrapping build deps
+        id: bootstrap
+        run: ./mach bootstrap --application-choice=browser
+
+      - name: Manually configure Rust toolchain
+        id: rust-cfg
+        run: |
+          mkdir -p /tmp/rust-extract
+          mkdir -p ~/.rustup/toolchains/1.91.0-custom
+
+          # Installing rustc
+          curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/rustc.pkg -o rustc.pkg
+          pkgutil --expand rustc.pkg /tmp/rust-extract/rustc
+          /tmp/rust-extract/rustc/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
+
+          # Install rust-std:
+          curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/rust-std.pkg -o rust-std.pkg
+          pkgutil --expand rust-std.pkg /tmp/rust-extract/rust-std
+          /tmp/rust-extract/rust-std/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
+
+          # Install cargo
+          curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/cargo.pkg -o cargo.pkg
+          pkgutil --expand cargo.pkg /tmp/rust-extract/cargo
+          /tmp/rust-extract/cargo/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
+
+          # Change default Rust toolchain
+          rustup default 1.91.0-custom
+          rustup override set 1.91.0-custom
+
+          # Verify Rust installation
+          cargo --version
+          rustc --version
+
+      - name: Configure build options
+        id: configure
+        run: ./mach configure
+
+      - name: Build
+        id: build
+        run: ./mach build
+
+      - name: Package
+        id: pkg
+        run: ./mach package
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3.2.2
+        with:
+          name: momiji-build-output
+          path: obj-ff-dbg-esr/dist/*.dmg
+          if-no-files-found: error
+          retention-days: 7
+    
