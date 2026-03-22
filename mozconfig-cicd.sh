@@ -46,7 +46,7 @@ ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
 
 # From Waterfox
-ac_add_options --enable-lto=full
+ac_add_options --enable-lto=thin
 ac_add_options --enable-optimize="-march=core2 -mtune=ivybridge -O3 -w"
 ac_add_options --enable-release
 ac_add_options --enable-rust-simd
