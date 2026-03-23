@@ -9,6 +9,16 @@ ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-apple-darwin11.0.0
 export MACOSX_DEPLOYMENT_TARGET=10.7
 
+# ============= SCCACHE ==============
+if test -x "$(command -v sccache)"; then
+    ac_add_options --with-ccache=/usr/local/bin/sccache
+    export SCCACHE_IDLE_TIMEOUT=0
+fi
+
+# ============ SDK ===================
+# Use SDK 26.2 (same as which used to build custom Rust) to avoid unexpected conflicts
+ac_add_options --with-macos-sdk="/Applications/Xcode_26.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk"
+
 # ============= LINKER ===============
 ac_add_options --enable-linker=ld64 # stable option
 
@@ -45,10 +55,13 @@ ac_add_options --disable-dmd
 ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
 
-# From Waterfox
-ac_add_options --enable-lto=thin
-ac_add_options --enable-optimize="-march=core2 -mtune=ivybridge -O3 -w"
-ac_add_options --enable-release
-ac_add_options --enable-rust-simd
-ac_add_options RUSTC_OPT_LEVEL=3
-export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
+# From Waterfox (Production build)
+# ac_add_options --enable-lto=thin
+# ac_add_options --enable-optimize="-march=core2 -mtune=ivybridge -O3 -w"
+# ac_add_options --enable-release
+# ac_add_options --enable-rust-simd
+# ac_add_options RUSTC_OPT_LEVEL=3
+# export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
+
+# From Waterfox (development build)
+ac_add_options --enable-optimize="-Os -w"
