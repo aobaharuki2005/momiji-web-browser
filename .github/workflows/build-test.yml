@@ -1,13 +1,16 @@
 name: build Momiji testing distribution
 
 on:
+  push:
+    branches:
+      - 140.2.Xesr-mj-test
   workflow_dispatch:
 
 jobs:
   build:
     name: build Momiji
     runs-on: macos-15-intel
-    steps:
+    steps:     
       - name: Checkout source code
         id: checkout
         uses: actions/checkout@v6.0.2
@@ -20,9 +23,19 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install missing libgit2 deps
-        id: install-miss-libgit2
-        run: brew install --formulae libgit2 libgit2-glib
+      - name: Manually install libgit2 (for rustc) and sccache
+        id: install-libgit2-sccache
+        run: | 
+          brew install --formulae sccache libgit2 libgit2-glib
+
+      # Khôi phục cache của sccache từ các lần build trước
+      - name: Restore sccache cache
+        uses: actions/cache@v5.0.4
+        with:
+          path: ~/Library/Caches/Mozilla.sccache
+          key: ${{ runner.os }}-sccache-${{ github.sha }}  # == *macos-15-intel*-sccache-*session-sha*
+          restore-keys: |
+            ${{ runner.os }}-sccache-
 
       - name: Bootstrapping build deps
         id: bootstrap
@@ -63,11 +76,18 @@ jobs:
 
       - name: Configure build options
         id: configure
-        run: ./mach configure
+        run: | 
+          # Khởi động sccache trước khi build
+          sccache --start-server
+          ./mach configure
 
       - name: Build
         id: build
         run: ./mach build
+
+      - name: Show sccache stats
+        id: show-sccache-stats
+        run: sccache --show-stats
 
       - name: Package
         id: pkg
