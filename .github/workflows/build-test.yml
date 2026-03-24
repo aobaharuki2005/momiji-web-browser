@@ -3,7 +3,7 @@ name: build Momiji testing distribution
 on:
   push:
     branches:
-      - 140.2.Xesr-mj-test
+      - '140.1.X*'
   workflow_dispatch:
 
 jobs:
@@ -17,17 +17,6 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Python 3.10 (to supress mach errors)
-        id: setup-python
-        uses: actions/setup-python@v6.2.0
-        with:
-          python-version: '3.10'
-
-      - name: Manually install libgit2 (for rustc) and sccache
-        id: install-libgit2-sccache
-        run: | 
-          brew install --formulae sccache libgit2 libgit2-glib
-
       # Khôi phục cache của sccache từ các lần build trước
       - name: Restore sccache cache
         uses: actions/cache@v5.0.4
@@ -39,7 +28,7 @@ jobs:
 
       - name: Bootstrapping build deps
         id: bootstrap
-        run: ./mach bootstrap --application-choice=browser
+        run: /usr/bin/python3 ./mach bootstrap --application-choice=browser
 
       - name: Create mozconfig build config from template
         id: buildcfg-link
@@ -48,24 +37,10 @@ jobs:
       - name: Manually configure Rust toolchain
         id: rust-cfg
         run: |
-          mkdir -p /tmp/rust-extract
-          mkdir -p ~/.rustup/toolchains/1.91.0-custom
-
-          # Installing rustc
-          curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/rustc.pkg -o rustc.pkg
-          pkgutil --expand rustc.pkg /tmp/rust-extract/rustc
-          /tmp/rust-extract/rustc/Scripts/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
-
-          # Install rust-std:
-          curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/rust-std.pkg -o rust-std.pkg
-          pkgutil --expand rust-std.pkg /tmp/rust-extract/rust-std
-          /tmp/rust-extract/rust-std/Scripts/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
-
-          # Install cargo
-          curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom/cargo.pkg -o cargo.pkg
-          pkgutil --expand cargo.pkg /tmp/rust-extract/cargo
-          /tmp/rust-extract/cargo/Scripts/install.sh --destdir=~/.rustup/toolchains/1.91.0-custom --prefix=/
-
+          curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-redist/1.91.0-custom.tar.gz -o 1.91.0-custom.tar.gz
+          mkdir -p ~/.rustup/toolchains
+          tar -xf ./1.91.0-custom.tar.gz -C ~/.rustup/toolchains
+        
           # Change default Rust toolchain
           rustup default 1.91.0-custom
           rustup override set 1.91.0-custom
@@ -78,20 +53,20 @@ jobs:
         id: configure
         run: | 
           # Khởi động sccache trước khi build
-          sccache --start-server
-          ./mach configure
+          $HOME/.mozbuild/sccache/sccache --start-server
+          /usr/bin/python3 ./mach configure
 
       - name: Build
         id: build
-        run: ./mach build
+        run: /usr/bin/python3 ./mach build
 
       - name: Show sccache stats
         id: show-sccache-stats
-        run: sccache --show-stats
+        run: $HOME/.mozbuild/sccache/sccache --show-stats
 
       - name: Package
         id: pkg
-        run: ./mach package
+        run: /usr/bin/python3 ./mach package
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7.0.0
