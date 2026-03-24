@@ -10,10 +10,8 @@ ac_add_options --target=x86_64-apple-darwin11.0.0
 export MACOSX_DEPLOYMENT_TARGET=10.7
 
 # ============= SCCACHE ==============
-if test -x "$(command -v sccache)"; then
-    ac_add_options --with-ccache=/usr/local/bin/sccache
-    export SCCACHE_IDLE_TIMEOUT=0
-fi
+ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
+export SCCACHE_IDLE_TIMEOUT=0
 
 # ============ SDK ===================
 # Use SDK 26.2 (same as which used to build custom Rust) to avoid unexpected conflicts
