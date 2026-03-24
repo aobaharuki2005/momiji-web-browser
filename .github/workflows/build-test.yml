@@ -18,13 +18,17 @@ jobs:
           fetch-depth: 1
 
       # Khôi phục cache của sccache từ các lần build trước
-      - name: Restore sccache cache
+      - name: Restore sccache cache mozbuild toolchains
         uses: actions/cache@v5.0.4
         with:
-          path: ~/Library/Caches/Mozilla.sccache
+          path: | 
+            ~/Library/Caches/Mozilla.sccache 
+            ~/.mozbuild
+            ~/.rustup/toolchains/1.91.0-custom
           key: ${{ runner.os }}-sccache-${{ hashFiles('**/mozconfig*') }}  # *macos-15-intel*-sccache-*mozconfig-sha* => less cache loss
           restore-keys: |
             ${{ runner.os }}-sccache-
+          save-always: true
 
       - name: Select Xcode 26.2
         run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
@@ -36,9 +40,13 @@ jobs:
       - name: Manually configure Rust toolchain
         id: rust-cfg
         run: |
-          curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-redist/1.91.0-custom.tar.gz -o 1.91.0-custom.tar.gz
-          mkdir -p ~/.rustup/toolchains
-          tar -xf ./1.91.0-custom.tar.gz -C ~/.rustup/toolchains
+          if [ ! -d "$HOME/.rustup/toolchains/1.91.0-custom" ]; then
+            echo "Cached Rust 1.91.0-custom not found. Starting bootstrap..."
+            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-redist/1.91.0-custom.tar.gz -o 1.91.0-custom.tar.gz
+            mkdir -p ~/.rustup/toolchains
+            tar -xf ./1.91.0-custom.tar.gz -C ~/.rustup/toolchains
+            echo "Bootstrap Rust 1.91.0-custom finished."
+          fi
         
           # Change default Rust toolchain
           rustup default 1.91.0-custom
@@ -47,6 +55,30 @@ jobs:
           # Verify Rust installation
           cargo --version
           rustc --version
+
+      - name: Bootstrapping
+        id: bootstrap
+        run: |
+          if [ ! -d "$HOME/.mozbuild" ]; then
+            echo "Cached .mozbuild toolchain not found. Starting bootstrap..."
+            /usr/bin/python3 ./mach bootstrap --no-interactive
+        
+            # Tạo thư mục tạm để lưu các toolchain quan trọng
+            mkdir -p ~/tmp_toolchains
+            
+            # Di chuyển các thư mục cần thiết ra ngoài (dùng -f để tránh hỏi)
+            [ -d "$HOME/.mozbuild/nodejs" ] && mv "$HOME/.mozbuild/nodejs" ~/tmp_toolchains/
+            [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
+            [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
+        
+            # Xóa sạch toàn bộ thư mục .mozbuild cũ (vốn chứa nhiều rác)
+            rm -rf "$HOME/.mozbuild"
+        
+            # Đổi tên thư mục tạm thành .mozbuild
+            mv ~/tmp_toolchains "$HOME/.mozbuild"
+            
+            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen."
+          fi
 
       - name: Configure build options
         id: configure
