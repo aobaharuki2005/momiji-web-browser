@@ -62,7 +62,7 @@ jobs:
         run: |
           if [ ! -d "$HOME/.mozbuild" ]; then
             echo "Cached .mozbuild toolchain not found. Starting bootstrap..."
-            /usr/bin/python3 ./mach bootstrap --enable-application=browser
+            /usr/bin/python3 ./mach bootstrap --application-choice=browser
         
             # Tạo thư mục tạm để lưu các toolchain quan trọng
             mkdir -p ~/tmp_toolchains
