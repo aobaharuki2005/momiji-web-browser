@@ -9,9 +9,12 @@ ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-apple-darwin11.0.0
 export MACOSX_DEPLOYMENT_TARGET=10.7
 
+# ======= BOOTSTRAPPING ==============
+ac_add_options --enable-bootstrap=-nodejs,-sccache
+
 # ============= SCCACHE ==============
-# ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
-# export SCCACHE_IDLE_TIMEOUT=0
+ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
+export SCCACHE_IDLE_TIMEOUT=0
 
 # ============ SDK ===================
 # Use SDK 26.2 (same as which used to build custom Rust) to avoid unexpected conflicts
