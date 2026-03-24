@@ -3,7 +3,7 @@ name: build Momiji testing distribution
 on:
   push:
     branches:
-      - '140.1.X*'
+      - '140.2.0esr-xcodeclang'
   workflow_dispatch:
 
 jobs:
@@ -18,13 +18,16 @@ jobs:
           fetch-depth: 1
 
       # Khôi phục cache của sccache từ các lần build trước
-      - name: Restore sccache cache
-        uses: actions/cache@v5.0.4
-        with:
-          path: ~/Library/Caches/Mozilla.sccache
-          key: ${{ runner.os }}-sccache-${{ github.sha }}  # == *macos-15-intel*-sccache-*session-sha*
-          restore-keys: |
-            ${{ runner.os }}-sccache-
+      # - name: Restore sccache cache
+      #   uses: actions/cache@v5.0.4
+      #   with:
+      #     path: ~/Library/Caches/Mozilla.sccache
+      #     key: ${{ runner.os }}-sccache-${{ github.sha }}  # == *macos-15-intel*-sccache-*session-sha*
+      #     restore-keys: |
+      #       ${{ runner.os }}-sccache-
+
+      - name: Select Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
 
       - name: Bootstrapping build deps
         id: bootstrap
@@ -49,20 +52,20 @@ jobs:
           cargo --version
           rustc --version
 
-      - name: Configure build options
-        id: configure
-        run: | 
-          # Khởi động sccache trước khi build
-          $HOME/.mozbuild/sccache/sccache --start-server
-          /usr/bin/python3 ./mach configure
+      # - name: Configure build options
+      #   id: configure
+      #   run: | 
+      #     # Khởi động sccache trước khi build
+      #     $HOME/.mozbuild/sccache/sccache --start-server
+      #     /usr/bin/python3 ./mach configure
 
       - name: Build
         id: build
         run: /usr/bin/python3 ./mach build
 
-      - name: Show sccache stats
-        id: show-sccache-stats
-        run: $HOME/.mozbuild/sccache/sccache --show-stats
+      # - name: Show sccache stats
+      #   id: show-sccache-stats
+      #   run: $HOME/.mozbuild/sccache/sccache --show-stats
 
       - name: Package
         id: pkg
