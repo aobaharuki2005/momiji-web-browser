@@ -16,6 +16,7 @@ jobs:
         uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
+          submodules: recursive
 
       # Khôi phục cache của sccache từ các lần build trước
       - name: Restore sccache cache mozbuild toolchains
@@ -25,7 +26,7 @@ jobs:
             ~/Library/Caches/Mozilla.sccache 
             ~/.mozbuild
             ~/.rustup/toolchains/1.91.0-custom
-          key: ${{ runner.os }}-sccache-${{ hashFiles('**/mozconfig*') }}  # *macos-15-intel*-sccache-*mozconfig-sha* => less cache loss
+          key: ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}  # *macos-15-intel*-sccache-*mozconfig-sha* => less cache loss
           restore-keys: |
             ${{ runner.os }}-sccache-
           save-always: true
