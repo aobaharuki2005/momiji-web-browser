@@ -45,7 +45,7 @@ jobs:
             mkdir -p ~/tmp_toolchains
             
             # Di chuyển các thư mục cần thiết ra ngoài (dùng -f để tránh hỏi)
-            [ -d "$HOME/.mozbuild/nodejs" ] && mv "$HOME/.mozbuild/nodejs" ~/tmp_toolchains/
+            [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
         
