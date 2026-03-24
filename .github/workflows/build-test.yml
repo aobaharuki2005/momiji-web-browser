@@ -99,8 +99,14 @@ jobs:
 
       - name: Saving cache (even if pipeline fails)
         id: save-cache
-        if: always() && steps.restore-cache.cache-hit != 'true'
+        if: always() && steps.restore-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
+        with:
+          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
+          path: |
+            ~/Library/Caches/Mozilla.sccache 
+            ~/.mozbuild
+            ~/.rustup/toolchains/1.91.0-custom
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7.0.0
