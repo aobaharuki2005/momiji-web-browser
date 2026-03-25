@@ -1,4 +1,4 @@
-name: build Momiji testing distribution (Momiji rolling, Firefox stable)
+name: build Momiji testing distribution (Momiji rolling, Firefox stable - arm64 cross compiling)
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     name: build Momiji
-    runs-on: macos-15-intel
+    runs-on: macos-15
     steps:     
       - name: Checkout source code
         id: checkout
@@ -26,7 +26,7 @@ jobs:
           path: | 
             ~/Library/Caches/Mozilla.sccache 
             ~/.mozbuild
-            ~/.rustup/toolchains/1.91.0-custom
+            ~/.rustup/toolchains/1.91.0-custom-cross
           key: ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}  # *macos-15-intel*-sccache-*mozconfig-sha* => less cache loss
           restore-keys: |
             ${{ runner.os }}-sccache-
@@ -67,17 +67,17 @@ jobs:
       - name: Manually configure Rust toolchain
         id: rust-cfg
         run: |
-          if [ ! -d "$HOME/.rustup/toolchains/1.91.0-custom" ]; then
-            echo "Cached Rust 1.91.0-custom not found. Starting bootstrap..."
-            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-redist/1.91.0-custom.tar.gz -o 1.91.0-custom.tar.gz
+          if [ ! -d "$HOME/.rustup/toolchains/1.91.0-custom-cross" ]; then
+            echo "Cached Rust 1.91.0-custom-cross not found. Starting bootstrap..."
+            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-cross-redist/1.91.0-custom-cross.tar.gz -o 1.91.0-custom-cross.tar.gz
             mkdir -p ~/.rustup/toolchains
-            tar -xf ./1.91.0-custom.tar.gz -C ~/.rustup/toolchains
-            echo "Bootstrap Rust 1.91.0-custom finished."
+            tar -xf ./1.91.0-custom-cross.tar.gz -C ~/.rustup/toolchains
+            echo "Bootstrap Rust 1.91.0-custom-cross finished."
           fi
         
           # Change default Rust toolchain
-          rustup default 1.91.0-custom
-          rustup override set 1.91.0-custom
+          rustup default 1.91.0-custom-cross
+          rustup override set 1.91.0-custom-cross
 
           # Verify Rust installation
           cargo --version
@@ -111,7 +111,7 @@ jobs:
           path: |
             ~/Library/Caches/Mozilla.sccache 
             ~/.mozbuild
-            ~/.rustup/toolchains/1.91.0-custom
+            ~/.rustup/toolchains/1.91.0-custom-cross
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7.0.0

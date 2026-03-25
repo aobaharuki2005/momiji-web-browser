@@ -34,7 +34,7 @@ export NODEJS="$HOME/.mozbuild/node/bin/node"
 ac_add_options --with-branding=browser/branding/momiji
 
 # ========== RUST ==========
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.91.0-custom/bin"
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.91.0-custom-cross/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
