@@ -13,9 +13,9 @@ export MACOSX_DEPLOYMENT_TARGET=10.7
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
 export SCCACHE_IDLE_TIMEOUT=0
 
-# ============= NASM & DUMPSYMS =============
-export NASM="$HOME/.mozbuild/nasm/nasm"
-export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
+# # ============= NASM & DUMPSYMS ============= (unavaiable in arm64 bootstrap)
+# export NASM="$HOME/.mozbuild/nasm/nasm"
+# export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
 
 # ============ SDK ===================
 # Use SDK 26.2 (same as which used to build custom Rust) to avoid unexpected conflicts

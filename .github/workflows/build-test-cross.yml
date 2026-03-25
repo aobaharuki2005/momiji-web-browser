@@ -48,8 +48,6 @@ jobs:
             [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/nasm" ] && mv "$HOME/.mozbuild/nasm" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/dump_syms" ] && mv "$HOME/.mozbuild/dump_syms" ~/tmp_toolchains/
             
             # Xóa sạch toàn bộ thư mục .mozbuild cũ (vốn chứa nhiều rác)
             rm -rf "$HOME/.mozbuild"
@@ -57,8 +55,9 @@ jobs:
             # Đổi tên thư mục tạm thành .mozbuild
             mv ~/tmp_toolchains "$HOME/.mozbuild"
             
-            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms."
+            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen."
           fi
+          brew install nasm
 
       - name: Create mozconfig build config from template
         id: buildcfg-link
