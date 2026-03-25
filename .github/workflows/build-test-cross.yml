@@ -69,7 +69,7 @@ jobs:
         run: |
           if [ ! -d "$HOME/.rustup/toolchains/1.91.0-custom-cross" ]; then
             echo "Cached Rust 1.91.0-custom-cross not found. Starting bootstrap..."
-            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-cross-redist/1.91.0-custom-cross.tar.gz -o 1.91.0-custom-cross.tar.gz
+            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-arm64cross/1.91.0-custom-cross.tar.gz -o 1.91.0-custom-cross.tar.gz
             mkdir -p ~/.rustup/toolchains
             tar -xf ./1.91.0-custom-cross.tar.gz -C ~/.rustup/toolchains
             echo "Bootstrap Rust 1.91.0-custom-cross finished."
