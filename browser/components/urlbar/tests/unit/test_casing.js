@@ -11,6 +11,7 @@ add_task(async function test_casing_1() {
   info("Searching for cased entry 1");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("MOZ", { isPrivate: false });
   await check_results({
@@ -37,6 +38,7 @@ add_task(async function test_casing_2() {
   info("Searching for cased entry 2");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mozilla.org/T", { isPrivate: false });
   await check_results({
@@ -61,6 +63,7 @@ add_task(async function test_casing_3() {
   info("Searching for cased entry 3");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mozilla.org/T", { isPrivate: false });
   await check_results({
@@ -82,6 +85,7 @@ add_task(async function test_casing_4() {
   info("Searching for cased entry 4");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mOzilla.org/t", { isPrivate: false });
   await check_results({
@@ -106,6 +110,7 @@ add_task(async function test_casing_5() {
   info("Searching for cased entry 5");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("mOzilla.org/T", { isPrivate: false });
   await check_results({
@@ -127,6 +132,7 @@ add_task(async function test_untrimmed_casing() {
   info("Searching for untrimmed cased entry");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("http://mOz", { isPrivate: false });
   await check_results({
@@ -153,6 +159,7 @@ add_task(async function test_untrimmed_www_casing() {
   info("Searching for untrimmed cased entry with www");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://www.mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("http://www.mOz", { isPrivate: false });
   await check_results({
@@ -179,6 +186,7 @@ add_task(async function test_untrimmed_path_casing() {
   info("Searching for untrimmed cased entry with path");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("http://mOzilla.org/t", { isPrivate: false });
   await check_results({
@@ -203,6 +211,7 @@ add_task(async function test_untrimmed_path_casing_2() {
   info("Searching for untrimmed cased entry with path 2");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("http://mOzilla.org/T", { isPrivate: false });
   await check_results({
@@ -224,6 +233,7 @@ add_task(async function test_untrimmed_path_www_casing() {
   info("Searching for untrimmed cased entry with www and path");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://www.mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("http://www.mOzilla.org/t", { isPrivate: false });
   await check_results({
@@ -248,6 +258,7 @@ add_task(async function test_untrimmed_path_www_casing_2() {
   info("Searching for untrimmed cased entry with www and path 2");
   await PlacesTestUtils.addVisits({
     uri: Services.io.newURI("http://www.mozilla.org/Test/"),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   let context = createContext("http://www.mOzilla.org/T", { isPrivate: false });
   await check_results({

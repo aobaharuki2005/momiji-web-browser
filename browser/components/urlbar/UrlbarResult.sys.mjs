@@ -257,6 +257,11 @@ export class UrlbarResult {
     return this.#testForceNewContent;
   }
 
+  // Used only for test.
+  get testHighlights() {
+    return this.#highlights;
+  }
+
   /**
    * Returns an icon url.
    *

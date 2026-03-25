@@ -2521,11 +2521,6 @@ void VerifyCientPrincipalInfosMatch(const mozilla::ipc::PrincipalInfo& aLeft,
 void nsDocShell::MaybeInheritController(
     mozilla::dom::ClientSource* aClientSource, nsIPrincipal* aPrincipal) {
   nsCOMPtr<nsIDocShell> parent = GetInProcessParentDocshell();
-  if (!parent) {
-    if (RefPtr<BrowsingContext> opener = mBrowsingContext->GetOpener()) {
-      parent = opener->GetDocShell();
-    }
-  }
   nsPIDOMWindowOuter* parentOuter = parent ? parent->GetWindow() : nullptr;
   nsPIDOMWindowInner* parentInner =
       parentOuter ? parentOuter->GetCurrentInnerWindow() : nullptr;
@@ -10702,7 +10697,8 @@ bool nsDocShell::ShouldDoInitialAboutBlankSyncLoad(
     return false;
   }
 
-  if (mHasStartedLoadingOtherThanInitialBlankURI ||
+  if (mHasStartedLoadingOtherThanInitialBlankURI || !mDocumentViewer ||
+      !mDocumentViewer->GetDocument() ||
       !mDocumentViewer->GetDocument()->IsUncommittedInitialDocument()) {
     return false;
   }
@@ -11337,11 +11333,33 @@ nsresult nsDocShell::CompleteInitialAboutBlankLoad(
     return NS_ERROR_FAILURE;
   }
 
-  const bool principalMissmatch =
-      aLoadState->PrincipalToInherit() &&
-      !aLoadState->PrincipalToInherit()->Equals(doc->GetPrincipal());
-  MOZ_ASSERT_IF(!aLoadState->PrincipalToInherit(),
-                doc->GetPrincipal()->GetIsNullPrincipal());
+  // Get the load event fired for the initial about:blank without starting
+  // a real load from a channel. We still need a channel object even though
+  // we don't care about reading from the channel.
+  nsCOMPtr<nsIChannel> aboutBlankChannel;
+  rv = NS_NewChannelInternal(getter_AddRefs(aboutBlankChannel),
+                             aLoadState->URI(), aLoadInfo, nullptr, mLoadGroup,
+                             nullptr, nsIChannel::LOAD_DOCUMENT_URI);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!aboutBlankChannel) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPrincipal> expectedPrincipal = aLoadState->PrincipalToInherit();
+  nsCOMPtr<nsIPrincipal> expectedPartitionedPrincipal = expectedPrincipal;
+  // If we don't have a content principal, also use it as partitioned principal
+  if (expectedPrincipal && expectedPrincipal->GetIsContentPrincipal()) {
+    // The partitioned content principal is always isolated.
+    StoragePrincipalHelper::Create(
+        aboutBlankChannel, expectedPrincipal, /* aForceIsolation */ true,
+        getter_AddRefs(expectedPartitionedPrincipal));
+  }
+
+  const bool principalMismatch =
+      expectedPrincipal && !expectedPrincipal->Equals(doc->GetPrincipal());
+  MOZ_ASSERT_IF(!expectedPrincipal, doc->GetPrincipal()->GetIsNullPrincipal());
 
   // The channel would sandbox aLoadState->PrincipalToInherit(). Even if
   // the document already has a null principal, we don't know if it's the right
@@ -11351,22 +11369,16 @@ nsresult nsDocShell::CompleteInitialAboutBlankLoad(
           ? mBrowsingContext->GetSandboxFlags()
           : mBrowsingContext->GetInitialSandboxFlags();
   const bool shouldBeSandboxed = sandboxFlags & SANDBOXED_ORIGIN;
-  MOZ_ASSERT_IF(shouldBeSandboxed, aLoadState->PrincipalToInherit());
+  MOZ_ASSERT_IF(shouldBeSandboxed, expectedPrincipal);
 
   // Clobber document before completing the synchronous load if it doesn't have
   // the right principal (bug 1979032)
-  if (principalMissmatch || shouldBeSandboxed) {
-    nsIPrincipal* principal = aLoadState->PrincipalToInherit();
-    nsIPrincipal* partitionedPrincipal =
-        aLoadState->PartitionedPrincipalToInherit();
-    if (!partitionedPrincipal) {
-      partitionedPrincipal = principal;
-    }
-
+  if (principalMismatch || shouldBeSandboxed) {
     // This will sandbox the principals as needed
     rv = CreateAboutBlankDocumentViewer(
-        principal, partitionedPrincipal, aLoadState->PolicyContainer(),
-        doc->GetDocBaseURI(), /* aIsInitialDocument */ true);
+        expectedPrincipal, expectedPartitionedPrincipal,
+        aLoadState->PolicyContainer(), doc->GetDocBaseURI(),
+        /* aIsInitialDocument */ true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     doc = mDocumentViewer->GetDocument();
@@ -11405,20 +11417,6 @@ nsresult nsDocShell::CompleteInitialAboutBlankLoad(
               ? doc->PartitionedPrincipal()
               : doc->GetPrincipal());
     }
-  }
-
-  // Get the load event fired for the initial about:blank without starting
-  // a real load from a channel. We still need a channel object even though
-  // we don't care about reading from the channel.
-  nsCOMPtr<nsIChannel> aboutBlankChannel;
-  rv = NS_NewChannelInternal(getter_AddRefs(aboutBlankChannel),
-                             aLoadState->URI(), aLoadInfo, nullptr, mLoadGroup,
-                             nullptr, nsIChannel::LOAD_DOCUMENT_URI);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  if (!aboutBlankChannel) {
-    return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(!mIsLoadingDocument);
@@ -11475,6 +11473,8 @@ nsresult nsDocShell::CompleteInitialAboutBlankLoad(
 
   OnStopRequest(aboutBlankChannel, NS_OK);
 
+  // Mechanisms in Document will force a load from EndLoad()
+  // even if there are still blockers.
   doc->EndLoad();
   // Can't assert any postcondition, because the load event
   // handler may have started loading something new in this

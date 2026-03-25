@@ -106,6 +106,7 @@ const UI_TARGET_COMMAND_ELEMENTS = new Set([
 ]);
 const UI_TARGET_ELEMENTS = new Map([
   ["change", UI_TARGET_CHANGE_ELEMENTS],
+  ["toggle", UI_TARGET_CHANGE_ELEMENTS],
   ["click", UI_TARGET_COMMAND_ELEMENTS],
   ["command", UI_TARGET_COMMAND_ELEMENTS],
 ]);
@@ -153,7 +154,7 @@ const PREFERENCES_PANES = [
   "paneContainers",
   "paneExperimental",
   "paneMoreFromMozilla",
-  "paneAiFeatures",
+  "paneAi",
 ];
 
 const IGNORABLE_EVENTS = new WeakMap();

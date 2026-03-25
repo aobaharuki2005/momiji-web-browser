@@ -221,7 +221,7 @@ internal fun InlineAutocompleteTextField(
                     showKeyboardOnFocus = true,
                     keyboardType = KeyboardType.Uri,
                     imeAction = ImeAction.Go,
-                    autoCorrectEnabled = !usePrivateModeQueries,
+                    autoCorrectEnabled = false,
                 ),
                 onKeyboardAction = {
                     keyboardController?.hide()

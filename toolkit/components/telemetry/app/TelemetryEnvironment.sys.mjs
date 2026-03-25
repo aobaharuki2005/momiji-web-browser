@@ -1442,6 +1442,7 @@ EnvironmentCache.prototype = {
       ua: attributionData.ua,
       dltoken: attributionData.dltoken,
       msstoresignedin: attributionData.msstoresignedin,
+      msclkid: attributionData.msclkid,
       dlsource: attributionData.dlsource,
     };
     Services.fog.updateAttribution(

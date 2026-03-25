@@ -35,7 +35,6 @@ export let gHasSts = gIsCertError && getCSSClass() === "badStsCert";
 export let gNoConnectivity =
   gErrorCode == "dnsNotFound" && !RPMHasConnectivity();
 export let gOffline = gErrorCode === "netOffline" || gNoConnectivity;
-const HOST_NAME = getHostName();
 
 export function isCaptive() {
   return searchParams.get("captive") == "true";
@@ -124,9 +123,15 @@ export async function recordSecurityUITelemetry(category, name, errorInfo) {
   if (category == "securityUiCerterror" && name.startsWith("load")) {
     extraKeys.issued_by_cca = false;
     extraKeys.hyphen_compat = false;
+
+    // We can't use HOST_NAME as that is display-formatted and can
+    // include a port. We need the ascii host as that is what the cert's
+    // SAN value would also contain.
+    const asciiHostname = RPMGetInnermostAsciiHost();
+
     // This issue only applies to certificate domain name mismatch errors where
     // the first label in the domain name starts or ends with a hyphen.
-    let label = HOST_NAME.substring(0, HOST_NAME.indexOf("."));
+    let label = asciiHostname.substring(0, asciiHostname.indexOf("."));
     if (
       errorCode == "SSL_ERROR_BAD_CERT_DOMAIN" &&
       (label.startsWith("-") || label.endsWith("-"))
@@ -140,7 +145,7 @@ export async function recordSecurityUITelemetry(category, name, errorInfo) {
           // domain names when matching wildcard entries.
           if (
             subjectAltName.startsWith("*.") &&
-            subjectAltName.substring(1) == HOST_NAME.substring(label.length)
+            subjectAltName.substring(1) == asciiHostname.substring(label.length)
           ) {
             extraKeys.hyphen_compat = true;
             break;

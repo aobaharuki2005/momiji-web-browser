@@ -21,8 +21,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/ipprotection/IPPSignInWatcher.sys.mjs",
   IPPStartupCache:
     "moz-src:///browser/components/ipprotection/IPPStartupCache.sys.mjs",
-  IPPVPNAddonHelper:
-    "moz-src:///browser/components/ipprotection/IPPVPNAddonHelper.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
@@ -173,14 +171,6 @@ class IPProtectionServiceSingleton extends EventTarget {
     // Maybe we have to use the cached state, because we are not initialized yet.
     if (!lazy.IPPStartupCache.isStartupCompleted) {
       return lazy.IPPStartupCache.state;
-    }
-
-    // If the VPN add-on is installed...
-    if (
-      lazy.IPPVPNAddonHelper.vpnAddonDetected &&
-      lazy.IPPEnrollAndEntitleManager.hasUpgraded
-    ) {
-      return IPProtectionStates.UNAVAILABLE;
     }
 
     // For non authenticated users, we can check if they are eligible (the UI

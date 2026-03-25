@@ -61,6 +61,20 @@ class AboutTranslations {
   #translationId = 0;
 
   /**
+   * Whether the Translations feature is enabled for this page.
+   *
+   * @type {boolean}
+   */
+  #isFeatureEnabled = true;
+
+  /**
+   * Whether the current system supports the translations engine.
+   *
+   * @type {boolean}
+   */
+  #isTranslationsEngineSupported;
+
+  /**
    * The previous source text that was translated.
    *
    * This is used to calculate the difference of lengths in the texts,
@@ -166,6 +180,8 @@ class AboutTranslations {
    *        Whether the translations engine is supported by the current system.
    */
   constructor(isTranslationsEngineSupported) {
+    this.#isTranslationsEngineSupported = isTranslationsEngineSupported;
+
     AT_telemetry("onOpen", {
       maintainFlow: false,
     });
@@ -194,6 +210,47 @@ class AboutTranslations {
    */
   async ready() {
     await this.#readyPromiseWithResolvers.promise;
+  }
+
+  /**
+   * Enables the feature and updates the UI to match the enabled state.
+   *
+   * @returns {Promise<void>}
+   */
+  async onFeatureEnabled() {
+    this.#isFeatureEnabled = true;
+
+    if (!this.#isTranslationsEngineSupported) {
+      this.#showUnsupportedInfoMessage();
+      document.body.style.visibility = "visible";
+      return;
+    }
+
+    if (!this.#supportedLanguages) {
+      this.#showLanguageLoadErrorMessage();
+      document.body.style.visibility = "visible";
+      return;
+    }
+
+    this.#updateSourceScriptDirection();
+    this.#updateTargetScriptDirection();
+    this.#updateSourceSectionClearButtonVisibility();
+    this.#requestSectionHeightsUpdate({ scheduleCallback: false });
+    this.#maybeRequestTranslation();
+
+    document.body.style.visibility = "visible";
+  }
+
+  /**
+   * Disables the feature and clears any active translations.
+   */
+  onFeatureDisabled() {
+    // Ensure any active translation request becomes stale.
+    this.#translationId += 1;
+    this.#isFeatureEnabled = false;
+    this.#destroyTranslator();
+
+    document.body.style.visibility = "hidden";
   }
 
   /**
@@ -1393,8 +1450,13 @@ class AboutTranslations {
      * in a new translation request.
      */
     onDebounce: async () => {
+      if (!this.#isFeatureEnabled) {
+        return;
+      }
+
       try {
         this.#updateURLFromUI();
+
         this.#requestSectionHeightsUpdate({ scheduleCallback: false });
 
         await this.#maybeUpdateDetectedSourceLanguage();
@@ -1473,6 +1535,10 @@ class AboutTranslations {
     // Mark the events so that they show up in the Firefox Profiler. This makes it handy
     // to visualize the debouncing behavior.
     doEveryTime: () => {
+      if (!this.#isFeatureEnabled) {
+        return;
+      }
+
       const sourceText = this.#getSourceText();
       performance.mark(
         `Translations: input changed to ${sourceText.length} code units.`
@@ -1789,37 +1855,94 @@ class AboutTranslations {
 }
 
 /**
+ * A promise used to ensure the about:translations page initializes once.
+ *
+ * @type {Promise<void> | null}
+ */
+let aboutTranslationsInitPromise = null;
+
+/**
+ * Initializes the about:translations page if it has not been initialized yet.
+ *
+ * @returns {Promise<void>}
+ */
+async function ensureAboutTranslationsInitialized() {
+  if (aboutTranslationsInitPromise) {
+    return aboutTranslationsInitPromise;
+  }
+
+  aboutTranslationsInitPromise = AT_isTranslationEngineSupported()
+    .then(async isTranslationsEngineSupported => {
+      window.aboutTranslations = new AboutTranslations(
+        isTranslationsEngineSupported
+      );
+      await window.aboutTranslations.ready();
+    })
+    .catch(error => {
+      AT_logError(error);
+    });
+
+  return aboutTranslationsInitPromise;
+}
+
+/**
+ * Marks that the document is ready for automated testing to being making assertions.
+ *
+ * @returns {void}
+ */
+function markReadyForTesting() {
+  document.body.setAttribute("ready-for-testing", "");
+}
+
+/**
+ * Whether the initial enabled state has been applied.
+ *
+ * @type {boolean}
+ */
+let initialEnabledStateApplied = false;
+
+/**
+ * Applies the enabled state to the about:translations UI.
+ *
+ * @param {boolean} enabled
+ * @returns {Promise<void>}
+ */
+async function setFeatureEnabledState(enabled) {
+  await ensureAboutTranslationsInitialized();
+
+  if (!window.aboutTranslations) {
+    return;
+  }
+
+  if (enabled) {
+    await window.aboutTranslations.onFeatureEnabled();
+  } else {
+    window.aboutTranslations.onFeatureDisabled();
+  }
+
+  if (initialEnabledStateApplied) {
+    document.dispatchEvent(
+      new CustomEvent("AboutTranslationsTest:EnabledStateChanged", {
+        detail: { enabled },
+      })
+    );
+  }
+
+  initialEnabledStateApplied = true;
+  markReadyForTesting();
+}
+
+/**
  * Listen for events coming from the AboutTranslations actor.
  */
 window.addEventListener("AboutTranslationsChromeToContent", ({ detail }) => {
   switch (detail.type) {
-    case "enable": {
-      if (window.aboutTranslations) {
-        throw new Error(
-          "Attempt to initialize about:translations page more than once."
-        );
-      }
-
-      AT_isTranslationEngineSupported()
-        .then(async isTranslationsEngineSupported => {
-          window.aboutTranslations = new AboutTranslations(
-            isTranslationsEngineSupported
-          );
-          await window.aboutTranslations.ready();
-        })
-        .catch(error => {
-          AT_logError(error);
-        })
-        .finally(() => {
-          // This lets test cases know that they can start making assertions.
-          document.body.setAttribute("ready-for-testing", "");
-          document.body.style.visibility = "visible";
-        });
-
+    case "enabled-state-changed": {
+      void setFeatureEnabledState(detail.enabled);
       break;
     }
     case "rebuild-translator": {
-      window.aboutTranslations.rebuildTranslator();
+      window.aboutTranslations?.rebuildTranslator();
       break;
     }
     default: {

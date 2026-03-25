@@ -446,6 +446,9 @@ class PlacesSemanticHistoryManager {
         try {
           lazy.logger.info("Running vector DB update task...");
           let conn = await this.getConnection();
+          if (!conn) {
+            return;
+          }
           let pagesRankChangedCount =
             PlacesObservers.counts.get("pages-rank-changed") +
             PlacesObservers.counts.get("history-cleared") +
@@ -675,7 +678,7 @@ class PlacesSemanticHistoryManager {
         );
         batchTensors = this.#convertTensor(batchTensors, rowsToAdd.length);
       } catch (ex) {
-        lazy.logger.error(`Error processing tensors: ${ex}`);
+        lazy.logger.error(`Error processing tensors`, ex);
         // If we failed generating tensors skip the addition, but proceed
         // with removals below.
         rowsToAdd.length = 0;

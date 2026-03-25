@@ -170,10 +170,10 @@ export class FormAutofillPreferences {
       visible: () => lazy.OSKeyStore.canReauth(),
       get: () => FormAutofillUtils.getOSAuthEnabled(),
       async set(checked) {
-        await FormAutofillPreferences.prototype.trySetOSAuthEnabled(
-          win,
-          checked
-        );
+        await FormAutofillPreferences.trySetOSAuthEnabled(win, checked);
+
+        // Trigger change event to keep checkbox UI in sync with pref value
+        Services.obs.notifyObservers(null, "OSAuthEnabledChange");
       },
       setup: emitChange => {
         Services.obs.addObserver(emitChange, "OSAuthEnabledChange");
@@ -206,7 +206,16 @@ export class FormAutofillPreferences {
     await lazy.formAutofillStorage.initialize();
   }
 
-  async trySetOSAuthEnabled(win, checked) {
+  /**
+   * Helper that sets OS Auth from the about:preferences, if authorized.
+   *
+   * @param  {object} win
+   *          The browser window.
+   * @param  {boolean} checked
+   *          The new state to set OS auth for payments, which determines if its
+   *          enabled or not. If not authorized, set to the current checked state.
+   */
+  static async trySetOSAuthEnabled(win, checked) {
     let messageText = await lazy.l10n.formatValueSync(
       "autofill-creditcard-os-dialog-message"
     );
@@ -229,7 +238,6 @@ export class FormAutofillPreferences {
     });
 
     if (!isAuthorized) {
-      FormAutofillUtils.setOSAuthEnabled(!checked);
       return;
     }
 

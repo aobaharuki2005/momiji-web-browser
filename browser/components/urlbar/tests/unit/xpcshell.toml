@@ -63,6 +63,8 @@ prefs = [
   "browser.urlbar.suggest.quickactions=false",
 ]
 
+["test_autofill_origins_typed_frecency.js"]
+
 ["test_autofill_prefix_fallback.js"]
 
 ["test_autofill_search_engine_aliases.js"]
@@ -180,6 +182,10 @@ skip-if = [
 ]
 
 ["test_resultGroups.js"]
+
+["test_result_highlights.js"]
+
+["test_result_title.js"]
 
 ["test_richsuggestions.js"]
 

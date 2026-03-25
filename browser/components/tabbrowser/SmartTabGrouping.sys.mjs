@@ -3,7 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-import { createEngine } from "chrome://global/content/ml/EngineProcess.sys.mjs";
+import {
+  createEngine,
+  FEATURES,
+} from "chrome://global/content/ml/EngineProcess.sys.mjs";
 import {
   cosSim,
   KeywordExtractor,
@@ -18,6 +21,8 @@ import {
   silhouetteCoefficients,
 } from "chrome://global/content/ml/ClusterAlgos.sys.mjs";
 
+import { AIFeature } from "chrome://global/content/ml/AIFeature.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -25,6 +30,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   MLEngineParent: "resource://gre/actors/MLEngineParent.sys.mjs",
   MultiProgressAggregator: "chrome://global/content/ml/Utils.sys.mjs",
   Progress: "chrome://global/content/ml/Utils.sys.mjs",
+  MLUninstallService: "chrome://global/content/ml/Utils.sys.mjs",
 });
 
 const LATEST_MODEL_REVISION = "latest";
@@ -96,6 +102,10 @@ const LABELS_TO_EXCLUDE = [DISSIMILAR_TAB_LABEL, ADULT_TAB_LABEL];
 const ML_TASK_FEATURE_EXTRACTION = "feature-extraction";
 const ML_TASK_TEXT2TEXT = "text2text-generation";
 
+const STG_FEATURE_ID = "smart-tab-grouping";
+const STG_EMBEDDING_FEATURE_ID = "smart-tab-embedding";
+const STG_TOPIC_FEATURE_ID = "smart-tab-topic";
+
 const LABEL_REASONS = {
   DEFAULT: "DEFAULT",
   LOW_CONFIDENCE: "LOW_CONFIDENCE",
@@ -108,7 +118,8 @@ export const SMART_TAB_GROUPING_CONFIG = {
     dtype: "q8",
     timeoutMS: 2 * 60 * 1000, // 2 minutes
     taskName: ML_TASK_FEATURE_EXTRACTION,
-    featureId: "smart-tab-embedding",
+    featureId: STG_EMBEDDING_FEATURE_ID,
+    engineId: FEATURES[STG_EMBEDDING_FEATURE_ID].engineId,
     backend: "onnx-native",
     fallbackBackend: "onnx",
   },
@@ -116,7 +127,8 @@ export const SMART_TAB_GROUPING_CONFIG = {
     dtype: "q8",
     timeoutMS: 2 * 60 * 1000, // 2 minutes
     taskName: ML_TASK_TEXT2TEXT,
-    featureId: "smart-tab-topic",
+    featureId: STG_TOPIC_FEATURE_ID,
+    engineId: FEATURES[STG_TOPIC_FEATURE_ID].engineId,
     backend: "onnx-native",
     fallbackBackend: "onnx",
   },
@@ -224,14 +236,130 @@ export function isSearchTab(tab) {
   return false;
 }
 
-export class SmartTabGroupingManager {
+export class SmartTabGroupingManager extends AIFeature {
   /**
    * Creates the SmartTabGroupingManager object.
    *
    * @param {object} config configuration options
    */
   constructor(config) {
+    super();
     this.config = config || structuredClone(SMART_TAB_GROUPING_CONFIG);
+  }
+
+  /**
+   * Returns id associated with Smart tab grouping
+   *
+   * @return {string}
+   */
+  static get id() {
+    return STG_FEATURE_ID;
+  }
+
+  /**
+   * Re-enables prefs for stg
+   */
+  static async enable() {
+    Services.prefs.setBoolPref("browser.tabs.groups.smart.enabled", true);
+    Services.prefs.setBoolPref("browser.tabs.groups.smart.userEnabled", true);
+    Services.prefs.setBoolPref("browser.tabs.groups.smart.optin", true);
+  }
+
+  /**
+   * Disables user prefs for smart tab grouping and deletes local models
+   *
+   * @return {Promise<void>}
+   */
+  static async disable() {
+    // disable prefs associated with stg
+    // opt-in flow is kept as in unless we decide to disable and re-enable later
+    // which would make the user have to go through the flow twice
+    Services.prefs.setBoolPref("browser.tabs.groups.smart.enabled", false);
+    Services.prefs.setBoolPref("browser.tabs.groups.smart.userEnabled", false);
+    Services.prefs.setBoolPref("browser.tabs.groups.smart.optin", false);
+
+    // delete models associated with stg
+    await SmartTabGroupingManager.deleteSmartTabModels();
+  }
+
+  /**
+   * Checks if STG feature is enabled based on various prefs
+   * that it depends on
+   *
+   * @return {boolean}
+   */
+  static get isEnabled() {
+    // note that both `browser.tabs.groups.smart.enabled` and
+    // `browser.tabs.smart.userEnabled` disable the UI but not
+    // `browser.tabs.groups.smart.optin`
+    return (
+      Services.prefs.getBoolPref("browser.ml.enable") &&
+      Services.prefs.getBoolPref("browser.tabs.groups.smart.enabled") &&
+      Services.prefs.getBoolPref("browser.tabs.groups.smart.userEnabled") &&
+      Services.prefs.getBoolPref("browser.tabs.groups.smart.optin")
+    );
+  }
+
+  /**
+   * Checks for other conditions for smart tab grouping to be turned on,
+   * e.g. locale.
+   *
+   * @return {boolean}
+   */
+  static get isAllowed() {
+    return Services.locale.appLocaleAsBCP47.startsWith("en");
+  }
+
+  /**
+   * Resets smart tab grouping to its default state where UI is visible
+   * and user opt-in is required
+   */
+  static async reset() {
+    Services.prefs.clearUserPref("browser.tabs.groups.smart.enabled");
+    Services.prefs.clearUserPref("browser.tabs.groups.smart.userEnabled");
+    Services.prefs.clearUserPref("browser.tabs.groups.smart.optin");
+
+    // remove local models
+    await SmartTabGroupingManager.deleteSmartTabModels();
+  }
+
+  /**
+   * Checks if UI is hidden
+   *
+   * @return {boolean}
+   */
+  static get isBlocked() {
+    return (
+      !Services.prefs.getBoolPref("browser.tabs.groups.smart.enabled") ||
+      !Services.prefs.getBoolPref("browser.tabs.groups.smart.userEnabled")
+    );
+  }
+
+  /**
+   * Checks if the feature is managed by enterprise policy.
+   *
+   * @return {boolean}
+   */
+  static get isManagedByPolicy() {
+    return Services.prefs.prefIsLocked("browser.tabs.groups.smart.userEnabled");
+  }
+
+  /**
+   * Deletes model artifacts associated with Smart Tab Grouping
+   *
+   * @return {Promise<void>}
+   */
+  static async deleteSmartTabModels() {
+    const engineIds = [
+      FEATURES[STG_TOPIC_FEATURE_ID].engineId,
+      FEATURES[STG_EMBEDDING_FEATURE_ID].engineId,
+    ];
+    // Remove all ML Engine files associated with this feature.
+    await lazy.MLUninstallService.uninstall({
+      engineIds,
+      // Used only for attribution/telemetry; the specific value is not significant.
+      actor: "SmartTabGrouping",
+    });
   }
 
   /**
@@ -920,6 +1048,7 @@ export class SmartTabGroupingManager {
       modelRevision,
       backend,
     };
+
     initData = SmartTabGroupingManager.getUpdatedInitData(initData, featureId);
     let engine;
     try {

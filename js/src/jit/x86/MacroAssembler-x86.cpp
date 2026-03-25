@@ -1993,20 +1993,24 @@ void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Register64 boundsCheckLimit,
                                        Label* label) {
-  Label ifFalse;
+  MOZ_ASSERT(cond == Assembler::AboveOrEqual || cond == Assembler::Below);
+  Label rejoin;
+  Label* failLabel = cond == Assembler::AboveOrEqual ? label : &rejoin;
   cmp32(index.high, Imm32(0));
-  j(Assembler::NonZero, &ifFalse);
+  j(Assembler::NonZero, failLabel);
   wasmBoundsCheck32(cond, index.low, boundsCheckLimit.low, label);
-  bind(&ifFalse);
+  bind(&rejoin);
 }
 
 void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
                                        Address boundsCheckLimit, Label* label) {
-  Label ifFalse;
+  MOZ_ASSERT(cond == Assembler::AboveOrEqual || cond == Assembler::Below);
+  Label rejoin;
+  Label* failLabel = cond == Assembler::AboveOrEqual ? label : &rejoin;
   cmp32(index.high, Imm32(0));
-  j(Assembler::NonZero, &ifFalse);
+  j(Assembler::NonZero, failLabel);
   wasmBoundsCheck32(cond, index.low, boundsCheckLimit, label);
-  bind(&ifFalse);
+  bind(&rejoin);
 }
 
 void MacroAssembler::wasmMarkCallAsSlow() {

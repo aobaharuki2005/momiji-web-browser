@@ -27,18 +27,22 @@ add_task(async function () {
   await PlacesTestUtils.addVisits({
     uri: `http://${host}`,
     visitDate: daysAgo(90),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
 
   await PlacesTestUtils.addVisits({
     uri: `https://${host}`,
     visitDate: daysAgo(30),
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
 
   await PlacesTestUtils.addVisits({
     uri: `https://fakedomain1.com/`,
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   await PlacesTestUtils.addVisits({
     uri: `https://fakedomain2.com/`,
+    transition: PlacesUtils.history.TRANSITION_TYPED,
   });
   await PlacesTestUtils.addVisits({
     url: `https://not-${host}/`,

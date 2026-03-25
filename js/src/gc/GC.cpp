@@ -3887,6 +3887,7 @@ GCRuntime::IncrementalResult GCRuntime::resetIncrementalGC(
 }
 
 void GCRuntime::setGrayBitsInvalid() {
+  waitBackgroundSweepEnd();
   grayBitsValid = false;
   atomMarking.unmarkAllGrayReferences(this);
 }

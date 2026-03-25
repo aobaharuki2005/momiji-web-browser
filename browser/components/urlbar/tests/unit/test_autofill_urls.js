@@ -253,48 +253,6 @@ add_task(async function uriCase() {
 
   const testData = [
     {
-      input: "example.COM",
-      expected: {
-        autofilled: "example.COM/",
-        completed: "http://example.com/",
-        results: [
-          context =>
-            makeVisitResult(context, {
-              uri: "http://example.com/",
-              title: UrlbarTestUtils.trimURL("http://example.com/"),
-              heuristic: true,
-            }),
-          context =>
-            makeVisitResult(context, {
-              uri: "http://example.com/ABC/DEF",
-              title: "test visit for http://example.com/ABC/DEF",
-            }),
-        ],
-      },
-    },
-    {
-      input: "example.COM/",
-      expected: {
-        autofilled: "example.COM/",
-        completed: "http://example.com/",
-        results: [
-          context =>
-            makeVisitResult(context, {
-              uri: "http://example.com/",
-              title: UrlbarTestUtils.trimURL("http://example.com/", {
-                removeSingleTrailingSlash: false,
-              }),
-              heuristic: true,
-            }),
-          context =>
-            makeVisitResult(context, {
-              uri: "http://example.com/ABC/DEF",
-              title: "test visit for http://example.com/ABC/DEF",
-            }),
-        ],
-      },
-    },
-    {
       input: "example.COM/a",
       expected: {
         autofilled: "example.COM/aBC/",
@@ -524,6 +482,74 @@ add_task(async function uriCase() {
             makeVisitResult(context, {
               uri: "http://example.com/abc/def",
               title: UrlbarTestUtils.trimURL("http://example.com/abc/def"),
+              heuristic: true,
+            }),
+          context =>
+            makeVisitResult(context, {
+              uri: "http://example.com/ABC/DEF",
+              title: "test visit for http://example.com/ABC/DEF",
+            }),
+        ],
+      },
+    },
+  ];
+
+  for (const { input, expected } of testData) {
+    const context = createContext(input, {
+      isPrivate: false,
+    });
+    await check_results({
+      context,
+      autofilled: expected.autofilled,
+      completed: expected.completed,
+      matches: expected.results.map(f => f(context)),
+    });
+  }
+
+  await cleanupPlaces();
+});
+
+add_task(async function uriCaseTyped() {
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com/ABC/DEF",
+      transition: PlacesUtils.history.TRANSITION_TYPED,
+    },
+  ]);
+
+  const testData = [
+    {
+      input: "example.COM",
+      expected: {
+        autofilled: "example.COM/",
+        completed: "http://example.com/",
+        results: [
+          context =>
+            makeVisitResult(context, {
+              uri: "http://example.com/",
+              title: UrlbarTestUtils.trimURL("http://example.com/"),
+              heuristic: true,
+            }),
+          context =>
+            makeVisitResult(context, {
+              uri: "http://example.com/ABC/DEF",
+              title: "test visit for http://example.com/ABC/DEF",
+            }),
+        ],
+      },
+    },
+    {
+      input: "example.COM/",
+      expected: {
+        autofilled: "example.COM/",
+        completed: "http://example.com/",
+        results: [
+          context =>
+            makeVisitResult(context, {
+              uri: "http://example.com/",
+              title: UrlbarTestUtils.trimURL("http://example.com/", {
+                removeSingleTrailingSlash: false,
+              }),
               heuristic: true,
             }),
           context =>
@@ -886,6 +912,7 @@ add_task(async function formatPunycodeResultCorrectly() {
   await PlacesTestUtils.addVisits([
     {
       uri: `http://test.xn--e1afmkfd.com/`,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("test", { isPrivate: false });

@@ -55,27 +55,18 @@ import mozilla.components.feature.downloads.R as downloadsR
 class DownloadRobot(private val composeTestRule: ComposeTestRule) {
 
     fun verifyDownloadPrompt(fileName: String) {
-        var currentTries = 0
-        while (currentTries++ < 3) {
-            Log.i(TAG, "verifyDownloadPrompt: Started try #$currentTries")
-            try {
-                assertUIObjectExists(
-                    itemContainingText("Download file?"),
-                    itemContainingText(fileName),
-                    cancelButton(),
-                    downloadButton(),
-                )
+        itemWithResId("org.mozilla.fenix.debug:id/parentPanel").waitForExists(waitingTime)
+        Log.i(TAG, "verifyDownloadPrompt: Waiting for $waitingTime ms for the \"Download file?\" download prompt to exist")
 
-                break
-            } catch (e: AssertionError) {
-                Log.i(TAG, "verifyDownloadPrompt: AssertionError caught, executing fallback methods")
-                Log.e("DOWNLOAD_ROBOT", "Failed to find locator: ${e.localizedMessage}")
-
+        assertUIObjectExists(
+            itemWithResIdContainingText("org.mozilla.fenix.debug:id/alertTitle", "Download file?"),
+            itemWithResIdContainingText("android:id/message", fileName),
+            cancelButton(),
+            downloadButton(),
+            )
                 browserScreen(this@DownloadRobot.composeTestRule) {
                 }.clickDownloadLink(fileName) {
                 }
-            }
-        }
     }
 
     fun verifyDownloadCompleteSnackbar(fileName: String) =

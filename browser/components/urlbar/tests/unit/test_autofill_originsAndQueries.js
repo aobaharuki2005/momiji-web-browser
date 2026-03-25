@@ -69,6 +69,7 @@ add_autofill_task(async function basic() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(search, { isPrivate: false });
@@ -92,6 +93,7 @@ add_autofill_task(async function basicCase() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(searchCase, { isPrivate: false });
@@ -115,6 +117,7 @@ add_autofill_task(async function noWWWShouldMatchWWW() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://www." + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(search, { isPrivate: false });
@@ -138,6 +141,7 @@ add_autofill_task(async function noWWWShouldMatchWWWCase() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://www." + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(searchCase, { isPrivate: false });
@@ -161,6 +165,7 @@ add_autofill_task(async function wwwShouldNotMatchNoWWW() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("www." + search, { isPrivate: false });
@@ -204,6 +209,7 @@ add_autofill_task(async function prefix() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("http://" + search, { isPrivate: false });
@@ -227,6 +233,7 @@ add_autofill_task(async function prefixCase() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("HTTP://" + searchCase, { isPrivate: false });
@@ -250,6 +257,7 @@ add_autofill_task(async function prefixNoWWWShouldMatchWWW() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://www." + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("http://" + search, { isPrivate: false });
@@ -273,6 +281,7 @@ add_autofill_task(async function prefixNoWWWShouldMatchWWWCase() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://www." + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("HTTP://" + searchCase, { isPrivate: false });
@@ -296,6 +305,7 @@ add_autofill_task(async function prefixWWWShouldNotMatchNoWWW() {
   await PlacesTestUtils.addVisits([
     {
       uri: "http://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("http://www." + search, { isPrivate: false });
@@ -321,6 +331,7 @@ add_autofill_task(async function httpPrefixShouldNotMatchHTTPS() {
   await PlacesTestUtils.addVisits([
     {
       uri: "https://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("http://" + search, { isPrivate: false });
@@ -351,6 +362,7 @@ add_autofill_task(async function httpsBasic() {
   await PlacesTestUtils.addVisits([
     {
       uri: "https://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(search, { isPrivate: false });
@@ -374,6 +386,7 @@ add_autofill_task(async function httpsNoWWWShouldMatchWWW() {
   await PlacesTestUtils.addVisits([
     {
       uri: "https://www." + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext(search, { isPrivate: false });
@@ -397,6 +410,7 @@ add_autofill_task(async function httpsWWWShouldNotMatchNoWWW() {
   await PlacesTestUtils.addVisits([
     {
       uri: "https://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     },
   ]);
   let context = createContext("www." + search, { isPrivate: false });
@@ -440,6 +454,7 @@ add_autofill_task(async function httpsPrefix() {
   await PlacesTestUtils.addVisits([
     {
       uri: "https://" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
     },
   ]);
   let context = createContext("https://" + search, { isPrivate: false });
@@ -463,6 +478,7 @@ add_autofill_task(async function httpsPrefixNoWWWShouldMatchWWW() {
   await PlacesTestUtils.addVisits([
     {
       uri: "https://www." + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
     },
   ]);
   let context = createContext("https://" + search, { isPrivate: false });
@@ -548,6 +564,7 @@ add_autofill_task(async function httpsPrefixShouldNotMatchMoreFrecentHTTP() {
     },
     {
       uri: "http://" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
     },
     {
       uri: "https://" + url,
@@ -555,6 +572,7 @@ add_autofill_task(async function httpsPrefixShouldNotMatchMoreFrecentHTTP() {
     },
     {
       uri: "http://otherpage",
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
     },
   ]);
   let context = createContext("https://" + search, { isPrivate: false });
@@ -580,8 +598,10 @@ add_autofill_task(async function frecency() {
     {
       uri: "http://" + url,
       visitDate: daysAgo(30),
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
     },
   ]);
+
   let context = createContext(search, { isPrivate: false });
   await check_results({
     context,
@@ -598,7 +618,11 @@ add_autofill_task(async function frecency() {
 
   // Add two https visits.  https should now be completed.
   await PlacesTestUtils.addVisits([
-    { uri: "https://" + url, visitDate: daysAgo(29) },
+    {
+      uri: "https://" + url,
+      visitDate: daysAgo(29),
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
   ]);
   context = createContext(search, { isPrivate: false });
   await check_results({
@@ -617,32 +641,59 @@ add_autofill_task(async function frecency() {
   // Add two more http visits, three total.  http should now be completed
   // again.
   await PlacesTestUtils.addVisits([
-    { uri: "http://" + url, visitDate: daysAgo(28) },
-    { uri: "http://" + url, visitDate: daysAgo(27) },
+    {
+      uri: "http://" + url,
+      visitDate: daysAgo(28),
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
+    {
+      uri: "http://" + url,
+      visitDate: daysAgo(27),
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
   ]);
   context = createContext(search, { isPrivate: false });
-  await check_results({
-    context,
-    autofilled: url,
-    completed: "http://" + url,
-    matches: [
-      makeVisitResult(context, {
-        uri: "http://" + url,
-        title: visitTitle("http", ""),
-        heuristic: true,
-      }),
-      makeVisitResult(context, {
-        uri: "https://" + url,
-        title: "test visit for https://" + url,
-        providerName: PLACES_PROVIDERNAME,
-      }),
-    ],
-  });
+  if (origins) {
+    await check_results({
+      context,
+      autofilled: url,
+      completed: "https://" + url,
+      matches: [
+        makeVisitResult(context, {
+          uri: "https://" + url,
+          title: visitTitle("https", ""),
+          heuristic: true,
+        }),
+      ],
+    });
+  } else {
+    await check_results({
+      context,
+      autofilled: url,
+      completed: "http://" + url,
+      matches: [
+        makeVisitResult(context, {
+          uri: "http://" + url,
+          title: visitTitle("http", ""),
+          heuristic: true,
+        }),
+        makeVisitResult(context, {
+          uri: "https://" + url,
+          title: "test visit for https://" + url,
+          providerName: PLACES_PROVIDERNAME,
+        }),
+      ],
+    });
+  }
 
   // Add four www https visits.  www https should now be completed.
   for (let i = 0; i < 4; i++) {
     await PlacesTestUtils.addVisits([
-      { uri: "https://www." + url, visitDate: daysAgo(i) },
+      {
+        uri: "https://www." + url,
+        visitDate: daysAgo(i),
+        transition: PlacesUtils.history.TRANSITIONS.TYPED,
+      },
     ]);
   }
   context = createContext(search, { isPrivate: false });
@@ -669,23 +720,38 @@ add_autofill_task(async function frecency() {
 
   // http should now be completed again.
   context = createContext(search, { isPrivate: false });
-  await check_results({
-    context,
-    autofilled: url,
-    completed: "http://" + url,
-    matches: [
-      makeVisitResult(context, {
-        uri: "http://" + url,
-        title: visitTitle("http", ""),
-        heuristic: true,
-      }),
-      makeVisitResult(context, {
-        uri: "https://" + url,
-        title: "test visit for https://" + url,
-        providerName: PLACES_PROVIDERNAME,
-      }),
-    ],
-  });
+  if (origins) {
+    await check_results({
+      context,
+      autofilled: url,
+      completed: "https://" + url,
+      matches: [
+        makeVisitResult(context, {
+          uri: "https://" + url,
+          title: visitTitle("https", ""),
+          heuristic: true,
+        }),
+      ],
+    });
+  } else {
+    await check_results({
+      context,
+      autofilled: url,
+      completed: "http://" + url,
+      matches: [
+        makeVisitResult(context, {
+          uri: "http://" + url,
+          title: visitTitle("http", ""),
+          heuristic: true,
+        }),
+        makeVisitResult(context, {
+          uri: "https://" + url,
+          title: "test visit for https://" + url,
+          providerName: PLACES_PROVIDERNAME,
+        }),
+      ],
+    });
+  }
 
   // Remove the http page.
   await PlacesUtils.history.remove(["http://" + url]);
@@ -708,7 +774,12 @@ add_autofill_task(async function frecency() {
   // Add a visit with a different host so that "ex" doesn't autofill it.
   // https://example.com/ should still have a higher frecency though, so it
   // should still be autofilled.
-  await PlacesTestUtils.addVisits([{ uri: "https://not-" + url }]);
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "https://not-" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
+  ]);
   context = createContext(search, { isPrivate: false });
   await check_results({
     context,
@@ -732,14 +803,31 @@ add_autofill_task(async function frecency() {
   // https://example.com/ falls below the autofill threshold.  It should not
   // be autofilled now.
   await PlacesTestUtils.addVisits([
-    { uri: "https://other-site.com/1" },
-    { uri: "https://other-site.com/2" },
-    { uri: "https://other-site.com/3" },
-    { uri: "https://other-site.com/4" },
+    {
+      uri: "https://other-site.com/1",
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
+    {
+      uri: "https://other-site.com/2",
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
+    {
+      uri: "https://other-site.com/3",
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
+    {
+      uri: "https://other-site.com/4",
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
   ]);
 
   for (let i = 0; i < 10; i++) {
-    await PlacesTestUtils.addVisits([{ uri: "https://not-" + url }]);
+    await PlacesTestUtils.addVisits([
+      {
+        uri: "https://not-" + url,
+        transition: PlacesUtils.history.TRANSITIONS.TYPED,
+      },
+    ]);
   }
 
   // In the `origins` case, the failure to make an autofill match means
@@ -849,6 +937,8 @@ add_autofill_task(async function bookmarkBelowThreshold() {
     await PlacesTestUtils.addVisits([
       {
         uri: "http://not-" + url,
+        visitDate: daysAgo(i),
+        transition: PlacesUtils.history.TRANSITION_TYPED,
       },
     ]);
   }
@@ -923,7 +1013,12 @@ add_autofill_task(async function bookmarkBelowThreshold() {
 add_autofill_task(async function bookmarkAboveThreshold() {
   // Add a visit to the URL, otherwise origin frecency will be too small, note
   // it would be filled anyway as bookmarks are always filled.
-  await PlacesTestUtils.addVisits(["http://" + url]);
+  await PlacesTestUtils.addVisits([
+    {
+      url: "http://" + url,
+      transition: PlacesUtils.history.TRANSITION_TYPED,
+    },
+  ]);
   // Bookmark a URL.
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
@@ -1021,7 +1116,10 @@ add_autofill_task(async function zeroThreshold() {
 // Expected result:
 //   should autofill: no
 add_autofill_task(async function suggestHistoryFalse_visit() {
-  await PlacesTestUtils.addVisits("http://" + url);
+  await PlacesTestUtils.addVisits({
+    url: "http://" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   let context = createContext(search, { isPrivate: false });
   await check_results({
     context,
@@ -1079,7 +1177,10 @@ add_autofill_task(async function suggestHistoryFalse_visit() {
 // Expected result:
 //   should autofill: no
 add_autofill_task(async function suggestHistoryFalse_visit_prefix() {
-  await PlacesTestUtils.addVisits("http://" + url);
+  await PlacesTestUtils.addVisits({
+    url: "http://" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   let context = createContext("http://" + search, { isPrivate: false });
   await check_results({
     context,
@@ -1148,7 +1249,10 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_0() {
   // the threshold.
   await TestUtils.waitForCondition(async () => {
     // Add a visit to another origin to boost the threshold.
-    await PlacesTestUtils.addVisits("http://foo-" + url);
+    await PlacesTestUtils.addVisits({
+      url: "http://foo-" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     let originFrecency = await getOriginFrecency("http://", host);
     let threshold = await getOriginAutofillThreshold();
@@ -1255,7 +1359,10 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_0() {
   // the threshold.
   await TestUtils.waitForCondition(async () => {
     // Add a visit to another origin to boost the threshold.
-    await PlacesTestUtils.addVisits("http://foo-" + url);
+    await PlacesTestUtils.addVisits({
+      url: "http://foo-" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     await PlacesFrecencyRecalculator.recalculateAnyOutdatedFrecencies();
     let originFrecency = await getOriginFrecency("http://", host);
     let threshold = await getOriginAutofillThreshold();
@@ -1423,7 +1530,10 @@ add_autofill_task(async function suggestHistoryFalse_bookmark_prefix_3() {
 //   should autofill: yes
 add_autofill_task(async function suggestBookmarkFalse_visit_0() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
-  await PlacesTestUtils.addVisits("http://" + url);
+  await PlacesTestUtils.addVisits({
+    url: "http://" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   let context = createContext(search, { isPrivate: false });
   await check_results({
     context,
@@ -1454,7 +1564,10 @@ add_autofill_task(async function suggestBookmarkFalse_visit_0() {
 //   should autofill: no
 add_autofill_task(async function suggestBookmarkFalse_visit_1() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
-  await PlacesTestUtils.addVisits("http://non-matching-" + url);
+  await PlacesTestUtils.addVisits({
+    url: "http://non-matching-" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   let context = createContext(search, { isPrivate: false });
   let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
   let matches = [
@@ -1508,7 +1621,10 @@ add_autofill_task(async function suggestBookmarkFalse_visit_1() {
 //   should autofill: yes
 add_autofill_task(async function suggestBookmarkFalse_visit_prefix_0() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
-  await PlacesTestUtils.addVisits("http://" + url);
+  await PlacesTestUtils.addVisits({
+    url: "http://" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   let context = createContext("http://" + search, { isPrivate: false });
   await check_results({
     context,
@@ -1539,7 +1655,10 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_0() {
 //   should autofill: no
 add_autofill_task(async function suggestBookmarkFalse_visit_prefix_1() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
-  await PlacesTestUtils.addVisits("ftp://" + url);
+  await PlacesTestUtils.addVisits({
+    url: "ftp://" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   let context = createContext("http://" + search, { isPrivate: false });
   let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
   await check_results({
@@ -1577,7 +1696,10 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_1() {
 //   should autofill: no
 add_autofill_task(async function suggestBookmarkFalse_visit_prefix_2() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
-  await PlacesTestUtils.addVisits("http://non-matching-" + url);
+  await PlacesTestUtils.addVisits({
+    url: "http://non-matching-" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   let context = createContext("http://" + search, { isPrivate: false });
   let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
   await check_results({
@@ -1615,7 +1737,10 @@ add_autofill_task(async function suggestBookmarkFalse_visit_prefix_2() {
 //   should autofill: no
 add_autofill_task(async function suggestBookmarkFalse_visit_prefix_3() {
   Services.prefs.setBoolPref("browser.urlbar.suggest.bookmark", false);
-  await PlacesTestUtils.addVisits("ftp://non-matching-" + url);
+  await PlacesTestUtils.addVisits({
+    url: "ftp://non-matching-" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   let context = createContext("http://" + search, { isPrivate: false });
   let prefixedUrl = origins ? `http://${search}/` : `http://${search}`;
   await check_results({
@@ -1878,7 +2003,10 @@ add_autofill_task(
 // Expected result:
 //   should autofill: yes
 add_autofill_task(async function suggestBookmarkFalse_visitedBookmark_above() {
-  await PlacesTestUtils.addVisits("http://" + url);
+  await PlacesTestUtils.addVisits({
+    url: "http://" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
   await PlacesTestUtils.addBookmarkWithDetails({
     uri: "http://" + url,
   });
@@ -1914,7 +2042,10 @@ add_autofill_task(async function suggestBookmarkFalse_visitedBookmark_above() {
 //   should autofill: yes
 add_autofill_task(
   async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_0() {
-    await PlacesTestUtils.addVisits("http://" + url);
+    await PlacesTestUtils.addVisits({
+      url: "http://" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://" + url,
     });
@@ -1951,7 +2082,10 @@ add_autofill_task(
 //   should autofill: no
 add_autofill_task(
   async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_1() {
-    await PlacesTestUtils.addVisits("ftp://" + url);
+    await PlacesTestUtils.addVisits({
+      url: "ftp://" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://" + url,
     });
@@ -1995,7 +2129,10 @@ add_autofill_task(
 //   should autofill: no
 add_autofill_task(
   async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_2() {
-    await PlacesTestUtils.addVisits("http://non-matching-" + url);
+    await PlacesTestUtils.addVisits({
+      url: "http://non-matching-" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "http://non-matching-" + url,
     });
@@ -2039,7 +2176,10 @@ add_autofill_task(
 //   should autofill: no
 add_autofill_task(
   async function suggestBookmarkFalse_visitedBookmarkAbove_prefix_3() {
-    await PlacesTestUtils.addVisits("ftp://non-matching-" + url);
+    await PlacesTestUtils.addVisits({
+      url: "ftp://non-matching-" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     await PlacesTestUtils.addBookmarkWithDetails({
       uri: "ftp://non-matching-" + url,
     });
@@ -2097,11 +2237,16 @@ add_autofill_task(async function suggestBookmarkFalse_visitedBookmarkBelow() {
   await PlacesTestUtils.addVisits({
     uri: "http://" + url,
     visitDate: daysAgo(30),
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
   });
   await PlacesTestUtils.addVisits({
     uri: "http://some-other-" + url,
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
   });
-  await PlacesTestUtils.addVisits("http://other-website.com");
+  await PlacesTestUtils.addVisits({
+    url: "http://other-website.com",
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
+  });
 
   let context = createContext(search, { isPrivate: false });
   await check_results({
@@ -2176,9 +2321,16 @@ add_autofill_task(
     await PlacesTestUtils.addVisits({
       uri: "http://" + url,
       visitDate: daysAgo(30),
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
     });
-    await PlacesTestUtils.addVisits("http://some-other-" + url);
-    await PlacesTestUtils.addVisits("http://other-website.com");
+    await PlacesTestUtils.addVisits({
+      url: "http://some-other-" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
+    await PlacesTestUtils.addVisits({
+      url: "http://other-website.com",
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
 
     let context = createContext("http://" + search, { isPrivate: false });
     await check_results({
@@ -2257,9 +2409,15 @@ add_autofill_task(
       return;
     }
     // First, make sure that `url` is below the autofill threshold.
-    await PlacesTestUtils.addVisits("ftp://" + url);
+    await PlacesTestUtils.addVisits({
+      url: "ftp://" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     for (let i = 0; i < 3; i++) {
-      await PlacesTestUtils.addVisits("ftp://some-other-" + url);
+      await PlacesTestUtils.addVisits({
+        url: "ftp://some-other-" + url,
+        transition: PlacesUtils.history.TRANSITIONS.TYPED,
+      });
     }
     let context = createContext("http://" + search, { isPrivate: false });
     await check_results({
@@ -2338,9 +2496,15 @@ add_autofill_task(
       return;
     }
     // First, make sure that `url` is below the autofill threshold.
-    await PlacesTestUtils.addVisits("http://non-matching-" + url);
+    await PlacesTestUtils.addVisits({
+      url: "http://non-matching-" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     for (let i = 0; i < 3; i++) {
-      await PlacesTestUtils.addVisits("http://some-other-" + url);
+      await PlacesTestUtils.addVisits({
+        url: "http://some-other-" + url,
+        transition: PlacesUtils.history.TRANSITIONS.TYPED,
+      });
     }
     let context = createContext("http://" + search, { isPrivate: false });
     await check_results({
@@ -2419,9 +2583,15 @@ add_autofill_task(
       return;
     }
     // First, make sure that `url` is below the autofill threshold.
-    await PlacesTestUtils.addVisits("ftp://non-matching-" + url);
+    await PlacesTestUtils.addVisits({
+      url: "ftp://non-matching-" + url,
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    });
     for (let i = 0; i < 3; i++) {
-      await PlacesTestUtils.addVisits("ftp://some-other-" + url);
+      await PlacesTestUtils.addVisits({
+        url: "ftp://some-other-" + url,
+        transition: PlacesUtils.history.TRANSITIONS.TYPED,
+      });
     }
     let context = createContext("http://" + search, { isPrivate: false });
     await check_results({
@@ -2485,7 +2655,10 @@ add_autofill_task(
 // there should be an additional http://example.com/ non-autofill result.
 add_autofill_task(async function hideHeuristic() {
   UrlbarPrefs.set("experimental.hideHeuristic", true);
-  await PlacesTestUtils.addVisits("http://" + url);
+  await PlacesTestUtils.addVisits({
+    url: "http://" + url,
+    transition: PlacesUtils.history.TRANSITION_TYPED,
+  });
   let context = createContext(search, { isPrivate: false });
   await check_results({
     context,

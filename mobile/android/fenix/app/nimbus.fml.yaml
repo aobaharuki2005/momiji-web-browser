@@ -449,7 +449,14 @@ features:
           process. "2" means "isolate high value", Android-specific setting to only isolate sites
           considered "high value".
         type: Int
-        default: 2
+        default: 0
+    defaults:
+      - channel: nightly
+        value:
+          isolationStrategy: 2
+      - channel: developer
+        value:
+          isolationStrategy: 2
 
   suggest-shipped-domains:
     description: Feature that suggests domains from the shipped domain list.
@@ -689,6 +696,14 @@ features:
           Whether or not to hide frecent top sites on the homepage.
         type: Boolean
         default: false
+
+  homepage-opening-screen-default:
+    description: Configure the default option for the homepage opening screen.
+    variables:
+      default-option:
+        description: The default option for the homepage opening screen.
+        type: OpeningScreenOption
+        default: homepage-four-hours
 
   unified-trust-panel:
     description: Enables the unified trust panel.
@@ -957,6 +972,16 @@ features:
         type: Boolean
         default: false
 
+  # Created this in addition to the `custom-review-prompt` flag to keep changes minimal and make it easier to uplift.
+  # See: https://bugzilla.mozilla.org/show_bug.cgi?id=2014083
+  custom-review-prompt-ui:
+    description: Feature that controls the custom UI for review prompt.
+    variables:
+      enabled:
+        description: When enabled we show the custom review prompt UI. Otherwise we try to directly show the Play Store in-app review prompt.
+        type: Boolean
+        default: true
+
   default-browser-prompt:
     description: Feature that controls when the default browser prompt is shown.
     variables:
@@ -1114,3 +1139,16 @@ types:
             Uses the following copy:
             - Title: "A note from Firefox"
             - Learn more: "You can learn more here."
+
+    OpeningScreenOption:
+      description: The types of different experiment branches for the opening screen.
+      variants:
+        homepage:
+          description:
+            Uses the homepage as the opening screen.
+        last-tab:
+          description:
+            Uses the last tab as the opening screen.
+        homepage-four-hours:
+          description:
+            Uses the homepage after four hours of inactivity as the opening screen.

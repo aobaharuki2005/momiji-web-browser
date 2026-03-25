@@ -16,6 +16,7 @@ add_task(async function test_protocol_trimming() {
           "www.foo"
       ),
       title: "Test title",
+      transition: PlacesUtils.history.TRANSITION_TYPED,
     };
     await PlacesTestUtils.addVisits(visit);
 

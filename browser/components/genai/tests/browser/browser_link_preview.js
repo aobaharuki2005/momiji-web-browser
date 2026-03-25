@@ -4,6 +4,9 @@
 const { LinkPreview } = ChromeUtils.importESModule(
   "moz-src:///browser/components/genai/LinkPreview.sys.mjs"
 );
+const { MLUninstallService } = ChromeUtils.importESModule(
+  "chrome://global/content/ml/Utils.sys.mjs"
+);
 const { Region } = ChromeUtils.importESModule(
   "resource://gre/modules/Region.sys.mjs"
 );

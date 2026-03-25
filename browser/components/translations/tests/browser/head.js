@@ -1502,8 +1502,12 @@ class FullPageTranslationsTestUtils {
    */
   static async waitForAllPendingTranslationsToComplete(runInPage) {
     await runInPage(async ({ waitForCondition }) => {
-      const translationsChild =
-        content.windowGlobalChild.getActor("Translations");
+      let translationsChild;
+      try {
+        translationsChild = content.windowGlobalChild.getActor("Translations");
+      } catch {
+        return;
+      }
 
       while (
         translationsChild.translatedDoc?.hasPendingTranslationRequests() ||
@@ -1533,8 +1537,12 @@ class FullPageTranslationsTestUtils {
    */
   static async assertNoElementsAreObservedForContentIntersection(runInPage) {
     await runInPage(async ({ waitForCondition }) => {
-      const translationsChild =
-        content.windowGlobalChild.getActor("Translations");
+      let translationsChild;
+      try {
+        translationsChild = content.windowGlobalChild.getActor("Translations");
+      } catch {
+        return;
+      }
 
       await waitForCondition(
         () =>
@@ -1553,8 +1561,12 @@ class FullPageTranslationsTestUtils {
    */
   static async assertNoElementsAreObservedForAttributeIntersection(runInPage) {
     await runInPage(async ({ waitForCondition }) => {
-      const translationsChild =
-        content.windowGlobalChild.getActor("Translations");
+      let translationsChild;
+      try {
+        translationsChild = content.windowGlobalChild.getActor("Translations");
+      } catch {
+        return;
+      }
 
       await waitForCondition(
         () =>
@@ -2665,6 +2677,49 @@ class FullPageTranslationsTestUtils {
       },
       onOpenPanel
     );
+  }
+
+  /**
+   * Opens the app menu and asserts the translate button visibility.
+   *
+   * @param {object} options
+   * @param {boolean} options.visible
+   * @param {string} message
+   */
+  static async assertAppMenuTranslateItemVisibility({ visible }, message) {
+    if (message) {
+      info(message);
+    }
+
+    if (window.PanelUI.panel.state !== "closed") {
+      const panelHidden = BrowserTestUtils.waitForEvent(
+        window.PanelUI.panel,
+        "popuphidden"
+      );
+      window.PanelUI.hide();
+      await panelHidden;
+    }
+
+    const panelShown = BrowserTestUtils.waitForEvent(
+      window.PanelUI.panel,
+      "popupshown"
+    );
+    window.PanelUI.show();
+    await panelShown;
+
+    const translateSiteButton = maybeGetById("appMenu-translate-button", false);
+    is(
+      translateSiteButton.hidden,
+      !visible,
+      "The app-menu translate button visibility should match the expected state."
+    );
+
+    const panelHidden = BrowserTestUtils.waitForEvent(
+      window.PanelUI.panel,
+      "popuphidden"
+    );
+    window.PanelUI.hide();
+    await panelHidden;
   }
 
   /**

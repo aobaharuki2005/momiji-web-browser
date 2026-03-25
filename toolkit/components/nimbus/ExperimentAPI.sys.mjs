@@ -37,17 +37,20 @@ const CRASHREPORTER_ENABLED =
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
 
-const ROLLOUTS_ENABLED_PREF = "nimbus.rollouts.enabled";
-const UPLOAD_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
-const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
+const Prefs = Object.freeze({
+  AI_FEATURES_ENABLED: "browser.ai.control.default",
+  ROLLOUTS_ENABLED: "nimbus.rollouts.enabled",
+  TELEMETRY_ENABLED: "datareporting.healthreport.uploadEnabled",
+  STUDIES_ENABLED: "app.shield.optoutstudies.enabled",
+  COLLECTION_ID: "messaging-system.rsexperimentloader.collection_id",
+  NIMBUS_PROFILE_ID: "nimbus.profileId",
+});
 
-const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
-const COLLECTION_ID_FALLBACK = "nimbus-desktop-experiments";
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "COLLECTION_ID",
-  COLLECTION_ID_PREF,
-  COLLECTION_ID_FALLBACK
+  Prefs.COLLECTION_ID,
+  "nimbus-desktop-experiments"
 );
 
 function parseJSON(value) {
@@ -77,8 +80,6 @@ const experimentBranchAccessor = {
     return target[prop];
   },
 };
-
-const NIMBUS_PROFILE_ID_PREF = "nimbus.profileId";
 
 /**
  * Metadata about an enrollment.
@@ -149,23 +150,30 @@ export const ExperimentAPI = new (class {
    */
   #prefValues = {
     /**
+     * Whether or not AI features are enabled.
+     *
+     * @see {@link Prefs.AI_FEATURES_ENABLED}
+     */
+    aiFeaturesEnabled: "blocked",
+
+    /**
      * Whether or not rollouts are enabled.
      *
-     * @see {@link ROLLOUTS_ENABLED_PREF}
+     * @see {@link Prefs.ROLLOUTS_ENABLED}
      */
     rolloutsEnabled: false,
 
     /**
      * Whether or not opt-out studies are enabled.
      *
-     * @see {@link STUDIES_OPT_OUT_PREF}
+     * @see {@link Prefs.STUDIES_ENABLED}
      */
     studiesEnabled: false,
 
     /**
      * Whether or not telemetry is enabled.
      *
-     * @see {@link UPLOAD_ENABLED_PREF}
+     * @see {@link Prefs.TELEMETRY_ENABLED}
      */
     telemetryEnabled: false,
   };
@@ -180,9 +188,9 @@ export const ExperimentAPI = new (class {
   constructor() {
     if (IS_MAIN_PROCESS) {
       // Ensure that the profile ID is cached in a pref.
-      if (Services.prefs.prefHasUserValue(NIMBUS_PROFILE_ID_PREF)) {
+      if (Services.prefs.prefHasUserValue(Prefs.NIMBUS_PROFILE_ID)) {
         this.#cachedProfileId = Services.prefs.getStringPref(
-          NIMBUS_PROFILE_ID_PREF
+          Prefs.NIMBUS_PROFILE_ID
         );
       } else {
         this.#cachedProfileId = Services.uuid
@@ -190,7 +198,7 @@ export const ExperimentAPI = new (class {
           .toString()
           .slice(1, -1);
         Services.prefs.setStringPref(
-          NIMBUS_PROFILE_ID_PREF,
+          Prefs.NIMBUS_PROFILE_ID,
           this.#cachedProfileId
         );
       }
@@ -214,6 +222,13 @@ export const ExperimentAPI = new (class {
    */
   get STUDIES_ENABLED_CHANGED() {
     return "nimbus:studies-enabled-changed";
+  }
+
+  /**
+   * The topic that is notified when Nimbus updates enrollmments.
+   */
+  get ENROLLMENTS_UPDATED() {
+    return "nimbus:enrollments-updated";
   }
 
   /**
@@ -313,11 +328,21 @@ export const ExperimentAPI = new (class {
     }
 
     Services.prefs.addObserver(
-      ROLLOUTS_ENABLED_PREF,
+      Prefs.ROLLOUTS_ENABLED,
       this._onEnabledPrefChange
     );
-    Services.prefs.addObserver(STUDIES_OPT_OUT_PREF, this._onEnabledPrefChange);
-    Services.prefs.addObserver(UPLOAD_ENABLED_PREF, this._onEnabledPrefChange);
+    Services.prefs.addObserver(
+      Prefs.STUDIES_ENABLED,
+      this._onEnabledPrefChange
+    );
+    Services.prefs.addObserver(
+      Prefs.TELEMETRY_ENABLED,
+      this._onEnabledPrefChange
+    );
+    Services.prefs.addObserver(
+      Prefs.AI_FEATURES_ENABLED,
+      this._onEnabledPrefChange
+    );
 
     // If Nimbus was disabled between the start of this function and registering
     // the pref observers we have not handled it yet.
@@ -380,15 +405,15 @@ export const ExperimentAPI = new (class {
     this.#experimentManager = null;
 
     Services.prefs.removeObserver(
-      ROLLOUTS_ENABLED_PREF,
+      Prefs.ROLLOUTS_ENABLED,
       this._onEnabledPrefChange
     );
     Services.prefs.removeObserver(
-      STUDIES_OPT_OUT_PREF,
+      Prefs.STUDIES_ENABLED,
       this._onEnabledPrefChange
     );
     Services.prefs.removeObserver(
-      UPLOAD_ENABLED_PREF,
+      Prefs.TELEMETRY_ENABLED,
       this._onEnabledPrefChange
     );
 
@@ -397,16 +422,20 @@ export const ExperimentAPI = new (class {
 
   #computeEnabled() {
     this.#prefValues.rolloutsEnabled = Services.prefs.getBoolPref(
-      ROLLOUTS_ENABLED_PREF,
+      Prefs.ROLLOUTS_ENABLED,
       false
     );
     this.#prefValues.studiesEnabled = Services.prefs.getBoolPref(
-      STUDIES_OPT_OUT_PREF,
+      Prefs.STUDIES_ENABLED,
       false
     );
     this.#prefValues.telemetryEnabled = Services.prefs.getBoolPref(
-      UPLOAD_ENABLED_PREF,
+      Prefs.TELEMETRY_ENABLED,
       false
+    );
+
+    this.#prefValues.aiFeaturesEnabled = Services.prefs.getStringPref(
+      Prefs.AI_FEATURES_ENABLED
     );
 
     this.#studiesEnabled =
@@ -432,6 +461,10 @@ export const ExperimentAPI = new (class {
 
   get studiesEnabled() {
     return this.#studiesEnabled;
+  }
+
+  get aiFeaturesEnabled() {
+    return this.#prefValues.aiFeaturesEnabled === "available";
   }
 
   /**
@@ -509,6 +542,7 @@ export const ExperimentAPI = new (class {
 
     const studiesPreviouslyEnabled = this.studiesEnabled;
     const rolloutsPreviouslyEnabled = this.rolloutsEnabled;
+    const aiFeaturesPreviouslyEnabled = this.aiFeaturesEnabled;
 
     this.#computeEnabled();
 
@@ -516,6 +550,8 @@ export const ExperimentAPI = new (class {
       studiesPreviouslyEnabled !== this.studiesEnabled;
     const rolloutsEnabledChanged =
       rolloutsPreviouslyEnabled !== this.rolloutsEnabled;
+    const aiFeaturesEnabledChanged =
+      aiFeaturesPreviouslyEnabled !== this.aiFeaturesEnabled;
 
     if (studiesEnabledChanged || rolloutsEnabledChanged) {
       if (!this.studiesEnabled) {
@@ -532,6 +568,10 @@ export const ExperimentAPI = new (class {
       await this._rsLoader.onEnabledPrefChange();
 
       Services.obs.notifyObservers(null, this.STUDIES_ENABLED_CHANGED);
+    }
+
+    if (aiFeaturesEnabledChanged) {
+      await this._rsLoader.updateRecipes("ai-features-changed");
     }
   }
 

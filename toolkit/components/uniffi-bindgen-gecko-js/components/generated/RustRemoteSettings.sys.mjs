@@ -2222,7 +2222,7 @@ export class RemoteSettingsServiceInterface {
      * execution can cause weird effects.
      * @param {RemoteSettingsConfig2} config
      */
-    updateConfig(
+    async updateConfig(
         config) {
       throw Error("updateConfig not implemented");
     }
@@ -2349,11 +2349,11 @@ export class RemoteSettingsService extends RemoteSettingsServiceInterface {
      * execution can cause weird effects.
      * @param {RemoteSettingsConfig2} config
      */
-    updateConfig(
+    async updateConfig(
         config) {
        
         FfiConverterTypeRemoteSettingsConfig2.checkType(config);
-        const result = UniFFIScaffolding.callSync(
+        const result = await UniFFIScaffolding.callAsyncWrapper(
             77, // uniffi_remote_settings_fn_method_remotesettingsservice_update_config
             FfiConverterTypeRemoteSettingsService.lowerReceiver(this),
             FfiConverterTypeRemoteSettingsConfig2.lower(config),

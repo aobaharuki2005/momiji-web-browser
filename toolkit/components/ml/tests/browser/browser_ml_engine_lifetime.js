@@ -475,6 +475,7 @@ add_task(async function test_ml_engine_get_status_by_engine_id() {
         modelHubUrlTemplate: "{model}/{revision}",
         modelId: "mozilla/distilvit",
         modelRevision: "main",
+        flowId: null,
         tokenizerId: "mozilla/distilvit",
         tokenizerRevision: "main",
         processorId: "mozilla/distilvit",

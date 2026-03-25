@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// @ts-nocheck - TODO - Remove this to type check this file.
+
 const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -41,8 +43,8 @@ export class MLTelemetry {
    * Creates a new MLTelemetry instance.
    *
    * @param {object} [options] - Configuration options.
-   * @param {string} [options.featureId] - The identifier for the ML feature.
-   * @param {string} [options.flowId] - An optional unique identifier for
+   * @param {string | null} [options.featureId] - The identifier for the ML feature.
+   * @param {string | null} [options.flowId] - An optional unique identifier for
    * this flow. If not provided, a new UUID will be generated.
    */
   constructor(options = {}) {
@@ -198,11 +200,11 @@ export class MLTelemetry {
    *
    * @param {object} options - Engine creation failure options.
    * @param {string} [options.flowId] - The flow ID. Uses instance flowId if not provided.
-   * @param {string} options.modelId - The model identifier.
-   * @param {string} options.featureId - The feature identifier.
-   * @param {string} options.taskName - The task name.
-   * @param {string} options.engineId - The engine identifier.
-   * @param {string|object} options.error - The error class/message or object.
+   * @param {string | null} options.modelId - The model identifier.
+   * @param {string | null} options.featureId - The feature identifier.
+   * @param {string | null} options.taskName - The task name.
+   * @param {string | null} options.engineId - The engine identifier.
+   * @param {unknown} options.error - The error class/message or object.
    */
   recordEngineCreationFailure({
     flowId,
@@ -348,15 +350,15 @@ export class MLTelemetry {
    *
    * @param {object} options - Engine run options.
    * @param {string} [options.flow_id] - The flow ID. Uses instance flowId if not provided.
-   * @param {number} options.cpuMilliseconds - The combined milliseconds of every cpu core that was running.
+   * @param {number | null} options.cpuMilliseconds - The combined milliseconds of every cpu core that was running.
    * @param {number} options.wallMilliseconds - The amount of wall time the run request took.
    * @param {number} options.cores - The number of cores on the machine.
-   * @param {number} options.cpuUtilization - The percentage of the user's CPU used (0-100).
-   * @param {number} options.memoryBytes - The number of RSS bytes for the inference process.
+   * @param {number | null} options.cpuUtilization - The percentage of the user's CPU used (0-100).
+   * @param {number | null} options.memoryBytes - The number of RSS bytes for the inference process.
    * @param {string} [options.feature_id] - The feature identifier. Uses instance featureId if not provided.
    * @param {string} options.engineId - The engine identifier.
-   * @param {string} options.modelId - The model identifier.
-   * @param {string} options.backend - The backend that is being used.
+   * @param {string | null} options.modelId - The model identifier.
+   * @param {string | null} options.backend - The backend that is being used.
    */
   recordEngineRun({
     cpuMilliseconds,

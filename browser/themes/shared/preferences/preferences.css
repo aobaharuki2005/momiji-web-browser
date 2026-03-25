@@ -1090,6 +1090,7 @@ dialog > .sync-engines-list + hbox {
   text-overflow: ellipsis;
 }
 
+.setting-hidden,
 .visually-hidden {
   display: none !important;
 }
@@ -1427,6 +1428,64 @@ setting-group[groupid="home"] {
 
 setting-group[groupid="aiFeatures"] {
   --select-max-width: fit-content;
+}
+
+setting-group[groupid="aiFeatures"] {
+  --select-max-width: fit-content;
+
+  > moz-card > moz-fieldset::part(inputs) {
+    gap: var(--space-xlarge);
+  }
+}
+
+#blockAiGroup {
+  @media not (prefers-contrast) {
+    --block-ai-background-color: light-dark(color-mix(in srgb, currentColor 3%, transparent), color-mix(in srgb, currentColor 5%, transparent));
+    background-color: var(--block-ai-background-color);
+  }
+}
+
+#aiBlockedMessage {
+  margin: calc(-1 * var(--space-large));
+  margin-top: var(--space-medium);
+  --message-bar-border-radius: 0 0 var(--box-border-radius) var(--box-border-radius);
+  border-bottom-color: transparent;
+  border-inline-color: transparent;
+}
+
+#aiControlDefaultToggle {
+  --toggle-width: 40px;
+  --toggle-height: 20px;
+}
+
+.ai-controls-description {
+  --ai-controls-description-image-margin: calc(64px + var(--space-large));
+  --ai-controls-description-background-color: light-dark(var(--color-violet-0), var(--color-violet-90));
+  anchor-name: --ai-controls-description;
+
+  @media not (forced-colors) {
+    --card-background-color: var(--ai-controls-description-background-color);
+  }
+
+  > p {
+    margin: 0;
+    margin-inline-end: var(--ai-controls-description-image-margin);
+  }
+
+  > img {
+    position: fixed;
+    position-anchor: --ai-controls-description;
+    inset-block-end: anchor(end);
+    inset-inline-end: anchor(end);
+    margin-inline-end: var(--space-large);
+  }
+}
+
+setting-group[groupid="aiStatesDescription"] {
+  p,
+  ul {
+    margin: 0;
+  }
 }
 
 #translations-manage-install-list {

@@ -1284,9 +1284,10 @@ bool Sanitizer::AllowAttribute(
 // https://wicg.github.io/sanitizer-api/#sanitizer-remove-an-attribute
 bool Sanitizer::RemoveAttribute(
     const StringOrSanitizerAttributeNamespace& aAttribute) {
+  // Step 1. Assert: configuration is valid.
   MaybeMaterializeDefaultConfig();
 
-  // Step 1. Set attribute to the result of canonicalize a sanitizer attribute
+  // Step 2. Set attribute to the result of canonicalize a sanitizer attribute
   // with attribute.
   CanonicalAttribute attribute = CanonicalizeAttribute(aAttribute);
 
@@ -1294,80 +1295,90 @@ bool Sanitizer::RemoveAttribute(
 }
 
 bool Sanitizer::RemoveAttributeCanonical(CanonicalAttribute&& aAttribute) {
-  // Step 2. If configuration["attributes"] exists:
+  // Step 3. If configuration["attributes"] exists:
   if (mAttributes) {
-    // Step 2.1. Comment: If we have a global allow-list, we need to add
+    // Step 3.1. Comment: If we have a global allow-list, we need to remove
     // attribute.
 
-    // Step 2.2. If configuration["attributes"] does not contain attribute:
-    if (!mAttributes->Contains(aAttribute)) {
-      // Step 2.2.1. Return false.
-      return false;
-    }
+    // Step 3.2. Set modified to the result of remove attribute from
+    // configuration["attributes"].
+    bool modified = mAttributes->EnsureRemoved(aAttribute);
 
-    // Step 2.3. Comment: Fix-up per-element allow and remove lists.
+    // Step 3.3. Comment: Fix-up per-element allow and remove lists.
 
-    // Step 2.4. If configuration["elements"] exists:
+    // Step 3.4. If configuration["elements"] exists:
     if (mElements) {
-      // Step 2.4.1. For each element in configuration["elements"]:
+      // Step 3.4.1. For each element of configuration["elements"]:
       for (auto iter = mElements->Iter(); !iter.Done(); iter.Next()) {
         CanonicalElementAttributes& elemAttributes = iter.Data();
-        // Step 2.4.1.1. If element["removeAttributes"] with default « [] »
+        // Step 3.4.1.1. If element["attributes"] with default « » contains
+        // attribute:
+        if (elemAttributes.mAttributes &&
+            elemAttributes.mAttributes->Contains(aAttribute)) {
+          // Step 3.4.1.1.1. Set modified to true.
+          modified = true;
+
+          // Step 3.4.1.1.2. Remove attribute from element["attributes"].
+          elemAttributes.mAttributes->Remove(aAttribute);
+        }
+
+        // Step 3.4.1.2. If element["removeAttributes"] with default « [] »
         // contains attribute:
         if (elemAttributes.mRemoveAttributes &&
             elemAttributes.mRemoveAttributes->Contains(aAttribute)) {
-          // Step 2.4.1.1.1. Remove attribute from
+          // Step 3.4.1.2.1. Assert: modified is true.
+          MOZ_ASSERT(modified,
+                     "Must have removed attribute from mAttributes already");
+
+          // Step 3.4.1.2.2. Remove attribute from
           // element["removeAttributes"].
           elemAttributes.mRemoveAttributes->Remove(aAttribute);
         }
       }
     }
 
-    // Step 2.5. Remove attribute from configuration["attributes"].
-    mAttributes->Remove(aAttribute);
-
-    // Step 2.6. Return true.
-    return true;
+    // Step 3.5. Return modified.
+    return modified;
   }
 
-  // Step 3. Otherwise:
-  // Step 3.1. Comment: If we have a global remove-list, we need to add
+  // Step 4. Otherwise:
+  // Step 4.1. Comment: If we have a global remove-list, we need to add
   // attribute.
 
-  // Step 3.2. If configuration["removeAttributes"] contains attribute return
+  // Step 4.2. If configuration["removeAttributes"] contains attribute return
   // false.
   if (mRemoveAttributes->Contains(aAttribute)) {
     return false;
   }
 
-  // Step 3.3. Comment: Fix-up per-element allow and remove lists.
-  // Step 3.4. If configuration["elements"] exists:
+  // Step 4.3. Comment: Fix-up per-element allow and remove lists.
+  // Step 4.4. If configuration["elements"] exists:
   if (mElements) {
-    // Step 3.4.1. For each element in configuration["elements"]:
+    // Step 4.4.1. For each element in configuration["elements"]:
     for (auto iter = mElements->Iter(); !iter.Done(); iter.Next()) {
       CanonicalElementAttributes& elemAttributes = iter.Data();
-      // Step 3.4.1.1. If element["attributes"] with default « [] » contains
+      // Step 4.4.1.1. If element["attributes"] with default « [] » contains
       // attribute:
       if (elemAttributes.mAttributes &&
           elemAttributes.mAttributes->Contains(aAttribute)) {
-        // Step 3.4.1.1.1. Remove attribute from element["attributes"].
+        // Step 4.4.1.1.1. Remove attribute from element["attributes"].
         elemAttributes.mAttributes->Remove(aAttribute);
       }
 
-      // Step 3.4.1.2. If element["removeAttributes"] with default « [] »
+      // Step 4.4.1.2. If element["removeAttributes"] with default « [] »
       // contains attribute:
       if (elemAttributes.mRemoveAttributes &&
           elemAttributes.mRemoveAttributes->Contains(aAttribute)) {
-        // Step 3.4.1.2.1. Remove attribute from element["removeAttributes"].
+        // Step 4.4.1.2.1. Remove attribute from element["removeAttributes"].
         elemAttributes.mRemoveAttributes->Remove(aAttribute);
       }
     }
   }
 
-  // Step 3.5. Append attribute to configuration["removeAttributes"].
+  // Step 4.5. Append attribute to configuration["removeAttributes"].
   mRemoveAttributes->Insert(std::move(aAttribute));
 
-  // Step 3.6. Return true.
+  // Step 4.6. Return true.
   return true;
 }
 

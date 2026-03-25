@@ -96,8 +96,8 @@ add_task(async function test_domain_change() {
   // progress listener sees waiting for, the statuspanel is still on
   // looking up. This may be racy.
   ok(
-    statuspanelLabel.value == `Looking up ${DOMAIN_NAME}…` ||
-      statuspanelLabel.value == `Transferring data from ${DOMAIN_NAME}…`,
+    statuspanelLabel.value.startsWith(`Looking up`) ||
+      statuspanelLabel.value.startsWith(`Transferring data`),
     `statuspanel has expected value. got ${statuspanelLabel.value}`
   );
   is(message, expectedMessage, "Status message was received correctly");

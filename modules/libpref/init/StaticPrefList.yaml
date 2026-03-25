@@ -1057,7 +1057,7 @@
 # nsXPLookAndFeel::GenericDarkColor for Linktext.
 - name: browser.anchor_color.dark
   type: String
-  value: "#8C8CFF"
+  value: "#00CADB"
   mirror: never
 
 # See http://dev.w3.org/html5/spec/forms.html#attr-fe-autofocus
@@ -1422,8 +1422,8 @@
   value: ""
   mirror: always
 
-# Control whether we enable the feature of crash pull at all
-- name: browser.crashReports.crashPull
+# Control whether we enable the feature of crash reports on demand at all
+- name: browser.crashReports.onDemand
   type: bool
   value: true
   mirror: always
@@ -3701,7 +3701,7 @@
 # BrowsingContext. This includes calls to History and Location APIs.
 - name: dom.navigation.navigationRateLimit.count
   type: uint32_t
-  value: 200
+  value: 1000
   mirror: always
 
 # Time span in seconds for location change rate limit.
@@ -5170,7 +5170,9 @@
     *.fedex.com,
     *.msci.com,
     *.the-saleroom.com,
-    *.si.com
+    *.si.com,
+    *.heinnie.com,
+    *.hyattinclusivecollection.com
   mirror: never
 
 # Maximum amount of time in milliseconds consecutive setTimeout()/setInterval()
@@ -5971,6 +5973,18 @@
 
 # Per-domain blocklist for the previous hack.
 - name: dom.about-blank-ckeditor-hack.disabled-domains
+  type: String
+  value: ""
+  mirror: never
+
+# Whether to enable about:blank async-load workaround for GWT's RichTextArea.
+- name: dom.about-blank-gwt-hack.enabled
+  type: bool
+  value: true
+  mirror: always
+
+# Per-domain blocklist for the previous hack.
+- name: dom.about-blank-gwt-hack.disabled-domains
   type: String
   value: ""
   mirror: never
@@ -9565,6 +9579,14 @@
 - name: javascript.options.parallel_parsing
   type: bool
   value: true
+  mirror: always
+
+# Testing pref to force the ScriptPreloader to remain active even after
+# browser-delayed-startup-finished. Only takes effect when running in automation.
+# This allows tests to exercise the cache after startup has completed.
+- name: javascript.options.force_preloader_active
+  type: bool
+  value: false
   mirror: always
 
 # Whether to use fdlibm for Math.sin, Math.cos, and Math.tan. When
@@ -15828,6 +15850,14 @@
   value: false
   mirror: always
 
+# When true, we will also sniff content beginning with <!--
+# but not followed by space or > as HTML. This differs from the mimesniff
+# standard but matches Chrome.
+- name: network.mimesniff.non_standard_html_comment
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The maximum count that we allow socket prrocess to crash. If this count is
 # reached, we won't use networking over socket process.
 - name: network.max_socket_process_failed_count
@@ -17586,8 +17616,14 @@
   value: 128
   mirror: always
 
-# Whether or not to enable the test trust anchor list when verifying QWACs
-# (qualified website authentication certificates)
+# Whether or not QWACs (qualified website authentication certificates)
+# processing is enabled.
+- name: security.qwacs.enabled
+  type: bool
+  value: false
+  mirror: always
+
+# Whether or not to enable the test trust anchor list when verifying QWACs.
 - name: security.qwacs.enable_test_trust_anchors
   type: RelaxedAtomicBool
   value: false

@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// @ts-nocheck - TODO - Remove this to type check this file.
+
 /**
  * @typedef {import("../actors/MLEngineParent.sys.mjs").MLEngineParent} MLEngineParent
  * @typedef {import("../content/Utils.sys.mjs").ProgressAndStatusCallbackParams} ProgressAndStatusCallbackParams
@@ -56,7 +58,7 @@ export const FILE_REGEX =
 
 /**
  * @constant
- * @type {{ [key: string]: string }}
+ * @type {{ [key: string]: { modelId: string, dtype: string } }}
  * @description Supported tasks with their default model identifiers.
  */
 export const DEFAULT_MODELS = Object.freeze({
@@ -430,6 +432,13 @@ export class PipelineOptions {
    * @type {?string}
    */
   modelRevision = null;
+
+  /**
+   * The flowId is used to track a flow of events for telemetry.
+   *
+   * @type {?string}
+   */
+  flowId = null;
 
   /**
    * The identifier for the tokenizer associated with the model, used for pre-processing inputs.
@@ -1143,9 +1152,12 @@ export class EngineProcess {
 /**
  * Creates a new `MLEngine` instance with the provided options.
  *
+ * @template {EngineFeatureIds} FeatureID
+ *
  * @param {object} options - Configuration options for the ML engine.
  * @param {?function(ProgressAndStatusCallbackParams):void} [notificationsCallback] - A function to call to indicate notifications.
  * @param {?AbortSignal} [abortSignal] - AbortSignal to cancel the download.
+ * @returns {Promise<MLEngine<FeatureID>>}
  */
 export async function createEngine(
   options,

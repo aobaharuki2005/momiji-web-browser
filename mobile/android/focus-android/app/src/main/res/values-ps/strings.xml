@@ -161,6 +161,21 @@
   <string name="about_screen_learn_more">نور مالومات ترلاسه کړئ</string>
   <!-- Header for the Privacy and Security settings menu -->
   <string name="preference_privacy_and_security_header">محرمیت او خونديتوب</string>
+  <!-- Preference summary for settings related to privacy and security -->
+  <string name="preference_privacy_and_security_summary">څارل، کوکيز، د معلوماتو انتخابونه</string>
+  <!--
+    Preference category description for settings related to search, set default
+    and autocomplete are settings a user can find and change inside the "search" settings screen
+  -->
+  <string name="preference_search_summary">ډيفالټ ټاکل، اتومات بشپړول</string>
+  <!--
+    Preference category description for settings screen for settings related to Mozilla
+
+    About the app and help are links that are inside this menu
+
+    %1$s will be replaced by the app name (e.g. Firefox Focus)
+  -->
+  <string name="preference_mozilla_summary">د %1$s په اړه، مرسته</string>
   <!-- Preference category for ad blocking and enhanced tracking protection settings -->
   <string name="preference_category_tracking_protection3">د پرمختللي څار خوندیتوب</string>
   <!-- Preference category for settings related to controlling web content -->
@@ -193,14 +208,40 @@
   <string name="preference_subitem_autocomplete">د URL اتومات بشپړول</string>
   <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
   <string name="preference_switch_autocomplete_topsites">د غوره سایټونو لپاره</string>
+  <!--
+    Summary for the toggle to enable autocomplete for the topsites list
+    %s is the name of the app (for example "Firefox Focus" or "Firefox Klar").
+  -->
+  <string name="preference_autocomplete_topsite_summary2">دا فعاله کړئ تر څو %s په پته‌ ځای کې د ۴۵۰ څخه زياتو مشهور URLs په اوتومات ډول بشپړ کړي.</string>
+  <!-- Title of "switch" preference that enables/disables autocomplete for the user-defined list -->
+  <string name="preference_switch_autocomplete_user_list">د هغو وېب‌پاڼو لپاره چې تاسو يې زياتوئ</string>
+  <!--
+    Summary for the toggle to enable autocomplete for the user-defined list
+    %s is the name of the app (for example "Firefox Focus" or "Firefox Klar").
+  -->
+  <string name="preference_autocomplete_user_list_summary2">فعال کړئ چې %s ستاسو د خوښې لېنکونه پخپله بشپړ کړي.</string>
   <!-- Preference category: Manage (user-defined) sites -->
   <string name="preference_category_autocomplete_manage_sites">د سایټونو اداره کول</string>
   <!-- Item in autocomplete settings that will open a new preference screen for adding and removing URLs to the user-defined list -->
   <string name="preference_autocomplete_subitem_manage_sites">د سایټونو اداره کول</string>
   <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
   <string name="preference_autocomplete_action_add">+ دودیز URL زياتول</string>
+  <!-- Explanation text above the list of custom autocomplete URLs. -->
+  <string name="preference_autocomplete_explanation_text">ستاسو د اتومات بشپړېدنې لېست:</string>
   <!-- Action at the bottom of the list of custom autocomplete URLs that will open a new screen to add a new URL to the list. -->
   <string name="preference_autocomplete_action_add2">URL اضافه کول</string>
+  <!-- Title of the screen for adding custom autocomplete URLs. -->
+  <string name="preference_autocomplete_title_add">خپل URL اضافه کول</string>
+  <!-- Label for the button to quick add custom autocomplete URLs. -->
+  <string name="custom_autocomplete_quick_add">خپل URL اضافه کول</string>
+  <!-- Label for the button to quick add the current URL to the custom autocomplete list -->
+  <string name="add_custom_autocomplete_label">لېنک اتومات بشپړېدنې ته اضافه کول</string>
+  <!-- Preference category for settings about cookies and site data -->
+  <string name="preference_category_cookies">کوکيز او د پاڼې معلومات</string>
+  <!-- Preference category for settings about data choices -->
+  <string name="preference_category_data_choices">د ډېټا غوراوي</string>
+  <!-- Title of the screen for removing custom autocomplete URLs. -->
+  <string name="preference_autocomplete_title_remove">خپل لېنکونه پاکول</string>
   <!-- A link to SUMO at autocomplete settings. -->
   <string name="preference_autocomplete_learn_more">نور مالومات ترلاسه کړئ</string>
   <!-- Example how a custom domain autocomplete URL be added (e.g. without http://) -->
@@ -228,6 +269,7 @@
   <string name="preference_category_mozilla">موزیلا</string>
   <!-- A link to SUMO at the end of the summary (preference_mozilla_telemetry_summary2) of the "Send anonymous usage data" setting. -->
   <string name="preference_mozilla_telemetry_summary">نور مالومات ترلاسه کړئ</string>
+  <string name="preference_daily_usage_ping_learn_more">نور مالومات تر لاسه کول</string>
   <string name="preference_search_remove">لېرې کړئ</string>
   <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
   <string name="content_description_menu">نور غوراوي</string>

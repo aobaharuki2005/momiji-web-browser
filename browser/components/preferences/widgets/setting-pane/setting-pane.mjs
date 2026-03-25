@@ -129,18 +129,23 @@ export class SettingPane extends MozLitElement {
 
   /** @param {string} groupId */
   groupTemplate(groupId) {
-    return html`<setting-group groupid=${groupId}></setting-group>`;
+    return html`<setting-group
+      groupid=${groupId}
+      .inSubPane=${this.isSubPane}
+    ></setting-group>`;
   }
 
   render() {
     return html`
-      <moz-page-header
-        data-l10n-id=${this.config.l10nId}
-        .iconSrc=${this.config.iconSrc}
-        .backButton=${this.isSubPane}
-        @navigate-back=${this.goBack}
-      ></moz-page-header>
-      ${this.config.groupIds.map(groupId => this.groupTemplate(groupId))}
+      <section>
+        <moz-page-header
+          data-l10n-id=${this.config.l10nId}
+          .iconSrc=${this.config.iconSrc}
+          .backButton=${this.isSubPane}
+          @navigate-back=${this.goBack}
+        ></moz-page-header>
+        ${this.config.groupIds.map(groupId => this.groupTemplate(groupId))}
+      </section>
     `;
   }
 }

@@ -39,21 +39,30 @@ export class AboutTranslationsChild extends JSWindowActorChild {
     "browser.translations.useHTML"
   );
 
-  handleEvent(event) {
+  async handleEvent(event) {
     if (event.type === "DOMDocElementInserted") {
       this.#exportFunctions();
     }
 
-    if (
-      event.type === "DOMContentLoaded" &&
-      Services.prefs.getBoolPref("browser.translations.enable")
-    ) {
-      this.#sendEventToContent({ type: "enable" });
+    if (event.type === "DOMContentLoaded") {
+      const enabled = await this.sendQuery("AboutTranslations:GetEnabledState");
+      this.#sendEventToContent({
+        type: "enabled-state-changed",
+        enabled,
+      });
     }
   }
 
   receiveMessage({ name, data }) {
     switch (name) {
+      case "AboutTranslations:EnabledStateChanged": {
+        const { enabled } = data;
+        this.#sendEventToContent({
+          type: "enabled-state-changed",
+          enabled,
+        });
+        break;
+      }
       case "AboutTranslations:SendTranslationsPort": {
         const { languagePair, port } = data;
         const transferables = [port];

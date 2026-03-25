@@ -1810,13 +1810,16 @@ export class TopSitesFeed {
   _mergeSponsoredLinks(sponsoredLinks) {
     const { positions: allocatedPositions, ready: sovReady } =
       this.store.getState().TopSites.sov || {};
+
+    // AMP links might have empty slots, remove them as SOV doesn't need those.
+    if (sponsoredLinks[SPONSORED_TILE_PARTNER_AMP]) {
+      sponsoredLinks[SPONSORED_TILE_PARTNER_AMP] =
+        sponsoredLinks[SPONSORED_TILE_PARTNER_AMP].filter(Boolean);
+    }
+
     if (!this._contile.sov || !sovReady) {
       return Object.values(sponsoredLinks).flat();
     }
-
-    // AMP links might have empty slots, remove them as SOV doesn't need those.
-    sponsoredLinks[SPONSORED_TILE_PARTNER_AMP] =
-      sponsoredLinks[SPONSORED_TILE_PARTNER_AMP].filter(Boolean);
 
     let sponsored = [];
 

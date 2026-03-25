@@ -619,6 +619,33 @@ bool MDefinition::congruentIfOperandsEqual(const MDefinition* ins) const {
   return true;
 }
 
+bool MDefinition::dominates(const MDefinition* other) const {
+  if (block() != other->block()) {
+    return block()->dominates(other->block());
+  }
+
+  // Nothing in a block dominates a phi in that block.
+  if (other->isPhi()) {
+    return false;
+  }
+
+  // Phis dominate all instructions in the block.
+  if (isPhi()) {
+    return true;
+  }
+
+  // If both defs are instructions in the same block, check whether
+  // `this` precedes `other`.
+  MInstructionIterator opIter = block()->begin(toInstruction());
+  do {
+    ++opIter;
+    if (opIter == block()->end()) {
+      return false;
+    }
+  } while (*opIter != other);
+  return true;
+}
+
 MDefinition* MDefinition::foldsTo(TempAllocator& alloc) {
   // In the default case, there are no constants to fold.
   return this;

@@ -137,6 +137,7 @@ export async function waitForInitialNavigationCompleted(
 export class ProgressListener {
   #expectNavigation;
   #resolveWhenCommitted;
+  #resolveWhenCommittedError;
   #resolveWhenStarted;
   #unloadTimeout;
   #waitForExplicitStart;
@@ -146,6 +147,7 @@ export class ProgressListener {
   #errorName;
   #navigationId;
   #navigationListener;
+  #seenNavigationCommitted;
   #seenStartFlag;
   #targetURI;
   #unloadTimerId;
@@ -207,6 +209,8 @@ export class ProgressListener {
 
     this.#deferredNavigation = null;
     this.#errorName = null;
+    this.#resolveWhenCommittedError = null;
+    this.#seenNavigationCommitted = false;
     this.#seenStartFlag = false;
     this.#targetURI = targetURI;
     this.#unloadTimerId = null;
@@ -333,6 +337,7 @@ export class ProgressListener {
             // Wait for the next location change notification to ensure that the
             // real error page was loaded.
             this.#trace(`Error=${errorName}, wait for redirect to error page`);
+            this.#seenNavigationCommitted = false;
             this.#errorName = errorName;
             return;
           }
@@ -370,12 +375,22 @@ export class ProgressListener {
   #onNavigationCommitted = (eventName, data) => {
     const { navigationId, url } = data;
 
+    this.#seenNavigationCommitted = true;
+
     if (this.#resolveWhenCommitted && this.#navigationId === navigationId) {
       this.#targetURI = Services.io.newURI(url);
-      this.#trace(
-        `Received "navigation-committed" event. Stopping the navigation.`
-      );
-      this.stop();
+      if (this.#resolveWhenCommittedError) {
+        this.#trace(
+          `Received "navigation-committed" event for an error page` +
+            ` (error: ${this.#resolveWhenCommittedError}). Stopping the navigation.`
+        );
+        this.stop({ error: new Error(this.#resolveWhenCommittedError) });
+      } else {
+        this.#trace(
+          `Received "navigation-committed" event. Stopping the navigation.`
+        );
+        this.stop();
+      }
     }
   };
 
@@ -424,7 +439,16 @@ export class ProgressListener {
       this.#trace(
         lazy.truncate`Location=errorPage, error=${errorName}, url=${this.documentURI.spec}`
       );
-      this.stop({ error: new Error(errorName) });
+      if (this.#seenNavigationCommitted || !this.#navigationListener) {
+        // If the navigation-committed event was already received, resolve immediately
+        this.stop({ error: new Error(errorName) });
+      } else {
+        this.#trace(
+          `Waiting for the "navigation-committed" event for the error page navigation (error: ${errorName}).`
+        );
+        this.#resolveWhenCommittedError = errorName;
+        this.#resolveWhenCommitted = true;
+      }
       return;
     }
 

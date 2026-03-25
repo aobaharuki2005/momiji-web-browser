@@ -415,6 +415,9 @@ int CamerasChild::StartCapture(CaptureEngine aCapEngine, const int capture_id,
           constraints, resize_mode);
   LockAndDispatch<> dispatcher(this, __func__, runnable, kError, kIpcError,
                                kSuccess);
+  if (!dispatcher.Success()) {
+    RemoveCallback(capture_id);
+  }
   return dispatcher.ReturnValue();
 }
 

@@ -134,6 +134,11 @@ class MockWebProgress {
     this.isLoadingDocument = false;
     this.documentRequest = null;
 
+    if (loadType & LOAD_FLAG_ERROR_PAGE) {
+      // loadType must be set before sending the stop state.
+      this.loadType = 0x10000;
+    }
+
     this.listener?.onStateChange(
       this,
       this.documentRequest,
@@ -142,7 +147,6 @@ class MockWebProgress {
     );
 
     if (loadType & LOAD_FLAG_ERROR_PAGE) {
-      this.loadType = 0x10000;
       return this.sendLocationChange({
         flag: Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE,
       });
@@ -867,6 +871,49 @@ add_task(
         "Listener has rejected in stop state for erroneous navigation"
       );
     }
+  }
+);
+
+add_task(
+  async function test_ProgressListener_navigationRejectedWaitsForNavigationCommitted() {
+    const browsingContext = new MockTopContext();
+    const webProgress = browsingContext.webProgress;
+    const mockNavigationManager = new MockNavigationManager();
+
+    const progressListener = new ProgressListener(webProgress, {
+      navigationManager: mockNavigationManager,
+    });
+
+    const navigationId = "navigationId1";
+    const navigated = progressListener.start(navigationId);
+
+    await webProgress.sendStartState();
+
+    // Emit a first navigation-committed before the location change
+    mockNavigationManager.emit("navigation-committed", {
+      navigationId,
+      url: TARGET_URI.spec,
+    });
+
+    await webProgress.sendStopState({
+      flag: Cr.NS_ERROR_MALWARE_URI,
+      loadType: LOAD_FLAG_ERROR_PAGE,
+    });
+
+    ok(
+      !(await hasPromiseRejected(navigated)),
+      "Listener waiting for navigation-committed event before rejecting"
+    );
+
+    mockNavigationManager.emit("navigation-committed", {
+      navigationId,
+      url: TARGET_URI_ERROR_PAGE.spec,
+    });
+
+    ok(
+      await hasPromiseRejected(navigated),
+      "Listener rejected after receiving navigation-committed for error page"
+    );
   }
 );
 

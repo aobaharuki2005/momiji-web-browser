@@ -196,6 +196,7 @@ export class SettingControl extends SettingElement {
     if (!this.setting) {
       throw new SettingNotDefinedError(this.config.id);
     }
+    this.id = `setting-control-${this.config.id}`;
     let prevHidden = this.hidden;
     this.hidden = !this.setting.visible;
     if (prevHidden != this.hidden) {

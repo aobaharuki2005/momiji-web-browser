@@ -14,6 +14,16 @@ import mozilla.components.compose.base.theme.layout.AcornWindowSize
 // The device parameter is needed in order to force the `LocalConfiguration.current.screenWidth`
 // to work properly. See: https://issuetracker.google.com/issues/300116108#comment1
 @Preview(
+    name = "Extra Small Window",
+    widthDp = SMALL_WINDOW_WIDTH,
+    heightDp = EXTRA_SMALL_WINDOW_HEIGHT,
+)
+@Preview(
+    name = "Extra Small Window Landscape",
+    widthDp = SMALL_WINDOW_WIDTH * 2,
+    heightDp = EXTRA_SMALL_WINDOW_HEIGHT,
+)
+@Preview(
     name = "Small Window",
     widthDp = SMALL_WINDOW_WIDTH,
 )

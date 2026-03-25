@@ -4797,10 +4797,10 @@ void SVGTextFrame::DoTextPathLayout() {
       Point offsetFromPath = normal * (vertical ? -mPositions[i].mPosition.x
                                                 : mPositions[i].mPosition.y);
       pt += offsetFromPath;
-      Point direction = textRun->IsInlineReversed() ? -tangent : tangent;
       mPositions[i].mPosition =
-          ThebesPoint(pt) - ThebesPoint(direction) * halfAdvance;
+          ThebesPoint(pt) - ThebesPoint(tangent) * halfAdvance;
       mPositions[i].mAngle += rotation;
+      Point direction = textRun->IsInlineReversed() ? -tangent : tangent;
 
       // Position any characters for a partial ligature.
       for (uint32_t k = i + 1; k < j; k++) {

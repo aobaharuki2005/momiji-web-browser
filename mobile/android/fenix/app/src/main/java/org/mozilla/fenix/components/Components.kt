@@ -313,8 +313,8 @@ class Components(private val context: Context) {
                 SetupChecklistPreferencesMiddleware(DefaultSetupChecklistRepository(context)),
                 SetupChecklistTelemetryMiddleware(),
                 ReviewPromptMiddleware(
-                    isReviewPromptFeatureEnabled = { settings.customReviewPromptFeatureEnabled },
-                    isTelemetryEnabled = { settings.isTelemetryEnabled },
+                    shouldUseNewTriggerCriteria = { settings.newReviewPromptTriggerCriteriaEnabled },
+                    shouldShowCustomPrompt = { settings.customReviewPromptUiEnabled && settings.isTelemetryEnabled },
                     createJexlHelper = nimbus::createJexlHelper,
                     nimbusEventStore = nimbus.events,
                 ).also {
@@ -353,8 +353,12 @@ class Components(private val context: Context) {
         )
     }
 
+    val termsOfUsePromptRepository by lazyMonitored {
+        DefaultTermsOfUsePromptRepository(settings)
+    }
+
     val termsOfUseManager by lazyMonitored {
-        TermsOfUseManager(DefaultTermsOfUsePromptRepository(settings))
+        TermsOfUseManager(termsOfUsePromptRepository)
     }
 
     val settingsIndexer by lazyMonitored {

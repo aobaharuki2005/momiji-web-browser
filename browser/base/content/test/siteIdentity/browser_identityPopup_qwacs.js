@@ -6,7 +6,10 @@
 
 add_setup(async function () {
   await SpecialPowers.pushPrefEnv({
-    set: [["security.qwacs.enable_test_trust_anchors", true]],
+    set: [
+      ["security.qwacs.enabled", true],
+      ["security.qwacs.enable_test_trust_anchors", true],
+    ],
   });
 });
 

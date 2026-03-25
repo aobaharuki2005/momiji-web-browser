@@ -335,9 +335,6 @@ export class UrlbarProviderHeuristicFallback extends UrlbarProvider {
         title: query,
         keyword,
       },
-      highlights: {
-        engine: UrlbarUtils.HIGHLIGHT.TYPED,
-      },
     });
   }
 }

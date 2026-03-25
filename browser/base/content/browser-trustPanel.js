@@ -177,13 +177,16 @@ class TrustPanel {
 
   async onContentBlockingEvent(
     event,
-    _webProgress,
+    webProgress,
     _isSimulated,
     _previousState
   ) {
-    if (!this.#enabled) {
+    // Only accept contentblocking events for uris that we initialised `updateIdentity`
+    // with, this can go wrong if trustpanel is enabled mid page load.
+    if (!this.#enabled || webProgress.browsingContext.currentURI != this.#uri) {
       return;
     }
+
     // First update all our internal state based on the allowlist and the
     // different blockers:
     this.anyDetected = false;
@@ -326,13 +329,9 @@ class TrustPanel {
   }
 
   async #updatePopup() {
-    if (this.#uri) {
-      this.#host = BrowserUtils.formatURIForDisplay(this.#uri, {
-        onlyBaseDomain: true,
-      });
-    } else {
-      this.#host = "";
-    }
+    this.#host = BrowserUtils.formatURIForDisplay(this.#uri, {
+      onlyBaseDomain: true,
+    });
     this.#popup.setAttribute("connection", this.#connectionState());
     this.#popup.setAttribute(
       "tracking-protection",
@@ -1284,6 +1283,9 @@ class TrustPanel {
   }
 
   async observe(subject, topic) {
+    if (!this.#enabled) {
+      return;
+    }
     switch (topic) {
       case "smartblock:open-protections-panel": {
         if (gBrowser.selectedBrowser.browserId !== subject.browserId) {

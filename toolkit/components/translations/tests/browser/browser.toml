@@ -81,6 +81,8 @@ skip-if = [
 
 ["browser_translations_actor_versioning.js"]
 
+["browser_translations_ai_feature.js"]
+
 ["browser_translations_full_page.js"]
 
 ["browser_translations_lang_tags.js"]

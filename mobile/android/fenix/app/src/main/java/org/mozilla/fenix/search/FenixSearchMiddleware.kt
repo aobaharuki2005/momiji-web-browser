@@ -243,7 +243,8 @@ class FenixSearchMiddleware(
         val showPrivatePrompt = with(store.state) {
             !settings.showSearchSuggestionsInPrivateOnboardingFinished &&
                     browsingModeManager.mode.isPrivate &&
-                    !isSearchSuggestionsFeatureEnabled() && !showSearchShortcuts && url != query
+                    !isSearchSuggestionsFeatureEnabled() && !showSearchShortcuts &&
+                    query.isNotBlank() && url != query
         }
 
         store.dispatch(

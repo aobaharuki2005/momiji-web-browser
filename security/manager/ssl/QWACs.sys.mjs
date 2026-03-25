@@ -416,7 +416,11 @@ export var QWACs = {
    *   use, if any, and null otherwise.
    */
   async determineQWACStatus(secInfo, uri, browsingContext) {
-    if (!secInfo || !secInfo.serverCert) {
+    if (
+      !Services.prefs.getBoolPref("security.qwacs.enabled") ||
+      !secInfo ||
+      !secInfo.serverCert
+    ) {
       return null;
     }
 

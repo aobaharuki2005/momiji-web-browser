@@ -495,10 +495,13 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
         let query = searchString.trim();
         let suggestion = entry.value;
         let title;
+        let titleHighlight;
         if (tail && entry.tailOffsetIndex >= 0) {
           title = tail;
+          titleHighlight = UrlbarUtils.HIGHLIGHT.SUGGESTED;
         } else if (suggestion) {
           title = suggestion;
+          titleHighlight = UrlbarUtils.HIGHLIGHT.SUGGESTED;
         } else {
           title = query;
         }
@@ -524,10 +527,7 @@ export class UrlbarProviderSearchSuggestions extends UrlbarProvider {
               helpUrl: entry.trending ? TRENDING_HELP_URL : undefined,
             },
             highlights: {
-              engine: UrlbarUtils.HIGHLIGHT.TYPED,
-              suggestion: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-              tail: UrlbarUtils.HIGHLIGHT.SUGGESTED,
-              keyword: UrlbarUtils.HIGHLIGHT.TYPED,
+              title: titleHighlight,
             },
           })
         );

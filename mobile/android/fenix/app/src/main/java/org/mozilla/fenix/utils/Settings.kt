@@ -63,6 +63,7 @@ import org.mozilla.fenix.nimbus.CookieBannersSection
 import org.mozilla.fenix.nimbus.DefaultBrowserPrompt
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
+import org.mozilla.fenix.nimbus.OpeningScreenOption
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.ShortcutType
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
@@ -346,12 +347,19 @@ class Settings(
     }
 
     /**
-     * Indicates if the custom review prompt feature should be enabled. `True` if the feature is
-     * enabled, `false` otherwise.
+     * Indicates if review prompt feature should use the new trigger criteria.
      */
-    var customReviewPromptFeatureEnabled by booleanPreference(
+    var newReviewPromptTriggerCriteriaEnabled by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_custom_review_prompt_enabled),
         default = { FxNimbus.features.customReviewPrompt.value().enabled },
+    )
+
+    /**
+     * Indicates if the custom review prompt UI should be enabled.
+     */
+    var customReviewPromptUiEnabled by booleanPreference(
+        appContext.getPreferenceKey(R.string.pref_key_custom_review_prompt_ui_enabled),
+        default = { FxNimbus.features.customReviewPromptUi.value().enabled },
     )
 
     var lastCfrShownTimeInMillis by longPreference(
@@ -847,13 +855,16 @@ class Settings(
         default = 0L,
     )
 
+    private val openingScreenDefault: OpeningScreenOption
+        get() = FxNimbus.features.homepageOpeningScreenDefault.value().defaultOption
+
     /**
      * Indicates if the user has selected the option to start on the home screen after
      * four hours of inactivity.
      */
     var openHomepageAfterFourHoursOfInactivity by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_start_on_home_after_four_hours),
-        default = true,
+        default = { openingScreenDefault == OpeningScreenOption.HOMEPAGE_FOUR_HOURS },
     )
 
     /**
@@ -861,7 +872,7 @@ class Settings(
      */
     var alwaysOpenTheHomepageWhenOpeningTheApp by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_start_on_home_always),
-        default = false,
+        default = { openingScreenDefault == OpeningScreenOption.HOMEPAGE },
     )
 
     /**
@@ -870,7 +881,7 @@ class Settings(
      */
     var alwaysOpenTheLastTabWhenOpeningTheApp by booleanPreference(
         appContext.getPreferenceKey(R.string.pref_key_start_on_home_never),
-        default = false,
+        default = { openingScreenDefault == OpeningScreenOption.LAST_TAB },
     )
 
     /**
@@ -2257,7 +2268,8 @@ class Settings(
      */
     var hasSeenBrowserToolbarCFR by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_toolbar_cfr),
-        default = isBenchmarkBuild,
+        default = Config.channel.isReleaseOrBeta || isBenchmarkBuild,
+        persistDefaultIfNotExists = true,
     )
 
     /**
@@ -2304,6 +2316,30 @@ class Settings(
 
     var firstWeekSeriesGrowthSent by booleanPreference(
         key = appContext.getPreferenceKey(R.string.pref_key_growth_first_week_series_sent),
+        default = false,
+    )
+
+    var firstWeekPostInstallLastThreeDaysActivitySent by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_first_week_post_install_last_three_days_activity_sent),
+        default = false,
+    )
+
+    var firstWeekPostInstallRecurrentActivitySent by booleanPreference(
+        key = appContext.getPreferenceKey(R.string.pref_key_first_week_post_install_recurrent_activity_sent),
+        default = false,
+    )
+
+    var firstWeekPostInstallEverydayActivityAndSetToDefaultSent by booleanPreference(
+        key = appContext.getPreferenceKey(
+            R.string.pref_key_first_week_post_install_everyday_activity_and_set_to_default_sent,
+        ),
+        default = false,
+    )
+
+    var firstWeekPostInstallIsBrowserSetToDefaultDuringFirstFourDays by booleanPreference(
+        key = appContext.getPreferenceKey(
+            R.string.pref_key_first_week_post_install_is_browser_set_to_default_during_first_four_days,
+        ),
         default = false,
     )
 

@@ -606,13 +606,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gTranslationsEnabled",
-  "browser.translations.enable",
-  false
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "gUseFeltPrivacyUI",
   "browser.privatebrowsing.felt-privacy-v1",
   false
@@ -1853,12 +1846,14 @@ let gFileMenu = {
     }
     this.updateUserContextUIVisibility();
     this.updateImportCommandEnabledState();
-    this.updateTabCloseCountState();
-    if (AppConstants.platform == "macosx") {
-      SharingUtils.updateShareURLMenuItem(
-        gBrowser.selectedBrowser,
-        document.getElementById("menu_savePage")
-      );
+    if (typeof gBrowser != "undefined") {
+      this.updateTabCloseCountState();
+      if (AppConstants.platform == "macosx") {
+        SharingUtils.updateShareURLMenuItem(
+          gBrowser.selectedBrowser,
+          document.getElementById("menu_savePage")
+        );
+      }
     }
     PrintUtils.updatePrintSetupMenuHiddenState();
 
@@ -2377,12 +2372,11 @@ var XULBrowserWindow = {
     } else {
       this._menuItemForTranslations.removeAttribute("disabled");
     }
-    if (gTranslationsEnabled) {
-      if (TranslationsParent.getIsTranslationsEngineSupported()) {
-        this._menuItemForTranslations.removeAttribute("hidden");
-      } else {
-        this._menuItemForTranslations.setAttribute("hidden", "true");
-      }
+    if (
+      TranslationsParent.AIFeature.isEnabled &&
+      TranslationsParent.getIsTranslationsEngineSupported()
+    ) {
+      this._menuItemForTranslations.removeAttribute("hidden");
     } else {
       this._menuItemForTranslations.setAttribute("hidden", "true");
     }

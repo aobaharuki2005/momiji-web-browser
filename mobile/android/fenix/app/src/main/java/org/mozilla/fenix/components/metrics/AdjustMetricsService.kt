@@ -35,6 +35,8 @@ class AdjustMetricsService(
 
     @Suppress("CognitiveComplexMethod")
     override fun start() {
+        logger.info("Started")
+
         val settings = application.components.settings
 
         if ((BuildConfig.ADJUST_TOKEN.isNullOrBlank())) {
@@ -44,11 +46,6 @@ class AdjustMetricsService(
                 throw IllegalStateException("No adjust token defined for release build")
             }
 
-            return
-        }
-
-        if (alreadyKnown(settings)) {
-            logger.info("Attribution already retrieved")
             return
         }
 
@@ -70,28 +67,31 @@ class AdjustMetricsService(
             config.enableCoppaCompliance()
         }
 
-        val timerId = AdjustAttribution.adjustAttributionTime.start()
-        config.setOnAttributionChangedListener {
-            AdjustAttribution.adjustAttributionTime.stopAndAccumulate(timerId)
+        if (!alreadyKnown(settings)) {
+            val timerId = AdjustAttribution.adjustAttributionTime.start()
+            config.setOnAttributionChangedListener {
+                AdjustAttribution.adjustAttributionTime.stopAndAccumulate(timerId)
 
-            if (!it.network.isNullOrEmpty()) {
-                settings.adjustNetwork = it.network
-                AdjustAttribution.network.set(it.network)
-            }
-            if (!it.adgroup.isNullOrEmpty()) {
-                settings.adjustAdGroup = it.adgroup
-                AdjustAttribution.adgroup.set(it.adgroup)
-            }
-            if (!it.creative.isNullOrEmpty()) {
-                settings.adjustCreative = it.creative
-                AdjustAttribution.creative.set(it.creative)
-            }
-            if (!it.campaign.isNullOrEmpty()) {
-                settings.adjustCampaignId = it.campaign
-                AdjustAttribution.campaign.set(it.campaign)
-            }
+                if (!it.network.isNullOrEmpty()) {
+                    settings.adjustNetwork = it.network
+                    AdjustAttribution.network.set(it.network)
+                }
+                if (!it.adgroup.isNullOrEmpty()) {
+                    settings.adjustAdGroup = it.adgroup
+                    AdjustAttribution.adgroup.set(it.adgroup)
+                }
+                if (!it.creative.isNullOrEmpty()) {
+                    settings.adjustCreative = it.creative
+                    AdjustAttribution.creative.set(it.creative)
+                }
+                if (!it.campaign.isNullOrEmpty()) {
+                    settings.adjustCampaignId = it.campaign
+                    AdjustAttribution.campaign.set(it.campaign)
+                }
 
-            triggerPing()
+                triggerPing()
+                logger.info("Trigger ping")
+            }
         }
 
         config.setLogLevel(LogLevel.SUPPRESS)
@@ -102,30 +102,42 @@ class AdjustMetricsService(
     }
 
     override fun stop() {
+        logger.info("Stopped")
+
         Adjust.disable()
         Adjust.gdprForgetMe(application.applicationContext)
     }
 
     @Suppress("TooGenericExceptionCaught")
     override fun track(event: Event) {
+        logger.info("Track")
+
         CoroutineScope(dispatcher).launch {
             try {
-                if (event is Event.GrowthData) {
+                val tokenName = when (event) {
+                    is Event.GrowthData -> event.tokenName
+                    is Event.FirstWeekPostInstall -> event.tokenName
+                }
+
+                if (event is Event.GrowthData || event is Event.FirstWeekPostInstall) {
                     if (storage.shouldTrack(event)) {
-                        Adjust.trackEvent(AdjustEvent(event.tokenName))
+                        Adjust.trackEvent(AdjustEvent(tokenName))
                         storage.updateSentState(event)
+                        logger.info("Update sent state $event")
                     } else {
                         storage.updatePersistentState(event)
+                        logger.info("Update persistent state $event")
                     }
                 }
             } catch (e: Exception) {
                 crashReporter.submitCaughtException(e)
+                logger.info("Track threw an exception for $event")
             }
         }
     }
 
     override fun shouldTrack(event: Event): Boolean =
-        event is Event.GrowthData
+        event is Event.GrowthData || event is Event.FirstWeekPostInstall
 
     companion object {
         @VisibleForTesting

@@ -76,15 +76,15 @@ internal fun FullDisplayToolbar(
     Surface {
         Box(
             modifier = modifier
-                .padding(
+                .semantics { testTagsAsResourceId = true },
+        ) {
+            Row(
+                modifier = Modifier.padding(
                     horizontal = when (isSmallWidthScreen) {
                         true -> NO_TOOLBAR_PADDING_DP.dp
                         else -> LARGE_TOOLBAR_PADDING_DP.dp
                     },
-                )
-                .semantics { testTagsAsResourceId = true },
-        ) {
-            Row(
+                ),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (browserActionsStart.isNotEmpty()) {

@@ -9071,7 +9071,7 @@
             this.mBrowser.originalURI = aRequest.originalURI;
           }
 
-          if (!this._allowTransparentBrowser) {
+          if (!gBrowser._allowTransparentBrowser) {
             this.mBrowser.toggleAttribute(
               "transparent",
               AIWindow.isAIWindowActive(window) &&

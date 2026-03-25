@@ -779,6 +779,8 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
 
 nsresult nsFrameLoader::CheckURILoad(nsIURI* aURI,
                                      nsIPrincipal* aTriggeringPrincipal) {
+  NS_ENSURE_STATE(mOwnerContent && mOwnerContent->IsInComposedDoc());
+
   // Check for security.  The fun part is trying to figure out what principals
   // to use.  The way I figure it, if we're doing a LoadFrame() accidentally
   // (eg someone created a frame/iframe node, we're being parsed, XUL iframes
@@ -2319,6 +2321,12 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     }
   }
 
+  if (mDestroyCalled) {
+    // Docshell creation can run script,see bug 2007774.
+    // Callers might expect there to be a document etc. if we return OK.
+    return nsresult::NS_ERROR_DOCSHELL_DYING;
+  }
+
   return NS_OK;
 }
 
@@ -2886,7 +2894,8 @@ nsresult nsFrameLoader::FinishStaticClone(
   nsCOMPtr<Document> doc = origDocShell->GetDocument();
   NS_ENSURE_STATE(doc);
 
-  MaybeCreateDocShell();
+  nsresult rv = MaybeCreateDocShell();
+  NS_ENSURE_SUCCESS(rv, rv);
   RefPtr<nsDocShell> docShell = GetDocShell();
   NS_ENSURE_STATE(docShell);
 

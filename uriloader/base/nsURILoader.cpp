@@ -17,6 +17,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIInputStream.h"
+#include "nsIJARChannel.h"
 #include "nsIStreamConverterService.h"
 #include "nsIWeakReferenceUtils.h"
 #include "nsIHttpChannel.h"
@@ -40,6 +41,7 @@
 #include "nsMimeTypes.h"
 
 #include "nsDocLoader.h"
+#include "mozilla/dom/LoadURIOptionsBinding.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Result.h"
@@ -565,7 +567,10 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest* request) {
     }
   }
 
-  if (mFlags & nsIURILoader::DONT_RETARGET) {
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  if (mFlags & nsIURILoader::DONT_RETARGET ||
+      loadInfo->GetForceMediaDocument() !=
+          mozilla::dom::ForceMediaDocument::None) {
     LOG(
         ("  External handling forced or (listener not interested and no "
          "stream converter exists), and retargeting disallowed -> aborting"));
@@ -688,6 +693,15 @@ nsresult nsDocumentOpenInfo::TryStreamConversion(nsIChannel* aChannel) {
   nsCString srcContentType(mContentType);
   if (srcContentType.IsEmpty()) {
     srcContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
+  }
+
+  // If this is an unknown content type loaded from a JAR file
+  // don't attempt to sniff it.
+  if (srcContentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
+    if (nsCOMPtr<nsIJARChannel> jar = do_QueryInterface(aChannel)) {
+      m_targetStreamListener = nullptr;
+      return NS_ERROR_NOT_AVAILABLE;
+    }
   }
 
   nsresult rv =

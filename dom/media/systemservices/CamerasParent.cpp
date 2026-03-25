@@ -514,7 +514,7 @@ void AggregateCapturer::SetConfigurationFor(
   }
 }
 
-webrtc::VideoCaptureCapability AggregateCapturer::CombinedCapability() {
+Maybe<webrtc::VideoCaptureCapability> AggregateCapturer::CombinedCapability() {
   Maybe<webrtc::VideoCaptureCapability> combinedCap;
   CamerasParent* someParent{};
   const auto streamsGuard = mStreams.ConstLock();
@@ -541,6 +541,11 @@ webrtc::VideoCaptureCapability AggregateCapturer::CombinedCapability() {
       combinedCap->height = std::max(combinedCap->height, cap.height);
     }
   }
+
+  if (!combinedCap) {
+    return Nothing();
+  }
+
   if (mCapEngine == CameraEngine) {
     const webrtc::VideoCaptureCapability* minDistanceCapability{};
     uint64_t minDistance = UINT64_MAX;
@@ -567,7 +572,7 @@ webrtc::VideoCaptureCapability AggregateCapturer::CombinedCapability() {
       combinedCap = Some(*minDistanceCapability);
     }
   }
-  return combinedCap.extract();
+  return combinedCap;
 }
 
 void AggregateCapturer::OnCaptureEnded() {
@@ -1240,8 +1245,8 @@ ipc::IPCResult CamerasParent::RecvStartCapture(
               if (cbh) {
                 cbh->SetConfigurationFor(aStreamId, capability, aConstraints,
                                          aResizeMode, /*aStarted=*/true);
-                error =
-                    cap.VideoCapture()->StartCapture(cbh->CombinedCapability());
+                error = cap.VideoCapture()->StartCapture(
+                    *cbh->CombinedCapability());
                 if (error) {
                   cbh->SetConfigurationFor(aStreamId, capability, aConstraints,
                                            aResizeMode, /*aStarted=*/false);
@@ -1427,6 +1432,14 @@ ipc::IPCResult CamerasParent::RecvStopCapture(const CaptureEngine& aCapEngine,
               aStreamId, webrtc::VideoCaptureCapability{},
               NormalizedConstraints{}, dom::VideoResizeModeEnum::None,
               /*aStarted=*/false);
+          if (!capturer->CombinedCapability()) {
+            if (auto* engine = EnsureInitialized(aCapEngine)) {
+              engine->WithEntry(capturer->mCaptureId,
+                                [&](VideoEngine::CaptureEntry& aEntry) {
+                                  aEntry.VideoCapture()->StopCapture();
+                                });
+            }
+          }
         }
       }));
 

@@ -197,6 +197,14 @@ let propNameAllowlist = [
   { propName: "--tab-group-color-gray-invert", isFromDevTools: false },
   { propName: "--tab-group-color-gray-pale", isFromDevTools: false },
 
+  // These properties are used as an anchor-name/position-anchor value
+  //
+  // This test appears to be overly aggresive in treating a dashed-ident as a
+  // custom property definition. In this case it is just an identifier, not a
+  // custom property. Bug 2012304
+  { propName: "--ai-controls-description", isFromDevTools: false },
+  { propName: "--browser-with-dialog", isFromDevTools: false },
+
   /* Allow design tokens in devtools without all variables being used there */
   { sourceName: /\/design-system\/tokens-.*\.css$/, isFromDevTools: true },
 

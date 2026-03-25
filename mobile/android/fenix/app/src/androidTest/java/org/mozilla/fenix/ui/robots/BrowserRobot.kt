@@ -1476,7 +1476,7 @@ class BrowserRobot(private val composeTestRule: ComposeTestRule) {
 
         fun clickDownloadLink(title: String, interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
             clickPageObject(composeTestRule, itemContainingText(title))
-
+            waitForAppWindowToBeUpdated()
             DownloadRobot(composeTestRule).interact()
             return DownloadRobot.Transition(composeTestRule)
         }

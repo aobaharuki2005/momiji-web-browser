@@ -492,9 +492,7 @@ function initPage() {
       // enable buttons
       let trrExceptionButton = document.getElementById("trrExceptionButton");
       trrExceptionButton.addEventListener("click", () => {
-        RPMSendQuery("Browser:AddTRRExcludedDomain", {
-          hostname: HOST_NAME,
-        }).then(() => {
+        RPMSendQuery("Browser:AddTRRExcludedDomain").then(() => {
           retryThis(trrExceptionButton);
         });
       });
@@ -1278,6 +1276,11 @@ function setTechnicalDetailsOnCertError(
           // get anyone anywhere useful. bug 432491
           const okHost = altName.replace(/^\*\./, "www.");
 
+          // We can't use HOST_NAME for the comparison, as that is
+          // display-formatted and can include a port. We need the ascii host as
+          // that is what the cert's SAN value would also contain.
+          const asciiHostname = RPMGetInnermostAsciiHost();
+
           // Let's check if we want to make this a link.
           const showLink =
             /* case #1:
@@ -1293,13 +1296,13 @@ function setTechnicalDetailsOnCertError(
              * domain names are famous for having '.' characters in them,
              * which would allow spurious and possibly hostile matches.
              */
-            okHost.endsWith("." + HOST_NAME) ||
+            okHost.endsWith("." + asciiHostname) ||
             /* case #2:
              * browser.garage.maemo.org uses an invalid security certificate.
              *
              * The certificate is only valid for garage.maemo.org
              */
-            HOST_NAME.endsWith("." + okHost);
+            asciiHostname.endsWith("." + okHost);
 
           const l10nArgs = { hostname: HOST_NAME, "alt-name": altName };
           if (showLink) {

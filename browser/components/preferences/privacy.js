@@ -3948,21 +3948,6 @@ var gPrivacyPane = {
 
     setSyncFromPrefListener("savePasswords", () => this.readSavePasswords());
 
-    if (AlertsServiceDND) {
-      let notificationsDoNotDisturbBox = document.getElementById(
-        "notificationsDoNotDisturbBox"
-      );
-      notificationsDoNotDisturbBox.removeAttribute("hidden");
-      let checkbox = document.getElementById("notificationsDoNotDisturb");
-      document.l10n.setAttributes(checkbox, "permissions-notification-pause");
-      if (AlertsServiceDND.manualDoNotDisturb) {
-        let notificationsDoNotDisturb = document.getElementById(
-          "notificationsDoNotDisturb"
-        );
-        notificationsDoNotDisturb.setAttribute("checked", true);
-      }
-    }
-
     this.initSiteDataControls();
 
     this.initCookieBannerHandling();
