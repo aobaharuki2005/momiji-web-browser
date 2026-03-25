@@ -6,7 +6,6 @@ import platform
 import subprocess
 import sys
 import tempfile
-import traceback
 from urllib.request import urlopen
 
 import certifi
@@ -36,10 +35,10 @@ output as packages are built.
 NO_BREW_INSTALLED = "It seems you don't have Homebrew installed."
 
 
-class OSXAndroidBootstrapper(object):
+class OSXAndroidBootstrapper:
     def install_mobile_android_packages(self, mozconfig_builder, artifact_mode=False):
         os_arch = platform.machine()
-        if os_arch != "x86_64" and os_arch != "arm64":
+        if os_arch not in {"x86_64", "arm64"}:
             raise Exception(
                 "You need a 64-bit version of Mac OS X to build "
                 "GeckoView/Firefox for Android."
@@ -47,39 +46,18 @@ class OSXAndroidBootstrapper(object):
 
         from mozboot import android
 
+        if os_arch in {"x86_64", "x86"}:
+            avd_manifest_path = android.AVD_MANIFEST_X86_64
+        else:
+            avd_manifest_path = android.AVD_MANIFEST_ARM64
+
         android.ensure_android(
             "macosx",
             os_arch,
-            artifact_mode=False,
+            artifact_mode=artifact_mode,
             no_interactive=self.no_interactive,
+            avd_manifest_path=avd_manifest_path,
         )
-
-        if os_arch == "x86_64" or os_arch == "x86":
-            android.ensure_android(
-                "macosx",
-                os_arch,
-                system_images_only=True,
-                artifact_mode=False,
-                no_interactive=self.no_interactive,
-                avd_manifest_path=android.AVD_MANIFEST_X86_64,
-            )
-            android.ensure_android(
-                "macosx",
-                os_arch,
-                system_images_only=True,
-                artifact_mode=False,
-                no_interactive=self.no_interactive,
-                avd_manifest_path=android.AVD_MANIFEST_ARM,
-            )
-        else:
-            android.ensure_android(
-                "macosx",
-                os_arch,
-                system_images_only=True,
-                artifact_mode=False,
-                no_interactive=self.no_interactive,
-                avd_manifest_path=android.AVD_MANIFEST_ARM64,
-            )
 
     def ensure_mobile_android_packages(self):
         from mozboot import android
@@ -87,26 +65,24 @@ class OSXAndroidBootstrapper(object):
         arch = platform.machine()
         android.ensure_java("macosx", arch)
 
-        if arch == "x86_64" or arch == "x86":
-            self.install_toolchain_artifact(android.MACOS_X86_64_ANDROID_AVD)
-            self.install_toolchain_artifact(android.MACOS_ARM_ANDROID_AVD)
+        if arch in {"x86_64", "x86"}:
+            self.install_toolchain_artifact(android.X86_64_ANDROID_AVD)
         elif arch == "arm64":
-            # The only emulator supported on Apple Silicon is the Arm64 one.
-            self.install_toolchain_artifact(android.MACOS_ARM64_ANDROID_AVD)
+            self.install_toolchain_artifact(android.ARM64_ANDROID_AVD)
 
     def install_mobile_android_artifact_mode_packages(self, mozconfig_builder):
-        self.install_mobile_android_packages(mozconfig_builder, artifact_mode=False)
+        self.install_mobile_android_packages(mozconfig_builder, artifact_mode=True)
 
     def generate_mobile_android_mozconfig(self):
         return self._generate_mobile_android_mozconfig()
 
     def generate_mobile_android_artifact_mode_mozconfig(self):
-        return self._generate_mobile_android_mozconfig(artifact_mode=False)
+        return self._generate_mobile_android_mozconfig(artifact_mode=True)
 
     def _generate_mobile_android_mozconfig(self, artifact_mode=False):
         from mozboot import android
 
-        return android.generate_mozconfig("macosx", artifact_mode=False)
+        return android.generate_mozconfig("macosx", artifact_mode=artifact_mode)
 
 
 def ensure_command_line_tools():
@@ -132,6 +108,7 @@ def ensure_command_line_tools():
     # (via `xcode-select --install`).
     proc = subprocess.run(
         ["xcode-select", "--print-path"],
+        check=False,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
     )
@@ -185,7 +162,7 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
                 "It will be installed with brew"
             )
 
-        packages = ["git", "gnutar", "terminal-notifier", "watchman", "rust", "cargo"]
+        packages = ["git", "gnu-tar", "terminal-notifier", "watchman"]
         if not hg_modern:
             packages.append("mercurial")
         self._ensure_homebrew_packages(packages)
@@ -197,75 +174,39 @@ class OSXBootstrapper(OSXAndroidBootstrapper, BaseBootstrapper):
         pass
 
     def _ensure_homebrew_found(self):
-        self.brew = to_optional_path(which("port"))
+        self.brew = to_optional_path(which("brew"))
 
         return self.brew is not None
 
     def _ensure_homebrew_packages(self, packages, is_for_cask=False):
+        package_type_flag = "--cask" if is_for_cask else "--formula"
         self.ensure_homebrew_installed()
 
         def create_homebrew_cmd(*parameters):
             base_cmd = [to_optional_str(self.brew)]
             base_cmd.extend(parameters)
-            return ["sudo"] + base_cmd 
+            return base_cmd + [package_type_flag]
 
         installed = set(
             subprocess.check_output(
-                create_homebrew_cmd("installed"), universal_newlines=True
+                create_homebrew_cmd("list"), universal_newlines=True
             ).split()
         )
         outdated = set(
             subprocess.check_output(
-                create_homebrew_cmd("outdated"), universal_newlines=True
+                create_homebrew_cmd("outdated", "--quiet"), universal_newlines=True
             ).split()
         )
 
         to_install = set(package for package in packages if package not in installed)
         to_upgrade = set(package for package in packages if package in outdated)
-        
+
         if to_install or to_upgrade:
             print(BREW_PACKAGES)
-        if self.os_version < Version("10.15"): # macOS Mojave
-            ''' Note that LLVM must be installed first. Otherwise, the system attempts to install
-            the latest version of LLVM compiler infrastructure which does not build. '''
-            subprocess.check_call(create_homebrew_cmd("install") + ["llvm-11"])
-            exclude_recent_versions = ["llvm"] # the list will grow with time
-            for dependency in exclude_recent_versions:
-                if dependency in to_install:
-                    to_install.remove(dependency)
-                if dependency in to_upgrade:
-                    to_upgrade.remove(dependency)
-
-            ''' Hardcoded for a very problematic package in terms of its management using Homebrew. 
-            Just ignore it, it is not mandatory to have it installed as of July 2023. '''
-            if "watchman" in to_install:
-                to_install.remove("watchman")
-            if "watchman" in to_upgrade:
-                to_upgrade.remove("watchman")
-
-            if to_install:
-                for dependency in to_install:
-                    try:
-                        subprocess.check_call(create_homebrew_cmd("install") + list(to_install) \
-                                              + ["--ignore-dependencies"] + exclude_recent_versions)
-                    except:
-                        print("It seems there is a problem with Firefox dependencies. You need to change " +
-                              "the procedure on how Homebrew packages are installed on macOS Mojave.")
-                        traceback.print_exc()
-            if to_upgrade:
-                for dependency in to_upgrade:
-                    try:
-                        subprocess.check_call(create_homebrew_cmd("upgrade") + list(dependency) \
-                                          + ["--ignore-dependencies"] + exclude_recent_versions)
-                    except:
-                        print("It seems there is a problem with Firefox dependencies. You need to change " +
-                              "the procedure on how Homebrew packages are installed on macOS Mojave.")
-                        traceback.print_exc()
-        else:
-            if to_install:
-                subprocess.check_call(create_homebrew_cmd("install") + list(to_install))
-            if to_upgrade:
-                subprocess.check_call(create_homebrew_cmd("upgrade") + list(to_upgrade))
+        if to_install:
+            subprocess.check_call(create_homebrew_cmd("install") + list(to_install))
+        if to_upgrade:
+            subprocess.check_call(create_homebrew_cmd("upgrade") + list(to_upgrade))
 
     def _ensure_homebrew_casks(self, casks):
         self._ensure_homebrew_found()
