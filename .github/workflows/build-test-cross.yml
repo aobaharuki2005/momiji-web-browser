@@ -1,9 +1,6 @@
-name: build Momiji testing distribution (Momiji rolling, Firefox stable - arm64 cross compiling)
+name: build Momiji testing distribution (arm64 cross compiling)
 
 on:
-  push:
-    branches:
-      - '148*'
   workflow_dispatch:
 
 jobs:
