@@ -10,10 +10,12 @@ ac_add_options --target=x86_64-apple-darwin11.0.0
 export MACOSX_DEPLOYMENT_TARGET=10.7
 
 # ============= SCCACHE ==============
-if test -x "$(command -v sccache)"; then
-    ac_add_options --with-ccache=/usr/local/bin/sccache
-    export SCCACHE_IDLE_TIMEOUT=0
-fi
+ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
+export SCCACHE_IDLE_TIMEOUT=0
+
+# ============= NASM & DUMPSYMS =============
+export NASM="$HOME/.mozbuild/nasm/nasm"
+export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
 
 # ============ SDK ===================
 # Use SDK 26.2 (same as which used to build custom Rust) to avoid unexpected conflicts
@@ -36,14 +38,14 @@ export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.91.0-custom/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
-export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.7 -C link-arg=-Wl,-ld_classic"
+export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.7"
 
 # ========== C/C++ ==========
-export CC="$HOME/.mozbuild/clang/bin/clang"
-export CXX="$HOME/.mozbuild/clang/bin/clang++"
-export LDFLAGS="-mmacosx-version-min=10.7 -ld_classic"
-export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-ld_classic"
-export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-ld_classic"
+export CC="/usr/bin/clang"
+export CXX="/usr/bin/clang++"
+export LDFLAGS="-mmacosx-version-min=10.7"
+export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070"
+export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070"
 
 # ========== OPTIMIZATIONS ==========
 ac_add_options --disable-crashreporter
@@ -55,12 +57,12 @@ ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
 
 # From Waterfox (Production build)
-# ac_add_options --enable-lto=thin
-# ac_add_options --enable-optimize="-march=core2 -mtune=ivybridge -O3 -w"
-# ac_add_options --enable-release
-# ac_add_options --enable-rust-simd
-# ac_add_options RUSTC_OPT_LEVEL=3
-# export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
+ac_add_options --enable-lto="thin"
+ac_add_options --enable-optimize="-march=core2 -O3 -w"
+ac_add_options --enable-release
+ac_add_options --enable-rust-simd
+ac_add_options RUSTC_OPT_LEVEL=3
+export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
 
 # From Waterfox (development build)
-ac_add_options --enable-optimize="-Os -w"
+# ac_add_options --enable-optimize="-Os -w"
