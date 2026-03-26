@@ -88,7 +88,7 @@ jobs:
         run: | 
           # Khởi động sccache trước khi build
           $HOME/.mozbuild/sccache/sccache --start-server
-          /usr/bin/python3 ./mach configure
+          MOZ_LD64_KNOWN_GOOD=1 /usr/bin/python3 ./mach configure
 
       - name: Build
         id: build
