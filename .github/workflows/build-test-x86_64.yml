@@ -1,9 +1,9 @@
-name: build Momiji testing distribution
+name: Build Momiji testing distribution (x86_64 compiling)
 
 on:
   push:
-    branches:
-      - '140.2.0esr-xcodeclang'
+    branches-ignore:
+      - 'master'
   workflow_dispatch:
 
 jobs:
@@ -21,15 +21,15 @@ jobs:
       # Khôi phục cache của sccache từ các lần build trước
       - name: Restore sccache cache mozbuild toolchains
         id: restore-cache
-        uses: actions/cache@v5.0.4
+        uses: actions/cache/restore@v5.0.4
         with:
           path: | 
             ~/Library/Caches/Mozilla.sccache 
             ~/.mozbuild
             ~/.rustup/toolchains/1.91.0-custom
-          key: ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}  # *macos-15-intel*-sccache-*mozconfig-sha* => less cache loss
+          key: ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-sccache-
+            ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}
 
       - name: Select Xcode 26.2
         run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
@@ -57,7 +57,7 @@ jobs:
             # Đổi tên thư mục tạm thành .mozbuild
             mv ~/tmp_toolchains "$HOME/.mozbuild"
             
-            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen."
+            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms."
           fi
 
       - name: Create mozconfig build config from template
@@ -104,10 +104,10 @@ jobs:
 
       - name: Saving cache (even if pipeline fails)
         id: save-cache
-        if: always() && steps.restore-cache.outputs.cache-hit != 'true'
+        if: always()
         uses: actions/cache/save@v5
         with:
-          key: ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}
+          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
           path: |
             ~/Library/Caches/Mozilla.sccache 
             ~/.mozbuild
