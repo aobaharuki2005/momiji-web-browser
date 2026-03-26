@@ -1,9 +1,9 @@
-name: Build Momiji testing distribution (x86_64 compiling)
+name: Build Momiji release distribution (x86_64 compiling)
 
 on:
-  push:
-    branches-ignore:
-      - 'master'
+  pull_request:
+    branches:
+      - master
   workflow_dispatch:
 
 jobs:

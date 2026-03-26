@@ -57,13 +57,13 @@ ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
 
 # From Waterfox (Production build)
-# export MOZ_LD64_KNOWN_GOOD=1
-# export MOZ_LTO="cross"
-# ac_add_options --enable-optimize="-march=core2 -O3 -w"
-# ac_add_options --enable-release
-# ac_add_options --enable-rust-simd
-# ac_add_options RUSTC_OPT_LEVEL=3
-# export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
+export MOZ_LD64_KNOWN_GOOD=1
+export MOZ_LTO="cross"
+ac_add_options --enable-optimize="-march=core2 -O3 -w"
+ac_add_options --enable-release
+ac_add_options --enable-rust-simd
+ac_add_options RUSTC_OPT_LEVEL=3
+export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
 
 # From Waterfox (development build)
-ac_add_options --enable-optimize="-Os -w"
+# ac_add_options --enable-optimize="-Os -w"
