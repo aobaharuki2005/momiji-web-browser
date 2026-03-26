@@ -29,7 +29,7 @@ jobs:
             ~/.rustup/toolchains/1.91.0-custom-cross
           key: ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}-
+            ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}
 
       - name: Select Xcode 26.2
         run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
