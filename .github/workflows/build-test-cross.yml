@@ -58,7 +58,7 @@ jobs:
 
       - name: Create mozconfig build config from template
         id: buildcfg-link
-        run: ln -sf ./mozconfig-cicd.sh mozconfig
+        run: ln -sf ./mozconfig-cicd-cross.sh mozconfig
 
       - name: Manually configure Rust toolchain
         id: rust-cfg
