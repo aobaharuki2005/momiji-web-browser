@@ -1,6 +1,9 @@
 name: build Momiji testing distribution (arm64 cross compiling)
 
 on:
+  push:
+    branches-ignore:
+      - 'master'
   workflow_dispatch:
 
 jobs:
