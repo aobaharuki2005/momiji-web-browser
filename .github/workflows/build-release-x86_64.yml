@@ -1,4 +1,4 @@
-name: Build Momiji release distribution (x86_64 compiling)
+name: release build (x86_64 runner)
 
 on:
   pull_request:
