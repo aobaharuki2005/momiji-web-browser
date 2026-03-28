@@ -2,8 +2,12 @@ name: testing build (x86_64 runner)
 
 on:
   push:
-    branches-ignore:
-      - 'master'
+    branches:
+      - '*test'
+    paths-ignore:
+      - '.github/workflows/*.yml'
+      - '.github/workflows/*.yaml'
+      - 'mozconf*'
 
 jobs:
   build:
@@ -26,9 +30,10 @@ jobs:
             ~/Library/Caches/Mozilla.sccache 
             ~/.mozbuild
             ~/.rustup/toolchains/1.91.0-custom
-          key: ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
+          key: ${{ runner.os }}-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}
+            ${{ runner.os }}-${{ hashFiles('mozconfig-cicd.sh') }}
+            ${{ runner.os }}-
 
       - name: Select Xcode 26.2
         run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
@@ -115,7 +120,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7.0.0
         with:
-          name: momiji-build-output
+          name: momiji-testing-output-${{ github.run_id }}-${{ github.run_attempt }}
           path: obj-ff-dbg-esr/dist/*.dmg
           if-no-files-found: error
           retention-days: 7
