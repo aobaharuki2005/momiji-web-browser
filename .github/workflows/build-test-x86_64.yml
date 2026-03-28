@@ -1,0 +1,127 @@
+name: testing build (x86_64 runner)
+
+on:
+  push:
+    branches:
+      - '*test'
+    paths-ignore:
+      - '.github/workflows/*.yml'
+      - '.github/workflows/*.yaml'
+      - 'mozconf*'
+
+jobs:
+  build:
+    name: build Momiji
+    runs-on: macos-15-intel
+    steps:     
+      - name: Checkout source code
+        id: checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      # Khôi phục cache của sccache từ các lần build trước
+      - name: Restore sccache cache mozbuild toolchains
+        id: restore-cache
+        uses: actions/cache/restore@v5.0.4
+        with:
+          path: | 
+            ~/Library/Caches/Mozilla.sccache 
+            ~/.mozbuild
+            ~/.rustup/toolchains/1.91.0-custom
+          key: ${{ runner.os }}-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-${{ hashFiles('mozconfig-cicd.sh') }}
+            ${{ runner.os }}-
+
+      - name: Select Xcode 26.2
+        run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
+
+      - name: Bootstrapping build deps
+        id: bootstrap
+        run: |
+          if [ ! -d "$HOME/.mozbuild" ]; then
+            echo "Cached .mozbuild toolchain not found. Starting bootstrap..."
+            /usr/bin/python3 ./mach bootstrap --application-choice=browser
+        
+            # Tạo thư mục tạm để lưu các toolchain quan trọng
+            mkdir -p ~/tmp_toolchains
+            
+            # Di chuyển các thư mục cần thiết ra ngoài (dùng -f để tránh hỏi)
+            [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
+            [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
+            [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
+            [ -d "$HOME/.mozbuild/nasm" ] && mv "$HOME/.mozbuild/nasm" ~/tmp_toolchains/
+            [ -d "$HOME/.mozbuild/dump_syms" ] && mv "$HOME/.mozbuild/dump_syms" ~/tmp_toolchains/
+            
+            # Xóa sạch toàn bộ thư mục .mozbuild cũ (vốn chứa nhiều rác)
+            rm -rf "$HOME/.mozbuild"
+        
+            # Đổi tên thư mục tạm thành .mozbuild
+            mv ~/tmp_toolchains "$HOME/.mozbuild"
+            
+            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms."
+          fi
+
+      - name: Create mozconfig build config from template
+        id: buildcfg-link
+        run: ln -sf ./mozconfig-cicd.sh mozconfig
+
+      - name: Manually configure Rust toolchain
+        id: rust-cfg
+        run: |
+          if [ ! -d "$HOME/.rustup/toolchains/1.91.0-custom" ]; then
+            echo "Cached Rust 1.91.0-custom not found. Starting bootstrap..."
+            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-redist/1.91.0-custom.tar.gz -o 1.91.0-custom.tar.gz
+            mkdir -p ~/.rustup/toolchains
+            tar -xf ./1.91.0-custom.tar.gz -C ~/.rustup/toolchains
+            echo "Bootstrap Rust 1.91.0-custom finished."
+          fi
+        
+          # Change default Rust toolchain
+          rustup default 1.91.0-custom
+          rustup override set 1.91.0-custom
+
+          # Verify Rust installation
+          cargo --version
+          rustc --version
+          
+      - name: Configure build options
+        id: configure
+        run: | 
+          # Khởi động sccache trước khi build
+          $HOME/.mozbuild/sccache/sccache --start-server
+          /usr/bin/python3 ./mach configure
+
+      - name: Build
+        id: build
+        run: /usr/bin/python3 ./mach build
+
+      - name: Show sccache stats
+        id: show-sccache-stats
+        run: $HOME/.mozbuild/sccache/sccache --show-stats
+
+      - name: Package
+        id: pkg
+        run: /usr/bin/python3 ./mach package
+
+      - name: Saving cache (even if pipeline fails)
+        id: save-cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
+          path: |
+            ~/Library/Caches/Mozilla.sccache 
+            ~/.mozbuild
+            ~/.rustup/toolchains/1.91.0-custom
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7.0.0
+        with:
+          name: momiji-testing-output-${{ github.run_id }}-${{ github.run_attempt }}
+          path: obj-ff-dbg-esr/dist/*.dmg
+          if-no-files-found: error
+          retention-days: 7
+    
