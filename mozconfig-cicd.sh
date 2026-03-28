@@ -58,6 +58,7 @@ ac_add_options --disable-debug
 ac_add_options --disable-dmd
 ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
+ac_add_options --disable-updater
 
 # From Waterfox (Production build)
 # export MOZ_LD64_KNOWN_GOOD=1
