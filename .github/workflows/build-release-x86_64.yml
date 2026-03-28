@@ -29,7 +29,9 @@ jobs:
             ~/.rustup/toolchains/1.91.0-custom
           key: ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
           restore-keys: |
-            ${{ runner.os }}-sccache-${{ hashFiles('mozconfig-cicd.sh') }}
+            ${{ runner.os }}-${{ hashFiles('mozconfig-cicd.sh') }}
+            ${{ runner.os }}-
+            
 
       - name: Select Xcode 26.2
         run: sudo xcode-select -s /Applications/Xcode_26.2.app/Contents/Developer
@@ -113,10 +115,15 @@ jobs:
             ~/.mozbuild
             ~/.rustup/toolchains/1.91.0-custom
 
+      - name: Get current built version
+        id: version
+        # Sử dụng tr để loại bỏ các ký tự xuống dòng nếu có
+        run: echo "version_string=$(cat browser/config/version.txt | tr -d '\n\r')" >> $GITHUB_OUTPUT
+
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7.0.0
         with:
-          name: momiji-build-output
+          name: momiji-release-output-${{ steps.version.outputs.version_string }}
           path: obj-ff-dbg-esr/dist/*.dmg
           if-no-files-found: error
           retention-days: 7
