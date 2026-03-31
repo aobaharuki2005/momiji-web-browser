@@ -6,7 +6,7 @@
 
 ## About Momiji
 
-Backported Firefox browser backported and maintained for macOS 10.7-10.14.
+Firefox browser backported and maintained for macOS 10.7-10.14.
 
 This project is the successor and inheritance of [firefox-dynasty](https://github.com/i3roly/firefox-dynasty) project - which (together with the owner), unfortunately, has been taken down due to GitHub violation of Term of Use. You can find more detail about the incident in this [MacRumors post](https://forums.macrumors.com/threads/firefox-dynasty-firefox-for-os-x-10-8-also-web-app-templates.2446475/post-34441749).
 
