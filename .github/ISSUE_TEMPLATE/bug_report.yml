@@ -1,5 +1,5 @@
 name: Bug Report
-description: File a bug report
+description: File a bug report of Momiji
 labels: [bug]
 body:
   - type: markdown
@@ -18,25 +18,30 @@ body:
     id: firefox
     attributes:
       label: Reproducible?
-      description: Is this issue reproducible on Firefox?
+      description: Is this issue reproducible on upstream Firefox?
       options:
-        - label: I have checked that this issue cannot be reproduced on Mozilla Firefox.
+        - label: I have checked that this issue cannot be reproduced on upstream Mozilla Firefox (running on macOS 10.15 and later).
   - type: input
     id: version
     attributes:
       label: Version
       description: What version of our software are you running?
-      placeholder: e.g., 6.6.0
+      placeholder: e.g., 140.0.1esr-mj
     validations:
       required: true
   - type: dropdown
     id: platform
     attributes:
-      label: What platform are you seeing the problem on?
+      label: Which macOS version are you using?
       multiple: true
       options:
-        - Linux
-        - macOS
-        - Windows
+        - 10.7 (Lion)
+        - 10.8 (Mountain Lion)
+        - 10.9 (Mavericks)
+        - 10.10 (Yosemite)
+        - 10.11 (El Capitan)
+        - 10.12 (Sierra)
+        - 10.13 (High Sierra)
+        - 10.14 (Mojave)
     validations:
       required: true
