@@ -22,9 +22,9 @@ Momiji（紅葉、もみじ）means "red leaves of autumn" in Japanese. I came u
 - **For 10.7 users:** 
     - Hardware-accelerated rendering is completely unavailable, only software rendering is usable.
     - On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A` (Hey Apple, what the logic are you implying here?). To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
-
-    `sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework`
-
+```sh
+sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework`
+```
     This command will trick Momiji to think that macOS 10.7 "really" locates `CoreText.framework` at `/System/Library/Frameworks` and continues to execute as usual.
 
 - **For 10.8 users:** hardware acceleration is available but stills buggy (on my Ivy Bridge machine, fonts look partially broken). In case of bug experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web experience.
