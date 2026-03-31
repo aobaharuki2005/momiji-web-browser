@@ -31,7 +31,9 @@ export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
 export NODEJS="$HOME/.mozbuild/node/bin/node"
 
 # ===== BRANDING =======
+ac_add_options --with-app-name=momiji
 ac_add_options --with-branding=browser/branding/momiji
+ac_add_options --with-distribution-id=net.momiji
 
 # ========== RUST ==========
 export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.91.0-custom/bin"
@@ -55,6 +57,7 @@ ac_add_options --disable-debug
 ac_add_options --disable-dmd
 ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
+ac_add_options --disable-updater
 
 # From Waterfox (Production build)
 # export MOZ_LD64_KNOWN_GOOD=1
