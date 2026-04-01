@@ -64,7 +64,7 @@ jobs:
             
             echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, sysroot-wasm32-wasi"
           fi
-          brew install wasi-libc wasi-runtimes wasi-component-ld
+          brew install wasi-libc wasi-runtimes wasm-component-ld
 
       - name: Create mozconfig build config from template
         id: buildcfg-link
