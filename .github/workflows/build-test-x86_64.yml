@@ -5,7 +5,7 @@ on:
     branches:
       - '*test'
     paths-ignore:
-      - '.github/workflows/*.yml'
+      # - '.github/workflows/*.yml'
       - '.github/workflows/*.yaml'
       # - 'mozconf*'
       - '*.md'
