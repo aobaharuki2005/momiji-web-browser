@@ -55,7 +55,6 @@ jobs:
             [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/nasm" ] && mv "$HOME/.mozbuild/nasm" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/dump_syms" ] && mv "$HOME/.mozbuild/dump_syms" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/sysroot-wasm32-wasi" ] && mv "$HOME/.mozbuild/sysroot-wasm32-wasi" ~/tmp_toolchains/
             
             # Xóa sạch toàn bộ thư mục .mozbuild cũ (vốn chứa nhiều rác)
             rm -rf "$HOME/.mozbuild"
@@ -63,8 +62,9 @@ jobs:
             # Đổi tên thư mục tạm thành .mozbuild
             mv ~/tmp_toolchains "$HOME/.mozbuild"
             
-            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms."
+            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, sysroot-wasm32-wasi"
           fi
+          brew install wasi-libc wasi-runtimes wasi-component-ld
 
       - name: Create mozconfig build config from template
         id: buildcfg-link
