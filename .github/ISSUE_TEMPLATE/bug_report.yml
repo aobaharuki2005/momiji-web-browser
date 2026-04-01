@@ -18,7 +18,9 @@ body:
     id: firefox
     attributes:
       label: Reproducible?
-      description: Is this issue reproducible on an equivalent Firefox-Dynasty version?
+      description: 
+        Is this issue reproducible on an equivalent Firefox-Dynasty version? 
+        You can seek out for archived Firefox-Dynasty version at https://github.com/firelighter487/firefox-dynasty-archive.
       options:
         - label: I have checked that this issue cannot be reproduced on any equivalent Firefox-Dynasty version.
   - type: input
