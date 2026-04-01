@@ -18,7 +18,7 @@ body:
     id: firefox
     attributes:
       label: Reproducible?
-      description: 
+      description: |
         Is this issue reproducible on an equivalent Firefox-Dynasty version? 
         You can seek out for archived Firefox-Dynasty version at https://github.com/firelighter487/firefox-dynasty-archive.
       options:
