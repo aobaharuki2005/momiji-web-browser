@@ -51,7 +51,7 @@ export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=107
 
 # ========== OPTIMIZATIONS ==========
 ac_add_options --disable-crashreporter
-ac_add_options --without-wasm-sandboxed-libraries
+# ac_add_options --without-wasm-sandboxed-libraries
 ac_add_options --disable-tests
 ac_add_options --disable-debug
 ac_add_options --disable-dmd
