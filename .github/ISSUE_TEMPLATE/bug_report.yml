@@ -18,9 +18,9 @@ body:
     id: firefox
     attributes:
       label: Reproducible?
-      description: Is this issue reproducible on upstream Firefox?
+      description: Is this issue reproducible on an equivalent Firefox-Dynasty version?
       options:
-        - label: I have checked that this issue cannot be reproduced on upstream Mozilla Firefox (running on macOS 10.15 and later).
+        - label: I have checked that this issue cannot be reproduced on any equivalent Firefox-Dynasty version.
   - type: input
     id: version
     attributes:
