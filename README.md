@@ -12,6 +12,8 @@ This project is the successor and inheritance of [firefox-dynasty](https://githu
 
 Momiji（紅葉、もみじ）means "red leaves of autumn" in Japanese. I came up with the idea because the Japanese "mo" sound resembles the "mo" sound in the original "Mozilla Foundation" trademark. Additionally, red leaves are also told to be able to make people remind of good old memories, so using such a name for this backported Firefox distribution, to my thought, is a good idea (maybe).
 
+For build guide, please checkout for [BUILDING.md](BUILDING.md)
+
 ## Features:
 - Allow browsing modern Web and using up-to-date Web services securely (with fully applied security patches) on macOS version unsupported by Apple and Mozilla, with almost fully working functions (for more detail about poorly supported Web functions, especially if you are using macOS 10.7, please check out for "Known caveats" subsection)
 - Disable unnecessary and unsupported components: Crash Reporter, WebAssembly, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
@@ -31,12 +33,7 @@ This command will trick Momiji to think that macOS 10.7 "really" locates `CoreTe
 
 ## Modifications
 
-Here is a summary of modifications I have made to produce macOS 10.7-10.14-compatible Firefox distributions:
-- Rust compiler patches (deployment target)
-- Standard library patches (API compatibility)
-- Build system modifications (framework linking)
-
-See [CHANGES.md](CHANGES.md) for complete list. (As of latest commit in 2026-Mar-19, documenting work is still in progress).
+See [CHANGES.md](CHANGES.md) for complete list. (Completed on 2026-Apr-01).
 
 ## License and Trademarks
 
