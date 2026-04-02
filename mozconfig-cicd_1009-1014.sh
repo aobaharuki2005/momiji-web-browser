@@ -40,7 +40,7 @@ export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2024-11-28-x86_64-apple-d
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
-export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.9 -C link-arg=-headerpad_max_install_names"
+export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.9"
 
 # ========== C/C++ ==========
 export CC="$HOME/.mozbuild/clang/bin/clang"
