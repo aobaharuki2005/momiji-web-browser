@@ -84,12 +84,12 @@ jobs:
       #     rustup default 1.91.0-custom
       #     rustup override set 1.91.0-custom
       
-      - name: Configure Rust toolchain version 1.82.0-nightly (nightly-2024-07-25)
-        id: rust-1820-nightly-cfg
+      - name: Configure Rust toolchain version 1.85.0-nightly (nightly-2024-11-28)
+        id: rust-1850-nightly-cfg
         run: |
-          rustup install nightly-2024-07-25
-          rustup default nightly-2024-07-25
-          rustup override set nightly-2024-07-25
+          rustup install nightly-2024-11-28
+          rustup default nightly-2024-11-28
+          rustup override set nightly-2024-11-28
 
           # Verify Rust installation
           cargo --version
@@ -158,23 +158,9 @@ jobs:
           [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
           $HOME/.mozbuild/sccache/sccache --stop-server
 
-      - name: Saving cache in case configuring, building, packaging or polyfill fails but toolchains bootstrap succeeded
-        id: save-cache-incase-fail
-        if: |
-          steps.bootstrap.outcome == success() &&
-          (steps.configure.outcome == failure() ||
-          steps.build.outcome == failure() || 
-          steps.pkg.outcome == failure() || 
-          steps.macports-legacy-polyfill.outcome == failure())
-        uses: actions/cache/save@v5.0.4
-        with:
-          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
-          path: |
-            ~/Library/Caches/Mozilla.sccache 
-            ~/.mozbuild
-      
-      - name: Saving cache in normal cases
-        id: save-cache-incase-normal
+      - name: Saving cache even if pipeline fails
+        id: save-cache
+        if: always()
         uses: actions/cache/save@v5.0.4
         with:
           key: ${{ steps.restore-cache.outputs.cache-primary-key }}
