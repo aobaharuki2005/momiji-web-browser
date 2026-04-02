@@ -1,4 +1,4 @@
-name: testing build (x86_64 runner)
+name: testing build for macOS 10.19-10.14
 
 on:
   push:
@@ -128,6 +128,9 @@ jobs:
           cd /tmp
           zip -r Momiji.app momiji-140.3.0esr-mj_macOS10.9-10.14.zip
 
+      - name: Stop sccache
+        run: $HOME/.mozbuild/sccache/sccache --stop-server
+
       - name: Saving cache (even if pipeline fails)
         id: save-cache
         if: always()
@@ -142,8 +145,8 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7.0.0
         with:
-          name: momiji-testing-output-${{ github.run_id }}-${{ github.run_attempt }}
-          path: obj-ff-dbg-esr/dist/*.dmg
+          archive: false
+          path: /tmp/Momiji.zip
           if-no-files-found: error
           retention-days: 7
     
