@@ -36,7 +36,7 @@ ac_add_options --with-branding=browser/branding/momiji
 ac_add_options --with-distribution-id=net.momiji
 
 # ========== RUST ==========
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2024-11-28-x86_64-apple-darwin/bin"
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-x86_64-apple-darwin/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
