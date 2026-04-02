@@ -158,11 +158,12 @@ jobs:
           [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
           $HOME/.mozbuild/sccache/sccache --stop-server
 
-      - name: Saving cache in case building, packaging or polyfill fails but toolchains bootstrap succeeded
+      - name: Saving cache in case configuring, building, packaging or polyfill fails but toolchains bootstrap succeeded
         id: save-cache-incase-fail
         if: |
           steps.bootstrap.outcome == success() &&
-          (steps.build.outcome == failure() || 
+          (steps.configure.outcome == failure() ||
+          steps.build.outcome == failure() || 
           steps.pkg.outcome == failure() || 
           steps.macports-legacy-polyfill.outcome == failure())
         uses: actions/cache/save@v5.0.4
