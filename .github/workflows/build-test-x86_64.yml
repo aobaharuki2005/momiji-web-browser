@@ -112,10 +112,10 @@ jobs:
           # Build libMacportsLegacySystem.B.dylib
           git clone --recursive --branch v1.5.2 https://github.com/macports/macports-legacy-support.git
           cd macports-legacy-support
-          MACOSX_DEPLOYMENT_TARGET=10.9 \
-            CC="$HOME/.mozbuild/clang/bin/clang" \
-            CXX="$HOME/.mozbuild/clang/bin/clang++" \ 
-            make
+          export MACOSX_DEPLOYMENT_TARGET=10.9
+          export CC="$HOME/.mozbuild/clang/bin/clang"
+          export CXX="$HOME/.mozbuild/clang/bin/clang++"
+          make
 
           #  After this, libMacportsLegacySystem.B.dylib will locate at @SRC_DIR/macports-legacy-support/lib
           cp lib/libMacportsLegacySystem.B.dylib ../obj-ff-dbg-esr/dist/Momiji.app/Contents/Frameworks
