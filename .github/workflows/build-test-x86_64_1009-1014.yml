@@ -84,12 +84,12 @@ jobs:
       #     rustup default 1.91.0-custom
       #     rustup override set 1.91.0-custom
       
-      - name: Configure Rust toolchain version 1.85.0-nightly (nightly-2024-11-28)
+      - name: Configure Rust toolchain version 1.86.0-nightly (nightly-2025-01-09)
         id: rust-1850-nightly-cfg
         run: |
-          rustup install nightly-2024-11-28
-          rustup default nightly-2024-11-28
-          rustup override set nightly-2024-11-28
+          rustup install nightly-2025-01-09
+          rustup default nightly-2025-01-09
+          rustup override set nightly-2025-01-09
 
           # Verify Rust installation
           cargo --version
