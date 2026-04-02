@@ -105,6 +105,23 @@ jobs:
         id: show-sccache-stats
         run: $HOME/.mozbuild/sccache/sccache --show-stats
 
+      # path to built app: obj-ff-dbg-esr/dist/*.dmg
+      - name: Polyfill Momiji with MacPorts Legacy Support in libgkcodecs.dylib
+        id: macports-legacy-polyfill
+        run: |
+          # Build libMacportsLegacySystem.B.dylib
+          git clone --recursive --branch v1.5.2 https://github.com/macports/macports-legacy-support.git
+          cd macports-legacy-support
+          MACOSX_DEPLOYMENT_TARGET=10.9 make
+
+          #  After this, libMacportsLegacySystem.B.dylib will locate at @SRC_DIR/macports-legacy-support/lib
+          cp lib/libMacportsLegacySystem.B.dylib ../obj-ff-dbg-esr/dist/Momiji.app/Contents/Frameworks
+          cd ..
+          install_name_tool -change \
+           /usr/lib/libSystem.B.dylib \
+           obj-ff-dbg-esr/dist/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib \
+           obj-ff-dbg-esr/dist/Momiji.app/Contents/MacOS/libgkcodecs.dylib
+
       - name: Package
         id: pkg
         run: /usr/bin/python3 ./mach package

@@ -6,8 +6,8 @@ mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-ff-dbg-esr
 ac_add_options --enable-application=browser
 
 # ======== TARGET PLATFORM ===============
-ac_add_options --target=x86_64-apple-darwin11.0.0
-export MACOSX_DEPLOYMENT_TARGET=10.7
+ac_add_options --target=x86_64-apple-darwin
+export MACOSX_DEPLOYMENT_TARGET=10.9
 
 # ============= SCCACHE ==============
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
@@ -22,7 +22,7 @@ export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
 ac_add_options --with-macos-sdk="/Applications/Xcode_26.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk"
 
 # ============= LINKER ===============
-ac_add_options --enable-linker=ld64 # stable option
+ac_add_options --enable-linker=lld # experimental: use lld
 
 # ============= DEBUG FLAGS ================
 export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
@@ -40,14 +40,14 @@ export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.91.0-custom/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
-export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.7 -C link-arg=-Wl,-ld_classic"
+export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.9"
 
 # ========== C/C++ ==========
 export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
-export LDFLAGS="-mmacosx-version-min=10.7 -ld_classic"
-export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-ld_classic"
-export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-ld_classic"
+export LDFLAGS="-mmacosx-version-min=10.9"
+export CFLAGS="-mmacosx-version-min=10.9 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1090"
+export CXXFLAGS="-mmacosx-version-min=10.9 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1090"
 
 # ========== OPTIMIZATIONS ==========
 ac_add_options --disable-crashreporter
