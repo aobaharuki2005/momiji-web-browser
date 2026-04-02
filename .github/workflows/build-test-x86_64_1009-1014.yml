@@ -6,7 +6,6 @@ on:
       - '*test'
     paths-ignore:
       # - '.github/workflows/*.yml'
-      - '.github/workflows/*.yaml'
       # - 'mozconf*'
       - '*.md'
 
@@ -105,29 +104,29 @@ jobs:
         id: show-sccache-stats
         run: $HOME/.mozbuild/sccache/sccache --show-stats
 
-      # # path to built app: obj-ff-dbg-esr/dist/*.dmg
-      # - name: Polyfill Momiji with MacPorts Legacy Support in libgkcodecs.dylib
-      #   id: macports-legacy-polyfill
-      #   run: |
-      #     # Build libMacportsLegacySystem.B.dylib
-      #     git clone --recursive --branch v1.5.2 https://github.com/macports/macports-legacy-support.git
-      #     cd macports-legacy-support
-      #     export MACOSX_DEPLOYMENT_TARGET=10.9
-      #     export CC="$HOME/.mozbuild/clang/bin/clang"
-      #     export CXX="$HOME/.mozbuild/clang/bin/clang++"
-      #     make
-
-      #     #  After this, libMacportsLegacySystem.B.dylib will locate at @SRC_DIR/macports-legacy-support/lib
-      #     cp lib/libMacportsLegacySystem.B.dylib ../obj-ff-dbg-esr/dist/Momiji.app/Contents/Frameworks
-      #     cd ..
-      #     install_name_tool -change \
-      #      /usr/lib/libSystem.B.dylib \
-      #      obj-ff-dbg-esr/dist/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib \
-      #      obj-ff-dbg-esr/dist/Momiji.app/Contents/MacOS/libgkcodecs.dylib
-
       - name: Package
         id: pkg
         run: /usr/bin/python3 ./mach package
+
+      # path to built app: obj-ff-dbg-esr/dist/*.dmg
+      - name: Polyfill Momiji with MacPorts Legacy Support in libgkcodecs.dylib
+        id: macports-legacy-polyfill
+        run: |
+          # Copy Momiji.app to /tmp
+          hdiutil attach obj-ff-dbg-esr/dist/momiji-140.3.0esr-mj.en-US.mac.dmg
+          cp -R /Volumes/Momiji/Momiji.app /tmp
+          
+          # Build libMacportsLegacySystem.B.dylib
+          git clone --recursive --branch v1.5.2 https://github.com/macports/macports-legacy-support.git
+          cd macports-legacy-support
+          MACOSX_DEPLOYMENT_TARGET=10.9 make
+
+          # Polyfill libgkcodecs.dylib
+          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/libgkcodecs.dylib
+
+          # Archive the output app
+          cd /tmp
+          zip -r Momiji.app momiji-140.3.0esr-mj_macOS10.9-10.14.zip
 
       - name: Saving cache (even if pipeline fails)
         id: save-cache
