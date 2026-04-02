@@ -45,9 +45,9 @@ export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.9"
 # ========== C/C++ ==========
 export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
-export LDFLAGS="-mmacosx-version-min=10.9"
-export CFLAGS="-mmacosx-version-min=10.9 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1090"
-export CXXFLAGS="-mmacosx-version-min=10.9 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1090"
+export LDFLAGS="-mmacosx-version-min=10.9 -headerpad_max_install_names"
+export CFLAGS="-mmacosx-version-min=10.9 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1090 -Wl,-headerpad_max_install_names"
+export CXXFLAGS="-mmacosx-version-min=10.9 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1090 -Wl,-headerpad_max_install_names"
 
 # ========== OPTIMIZATIONS ==========
 ac_add_options --disable-crashreporter
