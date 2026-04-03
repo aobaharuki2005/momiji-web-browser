@@ -1,6 +1,8 @@
 name: build for macOS 10.7-10.8
 
 on:
+  pull_request: 
+    branches: master
   push:
     branches:
       - '*test'
