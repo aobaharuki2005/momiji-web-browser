@@ -5,8 +5,7 @@ on:
     branches:
       - '*test'
     paths-ignore:
-      # - '.github/workflows/*.yml'
-      # - 'mozconf*'
+      - '*1007-1008*'   # Ignores anything related to 10.7-10.8 targets
       - '*.md'
 
 jobs:
@@ -175,7 +174,7 @@ jobs:
         uses: actions/upload-artifact@v7.0.0
         with:
           archive: false
-          path: momiji-140.3.0esr-mj_macOS10.9-10.14.zip
+          path: /tmp/*.zip
           if-no-files-found: error
           retention-days: 7
     
