@@ -1,11 +1,11 @@
-name: testing build for macOS 10.9-10.14
+name: testing build for macOS 10.7-10.8
 
 on:
   push:
     branches:
       - '*test'
     paths-ignore:
-      - '*1007-1008*'   # Ignores anything related to 10.7-10.8 targets
+      - '*1009-1014*'   # Ignores anything related to 10.9-10.14 targets
       - '*.yml'
       - '*.md'
   workflow_dispatch:
@@ -68,7 +68,7 @@ jobs:
 
       - name: Create mozconfig build config from template
         id: buildcfg-link
-        run: ln -sf ./mozconfig-cicd_1009-1014.sh mozconfig
+        run: ln -sf ./mozconfig-cicd_1007-1008.sh mozconfig
 
       # - name: Manually configure Rust toolchain
       #   id: rust-cfg
@@ -139,7 +139,7 @@ jobs:
 
           # Archive the output app
           cd /tmp
-          zip -r momiji-140.3.0esr-mj_macOS10.9-10.14.zip Momiji.app
+          zip -r momiji-140.3.0esr-mj_macOS10.7-10.8.zip Momiji.app
 
       - name: Stop sccache and create the cache folder in case it didn not exist yet
         if: always()
@@ -150,15 +150,16 @@ jobs:
           sleep 60
           echo "60s of waiting has ended."
 
-      - name: Saving cache even if pipeline fails
-        id: save-cache
-        if: always()
-        uses: actions/cache/save@v5.0.4
-        with:
-          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
-          path: |
-            ~/Library/Caches/Mozilla.sccache 
-            ~/.mozbuild
+      # No need to save cache in 1007-1008 build session
+      # - name: Saving cache even if pipeline fails
+      #   id: save-cache
+      #   if: always()
+      #   uses: actions/cache/save@v5.0.4
+      #   with:
+      #     key: ${{ steps.restore-cache.outputs.cache-primary-key }}
+      #     path: |
+      #       ~/Library/Caches/Mozilla.sccache 
+      #       ~/.mozbuild
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7.0.0

@@ -7,7 +7,7 @@ ac_add_options --enable-application=browser
 
 # ======== TARGET PLATFORM ===============
 ac_add_options --target=x86_64-apple-darwin
-export MACOSX_DEPLOYMENT_TARGET=10.9
+export MACOSX_DEPLOYMENT_TARGET=10.7
 
 # ============= SCCACHE ==============
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
@@ -18,11 +18,11 @@ export NASM="$HOME/.mozbuild/nasm/nasm"
 export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
 
 # ============ SDK ===================
-# Use SDK 26.2 (same as which used to build custom Rust) to avoid unexpected conflicts
-ac_add_options --with-macos-sdk="/Applications/Xcode_26.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.2.sdk"
+# Use SDK 15.4 (according to the minimum version specified in python\mozboot\mozboot\util.py
+ac_add_options --with-macos-sdk="/Applications/Xcode_16.3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.4.sdk"
 
 # ============= LINKER ===============
-ac_add_options --enable-linker=lld # experimental: use lld
+ac_add_options --enable-linker=ld64 # for macOS 10.7-10.8
 
 # ============= DEBUG FLAGS ================
 export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
@@ -36,18 +36,18 @@ ac_add_options --with-branding=browser/branding/momiji
 ac_add_options --with-distribution-id=net.momiji
 
 # ========== RUST ==========
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.91.0-custom/bin"
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-x86_64-apple-darwin/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
-export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.9"
+export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.7"
 
 # ========== C/C++ ==========
 export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
-export LDFLAGS="-mmacosx-version-min=10.9 -headerpad_max_install_names"
-export CFLAGS="-mmacosx-version-min=10.9 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1090 -Wl,-headerpad_max_install_names"
-export CXXFLAGS="-mmacosx-version-min=10.9 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1090 -Wl,-headerpad_max_install_names"
+export LDFLAGS="-mmacosx-version-min=10.7 -headerpad_max_install_names"
+export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names"
+export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names"
 
 # ========== OPTIMIZATIONS ==========
 ac_add_options --disable-crashreporter
