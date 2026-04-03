@@ -130,22 +130,23 @@ jobs:
           cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/
 
           # Polyfill *.dylib, momiji, nmhproxy, pingsender and XUL binaries
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/pingsender       
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/libfreebl3.dylib 
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/liblgpllibs.dylib
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/nmhproxy
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/libsoftokn3.dylib
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/XUL
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/libmozavutil.dylib
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/libmozglue.dylib
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/libgkcodecs.dylib
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/libmozavcodec.dylib
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/momiji
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/libnss3.dylib
+          cd /tmp/Momiji.app/Contents/MacOS/
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib pingsender       
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib libfreebl3.dylib 
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib liblgpllibs.dylib
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib nmhproxy
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib libsoftokn3.dylib
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib XUL
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib libmozavutil.dylib
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib libmozglue.dylib
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib libgkcodecs.dylib
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib libmozavcodec.dylib
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib momiji
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib libnss3.dylib
 
           # Polyfill plugin-container.app and media-plugin-helper.app
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib "/tmp/Momiji.app/Contents/MacOS/media-plugin-helper.app/Contents/MacOS/Momiji Media Plugin Helper"
-          install_name_tool -change /usr/lib/libSystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib "media-plugin-helper.app/Contents/MacOS/Momiji Media Plugin Helper"
+          install_name_tool -change /usr/lib/libSystem.B.dylib ../FrameWorks/libMacportsLegacySystem.B.dylib plugin-container.app/Contents/MacOS/plugin-container
 
           # Archive the output app
           cd /tmp
