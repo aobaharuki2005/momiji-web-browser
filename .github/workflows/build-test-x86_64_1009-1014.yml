@@ -8,7 +8,7 @@ on:
       - '*test'
     paths-ignore:
       - 'mozconf*'
-      - '*.yml'
+      - '.github/workflows/*.yml'
       - '*.md'
   workflow_dispatch:
 
