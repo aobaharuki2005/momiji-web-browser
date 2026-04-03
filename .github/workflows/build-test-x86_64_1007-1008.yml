@@ -1,11 +1,11 @@
-name: testing build for macOS 10.7-10.8
+name: build for macOS 10.7-10.8
 
 on:
   push:
     branches:
       - '*test'
     paths-ignore:
-      - '*1009-1014*'   # Ignores anything related to 10.9-10.14 targets
+      - 'mozconf*'
       - '*.yml'
       - '*.md'
   workflow_dispatch:
