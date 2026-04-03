@@ -1,8 +1,8 @@
 name: build for macOS 10.7-10.8
 
 on:
-  pull_request: 
-    branches: master
+  # pull_request: 
+  #   branches: master
   push:
     branches:
       - '*test'
@@ -118,7 +118,7 @@ jobs:
         run: /usr/bin/python3 ./mach package
 
       # path to built app: obj-ff-dbg-esr/dist/*.dmg
-      - name: Polyfill Momiji with MacPorts Legacy Support in libgkcodecs.dylib
+      - name: Polyfill Momiji with MacPorts Legacy Support
         id: macports-legacy-polyfill
         run: |
           # Copy Momiji.app to /tmp
@@ -141,7 +141,7 @@ jobs:
 
           # Archive the output app
           cd /tmp
-          zip -r momiji-140.3.0esr-mj_macOS10.7-10.8.zip Momiji.app
+          zip -r momiji-140.3.1esr-mj_macOS10.7-10.8.zip Momiji.app
 
       # (Unnecessary in 1007-1008 build session)
       # - name: Stop sccache and create the cache folder in case it didn not exist yet
