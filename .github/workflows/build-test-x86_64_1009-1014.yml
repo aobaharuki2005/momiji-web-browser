@@ -131,13 +131,13 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET=10.6 make
 
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
-          cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/Frameworks/
+          cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS
 
           # Polyfill XUL, libmozavutil.dylib and libgkcodecs.dylib only
           cd /tmp/Momiji.app/Contents/MacOS/
-          install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/../Frameworks/libMacportsLegacySystem.B.dylib" "XUL"
-          install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/../Frameworks/libMacportsLegacySystem.B.dylib" "libmozavutil.dylib"
-          install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/../Frameworks/libMacportsLegacySystem.B.dylib" "libgkcodecs.dylib"
+          install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "XUL"
+          install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "libmozavutil.dylib"
+          install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "libgkcodecs.dylib"
 
           # Archive the output app
           cd /tmp
