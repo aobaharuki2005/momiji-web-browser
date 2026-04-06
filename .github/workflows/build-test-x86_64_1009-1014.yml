@@ -72,6 +72,7 @@ jobs:
         id: buildcfg-link
         run: ln -sf ./mozconfig-cicd_1009-1014.sh mozconfig
 
+      # (No need to use custom toolchain for 10.9-10.14 target)
       # - name: Manually configure Rust toolchain
       #   id: rust-cfg
       #   run: |
@@ -146,7 +147,6 @@ jobs:
           cd /tmp
           zip -r "momiji-${VERSION}_macOS10.9-10.14.zip" Momiji.app
 
-      # (Comment out for production build)
       - name: Stop sccache and create the cache folder in case it didn not exist yet
         if: always()
         run: |

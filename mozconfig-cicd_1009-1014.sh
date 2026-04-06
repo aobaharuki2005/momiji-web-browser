@@ -9,7 +9,7 @@ ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-apple-darwin
 export MACOSX_DEPLOYMENT_TARGET=10.9
 
-# ============= SCCACHE ============== (comment out for production build)
+# ============= SCCACHE ==============
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
 export SCCACHE_IDLE_TIMEOUT=0
 
@@ -25,7 +25,8 @@ ac_add_options --with-macos-sdk="/Applications/Xcode_16.3.app/Contents/Developer
 ac_add_options --enable-linker=lld # experimental: use lld
 
 # ============= DEBUG FLAGS ================
-export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
+# (uncomment for BUILD production)
+# export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
 
 # ============= NODEJS =================
 export NODEJS="$HOME/.mozbuild/node/bin/node"
@@ -59,13 +60,13 @@ ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
 ac_add_options --disable-updater
 
-# From Waterfox (Production build)
-# export MOZ_LTO="thin"
-# ac_add_options --enable-optimize="-march=core2 -O3 -w"
-# ac_add_options --enable-release
-# ac_add_options --enable-rust-simd
-# ac_add_options RUSTC_OPT_LEVEL=3
-# export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
+# From Waterfox (PRODUCTION build)
+export MOZ_LTO="thin"
+ac_add_options --enable-optimize="-march=core2 -O3 -w"
+ac_add_options --enable-release
+ac_add_options --enable-rust-simd
+ac_add_options RUSTC_OPT_LEVEL=3
+export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
 
 # From Waterfox (development build)
-ac_add_options --enable-optimize="-Os -w"
+# ac_add_options --enable-optimize="-Os -w"
