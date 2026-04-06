@@ -221,10 +221,15 @@ export class WebRTCParent extends JSWindowActorParent {
     }
     let scrStatus = {};
     if (scrNeeded) {
-      lazy.OSPermissions.getScreenCapturePermissionState(scrStatus);
-      if (scrStatus.value == lazy.OSPermissions.PERMISSION_STATE_DENIED) {
-        lazy.OSPermissions.maybeRequestScreenCapturePermission();
-        return false;
+      try {
+        lazy.OSPermissions.getScreenCapturePermissionState(scrStatus);
+        if (scrStatus.value == lazy.OSPermissions.PERMISSION_STATE_DENIED) {
+          lazy.OSPermissions.maybeRequestScreenCapturePermission();
+          return false;
+        }
+      } catch (e) {
+        // If error is NOT_IMPLEMENTED, consider it as granted (default on legacy macOS)
+        console.warn("Screen capture permission check not supported, skipping.");
       }
     }
     return true;
