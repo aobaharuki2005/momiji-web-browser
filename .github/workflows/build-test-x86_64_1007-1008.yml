@@ -125,7 +125,7 @@ jobs:
           export VERSION=$(cat browser/config/version.txt)
           
           # Copy Momiji.app to /tmp
-          hdiutil attach "obj-ff-dbg-esr/dist/momiji-$VERSION.en-US.mac.dmg"
+          hdiutil attach "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"
           cp -R /Volumes/Momiji/Momiji.app /tmp
           
           # Build libMacportsLegacySystem.B.dylib (patched to support CCRandomGenerateBytes)
@@ -144,7 +144,7 @@ jobs:
 
           # Archive the output app
           cd /tmp
-          zip -r "momiji-$VERSION_macOS10.7-10.8.zip" Momiji.app
+          zip -r "momiji-${VERSION}_macOS10.7-10.8.zip" Momiji.app
 
       # (Unnecessary in 1007-1008 build session)
       # - name: Stop sccache and create the cache folder in case it didn not exist yet
