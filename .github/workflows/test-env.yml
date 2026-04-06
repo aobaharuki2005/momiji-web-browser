@@ -1,0 +1,35 @@
+name: Test environment value reading
+
+on:
+  push:
+    branches:
+      - '*test'
+
+jobs:
+  test-env:
+    name: Test Mozilla version string reading
+    runs-on: macos-15-intel
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: read Firefox version string and return a file
+        run: |
+          export VERSION = $(cat browser/config/version.txt)
+          touch momiji-$VERSION.en-US.mac.dmg
+          touch momiji-$VERSION.en-US.mac.txt
+          echo "momiji-$VERSION.en-US.mac.txt" > momiji-$VERSION.en-US.mac.txt
+          hdiutil attach momiji-$VERSION.en-US.mac.dmg
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7.0.0
+        if: always()
+        with:
+          archive: false
+          path: './*.txt'
+          retention-days: 7
+          
+      
+        
+  
