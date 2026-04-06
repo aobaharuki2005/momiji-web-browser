@@ -13,10 +13,12 @@ jobs:
       - name: Checkout
         id: checkout
         uses: actions/checkout@v6.0.2
+        with:
+          depth: 1
 
       - name: read Firefox version string and return a file
         run: |
-          export VERSION = $(cat browser/config/version.txt)
+          export VERSION=$(cat browser/config/version.txt)
           touch momiji-$VERSION.en-US.mac.dmg
           touch momiji-$VERSION.en-US.mac.txt
           echo "momiji-$VERSION.en-US.mac.txt" > momiji-$VERSION.en-US.mac.txt
