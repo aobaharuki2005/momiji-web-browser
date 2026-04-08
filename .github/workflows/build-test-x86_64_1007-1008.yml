@@ -7,8 +7,8 @@ on:
     branches:
       - '*test'
     paths-ignore:
-      - 'mozconf*'
-      - '.github/workflows/*.yml'
+      - '*1009-1014*'
+      - '.github/workflows/*1009-1014.yml'
       - '*.md'
   workflow_dispatch:
 
@@ -72,28 +72,21 @@ jobs:
         id: buildcfg-link
         run: ln -sf ./mozconfig-cicd_1007-1008.sh mozconfig
 
-      # - name: Manually configure Rust toolchain
-      #   id: rust-cfg
-      #   run: |
-      #     if [ ! -d "$HOME/.rustup/toolchains/1.91.0-custom" ]; then
-      #       echo "Cached Rust 1.91.0-custom not found. Starting bootstrap..."
-      #       curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-redist/1.91.0-custom.tar.gz -o 1.91.0-custom.tar.gz
-      #       mkdir -p ~/.rustup/toolchains
-      #       tar -xf ./1.91.0-custom.tar.gz -C ~/.rustup/toolchains
-      #       echo "Bootstrap Rust 1.91.0-custom finished."
-      #     fi
-        
-      #     # Change default Rust toolchain
-      #     rustup default 1.91.0-custom
-      #     rustup override set 1.91.0-custom
-      
-      - name: Configure Rust toolchain version 1.86.0-nightly (nightly-2025-01-09)
-        id: rust-1850-nightly-cfg
+      - name: Manually configure Rust toolchain
+        id: rust-cfg
         run: |
-          rustup install nightly-2025-01-09
-          rustup default nightly-2025-01-09
-          rustup override set nightly-2025-01-09
-
+          if [ ! -d "$HOME/.rustup/toolchains/1.86.0-custom" ]; then
+            echo "Cached Rust 1.86.0-custom not found. Starting bootstrap..."
+            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.86.0-custom/1.86.0-custom.tar.gz -o 1.86.0-custom.tar.gz
+            mkdir -p ~/.rustup/toolchains
+            tar -xf ./1.86.0-custom.tar.gz -C ~/.rustup/toolchains
+            echo "Bootstrap Rust 1.86.0-custom finished."
+          fi
+        
+          # Change default Rust toolchain
+          rustup default 1.86.0-custom
+          rustup override set 1.86.0-custom
+      
           # Verify Rust installation
           cargo --version
           rustc --version
@@ -128,7 +121,7 @@ jobs:
           hdiutil attach "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"
           cp -R /Volumes/Momiji/Momiji.app /tmp
           
-          # Build libMacportsLegacySystem.B.dylib (patched to support CCRandomGenerateBytes)
+          # Build libMacportsLegacySystem.B.dylib (patched to support CCRandomGenerateBytes and exp10)
           git clone --recursive --branch 1.5.2_addCCRandom https://github.com/aobaharuki2005/macports-legacy-support.git
           cd macports-legacy-support
           MACOSX_DEPLOYMENT_TARGET=10.6 make
@@ -146,26 +139,25 @@ jobs:
           cd /tmp
           zip -r "momiji-${VERSION}_macOS10.7-10.8.zip" Momiji.app
 
-      # (Unnecessary in 1007-1008 build session)
-      # - name: Stop sccache and create the cache folder in case it didn not exist yet
-      #   if: always()
-      #   run: |
-      #     [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
-      #     $HOME/.mozbuild/sccache/sccache --stop-server
-      #     # Delay for 60s to fix "file changes as we read it" from save-cache task
-      #     sleep 60
-      #     echo "60s of waiting has ended."
+      - name: Stop sccache and create the cache folder in case it didn not exist yet
+        if: always()
+        run: |
+          [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
+          $HOME/.mozbuild/sccache/sccache --stop-server
+          # Delay for 60s to fix "file changes as we read it" from save-cache task
+          sleep 60
+          echo "60s of waiting has ended."
 
-      # (No need to save cache in 1007-1008 build session)
-      # - name: Saving cache even if pipeline fails
-      #   id: save-cache
-      #   if: always()
-      #   uses: actions/cache/save@v5.0.4
-      #   with:
-      #     key: ${{ runner.os }}-ld64-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
-      #     path: |
-      #       ~/Library/Caches/Mozilla.sccache 
-      #       ~/.mozbuild
+      # (No need to save cache in production build session)
+      - name: Saving cache even if pipeline fails
+        id: save-cache
+        if: always()
+        uses: actions/cache/save@v5.0.4
+        with:
+          key: ${{ runner.os }}-ld64-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
+          path: |
+            ~/Library/Caches/Mozilla.sccache 
+            ~/.mozbuild
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v7.0.0
