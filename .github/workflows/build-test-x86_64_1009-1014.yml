@@ -147,14 +147,15 @@ jobs:
           cd /tmp
           zip -r "momiji-${VERSION}_macOS10.9-10.14.zip" Momiji.app
 
-      - name: Stop sccache and create the cache folder in case it didn not exist yet
-        if: always()
-        run: |
-          [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
-          $HOME/.mozbuild/sccache/sccache --stop-server
-          # Delay for 60s to fix "file changes as we read it" from save-cache task
-          sleep 60
-          echo "60s of waiting has ended."
+      # (Comment out on production build)
+      # - name: Stop sccache and create the cache folder in case it didn not exist yet
+      #   if: always()
+      #   run: |
+      #     [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
+      #     $HOME/.mozbuild/sccache/sccache --stop-server
+      #     # Delay for 60s to fix "file changes as we read it" from save-cache task
+      #     sleep 60
+      #     echo "60s of waiting has ended."
 
       - name: Saving cache even if pipeline fails
         id: save-cache
