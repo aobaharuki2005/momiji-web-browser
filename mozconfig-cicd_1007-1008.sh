@@ -40,14 +40,13 @@ export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.86.0-custom/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
-export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.7"
 
 # ========== C/C++ ==========
 export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
-export LDFLAGS="-mmacosx-version-min=10.7 -headerpad_max_install_names"
-export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names"
-export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names"
+export LDFLAGS="-mmacosx-version-min=10.7 -ld_classic"
+export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names -Wl,-ld_classic"
+export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names -Wl,-ld_classic"
 
 # ========== OPTIMIZATIONS ==========
 ac_add_options --disable-crashreporter

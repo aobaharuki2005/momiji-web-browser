@@ -163,7 +163,9 @@ jobs:
         uses: actions/upload-artifact@v7.0.0
         with:
           archive: false
-          path: /tmp/*.zip
+          path: | 
+            /tmp/*.zip
+            obj-ff-dbg-esr/dist/momiji-*.en-US.mac.dmg
           if-no-files-found: error
           retention-days: 7
     
