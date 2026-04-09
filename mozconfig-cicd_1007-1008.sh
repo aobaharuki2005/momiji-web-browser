@@ -24,7 +24,7 @@ ac_add_options --with-macos-sdk="/Applications/Xcode_16.3.app/Contents/Developer
 # ============= LINKER ===============
 ac_add_options --enable-linker=ld64 # for macOS 10.7-10.8
 
-# ============= DEBUG FLAGS ================
+# ============= DEBUG FLAGS ================ (comment out for production build)
 export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
 
 # ============= NODEJS =================
@@ -51,7 +51,7 @@ export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=107
 
 # ========== OPTIMIZATIONS ==========
 ac_add_options --disable-crashreporter
-# ac_add_options --without-wasm-sandboxed-libraries
+# ac_add_options --without-wasm-sandboxed-libraries (comment out for video-conferencing support)
 ac_add_options --disable-tests
 ac_add_options --disable-debug
 ac_add_options --disable-dmd
@@ -59,13 +59,14 @@ ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
 ac_add_options --disable-updater
 
-# From Waterfox (Production build)
+# ========= Production-specific optimizations (reference from Waterfox) ===========
 # export MOZ_LTO="thin"
 # ac_add_options --enable-optimize="-march=core2 -O3 -w"
 # ac_add_options --enable-release
 # ac_add_options --enable-rust-simd
-# ac_add_options RUSTC_OPT_LEVEL=3
+# export RUSTC_OPT_LEVEL=3
 # export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
 
-# From Waterfox (development build)
+# ========= Testing-specific optimizations (reference from Waterfox) ===========
 ac_add_options --enable-optimize="-Os -w"
+export RUSTC_OPT_LEVEL="s"

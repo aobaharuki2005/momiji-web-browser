@@ -37,7 +37,7 @@ jobs:
             ${{ runner.os }}-ld64-${{ hashFiles('mozconfig-cicd.sh') }}
             ${{ runner.os }}-ld64
 
-      - name: Select Xcode 16.3
+      - name: Select Xcode 16.3 (SDK 15.4)
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
 
       - name: Bootstrapping build deps
