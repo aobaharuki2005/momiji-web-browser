@@ -10,8 +10,8 @@ ac_add_options --target=x86_64-apple-darwin
 export MACOSX_DEPLOYMENT_TARGET=10.9
 
 # ============= SCCACHE ============== (comment out for production build)
-ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
-export SCCACHE_IDLE_TIMEOUT=0
+# ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
+# export SCCACHE_IDLE_TIMEOUT=0
 
 # ============= NASM & DUMPSYMS =============
 export NASM="$HOME/.mozbuild/nasm/nasm"
@@ -25,7 +25,7 @@ ac_add_options --with-macos-sdk="/Applications/Xcode_16.3.app/Contents/Developer
 ac_add_options --enable-linker=lld # experimental: use lld
 
 # ============= DEBUG FLAGS ================ (comment out for production build)
-# export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
+export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
 
 # ============= NODEJS =================
 export NODEJS="$HOME/.mozbuild/node/bin/node"
@@ -64,7 +64,7 @@ export MOZ_LTO="thin"
 ac_add_options --enable-optimize="-march=core2 -O3 -w"
 ac_add_options --enable-release
 ac_add_options --enable-rust-simd
-ac_add_options RUSTC_OPT_LEVEL=3
+export RUSTC_OPT_LEVEL=3
 export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========
