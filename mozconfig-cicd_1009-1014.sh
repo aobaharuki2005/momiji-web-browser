@@ -40,7 +40,6 @@ export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-x86_64-apple-d
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
-export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.9"
 
 # ========== C/C++ ==========
 export CC="$HOME/.mozbuild/clang/bin/clang"
@@ -60,12 +59,12 @@ ac_add_options --disable-profiling
 ac_add_options --disable-updater
 
 # ========= Production-specific optimizations (reference from Waterfox) ===========
-# export MOZ_LTO="thin" (incompatible with macOS 10.9 Mavericks)
+ac_add_options --enable-lto=thin
 ac_add_options --enable-optimize="-march=core2 -O3 -w"
 ac_add_options --enable-release
 ac_add_options --enable-rust-simd
 export RUSTC_OPT_LEVEL=3
-export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
+export RUSTFLAGS="-Ctarget-cpu=core2"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========
 # ac_add_options --enable-optimize="-Os -w"

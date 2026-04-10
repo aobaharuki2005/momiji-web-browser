@@ -10,8 +10,8 @@ ac_add_options --target=x86_64-apple-darwin
 export MACOSX_DEPLOYMENT_TARGET=10.7
 
 # ============= SCCACHE ============== (comment out for production build)
-ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
-export SCCACHE_IDLE_TIMEOUT=0
+# ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
+# export SCCACHE_IDLE_TIMEOUT=0
 
 # ============= NASM & DUMPSYMS =============
 export NASM="$HOME/.mozbuild/nasm/nasm"
@@ -36,7 +36,7 @@ ac_add_options --with-branding=browser/branding/momiji
 ac_add_options --with-distribution-id=net.momiji
 
 # ========== RUST ==========
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-x86_64-apple-darwin/bin"
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-x86_64-apple-darwin/bin"  # Rust 1.86.0-nightly
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
@@ -59,13 +59,13 @@ ac_add_options --disable-profiling
 ac_add_options --disable-updater
 
 # ========= Production-specific optimizations (reference from Waterfox) ===========
-# export MOZ_LTO="thin"
-# ac_add_options --enable-optimize="-march=core2 -O3 -w"
-# ac_add_options --enable-release
-# ac_add_options --enable-rust-simd
-# export RUSTC_OPT_LEVEL=3
-# export RUSTFLAGS="$RUSTFLAGS -Ctarget-cpu=core2"
+ac_add_options --enable-lto=thin
+ac_add_options --enable-optimize="-march=core2 -O3 -w"
+ac_add_options --enable-release
+ac_add_options --enable-rust-simd
+export RUSTC_OPT_LEVEL=3
+export RUSTFLAGS="-Ctarget-cpu=core2"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========
-ac_add_options --enable-optimize="-Os -w"
-export RUSTC_OPT_LEVEL="s"
+# ac_add_options --enable-optimize="-Os -w"
+# export RUSTC_OPT_LEVEL="s"
