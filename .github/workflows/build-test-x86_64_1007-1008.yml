@@ -72,25 +72,36 @@ jobs:
         id: buildcfg-link
         run: ln -sf ./mozconfig-cicd_1007-1008.sh mozconfig
 
-      - name: Manually configure Rust toolchain
-        id: rust-cfg
-        run: |
-          if [ ! -d "$HOME/.rustup/toolchains/1.86.0-custom" ]; then
-            echo "Cached Rust 1.86.0-custom not found. Starting bootstrap..."
-            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.86.0-custom/1.86.0-custom.tar.gz -o 1.86.0-custom.tar.gz
-            mkdir -p ~/.rustup/toolchains
-            tar -xf ./1.86.0-custom.tar.gz -C ~/.rustup/toolchains
-            echo "Bootstrap Rust 1.86.0-custom finished."
-          fi
+      # - name: Manually configure Rust toolchain
+      #   id: rust-cfg
+      #   run: |
+      #     if [ ! -d "$HOME/.rustup/toolchains/1.86.0-custom" ]; then
+      #       echo "Cached Rust 1.86.0-custom not found. Starting bootstrap..."
+      #       curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.86.0-custom/1.86.0-custom.tar.gz -o 1.86.0-custom.tar.gz
+      #       mkdir -p ~/.rustup/toolchains
+      #       tar -xf ./1.86.0-custom.tar.gz -C ~/.rustup/toolchains
+      #       echo "Bootstrap Rust 1.86.0-custom finished."
+      #     fi
         
-          # Change default Rust toolchain
-          rustup default 1.86.0-custom
-          rustup override set 1.86.0-custom
+      #     # Change default Rust toolchain
+      #     rustup default 1.86.0-custom
+      #     rustup override set 1.86.0-custom
       
+      #     # Verify Rust installation
+      #     cargo --version
+      #     rustc --version
+      
+      - name: Configure Rust toolchain version 1.86.0-nightly (nightly-2025-01-09)
+        id: rust-1850-nightly-cfg
+        run: |
+          rustup install nightly-2025-01-09
+          rustup default nightly-2025-01-09
+          rustup override set nightly-2025-01-09
+
           # Verify Rust installation
           cargo --version
           rustc --version
-          
+
       - name: Configure build options
         id: configure
         run: | 

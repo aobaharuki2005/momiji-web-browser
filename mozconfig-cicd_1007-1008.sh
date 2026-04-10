@@ -36,7 +36,7 @@ ac_add_options --with-branding=browser/branding/momiji
 ac_add_options --with-distribution-id=net.momiji
 
 # ========== RUST ==========
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.86.0-custom/bin"
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-x86_64-apple-darwin/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
@@ -44,9 +44,9 @@ export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
 # ========== C/C++ ==========
 export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
-export LDFLAGS="-mmacosx-version-min=10.7"
-export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names"
-export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names"
+export LDFLAGS="-mmacosx-version-min=10.7 -ld_classic"
+export CFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names -Wl,-ld_classic"
+export CXXFLAGS="-mmacosx-version-min=10.7 -D__MAC_OS_X_VERSION_MIN_REQUIRED=1070 -Wl,-headerpad_max_install_names -Wl,-ld_classic"
 
 # ========== OPTIMIZATIONS ==========
 ac_add_options --disable-crashreporter
