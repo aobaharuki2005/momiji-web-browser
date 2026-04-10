@@ -60,7 +60,7 @@ ac_add_options --disable-profiling
 ac_add_options --disable-updater
 
 # ========= Production-specific optimizations (reference from Waterfox) ===========
-export MOZ_LTO="thin"
+# export MOZ_LTO="thin" (incompatible with macOS 10.9 Mavericks)
 ac_add_options --enable-optimize="-march=core2 -O3 -w"
 ac_add_options --enable-release
 ac_add_options --enable-rust-simd
