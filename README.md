@@ -19,16 +19,14 @@ For build guide, please checkout for [BUILDING.md](BUILDING.md)
 - Disable unnecessary and unsupported components: Crash Reporter, WebAssembly, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
 
 ## Known caveats
-- Some special functions like live-streaming, online meeting and graphics design (Canva, Adobe Cloud Creative, Zoom, Microsoft Teams ...) may not work smoothly or functionally as expected on very old macOS version (due to insufficient of proper Mac machine for unit testing, I haven't been able to carry out intensive test and make comprehensive judgements)
-- **For 10.7 users:** 
-    - Hardware-accelerated rendering is completely unavailable, only software rendering is usable.
-    - On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A` (Hey Apple, what the logic are you implying here?). To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
+- **For 10.7 users:**: On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A`. To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
 ```sh
 sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework
 ```
 This command will trick Momiji to think that macOS 10.7 "really" locates `CoreText.framework` at `/System/Library/Frameworks` and continues to execute as usual.
-
-- **For 10.8 users:** hardware acceleration is available but stills buggy (on my Ivy Bridge machine, fonts look partially broken). In case of bug experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web experience.
+- Hardware graphics acceleration is available but maybe buggy  (on my Ivy Bridge machine, fonts look partially broken). In case of bug experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web experience.
+- Screen sharing is unavailable on macOS 10.7 due to the absence of compatible `DesktopCapture` framework
+- Discord voice, video calls and its Go Live streams are unsupported as they require at least Firefox 142 to work on since 2026-Mar-02, while Momiji is currently being based on Firefox 140 ESR baseline.
 
 ## Modifications
 
