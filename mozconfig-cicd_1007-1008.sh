@@ -9,9 +9,9 @@ ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-apple-darwin
 export MACOSX_DEPLOYMENT_TARGET=10.7
 
-# ============= SCCACHE ============== (comment out for production build)
-# ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
-# export SCCACHE_IDLE_TIMEOUT=0
+============= SCCACHE ============== (comment out for production build)
+ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
+export SCCACHE_IDLE_TIMEOUT=0
 
 # ============= NASM & DUMPSYMS =============
 export NASM="$HOME/.mozbuild/nasm/nasm"
@@ -24,7 +24,7 @@ ac_add_options --with-macos-sdk="/Applications/Xcode_16.3.app/Contents/Developer
 # ============= LINKER ===============
 ac_add_options --enable-linker=ld64 # for macOS 10.7-10.8
 
-# ============= DEBUG FLAGS ================ (comment out for production build)
+# ============= DEBUG FLAGS ================
 export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
 
 # ============= NODEJS =================
@@ -59,13 +59,13 @@ ac_add_options --disable-profiling
 ac_add_options --disable-updater
 
 # ========= Production-specific optimizations (reference from Waterfox) ===========
-ac_add_options --enable-lto=thin
-ac_add_options --enable-optimize="-march=core2 -O3 -w"
-ac_add_options --enable-release
-ac_add_options --enable-rust-simd
-export RUSTC_OPT_LEVEL=3
-export RUSTFLAGS="-Ctarget-cpu=core2"
+# ac_add_options --enable-lto=thin
+# ac_add_options --enable-optimize="-march=core2 -O3 -w"
+# ac_add_options --enable-release
+# ac_add_options --enable-rust-simd
+# export RUSTC_OPT_LEVEL=3
+# export RUSTFLAGS="-Ctarget-cpu=core2"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========
-# ac_add_options --enable-optimize="-Os -w"
-# export RUSTC_OPT_LEVEL="s"
+ac_add_options --enable-optimize="-Os -w"
+export RUSTC_OPT_LEVEL="s"

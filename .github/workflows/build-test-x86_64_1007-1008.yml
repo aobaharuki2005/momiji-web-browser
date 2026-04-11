@@ -94,9 +94,9 @@ jobs:
         id: build
         run: /usr/bin/python3 ./mach build
 
-      # - name: Show sccache stats (only in tesitng build)
-      #   id: show-sccache-stats
-      #   run: $HOME/.mozbuild/sccache/sccache --show-stats
+      - name: Show sccache stats (only in tesitng build)
+        id: show-sccache-stats
+        run: $HOME/.mozbuild/sccache/sccache --show-stats
 
       - name: Package
         id: pkg
@@ -132,25 +132,25 @@ jobs:
           zip -r "momiji-${VERSION}_macOS10.7-10.8.zip" Momiji.app
 
       # (Comment out on production build)
-      # - name: Stop sccache and create the cache folder in case it didn not exist yet
-      #   if: always()
-      #   run: |
-      #     [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
-      #     $HOME/.mozbuild/sccache/sccache --stop-server
-      #     # Delay for 60s to fix "file changes as we read it" from save-cache task
-      #     sleep 60
-      #     echo "60s of waiting has ended."
+      - name: Stop sccache and create the cache folder in case it didn not exist yet
+        if: always()
+        run: |
+          [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
+          $HOME/.mozbuild/sccache/sccache --stop-server
+          # Delay for 60s to fix "file changes as we read it" from save-cache task
+          sleep 60
+          echo "60s of waiting has ended."
 
       # (No need to save cache in production build session)
-      # - name: Saving cache even if pipeline fails
-      #   id: save-cache
-      #   if: always()
-      #   uses: actions/cache/save@v5.0.4
-      #   with:
-      #     key: ${{ runner.os }}-ld64-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
-      #     path: |
-      #       ~/Library/Caches/Mozilla.sccache 
-      #       ~/.mozbuild
+      - name: Saving cache even if pipeline fails
+        id: save-cache
+        if: always()
+        uses: actions/cache/save@v5.0.4
+        with:
+          key: ${{ runner.os }}-ld64-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
+          path: |
+            ~/Library/Caches/Mozilla.sccache 
+            ~/.mozbuild
 
       - name: Upload Artifacts
         if: always()

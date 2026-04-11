@@ -523,7 +523,6 @@ void MediaDecodeTask::FinishDecode() {
   auto newBuffers = CreateChannelBuffers(channelCount, resampledFrames);
   if (!newBuffers) {
     ReportFailureOnMainThread(WebAudioDecodeJob::UnknownError);
-    return;
   }
   mDecodeJob.mBuffer.mChannelData.SetLength(channelCount);
   for (uint32_t i = 0; i < channelCount; ++i) {
