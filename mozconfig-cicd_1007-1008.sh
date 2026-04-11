@@ -9,7 +9,7 @@ ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-apple-darwin
 export MACOSX_DEPLOYMENT_TARGET=10.7
 
-============= SCCACHE ============== (comment out for production build)
+# ============= SCCACHE ============== (comment out for production build)
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
 export SCCACHE_IDLE_TIMEOUT=0
 
