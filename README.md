@@ -16,7 +16,7 @@ For build guide, please checkout for [BUILDING.md](BUILDING.md)
 
 ## Features:
 - Allow browsing modern Web and using up-to-date Web services securely (with fully applied security patches) on macOS version unsupported by Apple and Mozilla, with almost fully working functions (for more detail about poorly supported Web functions, especially if you are using macOS 10.7, please check out for "Known caveats" subsection)
-- Disable unnecessary and unsupported components: Crash Reporter, WebAssembly, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
+- Disable unnecessary and unsupported components: Crash Reporter, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
 
 ## Known caveats
 - **For 10.7 users:**: On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A`. To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
@@ -27,6 +27,7 @@ This command will trick Momiji to think that macOS 10.7 "really" locates `CoreTe
 - Hardware graphics acceleration is available but maybe buggy on some platforms  (on my Ivy Bridge machine, fonts look partially broken in case of macOS 10.7 and 10.8). In case of buggy experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web rendering.
 - Screen sharing (in Google Meet, Microsoft Teams, etc.) is unavailable on macOS 10.7 due to the absence of compatible `DesktopCapture` framework
 - Discord voice, video calls and its Go Live streams are unsupported as they require at least Firefox 142 to work on since 2026-Mar-02, while Momiji is currently being based on Firefox 140 ESR baseline.
+- WebSocket applications and services could malfunction if Momiji is configured to use system's proxy settings. Check out [this issue](https://github.com/aobaharuki2005/momiji-web-browser/issues/10) to see how to disable it.
 
 ## Modifications
 
