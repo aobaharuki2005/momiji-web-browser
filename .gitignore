@@ -52,6 +52,7 @@ ID
 /.clangd
 /.mozconfig*
 /mozconfig*
+!/mozconfig*.sh
 /.moz-fast-forward
 /.moz-vendoring
 /old-configure
