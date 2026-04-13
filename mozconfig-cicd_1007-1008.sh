@@ -57,6 +57,7 @@ ac_add_options --disable-dmd
 ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
 ac_add_options --disable-updater
+ac_add_options --disable-sandbox
 
 # ========= Production-specific optimizations (reference from Waterfox) ===========
 # ac_add_options --enable-lto=thin
@@ -67,5 +68,6 @@ ac_add_options --disable-updater
 # export RUSTFLAGS="-Ctarget-cpu=core2"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========
-ac_add_options --enable-optimize="-Os -w"
-export RUSTC_OPT_LEVEL="s"
+# ac_add_options --enable-optimize="-Os -w"
+# export RUSTC_OPT_LEVEL="s"
+ac_add_options --disable-optimize
