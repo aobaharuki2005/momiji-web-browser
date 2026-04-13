@@ -16,20 +16,18 @@ For build guide, please checkout for [BUILDING.md](BUILDING.md)
 
 ## Features:
 - Allow browsing modern Web and using up-to-date Web services securely (with fully applied security patches) on macOS version unsupported by Apple and Mozilla, with almost fully working functions (for more detail about poorly supported Web functions, especially if you are using macOS 10.7, please check out for "Known caveats" subsection)
-- Disable unnecessary and unsupported components: Crash Reporter, WebAssembly, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
+- Disable unnecessary and unsupported components: Crash Reporter, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
 
 ## Known caveats
-- **(FIXED in 2026-Mar-20)** My self-designed Momiji icon logo for Momiji is broken in Finder's List view mode (especiall on macOS 10.10 and up). In other modes, however, the logo icon is still displaying fine. 
-- Some special functions like live-streaming, online meeting and graphics design (Canva, Adobe Cloud Creative, ...) may not work smoothly or functionally as expected on very old macOS version (due to insufficient of proper Mac machine for unit testing, I haven't been able to carry out intensive test and make comprehensive judgements)
-- **For 10.7 users:** 
-    - Hardware-accelerated rendering is completely unavailable, only software rendering is usable.
-    - On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A` (Hey Apple, what the logic are you implying here?). To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
+- **For 10.7 users:**: On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A`. To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
 ```sh
 sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework
 ```
 This command will trick Momiji to think that macOS 10.7 "really" locates `CoreText.framework` at `/System/Library/Frameworks` and continues to execute as usual.
-
-- **For 10.8 users:** hardware acceleration is available but stills buggy (on my Ivy Bridge machine, fonts look partially broken). In case of bug experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web experience.
+- Hardware graphics acceleration is available but maybe buggy on some platforms  (on my Ivy Bridge machine, fonts look partially broken in case of macOS 10.7 and 10.8). In case of buggy experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web rendering.
+- Screen sharing (in Google Meet, Microsoft Teams, etc.) is unavailable on macOS 10.7 due to the absence of compatible `DesktopCapture` framework
+- Discord voice, video calls and its Go Live streams are unsupported as they require at least Firefox 142 to work on since 2026-Mar-02, while Momiji is currently being based on Firefox 140 ESR baseline.
+- WebSocket applications and services could malfunction if Momiji is configured to use system's proxy settings. Check out [this issue](https://github.com/aobaharuki2005/momiji-web-browser/issues/10) to see how to disable it.
 
 ## Modifications
 
