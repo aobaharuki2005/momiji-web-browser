@@ -1,6 +1,6 @@
 <span style="display:block;text-align:center">![Momiji](./docs/readme/banner.jpg)</span>
 
-# Momiji Web Browser - macOS Legacy (10.7-10.14) support
+# Momiji Web Browser - macOS Legacy (10.7-10.14) support (64-BIT ONLY)
 
 <span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot_new.png)</span>
 
