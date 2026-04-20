@@ -8,7 +8,7 @@
 
 Firefox browser backported and maintained for macOS 10.7-10.14.
 
-This project is the successor and inheritance of [firefox-dynasty](https://github.com/i3roly/firefox-dynasty) project - which (together with the owner), unfortunately, has been taken down due to GitHub violation of Term of Use. You can find more detail about the incident in this [MacRumors post](https://forums.macrumors.com/threads/firefox-dynasty-firefox-for-os-x-10-8-also-web-app-templates.2446475/post-34441749).
+This project is the fork, the successor and inheritance of [firefox-dynasty](https://github.com/i3roly/firefox-dynasty) project - which (together with the owner), unfortunately, has been taken down due to GitHub violation of Term of Use. You can find more detail about the incident in this [MacRumors post](https://forums.macrumors.com/threads/firefox-dynasty-firefox-for-os-x-10-8-also-web-app-templates.2446475/post-34441749).
 
 Momiji（紅葉、もみじ）means "red leaves of autumn" in Japanese. I came up with the idea because the Japanese "mo" sound resembles the "mo" sound in the original "Mozilla Foundation" trademark. Additionally, red leaves are also told to be able to make people remind of good old memories, so using such a name for this backported Firefox distribution, to my thought, is a good idea (maybe).
 
