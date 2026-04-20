@@ -1,8 +1,6 @@
 name: build for macOS 10.9-10.14
 
 on:
-  # pull_request: 
-  #   branches: master
   push:
     branches:
       - '*test'
@@ -10,7 +8,6 @@ on:
       - '*1007-1008*'
       - '.github/workflows/*.yml'
       - '*.md'
-  workflow_dispatch:
 
 jobs:
   build:
@@ -22,7 +19,6 @@ jobs:
         uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
-          submodules: recursive
 
       # Restore cached toolchains and build artifacts
       - name: Restore sccache cache mozbuild toolchains
@@ -37,7 +33,7 @@ jobs:
             ${{ runner.os }}-lld-${{ hashFiles('mozconfig-cicd.sh') }}
             ${{ runner.os }}-lld
 
-      - name: Select Xcode 16.3
+      - name: Select Xcode 16.3 (SDK 15.4)
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
 
       - name: Bootstrapping build deps
@@ -73,7 +69,7 @@ jobs:
         run: ln -sf ./mozconfig-cicd_1009-1014.sh mozconfig
     
       - name: Configure Rust toolchain version 1.86.0-nightly (nightly-2025-01-09)
-        id: rust-1860-nightly-cfg
+        id: rust-nightly-cfg
         run: |
           rustup install nightly-2025-01-09
           rustup default nightly-2025-01-09
@@ -85,20 +81,17 @@ jobs:
           
       - name: Configure build options
         id: configure
-        run: | 
-          # Start sccache before building (only in tesitng build)
-          # $HOME/.mozbuild/sccache/sccache --start-server 
-          /usr/bin/python3 ./mach configure
+        run: /usr/bin/python3 ./mach configure
 
       - name: Build
         id: build
         run: /usr/bin/python3 ./mach build
 
-      # - name: Show sccache stats (only in tesitng build)
-      #   id: show-sccache-stats
-      #   run: $HOME/.mozbuild/sccache/sccache --show-stats
+      - name: Show sccache stats (only in testing build)
+        id: show-sccache-stats
+        run: $HOME/.mozbuild/sccache/sccache --show-stats
 
-      - name: Package into DMG
+      - name: Export the DMG image
         id: pkg
         run: /usr/bin/python3 ./mach package
 
@@ -125,7 +118,7 @@ jobs:
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
           cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS
 
-          # Polyfill XUL, libmozavutil.dylib and libgkcodecs.dylib only
+          # Polyfill XUL, libmozavutil.dylib and libgkcodecs.dylib
           cd /tmp/Momiji.app/Contents/MacOS/
           install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "XUL"
           install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "libmozavutil.dylib"
@@ -135,26 +128,15 @@ jobs:
           cd /tmp
           zip -r "momiji-${VERSION}_macOS10.9-10.11.zip" Momiji.app
 
-      # (Comment out on production build)
-      # - name: Stop sccache and create the cache folder in case it didn not exist yet
-      #   if: always()
-      #   run: |
-      #     [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
-      #     $HOME/.mozbuild/sccache/sccache --stop-server
-      #     # Delay for 60s to fix "file changes as we read it" from save-cache task
-      #     sleep 60
-      #     echo "60s of waiting has ended."
-
-      # (No need to save cache in production build session)
-      # - name: Saving cache even if pipeline fails
-      #   id: save-cache
-      #   if: always()
-      #   uses: actions/cache/save@v5.0.4
-      #   with:
-      #     key: ${{ runner.os }}-lld-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
-      #     path: |
-      #       ~/Library/Caches/Mozilla.sccache 
-      #       ~/.mozbuild
+      - name: Saving cache even if pipeline fails
+        id: save-cache
+        if: always()
+        uses: actions/cache/save@v5.0.4
+        with:
+          key: ${{ runner.os }}-lld-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
+          path: |
+            ~/Library/Caches/Mozilla.sccache 
+            ~/.mozbuild
 
       - name: Upload Artifacts
         if: always()
