@@ -2,7 +2,17 @@
 
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support (64-BIT ONLY)
 
-<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot_new.png)</span>
+> [!IMPORTANT]
+> * Only 64-bit Macintosh is supported. That means if you're owning a 32-bit only Macintosh, or installing a 32-bit only macOS version, it's out of support.
+> * **For 10.7 users:** On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A`. To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
+> ```sh
+> sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework
+> ```
+> This command will trick Momiji to think that macOS 10.7 "really" locates `CoreText.framework` at `/System/Library/Frameworks` and continues to execute as usual.
+> - Hardware graphics acceleration is available but maybe buggy on some platforms  (on my Ivy Bridge machine, fonts look partially broken in case of macOS 10.7 and 10.8). In case of buggy experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web rendering.
+> - Screen sharing (in Google Meet, Microsoft Teams, etc.) is unavailable on macOS 10.7 due to the absence of compatible `DesktopCapture` framework
+> - Discord voice, video calls and its Go Live streams are unsupported as they require at least Firefox 142 to work on since 2026-Mar-02, while Momiji is currently being based on Firefox 140 ESR baseline.
+> - WebSocket applications and services could malfunction if Momiji is configured to use system's proxy settings. Check out [this issue](https://github.com/aobaharuki2005/momiji-web-browser/issues/10) to see how to disable it.
 
 ## About Momiji
 
@@ -17,18 +27,6 @@ For build guide, please checkout for [BUILDING.md](BUILDING.md)
 ## Features:
 - Allow browsing modern Web and using up-to-date Web services securely (with fully applied security patches) on macOS version unsupported by Apple and Mozilla, with almost fully working functions (for more detail about poorly supported Web functions, especially if you are using macOS 10.7, please check out for "Known caveats" subsection)
 - Disable unnecessary and unsupported components: Crash Reporter, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
-
-## Known caveats
-- Only 64-bit macOS is supported. That means if you're owning a 32-bit only Macintosh, or installing a 32-bit only macOS version, it's out of support.
-- **For 10.7 users:**: On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A`. To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
-```sh
-sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework
-```
-This command will trick Momiji to think that macOS 10.7 "really" locates `CoreText.framework` at `/System/Library/Frameworks` and continues to execute as usual.
-- Hardware graphics acceleration is available but maybe buggy on some platforms  (on my Ivy Bridge machine, fonts look partially broken in case of macOS 10.7 and 10.8). In case of buggy experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web rendering.
-- Screen sharing (in Google Meet, Microsoft Teams, etc.) is unavailable on macOS 10.7 due to the absence of compatible `DesktopCapture` framework
-- Discord voice, video calls and its Go Live streams are unsupported as they require at least Firefox 142 to work on since 2026-Mar-02, while Momiji is currently being based on Firefox 140 ESR baseline.
-- WebSocket applications and services could malfunction if Momiji is configured to use system's proxy settings. Check out [this issue](https://github.com/aobaharuki2005/momiji-web-browser/issues/10) to see how to disable it.
 
 ## Modifications
 
@@ -51,6 +49,10 @@ Modified files are documented in [CHANGES.md](CHANGES.md).
 
 ## Downloads
 Check out for my releases (binary distribution and source code archive) in this [Releases](https://github.com/aobaharuki2005/firefox-dynasty-RELIFE/releases) page.
+
+## Screenshot
+
+<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot_new.png)</span>
 
 ## Credits
 
