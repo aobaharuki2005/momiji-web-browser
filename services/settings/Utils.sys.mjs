@@ -51,6 +51,7 @@ ChromeUtils.defineLazyGetter(lazy, "isRunningTests", () => {
 // Overriding the server URL is normally disabled on Beta and Release channels,
 // except under some conditions.
 ChromeUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
+  return true;
   if (!AppConstants.RELEASE_OR_BETA) {
     // Always allow to override the server URL on Nightly/DevEdition.
     return true;
@@ -109,9 +110,11 @@ const _cdnURLs = {};
 
 export var Utils = {
   get SERVER_URL() {
-    return lazy.allowServerURLOverride
-      ? lazy.gServerURL
-      : AppConstants.REMOTE_SETTINGS_SERVER_URL;
+    return (
+        AppConstants.REMOTE_SETTINGS_SERVER_URLS.includes(this.SERVER_URL) ||
+        this.SERVER_URL == "https://%.invalid" ||
+        lazy.isRunningTests
+     );
   },
 
   CHANGES_PATH: "/buckets/monitor/collections/changes/changeset",
