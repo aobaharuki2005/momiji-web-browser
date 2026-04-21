@@ -14185,7 +14185,7 @@
 #     PROXYCONFIG_SYSTEM   = 5
 - name: network.proxy.type
   type: RelaxedAtomicUint32
-  value: 5
+  value: 0
   mirror: always
 
 # Whether to use WPAD while configuring proxy with system settings
