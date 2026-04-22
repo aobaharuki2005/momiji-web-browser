@@ -231,7 +231,9 @@ void HTMLSlotElement::Assign(const Sequence<OwningElementOrText>& aNodes) {
     if (!mAssignedNodes.IsEmpty()) {
       changedSlots.EnsureInserted(this);
       if (root) {
-        root->InvalidateStyleAndLayoutOnSubtree(this);
+        // If not in a shadow tree, the flat tree is not really changing, so no
+        // need to invalidate layout. Same applies to other callers here.
+        ShadowRoot::InvalidateStyleAndLayoutOnSubtree(this);      
       }
       ClearAssignedNodes();
     }
