@@ -19,6 +19,10 @@ namespace mozilla {
 
 class ErrorResult;
 
+namespace layers {
+class SurfaceDescriptor;
+}  // namespace layers
+
 namespace dom {
 
 class BlobCallback;
