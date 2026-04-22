@@ -3,7 +3,6 @@
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support (64-BIT ONLY)
 
 > [!IMPORTANT]
-> * Only 64-bit Macintosh is supported. That means if you're owning a 32-bit only Macintosh, or installing a 32-bit only macOS version, it's out of support.
 > * **For 10.7 users:** On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A`. To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
 > ```sh
 > sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework
