@@ -9,7 +9,7 @@ ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-apple-darwin
 export MACOSX_DEPLOYMENT_TARGET=10.9
 
-# ============= SCCACHE ============== (comment out for production build)   VERIFIED! 2026-04-20
+# ============= SCCACHE ==============  VERIFIED! 2026-04-20
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
 export SCCACHE_IDLE_TIMEOUT=0
 
@@ -41,14 +41,10 @@ export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
 
-# ========== C/C++ ==========   AMENDED! 2026-04-20
-# Switch to use Mozilla Clang for wasm only
-# Switch to build main binary using Apple Clang again for claimed compatibility
-
-export WASM_CC="$HOME/.mozbuild/clang/bin/clang"
-export WASM_CXX="$HOME/.mozbuild/clang/bin/clang++"
-export CC="/usr/bin/clang"
-export CXX="/usr/bin/clang++"
+# ========== C/C++ ==========   AMENDED! 2026-04-21
+# Use Mozilla Clang for both wasm and main target on 10.9+
+export CC="$HOME/.mozbuild/clang/bin/clang"
+export CXX="$HOME/.mozbuild/clang/bin/clang++"
 
 # ========== OPTIMIZATIONS ==========   AMENDED! 2026-04-20
 # Officially eliminate --without-wasm-sandboxed-libraries flag because it's been decided
@@ -67,15 +63,15 @@ ac_add_options --disable-updater
 # Force both C/C++ and Rust codes to be compatible with very old Nocona architectures (MacPro1,1 and MacPro1,2)
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
 
-# ac_add_options --disable-debug
-# ac_add_options --enable-lto=thin
-# ac_add_options --enable-optimize="-march=nocona -O2 -w"
-# export RUSTC_OPT_LEVEL=2
-# export RUSTFLAGS="-Ctarget-cpu=nocona"
-# export LDFLAGS="-headerpad_max_install_names -march=nocona"
+ac_add_options --disable-debug
+ac_add_options --enable-lto=thin
+ac_add_options --enable-optimize="-march=nocona -O2 -w"
+export RUSTC_OPT_LEVEL=2
+export RUSTFLAGS="-Ctarget-cpu=nocona"
+export LDFLAGS="-march=nocona"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
-ac_add_options --disable-optimize
-export CFLAGS="-w"
-export CXXFLAGS="-w"
+# ac_add_options --disable-optimize
+# export CFLAGS="-w"
+# export CXXFLAGS="-w"

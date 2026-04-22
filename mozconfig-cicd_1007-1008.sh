@@ -9,7 +9,7 @@ ac_add_options --enable-application=browser
 ac_add_options --target=x86_64-apple-darwin
 export MACOSX_DEPLOYMENT_TARGET=10.7
 
-# ============= SCCACHE ============== (comment out for production build)   VERIFIED! 2026-04-20
+# ============= SCCACHE ==============  VERIFIED! 2026-04-20
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
 export SCCACHE_IDLE_TIMEOUT=0
 
@@ -64,19 +64,18 @@ ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming 
 
 # ========= Production-specific optimizations (reference from Waterfox) ===========     AMENDED! 2026-04-20
 # Remove unnecessary aggressive --enable-release and --enable-rust-simd, which may be unsuitable for very old processors (like MacPro1,1 and MacPro1,2)
-# Decrease optimization level of both Clang and Rust to -O2 to ensure compabitibility on very old processors
+# Decrease optimization level of both Clang and Rust to -Os to ensure compabitibility on very old processors
 # Force both C/C++ and Rust codes to be compatible with very old Nocona architectures (MacPro1,1 and MacPro1,2)
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
 
-# ac_add_options --disable-debug
-# ac_add_options --enable-lto=thin
-# ac_add_options --enable-optimize="-march=nocona -O2 -w"
-# export RUSTC_OPT_LEVEL=2
-# export RUSTFLAGS="-Ctarget-cpu=nocona"
-# export LDFLAGS="-headerpad_max_install_names -march=nocona"
+ac_add_options --disable-debug
+ac_add_options --enable-optimize="-march=nocona -Os -w"
+export RUSTC_OPT_LEVEL="s"
+export RUSTFLAGS="-Ctarget-cpu=nocona"
+export LDFLAGS="-march=nocona"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
-ac_add_options --disable-optimize
-export CFLAGS="-w"
-export CXXFLAGS="-w"
+# ac_add_options --disable-optimize
+# export CFLAGS="-w"
+# export CXXFLAGS="-w"
