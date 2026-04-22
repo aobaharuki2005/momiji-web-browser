@@ -58,6 +58,14 @@ uint32_t ComputeRGBBufferSize(IntSize aSize, SurfaceFormat aFormat) {
   return bufsize;
 }
 
+static bool CheckYCbCrStride(const gfx::IntSize& aSize, int32_t aStride,
+                             gfx::ColorDepth aDepth) {
+  gfx::SurfaceFormat format = gfx::SurfaceFormatForColorDepth(aDepth);
+  CheckedInt32 minStride =
+      CheckedInt32(gfx::BytesPerPixel(format)) * aSize.width;
+  return minStride.isValid() && aStride >= minStride.value();
+}
+
 // Minimum required shmem size in bytes
 uint32_t ComputeYCbCrBufferSize(const gfx::IntRect& aDisplay,
                                 const gfx::IntSize& aYSize, int32_t aYStride,
