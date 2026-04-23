@@ -50,8 +50,6 @@ jobs:
             [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
-            # [ -d "$HOME/.mozbuild/nasm" ] && mv "$HOME/.mozbuild/nasm" ~/tmp_toolchains/ # (Not available for aarch64 runner)
-            #  [ -d "$HOME/.mozbuild/dump_syms" ] && mv "$HOME/.mozbuild/dump_syms" ~/tmp_toolchains/ # (Not available for aarch64 runner)
             [ -d "$HOME/.mozbuild/clang" ] && mv "$HOME/.mozbuild/clang" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/sysroot-wasm32-wasi" ] && mv "$HOME/.mozbuild/sysroot-wasm32-wasi" ~/tmp_toolchains/
             
@@ -116,7 +114,13 @@ jobs:
           # Build libMacportsLegacySystem.B.dylib (patched to support CCRandomGenerateBytes and exp10)
           git clone --recursive --branch 1.5.2_addCCRandom https://github.com/aobaharuki2005/macports-legacy-support.git
           cd macports-legacy-support
-          MACOSX_DEPLOYMENT_TARGET=10.6 CXXFLAGS="-march=nocona" CFLAGS="-march=nocona" make
+
+          CC="clang --target=x86_64-apple-macos10.6" \
+          CXX="clang++ --target=x86_64-apple-macos10.6" \
+          CFLAGS="-march=x86-64 -Os" \
+          CXXFLAGS="-march=x86-64 -Os" \
+          LDFLAGS="--target=x86_64-apple-macos10.6" \
+          make
 
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
           cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS

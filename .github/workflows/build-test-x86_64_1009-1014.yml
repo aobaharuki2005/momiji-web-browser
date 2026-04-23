@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: build Momiji
-    runs-on: macos-15-intel
+    runs-on: macos-15
     steps:     
       - name: Checkout source code
         id: checkout
@@ -50,8 +50,6 @@ jobs:
             [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/nasm" ] && mv "$HOME/.mozbuild/nasm" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/dump_syms" ] && mv "$HOME/.mozbuild/dump_syms" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/clang" ] && mv "$HOME/.mozbuild/clang" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/sysroot-wasm32-wasi" ] && mv "$HOME/.mozbuild/sysroot-wasm32-wasi" ~/tmp_toolchains/
             
@@ -61,8 +59,12 @@ jobs:
             # Đổi tên thư mục tạm thành .mozbuild
             mv ~/tmp_toolchains "$HOME/.mozbuild"
             
-            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, clang, sysroot-wasm32-wasi"
+            # echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, clang, sysroot-wasm32-wasi"
+            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, clang, sysroot-wasm32-wasi"
           fi
+
+          # Install nasm from Homebrew
+          brew install nasm
 
       - name: Create mozconfig build config from template
         id: buildcfg-link
@@ -74,6 +76,9 @@ jobs:
           rustup install nightly-2025-01-09
           rustup default nightly-2025-01-09
           rustup override set nightly-2025-01-09
+
+          # Add support for cross compiling for x86_64-apple-darwin target
+          rustup target add x86_64-apple-darwin
 
           # Verify Rust installation
           cargo --version
@@ -113,8 +118,15 @@ jobs:
           # Build libMacportsLegacySystem.B.dylib (patched to support CCRandomGenerateBytes)
           git clone --recursive --branch 1.5.2_addCCRandom https://github.com/aobaharuki2005/macports-legacy-support.git
           cd macports-legacy-support
-          MACOSX_DEPLOYMENT_TARGET=10.6 make
 
+
+          CC="clang --target=x86_64-apple-macos10.6" \
+          CXX="clang++ --target=x86_64-apple-macos10.6" \
+          CFLAGS="-march=x86-64 -Os" \
+          CXXFLAGS="-march=x86-64 -Os" \
+          LDFLAGS="--target=x86_64-apple-macos10.6" \
+          make
+          
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
           cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS
 

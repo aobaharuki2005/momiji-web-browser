@@ -36,7 +36,7 @@ ac_add_options --with-branding=browser/branding/momiji
 # ac_add_options --with-distribution-id=net.momiji  # Disable in favor of compatibility with Firefox-Dynasty/older Momiji created profiles
 
 # ========== RUST ==========
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-x86_64-apple-darwin/bin"  # Rust 1.86.0-nightly
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-aarch64-apple-darwin/bin"  # Rust 1.86.0-nightly
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
@@ -63,10 +63,10 @@ ac_add_options --disable-updater
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
 
 ac_add_options --disable-debug
-ac_add_options --enable-optimize="-march=nocona -Os -w"
+ac_add_options --enable-optimize="-march=x86-64 -Os -w"
 export RUSTC_OPT_LEVEL="s"
 export LDFLAGS="-headerpad_max_install_names"
-export RUSTFLAGS="-C target-cpu=nocona -C target-feature=-ssse3,-sse4.1,-sse4.2"
+export RUSTFLAGS="-C target-cpu=x86-64"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
