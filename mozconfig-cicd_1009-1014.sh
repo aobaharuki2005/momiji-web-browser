@@ -14,8 +14,8 @@ ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
 export SCCACHE_IDLE_TIMEOUT=0
 
 # ============= NASM & DUMPSYMS =============       VERIFIED! 2026-04-20
-export NASM="$HOME/.mozbuild/nasm/nasm"
-export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
+# export NASM="$HOME/.mozbuild/nasm/nasm"
+# export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
 
 # ============ SDK ===================      VERIFIED! 2026-04-20
 # Use SDK 15.4 (according to the minimum version specified in python\mozboot\mozboot\util.py
