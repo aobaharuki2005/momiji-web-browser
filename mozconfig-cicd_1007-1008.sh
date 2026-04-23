@@ -65,14 +65,12 @@ ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming 
 # ========= Production-specific optimizations (reference from Waterfox) ===========     AMENDED! 2026-04-20
 # Remove unnecessary aggressive --enable-release and --enable-rust-simd, which may be unsuitable for very old processors (like MacPro1,1 and MacPro1,2)
 # Decrease optimization level of both Clang and Rust to -Os to ensure compabitibility on very old processors
-# Force both C/C++ and Rust codes to be compatible with very old Nocona architectures (MacPro1,1 and MacPro1,2)
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
 
 ac_add_options --disable-debug
-ac_add_options --enable-optimize="-march=nocona -Os -w"
+ac_add_options --enable-optimize="-Os -w"
 export RUSTC_OPT_LEVEL="s"
-export RUSTFLAGS="-Ctarget-cpu=nocona"
-export LDFLAGS="-headerpad_max_install_names -march=nocona"
+export LDFLAGS="-headerpad_max_install_names"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
