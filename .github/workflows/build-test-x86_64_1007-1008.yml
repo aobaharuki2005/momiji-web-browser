@@ -65,6 +65,9 @@ jobs:
             echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, clang, sysroot-wasm32-wasi"
           fi
 
+          # Install nasm from Homebrew
+          brew install nasm
+
       - name: Create mozconfig build config from template
         id: buildcfg-link
         run: ln -sf ./mozconfig-cicd_1007-1008.sh mozconfig
