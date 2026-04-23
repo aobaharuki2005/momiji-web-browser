@@ -13,9 +13,9 @@ export MACOSX_DEPLOYMENT_TARGET=10.7
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
 export SCCACHE_IDLE_TIMEOUT=0
 
-# ============= NASM & DUMPSYMS =============       VERIFIED! 2026-04-20
-export NASM="$HOME/.mozbuild/nasm/nasm"
-export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
+# ============= NASM & DUMPSYMS (unavailable for aarch64 runner) =============       VERIFIED! 2026-04-20
+# export NASM="$HOME/.mozbuild/nasm/nasm"
+# export DUMP_SYMS="$HOME/.mozbuild/dump_syms/dump_syms"
 
 # ============ SDK ===================      VERIFIED! 2026-04-20
 # Use SDK 15.4 (according to the minimum version specified in python\mozboot\mozboot\util.py
@@ -64,13 +64,15 @@ ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming 
 
 # ========= Production-specific optimizations (reference from Waterfox) ===========     AMENDED! 2026-04-20
 # Remove unnecessary aggressive --enable-release and --enable-rust-simd, which may be unsuitable for very old processors (like MacPro1,1 and MacPro1,2)
-# Decrease optimization level of both Clang and Rust to -O2 to ensure compabitibility on very old processors
+# Decrease optimization level of both Clang and Rust to -Os to ensure compabitibility on very old processors
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
+# Pass -ld_classic linker flag till Rust bindgen layer to ensure 10.7 compat
 
 ac_add_options --disable-debug
-ac_add_options --enable-optimize="-O2 -w"
-export RUSTC_OPT_LEVEL="2"
-export LDFLAGS="-headerpad_max_install_names"
+ac_add_options --enable-optimize="-Os -w"
+export RUSTC_OPT_LEVEL="s"
+export LDFLAGS="-headerpad_max_install_names -ld_classic"
+export RUSTFLAGS="-C link-arg=-ld_classic"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
