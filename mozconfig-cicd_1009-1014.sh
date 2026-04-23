@@ -63,9 +63,10 @@ ac_add_options --disable-updater
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
 
 ac_add_options --disable-debug
-ac_add_options --enable-optimize="-Os -w"
+ac_add_options --enable-optimize="-march=nocona -Os -w"
 export RUSTC_OPT_LEVEL="s"
 export LDFLAGS="-headerpad_max_install_names"
+export RUSTFLAGS="-C target-cpu=nocona -C target-feature=-ssse3,-sse4.1,-sse4.2"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time

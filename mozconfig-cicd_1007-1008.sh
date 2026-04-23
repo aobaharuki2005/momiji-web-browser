@@ -45,10 +45,10 @@ export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
 # Switch to use Mozilla Clang for wasm only
 # Switch to build main binary using Apple Clang again for claimed compatibility
 
-export WASM_CC="$HOME/.mozbuild/clang/bin/clang"
-export WASM_CXX="$HOME/.mozbuild/clang/bin/clang++"
-export CC="/usr/bin/clang"
-export CXX="/usr/bin/clang++"
+export CC="$HOME/.mozbuild/clang/bin/clang"
+export CXX="$HOME/.mozbuild/clang/bin/clang++"
+# export CC="/usr/bin/clang"
+# export CXX="/usr/bin/clang++"
 
 # ========== OPTIMIZATIONS ==========   AMENDED! 2026-04-20
 # Officially eliminate --without-wasm-sandboxed-libraries flag because it's been decided
@@ -63,16 +63,16 @@ ac_add_options --disable-updater
 ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming services is broken.
 
 # ========= Production-specific optimizations (reference from Waterfox) ===========     AMENDED! 2026-04-20
-# Remove unnecessary aggressive --enable-release and --enable-rust-simd, which may be unsuitable for very old processors (like MacPro1,1 and MacPro1,2)
+# Remove unnecessary aggressive --enable-release and --enable-rust-simd, which may be unsuitable for very old models (like MacPro1,1 and MacPro1,2)
 # Decrease optimization level of both Clang and Rust to -Os to ensure compabitibility on very old processors
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
-# Pass -ld_classic linker flag till Rust bindgen layer to ensure 10.7 compat
+# Enforce -march=nocona for compatible with old models like MacPro1,1 and MacPro1,2
 
 ac_add_options --disable-debug
-ac_add_options --enable-optimize="-Os -w"
+ac_add_options --enable-optimize="-march=nocona -Os -w"
 export RUSTC_OPT_LEVEL="s"
-export LDFLAGS="-headerpad_max_install_names "
-export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.7"
+export LDFLAGS="-headerpad_max_install_names"
+export RUSTFLAGS="-C target-cpu=nocona -C target-feature=-ssse3,-sse4.1,-sse4.2"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time

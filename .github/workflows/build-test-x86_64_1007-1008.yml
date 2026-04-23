@@ -116,7 +116,7 @@ jobs:
           # Build libMacportsLegacySystem.B.dylib (patched to support CCRandomGenerateBytes and exp10)
           git clone --recursive --branch 1.5.2_addCCRandom https://github.com/aobaharuki2005/macports-legacy-support.git
           cd macports-legacy-support
-          MACOSX_DEPLOYMENT_TARGET=10.6 CXXFLAGS="-march=x86_64" CFLAGS="-march=x86_64" make
+          MACOSX_DEPLOYMENT_TARGET=10.6 CXXFLAGS="-march=nocona" CFLAGS="-march=nocona" make
 
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
           cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS
