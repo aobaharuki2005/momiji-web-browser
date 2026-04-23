@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     name: build Momiji
-    runs-on: macos-15-latest
+    runs-on: macos-15
     steps:     
       - name: Checkout source code
         id: checkout
