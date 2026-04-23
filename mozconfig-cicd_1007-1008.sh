@@ -36,7 +36,7 @@ ac_add_options --with-branding=browser/branding/momiji
 # ac_add_options --with-distribution-id=net.momiji  # Disable in favor of compatibility with Firefox-Dynasty/older Momiji created profiles
 
 # ========== RUST ==========    VERIFIED! 2026-04-20
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-x86_64-apple-darwin/bin"  # Rust 1.86.0-nightly
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-aarch64-apple-darwin/bin"  # Rust 1.86.0-nightly
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
