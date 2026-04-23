@@ -71,8 +71,8 @@ ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming 
 ac_add_options --disable-debug
 ac_add_options --enable-optimize="-Os -w"
 export RUSTC_OPT_LEVEL="s"
-export LDFLAGS="-headerpad_max_install_names -ld_classic"
-export RUSTFLAGS="-C link-arg=-ld_classic"
+export LDFLAGS="-headerpad_max_install_names "
+export RUSTFLAGS="-C link-arg=-mmacosx-version-min=10.7"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
