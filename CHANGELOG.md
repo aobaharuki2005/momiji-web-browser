@@ -4,7 +4,7 @@
 - Disable build flag `ac_add_options --with-distribution-id=net.momiji` to bring back compatibility with profiles created from Momiji/Firefox-Dynasty 140.2.x and earlier. BE ATTENTION THAT Momiji 140.3.x profile will be rendered unusable due to this change.
 - Disable sandbox (`ac_add_options --disable-sandbox`) to fix video player issues on macOS 10.7
 - Disable Rust SIMD optimizations, replace `core2` with `nocona` arch optimizations, decrease optimization level from `-O3` to `-O2` to ensure compatibility with vintage models such as MacPro1,1 and Macpro2,1 which runing Intel Xeon 5000-series
-- Instead of showing project repository site as the welcome page, `about:blank` will be shown instead. This gives users more comfort in the first startup.
+- Instead of showing project repository site as the welcome page, "New tab" page will be shown instead. This gives users more comfort in the first startup.
 - Disable telemetry services including Firefox Health Report `imply_option("MOZ_SERVICES_HEALTHREPORT", False)`, Normandy remote experiments and studies `imply_option("MOZ_NORMANDY", False)`, Installation Telemetries `def is_telemetry_enabled(settings): return False`
 - Enable opening profiles used or created by newer Firefox versions (useful if you want to import data from Firefox-Dynasty v147, for example)
 ! ATTENTION: This changes does not guarantee success becuase database schema might have changed in newer Firefox versions. If crash occurs, it's recommend that you clean up your Firefox/Momiji profile directory and make a fresh start.

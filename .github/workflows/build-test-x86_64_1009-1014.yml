@@ -8,6 +8,7 @@ on:
       - '*1007-1008*'
       - '.github/workflows/*.yml'
       - '*.md'
+      - 'ff-patch/**'
 
 jobs:
   build:
