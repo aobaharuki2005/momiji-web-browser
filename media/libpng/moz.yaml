@@ -11,9 +11,9 @@ origin:
   url: "http://www.libpng.org/pub/png/libpng.html"
   license: libpng
 
-  release: v1.6.47 (2025-02-18T11:18:30+02:00).
+  release: v1.6.56 (2026-03-25T22:47:06+02:00).
 
-  revision: "v1.6.43"
+  revision: v1.6.56
 
   license-file: LICENSE
 
@@ -25,7 +25,7 @@ updatebot:
       enabled: True
 
 vendoring:
-  url: https://github.com/glennrp/libpng
+  url: https://github.com/pnggroup/libpng
   source-hosting: github
   tracking: tag
 

@@ -773,7 +773,7 @@ class ModuleEnvironmentObject : public EnvironmentObject {
   // `env` may be a DebugEnvironmentProxy, but not a hollow environment.
   static ModuleEnvironmentObject* find(JSObject* env);
 
-  uint32_t firstSyntheticValueSlot() { return RESERVED_SLOTS; }
+  uint32_t firstSyntheticValueSlot() { return RESERVED_SLOTS + 1; }
 
  private:
   static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
@@ -1518,6 +1518,7 @@ class DebugEnvironments {
                            const jsbytecode* pc);
   static void onPopWith(AbstractFramePtr frame);
   static void onPopModule(JSContext* cx, const EnvironmentIter& ei);
+  static void onPopWasm(JSContext* cx, AbstractFramePtr frame);
   static void onRealmUnsetIsDebuggee(Realm* realm);
 };
 

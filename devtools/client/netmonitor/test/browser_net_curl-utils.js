@@ -209,13 +209,13 @@ function testRemoveBinaryDataFromMultipartText(data) {
     '^"',
     boundary,
     "^\u000A\u000A",
-    'Content-Disposition: form-data; name=\\"param1\\"',
+    'Content-Disposition: form-data; name=^\\^"param1^\\^"',
     "^\u000A\u000A^\u000A\u000A",
     "value1",
     "^\u000A\u000A",
     boundary,
     "^\u000A\u000A",
-    'Content-Disposition: form-data; name=\\"file\\"; filename=\\"filename.png\\"',
+    'Content-Disposition: form-data; name=^\\^"file^\\^"; filename=^\\^"filename.png^\\^"',
     "^\u000A\u000A",
     "Content-Type: image/png",
     "^\u000A\u000A^\u000A\u000A",
@@ -334,10 +334,10 @@ function testEscapeStringWin() {
     "Percent signs should be escaped."
   );
 
-  const backslashes = "\\A simple string\\";
+  const backslashes = " - \\A simple string\\ - ";
   is(
     CurlUtils.escapeStringWin(backslashes),
-    '^"\\\\A simple string\\\\^"',
+    '^\" - ^\\^\\A simple string^\\^\\ - ^\"',
     "Backslashes should be escaped."
   );
 
@@ -365,8 +365,16 @@ function testEscapeStringWin() {
   const evilCommand = `query=evil\r\rcmd" /c timeout /t 3 & calc.exe\r\r`;
   is(
     CurlUtils.escapeStringWin(evilCommand),
-    '^\"query=evil^\n\n^\n\ncmd\\\" /c timeout /t 3 & calc.exe^\n\n^\n\n^\"',
+    '^\"query=evil^\n\n^\n\ncmd^\\^\" /c timeout /t 3 ^& calc.exe^\n\n^\n\n^\"',
     "The evil command is escaped properly"
+  );
+
+  // Control characters https://www.ascii-code.com/characters/control-characters
+  const containsControlChars = " - \u0007 \u0010 \u0014 \u001B \x1a - ";
+  is(
+    CurlUtils.escapeStringWin(containsControlChars),
+    '^\" - \u0007 \u0010 \u0014 \u001b \u001a - ^\"',
+    "Control characters should not be escaped with ^."
   );
 }
 

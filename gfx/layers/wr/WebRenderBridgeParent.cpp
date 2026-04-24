@@ -16,6 +16,7 @@
 #include "GLContextProvider.h"
 #include "GLLibraryLoader.h"
 #include "nsExceptionHandler.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Range.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/StaticPrefs_gfx.h"
@@ -314,8 +315,19 @@ class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender final {
     mWebRenderBridgeParent->SendPendingAsyncMessages();
     if (mActorsToDestroy) {
       // Destroy the actors after sending the async messages because the latter
-      // may contain references to some actors.
+      // may contain references to some actors. De-duplicate the array to avoid
+      // destroying the same texture parent actor twice.
+      nsTHashSet<PTextureParent*> seenTextureParents;
       for (const auto& op : *mActorsToDestroy) {
+        // Peek inside the op (as DestroyActor does) to see if we are about
+        // to destroy a PTextureParent.
+        if (op.type() == OpDestroy::TPTexture) {
+          PTextureParent* textureParent = op.get_PTexture().AsParent();
+          if (!seenTextureParents.EnsureInserted(textureParent)) {
+            // Already seen, so skip this one.
+            continue;
+          }
+        }
         mWebRenderBridgeParent->DestroyActor(op);
       }
     }
@@ -1843,25 +1855,37 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvGetSnapshot(
   TimeStamp start = TimeStamp::Now();
   MOZ_ASSERT(bufferTexture->GetBufferDescriptor().type() ==
              BufferDescriptor::TRGBDescriptor);
-  DebugOnly<uint32_t> stride = ImageDataSerializer::GetRGBStride(
-      bufferTexture->GetBufferDescriptor().get_RGBDescriptor());
+  if (bufferTexture->GetBufferDescriptor().type() !=
+      BufferDescriptor::TRGBDescriptor) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   uint8_t* buffer = bufferTexture->GetBuffer();
+  MOZ_ASSERT(buffer);
+  if (!buffer) {
+    return IPC_FAIL_NO_REASON(this);
+  }
+
   IntSize size = bufferTexture->GetSize();
 
-  MOZ_ASSERT(buffer);
   // For now the only formats we get here are RGBA and BGRA, and code below is
   // assuming a bpp of 4. If we allow other formats, the code needs adjusting
   // accordingly.
   MOZ_ASSERT(BytesPerPixel(bufferTexture->GetFormat()) == 4);
-  uint32_t buffer_size = size.width * size.height * 4;
+  if (BytesPerPixel(bufferTexture->GetFormat()) != 4) {
+    return IPC_FAIL_NO_REASON(this);
+  }
 
-  // Assert the stride of the buffer is what webrender expects
-  MOZ_ASSERT((uint32_t)(size.width * 4) == stride);
+  auto buffer_size = (CheckedInt<size_t>(size.width) * size.height * 4);
+  if (!buffer_size.isValid()) {
+    return IPC_FAIL_NO_REASON(this);
+  }
 
   FlushSceneBuilds();
   FlushFrameGeneration(wr::RenderReasons::SNAPSHOT);
   mApi->Readback(start, size, bufferTexture->GetFormat(),
-                 Range<uint8_t>(buffer, buffer_size), aNeedsYFlip);
+                 Range<uint8_t>(buffer, buffer_size.value()),
+                 aNeedsYFlip);
 
   return IPC_OK();
 }
@@ -2126,9 +2150,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvCapture() {
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvStartCaptureSequence(
-    const nsACString& aPath, const uint32_t& aFlags) {
+    const uint32_t& aFlags) {
   if (!mDestroyed) {
-    mApi->StartCaptureSequence(aPath, aFlags);
+    mApi->StartCaptureSequence(aFlags);
   }
   return IPC_OK();
 }

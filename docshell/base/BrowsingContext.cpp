@@ -2786,6 +2786,11 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
   });
 }
 
+bool BrowsingContext::CanSet(FieldIndex<IDX_InRDMPane>, const bool&,
+                             ContentParent* aSource) {
+  return XRE_IsParentProcess() && IsTop() && !aSource;
+}
+
 void BrowsingContext::DidSet(FieldIndex<IDX_InRDMPane>, bool aOldValue) {
   MOZ_ASSERT(IsTop(),
              "Should only set InRDMPane in the top-level browsing context");
@@ -4049,6 +4054,10 @@ bool IPDLParamTraits<dom::MaybeDiscarded<dom::BrowsingContext>>::Read(
   if (id == 0) {
     *aResult = nullptr;
   } else if (RefPtr<dom::BrowsingContext> bc = dom::BrowsingContext::Get(id)) {
+    if (!bc->Group()->IsKnownForMessageReader(aReader)) {
+      return false;
+    }
+
     *aResult = std::move(bc);
   } else {
     aResult->SetDiscarded(id);

@@ -4,8 +4,8 @@
 
 // This file contains branding-specific prefs.
 
-pref("startup.homepage_override_url", "https://github.com/aobaharuki2005/momiji-web-browser");
-pref("startup.homepage_welcome_url", "https://github.com/aobaharuki2005/momiji-web-browser");
+pref("startup.homepage_override_url", "about:blank");
+pref("startup.homepage_welcome_url", "about:blank");
 pref("startup.homepage_welcome_url.additional", "");
 // The time interval between checks for a new version (in seconds)
 pref("app.update.interval", 7200); // 2 hours

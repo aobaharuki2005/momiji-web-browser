@@ -51,6 +51,7 @@ ChromeUtils.defineLazyGetter(lazy, "isRunningTests", () => {
 // Overriding the server URL is normally disabled on Beta and Release channels,
 // except under some conditions.
 ChromeUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
+  return true;
   if (!AppConstants.RELEASE_OR_BETA) {
     // Always allow to override the server URL on Nightly/DevEdition.
     return true;
@@ -75,6 +76,18 @@ ChromeUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
   return false;
 });
 
+ChromeUtils.defineLazyGetter(lazy, "allowedCollections", () =>
+  Services.prefs
+    .getStringPref("librewolf.services.settings.allowedCollections", "")
+    .split(",")
+);
+
+ChromeUtils.defineLazyGetter(lazy, "allowedCollectionsFromDump", () =>
+  Services.prefs
+    .getStringPref("librewolf.services.settings.allowedCollectionsFromDump", "")
+    .split(",")
+);
+
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "gServerURL",
@@ -97,9 +110,11 @@ const _cdnURLs = {};
 
 export var Utils = {
   get SERVER_URL() {
-    return lazy.allowServerURLOverride
-      ? lazy.gServerURL
-      : AppConstants.REMOTE_SETTINGS_SERVER_URL;
+    return (
+        AppConstants.REMOTE_SETTINGS_SERVER_URLS.includes(this.SERVER_URL) ||
+        this.SERVER_URL == "https://%.invalid" ||
+        lazy.isRunningTests
+     );
   },
 
   CHANGES_PATH: "/buckets/monitor/collections/changes/changeset",
@@ -202,6 +217,75 @@ export var Utils = {
     } catch (ex) {
       log.warn("Could not determine network status.", ex);
     }
+    return false;
+  },
+
+  /**
+   * Internal code to determine whether the bucket and collection are allowed to
+   * be loaded by the remote settings client for a given list of allowed
+   * bucket/collection combinations.
+   * @param {string} bucket
+   * @param {string} collection
+   * @param {Array<string>} allowedCollections
+   * @returns {boolean} whether the bucket and collection are allowed to load
+   */
+  _isCollectionAllowedInternal(bucket, collection, allowedCollections) {
+    bucket = this.actualBucketName(bucket);
+    return (
+      allowedCollections.includes(`${bucket}/${collection}`) ||
+      allowedCollections.includes(`${bucket}/*`) ||
+      allowedCollections.includes("*")
+    );
+  },
+
+  /**
+   * Determines whether the bucket and collection are allowed to be loaded by the
+   * remote settings client.
+   * @param {string} bucket
+   * @param {string} collection
+   * @returns {boolean} whether the bucket and collection are allowed to load
+   */
+  isCollectionAllowed(bucket, collection) {
+    if (
+      this._isCollectionAllowedInternal(
+        bucket,
+        collection,
+        lazy.allowedCollections
+      )
+    ) {
+      return true;
+    }
+    console.warn(
+      `Connection attempt to RS collection "${bucket}/${collection}" was blocked/filtered.`
+    );
+    return false;
+  },
+
+  /**
+   * Determines whether the bucket and collection are allowed to be loaded from
+   * an in-tree remote settings dump.
+   * @param {string} bucket
+   * @param {string} collection
+   * @returns {boolean} whether the bucket and collection are allowed to load
+   */
+  isCollectionAllowedFromDump(bucket, collection) {
+    if (
+      this._isCollectionAllowedInternal(
+        bucket,
+        collection,
+        lazy.allowedCollectionsFromDump
+      ) ||
+      this._isCollectionAllowedInternal(
+        bucket,
+        collection,
+        lazy.allowedCollections
+      )
+    ) {
+      return true;
+    }
+    console.warn(
+      `Access attempt to RS collection "${bucket}/${collection}" from local dump was blocked/filtered.`
+    );
     return false;
   },
 
@@ -483,7 +567,9 @@ export var Utils = {
     }
 
     return {
-      changes,
+      changes: changes.filter(change =>
+        this.isCollectionAllowed(change.bucket, change.collection)
+      ),
       currentEtag: `"${timestamp}"`,
       serverTimeMillis,
       backoffSeconds,

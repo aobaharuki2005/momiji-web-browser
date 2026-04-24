@@ -39,8 +39,10 @@
 #include "vm/Shape.h"
 #include "vm/StringType.h"
 #include "vm/TypedArrayObject.h"
+#include "vm/Watchtower.h"
 #include "vm/NativeObject-inl.h"
 #include "vm/PlainObject-inl.h"  // js::PlainObject::createWithTemplate
+#include "vm/Shape-inl.h"        // js::GetPropertyAttributes
 
 using namespace js;
 
@@ -278,6 +280,10 @@ template <bool CheckForDuplicates>
 bool PropertyEnumerator::enumerateNativeProperties(JSContext* cx) {
   Handle<NativeObject*> pobj = obj_.as<NativeObject>();
 
+  if (Watchtower::watchesPropertyValueChange(pobj)) {
+    markIndicesUnsupported();
+  }
+
   // We don't need to iterate over the shape's properties if we're only
   // interested in enumerable properties and the object is known to have no
   // enumerable properties.
@@ -394,7 +400,7 @@ bool PropertyEnumerator::enumerateNativeProperties(JSContext* cx) {
         continue;
       }
 
-      PropertyIndex index = iter->isDataProperty()
+      PropertyIndex index = iter->isDataProperty() && iter->writable()
                                 ? PropertyIndex::ForSlot(pobj, iter->slot())
                                 : PropertyIndex::Invalid();
       if (!enumerate<CheckForDuplicates>(cx, id, iter->enumerable(), index)) {
@@ -1793,25 +1799,23 @@ static bool SuppressDeletedProperty(JSContext* cx, NativeIterator* ni,
 
       // Check whether another property along the prototype chain became
       // visible as a result of this deletion.
-      RootedObject proto(cx);
-      if (!GetPrototype(cx, obj, &proto)) {
-        return false;
-      }
-      if (proto) {
-        RootedId id(cx);
-        RootedValue idv(cx, StringValue(*idp));
-        if (!PrimitiveValueToId<CanGC>(cx, idv, &id)) {
-          return false;
-        }
-
-        Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
-        RootedObject holder(cx);
-        if (!GetPropertyDescriptor(cx, proto, id, &desc, &holder)) {
-          return false;
-        }
-
-        if (desc.isSome() && desc->enumerable()) {
-          continue;
+      if (obj->hasStaticPrototype()) {
+        JSObject* proto = obj->staticPrototype();
+        if (proto) {
+          JSAtom* atom = AtomizeString(cx, str);
+          if (!atom) {
+            return false;
+          }
+          PropertyKey key = AtomToId(atom);
+          NativeObject* holder = nullptr;
+          PropertyResult prop;
+          if (LookupPropertyPure(cx, proto, key, &holder, &prop) &&
+              prop.isFound()) {
+            JS::PropertyAttributes attrs = GetPropertyAttributes(holder, prop);
+            if (attrs.enumerable()) {
+              continue;
+            }
+          }
         }
       }
 

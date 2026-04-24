@@ -2782,7 +2782,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvReplyKeyEvent(
             NS_WARN_IF(data.mPseudoCharCode != aEvent.mPseudoCharCode) ||
             NS_WARN_IF(data.mKeyNameIndex != aEvent.mKeyNameIndex) ||
             NS_WARN_IF(data.mCodeNameIndex != aEvent.mCodeNameIndex) ||
-            NS_WARN_IF(data.mModifiers != aEvent.mModifiers)) {
+            NS_WARN_IF(data.mModifiers != aEvent.mModifiers) ||
+            // The child process should've already cleared the editor commands
+            // because we don't use them.
+            NS_WARN_IF(aEvent.HasEditCommands())) {
           // Got different event data from what we stored before dispatching an
           // event with the ID.
           return Nothing();
@@ -3909,13 +3912,18 @@ mozilla::ipc::IPCResult BrowserParent::RecvInvokeDragSession(
       cookieJarSettings, aSourceWindowContext.GetMaybeDiscarded(),
       aSourceTopWindowContext.GetMaybeDiscarded());
 
-  if (aVisualDnDData) {
-    const auto checkedSize = CheckedInt<size_t>(aDragRect.height) * aStride;
-    if (checkedSize.isValid() &&
-        aVisualDnDData->Size() >= checkedSize.value()) {
+  if (aVisualDnDData && aDragRect.width >= 0 && aDragRect.height >= 0) {
+    const auto checkedSize = CheckedInt<int32_t>(aDragRect.height) * aStride;
+    const auto computedStride =
+        CheckedInt<int32_t>(aDragRect.width) * gfx::BytesPerPixel(aFormat);
+    const auto checkedStride = CheckedInt<int32_t>(aStride);
+    if (checkedSize.isValid() && checkedSize.value() >= 0 &&
+        aVisualDnDData->Size() >= static_cast<size_t>(checkedSize.value()) &&
+        computedStride.isValid() && checkedStride.isValid() &&
+        computedStride.value() <= checkedStride.value()) {
       dragStartData->SetVisualization(gfx::CreateDataSourceSurfaceFromData(
           gfx::IntSize(aDragRect.width, aDragRect.height), aFormat,
-          aVisualDnDData->Data(), aStride));
+          aVisualDnDData->Data(), checkedStride.value()));
     }
   }
 

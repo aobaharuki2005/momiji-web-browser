@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "builtin/FinalizationRegistryObject.h"
+#include "debugger/Debugger.h"
 #include "gc/GC.h"
 #include "gc/PublicIterators.h"
 #include "js/friend/WindowProxy.h"  // js::IsWindow, js::IsWindowProxy
@@ -471,6 +472,12 @@ JS_PUBLIC_API bool js::AllowNewWrapper(JS::Compartment* target, JSObject* obj) {
 
   MOZ_ASSERT(obj->compartment() != target);
 
+  // Wrappers for debugger objects are not nuked and we must continue to allow
+  // them to be created or we will break the invariants in Compartment::wrap.
+  if (MOZ_UNLIKELY(obj->is<DebuggerInstanceObject>())) {
+    return true;
+  }
+
   if (target->nukedOutgoingWrappers ||
       obj->nonCCWRealm()->nukedIncomingWrappers) {
     return false;
@@ -500,6 +507,9 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
   MOZ_ASSERT(wcompartment != newTarget->compartment());
 
   AutoDisableProxyCheck adpc;
+
+  // This can't GC (and RemapDeadWrapper suppresses it).
+  JS::AutoAssertNoGC nogc(cx);
 
   // If we're mapping to a different target (as opposed to just recomputing
   // for the same target), we must not have an existing wrapper for the new
@@ -541,6 +551,10 @@ void js::RemapDeadWrapper(JSContext* cx, HandleObject wobj,
   MOZ_ASSERT(!newTarget->is<FinalizationRecordObject>());
 
   AutoDisableProxyCheck adpc;
+
+  // Suppress GC while we manipulate the wrapper map so that it can't observe
+  // intervening state.
+  gc::AutoSuppressGC nogc(cx);
 
   // wobj is not a cross-compartment wrapper, so we can use nonCCWRealm.
   Realm* wrealm = wobj->nonCCWRealm();

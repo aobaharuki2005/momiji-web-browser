@@ -1,8 +1,6 @@
 name: build for macOS 10.9-10.14
 
 on:
-  # pull_request: 
-  #   branches: master
   push:
     branches:
       - '*test'
@@ -10,19 +8,19 @@ on:
       - '*1007-1008*'
       - '.github/workflows/*.yml'
       - '*.md'
+      - 'ff-patch'
   workflow_dispatch:
 
 jobs:
   build:
     name: build Momiji
-    runs-on: macos-15-intel
+    runs-on: macos-15
     steps:     
       - name: Checkout source code
         id: checkout
         uses: actions/checkout@v6.0.2
         with:
           fetch-depth: 1
-          submodules: recursive
 
       # Restore cached toolchains and build artifacts
       - name: Restore sccache cache mozbuild toolchains
@@ -37,7 +35,7 @@ jobs:
             ${{ runner.os }}-lld-${{ hashFiles('mozconfig-cicd.sh') }}
             ${{ runner.os }}-lld
 
-      - name: Select Xcode 16.3
+      - name: Select Xcode 16.3 (SDK 15.4)
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
 
       - name: Bootstrapping build deps
@@ -54,8 +52,6 @@ jobs:
             [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/nasm" ] && mv "$HOME/.mozbuild/nasm" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/dump_syms" ] && mv "$HOME/.mozbuild/dump_syms" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/clang" ] && mv "$HOME/.mozbuild/clang" ~/tmp_toolchains/
             [ -d "$HOME/.mozbuild/sysroot-wasm32-wasi" ] && mv "$HOME/.mozbuild/sysroot-wasm32-wasi" ~/tmp_toolchains/
             
@@ -65,19 +61,26 @@ jobs:
             # Đổi tên thư mục tạm thành .mozbuild
             mv ~/tmp_toolchains "$HOME/.mozbuild"
             
-            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, clang, sysroot-wasm32-wasi"
+            # echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, clang, sysroot-wasm32-wasi"
+            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, clang, sysroot-wasm32-wasi"
           fi
+
+          # Install nasm from Homebrew
+          brew install nasm
 
       - name: Create mozconfig build config from template
         id: buildcfg-link
         run: ln -sf ./mozconfig-cicd_1009-1014.sh mozconfig
     
       - name: Configure Rust toolchain version 1.86.0-nightly (nightly-2025-01-09)
-        id: rust-1860-nightly-cfg
+        id: rust-nightly-cfg
         run: |
           rustup install nightly-2025-01-09
           rustup default nightly-2025-01-09
           rustup override set nightly-2025-01-09
+
+          # Add support for cross compiling for x86_64-apple-darwin target
+          rustup target add x86_64-apple-darwin
 
           # Verify Rust installation
           cargo --version
@@ -85,20 +88,17 @@ jobs:
           
       - name: Configure build options
         id: configure
-        run: | 
-          # Start sccache before building (only in tesitng build)
-          # $HOME/.mozbuild/sccache/sccache --start-server 
-          /usr/bin/python3 ./mach configure
+        run: /usr/bin/python3 ./mach configure
 
       - name: Build
         id: build
         run: /usr/bin/python3 ./mach build
 
-      # - name: Show sccache stats (only in tesitng build)
-      #   id: show-sccache-stats
-      #   run: $HOME/.mozbuild/sccache/sccache --show-stats
+      - name: End sccache session
+        id: stop-sccache
+        run: sleep 60 && $HOME/.mozbuild/sccache/sccache --stop-server
 
-      - name: Package into DMG
+      - name: Export the DMG image
         id: pkg
         run: /usr/bin/python3 ./mach package
 
@@ -120,12 +120,19 @@ jobs:
           # Build libMacportsLegacySystem.B.dylib (patched to support CCRandomGenerateBytes)
           git clone --recursive --branch 1.5.2_addCCRandom https://github.com/aobaharuki2005/macports-legacy-support.git
           cd macports-legacy-support
-          MACOSX_DEPLOYMENT_TARGET=10.6 make
 
+
+          CC="clang --target=x86_64-apple-macos10.6" \
+          CXX="clang++ --target=x86_64-apple-macos10.6" \
+          CFLAGS="-march=x86-64 -Os" \
+          CXXFLAGS="-march=x86-64 -Os" \
+          LDFLAGS="--target=x86_64-apple-macos10.6" \
+          make
+          
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
           cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS
 
-          # Polyfill XUL, libmozavutil.dylib and libgkcodecs.dylib only
+          # Polyfill XUL, libmozavutil.dylib and libgkcodecs.dylib
           cd /tmp/Momiji.app/Contents/MacOS/
           install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "XUL"
           install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "libmozavutil.dylib"
@@ -133,28 +140,17 @@ jobs:
 
           # Package the 10.9-10.11 distribution (MUST CHANGE DIRECTORY to /tmp FIRST)
           cd /tmp
-          zip -r "momiji-${VERSION}_macOS10.9-10.11.zip" Momiji.app
+          zip -qr "momiji-${VERSION}_macOS10.9-10.11.zip" Momiji.app
 
-      # (Comment out on production build)
-      # - name: Stop sccache and create the cache folder in case it didn not exist yet
-      #   if: always()
-      #   run: |
-      #     [ ! -d ~/Library/Caches/Mozilla.sccache ] && mkdir -p ~/Library/Caches/Mozilla.sccache 
-      #     $HOME/.mozbuild/sccache/sccache --stop-server
-      #     # Delay for 60s to fix "file changes as we read it" from save-cache task
-      #     sleep 60
-      #     echo "60s of waiting has ended."
-
-      # (No need to save cache in production build session)
-      # - name: Saving cache even if pipeline fails
-      #   id: save-cache
-      #   if: always()
-      #   uses: actions/cache/save@v5.0.4
-      #   with:
-      #     key: ${{ runner.os }}-lld-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
-      #     path: |
-      #       ~/Library/Caches/Mozilla.sccache 
-      #       ~/.mozbuild
+      - name: Saving cache even if pipeline fails
+        id: save-cache
+        if: always()
+        uses: actions/cache/save@v5.0.4
+        with:
+          key: ${{ runner.os }}-lld-${{ hashFiles('mozconfig-cicd.sh') }}-${{ github.run_id }}
+          path: |
+            ~/Library/Caches/Mozilla.sccache 
+            ~/.mozbuild
 
       - name: Upload Artifacts
         if: always()

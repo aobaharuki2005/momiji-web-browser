@@ -19,6 +19,10 @@ namespace mozilla {
 
 class ErrorResult;
 
+namespace layers {
+class SurfaceDescriptor;
+}  // namespace layers
+
 namespace dom {
 
 class BlobCallback;
@@ -84,6 +88,10 @@ class CanvasRenderingContextHelper {
   CanvasContextType mCurrentContextType;
   nsCOMPtr<nsICanvasRenderingContextInternal> mCurrentContext;
 };
+
+bool ValidSurfaceDescriptorForRemoteCanvas2d(
+    const layers::SurfaceDescriptor& aSd,
+    Maybe<layers::SurfaceDescriptor>* aResultSd = nullptr);
 
 }  // namespace dom
 namespace CanvasUtils {

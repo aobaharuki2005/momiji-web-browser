@@ -605,7 +605,8 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetIsMetaRefresh(), aLoadInfo->GetLoadingEmbedderPolicy(),
       aLoadInfo->GetIsOriginTrialCoepCredentiallessEnabledForTopLevel(),
       unstrippedURI, interceptionInfoArg, aLoadInfo->GetIsNewWindowTarget(),
-      aLoadInfo->GetUserNavigationInvolvement());
+      aLoadInfo->GetUserNavigationInvolvement(),
+      aLoadInfo->GetContainerFeaturePolicyInfo());
 
   return NS_OK;
 }
@@ -853,7 +854,8 @@ nsresult LoadInfoArgsToLoadInfo(const LoadInfoArgs& loadInfoArgs,
   RefPtr<mozilla::net::LoadInfo> loadInfo = new mozilla::net::LoadInfo(
       loadingPrincipal, triggeringPrincipal, principalToInherit,
       topLevelPrincipal, resultPrincipalURI, cookieJarSettings, cspToInherit,
-      triggeringRemoteType, loadInfoArgs.sandboxedNullPrincipalID(), clientInfo,
+      loadInfoArgs.containerFeaturePolicyInfo(), triggeringRemoteType,
+      loadInfoArgs.sandboxedNullPrincipalID(), clientInfo,
       reservedClientInfo, initialClientInfo, controller,
       loadInfoArgs.securityFlags(), loadInfoArgs.sandboxFlags(),
       loadInfoArgs.triggeringSandboxFlags(), loadInfoArgs.triggeringWindowId(),

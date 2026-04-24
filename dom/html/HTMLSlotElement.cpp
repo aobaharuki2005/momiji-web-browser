@@ -231,7 +231,9 @@ void HTMLSlotElement::Assign(const Sequence<OwningElementOrText>& aNodes) {
     if (!mAssignedNodes.IsEmpty()) {
       changedSlots.EnsureInserted(this);
       if (root) {
-        root->InvalidateStyleAndLayoutOnSubtree(this);
+        // If not in a shadow tree, the flat tree is not really changing, so no
+        // need to invalidate layout. Same applies to other callers here.
+        ShadowRoot::InvalidateStyleAndLayoutOnSubtree(this);      
       }
       ClearAssignedNodes();
     }
@@ -252,28 +254,26 @@ void HTMLSlotElement::Assign(const Sequence<OwningElementOrText>& aNodes) {
     // XXXsmaug Should we have a helper for
     //         https://infra.spec.whatwg.org/#ordered-set?
     if (content->GetManualSlotAssignment() != this) {
-      if (HTMLSlotElement* oldSlot = content->GetAssignedSlot()) {
-        if (changedSlots.EnsureInserted(oldSlot)) {
-          if (root) {
-            MOZ_ASSERT(oldSlot->GetContainingShadow() == root);
-            root->InvalidateStyleAndLayoutOnSubtree(oldSlot);
-          }
+      // Step 3.1: If content's manual slot assignment refers to a slot,
+      // then remove node from that slot's manually assigned nodes.
+      if (HTMLSlotElement* prevSlot = content->GetManualSlotAssignment()) {
+        ShadowRoot* prevSlotRoot = prevSlot->GetContainingShadow();
+        const bool wasAssigned = content->GetAssignedSlot() == prevSlot;
+        if (wasAssigned && prevSlotRoot &&
+            changedSlots.EnsureInserted(prevSlot)) {
+          ShadowRoot::InvalidateStyleAndLayoutOnSubtree(prevSlot);
         }
+        prevSlot->RemoveManuallyAssignedNode(*content);
       }
 
-      if (changedSlots.EnsureInserted(this)) {
-        if (root) {
-          root->InvalidateStyleAndLayoutOnSubtree(this);
-        }
-      }
-      // 3.1 (HTML Spec) If content's manual slot assignment refers to a slot,
-      // then remove node from that slot's manually assigned nodes. 3.2 (HTML
-      // Spec) Set content's manual slot assignment to this.
-      if (HTMLSlotElement* oldSlot = content->GetManualSlotAssignment()) {
-        oldSlot->RemoveManuallyAssignedNode(*content);
-      }
+      // Step 3.2: Set content's manual slot assignment to this.
       content->SetManualSlotAssignment(this);
+      // Step 3.3: Append content to nodesSet.
       mManuallyAssignedNodes.AppendElement(content);
+
+      if (changedSlots.EnsureInserted(this) && root) {
+        ShadowRoot::InvalidateStyleAndLayoutOnSubtree(this);
+      }
 
       if (root && host && content->GetParent() == host) {
         // Equivalent to 4.2.2.4.3 (DOM Spec) `Set slot's assigned nodes to
@@ -295,7 +295,11 @@ void HTMLSlotElement::Assign(const Sequence<OwningElementOrText>& aNodes) {
         }
       }
     }
-    MOZ_ASSERT(changedSlots.IsEmpty());
+  }
+  // Fire slotchange for any remaining slots that are in a different shadow
+  // tree (cross-root case). The spec doesn't define an ordering here.
+  for (const auto& slot : changedSlots) {
+    slot->EnqueueSlotChangeEvent();
   }
 }
 

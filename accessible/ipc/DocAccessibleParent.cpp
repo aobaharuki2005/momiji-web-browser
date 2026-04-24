@@ -145,7 +145,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::ProcessShowEvent(
     // Otherwise, clients might crawl the incomplete subtree and they won't get
     // mutation events for the remaining pieces.
     if (aComplete || root != child) {
-      AttachChild(parent, childIdx, child);
+      if (!AttachChild(parent, childIdx, child)) {
+        return IPC_FAIL(this, "failed to attach child");
+      }
     }
   }
 
@@ -174,7 +176,9 @@ mozilla::ipc::IPCResult DocAccessibleParent::ProcessShowEvent(
     MOZ_ASSERT(rootParent);
     root = GetAccessible(mPendingShowChild);
     MOZ_ASSERT(root);
-    AttachChild(rootParent, mPendingShowIndex, root);
+    if (!AttachChild(rootParent, mPendingShowIndex, root)) {
+      return IPC_FAIL(this, "failed to attach pending show child");
+    }
     mPendingShowChild = 0;
     mPendingShowParent = 0;
     mPendingShowIndex = 0;
@@ -234,6 +238,11 @@ RemoteAccessible* DocAccessibleParent::CreateAcc(
     return nullptr;
   }
 
+  if (aAccData.GenericTypes() & eDocument) {
+    MOZ_ASSERT_UNREACHABLE("Invalid acc type");
+    return nullptr;
+  }
+
   newProxy = new RemoteAccessible(aAccData.ID(), this, aAccData.Role(),
                                   aAccData.Type(), aAccData.GenericTypes(),
                                   aAccData.RoleMapEntryIndex());
@@ -246,9 +255,15 @@ RemoteAccessible* DocAccessibleParent::CreateAcc(
   return newProxy;
 }
 
-void DocAccessibleParent::AttachChild(RemoteAccessible* aParent,
+bool DocAccessibleParent::AttachChild(RemoteAccessible* aParent,
                                       uint32_t aIndex,
                                       RemoteAccessible* aChild) {
+  if (aChild->RemoteParent()) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Attempt to attach child which already has a parent!");
+    return false;
+  }
+
   aParent->AddChildAt(aIndex, aChild);
   aChild->SetParent(aParent);
   // ProxyCreated might have already been called if aChild is being moved.
@@ -274,6 +289,8 @@ void DocAccessibleParent::AttachChild(RemoteAccessible* aParent,
       return true;
     });
   }
+
+  return true;
 }
 
 void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
@@ -286,6 +303,10 @@ void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
     // the show event. For now, clear all of them by moving them to a temporary.
     auto children{std::move(aAcc->mChildren)};
     for (RemoteAccessible* child : children) {
+      if (child == aAcc) {
+        MOZ_ASSERT_UNREACHABLE(
+            "Somehow an accessible got added as a child of itself!");
+      }
       ShutdownOrPrepareForMove(child);
     }
   }
@@ -882,6 +903,11 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBindChildDoc(
 ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
                                                 uint64_t aParentID,
                                                 bool aCreating) {
+  if (aChildDoc->RemoteParent()) {
+    return IPC_FAIL(this,
+                    "Attempt to add child doc which already has a parent");
+  }
+
   // We do not use GetAccessible here because we want to be sure to not get the
   // document it self.
   ProxyEntry* e = mAccessibles.GetEntry(aParentID);

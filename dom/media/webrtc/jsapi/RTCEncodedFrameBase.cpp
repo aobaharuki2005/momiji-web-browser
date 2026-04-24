@@ -7,43 +7,89 @@
 #include "jsapi/RTCEncodedFrameBase.h"
 
 #include "js/GCAPI.h"
+#include "mozilla/HoldDropJSObjects.h"
 #include "nsIGlobalObject.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/dom/RTCRtpScriptTransformer.h"
 #include "js/ArrayBuffer.h"
 
 namespace mozilla::dom {
-NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(RTCEncodedFrameBase, (mGlobal),
-                                         (mData))
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(RTCEncodedFrameBase)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(RTCEncodedFrameBase)
+  using ::ImplCycleCollectionUnlink;
+  tmp->DetachData();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner, mGlobal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mData)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(RTCEncodedFrameBase)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner, mGlobal)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(RTCEncodedFrameBase)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBERS(mData)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
 NS_IMPL_CYCLE_COLLECTING_ADDREF(RTCEncodedFrameBase)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(RTCEncodedFrameBase)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(RTCEncodedFrameBase)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
 RTCEncodedFrameBase::RTCEncodedFrameBase(
     nsIGlobalObject* aGlobal,
     std::unique_ptr<webrtc::TransformableFrameInterface> aFrame,
-    uint64_t aCounter)
+    uint64_t aCounter,
+    RTCRtpScriptTransformer* aOwner)
     : mGlobal(aGlobal),
       mFrame(std::move(aFrame)),
       mCounter(aCounter),
-      mTimestamp(mFrame->GetTimestamp()) {
+      mTimestamp(mFrame->GetTimestamp()),
+      mOwner(aOwner) {
   AutoJSAPI jsapi;
   if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
     return;
   }
+
+  mozilla::HoldJSObjects(this);
 
   // Avoid a copy
   mData = JS::NewArrayBufferWithUserOwnedContents(
       jsapi.cx(), mFrame->GetData().size(), (void*)(mFrame->GetData().data()));
 }
 
-RTCEncodedFrameBase::~RTCEncodedFrameBase() = default;
+RTCEncodedFrameBase::~RTCEncodedFrameBase() {
+  DetachData();
+  mData = nullptr;
+  mozilla::DropJSObjects(this);
+}
+
+void RTCEncodedFrameBase::DetachData() {
+  // We might have handled this in unlink already
+  if (mGlobal && mData) {
+    AutoJSAPI jsapi;
+    if (NS_WARN_IF(!jsapi.Init(mGlobal))) {
+      return;
+    }
+
+    JS::Rooted<JSObject*> rootedData(jsapi.cx(), mData);
+    if (rootedData) {
+      JS::DetachArrayBuffer(jsapi.cx(), rootedData);
+    }
+  }
+}
+
+nsIGlobalObject* RTCEncodedFrameBase::GetParentObject() const {
+  return mGlobal;
+}
 
 unsigned long RTCEncodedFrameBase::Timestamp() const { return mTimestamp; }
 
 void RTCEncodedFrameBase::SetData(const ArrayBuffer& aData) {
+  DetachData();
   mData.set(aData.Obj());
   if (mFrame) {
     aData.ProcessData([&](const Span<uint8_t>& aData, JS::AutoCheckCannotGC&&) {
@@ -61,12 +107,7 @@ uint64_t RTCEncodedFrameBase::GetCounter() const { return mCounter; }
 
 std::unique_ptr<webrtc::TransformableFrameInterface>
 RTCEncodedFrameBase::TakeFrame() {
-  AutoJSAPI jsapi;
-  if (!jsapi.Init(mGlobal)) {
-    MOZ_CRASH("Could not init JSAPI!");
-  }
-  JS::Rooted<JSObject*> rootedData(jsapi.cx(), mData);
-  JS::DetachArrayBuffer(jsapi.cx(), rootedData);
+  DetachData();
   return std::move(mFrame);
 }
 

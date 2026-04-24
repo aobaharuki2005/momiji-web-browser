@@ -406,6 +406,21 @@ bool TexUnpackBlob::ConvertIfNeeded(
 
   if (!rowLength || !rowCount) return true;
 
+  auto minSrcStride =
+      CheckedInt<size_t>(
+          WebGLTexelConversions::TexelBytesForFormat(srcFormat)) *
+      rowLength;
+  auto minDstStride =
+      CheckedInt<size_t>(
+          WebGLTexelConversions::TexelBytesForFormat(dstFormat)) *
+      rowLength;
+  if (srcStride <= 0 || dstStride <= 0 || !minSrcStride.isValid() ||
+      !minDstStride.isValid() || size_t(srcStride) < minSrcStride.value() ||
+      size_t(dstStride) < minDstStride.value()) {
+    webgl->ErrorInvalidOperation("Invalid stride.");
+    return false;
+  }
+
   const auto srcIsPremult = (mDesc.srcAlphaType == gfxAlphaType::Premult);
   auto dstIsPremult = unpacking.premultiplyAlpha;
   const auto fnHasPremultMismatch = [&]() {
@@ -565,7 +580,7 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
     const auto& unpacking = unpackingRes.inspect();
     const auto stride = unpacking.metrics.bytesPerRowStride;
     // clang-format off
-    if (!ConvertIfNeeded(webgl, unpacking.state.rowLength,
+    if (!ConvertIfNeeded(webgl, unpacking.metrics.usedPixelsPerRow,
                          unpacking.metrics.totalRows,
                          format, uploadPtr, AutoAssertCast(stride),
                          format, AutoAssertCast(stride), &uploadPtr, &tempBuffer)) {
@@ -997,9 +1012,20 @@ bool TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec,
       const auto& data = sdb.data();
       MOZ_ASSERT(data.type() == layers::MemoryOrShmem::TShmem);
       const auto& shmem = data.get_Shmem();
-      surf = gfx::Factory::CreateWrappingDataSourceSurface(
-          shmem.get<uint8_t>(), layers::ImageDataSerializer::GetRGBStride(rgb),
+      size_t shmemSize = shmem.Size<uint8_t>();
+      int32_t stride = layers::ImageDataSerializer::GetRGBStride(rgb);
+      if (stride <= 0) {
+        gfxCriticalError() << "TexUnpackSurface failed to get rgb stride";
+        return false;
+      }
+      size_t bufSize = layers::ImageDataSerializer::ComputeRGBBufferSize(
           rgb.size(), rgb.format());
+      if (!bufSize || bufSize > shmemSize) {
+        gfxCriticalError() << "TexUnpackSurface failed to get rgb buffer size";
+        return false;
+      }
+      surf = gfx::Factory::CreateWrappingDataSourceSurface(
+          shmem.get<uint8_t>(), stride, rgb.size(), rgb.format());
     } else if (SDIsNullRemoteDecoder(sd)) {
       const auto& sdrd = sd.get_SurfaceDescriptorGPUVideo()
                              .get_SurfaceDescriptorRemoteDecoder();
@@ -1083,6 +1109,8 @@ bool TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec,
 
   ////
 
+  const auto surfSize = surf->GetSize();
+
   WebGLTexelFormat srcFormat;
   uint8_t srcBPP;
   if (!GetFormatForSurf(surf, &srcFormat, &srcBPP)) {
@@ -1106,12 +1134,10 @@ bool TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec,
   // -
 
   const auto dstFormat = FormatForPackingInfo(dstPI);
-  const auto dstBpp = BytesPerPixel(dstPI);
-  const size_t dstUsedBytesPerRow = dstBpp * surf->GetSize().width;
-  auto dstStride = dstUsedBytesPerRow;
-  if (dstFormat == srcFormat) {
-    dstStride = srcStride;  // Try to match.
-  }
+  const size_t dstBpp = BytesPerPixel(dstPI);
+  const size_t dstUsedBytesPerRow = dstBpp * surfSize.width;
+  size_t dstStride = dstFormat == srcFormat ? srcStride  // Try To match
+                                            : dstUsedBytesPerRow;
 
   // -
 
@@ -1135,12 +1161,18 @@ bool TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec,
   const auto& dstUnpacking = dstUnpackingRes.inspect();
   MOZ_ASSERT(dstUnpacking.metrics.bytesPerRowStride == dstStride);
 
+  if (uint32_t(surfSize.width) < dstUnpacking.metrics.usedPixelsPerRow ||
+      uint32_t(surfSize.height) < dstUnpacking.metrics.totalRows) {
+    gfxCriticalError() << "Source surface size too small for upload.";
+    return false;
+  }
+
   // -
 
   const uint8_t* dstBegin = srcBegin;
   UniqueBuffer tempBuffer;
   // clang-format off
-  if (!ConvertIfNeeded(webgl, surf->GetSize().width, surf->GetSize().height,
+  if (!ConvertIfNeeded(webgl, surfSize.width, surfSize.height,
                        srcFormat, srcBegin, AutoAssertCast(srcStride),
                        dstFormat, AutoAssertCast(dstUnpacking.metrics.bytesPerRowStride), &dstBegin,
                        &tempBuffer)) {

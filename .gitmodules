@@ -1,0 +1,3 @@
+[submodule "ff-patch"]
+	path = ff-patch
+	url = https://github.com/aobaharuki2005/ff-patch.git

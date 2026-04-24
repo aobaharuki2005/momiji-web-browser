@@ -1294,8 +1294,6 @@ addressbar-restore-dismissed-suggestions-button =
 
 content-blocking-enhanced-tracking-protection = Enhanced Tracking Protection
 
-content-blocking-section-top-level-description = Trackers follow you around online to collect information about your browsing habits and interests. { -brand-short-name } blocks many of these trackers and other malicious scripts.
-
 content-blocking-learn-more = Learn more
 
 content-blocking-fpi-incompatibility-warning = You are using First Party Isolation (FPI), which overrides some of { -brand-short-name }’s cookie settings.
