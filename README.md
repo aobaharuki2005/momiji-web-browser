@@ -1,6 +1,6 @@
 <span style="display:block;text-align:center">![Momiji](./docs/readme/banner.jpg)</span>
 
-# Momiji Web Browser - macOS Legacy (10.7-10.14) support (64-BIT ONLY)
+# Momiji Web Browser - macOS Legacy (10.7-10.14) support
 
 > [!IMPORTANT]
 > - Hardware graphics acceleration is available but maybe buggy on some platforms  (on my Ivy Bridge machine, fonts look partially broken in case of macOS 10.7 and 10.8). In case of buggy experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web rendering.
@@ -59,6 +59,10 @@ If I've forgotten to put your name here, please let me know and I'll add it.
 [i3roly](https://github.com/i3roly) - Original ideas, patches and owners of firefox-dynasty project
 
 [Wowfunhappy](https://github.com/Wowfunhappy) - Maintainers of the firefox-dynasty fork of the original project. Without his invaluable forked source, I wouldn't have been able to rebuilt, reverse engineered and revive the project from scratch like today.
+
+[LibreWolf](https://codeberg.org/librewolf/source) - debloating and privacy patches
+
+[GNU IceCat](https://cgit.git.savannah.gnu.org/cgit/gnuzilla.git) - debloating patches
 
 ## Contact
 
