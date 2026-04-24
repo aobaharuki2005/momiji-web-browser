@@ -2,34 +2,24 @@
 
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support
 
-<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot_new.png)</span>
+> [!IMPORTANT]
+> - Hardware graphics acceleration is available but maybe buggy on some platforms  (on my Ivy Bridge machine, fonts look partially broken in case of macOS 10.7 and 10.8). In case of buggy experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web rendering.
+> - Screen sharing (in Google Meet, Microsoft Teams, etc.) is unavailable on macOS 10.7 due to the absence of compatible `DesktopCapture` framework
+> - Discord voice, video calls and its Go Live streams are unsupported as they require at least Firefox 142 to work on since 2026-Mar-02, while Momiji is currently being based on Firefox 140 ESR baseline.
+> - ~~**For 10.7 users:** On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A`. To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command~~ _(Fixed since 140.10.0esr-mj version)_
+> - ~~WebSocket applications and services could malfunction if Momiji is configured to use system's proxy settings. Check out [this issue](https://github.com/aobaharuki2005/momiji-web-browser/issues/10) to see how to disable it~~ _(Proxy was disabled by default since 140.10.0esr-mj version)_
 
 ## About Momiji
 
 Firefox browser backported and maintained for macOS 10.7-10.14.
 
-This project is the successor and inheritance of [firefox-dynasty](https://github.com/i3roly/firefox-dynasty) project - which (together with the owner), unfortunately, has been taken down due to GitHub violation of Term of Use. You can find more detail about the incident in this [MacRumors post](https://forums.macrumors.com/threads/firefox-dynasty-firefox-for-os-x-10-8-also-web-app-templates.2446475/post-34441749).
+This project is the fork, the successor and inheritance of [firefox-dynasty](https://github.com/i3roly/firefox-dynasty) project - which (together with the owner), unfortunately, has been taken down due to GitHub violation of Term of Use. You can find more detail about the incident in this [MacRumors post](https://forums.macrumors.com/threads/firefox-dynasty-firefox-for-os-x-10-8-also-web-app-templates.2446475/post-34441749).
 
 Momiji（紅葉、もみじ）means "red leaves of autumn" in Japanese. I came up with the idea because the Japanese "mo" sound resembles the "mo" sound in the original "Mozilla Foundation" trademark. Additionally, red leaves are also told to be able to make people remind of good old memories, so using such a name for this backported Firefox distribution, to my thought, is a good idea (maybe).
 
-For build guide, please checkout for [BUILDING.md](BUILDING.md)
-
 ## Features:
 - Allow browsing modern Web and using up-to-date Web services securely (with fully applied security patches) on macOS version unsupported by Apple and Mozilla, with almost fully working functions (for more detail about poorly supported Web functions, especially if you are using macOS 10.7, please check out for "Known caveats" subsection)
-- Disable unnecessary and unsupported components: Crash Reporter, WebAssembly, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
-
-## Known caveats
-- **(FIXED in 2026-Mar-20)** My self-designed Momiji icon logo for Momiji is broken in Finder's List view mode (especiall on macOS 10.10 and up). In other modes, however, the logo icon is still displaying fine. 
-- Some special functions like live-streaming, online meeting and graphics design (Canva, Adobe Cloud Creative, ...) may not work smoothly or functionally as expected on very old macOS version (due to insufficient of proper Mac machine for unit testing, I haven't been able to carry out intensive test and make comprehensive judgements)
-- **For 10.7 users:** 
-    - Hardware-accelerated rendering is completely unavailable, only software rendering is usable.
-    - On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A` (Hey Apple, what the logic are you implying here?). To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command first:
-```sh
-sudo ln -s /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/CoreText.framework /System/Library/Frameworks/CoreText.framework
-```
-This command will trick Momiji to think that macOS 10.7 "really" locates `CoreText.framework` at `/System/Library/Frameworks` and continues to execute as usual.
-
-- **For 10.8 users:** hardware acceleration is available but stills buggy (on my Ivy Bridge machine, fonts look partially broken). In case of bug experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web experience.
+- Disable unnecessary and unsupported components: Crash Reporter, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
 
 ## Modifications
 
@@ -53,6 +43,13 @@ Modified files are documented in [CHANGES.md](CHANGES.md).
 ## Downloads
 Check out for my releases (binary distribution and source code archive) in this [Releases](https://github.com/aobaharuki2005/firefox-dynasty-RELIFE/releases) page.
 
+## Building
+For build guide, please checkout for [BUILDING.md](BUILDING.md)
+
+## Screenshot
+
+<span style="display:block;text-align:center">![Screenshot](docs/readme/screenshot_new.png)</span>
+
 ## Credits
 
 If I've forgotten to put your name here, please let me know and I'll add it.
@@ -62,6 +59,10 @@ If I've forgotten to put your name here, please let me know and I'll add it.
 [i3roly](https://github.com/i3roly) - Original ideas, patches and owners of firefox-dynasty project
 
 [Wowfunhappy](https://github.com/Wowfunhappy) - Maintainers of the firefox-dynasty fork of the original project. Without his invaluable forked source, I wouldn't have been able to rebuilt, reverse engineered and revive the project from scratch like today.
+
+[LibreWolf](https://codeberg.org/librewolf/source) - debloating and privacy patches
+
+[GNU IceCat](https://cgit.git.savannah.gnu.org/cgit/gnuzilla.git) - debloating patches
 
 ## Contact
 
