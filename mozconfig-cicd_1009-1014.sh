@@ -63,6 +63,7 @@ ac_add_options --disable-updater
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
 
 ac_add_options --disable-debug
+ac_add_options --enable-lto=thin
 ac_add_options --enable-optimize="-march=x86-64 -Os -w"
 export RUSTC_OPT_LEVEL="s"
 export LDFLAGS="-headerpad_max_install_names"
