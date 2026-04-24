@@ -6,7 +6,7 @@ on:
       - '*test'
     paths-ignore:
       - '*1009-1014*'
-      - '.github/workflows/*1009-1014.yml'
+      - '.github/workflows/*.yml'
       - '*.md'
       - 'ff-patch/**/*.*'
 
