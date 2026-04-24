@@ -9,6 +9,7 @@ on:
       - '.github/workflows/*.yml'
       - '*.md'
       - 'ff-patch/**/*.*'
+  workflow_dispatch:
 
 jobs:
   build:
