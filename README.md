@@ -19,7 +19,7 @@ This project is the fork, the successor and inheritance of [firefox-dynasty](htt
 Momiji（紅葉、もみじ）means "red leaves of autumn" in Japanese. I came up with the idea because the Japanese "mo" sound resembles the "mo" sound in the original "Mozilla Foundation" trademark. Additionally, red leaves are also told to be able to make people remind of good old memories, so using such a name for this backported Firefox distribution, to my thought, is a good idea (maybe).
 
 ## Features:
-- Allow browsing modern Web and using up-to-date Web services securely (with fully applied security patches) on macOS version unsupported by Apple and Mozilla, with almost fully working functions (for more detail about poorly supported Web functions, especially if you are using macOS 10.7, please check out for "Known caveats" subsection)
+- Allow browsing modern Web and using up-to-date Web services securely (with fully applied security patches) on macOS version unsupported by Apple and Mozilla, with almost fully working functions (for more detail about poorly supported Web functions, especially if you are using macOS 10.7, please check out for "Important" notice)
 - Disable unnecessary and unsupported components: Crash Reporter, Tests, Debug, Dark Matter Detector (DMD), Geckodriver and Profiling.
 
 ## Modifications
