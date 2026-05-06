@@ -69,10 +69,10 @@ ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming 
 # Enforce -march=x86-64 for compatible with old models like MacPro1,1 and MacPro1,2
 
 ac_add_options --disable-debug
-ac_add_options --enable-optimize="-march=nocona -Os -w"
+ac_add_options --enable-optimize="-march=core2 -Os -w"
 export RUSTC_OPT_LEVEL="s"
 export LDFLAGS="-headerpad_max_install_names -ld_classic"
-export RUSTFLAGS="-C target-cpu=nocona -C link-arg=-ld_classic"
+export RUSTFLAGS="-C target-cpu=core2 -C link-arg=-ld_classic"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
