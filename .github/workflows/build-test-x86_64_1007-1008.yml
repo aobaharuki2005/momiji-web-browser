@@ -38,6 +38,21 @@ jobs:
       - name: Select Xcode 16.3 (SDK 15.4)
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
 
+      # Experimenting with llvm-11 (for llvm-profdata)
+      - name: Install llvm-11 with macports
+        uses: melusina-org/setup-macports@v1.1.6
+        with:
+          variants:
+            select:
+              - universal
+          ports:
+            - name: llvm-11
+      
+      - name: Verify Macports and llvm-11 installation
+        run: |
+          port version
+          ls -l /opt/local/bin/llvm-profdata-mp-11
+
       - name: Bootstrapping build deps
         id: bootstrap
         run: |

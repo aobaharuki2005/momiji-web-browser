@@ -82,3 +82,5 @@ export RUSTFLAGS="-C target-cpu=nocona -C target-feature=+ssse3 -C link-arg=-ld_
 # export CXXFLAGS="-w"
 # export LDFLAGS="-headerpad_max_install_names -ld_classic"
 
+export LLVM_PROFDATA=/opt/local/bin/llvm-profdata-mp-11
+
