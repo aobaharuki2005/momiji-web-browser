@@ -72,7 +72,7 @@ ac_add_options --disable-debug
 ac_add_options --enable-optimize="-march=nocona -mssse3 -O2 -w"
 export RUSTC_OPT_LEVEL="2"
 export LDFLAGS="-headerpad_max_install_names -ld_classic"
-export RUSTFLAGS="-C target-cpu=nocona -C target-features=+ssse3 -C link-arg=-ld_classic"
+export RUSTFLAGS="-C target-cpu=nocona -C target-feature=+ssse3 -C link-arg=-ld_classic"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
