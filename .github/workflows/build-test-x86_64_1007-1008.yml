@@ -6,7 +6,7 @@ on:
       - '*test'
     paths-ignore:
       - '*1009-1014*'
-      - '.github/workflows/*1009-1014.yml'
+      - '.github/workflows/*.yml'
       - '*.md'
       - 'ff-patch'
   workflow_dispatch:
@@ -37,14 +37,6 @@ jobs:
 
       - name: Select Xcode 16.3 (SDK 15.4)
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-
-      # Experimenting with llvm-11 (for llvm-profdata)
-      - name: Install Macports
-        uses: melusina-org/setup-macports@v1.1.6
-              
-      - name: Install llvm-11 (universal variant)
-        run: |
-          sudo port -N install --allow-failing llvm-11 +universal
 
       - name: Bootstrapping build deps
         id: bootstrap
@@ -127,9 +119,9 @@ jobs:
 
           CC="clang --target=x86_64-apple-macos10.6" \
           CXX="clang++ --target=x86_64-apple-macos10.6" \
-          CFLAGS="-march=nocona -mssse3 -O2" \
-          CXXFLAGS="-march=nocona -mssse3 -O2" \
-          LDFLAGS="--target=x86_64-apple-macos10.6 -ld_classic" \
+          CFLAGS="-march=nocona -Os" \
+          CXXFLAGS="-march=nocona -Os" \
+          LDFLAGS="--target=x86_64-apple-macos10.6" \
           make
 
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
