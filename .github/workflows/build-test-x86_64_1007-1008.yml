@@ -39,16 +39,12 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
 
       # Experimenting with llvm-11 (for llvm-profdata)
-      - name: Install llvm-11 with macports
+      - name: Install Macports
         uses: melusina-org/setup-macports@v1.1.6
-        with:
-          ports: >-
-            [{ "name": "llvm-11", "select": "universal" }]
-      
-      - name: Verify Macports and llvm-11 installation
+              
+      - name: Install llvm-11 (universal variant)
         run: |
-          port version
-          ls -l /opt/local/bin/llvm-profdata-mp-11
+          sudo port -N install llvm-11 +universal
 
       - name: Bootstrapping build deps
         id: bootstrap
