@@ -119,9 +119,9 @@ jobs:
 
           CC="clang --target=x86_64-apple-macos10.6" \
           CXX="clang++ --target=x86_64-apple-macos10.6" \
-          CFLAGS="-march=core2 -Os" \
-          CXXFLAGS="-march=core2 -Os" \
-          LDFLAGS="--target=x86_64-apple-macos10.6" \
+          CFLAGS="-march=nocona -mssse3 -O2" \
+          CXXFLAGS="-march=nocona -mssse3 -O2" \
+          LDFLAGS="--target=x86_64-apple-macos10.6 -ld_classic" \
           make
 
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
