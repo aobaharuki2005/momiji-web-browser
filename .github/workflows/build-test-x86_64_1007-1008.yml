@@ -44,7 +44,7 @@ jobs:
               
       - name: Install llvm-11 (universal variant)
         run: |
-          sudo port -N --allow-failing install llvm-11 +universal
+          sudo port -N install --allow-failing llvm-11 +universal
 
       - name: Bootstrapping build deps
         id: bootstrap
