@@ -6,7 +6,7 @@ on:
       - '*test'
     paths-ignore:
       - '*1009-1014*'
-      - '.github/workflows/*.yml'
+      - '.github/workflows/*1009-1014.yml'
       - '*.md'
       - 'ff-patch'
   workflow_dispatch:
@@ -42,11 +42,8 @@ jobs:
       - name: Install llvm-11 with macports
         uses: melusina-org/setup-macports@v1.1.6
         with:
-          variants:
-            select:
-              - universal
-          ports:
-            - name: llvm-11
+          ports: >-
+            [{ "name": "llvm-11", "select": "universal" }]
       
       - name: Verify Macports and llvm-11 installation
         run: |
