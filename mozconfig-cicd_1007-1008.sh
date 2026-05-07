@@ -54,7 +54,7 @@ export CXX="$HOME/.mozbuild/clang/bin/clang++"
 # In favor of Woodcrest/Clovertown compatibility (No SSE4.1 and the newer)
 export CFLAGS="-mno-sse4.1 -mno-sse4.2 -mno-popcnt -mno-xsave -mno-aes -mno-avx -mno-xsaveopt -mno-avx2 -mno-bmi2 -mno-f16c -mno-fsgsbase"
 export CXXFLAGS=$CFLAGS
-export RUSTFLAGS="-C target-feature=-sse4.1,-sse4.2,-popcnt,-xsave,-aes,-avx,-xsaveopt,-avx2,-bmi2,-f16c,-fsgsbase"
+export RUSTFLAGS="-C target-feature=-sse4.1,-sse4.2,-popcnt,-xsave,-aes,-avx,-xsaveopt,-avx2,-bmi2,-f16c,-fsgsbase -C link-arg=-ld_classic"
 
 # ========== OPTIMIZATIONS ==========   AMENDED! 2026-04-20
 # Officially eliminate --without-wasm-sandboxed-libraries flag because it's been decided
@@ -78,13 +78,12 @@ ac_add_options --disable-debug
 ac_add_options --enable-optimize="-Os -w"
 export RUSTC_OPT_LEVEL="s"
 export LDFLAGS="-headerpad_max_install_names -ld_classic"
-export RUSTFLAGS="-C target-cpu=nocona -C link-arg=-ld_classic"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time
 # ac_add_options --disable-optimize
 # export RUST_OPT_LEVEL="0"
-# export CFLAGS="-w"
-# export CXXFLAGS="-w"
+# export CFLAGS="$CFLAGS -w"
+# export CXXFLAGS="$CXXFLAGS -w"
 # export LDFLAGS="-headerpad_max_install_names -ld_classic"
 

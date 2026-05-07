@@ -119,8 +119,8 @@ jobs:
 
           CC="clang --target=x86_64-apple-macos10.6" \
           CXX="clang++ --target=x86_64-apple-macos10.6" \
-          CFLAGS="-march=nocona -Os" \
-          CXXFLAGS="-march=nocona -Os" \
+          CFLAGS="-Os" \
+          CXXFLAGS="-Os" \
           LDFLAGS="--target=x86_64-apple-macos10.6" \
           make
 
