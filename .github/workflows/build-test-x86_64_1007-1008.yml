@@ -72,15 +72,34 @@ jobs:
         id: buildcfg-link
         run: ln -sf ./mozconfig-cicd_1007-1008.sh mozconfig
  
-      - name: Configure Rust toolchain version 1.86.0-nightly (nightly-2025-01-09)
-        id: rust-nightly-cfg
-        run: |
-          rustup install nightly-2025-01-09
-          rustup default nightly-2025-01-09
-          rustup override set nightly-2025-01-09
+      # - name: Configure Rust toolchain version 1.86.0-nightly (nightly-2025-01-09)
+      #   id: rust-nightly-cfg
+      #   run: |
+      #     rustup install nightly-2025-01-09
+      #     rustup default nightly-2025-01-09
+      #     rustup override set nightly-2025-01-09
 
-          # Add support for cross compiling for x86_64-apple-darwin target
-          rustup target add x86_64-apple-darwin
+      #     # Add support for cross compiling for x86_64-apple-darwin target
+      #     rustup target add x86_64-apple-darwin
+
+      #     # Verify Rust installation
+      #     cargo --version
+      #     rustc --version
+
+      - name: Manually configure Rust toolchain
+        id: rust-cfg
+        run: |
+          if [ ! -d "$HOME/.rustup/toolchains/1.91.0-custom" ]; then
+            echo "Cached Rust 1.91.0-custom-cross not found. Starting bootstrap..."
+            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-arm64cross/1.91.0-custom-cross.tar.gz -o 1.91.0-custom-cross.tar.gz
+            mkdir -p ~/.rustup/toolchains
+            tar -xf ./1.91.0-custom-cross.tar.gz -C ~/.rustup/toolchains
+            echo "Bootstrap Rust 1.91.0-custom-cross finished."
+          fi
+        
+          # Change default Rust toolchain
+          rustup default 1.91.0-custom-cross
+          rustup override set 1.91.0-custom-cross
 
           # Verify Rust installation
           cargo --version
