@@ -52,9 +52,14 @@ export CXX="$HOME/.mozbuild/clang/bin/clang++"
 
 # ===== CUSTOM COMPILER FLAGS ===
 # In favor of Woodcrest/Clovertown compatibility (No SSE4.1 and the newer)
-export CFLAGS="-mno-sse4.1 -mno-sse4.2 -mno-popcnt -mno-xsave -mno-aes -mno-avx -mno-xsaveopt -mno-avx2 -mno-bmi2 -mno-f16c -mno-fsgsbase"
+
+# export CFLAGS="-mno-sse4.1 -mno-sse4.2 -mno-popcnt -mno-xsave -mno-aes -mno-avx -mno-xsaveopt -mno-avx2 -mno-bmi2 -mno-f16c -mno-fsgsbase"
+# export CXXFLAGS=$CFLAGS
+# export RUSTFLAGS="-C target-feature=-sse4.1,-sse4.2,-popcnt,-xsave,-aes,-avx,-xsaveopt,-avx2,-bmi2,-f16c,-fsgsbase -C link-arg=-ld_classic"
+
+export CFLAGS="-march=core2"
 export CXXFLAGS=$CFLAGS
-export RUSTFLAGS="-C target-feature=-sse4.1,-sse4.2,-popcnt,-xsave,-aes,-avx,-xsaveopt,-avx2,-bmi2,-f16c,-fsgsbase -C link-arg=-ld_classic"
+export RUSTFLAGS="-C target-cpu=core2 -C link-arg=-ld_classic"
 
 # ========== OPTIMIZATIONS ==========   AMENDED! 2026-04-20
 # Officially eliminate --without-wasm-sandboxed-libraries flag because it's been decided
@@ -72,7 +77,6 @@ ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming 
 # Remove unnecessary aggressive --enable-release and --enable-rust-simd, which may be unsuitable for very old models (like MacPro1,1 and MacPro1,2)
 # Decrease optimization level of both Clang and Rust to -Os to ensure compabitibility on very old processors
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
-# Enforce -march=x86-64 for compatible with old models like MacPro1,1 and MacPro1,2
 
 ac_add_options --disable-debug
 ac_add_options --enable-optimize="-Os -w"
