@@ -31,8 +31,8 @@ export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
 export NODEJS="$HOME/.mozbuild/node/bin/node"
 
 # ===== BRANDING =======       AMENDED! 2026-04-20
-ac_add_options --with-app-name=momiji
-ac_add_options --with-branding=browser/branding/momiji
+# ac_add_options --with-app-name=momiji
+ac_add_options --with-branding=browser/branding/unofficial
 # ac_add_options --with-distribution-id=net.momiji  # Disable in favor of compatibility with Firefox-Dynasty/older Momiji created profiles
 
 # ========== RUST ==========    VERIFIED! 2026-04-20
