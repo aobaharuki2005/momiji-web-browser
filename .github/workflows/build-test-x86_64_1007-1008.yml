@@ -129,8 +129,8 @@ jobs:
           export VERSION=$(cat browser/config/version.txt)
           
           # Copy Momiji.app to /tmp
-          hdiutil attach -noverify "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"
-          cp -R /Volumes/Momiji/Momiji.app /tmp
+          hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"
+          cp -R /Volumes/Nightly/Nightly.app /tmp
           
           # Build libMacportsLegacySystem.B.dylib (patched to support CCRandomGenerateBytes and exp10)
           git clone --recursive --branch 1.5.2_addCCRandom https://github.com/aobaharuki2005/macports-legacy-support.git
@@ -144,10 +144,10 @@ jobs:
           make
 
           # copy libMacportsLegacySystem.B.dylib to the Frameworks directory of Momiji.app
-          cp lib/libMacportsLegacySystem.B.dylib /tmp/Momiji.app/Contents/MacOS
+          cp lib/libMacportsLegacySystem.B.dylib /tmp/Nightly.app/Contents/MacOS
 
           # Polyfill XUL, libmozavutil.dylib and libgkcodecs.dylib
-          cd /tmp/Momiji.app/Contents/MacOS/
+          cd /tmp/Nightly.app/Contents/MacOS/
           install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "XUL"
           install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "libmozavutil.dylib"
           install_name_tool -change "/usr/lib/libSystem.B.dylib" "@executable_path/libMacportsLegacySystem.B.dylib" "libgkcodecs.dylib"
@@ -156,7 +156,7 @@ jobs:
 
           # Package the output app
           cd /tmp
-          zip -qr "momiji-${VERSION}_macOS10.7-10.8.zip" Momiji.app
+          zip -qr "Nightly-${VERSION}_macOS10.7-10.8.zip" Nightly.app
 
       - name: Saving cache even if pipeline fails
         id: save-cache
@@ -175,7 +175,7 @@ jobs:
           archive: true
           path: | 
             /tmp/*.zip
-            obj-ff-dbg-esr/dist/momiji-*.en-US.mac.dmg
+            obj-ff-dbg-esr/dist/firefox-*.en-US.mac.dmg
           if-no-files-found: error
           retention-days: 7
     
