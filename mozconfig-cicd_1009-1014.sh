@@ -31,12 +31,12 @@ export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
 export NODEJS="$HOME/.mozbuild/node/bin/node"
 
 # ===== BRANDING =======
-ac_add_options --with-app-name=momiji
-ac_add_options --with-branding=browser/branding/momiji
+# ac_add_options --with-app-name=momiji
+ac_add_options --with-branding=browser/branding/unofficial
 # ac_add_options --with-distribution-id=net.momiji  # Disable in favor of compatibility with Firefox-Dynasty/older Momiji created profiles
 
 # ========== RUST ==========
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2025-01-09-aarch64-apple-darwin/bin"  # Rust 1.86.0-nightly
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.91.0-custom-cross/bin"  # Rust 1.86.0-nightly
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
@@ -45,6 +45,12 @@ export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
 # Use Mozilla Clang for both wasm and main target on 10.9+
 export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
+
+# ===== CUSTOM COMPILER FLAGS ===
+# In favor of Woodcrest/Clovertown compatibility (No SSE4.1 and the newer)
+export CFLAGS="-march=core2"
+export CXXFLAGS=$CFLAGS
+export RUSTFLAGS="-C target-cpu=core2"
 
 # ========== OPTIMIZATIONS ==========   AMENDED! 2026-04-20
 # Officially eliminate --without-wasm-sandboxed-libraries flag because it's been decided
@@ -63,7 +69,7 @@ ac_add_options --disable-updater
 # Relocates LDFLAGS to production-specific optimizations, which is sounder
 
 ac_add_options --disable-debug
-ac_add_options --enable-optimize="-march=x86-64 -Os -w"
+ac_add_options --enable-optimize="-Os -w"
 export RUSTC_OPT_LEVEL="s"
 export LDFLAGS="-headerpad_max_install_names"
 export RUSTFLAGS="-C target-cpu=x86-64"
