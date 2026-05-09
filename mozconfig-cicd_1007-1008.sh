@@ -73,6 +73,10 @@ ac_add_options --disable-profiling
 ac_add_options --disable-updater
 ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming services is broken.
 
+# ===== CUSTOMIZATION ==== #
+# Ignore signing requirements (for unsigned extensions)
+export MOZ_REQUIRE_SIGNING=
+
 # ========= Production-specific optimizations (reference from Waterfox) ===========     AMENDED! 2026-04-20
 # Remove unnecessary aggressive --enable-release and --enable-rust-simd, which may be unsuitable for very old models (like MacPro1,1 and MacPro1,2)
 # Decrease optimization level of both Clang and Rust to -Os to ensure compabitibility on very old processors

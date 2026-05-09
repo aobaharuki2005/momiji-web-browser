@@ -52,6 +52,10 @@ export CFLAGS="-march=core2"
 export CXXFLAGS=$CFLAGS
 export RUSTFLAGS="-C target-cpu=core2"
 
+# ===== CUSTOMIZATION ==== #
+# Ignore signing requirements (for unsigned extensions)
+export MOZ_REQUIRE_SIGNING=
+
 # ========== OPTIMIZATIONS ==========   AMENDED! 2026-04-20
 # Officially eliminate --without-wasm-sandboxed-libraries flag because it's been decided
 #   to enable wasm again for most of WebRTC functions
@@ -72,7 +76,6 @@ ac_add_options --disable-debug
 ac_add_options --enable-optimize="-Os -w"
 export RUSTC_OPT_LEVEL="s"
 export LDFLAGS="-headerpad_max_install_names"
-export RUSTFLAGS="-C target-cpu=x86-64"
 
 # ========= Testing-specific optimizations (reference from Waterfox) ===========    AMENDED! 2026-04-20
 # Just simply --disable-optimize to enable faster build time

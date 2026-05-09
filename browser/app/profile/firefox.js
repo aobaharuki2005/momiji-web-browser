@@ -68,8 +68,8 @@ pref("extensions.geckoProfiler.acceptedExtensionIds", "geckoprofiler@mozilla.com
 pref("extensions.webextensions.remote", true);
 
 // Require signed add-ons by default
-pref("extensions.langpacks.signatures.required", true);
-pref("xpinstall.signatures.required", true);
+pref("extensions.langpacks.signatures.required", false);
+pref("xpinstall.signatures.required", false);
 
 // Enable data collection permissions.
 pref("extensions.dataCollectionPermissions.enabled", true);
