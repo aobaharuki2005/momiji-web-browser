@@ -36,7 +36,7 @@ ac_add_options --with-branding=browser/branding/unofficial
 # ac_add_options --with-distribution-id=net.momiji  # Disable in favor of compatibility with Firefox-Dynasty/older Momiji created profiles
 
 # ========== RUST ==========    VERIFIED! 2026-04-20
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.91.0-custom-cross/bin"
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.82.0-custom-aarch64-crosscompiling/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"

@@ -90,16 +90,17 @@ jobs:
         id: rust-cfg
         run: |
           if [ ! -d "$HOME/.rustup/toolchains/1.91.0-custom" ]; then
-            echo "Cached Rust 1.91.0-custom-cross not found. Starting bootstrap..."
-            curl -L https://github.com/aobaharuki2005/rust/releases/download/v1.91.0-custom-arm64cross/1.91.0-custom-cross.tar.gz -o 1.91.0-custom-cross.tar.gz
+            echo "Cached Rust 1.82.0-custom-aarch64-crosscompiling not found. Starting bootstrap..."
+            curl -L https://github.com/aobaharuki2005/rust/releases/download/1.82.0/1.82.0-custom-aarch64-crosscompiling.zip -o 1.82.0-custom-aarch64-crosscompiling.zip
             mkdir -p ~/.rustup/toolchains
-            tar -xf ./1.91.0-custom-cross.tar.gz -C ~/.rustup/toolchains
-            echo "Bootstrap Rust 1.91.0-custom-cross finished."
+            # tar -xf ./1.82.0-custom-aarch64-crosscompiling.zip -C ~/.rustup/toolchains
+            unzip -q 1.82.0-custom-aarch64-crosscompiling.zip -d ~/.rustup/toolchains
+            echo "Bootstrap Rust 1.82.0-custom-aarch64-crosscompiling finished."
           fi
         
           # Change default Rust toolchain
-          rustup default 1.91.0-custom-cross
-          rustup override set 1.91.0-custom-cross
+          rustup default 1.82.0-custom-aarch64-crosscompiling
+          rustup override set 1.82.0-custom-aarch64-crosscompiling
 
           # Verify Rust installation
           cargo --version
