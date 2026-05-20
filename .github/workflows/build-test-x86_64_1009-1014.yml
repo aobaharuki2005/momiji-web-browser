@@ -1,14 +1,6 @@
 name: build for macOS 10.9-10.14
 
 on:
-  push:
-    branches:
-      - '*test'
-    paths-ignore:
-      - '*1007-1008*'
-      - '.github/workflows/*.yml'
-      - '*.md'
-      - 'ff-patch'
   workflow_dispatch:
 
 jobs:
