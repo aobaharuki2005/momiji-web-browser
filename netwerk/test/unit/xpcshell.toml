@@ -459,6 +459,8 @@ run-sequentially = "httpd server"
 ["test_cache2_clear_with_usercontext_oa.js"]
 run-sequentially = "httpd server"
 
+["test_cache2_nostore.js"]
+
 ["test_cache_204_response.js"]
 
 ["test_cache_jar.js"]
@@ -620,9 +622,6 @@ run-if = ["!socketprocess_networking"] # cancel connections doesn't work in sock
 ["test_freshconnection.js"]
 
 ["test_getHost.js"]
-
-["test_gio_protocol.js"]
-run-if = ["os == 'linux'"]
 
 ["test_gre_resources.js"]
 

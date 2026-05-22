@@ -123,9 +123,12 @@ PTextureParent* TextureHost::CreateIPDLActor(
     ReadLockDescriptor&& aReadLock, LayersBackend aLayersBackend,
     TextureFlags aFlags, const dom::ContentParentId& aContentId,
     uint64_t aSerial, const wr::MaybeExternalImageId& aExternalImageId) {
+  MOZ_ASSERT(!(aFlags & TextureFlags::DEALLOCATE_CLIENT));
+
+  TextureFlags flags = aFlags & ~TextureFlags::DEALLOCATE_CLIENT;
   TextureParent* actor =
       new TextureParent(aAllocator, aContentId, aSerial, aExternalImageId);
-  if (!actor->Init(aSharedData, std::move(aReadLock), aLayersBackend, aFlags)) {
+  if (!actor->Init(aSharedData, std::move(aReadLock), aLayersBackend, flags)) {
     actor->ActorDestroy(ipc::IProtocol::ActorDestroyReason::FailedConstructor);
     delete actor;
     return nullptr;
@@ -264,17 +267,19 @@ already_AddRefed<TextureHost> CreateBackendIndependentTextureHost(
       switch (data.type()) {
         case MemoryOrShmem::TShmem: {
           const ipc::Shmem& shmem = data.get_Shmem();
-          const BufferDescriptor& desc = bufferDesc.desc();
           if (!shmem.IsReadable()) {
-            // We failed to map the shmem so we can't verify its size. This
-            // should not be a fatal error, so just create the texture with
-            // nothing backing it.
-            result = new ShmemTextureHost(shmem, desc, aDeallocator, aFlags);
-            break;
+            // We failed to map the shmem so we can't verify its size.
+            // Attempting to construct a ShmemTextureHost with it will succeed,
+            // but the resulting object will have a null shmem and can't ever be
+            // locked or mapped -- it's not useful at all. We just return
+            // nullptr instead.
+            gfxCriticalError() << "Failed texture host with unmappable shmem.";
+            return nullptr;
           }
 
           size_t bufSize = shmem.Size<char>();
           size_t reqSize = SIZE_MAX;
+          const BufferDescriptor& desc = bufferDesc.desc();
           switch (desc.type()) {
             case BufferDescriptor::TYCbCrDescriptor: {
               const YCbCrDescriptor& ycbcr = desc.get_YCbCrDescriptor();
@@ -506,6 +511,10 @@ void BufferTextureHost::CreateRenderTexture(
   } else {
     texture =
         new wr::RenderBufferTextureHost(GetBuffer(), GetBufferDescriptor());
+
+    if (auto* shmemTextureHost = AsShmemTextureHost()) {
+      shmemTextureHost->OnRenderTextureCreated(texture);
+    }
   }
 
   wr::RenderThread::Get()->RegisterExternalImage(aExternalImageId,
@@ -538,7 +547,10 @@ void BufferTextureHost::PushResourceUpdates(
                                     : wr::ExternalImageType::Buffer();
 
   if (GetFormat() != gfx::SurfaceFormat::YUV420) {
-    MOZ_ASSERT(aImageKeys.length() == 1);
+    if (aImageKeys.length() != 1) {
+      MOZ_ASSERT_UNREACHABLE("unexpected keys lenght");
+      return;
+    }
 
     wr::ImageDescriptor descriptor(
         GetSize(),
@@ -547,7 +559,10 @@ void BufferTextureHost::PushResourceUpdates(
     (aResources.*method)(aImageKeys[0], descriptor, aExtID, imageType, 0,
                          /* aNormalizedUvs */ false);
   } else {
-    MOZ_ASSERT(aImageKeys.length() == 3);
+    if (aImageKeys.length() != 3) {
+      MOZ_ASSERT_UNREACHABLE("unexpected keys lenght");
+      return;
+    }
 
     const layers::YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     gfx::IntSize ySize = desc.display().Size();
@@ -578,13 +593,19 @@ void BufferTextureHost::PushDisplayItems(wr::DisplayListBuilder& aBuilder,
   bool useExternalSurface =
       aFlags.contains(PushDisplayItemFlag::SUPPORTS_EXTERNAL_BUFFER_TEXTURES);
   if (GetFormat() != gfx::SurfaceFormat::YUV420) {
-    MOZ_ASSERT(aImageKeys.length() == 1);
+    if (aImageKeys.length() != 1) {
+      MOZ_ASSERT_UNREACHABLE("unexpected key length");
+      return;
+    }
     aBuilder.PushImage(aBounds, aClip, true, false, aFilter, aImageKeys[0],
                        !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                        wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
                        preferCompositorSurface, useExternalSurface);
   } else {
-    MOZ_ASSERT(aImageKeys.length() == 3);
+    if (aImageKeys.length() != 3) {
+      MOZ_ASSERT_UNREACHABLE("unexpected key length");
+      return;
+    }
     const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     aBuilder.PushYCbCrPlanarImage(
         aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
@@ -714,6 +735,9 @@ already_AddRefed<gfx::DataSourceSurface> BufferTextureHost::GetAsSurface(
     NS_WARNING("BufferTextureHost: unsupported format!");
     return nullptr;
   }
+  if (!GetBuffer()) {
+    return nullptr;
+  }
   if (mFormat == gfx::SurfaceFormat::YUV420) {
     result = ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(
         GetBuffer(), mDescriptor.get_YCbCrDescriptor(), aSurface);
@@ -721,10 +745,29 @@ already_AddRefed<gfx::DataSourceSurface> BufferTextureHost::GetAsSurface(
       return nullptr;
     }
   } else {
+    auto stride =
+        ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor());
+
+    struct Closure {
+      RefPtr<nsISerialEventTarget> mEventTarget;
+      RefPtr<Runnable> mRunnable;
+    };
+
+    RefPtr<nsISerialEventTarget> eventTarget = CompositorThread();
+    RefPtr<Runnable> runnable =
+        NS_NewRunnableFunction("BufferTextureHost::GetAsSurface::Runnable",
+                               [self = RefPtr{this}]() {});
+
+    Closure* closure = new Closure{eventTarget.forget(), runnable.forget()};
+
+    auto destroyedCallback = [](void* aClosure) mutable {
+      auto* closure = static_cast<Closure*>(aClosure);
+      closure->mEventTarget->Dispatch(closure->mRunnable.forget());
+      delete closure;
+    };
+
     result = gfx::Factory::CreateWrappingDataSourceSurface(
-        GetBuffer(),
-        ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor()),
-        mSize, mFormat);
+        GetBuffer(), stride, mSize, mFormat, destroyedCallback, closure);
   }
   return result.forget();
 }
@@ -734,8 +777,12 @@ ShmemTextureHost::ShmemTextureHost(const ipc::Shmem& aShmem,
                                    ISurfaceAllocator* aDeallocator,
                                    TextureFlags aFlags)
     : BufferTextureHost(aDesc, aFlags), mDeallocator(aDeallocator) {
+  MOZ_ASSERT(!(mFlags & TextureFlags::DEALLOCATE_CLIENT));
+
   if (aShmem.IsReadable()) {
-    mShmem = MakeUnique<ipc::Shmem>(aShmem);
+    UniquePtr<mozilla::ipc::Shmem> shmem = MakeUnique<ipc::Shmem>(aShmem);
+    mShmemDeallocRunnable =
+        new ShmemDeallocRunnable(mDeallocator, std::move(shmem));
   } else {
     // This can happen if we failed to map the shmem on this process, perhaps
     // because it was big and we didn't have enough contiguous address space
@@ -750,35 +797,69 @@ ShmemTextureHost::ShmemTextureHost(const ipc::Shmem& aShmem,
 }
 
 ShmemTextureHost::~ShmemTextureHost() {
-  MOZ_ASSERT(!mShmem || (mFlags & TextureFlags::DEALLOCATE_CLIENT),
-             "Leaking our buffer");
   DeallocateDeviceData();
   MOZ_COUNT_DTOR(ShmemTextureHost);
 }
 
-void ShmemTextureHost::DeallocateSharedData() {
-  if (mShmem) {
-    MOZ_ASSERT(mDeallocator,
-               "Shared memory would leak without a ISurfaceAllocator");
-    mDeallocator->AsShmemAllocator()->DeallocShmem(*mShmem);
-    mShmem = nullptr;
+void ShmemTextureHost::DeallocateSharedData() {}
+
+void ShmemTextureHost::ForgetSharedData() {}
+
+void ShmemTextureHost::OnShutdown() { mShmemDeallocRunnable = nullptr; }
+
+ShmemTextureHost::ShmemDeallocRunnable::ShmemDeallocRunnable(
+    ISurfaceAllocator* aDeallocator, UniquePtr<mozilla::ipc::Shmem>&& aShmem)
+    : Runnable("ShmemDeallocRunnable"),
+      mDeallocator(aDeallocator),
+      mShmem(std::move(aShmem)) {}
+
+nsresult ShmemTextureHost::ShmemDeallocRunnable::Run() {
+  if (!mDeallocator || !mShmem) {
+    return NS_OK;
   }
+  mDeallocator->AsShmemAllocator()->DeallocShmem(*mShmem);
+  mShmem = nullptr;
+  return NS_OK;
 }
 
-void ShmemTextureHost::ForgetSharedData() {
-  if (mShmem) {
-    mShmem = nullptr;
+ShmemTextureHost::ShmemDeallocRunnable::~ShmemDeallocRunnable() {
+  if (!mDeallocator || !mShmem) {
+    return;
   }
+  mDeallocator->AsShmemAllocator()->DeallocShmem(*mShmem);
 }
 
-void ShmemTextureHost::OnShutdown() { mShmem = nullptr; }
+void ShmemTextureHost::OnRenderTextureCreated(
+    wr::RenderTextureHost* aRenderTexture) {
+  MOZ_ASSERT(aRenderTexture);
+
+  if (!mShmemDeallocRunnable || !mShmemDeallocRunnable->GetShmem()) {
+    return;
+  }
+
+  RefPtr<nsISerialEventTarget> eventTarget = GetCurrentSerialEventTarget();
+  RefPtr<ShmemDeallocRunnable> runnable = mShmemDeallocRunnable;
+
+  auto destroyedCallback = [eventTarget = std::move(eventTarget),
+                            runnable = std::move(runnable)]() mutable {
+    eventTarget->Dispatch(runnable.forget());
+  };
+
+  aRenderTexture->SetDestroyedCallback(destroyedCallback);
+}
 
 uint8_t* ShmemTextureHost::GetBuffer() {
-  return mShmem ? mShmem->get<uint8_t>() : nullptr;
+  if (mShmemDeallocRunnable && mShmemDeallocRunnable->GetShmem()) {
+    return mShmemDeallocRunnable->GetShmem()->get<uint8_t>();
+  }
+  return nullptr;
 }
 
 size_t ShmemTextureHost::GetBufferSize() {
-  return mShmem ? mShmem->Size<uint8_t>() : 0;
+  if (mShmemDeallocRunnable && mShmemDeallocRunnable->GetShmem()) {
+    return mShmemDeallocRunnable->GetShmem()->Size<uint8_t>();
+  }
+  return 0;
 }
 
 MemoryTextureHost::MemoryTextureHost(uint8_t* aBuffer,

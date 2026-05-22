@@ -221,15 +221,10 @@ export class WebRTCParent extends JSWindowActorParent {
     }
     let scrStatus = {};
     if (scrNeeded) {
-      try {
-        lazy.OSPermissions.getScreenCapturePermissionState(scrStatus);
-        if (scrStatus.value == lazy.OSPermissions.PERMISSION_STATE_DENIED) {
-          lazy.OSPermissions.maybeRequestScreenCapturePermission();
-          return false;
-        }
-      } catch (e) {
-        // If error is NOT_IMPLEMENTED, consider it as granted (default on legacy macOS)
-        console.warn("Screen capture permission check not supported, skipping.");
+      lazy.OSPermissions.getScreenCapturePermissionState(scrStatus);
+      if (scrStatus.value == lazy.OSPermissions.PERMISSION_STATE_DENIED) {
+        lazy.OSPermissions.maybeRequestScreenCapturePermission();
+        return false;
       }
     }
     return true;
@@ -1013,14 +1008,9 @@ function prompt(aActor, aBrowser, aRequest) {
             // web-sharing perspective, which is why this code resides here.
             // A restart doesn't appear to be necessary in spite of OS wording.
             let scrStatus = {};
-            try {
-              lazy.OSPermissions.getScreenCapturePermissionState(scrStatus);
-              if (scrStatus.value == lazy.OSPermissions.PERMISSION_STATE_DENIED) {
-                lazy.OSPermissions.maybeRequestScreenCapturePermission();
-              }
-            } catch (e) {
-                // If error is NOT_IMPLEMENTED, consider it as granted (default on legacy macOS)
-                console.warn("Screen capture permission check not supported, skipping.");
+            lazy.OSPermissions.getScreenCapturePermissionState(scrStatus);
+            if (scrStatus.value == lazy.OSPermissions.PERMISSION_STATE_DENIED) {
+              lazy.OSPermissions.maybeRequestScreenCapturePermission();
             }
           }
 

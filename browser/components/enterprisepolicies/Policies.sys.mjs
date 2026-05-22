@@ -606,6 +606,7 @@ export var Policies = {
       }
       let interceptionPointPrefs = [
         ["Clipboard", "clipboard"],
+        ["Download", "download"],
         ["DragAndDrop", "drag_and_drop"],
         ["FileUpload", "file_upload"],
         ["Print", "print"],
@@ -1185,7 +1186,35 @@ export var Policies = {
   },
 
   EnableTrackingProtection: {
+    onAllWindowsRestored(manager, param) {
+      if (param.Category) {
+        // browser.contentblocking.category only works as a default pref if
+        // it is locked.
+        PoliciesUtils.setDefaultPref(
+          "browser.contentblocking.category",
+          param.Category,
+          true
+        );
+        let { ContentBlockingPrefs } = ChromeUtils.importESModule(
+          "moz-src:///browser/components/protections/ContentBlockingPrefs.sys.mjs"
+        );
+        // These are always locked because they would reset at
+        // startup anyway.
+        ContentBlockingPrefs.setPrefsToCategory(
+          param.Category,
+          true // locked
+        );
+        ContentBlockingPrefs.matchCBCategory();
+      }
+    },
     onBeforeUIStartup(manager, param) {
+      if ("Exceptions" in param) {
+        addAllowDenyPermissions("trackingprotection", param.Exceptions);
+      }
+      if (param.Category) {
+        // If a category is set, we ignore everything except exceptions.
+        return;
+      }
       if (param.Value) {
         PoliciesUtils.setDefaultPref(
           "privacy.trackingprotection.enabled",
@@ -1227,8 +1256,17 @@ export var Policies = {
           param.Locked
         );
       }
-      if ("Exceptions" in param) {
-        addAllowDenyPermissions("trackingprotection", param.Exceptions);
+      if ("SuspectedFingerprinting" in param) {
+        PoliciesUtils.setDefaultPref(
+          "privacy.fingerprintingProtection",
+          param.SuspectedFingerprinting,
+          param.Locked
+        );
+        PoliciesUtils.setDefaultPref(
+          "privacy.fingerprintingProtection.pbmode",
+          param.SuspectedFingerprinting,
+          param.Locked
+        );
       }
     },
   },
@@ -1535,6 +1573,27 @@ export var Policies = {
           );
         }
       })();
+    },
+  },
+
+  GenerativeAI: {
+    onBeforeAddons(manager, param) {
+      const defaultValue = "Enabled" in param ? param.Enabled : undefined;
+
+      const features = [
+        ["Chatbot", ["browser.ml.chat.enabled", "browser.ml.chat.page"]],
+        ["LinkPreviews", ["browser.ml.linkPreview.optin"]],
+        ["TabGroups", ["browser.tabs.groups.smart.userEnabled"]],
+      ];
+
+      for (const [key, prefs] of features) {
+        const value = key in param ? param[key] : defaultValue;
+        if (value !== undefined) {
+          for (const pref of prefs) {
+            PoliciesUtils.setDefaultPref(pref, value, param.Locked);
+          }
+        }
+      }
     },
   },
 
@@ -1917,6 +1976,15 @@ export var Policies = {
         );
         setDefaultPermission("xr", param.VirtualReality);
       }
+
+      if ("ScreenShare" in param) {
+        addAllowDenyPermissions(
+          "screen",
+          param.ScreenShare.Allow,
+          param.ScreenShare.Block
+        );
+        setDefaultPermission("screen", param.ScreenShare);
+      }
     },
   },
 
@@ -1971,6 +2039,7 @@ export var Policies = {
         "app.update.",
         "browser.",
         "datareporting.policy.",
+        "devtools.",
         "dom.",
         "extensions.",
         "general.autoScroll",
@@ -1982,20 +2051,29 @@ export var Policies = {
         "keyword.enabled",
         "layers.",
         "layout.",
+        "mathml.disabled",
         "media.",
         "network.",
         "pdfjs.",
         "places.",
         "pref.",
         "print.",
+        "privacy.baselineFingerprintingProtection",
+        "privacy.fingerprintingProtection",
         "privacy.globalprivacycontrol.enabled",
         "privacy.userContext.enabled",
         "privacy.userContext.ui.enabled",
+        "sidebar.",
         "signon.",
         "spellchecker.",
+        "svg.context-properties.content.enabled",
+        "svg.disabled",
         "toolkit.legacyUserProfileCustomizations.stylesheets",
         "ui.",
+        "webgl.disabled",
+        "webgl.force-enabled",
         "widget.",
+        "xpinstall.enabled",
         "xpinstall.whitelist.required",
       ];
       if (!AppConstants.MOZ_REQUIRE_SIGNING) {
@@ -2003,6 +2081,7 @@ export var Policies = {
       }
       const allowedSecurityPrefs = [
         "security.block_fileuri_script_with_wrong_mime",
+        "security.csp.reporting.enabled",
         "security.default_personal_cert",
         "security.disable_button.openCertManager",
         "security.disable_button.openDeviceManager",
@@ -2024,6 +2103,7 @@ export var Policies = {
         "security.tls.hello_downgrade_check",
         "security.tls.version.enable-deprecated",
         "security.warn_submit_secure_to_insecure",
+        "security.webauthn.always_allow_direct_attestation",
       ];
       const blockedPrefs = [
         "app.update.channel",

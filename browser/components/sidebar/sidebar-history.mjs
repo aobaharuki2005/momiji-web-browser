@@ -16,6 +16,7 @@ import { SidebarPage } from "./sidebar-page.mjs";
 
 ChromeUtils.defineESModuleGetters(lazy, {
   HistoryController: "resource:///modules/HistoryController.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
   Sanitizer: "resource:///modules/Sanitizer.sys.mjs",
 });
 
@@ -72,6 +73,10 @@ export class SidebarHistory extends SidebarPage {
     if (!this.triggerNode) {
       e.preventDefault();
     }
+    let privateWindowMenuItem = this._contextMenu.querySelector(
+      "#sidebar-history-context-open-in-private-window"
+    );
+    privateWindowMenuItem.hidden = !lazy.PrivateBrowsingUtils.enabled;
   }
 
   handleCommandEvent(e) {

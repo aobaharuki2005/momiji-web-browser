@@ -9,11 +9,9 @@
 #include "gfxFT2FontBase.h"
 #include "gfxPlatformFontList.h"
 #include "mozilla/FontPropertyTypes.h"
-#include "mozilla/mozalloc.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "nsClassHashtable.h"
-#include "nsTHashMap.h"
 
 #include <fontconfig/fontconfig.h>
 #include "ft2build.h"
@@ -89,6 +87,8 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
 
   gfxFontEntry* Clone() const override;
 
+  AutoHBFace GetHBFace() override;
+
   FcPattern* GetPattern() { return mFontPattern; }
 
   nsresult ReadCMAP(FontInfoData* aFontInfoData = nullptr) override;
@@ -107,6 +107,9 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
   bool HasFontTable(uint32_t aTableTag) override;
   nsresult CopyFontTable(uint32_t aTableTag, nsTArray<uint8_t>&) override;
   hb_blob_t* GetFontTable(uint32_t aTableTag) override;
+  FontTableCache* GetFontTableCache(bool aCreate) override {
+    return mFontTableCache;
+  };
 
   double GetAspect(uint8_t aSizeAdjustBasis);
 
@@ -126,6 +129,14 @@ class gfxFontconfigFontEntry final : public gfxFT2FontEntryBase {
   // a RefPtr because we need it to be an atomic.
   mozilla::Atomic<mozilla::gfx::SharedFTFace*> mFTFace;
   mozilla::Atomic<bool> mFTFaceInitialized;
+
+  // HarfBuzz face, if the entry is backed by a disk file. Initialized on first
+  // use.
+  mozilla::Atomic<hb_face_t*> mHBFace;
+
+  // Font table cache, created only if we fail to create a hb_face_t that wraps
+  // the complete font data.
+  mozilla::Atomic<FontTableCache*> mFontTableCache;
 
   // Whether TestCharacterMap should check the actual cmap rather than asking
   // fontconfig about character coverage.

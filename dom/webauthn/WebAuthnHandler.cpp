@@ -392,7 +392,7 @@ already_AddRefed<Promise> WebAuthnHandler::MakeCredential(
 
   WebAuthnMakeCredentialInfo info(rpId, challenge, adjustedTimeout, excludeList,
                                   rpInfo, userInfo, coseAlgos, extensions,
-                                  authSelection, attestation);
+                                  authSelection, attestation, aOptions.mHints);
 
   // Set up the transaction state. Fallible operations should not be performed
   // below this line, as we must not leave the transaction state partially
@@ -429,8 +429,6 @@ already_AddRefed<Promise> WebAuthnHandler::MakeCredential(
 
   return promise.forget();
 }
-
-const size_t MAX_ALLOWED_CREDENTIALS = 20;
 
 already_AddRefed<Promise> WebAuthnHandler::GetAssertion(
     const PublicKeyCredentialRequestOptions& aOptions,
@@ -494,7 +492,7 @@ already_AddRefed<Promise> WebAuthnHandler::GetAssertion(
   }
 
   // Abort the request if the allowCredentials set is too large
-  if (aOptions.mAllowCredentials.Length() > MAX_ALLOWED_CREDENTIALS) {
+  if (aOptions.mAllowCredentials.Length() > kWebAuthnMaxAllowedCredentials) {
     promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return promise.forget();
   }
@@ -666,7 +664,7 @@ already_AddRefed<Promise> WebAuthnHandler::GetAssertion(
 
   WebAuthnGetAssertionInfo info(
       rpId, maybeAppId, challenge, adjustedTimeout, allowList, extensions,
-      aOptions.mUserVerification, aConditionallyMediated);
+      aOptions.mUserVerification, aConditionallyMediated, aOptions.mHints);
 
   // Set up the transaction state. Fallible operations should not be performed
   // below this line, as we must not leave the transaction state partially

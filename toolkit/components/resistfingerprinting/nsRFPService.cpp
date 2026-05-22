@@ -52,8 +52,10 @@
 #include "mozilla/dom/KeyboardEventBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/MediaDeviceInfoBinding.h"
+#include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/fallible.h"
 #include "mozilla/XorShift128PlusRNG.h"
+#include "mozilla/dom/CanvasUtils.h"
 
 #include "nsAboutProtocolUtils.h"
 #include "nsBaseHashtable.h"
@@ -1708,8 +1710,9 @@ nsresult nsRFPService::GenerateCanvasKeyFromImageData(
 
 // static
 nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
-                                       uint8_t* aData, uint32_t aWidth,
-                                       uint32_t aHeight, uint32_t aSize,
+                                       nsIPrincipal* aPrincipal, uint8_t* aData,
+                                       uint32_t aWidth, uint32_t aHeight,
+                                       uint32_t aSize,
                                        gfx::SurfaceFormat aSurfaceFormat) {
   NS_ENSURE_ARG_POINTER(aData);
 
@@ -1718,6 +1721,11 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
   }
 
   if (aSize <= 4) {
+    return NS_OK;
+  }
+
+  if (aPrincipal && CanvasUtils::GetCanvasExtractDataPermission(*aPrincipal) ==
+                        nsIPermissionManager::ALLOW_ACTION) {
     return NS_OK;
   }
 
@@ -2558,13 +2566,11 @@ void nsRFPService::GetMediaDeviceGroup(nsString& aGroup,
                                        dom::MediaDeviceKind aKind) {
   switch (aKind) {
     case dom::MediaDeviceKind::Audioinput:
+    case dom::MediaDeviceKind::Audiooutput:
       aGroup.Assign(u"Audio Device Group"_ns);
       break;
     case dom::MediaDeviceKind::Videoinput:
       aGroup = u"Video Device Group"_ns;
-      break;
-    case dom::MediaDeviceKind::Audiooutput:
-      aGroup = u"Speaker Device Group"_ns;
       break;
   }
 }
@@ -2669,4 +2675,18 @@ CSSIntRect nsRFPService::GetSpoofedScreenAvailSize(const nsRect& aRect,
 
   return CSSIntRect::FromAppUnitsRounded(
       nsRect{0, 0, aRect.width, aRect.height - spoofedHeightOffset});
+}
+
+/* static */
+uint64_t nsRFPService::GetSpoofedStorageLimit() {
+  uint64_t gib = 1024ULL * 1024ULL * 1024ULL;  // 1 GiB
+#ifdef ANDROID
+  uint64_t limit = 32ULL * gib;  // 32 GiB
+#else
+  uint64_t limit = 50ULL * gib;  // 50 GiB
+#endif
+  MOZ_ASSERT(limit / 5 ==
+             dom::quota::QuotaManager::GetGroupLimitForLimit(limit));
+
+  return limit;
 }

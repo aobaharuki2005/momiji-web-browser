@@ -107,7 +107,6 @@ if CONFIG["MOZ_APPLEMEDIA"]:
         "/media/libyuv/libyuv/include",
     ]
     OS_LIBS += [
-        "-framework AudioUnit",
         "-framework AudioToolbox",
         "-framework CoreMedia",
         "-framework VideoToolbox",

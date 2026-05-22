@@ -2428,10 +2428,8 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   //this call will ensure the GL context
   //will round our corners as we want, but at a cost
   //see comments about superview in nscocoawindow
-  if([self isCoveringTitlebar]) {
-    mPixelHostingView.layer.cornerRadius=6.0f;
-    mPixelHostingView.layer.masksToBounds=YES;
-  }
+  mPixelHostingView.layer.cornerRadius=6.0f;
+  mPixelHostingView.layer.masksToBounds=YES;
   if (mUsingOMTCompositor) {
     // Make sure the window's "drawRect" buffer does not interfere with our
     // OpenGL drawing's rounded corners.
@@ -2839,7 +2837,6 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
     // If we're already in a rotation and not "starting" a magnify, abort.
     return;
   }
-  mGestureState = eGestureState_MagnifyGesture;
 
   NSPoint locationInWindow =
       nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
@@ -2855,25 +2852,36 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
   NSEventPhase eventPhase = [anEvent phase];
   PinchGestureInput::PinchGestureType pinchGestureType;
 
-  switch (eventPhase) {
-    case NSEventPhaseBegan: {
+  // 10.11+ Populate phase, while 10.9 rely on explicit begin/end gesture callback
+  if (nsCocoaFeatures::OnElCapitanOrLater()) {
+    switch (eventPhase) {
+      case NSEventPhaseBegan: {
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
+        break;
+      }
+      case NSEventPhaseChanged: {
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
+        break;
+      }
+      case NSEventPhaseEnded: {
+        pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
+        mGestureState = eGestureState_None;
+        break;
+      }
+      default: {
+        NS_WARNING("Unexpected phase for pinch gesture event.");
+        return;
+      }
+    }
+  } else {
+    // rely on the state set by beginGestureWithEvent
+    if (mGestureState == eGestureState_StartGesture) {
       pinchGestureType = PinchGestureInput::PINCHGESTURE_START;
-      break;
-    }
-    case NSEventPhaseChanged: {
+    } else {
       pinchGestureType = PinchGestureInput::PINCHGESTURE_SCALE;
-      break;
-    }
-    case NSEventPhaseEnded: {
-      pinchGestureType = PinchGestureInput::PINCHGESTURE_END;
-      mGestureState = eGestureState_None;
-      break;
-    }
-    default: {
-      NS_WARNING("Unexpected phase for pinch gesture event.");
-      return;
     }
   }
+  mGestureState = eGestureState_MagnifyGesture;
 
   PinchGestureInput event{pinchGestureType,
                           PinchGestureInput::TRACKPAD,
@@ -3047,7 +3055,36 @@ static void DrawTopLeftCornerMask(CGContextRef aCtx, int aRadius) {
       mGeckoChild->DispatchWindowEvent(geckoEvent);
     } break;
 
-    case eGestureState_MagnifyGesture:  // APZ handles sending the widget events
+    case eGestureState_MagnifyGesture: {
+      if (!nsCocoaFeatures::OnElCapitanOrLater()) {
+        // On macOS 10.9, magnifyWithEvent doesn't receive NSEventPhaseEnded,
+        // so mGestureState will still be eGestureState_MagnifyGesture here.
+        // We need to dispatch the PINCHGESTURE_END event manually.
+        NSPoint locationInWindow =
+            nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
+        ScreenPoint position = ViewAs<ScreenPixel>(
+            [self convertWindowCoordinatesRoundDown:locationInWindow],
+            PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+        ExternalPoint screenOffset = ViewAs<ExternalPixel>(
+            mGeckoChild->WidgetToScreenOffset(),
+            PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+
+        TimeStamp eventTimeStamp =
+            nsCocoaUtils::GetEventTimeStamp([anEvent timestamp]);
+
+        PinchGestureInput event{PinchGestureInput::PINCHGESTURE_END,
+                                PinchGestureInput::TRACKPAD,
+                                eventTimeStamp,
+                                screenOffset,
+                                position,
+                                100.0,
+                                100.0, // Magnification is effectively 0 for the end event
+                                nsCocoaUtils::ModifiersForEvent(anEvent)};
+
+        mGeckoChild->DispatchAPZInputEvent(event);
+      }
+      break;
+    }
     case eGestureState_None:
     case eGestureState_StartGesture:
     default:

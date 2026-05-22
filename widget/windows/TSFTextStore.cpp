@@ -353,7 +353,12 @@ void TSFTextStore::FlushPendingActions() {
           break;
         }
 
+        const bool hadDeferredNotifyingTSFUnTilNextUpdate =
+            mDeferNotifyingTSFUntilNextUpdate;
         if (action.mAdjustSelection) {
+          // Don't notify TSF until we receive
+          // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.
+          mDeferNotifyingTSFUntilNextUpdate = true;
           // Select composition range so the new composition replaces the range
           WidgetSelectionEvent selectionSet(true, eSetSelection, widget);
           widget->InitEvent(selectionSet);
@@ -371,6 +376,8 @@ void TSFTextStore::FlushPendingActions() {
                     ("0x%p   TSFTextStore::FlushPendingActions() "
                      "FAILED due to eSetSelection failure",
                      this));
+            mDeferNotifyingTSFUntilNextUpdate =
+                hadDeferredNotifyingTSFUnTilNextUpdate;
             break;
           }
         }
@@ -379,6 +386,9 @@ void TSFTextStore::FlushPendingActions() {
         // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.  Therefore, we should
         // wait to clear mContentForTSF until it's notified.
         mDeferClearingContentForTSF = true;
+        // Don't notify TSF until we receive
+        // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.
+        mDeferNotifyingTSFUntilNextUpdate = true;
 
         MOZ_LOG(gIMELog, LogLevel::Debug,
                 ("0x%p   TSFTextStore::FlushPendingActions() "
@@ -394,6 +404,8 @@ void TSFTextStore::FlushPendingActions() {
                "FAILED to dispatch compositionstart event, "
                "IsHandlingCompositionInContent()=%s",
                this, TSFUtils::BoolToChar(IsHandlingCompositionInContent())));
+          mDeferNotifyingTSFUntilNextUpdate =
+              hadDeferredNotifyingTSFUnTilNextUpdate;
           // XXX Is this right? If there is a composition in content,
           //     shouldn't we wait NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED?
           mDeferClearingContentForTSF = !IsHandlingCompositionInContent();
@@ -436,6 +448,11 @@ void TSFTextStore::FlushPendingActions() {
                    this));
           WidgetEventTime eventTime = widget->CurrentMessageWidgetEventTime();
           nsEventStatus status;
+          // Don't notify TSF until we receive
+          // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.
+          const bool hadDeferredNotifyingTSFUnTilNextUpdate =
+              mDeferNotifyingTSFUntilNextUpdate;
+          mDeferNotifyingTSFUntilNextUpdate = true;
           rv = mDispatcher->FlushPendingComposition(status, &eventTime);
           if (NS_WARN_IF(NS_FAILED(rv))) {
             MOZ_LOG(
@@ -444,6 +461,8 @@ void TSFTextStore::FlushPendingActions() {
                  "FAILED to dispatch compositionchange event, "
                  "IsHandlingCompositionInContent()=%s",
                  this, TSFUtils::BoolToChar(IsHandlingCompositionInContent())));
+            mDeferNotifyingTSFUntilNextUpdate =
+                hadDeferredNotifyingTSFUnTilNextUpdate;
             // XXX Is this right? If there is a composition in content,
             //     shouldn't we wait NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED?
             mDeferClearingContentForTSF = !IsHandlingCompositionInContent();
@@ -473,6 +492,11 @@ void TSFTextStore::FlushPendingActions() {
                  this));
         WidgetEventTime eventTime = widget->CurrentMessageWidgetEventTime();
         nsEventStatus status;
+        // Don't notify TSF until we receive
+        // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.
+        const bool hadDeferredNotifyingTSFUnTilNextUpdate =
+            mDeferNotifyingTSFUntilNextUpdate;
+        mDeferNotifyingTSFUntilNextUpdate = true;
         rv = mDispatcher->CommitComposition(status, &action.mData, &eventTime);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           MOZ_LOG(
@@ -481,6 +505,8 @@ void TSFTextStore::FlushPendingActions() {
                "FAILED to dispatch compositioncommit event, "
                "IsHandlingCompositionInContent()=%s",
                this, TSFUtils::BoolToChar(IsHandlingCompositionInContent())));
+          mDeferNotifyingTSFUntilNextUpdate =
+              hadDeferredNotifyingTSFUnTilNextUpdate;
           // XXX Is this right? If there is a composition in content,
           //     shouldn't we wait NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED?
           mDeferClearingContentForTSF = !IsHandlingCompositionInContent();
@@ -505,6 +531,12 @@ void TSFTextStore::FlushPendingActions() {
           break;
         }
 
+        // Don't notify TSF until we receive
+        // NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED.
+        const bool hadDeferredNotifyingTSFUnTilNextUpdate =
+            mDeferNotifyingTSFUntilNextUpdate;
+        mDeferNotifyingTSFUntilNextUpdate = true;
+
         WidgetSelectionEvent selectionSet(true, eSetSelection, widget);
         selectionSet.mOffset = static_cast<uint32_t>(action.mSelectionStart);
         selectionSet.mLength = static_cast<uint32_t>(action.mSelectionLength);
@@ -519,6 +551,8 @@ void TSFTextStore::FlushPendingActions() {
                   ("0x%p   TSFTextStore::FlushPendingActions() "
                    "FAILED due to eSetSelection failure",
                    this));
+          mDeferNotifyingTSFUntilNextUpdate =
+              hadDeferredNotifyingTSFUnTilNextUpdate;
           break;
         }
         break;
@@ -3155,7 +3189,7 @@ IMENotificationRequests TSFTextStore::GetIMENotificationRequests() const {
   if (NS_WARN_IF(!mDocumentMgr)) {
     // If there is no active text store, we don't need any notifications
     // since there is no sink which needs notifications.
-    return IMENotificationRequests();
+    return {};
   }
 
   // Otherwise, requests all notifications since even if some of them may not
@@ -3173,11 +3207,10 @@ IMENotificationRequests TSFTextStore::GetIMENotificationRequests() const {
   // focused element isn't changed.  Therefore, if sEnabledTextStore isn't
   // nullptr, we need to keep notifying the sink even when it is not focused
   // text store for the thread manager.
-  return IMENotificationRequests(
-      IMENotificationRequests::NOTIFY_TEXT_CHANGE |
-      IMENotificationRequests::NOTIFY_POSITION_CHANGE |
-      IMENotificationRequests::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
-      IMENotificationRequests::NOTIFY_DURING_DEACTIVE);
+  return {IMENotificationRequest::TextChange,
+          IMENotificationRequest::PositionChange,
+          IMENotificationRequest::MouseEventOnChar,
+          IMENotificationRequest::NotifyDuringInactive};
 }
 
 nsresult TSFTextStore::OnTextChangeInternal(

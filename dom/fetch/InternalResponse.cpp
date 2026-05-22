@@ -123,6 +123,19 @@ template <typename T>
 
 InternalResponse::~InternalResponse() = default;
 
+void InternalResponse::SnapshotUnfilteredHeaders() {
+  auto snapshot = [](InternalHeaders* aHeaders) {
+    nsTArray<InternalHeaders::Entry> entries;
+    aHeaders->GetEntries(entries);
+    return MakeRefPtr<InternalHeaders>(std::move(entries), aHeaders->Guard());
+  };
+  if (mWrappedResponse) {
+    mWrappedResponse->mHeaders = snapshot(mWrappedResponse->mHeaders);
+  } else {
+    mHeaders = snapshot(mHeaders);
+  }
+}
+
 InternalResponseMetadata InternalResponse::GetMetadata() {
   nsTArray<HeadersEntry> headers;
   HeadersGuardEnum headersGuard;
@@ -145,11 +158,13 @@ InternalResponseMetadata InternalResponse::GetMetadata() {
 }
 
 void InternalResponse::ToChildToParentInternalResponse(
-    ChildToParentInternalResponse* aIPCResponse,
-    mozilla::ipc::PBackgroundChild* aManager) {
+    ChildToParentInternalResponse* aIPCResponse) {
   *aIPCResponse = ChildToParentInternalResponse(GetMetadata(), Nothing(),
                                                 UNKNOWN_BODY_SIZE, Nothing());
+}
 
+void InternalResponse::SerializeChildToParentInternalResponseBody(
+    ChildToParentInternalResponse* aIPCResponse) {
   nsCOMPtr<nsIInputStream> body;
   int64_t bodySize;
   GetUnfilteredBody(getter_AddRefs(body), &bodySize);

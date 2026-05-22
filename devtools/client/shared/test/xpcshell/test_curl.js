@@ -347,9 +347,7 @@ const QUOTE = isWin() ? '^"' : "'";
 function quote(str) {
   let escaped;
   if (isWin()) {
-    escaped = str
-      .replace(new RegExp(QUOTE, "g"), `${QUOTE}${QUOTE}`)
-      .replace(/"/g, '\\"');
+    escaped = str.replace(new RegExp('"', "g"), `^\\${QUOTE}`);
   } else {
     escaped = str.replace(new RegExp(QUOTE, "g"), `\\${QUOTE}`);
   }
@@ -396,7 +394,8 @@ function inParams(curlParams, param) {
 function parseCurl(curlCmd) {
   // This monster regexp parses the command line into an array of arguments,
   // recognizing quoted args with matching quotes and escaped quotes inside:
+  // [ "curl.exe 'url'", "--standalone-arg", "-arg-with-quoted-string 'value\'s'" ]
   // [ "curl 'url'", "--standalone-arg", "-arg-with-quoted-string 'value\'s'" ]
-  const matchRe = /[-A-Za-z1-9]+(?: ([\^\\"']+)(?:\\\1|.)*?\1)?/g;
+  const matchRe = /[-\.A-Za-z1-9]+(?: ([\^\"']+)(?:\\\1|.)*?\1)?/g;
   return curlCmd.match(matchRe);
 }

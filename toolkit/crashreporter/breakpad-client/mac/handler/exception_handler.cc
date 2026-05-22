@@ -127,8 +127,7 @@ struct ExceptionReplyMessage {
 // and may result in treating a non-fatal exception as fatal.
 exception_mask_t s_exception_mask = EXC_MASK_BAD_ACCESS |
 EXC_MASK_BAD_INSTRUCTION | EXC_MASK_ARITHMETIC | EXC_MASK_BREAKPOINT |
-EXC_MASK_CRASH;
-
+EXC_MASK_CRASH | EXC_MASK_RESOURCE | EXC_MASK_GUARD;
 
 kern_return_t ForwardException(mach_port_t task,
                                mach_port_t failed_thread,
@@ -530,13 +529,6 @@ kern_return_t ForwardException(mach_port_t task, mach_port_t failed_thread,
   // so that the current exception ports are the ones that we should be
   // forwarding to.
   ExceptionParameters current;
-#ifdef XP_MACOSX
-  if(__builtin_available(macOS 10.9, *)) {
-    s_exception_mask |= EXC_MASK_RESOURCE | EXC_MASK_GUARD;
-  } else if (__builtin_available(macOS 10.8, *)) {
-    s_exception_mask |= EXC_MASK_RESOURCE;
-  }
-#endif
 
   current.count = EXC_TYPES_COUNT;
   mach_port_t current_task = mach_task_self();

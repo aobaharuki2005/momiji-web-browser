@@ -1467,7 +1467,7 @@ export class ExtensionData {
       ),
       data_collection: newPermissions.data_collection.filter(
         perm =>
-          !oldPermissions.data_collection.includes(perm) && perm !== "none"
+          !oldPermissions.data_collection?.includes(perm) && perm !== "none"
       ),
     };
   }
@@ -1662,8 +1662,12 @@ export class ExtensionData {
    */
   get isInstalledByEnterprisePolicy() {
     const policySettings = Services.policies?.getExtensionSettings(this.id);
-    return ["force_installed", "normal_installed"].includes(
-      policySettings?.installation_mode
+    const legacyLockedSettings =
+      Services.policies?.getActivePolicies()?.Extensions?.Locked ?? [];
+    return (
+      ["force_installed", "normal_installed"].includes(
+        policySettings?.installation_mode
+      ) || legacyLockedSettings.includes(this.id)
     );
   }
 

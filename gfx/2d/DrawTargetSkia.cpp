@@ -260,6 +260,14 @@ static sk_sp<SkImage> GetSkImageForSurface(SourceSurface* aSurface,
     return nullptr;
   }
 
+  // Wrapper surfaces (e.g. SourceSurfaceOffset) can hand back the inner
+  // SourceSurfaceSkia here; route it through GetImage so copy-on-write
+  // snapshots are detached/locked rather than borrowing a raw pixel pointer
+  // that can outlive the originating SkSurface.
+  if (dataSurface->GetType() == SurfaceType::SKIA) {
+    return static_cast<SourceSurfaceSkia*>(dataSurface.get())->GetImage(aLock);
+  }
+
   DataSourceSurface::MappedSurface map;
   void (*releaseProc)(const void*, void*);
   if (dataSurface->GetType() == SurfaceType::DATA_SHARED_WRAPPER) {
@@ -589,7 +597,9 @@ static void SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern,
     case PatternType::SURFACE: {
       const SurfacePattern& pat = static_cast<const SurfacePattern&>(aPattern);
       Matrix offsetMatrix = pat.mMatrix;
-      offsetMatrix.PreTranslate(pat.mSurface->GetRect().TopLeft());
+      if (pat.mSurface) {
+        offsetMatrix.PreTranslate(pat.mSurface->GetRect().TopLeft());
+      }
       sk_sp<SkImage> image =
           GetSkImageForSurface(pat.mSurface, &aLock, aBounds, &offsetMatrix);
       if (!image) {

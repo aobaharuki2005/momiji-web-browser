@@ -223,7 +223,9 @@ MOZ_RUNINIT static std::optional<xpstring> defaultMemoryReportPath = {};
 
 static const char kCrashMainID[] = "crash.main.3\n";
 
-static CrashHelperClient* gCrashHelperClient = nullptr;
+static StaticMutex gCrashHelperClientMutex;
+static CrashHelperClient* gCrashHelperClient
+    MOZ_GUARDED_BY(gCrashHelperClientMutex) = nullptr;
 static google_breakpad::ExceptionHandler* gExceptionHandler = nullptr;
 static mozilla::Atomic<bool> gEncounteredChildException(false);
 MOZ_CONSTINIT static nsCString gServerURL;
@@ -232,11 +234,6 @@ MOZ_RUNINIT static xpstring pendingDirectory;
 MOZ_RUNINIT static xpstring crashReporterPath;
 MOZ_RUNINIT static xpstring crashHelperPath;
 MOZ_RUNINIT static xpstring memoryReportPath;
-// undoing commit https://hg.mozilla.org/mozilla-unified/rev/1bc4ee894015268a6be66950b80705e73f17147e
-// for backwards compatibility
-#ifdef XP_MACOSX
-static xpstring libraryPath;  // Path where the NSS library is
-#endif
 
 // Where crash events should go.
 MOZ_RUNINIT static xpstring eventsDirectory;
@@ -262,8 +259,6 @@ static char* androidUserSerial = nullptr;
 // service. After Android 8 we need to use "start-foreground-service"
 static const char* androidStartServiceCommand = nullptr;
 #endif
-
-static Maybe<ProcessId> gCrashHelperPid;
 
 // this holds additional data sent via the API
 static Mutex* notesFieldLock;
@@ -1234,11 +1229,6 @@ static bool LaunchProgram(const XP_CHAR* aProgramPath,
     CloseHandle(pi.hThread);
   }
 #  elif defined(XP_MACOSX)
-  //reverting commit https://hg.mozilla.org/mozilla-unified/rev/1bc4ee894015268a6be66950b80705e73f17147e
-  //for backwards compatibility
-  // Needed to locate NSS and its dependencies
-  setenv("DYLD_LIBRARY_PATH", libraryPath.c_str(), /* overwrite */ 1);
-
   pid_t pid = 0;
   char* const my_argv[] = {const_cast<char*>(aProgramPath),
                            const_cast<char*>(aMinidumpPath), nullptr};
@@ -1434,11 +1424,13 @@ static void WriteCrashEventFile(time_t crashTime, const char* crashTimeString,
                                 const XP_CHAR* minidump_id
 #endif
 ) {
+#ifdef MOZ_BACKGROUNDTASKS
   if (BackgroundTasks::IsBackgroundTaskMode()) {
     // Do not generate a crash event file if the main process was running a
     // background task, as the crash won't be visible to the user.
     return;
   }
+#endif
 
   // Minidump IDs are UUIDs (36) + NULL.
   static char id_ascii[37] = {};
@@ -1577,7 +1569,11 @@ bool MinidumpCallback(
 
   SetUpMemtestEnv();
 
-  if (doReport && isSafeToDump && !BackgroundTasks::IsBackgroundTaskMode()) {
+  bool isBackgroundTaskMode = false;
+#ifdef MOZ_BACKGROUNDTASKS
+  isBackgroundTaskMode = BackgroundTasks::IsBackgroundTaskMode();
+#endif
+  if (doReport && isSafeToDump && !isBackgroundTaskMode) {
     // We launch the crash reporter client/dialog only if we've been explicitly
     // asked to report crashes and if we weren't already trying to unset the
     // exception handler (which is indicated by isSafeToDump being false).
@@ -1723,22 +1719,18 @@ static bool IsCrashingException(EXCEPTION_POINTERS* exinfo) {
 // Do various actions to prepare the child process for minidump generation.
 // This includes disabling the I/O interposer and DLL blocklist which both
 // would get in the way. We also free the resources we have reserved, such as
-// address space on 32-bit Windows builds and file descriptors on Linux so that
-// they're available to the minidump generation code.
-static void PrepareForMinidump() {
+// address space on 32-bit Windows builds, so that they're available to the
+// minidump generation code.
+static void PrepareForMinidump(bool isChildProcess = true) {
   mozilla::IOInterposer::Disable();
   ReleaseResources();
-#if defined(XP_WIN)
-#  if defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
-  DllBlocklist_Shutdown();
-#  endif
-#elif defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
-  if (gCrashHelperPid.isSome()) {
-    // Ignore the return value because we're in the exception handler, so
-    // there's not much we can do safely, not even log the error.
-    Unused << prctl(PR_SET_PTRACER, gCrashHelperPid.value());
+
+  if (isChildProcess) {
+    crash_helper_wait_for_rendezvous();
   }
-#endif
+#if defined(XP_WIN) && defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
+  DllBlocklist_Shutdown();
+#endif  // defined(XP_WIN) && defined(DEBUG) && defined(HAS_DLL_BLOCKLIST)
 }
 
 #ifdef XP_WIN
@@ -1754,7 +1746,7 @@ static ExceptionHandler::FilterResult Filter(void* context,
     return ExceptionHandler::FilterResult::ContinueSearch;
   }
 
-  PrepareForMinidump();
+  PrepareForMinidump(/* isChildProcess */ false);
   return ExceptionHandler::FilterResult::HandleException;
 }
 
@@ -1799,7 +1791,7 @@ static MINIDUMP_TYPE GetMinidumpType() {
 #else
 
 static bool Filter(void* context) {
-  PrepareForMinidump();
+  PrepareForMinidump(/* isChildProcess */ false);
   return true;
 }
 
@@ -1948,27 +1940,8 @@ nsresult SetExceptionHandler(nsIFile* aXREDirectory, bool force /*=false*/) {
     return rv;
   }
 
-  // need this for the old style of loading
-  nsCOMPtr<nsIFile> libPath;
-  rv = aXREDirectory->Clone(getter_AddRefs(libPath));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-
-  }
-  nsAutoString libraryPath_temp;
-  rv = libPath->GetPath(libraryPath_temp);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   crashReporterPath = crashReporterPath_temp.get();
   crashHelperPath = crashHelperPath_temp.get();
-#    ifdef XP_MACOSX
-// reverting commit 3https://hg.mozilla.org/mozilla-unified/rev/1bc4ee894015268a6be66950b80705e73f17147e
-// for bakcwards compatibility
-  libraryPath = xpstring(NS_ConvertUTF16toUTF8(libraryPath_temp).get()); 
-#    endif
-
 #else
   // On Android, we launch a service defined via MOZ_ANDROID_CRASH_HANDLER
   const char* androidCrashHandler = PR_GetEnv("MOZ_ANDROID_CRASH_HANDLER");
@@ -2145,6 +2118,7 @@ nsresult SetMinidumpPath(const nsAString& aPath) {
 #endif
 
   // Set the path used by the crash helper for out-of-process crash generation
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     set_crash_report_path(gCrashHelperClient,
                           (const BreakpadChar*)path.BeginReading());
@@ -2370,6 +2344,7 @@ nsresult UnsetExceptionHandler() {
   dumpSafetyLock = nullptr;
 
   std::set_terminate(oldTerminateHandler);
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     crash_helper_shutdown(gCrashHelperClient);
     gCrashHelperClient = nullptr;
@@ -3337,6 +3312,7 @@ static void OOPInit() {
       gExceptionHandler->dump_path().c_str());
 #endif
 
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   gCrashHelperClient = crashHelperClient;
 }
 
@@ -3366,22 +3342,21 @@ CrashPipeType GetChildNotificationPipe() {
 #endif
 }
 
-#if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
-
-ProcessId GetCrashHelperPid() {
+UniqueFileHandle RegisterChildIPCChannel() {
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
-    return crash_helper_pid(gCrashHelperClient);
+    RawAncillaryData ipc_endpoint =
+        register_child_ipc_channel(gCrashHelperClient);
+    return UniqueFileHandle{ipc_endpoint};
   }
 
-  return base::kInvalidProcessId;
+  return UniqueFileHandle();
 }
 
-#endif  // defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
-
 bool SetRemoteExceptionHandler(CrashPipeType aCrashPipe,
-                               Maybe<ProcessId> aCrashHelperPid) {
+                               UniqueFileHandle aCrashHelperPipe) {
   MOZ_ASSERT(!gExceptionHandler, "crash client already init'd");
-  gCrashHelperPid = aCrashHelperPid;
+  crash_helper_rendezvous(aCrashHelperPipe.release());
   RegisterRuntimeExceptionModule();
   InitializeAppNotes();
   RegisterAnnotations();
@@ -3445,8 +3420,11 @@ bool TakeMinidumpForChild(ProcessId childPid, nsIFile** dump,
 
   CrashReport* crash_report = nullptr;
 
-  if (gCrashHelperClient) {
-    crash_report = transfer_crash_report(gCrashHelperClient, childPid);
+  {
+    StaticMutexAutoLock lock(gCrashHelperClientMutex);
+    if (gCrashHelperClient) {
+      crash_report = transfer_crash_report(gCrashHelperClient, childPid);
+    }
   }
 
   if (!crash_report) {
@@ -3727,12 +3705,14 @@ void GetCurrentProcessAuxvInfo(DirectAuxvDumpInfo* aAuxvInfo) {
 
 void RegisterChildAuxvInfo(pid_t aChildPid,
                            const DirectAuxvDumpInfo& aAuxvInfo) {
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     register_child_auxv_info(gCrashHelperClient, aChildPid, &aAuxvInfo);
   }
 }
 
 void UnregisterChildAuxvInfo(pid_t aChildPid) {
+  StaticMutexAutoLock lock(gCrashHelperClientMutex);
   if (gCrashHelperClient) {
     unregister_child_auxv_info(gCrashHelperClient, aChildPid);
   }

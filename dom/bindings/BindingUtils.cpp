@@ -2429,8 +2429,10 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
 
   bool isProxy = js::IsProxy(aObj);
   JS::Rooted<JSObject*> expandoObject(aCx);
+  JS::Rooted<JS::Value> expandoRollbackToken(aCx);
   if (isProxy) {
-    expandoObject = DOMProxyHandler::GetAndClearExpandoObject(aObj);
+    expandoObject =
+        DOMProxyHandler::GetAndClearExpandoObject(aObj, &expandoRollbackToken);
   }
 
   JSAutoRealm newAr(aCx, newGlobal);
@@ -2449,6 +2451,30 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
     aError.StealExceptionFromJSContext(aCx);
     return;
   }
+
+  // JS_CloneObject copies all reserved slots over for proxies, and no slots for
+  // non-proxies. That means that for both, the DOM_OBJECT_SLOT value needs to
+  // be transferred from aObj to newobj, and that slots need to be cleared from
+  // newobj on an error, and from aObj on success.
+  auto clearSlots = [=](JSObject* obj) {
+    JS::SetReservedSlot(obj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+    MOZ_ASSERT(isProxy == js::IsProxy(obj), "Cloning preserves proxy-ness");
+    if (isProxy) {
+      size_t nslots = JSCLASS_RESERVED_SLOTS(JS::GetClass(obj));
+      for (size_t slot = DOM_INSTANCE_RESERVED_SLOTS; slot < nslots; ++slot) {
+        JS::SetReservedSlot(obj, slot, JS::UndefinedValue());
+      }
+    }
+  };
+
+  auto resetOnError = MakeScopeExit([&]() {
+    if (isProxy) {
+      // Also, the expando will have been pulled off of aObj in the proxy case.
+      // Put it back on an error.
+      DOMProxyHandler::RestoreExpando(aObj, expandoRollbackToken);
+      clearSlots(newobj);
+    }
+  });
 
   // Assert it's possible to create wrappers when |aObj| and |newobj| are in
   // different compartments.
@@ -2472,9 +2498,12 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
     propertyHolder = nullptr;
   }
 
+  // We've made it far enough to be able to mutate the source. Cleared slots
+  // will not be observed even if a failure occurs after this point.
+  resetOnError.release();
+
   // We've set up |newobj|, so we make it own the native by setting its reserved
-  // slot and nulling out the reserved slot of |obj|. Update the wrapper cache
-  // to keep everything consistent in case GC moves newobj.
+  // slot and nulling out the reserved slot of |obj|.
   //
   // NB: It's important to do this _after_ copying the properties to
   // propertyHolder. Otherwise, an object with |foo.x === foo| will
@@ -2482,19 +2511,37 @@ void UpdateReflectorGlobal(JSContext* aCx, JS::Handle<JSObject*> aObjArg,
   // foo.x.
   JS::SetReservedSlot(newobj, DOM_OBJECT_SLOT,
                       JS::GetReservedSlot(aObj, DOM_OBJECT_SLOT));
-  JS::SetReservedSlot(aObj, DOM_OBJECT_SLOT, JS::PrivateValue(nullptr));
+  size_t nslots = JSCLASS_RESERVED_SLOTS(JS::GetClass(aObj));
+  for (size_t slot = DOM_INSTANCE_RESERVED_SLOTS; slot < nslots; ++slot) {
+    JS::Value slotValue = JS::GetReservedSlot(aObj, slot);
+    if (slotValue.isObject()) {
+      JSObject* slotObj = &slotValue.toObject();
+      if (IsObservableArrayProxy(slotObj)) {
+        JS::SetReservedSlot(newobj, slot, slotValue);
+      }
+    }
+  }
+  clearSlots(aObj);
+
   nsWrapperCache* cache = nullptr;
   CallQueryInterface(native, &cache);
-  cache->UpdateWrapperForNewGlobal(native, newobj);
+
+  // For preserved wrappers the store buffer keeps mWrapper consistent across
+  // the transplant. For non-preserved wrappers clear mWrapper so that
+  // JSObjectsTenured doesn't follow a stale pointer if nursery GC fires.
+  bool preserving = cache->PreservingWrapper();
+  if (preserving) {
+    cache->UpdateWrapperForNewGlobal(native, newobj);
+  } else {
+    cache->ClearWrapper();
+  }
 
   aObj = xpc::TransplantObjectRetainingXrayExpandos(aCx, aObj, newobj);
   if (!aObj) {
     MOZ_CRASH();
   }
 
-  // Update the wrapper cache again if transplanting didn't use newobj but
-  // returned some other object.
-  if (aObj != newobj) {
+  if (!preserving || aObj != newobj) {
     MOZ_ASSERT(UnwrapDOMObjectToISupports(aObj) == native);
     cache->UpdateWrapperForNewGlobal(native, aObj);
   }
@@ -3555,6 +3602,7 @@ static bool GetBackingObject(JSContext* aCx, JS::Handle<JSObject*> aObj,
                   ? aObj
                   : js::UncheckedUnwrap(aObj,
                                         /* stopAtWindowProxy = */ false);
+  MOZ_ASSERT(aSlotIndex < JSCLASS_RESERVED_SLOTS(JS::GetClass(reflector)));
 
   // Retrieve the backing object from the reserved slot on the maplike/setlike
   // object. If it doesn't exist yet, create it.

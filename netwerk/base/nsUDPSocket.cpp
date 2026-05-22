@@ -114,17 +114,17 @@ class SetSocketOptionRunnable : public Runnable {
 //-----------------------------------------------------------------------------
 NS_IMPL_ISUPPORTS(nsUDPOutputStream, nsIOutputStream)
 
-nsUDPOutputStream::nsUDPOutputStream(nsUDPSocket* aSocket, PRFileDesc* aFD,
+nsUDPOutputStream::nsUDPOutputStream(nsUDPSocket* aSocket,
                                      PRNetAddr& aPrClientAddr)
-    : mSocket(aSocket),
-      mFD(aFD),
-      mPrClientAddr(aPrClientAddr),
-      mIsClosed(false) {}
+    : mSocket(aSocket), mPrClientAddr(aPrClientAddr), mIsClosed(false) {}
 
 NS_IMETHODIMP nsUDPOutputStream::Close() {
   if (mIsClosed) return NS_BASE_STREAM_CLOSED;
 
   mIsClosed = true;
+  if (mSocket->IsSocketClosed()) {
+    return NS_BASE_STREAM_CLOSED;
+  }
   return NS_OK;
 }
 
@@ -138,9 +138,18 @@ NS_IMETHODIMP nsUDPOutputStream::Write(const char* aBuf, uint32_t aCount,
                                        uint32_t* _retval) {
   if (mIsClosed) return NS_BASE_STREAM_CLOSED;
 
+  if (mSocket->IsSocketClosed()) {
+    mIsClosed = true;
+    return NS_BASE_STREAM_CLOSED;
+  }
+
   *_retval = 0;
+  PRFileDesc* fd = mSocket->GetFD();
+  if (!fd) {
+    return NS_BASE_STREAM_CLOSED;
+  }
   int32_t count =
-      PR_SendTo(mFD, aBuf, aCount, 0, &mPrClientAddr, PR_INTERVAL_NO_WAIT);
+      PR_SendTo(fd, aBuf, aCount, 0, &mPrClientAddr, PR_INTERVAL_NO_WAIT);
   if (count < 0) {
     PRErrorCode code = PR_GetError();
     return ErrorAccordingToNSPR(code);
@@ -458,7 +467,7 @@ void nsUDPSocket::OnSocketReady(PRFileDesc* fd, int16_t outFlags) {
   NS_NewPipe2(getter_AddRefs(pipeIn), getter_AddRefs(pipeOut), true, true,
               segsize, segcount);
 
-  RefPtr<nsUDPOutputStream> os = new nsUDPOutputStream(this, mFD, prClientAddr);
+  RefPtr<nsUDPOutputStream> os = new nsUDPOutputStream(this, prClientAddr);
   nsresult rv = NS_AsyncCopy(pipeIn, os, mSts, NS_ASYNCCOPY_VIA_READSEGMENTS,
                              UDP_PACKET_CHUNK_SIZE);
 
@@ -1224,8 +1233,6 @@ void nsUDPSocket::EnableWritePoll() {
   mPollFlags = (PR_POLL_WRITE | PR_POLL_READ | PR_POLL_EXCEPT);
 }
 
-bool nsUDPSocket::IsSocketClosed() { return mFD == nullptr; }
-
 NS_IMETHODIMP
 nsUDPSocket::SendBinaryStream(const nsACString& aHost, uint16_t aPort,
                               nsIInputStream* aStream) {
@@ -1247,7 +1254,10 @@ nsUDPSocket::SendBinaryStreamWithAddress(const NetAddr* aAddr,
   PR_InitializeNetAddr(PR_IpAddrAny, 0, &prAddr);
   NetAddrToPRNetAddr(aAddr, &prAddr);
 
-  RefPtr<nsUDPOutputStream> os = new nsUDPOutputStream(this, mFD, prAddr);
+  if (!mFD) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+  RefPtr<nsUDPOutputStream> os = new nsUDPOutputStream(this, prAddr);
   return NS_AsyncCopy(aStream, os, mSts, NS_ASYNCCOPY_VIA_READSEGMENTS,
                       UDP_PACKET_CHUNK_SIZE);
 }

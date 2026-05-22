@@ -40,9 +40,14 @@ git = "https://github.com/franziskuskiefer/cose-rust"
 rev = "43c22248d136c8b38fe42ea709d08da6355cf04b"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/wgpu?rev=85001b2436f686451d6d783225311c06b60e6680"]
+[source."git+https://github.com/gfx-rs/wgpu?rev=88862f1fa3fd0f0c1010e9fc999dcfe47b5ae8fc"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "85001b2436f686451d6d783225311c06b60e6680"
+rev = "88862f1fa3fd0f0c1010e9fc999dcfe47b5ae8fc"
+replace-with = "vendored-sources"
+
+[source."git+https://github.com/glandium/allocator-api2?rev=ad5f3d56a5a4519eff52af4ff85293431466ef5c"]
+git = "https://github.com/glandium/allocator-api2"
+rev = "ad5f3d56a5a4519eff52af4ff85293431466ef5c"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/glandium/rust-objc?rev=4de89f5aa9851ceca4d40e7ac1e2759410c04324"]
@@ -65,14 +70,19 @@ git = "https://github.com/hsivonen/chardetng_c"
 rev = "ed8a4c6f900a90d4dbc1d64b856e61490a1c3570"
 replace-with = "vendored-sources"
 
+[source."git+https://github.com/hsivonen/encoding_rs?rev=1236d1bc423e6ba35a06485f74a6304db2d703b5"]
+git = "https://github.com/hsivonen/encoding_rs"
+rev = "1236d1bc423e6ba35a06485f74a6304db2d703b5"
+replace-with = "vendored-sources"
+
 [source."git+https://github.com/jfkthame/mapped_hyph.git?rev=eff105f6ad7ec9b79816cfc1985a28e5340ad14b"]
 git = "https://github.com/jfkthame/mapped_hyph.git"
 rev = "eff105f6ad7ec9b79816cfc1985a28e5340ad14b"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla/application-services?rev=9b46be5beedb6a1d859014a71bac58e2d722f954"]
+[source."git+https://github.com/mozilla/application-services?rev=f5907a411e52a3985d0369d71c486eb507c2c4e6"]
 git = "https://github.com/mozilla/application-services"
-rev = "9b46be5beedb6a1d859014a71bac58e2d722f954"
+rev = "f5907a411e52a3985d0369d71c486eb507c2c4e6"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/mozilla/audioipc?rev=e6f44a2bd1e57d11dfc737632a9e849077632330"]
@@ -80,9 +90,9 @@ git = "https://github.com/mozilla/audioipc"
 rev = "e6f44a2bd1e57d11dfc737632a9e849077632330"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=579b75af21c040700eee6a1d8520e222699fe4cd"]
+[source."git+https://github.com/mozilla/cubeb-coreaudio-rs?rev=bebaa23317332c95734df76e25193c24a83a6840"]
 git = "https://github.com/mozilla/cubeb-coreaudio-rs"
-rev = "579b75af21c040700eee6a1d8520e222699fe4cd"
+rev = "bebaa23317332c95734df76e25193c24a83a6840"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/mozilla/cubeb-pulse-rs?rev=8678dcab1c287de79c4c184ccc2e065bc62b70e2"]

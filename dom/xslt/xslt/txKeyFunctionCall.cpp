@@ -183,6 +183,13 @@ nsresult txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
     return NS_OK;
   }
 
+  // This means an xsl:key's match or use expression is (indirectly)
+  // looking up the same key.
+  // XSLT allows for recursion but prohibits circularity.
+  if (indexEntry->mIsBeingIndexed) {
+    return NS_ERROR_XSLT_BAD_RECURSION;
+  }
+
   // The key needs to be indexed.
   txXSLKey* xslKey = mKeys.get(aKeyName);
   if (!xslKey) {
@@ -190,10 +197,15 @@ nsresult txKeyHash::getKeyNodes(const txExpandedName& aKeyName,
     return NS_ERROR_INVALID_ARG;
   }
 
+  indexEntry->mIsBeingIndexed = true;
   nsresult rv = xslKey->indexSubtreeRoot(aRoot, mKeyValues, aEs);
   NS_ENSURE_SUCCESS(rv, rv);
+  indexEntry = mIndexedKeys.GetEntry(indexKey);
 
-  indexEntry->mIndexed = true;
+  if (MOZ_LIKELY(indexEntry)) {
+    indexEntry->mIsBeingIndexed = false;
+    indexEntry->mIndexed = true;
+  }
 
   // Now that the key is indexed we can get its value.
   valueEntry = mKeyValues.GetEntry(valueKey);

@@ -607,7 +607,7 @@ export class FormAutofillHandler {
 
     this.#refillTimeoutId = lazy.setTimeout(() => {
       for (let [e, v] of filledElementValues) {
-        if (e.autofillState == FIELD_STATES.AUTO_FILLED && e.value === v) {
+        if (e.autofillState == FIELD_STATES.NORMAL || e.value) {
           // Nothing to do if the autofilled value wasn't cleared or the
           // element's autofill state has changed to NORMAL in the meantime
           continue;

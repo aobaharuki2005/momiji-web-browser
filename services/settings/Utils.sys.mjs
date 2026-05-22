@@ -51,7 +51,9 @@ ChromeUtils.defineLazyGetter(lazy, "isRunningTests", () => {
 // Overriding the server URL is normally disabled on Beta and Release channels,
 // except under some conditions.
 ChromeUtils.defineLazyGetter(lazy, "allowServerURLOverride", () => {
-  return true;
+
+  return true; // always override in LW
+
   if (!AppConstants.RELEASE_OR_BETA) {
     // Always allow to override the server URL on Nightly/DevEdition.
     return true;
@@ -110,11 +112,9 @@ const _cdnURLs = {};
 
 export var Utils = {
   get SERVER_URL() {
-    return (
-        AppConstants.REMOTE_SETTINGS_SERVER_URLS.includes(this.SERVER_URL) ||
-        this.SERVER_URL == "https://%.invalid" ||
-        lazy.isRunningTests
-     );
+    return lazy.allowServerURLOverride
+      ? lazy.gServerURL
+      : AppConstants.REMOTE_SETTINGS_SERVER_URL;
   },
 
   CHANGES_PATH: "/buckets/monitor/collections/changes/changeset",
@@ -151,6 +151,7 @@ export var Utils = {
     // Load dumps only if pulling data from the production server, or in tests.
     return (
       this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL ||
+      this.SERVER_URL == "https://%.invalid" ||
       lazy.isRunningTests
     );
   },
@@ -294,7 +295,6 @@ export var Utils = {
    *
    * Use this in order to leverage the `beConservative` flag, for
    * example to avoid using HTTP3 to fetch critical data.
-   *
    * @param input a resource
    * @param init request options
    * @returns a Response object

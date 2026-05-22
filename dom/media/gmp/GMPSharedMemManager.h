@@ -11,6 +11,8 @@
 
 namespace mozilla::gmp {
 
+class GMPVideoi420FrameImpl;
+
 enum class GMPSharedMemClass { Decoded, Encoded };
 
 class GMPSharedMemManager {
@@ -27,8 +29,11 @@ class GMPSharedMemManager {
   virtual bool MgrAllocShmem(size_t aSize, ipc::Shmem* aMem) { return false; }
   virtual void MgrDeallocShmem(ipc::Shmem& aMem) = 0;
 
+  virtual void MgrDecodedFrameDestroyed(GMPVideoi420FrameImpl* aFrame) {}
+
  protected:
   virtual bool MgrIsOnOwningThread() const = 0;
+  virtual bool MgrCanSend() const = 0;
 
   static constexpr size_t kMaxPools = 2;
 

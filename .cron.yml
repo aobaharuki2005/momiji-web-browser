@@ -248,8 +248,9 @@ jobs:
               mozilla-release:
                   - {hour: 7, minute: 0}
                   - {hour: 19, minute: 0}
-              # Bug 1965205: Enable this after esr140 got a release
-              mozilla-esr140: []
+              mozilla-esr140:
+                  - {hour: 7, minute: 0}
+                  - {hour: 19, minute: 0}
 
     - name: periodic-update
       job:
@@ -260,11 +261,9 @@ jobs:
           - mozilla-central
           - mozilla-beta
           - mozilla-release
-          # Bug 1965206: Enable this once esr140 has branched off of release
-          # - mozilla-esr140
+          - mozilla-esr140
       when:
-          - {weekday: 'Monday', hour: 8, minute: 0}
-          - {weekday: 'Thursday', hour: 8, minute: 0}
+          - {weekday: 'Monday', hour: 5, minute: 0}
 
     - name: daily-beta-perf
       job:

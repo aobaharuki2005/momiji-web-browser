@@ -1948,7 +1948,8 @@ static JS::CompartmentIterResult FindSameOriginCompartment(
   }
 
   auto* compartmentPrivate = xpc::CompartmentPrivate::Get(aCompartment);
-  if (!compartmentPrivate->CanShareCompartmentWith(data->principal)) {
+  if (!compartmentPrivate ||
+      !compartmentPrivate->CanShareCompartmentWith(data->principal)) {
     // Can't reuse this one, keep going.
     return JS::CompartmentIterResult::KeepGoing;
   }
@@ -4937,9 +4938,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     }
   });
 
-  const bool forPreview =
-      !StaticPrefs::print_always_print_silent() &&
-      !Preferences::GetBool("print.prefer_system_dialog", false);
+  const bool forPreview = !StaticPrefs::print_always_print_silent() &&
+                          !StaticPrefs::print_prefer_system_dialog();
   Print(nullptr, nullptr, nullptr, nullptr, IsPreview(forPreview),
         IsForWindowDotPrint::Yes, nullptr, nullptr, aError);
 #endif
@@ -5136,8 +5136,11 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     // The exception is if we're using the passed-in aCachedBrowsingContext, in
     // which case this is the second print with this static document clone that
     // we created the first time through, and we are responsible for cleaning it
-    // up.
-    closeWindowAfterPrint = usingCachedBrowsingContext;
+    // up. There's also an exception if we're directly using the system print
+    // dialog rather than our preview panel, because in this case the preview
+    // will not take care of cleaning up the cloned doc.
+    closeWindowAfterPrint =
+        usingCachedBrowsingContext || StaticPrefs::print_prefer_system_dialog();
   } else {
     // In this case the document was not a static clone, so we made a static
     // clone for printing purposes and must clean it up after the print is done.
@@ -5165,20 +5168,29 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
     }
   }
 
-  // When using window.print() with the new UI, we usually want to block until
-  // the print dialog is hidden. But we can't really do that if we have print
-  // callbacks, because we are inside a sync operation, and we want to run
-  // microtasks / etc that the print callbacks may create. It is really awkward
-  // to have this subtle behavior difference...
-  //
-  // We also want to do this for fuzzing, so that they can test window.print().
+  // Check whether we're in a case where we need to block in order for
+  // window.print() to function properly:
   const bool shouldBlock = [&] {
     if (aForWindowDotPrint == IsForWindowDotPrint::No) {
+      // We're not doing window.print; no need to block.
       return false;
     }
-    if (aIsPreview == IsPreview::Yes) {
+
+    // When window.print() spawns a print dialog (either our own tab-modal
+    // dialog or the system-print dialog), we usually want window.print() to
+    // block until the print dialog is hidden. But we can't really do that if
+    // we have print callbacks (mozPrintCallback), because we are inside a sync
+    // operation, and we want to run microtasks / etc that the print callbacks
+    // may create. It is really awkward to have this subtle behavior
+    // difference...
+    if (aIsPreview == IsPreview::Yes ||
+        StaticPrefs::print_prefer_system_dialog()) {
       return !hasPrintCallbacks;
     }
+
+    // We also want to allow window.print() to block for fuzzing, so that
+    // fuzzers can test either behavior without needing to interact with a
+    // dialog.
     return StaticPrefs::dom_window_print_fuzzing_block_while_printing();
   }();
 

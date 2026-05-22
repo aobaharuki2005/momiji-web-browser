@@ -20,11 +20,7 @@ export const DEFAULT_ENGINE_ID = "default-engine";
  * @type {Array<string>}
  * @description Supported backends.
  */
-export const BACKENDS = Object.freeze({
-  onnx: "onnx",
-  wllama: "wllama",
-  onnxNative: "onnx-native",
-});
+export const BACKENDS = ["onnx", "wllama", "onnx-native"];
 
 /**
  * @constant

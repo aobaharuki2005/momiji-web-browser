@@ -32,18 +32,18 @@ using namespace layers;  // for PlanarYCbCrData and BufferRecycleBin
 using namespace ipc;
 using namespace gfx;
 
-layers::TextureForwarder* KnowsCompositorVideo::GetTextureForwarder() {
-  auto* vbc = VideoBridgeChild::GetSingleton();
+RefPtr<layers::TextureForwarder> KnowsCompositorVideo::GetTextureForwarder() {
+  auto vbc = VideoBridgeChild::GetSingleton();
   return (vbc && vbc->CanSend()) ? vbc : nullptr;
 }
 layers::LayersIPCActor* KnowsCompositorVideo::GetLayersIPCActor() {
-  return GetTextureForwarder();
+  return GetTextureForwarder().get();
 }
 
 /* static */ already_AddRefed<KnowsCompositorVideo>
 KnowsCompositorVideo::TryCreateForIdentifier(
     const layers::TextureFactoryIdentifier& aIdentifier) {
-  VideoBridgeChild* child = VideoBridgeChild::GetSingleton();
+  auto child = VideoBridgeChild::GetSingleton();
   if (!child) {
     return nullptr;
   }
@@ -151,6 +151,11 @@ RemoteVideoDecoderParent::RemoteVideoDecoderParent(
 
 IPCResult RemoteVideoDecoderParent::RecvConstruct(
     ConstructResolver&& aResolver) {
+  if (mDecoder || mShutdown) {
+    aResolver(MediaResult(NS_ERROR_ALREADY_INITIALIZED, __func__));
+    return IPC_OK();
+  }
+
   auto imageContainer = MakeRefPtr<layers::ImageContainer>(
       layers::ImageUsageType::RemoteVideoDecoder,
       layers::ImageContainer::SYNCHRONOUS);
@@ -175,6 +180,11 @@ IPCResult RemoteVideoDecoderParent::RecvConstruct(
           return;
         }
         MOZ_ASSERT(aValue.ResolveValue());
+        if (self->mDecoder || self->mShutdown) {
+          aValue.ResolveValue()->Shutdown();
+          resolver(MediaResult(NS_ERROR_ALREADY_INITIALIZED, __func__));
+          return;
+        }
         self->mDecoder =
             new MediaDataDecoderProxy(aValue.ResolveValue().forget(),
                                       do_AddRef(self->mDecodeTaskQueue.get()));

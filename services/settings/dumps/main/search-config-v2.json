@@ -319,32 +319,6 @@
     },
     {
       "base": {
-        "classification": "unknown",
-        "name": "Azerdict",
-        "urls": {
-          "search": {
-            "base": "https://azerdict.com/english/",
-            "searchTermParamName": "word"
-          }
-        }
-      },
-      "id": "786aa916-a331-4b0c-8099-85927dd87be8",
-      "identifier": "azerdict",
-      "last_modified": 1702906502323,
-      "recordType": "engine",
-      "schema": 1702901819798,
-      "variants": [
-        {
-          "environment": {
-            "locales": [
-              "az"
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "base": {
         "aliases": [
           "百度",
           "baidu"
@@ -452,9 +426,9 @@
       },
       "id": "05645095-d26e-4f20-9137-f24a14a23f28",
       "identifier": "bing",
-      "last_modified": 1747257920659,
+      "last_modified": 1753192235011,
       "recordType": "engine",
-      "schema": 1747180809142,
+      "schema": 1753150537498,
       "variants": [
         {
           "environment": {
@@ -524,8 +498,7 @@
             {
               "environment": {
                 "applications": [
-                  "firefox-android",
-                  "focus-android"
+                  "firefox-android"
                 ],
                 "distributions": [
                   "dt-001"
@@ -552,8 +525,7 @@
             {
               "environment": {
                 "applications": [
-                  "firefox-android",
-                  "focus-android"
+                  "firefox-android"
                 ],
                 "distributions": [
                   "vivo-001"
@@ -2557,24 +2529,9 @@
         ],
         "classification": "general",
         "name": "Google",
-        "partnerCode": "firefox-b-d",
         "urls": {
           "search": {
             "base": "https://www.google.com/search",
-            "params": [
-              {
-                "name": "client",
-                "value": "{partnerCode}"
-              },
-              {
-                "experimentConfig": "google_channel_row",
-                "name": "channel"
-              },
-              {
-                "enterpriseValue": "entpr",
-                "name": "channel"
-              }
-            ],
             "searchTermParamName": "q"
           },
           "suggestions": {
@@ -2585,8 +2542,8 @@
                 "value": "firefox"
               },
               {
-                "experimentConfig": "search_rich_suggestions",
-                "name": "channel"
+                "name": "channel",
+                "value": "fen"
               }
             ],
             "searchTermParamName": "q"
@@ -2605,19 +2562,41 @@
               }
             ],
             "searchTermParamName": "q"
+          },
+          "visualSearch": {
+            "acceptedContentTypes": [
+              "image/jpeg",
+              "image/gif",
+              "image/png",
+              "image/avif",
+              "image/webp"
+            ],
+            "base": "https://lens.google.com/upload",
+            "displayNameMap": {
+              "default": "Google Lens"
+            },
+            "excludePartnerCodeFromTelemetry": true,
+            "params": [
+              {
+                "name": "ep",
+                "value": "fcm"
+              }
+            ],
+            "searchTermParamName": "url"
           }
         }
       },
       "id": "7ace4aa1-e762-4f4b-87b9-b23b3c3a930b",
       "identifier": "google",
-      "last_modified": 1742996759044,
+      "last_modified": 1774874010729,
       "recordType": "engine",
-      "schema": 1742915469472,
+      "schema": 1774656007453,
       "variants": [
         {
           "environment": {
             "allRegionsAndLocales": true
           },
+          "partnerCode": "firefox-b-d",
           "subVariants": [
             {
               "environment": {
@@ -2641,23 +2620,34 @@
               "telemetrySuffix": "b-m"
             }
           ],
-          "telemetrySuffix": "b-d"
+          "telemetrySuffix": "b-d",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                },
+                {
+                  "enterpriseValue": "entpr",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         },
         {
           "environment": {
             "regions": [
               "ru",
-              "tr",
-              "by",
-              "kz"
+              "by"
             ]
           },
-          "telemetrySuffix": "com-nocodes",
-          "urls": {
-            "search": {
-              "params": []
-            }
-          }
+          "telemetrySuffix": "com-nocodes"
         },
         {
           "environment": {
@@ -2690,6 +2680,32 @@
               },
               "partnerCode": "firefox-b-1-m",
               "telemetrySuffix": "b-1-m"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android"
+                ],
+                "distributions": [
+                  "aura-001"
+                ]
+              },
+              "partnerCode": "firefox-b-1-ar",
+              "telemetrySuffix": "b-1-ar"
+            },
+            {
+              "environment": {
+                "applications": [
+                  "firefox-android"
+                ],
+                "distributions": [
+                  "dt-002",
+                  "dt-003",
+                  "xiaomi-001"
+                ]
+              },
+              "partnerCode": "firefox-b-1-dt",
+              "telemetrySuffix": "b-1-dt"
             }
           ],
           "telemetrySuffix": "b-1-d",
@@ -2763,10 +2779,32 @@
           "environment": {
             "distributions": [
               "mint-001"
+            ],
+            "excludedRegions": [
+              "ru",
+              "by"
             ]
           },
           "partnerCode": "firefox-b-lm",
-          "telemetrySuffix": "b-lm"
+          "telemetrySuffix": "b-lm",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                },
+                {
+                  "enterpriseValue": "entpr",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         },
         {
           "environment": {
@@ -2778,33 +2816,149 @@
             ]
           },
           "partnerCode": "firefox-b-1-lm",
-          "telemetrySuffix": "b-1-lm"
+          "telemetrySuffix": "b-1-lm",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                },
+                {
+                  "enterpriseValue": "entpr",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         },
         {
           "environment": {
             "applications": [
-              "firefox-android",
-              "focus-android"
+              "firefox-android"
             ],
             "distributions": [
               "vivo-001"
+            ],
+            "excludedRegions": [
+              "ru",
+              "by"
             ]
           },
           "partnerCode": "firefox-b-vv",
-          "telemetrySuffix": "b-vv"
+          "telemetrySuffix": "b-vv",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         },
         {
           "environment": {
             "applications": [
-              "firefox-android",
-              "focus-android"
+              "firefox-android"
             ],
             "distributions": [
               "dt-001"
+            ],
+            "excludedRegions": [
+              "ru",
+              "by"
             ]
           },
           "partnerCode": "firefox-b-tf",
-          "telemetrySuffix": "b-tf"
+          "telemetrySuffix": "b-tf",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "environment": {
+            "applications": [
+              "firefox-android"
+            ],
+            "distributions": [
+              "aura-001"
+            ],
+            "excludedRegions": [
+              "us",
+              "ru",
+              "by"
+            ]
+          },
+          "partnerCode": "firefox-b-ar",
+          "telemetrySuffix": "b-ar",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "environment": {
+            "applications": [
+              "firefox-android"
+            ],
+            "distributions": [
+              "dt-002",
+              "dt-003",
+              "xiaomi-001"
+            ],
+            "excludedRegions": [
+              "us",
+              "ru",
+              "by"
+            ]
+          },
+          "partnerCode": "firefox-b-dt",
+          "telemetrySuffix": "b-dt",
+          "urls": {
+            "search": {
+              "params": [
+                {
+                  "name": "client",
+                  "value": "{partnerCode}"
+                },
+                {
+                  "experimentConfig": "google_channel_row",
+                  "name": "channel"
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -3261,41 +3415,32 @@
           "suggestions": {
             "base": "https://suggest.perplexity.ai/suggest",
             "searchTermParamName": "q"
-          },
-          "trending": {
-            "base": "https://www.perplexity.ai/rest/autosuggest/list-trending-suggest"
           }
         }
       },
       "id": "bb836721-7be9-4de6-ac18-520189a69076",
       "identifier": "perplexity",
-      "last_modified": 1749848937099,
+      "last_modified": 1772114960787,
       "recordType": "engine",
-      "schema": 1749743664865,
+      "schema": 1772067581442,
       "variants": [
         {
           "environment": {
-            "experiment": "perplexity"
-          },
-          "subVariants": [
-            {
-              "environment": {
-                "locales": [
-                  "de"
-                ],
-                "regions": [
-                  "de",
-                  "us",
-                  "gb"
-                ]
-              },
-              "urls": {
-                "trending": {
-                  "base": "https://www.perplexity.ai/rest/autosuggest/list-trending-suggest?lang=de-DE"
-                }
-              }
-            }
-          ]
+            "allRegionsAndLocales": true,
+            "applications": [
+              "firefox",
+              "firefox-ios"
+            ]
+          }
+        },
+        {
+          "environment": {
+            "allRegionsAndLocales": true,
+            "applications": [
+              "firefox-android"
+            ],
+            "minVersion": "145.0.1"
+          }
         }
       ]
     },
@@ -3513,31 +3658,20 @@
     },
     {
       "base": {
-        "charset": "EUC-JP",
         "classification": "unknown",
         "name": "楽天市場",
         "urls": {
           "search": {
-            "base": "https://pt.afl.rakuten.co.jp/c/013ca98b.cd7c5f0c/",
-            "params": [
-              {
-                "name": "sv",
-                "value": "2"
-              },
-              {
-                "name": "p",
-                "value": "0"
-              }
-            ],
+            "base": "https://search.rakuten.co.jp/search/mall",
             "searchTermParamName": "sitem"
           }
         }
       },
       "id": "ab6f7178-b0be-452a-82f2-f5df8df2d836",
       "identifier": "rakuten",
-      "last_modified": 1702906502326,
+      "last_modified": 1753710379308,
       "recordType": "engine",
-      "schema": 1702901819182,
+      "schema": 1753668939392,
       "variants": [
         {
           "environment": {
@@ -3709,6 +3843,50 @@
               "partnerCode": "SearchBox"
             }
           ]
+        }
+      ]
+    },
+    {
+      "base": {
+        "aliases": [
+          "startpage"
+        ],
+        "classification": "general",
+        "name": "Startpage",
+        "partnerCode": "startpage.apex.desktop",
+        "urls": {
+          "search": {
+            "base": "https://www.startpage.com/sp/search",
+            "params": [
+              {
+                "name": "segment",
+                "value": "{partnerCode}"
+              }
+            ],
+            "searchTermParamName": "q"
+          },
+          "suggestions": {
+            "base": "https://www.startpage.com/suggestions?partner=apex&format=opensearch",
+            "params": [
+              {
+                "name": "segment",
+                "value": "{partnerCode}"
+              }
+            ],
+            "searchTermParamName": "q"
+          }
+        }
+      },
+      "id": "5fb2256b-fdb0-42e8-8d8a-0d633b14e8d5",
+      "identifier": "startpage",
+      "last_modified": 1778165854657,
+      "recordType": "engine",
+      "schema": 1778115248130,
+      "variants": [
+        {
+          "environment": {
+            "experiment": "startpage"
+          }
         }
       ]
     },
@@ -8242,5 +8420,5 @@
       "schema": 1707824831520
     }
   ],
-  "timestamp": 1749848937099
+  "timestamp": 1778165854657
 }

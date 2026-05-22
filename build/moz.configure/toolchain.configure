@@ -233,7 +233,7 @@ with only_when(host_is_osx | target_is_osx):
     )
 
     def mac_sdk_min_version():
-        return "15.4"
+        return "15.5"
 
     @depends(
         "--with-macos-sdk",
@@ -2026,7 +2026,7 @@ def select_linker_tmpl(host_or_target):
             # ensure consistent output.
             env["LC_ALL"] = "C"
             retcode, stdout, stderr = get_cmd_output(*cmd, env=env)
-            if retcode == 1 and "options" in stderr:
+            if retcode == 1 and "unknown options" in stderr:
                 kind = "ld64"
 
             elif retcode != 0:
@@ -2443,7 +2443,7 @@ set_define("_LIBCPP_HIDE_FROM_ABI", libcxx_override_visibility.hide_from_abi)
 @depends(target, build_environment)
 def visibility_flags(target, env):
     if target.os != "WINNT":
-        if target.kernel == "Darwin":
+        if target.kernel in ("Darwin", "FreeBSD", "OpenBSD"):
             return ("-fvisibility=hidden", "-fvisibility-inlines-hidden")
         return (
             "-I%s/system_wrappers" % os.path.join(env.dist),

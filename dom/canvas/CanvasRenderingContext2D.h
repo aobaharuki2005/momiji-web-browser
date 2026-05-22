@@ -613,11 +613,13 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
  protected:
   /**
    * Helper to parse a value for the letterSpacing or wordSpacing attribute.
-   * If successful, returns the result in aValue, and the whitespace-normalized
-   * value string in aNormalized; if unsuccessful these are left untouched.
+   * If the string can be parsed, returns Some(value) and sets aNormalized to
+   * the normalized form of the specified string. If it cannot be parsed as a
+   * spacing value, returns Nothing, and aNormalized is untouched.
+   * Note that ParseSpacing may flush style (to resolve font-relative units).
    */
-  void ParseSpacing(const nsACString& aSpacing, float* aValue,
-                    nsACString& aNormalized);
+  mozilla::Maybe<float> ParseSpacing(const nsACString& aSpacing,
+                                     nsACString& aNormalized);
 
   already_AddRefed<const ComputedStyle> ResolveStyleForProperty(
       nsCSSPropertyID aProperty, const nsACString& aValue);
@@ -1000,10 +1002,14 @@ class CanvasRenderingContext2D : public nsICanvasRenderingContextInternal,
    * last call to UpdateFilter and now.
    */
   const gfx::FilterDescription& EnsureUpdatedFilter() {
-    bool isWriteOnly = mCanvasElement && mCanvasElement->IsWriteOnly();
+    bool isWriteOnly = IsWriteOnly() ||
+                       (mCanvasElement && mCanvasElement->IsWriteOnly()) ||
+                       (mOffscreenCanvas && mOffscreenCanvas->IsWriteOnly());
     if (CurrentState().filterSourceGraphicTainted != isWriteOnly) {
-      UpdateFilter(/* aFlushIfNeeded = */ true);
-      EnsureTarget();
+      // Do not flush here: this runs inside drawing operations that hold raw
+      // references to mPath/state, and a flush can run script that resets the
+      // context, leading to UAF. Flush already happened at SetFilter() time.
+      UpdateFilter(/* aFlushIfNeeded = */ false);
     }
     MOZ_ASSERT(CurrentState().filterSourceGraphicTainted == isWriteOnly);
     return CurrentState().filter;

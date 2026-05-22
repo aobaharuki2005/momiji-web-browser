@@ -104,6 +104,10 @@ bool TimeoutManager::IsActive() const {
     return true;
   }
 
+  if (mIsChromeWorker) {
+    return true;
+  }
+
   // Check if we're playing audio
   if (mGlobalObject.IsPlayingAudio()) {
     return true;
@@ -322,7 +326,7 @@ TimeDuration TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   TimeDuration result = aTimeout->mInterval;
 
   if (aTimeout->mNestingLevel >=
-      StaticPrefs::dom_clamp_timeout_nesting_level()) {
+      StaticPrefs::dom_clamp_timeout_nesting_level() && !mIsChromeWorker) {
     uint32_t minTimeoutValue = StaticPrefs::dom_min_timeout_value();
     result = TimeDuration::Max(result,
                                TimeDuration::FromMilliseconds(minTimeoutValue));
@@ -404,7 +408,7 @@ uint32_t TimeoutManager::sNestingLevel = 0;
 
 TimeoutManager::TimeoutManager(nsIGlobalObject& aHandle,
                                uint32_t aMaxIdleDeferMS,
-                               nsISerialEventTarget* aEventTarget)
+                               nsISerialEventTarget* aEventTarget, bool aIsChromeWorker)
     : mGlobalObject(aHandle),
       mExecutor(new TimeoutExecutor(this, false, 0)),
       mIdleExecutor(new TimeoutExecutor(this, true, aMaxIdleDeferMS)),
@@ -425,7 +429,8 @@ TimeoutManager::TimeoutManager(nsIGlobalObject& aHandle,
       mBudgetThrottleTimeouts(false),
       mIsLoading(false),
       mEventTarget(aEventTarget),
-      mIsWindow(aHandle.GetAsInnerWindow()) {
+      mIsWindow(aHandle.GetAsInnerWindow()),
+      mIsChromeWorker(aIsChromeWorker) {
   MOZ_LOG(gTimeoutLog, LogLevel::Debug,
           ("TimeoutManager %p created, tracking bucketing %s\n", this,
            StaticPrefs::privacy_trackingprotection_annotate_channels()

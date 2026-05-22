@@ -3,9 +3,17 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use anyhow::Result;
-use crash_helper_common::{BreakpadChar, BreakpadData, IPCChannel, IPCConnector, IPCListener};
-use nix::unistd::{execv, fork, getpid, ForkResult};
-use std::ffi::{CStr, CString};
+use crash_helper_common::{ignore_eintr, BreakpadChar, BreakpadData, IPCChannel, IPCConnector};
+use nix::{
+    spawn::{posix_spawn, PosixSpawnAttr, PosixSpawnFileActions},
+    sys::wait::waitpid,
+    unistd::getpid,
+};
+use std::{
+    env,
+    ffi::{CStr, CString},
+    os::unix::ffi::OsStringExt,
+};
 
 use crate::CrashHelperClient;
 
@@ -16,19 +24,17 @@ impl CrashHelperClient {
         minidump_path: *const BreakpadChar,
     ) -> Result<CrashHelperClient> {
         let channel = IPCChannel::new()?;
-        let (listener, server_endpoint, client_endpoint) = channel.deconstruct();
-        let _pid = CrashHelperClient::spawn_crash_helper(
+        let (_listener, server_endpoint, client_endpoint) = channel.deconstruct();
+        CrashHelperClient::spawn_crash_helper(
             program,
             breakpad_data,
             minidump_path,
-            listener,
             server_endpoint,
         )?;
 
         Ok(CrashHelperClient {
             connector: client_endpoint,
-            #[cfg(target_os = "linux")]
-            pid: _pid,
+            spawner_thread: None,
         })
     }
 
@@ -36,39 +42,52 @@ impl CrashHelperClient {
         program: *const BreakpadChar,
         breakpad_data: BreakpadData,
         minidump_path: *const BreakpadChar,
-        listener: IPCListener,
         endpoint: IPCConnector,
-    ) -> Result<nix::libc::pid_t> {
+    ) -> Result<()> {
         let parent_pid = getpid().to_string();
         let parent_pid_arg = unsafe { CString::from_vec_unchecked(parent_pid.into_bytes()) };
-        let pid = unsafe { fork() }?;
+        let program = unsafe { CStr::from_ptr(program) };
+        let breakpad_data_arg =
+            unsafe { CString::from_vec_unchecked(breakpad_data.to_string().into_bytes()) };
+        let minidump_path = unsafe { CStr::from_ptr(minidump_path) };
+        let endpoint_arg = endpoint.serialize();
 
-        // TODO: daemonize the helper by double fork()'ing and waiting on the child
-        match pid {
-            ForkResult::Child => {
-                let program = unsafe { CStr::from_ptr(program) };
-                let breakpad_data_arg =
-                    unsafe { CString::from_vec_unchecked(breakpad_data.to_string().into_bytes()) };
-                let minidump_path = unsafe { CStr::from_ptr(minidump_path) };
-                let listener_arg = listener.serialize();
-                let endpoint_arg = endpoint.serialize();
+        let file_actions = PosixSpawnFileActions::init()?;
+        let attr = PosixSpawnAttr::init()?;
 
-                let _ = execv(
-                    program,
-                    &[
-                        program,
-                        &parent_pid_arg,
-                        &breakpad_data_arg,
-                        minidump_path,
-                        &listener_arg,
-                        &endpoint_arg,
-                    ],
-                );
+        let env: Vec<CString> = env::vars_os()
+            .map(|(key, value)| {
+                let mut s = key;
+                s.push("=");
+                s.push(value);
+                s
+            })
+            .filter_map(|string| CString::new(string.into_vec()).ok())
+            .collect();
 
-                // This point should be unreachable, but let's play it safe
-                unsafe { nix::libc::_exit(1) };
-            }
-            ForkResult::Parent { child } => Ok(child.as_raw()),
-        }
+        let pid = posix_spawn(
+            program,
+            &file_actions,
+            &attr,
+            &[
+                program,
+                &parent_pid_arg,
+                &breakpad_data_arg,
+                minidump_path,
+                &endpoint_arg,
+            ],
+            env.as_slice(),
+        )?;
+
+        // The child should exit quickly after having forked off the
+        // actual crash helper process, let's wait for it.
+        ignore_eintr!(waitpid(pid, None))?;
+
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    pub(crate) fn prepare_for_minidump(_pid: crash_helper_common::Pid) {
+        // This is a no-op on platforms that don't need it
     }
 }

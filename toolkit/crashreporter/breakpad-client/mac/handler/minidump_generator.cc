@@ -57,42 +57,6 @@
 #include "common/mac/file_id.h"
 #include "common/mac/macho_id.h"
 #include "common/mac/string_utilities.h"
-#include <sys/utsname.h>
-
-// let's sing it one more time...
-// he lives in a blue house with a blue window
-// blue is his colour, and all that he wears
-// blue are the streets and trees are too
-// he has a girlfriend, and she is so blue
-//
-// blue are the people here that walk around
-// blue like his corvette, that's standing outside
-// blue are the words he says and what he thinks
-// blue is the colour, that lives inside @blueboxd
-//
-// i'm blue--da ba dee, da ba dai, da ba dee daba dai--box (@blueboxd)
-
-static int readVersion() {
-    struct utsname info;
-    if (uname(&info) != 0) {
-        return 0;
-    }
-    if (strcmp(info.sysname, "Darwin") != 0) {
-        return 0;
-    }
-    char* dot = strchr(info.release, '.');
-    if (!dot) {
-        return 0;
-    }
-    int version = atoi(info.release);
-    return version;
-}
-static int darwinVersion() {
-    static int darwin_version = readVersion();
-    return darwin_version;
-}
-using namespace mozilla;
-
 
 using MacStringUtils::ConvertToString;
 using MacStringUtils::IntegerValueAtIndex;
@@ -1646,8 +1610,7 @@ bool MinidumpGenerator::WriteCVRecord(MDRawModule *module, int cpu_type, int cpu
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1676102.
   while (true) {
     if (in_memory) {
-      if ((out_of_process && !dyld_or_in_dyld_shared_cache) 
-              || (darwinVersion() <= 13)) {
+      if (out_of_process && !dyld_or_in_dyld_shared_cache) {
         break;
       }
       MacFileUtilities::MachoID macho(module_path,

@@ -191,7 +191,7 @@ treeherder:
         'Boot': 'Bootstrap'
         'Attr-L10n': 'Build Attribution'
         'android-l10n': 'Import strings from android-l10n repo'
-        'update-test': 'Test updates to release from older firefox versions'
+        'updt-tst': 'Test updates to release from older firefox versions'
 
         # The below symbols are from firefox-android (fenix/focus/android-components)
         'buildconfig': 'Make sure the content of .buildconfig.yml matches what gradle knows about its projects'
@@ -643,11 +643,36 @@ taskgraph:
 
 workers:
     aliases:
-        b-linux.*:
+        b-linux-gcp:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: '{alias}'
+            worker-type: b-linux
+        b-linux-gcp-aarch64:
+            provisioner: '{trust-domain}-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-aarch64
+        b-linux-kvm-gcp:
+            provisioner: '{trust-domain}-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-kvm
+        b-linux-medium-gcp:
+            provisioner: '{trust-domain}-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-medium
+        b-linux-large-gcp:
+            provisioner: '{trust-domain}-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-large
+        b-linux-xlarge-gcp:
+            provisioner: '{trust-domain}-{level}'
+            implementation: docker-worker
+            os: linux
+            worker-type: b-linux-xlarge
         b-win2012:
             provisioner: '{trust-domain}-{level}'
             implementation: generic-worker
@@ -677,12 +702,12 @@ workers:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: '{alias}'
+            worker-type: images
         images-gcp-aarch64:
             provisioner: '{trust-domain}-{level}'
             implementation: docker-worker
             os: linux
-            worker-type: '{alias}'
+            worker-type: images-aarch64
         addon:
             provisioner: scriptworker-k8s
             implementation: push-addons
@@ -750,15 +775,15 @@ workers:
             provisioner: scriptworker-prov-v1
             implementation: scriptworker-signing
             os: macosx
-            worker-type: depsigning-mac-v1
+            worker-type: dep-gecko-signing-mac14m2
         mac-signing:
             provisioner: scriptworker-prov-v1
             implementation: scriptworker-signing
             os: macosx
             worker-type:
                 by-release-level:
-                    production: signing-mac-v1
-                    staging: depsigning-mac-v1
+                    production: gecko-signing-mac14m2
+                    staging: dep-gecko-signing-mac14m2
         push-apk:
             provisioner: scriptworker-k8s
             implementation: scriptworker-pushapk
@@ -838,16 +863,6 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: '{alias}'
-        t-linux(-large|-xlarge|-xlarge-source):
-            provisioner: '{trust-domain}-t'
-            implementation: docker-worker
-            os: linux
-            worker-type: '{alias}-gcp'
-        t-linux(-large|-xlarge|-xlarge-source)-noscratch:
-            provisioner: '{trust-domain}-t'
-            implementation: docker-worker
-            os: linux
-            worker-type: '{alias}-gcp'
         t-linux-kvm:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
@@ -983,7 +998,7 @@ workers:
             provisioner: '{trust-domain}-t'
             implementation: docker-worker
             os: linux
-            worker-type: misc-gcp
+            worker-type: misc
 
 
 mac-signing:

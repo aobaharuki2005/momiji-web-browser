@@ -74,6 +74,8 @@ const MACOS_KERNEL_MAJOR_VERSION_MAVERICKS: u32 = 13;
 const MACOS_KERNEL_MAJOR_VERSION_SIERRA: u32 = 16;
 const MACOS_KERNEL_MAJOR_VERSION_LION: u32 = 11;
 
+
+
 // Global registry for tracking valid sync callback pointers.
 static SYNC_CALLBACK_REGISTRY: LazyLock<Mutex<HashSet<usize>>> =
     LazyLock::new(|| Mutex::new(HashSet::new()));
@@ -96,7 +98,7 @@ where
     }
 }
 
-#[derive(Debug, PartialEq, PartialOrd)]
+#[derive(Debug, PartialOrd, PartialEq)]
 enum ParseMacOSKernelVersionError {
     SysCtl,
     Malformed,

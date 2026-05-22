@@ -233,7 +233,7 @@ void HTMLSlotElement::Assign(const Sequence<OwningElementOrText>& aNodes) {
       if (root) {
         // If not in a shadow tree, the flat tree is not really changing, so no
         // need to invalidate layout. Same applies to other callers here.
-        ShadowRoot::InvalidateStyleAndLayoutOnSubtree(this);      
+        ShadowRoot::InvalidateStyleAndLayoutOnSubtree(this);
       }
       ClearAssignedNodes();
     }

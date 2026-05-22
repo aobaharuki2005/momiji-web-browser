@@ -73,6 +73,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsChannelClassifier.h"
 #include "nsFocusManager.h"
 #include "ReferrerInfo.h"
@@ -213,8 +214,8 @@ already_AddRefed<nsIDocShell> nsObjectLoadingContent::SetupDocShell(
   }
 
   if (!docShell) {
-    mFrameLoader->Destroy();
-    mFrameLoader = nullptr;
+    RefPtr<nsFrameLoader> loader = std::move(mFrameLoader);
+    loader->Destroy();
     return nullptr;
   }
 
@@ -734,11 +735,12 @@ nsObjectLoadingContent::UpdateObjectParameters() {
   /// Codebase
   ///
 
-  nsAutoString codebaseStr;
   nsIURI* docBaseURI = el->GetBaseURI();
-  el->GetAttr(nsGkAtoms::codebase, codebaseStr);
 
-  if (!codebaseStr.IsEmpty()) {
+  nsAutoString codebaseStr;
+  el->GetAttr(nsGkAtoms::codebase, codebaseStr);
+  if (StaticPrefs::dom_object_embed_codebase_enabled() &&
+      !codebaseStr.IsEmpty()) {
     rv = nsContentUtils::NewURIWithDocumentCharset(
         getter_AddRefs(newBaseURI), codebaseStr, el->OwnerDoc(), docBaseURI);
     if (NS_FAILED(rv)) {
@@ -1282,8 +1284,8 @@ nsresult nsObjectLoadingContent::LoadObject(bool aNotify, bool aForceLoad,
       nsCOMPtr<nsIURILoader> uriLoader(components::URILoader::Service());
       if (NS_WARN_IF(!uriLoader)) {
         MOZ_ASSERT_UNREACHABLE("Failed to get uriLoader service");
-        mFrameLoader->Destroy();
-        mFrameLoader = nullptr;
+        RefPtr<nsFrameLoader> loader = std::move(mFrameLoader);
+        loader->Destroy();
         break;
       }
 
@@ -1589,11 +1591,6 @@ uint32_t nsObjectLoadingContent::GetCapabilities() const {
 }
 
 void nsObjectLoadingContent::Destroy() {
-  if (mFrameLoader) {
-    mFrameLoader->Destroy();
-    mFrameLoader = nullptr;
-  }
-
   // Reset state so that if the element is re-appended to tree again (e.g.
   // adopting to another document), it will reload resource again.
   UnloadObject();
@@ -1617,8 +1614,8 @@ void nsObjectLoadingContent::Unlink(nsObjectLoadingContent* tmp) {
 
 void nsObjectLoadingContent::UnloadObject(bool aResetState) {
   if (mFrameLoader) {
-    mFrameLoader->Destroy();
-    mFrameLoader = nullptr;
+    RefPtr<nsFrameLoader> loader = std::move(mFrameLoader);
+    loader->Destroy();
   }
 
   if (aResetState) {
@@ -1716,21 +1713,28 @@ void nsObjectLoadingContent::TriggerInnerFallbackLoads() {
   }
   // Do a depth-first traverse of node tree with the current element as root,
   // looking for non-<param> elements.  If we find some then we have an HTML
-  // fallback for this element.
+  // fallback for this element
+  AutoTArray<RefPtr<nsIContent>, 4> targets;
   for (nsIContent* child = el->GetFirstChild(); child;) {
     // <object> and <embed> elements in the fallback need to StartObjectLoad.
     // Their children should be ignored since they are part of those element's
     // fallback.
-    if (auto* embed = HTMLEmbedElement::FromNode(child)) {
-      embed->StartObjectLoad(true, true);
-      // Skip the children
-      child = child->GetNextNonChildNode(el);
-    } else if (auto* object = HTMLObjectElement::FromNode(child)) {
-      object->StartObjectLoad(true, true);
-      // Skip the children
+    if (child->IsAnyOfHTMLElements(nsGkAtoms::embed, nsGkAtoms::object)) {
+      targets.AppendElement(child);
       child = child->GetNextNonChildNode(el);
     } else {
       child = child->GetNextNode(el);
+    }
+  }
+
+  for (RefPtr<nsIContent>& target : targets) {
+    if (!target->IsInclusiveDescendantOf(el)) {
+      continue;
+    }
+    if (auto* embed = HTMLEmbedElement::FromNode(target)) {
+      embed->StartObjectLoad(true, true);
+    } else if (auto* object = HTMLObjectElement::FromNode(target)) {
+      object->StartObjectLoad(true, true);
     }
   }
 }

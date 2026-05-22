@@ -63,7 +63,7 @@ int nr_stun_client_ctx_create(char *label, nr_socket *sock, nr_transport_addr *p
 
     ctx->state=NR_STUN_CLIENT_STATE_INITTED;
 
-    if(!(ctx->label=r_strdup(label)))
+    if(!(ctx->label=strdup(label)))
       ABORT(R_NO_MEMORY);
 
     ctx->sock=sock;
@@ -832,6 +832,16 @@ int nr_stun_client_process_response(nr_stun_client_ctx *ctx, UCHAR *msg, int len
     return(_status);
   }
 
+static void nr_stun_client_ctx_destroy_final(NR_SOCKET s, int b, void *cb_arg)
+  {
+    nr_stun_client_ctx *ctx=(nr_stun_client_ctx*)cb_arg;
+    free(ctx->nonce);
+    free(ctx->realm);
+
+    free(ctx->label);
+    free(ctx);
+  }
+
 int nr_stun_client_ctx_destroy(nr_stun_client_ctx **ctxp)
   {
     nr_stun_client_ctx *ctx;
@@ -843,13 +853,7 @@ int nr_stun_client_ctx_destroy(nr_stun_client_ctx **ctxp)
     *ctxp=0;
 
     nr_stun_client_reset(ctx);
-
-    RFREE(ctx->nonce);
-    RFREE(ctx->realm);
-
-    RFREE(ctx->label);
-    RFREE(ctx);
-
+    NR_ASYNC_TIMER_SET(0, nr_stun_client_ctx_destroy_final, ctx, &ctx->destroy_timer_handle);
     return(0);
   }
 

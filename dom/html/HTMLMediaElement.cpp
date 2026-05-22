@@ -2161,6 +2161,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLMediaElement,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMediaKeys)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mIncomingMediaKeys)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSelectedVideoStreamTrack)
+  tmp->mSelectedVideoStreamTrackGraph = nullptr;
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingPlayPromises)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSeekDOMPromise)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSetMediaKeysDOMPromise)
@@ -2882,17 +2883,24 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(dom::MediaTrack* aTrack) {
 
       mSelectedVideoStreamTrack = t->GetVideoStreamTrack();
       mSelectedVideoStreamTrack->AddPrincipalChangeObserver(this);
-      if (mMediaStreamRenderer) {
-        mMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
+      if (!mSelectedVideoStreamTrackGraph) {
+        mSelectedVideoStreamTrackGraph = mSelectedVideoStreamTrack->Graph();
       }
-      if (mSecondaryMediaStreamRenderer) {
-        mSecondaryMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
+      if (mSelectedVideoStreamTrackGraph ==
+          mSelectedVideoStreamTrack->Graph()) {
+        if (mMediaStreamRenderer) {
+          mMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
+        }
+        if (mSecondaryMediaStreamRenderer) {
+          mSecondaryMediaStreamRenderer->AddTrack(mSelectedVideoStreamTrack);
+        }
+        if (mMediaInfo.HasVideo()) {
+          mMediaInfo.mVideo.SetAlpha(mSelectedVideoStreamTrack->HasAlpha());
+        }
+        nsContentUtils::CombineResourcePrincipals(
+            &mSrcStreamVideoPrincipal,
+            mSelectedVideoStreamTrack->GetPrincipal());
       }
-      if (mMediaInfo.HasVideo()) {
-        mMediaInfo.mVideo.SetAlpha(mSelectedVideoStreamTrack->HasAlpha());
-      }
-      nsContentUtils::CombineResourcePrincipals(
-          &mSrcStreamVideoPrincipal, mSelectedVideoStreamTrack->GetPrincipal());
     }
   }
 
@@ -3130,6 +3138,9 @@ uint32_t HTMLMediaElement::GetPreloadDefault() const {
   if (mMediaSource) {
     return HTMLMediaElement::PRELOAD_METADATA;
   }
+  if (ShouldResistFingerprinting(RFPTarget::NetworkConnection)) {
+    return HTMLMediaElement::PRELOAD_METADATA;
+  }
   if (OnCellularConnection()) {
     return Preferences::GetInt("media.preload.default.cellular",
                                HTMLMediaElement::PRELOAD_NONE);
@@ -3139,6 +3150,9 @@ uint32_t HTMLMediaElement::GetPreloadDefault() const {
 }
 
 uint32_t HTMLMediaElement::GetPreloadDefaultAuto() const {
+  if (ShouldResistFingerprinting(RFPTarget::NetworkConnection)) {
+    return HTMLMediaElement::PRELOAD_ENOUGH;
+  }
   if (OnCellularConnection()) {
     return Preferences::GetInt("media.preload.auto.cellular",
                                HTMLMediaElement::PRELOAD_METADATA);
@@ -5478,6 +5492,7 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback() {
     mSelectedVideoStreamTrack->RemovePrincipalChangeObserver(this);
   }
   mSelectedVideoStreamTrack = nullptr;
+  mSelectedVideoStreamTrackGraph = nullptr;
 
   MOZ_ASSERT_IF(mSecondaryMediaStreamRenderer,
                 !mMediaStreamRenderer == !mSecondaryMediaStreamRenderer);

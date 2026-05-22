@@ -34,8 +34,6 @@
 
 #include <pthread.h>
 #include <servers/bootstrap.h>
-#include <os/lock.h>
-#include <libkern/OSAtomic.h>
 
 namespace google_breakpad {
 
@@ -96,17 +94,9 @@ void CrashGenerationClient::Initialization() {
                                              &task_bootstrap_port);
 
   if (rv != KERN_SUCCESS) {
-    if (__builtin_available(macOS 10.12, *)) {
-      os_unfair_lock_lock(&sync_.mUnfairLock);
-    } else {
-      OSSpinLockLock(&sync_.mSpinLock);
-    }
+    os_unfair_lock_lock(&sync_);
     state_ = State::Failed;
-    if (__builtin_available(macOS 10.12, *)) {
-      os_unfair_lock_unlock(&sync_.mUnfairLock);
-    } else {
-      OSSpinLockUnlock(&sync_.mSpinLock);
-    }
+    os_unfair_lock_unlock(&sync_);
     return;
   }
 
@@ -116,18 +106,10 @@ void CrashGenerationClient::Initialization() {
                            &send_port);
 
     if (rv == KERN_SUCCESS) {
-      if (__builtin_available(macOS 10.12, *)) {
-        os_unfair_lock_lock(&sync_.mUnfairLock);
-      } else {
-        OSSpinLockLock(&sync_.mSpinLock);
-      }
+      os_unfair_lock_lock(&sync_);
       state_ = State::Initialized;
       sender_ = std::make_unique<MachPortSender>(send_port);
-      if (__builtin_available(macOS 10.12, *)) {
-        os_unfair_lock_unlock(&sync_.mUnfairLock);
-      } else {
-        OSSpinLockUnlock(&sync_.mSpinLock);
-      }
+      os_unfair_lock_unlock(&sync_);
       return;
     } else if (rv == BOOTSTRAP_UNKNOWN_SERVICE) {
       struct timespec delay = {
@@ -137,17 +119,9 @@ void CrashGenerationClient::Initialization() {
 
       nanosleep(&delay, nullptr);
     } else {
-      if (__builtin_available(macOS 10.12, *)) {
-        os_unfair_lock_lock(&sync_.mUnfairLock);
-      } else {
-        OSSpinLockLock(&sync_.mSpinLock);
-      }
+      os_unfair_lock_lock(&sync_);
       state_ = State::Failed;
-      if (__builtin_available(macOS 10.12, *)) {
-        os_unfair_lock_unlock(&sync_.mUnfairLock);
-      } else {
-        OSSpinLockUnlock(&sync_.mSpinLock);
-      }
+      os_unfair_lock_unlock(&sync_);
       return;
     }
   }
@@ -166,22 +140,13 @@ void CrashGenerationClient::AsynchronousInitialization() {
 
 bool CrashGenerationClient::WaitForInitialization() {
   while (true) {
-    if (__builtin_available(macOS 10.12, *)) {
-      while (!os_unfair_lock_trylock(&sync_.mUnfairLock)) {
-        // We can't wait here as we may be in the exception handler, so spin
-        // instead until we get the lock.
-      }
-    } else {
-      while (!OSSpinLockTry(&sync_.mSpinLock)) {
-      }
+    while (!os_unfair_lock_trylock(&sync_)) {
+      // We can't wait here as we may be in the exception handler, so spin
+      // instead until we get the lock.
     }
 
     State state = state_;
-    if (__builtin_available(macOS 10.12, *)) {
-      os_unfair_lock_unlock(&sync_.mUnfairLock);
-    } else {
-      OSSpinLockUnlock(&sync_.mSpinLock);
-    }
+    os_unfair_lock_unlock(&sync_);
 
     switch (state) {
       case Initializing:

@@ -271,12 +271,15 @@ void HttpChannelParent::CleanupBackgroundChannel() {
     }
 
     // This HttpChannelParent might still have a reference from
-    // BackgroundChannelRegistrar.
-    nsCOMPtr<nsIBackgroundChannelRegistrar> registrar =
+    // BackgroundChannelRegistrar. Only remove our own entry; another
+    // HttpChannelParent may have been registered under the same channel Id
+    // (e.g. after a redirect), and we must not remove that entry.
+    RefPtr<BackgroundChannelRegistrar> registrar =
         BackgroundChannelRegistrar::GetOrCreate();
     MOZ_ASSERT(registrar);
-
-    registrar->DeleteChannel(mChannel->ChannelId());
+    if (registrar) {
+      registrar->DeleteChannelIfMatches(mChannel->ChannelId(), this);
+    }
 
     // If mAsyncOpenBarrier is greater than zero, it means AsyncOpen procedure
     // is still on going. we need to abort AsyncOpen with failure to destroy
@@ -980,6 +983,11 @@ HttpChannelParent::ContinueVerification(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aCallback);
 
+  if (mIPCClosed) {
+    aCallback->ReadyToVerify(NS_ERROR_FAILURE);
+    return NS_OK;
+  }
+
   // Continue the verification procedure if background channel is ready.
   if (mBgParent) {
     aCallback->ReadyToVerify(NS_OK);
@@ -1134,7 +1142,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
 
   LOG(("HttpChannelParent::OnStartRequest [this=%p, aRequest=%p]\n", this,
        aRequest));
-  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
 
   Maybe<uint32_t> multiPartID;
   bool isFirstPartOfMultiPart = false;
@@ -1339,6 +1347,10 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   if (mIPCClosed) {
     rv = NS_ERROR_UNEXPECTED;
   } else {
+    MOZ_DIAGNOSTIC_ASSERT(
+        responseHead == &cleanedUpResponseHead ||
+            responseHead == chan->GetResponseHead(),
+        "mResponseHead changed between GetResponseHead and copy");
     nsHttpResponseHead newResponseHead = *responseHead;
     if (!mBgParent->OnStartRequest(
             std::move(newResponseHead), useResponseHead,
@@ -1720,8 +1732,7 @@ HttpChannelParent::SetClassifierMatchedInfo(const nsACString& aList,
                                             const nsACString& aProvider,
                                             const nsACString& aFullHash) {
   LOG(("HttpChannelParent::SetClassifierMatchedInfo [this=%p]\n", this));
-  if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
+  if (!mIPCClosed && mBgParent) {
     Unused << mBgParent->OnSetClassifierMatchedInfo(aList, aProvider,
                                                     aFullHash);
   }
@@ -1733,8 +1744,7 @@ HttpChannelParent::SetClassifierMatchedTrackingInfo(
     const nsACString& aLists, const nsACString& aFullHashes) {
   LOG(("HttpChannelParent::SetClassifierMatchedTrackingInfo [this=%p]\n",
        this));
-  if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
+  if (!mIPCClosed && mBgParent) {
     Unused << mBgParent->OnSetClassifierMatchedTrackingInfo(aLists,
                                                             aFullHashes);
   }
@@ -1748,8 +1758,7 @@ HttpChannelParent::NotifyClassificationFlags(uint32_t aClassificationFlags,
       ("HttpChannelParent::NotifyClassificationFlags "
        "classificationFlags=%" PRIu32 ", thirdparty=%d [this=%p]\n",
        aClassificationFlags, static_cast<int>(aIsThirdParty), this));
-  if (!mIPCClosed) {
-    MOZ_ASSERT(mBgParent);
+  if (!mIPCClosed && mBgParent) {
     Unused << mBgParent->OnNotifyClassificationFlags(aClassificationFlags,
                                                      aIsThirdParty);
   }
@@ -1901,6 +1910,7 @@ HttpChannelParent::StartRedirect(nsIChannel* newChannel, uint32_t redirectFlags,
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo,
                                                   &loadInfoForwarderArg);
 
+  MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
   nsHttpResponseHead* responseHead = mChannel->GetResponseHead();
 
   nsHttpResponseHead cleanedUpResponseHead;

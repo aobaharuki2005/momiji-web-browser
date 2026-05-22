@@ -50,6 +50,7 @@ DocAccessibleParent::DocAccessibleParent()
       mTopLevel(false),
       mTopLevelInContentProcess(false),
       mShutdown(false),
+      mIsInitialTreeDone(false),
       mFocus(0),
       mCaretId(0),
       mCaretOffset(-1),
@@ -117,6 +118,11 @@ mozilla::ipc::IPCResult DocAccessibleParent::ProcessShowEvent(
       return IPC_OK();
 #endif
     }
+
+    if (parent->IsOuterDoc()) {
+      return IPC_FAIL(this, "Cannot attach non-doc to OuterDoc");
+    }
+
     lastParent = parent;
     lastParentID = accData.ParentID();
 
@@ -222,6 +228,11 @@ mozilla::ipc::IPCResult DocAccessibleParent::ProcessShowEvent(
 
 RemoteAccessible* DocAccessibleParent::CreateAcc(
     const AccessibleData& aAccData) {
+  if (aAccData.ID() == 0) {
+    MOZ_ASSERT_UNREACHABLE("An ID of 0 is reserved for the document itself");
+    return nullptr;
+  }
+
   RemoteAccessible* newProxy;
   if ((newProxy = GetAccessible(aAccData.ID()))) {
     // This is a move. Reuse the Accessible; don't destroy it.
@@ -264,13 +275,18 @@ bool DocAccessibleParent::AttachChild(RemoteAccessible* aParent,
     return false;
   }
 
+  if (aParent == aChild) {
+    MOZ_ASSERT_UNREACHABLE("Attempt to make an accessible its own child!");
+    return false;
+  }
+
   aParent->AddChildAt(aIndex, aChild);
   aChild->SetParent(aParent);
   // ProxyCreated might have already been called if aChild is being moved.
   if (!aChild->GetWrapper()) {
     ProxyCreated(aChild);
   }
-  if (aChild->IsTableCell()) {
+  if (aChild->IsTableRow() || aChild->IsTableCell()) {
     CachedTableAccessible::Invalidate(aChild);
   }
   if (aChild->IsOuterDoc()) {
@@ -284,6 +300,9 @@ bool DocAccessibleParent::AttachChild(RemoteAccessible* aParent,
       }
       MOZ_ASSERT(bridge->GetEmbedderAccessibleDoc() == this);
       if (DocAccessibleParent* childDoc = bridge->GetDocAccessibleParent()) {
+        MOZ_DIAGNOSTIC_ASSERT(!childDoc->RemoteParent(),
+                              "Pending OOP child doc shouldn't have parent "
+                              "once new OuterDoc is attached");
         AddChildDoc(childDoc, aChild->ID(), false);
       }
       return true;
@@ -319,7 +338,7 @@ void DocAccessibleParent::ShutdownOrPrepareForMove(RemoteAccessible* aAcc) {
   }
   // This is a move. Moves are sent as a hide and then a show, but for a move,
   // we want to keep the Accessible alive for reuse later.
-  if (aAcc->IsTable() || aAcc->IsTableCell()) {
+  if (aAcc->IsTable() || aAcc->IsTableRow() || aAcc->IsTableCell()) {
     // For table cells, it's important that we do this before the parent is
     // cleared because CachedTableAccessible::Invalidate needs the ancestry.
     CachedTableAccessible::Invalidate(aAcc);
@@ -624,6 +643,18 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvMutationEvents(
 
 mozilla::ipc::IPCResult DocAccessibleParent::RecvRequestAckMutationEvents() {
   if (!mShutdown) {
+    if (!mIsInitialTreeDone) {
+      // This is the first request for an ACK, which means we now have the
+      // initial tree.
+      mIsInitialTreeDone = true;
+      // If this document is already bound to its embedder, fire a reorder event
+      // to notify the client that the embedded document is available. If not,
+      // this will be handled when this document is bound in AddChildDoc.
+      if (RemoteAccessible* parent = RemoteParent()) {
+        parent->Document()->FireEvent(parent,
+                                      nsIAccessibleEvent::EVENT_REORDER);
+      }
+    }
     Unused << SendAckMutationEvents();
   }
   return IPC_OK();
@@ -885,7 +916,10 @@ mozilla::ipc::IPCResult DocAccessibleParent::RecvBindChildDoc(
   MOZ_ASSERT(CheckDocTree());
 
   auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc.get());
-  childDoc->Unbind();
+  if (childDoc->IsShutdown()) {
+    return IPC_FAIL(this, "Attempt to bind a shutdown child doc");
+  }
+
   ipc::IPCResult result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
   MOZ_ASSERT(CheckDocTree());
@@ -906,6 +940,10 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   if (aChildDoc->RemoteParent()) {
     return IPC_FAIL(this,
                     "Attempt to add child doc which already has a parent");
+  }
+
+  if (aChildDoc->IsShutdown()) {
+    return IPC_FAIL(this, "Attempt to add a shutdown child doc");
   }
 
   // We do not use GetAccessible here because we want to be sure to not get the
@@ -956,11 +994,20 @@ ipc::IPCResult DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
       aChildDoc->SetEmulatedWindowHandle(mEmulatedWindowHandle);
     }
 #endif  // defined(XP_WIN)
-    // We need to fire a reorder event on the outer doc accessible.
-    // For same-process documents, this is fired by the content process, but
-    // this isn't possible when the document is in a different process to its
-    // embedder.
-    // FireEvent fires both OS and XPCOM events.
+  }
+  // We need to fire a reorder event on the embedder. We do this here rather
+  // than in the content process for two reasons:
+  // 1. It isn't possible for the content process to fire a reorder event on the
+  // embedder when the embedded document is in a different process to its
+  // embedder.
+  // 2. Doing it here ensures that the event is fired after the child document
+  // is bound. Otherwise, there could be a short period where the content
+  // process has fired the reorder event, but the child document isn't bound
+  // yet.
+  // However, if the initial tree hasn't been received yet, we don't want to
+  // fire the reorder event yet. That gets handled in
+  // RecvRequestAckMutationEvents.
+  if (aChildDoc->mIsInitialTreeDone) {
     FireEvent(outerDoc, nsIAccessibleEvent::EVENT_REORDER);
   }
 
@@ -1001,6 +1048,9 @@ void DocAccessibleParent::Destroy() {
   // If we are already shutdown that is because our containing tab parent is
   // shutting down in which case we don't need to do anything.
   if (mShutdown) {
+    // Just in case there is a cycle in the document heirarchy.
+    mParent = nullptr;
+    mIndexInParent = -1;
     return;
   }
 
@@ -1038,6 +1088,8 @@ void DocAccessibleParent::Destroy() {
     RemoteAccessible* acc = iter.Get()->mProxy;
     MOZ_ASSERT(acc != this);
     if (acc->IsTable()) {
+      // Prevents the invalidation code from trying to walk up the tree.
+      acc->SetParent(nullptr);
       CachedTableAccessible::Invalidate(acc);
     }
     ProxyDestroyed(acc);
@@ -1083,6 +1135,9 @@ void DocAccessibleParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (!mShutdown) {
     ACQUIRE_ANDROID_LOCK
     Destroy();
+  } else if (RemoteParent()) {
+    ACQUIRE_ANDROID_LOCK
+    Unbind();
   }
 }
 

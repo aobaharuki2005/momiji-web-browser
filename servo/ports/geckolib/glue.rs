@@ -143,7 +143,7 @@ use style::thread_state;
 use style::traversal::resolve_style;
 use style::traversal::DomTraversal;
 use style::traversal_flags::{self, TraversalFlags};
-use style::use_counters::UseCounters;
+use style::use_counters::{CustomUseCounter, UseCounters};
 use style::values::animated::{Animate, Procedure, ToAnimatedZero};
 use style::values::computed::easing::ComputedTimingFunction;
 use style::values::computed::effects::Filter;
@@ -1590,7 +1590,6 @@ pub extern "C" fn Servo_StyleSheet_Empty(mode: SheetParsingMode) -> Strong<Style
         /* loader = */ None,
         None,
         QuirksMode::NoQuirks,
-        /* use_counters = */ None,
         AllowImportRules::Yes,
         /* sanitization_data = */ None,
     )
@@ -1610,7 +1609,6 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
     extra_data: *mut URLExtraData,
     quirks_mode: nsCompatibility,
     reusable_sheets: *mut LoaderReusableStyleSheets,
-    use_counters: Option<&UseCounters>,
     allow_import_rules: AllowImportRules,
     sanitization_kind: SanitizationKind,
     sanitized_output: Option<&mut nsAString>,
@@ -1651,7 +1649,6 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8Bytes(
         loader,
         reporter.as_ref().map(|r| r as &dyn ParseErrorReporter),
         quirks_mode.into(),
-        use_counters,
         allow_import_rules,
         sanitization_data.as_mut(),
     );
@@ -1672,7 +1669,6 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
     bytes: &nsACString,
     mode: SheetParsingMode,
     quirks_mode: nsCompatibility,
-    should_record_use_counters: bool,
     allow_import_rules: AllowImportRules,
 ) {
     let load_data = RefPtr::new(load_data);
@@ -1687,7 +1683,6 @@ pub unsafe extern "C" fn Servo_StyleSheet_FromUTF8BytesAsync(
         sheet_bytes,
         mode_to_origin(mode),
         quirks_mode.into(),
-        should_record_use_counters,
         allow_import_rules,
     );
 
@@ -2040,6 +2035,11 @@ pub extern "C" fn Servo_StyleSheet_HasRules(raw_contents: &StylesheetContents) -
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let guard = global_style_data.shared_lock.read();
     !raw_contents.rules.read_with(&guard).0.is_empty()
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_StyleSheet_UseCounters(raw_contents: &StylesheetContents) -> &UseCounters {
+    &raw_contents.use_counters
 }
 
 #[no_mangle]
@@ -8869,6 +8869,11 @@ pub unsafe extern "C" fn Servo_IsUnknownPropertyRecordedInUseCounter(
     p: CountedUnknownProperty,
 ) -> bool {
     use_counters.counted_unknown_properties.recorded(p)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_IsCustomUseCounterRecorded(use_counters: &UseCounters, c: CustomUseCounter) -> bool {
+    use_counters.custom.recorded(c)
 }
 
 #[no_mangle]

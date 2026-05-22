@@ -359,6 +359,7 @@ D3D11TextureData::~D3D11TextureData() {
     }
   }
   if (mFencesHolderId.isSome()) {
+    MOZ_ASSERT(mFencesHolderId->IsValid());
     auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
     if (fencesHolderMap) {
       fencesHolderMap->Unregister(mFencesHolderId.ref());
@@ -371,6 +372,7 @@ D3D11TextureData::~D3D11TextureData() {
 
 bool D3D11TextureData::Lock(OpenMode aMode) {
   if (mFencesHolderId.isSome()) {
+    MOZ_ASSERT(mFencesHolderId->IsValid());
     auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
     fencesHolderMap->WaitAllFencesAndForget(mFencesHolderId.ref(), mDevice);
   }
@@ -414,6 +416,7 @@ bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
 void D3D11TextureData::Unlock() {
   IncrementAndSignalWriteFence();
   if (mFencesHolderId.isSome()) {
+    MOZ_ASSERT(mFencesHolderId->IsValid());
     auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
     fencesHolderMap->SetWriteFence(mFencesHolderId.ref(), mWriteFence);
   }
@@ -491,7 +494,8 @@ already_AddRefed<TextureClient> D3D11TextureData::CreateTextureClient(
   data->SetColorRange(aColorRange);
 
   RefPtr<TextureClient> textureClient = MakeAndAddRef<TextureClient>(
-      data, TextureFlags::NO_FLAGS, aKnowsCompositor->GetTextureForwarder());
+      data, TextureFlags::NO_FLAGS,
+      aKnowsCompositor->GetTextureForwarder().get());
   const auto textureId = GpuProcessD3D11TextureMap::GetNextTextureId();
   data->SetGpuProcessTextureId(textureId);
 
@@ -719,6 +723,9 @@ void D3D11TextureData::IncrementAndSignalWriteFence() {
   if (mFencesHolderId.isNothing() || !mWriteFence) {
     return;
   }
+
+  MOZ_ASSERT(mFencesHolderId->IsValid());
+
   auto* fencesHolderMap = CompositeProcessD3D11FencesHolderMap::Get();
   if (!fencesHolderMap) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
@@ -993,7 +1000,28 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mHasKeyedMutex(aDescriptor.hasKeyedMutex()),
       mFencesHolderId(aDescriptor.fencesHolderId()),
       mColorSpace(aDescriptor.colorSpace()),
-      mColorRange(aDescriptor.colorRange()) {}
+      mColorRange(aDescriptor.colorRange()) {
+  if (!mFencesHolderId) {
+    return;
+  }
+  MOZ_ASSERT(mFencesHolderId->IsValid());
+  if (auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get()) {
+    fenceHolderMap->RegisterReference(mFencesHolderId.ref());
+  } else {
+    MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
+  }
+}
+
+DXGITextureHostD3D11::~DXGITextureHostD3D11() {
+  if (!mFencesHolderId) {
+    return;
+  }
+  if (auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get()) {
+    fenceHolderMap->Unregister(mFencesHolderId.ref());
+  } else {
+    MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
+  }
+}
 
 already_AddRefed<gfx::DataSourceSurface> DXGITextureHostD3D11::GetAsSurface(
     gfx::DataSourceSurface* aSurface) {
@@ -1311,7 +1339,10 @@ void DXGITextureHostD3D11::PushResourceUpdates(
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
-      MOZ_ASSERT(aImageKeys.length() == 1);
+      if (aImageKeys.length() != 1) {
+        MOZ_ASSERT_UNREACHABLE("unexpected key length");
+        return;
+      }
 
       wr::ImageDescriptor descriptor(mSize, GetFormat());
       // Prefer TextureExternal unless the backend requires TextureRect.
@@ -1330,7 +1361,11 @@ void DXGITextureHostD3D11::PushResourceUpdates(
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
-      MOZ_ASSERT(aImageKeys.length() == 2);
+      if (aImageKeys.length() != 2) {
+        MOZ_ASSERT_UNREACHABLE("unexpected key length");
+        return;
+      }
+
       MOZ_ASSERT(mSize.width % 2 == 0);
       MOZ_ASSERT(mSize.height % 2 == 0);
 
@@ -1385,7 +1420,10 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::R8G8B8A8:
     case gfx::SurfaceFormat::B8G8R8A8:
     case gfx::SurfaceFormat::B8G8R8X8: {
-      MOZ_ASSERT(aImageKeys.length() == 1);
+      if (aImageKeys.length() != 1) {
+        MOZ_ASSERT_UNREACHABLE("unexpected key length");
+        return;
+      }
       aBuilder.PushImage(aBounds, aClip, true, false, aFilter, aImageKeys[0],
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED),
                          wr::ColorF{1.0f, 1.0f, 1.0f, 1.0f},
@@ -1400,7 +1438,10 @@ void DXGITextureHostD3D11::PushDisplayItems(
       // it may be handled as if it was DXGI_FORMAT_P016. This is approximately
       // perceptually correct. However, due to rounding error, the precise
       // quantized value after sampling may be off by 1.
-      MOZ_ASSERT(aImageKeys.length() == 2);
+      if (aImageKeys.length() != 2) {
+        MOZ_ASSERT_UNREACHABLE("unexpected key length");
+        return;
+      }
       aBuilder.PushNV12Image(
           aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
           GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
@@ -1445,9 +1486,22 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
       mYUVColorSpace(aDescriptor.yUVColorSpace()),
       mColorRange(aDescriptor.colorRange()),
       mFencesHolderId(aDescriptor.fencesHolderId()) {
+  if (auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get()) {
+    fenceHolderMap->RegisterReference(mFencesHolderId);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
+  }
   mHandles[0] = aDescriptor.handleY();
   mHandles[1] = aDescriptor.handleCb();
   mHandles[2] = aDescriptor.handleCr();
+}
+
+DXGIYCbCrTextureHostD3D11::~DXGIYCbCrTextureHostD3D11() {
+  if (auto* fenceHolderMap = CompositeProcessD3D11FencesHolderMap::Get()) {
+    fenceHolderMap->Unregister(mFencesHolderId);
+  } else {
+    MOZ_ASSERT_UNREACHABLE("FencesHolderMap not available");
+  }
 }
 
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
@@ -1475,8 +1529,13 @@ void DXGIYCbCrTextureHostD3D11::PushResourceUpdates(
     return;
   }
 
+  if (aImageKeys.length() != 3) {
+    MOZ_ASSERT_UNREACHABLE("unexpected key length");
+    return;
+  }
+
   MOZ_ASSERT(mHandles[0] && mHandles[1] && mHandles[2]);
-  MOZ_ASSERT(aImageKeys.length() == 3);
+
   // Assume the chroma planes are rounded up if the luma plane is odd sized.
   MOZ_ASSERT((mSizeCbCr.width == mSizeY.width ||
               mSizeCbCr.width == (mSizeY.width + 1) >> 1) &&
@@ -1520,7 +1579,10 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     return;
   }
 
-  MOZ_ASSERT(aImageKeys.length() == 3);
+  if (aImageKeys.length() != 3) {
+    MOZ_ASSERT_UNREACHABLE("unexpected key length");
+    return;
+  }
 
   aBuilder.PushYCbCrPlanarImage(
       aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],

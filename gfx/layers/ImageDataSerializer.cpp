@@ -83,7 +83,7 @@ uint32_t ComputeYCbCrBufferSize(const gfx::IntRect& aDisplay,
           IntSize(aCbCrStride, aCbCrSize.height)) ||
       !CheckYCbCrStride(aYSize, aYStride, aDepth) ||
       !CheckYCbCrStride(aCbCrSize, aCbCrStride, aDepth) ||
-      (aCbCrSize != ChromaSize(aYSize, aSubsampling))) {
+      !(ChromaSize(aYSize, aSubsampling) <= aCbCrSize)) {
     return 0;
   }
 
@@ -327,6 +327,10 @@ already_AddRefed<DataSourceSurface> DataSourceSurfaceFromYCbCrDescriptor(
 
   DataSourceSurface::MappedSurface map;
   if (NS_WARN_IF(!result->Map(DataSourceSurface::MapType::WRITE, &map))) {
+    return nullptr;
+  }
+
+  if (!aBuffer) {
     return nullptr;
   }
 

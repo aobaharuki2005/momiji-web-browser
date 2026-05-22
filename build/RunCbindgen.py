@@ -55,7 +55,7 @@ def generate_metadata(output, cargo_config):
     # within a tree, the Rust dependencies have been vendored in so Cargo won't
     # touch the lock file.
     if not buildconfig.substs.get("JS_STANDALONE"):
-        args.append("--frozen")
+        args.append("--offline")
 
     stdout, returncode = _run_process(args)
 

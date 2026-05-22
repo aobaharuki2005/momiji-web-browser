@@ -36,6 +36,11 @@ class nsUDPSocket final : public nsASocketHandler, public nsIUDPSocket {
 
   nsUDPSocket();
 
+  PRFileDesc* GetFD() {
+    MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+    return mFD;
+  }
+
  private:
   virtual ~nsUDPSocket();
 
@@ -71,6 +76,15 @@ class nsUDPSocket final : public nsASocketHandler, public nsIUDPSocket {
   uint64_t mByteWriteCount{0};
 };
 
+inline bool nsUDPSocket::IsSocketClosed() {
+#ifdef DEBUG
+  bool onSTSThread = false;
+  mSts->IsOnCurrentThread(&onSTSThread);
+  MOZ_ASSERT(onSTSThread);
+#endif
+  return !mFD;
+}
+
 //-----------------------------------------------------------------------------
 
 class nsUDPMessage : public nsIUDPMessage {
@@ -98,14 +112,12 @@ class nsUDPOutputStream : public nsIOutputStream {
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOUTPUTSTREAM
 
-  nsUDPOutputStream(nsUDPSocket* aSocket, PRFileDesc* aFD,
-                    PRNetAddr& aPrClientAddr);
+  nsUDPOutputStream(nsUDPSocket* aSocket, PRNetAddr& aPrClientAddr);
 
  private:
   virtual ~nsUDPOutputStream() = default;
 
   RefPtr<nsUDPSocket> mSocket;
-  PRFileDesc* mFD;
   PRNetAddr mPrClientAddr;
   bool mIsClosed;
 };

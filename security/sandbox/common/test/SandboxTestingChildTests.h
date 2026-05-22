@@ -77,6 +77,16 @@ namespace ApplicationServices {
 #  ifndef MREMAP_DONTUNMAP
 #    define MREMAP_DONTUNMAP 4
 #  endif
+//
+// This constant is ancient, but the kernel header for it conflicts
+// with glibc's fcntl.h:
+#  ifndef F_LINUX_SPECIFIC_BASE
+#    define F_LINUX_SPECIFIC_BASE 1024
+#  endif
+// Added in 6.10:
+#  ifndef F_DUPFD_QUERY
+#    define F_DUPFD_QUERY (F_LINUX_SPECIFIC_BASE + 3)
+#  endif
 #endif
 
 constexpr bool kIsDebug =
@@ -144,6 +154,23 @@ static void RunGenericTests(SandboxTestingChild* child, bool aIsGMP = false) {
       flags = fcntl(fds[0], F_GETFL);
       MOZ_RELEASE_ASSERT(flags >= 0);
       MOZ_RELEASE_ASSERT(flags & O_NONBLOCK);
+    }
+  }
+
+  if (!aIsGMP) {
+    constexpr auto name = "fcntl_dupfd_query"_ns;
+    int rv = fcntl(0, F_DUPFD_QUERY, 0);
+    // Expected:
+    // * success with rv == 1 (new kernel)
+    // * failure with EINVAL (old kernel)
+    // Rejected:
+    // * failure with ENOSYS or any other error
+    // * success with rv == 0 (shouldn't be possible)
+    MOZ_RELEASE_ASSERT(rv != 0);
+    if (rv > 0) {
+      child->PosixTest(name, true, 0);
+    } else {  // (rv < 0), errno unchanged since fcntl
+      child->PosixTest(name, false, errno, Some(EINVAL));
     }
   }
 #endif  // XP_LINUX
@@ -570,6 +597,12 @@ void RunTestsContent(SandboxTestingChild* child) {
     // this sandbox it should be blocked (ENOSYS).
     return ioctl(0, _IOW('b', 0, uint64_t), nullptr);
   });
+
+  child->ErrnoValueTest("send_with_flag"_ns, ENOSYS, [] {
+    char c = 0;
+    return send(0, &c, 1, MSG_CONFIRM);
+  });
+
 #  endif  // XP_LINUX
 
 #  ifdef XP_MACOSX
@@ -728,6 +761,11 @@ void RunTestsSocket(SandboxTestingChild* child) {
                "recvmmsg should return -1 with EAGAIN given that no datagrams "
                "are available");
     return 0;
+  });
+
+  child->ErrnoValueTest("send_with_flag"_ns, ENOSYS, [] {
+    char c = 0;
+    return send(0, &c, 1, MSG_OOB);
   });
 
   child->ErrnoValueTest("ioctl_dma_buf"_ns, ENOSYS, [] {

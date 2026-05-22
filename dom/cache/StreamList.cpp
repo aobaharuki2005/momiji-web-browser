@@ -30,7 +30,6 @@ StreamList::StreamList(SafeRefPtr<Manager> aManager,
       mStreamControl(nullptr),
       mActivated(false) {
   MOZ_DIAGNOSTIC_ASSERT(mManager);
-  mContext->AddActivity(*this);
 }
 
 Manager& StreamList::GetManager() const {
@@ -73,6 +72,9 @@ void StreamList::Activate(CacheId aCacheId) {
   MOZ_DIAGNOSTIC_ASSERT(mCacheId == INVALID_CACHE_ID);
   mActivated = true;
   mCacheId = aCacheId;
+
+  mContext->AddActivity(*this);
+
   mManager->AddRefCacheId(mCacheId);
   mManager->AddStreamList(*this);
 
@@ -134,6 +136,7 @@ void StreamList::NoteClosedAll() {
 
 void StreamList::CloseAll() {
   NS_ASSERT_OWNINGTHREAD(StreamList);
+  SafeRefPtr<StreamList> kungFuDeathGrip = SafeRefPtrFromThis();
 
   if (mStreamControl && mStreamControl->CanSend()) {
     // CloseAll will kick off everything needed for shutdown.
@@ -192,13 +195,13 @@ StreamList::~StreamList() {
   NS_ASSERT_OWNINGTHREAD(StreamList);
   MOZ_DIAGNOSTIC_ASSERT(!mStreamControl);
   if (mActivated) {
+    mContext->RemoveActivity(*this);
     mManager->RemoveStreamList(*this);
     for (uint32_t i = 0; i < mList.Length(); ++i) {
       mManager->ReleaseBodyId(mList[i].mId);
     }
     mManager->ReleaseCacheId(mCacheId);
   }
-  mContext->RemoveActivity(*this);
 }
 
 }  // namespace mozilla::dom::cache

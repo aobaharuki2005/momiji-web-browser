@@ -2459,7 +2459,7 @@ VisualViewport* nsGlobalWindowInner::VisualViewport() {
 
 nsScreen* nsGlobalWindowInner::Screen() {
   if (!mScreen) {
-    mScreen = new nsScreen(this);
+    mScreen = nsScreen::Create(this);
   }
   return mScreen;
 }
@@ -2533,6 +2533,10 @@ Maybe<ClientState> nsPIDOMWindowInner::GetClientState() const {
 
 Maybe<ServiceWorkerDescriptor> nsPIDOMWindowInner::GetController() const {
   return nsGlobalWindowInner::Cast(this)->GetController();
+}
+
+ClientSource* nsPIDOMWindowInner::GetClientSource() const {
+  return nsGlobalWindowInner::Cast(this)->GetClientSource();
 }
 
 void nsPIDOMWindowInner::SetCsp(nsIContentSecurityPolicy* aCsp) {
@@ -4995,6 +4999,11 @@ void nsGlobalWindowInner::FireOfflineStatusEventIfChanged() {
 
   // Don't fire an event if the status hasn't changed
   if (mWasOffline == NS_IsOffline()) {
+    return;
+  }
+
+  if (ShouldResistFingerprinting(RFPTarget::NetworkConnection)) {
+    // We always report online=true when resistFingerprinting is enabled.
     return;
   }
 

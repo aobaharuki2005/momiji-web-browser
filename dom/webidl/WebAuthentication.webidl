@@ -12,9 +12,9 @@
 [SecureContext, Pref="security.webauth.webauthn",
  Exposed=Window]
 interface PublicKeyCredential : Credential {
-    [SameObject, Throws] readonly attribute ArrayBuffer      rawId;
-    [SameObject] readonly attribute AuthenticatorResponse    response;
-    readonly attribute DOMString?                            authenticatorAttachment;
+    [SameObject, Throws, Cached] readonly attribute ArrayBuffer rawId;
+    [SameObject] readonly attribute AuthenticatorResponse       response;
+    readonly attribute DOMString?                               authenticatorAttachment;
     AuthenticationExtensionsClientOutputs getClientExtensionResults();
     [NewObject] static Promise<boolean> isConditionalMediationAvailable();
     [Throws, Pref="security.webauthn.enable_json_serialization_methods"] object toJSON();
@@ -140,25 +140,25 @@ dictionary PublicKeyCredentialRequestOptionsJSON {
 [SecureContext, Pref="security.webauth.webauthn",
  Exposed=Window]
 interface AuthenticatorResponse {
-    [SameObject, Throws] readonly attribute ArrayBuffer clientDataJSON;
+    [SameObject, Throws, Cached] readonly attribute ArrayBuffer clientDataJSON;
 };
 
 [SecureContext, Pref="security.webauth.webauthn",
  Exposed=Window]
 interface AuthenticatorAttestationResponse : AuthenticatorResponse {
-    [SameObject, Throws] readonly attribute ArrayBuffer attestationObject;
-    sequence<DOMString>                                 getTransports();
-    [Throws] ArrayBuffer                                getAuthenticatorData();
-    [Throws] ArrayBuffer?                               getPublicKey();
-    [Throws] COSEAlgorithmIdentifier                    getPublicKeyAlgorithm();
+    [SameObject, Throws, Cached] readonly attribute ArrayBuffer attestationObject;
+    sequence<DOMString>                                         getTransports();
+    [Throws] ArrayBuffer                                        getAuthenticatorData();
+    [Throws] ArrayBuffer?                                       getPublicKey();
+    [Throws] COSEAlgorithmIdentifier                            getPublicKeyAlgorithm();
 };
 
 [SecureContext, Pref="security.webauth.webauthn",
  Exposed=Window]
 interface AuthenticatorAssertionResponse : AuthenticatorResponse {
-    [SameObject, Throws] readonly attribute ArrayBuffer      authenticatorData;
-    [SameObject, Throws] readonly attribute ArrayBuffer      signature;
-    [SameObject, Throws] readonly attribute ArrayBuffer?     userHandle;
+    [SameObject, Throws, Cached] readonly attribute ArrayBuffer  authenticatorData;
+    [SameObject, Throws, Cached] readonly attribute ArrayBuffer  signature;
+    [SameObject, Throws, Cached] readonly attribute ArrayBuffer? userHandle;
 };
 
 dictionary PublicKeyCredentialParameters {
@@ -177,6 +177,7 @@ dictionary PublicKeyCredentialCreationOptions {
     sequence<PublicKeyCredentialDescriptor>      excludeCredentials = [];
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticatorSelectionCriteria               authenticatorSelection = {};
+    sequence<DOMString>                          hints = [];
     DOMString                                    attestation = "none";
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticationExtensionsClientInputs         extensions = {};
@@ -208,6 +209,7 @@ dictionary PublicKeyCredentialRequestOptions {
     USVString                            rpId;
     sequence<PublicKeyCredentialDescriptor> allowCredentials = [];
     DOMString                            userVerification = "preferred";
+    sequence<DOMString>                  hints = [];
     // FIXME: bug 1493860: should this "= {}" be here?
     AuthenticationExtensionsClientInputs extensions = {};
 };

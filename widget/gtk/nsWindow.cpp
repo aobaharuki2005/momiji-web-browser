@@ -220,10 +220,9 @@ static gboolean leave_notify_event_cb(GtkWidget* widget,
                                       GdkEventCrossing* event);
 static gboolean motion_notify_event_cb(GtkWidget* widget,
                                        GdkEventMotion* event);
-MOZ_CAN_RUN_SCRIPT static gboolean button_press_event_cb(GtkWidget* widget,
-                                                         GdkEventButton* event);
-static gboolean button_release_event_cb(GtkWidget* widget,
-                                        GdkEventButton* event);
+static gboolean button_press_event_cb(GtkWidget* widget, GdkEventButton* event);
+MOZ_CAN_RUN_SCRIPT static gboolean button_release_event_cb(
+    GtkWidget* widget, GdkEventButton* event);
 static gboolean focus_in_event_cb(GtkWidget* widget, GdkEventFocus* event);
 static gboolean focus_out_event_cb(GtkWidget* widget, GdkEventFocus* event);
 static gboolean key_press_event_cb(GtkWidget* widget, GdkEventKey* event);
@@ -740,7 +739,6 @@ static bool IsPenEvent(GdkEvent* aEvent, bool* isEraser) {
     *isEraser = true;
     return true;
   } else {
-
 #ifdef MOZ_X11
     // Workaround : When using Xwayland, pens are reported as
     // GDK_SOURCE_TOUCHSCREEN If eSource is GDK_SOURCE_TOUCHSCREEN and the
@@ -899,7 +897,7 @@ bool nsWindow::ToplevelUsesCSD() const {
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
     static auto sGdkWaylandDisplayPrefersSsd =
-        (gboolean (*)(const GdkWaylandDisplay*))dlsym(
+        (gboolean(*)(const GdkWaylandDisplay*))dlsym(
             RTLD_DEFAULT, "gdk_wayland_display_prefers_ssd");
     // NOTE(emilio): Not using GDK_WAYLAND_DISPLAY to avoid bug 1946088.
     return !sGdkWaylandDisplayPrefersSsd ||
@@ -1708,8 +1706,10 @@ bool nsWindow::WaylandPopupConfigure() {
     mPopupContextMenu = WaylandPopupIsContextMenu();
   }
 
-  LOG("nsWindow::WaylandPopupConfigure tracked %d anchored %d hint %d\n",
-      mPopupTrackInHierarchy, mPopupAnchored, int(mPopupType));
+  LOG("nsWindow::WaylandPopupConfigure tracked %d anchored %d hint %d "
+      "permanent %d\n",
+      mPopupTrackInHierarchy, mPopupAnchored, int(mPopupType),
+      WaylandPopupIsPermanent());
 
   // Permanent state changed and popup is mapped.
   // We need to switch popup type but that's done when popup is mapped
@@ -2140,16 +2140,12 @@ void nsWindow::WaylandPopupSetDirectPosition() {
   if (popupWidth > parentWidth) {
     mPopupPosition.x = -(parentWidth - popupWidth) / 2 + x;
   } else {
-    if (IsPopupDirectionRTL()) {
-      // Stick with right window edge
-      if (mPopupPosition.x < x) {
-        mPopupPosition.x = x;
-      }
-    } else {
-      // Stick with left window edge
-      if (mPopupPosition.x + popupWidth > parentWidth + x) {
-        mPopupPosition.x = parentWidth + x - popupWidth;
-      }
+    if (mPopupPosition.x < x) {
+      // Stick with left window edge if it's placed too left
+      mPopupPosition.x = x;
+    } else if (mPopupPosition.x + popupWidth > parentWidth + x) {
+      // Stick with right window edge otherwise
+      mPopupPosition.x = parentWidth + x - popupWidth;
     }
   }
 
@@ -3338,10 +3334,9 @@ void nsWindow::RecomputeBounds(MayChangeCsdMargin aMayChangeCsdMargin) {
   }
 
   // Sometimes the window manager gives us garbage sizes (way past the maximum
-  // texture size) causing crashes if we don't enforce size constraints again
-  // here.
+  // texture size) causing crashes if we don't enforce sane sizes here.
   auto unconstrainedBounds = mBounds;
-  ConstrainSize(&mBounds.width, &mBounds.height);
+  mBounds.SizeTo(GetSafeWindowSize(mBounds.Size()));
 
   LOG("bounds: %s -> %s (%s unconstrained)", ToString(oldBounds).c_str(),
       ToString(mBounds).c_str(), ToString(unconstrainedBounds).c_str());
@@ -5082,7 +5077,7 @@ void nsWindow::OnScrollEvent(GdkEventScroll* aEvent) {
         if (StaticPrefs::apz_gtk_pangesture_enabled() &&
             gtk_check_version(3, 20, 0) == nullptr) {
           static auto sGdkEventIsScrollStopEvent =
-              (gboolean (*)(const GdkEvent*))dlsym(
+              (gboolean(*)(const GdkEvent*))dlsym(
                   RTLD_DEFAULT, "gdk_event_is_scroll_stop_event");
 
           LOG("[%d] pan smooth event dx=%f dy=%f inprogress=%d\n", aEvent->time,
@@ -5484,21 +5479,21 @@ void nsWindow::RefreshScale(bool aRefreshScreen) {
   LOG("nsWindow::RefreshScale() GdkWindow scale %d refresh %d",
       gdk_window_get_scale_factor(mGdkWindow), aRefreshScreen);
 
+  MOZ_DIAGNOSTIC_ASSERT(mIsMapped && mGdkWindow);
+  int ceiledScale = gdk_window_get_scale_factor(mGdkWindow);
+  const bool scaleChanged = GdkCeiledScaleFactor() != ceiledScale;
+
 #ifdef MOZ_WAYLAND
   if (GdkIsWaylandDisplay()) {
     WaylandSurfaceLock lock(mSurface);
-    mSurface->SetCeiledScaleLocked(lock,
-                                   gdk_window_get_scale_factor(mGdkWindow));
+    mSurface->SetCeiledScaleLocked(lock, ceiledScale);
   }
 #endif
+  mCeiledScaleFactor = ceiledScale;
 
-  MOZ_DIAGNOSTIC_ASSERT(mIsMapped && mGdkWindow);
-  int ceiledScale = gdk_window_get_scale_factor(mGdkWindow);
-  bool scaleChanged = (mCeiledScaleFactor != ceiledScale);
   if (!scaleChanged) {
     return;
   }
-  mCeiledScaleFactor = ceiledScale;
 
   NotifyAPZOfDPIChange();
 
@@ -7391,11 +7386,9 @@ bool nsWindow::DragInProgress() {
 // info about finished D&D operations and cancel it on our own.
 MOZ_CAN_RUN_SCRIPT static void WaylandDragWorkaround(nsWindow* aWindow,
                                                      GdkEventButton* aEvent) {
-  static int buttonPressCountWithDrag = 0;
-
   // We track only left button state as Firefox performs D&D on left
   // button only.
-  if (aEvent->button != 1 || aEvent->type != GDK_BUTTON_PRESS) {
+  if (aEvent->button != 1 || aEvent->type != GDK_BUTTON_RELEASE) {
     return;
   }
 
@@ -7406,20 +7399,16 @@ MOZ_CAN_RUN_SCRIPT static void WaylandDragWorkaround(nsWindow* aWindow,
   }
   nsCOMPtr<nsIDragSession> currentDragSession =
       dragService->GetCurrentSession(aWindow);
-
-  if (!currentDragSession) {
-    buttonPressCountWithDrag = 0;
+  if (!currentDragSession ||
+      static_cast<nsDragSession*>(currentDragSession.get())->IsActive()) {
     return;
   }
 
-  buttonPressCountWithDrag++;
-  if (buttonPressCountWithDrag > 1) {
-    NS_WARNING(
-        "Quit unfinished Wayland Drag and Drop operation. Buggy Wayland "
-        "compositor?");
-    buttonPressCountWithDrag = 0;
-    currentDragSession->EndDragSession(false, 0);
-  }
+  LOGDRAG("WaylandDragWorkaround applied, quit D&D session");
+  NS_WARNING(
+      "Quit unfinished Wayland Drag and Drop operation. Buggy Wayland "
+      "compositor?");
+  currentDragSession->EndDragSession(true, 0);
 }
 
 static nsWindow* get_window_for_gtk_widget(GtkWidget* widget) {
@@ -8047,10 +8036,6 @@ static gboolean button_press_event_cb(GtkWidget* widget,
 
   window->OnButtonPressEvent(event);
 
-  if (GdkIsWaylandDisplay()) {
-    WaylandDragWorkaround(window, event);
-  }
-
   return TRUE;
 }
 
@@ -8068,6 +8053,10 @@ static gboolean button_release_event_cb(GtkWidget* widget,
   }
 
   window->OnButtonReleaseEvent(event);
+
+  if (GdkIsWaylandDisplay()) {
+    WaylandDragWorkaround(window, event);
+  }
 
   return TRUE;
 }
@@ -8390,6 +8379,8 @@ gboolean WindowDragMotionHandler(GtkWidget* aWidget,
         static_cast<nsDragSession*>(dragService->StartDragSession(widget));
   }
   NS_ENSURE_TRUE(dragSession, FALSE);
+
+  dragSession->MarkAsActive();
 
   nsDragSession::AutoEventLoop loop(dragSession);
   if (!dragSession->ScheduleMotionEvent(
@@ -9759,6 +9750,7 @@ void nsWindow::OnUnmap() {
       static auto sGtkDragCancel =
           (void (*)(GdkDragContext*))dlsym(RTLD_DEFAULT, "gtk_drag_cancel");
       if (sGtkDragCancel) {
+        LOGDRAG("nsWindow::OnUnmap() Drag cancel");
         sGtkDragCancel(mSourceDragContext);
         mSourceDragContext = nullptr;
       }

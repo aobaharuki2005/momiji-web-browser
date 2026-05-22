@@ -2829,20 +2829,6 @@ static nsTextFrame* GetTextFrameForContent(nsIContent* aContent,
     return nullptr;
   }
 
-  // Try to un-suppress whitespace if needed, but only if we'll be able to flush
-  // to immediately see the results of the un-suppression. If we can't flush
-  // here, then calling EnsureFrameForTextNodeIsCreatedAfterFlush would be
-  // pointless anyway.
-  if (aFlushLayout) {
-    const bool frameWillBeUnsuppressed =
-        presShell->FrameConstructor()
-            ->EnsureFrameForTextNodeIsCreatedAfterFlush(
-                static_cast<CharacterData*>(aContent));
-    if (frameWillBeUnsuppressed) {
-      doc->FlushPendingNotifications(FlushType::Layout);
-    }
-  }
-
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (!frame || !frame->IsTextFrame()) {
     return nullptr;
@@ -3583,6 +3569,7 @@ void nsRange::CreateOrUpdateCrossShadowBoundaryRangeIfNeeded(
   // Nodes at least needs to be in the same document.
   if (startNode && endNode &&
       startNode->GetComposedDoc() != endNode->GetComposedDoc()) {
+    ResetCrossShadowBoundaryRange();
     return;
   }
 
@@ -3594,6 +3581,13 @@ void nsRange::CreateOrUpdateCrossShadowBoundaryRangeIfNeeded(
     // Unlike normal ranges, shadow cross ranges don't work
     // when the nodes aren't in document.
     if (!aContainer->IsInComposedDoc()) {
+      return false;
+    }
+
+    // We don't allow ranges to span different NAC subtrees (because we don't
+    // notify when unbinding NAC roots historically). nsRange can already deal
+    // with the "same anonymous subtree" case.
+    if (aContainer->IsInNativeAnonymousSubtree()) {
       return false;
     }
 

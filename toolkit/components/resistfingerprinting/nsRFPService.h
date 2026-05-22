@@ -52,14 +52,14 @@
 #  define SPOOFED_UA_OS "Android 10; Mobile"
 #  define SPOOFED_APPVERSION "5.0 (Android 10)"
 #  define SPOOFED_OSCPU "Linux armv81"
-#  define SPOOFED_MAX_TOUCH_POINTS 10
+#  define SPOOFED_MAX_TOUCH_POINTS 5
 #else
 // For Linux and other platforms, like BSDs, SunOS and etc, we will use Linux
 // platform.
 #  define SPOOFED_UA_OS SPOOFED_UA_OS_OTHER
 #  define SPOOFED_APPVERSION "5.0 (X11)"
 #  define SPOOFED_OSCPU "Linux x86_64"
-#  define SPOOFED_MAX_TOUCH_POINTS 10
+#  define SPOOFED_MAX_TOUCH_POINTS 0
 #endif
 
 #define LEGACY_BUILD_ID "20181001000000"
@@ -342,8 +342,9 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   // The method to add random noises to the image data based on the random key
   // of the given cookieJarSettings.
   static nsresult RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
-                                  uint8_t* aData, uint32_t aWidth,
-                                  uint32_t aHeight, uint32_t aSize,
+                                  nsIPrincipal* aPrincipal, uint8_t* aData,
+                                  uint32_t aWidth, uint32_t aHeight,
+                                  uint32_t aSize,
                                   mozilla::gfx::SurfaceFormat aSurfaceFormat);
 
   // --------------------------------------------------------------------------
@@ -412,6 +413,8 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   static CSSIntRect GetSpoofedScreenAvailSize(const nsRect& aRect, float aScale,
                                               bool aIsFullscreen);
+
+  static uint64_t GetSpoofedStorageLimit();
 
  private:
   nsresult Init();

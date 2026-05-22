@@ -5489,7 +5489,9 @@ class Document : public nsINode,
   nsTHashSet<RefPtr<nsAtom>> mLanguagesUsed;
 
   // TODO(emilio): Is this hot enough to warrant to be cached?
-  RefPtr<nsAtom> mLanguageFromCharset;
+  // EncodingToLang.cpp keeps the atom alive until shutdown, so
+  // no need for a RefPtr.
+  nsAtom* mLanguageFromCharset;
 
   // Restyle root for servo's style system.
   //
@@ -5730,7 +5732,7 @@ class MOZ_RAII IgnoreOpensDuringUnload final {
   }
 
  private:
-  Document* mDoc;
+  RefPtr<Document> mDoc;
 };
 
 bool IsInFocusedTab(Document* aDoc);

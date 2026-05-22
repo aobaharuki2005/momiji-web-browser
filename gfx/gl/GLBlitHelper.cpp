@@ -359,7 +359,7 @@ ScopedSaveMultiTex::ScopedSaveMultiTex(GLContext* const gl,
       mTexUnits(texUnits),
       mTexTarget(texTarget),
       mOldTexUnit(mGL.GetIntAs<GLenum>(LOCAL_GL_ACTIVE_TEXTURE)) {
-  MOZ_RELEASE_ASSERT(texUnits >= 1);
+  MOZ_RELEASE_ASSERT(texUnits >= 1 && texUnits <= std::size(mOldTex));
 
   GLenum texBinding;
   switch (mTexTarget) {
@@ -944,6 +944,9 @@ bool GLBlitHelper::BlitSdToFramebuffer(const layers::SurfaceDescriptor& asd,
     case layers::SurfaceDescriptor::TSurfaceDescriptorDMABuf: {
       const auto& sd = asd.get_SurfaceDescriptorDMABuf();
       RefPtr<DMABufSurface> surface = DMABufSurface::CreateDMABufSurface(sd);
+      if (!surface) {
+        return false;
+      }
       return Blit(surface, destSize, destOrigin);
     }
 #endif
@@ -1544,6 +1547,12 @@ bool GLBlitHelper::Blit(DMABufSurface* surface, const gfx::IntSize& destSize,
   const DrawBlitProg::YUVArgs* pYuvArgs = nullptr;
   const auto planes = surface->GetTextureCount();
 
+  // The shaders used below currently only support 1-3 planes.
+  if (planes < 1 || planes > 3) {
+    gfxCriticalError() << "Unexpected DMABuf planes count: " << planes;
+    return false;
+  }
+
   // -
   // Ensure textures for all planes have been created.
 
@@ -1960,7 +1969,7 @@ inline auto MaybeFind(C& container, const K& key)
 
 std::shared_ptr<gl::Texture> GLBlitHelper::GetColorLutTex(
     const ColorLutKey& request) const {
-  if (const auto found = MaybeFind(mColorLutTexMap, request)) {
+  if (const auto found = gl::MaybeFind(mColorLutTexMap, request)) {
     return *found;  // Might be *Some(nullptr) -> nullptr!
   }
 

@@ -6,7 +6,7 @@ binutils-2.31.1:
     description: binutils 2.31.1 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/binutils/binutils-2.31.1.tar.xz
+        url: https://ftpmirror.gnu.org/gnu/binutils/binutils-2.31.1.tar.xz
         sha256: 5d20086ecf5752cc7d9134246e9588fa201740d540f7eb84d795b1f7a93bca86
         size: 20467996
         gpg-signature:
@@ -20,7 +20,7 @@ binutils-2.41:
     description: binutils 2.41 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.xz
+        url: https://ftpmirror.gnu.org/gnu/binutils/binutils-2.41.tar.xz
         sha256: ae9a5789e23459e59606e6714723f2d3ffc31c03174191ef0d015bdf06007450
         size: 26765692
         gpg-signature:
@@ -34,7 +34,7 @@ gcc-8.5.0:
     description: GCC 8.5.0 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/gcc/gcc-8.5.0/gcc-8.5.0.tar.xz
+        url: https://ftpmirror.gnu.org/gnu/gcc/gcc-8.5.0/gcc-8.5.0.tar.xz
         sha256: d308841a511bb830a6100397b0042db24ce11f642dab6ea6ee44842e5325ed50
         size: 63841008
         gpg-signature:
@@ -48,7 +48,7 @@ gcc-9.5.0:
     description: GCC 9.5.0 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/gcc/gcc-9.5.0/gcc-9.5.0.tar.xz
+        url: https://ftpmirror.gnu.org/gnu/gcc/gcc-9.5.0/gcc-9.5.0.tar.xz
         sha256: 27769f64ef1d4cd5e2be8682c0c93f9887983e6cfd1a927ce5a0a2915a95cf8f
         size: 72462752
         gpg-signature:
@@ -62,7 +62,7 @@ gcc-11.4.0:
     description: GCC 11.4.0 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/gcc/gcc-11.4.0/gcc-11.4.0.tar.xz
+        url: https://ftpmirror.gnu.org/gnu/gcc/gcc-11.4.0/gcc-11.4.0.tar.xz
         sha256: 3f2db222b007e8a4a23cd5ba56726ef08e8b1f1eb2055ee72c1402cea73a8dd9
         size: 79837032
         gpg-signature:
@@ -76,7 +76,7 @@ gcc-14.2.0:
     description: GCC 14.2.0 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/gcc/gcc-14.2.0/gcc-14.2.0.tar.xz
+        url: https://ftpmirror.gnu.org/gnu/gcc/gcc-14.2.0/gcc-14.2.0.tar.xz
         sha256: a7b39bc69cbf9e25826c5a60ab26477001f7c08d85cec04bc0e29cabed6f3cc9
         size: 92306460
         gpg-signature:
@@ -90,7 +90,7 @@ gmp-6.1.0:
     description: GMP 6.1.0 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/gmp/gmp-6.1.0.tar.bz2
+        url: https://ftpmirror.gnu.org/gnu/gmp/gmp-6.1.0.tar.bz2
         sha256: 498449a994efeba527885c10405993427995d3f86b8768d8cdf8d9dd7c6b73e8
         size: 2383840
         gpg-signature:
@@ -123,7 +123,7 @@ mpc-1.0.3:
     description: mpc 1.0.3 source code
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
+        url: https://ftpmirror.gnu.org/gnu/mpc/mpc-1.0.3.tar.gz
         sha256: 617decc6ea09889fb08ede330917a00b16809b8db88c29c31bfbb49cbf88ecc3
         size: 669925
         gpg-signature:
@@ -137,11 +137,11 @@ mpfr-3.1.4:
     description: mpfr 3.1.4 source code
     fetch:
         type: static-url
-        url: http://www.mpfr.org/mpfr-3.1.4/mpfr-3.1.4.tar.bz2
+        url: https://ftpmirror.gnu.org/gnu/mpfr/mpfr-3.1.4.tar.bz2
         sha256: d3103a80cdad2407ed581f3618c4bed04e0c92d1cf771a65ead662cc397f7775
         size: 1279284
         gpg-signature:
-            sig-url: "{url}.asc"
+            sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
         artifact-name: mpfr-source.tar.zst
         strip-components: 1
@@ -173,13 +173,13 @@ wix-3.14.0:
         sha256: 13f067f38969faf163d93a804b48ea0576790a202c8f10291f2000f0e356e934
         size: 41282726
 
-zlib-1.3.1:
-    description: zlib 1.3.1 source code
+zlib-1.3.2:
+    description: zlib 1.3.2 source code
     fetch:
         type: static-url
-        url: https://zlib.net/fossils/zlib-1.3.1.tar.gz
-        sha256: 9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23
-        size: 1512791
+        url: https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.xz
+        sha256: d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3
+        size: 1320064
 
 nsis-3.07:
     description: nsis 3.07 source code
@@ -276,6 +276,8 @@ hfsplus-tools:
         url: https://src.fedoraproject.org/repo/pkgs/hfsplus-tools/diskdev_cmds-540.1.linux3.tar.gz/0435afc389b919027b69616ad1b05709/diskdev_cmds-540.1.linux3.tar.gz
         sha256: b01b203a97f9a3bf36a027c13ddfc59292730552e62722d690d33bd5c24f5497
         size: 411205
+        headers:
+            - "Accept: application/octet-stream"
 
 xar:
     description: xar source code
@@ -414,11 +416,13 @@ rust-1.81.0:
 
 rust-nightly:
     description: Rust nightly source code
+    attributes:
+        cached_task: false
     fetch:
         type: git
         include-dot-git: true
         repo: https://github.com/rust-lang/rust/
-        branch: master
+        branch: main
 
 wasi-sdk-11:
     description: wasi-sdk-11 source code
@@ -529,9 +533,10 @@ sonatype-nexus:
     description: Sonatype Nexus Maven repository service
     fetch:
         type: static-url
-        url: https://download.sonatype.com/nexus/oss/nexus-2.14.18-01-bundle.tar.gz
-        sha256: 350af8b270bec7fda5861a15b8a5b7870fd8903d0b9a210754113d5a966ce6a6
-        size: 83493896
+        # https://download.sonatype.com/nexus/oss/nexus-2.15.2-03-bundle.tar.gz
+        url: https://tooltool.mozilla-releng.net/sha512/8d0cd58839f95b8fa02eba82fd532b15795b59e93968bcfcf179383849cf3a09f3c2a76480c5583ebf4ee1b1528bfccbda5ad6d92f175817ebc6179d85a93b5b
+        sha256: cec1d80dad0be8a34a902aa00e666da547f51e83dc3a4a28b50b3ec36fe433a8
+        size: 89526162
         artifact-name: sonatype-nexus.tar.zst
         strip-components: 1
         add-prefix: sonatype-nexus/
@@ -635,7 +640,7 @@ gnumake:
     description: GNU make source
     fetch:
         type: static-url
-        url: https://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz
+        url: https://ftpmirror.gnu.org/gnu/make/make-4.4.1.tar.gz
         sha256: dd16fb1d67bfab79a72f5e8390735c49e3e8e70b4945a15ab1f81ddb78658fb3
         size: 2348200
         artifact-name: make.tar.zst
@@ -744,22 +749,18 @@ windows-rs:
         add-prefix: windows-rs/
 
 libxml2:
-    description: Source of the libxml2 library
+    description: libxml2 2.9.12 source code
     fetch:
-        type: static-url
-        url: https://gitlab.gnome.org/GNOME/libxml2/-/archive/v2.9.12/libxml2-v2.9.12.tar.gz
-        sha256: 98bfa7a9a5e2a75638422050740448ee9f02bf4dc2075c9822d7747d5ff9e617
-        size: 5233674
-        artifact-name: libxml2.tar.zst
-        strip-components: 1
-        add-prefix: libxml2/
+        type: git
+        repo: https://gitlab.gnome.org/GNOME/libxml2
+        revision: b48e77cf4f6fa0792c5f4b639707a2b0675e461b
 
 mozilla-pdf.js:
     description: Mozilla pdf.js Github repo
     fetch:
         type: git
         repo: https://github.com/mozilla/pdf.js
-        revision: 81cf42df470f85eb60150bdffca380e3eee79c08
+        revision: 2ac8185956b0e222cbb798a9d455e82bca954462
 
 xmlstarlet-1.6.1:
     description: xmlstarlet for Android Performance Tests

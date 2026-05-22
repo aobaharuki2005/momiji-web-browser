@@ -319,8 +319,9 @@ NSDictionary<NSData*, ASAuthorizationPublicKeyCredentialPRFAssertionInputValues*
   }
 
   uint32_t count = prfEvalByCredIds.Length();
-  NSData* keys[count];
-  ASAuthorizationPublicKeyCredentialPRFAssertionInputValues* objects[count];
+  NSMutableArray<NSData*>* keys = [NSMutableArray arrayWithCapacity:count];
+  NSMutableArray<ASAuthorizationPublicKeyCredentialPRFAssertionInputValues*>*
+      objects = [NSMutableArray arrayWithCapacity:count];
   for (size_t i = 0; i < count; i++) {
     NSData* saltInput1 = [NSData dataWithBytes:prfEvalByCredFirsts[i].Elements()
                                         length:prfEvalByCredFirsts[i].Length()];
@@ -329,15 +330,15 @@ NSDictionary<NSData*, ASAuthorizationPublicKeyCredentialPRFAssertionInputValues*
       saltInput2 = [NSData dataWithBytes:prfEvalByCredSeconds[i].Elements()
                                   length:prfEvalByCredSeconds[i].Length()];
     }
-    keys[i] = [NSData dataWithBytes:prfEvalByCredIds[i].Elements()
-                             length:prfEvalByCredIds[i].Length()];
-    objects[i] =
-        [[ASAuthorizationPublicKeyCredentialPRFAssertionInputValues alloc]
-            initWithSaltInput1:saltInput1
-                    saltInput2:saltInput2];
+    [keys addObject:[NSData dataWithBytes:prfEvalByCredIds[i].Elements()
+                                   length:prfEvalByCredIds[i].Length()]];
+    [objects
+        addObject:[[ASAuthorizationPublicKeyCredentialPRFAssertionInputValues
+                      alloc] initWithSaltInput1:saltInput1
+                                     saltInput2:saltInput2]];
   }
 
-  return [NSDictionary dictionaryWithObjects:objects forKeys:keys count:count];
+  return [NSDictionary dictionaryWithObjects:objects forKeys:keys];
 }
 
 @implementation MacOSAuthenticatorRequestDelegate {
@@ -823,6 +824,20 @@ MacOSWebAuthnService::MakeCredential(uint64_t aTransactionId,
               *userVerificationPreference;
         }
 
+        if (__builtin_available(macos 13.5, *)) {
+          // Show the hybrid transport unless we have a non-empty hint list and
+          // none of the hints are for the hybrid transport.
+          bool hasHybridHint = false;
+          nsTArray<nsString> hints;
+          (void)aArgs->GetHints(hints);
+          for (nsString& hint : hints) {
+            if (hint.Equals(u"hybrid"_ns)) {
+              hasHybridHint = true;
+            }
+          }
+          platformRegistrationRequest.shouldShowHybridTransport =
+              hints.Length() == 0 || hasHybridHint;
+        }
         if (__builtin_available(macos 14.0, *)) {
           bool largeBlobSupportRequired;
           nsresult rv =
@@ -1173,11 +1188,19 @@ void MacOSWebAuthnService::DoGetAssertion(
               *userVerificationPreference;
         }
         if (__builtin_available(macos 13.5, *)) {
-          // Show the hybrid transport option if (1) we have no transport hints
-          // or (2) at least one allow list entry lists the hybrid transport.
+          // Show the hybrid transport option if (1) none of the allowlist
+          // credentials list transports, or (2) at least one allow list entry
+          // lists the hybrid transport, or (3) the request has the hybrid hint.
           bool shouldShowHybridTransport =
               !transports ||
               (transports & MOZ_WEBAUTHN_AUTHENTICATOR_TRANSPORT_ID_HYBRID);
+          nsTArray<nsString> hints;
+          (void)aArgs->GetHints(hints);
+          for (nsString& hint : hints) {
+            if (hint.Equals(u"hybrid"_ns)) {
+              shouldShowHybridTransport = true;
+            }
+          }
           platformAssertionRequest.shouldShowHybridTransport =
               shouldShowHybridTransport;
         }

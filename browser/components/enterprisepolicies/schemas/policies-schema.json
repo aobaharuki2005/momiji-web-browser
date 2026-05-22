@@ -291,6 +291,14 @@
                 }
               }
             },
+            "Download": {
+              "type": "object",
+              "properties": {
+                "Enabled": {
+                  "type": "boolean"
+                }
+              }
+            },
             "DragAndDrop": {
               "type": "object",
               "properties": {
@@ -632,12 +640,19 @@
         "EmailTracking": {
           "type": "boolean"
         },
+        "SuspectedFingerprinting": {
+          "type": "boolean"
+        },
         "Exceptions": {
           "type": "array",
           "strict": false,
           "items": {
             "type": "origin"
           }
+        },
+        "Category": {
+          "type": "string",
+          "enum": ["standard", "strict"]
         }
       }
     },
@@ -827,6 +842,27 @@
           "type": "boolean"
         },
         "ImproveSuggest": {
+          "type": "boolean"
+        },
+        "Locked": {
+          "type": "boolean"
+        }
+      }
+    },
+
+    "GenerativeAI": {
+      "type": "object",
+      "properties": {
+        "Chatbot": {
+          "type": "boolean"
+        },
+        "LinkPreviews": {
+          "type": "boolean"
+        },
+        "TabGroups": {
+          "type": "boolean"
+        },
+        "Enabled": {
           "type": "boolean"
         },
         "Locked": {
@@ -1208,6 +1244,35 @@
         },
 
         "VirtualReality": {
+          "type": "object",
+          "properties": {
+            "Allow": {
+              "type": "array",
+              "strict": false,
+              "items": {
+                "type": "origin"
+              }
+            },
+
+            "Block": {
+              "type": "array",
+              "strict": false,
+              "items": {
+                "type": "origin"
+              }
+            },
+
+            "BlockNewRequests": {
+              "type": "boolean"
+            },
+
+            "Locked": {
+              "type": "boolean"
+            }
+          }
+        },
+
+        "ScreenShare": {
           "type": "object",
           "properties": {
             "Allow": {

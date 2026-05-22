@@ -42,9 +42,7 @@ StunAddrsRequestParent::StunAddrsRequestParent() : mIPCClosed(false) {
   MOZ_ASSERT(mSTSThread);
 }
 
-StunAddrsRequestParent::~StunAddrsRequestParent() {
-  ASSERT_ON_THREAD(mMainThread);
-}
+StunAddrsRequestParent::~StunAddrsRequestParent() = default;
 
 mozilla::ipc::IPCResult StunAddrsRequestParent::RecvGetStunAddrs() {
   ASSERT_ON_THREAD(mMainThread);
@@ -210,9 +208,6 @@ void StunAddrsRequestParent::OnQueryComplete_m(
 
 StaticRefPtr<StunAddrsRequestParent::MDNSServiceWrapper>
     StunAddrsRequestParent::mSharedMDNSService;
-
-NS_IMPL_ADDREF(StunAddrsRequestParent)
-NS_IMPL_RELEASE(StunAddrsRequestParent)
 
 StunAddrsRequestParent::MDNSServiceWrapper::MDNSServiceWrapper(
     const std::string& ifaddr)

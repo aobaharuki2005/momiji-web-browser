@@ -94,6 +94,10 @@ gfxUserFontEntry::~gfxUserFontEntry() {
   // traversal, since PostTraversalTask objects can hold raw pointers to
   // gfxUserFontEntry objects.
   MOZ_ASSERT(!gfxFontUtils::IsInServoTraversal());
+  // Ensure the platform font entry is destroyed on the main thread, to avoid
+  // potential race updating the sUserFonts cache.
+  NS_ReleaseOnMainThread("gfxUserFontEntry::mPlatformFontEntry",
+                         mPlatformFontEntry.forget());
 }
 
 bool gfxUserFontEntry::Matches(const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
@@ -541,7 +545,7 @@ void gfxUserFontEntry::DoLoadNextSrc(bool aIsContinue) {
           // If we need to start a font load and we're on a style
           // worker thread, we have to defer it.
           SetLoadState(STATUS_LOAD_PENDING);
-          set->AppendTask(PostTraversalTask::LoadFontEntry(this));
+          set->AppendTask(PostTraversalTask::LoadFontEntry(do_AddRef(this)));
           return;
         }
 
@@ -1115,6 +1119,16 @@ void gfxUserFontSet::ForgetLocalFace(gfxUserFontFamily* aFontFamily) {
     // discard it as no longer valid.
     if (ufe->GetPlatformFontEntry() &&
         ufe->GetPlatformFontEntry()->IsLocalUserFont()) {
+      // Clear shmem pointers on the local-user-font entry: it is not tracked
+      // in gfxPlatformFontList::mFontEntries, so InitFontList()'s cleanup loop
+      // misses it.
+      gfxFontEntry* pfe = ufe->GetPlatformFontEntry();
+      {
+        AutoWriteLock lock(pfe->mLock);
+        pfe->mShmemCharacterMap = nullptr;
+        pfe->mShmemFace = nullptr;
+        pfe->mShmemFamily = nullptr;
+      }
       ufe->mPlatformFontEntry = nullptr;
     }
     // If the entry had a local source, we need to re-evaluate the source list
@@ -1130,12 +1144,13 @@ void gfxUserFontSet::ForgetLocalFace(gfxUserFontFamily* aFontFamily) {
   for (auto& ufe : entriesToCancel) {
     if (auto* loader = ufe->GetLoader()) {
       // If there's a loader, we need to cancel it, because we'll trigger a
-      // fresh load if required when we re-resolve the font...
+      // fresh load if required when we re-resolve the font. Cancel() removes
+      // the loader from the set it was registered in (not necessarily |this|
+      // font set).
       loader->Cancel();
-      RemoveLoader(loader);
     } else {
-      // ...otherwise, just reset our state so that we'll re-evaluate the
-      // source list from the beginning.
+      // Otherwise, just reset our state so that we'll re-evaluate the source
+      // list from the beginning.
       ufe->LoadCanceled();
     }
   }
@@ -1229,6 +1244,7 @@ bool gfxUserFontSet::UserFontCache::Entry::KeyEquals(
 }
 
 void gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry) {
+  MOZ_ASSERT(NS_IsMainThread());
   NS_ASSERTION(aFontEntry->mFamilyName.Length() != 0,
                "caching a font associated with no family yet");
 
@@ -1283,6 +1299,10 @@ void gfxUserFontSet::UserFontCache::CacheFont(gfxFontEntry* aFontEntry) {
 }
 
 void gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry* aFontEntry) {
+  // The only caller is ~gfxFontEntry; if this fires, there is a path to
+  // off-main-thread destruction of a font entry with mIsDataUserFont set
+  // that needs to be proxied to main thread (see ~gfxUserFontEntry).
+  MOZ_ASSERT(NS_IsMainThread());
   if (!sUserFonts) {
     // if we've already deleted the cache (i.e. during shutdown),
     // just ignore this
@@ -1306,6 +1326,7 @@ void gfxUserFontSet::UserFontCache::ForgetFont(gfxFontEntry* aFontEntry) {
 
 gfxFontEntry* gfxUserFontSet::UserFontCache::GetFont(
     const gfxFontFaceSrc& aSrc, const gfxUserFontEntry& aUserFontEntry) {
+  MOZ_ASSERT(NS_IsMainThread() || gfxFontUtils::CurrentServoStyleSet());
   if (!sUserFonts || StaticPrefs::gfx_downloadable_fonts_disable_cache()) {
     return nullptr;
   }

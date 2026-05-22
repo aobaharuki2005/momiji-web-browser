@@ -222,10 +222,10 @@ nsresult InputStreamHolder::AsyncWait(uint32_t aFlags, uint32_t aRequestedCount,
 NS_IMETHODIMP InputStreamHolder::OnInputStreamReady(
     nsIAsyncInputStream* aStream) {
   mAsyncWaitWorkerRef = nullptr;
-  mAsyncWaitAlgorithms = nullptr;
   // We may get called back after ::Shutdown()
-  if (mCallback) {
-    return mCallback->OnInputStreamReady(aStream);
+  if (RefPtr<InputToReadableStreamAlgorithms> callback =
+          mAsyncWaitAlgorithms.forget()) {
+    return callback->OnInputStreamReady(aStream);
   }
   return NS_ERROR_FAILURE;
 }
@@ -448,8 +448,10 @@ void InputToReadableStreamAlgorithms::PullFromInputStream(JSContext* aCx,
     // But we do not use pullSize but use byteWritten here, since nsIInputStream
     // does not guarantee to read as much as it told in Available().
     MOZ_DIAGNOSTIC_ASSERT(pullSize == bytesWritten);
-    ReadableByteStreamControllerRespond(
-        aCx, MOZ_KnownLive(mStream->Controller()->AsByte()), bytesWritten, aRv);
+    RefPtr<ReadableByteStreamController> byteController(
+        mStream->Controller()->AsByte());
+    MOZ_ASSERT(byteController);
+    ReadableByteStreamControllerRespond(aCx, byteController, bytesWritten, aRv);
   }
   // Step 9. Otherwise,
   else {
@@ -483,8 +485,10 @@ void InputToReadableStreamAlgorithms::PullFromInputStream(JSContext* aCx,
 
     // Step 9.2. Perform ?
     // ReadableByteStreamControllerEnqueue(stream.[[controller]], view).
-    ReadableByteStreamControllerEnqueue(
-        aCx, MOZ_KnownLive(mStream->Controller()->AsByte()), view, aRv);
+    RefPtr<ReadableByteStreamController> byteController(
+        mStream->Controller()->AsByte());
+    MOZ_ASSERT(byteController);
+    ReadableByteStreamControllerEnqueue(aCx, byteController, view, aRv);
   }
 }
 

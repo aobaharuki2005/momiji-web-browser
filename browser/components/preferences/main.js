@@ -1971,22 +1971,22 @@ var gMainPane = {
    */
   updateSetDefaultBrowser() {
     if (AppConstants.HAVE_SHELL_SERVICE) {
-      // let shellSvc = getShellService();
+      let shellSvc = getShellService();
       let defaultBrowserBox = document.getElementById("defaultBrowserBox");
-      // let isInFlatpak = gGIOService?.isRunningUnderFlatpak;
+      let isInFlatpak = gGIOService?.isRunningUnderFlatpak;
       // Flatpak does not support setting nor detection of default browser
-      // if (!shellSvc || isInFlatpak) {
-      defaultBrowserBox.hidden = true;
-      return;
-      // }
-      // let isDefault = shellSvc.isDefaultBrowser(false, true);
-      // let setDefaultPane = document.getElementById("setDefaultPane");
-      // setDefaultPane.classList.toggle("is-default", isDefault);
-      // let alwaysCheck = document.getElementById("alwaysCheckDefault");
-      // let alwaysCheckPref = Preferences.get(
-      //   "browser.shell.checkDefaultBrowser"
-      // );
-      // alwaysCheck.disabled = alwaysCheckPref.locked || isDefault; // 
+      if (!shellSvc || isInFlatpak) {
+        defaultBrowserBox.hidden = true;
+        return;
+      }
+      let isDefault = shellSvc.isDefaultBrowser(false, true);
+      let setDefaultPane = document.getElementById("setDefaultPane");
+      setDefaultPane.classList.toggle("is-default", isDefault);
+      let alwaysCheck = document.getElementById("alwaysCheckDefault");
+      let alwaysCheckPref = Preferences.get(
+        "browser.shell.checkDefaultBrowser"
+      );
+      alwaysCheck.disabled = alwaysCheckPref.locked || isDefault;
     }
   },
 

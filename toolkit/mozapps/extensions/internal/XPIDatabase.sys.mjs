@@ -1377,8 +1377,12 @@ export class AddonWrapper {
    */
   get isInstalledByEnterprisePolicy() {
     const policySettings = Services.policies?.getExtensionSettings(this.id);
-    return ["force_installed", "normal_installed"].includes(
-      policySettings?.installation_mode
+    const legacyLockedSettings =
+      Services.policies?.getActivePolicies()?.Extensions?.Locked ?? [];
+    return (
+      ["force_installed", "normal_installed"].includes(
+        policySettings?.installation_mode
+      ) || legacyLockedSettings.includes(this.id)
     );
   }
 
@@ -1416,9 +1420,12 @@ export class AddonWrapper {
     let perms = {
       origins: required.origins.concat(requested?.origins ?? []),
       permissions: required.permissions.concat(requested?.permissions ?? []),
-      data_collection: required.data_collection.concat(
-        requested?.data_collection ?? []
-      ),
+      data_collection: [
+        // These fields can be missing if read from extensions.json that was
+        // generated before support for data_collection was introduced.
+        ...(required?.data_collection ?? []),
+        ...(requested?.data_collection ?? []),
+      ],
     };
     return perms;
   }

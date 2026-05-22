@@ -214,7 +214,7 @@ bool ParseDictDataBcd(ots::Buffer &table, std::vector<Operand> &operands) {
 
     // check number format
     uint8_t nibbles[2];
-    nibbles[0] = (nibble & 0xf0) >> 8;
+    nibbles[0] = (nibble & 0xf0) >> 4;
     nibbles[1] = (nibble & 0x0f);
     for (unsigned i = 0; i < 2; ++i) {
       if (nibbles[i] == 0xd) {  // reserved number
@@ -311,7 +311,7 @@ bool ParseDictDataNumber(ots::Buffer &table, uint8_t b0,
     if (!table.ReadU8(&b1)) {
       return OTS_FAILURE();
     }
-    result = -(b0 - 251) * 256 + b1 - 108;
+    result = -(b0 - 251) * 256 - b1 - 108;
   } else {
     return OTS_FAILURE();
   }
@@ -897,6 +897,11 @@ bool ParseDictData(ots::Buffer& table, ots::Buffer& dict,
 
       case (12 << 8) + 37: {  // FDSelect
         if (type != DICT_DATA_TOPLEVEL) {
+          return OTS_FAILURE();
+        }
+        // A CID-keyed font must have exactly one FDSelect; fail if we already
+        // encountered one.
+        if (!out_cff->fd_select.empty()) {
           return OTS_FAILURE();
         }
         if (operands.size() != 1) {

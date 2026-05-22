@@ -30,6 +30,10 @@ StaticRWLock gWinWebAuthnModuleLock;
 static bool gWinWebAuthnModuleUnusable = false;
 static HMODULE gWinWebAuthnModule = 0;
 
+static const LPCWSTR gWebAuthnHintStrings[3] = {
+    WEBAUTHN_CREDENTIAL_HINT_SECURITY_KEY,
+    WEBAUTHN_CREDENTIAL_HINT_CLIENT_DEVICE, WEBAUTHN_CREDENTIAL_HINT_HYBRID};
+
 static decltype(WebAuthNIsUserVerifyingPlatformAuthenticatorAvailable)*
     gWinWebauthnIsUVPAA = nullptr;
 static decltype(WebAuthNAuthenticatorMakeCredential)*
@@ -50,7 +54,6 @@ static decltype(WebAuthNGetPlatformCredentialList)*
     gWinWebauthnGetPlatformCredentialList = nullptr;
 static decltype(WebAuthNFreePlatformCredentialList)*
     gWinWebauthnFreePlatformCredentialList = nullptr;
-
 }  // namespace
 
 /***********************************************************************
@@ -174,6 +177,18 @@ WinWebAuthnService::~WinWebAuthnService() {
     FreeLibrary(gWinWebAuthnModule);
   }
   gWinWebAuthnModule = 0;
+}
+
+// static
+void PrunePublicKeyCredentialHints(const nsTArray<nsString>& aInHints,
+                                   /* out */ nsTArray<LPCWSTR>& aOutHints) {
+  for (const nsString& inputHint : aInHints) {
+    for (const LPCWSTR knownHint : gWebAuthnHintStrings) {
+      if (inputHint.Equals(knownHint)) {
+        aOutHints.AppendElement(knownHint);
+      }
+    }
+  }
 }
 
 // static
@@ -594,10 +609,16 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
           winPrivateBrowsing = TRUE;
         }
 
+        nsTArray<nsString> inputHints;
+        (void)aArgs->GetHints(inputHints);
+
+        nsTArray<LPCWSTR> hints;
+        PrunePublicKeyCredentialHints(inputHints, hints);
+
         // MakeCredentialOptions
         WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS
         WebAuthNCredentialOptions = {
-            WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS_VERSION_7,
+            WEBAUTHN_AUTHENTICATOR_MAKE_CREDENTIAL_OPTIONS_VERSION_8,
             timeout,
             {0, NULL},
             {0, NULL},
@@ -609,13 +630,16 @@ WinWebAuthnService::MakeCredential(uint64_t aTransactionId,
             &cancellationId,  // CancellationId
             pExcludeCredentialList,
             WEBAUTHN_ENTERPRISE_ATTESTATION_NONE,
-            largeBlobSupport,      // LargeBlobSupport
-            winPreferResidentKey,  // PreferResidentKey
-            winPrivateBrowsing,    // BrowserInPrivateMode
-            winEnablePrf,          // EnablePrf
-            NULL,                  // LinkedDevice
-            0,                     // size of JsonExt
-            NULL,                  // JsonExt
+            largeBlobSupport,       // LargeBlobSupport
+            winPreferResidentKey,   // PreferResidentKey
+            winPrivateBrowsing,     // BrowserInPrivateMode
+            winEnablePrf,           // EnablePrf
+            NULL,                   // LinkedDevice
+            0,                      // size of JsonExt
+            NULL,                   // JsonExt
+            NULL,                   // PRFGlobalEval
+            (DWORD)hints.Length(),  // Size of CredentialHints
+            hints.Elements(),       // CredentialHints
         };
 
         if (rgExtension.Length() != 0) {
@@ -968,6 +992,12 @@ void WinWebAuthnService::DoGetAssertion(
           pAllowCredentialList = &allowCredentialList;
         }
 
+        nsTArray<nsString> inputHints;
+        (void)aArgs->GetHints(inputHints);
+
+        nsTArray<LPCWSTR> hints;
+        PrunePublicKeyCredentialHints(inputHints, hints);
+
         uint32_t timeout_u32;
         Unused << aArgs->GetTimeoutMS(&timeout_u32);
         DWORD timeout = timeout_u32;
@@ -981,7 +1011,7 @@ void WinWebAuthnService::DoGetAssertion(
 
         WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS WebAuthNAssertionOptions =
             {
-                WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS_VERSION_7,
+                WEBAUTHN_AUTHENTICATOR_GET_ASSERTION_OPTIONS_VERSION_8,
                 timeout,
                 {0, NULL},
                 {0, NULL},
@@ -1001,6 +1031,8 @@ void WinWebAuthnService::DoGetAssertion(
                 FALSE,                   // AutoFill
                 0,                       // Size of JsonExt
                 NULL,                    // JsonExt
+                (DWORD)hints.Length(),   // Size of CredentialHints
+                hints.Elements(),        // CredentialHints
             };
 
         PWEBAUTHN_ASSERTION pWebAuthNAssertion = nullptr;

@@ -68,8 +68,8 @@ pref("extensions.geckoProfiler.acceptedExtensionIds", "geckoprofiler@mozilla.com
 pref("extensions.webextensions.remote", true);
 
 // Require signed add-ons by default
-pref("extensions.langpacks.signatures.required", false);
-pref("xpinstall.signatures.required", false);
+pref("extensions.langpacks.signatures.required", true);
+pref("xpinstall.signatures.required", true);
 
 // Enable data collection permissions.
 pref("extensions.dataCollectionPermissions.enabled", true);
@@ -1738,7 +1738,7 @@ pref("browser.partnerlink.campaign.topsites", "amzn_2020_a1");
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// // Do not enable the preonboarding experience on all platforms
+// // Do not enable the preonboarding experience on Linux & legacy macOS (Momiji purpose)
 // #ifdef XP_LINUX
 pref("browser.preonboarding.enabled", false);
 // #endif
@@ -1840,7 +1840,7 @@ pref("browser.newtabpage.activity-stream.discoverystream.fourCardLayout.enabled"
 pref("browser.newtabpage.activity-stream.discoverystream.newFooterSection.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.saveToPocketCard.enabled", true);
 pref("browser.newtabpage.activity-stream.discoverystream.saveToPocketCardRegions", "");
-pref("browser.newtabpage.activity-stream.discoverystream.hideDescriptions.enabled", true);
+pref("browser.newtabpage.activity-stream.discoverystream.hideDescriptions.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.hideDescriptionsRegions", "");
 pref("browser.newtabpage.activity-stream.discoverystream.compactGrid.enabled", false);
 pref("browser.newtabpage.activity-stream.discoverystream.compactImages.enabled", false);

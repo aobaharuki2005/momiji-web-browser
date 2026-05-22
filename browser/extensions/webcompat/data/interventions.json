@@ -3332,7 +3332,10 @@
     "interventions": [
       {
         "platforms": ["all"],
-        "ua_string": ["Chrome", "add_Firefox_as_Gecko"]
+        "content_scripts": {
+          "js": ["bug1950282-f1tv.formula1.com-unblock-firefox.js"]
+        },
+        "ua_string": ["Chrome"]
       },
       {
         "platforms": ["linux"],
@@ -3466,7 +3469,7 @@
     },
     "interventions": [
       {
-        "platforms": ["android"],
+        "platforms": ["fenix"],
         "content_scripts": {
           "js": ["bug1956165-www.youtube.com-picture-in-picture-fix.js"]
         }
@@ -3693,6 +3696,33 @@
       {
         "platforms": ["all"],
         "ua_string": ["Chrome", "add_Firefox_as_Gecko"]
+      }
+    ]
+  },
+  "1996823": {
+    "label": "rogers.com and fido.ca",
+    "bugs": {
+      "1996823": {
+        "issue": "page-fails-to-load",
+        "matches": [
+          "*://www.rogers.com/bbapp/bbapi.js*",
+          "*://www.fido.ca/bbapp/bbapi.js*"
+        ]
+      }
+    },
+    "interventions": [
+      {
+        "platforms": ["all"],
+        "replace_string_in_request": [
+          {
+            "find": "window\\.location\\.href = link;",
+            "replace": "let url = new URL(window.location.href); url.hash = link; window.location.href = url.href;",
+            "urls": [
+              "*://www.rogers.com/bbapp/bbapi.js*",
+              "*://www.fido.ca/bbapp/bbapi.js*"
+            ]
+          }
+        ]
       }
     ]
   }

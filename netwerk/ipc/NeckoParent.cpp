@@ -18,9 +18,6 @@
 #include "mozilla/net/WebSocketChannelParent.h"
 #include "mozilla/net/WebSocketEventListenerParent.h"
 #include "mozilla/net/DataChannelParent.h"
-#ifdef MOZ_WIDGET_GTK
-#  include "mozilla/net/GIOChannelParent.h"
-#endif
 #include "mozilla/net/DocumentChannelParent.h"
 #include "mozilla/net/SimpleChannelParent.h"
 #include "mozilla/net/AltDataOutputStreamParent.h"
@@ -183,43 +180,22 @@ mozilla::ipc::IPCResult NeckoParent::RecvPHttpChannelConstructor(
   return IPC_OK();
 }
 
-PStunAddrsRequestParent* NeckoParent::AllocPStunAddrsRequestParent() {
+already_AddRefed<PStunAddrsRequestParent>
+NeckoParent::AllocPStunAddrsRequestParent() {
 #ifdef MOZ_WEBRTC
-  StunAddrsRequestParent* p = new StunAddrsRequestParent();
-  p->AddRef();
-  return p;
+  return do_AddRef(new StunAddrsRequestParent());
 #else
   return nullptr;
 #endif
 }
 
-bool NeckoParent::DeallocPStunAddrsRequestParent(
-    PStunAddrsRequestParent* aActor) {
+already_AddRefed<PWebrtcTCPSocketParent>
+NeckoParent::AllocPWebrtcTCPSocketParent(const Maybe<TabId>& aTabId) {
 #ifdef MOZ_WEBRTC
-  StunAddrsRequestParent* p = static_cast<StunAddrsRequestParent*>(aActor);
-  p->Release();
-#endif
-  return true;
-}
-
-PWebrtcTCPSocketParent* NeckoParent::AllocPWebrtcTCPSocketParent(
-    const Maybe<TabId>& aTabId) {
-#ifdef MOZ_WEBRTC
-  WebrtcTCPSocketParent* parent = new WebrtcTCPSocketParent(aTabId);
-  parent->AddRef();
-  return parent;
+  return do_AddRef(new WebrtcTCPSocketParent(aTabId));
 #else
   return nullptr;
 #endif
-}
-
-bool NeckoParent::DeallocPWebrtcTCPSocketParent(
-    PWebrtcTCPSocketParent* aActor) {
-#ifdef MOZ_WEBRTC
-  WebrtcTCPSocketParent* parent = static_cast<WebrtcTCPSocketParent*>(aActor);
-  parent->Release();
-#endif
-  return true;
 }
 
 PAltDataOutputStreamParent* NeckoParent::AllocPAltDataOutputStreamParent(
@@ -330,51 +306,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvPDataChannelConstructor(
   return IPC_OK();
 }
 
-#ifdef MOZ_WIDGET_GTK
-static already_AddRefed<nsIPrincipal> GetRequestingPrincipal(
-    const GIOChannelCreationArgs& aArgs) {
-  if (aArgs.type() != GIOChannelCreationArgs::TGIOChannelOpenArgs) {
-    return nullptr;
-  }
-
-  const GIOChannelOpenArgs& args = aArgs.get_GIOChannelOpenArgs();
-  return GetRequestingPrincipal(args.loadInfo());
-}
-
-PGIOChannelParent* NeckoParent::AllocPGIOChannelParent(
-    PBrowserParent* aBrowser, const SerializedLoadContext& aSerialized,
-    const GIOChannelCreationArgs& aOpenArgs) {
-  nsCOMPtr<nsIPrincipal> requestingPrincipal =
-      GetRequestingPrincipal(aOpenArgs);
-
-  nsCOMPtr<nsILoadContext> loadContext;
-  CreateChannelLoadContext(aBrowser, Manager(), aSerialized,
-                           requestingPrincipal, loadContext);
-  PBOverrideStatus overrideStatus =
-      PBOverrideStatusFromLoadContext(aSerialized);
-  GIOChannelParent* p = new GIOChannelParent(BrowserParent::GetFrom(aBrowser),
-                                             loadContext, overrideStatus);
-  p->AddRef();
-  return p;
-}
-
-bool NeckoParent::DeallocPGIOChannelParent(PGIOChannelParent* channel) {
-  GIOChannelParent* p = static_cast<GIOChannelParent*>(channel);
-  p->Release();
-  return true;
-}
-
-mozilla::ipc::IPCResult NeckoParent::RecvPGIOChannelConstructor(
-    PGIOChannelParent* actor, PBrowserParent* aBrowser,
-    const SerializedLoadContext& aSerialized,
-    const GIOChannelCreationArgs& aOpenArgs) {
-  GIOChannelParent* p = static_cast<GIOChannelParent*>(actor);
-  DebugOnly<bool> rv = p->Init(aOpenArgs);
-  MOZ_ASSERT(rv);
-  return IPC_OK();
-}
-#endif
-
 PSimpleChannelParent* NeckoParent::AllocPSimpleChannelParent(
     const uint32_t& channelId) {
   RefPtr<SimpleChannelParent> p = new SimpleChannelParent();
@@ -420,13 +351,12 @@ bool NeckoParent::DeallocPTCPSocketParent(PTCPSocketParent* actor) {
   return true;
 }
 
-PTCPServerSocketParent* NeckoParent::AllocPTCPServerSocketParent(
-    const uint16_t& aLocalPort, const uint16_t& aBacklog,
-    const bool& aUseArrayBuffers) {
-  TCPServerSocketParent* p =
-      new TCPServerSocketParent(this, aLocalPort, aBacklog, aUseArrayBuffers);
-  p->AddIPDLReference();
-  return p;
+already_AddRefed<PTCPServerSocketParent>
+NeckoParent::AllocPTCPServerSocketParent(const uint16_t& aLocalPort,
+                                         const uint16_t& aBacklog,
+                                         const bool& aUseArrayBuffers) {
+  return do_AddRef(
+      new TCPServerSocketParent(this, aLocalPort, aBacklog, aUseArrayBuffers));
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPTCPServerSocketConstructor(
@@ -439,17 +369,9 @@ mozilla::ipc::IPCResult NeckoParent::RecvPTCPServerSocketConstructor(
   return IPC_OK();
 }
 
-bool NeckoParent::DeallocPTCPServerSocketParent(PTCPServerSocketParent* actor) {
-  TCPServerSocketParent* p = static_cast<TCPServerSocketParent*>(actor);
-  p->ReleaseIPDLReference();
-  return true;
-}
-
-PUDPSocketParent* NeckoParent::AllocPUDPSocketParent(
+already_AddRefed<PUDPSocketParent> NeckoParent::AllocPUDPSocketParent(
     nsIPrincipal* /* unused */, const nsACString& /* unused */) {
-  RefPtr<UDPSocketParent> p = new UDPSocketParent(this);
-
-  return p.forget().take();
+  return do_AddRef(new UDPSocketParent(this));
 }
 
 mozilla::ipc::IPCResult NeckoParent::RecvPUDPSocketConstructor(
@@ -462,12 +384,6 @@ mozilla::ipc::IPCResult NeckoParent::RecvPUDPSocketConstructor(
     return IPC_FAIL_NO_REASON(this);
   }
   return IPC_OK();
-}
-
-bool NeckoParent::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
-  UDPSocketParent* p = static_cast<UDPSocketParent*>(actor);
-  p->Release();
-  return true;
 }
 
 already_AddRefed<PDNSRequestParent> NeckoParent::AllocPDNSRequestParent(

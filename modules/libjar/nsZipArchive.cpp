@@ -13,6 +13,7 @@
 #include "mozilla/MmapFaultHandler.h"
 #include "prio.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/Logging.h"
 #include "mozilla/MemUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -269,6 +270,20 @@ nsresult nsZipHandle::Init(nsZipArchive* zip, const nsACString& entry,
   return NS_OK;
 }
 
+nsresult nsZipHandle::Init(const uint8_t* aData, uint32_t aLen,
+                           nsZipHandle** aRet) {
+  RefPtr<nsZipHandle> handle = new nsZipHandle();
+
+  handle->mFileStart = aData;
+  handle->mTotalLen = aLen;
+  nsresult rv = handle->findDataStart();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  handle.forget(aRet);
+  return NS_OK;
+}
+
 // This function finds the start of the ZIP data. If the file is a regular ZIP,
 // this is just the start of the file. If the file is a CRX file, the start of
 // the data is after the CRX header.
@@ -308,18 +323,25 @@ nsresult nsZipHandle::findDataStart() {
     headerData += CRXIntSize;  // Skip magic number
     uint32_t version = xtolong(headerData);
     headerData += CRXIntSize;  // Skip version
-    uint32_t headerSize = CRXIntSize * 2;
+    mozilla::CheckedInt<uint32_t> checkedHeaderSize = CRXIntSize * 2;
     if (version == 3) {
       uint32_t subHeaderSize = xtolong(headerData);
-      headerSize += CRXIntSize + subHeaderSize;
+      checkedHeaderSize += CRXIntSize;
+      checkedHeaderSize += subHeaderSize;
     } else if (version < 3) {
       uint32_t pubKeyLength = xtolong(headerData);
       headerData += CRXIntSize;
       uint32_t sigLength = xtolong(headerData);
-      headerSize += CRXIntSize * 2 + pubKeyLength + sigLength;
+      checkedHeaderSize += CRXIntSize * 2;
+      checkedHeaderSize += pubKeyLength;
+      checkedHeaderSize += sigLength;
     } else {
       return NS_ERROR_FILE_CORRUPTED;
     }
+    if (!checkedHeaderSize.isValid()) {
+      return NS_ERROR_FILE_CORRUPTED;
+    }
+    uint32_t headerSize = checkedHeaderSize.value();
     if (mTotalLen > headerSize) {
       mLen = mTotalLen - headerSize;
       mFileData = mFileStart + headerSize;
@@ -809,10 +831,14 @@ uint32_t nsZipArchive::GetDataOffset(nsZipItem* aItem) {
   MOZ_DIAGNOSTIC_ASSERT(len <= UINT32_MAX, "mLen > 2GB");
   const uint8_t* data = mFd->mFileData;
   offset = aItem->LocalOffset();
-  if (len < ZIPLOCAL_SIZE || offset > len - ZIPLOCAL_SIZE) return 0;
-  // Asserts there's enough space for the signature
-  MOZ_DIAGNOSTIC_ASSERT(offset <= mFd->mLen - 4,
-                        "Corrupt local offset in JAR file");
+  if (len < ZIPLOCAL_SIZE || offset > len - ZIPLOCAL_SIZE) {
+    return 0;
+  }
+  // Check there's enough space for the signature
+  if (offset > mFd->mLen) {
+    NS_WARNING("Corrupt local offset in JAR file");
+    return 0;
+  }
 
   // -- check signature before using the structure, in case the zip file is
   // corrupt
@@ -824,8 +850,11 @@ uint32_t nsZipArchive::GetDataOffset(nsZipItem* aItem) {
   //--       the offset accurately we need the _local_ extralen.
   offset += ZIPLOCAL_SIZE + xtoint(Local->filename_len) +
             xtoint(Local->extrafield_len);
-  // Asserts there's enough space for the signature
-  MOZ_DIAGNOSTIC_ASSERT(offset <= mFd->mLen, "Corrupt data offset in JAR file");
+  // Check data points inside the file.
+  if (offset > mFd->mLen) {
+    NS_WARNING("Corrupt data offset in JAR file");
+    return 0;
+  }
 
   MMAP_FAULT_HANDLER_CATCH(0)
   // can't be 0

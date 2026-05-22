@@ -511,6 +511,9 @@ BackgroundParentImpl::AllocPIdleSchedulerParent() {
 already_AddRefed<dom::PRemoteWorkerControllerParent>
 BackgroundParentImpl::AllocPRemoteWorkerControllerParent(
     const dom::RemoteWorkerData& aRemoteWorkerData) {
+  if (BackgroundParent::IsOtherProcessActor(this)) {
+    return nullptr;
+  }
   RefPtr<dom::RemoteWorkerControllerParent> actor =
       new dom::RemoteWorkerControllerParent(aRemoteWorkerData);
   return actor.forget();
@@ -520,7 +523,6 @@ IPCResult BackgroundParentImpl::RecvPRemoteWorkerControllerConstructor(
     dom::PRemoteWorkerControllerParent* aActor,
     const dom::RemoteWorkerData& aRemoteWorkerData) {
   MOZ_ASSERT(aActor);
-
   return IPC_OK();
 }
 
@@ -537,6 +539,12 @@ IPCResult BackgroundParentImpl::RecvPSharedWorkerConstructor(
     PSharedWorkerParent* aActor, const mozilla::dom::RemoteWorkerData& aData,
     const uint64_t& aWindowID,
     const mozilla::dom::MessagePortIdentifier& aPortIdentifier) {
+
+  if (MOZ_UNLIKELY(aData.serviceWorkerData().type() !=
+                   OptionalServiceWorkerData::Tvoid_t)) {
+    return IPC_FAIL(this, "Invalid worker type for PSharedWorkerParent");
+  }
+
   mozilla::dom::SharedWorkerParent* actor =
       static_cast<mozilla::dom::SharedWorkerParent*>(aActor);
   actor->Initialize(aData, aWindowID, aPortIdentifier);
@@ -665,10 +673,8 @@ bool BackgroundParentImpl::DeallocPCamerasParent(
 
 auto BackgroundParentImpl::AllocPUDPSocketParent(
     const Maybe<PrincipalInfo>& /* unused */, const nsACString& /* unused */)
-    -> PUDPSocketParent* {
-  RefPtr<UDPSocketParent> p = new UDPSocketParent(this);
-
-  return p.forget().take();
+    -> already_AddRefed<PUDPSocketParent> {
+  return do_AddRef(new UDPSocketParent(this));
 }
 
 mozilla::ipc::IPCResult BackgroundParentImpl::RecvPUDPSocketConstructor(
@@ -703,12 +709,6 @@ mozilla::ipc::IPCResult BackgroundParentImpl::RecvPUDPSocketConstructor(
   }
 
   return IPC_OK();
-}
-
-bool BackgroundParentImpl::DeallocPUDPSocketParent(PUDPSocketParent* actor) {
-  UDPSocketParent* p = static_cast<UDPSocketParent*>(actor);
-  p->Release();
-  return true;
 }
 
 mozilla::dom::PBroadcastChannelParent*

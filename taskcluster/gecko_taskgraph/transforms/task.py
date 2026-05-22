@@ -838,7 +838,7 @@ def build_generic_worker_payload(config, task, task_def):
     "scriptworker-signing",
     schema={
         # the maximum time to run, in seconds
-        Required("max-run-time"): int,
+        Optional("max-run-time"): int,
         # list of artifact URLs for the artifacts that should be signed
         Required("upstream-artifacts"): [
             {
@@ -888,7 +888,6 @@ def build_scriptworker_signing_payload(config, task, task_def):
     worker = task["worker"]
 
     task_def["payload"] = {
-        "maxRunTime": worker["max-run-time"],
         "upstreamArtifacts": worker["upstream-artifacts"],
     }
     if worker.get("mac-behavior"):
@@ -919,7 +918,7 @@ def build_scriptworker_signing_payload(config, task, task_def):
     "beetmover",
     schema={
         # the maximum time to run, in seconds
-        Required("max-run-time"): int,
+        Optional("max-run-time"): int,
         # locale key, if this is a locale beetmover job
         Optional("locale"): str,
         Required("release-properties"): {
@@ -952,7 +951,6 @@ def build_beetmover_payload(config, task, task_def):
     release_properties = worker["release-properties"]
 
     task_def["payload"] = {
-        "maxRunTime": worker["max-run-time"],
         "releaseProperties": {
             "appName": release_properties["app-name"],
             "appVersion": release_properties["app-version"],
@@ -976,7 +974,7 @@ def build_beetmover_payload(config, task, task_def):
     "beetmover-push-to-release",
     schema={
         # the maximum time to run, in seconds
-        Required("max-run-time"): int,
+        Optional("max-run-time"): int,
         Required("product"): str,
     },
 )
@@ -986,7 +984,6 @@ def build_beetmover_push_to_release_payload(config, task, task_def):
     partners = [f"{p}/{s}" for p, s, _ in get_partners_to_be_published(config)]
 
     task_def["payload"] = {
-        "maxRunTime": worker["max-run-time"],
         "product": worker["product"],
         "version": release_config["version"],
         "build_number": release_config["build_number"],
@@ -997,7 +994,7 @@ def build_beetmover_push_to_release_payload(config, task, task_def):
 @payload_builder(
     "beetmover-import-from-gcs-to-artifact-registry",
     schema={
-        Required("max-run-time"): int,
+        Optional("max-run-time"): int,
         Required("gcs-sources"): [str],
         Required("product"): str,
     },
@@ -1012,7 +1009,7 @@ def build_import_from_gcs_to_artifact_registry_payload(config, task, task_def):
 @payload_builder(
     "beetmover-maven",
     schema={
-        Required("max-run-time"): int,
+        Optional("max-run-time"): int,
         Required("release-properties"): {
             "app-name": str,
             "app-version": str,
@@ -1308,6 +1305,18 @@ def build_ship_it_shipped_payload(config, task, task_def):
     worker = task["worker"]
 
     task_def["payload"] = {"release_name": worker["release-name"]}
+
+
+@payload_builder(
+    "shipit-merged",
+    schema={
+        Required("merge-automation-id"): int,
+    },
+)
+def build_ship_it_merged_payload(config, task, task_def):
+    worker = task["worker"]
+
+    task_def["payload"] = {"automation_id": worker["merge-automation-id"]}
 
 
 @payload_builder(
@@ -1808,14 +1817,6 @@ def set_defaults(config, tasks):
                     "Windows and Linux, not on {}".format(worker["os"])
                 )
             worker.setdefault("chain-of-trust", False)
-        elif worker["implementation"] in (
-            "scriptworker-signing",
-            "beetmover",
-            "beetmover-push-to-release",
-            "beetmover-maven",
-            "beetmover-import-from-gcs-to-artifact-registry",
-        ):
-            worker.setdefault("max-run-time", 600)
         elif worker["implementation"] == "push-apk":
             worker.setdefault("commit", False)
 

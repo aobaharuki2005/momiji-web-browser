@@ -217,6 +217,8 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
 
   static bool InitLogFont(IDWriteFont* aFont, LOGFONTW* aLogFont);
 
+  FontTableCache* GetFontTableCache(bool aCreate) override;
+
   /**
    * A fontentry only needs to have either of these. If it has both only
    * the IDWriteFont will be used.
@@ -235,6 +237,8 @@ class gfxDWriteFontEntry final : public gfxFontEntry {
   RefPtr<IDWriteFontFace5> mFontFace5;
 
   DWRITE_FONT_FACE_TYPE mFaceType;
+
+  mozilla::Atomic<FontTableCache*> mFontTableCache;
 
   int8_t mIsCJK;
   bool mIsSystemFont;
@@ -457,6 +461,10 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
       const nsTArray<nsCString>* aForceClassicFams = nullptr)
       MOZ_REQUIRES(mLock);
 
+  void AddSubstitute(const nsCString& aSubstituteName,
+                     const nsCString& aActualFontName, bool aIsHardcoded)
+      MOZ_REQUIRES(mLock);
+
 #ifdef MOZ_BUNDLED_FONTS
   already_AddRefed<IDWriteFontCollection> CreateBundledFontsCollection(
       IDWriteFactory* aFactory);
@@ -474,6 +482,13 @@ class gfxDWriteFontList final : public gfxPlatformFontList {
    */
   FontFamilyTable mFontSubstitutes;
   nsClassHashtable<nsCStringHashKey, nsCString> mSubstitutions;
+
+  /**
+   * Table of hardcoded font substitutes. We use this instead of the one
+   * generated from the registry when fingerprinting protections are enabled.
+   */
+  FontFamilyTable mHardcodedSubstitutes;
+  nsClassHashtable<nsCStringHashKey, nsCString> mHardcodedSubstitutions;
 
   virtual already_AddRefed<FontInfoData> CreateFontInfoData();
 

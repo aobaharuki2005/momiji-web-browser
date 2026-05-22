@@ -329,6 +329,13 @@ BOOL nsCocoaUtils::ShouldRestoreStateDueToLaunchAtLogin() {
 void nsCocoaUtils::PrepareForNativeAppModalDialog() {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
+  if (!NSApp.active) {
+    // Early exit if the app isn't active. This is because we can't safely
+    // set the NSApp.mainMenu property in such a case. We early exit so we
+    // also don't invoke any side effects.
+    return;
+  }
+
   // Don't do anything if this is embedding. We'll assume that if there is no
   // hidden window we shouldn't do anything, and that should cover the embedding
   // case.
@@ -1480,8 +1487,9 @@ nsresult nsCocoaUtils::GetScreenCapturePermissionState(
     return NS_OK;
   }
 
-  LOG("GetScreenCapturePermissionState(): nothing to do, not on 10.15+");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  LOG("nsIOSPermissionRequest not available on macOS 10.14 and earlier, enable anyway");
+  aPermissionState = nsIOSPermissionRequest::PERMISSION_STATE_AUTHORIZED;
+  return NS_OK;
 }
 
 nsresult nsCocoaUtils::RequestVideoCapturePermission(

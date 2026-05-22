@@ -450,6 +450,12 @@ JS_PUBLIC_API bool js::NukeCrossCompartmentWrappers(
         continue;
       }
 
+      // Don't nuke wrappers for debugger objects. These are used in Breakpoints
+      // and nuking them breaks debugger invariants.
+      if (MOZ_UNLIKELY(wrapped->is<DebuggerInstanceObject>())) {
+        continue;
+      }
+
       // We only skip nuking window references that point to a target
       // compartment, not the ones that belong to it.
       if (nukeReferencesToWindow == DontNukeWindowReferences &&

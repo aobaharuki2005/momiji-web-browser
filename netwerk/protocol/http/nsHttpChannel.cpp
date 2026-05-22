@@ -354,6 +354,7 @@ nsHttpChannel::nsHttpChannel() : HttpAsyncAborter<nsHttpChannel>(this) {
 }
 
 nsHttpChannel::~nsHttpChannel() {
+  MOZ_ASSERT(NS_IsMainThread(), "Must be released on main thread");
   PROFILER_MARKER("~nsHttpChannel", NETWORK, {}, TerminatingFlowMarker,
                   Flow::FromPointer(this));
   LOG(("Destroying nsHttpChannel [this=%p, nsIChannel=%p]\n", this,
@@ -373,40 +374,9 @@ nsHttpChannel::~nsHttpChannel() {
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  ReleaseMainThreadOnlyReferences();
   if (gHttpHandler) {
     gHttpHandler->RemoveHttpChannel(mChannelId);
   }
-}
-
-void nsHttpChannel::ReleaseMainThreadOnlyReferences() {
-  if (NS_IsMainThread()) {
-    // Already on main thread, let dtor to
-    // take care of releasing references
-    return;
-  }
-
-  nsTArray<nsCOMPtr<nsISupports>> arrayToRelease;
-  arrayToRelease.AppendElement(mAuthProvider.forget());
-  arrayToRelease.AppendElement(mRedirectChannel.forget());
-  arrayToRelease.AppendElement(mPreflightChannel.forget());
-  arrayToRelease.AppendElement(mDNSPrefetch.forget());
-
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mEarlyHintObserver,
-      "Early hint observer should have been released in ReleaseListeners()");
-  arrayToRelease.AppendElement(mEarlyHintObserver.forget());
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mChannelClassifier,
-      "Channel classifier should have been released in ReleaseListeners()");
-  arrayToRelease.AppendElement(
-      mChannelClassifier.forget().downcast<nsIURIClassifierCallback>());
-  MOZ_DIAGNOSTIC_ASSERT(
-      !mWarningReporter,
-      "Warning reporter should have been released in ReleaseListeners()");
-  arrayToRelease.AppendElement(mWarningReporter.forget());
-
-  NS_DispatchToMainThread(new ProxyReleaseRunnable(std::move(arrayToRelease)));
 }
 
 nsresult nsHttpChannel::Init(nsIURI* uri, uint32_t caps, nsProxyInfo* proxyInfo,
@@ -465,7 +435,14 @@ nsresult nsHttpChannel::PrepareToConnect() {
   // notify "http-on-modify-request-before-cookies" observers
   gHttpHandler->OnModifyRequestBeforeCookies(this);
 
-  AddCookiesToRequest();
+  if (mStaleRevalidation) {
+    // This is a revalidating channel.
+    // The cookies (user set cookies + cookies from the cookeservice) are
+    // already copied to the request headers when opening this channel in
+    // PerformBackgroundCacheRevalidationNow().
+  } else {
+    AddCookiesToRequest();
+  }
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
 
@@ -1772,7 +1749,7 @@ nsresult nsHttpChannel::SetupChannelForTransaction() {
     rv = mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = mRequestHead.SetHeaderOnce(nsHttp::Connection, nsHttp::Upgrade.get(),
-                                    true);
+                                    false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     mCaps |= NS_HTTP_STICKY_CONNECTION;
     mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
@@ -6222,7 +6199,29 @@ NS_IMETHODIMP nsHttpChannel::ConnectionRestartable(bool aRestartable) {
 //-----------------------------------------------------------------------------
 
 NS_IMPL_ADDREF_INHERITED(nsHttpChannel, HttpBaseChannel)
-NS_IMPL_RELEASE_INHERITED(nsHttpChannel, HttpBaseChannel)
+bool nsHttpChannel::DispatchRelease() {
+  if (NS_IsMainThread()) {
+    return false;
+  }
+
+  NS_DispatchToMainThread(
+      NewNonOwningRunnableMethod("net::nsHttpChannel::Release", this,
+                                 &nsHttpChannel::Release),
+      NS_DISPATCH_NORMAL);
+
+  return true;
+}
+
+NS_IMETHODIMP_(MozExternalRefCountType)
+nsHttpChannel::Release() {
+  nsrefcnt count = mRefCnt - 1;
+  if (DispatchRelease()) {
+    // Redispatched to the main thread.
+    return count;
+  }
+
+  NS_IMPL_RELEASE_INHERITED_GUTS(nsHttpChannel, HttpBaseChannel);
+}
 
 NS_INTERFACE_MAP_BEGIN(nsHttpChannel)
   NS_INTERFACE_MAP_ENTRY(nsIRequest)
@@ -6654,6 +6653,10 @@ nsHttpChannel::GetSecurityInfo(nsITransportSecurityInfo** securityInfo) {
 // any error.
 NS_IMETHODIMP
 nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
+  // doContentSecurityCheck and OnOpeningRequest fire observers that may
+  // spin nested event loops; hold a strong ref to this.
+  RefPtr<nsHttpChannel> self(this);
+
   AUTO_PROFILER_FLOW_MARKER("nsHttpChannel::AsyncOpen", NETWORK,
                             Flow::FromPointer(this));
   nsCOMPtr<nsIStreamListener> listener = aListener;
@@ -6749,6 +6752,8 @@ nsHttpChannel::AsyncOpen(nsIStreamListener* aListener) {
   // Remember the cookie header that was set, if any
   nsAutoCString cookieHeader;
   if (NS_SUCCEEDED(mRequestHead.GetHeader(nsHttp::Cookie, cookieHeader))) {
+    // if this is a cache revalidaing channel (mIsStaleRevalidation), then this
+    // represents both user cookies and cookies from cookieService
     mUserSetCookieHeader = cookieHeader;
   }
 
@@ -11313,9 +11318,11 @@ nsHttpChannel::EarlyHint(const nsACString& aLinkHeader,
                          const nsACString& aCspHeader) {
   LOG(("nsHttpChannel::EarlyHint.\n"));
 
-  if (mEarlyHintObserver && nsContentUtils::ComputeIsSecureContext(this)) {
-    LOG(("nsHttpChannel::EarlyHint propagated.\n"));
-    mEarlyHintObserver->EarlyHint(aLinkHeader, aReferrerPolicy, aCspHeader);
+  if (nsCOMPtr<nsIEarlyHintObserver> obs = mEarlyHintObserver) {
+    if (nsContentUtils::ComputeIsSecureContext(this)) {
+      LOG(("nsHttpChannel::EarlyHint propagated.\n"));
+      obs->EarlyHint(aLinkHeader, aReferrerPolicy, aCspHeader);
+    }
   }
   return NS_OK;
 }

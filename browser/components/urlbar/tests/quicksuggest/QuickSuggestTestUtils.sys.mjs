@@ -943,8 +943,10 @@ class _QuickSuggestTestUtils {
     source = "rust",
     provider = "Yelp",
     isTopPick = false,
-    // The default Yelp suggestedIndex is 0, unlike most other Suggest
-    // suggestion types, which use -1.
+    // The logic for the default Yelp `suggestedIndex` is complex and depends on
+    // whether `UrlbarProviderSearchSuggestions` is active and whether search
+    // suggestions are shown first. By default -- when the answer to both of
+    // those questions is Yes -- Yelp's `suggestedIndex` is 0.
     suggestedIndex = 0,
     isSuggestedIndexRelativeToGroup = true,
     originalUrl = undefined,

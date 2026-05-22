@@ -530,6 +530,7 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect,
       // - superview setWantsLayer here  to ensure our
       //   menu and fullscreen buttons are shown, but not at the  cost of
       //   losing the rounded corners on popup menus.
+      [mWindow setBackgroundColor:[NSColor clearColor]];
       [[[mWindow contentView] superview] setWantsLayer:YES];
     }
   }

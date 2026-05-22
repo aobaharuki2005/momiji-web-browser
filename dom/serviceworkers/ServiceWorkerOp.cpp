@@ -303,7 +303,10 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable final
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
     MOZ_ASSERT(mOwner);
 
-    if (aWorkerPrivate->GlobalScope()->IsDying()) {
+    // GlobalScope could be nullptr here that OOM issue causes GlobalScope
+    // creation fail.
+    if (!aWorkerPrivate->GlobalScope() ||
+        aWorkerPrivate->GlobalScope()->IsDying()) {
       Unused << Cancel();
       return true;
     }
@@ -1691,15 +1694,22 @@ void FetchEventOp::ResolvedCallback(JSContext* aCx,
   // https://w3c.github.io/ServiceWorker/#on-fetch-request-algorithm Step 26: If
   // eventHandled is not null, then resolve eventHandled.
   //
-  // mRespondWithPromiseHolder will resolve a MozPromise that will resolve on
-  // the worker owner's thread, so it's fine to resolve the mHandled promise now
-  // because content will not interfere with respondWith getting the Response to
-  // where it's going.
+  // Take an immutable snapshot of the headers now, while still on the worker
+  // thread.
+  ir->SnapshotUnfilteredHeaders();
+
   mHandled->MaybeResolveWithUndefined();
+
+  ChildToParentSynthesizeResponseArgs synthesizeResponseArgs;
+  synthesizeResponseArgs.closure() = mRespondWithClosure.ref();
+  synthesizeResponseArgs.timeStamps() =
+      FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish);
+  ir->ToChildToParentInternalResponse(
+      &synthesizeResponseArgs.internalResponse());
+
   mRespondWithPromiseHolder.Resolve(
-      FetchEventRespondWithResult(std::make_tuple(
-          std::move(ir), mRespondWithClosure.ref(),
-          FetchEventTimeStamps(mFetchHandlerStart, mFetchHandlerFinish))),
+      FetchEventRespondWithResult(
+          std::make_pair(std::move(ir), std::move(synthesizeResponseArgs))),
       __func__);
 }
 
@@ -1862,10 +1872,14 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
             GetCurrentSerialEventTarget(), __func__,
             [self, globalObjectAsSupports](
                 SafeRefPtr<InternalResponse>&& aPreloadResponse) {
-              self->mPreloadResponse->MaybeResolve(
-                  MakeRefPtr<Response>(globalObjectAsSupports,
-                                       std::move(aPreloadResponse), nullptr));
+              // let's complete the promise holder before MaybeResolve
               self->mPreloadResponseAvailablePromiseRequestHolder.Complete();
+              RefPtr<Promise> preloadResponse = self->mPreloadResponse;
+              if (preloadResponse) {
+                preloadResponse->MaybeResolve(
+                    MakeRefPtr<Response>(globalObjectAsSupports,
+                                         std::move(aPreloadResponse), nullptr));
+              }
             },
             [self](int) {
               self->mPreloadResponseAvailablePromiseRequestHolder.Complete();
@@ -1904,10 +1918,14 @@ nsresult FetchEventOp::DispatchFetchEvent(JSContext* aCx,
         ->Then(
             GetCurrentSerialEventTarget(), __func__,
             [self, globalObjectAsSupports](ResponseEndArgs&& aArgs) {
-              if (aArgs.endReason() == FetchDriverObserver::eAborted) {
-                self->mPreloadResponse->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-              }
+              // let's complete the promise holder before MaybeReject
               self->mPreloadResponseEndPromiseRequestHolder.Complete();
+              if (aArgs.endReason() == FetchDriverObserver::eAborted) {
+                RefPtr<Promise> preloadResponse = self->mPreloadResponse;
+                if (preloadResponse) {
+                  preloadResponse->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+                }
+              }
             },
             [self](int) {
               self->mPreloadResponseEndPromiseRequestHolder.Complete();

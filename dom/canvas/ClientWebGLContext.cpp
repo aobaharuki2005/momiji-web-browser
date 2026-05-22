@@ -13,6 +13,7 @@
 #include "HostWebGLContext.h"
 #include "js/PropertyAndElement.h"  // JS_DefineElement
 #include "js/ScalarType.h"          // js::Scalar::Type
+#include "mozilla/dom/CanvasUtils.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/TypedArray.h"
@@ -35,6 +36,7 @@
 #include "mozilla/StaticPrefs_webgl.h"
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
+#include "nsIPermissionManager.h"
 #include "TexUnpackBlob.h"
 #include "WebGLFormats.h"
 #include "WebGLMethodDispatcher.h"
@@ -58,6 +60,16 @@ webgl::NotLostData::~NotLostData() {
     outOfProcess->Destroy();
   }
 }
+
+// Currently WebGL only runs method dispatch on a single thread. Access to
+// context data outside of that thread happens only rarely to collect memory
+// reports, which should be the only possible source of contention. It is
+// sufficient to acquire the global host context lock here since individual
+// contexts can't contend with each other, as the dispatching thread will only
+// be accessing contexts one at a time.
+class LockInProcess {
+  LockedOutstandingContexts locked;
+};
 
 // -
 
@@ -196,9 +208,25 @@ ClientWebGLContext::ClientWebGLContext(const bool webgl2)
     : mIsWebGL2(webgl2),
       mExtLoseContext(new ClientWebGLExtensionLoseContext(*this)) {}
 
-ClientWebGLContext::~ClientWebGLContext() { RemovePostRefreshObserver(); }
+static inline void SafeReleaseNotLostData(std::shared_ptr<webgl::NotLostData>& notLost) {
+  if (notLost) {
+    const auto keepAlive = std::move(notLost);
+    keepAlive->extensions = {};
+    keepAlive->state = {};
+  }
+}
+
+ClientWebGLContext::~ClientWebGLContext() {
+  RemovePostRefreshObserver();
+  SafeReleaseNotLostData(mNotLost);
+}
 
 void ClientWebGLContext::JsWarning(const std::string& utf8) const {
+  if (mDeferJsWarnings) {
+    mDeferJsWarnings->push_back(utf8);
+    return;
+  }
+
   nsIGlobalObject* global = nullptr;
   if (mCanvasElement) {
     mozilla::dom::Document* doc = mCanvasElement->OwnerDoc();
@@ -417,7 +445,7 @@ void ClientWebGLContext::ThrowEvent_WebGLContextCreationError(
 template <typename MethodT, typename... Args>
 void ClientWebGLContext::Run_WithDestArgTypes(
     std::optional<JS::AutoCheckCannotGC>&& noGc, const MethodT method,
-    const size_t id, const Args&... args) const {
+    const WebGLMethodInfo methodInfo, const Args&... args) const {
   const auto notLost =
       mNotLost;  // Hold a strong-ref to prevent LoseContext=>UAF.
 
@@ -431,15 +459,37 @@ void ClientWebGLContext::Run_WithDestArgTypes(
 
   const auto& inProcess = notLost->inProcess;
   if (inProcess) {
+    Maybe<LockInProcess> locked;
+    if (methodInfo.flags & WebGLMethodInfo::LOCK_IN_PROCESS) {
+      locked.emplace();
+    }
+
+    if (noGc.has_value()) {
+      // JsWarning may trigger GC, so defer warning till after any args have
+      // been used.
+      std::vector<std::string> warnings;
+      mDeferJsWarnings = &warnings;
+
+      (inProcess.get()->*method)(args...);
+
+      // Flush out any warnings, which may trigger GC.
+      mDeferJsWarnings = nullptr;
+      noGc.reset();
+      for (const auto& warning : warnings) {
+        JsWarning(warning);
+      }
+      return;
+    }
+
     (inProcess.get()->*method)(args...);
     return;
   }
 
   const auto& child = notLost->outOfProcess;
 
-  const auto info = webgl::SerializationInfo(id, args...);
-  const auto maybeDest = child->AllocPendingCmdBytes(info.requiredByteCount,
-                                                     info.alignmentOverhead);
+  const auto cmdInfo = webgl::SerializationInfo(methodInfo.id, args...);
+  const auto maybeDest = child->AllocPendingCmdBytes(cmdInfo.requiredByteCount,
+                                                     cmdInfo.alignmentOverhead);
   if (!maybeDest) {
     noGc.reset();  // Reset early, as GC data will not be used, but JsWarning
                    // can GC.
@@ -448,7 +498,7 @@ void ClientWebGLContext::Run_WithDestArgTypes(
     return;
   }
   const auto& destBytes = *maybeDest;
-  webgl::Serialize(destBytes, id, args...);
+  webgl::Serialize(destBytes, methodInfo.id, args...);
 }
 
 // -
@@ -1344,7 +1394,8 @@ UniquePtr<uint8_t[]> ClientWebGLContext::GetImageBuffer(
 
   if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
     return gfxUtils::GetImageBufferWithRandomNoise(
-        dataSurface, premultAlpha, GetCookieJarSettings(), out_format);
+        dataSurface, premultAlpha, GetCookieJarSettings(), PrincipalOrNull(),
+        out_format);
   }
 
   return gfxUtils::GetImageBuffer(dataSurface, premultAlpha, out_format);
@@ -1365,7 +1416,7 @@ ClientWebGLContext::GetInputStream(const char* mimeType,
   if (ShouldResistFingerprinting(RFPTarget::CanvasRandomization)) {
     return gfxUtils::GetInputStreamWithRandomNoise(
         dataSurface, premultAlpha, mimeType, encoderOptions,
-        GetCookieJarSettings(), out_stream);
+        GetCookieJarSettings(), PrincipalOrNull(), out_stream);
   }
 
   return gfxUtils::GetInputStream(dataSurface, premultAlpha, mimeType,
@@ -1413,6 +1464,7 @@ ClientWebGLContext::CreateOpaqueFramebuffer(
   if (mNotLost) {
     const auto& inProcess = mNotLost->inProcess;
     if (inProcess) {
+      LockInProcess locked;
       if (!inProcess->CreateOpaqueFramebuffer(ret->mId, options)) {
         ret = nullptr;
       }
@@ -4508,6 +4560,14 @@ void ClientWebGLContext::TexImage(uint8_t funcDims, GLenum imageTarget,
                 std::string{"gpuProcessTextureId works only in GPU process."});
           }
         } break;
+        case layers::SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr: {
+          MOZ_ASSERT(desc->image);
+          keepAliveImage = desc->image;
+        } break;
+        case layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
+          MOZ_ASSERT(desc->image);
+          keepAliveImage = desc->image;
+        } break;
         case layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo: {
           const auto& inProcess = mNotLost->inProcess;
           MOZ_ASSERT(desc->image);
@@ -7001,11 +7061,7 @@ void ImplCycleCollectionTraverse(
 }
 
 void ImplCycleCollectionUnlink(std::shared_ptr<webgl::NotLostData>& field) {
-  if (!field) return;
-  const auto keepAlive = field;
-  keepAlive->extensions = {};
-  keepAlive->state = {};
-  field = nullptr;
+  SafeReleaseNotLostData(field);
 }
 
 // -----------------------------------------------------

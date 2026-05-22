@@ -32,7 +32,6 @@ const TYPES: &[&str] = &[
     "Proxy",
     "RunLoop",
     "ScrollView",
-    "SplitView",
     "StackView",
     "String",
     "TextField",

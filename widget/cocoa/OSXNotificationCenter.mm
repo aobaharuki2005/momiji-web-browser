@@ -105,15 +105,9 @@ enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
         [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
     additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
   }
-  if(@available(macOS 10.10, *)) {
-    mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
-                       notification.activationType, additionalActionIndex,
-                       notification.additionalActivationAction);
-  } else {
-    mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
-                       notification.activationType, additionalActionIndex,
-                       NULL);
-  }
+  mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
+                     notification.activationType, additionalActionIndex,
+                     notification.additionalActivationAction);
 }
 
 - (BOOL)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center

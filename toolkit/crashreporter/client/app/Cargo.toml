@@ -40,7 +40,6 @@ lmdb-rkv-sys = "0.11"
 block = "0.1"
 cocoa = { package = "cocoabind", path = "../cocoabind" }
 objc = "0.2"
-whatsys ="0.3.1" 
 
 [target."cfg(target_os = \"linux\")".dependencies]
 gtk = { package = "gtkbind", path = "../gtkbind" }

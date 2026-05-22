@@ -646,8 +646,8 @@ Maybe<PlanarYCbCrData> PlanarYCbCrData::From(
       yuvDesc.cbCrSize().width < 0 || yuvDesc.cbCrSize().height < 0 ||
       yuvData.mYStride < 0 || yuvData.mCbCrStride < 0 || !yuvData.mYChannel ||
       !yuvData.mCbChannel || !yuvData.mCrChannel ||
-      yuvDesc.ySize() < yuvData.YDataSize() ||
-      yuvDesc.cbCrSize() < yuvData.CbCrDataSize()) {
+      !(yuvData.YDataSize() <= yuvDesc.ySize()) ||
+      !(yuvData.CbCrDataSize() <= yuvDesc.cbCrSize())) {
     gfxCriticalError() << "Unusual PlanarYCbCrData: " << yuvData.mYSkip << ","
                        << yuvData.mCbSkip << "," << yuvData.mCrSkip << ", "
                        << yuvDesc.ySize().width << "," << yuvDesc.ySize().height
@@ -756,6 +756,9 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
       pdata->mPictureRect, ySize, pdata->mYStride, cbcrSize, pdata->mCbCrStride,
       yOffset, cbOffset, crOffset, pdata->mColorDepth,
       pdata->mChromaSubsampling);
+  if (bufferSize == 0) {
+    return NS_ERROR_FAILURE;
+  }
 
   aSdBuffer.data() = aAllocate(bufferSize);
 

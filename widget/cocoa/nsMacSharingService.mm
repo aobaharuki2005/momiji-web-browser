@@ -19,6 +19,11 @@ NS_IMPL_ISUPPORTS(nsMacSharingService, nsIMacSharingService)
 NSString* const remindersServiceName =
     @"com.apple.reminders.RemindersShareExtension";
 
+NSString* const oldRemindersServiceName =
+    @"com.apple.reminders.RemindersShareExtension";
+NSString* const newRemindersServiceName =
+    @"com.apple.reminders.sharingextension";
+
 // These are some undocumented constants also used by Safari
 // to let us open the preferences window
 NSString* const extensionPrefPanePath =
@@ -75,12 +80,14 @@ static bool ShouldIgnoreProvider(NSString* aProviderName) {
 - (void)sharingService:(NSSharingService*)sharingService
          didShareItems:(NSArray*)items {
   [self cleanup];
+  [self release];
 }
 
 - (void)sharingService:(NSSharingService*)service
     didFailToShareItems:(NSArray*)items
                   error:(NSError*)error {
   [self cleanup];
+  [self release];
 }
 
 - (void)dealloc {

@@ -164,8 +164,6 @@ gfxTextRun::gfxTextRun(const gfxTextRunFactory::Parameters* aParams,
       mUserData(aParams->mUserData),
       mFontGroup(aFontGroup),
       mFlags2(aFlags2),
-      mReleasedFontGroup(false),
-      mReleasedFontGroupSkippedDrawing(false),
       mShapingState(eShapingState_Normal) {
   NS_ASSERTION(mAppUnitsPerDevUnit > 0, "Invalid app unit scale");
   NS_ADDREF(mFontGroup);
@@ -201,37 +199,13 @@ gfxTextRun::~gfxTextRun() {
   mFlags2 = ~nsTextFrameUtils::Flags();
 #endif
 
-  // The cached ellipsis textrun (if any) in a fontgroup will have already
-  // been told to release its reference to the group, so we mustn't do that
-  // again here.
-  if (!mReleasedFontGroup) {
 #ifndef RELEASE_OR_BETA
-    gfxTextPerfMetrics* tp = mFontGroup->GetTextPerfMetrics();
-    if (tp) {
-      tp->current.textrunDestr++;
-    }
-#endif
-    NS_RELEASE(mFontGroup);
+  gfxTextPerfMetrics* tp = mFontGroup->GetTextPerfMetrics();
+  if (tp) {
+    tp->current.textrunDestr++;
   }
-}
-
-void gfxTextRun::ReleaseFontGroup() {
-  NS_ASSERTION(!mReleasedFontGroup, "doubly released!");
-
-  // After dropping our reference to the font group, we'll no longer be able
-  // to get up-to-date results for ShouldSkipDrawing().  Store the current
-  // value in mReleasedFontGroupSkippedDrawing.
-  //
-  // (It doesn't actually matter that we can't get up-to-date results for
-  // ShouldSkipDrawing(), since the only text runs that we call
-  // ReleaseFontGroup() for are ellipsis text runs, and we ask the font
-  // group for a new ellipsis text run each time we want to draw one,
-  // and ensure that the cached one is cleared in ClearCachedData() when
-  // font loading status changes.)
-  mReleasedFontGroupSkippedDrawing = mFontGroup->ShouldSkipDrawing();
-
+#endif
   NS_RELEASE(mFontGroup);
-  mReleasedFontGroup = true;
 }
 
 bool gfxTextRun::SetPotentialLineBreaks(Range aRange,
@@ -570,9 +544,7 @@ void gfxTextRun::Draw(const Range aRange, const gfx::Point aPt,
   NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH || !aParams.callbacks,
                "callback must not be specified unless using GLYPH_PATH");
 
-  bool skipDrawing =
-      !mDontSkipDrawing && (mFontGroup ? mFontGroup->ShouldSkipDrawing()
-                                       : mReleasedFontGroupSkippedDrawing);
+  bool skipDrawing = !mDontSkipDrawing && mFontGroup->ShouldSkipDrawing();
   auto* textDrawer = aParams.context->GetTextDrawer();
   if (aParams.drawMode & DrawMode::GLYPH_FILL) {
     DeviceColor currentColor;
@@ -2026,17 +1998,8 @@ void gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily,
 void gfxFontGroup::AddFamilyToFontList(fontlist::Family* aFamily,
                                        StyleGenericFontFamily aGeneric) {
   gfxPlatformFontList* pfl = gfxPlatformFontList::PlatformFontList();
-  if (!aFamily->IsInitialized()) {
-    if (ServoStyleSet* set = gfxFontUtils::CurrentServoStyleSet()) {
-      // If we need to initialize a Family record, but we're on a style
-      // worker thread, we have to defer it.
-      set->AppendTask(PostTraversalTask::InitializeFamily(aFamily));
-      set->AppendTask(PostTraversalTask::FontInfoUpdate(set));
-      return;
-    }
-    if (!pfl->InitializeFamily(aFamily)) {
-      return;
-    }
+  if (!aFamily->IsInitialized() && !pfl->InitializeFamily(aFamily)) {
+    return;
   }
   AutoTArray<fontlist::Face*, 4> faceList;
   aFamily->FindAllFacesForStyle(pfl->SharedFontList(), mStyle, faceList);
@@ -3008,18 +2971,11 @@ void gfxFontGroup::InitScriptRun(DrawTarget* aDrawTarget, gfxTextRun* aTextRun,
   }
 }
 
-gfxTextRun* gfxFontGroup::GetEllipsisTextRun(
+already_AddRefed<gfxTextRun> gfxFontGroup::MakeEllipsisTextRun(
     int32_t aAppUnitsPerDevPixel, gfx::ShapedTextFlags aFlags,
-    LazyReferenceDrawTargetGetter& aRefDrawTargetGetter) {
+    DrawTarget* aRefDrawTarget) {
   MOZ_ASSERT(!(aFlags & ~ShapedTextFlags::TEXT_ORIENT_MASK),
              "flags here should only be used to specify orientation");
-  if (mCachedEllipsisTextRun &&
-      (mCachedEllipsisTextRun->GetFlags() &
-       ShapedTextFlags::TEXT_ORIENT_MASK) == aFlags &&
-      mCachedEllipsisTextRun->GetAppUnitsPerDevUnit() == aAppUnitsPerDevPixel) {
-    return mCachedEllipsisTextRun.get();
-  }
-
   // Use a Unicode ellipsis if the font supports it,
   // otherwise use three ASCII periods as fallback.
   RefPtr<gfxFont> firstFont = GetFirstValidFont();
@@ -3029,19 +2985,10 @@ gfxTextRun* gfxFontGroup::GetEllipsisTextRun(
           : nsDependentString(kASCIIPeriodsChar,
                               std::size(kASCIIPeriodsChar) - 1);
 
-  RefPtr<DrawTarget> refDT = aRefDrawTargetGetter.GetRefDrawTarget();
-  Parameters params = {refDT,   nullptr, nullptr,
-                       nullptr, 0,       aAppUnitsPerDevPixel};
-  mCachedEllipsisTextRun =
-      MakeTextRun(ellipsis.BeginReading(), ellipsis.Length(), &params, aFlags,
-                  nsTextFrameUtils::Flags(), nullptr);
-  if (!mCachedEllipsisTextRun) {
-    return nullptr;
-  }
-  // don't let the presence of a cached ellipsis textrun prolong the
-  // fontgroup's life
-  mCachedEllipsisTextRun->ReleaseFontGroup();
-  return mCachedEllipsisTextRun.get();
+  Parameters params = {aRefDrawTarget, nullptr, nullptr,
+                       nullptr,        0,       aAppUnitsPerDevPixel};
+  return MakeTextRun(ellipsis.BeginReading(), ellipsis.Length(), &params,
+                     aFlags, nsTextFrameUtils::Flags(), nullptr);
 }
 
 already_AddRefed<gfxFont> gfxFontGroup::FindFallbackFaceForChar(
@@ -3314,7 +3261,12 @@ already_AddRefed<gfxFont> gfxFontGroup::FindFontForChar(
         f->HasColorGlyphFor(aCh, aNextCh) ||
         (!nextIsVarSelector && f->HasColorGlyphFor(aCh, kVariationSelector16));
     // If the provided glyph matches the preference, accept the font.
-    if (hasColorGlyph == PrefersColor(presentation)) {
+    if (hasColorGlyph == PrefersColor(presentation) &&
+        // Exception: if this is an emoji flag+tag letters sequence, and the
+        // following codepoint (the first tag) is missing from the font, we
+        // don't want to use this font as it will fail to present the cluster.
+        (!hasColorGlyph || !gfxFontUtils::IsEmojiFlagAndTag(aCh, aNextCh) ||
+         f->HasCharacter(aNextCh))) {
       *aMatchType = t;
       return true;
     }

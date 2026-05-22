@@ -31,7 +31,7 @@
 // Use the WINDOWS windows subsystem. This prevents a console window from opening with the
 // application.
 #![cfg_attr(windows, windows_subsystem = "windows")]
-#![feature(let_chains)]
+
 use crate::std::sync::Arc;
 use config::Config;
 
@@ -67,6 +67,7 @@ mod logging;
 mod logic;
 mod memory_test;
 mod net;
+mod prefs_parser;
 mod process;
 mod settings;
 mod std;

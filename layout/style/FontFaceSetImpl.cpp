@@ -93,10 +93,12 @@ void FontFaceSetImpl::DestroyLoaders() {
     return;
   }
   if (NS_IsMainThread()) {
-    for (const auto& key : mLoaders.Keys()) {
+    // Move mLoaders to a local, because Cancel() calls RemoveLoader() which
+    // would otherwise mutate the table during the iteration.
+    auto loaders = std::move(mLoaders);
+    for (const auto& key : loaders.Keys()) {
       key->Cancel();
     }
-    mLoaders.Clear();
     return;
   }
 
@@ -764,21 +766,6 @@ void FontFaceSetImpl::OnFontFaceStatusChanged(FontFaceImpl* aFontFace) {
 }
 
 void FontFaceSetImpl::DispatchCheckLoadingFinishedAfterDelay() {
-  gfxFontUtils::AssertSafeThreadOrServoFontMetricsLocked();
-
-  if (ServoStyleSet* set = gfxFontUtils::CurrentServoStyleSet()) {
-    // See comments in Gecko_GetFontMetrics.
-    //
-    // We can't just dispatch the runnable below if we're not on the main
-    // thread, since it needs to take a strong reference to the FontFaceSet,
-    // and being a DOM object, FontFaceSet doesn't support thread-safe
-    // refcounting.
-    set->AppendTask(
-        PostTraversalTask::DispatchFontFaceSetCheckLoadingFinishedAfterDelay(
-            this));
-    return;
-  }
-
   DispatchToOwningThread(
       "FontFaceSetImpl::DispatchCheckLoadingFinishedAfterDelay",
       [self = RefPtr{this}]() { self->CheckLoadingFinishedAfterDelay(); });
@@ -815,7 +802,7 @@ void FontFaceSetImpl::CheckLoadingStarted() {
                          [self = RefPtr{this}]() { self->OnLoadingStarted(); });
 }
 
-void FontFaceSetImpl::OnLoadingStarted() {
+void FontFaceSetImpl::DispatchLoadingEventAndReplaceReadyPromise() {
   RecursiveMutexAutoLock lock(mMutex);
   if (mOwner) {
     mOwner->DispatchLoadingEventAndReplaceReadyPromise();

@@ -23,23 +23,11 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TCPServerSocketParent)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-void TCPServerSocketParent::ReleaseIPDLReference() {
-  MOZ_ASSERT(mIPCOpen);
-  mIPCOpen = false;
-  this->Release();
-}
-
-void TCPServerSocketParent::AddIPDLReference() {
-  MOZ_ASSERT(!mIPCOpen);
-  mIPCOpen = true;
-  this->AddRef();
-}
-
 TCPServerSocketParent::TCPServerSocketParent(PNeckoParent* neckoParent,
                                              uint16_t aLocalPort,
                                              uint16_t aBacklog,
                                              bool aUseArrayBuffers)
-    : mNeckoParent(neckoParent), mIPCOpen(false) {
+    : mNeckoParent(neckoParent) {
   mServerSocket =
       new TCPServerSocket(nullptr, aLocalPort, aUseArrayBuffers, aBacklog);
   mServerSocket->SetServerBridgeParent(this);
@@ -70,10 +58,6 @@ nsresult TCPServerSocketParent::SendCallbackAccept(TCPSocketParent* socket) {
 
   if (mNeckoParent) {
     if (mNeckoParent->SendPTCPSocketConstructor(socket, host, port)) {
-      // Call |AddIPDLReference| after the consructor message is sent
-      // successfully, otherwise |socket| could be leaked.
-      socket->AddIPDLReference();
-
       mozilla::Unused << PTCPServerSocketParent::SendCallbackAccept(
           WrapNotNull(socket));
     } else {

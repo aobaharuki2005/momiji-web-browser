@@ -21,7 +21,6 @@
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/RemoteTextureMap.h"
-#include "mozilla/widget/ScreenManager.h"
 #include "skia/include/core/SkPixmap.h"
 #include "nsContentUtils.h"
 #include "nsIMemoryReporter.h"
@@ -817,7 +816,7 @@ bool DrawTargetWebgl::GenerateComplexClipMask() {
   return !!data;
 }
 
-bool DrawTargetWebgl::SetSimpleClipRect() {
+Maybe<Rect> DrawTargetWebgl::ComputeSimpleClipRect() const {
   // Determine whether the clipping rectangle is simple enough to accelerate.
   // Check if there is a device space clip rectangle available from the Skia
   // target.
@@ -829,9 +828,7 @@ bool DrawTargetWebgl::SetSimpleClipRect() {
     if (!clip->IsEmpty() && clip->Contains(GetRect())) {
       clip = Some(GetRect());
     }
-    mSharedContext->SetClipRect(*clip);
-    mSharedContext->SetNoClipMask();
-    return true;
+    return Some(Rect(*clip));
   }
 
   // There was no pixel-aligned clip rect available, so check the clip stack to
@@ -842,15 +839,22 @@ bool DrawTargetWebgl::SetSimpleClipRect() {
     // complex.
     if (clipStack.mPath ||
         !clipStack.mTransform.PreservesAxisAlignedRectangles()) {
-      return false;
+      return Nothing();
     }
     // Transform the rect and intersect it with the current clip.
     rect =
         clipStack.mTransform.TransformBounds(clipStack.mRect).Intersect(rect);
   }
-  mSharedContext->SetClipRect(rect);
-  mSharedContext->SetNoClipMask();
-  return true;
+  return Some(rect);
+}
+
+bool DrawTargetWebgl::SetSimpleClipRect() {
+  if (Maybe<Rect> rect = ComputeSimpleClipRect()) {
+    mSharedContext->SetClipRect(*rect);
+    mSharedContext->SetNoClipMask();
+    return true;
+  }
+  return false;
 }
 
 // Installs the Skia clip rectangle, if applicable, onto the shared WebGL
@@ -872,6 +876,21 @@ bool DrawTargetWebgl::PrepareContext(bool aClipped) {
     mRefreshClipState = false;
   }
   return mSharedContext->SetTarget(this);
+}
+
+// Whether clipping may be necessary for the operation. This tries to avoid
+// generating a complex clip mask in case the current target is not active
+// or not using WebGL. If there is only a simple clip mask and its bounds
+// encompass the viewport, then no clipping is required.
+bool DrawTargetWebgl::ShouldClip() {
+  if (mSharedContext->IsCurrentTarget(this) && !mRefreshClipState) {
+    return mSharedContext->HasClipMask() ||
+           !mSharedContext->mClipAARect.Contains(Rect(GetRect()));
+  }
+  if (Maybe<Rect> rect = ComputeSimpleClipRect()) {
+    return !rect->Contains(Rect(GetRect()));
+  }
+  return true;
 }
 
 bool SharedContextWebgl::IsContextLost() const {
@@ -905,29 +924,12 @@ bool DrawTargetWebgl::CanCreate(const IntSize& aSize, SurfaceFormat aFormat) {
     return false;
   }
 
-  // Maximum pref allows 3 different options:
-  //  0 means unlimited size,
+  // Maximum pref allows 2 different options:
+  //  <= 0 means unlimited size,
   //  > 0 means use value as an absolute threshold,
-  //  < 0 means use the number of screen pixels as a threshold.
   int32_t maxSize = StaticPrefs::gfx_canvas_accelerated_max_size();
-  if (maxSize > 0) {
-    if (std::max(aSize.width, aSize.height) > maxSize) {
-      return false;
-    }
-  } else if (maxSize < 0) {
-    // Default to historical mobile screen size of 980x480, like FishIEtank.
-    // In addition, allow acceleration up to this size even if the screen is
-    // smaller. A lot content expects this size to work well. See Bug 999841
-    static const int32_t kScreenPixels = 980 * 480;
-
-    if (RefPtr<widget::Screen> screen =
-            widget::ScreenManager::GetSingleton().GetPrimaryScreen()) {
-      LayoutDeviceIntSize screenSize = screen->GetRect().Size();
-      if (aSize.width * aSize.height >
-          std::max(screenSize.width * screenSize.height, kScreenPixels)) {
-        return false;
-      }
-    }
+  if (maxSize > 0 && std::max(aSize.width, aSize.height) > maxSize) {
+    return false;
   }
 
   return true;
@@ -1645,9 +1647,7 @@ void DrawTargetWebgl::ClearRect(const Rect& aRect) {
 
   // If the clear rectangle encompasses the entire viewport and is not clipped,
   // then mark the target as entirely clear.
-  if (containsViewport && mSharedContext->IsCurrentTarget(this) &&
-      !mSharedContext->HasClipMask() &&
-      mSharedContext->mClipAARect.Contains(Rect(GetRect()))) {
+  if (containsViewport && !ShouldClip()) {
     mIsClear = true;
   }
 }
@@ -2038,6 +2038,7 @@ bool SharedContextWebgl::UploadSurface(DataSourceSurface* aData,
   if (srcRect.IsEmpty()) {
     return true;
   }
+  Maybe<DataSourceSurface::ScopedMap> map;
   if (aData) {
     // If the source rect could not possibly overlap the surface, then it is
     // effectively empty with nothing to upload.
@@ -2058,15 +2059,15 @@ bool SharedContextWebgl::UploadSurface(DataSourceSurface* aData,
     // The surface needs to be uploaded to its backing texture either to
     // initialize or update the texture handle contents. Map the data
     // contents of the surface so it can be read.
-    DataSourceSurface::ScopedMap map(aData, DataSourceSurface::READ);
-    if (!map.IsMapped()) {
+    map.emplace(aData, DataSourceSurface::READ);
+    if (!map->IsMapped()) {
       return false;
     }
-    int32_t stride = map.GetStride();
+    int32_t stride = map->GetStride();
     // Get the data pointer range considering the sampling rect offset and
     // size.
     Span<const uint8_t> range(
-        map.GetData() + srcRect.y * size_t(stride) + srcRect.x * bpp,
+        map->GetData() + srcRect.y * size_t(stride) + srcRect.x * bpp,
         std::max(srcRect.height - 1, 0) * size_t(stride) + srcRect.width * bpp);
     texDesc.cpuData = Some(range);
     // If the stride happens to be 4 byte aligned, assume that is the
@@ -2356,12 +2357,15 @@ bool SharedContextWebgl::DrawRectAccel(
     rectXform.PreMultiply(*aRectXform);
   }
 
-  if (aOptions.mCompositionOp == CompositionOp::OP_SOURCE && aTransformed &&
-      aClipped &&
-      (HasClipMask() || !rectXform.PreservesAxisAlignedRectangles() ||
-       !rectXform.TransformBounds(aRect).Contains(Rect(mClipAARect)) ||
+  if (aOptions.mCompositionOp == CompositionOp::OP_SOURCE && aClipped &&
+      (aVertexRange ||
+       !(aTransformed
+             ? rectXform.PreservesAxisAlignedRectangles() &&
+                   rectXform.TransformBounds(aRect).Contains(mClipAARect)
+             : aRect.IsEqualEdges(Rect(mClipRect)) ||
+                   aRect.Contains(mClipAARect)) ||
        (aPattern.GetType() == PatternType::SURFACE &&
-        !IsAlignedRect(aTransformed, rectXform, aRect)))) {
+        (HasClipMask() || !IsAlignedRect(false, Matrix(), mClipAARect))))) {
     // Clear outside the mask region for masks that are not bounded by clip.
     return DrawRectAccel(Rect(mClipRect), ColorPattern(DeviceColor(0, 0, 0, 0)),
                          DrawOptions(1.0f, CompositionOp::OP_SOURCE,

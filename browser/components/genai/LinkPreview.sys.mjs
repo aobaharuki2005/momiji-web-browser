@@ -166,7 +166,7 @@ export const LinkPreview = {
   },
 
   get canShowKeyPoints() {
-    return this._isRegionSupported();
+    return this._isRegionSupported() && !this._isDisabledByPolicy();
   },
 
   get canShowLegacy() {
@@ -749,6 +749,17 @@ export const LinkPreview = {
 
     const userRegion = lazy.Region.home?.toUpperCase();
     return !disallowedRegions.includes(userRegion);
+  },
+
+  /**
+   * Checks if key points generation is disabled by policy.
+   *
+   * @returns {boolean} True if disabled by policy, false otherwise.
+   */
+  _isDisabledByPolicy() {
+    return (
+      !lazy.optin && Services.prefs.prefIsLocked("browser.ml.linkPreview.optin")
+    );
   },
 
   /**

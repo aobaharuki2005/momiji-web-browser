@@ -1000,6 +1000,10 @@ void TextureClient::EndDraw() {
   mData->EndDraw();
 }
 
+void TextureData::ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) {
+  RefPtr<gfx::DrawTarget> dt(aDT);
+}
+
 already_AddRefed<gfx::SourceSurface> TextureClient::BorrowSnapshot() {
   MOZ_ASSERT(mIsLocked);
 
@@ -1176,8 +1180,8 @@ void TextureClient::SetRecycleAllocator(
 }
 
 bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
-  MOZ_ASSERT(aForwarder && aForwarder->GetTextureForwarder()->GetThread() ==
-                               mAllocator->GetThread());
+  RefPtr<TextureForwarder> textureFwd = aForwarder->GetTextureForwarder();
+  MOZ_ASSERT(aForwarder && textureFwd->GetThread() == mAllocator->GetThread());
 
   if (mActor && !mActor->IPCOpen()) {
     return false;
@@ -1185,7 +1189,6 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
 
   if (mActor && !mActor->mDestroyed) {
     CompositableForwarder* currentFwd = mActor->mCompositableForwarder;
-    TextureForwarder* currentTexFwd = mActor->mTextureForwarder;
     if (currentFwd != aForwarder) {
       // It's a bit iffy but right now ShadowLayerForwarder inherits
       // TextureForwarder even though it should not.
@@ -1193,7 +1196,8 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
       // the CompositorBridgeChild. It's Ok for a texture to move from a
       // ShadowLayerForwarder to another, but not form a CompositorBridgeChild
       // to another (they use different channels).
-      if (currentTexFwd && currentTexFwd != aForwarder->GetTextureForwarder()) {
+      if (mActor->mTextureForwarder &&
+          mActor->mTextureForwarder != textureFwd) {
         gfxCriticalError()
             << "Attempt to move a texture to a different channel CF.";
         MOZ_ASSERT_UNREACHABLE("unexpected to be called");
@@ -1207,8 +1211,7 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
         return false;
       }
       mActor->mCompositableForwarder = aForwarder;
-      mActor->mUsesImageBridge =
-          aForwarder->GetTextureForwarder()->UsesImageBridge();
+      mActor->mUsesImageBridge = textureFwd->UsesImageBridge();
     }
     return true;
   }
@@ -1221,8 +1224,7 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
   }
 
   // Try external image id allocation.
-  mExternalImageId =
-      aForwarder->GetTextureForwarder()->GetNextExternalImageId();
+  mExternalImageId = textureFwd->GetNextExternalImageId();
 
   ReadLockDescriptor readLockDescriptor = null_t();
 
@@ -1234,7 +1236,7 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
     }
   }
 
-  PTextureChild* actor = aForwarder->GetTextureForwarder()->CreateTexture(
+  PTextureChild* actor = textureFwd->CreateTexture(
       desc, std::move(readLockDescriptor),
       aForwarder->GetCompositorBackendType(), GetFlags(),
       dom::ContentParentId(), mSerial, mExternalImageId);
@@ -1250,7 +1252,7 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
 
   mActor = static_cast<TextureChild*>(actor);
   mActor->mCompositableForwarder = aForwarder;
-  mActor->mTextureForwarder = aForwarder->GetTextureForwarder();
+  mActor->mTextureForwarder = textureFwd;
   mActor->mTextureClient = this;
 
   // If the TextureClient is already locked, we have to lock TextureChild's
@@ -1264,13 +1266,11 @@ bool TextureClient::InitIPDLActor(CompositableForwarder* aForwarder) {
 
 bool TextureClient::InitIPDLActor(KnowsCompositor* aKnowsCompositor,
                                   const dom::ContentParentId& aContentId) {
+  RefPtr<TextureForwarder> textureFwd = aKnowsCompositor->GetTextureForwarder();
   MOZ_ASSERT(aKnowsCompositor &&
-             aKnowsCompositor->GetTextureForwarder()->GetThread() ==
-                 mAllocator->GetThread());
-  TextureForwarder* fwd = aKnowsCompositor->GetTextureForwarder();
+             textureFwd->GetThread() == mAllocator->GetThread());
   if (mActor && !mActor->mDestroyed) {
     CompositableForwarder* currentFwd = mActor->mCompositableForwarder;
-    TextureForwarder* currentTexFwd = mActor->mTextureForwarder;
 
     if (currentFwd) {
       gfxCriticalError()
@@ -1278,12 +1278,12 @@ bool TextureClient::InitIPDLActor(KnowsCompositor* aKnowsCompositor,
       return false;
     }
 
-    if (currentTexFwd && currentTexFwd != fwd) {
+    if (mActor->mTextureForwarder && mActor->mTextureForwarder != textureFwd) {
       gfxCriticalError()
           << "Attempt to move a texture to a different channel TF.";
       return false;
     }
-    mActor->mTextureForwarder = fwd;
+    mActor->mTextureForwarder = textureFwd;
     return true;
   }
   MOZ_ASSERT(!mActor || mActor->mDestroyed,
@@ -1295,8 +1295,7 @@ bool TextureClient::InitIPDLActor(KnowsCompositor* aKnowsCompositor,
   }
 
   // Try external image id allocation.
-  mExternalImageId =
-      aKnowsCompositor->GetTextureForwarder()->GetNextExternalImageId();
+  mExternalImageId = textureFwd->GetNextExternalImageId();
 
   ReadLockDescriptor readLockDescriptor = null_t();
   {
@@ -1307,10 +1306,10 @@ bool TextureClient::InitIPDLActor(KnowsCompositor* aKnowsCompositor,
     }
   }
 
-  PTextureChild* actor =
-      fwd->CreateTexture(desc, std::move(readLockDescriptor),
-                         aKnowsCompositor->GetCompositorBackendType(),
-                         GetFlags(), aContentId, mSerial, mExternalImageId);
+  PTextureChild* actor = textureFwd->CreateTexture(
+      desc, std::move(readLockDescriptor),
+      aKnowsCompositor->GetCompositorBackendType(), GetFlags(), aContentId,
+      mSerial, mExternalImageId);
   if (!actor) {
     gfxCriticalNote << static_cast<int32_t>(desc.type()) << ", "
                     << static_cast<int32_t>(
@@ -1321,7 +1320,7 @@ bool TextureClient::InitIPDLActor(KnowsCompositor* aKnowsCompositor,
   }
 
   mActor = static_cast<TextureChild*>(actor);
-  mActor->mTextureForwarder = fwd;
+  mActor->mTextureForwarder = textureFwd;
   mActor->mTextureClient = this;
 
   // If the TextureClient is already locked, we have to lock TextureChild's
@@ -1340,9 +1339,9 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
     KnowsCompositor* aAllocator, gfx::SurfaceFormat aFormat, gfx::IntSize aSize,
     BackendSelector aSelector, TextureFlags aTextureFlags,
     TextureAllocationFlags aAllocFlags) {
-  return TextureClient::CreateForDrawing(aAllocator->GetTextureForwarder(),
-                                         aFormat, aSize, aAllocator, aSelector,
-                                         aTextureFlags, aAllocFlags);
+  return TextureClient::CreateForDrawing(
+      aAllocator->GetTextureForwarder().get(), aFormat, aSize, aAllocator,
+      aSelector, aTextureFlags, aAllocFlags);
 }
 
 // static
@@ -1415,8 +1414,8 @@ already_AddRefed<TextureClient> TextureClient::CreateFromSurface(
 #endif
 
   if (data) {
-    return MakeAndAddRef<TextureClient>(data, aTextureFlags,
-                                        aAllocator->GetTextureForwarder());
+    return MakeAndAddRef<TextureClient>(
+        data, aTextureFlags, aAllocator->GetTextureForwarder().get());
   }
 
   // Fall back to using UpdateFromSurface
@@ -1445,7 +1444,7 @@ already_AddRefed<TextureClient> TextureClient::CreateForRawBufferAccess(
     gfx::BackendType aMoz2DBackend, TextureFlags aTextureFlags,
     TextureAllocationFlags aAllocFlags) {
   return CreateForRawBufferAccess(
-      aAllocator->GetTextureForwarder(), aFormat, aSize, aMoz2DBackend,
+      aAllocator->GetTextureForwarder().get(), aFormat, aSize, aMoz2DBackend,
       aAllocator->GetCompositorBackendType(), aTextureFlags, aAllocFlags);
 }
 
@@ -1514,7 +1513,7 @@ already_AddRefed<TextureClient> TextureClient::CreateForYCbCr(
   }
 
   return MakeAndAddRef<TextureClient>(data, aTextureFlags,
-                                      aAllocator->GetTextureForwarder());
+                                      aAllocator->GetTextureForwarder().get());
 }
 
 TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags,
@@ -1717,7 +1716,9 @@ already_AddRefed<TextureReadLock> TextureReadLock::Deserialize(
     case ReadLockDescriptor::TUntrustedShmemSection: {
       const UntrustedShmemSection& untrusted =
           aDescriptor.get_UntrustedShmemSection();
-      Maybe<ShmemSection> section = ShmemSection::FromUntrusted(untrusted);
+      size_t minSize = sizeof(ShmemTextureReadLock::ShmReadLockInfo);
+      Maybe<ShmemSection> section =
+          ShmemSection::FromUntrusted(untrusted, minSize);
       if (section.isNothing()) {
         return nullptr;
       }

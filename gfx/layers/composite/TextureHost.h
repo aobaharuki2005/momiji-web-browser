@@ -50,6 +50,7 @@ class Shmem;
 namespace wr {
 class DisplayListBuilder;
 class TransactionBuilder;
+class RenderTextureHost;
 }  // namespace wr
 
 namespace layers {
@@ -903,9 +904,25 @@ class ShmemTextureHost : public BufferTextureHost {
 
   ShmemTextureHost* AsShmemTextureHost() override { return this; }
 
+  void OnRenderTextureCreated(wr::RenderTextureHost* aRenderTexture);
+
  protected:
-  UniquePtr<mozilla::ipc::Shmem> mShmem;
+  class ShmemDeallocRunnable final : public Runnable {
+   public:
+    ShmemDeallocRunnable(ISurfaceAllocator* aDeallocator,
+                         UniquePtr<mozilla::ipc::Shmem>&& aShmem);
+    NS_IMETHOD Run() override;
+    mozilla::ipc::Shmem* GetShmem() { return mShmem.get(); }
+
+   protected:
+    virtual ~ShmemDeallocRunnable();
+
+    RefPtr<ISurfaceAllocator> mDeallocator;
+    UniquePtr<mozilla::ipc::Shmem> mShmem;
+  };
+
   RefPtr<ISurfaceAllocator> mDeallocator;
+  RefPtr<ShmemDeallocRunnable> mShmemDeallocRunnable;
 };
 
 /**

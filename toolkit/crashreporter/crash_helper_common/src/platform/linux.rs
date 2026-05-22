@@ -2,124 +2,62 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
-use crate::{ignore_eintr, AncillaryData, Pid};
-
 use nix::{
-    cmsg_space,
     errno::Errno,
     fcntl::{
         fcntl,
         FcntlArg::{F_GETFL, F_SETFD, F_SETFL},
         FdFlag, OFlag,
     },
-    sys::socket::{
-        getsockopt, recvmsg, sendmsg, socket, socketpair, sockopt::PeerCredentials, AddressFamily,
-        ControlMessage, ControlMessageOwned, MsgFlags, SockFlag, SockType, UnixAddr,
-    },
-    Result,
+    sys::socket::{socketpair, AddressFamily, SockFlag, SockType},
 };
-use std::{
-    env,
-    io::{IoSlice, IoSliceMut},
-    os::fd::{AsRawFd, BorrowedFd, OwnedFd, RawFd},
-};
+use std::os::fd::{BorrowedFd, OwnedFd};
+use thiserror::Error;
 
-pub(crate) fn unix_socket() -> Result<OwnedFd> {
-    socket(
-        AddressFamily::Unix,
-        SockType::SeqPacket,
-        SockFlag::empty(),
-        None,
-    )
+pub type ProcessHandle = ();
+
+#[derive(Error, Debug)]
+pub enum PlatformError {
+    #[error("poll() call failed with error: {0}")]
+    PollFailure(Errno),
+    #[error("Could not set socket in non-blocking mode: {0}")]
+    SocketNonBlockError(Errno),
+    #[error("Could not flag socket as close-after-exec: {0}")]
+    SocketCloexecError(Errno),
+    #[error("Could not create a socket pair: {0}")]
+    SocketpairFailure(#[from] Errno),
+    #[error("sendmsg() call failed with error: {0}")]
+    SendFailure(Errno),
+    #[error("Sending {expected} bytes failed, only {sent} bytes sent")]
+    SendTooShort { expected: usize, sent: usize },
+    #[error("recvmsg() call failed with error: {0}")]
+    ReceiveFailure(Errno),
+    #[error("Missing SCM credentials")]
+    ReceiveMissingCredentials,
+    #[error("Receiving {expected} bytes failed, only {received} bytes received")]
+    ReceiveTooShort { expected: usize, received: usize },
 }
 
-pub(crate) fn unix_socketpair() -> Result<(OwnedFd, OwnedFd)> {
+pub(crate) fn unix_socketpair() -> Result<(OwnedFd, OwnedFd), PlatformError> {
     socketpair(
         AddressFamily::Unix,
         SockType::SeqPacket,
         None,
         SockFlag::empty(),
     )
+    .map_err(PlatformError::SocketpairFailure)
 }
 
-pub(crate) fn set_socket_default_flags(socket: BorrowedFd) -> Result<()> {
+pub(crate) fn set_socket_default_flags(socket: BorrowedFd) -> Result<(), PlatformError> {
     // All our sockets are in non-blocking mode.
-    let fd = socket.as_raw_fd();
-    let flags = OFlag::from_bits_retain(fcntl(fd, F_GETFL)?);
-    fcntl(fd, F_SETFL(flags.union(OFlag::O_NONBLOCK))).map(|_res| ())
+    let flags = OFlag::from_bits_retain(fcntl(socket, F_GETFL)?);
+    fcntl(socket, F_SETFL(flags.union(OFlag::O_NONBLOCK)))
+        .map(|_res| ())
+        .map_err(PlatformError::SocketNonBlockError)
 }
 
-pub(crate) fn set_socket_cloexec(socket: BorrowedFd) -> Result<()> {
-    fcntl(socket.as_raw_fd(), F_SETFD(FdFlag::FD_CLOEXEC)).map(|_res| ())
-}
-
-pub(crate) fn server_addr(pid: Pid) -> Result<UnixAddr> {
-    let server_name = if let Ok(snap_instance_name) = env::var("SNAP_INSTANCE_NAME") {
-        format!("snap.{snap_instance_name:}.gecko-crash-helper-pipe.{pid:}")
-    } else {
-        format!("gecko-crash-helper-pipe.{pid:}")
-    };
-    UnixAddr::new_abstract(server_name.as_bytes())
-}
-
-// Return the pid of the process connected to this socket.
-pub(crate) fn connected_process_pid(socket: BorrowedFd) -> Result<Pid> {
-    let pid = getsockopt(&socket, PeerCredentials)?.pid();
-
-    Ok(pid)
-}
-
-pub(crate) fn send_nonblock(socket: RawFd, buff: &[u8], fd: Option<AncillaryData>) -> Result<()> {
-    let iov = [IoSlice::new(buff)];
-    let scm_fds: Vec<i32> = fd.map_or(vec![], |fd| vec![fd]);
-    let scm = ControlMessage::ScmRights(&scm_fds);
-
-    let res = ignore_eintr!(sendmsg::<()>(socket, &iov, &[scm], MsgFlags::empty(), None));
-
-    match res {
-        Ok(bytes_sent) => {
-            if bytes_sent == buff.len() {
-                Ok(())
-            } else {
-                // TODO: This should never happen but we might want to put a
-                // better error message here.
-                Err(Errno::EMSGSIZE)
-            }
-        }
-        Err(code) => Err(code),
-    }
-}
-
-pub(crate) fn recv_nonblock(
-    socket: RawFd,
-    expected_size: usize,
-) -> Result<(Vec<u8>, Option<AncillaryData>)> {
-    let mut buff: Vec<u8> = vec![0; expected_size];
-    let mut cmsg_buffer = cmsg_space!(RawFd);
-    let mut iov = [IoSliceMut::new(&mut buff)];
-
-    let res = ignore_eintr!(recvmsg::<()>(
-        socket,
-        &mut iov,
-        Some(&mut cmsg_buffer),
-        MsgFlags::empty(),
-    ))?;
-
-    let fd = if let Some(cmsg) = res.cmsgs()?.next() {
-        if let ControlMessageOwned::ScmRights(fds) = cmsg {
-            fds.first().copied()
-        } else {
-            return Err(Errno::EBADMSG);
-        }
-    } else {
-        None
-    };
-
-    if res.bytes != expected_size {
-        // TODO: This should only ever happen if the other side has gone rogue,
-        // we need a better error message here.
-        return Err(Errno::EBADMSG);
-    }
-
-    Ok((buff, fd))
+pub(crate) fn set_socket_cloexec(socket: BorrowedFd) -> Result<(), PlatformError> {
+    fcntl(socket, F_SETFD(FdFlag::FD_CLOEXEC))
+        .map(|_res| ())
+        .map_err(PlatformError::SocketCloexecError)
 }

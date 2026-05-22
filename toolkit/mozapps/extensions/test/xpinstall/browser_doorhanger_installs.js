@@ -577,7 +577,17 @@ var TESTS = [
 
   async function test_recommendedPostDownload() {
     await SpecialPowers.pushPrefEnv({
-      set: [["extensions.postDownloadThirdPartyPrompt", true]],
+      set: [
+        ["extensions.postDownloadThirdPartyPrompt", true],
+        // recommended.xpi is signed with AMO staging signature.
+        ["xpinstall.signatures.dev-root", true],
+        // Disable the blocklist because recommended.xpi is signed
+        // only with the staging signature and it may end up hitting
+        // a false positive on the Blocklist bloomfilter computed
+        // from all add-ons known by AMO as signed with the
+        // production key (e.g. see Bug 1996059).
+        ["extensions.blocklist.enabled", false],
+      ],
     });
 
     let triggers = encodeURIComponent(
@@ -594,7 +604,7 @@ var TESTS = [
 
     let notificationPromise = acceptAppMenuNotificationWhenShown(
       "addon-installed",
-      "{811d77f1-f306-4187-9251-b4ff99bad60b}"
+      "recommended-line@test.mozilla.org"
     );
 
     installDialog.button.click();
@@ -604,7 +614,7 @@ var TESTS = [
     is(installs.length, 0, "Should be no pending installs");
 
     let addon = await AddonManager.getAddonByID(
-      "{811d77f1-f306-4187-9251-b4ff99bad60b}"
+      "recommended-line@test.mozilla.org"
     );
     await addon.uninstall();
 

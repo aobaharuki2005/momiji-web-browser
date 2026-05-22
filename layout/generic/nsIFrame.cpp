@@ -1324,12 +1324,7 @@ void nsIFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {
   }
 
   if (handleStickyChange && !HasAnyStateBits(NS_FRAME_IS_NONDISPLAY) &&
-      !GetPrevInFlow()) {
-    // Note that we only add first continuations, but we really only
-    // want to add first continuation-or-ib-split-siblings. But since we don't
-    // yet know if we're a later part of a block-in-inline split, we'll just
-    // add later members of a block-in-inline split here, and then
-    // StickyScrollContainer will remove them later.
+      nsLayoutUtils::IsFirstContinuationOrIBSplitSibling(this)) {
     if (auto* ssc =
             StickyScrollContainer::GetStickyScrollContainerForFrame(this)) {
       if (disp->mPosition == StylePositionProperty::Sticky) {
@@ -3179,7 +3174,8 @@ void nsIFrame::BuildDisplayListForStackingContext(
     return;
   }
 
-  if (HasAnyStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE)) {
+  if (HasAnyStateBits(NS_FRAME_TOO_DEEP_IN_FRAME_TREE |
+                      NS_FRAME_IS_NONDISPLAY)) {
     return;
   }
 
@@ -9252,7 +9248,10 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
         // must reach the editing host boundary.
         return NS_ERROR_FAILURE;
       }
-      nsIFrame::GetLastLeaf(&lastFrame);
+      // Don't enter into native anonymous subtrees.
+      if (!lastFrame->ContentIsRootOfNativeAnonymousSubtree()) {
+        nsIFrame::GetLastLeaf(&lastFrame);
+      }
 
       if (aPos->mDirection == eDirNext) {
         nearStoppingFrame = firstFrame;
@@ -10928,7 +10927,12 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
       TransformReferenceBox refBox(this);
       for (const auto otype : AllOverflowTypes()) {
         nsRect& o = aOverflowAreas.Overflow(otype);
-        o = nsDisplayTransform::TransformRect(o, this, refBox);
+        // If the overflow is empty, it can still have a non-zero length in one axis.
+        // Transforming such axis-bound rect can cause the resulting rect to be non-empty,
+        // e.g. by rotating the rect.
+        if (!o.IsEmpty()) {
+          o = nsDisplayTransform::TransformRect(o, this, refBox);
+        }
       }
 
       /* If we're the root of the 3d context, then we want to include the
@@ -11331,10 +11335,7 @@ ComputedStyle* nsIFrame::DoGetParentComputedStyle(
 }
 
 void nsIFrame::GetLastLeaf(nsIFrame** aFrame) {
-  if (!aFrame || !*aFrame ||
-      // Don't enter into native anoymous subtree from the root like <input> or
-      // <textarea>.
-      (*aFrame)->ContentIsRootOfNativeAnonymousSubtree()) {
+  if (!aFrame || !*aFrame) {
     return;
   }
   for (nsIFrame* maybeLastLeaf = (*aFrame)->PrincipalChildList().LastChild();

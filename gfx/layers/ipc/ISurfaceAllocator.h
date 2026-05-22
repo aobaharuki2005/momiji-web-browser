@@ -76,7 +76,7 @@ class ISurfaceAllocator {
 
   virtual CompositableForwarder* AsCompositableForwarder() { return nullptr; }
 
-  virtual TextureForwarder* GetTextureForwarder() { return nullptr; }
+  virtual RefPtr<TextureForwarder> GetTextureForwarder();
 
   virtual ClientIPCAllocator* AsClientAllocator() { return nullptr; }
 
@@ -157,7 +157,7 @@ class HostIPCAllocator : public ISurfaceAllocator {
 class ShmemSection {
  public:
   static Maybe<ShmemSection> FromUntrusted(
-      const UntrustedShmemSection& aUntrusted);
+      const UntrustedShmemSection& aUntrusted, size_t aMinSize);
   bool Init(const mozilla::ipc::Shmem& aShm, uint32_t offset, uint32_t size);
   UntrustedShmemSection AsUntrusted();
 
@@ -203,14 +203,6 @@ class LegacySurfaceDescriptorAllocator {
 };
 
 bool IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface);
-
-already_AddRefed<gfx::DataSourceSurface> GetSurfaceForDescriptor(
-    const SurfaceDescriptor& aDescriptor);
-
-uint8_t* GetAddressFromDescriptor(const SurfaceDescriptor& aDescriptor);
-
-void DestroySurfaceDescriptor(mozilla::ipc::IShmemAllocator* aAllocator,
-                              SurfaceDescriptor* aSurface);
 
 class GfxMemoryImageReporter final : public nsIMemoryReporter {
   ~GfxMemoryImageReporter() = default;

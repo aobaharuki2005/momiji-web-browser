@@ -58,15 +58,6 @@ const CURL_LIB_NAMES: &[&str] = if cfg!(target_os = "linux") {
     &[]
 };
 
-// Shim until min rust version 1.74 which allows error_other
-fn error_other<E>(error: E) -> std::io::Error
-where
-    E: Into<Box<dyn std::error::Error + Send + Sync>>,
-{
-    std::io::Error::new(std::io::ErrorKind::Other, error)
-}
-
-
 #[repr(transparent)]
 #[derive(Clone, Copy)]
 struct CurlHandle(*mut ());
@@ -170,7 +161,7 @@ library_binding! {
 /// Load libcurl if possible.
 pub fn load() -> std::io::Result<&'static Curl> {
     static CURL: Lazy<std::io::Result<Curl>> = Lazy::new(Curl::load);
-    CURL.as_ref().map_err(error_other)
+    CURL.as_ref().map_err(std::io::Error::other)
 }
 
 #[derive(Debug)]
@@ -193,7 +184,7 @@ impl std::error::Error for Error {}
 
 impl From<Error> for std::io::Error {
     fn from(e: Error) -> Self {
-        error_other(e)
+        std::io::Error::other(e)
     }
 }
 
@@ -211,7 +202,7 @@ impl Curl {
     pub fn easy(&self) -> std::io::Result<Easy> {
         let handle = unsafe { (self.curl_easy_init)() };
         if handle.0.is_null() {
-            Err(error_other("curl_easy_init failed"))
+            Err(std::io::Error::other("curl_easy_init failed"))
         } else {
             Ok(Easy {
                 lib: self,
@@ -256,7 +247,7 @@ impl<'a> Easy<'a> {
     pub fn mime(&self) -> std::io::Result<Mime<'a>> {
         let handle = unsafe { (self.lib.curl_mime_init)(self.handle) };
         if handle.0.is_null() {
-            Err(error_other("curl_mime_init failed"))
+            Err(std::io::Error::other("curl_mime_init failed"))
         } else {
             Ok(Mime {
                 lib: self.lib,
@@ -295,7 +286,7 @@ impl<'a> Easy<'a> {
 
     pub fn set_postfields(&mut self, data: impl Into<Box<[u8]>>) -> std::io::Result<()> {
         let data = data.into();
-        let size: c_long = data.len().try_into().map_err(error_other)?;
+        let size: c_long = data.len().try_into().map_err(std::io::Error::other)?;
         to_result(unsafe {
             (self.lib.curl_easy_setopt)(self.handle, CURLOPT_POSTFIELDSIZE, size)
         })?;
@@ -409,7 +400,7 @@ impl<'a> Mime<'a> {
     pub fn add_part(&mut self) -> std::io::Result<MimePart<'a>> {
         let handle = unsafe { (self.lib.curl_mime_addpart)(self.handle) };
         if handle.0.is_null() {
-            Err(error_other("curl_mime_addpart failed"))
+            Err(std::io::Error::other("curl_mime_addpart failed"))
         } else {
             Ok(MimePart {
                 lib: self.lib,

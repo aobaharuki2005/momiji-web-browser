@@ -1032,6 +1032,7 @@ BEGIN_TEST(testRootedTuple) {
   return true;
 }
 END_TEST(testRootedTuple)
+
 BEGIN_TEST(testRootedRealm) {
   // Create a new global and use Rooted<Realm*> to keep it alive.
   Rooted<Realm*> realm(cx);

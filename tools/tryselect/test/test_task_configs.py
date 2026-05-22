@@ -67,31 +67,31 @@ TASK_CONFIG_TESTS = {
     "worker-overrides": [
         ([], None),
         (
-            ["--worker-override", "b-linux=worker/pool"],
-            {"try_task_config": {"worker-overrides": {"b-linux": "worker/pool"}}},
+            ["--worker-override", "b-linux-gcp=worker/pool"],
+            {"try_task_config": {"worker-overrides": {"b-linux-gcp": "worker/pool"}}},
         ),
         (
             [
                 "--worker-override",
-                "b-linux=worker/pool",
+                "b-linux-gcp=worker/pool",
                 "--worker-override",
-                "b-linux=other/pool",
+                "b-linux-gcp=other/pool",
             ],
             SystemExit,
         ),
         (
-            ["--worker-suffix", "b-linux=-dev"],
+            ["--worker-suffix", "b-linux-gcp=-dev"],
             {
                 "try_task_config": {
-                    "worker-overrides": {"b-linux": "gecko-1/b-linux-dev"}
+                    "worker-overrides": {"b-linux-gcp": "gecko-1/b-linux-dev"}
                 }
             },
         ),
         (
             [
                 "--worker-override",
-                "b-linux=worker/pool" "--worker-suffix",
-                "b-linux=-dev",
+                "b-linux-gcp=worker/pool" "--worker-suffix",
+                "b-linux-gcp=-dev",
             ],
             SystemExit,
         ),

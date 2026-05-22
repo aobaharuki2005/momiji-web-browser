@@ -374,7 +374,12 @@ export let ContentBlockingPrefs = {
     // they still have access to other content blocking prefs, and to keep our default definitions
     // from changing.
     let policy = Services.policies.getActivePolicies();
-    if (policy && (policy.EnableTrackingProtection || policy.Cookies)) {
+    if (
+      policy &&
+      ((policy.EnableTrackingProtection &&
+        !policy.EnableTrackingProtection.Category) ||
+        policy.Cookies)
+    ) {
       Services.prefs.setStringPref(this.PREF_CB_CATEGORY, "custom");
     }
   },
@@ -399,11 +404,15 @@ export let ContentBlockingPrefs = {
    *
    * @param {CBCategory} category
    */
-  setPrefsToCategory(category) {
+  setPrefsToCategory(category, lockPrefs) {
     // Leave prefs as they were if we are switching to "custom" category.
     if (category == "custom") {
       return;
     }
+
+    let prefBranch = lockPrefs
+      ? Services.prefs.getDefaultBranch(null)
+      : Services.prefs.getBranch(null);
 
     for (let pref in this.CATEGORY_PREFS[category]) {
       let value = this.CATEGORY_PREFS[category][pref];
@@ -413,14 +422,17 @@ export let ContentBlockingPrefs = {
         } else {
           switch (Services.prefs.getPrefType(pref)) {
             case Services.prefs.PREF_BOOL:
-              Services.prefs.setBoolPref(pref, value);
+              prefBranch.setBoolPref(pref, value);
               break;
             case Services.prefs.PREF_INT:
-              Services.prefs.setIntPref(pref, value);
+              prefBranch.setIntPref(pref, value);
               break;
             case Services.prefs.PREF_STRING:
-              Services.prefs.setStringPref(pref, value);
+              prefBranch.setStringPref(pref, value);
               break;
+          }
+          if (lockPrefs) {
+            Services.prefs.lockPref(pref);
           }
         }
       }

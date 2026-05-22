@@ -154,6 +154,22 @@ pref("dom.keyboardevent.keypress.hack.use_legacy_keycode_and_charcode.addl", "")
 // enabled here, the feature may not be visible in all browsers.
 pref("dom.text-recognition.enabled", true);
 
+// Blocklist of domains of web apps which we should not dispatch `input` event
+// immediately before `compositionend`.
+pref("editor.texteditor.inputevent.hack.no_dispatch_before_compositionend", "");
+pref("editor.htmleditor.inputevent.hack.no_dispatch_before_compositionend", "");
+// Pref for end-users and policy to add additional values.
+pref("editor.texteditor.inputevent.hack.no_dispatch_before_compositionend.addl", "");
+pref("editor.htmleditor.inputevent.hack.no_dispatch_before_compositionend.addl", "");
+
+// Blocklist of domains of web apps which we should not dispatch `input` event
+// immediately after `compositionend`.
+pref("editor.texteditor.inputevent.hack.no_dispatch_after_compositionend", "");
+pref("editor.htmleditor.inputevent.hack.no_dispatch_after_compositionend", "");
+// Pref for end-users and policy to add additional values.
+pref("editor.texteditor.inputevent.hack.no_dispatch_after_compositionend.addl", "");
+pref("editor.htmleditor.inputevent.hack.no_dispatch_after_compositionend.addl", "");
+
 // Fastback caching - if this pref is negative, then we calculate the number
 // of content viewers to cache based on the amount of available memory.
 pref("browser.sessionhistory.max_total_viewers", -1);
@@ -391,7 +407,9 @@ pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.fallback_delay_short", 100);
 
 #ifdef XP_WIN
-  pref("gfx.font_rendering.directwrite.use_gdi_table_loading", true);
+  // Bug 2011408 will remove this pref and the code that uses it completely if
+  // we don't see any performance issues.
+  pref("gfx.font_rendering.directwrite.use_gdi_table_loading", false);
 #endif
 
 #if defined(XP_WIN)
@@ -724,11 +742,6 @@ pref("browser.fixup.fallback-to-https", true);
 // encounter a printer for the first time, but only a subset of prefs will be
 // used in this case.  See nsPrintSettingsService::InitPrintSettingsFromPrefs
 // for the restrictions on which prefs can act as defaults.
-
-// Whether we directly use the system print dialog to collect the user's print
-// settings rather than using the tab-modal print preview dialog.
-// Note: `print.always_print_silent` overrides this.
-pref("print.prefer_system_dialog", false);
 
 // Print/Preview Shrink-To-Fit won't shrink below 20% for text-ish documents.
 pref("print.shrink-to-fit.scale-limit-percent", 20);

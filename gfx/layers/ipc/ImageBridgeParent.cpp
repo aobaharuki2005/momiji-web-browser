@@ -181,22 +181,7 @@ class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender final {
   ~AutoImageBridgeParentAsyncMessageSender() {
     mImageBridge->SendPendingAsyncMessages();
     if (mToDestroy) {
-      // Iterate mToDestroy but de-duplicate it to avoid destroying the
-      // same texture parent actor twice.
-      nsTHashSet<PTextureParent*> seenTextureParents;
-      for (const auto& op : *mToDestroy) {
-        // Peek inside the op (as DestroyActor does) to see if we are about
-        // to destroy a PTextureParent.
-        if (op.type() == OpDestroy::TPTexture) {
-          PTextureParent* textureParent = op.get_PTexture().AsParent();
-          if (!seenTextureParents.EnsureInserted(textureParent)) {
-            // Already seen, so skip this one.
-            continue;
-          }
-        }
-
-        mImageBridge->DestroyActor(op);
-      }
+      mImageBridge->DestroyActors(*mToDestroy);
     }
   }
 
@@ -319,6 +304,12 @@ PTextureParent* ImageBridgeParent::AllocPTextureParent(
     const SurfaceDescriptor& aSharedData, ReadLockDescriptor& aReadLock,
     const LayersBackend& aLayersBackend, const TextureFlags& aFlags,
     const uint64_t& aSerial, const wr::MaybeExternalImageId& aExternalImageId) {
+  if (aExternalImageId.isSome()) {
+    uint32_t ns = static_cast<uint32_t>(wr::AsUint64(*aExternalImageId) >> 32);
+    if (ns == 0) {
+      return nullptr;
+    }
+  }
   return TextureHost::CreateIPDLActor(this, aSharedData, std::move(aReadLock),
                                       aLayersBackend, aFlags, mContentId,
                                       aSerial, aExternalImageId);

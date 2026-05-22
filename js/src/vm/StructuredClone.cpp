@@ -1582,6 +1582,7 @@ bool JSStructuredCloneWriter::writeSharedWasmMemory(HandleObject obj) {
 
   Rooted<WasmMemoryObject*> memoryObj(context(),
                                       &obj->unwrapAs<WasmMemoryObject>());
+  JSAutoRealm ar(context(), memoryObj);
   Rooted<SharedArrayBufferObject*> sab(
       context(), &memoryObj->buffer().as<SharedArrayBufferObject>());
 
@@ -2564,6 +2565,10 @@ JSStructuredCloneReader::JSStructuredCloneReader(
       callbacks(cb),
       closure(cbClosure),
       gcHeap(in.context()) {
+  // Readers should never enable SAB for a DifferentProcess scope.
+  MOZ_RELEASE_ASSERT(!(scope == JS::StructuredCloneScope::DifferentProcess &&
+                       cloneDataPolicy.areSharedMemoryObjectsAllowed()));
+
   // Avoid the need to bounds check by keeping a never-matching element at the
   // base of the `objState` stack. This append() will always succeed because
   // the objState vector has a nonzero MinInlineCapacity.
@@ -2983,6 +2988,12 @@ bool JSStructuredCloneReader::readSharedWasmMemory(uint32_t nbytes,
   // Read the isHuge flag
   RootedValue isHuge(cx);
   if (!startRead(&isHuge)) {
+    return false;
+  }
+  if (!isHuge.isBoolean()) {
+    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "isHuge must be a boolean");
     return false;
   }
 
@@ -3444,6 +3455,12 @@ bool JSStructuredCloneReader::readHeader() {
     return false;
   }
 
+  if (allowedScope == JS::StructuredCloneScope::DifferentProcess) {
+    MOZ_RELEASE_ASSERT(
+        !cloneDataPolicy.areIntraClusterClonableSharedObjectsAllowed());
+    MOZ_RELEASE_ASSERT(!cloneDataPolicy.areSharedMemoryObjectsAllowed());
+  }
+
   return true;
 }
 
@@ -3797,7 +3814,13 @@ JSObject* JSStructuredCloneReader::readErrorHeader(uint32_t type) {
   if (!startRead(&val)) {
     return nullptr;
   }
-  bool hasCause = ToBoolean(val);
+  if (!val.isBoolean()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_SC_BAD_SERIALIZED_DATA,
+                              "hasCause must be a boolean");
+    return nullptr;
+  }
+  bool hasCause = val.toBoolean();
   Rooted<Maybe<Value>> cause(cx, mozilla::Nothing());
   if (hasCause) {
     cause = mozilla::Some(BooleanValue(true));
@@ -3863,6 +3886,12 @@ bool JSStructuredCloneReader::readErrorFields(Handle<ErrorObject*> errorObj,
   }
 
   if (errorObj->type() == JSEXN_AGGREGATEERR) {
+    if (!errors.isObject() || !errors.toObject().is<ArrayObject>()) {
+      JS_ReportErrorNumberASCII(
+          cx, GetErrorMessage, nullptr, JSMSG_SC_BAD_SERIALIZED_DATA,
+          "AggregateError 'errors' field must be an Array");
+      return false;
+    }
     if (!DefineDataProperty(context(), errorObj, cx->names().errors, errors,
                             0)) {
       return false;

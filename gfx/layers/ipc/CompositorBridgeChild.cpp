@@ -392,7 +392,7 @@ bool CompositorBridgeChild::SendStopFrameTimeRecording(
 
 PTextureChild* CompositorBridgeChild::AllocPTextureChild(
     const SurfaceDescriptor&, ReadLockDescriptor&, const LayersBackend&,
-    const TextureFlags&, const LayersId&, const uint64_t& aSerial,
+    const TextureFlags&, const uint64_t& aSerial,
     const wr::MaybeExternalImageId& aExternalImageId) {
   return TextureClient::CreateIPDLActor();
 }
@@ -514,11 +514,11 @@ PTextureChild* CompositorBridgeChild::CreateTexture(
     wr::MaybeExternalImageId& aExternalImageId) {
   PTextureChild* textureChild =
       AllocPTextureChild(aSharedData, aReadLock, aLayersBackend, aFlags,
-                         LayersId{0} /* FIXME */, aSerial, aExternalImageId);
+                         aSerial, aExternalImageId);
 
-  return SendPTextureConstructor(
-      textureChild, aSharedData, std::move(aReadLock), aLayersBackend, aFlags,
-      LayersId{0} /* FIXME? */, aSerial, aExternalImageId);
+  return SendPTextureConstructor(textureChild, aSharedData,
+                                 std::move(aReadLock), aLayersBackend, aFlags,
+                                 aSerial, aExternalImageId);
 }
 
 already_AddRefed<CanvasChild> CompositorBridgeChild::GetCanvasChild() {

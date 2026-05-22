@@ -177,7 +177,8 @@ mozilla::ipc::IPCResult GPUChild::RecvGraphicsError(const nsCString& aError) {
 mozilla::ipc::IPCResult GPUChild::RecvCreateVRProcess() {
   // Make sure create VR process at the main process
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
+  if (StaticPrefs::dom_vr_process_enabled_AtStartup() &&
+      StaticPrefs::dom_vr_enabled()) {
     VRProcessManager::Initialize();
     VRProcessManager* vr = VRProcessManager::Get();
     MOZ_ASSERT(vr, "VRProcessManager must be initialized first.");
@@ -193,19 +194,20 @@ mozilla::ipc::IPCResult GPUChild::RecvCreateVRProcess() {
 mozilla::ipc::IPCResult GPUChild::RecvShutdownVRProcess() {
   // Make sure stopping VR process at the main process
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
+  if (StaticPrefs::dom_vr_process_enabled_AtStartup() &&
+      StaticPrefs::dom_vr_enabled()) {
     VRProcessManager::Shutdown();
   }
 
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult GPUChild::RecvNotifyUiObservers(
-    const nsCString& aTopic) {
+mozilla::ipc::IPCResult GPUChild::RecvFlushActiveCheckerboardReportsDone() {
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   MOZ_ASSERT(obsSvc);
   if (obsSvc) {
-    obsSvc->NotifyObservers(nullptr, aTopic.get(), nullptr);
+    obsSvc->NotifyObservers(nullptr, "APZ:FlushActiveCheckerboard:Done",
+                            nullptr);
   }
   return IPC_OK();
 }
@@ -288,25 +290,27 @@ bool GPUChild::SendRequestMemoryReport(const uint32_t& aGeneration,
                                        const Maybe<FileDescriptor>& aDMDFile) {
   mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
 
-  PGPUChild::SendRequestMemoryReport(
-      aGeneration, aAnonymize, aMinimizeMemoryUsage, aDMDFile,
-      [&](const uint32_t& aGeneration2) {
-        if (GPUProcessManager* gpm = GPUProcessManager::Get()) {
-          if (GPUChild* child = gpm->GetGPUChild()) {
-            if (child->mMemoryReportRequest) {
-              child->mMemoryReportRequest->Finish(aGeneration2);
-              child->mMemoryReportRequest = nullptr;
+  PGPUChild::SendRequestMemoryReport(aGeneration, aAnonymize,
+                                     aMinimizeMemoryUsage, aDMDFile)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [](uint32_t aGeneration2) {
+            if (GPUProcessManager* gpm = GPUProcessManager::Get()) {
+              if (GPUChild* child = gpm->GetGPUChild()) {
+                if (child->mMemoryReportRequest) {
+                  child->mMemoryReportRequest->Finish(aGeneration2);
+                  child->mMemoryReportRequest = nullptr;
+                }
+              }
             }
-          }
-        }
-      },
-      [&](mozilla::ipc::ResponseRejectReason) {
-        if (GPUProcessManager* gpm = GPUProcessManager::Get()) {
-          if (GPUChild* child = gpm->GetGPUChild()) {
-            child->mMemoryReportRequest = nullptr;
-          }
-        }
-      });
+          },
+          [](mozilla::ipc::ResponseRejectReason) {
+            if (GPUProcessManager* gpm = GPUProcessManager::Get()) {
+              if (GPUChild* child = gpm->GetGPUChild()) {
+                child->mMemoryReportRequest = nullptr;
+              }
+            }
+          });
 
   return true;
 }

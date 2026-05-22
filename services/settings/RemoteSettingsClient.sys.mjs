@@ -233,13 +233,6 @@ class AttachmentDownloader extends Downloader {
         `Download attempt to RS collection "${this.identifier}" was blocked.`
       );
     }
-    await lazy.UptakeTelemetry.report(
-      TELEMETRY_COMPONENT,
-      lazy.UptakeTelemetry.STATUS.DOWNLOAD_START,
-      {
-        source: this._client.identifier,
-      }
-    );
     try {
       // Explicitly await here to ensure we catch a network error.
       return await super.download(record, options);

@@ -10,6 +10,7 @@
 #include <bitset>
 #include <cctype>
 #include <iterator>
+#include <limits>
 #include <queue>
 
 #include "AccessCheck.h"
@@ -520,6 +521,7 @@ void WebGLContext::Resize(uvec2 requestedSize) {
   // Kill our current default fb(s), for later lazy allocation.
   mRequestedSize = requestedSize;
   mDefaultFB = nullptr;
+  mResolvedDefaultFB = nullptr;
   mResetLayer = true;  // New size means new Layer.
 }
 
@@ -634,50 +636,6 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext* host,
 
   // -
 
-  const auto UploadableSdTypes = [&]() {
-    webgl::EnumMask<layers::SurfaceDescriptor::Type> types;
-    types[layers::SurfaceDescriptor::TSurfaceDescriptorBuffer] = true;
-    // Only support canvas surface interchange if using AC2D. This guarantees
-    // that WebGL and AC2D commands are sequenced and processed on the same
-    // thread, so that there is no mal-ordering between AC2D and WebGL
-    // processing. We can flush out AC2D commands to produce a surface in time
-    // for WebGL to use without requiring any blocking to occur.
-    types[layers::SurfaceDescriptor::TSurfaceDescriptorCanvasSurface] =
-        gfx::gfxVars::UseAcceleratedCanvas2D();
-    // This is conditional on not using the Compositor thread because we may
-    // need to synchronize with the RDD process over the PVideoBridge protocol
-    // to wait for the texture to be available in the compositor process. We
-    // cannot block on the Compositor thread, so in that configuration, we would
-    // prefer to do the readback from the RDD which is guaranteed to work, and
-    // only block the owning thread for WebGL.
-    const bool offCompositorThread = gfx::gfxVars::UseCanvasRenderThread() ||
-                                     !gfx::gfxVars::SupportsThreadsafeGL();
-    types[layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo] =
-        offCompositorThread;
-    // Similarly to the PVideoBridge protocol, we may need to synchronize with
-    // the content process over the PCompositorManager protocol to wait for the
-    // shared surface to be available in the compositor process, and we cannot
-    // block on the Compositor thread.
-    types[layers::SurfaceDescriptor::TSurfaceDescriptorExternalImage] =
-        offCompositorThread;
-    if (webgl->gl->IsANGLE()) {
-      types[layers::SurfaceDescriptor::TSurfaceDescriptorD3D10] = true;
-      types[layers::SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr] = true;
-    }
-    if (kIsMacOS) {
-      types[layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface] = true;
-    }
-    if (kIsAndroid) {
-      types[layers::SurfaceDescriptor::TSurfaceTextureDescriptor] = true;
-    }
-    if (kIsLinux) {
-      types[layers::SurfaceDescriptor::TSurfaceDescriptorDMABuf] = true;
-    }
-    return types;
-  };
-
-  // -
-
   constexpr GLenum SHADER_TYPES[] = {
       LOCAL_GL_VERTEX_SHADER,
       LOCAL_GL_FRAGMENT_SHADER,
@@ -713,7 +671,7 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext* host,
 
   out->options = webgl->mOptions;
   out->limits = *webgl->mLimits;
-  out->uploadableSdTypes = UploadableSdTypes();
+  out->uploadableSdTypes = webgl->mUploadableSdTypes;
   out->vendor = webgl->gl->Vendor();
   out->optionalRenderableFormatBits = webgl->mOptionalRenderableFormatBits;
 
@@ -823,6 +781,58 @@ void WebGLContext::FinishInit() {
 
   gl->ResetSyncCallCount("WebGLContext Initialization");
   LoseLruContextIfLimitExceeded();
+
+  InitUploadableSdTypes();
+}
+
+void WebGLContext::InitUploadableSdTypes() {
+  webgl::EnumMask<layers::SurfaceDescriptor::Type> types;
+  types[layers::SurfaceDescriptor::TSurfaceDescriptorBuffer] = true;
+  // Only support canvas surface interchange if using AC2D. This guarantees
+  // that WebGL and AC2D commands are sequenced and processed on the same
+  // thread, so that there is no mal-ordering between AC2D and WebGL
+  // processing. We can flush out AC2D commands to produce a surface in time
+  // for WebGL to use without requiring any blocking to occur.
+  types[layers::SurfaceDescriptor::TSurfaceDescriptorCanvasSurface] =
+      gfx::gfxVars::UseAcceleratedCanvas2D();
+  // This is conditional on not using the Compositor thread because we may
+  // need to synchronize with the RDD process over the PVideoBridge protocol
+  // to wait for the texture to be available in the compositor process. We
+  // cannot block on the Compositor thread, so in that configuration, we would
+  // prefer to do the readback from the RDD which is guaranteed to work, and
+  // only block the owning thread for WebGL.
+  const bool offCompositorThread = gfx::gfxVars::UseCanvasRenderThread() ||
+                                   !gfx::gfxVars::SupportsThreadsafeGL();
+  types[layers::SurfaceDescriptor::TSurfaceDescriptorGPUVideo] =
+      offCompositorThread;
+  // Similarly to the PVideoBridge protocol, we may need to synchronize with
+  // the content process over the PCompositorManager protocol to wait for the
+  // shared surface to be available in the compositor process, and we cannot
+  // block on the Compositor thread.
+  types[layers::SurfaceDescriptor::TSurfaceDescriptorExternalImage] =
+      offCompositorThread;
+  if (gl->IsANGLE()) {
+    types[layers::SurfaceDescriptor::TSurfaceDescriptorD3D10] = true;
+    types[layers::SurfaceDescriptor::TSurfaceDescriptorDXGIYCbCr] = true;
+  }
+  if (kIsMacOS) {
+    types[layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface] = true;
+  }
+  if (kIsAndroid) {
+    types[layers::SurfaceDescriptor::TSurfaceTextureDescriptor] = true;
+  }
+  if (kIsLinux) {
+    types[layers::SurfaceDescriptor::TSurfaceDescriptorDMABuf] = true;
+  }
+
+  mUploadableSdTypes = types;
+}
+
+bool WebGLContext::IsUploadableSdType(
+    const layers::SurfaceDescriptor& sd) const {
+  // If the WebGLContext is remote, then validate that the SD is an allowed
+  // type.
+  return !bool(mHost) || mUploadableSdTypes[sd.type()];
 }
 
 void WebGLContext::SetCompositableHost(
@@ -2804,6 +2814,23 @@ webgl::ExplicitPixelPackingState::ForUseWith(
     const Maybe<size_t> bytesPerRowStrideOverride) {
   auto state = stateOrZero;
 
+  // Enforce the GLES alignmentInTypeElems invariant. ElemsPerRowStride below
+  // assumes a in {1,2,4,8}. Callers at IPC entry points validate this but
+  // alignmentInTypeElems is deserialized from IPC, so guard it here too.
+  switch (state.alignmentInTypeElems) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+      break;
+    default: {
+      const auto text = nsPrintfCString(
+          "PACK/UNPACK_ALIGNMENT must be one of [1,2,4,8], was %u.",
+          state.alignmentInTypeElems);
+      return Err(mozilla::ToString(text));
+    }
+  }
+
   if (!IsTexTarget3D(target)) {
     state.skipImages = 0;
     state.imageHeight = 0;
@@ -2813,6 +2840,13 @@ webgl::ExplicitPixelPackingState::ForUseWith(
   }
   if (!state.imageHeight) {
     state.imageHeight = subrectSize.y;
+  }
+
+  constexpr uint32_t kGLintMax = std::numeric_limits<GLint>::max();
+  if (state.rowLength > kGLintMax || state.imageHeight > kGLintMax ||
+      state.skipPixels > kGLintMax || state.skipRows > kGLintMax ||
+      state.skipImages > kGLintMax) {
+    return Err("pixelStorei params must be GLint.");
   }
 
   // -
@@ -2909,7 +2943,9 @@ webgl::ExplicitPixelPackingState::ForUseWith(
 
   const auto elemsPerRowStride = ElemsPerRowStride();
   const auto bytesPerRowStride = pii.bytesPerElement * elemsPerRowStride;
-  if (!bytesPerRowStride.isValid()) {
+  const auto maxBytesPerRow = StaticPrefs::webgl_max_bytes_per_row();
+  if (!bytesPerRowStride.isValid() ||
+      (maxBytesPerRow > 0 && bytesPerRowStride.value() > maxBytesPerRow)) {
     return Err("ROW_LENGTH or width too large for packing.");
   }
   metrics.bytesPerRowStride = bytesPerRowStride.value();

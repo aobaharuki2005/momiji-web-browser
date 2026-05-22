@@ -159,6 +159,9 @@ const DEFAULT_ACTIONS = {
     l10nCommands: ["quickactions-cmd-print"],
     label: "quickactions-print2",
     icon: "chrome://global/skin/icons/print.svg",
+    isVisible: () => {
+      return Services.prefs.getBoolPref("print.enabled");
+    },
     onPick: () => {
       lazy.BrowserWindowTracker.getTopWindow()
         .document.getElementById("cmd_print")
@@ -193,6 +196,9 @@ const DEFAULT_ACTIONS = {
     l10nCommands: ["quickactions-cmd-savepdf2"],
     label: "quickactions-savepdf",
     icon: "chrome://global/skin/icons/print.svg",
+    isVisible: () => {
+      return Services.prefs.getBoolPref("print.enabled");
+    },
     onPick: () => {
       // This writes over the users last used printer which we
       // should not do. Refactor to launch the print preview with

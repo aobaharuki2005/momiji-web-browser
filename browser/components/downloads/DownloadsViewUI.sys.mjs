@@ -35,6 +35,13 @@ XPCOMUtils.defineLazyServiceGetter(
   Ci.nsIApplicationReputationService
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "contentAnalysisAgentName",
+  "browser.contentanalysis.agent_name",
+  "A DLP agent"
+);
+
 import { Integration } from "resource://gre/modules/Integration.sys.mjs";
 
 Integration.downloads.defineESModuleGetter(
@@ -777,7 +784,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
             lazy.DownloadsCommon.strings.stateBlockedParentalControls
           );
           this.hideButton();
-        } else if (this.download.error.becauseBlockedByReputationCheck) {
+        } else if (
+          this.download.error.becauseBlockedByReputationCheck ||
+          this.download.error.becauseBlockedByContentAnalysis
+        ) {
           verdict = this.download.error.reputationCheckVerdict;
           let hover = "";
           if (!this.download.hasBlockedData) {
@@ -881,6 +891,31 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     }
   },
 
+  getContentAnalysisErrorTitle(strings, cancelError) {
+    switch (cancelError) {
+      case Ci.nsIContentAnalysisResponse.eNoAgent:
+        return strings.contentAnalysisNoAgentError(
+          lazy.contentAnalysisAgentName
+        );
+      case Ci.nsIContentAnalysisResponse.eInvalidAgentSignature:
+        return strings.contentAnalysisInvalidAgentSignatureError(
+          lazy.contentAnalysisAgentName
+        );
+      case Ci.nsIContentAnalysisResponse.eTimeout:
+        return strings.contentAnalysisTimeoutError(
+          lazy.contentAnalysisAgentName
+        );
+      case Ci.nsIContentAnalysisResponse.eErrorOther:
+        return strings.contentAnalysisUnspecifiedError(
+          lazy.contentAnalysisAgentName
+        );
+      default:
+        // This also handles the case when cancelError is undefined
+        // because the request wasn't cancelled at all.
+        return strings.blockedByContentAnalysis;
+    }
+  },
+
   /**
    * Returns [title, [details1, details2]] for blocked downloads.
    * The title or details could be raw strings or l10n objects.
@@ -889,7 +924,8 @@ DownloadsViewUI.DownloadElementShell.prototype = {
     let s = lazy.DownloadsCommon.strings;
     if (
       !this.download.error ||
-      !this.download.error.becauseBlockedByReputationCheck
+      (!this.download.error.becauseBlockedByReputationCheck &&
+        !this.download.error.becauseBlockedByContentAnalysis)
     ) {
       return [null, null];
     }
@@ -902,14 +938,40 @@ DownloadsViewUI.DownloadElementShell.prototype = {
           [s.unblockInsecure2, s.unblockTip2],
         ];
       case lazy.Downloads.Error.BLOCK_VERDICT_POTENTIALLY_UNWANTED:
+        if (this.download.error.becauseBlockedByReputationCheck) {
+          return [
+            s.blockedPotentiallyUnwanted,
+            [s.unblockTypePotentiallyUnwanted2, s.unblockTip2],
+          ];
+        }
+        if (!this.download.error.becauseBlockedByContentAnalysis) {
+          // We expect one of becauseBlockedByReputationCheck or
+          // becauseBlockedByContentAnalysis to be true; if not,
+          // fall through to the error case.
+          break;
+        }
         return [
-          s.blockedPotentiallyUnwanted,
-          [s.unblockTypePotentiallyUnwanted2, s.unblockTip2],
+          s.warnedByContentAnalysis,
+          [s.unblockTypeContentAnalysisWarn, s.unblockContentAnalysisWarnTip],
         ];
       case lazy.Downloads.Error.BLOCK_VERDICT_MALWARE:
-        return [s.blockedMalware, [s.unblockTypeMalware, s.unblockTip2]];
-
-      case lazy.Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM:
+        if (this.download.error.becauseBlockedByReputationCheck) {
+          return [s.blockedMalware, [s.unblockTypeMalware, s.unblockTip2]];
+        }
+        if (!this.download.error.becauseBlockedByContentAnalysis) {
+          // We expect one of becauseBlockedByReputationCheck or
+          // becauseBlockedByContentAnalysis to be true; if not,
+          // fall through to the error case.
+          break;
+        }
+        return [
+          this.getContentAnalysisErrorTitle(
+            s,
+            this.download.error.contentAnalysisCancelError
+          ),
+          [s.unblockContentAnalysis1, s.unblockContentAnalysis2],
+        ];
+      case lazy.Downloads.Error.BLOCK_VERDICT_DOWNLOAD_SPAM: {
         let title = {
           id: "downloads-files-not-downloaded",
           args: {
@@ -921,6 +983,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
           args: { url: DownloadsViewUI.getStrippedUrl(this.download) },
         };
         return [{ l10n: title }, [{ l10n: details }, null]];
+      }
     }
     throw new Error(
       "Unexpected reputationCheckVerdict: " +
@@ -951,6 +1014,8 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   confirmUnblock(window, dialogType) {
     lazy.DownloadsCommon.confirmUnblockDownload({
       verdict: this.download.error.reputationCheckVerdict,
+      becauseBlockedByReputationCheck:
+        this.download.error.becauseBlockedByReputationCheck,
       window,
       dialogType,
     })
@@ -997,6 +1062,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       case lazy.DownloadsCommon.DOWNLOAD_FINISHED:
         return "downloadsCmd_open";
       case lazy.DownloadsCommon.DOWNLOAD_BLOCKED_PARENTAL:
+      case lazy.DownloadsCommon.DOWNLOAD_BLOCKED_CONTENT_ANALYSIS:
         return "downloadsCmd_openReferrer";
       case lazy.DownloadsCommon.DOWNLOAD_DIRTY:
         return "downloadsCmd_showBlockedInfo";
@@ -1017,11 +1083,10 @@ DownloadsViewUI.DownloadElementShell.prototype = {
         return this.download.canceled || !!this.download.error;
       case "downloadsCmd_pauseResume":
         return this.download.hasPartialData && !this.download.error;
-      case "downloadsCmd_openReferrer":
-        return (
-          !!this.download.source.referrerInfo &&
-          !!this.download.source.referrerInfo.originalReferrer
-        );
+      case "downloadsCmd_openReferrer": {
+        let referrer = this.download.source.referrerInfo?.originalReferrer;
+        return !!referrer && referrer.asciiSpec != "about:blank";
+      }
       case "downloadsCmd_confirmBlock":
       case "downloadsCmd_chooseUnblock":
       case "downloadsCmd_chooseOpen":

@@ -463,6 +463,13 @@ static bool RemoveProblematicMenuItems(NSMenu* aMenu) {
 nsresult nsMenuBarX::Paint() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  if (!NSApp.active && gSomeMenuBarPainted) {
+    // Early exit if the app isn't active, and we already have a menubar.
+    // This is because we can't safely set the NSApp.mainMenu property in
+    // such a case. We early exit so we also don't invoke any side effects.
+    return NS_OK;
+  }
+
   // Don't try to optimize anything in this painting by checking
   // sLastGeckoMenuBarPainted because the menubar can be manipulated by
   // native dialogs and sheet code and other things besides this paint method.
@@ -485,7 +492,15 @@ nsresult nsMenuBarX::Paint() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  RemoveProblematicMenuItems(mNativeMenu);
+  // If the user switches to another app and back to the last open window, we
+  // should not remove the problematic menu items again or the emoji picker
+  // would not be able to be opened again via shortcuts. This should be the only
+  // time that `sLastGeckoMenuBarPainted` is checked in this method, since other
+  // optimizations could interfere with menu manipulations by native dialogs and
+  // similar (see comment above).
+  if (nsMenuBarX::sLastGeckoMenuBarPainted != this) {
+    RemoveProblematicMenuItems(mNativeMenu);
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
