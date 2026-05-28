@@ -17,7 +17,7 @@ export SCCACHE_IDLE_TIMEOUT=0
 ac_add_options --with-macos-sdk="$(xcrun --sdk macosx15.5 --show-sdk-path)"
 
 # ============= LINKER ===============
-ac_add_options --enable-linker=ld64
+ac_add_options --enable-linker=lld
 
 # ============= SPECIAL DEBUG FLAGS FOR COMPATIBILITY REASON ================
 export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
@@ -40,10 +40,10 @@ export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
 
 # ===== CUSTOM COMPILER FLAGS =======
-export CFLAGS="-march=core2"
+export CFLAGS="-march=penryn"
 export CXXFLAGS=$CFLAGS
-export RUSTFLAGS="-C target-cpu=core2 -C link-arg=-ld_classic"
-export LDFLAGS="-headerpad_max_install_names -ld_classic"
+export RUSTFLAGS="-C target-cpu=penryn"
+export LDFLAGS="-headerpad_max_install_names"
 
 # ========== OPTIMIZATIONS ==========   
 ac_add_options --disable-crashreporter
