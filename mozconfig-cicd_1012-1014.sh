@@ -30,7 +30,7 @@ export NODEJS="$HOME/.mozbuild/node/bin/node"
 ac_add_options --with-branding=browser/branding/unofficial
 
 # ========== RUST ==========    
-export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-2024-09-05-aarch64-apple-darwin/bin"
+export RUST_BIN_PATH="$HOME/.rustup/toolchains/nightly-nightly-2025-01-09-aarch64-apple-darwin/bin"
 export RUSTC="$RUST_BIN_PATH/rustc"
 export CARGO="$RUST_BIN_PATH/cargo"
 export CBINDGEN="$HOME/.mozbuild/cbindgen/cbindgen"
@@ -40,9 +40,9 @@ export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
 
 # ===== CUSTOM COMPILER FLAGS =======
-# export CFLAGS="-march=penryn"
-# export CXXFLAGS=$CFLAGS
-# export RUSTFLAGS="-C target-cpu=penryn"
+export CFLAGS="-march=penryn"
+export CXXFLAGS=$CFLAGS
+export RUSTFLAGS="-C target-cpu=penryn"
 # export LDFLAGS="-headerpad_max_install_names"
 
 # ========== OPTIMIZATIONS ==========   

@@ -317,9 +317,9 @@ jobs:
       - name: Bootstrap Rust toolchain
         id: bootstrap-rust
         run: |
-          rustup install nightly-2024-09-05   # v1.83.0-nightly
-          rustup default nightly-2024-09-05   
-          rustup override set nightly-2024-09-05
+          rustup install nightly-2025-01-09   # v1.83.0-nightly
+          rustup default nightly-2025-01-09   
+          rustup override set nightly-2025-01-09
 
           # Add support for cross compiling for x86_64-apple-darwin target
           rustup target add x86_64-apple-darwin
