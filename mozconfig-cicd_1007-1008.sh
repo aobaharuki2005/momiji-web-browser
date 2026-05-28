@@ -26,8 +26,8 @@ export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
 export NODEJS="$HOME/.mozbuild/node/bin/node"
 
 # ===== BRANDING =======       
-# ac_add_options --with-app-name=momiji
-ac_add_options --with-branding=browser/branding/unofficial
+ac_add_options --with-app-name=momiji
+ac_add_options --with-branding=browser/branding/momiji
 
 # ========== RUST ==========    
 export RUST_BIN_PATH="$HOME/.rustup/toolchains/1.82.0-custom-aarch64/bin"
