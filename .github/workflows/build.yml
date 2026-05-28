@@ -152,8 +152,8 @@ jobs:
   #       uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
   #       with:
   #         path: ~/Library/Caches/Mozilla.sccache 
-  #         key: ${{ runner.os }}-lld-${{ github.run_id }}
-  #         restore-keys: ${{ runner.os }}-lld-
+  #         key: ${{ runner.os }}-lld-1009-1011-${{ github.run_id }}
+  #         restore-keys: ${{ runner.os }}-lld-1009-1011
       
   #     - name: Restore cached mozbuild toolchains
   #       id: restore-mozbuild-cache
@@ -233,7 +233,7 @@ jobs:
   #       if: steps.restore-sccache-cache.outputs.cache-matched-key == ''
   #       uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
   #       with:
-  #         key: ${{ runner.os }}-lld-${{ github.run_id }}
+  #         key: ${{ runner.os }}-lld-1009-1011-${{ github.run_id }}
   #         path: ~/Library/Caches/Mozilla.sccache
       
   #     - name: Polyfill & Repackage
@@ -273,8 +273,8 @@ jobs:
         uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
         with:
           path: ~/Library/Caches/Mozilla.sccache 
-          key: ${{ runner.os }}-lld-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-lld-
+          key: ${{ runner.os }}-lld-1012-1014-${{ github.run_id }}
+          restore-keys: ${{ runner.os }}-lld-1012-1014
       
       - name: Restore cached mozbuild toolchains
         id: restore-mozbuild-cache
@@ -357,6 +357,14 @@ jobs:
           cd /tmp
           zip -qr "Nightly-${VERSION}_macOS10.12-10.14.zip" Nightly.app
       
+      - name: Saving sccache
+        id: save-sccache-cache
+        if: steps.restore-sccache-cache.outputs.cache-matched-key == ''
+        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+        with:
+          key: ${{ runner.os }}-lld-1012-1014-${{ github.run_id }}
+          path: ~/Library/Caches/Mozilla.sccache
+    
       - name: Upload Momiji for macOS 10.12-10.14 build
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
