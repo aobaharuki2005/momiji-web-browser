@@ -236,14 +236,6 @@ jobs:
           key: ${{ runner.os }}-lld-${{ github.run_id }}
           path: ~/Library/Caches/Mozilla.sccache
       
-      - name: Saving mozbuild toolchain cache
-        id: save-mozbuild-cache
-        if: steps.restore-mozbuild-cache.outputs.cache-matched-key == ''
-        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
-        with:
-          key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
-          path: ~/.mozbuild
-      
       - name: Polyfill & Repackage
         id: polyfill-and-repkg
         run: |
