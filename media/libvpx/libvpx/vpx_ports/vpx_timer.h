@@ -62,7 +62,7 @@ struct vpx_usec_timer {
 #  include <sys/types.h>
 #  include <mach/mach_time.h>
 
-const uint64_t kNSperMS = 1000000;
+// const uint64_t kNSperMS = 1000000;
 
 #  include <mach/mach.h>
 #  include <mach/clock.h>
