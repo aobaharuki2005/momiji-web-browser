@@ -317,7 +317,7 @@ jobs:
       - name: Bootstrap Rust toolchain
         id: bootstrap-rust
         run: |
-          rustup install nightly-2025-01-09   # v1.83.0-nightly
+          rustup install nightly-2025-01-09   # v1.86.0-nightly
           rustup default nightly-2025-01-09   
           rustup override set nightly-2025-01-09
 
