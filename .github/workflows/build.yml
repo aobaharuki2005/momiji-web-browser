@@ -30,9 +30,6 @@ jobs:
           key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-mozbuild-
       
-      - name: Select Xcode 16.3 (SDK 15.4)
-        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      
       - name: Bootstrap build deps
         id: bootstrap-build-deps
         run: |
@@ -166,9 +163,6 @@ jobs:
           key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-mozbuild-
       
-      - name: Select Xcode 16.3 (SDK 15.4)
-        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      
       - name: Bootstrap build deps
         id: bootstrap-build-deps
         run: |
@@ -297,10 +291,7 @@ jobs:
           path: ~/.mozbuild
           key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
           restore-keys: ${{ runner.os }}-mozbuild-
-      
-      - name: Select Xcode 16.3 (SDK 15.4)
-        run: sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-      
+            
       - name: Bootstrap build deps
         id: bootstrap-build-deps
         run: |
