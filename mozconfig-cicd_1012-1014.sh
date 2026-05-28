@@ -40,10 +40,10 @@ export CC="$HOME/.mozbuild/clang/bin/clang"
 export CXX="$HOME/.mozbuild/clang/bin/clang++"
 
 # ===== CUSTOM COMPILER FLAGS =======
-export CFLAGS="-march=penryn"
-export CXXFLAGS=$CFLAGS
-export RUSTFLAGS="-C target-cpu=penryn"
-export LDFLAGS="-headerpad_max_install_names"
+# export CFLAGS="-march=penryn"
+# export CXXFLAGS=$CFLAGS
+# export RUSTFLAGS="-C target-cpu=penryn"
+# export LDFLAGS="-headerpad_max_install_names"
 
 # ========== OPTIMIZATIONS ==========   
 ac_add_options --disable-crashreporter
