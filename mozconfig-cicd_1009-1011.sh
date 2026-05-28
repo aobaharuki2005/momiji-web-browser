@@ -7,7 +7,7 @@ ac_add_options --enable-application=browser
 
 # ======== TARGET PLATFORM ===============      
 ac_add_options --target=x86_64-apple-darwin
-export MACOSX_DEPLOYMENT_TARGET=10.7
+export MACOSX_DEPLOYMENT_TARGET=10.9
 
 # ============= SCCACHE ==============  
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
@@ -52,7 +52,6 @@ ac_add_options --disable-dmd
 ac_add_options --disable-geckodriver
 ac_add_options --disable-profiling
 ac_add_options --disable-updater
-ac_add_options --disable-sandbox # On 10.7, sandbox causes some video-streaming services is broken.
 
 # ===== CUSTOMIZATION ==== #
 export MOZ_REQUIRE_SIGNING=     # Disable extension signing check
@@ -67,4 +66,3 @@ export RUSTC_OPT_LEVEL="s"
 # ac_add_options --disable-optimize
 # export CFLAGS="$CFLAGS -w"
 # export CXXFLAGS="$CXXFLAGS -w"
-
