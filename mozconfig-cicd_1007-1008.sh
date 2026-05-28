@@ -14,7 +14,7 @@ ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
 export SCCACHE_IDLE_TIMEOUT=0
 
 # ============ SDK ===================     
-ac_add_options --with-macos-sdk="$(xcrun --sdk macosx15.4 --show-sdk-path)"
+ac_add_options --with-macos-sdk="$(xcrun --sdk macosx15.5 --show-sdk-path)"
 
 # ============= LINKER ===============
 ac_add_options --enable-linker=ld64
