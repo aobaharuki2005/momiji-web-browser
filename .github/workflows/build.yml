@@ -117,17 +117,24 @@ jobs:
           # Get the current Momiji version
           export VERSION=$(cat browser/config/version.txt)
           
-          # Copy Momiji.app to /tmp
-          hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"
-          cp -R /Volumes/Nightly/Nightly.app /tmp
+          # Copy Momiji/Nightly.app to /tmp
+          ## Nightly
+          # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
+          # cp -R /Volumes/Nightly/Nightly.app /tmp
+
+          ## Momiji
+          hdiutil attach -noverify "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"  
+          cp -R /Volumes/Momiji/Momiji.app /tmp
           
           # On macOS 10.7, CoreText.framework is located inside ApplicationServices.framework, so we need to polyfill it in XUL
-          cd /tmp/Nightly.app/Contents/MacOS/
+          # cd /tmp/Nightly.app/Contents/MacOS/  # Nightly
+          cd /tmp/Momiji.app/Contents/MacOS/   # Momiji
           install_name_tool -change "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText" "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices" "XUL"
 
           # Package the output app
           cd /tmp
-          zip -qr "Nightly-${VERSION}_macOS10.7-10.8.zip" Nightly.app
+          # zip -qr "Nightly-${VERSION}_macOS10.7-10.8.zip" Nightly.app   # Nightly
+          zip -qr "Momiji-${VERSION}_macOS10.7-10.8.zip" Momiji.app    # Momiji
       
       - name: Upload Momiji for macOS 10.7-10.8 build
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -239,16 +246,19 @@ jobs:
       - name: Polyfill & Repackage
         id: polyfill-and-repkg
         run: |
-          # Get the current Momiji version
-          export VERSION=$(cat browser/config/version.txt)
-          
-          # Copy Momiji.app to /tmp
-          hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"
-          cp -R /Volumes/Nightly/Nightly.app /tmp
+          # Copy Momiji/Nightly.app to /tmp
+          ## Nightly
+          # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
+          # cp -R /Volumes/Nightly/Nightly.app /tmp
 
+          ## Momiji
+          hdiutil attach -noverify "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"  
+          cp -R /Volumes/Momiji/Momiji.app /tmp
+          
           # Package the output app
           cd /tmp
-          zip -qr "Nightly-${VERSION}_macOS10.9-10.11.zip" Nightly.app
+          # zip -qr "Nightly-${VERSION}_macOS10.9-10.11.zip" Nightly.app   # Nightly
+          zip -qr "Momiji-${VERSION}_macOS10.9-10.11.zip" Momiji.app    # Momiji
       
       - name: Upload Momiji for macOS 10.9-10.11 build
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
@@ -346,16 +356,19 @@ jobs:
       - name: Polyfill & Repackage
         id: polyfill-and-repkg
         run: |
-          # Get the current Momiji version
-          export VERSION=$(cat browser/config/version.txt)
-          
-          # Copy Momiji.app to /tmp
-          hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"
-          cp -R /Volumes/Nightly/Nightly.app /tmp
+          # Copy Momiji/Nightly.app to /tmp
+          ## Nightly
+          # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
+          # cp -R /Volumes/Nightly/Nightly.app /tmp
 
+          ## Momiji
+          hdiutil attach -noverify "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"  
+          cp -R /Volumes/Momiji/Momiji.app /tmp
+          
           # Package the output app
           cd /tmp
-          zip -qr "Nightly-${VERSION}_macOS10.12-10.14.zip" Nightly.app
+          # zip -qr "Nightly-${VERSION}_macOS10.12-10.14.zip" Nightly.app   # Nightly
+          zip -qr "Momiji-${VERSION}_macOS10.12-10.14.zip" Momiji.app    # Momiji
       
       - name: Saving sccache
         id: save-sccache-cache
