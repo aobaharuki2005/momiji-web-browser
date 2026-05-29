@@ -246,6 +246,9 @@ jobs:
       - name: Polyfill & Repackage
         id: polyfill-and-repkg
         run: |
+          # Get the current Momiji version
+          export VERSION=$(cat browser/config/version.txt)
+          
           # Copy Momiji/Nightly.app to /tmp
           ## Nightly
           # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
@@ -356,6 +359,9 @@ jobs:
       - name: Polyfill & Repackage
         id: polyfill-and-repkg
         run: |
+          # Get the current Momiji version
+          export VERSION=$(cat browser/config/version.txt)
+          
           # Copy Momiji/Nightly.app to /tmp
           ## Nightly
           # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
