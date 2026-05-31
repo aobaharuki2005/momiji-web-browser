@@ -7,7 +7,7 @@ ac_add_options --enable-application=browser
 
 # ======== TARGET PLATFORM ===============      
 ac_add_options --target=x86_64-apple-darwin
-export MACOSX_DEPLOYMENT_TARGET=10.11
+export MACOSX_DEPLOYMENT_TARGET=10.12
 
 # ============= SCCACHE ==============  
 ac_add_options --with-ccache="$HOME/.mozbuild/sccache/sccache"
