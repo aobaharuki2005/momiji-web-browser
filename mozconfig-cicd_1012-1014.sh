@@ -21,7 +21,8 @@ ac_add_options --enable-linker=lld
 
 # ============= SPECIAL DEBUG FLAGS FOR COMPATIBILITY REASON ================
 # Note: macOS 10.12-10.14 actually use dwarf-4, considering disable this in the next revision
-export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
+# export MOZ_DEBUG_FLAGS="-fdebug-default-version=2 -gdwarf-2 -gfull"
+export MOZ_DEBUG_FLAGS="-fdebug-default-version=4 -gdwarf-4 -gfull"
 
 # ============= NODEJS =================        
 export NODEJS="$HOME/.mozbuild/node/bin/node"
