@@ -3,12 +3,11 @@
 # Momiji Web Browser - macOS Legacy (10.7-10.14) support
 
 > [!IMPORTANT]
-> - Systems in 2008 era and earlier (Core 2 Duo and older) are currently out of support due to illegal instruction crashes (issue #13, #16)
 > - Hardware graphics acceleration is available but maybe buggy on some platforms  (on my Ivy Bridge machine, fonts look partially broken in case of macOS 10.7 and 10.8). In case of buggy experience, follow [this guide](https://support.mozilla.org/en-US/kb/performance-settings) to turn off hardware acceleration for better Web rendering.
+>     - Especially, in pre-2010 era machines, Momiji is reported with `SIGILL` crash in thread `Renderer`. In this case, you should try running Momiji in safe-mode first using Terminal: `/path/to/Momiji.app/Contents/MacOS/momiji --safe-mode` _(replace `/path/to/Momiji.app` with your actual Momiji path)_, then turn off hardware acceleration using the aforementioned guide, then perform a normal launch to see whether it works. If it still does not work, please file a bug in the Issue subpage. For more detail about this caveats, check out for this [issue #13 reference](https://github.com/aobaharuki2005/momiji-web-browser/issues/13#issuecomment-4412459833)
 > - Screen sharing (in Google Meet, Microsoft Teams, etc.) is unavailable on macOS 10.7 due to the absence of compatible `DesktopCapture` framework
 > - Discord voice, video calls and its Go Live streams are unsupported as they require at least Firefox 142 to work on since 2026-Mar-02, while Momiji is currently being based on Firefox 140 ESR baseline.
-> - ~~**For 10.7 users:** On macOS 10.8 and later, `CoreText.framework` is located at `/System/Library/Frameworks`. However, in macOS 10.7 and earlier, Apple stored it as a stub at `/System/Library/Frameworks/ApplicationServices.framework/Versions/A`. To fix this path difference, before running Momiji on your 10.7 for the first time, REMEMBER to run this command~~ _(Fixed since 140.10.0esr-mj version)_
-> - ~~WebSocket applications and services could malfunction if Momiji is configured to use system's proxy settings. Check out [this issue](https://github.com/aobaharuki2005/momiji-web-browser/issues/10) to see how to disable it~~ _(Proxy was disabled by default since 140.10.0esr-mj version)_
+> - DRM-encrypted content (e.g. Spotify, Netflix) is unable to play by default, due to unsupported WideVine plugin. To bring back this functionality, please install Momiji using Momiji Downloader created by @wowfunhappy in this [link](https://mavericksforever.com/).
 
 ## About Momiji
 
