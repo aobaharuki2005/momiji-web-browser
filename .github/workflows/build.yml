@@ -97,7 +97,7 @@ jobs:
       
       - name: Saving sccache
         id: save-sccache-cache
-        if: steps.restore-sccache-cache.outputs.cache-matched-key == ''
+        if: always()
         uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
         with:
           key: ${{ runner.os }}-ld64-${{ github.run_id }}
@@ -237,7 +237,7 @@ jobs:
       
       - name: Saving sccache
         id: save-sccache-cache
-        if: steps.restore-sccache-cache.outputs.cache-matched-key == ''
+        if: always()
         uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
         with:
           key: ${{ runner.os }}-lld-1009-1011-${{ github.run_id }}
@@ -378,7 +378,7 @@ jobs:
       
       - name: Saving sccache
         id: save-sccache-cache
-        if: steps.restore-sccache-cache.outputs.cache-matched-key == ''
+        if: always()
         uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
         with:
           key: ${{ runner.os }}-lld-1012-1014-${{ github.run_id }}
