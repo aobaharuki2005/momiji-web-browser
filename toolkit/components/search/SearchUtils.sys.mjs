@@ -181,9 +181,9 @@ export var SearchUtils = {
 
   ENGINES_URLS: {
     "prod-main":
-      "https://%.invalid",
+      "https://firefox.settings.services.mozilla.com/v1/buckets/main/collections/search-config/records",
     "prod-preview":
-      "https://%.invalid",
+      "https://firefox.settings.services.mozilla.com/v1/buckets/main-preview/collections/search-config/records",
     "stage-main":
       "https://firefox.settings.services.allizom.org/v1/buckets/main/collections/search-config/records",
     "stage-preview":
