@@ -4,272 +4,272 @@ on:
   workflow_dispatch:
 
 jobs:
-  macos1007-1008:
-    name: build for macOS 10.7-10.8
-    runs-on: macos-15
-    steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 1
+  # macos1007-1008:
+  #   name: build for macOS 10.7-10.8
+  #   runs-on: macos-15
+  #   steps:
+  #     - name: Checkout
+  #       id: checkout
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #       with:
+  #         fetch-depth: 1
       
-      - name: Restore cached sccache
-        id: restore-sccache-cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
-        with:
-          path: ~/Library/Caches/Mozilla.sccache 
-          key: ${{ runner.os }}-ld64-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-ld64-
+  #     - name: Restore cached sccache
+  #       id: restore-sccache-cache
+  #       uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+  #       with:
+  #         path: ~/Library/Caches/Mozilla.sccache 
+  #         key: ${{ runner.os }}-ld64-${{ github.run_id }}
+  #         restore-keys: ${{ runner.os }}-ld64-
       
-      - name: Restore cached mozbuild toolchains
-        id: restore-mozbuild-cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
-        with:
-          path: ~/.mozbuild
-          key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-mozbuild-
+  #     - name: Restore cached mozbuild toolchains
+  #       id: restore-mozbuild-cache
+  #       uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+  #       with:
+  #         path: ~/.mozbuild
+  #         key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
+  #         restore-keys: ${{ runner.os }}-mozbuild-
       
-      - name: Bootstrap build deps
-        id: bootstrap-build-deps
-        run: |
-          if [ ! -d "$HOME/.mozbuild" ]; then
-            echo "Cached .mozbuild toolchain not found. Starting bootstrap..."
-            /usr/bin/python3 ./mach bootstrap --application-choice=browser
+  #     - name: Bootstrap build deps
+  #       id: bootstrap-build-deps
+  #       run: |
+  #         if [ ! -d "$HOME/.mozbuild" ]; then
+  #           echo "Cached .mozbuild toolchain not found. Starting bootstrap..."
+  #           /usr/bin/python3 ./mach bootstrap --application-choice=browser
         
-            # Tạo thư mục tạm để lưu các toolchain quan trọng
-            mkdir -p ~/tmp_toolchains
+  #           # Tạo thư mục tạm để lưu các toolchain quan trọng
+  #           mkdir -p ~/tmp_toolchains
             
-            # Di chuyển các thư mục cần thiết ra ngoài (dùng -f để tránh hỏi)
-            [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/clang" ] && mv "$HOME/.mozbuild/clang" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/sysroot-wasm32-wasi" ] && mv "$HOME/.mozbuild/sysroot-wasm32-wasi" ~/tmp_toolchains/
+  #           # Di chuyển các thư mục cần thiết ra ngoài (dùng -f để tránh hỏi)
+  #           [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
+  #           [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
+  #           [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
+  #           [ -d "$HOME/.mozbuild/clang" ] && mv "$HOME/.mozbuild/clang" ~/tmp_toolchains/
+  #           [ -d "$HOME/.mozbuild/sysroot-wasm32-wasi" ] && mv "$HOME/.mozbuild/sysroot-wasm32-wasi" ~/tmp_toolchains/
             
-            # Xóa sạch toàn bộ thư mục .mozbuild cũ (vốn chứa nhiều rác)
-            rm -rf "$HOME/.mozbuild"
+  #           # Xóa sạch toàn bộ thư mục .mozbuild cũ (vốn chứa nhiều rác)
+  #           rm -rf "$HOME/.mozbuild"
         
-            # Đổi tên thư mục tạm thành .mozbuild
-            mv ~/tmp_toolchains "$HOME/.mozbuild"
+  #           # Đổi tên thư mục tạm thành .mozbuild
+  #           mv ~/tmp_toolchains "$HOME/.mozbuild"
             
-            # echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, clang, sysroot-wasm32-wasi"
-            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, clang, sysroot-wasm32-wasi"
-          fi
+  #           # echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, clang, sysroot-wasm32-wasi"
+  #           echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, clang, sysroot-wasm32-wasi"
+  #         fi
 
-          # Install nasm from Homebrew
-          brew install nasm
+  #         # Install nasm from Homebrew
+  #         brew install nasm
       
-      - name: Bootstrap Rust toolchain
-        id: bootstrap-rust
-        run: |
-          export RUST_VERSION=1.82.0
-          if [ ! -d "$HOME/.rustup/toolchains/${RUST_VERSION}-custom-aarch64" ]; then
-            echo "Cached Rust ${RUST_VERSION}-custom-aarch64 not found. Starting bootstrap..."
-            curl -L https://github.com/aobaharuki2005/rust/releases/download/${RUST_VERSION}-custom/${RUST_VERSION}-custom-aarch64.zip -o ${RUST_VERSION}-custom-aarch64.zip
-            mkdir -p ~/.rustup/toolchains
-            unzip -q ${RUST_VERSION}-custom-aarch64.zip -d ~/.rustup/toolchains
-            echo "Bootstrap Rust ${RUST_VERSION}-custom-aarch64 finished."
-          fi
+  #     - name: Bootstrap Rust toolchain
+  #       id: bootstrap-rust
+  #       run: |
+  #         export RUST_VERSION=1.82.0
+  #         if [ ! -d "$HOME/.rustup/toolchains/${RUST_VERSION}-custom-aarch64" ]; then
+  #           echo "Cached Rust ${RUST_VERSION}-custom-aarch64 not found. Starting bootstrap..."
+  #           curl -L https://github.com/aobaharuki2005/rust/releases/download/${RUST_VERSION}-custom/${RUST_VERSION}-custom-aarch64.zip -o ${RUST_VERSION}-custom-aarch64.zip
+  #           mkdir -p ~/.rustup/toolchains
+  #           unzip -q ${RUST_VERSION}-custom-aarch64.zip -d ~/.rustup/toolchains
+  #           echo "Bootstrap Rust ${RUST_VERSION}-custom-aarch64 finished."
+  #         fi
         
-          # Change default Rust toolchain
-          rustup default ${RUST_VERSION}-custom-aarch64
-          rustup override set ${RUST_VERSION}-custom-aarch64
+  #         # Change default Rust toolchain
+  #         rustup default ${RUST_VERSION}-custom-aarch64
+  #         rustup override set ${RUST_VERSION}-custom-aarch64
 
-          # Verify Rust installation
-          cargo --version
-          rustc --version
+  #         # Verify Rust installation
+  #         cargo --version
+  #         rustc --version
       
-      - name: Create mozconfig build config from template
-        run: ln -sf ./mozconfig-cicd_1007-1008.sh mozconfig
+  #     - name: Create mozconfig build config from template
+  #       run: ln -sf ./mozconfig-cicd_1007-1008.sh mozconfig
       
-      - name: Configure build options
-        run: /usr/bin/python3 ./mach configure
+  #     - name: Configure build options
+  #       run: /usr/bin/python3 ./mach configure
 
-      - name: Build
-        run: /usr/bin/python3 ./mach build
+  #     - name: Build
+  #       run: /usr/bin/python3 ./mach build
 
-      - name: End sccache session
-        run: sleep 60 && $HOME/.mozbuild/sccache/sccache --stop-server
+  #     - name: End sccache session
+  #       run: sleep 60 && $HOME/.mozbuild/sccache/sccache --stop-server
 
-      - name: Export the DMG image
-        run: /usr/bin/python3 ./mach package
+  #     - name: Export the DMG image
+  #       run: /usr/bin/python3 ./mach package
       
-      - name: Saving sccache
-        id: save-sccache-cache
-        if: always()
-        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
-        with:
-          key: ${{ runner.os }}-ld64-${{ github.run_id }}
-          path: ~/Library/Caches/Mozilla.sccache
+  #     - name: Saving sccache
+  #       id: save-sccache-cache
+  #       if: always()
+  #       uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+  #       with:
+  #         key: ${{ runner.os }}-ld64-${{ github.run_id }}
+  #         path: ~/Library/Caches/Mozilla.sccache
       
-      - name: Saving mozbuild toolchain cache
-        id: save-mozbuild-cache
-        if: steps.restore-mozbuild-cache.outputs.cache-matched-key == ''
-        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
-        with:
-          key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
-          path: ~/.mozbuild
+  #     - name: Saving mozbuild toolchain cache
+  #       id: save-mozbuild-cache
+  #       if: steps.restore-mozbuild-cache.outputs.cache-matched-key == ''
+  #       uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+  #       with:
+  #         key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
+  #         path: ~/.mozbuild
       
-      - name: Polyfill & Repackage
-        id: polyfill-and-repkg
-        run: |
-          # Get the current Momiji version
-          export VERSION=$(cat browser/config/version.txt)
+  #     - name: Polyfill & Repackage
+  #       id: polyfill-and-repkg
+  #       run: |
+  #         # Get the current Momiji version
+  #         export VERSION=$(cat browser/config/version.txt)
           
-          # Copy Momiji/Nightly.app to /tmp
-          ## Nightly
-          # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
-          # cp -R /Volumes/Nightly/Nightly.app /tmp
+  #         # Copy Momiji/Nightly.app to /tmp
+  #         ## Nightly
+  #         # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
+  #         # cp -R /Volumes/Nightly/Nightly.app /tmp
 
-          ## Momiji
-          hdiutil attach -noverify "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"  
-          cp -R /Volumes/Momiji/Momiji.app /tmp
+  #         ## Momiji
+  #         hdiutil attach -noverify "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"  
+  #         cp -R /Volumes/Momiji/Momiji.app /tmp
           
-          # On macOS 10.7, CoreText.framework is located inside ApplicationServices.framework, so we need to polyfill it in XUL
-          # cd /tmp/Nightly.app/Contents/MacOS/  # Nightly
-          cd /tmp/Momiji.app/Contents/MacOS/   # Momiji
-          install_name_tool -change "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText" "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices" "XUL"
+  #         # On macOS 10.7, CoreText.framework is located inside ApplicationServices.framework, so we need to polyfill it in XUL
+  #         # cd /tmp/Nightly.app/Contents/MacOS/  # Nightly
+  #         cd /tmp/Momiji.app/Contents/MacOS/   # Momiji
+  #         install_name_tool -change "/System/Library/Frameworks/CoreText.framework/Versions/A/CoreText" "/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices" "XUL"
 
-          # Package the output app
-          cd /tmp
-          # zip -qr "Nightly-${VERSION}_macOS10.7-10.8.zip" Nightly.app   # Nightly
-          zip -qr "Momiji-${VERSION}_macOS10.7-10.8.zip" Momiji.app    # Momiji
+  #         # Package the output app
+  #         cd /tmp
+  #         # zip -qr "Nightly-${VERSION}_macOS10.7-10.8.zip" Nightly.app   # Nightly
+  #         zip -qr "Momiji-${VERSION}_macOS10.7-10.8.zip" Momiji.app    # Momiji
       
-      - name: Upload Momiji for macOS 10.7-10.8 build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-        with:
-          archive: false
-          path: /tmp/*.zip
-          if-no-files-found: error
-          retention-days: 7
+  #     - name: Upload Momiji for macOS 10.7-10.8 build
+  #       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+  #       with:
+  #         archive: false
+  #         path: /tmp/*.zip
+  #         if-no-files-found: error
+  #         retention-days: 7
 
-  macos1009-1011:
-    name: build for macOS 10.9-10.11
-    runs-on: macos-15
-    steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          fetch-depth: 1
+  # macos1009-1011:
+  #   name: build for macOS 10.9-10.11
+  #   runs-on: macos-15
+  #   steps:
+  #     - name: Checkout
+  #       id: checkout
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #       with:
+  #         fetch-depth: 1
       
-      - name: Restore cached sccache
-        id: restore-sccache-cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
-        with:
-          path: ~/Library/Caches/Mozilla.sccache 
-          key: ${{ runner.os }}-lld-1009-1011-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-lld-1009-1011
+  #     - name: Restore cached sccache
+  #       id: restore-sccache-cache
+  #       uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+  #       with:
+  #         path: ~/Library/Caches/Mozilla.sccache 
+  #         key: ${{ runner.os }}-lld-1009-1011-${{ github.run_id }}
+  #         restore-keys: ${{ runner.os }}-lld-1009-1011
       
-      - name: Restore cached mozbuild toolchains
-        id: restore-mozbuild-cache
-        uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
-        with:
-          path: ~/.mozbuild
-          key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
-          restore-keys: ${{ runner.os }}-mozbuild-
+  #     - name: Restore cached mozbuild toolchains
+  #       id: restore-mozbuild-cache
+  #       uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+  #       with:
+  #         path: ~/.mozbuild
+  #         key: ${{ runner.os }}-mozbuild-${{ github.run_id }}
+  #         restore-keys: ${{ runner.os }}-mozbuild-
       
-      - name: Bootstrap build deps
-        id: bootstrap-build-deps
-        run: |
-          if [ ! -d "$HOME/.mozbuild" ]; then
-            echo "Cached .mozbuild toolchain not found. Starting bootstrap..."
-            /usr/bin/python3 ./mach bootstrap --application-choice=browser
+  #     - name: Bootstrap build deps
+  #       id: bootstrap-build-deps
+  #       run: |
+  #         if [ ! -d "$HOME/.mozbuild" ]; then
+  #           echo "Cached .mozbuild toolchain not found. Starting bootstrap..."
+  #           /usr/bin/python3 ./mach bootstrap --application-choice=browser
         
-            # Tạo thư mục tạm để lưu các toolchain quan trọng
-            mkdir -p ~/tmp_toolchains
+  #           # Tạo thư mục tạm để lưu các toolchain quan trọng
+  #           mkdir -p ~/tmp_toolchains
             
-            # Di chuyển các thư mục cần thiết ra ngoài (dùng -f để tránh hỏi)
-            [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/clang" ] && mv "$HOME/.mozbuild/clang" ~/tmp_toolchains/
-            [ -d "$HOME/.mozbuild/sysroot-wasm32-wasi" ] && mv "$HOME/.mozbuild/sysroot-wasm32-wasi" ~/tmp_toolchains/
+  #           # Di chuyển các thư mục cần thiết ra ngoài (dùng -f để tránh hỏi)
+  #           [ -d "$HOME/.mozbuild/node" ] && mv "$HOME/.mozbuild/node" ~/tmp_toolchains/
+  #           [ -d "$HOME/.mozbuild/sccache" ] && mv "$HOME/.mozbuild/sccache" ~/tmp_toolchains/
+  #           [ -d "$HOME/.mozbuild/cbindgen" ] && mv "$HOME/.mozbuild/cbindgen" ~/tmp_toolchains/
+  #           [ -d "$HOME/.mozbuild/clang" ] && mv "$HOME/.mozbuild/clang" ~/tmp_toolchains/
+  #           [ -d "$HOME/.mozbuild/sysroot-wasm32-wasi" ] && mv "$HOME/.mozbuild/sysroot-wasm32-wasi" ~/tmp_toolchains/
             
-            # Xóa sạch toàn bộ thư mục .mozbuild cũ (vốn chứa nhiều rác)
-            rm -rf "$HOME/.mozbuild"
+  #           # Xóa sạch toàn bộ thư mục .mozbuild cũ (vốn chứa nhiều rác)
+  #           rm -rf "$HOME/.mozbuild"
         
-            # Đổi tên thư mục tạm thành .mozbuild
-            mv ~/tmp_toolchains "$HOME/.mozbuild"
+  #           # Đổi tên thư mục tạm thành .mozbuild
+  #           mv ~/tmp_toolchains "$HOME/.mozbuild"
             
-            # echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, clang, sysroot-wasm32-wasi"
-            echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, clang, sysroot-wasm32-wasi"
-          fi
+  #           # echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, nasm, dump_syms, clang, sysroot-wasm32-wasi"
+  #           echo "Bootstrap finished. Kept: nodejs, sccache, cbindgen, clang, sysroot-wasm32-wasi"
+  #         fi
 
-          # Install nasm from Homebrew
-          brew install nasm
+  #         # Install nasm from Homebrew
+  #         brew install nasm
       
-      - name: Bootstrap Rust toolchain
-        id: bootstrap-rust
-        run: |
-          export RUST_VERSION=1.82.0
-          if [ ! -d "$HOME/.rustup/toolchains/${RUST_VERSION}-custom-aarch64" ]; then
-            echo "Cached Rust ${RUST_VERSION}-custom-aarch64 not found. Starting bootstrap..."
-            curl -L https://github.com/aobaharuki2005/rust/releases/download/${RUST_VERSION}-custom/${RUST_VERSION}-custom-aarch64.zip -o ${RUST_VERSION}-custom-aarch64.zip
-            mkdir -p ~/.rustup/toolchains
-            unzip -q ${RUST_VERSION}-custom-aarch64.zip -d ~/.rustup/toolchains
-            echo "Bootstrap Rust ${RUST_VERSION}-custom-aarch64 finished."
-          fi
+  #     - name: Bootstrap Rust toolchain
+  #       id: bootstrap-rust
+  #       run: |
+  #         export RUST_VERSION=1.82.0
+  #         if [ ! -d "$HOME/.rustup/toolchains/${RUST_VERSION}-custom-aarch64" ]; then
+  #           echo "Cached Rust ${RUST_VERSION}-custom-aarch64 not found. Starting bootstrap..."
+  #           curl -L https://github.com/aobaharuki2005/rust/releases/download/${RUST_VERSION}-custom/${RUST_VERSION}-custom-aarch64.zip -o ${RUST_VERSION}-custom-aarch64.zip
+  #           mkdir -p ~/.rustup/toolchains
+  #           unzip -q ${RUST_VERSION}-custom-aarch64.zip -d ~/.rustup/toolchains
+  #           echo "Bootstrap Rust ${RUST_VERSION}-custom-aarch64 finished."
+  #         fi
         
-          # Change default Rust toolchain
-          rustup default ${RUST_VERSION}-custom-aarch64
-          rustup override set ${RUST_VERSION}-custom-aarch64
+  #         # Change default Rust toolchain
+  #         rustup default ${RUST_VERSION}-custom-aarch64
+  #         rustup override set ${RUST_VERSION}-custom-aarch64
 
-          # Verify Rust installation
-          cargo --version
-          rustc --version
+  #         # Verify Rust installation
+  #         cargo --version
+  #         rustc --version
       
-      - name: Create mozconfig build config from template
-        run: ln -sf ./mozconfig-cicd_1009-1011.sh mozconfig
+  #     - name: Create mozconfig build config from template
+  #       run: ln -sf ./mozconfig-cicd_1009-1011.sh mozconfig
       
-      - name: Configure build options
-        run: /usr/bin/python3 ./mach configure
+  #     - name: Configure build options
+  #       run: /usr/bin/python3 ./mach configure
 
-      - name: Build
-        run: /usr/bin/python3 ./mach build
+  #     - name: Build
+  #       run: /usr/bin/python3 ./mach build
 
-      - name: End sccache session
-        run: sleep 60 && $HOME/.mozbuild/sccache/sccache --stop-server
+  #     - name: End sccache session
+  #       run: sleep 60 && $HOME/.mozbuild/sccache/sccache --stop-server
 
-      - name: Export the DMG image
-        run: /usr/bin/python3 ./mach package
+  #     - name: Export the DMG image
+  #       run: /usr/bin/python3 ./mach package
       
-      - name: Saving sccache
-        id: save-sccache-cache
-        if: always()
-        uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
-        with:
-          key: ${{ runner.os }}-lld-1009-1011-${{ github.run_id }}
-          path: ~/Library/Caches/Mozilla.sccache
+  #     - name: Saving sccache
+  #       id: save-sccache-cache
+  #       if: always()
+  #       uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7  # v5.0.4
+  #       with:
+  #         key: ${{ runner.os }}-lld-1009-1011-${{ github.run_id }}
+  #         path: ~/Library/Caches/Mozilla.sccache
       
-      - name: Polyfill & Repackage
-        id: polyfill-and-repkg
-        run: |
-          # Get the current Momiji version
-          export VERSION=$(cat browser/config/version.txt)
+  #     - name: Polyfill & Repackage
+  #       id: polyfill-and-repkg
+  #       run: |
+  #         # Get the current Momiji version
+  #         export VERSION=$(cat browser/config/version.txt)
           
-          # Copy Momiji/Nightly.app to /tmp
-          ## Nightly
-          # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
-          # cp -R /Volumes/Nightly/Nightly.app /tmp
+  #         # Copy Momiji/Nightly.app to /tmp
+  #         ## Nightly
+  #         # hdiutil attach -noverify "obj-ff-dbg-esr/dist/firefox-${VERSION}.en-US.mac.dmg"  
+  #         # cp -R /Volumes/Nightly/Nightly.app /tmp
 
-          ## Momiji
-          hdiutil attach -noverify "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"  
-          cp -R /Volumes/Momiji/Momiji.app /tmp
+  #         ## Momiji
+  #         hdiutil attach -noverify "obj-ff-dbg-esr/dist/momiji-${VERSION}.en-US.mac.dmg"  
+  #         cp -R /Volumes/Momiji/Momiji.app /tmp
           
-          # Package the output app
-          cd /tmp
-          # zip -qr "Nightly-${VERSION}_macOS10.9-10.11.zip" Nightly.app   # Nightly
-          zip -qr "Momiji-${VERSION}_macOS10.9-10.11.zip" Momiji.app    # Momiji
+  #         # Package the output app
+  #         cd /tmp
+  #         # zip -qr "Nightly-${VERSION}_macOS10.9-10.11.zip" Nightly.app   # Nightly
+  #         zip -qr "Momiji-${VERSION}_macOS10.9-10.11.zip" Momiji.app    # Momiji
       
-      - name: Upload Momiji for macOS 10.9-10.11 build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
-        with:
-          archive: false
-          path: /tmp/*.zip
-          if-no-files-found: error
-          retention-days: 7
+  #     - name: Upload Momiji for macOS 10.9-10.11 build
+  #       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+  #       with:
+  #         archive: false
+  #         path: /tmp/*.zip
+  #         if-no-files-found: error
+  #         retention-days: 7
 
   macos1012-1014:
     name: build for macOS 10.12-10.14
