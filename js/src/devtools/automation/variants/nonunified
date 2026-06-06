@@ -1,7 +1,0 @@
-{
-    "configure-args": "--enable-warnings-as-errors --enable-rust-simd --disable-unified-build",
-    "debug": true,
-    "skip-tests": {
-        "all": ["jstests", "jittest", "checks"]
-    }
-}

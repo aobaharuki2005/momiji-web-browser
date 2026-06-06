@@ -1,5 +1,0 @@
-[DEFAULT]
-tags = "devtools"
-firefox-appdir = "browser"
-
-["test_tracer.js"]

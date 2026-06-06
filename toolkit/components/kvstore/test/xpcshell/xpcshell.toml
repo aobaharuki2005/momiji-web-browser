@@ -1,7 +1,0 @@
-[DEFAULT]
-skip-if = ["os == 'android'"]
-support-files = ["data/**"]
-
-["test_kvstore.js"]
-
-["test_sqlite_kvstore.js"]

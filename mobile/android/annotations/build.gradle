@@ -1,6 +1,0 @@
-apply plugin: 'java'
-
-dependencies {
-    implementation libs.tools.lint
-    implementation libs.tools.lintchecks
-}

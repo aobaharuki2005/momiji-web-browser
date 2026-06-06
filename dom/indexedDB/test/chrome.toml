@@ -1,7 +1,0 @@
-[DEFAULT]
-tags = "inc-origin-init"
-support-files = ["chromeHelpers.js"]
-
-["test_globalObjects_chrome.xhtml"]
-
-["test_wrappedArray.xhtml"]

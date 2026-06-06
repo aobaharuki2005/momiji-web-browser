@@ -1,4 +1,0 @@
-emulator
-platform-tools
-build-tools;36.0.0
-platforms;android-36

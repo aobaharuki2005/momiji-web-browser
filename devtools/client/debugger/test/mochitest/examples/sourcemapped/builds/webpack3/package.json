@@ -1,9 +1,0 @@
-{
-  "private": true,
-  "dependencies": {
-    "lodash": "^4.17.10",
-    "ts-loader": "3",
-    "typescript": "^2.9.2",
-    "webpack": "3"
-  }
-}

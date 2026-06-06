@@ -1,3 +1,0 @@
-oomTest(function () {
-  parseModule("{}", "", "json");
-});

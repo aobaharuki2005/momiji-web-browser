@@ -1,5 +1,0 @@
-[DEFAULT]
-head = "head.js"
-
-["browser_aboutthirdparty.js"]
-skip-if = ["(os == 'win' && asan)"]

@@ -1,9 +1,0 @@
-[DEFAULT]
-support-files = [
-  "prompt_common.js",
-  "chromeScript.js",
-]
-
-["test_modal_prompts.html"]
-
-["test_modal_select.html"]

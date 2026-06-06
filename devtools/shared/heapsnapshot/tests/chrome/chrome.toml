@@ -1,6 +1,0 @@
-[DEFAULT]
-tags = "devtools devtools-memory"
-
-["test_DominatorTree_01.html"]
-
-["test_SaveHeapSnapshot.html"]

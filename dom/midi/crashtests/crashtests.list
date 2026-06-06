@@ -1,2 +1,0 @@
-# WebMIDI is not supported on Android
-skip-if(Android) test-pref(dom.webmidi.enabled,true) test-pref(midi.prompt.testing,true) load 1851829.html

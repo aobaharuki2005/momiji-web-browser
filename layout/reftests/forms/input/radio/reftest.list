@@ -1,9 +1,0 @@
-== label-dynamic.html label-dynamic-ref.html
-!= checked-native.html checked-native-notref.html
-== checked-appearance-none.html about:blank
-== unchecked-appearance-none.html about:blank
-!= checked-native.html about:blank
-!= checked-native-notref.html about:blank
-fuzzy(0-2,0-16) == radio-clamp-01.html radio-clamp-01-ref.html # Rounded corner antialiasing
-fuzzy(0-2,0-16) skip-if(!gtkWidget) == radio-clamp-02.html radio-clamp-02-ref.html
-!= radio-minimum-size.html radio-minimum-size-notref.html

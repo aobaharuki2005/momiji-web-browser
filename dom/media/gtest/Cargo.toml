@@ -1,9 +1,0 @@
-[package]
-edition = "2015"
-name = "mp4parse-gtest"
-version = "0.1.0"
-authors = ["The Mozilla Project Developers"]
-license = "MPL-2.0"
-
-[lib]
-path = "hello.rs"

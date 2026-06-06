@@ -1,1 +1,0 @@
-Feature-Policy: camera *; fullscreen 'none'; storage-access 'self'

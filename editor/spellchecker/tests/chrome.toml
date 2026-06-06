@@ -1,6 +1,0 @@
-[DEFAULT]
-prefs = ["gfx.font_loader.delay=0"]
-
-
-["test_nsIEditorSpellCheck_ReplaceWord.html"]
-support-files = ["spellcheck.js"]

@@ -1,5 +1,0 @@
-{
-    "skip_stages": "1",
-    "stages": "2",
-    "pgo": true
-}

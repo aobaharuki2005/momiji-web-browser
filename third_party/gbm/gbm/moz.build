@@ -1,4 +1,0 @@
-EXPORTS += [
-    'gbm.h',
-]
-

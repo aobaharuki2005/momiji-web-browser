@@ -1,7 +1,0 @@
-[DEFAULT]
-
-# marionette unit tests
-["include:unit/unit-tests.toml"]
-
-# integration tests
-["include:integration-tests.toml"]

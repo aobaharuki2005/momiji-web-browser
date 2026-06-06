@@ -1,5 +1,0 @@
-${PKG_NAME} (${PKG_VERSION}) UNRELEASED; urgency=medium
-
-  * N/A
-
- -- Mozilla <release@mozilla.com>  ${CHANGELOG_DATE}

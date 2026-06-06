@@ -1,6 +1,0 @@
----
-source: core/src/hir/type_context.rs
-expression: output
----
-Lowering error in NonOpaqueStruct: struct `NonOpaqueStruct` is a ZST because it has no fields
-

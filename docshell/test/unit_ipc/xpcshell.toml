@@ -1,5 +1,0 @@
-[DEFAULT]
-head = ""
-
-["test_pb_notification_ipc.js"]
-skip-if = ["true"] # Bug 751575: Perma-fails with: command timed out: 1200 seconds without output
