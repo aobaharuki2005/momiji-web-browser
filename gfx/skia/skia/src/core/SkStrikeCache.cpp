@@ -17,6 +17,8 @@
 #include "src/core/SkStrike.h"
 #include "src/core/SkStrikeSpec.h"
 
+#include "src/sksl/SkSLDefines.h"
+
 #include <algorithm>
 #include <utility>
 
@@ -28,10 +30,12 @@ using namespace sktext;
 bool gSkUseThreadLocalStrikeCaches_IAcknowledgeThisIsIncrediblyExperimental = false;
 
 SkStrikeCache* SkStrikeCache::GlobalStrikeCache() {
+#if !defined(SKSL_USE_THREAD_LOCAL) 
     if (gSkUseThreadLocalStrikeCaches_IAcknowledgeThisIsIncrediblyExperimental) {
         static thread_local auto* cache = new SkStrikeCache;
         return cache;
     }
+#endif
     static auto* cache = new SkStrikeCache;
     return cache;
 }

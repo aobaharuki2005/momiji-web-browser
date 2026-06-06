@@ -63,12 +63,14 @@ SUPPORTS_CXX20 = {
 @cache
 def GCC_BASE(version):
     version = Version(version)
-    return FakeCompiler({
-        "__GNUC__": version.major,
-        "__GNUC_MINOR__": version.minor,
-        "__GNUC_PATCHLEVEL__": version.patch,
-        "__STDC__": 1,
-    })
+    return FakeCompiler(
+        {
+            "__GNUC__": version.major,
+            "__GNUC_MINOR__": version.minor,
+            "__GNUC_PATCHLEVEL__": version.patch,
+            "__STDC__": 1,
+        }
+    )
 
 
 @cache
@@ -144,12 +146,14 @@ GCC_PLATFORM_X86_64_WIN = FakeCompiler(GCC_PLATFORM_X86_64, GCC_PLATFORM_WIN)
 @cache
 def CLANG_BASE(version):
     version = Version(version)
-    return FakeCompiler({
-        "__clang__": 1,
-        "__clang_major__": version.major,
-        "__clang_minor__": version.minor,
-        "__clang_patchlevel__": version.patch,
-    })
+    return FakeCompiler(
+        {
+            "__clang__": 1,
+            "__clang_major__": version.major,
+            "__clang_minor__": version.minor,
+            "__clang_patchlevel__": version.patch,
+        }
+    )
 
 
 @cache
@@ -236,15 +240,17 @@ CLANG_PLATFORM_X86_64_WIN = CLANG_PLATFORM(GCC_PLATFORM_X86_64_WIN)
 @cache
 def VS(version):
     version = Version(version)
-    return FakeCompiler({
-        None: {
-            "_MSC_VER": "%02d%02d" % (version.major, version.minor),
-            "_MSC_FULL_VER": "%02d%02d%05d"
-            % (version.major, version.minor, version.patch),
-            "_MT": "1",
-        },
-        "*.cpp": DEFAULT_CXX_97,
-    })
+    return FakeCompiler(
+        {
+            None: {
+                "_MSC_VER": "%02d%02d" % (version.major, version.minor),
+                "_MSC_FULL_VER": "%02d%02d%05d"
+                % (version.major, version.minor, version.patch),
+                "_MT": "1",
+            },
+            "*.cpp": DEFAULT_CXX_97,
+        }
+    )
 
 
 VS_2017u8 = VS("19.15.26726")
@@ -683,10 +689,12 @@ class LinuxToolchainTest(BaseToolchainTest):
 
     def test_absolute_path(self):
         paths = dict(self.PATHS)
-        paths.update({
-            "/opt/clang/bin/clang": paths["/usr/bin/clang"],
-            "/opt/clang/bin/clang++": paths["/usr/bin/clang++"],
-        })
+        paths.update(
+            {
+                "/opt/clang/bin/clang": paths["/usr/bin/clang"],
+                "/opt/clang/bin/clang++": paths["/usr/bin/clang++"],
+            }
+        )
         result = {
             "c_compiler": self.DEFAULT_CLANG_RESULT
             + {"compiler": "/opt/clang/bin/clang"},
@@ -703,10 +711,12 @@ class LinuxToolchainTest(BaseToolchainTest):
 
     def test_atypical_name(self):
         paths = dict(self.PATHS)
-        paths.update({
-            "/usr/bin/afl-clang-fast": paths["/usr/bin/clang"],
-            "/usr/bin/afl-clang-fast++": paths["/usr/bin/clang++"],
-        })
+        paths.update(
+            {
+                "/usr/bin/afl-clang-fast": paths["/usr/bin/clang"],
+                "/usr/bin/afl-clang-fast++": paths["/usr/bin/clang++"],
+            }
+        )
         self.do_toolchain_test(
             paths,
             {
@@ -860,11 +870,13 @@ class OSXToolchainTest(BaseToolchainTest):
     GCC_10_RESULT = LinuxToolchainTest.GCC_10_RESULT
     GXX_10_RESULT = LinuxToolchainTest.GXX_10_RESULT
     SYSROOT_FLAGS = {
-        "flags": PrependFlags([
-            "-isysroot",
-            xcrun("", ("--show-sdk-path",))[1],
-            "-mmacosx-version-min=10.15",
-        ])
+        "flags": PrependFlags(
+            [
+                "-isysroot",
+                xcrun("", ("--show-sdk-path",))[1],
+                "-mmacosx-version-min=10.13",
+            ]
+        )
     }
 
     def test_clang(self):
@@ -1237,10 +1249,12 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
             },
         )
 
-        paths.update({
-            "%s-gcc" % toolchain_prefix: DEFAULT_GCC + self.PLATFORMS[target],
-            "%s-g++" % toolchain_prefix: DEFAULT_GXX + self.PLATFORMS[target],
-        })
+        paths.update(
+            {
+                "%s-gcc" % toolchain_prefix: DEFAULT_GCC + self.PLATFORMS[target],
+                "%s-g++" % toolchain_prefix: DEFAULT_GXX + self.PLATFORMS[target],
+            }
+        )
         self.do_toolchain_test(
             paths,
             {
@@ -1367,10 +1381,12 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
 
     def test_cross_atypical_clang(self):
         paths = dict(self.PATHS)
-        paths.update({
-            "/usr/bin/afl-clang-fast": paths["/usr/bin/clang"],
-            "/usr/bin/afl-clang-fast++": paths["/usr/bin/clang++"],
-        })
+        paths.update(
+            {
+                "/usr/bin/afl-clang-fast": paths["/usr/bin/clang"],
+                "/usr/bin/afl-clang-fast++": paths["/usr/bin/clang++"],
+            }
+        )
         afl_clang_result = self.DEFAULT_CLANG_RESULT + {
             "compiler": "/usr/bin/afl-clang-fast"
         }
@@ -1393,10 +1409,12 @@ class LinuxCrossCompileToolchainTest(BaseToolchainTest):
 class OSXCrossToolchainTest(BaseToolchainTest):
     TARGET = "i686-apple-darwin11.2.0"
     PATHS = dict(LinuxToolchainTest.PATHS)
-    PATHS.update({
-        "/usr/bin/clang": CLANG_17 + CLANG_PLATFORM_X86_64_LINUX,
-        "/usr/bin/clang++": CLANGXX_17 + CLANG_PLATFORM_X86_64_LINUX,
-    })
+    PATHS.update(
+        {
+            "/usr/bin/clang": CLANG_17 + CLANG_PLATFORM_X86_64_LINUX,
+            "/usr/bin/clang++": CLANGXX_17 + CLANG_PLATFORM_X86_64_LINUX,
+        }
+    )
     DEFAULT_CLANG_RESULT = CompilerResult(
         flags=[],
         version="17.0.0",

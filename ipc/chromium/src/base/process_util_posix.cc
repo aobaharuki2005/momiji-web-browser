@@ -197,11 +197,48 @@ void CloseSuperfluousFds(void* aCtx, bool (*aShouldPreserve)(void*, int)) {
   }
 }
 
+// Sets all file descriptors to close on exec except for stdin, stdout
+// and stderr.
+// TODO(agl): Remove this function. It's fundamentally broken for multithreaded
+// apps.
+void SetAllFDsToCloseOnExec() {
+#if defined(XP_LINUX)
+  const char fd_dir[] = "/proc/self/fd";
+#elif defined(XP_MACOSX) || defined(XP_FREEBSD)
+  const char fd_dir[] = "/dev/fd";
+#endif
+  ScopedDIR dir_closer(opendir(fd_dir));
+  DIR *dir = dir_closer.get();
+  if (NULL == dir) {
+    DLOG(ERROR) << "Unable to open " << fd_dir;
+    return;
+  }
+  struct dirent *ent;
+  while ((ent = readdir(dir))) {
+    // Skip . and .. entries.
+    if (ent->d_name[0] == '.')
+      continue;
+    int i = atoi(ent->d_name);
+    // We don't close stdin, stdout or stderr.
+    if (i <= STDERR_FILENO)
+      continue;
+    int flags = fcntl(i, F_GETFD);
+    if ((flags == -1) || (fcntl(i, F_SETFD, flags | FD_CLOEXEC) == -1)) {
+      DLOG(ERROR) << "fcntl failure.";
+    }
+  }
+}
+
 ProcessStatus WaitForProcess(ProcessHandle handle, BlockingWait blocking,
                              int* info_out) {
   *info_out = 0;
 
 #if defined(MOZ_ENABLE_FORKSERVER) || !defined(HAVE_WAITID)
+# ifdef XP_MACOSX //have to do the same for 10.7 so it's a bit ugly
+    if (__builtin_available(macOS 10.8, *)) {
+        //nop. the negation of this check does not work the same way.
+    } else { 
+# endif
   auto handleStatus = [&](int status) -> ProcessStatus {
     if (WIFEXITED(status)) {
       *info_out = WEXITSTATUS(status);
@@ -214,8 +251,11 @@ ProcessStatus WaitForProcess(ProcessHandle handle, BlockingWait blocking,
     LOG_AND_ASSERT << "unexpected wait status: " << status;
     return ProcessStatus::Error;
   };
+#ifdef XP_MACOSX
+  }
 #endif
-
+  }
+#endif
   auto handleForkServer = [&]() -> mozilla::Maybe<ProcessStatus> {
 #ifdef MOZ_ENABLE_FORKSERVER
     if (errno != ECHILD || !mozilla::ipc::ForkServiceChild::WasUsed()) {
@@ -250,6 +290,10 @@ ProcessStatus WaitForProcess(ProcessHandle handle, BlockingWait blocking,
   const int maybe_wnohang = (blocking == BlockingWait::No) ? WNOHANG : 0;
 
 #ifdef HAVE_WAITID
+#ifdef XP_MACOSX
+  //10.8 and higher have a working waitid, broken on 10.7 and lower
+  if (__builtin_available(macOS 10.8, *)) {
+#endif
   // We use `WNOWAIT` to read the process status without
   // side-effecting it, in case it's something unexpected like a
   // ptrace-stop for the crash reporter.  If is an exit, the call is
@@ -316,7 +360,39 @@ ProcessStatus WaitForProcess(ProcessHandle handle, BlockingWait blocking,
   DCHECK(si.si_code == old_si_code);
   return status;
 
-#else   // no waitid
+#ifdef XP_MACOSX
+  } else {
+    //use the exact same code jed put below for openbsd, for 10.7 and lower
+    //it's redundant, but nothing else we can do.
+    int status;
+    const int result = waitpid(handle, &status, maybe_wnohang);
+    if (result == -1) {
+      *info_out = errno;
+      if (auto forkServerReturn = handleForkServer()) {
+        return *forkServerReturn;
+      }
+
+      CHROMIUM_LOG(ERROR) << "waitpid failed pid:" << handle
+                          << " errno:" << errno;
+      return ProcessStatus::Error;
+    }
+    if (result == 0) {
+      return ProcessStatus::Running;
+    }
+
+    if (WIFEXITED(status)) {
+      *info_out = WEXITSTATUS(status);
+      return ProcessStatus::Exited;
+    }
+    if (WIFSIGNALED(status)) {
+      *info_out = WTERMSIG(status);
+      return ProcessStatus::Killed;
+    }
+    LOG_AND_ASSERT << "unexpected wait status: " << status;
+    return ProcessStatus::Error;
+  }
+#endif
+#else  // no waitid
 
   int status;
   const int result = waitpid(handle, &status, maybe_wnohang);

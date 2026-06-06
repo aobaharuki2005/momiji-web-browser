@@ -109,8 +109,7 @@ class TextInputHandler;
 @property(nonatomic) mozilla::WindowShadow shadowStyle;
 
 - (void)updateTitlebarTransparency;
-- (void)setTitlebarSeparatorStyle:(NSTitlebarSeparatorStyle)aStyle
-    API_AVAILABLE(macos(11.0));
+- (void)setTitlebarSeparatorStyle:(NSTitlebarSeparatorStyle)aStyle API_AVAILABLE(macos(11.0));
 
 - (void)releaseJSObjects;
 
@@ -118,6 +117,7 @@ class TextInputHandler;
 
 @interface NSWindow (Undocumented)
 - (NSDictionary*)shadowParameters;
+- (BOOL)bottomCornerRounded;
 
 // Present in the same form on macOS since at least macOS 10.5.
 - (NSRect)contentRectForFrameRect:(NSRect)windowFrame
@@ -198,11 +198,25 @@ class TextInputHandler;
   // fullscreen.
   FullscreenTitlebarTracker* mFullscreenTitlebarTracker;
 
+  CGFloat mUnifiedToolbarHeight;
+  /* Store the height of the titlebar when this window is initialized. The
+     titlebarHeight getter returns 0 when in fullscreen, which is not useful in
+     some cases. */
+  CGFloat mInitialTitlebarHeight; 
   CGFloat mMenuBarHeight;
   NSRect mWindowButtonsRect;
+  NSRect mFullScreenButtonRect;
 }
+- (void)setUnifiedToolbarHeight:(CGFloat)aHeight;
+- (CGFloat)unifiedToolbarHeight;
+- (CGFloat)titlebarHeight;
+- (NSRect)titlebarRect;
 - (void)setDrawsContentsIntoWindowFrame:(BOOL)aState;
+
 - (void)placeWindowButtons:(NSRect)aRect;
+- (void)placeFullScreenButton:(NSRect)aRect;
+- (NSPoint)windowButtonsPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
+- (NSPoint)fullScreenButtonPositionWithDefaultPosition:(NSPoint)aDefaultPosition;
 - (NSRect)windowButtonsRect;
 - (void)windowMainStateChanged;
 @end
@@ -243,7 +257,6 @@ class nsCocoaWindow final : public nsIWidget {
   bool ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect) override {
     return false;
   }
-
   void* GetNativeData(uint32_t aDataType) override;
 
   void ConstrainPosition(DesktopIntPoint&) override;
@@ -311,9 +324,6 @@ class nsCocoaWindow final : public nsIWidget {
     return nsCocoaUtils::DevPixelsToCocoaPoints(aRect, BackingScaleFactor());
   }
 
-  // Called by nsCocoaWindow when the window's fullscreen state changes.
-  void UpdateFullscreen(bool aFullscreen);
-
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent);
   nsEventStatus DispatchAPZInputEvent(mozilla::InputData& aEvent);
 
@@ -348,7 +358,6 @@ class nsCocoaWindow final : public nsIWidget {
   mozilla::VibrancyManager& EnsureVibrancyManager();
 
   void TearDownView();
-
   bool PrepareForFullscreenTransition(nsISupports** aData) override;
   void PerformFullscreenTransition(FullscreenTransitionStage aStage,
                                    uint16_t aDuration, nsISupports* aData,
@@ -386,13 +395,14 @@ class nsCocoaWindow final : public nsIWidget {
   void BackingScaleFactorChanged();
   double GetDefaultScaleInternal() override;
   int32_t RoundsWidgetCoordinatesTo() override;
-
   // Mac specific methods
   void PaintWindow();
   void PaintWindowInDrawTarget(mozilla::gfx::DrawTarget* aDT,
                                const LayoutDeviceIntRegion& aRegion,
                                const mozilla::gfx::IntSize& aSurfaceSize);
 
+  bool PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion,
+                            mozilla::gfx::IntSize aSurfaceSize);
   void PaintWindowInContentLayer();
   void HandleMainThreadCATransaction();
 
@@ -401,8 +411,8 @@ class nsCocoaWindow final : public nsIWidget {
 #endif
 
   bool WidgetPaintsBackground() override { return true; }
-
   void CreateCompositor(int aWidth, int aHeight) override;
+  void CreateCompositor() override;
   void DestroyCompositor() override;
   void NotifyCompositorSessionLost(
       mozilla::layers::CompositorSession* aSession) override;
@@ -483,7 +493,7 @@ class nsCocoaWindow final : public nsIWidget {
 
   void SetInputContext(const InputContext& aContext,
                        const InputContextAction& aAction) override;
-  InputContext GetInputContext() override;
+  InputContext GetInputContext() override; 
   MOZ_CAN_RUN_SCRIPT bool GetEditCommands(
       mozilla::NativeKeyBindingsType aType,
       const mozilla::WidgetKeyboardEvent& aEvent,
@@ -559,12 +569,14 @@ class nsCocoaWindow final : public nsIWidget {
   WindowDelegate* mDelegate =
       nullptr;  // our delegate for processing window msgs [STRONG]
   RefPtr<nsMenuBarX> mMenuBar;
-  ChildView* mChildView = nullptr;  // Cocoa content view, [STRONG]
+  ChildView* mChildView = nullptr; //Cocoa content view, [STRONG]
+
 #ifdef ACCESSIBILITY
   // weak ref to this childview's associated mozAccessible for speed reasons
   // (we get queried for it *a lot* but don't want to own it)
   nsWeakPtr mAccessible;
 #endif
+
   // Held while the compositor (or WR renderer) thread is compositing.
   // Protects from tearing down the view during compositing and from presenting
   // half-composited layers to the screen.
@@ -572,15 +584,25 @@ class nsCocoaWindow final : public nsIWidget {
 
   mozilla::ViewRegion mNonDraggableRegion;
 
-  // Cached value of [mChildView backingScaleFactor], to avoid sending two obj-c
+  // Cached value of [mView backingScaleFactor], to avoid sending two obj-c
   // messages (respondsToSelector, backingScaleFactor) every time we need to
   // use it.
   // ** We'll need to reinitialize this if the backing resolution changes. **
   mutable CGFloat mBackingScaleFactor;
 
+  bool mVisible;
+  bool mDrawing;
+  bool mIsDispatchPaint;  // Is a paint event being dispatched
+
   RefPtr<mozilla::layers::NativeLayerRootCA> mNativeLayerRoot;
   RefPtr<mozilla::layers::NativeLayerRootRemoteMacParent>
       mNativeLayerRootRemoteMacParent;
+  mozilla::ipc::Endpoint<mozilla::layers::PNativeLayerRemoteChild>
+      mChildEndpoint;
+ 
+  // Only used for drawRect-based painting in popups.
+  // Always null if nsCocoaFeatures::OnMavericksOrLater() is true.
+  RefPtr<mozilla::gfx::DrawTarget> mBackingSurface;
 
   // In BasicLayers mode, this is the CoreAnimation layer that contains the
   // rendering from Gecko. It is a sublayer of mNativeLayerRoot's underlying
@@ -600,6 +622,7 @@ class nsCocoaWindow final : public nsIWidget {
   // transition, it is the animation object.
   NSAnimation* mFullscreenTransitionAnimation;
   mozilla::WindowShadow mShadowStyle;
+
   CGFloat mAspectRatio;
 
   WindowAnimationType mAnimationType;
@@ -674,12 +697,11 @@ class nsCocoaWindow final : public nsIWidget {
   bool mWasShown = false;
 
   int32_t mNumModalDescendants = 0;
-
-  // The workspaceID to move to once the window becomes visible. A value of 0
-  // is a no-op.
+   // The workspaceID to move to once the window becomes visible. A value of 0
   int32_t mDeferredWorkspaceID = 0;
-
+ 
   RefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
+
   InputContext mInputContext;
   NSWindowAnimationBehavior mWindowAnimationBehavior;
 

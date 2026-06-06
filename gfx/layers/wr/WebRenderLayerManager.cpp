@@ -43,6 +43,7 @@ WebRenderLayerManager::WebRenderLayerManager(
     : mWidget(aWidget),
       mWrChild(aWrChild),
       mLatestTransactionId{0},
+      mWindowOverlayChanged(false),
       mNeedsComposite(false),
       mIsFirstPaint(false),
       mDestroyed(false),
@@ -253,6 +254,15 @@ bool WebRenderLayerManager::BeginTransaction(const nsCString& aURL) {
 
 bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
   auto clearTarget = MakeScopeExit([&] { mTarget = nullptr; });
+  if (mWindowOverlayChanged) {
+    // If the window overlay changed then we can't do an empty transaction
+    // because we need to repaint the window overlay which we only currently
+    // support in a full transaction.
+    // XXX If we end up hitting this branch a lot we can probably optimize it
+    // by just sending an updated window overlay image instead of rebuilding
+    // the entire WR display list.
+    return false;
+  }
 
   // If we haven't sent a display list (since creation or since the last time we
   // sent ClearDisplayList to the parent) then we can't do an empty transaction
@@ -354,6 +364,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
   diplayListBuilder->Begin();
 
   wr::IpcResourceUpdateQueue resourceUpdates(WrBridge());
+  mWindowOverlayChanged = false;
   wr::usize builderDumpIndex = 0;
   bool containsSVGGroup = false;
   bool dumpEnabled =

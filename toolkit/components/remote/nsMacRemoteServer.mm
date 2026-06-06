@@ -36,7 +36,7 @@ void nsMacRemoteServer::HandleCommandLine(CFDataRef aData) {
     NSDictionary* dict =
         [NSKeyedUnarchiver unarchiveObjectWithData:(NSData*)aData];
     if (dict && [dict isKindOfClass:[NSDictionary class]]) {
-      NSArray* args = dict[@"args"];
+      NSArray* args = [dict objectForKey:@"args"];
       if (!args) {
         NS_ERROR("Wrong parameters passed to the Remote Server");
         return;
@@ -68,7 +68,7 @@ void nsMacRemoteServer::HandleCommandLine(CFDataRef aData) {
       // in the current instance.
       cmdLine->Run();
 
-      NSNumber* raise = dict[@"raise"];
+      NSNumber* raise = [dict objectForKey:@"raise"];
       if (!raise || [raise boolValue]) {
         // Activating the application brings the most recent window to the
         // foreground.

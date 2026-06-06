@@ -27,34 +27,41 @@ nsMacFinderProgress::Init(
     nsIMacFinderProgressCanceledCallback* cancellationCallback) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  NSURL* pathUrl = [NSURL
-      fileURLWithPath:[NSString
-                          stringWithCharacters:reinterpret_cast<const unichar*>(
-                                                   path.BeginReading())
-                                        length:path.Length()]];
-  NSDictionary* userInfo = @{
-    NSProgressFileOperationKindKey : NSProgressFileOperationKindDownloading,
-    NSProgressFileURLKey : pathUrl
-  };
+  //APPUL docs say 10.9, but mountain lion has it too, so i dunno
+  //10.7 def crashing on this tho.
+  if(@available(macOS 10.8, *)) {
+    NSURL* pathUrl = [NSURL
+        fileURLWithPath:[NSString
+                            stringWithCharacters:reinterpret_cast<const unichar*>(
+                                                     path.BeginReading())
+                                          length:path.Length()]];
+    NSDictionary* userInfo = @{
+      @"NSProgressFileOperationKindKey" :
+          @"NSProgressFileOperationKindDownloading",
+      @"NSProgressFileURLKey" : pathUrl
+    };
 
-  mProgress = [[NSProgress alloc] initWithParent:nil userInfo:userInfo];
-  mProgress.kind = NSProgressKindFile;
-  mProgress.cancellable = YES;
+    mProgress = [[NSProgress alloc] initWithParent:nil userInfo:userInfo];
+    mProgress.kind = NSProgressKindFile;
+    mProgress.cancellable = YES;
 
-  nsMainThreadPtrHandle<nsIMacFinderProgressCanceledCallback>
-      cancellationCallbackHandle(
-          new nsMainThreadPtrHolder<nsIMacFinderProgressCanceledCallback>(
-              "MacFinderProgress::CancellationCallback", cancellationCallback));
+    nsMainThreadPtrHandle<nsIMacFinderProgressCanceledCallback>
+        cancellationCallbackHandle(
+            new nsMainThreadPtrHolder<nsIMacFinderProgressCanceledCallback>(
+                "MacFinderProgress::CancellationCallback", cancellationCallback));
 
-  mProgress.cancellationHandler = ^{
-    NS_DispatchToMainThread(NS_NewRunnableFunction(
-        "MacFinderProgress::Canceled", [cancellationCallbackHandle] {
-          MOZ_ASSERT(NS_IsMainThread());
-          cancellationCallbackHandle->Canceled();
-        }));
-  };
+    mProgress.cancellationHandler = ^{
+      NS_DispatchToMainThread(NS_NewRunnableFunction(
+          "MacFinderProgress::Canceled", [cancellationCallbackHandle] {
+            MOZ_ASSERT(NS_IsMainThread());
+            cancellationCallbackHandle->Canceled();
+          }));
+    };
 
-  [mProgress publish];
+    [mProgress publish];
+  } else {
+    mProgress = NULL;
+  }
 
   return NS_OK;
 

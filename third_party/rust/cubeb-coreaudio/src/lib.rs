@@ -2,7 +2,7 @@
 //
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details.
-
+#![feature(result_option_inspect)]
 extern crate atomic;
 #[macro_use]
 extern crate bitflags;

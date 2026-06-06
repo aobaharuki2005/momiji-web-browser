@@ -202,7 +202,7 @@ static Atomic<bool, MemoryOrdering::Relaxed> malloc_initialized;
 #endif
 
 // This lock must be held while bootstrapping us.
-constinit StaticMutex gInitLock MOZ_UNANNOTATED;
+StaticMutex gInitLock MOZ_UNANNOTATED = {STATIC_MUTEX_INIT};
 
 // We cannot instantiate
 // Atomic<std::chrono::time_point<std::chrono::steady_clock>>
@@ -534,8 +534,8 @@ class ArenaCollection {
     return aArenaId & MAIN_THREAD_ARENA_BIT;
   }
 
-  arena_t* mDefaultArena = nullptr;
-  arena_id_t mLastPublicArenaId MOZ_GUARDED_BY(mLock) = 0;
+  arena_t* mDefaultArena;
+  arena_id_t mLastPublicArenaId MOZ_GUARDED_BY(mLock);
 
   // Accessing mArenas and mPrivateArenas can only be done while holding mLock.
   Tree mArenas MOZ_GUARDED_BY(mLock);
@@ -575,7 +575,7 @@ class ArenaCollection {
   Atomic<bool> mIsDeferredPurgeEnabled;
 };
 
-constinit static ArenaCollection gArenas;
+ MOZ_RUNINIT static ArenaCollection gArenas;
 
 // Protects huge allocation-related data structures.
 static Mutex huge_mtx;

@@ -19,6 +19,7 @@
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "prenv.h"
+#include <dlfcn.h>
 
 #if defined(MOZ_SANDBOX)
 #  include "mozilla/SandboxSettings.h"
@@ -639,8 +640,19 @@ CodeSignatureType GetSignatureTypeImpl(const nsCString& aPath) {
     return CodeSignatureType::UnexpectedError;
   }
 
-  CFNumberRef flagsRef =
-      (CFNumberRef)CFDictionaryGetValue(signingInfo, kSecCodeInfoFlags);
+  // per blueboxd we need to grab this flag a little differently
+  // on older macs, as we can't access kSecCodeInfoFlags directly:
+  // https://github.com/blueboxd/chromium-legacy/blob/master.lion/chrome/browser/apps/app_shim/code_signature_mac.cc#L87
+  static CFStringRef const* kSecCodeInfoFlagsStr =
+      reinterpret_cast<CFStringRef*>(dlsym(((void*)-2), "kSecCodeInfoFlags"));
+  CFNumberRef flagsRef;
+  if (kSecCodeInfoFlagsStr) {
+    flagsRef =
+        (CFNumberRef)CFDictionaryGetValue(signingInfo, kSecCodeInfoFlagsStr);
+  } else {
+    flagsRef = nullptr;
+  }
+
   if (!flagsRef) {
     // Is it signed? No kSecCodeInfoFlags key indicates unsigned
     // code per SecCodeCopySigningInformation documentation.

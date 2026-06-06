@@ -36,7 +36,9 @@ namespace mozilla {
 namespace net {
 
 #if defined(XP_MACOSX) || defined(XP_IOS)
-static bool sAppleFastDatapathProbeAllowed = true;
+/* Momiji notes: disable due to instability on macOS 10.9-10.14 */
+static bool sAppleFastDatapathProbeAllowed = false;
+/* EOMN */
 #endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)

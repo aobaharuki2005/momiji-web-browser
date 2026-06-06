@@ -158,7 +158,9 @@ void NativeMenuMac::IconUpdated() {
     if (menuImage) {
       [menuImage setTemplate:YES];
     }
-    mContainerStatusBarItem.button.image = menuImage;
+    if(@available(macOS 10.10, *)) {
+      mContainerStatusBarItem.button.image = menuImage;
+    }
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -273,7 +275,6 @@ void NativeMenuMac::ShowMenuAnchored(nsIFrame* aClickedFrame,
   NSRect buttonRect = NSMakeRect(contentPoint.x, contentPoint.y,
                                  desktopRect.width, desktopRect.height);
 
-  NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
   NSMenu* menu = mMenu->NativeNSMenu();
   NSRectEdge edge = nsCocoaUtils::PopupPositionToNSRectEdge(position);
 
@@ -289,7 +290,9 @@ void NativeMenuMac::ShowMenuAnchored(nsIFrame* aClickedFrame,
   // Let the MOZMenuOpeningCoordinator do the actual opening, so that this
   // ShowMenuAnchored call does not spawn a nested event loop, which would be
   // surprising to our callers.
-  mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance
+  if(nsCocoaFeatures::OnMavericksOrLater()) {
+    NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
+    mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance
       asynchronouslyOpenMenu:menu
             atScreenPosition:buttonRect.origin  // unused for anchored popups
                      forView:view
@@ -300,6 +303,19 @@ void NativeMenuMac::ShowMenuAnchored(nsIFrame* aClickedFrame,
                   anchorRect:buttonRect
                   anchorEdge:edge
                    pullsDown:pullsDown];
+  } else {
+    mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance
+      asynchronouslyOpenMenu:menu
+            atScreenPosition:buttonRect.origin  // unused for anchored popups
+                     forView:view
+              withAppearance:nil
+                withFontSize:fontSize
+               asContextMenu:false  // unused for anchored popups
+              asAnchoredMenu:true
+                  anchorRect:buttonRect
+                  anchorEdge:edge
+                   pullsDown:pullsDown];
+  }
 }
 
 void NativeMenuMac::ShowMenuAtPosition(nsIFrame* aClickedFrame,
@@ -314,13 +330,15 @@ void NativeMenuMac::ShowMenuAtPosition(nsIFrame* aClickedFrame,
 
   NSMenu* menu = mMenu->NativeNSMenu();
   NSView* view = NativeViewForFrame(aClickedFrame);
-  NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
+  // NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
   NSPoint locationOnScreen = nsCocoaUtils::GeckoPointToCocoaPoint(desktopPoint);
 
   // Let the MOZMenuOpeningCoordinator do the actual opening, so that this
   // ShowMenuAtPosition call does not spawn a nested event loop, which would be
   // surprising to our callers.
-  mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance
+  if(nsCocoaFeatures::OnMavericksOrLater()) {
+    NSAppearance* appearance = NativeAppearanceForContent(mMenu->Content());
+    mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance
       asynchronouslyOpenMenu:menu
             atScreenPosition:locationOnScreen
                      forView:view
@@ -331,6 +349,19 @@ void NativeMenuMac::ShowMenuAtPosition(nsIFrame* aClickedFrame,
                   anchorRect:NSMakeRect(0, 0, 0, 0)  // unused
                   anchorEdge:NSRectEdgeMaxY          // unused
                    pullsDown:false];                 // unused
+  } else {
+    mOpeningHandle = [MOZMenuOpeningCoordinator.sharedInstance
+      asynchronouslyOpenMenu:menu
+            atScreenPosition:locationOnScreen
+                     forView:view
+              withAppearance:nil
+                withFontSize:0.f  // unused
+               asContextMenu:aIsContextMenu
+              asAnchoredMenu:false
+                  anchorRect:NSMakeRect(0, 0, 0, 0)  // unused
+                  anchorEdge:NSRectEdgeMaxY          // unused
+                   pullsDown:false];                 // unused
+  }
 }
 
 bool NativeMenuMac::Close() {

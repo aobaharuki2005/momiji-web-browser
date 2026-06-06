@@ -142,6 +142,9 @@ nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
   // discovered printers. Auto-discovered printers are surfaced (and tagged
   // via mSortAfterLocal) only via the cupsGetDests2 path above; don't
   // re-enable them here without also picking a non-zero timeout.
+#ifdef XP_MACOSX
+  if(__builtin_available(macOS 10.9, *)) {
+#endif
   if (CupsShim().cupsEnumDests(
           CUPS_DEST_FLAGS_NONE,
           0 /* 0 timeout should be okay when masking CUPS_PRINTER_DISCOVERED */,
@@ -150,7 +153,45 @@ nsTArray<PrinterInfo> nsPrinterListCUPS::Printers() const {
           &CupsDestCallback, &printerInfoList)) {
     return printerInfoList;
   }
+#ifdef XP_MACOSX
+  } else {
+  cups_dest_t* printers = nullptr;
+  // Ideally we should use cupsEnumDests with CUPS_PRINTER_DISCOVERED, etc.
+  // flags instead of calling cupsGetDests and filtering out
+  // CUPS_PRINTER_DISCOVERED later, because it should be faster than the
+  // cupsGetDests call.  That being said, unfortunately at least on Ubuntu 20.20
+  // cupsEnumDests doesn't filter out CUPS_PRINTER_DISCOVERED-ed printers at
+  // all. So for now we use cupsGetDests but if we still have perf issues when
+  // we enumerate available printers on Mac, we should use cupsEnumDest at least
+  // on Mac.
+  auto numPrinters = CupsShim().cupsGetDests(&printers);
+  printerInfoList.SetCapacity(numPrinters);
 
+  for (auto i : mozilla::IntegerRange(0, numPrinters)) {
+    cups_dest_t* dest = printers + i;
+
+    if (const char* printerType = CupsShim().cupsGetOption(
+            "printer-type", dest->num_options, dest->options)) {
+      nsresult rv;
+      int64_t type = nsAutoCString(printerType).ToInteger64(&rv);
+      if (NS_SUCCEEDED(rv) && (type & (CUPS_PRINTER_FAX | CUPS_PRINTER_SCANNER |
+                                       CUPS_PRINTER_DISCOVERED))) {
+        continue;
+      }
+    }
+
+    cups_dest_t* ownedDest = nullptr;
+    mozilla::DebugOnly<const int> numCopied =
+        CupsShim().cupsCopyDest(dest, 0, &ownedDest);
+    MOZ_ASSERT(numCopied == 1);
+
+    nsString name;
+    GetDisplayNameForPrinter(*dest, name);
+
+    printerInfoList.AppendElement(PrinterInfo{std::move(name), ownedDest});
+    }
+  }
+#endif
   // Another error occurred. Maybe printerInfoList could be partially
   // populated, so perhaps we could return it without clearing it in the hope
   // that there are some usable dests. However, presuambly CUPS doesn't

@@ -39,7 +39,7 @@ static void EvaluateArray(JSONWriter* aWriter, NSArray* aArray) {
 static void EvaluateDict(JSONWriter* aWriter,
                          NSDictionary<NSString*, id>* aDict) {
   for (NSString* key in aDict) {
-    id value = aDict[key];
+    id value = [aDict objectForKey:key];
     if ([value isKindOfClass:[NSString class]]) {
       aWriter->StringProperty(MakeStringSpan([key UTF8String]),
                               MakeStringSpan([value UTF8String]));

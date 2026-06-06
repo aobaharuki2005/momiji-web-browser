@@ -508,7 +508,7 @@ static void* ReserveProcessExecutableMemory(size_t bytes) {
   unsigned protection = PROT_NONE;
   unsigned flags = MAP_NORESERVE | MAP_PRIVATE | MAP_ANON;
 #  if defined(XP_DARWIN)
-  flags |= MAP_JIT;
+    flags |= MAP_JIT;
 #    if defined(JS_USE_APPLE_FAST_WX)
   protection = PROT_READ | PROT_WRITE | PROT_EXEC;
 #    endif
@@ -562,22 +562,13 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
 [[nodiscard]] static bool CommitPages(void* addr, size_t bytes,
                                       ProtectionSetting protection) {
   // See the comment in ReserveProcessExecutableMemory.
-#  if defined(XP_DARWIN)
+#if defined(JS_USE_APPLE_FAST_WX)
   int ret;
   do {
     ret = madvise(addr, bytes, MADV_FREE_REUSE);
   } while (ret != 0 && errno == EAGAIN);
-  if (ret != 0) {
-    return false;
-  }
-#    if !defined(JS_USE_APPLE_FAST_WX)
-  unsigned flags = ProtectionSettingToFlags(protection);
-  if (mprotect(addr, bytes, flags)) {
-    return false;
-  }
-#    endif
-  return true;
-#  else
+  return ret == 0;
+#else
   unsigned flags = ProtectionSettingToFlags(protection);
   void* p = MozTaggedAnonymousMmap(addr, bytes, flags,
                                    MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0,
@@ -587,29 +578,25 @@ static unsigned ProtectionSettingToFlags(ProtectionSetting protection) {
   }
   MOZ_RELEASE_ASSERT(p == addr);
   return true;
-#  endif
+#endif
 }
 
 static void DecommitPages(void* addr, size_t bytes) {
   // See the comment in ReserveProcessExecutableMemory.
-#  if defined(XP_DARWIN)
+#if defined(JS_USE_APPLE_FAST_WX)
   int ret;
-#    if !defined(JS_USE_APPLE_FAST_WX)
-  ret = mprotect(addr, bytes, PROT_NONE);
-  MOZ_RELEASE_ASSERT(ret == 0);
-#    endif
   do {
     ret = madvise(addr, bytes, MADV_FREE_REUSABLE);
   } while (ret != 0 && errno == EAGAIN);
   MOZ_RELEASE_ASSERT(ret == 0);
-#  else
+#else
   // Use mmap with MAP_FIXED and PROT_NONE. Inspired by jemalloc's
   // pages_decommit.
   void* p = MozTaggedAnonymousMmap(addr, bytes, PROT_NONE,
                                    MAP_FIXED | MAP_PRIVATE | MAP_ANON, -1, 0,
                                    "js-executable-memory");
   MOZ_RELEASE_ASSERT(addr == p);
-#  endif
+#endif
 }
 #endif
 

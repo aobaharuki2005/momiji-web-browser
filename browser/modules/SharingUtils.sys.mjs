@@ -42,6 +42,10 @@ class SharingUtilsCls {
   ensureShareMenu(contextBrowser, browsers, insertAfterEl) {
     if (!Services.prefs.getBoolPref("browser.menu.share_url.allow", true)) {
       return;
+    } else if (AppConstants.platform == "macosx") {
+      if (!AppConstants.isPlatformAndVersionAtLeast("macosx", "12")) {
+        return;
+      }
     }
 
     let hasShareableURL =

@@ -5,7 +5,6 @@
 #ifndef mozilla_AppleDecoderModule_h
 #define mozilla_AppleDecoderModule_h
 
-#include "MediaCodecsSupport.h"
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {
@@ -38,9 +37,13 @@ class AppleDecoderModule : public PlatformDecoderModule {
 
   static void Init();
 
+  static bool sIsCoreMediaAvailable;
+  static bool sIsCoreVideoAvailable;
+  static bool sIsVDAAvailable;
+  static bool sIsVTAvailable;
+
   static constexpr int kCMVideoCodecType_H264{'avc1'};
   static constexpr int kCMVideoCodecType_VP9{'vp09'};
-
  private:
   AppleDecoderModule() = default;
   virtual ~AppleDecoderModule() = default;

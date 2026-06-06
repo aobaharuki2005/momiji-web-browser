@@ -144,6 +144,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   static void ShutDown();
 
   FwdTransactionCounter& GetFwdTransactionCounter();
+  void WindowOverlayChanged() { mWindowOverlayChanged = true; }
 
   /**
    * Hold TextureClient ref until end of usage on host side if
@@ -216,6 +217,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
   // True until the beginning of the two-step shutdown sequence of this actor.
   bool mCanSend;
 
+  bool mWindowOverlayChanged;
   // False until the actor is destroyed.
   bool mActorDestroyed;
 

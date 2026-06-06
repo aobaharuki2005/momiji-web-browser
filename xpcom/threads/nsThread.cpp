@@ -982,15 +982,17 @@ NS_IMETHODIMP nsThread::SetThreadQoS(nsIThread::QoSPriority aPriority) {
   // Only arm64 macs may possess heterogeneous cores. On these, we can tell
   // a thread to set its own QoS status. On intel macs things should behave
   // normally, and the OS will ignore the QoS state of the thread.
-  if (aPriority == nsIThread::QOS_PRIORITY_LOW) {
-    pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
-  } else if (NS_IsMainThread()) {
-    // MacOS documentation specifies that a main thread should be initialized at
-    // the USER_INTERACTIVE priority, so when we restore thread priorities the
-    // main thread should be setting itself to this.
-    pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
-  } else {
-    pthread_set_qos_class_self_np(QOS_CLASS_DEFAULT, 0);
+  if(__builtin_available(macOS 10.10, *)) {
+     if (aPriority == nsIThread::QOS_PRIORITY_LOW) {
+       pthread_set_qos_class_self_np(QOS_CLASS_BACKGROUND, 0);
+     } else if (NS_IsMainThread()) {
+       // MacOS documentation specifies that a main thread should be initialized at
+       // the USER_INTERACTIVE priority, so when we restore thread priorities the
+       // main thread should be setting itself to this.
+       pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
+     } else {
+       pthread_set_qos_class_self_np(QOS_CLASS_DEFAULT, 0);
+     }
   }
 #endif
   // Do nothing if an OS-specific implementation is unavailable.

@@ -10,16 +10,26 @@
 #import <objc/message.h>
 
 #include "nsCocoaWindow.h"
+#include "SDKDeclarations.h"
 #include "mozilla/StaticPrefs_widget.h"
 
 using namespace mozilla;
 
+#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
+@interface NSVisualEffectView (NSVisualEffectViewMethods)
+- (void)setEmphasized:(BOOL)emphasized;
+@end
+#endif
+
 @interface MOZVibrantView : NSVisualEffectView {
   VibrancyType mType;
 }
+
 - (instancetype)initWithFrame:(NSRect)aRect
                  vibrancyType:(VibrancyType)aVibrancyType;
-- (void)prefChanged;
+@end
+
+@interface MOZVibrantLeafView : MOZVibrantView
 @end
 
 static NSVisualEffectState VisualEffectStateForVibrancyType(
@@ -52,7 +62,7 @@ static NSVisualEffectBlendingMode VisualEffectBlendingModeForVibrancyType(
     case VibrancyType::Titlebar:
       return StaticPrefs::widget_macos_titlebar_blend_mode_behind_window()
                  ? NSVisualEffectBlendingModeBehindWindow
-                 : NSVisualEffectBlendingModeWithinWindow;
+                 : NSVisualEffectBlendingModeWithinWindow;  
   }
 }
 
@@ -68,51 +78,30 @@ static NSVisualEffectBlendingMode VisualEffectBlendingModeForVibrancyType(
   self.emphasized = NO;
   return self;
 }
+@end
+
+@implementation MOZVibrantLeafView
 
 - (NSView*)hitTest:(NSPoint)aPoint {
   // This view must be transparent to mouse events.
   return nil;
 }
 
-- (void)prefChanged {
-  self.blendingMode = VisualEffectBlendingModeForVibrancyType(mType);
+// MOZVibrantLeafView does not have subviews, so we can return YES here without
+// having unintended effects on other contents of the window.
+- (BOOL)allowsVibrancy {
+  return NO;
 }
+
 @end
 
-static void PrefChanged(const char* aPref, void* aClosure) {
-  static_cast<VibrancyManager*>(aClosure)->PrefChanged();
-}
-
-static constexpr nsLiteralCString kObservedPrefs[] = {
-    "widget.macos.sidebar-blend-mode.behind-window"_ns,
-    "widget.macos.titlebar-blend-mode.behind-window"_ns,
-};
 
 VibrancyManager::VibrancyManager(const nsCocoaWindow& aCoordinateConverter,
                                  NSView* aContainerView)
     : mCoordinateConverter(aCoordinateConverter),
-      mContainerView(aContainerView) {
-  for (const auto& pref : kObservedPrefs) {
-    Preferences::RegisterCallback(::PrefChanged, pref, this);
-  }
-}
+      mContainerView(aContainerView) {}
 
-VibrancyManager::~VibrancyManager() {
-  for (const auto& pref : kObservedPrefs) {
-    Preferences::UnregisterCallback(::PrefChanged, pref, this);
-  }
-}
-
-void VibrancyManager::PrefChanged() {
-  for (auto& region : mVibrantRegions) {
-    if (!region) {
-      continue;
-    }
-    for (NSView* view : region->Views()) {
-      [static_cast<MOZVibrantView*>(view) prefChanged];
-    }
-  }
-}
+VibrancyManager::~VibrancyManager() = default;
 
 bool VibrancyManager::UpdateVibrantRegion(
     VibrancyType aType, const LayoutDeviceIntRegion& aRegion) {
@@ -129,3 +118,24 @@ bool VibrancyManager::UpdateVibrantRegion(
     return [[MOZVibrantView alloc] initWithFrame:NSZeroRect vibrancyType:aType];
   });
 }
+
+/* static */ NSView* VibrancyManager::CreateEffectView(VibrancyType aType, BOOL aIsContainer) {
+  return aIsContainer ? [[MOZVibrantView alloc] initWithFrame:NSZeroRect vibrancyType:aType]
+                      : [[MOZVibrantLeafView alloc] initWithFrame:NSZeroRect vibrancyType:aType];
+
+}
+
+static bool ComputeSystemSupportsVibrancy() {
+#ifdef __x86_64__
+  return NSClassFromString(@"NSAppearance") && NSClassFromString(@"NSVisualEffectView");
+#else
+  // objc_allocateClassPair doesn't work in 32 bit mode, so turn off vibrancy.
+  return false;
+#endif
+}
+
+/* static */ bool VibrancyManager::SystemSupportsVibrancy() {
+  static bool supportsVibrancy = ComputeSystemSupportsVibrancy();
+  return supportsVibrancy;
+}
+

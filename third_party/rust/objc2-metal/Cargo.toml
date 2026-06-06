@@ -585,6 +585,9 @@ features = [
 optional = true
 default-features = false
 
+[dependencies.whatsys]
+version = "0.3"
+
 [lints.clippy]
 ptr_as_ptr = "warn"
 redundant_feature_names = "allow"

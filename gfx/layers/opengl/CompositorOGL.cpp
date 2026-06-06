@@ -47,6 +47,9 @@
 #include "HeapCopyOfStackArray.h"
 #include "GLBlitHelper.h"
 #include "mozilla/gfx/Swizzle.h"
+#ifdef XP_MACOSX
+#include "nsCocoaFeatures.h"
+#endif
 #ifdef MOZ_WIDGET_GTK
 #  include "mozilla/widget/GtkCompositorWidget.h"
 #endif
@@ -830,6 +833,67 @@ void CompositorOGL::CreateFBOWithTexture(const gfx::IntRect& aRect,
   mGLContext->fGenFramebuffers(1, aFBO);
 }
 
+// Should be called after calls to fReadPixels or fCopyTexImage2D, and other
+// GL read calls.
+static void WorkAroundAppleIntelHD3000GraphicsGLDriverBug(GLContext* aGL) {
+#ifdef XP_MACOSX
+  if (aGL->WorkAroundDriverBugs() &&
+      aGL->Renderer() == GLRenderer::IntelHD3000) {
+    // Work around a bug in the Apple Intel HD Graphics 3000 driver (bug
+    // 1586627, filed with Apple as FB7379358). This bug has been found present
+    // on 10.9.3 and on 10.13.6, so it likely affects all shipped versions of
+    // this driver. (macOS 10.14 does not support this GPU.)
+    // The bug manifests as follows: Reading from a framebuffer puts that
+    // framebuffer into a state such that deleting that framebuffer can break
+    // other framebuffers in certain cases. More specifically, if you have two
+    // framebuffers A and B, the following sequence of events breaks subsequent
+    // drawing to B:
+    //  1. A becomes "most recently read-from framebuffer".
+    //  2. B is drawn to.
+    //  3. A is deleted, and other GL state (such as GL_SCISSOR enabled state)
+    //     is touched.
+    //  4. B is drawn to again.
+    // Now all draws to framebuffer B, including the draw from step 4, will
+    // render at the wrong position and upside down.
+    //
+    // When AfterGLReadCall() is called, the currently bound framebuffer is the
+    // framebuffer that has been read from most recently. So in the presence of
+    // this bug, deleting this framebuffer has now become dangerous. We work
+    // around the bug by creating a new short-lived framebuffer, making that new
+    // framebuffer the most recently read-from framebuffer (using
+    // glCopyTexImage2D), and then deleting it under controlled circumstances.
+    // This deletion is not affected by the bug because our deletion call is not
+    // interleaved with draw calls to another framebuffer and a touching of the
+    // GL scissor enabled state.
+
+    ScopedTexture texForReading(aGL);
+    {
+      // Initialize a 1x1 texture.
+      ScopedBindTexture autoBindTexForReading(aGL, texForReading);
+      aGL->fTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 1, 1, 0,
+                       LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, nullptr);
+      aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
+                          LOCAL_GL_LINEAR);
+      aGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
+                          LOCAL_GL_LINEAR);
+    }
+    // Make a framebuffer around the texture.
+    ScopedFramebufferForTexture autoFBForReading(aGL, texForReading);
+    if (autoFBForReading.IsComplete()) {
+      // "Read" from the framebuffer, by initializing a new texture using
+      // glCopyTexImage2D. This flips the bad bit on autoFBForReading.FB().
+      ScopedBindFramebuffer autoFB(aGL, autoFBForReading.FB());
+      ScopedTexture texReadingDest(aGL);
+      ScopedBindTexture autoBindTexReadingDest(aGL, texReadingDest);
+      aGL->fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, 0, 0, 1, 1,
+                           0);
+    }
+    // When autoFBForReading goes out of scope, the "poisoned" framebuffer is
+    // deleted, and the bad state seems to go away along with it.
+  }
+#endif
+}
+
 GLuint CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
                                     GLuint aSourceFrameBuffer,
                                     IntSize* aAllocSize) {
@@ -874,6 +938,7 @@ GLuint CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
       mGLContext->fCopyTexImage2D(mFBOTextureTarget, 0, LOCAL_GL_RGBA,
                                   clampedRect.X(), FlipY(clampedRect.YMost()),
                                   clampedRectWidth, clampedRectHeight, 0);
+      WorkAroundAppleIntelHD3000GraphicsGLDriverBug(mGLContext);
     } else {
       // Curses, incompatible formats.  Take a slow path.
 
@@ -884,6 +949,7 @@ GLuint CompositorOGL::CreateTexture(const IntRect& aRect, bool aCopyFromSource,
       mGLContext->fReadPixels(clampedRect.X(), clampedRect.Y(),
                               clampedRectWidth, clampedRectHeight,
                               LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf.get());
+      WorkAroundAppleIntelHD3000GraphicsGLDriverBug(mGLContext);
       mGLContext->fTexImage2D(mFBOTextureTarget, 0, LOCAL_GL_RGBA,
                               clampedRectWidth, clampedRectHeight, 0,
                               LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf.get());
@@ -1311,7 +1377,19 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
     gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                              LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA);
   }
-
+#ifdef XP_MACOSX
+      if (gl()->WorkAroundDriverBugs() &&
+          gl()->Vendor() == GLVendor::NVIDIA &&
+          !nsCocoaFeatures::OnMavericksOrLater()) {
+        // Bug 987497: With some GPUs the nvidia driver on 10.8 and below
+        // won't pick up the TexturePass2 uniform change below if we don't do
+        // something to force it. Re-activating the shader seems to be one way
+        // of achieving that.
+        GLint program;
+        mGLContext->fGetIntegerv(LOCAL_GL_CURRENT_PROGRAM, &program);
+        mGLContext->fUseProgram(program);
+      }
+#endif
   // in case rendering has used some other GL context
   MakeCurrent();
 }

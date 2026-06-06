@@ -334,6 +334,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
     }
+    params.push_back("MAC_OS_VERSION");
+    params.push_back(combinedVersion.c_str());
   } else if (aInfo.type == MacSandboxType_RDD) {
     profile = const_cast<char*>(SandboxPolicyRDD);
     params.push_back("SHOULD_LOG");
@@ -358,6 +360,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
     }
+    params.push_back("MAC_OS_VERSION");
+    params.push_back(combinedVersion.c_str());
     params.push_back("HOME_PATH");
     params.push_back(getenv("HOME"));
   } else if (aInfo.type == MacSandboxType_GMP) {
@@ -378,6 +382,8 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
       params.push_back("CRASH_PORT");
       params.push_back(aInfo.crashServerPort.c_str());
     }
+    params.push_back("MAC_OS_VERSION");
+    params.push_back(combinedVersion.c_str());
     if (!aInfo.testingReadPath1.empty()) {
       params.push_back("TESTING_READ_PATH1");
       params.push_back(aInfo.testingReadPath1.c_str());
@@ -414,7 +420,6 @@ bool StartMacSandbox(MacSandboxInfo const& aInfo, std::string& aErrorMessage) {
         params.push_back("CRASH_PORT");
         params.push_back(aInfo.crashServerPort.c_str());
       }
-
       params.push_back("DARWIN_USER_CACHE_DIR");
       char confStrBuf[PATH_MAX];
       if (!confstr(_CS_DARWIN_USER_CACHE_DIR, confStrBuf, sizeof(confStrBuf))) {

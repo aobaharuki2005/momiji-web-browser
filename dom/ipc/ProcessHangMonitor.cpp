@@ -668,38 +668,40 @@ mozilla::ipc::IPCResult HangMonitorChild::RecvSetMainThreadQoSPriority(
            DefineQoS(aQoSPriority)));
 
 #ifdef XP_MACOSX
-  // If the new priority is the background (low) priority, we can tell the OS to
-  // put the main thread on low-power cores. Alternately, if we are changing
-  // from the background to a higher priority, we change the main thread back to
-  // the |user-interactive| state, defined in MacOS's QoS documentation as
-  // reserved for main threads.
-  qos_class_t qosClass = aQoSPriority == nsIThread::QOS_PRIORITY_LOW
-                             ? QOS_CLASS_BACKGROUND
-                             : QOS_CLASS_USER_INTERACTIVE;
+  if(__builtin_available(macOS 10.10, *)) {
+     // If the new priority is the background (low) priority, we can tell the OS to
+     // put the main thread on low-power cores. Alternately, if we are changing
+     // from the background to a higher priority, we change the main thread back to
+     // the |user-interactive| state, defined in MacOS's QoS documentation as
+     // reserved for main threads.
+     qos_class_t qosClass = aQoSPriority == nsIThread::QOS_PRIORITY_LOW
+                                ? QOS_CLASS_BACKGROUND
+                                : QOS_CLASS_USER_INTERACTIVE;
 
-  // We can't directly set the main thread's QoS class from off-main-thread.
-  // However, we can start a QoS class override to raise the QoS, then dispatch
-  // a runnable to set the QoS class and clear the override once complete.
-  pthread_override_t qosOverride =
-      pthread_override_qos_class_start_np(mMainPThread, qosClass, 0);
-  if (NS_FAILED(NS_DispatchToMainThread(NS_NewRunnableFunction(
-          "HangMonitorChild::RecvSetMainThreadQoSPriority",
-          [qosClass, qosOverride, aQoSPriority] {
-            MOZ_LOG(
-                gQoSLog, LogLevel::Debug,
-                ("Override %s sent to main thread.", DefineQoS(aQoSPriority)));
-            pthread_set_qos_class_self_np(qosClass, 0);
-            if (qosOverride) {
-              pthread_override_qos_class_end_np(qosOverride);
-              MOZ_LOG(gQoSLog, LogLevel::Debug,
-                      ("Override %s removed from main thread.",
-                       DefineQoS(aQoSPriority)));
-            }
-          })))) {
-    // If we fail to dispatch, go ahead and end the override anyway.
-    pthread_override_qos_class_end_np(qosOverride);
-    MOZ_LOG(gQoSLog, LogLevel::Debug,
-            ("Override %s removed from main thread.", DefineQoS(aQoSPriority)));
+     // We can't directly set the main thread's QoS class from off-main-thread.
+     // However, we can start a QoS class override to raise the QoS, then dispatch
+     // a runnable to set the QoS class and clear the override once complete.
+     pthread_override_t qosOverride =
+         pthread_override_qos_class_start_np(mMainPThread, qosClass, 0);
+     if (NS_FAILED(NS_DispatchToMainThread(NS_NewRunnableFunction(
+             "HangMonitorChild::RecvSetMainThreadQoSPriority",
+             [qosClass, qosOverride, aQoSPriority] {
+               MOZ_LOG(
+                   gQoSLog, LogLevel::Debug,
+                   ("Override %s sent to main thread.", DefineQoS(aQoSPriority)));
+               pthread_set_qos_class_self_np(qosClass, 0);
+               if (qosOverride) {
+                 pthread_override_qos_class_end_np(qosOverride);
+                 MOZ_LOG(gQoSLog, LogLevel::Debug,
+                         ("Override %s removed from main thread.",
+                          DefineQoS(aQoSPriority)));
+               }
+             })))) {
+       // If we fail to dispatch, go ahead and end the override anyway.
+       pthread_override_qos_class_end_np(qosOverride);
+       MOZ_LOG(gQoSLog, LogLevel::Debug,
+               ("Override %s removed from main thread.", DefineQoS(aQoSPriority)));
+     }
   }
 #endif
 
@@ -1213,9 +1215,11 @@ ProcessHangMonitor::ProcessHangMonitor() : mCPOWTimeout(false) {
   // On MacOS, ensure the priority is high enough to handle dispatches at
   // high cpu load. USER_INITIATED class threads are prioritized just below
   // the main thread.
-  mThread->Dispatch(NS_NewRunnableFunction(
-      "ProcessHangMonitor::SetPriority",
-      [] { pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0); }));
+  if(__builtin_available(macOS 10.10, *)) {
+     mThread->Dispatch(NS_NewRunnableFunction(
+         "ProcessHangMonitor::SetPriority",
+         [] { pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0); }));
+  }
 #endif
 }
 

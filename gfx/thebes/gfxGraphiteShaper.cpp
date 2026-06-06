@@ -57,16 +57,22 @@ gfxGraphiteShaper::~gfxGraphiteShaper() {
   mFont->GetFontEntry()->ReleaseGrFace(mGrFace);
 }
 
+#ifdef GFX_FONT_USE_THREAD_LOCAL
 /*static*/
 thread_local gfxGraphiteShaper::CallbackData*
     gfxGraphiteShaper::tl_GrGetAdvanceData = nullptr;
+#endif
 
 /*static*/
 tainted_opaque_gr<float> gfxGraphiteShaper::GrGetAdvance(
     rlbox_sandbox_gr& sandbox,
     tainted_opaque_gr<const void*> /* appFontHandle */,
     tainted_opaque_gr<uint16_t> t_glyphid) {
-  CallbackData* cb = tl_GrGetAdvanceData;
+#ifdef GFX_FONT_USE_THREAD_LOCAL
+    CallbackData* cb = tl_GrGetAdvanceData;
+#else
+  struct CallbackData* cb = tl_GrGetAdvanceData();
+#endif
   if (!cb) {
     // GrGetAdvance callback called unexpectedly. Just return safe value.
     tainted_gr<float> ret = 0;
@@ -232,10 +238,12 @@ bool gfxGraphiteShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
   auto clean_txt = MakeScopeExit([&] { mSandbox->free_in_sandbox(t_aText); });
 
   rlbox::memcpy(*mSandbox, t_aText, aText, aLength * sizeof(char16_t));
-
+#ifdef GFX_FONT_USE_THREAD_LOCAL
   tl_GrGetAdvanceData = &mCallbackData;
   auto clean_adv_data = MakeScopeExit([&] { tl_GrGetAdvanceData = nullptr; });
-
+#else
+  pthread_setspecific(lckey_shaper,  &mCallbackData);
+#endif
   tainted_gr<gr_segment*> seg =
       sandbox_invoke(*mSandbox, gr_make_seg, mGrFont, t_mGrFace, 0, grFeatures,
                      gr_utf16, t_aText, numChars, grBidi);

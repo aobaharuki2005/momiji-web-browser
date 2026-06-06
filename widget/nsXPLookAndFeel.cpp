@@ -117,6 +117,9 @@ static const char sIntPrefs[][45] = {
     "ui.windowsAccentColorInTitlebar",
     "ui.windowsMica",
     "ui.windowsMicaPopups",
+    "ui.macGraphiteTheme",
+    "ui.macLionTheme",
+    "ui.macYosemiteTheme",
     "ui.macBigSurTheme",
     "ui.macTahoeTheme",
     "ui.alertNotificationOrigin",
@@ -252,6 +255,17 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-sidebar",
     "ui.-moz-sidebartext",
     "ui.-moz-sidebarborder",
+    "ui.-moz-mac-vibrancy-light",
+    "ui.-moz-mac-vibrancy-dark",
+    "ui.-moz-mac-vibrant-titlebar-light",
+    "ui.-moz-mac-vibrant-titlebar-dark",
+    "ui.-moz-mac-menupopup",
+    "ui.-moz-mac-menuitem",
+    "ui.-moz-mac-active-menuitem",
+    "ui.-moz-mac-source-list",
+    "ui.-moz-mac-source-list-selection",
+    "ui.-moz-mac-active-source-list-selection",
+    "ui.-moz-mac-tooltip",
     "ui.accentcolor",
     "ui.accentcolortext",
     "ui.-moz-autofill-background",
@@ -709,6 +723,17 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(Linktext, 0x00, 0x00, 0xee)
       COLOR(Activetext, 0xee, 0x00, 0x00)
       COLOR(Visitedtext, 0x55, 0x1A, 0x8B)
+      COLOR(MozMacVibrancyLight, 0xf7, 0xf7, 0xf7)
+      COLOR(MozMacVibrantTitlebarLight, 0xf7, 0xf7, 0xf7)
+      COLOR(MozMacVibrancyDark, 0x28, 0x28, 0x28)
+      COLOR(MozMacVibrantTitlebarDark, 0x28, 0x28, 0x28)
+      COLOR(MozMacMenupopup, 0xe6, 0xe6, 0xe6)
+      COLOR(MozMacMenuitem, 0xe6, 0xe6, 0xe6)
+      COLOR(MozMacActiveMenuitem, 0x0a, 0x64, 0xdc)
+      COLOR(MozMacSourceList, 0xf7, 0xf7, 0xf7)
+      COLOR(MozMacSourceListSelection, 0xc8, 0xc8, 0xc8)
+      COLOR(MozMacActiveSourceListSelection, 0x0a, 0x64, 0xdc)
+      COLOR(MozMacTooltip, 0xf7, 0xf7, 0xf7)
       COLOR(MozAutofillBackground, 0xff, 0xfc, 0xc8)
       COLOR(TargetTextBackground, 0xf5, 0xcc, 0x58)  // --yellow-20
       COLOR(TargetTextForeground, 0x00, 0x00, 0x00)

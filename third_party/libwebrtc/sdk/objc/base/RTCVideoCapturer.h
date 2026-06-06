@@ -27,7 +27,12 @@ RTC_OBJC_EXPORT
 RTC_OBJC_EXPORT
 @interface RTC_OBJC_TYPE (RTCVideoCapturer) : NSObject
 
+#  if !defined(MAC_OS_X_VERSION_10_7) || \
+         MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
+@property(nonatomic, strong) id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)> delegate;
+#else
 @property(nonatomic, weak) id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)> delegate;
+#endif
 
 - (instancetype)initWithDelegate:
     (id<RTC_OBJC_TYPE(RTCVideoCapturerDelegate)>)delegate;

@@ -13,6 +13,17 @@
 #define MACOS_MAJOR_VERSION_MASK 0x00FF0000
 #define MACOS_MINOR_VERSION_MASK 0x0000FF00
 #define MACOS_BUGFIX_VERSION_MASK 0x000000FF
+#define MACOS_VERSION_10_0_HEX  0x000A0000
+#define MACOS_VERSION_10_5_HEX  0x000A0500
+#define MACOS_VERSION_10_6_HEX  0x000A0600
+#define MACOS_VERSION_10_7_HEX  0x000A0700
+#define MACOS_VERSION_10_8_HEX  0x000A0800
+#define MACOS_VERSION_10_9_HEX  0x000A0900
+#define MACOS_VERSION_10_10_HEX 0x000A0A00
+#define MACOS_VERSION_10_11_HEX 0x000A0B00
+#define MACOS_VERSION_10_12_HEX 0x000A0C00
+#define MACOS_VERSION_10_13_HEX 0x000A0D00
+#define MACOS_VERSION_10_14_HEX 0x000A0E00
 #define MACOS_VERSION_10_15_HEX 0x000A0F00
 #define MACOS_VERSION_10_16_HEX 0x000A1000
 #define MACOS_VERSION_11_0_HEX 0x000B0000
@@ -90,12 +101,12 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor,
   int32_t macOSVersion;
   if (aMajor < 10) {
     aMajor = 10;
-    NS_ERROR("Couldn't determine macOS version, assuming 10.15");
-    macOSVersion = MACOS_VERSION_10_15_HEX;
-  } else if (aMajor == 10 && aMinor < 15) {
-    aMinor = 15;
-    NS_ERROR("macOS version too old, assuming 10.15");
-    macOSVersion = MACOS_VERSION_10_15_HEX;
+    NS_ERROR("Couldn't determine macOS version, assuming 10.6");
+    macOSVersion = MACOS_VERSION_10_6_HEX;
+  } else if (aMajor == 10 && aMinor < 6) {
+    aMinor = 6;
+    NS_ERROR("macOS version too old, assuming 10.6");
+    macOSVersion = MACOS_VERSION_10_6_HEX;
   } else {
     MOZ_ASSERT(aMajor >= 10);
     MOZ_ASSERT(aMajor < 256);
@@ -151,6 +162,54 @@ int32_t nsCocoaFeatures::GetVersion(int32_t aMajor, int32_t aMinor,
 
 /* static */ int32_t nsCocoaFeatures::macOSVersionBugFix() {
   return ExtractBugFixVersion(macOSVersion());
+}
+
+/* static */ bool nsCocoaFeatures::OnLionOrLater()
+{
+    return (macOSVersion() >= MACOS_VERSION_10_7_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnMountainLionOrLater()
+{
+    return (macOSVersion() >= MACOS_VERSION_10_8_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnMavericksOrLater()
+{
+    return (macOSVersion() >= MACOS_VERSION_10_9_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnYosemiteOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_10_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnElCapitanOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_11_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnSierraExactly() {
+    return (macOSVersion() >= MACOS_VERSION_10_12_HEX) && (macOSVersion() < MACOS_VERSION_10_13_HEX);
+}
+
+/* Version of OnSierraExactly as global function callable from cairo & skia */
+bool Gecko_OnSierraExactly() { return nsCocoaFeatures::OnSierraExactly(); }
+
+/* static */ bool nsCocoaFeatures::OnSierraOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_12_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnHighSierraOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_13_HEX);
+}
+
+bool Gecko_OnSierraOrLater() { return nsCocoaFeatures::OnSierraOrLater(); }
+
+/* static */ bool nsCocoaFeatures::OnMojaveOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_14_HEX);
+}
+
+/* static */ bool nsCocoaFeatures::OnCatalinaOrLater() {
+    return (macOSVersion() >= MACOS_VERSION_10_15_HEX);
 }
 
 /* static */ bool nsCocoaFeatures::OnBigSurOrLater() {

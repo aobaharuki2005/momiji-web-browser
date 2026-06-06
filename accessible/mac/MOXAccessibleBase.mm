@@ -102,7 +102,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   }
 
   NSMutableArray* attributes =
-      attributesForEachClass [[self class]]
+      [attributesForEachClass objectForKey:[self class]]
           ?: [[[NSMutableArray alloc] init] autorelease];
 
   NSDictionary* getters = mac::AttributeGetters();
@@ -110,7 +110,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     // Go through all our attribute getters, if they are supported by this class
     // advertise the attribute name.
     for (NSString* attribute in getters) {
-      SEL selector = NSSelectorFromString(getters[attribute]);
+      SEL selector = NSSelectorFromString([getters objectForKey:attribute]);
       if ([self isSelectorSupported:selector]) {
         [attributes addObject:attribute];
       }
@@ -141,8 +141,8 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   id value = nil;
   NSDictionary* getters = mac::AttributeGetters();
-  if (getters[attribute]) {
-    SEL selector = NSSelectorFromString(getters[attribute]);
+  if ([getters objectForKey:attribute]) {
+    SEL selector = NSSelectorFromString([getters objectForKey:attribute]);
     if ([self isSelectorSupported:selector]) {
       value = [self performSelector:selector];
     }
@@ -151,8 +151,8 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     // attribute and call the associated selector on the delegate
     // if so.
     NSDictionary* textMarkerGetters = mac::TextAttributeGetters();
-    if (textMarkerGetters[attribute]) {
-      SEL selector = NSSelectorFromString(textMarkerGetters[attribute]);
+    if ([textMarkerGetters objectForKey:attribute]) {
+      SEL selector = NSSelectorFromString([textMarkerGetters objectForKey:attribute]);
       if ([textMarkerDelegate respondsToSelector:selector]) {
         value = [textMarkerDelegate performSelector:selector];
       }
@@ -173,7 +173,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     NSMutableArray* arr =
         [[[NSMutableArray alloc] initWithCapacity:arrSize] autorelease];
     for (NSUInteger i = 0; i < arrSize; i++) {
-      id<mozAccessible> mozAcc = GetObjectOrRepresentedView(value[i]);
+      id<mozAccessible> mozAcc = GetObjectOrRepresentedView([value objectAtIndex:i]);
       if ([mozAcc isAccessibilityElement]) {
         [arr addObject:mozAcc];
       }
@@ -210,16 +210,16 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   }
 
   NSDictionary* setters = mac::AttributeSetters();
-  if (setters[attribute]) {
-    SEL selector = NSSelectorFromString(setters[attribute]);
+  if ([setters objectForKey:attribute]) {
+    SEL selector = NSSelectorFromString([setters objectForKey:attribute]);
     if ([self isSelectorSupported:selector]) {
       return YES;
     }
   } else if (id textMarkerDelegate = [self moxTextMarkerDelegate]) {
     // If we have a delegate, check text setters on delegate
     NSDictionary* textMarkerSetters = mac::TextAttributeSetters();
-    if (textMarkerSetters[attribute]) {
-      SEL selector = NSSelectorFromString(textMarkerSetters[attribute]);
+    if ([textMarkerSetters objectForKey:attribute]) {
+      SEL selector = NSSelectorFromString([textMarkerSetters objectForKey:attribute]);
       if ([textMarkerDelegate respondsToSelector:selector]) {
         return YES;
       }
@@ -240,8 +240,8 @@ mozilla::LogModule* GetMacAccessibilityLog() {
       value);
 
   NSDictionary* setters = mac::AttributeSetters();
-  if (setters[attribute]) {
-    SEL selector = NSSelectorFromString(setters[attribute]);
+  if ([setters objectForKey:attribute]) {
+    SEL selector = NSSelectorFromString([setters objectForKey:attribute]);
     if ([self isSelectorSupported:selector]) {
       [self performSelector:selector withObject:value];
     }
@@ -250,8 +250,8 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     // attribute and call the associated selector on the delegate
     // if so.
     NSDictionary* textMarkerSetters = mac::TextAttributeSetters();
-    if (textMarkerSetters[attribute]) {
-      SEL selector = NSSelectorFromString(textMarkerSetters[attribute]);
+    if ([textMarkerSetters objectForKey:attribute]) {
+      SEL selector = NSSelectorFromString([textMarkerSetters objectForKey:attribute]);
       if ([textMarkerDelegate respondsToSelector:selector]) {
         [textMarkerDelegate performSelector:selector withObject:value];
       }
@@ -272,7 +272,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   NSDictionary* actions = mac::Actions();
   for (NSString* action in actions) {
-    SEL selector = NSSelectorFromString(actions[action]);
+    SEL selector = NSSelectorFromString([actions objectForKey:action]);
     if ([self isSelectorSupported:selector]) {
       [actionNames addObject:action];
     }
@@ -293,8 +293,8 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   LOG(LogLevel::Debug, @"%@ performAction %@ ", self, action);
 
   NSDictionary* actions = mac::Actions();
-  if (actions[action]) {
-    SEL selector = NSSelectorFromString(actions[action]);
+  if ([actions objectForKey:action]) {
+    SEL selector = NSSelectorFromString([actions objectForKey:action]);
     if ([self isSelectorSupported:selector]) {
       [self performSelector:selector];
     }
@@ -322,7 +322,7 @@ mozilla::LogModule* GetMacAccessibilityLog() {
 
   NSDictionary* attributes = mac::ParameterizedAttributeGetters();
   for (NSString* attribute in attributes) {
-    SEL selector = NSSelectorFromString(attributes[attribute]);
+    SEL selector = NSSelectorFromString([attributes objectForKey:attribute]);
     if ([self isSelectorSupported:selector]) {
       [attributeNames addObject:attribute];
     }
@@ -350,8 +350,8 @@ mozilla::LogModule* GetMacAccessibilityLog() {
   id value = nil;
 
   NSDictionary* getters = mac::ParameterizedAttributeGetters();
-  if (getters[attribute]) {
-    SEL selector = NSSelectorFromString(getters[attribute]);
+  if ([getters objectForKey:attribute]) {
+    SEL selector = NSSelectorFromString([getters objectForKey:attribute]);
     if ([self isSelectorSupported:selector]) {
       value = [self performSelector:selector withObject:parameter];
     }
@@ -360,8 +360,8 @@ mozilla::LogModule* GetMacAccessibilityLog() {
     // attribute and call the associated selector on the delegate
     // if so.
     NSDictionary* textMarkerGetters = mac::ParameterizedTextAttributeGetters();
-    if (textMarkerGetters[attribute]) {
-      SEL selector = NSSelectorFromString(textMarkerGetters[attribute]);
+    if ([textMarkerGetters objectForKey:attribute]) {
+      SEL selector = NSSelectorFromString([textMarkerGetters objectForKey:attribute]);
       if ([textMarkerDelegate respondsToSelector:selector]) {
         value = [textMarkerDelegate performSelector:selector
                                          withObject:parameter];

@@ -912,7 +912,6 @@ nsWebBrowser::SetPositionAndSize(int32_t aX, int32_t aY, int32_t aCX,
   int32_t doc_y = aY;
 
   // We also need to resize our widget then.
-  // Now reposition/ resize the doc
   NS_ENSURE_SUCCESS(
       mDocShell->SetPositionAndSize(doc_x, doc_y, aCX, aCY, aFlags),
       NS_ERROR_FAILURE);
@@ -984,15 +983,21 @@ nsWebBrowser::SetVisibility(bool aVisibility) {
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetEnabled(bool* aEnabled) { return NS_ERROR_FAILURE; }
+nsWebBrowser::GetEnabled(bool* aEnabled) {
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
-nsWebBrowser::SetEnabled(bool aEnabled) { return NS_ERROR_FAILURE; }
+nsWebBrowser::SetEnabled(bool aEnabled) {
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 nsWebBrowser::GetMainWidget(nsIWidget** aMainWidget) {
   NS_ENSURE_ARG_POINTER(aMainWidget);
+
   NS_IF_ADDREF(*aMainWidget = mParentWidget);
+
   return NS_OK;
 }
 

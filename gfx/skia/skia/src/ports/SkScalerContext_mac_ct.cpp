@@ -52,6 +52,45 @@
 
 #include <algorithm>
 
+#include <sys/utsname.h>
+
+// i'm blue--da ba dee, da ba dai, daba dee daba dai--box (@blueboxd)
+// See Source/WebKit/chromium/base/mac/mac_util.mm DarwinMajorVersionInternal for original source.
+static int readVersion() {
+    struct utsname info;
+    if (uname(&info) != 0) {
+        SkDebugf("uname failed\n");
+        return 0;
+    }
+    if (strcmp(info.sysname, "Darwin") != 0) {
+        SkDebugf("unexpected uname sysname %s\n", info.sysname);
+        return 0;
+    }
+    char* dot = strchr(info.release, '.');
+    if (!dot) {
+        SkDebugf("expected dot in uname release %s\n", info.release);
+        return 0;
+    }
+    int version = atoi(info.release);
+    if (version == 0) {
+        SkDebugf("could not parse uname release %s\n", info.release);
+    }
+    return version;
+}
+static int darwinVersion() {
+    static int darwin_version = readVersion();
+    return darwin_version;
+}
+static bool isLion() {
+    return darwinVersion() == 11;
+}
+static bool isMountainLion() {
+    return darwinVersion() == 12;
+}
+static bool isMavericks() {
+    return darwinVersion() == 13;
+}
+
 class SkDescriptor;
 
 
@@ -336,7 +375,7 @@ SkScalerContext::GlyphMetrics SkScalerContext_Mac::generateMetrics(const SkGlyph
         // is rare, so we won't incur a big performance cost for this extra check.
         // Avoid trying to create a path from a color font due to crashing on 10.9.
         if (0 == cgAdvance.width && 0 == cgAdvance.height &&
-            SkMask::kARGB32_Format != glyph.maskFormat()) {
+            SkMask::kARGB32_Format != glyph.maskFormat()  && !isMavericks()) {
             SkUniqueCFRef<CGPathRef> path(CTFontCreatePathForGlyph(fCTFont.get(), cgGlyph,nullptr));
             if (!path || CGPathIsEmpty(path.get())) {
                 return mx;
@@ -568,9 +607,9 @@ class SkCTPathGeometrySink {
     }
 
 public:
-    SkPathBuilder fBuilder;
+    SkPathBuilder fBuilder; 
 
-    SkCTPathGeometrySink() : fStarted{false}, fCurrent{0,0} {}
+    SkCTPathGeometrySink() : fStarted{false}, fCurrent{0,0} {} 
 
     static void ApplyElement(void *ctx, const CGPathElement *element) {
         SkCTPathGeometrySink& self = *(SkCTPathGeometrySink*)ctx;
@@ -632,9 +671,11 @@ public:
 
 std::optional<SkScalerContext::GeneratedPath>
 SkScalerContext_Mac::generatePath(const SkGlyph& glyph) {
+    if(isMavericks())
+        return {};
     SkScalar scaleX = SK_Scalar1;
     SkScalar scaleY = SK_Scalar1;
-
+    
     CGAffineTransform xform = fTransform;
     /*
      *  For subpixel positioning, we want to return an unhinted outline, so it

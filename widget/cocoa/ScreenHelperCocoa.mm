@@ -110,9 +110,11 @@ static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
 
   // What's the maximum color component value this screen can display? This
   // is a reasonable stand-in for measuring peak brightness.
-  CGFloat componentValueMax =
-      aScreen.maximumPotentialExtendedDynamicRangeColorComponentValue;
 
+  CGFloat componentValueMax = 0.0f;
+  if(@available(macOS 10.15, *)) {
+    componentValueMax = aScreen.maximumPotentialExtendedDynamicRangeColorComponentValue;
+  }
   // Should we treat this as HDR? Based on spec at
   // https://drafts.csswg.org/mediaqueries-5/#dynamic-range, we'll consider it
   // HDR if it has pixel depth greater than 24, and if has high peak brightness,
@@ -126,7 +128,7 @@ static already_AddRefed<Screen> MakeScreen(NSScreen* aScreen) {
   bool isHDR = pixelDepth > 24 && componentValueMax > 1.0;
 
   // Double-check HDR against the platform capabilities.
-  isHDR &= nsCocoaFeatures::OnBigSurOrLater();
+  isHDR &= nsCocoaFeatures::OnCatalinaOrLater();
 
   float dpi = 96.0f;
   CGDirectDisplayID displayID =

@@ -18,8 +18,8 @@ void CopyNSStringToXPCOMString(const NSString* aFrom, nsAString& aTo) {
   }
 
   NSUInteger len = [aFrom length];
-  if (len > std::numeric_limits<nsAString::size_type>::max()) {
-    aTo.AllocFailed(std::numeric_limits<nsAString::size_type>::max());
+  if (len > NSUIntegerMax) {
+    aTo.AllocFailed(NSUIntegerMax);
   }
 
   aTo.SetLength(len);
