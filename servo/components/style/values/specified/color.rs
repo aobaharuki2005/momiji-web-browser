@@ -346,6 +346,21 @@ pub enum SystemColor {
     #[parse(condition = "ParserContext::chrome_rules_enabled")]
     MozSidebarborder,
 
+    /// Font smoothing background colors needed by the Mac OS X theme, based on
+    /// -moz-appearance names.
+    MozMacVibrancyLight,
+    MozMacVibrancyDark,
+    MozMacVibrantTitlebarLight,
+    MozMacVibrantTitlebarDark,
+    MozMacMenupopup,
+    MozMacMenuitem,
+    MozMacActiveMenuitem,
+    MozMacSourceList,
+    MozMacSourceListSelection,
+    MozMacActiveSourceListSelection,
+
+    MozMacTooltip,
+
     /// Theme accent color.
     /// https://drafts.csswg.org/css-color-4/#valdef-system-color-accentcolor
     Accentcolor,

@@ -15,10 +15,26 @@
 #include "base/logging.h"
 #include "base/scoped_nsautorelease_pool.h"
 #include "base/eintr_wrapper.h"
+#include "nsCocoaFeatures.h"
 
 namespace base {
 
 namespace {
+
+// Prior to macOS 10.14, kqueue timers may spuriously wake up, because earlier
+// wake ups race with timer resets in the kernel. As of macOS 10.14, updating a
+// timer from the thread that reads the kqueue does not cause spurious wakeups.
+// Note that updating a kqueue timer from one thread while another thread is
+// waiting in a kevent64 invocation is still (inherently) racy.
+bool KqueueTimersSpuriouslyWakeUp() {
+#ifdef XP_DARWIN 
+  static const bool kqueue_timers_spuriously_wakeup = !nsCocoaFeatures::OnMojaveOrLater();
+  return kqueue_timers_spuriously_wakeup;
+#else
+  // This still happens on iOS15.
+  return true;
+#endif
+}
 
 // On iOS, the normal `kevent64` method is blocked by the content process
 // sandbox, so instead we use `be_kevent64` from the BrowserEngineCore library.
@@ -113,13 +129,30 @@ MessagePumpKqueue::MessagePumpKqueue() : kqueue_(kqueue()) {
   // Specify the wakeup port event to directly receive the Mach message as part
   // of the kevent64() syscall.
   kevent64_s event{};
-  event.ident = wakeup_.get();
-  event.filter = EVFILT_MACHPORT;
-  event.flags = EV_ADD;
-  event.fflags = MACH_RCV_MSG;
-  event.ext[0] = reinterpret_cast<uint64_t>(&wakeup_buffer_);
-  event.ext[1] = sizeof(wakeup_buffer_);
-
+  if (KqueueTimersSpuriouslyWakeUp()) {
+    mach_port_t compat_port;
+    kr = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_PORT_SET,
+                            &compat_port);
+    CHECK(kr == KERN_SUCCESS) << "mach_port_allocate PORT_SET";
+    port_set_.reset(compat_port);
+    kr = mach_port_insert_member(mach_task_self(), wakeup_.get(),
+                                 port_set_.get());
+    CHECK(kr == KERN_SUCCESS) << "mach_port_insert_member";
+    event.ident = port_set_.get();
+    event.filter = EVFILT_MACHPORT;
+    event.flags = EV_ADD;
+  } else {
+    // When not using a port set, the wakeup port event can be specified to
+    // directly receive the Mach message as part of the kevent64() syscall.
+    // This is not done when using a port set, since that would potentially
+    // receive client MachPortWatchers' messages.
+    event.ident = wakeup_.get();
+    event.filter = EVFILT_MACHPORT;
+    event.flags = EV_ADD;
+    event.fflags = MACH_RCV_MSG;
+    event.ext[0] = reinterpret_cast<uint64_t>(&wakeup_buffer_);
+    event.ext[1] = sizeof(wakeup_buffer_);
+  }
   int rv = ChangeOneEvent(kqueue_, &event);
   DCHECK(rv == 0) << "kevent64";
 }
@@ -197,16 +230,25 @@ bool MessagePumpKqueue::WatchMachReceivePort(
     return false;
   }
 
-  kevent64_s event{};
-  event.ident = port;
-  event.filter = EVFILT_MACHPORT;
-  event.flags = EV_ADD;
-  int rv = ChangeOneEvent(kqueue_, &event);
-  if (rv < 0) {
-    DLOG(ERROR) << "kevent64";
-    return false;
+  if (KqueueTimersSpuriouslyWakeUp()) {
+    kern_return_t kr =
+        mach_port_insert_member(mach_task_self(), port, port_set_.get());
+    if (kr != KERN_SUCCESS) {
+      DLOG(ERROR) << "mach_port_insert_member" << mach_error_string(kr);
+      return false;
+    }
+  } else {
+    kevent64_s event{};
+    event.ident = port;
+    event.filter = EVFILT_MACHPORT;
+    event.flags = EV_ADD;
+    int rv = ChangeOneEvent(kqueue_, &event);
+    if (rv < 0) {
+      DLOG(ERROR) << "kevent64";
+      return false;
+    }
+    ++event_count_;
   }
-  ++event_count_;
 
   controller->Init(this, port, delegate);
   port_controllers_.InsertOrUpdate(port, controller);
@@ -268,18 +310,25 @@ bool MessagePumpKqueue::StopWatchingMachPort(
   mach_port_t port = controller->port();
   controller->Reset();
   port_controllers_.Remove(port);
-
-  kevent64_s event{};
-  event.ident = port;
-  event.filter = EVFILT_MACHPORT;
-  event.flags = EV_DELETE;
-  --event_count_;
-  int rv = ChangeOneEvent(kqueue_, &event);
-  if (rv < 0) {
-    DLOG(ERROR) << "kevent64";
-    return false;
+  if (KqueueTimersSpuriouslyWakeUp()) {
+    kern_return_t kr =
+        mach_port_extract_member(mach_task_self(), port, port_set_.get());
+    if (kr != KERN_SUCCESS) {
+      DLOG(ERROR) << "mach_port_extract_member" << mach_error_string(kr);
+      return false;
+    }
+  } else {
+    kevent64_s event{};
+    event.ident = port;
+    event.filter = EVFILT_MACHPORT;
+    event.flags = EV_DELETE;
+    --event_count_;
+    int rv = ChangeOneEvent(kqueue_, &event);
+    if (rv < 0) {
+      DLOG(ERROR) << "kevent64";
+      return false;
+    }
   }
-
   return true;
 }
 
@@ -375,11 +424,21 @@ bool MessagePumpKqueue::ProcessEvents(Delegate* delegate, int count) {
         }
       }
     } else if (event->filter == EVFILT_MACHPORT) {
-      mach_port_t port = event->ident;
+      mach_port_t port = KqueueTimersSpuriouslyWakeUp() ? event->data : event->ident;
 
       if (port == wakeup_.get()) {
         // The wakeup event has been received, do not treat this as "doing
         // work", this just wakes up the pump.
+        if (KqueueTimersSpuriouslyWakeUp()) {
+          // When using the kqueue directly, the message can be received
+          // straight into a buffer that was created when adding the event.
+          // But when using a port set, the message must be drained manually.
+          wakeup_buffer_.header.msgh_local_port = port;
+          wakeup_buffer_.header.msgh_size = sizeof(wakeup_buffer_);
+          kern_return_t kr = mach_msg_receive(&wakeup_buffer_.header);
+          DLOG_IF(ERROR, kr != KERN_SUCCESS)
+              << "mach_msg_receive wakeup" << mach_error_string(kr);
+        }
         continue;
       }
 

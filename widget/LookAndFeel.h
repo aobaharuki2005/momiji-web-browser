@@ -103,6 +103,35 @@ class LookAndFeel {
      * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
      */
     WindowsAccentColorInTitlebar,
+    /*
+     * A Boolean value to determine whether the Mac graphite theme is
+     * being used.
+     *
+     * The value of this metric is not used on other platforms. These platforms
+     * should return NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
+     */
+    MacGraphiteTheme,
+
+    /*
+     * A Boolean value to determine whether the Mac OS X Lion-specific theming
+     * should be used.
+     *
+     * The value of this metric is not used on non-Mac platforms. These
+     * platforms should return NS_ERROR_NOT_IMPLEMENTED when queried for this
+     * metric.
+     */
+    MacLionTheme,
+
+   /*
+    * A Boolean value to determine whether the Mac OS X Yosemite-specific theming
+    * should be used.
+    *
+    * The value of this metric is not used on non-Mac platforms. These
+    * platforms should return NS_ERROR_NOT_IMPLEMENTED when queried for this
+    * metric.
+    */
+
+    MacYosemiteTheme,
 
     /* Whether Windows mica effect is enabled and available */
     WindowsMica,

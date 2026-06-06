@@ -3,6 +3,37 @@ use objc2::rc::Retained;
 use objc2::runtime::ProtocolObject;
 use objc2_foundation::NSArray;
 
+// For whatsys
+use std::str::FromStr;
+use std::{ffi::CStr, os::raw::c_char, path::Path, ptr};
+
+// For whatsys
+#[derive(Debug, PartialOrd, PartialEq)]
+enum ParseMacOSKernelVersionError {
+    SysCtl,
+    Malformed,
+    Parsing,
+}
+
+// For whatsys
+fn macos_kernel_major_version() -> std::result::Result<u32, ParseMacOSKernelVersionError> {
+    let ver = whatsys::kernel_version();
+    if ver.is_none() {
+        return Err(ParseMacOSKernelVersionError::SysCtl);
+    }
+    let ver = ver.unwrap();
+    let major = ver.split('.').next();
+    if major.is_none() {
+        return Err(ParseMacOSKernelVersionError::Malformed);
+    }
+    let parsed_major = u32::from_str(major.unwrap());
+    if parsed_major.is_err() {
+        return Err(ParseMacOSKernelVersionError::Parsing);
+    }
+    Ok(parsed_major.unwrap())
+}
+const MACOS_KERNEL_MAJOR_VERSION_ELCAPITAN: u32 = 15;
+
 /// Returns all Metal devices in the system.
 ///
 /// On macOS and macCatalyst, this API will not cause the system to switch
@@ -29,10 +60,13 @@ pub extern "C-unwind" fn MTLCopyAllDevices() -> Retained<NSArray<ProtocolObject<
             fn MTLCopyAllDevices() -> *mut NSArray<ProtocolObject<dyn MTLDevice>>;
         }
 
-        let ret = unsafe { MTLCopyAllDevices() };
+        let ret = if macos_kernel_major_version() >= Ok(MACOS_KERNEL_MAJOR_VERSION_ELCAPITAN) {
         // SAFETY: Marked NS_RETURNS_RETAINED (and has `Copy` in the name).
-        unsafe { Retained::from_raw(ret) }
-            .expect("function was marked as returning non-null, but actually returned NULL")
+            unsafe { Retained::from_raw(MTLCopyAllDevices()) }
+        } else {
+            None
+        };
+        ret.expect("function was marked as returning non-null, but actually returned NULL")
     }
     #[cfg(not(any(target_os = "macos", target_env = "macabi")))]
     {

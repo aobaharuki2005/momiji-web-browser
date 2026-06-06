@@ -69,7 +69,7 @@ NS_IMETHODIMP nsNativeAppSupportCocoa::Start(bool* _retval) {
 
   int major, minor, bugfix;
   nsCocoaFeatures::GetSystemVersion(major, minor, bugfix);
-  if (major >= 11 || (major == 10 && minor >= 15)) {
+  if (major >= 11 || (major == 10 && minor >= 7)) {
     *_retval = true;
   } else {
     NSLog(@"Minimum OS version requirement not met!");

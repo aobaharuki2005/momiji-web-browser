@@ -71,6 +71,9 @@ const SAFE_MAX_LATENCY_FRAMES: u32 = 512;
 const VPIO_IDLE_TIMEOUT: Duration = Duration::from_secs(10);
 
 const MACOS_KERNEL_MAJOR_VERSION_MONTEREY: u32 = 21;
+const MACOS_KERNEL_MAJOR_VERSION_MAVERICKS: u32 = 13;
+const MACOS_KERNEL_MAJOR_VERSION_SIERRA: u32 = 16;
+const MACOS_KERNEL_MAJOR_VERSION_LION: u32 = 11;
 
 // Global registry for tracking valid sync callback pointers.
 static SYNC_CALLBACK_REGISTRY: LazyLock<Mutex<HashSet<usize>>> =
@@ -94,7 +97,7 @@ where
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialOrd, PartialEq)]
 enum ParseMacOSKernelVersionError {
     SysCtl,
     Malformed,
@@ -1490,13 +1493,15 @@ fn create_voiceprocessing_audiounit() -> Result<VoiceProcessingUnit> {
             cubeb_log!("Could not get default output device in order to undo vpio ducking");
         }
         Some(id) => {
-            let r = audio_device_duck(id, 1.0, ptr::null_mut(), 0.5);
-            if r != NO_ERR {
-                cubeb_log!(
-                        "Failed to undo ducking of voiceprocessing on output device {}. Proceeding... Error: {}",
-                        id,
-                        r
-                    );
+            if macos_kernel_major_version() >= Ok(MACOS_KERNEL_MAJOR_VERSION_MAVERICKS) {
+                let r = audio_device_duck(id, 1.0, ptr::null_mut(), 0.5);
+                if r != NO_ERR {
+                    cubeb_log!(
+                            "Failed to undo ducking of voiceprocessing on output device {}. Proceeding... Error: {}",
+                            id,
+                            r
+                        );
+                }
             }
         }
     };
@@ -3605,7 +3610,8 @@ impl<'ctx> CoreStreamData<'ctx> {
                 .contains(StreamPrefs::VOICE)
                 || CoreStreamData::should_force_vpio_for_input_device(self.input_device.id))
             && !self.should_block_vpio_for_device_pair(&self.input_device, &self.output_device)
-            && macos_kernel_major_version() != Ok(MACOS_KERNEL_MAJOR_VERSION_MONTEREY);
+            && (macos_kernel_major_version() != Ok(MACOS_KERNEL_MAJOR_VERSION_MONTEREY)
+                && macos_kernel_major_version() >= Ok(MACOS_KERNEL_MAJOR_VERSION_SIERRA));
 
         let should_use_aggregate_device = {
             // It's impossible to create an aggregate device from an aggregate device, and it's

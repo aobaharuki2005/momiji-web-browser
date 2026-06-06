@@ -153,12 +153,8 @@ class CTFontFamily : public gfxFontFamily {
   CTFontRef mForSystemFont = nullptr;
 };
 
-class gfxMacFontFamily final : public CTFontFamily {
- public:
-};
 
 class CoreTextFontList : public gfxPlatformFontList {
-  using FontFamilyListEntry = mozilla::dom::SystemFontListEntry;
 
  public:
   already_AddRefed<gfxFontFamily> CreateFontFamily(
@@ -188,6 +184,7 @@ class CoreTextFontList : public gfxPlatformFontList {
   enum FontFamilyEntryType {
     kStandardFontFamily = 0,  // a standard installed font family
     kSystemFontFamily = 1,    // name of 'system' font
+    kDisplaySizeSystemFontFamily = 2  // 'system' font at display sizes
   };
   void ReadSystemFontList(mozilla::dom::SystemFontList*);
 
@@ -195,9 +192,10 @@ class CoreTextFontList : public gfxPlatformFontList {
   CoreTextFontList();
   virtual ~CoreTextFontList();
 
-  // initialize font lists
-  nsresult InitFontListForPlatform() MOZ_REQUIRES(mLock) override;
-  void InitSharedFontListForPlatform() MOZ_REQUIRES(mLock) override;
+  // moved back to gfxMacPlatformFontList for compatibility
+  //initialize font lists
+  //nsresult InitFontListForPlatform() MOZ_REQUIRES(mLock) override;
+  //void InitSharedFontListForPlatform() MOZ_REQUIRES(mLock) override;
 
   // handle commonly used fonts for which the name table should be loaded at
   // startup
@@ -277,6 +275,8 @@ class CoreTextFontList : public gfxPlatformFontList {
   // default font for use with system-wide font fallback
   CTFontRef mDefaultFont;
 
+  bool mUseSizeSensitiveSystemFont;
+  nsCString mSystemDisplayFontFamilyName;  // only used on OSX 10.11
   // Font family that -apple-system maps to
   nsCString mSystemFontFamilyName;
 

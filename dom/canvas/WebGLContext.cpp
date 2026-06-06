@@ -84,6 +84,11 @@
 #include "WebGLValidateStrings.h"
 #include "WebGLVertexArray.h"
 
+#ifdef MOZ_WIDGET_COCOA
+#  include "nsCocoaFeatures.h"
+#endif
+
+
 #ifdef XP_WIN
 #  include "WGLLibrary.h"
 #endif
@@ -681,6 +686,14 @@ void WebGLContext::FinishInit() {
       mNeedsFakeNoStencil = true;
     }
   }
+
+    mNeedsFakeNoStencil_UserFBs = false;
+#ifdef MOZ_WIDGET_COCOA
+  if (!nsCocoaFeatures::IsAtLeastVersion(10, 12) &&
+      gl->Vendor() == gl::GLVendor::Intel) {
+    mNeedsFakeNoStencil_UserFBs = true;
+  }
+#endif
 
   mResetLayer = true;
   mOptionsFrozen = true;
@@ -2022,8 +2035,13 @@ ScopedDrawCallWrapper::ScopedDrawCallWrapper(WebGLContext& webgl)
     }
     driverDepthTest &= !mWebGL.mNeedsFakeNoDepth;
     driverStencilTest &= !mWebGL.mNeedsFakeNoStencil;
-  }
-
+    } else {
+      if (mWebGL.mNeedsFakeNoStencil_UserFBs &&
+          fb->DepthAttachment().HasAttachment() &&
+          !fb->StencilAttachment().HasAttachment()) {
+        driverStencilTest = false;
+      }
+    }
   const auto& gl = mWebGL.gl;
   mWebGL.DoColorMask(Some(0), driverColorMask0);
   if (mWebGL.mDriverDepthTest != driverDepthTest) {

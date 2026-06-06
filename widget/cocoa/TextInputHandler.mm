@@ -5210,11 +5210,17 @@ void IMEInputHandler::OnTextSubstitution(uint32_t aStartOffset) {
   // NSTextCheckingResult.range is read only, so re-create this result object.
   NSRange candidatedRange = NSMakeRange(candidate.range.location + startFetch,
                                         candidate.range.length);
+  NSArray<NSString *> *anAlternativeString;
+  if(@available(macOS 10.8, *)) {
+    anAlternativeString = candidate.alternativeStrings;
+  } else {
+    anAlternativeString = @[];
+  }
   [mCandidatedTextSubstitutionResult release];
   mCandidatedTextSubstitutionResult = [[NSTextCheckingResult
       correctionCheckingResultWithRange:candidatedRange
                       replacementString:candidate.replacementString
-                     alternativeStrings:candidate.alternativeStrings] retain];
+                     alternativeStrings:anAlternativeString] retain];
   mOriginalTextForTextSubstitution =
       Substring(queryTextContentEvent.mReply->DataRef(),
                 candidatedRange.location - startFetch, candidatedRange.length);
@@ -5264,12 +5270,17 @@ void IMEInputHandler::ShowTextSubstitutionPanel() {
   if (!spellchecker) {
     return;
   }
+  NSArray<NSString *> *anotherAlternativeString;
+  if(@available(macOS 10.8, *)) {
+    anotherAlternativeString = mCandidatedTextSubstitutionResult.alternativeStrings;
+  } else {
+    anotherAlternativeString = @[];
+  }
   [spellchecker
       showCorrectionIndicatorOfType:NSCorrectionIndicatorTypeDefault
                       primaryString:mCandidatedTextSubstitutionResult
                                         .replacementString
-                 alternativeStrings:mCandidatedTextSubstitutionResult
-                                        .alternativeStrings
+                 alternativeStrings:anotherAlternativeString
                     forStringInRect:rect
                                view:mView
                   completionHandler:^(NSString* aAcceptedString) {

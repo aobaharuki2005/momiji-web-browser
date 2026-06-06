@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AppleVTDecoder.h"
+#include "AppleVTLinker.h"
 
 #include <CoreVideo/CVPixelBufferIOSurface.h>
 #include <IOSurface/IOSurfaceRef.h>
@@ -11,6 +12,7 @@
 
 #include "AOMDecoder.h"
 #include "AppleDecoderModule.h"
+#include "AppleUtils.h"
 #include "CallbackThreadRegistry.h"
 #include "H264.h"
 #include "H265.h"
@@ -188,8 +190,8 @@ void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
                                "AppleVTDecoder"_ns, aId, flag);
   });
 
-  AutoCFTypeRef<CMBlockBufferRef> block;
-  AutoCFTypeRef<CMSampleBufferRef> sample;
+  AutoCFTypeRef<CMBlockBufferRef> block(nullptr);
+  AutoCFTypeRef<CMSampleBufferRef> sample(nullptr);
   VTDecodeInfoFlags infoFlags;
   OSStatus rv;
 
@@ -226,8 +228,7 @@ void AppleVTDecoder::ProcessDecode(MediaRawData* aSample) {
     return;
   }
 
-  VTDecodeFrameFlags decodeFlags =
-      kVTDecodeFrame_EnableAsynchronousDecompression;
+  VTDecodeFrameFlags decodeFlags = kVTDecodeFrame_EnableAsynchronousDecompression;
   rv = VTDecompressionSessionDecodeFrame(
       mSession, sample, decodeFlags, CreateAppleFrameRef(aSample), &infoFlags);
   if (infoFlags & kVTDecodeInfo_FrameDropped) {
@@ -669,7 +670,7 @@ MediaResult AppleVTDecoder::InitializeSession() {
   CFBooleanRef isUsingHW = nullptr;
   rv = VTSessionCopyProperty(
       mSession,
-      kVTDecompressionPropertyKey_UsingHardwareAcceleratedVideoDecoder,
+      AppleVTLinker::skPropUsingHWAccel_Decode,
       kCFAllocatorDefault, &isUsingHW);
   if (rv == noErr) {
     mIsHardwareAccelerated = isUsingHW == kCFBooleanTrue;
@@ -728,8 +729,12 @@ CFDictionaryRef AppleVTDecoder::CreateDecoderExtensions() {
 }
 
 CFDictionaryRef AppleVTDecoder::CreateDecoderSpecification() {
+  if (!AppleVTLinker::skPropEnableHWAccel_Decode) {
+    return nullptr;
+  }
+
   const void* specKeys[] = {
-      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder};
+      AppleVTLinker::skPropEnableHWAccel_Decode};
   const void* specValues[1];
   if (gfx::gfxVars::CanUseHardwareVideoDecoding()) {
     specValues[0] = kCFBooleanTrue;
@@ -764,12 +769,18 @@ CFDictionaryRef AppleVTDecoder::CreateOutputConfiguration() {
   // Output format type:
 
   bool is10Bit = (gfx::BitDepthForColorDepth(mColorDepth) == 10);
-  SInt32 PixelFormatTypeValue =
-      mColorRange == gfx::ColorRange::FULL
+  SInt32 PixelFormatTypeValue;
+  if(__builtin_available(macOS 10.8, *)) {
+    PixelFormatTypeValue = mColorRange == gfx::ColorRange::FULL
           ? (is10Bit ? kCVPixelFormatType_420YpCbCr10BiPlanarFullRange
                      : kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)
           : (is10Bit ? kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange
                      : kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
+  } else {
+    PixelFormatTypeValue = mColorRange == gfx::ColorRange::FULL
+      ? kCVPixelFormatType_422YpCbCr8FullRange :
+       kCVPixelFormatType_422YpCbCr8_yuvs;
+  }
   AutoCFTypeRef<CFNumberRef> PixelFormatTypeNumber(CFNumberCreate(
       kCFAllocatorDefault, kCFNumberSInt32Type, &PixelFormatTypeValue));
   // Construct IOSurface Properties

@@ -8,6 +8,7 @@
 #include <os/availability.h>
 #include <spawn.h>
 #include <sys/wait.h>
+#include <sys/syscall.h>
 #include <unistd.h>
 
 #include <string>
@@ -24,7 +25,15 @@
 extern "C" {
 // N.B. the syscalls are available back to 10.5, but the C wrappers
 // only in 10.12.  Fortunately, 10.15 is our current baseline.
-int pthread_fchdir_np(int fd) API_AVAILABLE(macosx(10.12));
+int pthread_chdir_np(const char* dir)
+{
+    return syscall(SYS___pthread_chdir, dir);
+}
+
+int pthread_fchdir_np(int fd)
+{
+    return syscall(SYS___pthread_fchdir, fd);
+}
 
 int responsibility_spawnattrs_setdisclaim(posix_spawnattr_t attrs, int disclaim)
     API_AVAILABLE(macosx(10.14));
@@ -84,14 +93,42 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
     }
   }
 
+
+  // macOS 10.15 allows adding a chdir operation to the file actions;
+  // this ought to be part of the standard but sadly is not.  On older
+  // versions, we can use a different nonstandard extension:
+  // pthread_{f,}chdir_np, so we can temporarily change the calling
+  // thread's cwd (which is then inherited by the child) without
+  // disturbing other threads, and then restore it afterwards.
+  int old_cwd_fd = -1;
   if (!options.workdir.empty()) {
-    int rv = posix_spawn_file_actions_addchdir_np(&file_actions,
-                                                  options.workdir.c_str());
-    if (rv != 0) {
-      DLOG(WARNING) << "posix_spawn_file_actions_addchdir_np failed";
-      return Err(LaunchError("posix_spawn_file_actions_addchdir", rv));
+    if (@available(macOS 10.15, *)) {
+      int rv = posix_spawn_file_actions_addchdir_np(&file_actions, options.workdir.c_str());
+      if (rv != 0) {
+        DLOG(WARNING) << "posix_spawn_file_actions_addchdir_np failed";
+        return Err(LaunchError("posix_spawn_file_actions_addchdir", rv));
+      }
+    } else {
+      old_cwd_fd = open(".", O_RDONLY | O_CLOEXEC | O_DIRECTORY);
+      if (old_cwd_fd < 0) {
+        DLOG(WARNING) << "open(\".\") failed";
+        return Err(LaunchError("open", errno));
+      }
+      if (pthread_chdir_np(options.workdir.c_str()) != 0) {
+        DLOG(WARNING) << "pthread_chdir_np failed";
+        return Err(LaunchError("pthread_chdir_np", errno));
+      }
+     }
+   }
+
+  auto thread_cwd_guard = mozilla::MakeScopeExit([old_cwd_fd] {
+    if (old_cwd_fd >= 0) {
+      if (pthread_fchdir_np(old_cwd_fd) != 0) {
+        DLOG(ERROR) << "pthread_fchdir_np failed; thread is in the wrong directory!";
+      }
+      close(old_cwd_fd);
     }
-  }
+  });
 
   // Initialize spawn attributes.
   posix_spawnattr_t spawnattr;
@@ -102,7 +139,6 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
   }
   auto spawnattr_guard = mozilla::MakeScopeExit(
       [&spawnattr] { posix_spawnattr_destroy(&spawnattr); });
-
 #if defined(XP_MACOSX) && defined(__aarch64__)
   if (options.arch == PROCESS_ARCH_X86_64) {
     cpu_type_t cpu_pref = CPU_TYPE_X86_64;
@@ -118,31 +154,42 @@ Result<Ok, LaunchError> LaunchApp(const std::vector<std::string>& argv,
 #endif
 
   if (options.disclaim) {
-    int err = responsibility_spawnattrs_setdisclaim(&spawnattr, 1);
-    if (err != 0) {
-      DLOG(WARNING) << "responsibility_spawnattrs_setdisclaim failed";
-      return Err(LaunchError("responsibility_spawnattrs_setdisclaim", err));
+    if (@available(macOS 10.14, *)) {
+      int err = responsibility_spawnattrs_setdisclaim(&spawnattr, 1);
+      if (err != 0) {
+        DLOG(WARNING) << "responsibility_spawnattrs_setdisclaim failed";
+        return Err(LaunchError("responsibility_spawnattrs_setdisclaim", err));
+      }
     }
   }
 
-  // Prevent the child process from inheriting any file descriptors
-  // that aren't named in `file_actions`.  (This is an Apple-specific
-  // extension to posix_spawn.)
-  err = posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_CLOEXEC_DEFAULT);
-  if (err != 0) {
-    DLOG(WARNING) << "posix_spawnattr_setflags failed";
-    return Err(LaunchError("posix_spawnattr_setflags", err));
-  }
-
-  // Exempt std{in,out,err} from being closed by POSIX_SPAWN_CLOEXEC_DEFAULT.
-  for (int fd = 0; fd <= STDERR_FILENO; ++fd) {
-    err = posix_spawn_file_actions_addinherit_np(&file_actions, fd);
+  // thanks to @kencu at macports for suggesting posix_spawn has problems on
+  // 10.7. he was close, but it turns out its the POSIX_SPAWN_CLOEXEC_DEFAULT
+  // flag on the spawn attributes. kudos to the @textmate lads for confirming it (a9397 notes):
+  // https://github.com/textmate/textmate/blob/master/Applications/TextMate/about/Changes.md
+  if (@available(macOS 10.8, *)) {
+    // Prevent the child process from inheriting any file descriptors
+    // that aren't named in `file_actions`.  (This is an Apple-specific
+    // extension to posix_spawn.)
+    err = posix_spawnattr_setflags(&spawnattr, POSIX_SPAWN_CLOEXEC_DEFAULT);
     if (err != 0) {
-      DLOG(WARNING) << "posix_spawn_file_actions_addinherit_np failed";
-      return Err(LaunchError("posix_spawn_file_actions_addinherit_np", err));
+      DLOG(WARNING) << "posix_spawnattr_setflags failed";
+      return Err(LaunchError("posix_spawnattr_setflags", err));
     }
-  }
 
+    // Exempt std{in,out,err} from being closed by POSIX_SPAWN_CLOEXEC_DEFAULT.
+    for (int fd = 0; fd <= STDERR_FILENO; ++fd) {
+      err = posix_spawn_file_actions_addinherit_np(&file_actions, fd);
+      if (err != 0) {
+        DLOG(WARNING) << "posix_spawn_file_actions_addinherit_np failed";
+        return Err(LaunchError("posix_spawn_file_actions_addinherit_np", err));
+      }
+    }
+  } else {
+    // Make sure we don't leak any FDs to the child process by marking all FDs
+    // as close-on-exec.
+    SetAllFDsToCloseOnExec();
+  }
   int pid = 0;
   err = posix_spawnp(&pid, argv_copy[0], &file_actions, &spawnattr, argv_copy,
                      vars.get());

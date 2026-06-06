@@ -1282,6 +1282,7 @@ class WebGLContext : public VRefCounted, public SupportsWeakPtr {
   bool mNeedsFakeNoAlpha = false;
   bool mNeedsFakeNoDepth = false;
   bool mNeedsFakeNoStencil = false;
+  bool mNeedsFakeNoStencil_UserFBs = false;
 
   bool mDriverDepthTest = false;
   bool mDriverStencilTest = false;

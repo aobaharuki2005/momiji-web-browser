@@ -9,6 +9,7 @@
 #include <CoreMedia/CoreMedia.h>          // For CMVideoFormatDescriptionRef
 #include <VideoToolbox/VideoToolbox.h>    // For VTDecompressionSessionRef
 
+#include "AppleVDADecoder.h"
 #include "AppleDecoderModule.h"
 #include "PerformanceRecorder.h"
 #include "PlatformDecoderModule.h"

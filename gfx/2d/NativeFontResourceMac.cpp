@@ -15,6 +15,7 @@
 #endif
 
 #include "nsIMemoryReporter.h"
+#include "nsCocoaFeatures.h"
 
 namespace mozilla {
 namespace gfx {
@@ -80,80 +81,28 @@ void NativeFontResourceMac::RegisterMemoryReporter() {
 /* static */
 already_AddRefed<NativeFontResourceMac> NativeFontResourceMac::Create(
     const uint8_t* aFontData, uint32_t aDataLength) {
-  uint8_t* fontData = (uint8_t*)malloc(aDataLength);
-  if (!fontData) {
-    return nullptr;
-  }
-  memcpy(fontData, aFontData, aDataLength);
-  CFAllocatorContext context = {0,       fontData, nullptr, nullptr,
-                                nullptr, nullptr,  nullptr, FontDataDeallocate,
-                                nullptr};
-  CFAllocatorRef allocator = CFAllocatorCreate(kCFAllocatorDefault, &context);
-
-  // We create a CFDataRef here that we'l hold until we've determined that we
-  // have a valid font. If and only if we can create a font from the data,
-  // we'll store the font data in our map. Whether or not the font is valid,
-  // we'll later release this CFDataRef.
-  CFDataRef data = CFDataCreateWithBytesNoCopy(kCFAllocatorDefault, fontData,
-                                               aDataLength, allocator);
+  CFDataRef data = CFDataCreate(kCFAllocatorDefault, aFontData, aDataLength);
   if (!data) {
-    free(fontData);
     return nullptr;
   }
 
-  CTFontDescriptorRef ctFontDesc =
-      CTFontManagerCreateFontDescriptorFromData(data);
-  if (!ctFontDesc) {
-    CFRelease(data);
-    return nullptr;
-  }
+  // create a provider
+  CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
+  // release our reference to the CFData, provider keeps it alive
+   CFRelease(data);
 
-  // creating the CGFontRef via the CTFont avoids the data being held alive
-  // in a cache.
-  CTFontRef ctFont = CTFontCreateWithFontDescriptor(ctFontDesc, 0, nullptr);
-
-  // Creating the CGFont from the CTFont prevents the font data from being
-  // held in the TDescriptorSource cache. This appears to be true even
-  // if we later create a CTFont from the CGFont.
-  CGFontRef fontRef = CTFontCopyGraphicsFont(ctFont, nullptr);
-  CFRelease(ctFont);
+  // create the font object
+  CGFontRef fontRef = CGFontCreateWithDataProvider(provider);
+  // release our reference, font will keep it alive as long as needed
+  CGDataProviderRelease(provider);
 
   if (!fontRef) {
-    // Not a valid font; release the structures we've been holding.
-    CFRelease(data);
-    CFRelease(ctFontDesc);
     return nullptr;
   }
-
-  // Determine the font name and store it with the font data in the map.
-  nsAutoCStringN<FONT_NAME_MAX> fontName;
-
-  CFStringRef psname = CGFontCopyPostScriptName(fontRef);
-  if (psname) {
-    const char* cstr = CFStringGetCStringPtr(psname, kCFStringEncodingUTF8);
-    if (cstr) {
-      fontName.Assign(cstr);
-    } else {
-      char buf[FONT_NAME_MAX];
-      if (CFStringGetCString(psname, buf, FONT_NAME_MAX,
-                             kCFStringEncodingUTF8)) {
-        fontName.Assign(buf);
-      }
-    }
-    CFRelease(psname);
-  }
-
-  {
-    auto fontMap = sWeakFontDataMap.Lock();
-    void* key = (void*)fontData;
-    fontMap->insert({key, fontName});
-  }
-  // It's now safe to release our CFDataRef.
-  CFRelease(data);
 
   // passes ownership of fontRef to the NativeFontResourceMac instance
   RefPtr<NativeFontResourceMac> fontResource =
-      new NativeFontResourceMac(ctFontDesc, fontRef, aDataLength);
+      new NativeFontResourceMac(fontRef, aDataLength);
 
   return fontResource.forget();
 }

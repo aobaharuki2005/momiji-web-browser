@@ -9,6 +9,46 @@
 #  include <unistd.h>
 #endif
 
+#if defined(XP_DARWIN)
+#include <sys/utsname.h>
+
+// let's sing it one more time...
+// he lives in a blue house with a blue window
+// blue is his colour, and all that he wears
+// blue are the streets and trees are too
+// he has a girlfriend, and she is so blue
+//
+// blue are the people here that walk around
+// blue like his corvette, that's standing outside
+// blue are the words he says and what he thinks
+// blue is the colour, that lives inside @blueboxd
+//
+// i'm blue--da ba dee, da ba dai, da ba dee daba dai--box (@blueboxd)
+
+static int readVersion() {
+    struct utsname info;
+    if (uname(&info) != 0) {
+        return 0;
+    }
+    if (strcmp(info.sysname, "Darwin") != 0) {
+        return 0;
+    }
+    char* dot = strchr(info.release, '.');
+    if (!dot) {
+        return 0;
+    }
+    int version = atoi(info.release);
+    return version;
+}
+
+static int darwinVersion() {
+    static int darwin_version = readVersion();
+    return darwin_version;
+}
+
+static int macOSXVer = 0;
+#endif
+
 #if defined(XP_WIN)
 
 // Microsoft doesn't "officially" support using RtlGenRandom() directly
@@ -29,6 +69,9 @@ extern "C" BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer,
     defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || \
     defined(__wasi__)
 #  define USE_ARC4RANDOM
+#  if defined(XP_DARWIN)
+#    include <sys/random.h> //they left me with no choice.
+#  endif
 #endif
 
 #if defined(__linux__)
@@ -86,14 +129,22 @@ namespace mozilla {
 MFBT_API bool GenerateRandomBytesFromOS(void* aBuffer, size_t aLength) {
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aLength > 0);
-
 #if defined(XP_WIN)
   return !!RtlGenRandom(aBuffer, aLength);
 
 #elif defined(USE_ARC4RANDOM)  // defined(XP_WIN)
-
-  arc4random_buf(aBuffer, aLength);
-  return true;
+#  if defined(XP_DARWIN)
+  if(!macOSXVer)
+    macOSXVer = darwinVersion();
+  if(macOSXVer >= 16) // it's higher quality anyways. LEFT ME NO CHOICE
+    return !getentropy(aBuffer, aLength);
+  else {
+#  endif
+    arc4random_buf(aBuffer, aLength);
+    return true;
+#  if defined(XP_DARWIN)
+  }
+#endif
 
 #elif defined(XP_UNIX)  // defined(USE_ARC4RANDOM)
 

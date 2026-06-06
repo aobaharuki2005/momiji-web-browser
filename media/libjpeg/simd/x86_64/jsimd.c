@@ -29,9 +29,21 @@
 #define IS_ALIGNED_SSE(ptr)  (IS_ALIGNED(ptr, 4)) /* 16 byte alignment */
 #define IS_ALIGNED_AVX(ptr)  (IS_ALIGNED(ptr, 5)) /* 32 byte alignment */
 
+#if defined(XP_DARWIN)
+#include <AvailabilityMacros.h>
+#endif
+#if !defined(MAC_OS_X_VERSION_10_7) || \
+    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
+/* see comments at
+ * https://github.com/libjpeg-turbo/libjpeg-turbo/commit/ae87a958613b69628b92088b313ded0d4f59a716
+ * all removing THREAD_LOCAL does is affect thread safety of the
+ * error handler. even the dev thought it was "innocuous"
+ */
+#  define THREAD_LOCAL
+#endif
+
 static THREAD_LOCAL unsigned int simd_support = (unsigned int)(~0);
 static THREAD_LOCAL unsigned int simd_huffman = 1;
-
 /*
  * Check what SIMD accelerations are supported.
  */

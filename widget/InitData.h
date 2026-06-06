@@ -82,7 +82,7 @@ enum class PiPType : uint8_t {
 // Basic struct for widget initialization data.
 // @see Create member function of nsIWidget
 struct InitData {
-  WindowType mWindowType = WindowType::TopLevel;
+  WindowType mWindowType = WindowType::TopLevel; 
   BorderStyle mBorderStyle = BorderStyle::Default;
   PopupType mPopupHint = PopupType::Panel;
   PopupLevel mPopupLevel = PopupLevel::Top;

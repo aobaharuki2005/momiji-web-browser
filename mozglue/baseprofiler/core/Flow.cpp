@@ -51,12 +51,63 @@ struct Hasher {
   uint64_t Get() const { return hash; }
 };
 
+#if defined(__APPLE__) && defined(__MACH__)
+#  include <time.h>
+#  include <sys/time.h>
+#  include <sys/types.h>
+#  include <mach/mach_time.h>
+
+#if !defined(MAC_OS_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_12
+#  include <mach/mach.h>
+#  include <mach/clock.h>
+    //taken from https://github.com/ChisholmKyle/PosixMachTiming/
+    /* timing struct for osx */
+    typedef struct RoTimingMach {
+        mach_timebase_info_data_t timebase;
+        clock_serv_t cclock;
+    } RoTimingMach;
+
+    /* internal timing struct for osx */
+    static RoTimingMach ro_timing_mach_g;
+
+    /* mach clock port */
+    static mach_port_t clock_port;
+
+    /* emulate posix clock_gettime */
+    static inline int clock_gettime_missing (clockid_t id, struct timespec *tspec)
+    {
+        int retval = -1;
+        mach_timespec_t mts;
+        if (id == CLOCK_REALTIME) {
+            retval = clock_get_time (ro_timing_mach_g.cclock, &mts);
+            if (retval == 0 && tspec != NULL) {
+                tspec->tv_sec = mts.tv_sec;
+                tspec->tv_nsec = mts.tv_nsec;
+            }
+        } else if (id == CLOCK_MONOTONIC) {
+            retval = clock_get_time (clock_port, &mts);
+            if (retval == 0 && tspec != NULL) {
+                tspec->tv_sec = mts.tv_sec;
+                tspec->tv_nsec = mts.tv_nsec;
+            }
+        } else {}
+        return retval;
+    }
+
+
+#endif
+#endif
+
 static uint64_t CurrentTime() {
 #ifdef XP_WIN
   return GetTickCount64();
 #else
   timespec ts;
+#if !defined(MAC_OS_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_12
+  clock_gettime_missing(CLOCK_UPTIME_RAW, &ts);
+#else
   clock_gettime(CLOCK_MONOTONIC, &ts);
+#endif
   return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 #endif
 }

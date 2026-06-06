@@ -70,8 +70,8 @@ pref("extensions.webextensions.remote", true);
 pref("extensions.webextensions.pageActionIconDarkModeFilter.enabled", false);
 
 // Require signed add-ons by default
-pref("extensions.langpacks.signatures.required", true);
-pref("xpinstall.signatures.required", true);
+pref("extensions.langpacks.signatures.required", false);
+pref("xpinstall.signatures.required", false);
 
 // Enable data collection permissions.
 pref("extensions.dataCollectionPermissions.enabled", true);
@@ -1837,12 +1837,11 @@ pref("browser.partnerlink.campaign.topsites", "amzn_2020_a1");
 // Activates preloading of the new tab url.
 pref("browser.newtab.preload", true);
 
-// Preonboarding is disabled by default on platforms other than Windows and
-// macOS. For official Mozilla distributions (only for Linux), enabled at
-// runtime in TelemetryReportingPolicy.
-#if !defined(XP_WIN) && !defined(XP_MACOSX)
+/* Momiji notes: always disable onboarding experience on macOS (legacy) */
+#if defined(XP_MACOSX)
   pref("browser.preonboarding.enabled", false);
 #endif
+/* EOMN */
 
 // For further detail on the TOU prefs below, see the `preonboarding` feature in
 // FeatureManifest.yaml

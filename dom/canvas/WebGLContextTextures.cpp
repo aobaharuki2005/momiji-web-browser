@@ -29,6 +29,11 @@
 #include "nsReadableUtils.h"
 #include "nsString.h"
 
+// needed to check if current OS is lower than 10.7
+#if defined(MOZ_WIDGET_COCOA)
+#  include "nsCocoaFeatures.h"
+#endif
+
 namespace mozilla {
 
 /*virtual*/

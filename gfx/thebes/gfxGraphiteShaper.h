@@ -14,6 +14,16 @@
 struct gr_face;
 struct gr_font;
 struct gr_segment;
+#if !defined(MAC_OS_X_VERSION_10_7) || \
+    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
+//10.6 thread local stuff
+#define GFX_FONT_USE_THREAD_LOCAL 0
+static pthread_key_t lckey_shaper, lckey_fontEntry;
+static pthread_once_t lckey_shaper_once = PTHREAD_ONCE_INIT; 
+static pthread_once_t lckey_fontEntry_once = PTHREAD_ONCE_INIT; 
+#else
+#define GFX_FONT_USE_THREAD_LOCAL 1
+#endif
 
 class gfxGraphiteShaper : public gfxFontShaper {
  public:
@@ -58,9 +68,24 @@ class gfxGraphiteShaper : public gfxFontShaper {
     // remain valid throughout our lifetime
     gfxFont* MOZ_NON_OWNING_REF mFont;
   };
-
-  CallbackData mCallbackData;
+#ifndef GFX_FONT_USE_THREAD_LOCAL // 10.6
+  static void make_key(void) {
+      pthread_key_create(&lckey_shaper, NULL);
+  }
+  struct CallbackData* CallbackData();
+  static struct CallbackData* tl_GrGetAdvanceData(void) {
+      pthread_once(&lckey_shaper_once, make_key);
+      struct CallbackData *config = (struct CallbackData *)pthread_getspecific(lckey_shaper);
+      if (!config) {
+          config = new struct CallbackData();
+          pthread_setspecific(lckey_shaper, config);
+      }
+      return config;
+  }
+#else
   static thread_local CallbackData* tl_GrGetAdvanceData;
+#endif
+  struct CallbackData mCallbackData;
 
   bool mFallbackToSmallCaps;  // special fallback for the petite-caps case
 

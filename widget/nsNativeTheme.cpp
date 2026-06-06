@@ -141,6 +141,16 @@ bool nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame) {
                                            u"menu"_ns, eCaseMatters);
 }
 
+bool nsNativeTheme::IsPressedButton(nsIFrame* aFrame) {
+  ElementState state = GetContentState(aFrame, StyleAppearance::Toolbarbutton);
+  if (state.HasState(ElementState::DISABLED)) {
+    return false;
+  }
+
+  return IsOpenButton(aFrame) ||
+         state.HasAllStates(ElementState::ACTIVE | ElementState::HOVER);
+}
+
 bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
                                    nsIFrame* aFrame,
                                    StyleAppearance aAppearance) {
@@ -214,6 +224,30 @@ bool nsNativeTheme::IsVerticalMeter(nsIFrame* aFrame) {
       return !aFrame->GetWritingMode().IsVertical();
   }
   MOZ_ASSERT_UNREACHABLE("unexpected -moz-orient value");
+  return false;
+}
+
+// menupopup:
+bool nsNativeTheme::IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent) {
+  if (!aFrame) return false;
+
+  nsIContent* parentContent = aFrame->GetContent()->GetParent();
+  if (!parentContent || !parentContent->IsXULElement(nsGkAtoms::menu))
+    return false;
+
+  nsIFrame* parent = aFrame;
+  while ((parent = parent->GetParent())) {
+    if (parent->GetContent() == parentContent) {
+      if (aLeftOfParent) {
+        LayoutDeviceIntRect selfBounds, parentBounds;
+        selfBounds = aFrame->GetNearestWidget()->GetScreenBounds();
+        parentBounds = parent->GetNearestWidget()->GetScreenBounds();
+        *aLeftOfParent = selfBounds.X() < parentBounds.X();
+      }
+      return true;
+    }
+  }
+
   return false;
 }
 

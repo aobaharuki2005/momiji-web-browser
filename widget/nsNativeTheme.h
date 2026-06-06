@@ -67,9 +67,16 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
 
   bool IsButtonTypeMenu(nsIFrame* aFrame);
 
+  bool IsSelectedButton(nsIFrame* aFrame) {
+    return CheckBooleanAttr(aFrame, nsGkAtoms::checked) ||
+           CheckBooleanAttr(aFrame, nsGkAtoms::selected);
+  }
+
   bool IsOpenButton(nsIFrame* aFrame) {
     return CheckBooleanAttr(aFrame, nsGkAtoms::open);
   }
+
+  bool IsPressedButton(nsIFrame* aFrame);
 
   // progressbar:
   bool IsVerticalProgress(nsIFrame* aFrame);
@@ -77,6 +84,8 @@ class nsNativeTheme : public nsITimerCallback, public nsINamed {
   // meter:
   bool IsVerticalMeter(nsIFrame* aFrame);
 
+  // menupopup:
+  bool IsSubmenu(nsIFrame* aFrame, bool* aLeftOfParent);
   static bool CheckBooleanAttr(nsIFrame* aFrame, nsAtom* aAtom);
 
   // Helpers for progressbar.

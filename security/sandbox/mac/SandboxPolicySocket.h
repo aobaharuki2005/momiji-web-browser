@@ -14,7 +14,18 @@ static const char SandboxPolicySocket[] = R"SANDBOX_LITERAL(
   (define app-path (param "APP_PATH"))
   (define crashPort (param "CRASH_PORT"))
   (define home-path (param "HOME_PATH"))
+  (define macosVersion (string->number (param "MAC_OS_VERSION")))
   (define isRosettaTranslated (param "IS_ROSETTA_TRANSLATED"))
+
+  ;; OS X 10.7 (Lion) compatibility
+  ; see https://opensource.apple.com/source/WebKit2/WebKit2-7601.3.9/Resources/PlugInSandboxProfiles/com.apple.WebKit.plugin-common.sb.auto.html
+  (if (<= macosVersion 1007)
+    (begin
+    (define ipc-posix-shm* ipc-posix-shm)
+    (define ipc-posix-shm-read-data ipc-posix-shm)
+    (define ipc-posix-shm-read* ipc-posix-shm)
+    (define ipc-posix-shm-write-data ipc-posix-shm)))
+
 
   (define (moz-deny feature)
     (if (string=? should-log "TRUE")
@@ -30,23 +41,34 @@ static const char SandboxPolicySocket[] = R"SANDBOX_LITERAL(
 
   (moz-deny default)
   ; These are not included in (deny default)
-  (moz-deny process-info*)
-  (moz-deny nvram*)
-  (moz-deny file-map-executable)
+  (if (>= macosVersion 1009)
+    (moz-deny process-info*))
+  ; This isn't available in some older macOS releases.
+  (if (defined? 'nvram*)
+    (moz-deny nvram*))
+  ; This property requires macOS 10.10+
+  (if (defined? 'file-map-executable)
+    (moz-deny file-map-executable))
 
   (if (string=? should-log "TRUE")
     (debug deny))
 
   ; Needed for things like getpriority()/setpriority()/pthread_setname()
-  (allow process-info-pidinfo process-info-setcontrol (target self))
+  (if (>= macosVersion 1009)  
+  (allow process-info-pidinfo process-info-setcontrol (target self)))
 
-  (if (string=? isRosettaTranslated "TRUE")
-    (allow file-map-executable (subpath "/private/var/db/oah")))
-
-  (allow file-map-executable file-read*
-    (subpath "/System/Library")
-    (subpath "/usr/lib")
-    (subpath app-path))
+  (if (defined? 'file-map-executable)
+    (begin
+      (if (string=? isRosettaTranslated "TRUE")
+        (allow file-map-executable (subpath "/private/var/db/oah")))
+      (allow file-map-executable file-read*
+        (subpath "/System/Library")
+        (subpath "/usr/lib")
+        (subpath app-path)))
+    (allow file-read*
+      (subpath "/System/Library")
+      (subpath "/usr/lib")
+      (subpath app-path)))
 
   (if (string? crashPort)
     (allow mach-lookup (global-name crashPort)))
@@ -93,8 +115,10 @@ static const char SandboxPolicySocket[] = R"SANDBOX_LITERAL(
     (local udp))
 
   ; Distributed notifications memory.
-  (allow ipc-posix-shm-read-data
-    (ipc-posix-name "apple.shm.notification_center"))
+  (if (<= macosVersion 1007)
+   (allow ipc-posix-shm) 
+   (allow ipc-posix-shm-read-data
+    (ipc-posix-name "apple.shm.notification_center")))
 
   ; Notification data from the security server database.
   (allow ipc-posix-shm
@@ -122,17 +146,23 @@ static const char SandboxPolicySocket[] = R"SANDBOX_LITERAL(
     (literal "/var")
     (literal "/var/run"))
 
-  ; Certificate databases
-  (allow file-read*
-    (subpath "/private/var/db/mds")
-    (subpath "/Library/Keychains")
-    (subpath "/System/Library/Keychains")
-    (subpath "/System/Library/Security")
-    (home-subpath "/Library/Keychains"))
+   ; Certificate databases.
+   (allow file-read*
+     (literal "/Library/Preferences/com.apple.security.plist")
+     (home-literal "/Library/Preferences/com.apple.security.plist")
+     ; https://crbug.com/1024000
+     (home-literal "/Library/Preferences/com.apple.security.revocation.plist")
+     (subpath "/Library/Keychains")
+     (subpath "/System/Library/Keychains")
+     (subpath "/System/Library/Security")
+     (subpath "/private/var/db/mds")
+     (home-literal "/Library/Keychains")
+   )
 
   ; For enabling TCSM
+ (if (> macosVersion 1009) 
   (allow sysctl-write
-    (sysctl-name "kern.tcsm_enable"))
+    (sysctl-name "kern.tcsm_enable")))
 )SANDBOX_LITERAL";
 
 }  // namespace mozilla

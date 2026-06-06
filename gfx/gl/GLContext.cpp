@@ -544,7 +544,11 @@ bool GLContext::InitImpl() {
   MOZ_ASSERT(majorVer < 10);
   MOZ_ASSERT(minorVer < 10);
   mVersion = majorVer * 100 + minorVer * 10;
-  if (mVersion < 200) return false;
+  if (mVersion < 200) {
+    // Mac OSX 10.6/10.7 machines with Intel GPUs claim only OpenGL 1.4 but
+    // have all the GL2+ extensions that we need.
+    mVersion = 200;
+  }
 
   {
     const SymLoadStruct allSymbols[] = {
@@ -682,6 +686,7 @@ bool GLContext::InitImpl() {
       "NVIDIA Tegra",
       "Android Emulator",
       "Gallium 0.4 on llvmpipe",
+      "Intel HD Graphics 3000 OpenGL Engine",
       "Microsoft Basic Render Driver",
       "Samsung Xclipse",
       "Unknown"};
@@ -906,12 +911,30 @@ bool GLContext::InitImpl() {
     int maxTexSize = INT32_MAX;
     int maxCubeSize = INT32_MAX;
 #ifdef XP_MACOSX
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1544446
-    // Mojave exposes 16k textures, but gives FRAMEBUFFER_UNSUPPORTED for any
-    // 16k*16k FB except rgba8 without depth/stencil.
-    // The max supported sizes changes based on involved formats.
-    // (RGBA32F more restrictive than RGBA16F)
-    maxTexSize = 8192;
+    if (!nsCocoaFeatures::IsAtLeastVersion(10, 12)) {
+      if (mVendor == GLVendor::Intel) {
+        // see bug 737182 for 2D textures, bug 684882 for cube map textures.
+        maxTexSize = 4096;
+        maxCubeSize = 512;
+      } else if (mVendor == GLVendor::NVIDIA) {
+        if (nsCocoaFeatures::OnMountainLionOrLater()) {
+          // See bug 879656.  8192 fails, 8191 works.
+          mMaxTextureSize = std::min(mMaxTextureSize, 8191);
+          mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 8191);
+        } else {
+          // See bug 877949.
+          mMaxTextureSize = std::min(mMaxTextureSize, 4096);
+          mMaxRenderbufferSize = std::min(mMaxRenderbufferSize, 4096);
+        }
+      }
+    } else {
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1544446
+      // Mojave exposes 16k textures, but gives FRAMEBUFFER_UNSUPPORTED for any
+      // 16k*16k FB except rgba8 without depth/stencil.
+      // The max supported sizes changes based on involved formats.
+      // (RGBA32F more restrictive than RGBA16F)
+      maxTexSize = 8192;
+    }
 #endif
 #ifdef MOZ_X11
     if (mVendor == GLVendor::Nouveau) {
@@ -1798,6 +1821,15 @@ void GLContext::InitExtensions() {
     }
 
 #ifdef XP_MACOSX
+    // Bug 1009642: On OSX Mavericks (10.9), the driver for Intel HD
+    // 3000 appears to be buggy WRT updating sub-images of S3TC
+    // textures with glCompressedTexSubImage2D. Works on Intel HD 4000
+    // and Intel HD 5000/Iris that I tested.
+    // Bug 1124996: Appears to be the same on OSX Yosemite (10.10)
+    if (Renderer() == GLRenderer::IntelHD3000) {
+      MarkExtensionUnsupported(EXT_texture_compression_s3tc);
+    }
+
     // OSX supports EXT_texture_sRGB in Legacy contexts, but not in Core
     // contexts. Though EXT_texture_sRGB was included into GL2.1, it *excludes*
     // the interactions with s3tc. Strictly speaking, you must advertize support

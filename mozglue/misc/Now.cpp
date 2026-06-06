@@ -22,14 +22,64 @@ namespace mozilla {
 #  include <sys/types.h>
 #  include <mach/mach_time.h>
 
-static constexpr uint64_t kNSperMS = 1000000;
+const uint64_t kNSperMS = 1000000;
+#if !defined(MAC_OS_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_12
+
+#  include <mach/mach.h>
+#  include <mach/clock.h>
+    //taken from https://github.com/ChisholmKyle/PosixMachTiming/
+    /* timing struct for osx */
+    typedef struct RoTimingMach {
+        mach_timebase_info_data_t timebase;
+        clock_serv_t cclock;
+    } RoTimingMach;
+
+    /* internal timing struct for osx */
+    static RoTimingMach ro_timing_mach_g;
+
+    /* mach clock port */
+    static mach_port_t clock_port;
+
+    /* emulate posix clock_gettime */
+    static inline int clock_gettime_missing (clockid_t id, struct timespec *tspec)
+    {
+        int retval = -1;
+        mach_timespec_t mts;
+        if (id == CLOCK_REALTIME) {
+            retval = clock_get_time (ro_timing_mach_g.cclock, &mts);
+            if (retval == 0 && tspec != NULL) {
+                tspec->tv_sec = mts.tv_sec;
+                tspec->tv_nsec = mts.tv_nsec;
+            }
+        } else if (id == CLOCK_MONOTONIC) {
+            retval = clock_get_time (clock_port, &mts);
+            if (retval == 0 && tspec != NULL) {
+                tspec->tv_sec = mts.tv_sec;
+                tspec->tv_nsec = mts.tv_nsec;
+            }
+        } else {}
+        return retval;
+    }
+
+
+#endif
 
 Maybe<uint64_t> NowExcludingSuspendMs() {
+#if !defined(MAC_OS_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_12
+  struct timespec ts = {0};
+  return Some(clock_gettime_missing(CLOCK_UPTIME_RAW, &ts)/ kNSperMS);
+#else
   return Some(clock_gettime_nsec_np(CLOCK_UPTIME_RAW) / kNSperMS);
+#endif
 }
 
 Maybe<uint64_t> NowIncludingSuspendMs() {
+#if !defined(MAC_OS_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_12
+  struct timespec ts = {0};
+  return Some(clock_gettime_missing(CLOCK_MONOTONIC_RAW, &ts)/ kNSperMS);
+#else
   return Some(clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW) / kNSperMS);
+#endif
 }
 
 #elif defined(XP_WIN)
@@ -71,7 +121,7 @@ Maybe<uint64_t> NowIncludingSuspendMs() {
 // Number of nanoseconds in a millisecond.
 static constexpr uint64_t kNSperMS = 1000000;
 
-static uint64_t TimespecToMilliseconds(struct timespec aTs) {
+uint64_t TimespecToMilliseconds(struct timespec aTs) {
   return aTs.tv_sec * 1000 + aTs.tv_nsec / kNSperMS;
 }
 
@@ -108,4 +158,4 @@ Maybe<uint64_t> NowIncludingSuspendMs() { return Nothing(); }
 
 #endif
 
-}  // namespace mozilla
+};  // namespace mozilla

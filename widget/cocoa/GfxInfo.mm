@@ -487,6 +487,12 @@ const nsTArray<RefPtr<GfxDriverInfo>>& GfxInfo::GetGfxDriverInfo() {
         OperatingSystem::MacOS, DeviceFamily::IntelWebRenderBlocked,
         nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
         "FEATURE_FAILURE_INTEL_GEN5_OR_OLDER");
+
+    // Intel HD3000 disabled due to bug 1661505
+    IMPLEMENT_MAC_DRIVER_BLOCKLIST(
+        OperatingSystem::MacOS, DeviceFamily::IntelSandyBridge,
+        nsIGfxInfo::FEATURE_WEBRENDER, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
+        "FEATURE_FAILURE_INTEL_MAC_HD3000_NO_WEBRENDER");
   }
   return *sDriverInfo;
 }
@@ -520,9 +526,6 @@ nsresult GfxInfo::GetFeatureStatusImpl(
         case OperatingSystem::MacOS10_5:
         case OperatingSystem::MacOS10_6:
         case OperatingSystem::MacOS10_7:
-          *aStatus = nsIGfxInfo::FEATURE_BLOCKED_OS_VERSION;
-          aFailureId = "FEATURE_FAILURE_CANVAS_MACOS_VERSION";
-          break;
         default:
           *aStatus = nsIGfxInfo::FEATURE_STATUS_OK;
           break;

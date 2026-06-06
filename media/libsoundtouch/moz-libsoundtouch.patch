@@ -29,19 +29,35 @@ diff -u /src/FIRFilter.cpp /src/FIRFilter.cpp
 diff -u /src/STTypes.h /src/STTypes.h
 --- /src/STTypes.h
 +++ /src/STTypes.h
-@@ -47,11 +47,7 @@ typedef unsigned long   ulong;
- #define SOUNDTOUCH_ALIGN_POINTER_16(x)      ( ( (ulongptr)(x) + 15 ) & ~(ulongptr)15 )
+@@ -50,6 +50,16 @@ typedef unsigned long   ulong;
+ #include "soundtouch_config.h"
  
  
--#if (defined(__GNUC__) && !defined(ANDROID))
--    // In GCC, include soundtouch_config.h made by config scritps.
--    // Skip this in Android compilation that uses GCC but without configure scripts.
--    #include "soundtouch_config.h"
--#endif
-+#include "soundtouch_config.h"
- 
- 
++#if defined(WIN32)
++#if defined(BUILDING_SOUNDTOUCH)
++#define SOUNDTOUCH_API __declspec(dllexport)
++#else
++#define SOUNDTOUCH_API __declspec(dllimport)
++#endif
++#else
++#define SOUNDTOUCH_API
++#endif
++
  namespace soundtouch
+ {
+     /// Max allowed number of channels. This is not a hard limit but to have some
+diff -u /src/SoundTouch.h /src/SoundTouch.h
+--- /src/SoundTouch.h
++++ /src/SoundTouch.h
+@@ -141,7 +141,7 @@
+ ///   tempo/pitch/rate/samplerate settings.
+ #define SETTING_NOMINAL_OUTPUT_SEQUENCE		7
+ 
+-class SoundTouch : public FIFOProcessor
++class SOUNDTOUCH_API SoundTouch : public FIFOProcessor
+ {
+ private:
+     /// Rate transposer class instance
 diff -u /src/TDStretch.cpp /src/TDStretch.cpp
 --- /src/TDStretch.cpp
 +++ /src/TDStretch.cpp

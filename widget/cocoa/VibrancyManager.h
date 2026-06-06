@@ -65,9 +65,29 @@ class VibrancyManager {
   bool UpdateVibrantRegion(VibrancyType aType,
                            const LayoutDeviceIntRegion& aRegion);
 
-  void PrefChanged();
+ 
+  LayoutDeviceIntRegion GetUnionOfVibrantRegions() const;
 
- protected:
+  /**
+   * Check whether the operating system supports vibrancy at all.
+   * You may only create a VibrancyManager instance if this returns true.
+   * @return Whether VibrancyManager can be used on this OS.
+   */
+  static bool SystemSupportsVibrancy();
+
+  /**
+   * Create an NSVisualEffectView for the specified vibrancy type. The return
+   * value is not autoreleased. We return an object of type NSView* because we
+   * compile with an SDK that does not contain a definition for
+   * NSVisualEffectView.
+   * @param aIsContainer Whether this NSView will have child views. This value
+   *                     affects hit testing: Container views will pass through
+   *                     hit testing requests to their children, and leaf views
+   *                     will be transparent to hit testing.
+   */
+  static NSView* CreateEffectView(VibrancyType aType, BOOL aIsContainer = NO);
+
+protected:
   const nsCocoaWindow& mCoordinateConverter;
   NSView* mContainerView;
   EnumeratedArray<VibrancyType, UniquePtr<ViewRegion>> mVibrantRegions;

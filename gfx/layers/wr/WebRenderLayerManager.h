@@ -160,6 +160,7 @@ class WebRenderLayerManager final : public WindowRenderer {
   WebRenderScrollData& GetScrollData() { return mScrollData; }
 
   void WrUpdated();
+  void WindowOverlayChanged() { mWindowOverlayChanged = true; }
   nsIWidget* GetWidget() { return mWidget; }
 
   uint32_t StartFrameTimeRecording(int32_t aBufferSize) override;
@@ -237,6 +238,7 @@ class WebRenderLayerManager final : public WindowRenderer {
   // APZ to do it's job
   WebRenderScrollData mScrollData;
 
+  bool mWindowOverlayChanged;
   bool mNeedsComposite;
   bool mIsFirstPaint;
   bool mDestroyed;

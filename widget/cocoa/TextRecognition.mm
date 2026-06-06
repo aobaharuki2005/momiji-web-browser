@@ -2,6 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#if !defined(MAC_OS_VERSION_10_9) || MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_VERSION_10_9
+#include <math.h>
+extern "C" {
+  void __sincospif(float __x, float *__sinp, float *__cosp);
+  void __sincospi(double __x, double *__sinp, double *__cosp);
+} 
+#endif // !defined(MAC_OS_VERSION_10_9) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_10_9
+
 #import <Vision/Vision.h>
 
 #include "mozilla/dom/Promise.h"
@@ -21,100 +29,100 @@ auto TextRecognition::DoFindText(gfx::DataSourceSurface& aSurface,
                                  const nsTArray<nsCString>& aLanguages)
     -> RefPtr<NativePromise> {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
+  if (@available(macOS 10.15, *)) {
+    // TODO - Is this the most efficient path? Maybe we can write a new
+    // CreateCGImageFromXXX that enables more efficient marshalling of the data.
+    CGImageRef imageRef = nullptr;
+    nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(&aSurface, &imageRef);
+    if (NS_FAILED(rv) || !imageRef) {
+      return NativePromise::CreateAndReject("Failed to create CGImage"_ns,
+                                            __func__);
+    }
 
-  // TODO - Is this the most efficient path? Maybe we can write a new
-  // CreateCGImageFromXXX that enables more efficient marshalling of the data.
-  CGImageRef imageRef = nullptr;
-  nsresult rv = nsCocoaUtils::CreateCGImageFromSurface(&aSurface, &imageRef);
-  if (NS_FAILED(rv) || !imageRef) {
-    return NativePromise::CreateAndReject("Failed to create CGImage"_ns,
-                                          __func__);
-  }
+    auto promise = MakeRefPtr<NativePromise::Private>(__func__);
 
-  auto promise = MakeRefPtr<NativePromise::Private>(__func__);
+    NSMutableArray* recognitionLanguages = [[NSMutableArray alloc] init];
+    for (const auto& locale : aLanguages) {
+      [recognitionLanguages addObject:nsCocoaUtils::ToNSString(locale)];
+    }
 
-  NSMutableArray* recognitionLanguages = [[NSMutableArray alloc] init];
-  for (const auto& locale : aLanguages) {
-    [recognitionLanguages addObject:nsCocoaUtils::ToNSString(locale)];
-  }
+    NS_DispatchBackgroundTask(
+        NS_NewRunnableFunction(
+            __func__,
+            [promise, imageRef, recognitionLanguages] {
+              auto unrefImage = MakeScopeExit([&] {
+                ::CGImageRelease(imageRef);
+                [recognitionLanguages release];
+              });
 
-  NS_DispatchBackgroundTask(
-      NS_NewRunnableFunction(
-          __func__,
-          [promise, imageRef, recognitionLanguages] {
-            auto unrefImage = MakeScopeExit([&] {
-              ::CGImageRelease(imageRef);
-              [recognitionLanguages release];
-            });
+              dom::TextRecognitionResult result;
+              dom::TextRecognitionResult* pResult = &result;
 
-            dom::TextRecognitionResult result;
-            dom::TextRecognitionResult* pResult = &result;
+              // Define the request to use, which also handles the result. It will
+              // be run below directly in this thread. After creating this
+              // request.
+              VNRecognizeTextRequest* textRecognitionRequest =
+                  [[VNRecognizeTextRequest alloc] initWithCompletionHandler:^(
+                                                      VNRequest* _Nonnull request,
+                                                      NSError* _Nullable error) {
+                    NSArray<VNRecognizedTextObservation*>* observations =
+                        request.results;
 
-            // Define the request to use, which also handles the result. It will
-            // be run below directly in this thread. After creating this
-            // request.
-            VNRecognizeTextRequest* textRecognitionRequest =
-                [[VNRecognizeTextRequest alloc] initWithCompletionHandler:^(
-                                                    VNRequest* _Nonnull request,
-                                                    NSError* _Nullable error) {
-                  NSArray<VNRecognizedTextObservation*>* observations =
-                      request.results;
+                    [observations enumerateObjectsUsingBlock:^(
+                                      VNRecognizedTextObservation* _Nonnull obj,
+                                      NSUInteger idx, BOOL* _Nonnull stop) {
+                      // Requests the n top candidates for a recognized text
+                      // string.
+                      VNRecognizedText* recognizedText =
+                          [obj topCandidates:1].firstObject;
 
-                  [observations enumerateObjectsUsingBlock:^(
-                                    VNRecognizedTextObservation* _Nonnull obj,
-                                    NSUInteger idx, BOOL* _Nonnull stop) {
-                    // Requests the n top candidates for a recognized text
-                    // string.
-                    VNRecognizedText* recognizedText =
-                        [obj topCandidates:1].firstObject;
+                      // https://developer.apple.com/documentation/vision/vnrecognizedtext?language=objc
+                      auto& quad = *pResult->quads().AppendElement();
+                      CopyNSStringToXPCOMString(recognizedText.string,
+                                                quad.string());
+                      quad.confidence() = recognizedText.confidence;
 
-                    // https://developer.apple.com/documentation/vision/vnrecognizedtext?language=objc
-                    auto& quad = *pResult->quads().AppendElement();
-                    CopyNSStringToXPCOMString(recognizedText.string,
-                                              quad.string());
-                    quad.confidence() = recognizedText.confidence;
-
-                    auto ToImagePoint = [](CGPoint aPoint) -> ImagePoint {
-                      return {static_cast<float>(aPoint.x),
-                              static_cast<float>(aPoint.y)};
-                    };
-                    *quad.points().AppendElement() =
-                        ToImagePoint(obj.bottomLeft);
-                    *quad.points().AppendElement() = ToImagePoint(obj.topLeft);
-                    *quad.points().AppendElement() = ToImagePoint(obj.topRight);
-                    *quad.points().AppendElement() =
-                        ToImagePoint(obj.bottomRight);
+                      auto ToImagePoint = [](CGPoint aPoint) -> ImagePoint {
+                        return {static_cast<float>(aPoint.x),
+                                static_cast<float>(aPoint.y)};
+                      };
+                      *quad.points().AppendElement() =
+                          ToImagePoint(obj.bottomLeft);
+                      *quad.points().AppendElement() = ToImagePoint(obj.topLeft);
+                      *quad.points().AppendElement() = ToImagePoint(obj.topRight);
+                      *quad.points().AppendElement() =
+                          ToImagePoint(obj.bottomRight);
+                    }];
                   }];
-                }];
 
-            textRecognitionRequest.recognitionLevel =
-                VNRequestTextRecognitionLevelAccurate;
-            textRecognitionRequest.recognitionLanguages = recognitionLanguages;
-            textRecognitionRequest.usesLanguageCorrection = true;
+              textRecognitionRequest.recognitionLevel =
+                  VNRequestTextRecognitionLevelAccurate;
+              textRecognitionRequest.recognitionLanguages = recognitionLanguages;
+              textRecognitionRequest.usesLanguageCorrection = true;
 
-            // Send out the request. This blocks execution of this thread with
-            // an expensive CPU call.
-            NSError* error = nil;
-            VNImageRequestHandler* requestHandler =
-                [[[VNImageRequestHandler alloc] initWithCGImage:imageRef
-                                                        options:@{}]
-                    autorelease];
+              // Send out the request. This blocks execution of this thread with
+              // an expensive CPU call.
+              NSError* error = nil;
+              VNImageRequestHandler* requestHandler =
+                  [[[VNImageRequestHandler alloc] initWithCGImage:imageRef
+                                                          options:@{}]
+                      autorelease];
 
-            [requestHandler performRequests:@[ textRecognitionRequest ]
-                                      error:&error];
-            if (error != nil) {
-              promise->Reject(
-                  nsPrintfCString(
-                      "Failed to perform text recognition request (%ld)\n",
-                      error.code),
-                  __func__);
-            } else {
-              promise->Resolve(std::move(result), __func__);
-            }
-          }),
-      NS_DISPATCH_EVENT_MAY_BLOCK);
-  return promise;
-
+              [requestHandler performRequests:@[ textRecognitionRequest ]
+                                        error:&error];
+              if (error != nil) {
+                promise->Reject(
+                    nsPrintfCString(
+                        "Failed to perform text recognition request (%ld)\n",
+                        error.code),
+                    __func__);
+              } else {
+                promise->Resolve(std::move(result), __func__);
+              }
+            }),
+        NS_DISPATCH_EVENT_MAY_BLOCK);
+    return promise;
+  }
   NS_OBJC_END_TRY_IGNORE_BLOCK
 }
 

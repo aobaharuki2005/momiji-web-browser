@@ -449,6 +449,13 @@ body {
   }
 }
 
+@media (-moz-platform: macos) {
+  #titlebar-fullscreen-button {
+    appearance: auto;
+    -moz-default-appearance: -moz-mac-fullscreen-button;
+  }
+}
+
 /* Menu bar */
 
 #toolbar-menubar {

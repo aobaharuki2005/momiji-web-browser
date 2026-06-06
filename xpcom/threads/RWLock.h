@@ -180,7 +180,7 @@ typedef BaseAutoTryWriteLock<RWLock> AutoTryWriteLock;
 // calls to WriteLock() and WriteUnlock().
 typedef BaseAutoWriteLock<RWLock> AutoWriteLock;
 
-class MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS MOZ_CAPABILITY("rwlock")
+class  MOZ_CAPABILITY("rwlock")
     StaticRWLock {
  public:
   // In debug builds, check that mLock is initialized for us as we expect by

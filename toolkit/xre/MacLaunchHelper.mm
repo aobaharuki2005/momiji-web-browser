@@ -40,13 +40,23 @@ static void LaunchTask(NSString* aPath, NSArray* aArguments) {
 
   @try {
     NSTask* task = [[NSTask alloc] init];
-    [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
-    if (aArguments) {
-      [task setArguments:aArguments];
+    if (@available(macOS 10.13, *)) {
+      [task setExecutableURL:[NSURL fileURLWithPath:aPath]];
+      if (aArguments) {
+        [task setArguments:aArguments];
+      }
+      [task launchAndReturnError:nil];
+    } else {
+      NSArray* arguments = aArguments;
+      if (!arguments) {
+        arguments = @[];
+      }
+      task = [NSTask launchedTaskWithLaunchPath:aPath arguments:arguments];
     }
-    [task launchAndReturnError:nil];
     [task waitUntilExit];
-    [task release];
+    if (@available(macOS 10.13, *)) {
+      [task release];
+    }
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);
   }
@@ -77,29 +87,37 @@ void LaunchMacAppWithBundle(NSString* aBundlePath, NSArray* aArguments) {
     StripQuarantineBit(launchPath);
     RegisterAppWithLaunchServices(launchPath);
 
+    if(@available(macOS 10.15, *)) {
     // We use NSWorkspace to register the application into the
     // `TALAppsToRelaunchAtLogin` list and allow for macOS session resume.
     // This API only works with `.app`s.
     __block dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
-    NSWorkspaceOpenConfiguration* config =
-        [NSWorkspaceOpenConfiguration configuration];
-    [config setArguments:aArguments];
-    [config setCreatesNewApplicationInstance:YES];
-    [config setEnvironment:[[NSProcessInfo processInfo] environment]];
+      NSWorkspaceOpenConfiguration* config =
+          [NSWorkspaceOpenConfiguration configuration];
+      [config setArguments:aArguments];
+      [config setCreatesNewApplicationInstance:YES];
+      [config setEnvironment:[[NSProcessInfo processInfo] environment]];
 
-    [[NSWorkspace sharedWorkspace]
-        openApplicationAtURL:[NSURL fileURLWithPath:launchPath]
-               configuration:config
-           completionHandler:^(NSRunningApplication* aChild, NSError* aError) {
-             if (aError) {
-               NSLog(@"LaunchMacApp: Failed to run application. Error: %@",
-                     aError);
-             }
-             dispatch_semaphore_signal(semaphore);
-           }];
+      [[NSWorkspace sharedWorkspace]
+          openApplicationAtURL:[NSURL fileURLWithPath:launchPath]
+                 configuration:config
+             completionHandler:^(NSRunningApplication* aChild, NSError* aError) {
+               if (aError) {
+                 NSLog(@"LaunchMacApp: Failed to run application. Error: %@",
+                       aError);
+               }
+               dispatch_semaphore_signal(semaphore);
+             }];
+      // We use a semaphore to wait for the application to launch.
+      dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    } else {
+      NSError *error=nil;
+      [[NSWorkspace sharedWorkspace] launchApplicationAtURL:[NSBundle mainBundle].bundleURL
+                                                    options:NSWorkspaceLaunchAsync|NSWorkspaceLaunchNewInstance
+                                              configuration:@{NSWorkspaceLaunchConfigurationArguments:aArguments, NSWorkspaceLaunchConfigurationEnvironment:[[NSProcessInfo processInfo] environment]}
+                                                      error:&error];
 
-    // We use a semaphore to wait for the application to launch.
-    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+      }
   } @catch (NSException* e) {
     NSLog(@"%@: %@", e.name, e.reason);
   }
@@ -116,11 +134,17 @@ void LaunchChildMac(int aArgc, char** aArgv, pid_t* aPid) {
     for (int i = 1; i < aArgc; i++) {
       [arguments addObject:[NSString stringWithUTF8String:aArgv[i]]];
     }
+
     NSTask* task = [[NSTask alloc] init];
-    [task setExecutableURL:[NSURL fileURLWithPath:launchPath]];
-    [task setArguments:arguments];
     NSError* error = nil;
-    [task launchAndReturnError:&error];
+    [task setArguments:arguments];
+    if(@available(macOS 10.13, *)) {
+      [task setExecutableURL:[NSURL fileURLWithPath:launchPath]];
+      [task launchAndReturnError:&error];
+    } else {
+      [task setLaunchPath:launchPath];
+      [task launch];
+    }
     if (!error && aPid) {
       *aPid = [task processIdentifier];
       [task waitUntilExit];

@@ -50,6 +50,16 @@ typedef unsigned long   ulong;
 #include "soundtouch_config.h"
 
 
+#if defined(WIN32)
+#if defined(BUILDING_SOUNDTOUCH)
+#define SOUNDTOUCH_API __declspec(dllexport)
+#else
+#define SOUNDTOUCH_API __declspec(dllimport)
+#endif
+#else
+#define SOUNDTOUCH_API
+#endif
+
 namespace soundtouch
 {
     /// Max allowed number of channels. This is not a hard limit but to have some

@@ -49,6 +49,9 @@ version = "1.0.0"
 [dependencies.once_cell]
 version = "1.5.2"
 
+[dependencies]
+whatsys = "0.3"
+
 [target.'cfg(any(target_os = "linux", target_os = "android", target_os = "macos", target_os = "ios", target_os = "freebsd"))'.dependencies.libc]
 version = "0.2"
 

@@ -19,13 +19,21 @@ using namespace mozilla::gfx;
 // standard font descriptors that we construct the first time they're needed
 CTFontDescriptorRef gfxCoreTextShaper::sFeaturesDescriptor[kMaxFontInstances];
 
+static CFStringRef sCTWritingDirectionAttributeName = nullptr;
+
+// See CTStringAttributes.h
+enum {
+    kMyCTWritingDirectionEmbedding = (0 << 1),
+    kMyCTWritingDirectionOverride = (1 << 1)
+};
+
 // Helper to create a CFDictionary with the right attributes for shaping our
 // text, including imposing the given directionality.
 CFDictionaryRef gfxCoreTextShaper::CreateAttrDict(bool aRightToLeft) {
   // Because we always shape unidirectional runs, and may have applied
   // directional overrides, we want to force a direction rather than
   // allowing CoreText to do its own unicode-based bidi processing.
-  SInt16 dirOverride = kCTWritingDirectionOverride |
+  SInt16 dirOverride = kMyCTWritingDirectionOverride |
                        (aRightToLeft ? kCTWritingDirectionRightToLeft
                                      : kCTWritingDirectionLeftToRight);
   CFNumberRef dirNumber =
@@ -33,12 +41,25 @@ CFDictionaryRef gfxCoreTextShaper::CreateAttrDict(bool aRightToLeft) {
   CFArrayRef dirArray = ::CFArrayCreate(
       kCFAllocatorDefault, (const void**)&dirNumber, 1, &kCFTypeArrayCallBacks);
   ::CFRelease(dirNumber);
-  CFTypeRef attrs[] = {kCTFontAttributeName, kCTWritingDirectionAttributeName};
+  CFTypeRef attrs[] = {kCTFontAttributeName, sCTWritingDirectionAttributeName};
   CFTypeRef values[] = {mCTFont[0], dirArray};
   CFDictionaryRef attrDict = ::CFDictionaryCreate(
       kCFAllocatorDefault, attrs, values, std::size(attrs),
       &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
   ::CFRelease(dirArray);
+  return attrDict;
+}
+
+CFDictionaryRef
+gfxCoreTextShaper::CreateAttrDictWithoutDirection()
+{
+  CFTypeRef attrs[] = { kCTFontAttributeName };
+  CFTypeRef values[] = { mCTFont[0] };
+  CFDictionaryRef attrDict =
+      ::CFDictionaryCreate(kCFAllocatorDefault,
+                           attrs, values, std::size(attrs),
+                           &kCFTypeDictionaryKeyCallBacks,
+                           &kCFTypeDictionaryValueCallBacks);
   return attrDict;
 }
 
@@ -49,6 +70,16 @@ gfxCoreTextShaper::gfxCoreTextShaper(gfxMacFont* aFont)
   for (size_t i = 0; i < kMaxFontInstances; i++) {
     mCTFont[i] = nullptr;
   }
+  static bool sInitialized = false;
+  if (!sInitialized) {
+    CFStringRef* pstr = (CFStringRef*)
+        dlsym(RTLD_DEFAULT, "kCTWritingDirectionAttributeName");
+    if (pstr) {
+        sCTWritingDirectionAttributeName = *pstr;
+    }
+    sInitialized = true;
+  }
+
   // Create our default CTFontRef
   mCTFont[0] = CreateCTFontWithFeatures(
       aFont->GetAdjustedSize(), GetFeaturesDescriptor(kDefaultFeatures));
@@ -82,9 +113,76 @@ bool gfxCoreTextShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
   // CoreText to lay it out.
   bool isRightToLeft = aShapedText->IsRightToLeft();
   const UniChar* text = reinterpret_cast<const UniChar*>(aText);
+  uint32_t length = aLength;
 
-  CFStringRef stringObj = ::CFStringCreateWithCharactersNoCopy(
-      kCFAllocatorDefault, text, aLength, kCFAllocatorNull);
+  uint32_t startOffset;
+  CFStringRef stringObj;
+  CFDictionaryRef attrObj;
+
+  if (sCTWritingDirectionAttributeName) {
+      startOffset = 0;
+      stringObj = ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
+                                                       text, length,
+                                                       kCFAllocatorNull);
+    // Get an attributes dictionary suitable for shaping text in the
+    // current direction, creating it if necessary.
+    attrObj =
+        isRightToLeft ? mAttributesDictRTL : mAttributesDictLTR;
+    if (!attrObj) {
+      attrObj = CreateAttrDict(isRightToLeft);
+      (isRightToLeft ? mAttributesDictRTL : mAttributesDictLTR) = attrObj;
+    }
+  } else {
+      // OS is too old to support kCTWritingDirectionAttributeName:
+      // we need to bidi-wrap the text if the run is RTL,
+      // or if it is an LTR run but may contain (overridden) RTL chars
+      bool bidiWrap = isRightToLeft;
+      if (!bidiWrap && !aShapedText->TextIs8Bit()) {
+          uint32_t i;
+          for (i = 0; i < length; ++i) {
+              if (gfxFontUtils::PotentialRTLChar(aText[i])) {
+                  bidiWrap = true;
+                  break;
+              }
+          }
+      }
+     // If there's a possibility of any bidi, we wrap the text with
+     // direction overrides to ensure neutrals or characters that were
+     // bidi-overridden in HTML behave properly.
+     static const UniChar beginLTR[]    = { 0x202d, 0x20 };
+     static const UniChar beginRTL[]    = { 0x202e, 0x20 };
+     static const UniChar endBidiWrap[] = { 0x20, 0x2e, 0x202c };
+
+     if (bidiWrap) {
+         startOffset = isRightToLeft ? std::size(beginRTL)
+                                     : std::size(beginLTR);
+         CFMutableStringRef mutableString =
+             ::CFStringCreateMutable(kCFAllocatorDefault,
+                                     length + startOffset +
+                                         std::size(endBidiWrap));
+         ::CFStringAppendCharacters(mutableString,
+                                    isRightToLeft ? beginRTL : beginLTR,
+                                    startOffset);
+         ::CFStringAppendCharacters(mutableString, text, length);
+         ::CFStringAppendCharacters(mutableString, endBidiWrap,
+                                    std::size(endBidiWrap));
+         stringObj = mutableString;
+     } else {
+         startOffset = 0;
+         stringObj =
+             ::CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault,
+                                                  text, length,
+                                                  kCFAllocatorNull);
+     }
+
+     // Get an attributes dictionary suitable for shaping text,
+     // creating it if necessary. (This dict is not LTR-specific,
+     // but we use that field to store it anyway.)
+     if (!mAttributesDictLTR) {
+         mAttributesDictLTR = CreateAttrDictWithoutDirection();
+     }
+     attrObj = mAttributesDictLTR;
+  }
 
   // Figure out whether we should try to set the AAT small-caps feature:
   // examine OpenType tags for the requested style, and see if 'smcp' is
@@ -100,15 +198,6 @@ bool gfxCoreTextShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
   bool addSmallCaps = false;
   MergeFontFeatures(style, entry->mFeatureSettings, false, entry->FamilyName(),
                     false, handleFeatureTag, &addSmallCaps);
-
-  // Get an attributes dictionary suitable for shaping text in the
-  // current direction, creating it if necessary.
-  CFDictionaryRef attrObj =
-      isRightToLeft ? mAttributesDictRTL : mAttributesDictLTR;
-  if (!attrObj) {
-    attrObj = CreateAttrDict(isRightToLeft);
-    (isRightToLeft ? mAttributesDictRTL : mAttributesDictLTR) = attrObj;
-  }
 
   FeatureFlags featureFlags = kDefaultFeatures;
   if (IsBuggyIndicScript(aScript)) {
@@ -162,6 +251,10 @@ bool gfxCoreTextShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
   for (uint32_t runIndex = 0; runIndex < numRuns; runIndex++) {
     CTRunRef aCTRun = (CTRunRef)::CFArrayGetValueAtIndex(glyphRuns, runIndex);
     CFRange range = ::CTRunGetStringRange(aCTRun);
+    if (uint32_t(range.location + range.length) <= startOffset ||
+        range.location - startOffset >= aLength) {
+        continue;
+    }
     CFDictionaryRef runAttr = ::CTRunGetAttributes(aCTRun);
     if (runAttr != attrObj) {
       // If Core Text manufactured a new dictionary, this may indicate
@@ -174,7 +267,7 @@ bool gfxCoreTextShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
         // selector or join control that is otherwise unsupported,
         // we just ignore it.
         if (range.length == 1) {
-          char16_t ch = aText[range.location];
+          char16_t ch = aText[range.location - startOffset];
           if (gfxFontUtils::IsJoinControl(ch) ||
               gfxFontUtils::IsVarSelector(ch)) {
             continue;
@@ -185,7 +278,7 @@ bool gfxCoreTextShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
         break;
       }
     }
-    if (SetGlyphsFromRun(aShapedText, aOffset, aLength, aCTRun) != NS_OK) {
+    if (SetGlyphsFromRun(aShapedText, aOffset, aLength, aCTRun, startOffset) != NS_OK) {
       success = false;
       break;
     }
@@ -206,7 +299,7 @@ bool gfxCoreTextShaper::ShapeText(const char16_t* aText, uint32_t aOffset,
 
 nsresult gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText* aShapedText,
                                              uint32_t aOffset, uint32_t aLength,
-                                             CTRunRef aCTRun) {
+                                             CTRunRef aCTRun, int32_t aStringOffset) {
   typedef gfxShapedText::CompressedGlyph CompressedGlyph;
 
   int32_t direction = aShapedText->IsRightToLeft() ? -1 : 1;
@@ -228,8 +321,8 @@ nsresult gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText* aShapedText,
   // get the source string range within the CTLine's text
   CFRange stringRange = ::CTRunGetStringRange(aCTRun);
   // skip the run if it is entirely outside the actual range of the font run
-  if (stringRange.location + stringRange.length <= 0 ||
-      stringRange.location >= wordLength) {
+  if (stringRange.location + stringRange.length - aStringOffset <= 0 ||
+      stringRange.location - aStringOffset >= wordLength) {
     return NS_OK;
   }
 
@@ -454,14 +547,14 @@ nsresult gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText* aShapedText,
       while (charEnd >= 0 && charToGlyph[charEnd] == NO_GLYPH) {
         charEnd--;
       }
-      baseCharIndex = charEnd + stringRange.location + 1;
-      endCharIndex = charStart + stringRange.location + 1;
+      baseCharIndex = charEnd + stringRange.location - aStringOffset + 1;
+      endCharIndex = charStart + stringRange.location - aStringOffset + 1;
     } else {
       while (charEnd < stringRange.length && charToGlyph[charEnd] == NO_GLYPH) {
         charEnd++;
       }
-      baseCharIndex = charStart + stringRange.location;
-      endCharIndex = charEnd + stringRange.location;
+      baseCharIndex = charStart + stringRange.location - aStringOffset;
+      endCharIndex = charEnd + stringRange.location - aStringOffset;
     }
 
     // Then we check if the clump falls outside our actual string range; if so,

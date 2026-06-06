@@ -35,16 +35,21 @@ static dispatch_queue_t kNetworkMonitorQueue = nil;
 }
 
 + (BOOL)isOnQueueForType:(RTCDispatcherQueueType)dispatchType {
-  dispatch_queue_t targetQueue = [self dispatchQueueForType:dispatchType];
-  const char* targetLabel = dispatch_queue_get_label(targetQueue);
-  const char* currentLabel =
-      dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL);
+  //something wrong with <10.9 systems and this function, so we're gonna return.
+  if(@available(macOS 10.9, *)) {
+    dispatch_queue_t targetQueue = [self dispatchQueueForType:dispatchType];
+    const char* targetLabel = dispatch_queue_get_label(targetQueue);
+    const char* currentLabel =
+        dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL);
 
-  NSAssert(strlen(targetLabel) > 0, @"Label is required for the target queue.");
-  NSAssert(strlen(currentLabel) > 0,
-           @"Label is required for the current queue.");
+    NSAssert(strlen(targetLabel) > 0, @"Label is required for the target queue.");
+    NSAssert(strlen(currentLabel) > 0,
+             @"Label is required for the current queue.");
 
-  return strcmp(targetLabel, currentLabel) == 0;
+    return strcmp(targetLabel, currentLabel) == 0;
+  } else {
+    return true;
+  }
 }
 
 #pragma mark - Private

@@ -13,6 +13,7 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
   (define should-log (param "SHOULD_LOG"))
   (define app-path (param "APP_PATH"))
   (define app-binary-path (param "APP_BINARY_PATH"))
+  (define macosVersion (string->number (param "MAC_OS_VERSION")))
   (define crashPort (param "CRASH_PORT"))
   (define isRosettaTranslated (param "IS_ROSETTA_TRANSLATED"))
 
@@ -23,21 +24,33 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
 
   (moz-deny default)
   ; These are not included in (deny default)
-  (moz-deny process-info*)
-  (moz-deny nvram*)
-  (moz-deny file-map-executable)
+  (if (>= macosVersion 1009)  
+    (moz-deny process-info*))
+  ; This isn't available in some older macOS releases.
+  (if (defined? 'nvram*)
+    (moz-deny nvram*))
+  ; This property requires macOS 10.10+
+  (if (defined? 'file-map-executable)
+    (moz-deny file-map-executable))
 
   ; Needed for things like getpriority()/setpriority()/pthread_setname()
-  (allow process-info-pidinfo process-info-setcontrol (target self))
+  (if (>= macosVersion 1009)  
+  (allow process-info-pidinfo process-info-setcontrol (target self)))
 
-  (if (string=? isRosettaTranslated "TRUE")
-    (allow file-map-executable (subpath "/private/var/db/oah")))
-
-  (allow file-map-executable file-read*
-    (subpath "/System/Library")
-    (subpath "/usr/lib")
-    (subpath app-path)
-    (subpath app-binary-path))
+  (if (defined? 'file-map-executable)
+    (begin
+      (if (string=? isRosettaTranslated "TRUE")
+        (allow file-map-executable (subpath "/private/var/db/oah")))
+      (allow file-map-executable file-read*
+        (subpath "/System/Library")
+        (subpath "/usr/lib")
+        (subpath app-path)
+        (subpath app-binary-path)))
+    (allow file-read*
+      (subpath "/System/Library")
+      (subpath "/usr/lib")
+      (subpath app-path)
+      (subpath app-binary-path)))
 
   (if (string? crashPort)
     (allow mach-lookup (global-name crashPort)))
@@ -62,8 +75,12 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
 
 static const char SandboxPolicyUtilityMediaServiceAppleMediaAddend[] =
     R"SANDBOX_LITERAL(
-  ; For Utility AudioDecoder AppleMedia codecs (bug 1565575)
-  (allow mach-lookup (global-name "com.apple.audio.AudioComponentRegistrar"))
+  ; For Utility AudioDecoder AppleMedia codecs
+  (define macosVersion (string->number (param "MAC_OS_VERSION")))
+  (if (>= macosVersion 1013)
+   (allow mach-lookup
+    ; bug 1565575
+    (global-name "com.apple.audio.AudioComponentRegistrar")))
 )SANDBOX_LITERAL";
 
 }  // namespace mozilla

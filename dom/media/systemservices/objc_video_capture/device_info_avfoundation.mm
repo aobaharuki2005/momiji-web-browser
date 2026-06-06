@@ -189,9 +189,10 @@ void DeviceInfoAvFoundation::EnsureCapabilitiesMap() {
     return;
   }
 
-  for (AVCaptureDevice* device in [RTCCameraVideoCapturer
-           captureDevicesWithDeviceTypes:[RTCCameraVideoCapturer
-                                             defaultCaptureDeviceTypes]]) {
+  for (AVCaptureDevice* device in [RTCCameraVideoCapturer captureDevices]
+        /* //again, fuck you guys   
+        captureDevicesWithDeviceTypes:[RTCCameraVideoCapturer
+                                             defaultCaptureDeviceTypes]]*/) {
     std::string uniqueId = [NSString stdStringForString:device.uniqueID];
     std::string name = [NSString stdStringForString:device.localizedName];
     auto& [_, __, capabilities] = mDevicesAndCapabilities.emplace_back(

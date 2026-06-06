@@ -13,6 +13,20 @@
 #include "include/core/SkTypes.h"
 #include "include/private/base/SkTArray.h"
 
+//adopt commit for hopeful 10.6 port
+// https://github.com/google/skia/commit/3d9c73c1008260765ec4803629eea04b53d9fb7e
+#if defined(XP_DARWIN)
+#include <AvailabilityMacros.h>
+#endif
+#if !defined(MAC_OS_X_VERSION_10_7) || \
+    MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_X_VERSION_10_7
+#define SKSL_USE_THREAD_LOCAL 0
+#else
+#define SKSL_USE_THREAD_LOCAL 1
+#endif
+
+
+
 using SKSL_INT = int64_t;
 using SKSL_FLOAT = float;
 

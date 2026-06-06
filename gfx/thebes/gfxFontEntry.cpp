@@ -32,6 +32,23 @@
 
 #include <algorithm>
 
+#ifndef GFX_FONT_USE_THREAD_LOCAL //for 10.6
+static void make_key(void) {
+    pthread_key_create(&lckey_fontEntry, NULL);
+}
+
+gfxFontEntry *tl_grGetFontTableCallbackData(void) {
+    pthread_once(&lckey_fontEntry_once, make_key);
+    gfxFontEntry *config = (gfxFontEntry *)pthread_getspecific(lckey_fontEntry);
+    if (!config) {
+        pthread_setspecific(lckey_fontEntry, NULL);
+    }
+    return config;
+}
+#else //10.7 and higher
+static thread_local gfxFontEntry* tl_grGetFontTableCallbackData = nullptr;
+#endif
+
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::unicode;
@@ -468,14 +485,16 @@ hb_blob_t* gfxFontEntry::HBGetTable(hb_face_t* face, uint32_t aTag,
   return fontEntry->GetFontTable(aTag);
 }
 
-static thread_local gfxFontEntry* tl_grGetFontTableCallbackData = nullptr;
-
 class gfxFontEntryCallbacks {
  public:
   static tainted_gr<const void*> GrGetTable(
       rlbox_sandbox_gr& sandbox, tainted_gr<const void*> /* aAppFaceHandle */,
       tainted_gr<unsigned int> aName, tainted_gr<unsigned int*> aLen) {
+#ifdef GFX_FONT_USE_THREAD_LOCAL
     gfxFontEntry* fontEntry = tl_grGetFontTableCallbackData;
+#else //10.6
+    gfxFontEntry* fontEntry = tl_grGetFontTableCallbackData();
+#endif
     *aLen = 0;
     tainted_gr<const void*> ret = nullptr;
 
@@ -579,8 +598,11 @@ tainted_opaque_gr<gr_face*> gfxFontEntry::GetGrFace() {
     p_faceOps->size = sizeof(*p_faceOps);
     p_faceOps->get_table = mSandboxData->grGetTableCallback;
     p_faceOps->release_table = mSandboxData->grReleaseTableCallback;
-
+#ifdef GFX_FONT_USE_THREAD_LOCAL
     tl_grGetFontTableCallbackData = this;
+#else //10.6
+    pthread_setspecific(lckey_fontEntry, this);
+#endif
     auto face = sandbox_invoke(
         mSandboxData->sandbox, gr_make_face_with_ops,
         // For security, we do not pass the callback data to this arg, and use
@@ -589,8 +611,10 @@ tainted_opaque_gr<gr_face*> gfxFontEntry::GetGrFace() {
         // pointer which will be passed to callbacks, but never used. Let's just
         // pass p_faceOps again, as this is a non-null tainted pointer.
         p_faceOps /* appFaceHandle */, p_faceOps, gr_face_default);
-    tl_grGetFontTableCallbackData = nullptr;
     mGrFace = face.to_opaque();
+#ifdef GFX_FONT_USE_THREAD_LOCAL
+    tl_grGetFontTableCallbackData = nullptr;
+#endif
     mGrFaceInitialized = true;
     mSandboxData->sandbox.free_in_sandbox(p_faceOps);
   }
@@ -610,11 +634,15 @@ void gfxFontEntry::ReleaseGrFace(tainted_opaque_gr<gr_face*> aFace) {
   MOZ_ASSERT(mGrFaceRefCnt > 0);
   if (--mGrFaceRefCnt == 0) {
     auto t_mGrFace = rlbox::from_opaque(mGrFace);
-
+#if GFX_FONT_USE_THREAD_LOCAL
     tl_grGetFontTableCallbackData = this;
+#else // 10.6
+    pthread_setspecific(lckey_fontEntry, this);
+#endif
     sandbox_invoke(mSandboxData->sandbox, gr_face_destroy, t_mGrFace);
+#if GFX_FONT_USE_THREAD_LOCAL
     tl_grGetFontTableCallbackData = nullptr;
-
+#endif
     t_mGrFace = nullptr;
     mGrFace = t_mGrFace.to_opaque();
 

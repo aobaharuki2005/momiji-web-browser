@@ -102,7 +102,8 @@ SkUniqueCFRef<CTFontRef> SkCTFontCreateExactCopy(CTFontRef baseFont, CGFloat tex
     // If we have a system font we need to use the CGFont APIs to avoid having the
     // underlying font change for us when using CTFontCreateCopyWithAttributes.
     CFDictionaryRef variations = nullptr;
-    if (IsInstalledFont(baseFont)) {
+    if (nsCocoaFeatures::OnSierraExactly() || 
+            (IsInstalledFont(baseFont) && nsCocoaFeatures::OnHighSierraOrLater())) {
         baseCGFont.reset(CTFontCopyGraphicsFont(baseFont, nullptr));
 
         // The last parameter (CTFontDescriptorRef attributes) *must* be nullptr.
